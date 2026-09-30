@@ -1,33 +1,9 @@
-"""L'oggetto dell'archivio a cui una decisione si aggancia: quello che c'e', o uno nuovo.
-
-Qui si scrive cosa diventa una posa identificata -- la riga in `objects`, i suoi nomi, la sua
-fiducia -- mentre la sequenza che ci arriva sta in `identify.py` e il criterio in
-`identify_decide.py`.
-
-Vincoli non ovvi:
-
-* **Il nome grezzo dell'header entra in `object_names`** anche quando l'oggetto viene dal cielo
-  e quel nome non ha deciso niente: e' cio' che l'utente ha scritto. L'unica eccezione e' un nome
-  che e' **gia' di un altro oggetto** -- un nome, un oggetto -- e allora si scrive nel log: cade,
-  ma non in silenzio.
-* **`name_taken` conta i NOMI, non le pose**: ogni nome che non e' entrato perche' era di un
-  altro oggetto, di catalogo o grezzo. Una posa sola puo' valerne tre.
-* **Un oggetto ha sempre un modo di chiamarsi, ma non sempre in `object_names`.** Il primario si
-  assegna al primo nome **libero** e non al primo in lista: i nomi che il catalogo gli darebbe
-  possono essere gia' di altri (110 voci si spartiscono 42 nomi comuni -- `HCG 92` e `NGC 7318`
-  sono due dei cinque "Stephan's Quintet"), e un oggetto nato quando il catalogo non era caricato
-  puo' essersi preso una sigla. Se non ce n'e' nessuno libero l'oggetto nasce **senza nomi
-  propri**, e va bene solo perche' ha `catalog_slug`, cioe' il catalogo sa come si chiama. Un
-  oggetto **fuori** catalogo questo problema non ce l'ha mai: se il suo nome fosse di qualcuno,
-  `hang` si aggancerebbe a quell'oggetto invece di crearne uno.
-* **La parola dell'utente non si tocca mai**, ed e' la sola regola che questo stadio ha il
-  potere di violare in silenzio. Ma se e' la posa NUOVA a portarla si scrive sempre: la scala
-  delle fiducie non conosce `user`, e passare di li' voleva dire che rispondendo su un oggetto
-  gia' in archivio il lucchetto non si scriveva mai, l'oggetto restava `low`, e la pagina lo
-  rimetteva in cima all'utente che aveva appena risposto.
-"""
+"""The archive object a decision links to, existing or new. Its primary name is the first FREE
+one: the catalog's names for an object may already belong to another."""
 
 import logging
+import sqlite3
+from typing import Any
 
 from ..catalog import lookup
 from . import identify_decide as rule
@@ -36,23 +12,31 @@ from . import identify_store as store
 log = logging.getLogger(__name__)
 
 
-def entry_for(conn, slug, hit, cands):
-    """La voce di catalogo che la decisione ha scelto, fra quelle gia' in mano: serve per i nomi
-    dell'oggetto, e chiederla di nuovo al database sarebbe una terza interrogazione per posa."""
+def entry_for(
+    conn: sqlite3.Connection,
+    slug: str | None,
+    hit: dict[str, Any] | None,
+    cands: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    """The catalog entry the decision picked, taken from what is already in hand."""
     if slug is None:
         return None
     if hit and hit["slug"] == slug:
         return hit
     fra_i_candidati = next((c for c in cands if c["slug"] == slug), None)
-    # Una voce che non e' ne' il nome ne' un candidato c'e' solo quando l'utente l'ha dichiarata:
-    # il cielo diceva un'altra cosa, quindi va chiesta al catalogo per nome proprio.
+    # Neither the name nor a candidate: only a user's declaration picks that, so fetch it.
     return fra_i_candidati or lookup.by_slug(conn, slug)
 
 
-def hang(conn, decision, raw, entry, now, counts):  # noqa: PLR0913
-    """L'oggetto di questa decisione: quello che c'e' gia', o uno nuovo. Torna `(id, lucchettato)`,
-    dove il lucchetto e' la parola dell'utente -- ed e' cio' che dice se la pagina fara' ancora
-    una domanda su questo oggetto."""
+def hang(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    decision: dict[str, Any],
+    raw: str | None,
+    entry: dict[str, Any] | None,
+    now: str,
+    counts: dict[str, int],
+) -> tuple[int, bool]:
+    """`(object id, locked)`, where the lock is the user's own word."""
     slug = decision["slug"]
     if slug:
         existing = store.object_by_slug(conn, slug)
@@ -82,18 +66,15 @@ def hang(conn, decision, raw, entry, now, counts):  # noqa: PLR0913
     return object_id, lucchettato
 
 
-def _name_it(conn, object_id, decision, entry):
-    """I nomi di un oggetto appena nato, col primo che riesce a entrare come primario. Torna
-    quanti ne sono stati rifiutati perche' gia' di un altro oggetto.
-
-    Le altre sigle del catalogo non si copiano: le sa il catalogo, e ricopiarle qui sarebbe lo
-    stesso fatto in due case. Il primario si assegna al primo nome LIBERO e non al primo in
-    lista, perche' un nome puo' essere gia' di un altro oggetto: due voci di catalogo possono
-    portare lo stesso nome comune, e un oggetto nato quando il catalogo non era caricato si e'
-    preso una sigla che adesso servirebbe qui."""
+def _name_it(
+    conn: sqlite3.Connection,
+    object_id: int,
+    decision: dict[str, Any],
+    entry: dict[str, Any] | None,
+) -> int:
+    """Names a newborn object; returns how many of its names another object already owns."""
     if entry is None:
-        # Un nome che viene da una correzione e' parola dell'utente, non un'etichetta trovata
-        # in un header: si conserva con la sua provenienza, e l'export lo porta via con se'.
+        # A corrected name is the user's word, not a header label: its origin says so.
         origine = "user" if decision["method"] == "user" else "raw"
         candidati = [(decision["name"], origine)]
     else:
@@ -108,20 +89,17 @@ def _name_it(conn, object_id, decision, entry):
         else:
             rifiutati += 1
     if primario:
-        # Regge solo perche' l'oggetto ha `catalog_slug`: il catalogo sa come si chiama. Un
-        # oggetto fuori catalogo non arriva mai qui senza il suo nome.
+        # Tolerable only because the object has `catalog_slug`: an out-of-catalog
+        # object never reaches here without its own name.
         log.warning("identify: oggetto senza nomi propri", extra={"obj": object_id})
     return rifiutati
 
 
-def _restate(conn, existing, decision, now):
-    """La fiducia dell'oggetto quando un'altra posa lo aggancia.
-
-    Due regole, e vanno in quest'ordine. La parola dell'utente non si tocca mai -- e' quella che
-    questo stadio ha il potere di violare in silenzio. Ma se e' la posa NUOVA a portarla, si
-    scrive sempre: la scala delle fiducie non conosce `user`, e passare di li' voleva dire che
-    rispondendo su un oggetto **gia' in archivio** il lucchetto non si scriveva mai, l'oggetto
-    restava `low`, e la pagina lo rimetteva in cima -- all'utente che aveva appena risposto."""
+def _restate(
+    conn: sqlite3.Connection, existing: dict[str, Any], decision: dict[str, Any], now: str
+) -> None:
+    """Confidence when another frame links: an existing `user` lock is never touched;
+    otherwise a `user` carried by the NEW frame is always written."""
     if existing["identity_method"] == "user":
         return
     if decision["method"] == "user":

@@ -360,7 +360,7 @@ def test_a_doubt_on_a_locked_object_is_not_counted(archivio):
 def test_a_rule_keeps_the_header_spelling_among_the_names(archivio):
     """La regola cambia il nome che DECIDE, non cio' che l'utente ha scritto.
 
-    Il vincolo in testa al file vale su ogni posa: la grafia dell'header entra in `object_names`,
+    Vale su ogni posa (`identify_link.hang`): la grafia dell'header entra in `object_names`,
     e cade solo se e' gia' di un altro oggetto -- e allora si scrive nel log. Sul ramo della
     regola cadeva in silenzio, e l'Archivio mostrava un oggetto che non ricordava piu'
     l'etichetta con cui l'utente chiamava quelle pose."""

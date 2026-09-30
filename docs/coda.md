@@ -106,10 +106,11 @@ Niente di aperto.
     `docs/domini/spina.md` e `BRANCHES` in `backend/astrolog/spine/identify_decide.py` si controllano
     a vicenda: una riga inventata in tutti e due resta verde (12/9/2026). Manca la macchina che chieda
     a ogni ramo un produttore in `decide` e un test.
-24. **"Puro: niente database, niente catalogo" e' scritto e non fatto rispettare** in
-    `identify_decide`: aggiungendoci `sqlite3` e il catalogo, `lint-imports` resta verde. Il contratto
-    dei moduli puri in `backend/pyproject.toml` va allargato a `identify_decide`, `identify_score` e
-    `identify_geometry`.
+24. **La purezza di `identify_decide`, `identify_score` e `identify_geometry` e' scritta e non fatta
+    rispettare:** aggiungendoci `sqlite3` o `catalog.lookup`, `lint-imports` resta verde (il parser
+    `catalog.designation` invece e' puro, e `identify_score` lo usa gia'). Serve un contratto loro:
+    quello dei moduli puri in `backend/pyproject.toml` vieta `astrolog.spine`, e i tre si importano
+    fra loro.
 25. **Promesse d'intestazione senza rosso** (rotte una per una il 14/9/2026, suite verde):
     (a) `backend/astrolog/spine/rigless.py` promette la normalizzazione di
     `declarations.instrument_name`, e con uno `strip()` nudo `INSTRUME='(1)'` diventa un nome.
@@ -582,7 +583,8 @@ restano le decisioni che non hanno ancora un contratto.
   erano sono stati rinominati (`rigs_joined`, `KEY_KINDS`). Le due strade sono **rinominare anche
   i 78**, in una passata sola e con una macchina che poi lo impedisca, oppure **scrivere nel
   metodo** che la regola vale per cio' che esce da un modulo e non per i nomi interni -- che e'
-  quello che il codice fa gia' senza dirlo. E' una riga del metodo: la decide Marco.
+  quello che il codice fa gia' senza dirlo. **Decisa da Marco il 30/9/2026 (`CLAUDE.md`, "Nomi e
+  commenti in inglese"): si rinominano**, package per package nella fase 2 del refactor.
 
 - **Gli strumenti che la posa nomina costano query per posa, senza cache.**
   `spine/normalize_rig.instruments_on_frame` risolve tre generi uno per uno -- grafia imparata
@@ -1184,6 +1186,17 @@ restano le decisioni che non hanno ancora un contratto.
   una di quelle domande torna lenta.
 
 ### Il resto
+
+- **Fase 2 del refactor, `identify`: cosa il pilota ha lasciato.**
+  - La rotazione dello scarto negli assi del sensore e' scritta due volte: dentro `in_frame`
+    (`spine/identify_geometry.py`) e come `_in_axes` (`spine/mosaic_geometry.py`). Va in
+    `identify_geometry` e la chiamano tutti e due.
+  - Il letterale del lucchetto dell'utente (`method`/`confidence` `user`, `review` falso) e' scritto
+    due volte in `spine/identify.py`: una costante.
+  - Decisioni, candidati, voci del catalogo e wcs viaggiano come `dict[str, Any]`: un `TypedDict` o
+    una `dataclass` per forma, cosi' i tipi controllano le chiavi.
+  - I nomi interni in italiano (`con_cielo`, `lucchettato`, `fra_i_candidati`...): si rinominano, vedi
+    la voce *Il metodo dice "inglese nei nomi"*.
 
 - **La previsione accanto al meteo vero**, per misurare quanto ci azzeccava su quel sito: lo
   storico scrive solo l'osservato, e la previsione di una notte passata si butta.

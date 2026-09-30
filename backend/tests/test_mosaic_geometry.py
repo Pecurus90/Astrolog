@@ -6,8 +6,8 @@ E' la domanda che pone il contratto del mosaico, in `docs/domini/mosaico.md`: du
 Il contenimento e' il discriminante -- la stessa ripresa rifatta, e il dithering, si
 contengono a vicenda -- quindi qui si prova che i tre esiti si distinguono davvero.
 
-Le coordinate sono vere: IC 405 dal catalogo (79.122833, 34.356167), che e' il caso citato in
-`identify_geometry` per i suoi quattro pannelli. I centri dei pannelli escono dalla proiezione
+Le coordinate sono vere: IC 405 dal catalogo (79.122833, 34.356167), il mosaico di quattro
+pannelli del contratto. I centri dei pannelli escono dalla proiezione
 dell'app, non da una sottrazione a mano: a questa declinazione uno scarto di mezzo grado in
 ascensione retta porta anche 0,0015 gradi di nord, e un banco che lo ignorasse proverebbe
 l'aritmetica invece della decisione.
