@@ -33,7 +33,7 @@ Lo stato si legge dal codice e da [`docs/coda.md`](docs/coda.md); le decisioni s
 
 Si parte con `/esegui` o a parole, ed e' lo stesso giro (`.claude/commands/esegui.md`):
 ricognizione -> piano in cinque righe -> domande a Marco se servono -> codice, test e documenti
-nello stesso diff (li scrivo io se e' logica, lo `sviluppatore` se e' meccanico) -> Workflow
+nello stesso diff (li scrivo io se e' logica, lo `sviluppatore` altrimenti) -> Workflow
 `esegui` (revisione fino a un giro vuoto, audit eseguendo, controlli verdi) -> riassunto ->
 **ok di Marco** -> commit e push. Un rilievo che torna dopo essere stato riparato va a Marco: il
 difetto e' nel compito, non nel codice.
@@ -43,7 +43,8 @@ difetto e' nel compito, non nel codice.
 | Prodotto, risposte, ok al commit | Marco | -- |
 | Piano, logica di dominio, coordinamento | sessione principale (dentro il Workflow, le sue correzioni: un agente Opus) | Opus |
 | Ricognizione in sola lettura | `esploratore` | Sonnet |
-| Lavoro meccanico (potare, spostare, tipizzare) | `sviluppatore` | Sonnet |
+| Potare, tipizzare (serve giudizio) | `sviluppatore` | Opus |
+| Spostare file, rinominare, aggiornare import | `sviluppatore`, modo `spostamento` | Sonnet |
 | Revisione del diff: regole del progetto | `revisore` | Opus |
 | Revisione: bug, commenti, errori muti, test | `pr-review-toolkit` | Opus |
 | Audit che esegue e misura | `auditore` | Opus |
@@ -98,6 +99,8 @@ difetto e' nel compito, non nel codice.
 - **Uno script di sostituzioni afferma di aver trovato ogni stringa**, raccoglie i mancati e li
   stampa alla fine; dopo un generatore si guarda `git status`, non il suo output.
 - **Un lavoro alla volta:** se all'apertura c'e' lavoro in volo, si chiede.
+- **Regole o plugin cambiati: sessione nuova.** Gli agenti ricevono il CLAUDE.md letto all'avvio,
+  e un plugin installato a sessione aperta non carica i suoi agenti.
 
 ## Dove va cosa
 

@@ -10,7 +10,8 @@ Vale `CLAUDE.md`. Il giro e' questo, e non si salta un passo.
 1. **Ricognizione.** `esploratore` (o grep diretto se sai gia' dove): cosa esiste e si riusa,
    cosa e' nuovo, cosa rischia. Se viene da `docs/coda.md`, ri-misura lo stato.
 2. **Piano in cinque righe** -- Contesto / Obiettivo / Lavoro / Vincoli / Fatto quando -- con
-   `mode`: `meccanico` (potare, spostare, tipizzare, rinominare: lo fa lo `sviluppatore`) o
+   `mode`: `meccanico` (potare, tipizzare: serve giudizio, lo `sviluppatore` su Opus),
+   `spostamento` (spostare file, rinominare, aggiornare import: lo `sviluppatore` su Sonnet) o
    `logica` (dominio: lo scrivo io), e `surface` se cambia cio' che l'utente vede.
 3. **Domande a Marco, solo se servono, prima di scrivere codice**: quando la risposta dipende da
    lui (gusto, dati suoi, rischio che accetta). A video, a scelta multipla, la consigliata in cima
@@ -22,7 +23,7 @@ Vale `CLAUDE.md`. Il giro e' questo, e non si salta un passo.
    decisione nuova, `backend/astrolog/schema.sql`. Una pagina finita -> il `traduttore`. Ogni
    file nuovo: `git add -N <file>`, senno' revisione e controlli non lo vedono.
 5. **Workflow `esegui`** con `args: {task, plan, mode, surface, answers, history}`. In
-   `meccanico` costruisce lo `sviluppatore`, documenti compresi. Poi, a cicli: revisione
+   `meccanico` e `spostamento` costruisce lo `sviluppatore`, documenti compresi. Poi, a cicli: revisione
    (revisore + pr-review-toolkit) finche' un giro torna vuoto, audit (`auditore`, una domanda
    alla volta, eseguendo), tutti i controlli; se l'audit o i controlli fanno correggere, si torna
    alla revisione. Esiti:

@@ -1,7 +1,7 @@
 export const meta = {
   name: 'esegui',
   description: 'Build a planned task, review and fix until dry, audit by running, checks green',
-  whenToUse: 'After the plan and Marco\'s answers. args: {task, plan, mode: "meccanico"|"logica", surface: bool, answers: [string], history: [string]}',
+  whenToUse: 'After the plan and Marco\'s answers. args: {task, plan, mode: "meccanico"|"spostamento"|"logica", surface: bool, answers: [string], history: [string]}',
   phases: [
     { title: 'Build' },
     { title: 'Review' },
@@ -72,7 +72,9 @@ const task =
   `COMPITO:\n${args.task}\n\nPIANO:\n${args.plan}` +
   (answers ? `\n\nRISPOSTE DI MARCO (valgono, non si richiedono):\n${answers}` : '')
 // "logica": the main session built it before launching; fixes go to an agent on the session model.
-const fixer = args.mode === 'meccanico' ? 'sviluppatore' : undefined
+const fixer = args.mode === 'logica' ? undefined : 'sviluppatore'
+// "spostamento" (move, rename, fix imports): no judgment, so the cheaper model.
+const fixerModel = args.mode === 'spostamento' ? 'sonnet' : undefined
 const QUESTION_RULE =
   'Se per andare avanti serve una decisione che dipende da Marco (gusto, dati suoi, rischio che ' +
   'accetta), NON decidere: metti in `question` la domanda a scelta multipla con la consigliata ' +
@@ -91,13 +93,15 @@ const end = (status, extra) => ({ status, review_rounds: rounds, rejected_findin
 const stop = (where, question) => end('question', { where, question })
 const failed = (where) => end('failed', { where })
 
-if (args.mode === 'meccanico') {
+if (!['meccanico', 'spostamento', 'logica'].includes(args.mode)) return failed(`mode: ${args.mode}`)
+
+if (args.mode !== 'logica') {
   phase('Build')
   const built = await agent(
     `${task}\n\nCostruisci il compito; se il diff ne contiene gia una parte, continua da li. ${DOCS_RULE} ` +
       'Poi lancia `python -m pre_commit run --files <file toccati>` e i test toccati. Non committare. ' +
       QUESTION_RULE,
-    { phase: 'Build', schema: WORK, agentType: 'sviluppatore' },
+    { phase: 'Build', schema: WORK, agentType: 'sviluppatore', model: fixerModel },
   )
   if (!built) return failed('build')
   if (built.question) return stop('build', built.question)
@@ -135,7 +139,7 @@ const fix = (where, what) =>
       'parole, un rilievo gia riparato o scartato in un giro precedente, e non toccarli. Degli altri ' +
       'applica i fondati (in `done`) e scarta gli infondati col perche (in `rejected`). ' +
       `${DOCS_RULE} Poi rilancia pre-commit sui file toccati e i test. ${QUESTION_RULE}`,
-    { phase: where.split(' ')[0], label: `fix:${where}`, schema: WORK, agentType: fixer },
+    { phase: where.split(' ')[0], label: `fix:${where}`, schema: WORK, agentType: fixer, model: fixerModel },
   )
 
 async function reviewUntilDry() {
