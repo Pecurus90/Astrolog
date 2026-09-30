@@ -78,3 +78,25 @@ def test_the_row_numbers_of_the_confirmed_tables_are_never_reused(conn):
         conn.execute(f"DELETE FROM {tabella} WHERE id = ?", (vecchio,))  # noqa: S608 - nome nostro
         nuovo = conn.execute(insert, (secondo,)).lastrowid
         assert nuovo > vecchio, f"{tabella}: il numero di una riga cancellata e' tornato"
+
+
+def test_the_wal_shrinks_back_while_a_connection_stays_open(db_path):
+    """L'app tiene una connessione aperta, quindi il WAL non si cancella mai: dopo una scrittura
+    grossa deve tornare piccolo, o resta grande quanto lei finche' l'app gira."""
+    wal = db_path.with_name(db_path.name + "-wal")
+    keepalive = connect(db_path)
+    try:
+        grossa = connect(db_path)
+        grossa.execute("CREATE TABLE ingombro(b)")
+        grossa.execute("BEGIN")
+        grossa.executemany("INSERT INTO ingombro VALUES(randomblob(1000))", [()] * 8000)
+        grossa.execute("COMMIT")
+        grossa.close()
+        dopo_la_grossa = wal.stat().st_size
+        for _ in range(3):
+            piccola = connect(db_path)
+            piccola.execute("INSERT INTO ingombro VALUES(1)")
+            piccola.close()
+        assert wal.stat().st_size < dopo_la_grossa / 10, "il WAL resta grande come la scrittura"
+    finally:
+        keepalive.close()

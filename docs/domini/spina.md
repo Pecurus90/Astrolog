@@ -51,6 +51,7 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | Fermare ferma entro il file in corso, e non fa partire altro; chiudere la finestra non ferma niente | `test_worker_stop_cooperative`, `test_scan_answers_at_once_and_the_receipt_arrives_in_status` |
 | Riaprendo l'app non parte nessun lavoro da solo; sul NAS la scansione gira ogni ora solo se chi lancia l'app lo chiede (`ASTROLOG_SCAN_EVERY_MIN=60`); c'e' sempre il pulsante Scansiona, nella barra in alto di ogni pagina | `test_worker_no_autostart_and_stop_when_idle_is_a_noop`, `test_scan_schedule_nas` |
 | Due scansioni insieme non si pestano: la seconda riceve "gia' in corso" | `test_scan_lock_stop_and_the_button_verb` |
+| Una pagina aperta mentre l'app lavora in sottofondo non cade con "database is locked", anche su Windows con l'antivirus: l'app tiene il database aperto finche' gira, e il file accanto all'archivio non resta gonfio per questo | `test_closing_a_request_is_never_the_last_close`, `test_the_wal_shrinks_back_while_a_connection_stays_open` |
 | Ogni frame viene risolto sul cielo da ASTAP, prima uno per sessione, poi tutti; il FITS non viene mai modificato | `test_solve_order_one_per_group`, `test_solve_never_writes_fits`, `test_solve_field_from_the_header` |
 | Un frame risolto una volta non si ri-risolve dopo un reset: la cache per hash lo ricorda | `test_solve_cache_by_hash` |
 | Un frame che ASTAP non risolve e' "non risolto" con il suo perche', e l'archivio va avanti | `test_solve_failure_is_a_reason` |

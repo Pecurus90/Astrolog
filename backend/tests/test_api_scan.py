@@ -231,10 +231,8 @@ def test_scan_schedule_nas(db_path, tmp_path):
     write_light(root / "a.fits")
     with TestClient(create_app(db_path, scan_every_s=0.2), base_url="http://localhost") as c:
         c.post("/api/v1/folders", json={"root_path": str(root)})
-        assert wait_until(lambda: c.get("/api/v1/scan-runs").json()["items"] != [], 5.0)
-        assert wait_until(
-            lambda: c.get("/api/v1/scan-runs").json()["items"][0]["status"] == "ok", 5.0
-        )
+        assert wait_until(lambda: c.get("/api/v1/scan-runs").json()["items"] != [])
+        assert wait_until(lambda: c.get("/api/v1/scan-runs").json()["items"][0]["status"] == "ok")
         assert c.get("/api/v1/scan-runs").json()["items"][0]["new"] == 1
 
 

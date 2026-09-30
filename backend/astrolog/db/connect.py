@@ -33,6 +33,9 @@ def connect(path: str | Path, *, check_same_thread: bool = True) -> sqlite3.Conn
     conn.isolation_level = None
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA journal_mode = WAL")
+    # The app keeps one connection open, so the WAL is never deleted:
+    # truncate it whenever a checkpoint rewinds it.
+    conn.execute("PRAGMA journal_size_limit = 0")
     conn.execute("PRAGMA synchronous = NORMAL")
     conn.execute("PRAGMA busy_timeout = 5000")
     return conn

@@ -415,8 +415,9 @@ def sky_solved(conn, frame_id):
     stages.set_status(conn, frame_id, "solve", "done")
 
 
-def wait_until(pred, timeout=5.0):
-    """Aspetta che `pred()` sia vero, senza dormire piu' del necessario."""
+def wait_until(pred, timeout=30.0):
+    """Aspetta che `pred()` sia vero, senza dormire piu' del necessario. Il tetto e' largo perche'
+    costa solo quando il test fallisce, e la CI Windows in parallelo e' lenta."""
     deadline = time.time() + timeout
     while time.time() < deadline:
         if pred():

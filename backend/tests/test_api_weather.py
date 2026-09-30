@@ -117,7 +117,7 @@ def test_the_forecast_renews_itself_in_the_background(db_path, monkeypatch):
     monkeypatch.setattr(sky, "_fetch", finto)
     app = create_app(db_path, weather_every_s=3600)
     with TestClient(app, base_url="http://localhost") as c:
-        assert wait_until(lambda: c.get("/api/v1/weather").json()["sources"], timeout=10.0)
+        assert wait_until(lambda: c.get("/api/v1/weather").json()["sources"])
         # il giro non tiene aperto il processo quando l'app si chiude
         giri = [t for t in threading.enumerate() if t.name == "astrolog-weather"]
         assert giri and all(t.daemon for t in giri)
@@ -137,7 +137,7 @@ def test_a_home_site_declared_later_gets_its_forecast_without_waiting_the_full_r
     with TestClient(app, base_url="http://localhost") as c:
         assert c.get("/api/v1/weather").json()["nights"] == []
         metti_casa(db_path)
-        assert wait_until(lambda: c.get("/api/v1/weather").json()["nights"], timeout=10.0)
+        assert wait_until(lambda: c.get("/api/v1/weather").json()["nights"])
     assert len(finto.chiesti) == 1
 
 
@@ -260,8 +260,7 @@ def test_the_history_arrives_by_itself_in_the_background(db_path, monkeypatch):
     app = create_app(db_path, weather_every_s=3600)
     with TestClient(app, base_url="http://localhost") as cliente:
         assert wait_until(
-            lambda: cliente.get("/api/v1/nights").json()["items"][0]["weather"]["state"] == "ok",
-            timeout=10.0,
+            lambda: cliente.get("/api/v1/nights").json()["items"][0]["weather"]["state"] == "ok"
         )
 
 
@@ -277,7 +276,7 @@ def test_the_first_forecast_already_compares_the_wind_with_the_site(db_path, mon
     monkeypatch.setattr(sky, "_fetch", Finto(TimeoutError()))
     app = create_app(db_path, weather_every_s=3600)
     with TestClient(app, base_url="http://localhost") as c:
-        assert wait_until(lambda: c.get("/api/v1/weather").json()["nights"], timeout=10.0)
+        assert wait_until(lambda: c.get("/api/v1/weather").json()["nights"])
         assert c.get("/api/v1/weather").json()["nights"][0]["wind_700hpa_tenths"] == 0
 
 

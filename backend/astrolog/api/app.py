@@ -12,7 +12,8 @@ import logging
 import secrets
 import threading
 import time
-from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator, Callable
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request
@@ -157,6 +158,40 @@ def _load_catalog(db_path):
         conn.close()
 
 
+def _lifespan(
+    scan_every_s: float | None, weather_every_s: float | None
+) -> Callable[[FastAPI], AbstractAsyncContextManager[None]]:
+    """Il ciclo di vita dell'app: i giri in sottofondo e la connessione che resta aperta."""
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        # Never the last close: that one locks the file to delete the WAL, and an antivirus on
+        # Windows can stretch it past the busy timeout of whoever opens meanwhile.
+        keepalive = connect(app.state.db_path, check_same_thread=False)
+        stop_event = threading.Event()
+        if scan_every_s:
+            threading.Thread(
+                target=_scheduler,
+                args=(app.state, scan_every_s, stop_event),
+                name="astrolog-scheduler",
+                daemon=True,
+            ).start()
+        if weather_every_s:
+            threading.Thread(
+                target=_weather_scheduler,
+                args=(app.state.db_path, weather_every_s, stop_event),
+                name="astrolog-weather",
+                daemon=True,
+            ).start()
+        try:
+            yield
+        finally:
+            stop_event.set()
+            keepalive.close()
+
+    return lifespan
+
+
 def create_app(  # noqa: PLR0913
     db_path=None,
     *,
@@ -179,31 +214,10 @@ def create_app(  # noqa: PLR0913
     ensure_database(db_path)
     _load_catalog(db_path)
 
-    @asynccontextmanager
-    async def lifespan(app):
-        stop_event = threading.Event()
-        if scan_every_s:
-            t = threading.Thread(
-                target=_scheduler,
-                args=(app.state, scan_every_s, stop_event),
-                name="astrolog-scheduler",
-                daemon=True,
-            )
-            t.start()
-        if weather_every_s:
-            threading.Thread(
-                target=_weather_scheduler,
-                args=(app.state.db_path, weather_every_s, stop_event),
-                name="astrolog-weather",
-                daemon=True,
-            ).start()
-        yield
-        stop_event.set()
-
     app = FastAPI(
         title="AstroLog API",
         version=__version__,
-        lifespan=lifespan,
+        lifespan=_lifespan(scan_every_s, weather_every_s),
         generate_unique_id_function=_readable_id,
     )
     app.state.web_dir = Path(web_dir) if web_dir else page.WEB_DIR

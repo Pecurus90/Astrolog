@@ -80,7 +80,7 @@ def test_the_frames_of_every_folder_are_in_the_archive(app):
     client, uno, due = app
     scan_all(client)
     client.app.state.worker.join(30.0)
-    wait_until(lambda: status(client)["worker"]["state"] != "running", 30.0)
+    assert wait_until(lambda: status(client)["worker"]["state"] != "running")
 
     per_cartella = _frames_per_folder(client)
     assert per_cartella == {uno: 3, due: 2}, "un gesto, e i frame di tutte e due le cartelle"
