@@ -282,6 +282,7 @@ def test_the_user_answer_is_in_the_vocabulary_but_no_branch_writes_it():
     assert all(decide.decide(**c)["method"] != "user" for c in casi)
 
 
+@pytest.mark.sorgente
 def test_the_branches_are_the_ones_the_contract_lists():
     """La colonna `branch` di `docs/domini/spina.md` e questa costante sono lo stesso elenco.
 

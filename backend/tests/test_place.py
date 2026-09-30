@@ -12,7 +12,8 @@ from pathlib import Path
 import pytest
 
 from astrolog import net, place
-from conftest import SCARICANO, SuiteInRete
+from conftest import SCARICANO
+from recinto import SuiteInRete
 
 
 def test_no_test_downloads_unless_it_fakes_the_network():
@@ -31,6 +32,7 @@ def test_a_download_the_app_would_swallow_still_fails_the_test():
         net.ask_why(net.fetch, "https://203.0.113.1/v1/forecast")
 
 
+@pytest.mark.sorgente
 def test_every_module_that_downloads_is_fenced():
     """Il recinto conosce i moduli che scaricano per nome (`conftest.SCARICANO`): l'elenco si
     ricava dai sorgenti, non dal recinto, cosi' un modulo nuovo che scarica non resta fuori."""

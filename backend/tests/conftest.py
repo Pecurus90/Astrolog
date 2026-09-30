@@ -26,12 +26,9 @@ from astrolog.spine.identify import identify_frames
 from astrolog.spine.normalize import normalize_frames
 from astrolog.spine.scan import scan_folder
 from astrolog.weather import climate, forecast, history, meteoblue, sky
+from recinto import SuiteInRete
 
 real_bundle = bundle.path  # catturato prima del recinto della suite
-
-
-class SuiteInRete(BaseException):
-    """Una prova ha chiamato un servizio vero senza fingerlo (`dentro_il_recinto`)."""
 
 
 # I moduli che scaricano, ognuno col suo `_fetch` che le prove sostituiscono. Che l'elenco sia

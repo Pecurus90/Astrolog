@@ -134,6 +134,7 @@ def test_two_open_lists_on_one_connection_are_refused(conn):
             secondo.__enter__()
 
 
+@pytest.mark.sorgente
 def test_no_query_builds_one_placeholder_per_row(conn):
     """La regola con la sua macchina: nel prodotto non deve restare **nessuna** query che
     costruisce un segnaposto per riga, in nessuna delle grafie con cui la si scrive.

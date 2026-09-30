@@ -137,6 +137,7 @@ def test_declarable_bands_are_the_physical_ones_of_the_vocabulary():
     assert set(BANDS) <= PASSBANDS  # e ognuna e' anche una banda canonica valida
 
 
+@pytest.mark.sorgente
 def test_the_channels_the_solver_can_come_from_are_one_list():
     """I quattro canali da cui l'eseguibile puo' arrivare sono **lo stesso elenco** nel codice e
     nell'API: un quinto aggiunto alla ricerca e non al tipo farebbe esplodere `SolverOut` alla

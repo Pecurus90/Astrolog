@@ -79,13 +79,16 @@ include = ["astrolog"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [".", "tests"]
-markers = ["lento: test numerico pesante, a richiesta e in CI, mai al push"]
+markers = [
+  "lento: test numerico pesante, a richiesta e in CI, mai al push",
+  "sorgente: legge il codice o i documenti del repo come testo; fuori dalla mutazione, che li riscrive",
+]
 addopts = "--strict-markers -q"
 
 [tool.mutmut]
 # Nightly only (.github/workflows/nightly.yml): mutmut runs on Linux and macOS, not Windows.
 paths_to_mutate = ["astrolog/"]
-pytest_add_cli_args = ["-m", "not lento"]
+pytest_add_cli_args = ["-m", "not lento and not sorgente"]
 
 [tool.coverage.run]
 source = ["astrolog"]
