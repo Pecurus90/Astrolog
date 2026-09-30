@@ -1,10 +1,5 @@
-"""Un valore d'header reso confrontabile per gli alias (strumento, filtro, oggetto).
-
-Vincolo non ovvio: la pulizia e' cosmetica e conservativa -- minuscole, via l'indice di
-istanza ASCOM `(N)` in coda, punti in spazi, spazi collassati -- mai al punto di fondere due
-pezzi diversi. Idempotente. La stessa funzione normalizza cio' che si scrive nell'alias e
-cio' che si legge dal frame, altrimenti il confronto non e' deterministico.
-"""
+"""A cosmetic, conservative cleanup that never merges two different devices. Idempotent. The same
+function normalises what an alias stores and what a frame reads, or they would not compare."""
 
 import re
 
@@ -12,9 +7,9 @@ _WS_RE = re.compile(r"\s+")
 _TRAILING_INDEX_RE = re.compile(r"\s*\(\d+\)\s*$")
 
 
-def normalize_header_value(value):
+def normalize_header_value(value: object) -> str:
     """`"ZWO Focuser (1)"` -> `"zwo focuser"`, `"ASCOM.ToupTek.AAF"` -> `"ascom touptek aaf"`,
-    None -> "". Una stringa che normalizza a "" non e' un alias: lo respinge chi scrive."""
+    None -> "". A value that normalises to "" is not an alias: the writer rejects it."""
     if value is None:
         return ""
     x = str(value).lower()

@@ -1,47 +1,46 @@
-"""Le chiavi FITS da cui si legge ogni campo del frame, e come si legge un valore senza
-fidarsi del tipo.
-
-Vincolo non ovvio: le catene sono DATI, e corte per scelta (Marco, 2026-09-06): lo standard
-FITS/SBFITSEXT e cio' che scrivono N.I.N.A., ASIAIR, Voyager e SGP. Una chiave di un altro
-software entra solo con un header vero nel corpus (`tests/header/`), e con un test. Le
-misure scritte nell'header (FWHM, SNR...) non si leggono: si misurano.
-"""
+"""The keys each frame field is read from, kept short: FITS/SBFITSEXT and what the four supported
+programs write. Another program's key enters only with a real header in `backend/tests/header/`."""
 
 import math
+from typing import Any, Protocol
 
-# Chi ha ACQUISITO il file, e chi lo ha SCRITTO: due domande diverse, e la seconda e' l'unico
-# modo di sapere che un file e' passato per le mani di un programma di elaborazione. `SWMODIFY`
-# e' "software that modified the file": Diffraction Limited, *FITS File Header Definitions*
-# (l'aiuto di MaxIm DL).  <!-- software-ok: e' la fonte della convenzione, non un supportato -->
-# Il nome che ci sta dentro non si guarda mai: i software supportati restano quattro.
+
+class HeaderLike(Protocol):
+    """An astropy header, or the dict read back from the database: only `.get` is used."""
+
+    def get(self, key: str, default: Any = None, /) -> Any: ...
+
+
+# Who ACQUIRED the file and who WROTE it: the second is the only trace of a processing program.
+# SWMODIFY: *FITS File Header Definitions*, Diffraction Limited (MaxIm DL help). software-ok: source
 ACQUISITION_KEYS = ("SWCREATE", "CREATOR")
 WRITER_KEYS = ("PROGRAM", "SWMODIFY")
 
+# Measurements written in the header (FWHM, SNR...) are not read: they are measured.
 KEYS = {
     "object": ("OBJECT",),
-    "date_obs": ("DATE-OBS", "DATE-AVG"),  # mai DATE-LOC (locale, senza fuso) ne' DATE (del file)
+    "date_obs": ("DATE-OBS", "DATE-AVG"),  # never DATE-LOC (local, no offset) nor DATE (the file's)
     "exposure": ("EXPTIME", "EXPOSURE"),
     "filter": ("FILTER",),
     "gain": ("GAIN", "GAINRAW"),  # GAINRAW: ASIAIR
     "offset": ("OFFSET",),
     "telescope": ("TELESCOP",),
     "instrument": ("INSTRUME",),
-    # Gli altri strumenti, quando il programma li nomina **sulla posa**: N.I.N.A. scrive la
-    # ruota e il focheggiatore, l'ASIAIR la camera di guida (`backend/tests/header/`, gli unici
-    # due programmi di cui abbiamo un header vero). Nessuno dei due nomina la guida.
+    # Other devices, when the program names them on the frame: N.I.N.A. the wheel and focuser,
+    # the ASIAIR the guide camera (`backend/tests/header/`).
     "filter_wheel": ("FWHEEL",),
     "focuser": ("FOCNAME",),
     "guide_camera": ("GUIDECAM",),
     "bayer": ("BAYERPAT",),
     "focal": ("FOCALLEN",),
-    "ccd_temp": ("CCD-TEMP", "SET-TEMP"),  # SET-TEMP e' il setpoint: ripiego, non misura
+    "ccd_temp": ("CCD-TEMP", "SET-TEMP"),  # SET-TEMP is the setpoint: a fallback, not a reading
     "binning": ("XBINNING", "CCDXBIN"),  # CCDXBIN: ASIAIR, SGP
     "pixel_size": ("XPIXSZ",),
     "ra_deg": ("CRVAL1", "RA"),
     "ra_sexagesimal": ("OBJCTRA",),
     "dec_deg": ("CRVAL2", "DEC"),
     "dec_sexagesimal": ("OBJCTDEC",),
-    "radesys": ("RADESYS", "RADECSYS"),  # RADECSYS: grafia storica dello standard
+    "radesys": ("RADESYS", "RADECSYS"),  # RADECSYS: the standard's historic spelling
     "equinox": ("EQUINOX", "EPOCH"),
     "software": ACQUISITION_KEYS + WRITER_KEYS + ("ORIGIN",),
     "image_type": ("IMAGETYP",),
@@ -52,8 +51,8 @@ KEYS = {
 }
 
 
-def first(header, *keys):
-    """Il primo valore presente e non vuoto fra `keys`, GREZZO (tipato come lo da' astropy)."""
+def first(header: HeaderLike, *keys: str) -> Any:
+    """The first present, non-blank value among `keys`, RAW (typed as astropy gives it)."""
     for k in keys:
         v = header.get(k)
         if v is None:
@@ -64,13 +63,11 @@ def first(header, *keys):
     return None
 
 
-def get(header, field):
-    """`first` sulla catena di alias del campo `field` di `KEYS`."""
+def get(header: HeaderLike, field: str) -> Any:
     return first(header, *KEYS[field])
 
 
-def as_float(v):
-    """`float` con guardia NaN/inf; None o non parsabile -> None, mai un crash."""
+def as_float(v: Any) -> float | None:
     if v is None:
         return None
     try:
@@ -82,8 +79,8 @@ def as_float(v):
     return x
 
 
-def as_int(v):
-    """`int` che tollera "100" e 100.0; "0x10" non e' 16 (nessun parseInt esadecimale)."""
+def as_int(v: Any) -> int | None:
+    """Accepts "100" and 100.0; "0x10" is not 16."""
     if v is None:
         return None
     if isinstance(v, bool):
@@ -94,13 +91,9 @@ def as_int(v):
         return None
 
 
-def text(v):
-    """Stringa ripulita ai bordi, o None se vuota.
-
-    Gli apici che delimitano una stringa FITS li toglie gia' astropy: togliere **tutti** gli
-    apici mangiava le lettere dei nomi veri -- `Barnard's Loop` entrava in archivio come
-    `Barnards Loop`. Si toglie solo la coppia che avvolge il valore, quando c'e' (un header
-    letto come testo, o un programma che scrive gli apici dentro il valore)."""
+def text(v: Any) -> str | None:
+    """Strips only the quote pair wrapping the value (astropy already removes FITS ones): quotes
+    inside belong to the name, as in `Barnard's Loop`."""
     if v is None:
         return None
     cleaned = str(v).strip()

@@ -1,15 +1,9 @@
-"""I campi di un frame dall'header: grezzi ma tipati, con le catene di alias e la guardia di
-intervallo. Niente normalizzazione di nomi: quella e' di vocab.
-
-Vincolo non ovvio: `extract_fields` legge SOLO cio' che finisce in `frames`. Cio' che nessuno
-scrive non si calcola: l'header intero e' salvato su ogni posa, e quel giorno si ricava da li'.
-Il rumore della float32 si taglia qui, una volta, su dimensione del pixel e temperatura; le
-coordinate no, sono double veri. Il placeholder 0/0 senza WCS diventa None: un solve fallito
-non e' una coordinata.
-"""
+"""Raw but typed frame fields; name normalisation is vocab's. Only what lands in `frames` is read:
+the whole header is stored on every frame, and anything else is derived from it when needed."""
 
 import re
 from datetime import UTC
+from typing import Any
 
 from astropy.time import Time
 
@@ -17,35 +11,34 @@ from ..clock import parse_iso
 from ..units import strip_float32_noise
 from .frame_type import image_type
 from .header_coords import ra_dec, site
-from .header_keys import as_float, as_int, get, text
+from .header_keys import HeaderLike, as_float, as_int, get, text
 from .header_wcs import solved
 
 BAYER_RE = re.compile(r"^(RGGB|GRBG|BGGR|GBRG|CMYG|CYGM)$", re.IGNORECASE | re.ASCII)
 
 
-def bayer_pattern(header):
-    """La matrice di Bayer se l'header la dichiara (maiuscola), altrimenti None: None non vuol
-    dire mono, vuol dire che l'header non lo dice."""
+def bayer_pattern(header: HeaderLike) -> str | None:
+    """Uppercased. None does not mean mono: it means the header does not say."""
     raw = text(get(header, "bayer"))
     if raw and BAYER_RE.match(raw):
         return raw.upper()
     return None
 
 
-def canonical_utc(iso):
-    """Una data ISO qualunque (7 decimali di SGP, senza millisecondi di ASIAIR, con un fuso
-    esplicito) -> UTC ISO con i millisecondi, la forma unica del DB. None se non e' una data."""
+def canonical_utc(iso: object) -> str | None:
+    """Any ISO date (SGP's seven decimals, ASIAIR's missing milliseconds, an explicit offset) ->
+    UTC with milliseconds, the database's single form."""
     dt = parse_iso(iso)
     if dt is None:
         return None
     if dt.tzinfo is not None:
-        dt = dt.astimezone(UTC).replace(tzinfo=None)  # DATE-OBS senza fuso e' UTC per standard
+        dt = dt.astimezone(UTC).replace(tzinfo=None)  # DATE-OBS without offset is UTC by standard
     return dt.isoformat(timespec="milliseconds")
 
 
-def date_obs(header):
-    """L'istante in UTC canonico: DATE-OBS -> DATE-AVG, poi `MJD-OBS` convertito. Mai DATE-LOC
-    (ora locale senza fuso) ne' DATE (e' la data del file)."""
+def date_obs(header: HeaderLike) -> str | None:
+    """DATE-OBS, DATE-AVG, then `MJD-OBS`. Never DATE-LOC (local, no offset) nor DATE (the file's
+    date)."""
     iso = text(get(header, "date_obs"))
     if iso is not None:
         return canonical_utc(iso)
@@ -58,21 +51,21 @@ def date_obs(header):
         return None
 
 
-def binning(header):
-    """Il binning che l'header dichiara, o `None`. Assente, zero o illeggibile vuol dire "non si
-    sa", non 1: il pixel fisico della camera si ricava dividendo per lui."""
+def binning(header: HeaderLike) -> int | None:
+    """Missing, zero or unreadable means unknown, not 1: the camera's physical pixel is derived by
+    dividing by it."""
     value = as_int(get(header, "binning"))
     return value if value is not None and value >= 1 else None
 
 
-def extract_fields(header, path):
-    """Il dizionario dei campi grezzi del frame (nomi = colonne di `frames` piu' gli indizi
-    per gli stadi a valle). Mai un crash su una chiave mancante: None o il default."""
+def extract_fields(header: HeaderLike, path: str) -> dict[str, Any]:
+    """`frames` columns plus hints for later stages; a missing key gives None, never a crash."""
     focal = as_float(get(header, "focal"))
+    # float32 noise is cut here, once; coordinates are true doubles and are left alone
     pixel_um = strip_float32_noise(as_float(get(header, "pixel_size")))
     has_wcs = solved(header)
     ra, dec = ra_dec(header)
-    if ra == 0 and dec == 0 and not has_wcs:
+    if ra == 0 and dec == 0 and not has_wcs:  # the 0/0 placeholder of a failed solve
         ra = dec = None
     lat, lon, elev = site(header)
     return {

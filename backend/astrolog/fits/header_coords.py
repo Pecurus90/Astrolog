@@ -1,22 +1,23 @@
-"""Le coordinate dell'header, in gradi e in ICRS: decimali prima, sessagesimali poi, con
-guardia di intervallo, e la conversione di sistema SOLO se l'header lo dichiara.
-
-Vincolo non ovvio: senza dichiarazione le coordinate restano invariate (un file gia' J2000
-non si tocca); fuori intervallo o inconvertibili -> None, mai una coordinata inventata.
-Il placeholder 0/0 di un solve fallito lo giudica header_fields, che sa se c'e' un WCS.
-"""
+"""Header coordinates in ICRS degrees, converted only when the header declares another system: an
+undeclared file is left as is. Out of range or unconvertible -> None, never an invented value."""
 
 import astropy.units as u
 from astropy.coordinates import FK4, FK5, Angle, SkyCoord
 from astropy.time import Time
 
-from .header_keys import KEYS, as_float, first, get, text
+from .header_keys import KEYS, HeaderLike, as_float, first, get, text
 
 
-def coordinate(header, decimal_keys, sexagesimal_keys, unit, lo, hi):  # noqa: PLR0913
-    """Una coordinata in gradi: prima le chiavi decimali, poi le sessagesimali via `Angle`.
-    Dove le due forme hanno chiavi diverse (`RA` e `OBJCTRA`) decide la chiave; dove la stessa
-    chiave porta l'una o l'altra (il sito) si passa la chiave due volte, e decide il valore."""
+def coordinate(
+    header: HeaderLike,
+    decimal_keys: tuple[str, ...],
+    sexagesimal_keys: tuple[str, ...],
+    unit: u.UnitBase,
+    bounds: tuple[float, float],
+) -> float | None:
+    """Decimal keys first, then sexagesimal via `Angle`. Where both forms share a key (the site),
+    pass it twice and the value decides."""
+    lo, hi = bounds
     for k in decimal_keys:
         x = as_float(header.get(k))
         if x is not None:
@@ -28,20 +29,19 @@ def coordinate(header, decimal_keys, sexagesimal_keys, unit, lo, hi):  # noqa: P
         try:
             deg = float(Angle(str(v), unit=unit).deg)  # pyright: ignore[reportArgumentType]
         except (ValueError, TypeError, u.UnitsError):
-            continue  # sessagesimale illeggibile in questa chiave: si prova la prossima
+            continue  # unreadable sexagesimal in this key: try the next one
         return deg if lo <= deg <= hi else None
     return None
 
 
-def ra_dec(header):
-    """`(ra, dec)` in gradi ICRS, o None dove l'header non sa."""
-    ra = coordinate(header, KEYS["ra_deg"], KEYS["ra_sexagesimal"], u.hourangle, 0, 360)
-    dec = coordinate(header, KEYS["dec_deg"], KEYS["dec_sexagesimal"], u.deg, -90, 90)
+def ra_dec(header: HeaderLike) -> tuple[float | None, float | None]:
+    ra = coordinate(header, KEYS["ra_deg"], KEYS["ra_sexagesimal"], u.hourangle, (0, 360))
+    dec = coordinate(header, KEYS["dec_deg"], KEYS["dec_sexagesimal"], u.deg, (-90, 90))
     return to_icrs(header, ra, dec)
 
 
-def _equatorial_frame(radesys, equinox):
-    """Il frame dichiarato, o None se e' gia' ICRS/J2000 (nessuna conversione)."""
+def _equatorial_frame(radesys: str | None, equinox: float | None) -> FK4 | FK5 | None:
+    """None when already ICRS/J2000: no conversion."""
     if radesys == "FK4":
         eq = equinox if equinox is not None else 1950.0
         return FK4(equinox=Time(eq, format="byear"))
@@ -56,10 +56,11 @@ def _equatorial_frame(radesys, equinox):
     return None
 
 
-def to_icrs(header, ra, dec):
-    """Porta `(ra, dec)` a ICRS se l'header dichiara un altro sistema: equatoriale non J2000
-    (FK4, FK5, equinozio dell'anno = coordinate apparenti) o WCS galattico (solo se le
-    coordinate vengono da CRVAL: OBJCTRA resta equatoriale anche sotto un CTYPE galattico)."""
+def to_icrs(
+    header: HeaderLike, ra: float | None, dec: float | None
+) -> tuple[float | None, float | None]:
+    """An equinox of the date means apparent coordinates. Galactic only when the values come from
+    CRVAL: OBJCTRA stays equatorial even under a galactic CTYPE."""
     if ra is None or dec is None:
         return ra, dec
     radesys = text(get(header, "radesys"))
@@ -80,20 +81,17 @@ def to_icrs(header, ra, dec):
         icrs = sc.transform_to("icrs")
         ra2, dec2 = float(icrs.ra.deg), float(icrs.dec.deg)  # pyright: ignore[reportOptionalMemberAccess, reportArgumentType]
     except (ValueError, TypeError, u.UnitsError):
-        return ra, dec  # conversione non riuscita: si tiene cio' che l'header diceva
+        return ra, dec  # conversion failed: keep what the header said
     if not (0 <= ra2 <= 360 and -90 <= dec2 <= 90):
         return None, None
     return ra2, dec2
 
 
-def site(header):
-    """`(lat, lon, elev_m)` del sito scritti nell'header: un indizio, con guardia di intervallo.
-
-    La stessa chiave porta i gradi decimali o i gradi-minuti-secondi (la forma di `OBJCTDEC`), e
-    si leggono tutti e due. `SITELONG` e' la longitudine **est** (*FITS header format DR2*,
-    APPLAUSE): contata da 0 a 360 e' la stessa, e si riporta fra -180 e 180."""
-    lat = coordinate(header, KEYS["site_lat"], KEYS["site_lat"], u.deg, -90, 90)
-    lon = coordinate(header, KEYS["site_lon"], KEYS["site_lon"], u.deg, -180, 360)
+def site(header: HeaderLike) -> tuple[float | None, float | None, float | None]:
+    """A hint, range-guarded; one key carries decimal or DMS degrees. `SITELONG` is east longitude
+    (*FITS header format DR2*, APPLAUSE): counted 0-360 it is the same, folded to -180..180."""
+    lat = coordinate(header, KEYS["site_lat"], KEYS["site_lat"], u.deg, (-90, 90))
+    lon = coordinate(header, KEYS["site_lon"], KEYS["site_lon"], u.deg, (-180, 360))
     elev = as_float(first(header, *KEYS["site_elev"]))
     if lon is not None and lon > 180:
         lon -= 360

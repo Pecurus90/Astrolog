@@ -1,22 +1,14 @@
-"""Cio' che l'header sa del cielo del frame: se c'e' un WCS vero, la scala e la rotazione
-dalla matrice CD. `solved` la chiede la scansione su ogni posa (decide il placeholder 0/0);
-scala e rotazione le legge il solver sull'esito di ASTAP.
-
-Vincolo non ovvio: nel nuovo il cielo lo misura il solver; questi valori sono l'indizio
-iniziale. La rotazione e' in convenzione CROTA2 (`atan2(-CD1_2, CD2_2)`), e `OBJCTROT` non
-si legge mai: e' una sentinella piu' che una misura -- sull'archivio vero lo scrivono 11.975
-file su 14.148, e in 6.984 di quelli vale zero (58%). Nessuno di essi porta anche CROTA2,
-quindi che sia di segno opposto non lo sappiamo: non si scrive.
-"""
+"""What the header knows of the sky: hints only, the solver measures it. `OBJCTROT` is never read:
+it is a sentinel more than a measurement, and its sign against CROTA2 is unknown."""
 
 import math
 
-from .header_keys import KEYS, as_float, first
+from .header_keys import KEYS, HeaderLike, as_float, first
 
 
-def solved(header):
-    """True se c'e' vera presenza di un WCS: `PLTSOLVD` vero, `WCSAXES`, o la matrice `CD`.
-    Un `CRVAL1` nudo non basta: e' il puntamento della montatura, non una soluzione."""
+def solved(header: HeaderLike) -> bool:
+    """`PLTSOLVD` true, `WCSAXES`, or the CD matrix. A bare `CRVAL1` is the mount's pointing, not a
+    solution."""
     plt = header.get("PLTSOLVD")
     if plt is True or (isinstance(plt, str) and plt.strip().upper() in ("T", "TRUE")):
         return True
@@ -25,9 +17,8 @@ def solved(header):
     return any(header.get(k) is not None for k in ("CD1_1", "CD1_2", "CD2_1", "CD2_2"))
 
 
-def wcs_scale(header):
-    """Arcosecondi per pixel dalla soluzione astrometrica (binning compreso): dalla matrice
-    CD `sqrt(CD1_1^2 + CD2_1^2) * 3600`, ripiego `|CDELT1| * 3600`. None senza WCS."""
+def wcs_scale(header: HeaderLike) -> float | None:
+    """Arcseconds per pixel, binning included: from the CD matrix, falling back to `CDELT1`."""
     cd11 = as_float(header.get("CD1_1"))
     cd21 = as_float(header.get("CD2_1"))
     if cd11 is not None and cd21 is not None:
@@ -38,10 +29,9 @@ def wcs_scale(header):
     return None
 
 
-def wcs_rotation_deg(header):
-    """L'orientamento del campo in convenzione CROTA2, in [0, 360), due decimali; None se
-    l'header non lo dice. Con la matrice presente e `CD1_2` assente si legge 0 (WCS Paper I);
-    con `CD1_2` e `CD2_2` entrambe nulle la matrice e' degenere e l'angolo resta ignoto."""
+def wcs_rotation_deg(header: HeaderLike) -> float | None:
+    """CROTA2 convention in [0, 360). A matrix without `CD1_2` reads 0 (WCS Paper I); with `CD1_2`
+    and `CD2_2` both zero it is degenerate and the angle stays unknown."""
     cells = {k: as_float(header.get(k)) for k in ("CD1_1", "CD1_2", "CD2_1", "CD2_2")}
     if any(v is not None for v in cells.values()):
         cd12, cd22 = cells["CD1_2"] or 0.0, cells["CD2_2"] or 0.0

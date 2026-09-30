@@ -134,6 +134,18 @@ def test_two_open_lists_on_one_connection_are_refused(conn):
             secondo.__enter__()
 
 
+def test_no_ids_no_query(conn):
+    """Senza id `grouped` non tocca il database: una pagina vuota non costa niente."""
+    executed: list[str] = []
+    conn.set_trace_callback(executed.append)
+    try:
+        sql = "SELECT id FROM frames WHERE id IN {dentro}"
+        assert idlist.grouped(conn, sql, [], "id", dict) == {}
+    finally:
+        conn.set_trace_callback(None)
+    assert executed == []
+
+
 @pytest.mark.sorgente
 def test_no_query_builds_one_placeholder_per_row(conn):
     """La regola con la sua macchina: nel prodotto non deve restare **nessuna** query che

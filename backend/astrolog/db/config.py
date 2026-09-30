@@ -1,14 +1,13 @@
-"""Le preferenze dell'utente e i valori di fabbrica: chiavi CHIUSE, con tipo e fonte.
+"""User preferences and factory defaults over closed keys. The type belongs to the key, not to the
+look of the value: a user named "2024" stays text."""
 
-Vincolo non ovvio: il tipo e' della chiave, non dell'aspetto del valore (un nome utente
-"2024" resta testo). Ogni valore di fabbrica dice da dove viene: una convenzione pubblica
-dove c'e', altrimenti una scelta di prodotto dichiarata, che l'utente cambia in Impostazioni.
-"""
+import sqlite3
+from typing import Any
 
 from ..clock import now_iso
 
-# chiave -> (tipo, valore di fabbrica, da dove viene)
-KEYS = {
+# key -> (type, factory value, where the value comes from: a public convention or a product choice)
+KEYS: dict[str, tuple[type, str | None, str]] = {
     "user_name": (str, None, "lo dice l'utente nel wizard"),
     "language": (str, "it", "la lingua in cui l'app si costruisce; l'inglese e' la seconda"),
     "onboarding_done_at": (str, None, "il timbro del primo avvio: un fatto, non un'euristica"),
@@ -38,34 +37,30 @@ KEYS = {
     ),
 }
 
-# Le chiavi che accettano solo certi valori. I modelli meteo sono quelli che la previsione chiede
-# al servizio (`weather/openmeteo.py` li prende da qui): un nome fuori elenco darebbe una pagina
-# vuota senza un perche'.
+# A weather model outside this list would give an empty page with no reason.
 CHOICES = {"weather_model": ("best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless")}
 
 
-# Le chiavi dei servizi: fuori da qui escono solo come suggerimento (`hint`), mai intere.
+# Service keys leave the app only as a `hint`, never whole.
 SECRETS = frozenset({"sky_service_key", "meteoblue_key"})
-# Quelle che si scrivono solo dopo averle provate sul conto: le scrive la loro rotta
-# (`api/weather_key.py`), non la scrittura generica delle preferenze.
+# Written only after a check against the account, by their own route, not by the generic write.
 TRIED_ELSEWHERE = frozenset({"meteoblue_key"})
 
 
-def hint(value):
-    """Come si mostra una chiave senza mostrarla: le ultime quattro cifre. Basta a rispondere alla
-    sola domanda che serve -- e' quella che ho messo io?"""
+def hint(value: str | None) -> str | None:
+    """The last four characters: enough to answer "is it the one I entered?"."""
     if not value:
         return None
-    # una chiave di quattro caratteri o meno sarebbe mostrata intera: si dice solo che c'e'
+    # a key of four characters or fewer would be shown whole: only say that there is one
     return "..." + value[-4:] if len(value) > 4 else "..."
 
 
-def defaults():
+def defaults() -> dict[str, Any]:
     return {k: v for k, (_t, v, _why) in KEYS.items()}
 
 
-def read(conn):
-    """Tutte le chiavi: il valore salvato (nel tipo della chiave), o quello di fabbrica."""
+def read(conn: sqlite3.Connection) -> dict[str, Any]:
+    """Every key: the saved value in the key's type, or the factory one."""
     values = defaults()
     for row in conn.execute("SELECT key, value FROM config"):
         key = row["key"]
@@ -74,10 +69,9 @@ def read(conn):
     return values
 
 
-def write(conn, key, value):
-    """Scrive una chiave nota; `KeyError` per una chiave fuori dall'elenco, `ValueError` per
-    un valore che non e' del tipo della chiave: si respinge qui, dove si puo' rispondere
-    422, non in lettura."""
+def write(conn: sqlite3.Connection, key: str, value: object) -> None:
+    """`KeyError` for an unknown key, `ValueError` for a value of the wrong type: rejected here,
+    where the API can answer 422, not on read."""
     if key not in KEYS:
         raise KeyError(f"chiave di configurazione sconosciuta: {key}")
     kind = KEYS[key][0]

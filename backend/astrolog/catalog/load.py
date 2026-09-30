@@ -1,16 +1,12 @@
-"""Portare il catalogo dal file impacchettato alle tabelle del database.
-
-Vincolo non ovvio: le tabelle del catalogo sono **derivate al 100%**. Si rifanno da capo a
-ogni versione nuova -- le voci vecchie se ne vanno, non si sommano -- e non si rifanno affatto
-se la versione caricata e' gia' quella: ventiduemila voci sono un lavoro che non ha senso
-ripetere a ogni avvio. Il catalogo sta nel database e non solo nel file perche' `identify`
-deve poter chiedere "cosa c'e' in questo pezzo di cielo" con una query, non leggendo
-ventiduemila voci per ogni posa.
-"""
+"""The catalogue tables are fully derived: rebuilt from scratch on a new version, left alone on the
+same one. They exist so identify can ask "what is in this patch of sky" with an indexed query."""
 
 import json
 import logging
 import math
+import sqlite3
+from pathlib import Path
+from typing import Any
 
 from ..clock import now_iso
 from . import bundle, designation
@@ -18,23 +14,21 @@ from . import bundle, designation
 log = logging.getLogger(__name__)
 
 
-def unit_vector(ra_deg, dec_deg):
-    """Le coordinate sulla sfera unitaria. E' cio' che rende la ricerca per cono un riquadro
-    su tre assi -- che un indice sa fare -- e fa sparire il salto dell'ascensione retta a
-    0/360, invece di lasciarlo li' come caso da ricordarsi."""
+def unit_vector(ra_deg: float, dec_deg: float) -> tuple[float, float, float]:
+    """On the unit sphere a cone search is a box on three indexed axes, and the right ascension
+    wrap at 0/360 disappears instead of being a case to remember."""
     ra, dec = math.radians(ra_deg), math.radians(dec_deg)
     return math.cos(dec) * math.cos(ra), math.cos(dec) * math.sin(ra), math.sin(dec)
 
 
-def loaded_version(conn):
+def loaded_version(conn: sqlite3.Connection) -> str | None:
     row = conn.execute("SELECT version FROM catalog_version WHERE id = 1").fetchone()
     return row[0] if row else None
 
 
-def _kinds(entry) -> str | None:
-    """Le famiglie d'uso di una voce, per i filtri. Sono DUE campi nel file: `kind` e' la
-    principale e ce l'hanno tutte, `k` sono quelle in piu' e ce l'hanno cinquecento. Leggere
-    solo `k` lasciava la colonna vuota per il 97,7% del catalogo."""
+def _kinds(entry: dict[str, Any]) -> str | None:
+    """Two fields in the file: `kind` is the main family and every entry has it, `k` holds only
+    the extra ones, so both are read."""
     kinds = list(entry.get("k") or ())
     main = entry.get("kind")
     if main and main not in kinds:
@@ -42,12 +36,12 @@ def _kinds(entry) -> str | None:
     return json.dumps(kinds) if kinds else None
 
 
-def _designations(entry) -> list:
-    """Le designazioni di una voce, la principale per prima. Ognuna e' `[catalogo, numero]`."""
+def _designations(entry: dict[str, Any]) -> list[Any]:
+    """Main designation first, each as `[catalogue, number]`."""
     return list(entry.get("n") or ())
 
 
-def _entry_row(entry):
+def _entry_row(entry: dict[str, Any]) -> tuple[Any, ...]:
     x, y, z = unit_vector(entry["ra"], entry["dec"])
     return (
         entry["slug"], entry["name"], entry.get("common_name"),
@@ -61,20 +55,9 @@ def _entry_row(entry):
     )  # fmt: skip
 
 
-def _name_rows(entries):
-    """Una riga per designazione, con la chiave gia' normalizzata: e' la chiave che `lookup`
-    cerca, e normalizzarla qui e' cio' che permette all'indice di lavorare.
-
-    Un codice di catalogo che `designation` non conosce entra lo stesso -- la voce vale anche
-    senza quella sigla -- ma **si dice**: la sua chiave non e' una che il lettore produrra' mai,
-    quindi quella sigla e' irraggiungibile. E' lo stesso guasto delle 313 Sharpless, e senza
-    l'avviso il prossimo catalogo lo rifarebbe in silenzio.
-
-    Due voci che rivendicano la stessa sigla sono un difetto del file impacchettato, non
-    dell'app: la prima vince e il conto lo dice, invece di far fallire l'avvio per un dato che
-    l'utente non puo' correggere. La scelta della **principale** viene dopo lo scarto, non
-    prima: chi perdesse cosi' la sua prima sigla resterebbe senza principale, e la principale
-    e' quel che si mostra quando un oggetto non ha un nome comune."""
+def _name_rows(entries: list[dict[str, Any]]) -> list[tuple[Any, ...]]:
+    """An unreadable code still loads but is logged, since its designations are unreachable. A
+    designation claimed twice keeps the first; the primary is chosen after the drop, not before."""
     rows, seen, unknown, dropped = [], set(), set(), 0
     for entry in entries:
         primary = True
@@ -100,18 +83,18 @@ def _name_rows(entries):
     return rows
 
 
-def load_catalog(conn, file=None):
-    """Carica il catalogo nelle tabelle. Torna quante voci sono entrate: **zero** se era gia'
-    caricato, o se il file manca o non si capisce -- e in quel caso l'app parte lo stesso."""
+def load_catalog(conn: sqlite3.Connection, file: str | Path | None = None) -> int:
+    """Entries loaded: zero if this version is already in, or if the file is missing or unreadable,
+    and the app starts anyway."""
     version, entries = bundle.read(file)
     if not version or loaded_version(conn) == version:
         return 0
 
     names = _name_rows(entries)
     now = now_iso()
+    # By hand, not `db.transaction`: the layers in `backend/pyproject.toml` keep `db` out of reach.
     conn.execute("BEGIN")
     try:
-        # da capo: un catalogo nuovo sostituisce il vecchio, non ci si somma
         conn.execute("DELETE FROM catalog_names")
         conn.execute("DELETE FROM catalog_entries")
         conn.executemany(
@@ -119,12 +102,11 @@ def load_catalog(conn, file=None):
             " constellation, type_code, kinds_json, size_major_arcmin, size_minor_arcmin,"
             " position_angle_deg, magnitude, magnitude_band, surface_brightness, distance_ly,"
             " opacity, src_json) VALUES("
-            + ",".join("?" * 20)  # segnaposto-ok: venti colonne, non una riga per voce
+            + ",".join("?" * 20)  # segnaposto-ok: twenty columns, not one per entry
             + ")",
             [_entry_row(e) for e in entries],
         )
-        # Senza OR IGNORE: i doppioni li ha gia' tolti `_name_rows`, che sa anche rimettere a
-        # posto la principale. Qui un conflitto sarebbe un difetto nostro, e va visto.
+        # No OR IGNORE: `_name_rows` already dropped the duplicates, so a conflict here is our bug.
         conn.executemany(
             "INSERT INTO catalog_names(catalog, designation, key, slug, is_primary)"
             " VALUES(?, ?, ?, ?, ?)",

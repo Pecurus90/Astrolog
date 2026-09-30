@@ -1198,6 +1198,33 @@ restano le decisioni che non hanno ancora un contratto.
   - I nomi interni in italiano (`con_cielo`, `lucchettato`, `fra_i_candidati`...): si rinominano, vedi
     la voce *Il metodo dice "inglese nei nomi"*.
 
+- **Fase 2 del refactor, package di base: cosa la fase 1 ha lasciato** (`db`, `vocab`, `catalog`,
+  `fits`).
+  - Forme `dict` che escono dal package, annotate e non toccate: il modello di filtro
+    (`vocab/filters.models` e `model_by_id`, letti da `api/vocab` e `spine/gear`), la voce
+    del catalogo (`catalog/lookup.by_designation`, `by_slug`, `in_cone`), i campi della
+    posa (`fits/header_fields.extract_fields`, letti da `spine/scan`), le preferenze
+    (`db/config.read`). Una `dataclass` o un `TypedDict` per forma.
+  - `db/idlist.grouped` torna `dict[Any, list[Any]]`: generico in `T` rompe `api/archive.py`, che passa
+    i dict di `spine/filters_used` a un campo `list[FilterUsed]`. Si fa generico quando i chiamanti
+    costruiscono le loro righe tipate.
+  - Insiemi chiusi di stringhe che escono dal package e finiscono nel database, da fare `StrEnum`: il
+    tipo del frame (`fits/frame_type.image_type`, `UNKNOWN`, `CALIBRATION_TYPES`), i quattro software
+    (`vocab/software`), le bande (`vocab/filters`: `NO_FILTER`, `UNKNOWN`, `DUO_*`, `TRI_NB`,
+    `MULTI_NB`).
+  - `db/config.KEYS` ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei test
+    (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo spacchettamento.
+  - Due `noqa: PLR0913` restano, perche' toglierli cambia una firma usata fuori: `replace_rows`
+    (`db/replace_table.py`), `walk_dir` (`fits/walk.py`, i sei accumulatori in un oggetto solo).
+  - Doppioni piccoli: `catalog/load.load_catalog` riscrive a mano `db.transaction` (gli strati non gli
+    lasciano importare `db`); `db/paths.cache_dir` e `log_dir` sono la stessa funzione; in
+    `catalog/lookup` l'elenco delle colonne si ricompone due volte da `_FIELDS`; in
+    `fits/frame_type` `_calibrations_applied` e `_says_true` aprono con lo stesso preambolo.
+  - I nomi interni in italiano: `fuori`, `elencate` (`db/idlist`), `elenco`, `segnaposto`
+    (`db/replace_table`), `parola`, `candidato`, `lettere`, `calibrazione`, `riga` (`fits/frame_type`),
+    `intero`, `attributi` (`fits/walk`). Il segnaposto `{dentro}` di `idlist.grouped` e' un contratto
+    con le query dei chiamanti in `spine/`: si rinomina insieme a loro.
+
 - **La previsione accanto al meteo vero**, per misurare quanto ci azzeccava su quel sito: lo
   storico scrive solo l'osservato, e la previsione di una notte passata si butta.
 - **Il meteo, tre doppioni piccoli** (audit del 26/9/2026): le colonne di una riga di

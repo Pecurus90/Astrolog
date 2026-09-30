@@ -34,9 +34,9 @@ def test_a_model_says_what_the_screen_shows_and_nothing_else(client_vuoto):
 
 
 def test_the_order_is_the_one_you_search_in(client_vuoto):
-    """L'ordine e' una decisione del backend -- `models()` dichiara di essere "l'ordine con cui si
-    cerca in tendina" -- e deve arrivare intatto: se il frontend dovesse riordinare, quella
-    promessa sarebbe scritta in un commento e due case direbbero due ordini."""
+    """L'ordine e' una decisione del backend -- `models()` dichiara di essere per marca e nome,
+    "the order of the dropdown search" -- e deve arrivare intatto: se il frontend dovesse
+    riordinare, quella promessa sarebbe scritta in un commento e due case direbbero due ordini."""
     usciti = [m["id"] for m in client_vuoto.get("/api/v1/vocab/filter-models").json()["items"]]
     assert usciti == [m["id"] for m in vocab.models()]
 

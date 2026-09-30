@@ -1,14 +1,7 @@
-"""Il software di ripresa dal valore grezzo dell'header al nome canonico: i quattro
-supportati e basta (Marco, 2026-09-06). Tutto il resto resta com'e' scritto, in
-`software_raw`, che si conserva sempre.
+"""Only the four supported programs get a canonical name; anything else stays in `software_raw`.
+Substring search in order: "nina" and "n.i.n.a" before anything that contains them."""
 
-Vincolo non ovvio: la ricerca e' per sottostringa, in ordine: "n.i.n.a" e "nina" prima di
-qualunque altra cosa che le contenga.
-"""
-
-# I quattro nomi canonici, ognuno con la sua costante: una regola che altrove deve dire "questo
-# file lo ha scritto l'ASIAIR" la nomina invece di ripetere la stringa, o lo stesso nome finirebbe
-# in due case che possono divergere in silenzio.
+# One constant per name: a rule elsewhere names it instead of repeating the string.
 NINA = "N.I.N.A."
 ASIAIR = "ASIAIR"
 VOYAGER = "Voyager"
@@ -25,15 +18,13 @@ SOFTWARE_PATTERNS = (
 )
 
 
-def telescope_is_mount(software):
-    """Se quel software (canonico) scrive la **montatura** in `TELESCOP`, e l'ottica da nessuna
-    parte: l'ASIAIR. Chi legge `TELESCOP` chiede qui, o una casa lo prende per ottica e l'altra
-    per montatura."""
+def telescope_is_mount(software: str | None) -> bool:
+    """The ASIAIR writes the mount in `TELESCOP` and the optics nowhere: whoever reads `TELESCOP`
+    asks here, or one place takes it for optics and another for a mount."""
     return software == ASIAIR
 
 
-def normalize_software(raw):
-    """Il nome canonico del software, o None se il valore e' vuoto o non e' uno dei quattro."""
+def normalize_software(raw: str | None) -> str | None:
     if not raw:
         return None
     low = str(raw).lower()

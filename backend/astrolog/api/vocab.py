@@ -4,9 +4,9 @@ Vincolo non ovvio: **non aprono il database**. Un vocabolario non e' un dato del
 un elenco impacchettato col programma -- quindi si legge appena installati, a mani vuote, e una
 dipendenza dal database qui sarebbe una promessa in piu' senza un difetto in meno.
 
-L'**ordine** e' quello che il vocabolario dichiara (`filters.models()`: "l'ordine con cui si
-cerca in tendina"): arriva intatto, e il frontend non riordina. Due case che ordinano sono due
-ordini che prima o poi divergono.
+L'**ordine** e' quello che il vocabolario dichiara (`filters.models()`: per marca e nome, "the
+order of the dropdown search"): arriva intatto, e il frontend non riordina. Due case che
+ordinano sono due ordini che prima o poi divergono.
 """
 
 from fastapi import APIRouter

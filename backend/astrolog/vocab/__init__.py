@@ -1,2 +1,2 @@
-"""I vocabolari: come mille grafie diventano un filtro, una banda, un oggetto, un software,
-un valore d'header confrontabile. Puri: niente DB, niente rete, niente FITS."""
+"""Vocabularies: many spellings become one filter, band, object, software or header value.
+Pure: no DB, no network, no FITS."""

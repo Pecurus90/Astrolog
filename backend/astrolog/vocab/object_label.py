@@ -1,17 +1,12 @@
-"""Il nome dell'oggetto com'e' scritto nell'header, ripulito: spazi ai bordi e parole di
-tavolozza in coda ("M42 RGB", "M31 LRGB final" -> "M42", "M31").
-
-Vincolo non ovvio: le SIGLE (M, NGC, Caldwell, Sh2...) non si riconoscono qui con una
-lista scritta a mano: le sa il catalogo, e le riconosce lo stadio identify (Marco,
-2026-09-06). Qui non si inventa niente: un nome che non si riconosce resta com'e'.
-"""
+"""The header's object name without palette words ("M31 LRGB final" -> "M31"). Designations are not
+recognised here but by identify against the catalogue: an unrecognised name stays as it is."""
 
 PALETTE_NOISE = frozenset(
     {"rgb", "lrgb", "hargb", "rgbha", "lrgbha", "sho", "hoo", "hso", "final", "crop", "reprocessed"}
 )
 
 
-def _strip_palette_suffix(s):
+def _strip_palette_suffix(s: str) -> str:
     tokens = s.split()
     if len(tokens) <= 1:
         return s
@@ -22,9 +17,8 @@ def _strip_palette_suffix(s):
     return " ".join(tokens) if removed else s
 
 
-def clean_object_name(raw):
-    """Il nome senza spazi ai bordi e senza le parole di tavolozza in coda. Un valore vuoto
-    o None torna com'e'; un non-stringa solleva (non e' un nome)."""
+def clean_object_name(raw: str | None) -> str | None:
+    """Empty or None comes back as is; a non-string raises, since it is not a name."""
     if not raw:
         return raw
     return _strip_palette_suffix(raw.strip())

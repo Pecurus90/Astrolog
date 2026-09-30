@@ -1,10 +1,5 @@
-"""Dove stanno i dati dell'app sui tre bersagli, in un posto solo.
-
-Vincolo non ovvio: una sola fonte di configurazione per il deploy -- le variabili d'ambiente
--- e per il resto `platformdirs`: Windows `%LOCALAPPDATA%\\AstroLog`, Mac `~/Library/
-Application Support/AstroLog`, Linux `~/.local/share/AstroLog`; nel container si imposta
-`ASTROLOG_DATA_DIR=/data`. `ASTROLOG_DATA_ROOT` confina le cartelle FITS registrabili.
-"""
+"""Environment variables are the only deploy configuration (`ASTROLOG_DATA_DIR=/data` in the
+container), `platformdirs` the default. `ASTROLOG_DATA_ROOT` confines the FITS folders."""
 
 import os
 from pathlib import Path
@@ -14,33 +9,32 @@ from platformdirs import user_data_dir
 APP_NAME = "AstroLog"
 
 
-def data_dir():
-    """La cartella dei dati dell'app (creata se manca)."""
+def data_dir() -> Path:
     override = os.environ.get("ASTROLOG_DATA_DIR")
     base = Path(override) if override else Path(user_data_dir(APP_NAME, appauthor=False))
     base.mkdir(parents=True, exist_ok=True)
     return base
 
 
-def db_path():
+def db_path() -> Path:
     return data_dir() / "astrolog.db"
 
 
-def cache_dir():
+def cache_dir() -> Path:
     d = data_dir() / "cache"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
-def log_dir():
+def log_dir() -> Path:
     d = data_dir() / "log"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
-def data_root():
-    """La radice sotto cui devono stare le cartelle FITS, in forma canonica; None = nessun
-    confinamento (desktop). Sul NAS si imposta al volume montato."""
+def data_root() -> str | None:
+    """The canonical root the FITS folders must live under (the mounted volume on a NAS);
+    None means no confinement, as on a desktop."""
     raw = os.environ.get("ASTROLOG_DATA_ROOT")
     if not raw:
         return None
