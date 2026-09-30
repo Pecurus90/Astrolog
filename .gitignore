@@ -1,0 +1,76 @@
+# Dipendenze e artefatti rigenerabili
+node_modules/
+dist/
+.vite/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+venv/
+env/
+*.log
+
+# Segreti e configurazione locale
+.env
+.env.local
+docker-compose.override.yml
+
+# Database: MAI nel repo. Il repo e' pubblico e l'app e' distribuita: un DB e' il dato
+# personale di chi la usa, qualunque nome abbia.
+*.db
+*.db-*
+*.db.*
+*.sqlite
+*.sqlite3
+*.sqlite.*
+
+# Dati dell'utente e cache derivate, accanto al DB
+backend/user-images/
+backend/cache/
+
+# Fixture generate dai costruttori: si versiona il costruttore, non il binario ne' l'albero
+backend/tests/fixtures/**/*.fits
+backend/tests/fixtures/scan/*/
+frontend/tests/fixtures/**/*.fits
+frontend/tests/fixtures/scan/*/
+
+# Fogli e immagini personali lasciati in radice
+/*.xlsx
+/*.ods
+/*.png
+/*.jpg
+
+# Claude Code: commands/agents/hooks/skills/settings.json sono PROGETTO e si versionano.
+# Restano fuori solo i due file locali della macchina.
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Immagini lasciate nella radice: appunti di lavoro, non file del progetto. Cio' che serve
+# al progetto sta in una cartella sua (i pack grafici, la documentazione), mai qui.
+/*.png
+/*.jpg
+
+# La cava del progetto di prima: solo in locale e nel repository privato Astrolog-archivio.
+/old/
+
+# gli scarti di una costruzione del pacchetto: si rifanno, non si versionano
+build/
+dist/
+*.egg-info/
+mutants/
+
+# La pagina costruita: il frontend la produce QUI, dentro il pacchetto Python, perche' il
+# backend la serva anche dopo un'installazione. E' un artefatto, non un sorgente: si rifa' con
+# `npm run build`, e versionarla vorrebbe dire una pagina vecchia in git che non corrisponde al
+# codice che la genera. La riga `dist/` non la copre: qui la cartella si chiama `web`.
+backend/astrolog/web/
+# L'archivio di `tsc -b` e il rapporto della copertura: li riscrive ogni push, e versionati
+# sporcherebbero l'albero a ogni giro.
+frontend/tsconfig.tsbuildinfo
+frontend/coverage/

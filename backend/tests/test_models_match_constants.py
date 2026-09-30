@@ -1,0 +1,242 @@
+"""I `Literal` dei modelli dell'API dicono le stesse parole delle costanti del codice: quando
+uno stato o un contatore cambia, l'OpenAPI non deve mentire in silenzio. E la ricevuta
+chiusa in DB rifiuta esiti fuori vocabolario."""
+
+import ast
+import inspect
+import re
+import textwrap
+from pathlib import Path
+from typing import get_args
+
+import pytest
+
+from astrolog import astap
+from astrolog.api import models, models_review, models_review_groups, models_site
+from astrolog.db.connect import SCHEMA_PATH
+from astrolog.spine import (
+    declarations,
+    group,
+    identify_decide,
+    scan_store,
+    solve,
+    typeless,
+    unfiltered,
+)
+from astrolog.spine.scan import COUNTS
+from astrolog.units import SQM_MAX, SQM_MIN
+from astrolog.vocab.filters import BANDS, PASSBANDS
+from astrolog.worker import states
+from conftest import add_folder
+
+
+def test_scan_run_status_and_counts_match_the_store():
+    status_literal = models.ScanRunOut.model_fields["status"].annotation
+    statuses = {a for arg in get_args(status_literal) for a in (get_args(arg) or (arg,))}
+    assert statuses == {*scan_store.STATUSES, type(None)}  # None = corsa aperta
+    assert set(COUNTS) <= set(models.ScanRunOut.model_fields)
+    # cio' che la scansione lascia fuori: una lista di nomi, e le altre case la seguono
+    assert set(scan_store.RECEIPT_LISTS) <= set(models.ScanRunOut.model_fields)
+    assert set(scan_store.RECEIPT_LISTS) <= states.STRUCTURAL_KEYS
+    schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+    assert all(f"{name}_json" in schema for name in scan_store.RECEIPT_LISTS)
+    assert set(get_args(models.FileError)) == set(scan_store.FILE_ERRORS)
+    assert set(get_args(models.SkipReason)) == set(scan_store.SKIP_REASONS)
+    reason_literal = models.ScanRunOut.model_fields["reason"].annotation
+    reasons = {a for arg in get_args(reason_literal) for a in (get_args(arg) or (arg,))}
+    assert reasons == {r for r in scan_store.REASONS if r is not None} | {type(None)}
+
+
+def test_worker_states_match_the_constants():
+    worker_states = {
+        states.IDLE,
+        states.RUNNING,
+        states.STOPPED,
+        states.COMPLETED,
+        states.COMPLETED_WITH_ERRORS,
+        states.ERROR,
+    }
+    assert set(get_args(models.WorkerSnapshot.model_fields["state"].annotation)) == worker_states
+    stage_states = (worker_states - {states.IDLE}) | {states.NOT_RUN}
+    assert set(get_args(models.StageRecord.model_fields["state"].annotation)) == stage_states
+
+
+def test_finish_run_refuses_an_outcome_outside_the_vocabulary(conn):
+    run_id = scan_store.start_run(conn, add_folder(conn, "x"), "now")
+    counts = dict.fromkeys(COUNTS, 0)
+    with pytest.raises(ValueError):
+        scan_store.finish_run(conn, run_id, "boh", None, counts, {}, [], "now")
+    with pytest.raises(ValueError):
+        scan_store.finish_run(conn, run_id, "error", "FileNotFoundError", counts, {}, [], "now")
+    # e i motivi dei file lasciati fuori: un codice, mai la frase di un'eccezione
+    frase = [{"file": "a.fits", "reason": "PermissionError: accesso negato"}]
+    with pytest.raises(ValueError):
+        scan_store.finish_run(conn, run_id, "ok", None, counts, {}, frase, "now")
+    tipo = [{"reason": "dark", "count": 1}]
+    with pytest.raises(ValueError):
+        scan_store.finish_run(
+            conn, run_id, "ok", None, counts, {"skipped_by_reason": tipo}, [], "now"
+        )
+    scan_store.finish_run(conn, run_id, "aborted", "root_unreachable", counts, {}, [], "now")
+
+
+def test_the_answers_about_a_camera_are_the_words_the_spine_reads():
+    """Le risposte sulle pose che non dicono il filtro: l'API accetta le stesse parole che
+    `normalize` legge, o una risposta arriverebbe e non sposterebbe niente."""
+    assert set(get_args(models_review_groups.UnfilteredAnswer)) == set(unfiltered.ANSWERS)
+
+
+def test_the_answers_about_a_mosaic_are_the_words_the_spine_reads():
+    """Le due risposte su un mosaico: l'API accetta le stesse parole che il lettore riconosce. Una
+    che divergesse verrebbe scritta e poi **scartata come illeggibile** -- il lettore tratta un
+    valore che non conosce come nessuna risposta -- e la domanda tornerebbe senza dire perche'."""
+    assert set(get_args(models_review_groups.MosaicAnswer)) == set(declarations.MOSAIC_ANSWERS)
+
+
+def test_the_answers_about_a_file_type_are_the_words_the_spine_reads():
+    """Le due risposte su una cartella di frame che non dicono che file sono: l'API accetta le
+    stesse parole che la spina rilegge. Una che divergesse verrebbe scritta e poi scartata come
+    illeggibile, e quei frame resterebbero fermi prima dell'oggetto senza che niente lo dica."""
+    assert set(get_args(models_review_groups.TypelessAnswer)) == set(typeless.ANSWERS)
+
+
+def test_the_type_a_file_does_not_say_is_the_word_the_schema_allows():
+    """Il tipo che l'header non ha detto e' la parola che lo schema ammette: se lo schema e la
+    spina divergessero, la domanda non troverebbe nessun frame e sparirebbe dalla pagina."""
+    schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+    assert f"image_type IN ('light', '{typeless.UNKNOWN}')" in schema
+
+
+def test_the_camera_colours_say_what_the_schema_allows():
+    """Il colore di una camera e' una parola del CHECK dello schema, del modello e della spina; e
+    la risposta "a colori" e' la stessa parola. Una che divergesse si perderebbe in silenzio: si
+    scriverebbe un colore e se ne rileggerebbe un altro."""
+    schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+    riga = next(r for r in schema.splitlines() if "camera_type     TEXT CHECK" in r)
+    dallo_schema = set(re.findall(r"'([a-z]+)'", riga))
+    assert set(get_args(models_review.CameraType)) == dallo_schema
+    assert {declarations.CAMERA_MONO, declarations.CAMERA_COLOR} == dallo_schema
+    assert unfiltered.COLOR == declarations.CAMERA_COLOR
+
+
+def test_the_declaration_types_the_spine_names_are_the_ones_the_schema_allows():
+    """I tipi di dichiarazione che la spina nomina sono parole del `CHECK` dello schema. Una che
+    divergesse non si scriverebbe affatto -- il database la rifiuterebbe -- e siccome a scrivere e'
+    una risposta dell'utente, l'unico a vederlo sarebbe lo stadio, molto dopo, in un log."""
+    schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+    riga = next(r for r in schema.splitlines() if "entity_type TEXT NOT NULL CHECK" in r)
+    dallo_schema = set(re.findall(r"'([a-z_]+)'", riga))
+    tipi = {declarations.FOLDER, declarations.MOSAIC, declarations.FRAME_GROUP}
+    assert tipi <= dallo_schema
+
+
+def test_declarable_bands_are_the_physical_ones_of_the_vocabulary():
+    """Le bande che l'API accetta sono quelle che il vocabolario chiama fisiche: se domani
+    ne nasce una, i due elenchi non devono poter divergere in silenzio."""
+    assert set(get_args(models_review.Band)) == set(BANDS)
+    assert set(BANDS) <= PASSBANDS  # e ognuna e' anche una banda canonica valida
+
+
+def test_the_channels_the_solver_can_come_from_are_one_list():
+    """I quattro canali da cui l'eseguibile puo' arrivare sono **lo stesso elenco** nel codice e
+    nell'API: un quinto aggiunto alla ricerca e non al tipo farebbe esplodere `SolverOut` alla
+    costruzione -- 500 su `GET /solver` -- con la suite verde.
+
+    E si confronta col tipo, non con quattro parole ricopiate qui: un elenco scritto a mano
+    contro un altro scritto a mano e' una macchina che si fa dire di si'."""
+    assert set(astap.SOURCES) == set(get_args(models_site.SolverSource))
+
+    # E i canali che la ricerca **scrive davvero**: la costante potrebbe essere d'accordo col tipo
+    # e tutti e due in disaccordo col codice che gira.
+    #
+    # Si leggono dall'**albero sintattico**, non con un regexp: due dei quattro canali escono da
+    # un'assegnazione e non da un `return` (un regexp sui `return` ne prendeva meta' dicendo di
+    # prenderli tutti), e un regexp sulle virgolette raccoglie anche le parole dei **commenti**.
+    # L'albero i commenti non ce l'ha.
+    #
+    # **Uguaglianza, non inclusione**: `<=` passa anche con la lettura sganciata, ed e' la forma
+    # che rassicura senza guardare. Il prezzo e' che una parola di una parola sola scritta in
+    # `_cerca` e non dichiarata fa cadere questa prova -- ed e' il prezzo giusto: e' una funzione
+    # di venti righe che non scrive altro che canali.
+    detti = {
+        n.value
+        for n in ast.walk(ast.parse(textwrap.dedent(inspect.getsource(astap._cerca))))
+        if isinstance(n, ast.Constant)
+        and isinstance(n.value, str)
+        and re.fullmatch(r"\w+", n.value)
+    }
+    assert detti == set(astap.SOURCES), detti ^ set(astap.SOURCES)
+
+
+def test_the_word_for_the_missing_solver_is_one_word():
+    """Il codice con cui la spina dice "il solver non si trova" e quello che l'API dichiara
+    sono **la stessa parola**: cambiarne una sola farebbe mandare a schermo un valore fuori dal
+    tipo dichiarato, e il primo avvio smetterebbe di aggiungere il suo passo in silenzio."""
+    assert solve.NO_SOLVER in get_args(models_site.Missing)
+    # E la parola per "ASTAP c'e' ma il suo catalogo no", che vive in tre punti: il motivo di una
+    # posa fallita, cio' che ferma la corsa, e la riga di `missing`. Una sola casa per tutte e tre.
+    assert solve.NO_STAR_DATABASE in get_args(models_site.Missing)
+    assert solve.NO_STAR_DATABASE in astap.REASONS
+    assert solve.ABORTS_THE_RUN == (solve.NO_STAR_DATABASE,)
+
+
+def test_the_words_group_uses_are_the_words_the_api_shows():
+    """Perche' una notte non nasce l'app lo dice in due punti: nelle impostazioni ("cosa
+    manca") e nel motivo scritto sulla posa che e' rimasta fuori. Devono essere **la stessa
+    parola**: erano due stringhe a mano in due file, e chi ne cambiava una avrebbe lasciato
+    l'altra a dire il falso senza che niente diventasse rosso."""
+    assert group.NO_ACTIVE_SITE in get_args(models_site.Missing)
+    assert group.SITE_NO_TIMEZONE in get_args(models_site.Unknown)
+
+
+def test_instrument_kinds_say_what_the_schema_allows():
+    """Il `Literal` dei tipi di pezzo e il CHECK dello schema sono lo stesso vocabolario: se
+    lo schema cambia e il modello no, l'OpenAPI mentirebbe senza che niente diventi rosso."""
+    schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+    blocco = schema[schema.index("kind            TEXT NOT NULL CHECK") :]
+    blocco = blocco[: blocco.index("))") + 1]
+    dallo_schema = set(re.findall(r"'([a-z_]+)'", blocco))
+    assert set(get_args(models_review.InstrumentKind)) == dallo_schema
+
+
+def test_the_sky_bounds_are_the_same_in_the_model_the_units_and_the_schema():
+    """I confini di cio' che e' un cielo hanno una casa sola (`units`). Il modello li legge di
+    li' e lo schema li ripete come guardia del database: se domani si spostassero, l'API non
+    deve poter restare indietro in silenzio."""
+    for campo in (models_site.SiteCreate, models_site.SiteEdit):
+        limiti = {
+            m.__class__.__name__: getattr(m, "ge", None) or getattr(m, "le", None)
+            for m in campo.model_fields["sky_sqm"].metadata
+        }
+        assert limiti == {"Ge": SQM_MIN, "Le": SQM_MAX}
+
+    schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+    riga = next(r for r in schema.splitlines() if "sky_sqm      REAL CHECK" in r)
+    dallo_schema = re.findall(r"BETWEEN (\d+(?:\.\d+)?) AND (\d+(?:\.\d+)?)", riga)
+    # confrontati da numeri, non da stringhe: un confine frazionario non deve poter passare
+    assert [(float(a), float(b)) for a, b in dallo_schema] == [(SQM_MIN, SQM_MAX)]
+
+
+def test_the_identity_vocabularies_say_what_the_schema_allows():
+    """I due vocabolari chiusi di `objects` hanno una casa sola. Sono nati nel CHECK dello
+    schema e per una fetta intera nessuno in Python li nominava: chi scriveva avrebbe messo
+    stringhe a mano, e uno scarto si sarebbe visto solo su una posa vera, a valle."""
+    schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+    for colonna, costanti in (
+        ("identity_method", identify_decide.IDENTITY_METHODS),
+        ("identity_confidence", identify_decide.IDENTITY_CONFIDENCES),
+    ):
+        blocco = re.search(rf"{colonna} +TEXT CHECK \(.*?\)\)", schema, re.DOTALL)
+        assert blocco, colonna
+        assert set(re.findall(r"'([a-z_]+)'", blocco.group())) == set(costanti), colonna
+
+
+def test_the_identity_literals_of_the_api_match_the_spine():
+    """L'OpenAPI dice le stesse parole della spina: un metodo che il frontend non conosce
+    sarebbe un campo che non compila, e uno che l'API non dichiara sarebbe un valore che arriva
+    e non e' documentato. La catena e' schema -> `identify_decide` -> modelli, e ogni anello ha
+    la sua guardia."""
+    assert set(get_args(models_review.IdentityMethod)) == set(identify_decide.IDENTITY_METHODS)
+    assert set(get_args(models_review.IdentityConfidence)) == set(
+        identify_decide.IDENTITY_CONFIDENCES
+    )

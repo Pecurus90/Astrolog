@@ -1,0 +1,25 @@
+# Slow checks that do not belong on every commit: mutation testing.
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet -e ".[dev]" mutmut
+      - run: mutmut run --max-children 4
+      - name: Surviving mutants (tests that do not notice a change)
+        if: always()
+        run: mutmut results

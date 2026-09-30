@@ -1,0 +1,57 @@
+# Header vero, anonimizzato: coordinate del sito arrotondate a interi, e l'identificativo
+# hardware della camera (`CAMERAID`) azzerato -- era un numero di serie USB stabile, cioe'
+# l'impronta di una macchina precisa. La FORMA resta, perche' e' quella che il lettore deve
+# reggere; il numero no.
+# Software: N.I.N.A. 3.1.2.9001 (x64)
+SIMPLE  =                    T / C# FITS                                        
+BITPIX  =                   16                                                  
+NAXIS   =                    2 / Dimensionality                                 
+NAXIS1  =                 6224                                                  
+NAXIS2  =                 4168                                                  
+EXTEND  =                    T / Extensions are permitted                       
+BZERO   =                32768                                                  
+IMAGETYP= 'LIGHT'              / Type of exposure                               
+EXPOSURE=                120.0 / [s] Exposure duration                          
+EXPTIME =                120.0 / [s] Exposure duration                          
+DATE-LOC= '2025-06-29T23:11:33.412' / Time of observation (local)               
+DATE-OBS= '2025-06-29T21:11:33.412' / Time of observation (UTC)                 
+DATE-AVG= '2025-06-29T21:12:34.298' / Averaged midpoint time (UTC)              
+XBINNING=                    1 / X axis binning factor                          
+YBINNING=                    1 / Y axis binning factor                          
+GAIN    =                  100 / Sensor gain                                    
+OFFSET  =                  400 / Sensor gain offset                             
+XPIXSZ  =                 3.76 / [um] Pixel X axis size                         
+YPIXSZ  =                 3.76 / [um] Pixel Y axis size                         
+INSTRUME= 'ATR2600M(USB2.0)'   / Imaging instrument name                        
+CAMERAID= '\\?\usb#vid_0000&pid_0000#0&00000000&0&0' / Imaging instrument identi
+SET-TEMP=                 -5.0 / [degC] CCD temperature setpoint                
+CCD-TEMP=                 -4.9 / [degC] CCD temperature                         
+READOUTM= 'High Conversion Gain' / Sensor readout mode                          
+USBLIMIT=                    9 / Camera-specific USB setting                    
+TELESCOP= 'Askar 103Apo'       / Name of telescope                              
+FOCALLEN=                560.0 / [mm] Focal length                              
+FOCRATIO=                  5.4 / Focal ratio                                    
+RA      =     331.014579881035 / [deg] RA of telescope                          
+DEC     =     73.1033303825605 / [deg] Declination of telescope                 
+CENTALT =                 45.0 / [deg] Altitude of telescope                    
+CENTAZ  =                 24.0 / [deg] Azimuth of telescope                     
+AIRMASS =                  1.4 / Airmass at frame center (Gueymard 1993)        
+PIERSIDE= 'West'               / Telescope pointing state                       
+SITEELEV=                120.0 / [m] Observation site elevation                 
+SITELAT =                 45.0 / [deg] Observation site latitude                
+SITELONG=                 12.0 / [deg] Observation site longitude               
+FWHEEL  = 'ASCOM ToupTek FilterWheel' / Filter Wheel name                       
+FILTER  = 'G'                  / Active filter name                             
+OBJECT  = 'LDN 1235'           / Name of the object of interest                 
+OBJCTRA = '22 04 01'           / [H M S] RA of imaged object                    
+OBJCTDEC= '+73 08 15'          / [D M S] Declination of imaged object           
+OBJCTROT=                  0.0 / [deg] planned rotation of imaged object        
+FOCNAME = 'ASCOM ToupTek AAF'  / Focusing equipment name                        
+FOCPOS  =                  313 / [step] Focuser position                        
+FOCUSPOS=                  313 / [step] Focuser position                        
+FOCUSSZ =                100.0 / [um] Focuser step size                         
+FOCTEMP =                 32.2 / [degC] Focuser temperature                     
+FOCUSTEM=                 32.2 / [degC] Focuser temperature                     
+ROWORDER= 'TOP-DOWN'           / FITS Image Orientation                         
+EQUINOX =               2000.0 / Equinox of celestial coordinate system         
+SWCREATE= 'N.I.N.A. 3.1.2.9001 (x64)' / Software that created this file         

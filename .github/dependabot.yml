@@ -1,0 +1,25 @@
+# Chi sorveglia le dipendenze. Senza questo file una libreria puo' restare ferma per anni,
+# falle comprese, e nessuno se ne accorge: qui ogni settimana arriva una proposta di
+# aggiornamento, che passa dalla CI come qualunque altro cambiamento.
+#
+# Vincolo non ovvio: le proposte si raggruppano in una sola per ecosistema. Dieci richieste
+# separate a settimana non si guardano; una sola, con dentro tutto, si guarda davvero.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /backend
+    schedule:
+      interval: weekly
+    groups:
+      backend:
+        patterns: ["*"]
+    open-pull-requests-limit: 3
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      azioni:
+        patterns: ["*"]
+    open-pull-requests-limit: 3

@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "deny": [
+      "PowerShell(Set-Content *)",
+      "PowerShell(Out-File *)",
+      "PowerShell(Add-Content *)",
+      "PowerShell(git *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push --force-with-lease*)",
+      "Bash(git push *--force*)",
+      "Bash(git push * -f*)",
+      "Bash(git push *+*)",
+      "Bash(git -C * push*)",
+      "Bash(git -c * push*)",
+      "Bash(git commit --amend*)",
+      "Bash(git *--amend*)",
+      "Bash(git rebase*)",
+      "Bash(git * rebase*)",
+      "Bash(git reset --hard*)",
+      "Bash(git *--no-verify*)",
+      "Bash(git commit -n*)",
+      "Bash(git commit * -n *)",
+      "Bash(git commit * -n)",
+      "Bash(git -C * commit -n*)",
+      "Bash(git -C * commit * -n *)",
+      "Bash(git -C * commit * -n)",
+      "Bash(SKIP=*)",
+      "Bash(git *core.hooksPath*)",
+      "Bash(git * reset --hard*)"
+    ]
+  },
+  "enabledPlugins": {
+    "pr-review-toolkit@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true
+  }
+}

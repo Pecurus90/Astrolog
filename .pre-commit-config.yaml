@@ -1,0 +1,169 @@
+# Fast checks run on commit; the full suite on push and in CI (--hook-stage manual).
+default_install_hook_types: [pre-commit, pre-push, commit-msg]
+exclude: ^old/
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - {id: check-merge-conflict, stages: [pre-commit, manual]}
+      - {id: check-case-conflict, stages: [pre-commit, manual]}
+      # The object catalogue is data shipped with the app, rebuilt as a whole.
+      - {id: check-added-large-files, stages: [pre-commit, manual], exclude: ^backend/astrolog/catalog/data/}
+      - {id: detect-private-key, stages: [pre-commit, manual]}
+      - {id: check-yaml, stages: [pre-commit, manual]}
+      - {id: check-toml, stages: [pre-commit, manual]}
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - {id: gitleaks, stages: [pre-commit, manual]}
+
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - {id: conventional-pre-commit, stages: [commit-msg]}
+
+  - repo: local
+    hooks:
+      - id: commit-msg-one-ascii-line
+        name: commit message is one ASCII line (no trailers)
+        entry: python tools/commit_msg.py
+        language: system
+        stages: [commit-msg]
+
+  - repo: https://github.com/pylint-dev/pylint
+    rev: v4.1.1
+    hooks:
+      - id: pylint
+        name: file under 1000 lines
+        args: [--disable=all, --enable=too-many-lines, --max-module-lines=1000]
+        stages: [pre-commit, manual]
+
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        entry: ruff check
+        language: system
+        types: [python]
+        stages: [pre-commit, manual]
+      - id: ruff-format
+        name: ruff format
+        entry: ruff format --check
+        language: system
+        types: [python]
+        stages: [pre-commit, manual]
+      - id: eslint
+        name: eslint
+        entry: node frontend/node_modules/eslint/bin/eslint.js
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js)$
+        stages: [pre-commit, manual]
+      # Domain rule: only N.I.N.A., ASIAIR, Voyager and SGP are supported (docs/coda.md).
+      - id: foreign-software
+        name: software outside the four supported (mark software-ok if intended)
+        language: pygrep
+        entry: '(?i)\b(pixinsight|maxim|thesky ?x|sharpcap|asi ?studio|ekos|kstars|seestar|siril|backyard ?eos|nebulosity|astroart|astro photography tool)\b(?!.*software-ok)'
+        types: [text]
+        exclude: ^(old/|\.pre-commit-config\.yaml$|tools/test_precommit_rules\.py$)
+        stages: [pre-commit, manual]
+      # `/* .x-* */` closes the comment at `*/` and silently drops the next rule.
+      - id: css-glob-comment
+        name: CSS comment closed by a glob
+        language: pygrep
+        entry: '\.[\w-]+-\*\s*/'
+        files: \.css$
+        stages: [pre-commit, manual]
+      # It would also undo the suite-wide fence in conftest.py (fake data dir, no ASTAP, no network).
+      - id: no-monkeypatch-undo
+        name: no monkeypatch.undo() in tests
+        language: pygrep
+        entry: '^(?!\s*#).*monkeypatch\.undo\(\)'
+        files: ^backend/tests/.*\.py$
+        stages: [pre-commit, manual]
+      # Typographic quotes, accents or look-alikes pasted into product code (tests may use them).
+      - id: pasted-glyphs
+        name: non-ASCII in product code (mark glifo-ok if intended)
+        language: pygrep
+        entry: '^(?!.*glifo-ok).*[^\x00-\x7F]'
+        files: ^(backend/astrolog|frontend/src|tools)/.*\.(py|ts|tsx|js)$
+        exclude: ^tools/test_
+        stages: [pre-commit, manual]
+      # Invisible bytes (a `\b` typed in a script becomes 0x08) in any code file, tests included.
+      - id: control-characters
+        name: control characters in code
+        language: pygrep
+        entry: '[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'
+        files: \.(py|ts|tsx|js|css|json|ya?ml|md|sql|toml|html)$
+        stages: [pre-commit, manual]
+      - id: no-import-from-old
+        name: nothing imports from old/ (port it with its tests)
+        language: pygrep
+        entry: '^\s*(from\s+\.*old[.\s]|import\s+old\b)|(from|import|require\()\s*[''"](\.{1,2}/)*old/'
+        files: \.(py|ts|tsx|js)$
+        exclude: ^tools/test_precommit_rules\.py$
+        stages: [pre-commit, manual]
+      - id: ddl-outside-schema
+        name: DDL only in schema.sql
+        language: pygrep
+        entry: '(?i)\b(CREATE|ALTER|DROP)\s+TABLE\b(?!.*ddl-ok)'
+        files: ^backend/astrolog/.*\.py$
+        stages: [pre-commit, manual]
+
+      - id: pytest-backend
+        name: backend tests + coverage >= 85%
+        entry: python -B -m pytest -n auto -m "not lento" --cov=astrolog --cov-config=backend/pyproject.toml --cov-fail-under=85 backend/tests
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+      - id: pytest-tools
+        name: tools tests
+        entry: python -m pytest -q tools
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+      - id: pyright
+        name: pyright
+        entry: python -m pyright -p backend
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+      - id: import-linter
+        name: import-linter
+        entry: lint-imports --config backend/pyproject.toml
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+      - id: jscpd
+        name: duplicated code
+        entry: npx --yes jscpd@4 --min-tokens 60 --threshold 0.001 --reporters console backend/astrolog frontend/src
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+      - id: api-types
+        name: frontend types match the API
+        entry: python tools/tipi.py --check
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+      - id: frontend-build
+        name: frontend build (tsc + vite)
+        entry: npm --prefix frontend run build --silent
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
+      - id: vitest
+        name: frontend tests + coverage
+        entry: npm --prefix frontend test --silent -- --coverage
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]

@@ -1,0 +1,159 @@
+# CI: the pre-commit checks on three OSes, plus jobs that need the network or a clean install.
+
+name: AstroLog
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    name: checks (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet -e "backend[dev]"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install --no-audit --no-fund
+        working-directory: frontend
+      - name: All checks (the same ones that run on commit and push)
+        run: python -m pre_commit run --all-files --hook-stage manual --show-diff-on-failure
+
+  falle:
+    name: vulnerabilita' note (ubuntu)
+    runs-on: ubuntu-latest
+    # Needs the network, so it is not a pre-commit hook.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet pip-audit
+      - name: Le dipendenze del backend hanno falle note?
+        if: hashFiles('backend/pyproject.toml') != ''
+        run: python -m pip_audit --strict --progress-spinner off backend
+      - name: Segreti nell'albero intero (l'hook di commit guarda solo lo staging)
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar -xz gitleaks
+          mkdir -p "$RUNNER_TEMP/tracked"
+          git ls-files -z | grep -zv '^old/' | while IFS= read -r -d '' f; do
+            [ -f "$f" ] && mkdir -p "$RUNNER_TEMP/tracked/$(dirname "$f")" && cp "$f" "$RUNNER_TEMP/tracked/$f"
+          done
+          ./gitleaks dir "$RUNNER_TEMP/tracked" --redact --no-banner
+
+  messaggi:
+    name: messaggi di commit (ubuntu)
+    runs-on: ubuntu-latest
+    # On a pull request, where a message can still be fixed; merges and bots write their own.
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet pre-commit
+      - run: |
+          base=${{ github.event.pull_request.base.sha }}
+          head=${{ github.event.pull_request.head.sha }}
+          for c in $(git rev-list --no-merges "$base..$head"); do
+            case "$(git log -1 --format=%an "$c")" in *"[bot]") continue ;; esac
+            git log -1 --format=%B "$c" > "$RUNNER_TEMP/msg"
+            python -m pre_commit run conventional-pre-commit --hook-stage commit-msg --commit-msg-filename "$RUNNER_TEMP/msg" || exit 1
+            python tools/commit_msg.py --final "$RUNNER_TEMP/msg" || exit 1
+          done
+
+  ruote:
+    name: ruote per le cinque architetture (ubuntu)
+    runs-on: ubuntu-latest
+    # Needs PyPI. A dependency without a wheel for one of the five targets cannot install on a NAS.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet -e backend
+      - name: Ogni dipendenza ha la ruota per Windows, Mac Intel, Mac ARM, Linux x64 e ARM?
+        run: python tools/ruote.py
+
+  pacchetto:
+    name: la ruota si installa e l'app parte (ubuntu)
+    runs-on: ubuntu-latest
+    # Builds and installs the wheel in a clean env: catches a subpackage or data file left out,
+    # which development never sees because it runs from source.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: La pagina si costruisce PRIMA della ruota -- e' lei che deve portarsela dentro
+        # Senza questo passo la ruota si costruiva da un checkout pulito, dove `astrolog/web/`
+        # non c'e' (e' ignorato, ed e' giusto: e' un prodotto del build). Risultato: chi
+        # installava il pacchetto trovava un 404 sulla home, e nessuna macchina lo vedeva.
+        working-directory: frontend
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+      - run: python -m pip install --quiet build
+      - run: python -m build --wheel --outdir "$RUNNER_TEMP/ruota" backend
+      - name: In un ambiente pulito, l'app installata importa e crea il suo database?
+        run: |
+          python -m venv "$RUNNER_TEMP/pulito"
+          "$RUNNER_TEMP/pulito/bin/python" -m pip install --quiet "$RUNNER_TEMP"/ruota/*.whl
+          "$RUNNER_TEMP/pulito/bin/python" tools/prova_pacchetto.py
+
+  lento:
+    name: lento (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        if: hashFiles('backend/pyproject.toml') != ''
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet -e "backend[dev]"
+        if: hashFiles('backend/pyproject.toml') != ''
+      - run: python -m pytest -q --strict-markers -m lento
+        if: hashFiles('backend/pyproject.toml') != ''
+        working-directory: backend
+
+  # Five parallel runs of the fast suite: flaky tests show up under load.
+  instabilita:
+    name: instabilita (5 giri)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        if: hashFiles('backend/pyproject.toml') != ''
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet -e "backend[dev]"
+        if: hashFiles('backend/pyproject.toml') != ''
+      # Nessuna deselezione: la voce che ne giustificava una si e' chiusa il 16/9/2026 (la
+      # conferma di Da confermare ordina per numero di riga, non per orario) e con lei la riga.
+      # Una deselezione nuova entra solo con la sua voce in `docs/coda.md`, citata per frase.
+      - name: cinque giri della suite veloce
+        if: hashFiles('backend/pyproject.toml') != ''
+        # Nessun bytecode scritto: 24 processi che scrivono negli stessi `__pycache__` sono
+        # il sospettato di rossi con asserzioni impossibili, e non scriverlo non costa niente.
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          for giro in 1 2 3 4 5; do
+            echo "--- giro $giro"
+            python -m pytest -q --strict-markers -m "not lento" -n auto tests || exit 1
+          done
+        working-directory: backend

@@ -1,0 +1,255 @@
+# AstroLog backend: dependencies, tools and the import-linter contracts (the module map).
+
+[project]
+name = "astrolog"
+dynamic = ["version"]  # vive in astrolog/__init__.py, in un posto solo
+description = "Cataloga, analizza e pianifica sessioni di astrofotografia dai FITS"
+requires-python = ">=3.12"
+license = "GPL-3.0-or-later"
+dependencies = [
+  # ognuna entra col difetto che risolve, la licenza, e una ruota per le cinque
+  # architetture (Windows x64, Mac Intel e Apple Silicon, Linux amd64 e arm64) o Python puro
+  "fastapi>=0.115",          # MIT   - le rotte e l'OpenAPI da cui si generano i tipi TS
+  "uvicorn>=0.30",           # BSD   - il server
+  "pydantic>=2.8",           # MIT   - la forma delle risposte
+  "astropy>=6.1",            # BSD   - lettura header FITS (ruote per tutte e cinque)
+  "platformdirs>=4.2",       # MIT   - dove sta il DB su Windows, Mac e Linux
+  "tzfpy>=1.3",              # MIT   - il fuso dalle coordinate, offline e coi confini veri
+                             #         (ruote per tutte e cinque le architetture, 4 MB,
+                             #         nessuna dipendenza a sua volta)
+  "tzdata>=2024.1",          # Apache - il database dei fusi (Python puro: una ruota per
+                             #         tutte). NON e' facoltativa: Windows non
+                             #         ha un tz-db di sistema (zoneinfo.TZPATH e' vuoto) e le
+                             #         immagini slim nemmeno. Senza, ogni nome di fuso
+                             #         risulterebbe inesistente e ogni luogo nascerebbe
+                             #         senza fuso, in silenzio
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3", "pytest-cov>=5.0", "ruff>=0.6", "pyright>=1.1.380", "import-linter>=2.0",
+  # pytest-xdist: MIT, Python puro (con execnet, MIT). Entra col difetto che risolve: la
+  # suite veloce era arrivata a 46 s e il cancello a 59,2 s su un tetto di 60 -- e non c'era
+  # un test lento da marcare, ma 810 test da qualche decina di millisecondi. In parallelo
+  # sono 13 s. Un cancello lento e' un cancello che si salta (regola 5).
+  "pytest-xdist>=3.6",
+  # httpx2: BSD-3-Clause, Python puro (con httpcore2, BSD-3-Clause). Entra col difetto che
+  # risolve: da Starlette 1.6 il `TestClient` lo richiede ("required if you want to use the
+  # TestClient", PyPI), e senza la suite non parte nemmeno. In locale non si vedeva perche' un
+  # `httpx` vecchio c'era per caso, mai dichiarato; su una macchina pulita -- la CI -- ogni test
+  # che apre l'app cadeva all'import del conftest.
+  "httpx2>=2.0",
+  "pre-commit>=4.6",  # MIT - runs the checks in .pre-commit-config.yaml
+]
+# il rilevatore di duplicati (jscpd) gira da npm, nel frontend: una installazione per tutti e due
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+# `astrolog` e basta lascerebbe fuori i sotto-pacchetti: la ruota conterrebbe i moduli di
+# primo livello e nessuna rotta, nessuno stadio, nessun vocabolario. In sviluppo non si vede
+# (si gira dal sorgente), e si scoprirebbe il giorno del pacchetto.
+include = ["astrolog*"]
+
+[tool.setuptools.package-data]
+# I dati che viaggiano col codice: il vocabolario dei filtri, e domani il catalogo. Senza
+# questa riga il file c'e' nel repo e non nella ruota, e chi installa trova un modulo che
+# muore all'import.
+# `web/` e' la pagina costruita: senza questa riga la ruota si installa senza frontend, e
+# "il frontend si serve da se'" diventa falso il giorno del pacchetto -- non prima, che e' il
+# modo peggiore di scoprirlo.
+astrolog = ["**/*.json", "**/*.sql", "**/NOTICE", "web/**/*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "astrolog.__version__"}
+
+[tool.uv]
+# il lockfile `uv.lock` si committa: e' la lista esatta con cui l'app e' stata provata
+
+# ---------------------------------------------------------------- strumenti, una casa
+# Il linter ha la sua casa in `ruff.toml`, in radice: copre backend e strumenti insieme.
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+include = ["astrolog"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
+markers = ["lento: test numerico pesante, a richiesta e in CI, mai al push"]
+addopts = "--strict-markers -q"
+
+[tool.mutmut]
+# Nightly only (.github/workflows/nightly.yml): mutmut runs on Linux and macOS, not Windows.
+paths_to_mutate = ["astrolog/"]
+pytest_add_cli_args = ["-m", "not lento"]
+
+[tool.coverage.run]
+source = ["astrolog"]
+branch = true
+omit = ["astrolog/__main__.py"]  # l'avvio del processo: si collauda lanciandolo, non con un test
+
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
+
+# ---------------------------------------------------------------- IL DISEGNO
+# Pacchetti (un mestiere ciascuno):
+#   astrolog.fits    legge un file FITS: walk delle cartelle, header, chiavi e alias, tipo del
+#                    frame, coordinate. Puro: niente DB, niente rete, niente stato.
+#   astrolog.vocab   i vocabolari: filtri -> bande, nomi di oggetti, software, strumenti. Puri.
+#   astrolog.db      la connessione, lo schema (schema.sql), dove sta il file sui tre bersagli.
+#   astrolog.spine   i sei stadi -- scan, solve, normalize, identify, group, measure -- piu'
+#                    stages.py (lo stato per frame per stadio). Ogni stadio calcola cio' che
+#                    gli manca e scrive attraverso la connessione che riceve.
+#   astrolog.worker  l'unico scrittore: un thread che esegue gli stadi in sequenza, si ferma
+#                    in modo cooperativo e pubblica eventi.
+#   astrolog.api     le rotte FastAPI: leggono, mettono in fila, rispondono. Non calcolano.
+#   astrolog.catalog il catalogo astronomico: 22.080 voci, il dato in data/ (casella 3).
+#   astrolog.ephemeris cosa fa il cielo da un posto e in un momento: la Luna, e domani il
+#                    Sole (casella 3+). Puro e offline.
+#   astrolog.weather il meteo: chiede ai servizi e scrive le notti col loro riassunto. Accanto
+#                    alla spina, e i due non si conoscono (docs/domini/meteo.md).
+
+[tool.importlinter]
+root_package = "astrolog"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "L'app e' a strati: api -> worker -> spine -> (fits, vocab, db, catalog)"
+type = "layers"
+# `weather` sta accanto alla spina e i due non si conoscono: il meteo si scrive fuori dalla
+# lettura dei file. `ephemeris` sta sul fondo insieme agli altri puri: lo chiamano l'api, la spina
+# e il meteo, e lui non chiama nessuno di loro.
+layers = [
+  "astrolog.api",
+  "astrolog.worker",
+  "astrolog.spine | astrolog.weather",
+  "astrolog.fits | astrolog.vocab | astrolog.db | astrolog.catalog | astrolog.ephemeris",
+]
+
+[[tool.importlinter.contracts]]
+name = "Gli stadi non si conoscono fra loro: a metterli in fila e' spine.run"
+type = "independence"
+# measure si aggiunge qui quando nasce.
+modules = ["astrolog.spine.scan", "astrolog.spine.normalize", "astrolog.spine.solve", "astrolog.spine.identify", "astrolog.spine.group"]
+
+[[tool.importlinter.contracts]]
+# Lo store di uno stadio e' suo: una query che serve a due stadi va in una casa comune
+# (`spine.declarations` per il dichiarato), non presa in prestito. Senza questo contratto il
+# divieto era vero come principio e falso come macchina -- `identify` poteva importare
+# `normalize_store` col cancello verde.
+name = "Lo store di uno stadio lo importa solo lui"
+type = "forbidden"
+source_modules = ["astrolog.spine.scan", "astrolog.spine.normalize", "astrolog.spine.solve", "astrolog.spine.identify", "astrolog.spine.group"]
+forbidden_modules = ["astrolog.spine.scan_store", "astrolog.spine.normalize_store", "astrolog.spine.solve_store", "astrolog.spine.identify_store", "astrolog.spine.group_store"]
+ignore_imports = [
+  "astrolog.spine.scan -> astrolog.spine.scan_store",
+  "astrolog.spine.normalize -> astrolog.spine.normalize_store",
+  "astrolog.spine.solve -> astrolog.spine.solve_store",
+  "astrolog.spine.identify -> astrolog.spine.identify_store",
+  "astrolog.spine.group -> astrolog.spine.group_store",
+  # `identify_link` E' lo stadio identify -- e' la meta' che scrive l'oggetto -- quindi il suo
+  # store e' il suo. Senza questa riga il contratto vede la catena identify -> link -> store.
+  "astrolog.spine.identify_link -> astrolog.spine.identify_store",
+  # `camera_specs` E' lo stadio normalize -- e' la meta' che scrive sulla camera cio' che i suoi
+  # file votano, e la chiama `normalize` prima e dopo il giro -- quindi quello store e' il suo. Non e' un
+  # secondo stadio che prende in prestito una query: e' la stessa ragione di `identify_link`.
+  "astrolog.spine.camera_specs -> astrolog.spine.normalize_store",
+]
+
+[[tool.importlinter.contracts]]
+# Una lettura non calcola mai (Marco, 22/9/2026): calcola chi scrive, e scrive il risultato. La
+# macchina copre la geometria del cielo nell'Archivio e nelle proposte dei mosaici; gli altri
+# ricalcoli in lettura sono in `docs/coda.md`, e ognuno, quando si toglie, entra qui o in una prova
+# che confronta cio' che e' scritto con cio' che le regole direbbero (`tests/test_header_asks.py`).
+name = "Chi legge legge cio' che e' scritto: niente geometria in lettura"
+type = "forbidden"
+source_modules = ["astrolog.spine.archive", "astrolog.api.archive", "astrolog.spine.mosaic_proposals"]
+forbidden_modules = ["astrolog.spine.mosaic", "astrolog.spine.mosaic_geometry", "astrolog.spine.identify_geometry"]
+
+[[tool.importlinter.contracts]]
+# La stessa regola per l'Attrezzatura: i conti li fa `gear_usage` a fine giro degli stadi, e chi
+# legge la pagina non li chiede. Sugli import diretti, perche' `spine.gear` -- le schede, che la
+# lettura usa -- porta con se' i conteggi per le sue scritture.
+name = "L'Attrezzatura legge l'uso scritto: niente conti in lettura"
+type = "forbidden"
+source_modules = ["astrolog.spine.inventory", "astrolog.api.gear"]
+forbidden_modules = ["astrolog.spine.counts", "astrolog.spine.gear_usage"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+# E per i candidati del cielo degli oggetti in dubbio: il cono sul catalogo lo fa chi identifica
+# (`spine.object_candidates`), e chi compone Da confermare li legge. Sugli import diretti, come
+# le altre: la rotta porta anche le risposte, che fanno ripartire identify.
+name = "Da confermare legge i candidati scritti: niente cono in lettura"
+type = "forbidden"
+source_modules = ["astrolog.api.review", "astrolog.api.review_page"]
+forbidden_modules = ["astrolog.spine.identify", "astrolog.spine.object_candidates", "astrolog.catalog.lookup"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+# La stessa regola per la pagina di Da confermare, sugli import diretti: la stessa rotta porta
+# anche le risposte, che i mosaici li scrivono, e quella strada e' scrittura.
+name = "Da confermare legge le proposte scritte: niente geometria diretta"
+type = "forbidden"
+source_modules = ["astrolog.api.review"]
+forbidden_modules = ["astrolog.spine.mosaic", "astrolog.spine.mosaic_geometry", "astrolog.spine.identify_geometry"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+# E per la domanda sul tipo di file: le cartelle le scrive `spine.typeless_folders`, e Da
+# confermare le legge. Sugli import diretti: la rotta porta anche le risposte, e da li' si arriva
+# allo stacco, che le riscrive.
+name = "Da confermare legge le cartelle senza tipo scritte: niente conto in lettura"
+type = "forbidden"
+source_modules = ["astrolog.api.review", "astrolog.api.review_page"]
+forbidden_modules = ["astrolog.spine.typeless_folders"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+# E per il meteo: verdetto, fattori e ore utili li scrive la previsione per ogni modello, e la
+# pagina li legge. Sugli import diretti: la stessa rotta chiede la previsione a richiesta.
+name = "Il meteo legge il riassunto scritto: niente verdetto in lettura"
+type = "forbidden"
+source_modules = ["astrolog.api.weather"]
+forbidden_modules = [
+    "astrolog.weather.verdict",
+    "astrolog.weather.position",
+    "astrolog.weather.climate",
+    "astrolog.ephemeris",
+]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+# Stanotte calcola la Luna, ma il meteo della notte lo legge come la previsione l'ha scritto.
+name = "Stanotte legge il meteo scritto: niente verdetto ne' solito del sito in lettura"
+type = "forbidden"
+source_modules = ["astrolog.api.tonight"]
+forbidden_modules = ["astrolog.weather.verdict", "astrolog.weather.position", "astrolog.weather.climate"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "le effemeridi sono pure: niente db, niente spina, niente api, niente rete"
+type = "forbidden"
+source_modules = ["astrolog.ephemeris"]
+# La rete in particolare: il package disinnesca il download di astropy proprio perche' l'app
+# gira su un NAS senza rete e su un portatile in montagna. Un import che la riapre da un'altra
+# porta vanificherebbe quell'assetto senza che niente cada.
+forbidden_modules = ["astrolog.db", "astrolog.spine", "astrolog.worker", "astrolog.api", "sqlite3", "urllib", "httpx", "requests", "subprocess"]
+
+[[tool.importlinter.contracts]]
+name = "fits e vocab sono puri: niente db, niente spine, niente api, niente rete"
+type = "forbidden"
+source_modules = ["astrolog.fits", "astrolog.vocab"]
+forbidden_modules = ["astrolog.db", "astrolog.spine", "astrolog.worker", "astrolog.api", "sqlite3", "urllib", "httpx", "requests", "subprocess"]
+
+[[tool.importlinter.contracts]]
+name = "Solo la spina legge i file FITS: api e worker non li aprono mai"
+type = "forbidden"
+source_modules = ["astrolog.api", "astrolog.worker"]
+forbidden_modules = ["astrolog.fits.header_read", "astrolog.fits.header_fields", "astropy", "astrolog.astap", "subprocess"]
+allow_indirect_imports = true  # attraverso la spina si', in proprio mai (il walk delle cartelle e' ammesso)

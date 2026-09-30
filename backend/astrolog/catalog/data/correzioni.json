@@ -1,0 +1,81 @@
+{
+  "versione": 1,
+  "nota": "Correzioni NOSTRE ai campi del catalogo. Si applicano DOPO ogni arricchimento e hanno l'ultima parola: senza, ogni giro reintroduce un errore gia' chiuso. La storia di questo file e' git.",
+  "cosa_entra_qui": "SOLO un valore che una fonte afferma e che sappiamo FALSO. La prova: le due righe sono cose di specie diversa, e quella che porta il nome non puo' esserlo. NGC 2239 e' un ammasso, non una nebulosa.",
+  "cosa_NON_entra_qui": "Il nome di un SOGGETTO appoggiato a piu' righe che ne sono i pezzi (NGC 6960 e NGC 6974 sono tutti e due pezzi del Velo): li' nessuno dei due nomi e' sbagliato, manca la casa che li possiede.",
+  "e_le_sigle": "Non si correggono qui: l'identita' sta nei gruppi canonici del catalogo.",
+  "correzioni": [
+    {
+      "catalogo": "IC",
+      "designazione": "434",
+      "campo": "common_name",
+      "da": "Flame Nebula",
+      "a": null,
+      "perche": "e' NGC 2024"
+    },
+    {
+      "catalogo": "NGC",
+      "designazione": "2239",
+      "campo": "common_name",
+      "da": "Rosette Nebula",
+      "a": null,
+      "perche": "e' l'ammasso"
+    },
+    {
+      "catalogo": "B",
+      "designazione": "168",
+      "campo": "common_name",
+      "da": "Cocoon Nebula",
+      "a": null,
+      "perche": "e' IC 5146"
+    },
+    {
+      "catalogo": "M",
+      "designazione": "11",
+      "campo": "common_name",
+      "da": "Amas de l'Ecu de Sobieski",
+      "a": "Wild Duck Cluster",
+      "perche": "era in francese"
+    },
+    {
+      "catalogo": "NGC",
+      "designazione": "6974",
+      "campo": "common_name",
+      "da": "Veil Nebula",
+      "a": null,
+      "perche": "e' NGC 6960"
+    },
+    {
+      "catalogo": "NGC",
+      "designazione": "5195",
+      "campo": "common_name",
+      "da": "Whirlpool Galaxy",
+      "a": null,
+      "perche": "e' M 51"
+    },
+    {
+      "catalogo": "WR",
+      "designazione": "101a",
+      "campo": "common_name",
+      "da": "Blum Star",
+      "a": null,
+      "perche": "e' la designazione di una stella, non un nome comune"
+    },
+    {
+      "catalogo": "WR",
+      "designazione": "101b",
+      "campo": "common_name",
+      "da": "AHH NW",
+      "a": null,
+      "perche": "e' una sigla, non un nome"
+    },
+    {
+      "catalogo": "WR",
+      "designazione": "101c",
+      "campo": "common_name",
+      "da": "AF Star",
+      "a": null,
+      "perche": "e' una sigla, non un nome"
+    }
+  ]
+}

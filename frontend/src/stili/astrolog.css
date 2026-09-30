@@ -1,0 +1,3176 @@
+/* ==========================================================================
+   AstroLog — astrolog.css  ·  v10 (20/09/2026)
+   UN FILE SOLO. Prima i token (i valori, nomi per ruolo, su :root), poi i
+   mattoni (i componenti con i loro stati). Prima erano due fogli,
+   token.css e mattoni.css: sono stati uniti su richiesta, l'ordine e'
+   quello di allora e nessuna regola e' cambiata nell'unione.
+   Dal v6: tre token nuovi (--passo-segno, --passo-tratto, --avvio-largo) e
+   due mattoni in fondo al foglio, chiesti dal primo avvio: .as-passi (il
+   binario dei passi) e .as-entra (il movimento d'apertura). Poi la scala
+   di Bortle come mattone — .as-bortle (estesa) e .as-bortle-letta
+   (compatta) — con le sue nove tinte nei due temi, e i token
+   --misura-coordinata e --bortle-banda. Nessuna regola del v6 e' cambiata.
+   Dal v10 (i grafici della notte): le cinque fasce del crepuscolo
+   cambiano VALORE (non nome) e diventano una rampa caldo -> violetto con
+   l'alfa che SCENDE: la notte astronomica non e' piu' dipinta, e' il fondo
+   del riquadro, quindi la finestra operativa e' la parte piu' pulita del
+   grafico. Con lei: --fascia-istante, .as-grafico__confine e __istante (i
+   confini sono capelli, non muri), .as-grafico__massa e __filo (una serie
+   e' un corpo pieno con un filo sopra), .as-grafico__adesso-segno, e la
+   mira col suggerimento sul punto (.as-grafico__bersaglio, __mira,
+   __segno-p, __sugg). ESCE IL TRATTEGGIO DALLE MARCHE DELLA NOTTE:
+   .as-grafico__luna e .as-grafico__soglia sono ora tratti pieni. Resta
+   dove porta significato e non decorazione — .as-grafico__ignoto (il dato
+   che non si sa), .as-grafico__serie--confronto e --mediana (una serie di
+   riferimento, non una misura di stanotte), .as-grafico__barra--corrente
+   (il mese non finito). E --grafico-adesso non e' piu' il rosso
+   d'allarme ma inchiostro, --grafico-soglia non e' piu' l'ambra
+   dell'attesa ma --linea-significato. Con loro una correzione:
+   .as-dialogo-fondale dichiara grid-template-columns: minmax(0,1fr),
+   senza la quale ogni dialogo piu' largo della finestra sbordava dal
+   fondale invece di stringersi (si vedeva sul telefono).
+   Dal v9 (la Luna): il blocco .as-luna in fondo al foglio — la striscia
+   nel piede della barra laterale e il pannello che si apre da li' — con
+   .as-dialogo--largo (un dialogo largo quanto una tela intera),
+   .as-grafico__terra (il terreno sotto l'orizzonte, un velo che regge su
+   tutte e tre le superfici) e tre token: --luna-disco,
+   --luna-disco-grande, --grafico-terra. Il v9 era tutta roba aggiunta;
+   il v10 sopra NON lo e' — cambia sette regole gia' in uso, elencate li'.
+   Dal v8 (Impostazioni): la riga di elenco ha una soglia sua,
+   --soglia-riga 420px, staccata da --soglia-stretta 720px, che resta
+   quella della tabella. Motivo, e correzione di un errore nostro: una
+   carta stretta (il primo avvio, --avvio-largo 680px) stava per
+   costruzione sotto i 720, quindi in ogni riga l'azione finiva sotto il
+   nome e la forma affiancata non era raggiungibile. 720 e' la misura
+   giusta per una tabella a molte colonne, non per una riga fatta di un
+   nome e di un bottone. Con lei il mattone .as-impostazioni (navigazione
+   a sezioni accanto al pannello della sezione) e i suoi due token.
+   Nelle pagine si carica cosi', e basta:
+     <link rel="stylesheet" href="astrolog.css">
+   ========================================================================== */
+
+/* ########## PARTE 1 di 2 — I TOKEN ########## */
+
+/* ==========================================================================
+   AstroLog — token.css  ·  v5 (18/09/2026)
+   Dal v4: un token nuovo, --carta-minima, chiesto dalla griglia di carte
+   dell'Archivio (.as-griglia in mattoni.css v5). Nient'altro e' cambiato.
+   Unica fonte dei valori. Nomi per RUOLO: restano veri se la veste cambia.
+   Tema scuro di partenza su :root. Tema chiaro: [data-tema="chiaro"].
+   Densita': [data-densita="compatta"|"comoda"].
+
+   Regola: nessun valore scritto a mano nei mattoni. Se un mattone ha
+   bisogno di un numero che qui non c'e', quel numero e' un token che manca.
+   Le sole eccezioni ammesse in mattoni.css sono annotate una per una.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* --- superfici ------------------------------------------------------- */
+  --fondo-app:            #0a0b10;
+  --fondo-app-basso:      #0e0f15;   /* zone di servizio, piedi di pagina */
+  --fondo-carta:          #14151c;
+  --fondo-carta-alta:     #181a22;   /* carta dentro una carta */
+  --fondo-rilievo:        #1e2029;   /* sopra cui passa il mouse */
+  --fondo-premuto:        #23262f;
+  --fondo-incavo:         #0e0f15;   /* campi, celle, pozzi */
+  --fondo-riga-alterna:   rgba(255,255,255,.018);
+  /* dietro una finestra vera: nessun mattone di oggi lo usa, lo prende il
+     dialogo di conferma del blocco 3 ("elimina il sito") */
+  --velo-fondale:         rgba(6,7,11,.72);
+  --velo-vetro:           rgba(20,21,28,.86); /* traslucidita' con misura */
+
+  /* --- linee ----------------------------------------------------------- */
+  --linea:                rgba(255,255,255,.075);
+  --linea-forte:          rgba(255,255,255,.14);
+  /* una linea che DISTINGUE uno stato, non che separa: il bordo della cella
+     "nessuna notte" e' l'unica cosa che la divide da "fuori dall'arco",
+     quindi vale 1.4.11 e sta a 3:1 (--linea-forte fa 1,47 e resta per
+     separare, che e' decorazione). */
+  --linea-significato:    rgba(255,255,255,.34);
+  --linea-fuoco:          #a99bff;
+
+  /* --- inchiostro ------------------------------------------------------ */
+  --inchiostro:           #f3f4f7;
+  --inchiostro-tenue:     #b3b9c6;   /* prosa secondaria */
+  --inchiostro-debole:    #868d9c;   /* etichette, unita' di misura */
+  --inchiostro-spento:    #565d6b;   /* disabilitato */
+
+  /* --- accento (indaco del cielo) --------------------------------------
+     --accento-sopra e' scurito rispetto alla v1 (#7c5cff): li' il bianco
+     sopra faceva 4,35:1, sotto la soglia. Ora 4,55:1, e resta piu' chiaro
+     del riposo, quindi il passaggio del mouse si vede ancora.            */
+  --accento:              #6b52e8;   /* bianco sopra: 5,22:1 */
+  --accento-sopra:        #7a5af0;   /* bianco sopra: 4,55:1 */
+  --accento-premuto:      #5a43c9;
+  --accento-velo:         rgba(122,90,240,.15);
+  --inchiostro-accento:   #b9adff;   /* accento usato come testo */
+  --inchiostro-su-accento:#ffffff;
+
+  /* --- freddo: nomi di catalogo, oggetti del cielo --------------------- */
+  --freddo:               #58d3ef;
+
+  /* --- esiti (mai da soli: sempre con parola o forma) ------------------ */
+  --esito-buono:          #2fbf60;
+  --esito-buono-velo:     rgba(47,191,96,.14);
+  --esito-buono-inchiostro:#66e08f;
+  --esito-attesa:         #d99416;
+  --esito-attesa-velo:    rgba(217,148,22,.15);
+  --esito-attesa-inchiostro:#f1b65a;
+  --esito-allarme:        #e04a4a;
+  --esito-allarme-velo:   rgba(224,74,74,.15);
+  --esito-allarme-inchiostro:#ff8b8b;
+
+  /* --- il dato che non si sa (terza forma) ----------------------------- */
+  --ignoto-inchiostro:    #8b93a4;
+  /* il tratteggio del "non si sa" e' una FORMA che porta significato:
+     WCAG 2.2, 1.4.11 chiede 3:1. Da .28 (2,45:1) a .34 → 3,09:1 sulla
+     superficie piu' chiara su cui compare. */
+  --ignoto-tratteggio:    rgba(255,255,255,.34);
+  --ignoto-fondo:         rgba(255,255,255,.035);
+
+  /* --- filtri: il colore e' un promemoria, non l'informazione ----------
+     Lunghezze d'onda vere, spinte al contrasto necessario. Il nome del
+     filtro e' SEMPRE scritto accanto alla pastiglia.                     */
+  --filtro-l:          #dfe4ee;   /* luminanza */
+  --filtro-r:          #e0524f;
+  --filtro-g:          #4fb960;
+  --filtro-b:          #4e7fe6;
+  --filtro-ha:         #e0405a;   /* 656 nm */
+  --filtro-oiii:       #29c2b6;   /* 501 nm */
+  --filtro-sii:        #b8455f;   /* 672 nm */
+  --filtro-hb:         #4fa3e0;   /* 486 nm */
+  /* tre bande e piu' bande non hanno un colore proprio: la pastiglia mostra
+     le righe che passano, un segmento per riga (vedi .as-filtro) */
+  --filtro-osc:        #7f8aa0;   /* a colori, matrice di Bayer */
+  --filtro-osc-lp:     #6f9ab5;   /* taglia il cielo chiaro */
+  --filtro-osc-uvir:   #8f7fb5;   /* taglia ultravioletto e infrarosso */
+  --filtro-nessuno:    transparent;
+  --filtro-ignoto:     var(--ignoto-inchiostro);
+
+  /* --- grafici: assi, serie, fasce, evidenziazione ---------------------
+     Il colore non porta mai da solo l'informazione: ogni serie ha anche
+     etichetta scritta, forma del punto o tratteggio (vedi .as-grafico).   */
+  --grafico-assi:         rgba(255,255,255,.22);
+  --grafico-griglia:      rgba(255,255,255,.07);
+  --grafico-etichetta:    var(--inchiostro-debole);
+  --grafico-serie:        var(--accento);
+  --grafico-serie-velo:   var(--accento-velo);
+  --grafico-confronto:    var(--freddo);   /* l'anno di confronto */
+  --grafico-evidenzia:    var(--inchiostro);
+  /* la soglia e' una scelta di chi osserva, non un'attesa: perde l'ambra */
+  --grafico-soglia:       var(--linea-significato);
+  --grafico-mediana:      #d5d9e4;
+  --grafico-luna:         #e8dfa8;
+  /* adesso non e' un allarme: il rosso in questo foglio e' --esito-allarme */
+  --grafico-adesso:       var(--inchiostro);
+  /* il terreno sotto l'orizzonte. E' un velo e non una tinta piena perche'
+     la stessa fascia va sul fondo della barra laterale, dentro una carta e
+     dentro un dialogo: un colore opaco funzionerebbe su una sola delle tre.
+     Diverso da .as-grafico__orizzonte, che resta la LINEA. */
+  --grafico-terra:        rgba(255,255,255,.07);
+
+  /* heatmap: quattro livelli + i due stati che non sono una quantita'.
+     I livelli sono una quantita' con legenda scritta e numero nel
+     suggerimento; zero vero e fuori arco si distinguono per FORMA. */
+  --heat-1:               rgba(122,90,240,.28);
+  --heat-2:               rgba(122,90,240,.5);
+  --heat-3:               rgba(122,90,240,.72);
+  /* scurito da #8c6dff: il numero bianco dentro la cella faceva 3,65:1.
+     Ora 5,22:1, e resta piu' chiaro del livello 3 composto sul fondo carta. */
+  --heat-4:               #7a4fe0;
+  --heat-zero:            var(--fondo-incavo);
+  --heat-fuori:           transparent;
+
+  /* Le cinque fasce del crepuscolo: una RAMPA, non cinque tinte. Dal caldo
+     del giorno al violetto dell'accento, e l'alfa SCENDE fino a zero — la
+     notte astronomica non e' dipinta, e' il fondo del riquadro. Cosi' la
+     finestra in cui si osserva e' anche la parte piu' pulita del grafico,
+     quella dove le tracce hanno il contrasto massimo; prima era il
+     contrario, e l'occhio finiva sui muri chiari dei bordi, dove non si
+     osserva. Sul tema chiaro la direzione si inverte: li' il fondo e'
+     bianco e il buio deve dirsi. Stesso principio, verso opposto — ed e'
+     il motivo per cui sono token e non colori scritti nella regola.
+     Il caldo non e' --esito-attesa: sotto il 9% di alfa non compete con
+     l'ambra dell'attesa, che e' un tratto pieno. */
+  --fascia-giorno:        rgba(240,196,116,.085);
+  --fascia-civile:        rgba(232,146,96,.070);
+  --fascia-nautico:       rgba(146,128,205,.055);
+  --fascia-astronomico:   rgba(122,90,240,.035);
+  --fascia-notte:         transparent;
+  /* i due istanti operativi, inizio e fine del buio: l'accento, non una
+     seconda tinta. I tre confini intermedi sono capelli (--linea). */
+  --fascia-istante:       color-mix(in oklab, var(--accento) 60%, transparent);
+  /* LE STESSE CINQUE A SCALA DI STRISCIA. Cambia una cosa sola: quanto sono
+     forti i crepuscoli. Una striscia e' alta 40px, un riquadro 150 — l'alfa
+     che li' e' una velatura, qui non esiste, e la finestra operativa
+     resterebbe indistinguibile. Il buio resta senza velatura anche qui: e'
+     buio a ogni scala, e la finestra si legge come il VUOTO fra due spalle
+     calde, chiuso dai due segni degli istanti. */
+  --fascia-giorno-forte:      rgba(240,196,116,.20);
+  --fascia-civile-forte:      rgba(232,146,96,.16);
+  --fascia-nautico-forte:     rgba(146,128,205,.12);
+  --fascia-astronomico-forte: rgba(122,90,240,.07);
+  --fascia-notte-forte:       transparent;
+
+  /* --- spazi ----------------------------------------------------------- */
+  --spazio-1:  4px;
+  --spazio-2:  8px;
+  --spazio-3:  12px;
+  --spazio-4:  16px;
+  --spazio-5:  24px;
+  --spazio-6:  32px;
+  --spazio-7:  48px;
+  --spazio-8:  64px;
+
+  /* --- raggi ----------------------------------------------------------- */
+  --raggio-appena:  2px;   /* un angolo appena smussato su un campione alto 10px */
+  --raggio-minimo:  6px;
+  --raggio-piccolo: 8px;
+  --raggio-medio:   10px;
+  --raggio-grande:  12px;
+  --raggio-carta:   16px;
+  --raggio-pillola: 999px;
+
+  /* --- tipografia: solo famiglie di sistema (nessun font da scaricare) -- */
+  --carattere-testo:  system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --carattere-titolo: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --carattere-cifre:  ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --testo-micro:     11px;   /* soprattitoli, unita' */
+  --testo-minuto:    12.5px;
+  --testo-piccolo:   13px;
+  --testo-corpo:     14px;
+  --testo-lungo:     15px;   /* paragrafi delle domande */
+  --titolo-riga:     17px;
+  --titolo-sezione:  20px;
+  --titolo-pagina:   26px;
+
+  --interlinea-stretta: 1.2;
+  --interlinea-corpo:   1.45;
+  --interlinea-prosa:   1.62;
+
+  --peso-normale:  400;
+  --peso-medio:    500;
+  --peso-forte:    600;
+  --peso-grosso:   700;
+
+  --spaziatura-titolo: -.02em;
+  --spaziatura-soprattitolo: .14em;
+
+  /* --- ombre ----------------------------------------------------------- */
+  --ombra-carta:    0 1px 2px rgba(0,0,0,.35);
+  --ombra-rilievo:  0 6px 18px rgba(0,0,0,.35);
+  /* per cio' che galleggia davvero sopra la pagina: la prende il dialogo di
+     conferma del blocco 3. Il pannello del perche' sta nel flusso e usa
+     --ombra-carta, altrimenti un'ombra lunga la taglia il bordo della carta. */
+  --ombra-comparsa: 0 24px 64px rgba(0,0,0,.55);
+
+  /* --- durate e velature ----------------------------------------------- */
+  --durata-lampo:  90ms;    /* fondi al passaggio del mouse */
+  --durata-breve:  160ms;   /* comparse */
+  --durata-media:  240ms;   /* avanzamento */
+  --durata-giro:   700ms;   /* il segno che gira in un bottone al lavoro */
+  --durata-scorre: 1100ms;  /* la luce che scorre su uno scheletro */
+  --durata-va:     1400ms;  /* l'avanzamento senza totale */
+  --curva:         cubic-bezier(.2,.6,.3,1);
+  --opacita-attesa: .6;     /* una riga che sta salvando */
+  --sfocatura:      12px;   /* unica sfocatura del sistema: vetro */
+
+  /* --- misure dello scheletro ------------------------------------------ */
+  --barra-laterale:   252px;
+  --barra-alta:       56px;
+  --colonna-prosa:    68ch;    /* misura massima di un paragrafo */
+  --riga-alta:        44px;    /* riga di elenco o di tabella */
+  --cella-numero:     7ch;     /* colonna di cifre: larghezza fissa */
+  --fuoco-spessore:   2px;
+  --fuoco-stacco:     2px;
+  --filo:             2px;   /* tratti fini: sottolineature, contorni, segni */
+  --barra-stato:      3px;   /* la barra a sinistra di una riga in stato */
+  /* Altezza reale della testata di una tabella: riga di testo (micro per
+     l'interlinea stretta, dichiarata su thead th) + due padding + il bordo.
+     Serve al gruppo appiccicato per fermarsi SOTTO la testata e non sotto
+     un'altezza indovinata. Se cambi padding o interlinea, cambia qui. */
+  --testata-alta:     calc(var(--testo-micro) * var(--interlinea-stretta) + var(--spazio-2) * 2 + 1px);
+
+  /* --- misure dei mattoni ---------------------------------------------- */
+  --misura-campo:        420px;  /* un campo di testo non si allarga oltre */
+  --misura-cerca:        220px;  /* campo di ricerca in una barra */
+  /* una scelta a comparsa in barra: dentro ci sta la voce piu' lunga
+     ("Tutte le costellazioni", "Chioma di Berenice") senza tagliarla, e
+     restano tre o quattro scelte affiancate prima che la barra vada a capo.
+     Stessa misura per tutte: tre scelte di larghezza diversa in fila si
+     leggono come tre controlli diversi. */
+  --misura-scelta:       220px;
+  --misura-avanza:       520px;  /* barra di avanzamento */
+  --misura-comparsa-min: 280px;
+  --misura-comparsa:     420px;
+  --misura-vuoto:        560px;  /* colonna di uno stato vuoto */
+  --misura-disegno:      88px;   /* il cerchio di stelle dello stato vuoto */
+  --pastiglia:           14px;   /* pastiglia di filtro */
+  --segno-caricamento:   12px;   /* il segno che gira */
+
+  --grafico-alto:        180px;  /* altezza della tela di un grafico */
+  /* larghezza minima di una colonna che deve ospitare una tela intera:
+     --grafico-largo piu' i due --spazio-5 di padding della carta */
+  --colonna-grafico:     528px;
+  --grafico-basso:       40px;   /* sparkline dentro una card o una riga */
+  --grafico-filo:        2px;    /* linea di serie, e la Luna */
+  --grafico-filo-fine:   1px;    /* assi, griglia, soglia, orizzonte */
+  /* larghezza di disegno di una tela, uguale alla larghezza del suo
+     viewBox: la tela si rende esattamente cosi', quindi la scala del
+     disegno e' 1 e un'etichetta da --testo-micro si vede 11px. Una colonna
+     piu' stretta la rimpicciolisce (max-width: 100%); nell'app il viewBox
+     si ricalcola dalla colonna e la scala resta 1. Vedi .as-grafico__tela. */
+  --grafico-largo:       480px;
+  /* La cella e' un bottone: si tocca per sapere perche' un mese non ha
+     notti. Quindi vale WCAG 2.2, 2.5.8 Target Size (Minimum), livello AA,
+     e questi due valori vanno letti insieme:
+       --heat-cella >= 24px                      il bersaglio basta da solo
+       --heat-cella + --heat-gap >= 24px         passo: basta la spaziatura
+     Oggi la cella e' 24px, quindi passa per la prima via e il passo di
+     27px e' aria in piu'. Se un giorno la cella scende sotto i 24px, e'
+     il passo a dover restare almeno 24: --heat-gap cresce di conseguenza,
+     altrimenti la regola si rompe in silenzio. La cella non si stringe in
+     colonna stretta: la' la griglia scorre. */
+  --heat-cella:          24px;
+  --heat-gap:            3px;    /* vedi il conto qui sopra */
+  --anello-filo:         18px;   /* spessore dell'anello per filtro */
+  /* il campione di una legenda: largo quanto basta a far vedere un
+     tratteggio (due tratti e due vuoti), alto come una linea spessa */
+  --legenda-segno-largo: 14px;
+  --legenda-segno-alto:  10px;
+  --numero-grande:       38px;   /* il valore di una card Numero grande */
+  /* larghezza minima di una carta in griglia: dentro ci stanno l'anteprima
+     3:2, il nome su una riga e le due misure (frame e ore) affiancate.
+     Sotto questa misura la griglia toglie una colonna invece di stringere
+     le carte, perche' l'anteprima stringendosi perde di senso prima del
+     testo. Vedi .as-griglia. */
+  --carta-minima:        272px;
+
+  /* --- primo avvio ------------------------------------------------------
+     Il binario dei passi non e' fatto di bersagli: in un primo avvio non si
+     salta a un passo che non si e' ancora raggiunto, quindi le tappe non
+     sono bottoni e la regola dei 24px (WCAG 2.5.8) non le riguarda. Il
+     disco porta una cifra a --testo-minuto con aria intorno: 26px.        */
+  --passo-segno:         26px;   /* il disco che porta il numero del passo */
+  --passo-tratto:        24px;   /* il filo fra due tappe */
+  --avvio-largo:         680px;  /* la colonna del primo avvio */
+  /* un campo che porta una coordinata: "46,4843 N" e non di piu'. Piu'
+     largo, due coordinate in fila sembrano due campi di testo lunghi. */
+  --misura-coordinata:   180px;
+  --bortle-banda:        6px;    /* la banda di colore dentro una fascia */
+  /* il disco della fase, nelle sue due misure: in barra sta accanto a due
+     righe di testo (28px = l'altezza delle due righe), nel pannello e' la
+     prima cosa che si guarda */
+  --luna-disco:          28px;
+  --luna-disco-grande:   72px;
+
+  /* --- la scala di Bortle, nove fasce -----------------------------------
+     Rampa lineare dal ciano del cielo buono al rosa del cielo cittadino,
+     nove passi. Il colore e' un PROMEMORIA, non l'informazione: la classe
+     si scrive sempre col suo numero e la misura le sta accanto, come per
+     le pastiglie dei filtri. Fra il 4 e il 5 nessuno indovina a memoria,
+     e non deve: i due estremi sono scritti a parole sotto la scala.      */
+  --bortle-1:  #22d3ee;
+  --bortle-2:  #3cc7e7;
+  --bortle-3:  #57bbe0;
+  --bortle-4:  #71afd9;
+  --bortle-5:  #8ba2d2;
+  --bortle-6:  #a596cb;
+  --bortle-7:  #c08ac4;
+  --bortle-8:  #da7ebd;
+  --bortle-9:  #f472b6;
+
+  /* --- blocco 3 --------------------------------------------------------- */
+  --suggerimento-largo:  32ch;   /* un suggerimento e' una frase, non un paragrafo */
+  /* Aria da lasciare SOPRA un bersaglio che vive dentro un contenitore di
+     scorrimento: un contenitore che scorre ritaglia i suoi discendenti, e
+     verso l'alto il taglio non si raggiunge scorrendo.
+     Il conto, sulla frase piu' lunga della heatmap — "Maggio 2023 — nessuna
+     notte: quattordici notti serene, ma non hai ripreso", 73 caratteri:
+       riga         12,5px x 1,45  =  18,2px
+       padding      --spazio-2 x 2 =  16px
+       bordo        1px x 2        =   2px
+       stacco       --spazio-2     =   8px
+     A --suggerimento-largo (32ch, ~290px) stanno ~32 caratteri per riga:
+     3 righe -> 55 + 26 = 81px, arrotondato a 84 (una riga di margine).
+     In colonna stretta il pannello scende a --suggerimento-stretto (22ch,
+     ~150px): ~22 caratteri per riga, 4 righe -> 73 + 26 = 99px. Tengo 5
+     righe, 120px, perche' un'altra lingua allunga la frase.
+     Vedi .as-heat__griglia e la query di colonna stretta. */
+  --suggerimento-aria:   84px;
+  --suggerimento-aria-stretta: 120px;
+  --suggerimento-stretto: 22ch;   /* vedi il conto qui sopra */
+  /* la punta e' un quadrato ruotato di 45°: il lato va tenuto piccolo, o la
+     diagonale (il lato per 1,41) diventa piu' larga dello stacco dal
+     bersaglio e la punta si stacca dal pannello */
+  --suggerimento-punta:  8px;    /* il lato del quadrato ruotato che fa la punta */
+  --elenco-alto:         248px;  /* quanto si vede di un elenco di suggerimenti */
+  --dettaglio-largo:     520px;  /* il pannello di dettaglio accanto alla pagina */
+  --dialogo-largo:       440px;  /* un dialogo di conferma: una domanda e due vie */
+  --breve-largo:         380px;  /* l'avviso che compare e sparisce */
+
+  /* --- soglie ----------------------------------------------------------
+     Una container query non accetta var(): i numeri nei mattoni sono
+     scritti a mano UNA volta sola e devono coincidere con questi token.
+     Ogni query in mattoni.css porta accanto il nome del suo token.
+     --soglia-riga     420px → la riga di elenco incolonna le sue risposte
+     --soglia-stretta  720px → la tabella diventa un elenco
+     --soglia-guscio   900px → la barra laterale diventa una striscia     */
+  --soglia-riga:      420px;
+  --soglia-stretta:   720px;
+  --soglia-guscio:    900px;
+
+  /* --- Impostazioni -----------------------------------------------------
+     La colonna delle sezioni: dentro ci sta "Il riconoscitore (ASTAP)"
+     senza andare a capo. Il pannello chiede almeno --impostazioni-corpo:
+     sotto quella misura le due colonne non stanno affiancate e la
+     navigazione va sopra il pannello (e' il caso del tablet). */
+  --sezioni-largo:       220px;
+  --impostazioni-corpo:  460px;
+}
+
+/* densita': cambia la misura, non la struttura */
+:root[data-densita="compatta"] { --riga-alta: 36px; }
+:root[data-densita="comoda"]   { --riga-alta: 52px; }
+
+/* ==========================================================================
+   Tema chiaro — si usa di giorno per pianificare.
+   Stessi nomi, stessi mattoni: cambiano solo i valori.
+   ========================================================================== */
+:root[data-tema="chiaro"] {
+  color-scheme: light;
+
+  --fondo-app:            #f4f5f8;
+  --fondo-app-basso:      #eceef3;
+  --fondo-carta:          #ffffff;
+  --fondo-carta-alta:     #f7f8fb;
+  --fondo-rilievo:        #eef0f6;
+  --fondo-premuto:        #e4e7f0;
+  --fondo-incavo:         #f7f8fb;
+  --fondo-riga-alterna:   rgba(16,22,40,.022);
+  --velo-fondale:         rgba(28,32,44,.42);
+  --velo-vetro:           rgba(255,255,255,.9);
+
+  --linea:                rgba(16,22,40,.1);
+  --linea-forte:          rgba(16,22,40,.2);
+  --linea-significato:    rgba(16,22,40,.48);   /* 3,09:1 */
+  --linea-fuoco:          #4a35c7;
+
+  --inchiostro:           #14161d;
+  --inchiostro-tenue:     #4c5261;
+  /* scurito due volte: su --fondo-rilievo faceva 4,49:1, su --fondo-premuto
+     (riga di tabella premuta) 4,46:1. Ora 4,60:1 sul premuto, che e' il
+     fondo piu' scuro su cui questo inchiostro finisce. */
+  --inchiostro-debole:    #5f6777;
+  --inchiostro-spento:    #9aa0ad;
+
+  --accento:              #5340d6;
+  --accento-sopra:        #614fe4;
+  --accento-premuto:      #4231b0;
+  --accento-velo:         rgba(83,64,214,.1);
+  --inchiostro-accento:   #4632bb;
+  --inchiostro-su-accento:#ffffff;
+
+  --freddo:               #0b6d84;
+
+  --esito-buono:          #1c8a45;
+  --esito-buono-velo:     rgba(28,138,69,.1);
+  --esito-buono-inchiostro:#136b34;
+  --esito-attesa:         #a5680a;
+  --esito-attesa-velo:    rgba(165,104,10,.1);
+  --esito-attesa-inchiostro:#7d4e06;
+  --esito-allarme:        #c02626;
+  --esito-allarme-velo:   rgba(192,38,38,.1);
+  --esito-allarme-inchiostro:#9d1c1c;
+
+  --ignoto-inchiostro:    #5f667a;
+  --ignoto-tratteggio:    rgba(16,22,40,.48);   /* 3,15:1 — era .36, 2,24:1 */
+  --ignoto-fondo:         rgba(16,22,40,.03);
+
+  /* filtri: gli stessi colori, scuriti per stare su fondo chiaro */
+  --filtro-l:          #8e97a8;
+  --filtro-r:          #c22f2c;
+  --filtro-g:          #1f8c3a;
+  --filtro-b:          #2a5bc4;
+  --filtro-ha:         #c21f3c;
+  --filtro-oiii:       #0a8c84;
+  --filtro-sii:        #96203f;
+  --filtro-hb:         #1f7ab5;
+  --filtro-osc:        #5b6679;
+  --filtro-osc-lp:     #3f7691;
+  --filtro-osc-uvir:   #6a5a96;
+
+  --ombra-carta:    0 1px 2px rgba(16,22,40,.07);
+  --ombra-rilievo:  0 6px 18px rgba(16,22,40,.1);
+  --ombra-comparsa: 0 24px 64px rgba(16,22,40,.22);
+
+  /* grafici: gli stessi ruoli, sopra un fondo chiaro */
+  --grafico-assi:         rgba(16,22,40,.3);
+  --grafico-griglia:      rgba(16,22,40,.09);
+  --grafico-mediana:      #3d4354;
+  --grafico-luna:         #9a7d1a;
+  --grafico-adesso:       var(--inchiostro);
+  --grafico-terra:        rgba(16,22,40,.07);
+
+  --heat-1:               rgba(83,64,214,.18);
+  --heat-2:               rgba(83,64,214,.38);
+  --heat-3:               rgba(83,64,214,.62);
+  --heat-4:               #5340d6;
+
+  /* la stessa rampa, scurita per stare su fondo chiaro */
+  --bortle-1:  #147f8f;
+  --bortle-2:  #27768b;
+  --bortle-3:  #3a6c88;
+  --bortle-4:  #4e6384;
+  --bortle-5:  #615980;
+  --bortle-6:  #74507d;
+  --bortle-7:  #874779;
+  --bortle-8:  #9a3d75;
+  --bortle-9:  #ad3471;
+
+  --fascia-giorno:        rgba(245,200,110,.14);
+  --fascia-civile:        rgba(226,150,110,.14);
+  --fascia-nautico:       rgba(130,120,190,.15);
+  --fascia-astronomico:   rgba(122,90,240,.16);
+  --fascia-notte:         rgba(122,90,240,.19);
+  --fascia-giorno-forte:      rgba(245,200,110,.22);
+  --fascia-civile-forte:      rgba(226,150,110,.22);
+  --fascia-nautico-forte:     rgba(130,120,190,.24);
+  --fascia-astronomico-forte: rgba(122,90,240,.22);
+  --fascia-notte-forte:       rgba(122,90,240,.34);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --durata-lampo: 1ms; --durata-breve: 1ms; --durata-media: 1ms;
+    --durata-giro: 1ms; --durata-scorre: 1ms; --durata-va: 1ms;
+  }
+}
+
+
+/* ########## PARTE 2 di 2 — I MATTONI ########## */
+
+/* ==========================================================================
+   AstroLog — mattoni.css  ·  v5 (18/09/2026)
+   Dal v4, tre aggiunte volute dalla pagina Archivio (sezione ARCHIVIO in
+   fondo al foglio): .as-griglia (le carte in colonne), .as-carico (quanti
+   ne vedi di quanti, e il bottone per averne altri), .as-pagina__azioni
+   (la riga di controlli di una pagina). Un token nuovo in token.css:
+   --carta-minima.
+   Dal v5 (secondo giro sull'Archivio): .as-badge (un oggetto che contiene
+   piu' progetti) e .as-ore-filtro (le ore di integrazione filtro per
+   filtro, pastiglia + nome + ore). Nessun colore nuovo: .as-ore-filtro
+   prende le diciassette pastiglie di .as-filtro cosi' come sono.
+   Con loro .as-carta__corpo--colonna: un corpo di carta a piu' gruppi, che
+   li tiene distanziati senza che nessun mattone porti margini propri.
+   Poi, terzo giro sull'Archivio: .as-carta__segni (i badge in
+   sovrimpressione sull'anteprima), .as-badge--mosaico (un mosaico e i suoi
+   riquadri), .as-badge--sopra (il badge che sta su un'immagine),
+   .as-carta__titolo--riga e .as-soprattitolo--riga (nome e sottotitolo su
+   una riga sola, cosi' in griglia le carte si allineano fra loro).
+   Una correzione al v4: .as-bottone dichiara ora
+   text-decoration: none, perche' un <a> vestito da bottone si portava
+   dietro la sottolineatura del browser e somigliava a --nudo (che la
+   dichiara da se' e resta sottolineato).
+   Dipende solo da token.css. Nessun valore scritto a mano se non annotato.
+   HTML semplice e semantico: nav, header, main, section, ul/li, button, table.
+
+   Nomi: prefisso as-, italiano, blocco__elemento--modificatore.
+   Gli stati sono modificatori del loro blocco (as-riga--errore,
+   as-bottone--caricamento), non classi is-* globali.
+
+   Ambito: le regole di base e il contorno di fuoco valgono dentro .as-app
+   (sul body, o sul contenitore radice dell'app). Un mattone usato fuori da
+   .as-app ha i suoi colori ma non i reset ne' il fuoco: vedi regole d'uso.
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body.as-app, .as-app {
+  margin: 0;
+  background: var(--fondo-app);
+  color: var(--inchiostro);
+  font: var(--peso-normale) var(--testo-corpo)/var(--interlinea-corpo) var(--carattere-testo);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* fuoco da tastiera: sempre visibile, uguale su ogni mattone */
+.as-app :focus-visible,
+.as-fuoco:focus-visible {
+  outline: var(--fuoco-spessore) solid var(--linea-fuoco);
+  outline-offset: var(--fuoco-stacco);
+  border-radius: var(--raggio-minimo);
+}
+.as-solo-lettori {                     /* nome accessibile senza ingombro */
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
+/* --- cifre: incolonnate ovunque compaia un numero --------------------- */
+.as-cifre {
+  font-family: var(--carattere-cifre);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0;
+}
+.as-cifre--colonna {                   /* colonna di cifre fuori da una tabella */
+  display: inline-block; min-width: var(--cella-numero); text-align: right;
+}
+.as-unita { color: var(--inchiostro-debole); font-family: var(--carattere-testo); font-size: var(--testo-minuto); }
+
+/* ==========================================================================
+   SCHELETRO DI CARICAMENTO — .as-scheletro
+   Della misura del contenuto vero, cosi' il layout non salta.
+   ========================================================================== */
+.as-scheletro {
+  display: block; border-radius: var(--raggio-minimo);
+  background: var(--fondo-incavo);
+  background-image: linear-gradient(90deg, transparent, var(--fondo-rilievo), transparent);
+  background-size: 40% 100%; background-repeat: no-repeat;
+  animation: as-scorre var(--durata-scorre) linear infinite;
+  color: transparent; user-select: none;
+}
+.as-scheletro--riga  { height: 1em; width: 100%; }
+.as-scheletro--corta { height: 1em; width: 40%; }
+.as-scheletro--titolo{ height: var(--titolo-riga); width: 55%; }
+@keyframes as-scorre { from { background-position: -40% 0; } to { background-position: 140% 0; } }
+
+/* ==========================================================================
+   LE TRE FORME DEL DATO
+   piena | vuota (e' una misura vera che vale zero) | ignota (non si sa)
+   La terza non si distingue col solo colore: ha forma (tratteggio),
+   parola ("non si sa") e il suo perche' accanto.
+   ========================================================================== */
+.as-dato { font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums; }
+.as-dato--vuoto { color: var(--inchiostro-debole); }
+.as-dato--ignoto {
+  display: inline-flex; align-items: baseline; gap: var(--spazio-2);
+  font-family: var(--carattere-testo);
+  color: var(--ignoto-inchiostro);
+}
+.as-dato__segno {
+  font-family: var(--carattere-cifre);
+  padding: 0 var(--spazio-2);
+  border-radius: var(--raggio-minimo);
+  background: var(--ignoto-fondo);
+  border-bottom: var(--filo) dotted var(--ignoto-tratteggio);
+}
+.as-dato__perche {
+  font-size: var(--testo-minuto);
+  font-style: italic;
+  color: var(--ignoto-inchiostro);
+}
+
+/* ==========================================================================
+   CARTA / SEZIONE
+   ========================================================================== */
+.as-carta {
+  background: var(--fondo-carta);
+  border: 1px solid var(--linea);
+  border-radius: var(--raggio-carta);
+  box-shadow: var(--ombra-carta);
+  overflow: clip;
+}
+.as-carta--alta  { background: var(--fondo-carta-alta); }
+.as-carta--vetro { background: var(--velo-vetro); backdrop-filter: blur(var(--sfocatura)); }
+.as-carta--caricamento { pointer-events: none; }
+.as-carta--caricamento .as-carta__titolo,
+.as-carta--caricamento .as-carta__domanda { visibility: hidden; }
+.as-carta--errore { border-color: var(--esito-allarme); }
+.as-carta__intestazione {
+  display: flex; align-items: flex-start; gap: var(--spazio-4);
+  padding: var(--spazio-4) var(--spazio-5);
+  border-bottom: 1px solid var(--linea);
+}
+.as-carta__intestazione > .as-carta__azioni {
+  margin-left: auto; display: flex; gap: var(--spazio-2); flex-wrap: wrap; align-items: center;
+}
+.as-soprattitolo {
+  font-family: var(--carattere-cifre);
+  font-size: var(--testo-micro);
+  letter-spacing: var(--spaziatura-soprattitolo);
+  text-transform: uppercase;
+  color: var(--inchiostro-debole);
+  margin: 0 0 var(--spazio-1);
+}
+.as-carta__titolo {
+  font-family: var(--carattere-titolo);
+  font-size: var(--titolo-sezione);
+  font-weight: var(--peso-forte);
+  letter-spacing: var(--spaziatura-titolo);
+  margin: 0;
+}
+.as-carta__domanda {
+  font-size: var(--testo-lungo);
+  line-height: var(--interlinea-prosa);
+  color: var(--inchiostro-tenue);
+  max-width: var(--colonna-prosa);
+  margin: var(--spazio-2) 0 0;
+}
+/* Il corpo di una carta e' una colonna misurata: le regole di colonna
+   stretta valgono per quello che ci sta dentro senza che chi monta la
+   pagina debba ricordarsi un contenitore. Prima toccava a .as-colonna, e
+   bastava dimenticarlo perche' ogni @container diventasse codice morto. */
+.as-carta__corpo {
+  container-type: inline-size; container-name: colonna;
+  padding: var(--spazio-4) var(--spazio-5);
+}
+.as-carta__corpo--stretto { padding: 0; }
+/* piu' gruppi dentro un corpo (nome, misure, ore per filtro): colonna con
+   aria fra i gruppi. Senza, i blocchi si toccano — i mattoni non portano
+   margini propri — e la carta si legge come un blocco unico. */
+.as-carta__corpo--colonna { display: flex; flex-direction: column; gap: var(--spazio-4); }
+.as-carta__corpo--colonna > * { margin: 0; }
+/* l'anteprima non c'e' ancora: il pozzo la aspetta e tiene il suo posto,
+   cosi' la carta non va ridisegnata quando arrivera'. */
+.as-carta__anteprima {
+  position: relative;                    /* il piano dei segni: vedi .as-carta__segni */
+  aspect-ratio: 3 / 2; width: 100%;
+  background: var(--fondo-incavo);
+  border-bottom: 1px solid var(--linea);
+  display: grid; place-items: center;
+  font-size: var(--testo-minuto); color: var(--inchiostro-debole);
+}
+.as-carta__anteprima > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* I segni sopra l'anteprima — badge in sovrimpressione, in alto a destra.
+   Stanno sull'immagine e non sotto, perche' dicono cos'e' quella cosa prima
+   che si legga il nome. Sopra una foto un fondo velato non basterebbe a
+   tenere il testo leggibile: il badge che ci va usa .as-badge--sopra, che
+   porta vetro opaco e sfocatura sotto di se'. */
+.as-carta__segni {
+  position: absolute; top: var(--spazio-2); right: var(--spazio-2);
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--spazio-2);
+  max-width: calc(100% - var(--spazio-4));
+}
+/* un nome che deve stare su una riga sola: in una griglia di carte i nomi
+   vanno a capo a lunghezze diverse e i blocchi sotto non si allineano piu'.
+   Su una riga, e quello che non ci sta finisce in puntini. */
+.as-carta__titolo--riga, .as-soprattitolo--riga {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Il piede e' una riga di elementi affiancati (etichette, conteggi, azioni).
+   Se invece porta una frase — prosa con del codice inline dentro — serve
+   --prosa: in flex i nodi di testo diventano item anonimi e il gap spezza
+   la frase in pezzi. La regola sta DOPO il blocco base, che ha la stessa
+   specificita'. */
+.as-carta__piede {
+  display: flex; align-items: center; gap: var(--spazio-3);
+  padding: var(--spazio-3) var(--spazio-5);
+  border-top: 1px solid var(--linea);
+  background: var(--fondo-app-basso);
+  font-size: var(--testo-minuto);
+  color: var(--inchiostro-debole);
+}
+.as-carta__piede--prosa { display: block; }
+
+/* ==========================================================================
+   RIGA DI ELENCO  (ul/li) — per il caso che si risolve
+   ========================================================================== */
+.as-elenco { list-style: none; margin: 0; padding: 0; }
+.as-elenco > li + li { border-top: 1px solid var(--linea); }
+
+.as-riga {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--spazio-2) var(--spazio-4);
+  align-items: start;
+  padding: var(--spazio-3) var(--spazio-5);
+  min-height: var(--riga-alta);
+  background-repeat: no-repeat;
+  transition: background-color var(--durata-lampo) var(--curva);
+}
+.as-riga:hover { background-color: var(--fondo-rilievo); }
+.as-riga:has(:focus-visible) { background-color: var(--fondo-rilievo); }
+
+/* risposta data: barra piena a sinistra */
+.as-riga--risposta {
+  background-color: var(--accento-velo);
+  box-shadow: inset var(--barra-stato) 0 0 var(--accento);
+}
+/* errore: barra a righe — forma diversa, non solo colore diverso */
+.as-riga--errore {
+  box-shadow: inset var(--barra-stato) 0 0 var(--esito-allarme);
+  /* 3px/7px: passo delle righe oblique, disegno interno della barra */
+  background-image: repeating-linear-gradient(135deg,
+    var(--esito-allarme) 0 3px, transparent 3px 7px);
+  background-size: var(--barra-stato) 100%;
+}
+/* sta salvando: velata e inerte, con la parola nell'etichetta */
+.as-riga--caricamento { opacity: var(--opacita-attesa); pointer-events: none; }
+
+.as-riga__testa { display: flex; align-items: baseline; gap: var(--spazio-3); flex-wrap: wrap; }
+.as-riga__nome {
+  font-family: var(--carattere-cifre);
+  font-size: var(--testo-corpo);
+  font-weight: var(--peso-grosso);
+  color: var(--inchiostro);
+}
+.as-riga__nome--oggetto { color: var(--freddo); }
+.as-riga__conteggio { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-riga__perche {
+  grid-column: 1;
+  font-size: var(--testo-minuto);
+  line-height: var(--interlinea-prosa);
+  color: var(--inchiostro-tenue);
+  max-width: var(--colonna-prosa);
+  margin: 0;
+}
+.as-riga--errore .as-riga__perche { color: var(--esito-allarme-inchiostro); }
+.as-riga__prova {                       /* il perche' che viene dai file */
+  font-family: var(--carattere-cifre);
+  font-size: var(--testo-micro);
+  color: var(--inchiostro-debole);
+  background: var(--fondo-incavo);
+  border: 1px solid var(--linea);
+  border-radius: var(--raggio-minimo);
+  padding: 2px var(--spazio-2);   /* 2px: mezza riga, la pastiglia sta sulla linea di base */
+}
+.as-riga__risposte {
+  grid-column: 2; grid-row: 1 / span 3;
+  display: flex; align-items: center; gap: var(--spazio-2); flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* la colonna decide COME, mai COSA: le risposte scendono sotto la domanda */
+.as-colonna { container-type: inline-size; container-name: colonna; }
+
+/* soglia = --soglia-riga (420px). Unica occorrenza.
+   Fino al v7 questa soglia era --soglia-stretta, la stessa della tabella:
+   720px. Era sbagliata. Una riga e' un nome e un'azione, e a 700px di
+   colonna ci stanno comodamente affiancati; 720 e' la misura che serve a
+   una tabella a molte colonne, non a questa. L'effetto era che dentro una
+   carta stretta — il primo avvio, --avvio-largo 680px — nessuna riga
+   poteva mai essere affiancata: l'azione cadeva sotto il nome per
+   costruzione. A 420px incolonna quando serve davvero (il telefono, un
+   pannello di dettaglio stretto) e non un momento prima. */
+@container colonna (max-width: 420px) {
+  .as-riga { grid-template-columns: 1fr; }
+  .as-riga__risposte { grid-column: 1; grid-row: auto; justify-content: flex-start; }
+}
+
+/* ==========================================================================
+   TABELLA DI DATI — mille righe uguali
+   ========================================================================== */
+.as-tabella-guscio { overflow: auto; max-height: 100%; }
+.as-tabella { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--testo-corpo); }
+.as-tabella thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--fondo-carta-alta);
+  border-bottom: 1px solid var(--linea-forte);
+  text-align: left;
+  padding: var(--spazio-2) var(--spazio-4);
+  font-size: var(--testo-micro);
+  /* dichiarata, non ereditata: --testata-alta conta su questo token */
+  line-height: var(--interlinea-stretta);
+  font-weight: var(--peso-forte);
+  letter-spacing: var(--spaziatura-soprattitolo);
+  text-transform: uppercase;
+  color: var(--inchiostro-debole);
+  white-space: nowrap;
+}
+/* colonne di numeri: larghezza fissa, non si allargano al contenuto */
+.as-tabella th.as-num, .as-tabella td.as-num {
+  text-align: right;
+  min-width: calc(var(--cella-numero) + var(--spazio-4) * 2);
+}
+/* una cella che non sa sta in colonna come i numeri */
+.as-tabella td.as-num .as-dato--ignoto { justify-content: flex-end; }
+.as-tabella tbody td {
+  padding: 0 var(--spazio-4);
+  height: var(--riga-alta);
+  border-bottom: 1px solid var(--linea);
+  color: var(--inchiostro-tenue);
+  vertical-align: middle;
+}
+.as-tabella tbody tr:nth-child(even) td { background: var(--fondo-riga-alterna); }
+.as-tabella tbody tr:hover td { background: var(--fondo-rilievo); }
+.as-tabella tbody tr:has(:focus-visible) td { background: var(--fondo-rilievo); }
+.as-tabella tbody tr:active td { background: var(--fondo-premuto); }
+
+/* scelta: fondo + barra + spunta scritta nella prima cella */
+.as-tabella__riga--scelta td { background: var(--accento-velo); }
+.as-tabella__riga--scelta td:first-child {
+  box-shadow: inset var(--barra-stato) 0 0 var(--accento);
+}
+.as-tabella__riga--scelta td:first-child::before {
+  content: "\2713"; margin-right: var(--spazio-2);
+  font-family: var(--carattere-cifre); color: var(--inchiostro-accento);
+}
+/* errore su una riga: barra piena e segno di allarme scritto nella prima
+   cella — la forma la da' il segno, non il tratto della barra */
+.as-tabella__riga--errore td:first-child {
+  box-shadow: inset var(--barra-stato) 0 0 var(--esito-allarme);
+}
+.as-tabella__riga--errore td:first-child::before {
+  content: "\26A0"; margin-right: var(--spazio-2); color: var(--esito-allarme-inchiostro);
+}
+/* disabilitata: non si sceglie, e si vede che non si puo' */
+.as-tabella__riga--disabilitata td {
+  color: var(--inchiostro-spento); background: var(--fondo-app-basso);
+}
+.as-tabella__riga--disabilitata a { pointer-events: none; color: var(--inchiostro-spento); }
+/* caricamento: righe segnaposto della stessa altezza */
+.as-tabella--caricamento tbody tr:hover td { background: none; }
+.as-tabella__riga--scheletro td { color: transparent; }
+
+.as-tabella__oggetto {
+  color: var(--freddo);
+  font-weight: var(--peso-forte);
+  text-decoration: none;
+}
+.as-tabella__oggetto:hover { text-decoration: underline; }
+.as-tabella__secondo { display: block; font-size: var(--testo-micro); color: var(--inchiostro-debole); }
+.as-tabella__ordina {
+  all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: var(--spazio-1);
+}
+.as-tabella__ordina[aria-sort="descending"]::after { content: "\2193"; color: var(--inchiostro-accento); }
+.as-tabella__ordina[aria-sort="ascending"]::after  { content: "\2191"; color: var(--inchiostro-accento); }
+.as-tabella__vuoto td { height: auto; padding: 0; }
+
+/* intestazione di gruppo dentro una tabella lunga */
+.as-tabella__gruppo th {
+  position: sticky;
+  /* si ferma sotto la testata, all'altezza vera di quella: vedi
+     --testata-alta in token.css, che usa l'interlinea dichiarata su thead th */
+  top: var(--testata-alta);
+  z-index: 1;
+  text-align: left; padding: var(--spazio-2) var(--spazio-4);
+  background: var(--fondo-app-basso);
+  border-bottom: 1px solid var(--linea);
+  border-top: 1px solid var(--linea-forte);
+  font-family: var(--carattere-cifre); font-size: var(--testo-micro);
+  letter-spacing: var(--spaziatura-soprattitolo); text-transform: uppercase;
+  color: var(--inchiostro-debole);
+}
+.as-tabella__gruppo-conta { color: var(--inchiostro-spento); margin-left: var(--spazio-2); }
+
+/* soglia = --soglia-stretta (720px): la tabella diventa un elenco */
+@container colonna (max-width: 720px) {
+  .as-tabella thead { display: none; }
+  /* Tracce fluide e non contate: una riga puo' avere quattro celle o sette,
+     e tre tracce fisse (1fr auto auto) schiacciavano le celle in piu' a una
+     ventina di pixel, da cui testo che esce dalla cella e pastiglie
+     impilate una per riga. Qui ogni cella prende almeno 150px — o tutta la
+     riga, se la colonna e' piu' stretta di quello — e quante ce ne stanno
+     si affiancano. */
+  .as-tabella tbody tr {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+    gap: 0 var(--spazio-3);
+    padding: var(--spazio-2) var(--spazio-4); border-bottom: 1px solid var(--linea);
+  }
+  .as-tabella tbody td { border: 0; height: auto; padding: var(--spazio-1) 0; min-width: 0; }
+  .as-tabella tbody td[data-etichetta]::before {
+    content: attr(data-etichetta) " ";
+    font-family: var(--carattere-testo); font-size: var(--testo-micro);
+    color: var(--inchiostro-debole); text-transform: lowercase;
+  }
+  /* il nome sta su una riga sua: e' il titolo della riga. E cosi' anche una
+     cella che porta una fila di pastiglie o di etichette, che in una traccia
+     stretta si impilerebbe una per riga. */
+  .as-tabella tbody td:first-child,
+  .as-tabella tbody td[data-etichetta="filtri"],
+  .as-tabella tbody td[data-etichetta="etichette"] { grid-column: 1 / -1; }
+  /* Impilata, il fondo va dipinto sulla RIGA e non sulle celle: la riga e'
+     una griglia con gap fra le colonne, e le ultime tracce possono restare
+     vuote — un fondo per cella lascerebbe i gap e le tracce vuote non
+     dipinti, cioe' toppe chiare al posto di una fascia continua. */
+  .as-tabella tbody tr:nth-child(even) { background: var(--fondo-riga-alterna); }
+  .as-tabella tbody tr:hover,
+  .as-tabella tbody tr:has(:focus-visible) { background: var(--fondo-rilievo); }
+  .as-tabella tbody tr:active { background: var(--fondo-premuto); }
+  /* Il velo va al solo tr, che essendo il contenitore della griglia copre
+     tutta l'area. Sui td va azzerato, altrimenti si sommano due veli e
+     restano chiazze dove le celle non riempiono l'ultima traccia. Il reset
+     ripete le stesse pseudo-classi delle regole base, senno' perde di
+     specificita' e non si applica. */
+  /* Nel layout impilato ogni cella porta la sua etichetta e non esiste piu'
+     una colonna a cui incolonnarsi: le cifre a destra si allineerebbero al
+     bordo della traccia, cioe' a meta' riga, con un vuoto a destra. Da
+     sinistra, come le altre celle. */
+  .as-tabella tbody td.as-num { text-align: left; }
+  .as-tabella tbody tr td,
+  .as-tabella tbody tr:nth-child(even) td,
+  .as-tabella tbody tr:hover td,
+  .as-tabella tbody tr:has(:focus-visible) td,
+  .as-tabella tbody tr:active td { background: none; }
+  .as-tabella--caricamento tbody tr:hover { background: none; }
+  .as-tabella__gruppo th { position: static; }
+}
+
+/* ==========================================================================
+   BOTTONE — .as-bottone
+   ========================================================================== */
+.as-bottone {
+  --bottone-fondo: var(--fondo-carta-alta);
+  --bottone-linea: var(--linea-forte);
+  --bottone-inchiostro: var(--inchiostro);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--spazio-2);
+  min-height: var(--riga-alta); padding: 0 var(--spazio-4);
+  font: var(--peso-forte) var(--testo-piccolo)/1 var(--carattere-testo);
+  color: var(--bottone-inchiostro);
+  background: var(--bottone-fondo);
+  border: 1px solid var(--bottone-linea);
+  border-radius: var(--raggio-piccolo);
+  cursor: pointer;
+  /* un bottone e' un <a> quando l'azione porta a una pagina: senza questo
+     si porta dietro la sottolineatura del browser e finisce a somigliare a
+     --nudo, che e' proprio la variante sottolineata. La dichiara lei, e sta
+     dopo, quindi la sottolineatura resta dove ha un senso. */
+  text-decoration: none;
+  transition: background var(--durata-lampo) var(--curva), border-color var(--durata-lampo) var(--curva);
+}
+.as-bottone--primario   { --bottone-fondo: var(--accento); --bottone-linea: var(--accento); --bottone-inchiostro: var(--inchiostro-su-accento); }
+.as-bottone--tenue      { --bottone-fondo: transparent; --bottone-linea: var(--linea-forte); --bottone-inchiostro: var(--inchiostro-tenue); }
+.as-bottone--distruttivo{ --bottone-fondo: transparent; --bottone-linea: var(--esito-allarme); --bottone-inchiostro: var(--esito-allarme-inchiostro); }
+.as-bottone--nudo {
+  --bottone-fondo: transparent; --bottone-linea: transparent; --bottone-inchiostro: var(--inchiostro-tenue);
+  padding: 0 var(--spazio-2); text-decoration: underline;
+  text-underline-offset: 3px;   /* stacco della sottolineatura dal testo */
+}
+.as-bottone--piccolo { min-height: calc(var(--riga-alta) - var(--spazio-3)); font-size: var(--testo-minuto); padding: 0 var(--spazio-3); }
+
+/* Stati sopra/premuto: solo se il bottone e' vivo.
+   In v1 .as-bottone--primario:hover aveva la stessa specificita' di
+   [disabled] e veniva dopo, quindi un primario disabilitato si riaccendeva
+   sotto il mouse. Il :not() chiude il caso per tutte le varianti. */
+.as-bottone:not([disabled]):not([aria-disabled="true"]):hover {
+  background: var(--fondo-rilievo); border-color: var(--inchiostro-spento);
+}
+.as-bottone:not([disabled]):not([aria-disabled="true"]):active {
+  background: var(--fondo-premuto); transform: translateY(1px);
+}
+.as-bottone--primario:not([disabled]):not([aria-disabled="true"]):hover {
+  background: var(--accento-sopra); border-color: var(--accento-sopra);
+}
+.as-bottone--primario:not([disabled]):not([aria-disabled="true"]):active {
+  background: var(--accento-premuto); border-color: var(--accento-premuto);
+}
+.as-bottone--tenue:not([disabled]):not([aria-disabled="true"]):hover { color: var(--inchiostro); }
+.as-bottone--distruttivo:not([disabled]):not([aria-disabled="true"]):hover {
+  background: var(--esito-allarme-velo); border-color: var(--esito-allarme);
+}
+.as-bottone--distruttivo:not([disabled]):not([aria-disabled="true"]):active {
+  background: var(--esito-allarme-velo); border-color: var(--esito-allarme);
+  box-shadow: inset 0 0 0 1px var(--esito-allarme);
+}
+
+.as-bottone[disabled], .as-bottone[aria-disabled="true"] {
+  color: var(--inchiostro-spento); background: var(--fondo-incavo);
+  border-color: var(--linea); cursor: not-allowed; transform: none;
+}
+/* al lavoro: parola + segno che gira */
+.as-bottone--caricamento { cursor: progress; }
+.as-bottone--caricamento::before {
+  content: ""; width: var(--segno-caricamento); height: var(--segno-caricamento); flex: none;
+  border: var(--filo) solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: as-gira var(--durata-giro) linear infinite;
+}
+@keyframes as-gira { to { transform: rotate(360deg); } }
+/* l'azione non e' andata: segno, parola nel testo, bordo d'allarme */
+.as-bottone--errore {
+  --bottone-linea: var(--esito-allarme);
+  --bottone-inchiostro: var(--esito-allarme-inchiostro);
+  --bottone-fondo: var(--esito-allarme-velo);
+}
+.as-bottone--errore::before { content: "\26A0"; font-family: var(--carattere-cifre); }
+
+/* ==========================================================================
+   CAMPO DI TESTO
+   ========================================================================== */
+.as-campo { display: grid; gap: var(--spazio-2); max-width: var(--misura-campo); }
+.as-campo__etichetta { font-size: var(--testo-minuto); font-weight: var(--peso-medio); color: var(--inchiostro-tenue); }
+.as-campo__input, .as-campo__area {
+  width: 100%; min-height: var(--riga-alta);
+  padding: 0 var(--spazio-3);
+  font: var(--peso-normale) var(--testo-corpo)/var(--interlinea-corpo) var(--carattere-testo);
+  color: var(--inchiostro);
+  background: var(--fondo-incavo);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-piccolo);
+}
+.as-campo__area { padding: var(--spazio-3); min-height: calc(var(--riga-alta) * 2); resize: vertical; }
+.as-campo__input::placeholder, .as-campo__area::placeholder { color: var(--inchiostro-spento); }
+.as-campo__input:hover:not([disabled]), .as-campo__area:hover:not([disabled]) { border-color: var(--inchiostro-spento); }
+.as-campo__input[disabled], .as-campo__area[disabled] {
+  color: var(--inchiostro-spento); background: var(--fondo-app-basso);
+  border-color: var(--linea); cursor: not-allowed; resize: none;
+}
+.as-campo__aiuto { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-campo--errore .as-campo__input,
+.as-campo--errore .as-campo__area { border-color: var(--esito-allarme); background: var(--esito-allarme-velo); }
+.as-campo__errore {
+  display: flex; align-items: center; gap: var(--spazio-2);
+  font-size: var(--testo-minuto); font-weight: var(--peso-medio);
+  color: var(--esito-allarme-inchiostro);
+}
+.as-campo__errore::before { content: "\26A0"; font-size: var(--testo-corpo); }
+.as-campo--caricamento .as-campo__input {
+  background-image: linear-gradient(90deg, transparent, var(--accento-velo), transparent);
+  background-size: 40% 100%; background-repeat: no-repeat;
+  animation: as-scorre var(--durata-scorre) linear infinite;
+}
+
+/* elenco a comparsa (voci dall'archivio) */
+.as-scelta {
+  min-height: var(--riga-alta); padding: 0 var(--spazio-3);
+  font: var(--peso-medio) var(--testo-corpo) var(--carattere-testo);
+  color: var(--inchiostro); background: var(--fondo-incavo);
+  border: 1px solid var(--linea-forte); border-radius: var(--raggio-piccolo);
+}
+.as-scelta:hover:not([disabled]) { border-color: var(--inchiostro-spento); background: var(--fondo-rilievo); }
+.as-scelta[disabled] {
+  color: var(--inchiostro-spento); background: var(--fondo-app-basso);
+  border-color: var(--linea); cursor: not-allowed;
+}
+.as-scelta--errore { border-color: var(--esito-allarme); background: var(--esito-allarme-velo); }
+.as-scelta--caricamento {
+  color: var(--inchiostro-debole);
+  background-image: linear-gradient(90deg, transparent, var(--accento-velo), transparent);
+  background-size: 40% 100%; background-repeat: no-repeat;
+  animation: as-scorre var(--durata-scorre) linear infinite;
+}
+
+/* scelta fra POCHE opzioni fisse: segmentato */
+.as-segmentato {
+  display: inline-flex; padding: 3px; gap: 2px;         /* 3px/2px: incavo del binario, non spazi di layout */
+  background: var(--fondo-incavo); border: 1px solid var(--linea);
+  border-radius: var(--raggio-medio);
+  flex-wrap: wrap;
+}
+.as-segmentato--errore { border-color: var(--esito-allarme); background: var(--esito-allarme-velo); }
+.as-segmentato--caricamento {
+  background-image: linear-gradient(90deg, transparent, var(--accento-velo), transparent);
+  background-size: 40% 100%; background-repeat: no-repeat;
+  animation: as-scorre var(--durata-scorre) linear infinite;
+}
+.as-segmentato--caricamento .as-segmentato__voce { color: var(--inchiostro-spento); pointer-events: none; }
+.as-segmentato__voce {
+  all: unset; cursor: pointer;
+  padding: var(--spazio-2) var(--spazio-4);
+  border-radius: var(--raggio-piccolo);
+  font: var(--peso-medio) var(--testo-minuto)/1 var(--carattere-testo);
+  color: var(--inchiostro-tenue);
+  text-align: center;
+}
+/* come sul bottone: sopra solo se la voce e' viva, altrimenti il fondo
+   di :hover restava anche sulla voce disabilitata (stessa specificita') */
+.as-segmentato__voce:not([disabled]):hover { background: var(--fondo-rilievo); color: var(--inchiostro); }
+.as-segmentato__voce[aria-pressed="true"], .as-segmentato__voce[aria-selected="true"] {
+  background: var(--fondo-carta-alta); color: var(--inchiostro);
+  font-weight: var(--peso-forte);
+  box-shadow: var(--ombra-carta), inset 0 0 0 1px var(--linea-forte);
+}
+.as-segmentato__voce[disabled] { color: var(--inchiostro-spento); cursor: not-allowed; }
+
+/* --- segmentato a icone: due o tre voci, un disegno al posto della parola
+   Si usa solo dove le voci sono pochissime e il disegno e' inequivocabile
+   (le viste di un elenco). Il nome non sparisce: sta in aria-label e in uno
+   .as-solo-lettori, cosi' un lettore di schermo lo annuncia per intero e il
+   suggerimento lo mostra al passaggio del mouse. La voce scelta si
+   riconosce dal fondo, dal filo e dal peso del disegno, mai dal colore.
+   Il lato e' --riga-alta meno il binario (3px di incavo e 1px di filo per
+   parte): cosi' il segmentato intero misura --riga-alta e sta in linea con
+   un campo della barra, invece di essere piu' alto di 8px. L'area toccabile
+   resta oltre i 24px richiesti, e col binario arriva a 44.               */
+.as-segmentato__voce--icona {
+  --lato-icona: calc(var(--riga-alta) - 8px);
+  min-width: var(--lato-icona); min-height: var(--lato-icona);
+  /* display esplicito: la voce base nasce da `all: unset`, quindi e' inline
+     e justify/align non avrebbero presa — il disegno resterebbe appoggiato
+     in basso a sinistra invece che al centro del riquadro. */
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.as-segmentato__icona { width: 20px; height: 20px; display: block; fill: none;
+  stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.as-segmentato__voce[aria-selected="true"] .as-segmentato__icona { stroke-width: 2.2; }
+
+/* ==========================================================================
+   ETICHETTA DI STATO — parola obbligatoria, forma diversa per esito
+   ========================================================================== */
+.as-stato {
+  display: inline-flex; align-items: center; gap: var(--spazio-2);
+  padding: 3px var(--spazio-3);                          /* 3px: mezza riga di pillola */
+  border-radius: var(--raggio-pillola);
+  border: 1px solid var(--linea-forte);
+  background: var(--fondo-carta-alta);
+  /* 1,35: interlinea propria, la pillola non eredita quella del testo.
+     .02em: un filo d'aria fra le lettere di un'etichetta tutta corta. */
+  font: var(--peso-forte) var(--testo-micro)/1.35 var(--carattere-testo);
+  letter-spacing: .02em;
+  color: var(--inchiostro-tenue);
+  white-space: nowrap;
+}
+.as-stato::before { font-family: var(--carattere-cifre); font-size: var(--testo-micro); }
+.as-stato--buono { color: var(--esito-buono-inchiostro); background: var(--esito-buono-velo); border-color: var(--esito-buono); }
+.as-stato--buono::before { content: "\2713"; }
+.as-stato--attesa {
+  color: var(--esito-attesa-inchiostro); background: var(--esito-attesa-velo);
+  border-color: var(--esito-attesa); border-style: dashed;
+}
+.as-stato--attesa::before { content: "\25CB"; }
+.as-stato--allarme { color: var(--esito-allarme-inchiostro); background: var(--esito-allarme-velo); border-color: var(--esito-allarme); }
+.as-stato--allarme::before { content: "\26A0"; }
+.as-stato--ignoto { color: var(--ignoto-inchiostro); background: var(--ignoto-fondo); border-style: dotted; }
+.as-stato--ignoto::before { content: "?"; }
+.as-stato--conteggio {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  color: var(--inchiostro-accento); background: var(--accento-velo);
+  border-color: transparent;
+}
+
+/* ==========================================================================
+   BADGE — .as-badge
+   Dice che dentro una cosa ce ne sono altre: un oggetto dell'Archivio
+   ripreso in piu' progetti (piu' corredi, piu' stagioni, piu' pannelli di
+   un mosaico), le cui ore stanno tutte nel totale della riga.
+   Si distingue da .as-stato e da .as-filtro per FORMA, non per colore:
+   quelle due sono pillole (--raggio-pillola), questo e' un rettangolo
+   smussato (--raggio-minimo) e porta un segno di pile sovrapposte. Il
+   numero e la parola "progetti" sono sempre scritti: chi non vede il
+   colore legge il badge per intero.
+   Su <button> o <a> quando apre l'elenco dei progetti: il mattone se ne
+   accorge da se' e prende il passaggio del mouse.
+   ========================================================================== */
+.as-badge {
+  display: inline-flex; align-items: center; gap: var(--spazio-2);
+  padding: 2px var(--spazio-2);                          /* 2px: meta' riga, la stessa di .as-filtro */
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-minimo);
+  background: var(--fondo-carta-alta);
+  /* 1,35: interlinea propria, come .as-stato */
+  font: var(--peso-forte) var(--testo-micro)/1.35 var(--carattere-testo);
+  color: var(--inchiostro-tenue);
+  white-space: nowrap;
+}
+.as-badge__segno {
+  font-family: var(--carattere-cifre);
+  color: var(--inchiostro-debole);
+}
+.as-badge__conta {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-weight: var(--peso-grosso); color: var(--inchiostro);
+}
+/* piu' progetti dentro un oggetto: e' un conteggio, quindi veste d'accento
+   come .as-stato--conteggio */
+.as-badge--progetti {
+  color: var(--inchiostro-accento);
+  background: var(--accento-velo);
+  border-color: transparent;
+}
+.as-badge--progetti .as-badge__segno,
+.as-badge--progetti .as-badge__conta { color: var(--inchiostro-accento); }
+/* un mosaico: e' un'altra cosa dai progetti, e si distingue per il segno e
+   per la parola, non per il colore */
+.as-badge--mosaico {
+  color: var(--inchiostro);
+  background: var(--fondo-rilievo);
+  border-color: var(--linea-forte);
+}
+.as-badge--mosaico .as-badge__conta { color: var(--inchiostro); }
+/* sopra un'immagine: vetro opaco e sfocatura, cosi' il badge resta leggibile
+   qualunque cosa ci sia dietro */
+.as-badge--sopra {
+  background: var(--velo-vetro);
+  backdrop-filter: blur(var(--sfocatura));
+  border-color: var(--linea-forte);
+  color: var(--inchiostro);
+}
+.as-badge--sopra .as-badge__segno { color: var(--inchiostro-tenue); }
+.as-badge--sopra .as-badge__conta { color: var(--inchiostro); }
+/* in colonna, dove di badge ce n'e' uno per riga: senza fondo, cosi' mille
+   righe non diventano mille macchie */
+.as-badge--muto { background: none; border-color: var(--linea); color: var(--inchiostro-tenue); }
+.as-badge--muto .as-badge__conta { color: var(--inchiostro); }
+.as-badge:is(a, button) {
+  appearance: none; cursor: pointer; text-decoration: none;
+}
+.as-badge:is(a, button):hover { background: var(--fondo-rilievo); border-color: var(--linea-forte); }
+.as-badge:is(a, button):focus-visible {
+  outline: var(--fuoco-spessore) solid var(--linea-fuoco);
+  outline-offset: var(--fuoco-stacco);
+}
+
+/* ==========================================================================
+   ETICHETTA DI FILTRO — .as-filtro
+   Il colore vive in una pastiglia; il nome del filtro e' sempre scritto.
+   I segmenti della pastiglia dicono quante righe passa: uno, due, tre,
+   quattro. Forma, non solo colore.
+   A schermo si scrive il nome, non la sigla di codice:
+     L → L · R → R · G → G · B → B
+     HA → Ha · OIII → OIII · SII → SII · HB → Hb
+     DUO_HAOIII → Ha+OIII · DUO_SIIOIII → SII+OIII
+     TRI_NB → Tre bande · MULTI_NB → Piu' bande
+     OSC → A colori · OSC_LP → A colori, cielo chiaro
+     OSC_UVIR → A colori, senza UV e IR
+     NONE → Senza filtro · UNKNOWN → Non si sa
+   ========================================================================== */
+/* I quattro slot di colore stanno QUI, prima dei modificatori e sullo STESSO
+   elemento che ne porta la classe: la catena --filtro-2: var(--filtro-1) si
+   risolve dove --filtro-1 e' gia' stato riempito dal modificatore. Sul
+   contenitore non funziona — li' --filtro-1 vale ancora il ripiego, i figli
+   ereditano il grigio gia' sostituito e il modificatore riempie il solo
+   primo quarto. Vale anche per .as-ore-filtro__voce, che usa le stesse
+   classi .as-filtro--*. */
+.as-filtro,
+.as-ore-filtro__voce {
+  --filtro-1: var(--filtro-ignoto);
+  --filtro-2: var(--filtro-1);
+  --filtro-3: var(--filtro-2);
+  --filtro-4: var(--filtro-3);
+}
+.as-filtro {
+  display: inline-flex; align-items: center; gap: var(--spazio-2);
+  padding: 2px var(--spazio-3) 2px var(--spazio-2);      /* 2px: mezza riga di pillola */
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-pillola);
+  background: var(--fondo-carta-alta);
+  color: var(--inchiostro);
+  /* 1,4: interlinea propria della pillola, come .as-stato */
+  font: var(--peso-grosso) var(--testo-micro)/1.4 var(--carattere-testo);
+  white-space: nowrap;
+}
+.as-filtro__pastiglia {
+  width: var(--pastiglia); height: var(--pastiglia); flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--linea-forte);
+  background: linear-gradient(90deg,
+    var(--filtro-1) 0 25%, var(--filtro-2) 25% 50%,
+    var(--filtro-3) 50% 75%, var(--filtro-4) 75% 100%);
+}
+.as-filtro__banda {                      /* "Banda" / "Larga": parola, non colore */
+  font-weight: var(--peso-medio);
+  font-size: var(--testo-micro); color: var(--inchiostro-debole);
+}
+
+/* una riga */
+.as-filtro--l    { --filtro-1: var(--filtro-l); }
+.as-filtro--r    { --filtro-1: var(--filtro-r); }
+.as-filtro--g    { --filtro-1: var(--filtro-g); }
+.as-filtro--b    { --filtro-1: var(--filtro-b); }
+.as-filtro--ha   { --filtro-1: var(--filtro-ha); }
+.as-filtro--oiii { --filtro-1: var(--filtro-oiii); }
+.as-filtro--sii  { --filtro-1: var(--filtro-sii); }
+.as-filtro--hb   { --filtro-1: var(--filtro-hb); }
+
+/* due righe: mezza e mezza */
+.as-filtro--duo-haoiii  { --filtro-1: var(--filtro-ha);  --filtro-2: var(--filtro-ha);  --filtro-3: var(--filtro-oiii); --filtro-4: var(--filtro-oiii); }
+.as-filtro--duo-siioiii { --filtro-1: var(--filtro-sii); --filtro-2: var(--filtro-sii); --filtro-3: var(--filtro-oiii); --filtro-4: var(--filtro-oiii); }
+
+/* tre e piu' righe */
+.as-filtro--tri-nb   { --filtro-1: var(--filtro-sii); --filtro-2: var(--filtro-ha); --filtro-3: var(--filtro-oiii); --filtro-4: var(--filtro-oiii); }
+.as-filtro--multi-nb { --filtro-1: var(--filtro-sii); --filtro-2: var(--filtro-ha); --filtro-3: var(--filtro-oiii); --filtro-4: var(--filtro-hb); }
+
+/* a colori: pastiglia a quarti, come una matrice di Bayer */
+.as-filtro--osc      { --filtro-1: var(--filtro-r); --filtro-2: var(--filtro-g); --filtro-3: var(--filtro-b); --filtro-4: var(--filtro-g); }
+.as-filtro--osc-lp   { --filtro-1: var(--filtro-osc-lp); --filtro-2: var(--filtro-osc-lp); --filtro-3: var(--filtro-osc); --filtro-4: var(--filtro-osc); }
+.as-filtro--osc-uvir { --filtro-1: var(--filtro-osc-uvir); --filtro-2: var(--filtro-osc-uvir); --filtro-3: var(--filtro-osc); --filtro-4: var(--filtro-osc); }
+
+/* i due casi che non sono un filtro: pastiglia vuota, tratto diverso */
+.as-filtro--nessuno { color: var(--inchiostro-tenue); }
+.as-filtro--nessuno .as-filtro__pastiglia {
+  background: var(--filtro-nessuno); border-style: dashed; border-color: var(--inchiostro-spento);
+}
+.as-filtro--ignoto { color: var(--ignoto-inchiostro); border-style: dotted; border-color: var(--ignoto-tratteggio); }
+.as-filtro--ignoto .as-filtro__pastiglia {
+  background: var(--ignoto-fondo); border-style: dotted; border-color: var(--ignoto-tratteggio);
+}
+
+/* in tabella o in riga: la pastiglia sta in colonna, senza pillola */
+.as-tabella .as-filtro, .as-riga__testa .as-filtro--nuda { border: 0; background: transparent; padding: 0; }
+
+/* --- ORE PER FILTRO — .as-ore-filtro --------------------------------------
+   Le ore di integrazione divise per filtro, una voce accanto all'altra:
+   pastiglia, nome del filtro, ore. La pastiglia e' quella di .as-filtro
+   (.as-filtro__pastiglia) e il colore arriva dalle stesse classi
+   .as-filtro--ha, --oiii, --l ...: qui non nasce nessun colore nuovo.
+   Il nome del filtro e' scritto sempre, quindi la pastiglia e' un
+   promemoria e non l'informazione (1.4.1). Le ore sono in cifre
+   incolonnabili, cosi' due voci di seguito si confrontano a occhio.
+   Un filtro le cui ore non si sanno porta .as-dato--ignoto al posto delle
+   ore: tratteggio e parola, come ogni altra cella che non sa.          */
+.as-ore-filtro {
+  /* i colori: vedi la catena dei quattro slot in cima a .as-filtro, che
+     vale anche per .as-ore-filtro__voce */
+  display: flex; flex-wrap: wrap;
+  gap: var(--spazio-2) var(--spazio-4);
+  margin: 0; padding: 0; list-style: none;
+}
+.as-ore-filtro__voce {
+  display: inline-flex; align-items: center; gap: var(--spazio-2);
+  font-size: var(--testo-minuto);
+}
+.as-ore-filtro__nome { font-weight: var(--peso-forte); color: var(--inchiostro-tenue); }
+.as-ore-filtro__ore {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-weight: var(--peso-forte); color: var(--inchiostro);
+}
+/* in colonna stretta le voci scendono una per riga invece di spezzarsi a
+   meta'; soglia = --soglia-stretta (720px) */
+@container colonna (max-width: 720px) {
+  .as-ore-filtro { gap: var(--spazio-1) var(--spazio-3); }
+}
+
+/* ==========================================================================
+   AVVISO — un blocco di prosa, non un colore
+   ========================================================================== */
+.as-avviso {
+  display: grid; grid-template-columns: auto 1fr; gap: var(--spazio-2) var(--spazio-3);
+  padding: var(--spazio-4);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-grande);
+  background: var(--fondo-carta-alta);
+}
+.as-avviso__segno { font-family: var(--carattere-cifre); font-weight: var(--peso-grosso); color: var(--inchiostro-debole); }
+.as-avviso__titolo { margin: 0; font-size: var(--testo-corpo); font-weight: var(--peso-forte); }
+.as-avviso__testo {
+  grid-column: 2; margin: 0;
+  font-size: var(--testo-minuto); line-height: var(--interlinea-prosa);
+  color: var(--inchiostro-tenue); max-width: var(--colonna-prosa);
+}
+.as-avviso__azioni { grid-column: 2; display: flex; gap: var(--spazio-2); margin-top: var(--spazio-1); flex-wrap: wrap; }
+.as-avviso--attesa  { border-color: var(--esito-attesa); background: var(--esito-attesa-velo); border-style: dashed; }
+.as-avviso--attesa .as-avviso__segno { color: var(--esito-attesa-inchiostro); }
+.as-avviso--allarme { border-color: var(--esito-allarme); background: var(--esito-allarme-velo); }
+.as-avviso--allarme .as-avviso__segno { color: var(--esito-allarme-inchiostro); }
+.as-avviso--buono   { border-color: var(--esito-buono); background: var(--esito-buono-velo); }
+.as-avviso--buono .as-avviso__segno { color: var(--esito-buono-inchiostro); }
+
+/* ==========================================================================
+   STATO VUOTO — schermata di prima classe
+   ========================================================================== */
+.as-vuoto {
+  display: grid; justify-items: center; text-align: center;
+  gap: var(--spazio-3);
+  padding: var(--spazio-8) var(--spazio-5);
+  max-width: var(--misura-vuoto); margin: 0 auto;
+}
+.as-vuoto__disegno {
+  width: var(--misura-disegno); height: var(--misura-disegno); border-radius: 50%;
+  border: 1px dashed var(--linea-forte);
+  /* Stelle e velo: misure di disegno, non di layout. 1px e 1,5px sono la
+     grandezza di una stella (due sole, per dare profondita'), 60x50 l'alone
+     dietro. Non diventano token: nessun altro mattone li riusa. */
+  background:
+    radial-gradient(1px 1px at 30% 34%, var(--inchiostro-tenue), transparent),
+    radial-gradient(1.5px 1.5px at 66% 28%, var(--inchiostro), transparent),
+    radial-gradient(1px 1px at 48% 62%, var(--inchiostro-tenue), transparent),
+    radial-gradient(1px 1px at 72% 70%, var(--inchiostro-debole), transparent),
+    radial-gradient(60px 50px at 50% 50%, var(--accento-velo), transparent);
+}
+.as-vuoto__titolo {
+  margin: 0; font-family: var(--carattere-titolo);
+  font-size: var(--titolo-sezione); font-weight: var(--peso-forte);
+  letter-spacing: var(--spaziatura-titolo);
+}
+.as-vuoto__testo {
+  /* 48ch e non --colonna-prosa: il testo e' centrato, e una misura piu'
+     corta della prosa di lettura tiene le righe pari sotto il titolo. */
+  margin: 0; max-width: 48ch;
+  font-size: var(--testo-lungo); line-height: var(--interlinea-prosa);
+  color: var(--inchiostro-tenue);
+}
+.as-vuoto__azioni { display: flex; gap: var(--spazio-3); flex-wrap: wrap; justify-content: center; margin-top: var(--spazio-2); }
+.as-vuoto__nota { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+/* caricamento: lo stesso ingombro, cosi' non salta quando i dati arrivano */
+.as-vuoto--caricamento .as-vuoto__disegno { border-style: solid; border-color: var(--linea); animation: as-respira var(--durata-scorre) ease-in-out infinite alternate; }
+@keyframes as-respira { to { opacity: var(--opacita-attesa); } }
+
+/* ==========================================================================
+   BARRA DI AVANZAMENTO — regge l'assenza del totale
+   ========================================================================== */
+.as-avanza { display: grid; gap: var(--spazio-2); max-width: var(--misura-avanza); }
+.as-avanza__testa { display: flex; align-items: baseline; gap: var(--spazio-3); font-size: var(--testo-minuto); flex-wrap: wrap; }
+.as-avanza__fase { font-weight: var(--peso-forte); color: var(--inchiostro); }
+.as-avanza__conta { margin-left: auto; font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums; color: var(--inchiostro-tenue); }
+.as-avanza__pista {
+  height: 6px; border-radius: var(--raggio-pillola);     /* 6px: spessore della pista */
+  background: var(--fondo-incavo); border: 1px solid var(--linea);
+  overflow: hidden;
+}
+.as-avanza__riempi {
+  height: 100%; width: 0;
+  background: var(--accento);
+  transition: width var(--durata-media) var(--curva);
+}
+/* totale sconosciuto: nessuna percentuale, nessuno zero di ripiego */
+.as-avanza--ignoto .as-avanza__riempi {
+  width: 34%;
+  background: linear-gradient(90deg, transparent, var(--accento), transparent);
+  animation: as-va var(--durata-va) ease-in-out infinite;
+}
+@keyframes as-va { from { transform: translateX(-110%); } to { transform: translateX(320%); } }
+/* fermo: riempimento a righe oblique — si distingue senza colore */
+.as-avanza--fermo .as-avanza__riempi {
+  background: var(--inchiostro-spento);
+  background-image: repeating-linear-gradient(45deg,
+    var(--fondo-incavo) 0 3px, transparent 3px 6px);
+}
+.as-avanza--fermo .as-avanza__pista { border-style: dashed; }
+/* errore: righe nel verso opposto, pista punteggiata, e la parola nella fase */
+.as-avanza--errore .as-avanza__riempi {
+  background: var(--esito-allarme);
+  background-image: repeating-linear-gradient(-45deg,
+    var(--fondo-incavo) 0 3px, transparent 3px 6px);
+}
+.as-avanza--errore .as-avanza__pista { border-style: dotted; border-color: var(--esito-allarme); }
+.as-avanza--errore .as-avanza__fase::before { content: "\26A0  "; color: var(--esito-allarme-inchiostro); }
+.as-avanza__nota { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+
+/* ==========================================================================
+   PANNELLO DEL PERCHE'  (.as-comparsa)
+   Il pannello che spiega perche' l'app chiede. Non e' una finestra sopra la
+   pagina: si apre NEL FLUSSO, sotto la riga o dentro una carta, aperto da un
+   bottone con aria-expanded. Marcatura: un contenitore con role="region" e
+   il suo nome (aria-label o aria-labelledby sul titolo) — non role="dialog",
+   che farebbe annunciare a un lettore di schermo una finestra che non c'e'.
+   ========================================================================== */
+.as-comparsa {
+  min-width: var(--misura-comparsa-min); max-width: var(--misura-comparsa);
+  background: var(--fondo-carta-alta);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-grande);
+  /* ombra da elemento in pagina, non da cosa che galleggia: su un pannello
+     nel flusso un'ombra lunga verrebbe tagliata dall'overflow della carta */
+  box-shadow: var(--ombra-carta);
+  padding: var(--spazio-4);
+}
+/* Dentro una riga: sta nel flusso, come ultima cella a tutta larghezza.
+   La scelta e' voluta: in posizione assoluta si sovrapporrebbe alle righe
+   sotto (o alla carta seguente, se la riga e' l'ultima), e in un elenco di
+   casi da risolvere coprirebbe proprio le risposte che l'utente sta
+   confrontando. Cosi' la riga si allarga, niente da tagliare e niente da
+   ribaltare quando lo spazio sotto finisce. */
+.as-comparsa--accanto {
+  grid-column: 1 / -1;
+  margin-top: var(--spazio-3);
+  max-width: var(--misura-comparsa);
+}
+.as-comparsa__titolo { margin: 0 0 var(--spazio-2); font-size: var(--testo-corpo); font-weight: var(--peso-forte); }
+.as-comparsa__testo { margin: 0; font-size: var(--testo-minuto); line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue); }
+.as-comparsa__righe { list-style: none; margin: var(--spazio-3) 0 0; padding: 0; display: grid; gap: var(--spazio-1); }
+.as-comparsa__voce {
+  display: flex; align-items: center; gap: var(--spazio-3);
+  padding: var(--spazio-2) var(--spazio-3);
+  border: 1px solid var(--linea); border-radius: var(--raggio-piccolo);
+  background: var(--fondo-carta);
+}
+.as-comparsa__voce:hover { background: var(--fondo-rilievo); }
+.as-comparsa__azioni { display: flex; gap: var(--spazio-2); margin-top: var(--spazio-4); flex-wrap: wrap; }
+.as-comparsa--caricamento .as-comparsa__testo { visibility: hidden; }
+.as-comparsa--errore { border-color: var(--esito-allarme); }
+.as-comparsa--errore .as-comparsa__titolo::before { content: "\26A0  "; color: var(--esito-allarme-inchiostro); font-family: var(--carattere-cifre); }
+
+/* soglia = --soglia-stretta (720px): a tutta larghezza della colonna —
+   ristretta a un telefono meno due margini andrebbe a capo a ogni parola.
+   Sta DOPO la regola base: stessa specificita', vince l'ultima dichiarata
+   (una container query non ne aggiunge). */
+@container colonna (max-width: 720px) {
+  .as-comparsa--accanto { max-width: none; min-width: 0; }
+}
+
+/* ==========================================================================
+   SCHELETRO — barra laterale a gruppi + barra in alto
+   Il contenitore misurato e' il genitore: un elemento non si stila dalla
+   propria container query.
+   ========================================================================== */
+.as-guscio-misura { container-type: inline-size; container-name: guscio; min-height: 100%; }
+.as-guscio {
+  display: grid;
+  grid-template-columns: var(--barra-laterale) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "lato alto" "lato principale";
+  min-height: 100%;
+  background: var(--fondo-app);
+}
+.as-lato {
+  grid-area: lato;
+  border-right: 1px solid var(--linea);
+  background: var(--fondo-app-basso);
+  padding: var(--spazio-4) var(--spazio-3);
+  display: flex; flex-direction: column; gap: var(--spazio-5);
+  overflow: auto;
+}
+.as-lato__marchio {
+  display: flex; align-items: center; gap: var(--spazio-3);
+  padding: 0 var(--spazio-2);
+  font-family: var(--carattere-titolo); font-size: var(--testo-corpo);
+  font-weight: var(--peso-grosso); letter-spacing: var(--spaziatura-titolo);
+}
+.as-gruppo { display: grid; gap: 2px; }                  /* 2px: voci attaccate */
+.as-gruppo__nome {
+  font-family: var(--carattere-cifre); font-size: var(--testo-micro);
+  letter-spacing: var(--spaziatura-soprattitolo); text-transform: uppercase;
+  color: var(--inchiostro-debole);
+  padding: 0 var(--spazio-3) var(--spazio-1);
+}
+.as-voce {
+  display: flex; align-items: center; gap: var(--spazio-3);
+  min-height: var(--riga-alta); padding: 0 var(--spazio-3);
+  border-radius: var(--raggio-medio);
+  color: var(--inchiostro-tenue);
+  font-size: var(--testo-corpo); font-weight: var(--peso-medio);
+  text-decoration: none;
+}
+.as-voce:hover { background: var(--fondo-rilievo); color: var(--inchiostro); }
+.as-voce[aria-current="page"] {
+  background: var(--accento-velo); color: var(--inchiostro);
+  font-weight: var(--peso-forte);
+  box-shadow: inset var(--filo) 0 0 var(--accento);
+}
+/* il conteggio esiste solo se c'e' qualcosa da contare: a zero non si mette */
+.as-voce__conteggio {
+  margin-left: auto;
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-micro); font-weight: var(--peso-grosso);
+  color: var(--inchiostro-accento); background: var(--accento-velo);
+  border-radius: var(--raggio-pillola); padding: 2px var(--spazio-2);
+  min-width: 22px; text-align: center;                   /* 22px: due cifre */
+}
+/* il piede della barra: in colonna, spinto in fondo. La colonna e' nel foglio
+   e non inline nel montaggio, cosi' la striscia puo' ribaltarla in riga. */
+.as-lato__coda {
+  margin-top: auto;
+  display: grid; gap: var(--spazio-4);
+}
+
+.as-alto {
+  grid-area: alto;
+  display: flex; align-items: center; gap: var(--spazio-4);
+  min-height: var(--barra-alta);
+  padding: var(--spazio-2) var(--spazio-5);
+  border-bottom: 1px solid var(--linea);
+  background: var(--velo-vetro);
+  backdrop-filter: blur(var(--sfocatura));
+  position: sticky; top: 0; z-index: 5;
+  flex-wrap: wrap;
+}
+.as-alto__titolo {
+  margin: 0; font-family: var(--carattere-titolo);
+  font-size: var(--titolo-riga); font-weight: var(--peso-forte);
+  letter-spacing: var(--spaziatura-titolo);
+}
+.as-alto__strumenti { margin-left: auto; display: flex; align-items: center; gap: var(--spazio-3); flex-wrap: wrap; }
+.as-alto__menu { display: none; }
+/* la fase e l'avanzamento della scansione vivono qui, accanto al pulsante */
+.as-alto__lavoro { display: flex; align-items: center; gap: var(--spazio-3); min-width: 0; }
+.as-alto__fase { font-size: var(--testo-minuto); color: var(--inchiostro-tenue); white-space: nowrap; }
+.as-alto__conta { font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums; font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-alto__pista {
+  width: 120px; height: 4px; border-radius: var(--raggio-pillola);  /* 120px/4px: pista in barra */
+  background: var(--fondo-incavo); border: 1px solid var(--linea); overflow: hidden;
+}
+.as-alto__riempi { height: 100%; background: var(--accento); transition: width var(--durata-media) var(--curva); }
+
+.as-principale { grid-area: principale; overflow: auto; }
+
+/* --- UNA PAGINA ALTA QUANTO LA FINESTRA ----------------------------------
+   Per le pagine a risultati: il guscio e' alto quanto la finestra, la
+   colonna dei risultati e' la sola cosa che scorre, e cio' che sta sotto
+   l'area (la barra delle pagine) resta sempre in vista invece di finire
+   sotto la piega. min-height: 0 su tutta la catena, senno' ogni figlio in
+   flex o in grid resta alto quanto il suo contenuto e non si stringe.   */
+/* Vale solo da 700px di finestra in su. Sotto, lo spazio non c'e': azioni,
+   barra dei filtri (che a colonna stretta va a capo su piu' righe) e riga
+   delle pagine prendono gia' tutta l'altezza, e inchiodare il guscio alla
+   finestra lascerebbe ai risultati poche decine di pixel. Sotto la soglia
+   la pagina scorre come una pagina normale, che a schermo basso e' la cosa
+   giusta.
+   La classe e' ripetuta (.as-pagina.as-pagina--schermo) per stare sopra
+   .as-pagina, definita piu' sotto, che a pari specificita' imporrebbe il
+   suo display: grid — col grid i figli non sono voci flex e l'area dei
+   risultati collassa a zero.
+   :not([hidden]) e' obbligatorio: una regola d'autore con display: flex
+   batte [hidden] { display: none } dell'UA, e la vista nascosta tornerebbe
+   in pagina a prendersi mezza colonna. */
+@media (min-height: 700px) {
+  .as-guscio.as-guscio--schermo { height: 100svh; min-height: 0; }
+  /* overflow: auto e non hidden — e' la valvola. Col pavimento di 240px
+     sull'area, la colonna puo' chiedere piu' dell'altezza del guscio
+     (azioni + barra dei filtri che va a capo + pavimento + pagine): con
+     hidden il surplus verrebbe ritagliato e la barra delle pagine sarebbe
+     perduta, senza modo di raggiungerla. Cosi' invece, quando lo spazio non
+     basta, scorre la colonna e le pagine restano sempre raggiungibili. */
+  .as-guscio.as-guscio--schermo .as-principale { overflow: auto; min-height: 0; }
+  .as-pagina.as-pagina--schermo {
+    height: 100%; min-height: 0;
+    display: flex; flex-direction: column; gap: var(--spazio-4);
+  }
+  /* il pannello della vista e, dentro, la carta che porta l'elenco */
+  .as-pagina.as-pagina--schermo > [role="tabpanel"]:not([hidden]),
+  .as-pagina.as-pagina--schermo > [role="tabpanel"]:not([hidden]) > .as-carta {
+    display: flex; flex-direction: column;
+    flex: 1 1 auto; min-height: 0;
+  }
+  /* La carta ritaglia (overflow: clip) per tenere i suoi angoli tondi: qui
+     ritaglierebbe la barra delle pagine, e il surplus non arriverebbe mai
+     alla valvola su .as-principale, che percio' non avrebbe niente da
+     scorrere. Qui il ritaglio non serve: cio' che scorre e' il guscio della
+     tabella, che se ne occupa da se'. */
+  .as-pagina.as-pagina--schermo > [role="tabpanel"]:not([hidden]) > .as-carta { overflow: visible; }
+  /* un pavimento, cosi' l'area non collassa mai del tutto: se lo spazio non
+     basta, scorre lei invece di sparire */
+  .as-pagina.as-pagina--schermo .as-vista-guscio { min-height: 240px; }
+}
+.as-pagina {
+  container-type: inline-size; container-name: colonna;
+  padding: var(--spazio-5);
+  display: grid; gap: var(--spazio-6);   /* fra i blocchi di una pagina */
+  align-content: start;
+}
+
+/* soglia = --soglia-guscio (900px): barra laterale e barra in alto
+   diventano la stessa cosa. Stesse voci, stesso ordine. */
+@container guscio (max-width: 900px) {
+  .as-guscio-misura > .as-guscio, .as-guscio {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas: "alto" "lato" "principale";
+  }
+  .as-lato {
+    border-right: 0; border-bottom: 1px solid var(--linea);
+    flex-direction: row; align-items: center; gap: var(--spazio-4);
+    padding: var(--spazio-2) var(--spazio-4);
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .as-lato__marchio, .as-gruppo__nome { display: none; }
+  .as-gruppo { display: flex; gap: var(--spazio-1); }
+  .as-gruppo + .as-gruppo { border-left: 1px solid var(--linea); padding-left: var(--spazio-2); }
+  .as-voce { white-space: nowrap; min-height: calc(var(--riga-alta) - var(--spazio-2)); }
+  /* nella striscia il piede si mette in riga con le voci, invece di restare
+     una colonna: e' l'unico modo perche' la Luna collassata e Impostazioni
+     stiano nella stessa riga che scorre. */
+  .as-lato__coda {
+    margin: 0;
+    display: flex; align-items: center; gap: var(--spazio-4);
+  }
+  /* Il blocco della Luna dentro la striscia si collassa: le regole stanno in
+     fondo al foglio, DOPO .as-luna. Una container query non alza la
+     specificita', quindi messe qui — a millecinquecento righe di distanza
+     dal mattone che devono correggere — perdevano tutte contro di lui. */
+  .as-alto__menu { display: inline-flex; }
+  .as-pagina { padding: var(--spazio-4); gap: var(--spazio-5); }
+}
+
+/* barra delle risposte accumulate: si conferma tutto insieme, una volta sola */
+.as-conferma-tutto {
+  position: sticky; bottom: 0; z-index: 4;
+  display: flex; align-items: center; gap: var(--spazio-4);
+  padding: var(--spazio-3) var(--spazio-5);
+  background: var(--velo-vetro); backdrop-filter: blur(var(--sfocatura));
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-carta);
+  box-shadow: var(--ombra-rilievo);
+  flex-wrap: wrap;
+}
+.as-conferma-tutto__conta { font-size: var(--testo-corpo); color: var(--inchiostro-tenue); }
+.as-conferma-tutto__conta b { font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums; color: var(--inchiostro); }
+.as-conferma-tutto__azioni { margin-left: auto; display: flex; gap: var(--spazio-2); flex-wrap: wrap; }
+
+
+/* ==========================================================================
+   GRAFICI — le forme
+   Un grafico e' sempre quattro cose: un titolo, una frase che dice cosa
+   mostra, la tela, e il dato raggiungibile come tabella. La tela e' un SVG
+   con viewBox e senza misure fisse: si piega alla colonna da sola.
+   Il colore non porta mai da solo l'informazione: ogni serie ha etichetta
+   scritta, massa sotto il filo o forma del punto, e la legenda e' scritta.
+   Il tratteggio non distingue piu' le serie (v10): resta solo dove dice
+   "non si sa" o "non e' una misura di stanotte".
+   Stati: --caricamento, --vuoto, --ignoto, --errore.
+   ========================================================================== */
+.as-grafico { display: grid; gap: var(--spazio-3); }
+.as-grafico__titolo {
+  margin: 0; font-size: var(--testo-corpo); font-weight: var(--peso-forte);
+  color: var(--inchiostro);
+}
+.as-grafico__frase {
+  margin: 0; font-size: var(--testo-minuto); line-height: var(--interlinea-prosa);
+  color: var(--inchiostro-tenue); max-width: var(--colonna-prosa);
+}
+/* Un SVG con viewBox scala TUTTO il disegno: lo spessore delle linee, la
+   misura delle etichette, il raggio dei punti. Le linee le tiene ferme
+   vector-effect: non-scaling-stroke; testo e raggi no, perche' sono unita'
+   del disegno. Il solo modo di tenerli fermi e' che la tela si renda
+   ESATTAMENTE larga quanto il suo viewBox: allora la scala e' 1 e
+   un'etichetta da --testo-micro si vede 11px in ogni grafico, in una carta
+   a due colonne come in una a tutta larghezza. Percio' width e' fissa e
+   non 100%: la colonna che ospita una tela intera deve essere almeno
+   --colonna-grafico. Sotto quella misura max-width: 100% la rimpicciolisce
+   (ed e' il caso del telefono); nell'app il viewBox si ricalcola dalla
+   larghezza della colonna — un numero, non un layout — e la scala torna 1. */
+.as-grafico__tela {
+  display: block; width: var(--grafico-largo); max-width: 100%;
+  height: auto; overflow: visible;
+}
+.as-grafico__tela--alta  { min-height: var(--grafico-alto); }
+.as-grafico__tela--bassa { min-height: var(--grafico-basso); }
+.as-grafico__nota { font-size: var(--testo-micro); color: var(--inchiostro-debole); }
+
+/* parti del disegno: classi sugli elementi SVG, nessun attributo di stile */
+/* vector-effect: lo spessore e' quello a schermo, non quello del disegno:
+   una linea da --grafico-filo si vede 2px a qualunque scala della tela. */
+.as-grafico__assi, .as-grafico__griglia, .as-grafico__serie, .as-grafico__soglia,
+.as-grafico__adesso, .as-grafico__luna, .as-grafico__orizzonte, .as-grafico__ignoto,
+.as-grafico__barra--corrente, .as-grafico__punto--vuoto, .as-anello__fetta {
+  vector-effect: non-scaling-stroke;
+}
+.as-grafico__assi    { stroke: var(--grafico-assi); stroke-width: var(--grafico-filo-fine); fill: none; }
+.as-grafico__griglia { stroke: var(--grafico-griglia); stroke-width: var(--grafico-filo-fine); fill: none; }
+.as-grafico__etichetta {
+  fill: var(--grafico-etichetta);
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-micro);
+}
+.as-grafico__etichetta--testo { font-family: var(--carattere-testo); }
+/* etichetta scritta SOPRA una fascia del crepuscolo: le fasce sono fondi
+   semitrasparenti, e l'inchiostro debole non regge su nessuna delle cinque
+   (misurato: 2,21:1 sulla notte nel chiaro, 3,76:1 sul civile nello scuro).
+   Qui va l'inchiostro pieno, che sta sopra 7:1 su tutte e dieci. */
+.as-grafico__etichetta--sopra-fascia { fill: var(--inchiostro); }
+.as-grafico__serie {
+  fill: none; stroke: var(--grafico-serie); stroke-width: var(--grafico-filo);
+  stroke-linejoin: round; stroke-linecap: round;
+}
+.as-grafico__serie--confronto {
+  stroke: var(--grafico-confronto);
+  stroke-dasharray: 5 3;   /* tratteggio: la serie si distingue senza colore */
+}
+.as-grafico__serie--mediana { stroke: var(--grafico-mediana); stroke-dasharray: 2 3; }
+/* una tendenza per filtro: il colore viene dal token del filtro, non da un
+   attributo scritto dentro l'SVG */
+.as-grafico__serie--ha   { stroke: var(--filtro-ha); }
+.as-grafico__serie--oiii { stroke: var(--filtro-oiii); }
+.as-grafico__serie--sii  { stroke: var(--filtro-sii); }
+
+/* anello per filtro: lo spessore e' un token, la lunghezza di ogni fetta
+   resta nel disegno (stroke-dasharray) perche' e' il dato, non lo stile */
+.as-anello__fetta { fill: none; stroke-width: var(--anello-filo); }
+.as-anello__pista { fill: none; stroke: var(--fondo-incavo); stroke-width: var(--anello-filo); }
+.as-anello__fetta--ha     { stroke: var(--filtro-ha); }
+.as-anello__fetta--oiii   { stroke: var(--filtro-oiii); }
+.as-anello__fetta--sii    { stroke: var(--filtro-sii); }
+.as-anello__fetta--ignota { stroke: url(#as-tratto-ignoto); }
+/* il totale al centro dell'anello: --titolo-riga, come ogni titolo di riga.
+   Dentro un SVG il valore e' in unita' del disegno, e l'anello si rende
+   alla larghezza del suo viewBox (120), quindi 17 unita' sono 17px. */
+.as-anello__totale { fill: var(--inchiostro); font-size: var(--titolo-riga); font-weight: var(--peso-grosso); }
+
+/* la trama del "non si sa": il tratteggio che sta DENTRO un tratto o un'area,
+   disegnato una volta in un <pattern> e riusato da chi ne ha bisogno */
+.as-trama__fondo { fill: var(--ignoto-fondo); }
+.as-trama__riga  { stroke: var(--ignoto-inchiostro); stroke-width: var(--grafico-filo); }
+
+/* disco della Luna: il cerchio e' il disco spento, il tracciato la parte
+   illuminata, e il confine fra i due e' il terminatore */
+.as-luna__disco { fill: var(--fondo-incavo); stroke: var(--linea-forte); stroke-width: var(--grafico-filo-fine); }
+.as-luna__illuminata { fill: var(--grafico-luna); }
+
+/* punti di una nuvola: un colore per filtro, come le tendenze */
+.as-grafico__punto--ha   { fill: var(--filtro-ha); }
+.as-grafico__punto--oiii { fill: var(--filtro-oiii); }
+.as-grafico__punto--sii  { fill: var(--filtro-sii); }
+.as-grafico__banda { fill: var(--grafico-serie-velo); stroke: none; }  /* quartili */
+.as-grafico__area  { fill: var(--grafico-serie-velo); stroke: none; }
+.as-grafico__barra { fill: var(--grafico-serie); }
+/* il mese in corso: forma diversa, non solo colore — contorno e non pieno */
+.as-grafico__barra--corrente {
+  fill: var(--grafico-serie-velo);
+  stroke: var(--grafico-serie); stroke-width: var(--grafico-filo);
+  stroke-dasharray: 3 2;
+}
+.as-grafico__barra--evidenzia { fill: var(--grafico-evidenzia); }
+/* un dato che non si sa: vuoto dichiarato, mai una barra a zero */
+.as-grafico__ignoto {
+  fill: var(--ignoto-fondo);
+  stroke: var(--ignoto-tratteggio); stroke-width: var(--grafico-filo-fine); stroke-dasharray: 3 2;
+}
+/* v10: tratto pieno, e la soglia porta sempre il suo numero scritto in
+   fondo alla linea — senza, a pari valore non si distingue dalla griglia. */
+.as-grafico__soglia {
+  stroke: var(--grafico-soglia); stroke-width: var(--grafico-filo-fine); fill: none;
+}
+.as-grafico__adesso { stroke: var(--grafico-adesso); stroke-width: var(--grafico-filo); fill: none; }
+/* il terreno: la fascia piena sotto l'orizzonte. Sta separata da
+   .as-grafico__orizzonte (che e' la linea) perche' la stessa fascia va su
+   tre fondi diversi — barra laterale, carta, dialogo — e una tinta opaca
+   ne servirebbe uno solo. */
+.as-grafico__terra { fill: var(--grafico-terra); stroke: none; }
+/* la cornice della tela: un filo intorno al disegno, dentro il viewBox e non
+   sul contenitore, cosi' scala col disegno e non tocca il layout. Serve dove
+   la tela ha un FONDO dipinto (le fasce) e sta su una superficie senza carta
+   — la striscia nel piede della barra: senza, le spalle calde del giorno
+   sfumano nel fondo della barra e il disegno non ha piu' un bordo. Dentro
+   una carta non serve: il bordo ce l'ha gia' la carta.
+   Va disegnata per ULTIMA: l'SVG dipinge in ordine di documento, e messa in
+   testa finirebbe sotto le fasce e sotto il terreno, cioe' sotto le due cose
+   che deve chiudere. E' --linea-forte e non --linea: questo filo non separa,
+   e' il BORDO del disegno, e deve vedersi contro il fondo della barra. */
+.as-grafico__cornice { fill: none; stroke: var(--linea-forte); stroke-width: var(--grafico-filo-fine); }
+/* v10: tratto pieno. Il tratteggio distingueva la Luna dalla serie; adesso
+   la distinguono il colore caldo, la massa sotto il filo e l'etichetta. */
+.as-grafico__luna   { stroke: var(--grafico-luna); stroke-width: var(--grafico-filo); fill: none; stroke-linecap: round; }
+.as-grafico__orizzonte { fill: var(--fondo-app-basso); stroke: var(--grafico-assi); stroke-width: var(--grafico-filo-fine); }
+
+/* --- LE MARCHE DEL DATO (v10) ------------------------------------------
+   Una serie e' un CORPO PIENO con un filo sopra, non una linea sola: due
+   serie si distinguono per densita', calore e posizione, che sono tre
+   cose, invece che per il disegno del trattino, che e' una.            */
+.as-grafico__massa        { fill: var(--grafico-serie-velo); stroke: none; }
+.as-grafico__massa--luna  { fill: var(--grafico-luna); opacity: .10; stroke: none; }
+.as-grafico__filo {
+  fill: none; stroke: var(--accento-sopra); stroke-width: var(--grafico-filo);
+  stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke;
+}
+.as-grafico__filo--luna { stroke: var(--grafico-luna); stroke-width: var(--grafico-filo-fine); }
+/* il quadrato in cima alla riga di adesso: la riga da sola e' un tratto
+   come gli altri, il quadrato le da' una forma sua (1.4.1) */
+.as-grafico__adesso-segno { fill: var(--grafico-adesso); }
+
+/* --- I CONFINI DELLE FASCE (v10) ---------------------------------------
+   Capelli, non muri. I tre intermedi sono una linea di separazione
+   (--linea); i due ISTANTI OPERATIVI — inizio e fine del buio — sono i
+   soli due momenti che si guardano, e prendono l'accento.              */
+.as-grafico__confine { stroke: var(--linea); stroke-width: var(--grafico-filo-fine); }
+.as-grafico__istante { stroke: var(--fascia-istante); stroke-width: var(--grafico-filo-fine); }
+
+/* --- LA MIRA SUL PUNTO (v10) -------------------------------------------
+   Ora e valore di ogni campione, col mouse e col fuoco. Nessuno script:
+   ogni mira e' un <g> col suo <title> e il suggerimento si apre in
+   :hover e :focus-visible. La scatola si ribalta sotto il punto quando in
+   alto non c'e' posto e resta dentro i bordi della tela.
+   UN GRAFICO E' UNA SOLA SOSTA DEL TABULATORE: la mira corrente porta
+   tabindex="0", le altre -1, e ci si muove con le frecce — lo stesso
+   roving della scala di Bortle. Senza, attraversare una notte a quarti
+   d'ora costa novantasette battute. Le frecce sono codice: vedi le regole
+   d'uso.                                                                */
+.as-grafico__bersaglio { outline: none; }
+.as-grafico__mira { fill: transparent; }
+.as-grafico__segno-p, .as-grafico__sugg {
+  opacity: 0; transition: opacity var(--durata-breve) var(--curva);
+}
+.as-grafico__bersaglio:hover .as-grafico__segno-p,
+.as-grafico__bersaglio:hover .as-grafico__sugg,
+.as-grafico__bersaglio:focus-visible .as-grafico__segno-p,
+.as-grafico__bersaglio:focus-visible .as-grafico__sugg { opacity: 1; }
+.as-grafico__segno-p { fill: var(--inchiostro); }
+.as-grafico__bersaglio:focus-visible .as-grafico__mira {
+  stroke: var(--linea-fuoco); stroke-width: var(--fuoco-spessore); fill: var(--accento-velo);
+}
+.as-grafico__sugg rect {
+  fill: var(--fondo-carta-alta); stroke: var(--linea-forte); stroke-width: var(--grafico-filo-fine);
+}
+.as-grafico__sugg text {
+  fill: var(--inchiostro); font-family: var(--carattere-cifre);
+  font-variant-numeric: tabular-nums; font-size: var(--testo-micro);
+}
+.as-grafico__sugg text.as-sugg__u { fill: var(--inchiostro-tenue); }
+
+/* le cinque fasce del crepuscolo */
+.as-fascia--giorno      { fill: var(--fascia-giorno); }
+.as-fascia--civile      { fill: var(--fascia-civile); }
+.as-fascia--nautico     { fill: var(--fascia-nautico); }
+.as-fascia--astronomico { fill: var(--fascia-astronomico); }
+.as-fascia--notte       { fill: var(--fascia-notte); }
+/* dentro una tela bassa le stesse classi prendono la rampa forte: nessun
+   markup cambia, e la striscia in barra dice la notte come il pannello */
+.as-grafico__tela--bassa .as-fascia--giorno      { fill: var(--fascia-giorno-forte); }
+.as-grafico__tela--bassa .as-fascia--civile      { fill: var(--fascia-civile-forte); }
+.as-grafico__tela--bassa .as-fascia--nautico     { fill: var(--fascia-nautico-forte); }
+.as-grafico__tela--bassa .as-fascia--astronomico { fill: var(--fascia-astronomico-forte); }
+.as-grafico__tela--bassa .as-fascia--notte       { fill: var(--fascia-notte-forte); }
+
+/* punti: la forma dice la serie, non solo il colore.
+   Ogni punto interrogabile e' un <a>/<g> con tabindex e <title>: il
+   suggerimento si apre da tastiera e col tocco, non solo col mouse. */
+.as-grafico__punto { fill: var(--grafico-serie); stroke: none; }
+.as-grafico__punto--confronto { fill: var(--grafico-confronto); }
+.as-grafico__punto--vuoto { fill: var(--fondo-carta); stroke: var(--grafico-serie); stroke-width: var(--grafico-filo); }
+[tabindex]:focus-visible > .as-grafico__punto,
+.as-grafico__punto:focus-visible {
+  stroke: var(--linea-fuoco); stroke-width: var(--fuoco-spessore);
+}
+
+/* legenda: sempre scritta */
+.as-legenda { display: flex; flex-wrap: wrap; gap: var(--spazio-2) var(--spazio-4); margin: 0; padding: 0; list-style: none; }
+.as-legenda__voce {
+  display: flex; align-items: center; gap: var(--spazio-2);
+  font-size: var(--testo-micro); color: var(--inchiostro-tenue);
+}
+/* il segno e' un campione di tratto, non un elemento di layout */
+.as-legenda__segno {
+  width: var(--legenda-segno-largo); height: var(--legenda-segno-alto);
+  flex: none; border-radius: var(--raggio-appena);
+  background: var(--grafico-serie);
+}
+.as-legenda__segno--confronto { background: repeating-linear-gradient(90deg, var(--grafico-confronto) 0 5px, transparent 5px 8px); }
+.as-legenda__segno--corrente { background: var(--grafico-serie-velo); border: 1px dashed var(--grafico-serie); }
+.as-legenda__segno--ignoto { background: var(--ignoto-fondo); border: 1px dotted var(--ignoto-tratteggio); }
+/* lo stesso bordo della cella che spiega: se la legenda mostra un bordo
+   diverso da quello della cella, non la spiega */
+.as-legenda__segno--zero { background: var(--heat-zero); border: 1px solid var(--linea-significato); }
+.as-legenda__segno--soglia { background: repeating-linear-gradient(90deg, var(--grafico-soglia) 0 6px, transparent 6px 10px); }
+.as-legenda__segno--heat-1 { background: var(--heat-1); }
+.as-legenda__segno--heat-2 { background: var(--heat-2); }
+.as-legenda__segno--heat-3 { background: var(--heat-3); }
+.as-legenda__segno--heat-4 { background: var(--heat-4); }
+
+/* il dato come tabella: chiuso di suo, sempre raggiungibile */
+.as-grafico__dati { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-grafico__dati > summary { cursor: pointer; padding: var(--spazio-1) 0; }
+.as-grafico__dati[open] > summary { margin-bottom: var(--spazio-2); }
+
+/* i quattro stati: la tela lascia il posto a una parola */
+.as-grafico__stato {
+  display: grid; place-content: center; gap: var(--spazio-2); text-align: center;
+  min-height: var(--grafico-alto);
+  border: 1px solid var(--linea); border-radius: var(--raggio-grande);
+  background: var(--fondo-incavo);
+  padding: var(--spazio-4);
+  font-size: var(--testo-minuto); color: var(--inchiostro-tenue);
+}
+.as-grafico--caricamento .as-grafico__stato {
+  background-image: linear-gradient(90deg, transparent, var(--fondo-rilievo), transparent);
+  background-size: 40% 100%; background-repeat: no-repeat;
+  animation: as-scorre var(--durata-scorre) linear infinite;
+}
+.as-grafico--ignoto .as-grafico__stato { border-style: dotted; border-color: var(--ignoto-tratteggio); color: var(--ignoto-inchiostro); }
+.as-grafico--vuoto  .as-grafico__stato { border-style: dashed; }
+.as-grafico--errore .as-grafico__stato { border-color: var(--esito-allarme); color: var(--esito-allarme-inchiostro); }
+.as-grafico__stato-titolo { font-weight: var(--peso-forte); color: var(--inchiostro); }
+.as-grafico--errore .as-grafico__stato-titolo { color: var(--esito-allarme-inchiostro); }
+.as-grafico--ignoto .as-grafico__stato-titolo { color: var(--ignoto-inchiostro); }
+
+/* ==========================================================================
+   HEATMAP MESE PER ANNO — .as-heat
+   Griglia per MESE, non per giorno. Tre stati che si distinguono anche
+   senza colore: con notti (pieno, quattro livelli con legenda scritta),
+   zero vero (vuoto col bordo pieno), fuori dall'arco (tratteggiato).
+   ========================================================================== */
+/* --heat-fondo e' la superficie su cui sta la heatmap: serve alla colonna
+   degli anni, che resta ferma mentre la griglia scorre e deve coprire le
+   celle che le passano sotto. Chi la mette su un fondo diverso cambia solo
+   questo: .as-carta--alta lo fa qui sotto, e una pagina che la mettesse
+   sul fondo dell'app scriverebbe --heat-fondo: var(--fondo-app). */
+.as-heat { display: grid; gap: var(--spazio-2); --heat-fondo: var(--fondo-carta); }
+.as-carta--alta .as-heat, .as-carta__corpo--alto .as-heat { --heat-fondo: var(--fondo-carta-alta); }
+/* La cella non scende sotto --heat-cella a nessuna larghezza: quando la
+   colonna non basta per dodici mesi, la griglia SCORRE. Le due alternative
+   costavano troppo: stringere le celle le porta sotto i 24px di WCAG 2.5.8
+   (e sono bottoni: cella e gap entrano nel conto del bersaglio, vedi
+   token.css), sei mesi per riga spezza a meta' la riga di un anno, che e'
+   il modo in cui questa forma si legge. */
+.as-heat__griglia {
+  display: grid;
+  grid-template-columns: auto repeat(12, minmax(var(--heat-cella), 1fr));
+  gap: var(--heat-gap);   /* entra nel conto del bersaglio: vedi token.css */
+  align-items: center;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  /* overflow-x: auto fa di questa griglia un contenitore di scorrimento, e
+     un contenitore che scorre RITAGLIA i suoi discendenti: il suggerimento
+     della prima riga, che si apre verso l'alto, finirebbe mozzato in una
+     direzione dove lo scorrimento non arriva. L'aria sopra entra nel
+     riquadro di taglio; il margine negativo la annulla nel layout, cosi'
+     la griglia resta dove era e il pannello ci sta dentro. */
+  padding-top: var(--suggerimento-aria);
+  margin-top: calc(-1 * var(--suggerimento-aria));
+}
+/* l'anno resta in vista mentre si scorre: senza, si perde la riga */
+.as-heat__anno {
+  position: sticky; left: 0; z-index: 1;
+  background: var(--heat-fondo);
+}
+.as-heat__anno, .as-heat__mese {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-micro); color: var(--inchiostro-debole);
+  text-align: center;
+}
+.as-heat__anno { text-align: right; padding-right: var(--spazio-2); }
+.as-heat__cella {
+  all: unset; cursor: pointer;
+  aspect-ratio: 1; min-height: var(--heat-cella);
+  border-radius: var(--raggio-minimo);
+  background: var(--heat-zero);
+  border: 1px solid var(--linea-forte);
+  display: grid; place-items: center;
+  font-family: var(--carattere-cifre); font-size: var(--testo-micro);
+  color: var(--inchiostro-su-accento);
+}
+.as-heat__cella--1 { background: var(--heat-1); border-color: transparent; color: var(--inchiostro); }
+.as-heat__cella--2 { background: var(--heat-2); border-color: transparent; color: var(--inchiostro); }
+.as-heat__cella--3 { background: var(--heat-3); border-color: transparent; }
+.as-heat__cella--4 { background: var(--heat-4); border-color: transparent; }
+/* Nel tema chiaro il livello 3 composto sul bianco della carta da' #9489e6:
+   il bianco ereditato dalla base faceva 3,01:1. Con l'inchiostro pieno fa
+   6,01:1. Nello scuro il livello 3 resta col bianco, che li' fa 6,92:1. */
+:root[data-tema="chiaro"] .as-heat__cella--3 { color: var(--inchiostro); }
+/* zero vero: un mese in cui non hai osservato. Vuoto, bordo pieno. */
+.as-heat__cella--zero { background: var(--heat-zero); border-color: var(--linea-significato); }
+/* fuori dall'arco: prima della prima notte o dopo oggi. Tratteggiato. */
+.as-heat__cella--fuori {
+  background: var(--heat-fuori); border-style: dashed; border-color: var(--linea);
+  cursor: default;
+}
+.as-heat__cella:hover:not(.as-heat__cella--fuori) { box-shadow: inset 0 0 0 1px var(--inchiostro); }
+
+/* ==========================================================================
+   BARRA IMPILATA PER FILTRO — .as-impilata
+   Dentro una card o una riga. La sigla del filtro e' sempre scritta.
+   ========================================================================== */
+.as-impilata { display: grid; gap: var(--spazio-2); }
+.as-impilata__pista {
+  display: flex; height: 10px; border-radius: var(--raggio-pillola);   /* 10px: spessore della pista, come --avanza */
+  overflow: hidden; background: var(--fondo-incavo);
+  border: 1px solid var(--linea);
+}
+.as-impilata__parte { height: 100%; }
+.as-impilata__parte--ha   { background: var(--filtro-ha); }
+.as-impilata__parte--oiii { background: var(--filtro-oiii); }
+.as-impilata__parte--sii  { background: var(--filtro-sii); }
+.as-impilata__parte--l    { background: var(--filtro-l); }
+.as-impilata__parte--osc  { background: var(--filtro-osc); }
+/* la parte che non si sa: tratteggiata, non un pezzo di colore in meno */
+.as-impilata__parte--ignoto {
+  background: var(--ignoto-fondo);
+  background-image: repeating-linear-gradient(45deg, var(--ignoto-tratteggio) 0 2px, transparent 2px 5px);
+}
+.as-impilata__voci { display: flex; flex-wrap: wrap; gap: var(--spazio-2) var(--spazio-3); }
+.as-impilata__voce {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2);
+  font-size: var(--testo-micro); color: var(--inchiostro-tenue);
+}
+.as-impilata__ore {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  color: var(--inchiostro); white-space: nowrap;
+}
+
+/* ==========================================================================
+   CARD — numero grande, elenco breve, oggetto, notte, avanzamento
+   Tutte dentro .as-carta: qui c'e' solo cio' che la carta non sa gia' fare.
+   ========================================================================== */
+/* Cifra e unita' vanno a capo FRA loro (flex-wrap), non dentro l'unita':
+   in una card stretta un flex nowrap comprime gli item sotto la loro
+   larghezza di contenuto, e "ore in tutto" si spezzerebbe in due righe. */
+.as-numero {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--spazio-2);
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--numero-grande); font-weight: var(--peso-grosso);
+  line-height: var(--interlinea-stretta);
+  color: var(--inchiostro);
+}
+.as-numero__unita {
+  font-family: var(--carattere-testo); font-size: var(--testo-corpo);
+  font-weight: var(--peso-medio); color: var(--inchiostro-debole);
+  white-space: nowrap;
+}
+.as-numero--ignoto { font-family: var(--carattere-testo); font-size: var(--titolo-sezione); color: var(--ignoto-inchiostro); }
+.as-numero__spiega {
+  margin: var(--spazio-1) 0 0; font-size: var(--testo-minuto);
+  line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue);
+}
+/* la variazione: segno e parola, non solo colore */
+/* La variazione e' una freccia, una cifra e una frase. Va a capo fra i tre
+   pezzi (flex-wrap), non DENTRO la cifra: in una card stretta gli item di
+   un flex si comprimono sotto la loro larghezza di contenuto, e una cifra
+   con la sua unita' si spezzerebbe in due righe ("+33,4" e "h" sotto). */
+.as-variazione {
+  display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: var(--spazio-2);
+  font-size: var(--testo-minuto); font-weight: var(--peso-medio);
+  color: var(--inchiostro-tenue);
+}
+/* il valore e la sua unita' sono una cosa sola */
+.as-variazione__cifra {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* nessun voto: la freccia e la parola dicono il verso, l'inchiostro e' lo
+   stesso in su e in giu'. Piu' ore non e' "bene", meno oggetti non e' "da
+   guardare": sono fatti, e li giudica chi legge. */
+.as-variazione--su .as-variazione__cifra,
+.as-variazione--giu .as-variazione__cifra { color: var(--inchiostro); }
+.as-variazione--su::before  { content: "\2191"; font-family: var(--carattere-cifre); }
+.as-variazione--giu::before { content: "\2193"; font-family: var(--carattere-cifre); }
+.as-variazione--pari::before { content: "\2192"; font-family: var(--carattere-cifre); }
+
+/* elenco breve di numeri dentro una card */
+.as-misure { display: flex; flex-wrap: wrap; gap: var(--spazio-4); margin: 0; padding: 0; }
+.as-misure__voce { display: grid; gap: 2px; }   /* 2px: etichetta e dato sono una cosa sola, non due */
+.as-misure__nome { font-size: var(--testo-micro); color: var(--inchiostro-debole); }
+.as-misure__dato {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--titolo-riga); font-weight: var(--peso-forte); color: var(--inchiostro);
+  white-space: nowrap;
+}
+
+/* riga di oggetti con le pastiglie dei filtri */
+.as-oggetti { display: flex; flex-wrap: wrap; gap: var(--spazio-2); margin: 0; padding: 0; list-style: none; }
+.as-oggetti__voce {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2);
+  padding: var(--spazio-1) var(--spazio-2);
+  border: 1px solid var(--linea); border-radius: var(--raggio-piccolo);
+  background: var(--fondo-carta-alta);
+  font-size: var(--testo-minuto);
+}
+.as-oggetti__nome { font-family: var(--carattere-cifre); font-weight: var(--peso-forte); color: var(--freddo); }
+
+/* riga con avanzamento verso un obiettivo, per filtro (Progetti) */
+.as-obiettivo { display: grid; gap: var(--spazio-2); }
+/* 7rem: la colonna dei nomi di filtro, larga quanto il piu' lungo dei nomi
+   ammessi ("A colori, senza UV e IR" va a capo, i nomi di banda no) */
+.as-obiettivo__riga { display: grid; grid-template-columns: 7rem 1fr auto; gap: var(--spazio-3); align-items: center; }
+.as-obiettivo__pista {
+  height: 8px; border-radius: var(--raggio-pillola);   /* 8px: pista dentro una riga, piu' sottile di quella di una card */
+  background: var(--fondo-incavo); border: 1px solid var(--linea); overflow: hidden;
+}
+.as-obiettivo__riempi { height: 100%; background: var(--grafico-serie); }
+.as-obiettivo__riempi--ha   { background: var(--filtro-ha); }
+.as-obiettivo__riempi--oiii { background: var(--filtro-oiii); }
+.as-obiettivo__riempi--sii  { background: var(--filtro-sii); }
+.as-obiettivo__conta {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-minuto); color: var(--inchiostro-tenue);
+  white-space: nowrap;   /* "14,2 / 20 h" e' una misura sola */
+}
+
+/* soglia = --soglia-stretta (720px): i grafici si piegano alla colonna */
+@container colonna (max-width: 720px) {
+  .as-obiettivo__riga { grid-template-columns: 1fr auto; }
+  .as-obiettivo__pista { grid-column: 1 / -1; }
+  .as-misure { gap: var(--spazio-3); }
+}
+
+
+/* ==========================================================================
+   BLOCCO 3 — gli altri mattoni
+   ========================================================================== */
+
+/* --- SUGGERIMENTO ---------------------------------------------------------
+   Si apre col mouse, col fuoco da tastiera E col tocco: il bersaglio e'
+   sempre un button o un a, quindi toccarlo gli da' il fuoco e :focus-within
+   basta. Il testo sta DENTRO il bersaglio ed e' aria-hidden: il nome
+   accessibile lo porta gia' aria-label, cosi' un lettore di schermo non
+   legge la stessa frase due volte.
+   Chiudere con Esc e' l'unica cosa che vuole una riga di codice: e' nelle
+   regole d'uso, non qui.                                                  */
+.as-suggerimento { position: relative; }
+.as-suggerimento--guscio { display: inline-flex; }
+.as-suggerimento__testo {
+  position: absolute; bottom: calc(100% + var(--spazio-2)); left: 50%;
+  translate: -50% 0;
+  z-index: 30;
+  width: max-content; max-width: var(--suggerimento-largo);
+  padding: var(--spazio-2) var(--spazio-3);
+  background: var(--fondo-carta-alta); color: var(--inchiostro);
+  border: 1px solid var(--linea-forte); border-radius: var(--raggio-piccolo);
+  box-shadow: var(--ombra-rilievo);
+  font: var(--peso-normale) var(--testo-minuto)/var(--interlinea-corpo) var(--carattere-testo);
+  text-align: left; white-space: normal;
+  /* display: none e non visibility: hidden — un elemento nascosto con
+     visibility occupa ancora l'area da scorrere, e dentro un contenitore
+     che scorre (la griglia della heatmap) farebbe comparire una barra di
+     scorrimento per un pannello che non si vede. Niente transizione: e' il
+     prezzo di sparire davvero, e un suggerimento istantaneo va bene. */
+  display: none;
+}
+.as-suggerimento__testo::after {          /* la punta che indica il bersaglio */
+  content: ""; position: absolute; top: 100%; left: 50%; translate: -50% -50%;
+  width: var(--suggerimento-punta); height: var(--suggerimento-punta); rotate: 45deg;
+  background: var(--fondo-carta-alta);
+  border-right: 1px solid var(--linea-forte);
+  border-bottom: 1px solid var(--linea-forte);
+}
+/* aperto a mano, per mostrarlo in una guida o per tenerlo aperto dal codice
+   quando l'apertura la decide un tocco: e' la stessa via di hover e fuoco */
+.as-suggerimento--aperto > .as-suggerimento__testo,
+.as-suggerimento:hover > .as-suggerimento__testo,
+.as-suggerimento:focus-visible > .as-suggerimento__testo,
+.as-suggerimento:focus-within > .as-suggerimento__testo,
+.as-suggerimento__testo--aperto {
+  display: block;
+}
+/* Ancorato a un lato del bersaglio invece che centrato: serve quando il
+   bersaglio e' piccolo e vive in un contenitore che ritaglia — un pannello
+   centrato su una cella da 24px sborda di oltre 100px per lato. --destra si
+   apre verso destra (per i bersagli nella prima meta' della fila),
+   --sinistra verso sinistra (per quelli nella seconda). */
+.as-suggerimento__testo--destra   { left: 0; right: auto; translate: 0 0; }
+.as-suggerimento__testo--destra::after { left: var(--spazio-3); translate: 0 -50%; }
+.as-suggerimento__testo--sinistra { left: auto; right: 0; translate: 0 0; }
+.as-suggerimento__testo--sinistra::after { left: auto; right: var(--spazio-3); translate: 0 -50%; }
+
+/* sotto il bersaglio, quando sopra non c'e' posto */
+.as-suggerimento__testo--sotto { bottom: auto; top: calc(100% + var(--spazio-2)); }
+.as-suggerimento__testo--sotto::after {
+  top: auto; bottom: 100%; translate: -50% 50%;
+  border: 0; border-left: 1px solid var(--linea-forte); border-top: 1px solid var(--linea-forte);
+}
+
+/* --- BARRA DI UN ELENCO ---------------------------------------------------
+   Ricerca, un elenco a comparsa, un segmentato, l'ordinamento. Il controllo
+   si scegli per la natura delle voci, non per lo schermo.                 */
+.as-barra {
+  display: flex; align-items: flex-end; gap: var(--spazio-3); flex-wrap: wrap;
+  padding: var(--spazio-3) var(--spazio-5);
+  border-bottom: 1px solid var(--linea);
+  background: var(--fondo-app-basso);
+}
+/* 340px: oltre questa misura un campo di ricerca sembra un campo di testo
+   lungo, e la barra perde il suo ritmo di controlli affiancati */
+.as-barra__cerca { flex: 1 1 var(--misura-cerca); min-width: var(--misura-cerca); max-width: 340px; }
+.as-barra__coda { margin-left: auto; display: flex; align-items: flex-end; gap: var(--spazio-3); flex-wrap: wrap; }
+.as-barra__conta {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-minuto); color: var(--inchiostro-debole);
+  white-space: nowrap; padding-bottom: var(--spazio-2);
+}
+
+/* --- CAMPO DI RICERCA CON SUGGERIMENTI ------------------------------------
+   Le voci vengono dall'archivio, quindi e' un elenco a comparsa e non un
+   segmentato. Marcatura: input role="combobox" + ul role="listbox".      */
+.as-cerca { position: relative; display: grid; gap: var(--spazio-2); max-width: var(--misura-campo); }
+.as-cerca__elenco {
+  position: absolute; top: calc(100% + var(--spazio-1)); left: 0; right: 0; z-index: 25;
+  margin: 0; padding: var(--spazio-1); list-style: none;
+  max-height: var(--elenco-alto); overflow-y: auto;
+  background: var(--fondo-carta-alta);
+  border: 1px solid var(--linea-forte); border-radius: var(--raggio-piccolo);
+  box-shadow: var(--ombra-rilievo);
+}
+.as-cerca__voce {
+  display: flex; align-items: center; gap: var(--spazio-3);
+  min-height: var(--riga-alta); padding: 0 var(--spazio-3);
+  border-radius: var(--raggio-minimo);
+  font-size: var(--testo-corpo); color: var(--inchiostro-tenue);
+  cursor: pointer;
+}
+.as-cerca__voce:hover { background: var(--fondo-rilievo); color: var(--inchiostro); }
+.as-cerca__voce[aria-selected="true"] {
+  background: var(--accento-velo); color: var(--inchiostro);
+  box-shadow: inset var(--barra-stato) 0 0 var(--accento);
+}
+.as-cerca__voce mark {                    /* la parte che hai scritto */
+  background: none; color: var(--inchiostro); font-weight: var(--peso-grosso);
+  /* 2px: la sottolineatura sta sotto le lettere con la pancia (g, p) senza
+     staccarsi dalla parola — il 3px dei collegamenti qui e' troppo */
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.as-cerca__coda { margin-left: auto; font-size: var(--testo-micro); color: var(--inchiostro-debole); }
+.as-cerca__niente {
+  padding: var(--spazio-3);
+  font-size: var(--testo-minuto); line-height: var(--interlinea-prosa);
+  color: var(--inchiostro-tenue);
+}
+
+/* --- SCHEDE dentro una pagina --------------------------------------------- */
+.as-schede {
+  display: flex; gap: var(--spazio-1); flex-wrap: wrap;
+  border-bottom: 1px solid var(--linea);
+  padding: 0 var(--spazio-5);
+}
+.as-schede__voce {
+  all: unset; cursor: pointer;
+  min-height: var(--riga-alta); padding: 0 var(--spazio-4);
+  display: inline-flex; align-items: center; gap: var(--spazio-2);
+  font: var(--peso-medio) var(--testo-corpo)/1 var(--carattere-testo);
+  color: var(--inchiostro-tenue);
+  border-bottom: var(--filo) solid transparent;
+  margin-bottom: -1px;
+}
+.as-schede__voce:hover { color: var(--inchiostro); }
+.as-schede__voce[aria-selected="true"] {
+  color: var(--inchiostro); font-weight: var(--peso-forte);
+  border-bottom-color: var(--accento);
+}
+.as-schede__voce[disabled] { color: var(--inchiostro-spento); cursor: not-allowed; }
+
+/* --- NAVIGAZIONE A SEZIONI (Impostazioni) --------------------------------
+   Ogni sezione ha il suo indirizzo: sono ancore, non bottoni.            */
+.as-sezioni { display: grid; gap: 2px; align-content: start; }
+.as-sezioni__voce {
+  display: flex; align-items: center; gap: var(--spazio-3);
+  min-height: var(--riga-alta); padding: 0 var(--spazio-3);
+  border-radius: var(--raggio-medio);
+  color: var(--inchiostro-tenue); text-decoration: none;
+  font-size: var(--testo-corpo);
+}
+.as-sezioni__voce:hover { background: var(--fondo-rilievo); color: var(--inchiostro); }
+.as-sezioni__voce[aria-current="true"] {
+  background: var(--accento-velo); color: var(--inchiostro);
+  font-weight: var(--peso-forte);
+  box-shadow: inset var(--filo) 0 0 var(--accento);
+}
+
+/* --- LA PAGINA DELLE IMPOSTAZIONI ----------------------------------------
+   Le sezioni a sinistra, la sezione aperta accanto. Non e' una container
+   query: le due colonne si affiancano finche' il pannello ha i suoi
+   --impostazioni-corpo, e quando non li ha piu' la navigazione passa
+   sopra. Il numero enorme su .as-impostazioni__corpo (999) fa si' che
+   tutto lo spazio in piu' vada al pannello e la colonna delle sezioni
+   resti della sua misura.                                               */
+.as-impostazioni {
+  display: flex; flex-wrap: wrap; align-items: flex-start;
+  gap: var(--spazio-5);
+}
+.as-impostazioni__lato { flex: 1 1 var(--sezioni-largo); min-width: 0; }
+.as-impostazioni__corpo {
+  flex: 999 1 var(--impostazioni-corpo); min-width: 0;
+  display: grid; gap: var(--spazio-5); align-content: start;
+}
+
+/* --- TESTATA DI DETTAGLIO, col percorso ----------------------------------- */
+.as-testata { display: grid; gap: var(--spazio-2); }
+.as-percorso { display: flex; align-items: center; gap: var(--spazio-2); flex-wrap: wrap; font-size: var(--testo-minuto); }
+.as-percorso a { color: var(--inchiostro-tenue); text-decoration: none; }
+.as-percorso a:hover { color: var(--inchiostro); text-decoration: underline; }
+.as-percorso__separa { color: var(--inchiostro-spento); }
+.as-percorso__qui { color: var(--inchiostro); font-weight: var(--peso-medio); }
+.as-testata__titolo {
+  margin: 0; font-family: var(--carattere-titolo);
+  font-size: var(--titolo-pagina); font-weight: var(--peso-forte);
+  letter-spacing: var(--spaziatura-titolo);
+}
+.as-testata__sotto { margin: 0; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+
+/* --- SCHEDA DI DETTAGLIO --------------------------------------------------
+   Accanto alla pagina (un pannello che divide la colonna) oppure sopra, se
+   la colonna e' stretta: e' la sola cosa che cambia con la larghezza.    */
+.as-dettaglio {
+  display: grid; gap: var(--spazio-5);
+  align-content: start;
+  width: var(--dettaglio-largo); max-width: 100%;
+  padding: var(--spazio-5);
+  background: var(--fondo-carta);
+  border-left: 1px solid var(--linea);
+}
+.as-dettaglio__testa { display: flex; align-items: flex-start; gap: var(--spazio-4); }
+.as-dettaglio__chiudi { margin-left: auto; }
+.as-dettaglio__sezione { display: grid; gap: var(--spazio-3); }
+.as-dettaglio__nome {
+  font-family: var(--carattere-cifre); font-size: var(--testo-micro);
+  letter-spacing: var(--spaziatura-soprattitolo); text-transform: uppercase;
+  color: var(--inchiostro-debole);
+}
+
+/* --- SELETTORE DI PERIODO ------------------------------------------------- */
+.as-periodo { display: flex; align-items: center; gap: var(--spazio-2); flex-wrap: wrap; }
+.as-periodo__intervallo { display: flex; align-items: center; gap: var(--spazio-2); }
+.as-periodo__a { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+
+/* --- AVVISO BREVE (compare e sparisce) -----------------------------------
+   Vive in un guscio con aria-live="polite": chi non vede lo sente.       */
+.as-breve-guscio {
+  position: fixed; bottom: var(--spazio-5); left: 50%; translate: -50% 0;
+  z-index: 40; display: grid; gap: var(--spazio-2); justify-items: center;
+  pointer-events: none;
+}
+.as-breve {
+  display: flex; align-items: center; gap: var(--spazio-3);
+  width: max-content; max-width: var(--breve-largo);
+  padding: var(--spazio-3) var(--spazio-4);
+  background: var(--velo-vetro); backdrop-filter: blur(var(--sfocatura));
+  border: 1px solid var(--linea-forte); border-radius: var(--raggio-pillola);
+  box-shadow: var(--ombra-rilievo);
+  font-size: var(--testo-minuto); color: var(--inchiostro);
+  pointer-events: auto;
+}
+.as-breve__segno { font-family: var(--carattere-cifre); color: var(--esito-buono-inchiostro); }
+/* l'avviso buono e' role="status" (aspetta il suo turno), quello d'allarme
+   role="alert" (interrompe): resta finche' non lo chiudi tu, quindi va
+   detto subito. Sta nella marcatura, non qui: vedi le regole d'uso. */
+.as-breve--allarme .as-breve__segno { color: var(--esito-allarme-inchiostro); }
+.as-breve--allarme { border-color: var(--esito-allarme); }
+.as-breve__annulla { margin-left: var(--spazio-2); }
+
+/* --- DIALOGO DI CONFERMA -------------------------------------------------
+   Questo SI' e' una finestra: prende il velo e l'ombra lunga, e il bottone
+   che conferma dice il verbo. Marcatura: <dialog> oppure role="dialog"
+   aria-modal="true", col fuoco dentro.                                   */
+/* v10, correzione: la traccia e' minmax(0,1fr) e non piu' implicita.
+   Con place-items: center la colonna implicita si dimensionava sul
+   max-content del dialogo, quindi il suo max-width: 100% si risolveva
+   contro quella misura gonfiata e non tagliava mai: su una finestra piu'
+   stretta del dialogo (un telefono, e il pannello della Luna e' largo
+   528px) il dialogo sbordava dal fondale invece di stringersi. Adesso la
+   traccia e' limitata dal contenitore e il ripiegamento avviene da se'. */
+.as-dialogo-fondale {
+  position: fixed; inset: 0; z-index: 50;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  justify-items: center; align-content: center;
+  padding: var(--spazio-5);
+  background: var(--velo-fondale);
+}
+.as-dialogo {
+  width: var(--dialogo-largo); max-width: 100%;
+  display: grid; gap: var(--spazio-4);
+  padding: var(--spazio-5);
+  background: var(--fondo-carta-alta);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-carta);
+  box-shadow: var(--ombra-comparsa);
+}
+.as-dialogo__titolo {
+  margin: 0; font-family: var(--carattere-titolo);
+  font-size: var(--titolo-sezione); font-weight: var(--peso-forte);
+  letter-spacing: var(--spaziatura-titolo);
+}
+.as-dialogo__testo {
+  margin: 0; font-size: var(--testo-lungo); line-height: var(--interlinea-prosa);
+  color: var(--inchiostro-tenue);
+}
+.as-dialogo__perdi {
+  list-style: none; margin: 0; padding: var(--spazio-3) var(--spazio-4);
+  display: grid; gap: var(--spazio-2);
+  background: var(--fondo-incavo); border: 1px solid var(--linea);
+  border-radius: var(--raggio-piccolo);
+  font-size: var(--testo-minuto); color: var(--inchiostro-tenue);
+}
+.as-dialogo__perdi b { font-family: var(--carattere-cifre); color: var(--inchiostro); }
+.as-dialogo__azioni { display: flex; gap: var(--spazio-2); justify-content: flex-end; flex-wrap: wrap; }
+
+/* --- SCHELETRI, misure pronte -------------------------------------------- */
+.as-scheletro--numero { height: var(--numero-grande); width: 60%; }
+.as-scheletro--grafico { height: var(--grafico-alto); width: 100%; border-radius: var(--raggio-grande); }
+.as-scheletro--cella { height: var(--riga-alta); width: 100%; }
+/* 64px: la larghezza di una pastiglia di filtro col suo nome ("Ha Banda"),
+   che e' cio' che questo scheletro sta aspettando */
+.as-scheletro--pastiglia { height: var(--pastiglia); width: 64px; border-radius: var(--raggio-pillola); }
+
+/* soglia = --soglia-stretta (720px): il dettaglio non sta accanto, sta sopra */
+@container colonna (max-width: 720px) {
+  /* Il riquadro di taglio e' piu' piccolo, quindi il pannello si stringe con
+     lui — e stringendosi si allunga: la frase piu' lunga della heatmap passa
+     da tre righe a quattro. L'aria sopra la griglia cresce di conseguenza,
+     o sulla prima riga di anni il pannello tornerebbe mozzato. Il conto e'
+     accanto ai token, in token.css. */
+  .as-suggerimento__testo { max-width: var(--suggerimento-stretto); }
+  .as-heat__griglia { --suggerimento-aria: var(--suggerimento-aria-stretta); }
+  .as-dettaglio { width: 100%; border-left: 0; border-top: 1px solid var(--linea); }
+  .as-barra { padding: var(--spazio-3) var(--spazio-4); }
+  .as-barra__coda { margin-left: 0; width: 100%; }
+  .as-schede { padding: 0 var(--spazio-4); }
+}
+
+/* ==========================================================================
+   ARCHIVIO — la griglia di carte, il carico progressivo, i controlli di
+   una pagina. Tre mattoni che il v4 non aveva perche' nessuna pagina li
+   aveva ancora chiesti.
+   ========================================================================== */
+
+/* --- GRIGLIA DI CARTE — .as-griglia ---------------------------------------
+   Colonne quante ne stanno, larghe uguali, mai piu' strette di
+   --carta-minima. Il min() serve al caso in cui la colonna sia piu' stretta
+   di una carta sola (telefono in verticale, o la carta dentro una carta):
+   senza, la traccia resterebbe larga --carta-minima e la griglia sborderebbe
+   dal suo contenitore invece di scendere a una colonna.
+   Le carte di una fila sono alte uguali e il piede resta in fondo: la carta
+   e' una griglia di tre fasce (anteprima, corpo, piede) e il corpo prende
+   quello che resta. Cosi' l'occhio confronta le ultime notti su una riga
+   sola, che e' il motivo per cui questa vista esiste.                     */
+.as-griglia {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--carta-minima), 100%), 1fr));
+  gap: var(--spazio-4);
+  margin: 0; padding: 0; list-style: none;
+}
+.as-griglia > li { display: grid; }
+/* Le carte di una fila sono alte uguali: la carta e' una colonna e il suo
+   corpo prende lo spazio che resta, cosi' l'ultima fascia (piede, oppure il
+   corpo stesso) resta in fondo. Colonna e non tre fasce fisse: una carta ha
+   anteprima, intestazione e corpo, un'altra non ha il piede, e una griglia
+   a righe contate stirerebbe la fascia sbagliata. */
+.as-griglia > li > .as-carta {
+  display: flex; flex-direction: column;
+  height: 100%;
+}
+.as-griglia > li > .as-carta > .as-carta__corpo { flex: 1 1 auto; }
+
+/* --- CARICO PROGRESSIVO — .as-carico -------------------------------------
+   "Stai vedendo 20 di 1.240": il totale e' sempre dichiarato, anche quando
+   non e' ancora tutto in pagina. Sta in fondo all'elenco, non in cima: si
+   legge quando si e' arrivati alla fine di cio' che c'e'.
+   Nella carta dell'elenco e' l'ultima fascia (linea sopra e fondo di
+   servizio, come .as-carta__piede); sotto una griglia di carte, dove non
+   c'e' nessuna carta che lo contenga, --nudo gli toglie linea e fondo.   */
+.as-carico {
+  display: grid; justify-items: center; gap: var(--spazio-3);
+  padding: var(--spazio-4) var(--spazio-5);
+  border-top: 1px solid var(--linea);
+  background: var(--fondo-app-basso);
+  text-align: center;
+}
+.as-carico--nudo { border-top: 0; background: none; padding-inline: 0; }
+.as-carico__conta { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-carico__conta b {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-weight: var(--peso-forte); color: var(--inchiostro);
+}
+/* la fine dell'elenco: nessun bottone, e la frase lo dice invece di lasciare
+   un bottone che non fa niente */
+.as-carico--fine .as-carico__conta { color: var(--inchiostro-tenue); }
+
+/* --- CAMPI E GRUPPI DENTRO UNA BARRA ------------------------------------
+   Una scelta in barra non si allarga oltre --misura-scelta, e un gruppo
+   (etichetta piu' controllo, come "Ordina") sta in colonna. Sono qui e non
+   negli attributi style delle pagine: una misura scritta a mano dentro una
+   pagina, quando la pagina diventa un componente, e' una misura senza casa
+   che nessuno controlla piu'.                                            */
+.as-barra__campo { max-width: var(--misura-scelta); gap: var(--spazio-2); }
+.as-barra__gruppo { display: grid; gap: var(--spazio-2); }
+
+/* --- AREA DI UNA VISTA — .as-vista-guscio --------------------------------
+   Il tetto di cio' che scorre. Le pagine servono a non scorrere, ma da sole
+   non bastano: dodici carte a due colonne fanno sei file, e la barra delle
+   pagine finisce sotto la piega — cioe' per cambiare pagina tocca fare lo
+   scroll che le pagine dovevano togliere. Qui l'area dei risultati prende un
+   tetto e scorre dentro di se', e la barra delle pagine, che le sta fuori,
+   resta sempre in vista.
+   Il tetto non si calcola a mano: l'area prende quel che resta dopo azioni,
+   barra e pagine, qualunque sia la loro altezza. Perche' funzioni, la pagina
+   che la contiene porta .as-pagina--schermo e il guscio .as-guscio--schermo:
+   il guscio e' alto quanto la finestra e questa e' la sola cosa che scorre.
+   Un calcolo a mano (100svh meno una costante) non torna mai: la barra dei
+   filtri e la riga delle pagine vanno a capo a larghezze diverse.        */
+.as-vista-guscio {
+  flex: 1 1 auto; min-height: 0;     /* min-height: 0, senno' un figlio in
+                                        flex non si stringe sotto il suo
+                                        contenuto e il tetto non ha effetto */
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* --- PAGINE — .as-pagine ------------------------------------------------
+   L'elenco a pagine, al posto del carico progressivo: dodici oggetti per
+   pagina, cosi' una pagina sta in uno schermo e non si scorre. Dice sempre
+   quali si vedono e quanti sono in tutto, perche' un numero di pagina da
+   solo non dice quanto manca.
+   I passi sono bottoni veri: .as-bottone per avanti e indietro (a fine
+   corsa portano disabled, non spariscono, senno' i controlli ballano), e un
+   numero per pagina. La pagina in cui si e' porta aria-current="page" e si
+   riconosce dal fondo pieno E dal peso del carattere, non dal solo colore.
+   --salto e' il segno di omissione fra numeri lontani: non e' un bottone e
+   non si puo' toccare.                                                   */
+.as-pagine {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--spazio-3);
+  padding: var(--spazio-4) var(--spazio-5);
+  border-top: 1px solid var(--linea);
+  background: var(--fondo-app-basso);
+}
+.as-pagine--nuda { border-top: 0; background: none; padding-inline: 0; }
+.as-pagine__conta { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-pagine__conta b {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-weight: var(--peso-forte); color: var(--inchiostro);
+}
+.as-pagine__passi { display: flex; align-items: center; gap: var(--spazio-2); flex-wrap: wrap; }
+.as-pagine__numero {
+  display: inline-flex; align-items: center; justify-content: center;
+  /* 44px di area toccabile (WCAG 2.5.8): e' la misura di una riga */
+  min-width: var(--riga-alta); min-height: var(--riga-alta);
+  padding: 0 var(--spazio-2);
+  appearance: none; cursor: pointer;
+  border: 1px solid transparent; border-radius: var(--raggio-piccolo);
+  background: none; text-decoration: none;
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-minuto); color: var(--inchiostro-tenue);
+}
+.as-pagine__numero:hover { background: var(--fondo-rilievo); color: var(--inchiostro); }
+.as-pagine__numero:focus-visible {
+  outline: var(--fuoco-spessore) solid var(--linea-fuoco);
+  outline-offset: var(--fuoco-stacco);
+}
+.as-pagine__numero[aria-current="page"] {
+  background: var(--accento-velo); border-color: var(--accento);
+  color: var(--inchiostro-accento); font-weight: var(--peso-grosso);
+}
+.as-pagine__salto {
+  min-width: var(--spazio-4); text-align: center;
+  color: var(--inchiostro-spento); font-size: var(--testo-minuto);
+}
+
+/* --- CONTROLLI DI UNA PAGINA — .as-pagina__azioni ------------------------
+   Una riga di controlli che vale per tutta la pagina (l'interruttore fra le
+   viste dell'Archivio). Serve perche' .as-pagina e' una griglia: un
+   .as-segmentato messo dentro da solo diventa larghissimo quanto la
+   colonna, e un interruttore a due voci larghe mezza pagina non si legge
+   piu' come un interruttore. Qui dentro ogni controllo resta della sua
+   misura.                                                                */
+.as-pagina__azioni { display: flex; align-items: center; gap: var(--spazio-3); flex-wrap: wrap; }
+
+/* ==========================================================================
+   PRIMO AVVIO — il binario dei passi e l'entrata
+   Due mattoni chiesti dal primo avvio: .as-passi, che dice a che punto sei
+   e come si chiamano i passi, e .as-entra, il movimento d'apertura.
+   ========================================================================== */
+
+/* --- IL BINARIO DEI PASSI — .as-passi -------------------------------------
+   Marcatura: <nav> con il suo nome, dentro una <ol> — i passi sono in
+   ordine e il numero e' informazione, quindi lista ordinata. La tappa di
+   adesso porta aria-current="step" (il valore giusto per un passo dentro un
+   procedimento; "page" e' per la pagina, "true" per una sezione: e' per
+   questo che .as-sezioni non serviva qui).
+   Tre stati, e nessuno si distingue per il solo colore (1.4.1):
+     fatta    filo pieno, disco con la spunta, e la parola "fatto" per chi legge a voce
+     adesso   disco pieno, cifra in negativo, nome in grassetto, parola "sei qui"
+     dopo     disco punteggiato, cifra tenue, filo grigio
+   Quante tappe ci sono si decide entrando: chi non ha il riconoscitore ne
+   vede quattro dal primo passo, non tre che diventano quattro a meta'.
+   Va a capo da sola: a 800px in verticale le quattro tappe stanno su due
+   righe. Il filo sta in coda alla tappa (::after) e non in testa alla
+   seguente: cosi' una riga che va a capo FINISCE col filo — che li' dice
+   "continua sotto" — invece di COMINCIARE con un trattino sospeso alla
+   sinistra del disco, che si legge come un errore di disegno. L'ultima
+   tappa non ha filo, quindi il binario non finisce mai in un tratto
+   appeso al nulla.                                                       */
+.as-passi {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--spazio-2) var(--spazio-3);
+  margin: 0; padding: 0; list-style: none;
+}
+.as-passi__tappa { display: flex; align-items: center; gap: var(--spazio-2); min-width: 0; }
+.as-passi__tappa:not(:last-child)::after {
+  content: ""; flex: none;
+  width: var(--passo-tratto); height: var(--filo);
+  margin-left: var(--spazio-1);
+  border-radius: var(--raggio-pillola);
+  background: var(--linea-significato);
+}
+/* il filo che esce da una tappa fatta e' strada gia' percorsa: pieno
+   d'accento invece che grigio */
+.as-passi__tappa--fatto::after { background: var(--accento); }
+
+.as-passi__segno {
+  flex: none;
+  width: var(--passo-segno); height: var(--passo-segno);
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px dotted var(--linea-significato);
+  background: var(--fondo-incavo);
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-minuto); color: var(--inchiostro-debole);
+}
+.as-passi__nome { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+
+.as-passi__tappa--fatto .as-passi__segno {
+  border-style: solid; border-color: var(--accento);
+  background: var(--accento-velo); color: var(--inchiostro-accento);
+}
+.as-passi__tappa--fatto .as-passi__nome { color: var(--inchiostro-tenue); }
+
+.as-passi__tappa[aria-current="step"] .as-passi__segno {
+  border-style: solid; border-color: var(--accento);
+  background: var(--accento); color: var(--inchiostro-su-accento);
+  font-weight: var(--peso-grosso);
+  /* l'alone e' la terza forma dello stato, dopo il pieno e il grassetto:
+     lo stacco e' quello del fuoco, cosi' i due anelli non si somigliano
+     per caso ma per misura */
+  box-shadow: 0 0 0 var(--fuoco-stacco) var(--accento-velo);
+}
+.as-passi__tappa[aria-current="step"] .as-passi__nome {
+  color: var(--inchiostro); font-weight: var(--peso-forte);
+}
+
+/* --- L'ENTRATA — .as-entra ------------------------------------------------
+   Il movimento d'apertura del primo avvio, che si vede una volta sola
+   nella vita dell'installazione. Tre cose ne fanno parte, e tutte e tre
+   stanno nei token:
+   - la durata e' --durata-media (o --durata-breve per le tappe): sotto
+     prefers-reduced-motion i token scendono a 1ms e il movimento sparisce
+     da se', senza una seconda regola da ricordarsi;
+   - il ritardo e' un MULTIPLO di --durata-breve (--ritardo: 1, 2, 3...),
+     non un numero suo: un ritardo scritto a mano resterebbe in piedi
+     proprio dove il movimento e' stato tolto;
+   - non ritarda l'uso: l'elemento e' in pagina dal primo fotogramma e
+     prende il fuoco da subito — cambiano solo opacita' e posizione.
+   Solo all'apertura: passare dal passo 2 al 3 non porta .as-entra. */
+.as-entra {
+  animation: as-entra var(--durata-media) var(--curva) both;
+  animation-delay: calc(var(--durata-breve) * var(--ritardo, 0));
+}
+@keyframes as-entra {
+  from { opacity: 0; translate: 0 var(--spazio-3); }
+}
+/* l'alone di cielo dietro la colonna: nessun movimento, solo la luce che
+   sale, e piu' lenta di tutto il resto (tre volte --durata-media) */
+.as-entra--alone {
+  animation-name: as-alone;
+  animation-duration: calc(var(--durata-media) * 3);
+}
+@keyframes as-alone { from { opacity: 0; } }
+
+/* --- LA SCALA DI BORTLE — .as-bortle, .as-bortle-letta -------------------
+   La stessa scala compare in tre posti: nel primo avvio, dove si sceglie;
+   nella scheda del luogo, dove si corregge; nella barra laterale, dove si
+   legge e basta. Da qui TRE forme, una per posto:
+   - .as-bortle          estesa, le nove fasce in fila, un radiogroup:
+                         il primo avvio e la scheda del luogo;
+   - .as-bortle-letta    compatta, una riga sola: dentro una riga di elenco
+                         o l'intestazione di una carta, dove la classe e'
+                         un attributo dell'oggetto che si sta guardando
+                         (l'Archivio, il catalogo, la scheda del luogo);
+   - .as-bortle-scala    la scala intera con una fascia marcata: SOLO nel
+                         piede della barra laterale.
+   Nel PIEDE DELLA BARRA vale .as-bortle-scala, e .as-bortle-letta non ci
+   va piu'. Il motivo e' la domanda: in una riga d'elenco si chiede "che
+   classe ha questo posto" e la coppia classe+misura risponde; in barra si
+   chiede "quanto e' buono il mio cielo", e a quella una cifra su nove non
+   risponde — nove non e' una scala che si ha in testa. La barra e' anche
+   l'unico posto dove la misura in magnitudini non compare (vedi la seconda
+   eccezione, sotto): senza la misura, .as-bortle-letta sarebbe una fascia
+   colorata e un numero, cioe' meno di quello che gia' fa.
+   Tre regole, e valgono per tutte e due:
+   - il colore non dice mai da solo che classe e': la cifra e' sempre
+     scritta, e nella forma compatta anche la parola "Bortle";
+   - la misura sta sempre accanto alla classe ("Bortle 4 (20,8)"): la scala
+     non ha confini ufficiali in magnitudini, e la sola classe farebbe
+     passare per legge una conversione che e' una convenzione. Due posti
+     fanno eccezione, e sono i due dove non si sta dichiarando niente: il
+     primo avvio, dove si sceglie e basta, e il PIEDE DELLA BARRA
+     LATERALE, dove la classe sta accanto al nome del sito come
+     promemoria di dov'e' puntata l'app — la coppia intera si legge nella
+     scheda del luogo, in Impostazioni, che e' il posto dove si corregge.
+     La coppia classe/misura la calcola l'app, e questi sono i suoi
+     pavimenti in magnitudini per arcosecondo quadrato (la conversione dei
+     siti di astrofotografia, che e' il numero con cui l'utente confronta
+     il nostro): 1 = 21,76 · 2 = 21,60 · 3 = 21,30 · 4 = 20,40 ·
+     5 = 19,10 · 6 = 18,50 · 7 = 18,00 · 8 = 17,00 · 9 = sotto. In un
+     mockup la coppia va presa da qui, senno' insegna l'altra famiglia di
+     conversione, che sullo stesso cielo differisce fino a due classi;
+   - i due estremi si leggono anche senza i colori: sono scritti a parole
+     sotto la scala, e l'ordine da 1 a 9 e' quello della lettura.
+   La voce e' un bottone: alta --riga-alta meno --spazio-2 (36px) e larga
+   un nono della scala (~44px), quindi sopra i 24px di WCAG 2.5.8.        */
+.as-bortle { display: grid; gap: var(--spazio-2); max-width: var(--misura-campo); }
+.as-bortle__scala { display: flex; gap: var(--spazio-1); }
+.as-bortle__voce {
+  all: unset; cursor: pointer;
+  flex: 1 1 0; min-width: 0;
+  display: grid; gap: var(--spazio-1); justify-items: center; align-content: center;
+  min-height: calc(var(--riga-alta) - var(--spazio-2));
+  padding: var(--spazio-1) 0;
+  border: 1px solid var(--linea); border-radius: var(--raggio-minimo);
+  background: var(--fondo-incavo);
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-minuto); color: var(--inchiostro-tenue);
+  text-align: center;
+}
+.as-bortle__fascia {
+  width: 100%; height: var(--bortle-banda);
+  border-radius: var(--raggio-pillola);
+  background: var(--bortle-colore, var(--ignoto-inchiostro));
+}
+.as-bortle__voce:hover { background: var(--fondo-rilievo); color: var(--inchiostro); border-color: var(--inchiostro-spento); }
+/* scelta: fondo, bordo e peso, oltre alla banda — tre segni, nessuno dei
+   quali e' la tinta della fascia */
+.as-bortle__voce[aria-checked="true"] {
+  background: var(--accento-velo); border-color: var(--accento);
+  color: var(--inchiostro); font-weight: var(--peso-grosso);
+}
+.as-bortle__voce[disabled] { color: var(--inchiostro-spento); cursor: not-allowed; }
+.as-bortle__estremi {
+  margin: 0; display: flex; justify-content: space-between; gap: var(--spazio-3);
+  font-size: var(--testo-micro); color: var(--inchiostro-debole);
+}
+
+.as-bortle-letta {
+  margin: 0; display: inline-flex; align-items: center; gap: var(--spazio-2);
+  font-size: var(--testo-minuto); color: var(--inchiostro-tenue);
+}
+.as-bortle-letta__fascia {
+  flex: none; width: var(--pastiglia); height: var(--pastiglia);
+  border-radius: var(--raggio-appena);
+  border: 1px solid var(--linea-forte);
+  background: var(--bortle-colore, var(--ignoto-inchiostro));
+}
+/* non impostata: la terza forma del dato, tratteggio e niente tinta */
+.as-bortle-letta__fascia--ignota {
+  background: var(--ignoto-fondo);
+  border-style: dotted; border-color: var(--ignoto-tratteggio);
+}
+.as-bortle-letta__classe { font-family: var(--carattere-cifre); font-weight: var(--peso-forte); color: var(--inchiostro); }
+.as-bortle-letta__misura { font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums; color: var(--inchiostro-debole); }
+
+/* --- LA SCALA INTERA, LETTA — .as-bortle-scala --------------------------
+   Terza forma, dopo l'estesa (dove si sceglie) e la compatta (dove si legge
+   una classe sola). Qui si vedono tutte e nove le fasce e una e' marcata.
+   Serve nel piede della barra, dove la domanda non e' "che classe ho" ma
+   "quanto e' buono il mio cielo rispetto agli altri": nove non e' una scala
+   che si ha in testa, e la cifra da sola non dice se sei vicino al buio o
+   alla citta'. Vedendo la rampa intera, lo dice la posizione.
+   NON e' interattiva: e' un'immagine col suo nome accessibile, quindi le
+   fasce possono stare sotto i 24px, che valgono per i bersagli (WCAG 2.5.8).
+   Per cambiarla si va in Impostazioni, ed e' li' che la scala e' un
+   radiogroup vero.
+   La fascia di adesso non si distingue per la tinta (1.4.1): e' piu' alta,
+   ha il suo anello di inchiostro e porta la cifra SCRITTA sotto. La cifra
+   sta sotto e non dentro perche' le nove tinte vanno dal ciano al rosa e
+   nessun colore di testo regge il contrasto su tutte e nove.
+   Gli estremi sono scritti a parole, come nelle altre due forme.          */
+.as-bortle-scala { display: grid; gap: var(--spazio-2); }
+.as-bortle-scala__dice { margin: 0; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-bortle-scala__dice b {
+  color: var(--inchiostro); font-size: var(--testo-corpo); font-weight: var(--peso-forte);
+}
+.as-bortle-scala__scala { display: grid; grid-template-columns: repeat(9, 1fr); gap: 2px; }
+/* due righe per ogni voce, e la seconda e' riservata anche dove la cifra non
+   c'e': cosi' tutte e nove le fasce poggiano sulla stessa linea e quella di
+   adesso cresce verso l'alto, invece di sballare la fila. */
+.as-bortle-scala__voce {
+  display: grid; gap: 2px; justify-items: center;
+  grid-template-rows: 1fr calc(var(--testo-micro) + 2px);
+  align-items: end;
+}
+.as-bortle-scala__banda {
+  width: 100%; height: var(--bortle-banda);
+  border-radius: var(--raggio-appena);
+  background: var(--bortle-colore, var(--ignoto-inchiostro));
+}
+.as-bortle-scala__voce--qui .as-bortle-scala__banda {
+  height: calc(var(--bortle-banda) * 2.5);
+  box-shadow: 0 0 0 1px var(--inchiostro);
+}
+.as-bortle-scala__voce b {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-micro); font-weight: var(--peso-grosso); color: var(--inchiostro);
+  line-height: 1;
+}
+/* classe non dichiarata: l'API lo manda, ed e' un caso vero. La scala resta
+   intera — e' il metro, e il metro non sparisce perche' non abbiamo misurato
+   — ma perde le tinte e prende la terza forma del dato, la stessa della
+   riga compatta: fondo d'ignoto e tratteggio. Nessuna fascia e' marcata,
+   perche' marcarne una sarebbe inventare la risposta. */
+.as-bortle-scala--ignota .as-bortle-scala__banda {
+  background: var(--ignoto-fondo);
+  border: 1px dotted var(--ignoto-tratteggio);
+}
+.as-bortle-scala--ignota .as-bortle-scala__dice b { color: var(--inchiostro); }
+.as-bortle-scala__ignota {
+  font-size: var(--testo-minuto); color: var(--ignoto-inchiostro);
+}
+.as-bortle-scala__estremi {
+  margin: 0; display: flex; justify-content: space-between; gap: var(--spazio-2);
+  font-size: var(--testo-micro); color: var(--inchiostro-debole);
+}
+
+/* la tinta di ogni fascia, per tutte e tre le forme */
+.as-bortle__voce--1, .as-bortle-letta__fascia--1, .as-bortle-scala__voce--1 { --bortle-colore: var(--bortle-1); }
+.as-bortle__voce--2, .as-bortle-letta__fascia--2, .as-bortle-scala__voce--2 { --bortle-colore: var(--bortle-2); }
+.as-bortle__voce--3, .as-bortle-letta__fascia--3, .as-bortle-scala__voce--3 { --bortle-colore: var(--bortle-3); }
+.as-bortle__voce--4, .as-bortle-letta__fascia--4, .as-bortle-scala__voce--4 { --bortle-colore: var(--bortle-4); }
+.as-bortle__voce--5, .as-bortle-letta__fascia--5, .as-bortle-scala__voce--5 { --bortle-colore: var(--bortle-5); }
+.as-bortle__voce--6, .as-bortle-letta__fascia--6, .as-bortle-scala__voce--6 { --bortle-colore: var(--bortle-6); }
+.as-bortle__voce--7, .as-bortle-letta__fascia--7, .as-bortle-scala__voce--7 { --bortle-colore: var(--bortle-7); }
+.as-bortle__voce--8, .as-bortle-letta__fascia--8, .as-bortle-scala__voce--8 { --bortle-colore: var(--bortle-8); }
+.as-bortle__voce--9, .as-bortle-letta__fascia--9, .as-bortle-scala__voce--9 { --bortle-colore: var(--bortle-9); }
+
+/* ==========================================================================
+   LA LUNA — .as-luna (la striscia in barra) e il pannello che apre
+   Due superfici e un disegno solo: il grafico del pannello e' lo stesso
+   della striscia, ingrandito. Perche' lo sia davvero, la scala verticale
+   e' la stessa nei due posti, ed e' questa:
+
+     DA -15 GRADI AL TETTO DEL SITO.
+
+   Il tetto e' il massimo che la Luna puo' raggiungere da quel sito. Lo
+   calcola il backend e lo manda gia' fatto; la forma e':
+       tetto = arrotonda per eccesso a 15 di (90 - max(0, |lat| - 28,6))
+   (28,6 e' la declinazione massima della Luna al lunistizio maggiore.)
+   Il max(0, ...) e' necessario: sotto i 28,6 gradi di latitudine la Luna
+   passa allo zenit e il tetto e' 90 e basta. Senza, alle Canarie (28,1)
+   verrebbe 90,5 e a Singapore (1,3) verrebbe 117, cioe' un cielo piu' alto
+   del cielo. Vicenza, 45,5 N: 73,1 -> 75. Palermo, 38,1 N: 80,5 -> 90.
+   Tromso, 69,7 N: 48,9 -> 60. Canarie e Singapore: 90. Latitudine ignota:
+   75, e il disegno si taglia in cima solo se la Luna sfonda, che alle
+   nostre latitudini non succede.
+
+   Perche' non le altre due strade del brief:
+   - la scala che si adatta alla notte fa somigliare la notte del 19
+     (culmine 16 gradi) alla notte del 27 (culmine 56): stessa gobba,
+     stessa altezza sul foglio, e la sola domanda che si sta facendo
+     — quanto e' alta — sparisce dal disegno;
+   - la scala fissa -20/+90 e' confrontabile ma spreca: da Vicenza la Luna
+     non passa mai i 73 gradi, quindi un quinto della tela in cima resta
+     vuoto per sempre, e i 16 gradi del 19 diventano sei pixel su quaranta.
+   Il tetto del sito tiene il confronto (la scala non cambia mai fra una
+   notte e l'altra, nello stesso posto) e non spreca niente. Due siti a
+   latitudini diverse non si confrontano a occhio: e' il prezzo, e si paga
+   volentieri, perche' chi osserva confronta stanotte con domani notte,
+   non Vicenza con Palermo.
+
+   Il pavimento e' -15 e la curva ci si TAGLIA: sotto c'e' solo la parte
+   di notte in cui la Luna non c'e', e disegnarla intera (fino a -71)
+   spingerebbe la parte che conta in una scheggia in cima. Quindici gradi
+   di terreno bastano a vedere DOVE entra e DOVE esce, che e' l'unica cosa
+   che il sottosuolo ha da dire. Il taglio non e' un dato mancante: la
+   fascia di terreno e' piena (.as-grafico__terra) e sotto il bordo non
+   c'e' tela.
+
+   La finestra e' mezzogiorno-mezzogiorno nel fuso del sito, e la larghezza
+   della tela e' quella finestra qualunque sia la sua durata: le due notti
+   del cambio d'ora (23 e 25 ore) hanno meno punti o piu' punti, non un
+   disegno diverso.
+
+   In barra la tela e' alta --grafico-basso (40px) e va SENZA assi e senza
+   etichette, come avete deciso: a quell'altezza un grado sta sotto il
+   mezzo pixel. Porta aria-hidden, e accanto ci sono la frase e gli orari
+   scritti, che sono il dato per intero.
+   ========================================================================== */
+.as-luna { display: grid; gap: var(--spazio-3); }
+
+/* il sito col suo cielo sta SOPRA la Luna, come dice il contratto di
+   navigazione — prima da dove osservi, poi cosa fa il cielo. Lo monta
+   .as-bortle-scala, che porta gia' il nome del posto nella sua prima riga:
+   .as-luna__sito e .as-luna__posto esistevano per farlo e sono state tolte
+   nel v10, perche' nessuno le usava piu'. */
+
+/* Tutta la Luna e' UN bersaglio solo: un bottone che apre il pannello.
+   Non tre (disco, grafico, orari), che sarebbero tre soste di tabulatore
+   per una cosa sola. Il margine negativo compensa l'imbottitura, cosi' il
+   fondo del passaggio del mouse sborda dal testo ma la striscia resta
+   allineata alle voci della barra. */
+.as-luna__apri {
+  all: unset; cursor: pointer;
+  display: grid; gap: var(--spazio-2);
+  padding: var(--spazio-2); margin: calc(var(--spazio-2) * -1);
+  border-radius: var(--raggio-medio);
+}
+.as-luna__apri:hover { background: var(--fondo-rilievo); }
+.as-luna__apri:focus-visible {
+  outline: var(--fuoco-spessore) solid var(--linea-fuoco);
+  outline-offset: var(--fuoco-stacco);
+}
+.as-luna__fase { display: flex; align-items: center; gap: var(--spazio-3); }
+.as-luna__faccia { flex: none; display: block; width: var(--luna-disco); height: var(--luna-disco); }
+.as-luna__faccia--grande { width: var(--luna-disco-grande); height: var(--luna-disco-grande); }
+/* la fase e la percentuale sono una frase sola: stanno in fila e vanno a
+   capo insieme, non su due righe fisse. */
+.as-luna__dice { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--spazio-2); min-width: 0; }
+.as-luna__nome { font-size: var(--testo-minuto); font-weight: var(--peso-medio); color: var(--inchiostro); }
+.as-luna__quanto {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-minuto); color: var(--inchiostro-tenue);
+}
+/* gli orari: vanno a capo fra loro, mai dentro un orario. "del giorno
+   dopo" e' scritto per esteso e non e' un asterisco: e' l'unica cosa che
+   distingue una Luna che se ne va da una che resta. */
+.as-luna__orari {
+  margin: 0; display: flex; flex-wrap: wrap; gap: var(--spazio-1) var(--spazio-3);
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-micro); color: var(--inchiostro-debole);
+}
+.as-luna__orario { white-space: nowrap; }
+.as-luna__orario b { font-weight: var(--peso-forte); color: var(--inchiostro-tenue); }
+/* quello che non succede stanotte: parola, mai un trattino e mai un'ora
+   finta. Prende la terza forma del dato. */
+.as-luna__orario--mai { color: var(--ignoto-inchiostro); font-family: var(--carattere-testo); }
+
+/* --- IL PANNELLO ----------------------------------------------------------
+   Perche' un dialogo e non una comparsa ne' una scheda di dettaglio: la
+   barra e' larga 252px e il pannello non ci sta dentro, quindi deve stare
+   SOPRA la pagina, e nel foglio la sola forma che ci sta sopra e'
+   .as-dialogo-fondale. .as-comparsa dichiara di stare nel flusso (e ha un
+   minimo di 280px, piu' della barra); .as-dettaglio divide la colonna di
+   una pagina che ha un elenco e un dettaglio, e qui non c'e' ne' l'uno ne'
+   l'altro. Si legge e si chiude: il fuoco ci resta dentro finche' e'
+   aperto e torna alla striscia, che e' gia' scritto nelle regole d'uso.
+   Largo --colonna-grafico (528px) e non --dialogo-largo (440): dentro c'e'
+   una tela intera, che a 440 si rimpicciolirebbe e le etichette con lei.
+   Sul telefono si stringe da se': il fondale ha la sua imbottitura e la
+   traccia della griglia e' limitata (vedi la correzione su
+   .as-dialogo-fondale, v10 — prima non lo era, e a 360px il dialogo
+   sbordava invece di ripiegarsi).                                        */
+.as-dialogo--largo { width: var(--colonna-grafico); }
+
+.as-luna__testa { display: flex; align-items: center; gap: var(--spazio-4); flex-wrap: wrap; }
+.as-luna__titolo-fase {
+  margin: 0; font-family: var(--carattere-titolo);
+  font-size: var(--titolo-riga); font-weight: var(--peso-forte);
+}
+.as-luna__percento {
+  margin: var(--spazio-1) 0 0;
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--testo-minuto); color: var(--inchiostro-tenue);
+}
+/* i tre orari: non due. "Culmina, e a quanti gradi" e' il numero che
+   decide la notte, quindi sta in fila con gli altri due e non in una nota.
+   minmax(0,1fr) a tre tracce: sotto i 420px del telefono vanno in colonna
+   da soli. */
+.as-luna__quando {
+  display: grid; gap: var(--spazio-3);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+.as-luna__quando-voce {
+  display: grid; gap: var(--spazio-1);
+  padding: var(--spazio-3);
+  background: var(--fondo-incavo);
+  border: 1px solid var(--linea); border-radius: var(--raggio-piccolo);
+}
+.as-luna__quando-nome {
+  font-family: var(--carattere-cifre); font-size: var(--testo-micro);
+  letter-spacing: var(--spaziatura-soprattitolo); text-transform: uppercase;
+  color: var(--inchiostro-debole);
+}
+.as-luna__quando-ora {
+  font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums;
+  font-size: var(--titolo-riga); font-weight: var(--peso-forte); color: var(--inchiostro);
+}
+.as-luna__quando-coda { font-size: var(--testo-micro); color: var(--inchiostro-tenue); }
+.as-luna__quando-voce--mai .as-luna__quando-ora {
+  font-family: var(--carattere-testo); font-size: var(--testo-corpo);
+  color: var(--ignoto-inchiostro);
+}
+
+/* la legenda e' scritta: la curva della Luna, la linea di adesso, il terreno
+   e la rampa delle fasce hanno ognuno il suo nome accanto al suo segno
+   (1.4.1). Dal v10 nessuno di quei segni e' un tratteggio. */
+.as-luna__legenda {
+  margin: 0; padding: 0; list-style: none;
+  display: flex; flex-wrap: wrap; gap: var(--spazio-2) var(--spazio-4);
+  font-size: var(--testo-micro); color: var(--inchiostro-debole);
+}
+.as-luna__legenda li { display: flex; align-items: center; gap: var(--spazio-2); }
+.as-luna__legenda svg { flex: none; display: block; }
+
+/* il riquadro che tiene la tela del pannello. Le cinque fasce del
+   crepuscolo stanno DIETRO la curva, dentro questa tela: gli orari del Sole
+   sono l'unica cosa che manca, e finche' non arrivano il montaggio li
+   dichiara segnaposto invece di far finta che siano dati. */
+.as-luna__cielo { position: relative; }
+
+/* ==========================================================================
+   LA LUNA DENTRO LA STRISCIA — deve stare DOPO il blocco .as-luna
+   Sotto --soglia-guscio la barra e' una riga che scorre in orizzontale, e il
+   blocco intero (nome del sito, la scala di Bortle, il disco, una tela da
+   227x40 e due righe di orari) non ci sta: sarebbe alto quanto cinque voci
+   di menu. Non lo nascondiamo — vorrebbe dire "sul telefono la Luna non
+   c'e'" — lo COLLASSIAMO alla sua forma minima: disco, parola, percentuale.
+   Un bersaglio solo, alto quanto le voci accanto, che apre lo stesso
+   pannello; il dialogo si stringe fino a 360px, quindi il dato per intero
+   resta raggiungibile. Cosi' il cassetto non serve piu' alla Luna.
+   PERCHE' QUI E NON NEL BLOCCO DEI 900px, dove starebbe con le altre regole
+   della striscia: una container query NON alza la specificita'. La', a
+   millecinquecento righe prima di .as-luna, ogni dichiarazione a una classe
+   sola perdeva contro il mattone, e passavano solo i selettori a due classi
+   — la striscia nascondeva la tela ma teneva le misure da scrivania.
+   Resta aperta una cosa che non e' del foglio: .as-alto__menu compare nella
+   striscia e niente dice cosa apre. Con la Luna collassata il cassetto non
+   serve piu' a lei: la domanda e' di chi monta l'app.
+   ========================================================================== */
+@container guscio (max-width: 900px) {
+  .as-luna { gap: 0; flex: none; }
+  .as-luna > .as-soprattitolo,
+  .as-luna .as-bortle-scala,
+  .as-luna .as-grafico__tela--bassa,
+  .as-luna .as-luna__orari { display: none; }
+  .as-luna__apri {
+    gap: 0; margin: 0; padding: var(--spazio-1) var(--spazio-3);
+    min-height: calc(var(--riga-alta) - var(--spazio-2));
+    align-content: center; white-space: nowrap;
+  }
+  .as-luna__dice { flex-wrap: nowrap; }
+}

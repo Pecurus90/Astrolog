@@ -1,0 +1,45 @@
+Catalogo AstroLog -- opera derivata.
+
+Questo file nasce fondendo le sorgenti qui sotto, snellendolo ai campi che l'app usa e
+completandolo con SIMBAD (`tools/arricchisci_catalogo.py`). Le licenze delle sorgenti restano
+in vigore, e la provenienza di ogni singolo valore e' conservata nel campo `src` di ogni voce:
+fondere non estingue gli obblighi, li concentra.
+
+OpenNGC v20260501 -- Mattia Verga -- CC-BY-SA-4.0
+  https://github.com/mattiaverga/OpenNGC
+  ATTENZIONE: e' share-alike. Questo catalogo derivato si distribuisce sotto la stessa
+  licenza. Il codice che lo legge non e' opera derivata della base dati.
+
+Cataloghi estesi via VizieR / Centre de Donnees astronomiques de Strasbourg (CDS).
+La citazione e' dovuta PER CATALOGO, col suo bibcode:
+
+  Sh2   Sharpless S. (1959)              1959ApJS....4..257S
+  LBN   Lynds B.T. (1965)                1965ApJS...12..163L
+  LDN   Lynds B.T. (1962)                1962ApJS....7....1L
+  B     Barnard E.E. (1927)              1927cdom.book.....B
+  vdB   van den Bergh S. (1966)          1966AJ.....71..990V
+  PK    Acker A. et al. (1992)           1992secg.book.....A
+  WR    van der Hucht K.A. (2001)        2001NewAR..45..135V
+  RCW   Rodgers, Campbell & Whiteoak     1960MNRAS.121..103R
+  Ced   Cederblad S. (1946)              1946MeLuS.119....1C
+  Abell Abell, Corwin & Olowin (1989)    1989ApJS...70....1A
+
+  Le coordinate sono convertite a ICRS/J2000 dall'equinozio nativo di ciascun catalogo, che
+  non e' lo stesso per tutti (B1875 Barnard, B1900 Sh2 e Ced, B1950 gli altri, J2000 vdB e WR).
+
+Stellarium DSO catalog 3.23 e names.dat 20260725 -- GPL-2.0-or-later
+  Stellarium developers -- https://stellarium.org
+  E' la fonte principale dei nomi comuni.
+
+Gruppi canonici v20260501-20260621-a5b55395-50378e2b -- derivazione AstroLog, che eredita le
+  licenze delle sorgenti a monte.
+
+SIMBAD -- Centre de Donnees astronomiques de Strasbourg (CDS) -- CC-BY-4.0
+  2000, A&AS 143, 9 (Wenger et al.) -- https://simbad.cds.unistra.fr/
+  "This research has made use of the SIMBAD database, operated at CDS, Strasbourg, France."
+
+Correzioni curate AstroLog (`correzioni.json`): valori che una fonte afferma e che sappiamo
+  falsi. Si applicano dopo ogni arricchimento e hanno l'ultima parola.
+
+Quante voci e quanti campi ci sono non e' scritto qui: si contano dal file, e un numero
+congelato in un documento invecchia al primo arricchimento.

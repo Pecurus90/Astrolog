@@ -1,0 +1,29 @@
+# Fine-riga esplicito: il progetto si sviluppa su Windows ma gira su Windows, Mac e NAS.
+# Uno script di shell con CRLF su Linux non parte ("bad interpreter"); lo stesso vale per
+# qualunque file copiato nell'immagine Docker ed eseguito.
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.toml      text eol=lf
+*.sql       text eol=lf
+
+# Windows-only per costruzione
+*.ps1       text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# Binari
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.ico       binary
+*.fits      binary
+*.fit       binary
+*.db        binary
+
+# I fogli della veste: **gli stessi byte su ogni sistema**. Una prova ne verifica l'impronta
+# (`tools/controlli_veste.py`) perche' si portano alla lettera dalla consegna di Claude Design;
+# senza questa riga `core.autocrlf` li riscriverebbe con CRLF al checkout su Windows, l'impronta
+# non tornerebbe piu' e la prova sarebbe rossa li' e verde su Linux.
+frontend/src/stili/*.css  text eol=lf

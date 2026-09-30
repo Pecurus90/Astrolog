@@ -1,0 +1,36 @@
+/* ==========================================================================
+   Quello che e' NOSTRO, e che il design system non puo' conoscere.
+
+   Qui dentro non entra veste: nessun colore, nessuno spazio, nessun mattone.
+   Solo cio' che riguarda il nodo in cui l'app vive, che e' un fatto della
+   nostra pagina (`frontend/index.html`) e non della consegna.
+
+   La catena delle altezze. `.as-guscio` chiede `min-height: 100%`, e una
+   percentuale si misura sul genitore: senza altezza su html, body e #root la
+   barra laterale finisce dove finisce il testo, e sotto resta il fondo nudo.
+   Visto dal vivo al primo collaudo, non in un test: in jsdom non c'e' layout.
+   ========================================================================== */
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Il guscio, e solo lui. Due cose, misurate dal vivo e non deducibili in jsdom:
+
+   1. una percentuale di `min-height` si risolve contro l'`height` del genitore, e un genitore
+      alto `auto` non gliela puo' dare: senza questa riga il guscio restava alto 513px dentro
+      una finestra da 1271, e sotto restava il fondo nudo;
+   2. con un'altezza vera, la riga `minmax(0, 1fr)` della griglia smette di crescere col
+      contenuto, e a scorrere e' `.as-principale` (che ha gia' `overflow: auto`) invece del
+      documento. Senza, su una pagina piu' alta della finestra la barra laterale se ne andava
+      in su e spariva: misurato su Da confermare, alta 1.614px, la prima voce finiva a -412.
+
+   Vale per il guscio e per cio' che ci sta dentro, NON per ogni figlio della radice: il primo
+   avvio non passa di qui, e dandogli un'altezza piena si prendeva 19px di scorrimento che non
+   gli servivano. */
+#root > .as-guscio-misura,
+#root > .as-guscio-misura > * {
+  height: 100%;
+}

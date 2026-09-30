@@ -1,0 +1,593 @@
+# Guida a AstroLog
+
+AstroLog cataloga le tue sessioni di astrofotografia. Gli indichi dove tieni i FITS, lui legge
+gli header, riconosce cosa hai ripreso e ricostruisce la tua cronologia osservativa.
+
+Non c'e' nessun account e nessuna registrazione: gira sul tuo computer, e i tuoi file non li
+manda a nessuno. Li **legge soltanto**: non li sposta, non li rinomina, non li tocca.
+
+Questa guida racconta **cio' che l'app fa adesso**. Quello che ancora non fa e' detto in fondo,
+apertamente, invece di essere lasciato indovinare.
+
+## Il primo avvio
+
+La prima volta l'app ti fa **quattro domande**, e poi si toglie di mezzo.
+
+1. **Come ti chiami.** Per ora l'app lo conserva soltanto. Si puo' lasciare vuoto.
+2. **Da dove osservi.** Cerchi il sito per nome e scegli fra quelli che compaiono -- ognuno ti
+   mostra le sue coordinate, cosi' scegli sapendo su cosa: l'app le riempie da sola, e da quelle
+   ricava **il fuso orario e l'altitudine** senza chiedertele. Se preferisci, o se sei senza
+   rete, **scrivi tu nome e coordinate**: la strada manuale e' sempre aperta, e non e' un
+   ripiego -- e' li' fin dall'inizio, perche' i siti bui dove si osserva spesso la rete non ce
+   l'hanno. Le coordinate le puoi scrivere come le scrivi di solito -- `46,4843` o `46.4843`, e
+   anche `46,4843 N` -- e se una e' fuori scala te lo dice **sotto il campo**, prima che tu prema.
+   Poi ti chiede **che cielo hai**, fra le nove classi di Bortle: non scegli un numero al buio,
+   scegli guardando **cosa ci si vede** -- se la Via Lattea proietta ombre o se di notte si legge
+   il giornale -- e la misura del cielo la ricava l'app da quella. Puoi **non rispondere**: il
+   sito si salva lo stesso, e il cielo resta vuoto invece di prendersi un valore che non hai
+   dato.
+3. **Dove stanno i file.** Scrivi il percorso di una cartella e premi *Guarda*: l'app conta i
+   FITS che ci sono **prima** di registrarla, cosi' ti accorgi subito se hai puntato la cartella
+   sbagliata. Se la cartella non si raggiunge te lo dice, e non ti lascia aggiungerla. Sul NAS
+   il percorso non lo scrivi: l'app gira dentro un container e i suoi percorsi non sono i tuoi,
+   quindi ti fa **sfogliare** le cartelle e ti mostra in alto dove sei arrivato.
+4. **Il seeing per la planetaria.** Se hai una **chiave Meteoblue** la scrivi qui: l'app la prova
+   sul tuo conto e la tiene solo se vale, e da li' il seeing arriva ora per ora per sette notti.
+   Non e' obbligatoria, e la maggior parte di chi comincia non ce l'ha: senza, il seeing viene da
+   7Timer, a fasce. La puoi mettere anche dopo, nelle Impostazioni.
+
+**Puoi saltare, da qualunque passo, e non ti viene chiesta nessuna conferma.** Saltare e'
+una scelta legittima: l'app cataloga e cerca lo stesso. L'unica cosa che non puo' fare e' creare
+le **notti**, perche' una notte e' una data *piu' un sito*, e senza un sito non sa in che fuso
+comincia e finisce la tua nottata. Preferisce dirtelo piuttosto che inventarsene uno.
+
+Al terzo passo puoi indicare **quante cartelle vuoi**: ne aggiungi una, compare nell'elenco, ne
+aggiungi un'altra. Prima di registrarne una l'app la **guarda** e ti dice quanti file FITS ci sono
+dentro, cosi' ti accorgi subito se hai puntato la cartella sbagliata. Dove l'app ha una radice dei
+dati -- e' il caso del NAS -- le cartelle si **scelgono da un elenco** invece di scrivere il
+percorso a mano: entri dentro con un clic, risali con *Sali di una cartella*, e quando sei dove
+vuoi premi *Usa questa cartella*. L'elenco parte dalla cartella dei dati e non esce da li'.
+
+Se l'app non trova **ASTAP** sul tuo computer, aggiunge un **quinto passo**: ASTAP e' il
+programma gratuito con cui l'app riconosce cosa hai ripreso, confrontando le tue foto col cielo.
+Ti dice dove prenderlo, e se ce l'hai gia' ti lascia indicare dove sta -- il **programma**, non la
+cartella dove l'hai installato. Puoi incollarlo come te lo copia Windows, virgolette comprese.
+Appena scrivi il percorso l'app ti risponde se quel programma c'e'
+davvero, cosi' un percorso sbagliato lo correggi subito invece di scoprirlo a lettura finita, e
+quello che hai scritto si salva anche se non premi *Usa questo*. L'app non scarica e non installa
+niente da sola. Puoi saltarlo: senza, l'app cataloga i file, mette in ordine i nomi e conta le ore,
+ma non sa dirti **cosa** hai fotografato -- e quando lo installerai, i frame che aspettano verranno
+riconosciuti. Se hai tutto a posto quel passo non compare nemmeno.
+
+Quando chiudi il primo avvio, **l'app si mette a leggere da sola** le cartelle che le hai indicato:
+non devi cercare nessun pulsante. Se non ne hai indicata nessuna non parte niente, e l'app funziona
+lo stesso.
+
+Che tu completi o che tu salti, l'app **si segna che le hai gia' viste**, e al prossimo avvio non
+te le richiede.
+
+## Come ci si muove
+
+A sinistra c'e' una barra con le pagine, raccolte per quello che ci fai: **Guarda** quello che
+hai, **Sistema** l'archivio, **Pianifica** le prossime notti. In cima c'e' **Casa**, in fondo le
+**Impostazioni**. Accanto a *Da confermare* leggi quante cose aspettano una risposta, senza
+aprirla. Se apri un indirizzo che non porta a nessuna pagina -- scritto male, o tenuto
+nei preferiti da una pagina che non c'e' piu' -- l'app te lo dice e ti riporta a Casa.
+
+In fondo alla barra c'e' **Stanotte**: da dove stai osservando, che cielo ha quel posto, e che
+luna fa -- quanto e' illuminata, che forma ha, come sale e scende durante la notte, e a che ora
+sorge e tramonta. Gli orari
+sono quelli del **tuo sito**, anche se guardi l'app da un altro fuso. Se una notte la Luna non
+sorge o non tramonta, c'e' scritto: non un trattino.
+
+Sotto la Luna c'e' **il meteo di stanotte** dal tuo sito di casa: il verdetto, le nuvole, le ore utili, quanti
+modelli sono d'accordo e il vento in quota, col collegamento al **Meteo** per il resto. Se la
+previsione di stanotte non c'e' -- non e' ancora arrivata, o il modello che hai scelto non l'ha data --
+te lo dice, e il Meteo ti spiega perche'.
+
+Dietro la curva c'e' **il buio**: la notte e' dipinta a fasce -- il giorno, i tre crepuscoli, e il
+buio -- quindi vedi a colpo d'occhio quando comincia il buio vero e dove sta la Luna dentro.
+Dove il Sole non tramonta -- al circolo polare d'estate -- la fascia e' **una sola**, tutta giorno.
+Dove non sorge, invece, il buio non e' automatico: alle Svalbard a gennaio il cielo a mezzogiorno
+risale fino al crepuscolo nautico e poi torna buio. L'app dipinge le fasce che quella notte ha
+davvero, mai cinque per abitudine.
+
+La Luna **si apre**: un clic su quella striscia e il grafico si vede grande, con i gradi e le ore
+scritti accanto, e trovi il numero che in barra non ci sta -- **quanto sale**, e a che ora. E'
+quello che decide se una notte e' buona: una Luna piena che resta bassa disturba meno di una mezza
+che passa allo zenit. Si chiude con *Chiudi* o con Esc, e torni dov'eri.
+
+In fondo alla barra c'e' **Impostazioni**, che e' una pagina sola con dentro le sue sezioni --
+ognuna col suo indirizzo, quindi ci torni col tasto indietro e il collegamento si manda a
+qualcuno. La prima e' **Cartelle**: quelle che l'app legge, quante ne e' entrato in archivio, se
+al momento si raggiungono. Da li' ne aggiungi una (scrivendo il percorso, o sfogliando se l'app
+gira sul NAS) e ne togli una -- e togliere **non cancella niente**: l'app smette di leggerla, e i
+frame gia' entrati restano con la loro storia. Te lo richiede prima, coi numeri davanti.
+
+La seconda e' **Il sito**: da dove osservi. Ci trovi i posti che hai dichiarato, con le loro
+coordinate e che cielo hanno, e uno segnato **di casa** -- e' quello da cui l'app calcola le notti
+e l'altezza degli oggetti; gli altri servono alle uscite. Di ognuno puoi correggere nome,
+coordinate e cielo, renderlo quello di casa, o toglierlo. **Il cielo si corregge quando vuoi**:
+cambia davvero -- un lampione nuovo, un quartiere che spegne di notte -- e prima lo sceglievi una
+volta al primo avvio e restava li'. Se non sai che cielo hai, lo lasci in bianco: il sito funziona
+lo stesso, quello che manca e' il confronto fra una notte e l'altra quando cambi posto.
+
+Un sito che tiene delle notti **non si toglie**: l'app te lo dice, e ti dice quante ne tiene.
+Aggiungerne uno lo cerchi per nome, oppure ne scrivi le coordinate a mano -- e la strada a mano e'
+sempre aperta, perche' dove si osserva la rete spesso non c'e'.
+
+La terza e' **Il riconoscitore**: ASTAP, il programma che guarda le stelle inquadrate e dice dove
+punta ogni ripresa. Qui vedi se l'app lo trova, **dove**, e da cosa l'ha capito: perche' gliel'hai
+detto tu, perche' l'ha detto chi ha avviato l'app (sul NAS lo fa chi lo gestisce), perche' l'ha
+cercato fra i programmi di sistema, o perche' l'ha trovato dove ASTAP si installa di solito --
+quattro strade, e ti dice sempre quale. Sapere **chi ha deciso** conta: se l'app ha pescato da
+sola una copia vecchia rimasta in giro, li' vedi che nessuno gliel'ha detto e che quel percorso
+se l'e' scelto lei. Puoi dirgli tu dove sta, o premere **Cercalo tu** e farlo cercare all'app:
+quello che trova te lo **propone**, e lo usa solo se glielo dici. Se il percorso che hai scritto
+non porta a nessun programma, l'app te lo dice subito -- non a scansione finita -- e quel percorso
+resta scritto, cosi' lo correggi invece di ribatterlo.
+
+Nella stessa sezione vedi anche **se ASTAP ha il suo catalogo stellare**, e quale. E' un download a
+parte, e senza di lui ASTAP parte e non riconosce niente: la lettura si ferma alla
+prima posa. Se manca, l'app te lo dice e ti da' l'indirizzo per prenderlo -- non lo scarica lei.
+Il catalogo va messo **nella stessa cartella del programma** -- l'autore dice che i file devono
+stare tutti insieme -- ed e'
+li' che l'app lo cerca, **solo** li': se lo tieni altrove l'app ti dira' che manca, e ti conviene
+spostarlo dove ASTAP se lo aspetta. La
+stessa cosa te la dice il **primo avvio**, che aggiunge il suo quinto passo anche a chi ASTAP ce
+l'ha ma senza catalogo: si finisce allo stesso punto -- una scansione che non riconosce niente --
+e conviene saperlo prima.
+
+La quarta e' **Servizi**: le chiavi personali dei servizi che l'app interroga. Oggi c'e' quella di
+**Meteoblue**: la scrivi, premi *Prova e salva*, e l'app la prova sul tuo conto prima di tenerla --
+se il conto non la riconosce te lo dice e non la salva. Una chiave salvata non la rivedi mai
+intera: l'app ti mostra come finisce, che basta a sapere se e' quella giusta. Con *Togli la chiave*
+il seeing torna a quello di 7Timer.
+
+La quinta e' **Le letture**: una per ogni volta che l'app ha letto le tue cartelle. Di
+ognuna trovi quale cartella, quando, quanto e' durata, com'e' andata -- e i conti: quanti file ha
+guardato, quanti erano nuovi, quanti erano gia' in archivio. Gli zeri non si scrivono, tranne i
+**nuovi**, che sono la domanda che ti stai facendo. Se qualcosa e' **rimasto fuori** lo apri li'
+dentro: quanti file ha saltato apposta e perche' (le calibrazioni, le somme, quelli ancora in
+scrittura), quali cartelle non ha guardato e perche', e i file che non e' riuscito a leggere,
+ognuno col suo motivo a parole. L'elenco dei file non letti lo tiene **l'ultima lettura di ogni
+cartella**: delle piu' vecchie restano i numeri, e l'app te lo dice invece di mostrarti un elenco
+vuoto. La lettura di una scansione appena finita compare **da sola**, senza ricaricare.
+
+Nella barra compaiono **solo le pagine che esistono**: l'app cresce una pagina alla volta, e una
+voce che si apre su una pagina vuota sarebbe una promessa non mantenuta. Quando una pagina nasce,
+la sua voce compare al posto che ha gia'.
+
+Ogni pagina ha il suo indirizzo, quindi il tasto indietro del browser o del telefono funziona come
+ti aspetti, e puoi **ricaricare** la pagina o tenerne l'indirizzo nei preferiti: riapri, e sei
+dov'eri.
+
+## Leggere le cartelle
+
+In alto, su ogni pagina, c'e' il pulsante **Scansiona**: lo premi e l'app legge **tutte** le
+cartelle che le hai indicato -- non ti chiede quale. Mentre lavora, accanto al pulsante, ti dice
+cosa sta facendo e a che punto e' (*leggo i file 120 su 337*), e il pulsante diventa **Ferma**.
+Se fermi, diventa **Riprendi**, e riprende davvero: torna sulle cartelle che non aveva finito di
+leggere -- i file gia' letti li salta -- e poi va avanti col resto. Il lavoro continua anche se
+cambi pagina: per questo il pulsante sta in alto e non dentro una pagina.
+
+Se una cartella non si riesce a leggere -- un disco staccato, il NAS spento -- le altre si leggono
+lo stesso, e quella ti viene detta, col suo percorso. E se una cartella sparisce **mentre** l'app
+la sta leggendo, te lo dice lo stesso, anche se era la prima e le altre sono andate bene, e anche
+quando l'app intanto e' passata ad altro: le altre restano lette, e quella si riprova col prossimo
+*Scansiona*. Quando finisce, i conti si aggiornano da soli.
+
+## Casa
+
+La pagina principale ti dice **quante cose ci sono da confermare**: sono le domande che l'app ha
+su cio' che ha letto negli header. Sotto trovi la versione dell'app e due numeri sullo stato
+interno (quante tabelle ha il database, quante voci ha il catalogo di oggetti celesti), e un tasto
+per ricaricare.
+
+Se qualcosa non risponde, l'app **te lo dice**: non ti mostra uno zero al posto di un numero che
+non ha potuto leggere.
+
+## Archivio
+
+**Cosa hai ripreso, e quanto.** Ogni riga e' un oggetto, o un mosaico: quanti **frame** gli hai dedicato, quante
+**ore**, e con che **filtri** -- ognuno con la pastiglia del suo colore e le sue ore, quando le
+pose le dicono. Per gli oggetti di catalogo leggi anche la **costellazione**, col suo nome latino
+ufficiale, uguale in ogni lingua, e che cosa sono (*Andromeda · galassia*).
+
+Un **mosaico** che hai confermato in *Da confermare* e' **una riga sola**, col nome che gli hai
+dato e i frame e le ore di tutti i suoi pannelli, e porta l'etichetta *mosaico 4 pannelli*: sulla
+carta sopra il riquadro dell'immagine, nell'elenco nella colonna *Etichette*. Se hai almeno un
+mosaico, nella barra compare anche la tendina **Mosaici**, per vedere solo quelli, e in fondo leggi
+quanti oggetti e quanti mosaici hai trovato (*3 oggetti e 1 mosaico*). Un oggetto che hai ripreso anche da solo, fuori
+dal mosaico, ha la sua riga con quelle sole riprese: niente si conta due volte. Cercando o
+filtrando, il mosaico compare se **uno** dei suoi pannelli risponde -- chi cerca il pezzo di cielo
+di un pannello trova il mosaico. Sulla carta del mosaico, **Cosa c'e' in ogni pannello** apre
+l'elenco dei pannelli, da quello a cui hai dato piu' tempo: per ognuno l'oggetto, i frame, le ore
+e il punto del cielo, che dice quale pannello e' se due inquadrano lo stesso oggetto. Un pannello
+i cui frame non sono legati a nessun oggetto dice *nessun oggetto riconosciuto*; uno legato a un
+oggetto fuori catalogo porta il nome che ha.
+
+La pagina ha **due viste**, e si cambia col pulsante in alto a sinistra:
+
+- **carte**, che e' come si apre: una per riga, col posto gia' pronto per l'immagine (l'app non
+  la mostra ancora, e quel riquadro la aspetta);
+- **elenco**, a colonne allineate, per confrontare a colpo d'occhio chi ha piu' ore o piu' frame.
+
+In alto c'e' la **barra**: cerchi un oggetto scrivendo qualunque nome con cui lo conosci -- `m31`,
+`M 31`, `NGC 224` sono la stessa galassia -- e stringi l'elenco per **catalogo**, **costellazione**
+o **filtro usato**. Le tendine ti offrono solo quello che hai davvero: se riprendi solo Messier,
+non ti fanno scorrere tutti quelli che il catalogo conosce, e quella che non avrebbe niente da
+offrire non compare.
+Accanto scegli l'**ordine** -- nome, ore o frame -- e l'archivio si apre in ordine di nome, perche'
+e' un inventario: cosa hai ripreso di recente si guarda nelle **Notti**. In fondo alla barra c'e'
+quanti ne ha **trovati**: con un filtro acceso e' quel numero, non quanti ne hai in tutto. Se la
+richiesta non e' andata a buon fine dice "non so quanti", che e' la verita': zero sarebbe l'unica
+risposta che sappiamo falsa.
+
+Mentre l'app cerca, quello che avevi sotto resta a schermo -- finche' c'e' qualcosa da mostrare:
+se la ricerca di prima non aveva trovato niente, sotto la barra resta il vuoto -- e il campo di
+ricerca e le tendine si animano: cosi' non perdi il punto in cui stavi scrivendo, e sai che quello
+che vedi e' ancora la risposta di prima.
+
+Se una ricerca non trova niente l'app te lo dice, e non usa le parole dell'archivio vuoto: e'
+questa ricerca che non pesca -- e trovi il bottone per togliere i filtri.
+
+**Tutto quello che stai guardando finisce nell'indirizzo**: la vista, la ricerca, i filtri e
+l'ordine. Se mandi il collegamento a qualcuno, gli si apre esattamente quello che vedi tu. E il
+tasto indietro disfa l'**ultima scelta** -- un filtro, un ordine, la vista -- mentre quello che
+hai **scritto** nella ricerca non lascia una tappa per ogni lettera, quindi il tasto indietro non
+te le fa ripercorrere: disfa la scelta che avevi fatto **prima** di metterti a scrivere, e se non
+ne avevi fatte ti porta fuori dall'Archivio.
+
+Le ore sono quelle vere:
+
+- se tieni accanto agli originali anche le **copie calibrate**, non contano due volte;
+- un frame che **non dice quanto e' durato** non vale zero: non entra nelle ore, e l'app te lo
+  dice a parte (*3 senza tempo*), come in *Da confermare*;
+- se **nessun** frame di un oggetto dice la durata, non leggi "0 h": le ore non compaiono, e
+  restano solo i frame senza tempo;
+- un tempo piccolo ma vero non diventa zero: leggi **< 0,1 h**, qui e in *Da confermare*.
+
+Se hai molti oggetti, in fondo trovi **Mostra altri**.
+
+Appena installata, l'Archivio e' vuoto e **te lo dice**, insieme a cosa fare per riempirlo.
+
+## Notti
+
+**Quando hai ripreso.** L'Archivio racconta gli oggetti; qui ci sono le **notti**, una riga
+ciascuna e dalla piu' recente: che **giorno** era -- con il giorno della settimana, perche' una
+notte ce la si ricorda come *"quel sabato"* -- da quale **sito**, quanti **frame**, quante
+**ore**, cosa hai **ripreso** e con quali **filtri**, ognuno con le ore che gli hai dato, dal piu'
+usato.
+
+Una notte e' una **data piu' un luogo**: se nella stessa sera hai ripreso da due postazioni, sono
+due notti, e la riga dice da dove. Una notte con due oggetti resta **una riga sola**: le sue ore
+sono le ore di quella notte, e gli oggetti stanno dentro.
+
+In cima leggi quante notti, quanti frame e quante ore hai **in tutto** -- tutte le tue notti, non
+solo quelle che stai guardando -- e cio' che spiega un elenco piu' corto del previsto:
+
+- i frame che **aspettano una tua risposta** non stanno in nessuna notte: te li conta, e ti dice
+  **dove** si risponde, che non e' sempre lo stesso posto -- in *Da confermare* per le domande su
+  sito e oggetto, nelle **Impostazioni** quando manca il sito da cui osservi;
+- i frame che **non dicono quando** sono stati ripresi te li conta e basta: a quelli non c'e'
+  risposta che rimedi, e mandarti da qualche parte sarebbe una promessa vuota;
+- se l'app **sta ancora leggendo** l'archivio, te lo dice con quanti frame mancano: cosi' un
+  elenco a meta' non sembra tutto quello che hai.
+
+Se non hai ancora notti, l'app ti dice **quale** dei motivi e', perche' portano a gesti diversi:
+non hai ancora frame (si parte dalla scansione), non hai detto **da dove osservi** (e allora le
+notti non nasceranno mai, finche' non lo dici), i tuoi frame aspettano una risposta in *Da
+confermare*, oppure l'app non ci e' ancora arrivata.
+
+Su ogni riga c'e' anche **che luna c'era** quella notte e quanto era illuminata -- e' quello che
+spiega perche' una serata e' andata come e' andata. Si calcola ogni volta, quindi non invecchia; e
+se di un sito non si riconosce il fuso orario la Luna non si sa, e la riga **tace** invece di
+mettere un trattino che sembra un dato.
+
+Su ogni riga c'e' anche **com'era il cielo** quella notte, dal sito dove hai ripreso: poco,
+parzialmente o molto nuvoloso -- le stesse tre classi del verdetto del Meteo -- con le nuvole nelle
+ore di buio e le **ore utili**. Arriva **da solo**
+dopo la scansione, senza che tu chieda niente, dall'archivio meteo di Open-Meteo. Arriva quando
+il mattino di quella notte ha cinque giorni: prima, l'archivio ha solo una previsione e non ancora
+la ricostruzione definitiva, e leggi che non e' ancora arrivato. Se un archivio di anni e' appena
+entrato, l'app lo chiede un pezzo per volta, per non martellare il servizio; senza rete, o se
+l'archivio non risponde, aspetta e riprova, e intanto leggi lo stesso che non e' ancora arrivato. Una notte di un sito senza fuso orario
+dice che il meteo non si puo' sapere.
+
+Non ci sono ancora le **misure** dei tuoi frame di quella notte: arrivano, e finche' non ci sono
+la pagina tace invece di scrivere un numero che nessuno ha misurato.
+
+## Meteo
+
+**Com'e' il cielo nelle prossime notti del tuo sito di casa.** Per ogni notte leggi il
+**verdetto** -- *si fa*, *incerta*, *no* -- con le nuvole in media nelle ore di buio, **quanti
+modelli sono d'accordo** (*3 modelli su 4 dicono che si fa*: e' cio' che ti dice quanto fidarti),
+e le **ore utili**: quante ore di buio avranno il cielo abbastanza sereno. Sotto c'e' **cosa pesa**: la
+pioggia, le nuvole basse, le nuvole, le raffiche che fanno vibrare la montatura, la condensa. Ogni
+motivo dice il suo numero, da dove comincia a pesare, e **quando**: *dalle 01:00 alle 05:00, 3
+ore* vuol dire che in quelle quattro ore ce n'e' una libera. Aprendo **ora per ora** vedi la notte da
+mezzogiorno a mezzogiorno: le nuvole basse, medie e alte, la temperatura, l'umidita', il punto di
+rugiada, il vento, le raffiche e la pioggia, con accanto se in quell'ora e' giorno, crepuscolo o
+buio. Un numero che il modello non da' si legge *non lo dice*, mai uno zero.
+
+Ogni notte piena dice anche il **vento in quota** -- a circa 3.000 metri, medio sulle ore della notte -- accanto al
+**solito del tuo sito**: *piu' forte di 8 notti su 10 dell'ultimo anno, qui*. Non e' un giudizio: un
+vento che altrove sarebbe normale da te puo' essere raro, e viceversa. Il solito l'app lo scarica da
+sola una volta l'anno; finche' non c'e' leggi il vento senza il confronto.
+
+Aprendo **il cielo in quota** vedi, ora per ora, cio' che conta per la planetaria: il vento a 700,
+a 250 e a 200 hPa -- gli ultimi due sono il *jet stream* -- del modello che hai scelto, il **seeing** e la **trasparenza** di
+7Timer e l'**aerosol** e le **polveri** di Copernicus. Seeing e trasparenza non arrivano per ogni ora, e
+arrivano come il servizio li da', a fasce: *1,25-1,5* arcosecondi, *sotto 0,5*, *sopra 2,5*; l'app non ci
+mette un numero suo in mezzo. Nelle ore che il servizio non copre leggi *non lo dice*. Se hai
+messo la tua **chiave Meteoblue**, il seeing viene da li', ora per ora e in arcosecondi, e la
+pagina lo dice sopra le notti. Se Meteoblue rifiuta la chiave il seeing torna a 7Timer; se non
+risponde, resta quello che aveva dato l'ultima volta. In tutti e due i casi la pagina ti dice
+perche'. Meteoblue si chiede al massimo due volte al
+giorno, perche' la chiave gratuita ha un tetto di chiamate l'anno.
+
+Le **prime tre notti** sono piene; dalla quarta alla settima vedi solo la **tendenza** -- il
+verdetto, le nuvole, le ore di buio e l'accordo dei modelli -- perche' cosi' avanti la previsione ora per ora vale
+poco, e l'app lo dice invece di farti credere a ore precise.
+
+Il verdetto guarda solo le nuvole, perche' sono l'unica cosa che ferma tutti i soggetti allo
+stesso modo; la Luna non entra. Le soglie sono quelle che usa chi fa meteo: **si fa** fino a due
+ottavi di cielo coperto, **incerta** fino a quattro, **no** oltre. D'estate molto a nord, dove il
+buio pieno non arriva, il verdetto guarda le ore col Sole sotto l'orizzonte e te lo dice; dove il
+Sole non tramonta non c'e' verdetto.
+
+Puoi scegliere il **modello** della previsione: di fabbrica quello che il servizio sceglie per il
+tuo posto, oppure l'europeo (ECMWF), il tedesco (ICON) o l'americano (GFS). Cambiarlo non chiede
+niente a nessuno -- ogni previsione li porta tutti insieme -- e la scelta resta. Se un modello
+quella volta non ha dato notti intere, la pagina te lo dice e puoi guardarne un altro.
+
+La previsione **arriva da sola** appena hai un sito di casa, e si rinnova ogni tre ore; col
+pulsante la chiedi subito. Se il servizio non risponde -- sei senza rete, o e' giu' -- resta
+quella di prima, con l'ora in cui e' arrivata; se l'hai chiesta col pulsante, l'app ti dice
+anche perche' non e' cambiata. Se il tuo sito di casa non ha un fuso orario (coordinate in mare
+aperto), le sue notti non si possono dividere e la pagina te lo dice. I dati vengono da
+Open-Meteo, 7Timer e Copernicus, che la pagina cita in fondo.
+
+## Attrezzatura
+
+**Con cosa hai ripreso, e quanto.** I tuoi pezzi raccolti per genere -- telescopi, camere,
+montature, e quello che ci sta intorno -- piu' i **corredi** (l'ottica con la sua camera e la
+focale) e i **filtri**. Di ognuno leggi quante **ore**, quanti **frame** e in quante **notti** ti
+e' servito, e cosa ci hai ripreso. I numeri li conta l'app mentre legge i tuoi file, non quando
+apri la pagina, cosi' la pagina si apre subito anche con un archivio grande: un pezzo appena
+trovato, a meta' di una lettura, dice *si sta contando* finche' la lettura non finisce.
+
+I pezzi li riconosce dai tuoi file: il nome e' quello che l'header scrive, e le correzioni che
+fai qui restano. Un pezzo nuovo non ti viene chiesto altrove: lo trovi qui. Un pezzo che hai
+dichiarato tu e' segnato come tale.
+
+**La ruota, il focheggiatore e la camera di guida li trova da solo**, se il tuo programma li
+scrive: N.I.N.A. mette nell'header il nome della ruota portafiltri e del focheggiatore, l'ASIAIR
+quello della camera di guida -- e siccome li scrive **su ogni posa**, l'app sa anche quante ore
+hanno fatto. Li trovi in pagina senza aver scritto niente.
+
+Se invece il tuo programma quei nomi non li scrive, la ruota che ti sei aggiunto a mano **non
+dice zero ore**: dice che quelle ore l'app non le sa. Uno zero sarebbe una misura, e sarebbe falsa.
+
+**Quello che i file non nominano lo scrivi tu.** Una guida, un riduttore, una montatura, o un
+pezzo che il tuo programma non nomina: *Aggiungi un pezzo*, in cima alla pagina, li fa esistere -- anche il primo giorno, prima di aver letto una sola cartella.
+Scegli il genere, dai un nome, e compila quello che sai: i campi che ti chiede cambiano col genere
+(la portata la chiede a una montatura, l'apertura a un telescopio). Se quel nome lo possiedi gia'
+te lo dice, invece di farti un doppione: il pezzo che cerchi e' gia' nell'elenco.
+
+**E ogni scheda si corregge da qui**, col bottone *Correggi* accanto al pezzo: la scheda si apre
+dentro la sua riga. Cambiare il nome non perde niente -- l'app impara che il nome vecchio degli
+header e' quello nuovo, cosi' la scansione dopo non ricrea il pezzo com'era. E cio' che scrivi
+vince sui file: resta anche quando l'archivio viene riletto. Se due righe sono lo stesso pezzo
+scritto in due modi, nella scheda scegli *E' lo stesso pezzo di*: la tendina offre solo quelli dello
+stesso genere. Lo stesso vale per i filtri, con *Correggi* accanto al filtro (nome, marca, modello,
+o *E' lo stesso filtro di*), e un corredo lo chiami come vuoi con *Dagli un nome*.
+
+Se i file di una camera non dicono quanto e' grande il pixel, l'app lo **ricava dal cielo**: dalla
+scala che ha misurato sulle foto risolte e dalla focale del corredo. Serve che i file dicano almeno
+il binning: senza, la scala misurata non dice quanti pixel erano uniti, e l'app non tira a indovinare. Lo leggi con scritto *ricavato
+dal cielo*, perche' non e' la stessa certezza -- un riduttore che il file non dice lo sposta --; se
+il pixel lo scrivi tu nella scheda, vale il tuo.
+
+Di un corredo leggi anche **quanto cielo inquadra davvero**: la scala in arcosecondi per pixel e
+il rettangolo in gradi, **misurati** sulle pose che l'app ha risolto -- non calcolati da focale e
+pixel. Cosi' un riduttore e' gia' dentro il numero, invece di essere una correzione da fare a
+mente. Se di un corredo l'app non ha ancora riconosciuto nessuna posa -- perche' non hai ancora
+ripreso, o perche' il riconoscitore non ci e' ancora arrivato -- la scala non c'e', e te lo dice.
+
+**La montatura ha le sue ore.** Se il tuo programma di ripresa la scrive nei file, l'app la lega
+da sola a ogni posa: fra i programmi che l'app conosce, oggi lo fa l'ASIAIR. Se no, apri un corredo, premi *Scegli la montatura* e
+scegli fra quelle che possiedi (una montatura che non trovi la scrivi con *Aggiungi un pezzo*):
+da li' la montatura conta le ore, le notti e cosa ci hai ripreso con quel corredo, e la riga del
+corredo dice su quale sta. Quello che scegli tu vale anche dove i file dicono altro; lasciando la
+scelta vuota tornano i file. Finche' nessun corredo la porta, la riga della montatura te lo dice
+invece di scrivere zero.
+
+**Anche un filtro o un corredo li puoi scrivere tu**, dallo stesso *Aggiungi un pezzo*, prima di
+averci ripreso. Un **filtro** vuole il nome e la **banda** che lascia passare -- e' cio' che l'app
+guarda per capire cosa hai ripreso -- e se vuoi marca e modello. Un **corredo** vuole l'ottica e la
+camera, scelte fra i tuoi pezzi, e la **focale**: quella che scrive il tuo programma, quindi col
+riduttore se lo usi. Il giorno che i tuoi file li portano, sono gli stessi: un filtro scritto col
+nome che il tuo programma mette nei file (`L`, per esempio) prende le pose che lo dicono -- quelle
+di una camera a colori restano *OSC* -- e un corredo con la stessa ottica, la stessa camera e una
+focale entro il 5% e' quello. Per la stessa ragione, se quel filtro ce l'hai gia' (le tue pose `L`
+stanno gia' su *Lum*) o se hai gia' un corredo uguale, te lo dice invece di fartene un secondo: il
+filtro si rinomina con *Correggi*. Con l'ASIAIR i file non dicono l'ottica: le sue pose vanno in un
+corredo senza ottica, finche' non dici quale era in *Da confermare* (*Frame senza ottica*).
+
+## Da confermare
+
+Qui rispondi alle domande dell'app. Ogni domanda e' una **scheda**, sempre nello stesso ordine, e
+quelle senza niente da chiedere non si vedono. Dentro ogni scheda, una riga per cosa: il nome e i
+conteggi, e in alcune schede anche **l'indizio che viene dai tuoi file** da cui la domanda nasce,
+cosi' puoi controllare invece di fidarti.
+
+**Le risposte si accumulano**: rispondi a quello che sai, in qualunque scheda, e premi **Applica**
+una volta sola. In fondo alla pagina una barra ti segue e ti dice **quante risposte hai in mano**
+prima di premere; una riga a cui hai risposto si segna con una barra piena a sinistra, cosi' vedi
+cosa stai per mandare anche se non distingui i colori. La pagina si rilegge e ti dice quante
+risposte ha applicato e quanti frame ha rimesso in lavorazione. Ogni risposta vale anche per i frame che
+arriveranno, e **si cambia**: un gruppo a cui hai risposto resta in pagina con la sua risposta.
+
+Il conto scende quando **rispondi**, non quando guardi. Le cose su cui l'app ti sta chiedendo
+qualcosa -- un filtro che non riconosce, due camere che sembrano la stessa, un oggetto con dei
+candidati da cliccare, un gruppo di frame senza risposta -- restano contate finche' non rispondi.
+Gli altri oggetti si considerano visti quando premi *Applica*. Il tuo equipaggiamento qui non c'e':
+un pezzo nuovo, trovato nei file o scritto da te, lo vedi e lo completi nell'*Attrezzatura*.
+
+Accanto ai gruppi di frame c'e' **cosa hai ripreso**: gli oggetti che l'app ha riconosciuto in
+quei frame, con quanti frame ciascuno (i primi tre, e quanti altri), per rispondere senza dover
+ricordare -- anche se il file non scrive l'oggetto, come succede con molte reflex. A parte dice i
+frame in cui il cielo non ha trovato niente e quelli che non ha ancora guardato o non e' riuscito
+a guardare, perche' non sono la stessa cosa.
+
+- **Stesso pezzo?** Quando due camere hanno lo stesso nome a parte spazi, segni o un'aggiunta fra
+  parentesi (per esempio `ATR2600M` e `ATR2600M(USB2.0)`), e lo stesso pixel e lo stesso colore,
+  spesso sono la stessa camera vista da due programmi -- ma possono anche essere due camere dello
+  stesso modello, e questo l'app non puo' saperlo. Te lo chiede sulla camera con meno frame: *si'*
+  la unisce a quella con piu' frame, *no* e la domanda non torna piu' per quelle due. Niente e'
+  scelto prima di te, perche' un'unione non si disfa. Per gli altri pezzi non te lo chiede, perche'
+  non ha un dato per esserne sicura: l'unione la scegli dall'*Attrezzatura*.
+- **Filtri.** Qui arrivano solo i filtri che l'app non riconosce, come una `H` sola: dici cos'e',
+  una volta, e vale anche per i frame che arriveranno. E' *uno dei miei filtri* (lo scegli fra
+  quelli che l'app conosce), un modello in commercio, o un nome con la sua banda. I filtri che
+  l'app riconosce non te li chiede. A differenza delle altre domande, un filtro a cui hai risposto
+  esce dalla pagina. Nell'Attrezzatura, con *Correggi* accanto al filtro, ne cambi nome, marca e
+  modello, o lo unisci a un altro; la banda, per ora, no.
+- **Frame senza filtro.** Per le camere i cui frame non scrivono il filtro scegli una volta sola
+  cosa c'era davanti: *a colori, senza filtro*, *nessun filtro* o *uno dei miei filtri*, che scegli
+  da una tendina fra i filtri che l'app conosce. Vale anche per i frame che arriveranno. Se con
+  quella camera cambiavi filtri senza che il file li scrivesse non c'e' una risposta giusta:
+  quei frame restano senza filtro. Una camera che i suoi file dicono a colori non te la chiede: i
+  suoi frame senza filtro vanno su OSC da soli.
+- **Frame senza camera.** Un frame che non dice la camera prende quella degli altri frame della
+  stessa notte, se dicono tutti la stessa; e se non dice l'ottica, prende quella della notte quando
+  la notte ne dice una sola a una focale sola, con la focale se il frame non la dice (una focale sua
+  diversa invece non prende l'ottica della notte). Te lo chiede quando nessun frame di quella notte
+  dice la camera, o quando ne dicono piu' d'una. La notte va da mezzogiorno a mezzogiorno nell'ora
+  del posto -- dove l'hai ripreso, se il file lo dice, o di casa; senza nessuno dei due, di
+  Greenwich (UTC) -- e un frame che non dice quando e' stato ripreso prende il giorno in cui il
+  file e' stato scritto. Se dichiari casa dopo la prima lettura, o la sposti in un altro fuso, i
+  frame che non dicono dove sono stati ripresi passano all'ora della casa nuova, e le risposte che
+  hai dato per notte li seguono; se due gruppi a cui avevi risposto in modo diverso diventano uno,
+  la domanda torna aperta.
+  Te li mostra raggruppati per notte e per cio' che dicono i file (sensore, pixel, telescopio),
+  non per cartella. Per ogni gruppo scegli uno dei tuoi corredi, oppure scrivi ottica, camera e
+  focale: l'app ti propone l'ottica che i frame dicono e la focale nativa. La tua risposta vale
+  anche per i frame che arriveranno con la stessa notte e gli stessi valori, da qualunque
+  cartella, e vale anche se poi la notte direbbe un'altra camera. Se poi rinomini o unisci la
+  camera o l'ottica che hai scritto, la risposta le segue.
+- **Frame senza ottica.** Frame che hanno una camera ma nessuna ottica: i loro file non la
+  nominano (l'ASIAIR al suo posto scrive la montatura, altri programmi non scrivono il
+  telescopio), oppure la camera l'hanno presa dalla loro notte o da una tua risposta in *Frame
+  senza camera*. Te lo chiede una volta per camera e focale, con quanti frame e cosa ci hai ripreso: scegli una delle tue ottiche o ne
+  scrivi il nome, e se non ce l'hai nasce in Attrezzatura. I frame vanno nel corredo che quell'ottica
+  ha gia' con quella camera, e la risposta vale anche per i frame che arriveranno. Due ottiche
+  diverse usate alla stessa focale con la stessa camera ti arrivano come una domanda sola.
+- **Frame senza tipo.** Alcuni programmi non scrivono nel file se e' una foto del cielo o un file
+  di calibrazione. Lo capisce l'app guardando il cielo: se riesce a riconoscere dove punta e' una
+  foto, se non trova stelle e' una calibrazione (bias, flat e dark con pochi pixel caldi non ne hanno; e
+  nemmeno una foto tutta coperta dalle nuvole, che cosi' non conta nelle ore). Un dark con molti
+  pixel caldi puo' sembrarle un cielo: quello te lo chiede. Te lo chiede in tutti gli altri
+  casi: quando vede delle stelle ma non riconosce il cielo, quando non ci riesce in tempo, o quando
+  il file non si lascia leggere. Per quelle cartelle lo dici tu, una volta: *e' una
+  foto del cielo* li manda avanti come gli altri, *sono file di calibrazione* li lascia da parte
+  -- e da li' in poi l'app salta anche i file senza tipo che arriveranno in quella cartella e che
+  l'archivio non ha ancora, contandoli fra i saltati della scansione. La tua risposta vale per
+  tutti i file senza tipo della cartella, anche per quelli che l'app aveva gia' capito. Finche' non rispondi quei frame non contano nelle
+  ore e non te li chiede fra i Frame senza nome ne' fra i Frame senza filtro: prima si sa **che
+  file sono**, poi cosa inquadrano. La risposta e' della cartella, e vale anche per i file che ci
+  sposti: in una cartella a cui non hai ancora risposto torna ad aspettare un file che il cielo non
+  ha riconosciuto, in una cartella che hai detto di calibrazione qualunque file senza tipo, anche
+  uno che il cielo aveva riconosciuto. In tutti e due i casi le sue ore escono dall'archivio, e
+  tornano quando di quella cartella dici *e' una foto del cielo*, o quando lo rimetti in una
+  cartella che lo lascia andare. Se invece ce lo copi, e
+  l'originale resta dov'era in una cartella che l'app legge, conta la cartella dell'originale e le
+  ore restano. Un file che
+  sparisce, o una cartella che togli, tiene invece le sue ore come ogni altro frame. L'elenco delle
+  cartelle e i loro numeri si aggiornano quando l'app finisce di leggerle o di guardare il cielo:
+  mentre lavora possono essere indietro di un passo, e se la fermi a meta' lettura restano indietro
+  finche' non riparte. La tua risposta invece si vede subito.
+- **Frame senza sito.** Dei frame ripresi a coordinate che non cadono in nessuno dei tuoi siti dici
+  **da quale sito** vengono: te li propone dal piu' vicino, ma non ne sceglie uno. Accanto vedi le
+  **notti** di quei frame, per ricordarti dov'eri: il fuso e' quello delle coordinate -- quando
+  avrai risposto sara' quello del sito che scegli, e per una posa vicino a mezzogiorno le due date
+  possono non coincidere.
+- **Mosaici proposti.** Dei pannelli affiancati che l'app ti propone come mosaico dici se lo sono o
+  no: un no resta, e non te lo ripropone. Col si' dici anche **di cosa** e' il mosaico: il campo
+  arriva gia' compilato con l'oggetto del catalogo che sta al centro del mosaico, e se non e'
+  quello scrivi il nome giusto. I pannelli che riprenderai dopo entrano nel mosaico da soli, e
+  rinominare la camera o dire con che camera hai ripreso non cambia niente: la risposta resta.
+  Un gruppo di frame conta come pannello solo se ha almeno un quarto del tempo del pannello piu'
+  lungo (le pose, se i file non dicono la durata): i pochi frame spostati di un giro al meridiano
+  non ti fanno proporre un mosaico, e restano col loro oggetto. Un frame di cui non si sa quanto e'
+  grande il campo non entra nei mosaici.
+- **Frame senza nome.** I frame che non dicono cosa hai ripreso, e di cui il cielo non dice niente
+  -- non ci ha trovato oggetti, o non e' riuscito a guardarli -- si chiedono per gruppo: la notte,
+  la camera, il telescopio e **dove puntava la montatura**, non la cartella. I frame che puntano a
+  meno di un campo inquadrato dal primo del gruppo sono lo stesso oggetto, cosi' il dithering non
+  conta; per saperlo servono il puntamento, la focale e i pixel del file. Due oggetti ripresi nella
+  stessa notte sono quindi due domande, tranne quando stanno a meno di un campo l'uno dall'altro
+  (M 81 e M 82 con un campo largo) o quando il file non dice dove puntavi: li' restano una domanda
+  sola, e rispondendo metti tutti quei frame sullo stesso oggetto. Per accorgertene, la domanda
+  dice l'ora del primo e dell'ultimo frame (*dalle 21:10 alle 03:40*), nell'ora del posto; contano
+  solo i frame che dicono quando sono stati ripresi, e un gruppo dove nessuno lo dice non mostra
+  ore. Ogni notte
+  e' una domanda a parte. Scrivi l'oggetto oppure spunta *non e' un oggetto*, per un frame di prova o una
+  messa a fuoco: la risposta vale anche per i frame che arriveranno nello stesso gruppo. Dove invece il cielo ha trovato qualcosa decide lui, e un frame che il nome lo scrive
+  tiene il suo.
+- **Oggetti.** In cima ci sono quelli su cui l'app ha un dubbio, ognuno con cio' che il cielo ha
+  trovato nel campo di quel frame da cliccare, quando ha trovato qualcosa; se nessuno e' quello
+  giusto, o se non c'e' niente da cliccare, il nome lo scrivi tu. Sotto ci sono gli altri oggetti
+  nuovi, che non hai ancora visto. Una volta visti, gli oggetti su cui non c'e' niente da scegliere
+  -- anche un dubbio senza niente da cliccare -- stanno chiusi in
+  *Mostra gli oggetti gia' visti*: li apri quando ti serve correggerne uno, e arrivano un po' per
+  volta con *Mostrane altri*. Accanto a
+  ogni oggetto trovi quanti frame sono e quante ore, e a parte i frame il cui header non dice il
+  tempo.
+
+Quando scrivi a mano un oggetto -- negli Oggetti o nei Frame senza nome -- una **sigla** che il
+catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altro nome resta com'e'.
+
+## Cosa non fa ancora
+
+- **Sul NAS la scansione puo' partire da sola a intervalli**, se chi avvia l'app imposta
+  `ASTROLOG_SCAN_EVERY_MIN`. Per il resto partono da soli solo i giri del meteo -- la previsione,
+  lo storico delle notti riprese e il solito del sito: la scansione si chiede col pulsante.
+- **Il Meteo non ha ancora grafici**: arrivano col design.
+- **ASTAP va installato a parte**, col suo catalogo: l'app ti dice se li trova e ti lascia
+  indicare dove sta il programma -- al primo avvio e in Impostazioni -- ma non scarica ne' installa
+  niente per te. In futuro viaggera' dentro l'app.
+- Nelle **Notti** mancano ancora le misure dei
+  tuoi frame, e **una notte non si apre**: il suo dettaglio, come quello di un
+  oggetto, arrivera' tutto insieme; le Notti non si filtrano e non si riordinano. Nell'Archivio
+  i pannelli di un mosaico si aprono dalla sua carta, non dall'elenco.
+- **Il tuo nome si dichiara solo al primo avvio**: le cartelle, il sito e il riconoscitore ora si
+  rivedono dalle Impostazioni, il nome no.
+- **Le cartelle si sfogliano da un elenco solo sul NAS**, dove l'app ha una radice dei dati; sul
+  computer il percorso si scrive.
+- **Un campo della scheda non si svuota**: si corregge scrivendo un altro valore, ma un valore
+  scritto non si toglie dalla pagina.
+- **La veste non e' ancora su tutto**: l'app ha i suoi colori, la barra, la Casa, *Da confermare*
+  e il **primo avvio**, che e' ora quello disegnato: a che punto sei con un binario -- la tappa
+  fatta porta una spunta, quella dove sei un disco pieno, quelle che vengono un cerchietto
+  punteggiato -- e ogni passo dice **perche'** l'app chiede quella cosa. L'**Archivio** mostra
+  gia' tutto quello che sa, ma la grafica delle sue righe arriva nel prossimo giro. Il tema
+  chiaro c'e' nel foglio e **non si puo' ancora accendere**: le Impostazioni ci sono, ma non hanno
+  ancora la sezione da cui chiederlo.
+- **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un
+  segno -- una spunta se e' andata bene, un triangolo se c'e' un problema -- perche' chi non
+  distingue il verde dal rosso deve capire lo stesso. E nel primo avvio tre risposte che prima
+  comparivano in silenzio -- la cartella che non si raggiunge, quanti file ha trovato, se il
+  riconoscitore c'e' -- ora vengono **lette ad alta voce** da un lettore di schermo.
+
+## Dove stanno i tuoi dati
+
+Tutto in un file solo, fuori dalla cartella del programma:
+
+- **Windows**: `%LOCALAPPDATA%\AstroLog`
+- **Mac**: `~/Library/Application Support/AstroLog`
+- **Docker / NAS**: `/data`
+
+Li' dentro ci sono il database, la cache e i log. I tuoi FITS restano dove sono.

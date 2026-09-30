@@ -1,0 +1,115 @@
+/** Settings texts. */
+export const enImpostazioni = {
+  "settings.sections": "Settings sections",
+  "settings.folders": "Folders",
+  "settings.solver": "The solver",
+  "settings.solver.title": "The sky solver",
+  "settings.solver.what":
+    "It is ASTAP that looks at the stars in frame and says where each shot points. Here you see whether the app finds it, and where.",
+  "settings.solver.here": "found",
+  "settings.solver.none": "I can't find ASTAP on this computer.",
+  "settings.solver.declaredNotThere": "The path you wrote leads to no program:",
+  "settings.solver.from.declared": "because you told it so",
+  "settings.solver.from.env": "from whoever started the app (ASTROLOG_ASTAP)",
+  "settings.solver.from.path": "by looking among the system programs",
+  "settings.solver.from.known_place": "where it is usually installed",
+  "settings.solver.search": "Look for it",
+  "settings.solver.searchedFound": "I found one",
+  "settings.solver.searchedNothing": "I looked among the system programs and where ASTAP is usually installed: it is not there.",
+  "settings.solver.adopt": "Use the one you found",
+  "settings.solver.failed": "I can't tell where the solver is.",
+  "settings.solver.searchFailed": "I couldn't look for it.",
+  "settings.site": "The site",
+  "settings.readings": "The readings",
+  "settings.services": "Services",
+  "settings.services.title": "The services",
+  "settings.services.what": "Your personal keys for the services the app asks. Without them, the app works just the same.",
+
+  "settings.folders.title": "The folders I read",
+  "settings.folders.what":
+    "I read all of them, subfolders included. No file is moved or changed.",
+  "settings.folders.reachable": "reachable",
+  "settings.folders.unreachable": "not reachable",
+  "settings.folders.frames": "{n} frames in the archive",
+  "settings.folders.frames.one": "1 frame in the archive",
+  "settings.folders.frames.kept": "{n} frames already read stay in the archive",
+  "settings.folders.frames.kept.one": "1 frame already read stays in the archive",
+  "settings.folders.since": "added on {quando}",
+  "settings.folders.remove": "Remove",
+  "settings.folders.keeps":
+    "Removing a folder deletes nothing: I stop reading it, and the frames already in the archive stay there with their history.",
+  "settings.folders.failed": "I can't read the list of folders.",
+
+  "settings.folders.add.title": "Add a folder",
+  "settings.folders.add.what": "Write the path as you see it on your computer.",
+  "settings.folders.add.what.nas": "Pick from the folders the NAS exposes: your computer's disk isn't visible from in here.",
+  "settings.folders.label": "Path",
+  "settings.folders.look": "Look inside first",
+  "settings.folders.add": "Add",
+  "settings.folders.lookFailed": "I couldn't look inside that folder.",
+  "settings.folders.addFailed": "I couldn't add that folder.",
+  "settings.folders.removeFailed": "I couldn't remove that folder.",
+  "settings.folders.foundTitle": "Found",
+  "settings.folders.found": "There are {n} files to read.",
+  "settings.folders.found.one": "There is 1 file to read.",
+  "settings.folders.atLeastTitle": "At least these",
+  "settings.folders.atLeast": "I counted {n} and stopped counting: there are at least that many.",
+  "settings.folders.unreachableTitle": "I can't reach it",
+  "settings.folders.unreachableHelp":
+    "The drive may be disconnected, or the path may be wrong. Until I can reach it I can't add it.",
+
+  "settings.folders.none": "I'm not reading any folder",
+  "settings.folders.none.why":
+    "Until you point me at one, the archive stays empty: there's nothing to read from.",
+  "settings.folders.none.safe": "No file is moved or changed: they're read and counted.",
+
+  "settings.folders.confirm": "Stop reading {percorso}?",
+  "settings.folders.confirm.what":
+    "I delete nothing. What's already in the archive stays where it is, with its nights and its hours.",
+  "settings.folders.confirm.frames": "frames stay in the archive",
+  "settings.folders.confirm.files": "the files on disk are not touched",
+  "settings.folders.confirm.stop": "I stop watching this folder: new files won't come in",
+  "settings.folders.cancel": "Cancel",
+  "settings.folders.stop": "Stop reading it",
+
+  "settings.site.title": "Your sites",
+  "settings.site.what":
+    "Nights and object altitudes are worked out from the home site. The others are for trips.",
+  "settings.site.home": "home",
+  "settings.site.makeHome": "Make it home",
+  "settings.site.makeHomeOne": "Make {nome} home",
+  "settings.site.fix": "Correct",
+  "settings.site.fixOne": "Correct {nome}",
+  "settings.site.remove": "Remove",
+  "settings.site.removeOne": "Remove {nome}",
+  "settings.site.removeIt": "Remove the site",
+  "settings.site.add": "Add a site",
+  "settings.site.cancel": "Cancel",
+  "settings.site.save": "Save",
+  "settings.site.keeps":
+    "Without the sky the site still works: what you lose is comparing one night with another when you change place.",
+  "settings.site.failed": "I can't read your sites.",
+  "settings.site.saveFailed": "I couldn't save the site.",
+  "settings.site.homeFailed": "I couldn't change the home site.",
+  "settings.site.removeFailed": "I couldn't remove the site.",
+  "settings.site.add.title": "Add a site",
+  "settings.site.add.what": "Search the place by name, or write the coordinates.",
+  "settings.site.fix.title": "Correct the site",
+  "settings.site.fix.what":
+    "The sky changes: a new street light, a district that switches off at night. You correct it here without redoing anything.",
+  "settings.site.confirm": "Remove {nome}?",
+  "settings.site.confirm.what":
+    "The frames shot from there stay in the archive. What you lose is the place the app works the nights out from.",
+  "settings.site.hasNightsTitle": "This site holds nights",
+  "settings.site.hasNights":
+    "{n} nights are tied to this site: while they are, it can't be removed. If the place is wrong, correct it instead of removing it.",
+  "settings.site.hasNights.one":
+    "1 night is tied to this site: while it is, it can't be removed. If the place is wrong, correct it instead of removing it.",
+  "settings.site.noHomeTitle": "No site is the home one",
+  "settings.site.noHome":
+    "Until you choose one, nights are not worked out and the sidebar doesn't know where you observe from. Press Make it home on the right one.",
+  "settings.site.none": "No site declared",
+  "settings.site.none.why":
+    "I still catalogue everything you have shot. What I can't do is split the shots into nights: without a place I don't know when the dark begins and ends.",
+  "settings.site.none.enough": "Name and coordinates are enough. The sky can be declared later, or never.",
+}

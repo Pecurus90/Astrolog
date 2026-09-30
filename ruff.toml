@@ -1,0 +1,28 @@
+# Il linter, una casa sola per tutto il repo: il backend e gli strumenti del metodo.
+# `old/` non si misura (e' la cava, si porta e si cancella) e `node_modules` non e' nostro.
+line-length = 100
+target-version = "py312"
+extend-exclude = ["old", "node_modules"]
+# Dove stanno i nostri pacchetti: senza questo `astrolog` finirebbe fra le librerie di
+# terzi e l'ordine degli import cambierebbe in tutto il repo.
+src = ["backend", "backend/tests", "tools"]
+
+[lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "DTZ", "S", "BLE", "T20", "SIM",
+          "C901", "PLR0912", "PLR0913", "PLR0915", "PLE25"]
+# C901/PLR: limits on functions, not files. Existing breaches carry a `noqa`: that is the debt.
+# PLE25: control characters (backspace, NUL, ESC...) pasted into strings.
+# DTZ: le date portano il fuso (CLAUDE.md). BLE: niente `except Exception` muti. T20: niente
+# print. S: le prese di sicurezza, S608 (SQL composto con stringhe) e S105 (segreti scritti
+# nel codice) comprese. N: nomi in inglese, PEP 8.
+# B008 e' l'idioma di FastAPI (`Depends` nel default): non e' un difetto.
+ignore = ["S101", "B008"]
+
+[lint.per-file-ignores]
+# Nei test: `assert` e' il mestiere, i percorsi temporanei sono voluti, i sottoprocessi si
+# lanciano apposta. I segreti scritti nel codice NO: quella presa resta accesa anche qui,
+# perche' una finta password in un test finisce nella storia come una vera.
+"backend/tests/**" = ["S101", "S108", "S311", "S603", "S607", "DTZ", "PLR0913", "C901", "PLR0912", "PLR0915"]
+# Gli strumenti sono programmi da riga di comando: stampare e' come parlano, e lanciare
+# processi (ruff, pytest, git) e' cio' per cui esistono.
+"tools/**" = ["T20", "S603", "S607"]
