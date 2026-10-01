@@ -14,11 +14,11 @@ non entra: lo rifa' Marco col disegno nuovo (*Per il disegno nuovo*, sotto).
 
 **Fase 1 -- pulizia e tipi.** Commenti al massimo due righe e solo il perche'; ogni funzione
 annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
-- Fatti: `spine/identify*`, `db`, `vocab`, `catalog`, `fits`.
-- Mancano: il resto di `spine`, `api`, `weather`, `ephemeris`, `worker`, e i file sciolti di
+- Fatti: `spine/identify*`, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`.
+- Mancano: il resto di `spine`, `api`, `weather`, e i file sciolti di
   `backend/astrolog` (`__init__`, `__main__`, `astap`, `clock`, `log`, `net`, `place`,
   `startup`, `units`).
-- Da chiudere strada facendo: 46 righe del backend (32 in `backend/astrolog`, 14 in
+- Da chiudere strada facendo: 44 righe del backend (30 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
@@ -35,7 +35,10 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `fuori`, `elencate` (`db/idlist`), `elenco`, `segnaposto` (`db/replace_table`), `parola`,
   `candidato`, `lettere`, `calibrazione`, `riga` (`fits/frame_type`), `intero`, `attributi`
   (`fits/walk`). Il segnaposto `{dentro}` di `idlist.grouped` e' un contratto con le query dei
-  chiamanti in `spine/`: si rinomina insieme a loro.
+  chiamanti in `spine/`: si rinomina insieme a loro. In `ephemeris` quasi tutto: il modulo
+  `corpi` e le sue `quando`, `convertito`, `altezze`; `istanti`, `inizio`, `scarti`, `soglia`,
+  `verso`, `FASCE`, `BUIO`, `_UN_FILO`, `_BANDA_DEG`, `_fascia`, `_confini`, `nel_fuso`, `punto`.
+  `sun.BUIO` e' letto da `weather/verdict`.
 - **`identify`**: la rotazione dello scarto negli assi del sensore e' scritta due volte
   (`identify_geometry.in_frame` e `mosaic_geometry._in_axes`): va in `identify_geometry` e la
   chiamano tutti e due. Il letterale del lucchetto dell'utente (`method`/`confidence` `user`,
@@ -44,14 +47,18 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
 - **Forme `dict` che escono dai package di base**: il modello di filtro (`vocab/filters.models`,
   `model_by_id`, letti da `api/vocab` e `spine/gear`), la voce del catalogo
   (`catalog/lookup.by_designation`, `by_slug`, `in_cone`), i campi del frame
-  (`fits/header_fields.extract_fields`, letti da `spine/scan`), le preferenze (`db/config.read`).
+  (`fits/header_fields.extract_fields`, letti da `spine/scan`), le preferenze (`db/config.read`),
+  la fase (`ephemeris/moon.phase`, `phases`), la notte della Luna (`moon.night_track`), le fasce
+  (`sun.night_bands`, `sky_bands`), lo snapshot e il record dello stadio (`worker/worker.py`,
+  `worker/states.blank_record`).
 - **`db/idlist.grouped` torna `dict[Any, list[Any]]`**: generico in `T` rompe `api/archive.py`, che
   passa i dict di `spine/filters_used` a un campo `list[FilterUsed]`. Si fa generico quando i
   chiamanti costruiscono righe tipate.
 - **Insiemi chiusi da fare `StrEnum`**, che escono dal package e finiscono nel database: il tipo
   del frame (`fits/frame_type.image_type`, `UNKNOWN`, `CALIBRATION_TYPES`), i quattro software
   (`vocab/software`), le bande (`vocab/filters`: `NO_FILTER`, `UNKNOWN`, `DUO_*`, `TRI_NB`,
-  `MULTI_NB`).
+  `MULTI_NB`); e, che escono dal package, `ephemeris/moon.PHASES`, i nomi delle fasce di
+  `ephemeris/sun` e gli stati di `worker/states`.
 - **`db/config.KEYS`** ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei
   test (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo
   spacchettamento.
@@ -61,7 +68,10 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `db.transaction` (gli strati non gli lasciano importare `db`); `db/paths.cache_dir` e `log_dir`
   sono la stessa funzione; in `catalog/lookup` l'elenco delle colonne si ricompone due volte da
   `_FIELDS`; in `fits/frame_type` `_calibrations_applied` e `_says_true` aprono con lo stesso
-  preambolo.
+  preambolo. In `ephemeris`: l'interpolazione lineare `t0 + (t1 - t0) * quota` in
+  `grid.first_crossing` e `sun._confini`; il rifiuto dell'istante senza fuso in `corpi.quando` e
+  `grid.night_grid`; `moon.altitudes` e `sun.altitudes`, lo stesso involucro di `corpi.altezze`;
+  `moon.night_track` e `sun.night_bands`, lo stesso percorso (griglia, altezze, fuso del sito).
 
 ### Tappe del prodotto
 

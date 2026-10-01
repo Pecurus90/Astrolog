@@ -1,13 +1,9 @@
-"""Il worker: una lista ordinata di stadi in un thread, uno alla volta; Stop cooperativo fra
-un elemento e l'altro; snapshot sotto lock; timbri della corsa.
-
-Vincolo non ovvio: lo stato e' volatile per scelta (dopo uno stop si riparte da cio' che
-manca nel DB); non riparte mai da solo; un lavoro alla volta -- chi trova il worker
-occupato riceve `WorkerBusyError`, non una coda invisibile.
-"""
+"""State is volatile by choice: after a stop the next run resumes from what the DB lacks."""
 
 import logging
 import threading
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from ..clock import now_iso
 from .states import (
@@ -17,6 +13,7 @@ from .states import (
     IDLE,
     RUNNING,
     STOPPED,
+    Stage,
     blank_record,
     tally_of,
 )
@@ -25,25 +22,22 @@ log = logging.getLogger(__name__)
 
 
 class WorkerBusyError(RuntimeError):
-    """Un lavoro e' gia' in corso."""
+    """A job is already running: the caller is told, rather than queued invisibly."""
 
 
 class Worker:
-    def __init__(self):
+    def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._thread = None
+        self._thread: threading.Thread | None = None
         self._state = IDLE
-        self._stage = None
-        self._stages = []
-        self._error = None
+        self._stage: str | None = None
+        self._stages: list[dict[str, Any]] = []
+        self._error: str | None = None
         self._stop_flag = False
-        self._started_at = None
-        self._ended_at = None
+        self._started_at: str | None = None
+        self._ended_at: str | None = None
 
-    # -- API ------------------------------------------------------------------------
-
-    def start(self, stages):
-        """Avvia la corsa; `WorkerBusyError` se una e' gia' in corso. Ritorna lo snapshot."""
+    def start(self, stages: Sequence[Stage]) -> dict[str, Any]:
         with self._lock:
             if self._thread is not None and self._thread.is_alive():
                 raise WorkerBusyError("un lavoro di sottofondo e' gia' in corso")
@@ -60,42 +54,40 @@ class Worker:
             t.start()
             return self._snapshot_locked()
 
-    def stop(self):
-        """Chiede lo stop: il ciclo lo raccoglie al prossimo confine fra elementi."""
+    def stop(self) -> dict[str, Any]:
+        """Picked up at the next boundary between items."""
         with self._lock:
             self._stop_flag = True
             return self._snapshot_locked()
 
-    def reset(self):
+    def reset(self) -> dict[str, Any]:
         with self._lock:
             if self._thread is not None and self._thread.is_alive():
                 raise RuntimeError("reset con un lavoro in corso")
-            self.__init__()  # noqa: PLC2801 - lo stato torna a nuovo, stesso lock nuovo
+            self.__init__()  # noqa: PLC2801 - back to a fresh state, lock included
             return self._snapshot_locked()
 
-    def snapshot(self):
+    def snapshot(self) -> dict[str, Any]:
         with self._lock:
             return self._snapshot_locked()
 
-    def is_running(self):
+    def is_running(self) -> bool:
         with self._lock:
             return self._thread is not None and self._thread.is_alive()
 
-    def stage_record(self, name):
-        """Il record (copia) dello stadio `name` nella corsa corrente, o None."""
+    def stage_record(self, name: str) -> dict[str, Any] | None:
+        """A copy: the live record changes under the lock, the caller reads it outside."""
         with self._lock:
             rec = self._record(name)
             return None if rec is None else dict(rec, tally=dict(rec["tally"]))
 
-    def join(self, timeout=None):
+    def join(self, timeout: float | None = None) -> None:
         t = self._thread
         if t is not None:
             t.join(timeout)
 
-    # -- interno --------------------------------------------------------------------
-
-    def _snapshot_locked(self):
-        snap = {
+    def _snapshot_locked(self) -> dict[str, Any]:
+        snap: dict[str, Any] = {
             "state": self._state,
             "stage": self._stage,
             "started_at": self._started_at,
@@ -116,23 +108,23 @@ class Worker:
             snap["error"] = self._error
         return snap
 
-    def _record(self, name):
+    def _record(self, name: str) -> dict[str, Any] | None:
         for r in self._stages:
             if r["name"] == name:
                 return r
         return None
 
-    def _set_stage_state(self, name, state):
+    def _set_stage_state(self, name: str, state: str) -> None:
         with self._lock:
             rec = self._record(name)
             if rec is not None:
                 rec["state"] = state
 
-    def _stop_requested(self):
+    def _stop_requested(self) -> bool:
         with self._lock:
             return self._stop_flag
 
-    def _apply_progress(self, name, event):
+    def _apply_progress(self, name: str, event: Mapping[str, Any]) -> None:
         with self._lock:
             rec = self._record(name)
             if rec is not None:
@@ -141,7 +133,7 @@ class Worker:
                 rec["tally"] = tally_of(event)
                 rec["last_event"] = event
 
-    def _finish_stage(self, name, event):
+    def _finish_stage(self, name: str, event: Mapping[str, Any]) -> None:
         with self._lock:
             rec = self._record(name)
             if rec is None:
@@ -150,20 +142,18 @@ class Worker:
             rec["total"] = event.get("total")
             rec["current"] = event.get("total")
             rec["reason"] = event.get("reason")
-            # Uno stadio che si e' FERMATO da solo non e' "completato": senza questa riga la
-            # ricevuta diceva `current 1 / total 1`, zero risolte e nessun motivo, su un
-            # archivio da cinquemila pose. Per la lettura dei file, finita, l'esito che la pagina
-            # mostra non e' questo: lo dicono le ricevute di tutte le cartelle (`api/pipeline.py`).
+            # A stage that stopped itself is not "completed": current is set to total, so the
+            # receipt would read done with nothing processed.
             if event.get("status") == "aborted":
                 rec["state"] = ERROR
             else:
-                # dei file non letti lo stato dice solo che ci sono: la pagina lo chiede ogni pochi
-                # secondi, e i file li legge a pagine dalla ricevuta scritta (`api/scan.py`)
+                # The state only flags that errors exist: the page polls it often and pages the
+                # unread files from the written receipt (`api/scan.py`).
                 rec["state"] = COMPLETED_WITH_ERRORS if event.get("errors_detail") else COMPLETED
 
-    def _run_stage(self, stage):
-        """Consuma il generatore; False se ci si e' fermati su Stop. Prima si chiude il
-        generatore, poi si rilascia, e solo alla fine si pubblica lo stato terminale."""
+    def _run_stage(self, stage: Stage) -> bool:
+        """False when stopped. The generator is closed, then released, and only then is the
+        terminal state published."""
         gen = stage.factory()
         done_event, stopped = None, False
         try:
@@ -191,7 +181,7 @@ class Worker:
             self._set_stage_state(stage.name, COMPLETED)
         return True
 
-    def _run(self, stages):
+    def _run(self, stages: list[Stage]) -> None:
         try:
             for stage in stages:
                 if self._stop_requested():
@@ -214,7 +204,7 @@ class Worker:
             for stage in stages:
                 stage.finish()
 
-    def _finish(self, state, error=None):
+    def _finish(self, state: str, error: str | None = None) -> None:
         with self._lock:
             self._state = state
             self._stage = None
@@ -222,7 +212,7 @@ class Worker:
             if error is not None:
                 self._error = error
 
-    def _finish_from_stages(self):
+    def _finish_from_stages(self) -> None:
         with self._lock:
             worst = COMPLETED
             for rec in self._stages:

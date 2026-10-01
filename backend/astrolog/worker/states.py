@@ -1,12 +1,8 @@
-"""Gli stati del worker (che sono anche gli stati per stadio: un vocabolario solo) e il
-contratto di uno stadio.
-
-Vincolo non ovvio: `factory` restituisce un generatore FRESCO a ogni corsa, che emette dict
-di avanzamento e chiude con `{done: True}`; `on_finish` gira esattamente una volta, comunque
-vada, anche se lo stadio non parte mai (un lock non puo' restare orfano).
-"""
+"""Worker states, which are also the per-stage states (one vocabulary), and the stage contract."""
 
 import logging
+from collections.abc import Callable, Generator, Mapping
+from typing import Any
 
 log = logging.getLogger(__name__)
 
@@ -20,8 +16,7 @@ NOT_RUN = "not_run"
 
 TERMINAL_STATES = frozenset({COMPLETED, COMPLETED_WITH_ERRORS, ERROR, STOPPED})
 
-# Le chiavi di posizione di un evento; tutto il resto e' il tally, che il worker trasporta
-# senza conoscerne i nomi.
+# The position keys of an event; everything else is the tally, carried without knowing its names.
 STRUCTURAL_KEYS = frozenset(
     {
         "current",
@@ -42,18 +37,24 @@ STRUCTURAL_KEYS = frozenset(
 
 
 class Stage:
-    """Uno stadio: nome, fabbrica del generatore, e il gancio `on_finish` per rilasciare."""
+    """`factory` gives a fresh generator per run, yielding progress and ending with `{done: True}`;
+    `on_finish` runs exactly once, even if the stage never starts: a lock must not be orphaned."""
 
     __slots__ = ("name", "factory", "on_finish", "_finished")
 
-    def __init__(self, name, factory, on_finish=None):
+    def __init__(
+        self,
+        name: str,
+        factory: Callable[[], Generator[dict[str, Any]]],
+        on_finish: Callable[[], object] | None = None,
+    ) -> None:
         self.name = name
         self.factory = factory
         self.on_finish = on_finish
         self._finished = False
 
-    def finish(self):
-        """Idempotente: la seconda chiamata non fa niente."""
+    def finish(self) -> None:
+        """Idempotent."""
         if self._finished:
             return
         self._finished = True
@@ -65,11 +66,11 @@ class Stage:
             log.exception("worker: on_finish dello stadio %s fallito", self.name)
 
 
-def tally_of(event):
+def tally_of(event: Mapping[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in event.items() if k not in STRUCTURAL_KEYS}
 
 
-def blank_record(name):
+def blank_record(name: str) -> dict[str, Any]:
     return {
         "name": name,
         "state": NOT_RUN,

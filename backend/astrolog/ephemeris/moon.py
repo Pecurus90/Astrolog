@@ -1,35 +1,15 @@
-"""La Luna: quanto e' illuminata, che fase e', quando sorge e tramonta, quanto sale stanotte, con
-che curva ci arriva, e quanto potrebbe salire al massimo da quel posto.
+"""The Moon: phase and illumination (geocentric, the same for everyone on Earth), rise, set and
+the night's curve (topocentric), and how high it can ever climb from a site."""
 
-Vincoli non ovvi:
-
-* **La fase e' geocentrica, il sorgere e' topocentrico**, e non e' una svista. Quanto e'
-  illuminata la Luna si vede uguale da tutta la Terra -- calcolarla dal sito la farebbe ballare
-  di pochissimo e senza motivo, e due utenti che guardano la stessa luna leggerebbero due numeri
-  diversi. L'ora in cui sorge invece dipende da dove sei, ed e' tutto il punto.
-* **Un istante senza fuso si rifiuta.** `astropy` lo leggerebbe come UTC in silenzio: su un sito
-  in Arizona la notte sarebbe quella sbagliata di mezza giornata, e nessuno se ne accorgerebbe.
-  E' la stessa regola dell'archivio (`astrolog.clock`), applicata al cielo.
-* **Chi non sorge non ha un orario.** Sopra il circolo polare la Luna puo' restare sopra o sotto
-  l'orizzonte per giorni: li' si torna `None`, che a schermo diventa una frase, non un'ora finta.
-* **I quattro nomi "esatti" -- nuova, primo quarto, piena, ultimo quarto -- coprono dodici
-  gradi ciascuno**, sei per lato del loro centro: "luna piena" e' una parola, non un istante, e
-  chiamarla piena solo all'istante esatto vorrebbe dire non dirlo mai. Gli altri quattro --
-  crescente, gibbosa crescente, gibbosa calante, calante -- si prendono quel che resta, cioe'
-  settantotto gradi a testa. `_BANDA_DEG` e' la **semi**-ampiezza dei primi quattro, ed e' da li'
-  che si ricava quanta luce puo' avere ogni fase.
-
-Nota sui tipi: le dichiarazioni di `astropy` danno per possibilmente assente ogni angolo di una
-coordinata (`.lon`, `.alt`) e per "vettore di qualcosa" il suo valore in gradi, perche' la stessa
-chiamata sa lavorare su un istante solo o su mille. Dove qui si sa che e' uno, si converte a
-numero e si disarma l'avviso **sul posto e per nome** -- la stessa forma che usa
-`fits/header_coords.py`, che chiede ad astropy le stesse cose.
-"""
-
+import datetime as dt
 import math
+from collections.abc import Sequence
+from typing import Any, Literal
 
 from astropy.coordinates import (
+    BaseCoordinateFrame,
     GeocentricMeanEcliptic,
+    SkyCoord,
     get_body,
     get_sun,
 )
@@ -45,8 +25,7 @@ from . import (
 )
 from .grid import first_crossing, night_grid
 
-# Le otto fasi, nell'ordine del mese lunare. E' anche l'elenco chiuso di cio' che questo modulo
-# puo' rispondere: chi mostra la fase scrive i suoi testi da qui.
+# In the order of the lunar month: the closed list of what this module can answer.
 PHASES = (
     "new",
     "waxing_crescent",
@@ -58,17 +37,14 @@ PHASES = (
     "waning_crescent",
 )
 
-# Quanto ci si puo' allontanare dal centro di nuovo/quarti/piena continuando a chiamarli cosi':
-# la fetta di cerchio che ne esce e' larga **il doppio**, dodici gradi.
+# Half-width of new, quarters and full: "full moon" is a word, not an instant, so each of the
+# four covers twelve degrees and the other four share what is left.
 _BANDA_DEG = 6.0
 
 
-def phase_name(scarto_deg):
-    """La fase dalla differenza di longitudine eclittica fra Luna e Sole: 0 nuova, 90 primo
-    quarto, 180 piena, 270 ultimo quarto.
-
-    E' pubblica perche' e' **la regola**, e una regola si prova dove sta: provarla solo passando
-    dal cielo vorrebbe dire campionare un mese vero per scoprire che una banda non scatta mai."""
+def phase_name(scarto_deg: float) -> str:
+    """From the Moon-Sun ecliptic longitude difference: 0 new, 90 first quarter, 180 full, 270 last
+    quarter. Public so the rule is tested directly, not by sampling a real month."""
     d = scarto_deg % 360
     if d < _BANDA_DEG or d > 360 - _BANDA_DEG:
         return "new"
@@ -84,123 +60,71 @@ def phase_name(scarto_deg):
     return "waning_crescent"
 
 
-def _longitudini_eclittiche(corpo, eclittica):
-    """Le longitudini eclittiche di un corpo, in gradi: una per istante chiesto."""
+def _longitudini_eclittiche(corpo: SkyCoord, eclittica: BaseCoordinateFrame) -> Any:
+    """Degrees, one per instant asked: astropy types the angle as optional and the value loosely."""
     return corpi.convertito(corpo, eclittica).lon.deg  # pyright: ignore[reportOptionalMemberAccess]
 
 
-def phase(istante):
-    """Che luna fa in quel momento: `{"phase_key", "illumination_pct"}`.
-
-    E' **geocentrica**: la stessa da ogni posto della Terra, e per questo non chiede un sito."""
+def phase(istante: dt.datetime) -> dict[str, Any]:
+    """`{"phase_key", "illumination_pct"}`; geocentric, so it takes no site."""
     return phases([istante])[0]
 
 
-def phases(istanti):
-    """Che luna faceva in ognuno di quegli istanti, **in una chiamata sola**.
-
-    Chi ha una pagina di notti chiede cento fasi insieme, e cento chiamate costerebbero cento
-    volte tanto: quanto, lo misura `test_asking_the_phases_together_is_worth_it`. `phase` passa
-    di qui, o le due strade direbbero due lune per la stessa notte.
-
-    Un elenco vuoto torna vuoto senza chiedere niente: `Time([])` in astropy non e' una lista
-    vuota, e' un errore, e il caso si chiude qui invece che in ogni chiamante."""
+def phases(istanti: Sequence[dt.datetime]) -> list[dict[str, Any]]:
+    """All in one astropy call. Empty in, empty out: astropy rejects `Time([])`."""
     if not istanti:
         return []
     quando = Time([corpi.quando(i) for i in istanti])
     sole = get_sun(quando)
     luna = get_body("moon", quando)
     eclittica = GeocentricMeanEcliptic(obstime=quando)
-    scarti = _longitudini_eclittiche(luna, eclittica) - _longitudini_eclittiche(  # pyright: ignore[reportOperatorIssue]
-        sole, eclittica
-    )
-    elongazioni = sole.separation(luna).deg  # pyright: ignore[reportArgumentType]
+    scarti = _longitudini_eclittiche(luna, eclittica) - _longitudini_eclittiche(sole, eclittica)
+    elongazioni: Any = sole.separation(luna).deg  # pyright: ignore[reportArgumentType]
+    # Illuminated fraction from the elongation: 0 with Moon and Sun together, 1 when opposite.
     return [
         {
             "phase_key": phase_name(float(scarto)),
-            # La frazione illuminata dall'elongazione: 0 quando Luna e Sole stanno dalla stessa
-            # parte, 1 quando sono opposti.
             "illumination_pct": round((1 - math.cos(math.radians(float(elongazione)))) / 2 * 100),
         }
-        for scarto, elongazione in zip(scarti, elongazioni, strict=True)  # pyright: ignore[reportArgumentType]
+        for scarto, elongazione in zip(scarti, elongazioni, strict=True)
     ]
 
 
-def altitudes(istanti, latitude, longitude):
-    """L'altezza della Luna sull'orizzonte, in gradi, per ognuno degli istanti dati."""
+def altitudes(istanti: Sequence[dt.datetime], latitude: float, longitude: float) -> list[float]:
     return corpi.altezze("moon", istanti, latitude, longitude)
 
 
-def lit_side(phase_key, latitude):
-    """Da che parte si vede il lembo illuminato: `"left"` o `"right"`.
-
-    Cresce a destra e cala a sinistra -- ma **dall'emisfero sud si vede al contrario**, perche' la
-    Luna sta dalla parte opposta del cielo e la si guarda capovolta. Senza questa riga, meta' del
-    mondo vedrebbe ogni fase specchiata, e da qui non se ne accorgerebbe nessuno."""
+def lit_side(phase_key: str, latitude: float) -> Literal["left", "right"]:
+    """`"left"` or `"right"`: waxing is lit on the right, mirrored from the southern hemisphere,
+    where the Moon is seen upside down."""
     cresce = phase_key in ("waxing_crescent", "first_quarter", "waxing_gibbous")
     return "right" if cresce != (latitude < 0) else "left"
 
 
-def sky_ceiling(latitude):
-    """Il tetto del sito: quanto in alto la Luna puo' arrivare da quella latitudine, **mai di
-    piu'**, in gradi e salito al multiplo di quindici.
-
-    E' il bordo alto del grafico della notte. Dipende **solo da dove sei**, non da stanotte, ed e'
-    per questo che serve: la stessa scala vale tutte le notti di quel posto, quindi due notti si
-    confrontano a occhio invece di diventare la stessa gobba.
-
-    **Sopra i novanta non si va**, e non e' un dettaglio: alle latitudini sotto la declinazione
-    massima della Luna lei passa allo zenit, e li' il tetto e' novanta e basta. La formula senza
-    quel limite -- novanta meno la latitudine piu' la declinazione -- alle Canarie da' 90,5 e a
-    Singapore 117, che salito alla tacca fa 120 contro i 90 che servono: **un terzo piu' alto del
-    necessario**, poco piu' di un quinto di tela vuota per sempre, e un difetto che a
-    quarantacinque gradi non si vede mai."""
+def sky_ceiling(latitude: float) -> int:
+    """The night chart's top: the highest the Moon can ever reach from this latitude, rounded up to
+    the tick, capped at the zenith. It depends on the site only, so nights compare at a glance."""
     quanto_ci_manca = max(0.0, abs(latitude) - MAX_DECLINATION_DEG)
     return math.ceil((90 - quanto_ci_manca) / CEILING_STEP_DEG) * CEILING_STEP_DEG
 
 
-def night_track(inizio, latitude, longitude, hours):
-    """Tutto cio' che si sa della Luna in una notte, da **un campionamento solo**.
-
-    Torna `{"rise", "set", "highest", "track"}`: i due attraversamenti, il punto piu' alto, e la
-    curva dell'altezza. Stanno insieme perche' vengono tutti dalla stessa griglia, e chiederla due
-    volte vorrebbe dire pagare due volte l'unica cosa cara che c'e' qui.
-
-    `hours` non ha un valore di riserva: quanto dura una notte lo sa chi la conosce, e la notte
-    del cambio d'ora non dura ventiquattro ore. Scritto qui un ventiquattro di comodo, il giorno
-    che il chiamante lo calcola bene questo mentirebbe in silenzio.
-
-    `rise` e `set` sono istanti con fuso, oppure `None` se quell'attraversamento non c'e' nella
-    finestra. **`None` vuol dire "non in questa notte", non "mai".** Sopra il circolo polare e' il
-    caso ovvio, ma capita anche a latitudini normali: la Luna torna ogni giorno circa cinquanta
-    minuti piu' tardi, quindi un paio di notti al mese uno dei due attraversamenti cade fuori
-    dalla finestra. Misurato a Vicenza: due notti su trenta. Chi mostra questi numeri scrive "non
-    tramonta stanotte", non "non tramonta".
-
-    **I due istanti sono indipendenti**, ognuno il primo del suo verso: per meta' mese il
-    tramonto viene **prima** del sorgere (misurato: tredici notti su trenta), ed e' giusto --
-    e' la Luna di ieri che cala prima che sorga quella di stanotte.
-
-    **`highest` c'e' sempre**, anche quando non ci sono orari: una Luna che non sorge sale lo
-    stesso, sotto l'orizzonte, e quanto poco sale e' cio' che chi osserva vuole sapere. E' il
-    massimo **dentro la finestra**, che non e' sempre una culminazione vera: puo' cadere sul
-    bordo, se la Luna sta ancora salendo quando la notte finisce."""
+def night_track(
+    inizio: dt.datetime, latitude: float, longitude: float, hours: float
+) -> dict[str, Any]:
+    """`{"rise", "set", "highest", "track"}` from one sampling, the only costly thing here. A None
+    rise or set means "not in this window", not "never"; `highest` is always there."""
     istanti = night_grid(inizio, hours=hours, step_min=GRID_STEP_MIN)
     alte = altitudes(istanti, latitude, longitude)
 
-    # Il conto sta in UTC, la risposta torna **nel fuso da cui e' stata chiesta**: e' l'ora che
-    # l'utente leggera', e il passaggio la fa `astimezone`, che l'ora legale la sa.
-    def nel_fuso(quando):
+    # Computed in UTC, answered in the caller's zone, where astimezone knows about DST.
+    def nel_fuso(quando: dt.datetime | None) -> dt.datetime | None:
         return quando.astimezone(inizio.tzinfo) if quando else None
 
-    def punto(i):
+    def punto(i: int) -> dict[str, Any]:
         return {"at": nel_fuso(istanti[i]), "altitude_deg": round(alte[i], 1)}
 
-    # L'ultimo campione ci va comunque: con una finestra che non e' un multiplo del passo della
-    # curva il salto lo scavalca, e il grafico chiuderebbe prima della fine della notte. Si uniscono
-    # come **insieme** invece che con un `if`, cosi' quando il salto ci arriva gia' non nasce un
-    # doppione -- che a schermo sarebbe un segmento lungo zero, cioe' niente da vedere e un punto
-    # in piu' nel conto.
+    # The last sample always closes the curve; a set, so a step that already lands on it adds no
+    # duplicate point.
     passo = TRACK_STEP_MIN // GRID_STEP_MIN
     quali = sorted({*range(0, len(istanti), passo), len(istanti) - 1})
 

@@ -1,2 +1,2 @@
-"""L'unico scrittore del DB: un thread che esegue gli stadi in sequenza, si ferma in modo
-cooperativo e pubblica il proprio stato. Non sa cosa sia uno stadio: esegue generatori."""
+"""The only writer of the database: one thread runs the stages in order, stops cooperatively and
+publishes its state. It runs generators and knows nothing of what a stage does."""
