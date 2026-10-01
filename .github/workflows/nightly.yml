@@ -8,6 +8,11 @@ on:
 
 jobs:
   mutation:
+    # The whole backend in one job overruns the job limit; see docs/adr/0001-metodo-standard.md.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [api, spine-a-m, spine-n-z, rest]
     runs-on: ubuntu-latest
     timeout-minutes: 300
     defaults:
@@ -19,7 +24,17 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install --quiet -e ".[dev]" mutmut
-      - run: mutmut run --max-children 4
+      # A step limit below the job's, so a shard cut short still leaves time for its report.
+      - name: Mutants of shard ${{ matrix.shard }}
+        timeout-minutes: 280
+        run: |
+          patterns="$(python ../tools/mutation_shards.py ${{ matrix.shard }})"
+          set -f
+          mutmut run --max-children 4 $patterns
+      # Killed ones included, so a shard that owns no mutant in the report fails instead of
+      # looking clean; a shard cut short lists its own unrun mutants as "not checked".
       - name: Surviving mutants (tests that do not notice a change)
         if: always()
-        run: mutmut results
+        run: |
+          mutmut results --all true > results.txt
+          python ../tools/mutation_shards.py ${{ matrix.shard }} --filter < results.txt

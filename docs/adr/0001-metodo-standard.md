@@ -14,8 +14,15 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
 - I controlli sono **pre-commit** (veloci al commit, completi al push) e la **CI** su tre sistemi,
   con gli stessi comandi. La mutazione gira **di notte** (`mutmut`) ed e' un rapporto, non un
   blocco: su tutto il backend i mutanti sopravvissuti ci sono sempre, e un job sempre rosso non
-  dice niente. **Non e' ancora stata vista girare** (mutmut non gira su Windows): si prova col primo
-  lancio manuale in CI, e finche' non e' vista verde non conta come macchina.
+  dice niente. mutmut non gira su Windows, quindi gira solo in CI. Tutto il backend in un job
+  solo sfora il limite di 5 ore: si divide in quattro job paralleli (`api`, `spine` in due, il
+  resto), e il resto si calcola da `tools/mutation_shards.py`, cosi' un modulo nuovo non resta
+  fuori; un gruppo che resta senza moduli ferma il job. Il rapporto di ogni job tiene
+  solo i mutanti del suo gruppo, compresi i "not checked": un job tagliato a meta' lo dice; se
+  nel rapporto il gruppo non ha nessun mutante (i nomi non si leggono piu'), il job fallisce
+  invece di sembrare pulito. Un mutante che nessun gruppo prende fa fallire il job del resto,
+  che lo elenca.
+  Finche' non la si vede finire, non conta come macchina.
 - Il limite e' sulle **funzioni** (ruff `C901`, `PLR0912/0913/0915`), non sui file: il file ha
   un tetto largo a 1000 righe (pylint). Chi supera oggi porta un `noqa`: e' il debito da togliere.
 - **Commenti**: al massimo due righe, in inglese, solo il perche' che il codice non mostra. La docstring di una rotta API fa eccezione: e' il contratto OpenAPI (skill `rotta-api`).
