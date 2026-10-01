@@ -1,7 +1,7 @@
 export const meta = {
   name: 'esegui',
-  description: 'Build a planned task, review and fix until dry, audit by running, checks green',
-  whenToUse: 'After the plan and Marco\'s answers. args: {task, plan, mode: "meccanico"|"spostamento"|"logica", surface: bool, answers: [string], history: [string]}',
+  description: 'Build a planned task, review and fix until no defect is left, audit by running, checks green',
+  whenToUse: 'After the plan and Marco\'s answers. args: {task, plan, mode: "meccanico"|"spostamento"|"logica", surface: bool, answers: [string], history: [string], parked: [string]}',
   phases: [
     { title: 'Build' },
     { title: 'Review' },
@@ -10,9 +10,10 @@ export const meta = {
   ],
 }
 
-// Review rounds go on until one comes back empty; the caps only stop a runaway.
+// Review rounds go on until one finds no defect; the caps only stop a runaway.
 const MAX_REVIEW_ROUNDS = 10
 const MAX_CYCLES = 3
+const HARDENING = 'irrobustimento'
 
 const FINDINGS = {
   type: 'object',
@@ -25,10 +26,11 @@ const FINDINGS = {
           file: { type: 'string' },
           line: { type: 'integer' },
           severity: { type: 'string', enum: ['high', 'medium', 'low'] },
+          kind: { type: 'string', enum: ['difetto', HARDENING] },
           problem: { type: 'string' },
           fix: { type: 'string' },
         },
-        required: ['file', 'problem', 'severity'],
+        required: ['file', 'problem', 'severity', 'kind'],
       },
     },
   },
@@ -87,25 +89,31 @@ const DOCS_RULE =
 
 // Survives a relaunch after a question, so repeats are still recognised.
 const history = [...(args.history || [])]
+const resuming = history.length > 0
 const rejected = []
+// Hardening the reviewers proposed: not built, the main session parks it in docs/coda.md.
+// Carried across a relaunch like history, so nothing parked before a question is lost.
+const parked = [...(args.parked || [])]
 let rounds = 0
-const end = (status, extra) => ({ status, review_rounds: rounds, rejected_findings: rejected, history, ...extra })
-const stop = (where, question) => end('question', { where, question })
+const end = (status, extra) => ({ status, review_rounds: rounds, rejected_findings: rejected, parked, history, ...extra })
+// A question after Build leaves a mark in history, so the relaunch knows not to build again.
+const stop = (where, question) => {
+  if (where !== 'build') history.push(`domanda (${where}): ${question}`)
+  return end('question', { where, question })
+}
 const failed = (where) => end('failed', { where })
 
 if (!['meccanico', 'spostamento', 'logica'].includes(args.mode)) return failed(`mode: ${args.mode}`)
 
-if (args.mode !== 'logica') {
-  phase('Build')
-  const built = await agent(
-    `${task}\n\nCostruisci il compito; se il diff ne contiene gia una parte, continua da li. ${DOCS_RULE} ` +
-      'Poi lancia `python -m pre_commit run --files <file toccati>` e i test toccati. Non committare. ' +
-      QUESTION_RULE,
-    { phase: 'Build', schema: WORK, agentType: 'sviluppatore', model: fixerModel },
-  )
-  if (!built) return failed('build')
-  if (built.question) return stop('build', built.question)
-}
+const KIND_RULE =
+  'Ogni rilievo dichiara `kind`. `difetto`: il diff fa una cosa sbagliata, dice il falso (codice, ' +
+  'commento o documento), viola una regola del progetto o del compito, manca qualcosa che il ' +
+  'compito chiedeva, contiene roba che il compito non chiedeva, o un caso che puo capitare oggi ' +
+  'fallisce in silenzio. `irrobustimento`: una cosa da aggiungere che il diff non ha, cioe una ' +
+  'protezione contro un caso che oggi non puo capitare, un miglioramento che nessuno ha chiesto, un ' +
+  'doppione che c era gia prima del diff o un debito da una fase successiva. Roba non chiesta gia ' +
+  'nel diff, o un doppione che il diff introduce, e difetto, non irrobustimento. Nel dubbio fra i ' +
+  'due, difetto.'
 
 const REVIEWERS = [
   { type: 'revisore', what: 'le regole di AstroLog del tuo file di agente (anche i controlli che nessuna macchina fa piu), se fa quello che il compito chiede e nient altro, e se i documenti nel diff dicono il vero' },
@@ -131,16 +139,48 @@ function absorb(fixed, where) {
   return null
 }
 
-const fix = (where, what) =>
+const REPEAT_RULE =
+  'In `repeated` metti quelli che ripropongono, anche con altre parole, un rilievo gia riparato o ' +
+  'scartato in un giro precedente, e non toccarli. Degli altri applica'
+
+const fix = (where, what, repeatRule = REPEAT_RULE) =>
   agent(
     `${task}\n\n${what}\n\n` +
       (history.length ? `Giri precedenti:\n${history.join('\n')}\n\n` : '') +
-      'Verifica ognuno sul codice. In `repeated` metti quelli che ripropongono, anche con altre ' +
-      'parole, un rilievo gia riparato o scartato in un giro precedente, e non toccarli. Degli altri ' +
-      'applica i fondati (in `done`) e scarta gli infondati col perche (in `rejected`). ' +
+      `Verifica ognuno sul codice. ${repeatRule} ` +
+      'i fondati (in `done`) e scarta gli infondati col perche (in `rejected`). ' +
       `${DOCS_RULE} Poi rilancia pre-commit sui file toccati e i test. ${QUESTION_RULE}`,
     { phase: where.split(' ')[0], label: `fix:${where}`, schema: WORK, agentType: fixer, model: fixerModel },
   )
+
+// After `fix`: a const cannot be called before its declaration has run.
+// A relaunch after a question finds the work already in the diff: building again would undo fixes.
+if (args.mode !== 'logica' && !resuming) {
+  phase('Build')
+  const built = await agent(
+    `${task}\n\nCostruisci il compito; se il diff ne contiene gia una parte, continua da li. ${DOCS_RULE} ` +
+      'Poi lancia `python -m pre_commit run --files <file toccati>` e i test toccati. Non committare. ' +
+      QUESTION_RULE,
+    { phase: 'Build', schema: WORK, agentType: 'sviluppatore', model: fixerModel },
+  )
+  if (!built) return failed('build')
+  if (built.question) return stop('build', built.question)
+} else if (resuming) {
+  // The question may have stopped a fix half-way: only Marco's answer goes into the diff.
+  phase('Review')
+  const resumed = absorb(
+    await fix(
+      'Review ripresa',
+      'Ripresa dopo una domanda: applica al diff la risposta di Marco (RISPOSTE DI MARCO) all ultima ' +
+        'domanda in Giri precedenti. Non ricostruire il resto: il lavoro gia nel diff resta.',
+      // The default rule would mark the questioned findings as repeated, and absorb() would stop again.
+      'I rilievi nominati nell ultima domanda sono l oggetto della risposta: vanno in `done` o in ' +
+        '`rejected` come dice la risposta, mai in `repeated`. Della risposta applica',
+    ),
+    'Review ripresa',
+  )
+  if (resumed) return resumed
+}
 
 async function reviewUntilDry() {
   for (let r = 0; r < MAX_REVIEW_ROUNDS; r++) {
@@ -149,16 +189,27 @@ async function reviewUntilDry() {
       REVIEWERS.map((rv) => () =>
         agent(
           `${task}\n\nRivedi il diff non committato (git diff; git diff --cached), documenti compresi. ` +
-            `Guarda solo: ${rv.what}. Ogni rilievo con file e riga. Nessun rilievo e un esito legittimo: non inventarne.` +
-            (history.length ? `\n\nGiri precedenti (rilievo -> esito):\n${history.join('\n')}` : ''),
+            `Guarda solo: ${rv.what}. Ogni rilievo con file e riga. ${KIND_RULE} Nessun rilievo e un esito legittimo: non inventarne.` +
+            (history.length ? `\n\nGiri precedenti (rilievo -> esito):\n${history.join('\n')}` : '') +
+            (parked.length ? `\n\nIrrobustimenti gia parcheggiati, non riproporli:\n${parked.join('\n')}` : ''),
           { phase: 'Review', label: `review:${rv.type}#${rounds}`, schema: FINDINGS, agentType: rv.type },
         ),
       ),
     )
     const dead = REVIEWERS.filter((_, i) => !results[i]).map((rv) => rv.type)
     if (dead.length) return failed(`review ${rounds}: nessuna risposta da ${dead.join(', ')}`)
-    const found = results.flatMap((x) => x.findings)
-    log(`giro ${rounds}: ${found.length} rilievi`)
+    const all = results.flatMap((x) => x.findings)
+    const found = []
+    const where = (f) => [f.file, f.line].filter(Boolean).join(':')
+    for (const f of all) {
+      if (f.kind !== HARDENING) {
+        found.push(f)
+        continue
+      }
+      const entry = `${where(f)} ${f.problem}`
+      if (!parked.includes(entry)) parked.push(entry)
+    }
+    log(`giro ${rounds}: ${found.length} difetti, ${all.length - found.length} irrobustimenti`)
     if (!found.length) return null
     const halt = absorb(
       await fix(`Review ${rounds}`, `Rilievi della revisione:\n${JSON.stringify(found, null, 1)}`),
@@ -166,7 +217,7 @@ async function reviewUntilDry() {
     )
     if (halt) return halt
   }
-  return end('not_dry', { where: `review: ${MAX_REVIEW_ROUNDS} giri senza un giro vuoto` })
+  return end('not_dry', { where: `review: ${MAX_REVIEW_ROUNDS} giri senza un giro privo di difetti` })
 }
 
 const QUESTIONS = [

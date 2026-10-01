@@ -7,6 +7,19 @@ stanno qui: quelle di un dominio nel suo contratto (`domini/`), le altre in un A
 
 ## Il piano
 
+### Prima delle funzioni nuove
+
+Deciso con Marco: nessuna funzione nuova finche' non e' sistemato cio' che c'e'. Prima la fase 1
+del refactor sui package che mancano (sotto), poi le prime due *Tappe del prodotto*. La spina si
+giudica dominio per dominio con una domanda sola: dice il vero, regge e risponde in tempo? I FITS
+veri di ASIAIR li ha Marco; di Voyager e SGP servono frame di un altro utente (*Mancano Voyager e
+SGP*).
+
+Il Parcheggio non entra: un debito si chiude quando si tocca il codice dove sta. **Dopo cinque o
+sei funzioni nuove si misura il metodo**: difetti presi dalla revisione contro difetti scappati e
+trovati da Marco usando l'app; se la revisione prende poco si alleggerisce, se scappa troppo si
+stringe.
+
 ### Il refactor del backend
 
 Si lavora **package per package**, e nessuna delle due fasi cambia il comportamento. Il frontend
@@ -98,9 +111,9 @@ nominano col loro nome, per non confonderle con le fasi del refactor.
    ([`domini/catalogo.md`](domini/catalogo.md)); il sito c'e' ([`domini/sito.md`](domini/sito.md));
    delle effemeridi ci sono la Luna e il buio ([`domini/effemeridi.md`](domini/effemeridi.md)).
    Finche' ASTAP non e' installato i frame non hanno oggetto, ed e' voluto. Resta da chiudere
-   *Da riparare*, sotto: prima cio' che fa dire all'archivio cose false, poi le macchine,
-   l'efficienza e i doppioni.
-2. **Alleggerire**: i doppioni e i guadagni della sezione efficienza, coi numeri gia' misurati.
+   *Da riparare*, sotto, fino alle macchine che non guardano.
+2. **Alleggerire**: i guadagni della sezione efficienza, coi numeri gia' misurati, poi i doppioni
+   insieme alla fase 2 del refactor.
 3. **`measure`**: contratto e posto nei contratti dei moduli, poi eccentricita', fondo cielo,
    tilt ([ADR 0007](adr/0007-metriche-con-sep.md)). Dopo la spina e l'alleggerimento apposta: su
    una catena con difetti muti misurerebbe la qualita' con dati che mentono. Planner e Progetti
@@ -511,6 +524,18 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **Il Workflow `esegui` classifica i rilievi della revisione, non quelli dell'audit**: ogni
+  `issue` di un audit che non regge va al fixer e si costruisce, anche un irrobustimento (sul
+  ritocco stesso: 15 giri in 3 cicli, i giri 6 e 7 senza difetti, poi riaperti dall'audit). E
+  ancora, dalla stessa corsa: un irrobustimento si parcheggia qualunque sia la sua `severity`, e
+  un `high` etichettato male chiude il giro senza che il log lo dica; `parked` cresce a ogni giro
+  e si deduplica solo sul testo esatto; un rilancio si riconosce dalla `history` non vuota, che
+  manca se la domanda arriva dal primo fixer senza riparazioni; in
+  `tools/test_esegui_workflow.py` il test del fine riga LF si salta con gli altri se manca `node`.
+- **La regola che chiude la revisione ("finche' un giro non trova difetti") e' scritta in sette
+  punti di quattro file**: `CLAUDE.md` (il giro di lavoro), ADR 0001, `.claude/commands/esegui.md` (frontmatter e
+  punto 5), `.claude/workflows/esegui.js` (`meta.description`, il commento sopra
+  `MAX_REVIEW_ROUNDS`, il messaggio di `not_dry`). La casa e' l'ADR; le altre possono rimandare.
 - **Le dichiarazioni dell'utente non si esportano ne' si reimportano**: nomi, correzioni e
   risposte vivono solo nel database, e ricrearlo le perde (`tools/reset_db.py` le porta via).
   Rimedio: un file solo del dichiarato, reimportabile; doveva nascere con la seconda pagina, che

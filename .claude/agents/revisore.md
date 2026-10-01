@@ -108,5 +108,5 @@ che pre-commit prende gia': suite, lint, tipi, duplicati, build, dimensione dei 
 
 **PASSA** oppure **NON PASSA**, e sotto i rilievi dal piu' grave, ognuno con `file:riga` e
 la categoria (manca / in piu' / sbagliato / regola). Se passa, una riga e basta. Se non hai
-trovato niente, e' un esito legittimo: non inventare un rilievo. Un giro che torna vuoto
-e' il segnale che la fetta e' pronta.
+trovato niente, e' un esito legittimo: non inventare un rilievo. Ogni rilievo dichiara anche se e'
+un **difetto** o un **irrobustimento**, con la regola che ti passa il prompt del Workflow.

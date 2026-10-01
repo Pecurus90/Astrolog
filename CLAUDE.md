@@ -34,7 +34,7 @@ Lo stato si legge dal codice e da [`docs/coda.md`](docs/coda.md); le decisioni s
 Si parte con `/esegui` o a parole, ed e' lo stesso giro (`.claude/commands/esegui.md`):
 ricognizione -> piano in cinque righe -> domande a Marco se servono -> codice, test e documenti
 nello stesso diff (li scrivo io se e' logica, lo `sviluppatore` altrimenti) -> Workflow
-`esegui` (revisione fino a un giro vuoto, audit eseguendo, controlli verdi) -> riassunto ->
+`esegui` (revisione finche' un giro non trova difetti, audit eseguendo, controlli verdi) -> riassunto ->
 **ok di Marco** -> commit e push. Un rilievo che torna dopo essere stato riparato va a Marco: il
 difetto e' nel compito, non nel codice.
 

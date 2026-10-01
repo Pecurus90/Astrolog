@@ -26,8 +26,9 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
 - Il limite e' sulle **funzioni** (ruff `C901`, `PLR0912/0913/0915`), non sui file: il file ha
   un tetto largo a 1000 righe (pylint). Chi supera oggi porta un `noqa`: e' il debito da togliere.
 - **Commenti**: al massimo due righe, in inglese, solo il perche' che il codice non mostra. La docstring di una rotta API fa eccezione: e' il contratto OpenAPI (skill `rotta-api`).
-- Il lavoro gira dal comando `/esegui` e dal Workflow `esegui`: revisione fino a vuoto, audit
-  che esegue, controlli. Marco decide il prodotto e da' l'ok al commit.
+- Il lavoro gira dal comando `/esegui` e dal Workflow `esegui`: revisione finche' un giro non
+  trova difetti (un irrobustimento va in `docs/coda.md`, non si costruisce), audit che esegue,
+  controlli. Marco decide il prodotto e da' l'ok al commit.
 - Plugin del progetto (`.claude/settings.json`): `pr-review-toolkit` per la revisione,
   `security-guidance` che avvisa su una modifica che apre un buco di sicurezza.
 - Le decisioni stanno qui, una per file.

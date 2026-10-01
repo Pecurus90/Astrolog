@@ -1,5 +1,5 @@
 ---
-description: Porta un lavoro dal piano al riassunto finale senza fermarsi - piano e domande, costruzione con i documenti, poi il Workflow esegui (revisione fino a vuoto, audit eseguendo, controlli verdi). Il commit lo fa dopo l'ok di Marco.
+description: Porta un lavoro dal piano al riassunto finale senza fermarsi - piano e domande, costruzione con i documenti, poi il Workflow esegui (revisione finche' restano difetti, audit eseguendo, controlli verdi). Il commit lo fa dopo l'ok di Marco.
 argument-hint: [cosa vuoi]
 ---
 
@@ -22,18 +22,21 @@ Vale `CLAUDE.md`. Il giro e' questo, e non si salta un passo.
    `docs/coda.md` (chiuso -> sparisce, debito nuovo -> Parcheggio), un ADR in `docs/adr/` per una
    decisione nuova, `backend/astrolog/schema.sql`. Una pagina finita -> il `traduttore`. Ogni
    file nuovo: `git add -N <file>`, senno' revisione e controlli non lo vedono.
-5. **Workflow `esegui`** con `args: {task, plan, mode, surface, answers, history}`. In
+5. **Workflow `esegui`** con `args: {task, plan, mode, surface, answers, history, parked}`. In
    `meccanico` e `spostamento` costruisce lo `sviluppatore`, documenti compresi. Poi, a cicli: revisione
-   (revisore + pr-review-toolkit) finche' un giro torna vuoto, audit (`auditore`, una domanda
+   (revisore + pr-review-toolkit) finche' un giro non trova difetti, audit (`auditore`, una domanda
    alla volta, eseguendo), tutti i controlli; se l'audit o i controlli fanno correggere, si torna
    alla revisione. Esiti:
    - `done`: al punto 6.
    - `question`: la domanda va a Marco come al punto 3; si rilancia aggiungendo la risposta ad
-     `answers` e passando la `history` restituita (il lavoro fatto resta nel diff).
+     `answers` e passando la `history` e la `parked` restituite: il lavoro fatto resta nel diff, con
+     una `history` il Workflow non ricostruisce ma applica al diff solo la risposta, e gli
+     irrobustimenti gia' raccolti non si perdono.
    - `failed`, `not_dry`, `audit_failing`, `checks_failing`: si dice a Marco cosa si e' fermato e
-     dove. Niente commit.
+     dove, e la `parked` restituita va come al punto 6. Niente commit.
 6. **Riassunto a Marco**, cinque righe, aprendo con *cosa funziona ora e prima no*: poi l'esito
-   della revisione (giri, rilievi scartati e perche'), dell'audit, dei controlli. Ogni cosa tolta
+   della revisione (giri, rilievi scartati e perche'), dell'audit, dei controlli. Gli
+   irrobustimenti (`parked`) li scrivo in `docs/coda.md` e li dico: Marco puo' riportarne uno indietro. Ogni cosa tolta
    si spiega in una riga.
 7. **Dopo l'ok di Marco:** `git status` (un'altra sessione puo' aver messo in staging),
    `git add <file uno per uno>`, `git commit -m "<tipo>: <una riga ASCII>"` (Conventional
