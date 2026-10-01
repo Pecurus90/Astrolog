@@ -37,6 +37,9 @@ entrano nel database: l'assenza si dice a schermo.
 conferme: si possono registrare cartelle, scansionare, catalogare. Ma una notte e' *data-notte
 + sito*, quindi senza un sito le notti non nascono, e l'app lo dice con un motivo
 (`no_active_site`) invece di indovinare un fuso. Due siti nella stessa data sono due notti.
+Di `missing` (`GET /settings`) il primo avvio guarda solo il riconoscitore, programma e
+catalogo: per il sito un avviso in piu' non si aggiunge, perche' il sito lo chiede gia' il
+primo avvio.
 
 **Il fuso si ricava dalle coordinate, offline, mai dalla longitudine.** I confini dei fusi
 sono politici e frastagliati: un meridiano darebbe la risposta sbagliata a pochi chilometri da

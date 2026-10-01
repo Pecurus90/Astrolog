@@ -68,7 +68,7 @@ difetto e' nel compito, non nel codice.
 - **Una lettura non calcola:** calcola chi scrive, e scrive il risultato.
 - **Le date portano il fuso:** la notte va da mezzogiorno a mezzogiorno nel fuso del sito.
 - **Software supportati: quattro** (N.I.N.A., ASIAIR, Voyager, SGP). Una decisione gia' in
-  `docs/coda.md` o in un ADR vale: se sembra sbagliata si porta a Marco, non si aggira.
+  un contratto di `docs/domini/` o in un ADR vale: se sembra sbagliata si porta a Marco, non si aggira.
 - **`old/` si porta, non si importa:** un pezzo si sposta coi suoi test; un vocabolario voce per
   voce, con Marco. `old/docs/intervista-requisiti.md` si legge e non si tocca.
 

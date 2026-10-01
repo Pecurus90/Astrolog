@@ -20,7 +20,7 @@ risolto", dove sta il binario sui tre bersagli -- e' di dominio e sta in
 server su **ogni** endpoint (Pydantic sugli input). Nessuna risorsa da CDN: il frontend si
 serve da se'.
 
-**Rete.** In v1 non c'e' login: la rete di casa e' fidata (`docs/coda.md`). Ne segue che il
+**Rete.** In v1 non c'e' login: la rete di casa e' fidata (`docs/adr/0002-rete-di-casa-e-chiave-di-avvio.md`). Ne segue che il
 servizio **ascolta solo dove deve** -- `127.0.0.1` in locale, l'interfaccia del container
 sul NAS, mai `0.0.0.0` su una macchina esposta -- e che nessun endpoint puo' fare danni
 irreversibili senza conferma: i FITS non si toccano, e cancellare e' sempre un gesto

@@ -40,7 +40,7 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | Una sottocartella nascosta resta fuori, ma la ricevuta la nomina | `test_scan_names_the_hidden_folders_it_leaves_out` |
 | La cartella del NAS la registro come `\\NAS\Foto` o come disco collegato `Z:`, e la ritrovo con la lettera o il percorso di rete che ho scelto | `test_the_folder_is_saved_in_the_form_the_user_finds_again`, `test_a_network_folder_is_accepted` |
 | Aprire le cartelle di rete non apre le zone di sistema, comunque siano scritte, e su qualunque sistema: anche su Mac, dove `/etc` e `/var` sono collegamenti | `test_the_checks_look_at_where_the_path_leads`, `test_a_system_zone_that_leads_elsewhere_is_refused_too`, `test_the_forms_that_would_bypass_the_checks_are_refused`, `test_a_path_that_resolves_to_no_absolute_path_is_refused`, `test_a_folder_that_does_not_answer_is_checked_and_kept_as_written` |
-| Sul NAS in Docker scelgo la cartella da un elenco, invece di indovinarne il percorso (rotte e worker; il primo avvio non le usa ancora, ed e' in coda) | `test_the_nas_folder_is_chosen_from_a_list`, `test_the_folders_to_choose_from_are_the_ones_the_walk_walks` |
+| Sul NAS in Docker scelgo la cartella da un elenco, invece di indovinarne il percorso (rotte e worker; il primo avvio e le Impostazioni le usano) | `test_the_nas_folder_is_chosen_from_a_list`, `test_the_folders_to_choose_from_are_the_ones_the_walk_walks`, *nell elenco del NAS si entra, e si registra la cartella dove sei* (`frontend/tests/wizard-cartelle.test.tsx`); le Impostazioni senza prova (*Per il disegno nuovo*, in `docs/coda.md`) |
 | Una cartella raggiunta da un collegamento non fa girare la scansione a vuoto, e la ricevuta la nomina | `test_a_junction_is_not_followed_and_is_named`, `test_a_link_to_a_file_is_not_named_as_a_folder`, `test_the_linked_folders_are_named_in_order`, `test_scan_names_the_linked_folders_it_does_not_follow` |
 | Un file che non si riesce a leggere, per qualunque motivo, non ferma la scansione: la ricevuta lo nomina col suo motivo, e resta scritta | `test_scan_bad_header_counted`, `test_a_file_that_breaks_the_reading_is_named_and_the_scan_goes_on`, `test_a_name_the_archive_cannot_write_is_named_and_the_scan_goes_on`, `test_a_pose_that_can_no_longer_be_read_is_not_missing`, `test_scan_stop_leaves_a_coherent_prefix` |
 | Se il database non risponde (disco pieno, occupato) la scansione si ferma col suo motivo, invece di contare file sani come non letti | `test_a_database_fault_stops_the_scan_and_the_receipt_says_so` |
@@ -262,10 +262,13 @@ accanto): su Windows solo li' compare. Prima di macOS Sonoma iCloud non metteva 
 segnaposto nascosto `.nome.fits.icloud`, che si riconosce dal nome e vale lo stesso. Quei file si
 contano nella ricevuta (`online_only`), si
 rivedono a ogni scansione ed entrano quando l'utente li rende disponibili sul disco; un frame gia'
-in archivio lasciato solo online non diventa "non trovato". Senza nessun servizio, come deciso in
-`docs/coda.md`.
+in archivio lasciato solo online non diventa "non trovato". **Senza nessun servizio**:
+nessun account, nessuna rete, nessun collegamento a OneDrive, Dropbox o iCloud; l'app
+guarda solo il segno o il segnaposto che il sistema scrive, una forma fissa e mai una lista di
+nomi.
 
-**Cosa entra**: `.fits` e `.fit`, tipo `light` o `unknown`. Dark, flat, bias, dark-flat e
+**Cosa entra**: `.fits` e `.fit`, tipo `light` o `unknown`; gli altri formati (`.fts`, `.fz`,
+XISF) quando un utente li chiede. Dark, flat, bias, dark-flat e
 `stack` (`STACKCNT`, `NCOMBINE`, `NIMAGES` quando contano **piu' di un** frame -- a 1 e' un
 frame --, o *master / integration / stack / stacked* nel
 tipo o nell'oggetto: anche lo stack dal vivo di un Seestar) <!-- software-ok --> si
@@ -319,6 +322,15 @@ giusta. Un header di un programma che non e' fra i quattro non entra nel corpus.
 `identify` col catalogo: qui il nome si pulisce soltanto (spazi, parole di tavolozza), e un
 suffisso di mosaico (*Pannello 2*) resta nel nome, perche' toglierlo e' interpretare.
 Non dipende da nessuno stadio: gira anche prima del solver.
+
+**I vocabolari dicono solo cio' che i quattro software scrivono**.
+Nei filtri restano le grafie dei quattro; il catalogo dei modelli resta come
+tendina, ma si puo' scrivere qualunque nome con la sua banda; le bande sono 16 piu' `UNKNOWN`
+(`vocab/filters.json`). Il software riconosciuto e' solo quello dei quattro, e la copia calibrata
+si riconosce dal marchio che il file porta, non dal nome del programma. Le chiavi dell'header sono
+lo standard FITS piu' cio' che i quattro scrivono, salvo le due che dicono che il file e' stato
+riscritto (`CALSTAT`, `CALIBRAT`), da una convenzione pubblica. Le misure scritte nell'header
+(FWHM, SNR, stelle) non si leggono: si misurano.
 
 **Prima l'alias, poi il vocabolario, poi la domanda.** Per ogni grezzo l'ordine e':
 `header_aliases` (cio' che l'utente ha gia' risposto) -> il vocabolario -> altrimenti il
@@ -496,7 +508,9 @@ stesso: rileggere l'archivio un'altra volta costerebbe di piu'. Vanno in `frame_
 FITS dell'utente** ignorando `-o` e la cartella di lavoro (verificato) -- e su una
 condivisione in sola lettura fallirebbe. Tilt, eccentricita' e fondo cielo nascono con
 `measure`, dove i pixel li leggiamo noi e non si scrive niente. La rotazione e' quella
-misurata (CROTA2 da `CD`), mai `OBJCTROT`.
+misurata (CROTA2 da `CD`), mai `OBJCTROT`: ha il segno opposto a `CROTA2`, un offset che cambia a
+ogni rimontaggio della camera, e vale `0` come sentinella su meta' dei frame. **Anche il centro si
+misura**: quello dell'header sbaglia di qualche minuto d'arco, e a volte di quasi mezzo grado.
 
 **I numeri che ASTAP stampa portano la virgola decimale** (`HFD_MEDIAN=9,1`): si leggono
 sapendolo, o su una macchina italiana diventano zero in silenzio.
@@ -552,8 +566,8 @@ lo stesso: pretenderli tutti butterebbe via un cielo misurato davvero.
 
 **Il primo avvio**: un wizard con quattro passi -- nome, sito principale, cartelle, la chiave
 Meteoblue facoltativa -- saltabile
-e riapribile; poi la prima scansione dovra' partire da sola (oggi la cartella si registra e
-basta: e' in coda). L'attrezzatura non si dichiara qui: al buio l'utente dovrebbe elencare cio'
+e riapribile; alla fine, se c'e' almeno una cartella, la prima scansione parte da sola (oggi, se non parte, non lo dice: [in coda](../coda.md), *Per il
+disegno nuovo*, *Primo avvio*). L'attrezzatura non si dichiara qui: al buio l'utente dovrebbe elencare cio'
 che possiede prima di aver visto cosa ha ripreso. Si vede e si corregge nell'Attrezzatura, dove
 ogni pezzo trovato e' davanti agli occhi con quanti frame vale.
 
@@ -566,7 +580,13 @@ di frame**, una per ogni cosa che l'app non puo' sapere:
 il sito, il filtro per camera, con che camera sono
 stati ripresi i frame che non lo dicono, e i frame che l'header non nomina e di cui il cielo
 non dice niente. Quante sezioni siano lo dice `ReviewOut`, non questa riga: un numero scritto qui
-direbbe il falso alla prossima domanda che nasce. Le decisioni si
+direbbe il falso alla prossima domanda che nasce. Dentro l'ordine fisso delle sezioni, prima i
+gruppi che toccano piu' frame (`api/review.py`, `api/review_page.py`; prove
+`test_the_most_used_filters_come_first`, `test_a_question_per_group_with_the_largest_first`,
+`test_a_question_per_camera_with_the_largest_first`; degli oggetti
+`test_the_ones_to_decide_come_first` prova solo che quelli in dubbio stanno in cima; per l'ordine
+per frame degli oggetti e per i siti la prova manca, vedi [`coda.md`](../coda.md) *Macchine che
+non guardano*). Le decisioni si
 prendono cliccando e **"Applica" le scrive in un colpo solo**: diventano dichiarazioni e
 regole (`header_aliases`) valide per tutto l'archivio, non per la sola scansione. Un oggetto
 e' *nuovo* finche' non e' stato confermato almeno una volta -- confermare e' una
@@ -620,7 +640,7 @@ invece "ha un frame col cielo" sembrava lo stesso ed era un'altra cosa: col ciel
 **senza catalogo** il cono non torna niente, e quell'oggetto sarebbe rimasto da confermare per
 sempre senza niente da cliccare.
 **La scheda chiede solo i campi del suo tipo**, e li manda l'API (`cards` dell'Attrezzatura):
-quali siano e' la decisione del 7/9/2026 in `docs/coda.md`, scritta una volta in
+quali siano lo dice *Le schede* piu' sotto, scritto una volta in
 `instrument_answer.CARD`. **Si unisce solo dove la spina accetta** (`mergeable_into`: stesso tipo, e
 un tipo con grafie da unire): la regola e' una, `gear.mergeable`, e la leggono sia la pagina sia
 l'unione vera.
@@ -991,5 +1011,7 @@ coi Progetti); non tocca i FITS.
 
 ## Cosa NON fa
 
-Non modifica, sposta, rinomina o cancella un FITS. Non cataloga i file di calibrazione.
+Non modifica, sposta, rinomina o cancella un FITS: togliere un frame dall'archivio dell'app,
+quando si potra', sara' un'esclusione **dichiarata**, con conferma, che sopravvive alle
+scansioni, e nomi e correzioni non si perdono. Non cataloga i file di calibrazione.
 Non sorveglia le cartelle in continuo. Non riparte da solo all'apertura. Non vota i frame.

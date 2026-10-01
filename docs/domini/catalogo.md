@@ -157,6 +157,13 @@ sotto il tetto). Il caricamento invece ha la sua misura in `backend/tests/perf_b
 cerca e conta le ore lo stesso: non sa dire cosa hai fotografato, e lo dichiara in
 `/api/health` (`catalog_entries`, `catalog_version`).
 
+**L'arricchimento online e' a richiesta, in cache, e mai nella spina.** SIMBAD TAP (una
+richiesta al secondo al massimo) e Wikidata (CC0) per nomi e descrizioni nelle lingue: solo
+testo, mai foto di terzi (`ereditato.md`, *Foto finali*); `urllib` e JSON, niente `astroquery`. Ogni richiesta porta uno
+User-Agent con un contatto (`net.USER_AGENT`): senza, Wikimedia concede 10 richieste al minuto.
+Dove la fonte tace, "non arricchito" e' un campo. La spina non tocca la rete in nessun punto, ma
+l'app non e' offline-first: arricchimento e meteo sono benvenuti dove non sono il cuore.
+
 ## Cosa NON fa
 
 Non si aggiorna da solo e non scarica niente all'avvio. Non inventa un valore mancante. Non

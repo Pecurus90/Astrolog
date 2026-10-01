@@ -117,7 +117,8 @@ la chiave la scrive la risposta stessa, e nessun altro dato dipende da lei.
 **Non si fonde niente, e l'Archivio li mostra come una cosa sola.** Le due decisioni stanno
 insieme: nei dati i pannelli restano oggetti distinti -- chi cerca `LBN 796` lo trova -- ed e'
 l'Archivio che raccoglie i frame con la stessa chiave in una riga, col nome detto dall'utente
-(`archivio.md`). `identify` non si tocca.
+(`archivio.md`). `identify` non si tocca. **Un mosaico confermato ha le stesse funzioni di un
+oggetto**: dove l'app mostra un oggetto, il mosaico si mostra e si usa allo stesso modo.
 
 **Un pannello conta solo se regge una parte del lavoro** (Marco, 27/9/2026): almeno il 25% del
 tempo del pannello piu' lungo del suo mosaico, contando le pose se il tempo non si sa. La pratica
