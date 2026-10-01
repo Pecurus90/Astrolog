@@ -14,10 +14,11 @@ non entra: lo rifa' Marco col disegno nuovo (*Per il disegno nuovo*, sotto).
 
 **Fase 1 -- pulizia e tipi.** Commenti al massimo due righe e solo il perche'; ogni funzione
 annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
-- Fatti: `spine/identify*`, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`.
-- Mancano: il resto di `spine`, `api`, `weather`, e i file sciolti di
+- Fatti: `spine/identify*`, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`, `weather`.
+- Mancano: il resto di `spine`, `api`, e i file sciolti di
   `backend/astrolog` (`__init__`, `__main__`, `astap`, `clock`, `log`, `net`, `place`,
-  `startup`, `units`).
+  `startup`, `units`). Annotando `net`, il tipo della sua chiamata (`weather.Fetch`, oggi in
+  `weather/__init__.py`) si sposta in `net`, e `place` e `weather` lo prendono da li'.
 - Da chiudere strada facendo: 44 righe del backend (30 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
@@ -38,7 +39,12 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   chiamanti in `spine/`: si rinomina insieme a loro. In `ephemeris` quasi tutto: il modulo
   `corpi` e le sue `quando`, `convertito`, `altezze`; `istanti`, `inizio`, `scarti`, `soglia`,
   `verso`, `FASCE`, `BUIO`, `_UN_FILO`, `_BANDA_DEG`, `_fascia`, `_confini`, `nel_fuso`, `punto`.
-  `sun.BUIO` e' letto da `weather/verdict`.
+  `sun.BUIO` e' letto da `weather/verdict`. In `weather` quasi tutto: `_scrivi`, `_una`,
+  `_fattore`, `_quando`, `_valori`, `_media`, `_con`, `_ORDINE`, `_accordo`, `_spostato`, `_tocca`,
+  `_percentili`, `_medie_notturne`, `_in_attesa`, `_da_chiedere`, `_MANCANTI`, `_fascia`, gli
+  attributi di `forecast.Cadence` e i parametri italiani di quasi ogni funzione, pubbliche
+  comprese (`adesso`, `ore`, `serie`, `tempi`, `coppie`, `percentili`, `valore`, `righe`,
+  `risposta`, `ultimo`, `dal`/`al`, ...).
 - **`identify`**: la rotazione dello scarto negli assi del sensore e' scritta due volte
   (`identify_geometry.in_frame` e `mosaic_geometry._in_axes`): va in `identify_geometry` e la
   chiamano tutti e due. Il letterale del lucchetto dell'utente (`method`/`confidence` `user`,
@@ -50,7 +56,8 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   (`fits/header_fields.extract_fields`, letti da `spine/scan`), le preferenze (`db/config.read`),
   la fase (`ephemeris/moon.phase`, `phases`), la notte della Luna (`moon.night_track`), le fasce
   (`sun.night_bands`, `sky_bands`), lo snapshot e il record dello stadio (`worker/worker.py`,
-  `worker/states.blank_record`).
+  `worker/states.blank_record`), il riassunto e le ore di una notte (`weather/verdict.assess`,
+  `weather/nights.hours`: scritti in `weather_nights` e riletti da `api/weather`).
 - **`db/idlist.grouped` torna `dict[Any, list[Any]]`**: generico in `T` rompe `api/archive.py`, che
   passa i dict di `spine/filters_used` a un campo `list[FilterUsed]`. Si fa generico quando i
   chiamanti costruiscono righe tipate.
@@ -58,7 +65,11 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   del frame (`fits/frame_type.image_type`, `UNKNOWN`, `CALIBRATION_TYPES`), i quattro software
   (`vocab/software`), le bande (`vocab/filters`: `NO_FILTER`, `UNKNOWN`, `DUO_*`, `TRI_NB`,
   `MULTI_NB`); e, che escono dal package, `ephemeris/moon.PHASES`, i nomi delle fasce di
-  `ephemeris/sun` e gli stati di `worker/states`.
+  `ephemeris/sun` e gli stati di `worker/states`. In `weather`: gli esiti (`forecast.OK`,
+  `NO_SITE`, `NO_TIMEZONE`, `UNREACHABLE`, `BAD_ANSWER`, `net.REFUSED`, scritti in
+  `weather_fetches` e ripetuti come `Literal` in `api/models_weather` e `api/weather_key` oltre
+  che in `forecast.Outcome` e `meteoblue.KeyOutcome`), il verdetto `go`/`marginal`/`nogo`, i codici dei
+  fattori (`verdict._ORDINE`), la finestra (`BUIO`/`SUN_DOWN`), i nomi delle fonti.
 - **`db/config.KEYS`** ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei
   test (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo
   spacchettamento.
@@ -72,6 +83,10 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `grid.first_crossing` e `sun._confini`; il rifiuto dell'istante senza fuso in `corpi.quando` e
   `grid.night_grid`; `moon.altitudes` e `sun.altitudes`, lo stesso involucro di `corpi.altezze`;
   `moon.night_track` e `sun.night_bands`, lo stesso percorso (griglia, altezze, fuso del sito).
+  In `weather`: `openmeteo.parse` e `parse_single` aprono con lo stesso preambolo (serie oraria e
+  orari); `climate._tocca` e `history._in_attesa` la stessa attesa `RETRY_S` dopo un giro andato male (il clima aspetta
+  un giorno dopo un `bad_answer`); `meteoblue` ripete come alias
+  `OK`, `REFUSED`, `UNREACHABLE`, `BAD_ANSWER`.
 
 ### Tappe del prodotto
 
@@ -334,8 +349,14 @@ Niente di aperto.
 - **Il meteo, tre doppioni**: le colonne di una riga di `weather_nights` in tre case
   (`forecast.write_rows`, l'`INSERT` dello storico, le righe di `sky` e `forecast`); la condizione
   "il meteo di questa notte" in SQL due volte (la pagina delle Notti e lo storico), per cui la
-  spina conosce la tabella del meteo senza importarla; tre ricette di indirizzi Open-Meteo quasi
-  uguali (`openmeteo.forecast_url`, `cams.url`, `history._url`).
+  spina conosce la tabella del meteo senza importarla; quattro ricette di indirizzi Open-Meteo
+  quasi uguali (`openmeteo.forecast_url`, `cams.url`, `history._url`, `climate._url`); le ultime
+  due sono uguali quanto basta a `jscpd`, che oggi le salta per i segni `jscpd:ignore` attorno a
+  `climate._url`: unite le ricette, i segni si tolgono. Nei tipi: il ritorno di una lettura a serie
+  sola (`tuple[list[datetime], dict[str, list[Any]]]`) scritto per esteso in cinque `parse` invece
+  di un alias; `verdict.Hour` non riusato da `nights.hours` e `forecast.refresh`; e "un sito con
+  fuso ha sempre la sua notte" detto da due `cast` (`forecast.refresh`, `sky`) che nascondono a
+  pyright il `None` di `clock.night_date`: si chiude annotando `night_date` quando si tocca `clock`.
 - **Piu' piccoli**: `CATALOG_PRIORITY` (`spine/identify_score.py`) senza sei sigle che `parse`
   produce; frasi dei contratti copiate nelle docstring (da ricontare); i siti senza una casa in
   lettura come oggetti e notti; `identify_store.object_by_name` e `name_owner`, che fanno quasi la

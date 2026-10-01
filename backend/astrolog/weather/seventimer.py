@@ -1,19 +1,19 @@
-"""7Timer ASTRO: il seeing e la trasparenza senza chiave, dal modello GFS, per le prime notti e non
-ogni ora. Servizio volontario, e si cita.
-
-Vincolo non ovvio: **arrivano in otto fasce, e restano fasce**. Ogni fascia diventa l'intervallo
-che la documentazione del servizio le da' (https://www.7timer.info/doc.php?lang=en), con l'estremo
-aperto a `None`: un numero in mezzo alla fascia sarebbe una misura che il servizio non ha fatto.
-"""
+"""7Timer ASTRO: keyless seeing and transparency from GFS, for the first nights and not hourly.
+Bands stay bands: a number inside one would be a measurement the service never made."""
 
 import urllib.parse
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from .openmeteo import BadAnswerError
 
 URL = "https://www.7timer.info/bin/api.pl"
 
-# seeing in arcosecondi e trasparenza in magnitudini per massa d'aria, fascia 1..8
+type FromTo = tuple[float | None, float | None]
+
+# Seeing in arcsec and transparency in mag per airmass, bands 1..8, an open end as `None`
+# (https://www.7timer.info/doc.php?lang=en).
 SEEING_ARCSEC = (
     (None, 0.5), (0.5, 0.75), (0.75, 1.0), (1.0, 1.25),
     (1.25, 1.5), (1.5, 2.0), (2.0, 2.5), (2.5, None),
@@ -26,7 +26,7 @@ TRANSPARENCY_MAG = (
 __all__ = ["URL", "BadAnswerError", "parse", "url"]
 
 
-def url(latitude, longitude):
+def url(latitude: float, longitude: float) -> str:
     query = urllib.parse.urlencode(
         {
             "lat": round(latitude, 3),
@@ -38,15 +38,14 @@ def url(latitude, longitude):
     return f"{URL}?{query}"
 
 
-def _fascia(scala, valore):
+def _fascia(scala: Sequence[FromTo], valore: Any) -> FromTo:
     return (
         scala[valore - 1] if isinstance(valore, int) and 1 <= valore <= len(scala) else (None, None)
     )
 
 
-def parse(payload):
-    """`(istanti UTC, {seeing_from, seeing_to, transparency_from, transparency_to})`. Gli istanti
-    si ricostruiscono dal run (`init`, in UTC) e dalle ore di ogni voce (`timepoint`)."""
+def parse(payload: Any) -> tuple[list[datetime], dict[str, list[Any]]]:
+    """Instants are rebuilt from the run (`init`, UTC) plus each entry's `timepoint` hours."""
     serie = payload.get("dataseries") if isinstance(payload, dict) else None
     if not isinstance(serie, list):
         raise BadAnswerError("manca la serie ASTRO")

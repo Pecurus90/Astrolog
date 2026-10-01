@@ -1,43 +1,35 @@
-"""Il vento in quota tipico del sito: un anno di notti, il vento a 700 hPa di ognuna sulle ore su
-cui la si giudica, e la loro distribuzione scritta per chi deve dire dove cade una notte
-(`position.py`).
-
-Vincoli non ovvi:
-
-* **Una volta l'anno per sito**, una chiamata all'archivio delle previsioni: l'archivio della
-  rianalisi a 700 hPa non risponde, quello delle previsioni si' (verificato il 26/9/2026). Un giro
-  andato male aspetta prima di riprovare, scritto in `weather_fetches`.
-* **Le notti, non le ore**: ogni notte vale la media delle ore su cui la previsione giudica la sua
-  (`verdict.window`: il buio, o dove non arriva il Sole sotto l'orizzonte). Il giorno non descrive
-  le notti in cui si riprende.
-* **Il solito e' di un posto**: si scrive con le coordinate che l'hanno misurato, e un sito che si
-  sposta lo richiede subito invece di aspettare l'anno.
-* **Sotto un terzo dell'anno non si scrive niente**: e' una scelta, non una convenzione. Meno notti
-  sarebbero il solito di una stagione sola, e meglio nessun confronto che uno sbagliato. Un anno
-  corto tornera' corto anche fra un quarto d'ora: dopo una risposta che non basta si aspetta un
-  giorno, non l'attesa di un servizio muto.
-"""
+"""The site's usual upper wind: a year of nights, each the mean 700 hPa wind over the hours its
+verdict judges, written as percentiles for `position`. Asked once a year per site."""
 
 import json
+import sqlite3
 import urllib.parse
-from datetime import UTC, datetime, timedelta
+from collections.abc import Mapping, Sequence
+from datetime import UTC, date, datetime, timedelta
+from typing import Any
 
 from .. import net
 from ..clock import iso_z
-from . import fetches, forecast, nights, openmeteo, verdict
+from . import Fetch, fetches, forecast, nights, openmeteo, verdict
 
+# The reanalysis archive does not answer at 700 hPa; the historical forecast archive does.
 URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 SOURCE = "open-meteo/climate"
 VARIABLE = "wind_speed_700hPa"
 YEAR_DAYS = 365
+# A third of a year, a product choice, not a convention: fewer nights would be one season's usual,
+# and better no comparison than a wrong one.
 MIN_NIGHTS = 120
+# A year too short is still short at the next `forecast.RETRY_S` retry: wait a day instead.
 BAD_ANSWER_WAIT = timedelta(days=1)
 
-# La chiamata vera: un nome di questo modulo, cosi' le prove la sostituiscono qui.
+# The real call, named in this module so tests replace it here.
 _fetch = net.fetch
 
 
-def _url(site, dal, al):
+# Twin of `history._url`; the markers go when the Open-Meteo recipes merge (docs/coda.md).
+# jscpd:ignore-start
+def _url(site: Mapping[str, Any], dal: date, al: date) -> str:
     query = urllib.parse.urlencode(
         {
             "latitude": site["latitude"],
@@ -51,14 +43,18 @@ def _url(site, dal, al):
     return f"{URL}?{query}"
 
 
-def _spostato(conn, site):
+# jscpd:ignore-end
+
+
+def _spostato(conn: sqlite3.Connection, site: Mapping[str, Any]) -> bool:
+    """The usual belongs to a place: a site that moved asks again now, not in a year."""
     riga = conn.execute(
         "SELECT latitude, longitude FROM weather_climate WHERE site_id = ?", (site["id"],)
     ).fetchone()
     return riga is not None and (riga[0], riga[1]) != (site["latitude"], site["longitude"])
 
 
-def _tocca(conn, site, adesso):
+def _tocca(conn: sqlite3.Connection, site: Mapping[str, Any], adesso: datetime) -> bool:
     ultimo = fetches.last(conn, site["id"], SOURCE)
     if ultimo is None:
         return True
@@ -70,8 +66,8 @@ def _tocca(conn, site, adesso):
     return _spostato(conn, site) or eta >= timedelta(days=YEAR_DAYS)
 
 
-def _percentili(valori):
-    """I 101 percentili dei valori, per interpolazione fra i due vicini."""
+def _percentili(valori: Sequence[float]) -> list[float]:
+    """The 101 percentiles, interpolated between the two neighbours."""
     xs = sorted(valori)
     out = []
     for p in range(101):
@@ -82,8 +78,11 @@ def _percentili(valori):
     return out
 
 
-def _medie_notturne(site, tempi, serie):
-    """Il vento medio di ogni notte intera che la serie copre, sulle ore della sua finestra."""
+def _medie_notturne(
+    site: Mapping[str, Any], tempi: Sequence[datetime], serie: Sequence[float | None]
+) -> list[float]:
+    """Mean wind of each whole night, over its verdict window: the day says nothing of the nights
+    one shoots."""
     notti = nights.covered(site["timezone"], tempi, tempi[0].date().isoformat(), whole=True)
     cielo = nights.sky(site["latitude"], site["longitude"], notti)
     medie = []
@@ -95,8 +94,14 @@ def _medie_notturne(site, tempi, serie):
     return medie
 
 
-def step(conn, site, *, fetch=None, now=None):
-    """Un passo della climatologia del sito: una chiamata se tocca, l'esito; `None` se non tocca."""
+def step(
+    conn: sqlite3.Connection,
+    site: Mapping[str, Any] | None,
+    *,
+    fetch: Fetch | None = None,
+    now: datetime | None = None,
+) -> str | None:
+    """One call if due, and its outcome; `None` when not due."""
     if site is None or not site["timezone"]:
         return None
     adesso = now or datetime.now(UTC)
@@ -109,7 +114,9 @@ def step(conn, site, *, fetch=None, now=None):
     return esito
 
 
-def _scrivi(conn, site, risposta, adesso):
+def _scrivi(
+    conn: sqlite3.Connection, site: Mapping[str, Any], risposta: Any, adesso: datetime
+) -> str:
     try:
         tempi, serie = openmeteo.parse_single(risposta, {VARIABLE: "wind_700hpa_kmh"})
     except openmeteo.BadAnswerError:

@@ -1,35 +1,43 @@
-"""Chi scrive il cielo in quota: chiede a ogni fonte, divide le sue ore in notti, e le scrive nelle
-righe di quella fonte. Il vento in quota no: arriva coi modelli, nella previsione.
-
-Vincolo non ovvio: **ogni fonte e' per conto suo**. Una che tace, o risponde storto, tiene le sue
-righe di prima e non ferma le altre; e nessuna tocca le righe della previsione.
-"""
+"""Writes the sky aloft per source; the upper wind arrives with the models, in the forecast. Each
+source is on its own: a silent or broken one keeps its old rows and stops none of the others."""
 
 import json
 import logging
+import sqlite3
 import zoneinfo
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
+from types import ModuleType
+from typing import Any, cast
 
 from .. import net
 from ..clock import iso_z, night_date
 from ..db import config
-from . import cams, meteoblue, nights, seventimer
+from . import Fetch, cams, meteoblue, nights, seventimer
 from .forecast import BAD_ANSWER, KIND, OK, UNREACHABLE, write_rows
 from .openmeteo import BadAnswerError
 
 log = logging.getLogger(__name__)
 
-# La fonte, e come la si chiede e la si legge. Il nome e' quello che finisce nelle righe.
+type Parse = Callable[[Any], tuple[list[datetime], dict[str, list[Any]]]]
+
+# The source's name as written in its rows -> the module that asks and reads it.
 SOURCES = {"7timer": seventimer, "cams": cams}
-# Tutte le fonti del cielo. Il seeing di una notte viene da una sola: Meteoblue quando c'e'.
+# Every sky source; the reader takes a night's seeing from Meteoblue when it is there, else 7Timer.
 ALL_SOURCES = (*SOURCES, meteoblue.SOURCE)
 
-# La chiamata vera: un nome di questo modulo, cosi' le prove delle rotte la sostituiscono qui.
+# The real call, named in this module so the route tests replace it here.
 _fetch = net.fetch
 
 
-def _scrivi(conn, site, nome, parse, risposta, adesso):  # noqa: PLR0913
-    """Legge la risposta di una fonte e scrive le sue notti: l'esito."""
+def _scrivi(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    site: Mapping[str, Any],
+    nome: str,
+    parse: Parse,
+    risposta: Any,
+    adesso: datetime,
+) -> str:
     try:
         tempi, serie = parse(risposta)
     except BadAnswerError:
@@ -38,7 +46,7 @@ def _scrivi(conn, site, nome, parse, risposta, adesso):  # noqa: PLR0913
         )
         return BAD_ANSWER
     fuso = zoneinfo.ZoneInfo(site["timezone"])
-    in_corso = night_date(iso_z(adesso), site["timezone"])
+    in_corso = cast("str", night_date(iso_z(adesso), site["timezone"]))  # a valid instant and zone
     righe = []
     for data, coppie in nights.covered(site["timezone"], tempi, in_corso, whole=False):
         ore = nights.hours(serie, coppie, fuso)
@@ -51,15 +59,24 @@ def _scrivi(conn, site, nome, parse, risposta, adesso):  # noqa: PLR0913
     return OK
 
 
-def _una(conn, site, nome, fonte, fetch, adesso):  # noqa: PLR0913
+def _una(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    site: Mapping[str, Any],
+    nome: str,
+    fonte: ModuleType,
+    fetch: Fetch,
+    adesso: datetime,
+) -> str:
     risposta = net.ask(fetch, fonte.url(site["latitude"], site["longitude"]))
     if risposta is None:
         return UNREACHABLE
     return _scrivi(conn, site, nome, fonte.parse, risposta, adesso)
 
 
-def _meteoblue(conn, site, fetch, adesso):
-    """Il seeing Meteoblue, se c'e' la chiave e se tocca: l'esito, scritto col suo tentativo."""
+def _meteoblue(
+    conn: sqlite3.Connection, site: Mapping[str, Any], fetch: Fetch, adesso: datetime
+) -> str | None:
+    """The outcome, recorded with its attempt; `None` without a key or before it is due."""
     chiave = config.read(conn)["meteoblue_key"]
     if not chiave or not meteoblue.due(conn, site["id"], adesso):
         return None
@@ -67,15 +84,21 @@ def _meteoblue(conn, site, fetch, adesso):
         fetch, meteoblue.url(site["latitude"], site["longitude"], chiave)
     )
     esito = perche or _scrivi(conn, site, meteoblue.SOURCE, meteoblue.parse, risposta, adesso)
+    # only a refusal speaks of the key; a silence keeps the seeing it gave last time
     if esito == meteoblue.REFUSED:
         meteoblue.drop_seeing(conn)
     meteoblue.record(conn, site["id"], esito, adesso)
     return esito
 
 
-def refresh(conn, site, *, fetch=None, now=None):
-    """Chiede ogni fonte del cielo per il sito e scrive le sue righe: `{fonte: esito}`. Meteoblue
-    c'e' solo quando e' stato chiesto."""
+def refresh(
+    conn: sqlite3.Connection,
+    site: Mapping[str, Any],
+    *,
+    fetch: Fetch | None = None,
+    now: datetime | None = None,
+) -> dict[str, str]:
+    """`{source: outcome}`; Meteoblue is there only when it was asked."""
     adesso = now or datetime.now(UTC)
     esiti = {
         nome: _una(conn, site, nome, fonte, fetch or _fetch, adesso)

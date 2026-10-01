@@ -1,16 +1,14 @@
-"""Dove cade il vento in quota di una notte rispetto al solito del suo sito: quante notti su dieci
-dell'ultimo anno ne avevano meno.
-
-Vincolo non ovvio: **e' una posizione, non una soglia**. Non dice se la notte e' buona: dice se e'
-insolita per quel posto. La distribuzione la scrive `climate.py`; qui la si legge soltanto.
-"""
+"""Where a night's upper wind falls against its site's usual: a position, not a threshold. It says
+whether the night is unusual for the place, not whether it is good."""
 
 import json
+import sqlite3
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 
-def percentiles(conn, site):
-    """I 101 percentili del vento in quota delle notti dell'ultimo anno del sito, o `None` se non
-    ci sono o sono di un altro posto: un sito spostato non si confronta col solito di prima."""
+def percentiles(conn: sqlite3.Connection, site: Mapping[str, Any]) -> list[float] | None:
+    """`None` when missing or measured elsewhere: a moved site is not held to its old usual."""
     riga = conn.execute(
         "SELECT latitude, longitude, percentiles_json FROM weather_climate WHERE site_id = ?",
         (site["id"],),
@@ -23,7 +21,7 @@ def percentiles(conn, site):
     return json.loads(riga["percentiles_json"])
 
 
-def tenths_below(percentili, valore):
-    """Quante notti su dieci avevano meno vento di `valore`, da 0 a 10."""
+def tenths_below(percentili: Sequence[float], valore: float) -> int:
+    """How many nights in ten of the last year had less wind than `valore`."""
     sotto = sum(p < valore for p in percentili)
     return round(sotto / len(percentili) * 10)

@@ -1,5 +1,8 @@
-"""Il meteo: com'e' la notte, dai servizi che la prevedono. Il contratto e' `docs/domini/meteo.md`.
+"""How the night will be, from the services that forecast it (contract: docs/domini/meteo.md).
+It sits beside the spine and neither knows the other, so a scan without network goes on."""
 
-Vincolo non ovvio: sta accanto alla spina e i due non si conoscono. Chi scrive il meteo lo fa
-fuori dalla lettura dei file, e una scansione senza rete va avanti uguale.
-"""
+from collections.abc import Callable
+from typing import Any
+
+# The network call each writer receives, so tests pass a fake and never leave the machine.
+type Fetch = Callable[[str], Any]

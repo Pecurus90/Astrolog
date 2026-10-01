@@ -1,27 +1,20 @@
-"""La previsione di Open-Meteo: piu' modelli in una chiamata sola, e la risposta letta per modello.
-
-Vincoli non ovvi:
-
-* **Gli orari si chiedono in UTC** e il fuso lo mette chi scrive la notte: cosi' la notte del
-  cambio d'ora ha le sue 23 o 25 ore, e nessuna ora doppia.
-* **Un modello che il servizio non manda resta fuori**, non si riempie: con piu' modelli la
-  risposta porta `<variabile>_<modello>` per ognuno.
-* Dati CC BY 4.0: la pagina scrive "Weather data by Open-Meteo.com".
-"""
+"""Open-Meteo forecast: several models in one call, read per model. Times are asked in UTC so the
+clock-change night has its 23 or 25 hours and no doubled hour."""
 
 import urllib.parse
+from collections.abc import Mapping
 from datetime import UTC, datetime
+from typing import Any
 
 from ..db import config
 
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 
-# Il primo e' quello che Open-Meteo sceglie per il posto, e il modello di fabbrica. L'elenco sta
-# con le scelte della configurazione, che non accetta un modello che qui non si chiede.
+# The first is Open-Meteo's own pick for the place, and the default. The list lives with the
+# config choices, which refuse a model not asked here.
 MODELS = config.CHOICES["weather_model"]
 
-# La variabile di Open-Meteo -> il nome nostro. Il totale delle nuvole e' quello del modello,
-# mai ricalcolato dagli strati.
+# Open-Meteo variable -> our name. Total cloud is the model's, never recomputed from the layers.
 VARIABLES = {
     "cloud_cover": "cloud_total_pct",
     "cloud_cover_low": "cloud_low_pct",
@@ -33,25 +26,24 @@ VARIABLES = {
     "wind_speed_10m": "wind_kmh",
     "wind_gusts_10m": "wind_gust_kmh",
     "precipitation": "precip_mm",
-    # il jet stream: si mostra com'e', nessuna stima di seeing ne esce
+    # the jet stream: shown as it is, no seeing estimate comes out of it
     "wind_speed_250hPa": "wind_250hpa_kmh",
     "wind_speed_200hPa": "wind_200hpa_kmh",
-    # il vento a circa 3.000 metri: si confronta col solito del sito, non decide niente
+    # wind at about 3,000 m: compared with the site's usual, it decides nothing
     "wind_speed_700hPa": "wind_700hpa_kmh",
 }
 
-# Un giorno indietro perche' prima di mezzogiorno la notte in corso e' cominciata ieri; otto
-# avanti per la notte in corso e le sei o sette dopo (sette prima di mezzogiorno, quando la notte
-# in corso e' quella di ieri).
+# One day back because before noon the night under way began yesterday; eight ahead for it and
+# the six or seven after.
 PAST_DAYS = 1
 FORECAST_DAYS = 8
 
 
 class BadAnswerError(ValueError):
-    """Il servizio ha risposto, ma non una previsione."""
+    """The service answered, but not a forecast."""
 
 
-def forecast_url(latitude, longitude):
+def forecast_url(latitude: float, longitude: float) -> str:
     query = urllib.parse.urlencode(
         {
             "latitude": latitude,
@@ -66,9 +58,8 @@ def forecast_url(latitude, longitude):
     return f"{FORECAST_URL}?{query}"
 
 
-def parse(payload):
-    """`(istanti UTC, {modello: {nome nostro: [valori]}})`: gli orari sono uno per tutti i modelli.
-    `BadAnswerError` se non e' una previsione."""
+def parse(payload: Any) -> tuple[list[datetime], dict[str, dict[str, list[Any]]]]:
+    """One time axis for every model."""
     hourly = payload.get("hourly") if isinstance(payload, dict) else None
     if not isinstance(hourly, dict) or not isinstance(hourly.get("time"), list):
         raise BadAnswerError("manca la serie oraria")
@@ -80,14 +71,16 @@ def parse(payload):
     letto = {}
     for modello in MODELS:
         serie = {nostro: hourly.get(f"{loro}_{modello}") for loro, nostro in VARIABLES.items()}
+        # a model the service did not send stays out, never filled in
         if all(isinstance(v, list) and len(v) == len(istanti) for v in serie.values()):
             letto[modello] = serie
     return istanti, letto
 
 
-def parse_single(payload, variables):
-    """`(istanti UTC, {nome nostro: [valori]})` di una risposta con una serie sola, senza modelli
-    (l'archivio, l'aria di CAMS). `BadAnswerError` se non e' una serie oraria completa."""
+def parse_single(
+    payload: Any, variables: Mapping[str, str]
+) -> tuple[list[datetime], dict[str, list[Any]]]:
+    """An answer with a single series and no models (the archive, CAMS air)."""
     hourly = payload.get("hourly") if isinstance(payload, dict) else None
     if not isinstance(hourly, dict) or not isinstance(hourly.get("time"), list):
         raise BadAnswerError("manca la serie oraria")
@@ -95,7 +88,7 @@ def parse_single(payload, variables):
         istanti = [datetime.fromisoformat(t).replace(tzinfo=UTC) for t in hourly["time"]]
     except (TypeError, ValueError) as err:
         raise BadAnswerError("orari illeggibili") from err
-    serie = {nostro: hourly.get(loro) for loro, nostro in variables.items()}
+    serie: dict[str, Any] = {nostro: hourly.get(loro) for loro, nostro in variables.items()}
     if not all(isinstance(v, list) and len(v) == len(istanti) for v in serie.values()):
         raise BadAnswerError("serie incomplete")
     return istanti, serie

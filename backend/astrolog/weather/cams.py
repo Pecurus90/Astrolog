@@ -1,12 +1,9 @@
-"""L'aria dal servizio Air Quality di Open-Meteo, coi dati CAMS di Copernicus: lo spessore ottico
-degli aerosol e le polveri, ora per ora, gratis e ovunque.
-
-Vincolo non ovvio: **si mostrano come arrivano**, senza soglie: una scala "aria tersa / velata"
-dall'aerosol non l'abbiamo trovata su una fonte, e non si inventa. Dove il servizio manda
-`null` -- le ultime ore della previsione -- resta "non lo dice".
-"""
+"""Aerosol and dust from Open-Meteo Air Quality (CAMS data), shown as they arrive: no sourced scale
+for clear or hazy air was found, so none is invented; a `null` hour stays unknown."""
 
 import urllib.parse
+from datetime import datetime
+from typing import Any
 
 from . import openmeteo
 
@@ -14,7 +11,7 @@ URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
 VARIABLES = {"aerosol_optical_depth": "aerosol_optical_depth", "dust": "dust_ugm3"}
 
 
-def url(latitude, longitude):
+def url(latitude: float, longitude: float) -> str:
     query = urllib.parse.urlencode(
         {
             "latitude": latitude,
@@ -28,6 +25,5 @@ def url(latitude, longitude):
     return f"{URL}?{query}"
 
 
-def parse(payload):
-    """`(istanti UTC, {aerosol_optical_depth, dust_ugm3})`; `BadAnswerError` se non e' una serie."""
+def parse(payload: Any) -> tuple[list[datetime], dict[str, list[Any]]]:
     return openmeteo.parse_single(payload, VARIABLES)

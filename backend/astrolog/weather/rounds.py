@@ -1,15 +1,24 @@
-"""Un giro del meteo: la previsione dei modelli, poi il cielo in quota. Lo fanno il giro in
-sottofondo e il pulsante, e l'esito che torna e' quello della previsione.
+"""A weather round, for the background loop and the button: the models' forecast, then the sky
+aloft. Without a site or its timezone the sky sources are not even asked."""
 
-Vincolo non ovvio: **senza un sito da chiedere non si chiede niente a nessuno**: senza sito di casa,
-o senza il suo fuso, le fonti del cielo non si interrogano nemmeno.
-"""
+import sqlite3
+from collections.abc import Mapping
+from datetime import datetime
+from typing import Any, cast
 
-from . import forecast, sky
+from . import Fetch, forecast, sky
 
 
-def refresh(conn, site, *, fetch=None, now=None):
+def refresh(
+    conn: sqlite3.Connection,
+    site: Mapping[str, Any] | None,
+    *,
+    fetch: Fetch | None = None,
+    now: datetime | None = None,
+) -> forecast.Outcome:
+    """Only the forecast's outcome comes back; the sky sources' outcomes are dropped."""
     esito = forecast.refresh(conn, site, fetch=fetch, now=now)
     if esito not in (forecast.NO_SITE, forecast.NO_TIMEZONE):
-        sky.refresh(conn, site, fetch=fetch, now=now)
+        # past those two outcomes there is a site
+        sky.refresh(conn, cast("Mapping[str, Any]", site), fetch=fetch, now=now)
     return esito

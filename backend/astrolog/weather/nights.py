@@ -1,22 +1,21 @@
-"""Le notti di una serie oraria di un servizio: da mezzogiorno a mezzogiorno nel fuso del sito, e
-quali ore di ognuna la serie porta. Lo usano la previsione dei modelli, le fonti del cielo in
-quota e lo storico.
+"""Nights of a service's hourly series, noon to noon in the site's timezone. Whole or not depends
+on the source: one not sampling every hour (7Timer) would never have a whole night."""
 
-Vincolo non ovvio: **intera o no dipende dalla fonte**. Un modello ora per ora scrive una notte
-solo se ne ha tutte le ore; una fonte che non campiona ogni ora (7Timer) non l'avrebbe mai, e la
-sua notte entra con le ore che ha.
-"""
-
-from datetime import UTC, date, timedelta
+import zoneinfo
+from collections.abc import Mapping, Sequence
+from datetime import UTC, date, datetime, timedelta
+from typing import Any
 
 from ..clock import night_window
 from ..ephemeris import sun
 
+# A night's date and its hours as `(index in the series, instant)`.
+type Night = tuple[str, list[tuple[int, datetime]]]
 
-def covered(timezone, tempi, dalla, *, whole):
-    """Le notti che la serie copre, da `dalla` (YYYY-MM-DD): `[(data, [(posto, istante)])]`, dove
-    `posto` e' l'indice dell'ora nella serie. Con `whole` si ferma alla prima notte incompleta;
-    senza, una notte entra se ha almeno un'ora, e ci sono solo le ore che la serie da'."""
+
+def covered(timezone: str, tempi: Sequence[datetime], dalla: str, *, whole: bool) -> list[Night]:
+    """From `dalla` on. `whole` stops at the first incomplete night; otherwise a night enters with
+    whatever hours the series has."""
     if not tempi:
         return []
     indice = {t: i for i, t in enumerate(tempi)}
@@ -35,9 +34,13 @@ def covered(timezone, tempi, dalla, *, whole):
         giorno += timedelta(days=1)
 
 
-def hours(serie, coppie, fuso, **per_istante):
-    """Le ore di una notte come si scrivono: l'istante nel fuso del sito e i valori della serie.
-    `per_istante` aggiunge un campo letto da una mappa per istante (il cielo, per la previsione)."""
+def hours(
+    serie: Mapping[str, Sequence[Any]],
+    coppie: Sequence[tuple[int, datetime]],
+    fuso: zoneinfo.ZoneInfo,
+    **per_istante: Mapping[datetime, Any],
+) -> list[dict[str, Any]]:
+    """Each `per_istante` map adds a field looked up by instant (the sky, for the forecast)."""
     ore = []
     for i, istante in coppie:
         riga = {"at": istante.astimezone(fuso).isoformat()}
@@ -47,13 +50,13 @@ def hours(serie, coppie, fuso, **per_istante):
     return ore
 
 
-def empty(ore):
-    """Nessuna ora porta un valore: una notte cosi' non si scrive."""
+def empty(ore: Sequence[Mapping[str, Any]]) -> bool:
+    """No hour carries a value: such a night is not written."""
     return all(v is None for o in ore for k, v in o.items() if k not in ("at", "sky"))
 
 
-def sky(latitude, longitude, notti):
-    """In che cielo cade ogni ora delle notti date, in una chiamata sola: `{istante: fascia}`."""
+def sky(latitude: float, longitude: float, notti: Sequence[Night]) -> dict[datetime, str]:
+    """Every hour's sky band in a single ephemeris call."""
     istanti = [t for _, coppie in notti for _, t in coppie]
     fasce = sun.sky_at(istanti, latitude, longitude)
     return {t: fasce[i] for i, t in enumerate(istanti)}
