@@ -15,25 +15,22 @@ const MAX_REVIEW_ROUNDS = 10
 const MAX_CYCLES = 3
 const HARDENING = 'irrobustimento'
 
-const FINDINGS = {
+const FINDING = {
   type: 'object',
   properties: {
-    findings: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          file: { type: 'string' },
-          line: { type: 'integer' },
-          severity: { type: 'string', enum: ['high', 'medium', 'low'] },
-          kind: { type: 'string', enum: ['difetto', HARDENING] },
-          problem: { type: 'string' },
-          fix: { type: 'string' },
-        },
-        required: ['file', 'problem', 'severity', 'kind'],
-      },
-    },
+    file: { type: 'string' },
+    line: { type: 'integer' },
+    severity: { type: 'string', enum: ['high', 'medium', 'low'] },
+    kind: { type: 'string', enum: ['difetto', HARDENING] },
+    problem: { type: 'string' },
+    fix: { type: 'string' },
   },
+  required: ['file', 'problem', 'severity', 'kind'],
+}
+
+const FINDINGS = {
+  type: 'object',
+  properties: { findings: { type: 'array', items: FINDING } },
   required: ['findings'],
 }
 
@@ -50,14 +47,14 @@ const WORK = {
   required: ['files', 'checks', 'question'],
 }
 
+// No `holds`: the loop derives it from the issues' kinds (see UNMEASURED_RULE).
 const VERDICT = {
   type: 'object',
   properties: {
-    holds: { type: 'boolean' },
     ran: { type: 'string' },
-    issues: { type: 'array', items: { type: 'string' } },
+    issues: { type: 'array', items: FINDING },
   },
-  required: ['holds', 'ran', 'issues'],
+  required: ['ran', 'issues'],
 }
 
 const CHECKS = {
@@ -91,7 +88,7 @@ const DOCS_RULE =
 const history = [...(args.history || [])]
 const resuming = history.length > 0
 const rejected = []
-// Hardening the reviewers proposed: not built, the main session parks it in docs/coda.md.
+// Hardening the review or the audit proposed: not built, the main session parks it in docs/coda.md.
 // Carried across a relaunch like history, so nothing parked before a question is lost.
 const parked = [...(args.parked || [])]
 let rounds = 0
@@ -106,7 +103,7 @@ const failed = (where) => end('failed', { where })
 if (!['meccanico', 'spostamento', 'logica'].includes(args.mode)) return failed(`mode: ${args.mode}`)
 
 const KIND_RULE =
-  'Ogni rilievo dichiara `kind`. `difetto`: il diff fa una cosa sbagliata, dice il falso (codice, ' +
+  'Ogni rilievo con file e riga, e dichiara `kind`. `difetto`: il diff fa una cosa sbagliata, dice il falso (codice, ' +
   'commento o documento), viola una regola del progetto o del compito, manca qualcosa che il ' +
   'compito chiedeva, contiene roba che il compito non chiedeva, o un caso che puo capitare oggi ' +
   'fallisce in silenzio. `irrobustimento`: una cosa da aggiungere che il diff non ha, cioe una ' +
@@ -114,6 +111,26 @@ const KIND_RULE =
   'doppione che c era gia prima del diff o un debito da una fase successiva. Roba non chiesta gia ' +
   'nel diff, o un doppione che il diff introduce, e difetto, non irrobustimento. Nel dubbio fra i ' +
   'due, difetto.'
+const UNMEASURED_RULE =
+  'L esito e dato dai rilievi: se non hai potuto eseguire o misurare (l app non parte, manca un ' +
+  'dato), restituisci un rilievo difetto che lo dice, con file = cio che non e partito.'
+
+const where = (f) => [f.file, f.line].filter(Boolean).join(':')
+const entry = (f) => `${where(f)} ${f.problem}`
+// A finding without `kind` counts as a defect.
+const isDefect = (f) => f.kind !== HARDENING
+// Parks the hardening and returns the defects.
+function defectsOf(label, findings) {
+  const defects = findings.filter(isDefect)
+  for (const f of findings) {
+    if (isDefect(f)) continue
+    if (!parked.includes(entry(f))) parked.push(entry(f))
+  }
+  log(`${label}: ${defects.length} difetti, ${findings.length - defects.length} irrobustimenti`)
+  return defects
+}
+const parkedNote = () =>
+  parked.length ? `\n\nIrrobustimenti gia parcheggiati, non riproporli:\n${parked.join('\n')}` : ''
 
 const REVIEWERS = [
   { type: 'revisore', what: 'le regole di AstroLog del tuo file di agente (anche i controlli che nessuna macchina fa piu), se fa quello che il compito chiede e nient altro, e se i documenti nel diff dicono il vero' },
@@ -189,27 +206,16 @@ async function reviewUntilDry() {
       REVIEWERS.map((rv) => () =>
         agent(
           `${task}\n\nRivedi il diff non committato (git diff; git diff --cached), documenti compresi. ` +
-            `Guarda solo: ${rv.what}. Ogni rilievo con file e riga. ${KIND_RULE} Nessun rilievo e un esito legittimo: non inventarne.` +
+            `Guarda solo: ${rv.what}. ${KIND_RULE} Nessun rilievo e un esito legittimo: non inventarne.` +
             (history.length ? `\n\nGiri precedenti (rilievo -> esito):\n${history.join('\n')}` : '') +
-            (parked.length ? `\n\nIrrobustimenti gia parcheggiati, non riproporli:\n${parked.join('\n')}` : ''),
+            parkedNote(),
           { phase: 'Review', label: `review:${rv.type}#${rounds}`, schema: FINDINGS, agentType: rv.type },
         ),
       ),
     )
     const dead = REVIEWERS.filter((_, i) => !results[i]).map((rv) => rv.type)
     if (dead.length) return failed(`review ${rounds}: nessuna risposta da ${dead.join(', ')}`)
-    const all = results.flatMap((x) => x.findings)
-    const found = []
-    const where = (f) => [f.file, f.line].filter(Boolean).join(':')
-    for (const f of all) {
-      if (f.kind !== HARDENING) {
-        found.push(f)
-        continue
-      }
-      const entry = `${where(f)} ${f.problem}`
-      if (!parked.includes(entry)) parked.push(entry)
-    }
-    log(`giro ${rounds}: ${found.length} difetti, ${all.length - found.length} irrobustimenti`)
+    const found = defectsOf(`giro ${rounds}`, results.flatMap((x) => x.findings))
     if (!found.length) return null
     const halt = absorb(
       await fix(`Review ${rounds}`, `Rilievi della revisione:\n${JSON.stringify(found, null, 1)}`),
@@ -245,24 +251,32 @@ for (let cycle = 1; cycle <= MAX_CYCLES; cycle++) {
   phase('Audit')
   // One at a time: audits run the app and compare with HEAD, and must not step on each other.
   audits = []
+  // Kept beside audits, not inside, so the result carries each defect once (in `issues`).
+  const failing = []
   for (const q of QUESTIONS) {
     const name = q.split(':')[0]
-    const verdict = await agent(`${task}\n\nDomanda dell audit -- ${q}`, {
-      phase: 'Audit',
-      label: `audit:${name}#${cycle}`,
-      schema: VERDICT,
-      agentType: name === 'collaudo' ? undefined : 'auditore',
-    })
+    const verdict = await agent(
+      `${task}\n\nDomanda dell audit -- ${q}\n\n${KIND_RULE} ${UNMEASURED_RULE}` + parkedNote(),
+      {
+        phase: 'Audit',
+        label: `audit:${name}#${cycle}`,
+        schema: VERDICT,
+        agentType: name === 'collaudo' ? undefined : 'auditore',
+      },
+    )
     if (!verdict) return failed(`audit ${name}: nessuna risposta`)
-    audits.push({ question: q, ...verdict })
+    const defects = defectsOf(`audit ${name}#${cycle}`, verdict.issues)
+    audits.push({ question: q, ...verdict, holds: !defects.length })
+    if (defects.length) failing.push({ question: q, defects })
   }
-  const failing = audits.filter((a) => !a.holds)
   if (failing.length) {
     if (cycle === MAX_CYCLES) return end('audit_failing', { audits })
+    const line = (f) => entry(f) + (f.fix ? ` -> ${f.fix}` : '')
+    const listed = (a) => a.defects.map(line).join('\n  ')
     const halt = absorb(
       await fix(
         `Audit ${cycle}`,
-        'L audit non regge:\n' + failing.map((a) => `- ${a.question}\n  ${a.issues.join('\n  ')}`).join('\n'),
+        'L audit non regge:\n' + failing.map((a) => `- ${a.question}\n  ${listed(a)}`).join('\n'),
       ),
       `Audit ${cycle}`,
     )

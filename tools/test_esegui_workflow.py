@@ -44,7 +44,7 @@ WORK = {"files": [], "checks": "ok", "question": None, "done": ["d"]}
 EMPTY = {"findings": []}
 HARDENING = "irrobustimento"
 TAIL = {
-    "audit:": {"holds": True, "ran": "r", "issues": []},
+    "audit:": {"ran": "r", "issues": []},
     "checks": {"all_passed": True, "failed": []},
     "Build": WORK,
     "fix:": WORK,
@@ -198,6 +198,73 @@ def test_a_question_from_build_leaves_history_empty(tmp_path):
     assert out["result"]["status"] == "question"
     assert out["result"]["history"] == []
     assert labels(out["calls"]) == ["Build"]
+
+
+@needs_node
+def test_an_audit_with_only_hardening_holds_and_parks_it(tmp_path):
+    replies = {
+        "review:": EMPTY,
+        "audit:spreco#1": {"ran": "r", "issues": [finding(HARDENING, "cache")]},
+        **TAIL,
+    }
+    out = run(tmp_path, replies)
+    assert out["result"]["status"] == "done"
+    assert out["result"]["parked"] == ["a.py:1 cache"]
+    assert not [x for x in labels(out["calls"]) if x.startswith("fix:")]
+    spreco = next(a for a in out["result"]["audits"] if a["question"].startswith("spreco"))
+    assert spreco["holds"] is True
+
+
+@needs_node
+def test_an_audit_defect_is_fixed_and_its_hardening_is_not(tmp_path):
+    issues = [finding("difetto", "rotto"), finding(HARDENING, "cache", "b.py", 2)]
+    replies = {"review:": EMPTY, "audit:promesse#1": {"ran": "r", "issues": issues}, **TAIL}
+    out = run(tmp_path, replies)
+    assert out["result"]["status"] == "done"
+    fixed = next(c["prompt"] for c in out["calls"] if c["label"] == "fix:Audit 1")
+    assert "a.py:1 rotto" in fixed
+    assert "cache" not in fixed
+    assert out["result"]["parked"] == ["b.py:2 cache"]
+    second = next(c["prompt"] for c in out["calls"] if c["label"] == "audit:doppioni#2")
+    assert "Irrobustimenti gia parcheggiati, non riproporli:\nb.py:2 cache" in second
+
+
+@needs_node
+def test_an_audit_issue_without_kind_is_fixed(tmp_path):
+    bare = {"file": "a.py", "problem": "rotto"}
+    replies = {"review:": EMPTY, "audit:promesse#1": {"ran": "r", "issues": [bare]}, **TAIL}
+    out = run(tmp_path, replies)
+    assert "fix:Audit 1" in labels(out["calls"])
+    assert out["result"]["parked"] == []
+
+
+@needs_node
+def test_the_audit_declares_the_kind_of_every_issue(tmp_path):
+    out = run(tmp_path, {"review:": EMPTY, **TAIL})
+    audits = [c for c in out["calls"] if c["label"].startswith("audit:")]
+    assert len(audits) == 4
+    for call in audits:
+        assert "Nel dubbio fra i due, difetto" in call["prompt"]
+        assert call["prompt"].count("file e riga") == 1
+        assert "se non hai potuto eseguire o misurare" in call["prompt"]
+        item = call["schema"]["properties"]["issues"]["items"]
+        assert "kind" in item["required"]
+        assert item["properties"]["kind"]["enum"] == ["difetto", HARDENING]
+
+
+@needs_node
+def test_an_audit_defect_on_the_last_cycle_ends_audit_failing(tmp_path):
+    replies = {
+        "review:": EMPTY,
+        "audit:promesse": {"ran": "r", "issues": [finding("difetto", "rotto")]},
+        **TAIL,
+    }
+    out = run(tmp_path, replies)
+    assert out["result"]["status"] == "audit_failing"
+    promesse = next(a for a in out["result"]["audits"] if a["question"].startswith("promesse"))
+    assert promesse["holds"] is False
+    # The main session reads the result: each defect appears once, in `issues`.
+    assert "defects" not in promesse
 
 
 def test_the_workflow_scripts_stay_lf_in_git_and_on_disk():

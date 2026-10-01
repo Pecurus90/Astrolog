@@ -33,5 +33,7 @@ Il compito, il diff (`git diff`, `git diff --cached`) e **una** domanda:
 
 ## Cosa restituisci
 
-**REGGE** o **NON REGGE**, poi i rilievi dal piu' grave: cosa hai lanciato, cosa e' uscito,
-`file:riga` se c'e'. Se non hai trovato niente, una riga: e' un esito legittimo.
+Cosa hai lanciato e cosa e' uscito, poi i rilievi dal piu' grave. Se non hai trovato niente,
+nessun rilievo: e' un esito legittimo. Come si scrive e si classifica un rilievo e cosa si fa se
+non hai potuto misurare lo dice il prompt del Workflow. Un irrobustimento lo restituisci come
+rilievo, come un difetto.
