@@ -4,6 +4,7 @@ import sqlite3
 from typing import Any
 
 from ..db import idlist
+from ..db.inserted import inserted_id
 
 
 def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
@@ -44,13 +45,13 @@ def name_owner(conn: sqlite3.Connection, name: str) -> int | None:
 def create_object(
     conn: sqlite3.Connection, *, slug: str | None, method: str, confidence: str, now: str
 ) -> int:
-    object_id = conn.execute(
-        "INSERT INTO objects(catalog_slug, identity_method, identity_confidence,"
-        " identified_at, created_at) VALUES(?, ?, ?, ?, ?)",
-        (slug, method, confidence, now, now),
-    ).lastrowid
-    assert object_id is not None  # always set after an INSERT into a rowid table
-    return object_id
+    return inserted_id(
+        conn.execute(
+            "INSERT INTO objects(catalog_slug, identity_method, identity_confidence,"
+            " identified_at, created_at) VALUES(?, ?, ?, ?, ?)",
+            (slug, method, confidence, now, now),
+        )
+    )
 
 
 def set_identity(

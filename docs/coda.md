@@ -28,9 +28,11 @@ non entra: lo rifa' Marco col disegno nuovo (*Per il disegno nuovo*, sotto).
 **Fase 1 -- pulizia e tipi.** Commenti al massimo due righe e solo il perche'; ogni funzione
 annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
 - Fatti: `spine/identify*`, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`, `weather`,
-  i file sciolti di `backend/astrolog`.
-- Mancano: il resto di `spine`, `api`.
-- Da chiudere strada facendo: 39 righe del backend (25 in `backend/astrolog`, 14 in
+  i file sciolti di `backend/astrolog`. `spine` e' in corso per lotti, file per file nel glob:
+  fatto il primo, la scansione (`spine/__init__`, `scan`, `scan_store`, `frame_folder`,
+  `inventory`, `header_asks`, `copies`, `coordinates`, `rewrite`).
+- Mancano: il resto di `spine` (i lotti dopo la scansione), `api`.
+- Da chiudere strada facendo: 34 righe del backend (20 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
@@ -40,7 +42,9 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   `.pre-commit-config.yaml` (i quattro software) va a `CLAUDE.md`, "Software supportati".
   Annotare `astap`, `clock` e `units` ha lasciato tre `cast` dove il tipo ora ammette `None` ma
   il controllo sta sopra (`api/tonight.py`, `spine/solve.py`, `spine/unnamed.py`): si tolgono
-  restringendo il tipo quando arriva il loro package.
+  restringendo il tipo quando arriva il loro package. Annotare `spine/scan` ha lasciato un quarto
+  `cast` in `spine/run.queue`: `folder_id` vi ammette `None` e il controllo sta sotto la lambda;
+  si toglie quando arriva `run`.
 
 **Fase 2 -- semplificare**, sul codice gia' pulito: doppioni uniti, nomi interni in inglese, `dict`
 che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lunghe spezzate e i
@@ -62,6 +66,11 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   (`astap`); `_ORA_DI_INIZIO`, `comincia`, `fine`, `finisce`, `fuso`, `giorno`, `inizio`,
   `quando`, `quante`, `secondi` (`clock`); `_RIFIUTI`, `rifiuto`, `motivo` (`net`); `misurati`,
   `coppia`, `nord`, `est` (`place`); `CASA`, `MODO_SOLO_UTENTE` (`startup`); `classe` (`units`).
+  Nel primo lotto di `spine`: `detto`, `notte`, `giudicati`, `fuso`, `istante` (`scan`); `prima`
+  (`scan_store`); `_DENTRO`, `dentro`, `dritto` (`frame_folder`); `corredi` (alias di `rigs`),
+  `_USO`, `_STRUMENTI`, `_CORREDI`, `_FILTRI`, `_BANDE`, `dichiarato`, `_senza_ore`, `nomi`,
+  `montature`, `bande`, `_riga`, `riga` (`inventory`); `gruppi`, `chiave`, `posto`, `detto`
+  (`coordinates`); `programmi` (`rewrite`).
 - **`identify`**: la rotazione dello scarto negli assi del sensore e' scritta due volte
   (`identify_geometry.in_frame` e `mosaic_geometry._in_axes`): va in `identify_geometry` e la
   chiamano tutti e due. Il letterale del lucchetto dell'utente (`method`/`confidence` `user`,
@@ -91,7 +100,15 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   sciolti: `astap.REASONS` e `SOURCES`, `place.SkySource` ed `ElevationSource` (scritti in
   `sites`), `net.Failure` (accanto a `REFUSED`/`UNREACHABLE`). `meteoblue.KeyOutcome` e' gia'
   `Literal["ok", "bad_answer"] | net.Failure`: toglie la terza scrittura di refused/unreachable
-  senza cambiare comportamento, e lo `StrEnum` la sostituira'.
+  senza cambiare comportamento, e lo `StrEnum` la sostituira'. Nella scansione: esiti, motivi,
+  file non letti e saltati (`scan_store.STATUSES`, `REASONS`, `FILE_ERRORS`, `SKIP_REASONS`,
+  scritti in `scan_runs` e ripetuti in `api/models`) e il marchio `calibrated`/`rewritten`
+  (`rewrite.MARK_WEIGHT`, scritto in `frames.rewrite_mark`).
+- **La notte di un frame** (`scan_store.LocalNight`, notte/fuso/istante costruita da
+  `scan.night_of` e spacchettata per posizione da `scan_store.insert_frame`) e' un alias di `tuple`: una `NamedTuple` la nomina.
+- **`db/inserted.inserted_id`** tiene la guardia su `lastrowid`; gli altri `.lastrowid` del
+  backend (`spine/gear_create`, `group_store`, `mosaic`, `rigs`, `api/folders`, `api/sites`) la
+  chiamano quando arriva il loro package.
 - **`db/config.KEYS`** ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei
   test (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo
   spacchettamento.
@@ -239,8 +256,10 @@ Niente di aperto.
 - **Una misura di tempo non ha niente che le impedisca di girare sotto carico.**
   `test_catalog_load_seconds_does_not_regress` (`backend/tests/test_perf_catalog.py`, `lento`)
   confronta un tempo col tetto di `backend/tests/perf_baseline.json`. In CI gira da solo, ma chi
-  lancia la suite intera con `-n auto` lo misura con decine di processi addosso, e cade. Rimedio:
-  una guardia che si rifiuti di misurare quando non e' solo.
+  lancia la suite intera con `-n auto` lo misura con decine di processi addosso, e cade. Lo stesso
+  vale per i frame al secondo di `backend/tests/test_perf_scan.py`, che cade anche da solo quando
+  la macchina e' carica (sotto la soglia in 2 corse su 16, sul codice nuovo e su quello di prima).
+  Rimedio: una guardia che si rifiuti di misurare quando non e' solo, o la mediana di piu' corse.
 - **La guardia sull'anonimato del corpus e' cieca fuori dal suo elenco.**
   `test_no_real_site_coordinates_in_the_corpus` (`backend/tests/test_header_corpus.py`) guarda le
   chiavi di `GEO_KEYS`: con `GEOLAT`, `GEOLON` e `SITE` che portano un paese vero i test restano
@@ -533,6 +552,13 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **La scansione, dopo la fase 1, dice due volte la stessa regola**: in `spine/coordinates.py`
+  "un posto gia' risposto resta in elenco, cosi' la risposta si cambia" sta nella docstring del
+  modulo, di `_rows` e di `frames_at`; il perche' di `calibrated` che pesa piu' di `rewritten` sta
+  sopra `rewrite.MARK_WEIGHT` e in `schema.sql` (`frames.rewrite_mark`); la docstring di
+  `scan.night_of` ripete la notte da mezzogiorno a mezzogiorno (`clock.night_date`) e la ricaduta
+  del fuso (`place.timezone_of_frame`, `scan_store.home_timezone`); "radice e sottocartella
+  viaggiano nella riga" sta nella docstring di `spine/frame_folder.py` e in quella di `group_of`.
 - **I file sciolti, dopo la fase 1**: `astap.analyse` inghiotte timeout e `OSError` e torna
   `(None, None)` senza scrivere nel log, mentre `solve` lo scrive (HFD e stelle vuoti senza
   traccia in Diagnostica); i quattro canali del solver sono scritti in `astap.SOURCES` e in

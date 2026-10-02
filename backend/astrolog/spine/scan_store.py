@@ -1,12 +1,12 @@
-"""Le scritture della scansione: cartella, ricevuta, frame, posizioni. SQL con segnaposto,
-mai composto con stringhe.
-
-Vincolo non ovvio: qui non si decide niente (chi entra, chi si salta): si scrive cio' che
-`scan.py` ha deciso. Un frame nuovo nasce con tutti gli stadi `pending`.
-"""
+"""The scan's writes: folder, receipt, frames, positions. Nothing is decided here: it writes what
+`scan.py` decided, and a new frame is born with every stage `pending`."""
 
 import json
+import sqlite3
+from collections.abc import Collection, Iterable, Mapping, Sequence
+from typing import Any
 
+from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from .stages import mark_pending, refresh_waiting
 
@@ -44,10 +44,10 @@ _FIELD_OF = {"focal_mm_raw": "focal_mm", "ra_hint_deg": "ra_deg", "dec_hint_deg"
 
 
 class FolderNotFoundError(ValueError):
-    """La cartella non esiste nel DB: guardia del motore, non un caso dell'utente."""
+    """An engine guard, not a user case."""
 
 
-def folder_root(conn, folder_id):
+def folder_root(conn: sqlite3.Connection, folder_id: int) -> tuple[str, str | None]:
     row = conn.execute(
         "SELECT root_path, retired_at FROM folders WHERE id = ?", (folder_id,)
     ).fetchone()
@@ -56,39 +56,34 @@ def folder_root(conn, folder_id):
     return row["root_path"], row["retired_at"]
 
 
-def start_run(conn, folder_id, now):
+def start_run(conn: sqlite3.Connection, folder_id: int, now: str) -> int:
     with transaction(conn):
-        return conn.execute(
+        cursor = conn.execute(
             "INSERT INTO scan_runs(folder_id, started_at) VALUES(?, ?)", (folder_id, now)
-        ).lastrowid
+        )
+    return inserted_id(cursor)
 
 
-def discard_run(conn, run_id):
-    """Toglie una ricevuta aperta la cui corsa non ha mai letto quella cartella: il worker era
-    occupato, oppure la corsa si e' fermata prima di arrivarci. Tocca solo le righe **aperte**,
-    quindi non puo' portarsi via il racconto di una cartella gia' letta."""
+def discard_run(conn: sqlite3.Connection, run_id: int) -> None:
+    """For a run that never read that folder. Only open rows, so it cannot take away the story of a
+    folder already read."""
     conn.execute("DELETE FROM scan_runs WHERE id = ? AND ended_at IS NULL", (run_id,))
 
 
-# Una ricevuta porta con se' il **percorso della sua cartella**, che e' quello che l'utente
-# riconosce: col solo id, chi la mostra dovrebbe leggersi le cartelle e appaiarle da se'. La
-# giunzione e' **interna** perche' una cartella non si cancella, si **ritira** (`api/folders.py`,
-# `retired_at`) -- e cancellarla davvero non si puo': `scan_runs.folder_id` la riferisce, e lo
-# schema ferma il colpo. Un percorso che manca sarebbe un archivio incoerente, non un caso da
-# mostrare a schermo.
+# The folder path is what the user recognises. The join is inner because a folder is retired,
+# never deleted: `scan_runs.folder_id` references it and the schema stops the delete.
 SELECT_RUN = (
     "SELECT r.*, f.root_path AS folder_path FROM scan_runs r JOIN folders f ON f.id = r.folder_id"
 )
 
 
-def run_row(conn, run_id):
+def run_row(conn: sqlite3.Connection, run_id: int) -> sqlite3.Row | None:
     return conn.execute(SELECT_RUN + " WHERE r.id = ?", (run_id,)).fetchone()
 
 
-def run_outcomes(conn, run_ids):
-    """Com'e' finita ognuna di quelle ricevute, e basta: chi lo chiede a ogni interrogazione dello
-    stato non deve decodificare l'elenco dei file non letti, che puo' contarne migliaia a ricevuta.
-    Quelle che non ci sono piu' non tornano."""
+def run_outcomes(conn: sqlite3.Connection, run_ids: Iterable[int]) -> list[sqlite3.Row]:
+    """Without the unread-file list, which can hold thousands per receipt: it is asked at every
+    status poll. Receipts that are gone do not come back."""
     return [
         r
         for r in (
@@ -103,23 +98,29 @@ def run_outcomes(conn, run_ids):
 
 STATUSES = ("ok", "stopped", "aborted", "error")
 REASONS = (None, "root_unreachable", "stop_requested", "internal_error", "database_error")
-# Perche' un file non e' entrato: il sistema non lo apre, non e' un FITS, il suo nome non si puo'
-# scrivere, o un guasto che nessuno aspettava (la traccia sta nel log).
+# Why a file did not enter: the system will not open it, it is not a FITS, its name cannot be
+# written, or an unexpected fault (the trace is in the log).
 FILE_ERRORS = ("file_unreadable", "header_unreadable", "name_not_utf8", "internal_error")
-# Perche' un file si salta: si conta per motivo, calibrazioni comprese (Marco, 2026-09-11).
 SKIP_REASONS = ("calibration", "stack", "still_writing")
 
 
-# Cio' che la scansione lascia fuori e la ricevuta porta per intero: un elenco ciascuno, e in
-# `scan_runs` una colonna `<nome>_json`. Chi li passa, li scrive o li mostra parte da questi nomi.
-# I file non letti no: possono essere migliaia, e si leggono a pagine (`errors_detail_json`).
+# What the scan leaves out, each carried whole in a `<name>_json` column of `scan_runs`. Unread
+# files are not here: they can be thousands, and are read in pages (`errors_detail_json`).
 RECEIPT_LISTS = ("unreadable_dirs", "hidden_dirs", "linked_dirs", "skipped_by_reason")
 
 
-def finish_run(conn, run_id, status, reason, counts, left_out, errors, now):  # noqa: PLR0913
-    """Chiude la ricevuta; `left_out` e' `{nome: elenco}` coi nomi di `RECEIPT_LISTS`, `errors`
-    i file non letti. Stato, motivo e motivi dei file sono codici chiusi: una frase o un nome di
-    classe qui e' un errore di programmazione."""
+def finish_run(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    run_id: int,
+    status: str,
+    reason: str | None,
+    counts: Mapping[str, int],
+    left_out: Mapping[str, Sequence[Any]],
+    errors: Sequence[Mapping[str, str]],
+    now: str,
+) -> None:
+    """Status, reason and file reasons are closed codes: a sentence or a class name here is a
+    programming error."""
     if status not in STATUSES or reason not in REASONS:
         raise ValueError(f"esito fuori dal vocabolario: {status}/{reason}")
     codes = {e["reason"] for e in errors} - set(FILE_ERRORS)
@@ -128,9 +129,11 @@ def finish_run(conn, run_id, status, reason, counts, left_out, errors, now):  # 
         raise ValueError(f"motivi fuori dal vocabolario: {sorted(codes)}")
     columns = ", ".join(f"{name}_json = ?" for name in RECEIPT_LISTS)
     with transaction(conn):
+        # S608: columns from a constant of ours.
         conn.execute(
-            "UPDATE scan_runs SET ended_at = ?, status = ?, reason = ?, found = ?, new = ?,"  # noqa: S608 - colonne da una costante nostra
-            " unchanged = ?, duplicates = ?, missing = ?, skipped = ?, errors = ?, online_only = ?,"
+            "UPDATE scan_runs SET ended_at = ?, status = ?, reason = ?,"  # noqa: S608
+            " found = ?, new = ?, unchanged = ?, duplicates = ?, missing = ?, skipped = ?,"
+            " errors = ?, online_only = ?,"
             f" errors_detail_json = ?, {columns} WHERE id = ?",
             (
                 now,
@@ -149,10 +152,8 @@ def finish_run(conn, run_id, status, reason, counts, left_out, errors, now):  # 
                 run_id,
             ),
         )
-        # L'elenco dei file non letti lo tiene l'ultima ricevuta di una cartella, e se quella
-        # corsa non e' arrivata in fondo anche l'ultima che ci e' arrivata (Marco, 2026-09-11):
-        # quei file si riprovano a ogni scansione arrivata in fondo. Le altre tengono i numeri, e
-        # il database non cresce a ogni giro di un NAS, nemmeno se la condivisione cade a ogni giro.
+        # The unread-file list stays on a folder's last receipt, and on the last one that reached
+        # the end if that did not: the database does not grow at every round of a flaky NAS.
         folder = conn.execute("SELECT folder_id FROM scan_runs WHERE id = ?", (run_id,)).fetchone()
         last_ok = conn.execute(
             "SELECT MAX(id) FROM scan_runs WHERE folder_id = ? AND status = 'ok' AND id < ?",
@@ -165,12 +166,12 @@ def finish_run(conn, run_id, status, reason, counts, left_out, errors, now):  # 
         )
 
 
-def _as_json(items):
-    """Un elenco come JSON leggibile, accenti compresi, o NULL se e' vuoto."""
+def _as_json(items: Sequence[Any] | None) -> str | None:
+    """Readable JSON, accents included, or NULL when empty."""
     return json.dumps(items, ensure_ascii=False) if items else None
 
 
-def position(conn, folder_id, rel_path):
+def position(conn: sqlite3.Connection, folder_id: int, rel_path: str) -> sqlite3.Row | None:
     return conn.execute(
         "SELECT id, frame_id, filesize, mtime, status FROM positions"
         " WHERE folder_id = ? AND rel_path = ?",
@@ -178,7 +179,7 @@ def position(conn, folder_id, rel_path):
     ).fetchone()
 
 
-def set_position_present(conn, position_id, now):
+def set_position_present(conn: sqlite3.Connection, position_id: int, now: str) -> None:
     with transaction(conn):
         conn.execute(
             "UPDATE positions SET status = 'present', seen_at = ? WHERE id = ?", (now, position_id)
@@ -186,39 +187,58 @@ def set_position_present(conn, position_id, now):
         refresh_waiting(conn, [_frame_of(conn, position_id)])
 
 
-def _frame_of(conn, position_id):
+def _frame_of(conn: sqlite3.Connection, position_id: int) -> int:
     return conn.execute("SELECT frame_id FROM positions WHERE id = ?", (position_id,)).fetchone()[0]
 
 
-def home_timezone(conn):
-    """Il fuso del sito di casa, o `None`: e' quello della notte di una posa che non dice dove."""
+def home_timezone(conn: sqlite3.Connection) -> str | None:
+    """The night zone of a frame that does not say where it was taken."""
     row = conn.execute("SELECT timezone FROM sites WHERE is_default = 1").fetchone()
     return None if row is None else row["timezone"]
 
 
-def frame_id_by_hash(conn, frame_hash):
+def frame_id_by_hash(conn: sqlite3.Connection, frame_hash: str) -> int | None:
     row = conn.execute("SELECT id FROM frames WHERE frame_hash = ?", (frame_hash,)).fetchone()
     return row["id"] if row else None
 
 
-def insert_frame(conn, fields, frame_hash, header_json, now, night):  # noqa: PLR0913
-    """Il frame nuovo, coi grezzi dell'header, la sua notte `(notte, fuso, istante)` e tutti gli
-    stadi da fare. Dentro una transazione aperta dal chiamante."""
+# (night, zone, instant) of a frame, as `local_night`, `local_tz`, `night_instant`.
+LocalNight = tuple[str | None, str | None, str]
+
+
+def insert_frame(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    fields: Mapping[str, Any],
+    frame_hash: str,
+    header_json: str,
+    now: str,
+    night: LocalNight,
+) -> int:
+    """Inside a transaction opened by the caller."""
     values = [fields.get(_FIELD_OF.get(c, c)) for c in FRAME_COLUMNS]
     cols = ", ".join(f'"{c}"' for c in FRAME_COLUMNS)
-    marks = ", ".join("?" for _ in FRAME_COLUMNS)  # segnaposto-ok: le colonne, non le righe
-    frame_id = conn.execute(
-        "INSERT INTO frames(frame_hash, header_json, created_at, local_night, local_tz,"  # noqa: S608 - colonne fisse
-        f" night_instant, {cols}) VALUES(?, ?, ?, ?, ?, ?, {marks})",
-        [frame_hash, header_json, now, *night, *values],
-    ).lastrowid
+    marks = ", ".join("?" for _ in FRAME_COLUMNS)  # segnaposto-ok: the columns, not the rows
+    # S608: fixed columns.
+    sql = (
+        "INSERT INTO frames(frame_hash, header_json, created_at,"  # noqa: S608
+        f" local_night, local_tz, night_instant, {cols}) VALUES(?, ?, ?, ?, ?, ?, {marks})"
+    )
+    frame_id = inserted_id(conn.execute(sql, [frame_hash, header_json, now, *night, *values]))
     mark_pending(conn, frame_id, now)
     return frame_id
 
 
-def upsert_position(conn, frame_id, folder_id, rel_path, filesize, mtime, now):  # noqa: PLR0913
-    """La posizione di quel file; se allo stesso percorso c'era un altro file, passa a questo, e
-    il frame di prima puo' aver perso la cartella che gli dava la risposta sul tipo."""
+def upsert_position(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    frame_id: int,
+    folder_id: int,
+    rel_path: str,
+    filesize: int,
+    mtime: float,
+    now: str,
+) -> None:
+    """A different file at the same path takes the position over, and the frame before may have
+    lost the folder that answered its type."""
     prima = position(conn, folder_id, rel_path)
     conn.execute(
         "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, status, seen_at)"
@@ -231,9 +251,15 @@ def upsert_position(conn, frame_id, folder_id, rel_path, filesize, mtime, now): 
     refresh_waiting(conn, {frame_id} | ({prima["frame_id"]} if prima else set()))
 
 
-def mark_missing(conn, folder_id, seen, untouched, now):
-    """Le posizioni della cartella non incontrate diventano `missing`, mai cancellate; quelle
-    sotto una sottocartella in `untouched` (non apribile) restano com'erano."""
+def mark_missing(
+    conn: sqlite3.Connection,
+    folder_id: int,
+    seen: Collection[str],
+    untouched: Collection[str],
+    now: str,
+) -> int:
+    """Never deleted; positions under an `untouched` subfolder (it would not open) stay as they
+    were."""
     missing = 0
     with transaction(conn):
         for r in conn.execute(

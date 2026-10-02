@@ -7,6 +7,8 @@ costruire un generatore fresco a ogni corsa. Gli stadi non si conoscono fra loro
 in fila e' questo file, e solo questo.
 """
 
+from typing import cast
+
 from ..db.connect import connect
 from ..db.transaction import transaction
 from . import typeless_answer
@@ -74,7 +76,10 @@ def queue(db_path, stages, *, folder_id=None, run_id=None):
     le notti dopo ogni risposta su un filtro, finche' l'utente non premeva Avvia."""
     chiesti = set(stages)
     lavoro = {
-        STAGE_SCAN: lambda c: _then_detach(c, scan_folder(c, folder_id, run_id=run_id)),
+        # checked below, before any stage runs
+        STAGE_SCAN: lambda c: _then_detach(
+            c, scan_folder(c, cast("int", folder_id), run_id=run_id)
+        ),
         STAGE_NORMALIZE: normalize_frames,
         STAGE_SOLVE: solve_frames,
         STAGE_IDENTIFY: identify_frames,

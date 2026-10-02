@@ -1,21 +1,13 @@
-"""Lo stadio di scansione: dalle cartelle ai frame, leggendo l'header e 64 KB di pixel dal
-centro (l'impronta), mai il resto.
-
-Vincolo non ovvio: un generatore che committa per frame ed emette un evento per file; chi lo
-chiude (Stop) lo trova a transazione chiusa e la ricevuta dice `stopped` con i numeri veri.
-Radice irraggiungibile, prima o a meta' corsa, = `aborted` senza toccare una posizione. Un file
-che non si legge, per qualunque motivo, si salta e la ricevuta lo nomina: non ferma la corsa.
-Calibrazione e stack si saltano e si contano per motivo -- e con loro i file che non dicono che
-file sono, nelle cartelle che l'utente ha chiamato di calibrazione, se non sono gia' in archivio.
-Un file solo online non si apre, perche' aprirlo lo scaricherebbe: si conta nella ricevuta e si
-rivede la volta dopo.
-"""
+"""Folders to frames, reading the header and `FINGERPRINT_BYTES` of pixels from the centre, never
+the rest. An unreadable file is counted among the errors and named in the receipt, never fatal."""
 
 import logging
 import os
 import sqlite3
 import time
+from collections.abc import Callable, Generator, Iterable, Mapping
 from functools import partial
+from typing import Any, TypeGuard
 
 from ..clock import night_date, night_instant, now_iso
 from ..db.transaction import transaction
@@ -31,16 +23,16 @@ from .stage_run import receipt
 log = logging.getLogger(__name__)
 
 COUNTS = ("found", "new", "unchanged", "duplicates", "missing", "skipped", "errors", "online_only")
-DEFAULT_MIN_AGE_S = 30  # un file scritto da meno di tanto e' ancora in scrittura: si rivede dopo
+DEFAULT_MIN_AGE_S = 30  # a file written more recently is still being written: seen next time
 
 
 class _RootLostError(Exception):
-    """Interno: la radice e' sparita, fra il pre-controllo e il walk o a meta' corsa."""
+    """The root vanished, between the pre-check and the walk or mid-run."""
 
 
-def root_readable(root):
-    """La radice si apre davvero? `isdir` non basta: una condivisione caduta puo' esistere
-    come cartella e non rispondere. E' l'unico controllo di raggiungibilita' della spina."""
+def root_readable(root: str) -> bool:
+    """`isdir` is not enough: a dropped share can exist as a folder and not answer. The spine's
+    only reachability check."""
     try:
         os.scandir(long_path(root)).close()
     except OSError:
@@ -48,17 +40,16 @@ def root_readable(root):
     return True
 
 
-def rel_path(abs_path, root):
-    """Il percorso relativo alla radice, con `/` su ogni sistema: e' la chiave di `positions`."""
+def rel_path(abs_path: str, root: str) -> str:
+    """With `/` on every system: it is the key of `positions`."""
     return os.path.relpath(abs_path, root).replace(os.sep, "/")
 
 
-# un NAS rimontato con un'altra precisione tronca l'mtime al millisecondo: non e' una modifica
+# a NAS remounted with another precision truncates mtime to the millisecond: not a modification
 MTIME_TOLERANCE_S = 0.001
 
 
-def is_unchanged(known, size, mtime):
-    """Il pre-controllo incrementale: stessa dimensione e stesso mtime al millisecondo."""
+def is_unchanged(known: sqlite3.Row | None, size: int, mtime: float) -> TypeGuard[sqlite3.Row]:
     return (
         known is not None
         and known["filesize"] == size
@@ -66,19 +57,33 @@ def is_unchanged(known, size, mtime):
     )
 
 
-def _receipt(status, reason, run_id, folder_id, counts, left_out=None, errors=()):  # noqa: PLR0913
+def _receipt(  # noqa: PLR0913
+    status: str,
+    reason: str | None,
+    run_id: int,
+    folder_id: int,
+    counts: dict[str, int],
+    left_out: Mapping[str, Iterable[Any]] | None = None,
+    errors: Iterable[dict[str, str]] = (),
+) -> dict[str, Any]:
     lists = {name: list((left_out or {}).get(name, ())) for name in store.RECEIPT_LISTS}
     return receipt(status, reason, counts, errors, run_id=run_id, folder_id=folder_id, **lists)
 
 
-def scan_folder(conn, folder_id, *, run_id=None, min_age_s=DEFAULT_MIN_AGE_S, now_fn=time.time):  # noqa: C901
-    """Scansiona la cartella `folder_id`; yield di un evento per file e, in coda, la
-    ricevuta. `run_id` e' la riga di `scan_runs` gia' aperta da chi ha avviato (per
-    rispondere subito con l'id), o None per aprirla qui."""
+def scan_folder(  # noqa: C901
+    conn: sqlite3.Connection,
+    folder_id: int,
+    *,
+    run_id: int | None = None,
+    min_age_s: float = DEFAULT_MIN_AGE_S,
+    now_fn: Callable[[], float] = time.time,
+) -> Generator[dict[str, Any], None, None]:
+    """One event per file, then the receipt. `run_id` is the `scan_runs` row the caller already
+    opened to answer with its id at once, or None to open it here."""
     root, _retired = store.folder_root(conn, folder_id)
-    counts = dict.fromkeys(COUNTS, 0)
+    counts: dict[str, int] = dict.fromkeys(COUNTS, 0)
     online, seen, errors, traced = [], set(), [], set()
-    left_out = {name: [] for name in store.RECEIPT_LISTS}
+    left_out: dict[str, list[Any]] = {name: [] for name in store.RECEIPT_LISTS}
     skipped, unreadable = left_out["skipped_by_reason"], left_out["unreadable_dirs"]
     if run_id is None:
         run_id = store.start_run(conn, folder_id, now_iso())
@@ -101,10 +106,10 @@ def scan_folder(conn, folder_id, *, run_id=None, min_age_s=DEFAULT_MIN_AGE_S, no
             linked=left_out["linked_dirs"],
         )
         if any(os.path.normpath(d) == os.path.normpath(root) for d in unreadable):
-            raise _RootLostError  # caduta fra il controllo e il walk
+            raise _RootLostError  # dropped between the check and the walk
         for dirs in (unreadable, left_out["hidden_dirs"], left_out["linked_dirs"]):
-            # dalla radice in giu', come i file non letti: il percorso intero e' quello della
-            # cartella, che la ricevuta dice gia'. Un nome che non e' UTF-8 non si scrive.
+            # from the root down, like unread files: the receipt already names the folder; a
+            # name that is not UTF-8 cannot be written
             dirs[:] = [_shown(rel_path(d, root)) for d in dirs]
         total = len(files)
         counts["found"] = total + len(online)
@@ -124,25 +129,24 @@ def scan_folder(conn, folder_id, *, run_id=None, min_age_s=DEFAULT_MIN_AGE_S, no
                 "folder_id": folder_id,
                 **counts,
             }
-        # Sotto una cartella che non si e' potuta aprire i file non sono spariti: non si sa. Le
-        # loro posizioni restano com'erano -- e la ricevuta le nomina gia' dalla radice in giu',
-        # che e' la stessa forma delle posizioni.
+        # Files under a folder that would not open have not vanished: nobody knows. Their
+        # positions stay as they were.
         counts["missing"] = store.mark_missing(conn, folder_id, seen, unreadable, now_iso())
     except GeneratorExit:
         status, reason = "stopped", "stop_requested"
         raise
     except _RootLostError:
-        # la radice e' caduta: si smette senza segnare "non trovato" file che ci sono
+        # the root dropped: stop without marking as missing files that are there
         status, reason = "aborted", "root_unreachable"
         log.warning("scan: radice caduta", extra={"scan_run_id": run_id})
     except Exception as err:
-        # il database che non risponde (disco pieno, occupato) non e' un file che non si legge
+        # a database that does not answer (disk full, busy) is not an unreadable file
         status = "error"
         reason = "database_error" if isinstance(err, sqlite3.Error) else "internal_error"
         log.exception("scan: errore di sistema", extra={"scan_run_id": run_id})
         raise
     finally:
-        # un guasto a meta' scrittura: se il database risponde, la ricevuta si chiude lo stesso
+        # a fault mid-write: if the database answers, the receipt closes anyway
         if conn.in_transaction:
             conn.execute("ROLLBACK")
         store.finish_run(conn, run_id, status, reason, counts, left_out, errors, now_iso())
@@ -151,40 +155,48 @@ def scan_folder(conn, folder_id, *, run_id=None, min_age_s=DEFAULT_MIN_AGE_S, no
     yield _receipt(status, reason, run_id, folder_id, counts, left_out, errors)
 
 
-def _shown(name):
-    """Il nome come l'archivio lo puo' scrivere e la pagina mostrare. Python porta i byte di un
-    nome che non e' UTF-8 come surrogati, che sqlite3 e il JSON rifiutano: diventano `?`."""
+def _shown(name: str) -> str:
+    """Python carries the bytes of a non-UTF-8 name as surrogates, which sqlite3 and JSON refuse:
+    they become `?`."""
     return name.encode("utf-8", "replace").decode("utf-8")
 
 
-def _safely(conn, folder_id, root, counts, errors, seen, run_id, traced, rel, work):  # noqa: PLR0913
-    """Un file dentro la sua rete: `work()` lo legge o lo conta, e se il file non si legge -- per
-    qualunque motivo -- la ricevuta lo nomina col suo codice e la corsa va avanti (Marco,
-    2026-09-11)."""
+def _safely(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    folder_id: int,
+    root: str,
+    counts: dict[str, int],
+    errors: list[dict[str, str]],
+    seen: set[str],
+    run_id: int,
+    traced: set[type[BaseException]],
+    rel: str,
+    work: Callable[[], None],
+) -> None:
     code = "name_not_utf8" if _shown(rel) != rel else _failure(work, root, run_id, traced)
     if code is not None:
         _count_error(conn, folder_id, rel, code, counts, errors, seen, run_id)
 
 
-def _failure(work, root, run_id, traced):
-    """Perche' `work()` non ha letto il file, in codice, o None se l'ha letto. Il sistema che non
-    apre un file lo dice con un numero d'errore (permessi, file sparito o bloccato); astropy dice
-    "non e' un FITS" con un `OSError` senza numero. La radice caduta e il database che non
-    risponde non sono un file: fermano la corsa."""
+def _failure(
+    work: Callable[[], None], root: str, run_id: int, traced: set[type[BaseException]]
+) -> str | None:
+    """The system says why it cannot open a file with an errno; astropy says "not a FITS" with an
+    errno-less `OSError`. A dropped root or a silent database is not a file: it stops the run."""
     try:
         work()
     except (HeaderReadError, OSError) as err:
         cause = err.cause if isinstance(err, HeaderReadError) else err
         if isinstance(cause, OSError) and not root_readable(root):
-            raise _RootLostError from err  # nello stat o dentro la lettura dell'header
+            raise _RootLostError from err  # in the stat or inside the header read
         if isinstance(cause, OSError) and cause.errno is not None:
             return "file_unreadable"
         return "header_unreadable"
     except Exception as err:
         if isinstance(err, sqlite3.Error):
             raise
-        # Un guasto che nessuno aspettava si nomina come gli altri. La traccia va nel log una volta
-        # per tipo: uguale su mille file, mille tracce riempirebbero i 20 MB del log.
+        # The trace goes to the log once per type: the same fault on a thousand files would fill
+        # the log.
         if type(err) not in traced:
             traced.add(type(err))
             log.exception("scan: errore imprevisto", extra={"scan_run_id": run_id})
@@ -192,30 +204,51 @@ def _failure(work, root, run_id, traced):
     return None
 
 
-def _not_on_disk(conn, folder_id, rel, counts, seen):
-    """Un FITS solo online: non si apre -- aprirlo lo scaricherebbe -- e si rivede alla prossima
-    scansione. Se era gia' in archivio non e' sparito: e' li', solo non sul disco."""
+def _not_on_disk(
+    conn: sqlite3.Connection, folder_id: int, rel: str, counts: dict[str, int], seen: set[str]
+) -> None:
+    """Opening an online-only FITS would download it. If it was already archived it has not
+    vanished: it is there, only not on disk."""
     counts["online_only"] += 1
     pos = store.position(conn, folder_id, rel)
     if pos is not None:
         seen.add(rel)
-        if pos["status"] != "present":  # era "non trovata", ed e' ricomparsa: solo non sul disco
+        if pos["status"] != "present":
             store.set_position_present(conn, pos["id"], now_iso())
 
 
-def _count_error(conn, folder_id, rel, code, counts, errors, seen, run_id):  # noqa: PLR0913
+def _count_error(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    folder_id: int,
+    rel: str,
+    code: str,
+    counts: dict[str, int],
+    errors: list[dict[str, str]],
+    seen: set[str],
+    run_id: int,
+) -> None:
     counts["errors"] += 1
     errors.append({"file": _shown(rel), "reason": code})
-    # un nome che non si scrive non ha una posizione, e chiederla al DB con quel nome fallirebbe
+    # a name that cannot be written has no position, and asking the DB with it would fail
     if code != "name_not_utf8" and store.position(conn, folder_id, rel) is not None:
-        seen.add(rel)  # il file c'e', anche se non si legge: non e' "non trovato"
+        seen.add(rel)  # the file is there even if unreadable: not missing
     log.warning(
         "scan: file non letto", extra={"scan_run_id": run_id, "file": _shown(rel), "error": code}
     )
 
 
-def _one_file(conn, folder_id, root, abs_path, rel, counts, skipped, seen, min_age_s, now_fn):  # noqa: PLR0913
-    """Un file: pre-controllo incrementale, eta', header, tipo, impronta, scrittura."""
+def _one_file(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    folder_id: int,
+    root: str,
+    abs_path: str,
+    rel: str,
+    counts: dict[str, int],
+    skipped: list[dict[str, Any]],
+    seen: set[str],
+    min_age_s: float,
+    now_fn: Callable[[], float],
+) -> None:
     st = os.stat(long_path(abs_path))
     size, mtime = st.st_size, st.st_mtime
     pos = store.position(conn, folder_id, rel)
@@ -231,20 +264,15 @@ def _one_file(conn, folder_id, root, abs_path, rel, counts, skipped, seen, min_a
         return
     header, block = read_frame(long_path(abs_path))
     if os.stat(long_path(abs_path)).st_size != size:
-        _skip(rel, "still_writing", counts, skipped, seen, pos)  # cresciuto mentre si leggeva
+        _skip(rel, "still_writing", counts, skipped, seen, pos)  # grew while being read
         return
     fields = extract_fields(header, abs_path)
     kind = fields["image_type"]
     if kind in CALIBRATION_TYPES or kind == "stack":
         _skip(rel, "stack" if kind == "stack" else "calibration", counts, skipped, seen, pos)
         return
-    # Un file che non dice che file e' non e' un light: se l'utente ha gia' detto che in quella
-    # cartella ci sono file di calibrazione, si salta alla porta come quelli che lo dicono da
-    # soli. Altrimenti entra e aspetta: il cielo non lo prende finche' non si sa che file e'
-    # (`spine/stages.py`, chi e' pronto), e non conta nemmeno nel residuo della spina. Un file
-    # che e' gia' un frame invece entra anche li': se ci e' stato spostato, saltato sembrerebbe
-    # sparito, che tiene le ore; con la posizione nuova lo stacco lo trova
-    # (`typeless_answer.detach_waiting`).
+    # A typeless file in a folder the user called calibration is skipped like a calibration; one
+    # already a frame still enters, or after a move it would look vanished and keep its hours.
     detto = typeless.answer_at(conn, root, rel) if kind == UNKNOWN else None
     fingerprint = frame_fingerprint(long_path(abs_path), header, block)
     if detto == typeless.CALIBRATION and store.frame_id_by_hash(conn, fingerprint) is None:
@@ -260,17 +288,16 @@ def _one_file(conn, folder_id, root, abs_path, rel, counts, skipped, seen, min_a
             )
             counts["new"] += 1
         elif pos is not None and pos["frame_id"] == frame_id:
-            counts["unchanged"] += 1  # toccato sul disco (magari l'header), stessi pixel
+            counts["unchanged"] += 1  # touched on disk (the header, perhaps), same pixels
         else:
             counts["duplicates"] += 1
         store.upsert_position(conn, frame_id, folder_id, rel, size, mtime, now)
     seen.add(rel)
 
 
-def night_of(conn, fields, mtime):
-    """(notte, fuso, istante) della posa, scritti quando entra: da mezzogiorno a mezzogiorno nel
-    fuso delle coordinate dell'header, o del sito di casa, o in UTC (fuso `None`), a partire
-    dall'istante di `clock.night_instant`."""
+def night_of(conn: sqlite3.Connection, fields: Mapping[str, Any], mtime: float) -> store.LocalNight:
+    """Written on entry: noon to noon in the zone of the header coordinates, or of the home
+    site, or UTC (zone `None`)."""
     fuso = timezone_of_frame(
         fields.get("site_lat"), fields.get("site_lon"), store.home_timezone(conn)
     )
@@ -278,8 +305,15 @@ def night_of(conn, fields, mtime):
     return night_date(istante, fuso), fuso, istante
 
 
-def _skip(rel, why, counts, skipped, seen, pos):  # noqa: PLR0913
-    """Un file saltato si conta per motivo, non per nome (Marco, 2026-09-11)."""
+def _skip(  # noqa: PLR0913
+    rel: str,
+    why: str,
+    counts: dict[str, int],
+    skipped: list[dict[str, Any]],
+    seen: set[str],
+    pos: sqlite3.Row | None,
+) -> None:
+    """Counted by reason, not by name."""
     counts["skipped"] += 1
     entry = next((e for e in skipped if e["reason"] == why), None)
     if entry is None:

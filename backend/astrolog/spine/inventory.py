@@ -1,19 +1,9 @@
-"""L'**attrezzatura** in lettura: i pezzi che possiedi, e quanto ti sono serviti.
-
-Le righe le scrive la spina leggendo gli header (`normalize`), le schede chi le corregge
-nell'Attrezzatura (`gear`), e quanto e' servito ognuno chi lavora le pose (`gear_usage`): qui si
-leggono tutte insieme, e **non si calcola niente** (Marco, 22/9/2026: una lettura non calcola mai).
-
-Vincoli non ovvi:
-
-* **Le ore che l'app non puo' sapere arrivano `None`, non zero**, e chi legge lo dichiara a
-  schermo. Lo decide chi scrive (`gear_usage`). Un pezzo nato a meta' giro non ha ancora la sua
-  riga, e arriva con `counted` falso: "non ancora contato" non e' "non si puo' sapere".
-* **"Nessun filtro" non e' un filtro che possiedi**: e' la riga con cui l'app segna una posa senza
-  vetro davanti, e in un elenco di cose tue sarebbe la prima voce di qualcosa che non hai.
-"""
+"""The gear, read: nothing is computed here. Hours the app cannot know arrive `None`, not zero
+(`gear_usage` decides); a piece born mid-round has `counted` false: not yet is not unknowable."""
 
 import json
+import sqlite3
+from typing import Any
 
 from . import gear
 from . import rigs as corredi
@@ -26,35 +16,32 @@ SELECT i.*, {_USO}
 FROM instruments i
 LEFT JOIN gear_usage u ON u.subject = 'instrument' AND u.subject_id = i.id
 ORDER BY i.kind, i.name
-"""  # noqa: S608 - frammento costante di questo file
+"""  # noqa: S608 - constant fragment of this file
 
-# L'ordine e' quello che chi conta ha scritto (`position`, il piu' usato in cima); una riga non
-# ancora contata va in fondo.
+# The order the counter wrote (`position`, most used first); a row not yet counted goes last.
 _CORREDI = f"""
 SELECT g.id, g.focal_mm, o.name AS optics, c.name AS camera, {_USO}
 FROM rigs g LEFT JOIN instruments o ON o.id = g.optics_id
             LEFT JOIN instruments c ON c.id = g.camera_id
 LEFT JOIN gear_usage u ON u.subject = 'rig' AND u.subject_id = g.id
 ORDER BY u.position IS NULL, u.position, g.id
-"""  # noqa: S608 - frammento costante di questo file
+"""  # noqa: S608 - constant fragment of this file
 
+# "No filter" is the row marking a frame with no glass in front, not a filter you own.
 _FILTRI = f"""
 SELECT x.*, {_USO}
 FROM filters x
 LEFT JOIN gear_usage u ON u.subject = 'filter' AND u.subject_id = x.id
 WHERE x.is_none = 0
 ORDER BY u.position IS NULL, u.position, x.name
-"""  # noqa: S608 - frammento costante di questo file
+"""  # noqa: S608 - constant fragment of this file
 
 _BANDE = "SELECT filter_id, band, width_nm FROM filter_bands ORDER BY filter_id, band"
 
 
-def instruments(conn):
-    """I pezzi, per genere e per nome, con la loro scheda, quanto sono serviti e cosa ci hai
-    ripreso."""
-    # Colore e pixel di una camera li scrive l'utente **fra le dichiarazioni**, non nella colonna,
-    # che e' dei file: letta la sola colonna, la pagina mostrerebbe cio' che i file dicono anche
-    # dopo che l'utente ha detto un'altra cosa.
+def instruments(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+    # A camera's colour and pixel the user writes among the declarations, not in the column, which
+    # belongs to the files: the column alone would show what the files say over the user.
     dichiarato = gear.camera_specs(conn)
     return [
         {**_riga(r), **dichiarato.get(r["id"], {}), "no_hours": _senza_ore(r)}
@@ -62,19 +49,17 @@ def instruments(conn):
     ]
 
 
-def _senza_ore(r):
-    """Perche' un pezzo contato non ha ore: una montatura senza pose non e' "i file tacciono", e'
-    che nessun corredo la porta ancora -- anche dove altre montature ce l'hanno."""
+def _senza_ore(r: sqlite3.Row) -> str | None:
+    """A mount without frames is not "the files are silent": no rig carries it yet, even where
+    other mounts have hours."""
     if r["objects_json"] is None:
-        return None  # non ancora contato: lo dice `counted`
+        return None  # not counted yet: `counted` says so
     if r["kind"] == "mount" and not r["frames"]:
         return "no_rig"
     return "files_silent" if r["frames"] is None else None
 
 
-def rigs(conn):
-    """I corredi: com'e' fatto ognuno, quanto e' servito, cosa ci hai ripreso e quanto cielo
-    inquadra davvero."""
+def rigs(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     nomi, montature = corredi.rig_names(conn), corredi.rig_mounts(conn)
     return [
         {
@@ -86,18 +71,15 @@ def rigs(conn):
     ]
 
 
-def filters(conn):
-    """I filtri posseduti, con la banda che lasciano passare, quanto sono serviti e cosa ci hai
-    ripreso."""
-    bande = {}
+def filters(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+    bande: dict[int, list[dict[str, Any]]] = {}
     for r in conn.execute(_BANDE):
         bande.setdefault(r["filter_id"], []).append({"band": r["band"], "width_nm": r["width_nm"]})
     return [{**_riga(r), "bands": bande.get(r["id"], [])} for r in conn.execute(_FILTRI).fetchall()]
 
 
-def _riga(r):
-    """La riga letta, con gli oggetti ripresi e se chi conta l'ha gia' contata."""
-    riga = {k: r[k] for k in r.keys() if k != "objects_json"}  # noqa: SIM118 - Row itera i valori
+def _riga(r: sqlite3.Row) -> dict[str, Any]:
+    riga = {k: r[k] for k in r.keys() if k != "objects_json"}  # noqa: SIM118 - Row iterates values
     riga["counted"] = r["objects_json"] is not None
     riga["objects"] = json.loads(r["objects_json"] or "[]")
     return riga

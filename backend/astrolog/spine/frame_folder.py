@@ -1,23 +1,9 @@
-"""**La cartella di una posa**: quella che contiene il file, e la chiave con cui una risposta per
-cartella la ritrova. La legge la domanda che si fa per cartella -- i frame che non dicono che file
-sono (`spine/typeless.py`), perche' la scansione salta i file nuovi senza tipo di una cartella
-detta di calibrazione -- e la stessa chiave in SQL (`spine/stages.py`). Le domande sulla camera,
-sull'ottica e sul nome ne prendono solo la giunzione sulle cartelle vive (`spine/rigless.py`,
-`spine/rig_optics.py`, `spine/unnamed.py`).
+"""A frame's folder: the one holding the file, not the registered root, from its first present
+position in a live folder. Root and subfolder travel in the row: re-splitting a key goes wrong."""
 
-Vincoli non ovvi:
-
-* **La cartella che contiene i file, non la radice registrata**: una radice sola con l'albero di un
-  software di acquisizione dentro darebbe un gruppo solo. Non e' una colonna, si ricava dal percorso
-  della posizione; nella chiave le barre sono sempre in avanti, cosi' e' la stessa su Windows, su
-  Mac e sul NAS.
-* **Una posa sta in una cartella sola**: quella della sua prima posizione presente in una cartella
-  non ritirata. Lo stesso file in due cartelle potrebbe ricevere due risposte diverse, e un file che
-  non si trova piu' o una cartella ritirata non chiedono niente.
-* **La chiave non si spezza mai**: radice e sottocartella viaggiano nella riga, e chi cerca la
-  risposta di una posa la ricostruisce con `folder_key`. Un percorso contiene di tutto, e qualunque
-  regola per rileggerlo dalla chiave sbaglia su un archivio vero, in silenzio.
-"""
+import sqlite3
+from collections.abc import Callable, Mapping
+from typing import Any
 
 _FIRST_POSITION = """
   SELECT p2.id FROM positions p2 JOIN folders d2 ON d2.id = p2.folder_id
@@ -25,84 +11,74 @@ _FIRST_POSITION = """
   ORDER BY p2.id LIMIT 1
 """
 
-# La cartella dentro la radice: `rtrim` toglie da destra ogni carattere che NON e' una barra --
-# cioe' il nome del file -- e lascia `notte/M51/`. Un file nella radice non ha barre e resta
-# vuoto: la sua cartella e' la radice. Chi raggruppa per cartella mette `COLUMNS` nella SELECT e
-# `JOIN` dopo `frames f`; chi cerca le pose di una cartella usa `frames_in`.
+# `rtrim` strips from the right every character that is NOT a slash, i.e. the file name, leaving
+# `night/M51/`; a file in the root has no slash and leaves it empty.
 _SUB = "rtrim(p.rel_path, replace(p.rel_path, '/', ''))"
 COLUMNS = f"d.root_path AS root, {_SUB} AS sub"
 JOIN = f"JOIN positions p ON p.id = ({_FIRST_POSITION}) JOIN folders d ON d.id = p.folder_id"
 
-# La stessa chiave di `folder_key`, ma in SQL: serve a chi deve confrontarla dentro una query
-# (`spine/stages.py`, per sapere se quella cartella ha gia' una risposta). Le due lingue dicono
-# la stessa cosa e un test le tiene incollate (`test_typeless.py`): qui la barra rovescia
-# diventa dritta, la barra in coda cade, e una sottocartella vuota non aggiunge niente.
+# `folder_key` in SQL, for comparing inside a query; the two must say the same thing.
 _ROOT_KEY = r"rtrim(replace(d.root_path, '\', '/'), '/')"
 _DENTRO = f"trim({_SUB}, '/')"
 KEY = f"{_ROOT_KEY} || CASE WHEN {_DENTRO} = '' THEN '' ELSE '/' || {_DENTRO} END"
-# La chiave della cartella di `f`, da mettere dentro una query che ha gia' `frames f`.
+# For a query that already has `frames f`.
 KEY_OF_FRAME = (
-    f"SELECT {KEY} FROM positions p"  # noqa: S608 - costanti
+    f"SELECT {KEY} FROM positions p"  # noqa: S608 - constants
     f" JOIN folders d ON d.id = p.folder_id WHERE p.id = ({_FIRST_POSITION})"
 )
 
-# Le pose di una cartella si cercano **partendo dalla cartella**: per indice alle sue posizioni
-# sotto quella sottocartella, poi la posa, poi se quella e' la sua prima posizione viva. Partire
-# dalle pose ricomporrebbe la cartella di ognuna dell'archivio a ogni risposta.
+# Searched from the folder, by index on its positions: starting from the frames would rebuild the
+# folder of every frame in the archive at each answer.
 _IN_FOLDER = (
-    "SELECT f.id, f.image_type FROM folders d"  # noqa: S608 - costanti di questo file
+    "SELECT f.id, f.image_type FROM folders d"  # noqa: S608 - constants of this file
     " CROSS JOIN positions p ON p.folder_id = d.id"
     " CROSS JOIN frames f ON f.id = p.frame_id"
     f" WHERE d.root_path = ? AND p.rel_path >= ? AND p.rel_path < ? AND {_SUB} = ?"
     f" AND p.id = ({_FIRST_POSITION})"
 )
-# Dove finiscono i percorsi sotto una sottocartella: `notte/` va da `notte/` a `notte0`, perche'
-# `0` e' il carattere subito dopo la barra. Sotto la radice va tutto: la fine e' un BLOB vuoto,
-# che per SQLite viene dopo ogni testo, qualunque carattere contenga.
+# `night/` runs to `night0`, `0` being the character right after the slash. Under the root, an
+# empty BLOB, which SQLite sorts after every text.
 _AFTER_EVERY_PATH = b""
 
 
-def folder_key(root_path, sub=""):
-    """Il percorso della cartella che contiene i file: la chiave del gruppo, ed e' anche cio' che si
-    mostra. Le barre sono sempre in avanti -- Windows le accetta, e una chiave col separatore del
-    sistema direbbe due cose diverse su due macchine."""
+def folder_key(root_path: str, sub: str = "") -> str:
+    """Also what is shown. Always forward slashes: Windows accepts them, and the system separator
+    would make two machines disagree."""
     root = root_path.replace("\\", "/").rstrip("/")
     dentro = sub.strip("/")
     return f"{root}/{dentro}" if dentro else root
 
 
-def key_of_path(root_path, rel_path):
-    """La chiave della cartella che conterrebbe quel file, senza passare dal DB: la vuole chi deve
-    decidere **prima** di scrivere il frame (`spine/scan.py`). Sta qui, con `folder_key`, perche'
-    "la cartella e' il percorso senza il nome del file" e' un fatto solo."""
+def key_of_path(root_path: str, rel_path: str) -> str:
+    """Without the DB, for the scan that decides before writing the frame."""
     dritto = rel_path.replace("\\", "/")
     return folder_key(root_path, dritto.rsplit("/", 1)[0] if "/" in dritto else "")
 
 
-def frames_in(conn, row):
-    """Le pose della cartella di quel gruppo, **copie comprese**, col tipo di file: chi risponde
-    sceglie quali rimettere in coda. Si cerca con radice e sottocartella della riga, mai spezzando
-    la chiave."""
+def frames_in(conn: sqlite3.Connection, row: sqlite3.Row | Mapping[str, Any]) -> list[sqlite3.Row]:
+    """Copies included, with the file type: the answerer picks which to requeue."""
     sub = row["sub"]
     end = sub[:-1] + "0" if sub else _AFTER_EVERY_PATH
     return conn.execute(_IN_FOLDER, (row["root"], sub, end, sub)).fetchall()
 
 
-def group_of(groups, row, **fields):
-    """Il gruppo della cartella di questa riga in `groups`, creato con i campi `fields` la prima
-    volta. Radice e sottocartella restano nel gruppo, perche' chi risponde ritrovi le pose senza
-    spezzare la chiave."""
+def group_of(
+    groups: dict[str, dict[str, Any]], row: sqlite3.Row | Mapping[str, Any], **fields: Any
+) -> dict[str, Any]:
+    """Created with `fields` the first time; root and subfolder stay in the group."""
     key = folder_key(row["root"], row["sub"])
     return groups.setdefault(key, {"key": key, "root": row["root"], "sub": row["sub"], **fields})
 
 
-def counted(conn, query, *, skip=None):
-    """Le cartelle di una domanda che conta e basta, la piu' numerosa in cima.
-
-    `skip` scarta una riga prima di contarla, dove la domanda non vale per tutte. Una cartella
-    rimasta a zero non chiede niente: li' dentro ci sono solo copie, e una domanda su zero pose non
-    si capisce."""
-    groups = {}
+def counted(
+    conn: sqlite3.Connection,
+    query: str,
+    *,
+    skip: Callable[[sqlite3.Row], bool] | None = None,
+) -> list[dict[str, Any]]:
+    """Largest first. A folder left at zero asks nothing: only copies are there, and a question on
+    zero frames makes no sense."""
+    groups: dict[str, dict[str, Any]] = {}
     for row in conn.execute(query):
         if skip and skip(row):
             continue
