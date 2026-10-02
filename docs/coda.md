@@ -154,10 +154,7 @@ guardano, poi efficienza e doppioni.
 
 ### Rompe
 
-- **La chiave di avvio finisce nel log**: il logger `uvicorn.access` scrive la richiesta intera
-  (`GET /?token=...`) in `log/astrolog.log`, il file che l'utente allega a una segnalazione
-  (visto dall'audit con l'app isolata). Rimedio: togliere la query dalla riga d'accesso, come
-  `net.service_of` gia' fa per le chiamate in uscita, con un test che legge il file.
+Niente di aperto.
 
 ### L'archivio dice cose false, e non si vede
 
@@ -544,7 +541,9 @@ riga per voce.
   accanto al FITS" sta sia nella docstring del modulo `astap` sia in quella di `analyse`;
   nessun test prova che `place.by_distance` lasci fuori i siti senza coordinate, ne' ciascuno dei
   quattro `is None` di `place.distance_km`; il commento sul `cast` in `api/tonight.py` non dice
-  che `mezzanotte` c'e' solo quando c'e' `notte`.
+  che `mezzanotte` c'e' solo quando c'e' `notte`; il log d'accesso scrive la query intera, quindi
+  una chiave messa a mano in un indirizzo (`/?token=...`) finirebbe in `log/astrolog.log`, ma l'app
+  non la mette mai in un indirizzo (ADR 0002: arriva nella pagina e viaggia in un header).
 - **Il Workflow `esegui` ha quattro buchi noti**: un irrobustimento si parcheggia qualunque sia
   la sua `severity`, e un `high` etichettato male chiude il giro senza che il log lo dica;
   `parked` cresce a ogni giro e si deduplica solo sul testo esatto; un rilancio si riconosce
