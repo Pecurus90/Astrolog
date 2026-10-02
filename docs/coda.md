@@ -27,12 +27,10 @@ non entra: lo rifa' Marco col disegno nuovo (*Per il disegno nuovo*, sotto).
 
 **Fase 1 -- pulizia e tipi.** Commenti al massimo due righe e solo il perche'; ogni funzione
 annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
-- Fatti: `spine/identify*`, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`, `weather`.
-- Mancano: il resto di `spine`, `api`, e i file sciolti di
-  `backend/astrolog` (`__init__`, `__main__`, `astap`, `clock`, `log`, `net`, `place`,
-  `startup`, `units`). Annotando `net`, il tipo della sua chiamata (`weather.Fetch`, oggi in
-  `weather/__init__.py`) si sposta in `net`, e `place` e `weather` lo prendono da li'.
-- Da chiudere strada facendo: 44 righe del backend (30 in `backend/astrolog`, 14 in
+- Fatti: `spine/identify*`, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`, `weather`,
+  i file sciolti di `backend/astrolog`.
+- Mancano: il resto di `spine`, `api`.
+- Da chiudere strada facendo: 39 righe del backend (25 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
@@ -40,6 +38,9 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   puntano a decisioni che ora vivono altrove: `api/instrument_answer.py` e
   `tests/test_gear_instruments.py` vanno a `docs/domini/spina.md`, *Le schede*;
   `.pre-commit-config.yaml` (i quattro software) va a `CLAUDE.md`, "Software supportati".
+  Annotare `astap`, `clock` e `units` ha lasciato tre `cast` dove il tipo ora ammette `None` ma
+  il controllo sta sopra (`api/tonight.py`, `spine/solve.py`, `spine/unnamed.py`): si tolgono
+  restringendo il tipo quando arriva il loro package.
 
 **Fase 2 -- semplificare**, sul codice gia' pulito: doppioni uniti, nomi interni in inglese, `dict`
 che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lunghe spezzate e i
@@ -57,7 +58,10 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `_percentili`, `_medie_notturne`, `_in_attesa`, `_da_chiedere`, `_MANCANTI`, `_fascia`, gli
   attributi di `forecast.Cadence` e i parametri italiani di quasi ogni funzione, pubbliche
   comprese (`adesso`, `ore`, `serie`, `tempi`, `coppie`, `percentili`, `valore`, `righe`,
-  `risposta`, `ultimo`, `dal`/`al`, ...).
+  `risposta`, `ultimo`, `dal`/`al`, ...). Nei file sciolti: `_cerca`, `canale`, `nomi`, `scritto`
+  (`astap`); `_ORA_DI_INIZIO`, `comincia`, `fine`, `finisce`, `fuso`, `giorno`, `inizio`,
+  `quando`, `quante`, `secondi` (`clock`); `_RIFIUTI`, `rifiuto`, `motivo` (`net`); `misurati`,
+  `coppia`, `nord`, `est` (`place`); `CASA`, `MODO_SOLO_UTENTE` (`startup`); `classe` (`units`).
 - **`identify`**: la rotazione dello scarto negli assi del sensore e' scritta due volte
   (`identify_geometry.in_frame` e `mosaic_geometry._in_axes`): va in `identify_geometry` e la
   chiamano tutti e due. Il letterale del lucchetto dell'utente (`method`/`confidence` `user`,
@@ -70,7 +74,8 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   la fase (`ephemeris/moon.phase`, `phases`), la notte della Luna (`moon.night_track`), le fasce
   (`sun.night_bands`, `sky_bands`), lo snapshot e il record dello stadio (`worker/worker.py`,
   `worker/states.blank_record`), il riassunto e le ore di una notte (`weather/verdict.assess`,
-  `weather/nights.hours`: scritti in `weather_nights` e riletti da `api/weather`).
+  `weather/nights.hours`: scritti in `weather_nights` e riletti da `api/weather`), i posti trovati
+  (`place.search`, che `api/sites` riveste uno per uno in `PlaceOut`).
 - **`db/idlist.grouped` torna `dict[Any, list[Any]]`**: generico in `T` rompe `api/archive.py`, che
   passa i dict di `spine/filters_used` a un campo `list[FilterUsed]`. Si fa generico quando i
   chiamanti costruiscono righe tipate.
@@ -82,7 +87,11 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `NO_SITE`, `NO_TIMEZONE`, `UNREACHABLE`, `BAD_ANSWER`, `net.REFUSED`, scritti in
   `weather_fetches` e ripetuti come `Literal` in `api/models_weather` e `api/weather_key` oltre
   che in `forecast.Outcome` e `meteoblue.KeyOutcome`), il verdetto `go`/`marginal`/`nogo`, i codici dei
-  fattori (`verdict._ORDINE`), la finestra (`BUIO`/`SUN_DOWN`), i nomi delle fonti.
+  fattori (`verdict._ORDINE`), la finestra (`BUIO`/`SUN_DOWN`), i nomi delle fonti. Nei file
+  sciolti: `astap.REASONS` e `SOURCES`, `place.SkySource` ed `ElevationSource` (scritti in
+  `sites`), `net.Failure` (accanto a `REFUSED`/`UNREACHABLE`). `meteoblue.KeyOutcome` e' gia'
+  `Literal["ok", "bad_answer"] | net.Failure`: toglie la terza scrittura di refused/unreachable
+  senza cambiare comportamento, e lo `StrEnum` la sostituira'.
 - **`db/config.KEYS`** ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei
   test (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo
   spacchettamento.
@@ -145,7 +154,10 @@ guardano, poi efficienza e doppioni.
 
 ### Rompe
 
-Niente di aperto.
+- **La chiave di avvio finisce nel log**: il logger `uvicorn.access` scrive la richiesta intera
+  (`GET /?token=...`) in `log/astrolog.log`, il file che l'utente allega a una segnalazione
+  (visto dall'audit con l'app isolata). Rimedio: togliere la query dalla riga d'accesso, come
+  `net.service_of` gia' fa per le chiamate in uscita, con un test che legge il file.
 
 ### L'archivio dice cose false, e non si vede
 
@@ -524,6 +536,15 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **I file sciolti, dopo la fase 1**: `astap.analyse` inghiotte timeout e `OSError` e torna
+  `(None, None)` senza scrivere nel log, mentre `solve` lo scrive (HFD e stelle vuoti senza
+  traccia in Diagnostica); i quattro canali del solver sono scritti in `astap.SOURCES` e in
+  `api/models_site.SolverSource`; la data della notte si legge con lo stesso `strptime` e lo
+  stesso `noqa: DTZ007` in `clock.midnight_of` e `clock.night_window`; "`-extract` lascia un CSV
+  accanto al FITS" sta sia nella docstring del modulo `astap` sia in quella di `analyse`;
+  nessun test prova che `place.by_distance` lasci fuori i siti senza coordinate, ne' ciascuno dei
+  quattro `is None` di `place.distance_km`; il commento sul `cast` in `api/tonight.py` non dice
+  che `mezzanotte` c'e' solo quando c'e' `notte`.
 - **Il Workflow `esegui` ha quattro buchi noti**: un irrobustimento si parcheggia qualunque sia
   la sua `severity`, e un `high` etichettato male chiude il giro senza che il log lo dica;
   `parked` cresce a ogni giro e si deduplica solo sul testo esatto; un rilancio si riconosce

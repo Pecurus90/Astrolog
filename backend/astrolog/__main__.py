@@ -1,11 +1,5 @@
-"""Avvia il servizio: `python -m astrolog`.
-
-Sul desktop ascolta su 127.0.0.1 con un token per avvio: la **pagina** se lo trova dentro (e'
-l'app a consegnarglielo), e resta scritto in `<dati>/token` per chi chiama l'API da fuori --
-uno script, una prova a mano. Sul NAS si imposta `ASTROLOG_HOST=0.0.0.0`,
-`ASTROLOG_HOSTS=nas.local,192.168.1.10` (gli host con cui lo si chiama) e
-`ASTROLOG_SCAN_EVERY_MIN=60`; senza token, perche' la rete di casa e' fidata.
-"""
+"""`python -m astrolog`. NAS: `ASTROLOG_HOST=0.0.0.0`, `ASTROLOG_HOSTS=nas.local,...`,
+`ASTROLOG_SCAN_EVERY_MIN=60`; no token (docs/adr/0002-rete-di-casa-e-chiave-di-avvio.md)."""
 
 import os
 
@@ -18,7 +12,7 @@ from .startup import token_for
 from .weather.forecast import REFRESH_EVERY_S
 
 
-def main():
+def main() -> None:
     setup_logging(log_dir())
     host = os.environ.get("ASTROLOG_HOST", "127.0.0.1")
     every_min = os.environ.get("ASTROLOG_SCAN_EVERY_MIN")

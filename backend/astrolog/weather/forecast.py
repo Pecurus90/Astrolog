@@ -12,7 +12,7 @@ from typing import Any, Final, Literal, TypeGuard, cast
 from .. import net
 from ..clock import iso_z, night_date
 from ..db.replace_table import replace_rows
-from . import Fetch, nights, openmeteo, position, verdict
+from . import nights, openmeteo, position, verdict
 
 log = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ def refresh(  # noqa: C901
     conn: sqlite3.Connection,
     site: Mapping[str, Any] | None,
     *,
-    fetch: Fetch | None = None,
+    fetch: net.Fetch | None = None,
     now: datetime | None = None,
 ) -> Outcome:
     """Asks the forecast for the site and writes it; a code says how it went. A silent or nightless

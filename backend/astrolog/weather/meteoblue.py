@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Final, Literal
 
 from .. import net
-from . import Fetch, fetches, forecast
+from . import fetches, forecast
 from .openmeteo import BadAnswerError
 
 URL = "https://my.meteoblue.com/packages/seeing-1h"
@@ -23,7 +23,7 @@ CALLS_PER_YEAR = FREE_YEAR_CREDITS // CREDITS_PER_CALL
 # Twice a day at most, since one answer already brings seven nights; never more than the cap.
 MIN_GAP_H = max(12, math.ceil(24 * 365 / CALLS_PER_YEAR))
 
-type KeyOutcome = Literal["ok", "refused", "unreachable", "bad_answer"]
+type KeyOutcome = Literal["ok", "bad_answer"] | net.Failure
 OK: Final = forecast.OK
 REFUSED: Final = net.REFUSED
 UNREACHABLE: Final = net.UNREACHABLE
@@ -62,7 +62,7 @@ def parse(payload: Any) -> tuple[list[datetime], dict[str, list[Any]]]:
     return istanti, {"seeing_from": list(valori), "seeing_to": list(valori)}
 
 
-def check_key(key: str, *, fetch: Fetch | None = None) -> KeyOutcome:
+def check_key(key: str, *, fetch: net.Fetch | None = None) -> KeyOutcome:
     """Asks the account's usage, which costs no credits."""
     risposta, perche = net.ask_why(
         fetch or _fetch, f"{USAGE_URL}?{urllib.parse.urlencode({'apikey': key})}"

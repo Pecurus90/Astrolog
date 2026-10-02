@@ -1,13 +1,5 @@
-"""Guidare ASTAP, il solver astrometrico: dove sta l'eseguibile, che comando gli si da',
-quanto lo si aspetta, e come si legge cio' che ha scritto.
-
-Vincolo non ovvio: **il lancio si passa come argomento** (`run=`), cosi' i test non chiamano
-il solver e la suite veloce non dipende da un programma installato a parte. Due bandiere non
-si usano MAI: `-update` riscriverebbe il FITS dell'utente, e `-extract` gli lascerebbe un CSV
-**accanto al file**, ignorando sia `-o` sia la cartella di lavoro (verificato sul campo). E i
-numeri che ASTAP stampa portano il separatore decimale della macchina: su un computer
-italiano `HFD_MEDIAN=9,1`.
-"""
+"""Drives the ASTAP solver. Never `-update` (it rewrites the user's FITS) nor `-extract` (it leaves
+a CSV beside the file, ignoring `-o`); ASTAP prints numbers with the machine's decimal separator."""
 
 import contextlib
 import logging
@@ -15,6 +7,7 @@ import os
 import re
 import shutil
 import subprocess
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -23,11 +16,11 @@ from .fits.header_wcs import solved, wcs_rotation_deg, wcs_scale
 
 log = logging.getLogger(__name__)
 
-# `astap_cli` per primo: non apre finestre, ed e' l'unico che funziona su un NAS senza schermo.
+# `astap_cli` first: it opens no window, the only one that works on a headless NAS.
 EXE_NAMES = ("astap_cli", "astap")
 ENV_EXE = "ASTROLOG_ASTAP"
 
-# Dove si installa da se' sui tre bersagli, se non e' nel PATH.
+# Where it installs itself on the three targets, when not in PATH.
 CANDIDATES = (
     r"C:\Program Files\astap\astap_cli.exe",
     r"C:\Program Files (x86)\astap\astap_cli.exe",
@@ -36,51 +29,41 @@ CANDIDATES = (
     "/usr/local/bin/astap_cli",
 )
 
-# Le sigle dei cataloghi stellari, lette dall'elenco dei download dell'autore: le attuali e le
-# vecchie, che chi non le ha tolte ha ancora installate e che ASTAP legge lo stesso.
+# Star catalogue codes from the author's download list: current and old ones, which ASTAP still
+# reads where they were never removed.
 DB_KINDS = ("d05", "d20", "d50", "d80", "v05", "v50", "g05", "w08",
             "h17", "h18", "v17", "g17", "g18")  # fmt: skip
 
-# Il nome di un file di catalogo: sigla, trattino basso, zona di cielo, punto -- `d80_0101.1476`.
-# Si guarda il **nome** e non l'estensione, che cambia col formato (`.1476`, `.001`, i vecchi
-# `.290`), e senza distinguere maiuscole. **La sigla si controlla contro l'elenco**: un `x99_1.zip`
-# qualunque direbbe "catalogo stellare: x99", il "ce l'hai" falso che questa ricerca esiste per non
-# fare. Il prezzo -- un catalogo nuovo risulta mancante finche' non entra qui -- e' quello scelto.
+# By name, since the extension changes with the format; the code is checked against the list, or
+# any `x99_1.zip` would be a false "you have it". A new catalogue reads missing until listed.
 DB_NAME = re.compile(r"(" + "|".join(DB_KINDS) + r")_[0-9]+\.", re.IGNORECASE)
 
-# Dieci volte il caso peggiore misurato (23 s, cieco, su 26 megapixel): oltre, e' piantato.
+# More than twice the slowest blind solve on a large sensor (docs/domini/spina.md): beyond it,
+# ASTAP has hung.
 TIMEOUT_S = 60
-# Col puntamento dell'header bastano pochi gradi, ma 30 assorbe una montatura scentrata
-# senza costare: la leva della velocita' e' il campo, non il raggio (misurato).
+# A few degrees would do with the header's pointing; 30 absorbs an off-centre mount at no cost,
+# since speed depends on the field, not the radius.
 SEARCH_RADIUS_DEG = 30
 BLIND_RADIUS_DEG = 180
 
-NO_STARS = "no_stars"  # nessuna stella: un file senza tipo e' una calibrazione (`typeless`)
-# I motivi per cui una posa resta senza cielo: un elenco CHIUSO di codici, mai la frase di
-# ASTAP -- le frasi cambiano da una versione all'altra e finirebbero a schermo in inglese.
+NO_STARS = "no_stars"  # with no stars, a typeless file is a calibration frame (`typeless`)
+# Closed list of codes, never ASTAP's sentence: sentences change between versions and would
+# reach the screen in English.
 REASONS = (NO_STARS, "no_solution", "timeout", "astap_missing", "file_missing",
            "no_star_database", "internal_error")  # fmt: skip
 
-# Cosa dice ASTAP quando fallisce -> il nostro codice. Si confronta in minuscolo e per
-# contenimento: il testo esatto cambia, la parola chiave no.
+# Compared lowercase and by containment: the exact text changes, the key words do not.
 _ERROR_WORDS = (
     ("not enough stars", NO_STARS),
     ("file not found", "file_missing"),
-    # ASTAP c'e' ma il suo catalogo no. E' un download separato da ~1 GB, ed e' l'errore di
-    # installazione piu' comune -- in DUE modi, che ASTAP dice con due frasi diverse:
-    # `No star database found.` (non scaricato, o cartella vuota) e `Error reading star
-    # database.` (scaricato a meta', troncato, o unzip andato male). Interrotto a meta' e'
-    # comune quanto non fatto, e prendere solo la prima frase lasciava il secondo caso nel
-    # vicolo cieco. Frasi lette da ASTAP CLI-2025.11.19, non scritte a memoria: la prima con
-    # `-d` su una cartella vuota, la seconda su un file di catalogo troncato.
+    # Both `No star database found.` (missing) and `Error reading star database.` (truncated
+    # download), as ASTAP CLI-2025.11.19 prints them: a half download is as common as none.
     ("star database", "no_star_database"),
 )
 
 
 @dataclass(frozen=True)
 class Solution:
-    """L'esito di un solve: il cielo trovato, oppure il motivo per cui non c'e'."""
-
     ok: bool
     reason: str | None = None
     ra_deg: float | None = None
@@ -89,54 +72,49 @@ class Solution:
     rotation_deg: float | None = None
 
 
-# I quattro canali da cui l'eseguibile puo' arrivare, come codici e non come frasi: si mostrano
-# a schermo, e una parola nuova ci arriverebbe non tradotta. Elenco chiuso, come `REASONS`.
+# Codes, not sentences: they are shown on screen, and a new word would arrive untranslated.
 SOURCES = ("declared", "env", "path", "known_place")
 
 
-def find_exe(declared=None, env=None, which=shutil.which, candidates=CANDIDATES):
-    """Il percorso dell'eseguibile, o `None` se non c'e'. E' `where_exe` senza il canale: chi
-    deve solo lanciarlo non ha bisogno di sapere da dove viene.
+type Which = Callable[[str], str | None]
 
-    **Chiama `_cerca`, non `where_exe`**: le due pubbliche le sostituisce il recinto della suite
-    (`tests/conftest.py`), e una che passasse per l'altra raccoglierebbe lo stub anche quando e'
-    stata catturata apposta prima."""
+
+def find_exe(
+    declared: str | None = None,
+    env: Mapping[str, str] | None = None,
+    which: Which = shutil.which,
+    candidates: Iterable[str | Path] = CANDIDATES,
+) -> str | None:
+    """Calls `_cerca`, not `where_exe`: the suite's fence replaces both public ones, and one going
+    through the other would pick up the stub even when captured on purpose beforehand."""
     return _cerca(declared, env, which, candidates)[0]
 
 
-def where_exe(declared=None, env=None, which=shutil.which, candidates=CANDIDATES):
-    """Il percorso dell'eseguibile **e da quale dei quattro canali arriva**, o `(None, None)`.
-
-    Il canale serve a schermo: "trovato" senza dire da dove non si puo' smentire, e la ricerca
-    automatica sbaglia proprio quando trova **qualcosa** -- un ASTAP vecchio rimasto nel PATH, o
-    quello di un altro utente in un posto noto.
-
-    Chi ha gia' il suo ASTAP lo dichiara e vince su tutto: e' la via d'uscita quando la
-    ricerca automatica sbaglia. Dichiarato ma inesistente vale `None`, non un ripiego di
-    nascosto: chi ha scritto quel percorso deve accorgersi che e' sbagliato. E deve essere un
-    **file**: una cartella esiste eccome, e indicare la cartella di installazione invece del
-    programma che sta dentro e' l'errore piu' facile da fare -- accettarlo vorrebbe dire
-    provare a lanciare una directory a ogni posa.
-
-    Due modi di dichiararlo, e l'ordine conta: la **preferenza dell'utente** (`declared`, che
-    arriva dal primo avvio o dalle Impostazioni) viene prima della variabile d'ambiente, che e'
-    di chi lancia l'app -- su Docker la mette chi gestisce il NAS, e non deve poter zittire
-    quello che l'utente ha scritto guardando lo schermo."""
+def where_exe(
+    declared: str | None = None,
+    env: Mapping[str, str] | None = None,
+    which: Which = shutil.which,
+    candidates: Iterable[str | Path] = CANDIDATES,
+) -> tuple[str | None, str | None]:
+    """The channel is shown because the automatic search is wrong exactly when it finds something
+    (an old ASTAP in PATH). The user's choice beats the variable, set by the NAS admin."""
     return _cerca(declared, env, which, candidates)
 
 
-def _cerca(declared, env, which, candidates):
-    """La ricerca vera, che le due funzioni pubbliche si dividono. Sta sotto di loro perche' il
-    recinto della suite sostituisce quelle, non questa."""
+def _cerca(
+    declared: str | None,
+    env: Mapping[str, str] | None,
+    which: Which,
+    candidates: Iterable[str | Path],
+) -> tuple[str | None, str | None]:
     env = os.environ if env is None else env
     scritto, canale = (declared, "declared") if declared else (env.get(ENV_EXE), "env")
     if scritto:
-        # Come lo incolla l'utente: *Copia come percorso* di Windows mette le **virgolette**
-        # intorno, ed e' il modo piu' comune di prendere un percorso senza riscriverlo. Con le
-        # virgolette dentro, il file non si trova mai e l'avviso accuserebbe la cosa sbagliata.
+        # Windows' *Copy as path* wraps it in quotes: with them inside the file is never found,
+        # and the warning would blame the wrong thing.
         scritto = scritto.strip().strip("\"'")
-        # Un percorso scritto e sbagliato **ferma la ricerca**: ripiegare di nascosto sul PATH
-        # direbbe "trovato" a chi ha scritto male, e il canale mentirebbe due volte.
+        # A written wrong path, or a folder, stops the search: falling back on PATH would say
+        # "found" to whoever wrote it wrong.
         return (scritto, canale) if Path(scritto).is_file() else (None, None)
     for name in EXE_NAMES:
         found = which(name)
@@ -148,43 +126,37 @@ def _cerca(declared, env, which, candidates):
     return None, None
 
 
-def star_databases(exe):
-    """I cataloghi stellari **accanto all'eseguibile**, per nome e in ordine. Senza, ASTAP parte e
-    non riconosce niente (`docs/domini/sito.md`).
-
-    Solo li', e **non** anche nelle cartelle d'installazione note: su una macchina che ha ASTAP,
-    un eseguibile indicato altrove risulterebbe col catalogo di un altro programma -- "tutto a
-    posto" proprio nel caso che questa funzione esiste per prendere. Il collegamento si scioglie
-    prima: se quel che si trova e' un collegamento, la cartella giusta e' dove punta.
-
-    **Si guarda, non si chiede**: interrogare ASTAP vorrebbe dire lanciarlo."""
+def star_databases(exe: str | Path | None) -> tuple[str, ...]:
+    """Only beside the resolved executable, not in known install folders, which would show another
+    program's catalogue. Looked at, not asked: asking ASTAP means running it."""
     if exe is None:
         return ()
-    with contextlib.suppress(OSError):  # cartella sparita, disco staccato, permessi negati
+    with contextlib.suppress(OSError):  # folder gone, disk unplugged, permission denied
         nomi = (DB_NAME.match(f.name) for f in Path(exe).resolve().parent.iterdir())
         return tuple(sorted({m.group(1).lower() for m in nomi if m}))
     return ()
 
 
-def _run(cmd, timeout_s):
-    """L'unico posto che lancia davvero un processo. Chi lo sostituisce nei test passa `run`."""
-    done = subprocess.run(  # noqa: S603 - argomenti nostri, nessuna shell
+# The process launch each caller receives, so tests never run the solver.
+type Run = Callable[[Sequence[str], float], tuple[int, str]]
+
+
+def _run(cmd: Sequence[str], timeout_s: float) -> tuple[int, str]:
+    done = subprocess.run(  # noqa: S603 - our own arguments, no shell
         cmd, capture_output=True, text=True, timeout=timeout_s, check=False
     )
     return done.returncode, done.stdout
 
 
-def _number(text):
-    """Un numero come ASTAP lo stampa: la virgola decimale della macchina vale quanto il
-    punto. `None` per cio' che non e' un numero -- mai uno zero di ripiego."""
+def _number(text: object) -> float | None:
+    """The machine's decimal comma counts as a point. Never a fallback zero."""
     if text is None:
         return None
     return as_float(str(text).strip().replace(",", "."))
 
 
-def read_ini_text(text):
-    """Le righe `CHIAVE=valore` di un testo: ASTAP le scrive cosi' nel file di esito e le
-    stampa cosi' a schermo, quindi il lettore e' uno solo."""
+def read_ini_text(text: str | None) -> dict[str, str]:
+    """ASTAP writes `KEY=value` lines both in the result file and on screen: one reader."""
     out = {}
     for line in (text or "").splitlines():
         key, sep, value = line.partition("=")
@@ -193,18 +165,16 @@ def read_ini_text(text):
     return out
 
 
-def read_ini(path):
-    """Il file di esito come dizionario. Le sue chiavi sono quelle di un header FITS
-    (`PLTSOLVD`, `CRVAL1`, la matrice `CD`), percio' il lettore del WCS che gia' esiste lo
-    legge senza modifiche. Un file che non c'e' e' un dizionario vuoto."""
+def read_ini(path: str | Path) -> dict[str, str]:
+    """Its keys are a FITS header's (`PLTSOLVD`, `CRVAL1`, `CD`), so the existing WCS reader reads
+    it unchanged. A missing file is an empty dict."""
     try:
         return read_ini_text(Path(path).read_text(encoding="utf-8", errors="replace"))
     except OSError:
         return {}
 
 
-def _reason_of(ini):
-    """Il codice del fallimento, dalla frase che ASTAP ha scritto."""
+def _reason_of(ini: Mapping[str, str]) -> str:
     message = str(ini.get("ERROR", "")).lower()
     for words, code in _ERROR_WORDS:
         if words in message:
@@ -212,17 +182,25 @@ def _reason_of(ini):
     return "no_solution"
 
 
-def command(fits_path, out_base, *, exe, field_deg=None, ra_deg=None, dec_deg=None):  # noqa: PLR0913
-    """Il comando, senza lanciarlo: e' qui che si prova che le due bandiere vietate non ci
-    sono e che le unita' sono quelle che ASTAP vuole."""
+def command(  # noqa: PLR0913
+    fits_path: str | Path,
+    out_base: str | Path,
+    *,
+    exe: str,
+    field_deg: float | None = None,
+    ra_deg: float | None = None,
+    dec_deg: float | None = None,
+) -> list[str]:
+    """Built without running it, so a test proves the forbidden flags are absent and the units
+    are the ones ASTAP wants."""
     cmd = [
         exe,
         "-f",
         str(fits_path),
         "-o",
         str(out_base),
-        # Il campo inquadrato e' la leva: col campo giusto 0,2 s, con `0` (cerca da se') 2,3 s
-        # sullo stesso frame. Dove l'header non dice focale o pixel si paga la differenza.
+        # The field is the speed lever: where the header lacks focal or pixel size, the blind
+        # field search pays for it.
         "-fov",
         f"{field_deg:.3f}" if field_deg else "0",
         "-z",
@@ -230,8 +208,8 @@ def command(fits_path, out_base, *, exe, field_deg=None, ra_deg=None, dec_deg=No
         "-wcs",
     ]
     if ra_deg is not None and dec_deg is not None:
-        # ASTAP vuole le ORE per l'ascensione retta e la distanza dal polo SUD per la
-        # declinazione: sbagliarle non da' errore, da' il cielo di un altro punto del mondo.
+        # ASTAP wants HOURS of right ascension and the distance from the SOUTH pole: getting them
+        # wrong gives no error, it gives the sky of another point.
         cmd += ["-ra", f"{ra_deg / 15.0:.5f}", "-spd", f"{dec_deg + 90.0:.4f}", "-r",
                 str(SEARCH_RADIUS_DEG)]  # fmt: skip
     else:
@@ -239,13 +217,19 @@ def command(fits_path, out_base, *, exe, field_deg=None, ra_deg=None, dec_deg=No
     return cmd
 
 
-def solve(fits_path, out_base, *, field_deg=None, ra_deg=None, dec_deg=None, exe=None, run=None,  # noqa: PLR0913
-          timeout_s=TIMEOUT_S):  # fmt: skip
-    """Risolve un frame sul cielo. Scrive `<out_base>.ini` e `<out_base>.wcs` -- dove diciamo
-    noi, mai accanto al FITS dell'utente.
-
-    Non solleva mai per colpa del solver: un ASTAP assente, piantato o che non trova stelle
-    e' una posa senza cielo col suo motivo, e l'archivio va avanti."""
+def solve(  # noqa: PLR0913
+    fits_path: str | Path,
+    out_base: str | Path,
+    *,
+    field_deg: float | None = None,
+    ra_deg: float | None = None,
+    dec_deg: float | None = None,
+    exe: str | None = None,
+    run: Run | None = None,
+    timeout_s: float = TIMEOUT_S,
+) -> Solution:
+    """Writes `<out_base>.ini` and `.wcs` where we say, never beside the user's FITS. Never raises
+    for the solver's fault: a missing or hung ASTAP is a frame without sky and its reason."""
     if not exe:
         return Solution(ok=False, reason="astap_missing")
     cmd = command(fits_path, out_base, exe=exe, field_deg=field_deg, ra_deg=ra_deg, dec_deg=dec_deg)
@@ -261,14 +245,9 @@ def solve(fits_path, out_base, *, field_deg=None, ra_deg=None, dec_deg=None, exe
     return from_ini(read_ini(f"{out_base}.ini"))
 
 
-def from_ini(ini):
-    """Il cielo trovato, dal file di esito. E' anche la via della cache: un frame gia' risolto
-    non si ri-risolve, si rilegge da qui.
-
-    Un esito a meta' (ASTAP ucciso mentre scriveva, disco pieno) puo' dire `PLTSOLVD=T` e non
-    avere i numeri: senza questa guardia finirebbe nel database come un cielo con dei buchi,
-    e ci resterebbe. Vale come nessuna soluzione, cosi' chi legge la cache la butta e
-    ri-risolve."""
+def from_ini(ini: dict[str, str]) -> Solution:
+    """Also the cache's path. A half-written result can say `PLTSOLVD=T` without the numbers: it
+    counts as no solution, so the cache reader drops it and solves again."""
     if not solved(ini):
         return Solution(ok=False, reason=_reason_of(ini))
     found = Solution(
@@ -283,11 +262,15 @@ def from_ini(ini):
     return found
 
 
-def analyse(fits_path, *, exe=None, run=None, timeout_s=TIMEOUT_S):
-    """`(HFD mediana, stelle)` da una seconda passata di ASTAP, o `(None, None)`.
-
-    E' l'unica strada per questi due numeri che non lasci file nella cartella dell'utente:
-    `-extract` scriverebbe un CSV accanto al FITS. Costa ~0,3 s a posa."""
+def analyse(
+    fits_path: str | Path,
+    *,
+    exe: str | None = None,
+    run: Run | None = None,
+    timeout_s: float = TIMEOUT_S,
+) -> tuple[float | None, int | None]:
+    """`(median HFD, stars)` from a second ASTAP pass: the only way to these two numbers that
+    leaves no file in the user's folder, since `-extract` would write a CSV beside the FITS."""
     if not exe:
         return None, None
     try:

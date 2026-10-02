@@ -12,7 +12,7 @@ from typing import Any
 
 from .. import net
 from ..clock import iso_z, night_date
-from . import Fetch, fetches, forecast, nights, openmeteo, verdict
+from . import fetches, forecast, nights, openmeteo, verdict
 
 log = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ def _da_chiedere(
 
 
 def step(
-    conn: sqlite3.Connection, *, fetch: Fetch | None = None, now: datetime | None = None
+    conn: sqlite3.Connection, *, fetch: net.Fetch | None = None, now: datetime | None = None
 ) -> str | None:
     """One call at most: the outcome, or `None` when there was nothing to ask or a failed round is
     still waiting."""

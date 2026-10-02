@@ -13,7 +13,7 @@ from typing import Any, cast
 from .. import net
 from ..clock import iso_z, night_date
 from ..db import config
-from . import Fetch, cams, meteoblue, nights, seventimer
+from . import cams, meteoblue, nights, seventimer
 from .forecast import BAD_ANSWER, KIND, OK, UNREACHABLE, write_rows
 from .openmeteo import BadAnswerError
 
@@ -64,7 +64,7 @@ def _una(  # noqa: PLR0913
     site: Mapping[str, Any],
     nome: str,
     fonte: ModuleType,
-    fetch: Fetch,
+    fetch: net.Fetch,
     adesso: datetime,
 ) -> str:
     risposta = net.ask(fetch, fonte.url(site["latitude"], site["longitude"]))
@@ -74,7 +74,7 @@ def _una(  # noqa: PLR0913
 
 
 def _meteoblue(
-    conn: sqlite3.Connection, site: Mapping[str, Any], fetch: Fetch, adesso: datetime
+    conn: sqlite3.Connection, site: Mapping[str, Any], fetch: net.Fetch, adesso: datetime
 ) -> str | None:
     """The outcome, recorded with its attempt; `None` without a key or before it is due."""
     chiave = config.read(conn)["meteoblue_key"]
@@ -95,7 +95,7 @@ def refresh(
     conn: sqlite3.Connection,
     site: Mapping[str, Any],
     *,
-    fetch: Fetch | None = None,
+    fetch: net.Fetch | None = None,
     now: datetime | None = None,
 ) -> dict[str, str]:
     """`{source: outcome}`; Meteoblue is there only when it was asked."""

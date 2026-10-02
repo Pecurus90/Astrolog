@@ -1,23 +1,17 @@
-"""Il log strutturato: una riga JSON per evento, file ruotato accanto al DB; ogni passata
-di scansione porta il suo `scan_run_id`, lo stesso della ricevuta. E' la fonte della
-Diagnostica.
-
-Vincolo non ovvio: ogni modulo logga col logger del suo nome (`logging.getLogger(__name__)`),
-mai `print`. Le chiavi extra passate con `extra={...}` finiscono nel JSON tali e quali.
-"""
+"""Structured log, one JSON line per event in a rotated file beside the database: the source of
+Diagnostics. The keys passed with `extra={...}` land in the JSON as they are."""
 
 import json
 import logging
 from datetime import UTC, datetime
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 _STANDARD = set(logging.LogRecord("x", 0, "", 0, "", (), None).__dict__) | {"message", "asctime"}
 
 
 class JsonLines(logging.Formatter):
-    """Un evento per riga: istante UTC, livello, logger, messaggio, e le chiavi extra."""
-
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         row = {
             "t": datetime.fromtimestamp(record.created, tz=UTC).isoformat(timespec="milliseconds"),
             "level": record.levelname,
@@ -32,8 +26,7 @@ class JsonLines(logging.Formatter):
         return json.dumps(row, ensure_ascii=False, default=str)
 
 
-def setup_logging(log_dir, *, level=logging.INFO):
-    """Attacca al logger radice il file ruotato in `log_dir` (5 MB x 3) in formato JSON."""
+def setup_logging(log_dir: Path, *, level: int = logging.INFO) -> RotatingFileHandler:
     root = logging.getLogger()
     root.setLevel(level)
     for h in list(root.handlers):

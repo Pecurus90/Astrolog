@@ -13,16 +13,9 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from ..place import ElevationSource, SkySource
 from ..units import SQM_MAX, SQM_MIN
 from .models_page import Page
-
-# Come si sa la luminosita' del cielo di un luogo, in ordine di fiducia.
-SkySource = Literal["measured", "service", "scale"]
-
-# Come si sa l'altitudine: scritta da chi c'e' stato, o chiesta al servizio. Serve per la
-# stessa ragione di `sky_source`: spostando il luogo si rifa' solo cio' che veniva dalle
-# coordinate, e cio' che l'utente ha scritto resta sua parola.
-ElevationSource = Literal["declared", "service"]
 
 # Cosa manca all'app per fare il suo mestiere: un elenco chiuso di motivi, non frasi.
 Missing = Literal["no_active_site", "no_solver", "no_star_database"]

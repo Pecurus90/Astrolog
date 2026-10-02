@@ -19,6 +19,7 @@ from ..units import bortle_of
 from .deps import get_db
 from .models_site import (
     PlaceList,
+    PlaceOut,
     SiteCreate,
     SiteDeleted,
     SiteEdit,
@@ -84,7 +85,7 @@ def search_places(q: str = Query(min_length=1)):
     """I posti che portano quel nome, per riempire le coordinate senza scriverle a mano.
     Non tocca il database: cercare non crea niente, e senza rete torna un elenco vuoto --
     la strada manuale resta sempre aperta. Senza pagine: il tetto e' quello di `place.search`."""
-    return PlaceList(items=place.search(q))
+    return PlaceList(items=[PlaceOut(**p) for p in place.search(q)])
 
 
 @router.get("/sites", response_model=SiteList)

@@ -26,6 +26,7 @@ Vincoli non ovvi:
 """
 
 import json
+from typing import cast
 
 from ..clock import NIGHT_SQL, local_iso
 from ..units import angular_separation_deg, field_deg, scale_arcsec_px
@@ -102,7 +103,10 @@ def assign(conn, frame_id):
             continue
         if campo is None:
             vicini.append((0.0, altra))
-        elif (distanza := angular_separation_deg(ra, dec, a_ra, a_dec)) < campo:
+        # A field exists only with a pointing.
+        elif (
+            distanza := angular_separation_deg(cast("float", ra), cast("float", dec), a_ra, a_dec)
+        ) < campo:
             vicini.append((distanza, altra))
     if vicini:
         chiave = min(vicini)[1]

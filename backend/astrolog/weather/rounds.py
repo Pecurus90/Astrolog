@@ -6,7 +6,8 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Any, cast
 
-from . import Fetch, forecast, sky
+from ..net import Fetch
+from . import forecast, sky
 
 
 def refresh(

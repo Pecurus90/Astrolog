@@ -1,7 +1,4 @@
-"""AstroLog: cataloga, analizza e pianifica sessioni di astrofotografia dai FITS.
-
-Il disegno dei pacchetti sta nei contratti di `pyproject.toml`: fits e vocab sono puri, db
-tiene lo schema, spine ha i sei stadi, worker e' l'unico scrittore, api risponde e basta.
-"""
+"""AstroLog: catalogues, analyses and plans astrophotography sessions from FITS files. The package
+layout is enforced by the import-linter contracts in `pyproject.toml`."""
 
 __version__ = "0.1.0"

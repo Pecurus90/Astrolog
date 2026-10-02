@@ -10,7 +10,7 @@ from typing import Any
 
 from .. import net
 from ..clock import iso_z
-from . import Fetch, fetches, forecast, nights, openmeteo, verdict
+from . import fetches, forecast, nights, openmeteo, verdict
 
 # The reanalysis archive does not answer at 700 hPa; the historical forecast archive does.
 URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
@@ -98,7 +98,7 @@ def step(
     conn: sqlite3.Connection,
     site: Mapping[str, Any] | None,
     *,
-    fetch: Fetch | None = None,
+    fetch: net.Fetch | None = None,
     now: datetime | None = None,
 ) -> str | None:
     """One call if due, and its outcome; `None` when not due."""

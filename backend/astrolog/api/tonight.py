@@ -26,6 +26,7 @@ Vincoli non ovvi:
 """
 
 import sqlite3
+from typing import cast
 
 from fastapi import APIRouter, Depends
 
@@ -94,7 +95,8 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)):
         # la luna giusta di un altro posto senza che nessuno se ne accorga. Il sito, senza la sua
         # notte e senza la sua luna, si legge lo stesso.
         return TonightOut(night=None, site=_sito(sito), moon=None)
-    comincia, quante_ore = night_window(notte, sito["timezone"])
+    # A midnight exists only for a night.
+    comincia, quante_ore = night_window(cast("str", notte), sito["timezone"])
 
     fase = moon.phase(mezzanotte)
     cielo = moon.night_track(comincia, sito["latitude"], sito["longitude"], hours=quante_ore)

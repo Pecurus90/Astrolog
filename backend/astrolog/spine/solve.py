@@ -12,6 +12,7 @@ import contextlib
 import logging
 import os
 from functools import partial
+from typing import cast
 
 from .. import astap
 from ..clock import now_iso
@@ -169,7 +170,7 @@ def _one_frame(conn, frame_id, counts, *, exe, run, cache):  # noqa: PLR0913
         # un'altra volta costerebbe di piu' del tempo che si risparmia adesso. Si chiede anche
         # quando il cielo viene dalla cache: dopo un azzeramento del database la soluzione
         # torna da li', ma HFD e stelle no -- e senza questo si perderebbero per sempre.
-        hfd, stars = astap.analyse(_path_of(frame), exe=exe, run=run)
+        hfd, stars = astap.analyse(cast("str", _path_of(frame)), exe=exe, run=run)  # checked above
 
     with transaction(conn):
         if not solution.ok:
