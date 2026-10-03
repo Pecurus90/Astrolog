@@ -3,6 +3,7 @@ question because the scan reads the question, and must not reach the stores of o
 
 import sqlite3
 
+from ..db.row import Row
 from ..fits.frame_type import UNKNOWN
 from . import (
     camera_sky,
@@ -33,9 +34,7 @@ def detach(conn: sqlite3.Connection, frame_ids: list[int]) -> None:
     mosaic.settle(conn, mosaic.leave(conn, frame_ids))
 
 
-def apply_answer(
-    conn: sqlite3.Connection, row: folder.FolderRow, now: str | None = None
-) -> list[int]:
+def apply_answer(conn: sqlite3.Connection, row: Row, now: str | None = None) -> list[int]:
     """Returns the requeued frames. "Photos" go on, and those an earlier "calibration" detached go
     back to the sky, which restores it from its cache; "calibration" stops and detaches them."""
     frames = domanda.frames_of(conn, row)

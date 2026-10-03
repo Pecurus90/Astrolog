@@ -5,7 +5,7 @@ import logging
 import sqlite3
 from collections.abc import Callable, Iterator
 from functools import cache, partial
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, cast
 
 from ..clock import now_iso
 from ..db.transaction import transaction
@@ -222,9 +222,11 @@ def _filter_for(  # noqa: PLR0913
     if tenuto and (filter_id := filter_id_by_name(conn, tenuto)) is not None:
         return filter_id, True
     band = passband_of(canonical)
-    filter_id = filter_id_by_name(conn, canonical)
+    # a silent filter returned above, and with a colour matrix it is at least OSC
+    named = cast(str, canonical)
+    filter_id = filter_id_by_name(conn, named)
     if filter_id is None:
-        filter_id = create_filter(conn, canonical, band, now)
+        filter_id = create_filter(conn, named, band, now)
         counts["filters"] += 1
     return filter_id, band != UNKNOWN
 

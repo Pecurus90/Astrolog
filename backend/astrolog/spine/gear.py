@@ -1,12 +1,12 @@
-"""Le schede dell'attrezzatura: cosa l'utente dichiara di possedere, e cosa succede dopo.
+"""The gear cards: what the user declares to own. Renaming or merging a piece learns the rule on the
+old spelling, or the next scan would recreate it; what changes a frame's meaning requeues it."""
 
-Strumenti e filtri; il corredo ha la sua casa in `rigs`. Un pezzo dichiarato non e' piu' una
-scoperta della spina (`detected = 0`), rinominarlo o unirlo **impara la regola sulla grafia
-vecchia** -- senza, la scansione dopo lo ricreerebbe com'era -- e cio' che cambia il senso di
-una posa la rimette in coda.
-"""
+import sqlite3
+from collections.abc import Collection, Mapping, Sequence
+from typing import Any
 
 from ..db import idlist
+from ..db.row import Row
 from ..vocab.filters import NO_FILTER, UNKNOWN, model_by_id, passband_from_bands
 from . import counts, unfiltered
 from . import rigs as corredi
@@ -20,7 +20,7 @@ from .declarations import (
 )
 from .stages import invalidate
 
-# Le schede sono chiuse come le chiavi delle preferenze: un campo che non e' qui non entra.
+# Closed like the preference keys: a field that is not here does not get in.
 INSTRUMENT_FIELDS = (
     "name", "brand", "model", "camera_type", "pixel_size_um", "aperture_mm", "focal_mm",
     "reducer_factor", "weight_kg", "payload_kg", "slots", "backfocus_mm", "notes",
@@ -28,36 +28,45 @@ INSTRUMENT_FIELDS = (
 FILTER_FIELDS = ("name", "brand", "model", "catalog_id")
 
 
-def _set_fields(conn, table, row_id, fields, allowed):
+def _set_fields(
+    conn: sqlite3.Connection,
+    table: str,
+    row_id: int,
+    fields: Mapping[str, Any],
+    allowed: Collection[str],
+) -> bool:
     chosen = {k: v for k, v in fields.items() if k in allowed}
     if not chosen:
         return False
     columns = ", ".join(f'"{k}" = ?' for k in chosen)
     conn.execute(
-        f"UPDATE {table} SET {columns} WHERE id = ?",  # noqa: S608 - colonne da una lista chiusa
+        f"UPDATE {table} SET {columns} WHERE id = ?",  # noqa: S608 - columns from a closed list
         [*chosen.values(), row_id],
     )
     return True
 
 
-def instrument_id(conn, kind, name):
-    """L'id del pezzo con quel tipo e quel nome, o None: il nome e' unico per tipo."""
+def instrument_id(conn: sqlite3.Connection, kind: str, name: str) -> int | None:
     row = conn.execute(
         "SELECT id FROM instruments WHERE kind = ? AND name = ?", (kind, name)
     ).fetchone()
     return None if row is None else row["id"]
 
 
-def declare_instrument(conn, instrument_id, fields, now=None):
-    """La scheda di un pezzo. Rinominarlo scrive anche la regola sulla grafia vecchia,
-    altrimenti la prossima scansione ricreerebbe il pezzo col nome dell'header. Pixel e colore
-    di una camera vanno fra le dichiarazioni: la colonna e' dei file, e la spina la ricalcola."""
+def declare_instrument(
+    conn: sqlite3.Connection,
+    instrument_id: int,
+    fields: Mapping[str, Any],
+    now: str | None = None,
+) -> bool:
+    """A camera's pixel and colour go among the declarations: the column belongs to the files, and
+    the spine rewrites it."""
     row = conn.execute(
         "SELECT kind, name FROM instruments WHERE id = ?", (instrument_id,)
     ).fetchone()
     if row is None:
         raise LookupError(f"strumento {instrument_id}")
-    new_name = fields.get("name")
+    new_name: str = fields.get("name") or ""
     renamed = bool(new_name) and new_name != row["name"]
     if renamed and row["kind"] in ALIAS_KINDS:
         rename(conn, row["kind"], row["name"], new_name, now)
@@ -66,23 +75,20 @@ def declare_instrument(conn, instrument_id, fields, now=None):
     changed = _set_fields(conn, "instruments", instrument_id, fields, columns) or bool(specs)
     for field, value in specs.items():
         declare_instrument_spec(conn, row["kind"], row["name"], field, value, now)
-    if renamed:  # anche il nome del corredo, la cui chiave porta quello del pezzo
+    if renamed:  # the rig's key carries the piece's name too
         _move_instrument_declarations(conn, row["kind"], row["name"], new_name, merging=False)
         corredi.follow_piece(conn, row["kind"], row["name"], new_name, now)
     if changed:
-        # da adesso il pezzo l'ha detto l'utente, non la spina
+        # from now on the user said it, not the spine
         conn.execute("UPDATE instruments SET detected = 0 WHERE id = ?", (instrument_id,))
     return changed
 
 
-def _move_instrument_declarations(conn, kind, old_name, new_name, *, merging):
-    """Le dichiarazioni di un pezzo hanno la chiave del suo nome: quando il nome cambia, o il
-    pezzo finisce dentro un altro, pixel, colore e risposte vanno con lui, o resterebbero orfani
-    ad aspettare il prossimo pezzo con quel nome.
-
-    Nella rinomina vince cio' che si sposta: sotto il nome nuovo non c'e' un pezzo vivo (il nome
-    e' unico), solo resti. Nell'unione vince la scheda del pezzo tenuto, e quella dell'assorbito
-    passa dove il tenuto non ha scritto niente."""
+def _move_instrument_declarations(
+    conn: sqlite3.Connection, kind: str, old_name: str, new_name: str, *, merging: bool
+) -> None:
+    """On a rename what moves wins: the new name holds only leftovers. On a merge the kept piece's
+    card wins, and the absorbed one fills only what it left empty."""
     old, new = instrument_key(kind, old_name), instrument_key(kind, new_name)
     if not merging:
         conn.execute(
@@ -100,10 +106,9 @@ def _move_instrument_declarations(conn, kind, old_name, new_name, *, merging):
         follow_not_same_as(conn, old_name, new_name)
 
 
-def camera_specs(conn):
-    """`{id: {campo: valore}}`: pixel e colore di ogni camera come la scheda li mostra. Campo
-    per campo, cio' che l'utente ha scritto vince su cio' che dicono i file."""
-    written = {}
+def camera_specs(conn: sqlite3.Connection) -> dict[int, dict[str, Any]]:
+    """`{id: {field: value}}` of every camera: field by field, the user's word beats the files."""
+    written: dict[str, dict[str, Any]] = {}
     for r in conn.execute(
         "SELECT entity_key, field, value FROM declarations"
         " WHERE entity_type = 'instrument' AND field IN (?, ?)",
@@ -122,26 +127,33 @@ def camera_specs(conn):
     }
 
 
-def declare_filter(conn, filter_id, fields, bands=None, is_none=None, now=None):  # noqa: PLR0913
-    """La scheda di un filtro, con le bande che lascia passare: la banda canonica si ricava
-    da quelle. Torna i frame da rimettere in coda (la banda cambia le risposte a valle)."""
+def declare_filter(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    filter_id: int,
+    fields: Mapping[str, Any],
+    bands: Sequence[Mapping[str, Any]] | None = None,
+    is_none: bool | None = None,
+    now: str | None = None,
+) -> list[int]:
+    """The canonical band derives from the bands it passes. Returns the frames to requeue: the
+    band changes the answers downstream."""
     row = conn.execute(
         "SELECT name, passband, is_none FROM filters WHERE id = ?", (filter_id,)
     ).fetchone()
     if row is None:
         raise LookupError(f"filtro {filter_id}")
     if fields.get("catalog_id") and model_by_id(fields["catalog_id"]) is None:
-        raise LookupError(f"modello {fields['catalog_id']}")  # prima di scrivere
+        raise LookupError(f"modello {fields['catalog_id']}")  # before writing
     new_name = fields.get("name")
     if new_name and new_name != row["name"] and not row["is_none"]:
-        # La riga "nessun filtro" non ha grafie da imparare: il suo nome viene dal vocabolario, e
-        # una regola su "none" deciderebbe per ogni camera al posto della sua risposta.
+        # The "no filter" row's name comes from the vocabulary: a rule on "none" would decide for
+        # every camera in place of its answer.
         rename(conn, "filter", row["name"], new_name, now)
-        unfiltered.follow_filter(conn, row["name"], new_name)  # la camera tiene il NOME
+        unfiltered.follow_filter(conn, row["name"], new_name)  # the camera keeps the NAME
     _set_fields(conn, "filters", filter_id, fields, FILTER_FIELDS)
     if is_none is not None:
-        # "nessun filtro" E' una banda del dominio chiuso: l'interruttore da solo lascerebbe
-        # la riga con la banda vecchia, due case per lo stesso fatto
+        # "no filter" IS a band of the closed domain: the switch alone would leave the old band,
+        # two homes for one fact
         conn.execute(
             "UPDATE filters SET is_none = ?, passband = CASE WHEN ? THEN ? ELSE passband END"
             " WHERE id = ?",
@@ -158,23 +170,24 @@ def declare_filter(conn, filter_id, fields, bands=None, is_none=None, now=None):
             "UPDATE filters SET passband = ? WHERE id = ?",
             (passband_from_bands([b["band"] for b in bands]), filter_id),
         )
-    modello = model_by_id(fields.get("catalog_id")) if bands is None else None
+    catalog_id = fields.get("catalog_id")
+    modello = model_by_id(catalog_id) if bands is None and catalog_id is not None else None
     if modello:
-        # il modello porta la sua banda: sceglierlo e' una risposta intera, non una marca
+        # the model carries its band: choosing it is a whole answer, not a brand
         conn.execute(
             "UPDATE filters SET passband = ? WHERE id = ?", (modello["passband"], filter_id)
         )
     after = conn.execute("SELECT passband FROM filters WHERE id = ?", (filter_id,)).fetchone()
     if after["passband"] == row["passband"]:
-        # marca, modello o una nota non cambiano cosa vuol dire una posa: non si rilavora
+        # brand, model or a note do not change what a frame means: nothing is redone
         return []
     frames = [r[0] for r in conn.execute("SELECT id FROM frames WHERE filter_id = ?", (filter_id,))]
     invalidate(conn, frames, "normalize", now=now)
     return frames
 
 
-def _rigs_using(conn, instrument_id):
-    """I corredi in cui quel pezzo e' ottica o camera: quelli la cui chiave porta il suo nome."""
+def _rigs_using(conn: sqlite3.Connection, instrument_id: int) -> list[int]:
+    """The rigs whose key carries that piece's name."""
     return [
         r[0]
         for r in conn.execute(
@@ -185,20 +198,21 @@ def _rigs_using(conn, instrument_id):
 
 
 class MergeRefusedError(ValueError):
-    """Un'unione che la spina non fa. Chi espone la rotta la traduce in 422: e' un rifiuto con la
-    sua ragione, e solo questo -- un altro `ValueError` e' un guasto, e resta tale."""
+    """A merge the spine refuses, with its reason: the route maps it to 422. Any other
+    `ValueError` is a fault and stays one."""
 
 
-def mergeable(src, dst):
-    """Se `src` si unisce in `dst`: due pezzi DIVERSI dello stesso tipo, e un tipo con grafie da
-    unire -- senza regola la scansione dopo ricreerebbe la grafia vecchia. Una casa sola per le
-    due porte: la pagina offre solo queste unioni, e `merge_instrument` rifiuta le altre."""
+def mergeable(src: Row, dst: Row) -> bool:
+    """Only kinds with spellings to merge: without the rule the next scan would recreate the old
+    one. The page offers these merges and `merge_instrument` refuses the others."""
     return src["id"] != dst["id"] and src["kind"] == dst["kind"] and src["kind"] in ALIAS_KINDS
 
 
-def merge_instrument(conn, from_id, into_id, now=None):
-    """Due grafie, un pezzo: si impara la regola, si toglie la riga assorbita e i corredi che
-    la usavano, e le pose tornano in coda. `normalize` le riaggancia al pezzo giusto."""
+def merge_instrument(
+    conn: sqlite3.Connection, from_id: int, into_id: int, now: str | None = None
+) -> list[int]:
+    """The rule is learnt, the absorbed row and the rigs using it go, and the frames are requeued:
+    `normalize` hooks them to the right piece."""
     src = conn.execute("SELECT id, kind, name FROM instruments WHERE id = ?", (from_id,)).fetchone()
     dst = conn.execute("SELECT id, kind, name FROM instruments WHERE id = ?", (into_id,)).fetchone()
     if src is None or dst is None:
@@ -216,16 +230,15 @@ def merge_instrument(conn, from_id, into_id, now=None):
     return sorted(frames)
 
 
-def _detach_from_frames(conn, instrument_id):
-    """Stacca dalle pose il pezzo che sta per sparire, per i generi che la posa nomina **addosso a
-    se'**. Senza, la riga non si cancella affatto -- il database la tiene per la chiave esterna --
-    e l'Applica intera va a rotoli portandosi via anche le risposte buone."""
-    staccate = set()
+def _detach_from_frames(conn: sqlite3.Connection, instrument_id: int) -> set[int]:
+    """Without it the foreign key keeps the row from being deleted, and the whole Apply fails,
+    taking the good answers with it."""
+    staccate: set[int] = set()
     for kind in counts.CARRIED:
         pose = [
             r[0]
             for r in conn.execute(
-                f"SELECT id FROM frames WHERE {kind}_id = ?",  # noqa: S608 - generi nostri
+                f"SELECT id FROM frames WHERE {kind}_id = ?",  # noqa: S608 - our own kinds
                 (instrument_id,),
             )
         ]
@@ -238,26 +251,26 @@ def _detach_from_frames(conn, instrument_id):
     return staccate
 
 
-def band_unknown(row):
-    """Se di quel filtro non si sa la banda: e' la domanda "che filtro e'?" di *Da confermare*."""
+def band_unknown(row: Row) -> bool:
+    """The "which filter is it?" question of the review page."""
     return row["passband"] == UNKNOWN
 
 
-def filter_target(row):
-    """Se un filtro puo' ricevere un'unione, o essere scelto come "uno dei tuoi": uno con la banda
-    nota, tranne la riga "nessun filtro". Una casa sola per le tendine e per chi unisce."""
+def filter_target(row: Row) -> bool:
+    """Whether a filter can receive a merge or be chosen as "one of yours": one home for the
+    dropdowns and for whoever merges."""
     return not row["is_none"] and not band_unknown(row)
 
 
-def filter_mergeable(src, dst):
-    """Se il filtro `src` si unisce in `dst`: due filtri diversi, l'origine non e' "nessun filtro"
-    -- la sua grafia diventerebbe una regola su "none", che risponderebbe per ogni camera -- e la
-    destinazione e' uno dei tuoi. La pagina offre queste, `merge_filter` rifiuta le altre."""
+def filter_mergeable(src: Row, dst: Row) -> bool:
+    """Never from "no filter": its spelling would become a rule on "none", answering for every
+    camera. The page offers these merges and `merge_filter` refuses the others."""
     return src["id"] != dst["id"] and not src["is_none"] and filter_target(dst)
 
 
-def merge_filter(conn, from_id, into_id, now=None):
-    """Come per gli strumenti: la grafia assorbita diventa una regola verso il filtro tenuto."""
+def merge_filter(
+    conn: sqlite3.Connection, from_id: int, into_id: int, now: str | None = None
+) -> list[int]:
     riga = "SELECT id, name, is_none, passband FROM filters WHERE id = ?"
     src = conn.execute(riga, (from_id,)).fetchone()
     dst = conn.execute(riga, (into_id,)).fetchone()
@@ -266,7 +279,7 @@ def merge_filter(conn, from_id, into_id, now=None):
     if not filter_mergeable(src, dst):
         raise MergeRefusedError("si unisce un filtro vero in un altro, con la banda nota")
     rename(conn, "filter", src["name"], dst["name"], now)
-    unfiltered.follow_filter(conn, src["name"], dst["name"])  # "sono lo stesso filtro", anche li'
+    unfiltered.follow_filter(conn, src["name"], dst["name"])  # "the same filter" there too
     frames = [r[0] for r in conn.execute("SELECT id FROM frames WHERE filter_id = ?", (from_id,))]
     conn.execute("UPDATE frames SET filter_id = NULL WHERE filter_id = ?", (from_id,))
     conn.execute("DELETE FROM filters WHERE id = ?", (from_id,))
@@ -274,18 +287,17 @@ def merge_filter(conn, from_id, into_id, now=None):
     return frames
 
 
-def _detach_rigs(conn, rig_ids):
-    """Stacca le pose dai corredi che stanno per sparire e li cancella. I corredi sono
-    rilevati: `normalize` li rifa' identici, o migliori, al giro dopo."""
+def _detach_rigs(conn: sqlite3.Connection, rig_ids: Collection[int]) -> list[int]:
+    """Rigs are detected: `normalize` remakes them, identical or better, on the next pass."""
     if not rig_ids:
         return []
     with idlist.holding(conn, rig_ids) as listed:
         frames = [
             r[0]
             for r in conn.execute(
-                f"SELECT id FROM frames WHERE rig_id IN {listed}"  # noqa: S608 - costante nostra
+                f"SELECT id FROM frames WHERE rig_id IN {listed}"  # noqa: S608 - our constant
             )
         ]
         conn.execute(f"UPDATE frames SET rig_id = NULL WHERE rig_id IN {listed}")  # noqa: S608
-        conn.execute(f"DELETE FROM rigs WHERE id IN {listed}")  # noqa: S608 - costante nostra
+        conn.execute(f"DELETE FROM rigs WHERE id IN {listed}")  # noqa: S608 - our constant
     return frames

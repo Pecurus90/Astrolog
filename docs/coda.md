@@ -33,9 +33,11 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   `inventory`, `header_asks`, `copies`, `coordinates`, `rewrite`), e il secondo, normalizzazione
   e stadi (`normalize`, `normalize_store`, `normalize_rig`, `stages`, `stage_run`, `run`,
   `counts`), e il terzo, risoluzione, raggruppamento e frame senza tipo (`solve`, `solve_store`,
-  `group`, `group_store`, `typeless`, `typeless_answer`, `typeless_folders`, `home_nights`).
-- Mancano: il resto di `spine` (i lotti dopo il terzo), `api`.
-- Da chiudere strada facendo: 26 righe del backend (12 in `backend/astrolog`, 14 in
+  `group`, `group_store`, `typeless`, `typeless_answer`, `typeless_folders`, `home_nights`), e il
+  quarto, l'attrezzatura (`gear`, `gear_create`, `gear_usage`, `rigs`, `rig_optics`,
+  `camera_specs`, `camera_sky`, `filters_used`).
+- Mancano: il resto di `spine` (i lotti dopo il quarto), `api`.
+- Da chiudere strada facendo: 25 righe del backend (11 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
@@ -45,7 +47,9 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   `.pre-commit-config.yaml` (i quattro software) va a `CLAUDE.md`, "Software supportati".
   Annotare `astap`, `clock` e `units` ha lasciato due `cast` dove il tipo ora ammette `None` ma
   il controllo sta sopra (`api/tonight.py`, `spine/unnamed.py`): si tolgono restringendo il tipo
-  quando arriva il loro package.
+  quando arriva il loro package. Annotare `gear_create` ne ha lasciato un terzo in
+  `normalize._filter_for`: il filtro che non dice niente esce prima, ma `normalize_filter` torna
+  `str | None`; lo toglie un ritorno anticipato che il tipo veda.
 
 **Fase 2 -- semplificare**, sul codice gia' pulito: doppioni uniti, nomi interni in inglese, `dict`
 che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lunghe spezzate e i
@@ -82,7 +86,18 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `risposta`, `fuori`, `data`, `lontano`, `detto`, `vicini`, `riga` (`group`); `domanda` (alias
   di `typeless`, in `typeless_answer`); `casa`, `riscritte`, `notte`, `notti`, `spostati`,
   `fermi`, `rig_fermi`, `oggetto_fermi`, `verso`, `vecchia`, `vecchie`, `nuova`, `toccati`,
-  `tutte`, `prima`, `fonti`, `dette` (`home_nights`).
+  `tutte`, `prima`, `fonti`, `dette` (`home_nights`). Nel quarto lotto: `corredi` (alias di
+  `rigs`), `pose`, `staccate`, `modello`, `riga` (`gear`); `grafia`, `gia`, `scheda`
+  (`gear_create`); `_SEMPRE`, `_CONTI`, `_USATI`, `_STRUMENTI`, `_CORREDI`, `_FILTRI`, `_OGGETTI`,
+  `_OGGETTI_DEL_CORREDO`, `_OGGETTI_DEL_FILTRO`, `_OGGETTI_DEL_PEZZO`, `_CIELO`, `_COLONNE`,
+  `_nuova`, `_con_le_ore`, `_riga`, `_strumenti`, `_corredi`, `_filtri`, `righe`, `elenco`,
+  `conta`, `generi`, `detto`, `uso`, `cielo`, `oggetti`, `con_le_ore`, `visto`, `campo` e i
+  segnaposto `{chiave}`, `{giunzione}`, `{campo}` (`gear_usage`); `trovato`, `campo`, `nomi`,
+  `_pezzo_id`, `chiave`, `parti`, `ottica`, `focale`, `quando`, `rifatto`, `tolta`, `nome`, `pose`,
+  `_MONTATURE`, `trovata`, `nuova` (`rigs`); `chiave`, `ottica`, `letta`, `trovata`, `risposte`,
+  `domande`, `domanda`, `focale`, `campo`, `pose` (`rig_optics`); `nome`, `votato`, `prima`,
+  `colore`, `scelto` (`camera_specs`); `uno`, `valori`, `mezzo` (`camera_sky`); `soggetto`
+  (parametro e colonna), `dove`, `solo` (`filters_used`).
 - **`group._where`** torna il sito ma non la data: `_one_frame` la ricalcola, e cosi' arriva
   `str | None` fino a `group_store.night` e `create_night`; e il "lo ha detto l'utente" e'
   `bool | None` (passato con `bool()`) perche' la terna non distingue chi si ferma da chi entra.
@@ -104,8 +119,6 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
 - **`db/idlist.grouped` torna `dict[Any, list[Any]]`**: generico in `T` rompe `api/archive.py`, che
   passa i dict di `spine/filters_used` a un campo `list[FilterUsed]`. Si fa generico quando i
   chiamanti costruiscono righe tipate.
-- **Un alias delle righe in `db`**, per `place.by_distance` e `frame_folder.FolderRow`, che oggi
-  scrivono la stessa unione (`sqlite3.Row | Mapping[str, Any]`).
 - **Insiemi chiusi da fare `StrEnum`**, che escono dal package e finiscono nel database: il tipo
   del frame (`fits/frame_type.image_type`, `UNKNOWN`, `CALIBRATION_TYPES`), i quattro software
   (`vocab/software`), le bande (`vocab/filters`: `NO_FILTER`, `UNKNOWN`, `DUO_*`, `TRI_NB`,
@@ -126,11 +139,14 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   soggetti del conto (le chiavi di `counts._SOGGETTI`, passate come stringhe da chi conta). Nel
   raggruppamento i motivi di `group` (`NO_ACTIVE_SITE`, `SITE_NO_TIMEZONE`, `SITE_UNCLEAR`,
   `NO_OBJECT`, `NO_DATE`, scritti in `frame_stages.reason`); le risposte sul tipo
-  (`typeless.ANSWERS`, ripetute in `api/models_review_groups`).
+  (`typeless.ANSWERS`, ripetute in `api/models_review_groups`). Nell'attrezzatura i soggetti
+  dell'uso (`instrument`, `rig`, `filter`, scritti in `gear_usage.subject` e passati come stringhe
+  da `rigs` e `api/gear_write`) e i campi dei corredi (`rigs.MOUNT`, `DECLARED`, `rig_optics.OPTICS`,
+  scritti in `declarations.field`).
 - **La notte di un frame** (`scan_store.LocalNight`, notte/fuso/istante costruita da
   `scan.night_of` e spacchettata per posizione da `scan_store.insert_frame`) e' un alias di `tuple`: una `NamedTuple` la nomina.
 - **`db/inserted.inserted_id`** tiene la guardia su `lastrowid`; gli altri `.lastrowid` del
-  backend (`spine/gear_create`, `mosaic`, `rigs`, `api/folders`, `api/sites`) la
+  backend (`spine/mosaic`, `api/folders`, `api/sites`) la
   chiamano quando arriva il loro package.
 - **`db/config.KEYS`** ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei
   test (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo
@@ -575,6 +591,10 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **L'attrezzatura, dopo la fase 1**: le docstring di `rigs.find_rig` e `rigs.RigExistsError`
+  scrivono a mano il 5 % di `units.FOCAL_TOLERANCE`; "la scheda dell'utente vince su file e cielo"
+  e' detta in `camera_sky`, `camera_specs` e `gear.camera_specs`, ma vive solo in
+  `gear.camera_specs`.
 - **Risoluzione, raggruppamento e frame senza tipo, dopo la fase 1**: nessun test distingue la
   regola "cielo dalla cache e disco staccato: niente `analyse`" in `spine/solve.py` (una mutazione
   come `path or _old_path` passerebbe); le ragioni di `group` sono ripetute come `Literal` in
@@ -589,6 +609,9 @@ riga per voce.
   (`typeless`, `typeless_folders`, `api/models_review_groups`); la notte da mezzogiorno a
   mezzogiorno nella docstring di `group`, senza rimando a `clock.night_date`; "due risposte
   diverse cadono" in `home_nights._carry` e nel contratto (`docs/domini/spina.md`).
+- **Attrezzatura, dopo la fase 1**: `rigs.declared_mount` riscrive la query di `rigs._rig`
+  (`RIG_ROWS` per id) invece di chiamarla; `filters_used.of` e `idlist` accettano anche chiavi di
+  testo (i mosaici dell'Archivio) in una tabella `id INTEGER`, che le tiene per affinita' di SQLite.
 - **Normalizzazione e stadi, dopo la fase 1**: `count_pending` e `pending_by_stage`
   (`spine/stages.py`) hanno la stessa query e la stessa sottrazione di `_waiting_by_stage`, e il
   commento "five counts" scrive a mano `len(STAGES)`; il controllo `scan` di `run.queue` ha un

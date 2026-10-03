@@ -15,7 +15,7 @@ _in_use: set[sqlite3.Connection] = set()
 
 
 @contextmanager
-def holding(conn: sqlite3.Connection, ids: Iterable[int | None]) -> Iterator[str]:
+def holding(conn: sqlite3.Connection, ids: Iterable[int | str | None]) -> Iterator[str]:
     """Yields the SQL for "among these ids": `WHERE id IN {listed}`."""
     if conn in _in_use:
         raise RuntimeError("un elenco e' gia' aperto su questa connessione")
@@ -37,7 +37,7 @@ def holding(conn: sqlite3.Connection, ids: Iterable[int | None]) -> Iterator[str
 def grouped(
     conn: sqlite3.Connection,
     sql: str,
-    ids: Collection[int | None],
+    ids: Collection[int | str | None],
     key: str,
     row: Callable[[sqlite3.Row], Any],
 ) -> dict[Any, list[Any]]:

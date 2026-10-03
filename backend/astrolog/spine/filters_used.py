@@ -1,26 +1,24 @@
-"""Con che filtri hai ripreso qualcosa: per notte, per oggetto, per un lotto di soggetti.
+"""Which filters shot something, per night, object or batch of subjects. One home because Nights and
+Archive ask it of the same frames: two copies would count the same time two ways."""
 
-Sta in una casa sola perche' la stessa domanda la fanno le Notti e l'Archivio sulle **stesse
-pose**: due copie sarebbero due modi di contare lo stesso tempo, e il giorno che una delle due
-cambia, la notte e l'oggetto direbbero numeri diversi dello stesso scatto. Il legame e l'ordine
-li da' `counts`, che e' la casa del "quanto e' servito".
-"""
+import sqlite3
+from collections.abc import Collection
+from typing import Any
 
 from ..db import idlist
 from . import counts
 
 
-def of(conn, soggetto, ids, *, alone=False):
-    """`{id del soggetto: [{name, passband, frames, integration_s}]}`, dal filtro a cui e' andato
-    piu' tempo. `alone` guarda solo le pose fuori dai mosaici confermati, come la riga di un
-    oggetto nell'Archivio (`counts.ALONE`).
-
-    La **banda** viaggia col nome perche' e' lei a dire di che colore si disegna la pastiglia: il
-    nome lo sceglie l'utente e non dice niente a una macchina.
-
-    Il soggetto e' una **chiave** di un elenco chiuso (`counts.column_of`), mai un pezzo di SQL che
-    arriva da fuori. Le copie riscritte non contano, come ovunque si sommino delle ore."""
-    dove = counts.column_of(soggetto)  # da un elenco chiuso: una chiave che non c'e' e' un KeyError
+def of(
+    conn: sqlite3.Connection,
+    soggetto: str,
+    ids: Collection[int | str | None],
+    *,
+    alone: bool = False,
+) -> dict[Any, list[Any]]:
+    """`{subject id: [{name, passband, frames, integration_s}]}`, most time first; the band travels
+    because it colours the pill. `alone` keeps frames outside confirmed mosaics (`counts.ALONE`)."""
+    dove = counts.column_of(soggetto)  # from a closed list: an unknown key is a KeyError
     solo = f" AND {counts.ALONE}" if alone else ""
     sql = f"""
     SELECT f.{dove} AS soggetto, x.name, x.passband, {counts.AGGREGATE}
@@ -28,7 +26,7 @@ def of(conn, soggetto, ids, *, alone=False):
     WHERE f.{dove} IN {{dentro}} AND f.copy_of IS NULL{solo}
     GROUP BY f.{dove}, x.id
     {counts.ORDER_BY_TIME}, x.id
-    """  # noqa: S608 - `dove` viene dall'elenco chiuso, `dentro` e' un segnaposto
+    """  # noqa: S608 - `dove` comes from the closed list, `dentro` is a placeholder
     return idlist.grouped(
         conn,
         sql,

@@ -1,57 +1,60 @@
-"""Far nascere un pezzo o un filtro dell'attrezzatura: la casa sola dei due modi in cui nascono --
-la spina li trova nei file, oppure li scrivi tu. Il filtro scritto da te riceve la scheda da
-`gear.declare_filter`, come una correzione.
-
-La spina lo riconosce leggendo un header, oppure lo scrivi tu dalla pagina Attrezzatura -- e in
-tutti e due i casi e' la stessa riga, perche' un pezzo e' il suo **nome dentro il suo genere**
-(`instruments_kind_name` e' unico). Cosa c'e' scritto nella sua scheda lo decide chi dichiara
-(`gear.declare_instrument`); qui si scrive solo cio' che lo fa esistere.
-
-Vincolo non ovvio: `detected` dice **chi** l'ha fatto nascere e lo passa il chiamante, che e'
-l'unico a saperlo. Non si indovina dalla scheda: un pezzo trovato dalla spina e poi corretto
-diventa dichiarato, e un pezzo scritto a mano lo e' dal primo istante.
+"""The birth of a piece or a filter, found in the files or written by the user: the same row, since
+a piece is its name within its kind. Only the caller knows who made a piece: it passes `detected`.
 """
 
+import sqlite3
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+from ..db.inserted import inserted_id
 from ..vocab.filters import UNKNOWN, normalize_filter
 from ..vocab.header_value import normalize_header_value
 from . import declarations, gear
 
 
-def instrument(conn, kind, name, now, *, detected):
-    """La riga di un pezzo, col solo nome: pixel e colore di una camera li scrive `camera_specs`
-    a fine giro, il resto lo compila chi dichiara."""
-    return conn.execute(
-        "INSERT INTO instruments(kind, name, detected, created_at) VALUES(?, ?, ?, ?)",
-        (kind, name, int(detected), now),
-    ).lastrowid
+def instrument(conn: sqlite3.Connection, kind: str, name: str, now: str, *, detected: bool) -> int:
+    """Name only: `camera_specs` writes a camera's pixel and colour at the end of the pass, the
+    rest is filled by whoever declares."""
+    return inserted_id(
+        conn.execute(
+            "INSERT INTO instruments(kind, name, detected, created_at) VALUES(?, ?, ?, ?)",
+            (kind, name, int(detected), now),
+        )
+    )
 
 
-def filter_id_by_name(conn, name):
+def filter_id_by_name(conn: sqlite3.Connection, name: str) -> int | None:
     row = conn.execute("SELECT id FROM filters WHERE name = ?", (name,)).fetchone()
     return None if row is None else row["id"]
 
 
-def create_filter(conn, name, passband, now, is_none=False):
-    """La riga di un filtro, rilevato o scritto da te; `is_none` per la riga "nessun filtro", una
-    sola nell'archivio."""
-    return conn.execute(
-        "INSERT INTO filters(name, passband, is_none, created_at) VALUES(?, ?, ?, ?)",
-        (name, passband, int(is_none), now),
-    ).lastrowid
+def create_filter(
+    conn: sqlite3.Connection, name: str, passband: str, now: str, is_none: bool = False
+) -> int:
+    """`is_none` for the "no filter" row, one in the archive."""
+    return inserted_id(
+        conn.execute(
+            "INSERT INTO filters(name, passband, is_none, created_at) VALUES(?, ?, ?, ?)",
+            (name, passband, int(is_none), now),
+        )
+    )
 
 
 class SpellingTakenError(ValueError):
-    """Quel nome e' gia' una grafia di un altro tuo filtro: la scansione lo porta li'."""
+    """That name is already a spelling of another filter of yours: the scan takes it there."""
 
 
-def filter_declared(conn, name, bands, now, *, brand=None, model=None):  # noqa: PLR0913
-    """Un filtro che scrivi tu. Nasce come il rilevato e riceve la scheda come una correzione.
-
-    Se il vocabolario ne farebbe un altro nome -- `L` diventa `Lum` -- impara che quel nome e' lui:
-    e' la regola di una rinomina, che si legge **dopo il colore**, cosi' le pose mono vengono a lui
-    e quelle a colori restano OSC. Si rifiuta se quel nome e' gia' un tuo filtro, o la grafia di un
-    altro: le pose che lo dicono ci stanno gia', e un secondo filtro dividerebbe le ore -- si
-    rinomina quello."""
+def filter_declared(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    name: str,
+    bands: Sequence[Mapping[str, Any]],
+    now: str,
+    *,
+    brand: str | None = None,
+    model: str | None = None,
+) -> int:
+    """A name the vocabulary turns into another (`L` -> `Lum`) is learnt as a rename, read after the
+    colour, so colour frames stay OSC. A taken name is refused: a twin would split the hours."""
     mono = normalize_filter(name, bayer=False)
     for grafia in {name, mono} - {None}:
         gia = declarations.alias_target(conn, "filter", normalize_header_value(grafia))

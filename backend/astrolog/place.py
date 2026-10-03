@@ -2,17 +2,17 @@
 silent service gives `None` or an empty list, never a fallback zero: zero is sea level."""
 
 import math
-import sqlite3
 import threading
 import time
 import urllib.parse
 import zoneinfo
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable
 from typing import Any, Literal
 
 from tzfpy import get_tz
 
 from . import net
+from .db.row import Row
 from .units import believable_sqm, sqm_from_brightness, sqm_of_bortle
 
 # A degree of arc on the mean-radius Earth (2*pi*6371 km / 360): a constant, not a measure of
@@ -69,7 +69,7 @@ def distance_km(
     return math.hypot(nord, est)
 
 
-def by_distance[S: sqlite3.Row | Mapping[str, Any]](
+def by_distance[S: Row](
     latitude: float | None, longitude: float | None, sites: Iterable[S]
 ) -> list[tuple[float, S]]:
     """Sorted on the true distance: rounded ones would tie two near sites, and comparing the rows

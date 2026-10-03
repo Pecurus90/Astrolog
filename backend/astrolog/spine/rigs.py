@@ -1,23 +1,10 @@
-"""Il **corredo** visto da chi dichiara: la sua impronta, la chiave con cui lo si nomina, e cio'
-che l'utente gli scrive addosso.
+"""The rig as the declarer sees it: its fingerprint, its key, what the user writes on it. A merge
+can delete the row, so name and mount live among the declarations, on a key that outlives it."""
 
-Un corredo lo fa la spina dalle pose (ottica, camera, focale), o lo scrivi tu, e un'unione puo'
-cancellarne la riga. Per questo il nome che gli dai non sta li' dentro ma fra le dichiarazioni, con
-una chiave che gli sopravvive: quando `normalize` rifa' lo stesso corredo, o `restore_declared`
-rifa' quello che hai scritto tu, il nome torna da solo.
-
-Vincoli non ovvi:
-
-* La chiave porta i **nomi** di ottica e camera, quindi una rinomina di uno dei due la sposta.
-  Vale per quei due generi soltanto: gli altri nella chiave non ci sono, e seguirli riscriverebbe
-  la chiave di un corredo che con loro non c'entra.
-* **La montatura del corredo e' il suo nome**, non il numero della riga: una rinomina o
-  un'unione la portano con se', e sulle pose la scrive `normalize`, che le rilavora.
-* Il corredo si trova per impronta con le focali entro il +-5 % considerate la stessa: l'indice
-  unico e' su uguaglianza esatta, quindi il raggruppamento vive qui, in Python, prima di scrivere.
-"""
+import sqlite3
 
 from ..clock import now_iso
+from ..db.inserted import inserted_id
 from ..units import same_focal
 from . import gear_usage, rigless
 from .declarations import forget, rig_key, rig_key_parts, values_of, write_declaration
@@ -28,37 +15,45 @@ DECLARED = "declared"
 
 
 class NotAMountError(ValueError):
-    """Si e' chiesto di montare su un corredo un pezzo che non e' una montatura."""
+    """The piece asked to mount on a rig is not a mount."""
 
 
 class WrongKindError(ValueError):
-    """Un corredo si fa con un'ottica e una camera che possiedi: un altro pezzo non va."""
+    """A rig is made of an optics and a camera you own: another piece does not fit."""
 
 
 class RigExistsError(ValueError):
-    """Quel corredo ce l'hai gia': stessa ottica, stessa camera, focale entro il 5 %."""
+    """You already have that rig: same optics, same camera, focal within 5 %."""
 
 
-def rig_for(conn, optics_id, camera_id, focal_mm, now, *, detected=True):  # noqa: PLR0913
-    """(id, creato?) del corredo con quell'impronta: una focale entro il +-5 % di una gia'
-    vista e' la stessa focale, e il corredo e' quello.
-
-    Il valore di `rigs.focal_mm` si fissa alla CREAZIONE e non si muove piu': una scansione
-    successiva che porta focali vicine le aggancia a questo corredo senza ricalcolare il
-    rappresentante. Spostarlo vorrebbe dire riscrivere un dato che l'utente ha gia' visto."""
+def rig_for(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    optics_id: int | None,
+    camera_id: int | None,
+    focal_mm: float | None,
+    now: str,
+    *,
+    detected: bool = True,
+) -> tuple[int, bool]:
+    """(id, created?). `rigs.focal_mm` is fixed at creation: nearby focals join without moving it,
+    which would rewrite a value the user has already seen."""
     trovato = find_rig(conn, optics_id, camera_id, focal_mm)
     if trovato is not None:
         return trovato, False
-    rig_id = conn.execute(
-        "INSERT INTO rigs(optics_id, camera_id, focal_mm, detected, created_at)"
-        " VALUES(?, ?, ?, ?, ?)",
-        (optics_id, camera_id, focal_mm, int(detected), now),
-    ).lastrowid
+    rig_id = inserted_id(
+        conn.execute(
+            "INSERT INTO rigs(optics_id, camera_id, focal_mm, detected, created_at)"
+            " VALUES(?, ?, ?, ?, ?)",
+            (optics_id, camera_id, focal_mm, int(detected), now),
+        )
+    )
     return rig_id, True
 
 
-def find_rig(conn, optics_id, camera_id, focal_mm):
-    """Il corredo con quell'impronta, o `None`: la stessa regola della focale di `rig_for`."""
+def find_rig(
+    conn: sqlite3.Connection, optics_id: int | None, camera_id: int | None, focal_mm: float | None
+) -> int | None:
+    """The unique index is on exact equality: the +-5 % focal grouping lives here, in Python."""
     for row in conn.execute(
         "SELECT id, focal_mm FROM rigs WHERE optics_id IS ? AND camera_id IS ?",
         (optics_id, camera_id),
@@ -68,13 +63,12 @@ def find_rig(conn, optics_id, camera_id, focal_mm):
     return None
 
 
-# Cio' che un corredo porta alla chiave nuova delle sue pose; la risposta sull'ottica resta dov'e'.
+# What a rig carries to its frames' new key; the answer on the optics stays where it is.
 CARRIED_FIELDS = ("name", MOUNT)
 
 
-def carry_declarations(conn, old_key, rig_id, now):
-    """Copia il nome e la montatura scritti sulla chiave `old_key` sul corredo `rig_id`, appena
-    nato. Si **copiano**: a un cambio di idea il corredo nuovo li ritrova li'."""
+def carry_declarations(conn: sqlite3.Connection, old_key: str, rig_id: int, now: str) -> None:
+    """Copied, not moved: on a change of mind the new rig finds them there."""
     for campo in CARRIED_FIELDS:
         conn.execute(
             "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"
@@ -85,20 +79,25 @@ def carry_declarations(conn, old_key, rig_id, now):
         )
 
 
-def drop_empty(conn):
-    """Cancella i corredi **rilevati** rimasti senza pose -- il residuo di una risposta che le ha
-    spostate --, che in Attrezzatura sembrerebbero veri con zero ore. Uno scritto a mano resta."""
+def drop_empty(conn: sqlite3.Connection) -> None:
+    """Detected rigs left without frames would look real with zero hours; a hand-written one
+    stays."""
     conn.execute(
         "DELETE FROM rigs WHERE detected = 1"
         " AND NOT EXISTS (SELECT 1 FROM frames f WHERE f.rig_id = rigs.id)"
     )
 
 
-def create_declared(conn, optics_id, camera_id, focal_mm, now=None):
-    """Un corredo scritto a mano, anche prima di averci ripreso: e' la sua impronta, quindi e' lo
-    stesso che la scansione trovera'. Scritto anche fra le dichiarazioni, perche' un'unione della
-    sua ottica o della sua camera cancella i corredi e `normalize` li rifa' solo dalle pose."""
-    nomi = {}
+def create_declared(
+    conn: sqlite3.Connection,
+    optics_id: int,
+    camera_id: int,
+    focal_mm: float,
+    now: str | None = None,
+) -> int:
+    """Also written among the declarations: merging its optics or camera deletes the rigs, and
+    `normalize` remakes them only from frames."""
+    nomi: dict[str, str] = {}
     for kind, piece_id in (("optics", optics_id), ("camera", camera_id)):
         row = conn.execute(
             "SELECT name FROM instruments WHERE id = ? AND kind = ?", (piece_id, kind)
@@ -115,21 +114,20 @@ def create_declared(conn, optics_id, camera_id, focal_mm, now=None):
     return rig_id
 
 
-def _pezzo_id(conn, kind, name):
+def _pezzo_id(conn: sqlite3.Connection, kind: str, name: str | None) -> int | None:
     row = conn.execute(
         "SELECT id FROM instruments WHERE kind = ? AND name = ?", (kind, name)
     ).fetchone()
     return None if row is None else row["id"]
 
 
-def restore_declared(conn, now=None):
-    """Rifa' i corredi scritti da te che un'unione ha cancellato: la chiave li ha gia' seguiti
-    sul pezzo tenuto (`follow_rename`), qui tornano la riga e la sua riga d'uso. I nomi si
-    confrontano interi."""
+def restore_declared(conn: sqlite3.Connection, now: str | None = None) -> None:
+    """Remakes your rigs a merge deleted: the key already followed the kept piece
+    (`follow_rename`), here the row and its usage row come back."""
     for chiave, _ in values_of(conn, "rig", DECLARED):
         parti = rig_key_parts(chiave)
         if parti is None:
-            continue  # un nome con la sbarra dentro: come in `follow_rename`, non si tocca
+            continue  # a name with the bar inside: as in `follow_rename`, left alone
         ottica, camera, focale = parti
         optics_id, camera_id = _pezzo_id(conn, "optics", ottica), _pezzo_id(conn, "camera", camera)
         if optics_id is None or camera_id is None:
@@ -147,28 +145,28 @@ FROM rigs g LEFT JOIN instruments o ON o.id = g.optics_id
 """
 
 
-def rigs_with_keys(conn):
-    """Le righe dei corredi con la loro chiave: la chiave che si LEGGE e quella che si SCRIVE
-    vengono tutte di qui, o il nome dato a un corredo finirebbe su un altro."""
+def rigs_with_keys(conn: sqlite3.Connection) -> list[tuple[str, sqlite3.Row]]:
+    """The key read and the key written both come from here, or a rig's name would land on
+    another."""
     return [(decl_key(r), r) for r in conn.execute(RIG_ROWS).fetchall()]
 
 
-def decl_key(row):
+def decl_key(row: sqlite3.Row) -> str:
     return rig_key(row["optics"], row["camera"], row["focal_mm"])
 
 
-def _rig(conn, rig_id):
-    """La riga del corredo, o `LookupError`: la leggono tutti quelli che gli scrivono addosso."""
+def _rig(conn: sqlite3.Connection, rig_id: int) -> sqlite3.Row:
     row = conn.execute(RIG_ROWS + " WHERE g.id = ?", (rig_id,)).fetchone()
     if row is None:
         raise LookupError(f"corredo {rig_id}")
     return row
 
 
-def declare_mount(conn, rig_id, mount_id, now=None):
-    """La montatura con cui usi un corredo, o `None` per togliere la tua parola e tornare a
-    quella dei file. Rimette le sue pose a `normalize`, che la scrive su ognuna: torna quali --
-    nessuna, se non e' cambiato niente."""
+def declare_mount(
+    conn: sqlite3.Connection, rig_id: int, mount_id: int | None, now: str | None = None
+) -> list[int]:
+    """`None` drops the user's word and goes back to the files'. Returns the frames requeued to
+    `normalize`, which writes the mount on each: none if nothing changed."""
     chiave = decl_key(_rig(conn, rig_id))
     if mount_id is None:
         tolta = forget(conn, "rig", chiave, MOUNT)
@@ -195,14 +193,12 @@ WHERE d.entity_type = 'rig' AND d.field = 'mount'
 """
 
 
-def rig_mounts(conn):
-    """Le montature che l'utente ha dato ai corredi, per chiave: `{chiave: id}`."""
+def rig_mounts(conn: sqlite3.Connection) -> dict[str, int]:
     return {r["entity_key"]: r["id"] for r in conn.execute(_MONTATURE)}
 
 
-def declared_mount(conn, rig_id):
-    """La montatura che l'utente ha dato a quel corredo, o `None`. La chiede `normalize` per ogni
-    posa: una ricerca per chiave, non tutte le dichiarazioni."""
+def declared_mount(conn: sqlite3.Connection, rig_id: int) -> int | None:
+    """`normalize` asks it for every frame: a lookup by key, not all the declarations."""
     row = conn.execute(RIG_ROWS + " WHERE g.id = ?", (rig_id,)).fetchone()
     if row is None:
         return None
@@ -210,15 +206,13 @@ def declared_mount(conn, rig_id):
     return None if trovata is None else trovata["id"]
 
 
-def rig_names(conn):
-    """I nomi che l'utente ha dato ai corredi, per chiave: `{chiave: nome}`."""
+def rig_names(conn: sqlite3.Connection) -> dict[str, str]:
     return dict(values_of(conn, "rig", "name"))
 
 
-def declare_rig(conn, rig_id, name, now=None):
-    """Il nome di un corredo. Non sta nella riga di `rigs`, che e' rilevata e che un'unione
-    puo' cancellare: sta fra le dichiarazioni, con la chiave che sopravvive. Cosi' il nome
-    torna da solo quando `normalize` ricostruisce lo stesso corredo."""
+def declare_rig(conn: sqlite3.Connection, rig_id: int, name: str, now: str | None = None) -> bool:
+    """Among the declarations, not in the row a merge can delete: the name comes back by itself
+    when `normalize` rebuilds the same rig."""
     row = _rig(conn, rig_id)
     if not name:
         return False
@@ -226,23 +220,24 @@ def declare_rig(conn, rig_id, name, now=None):
     return True
 
 
-# I generi nella **chiave di un corredo** (`ottica|camera|focale`): solo per loro una rinomina
-# sposta le chiavi. `follow_rename` guarda i nomi e non il genere, e i `GUIDECAM` veri portano
-# nomi della famiglia delle camere: chiamata per una camera di guida, riscriverebbe chiavi altrui.
+# Only these kinds are in a rig's key (`optics|camera|focal`). `follow_rename` looks at names, not
+# kinds, and real guide cameras carry camera-family names: called for one, it would move others'.
 KEY_KINDS = ("optics", "camera")
 
 
-# I pezzi che una dichiarazione sul corredo porta **nel valore**, col genere come campo: la
-# montatura che gli dai, e l'ottica che dici alla camera a una focale (`spine/rig_optics.py`).
+# The pieces a rig declaration carries in its value, with the kind as field: the mount you give
+# it, and the optics you tell the camera at a focal (`spine/rig_optics.py`).
 VALUE_KINDS = (MOUNT, "optics")
 
 
-def follow_piece(conn, kind, old_name, new_name, now=None):
-    """Un pezzo che cambia nome, visto dai corredi: la loro chiave, se e' ottica o camera; il
-    valore che lo nomina, se e' una montatura o un'ottica. Gli altri generi non li toccano."""
+def follow_piece(
+    conn: sqlite3.Connection, kind: str, old_name: str, new_name: str, now: str | None = None
+) -> None:
+    """Optics and camera move the rig key, mount and optics the value naming them; no other kind is
+    touched."""
     if kind in KEY_KINDS:
         follow_rename(conn, old_name, new_name, now)
-        rigless.follow_piece(conn, kind, old_name, new_name, now)  # e le risposte sui gruppi
+        rigless.follow_piece(conn, kind, old_name, new_name, now)  # and the answers on the groups
     if kind in VALUE_KINDS:
         conn.execute(
             "UPDATE declarations SET value = ?"
@@ -251,10 +246,11 @@ def follow_piece(conn, kind, old_name, new_name, now=None):
         )
 
 
-def follow_rename(conn, old_name, new_name, now=None):
-    """Le dichiarazioni sui corredi hanno la chiave (ottica, camera, focale): se un pezzo
-    cambia nome, la chiave cambia con lui, o il nome che l'utente ha dato al corredo resta
-    orfano e il corredo rifatto torna senza nome."""
+def follow_rename(
+    conn: sqlite3.Connection, old_name: str, new_name: str, now: str | None = None
+) -> None:
+    """The key carries the piece's name: without following it the rig's name would be orphaned and
+    the rebuilt rig would come back nameless."""
     for r in conn.execute(
         "SELECT entity_type, entity_key, field, value FROM declarations WHERE entity_type = 'rig'"
     ).fetchall():
@@ -267,6 +263,6 @@ def follow_rename(conn, old_name, new_name, now=None):
         conn.execute(
             "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"
             " VALUES(?, ?, ?, ?, ?) ON CONFLICT(entity_type, entity_key, field)"
-            " DO NOTHING",  # se il corredo di destinazione ha gia' una risposta, vince la sua
+            " DO NOTHING",  # if the target rig already has an answer, its own wins
             (r["entity_type"], nuova, r["field"], r["value"], now or now_iso()),
         )

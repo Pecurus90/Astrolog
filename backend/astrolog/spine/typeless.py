@@ -4,6 +4,7 @@ tell (solved is a photo, starless is a calibration). Until answered they wait be
 import sqlite3
 from typing import Any
 
+from ..db.row import Row
 from ..fits.frame_type import UNKNOWN
 from . import declarations as decl
 from . import frame_folder as folder
@@ -57,6 +58,6 @@ def answer_at(conn: sqlite3.Connection, root_path: str, rel_path: str) -> str | 
     return answer(conn, folder.key_of_path(root_path, rel_path))
 
 
-def frames_of(conn: sqlite3.Connection, row: folder.FolderRow) -> list[int]:
+def frames_of(conn: sqlite3.Connection, row: Row) -> list[int]:
     """Copies included: a copy has its own sky, even though on screen it is not counted."""
     return [r["id"] for r in folder.frames_in(conn, row) if r["image_type"] == UNKNOWN]
