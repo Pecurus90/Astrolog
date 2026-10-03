@@ -35,21 +35,26 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   `counts`), e il terzo, risoluzione, raggruppamento e frame senza tipo (`solve`, `solve_store`,
   `group`, `group_store`, `typeless`, `typeless_answer`, `typeless_folders`, `home_nights`), e il
   quarto, l'attrezzatura (`gear`, `gear_create`, `gear_usage`, `rigs`, `rig_optics`,
-  `camera_specs`, `camera_sky`, `filters_used`).
-- Mancano: il resto di `spine` (i lotti dopo il quarto), `api`.
-- Da chiudere strada facendo: 25 righe del backend (11 in `backend/astrolog`, 14 in
+  `camera_specs`, `camera_sky`, `filters_used`), e il quinto, frame senza corredo, senza filtro,
+  senza nome, e oggetti (`rigless`, `night_rig`, `unfiltered`, `unnamed`, `objects`,
+  `object_answer`, `object_candidates`).
+- Mancano: il resto di `spine` (i lotti dopo il quinto), `api`.
+- Da chiudere strada facendo: 24 righe del backend (10 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
-  glossario dice "frame" e "sito" (`spine/unnamed.py` e altri). Tre rimandi a `docs/coda.md`
-  puntano a decisioni che ora vivono altrove: `api/instrument_answer.py` e
+  glossario dice "frame" e "sito" (`api/models_review_groups.py` e altri). Tre rimandi a
+  `docs/coda.md` puntano a decisioni che ora vivono altrove: `api/instrument_answer.py` e
   `tests/test_gear_instruments.py` vanno a `docs/domini/spina.md`, *Le schede*;
   `.pre-commit-config.yaml` (i quattro software) va a `CLAUDE.md`, "Software supportati".
-  Annotare `astap`, `clock` e `units` ha lasciato due `cast` dove il tipo ora ammette `None` ma
-  il controllo sta sopra (`api/tonight.py`, `spine/unnamed.py`): si tolgono restringendo il tipo
-  quando arriva il loro package. Annotare `gear_create` ne ha lasciato un terzo in
+  Annotare `astap`, `clock` e `units` ha lasciato un `cast` dove il tipo ora ammette `None` ma
+  il controllo sta sopra (`api/tonight.py`): si toglie restringendo il tipo quando arriva il suo
+  package. Annotare `gear_create` ne ha lasciato un secondo in
   `normalize._filter_for`: il filtro che non dice niente esce prima, ma `normalize_filter` torna
-  `str | None`; lo toglie un ritorno anticipato che il tipo veda.
+  `str | None`; lo toglie un ritorno anticipato che il tipo veda. Annotare `objects` ne ha
+  lasciato un terzo in `objects.stable_key`: lo slug o il nome mostrato, mai `None` perche' un
+  oggetto fuori catalogo ha sempre un primario (`docs/domini/spina.md`, invariante 3), ma
+  `display_name` torna `str | None`; lo toglie una riga d'oggetto tipata che dica l'invariante.
 
 **Fase 2 -- semplificare**, sul codice gia' pulito: doppioni uniti, nomi interni in inglese, `dict`
 che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lunghe spezzate e i
@@ -95,9 +100,22 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   segnaposto `{chiave}`, `{giunzione}`, `{campo}` (`gear_usage`); `trovato`, `campo`, `nomi`,
   `_pezzo_id`, `chiave`, `parti`, `ottica`, `focale`, `quando`, `rifatto`, `tolta`, `nome`, `pose`,
   `_MONTATURE`, `trovata`, `nuova` (`rigs`); `chiave`, `ottica`, `letta`, `trovata`, `risposte`,
-  `domande`, `domanda`, `focale`, `campo`, `pose` (`rig_optics`); `nome`, `votato`, `prima`,
-  `colore`, `scelto` (`camera_specs`); `uno`, `valori`, `mezzo` (`camera_sky`); `soggetto`
-  (parametro e colonna), `dove`, `solo` (`filters_used`).
+  `domande`, `domanda`, `focale`, `campo`, `pose`, `_POSES_OF_RIGS` (`rig_optics`); `nome`,
+  `votato`, `prima`, `colore`, `scelto` (`camera_specs`); `uno`, `valori`, `mezzo`
+  (`camera_sky`); `soggetto` (parametro e colonna), `dove`, `solo` (`filters_used`). Nel quinto
+  lotto: `valori`, `detti`, `righe`, `notti`, `risposte`, `gruppi`, `gruppo`, `chiave`,
+  `scritto`, `risposta`, `dato`, `valore`, `_POSES_OF_NIGHT` (`rigless`); `dove`, `per_notte`,
+  `nomi`, `nome`, `grafia`, `righe`, `ottica`, `visto`, `corredi`, `corredo`, `notte`, `viste`,
+  `camere`, `ottiche`, `focali`, `intero`, `dicono` (`night_rig`); `colore`, `gruppi`, `gruppo`,
+  `risposta`, `filtro`, `riga` (`unfiltered`); `risposta` (alias di `object_answer`, anche in
+  `identify`, `mosaic`, `mosaic_proposals` e `api/review_write`), `lati`, `campo`, `chiave`,
+  `vicini`, `altra`, `distanza`, `notte`, `detto`, `valore`, `nome`, `_POSES_OF_GROUP`
+  (`unnamed`); `sorgente`, `righe`, `nomi`, `conti`, `gruppi`, `vuoti`, `trovati`, il parametro
+  `gruppo` di `count_subject` (il dizionario del gruppo) e la colonna `gruppo` di `subjects_sql`,
+  alias interno letto solo da `subjects_of` (`subjects_sql` la usano anche `mosaic_proposals` e
+  `archive`, che non leggono `gruppo`) (`objects`); `prefisso`, `letto`, `valore`, `grafia`,
+  `tocca`, `grezzo`, `altro_id`, `mie` (`object_answer`); `_COLONNE`, `righe`, `cielo`
+  (`object_candidates`).
 - **`group._where`** torna il sito ma non la data: `_one_frame` la ricalcola, e cosi' arriva
   `str | None` fino a `group_store.night` e `create_night`; e il "lo ha detto l'utente" e'
   `bool | None` (passato con `bool()`) perche' la terna non distingue chi si ferma da chi entra.
@@ -142,7 +160,12 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   (`typeless.ANSWERS`, ripetute in `api/models_review_groups`). Nell'attrezzatura i soggetti
   dell'uso (`instrument`, `rig`, `filter`, scritti in `gear_usage.subject` e passati come stringhe
   da `rigs` e `api/gear_write`) e i campi dei corredi (`rigs.MOUNT`, `DECLARED`, `rig_optics.OPTICS`,
-  scritti in `declarations.field`).
+  scritti in `declarations.field`). Nelle domande per gruppo le risposte sul filtro
+  (`unfiltered.ANSWERS`, scritte in `declarations` e ripetute in
+  `api/models_review_groups.UnfilteredAnswer`), i tipi del bersaglio (`catalog`, `name`, `none`:
+  `object_answer.read_target`, `unnamed.answer`, ripetuti in `api/models_review_groups`, e
+  `unnamed.NONE` riscritto come `Literal["none"]` nel ritorno di `named_by_group`) e i due vuoti
+  del cielo (`objects.NOT_YET`, `NOT_FOUND`).
 - **La notte di un frame** (`scan_store.LocalNight`, notte/fuso/istante costruita da
   `scan.night_of` e spacchettata per posizione da `scan_store.insert_frame`) e' un alias di `tuple`: una `NamedTuple` la nomina.
 - **`db/inserted.inserted_id`** tiene la guardia su `lastrowid`; gli altri `.lastrowid` del
@@ -591,6 +614,19 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **Domande per gruppo e oggetti, dopo la fase 1**: `row_of` e' la stessa riga
+  (`next(iter(by_...(conn, only=key)), None)`) in `rigless`, `unnamed`, `typeless` e `rig_optics`,
+  e l'ordine "il piu' numeroso in cima" (`-frames`, `key`) e' riscritto in `rigless`, `unnamed`,
+  `unfiltered`, `rig_optics` e `frame_folder.counted`; "un grezzo senza bianchi o `None`" e'
+  `unnamed._written` e di nuovo a mano in `rigless.by_group`. Due regole senza test: in
+  `unnamed.assign` un frame senza puntamento non entra in un gruppo della stessa notte aperto con
+  un puntamento (tolta la condizione, la suite resta verde e due bersagli prendono una risposta
+  sola); `rigless.row_of` non ricostruisce la pagina intera per ogni risposta (costo al quadrato
+  dei gruppi), e nessun test di costo lo tiene. Regole dette piu' volte: "`IS`, non `=`: anche
+  'nessuna data' e' un gruppo" (`unnamed`, `rigless`); "i frame gia' risposti tornano in coda,
+  cosi' un ripensamento vale" nei `requeue` di `rigless`, `unfiltered` e `unnamed`; gli invarianti
+  del nome in `objects.NAME_COLUMNS` e `display_name` ripetono `docs/domini/spina.md` senza
+  rimandarci.
 - **L'attrezzatura, dopo la fase 1**: le docstring di `rigs.find_rig` e `rigs.RigExistsError`
   scrivono a mano il 5 % di `units.FOCAL_TOLERANCE`; "la scheda dell'utente vince su file e cielo"
   e' detta in `camera_sky`, `camera_specs` e `gear.camera_specs`, ma vive solo in

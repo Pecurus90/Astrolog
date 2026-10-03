@@ -1,73 +1,65 @@
-"""Il **corredo della notte**: cio' che le pose di una notte dicono dell'attrezzatura, per la posa
-che non lo dice.
-
-Una posa senza camera prende quella della sua notte, se gli header ne dicono una sola (Marco,
-23/9/2026); e se non dice l'ottica, prende quella della notte quando la notte ne dice una sola a
-una focale sola, con la focale se la posa non la dice -- senza, nasceva un corredo senza ottica
-accanto a quello delle pose complete. Una focale sua diversa non prende l'ottica. Lo usano
-`normalize` (`normalize_rig.rig_for_frame`) e la domanda sulla camera (`spine/rigless.py`), che un
-gruppo risolto dalla notte non lo chiede.
-
-Vincolo non ovvio: **si legge dal grezzo**, software compreso: le pose della notte possono non
-essere ancora normalizzate quando la si chiede, e la colonna normalizzata sarebbe vuota.
-"""
+"""What a night's frames say about the gear, for the frame that does not say it. Read from the raw
+columns: the night's frames may not be normalized yet when it is asked."""
 
 import json
+import sqlite3
+from collections.abc import Iterable
+from typing import Any
 
 from ..clock import NIGHT_SQL
+from ..db.row import Row
 from ..units import known_focal, same_focal
 from ..vocab.header_value import normalize_header_value
 from ..vocab.software import normalize_software, telescope_is_mount
 from . import declarations as decl
 
 
-def rigs_by_night(listed):
-    """Cio' che le pose di una notte dicono dell'attrezzatura: una riga per notte e grezzi, mai per
-    posa. Con `listed` solo le notti di un elenco JSON, che si cercano con l'indice."""
+def rigs_by_night(listed: bool) -> str:
+    """One row per night and raw values, never per frame. `listed` keeps the nights of a JSON list,
+    which are looked up through the index."""
     dove = f"{NIGHT_SQL} IN (SELECT value FROM json_each(?))" if listed else "1"  # noqa: S608
     return f"""
 SELECT {NIGHT_SQL} AS night, f.instrument_raw, f.telescope_raw, f.software_raw, f.focal_mm_raw
 FROM frames f WHERE {NIGHT_SQL} IS NOT NULL AND f.instrument_raw IS NOT NULL AND {dove}
 GROUP BY night, f.instrument_raw, f.telescope_raw, f.software_raw, f.focal_mm_raw
-"""  # noqa: S608 - frammenti costanti
+"""  # noqa: S608 - constant fragments
 
 
-# La notte della posa in SQL e non con `clock.night_date`: deve essere la stessa chiave del
-# raggruppamento, e con il fuso scritto nella data le due lingue non concordano.
+# In SQL, not `clock.night_date`: it must be the grouping key, and with the zone written in the
+# date the two languages disagree.
 NIGHT_OF = f"SELECT {NIGHT_SQL} AS night FROM frames f WHERE f.id = ?"  # noqa: S608
 
 _RAW_OF = "SELECT id, instrument_raw FROM frames WHERE id IN (SELECT value FROM json_each(?))"
 
-# Le pose delle notti di queste pose: la notte puo' aver cambiato la loro camera.
 _IN_NIGHTS_OF = f"""
 SELECT f.id, f.instrument_raw FROM frames f
 WHERE {NIGHT_SQL} IN (
   SELECT {NIGHT_SQL} FROM frames f WHERE f.id IN (SELECT value FROM json_each(?))
 )
-"""  # noqa: S608 - frammento costante
+"""  # noqa: S608 - constant fragment
+
+type _Seen = tuple[str, str | None, float | None]
 
 
-def asks_camera(instrument_raw):
-    """Se quella posa non dice con che camera e' stata ripresa. Si guarda il grezzo con la stessa
-    normalizzazione con cui si cerca la regola imparata (`declarations.instrument_name`): un valore
-    che si riduce a niente -- soli bianchi, o il solo indice di istanza ASCOM -- non e' un nome."""
+def asks_camera(instrument_raw: str | None) -> bool:
+    """Normalized as a learned rule is looked up: blanks or a bare ASCOM instance index are not a
+    name."""
     return not normalize_header_value(instrument_raw)
 
 
-def night_rigs(conn, nights=None):
-    """`{notte: corredo}` per le notti in cui gli header dicono una camera sola. Il corredo porta
-    l'ottica e la focale solo se la notte ne dice **una**, e "nessuna ottica" dell'ASIAIR e' una
-    risposta anch'essa; se no porta la camera sola. Le grafie passano dalla regola imparata.
-
-    `nights` tiene solo quelle notti: il corredo di una notte dipende solo dalle sue pose, e chi ne
-    chiede poche non deve leggere l'archivio intero."""
-    per_notte, nomi = {}, {}
+def night_rigs(
+    conn: sqlite3.Connection, nights: Iterable[str] | None = None
+) -> dict[str, dict[str, Any]]:
+    """Nights whose headers name one camera. Optics and focal only if the night says one: the
+    ASIAIR's "no optics" is an answer too. `nights` spares reading the whole archive."""
+    per_notte: dict[str, list[_Seen]] = {}
+    nomi: dict[tuple[str, str | None], str | None] = {}
     if nights is None:
         righe = conn.execute(rigs_by_night(False))
     else:
         righe = conn.execute(rigs_by_night(True), (json.dumps(sorted(nights)),))
 
-    def nome(kind, grafia):  # una grafia si risolve una volta, non una per notte
+    def nome(kind: str, grafia: str | None) -> str | None:  # one lookup per spelling, not per night
         if (kind, grafia) not in nomi:
             nomi[kind, grafia] = decl.instrument_name(conn, kind, grafia) if grafia else None
         return nomi[kind, grafia]
@@ -83,9 +75,7 @@ def night_rigs(conn, nights=None):
     return {notte: corredo for notte, corredo in corredi.items() if corredo is not None}
 
 
-def _rig_of(viste):
-    """Il corredo di una notte dalle sue terne (camera, ottica, focale), o `None` se le camere sono
-    piu' d'una."""
+def _rig_of(viste: list[_Seen]) -> dict[str, Any] | None:
     camere, ottiche = {v[0] for v in viste}, {v[1] for v in viste}
     if len(camere) != 1:
         return None
@@ -98,14 +88,15 @@ def _rig_of(viste):
     }
 
 
-def rig_of_night(conn, frame, rigs):
-    """Il corredo della notte di questa posa in `rigs` (`night_rigs`), o `None`."""
+def rig_of_night(
+    conn: sqlite3.Connection, frame: Row, rigs: dict[str, dict[str, Any]]
+) -> dict[str, Any] | None:
     return rigs.get(conn.execute(NIGHT_OF, (frame["id"],)).fetchone()["night"])
 
 
-def in_nights_of(conn, frame_ids):
-    """Le pose senza camera delle notti in cui cade una di queste pose che la camera la dice: il
-    corredo della loro notte puo' essere cambiato, e chi normalizza le rimette in coda."""
+def in_nights_of(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> list[int]:
+    """Camera-less frames in the nights of these camera-naming frames: their night's rig may have
+    changed, so the caller requeues them."""
     dicono = [r["id"] for r in conn.execute(_RAW_OF, (json.dumps(list(frame_ids)),))
               if not asks_camera(r["instrument_raw"])]  # fmt: skip
     if not dicono:
