@@ -57,7 +57,7 @@ NO_DATE = "no_date"
 def group_frames(conn):
     """Mette ogni posa che aspetta questo stadio nella sua notte e nella sua sessione; un
     evento per posa, poi la ricevuta."""
-    counts = dict.fromkeys(COUNTS, 0)
+    counts: dict[str, int] = dict.fromkeys(COUNTS, 0)
     errors, seen = [], 0
 
     def at_end():

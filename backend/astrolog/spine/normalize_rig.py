@@ -1,20 +1,22 @@
-"""I pezzi e il corredo di una posa: chi nasce da un valore d'header, e come si mette insieme.
+"""The half of `normalize` that turns raw header values into pieces and rigs."""
 
-E' la meta' di `normalize` che guarda l'attrezzatura -- l'altra guarda i filtri -- e si cambia
-per una ragione sola: come un grezzo diventa un pezzo. Lo store e' quello di `normalize`,
-perche' questo modulo **e'** quello stadio (la stessa ragione di `camera_specs`, dichiarata nei
-contratti di `backend/pyproject.toml`).
-"""
+import sqlite3
+from collections.abc import Mapping
+from typing import Any
 
 from ..units import known_focal, same_focal
 from ..vocab.software import telescope_is_mount
 from . import counts, declarations, gear, gear_create, rig_optics
 from . import rigs as corredi
 
+# a rig as the group's answer or the night gives it
+GivenRig = Mapping[str, Any]
 
-def instrument_named(conn, kind, name, counts, now):
-    """Il pezzo con quel nome, creato se non c'e': un nome che l'utente ha scritto fa nascere un
-    pezzo come lo fa nascere un header (`spine/rigless.py`)."""
+
+def instrument_named(
+    conn: sqlite3.Connection, kind: str, name: str | None, counts: dict[str, int], now: str
+) -> int | None:
+    """Created if missing: a name the user wrote gives birth to a piece just as a header does."""
     if not name:
         return None
     instrument_id = gear.instrument_id(conn, kind, name)
@@ -24,34 +26,35 @@ def instrument_named(conn, kind, name, counts, now):
     return instrument_id
 
 
-def instrument_for(conn, kind, raw, counts, now):
-    """Il pezzo dietro un valore d'header, creato se non c'e'. Il GENERE lo decide chi chiama.
-
-    Nessuna lista di nomi di montatura, mai: il nome cambia da utente a utente (`EQMod Mount`
-    e `ZWO AM3` sono tutti e due veri) e una lista invecchia. A dire che quel valore e' una
-    montatura e' il **software** che ha scritto il file."""
+def instrument_for(
+    conn: sqlite3.Connection, kind: str, raw: str | None, counts: dict[str, int], now: str
+) -> int | None:
+    """The caller decides the kind: no list of mount names, which differ per user and would go
+    stale; the software that wrote the file says whether a value is a mount."""
     return instrument_named(conn, kind, declarations.instrument_name(conn, kind, raw), counts, now)
 
 
-def instruments_on_frame(conn, frame, conti, now):
-    """Gli strumenti che **la posa nomina addosso a se'**, per genere: `{genere: id}`, e `None`
-    dove l'header tace. Il grezzo si chiama come il genere piu' `_raw`; i generi li elenca
-    `counts.ON_THE_FRAME`, che e' la casa sola.
-
-    **Stanno sulla posa e non sul corredo**: i file li legano al singolo scatto -- e' per questo
-    che le loro ore si sanno, a differenza della montatura -- e infilarli nell'impronta di un
-    corredo farebbe nascere un secondo corredo a chi cambia una ruota."""
+def instruments_on_frame(
+    conn: sqlite3.Connection, frame: sqlite3.Row, conti: dict[str, int], now: str
+) -> dict[str, int | None]:
+    """On the frame, not in the rig's fingerprint: files tie them to the single shot, and changing a
+    wheel would otherwise give birth to a second rig."""
     return {
         kind: instrument_for(conn, kind, frame[f"{kind}_raw"], conti, now)
         for kind in counts.ON_THE_FRAME
     }
 
 
-def mount_for_frame(conn, frame, rig_id, software, counts, now):  # noqa: PLR0913
-    """La montatura della posa. **Cio' che dici tu sul corredo vince**, per tutte le sue pose;
-    dove taci, quella che il file nomina, se il software dice che `TELESCOP` e' la montatura.
-    Quella del file **nasce comunque**: la tua parola sceglie cosa va sulla posa, non cancella un
-    pezzo che i tuoi file nominano."""
+def mount_for_frame(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    frame: sqlite3.Row,
+    rig_id: int | None,
+    software: str | None,
+    counts: dict[str, int],
+    now: str,
+) -> int | None:
+    """The user's mount on the rig wins; the file's mount is created anyway, because the user's word
+    chooses what goes on the frame, it does not delete a piece the files name."""
     dal_file = (
         instrument_for(conn, "mount", frame["telescope_raw"], counts, now)
         if telescope_is_mount(software)
@@ -61,29 +64,28 @@ def mount_for_frame(conn, frame, rig_id, software, counts, now):  # noqa: PLR091
     return detta if detta is not None else dal_file
 
 
-def rig_for_frame(conn, frame, buckets, counts, now, camera, detto, software, notte=None):  # noqa: PLR0913
-    """Il corredo: ottica + camera a una focale. Senza ne' l'una ne' l'altra non c'e' corredo.
-
-    **Con l'ASIAIR `TELESCOP` non e' l'ottica**: quel programma ci scrive la montatura, sempre, e
-    l'ottica non la scrive da nessuna parte (misurato su 171 header di quattro utenti, 14/9/2026).
-    Il pezzo nasce quindi `mount` e il corredo resta **senza ottica**: un corredo a cui manca un
-    pezzo e' vero, uno con la montatura al posto dell'ottica e' falso. Il criterio e' il software,
-    non il nome della montatura. Quale ottica fosse lo dici tu, una volta per camera e focale
-    (`spine/rig_optics.py`), e la risposta vale per ogni posa che l'ottica non la nomina.
-
-    `camera` e `detto` li porta chi ha gia' letto la risposta sul gruppo: l'ottica dichiarata
-    **vince** comunque, e la focale dichiarata riempie quella che le pose non dicono, o il corredo
-    che nasce qui resterebbe un gemello separato da quello rilevato. `notte` e' il corredo della
-    notte (`night_rig.night_rigs`): riempie solo cio' che il file tace, e l'ottica solo se la focale
-    della posa, quando c'e', e' la sua."""
+def rig_for_frame(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    frame: sqlite3.Row,
+    buckets: Mapping[float, float],
+    counts: dict[str, int],
+    now: str,
+    camera: str | None,
+    detto: GivenRig | None,
+    software: str | None,
+    notte: GivenRig | None = None,
+) -> int | None:
+    """Optics + camera at a focal. Where `TELESCOP` is the mount the file gives no optics: the
+    declared optics, the night's rig (at its focal) or the camera+focal answer fill it."""
     if telescope_is_mount(software):
-        optics_id = None  # e' la montatura, e la scrive `mount_for_frame`
+        optics_id = None  # it is the mount, written by `mount_for_frame`
     else:
         optics_id = instrument_for(conn, "optics", frame["telescope_raw"], counts, now)
     camera_id = instrument_named(conn, "camera", camera, counts, now)
     focal = known_focal(buckets.get(frame["focal_mm_raw"], frame["focal_mm_raw"]))
     if detto is not None:
         optics_id = instrument_named(conn, "optics", detto["optics"], counts, now) or optics_id
+        # the declared focal fills a silent one, or the rig born here would twin the detected one
         focal = focal if focal is not None else detto["focal_mm"]
     if (
         notte is not None
@@ -99,8 +101,8 @@ def rig_for_frame(conn, frame, buckets, counts, now, camera, detto, software, no
         return None
     rig_id, created = corredi.rig_for(conn, optics_id, camera_id, focal, now)
     counts["rigs"] += 1 if created else 0
-    # Il corredo che nasce da una risposta prende il nome e la montatura dati a quello senza
-    # ottica; uno che c'era gia' tiene la sua parola, e cio' che gli togli non torna.
+    # a rig born from an answer takes the name and mount given to the optics-less one; an existing
+    # rig keeps its own word
     if detta is not None and created:
         corredi.carry_declarations(conn, detta[0], rig_id, now)
     return rig_id

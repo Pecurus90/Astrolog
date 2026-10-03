@@ -29,10 +29,12 @@ non entra: lo rifa' Marco col disegno nuovo (*Per il disegno nuovo*, sotto).
 annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
 - Fatti: `spine/identify*`, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`, `weather`,
   i file sciolti di `backend/astrolog`. `spine` e' in corso per lotti, file per file nel glob:
-  fatto il primo, la scansione (`spine/__init__`, `scan`, `scan_store`, `frame_folder`,
-  `inventory`, `header_asks`, `copies`, `coordinates`, `rewrite`).
-- Mancano: il resto di `spine` (i lotti dopo la scansione), `api`.
-- Da chiudere strada facendo: 34 righe del backend (20 in `backend/astrolog`, 14 in
+  fatti il primo, la scansione (`spine/__init__`, `scan`, `scan_store`, `frame_folder`,
+  `inventory`, `header_asks`, `copies`, `coordinates`, `rewrite`), e il secondo, normalizzazione
+  e stadi (`normalize`, `normalize_store`, `normalize_rig`, `stages`, `stage_run`, `run`,
+  `counts`).
+- Mancano: il resto di `spine` (i lotti dopo normalizzazione e stadi), `api`.
+- Da chiudere strada facendo: 30 righe del backend (16 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
@@ -42,9 +44,7 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   `.pre-commit-config.yaml` (i quattro software) va a `CLAUDE.md`, "Software supportati".
   Annotare `astap`, `clock` e `units` ha lasciato tre `cast` dove il tipo ora ammette `None` ma
   il controllo sta sopra (`api/tonight.py`, `spine/solve.py`, `spine/unnamed.py`): si tolgono
-  restringendo il tipo quando arriva il loro package. Annotare `spine/scan` ha lasciato un quarto
-  `cast` in `spine/run.queue`: `folder_id` vi ammette `None` e il controllo sta sotto la lambda;
-  si toglie quando arriva `run`.
+  restringendo il tipo quando arriva il loro package.
 
 **Fase 2 -- semplificare**, sul codice gia' pulito: doppioni uniti, nomi interni in inglese, `dict`
 che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lunghe spezzate e i
@@ -70,7 +70,14 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   (`scan_store`); `_DENTRO`, `dentro`, `dritto` (`frame_folder`); `corredi` (alias di `rigs`),
   `_USO`, `_STRUMENTI`, `_CORREDI`, `_FILTRI`, `_BANDE`, `dichiarato`, `_senza_ore`, `nomi`,
   `montature`, `bande`, `_riga`, `riga` (`inventory`); `gruppi`, `chiave`, `posto`, `detto`
-  (`coordinates`); `programmi` (`rewrite`).
+  (`coordinates`); `programmi` (`rewrite`). Nel secondo lotto: `della_notte` (alias di
+  `night_rig`), `corredi` (alias di `rigs`), `vicine`, `detto`, `notte`, `addosso`, `larga`,
+  `filtro`, `tenuto` (`normalize`); `colonne` (`normalize_store`); `corredi` (alias di `rigs`),
+  `conti`, `dal_file`, `detta`, `detto`, `notte` (`normalize_rig`); `quanti`, `totali`, `aspettano` (`stages`); `chiesti`, `lavoro`, `ignoti`,
+  `voluti`, `eventi`, `evento`, `cartelle` (parametro di `queue_folders`), `molte`, `conti`,
+  `errori`, `esiti`, `chiave`, `storte`, `stato`, `motivo`, `dopo` (`run`); `_pezzo`,
+  `dai_corredi`, `_DAI_CORREDI`, `_DEL_MOSAICO`, `_SOGGETTI`, `_UNA_COLONNA`, `soggetto`, `dove`,
+  `trovata`, `tre` (`counts`).
 - **`identify`**: la rotazione dello scarto negli assi del sensore e' scritta due volte
   (`identify_geometry.in_frame` e `mosaic_geometry._in_axes`): va in `identify_geometry` e la
   chiamano tutti e due. Il letterale del lucchetto dell'utente (`method`/`confidence` `user`,
@@ -103,7 +110,9 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   senza cambiare comportamento, e lo `StrEnum` la sostituira'. Nella scansione: esiti, motivi,
   file non letti e saltati (`scan_store.STATUSES`, `REASONS`, `FILE_ERRORS`, `SKIP_REASONS`,
   scritti in `scan_runs` e ripetuti in `api/models`) e il marchio `calibrated`/`rewritten`
-  (`rewrite.MARK_WEIGHT`, scritto in `frames.rewrite_mark`).
+  (`rewrite.MARK_WEIGHT`, scritto in `frames.rewrite_mark`). Negli stadi: i nomi e gli stati
+  (`stages.STAGES`, `STATUSES`, scritti in `frame_stages`, e `run.STAGE_*`, letti da `api`) e i
+  soggetti del conto (le chiavi di `counts._SOGGETTI`, passate come stringhe da chi conta).
 - **La notte di un frame** (`scan_store.LocalNight`, notte/fuso/istante costruita da
   `scan.night_of` e spacchettata per posizione da `scan_store.insert_frame`) e' un alias di `tuple`: una `NamedTuple` la nomina.
 - **`db/inserted.inserted_id`** tiene la guardia su `lastrowid`; gli altri `.lastrowid` del
@@ -552,6 +561,19 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **Normalizzazione e stadi, dopo la fase 1**: `count_pending` e `pending_by_stage`
+  (`spine/stages.py`) hanno la stessa query e la stessa sottrazione di `_waiting_by_stage`, e il
+  commento "five counts" scrive a mano `len(STAGES)`; il controllo `scan` di `run.queue` ha un
+  solo test (`test_scanning_without_a_folder_is_an_error`), che lascia fuori sia `folder_id` sia
+  `run_id`, cosi' un controllo solo su `folder_id` passerebbe; `counts.py` e `stages.py` hanno
+  ancora una riga oltre i 100 caratteri dietro `# noqa: S608` (quella di `stages.py` senza
+  ragione); per un alias di tipo `worker/states.py` importa `spine.stage_run` (da solo, 16 moduli
+  invece di 3; nell'app intera costo zero). Regole dette piu' volte: "il worker si ferma al primo
+  evento con `done`" (`run._then_detach`, `run.molte`, `stage_run.receipt`); "il residuo non
+  arriva mai a zero" e "un dark senza tipo diventa ore" in `stages.py`; "una posa rotta fallisce
+  da sola" in `stage_run` (modulo e `watched`) e in `normalize`; la forma per chi ha gia' `rigs g`
+  (`counts._WITH_RIGS` e `counts.of`); le focali raggruppate prima di scrivere
+  (`normalize_store.pending_focals` e `normalize.py`).
 - **La scansione, dopo la fase 1, dice due volte la stessa regola**: in `spine/coordinates.py`
   "un posto gia' risposto resta in elenco, cosi' la risposta si cambia" sta nella docstring del
   modulo, di `_rows` e di `frames_at`; il perche' di `calibrated` che pesa piu' di `rewritten` sta

@@ -1,27 +1,25 @@
-"""Le scritture di `normalize`: le specifiche di una camera, le focali in attesa e il legame col
-frame. Query statiche, nessuna decisione: chi decide e' `normalize.py`. Far **nascere** un pezzo o
-un filtro e' di `gear_create`, trovare o creare un corredo per impronta di `rigs`: servono anche a
-chi scrive a mano, e lo store di uno stadio e' solo suo.
-"""
+"""The writes of `normalize`: static queries, no decisions. Creating a piece, a filter or a rig
+lives in `gear_create` and `rigs`, because hand-written answers need them too."""
+
+import sqlite3
+from collections.abc import Iterable, Iterator, Mapping
 
 from ..db import idlist
 from . import counts
 
 
-def frame(conn, frame_id):
+def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
     return conn.execute("SELECT * FROM frames WHERE id = ?", (frame_id,)).fetchone()
 
 
-def none_filter_id(conn):
-    """La riga "nessun filtro", una sola nell'archivio, o None. Si cerca per `is_none` e non per
-    nome: l'utente puo' averla rinominata."""
+def none_filter_id(conn: sqlite3.Connection) -> int | None:
+    """Found by `is_none`, not by name: the user may have renamed it."""
     row = conn.execute("SELECT id FROM filters WHERE is_none = 1").fetchone()
     return None if row is None else row["id"]
 
 
-# Per ogni camera, i file che la usano raggruppati per cio' che dicono: poche righe, non una per
-# posa. Ogni camera c'e', anche senza pose (`n` a zero), perche' possa dimenticare cio' che le
-# pose dicevano. Le copie riscritte non votano, perche' non sono un'altra posa.
+# One row per camera and per what its files say. Every camera is there, even with no frames, so it
+# can forget what they said; rewritten copies are not another frame and do not vote.
 _CAMERA_VOTES = """
 SELECT i.id AS camera_id, i.name AS camera, f.pixel_size_um, f.binning,
        f.bayer_pattern IS NOT NULL AS color, COUNT(f.id) AS n
@@ -33,19 +31,21 @@ GROUP BY i.id, f.pixel_size_um, f.binning, color
 """
 
 
-def camera_votes(conn, leaving_out=()):
-    """Le righe del voto; `leaving_out` sono le pose che non votano col corredo che hanno adesso."""
+def camera_votes(conn: sqlite3.Connection, leaving_out: Iterable[int] = ()) -> list[sqlite3.Row]:
+    """`leaving_out` are the frames that do not vote with the rig they have now."""
     with idlist.holding(conn, leaving_out) as listed:
         return conn.execute(_CAMERA_VOTES.format(listed=listed)).fetchall()
 
 
-def camera_colours(conn):
-    """`{id della camera: (nome, colore votato)}`, prima che un voto nuovo lo riscriva."""
+def camera_colours(conn: sqlite3.Connection) -> dict[int, tuple[str, str | None]]:
+    """`{camera id: (name, voted colour)}`, read before a new vote rewrites it."""
     rows = conn.execute("SELECT id, name, camera_type FROM instruments WHERE kind = 'camera'")
     return {r["id"]: (r["name"], r["camera_type"]) for r in rows}
 
 
-def set_camera_specs(conn, camera_id, camera_type, pixel_size_um):
+def set_camera_specs(
+    conn: sqlite3.Connection, camera_id: int, camera_type: str | None, pixel_size_um: float | None
+) -> None:
     conn.execute(
         "UPDATE instruments SET camera_type = ?, pixel_size_um = ?"
         " WHERE id = ? AND (camera_type IS NOT ? OR pixel_size_um IS NOT ?)",
@@ -53,9 +53,8 @@ def set_camera_specs(conn, camera_id, camera_type, pixel_size_um):
     )
 
 
-# Le nidiate delle pose date: tutti i frame che dicono di essere lo stesso scatto di una di loro
-# (stessa data, stessa camera, stessa esposizione). Chi non ne dice uno dei tre non ha nidiata:
-# su un dato assente non si afferma niente, e `NULL = NULL` legherebbe pose vere fra loro.
+# Every frame claiming to be the same shot as one given (date, camera, exposure). One without all
+# three has no brood: `NULL = NULL` would tie real frames together.
 _BROODS = """
 SELECT f.id, f.date_obs, f.instrument_raw, f.exposure_s, f.software_raw, f.header_json, f.copy_of
 FROM frames f JOIN (
@@ -67,17 +66,15 @@ ORDER BY f.date_obs, f.instrument_raw, f.exposure_s
 """
 
 
-def broods(conn, frame_ids):
-    """Le righe una alla volta, non un elenco: chi le legge tiene di ognuna solo cio' che gli
-    serve, e gli header di tutta la coda non stanno in memoria insieme. L'elenco resta preso
-    finche' la lettura non finisce (`db/idlist.py`, la rientranza)."""
+def broods(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> Iterator[sqlite3.Row]:
+    """Row by row, so the headers of the whole queue are never in memory together; the id list
+    stays held until the reading ends."""
     with idlist.holding(conn, frame_ids) as listed:
         yield from conn.execute(_BROODS.format(listed=listed))
 
 
-def pending_focals(conn, frame_ids):
-    """Le focali grezze dei frame in coda: servono tutte insieme per raggrupparle prima di
-    scrivere, cosi' l'ordine dei file non cambia i corredi."""
+def pending_focals(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> list[float | None]:
+    """All together, so they are bucketed before writing and the file order does not change rigs."""
     with idlist.holding(conn, frame_ids) as listed:
         return [
             r[0]
@@ -87,13 +84,23 @@ def pending_focals(conn, frame_ids):
         ]
 
 
-def set_normalized(conn, frame_id, *, filter_id, rig_id, software, copy_of, rewrite_mark, on_frame):  # noqa: PLR0913
-    """`on_frame` sono gli strumenti che la posa nomina addosso a se', per genere: le colonne si
-    chiamano come il genere piu' `_id`, e chi non c'e' arriva `None`. I generi li elenca
-    `counts.CARRIED`, che e' la casa sola."""
+def set_normalized(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    frame_id: int,
+    *,
+    filter_id: int | None,
+    rig_id: int | None,
+    software: str | None,
+    copy_of: int | None,
+    rewrite_mark: str | None,
+    on_frame: Mapping[str, int | None],
+) -> None:
+    """`on_frame` holds the carried instruments by kind; column `<kind>_id`, kinds from
+    `counts.CARRIED`."""
     colonne = "".join(f", {k}_id = ?" for k in counts.CARRIED)
+    # kinds are ours, never user values
     conn.execute(
-        "UPDATE frames SET filter_id = ?, rig_id = ?, software = ?, copy_of = ?,"  # noqa: S608 - generi nostri, mai valori dell'utente
+        "UPDATE frames SET filter_id = ?, rig_id = ?, software = ?, copy_of = ?,"  # noqa: S608
         f" rewrite_mark = ?{colonne} WHERE id = ?",
         (
             filter_id,

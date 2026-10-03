@@ -21,7 +21,7 @@ from . import identify_link as link
 from . import identify_score as score
 from . import identify_store as store
 from . import object_answer as risposta
-from .stage_run import frame_safely, receipt, watched
+from .stage_run import Event, frame_safely, receipt, watched
 from .stages import ready, set_status
 
 log = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ def candidates(
     return running[:limit]
 
 
-def identify_frames(conn: sqlite3.Connection) -> Iterator[dict[str, Any]]:
+def identify_frames(conn: sqlite3.Connection) -> Iterator[Event]:
     """Links every frame waiting on this stage: one event per frame, then the receipt."""
     counts: dict[str, int] = dict.fromkeys(COUNTS, 0)
     errors, seen, frame_ids = [], 0, []

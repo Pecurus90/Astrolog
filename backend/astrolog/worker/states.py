@@ -1,8 +1,10 @@
 """Worker states, which are also the per-stage states (one vocabulary), and the stage contract."""
 
 import logging
-from collections.abc import Callable, Generator, Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
+
+from ..spine.stage_run import Factory
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ class Stage:
     def __init__(
         self,
         name: str,
-        factory: Callable[[], Generator[dict[str, Any]]],
+        factory: Factory,
         on_finish: Callable[[], object] | None = None,
     ) -> None:
         self.name = name

@@ -18,7 +18,7 @@ from ..fits.walk import long_path, walk_dir
 from ..place import timezone_of_frame
 from . import header_asks, typeless
 from . import scan_store as store
-from .stage_run import receipt
+from .stage_run import Event, receipt
 
 log = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ def _receipt(  # noqa: PLR0913
     counts: dict[str, int],
     left_out: Mapping[str, Iterable[Any]] | None = None,
     errors: Iterable[dict[str, str]] = (),
-) -> dict[str, Any]:
+) -> Event:
     lists = {name: list((left_out or {}).get(name, ())) for name in store.RECEIPT_LISTS}
     return receipt(status, reason, counts, errors, run_id=run_id, folder_id=folder_id, **lists)
 
@@ -77,7 +77,7 @@ def scan_folder(  # noqa: C901
     run_id: int | None = None,
     min_age_s: float = DEFAULT_MIN_AGE_S,
     now_fn: Callable[[], float] = time.time,
-) -> Generator[dict[str, Any], None, None]:
+) -> Generator[Event, None, None]:
     """One event per file, then the receipt. `run_id` is the `scan_runs` row the caller already
     opened to answer with its id at once, or None to open it here."""
     root, _retired = store.folder_root(conn, folder_id)

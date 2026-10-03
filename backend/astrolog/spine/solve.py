@@ -100,7 +100,7 @@ def solve_frames(conn, *, exe=FIND_IT, run=None, cache=None):
 
     `exe` e `run` si passano nei test; in produzione l'eseguibile si cerca una volta sola per
     corsa, non a ogni posa."""
-    counts = dict.fromkeys(COUNTS, 0)
+    counts: dict[str, int] = dict.fromkeys(COUNTS, 0)
     status, reason = "ok", None
     errors, seen = [], 0
     exe = solver_path(conn) if exe is FIND_IT else exe

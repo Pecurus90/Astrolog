@@ -1,26 +1,33 @@
-"""La corsa di uno stadio che lavora posa per posa, scritta una volta: la guardia della posa, lo
-scheletro della corsa e la ricevuta che worker e pagina leggono.
-
-Vincolo non ovvio: una posa rotta si segna `failed` e la corsa continua, un guasto fuori da una
-posa la ferma; e cio' che le pose lavorate hanno spostato si riscrive in ogni caso, anche a corsa
-fermata o rotta. La transazione di una posa sta in `db/transaction.py`; l'ordine degli stadi, in
-`spine/run.py`.
-"""
+"""The run of a frame-by-frame stage, written once: a broken frame fails alone, a fault outside a
+frame stops the run, and what the frames moved is rewritten even after a stop or a crash."""
 
 import logging
+import sqlite3
+from collections.abc import Callable, Generator, Iterable, Iterator, Mapping
 from contextlib import contextmanager
+from typing import Any
 
 from .stages import set_status
 
 log = logging.getLogger(__name__)
 
+type Event = dict[str, Any]
+type Factory = Callable[[], Generator[Event]]
+type FrameError = dict[str, int | str]
 
-def frame_safely(conn, stage, frame_id, work, counts, errors):  # noqa: PLR0913
-    """Cio' che torna `work()`, o None se la posa si e' rotta: allora e' segnata `failed` col suo
-    perche', contata in `counts["errors"]` e messa in `errors`."""
+
+def frame_safely[T](  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    stage: str,
+    frame_id: int,
+    work: Callable[[], T],
+    counts: dict[str, int],
+    errors: list[FrameError],
+) -> T | None:
+    """None if the frame broke: it is then marked `failed` with its reason and counted."""
     try:
         return work()
-    except Exception as err:  # noqa: BLE001 - il guasto e' della posa, non della corsa
+    except Exception as err:  # noqa: BLE001 - the fault is the frame's, not the run's
         set_status(conn, frame_id, stage, "failed", reason="internal_error")
         log.exception("%s: posa non lavorata", stage, extra={"frame_id": frame_id})
         counts["errors"] += 1
@@ -29,12 +36,13 @@ def frame_safely(conn, stage, frame_id, work, counts, errors):  # noqa: PLR0913
 
 
 @contextmanager
-def watched(stage, counts, at_end, **start):
-    """Il corpo di una corsa: `at_end()` gira comunque -- finita, fermata dall'utente o rotta.
-    `start` va nella riga di log d'inizio; lo stato che la corsa scrive in cio' che riceve va in
-    quella di fine."""
+def watched(
+    stage: str, counts: Mapping[str, int], at_end: Callable[[], object], **start: object
+) -> Iterator[dict[str, Any]]:
+    """`at_end()` runs whether the run ends, is stopped or breaks. The status written into the
+    yielded dict goes into the closing log line."""
     log.info("%s: inizio", stage, extra=start)
-    outcome = {"status": "ok"}
+    outcome: dict[str, Any] = {"status": "ok"}
     try:
         yield outcome
     except GeneratorExit:
@@ -48,8 +56,14 @@ def watched(stage, counts, at_end, **start):
     log.info("%s: fine", stage, extra={**outcome, **counts})
 
 
-def receipt(status, reason, counts, errors, **extra):
-    """L'ultimo evento di una corsa: il worker si ferma al primo `done` che vede."""
+def receipt(
+    status: str,
+    reason: str | None,
+    counts: Mapping[str, int],
+    errors: Iterable[Mapping[str, Any]],
+    **extra: object,
+) -> Event:
+    """The worker stops at the first event with `done`."""
     return {
         "done": True,
         "status": status,
