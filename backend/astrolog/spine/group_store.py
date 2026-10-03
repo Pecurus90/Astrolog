@@ -1,17 +1,14 @@
-"""Le domande al database dello stadio `group`, tutte qui e tutte statiche.
+"""The queries of the `group` stage, all static. Nights and sessions are derived: found before
+created, detached when redone, swept when empty. The user's word lives in `declarations`."""
 
-Vincolo non ovvio: notti e sessioni sono un **derivato**, come gli oggetti. Chi le scrive le
-cerca prima e le crea poi, e chi rifa' il lavoro stacca le pose e spazza cio' che resta vuoto:
-una sessione a zero pose sarebbe una riga che dice "0 pose" sulla pagina Notti, e una notte
-senza sessioni non e' una notte. La parola dell'utente non vive qui -- vive in `declarations`.
-"""
+import sqlite3
+from collections.abc import Collection
 
 from ..db import idlist
+from ..db.inserted import inserted_id
 
 
-def frame(conn, frame_id):
-    """Cio' che serve a raggruppare una posa: quando, cosa, con che corredo, e da dove dice
-    l'header di essere stata ripresa."""
+def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
     return conn.execute(
         "SELECT id, date_obs, object_id, rig_id, site_lat, site_lon, header_json"
         " FROM frames WHERE id = ?",
@@ -22,43 +19,46 @@ def frame(conn, frame_id):
 _SITE = "SELECT id, name, latitude, longitude, timezone, sky_sqm FROM sites"
 
 
-def home_site(conn):
-    """Il luogo di casa: e' lui a dare il fuso alle notti. `None` se non ce n'e' uno."""
+def home_site(conn: sqlite3.Connection) -> sqlite3.Row | None:
     return conn.execute(_SITE + " WHERE is_default = 1").fetchone()
 
 
-def sites(conn):
-    """Tutti i luoghi dichiarati: una posa ripresa vicino a uno di loro ci va senza chiedere."""
+def sites(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     return conn.execute(_SITE).fetchall()
 
 
-def night(conn, site_id, night_date):
-    """La notte di quel luogo in quella data, se c'e' gia'."""
+def night(conn: sqlite3.Connection, site_id: int, night_date: str | None) -> sqlite3.Row | None:
     return conn.execute(
         "SELECT id FROM nights WHERE site_id = ? AND night_date = ?", (site_id, night_date)
     ).fetchone()
 
 
-def site_by_name(conn, name):
-    """Un sito per NOME: e' la chiave su cui viaggia la risposta dell'utente, perche' gli id si
-    riusano. `None` se quel sito non c'e' piu' o si chiama in un altro modo."""
+def site_by_name(conn: sqlite3.Connection, name: str) -> sqlite3.Row | None:
+    """By NAME: the user's answer travels on it, because ids are reused."""
     return conn.execute(_SITE + " WHERE name = ?", (name,)).fetchone()
 
 
-def create_night(conn, site_id, night_date, now, *, declared=False):
-    """Una notte nuova. `detected` quando e' l'app ad attribuirla al luogo di casa, `declared`
-    quando il sito viene da una risposta dell'utente: e' la differenza che decide chi puo'
-    spostarla dopo (nessuno, nel secondo caso)."""
-    return conn.execute(
-        "INSERT INTO nights(site_id, night_date, site_source, created_at) VALUES(?, ?, ?, ?)",
-        (site_id, night_date, "declared" if declared else "detected", now),
-    ).lastrowid
+def create_night(
+    conn: sqlite3.Connection,
+    site_id: int,
+    night_date: str | None,
+    now: str,
+    *,
+    declared: bool = False,
+) -> int:
+    return inserted_id(
+        conn.execute(
+            "INSERT INTO nights(site_id, night_date, site_source, created_at) VALUES(?, ?, ?, ?)",
+            (site_id, night_date, "declared" if declared else "detected", now),
+        )
+    )
 
 
-def session(conn, night_id, object_id, rig_id):
-    """La sessione di quella terna, se c'e' gia'. Il corredo vuoto si confronta come tale:
-    e' la stessa forma della chiave nello schema, o due pose senza corredo non si
-    ritroverebbero nella stessa sessione."""
+def session(
+    conn: sqlite3.Connection, night_id: int, object_id: int, rig_id: int | None
+) -> sqlite3.Row | None:
+    """A missing rig compares as the schema's key does, or two rigless frames would not meet in
+    the same session."""
     return conn.execute(
         "SELECT id FROM sessions WHERE night_id = ? AND object_id = ?"
         " AND COALESCE(rig_id, -1) = COALESCE(?, -1)",
@@ -66,24 +66,28 @@ def session(conn, night_id, object_id, rig_id):
     ).fetchone()
 
 
-def create_session(conn, night_id, object_id, rig_id):
-    return conn.execute(
-        "INSERT INTO sessions(night_id, object_id, rig_id) VALUES(?, ?, ?)",
-        (night_id, object_id, rig_id),
-    ).lastrowid
+def create_session(
+    conn: sqlite3.Connection, night_id: int, object_id: int, rig_id: int | None
+) -> int:
+    return inserted_id(
+        conn.execute(
+            "INSERT INTO sessions(night_id, object_id, rig_id) VALUES(?, ?, ?)",
+            (night_id, object_id, rig_id),
+        )
+    )
 
 
-def set_frame_group(conn, frame_id, night_id, session_id):
-    """Dove finisce la posa: la sua notte e la sua sessione."""
+def set_frame_group(
+    conn: sqlite3.Connection, frame_id: int, night_id: int, session_id: int
+) -> None:
     conn.execute(
         "UPDATE frames SET night_id = ?, session_id = ? WHERE id = ?",
         (night_id, session_id, frame_id),
     )
 
 
-def detach(conn, frame_ids):
-    """Stacca notte e sessione dalle pose che questo stadio sta per rifare: sono un derivato, e
-    chi le ha rimesse in coda ha detto che quelli vecchi non valgono piu'."""
+def detach(conn: sqlite3.Connection, frame_ids: Collection[int]) -> None:
+    """Whoever requeued these frames said the old night and session no longer hold."""
     if not frame_ids:
         return
     with idlist.holding(conn, frame_ids) as listed:
@@ -93,22 +97,16 @@ def detach(conn, frame_ids):
         )
 
 
-def drop_empty_sessions(conn):
-    """Le sessioni rimaste senza pose. Torna quante ne ha tolte."""
+def drop_empty_sessions(conn: sqlite3.Connection) -> int:
     return conn.execute(
         "DELETE FROM sessions"
         " WHERE id NOT IN (SELECT session_id FROM frames WHERE session_id IS NOT NULL)"
     ).rowcount
 
 
-def drop_empty_nights(conn):
-    """Le notti rimaste senza sessioni. Si chiama DOPO la spazzata delle sessioni, o una notte
-    appena svuotata resterebbe in piedi per un giro.
-
-    **Mai una notte dichiarata dall'utente**: quella e' una sua risposta ("queste pose sono di
-    questo luogo") e puo' restare vuota per un giro senza essere un residuo -- basta che le sue
-    pose aspettino un altro stadio. Toglierla vorrebbe dire cancellare una risposta in
-    silenzio, che e' la cosa che questo progetto non fa mai."""
+def drop_empty_nights(conn: sqlite3.Connection) -> int:
+    """Never a night the user declared: it may stay empty while its frames wait for another stage,
+    and removing it would silently delete an answer."""
     return conn.execute(
         "DELETE FROM nights"
         " WHERE site_source != 'declared'"

@@ -1,24 +1,8 @@
-"""La notte delle pose che non dicono dove sono state fatte **segue il fuso di casa**, e le risposte
-per gruppo che portano quella notte nella chiave la seguono.
-
-Vincoli non ovvi:
-
-* **Si riscrive solo chi non ha un fuso dalle coordinate dell'header**, con la regola della
-  scansione (`place.timezone_of_frame`): dove le coordinate danno un fuso vale quello, e casa non
-  c'entra. Si confronta col
-  fuso scritto sulla posa, quindi chiamarla due volte non cambia niente.
-* **Il gruppo della camera e' fatto solo di chi non la dice** (`rigless`): una posa con la camera
-  nell'header che cambia notte non porta ne' toglie risposte a nessuno.
-* **Nelle chiavi la notte e' una data**: la notte UTC del 14 e quella locale del 14 sono la stessa
-  chiave, e si sposta solo chi cambia data. Una notte si puo' dividere in due (la risposta va su
-  tutte e due le parti) e due notti diventare una: una risposta sola -- o la stessa su tutte e due
-  -- va sul gruppo unito, anche sulle pose che non l'avevano; due risposte diverse cadono e la
-  domanda torna aperta, perche' scegliere vorrebbe dire inventarne una.
-* **Una risposta rimasta senza pose si toglie**: varrebbe per pose diverse che arrivassero domani
-  con la stessa data e gli stessi valori.
-"""
+"""The night of frames whose header does not say where they were shot follows home's zone, and the
+per-group answers carrying that night in their key follow it (contract: `docs/domini/spina.md`)."""
 
 import json
+import sqlite3
 
 from ..clock import NIGHT_SQL, night_date
 from ..place import timezone_of_frame
@@ -28,7 +12,11 @@ from .night_rig import asks_camera
 from .scan_store import home_timezone
 from .stages import invalidate
 
-# I posti delle pose che non stanno nel fuso di casa: si chiede il fuso una volta per posto.
+# A frame and its new night.
+type Move = tuple[sqlite3.Row, str | None]
+# `{new key: old keys}` of a per-group answer.
+type Towards = dict[str, set[str]]
+
 _PLACES = "SELECT DISTINCT site_lat, site_lon FROM frames WHERE local_tz IS NOT ?"
 _OF_PLACE = """
 SELECT f.id, f.local_night, f.night_instant, f.unnamed_key, f.instrument_raw, f.telescope_raw,
@@ -40,19 +28,18 @@ _OF_NIGHTS = f"""
 SELECT f.id, {NIGHT_SQL} AS night, f.unnamed_key, f.instrument_raw, f.telescope_raw, f.naxis1,
   f.naxis2, f.pixel_size_um
 FROM frames f WHERE {NIGHT_SQL} IN (SELECT value FROM json_each(?))
-"""  # noqa: S608 - frammento costante
+"""  # noqa: S608 - constant fragments
 
 
-def follow_home(conn):
-    """Porta nel fuso di casa di adesso -- o in UTC, senza casa -- la notte delle pose che non
-    hanno un fuso dalle coordinate dell'header, sposta le risposte per gruppo che la portano nella
-    chiave, e rimette in coda da `normalize` le pose delle notti toccate. La chiama chi cambia casa
-    o il suo fuso (`api/sites.py`)."""
+def follow_home(conn: sqlite3.Connection) -> None:
+    """Into home's zone now (UTC without a home), only where the header's coordinates give no zone;
+    comparing with the written zone makes a second call a no-op. Touched nights are redone."""
     casa = home_timezone(conn)
-    moved, riscritte = [], []
+    moved: list[Move] = []
+    riscritte: list[tuple[str | None, str | None, int]] = []
     for lat, lon in conn.execute(_PLACES, (casa,)).fetchall():
         if timezone_of_frame(lat, lon, casa) != casa:
-            continue  # il fuso viene dalle coordinate
+            continue  # the zone comes from the coordinates
         for r in conn.execute(_OF_PLACE, (casa, lat, lon)).fetchall():
             notte = night_date(r["night_instant"], casa)
             riscritte.append((notte, casa, r["id"]))
@@ -75,10 +62,10 @@ def follow_home(conn):
     invalidate(conn, [r["id"] for r in conn.execute(_OF_NIGHTS, (notti,))], "normalize")
 
 
-def _rigless_moves(moved):
-    """`{chiave nuova: chiavi vecchie}` delle domande sulla camera: la chiave si ricompone dalla
-    notte, quindi si sposta da sola, e con lei deve andare la risposta."""
-    verso = {}
+def _rigless_moves(moved: list[Move]) -> Towards:
+    """Only frames that do not say their camera: the key is composed from the night, so it moves by
+    itself and the answer must go with it."""
+    verso: Towards = {}
     for r, notte in moved:
         if asks_camera(r["instrument_raw"]):
             vecchia = rigless.key_of_row(r, r["local_night"])
@@ -86,25 +73,22 @@ def _rigless_moves(moved):
     return verso
 
 
-def _unnamed_moves(conn, moved):
-    """`{chiave nuova: chiavi vecchie}` dei frame senza nome: la chiave e' scritta sulla posa, e si
-    risceglie col puntamento nella notte nuova (`unnamed.assign`), dove puo' finire in un gruppo
-    che c'era gia'."""
+def _unnamed_moves(conn: sqlite3.Connection, moved: list[Move]) -> Towards:
+    """The key is written on the frame, so it is chosen again in the new night (`unnamed.assign`),
+    where it may land in a group already there."""
     toccati = sorted(((r["id"], r["unnamed_key"]) for r, _ in moved if r["unnamed_key"]))
     conn.executemany(
         "UPDATE frames SET unnamed_key = NULL WHERE id = ?", [(i,) for i, _ in toccati]
     )
-    verso = {}
+    verso: Towards = {}
     for frame_id, vecchia in toccati:
         verso.setdefault(unnamed.assign(conn, frame_id), set()).add(vecchia)
     return verso
 
 
-def _carry(conn, field, verso, fermi):
-    """Porta le risposte `field` dalle chiavi vecchie alle nuove. `fermi` sono le chiavi che le
-    pose rimaste al loro posto portano ancora: la risposta di una di quelle vale anche per chi
-    arriva. Tutto si legge prima di scrivere, perche' la chiave vecchia di un gruppo puo' essere
-    la nuova di un altro."""
+def _carry(conn: sqlite3.Connection, field: str, verso: Towards, fermi: set[str]) -> None:
+    """`fermi` are keys still carried by frames that stayed: their answer holds for newcomers too.
+    All is read before writing, because one group's old key may be another's new one."""
     tutte = set(verso).union(*verso.values())
     prima = {k: decl.declared(conn, decl.FRAME_GROUP, k, field) for k in tutte}
     for nuova, vecchie in verso.items():
@@ -113,6 +97,8 @@ def _carry(conn, field, verso, fermi):
         if len(dette) == 1:
             decl.write_declaration(conn, decl.FRAME_GROUP, nuova, field, dette.pop())
         else:
+            # Two different answers fall and the question reopens: picking one would invent it.
             decl.forget(conn, decl.FRAME_GROUP, nuova, field)
+    # An answer left with no frames would hold for other frames arriving later with the same key.
     for vecchia in tutte - set(verso) - fermi:
         decl.forget(conn, decl.FRAME_GROUP, vecchia, field)

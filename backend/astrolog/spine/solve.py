@@ -1,18 +1,15 @@
-"""Lo stadio `solve`: il cielo di ogni posa, misurato da ASTAP e non letto dall'header.
-
-Vincolo non ovvio: **due giri**. Il primo risolve una posa per sessione -- basta per
-orientare, raggruppare e disegnare il campo, e sono 300 solve invece di 10.000 per vedere un
-archivio intero; il secondo prende tutte le altre dalle piu' recenti, e li' una posa senza
-puntamento nell'header **eredita l'indizio dalla sorella gia' risolta**, che e' cio' che la
-salva dai 23 secondi della ricerca cieca. Il FITS non si tocca mai: cio' che ASTAP scrive va
-nella cache, e una soluzione trovata una volta non si ricalcola.
-"""
+"""The `solve` stage: each frame's sky measured by ASTAP, never read from the header. One frame
+per order key goes first: that alone is enough to place and group the whole archive."""
 
 import contextlib
 import logging
 import os
+import sqlite3
+from collections.abc import Iterator
+from enum import Enum
 from functools import partial
-from typing import cast
+from pathlib import Path
+from typing import Final
 
 from .. import astap
 from ..clock import now_iso
@@ -23,94 +20,82 @@ from ..fits.walk import long_path
 from ..units import field_deg, scale_arcsec_px
 from . import camera_sky, gear_usage, typeless_folders
 from . import solve_store as store
-from .stage_run import frame_safely, receipt, watched
+from .stage_run import Event, FrameError, frame_safely, receipt, watched
 from .stages import ready, set_status
 
 log = logging.getLogger(__name__)
 
 COUNTS = ("solved", "cached", "unsolved", "waiting", "measured", "errors")
 
-# ASTAP c'e' ma il suo catalogo stellare no: il programma parte e **non riconosce niente**. E' un
-# download separato -- dai 101 MB del D05 a 1,25 GB del D80 -- e la stessa parola
-# serve in tre punti -- il motivo di una posa fallita, cio' che ferma la corsa, e la riga di
-# `missing` che lo dice prima di far aspettare una scansione intera.
+# ASTAP without its star catalogue starts and recognises nothing. One word for a frame's reason,
+# for what stops the run, and for the `missing` line that warns before a whole scan.
 NO_STAR_DATABASE = "no_star_database"
 
-# Cio' che si riprova da solo: la posa NON si segna `failed`, resta da fare, e la corsa dopo
-# ci ritorna. Segnarla fallita e' un vicolo cieco -- nessuno la rimetterebbe in coda, e chi
-# installa ASTAP il giorno dopo, riattacca il disco o scarica il catalogo non risolverebbe mai
-# piu' niente: l'unica uscita sarebbe cancellare il database dell'app.
+# Not marked `failed`: nobody would requeue it, and installing ASTAP or reattaching the disk the
+# next day would never solve anything again. It stays pending and the next run retries it.
 RETRIABLE = ("astap_missing", "file_missing", NO_STAR_DATABASE)
 
-# E cio' che ferma la corsa invece di ripetersi posa per posa: senza il catalogo **ogni** posa
-# fallira' identica, e lanciare ASTAP cinquemila volte per scoprirlo e' un'ora buttata. Si
-# ferma alla prima e lo dichiara: lo stadio risulta in errore col suo motivo, non completato.
+# Without the catalogue every frame fails the same way: stop at the first and say so.
 ABORTS_THE_RUN = (NO_STAR_DATABASE,)
 
-# "cercalo tu" e "non c'e'" sono due cose diverse, e `None` non puo' dirle tutte e due:
-# un test che vuole provare l'assenza del solver passa `exe=None` e deve ottenere
-# l'assenza, non una ricerca che sulla macchina di chi sviluppa lo trova davvero.
-FIND_IT = object()
 
-# Cosa manca all'app quando il solver non si trova, come codice e non come frase: e' la parola
-# che `GET /settings` mette fra le cose che mancano. Sta qui, con lo stadio che ne soffre, come
-# `NO_ACTIVE_SITE` sta con `group`.
+class _Sentinel(Enum):
+    FIND_IT = "find_it"
+
+
+# "Look for it" and "there is none" differ: a test passing `exe=None` must get no solver, not a
+# search that finds the developer's own ASTAP.
+FIND_IT: Final = _Sentinel.FIND_IT
+
+# The word `GET /settings` lists among what is missing; it lives with the stage that suffers it.
 NO_SOLVER = "no_solver"
 
 
-def solver_path(conn):
-    """Dove sta ASTAP per questa installazione: il percorso dichiarato dall'utente se c'e',
-    altrimenti la ricerca automatica.
-
-    Una casa sola perche' la domanda si fa in due punti -- questa corsa, e la riga di `missing`
-    che avvisa l'utente -- e due ricerche scritte a parte divergerebbero: l'avviso direbbe che
-    il solver c'e' mentre la corsa non lo trova, o il contrario. Che `find_exe` e `where_exe`
-    diano lo stesso percorso lo tiene fermo una prova che le confronta su **ogni ramo** della
-    ricerca (`tests/test_astap.py`), non questa catena: farle passare una dall'altra renderebbe
-    cieco il recinto della suite, che le sostituisce tutte e due."""
+def solver_path(conn: sqlite3.Connection) -> str | None:
+    """One home for the run and for the warning, or they would disagree on whether ASTAP is there.
+    The declared path wins over the automatic search."""
     return astap.find_exe(config.read(conn).get("astap_path"))
 
 
-def solver_where(conn):
-    """Dove sta ASTAP **e da quale canale arriva**: (percorso, canale) o (None, None).
-
-    Il canale lo mostra la sezione *Il riconoscitore*: chi legge "trovato" deve poter dire "no,
-    non quello" -- e la ricerca automatica sbaglia proprio quando trova qualcosa."""
+def solver_where(conn: sqlite3.Connection) -> tuple[str | None, str | None]:
+    """`(path, channel)`: the user must be able to say "not that one", since the automatic search
+    is wrong exactly when it finds something."""
     return astap.where_exe(config.read(conn).get("astap_path"))
 
 
-def databases_next_to(exe):
-    """I cataloghi stellari accanto a quell'eseguibile. L'eseguibile si passa perche' la domanda
-    si fa anche su un programma **proposto** dalla ricerca, che non e' quello delle preferenze.
-
-    Sta qui e non in `api/` perche' l'API non legge ASTAP: e' la spina a guardare il disco."""
+def databases_next_to(exe: str | Path | None) -> tuple[str, ...]:
+    """The executable is passed because the question is also asked of a proposed one. Here and not
+    in `api/` because the API does not read ASTAP."""
     return astap.star_databases(exe)
 
 
-def solver_found():
-    """Cosa troverebbe l'app **ignorando cio' che e' scritto nelle preferenze**: e' il *cercalo
-    tu* della sezione. Propone e basta -- adottarlo e' un gesto dell'utente, perche' sovrascrivere
-    di nascosto un percorso scritto a mano toglierebbe l'unica via d'uscita quando questa ricerca
-    prende il programma sbagliato."""
+def solver_found() -> tuple[str | None, str | None]:
+    """What the search finds ignoring the preferences. It only proposes: silently overwriting a
+    hand-written path would remove the way out when the search picks the wrong program."""
     return astap.where_exe(None)
 
 
-def solve_frames(conn, *, exe=FIND_IT, run=None, cache=None):
-    """Risolve i frame che aspettano questo stadio; un evento per frame, poi la ricevuta.
-
-    `exe` e `run` si passano nei test; in produzione l'eseguibile si cerca una volta sola per
-    corsa, non a ogni posa."""
+def solve_frames(
+    conn: sqlite3.Connection,
+    *,
+    exe: str | _Sentinel | None = FIND_IT,
+    run: astap.Run | None = None,
+    cache: Path | None = None,
+) -> Iterator[Event]:
+    """One event per frame, then the receipt. The executable is looked up once per run, not per
+    frame."""
     counts: dict[str, int] = dict.fromkeys(COUNTS, 0)
     status, reason = "ok", None
-    errors, seen = [], 0
-    exe = solver_path(conn) if exe is FIND_IT else exe
-    cache = _cache_dir(cache)
+    errors: list[FrameError] = []
+    seen = 0
+    solver = solver_path(conn) if exe is FIND_IT else exe
+    solve_cache = _cache_dir(cache)
 
-    def at_end():
-        if seen:  # la scala e' arrivata; e solo se qualche posa e' stata guardata: contare costa
+    def at_end() -> None:
+        if seen:  # counting costs: only if some frame was looked at
             _at_round_end(conn)
 
-    with watched("solve", counts, at_end, astap=exe) as outcome:
+    with watched("solve", counts, at_end, astap=solver) as outcome:
         frame_ids = _in_order(conn)
         total = len(frame_ids)
         for frame_id in frame_ids:
@@ -118,7 +103,7 @@ def solve_frames(conn, *, exe=FIND_IT, run=None, cache=None):
                 conn,
                 "solve",
                 frame_id,
-                partial(_one_frame, conn, frame_id, counts, exe=exe, run=run, cache=cache),
+                partial(_one_frame, conn, frame_id, counts, exe=solver, run=run, cache=solve_cache),
                 counts,
                 errors,
             )
@@ -131,51 +116,55 @@ def solve_frames(conn, *, exe=FIND_IT, run=None, cache=None):
     yield receipt(status, reason, counts, errors, total=seen)
 
 
-def _at_round_end(conn):
+def _at_round_end(conn: sqlite3.Connection) -> None:
     camera_sky.write(conn)
     gear_usage.write(conn)
-    typeless_folders.write(conn)  # il cielo decide quali pose senza tipo non sa dire
+    typeless_folders.write(conn)  # the sky decides which typeless frames it cannot tell
 
 
-def _cache_dir(cache):
-    """`<dati>/cache/solve`, creata se manca. La soluzione di un frame vive qui e non nel
-    database: un azzeramento del DB la rilegge invece di ri-risolvere."""
+def _cache_dir(cache: Path | None) -> Path:
+    """Solutions live on disk, not in the database: a database reset reads them back instead of
+    solving again."""
     base = (cache or cache_dir()) / "solve"
     base.mkdir(parents=True, exist_ok=True)
     return base
 
 
-def _in_order(conn):
-    """L'ordine dei due giri, deciso una volta all'inizio: prima una posa per sessione, poi
-    tutte le altre dalle piu' recenti."""
+def _in_order(conn: sqlite3.Connection) -> list[int]:
     pending = ready(conn, "solve")
     first = store.first_per_order_key(conn, pending)
     rest = [i for i in pending if i not in set(first)]
     return first + store.newest_first(conn, rest)
 
 
-def _one_frame(conn, frame_id, counts, *, exe, run, cache):  # noqa: PLR0913
-    """Una posa, in una transazione: cio' che e' fatto e' fatto anche se ci si ferma dopo.
-
-    Torna il motivo che ferma la corsa (`ABORTS_THE_RUN`), o None: un guasto della posa non la
-    ferma mai, un guasto dell'installazione si'."""
+def _one_frame(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    frame_id: int,
+    counts: dict[str, int],
+    *,
+    exe: str | None,
+    run: astap.Run | None,
+    cache: Path,
+) -> str | None:
+    """The reason that stops the run (`ABORTS_THE_RUN`), or None: a frame's fault never stops it,
+    an installation's fault does."""
     frame = store.frame(conn, frame_id)
     now = now_iso()
     solution, cached = _solution_for(conn, frame, exe=exe, run=run, cache=cache)
-    hfd, stars = (None, None)
-    # La cache risponde anche a disco staccato: senza il controllo sul percorso si lancerebbe
-    # un processo per posa su un file che non c'e'.
-    if solution.ok and _path_of(frame) and not store.has_metrics(conn, frame["id"]):
-        # La qualita' costa una seconda passata e si prende subito: rileggere l'archivio
-        # un'altra volta costerebbe di piu' del tempo che si risparmia adesso. Si chiede anche
-        # quando il cielo viene dalla cache: dopo un azzeramento del database la soluzione
-        # torna da li', ma HFD e stelle no -- e senza questo si perderebbero per sempre.
-        hfd, stars = astap.analyse(cast("str", _path_of(frame)), exe=exe, run=run)  # checked above
+    hfd: float | None = None
+    stars: int | None = None
+    path = _path_of(frame)
+    # The cache answers with the disk detached too: without the path check one process per frame
+    # would be launched on a missing file.
+    if solution.ok and path and not store.has_metrics(conn, frame["id"]):
+        # Asked even for a cached sky: after a database reset the solution comes back from the
+        # cache, but HFD and stars would be lost for good.
+        hfd, stars = astap.analyse(path, exe=exe, run=run)
 
     with transaction(conn):
         if not solution.ok:
             if solution.reason in RETRIABLE:
-                counts["waiting"] += 1  # resta `pending`: si riprova da sola alla prossima
+                counts["waiting"] += 1
             else:
                 set_status(conn, frame["id"], "solve", "failed", reason=solution.reason, now=now)
                 counts["unsolved"] += 1
@@ -200,9 +189,16 @@ def _one_frame(conn, frame_id, counts, *, exe, run, cache):  # noqa: PLR0913
     return solution.reason if solution.reason in ABORTS_THE_RUN else None
 
 
-def _solution_for(conn, frame, *, exe, run, cache):
-    """La soluzione e se veniva dalla cache. Si guarda prima li': la chiave e' l'impronta del
-    frame, che sopravvive a uno spostamento del file, a una rinomina e a un reset del DB."""
+def _solution_for(
+    conn: sqlite3.Connection,
+    frame: sqlite3.Row,
+    *,
+    exe: str | None,
+    run: astap.Run | None,
+    cache: Path,
+) -> tuple[astap.Solution, bool]:
+    """The solution and whether it came from the cache, keyed on the frame's hash: it survives a
+    move, a rename and a database reset."""
     out_base = cache / frame["frame_hash"]
     saved = astap.from_ini(astap.read_ini(f"{out_base}.ini"))
     if saved.ok:
@@ -213,16 +209,23 @@ def _solution_for(conn, frame, *, exe, run, cache):
     if exe:
         solution = _launch(conn, frame, path, out_base, exe=exe, run=run)
     else:
-        # Senza il solver non parte niente: il suggerimento e la pulizia servono a un lancio, e
-        # ogni corsa ripassa tutte le pose in attesa solo per chiedere alla cache.
+        # Every run walks all waiting frames just to ask the cache: hint and cleanup are for a
+        # launch.
         solution = astap.Solution(ok=False, reason="astap_missing")
     return solution, False
 
 
-def _launch(conn, frame, path, out_base, *, exe, run):  # noqa: PLR0913
-    """Lancia ASTAP su quella posa, col suggerimento di dove guardare."""
-    # C'era un esito ma non e' una soluzione (troncato, o un fallimento di ieri): si butta prima
-    # di lanciare, o un ASTAP che fallisce senza scrivere lascerebbe rileggere quello.
+def _launch(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    frame: sqlite3.Row,
+    path: str,
+    out_base: Path,
+    *,
+    exe: str,
+    run: astap.Run | None,
+) -> astap.Solution:
+    # A leftover that is not a solution goes first, or an ASTAP failing without writing would
+    # leave it to be read back.
     _forget(out_base)
     ra, dec = _hint_for(conn, frame)
     solution = astap.solve(
@@ -235,51 +238,44 @@ def _launch(conn, frame, path, out_base, *, exe, run):  # noqa: PLR0913
         run=run,
     )
     if not solution.ok:
-        # Un fallimento non si mette in cache: domani ASTAP puo' avere un database piu' fitto,
-        # o la posa puo' ereditare un indizio da una sorella. Solo le soluzioni sono immutabili.
+        # Not cached: tomorrow ASTAP may have a denser catalogue, or the frame a sister's hint.
         _forget(out_base)
     return solution
 
 
-def _forget(out_base):
+def _forget(out_base: Path) -> None:
     for suffix in (".ini", ".wcs"):
-        # non c'era, o non si puo' togliere: la prossima corsa lo rifara' comunque
+        # missing or locked: the next run redoes it anyway
         with contextlib.suppress(OSError):
             (out_base.parent / f"{out_base.name}{suffix}").unlink()
 
 
-def _path_of(frame):
-    """Il percorso su disco della posa, o `None` se nessuna posizione e' presente."""
+def _path_of(frame: sqlite3.Row) -> str | None:
     if not frame["root_path"] or not frame["rel_path"]:
         return None
     return long_path(os.path.join(frame["root_path"], frame["rel_path"]))
 
 
-def _hint_for(conn, frame):
-    """Dove puntava il telescopio, per restringere la ricerca. Prima l'header; se tace, il
-    cielo MISURATO di una sorella dello stesso gruppo -- e' lo stesso pezzo di cielo."""
+def _hint_for(conn: sqlite3.Connection, frame: sqlite3.Row) -> tuple[float | None, float | None]:
+    """The header's pointing; if silent, the MEASURED sky of a sister: the same piece of sky."""
     if frame["ra_hint_deg"] is not None and frame["dec_hint_deg"] is not None:
         return frame["ra_hint_deg"], frame["dec_hint_deg"]
     sister = store.sister_solution(conn, frame)
     return (sister["ra_deg"], sister["dec_deg"]) if sister else (None, None)
 
 
-def _scale_of(frame):
-    """La scala derivata dalle specifiche dell'header.
-
-    Il binning NON si moltiplica: `XPIXSZ` per convenzione lo include gia' (le fonti stanno nel
-    contratto, `docs/domini/spina.md`), e moltiplicare raddoppierebbe il campo su un archivio a
-    bin 2."""
+def _scale_of(frame: sqlite3.Row) -> float | None:
+    """Binning is not multiplied: by convention `XPIXSZ` already includes it (sources in
+    `docs/domini/spina.md`)."""
     return scale_arcsec_px(frame["pixel_size_um"], frame["focal_mm_raw"])
 
 
-def _field_hint(frame):
-    """L'altezza del campo in gradi: e' la leva della velocita' del solver (0,2 s contro 2,3 s
-    sullo stesso frame). `None` dove l'header non dice focale o pixel: si cerca e si paga."""
+def _field_hint(frame: sqlite3.Row) -> float | None:
+    """The field height is the solver's speed lever; `None` without focal or pixel: the search
+    is blind and slow."""
     return field_deg(frame["naxis2"], _scale_of(frame))
 
 
-def _field_of(frame, scale):
-    """Larghezza e altezza del campo, dalla scala MISURATA: e' il rettangolo che si disegna
-    sul cielo, e viene dalla soluzione, non dalle specifiche dichiarate."""
+def _field_of(frame: sqlite3.Row, scale: float | None) -> tuple[float | None, float | None]:
+    """From the MEASURED scale: the rectangle drawn on the sky comes from the solution."""
     return field_deg(frame["naxis1"], scale), field_deg(frame["naxis2"], scale)

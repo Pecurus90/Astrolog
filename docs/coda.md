@@ -32,9 +32,10 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   fatti il primo, la scansione (`spine/__init__`, `scan`, `scan_store`, `frame_folder`,
   `inventory`, `header_asks`, `copies`, `coordinates`, `rewrite`), e il secondo, normalizzazione
   e stadi (`normalize`, `normalize_store`, `normalize_rig`, `stages`, `stage_run`, `run`,
-  `counts`).
-- Mancano: il resto di `spine` (i lotti dopo normalizzazione e stadi), `api`.
-- Da chiudere strada facendo: 30 righe del backend (16 in `backend/astrolog`, 14 in
+  `counts`), e il terzo, risoluzione, raggruppamento e frame senza tipo (`solve`, `solve_store`,
+  `group`, `group_store`, `typeless`, `typeless_answer`, `typeless_folders`, `home_nights`).
+- Mancano: il resto di `spine` (i lotti dopo il terzo), `api`.
+- Da chiudere strada facendo: 26 righe del backend (12 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
@@ -42,9 +43,9 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   puntano a decisioni che ora vivono altrove: `api/instrument_answer.py` e
   `tests/test_gear_instruments.py` vanno a `docs/domini/spina.md`, *Le schede*;
   `.pre-commit-config.yaml` (i quattro software) va a `CLAUDE.md`, "Software supportati".
-  Annotare `astap`, `clock` e `units` ha lasciato tre `cast` dove il tipo ora ammette `None` ma
-  il controllo sta sopra (`api/tonight.py`, `spine/solve.py`, `spine/unnamed.py`): si tolgono
-  restringendo il tipo quando arriva il loro package.
+  Annotare `astap`, `clock` e `units` ha lasciato due `cast` dove il tipo ora ammette `None` ma
+  il controllo sta sopra (`api/tonight.py`, `spine/unnamed.py`): si tolgono restringendo il tipo
+  quando arriva il loro package.
 
 **Fase 2 -- semplificare**, sul codice gia' pulito: doppioni uniti, nomi interni in inglese, `dict`
 che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lunghe spezzate e i
@@ -77,7 +78,15 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `voluti`, `eventi`, `evento`, `cartelle` (parametro di `queue_folders`), `molte`, `conti`,
   `errori`, `esiti`, `chiave`, `storte`, `stato`, `motivo`, `dopo` (`run`); `_pezzo`,
   `dai_corredi`, `_DAI_CORREDI`, `_DEL_MOSAICO`, `_SOGGETTI`, `_UNA_COLONNA`, `soggetto`, `dove`,
-  `trovata`, `tre` (`counts`).
+  `trovata`, `tre` (`counts`). Nel terzo lotto: `ferma` (`solve`); `luoghi`, `tolte`, `dove`,
+  `risposta`, `fuori`, `data`, `lontano`, `detto`, `vicini`, `riga` (`group`); `domanda` (alias
+  di `typeless`, in `typeless_answer`); `casa`, `riscritte`, `notte`, `notti`, `spostati`,
+  `fermi`, `rig_fermi`, `oggetto_fermi`, `verso`, `vecchia`, `vecchie`, `nuova`, `toccati`,
+  `tutte`, `prima`, `fonti`, `dette` (`home_nights`).
+- **`group._where`** torna il sito ma non la data: `_one_frame` la ricalcola, e cosi' arriva
+  `str | None` fino a `group_store.night` e `create_night`; e il "lo ha detto l'utente" e'
+  `bool | None` (passato con `bool()`) perche' la terna non distingue chi si ferma da chi entra.
+  Una `dataclass` (sito, data, dichiarato) o un motivo li stringe tutti e due.
 - **`identify`**: la rotazione dello scarto negli assi del sensore e' scritta due volte
   (`identify_geometry.in_frame` e `mosaic_geometry._in_axes`): va in `identify_geometry` e la
   chiamano tutti e due. Il letterale del lucchetto dell'utente (`method`/`confidence` `user`,
@@ -95,6 +104,8 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
 - **`db/idlist.grouped` torna `dict[Any, list[Any]]`**: generico in `T` rompe `api/archive.py`, che
   passa i dict di `spine/filters_used` a un campo `list[FilterUsed]`. Si fa generico quando i
   chiamanti costruiscono righe tipate.
+- **Un alias delle righe in `db`**, per `place.by_distance` e `frame_folder.FolderRow`, che oggi
+  scrivono la stessa unione (`sqlite3.Row | Mapping[str, Any]`).
 - **Insiemi chiusi da fare `StrEnum`**, che escono dal package e finiscono nel database: il tipo
   del frame (`fits/frame_type.image_type`, `UNKNOWN`, `CALIBRATION_TYPES`), i quattro software
   (`vocab/software`), le bande (`vocab/filters`: `NO_FILTER`, `UNKNOWN`, `DUO_*`, `TRI_NB`,
@@ -112,11 +123,14 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   scritti in `scan_runs` e ripetuti in `api/models`) e il marchio `calibrated`/`rewritten`
   (`rewrite.MARK_WEIGHT`, scritto in `frames.rewrite_mark`). Negli stadi: i nomi e gli stati
   (`stages.STAGES`, `STATUSES`, scritti in `frame_stages`, e `run.STAGE_*`, letti da `api`) e i
-  soggetti del conto (le chiavi di `counts._SOGGETTI`, passate come stringhe da chi conta).
+  soggetti del conto (le chiavi di `counts._SOGGETTI`, passate come stringhe da chi conta). Nel
+  raggruppamento i motivi di `group` (`NO_ACTIVE_SITE`, `SITE_NO_TIMEZONE`, `SITE_UNCLEAR`,
+  `NO_OBJECT`, `NO_DATE`, scritti in `frame_stages.reason`); le risposte sul tipo
+  (`typeless.ANSWERS`, ripetute in `api/models_review_groups`).
 - **La notte di un frame** (`scan_store.LocalNight`, notte/fuso/istante costruita da
   `scan.night_of` e spacchettata per posizione da `scan_store.insert_frame`) e' un alias di `tuple`: una `NamedTuple` la nomina.
 - **`db/inserted.inserted_id`** tiene la guardia su `lastrowid`; gli altri `.lastrowid` del
-  backend (`spine/gear_create`, `group_store`, `mosaic`, `rigs`, `api/folders`, `api/sites`) la
+  backend (`spine/gear_create`, `mosaic`, `rigs`, `api/folders`, `api/sites`) la
   chiamano quando arriva il loro package.
 - **`db/config.KEYS`** ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei
   test (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo
@@ -561,6 +575,20 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **Risoluzione, raggruppamento e frame senza tipo, dopo la fase 1**: nessun test distingue la
+  regola "cielo dalla cache e disco staccato: niente `analyse`" in `spine/solve.py` (una mutazione
+  come `path or _old_path` passerebbe); le ragioni di `group` sono ripetute come `Literal` in
+  `api/models_site.py` (`Missing`, `Unknown`) e scritte a mano in `api/sites.py`, e
+  `solve.RETRIABLE` riscrive "astap_missing" e "file_missing" invece di prenderli da
+  `astap.REASONS` (`solve.NO_SOLVER` e `NO_STAR_DATABASE` mancano dall'inventario della fase 2).
+  Regole dette piu' volte: il binning gia' dentro `XPIXSZ` (`solve._scale_of` e
+  `units.physical_pixel_um`); "la ricerca automatica sbaglia proprio quando trova qualcosa"
+  (`solve.solver_where` e `astap.where_exe`) e il percorso scritto a mano che non si sovrascrive
+  (`solve.solver_found` e `api/settings.search_solver`); il campo come leva di velocita'
+  (`solve._field_hint` e `astap.solve`); "risolto e' una foto, senza stelle una calibrazione"
+  (`typeless`, `typeless_folders`, `api/models_review_groups`); la notte da mezzogiorno a
+  mezzogiorno nella docstring di `group`, senza rimando a `clock.night_date`; "due risposte
+  diverse cadono" in `home_nights._carry` e nel contratto (`docs/domini/spina.md`).
 - **Normalizzazione e stadi, dopo la fase 1**: `count_pending` e `pending_by_stage`
   (`spine/stages.py`) hanno la stessa query e la stessa sottrazione di `_waiting_by_stage`, e il
   commento "five counts" scrive a mano `len(STAGES)`; il controllo `scan` di `run.queue` ha un

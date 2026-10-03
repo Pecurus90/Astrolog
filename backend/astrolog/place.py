@@ -2,6 +2,7 @@
 silent service gives `None` or an empty list, never a fallback zero: zero is sea level."""
 
 import math
+import sqlite3
 import threading
 import time
 import urllib.parse
@@ -68,7 +69,7 @@ def distance_km(
     return math.hypot(nord, est)
 
 
-def by_distance[S: Mapping[str, Any]](
+def by_distance[S: sqlite3.Row | Mapping[str, Any]](
     latitude: float | None, longitude: float | None, sites: Iterable[S]
 ) -> list[tuple[float, S]]:
     """Sorted on the true distance: rounded ones would tie two near sites, and comparing the rows

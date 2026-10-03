@@ -40,6 +40,9 @@ _IN_FOLDER = (
 # empty BLOB, which SQLite sorts after every text.
 _AFTER_EVERY_PATH = b""
 
+# Anything carrying a folder's `root` and `sub`: a query row or a page row.
+type FolderRow = sqlite3.Row | Mapping[str, Any]
+
 
 def folder_key(root_path: str, sub: str = "") -> str:
     """Also what is shown. Always forward slashes: Windows accepts them, and the system separator
@@ -55,16 +58,14 @@ def key_of_path(root_path: str, rel_path: str) -> str:
     return folder_key(root_path, dritto.rsplit("/", 1)[0] if "/" in dritto else "")
 
 
-def frames_in(conn: sqlite3.Connection, row: sqlite3.Row | Mapping[str, Any]) -> list[sqlite3.Row]:
+def frames_in(conn: sqlite3.Connection, row: FolderRow) -> list[sqlite3.Row]:
     """Copies included, with the file type: the answerer picks which to requeue."""
     sub = row["sub"]
     end = sub[:-1] + "0" if sub else _AFTER_EVERY_PATH
     return conn.execute(_IN_FOLDER, (row["root"], sub, end, sub)).fetchall()
 
 
-def group_of(
-    groups: dict[str, dict[str, Any]], row: sqlite3.Row | Mapping[str, Any], **fields: Any
-) -> dict[str, Any]:
+def group_of(groups: dict[str, dict[str, Any]], row: FolderRow, **fields: Any) -> dict[str, Any]:
     """Created with `fields` the first time; root and subfolder stay in the group."""
     key = folder_key(row["root"], row["sub"])
     return groups.setdefault(key, {"key": key, "root": row["root"], "sub": row["sub"], **fields})
