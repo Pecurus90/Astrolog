@@ -200,15 +200,18 @@ class ScanProgress(BaseModel):
     folder_id: int
     run_id: int
     last_event: ScanEvent | None
-    receipt: ScanRunOut | None  # dal DB, quando la corsa e' finita comunque sia finita
+    receipt: ScanRunOut | None
+
+
+PipelineAction = Literal["start", "stop", "resume"]
 
 
 class PipelineStatus(BaseModel):
     worker: WorkerSnapshot
-    scan: ScanProgress | None  # None finche' non e' partita nessuna scansione
+    scan: ScanProgress | None
     pending: dict[str, int]  # per stadio: quanti frame mancano ancora
     # il verbo del pulsante, deciso qui e non nella pagina: Avvia / Ferma / Riprendi
-    action: Literal["start", "stop", "resume"]
+    action: PipelineAction
 
 
 class WorkerOut(BaseModel):

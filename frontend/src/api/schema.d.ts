@@ -13,7 +13,12 @@ export interface paths {
         };
         /**
          * Health
-         * @description Il servizio e' su, il DB risponde, la radice confinata se c'e'.
+         * @description The service is up and the database answers. Returns the API version, how many of the
+         *     app's own tables exist (SQLite's internal ones, such as `sqlite_sequence`, are left out so
+         *     the number matches `schema.sql`), the confined data root (`null` when there is none), and
+         *     the catalog's entries and version. A missing catalog shows as zero entries; a newer
+         *     catalog that fails to load leaves the previous entries and `catalog_version` in place,
+         *     and the failure is only logged.
          */
         get: operations["health"];
         put?: never;
@@ -450,8 +455,14 @@ export interface paths {
         };
         /**
          * Status
-         * @description Lo snapshot del worker, l'avanzamento della scansione, quanti frame mancano a ogni
-         *     stadio, e cosa fa il pulsante.
+         * @description The worker snapshot, the progress of the last scan started (`null` until one has started),
+         *     how many frames each stage still lacks, and what the button does (`action`).
+         *
+         *     Once the scan has finished, however it finished (a Stop included), `state` combines the
+         *     receipts of every folder of the gesture (worst first); while it runs, it is the worker's.
+         *     `receipt`, like `folder_id` and `run_id`, is the last started folder's, present once the scan
+         *     has finished. If it stopped or fell before the first folder, no receipt is left: `receipt` is
+         *     `null` and the state is the worker's (`not_run` when the worker has no record of the scan).
          */
         get: operations["status"];
         put?: never;
@@ -473,7 +484,8 @@ export interface paths {
         put?: never;
         /**
          * Stop
-         * @description Chiede lo Stop: il worker si ferma entro l'elemento in corso, a transazione chiusa.
+         * @description Asks for the Stop and returns the worker snapshot. Cooperative: the worker stops within the
+         *     item in progress, with the transaction closed. Always 200, even with nothing running.
          */
         post: operations["stop"];
         delete?: never;
@@ -493,19 +505,23 @@ export interface paths {
         put?: never;
         /**
          * Run
-         * @description Avvia il lavoro che aspetta: la normalizzazione dei frame rimasti indietro, il cielo
-         *     delle pose ancora da risolvere, l'oggetto di quelle che non ce l'hanno e le notti di quelle
-         *     che aspettano una sessione.
+         * @description Starts the waiting work: the normalisation of frames left behind, the sky of frames still
+         *     to solve, the object of those without one, and the nights of those waiting for a session.
+         *     Returns the worker snapshot.
          *
-         *     E' il pulsante "Avvia"/"Riprendi" della pagina: senza questa rotta il lavoro rimesso in
-         *     coda da una risposta in Da confermare aspetterebbe la prossima scansione, e le pose che
-         *     aspettavano ASTAP non partirebbero mai.
+         *     It is the page's "Start"/"Resume" button: without this route the work requeued by an answer
+         *     in To confirm would wait for the next scan, and frames waiting for ASTAP would never start.
          *
-         *     **Se l'ultima lettura non era arrivata in fondo, Riprendi rilegge le cartelle.** Qui gli
-         *     stadi si chiedono per residuo, e `scan` non e' uno stadio della posa: un file mai letto non
-         *     lascia niente in coda, quindi senza questa riga "Riprendi" riportava il worker a `completed`
-         *     **senza leggere niente**, e chi aveva fermato a meta' restava con l'archivio incompleto e la
-         *     parola "fatto" a schermo. Misurato: 7 frame su 9 fuori, e nessuna traccia (16/9/2026).
+         *     **If the last read did not reach the end, Resume reads the folders again.** Stages are asked
+         *     for by remainder here, and `scan` is not a frame stage: a file never read leaves nothing in the
+         *     queue, so otherwise Resume would bring the worker to `completed` without reading anything.
+         *
+         *     With nothing to do it starts nothing and returns the snapshot as it is, even mid-run, so the
+         *     NAS cadence does not skip a round.
+         *
+         *     409 `worker_busy` if there is work to start while a job is already running. When Resume
+         *     reads the folders again, also 409 `no_folders` if no active folder is left, and 409
+         *     `no_readable_folders` with the `skipped` folders if none of their roots can be reached.
          */
         post: operations["run"];
         delete?: never;
@@ -689,9 +705,13 @@ export interface paths {
         head?: never;
         /**
          * Write Settings
-         * @description Scrive le chiavi date. O passano tutte o non passa niente: meta' preferenze scritte
-         *     sarebbe peggio di nessuna, e chi ha sbagliato una chiave non deve indovinare quali sono
-         *     entrate.
+         * @description Writes the given keys and returns the settings as they now are. Either all pass or nothing
+         *     does: half the preferences written would be worse than none, and whoever got one key wrong
+         *     must not guess which ones went in.
+         *
+         *     422 `unknown_setting` with the unknown `keys`; 422 `tried_elsewhere` with the `keys` that are
+         *     tried by their own route before being stored; 422 `wrong_type` if a value has the wrong type
+         *     or is not one of the key's allowed choices.
          */
         patch: operations["write_settings"];
         trace?: never;
@@ -705,11 +725,10 @@ export interface paths {
         };
         /**
          * Read Solver
-         * @description Dove l'app prende il riconoscitore, e da quale canale.
+         * @description Where the app takes the solver from, and through which channel.
          *
-         *     Il percorso **dichiarato** esce sempre, anche quando non porta a niente: e' l'unica cosa che
-         *     si puo' correggere, e nasconderlo lascerebbe una sezione che dice "non trovato" senza dire
-         *     perche'.
+         *     The **declared** path always comes out, even when it leads nowhere: it is the only thing that
+         *     can be corrected, and hiding it would leave a section saying "not found" without saying why.
          */
         get: operations["read_solver"];
         put?: never;
@@ -731,12 +750,11 @@ export interface paths {
         put?: never;
         /**
          * Search Solver
-         * @description *Cercalo tu*: cosa troverebbe l'app **ignorando la preferenza**.
+         * @description *Find it for me*: what the app would find **ignoring the preference**.
          *
-         *     E' un POST perche' guarda il disco e il PATH della macchina, non perche' scriva: **non
-         *     scrive niente**. Adottare la proposta e' un gesto dell'utente -- sovrascrivere di nascosto un
-         *     percorso scritto a mano toglierebbe l'unica via d'uscita quando questa ricerca prende il
-         *     programma sbagliato.
+         *     A POST because it looks at the machine's disk and PATH, not because it writes: **it writes
+         *     nothing**. Adopting the proposal is the user's gesture -- silently overwriting a hand-written
+         *     path would remove the only way out when this search picks the wrong program.
          */
         post: operations["search_solver"];
         delete?: never;
@@ -756,8 +774,9 @@ export interface paths {
         put?: never;
         /**
          * Stamp Wizard
-         * @description Il primo avvio e' passato: completandolo o saltandolo, e' lo stesso timbro. Riaprire il
-         *     wizard dalle Impostazioni non lo riscrive: la prima volta e' stata una sola.
+         * @description The first start is over: completing or skipping the wizard is the same stamp. Reopening the
+         *     wizard from Settings does not rewrite it: the stamp keeps the first time.
+         *     Returns the settings.
          */
         post: operations["stamp_wizard"];
         delete?: never;
@@ -795,8 +814,9 @@ export interface paths {
         };
         /**
          * Filter Models
-         * @description I filtri in commercio da cui si dichiara un filtro nuovo: marca, nome e banda. Senza pagine:
-         *     il vocabolario viene col programma e non cresce con l'archivio.
+         * @description The commercial filters a new filter is declared from: brand, name and passband, in the
+         *     vocabulary's order. Not paginated: the vocabulary ships with the program
+         *     and does not grow with the archive.
          */
         get: operations["filter_models"];
         put?: never;

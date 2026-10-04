@@ -1,15 +1,14 @@
-"""Lo stato della spina in una chiamata: il worker, l'ultimo evento e la ricevuta della
-scansione, il residuo per stadio, il verbo del pulsante; e lo Stop.
+"""The only progress channel, the same for every device. The scan's remainder cannot be derived
+from the database (its denominator is the folders on disk): resuming re-scans."""
 
-Vincolo non ovvio: e' l'unico canale di avanzamento (1-3 s mentre gira, 60 s da fermo, zero
-a scheda nascosta), uguale per desktop, altra scheda e telefono. La ricevuta viene dal DB,
-comunque la corsa sia finita (anche su Stop, dove il generatore non arriva a emetterla). Il
-residuo della scansione non e' derivabile dal DB (il denominatore vive sul filesystem):
-riprendere e' ri-scansionare. Lo Stop e' cooperativo e risponde sempre 200.
-"""
+import sqlite3
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from starlette.datastructures import State
 
+from ..db.row import Row
 from ..spine.run import ORDER, STAGE_SCAN, queue
 from ..spine.scan_store import run_outcomes, run_row
 from ..spine.stages import count_pending, pending_by_stage
@@ -24,15 +23,14 @@ from ..worker.states import (
 )
 from ..worker.worker import WorkerBusyError
 from .deps import get_db
-from .models import PipelineStatus, ScanEvent, ScanProgress, StageState, WorkerOut
+from .models import PipelineAction, PipelineStatus, ScanEvent, ScanProgress, StageState, WorkerOut
 from .scan import run_out, start_scan_all
 
 router = APIRouter(prefix="/api/v1", tags=["spina"])
 
 
-def action_for(snapshot):
-    """Il verbo del pulsante: `stop` mentre gira, `resume` dopo uno Stop (il lavoro resta),
-    `start` altrimenti. Deciso qui, cosi' la pagina lo mostra e basta."""
+def action_for(snapshot: Mapping[str, Any]) -> PipelineAction:
+    """`resume` after a Stop, because the work is still there."""
     if snapshot["state"] == RUNNING:
         return "stop"
     if snapshot["state"] == STOPPED:
@@ -40,9 +38,8 @@ def action_for(snapshot):
     return "start"
 
 
-# L'esito scritto nelle ricevute, tradotto negli stati del worker, dal piu' grave: una lettura di
-# piu' cartelle e' com'e' andata la sua cartella peggiore, e una cartella persa non si copre con
-# una letta bene dopo di lei.
+# Worst first: several folders read together end like their worst one, and a lost folder is not
+# covered by one read well after it.
 _SEVERITY: tuple[StageState, ...] = (ERROR, STOPPED, COMPLETED_WITH_ERRORS, COMPLETED)
 _STATE_OF: dict[str, StageState] = {
     "ok": COMPLETED,
@@ -52,8 +49,8 @@ _STATE_OF: dict[str, StageState] = {
 }
 
 
-def _state_of(rows) -> StageState:
-    def of_row(row) -> StageState:
+def _state_of(rows: Iterable[Row]) -> StageState:
+    def of_row(row: Row) -> StageState:
         if row["status"] == "ok" and row["errors"]:
             return COMPLETED_WITH_ERRORS
         return _STATE_OF.get(row["status"], COMPLETED)
@@ -62,22 +59,17 @@ def _state_of(rows) -> StageState:
     return next(s for s in _SEVERITY if s in states)
 
 
-def scan_progress(state, conn):
-    """L'ultima scansione avviata: l'evento in corso dal worker, l'esito dalle ricevute.
-
-    **Finita, l'esito lo dicono le ricevute di tutte le cartelle del gesto**, non il worker: il
-    worker smette di saperlo appena fa ALTRO (una normalizzazione chiesta da Da confermare), e
-    l'ultima cartella da sola coprirebbe una persa prima di lei. Mentre gira, lo stato e' del
-    worker. La ricevuta che accompagna e' quella dell'ultima cartella."""
+def scan_progress(state: State, conn: sqlite3.Connection) -> ScanProgress | None:
+    """The outcome is read from the receipts, not the worker: the worker forgets it as soon as it
+    does something else."""
     if state.last_scan is None:
         return None
     folder_id, run_id = state.last_scan
     rec = state.worker.stage_record(STAGE_SCAN)
-    # quelle delle cartelle mai cominciate si buttano a fine corsa, e non tornano
+    # receipts of folders never started are discarded at the end of the run
     rows = run_outcomes(conn, state.scan_runs)
-    # senza ricevute (fermata o caduta prima della prima cartella) resta il worker
     closed = bool(rows) and all(r["ended_at"] is not None for r in rows)
-    # l'ultima ricevuta si chiude prima della fine dello stadio (lo stacco gira ancora)
+    # the last receipt closes before the stage ends (the detach is still running)
     finished = closed and (rec is None or rec["state"] in TERMINAL_STATES)
     row = run_row(conn, run_id) if finished else None
     last = rec["last_event"] if rec is not None else None
@@ -91,9 +83,15 @@ def scan_progress(state, conn):
 
 
 @router.get("/pipeline/status", response_model=PipelineStatus)
-def status(request: Request, conn=Depends(get_db)):
-    """Lo snapshot del worker, l'avanzamento della scansione, quanti frame mancano a ogni
-    stadio, e cosa fa il pulsante."""
+def status(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> PipelineStatus:
+    """The worker snapshot, the progress of the last scan started (`null` until one has started),
+    how many frames each stage still lacks, and what the button does (`action`).
+
+    Once the scan has finished, however it finished (a Stop included), `state` combines the
+    receipts of every folder of the gesture (worst first); while it runs, it is the worker's.
+    `receipt`, like `folder_id` and `run_id`, is the last started folder's, present once the scan
+    has finished. If it stopped or fell before the first folder, no receipt is left: `receipt` is
+    `null` and the state is the worker's (`not_run` when the worker has no record of the scan)."""
     state = request.app.state
     snapshot = state.worker.snapshot()
     return PipelineStatus(
@@ -104,11 +102,9 @@ def status(request: Request, conn=Depends(get_db)):
     )
 
 
-def _scansione_interrotta(conn, state):
-    """Se, a worker fermo, l'ultima lettura non e' arrivata in fondo: una sua ricevuta e'
-    `stopped` o ancora aperta, o non ne resta nessuna. Lo dicono le ricevute di tutto il gesto, e
-    non il worker: fermato dopo la lettura anche un altro lavoro, il worker non sa piu' che una
-    lettura era rimasta a meta'."""
+def _scansione_interrotta(conn: sqlite3.Connection, state: State) -> bool:
+    """True when, with the worker stopped, the last read did not end (a receipt `stopped` or open,
+    or none). Asked of the receipts: after another stopped job the worker no longer knows."""
     if state.last_scan is None or state.worker.snapshot()["state"] != STOPPED:
         return False
     rows = run_outcomes(conn, state.scan_runs)
@@ -116,38 +112,41 @@ def _scansione_interrotta(conn, state):
 
 
 @router.post("/pipeline/stop", response_model=WorkerOut)
-def stop(request: Request):
-    """Chiede lo Stop: il worker si ferma entro l'elemento in corso, a transazione chiusa."""
+def stop(request: Request) -> WorkerOut:
+    """Asks for the Stop and returns the worker snapshot. Cooperative: the worker stops within the
+    item in progress, with the transaction closed. Always 200, even with nothing running."""
     return WorkerOut(worker=request.app.state.worker.stop())
 
 
 @router.post("/pipeline/run", response_model=WorkerOut)
-def run(request: Request, conn=Depends(get_db)):
-    """Avvia il lavoro che aspetta: la normalizzazione dei frame rimasti indietro, il cielo
-    delle pose ancora da risolvere, l'oggetto di quelle che non ce l'hanno e le notti di quelle
-    che aspettano una sessione.
+def run(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> WorkerOut:
+    """Starts the waiting work: the normalisation of frames left behind, the sky of frames still
+    to solve, the object of those without one, and the nights of those waiting for a session.
+    Returns the worker snapshot.
 
-    E' il pulsante "Avvia"/"Riprendi" della pagina: senza questa rotta il lavoro rimesso in
-    coda da una risposta in Da confermare aspetterebbe la prossima scansione, e le pose che
-    aspettavano ASTAP non partirebbero mai.
+    It is the page's "Start"/"Resume" button: without this route the work requeued by an answer
+    in To confirm would wait for the next scan, and frames waiting for ASTAP would never start.
 
-    **Se l'ultima lettura non era arrivata in fondo, Riprendi rilegge le cartelle.** Qui gli
-    stadi si chiedono per residuo, e `scan` non e' uno stadio della posa: un file mai letto non
-    lascia niente in coda, quindi senza questa riga "Riprendi" riportava il worker a `completed`
-    **senza leggere niente**, e chi aveva fermato a meta' restava con l'archivio incompleto e la
-    parola "fatto" a schermo. Misurato: 7 frame su 9 fuori, e nessuna traccia (16/9/2026)."""
+    **If the last read did not reach the end, Resume reads the folders again.** Stages are asked
+    for by remainder here, and `scan` is not a frame stage: a file never read leaves nothing in the
+    queue, so otherwise Resume would bring the worker to `completed` without reading anything.
+
+    With nothing to do it starts nothing and returns the snapshot as it is, even mid-run, so the
+    NAS cadence does not skip a round.
+
+    409 `worker_busy` if there is work to start while a job is already running. When Resume
+    reads the folders again, also 409 `no_folders` if no active folder is left, and 409
+    `no_readable_folders` with the `skipped` folders if none of their roots can be reached."""
     state = request.app.state
     if _scansione_interrotta(conn, state):
         start_scan_all(state, conn)
         return WorkerOut(worker=state.worker.snapshot())
-    # Cosa ha ancora residuo, e basta: in che ordine vada, e chi tira dietro chi, lo sa `queue`.
-    # `scan` non e' uno stadio della posa -- lo chiede solo chi scansiona una cartella.
+    # Only what has a remainder: the order and who pulls whom is `queue`'s.
     da_fare = queue(
         state.db_path,
         [s for s in ORDER if s != STAGE_SCAN and count_pending(conn, s)],
     )
     if not da_fare:
-        # niente da fare: occupare il worker farebbe saltare un giro alla cadenza del NAS
         return WorkerOut(worker=state.worker.snapshot())
     try:
         snapshot = state.worker.start([Stage(n, f) for n, f in da_fare])

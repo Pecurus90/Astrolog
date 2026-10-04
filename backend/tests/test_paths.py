@@ -150,6 +150,19 @@ def test_a_system_share_is_refused_where_the_path_leads(monkeypatch):
 
 
 @windows
+@pytest.mark.parametrize(
+    "scritto",
+    ["\\\\localhost\\C$.\\Windows", "\\\\localhost\\C$ \\Windows"],
+    ids=["punto", "spazio"],
+)
+def test_a_share_name_with_a_trailing_dot_or_space_passes(monkeypatch, scritto):
+    """`C$.` e `C$ ` non si rifiutano: Windows non porta al disco attraverso di loro
+    ("nome di rete non valido"), quindi non scavalcano la guardia."""
+    monkeypatch.setattr(paths.os.path, "realpath", lambda p: p)  # niente rete vera
+    assert validate_root(scritto, None) == scritto
+
+
+@windows
 def test_a_mapped_drive_is_one_row_however_it_is_written(monkeypatch):
     """Le grafie della stessa cartella su un disco collegato danno la stessa forma, quindi la
     stessa riga; e un percorso senza lettera prende quella del disco corrente."""

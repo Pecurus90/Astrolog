@@ -29,8 +29,9 @@ non entra: lo rifa' Marco col disegno nuovo (*Per il disegno nuovo*, sotto).
 annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
 - Fatti: `spine` intero, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`, `weather`, i
   file sciolti di `backend/astrolog`.
-- Manca: `api`.
-- Da chiudere strada facendo: 22 righe del backend (8 in `backend/astrolog`, 14 in
+- In corso, per lotti: `api`. Fatti `__init__`, `app`, `deps`, `page`, `paths`, `pipeline`,
+  `work`, `settings`, `vocab`; mancano gli altri 27 file.
+- Da chiudere strada facendo: 21 righe del backend (7 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
@@ -46,6 +47,8 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   lasciato un terzo in `objects.stable_key`: lo slug o il nome mostrato, mai `None` perche' un
   oggetto fuori catalogo ha sempre un primario (`docs/domini/spina.md`, invariante 3), ma
   `display_name` torna `str | None`; lo toglie una riga d'oggetto tipata che dica l'invariante.
+  Annotare `api/settings` ne ha lasciato un quarto in `settings._solver` (*I file sciolti, dopo
+  la fase 1*, sotto).
 
 **Fase 2 -- semplificare**, sul codice gia' pulito: doppioni uniti, nomi interni in inglese, `dict`
 che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lunghe spezzate e i
@@ -125,7 +128,10 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `_cercando`, `_dove`, `_elenco`, le colonne `chiave` e `nome`, `criteri`, `scritto`, `scudato`,
   `pezzi`, `pezzo`, `valori`, `valore`, `cercato`, `suoi`, `ordine`, `dove`, `righe`, `quanti`,
   `oggetti`, `mosaici`, `elencate` (`archive`); `chiavi`, `vicino`, `punto`, `nominato`,
-  `senza_fuso`, `da_spostare` (`site_requeue`).
+  `senza_fuso`, `da_spostare` (`site_requeue`). Nel primo lotto di `api`: `cadenza`, `riga`,
+  `sito` (`app`); `_servita`, `pagina_del_router`, il parametro di percorso `percorso` e il
+  segnaposto `{chiave}` di `TOKEN_META` (`page`); `_scansione_interrotta`, `da_fare`
+  (`pipeline`); `manca`, `percorso`, `provate`, `dove` (`settings`).
 - **`group._where`** torna il sito ma non la data: `_one_frame` la ricalcola, e cosi' arriva
   `str | None` fino a `group_store.night` e `create_night`; e il "lo ha detto l'utente" e'
   `bool | None` (passato con `bool()`) perche' la terna non distingue chi si ferma da chi entra.
@@ -191,8 +197,9 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
 - **`db/config.KEYS`** ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei
   test (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo
   spacchettamento.
-- **Due `noqa: PLR0913`** restano perche' toglierli cambia una firma usata fuori: `replace_rows`
-  (`db/replace_table.py`) e `walk_dir` (`fits/walk.py`, i sei accumulatori in un oggetto solo).
+- **Fra i `noqa: PLR0913`**, questi restano perche' toglierli cambia una firma usata fuori:
+  `replace_rows` (`db/replace_table.py`), `walk_dir` (`fits/walk.py`, i sei accumulatori in un oggetto solo) e
+  `create_app` (`api/app.py`, sei opzioni a parola chiave lette da `__main__`, `tools` e test).
 - **Doppioni piccoli dei package di base**: `catalog/load.load_catalog` riscrive a mano
   `db.transaction` (gli strati non gli lasciano importare `db`); `db/paths.cache_dir` e `log_dir`
   sono la stessa funzione; in `catalog/lookup` l'elenco delle colonne si ricompone due volte da
@@ -705,6 +712,23 @@ riga per voce.
   cosi' un ripensamento vale" nei `requeue` di `rigless`, `unfiltered` e `unnamed`; gli invarianti
   del nome in `objects.NAME_COLUMNS` e `display_name` ripetono `docs/domini/spina.md` senza
   rimandarci.
+- **La base di `api`, dopo la fase 1.** Senza test: i 409 di `POST /pipeline/run`
+  (`no_folders`, `no_readable_folders`, `worker_busy`) e il suo 200 "niente da avviare" a corsa
+  in giro; `POST /pipeline/stop` a worker fermo; `GET /pipeline/status` con una scansione fermata
+  prima della prima cartella; `create_app` con un catalogo che solleva al caricamento. Un solo
+  `except` in `app._load_catalog` copre il catalogo e le due tabelle derivate
+  (`gear_usage.write`, `object_candidates.write`): se cadono queste, il log dice che il catalogo
+  non si e' caricato, ed e' falso, e le tabelle restano vecchie fino al catalogo dopo. Riprendi
+  butta il `ScanAllStarted` di `start_scan_all`, quindi le cartelle saltate in parte non si
+  dicono. `GET /settings` non ha docstring (contratto OpenAPI vuoto); `GET /settings` e
+  `GET /solver` cercano il solver sul disco a ogni lettura (~7,9 ms contro ~1,5): una lettura che
+  calcola. I tag OpenAPI dei router sono in italiano (fase 2). Doppioni: `[Stage(n, f) for ...]`
+  in `pipeline.run` e `work.after`; i tre verbi del bottone scritti a mano due volte in
+  `frontend/src/Scansiona.tsx` invece del tipo generato; regole dette due volte ("riprendere
+  rilegge le cartelle", il perche' delle ricevute, "una regola, non un elenco" in `app._is_open`
+  e `page.is_page`, "la rotta di ripiego si registra per ultima", i perche' di `solver_found` e
+  `solver_where` ripetuti dalle rotte del solver, i commenti italiani su
+  `PipelineStatus.pending` e `.action`).
 - **L'attrezzatura, dopo la fase 1**: le docstring di `rigs.find_rig` e `rigs.RigExistsError`
   scrivono a mano il 5 % di `units.FOCAL_TOLERANCE`; "la scheda dell'utente vince su file e cielo"
   e' detta in `camera_sky`, `camera_specs` e `gear.camera_specs`, ma vive solo in
@@ -749,7 +773,8 @@ riga per voce.
 - **I file sciolti, dopo la fase 1**: `astap.analyse` inghiotte timeout e `OSError` e torna
   `(None, None)` senza scrivere nel log, mentre `solve` lo scrive (HFD e stelle vuoti senza
   traccia in Diagnostica); i quattro canali del solver sono scritti in `astap.SOURCES` e in
-  `api/models_site.SolverSource`; la data della notte si legge con lo stesso `strptime` e lo
+  `api/models_site.SolverSource`, e `astap.where_exe` li torna come `str` (da qui il `cast` in
+  `api/settings._solver`): uno `StrEnum` in `astap` toglie entrambi; la data della notte si legge con lo stesso `strptime` e lo
   stesso `noqa: DTZ007` in `clock.midnight_of` e `clock.night_window`; "`-extract` lascia un CSV
   accanto al FITS" sta sia nella docstring del modulo `astap` sia in quella di `analyse`;
   nessun test prova che `place.by_distance` lasci fuori i siti senza coordinate, ne' ciascuno dei

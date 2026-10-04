@@ -1,15 +1,11 @@
-"""**Il lavoro in corso, visto da una rotta che scrive**: le due meta' dello stesso fatto.
-
-Prima di scrivere, **un lavoro alla volta**: col worker in corsa si rifiuta, perche' meglio
-dirlo che lasciare l'archivio a meta'. Dopo aver scritto, invece, **il worker occupato non e'
-un errore**: le pose sono gia' segnate da rilavorare nel database, quindi le raccoglie la corsa
-in corso o il prossimo *Avvia*, e fallire li' direbbe a chi ha risposto che la sua risposta e'
-andata persa. Due risposte opposte alla stessa domanda, e la differenza e' **quando** si chiede.
-"""
+"""Before writing, a busy worker is refused so the archive is not left half done; after writing it
+is not an error: the frames are queued in the database for the running job or the next Start."""
 
 import logging
+from collections.abc import Iterable
 
 from fastapi import HTTPException
+from starlette.datastructures import State
 
 from ..spine.run import queue
 from ..worker.states import Stage
@@ -18,14 +14,14 @@ from ..worker.worker import WorkerBusyError
 log = logging.getLogger(__name__)
 
 
-def busy(state):
-    """Rifiuta se il worker sta gia' lavorando. Si chiama **prima** di aprire la transazione."""
+def busy(state: State) -> None:
+    """Called before opening the transaction."""
     if state.worker.is_running():
         raise HTTPException(status_code=409, detail={"code": "worker_busy"})
 
 
-def after(state, stages):
-    """Avvia gli stadi che quella risposta tocca. Torna se la corsa e' partita."""
+def after(state: State, stages: Iterable[str]) -> bool:
+    """True if the run started."""
     try:
         state.worker.start([Stage(n, f) for n, f in queue(state.db_path, stages)])
     except WorkerBusyError:

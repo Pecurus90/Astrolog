@@ -1,13 +1,5 @@
-"""I vocabolari che l'app si porta dentro, come li legge la pagina.
-
-Vincolo non ovvio: **non aprono il database**. Un vocabolario non e' un dato dell'utente -- e'
-un elenco impacchettato col programma -- quindi si legge appena installati, a mani vuote, e una
-dipendenza dal database qui sarebbe una promessa in piu' senza un difetto in meno.
-
-L'**ordine** e' quello che il vocabolario dichiara (`filters.models()`: per marca e nome, "the
-order of the dropdown search"): arriva intatto, e il frontend non riordina. Due case che
-ordinano sono due ordini che prima o poi divergono.
-"""
+"""Vocabularies ship with the program, so they never open the database: they answer on a fresh
+install."""
 
 from fastapi import APIRouter
 
@@ -18,9 +10,10 @@ router = APIRouter(prefix="/api/v1", tags=["vocabolari"])
 
 
 @router.get("/vocab/filter-models", response_model=FilterModelList)
-def filter_models():
-    """I filtri in commercio da cui si dichiara un filtro nuovo: marca, nome e banda. Senza pagine:
-    il vocabolario viene col programma e non cresce con l'archivio."""
+def filter_models() -> FilterModelList:
+    """The commercial filters a new filter is declared from: brand, name and passband, in the
+    vocabulary's order. Not paginated: the vocabulary ships with the program
+    and does not grow with the archive."""
     return FilterModelList(
         items=[
             FilterModelOut(id=m["id"], brand=m["brand"], name=m["name"], passband=m["passband"])
