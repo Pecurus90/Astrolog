@@ -1,17 +1,14 @@
-"""La forma di cio' che l'app dice sul meteo delle prossime notti.
-
-Vincolo non ovvio: **ogni numero puo' mancare, e mancare vuol dire "il modello non lo dice"**, mai
-zero. Il verdetto manca quando manca la copertura, la finestra quando il Sole non tramonta.
-"""
+"""Every weather number may be missing, and missing means "the model does not say", never zero:
+the verdict is missing without cloud cover, the window when the Sun does not set."""
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class WeatherFactorOut(BaseModel):
-    """Un motivo che pesa sulla notte: il valore, la soglia che supera, e quando morde. `hours`
-    accanto a `since`/`until` dice se la finestra e' piena o a tratti."""
+    """A reason that weighs on the night: the value, the threshold it exceeds, and when it bites.
+    `hours` next to `since`/`until` tells whether the window is full or patchy."""
 
     code: Literal["rain", "cloud_low", "cloud", "gust", "condensation"]
     value: float
@@ -22,7 +19,7 @@ class WeatherFactorOut(BaseModel):
 
 
 class WeatherHourOut(BaseModel):
-    """Un'ora della notte, nel fuso del sito, col cielo che ha in quel momento."""
+    """An hour of the night, in the site's time zone, with the sky it has at that moment."""
 
     at: str
     sky: Literal["day", "civil", "nautical", "astronomical", "dark"]
@@ -39,10 +36,10 @@ class WeatherHourOut(BaseModel):
 
 
 class WeatherAloftOut(BaseModel):
-    """Un'ora del cielo in quota: il vento a 700, 250 e 200 hPa del modello scelto; il seeing come
-    intervallo -- le fasce di 7Timer, o il valore di Meteoblue coi due estremi uguali, quando c'e'
-    la chiave -- e la trasparenza di 7Timer (un estremo aperto e' `None`, e tutti e due `None`
-    vuol dire che per quell'ora la fonte non dice niente); l'aerosol e le polveri di CAMS."""
+    """An hour of the upper air: the wind at 700, 250 and 200 hPa from the chosen model; seeing as
+    a range -- 7Timer's bands, or Meteoblue's value with both ends equal, when the key is there --
+    and 7Timer's transparency (an open end is `None`, and both `None` means the source says nothing
+    for that hour); aerosol and dust from CAMS."""
 
     at: str
     wind_700hpa_kmh: float | None
@@ -57,7 +54,8 @@ class WeatherAloftOut(BaseModel):
 
 
 class WeatherAgreementOut(BaseModel):
-    """Quanti modelli dicono si fa, incerta, no, o non lo sanno, per quella notte, e su quanti."""
+    """How many models say go, marginal, no-go, or do not know, for that night, and out of how
+    many."""
 
     go: int
     marginal: int
@@ -67,10 +65,10 @@ class WeatherAgreementOut(BaseModel):
 
 
 class WeatherSkyOut(BaseModel):
-    """Il cielo di una notte, come lo riassume il verdetto: la parola, la copertura media, e le ore
-    utili su quelle della notte. `window` dice su quali ore si e' giudicato: il buio, o -- dove il
-    buio non arriva -- l'arco col Sole sotto l'orizzonte; `None` dove il Sole non tramonta. E' la
-    stessa forma per la previsione (Meteo) e per lo storico (Notti)."""
+    """A night's sky as the verdict sums it up: the word, the mean cloud cover, and the usable hours
+    out of the night's. `window` tells which hours were judged: the dark, or -- where the dark
+    never comes -- the arc with the Sun below the horizon; `None` where the Sun does not set. The
+    same shape serves the forecast (Weather) and the history (Nights)."""
 
     verdict: Literal["go", "marginal", "nogo"] | None
     cloud_total_pct: float | None
@@ -80,9 +78,9 @@ class WeatherSkyOut(BaseModel):
 
 
 class WeatherBriefOut(WeatherSkyOut):
-    """Una notte della previsione in breve: il suo cielo, l'accordo dei modelli, e il vento in quota
-    medio della notte col suo posto fra le notti dell'ultimo anno del sito -- quante su dieci ne
-    avevano meno (`None` finche' la climatologia del sito non c'e'). E' cio' che dice Stanotte."""
+    """A forecast night in brief: its sky, the models' agreement, and the night's mean upper-air
+    wind with its rank among the site's nights of the last year -- how many in ten had less
+    (`None` until the site's climatology exists). It is what Tonight says."""
 
     agreement: WeatherAgreementOut
     wind_700hpa_kmh: float | None
@@ -90,9 +88,8 @@ class WeatherBriefOut(WeatherSkyOut):
 
 
 class WeatherNightOut(WeatherBriefOut):
-    """Una notte della previsione: il riassunto, i fattori, e le sue ore da mezzogiorno a
-    mezzogiorno. Una notte di `trend` porta il riassunto senza ore utili: niente fattori, niente
-    ore ne' cielo in quota."""
+    """A forecast night: the summary, the factors, and its hours from noon to noon. A `trend`
+    night carries the summary without usable hours: no factors, no hours, no upper air."""
 
     night: str
     trend: bool
@@ -102,26 +99,29 @@ class WeatherNightOut(WeatherBriefOut):
 
 
 class WeatherSourceOut(BaseModel):
-    """Una fonte del cielo in quota che ha scritto qualcosa, e quando: la pagina la cita solo se
-    c'e', e la licenza di CAMS vuole l'anno dei dati."""
+    """An upper-air source that wrote something, and when: the page cites it only if present, and
+    the CAMS licence wants the year of the data."""
 
-    source: str  # un nome di `weather.sky.SOURCES`: scritto qui, sarebbe una seconda casa
+    source: str = Field(
+        description="A name from `weather.sky.ALL_SOURCES`; not listed here, so the names have "
+        "one home."
+    )
     fetched_at: str
 
 
 class WeatherSeeingOut(BaseModel):
-    """Da dove viene il seeing (`meteoblue`, `7timer`, o `None` se da nessuna parte) e, quando c'e'
-    la chiave Meteoblue, com'e' andato il suo ultimo tentativo: `ok`, `refused`, `unreachable`,
-    `bad_answer`, o `None` se non si e' ancora chiesto."""
+    """Where seeing comes from (`meteoblue`, `7timer`, or `None` if nowhere) and, when the
+    Meteoblue key is there, how its last attempt went: `ok`, `refused`, `unreachable`,
+    `bad_answer`, or `None` if it has not been asked yet."""
 
     source: Literal["meteoblue", "7timer"] | None
     meteoblue: Literal["ok", "refused", "unreachable", "bad_answer"] | None
 
 
 class WeatherOut(BaseModel):
-    """Le prossime notti del sito di casa per il modello scelto. `fetched_at` e' l'ora in cui e'
-    arrivata l'ultima previsione del sito, per tutti i modelli insieme: `None` finche' non ne e'
-    arrivata nessuna. `missing` dice cosa impedisce di averne una."""
+    """The next nights of the home site for the chosen model. `fetched_at` is when the site's
+    latest forecast arrived, for all models together: `None` until the first one arrives. `missing`
+    tells what prevents having one."""
 
     site: str | None
     missing: Literal["no_timezone"] | None
@@ -135,6 +135,6 @@ class WeatherOut(BaseModel):
 
 
 class WeatherRefreshOut(BaseModel):
-    """Com'e' andata la richiesta: arrivata, o perche' no."""
+    """How the request went: arrived, or why not."""
 
     status: Literal["ok", "no_site", "no_timezone", "unreachable", "bad_answer"]

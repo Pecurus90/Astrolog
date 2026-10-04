@@ -1,10 +1,5 @@
-"""La forma di cio' che l'app dice sul cielo di stanotte.
-
-Vincolo non ovvio: **ogni campo puo' mancare, e mancare vuol dire una cosa precisa**. Senza sito
-di casa non c'e' notte e non c'e' luna; una luna che non sorge nelle ventiquattro ore non ha
-un'ora. Sono le **tre forme del dato** del design system -- piena, vuota, ignota -- portate in un
-modello: chi le mostra scrive una frase, non uno zero.
-"""
+"""Every field of tonight's sky may be missing, and missing means something precise (no home site,
+a moon that does not rise): whoever shows it writes a sentence, not a zero."""
 
 from typing import Literal
 
@@ -12,10 +7,8 @@ from pydantic import BaseModel, Field
 
 from .models_weather import WeatherBriefOut
 
-# Le otto fasi. Ripetute qui e non importate da `ephemeris`: questo modulo descrive il
-# **contratto della rotta**, e un contratto che cambia forma perche' e' cambiato un modulo
-# interno sarebbe un contratto che non si puo' leggere. Che i due elenchi coincidano lo prova
-# `tests/test_api_tonight.py`.
+# Repeated rather than imported from `ephemeris`, so the route contract does not change shape with
+# an internal module.
 PhaseKey = Literal[
     "new",
     "waxing_crescent",
@@ -29,10 +22,10 @@ PhaseKey = Literal[
 
 
 class SkyPointOut(BaseModel):
-    """Un istante della notte e quanto era alta la Luna, in gradi sull'orizzonte.
+    """An instant of the night and how high the Moon was, in degrees above the horizon.
 
-    L'altezza e' **negativa sotto l'orizzonte**, e non si taglia a zero: e' cio' che permette di
-    disegnare dove la Luna entra ed esce invece di una curva che si appoggia al bordo.
+    The altitude is **negative below the horizon**, and is not clipped to zero: that is what lets
+    the chart draw where the Moon comes in and goes out instead of a curve resting on the edge.
     """
 
     at: str
@@ -42,35 +35,46 @@ class SkyPointOut(BaseModel):
 class MoonOut(BaseModel):
     phase_key: PhaseKey
     illumination_pct: int = Field(ge=0, le=100)
-    # Istanti con il loro fuso, in ISO. `None` quando l'attraversamento non c'e' nella notte:
-    # sopra il circolo polare capita, e li' un'ora scritta sarebbe inventata.
-    rise: str | None
-    set: str | None
-    # Da che parte si vede il lembo illuminato, **da questo sito**: dipende dalla fase e
-    # dall'emisfero, perche' una crescente e' illuminata a destra da noi e a sinistra in
-    # Australia. Lo dice il backend, che conosce tutti e due: farlo dedurre a chi disegna
-    # vorrebbe dire un conto nel layout, e mezzo mondo con la Luna specchiata.
-    lit_side: Literal["left", "right"]
-    # Il punto piu' alto della notte. **Non e' mai assente**, nemmeno quando non ci sono orari:
-    # una Luna che non sorge sale lo stesso, sotto l'orizzonte, e quanto poco sale e' la risposta.
-    highest: SkyPointOut
-    # La curva dell'altezza lungo la notte, per chi la disegna. Il primo e l'ultimo punto sono i
-    # due estremi della notte: un grafico che chiudesse prima perderebbe l'ultima mezz'ora.
-    track: list[SkyPointOut]
-    # Quanto in alto la Luna puo' arrivare **da questo sito**, mai di piu': e' il bordo alto del
-    # grafico. Dipende dalla latitudine e non dalla notte, quindi la scala non cambia mai nello
-    # stesso posto e due notti si confrontano a occhio. Arriva gia' salito al multiplo di quindici
-    # perche' e' il numero che va sulla tacca: farlo salire a schermo sarebbe un conto nel layout.
-    ceiling_deg: int = Field(gt=0, le=90)
+    rise: str | None = Field(
+        description="ISO instant with its time zone. `None` when the crossing does not happen "
+        "within the night, as above the polar circle, where a written time would be invented."
+    )
+    set: str | None = Field(description="ISO instant with its time zone; `None` as for `rise`.")
+    lit_side: Literal["left", "right"] = Field(
+        description="Which side the lit limb is seen on **from this site**: it depends on the "
+        "phase and on the hemisphere, since a crescent is lit on the right in the north and on "
+        "the left in Australia. The backend says it because it knows both: deducing it while "
+        "drawing would put a computation in the layout, and half the world would see the Moon "
+        "mirrored."
+    )
+    highest: SkyPointOut = Field(
+        description="The highest point of the night. **Never absent**, not even without rise "
+        "and set times: a Moon that does not rise still climbs, below the horizon, and how "
+        "little it climbs is the answer."
+    )
+    track: list[SkyPointOut] = Field(
+        description="The altitude curve along the night, for whoever draws it. The first and "
+        "last points are the two ends of the night: a chart that closed earlier would lose the "
+        "last half hour."
+    )
+    ceiling_deg: int = Field(
+        gt=0,
+        le=90,
+        description="How high the Moon can get **from this site**, never more: it is the top "
+        "edge of the chart. It depends on the latitude and not on the night, so the scale never "
+        "changes at one place and two nights compare at a glance. It arrives already rounded up "
+        "to a multiple of fifteen, because that is the number on the tick mark: rounding it up "
+        "on screen would be a computation in the layout.",
+    )
 
 
 class SiteSkyOut(BaseModel):
-    """Da dove si osserva, e che cielo ha: il piede della barra lo scrive in una riga sola.
+    """Where one observes from, and what sky it has: the toolbar footer writes it on one line.
 
-    **I due campi del cielo vanno insieme, e insieme possono mancare.** La classe non e' una
-    colonna del database: nasce dalla luminosita' (`astrolog.units.bortle_of`), quindi senza la
-    misura non c'e' classe -- ed e' lo stato di chi ha saltato quella domanda al primo avvio, non
-    un guasto. Chi lo mostra scrive "classe non dichiarata", non uno zero.
+    **The two sky fields go together, and together they can be missing.** The class is not a
+    database column: it derives from the brightness, so without the measurement there is no
+    class -- and that is the state of someone who skipped that question at first launch, not a
+    fault. Whoever shows it writes "class not declared", not a zero.
     """
 
     name: str
@@ -79,10 +83,10 @@ class SiteSkyOut(BaseModel):
 
 
 class SkyBandOut(BaseModel):
-    """Un pezzo di notte in cui il cielo e' sempre la stessa cosa: da quando a quando, e quale.
+    """A stretch of night in which the sky is always the same thing: from when to when, and which.
 
-    Perche' escano **gia' divise** invece che come otto orari lo dice `docs/domini/effemeridi.md`,
-    voce *"Le fasce arrivano gia' divise"*."""
+    Why they come out **already split** instead of as eight times is told in
+    `docs/domini/effemeridi.md`, entry *"Le fasce arrivano gia' divise"*."""
 
     starts_at: str
     ends_at: str
@@ -90,14 +94,19 @@ class SkyBandOut(BaseModel):
 
 
 class TonightOut(BaseModel):
-    """La notte a cui si riferisce (`YYYY-MM-DD` nel fuso del sito), il sito, la Luna e il cielo."""
+    """The night it refers to (`YYYY-MM-DD` in the site's time zone), the site, the Moon and the
+    sky."""
 
     night: str | None
     site: SiteSkyOut | None
     moon: MoonOut | None
-    # Vuoto quando non c'e' una notte da dividere -- nessun sito, o un fuso che non si risolve --
-    # per la stessa ragione per cui li' la Luna e' `None`.
-    sky_bands: list[SkyBandOut] = []
-    # Il meteo della notte in corso dal modello scelto, come la previsione l'ha scritto; `None`
-    # finche' la previsione non e' arrivata.
-    weather: WeatherBriefOut | None = None
+    sky_bands: list[SkyBandOut] = Field(
+        default=[],
+        description="Empty when there is no night to split -- no site, or a time zone that does "
+        "not resolve -- for the same reason the Moon is `None` there.",
+    )
+    weather: WeatherBriefOut | None = Field(
+        default=None,
+        description="The current night's weather from the chosen model, as the forecast wrote "
+        "it; `None` until the forecast has arrived.",
+    )

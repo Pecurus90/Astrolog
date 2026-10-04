@@ -1,13 +1,5 @@
-"""La forma delle risposte e delle richieste del **luogo da cui si osserva e del primo
-avvio**: il sito, le preferenze che il wizard scrive, e cio' che manca per fare le notti.
-
-Vale la convenzione di `models.py`: "non so" e' un campo con codice, mai un null muto; i nomi
-vengono dal glossario. Un file per dominio: la spina, Da confermare, il sito.
-
-Vincolo non ovvio: `bortle` esce ma non entra mai nel database -- e' derivato dalla
-luminosita' e viaggia sempre accanto a lei. In creazione e' invece una scorciatoia d'ingresso
-(chi il cielo lo sceglie invece di misurarlo) che si converte subito in una luminosita'.
-"""
+"""Site and first-launch shapes. `bortle` goes out but never into the database: it derives from the
+brightness, and on creation it is only an input shortcut converted at once into a brightness."""
 
 from typing import Any, Literal
 
@@ -17,15 +9,12 @@ from ..place import ElevationSource, SkySource
 from ..units import SQM_MAX, SQM_MIN
 from .models_page import Page
 
-# Cosa manca all'app per fare il suo mestiere: un elenco chiuso di motivi, non frasi.
+# Closed sets of codes, not sentences: they reach the screen, and a new word would arrive
+# untranslated.
 Missing = Literal["no_active_site", "no_solver", "no_star_database"]
-
-# Da quale canale arriva l'eseguibile del riconoscitore. Chiuso come `Missing`, e per la stessa
-# ragione: si mostra a schermo, e una parola nuova ci arriverebbe non tradotta.
 SolverSource = Literal["declared", "env", "path", "known_place"]
 
-# Cosa di un luogo non si e' potuto sapere, e percio' e' vuoto. La pagina scrive "non
-# fornita" e sa perche': un null da solo non distingue "non lo so" da "non l'ho chiesto".
+# A null alone does not tell "I don't know" from "I didn't ask": each empty field carries its code.
 Unknown = Literal["site_no_timezone", "site_no_elevation", "site_no_sky"]
 
 
@@ -34,15 +23,23 @@ class SiteOut(BaseModel):
     name: str
     latitude: float
     longitude: float
-    elevation_m: float | None  # None = non fornita: lo zero e' il livello del mare, ed e' vero
+    elevation_m: float | None = Field(
+        description="None = not provided: zero is sea level, and it is a true value."
+    )
     elevation_source: ElevationSource | None
-    timezone: str | None  # None dove le coordinate non cadono in nessun fuso (mare aperto)
+    timezone: str | None = Field(
+        description="None where the coordinates fall in no time zone (open sea)."
+    )
     sky_sqm: float | None
     sky_source: SkySource | None
-    bortle: int | None  # DERIVATO: non e' una colonna, e non compare mai senza la misura
+    bortle: int | None = Field(
+        description="DERIVED: not a column, and it never appears without the measurement."
+    )
     is_default: bool
-    nights: int  # quante notti lo tengono: chi cancella lo sa prima di provarci
-    unknown: list[Unknown]  # i campi vuoti, col loro motivo
+    nights: int = Field(
+        description="How many nights hold it: whoever deletes it knows before trying."
+    )
+    unknown: list[Unknown] = Field(description="The empty fields, with their reason.")
 
 
 class SiteList(Page[SiteOut]):
@@ -53,16 +50,18 @@ class SiteCreate(BaseModel):
     name: str = Field(min_length=1)
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
-    # Se non lo dai, l'app lo chiede al servizio; se lo dai, vince il tuo.
-    elevation_m: float | None = None
+    elevation_m: float | None = Field(
+        default=None,
+        description="If you don't give it, the app asks the service; if you do, yours wins.",
+    )
     sky_sqm: float | None = Field(None, ge=SQM_MIN, le=SQM_MAX)
     bortle: int | None = Field(None, ge=1, le=9)
     is_default: bool = False
 
 
 class SiteEdit(BaseModel):
-    """Cio' che si cambia di un luogo. Un campo assente resta com'e'; le coordinate cambiate
-    rifanno il fuso, perche' un fuso vecchio su coordinate nuove e' un errore silenzioso."""
+    """What changes in a site. An absent field stays as it is; changed coordinates redo the time
+    zone, because an old time zone on new coordinates is a silent error."""
 
     name: str | None = Field(None, min_length=1)
     latitude: float | None = Field(None, ge=-90, le=90)
@@ -78,8 +77,8 @@ class SiteDeleted(BaseModel):
 
 
 class PlaceOut(BaseModel):
-    """Un posto trovato per nome. Non e' un luogo dell'archivio: e' un candidato, e diventa un
-    luogo solo quando l'utente lo crea."""
+    """A place found by name. It is not a site of the archive: it is a candidate, and becomes a
+    site only when the user creates it."""
 
     name: str
     latitude: float
@@ -87,41 +86,47 @@ class PlaceOut(BaseModel):
 
 
 class PlaceList(BaseModel):
-    """La ricerca e' un GESTO, non un elenco dell'archivio: niente pagine, al piu' una
-    manciata di candidati che il servizio ha proposto."""
+    """The search is an ACTION, not a list from the archive: no pages, at most a handful of
+    candidates the service proposed."""
 
     items: list[PlaceOut]
 
 
 class SettingsOut(BaseModel):
     values: dict[str, str | None]
-    wizard_done: bool  # il timbro c'e': un fatto scritto, non "sembra vuoto"
+    wizard_done: bool = Field(
+        description='The stamp is there: a written fact, not "it looks empty".'
+    )
     missing: list[Missing]
 
 
 class SolverOut(BaseModel):
-    """Dove l'app prende il riconoscitore, e **da cosa** l'ha dedotto.
+    """Where the app takes the solver from, and **what** it deduced that from.
 
-    Il canale accompagna sempre il percorso perche' "trovato" da solo non si puo' smentire: la
-    ricerca automatica sbaglia proprio quando trova qualcosa -- un ASTAP vecchio rimasto nel
-    PATH, o quello di un altro utente in un posto noto -- e chi guarda deve poter dire "no, non
-    quello" senza indovinare quale dei quattro canali ha risposto."""
+    The channel always comes with the path because "found" alone cannot be disproved: automatic
+    search goes wrong exactly when it finds something -- an old ASTAP left in the PATH, or another
+    user's in a known place -- and whoever looks must be able to say "no, not that one" without
+    guessing which of the four channels answered."""
 
-    path: str | None  # None = non trovato: il canale e' None insieme a lui, mai da solo
+    path: str | None = Field(
+        description="None = not found: the channel is None together with it, never alone."
+    )
     source: SolverSource | None
-    # Cio' che l'utente ha scritto, **anche quando non porta a niente**: senza, un percorso
-    # sbagliato sparirebbe dalla schermata e non ci sarebbe niente da correggere.
-    declared: str | None
-    # I cataloghi stellari trovati accanto al programma, per nome (`d80`, `v50`). Vuoto **con** un
-    # percorso vuol dire che ASTAP parte e non riconosce niente; vuoto **senza** percorso vuol dire
-    # soltanto che ASTAP non c'e'.
-    databases: list[str]
+    declared: str | None = Field(
+        description="What the user wrote, **even when it leads nowhere**: without it, a wrong "
+        "path would vanish from the screen and there would be nothing to correct."
+    )
+    databases: list[str] = Field(
+        description="The star databases found next to the program, by name (`d80`, `v50`). "
+        "Empty **with** a path means ASTAP starts and recognises nothing; empty **without** a "
+        "path only means ASTAP is not there."
+    )
 
 
 class SettingsPatch(BaseModel):
-    """Una scrittura o passa intera o non passa: meta' preferenze scritte sarebbe peggio.
+    """A write either passes whole or does not pass: half the preferences written would be worse.
 
-    I valori entrano come sono: il tipo di ogni chiave lo giudica `db/config.py`, che e' dove
-    l'elenco chiuso vive. Dichiararlo anche qui vorrebbe dire scriverlo due volte."""
+    The values go in as they are: the type of each key is judged where the closed list of keys
+    lives, and declaring it here as well would mean writing it twice."""
 
     values: dict[str, Any]

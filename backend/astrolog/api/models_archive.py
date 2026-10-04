@@ -1,23 +1,21 @@
-"""La forma di cio' che l'**Archivio** mostra: cio' che hai ripreso, gia' pronto per lo schermo.
+"""The Archive arrives ready for the screen. Hours can be zero even when time is unknown, so they
+travel with `untimed` and the frontend never writes "0 h" from them."""
 
-Vincolo non ovvio: qui non c'e' niente che il frontend debba ricalcolare. Il nome e' gia' scelto
-fra i due passi del contratto, le ore sono gia' sommate escludendo le copie riscritte e i filtri
-arrivano gia' in ordine. Le ore **possono essere zero anche quando il tempo non si sa** -- la
-somma di nessun frame con una durata -- per questo viaggiano con `untimed`, e chi le mostra
-(`TempoDellePose`, nel frontend) non scrive "0 h". Le parole vengono dal glossario.
-"""
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .models_nights import FilterUsed
 from .models_page import Page
 
 
 class ArchivePanel(BaseModel):
-    """Un pannello di un mosaico: l'inquadratura, cio' che ci hai ripreso e quanto."""
+    """A panel of a mosaic: the framing, what you shot in it and how much."""
 
-    object: str | None  # l'oggetto (o gli oggetti) delle sue pose; nullo se il cielo non ne sa
-    ra_deg: float  # il centro: dice QUALE pannello, se due hanno lo stesso oggetto
+    object: str | None = Field(
+        description="The object (or objects) of its frames; null if the sky knows of none."
+    )
+    ra_deg: float = Field(
+        description="The centre: it tells WHICH panel, when two have the same object."
+    )
     dec_deg: float
     frames: int
     integration_s: float
@@ -25,41 +23,66 @@ class ArchivePanel(BaseModel):
 
 
 class ArchiveObject(BaseModel):
-    """Una riga dell'Archivio: un gruppo di frame -- un oggetto, o un mosaico confermato -- e cosa
-    ci hai messo dentro. La riga di un oggetto porta solo i frame che nessun mosaico ha preso."""
+    """A row of the Archive: a group of frames -- an object, or a confirmed mosaic -- and what you
+    put into it. An object's row carries only the frames no mosaic has taken."""
 
-    key: str  # stabile: lo slug o il nome primario di un oggetto, la chiave di un mosaico
-    name: str | None  # gia' risolto dal backend; nullo solo su una riga che non dovrebbe esistere
-    slug: str | None  # lo slug di catalogo dell'oggetto, o del bersaglio del mosaico
-    frames: int  # quanti frame, copie riscritte escluse
-    integration_s: float  # la somma del tempo dei frame, in secondi; a schermo si legge in ore
-    untimed: int  # quanti di quei frame non dicono quanto sono durati: non valgono zero
-    constellation: str | None  # codice IAU a tre lettere, dal catalogo
-    type_code: str | None  # che cosa e' (GALAXY, DARK_NEBULA...), dal catalogo
-    filters: list[FilterUsed]  # con che filtri l'hai ripreso, dal piu' usato; vuoto se non si sa
-    panels: int | None  # quanti pannelli, per un mosaico; nullo per un oggetto
-    panel_list: list[ArchivePanel]  # i pannelli, dal piu' ripreso; vuoto per un oggetto
+    key: str = Field(
+        description="Stable: the slug or the primary name of an object, the key of a mosaic."
+    )
+    name: str | None = Field(
+        description="Already resolved by the backend; null only on a row that should not exist."
+    )
+    slug: str | None = Field(
+        description="The catalog slug of the object, or of the mosaic's target."
+    )
+    frames: int = Field(description="How many frames, rewritten copies excluded.")
+    integration_s: float = Field(
+        description="The sum of the frames' time, in seconds; on screen it reads in hours."
+    )
+    untimed: int = Field(
+        description="How many of those frames do not say how long they lasted: they do not "
+        "count as zero."
+    )
+    constellation: str | None = Field(description="Three-letter IAU code, from the catalog.")
+    type_code: str | None = Field(
+        description="What it is (GALAXY, DARK_NEBULA...), from the catalog."
+    )
+    filters: list[FilterUsed] = Field(
+        description="Which filters you shot it with, most used first; empty if unknown."
+    )
+    panels: int | None = Field(description="How many panels, for a mosaic; null for an object.")
+    panel_list: list[ArchivePanel] = Field(
+        description="The panels, most shot first; empty for an object."
+    )
 
 
 class ArchiveChoices(BaseModel):
-    """Cosa offrono le tendine della barra: **cio' che c'e' in archivio**, non cio' che il
-    catalogo conosce: chi ne usa due non deve scorrere tutti quelli che il catalogo porta."""
+    """What the toolbar dropdowns offer: **what is in the archive**, not what the catalog knows:
+    someone who uses two catalogs must not scroll through every one the catalog carries."""
 
-    catalogs: list[str]  # le sigle dei cataloghi che i tuoi oggetti hanno (`M`, `NGC`...)
-    constellations: list[str]  # i codici IAU a tre lettere, in ordine
-    filters: list[str]  # i nomi dei filtri con cui hai ripreso almeno un oggetto
-    mosaics: bool  # se hai almeno un mosaico confermato: senza, "solo i mosaici" non si offre
+    catalogs: list[str] = Field(
+        description="The prefixes of the catalogs your objects belong to (`M`, `NGC`...)."
+    )
+    constellations: list[str] = Field(description="The three-letter IAU codes, in order.")
+    filters: list[str] = Field(
+        description="The names of the filters you shot at least one object with."
+    )
+    mosaics: bool = Field(
+        description='Whether you have at least one confirmed mosaic: without one, "mosaics '
+        'only" is not offered.'
+    )
 
 
 class ArchiveFound(BaseModel):
-    """Quante delle righe trovate sono oggetti e quanti mosaici: la conta a schermo non chiama
-    "oggetto" un mosaico."""
+    """How many of the rows found are objects and how many mosaics: the count on screen does not
+    call a mosaic an "object"."""
 
     objects: int
     mosaics: int
 
 
 class ArchiveList(Page[ArchiveObject]):
-    # `total` sono le righe che **passano il filtro**, non quante ne hai in tutto
-    found: ArchiveFound  # le stesse righe, divise fra oggetti e mosaici
+    """`total` counts the rows that pass the filter, not every row in the archive."""
+
+    found: ArchiveFound = Field(description="The same rows, split between objects and mosaics.")
     choices: ArchiveChoices

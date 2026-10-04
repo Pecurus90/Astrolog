@@ -1,9 +1,5 @@
-"""La forma delle risposte e delle richieste della **spina**: cartelle, scansione, worker.
-
-Vincolo non ovvio: "non so" e' un campo con codice, mai un null muto; ogni elenco e'
-paginato (`items`, `total`, `limit`, `offset`). I nomi vengono dal glossario. La convenzione
-vale per tutti; i modelli stanno in un file per dominio (`models_review`, `models_site`).
-"""
+"""Spine shapes. "Don't know" is a coded field, never a silent null; archive row lists are paged
+(`Page`), an action's answer is not. Each domain keeps its models in its own `models_*` file."""
 
 from typing import Any, Literal
 
@@ -38,19 +34,23 @@ class PathProbe(BaseModel):
 class ProbeOut(BaseModel):
     root_path: str
     reachable: bool
-    fits_count: int | None  # None = non ho guardato (cartella non raggiungibile), mai 0
-    complete: bool | None  # False = conta fermata al tetto di tempo: sono "piu' di" fits_count
+    fits_count: int | None = Field(
+        description="None = not looked at (the folder is unreachable); never reported as 0."
+    )
+    complete: bool | None = Field(
+        description='False = the count stopped at the time limit: there are "more than" fits_count.'
+    )
 
 
 class FolderEntry(BaseModel):
     name: str
-    path: str  # quello da registrare, cosi' com'e'
+    path: str = Field(description="The path to register, as it is.")
 
 
 class BrowseOut(BaseModel):
     path: str
-    parent: str | None  # None alla radice dei dati: piu' su non si sale
-    folders: list[FolderEntry]  # le sottocartelle visibili, ordinate
+    parent: str | None = Field(description="None at the data root: there is no going higher.")
+    folders: list[FolderEntry] = Field(description="The visible subfolders, sorted.")
 
 
 class FolderOut(BaseModel):
@@ -59,7 +59,10 @@ class FolderOut(BaseModel):
     root_path: str
     created_at: str
     reachable: bool
-    frames: int  # posizioni presenti: viene dal DB, vale anche a disco staccato
+    frames: int = Field(
+        description="Positions present: comes from the database, so it holds with the disk "
+        "detached too."
+    )
     reactivated: bool = False
 
 
@@ -79,14 +82,13 @@ class ScanStarted(BaseModel):
 
 
 class FolderSkipped(BaseModel):
-    """Una cartella che il gesto in barra non ha letto, col suo perche': oggi solo
-    `root_unreachable` (il disco staccato, il NAS spento) e `scan_running` (la sta gia'
-    leggendo un'altra corsa).
+    """A folder the toolbar action did not read, with its reason: `root_unreachable` (the
+    detached disk, the NAS switched off) or `scan_running` (another run is already reading it).
 
-    Porta il **percorso** e non solo il numero di riga: e' cio' che l'utente riconosce, e chi
-    avvia la scansione lo ha gia' in mano (`api/scan.py` lo legge per il pre-controllo). Senza,
-    la pagina dovrebbe chiedere l'elenco delle cartelle e ricucire due risposte proprio nel
-    momento del guasto -- e a un utente con piu' di cento cartelle non tornerebbe nemmeno."""
+    It carries the **path** and not just the row id: that is what the user recognises, and the
+    scan route already holds it for its pre-check. Without it the page would have to fetch the
+    folder list and stitch two answers together right at the moment of the failure -- and for a
+    user with more than a hundred folders they would not even match up."""
 
     folder_id: int
     root_path: str
@@ -94,22 +96,25 @@ class FolderSkipped(BaseModel):
 
 
 class ScanAllStarted(BaseModel):
-    """Cosa ha fatto il gesto "leggile tutte": le cartelle avviate con la loro ricevuta, e
-    quelle saltate col motivo. Le saltate si dicono invece di sparire: un disco staccato e'
-    esattamente la cosa che l'utente deve sapere, e tacerla farebbe sembrare completa una
-    scansione che non lo e'."""
+    """What the "read them all" action did: the folders started, each with its receipt, and the
+    ones skipped with their reason. Skipped folders are reported instead of vanishing: a
+    detached disk is exactly what the user must know, and hiding it would make an incomplete
+    scan look complete."""
 
     started: list[ScanStarted]
     skipped: list[FolderSkipped]
 
 
-# Perche' un file non e' entrato, e perche' si e' saltato: le parole di `spine/scan_store`.
+# The words of `spine/scan_store` for why a file did not get in and why it was skipped.
 FileError = Literal["file_unreadable", "header_unreadable", "name_not_utf8", "internal_error"]
 SkipReason = Literal["calibration", "stack", "still_writing"]
 
 
 class FileNotRead(BaseModel):
-    file: str  # relativo alla radice; un nome che non e' UTF-8 porta `?` al posto dei byte storti
+    file: str = Field(
+        description="Relative to the root; a name that is not UTF-8 carries `?` in place of the "
+        "bad bytes."
+    )
     reason: FileError
 
 
@@ -121,14 +126,19 @@ class SkippedCount(BaseModel):
 class ScanRunOut(BaseModel):
     id: int
     folder_id: int
-    # Il percorso della cartella, che e' quello che l'utente riconosce: col solo `folder_id` la
-    # pagina dovrebbe leggersi le cartelle e appaiarle da se'. Non e' mai vuoto: togliere una
-    # cartella la **ritira**, e la sua riga la trattiene la chiave esterna di `scan_runs`.
-    folder_path: str
+    folder_path: str = Field(
+        description="The folder's path, which is what the user recognises: with `folder_id` "
+        "alone the page would have to read the folders and pair them up itself. Never empty: "
+        "removing a folder **retires** it, and the foreign key of `scan_runs` keeps its row."
+    )
     started_at: str
     ended_at: str | None
-    duration_s: float | None  # None = non lo so: la corsa e' aperta, o i due istanti non tornano
-    status: Literal["ok", "stopped", "aborted", "error"] | None  # None = corsa aperta
+    duration_s: float | None = Field(
+        description="None = unknown: the run is open, or the two instants do not add up."
+    )
+    status: Literal["ok", "stopped", "aborted", "error"] | None = Field(
+        description="None = the run is open."
+    )
     reason: Literal["root_unreachable", "stop_requested", "internal_error", "database_error"] | None
     found: int
     new: int
@@ -137,11 +147,20 @@ class ScanRunOut(BaseModel):
     missing: int
     skipped: int
     errors: int
-    online_only: int  # FITS solo online: non aperti, per non scaricarli; si rivedono dopo
+    online_only: int = Field(
+        description="Online-only FITS: not opened, so as not to download them; they are "
+        "revisited later."
+    )
     unreadable_dirs: list[str]
-    hidden_dirs: list[str]  # sottocartelle nascoste lasciate fuori (il cestino, per esempio)
-    linked_dirs: list[str]  # raggiunte da un collegamento o una giunzione: non seguite
-    skipped_by_reason: list[SkippedCount]  # quanti saltati per motivo, calibrazioni comprese
+    hidden_dirs: list[str] = Field(
+        description="Hidden subfolders left out (the recycle bin, for instance)."
+    )
+    linked_dirs: list[str] = Field(
+        description="Reached through a link or a junction: not followed."
+    )
+    skipped_by_reason: list[SkippedCount] = Field(
+        description="How many were skipped per reason, calibration frames included."
+    )
 
 
 class ScanRunList(Page[ScanRunOut]):
@@ -149,10 +168,9 @@ class ScanRunList(Page[ScanRunOut]):
 
 
 class ScanErrorList(Page[FileNotRead]):
-    """I file che una scansione non ha letto, a pagine: possono essere migliaia."""
+    """The files a scan did not read, paginated: they can be thousands."""
 
 
-# gli stati di uno stadio nel worker: un vocabolario, scritto una volta
 StageState = Literal["not_run", "running", "stopped", "completed", "completed_with_errors", "error"]
 
 
@@ -162,21 +180,25 @@ class StageRecord(BaseModel):
     current: int | None
     total: int | None
     tally: dict[str, Any]
-    # Perche' lo stadio si e' fermato, quando si e' fermato da solo: un codice, mai una frase.
-    reason: str | None = None
+    reason: str | None = Field(
+        default=None,
+        description="Why the stage stopped, when it stopped on its own: a code, never a sentence.",
+    )
 
 
 class WorkerSnapshot(BaseModel):
     state: Literal["idle", "running", "stopped", "completed", "completed_with_errors", "error"]
     stage: str | None
-    started_at: str | None  # None finche' non e' mai partito: mai un istante inventato
+    started_at: str | None = Field(
+        description="None until it has ever started: never an invented instant."
+    )
     ended_at: str | None
     stages: list[StageRecord]
     error: str | None = None
 
 
 class ScanEvent(BaseModel):
-    """Un evento di avanzamento della scansione: il file in corso e i conteggi finora."""
+    """A scan progress event: the file being read and the counts so far."""
 
     current: int
     total: int
@@ -194,7 +216,7 @@ class ScanEvent(BaseModel):
 
 
 class ScanProgress(BaseModel):
-    """La scansione della corsa corrente: cosa la pagina mostra mentre gira e a fine corsa."""
+    """The scan of the current run: what the page shows while it runs and when it ends."""
 
     state: StageState
     folder_id: int
@@ -209,9 +231,10 @@ PipelineAction = Literal["start", "stop", "resume"]
 class PipelineStatus(BaseModel):
     worker: WorkerSnapshot
     scan: ScanProgress | None
-    pending: dict[str, int]  # per stadio: quanti frame mancano ancora
-    # il verbo del pulsante, deciso qui e non nella pagina: Avvia / Ferma / Riprendi
-    action: PipelineAction
+    pending: dict[str, int] = Field(description="Per stage: how many frames are still missing.")
+    action: PipelineAction = Field(
+        description="The button's verb, decided here and not in the page: start / stop / resume."
+    )
 
 
 class WorkerOut(BaseModel):

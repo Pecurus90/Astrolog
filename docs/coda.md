@@ -30,7 +30,8 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
 - Fatti: `spine` intero, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`, `weather`, i
   file sciolti di `backend/astrolog`.
 - In corso, per lotti: `api`. Fatti `__init__`, `app`, `deps`, `page`, `paths`, `pipeline`,
-  `work`, `settings`, `vocab`; mancano gli altri 27 file.
+  `work`, `settings`, `vocab`, `models`, `models_page`, `models_archive`, `models_nights`,
+  `models_tonight`, `models_site`, `models_weather`; mancano gli altri 20 file.
 - Da chiudere strada facendo: 21 righe del backend (7 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
@@ -729,6 +730,10 @@ riga per voce.
   e `page.is_page`, "la rotta di ripiego si registra per ultima", i perche' di `solver_found` e
   `solver_where` ripetuti dalle rotte del solver, i commenti italiani su
   `PipelineStatus.pending` e `.action`).
+- **I modelli delle pagine, dopo la fase 1**: `Night.frames` e `ArchiveObject.frames` hanno la
+  stessa descrizione parola per parola nell'OpenAPI, e quelle di `untimed` sono quasi uguali (il
+  significato ha casa nel glossario); il limite `Field(ge=0, le=100)` della Luna e' scritto in
+  `MoonOut` e di nuovo in `MoonThatNight`, che dice di condividerlo ma condivide solo `PhaseKey`.
 - **L'attrezzatura, dopo la fase 1**: le docstring di `rigs.find_rig` e `rigs.RigExistsError`
   scrivono a mano il 5 % di `units.FOCAL_TOLERANCE`; "la scheda dell'utente vince su file e cielo"
   e' detta in `camera_sky`, `camera_specs` e `gear.camera_specs`, ma vive solo in

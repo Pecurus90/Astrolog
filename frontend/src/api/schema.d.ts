@@ -894,23 +894,35 @@ export interface components {
     schemas: {
         /**
          * ArchiveChoices
-         * @description Cosa offrono le tendine della barra: **cio' che c'e' in archivio**, non cio' che il
-         *     catalogo conosce: chi ne usa due non deve scorrere tutti quelli che il catalogo porta.
+         * @description What the toolbar dropdowns offer: **what is in the archive**, not what the catalog knows:
+         *     someone who uses two catalogs must not scroll through every one the catalog carries.
          */
         ArchiveChoices: {
-            /** Catalogs */
+            /**
+             * Catalogs
+             * @description The prefixes of the catalogs your objects belong to (`M`, `NGC`...).
+             */
             catalogs: string[];
-            /** Constellations */
+            /**
+             * Constellations
+             * @description The three-letter IAU codes, in order.
+             */
             constellations: string[];
-            /** Filters */
+            /**
+             * Filters
+             * @description The names of the filters you shot at least one object with.
+             */
             filters: string[];
-            /** Mosaics */
+            /**
+             * Mosaics
+             * @description Whether you have at least one confirmed mosaic: without one, "mosaics only" is not offered.
+             */
             mosaics: boolean;
         };
         /**
          * ArchiveFound
-         * @description Quante delle righe trovate sono oggetti e quanti mosaici: la conta a schermo non chiama
-         *     "oggetto" un mosaico.
+         * @description How many of the rows found are objects and how many mosaics: the count on screen does not
+         *     call a mosaic an "object".
          */
         ArchiveFound: {
             /** Objects */
@@ -918,7 +930,10 @@ export interface components {
             /** Mosaics */
             mosaics: number;
         };
-        /** ArchiveList */
+        /**
+         * ArchiveList
+         * @description `total` counts the rows that pass the filter, not every row in the archive.
+         */
         ArchiveList: {
             /** Items */
             items: components["schemas"]["ArchiveObject"][];
@@ -928,46 +943,86 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
+            /** @description The same rows, split between objects and mosaics. */
             found: components["schemas"]["ArchiveFound"];
             choices: components["schemas"]["ArchiveChoices"];
         };
         /**
          * ArchiveObject
-         * @description Una riga dell'Archivio: un gruppo di frame -- un oggetto, o un mosaico confermato -- e cosa
-         *     ci hai messo dentro. La riga di un oggetto porta solo i frame che nessun mosaico ha preso.
+         * @description A row of the Archive: a group of frames -- an object, or a confirmed mosaic -- and what you
+         *     put into it. An object's row carries only the frames no mosaic has taken.
          */
         ArchiveObject: {
-            /** Key */
+            /**
+             * Key
+             * @description Stable: the slug or the primary name of an object, the key of a mosaic.
+             */
             key: string;
-            /** Name */
+            /**
+             * Name
+             * @description Already resolved by the backend; null only on a row that should not exist.
+             */
             name: string | null;
-            /** Slug */
+            /**
+             * Slug
+             * @description The catalog slug of the object, or of the mosaic's target.
+             */
             slug: string | null;
-            /** Frames */
+            /**
+             * Frames
+             * @description How many frames, rewritten copies excluded.
+             */
             frames: number;
-            /** Integration S */
+            /**
+             * Integration S
+             * @description The sum of the frames' time, in seconds; on screen it reads in hours.
+             */
             integration_s: number;
-            /** Untimed */
+            /**
+             * Untimed
+             * @description How many of those frames do not say how long they lasted: they do not count as zero.
+             */
             untimed: number;
-            /** Constellation */
+            /**
+             * Constellation
+             * @description Three-letter IAU code, from the catalog.
+             */
             constellation: string | null;
-            /** Type Code */
+            /**
+             * Type Code
+             * @description What it is (GALAXY, DARK_NEBULA...), from the catalog.
+             */
             type_code: string | null;
-            /** Filters */
+            /**
+             * Filters
+             * @description Which filters you shot it with, most used first; empty if unknown.
+             */
             filters: components["schemas"]["FilterUsed"][];
-            /** Panels */
+            /**
+             * Panels
+             * @description How many panels, for a mosaic; null for an object.
+             */
             panels: number | null;
-            /** Panel List */
+            /**
+             * Panel List
+             * @description The panels, most shot first; empty for an object.
+             */
             panel_list: components["schemas"]["ArchivePanel"][];
         };
         /**
          * ArchivePanel
-         * @description Un pannello di un mosaico: l'inquadratura, cio' che ci hai ripreso e quanto.
+         * @description A panel of a mosaic: the framing, what you shot in it and how much.
          */
         ArchivePanel: {
-            /** Object */
+            /**
+             * Object
+             * @description The object (or objects) of its frames; null if the sky knows of none.
+             */
             object: string | null;
-            /** Ra Deg */
+            /**
+             * Ra Deg
+             * @description The centre: it tells WHICH panel, when two have the same object.
+             */
             ra_deg: number;
             /** Dec Deg */
             dec_deg: number;
@@ -980,7 +1035,7 @@ export interface components {
         };
         /**
          * ArchiveTotals
-         * @description Cosa tiene l'archivio intero: non dipende da quante righe si stanno guardando.
+         * @description What the whole archive holds: it does not depend on how many rows are being looked at.
          */
         ArchiveTotals: {
             /** Nights */
@@ -1016,9 +1071,15 @@ export interface components {
         BrowseOut: {
             /** Path */
             path: string;
-            /** Parent */
+            /**
+             * Parent
+             * @description None at the data root: there is no going higher.
+             */
             parent: string | null;
-            /** Folders */
+            /**
+             * Folders
+             * @description The visible subfolders, sorted.
+             */
             folders: components["schemas"]["FolderEntry"][];
         };
         /**
@@ -1036,7 +1097,10 @@ export interface components {
         };
         /** FileNotRead */
         FileNotRead: {
-            /** File */
+            /**
+             * File
+             * @description Relative to the root; a name that is not UTF-8 carries `?` in place of the bad bytes.
+             */
             file: string;
             /**
              * Reason
@@ -1184,15 +1248,21 @@ export interface components {
         };
         /**
          * FilterUsed
-         * @description Un filtro con cui hai ripreso qualcosa, col tempo che gli e' stato dato.
+         * @description A filter you shot something with, with the time given to it.
          *
-         *     Nasce qui, dove l'hanno chiesto per primo le Notti, e lo riusa l'Archivio: la casa che li
-         *     conta e' una sola (`spine/filters_used.py`), e due forme direbbero due volte lo stesso fatto.
+         *     Born here, where the Nights asked for it first, and reused by the Archive: the place that
+         *     counts them is a single one, and two shapes would state the same fact twice.
          */
         FilterUsed: {
-            /** Name */
+            /**
+             * Name
+             * @description The name you gave it, or the one the files carried.
+             */
             name: string;
-            /** Passband */
+            /**
+             * Passband
+             * @description The canonical passband (`vocab/filters`): it is what gives the colour.
+             */
             passband: string;
             /** Frames */
             frames: number;
@@ -1210,7 +1280,10 @@ export interface components {
         FolderEntry: {
             /** Name */
             name: string;
-            /** Path */
+            /**
+             * Path
+             * @description The path to register, as it is.
+             */
             path: string;
         };
         /** FolderList */
@@ -1236,7 +1309,10 @@ export interface components {
             created_at: string;
             /** Reachable */
             reachable: boolean;
-            /** Frames */
+            /**
+             * Frames
+             * @description Positions present: comes from the database, so it holds with the disk detached too.
+             */
             frames: number;
             /**
              * Reactivated
@@ -1246,14 +1322,13 @@ export interface components {
         };
         /**
          * FolderSkipped
-         * @description Una cartella che il gesto in barra non ha letto, col suo perche': oggi solo
-         *     `root_unreachable` (il disco staccato, il NAS spento) e `scan_running` (la sta gia'
-         *     leggendo un'altra corsa).
+         * @description A folder the toolbar action did not read, with its reason: `root_unreachable` (the
+         *     detached disk, the NAS switched off) or `scan_running` (another run is already reading it).
          *
-         *     Porta il **percorso** e non solo il numero di riga: e' cio' che l'utente riconosce, e chi
-         *     avvia la scansione lo ha gia' in mano (`api/scan.py` lo legge per il pre-controllo). Senza,
-         *     la pagina dovrebbe chiedere l'elenco delle cartelle e ricucire due risposte proprio nel
-         *     momento del guasto -- e a un utente con piu' di cento cartelle non tornerebbe nemmeno.
+         *     It carries the **path** and not just the row id: that is what the user recognises, and the
+         *     scan route already holds it for its pre-check. Without it the page would have to fetch the
+         *     folder list and stitch two answers together right at the moment of the failure -- and for a
+         *     user with more than a hundred folders they would not even match up.
          */
         FolderSkipped: {
             /** Folder Id */
@@ -1537,24 +1612,38 @@ export interface components {
             phase_key: "new" | "waxing_crescent" | "first_quarter" | "waxing_gibbous" | "full" | "waning_gibbous" | "last_quarter" | "waning_crescent";
             /** Illumination Pct */
             illumination_pct: number;
-            /** Rise */
+            /**
+             * Rise
+             * @description ISO instant with its time zone. `None` when the crossing does not happen within the night, as above the polar circle, where a written time would be invented.
+             */
             rise: string | null;
-            /** Set */
+            /**
+             * Set
+             * @description ISO instant with its time zone; `None` as for `rise`.
+             */
             set: string | null;
             /**
              * Lit Side
+             * @description Which side the lit limb is seen on **from this site**: it depends on the phase and on the hemisphere, since a crescent is lit on the right in the north and on the left in Australia. The backend says it because it knows both: deducing it while drawing would put a computation in the layout, and half the world would see the Moon mirrored.
              * @enum {string}
              */
             lit_side: "left" | "right";
+            /** @description The highest point of the night. **Never absent**, not even without rise and set times: a Moon that does not rise still climbs, below the horizon, and how little it climbs is the answer. */
             highest: components["schemas"]["SkyPointOut"];
-            /** Track */
+            /**
+             * Track
+             * @description The altitude curve along the night, for whoever draws it. The first and last points are the two ends of the night: a chart that closed earlier would lose the last half hour.
+             */
             track: components["schemas"]["SkyPointOut"][];
-            /** Ceiling Deg */
+            /**
+             * Ceiling Deg
+             * @description How high the Moon can get **from this site**, never more: it is the top edge of the chart. It depends on the latitude and not on the night, so the scale never changes at one place and two nights compare at a glance. It arrives already rounded up to a multiple of fifteen, because that is the number on the tick mark: rounding it up on screen would be a computation in the layout.
+             */
             ceiling_deg: number;
         };
         /**
          * MoonThatNight
-         * @description Che luna c'era: la fase e quanto era illuminata. **Calcolata**, non conservata.
+         * @description Which moon there was: the phase and how lit it was. **Computed**, not stored.
          */
         MoonThatNight: {
             /**
@@ -1619,27 +1708,52 @@ export interface components {
         };
         /**
          * Night
-         * @description Una riga: **una notte**, con dentro cosa ci hai fatto.
+         * @description A row: **one night**, with what you did in it.
          */
         Night: {
-            /** Id */
+            /**
+             * Id
+             * @description The night's stable id.
+             */
             id: number;
-            /** Night Date */
+            /**
+             * Night Date
+             * @description The date of the night, in the site's time zone; on screen it reads as a date.
+             */
             night_date: string;
-            /** Site */
+            /**
+             * Site
+             * @description From where: two sites on the same date are two nights, and the row must say so.
+             */
             site: string;
-            /** Site Source */
+            /**
+             * Site Source
+             * @description `declared` if you said it, `detected` if the app derived it.
+             */
             site_source: string;
-            /** Frames */
+            /**
+             * Frames
+             * @description How many frames, rewritten copies excluded.
+             */
             frames: number;
-            /** Integration S */
+            /**
+             * Integration S
+             * @description The sum of the frames' time, in seconds.
+             */
             integration_s: number;
-            /** Untimed */
+            /**
+             * Untimed
+             * @description How many do not say how long they lasted: they do not count as zero.
+             */
             untimed: number;
             /** Objects */
             objects: components["schemas"]["NightObject"][];
-            /** Filters */
+            /**
+             * Filters
+             * @description Most integration time first: the order the page shows them in.
+             */
             filters: components["schemas"]["FilterUsed"][];
+            /** @description Null when the site's time zone is not recognised: without a time zone there is no midnight, and the row stays silent instead of describing the sky of another place. */
             moon: components["schemas"]["MoonThatNight"] | null;
             weather: components["schemas"]["NightWeather"];
         };
@@ -1656,15 +1770,21 @@ export interface components {
             totals: components["schemas"]["ArchiveTotals"];
             /** Waiting */
             waiting: components["schemas"]["WaitingPoses"][];
-            /** Still Reading */
+            /**
+             * Still Reading
+             * @description How many frames the spine still has to work through: work, not a question.
+             */
             still_reading: number;
         };
         /**
          * NightObject
-         * @description Un oggetto ripreso in quella notte.
+         * @description An object shot during that night.
          */
         NightObject: {
-            /** Key */
+            /**
+             * Key
+             * @description The stable key, the same as the Archive's.
+             */
             key: string;
             /** Name */
             name: string | null;
@@ -1675,9 +1795,9 @@ export interface components {
         };
         /**
          * NightWeather
-         * @description Il meteo vero di quella notte, dall'archivio: `ok` col suo cielo; `waiting` finche' non e'
-         *     arrivato (una notte giovane aspetta la rianalisi); `unknown` se il fuso del sito non si
-         *     riconosce.
+         * @description The actual weather of that night, from the archive: `ok` with its sky; `waiting` until it
+         *     has arrived (a young night waits for the reanalysis); `unknown` if the site's time zone is not
+         *     recognised.
          */
         NightWeather: {
             /** Verdict */
@@ -1809,20 +1929,24 @@ export interface components {
         PipelineStatus: {
             worker: components["schemas"]["WorkerSnapshot"];
             scan: components["schemas"]["ScanProgress"] | null;
-            /** Pending */
+            /**
+             * Pending
+             * @description Per stage: how many frames are still missing.
+             */
             pending: {
                 [key: string]: number;
             };
             /**
              * Action
+             * @description The button's verb, decided here and not in the page: start / stop / resume.
              * @enum {string}
              */
             action: "start" | "stop" | "resume";
         };
         /**
          * PlaceList
-         * @description La ricerca e' un GESTO, non un elenco dell'archivio: niente pagine, al piu' una
-         *     manciata di candidati che il servizio ha proposto.
+         * @description The search is an ACTION, not a list from the archive: no pages, at most a handful of
+         *     candidates the service proposed.
          */
         PlaceList: {
             /** Items */
@@ -1830,8 +1954,8 @@ export interface components {
         };
         /**
          * PlaceOut
-         * @description Un posto trovato per nome. Non e' un luogo dell'archivio: e' un candidato, e diventa un
-         *     luogo solo quando l'utente lo crea.
+         * @description A place found by name. It is not a site of the archive: it is a candidate, and becomes a
+         *     site only when the user creates it.
          */
         PlaceOut: {
             /** Name */
@@ -1847,9 +1971,15 @@ export interface components {
             root_path: string;
             /** Reachable */
             reachable: boolean;
-            /** Fits Count */
+            /**
+             * Fits Count
+             * @description None = not looked at (the folder is unreachable); never reported as 0.
+             */
             fits_count: number | null;
-            /** Complete */
+            /**
+             * Complete
+             * @description False = the count stopped at the time limit: there are "more than" fits_count.
+             */
             complete: boolean | null;
         };
         /** RetireOut */
@@ -2131,10 +2261,10 @@ export interface components {
         };
         /**
          * ScanAllStarted
-         * @description Cosa ha fatto il gesto "leggile tutte": le cartelle avviate con la loro ricevuta, e
-         *     quelle saltate col motivo. Le saltate si dicono invece di sparire: un disco staccato e'
-         *     esattamente la cosa che l'utente deve sapere, e tacerla farebbe sembrare completa una
-         *     scansione che non lo e'.
+         * @description What the "read them all" action did: the folders started, each with its receipt, and the
+         *     ones skipped with their reason. Skipped folders are reported instead of vanishing: a
+         *     detached disk is exactly what the user must know, and hiding it would make an incomplete
+         *     scan look complete.
          */
         ScanAllStarted: {
             /** Started */
@@ -2144,7 +2274,7 @@ export interface components {
         };
         /**
          * ScanErrorList
-         * @description I file che una scansione non ha letto, a pagine: possono essere migliaia.
+         * @description The files a scan did not read, paginated: they can be thousands.
          */
         ScanErrorList: {
             /** Items */
@@ -2158,7 +2288,7 @@ export interface components {
         };
         /**
          * ScanEvent
-         * @description Un evento di avanzamento della scansione: il file in corso e i conteggi finora.
+         * @description A scan progress event: the file being read and the counts so far.
          */
         ScanEvent: {
             /** Current */
@@ -2190,7 +2320,7 @@ export interface components {
         };
         /**
          * ScanProgress
-         * @description La scansione della corsa corrente: cosa la pagina mostra mentre gira e a fine corsa.
+         * @description The scan of the current run: what the page shows while it runs and when it ends.
          */
         ScanProgress: {
             /**
@@ -2222,15 +2352,24 @@ export interface components {
             id: number;
             /** Folder Id */
             folder_id: number;
-            /** Folder Path */
+            /**
+             * Folder Path
+             * @description The folder's path, which is what the user recognises: with `folder_id` alone the page would have to read the folders and pair them up itself. Never empty: removing a folder **retires** it, and the foreign key of `scan_runs` keeps its row.
+             */
             folder_path: string;
             /** Started At */
             started_at: string;
             /** Ended At */
             ended_at: string | null;
-            /** Duration S */
+            /**
+             * Duration S
+             * @description None = unknown: the run is open, or the two instants do not add up.
+             */
             duration_s: number | null;
-            /** Status */
+            /**
+             * Status
+             * @description None = the run is open.
+             */
             status: ("ok" | "stopped" | "aborted" | "error") | null;
             /** Reason */
             reason: ("root_unreachable" | "stop_requested" | "internal_error" | "database_error") | null;
@@ -2248,15 +2387,27 @@ export interface components {
             skipped: number;
             /** Errors */
             errors: number;
-            /** Online Only */
+            /**
+             * Online Only
+             * @description Online-only FITS: not opened, so as not to download them; they are revisited later.
+             */
             online_only: number;
             /** Unreadable Dirs */
             unreadable_dirs: string[];
-            /** Hidden Dirs */
+            /**
+             * Hidden Dirs
+             * @description Hidden subfolders left out (the recycle bin, for instance).
+             */
             hidden_dirs: string[];
-            /** Linked Dirs */
+            /**
+             * Linked Dirs
+             * @description Reached through a link or a junction: not followed.
+             */
             linked_dirs: string[];
-            /** Skipped By Reason */
+            /**
+             * Skipped By Reason
+             * @description How many were skipped per reason, calibration frames included.
+             */
             skipped_by_reason: components["schemas"]["SkippedCount"][];
         };
         /** ScanStarted */
@@ -2272,17 +2423,20 @@ export interface components {
             values: {
                 [key: string]: string | null;
             };
-            /** Wizard Done */
+            /**
+             * Wizard Done
+             * @description The stamp is there: a written fact, not "it looks empty".
+             */
             wizard_done: boolean;
             /** Missing */
             missing: ("no_active_site" | "no_solver" | "no_star_database")[];
         };
         /**
          * SettingsPatch
-         * @description Una scrittura o passa intera o non passa: meta' preferenze scritte sarebbe peggio.
+         * @description A write either passes whole or does not pass: half the preferences written would be worse.
          *
-         *     I valori entrano come sono: il tipo di ogni chiave lo giudica `db/config.py`, che e' dove
-         *     l'elenco chiuso vive. Dichiararlo anche qui vorrebbe dire scriverlo due volte.
+         *     The values go in as they are: the type of each key is judged where the closed list of keys
+         *     lives, and declaring it here as well would mean writing it twice.
          */
         SettingsPatch: {
             /** Values */
@@ -2328,7 +2482,10 @@ export interface components {
             latitude: number;
             /** Longitude */
             longitude: number;
-            /** Elevation M */
+            /**
+             * Elevation M
+             * @description If you don't give it, the app asks the service; if you do, yours wins.
+             */
             elevation_m?: number | null;
             /** Sky Sqm */
             sky_sqm?: number | null;
@@ -2349,8 +2506,8 @@ export interface components {
         };
         /**
          * SiteEdit
-         * @description Cio' che si cambia di un luogo. Un campo assente resta com'e'; le coordinate cambiate
-         *     rifanno il fuso, perche' un fuso vecchio su coordinate nuove e' un errore silenzioso.
+         * @description What changes in a site. An absent field stays as it is; changed coordinates redo the time
+         *     zone, because an old time zone on new coordinates is a silent error.
          */
         SiteEdit: {
             /** Name */
@@ -2387,33 +2544,48 @@ export interface components {
             latitude: number;
             /** Longitude */
             longitude: number;
-            /** Elevation M */
+            /**
+             * Elevation M
+             * @description None = not provided: zero is sea level, and it is a true value.
+             */
             elevation_m: number | null;
             /** Elevation Source */
             elevation_source: ("declared" | "service") | null;
-            /** Timezone */
+            /**
+             * Timezone
+             * @description None where the coordinates fall in no time zone (open sea).
+             */
             timezone: string | null;
             /** Sky Sqm */
             sky_sqm: number | null;
             /** Sky Source */
             sky_source: ("measured" | "service" | "scale") | null;
-            /** Bortle */
+            /**
+             * Bortle
+             * @description DERIVED: not a column, and it never appears without the measurement.
+             */
             bortle: number | null;
             /** Is Default */
             is_default: boolean;
-            /** Nights */
+            /**
+             * Nights
+             * @description How many nights hold it: whoever deletes it knows before trying.
+             */
             nights: number;
-            /** Unknown */
+            /**
+             * Unknown
+             * @description The empty fields, with their reason.
+             */
             unknown: ("site_no_timezone" | "site_no_elevation" | "site_no_sky")[];
         };
         /**
          * SiteSkyOut
-         * @description Da dove si osserva, e che cielo ha: il piede della barra lo scrive in una riga sola.
+         * @description Where one observes from, and what sky it has: the toolbar footer writes it on one line.
          *
-         *     **I due campi del cielo vanno insieme, e insieme possono mancare.** La classe non e' una
-         *     colonna del database: nasce dalla luminosita' (`astrolog.units.bortle_of`), quindi senza la
-         *     misura non c'e' classe -- ed e' lo stato di chi ha saltato quella domanda al primo avvio, non
-         *     un guasto. Chi lo mostra scrive "classe non dichiarata", non uno zero.
+         *     **The two sky fields go together, and together they can be missing.** The class is not a
+         *     database column: it derives from the brightness, so without the measurement there is no
+         *     class -- and that is the state of someone who skipped that question at first launch, not a
+         *     fault. Whoever shows it writes "class not declared", not a zero.
          */
         SiteSkyOut: {
             /** Name */
@@ -2435,10 +2607,10 @@ export interface components {
         };
         /**
          * SkyBandOut
-         * @description Un pezzo di notte in cui il cielo e' sempre la stessa cosa: da quando a quando, e quale.
+         * @description A stretch of night in which the sky is always the same thing: from when to when, and which.
          *
-         *     Perche' escano **gia' divise** invece che come otto orari lo dice `docs/domini/effemeridi.md`,
-         *     voce *"Le fasce arrivano gia' divise"*.
+         *     Why they come out **already split** instead of as eight times is told in
+         *     `docs/domini/effemeridi.md`, entry *"Le fasce arrivano gia' divise"*.
          */
         SkyBandOut: {
             /** Starts At */
@@ -2453,10 +2625,10 @@ export interface components {
         };
         /**
          * SkyPointOut
-         * @description Un istante della notte e quanto era alta la Luna, in gradi sull'orizzonte.
+         * @description An instant of the night and how high the Moon was, in degrees above the horizon.
          *
-         *     L'altezza e' **negativa sotto l'orizzonte**, e non si taglia a zero: e' cio' che permette di
-         *     disegnare dove la Luna entra ed esce invece di una curva che si appoggia al bordo.
+         *     The altitude is **negative below the horizon**, and is not clipped to zero: that is what lets
+         *     the chart draw where the Moon comes in and goes out instead of a curve resting on the edge.
          */
         SkyPointOut: {
             /** At */
@@ -2466,21 +2638,30 @@ export interface components {
         };
         /**
          * SolverOut
-         * @description Dove l'app prende il riconoscitore, e **da cosa** l'ha dedotto.
+         * @description Where the app takes the solver from, and **what** it deduced that from.
          *
-         *     Il canale accompagna sempre il percorso perche' "trovato" da solo non si puo' smentire: la
-         *     ricerca automatica sbaglia proprio quando trova qualcosa -- un ASTAP vecchio rimasto nel
-         *     PATH, o quello di un altro utente in un posto noto -- e chi guarda deve poter dire "no, non
-         *     quello" senza indovinare quale dei quattro canali ha risposto.
+         *     The channel always comes with the path because "found" alone cannot be disproved: automatic
+         *     search goes wrong exactly when it finds something -- an old ASTAP left in the PATH, or another
+         *     user's in a known place -- and whoever looks must be able to say "no, not that one" without
+         *     guessing which of the four channels answered.
          */
         SolverOut: {
-            /** Path */
+            /**
+             * Path
+             * @description None = not found: the channel is None together with it, never alone.
+             */
             path: string | null;
             /** Source */
             source: ("declared" | "env" | "path" | "known_place") | null;
-            /** Declared */
+            /**
+             * Declared
+             * @description What the user wrote, **even when it leads nowhere**: without it, a wrong path would vanish from the screen and there would be nothing to correct.
+             */
             declared: string | null;
-            /** Databases */
+            /**
+             * Databases
+             * @description The star databases found next to the program, by name (`d80`, `v50`). Empty **with** a path means ASTAP starts and recognises nothing; empty **without** a path only means ASTAP is not there.
+             */
             databases: string[];
         };
         /** StageRecord */
@@ -2500,7 +2681,10 @@ export interface components {
             tally: {
                 [key: string]: unknown;
             };
-            /** Reason */
+            /**
+             * Reason
+             * @description Why the stage stopped, when it stopped on its own: a code, never a sentence.
+             */
             reason?: string | null;
         };
         /**
@@ -2531,7 +2715,8 @@ export interface components {
         };
         /**
          * TonightOut
-         * @description La notte a cui si riferisce (`YYYY-MM-DD` nel fuso del sito), il sito, la Luna e il cielo.
+         * @description The night it refers to (`YYYY-MM-DD` in the site's time zone), the site, the Moon and the
+         *     sky.
          */
         TonightOut: {
             /** Night */
@@ -2540,9 +2725,11 @@ export interface components {
             moon: components["schemas"]["MoonOut"] | null;
             /**
              * Sky Bands
+             * @description Empty when there is no night to split -- no site, or a time zone that does not resolve -- for the same reason the Moon is `None` there.
              * @default []
              */
             sky_bands: components["schemas"]["SkyBandOut"][];
+            /** @description The current night's weather from the chosen model, as the forecast wrote it; `None` until the forecast has arrived. */
             weather?: components["schemas"]["WeatherBriefOut"] | null;
         };
         /**
@@ -2719,9 +2906,9 @@ export interface components {
         };
         /**
          * WaitingPoses
-         * @description Pose che nessuna notte ha raccolto, raggruppate per **dove si risponde**: una domanda di
-         *     *Da confermare* (`review`), il sito da dichiarare (`site`), o niente (`never`) -- che e' il
-         *     caso di una posa senza data, a cui nessuna risposta puo' rimediare.
+         * @description Frames no night has gathered, grouped by **where the answer is given**: a question in
+         *     *To confirm* (`review`), the site to declare (`site`), or nowhere (`never`) -- the case of a
+         *     frame without a date, which no answer can fix.
          */
         WaitingPoses: {
             /**
@@ -2734,7 +2921,8 @@ export interface components {
         };
         /**
          * WeatherAgreementOut
-         * @description Quanti modelli dicono si fa, incerta, no, o non lo sanno, per quella notte, e su quanti.
+         * @description How many models say go, marginal, no-go, or do not know, for that night, and out of how
+         *     many.
          */
         WeatherAgreementOut: {
             /** Go */
@@ -2750,10 +2938,10 @@ export interface components {
         };
         /**
          * WeatherAloftOut
-         * @description Un'ora del cielo in quota: il vento a 700, 250 e 200 hPa del modello scelto; il seeing come
-         *     intervallo -- le fasce di 7Timer, o il valore di Meteoblue coi due estremi uguali, quando c'e'
-         *     la chiave -- e la trasparenza di 7Timer (un estremo aperto e' `None`, e tutti e due `None`
-         *     vuol dire che per quell'ora la fonte non dice niente); l'aerosol e le polveri di CAMS.
+         * @description An hour of the upper air: the wind at 700, 250 and 200 hPa from the chosen model; seeing as
+         *     a range -- 7Timer's bands, or Meteoblue's value with both ends equal, when the key is there --
+         *     and 7Timer's transparency (an open end is `None`, and both `None` means the source says nothing
+         *     for that hour); aerosol and dust from CAMS.
          */
         WeatherAloftOut: {
             /** At */
@@ -2779,9 +2967,9 @@ export interface components {
         };
         /**
          * WeatherBriefOut
-         * @description Una notte della previsione in breve: il suo cielo, l'accordo dei modelli, e il vento in quota
-         *     medio della notte col suo posto fra le notti dell'ultimo anno del sito -- quante su dieci ne
-         *     avevano meno (`None` finche' la climatologia del sito non c'e'). E' cio' che dice Stanotte.
+         * @description A forecast night in brief: its sky, the models' agreement, and the night's mean upper-air
+         *     wind with its rank among the site's nights of the last year -- how many in ten had less
+         *     (`None` until the site's climatology exists). It is what Tonight says.
          */
         WeatherBriefOut: {
             /** Verdict */
@@ -2802,8 +2990,8 @@ export interface components {
         };
         /**
          * WeatherFactorOut
-         * @description Un motivo che pesa sulla notte: il valore, la soglia che supera, e quando morde. `hours`
-         *     accanto a `since`/`until` dice se la finestra e' piena o a tratti.
+         * @description A reason that weighs on the night: the value, the threshold it exceeds, and when it bites.
+         *     `hours` next to `since`/`until` tells whether the window is full or patchy.
          */
         WeatherFactorOut: {
             /**
@@ -2824,7 +3012,7 @@ export interface components {
         };
         /**
          * WeatherHourOut
-         * @description Un'ora della notte, nel fuso del sito, col cielo che ha in quel momento.
+         * @description An hour of the night, in the site's time zone, with the sky it has at that moment.
          */
         WeatherHourOut: {
             /** At */
@@ -2857,9 +3045,8 @@ export interface components {
         };
         /**
          * WeatherNightOut
-         * @description Una notte della previsione: il riassunto, i fattori, e le sue ore da mezzogiorno a
-         *     mezzogiorno. Una notte di `trend` porta il riassunto senza ore utili: niente fattori, niente
-         *     ore ne' cielo in quota.
+         * @description A forecast night: the summary, the factors, and its hours from noon to noon. A `trend`
+         *     night carries the summary without usable hours: no factors, no hours, no upper air.
          */
         WeatherNightOut: {
             /** Verdict */
@@ -2890,9 +3077,9 @@ export interface components {
         };
         /**
          * WeatherOut
-         * @description Le prossime notti del sito di casa per il modello scelto. `fetched_at` e' l'ora in cui e'
-         *     arrivata l'ultima previsione del sito, per tutti i modelli insieme: `None` finche' non ne e'
-         *     arrivata nessuna. `missing` dice cosa impedisce di averne una.
+         * @description The next nights of the home site for the chosen model. `fetched_at` is when the site's
+         *     latest forecast arrived, for all models together: `None` until the first one arrives. `missing`
+         *     tells what prevents having one.
          */
         WeatherOut: {
             /** Site */
@@ -2915,7 +3102,7 @@ export interface components {
         };
         /**
          * WeatherRefreshOut
-         * @description Com'e' andata la richiesta: arrivata, o perche' no.
+         * @description How the request went: arrived, or why not.
          */
         WeatherRefreshOut: {
             /**
@@ -2926,9 +3113,9 @@ export interface components {
         };
         /**
          * WeatherSeeingOut
-         * @description Da dove viene il seeing (`meteoblue`, `7timer`, o `None` se da nessuna parte) e, quando c'e'
-         *     la chiave Meteoblue, com'e' andato il suo ultimo tentativo: `ok`, `refused`, `unreachable`,
-         *     `bad_answer`, o `None` se non si e' ancora chiesto.
+         * @description Where seeing comes from (`meteoblue`, `7timer`, or `None` if nowhere) and, when the
+         *     Meteoblue key is there, how its last attempt went: `ok`, `refused`, `unreachable`,
+         *     `bad_answer`, or `None` if it has not been asked yet.
          */
         WeatherSeeingOut: {
             /** Source */
@@ -2938,11 +3125,14 @@ export interface components {
         };
         /**
          * WeatherSourceOut
-         * @description Una fonte del cielo in quota che ha scritto qualcosa, e quando: la pagina la cita solo se
-         *     c'e', e la licenza di CAMS vuole l'anno dei dati.
+         * @description An upper-air source that wrote something, and when: the page cites it only if present, and
+         *     the CAMS licence wants the year of the data.
          */
         WeatherSourceOut: {
-            /** Source */
+            /**
+             * Source
+             * @description A name from `weather.sky.ALL_SOURCES`; not listed here, so the names have one home.
+             */
             source: string;
             /** Fetched At */
             fetched_at: string;
@@ -2960,7 +3150,10 @@ export interface components {
             state: "idle" | "running" | "stopped" | "completed" | "completed_with_errors" | "error";
             /** Stage */
             stage: string | null;
-            /** Started At */
+            /**
+             * Started At
+             * @description None until it has ever started: never an invented instant.
+             */
             started_at: string | null;
             /** Ended At */
             ended_at: string | null;

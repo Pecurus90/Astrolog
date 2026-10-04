@@ -1,11 +1,5 @@
-"""La forma di cio' che la pagina **Notti** mostra: le notti, gia' pronte per lo schermo.
-
-Vincolo non ovvio: qui non c'e' niente da ricalcolare. Le ore sono gia' sommate senza le copie
-riscritte, i nomi degli oggetti sono gia' risolti, e i filtri arrivano **in ordine di tempo
-dato**, che e' l'ordine con cui la pagina li mostra. Cio' che non c'e' ancora -- la Luna, il
-meteo, le misure delle pose -- non ha un campo vuoto qui: nasce col suo pezzo
-(`docs/domini/notti.md`).
-"""
+"""The Nights page arrives ready for the screen: what does not exist yet gets no empty field here,
+it is born with its own piece (`docs/domini/notti.md`)."""
 
 from typing import Literal
 
@@ -17,65 +11,77 @@ from .models_weather import WeatherSkyOut
 
 
 class NightObject(BaseModel):
-    """Un oggetto ripreso in quella notte."""
+    """An object shot during that night."""
 
-    key: str  # la chiave stabile, la stessa dell'Archivio
+    key: str = Field(description="The stable key, the same as the Archive's.")
     name: str | None
     frames: int
     integration_s: float
 
 
 class FilterUsed(BaseModel):
-    """Un filtro con cui hai ripreso qualcosa, col tempo che gli e' stato dato.
+    """A filter you shot something with, with the time given to it.
 
-    Nasce qui, dove l'hanno chiesto per primo le Notti, e lo riusa l'Archivio: la casa che li
-    conta e' una sola (`spine/filters_used.py`), e due forme direbbero due volte lo stesso fatto."""
+    Born here, where the Nights asked for it first, and reused by the Archive: the place that
+    counts them is a single one, and two shapes would state the same fact twice."""
 
-    name: str  # il nome che gli hai dato tu, o quello che i file portavano
-    passband: str  # la banda canonica (`vocab/filters`): e' lei a dare il colore
+    name: str = Field(description="The name you gave it, or the one the files carried.")
+    passband: str = Field(
+        description="The canonical passband (`vocab/filters`): it is what gives the colour."
+    )
     frames: int
     integration_s: float
 
 
 class MoonThatNight(BaseModel):
-    """Che luna c'era: la fase e quanto era illuminata. **Calcolata**, non conservata."""
+    """Which moon there was: the phase and how lit it was. **Computed**, not stored."""
 
-    # Le otto fasi sono **quelle della rotta di stanotte**, non un secondo elenco: e' la stessa
-    # Luna, e chi la mostra ha un dizionario solo per i suoi nomi.
+    # The same phases and bound as tonight's route: it is the same Moon, and two OpenAPI shapes
+    # for one fact would be two contracts to keep in agreement.
     phase_key: PhaseKey
-    # Lo stesso vincolo della rotta di stanotte: e' la stessa grandezza, e due forme in OpenAPI
-    # per lo stesso fatto sono due contratti da tenere d'accordo.
     illumination_pct: int = Field(ge=0, le=100)
 
 
 class NightWeather(WeatherSkyOut):
-    """Il meteo vero di quella notte, dall'archivio: `ok` col suo cielo; `waiting` finche' non e'
-    arrivato (una notte giovane aspetta la rianalisi); `unknown` se il fuso del sito non si
-    riconosce."""
+    """The actual weather of that night, from the archive: `ok` with its sky; `waiting` until it
+    has arrived (a young night waits for the reanalysis); `unknown` if the site's time zone is not
+    recognised."""
 
     state: Literal["ok", "waiting", "unknown"]
 
 
 class Night(BaseModel):
-    """Una riga: **una notte**, con dentro cosa ci hai fatto."""
+    """A row: **one night**, with what you did in it."""
 
-    id: int  # con cui chiamarla: il modale che nascera' ha gia' come chiedere questa notte
-    night_date: str  # la data della notte, nel fuso del sito; a schermo si legge come data
-    site: str  # da dove: due siti nella stessa data sono due notti, e la riga lo deve dire
-    site_source: str  # `declared` se l'hai detto tu, `detected` se lo ha ricavato l'app
-    frames: int  # quante pose, copie riscritte escluse
-    integration_s: float  # la somma del tempo delle pose, in secondi
-    untimed: int  # quante non dicono quanto sono durate: non valgono zero
+    id: int = Field(description="The night's stable id.")
+    night_date: str = Field(
+        description="The date of the night, in the site's time zone; on screen it reads as a date."
+    )
+    site: str = Field(
+        description="From where: two sites on the same date are two nights, and the row must "
+        "say so."
+    )
+    site_source: str = Field(
+        description="`declared` if you said it, `detected` if the app derived it."
+    )
+    frames: int = Field(description="How many frames, rewritten copies excluded.")
+    integration_s: float = Field(description="The sum of the frames' time, in seconds.")
+    untimed: int = Field(
+        description="How many do not say how long they lasted: they do not count as zero."
+    )
     objects: list[NightObject]
-    filters: list[FilterUsed]
-    # Nulla quando il fuso del sito non si riconosce: senza fuso non c'e' una mezzanotte, e la
-    # riga tace invece di descrivere il cielo di un altro posto.
-    moon: MoonThatNight | None
+    filters: list[FilterUsed] = Field(
+        description="Most integration time first: the order the page shows them in."
+    )
+    moon: MoonThatNight | None = Field(
+        description="Null when the site's time zone is not recognised: without a time zone there "
+        "is no midnight, and the row stays silent instead of describing the sky of another place."
+    )
     weather: NightWeather
 
 
 class ArchiveTotals(BaseModel):
-    """Cosa tiene l'archivio intero: non dipende da quante righe si stanno guardando."""
+    """What the whole archive holds: it does not depend on how many rows are being looked at."""
 
     nights: int
     frames: int
@@ -84,9 +90,9 @@ class ArchiveTotals(BaseModel):
 
 
 class WaitingPoses(BaseModel):
-    """Pose che nessuna notte ha raccolto, raggruppate per **dove si risponde**: una domanda di
-    *Da confermare* (`review`), il sito da dichiarare (`site`), o niente (`never`) -- che e' il
-    caso di una posa senza data, a cui nessuna risposta puo' rimediare."""
+    """Frames no night has gathered, grouped by **where the answer is given**: a question in
+    *To confirm* (`review`), the site to declare (`site`), or nowhere (`never`) -- the case of a
+    frame without a date, which no answer can fix."""
 
     answer_at: Literal["review", "site", "never"]
     frames: int
@@ -95,4 +101,6 @@ class WaitingPoses(BaseModel):
 class NightList(Page[Night]):
     totals: ArchiveTotals
     waiting: list[WaitingPoses]
-    still_reading: int  # quante pose la spina ha ancora da lavorare: lavoro, non una domanda
+    still_reading: int = Field(
+        description="How many frames the spine still has to work through: work, not a question."
+    )
