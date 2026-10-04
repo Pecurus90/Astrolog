@@ -31,12 +31,13 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   file sciolti di `backend/astrolog`.
 - In corso, per lotti: `api`. Fatti `__init__`, `app`, `deps`, `page`, `paths`, `pipeline`,
   `work`, `settings`, `vocab`, `models`, `models_page`, `models_archive`, `models_nights`,
-  `models_tonight`, `models_site`, `models_weather`; mancano gli altri 20 file.
+  `models_tonight`, `models_site`, `models_weather`, `models_review`, `models_review_apply`,
+  `models_review_groups`, `models_gear`; mancano gli altri 16 file.
 - Da chiudere strada facendo: 21 righe del backend (7 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
-  glossario dice "frame" e "sito" (`api/models_review_groups.py` e altri). Tre rimandi a
+  glossario dice "frame" e "sito" (`api/review_page.py` e altri). Tre rimandi a
   `docs/coda.md` puntano a decisioni che ora vivono altrove: `api/instrument_answer.py` e
   `tests/test_gear_instruments.py` vanno a `docs/domini/spina.md`, *Le schede*;
   `.pre-commit-config.yaml` (i quattro software) va a `CLAUDE.md`, "Software supportati".
@@ -730,6 +731,16 @@ riga per voce.
   e `page.is_page`, "la rotta di ripiego si registra per ultima", i perche' di `solver_found` e
   `solver_where` ripetuti dalle rotte del solver, i commenti italiani su
   `PipelineStatus.pending` e `.action`).
+- **I modelli di revisione e attrezzatura, dopo la fase 1: le regole ripetute ora stanno
+  nell'OpenAPI.** I commenti diventati descrizioni portano in `schema.d.ts` regole scritte molte
+  volte: "un gruppo gia' risposto resta in pagina per cambiare idea" (otto modelli di
+  `models_review_groups`), "si risponde con la chiave stabile, mai col numero di riga" (in quasi
+  ogni `key` di `models_review*`), il significato di `seen` (`ReviewSeen`, `ReviewOut.seen`,
+  `ReviewApply.seen`), "`null` finche' non e' contato" in tre modelli di `models_gear`, le
+  descrizioni di `key`, `night`, `integration_s` e `untimed` uguali fra gruppi, "Checked here so
+  the OpenAPI declares it" in due validatori. Rimedio: la regola nella docstring del modulo o
+  del modello padre, e i campi che rimandano. Senza test: `OpticslessAnswer.optics` che rifiuta
+  una risposta vuota o di soli spazi (il 422 di `pattern`).
 - **I modelli delle pagine, dopo la fase 1**: `Night.frames` e `ArchiveObject.frames` hanno la
   stessa descrizione parola per parola nell'OpenAPI, e quelle di `untimed` sono quasi uguali (il
   significato ha casa nel glossario); il limite `Field(ge=0, le=100)` della Luna e' scritto in

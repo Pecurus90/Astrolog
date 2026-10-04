@@ -1064,7 +1064,10 @@ export interface components {
              * @enum {string}
              */
             band: "L" | "R" | "G" | "B" | "HA" | "HB" | "OIII" | "SII";
-            /** Width Nm */
+            /**
+             * Width Nm
+             * @description Optional: a light-pollution filter does not declare it.
+             */
             width_nm: number | null;
         };
         /** BrowseOut */
@@ -1084,13 +1087,16 @@ export interface components {
         };
         /**
          * CoordinatesEdit
-         * @description La risposta su un posto: "le pose riprese a queste coordinate sono di questo sito".
+         * @description The answer about a place: "the frames taken at these coordinates are of this site".
          *
-         *     Si manda l'id del sito perche' e' quello che la pagina ha in mano dopo un clic; a scriverla
-         *     e' il **nome**, che e' la chiave che sopravvive.
+         *     The site id is sent because it is what the page holds after a click; what gets written is the
+         *     **name**, which is the key that survives.
          */
         CoordinatesEdit: {
-            /** Key */
+            /**
+             * Key
+             * @description The coordinates read from the page, never a row number.
+             */
             key: string;
             /** Site Id */
             site_id: number;
@@ -1110,7 +1116,7 @@ export interface components {
         };
         /**
          * FilterCandidate
-         * @description Uno dei tuoi filtri, fra cui si sceglie una risposta: uno con la banda nota.
+         * @description One of your filters, among which an answer is chosen: one with a known band.
          */
         FilterCandidate: {
             /** Id */
@@ -1122,7 +1128,7 @@ export interface components {
         };
         /**
          * FilterCorrection
-         * @description La scheda di un filtro, o "e' lo stesso filtro di" (`merge_into`).
+         * @description The card of a filter, or "it is the same filter as" (`merge_into`).
          */
         FilterCorrection: {
             /** Name */
@@ -1164,11 +1170,11 @@ export interface components {
         };
         /**
          * FilterModelOut
-         * @description Un filtro IN COMMERCIO, come si legge in tendina quando si dichiara un filtro nuovo.
+         * @description A filter ON THE MARKET, as it reads in the drop-down when a new filter is declared.
          *
-         *     Non e' un filtro dell'archivio: e' una voce del vocabolario che l'app si porta dentro. Gli
-         *     **alias** restano fuori -- servono a riconoscere una grafia nell'header, e a schermo sarebbero
-         *     rumore. Quando si sceglie da qui, `catalog_id` ricorda quale voce era.
+         *     It is not a filter of the archive: it is an entry of the vocabulary the app carries inside. The
+         *     **aliases** stay out -- they serve to recognise a spelling in the header, and on screen they
+         *     would be noise. When one is picked from here, `catalog_id` remembers which entry it was.
          */
         FilterModelOut: {
             /** Id */
@@ -1182,8 +1188,8 @@ export interface components {
         };
         /**
          * FilterNew
-         * @description Un filtro che scrivi tu: il nome, e la banda che lascia passare -- e' cio' che sblocca le
-         *     pose. Marca e modello se vuoi.
+         * @description A filter you write: the name, and the band it lets through -- it is what unblocks the
+         *     frames. Brand and model if you want.
          */
         FilterNew: {
             /** Name */
@@ -1197,7 +1203,7 @@ export interface components {
         };
         /**
          * FilterOnPage
-         * @description Un filtro posseduto, con la banda che lascia passare.
+         * @description An owned filter, with the band it lets through.
          */
         FilterOnPage: {
             /** Id */
@@ -1210,7 +1216,10 @@ export interface components {
             model: string | null;
             /** Bands */
             bands: components["schemas"]["BandOut"][];
-            /** Frames */
+            /**
+             * Frames
+             * @description Null until it is counted (`counted`). The same holds for `integration_s`, `untimed` and `nights`.
+             */
             frames: number | null;
             /** Integration S */
             integration_s: number | null;
@@ -1222,7 +1231,10 @@ export interface components {
             objects: components["schemas"]["GearObject"][];
             /** Counted */
             counted: boolean;
-            /** Mergeable Into */
+            /**
+             * Mergeable Into
+             * @description The filters it can be merged into: only those the spine accepts.
+             */
             mergeable_into: number[];
         };
         /** FilterOut */
@@ -1349,14 +1361,17 @@ export interface components {
             rigs: components["schemas"]["RigOnPage"][];
             /** Filters */
             filters: components["schemas"]["FilterOnPage"][];
-            /** Cards */
+            /**
+             * Cards
+             * @description Which fields the card of each kind asks for, in reading order. It comes **per kind and not per piece** because it also serves to write one of a kind you do not own yet: there, there is no piece to copy them from. The backend decides them, and the page keeps no second list.
+             */
             cards: {
                 [key: string]: ("brand" | "model" | "camera_type" | "pixel_size_um" | "aperture_mm" | "focal_mm" | "reducer_factor" | "weight_kg" | "payload_kg" | "slots" | "notes")[];
             };
         };
         /**
          * GearObject
-         * @description Un oggetto ripreso con quel pezzo, e quanto ci ha pesato.
+         * @description An object taken with that piece, and how much it weighed in.
          */
         GearObject: {
             /** Key */
@@ -1370,8 +1385,8 @@ export interface components {
         };
         /**
          * GearWritten
-         * @description Cos'e' successo scrivendo. `requeued` non e' zero quando la risposta cambia il senso di
-         *     qualche posa -- il colore di una camera lo fa -- e allora il lavoro riparte da solo.
+         * @description What happened while writing. `requeued` is not zero when the answer changes the meaning of
+         *     some frame -- the colour of a camera does -- and then the work restarts by itself.
          */
         GearWritten: {
             /** Id */
@@ -1383,8 +1398,8 @@ export interface components {
         };
         /**
          * GroupRig
-         * @description Il corredo che l'utente ha detto per un gruppo: i **nomi** dei pezzi, mai i numeri di
-         *     riga. `optics` vuoto vuol dire che non l'ha detta, non che non c'era.
+         * @description The rig the user named for a group: the **names** of the pieces, never the row numbers.
+         *     Empty `optics` means they did not say it, not that there was none.
          */
         GroupRig: {
             /** Optics */
@@ -1419,9 +1434,9 @@ export interface components {
         };
         /**
          * InstrumentCorrection
-         * @description La scheda di un pezzo che c'e' gia', o l'unione con un altro (`merge_into`, "e' lo stesso
-         *     pezzo di", e allora il resto non conta). Mandare il nome e' rinominare; non mandarlo lascia
-         *     quello che c'e'. Quale pezzo sia lo dice l'indirizzo.
+         * @description The card of a piece that already exists, or the merge with another (`merge_into`, "it is the
+         *     same piece as", and then the rest does not count). Sending the name is renaming; not sending it
+         *     leaves the one there is. Which piece it is, the address says.
          */
         InstrumentCorrection: {
             /** Brand */
@@ -1442,7 +1457,10 @@ export interface components {
             weight_kg?: number | null;
             /** Payload Kg */
             payload_kg?: number | null;
-            /** Slots */
+            /**
+             * Slots
+             * @description A count: zero is not "I don't know", it is no wheel.
+             */
             slots?: number | null;
             /** Backfocus Mm */
             backfocus_mm?: number | null;
@@ -1455,9 +1473,9 @@ export interface components {
         };
         /**
          * InstrumentNew
-         * @description Un pezzo che scrivi tu. Genere e nome sono cio' che lo fa esistere -- un pezzo e' il suo
-         *     nome dentro il suo genere -- e la scheda arriva con lui: creare e poi correggere sarebbero due
-         *     gesti per una cosa sola, e fra i due il pezzo esisterebbe a meta'.
+         * @description A piece you write. Kind and name are what make it exist -- a piece is its name within its
+         *     kind -- and the card comes with it: creating and then correcting would be two actions for a
+         *     single thing, and between the two the piece would half exist.
          */
         InstrumentNew: {
             /** Brand */
@@ -1478,7 +1496,10 @@ export interface components {
             weight_kg?: number | null;
             /** Payload Kg */
             payload_kg?: number | null;
-            /** Slots */
+            /**
+             * Slots
+             * @description A count: zero is not "I don't know", it is no wheel.
+             */
             slots?: number | null;
             /** Backfocus Mm */
             backfocus_mm?: number | null;
@@ -1489,13 +1510,16 @@ export interface components {
              * @enum {string}
              */
             kind: "optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser";
-            /** Name */
+            /**
+             * Name
+             * @description Required here: without a name the piece is nobody.
+             */
             name: string;
         };
         /**
          * InstrumentOnPage
-         * @description Un pezzo dell'attrezzatura: la sua scheda -- i campi vuoti sono quelli che l'header non sa
-         *     dire e che compila l'utente -- piu' quanto e' servito e cosa ci hai ripreso.
+         * @description A piece of the gear: its card -- the empty fields are those the header cannot tell and the
+         *     user fills in -- plus how much it served and what you took with it.
          */
         InstrumentOnPage: {
             /** Id */
@@ -1515,7 +1539,10 @@ export interface components {
             camera_type: ("mono" | "color") | null;
             /** Pixel Size Um */
             pixel_size_um: number | null;
-            /** Pixel From Sky Um */
+            /**
+             * Pixel From Sky Um
+             * @description Derived from the sky when the files do not say it: in a field of its own, so that whoever shows it says it is derived and does not confuse it with the one from the files or the user.
+             */
             pixel_from_sky_um: number | null;
             /** Aperture Mm */
             aperture_mm: number | null;
@@ -1533,11 +1560,20 @@ export interface components {
             backfocus_mm: number | null;
             /** Notes */
             notes: string | null;
-            /** Detected */
+            /**
+             * Detected
+             * @description Detected from the files, or declared by you.
+             */
             detected: boolean;
-            /** Mergeable Into */
+            /**
+             * Mergeable Into
+             * @description The pieces it can be merged into: only those the spine accepts.
+             */
             mergeable_into: number[];
-            /** Frames */
+            /**
+             * Frames
+             * @description Null where the link with the frames does not exist: a kind that no frame in **this archive** names does not have zero hours, it has hours the app does not know -- and whoever shows the row says so. The spine decides it, not this shape. The same holds for `integration_s`, `untimed` and `nights`.
+             */
             frames: number | null;
             /** Integration S */
             integration_s: number | null;
@@ -1547,15 +1583,21 @@ export interface components {
             nights: number | null;
             /** Objects */
             objects: components["schemas"]["GearObject"][];
-            /** Counted */
+            /**
+             * Counted
+             * @description False for a piece born mid-run, which the counter has not counted yet: "not counted yet" is not "cannot be known", and the page tells them apart.
+             */
             counted: boolean;
-            /** No Hours */
+            /**
+             * No Hours
+             * @description Why a counted piece has no hours to show: the files do not name that kind, or it is a mount no rig carries yet. `None` when the hours are there.
+             */
             no_hours: ("files_silent" | "no_rig") | null;
         };
         /**
          * LookalikeEdit
-         * @description La risposta a "sono lo stesso pezzo?": si' unisce `id` dentro `into_id`, no dice che sono
-         *     due pezzi e la proposta non torna.
+         * @description The answer to "are they the same piece?": yes merges `id` into `into_id`, no says they are
+         *     two pieces and the proposal does not come back.
          */
         LookalikeEdit: {
             /** Id */
@@ -1567,8 +1609,8 @@ export interface components {
         };
         /**
          * LookalikeOut
-         * @description Due grafie che hanno tutta l'aria di essere la stessa camera: "sono lo stesso pezzo?". Si'
-         *     unisce `id` dentro `into_id`, no non la propone piu'.
+         * @description Two spellings that look very much like the same camera: "are they the same piece?". Yes
+         *     merges `id` into `into_id`, no stops proposing it.
          */
         LookalikeOut: {
             /** Id */
@@ -1656,44 +1698,68 @@ export interface components {
         };
         /**
          * MosaicCandidate
-         * @description Una regione ripresa a **pannelli affiancati**, come la pagina la propone: quanti pannelli,
-         *     quante pose e quali soggetti tocca -- spesso piu' d'uno, perche' ogni pannello inquadra una
-         *     parte diversa del complesso e l'app li identifica come oggetti diversi.
+         * @description A region taken in **side-by-side panels**, as the page proposes it: how many panels, how many
+         *     frames and which subjects it touches -- often more than one, because each panel frames a
+         *     different part of the complex and the app identifies them as different objects.
          *
-         *     Si risponde con la **chiave** del mosaico, che non cambia quando cambia la camera. Un gruppo
-         *     risposto resta in pagina: si deve poter cambiare idea.
+         *     One answers with the **key** of the mosaic, which does not change when the camera changes. An
+         *     answered group stays on the page: one must be able to change one's mind.
          */
         MosaicCandidate: {
-            /** Key */
+            /**
+             * Key
+             * @description What one answers with.
+             */
             key: string;
-            /** Ra Deg */
+            /**
+             * Ra Deg
+             * @description The centre of the mosaic: on screen it tells which, if two have the same name.
+             */
             ra_deg: number;
             /** Dec Deg */
             dec_deg: number;
-            /** Object */
+            /**
+             * Object
+             * @description The subjects it touches, with their names, in alphabetical order.
+             */
             object: string;
             /** Panels */
             panels: number;
             /** Frames */
             frames: number;
-            /** Integration S */
+            /**
+             * Integration S
+             * @description The sum of the panels' time; on screen it reads in hours.
+             */
             integration_s: number;
-            /** Untimed */
+            /**
+             * Untimed
+             * @description How many of those frames do not tell their time: they are not worth zero, they are counted here.
+             */
             untimed: number;
             /** Answer */
             answer: ("yes" | "no") | null;
-            /** Answer Name */
+            /**
+             * Answer Name
+             * @description What the mosaic is of, as the user said it; only with yes.
+             */
             answer_name: string | null;
-            /** Names */
+            /**
+             * Names
+             * @description The subjects of `object`, one per entry, and the proposal: the suggestions.
+             */
             names: string[];
-            /** Proposed */
+            /**
+             * Proposed
+             * @description The catalog entry at the centre: the field arrives filled in with it.
+             */
             proposed: string;
         };
         /**
          * MosaicEdit
-         * @description La risposta su un mosaico proposto: si', quei pannelli sono un mosaico (`yes`), oppure no.
+         * @description The answer about a proposed mosaic: yes, those panels are a mosaic (`yes`), or no.
          *
-         *     Si manda la **chiave** del mosaico letta dalla pagina.
+         *     The **key** of the mosaic read from the page is sent.
          */
         MosaicEdit: {
             /** Key */
@@ -1703,7 +1769,10 @@ export interface components {
              * @enum {string}
              */
             answer: "yes" | "no";
-            /** Name */
+            /**
+             * Name
+             * @description What the mosaic is of: with yes it is always there, with no never.
+             */
             name?: string | null;
         };
         /**
@@ -1818,8 +1887,8 @@ export interface components {
         };
         /**
          * ObjectCandidate
-         * @description Una voce che il cielo ha trovato nel campo di questo oggetto: e' cio' che si clicca per
-         *     rispondere. La scrive chi identifica (`spine/object_candidates.py`), e la pagina la legge.
+         * @description An entry the sky found in the field of this object: it is what one clicks to answer. The
+         *     identification writes it, and the page reads it.
          */
         ObjectCandidate: {
             /** Slug */
@@ -1828,16 +1897,22 @@ export interface components {
             name: string;
             /** Common Name */
             common_name: string | null;
-            /** In Frame */
+            /**
+             * In Frame
+             * @description None when the sky carries no sides or rotation: it was called a circle.
+             */
             in_frame: boolean | null;
         };
         /**
          * ObjectEdit
-         * @description La risposta su un oggetto: uno slug di catalogo (di solito un candidato cliccato) oppure
-         *     un nome scritto a mano.
+         * @description The answer about an object: a catalog slug (usually a clicked candidate) or a hand-written
+         *     name.
          */
         ObjectEdit: {
-            /** Key */
+            /**
+             * Key
+             * @description The stable key read from the page, never the row id.
+             */
             key: string;
             /** Slug */
             slug?: string | null;
@@ -1846,13 +1921,19 @@ export interface components {
         };
         /**
          * ObjectOut
-         * @description Un oggetto dell'archivio. `name` sono i due passi del contratto gia' fatti dal backend:
-         *     il nome primario, o quello che il catalogo da' allo slug.
+         * @description An object of the archive. `name` is the two steps of the contract already done by the
+         *     backend: the primary name, or the one the catalog gives to the slug.
          */
         ObjectOut: {
-            /** Id */
+            /**
+             * Id
+             * @description The row number: it serves the frontend as a list key, not for answering.
+             */
             id: number;
-            /** Key */
+            /**
+             * Key
+             * @description The stable key one answers with: the catalog slug, or the name.
+             */
             key: string;
             /** Name */
             name: string | null;
@@ -1864,37 +1945,54 @@ export interface components {
             confidence: ("certain" | "high" | "low" | "user") | null;
             /** Frames */
             frames: number;
-            /** Integration S */
+            /**
+             * Integration S
+             * @description The sum of the frames' time; on screen it reads in hours.
+             */
             integration_s: number;
-            /** Untimed */
+            /**
+             * Untimed
+             * @description How many of those frames do not tell their time: they are not worth zero, they are counted here.
+             */
             untimed: number;
             /** Confirmed */
             confirmed: boolean;
             /**
              * Candidates
+             * @description Only on those still to decide.
              * @default []
              */
             candidates: components["schemas"]["ObjectCandidate"][];
         };
         /**
          * OpticslessEdit
-         * @description La risposta su una camera a una focale: con che ottica. Si scrive il **nome**: uno che
-         *     l'Attrezzatura non ha fa nascere il pezzo, come un header.
+         * @description The answer about a camera at one focal length: with which optics. The **name** is written:
+         *     one the Gear page does not have makes the piece come into being, like a header.
          */
         OpticslessEdit: {
-            /** Key */
+            /**
+             * Key
+             * @description The key read from the page.
+             */
             key: string;
-            /** Optics */
+            /**
+             * Optics
+             * @description A name of only spaces is not a name.
+             */
             optics: string;
         };
         /**
          * OpticslessRig
-         * @description Le pose i cui file non nominano l'ottica (l'ASIAIR ci scrive la montatura, altri non la
-         *     scrivono affatto), una domanda per **camera e focale**: "quale ottica era?". La risposta vale
-         *     anche per le pose che arriveranno; una domanda risposta resta in pagina per cambiare idea.
+         * @description The frames whose files do not name the optics (the ASIAIR writes the mount there, others do
+         *     not write it at all), one question per **camera and focal length**: "which optics was it?". The
+         *     answer also holds for the frames still to come; an answered question stays on the page to allow
+         *     a change of mind.
          */
         OpticslessRig: {
-            /** Key */
+            /**
+             * Key
+             * @description The key of the camera at that focal length: one answers with it.
+             */
             key: string;
             /** Camera */
             camera: string;
@@ -1906,7 +2004,10 @@ export interface components {
             integration_s: number;
             /** Untimed */
             untimed: number;
-            /** Answer */
+            /**
+             * Answer
+             * @description The name of the optics already given.
+             */
             answer: string | null;
             subjects: components["schemas"]["Subjects"];
         };
@@ -1993,25 +2094,37 @@ export interface components {
         };
         /** ReviewApplied */
         ReviewApplied: {
-            /** Changed */
+            /**
+             * Changed
+             * @description Answers written.
+             */
             changed: number;
-            /** Confirmed */
+            /**
+             * Confirmed
+             * @description Entries that from now on are no longer asked.
+             */
             confirmed: number;
-            /** Requeued */
+            /**
+             * Requeued
+             * @description Frames put back in the queue because the answer concerns them.
+             */
             requeued: number;
-            /** Run Started */
+            /**
+             * Run Started
+             * @description False if the worker was busy: the work stays in the queue.
+             */
             run_started: boolean;
         };
         /**
          * ReviewApply
-         * @description Tutte le decisioni insieme: si scrivono in una transazione sola, e cio' che e'
-         *     elencato nella pagina resta confermato anche se non lo si e' toccato.
+         * @description All the decisions together: they are written in a single transaction, and what is listed on
+         *     the page stays confirmed even if it was not touched.
          *
-         *     **Un campo che non esiste e' un errore, non una svista da ignorare** (`extra="forbid"`): una
-         *     pagina aperta prima di un aggiornamento del server manderebbe il nome vecchio, Pydantic lo
-         *     scarterebbe in silenzio e l'Applica confermerebbe **tutto**, compreso cio' che quella pagina
-         *     non ha mai mostrato. Sul NAS e' lo scenario ordinario -- una scheda lasciata aperta sul
-         *     tablet -- e il danno cade dalla parte che non si rivede. Meglio un 422 che si vede.
+         *     **A field that does not exist is an error, not a slip to ignore** (`extra="forbid"`): a page
+         *     opened before a server update would send the old name, Pydantic would discard it silently and
+         *     Apply would confirm **everything**, including what that page never showed. On the NAS it is the
+         *     ordinary scenario -- a tab left open on the tablet -- and the damage falls on the side nobody
+         *     looks at again. Better a 422 that shows.
          */
         ReviewApply: {
             /**
@@ -2064,57 +2177,94 @@ export interface components {
              * @default []
              */
             mosaics: components["schemas"]["MosaicEdit"][];
+            /** @description How far the page being applied had looked. Absent means "confirm what is there now": asked by whoever did not read a page, and it is not the button's way. */
             seen?: components["schemas"]["ReviewSeen"] | null;
         };
         /**
          * ReviewOut
-         * @description Tutta la pagina in una risposta: non e' un elenco paginato, sono le domande aperte.
+         * @description The whole page in one response: it is not a paged list, it is the open questions.
          */
         ReviewOut: {
-            /** Lookalikes */
+            /**
+             * Lookalikes
+             * @description Two spellings that look like the same camera.
+             */
             lookalikes: components["schemas"]["LookalikeOut"][];
             /** Filters */
             filters: components["schemas"]["FilterOut"][];
-            /** Rig Choices */
+            /**
+             * Rig Choices
+             * @description The rigs among which one answers about the frames without a camera.
+             */
             rig_choices: components["schemas"]["RigChoice"][];
-            /** Objects */
+            /**
+             * Objects
+             * @description Those to decide and the new ones; the doubts on top.
+             */
             objects: components["schemas"]["ObjectOut"][];
-            /** Settled Objects */
+            /**
+             * Settled Objects
+             * @description How many the others are, already seen: they are read in pages.
+             */
             settled_objects: number;
             /** Unnamed */
             unnamed: components["schemas"]["UnnamedGroup"][];
-            /** Unclear */
+            /**
+             * Unclear
+             * @description The places the app asks about: empty when it does not ask.
+             */
             unclear: components["schemas"]["UnclearCoordinates"][];
-            /** Unfiltered */
+            /**
+             * Unfiltered
+             * @description The cameras whose frames do not tell the filter.
+             */
             unfiltered: components["schemas"]["UnfilteredCamera"][];
-            /** Filter Choices */
+            /**
+             * Filter Choices
+             * @description The filters with a known band, among which one answers.
+             */
             filter_choices: components["schemas"]["FilterCandidate"][];
-            /** Rigless */
+            /**
+             * Rigless
+             * @description The groups of frames that do not tell the camera.
+             */
             rigless: components["schemas"]["RiglessGroup"][];
-            /** Opticsless */
+            /**
+             * Opticsless
+             * @description The cameras at one focal length whose frames do not name the optics.
+             */
             opticsless: components["schemas"]["OpticslessRig"][];
-            /** Optics Choices */
+            /**
+             * Optics Choices
+             * @description The optics you own, among which one answers that question.
+             */
             optics_choices: string[];
-            /** Typeless */
+            /**
+             * Typeless
+             * @description The folders whose frames do not tell what file they are.
+             */
             typeless: components["schemas"]["TypelessFolder"][];
-            /** Mosaics */
+            /**
+             * Mosaics
+             * @description The regions taken in side-by-side panels.
+             */
             mosaics: components["schemas"]["MosaicCandidate"][];
             /** To Confirm */
             to_confirm: number;
+            /** @description How far this page looked: Apply sends it back and confirms only what was listed, never what arrived in the meantime. */
             seen: components["schemas"]["ReviewSeen"];
         };
         /**
          * ReviewSeen
-         * @description Fin dove la pagina ha guardato gli oggetti: il numero di riga piu' alto che ha davvero
-         *     elencato. L'Applica lo rimanda e conferma solo fino a li'.
+         * @description How far the page looked at the objects: the highest row number it really listed. Apply sends
+         *     it back and confirms only up to there.
          *
-         *     Numeri di riga e non orari, perche' **due righe nate nello stesso istante non si ordinano**
-         *     (la misura e il perche' stanno in `docs/domini/spina.md`, sezione Da confermare).
+         *     Row numbers and not times, because **two rows born in the same instant cannot be ordered**
+         *     (the measurement and the why are in `docs/domini/spina.md`, section Da confermare).
          *
-         *     Zero vuol dire "non ho visto niente", ed e' anche cio' che vale quando la pagina non elenca
-         *     nessun oggetto: non e' un limite mancante, e' un limite che non lascia passare niente. Chi non
-         *     manda `seen` del tutto sta dicendo un'altra cosa -- "conferma cio' che c'e' adesso" -- e la sua
-         *     casa e' `ReviewApply`.
+         *     Zero means "I saw nothing", and it is also the value when the page lists no object: it is not a
+         *     missing limit, it is a limit that lets nothing through. Whoever does not send `seen` at all is
+         *     saying something else -- "confirm what is there now" -- and its home is `ReviewApply`.
          */
         ReviewSeen: {
             /**
@@ -2125,13 +2275,16 @@ export interface components {
         };
         /**
          * RigChoice
-         * @description Uno dei tuoi corredi, fra cui si sceglie con che camera sono state riprese delle pose: solo
-         *     quelli con una camera, perche' uno senza non risponde a quella domanda.
+         * @description One of your rigs, among which one chooses which camera took some frames: only those with a
+         *     camera, because one without does not answer that question.
          */
         RigChoice: {
             /** Id */
             id: number;
-            /** Name */
+            /**
+             * Name
+             * @description The one you gave it; without it, the page shows the two pieces.
+             */
             name: string | null;
             /** Optics */
             optics: string | null;
@@ -2142,8 +2295,8 @@ export interface components {
         };
         /**
          * RigMount
-         * @description La montatura con cui usi un corredo, fra quelle che possiedi; `None` torna a quella che
-         *     dicono i file.
+         * @description The mount you use a rig with, among those you own; `None` goes back to the one the files
+         *     say.
          */
         RigMount: {
             /** Mount Id */
@@ -2151,7 +2304,7 @@ export interface components {
         };
         /**
          * RigNaming
-         * @description Il nome che dai a un corredo: e' cosi' che si dichiara.
+         * @description The name you give a rig: it is how it is declared.
          */
         RigNaming: {
             /** Name */
@@ -2159,8 +2312,8 @@ export interface components {
         };
         /**
          * RigNew
-         * @description Un corredo che scrivi tu: ottica e camera fra i tuoi pezzi, e la focale -- senza, i file
-         *     che la dicono farebbero nascere un secondo corredo.
+         * @description A rig you write: optics and camera among your pieces, and the focal length -- without it, the
+         *     files that tell it would make a second rig come into being.
          */
         RigNew: {
             /** Optics Id */
@@ -2172,14 +2325,20 @@ export interface components {
         };
         /**
          * RigOnPage
-         * @description Un corredo: com'e' fatto, quanto e' servito, e **quanto cielo inquadra davvero**.
+         * @description A rig: how it is made, how much it served, and **how much sky it really frames**.
          */
         RigOnPage: {
             /** Id */
             id: number;
-            /** Name */
+            /**
+             * Name
+             * @description The name you gave it, if you gave it one.
+             */
             name: string | null;
-            /** Mount Id */
+            /**
+             * Mount Id
+             * @description The mount you gave it; where you are silent, the frames take the one the file names.
+             */
             mount_id: number | null;
             /** Optics */
             optics: string | null;
@@ -2187,7 +2346,10 @@ export interface components {
             camera: string | null;
             /** Focal Mm */
             focal_mm: number | null;
-            /** Frames */
+            /**
+             * Frames
+             * @description Null until it is counted (`counted`): a rig born mid-run. The same holds for `integration_s`, `untimed` and `nights`.
+             */
             frames: number | null;
             /** Integration S */
             integration_s: number | null;
@@ -2199,7 +2361,10 @@ export interface components {
             objects: components["schemas"]["GearObject"][];
             /** Counted */
             counted: boolean;
-            /** Scale Arcsec Px */
+            /**
+             * Scale Arcsec Px
+             * @description Measured on the solved frames, median: null until the solver has solved one. Named as in the schema (`frame_wcs`), which is where they come from. The same holds for `width_deg` and `height_deg`.
+             */
             scale_arcsec_px: number | null;
             /** Width Deg */
             width_deg: number | null;
@@ -2208,20 +2373,30 @@ export interface components {
         };
         /**
          * RiglessGroup
-         * @description Le pose che non dicono con che camera sono state riprese, raggruppate per **notte e valori
-         *     dell'header** (Marco, 23/9/2026): si chiede per gruppo, mai per posa, e mai per cartella. Il
-         *     gruppo si mostra con la notte -- vuota per le pose senza data -- e i valori che lo fanno. Ci
-         *     cadono anche le pose che portano il telescopio ma non la camera (l'ASIAIR scrive la montatura in
-         *     `TELESCOP`). `optics` e `focal_mm` sono cio' che le pose dicono gia', quando dicono una cosa
-         *     sola; `focal_suggested` la focale nativa dell'ottica in scheda, da proporre dove le pose non la
-         *     portano. Un gruppo risposto resta in pagina perche' si deve poter cambiare idea.
+         * @description The frames that do not tell which camera took them, grouped by **night and header values**:
+         *     one asks per group, never per frame, and never per folder. The group shows with the night --
+         *     empty for frames without a date -- and the values that make it. The frames that carry the
+         *     telescope but not the camera fall here too (the ASIAIR writes the mount in `TELESCOP`).
+         *     `optics` and `focal_mm` are what the frames already say, when they say a single thing;
+         *     `focal_suggested` the native focal length of the optics on the card, to propose where the frames
+         *     do not carry it. An answered group stays on the page because one must be able to change one's
+         *     mind.
          */
         RiglessGroup: {
-            /** Key */
+            /**
+             * Key
+             * @description The group key: one answers with it, and it does not reopen.
+             */
             key: string;
-            /** Night */
+            /**
+             * Night
+             * @description The night, YYYY-MM-DD; empty for those that do not say when.
+             */
             night: string | null;
-            /** Telescope */
+            /**
+             * Telescope
+             * @description `TELESCOP` as written in the file: it is in the key, and goes on screen.
+             */
             telescope: string | null;
             /** Width Px */
             width_px: number | null;
@@ -2242,13 +2417,16 @@ export interface components {
         };
         /**
          * RiglessGroupEdit
-         * @description La risposta su un gruppo: con che corredo sono state riprese quelle pose. Un corredo fra
-         *     quelli che l'app conosce (`rig_id`, cio' che la pagina ha in mano dopo un clic) **oppure** i
-         *     pezzi scritti: la camera e la **focale**, piu' l'ottica se serve. A essere scritti sono sempre i
-         *     **nomi**, e i pezzi nascono da quei nomi come nascono da un header.
+         * @description The answer about a group: with which rig those frames were taken. A rig among those the app
+         *     knows (`rig_id`, what the page holds after a click) **or** the written pieces: the camera and
+         *     the **focal length**, plus the optics if needed. What is written is always the **names**, and
+         *     the pieces come into being from those names as they do from a header.
          */
         RiglessGroupEdit: {
-            /** Key */
+            /**
+             * Key
+             * @description The group key read from the page.
+             */
             key: string;
             /** Rig Id */
             rig_id?: number | null;
@@ -2256,7 +2434,10 @@ export interface components {
             optics?: string | null;
             /** Camera */
             camera?: string | null;
-            /** Focal Mm */
+            /**
+             * Focal Mm
+             * @description Unknown focal length, never invented: no zeros.
+             */
             focal_mm?: number | null;
         };
         /**
@@ -2446,10 +2627,9 @@ export interface components {
         };
         /**
          * SettledObjects
-         * @description Gli oggetti gia' visti, senza niente da scegliere, a pagine: non sono domande, e crescono
-         *     con l'archivio (Marco, 27/9/2026). Si aprono dalla sezione Oggetti, e da li' si correggono. Un
-         *     dubbio di cui il cielo non sa dire niente sta qui, una volta visto: non c'e' niente da
-         *     cliccare.
+         * @description The objects already seen, with nothing to choose, in pages: they are not questions, and they
+         *     grow with the archive. They open from the Objects section, and are corrected from there. A doubt
+         *     the sky can say nothing about stays here once seen: there is nothing to click.
          */
         SettledObjects: {
             /** Items */
@@ -2463,8 +2643,8 @@ export interface components {
         };
         /**
          * SiteCandidate
-         * @description Un luogo gia' dichiarato, con quanto dista da quelle coordinate: e' cio' che si clicca
-         *     per rispondere. Si ricalcola alla lettura, non si salva.
+         * @description A site already declared, with how far it is from those coordinates: it is what one clicks to
+         *     answer. Recomputed on reading, not saved.
          */
         SiteCandidate: {
             /** Id */
@@ -2689,7 +2869,7 @@ export interface components {
         };
         /**
          * Subject
-         * @description Un oggetto che il cielo ha trovato nelle pose di un gruppo, e in quante.
+         * @description An object the sky found in the frames of a group, and in how many.
          */
         Subject: {
             /** Name */
@@ -2699,11 +2879,11 @@ export interface components {
         };
         /**
          * Subjects
-         * @description Cosa hai ripreso in quel gruppo, per ricordarlo senza andare a memoria: gli oggetti, il piu'
-         *     ripreso in cima, e le pose dei due vuoti -- che non sono lo stesso: `not_yet` e' il cielo che
-         *     non ci ha ancora guardato (o non ci e' riuscito), `not_found` il cielo che ha guardato senza
-         *     trovare niente. Si legge
-         *     accanto alla domanda e non la cambia: la chiave del gruppo resta quella.
+         * @description What you took in that group, to remember it without going by memory: the objects, the most
+         *     taken on top, and the frames of the two blanks -- which are not the same: `not_yet` is the sky
+         *     that has not looked yet (or did not manage to), `not_found` the sky that looked without finding
+         *     anything. It reads next to the question and does not change it: the group key stays the
+         *     same.
          */
         Subjects: {
             /** Found */
@@ -2734,18 +2914,21 @@ export interface components {
         };
         /**
          * TypelessFolder
-         * @description I frame che non dicono che file sono, raggruppati per **cartella**: chi riprende tiene dark
-         *     e flat in cartelle loro, quindi una risposta chiude una cartella intera. Ci sono solo le
-         *     cartelle dove il cielo non sa dire -- risolto e' una foto, senza stelle una calibrazione --, e
-         *     finche' non si risponde quei frame restano fermi prima dell'oggetto: non diventano ore, e non
-         *     compaiono fra i frame senza nome -- li' la domanda e' "cosa hai ripreso", e rispondere con un
-         *     oggetto trasformerebbe una calibrazione in ore. Un gruppo risposto resta in pagina perche' si
-         *     deve poter cambiare idea. Cio' che il cielo ha trovato qui non c'e', e non e' una
-         *     dimenticanza: su quei frame il cielo non ha saputo dire, e mostrare "nessun oggetto"
-         *     sembrerebbe una risposta.
+         * @description The frames that do not tell what file they are, grouped by **folder**: whoever shoots keeps
+         *     darks and flats in folders of their own, so one answer closes a whole folder. Only the folders
+         *     where the sky cannot tell are here -- solved is a picture, no stars a calibration --, and until
+         *     answered those frames stay still before the object: they do not become hours, and they do not
+         *     appear among the unnamed frames -- there the question is "what did you take", and answering
+         *     with an object would turn a calibration into hours. An answered group stays on the page because
+         *     one must be able to change one's mind. What the sky found here is absent, and it is not an
+         *     oversight: on those frames the sky could not tell, and showing "no object" would look like an
+         *     answer.
          */
         TypelessFolder: {
-            /** Key */
+            /**
+             * Key
+             * @description The folder path: it is the key one answers with.
+             */
             key: string;
             /** Frames */
             frames: number;
@@ -2754,12 +2937,15 @@ export interface components {
         };
         /**
          * TypelessFolderEdit
-         * @description La risposta su una cartella di frame che non dicono che file sono: una foto del cielo
-         *     (`light`) o un file di calibrazione (`calibration`). Le parole sono due e stanno nel modello,
-         *     cosi' una terza e' un 422 dichiarato nell'OpenAPI e non una risposta da interpretare.
+         * @description The answer about a folder of frames that do not tell what file they are: a sky picture
+         *     (`light`) or a calibration file (`calibration`). The words are two and live in the model, so a
+         *     third one is a 422 declared in the OpenAPI and not an answer to interpret.
          */
         TypelessFolderEdit: {
-            /** Key */
+            /**
+             * Key
+             * @description The folder path read from the page.
+             */
             key: string;
             /**
              * Kind
@@ -2769,19 +2955,25 @@ export interface components {
         };
         /**
          * UnclearCoordinates
-         * @description Le pose che l'app ha fermato perche' le coordinate dell'header dicono un altro posto,
-         *     raggruppate per **coordinate**: si chiede per gruppo, mai per posa. Le notti sono quelle
-         *     coinvolte, calcolate nel fuso di quelle coordinate. `site` e' la risposta gia' data, se
-         *     c'e': un gruppo risposto resta in pagina perche' un clic sbagliato si deve poter cambiare.
+         * @description The frames the app stopped because the header coordinates say another place, grouped by
+         *     **coordinates**: one asks per group, never per frame. The nights are those involved, computed
+         *     in the time zone of those coordinates. `site` is the answer already given, if there is one: an
+         *     answered group stays on the page because a wrong click must be changeable.
          */
         UnclearCoordinates: {
-            /** Key */
+            /**
+             * Key
+             * @description The rounded coordinates: it is the key one answers with.
+             */
             key: string;
             /** Latitude */
             latitude: number;
             /** Longitude */
             longitude: number;
-            /** Distance Km */
+            /**
+             * Distance Km
+             * @description From home; None without a home site (never a fake zero).
+             */
             distance_km: number | null;
             /** Frames */
             frames: number;
@@ -2795,30 +2987,42 @@ export interface components {
         };
         /**
          * UnfilteredCamera
-         * @description Le pose che non dicono il filtro, raggruppate per **camera**: senza `BAYERPAT` una mono e
-         *     una camera a colori non si distinguono, e si chiede una volta sola. Una camera che la scheda o
-         *     i file dicono a colori non c'e': le sue pose sono OSC. `answer` e' la risposta gia' data: un
-         *     gruppo risposto resta in pagina perche' si deve poter cambiare idea.
+         * @description The frames that do not tell the filter, grouped by **camera**: without `BAYERPAT` a mono and
+         *     a colour camera cannot be told apart, and one asks only once. A camera the card or the files
+         *     say is colour is not there: its frames are OSC. `answer` is the answer already given: an
+         *     answered group stays on the page because one must be able to change one's mind.
          */
         UnfilteredCamera: {
-            /** Key */
+            /**
+             * Key
+             * @description The camera name: it is the key one answers with.
+             */
             key: string;
             /** Frames */
             frames: number;
-            /** Answer */
+            /**
+             * Answer
+             * @description "Colour" removes it from the page.
+             */
             answer: ("no_filter" | "filter") | null;
-            /** Filter Id */
+            /**
+             * Filter Id
+             * @description With "one of yours", which one; empty if that filter is no longer there.
+             */
             filter_id: number | null;
             subjects: components["schemas"]["Subjects"];
         };
         /**
          * UnfilteredEdit
-         * @description La risposta su una camera: le sue pose che non dicono il filtro sono di una camera a colori
-         *     (`color`), riprese senza nessun filtro (`no_filter`), o con uno dei tuoi filtri (`filter`, e
-         *     `filter_id` dice quale).
+         * @description The answer about a camera: its frames that do not tell the filter are of a colour camera
+         *     (`color`), taken with no filter (`no_filter`), or with one of your filters (`filter`, and
+         *     `filter_id` says which).
          */
         UnfilteredEdit: {
-            /** Key */
+            /**
+             * Key
+             * @description The camera name read from the page.
+             */
             key: string;
             /**
              * Answer
@@ -2830,9 +3034,9 @@ export interface components {
         };
         /**
          * UnnamedAnswer
-         * @description Cosa l'utente ha detto di un gruppo di pose senza nome e senza cielo: un oggetto di
-         *     catalogo (`value` e' lo slug), un nome scritto, oppure "non e' un oggetto" (`value` vuoto).
-         *     `name` e' come l'oggetto si mostra: il nome della voce, o quello scritto.
+         * @description What the user said about a group of frames with no name and no sky: a catalog object
+         *     (`value` is the slug), a written name, or "it is not an object" (`value` empty). `name` is how
+         *     the object shows: the name of the entry, or the written one.
          */
         UnnamedAnswer: {
             /**
@@ -2847,11 +3051,14 @@ export interface components {
         };
         /**
          * UnnamedEdit
-         * @description La risposta su un gruppo di pose senza nome e senza cielo: quale oggetto e' -- uno slug di
-         *     catalogo o un nome scritto -- oppure "non e' un oggetto".
+         * @description The answer about a group of frames with no name and no sky: which object it is -- a catalog
+         *     slug or a written name -- or "it is not an object".
          */
         UnnamedEdit: {
-            /** Key */
+            /**
+             * Key
+             * @description The group key read from the page.
+             */
             key: string;
             /** Slug */
             slug?: string | null;
@@ -2865,28 +3072,46 @@ export interface components {
         };
         /**
          * UnnamedGroup
-         * @description Le pose che l'header non nomina e di cui il cielo non dice niente, raggruppate per **notte,
-         *     camera, telescopio e puntamento** (Marco, 24/9/2026), mai per file ne' per cartella. Il gruppo
-         *     si mostra con quei valori; il puntamento e' quello della posa che l'ha aperto. Un gruppo
-         *     risposto resta in pagina con `answer`, perche' si deve poter cambiare idea.
+         * @description The frames the header does not name and the sky says nothing about, grouped by **night,
+         *     camera, telescope and pointing**, never by file or folder. The group shows with those values;
+         *     the pointing is that of the frame that opened it. An answered group stays on the page with
+         *     `answer`, because one must be able to change one's mind.
          */
         UnnamedGroup: {
-            /** Key */
+            /**
+             * Key
+             * @description The group key: one answers with it, and it does not reopen.
+             */
             key: string;
-            /** Night */
+            /**
+             * Night
+             * @description The night, YYYY-MM-DD; empty for those that do not say when.
+             */
             night: string | null;
-            /** Camera */
+            /**
+             * Camera
+             * @description `INSTRUME` as written in the file.
+             */
             camera: string | null;
-            /** Telescope */
+            /**
+             * Telescope
+             * @description `TELESCOP` as written in the file.
+             */
             telescope: string | null;
-            /** Ra Deg */
+            /**
+             * Ra Deg
+             * @description Where the mount pointed, from the header.
+             */
             ra_deg: number | null;
             /** Dec Deg */
             dec_deg: number | null;
             /** Frames */
             frames: number;
             answer: components["schemas"]["UnnamedAnswer"] | null;
-            /** First Frame */
+            /**
+             * First Frame
+             * @description The first and the last frame, ISO in the night's time zone: two objects without pointing in the same night are a single group, and the hours tell whoever answers whether they are two. Frames with `DATE-OBS` count: null if none says it.
+             */
             first_frame: string | null;
             /** Last Frame */
             last_frame: string | null;

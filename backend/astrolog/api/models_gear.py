@@ -1,10 +1,5 @@
-"""La forma di cio' che la pagina **Attrezzatura** mostra, e di cio' che le si dice.
-
-Vincolo non ovvio: **cio' che non si sa e' `None`, e non zero**. Le ore di una montatura sono
-nulle perche' nessun file la lega a una posa, e la scala di un corredo che non ha ancora ripreso
-non esiste: chi mostra la riga dice **perche'** manca, e un numero al loro posto sarebbe un dato
-falso che nessuno potrebbe smentire (`docs/domini/attrezzatura.md`).
-"""
+"""The Gear page. What is not known is `None`, never zero: a number in its place would be a false
+datum nobody could disprove (`docs/domini/attrezzatura.md`)."""
 
 from typing import Literal
 
@@ -15,15 +10,16 @@ from .models_review_apply import BandIn
 
 
 class InstrumentCardIn(BaseModel):
-    """La scheda di un pezzo come la si scrive: i campi, e basta. La usano il pezzo che nasce e
-    quello che si corregge, perche' il giorno che un campo cambia forma non cambi in un gesto e
-    nell'altro no. **Il nome no**: correggendo e' un campo come gli altri e si puo' non mandarlo,
-    creando e' cio' che fa esistere il pezzo -- quindi lo dichiara chi lo chiede, con la sua forma.
+    """The card of a piece as one writes it: the fields, and nothing else. Both the piece being
+    born and the one being corrected use it, so that the day a field changes shape it does not
+    change in one action and not in the other. **Not the name**: when correcting it is a field like
+    the others and may be left out, when creating it is what makes the piece exist -- so whoever
+    asks for it declares it, with its own shape.
 
-    Le **misure** valgono solo positive: uno zero non e' una misura, e' un vuoto scritto male, e
-    una volta in scheda chi ne deriva lo scarta in silenzio -- una focale 0 fa sparire la scala.
-    E' la stessa regola che `RiglessGroupEdit.focal_mm` impone alla risposta sulla camera:
-    "ignota, mai inventata" o vale in tutte le case, o non e' una regola."""
+    The **measurements** are valid only positive: a zero is not a measurement, it is a blank written
+    badly, and once on the card whoever derives from it discards it silently -- a focal length of 0
+    makes the scale vanish. It is the same rule `RiglessGroupEdit.focal_mm` imposes on the answer
+    about the camera: "unknown, never invented" either holds in every home, or it is not a rule."""
 
     brand: str | None = None
     model: str | None = None
@@ -34,29 +30,31 @@ class InstrumentCardIn(BaseModel):
     reducer_factor: float | None = Field(None, gt=0)
     weight_kg: float | None = Field(None, gt=0)
     payload_kg: float | None = Field(None, gt=0)
-    slots: int | None = Field(None, gt=0)  # un conto: zero non e' "non lo so", e' nessuna ruota
+    slots: int | None = Field(
+        None, gt=0, description='A count: zero is not "I don\'t know", it is no wheel.'
+    )
     backfocus_mm: float | None = Field(None, gt=0)
     notes: str | None = None
 
 
 class InstrumentCorrection(InstrumentCardIn):
-    """La scheda di un pezzo che c'e' gia', o l'unione con un altro (`merge_into`, "e' lo stesso
-    pezzo di", e allora il resto non conta). Mandare il nome e' rinominare; non mandarlo lascia
-    quello che c'e'. Quale pezzo sia lo dice l'indirizzo."""
+    """The card of a piece that already exists, or the merge with another (`merge_into`, "it is the
+    same piece as", and then the rest does not count). Sending the name is renaming; not sending it
+    leaves the one there is. Which piece it is, the address says."""
 
     name: str | None = Field(None, min_length=1)
     merge_into: int | None = None
 
 
 class RigNaming(BaseModel):
-    """Il nome che dai a un corredo: e' cosi' che si dichiara."""
+    """The name you give a rig: it is how it is declared."""
 
     name: str = Field(min_length=1)
 
 
 class FilterNew(BaseModel):
-    """Un filtro che scrivi tu: il nome, e la banda che lascia passare -- e' cio' che sblocca le
-    pose. Marca e modello se vuoi."""
+    """A filter you write: the name, and the band it lets through -- it is what unblocks the
+    frames. Brand and model if you want."""
 
     name: str = Field(min_length=1)
     bands: list[BandIn] = Field(min_length=1)
@@ -65,8 +63,8 @@ class FilterNew(BaseModel):
 
 
 class RigNew(BaseModel):
-    """Un corredo che scrivi tu: ottica e camera fra i tuoi pezzi, e la focale -- senza, i file
-    che la dicono farebbero nascere un secondo corredo."""
+    """A rig you write: optics and camera among your pieces, and the focal length -- without it, the
+    files that tell it would make a second rig come into being."""
 
     optics_id: int
     camera_id: int
@@ -74,14 +72,14 @@ class RigNew(BaseModel):
 
 
 class RigMount(BaseModel):
-    """La montatura con cui usi un corredo, fra quelle che possiedi; `None` torna a quella che
-    dicono i file."""
+    """The mount you use a rig with, among those you own; `None` goes back to the one the files
+    say."""
 
     mount_id: int | None
 
 
 class GearObject(BaseModel):
-    """Un oggetto ripreso con quel pezzo, e quanto ci ha pesato."""
+    """An object taken with that piece, and how much it weighed in."""
 
     key: str
     name: str | None
@@ -90,8 +88,8 @@ class GearObject(BaseModel):
 
 
 class InstrumentOnPage(BaseModel):
-    """Un pezzo dell'attrezzatura: la sua scheda -- i campi vuoti sono quelli che l'header non sa
-    dire e che compila l'utente -- piu' quanto e' servito e cosa ci hai ripreso."""
+    """A piece of the gear: its card -- the empty fields are those the header cannot tell and the
+    user fills in -- plus how much it served and what you took with it."""
 
     id: int
     kind: InstrumentKind
@@ -100,9 +98,11 @@ class InstrumentOnPage(BaseModel):
     model: str | None
     camera_type: CameraType | None
     pixel_size_um: float | None
-    # ricavato dal cielo quando i file non lo dicono: in un campo suo, perche' chi lo mostra dica
-    # che e' ricavato e non lo confonda con quello dei file o dell'utente
-    pixel_from_sky_um: float | None
+    pixel_from_sky_um: float | None = Field(
+        description="Derived from the sky when the files do not say it: in a field of its own, so "
+        "that whoever shows it says it is derived and does not confuse it with the one from the "
+        "files or the user."
+    )
     aperture_mm: float | None
     focal_mm: float | None
     reducer_factor: float | None
@@ -111,88 +111,108 @@ class InstrumentOnPage(BaseModel):
     slots: int | None
     backfocus_mm: float | None
     notes: str | None
-    detected: bool  # rilevato dai file, o dichiarato da te
-    mergeable_into: list[int]  # i pezzi in cui si puo' unire: solo quelli che la spina accetta
-    # Nulli dove il legame con le pose non esiste: un genere che in **questo archivio** nessuna
-    # posa nomina non ha zero ore, ha ore che l'app non sa -- e chi mostra la riga lo dice. Chi
-    # lo decide e' `spine/inventory.py`, non questa forma.
-    frames: int | None
+    detected: bool = Field(description="Detected from the files, or declared by you.")
+    mergeable_into: list[int] = Field(
+        description="The pieces it can be merged into: only those the spine accepts."
+    )
+    frames: int | None = Field(
+        description="Null where the link with the frames does not exist: a kind that no frame in "
+        "**this archive** names does not have zero hours, it has hours the app does not know -- "
+        "and whoever shows the row says so. The spine decides it, not this shape. The same holds "
+        "for `integration_s`, `untimed` and `nights`."
+    )
     integration_s: float | None
     untimed: int | None
     nights: int | None
     objects: list[GearObject]
-    # Falso per un pezzo nato a meta' giro, che chi conta non ha ancora contato: "non ancora
-    # contato" non e' "non si puo' sapere", e la pagina li dice diversi.
-    counted: bool
-    # Perche' un pezzo contato non ha ore da mostrare: i file non nominano quel genere, o e' una
-    # montatura che nessun corredo porta ancora. `None` quando le ore ci sono.
-    no_hours: Literal["files_silent", "no_rig"] | None
+    counted: bool = Field(
+        description='False for a piece born mid-run, which the counter has not counted yet: "not '
+        'counted yet" is not "cannot be known", and the page tells them apart.'
+    )
+    no_hours: Literal["files_silent", "no_rig"] | None = Field(
+        description="Why a counted piece has no hours to show: the files do not name that kind, "
+        "or it is a mount no rig carries yet. `None` when the hours are there."
+    )
 
 
 class RigOnPage(BaseModel):
-    """Un corredo: com'e' fatto, quanto e' servito, e **quanto cielo inquadra davvero**."""
+    """A rig: how it is made, how much it served, and **how much sky it really frames**."""
 
     id: int
-    name: str | None  # il nome che gli hai dato, se gliene hai dato uno
-    # la montatura che gli hai dato tu; dove taci, le pose prendono quella che il file nomina
-    mount_id: int | None
+    name: str | None = Field(description="The name you gave it, if you gave it one.")
+    mount_id: int | None = Field(
+        description="The mount you gave it; where you are silent, the frames take the one the "
+        "file names."
+    )
     optics: str | None
     camera: str | None
     focal_mm: float | None
-    # nulli finche' non e' contato (`counted`): un corredo nato a meta' giro
-    frames: int | None
+    frames: int | None = Field(
+        description="Null until it is counted (`counted`): a rig born mid-run. The same holds for "
+        "`integration_s`, `untimed` and `nights`."
+    )
     integration_s: float | None
     untimed: int | None
     nights: int | None
     objects: list[GearObject]
     counted: bool
-    # Misurati sulle pose risolte, mediana: nulli finche' il riconoscitore non ne ha risolta
-    # nessuna. Si chiamano come nello schema (`frame_wcs`), che e' da dove vengono.
-    scale_arcsec_px: float | None
+    scale_arcsec_px: float | None = Field(
+        description="Measured on the solved frames, median: null until the solver has solved "
+        "one. Named as in the schema (`frame_wcs`), which is where they come from. The same "
+        "holds for `width_deg` and `height_deg`."
+    )
     width_deg: float | None
     height_deg: float | None
 
 
 class FilterOnPage(BaseModel):
-    """Un filtro posseduto, con la banda che lascia passare."""
+    """An owned filter, with the band it lets through."""
 
     id: int
     name: str
     brand: str | None
     model: str | None
     bands: list[BandOut]
-    frames: int | None  # nulli finche' non e' contato (`counted`)
+    frames: int | None = Field(
+        description="Null until it is counted (`counted`). The same holds for `integration_s`, "
+        "`untimed` and `nights`."
+    )
     integration_s: float | None
     untimed: int | None
     nights: int | None
     objects: list[GearObject]
     counted: bool
-    mergeable_into: list[int]  # i filtri in cui si puo' unire: solo quelli che la spina accetta
+    mergeable_into: list[int] = Field(
+        description="The filters it can be merged into: only those the spine accepts."
+    )
 
 
 class GearList(BaseModel):
     instruments: list[InstrumentOnPage]
     rigs: list[RigOnPage]
     filters: list[FilterOnPage]
-    # Quali campi chiede la scheda di ogni genere, nell'ordine in cui si leggono. Arriva **per
-    # genere e non per pezzo** perche' serve anche a scriverne uno di un genere che non possiedi
-    # ancora: li' non c'e' nessun pezzo da cui copiarli. Li decide il backend, e la pagina non ne
-    # tiene un secondo elenco.
-    cards: dict[InstrumentKind, list[CardField]]
+    cards: dict[InstrumentKind, list[CardField]] = Field(
+        description="Which fields the card of each kind asks for, in reading order. It comes **per "
+        "kind and not per piece** because it also serves to write one of a kind you do not own "
+        "yet: there, there is no piece to copy them from. The backend decides them, and the page "
+        "keeps no second list."
+    )
 
 
 class InstrumentNew(InstrumentCardIn):
-    """Un pezzo che scrivi tu. Genere e nome sono cio' che lo fa esistere -- un pezzo e' il suo
-    nome dentro il suo genere -- e la scheda arriva con lui: creare e poi correggere sarebbero due
-    gesti per una cosa sola, e fra i due il pezzo esisterebbe a meta'."""
+    """A piece you write. Kind and name are what make it exist -- a piece is its name within its
+    kind -- and the card comes with it: creating and then correcting would be two actions for a
+    single thing, and between the two the piece would half exist."""
 
     kind: InstrumentKind
-    name: str = Field(min_length=1)  # qui e' obbligatorio: senza nome il pezzo non e' nessuno
+    name: str = Field(
+        min_length=1, description="Required here: without a name the piece is nobody."
+    )
 
 
 class GearWritten(BaseModel):
-    """Cos'e' successo scrivendo. `requeued` non e' zero quando la risposta cambia il senso di
-    qualche posa -- il colore di una camera lo fa -- e allora il lavoro riparte da solo."""
+    """What happened while writing. `requeued` is not zero when the answer changes the meaning of
+    some frame -- the colour of a camera does -- and then the work restarts by itself."""
 
     id: int
     requeued: int
