@@ -27,19 +27,10 @@ non entra: lo rifa' Marco col disegno nuovo (*Per il disegno nuovo*, sotto).
 
 **Fase 1 -- pulizia e tipi.** Commenti al massimo due righe e solo il perche'; ogni funzione
 annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
-- Fatti: `spine/identify*`, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`, `weather`,
-  i file sciolti di `backend/astrolog`. `spine` e' in corso per lotti, file per file nel glob:
-  fatti il primo, la scansione (`spine/__init__`, `scan`, `scan_store`, `frame_folder`,
-  `inventory`, `header_asks`, `copies`, `coordinates`, `rewrite`), e il secondo, normalizzazione
-  e stadi (`normalize`, `normalize_store`, `normalize_rig`, `stages`, `stage_run`, `run`,
-  `counts`), e il terzo, risoluzione, raggruppamento e frame senza tipo (`solve`, `solve_store`,
-  `group`, `group_store`, `typeless`, `typeless_answer`, `typeless_folders`, `home_nights`), e il
-  quarto, l'attrezzatura (`gear`, `gear_create`, `gear_usage`, `rigs`, `rig_optics`,
-  `camera_specs`, `camera_sky`, `filters_used`), e il quinto, frame senza corredo, senza filtro,
-  senza nome, e oggetti (`rigless`, `night_rig`, `unfiltered`, `unnamed`, `objects`,
-  `object_answer`, `object_candidates`).
-- Mancano: il resto di `spine` (i lotti dopo il quinto), `api`.
-- Da chiudere strada facendo: 24 righe del backend (10 in `backend/astrolog`, 14 in
+- Fatti: `spine` intero, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`, `weather`, i
+  file sciolti di `backend/astrolog`.
+- Manca: `api`.
+- Da chiudere strada facendo: 22 righe del backend (8 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
@@ -115,7 +106,26 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   alias interno letto solo da `subjects_of` (`subjects_sql` la usano anche `mosaic_proposals` e
   `archive`, che non leggono `gruppo`) (`objects`); `prefisso`, `letto`, `valore`, `grafia`,
   `tocca`, `grezzo`, `altro_id`, `mie` (`object_answer`); `_COLONNE`, `righe`, `cielo`
-  (`object_candidates`).
+  (`object_candidates`). Nel sesto lotto: `descrizione`, `proposte`, `peso` (alias di
+  `mosaic_describe`, `mosaic_proposals`, `mosaic_weight`), `pose` (variabile e parametro di
+  `_stays`, `_band`, `_open`), `_POSES`, `pannelli`, `vivi`, `lista`, `lasciati`, `righe`
+  (`mosaic`); `_most_poses`, `voci`, `dentro`, `scelta`, `righe`, `nomi`, `versori`
+  (`mosaic_describe`); `raggi`, `b_su_a`,
+  `a_su_b` (`mosaic_geometry`); `soggetti`, `righe`, `valore`, `parola`, `detto`, `nomi`
+  (`mosaic_proposals`); `per_mosaico`, `pannelli`, `misura`, `lavoro`, `soglia`, `peso`
+  (`mosaic_weight`); `chiave`, `parti`, `ottica`, `camera`, `focale` (`declarations`); `_DOVE`,
+  `_PAGINA`, `_QUANTE`, `_TOTALI`, `_OGGETTI`, `_FERME`, `_SENZA_CIELO`, `_lune`, `_meteo` e il
+  suo parametro `fuso_riconosciuto`, la colonna `meteo`, `righe`, `lune`, `oggetti`, `filtri`,
+  `riga`, `quando`, `certe`, `somme`, `dove`, `ordinati`, `voce`, `quanti` (`nights`); `ORDINI`
+  (pubblico, letto da `test_spine_archive`), `_OGGETTI`, `_SLUG`, `_NOME`, `_DEL_SLUG`,
+  `_DEL_NOME`, `_MOSAICI`, `_RIGHE`, `_ORE`, `_POSE_DELLA_RIGA`, `_PANNELLI`,
+  `_OGGETTI_DELLA_RIGA`, `_CON_IL_FILTRO`, `_DAI_PANNELLI` coi segnaposto `{tabella}`,
+  `{legame}`, `{colonna}`, `_DEL_CATALOGO`, `_NELLA_COSTELLAZIONE`, `_MINUSCOLE_ASCII`,
+  `_PIEGATO`, `_CERCATO`, `_OGGETTI_DEI_PANNELLI` (letto da `test_spine_archive_mosaic`),
+  `_cercando`, `_dove`, `_elenco`, le colonne `chiave` e `nome`, `criteri`, `scritto`, `scudato`,
+  `pezzi`, `pezzo`, `valori`, `valore`, `cercato`, `suoi`, `ordine`, `dove`, `righe`, `quanti`,
+  `oggetti`, `mosaici`, `elencate` (`archive`); `chiavi`, `vicino`, `punto`, `nominato`,
+  `senza_fuso`, `da_spostare` (`site_requeue`).
 - **`group._where`** torna il sito ma non la data: `_one_frame` la ricalcola, e cosi' arriva
   `str | None` fino a `group_store.night` e `create_night`; e il "lo ha detto l'utente" e'
   `bool | None` (passato con `bool()`) perche' la terna non distingue chi si ferma da chi entra.
@@ -157,7 +167,8 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   soggetti del conto (le chiavi di `counts._SOGGETTI`, passate come stringhe da chi conta). Nel
   raggruppamento i motivi di `group` (`NO_ACTIVE_SITE`, `SITE_NO_TIMEZONE`, `SITE_UNCLEAR`,
   `NO_OBJECT`, `NO_DATE`, scritti in `frame_stages.reason`); le risposte sul tipo
-  (`typeless.ANSWERS`, ripetute in `api/models_review_groups`). Nell'attrezzatura i soggetti
+  (`typeless.ANSWERS`, parole di casa in `declarations.TYPE_LIGHT`/`TYPE_CALIBRATION`, ripetute
+  in `api/models_review_groups.TypelessAnswer`). Nell'attrezzatura i soggetti
   dell'uso (`instrument`, `rig`, `filter`, scritti in `gear_usage.subject` e passati come stringhe
   da `rigs` e `api/gear_write`) e i campi dei corredi (`rigs.MOUNT`, `DECLARED`, `rig_optics.OPTICS`,
   scritti in `declarations.field`). Nelle domande per gruppo le risposte sul filtro
@@ -165,11 +176,17 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `api/models_review_groups.UnfilteredAnswer`), i tipi del bersaglio (`catalog`, `name`, `none`:
   `object_answer.read_target`, `unnamed.answer`, ripetuti in `api/models_review_groups`, e
   `unnamed.NONE` riscritto come `Literal["none"]` nel ritorno di `named_by_group`) e i due vuoti
-  del cielo (`objects.NOT_YET`, `NOT_FOUND`).
+  del cielo (`objects.NOT_YET`, `NOT_FOUND`). Nel sesto lotto il vocabolario di `declarations`
+  (`MOSAIC_YES`/`MOSAIC_NO`, ripetuti in `api/models_review_groups.MosaicAnswer`;
+  `CAMERA_MONO`/`CAMERA_COLOR`,
+  ripetuti in `api/models_review.CameraType`; i tipi di entita' del `CHECK` di
+  `declarations.entity_type`, passati anche come stringhe nude), i posti dove si risponde
+  (`nights.REVIEW`, `SITE`, `NEVER`, ripetuti in `api/models_nights`) e gli ordini dell'archivio
+  (le chiavi di `archive.ORDINI`, ripetute in `api/archive.Sort`).
 - **La notte di un frame** (`scan_store.LocalNight`, notte/fuso/istante costruita da
   `scan.night_of` e spacchettata per posizione da `scan_store.insert_frame`) e' un alias di `tuple`: una `NamedTuple` la nomina.
 - **`db/inserted.inserted_id`** tiene la guardia su `lastrowid`; gli altri `.lastrowid` del
-  backend (`spine/mosaic`, `api/folders`, `api/sites`) la
+  backend (`api/folders`, `api/sites`) la
   chiamano quando arriva il loro package.
 - **`db/config.KEYS`** ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei
   test (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo
@@ -614,6 +631,25 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **Mosaici, dichiarazioni e archivio, dopo la fase 1**: `archive._PANNELLI` e' assegnato due
+  volte (il pezzo di `WHERE` sui pannelli di una riga, poi la query dei pannelli in fondo al
+  file): il primo vale solo perche' `_OGGETTI_DELLA_RIGA` lo legge prima che il secondo lo
+  copra; due nomi. `declarations.learn` (`target_key`) e `confirm` (`key`) accettano
+  `str | None` perche' `object_answer.declare_object` e `unnamed.declare` passano `slug or name`
+  da `resolved`, che torna due opzionali; un `None` cadrebbe sul `NOT NULL`: lo toglie un
+  bersaglio risolto tipato `str`. `declarations.values_of` torna `list[Any]` (righe che `rigs`
+  spacchetta in coppie con `dict()`): coppie tipate quando la riga avra' una forma. Le pose e i
+  pannelli di `mosaic` e `mosaic_geometry` restano `dict[str, Any]`, non `db/row.Row`, perche'
+  `identify_geometry.frame_shape`/`frame_radius_deg` leggono con `.get` (un `sqlite3.Row` non ce
+  l'ha, e i test passano dict senza i lati): passare a `[]` cambia comportamento, quindi aspetta.
+  `mosaic_geometry` non e' uno stadio: quando il mosaico lo diventera', entra nel contratto di
+  indipendenza in `backend/pyproject.toml`. Due righe di `archive.py` passano i 100 caratteri con
+  la ragione del `noqa` dopo il codice, come quelle di `counts.py` e `stages.py`. La docstring di
+  `nights.still_reading` dice "`measure`, which nobody runs yet": invecchia quando uno stadio lo
+  lancera'. Regole dette due volte: "righe e conta usano una condizione sola" (docstring di
+  `archive` e di `_dove`); `COLLATE NOCASE` (`archive.ORDINI` e `choices`); "sta qui perche' la
+  leggono piu' stadi" e "una chiave che sopravvive, mai l'id di riga" (docstring di
+  `declarations`, poi `FOLDER_TYPE` e `declare_coordinates`).
 - **Domande per gruppo e oggetti, dopo la fase 1**: `row_of` e' la stessa riga
   (`next(iter(by_...(conn, only=key)), None)`) in `rigless`, `unnamed`, `typeless` e `rig_optics`,
   e l'ordine "il piu' numeroso in cima" (`-frames`, `key`) e' riscritto in `rigless`, `unnamed`,

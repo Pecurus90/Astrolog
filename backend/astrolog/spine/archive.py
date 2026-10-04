@@ -1,16 +1,8 @@
-"""Una pagina dell'**Archivio**: cosa hai ripreso, cercato, filtrato e ordinato.
+"""An Archive page: a row is a group of frames, a confirmed mosaic being one row. Rows and count
+share one condition, and nothing from outside becomes SQL (`docs/domini/archivio.md`)."""
 
-Vincoli non ovvi (il perche' di righe, filtri e ordini sta in `docs/domini/archivio.md`):
-
-* **Una riga e' un gruppo di pose, non un oggetto**: un mosaico confermato e' una riga sola
-  (`frames.mosaic_key`, letta e mai ricalcolata), e quella di un oggetto porta solo le pose che
-  nessun mosaico ha preso. Si impaginano righe.
-* **Un filtro della barra fa passare il gruppo se una delle sue pose passa**, ognuno per conto suo:
-  i pannelli sono oggetti di cataloghi diversi, e filtrando le pose la riga direbbe meno ore.
-* **Righe e conta usano la stessa condizione**, e cio' che arriva da fuori non diventa mai SQL.
-* **La ricerca guarda ogni nome e ogni designazione**, senza spazi e con la cassa piegata solo
-  sull'ASCII, dai due lati: `LOWER()` di SQLite non tocca l'Unicode.
-"""
+import sqlite3
+from typing import Any
 
 from ..db import idlist
 from . import counts
@@ -18,12 +10,8 @@ from .declarations import MOSAIC, MOSAIC_FIELD
 from .object_answer import CATALOG, NAME
 from .objects import NAME_COLUMNS, subjects_of, subjects_sql, together
 
-# Le righe portano solo **chi sono**; le ore si contano fuori (`counts.counts_on("row")`), dopo il
-# filtro: dentro l'unione si conterebbero per ogni riga, anche per la sola conta.
-# La riga di un oggetto: un oggetto le cui pose stanno tutte in un mosaico non ne ha una -- le sue
-# ore sono in quella del mosaico; uno senza pose ce l'ha. Il `NOT IN` non e' correlato e usa
-# l'indice parziale `frames_mosaic`: a mani vuote non guarda nessuna posa. `object_id IS NOT NULL`
-# perche' un solo NULL dentro un `NOT IN` lo fa fallire per tutti.
+# Rows say only who they are; hours are counted after the filter, or the count would pay for them.
+# The `NOT IN` uses the partial index; `object_id IS NOT NULL` since one NULL in it fails them all.
 _OGGETTI = f"""
 SELECT 'o:' || o.id AS chiave, o.id, NULL AS mosaic_key, o.catalog_slug, {NAME_COLUMNS},
        e.constellation, e.type_code, c.catalog, c.designation, NULL AS panels
@@ -33,18 +21,14 @@ LEFT JOIN catalog_names c ON c.slug = o.catalog_slug AND c.is_primary = 1
 WHERE o.id NOT IN (SELECT f.object_id FROM frames f WHERE f.mosaic_key IS NOT NULL
                    AND f.copy_of IS NULL AND f.object_id IS NOT NULL)
    OR EXISTS (SELECT 1 FROM frames f WHERE f.object_id = o.id AND f.copy_of IS NULL
-              AND {counts.ALONE})"""  # noqa: S608 - frammenti costanti della spina
+              AND {counts.ALONE})"""  # noqa: S608 - constant fragments of the spine
 
-# Il bersaglio della risposta sul mosaico, letto dal suo valore (`object_answer.target_value`):
-# lo slug di catalogo o il nome scritto. E' il nome che l'utente ha dato, non una proposta. Come
-# in `read_target`, un bersaglio vuoto o di soli spazi non e' un bersaglio.
+# The user's target, slug or written name; as in `read_target`, a blank target is not one.
 _SLUG, _NOME = f"substr(d.value, {len(CATALOG) + 1})", f"substr(d.value, {len(NAME) + 1})"
 _DEL_SLUG = f"CASE WHEN d.value LIKE '{CATALOG}%' AND TRIM({_SLUG}) <> '' THEN {_SLUG} END"
 _DEL_NOME = f"CASE WHEN d.value LIKE '{NAME}%' AND TRIM({_NOME}) <> '' THEN {_NOME} END"
 
-# La riga di un mosaico confermato: tutte le sue pose, col nome e il catalogo del bersaglio, e
-# quanti pannelli ha, senza geometria. Si raggruppa **prima**, e la risposta si ritrova con la
-# chiave del mosaico sull'indice di `declarations`.
+# Grouped first, so the answer is found by mosaic key on the `declarations` index.
 _MOSAICI = f"""
 SELECT 'm:' || g.mosaic_key AS chiave, NULL AS id, g.mosaic_key, t.slug AS catalog_slug,
        t.nome AS primary_name, e.name AS catalog_name,
@@ -55,15 +39,13 @@ LEFT JOIN (SELECT d.entity_key, d.field, {_DEL_SLUG} AS slug, {_DEL_NOME} AS nom
            FROM declarations d WHERE d.entity_type = '{MOSAIC}' AND d.field = '{MOSAIC_FIELD}') t
        ON t.entity_key = g.mosaic_key
 LEFT JOIN catalog_entries e ON e.slug = t.slug
-LEFT JOIN catalog_names c ON c.slug = t.slug AND c.is_primary = 1"""  # noqa: S608 - frammenti costanti della spina
+LEFT JOIN catalog_names c ON c.slug = t.slug AND c.is_primary = 1"""  # noqa: S608 - constant fragments of the spine
 
 _RIGHE = f"({_OGGETTI} UNION ALL {_MOSAICI}) r"
 _ORE = counts.counts_on("row")
 
-# I tre ordini che la barra offre. **Per nome** non e' l'alfabeto nudo -- `M 13` finirebbe dopo
-# `M 103` -- si legge catalogo e poi numero, e chi un catalogo non ce l'ha va in fondo.
-# `COLLATE NOCASE` o `vdB` finirebbe dopo `WR`. La chiave della riga chiude sempre, o due pagine
-# consecutive potrebbero mostrare la stessa riga due volte o saltarne una.
+# By name is catalog then number, or `M 13` would follow `M 103`; `NOCASE` or `vdB` follows `WR`.
+# The row key always closes, or two consecutive pages could repeat or skip a row.
 ORDINI = {
     "name": (
         "ORDER BY (r.catalog_slug IS NULL), r.catalog COLLATE NOCASE,"
@@ -74,10 +56,8 @@ ORDINI = {
     "frames": "ORDER BY frames DESC, integration_s DESC, r.chiave",
 }
 
-# Le pose di una riga `r`, e gli oggetti a cui appartengono: le due cose su cui la barra chiede.
-# Gli oggetti di una riga oggetto sono lui solo -- anche senza pose, o un filtro sul catalogo lo
-# perderebbe -- e i pannelli si cercano solo per un mosaico: per tutte le altre righe sarebbe una
-# ricerca fra le pose che non trova niente di nuovo.
+# An object row's objects are itself, even without frames, or a catalog filter would lose it;
+# panels are looked up only for a mosaic, elsewhere the search would find nothing new.
 _POSE_DELLA_RIGA = f"f.copy_of IS NULL AND {counts.of('row')}"
 _PANNELLI = (
     "r.mosaic_key IS NOT NULL AND o2.id IN (SELECT f.object_id FROM frames f"  # noqa: S608
@@ -85,16 +65,13 @@ _PANNELLI = (
 )
 _OGGETTI_DELLA_RIGA = f"(o2.id = r.id OR ({_PANNELLI}))"
 
-# Una posa della riga ripresa con quel filtro. Basta **una**: la domanda della tendina e' "cosa ho
-# ripreso in Ha", non "cosa ho ripreso prevalentemente in Ha".
+# One frame is enough: the question is "what did I shoot in Ha", not "mostly in Ha".
 _CON_IL_FILTRO = (
     "EXISTS (SELECT 1 FROM frames f JOIN filters x ON x.id = f.filter_id"  # noqa: S608
     f" WHERE {_POSE_DELLA_RIGA} AND x.name = ?)"
 )
-# La riga, o uno dei pannelli del mosaico, di quel catalogo o in quella costellazione. Per una
-# riga oggetto `r.catalog` e `r.constellation` sono gia' quelli del suo oggetto; per un mosaico si
-# parte dalle sue pose (`CROSS JOIN` fissa l'ordine), o SQLite partirebbe dalle migliaia di voci
-# del catalogo scelto, per ogni mosaico.
+# For a mosaic, start from its frames (`CROSS JOIN` fixes the order), or SQLite would start from
+# the chosen catalog's thousands of entries, for every mosaic.
 _DAI_PANNELLI = (
     "r.mosaic_key IS NOT NULL AND EXISTS (SELECT 1 FROM frames f CROSS JOIN objects o2"  # noqa: S608
     " CROSS JOIN {tabella} WHERE f.copy_of IS NULL AND " + counts.of("mosaic") +
@@ -102,7 +79,7 @@ _DAI_PANNELLI = (
 )  # fmt: skip
 _DEL_CATALOGO = (
     "(r.catalog = ? OR ("
-    + _DAI_PANNELLI.format(  # noqa: S608 - costanti
+    + _DAI_PANNELLI.format(  # noqa: S608 - constants
         tabella="catalog_names c2",
         legame="c2.slug = o2.catalog_slug AND c2.is_primary = 1",
         colonna="c2.catalog",
@@ -117,12 +94,9 @@ _NELLA_COSTELLAZIONE = (
     + "))"
 )
 
-# La tavola con cui si piega la cassa: **solo l'ASCII**, come fa `LOWER()` di SQLite. Sta qui
-# e non dentro la funzione perche' si costruisce una volta, e perche' e' la meta' di una regola
-# che vive su due lati -- chi la cambia deve vedere accanto il perche'.
+# ASCII only, as SQLite's `LOWER()`: half of a rule that lives on both sides.
 _MINUSCOLE_ASCII = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 
-# Un nome come lo confronta la ricerca: senza spazi, con la cassa piegata da SQLite.
 _PIEGATO = "REPLACE(LOWER({}), ' ', '') LIKE ? ESCAPE '\\'"
 _CERCATO = (
     "(EXISTS (SELECT 1 FROM objects o2 WHERE " + _OGGETTI_DELLA_RIGA +  # noqa: S608
@@ -136,12 +110,9 @@ _CERCATO = (
 )  # fmt: skip
 
 
-def _cercando(q):
-    """Il pezzo di `WHERE` per cio' che l'utente ha scritto, coi suoi valori -- o niente.
-
-    Uno spazio o il campo svuotato **non sono una ricerca**: si toglie il contorno e gli spazi
-    prima di confrontare, o cancellare cio' che si era scritto lascerebbe un `LIKE '%   %'` che non
-    trova niente. `%` e `_` sono i jolly di `LIKE`, e chi li scrive sta cercando **quei segni**."""
+def _cercando(q: str | None) -> tuple[str, list[str]]:
+    """Blanks or an emptied field are no search, or a `LIKE '%   %'` would find nothing. `%` and
+    `_` are escaped: who types them is looking for those signs."""
     scritto = (q or "").strip().translate(_MINUSCOLE_ASCII).replace(" ", "")
     if not scritto:
         return "", []
@@ -149,9 +120,14 @@ def _cercando(q):
     return _CERCATO, [f"%{scudato}%"] * _CERCATO.count("LIKE ?")
 
 
-def _dove(q=None, catalog=None, constellation=None, filter_name=None, mosaic=False):
-    """La condizione di questa pagina, coi suoi valori. Una sola, usata dalle righe **e** dalle
-    conte: due copie vorrebbero dire una pagina che dice "3 oggetti" e ne mostra 4."""
+def _dove(
+    q: str | None = None,
+    catalog: str | None = None,
+    constellation: str | None = None,
+    filter_name: str | None = None,
+    mosaic: bool = False,
+) -> tuple[str, list[str]]:
+    """One condition for rows and counts: two copies would say "3 objects" and show 4."""
     pezzi, valori = ["1 = 1"], []
     if mosaic:
         pezzi.append("r.mosaic_key IS NOT NULL")
@@ -169,57 +145,46 @@ def _dove(q=None, catalog=None, constellation=None, filter_name=None, mosaic=Fal
     return " AND ".join(pezzi), valori
 
 
-def page(conn, *, limit, offset, sort="name", **criteri):
-    """Le righe di questa pagina **e quante righe passano il filtro**; `criteri` sono quelli di
-    `_dove`.
-
-    La conta viaggia con le righe e non a parte perche' e' la stessa domanda: con un filtro acceso
-    dire quante righe hai in archivio sarebbe un numero che mente, ed e' anche il numero su cui la
-    pagina decide se ce n'e' un'altra."""
-    ordine = ORDINI[sort]  # da un elenco chiuso: cio' che arriva da fuori non diventa `ORDER BY`
+def page(
+    conn: sqlite3.Connection, *, limit: int, offset: int, sort: str = "name", **criteri: Any
+) -> tuple[list[dict[str, Any]], int]:
+    """The rows and how many pass the filter, `criteri` being `_dove`'s: with a filter on, the
+    archive's total would lie, and the page decides on it whether another follows."""
+    ordine = ORDINI[sort]  # from a closed list: nothing from outside becomes `ORDER BY`
     dove, valori = _dove(**criteri)
     righe = conn.execute(
         f"SELECT r.*, {_ORE} FROM {_RIGHE} WHERE {dove} {ordine} LIMIT ? OFFSET ?",  # noqa: S608
         (*valori, limit, offset),
     )
     quanti = conn.execute(
-        f"SELECT COUNT(*) FROM {_RIGHE} WHERE {dove}",  # noqa: S608 - `dove` sono segnaposto
+        f"SELECT COUNT(*) FROM {_RIGHE} WHERE {dove}",  # noqa: S608 - `dove` are placeholders
         valori,
     ).fetchone()[0]
     return [dict(r) for r in righe], quanti
 
 
-def found(conn, **criteri):
-    """Quante delle righe che passano il filtro sono oggetti e quanti mosaici: la conta a schermo
-    non chiama "oggetto" un mosaico. Stessa condizione delle righe (`_dove`)."""
+def found(conn: sqlite3.Connection, **criteri: Any) -> dict[str, int]:
+    """Objects and mosaics apart: the on-screen count does not call a mosaic an object."""
     dove, valori = _dove(**criteri)
     sql = (
-        "SELECT COALESCE(SUM(r.mosaic_key IS NULL), 0), COALESCE(SUM(r.mosaic_key IS NOT NULL), 0)"  # noqa: S608 - `dove` sono segnaposto
+        "SELECT COALESCE(SUM(r.mosaic_key IS NULL), 0), COALESCE(SUM(r.mosaic_key IS NOT NULL), 0)"  # noqa: S608 - `dove` are placeholders
         f" FROM {_RIGHE} WHERE {dove}"
     )
     oggetti, mosaici = conn.execute(sql, valori).fetchone()
     return {"objects": oggetti, "mosaics": mosaici}
 
 
-# I filtri che hanno ripreso un oggetto, per la tendina: per ogni filtro basta la prima posa buona,
-# e l'indice su `frames.filter_id` tiene breve anche la ricerca di chi non ne ha. Un `JOIN` con
-# `DISTINCT` le legge tutte.
+# The first good frame per filter is enough, and the `frames.filter_id` index keeps the search
+# short; a `JOIN` with `DISTINCT` would read them all.
 FILTERS_USED = (
     "SELECT x.name FROM filters x WHERE EXISTS (SELECT 1 FROM frames f WHERE f.filter_id = x.id"
     " AND f.object_id IS NOT NULL AND f.copy_of IS NULL) ORDER BY x.name COLLATE NOCASE"
 )
 
 
-def choices(conn):
-    """Cosa offrono le tendine: **cio' che c'e' in archivio**, non cio' che il catalogo
-    conosce. Ordinate come le righe, `COLLATE NOCASE`: senza, `vdB` uscirebbe dopo `WR` qui e
-    prima di la', cioe' la stessa pagina ordinerebbe la stessa cosa in due modi -- e i nomi dei
-    filtri li scrive l'utente, quindi li' capita di sicuro, non per ipotesi.
-
-    Le sigle e le costellazioni del catalogo sono molte piu' di quelle che un archivio tocca --
-    quante, lo conta la prova qui accanto -- e offrirle tutte a chi ne usa due e' una tendina che
-    fa perdere tempo. E' la stessa regola delle ore per genere: per archivio, non per elenco
-    fisso."""
+def choices(conn: sqlite3.Connection) -> dict[str, Any]:
+    """What the archive holds, not what the catalog knows; `NOCASE` like the rows, or `vdB` would
+    sort apart here and there, and the user's filter names mix case for sure."""
     return {
         "catalogs": _elenco(
             conn,
@@ -233,9 +198,9 @@ def choices(conn):
             " JOIN catalog_entries e ON e.slug = o.catalog_slug"
             " ORDER BY e.constellation COLLATE NOCASE",
         ),
-        # i filtri che hanno ripreso **un oggetto**: uno posseduto e mai usato non stringe niente
+        # filters that shot an object: one owned and never used narrows nothing
         "filters": _elenco(conn, FILTERS_USED),
-        # "solo i mosaici" si offre a chi ne ha uno confermato: l'indice parziale lo dice subito
+        # offered to whoever has a confirmed mosaic: the partial index says so at once
         "mosaics": conn.execute(
             "SELECT EXISTS (SELECT 1 FROM frames WHERE mosaic_key IS NOT NULL)"
         ).fetchone()[0]
@@ -243,22 +208,21 @@ def choices(conn):
     }
 
 
-# I pannelli di un mosaico confermato: le sue pose per inquadratura, col centro che ha scritto chi
-# le ha raggruppate (`panels`). Si contano come ogni riga, dal pannello con piu' tempo.
+# By framing, with the centre `group` wrote, counted like every row, longest first.
 _PANNELLI = f"""
 SELECT f.mosaic_key, f.panel_id, p.ra_deg, p.dec_deg, {counts.AGGREGATE}, {counts.UNTIMED}
 FROM frames f JOIN panels p ON p.id = f.panel_id
 WHERE f.mosaic_key IN {{dentro}} AND f.copy_of IS NULL
 GROUP BY f.mosaic_key, f.panel_id
-{counts.ORDER_BY_TIME}, f.panel_id"""  # noqa: S608 - frammenti costanti, `dentro` e' un segnaposto
+{counts.ORDER_BY_TIME}, f.panel_id"""  # noqa: S608 - constant fragments, `dentro` a placeholder
 _OGGETTI_DEI_PANNELLI = subjects_sql("f.panel_id", where="AND f.mosaic_key IN {dentro}")
 
 
-def panels(conn, keys):
-    """`{chiave del mosaico: [pannello]}` per i mosaici di una pagina, in due domande per tutta la
-    pagina. Un pannello senza oggetto ha `object` nullo: un nome non s'inventa."""
+def panels(conn: sqlite3.Connection, keys: list[str]) -> dict[Any, list[Any]]:
+    """`{mosaic key: [panel]}`, two queries for the whole page. A panel without an object has a
+    null `object`: a name is not invented."""
     if not keys:
-        return {}  # la pagina di chi non ha mosaici, cioe' quasi tutte: nessuna domanda
+        return {}  # the page of whoever has no mosaics, nearly all: no query
     with idlist.holding(conn, keys) as elencate:
         oggetti = subjects_of(conn.execute(_OGGETTI_DEI_PANNELLI.format(dentro=elencate)))
     return idlist.grouped(
@@ -277,5 +241,5 @@ def panels(conn, keys):
     )
 
 
-def _elenco(conn, sql):
+def _elenco(conn: sqlite3.Connection, sql: str) -> list[str]:
     return [r[0] for r in conn.execute(sql)]

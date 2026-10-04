@@ -1,12 +1,9 @@
-"""Cosa rimette in coda un cambio dei luoghi dichiarati: le pose ferme che quel cambio puo'
-sbloccare, le notti di un luogo spostato, e il trasloco delle notti quando cambia casa.
-
-Vincolo non ovvio: si rimette in coda solo cio' che il cambio puo' cambiare. Il resto tornerebbe
-uguale, e rifarlo e' lavoro buttato. Le rotte stanno in `api/sites.py`; le regole in
-`docs/domini/sito.md`.
-"""
+"""What a change of the declared sites requeues: only what the change can change, the rest would
+come back the same (`docs/domini/sito.md`)."""
 
 import json
+import sqlite3
+from collections.abc import Collection, Iterable
 
 from .. import place
 from ..db import idlist
@@ -15,13 +12,15 @@ from .group import NO_ACTIVE_SITE, SAME_PLACE_KM, SITE_NO_TIMEZONE, SITE_UNCLEAR
 from .stages import invalidate
 
 
-def requeue_waiting(conn, *, near=(), names=(), homeless=False):
-    """Le pose ferme perche' il posto non si sapeva ripartono quando un cambio dei luoghi puo'
-    dire da solo dov'erano: quelle entro `SAME_PLACE_KM` da un punto toccato (`near`), quelle la
-    cui risposta nomina un luogo rinominato (`names`), quelle ferme perche' casa non c'era quando
-    nasce (`homeless`), e sempre quelle ferme per un luogo senza fuso -- poche per natura, e un
-    luogo spostato o tolto puo' dargliene uno anche senza che le loro coordinate lo dicano. Le
-    altre tornerebbero uguali: rifarle e' lavoro buttato."""
+def requeue_waiting(
+    conn: sqlite3.Connection,
+    *,
+    near: Collection[tuple[float | None, float | None]] = (),
+    names: Iterable[str] = (),
+    homeless: bool = False,
+) -> None:
+    """Frames stopped on their place: near a touched point, answered with a renamed site, waiting
+    for a home, and always those of a site without a zone, which a moved site may give one."""
     chiavi = {
         r[0]
         for r in conn.execute(
@@ -49,9 +48,8 @@ def requeue_waiting(conn, *, near=(), names=(), homeless=False):
     invalidate(conn, frames, "group")
 
 
-def requeue_nights_of(conn, site_id):
-    """Le pose delle notti che l'app aveva dato a quel luogo tornano in coda: spostato, le loro
-    coordinate potrebbero non cadere piu' li'."""
+def requeue_nights_of(conn: sqlite3.Connection, site_id: int) -> None:
+    """The nights the app gave that site: moved, their coordinates may no longer fall there."""
     frames = [
         r[0]
         for r in conn.execute(
@@ -63,20 +61,10 @@ def requeue_nights_of(conn, site_id):
     invalidate(conn, frames, "group")
 
 
-def adopt_nights(conn, site_id, old_home):
-    """Le notti che l'APP aveva attribuito alla casa vecchia seguono la nuova, e le loro pose
-    si rifanno: quelle senza coordinate restano sulla casa nuova, quelle con le coordinate della
-    casa vecchia ci tornano, perche' ora e' un luogo dichiarato come gli altri. Le notti
-    dichiarate, e quelle che l'app ha dato a un altro luogo, restano dove sono.
-
-    Cambiare il luogo di casa vuol dire "da adesso osservo di qui", e cio' che era un'ipotesi
-    dell'app si aggiorna con lui. Una notte dichiarata e' invece una risposta, e nessuno gliela
-    tocca. Una notte che sul nuovo luogo esisterebbe gia' (stessa data) **resta dov'e'**: due
-    notti della stessa data sullo stesso luogo il database non le ammette, e far fallire il
-    trasloco per un'attribuzione dubbia sarebbe peggio -- le pose non si perdono comunque, e
-    quella notte si sposta a mano."""
-    # Una data per volta: due notti `detected` della stessa data su due luoghi diversi che
-    # traslocassero insieme si scontrerebbero fra loro, e il trasloco fallirebbe.
+def adopt_nights(conn: sqlite3.Connection, site_id: int, old_home: int) -> None:
+    """The app's guesses follow the new home; declared nights are answers and stay. So does a date
+    the new site already has: failing the move would be worse, and that night moves by hand."""
+    # one date at a time: two detected nights of a date on two sites would collide moving together
     da_spostare = [
         r[0]
         for r in conn.execute(
@@ -90,16 +78,14 @@ def adopt_nights(conn, site_id, old_home):
         return
     with idlist.holding(conn, da_spostare) as listed:
         conn.execute(
-            f"UPDATE nights SET site_id = ? WHERE id IN {listed}",  # noqa: S608 - costante nostra
+            f"UPDATE nights SET site_id = ? WHERE id IN {listed}",  # noqa: S608 - our constant
             (site_id,),
         )
-        # E le loro pose tornano in coda: il fuso del luogo nuovo puo' tagliare le notti in un
-        # altro punto, e una data calcolata col fuso di prima non e' piu' vera. A ritagliarle e'
-        # `group`, che e' l'unico che sa farlo.
+        # the new zone may cut the nights elsewhere, and only `group` knows how to recut them
         frames = [
             r[0]
             for r in conn.execute(
-                f"SELECT id FROM frames WHERE night_id IN {listed}"  # noqa: S608 - costante nostra
+                f"SELECT id FROM frames WHERE night_id IN {listed}"  # noqa: S608 - our constant
             )
         ]
     invalidate(conn, frames, "group")
