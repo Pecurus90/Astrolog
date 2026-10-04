@@ -236,12 +236,54 @@ nominano col loro nome, per non confonderle con le fasi del refactor.
 6. **Le effemeridi che mancano**: gli orari del Sole come numeri e le ore di buio, quando una
    schermata li chiede; **quanto sale un oggetto stanotte**, dalla cava
    (`old/backend/astrolog/ephemeris/`), col Planner.
-7. **Il Planner e i Progetti**, poi la **Carta del cielo**, su Aladin Lite v3
-   ([ADR 0005](adr/0005-carta-del-cielo-aladin-lite.md)).
+7. **Il Planner, i progetti e il piano della notte**
+   ([ADR 0013](adr/0013-progetti-e-piano-della-notte.md)): i progetti con l'inquadratura su
+   Aladin Lite v3 ([ADR 0005](adr/0005-carta-del-cielo-aladin-lite.md)), la pagina delle
+   sequenze col wizard della serata e la linea del tempo, l'export per N.I.N.A. Prima i DSO, poi
+   esopianeti, variabili, occultazioni e campagne AAVSO, poi supernove e transienti, per ultimi
+   comete e NEO. Poi la **Carta del cielo**.
 8. **Il pacchetto**: immagine Docker con ASTAP dentro, multi-arch su runner arm64 nativi; su
    Windows e Mac l'app desktop con installer e updater firmati
    ([ADR 0003](adr/0003-astap-per-tutti.md), [ADR 0004](adr/0004-pacchetto-desktop-tauri.md)).
 9. **Il mobile**, per ultimo, a desktop funzionante: tablet e telefono, su ogni pagina.
+
+### Semplificare e completare la spina
+
+Da una lettura critica del disegno (giudizi, non misure: si misurano prima di costruirli). Le
+semplificazioni cambiano Da confermare, quindi le decide Marco, una per una.
+
+- **S1 -- Una domanda sull'attrezzatura invece di tre.** Oggi senza camera (per notte, telescopio,
+  dimensioni e pixel), senza ottica (per camera e focale) e senza filtro (per camera), piu'
+  l'eredita' dalla notte (`night_rig`). Una domanda per firma dell'header (grafia di camera e
+  telescopio, focale, dimensioni) che risponde corredo e filtro insieme; si perde solo la stessa
+  firma con attrezzature diverse in notti diverse.
+- **S2 -- Risposte con chiavi che non si spostano.** Senza camera e senza nome hanno la notte
+  nella chiave, e cambiare il fuso di casa le divide e le riunisce (`spine/home_nights.py`).
+  Chiavi dalla firma dell'header, o i frame fissati al momento della risposta; si perde un po'
+  del "vale per i frame futuri di quella notte".
+- **S3 -- Una scheda per gruppo di frame invece di Oggetti e Senza nome**, coi candidati del
+  cielo (anche zero).
+- **S4 -- Applica conferma solo cio' a cui si e' risposto**, e un oggetto che il cielo riconosce
+  con certezza non si chiede; si perde l'avviso degli oggetti nuovi (`ReviewSeen`).
+- **S5 -- Il segno "aspetta il tipo" ricalcolato da solo sui frame toccati**, invece di
+  `refresh_waiting` chiamato a mano da chi cambia un suo ingresso; prima si misura il costo.
+- **M1 -- Dall'archivio ai file**: nessuna risposta di Archivio o Notti porta il percorso di un
+  frame. Elenco dei file per oggetto, notte e filtro, in CSV e come lista per i programmi di
+  elaborazione (PixInsight, Siril) <!-- software-ok: elaborano, non riprendono -->.
+- **M2 -- "La cartella ora sta qui"**: le risposte per cartella hanno nella chiave il percorso
+  intero (`spine/frame_folder.py`) e una cartella registrata non si sposta (`api/folders.py`);
+  cambiare lettera al disco del NAS, o passare a Docker, le perde.
+- **M3 -- Formati**: entrano solo `.fits` e `.fit` (`domini/spina.md`); poi `.fts` e `.fz`, poi
+  XISF, che N.I.N.A. sa salvare.
+- **M4 -- Filtri dell'Archivio** per periodo, camera o corredo, sito (`api/archive.py`).
+- **M5 -- Il backup delle risposte** (*Le dichiarazioni dell'utente non si esportano*, nel
+  Parcheggio) va agganciato all'impronta del frame e alla grafia dell'header, non alla notte o al
+  percorso: piu' facile dopo S2.
+
+Ordine consigliato: le prove che mancano e *L'archivio dice cose false*; poi S1-S4, prima delle
+velocita' che toccano gli stessi pezzi (Applica, fuso di casa, riletture in `row_of`), che con
+S1 e S2 spariscono in parte; poi M1, M2, M4, M3; le velocita' e i doppioni che restano con la
+fase 2 del refactor; M5 dopo S2.
 
 ## Da riparare, nell'ordine
 
