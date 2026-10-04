@@ -43,6 +43,8 @@ const WORK = {
     repeated: { type: 'array', items: { type: 'string' } },
     checks: { type: 'string' },
     question: { type: ['string', 'null'] },
+    base: { type: 'string' },
+    prose_only: { type: 'boolean' },
   },
   required: ['files', 'checks', 'question'],
 }
@@ -92,6 +94,10 @@ const rejected = []
 // Carried across a relaunch like history, so nothing parked before a question is lost.
 const parked = [...(args.parked || [])]
 let rounds = 0
+// After a fix the next round reviews only that fix; the review still closes on a full round.
+let reviewBase = null
+// The running audits are due until a pass of them runs, and again after any fix not measured prose.
+let auditDue = true
 const end = (status, extra) => ({ status, review_rounds: rounds, rejected_findings: rejected, parked, history, ...extra })
 // A question after Build leaves a mark in history, so the relaunch knows not to build again.
 const stop = (where, question) => {
@@ -143,6 +149,9 @@ const REVIEWERS = [
 // Applies a fixer's answer; returns an end state, or null to carry on.
 function absorb(fixed, where) {
   if (!fixed) return failed(where)
+  reviewBase = fixed.base || null
+  // Unmeasured counts as code: in doubt the audits run again.
+  if (!(fixed.prose_only === true && fixed.base)) auditDue = true
   rejected.push(...(fixed.rejected || []))
   history.push(
     ...(fixed.done || []).map((d) => `riparato (${where}): ${d}`),
@@ -156,6 +165,18 @@ function absorb(fixed, where) {
   return null
 }
 
+const BASE_RULE =
+  'Prima di toccare un file lancia `python tools/solo_prosa.py --base` e metti cio che stampa in ' +
+  '`base`; se fallisce lascia `base` vuoto.'
+const PROSE_RULE =
+  'Alla fine lancia `python tools/solo_prosa.py <base>` e metti `prose_only` vero solo se stampa ' +
+  '`prose`; se fallisce, falso.'
+// A finding that asks for new machinery for an edge case gets the simplest safe rule instead.
+const SIMPLE_RULE =
+  'Se un rilievo chiede un meccanismo nuovo (un campo, uno stato, un marchio) per un caso limite, ' +
+  'scegli la regola piu semplice che resta sicura (nel dubbio si rifa l audit o si rilegge intero) ' +
+  'e scrivila in `done`; non aggiungere stati.'
+
 const REPEAT_RULE =
   'In `repeated` metti quelli che ripropongono, anche con altre parole, un rilievo gia riparato o ' +
   'scartato in un giro precedente, e non toccarli. Degli altri applica'
@@ -164,9 +185,10 @@ const fix = (where, what, repeatRule = REPEAT_RULE) =>
   agent(
     `${task}\n\n${what}\n\n` +
       (history.length ? `Giri precedenti:\n${history.join('\n')}\n\n` : '') +
-      `Verifica ognuno sul codice. ${repeatRule} ` +
+      `${BASE_RULE} Verifica ognuno sul codice. ${repeatRule} ` +
       'i fondati (in `done`) e scarta gli infondati col perche (in `rejected`). ' +
-      `${DOCS_RULE} Poi rilancia pre-commit sui file toccati e i test. ${QUESTION_RULE}`,
+      `${SIMPLE_RULE} ${DOCS_RULE} Poi rilancia pre-commit sui file toccati e i test. ` +
+      `${PROSE_RULE} ${QUESTION_RULE}`,
     { phase: where.split(' ')[0], label: `fix:${where}`, schema: WORK, agentType: fixer, model: fixerModel },
   )
 
@@ -199,13 +221,20 @@ if (args.mode !== 'logica' && !resuming) {
   if (resumed) return resumed
 }
 
+const scope = () =>
+  reviewBase
+    ? `Rivedi solo cio che l ultima correzione ha cambiato: \`git diff ${reviewBase}\`, documenti ` +
+      'compresi; il resto del diff e gia stato rivisto. Se la correzione rompe qualcosa fuori da ' +
+      'quelle righe (un chiamante, un documento che ora dice il falso), dillo.'
+    : 'Rivedi il diff non committato (git diff; git diff --cached), documenti compresi.'
+
 async function reviewUntilDry() {
   for (let r = 0; r < MAX_REVIEW_ROUNDS; r++) {
     rounds++
     const results = await parallel(
       REVIEWERS.map((rv) => () =>
         agent(
-          `${task}\n\nRivedi il diff non committato (git diff; git diff --cached), documenti compresi. ` +
+          `${task}\n\n${scope()} ` +
             `Guarda solo: ${rv.what}. ${KIND_RULE} Nessun rilievo e un esito legittimo: non inventarne.` +
             (history.length ? `\n\nGiri precedenti (rilievo -> esito):\n${history.join('\n')}` : '') +
             parkedNote(),
@@ -216,7 +245,12 @@ async function reviewUntilDry() {
     const dead = REVIEWERS.filter((_, i) => !results[i]).map((rv) => rv.type)
     if (dead.length) return failed(`review ${rounds}: nessuna risposta da ${dead.join(', ')}`)
     const found = defectsOf(`giro ${rounds}`, results.flatMap((x) => x.findings))
-    if (!found.length) return null
+    if (!found.length) {
+      if (!reviewBase) return null
+      // A dry targeted round only says the fix is clean: the review closes on a full one.
+      reviewBase = null
+      continue
+    }
     const halt = absorb(
       await fix(`Review ${rounds}`, `Rilievi della revisione:\n${JSON.stringify(found, null, 1)}`),
       `Review ${rounds}`,
@@ -243,11 +277,8 @@ if (args.surface) {
 
 let audits = []
 let checks = null
-for (let cycle = 1; cycle <= MAX_CYCLES; cycle++) {
-  phase('Review')
-  const reviewEnd = await reviewUntilDry()
-  if (reviewEnd) return reviewEnd
-
+// Returns the defects of a full pass, or an end state when an auditor gives no answer.
+async function auditPass(cycle) {
   phase('Audit')
   // One at a time: audits run the app and compare with HEAD, and must not step on each other.
   audits = []
@@ -264,24 +295,40 @@ for (let cycle = 1; cycle <= MAX_CYCLES; cycle++) {
         agentType: name === 'collaudo' ? undefined : 'auditore',
       },
     )
-    if (!verdict) return failed(`audit ${name}: nessuna risposta`)
+    if (!verdict) return { halt: failed(`audit ${name}: nessuna risposta`) }
     const defects = defectsOf(`audit ${name}#${cycle}`, verdict.issues)
     audits.push({ question: q, ...verdict, holds: !defects.length })
     if (defects.length) failing.push({ question: q, defects })
   }
-  if (failing.length) {
-    if (cycle === MAX_CYCLES) return end('audit_failing', { audits })
-    const line = (f) => entry(f) + (f.fix ? ` -> ${f.fix}` : '')
-    const listed = (a) => a.defects.map(line).join('\n  ')
-    const halt = absorb(
-      await fix(
+  auditDue = false
+  return { failing }
+}
+
+// One cycle past the cap only after a prose fix: a targeted review, a full one and the checks.
+for (let cycle = 1; cycle <= MAX_CYCLES + 1; cycle++) {
+  phase('Review')
+  const reviewEnd = await reviewUntilDry()
+  if (reviewEnd) return reviewEnd
+
+  if (auditDue) {
+    if (cycle > MAX_CYCLES) return end('audit_failing', { audits })
+    const pass = await auditPass(cycle)
+    if (pass.halt) return pass.halt
+    if (pass.failing.length) {
+      const line = (f) => entry(f) + (f.fix ? ` -> ${f.fix}` : '')
+      const listed = (a) => a.defects.map(line).join('\n  ')
+      const halt = absorb(
+        await fix(
+          `Audit ${cycle}`,
+          'L audit non regge:\n' +
+            pass.failing.map((a) => `- ${a.question}\n  ${listed(a)}`).join('\n'),
+        ),
         `Audit ${cycle}`,
-        'L audit non regge:\n' + failing.map((a) => `- ${a.question}\n  ${listed(a)}`).join('\n'),
-      ),
-      `Audit ${cycle}`,
-    )
-    if (halt) return halt
-    continue // the diff changed: back to review before it can reach the commit
+      )
+      if (halt) return halt
+      if (auditDue && cycle >= MAX_CYCLES) return end('audit_failing', { audits })
+      continue // the diff changed: back to review before it can reach the commit
+    }
   }
 
   phase('Checks')
@@ -293,7 +340,7 @@ for (let cycle = 1; cycle <= MAX_CYCLES; cycle++) {
   )
   if (!checks) return failed('checks: nessuna risposta')
   if (checks.all_passed) return end('done', { audits })
-  if (cycle === MAX_CYCLES) return end('checks_failing', { audits, checks: checks.failed })
+  if (cycle >= MAX_CYCLES) return end('checks_failing', { audits, checks: checks.failed })
   const halt = absorb(
     await fix(`Checks ${cycle}`, `I controlli cadono:\n${checks.failed.join('\n')}`),
     `Checks ${cycle}`,

@@ -28,8 +28,12 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
 - **Commenti**: al massimo due righe, in inglese, solo il perche' che il codice non mostra. La docstring di una rotta API fa eccezione: e' il contratto OpenAPI (skill `rotta-api`).
 - Il lavoro gira dal comando `/esegui` e dal Workflow `esegui`: revisione finche' un giro non
   trova difetti, audit che esegue (regge se non trova difetti), controlli; un irrobustimento,
-  della revisione o dell'audit, va in `docs/coda.md` e non si costruisce. Marco decide il
-  prodotto e da' l'ok al commit.
+  della revisione o dell'audit, va in `docs/coda.md` e non si costruisce. Dopo una correzione il
+  giro guarda solo cio' che la correzione ha cambiato, ma la revisione si chiude solo su un giro
+  intero senza difetti; una correzione di sola prosa (commenti, docstring, Markdown: lo misura
+  `tools/solo_prosa.py`) non rifa' gli audit che eseguono, e all'ultimo ciclo non ferma il
+  lavoro. Una correzione non misurata conta come codice. Marco decide il prodotto e da' l'ok al
+  commit.
 - Plugin del progetto (`.claude/settings.json`): `pr-review-toolkit` per la revisione,
   `security-guidance` che avvisa su una modifica che apre un buco di sicurezza.
 - Le decisioni stanno qui, una per file.

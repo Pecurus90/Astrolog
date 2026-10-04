@@ -267,6 +267,142 @@ def test_an_audit_defect_on_the_last_cycle_ends_audit_failing(tmp_path):
     assert "defects" not in promesse
 
 
+def _prompts(calls, prefix):
+    return [c["prompt"] for c in calls if c["label"].startswith(prefix)]
+
+
+def _review_round(calls, n):
+    return [
+        c["prompt"]
+        for c in calls
+        if c["label"].startswith("review:") and c["label"].endswith(f"#{n}")
+    ]
+
+
+@needs_node
+def test_after_a_fix_the_next_round_reviews_only_what_the_fix_changed(tmp_path):
+    replies = {
+        "review:revisore#1": {"findings": [finding("difetto")]},
+        "review:": EMPTY,
+        **TAIL,
+        "fix:": {**WORK, "base": "abc123", "prose_only": True},
+    }
+    out = run(tmp_path, replies)
+    assert out["result"]["status"] == "done"
+    first = _review_round(out["calls"], 1)
+    second = _review_round(out["calls"], 2)
+    assert all("git diff; git diff --cached" in p for p in first)
+    assert len(second) == 5
+    assert all("git diff abc123" in p and "git diff; git diff --cached" not in p for p in second)
+    # A dry targeted round does not close the review: a full one does.
+    third = _review_round(out["calls"], 3)
+    assert len(third) == 5
+    assert all("git diff; git diff --cached" in p for p in third)
+    assert out["result"]["review_rounds"] == 3
+
+
+@needs_node
+def test_every_fix_records_its_base_measures_prose_and_keeps_it_simple(tmp_path):
+    replies = {"review:revisore#1": {"findings": [finding("difetto")]}, "review:": EMPTY, **TAIL}
+    out = run(tmp_path, replies)
+    fixed = _prompts(out["calls"], "fix:Review 1")[0]
+    assert "python tools/solo_prosa.py --base" in fixed
+    assert "python tools/solo_prosa.py <base>" in fixed
+    assert "la regola piu semplice che resta sicura" in fixed
+    work = next(c["schema"] for c in out["calls"] if c["label"] == "fix:Review 1")
+    assert {"base", "prose_only"} <= set(work["properties"])
+
+
+def _failing_audit(problem="rotto"):
+    return {"ran": "r", "issues": [finding("difetto", problem)]}
+
+
+def _second_audits(calls):
+    return [x for x in labels(calls) if x.startswith("audit:") and x.endswith("#2")]
+
+
+@needs_node
+def test_a_prose_fix_after_an_audit_skips_the_running_audits(tmp_path):
+    replies = {
+        "review:": EMPTY,
+        "audit:promesse#1": _failing_audit(),
+        "fix:Audit 1": {**WORK, "base": "b1", "prose_only": True},
+        **TAIL,
+    }
+    out = run(tmp_path, replies)
+    assert out["result"]["status"] == "done"
+    assert not _second_audits(out["calls"])
+    assert "checks#2" in labels(out["calls"])
+
+
+@needs_node
+@pytest.mark.parametrize(
+    "fixed",
+    [
+        {"base": "b1", "prose_only": False},
+        # Unmeasured counts as code: in doubt the audits run again.
+        {"prose_only": True},
+        {"base": "", "prose_only": True},
+    ],
+    ids=["code", "no-base", "empty-base"],
+)
+def test_a_fix_not_measured_prose_runs_the_audits_again(tmp_path, fixed):
+    replies = {
+        "review:": EMPTY,
+        "audit:promesse#1": _failing_audit(),
+        "fix:Audit 1": {**WORK, **fixed},
+        **TAIL,
+    }
+    out = run(tmp_path, replies)
+    assert out["result"]["status"] == "done"
+    assert len(_second_audits(out["calls"])) == 4
+
+
+@needs_node
+def test_a_code_fix_from_the_review_after_a_prose_fix_runs_the_audits_again(tmp_path):
+    replies = {
+        "review:revisore#2": {"findings": [finding("difetto")]},
+        "review:": EMPTY,
+        "audit:promesse#1": _failing_audit(),
+        "fix:Audit 1": {**WORK, "base": "b1", "prose_only": True},
+        "fix:Review": {**WORK, "base": "b2", "prose_only": False},
+        **TAIL,
+    }
+    out = run(tmp_path, replies)
+    assert out["result"]["status"] == "done"
+    assert len(_second_audits(out["calls"])) == 4
+
+
+@needs_node
+def test_a_prose_fix_on_the_last_cycle_still_reaches_the_checks(tmp_path):
+    replies = {
+        "review:": EMPTY,
+        "audit:promesse": _failing_audit(),
+        "fix:Audit 3": {**WORK, "base": "b3", "prose_only": True},
+        "fix:Audit": {**WORK, "base": "b", "prose_only": False},
+        **TAIL,
+    }
+    out = run(tmp_path, replies)
+    assert out["result"]["status"] == "done"
+    names = labels(out["calls"])
+    assert "fix:Audit 3" in names
+    assert "checks#4" in names
+    assert not [x for x in names if x.startswith("audit:") and x.endswith("#4")]
+
+
+@needs_node
+def test_a_code_fix_on_the_last_cycle_ends_audit_failing(tmp_path):
+    replies = {
+        "review:": EMPTY,
+        "audit:promesse": _failing_audit(),
+        "fix:Audit": {**WORK, "base": "b", "prose_only": False},
+        **TAIL,
+    }
+    out = run(tmp_path, replies)
+    assert out["result"]["status"] == "audit_failing"
+    assert "fix:Audit 3" in labels(out["calls"])
+
+
 def test_the_workflow_scripts_stay_lf_in_git_and_on_disk():
     folder = os.path.join(ROOT, ".claude", "workflows")
     scripts = [os.path.join(folder, n) for n in os.listdir(folder) if n.endswith(".js")]

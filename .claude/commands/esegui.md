@@ -26,7 +26,8 @@ Vale `CLAUDE.md`. Il giro e' questo, e non si salta un passo.
    `meccanico` e `spostamento` costruisce lo `sviluppatore`, documenti compresi. Poi, a cicli: revisione
    (revisore + pr-review-toolkit) finche' un giro non trova difetti, audit (`auditore`, una domanda
    alla volta, eseguendo), tutti i controlli; se l'audit o i controlli fanno correggere, si torna
-   alla revisione. Esiti:
+   alla revisione, mirata sulla correzione e chiusa da un giro intero (ADR 0001); dopo una
+   correzione di sola prosa gli audit non si rifanno. Esiti:
    - `done`: al punto 6.
    - `question`: la domanda va a Marco come al punto 3; si rilancia aggiungendo la risposta ad
      `answers` e passando la `history` e la `parked` restituite: il lavoro fatto resta nel diff, con

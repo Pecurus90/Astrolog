@@ -36,7 +36,9 @@ ricognizione -> piano in cinque righe -> domande a Marco se servono -> codice, t
 nello stesso diff (li scrivo io se e' logica, lo `sviluppatore` altrimenti) -> Workflow
 `esegui` (revisione finche' un giro non trova difetti, audit eseguendo, controlli verdi) -> riassunto ->
 **ok di Marco** -> commit e push. Un rilievo che torna dopo essere stato riparato va a Marco: il
-difetto e' nel compito, non nel codice.
+difetto e' nel compito, non nel codice. Un rilievo che chiede un meccanismo nuovo (un campo, uno
+stato) per un caso limite si chiude con la regola piu' semplice che resta sicura (nel dubbio si
+rifa' l'audit, si rilegge intero): la revisione controlla, non costruisce.
 
 | Ruolo | Chi | Modello |
 |---|---|---|
