@@ -7,6 +7,14 @@ stanno qui: quelle di un dominio nel suo contratto (`domini/`), le altre in un A
 
 ## Il piano
 
+### Misura del metodo (fino al 19/10/2026)
+
+ADR 0015: per ogni lavoro una riga, poi il confronto col giro vecchio (2-6 M token per lotto).
+Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati.
+
+| Data | Tipo | Lavoro | Token | Minuti | Difetti |
+|---|---|---|---|---|---|
+
 ### Prima delle funzioni nuove
 
 Deciso con Marco: nessuna funzione nuova finche' non e' sistemato cio' che c'e'. La fase 1

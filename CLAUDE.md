@@ -57,11 +57,13 @@ va nel riassunto. Una regola controllabile da una macchina sta in una macchina, 
 - **Nomi e commenti in inglese; italiano** nei documenti, nei testi dell'app e in chat.
 - **Tipi:** una funzione che si tocca esce annotata; `StrEnum` per un insieme chiuso di stringhe,
   `dataclass` per una riga che viaggia fra funzioni invece di un `dict`.
-- **Commenti:** al massimo due righe, solo il perche' che il codice non mostra. La docstring di una rotta API fa eccezione: e' il contratto OpenAPI (skill `rotta-api`). Niente date, nomi,
-  storia (e' git), misure (se provano una regola stanno in un test), mappe di file.
+- **Prosa compressa** nei commenti e nei documenti di lavoro (coda, ADR, contratti, comandi,
+  agenti): frasi corte, niente riempitivi, solo il perche' che il codice non mostra. Tetto e
+  divieti dei commenti li controlla `tools/commenti.py`. `docs/guida-utente.md` resta italiano pieno.
 - **Un fatto, una casa.** Le derivazioni vivono in Python; il backend manda cio' che lo schermo
   mostra e il frontend formatta e basta; i tipi TS si generano dall'OpenAPI. Prima di scrivere
-  una funzione si cerca se esiste.
+  una funzione si cerca se esiste. Un'astrazione o un file nuovo alla seconda occorrenza, mai
+  alla prima.
 - **Test prima del codice, visti rossi:** una regola, un test che si rompe se la regola si rompe.
 - **Una lettura non calcola:** calcola chi scrive, e scrive il risultato.
 - **Le date portano il fuso:** la notte va da mezzogiorno a mezzogiorno nel fuso del sito.
@@ -79,9 +81,9 @@ va nel riassunto. Una regola controllabile da una macchina sta in una macchina, 
   si scrive. Un fatto corretto si corregge in tutte le sue case, cercate col grep anche con le
   parole che legge l'utente.
 - **Una superficie si collauda nel browser**, guardando il contenuto (skill `collaudo-dal-vivo`).
-- **Quando Marco mi corregge su un modo di sbagliare**, la regola entra qui nello stesso turno.
+- **Quando Marco mi corregge su un modo di sbagliare**, nello stesso turno: prima uno strumento
+  (test, hook, controllo di pre-commit), solo se non si puo' una riga qui.
 - **Una fetta arriva a schermo**: parte da cio' che l'utente vedra' e ci arriva in un commit.
-- **Economia di contesto**: grep prima di read; output lunghi a un sotto-agente.
 - **La memoria non e' una casa**: cio' che vale si scrive nel repo (qui, `docs/coda.md`, un ADR);
   la memoria tiene solo il rimando, e ogni voce dichiara la sua casa (`casa:`).
 
@@ -113,7 +115,3 @@ va nel riassunto. Una regola controllabile da una macchina sta in una macchina, 
 | cambiare cio' che l'utente vede | `docs/guida-utente.md`, nello stesso intervento |
 | parcheggiare un'idea o un debito | `docs/coda.md` |
 | toccare lo schema | `backend/astrolog/schema.sql` |
-
-Le skill del progetto (`.claude/skills/`) si caricano da sole: `per-altri-utenti` ·
-`rotta-api` · `componente-che-formatta` · `schema-unico` · `sicurezza-web` · `test-sulla-logica`
-· `collaudo-dal-vivo` · `porting-fedele` · `testi-per-pagina`.

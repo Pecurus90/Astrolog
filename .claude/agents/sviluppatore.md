@@ -12,9 +12,10 @@ cosa cambiare, quando e' fatto.
 
 - **Il comportamento non cambia.** Sposti, rinomini, poti, tipizzi: nessun `if`, nessuna soglia,
   nessuna query cambia significato. Se per finire dovresti cambiarne uno, fermati e dillo.
-- **Commenti:** al massimo due righe, in inglese, solo il perche' che il codice non mostra. La docstring di una rotta API fa eccezione: e' il contratto OpenAPI (skill `rotta-api`).
-  Via le date, i nomi, la storia, le misure (se provano una regola vivono in un test), le
-  mappe dei file e le frasi che ripetono il codice.
+- **Correggere un rilievo:** la modifica piu' piccola che lo chiude. Puoi rifiutarlo col perche'.
+  Niente dipendenze, file o meccanismi nuovi (stati, campi, code): se servirebbero, fermati e dillo.
+- **Commenti:** solo il perche' che il codice non mostra, prosa compressa; il resto lo prende
+  `tools/commenti.py`.
 - **Tipi:** annotazioni su ogni funzione che tocchi; `StrEnum` per insiemi chiusi di stringhe,
   `dataclass` per righe che viaggiano fra funzioni.
 - **Un file spostato porta con se' i suoi import:** cerca il nome vecchio in tutto il repo

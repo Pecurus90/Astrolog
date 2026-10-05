@@ -43,8 +43,7 @@ sui frame reali, le code di revisione dell'incertezza. I contratti dei moduli no
 posto per loro, e non e' una svista.
 
 **Quando la fonte e' una pagina di `old/src`**, il criterio e' *"ogni scostamento e'
-voluto"*: il CSS **non si porta** (Marco, 13/9/2026 -- le pagine nascono semplici e la veste
-arriva alla fine), il comportamento si riscrive in **TypeScript**
+voluto"*: il CSS **non si porta** (la veste viene dal design system), il comportamento si riscrive in **TypeScript**
 sui dati che ora arrivano gia' fatti e tipati dall'API. Un conto che la pagina vecchia
 faceva in JavaScript **non si porta**: si sposta in Python, e la pagina riceve il
 risultato.

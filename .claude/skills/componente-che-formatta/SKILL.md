@@ -34,7 +34,7 @@ larghezza decide *come* si dispone, mai *cosa* c'e'. Un controllo si sceglie per
 natura delle voci, non per lo schermo: elenco a comparsa se vengono dall'archivio,
 segmentato solo per voci poche e fisse.
 
-**La pagina nasce semplice** (Marco, 13/9/2026): struttura, testi e dati veri, senza grafica
+**La pagina nasce semplice**: struttura, testi e dati veri, senza grafica
 -- nessun mock da trascrivere, nessun pack di `old/design/`.
 La veste **non la mette chi costruisce la pagina**: gliela mette la fetta della veste, coi
 mattoni del design system, cosi' due pagine sorelle si somigliano perche' condividono i

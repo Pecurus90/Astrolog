@@ -36,10 +36,8 @@ prendere e cio' che **non** deve prendere. La seconda e' quella che manca sempre
 **Quando due chiavi rispondono alla stessa domanda, il banco e' una TABELLA, non un elenco
 di asserzioni**: una riga per valore, una colonna per chiave, e ogni valore provato su
 tutte. Un valore provato su una colonna sola e' dove nascono le inversioni -- una modifica
-da tre righe sposta la risposta sulla chiave scoperta e la suite resta verde. Misurato
-sulla copia calibrata (10/9/2026): **quattro** bocciature su nove venivano da li', tutte
-sulla stessa coppia di chiavi (`CALSTAT` a lettere e `CALIBRAT` a si'/no, dove la stessa
-parola dice il contrario), e le ha chiuse la tabella, non le singole riparazioni.
+da tre righe sposta la risposta sulla chiave scoperta e la suite resta verde (es. `CALSTAT`
+a lettere e `CALIBRAT` a si'/no, dove la stessa parola dice il contrario).
 
 **Una guardia si vede rossa prima che verde.** Un hook, un controllo di pre-commit, un test
 di fonte unica: si scrive, si fa fallire sul caso che deve bloccare, e solo dopo si
@@ -58,3 +56,6 @@ fissata in un solo posto; chi asserisce testo-utente passa dalla traduzione, mai
 stringa scritta a mano.
 
 **Quando ripari una duplicazione, lasci un test** che si rompe se il pezzo torna in due case.
+
+**Un refactor si prova con le snapshot** (`backend/tests/test_snapshot_comportamento.py`, syrupy):
+restano identiche o il comportamento e' cambiato. Aggiornarle e' una decisione di Marco (hook).
