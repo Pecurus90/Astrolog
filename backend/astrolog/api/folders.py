@@ -1,17 +1,16 @@
-"""Le cartelle di FITS: elenco, registrazione, ritiro, "guarda senza registrare". La
-scansione sta in `scan.py`.
-
-Vincolo non ovvio: la registrazione e' permissiva (forma e unicita'): la cartella puo' non
-rispondere adesso (NAS spento) e va bene. `frames` viene dal DB, mai dal disco; contare sul
-disco e' un gesto esplicito del wizard (`probe`), mai un costo all'apertura di una pagina.
-"""
+"""Registering is permissive: a folder may not answer now (a NAS switched off). `frames` comes
+from the database, never the disk: counting on disk is the wizard's explicit `probe`."""
 
 import os
+import sqlite3
 import time
+from typing import Final
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from starlette.datastructures import State
 
 from ..clock import now_iso
+from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from ..fits.walk import subfolders, walk_dir
 from ..spine import typeless_answer
@@ -35,14 +34,9 @@ from .paths import same_folder, validate_root
 
 router = APIRouter(prefix="/api/v1", tags=["cartelle"])
 
-# Quanto aspetta la conta di Aggiungi cartella prima di rispondere "piu' di": "10 seconds is
-# about the limit for keeping the user's attention focused on the dialogue" (Nielsen, *Response
-# Times: The 3 Important Limits*, 1993). Un archivio enorme o un NAS lento non tengono ferma la
-# pagina. Il tetto si guarda fra una cartella e l'altra: una cartella lentissima da elencare lo
-# sfora di quanto ci mette, e la risposta dice comunque che il conteggio non e' completo. Vale per
-# la conta, non per cio' che viene prima: risolvere il percorso e chiedere se la cartella risponde
-# aspettano quanto il sistema (in coda: *"Da misurare su un NAS vero"*).
-PROBE_SECONDS = 10
+# "10 seconds is about the limit for keeping the user's attention focused on the dialogue"
+# (Nielsen, *Response Times: The 3 Important Limits*, 1993); checked between folders.
+PROBE_SECONDS: Final = 10
 
 _SELECT = (
     "SELECT f.id, f.name, f.root_path, f.created_at,"
@@ -51,27 +45,32 @@ _SELECT = (
 )
 
 
-def _out(row, **more):
-    return FolderOut(**dict(row), reachable=root_readable(row["root_path"]), **more)
+def _out(row: sqlite3.Row, *, reactivated: bool = False) -> FolderOut:
+    return FolderOut(
+        **dict(row), reachable=root_readable(row["root_path"]), reactivated=reactivated
+    )
 
 
 @router.get("/folders/path-info", response_model=PathInfo)
-def path_info(request: Request):
-    """Come sono fatti i percorsi su QUESTA macchina, e se c'e' una radice confinata."""
+def path_info(request: Request) -> PathInfo:
+    """How paths are shaped on THIS machine, and whether there is a confined data root."""
     return PathInfo(
         family="windows" if os.name == "nt" else "posix", data_root=request.app.state.data_root
     )
 
 
 @router.post("/folders/probe", response_model=ProbeOut)
-def probe(body: PathProbe, request: Request):
-    """Guarda un percorso senza registrarlo: `fits_count` e' None se non si e' guardato. Conta
-    anche i FITS solo online: ci sono, anche se non sul disco, e chi ha l'archivio sotto OneDrive
-    non deve leggere "0" sulla cartella che ha appena scelto."""
+def probe(body: PathProbe, request: Request) -> ProbeOut:
+    """Looks at a path without registering it. It also counts the online-only FITS: they are
+    there, even if not on the disk, and whoever keeps the archive under OneDrive must not read "0"
+    on the folder they have just chosen.
+
+    422 when the path is refused, with the reason as its code."""
     canonical = validate_root(body.root_path, request.app.state.data_root)
     if not root_readable(canonical):
         return ProbeOut(root_path=canonical, reachable=False, fits_count=None, complete=None)
-    online, unvisited = [], []
+    online: list[str] = []
+    unvisited: list[str] = []
     found = walk_dir(
         canonical,
         online_only=online,
@@ -87,11 +86,14 @@ def probe(body: PathProbe, request: Request):
 
 
 @router.get("/folders/browse", response_model=BrowseOut)
-def browse(request: Request, path: str | None = None):
-    """Le sottocartelle da scegliere dentro la radice dei dati: sul NAS in Docker l'utente non
-    sa quale percorso ha la cartella dentro il container, e la sceglie invece di scriverla. Senza
-    radice (il desktop) non si elenca niente: 409 `no_data_root`. Senza pagine: sono le
-    sottocartelle di una cartella sola, non l'archivio."""
+def browse(request: Request, path: str | None = None) -> BrowseOut:
+    """The subfolders to choose from inside the data root: on a NAS in Docker the user does not
+    know which path the folder has inside the container, and picks it instead of typing it.
+    Without a root (the desktop) nothing is listed: 409 `no_data_root`. No pages: these are the
+    subfolders of a single folder, not the archive.
+
+    409 `root_unreachable` with the `path` when it cannot be listed; 422 when the path is refused,
+    with the reason as its code."""
     root = request.app.state.data_root
     if root is None:
         raise HTTPException(status_code=409, detail={"code": "no_data_root"})
@@ -111,9 +113,11 @@ def browse(request: Request, path: str | None = None):
 
 @router.get("/folders", response_model=FolderList)
 def list_folders(
-    limit: int = Query(100, ge=1, le=1000), offset: int = Query(0, ge=0), conn=Depends(get_db)
-):
-    """Le cartelle attive (le ritirate non compaiono)."""
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    conn: sqlite3.Connection = Depends(get_db),
+) -> FolderList:
+    """The active folders (the retired ones do not appear)."""
     total = conn.execute("SELECT COUNT(*) FROM folders WHERE retired_at IS NULL").fetchone()[0]
     rows = conn.execute(
         _SELECT + " WHERE f.retired_at IS NULL ORDER BY f.id LIMIT ? OFFSET ?", (limit, offset)
@@ -122,8 +126,13 @@ def list_folders(
 
 
 @router.post("/folders", response_model=FolderOut, status_code=201)
-def create_folder(body: FolderCreate, request: Request, conn=Depends(get_db)):
-    """Registra una cartella; ri-registrare una ritirata la riattiva; 409 se gia' attiva."""
+def create_folder(
+    body: FolderCreate, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> FolderOut:
+    """Registers a folder; registering a retired one again reactivates it.
+
+    409 `folder_exists` with its `folder_id` if it is already active; 422 when the path is
+    refused, with the reason as its code."""
     canonical = validate_root(body.root_path, request.app.state.data_root)
     existing = conn.execute(
         "SELECT id, retired_at FROM folders WHERE root_path = ?", (canonical,)
@@ -136,16 +145,22 @@ def create_folder(body: FolderCreate, request: Request, conn=Depends(get_db)):
         _move(conn, request.app.state, existing["id"], None)
         row = conn.execute(_SELECT + " WHERE f.id = ?", (existing["id"],)).fetchone()
         return _out(row, reactivated=True)
-    folder_id = conn.execute(
-        "INSERT INTO folders(root_path, name, created_at) VALUES(?, ?, ?)",
-        (canonical, body.name, now_iso()),
-    ).lastrowid
+    folder_id = inserted_id(
+        conn.execute(
+            "INSERT INTO folders(root_path, name, created_at) VALUES(?, ?, ?)",
+            (canonical, body.name, now_iso()),
+        )
+    )
     return _out(conn.execute(_SELECT + " WHERE f.id = ?", (folder_id,)).fetchone())
 
 
 @router.delete("/folders/{folder_id}", response_model=RetireOut)
-def retire_folder(folder_id: int, request: Request, conn=Depends(get_db)):
-    """Ritira: l'app smette di guardare li'. I frame restano. Idempotente; 404 se ignota."""
+def retire_folder(
+    folder_id: int, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> RetireOut:
+    """Retires: the app stops looking there. The frames stay. Idempotent.
+
+    404 `folder_not_found` if it is unknown."""
     row = conn.execute("SELECT id, retired_at FROM folders WHERE id = ?", (folder_id,)).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail={"code": "folder_not_found"})
@@ -158,24 +173,16 @@ def retire_folder(folder_id: int, request: Request, conn=Depends(get_db)):
     return RetireOut(folder_id=folder_id, retired=True, kept_frames=kept)
 
 
-def _move(conn, state, folder_id, retired_at):
-    """Toglie (`retired_at` e' l'istante) o rimette (`None`) una cartella. Cambia la cartella di un
-    frame che sta anche altrove: il segno dell'attesa si riscrive **nella stessa transazione** del
-    ritiro, perche' un ritiro scritto con i segni vecchi non si ripara ripetendolo -- torna prima,
-    gia' ritirato. Chi torna ad aspettare si stacca (`typeless_answer.detach_waiting`), e la corsa
-    da `identify` spazza gli oggetti e le sessioni rimasti vuoti; chi ha perso il cielo e sta in una
-    cartella viva che non lo ferma torna in fila dal cielo, e la corsa che parte, se il worker e'
-    libero, parte da li'. A differenza delle risposte non si rifiuta col worker occupato: rimettere
-    una cartella passa da Aggiungi, che si usa mentre l'app scansiona, e toglierla si deve poter
-    fare sempre. La corsa in volo non riattacca chi e' tornato ad aspettare, perche' `identify` e
-    `group` ricontrollano ogni frame prima di lavorarlo (`stages.ready` con `frame_id`); se pero'
-    ha gia' cominciato `identify`, l'oggetto rimasto vuoto lo spazza la corsa della scansione
-    successiva."""
+def _move(conn: sqlite3.Connection, state: State, folder_id: int, retired_at: str | None) -> None:
+    """Waiting marks are rewritten in the retirement's transaction: one written with stale marks
+    cannot be repaired by repeating it, which returns early as already retired."""
+    # Not refused while the worker runs: re-adding goes through Add, used while scanning, and
+    # removing must always work; `identify` and `group` recheck every frame before working it.
     with transaction(conn):
         conn.execute("UPDATE folders SET retired_at = ? WHERE id = ?", (retired_at, folder_id))
-        refresh_waiting(conn)  # la cartella di un frame e' cambiata senza passare dalle posizioni
+        refresh_waiting(conn)  # a frame's folder changed without going through the positions
         detached, requeued = typeless_answer.detach_waiting(conn)
-    # anche senza stacchi: rimessa la cartella, chi aspettava puo' tornare pronto
+    # even with nothing detached: a restored folder can make the waiting frames ready again
     if requeued:
         work.after(state, [STAGE_SOLVE])
     elif detached or count_pending(conn, STAGE_IDENTIFY):

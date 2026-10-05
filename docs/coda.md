@@ -33,14 +33,15 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   `work`, `settings`, `vocab`, `models`, `models_page`, `models_archive`, `models_nights`,
   `models_tonight`, `models_site`, `models_weather`, `models_review`, `models_review_apply`,
   `models_review_groups`, `models_gear`, `archive`, `nights`, `tonight`, `weather`, `weather_key`,
-  `sites`, `gear`; mancano gli altri 9 file.
+  `sites`, `gear`, `folders`, `scan`, `gear_write`, `instrument_answer`, `lookalike`; mancano
+  `review`, `review_page`, `review_write`, `review_write_folders`.
 - Da chiudere strada facendo: 20 righe del backend (6 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
-  glossario dice "frame" e "sito" (`api/review_page.py` e altri). Tre rimandi a
-  `docs/coda.md` puntano a decisioni che ora vivono altrove: `api/instrument_answer.py` e
-  `tests/test_gear_instruments.py` vanno a `docs/domini/spina.md`, *Le schede*;
+  glossario dice "frame" e "sito" (`api/review_page.py` e altri). Due rimandi a
+  `docs/coda.md` puntano a decisioni che ora vivono altrove: `tests/test_gear_instruments.py` va
+  a `docs/domini/spina.md`, *Le schede*;
   `.pre-commit-config.yaml` (i quattro software) va a `CLAUDE.md`, "Software supportati".
   Annotare `gear_create` ha lasciato un `cast` in
   `normalize._filter_for`: il filtro che non dice niente esce prima, ma `normalize_filter` torna
@@ -140,7 +141,11 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `fonte`, `ultimo`, `arrivate`, `scelto`, `vuoto`, `in_corso`, `del_sito`, `con_meteoblue`,
   `per_ora`, `via`, `righe`, `riga`, `sito` (`weather`); `chiave`, `esito`, `sito`
   (`weather_key`); `vuoti`, `vecchia`, `scritta`,
-  `nome`, `senza_casa` (`sites`); `pezzi`, `filtri`, l'alias `strumento` (`gear`).
+  `nome`, `senza_casa` (`sites`); `pezzi`, `filtri`, l'alias `strumento` (`gear`). Nel quinto
+  lotto di `api`: `_pulisci`, `_scarta_le_mai_iniziate`, `prese`, `partite`, `saltate`, `coppie`,
+  `iniziate`, `segui`, `a_fine_corsa`, `orfane` (`scan`); `_scritto`, `scheda`, `bande`, `nuovo`,
+  gli alias `corredi` e `strumento` (`gear_write`); `fuori`, `scheda` (`instrument_answer`);
+  `domande`, `coppia`, `nomi`, l'alias `strumento` (`lookalike`).
 - **`group._where`** torna il sito ma non la data: `_one_frame` la ricalcola, e cosi' arriva
   `str | None` fino a `group_store.night` e `create_night`; e il "lo ha detto l'utente" e'
   `bool | None` (passato con `bool()`) perche' la terna non distingue chi si ferma da chi entra.
@@ -200,8 +205,6 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   (le chiavi di `archive.ORDINI`, ripetute in `api/archive.Sort`).
 - **La notte di un frame** (`scan_store.LocalNight`, notte/fuso/istante costruita da
   `scan.night_of` e spacchettata per posizione da `scan_store.insert_frame`) e' un alias di `tuple`: una `NamedTuple` la nomina.
-- **`db/inserted.inserted_id`** tiene la guardia su `lastrowid`; l'altro `.lastrowid` del
-  backend (`api/folders`) la chiama quando arriva il suo lotto.
 - **`db/config.KEYS`** ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei
   test (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo
   spacchettamento.
@@ -739,6 +742,26 @@ riga per voce.
   e `page.is_page`, "la rotta di ripiego si registra per ultima", i perche' di `solver_found` e
   `solver_where` ripetuti dalle rotte del solver, i commenti italiani su
   `PipelineStatus.pending` e `.action`).
+- **Il testo di `no_readable_folders`, in una fetta che tocca lo schermo.** Il 409 di
+  `POST /pipeline/run` e `POST /scan` scatta anche quando tutte le cartelle sono gia' in
+  scansione (`scan_running`), ma `frontend/src/i18n/it.ts` e `en.ts` (riga 47) dicono solo che non
+  si riescono a leggere: un doppio clic su Scansiona mostra "non si riesce a leggere". Il testo
+  deve dire anche il caso della scansione gia' in corso.
+- **Le rotte di scrittura, dopo la fase 1.** Codici d'errore scritti nel contratto e mai provati
+  da un test (i test guardano solo lo stato HTTP, o non arrivano al caso): 409 `root_unreachable`
+  di browse, 409 `folder_exists` col suo `folder_id`, 404 `folder_not_found` (`api/folders.py`);
+  409 `folder_retired`, 404 `scan_run_not_found` (`api/scan.py`); 409 `none_filter_exists`, 422
+  `not_a_mount` (`api/gear_write.py`); e la prima registrazione di una cartella che risponde
+  `reactivated: false`. `scan.start_scan` non e' simmetrico con `start_scan_all`: se `queue()` o
+  `worker.start()` cadono con un errore diverso da `WorkerBusyError` dopo che la ricevuta e'
+  aperta, la ricevuta resta aperta per sempre e `scan_runs`/`last_scan` puntano a una lettura
+  mai partita (l'errore arriva come 500, ma lo stato resta). Regole dette due o tre volte: "il
+  lucchetto si libera a fine corsa" e "prima l'avvio, poi le ricevute" (`api/scan.py`); il
+  criterio delle camere simili e "il no si scrive col nome dell'altra" in `lookalike` (modulo,
+  `lookalikes`, `answer_all`, `_bare_name`, un commento) e in `docs/domini/spina.md`; "le stesse
+  funzioni di Da confermare" in `gear_write` (modulo, due rotte) e in
+  `docs/domini/attrezzatura.md`; "`frames` viene dal database" in `folders` e in
+  `FolderOut.frames`.
 - **Le rotte di lettura, dopo la fase 1.** `create_site` e `edit_site` (`api/sites.py`)
   prendono `sqlite3.IntegrityError` su tutta la transazione, non solo sull'`INSERT`/`UPDATE` del
   nome: un vincolo violato in `_make_default`, nei `requeue` o in `home_nights.follow_home`

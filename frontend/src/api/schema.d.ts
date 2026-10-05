@@ -89,11 +89,13 @@ export interface paths {
         put?: never;
         /**
          * Add Instrument
-         * @description Un pezzo che i tuoi file non nominano: una guida, un riduttore, una montatura.
+         * @description A piece your files do not name: a guide scope, a reducer, a mount.
          *
-         *     Nasce **dichiarato** e con la sua scheda gia' dentro. Un nome che gia' possiedi in quel genere
-         *     non fa un secondo pezzo: e' un rifiuto, perche' un pezzo e' il suo nome dentro il suo genere e
-         *     quello che scrivi a mano e' esattamente quello che la scansione riconoscera'.
+         *     It is born **declared**. A name you already own in that kind does not make a second piece: it
+         *     is a refusal, and what you write by hand is exactly what the scan will recognise.
+         *
+         *     409 `worker_busy`; 409 `name_taken`; 422 `field_not_of_kind` with the `fields` that kind's card
+         *     does not ask for.
          */
         post: operations["add_instrument"];
         delete?: never;
@@ -117,11 +119,15 @@ export interface paths {
         head?: never;
         /**
          * Edit Instrument
-         * @description La scheda di un pezzo, corretta dalla pagina dove la si legge.
+         * @description A piece's card, corrected from the page where it is read.
          *
-         *     Rinominare impara la grafia vecchia -- se no la scansione dopo ricrea il pezzo com'era -- e
-         *     cambiare il colore di una camera rimette in coda le pose che non dicono il filtro: sono la
-         *     stessa risposta di *Da confermare*, scritta dalla stessa mano.
+         *     Renaming learns the old spelling -- otherwise the next scan recreates the piece as it was --
+         *     and changing a camera's colour requeues the frames that do not name their filter: it is the
+         *     same answer as *Da confermare*, written by the same hand.
+         *
+         *     409 `worker_busy`; 404 `not_found`; 409 `name_taken` if the new name is already another piece
+         *     of that kind; 422 `field_not_of_kind` with the `fields` that kind's card does not ask for; 422
+         *     `merge_refused`.
          */
         patch: operations["edit_instrument"];
         trace?: never;
@@ -141,8 +147,10 @@ export interface paths {
         head?: never;
         /**
          * Name Rig
-         * @description Il nome di un corredo. Sta fra le dichiarazioni, non nella riga: torna quando la spina
-         *     rifa' lo stesso corredo.
+         * @description A rig's name. It is kept among the declarations, not in the row: it comes back when the
+         *     spine rebuilds the same rig.
+         *
+         *     409 `worker_busy`; 404 `not_found`.
          */
         patch: operations["name_rig"];
         trace?: never;
@@ -158,8 +166,11 @@ export interface paths {
         put?: never;
         /**
          * Add Filter
-         * @description Un filtro che non hai ancora usato, o che i tuoi file chiamano in un modo che l'app non
-         *     capisce. Un nome che possiedi gia' e' un rifiuto, non un secondo filtro.
+         * @description A filter you have not used yet, or that your files call in a way the app does not
+         *     understand. A name you already own is a refusal, not a second filter.
+         *
+         *     409 `worker_busy`; 409 `name_taken`, or `spelling_taken` if the name is already a spelling of
+         *     another filter of yours.
          */
         post: operations["add_filter"];
         delete?: never;
@@ -179,8 +190,11 @@ export interface paths {
         put?: never;
         /**
          * Add Rig
-         * @description Un corredo che non ha ancora ripreso: la sua impronta, quindi quello che la scansione
-         *     trovera'. Uno che hai gia', focale entro il 5 %, e' un rifiuto.
+         * @description A rig that has not imaged yet: its fingerprint, hence what the scan will find. One you
+         *     already have, focal length within 5 %, is a refusal.
+         *
+         *     409 `worker_busy`; 409 `rig_exists`; 422 `wrong_kind` if the optics or the camera is not a
+         *     piece of that kind.
          */
         post: operations["add_rig"];
         delete?: never;
@@ -199,8 +213,10 @@ export interface paths {
         get?: never;
         /**
          * Mount Rig
-         * @description La montatura di un corredo, dalla sua scheda. Sta fra le dichiarazioni come il nome, e le
-         *     pose del corredo tornano a `normalize`, che la scrive su ognuna.
+         * @description A rig's mount, from its card. It is kept among the declarations like the name, and the
+         *     rig's frames go back to `normalize`, which writes it on each.
+         *
+         *     409 `worker_busy`; 404 `not_found`; 422 `not_a_mount`.
          */
         put: operations["mount_rig"];
         post?: never;
@@ -225,7 +241,10 @@ export interface paths {
         head?: never;
         /**
          * Edit Filter
-         * @description La scheda di un filtro, o l'unione con un altro: le stesse funzioni di *Da confermare*.
+         * @description The same functions as *Da confermare*.
+         *
+         *     409 `worker_busy`; 404 `not_found`; 409 `name_taken` if the new name is already another
+         *     filter's; 422 `merge_refused`.
          */
         patch: operations["edit_filter"];
         trace?: never;
@@ -265,7 +284,7 @@ export interface paths {
         };
         /**
          * Path Info
-         * @description Come sono fatti i percorsi su QUESTA macchina, e se c'e' una radice confinata.
+         * @description How paths are shaped on THIS machine, and whether there is a confined data root.
          */
         get: operations["path_info"];
         put?: never;
@@ -287,9 +306,11 @@ export interface paths {
         put?: never;
         /**
          * Probe
-         * @description Guarda un percorso senza registrarlo: `fits_count` e' None se non si e' guardato. Conta
-         *     anche i FITS solo online: ci sono, anche se non sul disco, e chi ha l'archivio sotto OneDrive
-         *     non deve leggere "0" sulla cartella che ha appena scelto.
+         * @description Looks at a path without registering it. It also counts the online-only FITS: they are
+         *     there, even if not on the disk, and whoever keeps the archive under OneDrive must not read "0"
+         *     on the folder they have just chosen.
+         *
+         *     422 when the path is refused, with the reason as its code.
          */
         post: operations["probe"];
         delete?: never;
@@ -307,10 +328,13 @@ export interface paths {
         };
         /**
          * Browse
-         * @description Le sottocartelle da scegliere dentro la radice dei dati: sul NAS in Docker l'utente non
-         *     sa quale percorso ha la cartella dentro il container, e la sceglie invece di scriverla. Senza
-         *     radice (il desktop) non si elenca niente: 409 `no_data_root`. Senza pagine: sono le
-         *     sottocartelle di una cartella sola, non l'archivio.
+         * @description The subfolders to choose from inside the data root: on a NAS in Docker the user does not
+         *     know which path the folder has inside the container, and picks it instead of typing it.
+         *     Without a root (the desktop) nothing is listed: 409 `no_data_root`. No pages: these are the
+         *     subfolders of a single folder, not the archive.
+         *
+         *     409 `root_unreachable` with the `path` when it cannot be listed; 422 when the path is refused,
+         *     with the reason as its code.
          */
         get: operations["browse"];
         put?: never;
@@ -330,13 +354,16 @@ export interface paths {
         };
         /**
          * List Folders
-         * @description Le cartelle attive (le ritirate non compaiono).
+         * @description The active folders (the retired ones do not appear).
          */
         get: operations["list_folders"];
         put?: never;
         /**
          * Create Folder
-         * @description Registra una cartella; ri-registrare una ritirata la riattiva; 409 se gia' attiva.
+         * @description Registers a folder; registering a retired one again reactivates it.
+         *
+         *     409 `folder_exists` with its `folder_id` if it is already active; 422 when the path is
+         *     refused, with the reason as its code.
          */
         post: operations["create_folder"];
         delete?: never;
@@ -357,7 +384,9 @@ export interface paths {
         post?: never;
         /**
          * Retire Folder
-         * @description Ritira: l'app smette di guardare li'. I frame restano. Idempotente; 404 se ignota.
+         * @description Retires: the app stops looking there. The frames stay. Idempotent.
+         *
+         *     404 `folder_not_found` if it is unknown.
          */
         delete: operations["retire_folder"];
         options?: never;
@@ -376,7 +405,11 @@ export interface paths {
         put?: never;
         /**
          * Scan All
-         * @description Legge tutte le cartelle indicate; l'avanzamento sta in `GET /pipeline/status`.
+         * @description Reads all the registered folders that are not retired, in one run, and replies at once;
+         *     the progress is in `GET /pipeline/status`.
+         *
+         *     409 `no_folders` when there is none; 409 `no_readable_folders` with the `skipped` folders
+         *     when none can be started; 409 `worker_busy`.
          */
         post: operations["scan_all"];
         delete?: never;
@@ -396,7 +429,10 @@ export interface paths {
         put?: never;
         /**
          * Scan
-         * @description Avvia la scansione e risponde subito; l'avanzamento sta in `GET /pipeline/status`.
+         * @description Starts the scan and replies at once; the progress is in `GET /pipeline/status`.
+         *
+         *     404 `folder_not_found`; 409 `folder_retired`, `root_unreachable` with the `path`,
+         *     `scan_running` with the `folder_id`, or `worker_busy`.
          */
         post: operations["scan"];
         delete?: never;
@@ -414,7 +450,7 @@ export interface paths {
         };
         /**
          * Scan Runs
-         * @description Le ricevute, dalla piu' recente.
+         * @description The receipts, newest first.
          */
         get: operations["scan_runs"];
         put?: never;
@@ -434,10 +470,12 @@ export interface paths {
         };
         /**
          * Scan Run Errors
-         * @description I file che la scansione non ha letto, ognuno col suo motivo, a pagine. L'elenco lo tiene
-         *     l'ultima scansione di ogni cartella, e se non e' arrivata in fondo anche l'ultima che ci e'
-         *     arrivata (`spine/scan_store.finish_run`): delle altre restano i numeri, e di una ancora aperta
-         *     non c'e' ancora; la risposta lo dice col suo codice invece di un elenco vuoto.
+         * @description The files the scan did not read, each with its reason, in pages. The list is kept by the
+         *     last scan of each folder and, if that one did not reach the end, also by the last one that did
+         *     (`spine/scan_store.finish_run`): of the others only the numbers remain, and an open one has no
+         *     list yet; the reply says so with its code instead of an empty list.
+         *
+         *     404 `scan_run_not_found`; 409 `scan_run_open`; 410 `errors_not_kept`.
          */
         get: operations["scan_run_errors"];
         put?: never;
@@ -523,7 +561,7 @@ export interface paths {
          *
          *     409 `worker_busy` if there is work to start while a job is already running. When Resume
          *     reads the folders again, also 409 `no_folders` if no active folder is left, and 409
-         *     `no_readable_folders` with the `skipped` folders if none of their roots can be reached.
+         *     `no_readable_folders` with the `skipped` folders when none can be started.
          */
         post: operations["run"];
         delete?: never;

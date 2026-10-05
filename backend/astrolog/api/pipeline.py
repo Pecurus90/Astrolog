@@ -136,7 +136,7 @@ def run(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> WorkerO
 
     409 `worker_busy` if there is work to start while a job is already running. When Resume
     reads the folders again, also 409 `no_folders` if no active folder is left, and 409
-    `no_readable_folders` with the `skipped` folders if none of their roots can be reached."""
+    `no_readable_folders` with the `skipped` folders when none can be started."""
     state = request.app.state
     if _scansione_interrotta(conn, state):
         start_scan_all(state, conn)

@@ -1,24 +1,21 @@
-"""La domanda "sono lo stesso pezzo?" di Da confermare: due grafie della stessa camera, e l'app lo
-fa notare. Si' e' l'unione (`instrument_answer.merge`), no una dichiarazione che la spegne.
-
-Vincolo non ovvio: un'unione non si disfa, quindi si propone solo con una **prova positiva** (lo
-stesso sensore), mai per la sola somiglianza del nome. E l'app non puo' saperlo da sola (Marco,
-25/9/2026): due camere dello stesso modello sono due pezzi, e i file non lo dicono.
-"""
+"""A merge cannot be undone, so it is proposed only on positive proof (the same sensor), never on a
+likeness of names; and only asked, since two cameras of the same model are two pieces."""
 
 import json
 import re
+import sqlite3
+from collections.abc import Collection, Iterable
+from typing import Any
 
 from ..spine import counts, gear
 from ..spine import declarations as decl
 from ..vocab.header_value import normalize_header_value
 from . import instrument_answer as strumento
 from .models_review import LookalikeOut
+from .models_review_apply import LookalikeEdit
 
-# Quante pose vere hanno le camere di un elenco JSON: lo stesso legame dell'Attrezzatura
-# (`counts.of`), e una copia riscritta non e' un'altra posa. Nella forma coi corredi gia' nel
-# `FROM`: quella con la sotto-select cerca i corredi per ogni coppia (posa, camera), e la prova sta
-# in `test_the_cameras_do_not_search_the_rigs_row_by_row`.
+# Real frames per camera, matched as the Gear page does (`counts.of`): a rewritten copy is not
+# another frame. The rigs are in the `FROM`: a sub-select would search them per (frame, camera).
 _CAMERAS = f"""
 SELECT i.id, COUNT(f.id) AS frames
 FROM instruments i
@@ -26,47 +23,33 @@ LEFT JOIN (frames f LEFT JOIN rigs g ON g.id = f.rig_id)
        ON f.copy_of IS NULL AND {counts.of("instrument", rigs_joined=True)}
 WHERE i.id IN (SELECT value FROM json_each(?))
 GROUP BY i.id
-"""  # noqa: S608 - frammento della spina, non valori dell'utente
+"""  # noqa: S608 - a fragment of the spine, not user values
 
 
-def _frames_of(conn, ids):
-    """`{id: pose vere}` per quelle camere."""
+def _frames_of(conn: sqlite3.Connection, ids: Iterable[int]) -> dict[int, int]:
     return {r["id"]: r["frames"] for r in conn.execute(_CAMERAS, (json.dumps(sorted(ids)),))}
 
 
-def lookalikes(conn):
-    """Per ogni camera che ha tutta l'aria di essere un'altra scritta in un altro modo, la domanda
-    verso il pezzo in cui si unirebbe (Marco, 15/9/2026: `ATR2600M` e `ATR2600M(USB2.0)` sono la
-    stessa camera vista da due driver).
-
-    Un'unione non si disfa, quindi serve una **prova positiva**, non l'assenza di differenze: la
-    regola larga proponeva `Canon EF (50mm)` con `(200mm)` e `Atik 460EX (Mono)` con `(Color)`.
-    Somigliano due camere con:
-    - **lo stesso nome**, tolti maiuscole, spazi, segni e cio' che sta **fra parentesi** -- li' il
-      driver scrive un'annotazione. "Comincia come l'altro" non basta: `QHY268M` e `QHY268MC` sono
-      due sensori;
-    - **lo stesso pixel, noto per tutte e due** dai file o dall'utente: e' la prova che il sensore
-      e' uno. Quello ricavato dal cielo no: porta l'errore della focale;
-    - **lo stesso colore**, dove il colore che manca vale mono: una mono letta dai file non lo
-      porta mai, e se fosse un valore a se' dire "mono" su una sola grafia separerebbe le due.
-    Si chiede in **una direzione**, verso chi ha piu' pose (a pari pose il primo arrivato). Un no
-    vale per quella coppia in tutte e due le direzioni, perche' chi ha piu' pose puo' cambiare."""
+def lookalikes(conn: sqlite3.Connection) -> list[LookalikeOut]:
+    """The criterion and its reasons are in `docs/domini/spina.md`. Asked one way, towards the most
+    frames (the first come on a tie); a no holds both ways, since the most used can change."""
     specs = gear.camera_specs(conn)
     distinct = _answered_no(conn)
-    groups = {}
+    by_key: dict[tuple[str, float, str], list[dict[str, Any]]] = {}
     for r in conn.execute("SELECT id, name FROM instruments WHERE kind = 'camera'"):
         p = {**dict(r), **specs.get(r["id"], {})}
         name = _bare_name(p["name"])
         if name and p["pixel_size_um"] is not None:
+            # a missing colour counts as mono: a mono read from the files never carries it
             same = (name, p["pixel_size_um"], p["camera_type"] or decl.CAMERA_MONO)
-            groups.setdefault(same, []).append(p)
-    # si contano le pose solo dei gruppi con una coppia ancora da chiedere: una camera sola, o un
-    # gruppo in cui ogni coppia ha gia' avuto un no, non e' una domanda qualunque sia la piu' usata
-    groups = [g for g in groups.values() if _still_asks(g, distinct)]
+            by_key.setdefault(same, []).append(p)
+    # frames are counted only for groups with a pair still to ask: one camera alone, or a group
+    # where every pair already had a no, is not a question whichever is the most used
+    groups = [g for g in by_key.values() if _still_asks(g, distinct)]
     frames = _frames_of(conn, [p["id"] for g in groups for p in g]) if groups else {}
     for p in (p for g in groups for p in g):
         p["frames"] = frames[p["id"]]
-    out = []
+    out: list[LookalikeOut] = []
     for group in groups:
         kept = max(group, key=lambda p: (p["frames"], -p["id"]))
         out += [
@@ -85,20 +68,16 @@ def lookalikes(conn):
     return out
 
 
-def answer_all(conn, edits, now):
-    """Le risposte di un Applica, e le pose da rimettere in coda. Si' unisce le due grafie; no si
-    scrive sulla camera chiesta, col **nome** dell'altra e non col suo numero di riga, che
-    un'unione cancella. Una coppia che non e' piu' chiesta e' una pagina vecchia, e si dice prima
-    di scrivere.
-
-    Le coppie si calcolano una volta, e di nuovo **solo dopo un'unione**: un'unione sposta pose e
-    puo' cambiare quale grafia resta nella coppia dopo, un no non sposta niente."""
-    requeued, domande = set(), None
+def answer_all(conn: sqlite3.Connection, edits: Iterable[LookalikeEdit], now: str) -> set[int]:
+    """A no is written with the other's **name**, not its row id, which a merge deletes. The pairs
+    are recomputed only after a merge: it moves frames and may change who stays in the next pair."""
+    requeued: set[int] = set()
+    domande: dict[tuple[int, int], LookalikeOut] | None = None
     for edit in edits:
         if domande is None:
             domande = {(q.id, q.into_id): q for q in lookalikes(conn)}
         coppia = domande.pop((edit.id, edit.into_id), None)
-        if coppia is None:
+        if coppia is None:  # a pair no longer asked is an old page, said before writing
             raise LookupError(f"coppia {edit.id} {edit.into_id}")
         if edit.same:
             requeued |= strumento.merge(conn, edit.id, edit.into_id, now)
@@ -115,14 +94,13 @@ def answer_all(conn, edits, now):
     return requeued
 
 
-def _still_asks(group, distinct):
-    """Se nel gruppo c'e' almeno una coppia di camere a cui non si e' risposto no."""
+def _still_asks(group: list[dict[str, Any]], distinct: Collection[frozenset[str]]) -> bool:
     nomi = [p["name"] for p in group]
     return any(frozenset((a, b)) not in distinct for i, a in enumerate(nomi) for b in nomi[i + 1 :])
 
 
-def _answered_no(conn):
-    """Le coppie a cui si e' risposto no, come insiemi di due nomi: la direzione non conta."""
+def _answered_no(conn: sqlite3.Connection) -> set[frozenset[str]]:
+    """As sets of two names: the direction does not count."""
     return {
         frozenset((r["entity_key"].split("|", 1)[1], r["value"]))
         for r in conn.execute(
@@ -133,6 +111,6 @@ def _answered_no(conn):
     }
 
 
-def _bare_name(name):
-    """Il nome senza annotazioni fra parentesi, ridotto a lettere e cifre."""
+def _bare_name(name: str) -> str:
+    """Without the notes in parentheses, where the driver writes an annotation."""
     return re.sub(r"\([^)]*\)|[^a-z0-9]", "", normalize_header_value(name))
