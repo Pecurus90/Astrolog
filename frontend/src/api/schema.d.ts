@@ -2635,6 +2635,11 @@ export interface components {
              * @description The folder's path, which is what the user recognises: with `folder_id` alone the page would have to read the folders and pair them up itself. Never empty: removing a folder **retires** it, and the foreign key of `scan_runs` keeps its row.
              */
             folder_path: string;
+            /**
+             * Folder Retired
+             * @description The folder was removed (retired) since: its path no longer updates.
+             */
+            folder_retired: boolean;
             /** Started At */
             started_at: string;
             /** Ended At */

@@ -70,12 +70,16 @@ def test_duplicate_is_409_and_retire_reactivate_keep_data(client_vuoto, tmp_path
     letture = client_vuoto.get("/api/v1/scan-runs").json()["items"]
     assert [riga["folder_id"] for riga in letture] == [f["id"]]
     assert letture[0]["folder_path"] == str(root)
+    # A receipt says its folder is retired: otherwise the page shows a path that never updates.
+    assert letture[0]["folder_retired"] is True
     c = connect(db_path)
     assert c.execute("SELECT COUNT(*) FROM frames").fetchone()[0] == 1
     c.close()
     assert client_vuoto.post(f"/api/v1/folders/{f['id']}/scan").status_code == 409
     again = add(client_vuoto, root)
     assert again["id"] == f["id"] and again["reactivated"] is True
+    letture = client_vuoto.get("/api/v1/scan-runs").json()["items"]
+    assert letture[0]["folder_retired"] is False
     assert client_vuoto.delete("/api/v1/folders/99999").status_code == 404
     client_vuoto.delete(f"/api/v1/folders/{f['id']}")
     assert client_vuoto.delete(f"/api/v1/folders/{f['id']}").json()["retired"] is False

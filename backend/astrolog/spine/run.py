@@ -26,6 +26,7 @@ STAGE_GROUP = "group"
 ORDER = (STAGE_SCAN, STAGE_NORMALIZE, STAGE_SOLVE, STAGE_IDENTIFY, STAGE_GROUP)
 
 type Work = Callable[[sqlite3.Connection], Iterable[Event]]
+type OnFolder = Callable[[int, int], object]
 
 
 def _with_conn(db_path: str | Path, work: Work) -> Factory:
@@ -59,6 +60,7 @@ def queue(
     *,
     folder_id: int | None = None,
     run_id: int | None = None,
+    on_folder: OnFolder | None = None,
 ) -> list[tuple[str, Factory]]:
     """The only door: callers say what they need, never the order. Who pulls whom is the graph's
     (`stages.downstream`), so an answer on a filter also requeues names and nights."""
@@ -76,17 +78,25 @@ def queue(
         if folder_id is None or run_id is None:
             # later it would break inside the generator, in the worker thread, silently
             raise ValueError("scan vuole folder_id e run_id")
-        lavoro[STAGE_SCAN] = lambda c: _then_detach(c, scan_folder(c, folder_id, run_id=run_id))
+        lavoro[STAGE_SCAN] = lambda c: _then_detach(c, _scan_one(c, folder_id, run_id, on_folder))
     # `measure` is in the graph but has no work yet
     voluti = chiesti | {d for s in chiesti for d in downstream(s) if d in lavoro}
     return [(s, _with_conn(db_path, lavoro[s])) for s in ORDER if s in voluti]
+
+
+def _scan_one(
+    conn: sqlite3.Connection, folder_id: int, run_id: int, on_folder: OnFolder | None
+) -> Iterator[Event]:
+    if on_folder is not None:
+        on_folder(folder_id, run_id)
+    yield from scan_folder(conn, folder_id, run_id=run_id)
 
 
 def queue_folders(
     db_path: str | Path,
     cartelle: Sequence[tuple[int, int]],
     *,
-    on_folder: Callable[[int, int], object] | None = None,
+    on_folder: OnFolder | None = None,
 ) -> list[tuple[str, Factory]]:
     """One `scan` stage reading the `(folder_id, run_id)` pairs in turn, then the chain once: what
     follows works on the database, which knows nothing of folders. `on_folder` precedes each."""
@@ -99,9 +109,7 @@ def queue_folders(
         errori: list[dict[str, Any]] = []
         esiti: list[tuple[Any, Any]] = []
         for folder_id, run_id in cartelle:
-            if on_folder is not None:
-                on_folder(folder_id, run_id)
-            for evento in scan_folder(conn, folder_id, run_id=run_id):
+            for evento in _scan_one(conn, folder_id, run_id, on_folder):
                 if not evento.get("done"):
                     yield evento
                     continue

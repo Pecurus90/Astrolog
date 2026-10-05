@@ -2,7 +2,9 @@
 ricevuta stanno in un canale solo (`/pipeline/status`); il lock; nessun avvio da solo; sul
 NAS la cadenza; la guardia sull'host e il token del desktop."""
 
+import itertools
 import threading
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -67,12 +69,19 @@ def test_the_outcome_of_a_reading_does_not_carry_the_files_not_read(conn):
     assert set(riga.keys()) == {"id", "status", "errors", "ended_at"}
 
 
-def test_resume_reads_one_folder_stopped_before_it_began(app):
-    """Una cartella sola fermata prima di cominciare lascia la sua ricevuta aperta, non `stopped`:
-    anche cosi' la lettura non e' arrivata in fondo, e Riprendi la rilegge."""
+def open_receipts(db_path: str | Path) -> int:
+    with connect(db_path) as conn:
+        return conn.execute("SELECT COUNT(*) FROM scan_runs WHERE ended_at IS NULL").fetchone()[0]
+
+
+@pytest.mark.parametrize("stop_from_check", [1, 2])
+def test_resume_reads_one_folder_stopped_before_it_began(app, stop_from_check):
+    """A single folder stopped before it began, even after its stage was handed out, leaves no
+    receipt open forever (as with many folders), and Resume reads it again."""
     client, fid, _ = app
     worker = client.app.state.worker
-    worker._stop_requested = lambda: True  # lo Stop arriva fra l'avvio e il primo passo
+    checks = itertools.count(1)
+    worker._stop_requested = lambda: next(checks) >= stop_from_check
     try:
         assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 202
         worker.join(10.0)
@@ -83,10 +92,28 @@ def test_resume_reads_one_folder_stopped_before_it_began(app):
         with connect(client.app.state.db_path) as conn:
             return conn.execute("SELECT COUNT(*) FROM frames").fetchone()[0]
 
-    assert (status(client)["action"], pose()) == ("resume", 0)
+    db_path = client.app.state.db_path
+    assert (status(client)["action"], pose(), open_receipts(db_path)) == ("resume", 0, 0)
     client.post("/api/v1/pipeline/run")
     worker.join(30.0)
     assert pose() == 5
+
+
+def test_a_start_that_breaks_unexpectedly_leaves_nothing_behind(app):
+    """Not only a busy worker: any failure after the receipt opened discards it, frees the folder
+    and puts back the previous run, as the scan of every folder does."""
+    client, fid, _ = app
+    state = client.app.state
+    previous = (state.last_scan, state.scan_runs)
+    with (
+        mock.patch.object(state.worker, "start", side_effect=RuntimeError("boom")),
+        pytest.raises(RuntimeError),
+    ):
+        client.post(f"/api/v1/folders/{fid}/scan")
+    with connect(state.db_path) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0] == 0
+    assert fid not in state.folder_locks
+    assert (state.last_scan, state.scan_runs) == previous
 
 
 def test_the_files_not_read_are_listed_a_page_at_a_time(app, db_path):
@@ -204,11 +231,7 @@ def test_a_second_folder_finds_the_worker_busy_and_leaves_no_open_receipt(app, t
         r = client.post(f"/api/v1/folders/{other_id}/scan")
         assert r.status_code == 409 and r.json()["detail"]["code"] == "worker_busy"
         assert status(client)["scan"]["folder_id"] == fid  # la corsa che gira, non la respinta
-        with connect(client.app.state.db_path) as c:
-            assert (
-                c.execute("SELECT COUNT(*) FROM scan_runs WHERE ended_at IS NULL").fetchone()[0]
-                == 1
-            )
+        assert open_receipts(client.app.state.db_path) == 1
         gate.set()
         client.app.state.worker.join(10.0)
     assert client.app.state.folder_locks == set()

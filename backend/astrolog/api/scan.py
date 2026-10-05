@@ -22,6 +22,7 @@ from ..spine.scan_store import (
     run_row,
     start_run,
 )
+from ..spine.stage_run import Factory
 from ..worker.states import Stage
 from ..worker.worker import WorkerBusyError
 from .deps import get_db
@@ -78,28 +79,53 @@ def start_scan(state: State, conn: sqlite3.Connection, folder_id: int) -> int:
     previous = (state.last_scan, state.scan_runs)
     try:
         run_id = start_run(conn, folder_id, now_iso())
-        # The folder lock is released at the end of the RUN, not of the stage: normalize still works
-        # on those frames after the reading; every stage's `finish` runs however it goes, Stop too.
-        steps = queue(state.db_path, ORDER, folder_id=folder_id, run_id=run_id)
-        stages: list[Stage] = []
-        for i, (name, factory) in enumerate(steps):
-            last = i == len(steps) - 1
-            release = (lambda: _release(state, folder_id)) if last else None
-            stages.append(Stage(name, factory, on_finish=release))
+        stages = _one_folder_stages(state, folder_id, run_id)
         # before the start, and the receipts before the current one: a poll never sees the old run
         state.scan_runs = (run_id,)
         state.last_scan = (folder_id, run_id)
         state.worker.start(stages)
         return run_id
-    except WorkerBusyError as err:
+    except Exception as err:
+        # whatever broke the start, the open receipt will never have a run
         _release(state, folder_id)
         state.last_scan, state.scan_runs = previous
         if run_id is not None:
-            discard_run(conn, run_id)  # the open receipt will never have a run
-        raise HTTPException(status_code=409, detail={"code": "worker_busy"}) from err
-    except Exception:
-        _release(state, folder_id)
+            discard_run(conn, run_id)
+        if isinstance(err, WorkerBusyError):
+            raise HTTPException(status_code=409, detail={"code": "worker_busy"}) from err
         raise
+
+
+def _one_folder_stages(state: State, folder_id: int, run_id: int) -> list[Stage]:
+    begun: set[int] = set()
+    steps = queue(
+        state.db_path,
+        ORDER,
+        folder_id=folder_id,
+        run_id=run_id,
+        on_folder=lambda _f, r: begun.add(r),
+    )
+    started = [ScanStarted(run_id=run_id, folder_id=folder_id)]
+    return _stages_with_cleanup(state, steps, [folder_id], started, begun)
+
+
+def _stages_with_cleanup(
+    state: State,
+    steps: list[tuple[str, Factory]],
+    locked: Iterable[int],
+    started: Iterable[ScanStarted],
+    begun: Container[int],
+) -> list[Stage]:
+    def at_end() -> None:
+        for folder_id in locked:
+            _release(state, folder_id)
+        _scarta_le_mai_iniziate(state.db_path, started, begun)
+
+    last = len(steps) - 1
+    return [
+        Stage(name, factory, on_finish=at_end if i == last else None)
+        for i, (name, factory) in enumerate(steps)
+    ]
 
 
 def _pulisci(
@@ -116,8 +142,8 @@ def _pulisci(
 def _scarta_le_mai_iniziate(
     db_path: str | Path, partite: Iterable[ScanStarted], iniziate: Container[int]
 ) -> None:
-    """Its own connection: this runs in the worker's thread, and the request's connection was
-    closed long ago."""
+    """At the end of a run, its receipts whose reading never began go: no run would ever close them.
+    Its own connection: this runs in the worker's thread, the request's one was closed long ago."""
     orfane = [c.run_id for c in partite if c.run_id not in iniziate]
     if not orfane:
         return
@@ -129,7 +155,7 @@ def _scarta_le_mai_iniziate(
         conn.close()
 
 
-def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:  # noqa: C901
+def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
     """A folder that cannot be read is skipped and reported instead of stopping the others: one NAS
     switched off would otherwise stop every scan. The locks are all taken before the start."""
     ids = [
@@ -166,25 +192,15 @@ def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:  #
             run_id = start_run(conn, folder_id, now_iso())
             partite.append(ScanStarted(run_id=run_id, folder_id=folder_id))
         coppie = [(c.folder_id, c.run_id) for c in partite]
-        # The reply carries every receipt, so they all open now; those a stopped run never reaches
-        # are discarded at its end, or `GET /scan-runs` would show them open forever.
+        # the reply carries every receipt, so they all open now
         iniziate: set[int] = set()
 
         def segui(folder_id: int, run_id: int) -> None:
             iniziate.add(run_id)
             state.last_scan = (folder_id, run_id)
 
-        def a_fine_corsa() -> None:
-            for folder_id in prese:
-                _release(state, folder_id)
-            _scarta_le_mai_iniziate(state.db_path, partite, iniziate)
-
         steps = queue_folders(state.db_path, coppie, on_folder=segui)
-        stages: list[Stage] = []
-        for i, (name, factory) in enumerate(steps):
-            last = i == len(steps) - 1
-            # as for a single folder: the locks are released at the end of the RUN
-            stages.append(Stage(name, factory, on_finish=a_fine_corsa if last else None))
+        stages = _stages_with_cleanup(state, steps, prese, partite, iniziate)
         # before the start, and the receipts before the current one: a poll never sees the old run
         state.scan_runs = tuple(run_id for _, run_id in coppie)
         state.last_scan = coppie[0]

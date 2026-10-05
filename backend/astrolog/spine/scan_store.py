@@ -73,7 +73,8 @@ def discard_run(conn: sqlite3.Connection, run_id: int) -> None:
 # The folder path is what the user recognises. The join is inner because a folder is retired,
 # never deleted: `scan_runs.folder_id` references it and the schema stops the delete.
 SELECT_RUN = (
-    "SELECT r.*, f.root_path AS folder_path FROM scan_runs r JOIN folders f ON f.id = r.folder_id"
+    "SELECT r.*, f.root_path AS folder_path, f.retired_at IS NOT NULL AS folder_retired"
+    " FROM scan_runs r JOIN folders f ON f.id = r.folder_id"
 )
 
 

@@ -131,6 +131,9 @@ class ScanRunOut(BaseModel):
         "alone the page would have to read the folders and pair them up itself. Never empty: "
         "removing a folder **retires** it, and the foreign key of `scan_runs` keeps its row."
     )
+    folder_retired: bool = Field(
+        description="The folder was removed (retired) since: its path no longer updates."
+    )
     started_at: str
     ended_at: str | None
     duration_s: float | None = Field(

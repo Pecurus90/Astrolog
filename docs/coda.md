@@ -139,7 +139,7 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   (`weather_key`); `vuoti`, `vecchia`, `scritta`,
   `nome`, `senza_casa` (`sites`); `pezzi`, `filtri`, l'alias `strumento` (`gear`). Nel quinto
   lotto di `api`: `_pulisci`, `_scarta_le_mai_iniziate`, `prese`, `partite`, `saltate`, `coppie`,
-  `iniziate`, `segui`, `a_fine_corsa`, `orfane` (`scan`); `_scritto`, `scheda`, `bande`, `nuovo`,
+  `iniziate`, `segui`, `orfane` (`scan`); `_scritto`, `scheda`, `bande`, `nuovo`,
   gli alias `corredi` e `strumento` (`gear_write`); `fuori`, `scheda` (`instrument_answer`);
   `domande`, `coppia`, `nomi`, l'alias `strumento` (`lookalike`). Nel sesto lotto di `api`:
   `_stadi_toccati`, `voluti`, `certi`, `incerte`, `righe_camere`, `da_chiedere`,
@@ -330,10 +330,6 @@ Niente di aperto.
   contraddicono: `tests/synthetic.py` fa scrivere `SWCREATE` ai profili di Voyager e SGP, mentre
   `tests/test_fits_header.py` e `tests/test_normalize_rewrite.py` dichiarano `PROGRAM` e
   `SWMODIFY`; nessuna e' verificata finche' non arrivano header veri.
-- **La ricevuta di una lettura non dice se la sua cartella e' ritirata**: `ScanRunOut`
-  (`api/models.py`, servita da `GET /scan-runs` in `api/scan.py`) non porta `retired_at`, e chi la
-  legge vede un percorso che non si aggiorna piu' senza sapere perche'. Rimedio: un campo
-  `retired` sulla ricevuta, letto da `folders.retired_at`.
 - **Due limiti dei file solo online.** Sul Mac elencare una cartella solo online ne scarica
   l'elenco (TN3150, Apple), mai provato su un Mac, e costa una `lstat` in piu' a FITS. Un frame gia'
   in archivio lasciato poi solo online non si riapre in scansione, ma `solve` lo leggerebbe per
@@ -347,11 +343,6 @@ Niente di aperto.
   l'impronta ripiega sull'header (`fits/header_read.frame_fingerprint`). Provato su cinque
   troncati sintetici; con header veri, che differiscono almeno per `DATE-OBS`, e' improbabile ma
   nessuna prova lo esclude.
-- **Una cartella sola fermata prima di cominciare lascia la sua ricevuta aperta per sempre**: la
-  lettura di piu' cartelle butta a fine corsa le ricevute mai cominciate
-  (`api/scan._scarta_le_mai_iniziate`), quella di una cartella sola (`api/scan.start_scan`) no, e
-  `GET /scan-runs` la mostra come una lettura mai finita. Ci passano la cadenza del NAS
-  (`api/app.py`) e `POST /folders/{folder_id}/scan`.
 - **`objects.by_key` puo' prendere l'oggetto sbagliato se un nome primario fuori catalogo e' uguale
   a uno slug**: cerca le due cose con un `OR`, e un header con `OBJECT = m-31` arriva intatto a
   `identify` (`clean_object_name` toglie solo spazi e parole di tavolozza). Se `identify` lo
@@ -659,8 +650,7 @@ riga per voce.
 - **La lettura**: la catena intera delle fasi e la ricevuta dell'ultima corsa (`GET
   /pipeline/status` porta ogni stadio in `worker.stages`, `Scansiona.tsx` ne mostra uno); una
   frase per una corsa fermata da `no_star_database`; una lettura di una cartella ritirata dice che
-  la cartella non si segue piu' (il campo lo chiede *Da riparare*, voce sulla ricevuta di
-  `/scan-runs`).
+  la cartella non si segue piu' (il campo c'e': `folder_retired` di `GET /scan-runs`).
 - **Impostazioni**: tema chiaro e densita' (il foglio conosce `data-tema` e `data-densita`); un
   indice, o l'ultima sezione aperta, invece di atterrare su *Cartelle* e pagarne le chiamate.
 - **Archivio**: **un errore alla primissima risposta dell'Archivio lascia un filtro acceso senza
@@ -752,6 +742,18 @@ riga per voce.
   scansione (`scan_running`), ma `frontend/src/i18n/it.ts` e `en.ts` (riga 47) dicono solo che non
   si riescono a leggere: un doppio clic su Scansiona mostra "non si riesce a leggere". Il testo
   deve dire anche il caso della scansione gia' in corso.
+- **Le ricevute di lettura, dopo la riparazione.** Una lettura conta come cominciata appena il
+  suo stadio parte (`on_folder`), prima che `connect()` e `folder_root` riescano: se cadono li',
+  il worker lo scrive nel log ma la ricevuta resta aperta, per una cartella come per tutte.
+  `test_a_start_that_breaks_unexpectedly_leaves_nothing_behind` parte da un'app vuota, quindi
+  non distingue "rimette la corsa di prima" da "azzera" (lo prova solo il ramo
+  `WorkerBusyError`); il caso `stop_from_check=2` di
+  `test_resume_reads_one_folder_stopped_before_it_began` conta su quante volte il worker chiede
+  lo Stop prima di consegnare lo stadio. `start_scan` e `start_scan_all` puliscono un avvio
+  fallito con due forme diverse (un `except` con `isinstance`, due `except` con `_pulisci`). A
+  fine suite un worker puo' ancora lanciare l'ASTAP vero della macchina e stampare "can't create
+  new thread at interpreter shutdown": dipende dai tempi, visto una volta e poi in nessuna di
+  quattro corse ripetute.
 - **La revisione in `api`, dopo la fase 1.** Il contratto di `POST /review/apply` promette
   "tutte le risposte o nessuna" e 409 `none_filter_exists`, e nessun test lo prova: nessun corpo
   misto con una risposta valida e una rifiutata, nessun filtro "nessun filtro" doppio passando da
@@ -766,11 +768,7 @@ riga per voce.
   di browse, 409 `folder_exists` col suo `folder_id`, 404 `folder_not_found` (`api/folders.py`);
   409 `folder_retired`, 404 `scan_run_not_found` (`api/scan.py`); 409 `none_filter_exists`, 422
   `not_a_mount` (`api/gear_write.py`); e la prima registrazione di una cartella che risponde
-  `reactivated: false`. `scan.start_scan` non e' simmetrico con `start_scan_all`: se `queue()` o
-  `worker.start()` cadono con un errore diverso da `WorkerBusyError` dopo che la ricevuta e'
-  aperta, la ricevuta resta aperta per sempre e `scan_runs`/`last_scan` puntano a una lettura
-  mai partita (l'errore arriva come 500, ma lo stato resta). Regole dette due o tre volte: "il
-  lucchetto si libera a fine corsa" e "prima l'avvio, poi le ricevute" (`api/scan.py`); il
+  `reactivated: false`. Regole dette due o tre volte: "prima l'avvio, poi le ricevute" (`api/scan.py`); il
   criterio delle camere simili e "il no si scrive col nome dell'altra" in `lookalike` (modulo,
   `lookalikes`, `answer_all`, `_bare_name`, un commento) e in `docs/domini/spina.md`; "le stesse
   funzioni di Da confermare" in `gear_write` (modulo, due rotte) e in

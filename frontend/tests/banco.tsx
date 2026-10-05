@@ -108,6 +108,7 @@ export const LETTURA: components["schemas"]["ScanRunOut"] = {
   id: 3,
   folder_id: 1,
   folder_path: "D:\\Astro\\2025",
+  folder_retired: false,
   started_at: "2026-09-20T21:00:00.000Z",
   ended_at: "2026-09-20T21:02:14.000Z",
   duration_s: 134,
