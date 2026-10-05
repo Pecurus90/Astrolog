@@ -862,6 +862,9 @@ riga per voce.
   `parked` cresce a ogni giro e si deduplica solo sul testo esatto; un rilancio si riconosce
   dalla `history` non vuota, che manca se la domanda arriva dal primo fixer senza riparazioni; in
   `tools/test_esegui_workflow.py` il test del fine riga LF si salta con gli altri se manca `node`.
+- **`tools/guardia_test.py` non vede due forme di test del frontend**: `it.each([...])(...)` e i
+  titoli che vanno a capo dopo `it(` (`frontend/tests/confermare-soggetti.test.tsx`,
+  `frontend/tests/meteo.test.tsx`), quindi toglierli passa inosservato.
 - **`tools/solo_prosa.py` misura con prudenza, a volte troppa**: un file non tracciato lasciato
   nel repo prima della base conta sempre come nuovo, quindi ogni correzione esce `code` e lo
   sconto sugli audit si perde senza che nessuno lo dica; e quando git fallisce, l'errore che
