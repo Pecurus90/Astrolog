@@ -35,14 +35,14 @@ Si parte con `/esegui` o a parole, ed e' lo stesso giro (`.claude/commands/esegu
 ricognizione -> piano in cinque righe -> domande a Marco se servono -> codice, test e documenti
 nello stesso diff (li scrivo io se e' logica, lo `sviluppatore` altrimenti) -> Workflow
 `esegui` (revisione finche' un giro non trova difetti, audit eseguendo, controlli verdi) -> riassunto ->
-**ok di Marco** -> commit e push. Un rilievo che torna dopo essere stato riparato va a Marco: il
+commit e push (automatici: vedi *Regole ferme*). Un rilievo che torna dopo essere stato riparato va a Marco: il
 difetto e' nel compito, non nel codice. Un rilievo che chiede un meccanismo nuovo (un campo, uno
 stato) per un caso limite si chiude con la regola piu' semplice che resta sicura (nel dubbio si
 rifa' l'audit, si rilegge intero): la revisione controlla, non costruisce.
 
 | Ruolo | Chi | Modello |
 |---|---|---|
-| Prodotto, risposte, ok al commit | Marco | -- |
+| Prodotto, risposte, collaudo a schermo | Marco | -- |
 | Piano, logica di dominio, coordinamento | sessione principale (dentro il Workflow, le sue correzioni: un agente Opus) | Opus |
 | Ricognizione in sola lettura | `esploratore` | Sonnet |
 | Potare, tipizzare (serve giudizio) | `sviluppatore` | Opus |
@@ -91,7 +91,11 @@ rifa' l'audit, si rilegge intero): la revisione controlla, non costruisce.
 
 ## Regole ferme
 
-- **Commit solo dopo l'ok di Marco.** Messaggio Conventional Commits, una riga ASCII
+- **Commit e push automatici** (Marco, 5/10/2026): un lavoro chiuso coi controlli verdi e la
+  sua revisione fatta si committa e si pubblica senza chiedere, col suo riassunto, e si passa
+  al successivo. Si ferma e chiede solo per cio' che e' di Marco: prodotto, cio' che
+  l'utente vede da collaudare, una dipendenza nuova, un controllo rosso che non si ripara.
+  Messaggio Conventional Commits, una riga ASCII
   (`fix: ...`), niente `Co-Authored-By`. Mai force push, mai riscrivere la storia: si torna
   indietro con `git revert --no-commit <sha>` e poi `git commit -m "revert: ..."` (il messaggio
   che `git revert` scrive da solo non passa i controlli del messaggio).

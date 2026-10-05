@@ -9,7 +9,7 @@ src = ["backend", "backend/tests", "tools"]
 
 [lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "DTZ", "S", "BLE", "T20", "SIM",
-          "C901", "PLR0912", "PLR0913", "PLR0915", "PLE25",
+          "C901", "PLR0912", "PLR0913", "PLR0915", "PLE25", "ERA001",
           "ANN001", "ANN002", "ANN003", "ANN201", "ANN202", "ANN204", "ANN205", "ANN206"]
 # C901/PLR: limits on functions, not files. Existing breaches carry a `noqa`: that is the debt.
 # PLE25: control characters (backspace, NUL, ESC...) pasted into strings.
@@ -22,6 +22,8 @@ ignore = ["S101", "B008"]
 [lint.per-file-ignores]
 # ANN: every function of the app annotated; tests and tools stay exempt.
 "!backend/astrolog/**/*.py" = ["ANN"]
+# ERA001: commented-out code. Its jscpd markers read as code; they go with the recipes' merge.
+"backend/astrolog/weather/climate.py" = ["ERA001"]
 # Nei test: `assert` e' il mestiere, i percorsi temporanei sono voluti, i sottoprocessi si
 # lanciano apposta. I segreti scritti nel codice NO: quella presa resta accesa anche qui,
 # perche' una finta password in un test finisce nella storia come una vera.

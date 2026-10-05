@@ -68,6 +68,13 @@ repos:
         types: [text]
         exclude: ^(old/|\.pre-commit-config\.yaml$|tools/test_precommit_rules\.py$)
         stages: [pre-commit, manual]
+      # CLAUDE.md's comment rule, checked here so no reviewer has to read prose for it.
+      - id: comment-rule
+        name: comments at most 2 lines, no dates or names
+        language: system
+        entry: python tools/commenti.py
+        files: ^backend/astrolog/.*\.py$
+        stages: [pre-commit, manual]
       # `/* .x-* */` closes the comment at `*/` and silently drops the next rule.
       - id: css-glob-comment
         name: CSS comment closed by a glob

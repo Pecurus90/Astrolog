@@ -32,8 +32,8 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
   giro guarda solo cio' che la correzione ha cambiato, ma la revisione si chiude solo su un giro
   intero senza difetti; una correzione di sola prosa (commenti, docstring, Markdown: lo misura
   `tools/solo_prosa.py`) non rifa' gli audit che eseguono, e all'ultimo ciclo non ferma il
-  lavoro. Una correzione non misurata conta come codice. Marco decide il prodotto e da' l'ok al
-  commit.
+  lavoro. Una correzione non misurata conta come codice. Marco decide il prodotto; commit e push
+  sono automatici a controlli verdi (Marco, 5/10/2026).
 - Plugin del progetto (`.claude/settings.json`): `pr-review-toolkit` per la revisione,
   `security-guidance` che avvisa su una modifica che apre un buco di sicurezza.
 - Le decisioni stanno qui, una per file.

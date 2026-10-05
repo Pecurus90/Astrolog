@@ -1,5 +1,5 @@
 ---
-description: Porta un lavoro dal piano al riassunto finale senza fermarsi - piano e domande, costruzione con i documenti, poi il Workflow esegui (revisione finche' restano difetti, audit eseguendo, controlli verdi). Il commit lo fa dopo l'ok di Marco.
+description: Porta un lavoro dal piano al riassunto finale senza fermarsi - piano e domande, costruzione con i documenti, poi il Workflow esegui (revisione finche' restano difetti, audit eseguendo, controlli verdi). Commit e push automatici a controlli verdi.
 argument-hint: [cosa vuoi]
 ---
 
@@ -39,6 +39,6 @@ Vale `CLAUDE.md`. Il giro e' questo, e non si salta un passo.
    della revisione (giri, rilievi scartati e perche'), dell'audit, dei controlli. Gli
    irrobustimenti (`parked`) li scrivo in `docs/coda.md` e li dico: Marco puo' riportarne uno indietro. Ogni cosa tolta
    si spiega in una riga.
-7. **Dopo l'ok di Marco:** `git status` (un'altra sessione puo' aver messo in staging),
+7. **Commit e push automatici** (CLAUDE.md, *Regole ferme*), senza aspettare l'ok: `git status` (un'altra sessione puo' aver messo in staging),
    `git add <file uno per uno>`, `git commit -m "<tipo>: <una riga ASCII>"` (Conventional
    Commits: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`), `git push origin main`.
