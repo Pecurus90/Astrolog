@@ -106,6 +106,18 @@ def test_the_hook_answers_deny_in_the_shape_claude_code_reads():
     assert "uv.lock" in answer["permissionDecisionReason"]
 
 
+def test_a_dependency_command_asks_marco_instead_of_refusing():
+    payload = json.dumps(bash("uv lock"))
+    out = subprocess.run(
+        [sys.executable, os.path.join(ROOT, ".claude", "hooks", "guard.py")],
+        input=payload,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert json.loads(out.stdout)["hookSpecificOutput"]["permissionDecision"] == "ask"
+
+
 def test_the_hook_stays_silent_when_nothing_is_wrong():
     payload = json.dumps(edit("docs/coda.md"))
     out = subprocess.run(

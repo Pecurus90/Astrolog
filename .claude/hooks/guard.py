@@ -93,7 +93,9 @@ def main() -> int:
     root = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
     why = reason(payload, root)
     if why is not None:
-        decision = {"hookEventName": "PreToolUse", "permissionDecision": "deny"}
+        # a hand edit of these files is never right; a command that changes them is Marco's click
+        verdict = "ask" if payload.get("tool_name") == "Bash" else "deny"
+        decision = {"hookEventName": "PreToolUse", "permissionDecision": verdict}
         decision["permissionDecisionReason"] = why
         sys.stdout.write(json.dumps({"hookSpecificOutput": decision}) + "\n")
     return 0

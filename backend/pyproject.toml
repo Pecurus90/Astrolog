@@ -33,6 +33,9 @@ dev = [
   # un test lento da marcare, ma 810 test da qualche decina di millisecondi. In parallelo
   # sono 13 s. Un cancello lento e' un cancello che si salta (regola 5).
   "pytest-xdist>=3.6",
+  # syrupy: MIT, Python puro. Snapshot di cio' che il programma produce: la prova che un
+  # rifattorizzamento non cambia il comportamento, senza un revisore che lo legga (ADR 0001).
+  "syrupy>=4.0",
   # httpx2: BSD-3-Clause, Python puro (con httpcore2, BSD-3-Clause). Entra col difetto che
   # risolve: da Starlette 1.6 il `TestClient` lo richiede ("required if you want to use the
   # TestClient", PyPI), e senza la suite non parte nemmeno. In locale non si vedeva perche' un
