@@ -9,6 +9,7 @@ import sqlite3
 
 import pytest
 
+from astrolog import place
 from astrolog.place import coordinates_key
 from astrolog.spine import declarations as decl
 from astrolog.spine import group
@@ -216,7 +217,7 @@ def test_without_a_home_a_frame_near_a_declared_site_goes_there(archivio):
 def test_a_declared_site_without_a_timezone_says_so(archivio):
     """Il sito dichiarato piu' vicino non ha un fuso: si dice, non si ripiega su casa."""
     luogo(archivio, ROMA)
-    luogo(archivio, ("Barca", *VICINO, None), casa=False)
+    luogo(archivio, ("Senza fuso", *VICINO, None), casa=False)
     f = posa(archivio, quando="2024-05-17T22:00:00Z", coord=VICINO)
     corri(archivio)
     assert stato(archivio, f) == ("skipped", group.SITE_NO_TIMEZONE)
@@ -253,11 +254,23 @@ def test_no_home_place_no_nights_and_it_says_so(archivio):
     assert ricevuta["waiting"] == 1
 
 
+def test_on_the_open_sea_the_night_follows_the_nautical_zone(archivio):
+    """In mare aperto la libreria dei confini da' il fuso nautico, e la notte va da mezzogiorno a
+    mezzogiorno in quel fuso: le 20:00 UTC sono le 11:00 di bordo, ancora la notte prima."""
+    fuso = place.timezone_of(0.0, -140.0)
+    assert fuso == "Etc/GMT+9"
+    luogo(archivio, ("Pacifico", 0.0, -140.0, fuso))
+    f = posa(archivio, quando="2024-05-17T20:00:00Z")
+    corri(archivio)
+    assert stato(archivio, f) == ("done", None)
+    assert notte_di(archivio, f)["night_date"] == "2024-05-16"
+
+
 def test_a_site_without_a_timezone_does_not_guess_one(archivio):
-    """Mare aperto: le coordinate non cadono in nessun fuso. Si dice, non si ripiega su UTC."""
+    """Del sito non si riconosce un fuso. Si dice, non si ripiega su UTC."""
     archivio.execute(
         "INSERT INTO sites(name, latitude, longitude, timezone, is_default, created_at)"
-        " VALUES('Barca', 0.0, -30.0, NULL, 1, 'now')"
+        " VALUES('Senza fuso', 0.0, -30.0, NULL, 1, 'now')"
     )
     f = posa(archivio, quando="2024-05-17T22:00:00Z")
     corri(archivio)

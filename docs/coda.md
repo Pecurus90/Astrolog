@@ -337,26 +337,12 @@ Niente di aperto.
 - **Da misurare su un NAS vero** quanto aspettano registrazione e conta di una cartella di rete che
   non risponde: risolvere il percorso e chiedere se risponde vengono prima del tetto della conta
   (`api/folders.py`, `PROBE_SECONDS`) e non ne hanno uno (una sonda con due attese finte da 2 s ha
-  risposto in 4 s col tetto a 0,5). Anche `GET /folders` chiede a ogni cartella se risponde
-  (`root_readable`), una per una e senza tetto: l'elenco delle cartelle si blocca.
+  risposto in 4 s col tetto a 0,5). `GET /folders` invece le chiede tutte insieme sotto quel
+  tetto.
 - **Due file troncati con l'header identico diventano un frame solo**: senza pixel da leggere
   l'impronta ripiega sull'header (`fits/header_read.frame_fingerprint`). Provato su cinque
   troncati sintetici; con header veri, che differiscono almeno per `DATE-OBS`, e' improbabile ma
   nessuna prova lo esclude.
-- **`objects.by_key` puo' prendere l'oggetto sbagliato se un nome primario fuori catalogo e' uguale
-  a uno slug**: cerca le due cose con un `OR`, e un header con `OBJECT = m-31` arriva intatto a
-  `identify` (`clean_object_name` toglie solo spazi e parole di tavolozza). Se `identify` lo
-  risolva poi sul catalogo, e quindi se il caso possa nascere, non e' misurato.
-- **Il fuso di un sito in mare aperto non resta vuoto.** `docs/domini/sito.md` (e la guida, sulla
-  pagina del meteo) dice che fuori da ogni fuso il campo resta vuoto (`site_no_timezone`), ma
-  `place.timezone_of(0, -140)` torna `Etc/GMT+9`, che passa la validazione. Da decidere se un fuso
-  `Etc/` vale come fuso del posto o come nessuno, in `place.timezone_of`, da cui passano sito e
-  frame.
-- **I nostri confini della scala di Bortle e la fonte che citiamo si sono scostati su due
-  classi** (`backend/astrolog/units.py` contro la voce *Bortle scale* di Wikipedia: la 4 a 20,40
-  contro 20,80, la 5 a 19,10 contro 19,25, perche' la fonte ha una classe 4,5). Un cielo a 20,5 si
-  legge piu' generoso del numero. Da scegliere: allineare i due pavimenti alla fonte, o dichiarare
-  in `units.py` quale fonte vince; finche' dura, la tabella nostra e' l'autorita'.
 
 ### Macchine che non guardano
 
@@ -584,6 +570,12 @@ riga per voce.
   pavimento del grafico della notte (-15 gradi) e l'altezza della tela in barra (40px), ricopiati
   in `frontend/src/disegnoDellaLuna.ts` e `frontend/src/Stanotte.tsx`, no; il tetto della Luna
   (il foglio commenta 28,6 gradi, `ephemeris/__init__.py` usa 28,8 come limite superiore) no.
+- **I pavimenti di Bortle 4 e 5 nella fonte del foglio vanno portati a quelli della norma**
+  (`units.BORTLE_FLOORS`, voce *Bortle scale* di Wikipedia): `4 = 20,80 · 5 = 19,25` al posto di
+  `20,40` e `19,10`. Il commento di `.as-bortle` in `frontend/src/stili/astrolog.css` e' gia'
+  corretto qui, con l'impronta di `tools/controlli_veste.py`, per eccezione all'ADR 0012 decisa da
+  Marco: la correzione va chiesta a Claude Design, perche' la prossima consegna non la riporti
+  indietro.
 - **Il fuoco va dove serve**: un bottone che apre un campo ("Non e' questo: lo correggo", "Non e'
   in elenco", "Dagli un nome") ci porta il fuoco; **il dialogo non trattiene il fuoco** oggi
   (`frontend/src/Dialogo.tsx`: col tabulatore si esce sulla pagina dietro), e va chiuso con un
@@ -742,6 +734,15 @@ riga per voce.
   scansione (`scan_running`), ma `frontend/src/i18n/it.ts` e `en.ts` (riga 47) dicono solo che non
   si riescono a leggere: un doppio clic su Scansiona mostra "non si riesce a leggere". Il testo
   deve dire anche il caso della scansione gia' in corso.
+- **`objects.by_key` cerca slug e nome primario con un `OR`**: un nome fuori catalogo scritto
+  come uno slug (`OBJECT = m-31`) e un oggetto di catalogo con quello slug danno due righe, e
+  vince la prima che SQLite trova. Misurato: col piano di query di oggi vince lo slug anche
+  inserendo prima l'oggetto fuori catalogo, quindi il caso non nasce; un `ORDER BY` che metta lo
+  slug davanti lo renderebbe una regola invece di un piano.
+- **La lista delle cartelle sotto un tetto unico** (`api/folders._reachable`): una condivisione
+  che non risponde lascia indietro il suo thread a ogni `GET /folders`, e finche' resta morta i
+  thread si sommano; quando il tempo scade la cartella diventa `reachable: false` senza una riga
+  nel log, quindi non si distingue un'attesa scaduta da un errore vero.
 - **Le ricevute di lettura, dopo la riparazione.** Una lettura conta come cominciata appena il
   suo stadio parte (`on_folder`), prima che `connect()` e `folder_root` riescano: se cadono li',
   il worker lo scrive nel log ma la ricevuta resta aperta, per una cartella come per tutte.

@@ -120,9 +120,9 @@ NATURAL_SKY_CD_M2 = 174e-6
 # The constant linking candela per square metre and magnitudes per square arcsecond.
 CD_M2_PER_MAG0 = 1.08e5
 
-# Bortle gave no numeric bounds: this is the astrophotography sites' family (docs/domini/sito.md).
-# The sources merge 8 and 9 below 18.00; split at 17.00, where descriptions put the city centre.
-BORTLE_FLOORS = ((1, 21.76), (2, 21.60), (3, 21.30), (4, 20.40), (5, 19.10), (6, 18.50),
+# Bortle gave no numeric bounds: the floors of Wikipedia's *Bortle scale* (docs/domini/sito.md),
+# its 4.5 read as 5; it merges 8 and 9 below 18.00, split at 17.00 for the inner city.
+BORTLE_FLOORS = ((1, 21.76), (2, 21.60), (3, 21.30), (4, 20.80), (5, 19.25), (6, 18.50),
                  (7, 18.00), (8, 17.00))  # fmt: skip
 # Class 1 is open above and 9 below: two convenience ends for the reverse direction.
 BORTLE_TOP, BORTLE_BOTTOM = 22.00, 16.00

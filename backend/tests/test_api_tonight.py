@@ -307,13 +307,14 @@ def test_the_route_sends_the_bands_of_the_sky_already_made(client_vuoto):
 
 
 def test_a_site_that_has_no_timezone_at_all_does_not_break_the_page(client_vuoto):
-    """Un sito **senza fuso** -- coordinate in mare aperto, o un database dei fusi vecchio sul NAS
-    -- non e' un caso teorico: lo schema lo ammette, le Impostazioni lo mostrano col suo codice, e
-    lo stadio che raggruppa lo salta apposta. Qui la pagina si legge lo stesso, senza la sua luna.
+    """Un sito **senza fuso** -- un fuso che non si riconosce, o un database dei fusi vecchio sul
+    NAS -- non e' un caso teorico: lo schema lo ammette, le Impostazioni lo mostrano col suo
+    codice, e lo stadio che raggruppa lo salta apposta. Qui la pagina si legge lo stesso, senza
+    la sua luna.
 
     Non si ripiega su Greenwich: la Luna di un posto che non sappiamo dov'e' sarebbe un numero
     giusto per un altro sito, e nessuno potrebbe accorgersene."""
-    crea_sito(client_vuoto, "Mare aperto", 0.0, -30.0)
+    crea_sito(client_vuoto, "Senza fuso", 0.0, -30.0)
     with db(client_vuoto) as conn:
         conn.execute("UPDATE sites SET timezone = NULL")
         conn.commit()
@@ -322,7 +323,7 @@ def test_a_site_that_has_no_timezone_at_all_does_not_break_the_page(client_vuoto
 
     assert r.status_code == 200, r.text
     detto = r.json()
-    assert detto["site"]["name"] == "Mare aperto"
+    assert detto["site"]["name"] == "Senza fuso"
     assert detto["night"] is None and detto["moon"] is None
     assert detto["sky_bands"] == []
 

@@ -82,9 +82,9 @@ def pavimenti_del_cielo(root):
 
     Il fornitore se li e' scritti nel commento di `.as-bortle` -- glieli avevamo mandati noi --
     per disegnare mockup con la coppia classe/misura giusta. Sono **un nostro fatto in casa loro**,
-    e il foglio non si emenda: il giorno che la nostra tabella cambia (e' in discussione, vedi
-    `docs/coda.md`), quel commento dice il falso e la correzione va chiesta alla fonte. Senza
-    questa guardia se ne accorgerebbe solo chi rilegge il CSS, cioe' nessuno.
+    e il foglio non si emenda: il giorno che la nostra tabella cambia quel commento dice il falso
+    e la correzione va chiesta alla fonte. Senza questa guardia se ne accorgerebbe solo chi
+    rilegge il CSS, cioe' nessuno.
 
     Si guardano tutte e due le direzioni: un pavimento **diverso** e un pavimento **sparito**. La
     seconda e' quella che conta -- confrontare solo cio' che il foglio cita ancora vuol dire

@@ -354,7 +354,9 @@ export interface paths {
         };
         /**
          * List Folders
-         * @description The active folders (the retired ones do not appear).
+         * @description The active folders (the retired ones do not appear). All are asked at once whether they
+         *     answer, under one deadline of `PROBE_SECONDS`: one that has not answered by then is
+         *     `reachable: false`, so a dead network share cannot hold the list.
          */
         get: operations["list_folders"];
         put?: never;
@@ -2835,7 +2837,7 @@ export interface components {
             elevation_source: ("declared" | "service") | null;
             /**
              * Timezone
-             * @description None where the coordinates fall in no time zone (open sea).
+             * @description None where no time zone is recognised for the coordinates; in open sea it is the nautical zone (Etc/GMT...).
              */
             timezone: string | null;
             /** Sky Sqm */

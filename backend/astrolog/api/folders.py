@@ -3,6 +3,7 @@ from the database, never the disk: counting on disk is the wizard's explicit `pr
 
 import os
 import sqlite3
+import threading
 import time
 from typing import Final
 
@@ -43,6 +44,23 @@ _SELECT = (
     " (SELECT COUNT(*) FROM positions p WHERE p.folder_id = f.id AND p.status = 'present')"
     " AS frames FROM folders f"
 )
+
+
+def _reachable(roots: list[str]) -> dict[str, bool]:
+    """Every folder asked at once under one deadline: a dead share is "not reachable" when time is
+    up, and its thread is left behind instead of holding the answer."""
+    answers: dict[str, bool] = {}
+
+    def ask(root: str) -> None:
+        answers[root] = root_readable(root)
+
+    threads = [threading.Thread(target=ask, args=(r,), daemon=True) for r in set(roots)]
+    for thread in threads:
+        thread.start()
+    deadline = time.monotonic() + PROBE_SECONDS
+    for thread in threads:
+        thread.join(max(0.0, deadline - time.monotonic()))
+    return {root: answers.get(root, False) for root in roots}
 
 
 def _out(row: sqlite3.Row, *, reactivated: bool = False) -> FolderOut:
@@ -117,12 +135,16 @@ def list_folders(
     offset: int = Query(0, ge=0),
     conn: sqlite3.Connection = Depends(get_db),
 ) -> FolderList:
-    """The active folders (the retired ones do not appear)."""
+    """The active folders (the retired ones do not appear). All are asked at once whether they
+    answer, under one deadline of `PROBE_SECONDS`: one that has not answered by then is
+    `reachable: false`, so a dead network share cannot hold the list."""
     total = conn.execute("SELECT COUNT(*) FROM folders WHERE retired_at IS NULL").fetchone()[0]
     rows = conn.execute(
         _SELECT + " WHERE f.retired_at IS NULL ORDER BY f.id LIMIT ? OFFSET ?", (limit, offset)
     ).fetchall()
-    return FolderList(items=[_out(r) for r in rows], total=total, limit=limit, offset=offset)
+    reach = _reachable([r["root_path"] for r in rows])
+    items = [FolderOut(**dict(r), reachable=reach[r["root_path"]]) for r in rows]
+    return FolderList(items=items, total=total, limit=limit, offset=offset)
 
 
 @router.post("/folders", response_model=FolderOut, status_code=201)

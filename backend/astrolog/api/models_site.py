@@ -28,7 +28,8 @@ class SiteOut(BaseModel):
     )
     elevation_source: ElevationSource | None
     timezone: str | None = Field(
-        description="None where the coordinates fall in no time zone (open sea)."
+        description="None where no time zone is recognised for the coordinates; in open sea it is"
+        " the nautical zone (Etc/GMT...)."
     )
     sky_sqm: float | None
     sky_source: SkySource | None

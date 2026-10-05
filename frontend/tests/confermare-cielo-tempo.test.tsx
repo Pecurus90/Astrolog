@@ -50,7 +50,7 @@ const PAGINA = {
       longitude: -111.0,
       distance_km: 8000,
       frames: 1,
-      // nessuna notte: le coordinate non cadono in nessun fuso (mare aperto), e l'app non
+      // nessuna notte: del luogo non si riconosce un fuso, e l'app non
       // indovina in che notte cadano
       nights: [],
       site: null,

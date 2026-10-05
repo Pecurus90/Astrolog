@@ -462,7 +462,7 @@ def test_two_nights_of_the_same_date_do_not_collide_while_moving(client_vuoto, o
 
 
 def test_a_site_where_there_is_no_timezone_says_so(client_vuoto, offline, monkeypatch):
-    """Dove le coordinate non cadono in nessun fuso il campo resta vuoto COL SUO MOTIVO.
+    """Dove un fuso non si riconosce il campo resta vuoto COL SUO MOTIVO.
     La libreria dei confini un nome lo trova sempre, anche in mezzo all'oceano: qui si finge
     che non lo trovi, perche' una guardia mai vista rossa non ha dimostrato niente."""
     monkeypatch.setattr(place, "get_tz", lambda lon, lat: None)

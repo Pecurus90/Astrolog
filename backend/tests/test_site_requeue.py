@@ -74,13 +74,13 @@ def test_renaming_a_site_to_the_name_an_answer_says_puts_those_frames_back(clien
 def test_fixing_a_site_without_a_timezone_frees_the_frames_waiting_for_it(
     client_vuoto, monkeypatch, offline
 ):
-    """Casa non ha un fuso -- mare aperto -- e i frame senza coordinate aspettano per quello.
+    """Casa non ha un fuso riconosciuto, e i frame senza coordinate aspettano per quello.
     Corrette le coordinate, il fuso c'e': quei frame ripartono, anche se non hanno coordinate da
     avvicinare e il nome non e' cambiato."""
     # come la vera: senza coordinate nessun fuso
     finta = lambda lat, lon: None if lon is None or lon < -20 else "Europe/Rome"  # noqa: E731
     monkeypatch.setattr(place, "timezone_of", finta)
-    casa = create(client_vuoto, name="Barca", latitude=0.0, longitude=-30.0)
+    casa = create(client_vuoto, name="Senza fuso", latitude=0.0, longitude=-30.0)
     with connect(client_vuoto.app.state.db_path) as conn:
         frame = _in_attesa(conn, "site_no_timezone", coord=(None, None))
     r = client_vuoto.patch(

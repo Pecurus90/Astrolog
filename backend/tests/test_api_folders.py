@@ -2,6 +2,7 @@
 raccontano quanti frame hanno dato senza far aspettare, e "Verifica ora" e' un gesto."""
 
 import os
+import time
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -22,6 +23,31 @@ def add(client_vuoto, path):
 
 def folders(client_vuoto):
     return client_vuoto.get("/api/v1/folders").json()["items"]
+
+
+def test_a_share_that_does_not_answer_does_not_hold_the_list(client_vuoto, tmp_path, monkeypatch):
+    """Every folder is asked at once, under one deadline: four dead shares answer "not reachable"
+    when time is up, together, instead of one after the other."""
+    slow = [tmp_path / f"slow{i}" for i in range(4)]
+    fast = tmp_path / "fast"
+    for folder in [*slow, fast]:
+        folder.mkdir()
+    ids = [add(client_vuoto, folder)["id"] for folder in slow]
+    f = add(client_vuoto, fast)
+    real = folders_api.root_readable
+
+    def hangs_on_slow(root):
+        if "slow" in os.path.basename(root):
+            time.sleep(3.0)
+        return real(root)
+
+    monkeypatch.setattr(folders_api, "root_readable", hangs_on_slow)
+    monkeypatch.setattr(folders_api, "PROBE_SECONDS", 0.5)
+    start = time.monotonic()
+    rows = {r["id"]: r["reachable"] for r in folders(client_vuoto)}
+    # one wait for all, not one per folder (four would be 2 s)
+    assert time.monotonic() - start < 1.5
+    assert rows == {**dict.fromkeys(ids, False), f["id"]: True}
 
 
 def test_create_list_and_reachability(client_vuoto, tmp_path):

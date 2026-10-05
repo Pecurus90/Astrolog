@@ -110,6 +110,10 @@ def test_bortle_from_sky_brightness():
     assert bortle_of(21.2) == 4 and bortle_of(20.0) == 5
     assert bortle_of(18.8) == 6 and bortle_of(18.2) == 7
     assert bortle_of(17.5) == 8 and bortle_of(16.5) == 9
+    # The source's own floors (class 4 from 20.8, 5 from 19.25), and its 4.5 read as 5: never
+    # more generous than the number the user will compare ours with.
+    assert bortle_of(20.8) == 4 and bortle_of(20.79) == 5 and bortle_of(20.5) == 5
+    assert bortle_of(19.25) == 5 and bortle_of(19.24) == 6
     classi = [bortle_of(s / 100) for s in range(1600, 2210)]
     assert classi == sorted(classi, reverse=True)  # piu' buio = classe piu' bassa, sempre
     assert bortle_of(None) is None

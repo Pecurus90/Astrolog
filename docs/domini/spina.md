@@ -35,6 +35,7 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | Le mie ore su un oggetto non si sparpagliano su due voci | `test_two_frames_of_the_same_galaxy_make_one_object` |
 | Quando correggo un'identificazione non torna indietro mai piu' | `test_the_user_answer_is_never_overwritten` |
 | Se la cartella di rete cade a meta', l'app si ferma e lo dice: non segna "non trovato" mille file | `test_scan_root_gone_aborts` |
+| Una cartella di rete che non risponde non blocca l'elenco delle cartelle: la vedo come non raggiungibile | `test_a_share_that_does_not_answer_does_not_hold_the_list`, `test_a_share_still_being_asked_is_not_asked_again`, `test_many_dead_shares_do_not_make_a_live_folder_unreachable`, `test_a_folder_that_goes_away_reads_unreachable_on_the_next_list` |
 | Una cartella senza permessi non blocca le altre: la vedo elencata nella ricevuta | `test_scan_unreadable_dirs` |
 | Un file che sta solo online (OneDrive, Dropbox, iCloud) non viene scaricato: si salta, la ricevuta lo conta, e entra quando lo rendo disponibile sul disco | `test_scan_does_not_download_an_online_only_file`, `test_scan_a_pose_left_online_only_is_not_missing` |
 | Una sottocartella nascosta resta fuori, ma la ricevuta la nomina | `test_scan_names_the_hidden_folders_it_leaves_out` |
@@ -241,7 +242,13 @@ percorso ha la cartella che conosce come `/volume1/photo`: `GET /folders/browse`
 sottocartelle visibili sotto la radice dei dati, e fuori da li' non guarda; senza radice (il
 desktop) non elenca niente. **Aggiungi cartella conta per un tempo limitato**
 (`PROBE_SECONDS`, con la fonte in `api/folders.py`), guardato fra una cartella e l'altra, e dice
-se il conteggio e' completo (`complete`).
+se il conteggio e' completo (`complete`). **L'elenco delle cartelle chiede a tutte se
+rispondono**, insieme e sotto lo stesso `PROBE_SECONDS`: una che non ha risposto in tempo si
+legge "non si raggiunge", e una condivisione morta non tiene fermo l'elenco. Chiedono
+lavoratori che restano accesi e si riusano; una cartella ancora in attesa di risposta non si
+richiede, e occupa un lavoratore, non uno per ogni volta che si apre l'elenco. Un lavoratore
+fermo su una cartella morta non e' libero: se non ce n'e' uno libero se ne accende un altro, cosi'
+anche con molte cartelle su un NAS caduto quelle che rispondono si leggono raggiungibili.
 
 **Cio' che il disco mette accanto ai file non e' un file.** Non si raccolgono i gemelli che
 macOS scrive su chiavette e NAS (`._M42.fits`: metadati del Finder, non un FITS -- senza
@@ -994,8 +1001,8 @@ default interpretation shall use UTC"*), e l'app non la corregge con `DATE-LOC` 
 
 **Senza un sito dichiarato non nascono notti**, e l'app lo dice col codice `no_active_site`
 (contratto del sito): a mani vuote non si inventa un fuso. Ogni altro motivo per cui un frame
-resta fuori da una sessione ha il suo codice e si conta nella ricevuta: `site_no_timezone` (le
-coordinate del sito non cadono in nessun fuso -- mare aperto), `site_unclear`, `no_date` (un
+resta fuori da una sessione ha il suo codice e si conta nella ricevuta: `site_no_timezone` (del
+sito non si riconosce un fuso; in mare aperto vale quello nautico), `site_unclear`, `no_date` (un
 software che non scrive `DATE-OBS` esiste; sull'archivio di collaudo non capita mai) e
 `no_object`, per un frame che `identify` ha lasciato senza oggetto. Quest'ultimo arriva fin qui
 **apposta**: se lo stadio non lo vedesse resterebbe `pending` per sempre, il residuo non

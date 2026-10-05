@@ -49,8 +49,8 @@ CREATE TABLE sites (
   longitude    REAL NOT NULL CHECK (longitude BETWEEN -180 AND 180),
   elevation_m  REAL,
   elevation_source TEXT CHECK (elevation_source IN ('declared', 'service')),
-  timezone     TEXT,                                 -- IANA; NULL quando le coordinate non
-                                                     -- cadono in nessun fuso (mare aperto)
+  timezone     TEXT,                                 -- IANA; NULL quando non si riconosce un
+                                                     -- fuso (in mare aperto vale il nautico)
   sky_sqm      REAL CHECK (sky_sqm BETWEEN 10 AND 23),  -- gli stessi estremi di
                                                        -- units.SQM_MIN/SQM_MAX: questa
                                                        -- e' la guardia del database

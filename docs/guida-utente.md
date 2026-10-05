@@ -345,9 +345,9 @@ quella volta non ha dato notti intere, la pagina te lo dice e puoi guardarne un 
 La previsione **arriva da sola** appena hai un sito di casa, e si rinnova ogni tre ore; col
 pulsante la chiedi subito. Se il servizio non risponde -- sei senza rete, o e' giu' -- resta
 quella di prima, con l'ora in cui e' arrivata; se l'hai chiesta col pulsante, l'app ti dice
-anche perche' non e' cambiata. Se il tuo sito di casa non ha un fuso orario (coordinate in mare
-aperto), le sue notti non si possono dividere e la pagina te lo dice. I dati vengono da
-Open-Meteo, 7Timer e Copernicus, che la pagina cita in fondo.
+anche perche' non e' cambiata. Se del tuo sito di casa non si riconosce il fuso orario, le sue
+notti non si possono dividere e la pagina te lo dice (in mare aperto vale il fuso nautico). I
+dati vengono da Open-Meteo, 7Timer e Copernicus, che la pagina cita in fondo.
 
 ## Attrezzatura
 

@@ -12,6 +12,7 @@ sono state assorbite qui e tolte da [`ereditato.md`](ereditato.md).
 |---|---|
 | Dico da dove osservo scrivendo il nome del posto, e l'app trova le coordinate; se non c'e' rete le scrivo a mano, e funziona uguale | `test_site_search_by_name`, `test_site_manual_coordinates` |
 | Il fuso orario non me lo chiede: lo sa dalle coordinate, e lo sa anche senza rete | `test_site_timezone_offline` |
+| Anche in mare aperto il sito ha un fuso, quello nautico, e le notti nascono in quel fuso | `test_an_empty_field_says_why_it_is_empty`, `test_on_the_open_sea_the_night_follows_the_nautical_zone` |
 | L'altitudine si compila da sola dalle coordinate; se non ci riesce resta vuota e me lo dice, non mette zero | `test_site_elevation_or_nothing` |
 | Del cielo dico quello che so: lo misuro con lo strumento, lo faccio chiedere al servizio, o scelgo il cielo dall'elenco dei nove | `test_site_sky_three_ways` |
 | Vedo la classe di Bortle **e** la misura accanto, e l'app non finge che la conversione sia una legge | `test_bortle_from_sky_brightness`, `test_the_bortle_is_derived_and_never_stored` |
@@ -44,8 +45,10 @@ primo avvio.
 **Il fuso si ricava dalle coordinate, offline, mai dalla longitudine.** I confini dei fusi
 sono politici e frastagliati: un meridiano darebbe la risposta sbagliata a pochi chilometri da
 casa. Si usa una libreria coi confini veri, che lavora senza rete e ha le ruote per tutte e
-cinque le architetture. Dove le coordinate non cadono in nessun fuso (mare aperto) il campo
-resta vuoto col suo motivo (`site_no_timezone`), e non si inventa.
+cinque le architetture. In mare aperto vale il **fuso nautico** che la libreria da' (`Etc/GMT+9`
+e simili, fasce di 15 gradi): e' una convenzione vera, e la notte da mezzogiorno a mezzogiorno
+ci funziona. Il campo resta vuoto col suo motivo (`site_no_timezone`) solo dove un fuso non si
+riconosce, e non si inventa.
 
 **Il nome di un fuso si valida per appartenenza** all'elenco ufficiale, non provando ad
 aprirlo: "Europe" e "Europe/Roma" sono sbagliati in due modi diversi e falliscono con
@@ -76,7 +79,9 @@ circolano **due famiglie** di conversioni che su uno stesso cielo differiscono f
 classi. L'app usa quella dei **siti di astrofotografia** (Wikipedia, AstroBackyard, Telescope
 Live), non quella piu' severa del mondo degli strumenti SQM, per una ragione sola: e' il
 numero con cui l'utente confrontera' il nostro, e un 21,8 chiamato "Bortle 3" quando ovunque
-si legge "Bortle 1" farebbe sembrare rotta l'app. Sta in un posto solo con la sua avvertenza,
+si legge "Bortle 1" farebbe sembrare rotta l'app. I pavimenti sono quelli della voce *Bortle
+scale* di Wikipedia; la sua classe 4,5 (da 20,3 a 20,8) si legge 5, perche' il nostro numero non
+sia mai piu' generoso di quello con cui verra' confrontato. Sta in un posto solo con la sua avvertenza,
 e a schermo **compare accanto alla misura** -- "Bortle 4 (20,8)" -- tranne nei due posti dove
 la misura non c'e' o non ci sta: il primo avvio, dove si sceglie, e il piede della barra. Chi sceglie il cielo dalla
 scala fa il percorso inverso, e ritrova la stessa classe.
