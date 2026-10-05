@@ -1,23 +1,25 @@
-"""Le risposte di Da confermare che si danno **per gruppo di frame**: con che corredo e quale
-oggetto (per notte e valori dell'header), e che file sono (per cartella, `spine/frame_folder.py`).
+"""The group is checked BEFORE writing: an answer to a group that no longer asks anything is an
+old page, and would stay forever unseen. Hence LookupError, which the route turns into 404."""
 
-Stanno insieme perche' hanno la stessa forma: il gruppo si controlla **prima** di scrivere, poi si
-dichiara e si rimettono in coda i frame. Una risposta verso un gruppo che non chiede piu' niente e'
-una pagina vecchia, e resterebbe li' per sempre senza che nessuno la veda: per questo LookupError,
-che la rotta traduce in 404.
-"""
+import sqlite3
+from collections.abc import Mapping
 
 from ..spine import declarations as decl
 from ..spine import rig_optics, rigless, typeless, typeless_answer, unnamed
+from .models_review import RigChoice
+from .models_review_apply import (
+    OpticslessEdit,
+    RiglessGroupEdit,
+    TypelessFolderEdit,
+    UnnamedEdit,
+)
 
 
-def answer_rigless(conn, edit, now, scelte):
-    """ "Le pose di questo gruppo sono state riprese con questo corredo": si scrive la risposta
-    sul gruppo e si rimettono in coda le sue pose. Torna quelle pose.
-
-    Il gruppo si controlla **prima** di scrivere: uno su cui non c'e' nessuna posa da chiedere e'
-    una pagina vecchia, e una risposta verso il nulla resterebbe li' per sempre senza che nessuno la
-    veda. I pezzi nascono dai nomi al giro dopo (`normalize_rig.instrument_named`)."""
+def answer_rigless(
+    conn: sqlite3.Connection, edit: RiglessGroupEdit, now: str, scelte: Mapping[int, RigChoice]
+) -> list[int]:
+    """The pieces come into being from the names on the next round
+    (`normalize_rig.instrument_named`)."""
     riga = rigless.row_of(conn, edit.key)
     if riga is None:
         raise LookupError(f"gruppo {edit.key}")
@@ -26,9 +28,7 @@ def answer_rigless(conn, edit, now, scelte):
     return rigless.requeue(conn, riga)
 
 
-def answer_opticsless(conn, edit, now):
-    """ "Con quella camera, a quella focale, l'ottica era questa": come per la camera, la domanda si
-    controlla prima di scrivere, e le sue pose tornano in coda."""
+def answer_opticsless(conn: sqlite3.Connection, edit: OpticslessEdit, now: str) -> list[int]:
     riga = rig_optics.row_of(conn, edit.key)
     if riga is None:
         raise LookupError(f"camera e focale {edit.key}")
@@ -36,9 +36,7 @@ def answer_opticsless(conn, edit, now):
     return rig_optics.requeue(conn, riga)
 
 
-def answer_unnamed(conn, edit, now):
-    """ "Le pose senza nome di questo gruppo sono questo oggetto", o "non sono un oggetto": come per
-    la camera, il gruppo si controlla prima di scrivere, e le sue pose tornano in coda."""
+def answer_unnamed(conn: sqlite3.Connection, edit: UnnamedEdit, now: str) -> list[int]:
     riga = unnamed.row_of(conn, edit.key)
     if riga is None:
         raise LookupError(f"gruppo {edit.key}")
@@ -48,14 +46,11 @@ def answer_unnamed(conn, edit, now):
     return unnamed.requeue(conn, riga)
 
 
-def rig_parts(edit, scelte):
-    """(ottica, camera, focale) della risposta: i pezzi del corredo scelto dall'elenco, o quelli
-    scritti a mano. Si scrivono sempre i **nomi**: un'unione cancella la riga rilevata, e la
-    dichiarazione deve sopravvivere a un azzeramento del rilevato.
-
-    Un corredo che l'elenco non offre (`scelte`, da `review_page.rig_choices`) -- uno **senza
-    camera** non risponde a questa domanda, ed e' proprio quello che queste pose hanno creato dal
-    solo `TELESCOP` -- e' un bersaglio che non esiste, e si dice."""
+def rig_parts(
+    edit: RiglessGroupEdit, scelte: Mapping[int, RigChoice]
+) -> tuple[str | None, str | None, float | None]:
+    """Always NAMES: a merge deletes the detected row, and the declaration must survive. A rig
+    `scelte` does not offer (one without a camera, say) is a target that does not exist."""
     if edit.rig_id is None:
         return edit.optics, edit.camera, edit.focal_mm
     scelto = scelte.get(edit.rig_id)
@@ -64,10 +59,8 @@ def rig_parts(edit, scelte):
     return scelto.optics, scelto.camera, scelto.focal_mm
 
 
-def answer_typeless(conn, edit, now):
-    """ "I frame di questa cartella sono foto del cielo", oppure "sono file di calibrazione": si
-    scrive la risposta sulla cartella e, solo se sono foto del cielo, i frame tornano in coda --
-    un file di calibrazione non ha un cielo da cercare. Torna i frame rimessi in coda."""
+def answer_typeless(conn: sqlite3.Connection, edit: TypelessFolderEdit, now: str) -> list[int]:
+    """Only sky pictures go back in the queue: a calibration file has no sky to look for."""
     riga = typeless.row_of(conn, edit.key)
     if riga is None:
         raise LookupError(f"cartella {edit.key}")

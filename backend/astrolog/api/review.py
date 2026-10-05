@@ -1,10 +1,9 @@
-"""Da confermare: cosa la scansione ha trovato, e le risposte dell'utente in un colpo solo.
+"""The page sends back its `seen` because Apply confirms the objects the page READ listed, not
+what is in the table at the moment of the click."""
 
-Vincolo non ovvio: qui si legge la pagina e si prendono le due rotte; cosa una risposta scrive
-sta in `review_write`, e le regole vere nella spina (`spine.declarations`, `spine.gear`). La
-pagina rimanda il suo `seen` perche' l'Applica conferma gli oggetti che la pagina LETTA elencava,
-non cio' che c'e' in tabella al momento del clic.
-"""
+import sqlite3
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request
 
@@ -36,17 +35,14 @@ from .models_review_groups import (
 router = APIRouter(prefix="/api/v1", tags=["da confermare"])
 
 
-def unanswered(rows):
-    """Quanti gruppi di una sezione aspettano ancora una risposta. Un gruppo risposto resta in
-    pagina -- si deve poter cambiare idea -- ma non conta piu' fra le cose da confermare."""
+def unanswered(rows: Iterable[Mapping[str, Any]]) -> int:
+    """An answered group stays on the page, so one can change one's mind, but it is no longer
+    something to confirm."""
     return sum(1 for r in rows if r["answer"] is None)
 
 
-# Una copia riscritta non e' un'altra posa: ogni conteggio di questa pagina filtra
-# `copy_of IS NULL`, scritto per esteso in ogni query perche' una query composta con le stringhe
-# e' una presa di sicurezza in meno.
-# Solo i filtri con la banda sconosciuta (`gear.band_unknown`, la stessa costante): contare le pose
-# degli altri per poi scartarli legge le loro pose, e con l'archivio intero cresce il conto.
+# Only filters with an unknown band: counting the others' frames would grow with the archive. A
+# copy is not another frame; `copy_of IS NULL` is spelled out: composed SQL is one less safety hold.
 _FILTERS = """
 SELECT fi.*, (SELECT COUNT(*) FROM frames f
               WHERE f.copy_of IS NULL AND f.filter_id = fi.id) AS frames
@@ -55,14 +51,12 @@ FROM filters fi WHERE fi.passband = ?
 
 
 @router.get("/review", response_model=ReviewOut)
-def review(conn=Depends(get_db)):
-    """Le domande aperte su cio' che la scansione ha trovato, e gli oggetti."""
-    bands = {}
+def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
+    """The open questions about what the scan found, and the objects."""
+    bands: dict[int, list[BandOut]] = {}
     for r in conn.execute("SELECT filter_id, band, width_nm FROM filter_bands ORDER BY band"):
         bands.setdefault(r["filter_id"], []).append(BandOut(band=r["band"], width_nm=r["width_nm"]))
-    # Solo i filtri che l'app non riconosce (Marco, 25/9/2026): "che filtro e' H?". Uno che il
-    # vocabolario riconosce non e' una domanda. I piu' usati in cima: l'ordine e' della pagina e
-    # si legge qui.
+    # a filter the vocabulary recognises is not a question; the most used first
     rows = conn.execute(_FILTERS, (UNKNOWN,)).fetchall()
     rows.sort(key=lambda r: (-r["frames"], r["name"]))
     filters = [
@@ -92,42 +86,27 @@ def review(conn=Depends(get_db)):
     righe_mosaici = mosaic_reader.candidates(conn)
     mosaici = [MosaicCandidate(**m) for m in righe_mosaici]
     coppie = lookalike.lookalikes(conn)
-    # Fin dove questa pagina ha guardato: il numero di riga piu' alto fra quelli ELENCATI, non un
-    # `SELECT MAX(id)` -- una riga scritta mentre la pagina si compone resta fuori dalla conferma.
+    # the highest LISTED row, not `SELECT MAX(id)`: a row written while the page is composed
+    # stays out of the confirmation
     seen = ReviewSeen(objects=max((o.id for o in objects), default=0))
-    # I posti su cui l'app non sa rispondere contano sempre: non sono voci "gia' viste una
-    # volta", sono domande aperte, e restano tali finche' non si risponde.
+    # Seeing a question is not answering it: each one counts until answered, or the count would
+    # drop to zero while the frames still wait.
     to_confirm = (
         sum(1 for o in objects if not o.confirmed)
-        # un filtro che l'app non riconosce, e due grafie che sembrano un pezzo solo, sono domande
-        # finche' non gli si risponde: vederle non e' rispondere
         + len(filters)
         + len(coppie)
-        # un posto risposto resta in pagina per poterlo cambiare, ma non e' piu' una domanda
         + sum(1 for p in incerte if p.site is None)
-        + unanswered(righe_camere)  # come i posti
-        # Un gruppo di pose che non dicono la camera conta finche' nessuno ha risposto: senza
-        # questa riga il conto tornerebbe a zero mentre quelle pose sono ancora senza corredo, ed e'
-        # esattamente il buco per cui la domanda e' nata.
+        + unanswered(righe_camere)
         + unanswered(righe_senza_camera)
-        # e le pose che hanno la camera ma non l'ottica: senza, l'ASIAIR non chiederebbe mai niente
         + unanswered(righe_senza_ottica)
-        # Lo stesso per le cartelle di pose senza nome e senza cielo: pose che non stanno su nessun
-        # oggetto, e che senza questa riga lascerebbero il conto a zero.
         + unanswered(righe_senza_nome)
-        # Un mosaico proposto conta finche' nessuno ha risposto: lo chiudono tutti e due, il si' e
-        # il no, perche' anche il no e' una risposta -- altrimenti l'unico modo di far tacere una
-        # proposta sbagliata sarebbe accettarla.
+        # a mosaic's no closes it too, or a wrong proposal could only be silenced by accepting it
         + unanswered(righe_mosaici)
-        # Una cartella i cui frame non dicono che file sono conta finche' nessuno ha risposto:
-        # quei frame aspettano prima dell'oggetto, e senza questa riga il conto direbbe zero mentre
-        # l'archivio non sa ancora che file sono.
         + unanswered(righe_senza_tipo)
     )
     return ReviewOut(
         lookalikes=coppie,
         filters=filters,
-        # i filtri fra cui si sceglie una risposta: quelli con la banda nota, una volta sola
         filter_choices=page.filter_choices(conn),
         rig_choices=page.rig_choices(conn),
         objects=objects,
@@ -147,49 +126,53 @@ def review(conn=Depends(get_db)):
 
 @router.get("/review/objects/settled", response_model=SettledObjects)
 def settled_objects(
-    limit: int = Query(50, ge=1, le=500), offset: int = Query(0, ge=0), conn=Depends(get_db)
-):
-    """Gli oggetti gia' visti, senza niente da scegliere, a pagine, nell'ordine della pagina."""
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    conn: sqlite3.Connection = Depends(get_db),
+) -> SettledObjects:
+    """The objects already seen, with nothing to choose, in pages, in the page's order."""
     _, certi = page.objects(conn)
     return SettledObjects(**page_of(certi, limit, offset))
 
 
 @router.post("/review/apply", response_model=ReviewApplied)
-def apply(body: ReviewApply, request: Request, conn=Depends(get_db)):
-    """Le risposte diventano regole, e il lavoro riparte sulle pose che le riguardano."""
+def apply(
+    body: ReviewApply, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> ReviewApplied:
+    """The answers become rules, and the work restarts on the frames they concern. All of them are
+    written together or none is.
+
+    409 `worker_busy`; 404 `not_found` if what an answer points to no longer exists or is no
+    longer asked (an old page); 422 `unknown_target` for a catalog slug that does not exist or a
+    rig the page does not offer; 422 `merge_refused`; 409 `name_taken` or `none_filter_exists` if
+    a filter answer collides with another filter."""
     state = request.app.state
     work.busy(state)
     now = now_iso()
     with write.scrivendo(conn):
         changed, requeued = write.apply_answers(conn, body, now)
         confirmed = write.confirm_seen(conn, body.seen, now)
-    # senza pose da rilavorare non si occupa il worker per niente
+    # without frames to redo the worker is not taken for nothing
     started = bool(requeued) and work.after(state, _stadi_toccati(body))
     return ReviewApplied(
         changed=changed, confirmed=confirmed, requeued=len(requeued), run_started=started
     )
 
 
-def _stadi_toccati(body):
-    """Quali stadi rifare, viste le risposte che sono arrivate.
-
-    Una risposta sui soli oggetti non cambia niente a monte: rifare la normalizzazione sarebbe
-    rileggere vocabolari che nessuno ha toccato. Ma a una risposta MISTA servono tutti e due, e in
-    quest'ordine -- con la sola normalizzazione la risposta sugli oggetti restava ferma finche'
-    qualcuno non cliccava Avvia."""
-    voluti = set()
+def _stadi_toccati(body: ReviewApply) -> set[str]:
+    """An answer on objects alone changes nothing upstream, but a MIXED answer needs both stages,
+    in this order, or the object answer would wait for someone to click Start."""
+    voluti: set[str] = set()
     if body.lookalikes or body.filters:
         voluti.add(STAGE_NORMALIZE)
     if body.unfiltered or body.rigless or body.opticsless:
-        voluti.add(STAGE_NORMALIZE)  # cambiano il filtro o il corredo delle loro pose
+        voluti.add(STAGE_NORMALIZE)  # they change the filter or the rig of their frames
     if body.typeless:
-        # "E' una foto del cielo" rimette in coda il CIELO di quei frame: da li' il nome e la
-        # notte vengono dietro da soli (`spine/stages.py`, il grafo).
+        # the SKY of those frames is requeued: name and night follow from the stage graph
         voluti.add(STAGE_SOLVE)
     if body.objects or body.unnamed:
         voluti.add(STAGE_IDENTIFY)
     elif body.unclear:
-        # Una risposta sul luogo non cambia ne' i vocabolari ne' gli oggetti: cambia solo dove
-        # stanno quelle pose, e a rimetterle a posto basta l'ultimo stadio.
+        # a place answer changes only where those frames sit: the last stage is enough
         voluti.add(STAGE_GROUP)
     return voluti

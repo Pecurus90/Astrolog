@@ -9,8 +9,8 @@ stanno qui: quelle di un dominio nel suo contratto (`domini/`), le altre in un A
 
 ### Prima delle funzioni nuove
 
-Deciso con Marco: nessuna funzione nuova finche' non e' sistemato cio' che c'e'. Prima la fase 1
-del refactor sui package che mancano (sotto), poi le prime due *Tappe del prodotto*. La spina si
+Deciso con Marco: nessuna funzione nuova finche' non e' sistemato cio' che c'e'. La fase 1
+del refactor e' fatta (sotto); poi le prime due *Tappe del prodotto*. La spina si
 giudica dominio per dominio con una domanda sola: dice il vero, regge e risponde in tempo? I FITS
 veri di ASIAIR li ha Marco; di Voyager e SGP servono frame di un altro utente (*Mancano Voyager e
 SGP*).
@@ -26,20 +26,15 @@ Si lavora **package per package**, e nessuna delle due fasi cambia il comportame
 non entra: lo rifa' Marco col disegno nuovo (*Per il disegno nuovo*, sotto).
 
 **Fase 1 -- pulizia e tipi.** Commenti al massimo due righe e solo il perche'; ogni funzione
-annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
-- Fatti: `spine` intero, `db`, `vocab`, `catalog`, `fits`, `ephemeris`, `worker`, `weather`, i
-  file sciolti di `backend/astrolog`.
-- In corso, per lotti: `api`. Fatti `__init__`, `app`, `deps`, `page`, `paths`, `pipeline`,
-  `work`, `settings`, `vocab`, `models`, `models_page`, `models_archive`, `models_nights`,
-  `models_tonight`, `models_site`, `models_weather`, `models_review`, `models_review_apply`,
-  `models_review_groups`, `models_gear`, `archive`, `nights`, `tonight`, `weather`, `weather_key`,
-  `sites`, `gear`, `folders`, `scan`, `gear_write`, `instrument_answer`, `lookalike`; mancano
-  `review`, `review_page`, `review_write`, `review_write_folders`.
+annotata; il glob `ANN` di `ruff.toml` copre tutto `backend/astrolog`.
+- Fatti: tutto `backend/astrolog`.
 - Da chiudere strada facendo: 20 righe del backend (6 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
-  ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
-  glossario dice "frame" e "sito" (`api/review_page.py` e altri). Due rimandi a
+  ragione va sopra la riga. Dicono ancora "posa" e "luogo" dove il glossario dice "frame" e
+  "sito": commenti, docstring e prove di `backend/tests`, i commenti di
+  `backend/astrolog/schema.sql`, il tag OpenAPI `luoghi` di `api/sites.py` e due messaggi di log
+  (`spine/identify`, `spine/stage_run`). Due rimandi a
   `docs/coda.md` puntano a decisioni che ora vivono altrove: `tests/test_gear_instruments.py` va
   a `docs/domini/spina.md`, *Le schede*;
   `.pre-commit-config.yaml` (i quattro software) va a `CLAUDE.md`, "Software supportati".
@@ -145,7 +140,15 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   lotto di `api`: `_pulisci`, `_scarta_le_mai_iniziate`, `prese`, `partite`, `saltate`, `coppie`,
   `iniziate`, `segui`, `a_fine_corsa`, `orfane` (`scan`); `_scritto`, `scheda`, `bande`, `nuovo`,
   gli alias `corredi` e `strumento` (`gear_write`); `fuori`, `scheda` (`instrument_answer`);
-  `domande`, `coppia`, `nomi`, l'alias `strumento` (`lookalike`).
+  `domande`, `coppia`, `nomi`, l'alias `strumento` (`lookalike`). Nel sesto lotto di `api`:
+  `_stadi_toccati`, `voluti`, `certi`, `incerte`, `righe_camere`, `da_chiedere`,
+  `righe_senza_camera`, `righe_senza_nome`, `righe_senza_tipo`, `righe_senza_ottica`,
+  `righe_mosaici`, `senza_camera`, `mosaici`, `coppie` (`review`); `righe`, `usati`, `nomi`,
+  `posti`, `luoghi`, `casa`, `posto`, `vicini`, `quanto`, `confermati`, `nome`, `chiave`,
+  `dubbio`, `aperti`, `certi`, l'alias `corredi` (`review_page`); `scrivendo` (letto anche da
+  `gear_write`), `_rifiuto`, `rifiuto`, `_TUTTO`, `_SENZA_LIMITI`, `fino_a`, `chiave`, `scelte`,
+  `rimesse`, `scritta`, `nome`, `sito`, gli alias `risposta`, `corredi`, `strumento`
+  (`review_write`); `riga`, `scelte`, `scelto` (`review_write_folders`).
 - **`group._where`** torna il sito ma non la data: `_one_frame` la ricalcola, e cosi' arriva
   `str | None` fino a `group_store.night` e `create_night`; e il "lo ha detto l'utente" e'
   `bool | None` (passato con `bool()`) perche' la terna non distingue chi si ferma da chi entra.
@@ -747,6 +750,15 @@ riga per voce.
   scansione (`scan_running`), ma `frontend/src/i18n/it.ts` e `en.ts` (riga 47) dicono solo che non
   si riescono a leggere: un doppio clic su Scansiona mostra "non si riesce a leggere". Il testo
   deve dire anche il caso della scansione gia' in corso.
+- **La revisione in `api`, dopo la fase 1.** Il contratto di `POST /review/apply` promette
+  "tutte le risposte o nessuna" e 409 `none_filter_exists`, e nessun test lo prova: nessun corpo
+  misto con una risposta valida e una rifiutata, nessun filtro "nessun filtro" doppio passando da
+  Applica. Regole dette piu' volte: Applica conferma cio' che la pagina ha letto (`seen`) in
+  `review`, `review_write` e nel commento di `review()`; "una risposta a cio' che non esiste
+  piu' e' una pagina vecchia: 404" in `review_write_folders`, `review_write._answer_unfiltered`
+  e nel contratto; quali filtri sono una domanda, due volte in `review.py`; il "ripensamento che
+  sposta" in `review_write._answer_where` e in `coordinates.frames_at`; l'ordine per distanza
+  vera in `review_page` e in `place.by_distance`.
 - **Le rotte di scrittura, dopo la fase 1.** Codici d'errore scritti nel contratto e mai provati
   da un test (i test guardano solo lo stato HTTP, o non arrivano al caso): 409 `root_unreachable`
   di browse, 409 `folder_exists` col suo `folder_id`, 404 `folder_not_found` (`api/folders.py`);
@@ -790,6 +802,8 @@ riga per voce.
   `MeteoblueKeyIn` stanno in `api/weather_key.py` e non in `models_weather`. Regole dette due
   volte: "l'ordine lo decide il backend" nei moduli `api/archive` e `api/nights`; il Bortle che
   passa da `units.bortle_of` in `api/tonight._sito` e `api/sites._out`.
+- **Da confermare, dopo la fase 1**: il 409 `none_filter_exists` di `POST /review/apply` e'
+  scritto nel contratto ma nessun test lo prova.
 - **L'attrezzatura, dopo la fase 1**: le docstring di `rigs.find_rig` e `rigs.RigExistsError`
   scrivono a mano il 5 % di `units.FOCAL_TOLERANCE`; "la scheda dell'utente vince su file e cielo"
   e' detta in `camera_sky`, `camera_specs` e `gear.camera_specs`, ma vive solo in

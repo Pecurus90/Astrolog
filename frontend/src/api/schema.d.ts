@@ -579,7 +579,7 @@ export interface paths {
         };
         /**
          * Review
-         * @description Le domande aperte su cio' che la scansione ha trovato, e gli oggetti.
+         * @description The open questions about what the scan found, and the objects.
          */
         get: operations["review"];
         put?: never;
@@ -599,7 +599,7 @@ export interface paths {
         };
         /**
          * Settled Objects
-         * @description Gli oggetti gia' visti, senza niente da scegliere, a pagine, nell'ordine della pagina.
+         * @description The objects already seen, with nothing to choose, in pages, in the page's order.
          */
         get: operations["settled_objects"];
         put?: never;
@@ -621,7 +621,13 @@ export interface paths {
         put?: never;
         /**
          * Apply
-         * @description Le risposte diventano regole, e il lavoro riparte sulle pose che le riguardano.
+         * @description The answers become rules, and the work restarts on the frames they concern. All of them are
+         *     written together or none is.
+         *
+         *     409 `worker_busy`; 404 `not_found` if what an answer points to no longer exists or is no
+         *     longer asked (an old page); 422 `unknown_target` for a catalog slug that does not exist or a
+         *     rig the page does not offer; 422 `merge_refused`; 409 `name_taken` or `none_filter_exists` if
+         *     a filter answer collides with another filter.
          */
         post: operations["apply"];
         delete?: never;

@@ -1,14 +1,9 @@
-"""Come si compone la pagina di Da confermare, sezione per sezione.
+"""Each section arrives ready for the screen, because the frontend only formats. The sky candidates
+are written by identify, since the catalog cone is costly; the rest is composed here."""
 
-Le rotte stanno in `review.py`, cosa scrive una risposta in `review_write.py`. Qui c'e' solo
-la lettura: ogni sezione arriva **gia' pronta per lo schermo** -- ordinata, coi conteggi
-fatti e i candidati da cliccare gia' scelti -- perche' il frontend formatta e basta.
+import sqlite3
 
-Vincolo non ovvio: i candidati del cielo li scrive chi identifica (`spine/object_candidates.py`),
-perche' il cono sul catalogo costa; i filtri e i corredi fra cui scegliere e i luoghi vicini si
-compongono qui da cio' che e' scritto, con una query o tre moltiplicazioni.
-"""
-
+from ..db.row import Row
 from ..place import by_distance, distance_km
 from ..spine import coordinates as places
 from ..spine import declarations as decl
@@ -21,11 +16,9 @@ from .models_review import FilterCandidate, ObjectCandidate, ObjectOut, RigChoic
 from .models_review_groups import SiteCandidate, UnclearCoordinates
 
 
-def filter_choices(conn):
-    """I filtri fra cui si sceglie "uno dei tuoi" -- per i frame senza filtro, e per dire che un
-    filtro che l'app non riconosce e' uno di questi: quelli con la banda nota, tranne la riga
-    "nessun filtro", che e' un'altra risposta. Una casa sola per le tendine e per chi scrive la
-    risposta: l'Applica non accetta come risposta un filtro che la tendina non offre."""
+def filter_choices(conn: sqlite3.Connection) -> list[FilterCandidate]:
+    """Filters with a known band, minus the "no filter" row, which is another answer. One home for
+    the dropdowns and for the writer: Apply does not accept a filter the dropdown does not offer."""
     righe = conn.execute("SELECT id, name, passband, is_none FROM filters ORDER BY name")
     return [
         FilterCandidate(id=r["id"], name=r["name"], passband=r["passband"])
@@ -34,24 +27,21 @@ def filter_choices(conn):
     ]
 
 
-def optics_choices(conn):
-    """Le ottiche che hai, per nome: fra loro si risponde "quale ottica era". Si puo' scrivere anche
-    un nome che non c'e', e il pezzo nasce."""
+def optics_choices(conn: sqlite3.Connection) -> list[str]:
+    """A name that is not here can be written too, and the piece comes into being."""
     righe = conn.execute(
         "SELECT name FROM instruments WHERE kind = 'optics' ORDER BY name COLLATE NOCASE"
     )
     return [r["name"] for r in righe]
 
 
-# Le pose di ogni corredo, copie comprese: la tendina non chiede le ore, chiede chi e' usato.
+# copies included: the dropdown asks who is used, not the hours
 USED_RIGS = "SELECT rig_id, COUNT(*) AS n FROM frames WHERE rig_id IS NOT NULL GROUP BY rig_id"
 
 
-def rig_choices(conn):
-    """I corredi fra cui si sceglie con che camera sono state riprese delle pose: quelli **con una
-    camera** -- uno senza non risponde a quella domanda -- e con almeno una posa, anche solo una
-    copia: uno rimasto senza nessuna e' un residuo di una risposta che ha spostato le sue pose. I
-    piu' usati in cima. Una casa sola per la tendina e per chi scrive la risposta, come i filtri."""
+def rig_choices(conn: sqlite3.Connection) -> list[RigChoice]:
+    """A rig without a camera does not answer the question; one with no frame left is the residue
+    of an answer that moved them. One home for the dropdown and the writer, like the filters."""
     usati = {r["rig_id"]: r["n"] for r in conn.execute(USED_RIGS)}
     nomi = corredi.rig_names(conn)
     righe = [
@@ -70,42 +60,24 @@ def rig_choices(conn):
     ]
 
 
-def object_still_open(conn, row):
-    """Se quell'oggetto e' ancora una **domanda**: c'e' un dubbio **e** il cielo ha trovato
-    qualcosa da cliccare.
-
-    Si chiede **esattamente cio' che la pagina chiede** -- gli stessi candidati, dalla stessa
-    funzione -- e non "ha una posa col cielo", che sembra la stessa domanda e non lo e': col
-    cielo misurato ma **senza catalogo** (uno stato dichiarato supportato: l'app senza catalogo
-    cataloga, cerca e conta le ore lo stesso) il cono non torna niente, e un oggetto resterebbe
-    da confermare per sempre **senza niente da cliccare**. Il conto non tornerebbe piu' a zero,
-    che e' la promessa che questa regola esiste per proteggere.
-
-    Il dubbio da solo non basta per la ragione opposta: finche' ASTAP non e' installato le pose
-    non hanno cielo e **ogni** oggetto nasce dubbio, e il contatore resterebbe acceso su un
-    archivio dove nessuna domanda e' mai comparsa a schermo."""
+def object_still_open(conn: sqlite3.Connection, row: Row) -> bool:
+    """A doubt AND the candidates the page shows: without a catalog, or before ASTAP, a doubt has
+    nothing to click, and the count would never clear."""
     return row["identity_confidence"] == DOUBT and bool(_sky_candidates(conn, row["id"]))
 
 
-def unclear_coordinates(conn):
-    """I posti su cui l'app ha fermato delle pose, coi luoghi dichiarati da cliccare -- il piu'
-    vicino a QUELLE coordinate in cima, che e' quasi sempre la risposta giusta.
-
-    Le distanze si ricalcolano alla lettura: sono tre moltiplicazioni, e uno stato salvato
-    invecchierebbe al primo luogo nuovo."""
+def unclear_coordinates(conn: sqlite3.Connection) -> list[UnclearCoordinates]:
+    """The nearest declared site first, almost always the right answer. Distances are recomputed on
+    read: three multiplications, while a stored state would go stale at the first new site."""
     posti = places.unclear_coordinates(conn, SITE_UNCLEAR)
     if not posti:
         return []
     luoghi = conn.execute("SELECT id, name, latitude, longitude, is_default FROM sites").fetchall()
     casa = next((s for s in luoghi if s["is_default"]), None)
-    out = []
+    out: list[UnclearCoordinates] = []
     for posto in posti:
-        # Un luogo senza coordinate non e' un candidato: non si saprebbe dove metterlo
-        # nell'ordine, e proporlo per primo o per ultimo sarebbe inventare.
-        # Si ordina sulla distanza VERA, e i modelli si costruiscono dopo: `SiteCandidate` la
-        # arrotonda a cio' che lo schermo mostra, e ordinare gli arrotondati fa pareggiare due
-        # luoghi a meno di cento metri l'uno dall'altro -- in cima finirebbe il piu' lontano,
-        # a seconda di come il database restituisce le righe.
+        # sorted on the true distance before building the models: `SiteCandidate` rounds it, and
+        # rounded ones would tie two sites under a hundred metres apart
         vicini = [
             SiteCandidate(id=s["id"], name=s["name"], distance_km=quanto)
             for quanto, s in by_distance(posto["latitude"], posto["longitude"], luoghi)
@@ -113,8 +85,7 @@ def unclear_coordinates(conn):
         out.append(
             UnclearCoordinates(
                 **posto,
-                # Senza un luogo di casa non c'e' nessuna distanza da dire: il campo resta
-                # vuoto. Uno zero sarebbe "sei a casa", che e' falso.
+                # without a home site there is no distance: zero would say "you are home"
                 distance_km=distance_km(
                     posto["latitude"], posto["longitude"], casa["latitude"], casa["longitude"]
                 )
@@ -127,15 +98,11 @@ def unclear_coordinates(conn):
     return out
 
 
-def objects(conn):
-    """Gli oggetti dell'archivio divisi in due: `(aperti, gia' visti)`. Aperti sono quelli nuovi,
-    che contano fra le cose da confermare, e quelli su cui c'e' qualcosa da cliccare, **i dubbi in
-    cima**: chi apre la pagina deve vedere il lavoro, non scorrere per trovarlo. Gli altri sono gia'
-    visti e senza niente da scegliere, e la pagina li legge a pagine (Marco, 27/9/2026).
-
-    I candidati si leggono solo per quelli da decidere: gli altri non ne hanno di scritti."""
+def objects(conn: sqlite3.Connection) -> tuple[list[ObjectOut], list[ObjectOut]]:
+    """`(open, settled)`: open are the new ones and those with something to click, doubts first, so
+    whoever opens the page sees the work. Candidates are read only for those to decide."""
     confermati = decl.confirmed_keys(conn, "object")
-    out = []
+    out: list[ObjectOut] = []
     for row in obj.listing(conn):
         nome = obj.display_name(row)
         chiave = obj.stable_key(row)
@@ -156,17 +123,15 @@ def objects(conn):
             )
         )
     out.sort(key=lambda o: (o.confidence != DOUBT, -o.frames, o.name or ""))
-    # aperto: nuovo, o con qualcosa da cliccare -- i candidati ci sono solo dove `object_still_open`
-    aperti, certi = [], []
+    aperti: list[ObjectOut] = []
+    certi: list[ObjectOut] = []
     for o in out:
         (aperti if not o.confirmed or o.candidates else certi).append(o)
     return aperti, certi
 
 
-def _sky_candidates(conn, object_id):
-    """Cosa il cielo ha trovato nel campo di questo oggetto: e' cio' che si clicca per
-    rispondere, e per il ramo "il cielo dice un'altra cosa" e' proprio la risposta al perche'.
-    Li ha scritti chi identifica (`spine/object_candidates.py`): qui si leggono."""
+def _sky_candidates(conn: sqlite3.Connection, object_id: int) -> list[ObjectCandidate]:
+    """What one clicks to answer, and for "the sky says something else" the answer to why."""
     return [
         ObjectCandidate(
             slug=r["slug"],
