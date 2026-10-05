@@ -1,10 +1,5 @@
-"""I luoghi da cui si osserva: elenco, creazione, modifica, cancellazione, "questo e' quello
-di casa" -- piu' la ricerca di un posto per nome, che e' un gesto e non un elenco.
-
-Vincolo non ovvio: il luogo e' sempre DICHIARATO. Le coordinate degli header sono un indizio
-e non creano niente. Cio' che si ricava dalle coordinate (fuso, altitudine, luminosita' del
-cielo) si ricava alla scrittura e si salva: una pagina che si apre non deve aspettare la rete.
-"""
+"""A site is always declared: header coordinates are a hint and create nothing. What coordinates
+yield (zone, elevation, sky) is derived on write and saved, so an opening page never waits."""
 
 import sqlite3
 
@@ -13,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from .. import place
 from ..clock import now_iso
 from ..db import config
+from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from ..spine import home_nights, site_requeue
 from ..units import bortle_of
@@ -38,9 +34,8 @@ _SELECT = (
 )
 
 
-def _out(row):
-    """Un luogo come lo vede la pagina: il Bortle nasce qui, dalla luminosita', e non esiste
-    da nessun'altra parte -- e' una consuetudine, non un dato."""
+def _out(row: sqlite3.Row) -> SiteOut:
+    """Bortle is derived here from the brightness and never stored: a convention, not a datum."""
     data = dict(row)
     data["is_default"] = bool(data["is_default"])
     vuoti: tuple[tuple[Unknown, object], ...] = (
@@ -51,28 +46,26 @@ def _out(row):
     return SiteOut(
         **data,
         bortle=bortle_of(data["sky_sqm"]),
-        # "non lo so" e' un codice, non un null muto: la pagina scrive "non fornita" e sa
-        # perche'. Zero e' un'altitudine vera, e non entra qui.
+        # zero is a real elevation, not an unknown one
         unknown=[code for code, value in vuoti if value is None],
     )
 
 
-def _row(conn, site_id):
+def _row(conn: sqlite3.Connection, site_id: int) -> sqlite3.Row:
     row = conn.execute(_SELECT + " WHERE s.id = ?", (site_id,)).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail={"code": "site_not_found"})
     return row
 
 
-def _sky_key(conn):
-    """La chiave personale del servizio che stima il cielo. Senza, non si chiede niente a
-    nessuno e l'app funziona uguale: il cielo si misura o si sceglie."""
+def _sky_key(conn: sqlite3.Connection) -> str | None:
+    """Without the sky service's key nobody is asked: the sky is measured or chosen."""
     return config.read(conn)["sky_service_key"]
 
 
-def _make_default(conn, site_id):
-    """Uno solo e' quello di casa: si toglie a tutti e si da' a lui, dentro la stessa
-    transazione -- l'indice unico non tollera nemmeno un istante con due."""
+def _make_default(conn: sqlite3.Connection, site_id: int) -> None:
+    """Taken from the others before it is given, in the caller's transaction: the unique index
+    does not tolerate even an instant with two homes."""
     vecchia = conn.execute("SELECT id FROM sites WHERE is_default = 1").fetchone()
     conn.execute("UPDATE sites SET is_default = 0 WHERE is_default = 1 AND id != ?", (site_id,))
     conn.execute("UPDATE sites SET is_default = 1 WHERE id = ?", (site_id,))
@@ -81,17 +74,21 @@ def _make_default(conn, site_id):
 
 
 @router.get("/places", response_model=PlaceList)
-def search_places(q: str = Query(min_length=1)):
-    """I posti che portano quel nome, per riempire le coordinate senza scriverle a mano.
-    Non tocca il database: cercare non crea niente, e senza rete torna un elenco vuoto --
-    la strada manuale resta sempre aperta. Senza pagine: il tetto e' quello di `place.search`."""
+def search_places(q: str = Query(min_length=1)) -> PlaceList:
+    """The places bearing that name, to fill in the coordinates without typing them by hand.
+    It does not touch the database: searching creates nothing, and without network it returns an
+    empty list -- the manual way always stays open. No pages: the cap is `place.search`'s."""
     return PlaceList(items=[PlaceOut(**p) for p in place.search(q)])
 
 
 @router.get("/sites", response_model=SiteList)
 def list_sites(
-    limit: int = Query(100, ge=1, le=1000), offset: int = Query(0, ge=0), conn=Depends(get_db)
-):
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+    conn: sqlite3.Connection = Depends(get_db),
+) -> SiteList:
+    """The sites, the home one first and then by name, each with its number of nights and the
+    codes of what is not known about it (`unknown`)."""
     total = conn.execute("SELECT COUNT(*) FROM sites").fetchone()[0]
     rows = conn.execute(
         _SELECT + " ORDER BY s.is_default DESC, s.name LIMIT ? OFFSET ?", (limit, offset)
@@ -100,11 +97,13 @@ def list_sites(
 
 
 @router.post("/sites", response_model=SiteOut, status_code=201)
-def create_site(body: SiteCreate, conn=Depends(get_db)):
-    """Un luogo nuovo, arricchito da cio' che le sue coordinate sanno dire.
+def create_site(body: SiteCreate, conn: sqlite3.Connection = Depends(get_db)) -> SiteOut:
+    """A new site, enriched by what its coordinates can tell, returned as it is now saved.
 
-    Il primo luogo di tutti diventa quello di casa da solo: a mani vuote non c'e' niente da
-    scegliere, e chiederlo sarebbe una domanda con una risposta sola."""
+    The very first site becomes the home one by itself: empty-handed there is nothing to choose,
+    and asking would be a question with a single answer.
+
+    409 `site_name_taken` if another site already has that name."""
     timezone = place.timezone_of(body.latitude, body.longitude)
     elevation_m, elevation_source = place.elevation_from(
         body.latitude, body.longitude, declared=body.elevation_m
@@ -114,25 +113,27 @@ def create_site(body: SiteCreate, conn=Depends(get_db)):
     )
     try:
         with transaction(conn):
-            # "e' il primo?" si guarda DENTRO la transazione: fuori sarebbe una risposta
-            # vecchia di un istante, e il luogo di casa e' uno solo per tutta l'app.
+            # inside the transaction: outside, the answer would be an instant old, and there is
+            # one home for the whole app
             first = conn.execute("SELECT COUNT(*) FROM sites").fetchone()[0] == 0
-            site_id = conn.execute(
-                "INSERT INTO sites(name, latitude, longitude, elevation_m,"
-                " elevation_source, timezone, sky_sqm, sky_source, is_default, created_at)"
-                " VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, ?)",
-                (
-                    body.name,
-                    body.latitude,
-                    body.longitude,
-                    elevation_m,
-                    elevation_source,
-                    timezone,
-                    sky_sqm,
-                    sky_source,
-                    now_iso(),
-                ),
-            ).lastrowid
+            site_id = inserted_id(
+                conn.execute(
+                    "INSERT INTO sites(name, latitude, longitude, elevation_m,"
+                    " elevation_source, timezone, sky_sqm, sky_source, is_default, created_at)"
+                    " VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, ?)",
+                    (
+                        body.name,
+                        body.latitude,
+                        body.longitude,
+                        elevation_m,
+                        elevation_source,
+                        timezone,
+                        sky_sqm,
+                        sky_source,
+                        now_iso(),
+                    ),
+                )
+            )
             if body.is_default or first:
                 _make_default(conn, site_id)
             site_requeue.requeue_waiting(
@@ -145,16 +146,19 @@ def create_site(body: SiteCreate, conn=Depends(get_db)):
 
 
 @router.patch("/sites/{site_id}", response_model=SiteOut)
-def edit_site(site_id: int, body: SiteEdit, conn=Depends(get_db)):
-    """Cio' che si manda vince, anche se e' vuoto: mandare un campo a vuoto vuol dire
-    cancellarlo, e un campo non mandato resta com'era.
+def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(get_db)) -> SiteOut:
+    """What is sent wins, even when empty: sending a field empty means deleting it, and a field
+    not sent stays as it was. Returns the site as it now is.
 
-    Spostare le coordinate rifa' il fuso sempre, e rifa' **cio' che dalle coordinate veniva**:
-    l'altitudine e la luminosita' chieste al servizio si richiedono per il posto nuovo, e se il
-    servizio tace restano vuote col loro motivo. Cio' che l'utente ha scritto -- un'altitudine
-    dichiarata, un cielo misurato o scelto -- resta la sua parola e nessuno la tocca. Per
-    questo dell'una e dell'altra si registra la provenienza: un numero rimasto attaccato a
-    coordinate nuove sarebbe indistinguibile da una misura."""
+    Moving the coordinates always redoes the time zone, and redoes **what came from the
+    coordinates**: the elevation and brightness asked of the service are asked again for the new
+    place, and if the service is silent they stay empty with their reason. What the user wrote --
+    a declared elevation, a measured or chosen sky -- stays their word and nobody touches it. That
+    is why the source of each is recorded: a number left attached to new coordinates would be
+    indistinguishable from a measurement.
+
+    404 `site_not_found`; 422 `field_required` with the `fields` among `name`, `latitude` and
+    `longitude` sent empty; 409 `site_name_taken` if another site already has the new name."""
     old = dict(_row(conn, site_id))
     fields = body.model_dump(exclude_unset=True)
     vuoti = [f for f in ("name", "latitude", "longitude") if f in fields and fields[f] is None]
@@ -167,8 +171,8 @@ def edit_site(site_id: int, body: SiteEdit, conn=Depends(get_db)):
 
     timezone = place.timezone_of(latitude, longitude)
     if "elevation_m" in fields:
-        # mandata a vuoto vuol dire CANCELLATA: non si torna a chiederla al servizio, o il
-        # gesto "svuota questo campo" vorrebbe dire due cose diverse su due campi vicini
+        # sent empty means deleted, not asked of the service again: otherwise "empty this field"
+        # would mean two different things on two neighbouring fields
         scritta = fields["elevation_m"]
         elevation_m, elevation_source = (
             (scritta, "declared") if scritta is not None else (None, None)
@@ -219,8 +223,11 @@ def edit_site(site_id: int, body: SiteEdit, conn=Depends(get_db)):
 
 
 @router.post("/sites/{site_id}/default", response_model=SiteOut)
-def set_default(site_id: int, conn=Depends(get_db)):
-    """ "Questo e' il mio luogo di casa": e' lui che decide il fuso delle notti."""
+def set_default(site_id: int, conn: sqlite3.Connection = Depends(get_db)) -> SiteOut:
+    """ "This is my home site": it decides the time zone of the nights. Returns the site as it now
+    is.
+
+    404 `site_not_found`."""
     row = _row(conn, site_id)
     with transaction(conn):
         senza_casa = conn.execute("SELECT 1 FROM sites WHERE is_default = 1").fetchone() is None
@@ -233,9 +240,11 @@ def set_default(site_id: int, conn=Depends(get_db)):
 
 
 @router.delete("/sites/{site_id}", response_model=SiteDeleted)
-def delete_site(site_id: int, conn=Depends(get_db)):
-    """Un luogo che ha delle notti non si perde per sbaglio: l'app si rifiuta e dice quante.
-    Se era quello di casa, non ne elegge un altro da sola: lo chiede."""
+def delete_site(site_id: int, conn: sqlite3.Connection = Depends(get_db)) -> SiteDeleted:
+    """A site that has nights is not lost by mistake: the app refuses and says how many. If it was
+    the home one, the app does not elect another by itself: it asks.
+
+    404 `site_not_found`; 409 `site_has_nights` with the number of `nights`."""
     nights = _row(conn, site_id)["nights"]
     if nights:
         raise HTTPException(status_code=409, detail={"code": "site_has_nights", "nights": nights})

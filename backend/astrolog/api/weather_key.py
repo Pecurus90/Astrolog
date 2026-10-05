@@ -1,16 +1,5 @@
-"""La chiave Meteoblue: si prova sul conto prima di salvarla, e si toglie mandandola vuota.
-
-Vincoli non ovvi:
-
-* **Una chiave che il conto non riconosce non si salva**: salvarla vorrebbe dire scoprirlo solo al
-  prossimo giro, con un seeing che non arriva e nessuna idea del perche'.
-* **Una chiave nuova si usa subito**: il seeing di prima e l'ultimo tentativo si dimenticano, e il
-  giro del meteo parte adesso invece che fra dodici ore.
-* Fuori esce solo il suggerimento (`config.hint`), mai la chiave.
-"""
-
 import sqlite3
-from typing import Literal
+from typing import Final, Literal
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -23,7 +12,7 @@ from .deps import get_db
 
 router = APIRouter(prefix="/api/v1", tags=["meteo"])
 
-REMOVED = "removed"
+REMOVED: Final = "removed"
 
 
 class MeteoblueKeyIn(BaseModel):
@@ -31,17 +20,26 @@ class MeteoblueKeyIn(BaseModel):
 
 
 class MeteoblueKeyOut(BaseModel):
-    """Com'e' andata: salvata (`ok`), tolta (`removed`), o perche' no; e il suggerimento della
-    chiave che adesso c'e'."""
+    """How it went: saved (`ok`), removed (`removed`), or why not; and the hint of the key that is
+    there now."""
 
     status: Literal["ok", "removed", "refused", "unreachable", "bad_answer"]
     hint: str | None
 
 
 @router.put("/weather/meteoblue-key", response_model=MeteoblueKeyOut)
-def put_meteoblue_key(body: MeteoblueKeyIn, conn: sqlite3.Connection = Depends(get_db)):
-    """Prova la chiave e la salva, o la toglie. Una chiave incollata si porta dietro spazi e ritorni
-    a capo: un carattere invisibile in fondo darebbe un rifiuto che nessuno sa spiegarsi."""
+def put_meteoblue_key(
+    body: MeteoblueKeyIn, conn: sqlite3.Connection = Depends(get_db)
+) -> MeteoblueKeyOut:
+    """Tries the key on the account and saves it, or removes it when it is sent empty. A pasted key
+    carries spaces and line breaks along: an invisible character at the end would give a refusal
+    nobody can explain, so they are trimmed.
+
+    **A key the account does not recognise is not saved**, and the hint stays the previous key's:
+    saving it would mean finding out only at the next round, with seeing that does not arrive and
+    no idea why. **A new key is used at once**: the previous seeing and the last attempt are
+    forgotten, and the weather round starts now instead of after Meteoblue's minimum gap
+    (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key."""
     chiave = (body.key or "").strip()
     if not chiave:
         with transaction(conn):

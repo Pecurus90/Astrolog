@@ -32,8 +32,9 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
 - In corso, per lotti: `api`. Fatti `__init__`, `app`, `deps`, `page`, `paths`, `pipeline`,
   `work`, `settings`, `vocab`, `models`, `models_page`, `models_archive`, `models_nights`,
   `models_tonight`, `models_site`, `models_weather`, `models_review`, `models_review_apply`,
-  `models_review_groups`, `models_gear`; mancano gli altri 16 file.
-- Da chiudere strada facendo: 21 righe del backend (7 in `backend/astrolog`, 14 in
+  `models_review_groups`, `models_gear`, `archive`, `nights`, `tonight`, `weather`, `weather_key`,
+  `sites`, `gear`; mancano gli altri 9 file.
+- Da chiudere strada facendo: 20 righe del backend (6 in `backend/astrolog`, 14 in
   `backend/tests`) passano i 100 caratteri dietro un
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. E commenti, docstring e prove dicono ancora "posa" e "luogo" dove il
@@ -41,15 +42,13 @@ annotata; il glob `ANN` di `ruff.toml` si allarga a ogni package finito.
   `docs/coda.md` puntano a decisioni che ora vivono altrove: `api/instrument_answer.py` e
   `tests/test_gear_instruments.py` vanno a `docs/domini/spina.md`, *Le schede*;
   `.pre-commit-config.yaml` (i quattro software) va a `CLAUDE.md`, "Software supportati".
-  Annotare `astap`, `clock` e `units` ha lasciato un `cast` dove il tipo ora ammette `None` ma
-  il controllo sta sopra (`api/tonight.py`): si toglie restringendo il tipo quando arriva il suo
-  package. Annotare `gear_create` ne ha lasciato un secondo in
+  Annotare `gear_create` ha lasciato un `cast` in
   `normalize._filter_for`: il filtro che non dice niente esce prima, ma `normalize_filter` torna
   `str | None`; lo toglie un ritorno anticipato che il tipo veda. Annotare `objects` ne ha
-  lasciato un terzo in `objects.stable_key`: lo slug o il nome mostrato, mai `None` perche' un
+  lasciato un secondo in `objects.stable_key`: lo slug o il nome mostrato, mai `None` perche' un
   oggetto fuori catalogo ha sempre un primario (`docs/domini/spina.md`, invariante 3), ma
   `display_name` torna `str | None`; lo toglie una riga d'oggetto tipata che dica l'invariante.
-  Annotare `api/settings` ne ha lasciato un quarto in `settings._solver` (*I file sciolti, dopo
+  Annotare `api/settings` ne ha lasciato un terzo in `settings._solver` (*I file sciolti, dopo
   la fase 1*, sotto).
 
 **Fase 2 -- semplificare**, sul codice gia' pulito: doppioni uniti, nomi interni in inglese, `dict`
@@ -133,7 +132,15 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `senza_fuso`, `da_spostare` (`site_requeue`). Nel primo lotto di `api`: `cadenza`, `riga`,
   `sito` (`app`); `_servita`, `pagina_del_router`, il parametro di percorso `percorso` e il
   segnaposto `{chiave}` di `TOKEN_META` (`page`); `_scansione_interrotta`, `da_fare`
-  (`pipeline`); `manca`, `percorso`, `provate`, `dove` (`settings`).
+  (`pipeline`); `manca`, `percorso`, `provate`, `dove` (`settings`). Nel quarto lotto di `api`:
+  `criteri`, `righe`, `quanti`, `oggetti`, `filtri`, `mosaici`, `pannelli` (`archive`); `_sito`,
+  `_fascia`, `istante`, `riga`, `fascia`, `punto`, `sito`, `notte`, `mezzanotte`, `comincia`,
+  `quante_ore`, `fase`, `cielo` (`tonight`); `_NOTTI`, `_ARRIVATA`, `_FONTI_DEL_CIELO`, `_CIELO`,
+  `_VENTO`, `_CAMPI_DEL_CIELO`, `_in_quota`, `_notte`, `ore`, `del_cielo`, `posto`, `riassunto`,
+  `fonte`, `ultimo`, `arrivate`, `scelto`, `vuoto`, `in_corso`, `del_sito`, `con_meteoblue`,
+  `per_ora`, `via`, `righe`, `riga`, `sito` (`weather`); `chiave`, `esito`, `sito`
+  (`weather_key`); `vuoti`, `vecchia`, `scritta`,
+  `nome`, `senza_casa` (`sites`); `pezzi`, `filtri`, l'alias `strumento` (`gear`).
 - **`group._where`** torna il sito ma non la data: `_one_frame` la ricalcola, e cosi' arriva
   `str | None` fino a `group_store.night` e `create_night`; e il "lo ha detto l'utente" e'
   `bool | None` (passato con `bool()`) perche' la terna non distingue chi si ferma da chi entra.
@@ -193,15 +200,16 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   (le chiavi di `archive.ORDINI`, ripetute in `api/archive.Sort`).
 - **La notte di un frame** (`scan_store.LocalNight`, notte/fuso/istante costruita da
   `scan.night_of` e spacchettata per posizione da `scan_store.insert_frame`) e' un alias di `tuple`: una `NamedTuple` la nomina.
-- **`db/inserted.inserted_id`** tiene la guardia su `lastrowid`; gli altri `.lastrowid` del
-  backend (`api/folders`, `api/sites`) la
-  chiamano quando arriva il loro package.
+- **`db/inserted.inserted_id`** tiene la guardia su `lastrowid`; l'altro `.lastrowid` del
+  backend (`api/folders`) la chiama quando arriva il suo lotto.
 - **`db/config.KEYS`** ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei
   test (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo
   spacchettamento.
 - **Fra i `noqa: PLR0913`**, questi restano perche' toglierli cambia una firma usata fuori:
   `replace_rows` (`db/replace_table.py`), `walk_dir` (`fits/walk.py`, i sei accumulatori in un oggetto solo) e
   `create_app` (`api/app.py`, sei opzioni a parola chiave lette da `__main__`, `tools` e test).
+  `archive_page` (`api/archive.py`) resta per un'altra ragione: i suoi otto parametri sono la
+  query della rotta, e raccoglierli in una dipendenza di FastAPI e' un cambio di forma (fase 2).
 - **Doppioni piccoli dei package di base**: `catalog/load.load_catalog` riscrive a mano
   `db.transaction` (gli strati non gli lasciano importare `db`); `db/paths.cache_dir` e `log_dir`
   sono la stessa funzione; in `catalog/lookup` l'elenco delle colonne si ricompone due volte da
@@ -731,6 +739,15 @@ riga per voce.
   e `page.is_page`, "la rotta di ripiego si registra per ultima", i perche' di `solver_found` e
   `solver_where` ripetuti dalle rotte del solver, i commenti italiani su
   `PipelineStatus.pending` e `.action`).
+- **Le rotte di lettura, dopo la fase 1.** `create_site` e `edit_site` (`api/sites.py`)
+  prendono `sqlite3.IntegrityError` su tutta la transazione, non solo sull'`INSERT`/`UPDATE` del
+  nome: un vincolo violato in `_make_default`, nei `requeue` o in `home_nights.follow_home`
+  risponde 409 `site_name_taken`, che e' falso, e l'errore vero non va nel log (il contratto ora
+  dice "409 se il nome e' gia' di un altro sito"). Le docstring delle rotte hanno preso la prosa
+  della docstring di modulo, e ripetono nell'OpenAPI cio' che i modelli dicono gia': cosa perde
+  una notte di tendenza (`weather` e `WeatherNightOut`), il piede con posto e classe (`tonight`
+  e `SiteSkyOut`), `still_reading` (`nights` e `models_nights`). In `api/weather.py` la ragione
+  del `noqa: S608` di `_CIELO` e' scritta due volte in due righe.
 - **I modelli di revisione e attrezzatura, dopo la fase 1: le regole ripetute ora stanno
   nell'OpenAPI.** I commenti diventati descrizioni portano in `schema.d.ts` regole scritte molte
   volte: "un gruppo gia' risposto resta in pagina per cambiare idea" (otto modelli di
@@ -745,6 +762,11 @@ riga per voce.
   stessa descrizione parola per parola nell'OpenAPI, e quelle di `untimed` sono quasi uguali (il
   significato ha casa nel glossario); il limite `Field(ge=0, le=100)` della Luna e' scritto in
   `MoonOut` e di nuovo in `MoonThatNight`, che dice di condividerlo ma condivide solo `PhaseKey`.
+- **Le rotte di lettura di `api`, dopo la fase 1**: `api/weather._seeing` e il ciclo di `weather`
+  scrivono a mano `"meteoblue"` e `"7timer"` accanto a `meteoblue.SOURCE`; `MeteoblueKeyOut` e
+  `MeteoblueKeyIn` stanno in `api/weather_key.py` e non in `models_weather`. Regole dette due
+  volte: "l'ordine lo decide il backend" nei moduli `api/archive` e `api/nights`; il Bortle che
+  passa da `units.bortle_of` in `api/tonight._sito` e `api/sites._out`.
 - **L'attrezzatura, dopo la fase 1**: le docstring di `rigs.find_rig` e `rigs.RigExistsError`
   scrivono a mano il 5 % di `units.FOCAL_TOLERANCE`; "la scheda dell'utente vince su file e cielo"
   e' detta in `camera_sky`, `camera_specs` e `gear.camera_specs`, ma vive solo in
@@ -794,8 +816,7 @@ riga per voce.
   stesso `noqa: DTZ007` in `clock.midnight_of` e `clock.night_window`; "`-extract` lascia un CSV
   accanto al FITS" sta sia nella docstring del modulo `astap` sia in quella di `analyse`;
   nessun test prova che `place.by_distance` lasci fuori i siti senza coordinate, ne' ciascuno dei
-  quattro `is None` di `place.distance_km`; il commento sul `cast` in `api/tonight.py` non dice
-  che `mezzanotte` c'e' solo quando c'e' `notte`; il log d'accesso scrive la query intera, quindi
+  quattro `is None` di `place.distance_km`; il log d'accesso scrive la query intera, quindi
   una chiave messa a mano in un indirizzo (`/?token=...`) finirebbe in `log/astrolog.log`, ma l'app
   non la mette mai in un indirizzo (ADR 0002: arriva nella pagina e viaggia in un header).
 - **Il Workflow `esegui` ha quattro buchi noti**: un irrobustimento si parcheggia qualunque sia

@@ -1,11 +1,7 @@
-"""L'Archivio in lettura: cosa hai ripreso, con quanti frame, quante ore e con che filtri.
+"""Filtering and order happen in SQL (`spine/archive.page`): a search over downloaded rows finds
+only those; the backend orders even the user's sort, or two views would agree only by chance."""
 
-Vincolo non ovvio: qui non si calcola e non si filtra niente. La pagina la fa la spina in SQL
-(`spine/archive.page`), perche' cercare fra le righe gia' scaricate troverebbe solo quelle -- e un
-archivio di seicento oggetti direbbe "non trovato" mentendo. L'**ordine lo decide il backend**
-anche quando lo scegli tu, o due viste dello stesso archivio si metterebbero d'accordo per caso.
-"""
-
+import sqlite3
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Query
@@ -16,8 +12,7 @@ from .models_archive import ArchiveChoices, ArchiveFound, ArchiveList, ArchiveOb
 
 router = APIRouter(prefix="/api/v1", tags=["archivio"])
 
-# I tre ordini della barra, come chiavi: `Literal` li fa rifiutare a FastAPI **prima** che
-# arrivino alla spina, e li scrive nell'OpenAPI, da cui il frontend genera i suoi tipi.
+# A `Literal` so FastAPI rejects an unknown order before the spine, and the OpenAPI carries it.
 Sort = Literal["name", "hours", "frames"]
 
 
@@ -31,14 +26,14 @@ def archive_page(  # noqa: PLR0913
     filter_name: str | None = Query(None, alias="filter", max_length=120),
     mosaic: bool = False,
     sort: Sort = "name",
-    conn=Depends(get_db),
-):
-    """Le righe dell'archivio -- oggetti e mosaici confermati -- in ordine di nome, coi filtri di
-    ognuna.
+    conn: sqlite3.Connection = Depends(get_db),
+) -> ArchiveList:
+    """The archive rows -- confirmed objects and mosaics -- with each one's filters, in the order
+    `sort` chooses, narrowed by the search parameters.
 
-    Il tetto di fabbrica e' alto (100) perche' questo elenco e' un **inventario**, non un flusso
-    da scorrere: chi ha centomila frame ha comunque una manciata di oggetti, e chiederne venti per
-    volta sarebbe cinque giri per vedere cio' che sta in uno."""
+    The factory cap is high (100) because this list is an **inventory**, not a feed to scroll:
+    whoever has a hundred thousand frames still has a handful of objects, and asking for twenty at
+    a time would be five rounds to see what fits in one."""
     criteri = {
         "q": q,
         "catalog": catalog,
@@ -47,9 +42,8 @@ def archive_page(  # noqa: PLR0913
         "mosaic": mosaic,
     }
     righe, quanti = archive.page(conn, limit=limit, offset=offset, sort=sort, **criteri)
-    # I filtri in **una domanda per genere di riga** per tutta la pagina, non una per riga: sono la
-    # stessa casa che li conta per una notte (`spine/filters_used.py`). La riga di un oggetto porta
-    # solo le sue pose fuori dai mosaici, come le sue ore.
+    # One query per kind of row for the whole page; an object row carries only its frames outside
+    # mosaics, like its hours.
     oggetti = [r["id"] for r in righe if r["mosaic_key"] is None]
     filtri = filters_used.of(conn, "object", oggetti, alone=True)
     mosaici = [r["mosaic_key"] for r in righe if r["mosaic_key"]]
@@ -58,7 +52,7 @@ def archive_page(  # noqa: PLR0913
     return ArchiveList(
         items=[
             ArchiveObject(
-                # un mosaico si chiama con la chiave della sua risposta, che nessun oggetto porta
+                # a mosaic is named by its answer's key, which no object carries
                 key=r["mosaic_key"] or objects.stable_key(r),
                 name=objects.display_name(r),
                 slug=r["catalog_slug"],

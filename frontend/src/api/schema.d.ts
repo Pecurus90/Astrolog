@@ -38,12 +38,12 @@ export interface paths {
         };
         /**
          * Archive Page
-         * @description Le righe dell'archivio -- oggetti e mosaici confermati -- in ordine di nome, coi filtri di
-         *     ognuna.
+         * @description The archive rows -- confirmed objects and mosaics -- with each one's filters, in the order
+         *     `sort` chooses, narrowed by the search parameters.
          *
-         *     Il tetto di fabbrica e' alto (100) perche' questo elenco e' un **inventario**, non un flusso
-         *     da scorrere: chi ha centomila frame ha comunque una manciata di oggetti, e chiederne venti per
-         *     volta sarebbe cinque giri per vedere cio' che sta in uno.
+         *     The factory cap is high (100) because this list is an **inventory**, not a feed to scroll:
+         *     whoever has a hundred thousand frames still has a handful of objects, and asking for twenty at
+         *     a time would be five rounds to see what fits in one.
          */
         get: operations["archive_page"];
         put?: never;
@@ -63,11 +63,11 @@ export interface paths {
         };
         /**
          * Gear List
-         * @description I pezzi che possiedi, per genere, coi corredi e i filtri.
+         * @description The pieces you own, by kind, with the rigs and the filters.
          *
-         *     Senza paginazione, e non per dimenticanza: l'attrezzatura di chiunque sta in una schermata --
-         *     chi ha centomila frame ha comunque una manciata di telescopi -- e impaginarla vorrebbe dire
-         *     un giro in piu' per vedere cio' che sta in uno.
+         *     No pagination, and not by oversight: anyone's gear fits in one screen -- whoever has a hundred
+         *     thousand frames still has a handful of telescopes -- and paging it would mean one more round to
+         *     see what fits in one.
          */
         get: operations["gear_list"];
         put?: never;
@@ -239,11 +239,13 @@ export interface paths {
         };
         /**
          * Night List
-         * @description Le notti dell'archivio, dalla piu' recente.
+         * @description The archive's nights, newest first. Beside them travel the two things that explain a short
+         *     list: how many frames wait for an answer (`waiting`) and how many the spine has still to read
+         *     (`still_reading`).
          *
-         *     Il tetto di fabbrica e' lo stesso dell'Archivio (100): sono molte piu' righe -- una per
-         *     notte, non una per oggetto -- ma si guardano allo stesso modo, scorrendo indietro nel tempo,
-         *     e chiederne venti per volta sarebbe cinque giri per vedere un anno.
+         *     The factory cap is the same as the Archive's (100): there are many more rows -- one per night,
+         *     not one per object -- but they are looked at the same way, scrolling back in time, and asking
+         *     for twenty at a time would be five rounds to see a year.
          */
         get: operations["night_list"];
         put?: never;
@@ -599,9 +601,9 @@ export interface paths {
         };
         /**
          * Search Places
-         * @description I posti che portano quel nome, per riempire le coordinate senza scriverle a mano.
-         *     Non tocca il database: cercare non crea niente, e senza rete torna un elenco vuoto --
-         *     la strada manuale resta sempre aperta. Senza pagine: il tetto e' quello di `place.search`.
+         * @description The places bearing that name, to fill in the coordinates without typing them by hand.
+         *     It does not touch the database: searching creates nothing, and without network it returns an
+         *     empty list -- the manual way always stays open. No pages: the cap is `place.search`'s.
          */
         get: operations["search_places"];
         put?: never;
@@ -619,15 +621,21 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Sites */
+        /**
+         * List Sites
+         * @description The sites, the home one first and then by name, each with its number of nights and the
+         *     codes of what is not known about it (`unknown`).
+         */
         get: operations["list_sites"];
         put?: never;
         /**
          * Create Site
-         * @description Un luogo nuovo, arricchito da cio' che le sue coordinate sanno dire.
+         * @description A new site, enriched by what its coordinates can tell, returned as it is now saved.
          *
-         *     Il primo luogo di tutti diventa quello di casa da solo: a mani vuote non c'e' niente da
-         *     scegliere, e chiederlo sarebbe una domanda con una risposta sola.
+         *     The very first site becomes the home one by itself: empty-handed there is nothing to choose,
+         *     and asking would be a question with a single answer.
+         *
+         *     409 `site_name_taken` if another site already has that name.
          */
         post: operations["create_site"];
         delete?: never;
@@ -648,23 +656,28 @@ export interface paths {
         post?: never;
         /**
          * Delete Site
-         * @description Un luogo che ha delle notti non si perde per sbaglio: l'app si rifiuta e dice quante.
-         *     Se era quello di casa, non ne elegge un altro da sola: lo chiede.
+         * @description A site that has nights is not lost by mistake: the app refuses and says how many. If it was
+         *     the home one, the app does not elect another by itself: it asks.
+         *
+         *     404 `site_not_found`; 409 `site_has_nights` with the number of `nights`.
          */
         delete: operations["delete_site"];
         options?: never;
         head?: never;
         /**
          * Edit Site
-         * @description Cio' che si manda vince, anche se e' vuoto: mandare un campo a vuoto vuol dire
-         *     cancellarlo, e un campo non mandato resta com'era.
+         * @description What is sent wins, even when empty: sending a field empty means deleting it, and a field
+         *     not sent stays as it was. Returns the site as it now is.
          *
-         *     Spostare le coordinate rifa' il fuso sempre, e rifa' **cio' che dalle coordinate veniva**:
-         *     l'altitudine e la luminosita' chieste al servizio si richiedono per il posto nuovo, e se il
-         *     servizio tace restano vuote col loro motivo. Cio' che l'utente ha scritto -- un'altitudine
-         *     dichiarata, un cielo misurato o scelto -- resta la sua parola e nessuno la tocca. Per
-         *     questo dell'una e dell'altra si registra la provenienza: un numero rimasto attaccato a
-         *     coordinate nuove sarebbe indistinguibile da una misura.
+         *     Moving the coordinates always redoes the time zone, and redoes **what came from the
+         *     coordinates**: the elevation and brightness asked of the service are asked again for the new
+         *     place, and if the service is silent they stay empty with their reason. What the user wrote --
+         *     a declared elevation, a measured or chosen sky -- stays their word and nobody touches it. That
+         *     is why the source of each is recorded: a number left attached to new coordinates would be
+         *     indistinguishable from a measurement.
+         *
+         *     404 `site_not_found`; 422 `field_required` with the `fields` among `name`, `latitude` and
+         *     `longitude` sent empty; 409 `site_name_taken` if another site already has the new name.
          */
         patch: operations["edit_site"];
         trace?: never;
@@ -680,7 +693,10 @@ export interface paths {
         put?: never;
         /**
          * Set Default
-         * @description "Questo e' il mio luogo di casa": e' lui che decide il fuso delle notti.
+         * @description "This is my home site": it decides the time zone of the nights. Returns the site as it now
+         *     is.
+         *
+         *     404 `site_not_found`.
          */
         post: operations["set_default"];
         delete?: never;
@@ -794,7 +810,26 @@ export interface paths {
         };
         /**
          * Tonight
-         * @description Che luna fa stanotte dal sito di casa.
+         * @description Tonight's Moon from the home site, with the night's sky bands and its forecast summary.
+         *
+         *     **The night is the app's**, noon to noon in the site's time zone (`clock.night_date`), not a
+         *     calendar day: whoever looks at two in the morning is still in last night, and wants last
+         *     night's Moon. The window is measured **between the two true noons**, not at a fixed
+         *     twenty-four hours: the clock-change night lasts 23 or 25. **The phase is asked at midnight**,
+         *     not at noon: asked at the window's start, whoever looks at the bar at eleven in the evening
+         *     would read the number of twelve hours earlier.
+         *
+         *     **Without a home site there is nothing to say**, and it says so: `night`, `site` and `moon`
+         *     are `null`. A Moon computed on an invented place would be a number that looks true. The site,
+         *     when there is one, **travels with its sky**: the bar's footer writes the place and its class in
+         *     one line, and asking two routes for them would leave a moment when the page is half done. A
+         *     site whose time zone is missing or no longer known still comes out, without its night and its
+         *     Moon (`night` and `moon` `null`): falling back to Greenwich would give another place's Moon
+         *     without anyone noticing.
+         *
+         *     **The computation is costly**, because it samples a night of sky twice, once per body. The
+         *     reply carries the night it refers to, so whoever shows it knows when it has expired without
+         *     asking again at every breath.
          */
         get: operations["tonight"];
         put?: never;
@@ -836,7 +871,17 @@ export interface paths {
         };
         /**
          * Weather
-         * @description Le prossime notti del sito di casa, dal modello scelto nelle preferenze.
+         * @description The coming nights of the home site, from the model chosen in the preferences, as the
+         *     forecast wrote them: changing model is reading another row.
+         *
+         *     Without a home site `site` is `null` and there are no nights; with a site whose time zone is
+         *     missing or unknown, `missing` is `no_timezone`.
+         *
+         *     **Three full nights, then a trend**: from the fourth (`trend`) only the verdict, the clouds,
+         *     the dark hours and the agreement, without usable hours, factors, hours, upper sky or upper
+         *     wind. A night that has Meteoblue's seeing takes all of it from there: the hours Meteoblue does
+         *     not cover stay empty instead of taking 7Timer's bands, or the page would say "from Meteoblue"
+         *     over a night of two sources.
          */
         get: operations["weather"];
         put?: never;
@@ -858,7 +903,8 @@ export interface paths {
         put?: never;
         /**
          * Refresh
-         * @description Chiede la previsione adesso. Se il servizio tace resta quella di prima, e si dice perche'.
+         * @description Asks for the forecast now. If the service is silent the previous one stays, and the reply
+         *     says why.
          */
         post: operations["refresh"];
         delete?: never;
@@ -877,8 +923,15 @@ export interface paths {
         get?: never;
         /**
          * Put Meteoblue Key
-         * @description Prova la chiave e la salva, o la toglie. Una chiave incollata si porta dietro spazi e ritorni
-         *     a capo: un carattere invisibile in fondo darebbe un rifiuto che nessuno sa spiegarsi.
+         * @description Tries the key on the account and saves it, or removes it when it is sent empty. A pasted key
+         *     carries spaces and line breaks along: an invisible character at the end would give a refusal
+         *     nobody can explain, so they are trimmed.
+         *
+         *     **A key the account does not recognise is not saved**, and the hint stays the previous key's:
+         *     saving it would mean finding out only at the next round, with seeing that does not arrive and
+         *     no idea why. **A new key is used at once**: the previous seeing and the last attempt are
+         *     forgotten, and the weather round starts now instead of after Meteoblue's minimum gap
+         *     (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key.
          */
         put: operations["put_meteoblue_key"];
         post?: never;
@@ -1633,8 +1686,8 @@ export interface components {
         };
         /**
          * MeteoblueKeyOut
-         * @description Com'e' andata: salvata (`ok`), tolta (`removed`), o perche' no; e il suggerimento della
-         *     chiave che adesso c'e'.
+         * @description How it went: saved (`ok`), removed (`removed`), or why not; and the hint of the key that is
+         *     there now.
          */
         MeteoblueKeyOut: {
             /**

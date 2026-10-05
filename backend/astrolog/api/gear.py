@@ -1,9 +1,7 @@
-"""L'Attrezzatura in lettura: con cosa hai ripreso, e quanto.
+"""The rows come from `spine/inventory.py` with the counts the Archive and Nights already use; what
+is unknown arrives `null`, not zero, so the page can say why it is missing."""
 
-Vincolo non ovvio: qui non si calcola niente. Le righe le fa la spina (`spine/inventory.py`), coi
-conteggi che l'Archivio e le Notti usano gia'; e cio' che non si sa arriva **nullo**, non a zero.
-La pagina scrive perche' manca.
-"""
+import sqlite3
 
 from fastapi import APIRouter, Depends
 
@@ -16,27 +14,26 @@ router = APIRouter(prefix="/api/v1", tags=["attrezzatura"])
 
 
 @router.get("/gear", response_model=GearList)
-def gear_list(conn=Depends(get_db)):
-    """I pezzi che possiedi, per genere, coi corredi e i filtri.
+def gear_list(conn: sqlite3.Connection = Depends(get_db)) -> GearList:
+    """The pieces you own, by kind, with the rigs and the filters.
 
-    Senza paginazione, e non per dimenticanza: l'attrezzatura di chiunque sta in una schermata --
-    chi ha centomila frame ha comunque una manciata di telescopi -- e impaginarla vorrebbe dire
-    un giro in piu' per vedere cio' che sta in uno."""
+    No pagination, and not by oversight: anyone's gear fits in one screen -- whoever has a hundred
+    thousand frames still has a handful of telescopes -- and paging it would mean one more round to
+    see what fits in one."""
     pezzi = inventory.instruments(conn)
     for p in pezzi:
-        # si offrono solo le unioni che la spina accetta: la stessa regola della risposta
+        # only the merges the spine accepts: the same rule as the answer
         p["mergeable_into"] = [o["id"] for o in pezzi if gear.mergeable(p, o)]
     filtri = inventory.filters(conn)
     for f in filtri:
-        # le unioni che la spina accetta: la stessa regola di chi unisce
         f["mergeable_into"] = [o["id"] for o in filtri if gear.filter_mergeable(f, o)]
     return GearList.model_validate(
         {
             "instruments": pezzi,
             "rigs": inventory.rigs(conn),
             "filters": filtri,
-            # Quali campi chiede la scheda di un genere lo sa l'api, non la spina: e' la
-            # stessa tabella con cui la risposta rifiuta un campo che quel genere non ha.
+            # The api, not the spine, knows which fields a kind's card asks for: the same table
+            # with which the answer rejects a field that kind does not have.
             "cards": strumento.CARD,
         }
     )
