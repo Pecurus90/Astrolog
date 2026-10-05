@@ -10,7 +10,8 @@ stanno qui: quelle di un dominio nel suo contratto (`domini/`), le altre in un A
 ### Prima delle funzioni nuove
 
 Deciso con Marco: nessuna funzione nuova finche' non e' sistemato cio' che c'e'. La fase 1
-del refactor e' fatta (sotto); poi le prime due *Tappe del prodotto*. La spina si
+del refactor e' fatta (sotto); poi le prime due *Tappe del prodotto*, nell'ordine di
+*Semplificare e completare la spina*. La spina si
 giudica dominio per dominio con una domanda sola: dice il vero, regge e risponde in tempo? I FITS
 veri di ASIAIR li ha Marco; di Voyager e SGP servono frame di un altro utente (*Mancano Voyager e
 SGP*).
@@ -272,8 +273,9 @@ nominano col loro nome, per non confonderle con le fasi del refactor.
 
 ### Semplificare e completare la spina
 
-Da una lettura critica del disegno (giudizi, non misure: si misurano prima di costruirli). Le
-semplificazioni cambiano Da confermare, quindi le decide Marco, una per una.
+Da una lettura critica del disegno (giudizi, non misure: si misurano prima di costruirli).
+**S1-S4 decise da Marco: si fanno**, prima della fase 2
+([ADR 0014](adr/0014-da-confermare-semplificata.md)); S5 si decide misurandola.
 
 - **S1 -- Una domanda sull'attrezzatura invece di tre.** Oggi senza camera (per notte, telescopio,
   dimensioni e pixel), senza ottica (per camera e focale) e senza filtro (per camera), piu'
@@ -303,10 +305,10 @@ semplificazioni cambiano Da confermare, quindi le decide Marco, una per una.
   Parcheggio) va agganciato all'impronta del frame e alla grafia dell'header, non alla notte o al
   percorso: piu' facile dopo S2.
 
-Ordine consigliato: le prove che mancano e *L'archivio dice cose false*; poi S1-S4, prima delle
+L'ordine: le prove che mancano e *L'archivio dice cose false*; poi S1-S4, prima delle
 velocita' che toccano gli stessi pezzi (Applica, fuso di casa, riletture in `row_of`), che con
-S1 e S2 spariscono in parte; poi M1, M2, M4, M3; le velocita' e i doppioni che restano con la
-fase 2 del refactor; M5 dopo S2.
+S1 e S2 spariscono in parte; poi la fase 2 del refactor, con le velocita' e i doppioni che
+restano; poi M1, M2, M4, M3; M5 dopo S2.
 
 ## Da riparare, nell'ordine
 
