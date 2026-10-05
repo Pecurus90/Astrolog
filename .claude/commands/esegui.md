@@ -1,44 +1,18 @@
 ---
-description: Porta un lavoro dal piano al riassunto finale senza fermarsi - piano e domande, costruzione con i documenti, poi il Workflow esegui (revisione finche' restano difetti, audit eseguendo, controlli verdi). Commit e push automatici a controlli verdi.
+description: Sceglie la ricetta giusta per il lavoro (costruisci, ripara, rifattorizza, riordina, rivedi, documenti) e la segue.
 argument-hint: [cosa vuoi]
 ---
 
 **Lavoro:** $ARGUMENTS
 
-Vale `CLAUDE.md`. Il giro e' questo, e non si salta un passo.
+Vale `CLAUDE.md`. Prima si dice il tipo in una riga, poi si segue la sua ricetta (ADR 0015):
 
-1. **Ricognizione.** `esploratore` (o grep diretto se sai gia' dove): cosa esiste e si riusa,
-   cosa e' nuovo, cosa rischia. Se viene da `docs/coda.md`, ri-misura lo stato.
-2. **Piano in cinque righe** -- Contesto / Obiettivo / Lavoro / Vincoli / Fatto quando -- con
-   `mode`: `meccanico` (potare, tipizzare: serve giudizio, lo `sviluppatore` su Opus),
-   `spostamento` (spostare file, rinominare, aggiornare import: lo `sviluppatore` su Sonnet) o
-   `logica` (dominio: lo scrivo io), e `surface` se cambia cio' che l'utente vede.
-3. **Domande a Marco, solo se servono, prima di scrivere codice**: quando la risposta dipende da
-   lui (gusto, dati suoi, rischio che accetta). A video, a scelta multipla, la consigliata in cima
-   -- la piu' corretta, anche se costa piu' lavoro, e si dice quanto. Un difetto non e' una
-   domanda: si ripara. Il piano si mostra a Marco solo se cambia cio' che vede.
-4. **Se `logica`, costruisco io**: test visti rossi, codice, e i documenti nello stesso diff --
-   `docs/guida-utente.md` se cambia cio' che l'utente vede, il contratto in `docs/domini/`,
-   `docs/coda.md` (chiuso -> sparisce, debito nuovo -> Parcheggio), un ADR in `docs/adr/` per una
-   decisione nuova, `backend/astrolog/schema.sql`. Una pagina finita -> il `traduttore`. Ogni
-   file nuovo: `git add -N <file>`, senno' revisione e controlli non lo vedono.
-5. **Workflow `esegui`** con `args: {task, plan, mode, surface, answers, history, parked}`. In
-   `meccanico` e `spostamento` costruisce lo `sviluppatore`, documenti compresi. Poi, a cicli: revisione
-   (revisore + pr-review-toolkit) finche' un giro non trova difetti, audit (`auditore`, una domanda
-   alla volta, eseguendo), tutti i controlli; se l'audit o i controlli fanno correggere, si torna
-   alla revisione, mirata sulla correzione e chiusa da un giro intero (ADR 0001); dopo una
-   correzione di sola prosa gli audit non si rifanno. Esiti:
-   - `done`: al punto 6.
-   - `question`: la domanda va a Marco come al punto 3; si rilancia aggiungendo la risposta ad
-     `answers` e passando la `history` e la `parked` restituite: il lavoro fatto resta nel diff, con
-     una `history` il Workflow non ricostruisce ma applica al diff solo la risposta, e gli
-     irrobustimenti gia' raccolti non si perdono.
-   - `failed`, `not_dry`, `audit_failing`, `checks_failing`: si dice a Marco cosa si e' fermato e
-     dove, e la `parked` restituita va come al punto 6. Niente commit.
-6. **Riassunto a Marco**, cinque righe, aprendo con *cosa funziona ora e prima no*: poi l'esito
-   della revisione (giri, rilievi scartati e perche'), dell'audit, dei controlli. Gli
-   irrobustimenti (`parked`) li scrivo in `docs/coda.md` e li dico: Marco puo' riportarne uno indietro. Ogni cosa tolta
-   si spiega in una riga.
-7. **Commit e push automatici** (CLAUDE.md, *Regole ferme*), senza aspettare l'ok: `git status` (un'altra sessione puo' aver messo in staging),
-   `git add <file uno per uno>`, `git commit -m "<tipo>: <una riga ASCII>"` (Conventional
-   Commits: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`), `git push origin main`.
+- funzionalita' nuova o comportamento che cambia: `.claude/commands/costruisci.md`;
+- difetto: `.claude/commands/ripara.md`;
+- stesso comportamento, codice diverso: `.claude/commands/rifattorizza.md`;
+- togliere, accorpare, spostare: `.claude/commands/riordina.md`;
+- rivedere un'area senza correggere: `.claude/commands/rivedi.md`;
+- documenti e decisioni: li scrivo io, nessuna revisione sulle parole; un comportamento promesso
+  in un contratto ha il suo test. Commit `docs:`.
+
+Un lavoro misto si divide: prima la parte che fissa il comportamento, poi il resto.

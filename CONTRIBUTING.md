@@ -21,9 +21,10 @@ commit, quelli completi (test, tipi, duplicati) a ogni push; tutti insieme, come
 `python -m pre_commit run --all-files --hook-stage manual`. Il messaggio di commit e' una riga
 [Conventional Commits](https://www.conventionalcommits.org/) (`fix: ...`, `feat: ...`).
 
-**Con Claude Code** il giro e' `/esegui` (`.claude/commands/esegui.md`). La revisione usa il plugin
-`pr-review-toolkit`; `security-guidance` avvisa (e puo' fermare) una modifica che apre un buco di
-sicurezza. Tutti e due li propone `.claude/settings.json` all'apertura del progetto.
+**Con Claude Code** c'e' una ricetta per tipo di lavoro (`.claude/commands/`, ADR 0015); `/esegui`
+sceglie quella giusta. `security-guidance` avvisa (e puo' fermare) una modifica che apre un buco di
+sicurezza; `pr-review-toolkit` si usa a mano. Tutti e due li propone `.claude/settings.json`
+all'apertura del progetto.
 
 **Un modulo, un mestiere; un fatto, una casa.** Se un cambiamento tocca un file che fa gia'
 due cose, il cambiamento giusto e' prima separarle.

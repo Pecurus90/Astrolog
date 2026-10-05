@@ -26,15 +26,9 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
 - Il limite e' sulle **funzioni** (ruff `C901`, `PLR0912/0913/0915`), non sui file: il file ha
   un tetto largo a 1000 righe (pylint). Chi supera oggi porta un `noqa`: e' il debito da togliere.
 - **Commenti**: al massimo due righe, in inglese, solo il perche' che il codice non mostra. La docstring di una rotta API fa eccezione: e' il contratto OpenAPI (skill `rotta-api`).
-- Il lavoro gira dal comando `/esegui` e dal Workflow `esegui`: revisione finche' un giro non
-  trova difetti, audit che esegue (regge se non trova difetti), controlli; un irrobustimento,
-  della revisione o dell'audit, va in `docs/coda.md` e non si costruisce. Dopo una correzione il
-  giro guarda solo cio' che la correzione ha cambiato, ma la revisione si chiude solo su un giro
-  intero senza difetti; una correzione di sola prosa (commenti, docstring, Markdown: lo misura
-  `tools/solo_prosa.py`) non rifa' gli audit che eseguono, e all'ultimo ciclo non ferma il
-  lavoro. Una correzione non misurata conta come codice. Marco decide il prodotto; commit e push
-  sono automatici a controlli verdi (Marco, 5/10/2026).
-- Plugin del progetto (`.claude/settings.json`): `pr-review-toolkit` per la revisione,
+- Il giro di lavoro e la revisione: ADR 0015 (una ricetta per tipo, una revisione sola). Marco
+  decide il prodotto; commit e push sono automatici a controlli verdi (Marco, 5/10/2026).
+- Plugin del progetto (`.claude/settings.json`): `pr-review-toolkit`, fuori dal giro e a mano,
   `security-guidance` che avvisa su una modifica che apre un buco di sicurezza.
 - Le decisioni stanno qui, una per file.
 
@@ -56,10 +50,9 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
   le forme comuni (`.claude/settings.json`), non tutte, e a una persona no. La rete e' la CI, che
   rifa' tutti i controlli sul codice; il messaggio di un commit spinto direttamente su `main`
   invece non ha rete.
-- **Senza macchina, da ora** -- li tiene il Workflow `esegui`, che non salta i passi:
-  - commenti corti: revisore e `comment-analyzer`;
+- Commenti corti e test spariti senza dirlo sono passati a macchine (ADR 0015).
+- **Senza macchina** -- li tengono le ricette di ADR 0015:
   - l'audit: `auditore`;
-  - un test sparito senza dirlo: `pr-test-analyzer` e il revisore;
   - le prove promesse nei contratti di `docs/domini/`: l'audit *promesse*;
   - rimandi fra documenti, percorsi citati, voci della coda citate col numero, un file in `docs/`
     fuori da `coda.md`, `guida-utente.md`, `domini/` e `adr/`: il revisore;

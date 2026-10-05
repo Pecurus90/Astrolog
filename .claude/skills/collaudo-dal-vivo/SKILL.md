@@ -6,7 +6,7 @@ description: Usa quando una fetta tocca una superficie (una pagina, un modale, u
 # Collaudo dal vivo
 
 **Una superficie mai aperta non e' fatta.** Leggere il codice trova cio' che il codice dice;
-guidare l'app trova cio' che fa. Il collaudo e' un passo del loop (`/esegui`), non
+guidare l'app trova cio' che fa. Il collaudo e' un passo delle ricette (`/costruisci`, `/ripara`), non
 un'abitudine.
 
 **Come si avvia.** Isolata: `npm --prefix frontend run build`, poi `python -m astrolog` con

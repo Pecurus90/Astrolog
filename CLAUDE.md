@@ -31,24 +31,20 @@ Lo stato si legge dal codice e da [`docs/coda.md`](docs/coda.md); le decisioni s
 
 ## Il giro di lavoro
 
-Si parte con `/esegui` o a parole, ed e' lo stesso giro (`.claude/commands/esegui.md`):
-ricognizione -> piano in cinque righe -> domande a Marco se servono -> codice, test e documenti
-nello stesso diff (li scrivo io se e' logica, lo `sviluppatore` altrimenti) -> Workflow
-`esegui` (revisione finche' un giro non trova difetti, audit eseguendo, controlli verdi) -> riassunto ->
-commit e push (automatici: vedi *Regole ferme*). Un rilievo che torna dopo essere stato riparato va a Marco: il
-difetto e' nel compito, non nel codice. Un rilievo che chiede un meccanismo nuovo (un campo, uno
-stato) per un caso limite si chiude con la regola piu' semplice che resta sicura (nel dubbio si
-rifa' l'audit, si rilegge intero): la revisione controlla, non costruisce.
+Una ricetta per tipo di lavoro (ADR 0015): `/costruisci`, `/ripara`, `/rifattorizza`,
+`/riordina`, `/rivedi`; `/esegui` o le parole scelgono. Per tutte: un giro di revisione e al
+massimo una verifica delle correzioni; blocca solo un rilievo con prova; il correttore puo'
+rifiutare e non aggiunge dipendenze, file o meccanismi; cio' che resta aperto ferma il lavoro e
+va nel riassunto. Una regola controllabile da una macchina sta in una macchina, non in un prompt.
 
 | Ruolo | Chi | Modello |
 |---|---|---|
 | Prodotto, risposte, collaudo a schermo | Marco | -- |
-| Piano, logica di dominio, coordinamento | sessione principale (dentro il Workflow, le sue correzioni: un agente Opus) | Opus |
+| Piano, logica di dominio, coordinamento | sessione principale | Opus |
 | Ricognizione in sola lettura | `esploratore` | Sonnet |
 | Potare, tipizzare (serve giudizio) | `sviluppatore` | Opus |
 | Spostare file, rinominare, aggiornare import | `sviluppatore`, modo `spostamento` | Sonnet |
-| Revisione del diff: regole del progetto | `revisore` | Opus |
-| Revisione: bug, commenti, errori muti, test | `pr-review-toolkit` | Opus |
+| Revisione del diff, un giro | `revisore` | Opus |
 | Audit che esegue e misura | `auditore` | Opus |
 | Traduzione di una pagina finita | `traduttore` | Sonnet |
 

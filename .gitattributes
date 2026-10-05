@@ -29,5 +29,5 @@ Dockerfile  text eol=lf
 frontend/src/stili/*.css  text eol=lf
 
 # The Workflow tool rejects a script with CRLF (a control character): without this line a
-# Windows checkout breaks /esegui.
+# Windows checkout breaks /costruisci.
 .claude/workflows/*.js    text eol=lf

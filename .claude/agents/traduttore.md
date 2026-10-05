@@ -31,7 +31,7 @@ vive in un posto solo nel frontend: leggilo, non presumerlo). Non tocchi nient'a
 - **Registro**: la seconda persona, asciutto, come l'italiano. Niente formule di
   cortesia che l'italiano non ha.
 - **Non puoi eseguire niente.** Scrivi con cura: i test del frontend (al push e nel Workflow
-  `esegui`) riverificano dopo di te.
+  `costruisci`) riverificano dopo di te.
 
 ## Cosa restituisci
 
