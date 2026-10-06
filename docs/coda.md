@@ -15,6 +15,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | Data | Tipo | Lavoro | Token | Minuti | Difetti |
 |---|---|---|---|---|---|
 | 6/10/2026 | costruisci | S1, una scheda per firma | ~0,5 M agenti (workflow 0,41 + sviluppatore 0,09), sessione principale non contata | 78 workflow | 2 bloccanti dal giro (ottica persa rispondendo la camera; "a colori" con la camera della notte) + 1 mio dopo (falso avviso nel log) |
+| 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 
 ### Prima delle funzioni nuove
 
@@ -288,10 +289,11 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   automatica (Marco). La grafia che l'ASIAIR scrive come montatura non entra nella firma. Si perde
   anche l'unione di due camere che portava la risposta sul filtro: ogni grafia ha la sua. La
   scheda a schermo aspetta il disegno (*Per il disegno nuovo*).
-- **S2 -- Risposte con chiavi che non si spostano.** Per l'attrezzatura fatto con S1. Senza nome
-  ha ancora la notte nella chiave, e cambiare il fuso di casa le divide e le riunisce (`spine/home_nights.py`).
-  Chiavi dalla firma dell'header, o i frame fissati al momento della risposta; si perde un po'
-  del "vale per i frame futuri di quella notte".
+- **S2 -- fatta** (6/10/2026): l'oggetto dei frame senza nome si scrive sull'impronta di ogni
+  frame del gruppo (`declarations`, tipo `frame`); la risposta del gruppo e' quella che i suoi frame
+  portano, cosi' vale per chi arriva dopo. `home_nights` risceglie solo il gruppo, non trasporta
+  risposte. Si perde il frame arrivato dopo la risposta che il fuso nuovo porta in un gruppo senza
+  frame risposti.
 - **S3 -- Una scheda per gruppo di frame invece di Oggetti e Senza nome**, coi candidati del
   cielo (anche zero).
 - **S4 -- Applica conferma solo cio' a cui si e' risposto**, e un oggetto che il cielo riconosce
@@ -832,8 +834,7 @@ riga per voce.
   (`solve.solver_found` e `api/settings.search_solver`); il campo come leva di velocita'
   (`solve._field_hint` e `astap.solve`); "risolto e' una foto, senza stelle una calibrazione"
   (`typeless`, `typeless_folders`, `api/models_review_groups`); la notte da mezzogiorno a
-  mezzogiorno nella docstring di `group`, senza rimando a `clock.night_date`; "due risposte
-  diverse cadono" in `home_nights._carry` e nel contratto (`docs/domini/spina.md`).
+  mezzogiorno nella docstring di `group`, senza rimando a `clock.night_date`.
 - **Attrezzatura, dopo la fase 1**: `rigs.declared_mount` riscrive la query di `rigs._rig`
   (`RIG_ROWS` per id) invece di chiamarla; `filters_used.of` e `idlist` accettano anche chiavi di
   testo (i mosaici dell'Archivio) in una tabella `id INTEGER`, che le tiene per affinita' di SQLite.

@@ -538,7 +538,10 @@ a guardare, perche' non sono la stessa cosa.
   solo i frame che dicono quando sono stati ripresi, e un gruppo dove nessuno lo dice non mostra
   ore. Ogni notte
   e' una domanda a parte. Scrivi l'oggetto oppure spunta *non e' un oggetto*, per un frame di prova o una
-  messa a fuoco: la risposta vale anche per i frame che arriveranno nello stesso gruppo. Dove invece il cielo ha trovato qualcosa decide lui, e un frame che il nome lo scrive
+  messa a fuoco: la risposta vale anche per i frame che arriveranno nello stesso gruppo. La
+  risposta resta scritta sui frame: se cambi casa o il suo fuso e un frame passa a un'altra notte,
+  la porta con se'; se in un gruppo finiscono frame con due risposte diverse, la domanda torna
+  aperta. Dove invece il cielo ha trovato qualcosa decide lui, e un frame che il nome lo scrive
   tiene il suo.
 - **Oggetti.** In cima ci sono quelli su cui l'app ha un dubbio, ognuno con cio' che il cielo ha
   trovato nel campo di quel frame da cliccare, quando ha trovato qualcosa; se nessuno e' quello

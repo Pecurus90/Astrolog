@@ -70,3 +70,4 @@ test_two_camera_answers_that_disagree_fall_when_their_groups_become_one - S1: th
 test_the_group_is_the_night_and_the_header_not_the_folder - S1: replaced by test_the_signature_is_the_header_not_the_night_or_the_folder (ADR 0014)
 test_rigless_asks_the_rig_only_of_the_nights_of_its_poses - S1: renamed test_the_cards_ask_the_rig_only_of_the_nights_of_their_poses (ADR 0014)
 test_merging_two_cameras_carries_the_answer_to_the_one_kept - S1: the filter answer sits on the file spelling, a merge does not move it; see test_merging_two_cameras_leaves_each_signature_its_answer (ADR 0014)
+test_a_single_frame_has_no_declarations - S2: renamed test_a_single_frame_declares_only_its_object, the unnamed answer sits on the frame (ADR 0014)

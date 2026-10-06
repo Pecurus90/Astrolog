@@ -169,19 +169,22 @@ CREATE TABLE header_aliases (
 -- di camera e telescopio, focale, sensore (ADR 0014, S1); il campo `gear` tiene in JSON i NOMI di
 -- camera e ottica, la focale e cosa c'era davanti (`no_filter`, o `filter` col nome del filtro).
 -- Vale anche per le pose che arriveranno con la stessa firma, in qualunque notte.
--- Per i gruppi di pose senza oggetto (`frame_group`) la chiave e' scritta sulla posa; sulla stessa
--- chiave il campo `object` risponde per le pose che non dicono l'OGGETTO e di cui il cielo non dice
--- niente: "catalog:<slug>", "name:<nome>" oppure "none", cioe' non e' un oggetto (Marco, 15/9/2026).
+-- Per le pose che non dicono l'OGGETTO e di cui il cielo non dice niente (`frame`) la chiave e'
+-- l'impronta della posa, non il gruppo, che porta la notte (ADR 0014, S2): la risposta del gruppo
+-- si scrive su ognuna, e il campo `object` vale "catalog:<slug>", "name:<nome>" oppure "none",
+-- cioe' non e' un oggetto (Marco, 15/9/2026).
 -- Per un mosaico (`mosaic`) la chiave e' quella del mosaico -- l'impronta di una delle sue pose,
 -- scelta quando nasce e poi ferma, che non dipende dalla camera -- e il campo e' `answer`: il valore e'
 -- "no", oppure DI COSA e' il mosaico, "catalog:<slug>" o "name:<nome>", che e' il si' (Marco,
 -- 22/9/2026). Si scrive una volta, e nessuno la ricalcola (Marco, 23/9/2026).
 CREATE TABLE declarations (
-  entity_type TEXT NOT NULL CHECK (entity_type IN ('object', 'rig', 'instrument', 'night', 'session', 'coordinates', 'folder', 'frame_group', 'mosaic', 'signature')),
+  entity_type TEXT NOT NULL CHECK (entity_type IN ('object', 'rig', 'instrument', 'night', 'session', 'coordinates', 'folder', 'frame', 'mosaic', 'signature')),
   entity_key  TEXT NOT NULL,
   field       TEXT NOT NULL,
   value       ANY,
   created_at  TEXT NOT NULL,
+  -- the single frame carries only the answer on its object (ADR 0014, S2)
+  CHECK (entity_type <> 'frame' OR field = 'object'),
   PRIMARY KEY (entity_type, entity_key, field)
 ) STRICT;
 

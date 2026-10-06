@@ -45,6 +45,13 @@ GROUP BY f.unnamed_key
 # Copies and frames with a sky included: `identify` makes the choice again.
 _POSES_OF_GROUP = f"SELECT f.id FROM frames f {folder.JOIN} WHERE f.unnamed_key = ?"  # noqa: S608
 
+# Two are enough to tell one answer from a disagreement.
+_ANSWERS_OF_GROUP = """
+SELECT DISTINCT d.value FROM frames f JOIN declarations d ON d.entity_type = ?
+  AND d.entity_key = f.frame_hash AND d.field = ?
+WHERE f.unnamed_key = ? LIMIT 2
+"""
+
 
 def _field(r: Row) -> float | None:
     """The short side of the field, in degrees."""
@@ -125,22 +132,27 @@ def declare(  # noqa: PLR0913
     not_an_object: bool = False,
     now: str | None = None,
 ) -> None:
-    """Rewritable: answering again changes one's mind. An unknown slug is refused before writing."""
+    """On every frame's fingerprint, so a frame that changes group carries it. Rewritable; an
+    unknown slug is refused before writing."""
     risposta.refuse_unknown_slug(conn, slug)
     slug, name = risposta.resolved(conn, slug, name)
     value = NONE if not_an_object else risposta.target_value(slug, name)
-    decl.write_declaration(conn, decl.FRAME_GROUP, key, decl.GROUP_OBJECT, value, now)
+    # every frame `answer` reads, missing ones too: a stale one would leave two answers
+    rows = conn.execute("SELECT frame_hash FROM frames WHERE unnamed_key = ?", (key,)).fetchall()
+    for r in rows:
+        decl.write_declaration(conn, decl.FRAME, r["frame_hash"], decl.FRAME_OBJECT, value, now)
     if not not_an_object:
         # the user named the object: it does not come back to the page asking to be confirmed
         decl.confirm(conn, "object", slug or name, now)
 
 
 def answer(conn: sqlite3.Connection, key: str | None) -> dict[str, Any] | None:
-    """`{"kind", "value", "name"}`. A catalog entry that is gone counts as no answer: its frames
-    stay a question (`named_by_group`), so the group cannot claim an answer while they wait."""
-    value = decl.declared(conn, decl.FRAME_GROUP, key, decl.GROUP_OBJECT) if key else None
-    if value is None:
+    """`{"kind", "value", "name"}`: the one answer its frames carry, which newcomers take. Two
+    answers are none, and so is a gone catalog entry: its frames stay a question."""
+    dette = conn.execute(_ANSWERS_OF_GROUP, (decl.FRAME, decl.FRAME_OBJECT, key)).fetchall()
+    if len(dette) != 1:
         return None
+    value = dette[0][0]
     if value == NONE:
         return {"kind": NONE, "value": None, "name": None}
     detto = risposta.shown_target(conn, value)

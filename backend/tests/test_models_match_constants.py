@@ -129,7 +129,7 @@ def test_the_declaration_types_the_spine_names_are_the_ones_the_schema_allows():
     schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
     riga = next(r for r in schema.splitlines() if "entity_type TEXT NOT NULL CHECK" in r)
     dallo_schema = set(re.findall(r"'([a-z_]+)'", riga))
-    tipi = {declarations.FOLDER, declarations.MOSAIC, declarations.FRAME_GROUP}
+    tipi = {declarations.FOLDER, declarations.MOSAIC, declarations.FRAME}
     assert tipi <= dallo_schema
 
 

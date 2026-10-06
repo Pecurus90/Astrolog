@@ -302,9 +302,13 @@ def test_declarations_and_aliases_key_on_stable_values(conn):
         conn.execute("SELECT entity_id FROM declarations")
 
 
-def test_a_single_frame_has_no_declarations(conn):
-    """L'utente risponde per gruppi -- una cartella, un nome, una camera --, mai per la singola
-    posa: una dichiarazione per frame non ha una pagina che la scriva, e lo schema la rifiuta."""
+def test_a_single_frame_declares_only_its_object(conn):
+    """L'utente risponde per gruppi; la sola risposta che scende sulla posa e' l'oggetto dei
+    frame senza nome (ADR 0014, S2). Ogni altro campo per frame lo schema lo rifiuta."""
+    conn.execute(
+        "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"
+        " VALUES('frame', 'abc123', 'object', 'name:Rosetta', 'now')"
+    )
     with pytest.raises(sqlite3.IntegrityError):
         conn.execute(
             "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"

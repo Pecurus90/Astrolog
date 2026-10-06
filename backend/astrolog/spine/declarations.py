@@ -86,8 +86,9 @@ CAMERA_MONO, CAMERA_COLOR = "mono", "color"
 
 # The gear the files leave out, keyed by the header signature (`spine/signature.py`).
 SIGNATURE, SIGNATURE_GEAR = "signature", "gear"
-# The target on frames with no name and no sky, keyed by the group written on the frame.
-FRAME_GROUP, GROUP_OBJECT = "frame_group", "object"
+# The target on frames with no name and no sky, keyed by the frame's fingerprint: the group's key
+# carries the night, which moves with home's zone.
+FRAME, FRAME_OBJECT = "frame", "object"
 # Answers on a folder, keyed by its path.
 FOLDER = "folder"
 # Whether frames that do not say what file they are are a light or a calibration. Here and not in

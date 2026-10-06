@@ -79,7 +79,10 @@ def _di(client, sotto, value):
     torna la ricevuta dello stadio."""
     chiave = _chiave(client, sotto)
     with db(client) as conn:
-        decl.write_declaration(conn, decl.FRAME_GROUP, chiave, decl.GROUP_OBJECT, value)
+        for (impronta,) in conn.execute(
+            "SELECT frame_hash FROM frames WHERE unnamed_key = ?", (chiave,)
+        ).fetchall():
+            decl.write_declaration(conn, decl.FRAME, impronta, decl.FRAME_OBJECT, value)
         conn.commit()
     return _rigira(client)
 

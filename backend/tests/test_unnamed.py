@@ -172,3 +172,58 @@ def test_the_answer_reaches_a_pose_of_the_same_group_in_another_folder(conn):
     b = _posa(conn, radice, "altrove/b.fits")
     unnamed.declare(conn, _chiave(conn, a), name="Rosetta")
     assert unnamed.named_by_group(conn, _chiave(conn, b)) == ("Rosetta", None)
+
+
+def test_the_answer_hangs_on_the_poses_not_on_a_key_with_the_night(conn):
+    """La risposta si scrive sull'impronta di ogni posa del gruppo, non su una chiave con la notte
+    (ADR 0014, S2): cambiare il fuso di casa non la sposta, e un backup la ritrova."""
+    radice = add_folder(conn, "D:/Astro")
+    pose = [_posa(conn, radice, f"R/{i}.fits") for i in range(2)]
+    unnamed.declare(conn, _chiave(conn, pose[0]), name="Rosetta")
+    righe = conn.execute(
+        "SELECT entity_type, entity_key, value FROM declarations WHERE field = 'object'"
+        " AND entity_type <> 'object'"
+    ).fetchall()
+    impronte = {f"{radice}:R/{i}.fits" for i in range(2)}
+    assert {tuple(r) for r in righe} == {("frame", k, "name:Rosetta") for k in impronte}
+
+
+def test_the_answer_follows_its_poses_into_another_group(conn):
+    """Una posa che cambia gruppo -- la notte si sposta col fuso di casa -- porta con se' la sua
+    risposta: nessuno la deve trasportare."""
+    radice = add_folder(conn, "D:/Astro")
+    a = _posa(conn, radice, "R/a.fits")
+    unnamed.declare(conn, _chiave(conn, a), name="Rosetta")
+    conn.execute(
+        "UPDATE frames SET unnamed_key = NULL, local_night = '2024-03-13' WHERE id = ?", (a,)
+    )
+    assert unnamed.named_by_group(conn, unnamed.assign(conn, a)) == ("Rosetta", None)
+
+
+def test_changing_my_mind_reaches_a_missing_pose_too(conn):
+    """Si cambia idea dopo che un file e' sparito: la risposta nuova si scrive anche sul mancante,
+    o il gruppo resterebbe con due risposte e una domanda che rispondere non chiude."""
+    radice = add_folder(conn, "D:/Astro")
+    a = _posa(conn, radice, "R/a.fits")
+    b = _posa(conn, radice, "R/b.fits")
+    chiave = _chiave(conn, a)
+    unnamed.declare(conn, chiave, name="Rosetta")
+    conn.execute("UPDATE positions SET status = 'missing' WHERE frame_id = ?", (b,))
+    unnamed.declare(conn, chiave, name="Caldwell 49")
+    assert unnamed.named_by_group(conn, chiave) == ("Caldwell 49", None)
+
+
+def test_two_answers_in_one_group_are_no_answer(conn):
+    """Due pose dello stesso gruppo con risposte diverse: il gruppo non ne sceglie una, la domanda
+    torna aperta; una posa senza risposta prende quella del gruppo."""
+    radice = add_folder(conn, "D:/Astro")
+    chiave = _chiave(conn, _posa(conn, radice, "R/a.fits"))
+    _posa(conn, radice, "R/b.fits")
+    unnamed.declare(conn, chiave, name="Rosetta")
+    _posa(conn, radice, "R/dopo.fits")
+    assert unnamed.named_by_group(conn, chiave) == ("Rosetta", None)
+    conn.execute(
+        "UPDATE declarations SET value = 'name:Caldwell 49' WHERE entity_key = ?",
+        (f"{radice}:R/b.fits",),
+    )
+    assert unnamed.answer(conn, chiave) is None

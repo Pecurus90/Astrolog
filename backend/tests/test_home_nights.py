@@ -1,6 +1,6 @@
-"""La notte delle pose che non dicono dove sono state fatte segue il fuso di casa, e le risposte
-sui frame senza nome, che portano quella notte nella chiave, la seguono. Quelle sull'attrezzatura
-no: la loro chiave e' la firma dell'header, senza notte (ADR 0014, S1). Le regole stanno in
+"""La notte delle pose che non dicono dove sono state fatte segue il fuso di casa, e con lei il
+gruppo dei frame senza nome. Nessuna risposta porta la notte: l'oggetto sta sull'impronta del
+frame (ADR 0014, S2), l'attrezzatura sulla firma dell'header (S1). Le regole stanno in
 `spine/home_nights.py`.
 
 A Tokyo il confine della notte (mezzogiorno locale) cade alle 03:00 UTC, e quello UTC alle 21:00
