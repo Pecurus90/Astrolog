@@ -9,19 +9,19 @@ from typing import Any
 
 def percentiles(conn: sqlite3.Connection, site: Mapping[str, Any]) -> list[float] | None:
     """`None` when missing or measured elsewhere: a moved site is not held to its old usual."""
-    riga = conn.execute(
+    row = conn.execute(
         "SELECT latitude, longitude, percentiles_json FROM weather_climate WHERE site_id = ?",
         (site["id"],),
     ).fetchone()
-    if riga is None or (riga["latitude"], riga["longitude"]) != (
+    if row is None or (row["latitude"], row["longitude"]) != (
         site["latitude"],
         site["longitude"],
     ):
         return None
-    return json.loads(riga["percentiles_json"])
+    return json.loads(row["percentiles_json"])
 
 
-def tenths_below(percentili: Sequence[float], valore: float) -> int:
-    """How many nights in ten of the last year had less wind than `valore`."""
-    sotto = sum(p < valore for p in percentili)
-    return round(sotto / len(percentili) * 10)
+def tenths_below(usual: Sequence[float], value: float) -> int:
+    """How many nights in ten of the last year had less wind than `value`."""
+    below = sum(p < value for p in usual)
+    return round(below / len(usual) * 10)

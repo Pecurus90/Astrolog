@@ -3,18 +3,19 @@ verdict judges, written as percentiles for `position`. Asked once a year per sit
 
 import json
 import sqlite3
-import urllib.parse
+import zoneinfo
 from collections.abc import Mapping, Sequence
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from .. import net
 from ..clock import iso_z
-from . import fetches, forecast, nights, openmeteo, verdict
+from . import fetches, nights, openmeteo, verdict
+from .fetches import Source
+from .forecast import Outcome, Status
 
 # The reanalysis archive does not answer at 700 hPa; the historical forecast archive does.
 URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
-SOURCE = "open-meteo/climate"
 VARIABLE = "wind_speed_700hPa"
 YEAR_DAYS = 365
 # A third of a year, a product choice, not a convention: fewer nights would be one season's usual,
@@ -27,71 +28,52 @@ BAD_ANSWER_WAIT = timedelta(days=1)
 _fetch = net.fetch
 
 
-# Twin of `history._url`; the markers go when the Open-Meteo recipes merge (docs/coda.md).
-# jscpd:ignore-start
-def _url(site: Mapping[str, Any], dal: date, al: date) -> str:
-    query = urllib.parse.urlencode(
-        {
-            "latitude": site["latitude"],
-            "longitude": site["longitude"],
-            "start_date": dal.isoformat(),
-            "end_date": al.isoformat(),
-            "hourly": VARIABLE,
-            "timezone": "UTC",
-        }
-    )
-    return f"{URL}?{query}"
-
-
-# jscpd:ignore-end
-
-
-def _spostato(conn: sqlite3.Connection, site: Mapping[str, Any]) -> bool:
+def _moved(conn: sqlite3.Connection, site: Mapping[str, Any]) -> bool:
     """The usual belongs to a place: a site that moved asks again now, not in a year."""
-    riga = conn.execute(
+    row = conn.execute(
         "SELECT latitude, longitude FROM weather_climate WHERE site_id = ?", (site["id"],)
     ).fetchone()
-    return riga is not None and (riga[0], riga[1]) != (site["latitude"], site["longitude"])
+    return row is not None and (row[0], row[1]) != (site["latitude"], site["longitude"])
 
 
-def _tocca(conn: sqlite3.Connection, site: Mapping[str, Any], adesso: datetime) -> bool:
-    ultimo = fetches.last(conn, site["id"], SOURCE)
-    if ultimo is None:
+def _due(conn: sqlite3.Connection, site: Mapping[str, Any], now: datetime) -> bool:
+    attempt = fetches.last(conn, site["id"], Source.CLIMATE)
+    if attempt is None:
         return True
-    eta = fetches.age(ultimo, adesso)
-    if ultimo["status"] == forecast.BAD_ANSWER:
-        return eta >= BAD_ANSWER_WAIT
-    if ultimo["status"] != forecast.OK:
-        return eta >= timedelta(seconds=forecast.RETRY_S)
-    return _spostato(conn, site) or eta >= timedelta(days=YEAR_DAYS)
+    if attempt["status"] == Outcome.BAD_ANSWER:
+        return fetches.age(attempt, now) >= BAD_ANSWER_WAIT
+    if attempt["status"] != Outcome.OK:
+        return not fetches.failed_recently(attempt, now)
+    return _moved(conn, site) or fetches.age(attempt, now) >= timedelta(days=YEAR_DAYS)
 
 
-def _percentili(valori: Sequence[float]) -> list[float]:
+def _percentiles(values: Sequence[float]) -> list[float]:
     """The 101 percentiles, interpolated between the two neighbours."""
-    xs = sorted(valori)
+    xs = sorted(values)
     out = []
     for p in range(101):
         pos = (len(xs) - 1) * p / 100
-        basso = int(pos)
-        alto = min(basso + 1, len(xs) - 1)
-        out.append(round(xs[basso] + (xs[alto] - xs[basso]) * (pos - basso), 2))
+        low = int(pos)
+        high = min(low + 1, len(xs) - 1)
+        out.append(round(xs[low] + (xs[high] - xs[low]) * (pos - low), 2))
     return out
 
 
-def _medie_notturne(
-    site: Mapping[str, Any], tempi: Sequence[datetime], serie: Sequence[float | None]
+def _night_means(
+    site: Mapping[str, Any], times: Sequence[datetime], wind: Sequence[float | None]
 ) -> list[float]:
     """Mean wind of each whole night, over its verdict window: the day says nothing of the nights
     one shoots."""
-    notti = nights.covered(site["timezone"], tempi, tempi[0].date().isoformat(), whole=True)
-    cielo = nights.sky(site["latitude"], site["longitude"], notti)
-    medie = []
-    for _, coppie in notti:
-        ore, _ = verdict.window([{"sky": cielo[t], "v": serie[i]} for i, t in coppie])
-        valori = [o["v"] for o in ore if o["v"] is not None]
-        if valori:
-            medie.append(sum(valori) / len(valori))
-    return medie
+    covered = nights.covered(site["timezone"], times, times[0].date().isoformat(), whole=True)
+    sky = nights.sky(site["latitude"], site["longitude"], covered)
+    tz = zoneinfo.ZoneInfo(site["timezone"])
+    means = []
+    for _, pairs in covered:
+        judged, _ = verdict.window(nights.hours({"v": wind}, pairs, tz, sky=sky))
+        values = [h.values["v"] for h in judged if h.values["v"] is not None]
+        if values:
+            means.append(sum(values) / len(values))
+    return means
 
 
 def step(
@@ -100,30 +82,38 @@ def step(
     *,
     fetch: net.Fetch | None = None,
     now: datetime | None = None,
-) -> str | None:
+) -> Status | None:
     """One call if due, and its outcome; `None` when not due."""
     if site is None or not site["timezone"]:
         return None
-    adesso = now or datetime.now(UTC)
-    if not _tocca(conn, site, adesso):
+    moment = now or datetime.now(UTC)
+    if not _due(conn, site, moment):
         return None
-    al = adesso.date() - timedelta(days=1)
-    risposta, perche = net.ask_why(fetch or _fetch, _url(site, al - timedelta(days=YEAR_DAYS), al))
-    esito = perche or _scrivi(conn, site, risposta, adesso)
-    fetches.record(conn, site["id"], SOURCE, esito, adesso)
-    return esito
+    end = moment.date() - timedelta(days=1)
+    query = openmeteo.url(
+        URL,
+        site["latitude"],
+        site["longitude"],
+        (VARIABLE,),
+        start_date=(end - timedelta(days=YEAR_DAYS)).isoformat(),
+        end_date=end.isoformat(),
+    )
+    answer, failure = net.ask_why(fetch or _fetch, query)
+    outcome = failure or _write(conn, site, answer, moment)
+    fetches.record(conn, site["id"], Source.CLIMATE, outcome, moment)
+    return outcome
 
 
-def _scrivi(
-    conn: sqlite3.Connection, site: Mapping[str, Any], risposta: Any, adesso: datetime
-) -> str:
+def _write(
+    conn: sqlite3.Connection, site: Mapping[str, Any], answer: Any, now: datetime
+) -> Outcome:
     try:
-        tempi, serie = openmeteo.parse_single(risposta, {VARIABLE: "wind_700hpa_kmh"})
+        times, series = openmeteo.parse_single(answer, {VARIABLE: "wind_700hpa_kmh"})
     except openmeteo.BadAnswerError:
-        return forecast.BAD_ANSWER
-    medie = _medie_notturne(site, tempi, serie["wind_700hpa_kmh"]) if tempi else []
-    if len(medie) < MIN_NIGHTS:
-        return forecast.BAD_ANSWER
+        return Outcome.BAD_ANSWER
+    means = _night_means(site, times, series["wind_700hpa_kmh"]) if times else []
+    if len(means) < MIN_NIGHTS:
+        return Outcome.BAD_ANSWER
     conn.execute(
         "INSERT INTO weather_climate(site_id, latitude, longitude, computed_at, nights,"
         " percentiles_json) VALUES(?, ?, ?, ?, ?, ?) ON CONFLICT(site_id) DO UPDATE SET"
@@ -134,9 +124,9 @@ def _scrivi(
             site["id"],
             site["latitude"],
             site["longitude"],
-            iso_z(adesso),
-            len(medie),
-            json.dumps(_percentili(medie)),
+            iso_z(now),
+            len(means),
+            json.dumps(_percentiles(means)),
         ),
     )
-    return forecast.OK
+    return Outcome.OK

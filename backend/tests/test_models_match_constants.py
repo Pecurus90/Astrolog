@@ -11,7 +11,7 @@ from typing import get_args
 
 import pytest
 
-from astrolog import astap
+from astrolog import astap, net
 from astrolog.api import (
     models,
     models_review,
@@ -19,6 +19,7 @@ from astrolog.api import (
     models_site,
     models_tonight,
     models_weather,
+    weather_key,
 )
 from astrolog.db.connect import SCHEMA_PATH
 from astrolog.ephemeris import moon, sun
@@ -36,6 +37,7 @@ from astrolog.spine import (
 from astrolog.spine.scan import COUNTS
 from astrolog.units import SQM_MAX, SQM_MIN
 from astrolog.vocab.filters import BANDS, PASSBANDS
+from astrolog.weather import fetches, forecast, verdict
 from astrolog.worker import states
 from conftest import add_folder
 
@@ -263,3 +265,34 @@ def test_the_moon_phases_and_sky_bands_are_the_same_in_the_models_and_the_epheme
         models_weather.WeatherHourOut.model_fields["sky"].annotation,
     ):
         assert set(get_args(literal)) == set(sun.Sky)
+
+
+def _words(annotation):
+    """The strings of a `Literal`, or of a `Literal | None`."""
+    return {a for arg in get_args(annotation) for a in (get_args(arg) or (arg,))} - {type(None)}
+
+
+def test_the_weather_words_are_the_same_in_the_models_and_the_weather_package():
+    """The routes repeat them as `Literal` on purpose (`models_tonight`): never drifted."""
+    fields = {
+        name: model.model_fields[field].annotation
+        for name, model, field in (
+            ("verdict", models_weather.WeatherSkyOut, "verdict"),
+            ("window", models_weather.WeatherSkyOut, "window"),
+            ("code", models_weather.WeatherFactorOut, "code"),
+            ("missing", models_weather.WeatherOut, "missing"),
+            ("seeing", models_weather.WeatherSeeingOut, "source"),
+            ("meteoblue", models_weather.WeatherSeeingOut, "meteoblue"),
+        )
+    }
+    assert _words(fields["verdict"]) == set(verdict.Verdict)
+    assert _words(fields["window"]) == set(verdict.Window)
+    assert _words(fields["code"]) == set(verdict.FactorCode)
+    assert _words(fields["missing"]) == {forecast.Outcome.NO_TIMEZONE}
+    assert _words(fields["seeing"]) <= set(fetches.Source)
+    key_outcomes = {forecast.Outcome.OK, forecast.Outcome.BAD_ANSWER, *net.Failure}
+    assert _words(fields["meteoblue"]) == key_outcomes
+    assert set(get_args(weather_key.KeyStatus)) == key_outcomes | {weather_key.REMOVED}
+    assert set(get_args(models_weather.RefreshStatus)) == set(forecast.Outcome) | {
+        net.Failure.UNREACHABLE
+    }

@@ -8,6 +8,7 @@ from typing import Any, cast
 
 from ..net import Fetch
 from . import forecast, sky
+from .forecast import Outcome
 
 
 def refresh(
@@ -16,10 +17,10 @@ def refresh(
     *,
     fetch: Fetch | None = None,
     now: datetime | None = None,
-) -> forecast.Outcome:
+) -> forecast.Status:
     """Only the forecast's outcome comes back; the sky sources' outcomes are dropped."""
-    esito = forecast.refresh(conn, site, fetch=fetch, now=now)
-    if esito not in (forecast.NO_SITE, forecast.NO_TIMEZONE):
+    outcome = forecast.refresh(conn, site, fetch=fetch, now=now)
+    if outcome not in (Outcome.NO_SITE, Outcome.NO_TIMEZONE):
         # past those two outcomes there is a site
         sky.refresh(conn, cast("Mapping[str, Any]", site), fetch=fetch, now=now)
-    return esito
+    return outcome

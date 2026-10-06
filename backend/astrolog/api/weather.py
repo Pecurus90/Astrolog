@@ -3,7 +3,7 @@ with the forecast, and the upper air is merged per hour from its sources' rows."
 
 import json
 import sqlite3
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends
 
@@ -11,8 +11,10 @@ from ..clock import night_date, now_iso
 from ..db import config
 from ..spine.group_store import home_site
 from ..weather import forecast, meteoblue, openmeteo, rounds, sky
+from ..weather.fetches import Source
 from .deps import get_db
 from .models_weather import (
+    RefreshStatus,
     WeatherAloftOut,
     WeatherBriefOut,
     WeatherNightOut,
@@ -127,7 +129,9 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
         return vuoto
     in_corso = night_date(now_iso(), sito["timezone"]) if sito["timezone"] else None
     if in_corso is None:
-        return vuoto.model_copy(update={"site": sito["name"], "missing": forecast.NO_TIMEZONE})
+        return vuoto.model_copy(
+            update={"site": sito["name"], "missing": forecast.Outcome.NO_TIMEZONE}
+        )
     righe = conn.execute(
         _NOTTI, (sito["id"], forecast.KIND, forecast.source_of(scelto), in_corso)
     ).fetchall()
@@ -136,7 +140,7 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
     del_sito = conn.execute(
         _CIELO, (sito["id"], forecast.KIND, *sky.ALL_SOURCES, in_corso)
     ).fetchall()
-    con_meteoblue = {r["night_date"] for r in del_sito if r["source"] == meteoblue.SOURCE}
+    con_meteoblue = {r["night_date"] for r in del_sito if r["source"] == Source.METEOBLUE}
     for r in del_sito:
         arrivate[r["source"]] = max(arrivate.get(r["source"], ""), r["fetched_at"])
         per_ora = del_cielo.setdefault(r["night_date"], {})
@@ -165,7 +169,8 @@ def refresh(conn: sqlite3.Connection = Depends(get_db)) -> WeatherRefreshOut:
     """Asks for the forecast now. If the service is silent the previous one stays, and the reply
     says why."""
     sito = home_site(conn)
-    return WeatherRefreshOut(status=rounds.refresh(conn, dict(sito) if sito else None))
+    status = rounds.refresh(conn, dict(sito) if sito else None)
+    return WeatherRefreshOut(status=cast(RefreshStatus, status))
 
 
 def brief_of(conn: sqlite3.Connection, site_id: int, night: str) -> WeatherBriefOut | None:

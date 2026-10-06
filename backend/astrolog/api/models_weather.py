@@ -134,7 +134,12 @@ class WeatherOut(BaseModel):
     nights: list[WeatherNightOut]
 
 
+# Repeated rather than imported from `weather`, so the route contract does not change shape with
+# an internal module.
+RefreshStatus = Literal["ok", "no_site", "no_timezone", "unreachable", "bad_answer"]
+
+
 class WeatherRefreshOut(BaseModel):
     """How the request went: arrived, or why not."""
 
-    status: Literal["ok", "no_site", "no_timezone", "unreachable", "bad_answer"]
+    status: RefreshStatus

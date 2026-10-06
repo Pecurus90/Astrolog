@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -8,11 +8,15 @@ from ..db import config
 from ..db.transaction import transaction
 from ..spine.group_store import home_site
 from ..weather import meteoblue, rounds
+from ..weather.forecast import Outcome
 from .deps import get_db
 
 router = APIRouter(prefix="/api/v1", tags=["meteo"])
 
 REMOVED: Final = "removed"
+# Repeated rather than imported from `weather`, so the route contract does not change shape with
+# an internal module.
+KeyStatus = Literal["ok", "removed", "refused", "unreachable", "bad_answer"]
 
 
 class MeteoblueKeyIn(BaseModel):
@@ -23,7 +27,7 @@ class MeteoblueKeyOut(BaseModel):
     """How it went: saved (`ok`), removed (`removed`), or why not; and the hint of the key that is
     there now."""
 
-    status: Literal["ok", "removed", "refused", "unreachable", "bad_answer"]
+    status: KeyStatus
     hint: str | None
 
 
@@ -47,12 +51,14 @@ def put_meteoblue_key(
             meteoblue.forget(conn)
         return MeteoblueKeyOut(status=REMOVED, hint=None)
     esito = meteoblue.check_key(chiave)
-    if esito != meteoblue.OK:
-        return MeteoblueKeyOut(status=esito, hint=config.hint(config.read(conn).meteoblue_key))
+    if esito != Outcome.OK:
+        return MeteoblueKeyOut(
+            status=cast(KeyStatus, esito), hint=config.hint(config.read(conn).meteoblue_key)
+        )
     with transaction(conn):
         config.write(conn, "meteoblue_key", chiave)
         meteoblue.forget(conn)
     sito = home_site(conn)
     if sito is not None:
         rounds.refresh(conn, dict(sito))
-    return MeteoblueKeyOut(status=esito, hint=config.hint(chiave))
+    return MeteoblueKeyOut(status=cast(KeyStatus, esito), hint=config.hint(chiave))

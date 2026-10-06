@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from .openmeteo import BadAnswerError
+from .openmeteo import BadAnswerError, Series
 
 URL = "https://www.7timer.info/bin/api.pl"
 
@@ -38,27 +38,25 @@ def url(latitude: float, longitude: float) -> str:
     return f"{URL}?{query}"
 
 
-def _fascia(scala: Sequence[FromTo], valore: Any) -> FromTo:
-    return (
-        scala[valore - 1] if isinstance(valore, int) and 1 <= valore <= len(scala) else (None, None)
-    )
+def _band(scale: Sequence[FromTo], value: Any) -> FromTo:
+    return scale[value - 1] if isinstance(value, int) and 1 <= value <= len(scale) else (None, None)
 
 
-def parse(payload: Any) -> tuple[list[datetime], dict[str, list[Any]]]:
+def parse(payload: Any) -> Series:
     """Instants are rebuilt from the run (`init`, UTC) plus each entry's `timepoint` hours."""
-    serie = payload.get("dataseries") if isinstance(payload, dict) else None
-    if not isinstance(serie, list):
+    series = payload.get("dataseries") if isinstance(payload, dict) else None
+    if not isinstance(series, list):
         raise BadAnswerError("manca la serie ASTRO")
     try:
         run = datetime.strptime(str(payload.get("init")), "%Y%m%d%H").replace(tzinfo=UTC)
     except ValueError as err:
         raise BadAnswerError("run illeggibile") from err
-    voci = [v for v in serie if isinstance(v, dict) and isinstance(v.get("timepoint"), int)]
-    seeing = [_fascia(SEEING_ARCSEC, v.get("seeing")) for v in voci]
-    trasparenza = [_fascia(TRANSPARENCY_MAG, v.get("transparency")) for v in voci]
-    return [run + timedelta(hours=v["timepoint"]) for v in voci], {
+    entries = [e for e in series if isinstance(e, dict) and isinstance(e.get("timepoint"), int)]
+    seeing = [_band(SEEING_ARCSEC, e.get("seeing")) for e in entries]
+    transparency = [_band(TRANSPARENCY_MAG, e.get("transparency")) for e in entries]
+    return [run + timedelta(hours=e["timepoint"]) for e in entries], {
         "seeing_from": [s[0] for s in seeing],
         "seeing_to": [s[1] for s in seeing],
-        "transparency_from": [t[0] for t in trasparenza],
-        "transparency_to": [t[1] for t in trasparenza],
+        "transparency_from": [t[0] for t in transparency],
+        "transparency_to": [t[1] for t in transparency],
     }

@@ -12,6 +12,7 @@ import pytest
 
 from astrolog.db.connect import connect, ensure_database
 from astrolog.weather import history, openmeteo
+from astrolog.weather.fetches import Source
 from test_weather_forecast import Finto
 
 ADESSO = datetime(2026, 9, 26, 10, 0, tzinfo=UTC)
@@ -64,7 +65,7 @@ def test_a_night_older_than_five_days_gets_its_observed_weather(db):
     assert (riga["night_date"], riga["kind"], riga["source"]) == (
         "2026-03-10",
         "observed",
-        history.SOURCE,
+        Source.ARCHIVE,
     )
     assert json.loads(riga["summary_json"])["verdict"] == "go"
 

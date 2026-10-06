@@ -140,7 +140,7 @@ def test_without_a_site_or_its_timezone_nothing_is_asked(db, minimo_di_un_mese):
 
 def test_the_percentiles_are_interpolated_between_the_two_nearest_nights():
     """Fra due notti vicine il percentile sta sulla retta che le unisce, non su una delle due."""
-    percentili = climate._percentili([40.0, 0.0, 10.0])
+    percentili = climate._percentiles([40.0, 0.0, 10.0])
     assert (percentili[0], percentili[25], percentili[50], percentili[75], percentili[100]) == (
         0.0,
         5.0,

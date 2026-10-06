@@ -2,7 +2,7 @@
 clock-change night has its 23 or 25 hours and no doubled hour."""
 
 import urllib.parse
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
 from typing import Any
 
@@ -38,57 +38,66 @@ VARIABLES = {
 PAST_DAYS = 1
 FORECAST_DAYS = 8
 
+# A single-series reading: the instants, and each quantity's values by our name.
+type Series = tuple[list[datetime], dict[str, list[Any]]]
+
 
 class BadAnswerError(ValueError):
     """The service answered, but not a forecast."""
 
 
+def url(base: str, latitude: float, longitude: float, hourly: Iterable[str], **params: Any) -> str:
+    """Every Open-Meteo service: the place, the hourly quantities in UTC, then its own `params`."""
+    query = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "hourly": ",".join(hourly),
+        "timezone": "UTC",
+        **params,
+    }
+    return f"{base}?{urllib.parse.urlencode(query)}"
+
+
 def forecast_url(latitude: float, longitude: float) -> str:
-    query = urllib.parse.urlencode(
-        {
-            "latitude": latitude,
-            "longitude": longitude,
-            "hourly": ",".join(VARIABLES),
-            "models": ",".join(MODELS),
-            "timezone": "UTC",
-            "past_days": PAST_DAYS,
-            "forecast_days": FORECAST_DAYS,
-        }
+    return url(
+        FORECAST_URL,
+        latitude,
+        longitude,
+        VARIABLES,
+        models=",".join(MODELS),
+        past_days=PAST_DAYS,
+        forecast_days=FORECAST_DAYS,
     )
-    return f"{FORECAST_URL}?{query}"
+
+
+def _hourly(payload: Any) -> tuple[dict[str, Any], list[datetime]]:
+    """The hourly block and its instants."""
+    hourly = payload.get("hourly") if isinstance(payload, dict) else None
+    if not isinstance(hourly, dict) or not isinstance(hourly.get("time"), list):
+        raise BadAnswerError("manca la serie oraria")
+    try:
+        instants = [datetime.fromisoformat(t).replace(tzinfo=UTC) for t in hourly["time"]]
+    except (TypeError, ValueError) as err:
+        raise BadAnswerError("orari illeggibili") from err
+    return hourly, instants
 
 
 def parse(payload: Any) -> tuple[list[datetime], dict[str, dict[str, list[Any]]]]:
     """One time axis for every model."""
-    hourly = payload.get("hourly") if isinstance(payload, dict) else None
-    if not isinstance(hourly, dict) or not isinstance(hourly.get("time"), list):
-        raise BadAnswerError("manca la serie oraria")
-    tempi = hourly["time"]
-    try:
-        istanti = [datetime.fromisoformat(t).replace(tzinfo=UTC) for t in tempi]
-    except (TypeError, ValueError) as err:
-        raise BadAnswerError("orari illeggibili") from err
-    letto = {}
-    for modello in MODELS:
-        serie = {nostro: hourly.get(f"{loro}_{modello}") for loro, nostro in VARIABLES.items()}
+    hourly, instants = _hourly(payload)
+    read = {}
+    for model in MODELS:
+        series = {ours: hourly.get(f"{theirs}_{model}") for theirs, ours in VARIABLES.items()}
         # a model the service did not send stays out, never filled in
-        if all(isinstance(v, list) and len(v) == len(istanti) for v in serie.values()):
-            letto[modello] = serie
-    return istanti, letto
+        if all(isinstance(v, list) and len(v) == len(instants) for v in series.values()):
+            read[model] = series
+    return instants, read
 
 
-def parse_single(
-    payload: Any, variables: Mapping[str, str]
-) -> tuple[list[datetime], dict[str, list[Any]]]:
+def parse_single(payload: Any, variables: Mapping[str, str]) -> Series:
     """An answer with a single series and no models (the archive, CAMS air)."""
-    hourly = payload.get("hourly") if isinstance(payload, dict) else None
-    if not isinstance(hourly, dict) or not isinstance(hourly.get("time"), list):
-        raise BadAnswerError("manca la serie oraria")
-    try:
-        istanti = [datetime.fromisoformat(t).replace(tzinfo=UTC) for t in hourly["time"]]
-    except (TypeError, ValueError) as err:
-        raise BadAnswerError("orari illeggibili") from err
-    serie: dict[str, Any] = {nostro: hourly.get(loro) for loro, nostro in variables.items()}
-    if not all(isinstance(v, list) and len(v) == len(istanti) for v in serie.values()):
+    hourly, instants = _hourly(payload)
+    series: dict[str, Any] = {ours: hourly.get(theirs) for theirs, ours in variables.items()}
+    if not all(isinstance(v, list) and len(v) == len(instants) for v in series.values()):
         raise BadAnswerError("serie incomplete")
-    return istanti, serie
+    return instants, series

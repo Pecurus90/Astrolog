@@ -19,6 +19,8 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | rifattorizza | Fase 2, lotto 3: `weather` | ~0,21 M agenti (uno sviluppatore), sessione principale non contata | 17 agente | 0 (la prova copre; confronto byte per byte delle tabelle del meteo) |
+| 6/10/2026 | rifattorizza | Fase 2, lotto 2: `ephemeris` | sessione principale sola | ~35 | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 1: macchina dei nomi, `db`/`fits`/`catalog`/`vocab` | ~0,18 M agenti (uno sviluppatore), sessione principale non contata | ~70 | 0 (nessun revisore: la prova copre); 1 regola dei commenti presa dal commit |
 
 ### Prima delle funzioni nuove
@@ -73,15 +75,10 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   nome italiano nuovo e' rosso, quelli vecchi stanno in `tools/nomi_italiani.txt`, che solo si
   accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Fatti `db` e
   `fits` (e il segnaposto `{listed}` di `idlist.grouped`), poi `ephemeris` (`corpi` e' `bodies`).
-  Gia' visti: `con_cielo`, `lucchettato`, `fra_i_candidati` (`spine/identify*`). In `weather`
-  quasi tutto: `_scrivi`, `_una`,
-  `_fattore`, `_quando`, `_valori`, `_media`, `_con`, `_ORDINE`, `_accordo`, `_spostato`, `_tocca`,
-  `_percentili`, `_medie_notturne`, `_in_attesa`, `_da_chiedere`, `_MANCANTI`, `_fascia`, gli
-  attributi di `forecast.Cadence` e i parametri italiani di quasi ogni funzione, pubbliche
-  comprese (`adesso`, `ore`, `serie`, `tempi`, `coppie`, `percentili`, `valore`, `righe`,
-  `risposta`, `ultimo`, `dal`/`al`, ...). Nei file sciolti: `_cerca`, `canale`, `nomi`, `scritto`
+  Fatti anche `weather` e `net`. Gia' visti: `con_cielo`, `lucchettato`, `fra_i_candidati`
+  (`spine/identify*`). Nei file sciolti: `_cerca`, `canale`, `nomi`, `scritto`
   (`astap`); `_ORA_DI_INIZIO`, `comincia`, `fine`, `finisce`, `fuso`, `giorno`, `inizio`,
-  `quando`, `quante`, `secondi` (`clock`); `_RIFIUTI`, `rifiuto`, `motivo` (`net`); `misurati`,
+  `quando`, `quante`, `secondi` (`clock`); `misurati`,
   `coppia`, `nord`, `est` (`place`); `CASA`, `MODO_SOLO_UTENTE` (`startup`); `classe` (`units`).
   Nel primo lotto di `spine`: `detto`, `notte`, `giudicati`, `fuso`, `istante` (`scan`); `prima`
   (`scan_store`); `_DENTRO`, `dentro`, `dritto` (`frame_folder`); `corredi` (alias di `rigs`),
@@ -174,22 +171,16 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
 - **Forme `dict` che escono dai package di base**: la voce del catalogo
   (`catalog/lookup.by_designation`, `by_slug`, `in_cone`), da tipare col lotto di
   `spine/identify`: si spalma nei candidati (`**entry`) e i test ne costruiscono a mano; lo snapshot e il record dello stadio (`worker/worker.py`,
-  `worker/states.blank_record`), il riassunto e le ore di una notte (`weather/verdict.assess`,
-  `weather/nights.hours`: scritti in `weather_nights` e riletti da `api/weather`), i posti trovati
+  `worker/states.blank_record`), i posti trovati
   (`place.search`, che `api/sites` riveste uno per uno in `PlaceOut`).
 - **`db/idlist.grouped` torna `dict[Any, list[Any]]`**: generico in `T` rompe `api/archive.py`, che
   passa i dict di `spine/filters_used` a un campo `list[FilterUsed]`. Si fa generico quando i
   chiamanti costruiscono righe tipate.
 - **Insiemi chiusi da fare `StrEnum`**, che escono dal package (fatti tipo del frame, software e
-  bande, fasi della Luna e fasce del cielo): gli stati di `worker/states`. In `weather`: gli esiti (`forecast.OK`,
-  `NO_SITE`, `NO_TIMEZONE`, `UNREACHABLE`, `BAD_ANSWER`, `net.REFUSED`, scritti in
-  `weather_fetches` e ripetuti come `Literal` in `api/models_weather` e `api/weather_key` oltre
-  che in `forecast.Outcome` e `meteoblue.KeyOutcome`), il verdetto `go`/`marginal`/`nogo`, i codici dei
-  fattori (`verdict._ORDINE`), la finestra (`BUIO`/`SUN_DOWN`), i nomi delle fonti. Nei file
-  sciolti: `astap.REASONS` e `SOURCES`, `place.SkySource` ed `ElevationSource` (scritti in
-  `sites`), `net.Failure` (accanto a `REFUSED`/`UNREACHABLE`). `meteoblue.KeyOutcome` e' gia'
-  `Literal["ok", "bad_answer"] | net.Failure`: toglie la terza scrittura di refused/unreachable
-  senza cambiare comportamento, e lo `StrEnum` la sostituira'. Nella scansione: esiti, motivi,
+  bande, fasi della Luna e fasce del cielo, meteo e `net.Failure`): gli stati di `worker/states`.
+  Nei file sciolti: `astap.REASONS` e `SOURCES`, `place.SkySource` ed `ElevationSource` (scritti
+  in `sites`). In `weather` restano stringhe i generi di riga (`forecast.KIND`, `history.KIND`) e
+  le fonti per modello (`forecast.source_of`), aperte quanto la scelta dei modelli. Nella scansione: esiti, motivi,
   file non letti e saltati (`scan_store.STATUSES`, `REASONS`, `FILE_ERRORS`, `SKIP_REASONS`,
   scritti in `scan_runs` e ripetuti in `api/models`) e il marchio `calibrated`/`rewritten`
   (`rewrite.MARK_WEIGHT`, scritto in `frames.rewrite_mark`). Negli stadi: i nomi e gli stati
@@ -221,10 +212,7 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   `archive_page` (`api/archive.py`) resta per un'altra ragione: i suoi otto parametri sono la
   query della rotta, e raccoglierli in una dipendenza di FastAPI e' un cambio di forma (fase 2).
 - **Doppioni piccoli dei package di base**: `catalog/load.load_catalog` riscrive a mano
-  `db.transaction` (gli strati non gli lasciano importare `db`: resta). In `weather`: `openmeteo.parse` e `parse_single` aprono con lo stesso preambolo (serie oraria e
-  orari); `climate._tocca` e `history._in_attesa` la stessa attesa `RETRY_S` dopo un giro andato male (il clima aspetta
-  un giorno dopo un `bad_answer`); `meteoblue` ripete come alias
-  `OK`, `REFUSED`, `UNREACHABLE`, `BAD_ANSWER`.
+  `db.transaction` (gli strati non gli lasciano importare `db`: resta).
 
 ### Tappe del prodotto
 
@@ -508,17 +496,11 @@ Niente di aperto.
 - **I soggetti di un mosaico si leggono in due posti** (`_most_poses` in
   `spine/mosaic_describe.py`, `_SUBJECTS` in `spine/mosaic_proposals.py`): la stessa giunzione
   frame-pannelli, una per il piu' frequente e una per l'insieme.
-- **Il meteo, tre doppioni**: le colonne di una riga di `weather_nights` in tre case
-  (`forecast.write_rows`, l'`INSERT` dello storico, le righe di `sky` e `forecast`); la condizione
-  "il meteo di questa notte" in SQL due volte (la pagina delle Notti e lo storico), per cui la
-  spina conosce la tabella del meteo senza importarla; quattro ricette di indirizzi Open-Meteo
-  quasi uguali (`openmeteo.forecast_url`, `cams.url`, `history._url`, `climate._url`); le ultime
-  due sono uguali quanto basta a `jscpd`, che oggi le salta per i segni `jscpd:ignore` attorno a
-  `climate._url`: unite le ricette, i segni si tolgono. Nei tipi: il ritorno di una lettura a serie
-  sola (`tuple[list[datetime], dict[str, list[Any]]]`) scritto per esteso in cinque `parse` invece
-  di un alias; `verdict.Hour` non riusato da `nights.hours` e `forecast.refresh`; e "un sito con
-  fuso ha sempre la sua notte" detto da due `cast` (`forecast.refresh`, `sky`) che nascondono a
-  pyright il `None` di `clock.night_date`: si chiude annotando `night_date` quando si tocca `clock`.
+- **Il meteo, due doppioni**: la condizione "il meteo di questa notte" in SQL due volte (la pagina
+  delle Notti e lo storico), per cui la spina conosce la tabella del meteo senza importarla; e "un
+  sito con fuso ha sempre la sua notte" detto da due `cast` (`forecast.refresh`, `sky`) che
+  nascondono a pyright il `None` di `clock.night_date`: si chiude annotando `night_date` quando si
+  tocca `clock`.
 - **Piu' piccoli**: `CATALOG_PRIORITY` (`spine/identify_score.py`) senza sei sigle che `parse`
   produce; frasi dei contratti copiate nelle docstring (da ricontare); i siti senza una casa in
   lettura come oggetti e notti; `identify_store.object_by_name` e `name_owner`, che fanno quasi la
@@ -812,7 +794,7 @@ riga per voce.
   significato ha casa nel glossario); il limite `Field(ge=0, le=100)` della Luna e' scritto in
   `MoonOut` e di nuovo in `MoonThatNight`, che dice di condividerlo ma condivide solo `PhaseKey`.
 - **Le rotte di lettura di `api`, dopo la fase 1**: `api/weather._seeing` e il ciclo di `weather`
-  scrivono a mano `"meteoblue"` e `"7timer"` accanto a `meteoblue.SOURCE`; `MeteoblueKeyOut` e
+  scrivono a mano `"meteoblue"` e `"7timer"` accanto a `fetches.Source`; `MeteoblueKeyOut` e
   `MeteoblueKeyIn` stanno in `api/weather_key.py` e non in `models_weather`. Regole dette due
   volte: "l'ordine lo decide il backend" nei moduli `api/archive` e `api/nights`; il Bortle che
   passa da `units.bortle_of` in `api/tonight._sito` e `api/sites._out`.
