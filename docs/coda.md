@@ -334,10 +334,11 @@ Niente di aperto.
   ricreato).
 - **Una lettura non calcola mai, e ci sono ancora letture che calcolano.** La regola ha le sue
   macchine nei contratti dei moduli (`backend/pyproject.toml`). Fuori restano: il **contatore
-  della barra** chiede tutta Da confermare (`GET /review`, che costruisce tutte le sezioni: 3,3 s
-  su un archivio gonfiato a 5.000 voci per famiglia) per mostrare un numero, a ogni pagina e a
-  ogni ritorno sulla finestra (`frontend/src/main.tsx` crea il client senza `staleTime`); un conto
-  leggero non deve scrivere in due case il predicato di cosa e' una domanda aperta. Dei lettori di
+  della barra** chiede tutta Da confermare (`GET /review`) per mostrare un numero, a ogni pagina e
+  a ogni ritorno sulla finestra (`frontend/src/main.tsx` crea il client senza `staleTime`). Dopo
+  la fase 2 costa 50-114 ms su 20.000 frame sintetici (3,3 s solo sull'archivio gonfiato a 5.000
+  voci per famiglia): un conto a parte scriverebbe in due case il predicato di cosa e' una domanda
+  aperta, e non vale. Si rimisura col disegno nuovo, che decide quando la barra chiede. Dei lettori di
   Da confermare, la tendina dei corredi e l'elenco degli oggetti contano ancora ogni frame a ogni
   apertura. Piu' piccoli: i frame per cartella in `GET /folders`; `stages.pending_by_stage` che
   conta `measure`, stadio che non gira mai (la sua chiave esce in `GET /pipeline/status`:
@@ -378,8 +379,9 @@ Niente di aperto.
   (`spine/scan.py`). Rimedio: ricordare i file saltati con percorso, dimensione e data.
 - **Cercare il catalogo di ASTAP costa una lettura di cartella a ogni domanda** (`GET /settings`,
   `PATCH /settings`, `GET /solver`): 5,2 ms per 1.492 voci su disco locale; su una condivisione di
-  rete sarebbe un'altra cosa. Rimedio: tenere la risposta per un po' (una cache: meccanismo
-  nuovo, fuori dal refactor).
+  rete sarebbe un'altra cosa. Rimedio: tenere la risposta per un po'. Non vale finche' ASTAP sta
+  sul disco locale, come su Windows, Mac e nell'immagine Docker; si rimisura se un utente lo
+  tiene su una condivisione.
 
 ### Doppioni -- lo stesso pezzo scritto piu' volte
 
