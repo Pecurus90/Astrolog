@@ -55,6 +55,16 @@ def _then_detach(conn: sqlite3.Connection, events: Iterable[Event]) -> Iterator[
         yield event
 
 
+def _then_normalize(conn: sqlite3.Connection, events: Iterable[Event]) -> Iterator[Event]:
+    """The frames the sky sent back to `normalize` (ADR 0016) are redone before `done`: `normalize`
+    already ran in this queue, and `identify` waits for it."""
+    for event in events:
+        if event.get("done"):
+            for _ in normalize_frames(conn):
+                pass
+        yield event
+
+
 def queue(
     db_path: str | Path,
     stages: Iterable[StageName],
@@ -68,7 +78,7 @@ def queue(
     asked = set(stages)
     jobs: dict[StageName, Work] = {
         StageName.NORMALIZE: normalize_frames,
-        StageName.SOLVE: solve_frames,
+        StageName.SOLVE: lambda c: _then_normalize(c, solve_frames(c)),
         StageName.IDENTIFY: identify_frames,
         StageName.GROUP: group_frames,
     }

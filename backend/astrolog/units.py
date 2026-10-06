@@ -67,6 +67,14 @@ def pixel_um_from_scale(
     return scale_arcsec_px * focal_mm / ARCSEC_PER_RAD_PER_1000 / binning
 
 
+def focal_from_scale(binned_pixel_um: float | None, scale: float | None) -> int | None:
+    """The focal of the whole optical train, reducer included (ADR 0016); the pixel is the binned
+    one, as `XPIXSZ`. Rounded to the millimetre: the measure spreads 0.2 %, the mm is below it."""
+    if not binned_pixel_um or not scale or binned_pixel_um <= 0 or scale <= 0:
+        return None
+    return round(binned_pixel_um / scale * ARCSEC_PER_RAD_PER_1000)
+
+
 def scale_arcsec_px(pixel_um: float | None, focal_mm: float | None) -> float | None:
     """The derived scale knows neither binning nor the real optics: the solver's measured one
     always wins, this is the answer until a measure exists."""

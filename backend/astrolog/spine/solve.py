@@ -18,11 +18,11 @@ from ..db import config
 from ..db.paths import cache_dir
 from ..db.transaction import transaction
 from ..fits.walk import long_path
-from ..units import field_deg, scale_arcsec_px
+from ..units import field_deg, focal_from_scale, same_focal, scale_arcsec_px
 from . import camera_sky, gear_usage, typeless_folders
 from . import solve_store as store
 from .stage_run import Event, FrameError, frame_safely, receipt, watched
-from .stages import StageName, StageStatus, ready, set_status
+from .stages import StageName, StageStatus, invalidate, ready, set_status
 
 log = logging.getLogger(__name__)
 
@@ -178,6 +178,7 @@ def _one_frame(
                 counts["unsolved"] += 1
         else:
             width, height = _field_of(frame, solution.scale_arcsec_px)
+            focal = _measured_focal(frame, solution.scale_arcsec_px)
             store.save_wcs(
                 conn,
                 frame["id"],
@@ -187,8 +188,13 @@ def _one_frame(
                 rotation=solution.rotation_deg,
                 width=width,
                 height=height,
+                focal=focal,
                 now=now,
             )
+            # the rig was born from the header before the sky: the measure corrects it (ADR 0016)
+            moved = focal is not None and not same_focal(frame["rig_focal_mm"], focal)
+            if moved and frame["rig_id"] is not None:
+                invalidate(conn, [frame["id"]], StageName.NORMALIZE, now)
             if hfd is not None or stars is not None:
                 store.save_metrics(conn, frame["id"], hfd_px=hfd, stars=stars, now=now)
                 counts["measured"] += 1
@@ -264,6 +270,15 @@ def _hint_for(conn: sqlite3.Connection, frame: sqlite3.Row) -> tuple[float | Non
 def _scale_of(frame: sqlite3.Row) -> float | None:
     """Binning is not multiplied: `XPIXSZ` already includes it (`units.physical_pixel_um`)."""
     return scale_arcsec_px(frame["pixel_size_um"], frame["focal_mm_raw"])
+
+
+def _measured_focal(frame: sqlite3.Row, scale: float | None) -> int | None:
+    """`XPIXSZ`, or the camera card's physical pixel times the binning; never the pixel the sky
+    gave, which is made from the rig's focal."""
+    pixel = frame["pixel_size_um"]
+    if not pixel and frame["card_pixel_um"] and frame["binning"]:
+        pixel = frame["card_pixel_um"] * frame["binning"]
+    return focal_from_scale(pixel, scale)
 
 
 def _field_hint(frame: sqlite3.Row) -> float | None:

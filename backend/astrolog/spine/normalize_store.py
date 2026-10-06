@@ -9,9 +9,15 @@ from ..db import idlist
 from . import counts
 from .rewrite import RewriteMark
 
+# The focal the rig is made with: the sky's where measured, the header's before (ADR 0016).
+_FOCAL = "COALESCE((SELECT w.focal_mm FROM frame_wcs w WHERE w.frame_id = f.id), f.focal_mm_raw)"
+
 
 def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
-    return conn.execute("SELECT * FROM frames WHERE id = ?", (frame_id,)).fetchone()
+    return conn.execute(
+        f"SELECT f.*, {_FOCAL} AS focal_mm FROM frames f WHERE f.id = ?",  # noqa: S608 - constant
+        (frame_id,),
+    ).fetchone()
 
 
 def none_filter_id(conn: sqlite3.Connection) -> int | None:
@@ -80,7 +86,7 @@ def pending_focals(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> list[f
         return [
             r[0]
             for r in conn.execute(
-                f"SELECT DISTINCT focal_mm_raw FROM frames WHERE id IN {listed}"  # noqa: S608
+                f"SELECT DISTINCT {_FOCAL} FROM frames f WHERE f.id IN {listed}"  # noqa: S608
             )
         ]
 

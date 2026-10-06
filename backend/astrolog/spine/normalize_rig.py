@@ -109,7 +109,7 @@ def rig_for_frame(
     else:
         optics_id = instrument_for(conn, "optics", frame["telescope_raw"], counts, now)
     camera_id = instrument_named(conn, "camera", given.camera, counts, now)
-    focal = known_focal(writing.buckets.get(frame["focal_mm_raw"], frame["focal_mm_raw"]))
+    focal = known_focal(writing.buckets.get(frame["focal_mm"], frame["focal_mm"]))
     declared = answer is not None and answer.optics is not None
     if answer is not None:
         optics_id = instrument_named(conn, "optics", answer.optics, counts, now) or optics_id

@@ -407,8 +407,12 @@ invece di scrivere zero.
 **Anche un filtro o un corredo li puoi scrivere tu**, dallo stesso *Aggiungi un pezzo*, prima di
 averci ripreso. Un **filtro** vuole il nome e la **banda** che lascia passare -- e' cio' che l'app
 guarda per capire cosa hai ripreso -- e se vuoi marca e modello. Un **corredo** vuole l'ottica e la
-camera, scelte fra i tuoi pezzi, e la **focale**: quella che scrive il tuo programma, quindi col
-riduttore se lo usi. Il giorno che i tuoi file li portano, sono gli stessi: un filtro scritto col
+camera, scelte fra i tuoi pezzi, e la **focale** vera, col riduttore se lo usi. La focale dei tuoi
+file l'app la **misura dal cielo** quando riconosce una foto e conosce il pixel della camera:
+anche se il tuo programma scrive la focale del telescopio senza il riduttore, dopo il
+riconoscimento le pose passano al corredo della focale vera. Dove il cielo non c'e' (dark, flat,
+foto non riconosciute) vale la focale che scrive il programma. Il giorno che i tuoi file li
+portano, sono gli stessi: un filtro scritto col
 nome che il tuo programma mette nei file (`L`, per esempio) prende le pose che lo dicono -- quelle
 di una camera a colori restano *OSC* -- e un corredo con la stessa ottica, la stessa camera e una
 focale entro il 5% e' quello. Per la stessa ragione, se quel filtro ce l'hai gia' (le tue pose `L`

@@ -421,6 +421,7 @@ def sky_solved(conn, frame_id):
         rotation=0.0,
         width=1.0,
         height=0.7,
+        focal=None,
         now="2026-03-15T00:00:00Z",
     )
     stages.set_status(conn, frame_id, "solve", "done")

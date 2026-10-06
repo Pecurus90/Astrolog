@@ -442,6 +442,9 @@ CREATE TABLE frame_wcs (
   rotation_deg    REAL,                            -- convenzione CROTA2
   width_deg       REAL,
   height_deg      REAL,
+  -- La focale del treno ottico misurata (ADR 0016): pixel / scala, NULL senza un pixel noto.
+  -- La legge `normalize` al posto di `FOCALLEN`.
+  focal_mm        REAL,
   solved_at       TEXT NOT NULL
 ) STRICT;
 

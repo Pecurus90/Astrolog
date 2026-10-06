@@ -412,9 +412,19 @@ un pezzo e' vero; uno con la montatura al posto dell'ottica e' falso. **Quale fo
 chiede Da confermare**, nella scheda della firma: la risposta da' l'ottica a ogni frame di quella
 firma che l'ottica non la nomina, anche a quelli che arriveranno. Limite dichiarato: due ottiche
 diverse alla stessa focale con la stessa camera sono una domanda sola. Corredo = (ottica, camera) a una focale, con le focali entro il **+-5 %** raggruppate
-prima di scrivere; il binning non cambia il corredo, un riduttore si' (cambia la focale). Le
+prima di scrivere; il binning non cambia il corredo, un riduttore si' (cambia la focale). **La
+focale e' quella misurata dal cielo** dove c'e' (ADR 0016): dopo una soluzione, pixel (`XPIXSZ`, o
+quello della scheda per il binning, mai quello ricavato dal cielo) diviso la scala, al millimetro,
+in `frame_wcs.focal_mm`; senza, `FOCALLEN`. Il corredo nasce dall'header prima del cielo, e il
+solver rimanda a `normalize` il frame la cui misura non e' la focale del corredo, rifatto nello
+stesso giro prima del `done` di `solve` (`run.queue`)
+(`test_a_reducer_the_header_does_not_say_moves_the_frames_to_the_true_focal`,
+`test_the_frames_the_sky_sends_back_are_redone_in_the_same_run`,
+`test_a_measure_within_the_tolerance_keeps_the_rig_and_redoes_nothing`,
+`test_without_a_pixel_the_header_focal_stays`, `test_a_frame_without_a_header_focal_takes_the_measured_one`).
+Firme dell'header e notte restano sulla focale dell'header: chiedono cio' che i file dicono. Le
 specifiche non si cercano su internet: le compila l'utente. Il legame frame -> corredo si
-congela: la verita' storica sta nell'header. La chiave con cui un corredo e' stato rilevato
+congela dopo il cielo: la verita' storica sta nell'header e nella focale misurata. La chiave con cui un corredo e' stato rilevato
 resta separata da cio' che l'utente cambia: rinominarlo o arricchirlo non crea un doppione.
 Uno strumento che l'app non conosce nasce provvisorio e **si segnala, mai si scarta**; nomi
 di ripiego non entrano nel DB (niente "Corredo sconosciuto": l'assenza si dice a schermo).

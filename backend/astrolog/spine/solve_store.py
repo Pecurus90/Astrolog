@@ -15,7 +15,10 @@ def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
         " (SELECT d.root_path FROM positions p JOIN folders d ON d.id = p.folder_id"
         "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS root_path,"
         " (SELECT p.rel_path FROM positions p"
-        "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS rel_path"
+        "   WHERE p.frame_id = f.id AND p.status = 'present' ORDER BY p.id LIMIT 1) AS rel_path,"
+        " (SELECT i.pixel_size_um FROM rigs r JOIN instruments i ON i.id = r.camera_id"
+        "   WHERE r.id = f.rig_id) AS card_pixel_um,"
+        " (SELECT r.focal_mm FROM rigs r WHERE r.id = f.rig_id) AS rig_focal_mm"
         " FROM frames f WHERE f.id = ?",
         (frame_id,),
     ).fetchone()
@@ -84,16 +87,18 @@ def save_wcs(  # noqa: PLR0913
     rotation: float | None,
     width: float | None,
     height: float | None,
+    focal: int | None,
     now: str,
 ) -> None:
     conn.execute(
         "INSERT INTO frame_wcs(frame_id, ra_deg, dec_deg, scale_arcsec_px, rotation_deg,"
-        " width_deg, height_deg, solved_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
+        " width_deg, height_deg, focal_mm, solved_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
         " ON CONFLICT(frame_id) DO UPDATE SET ra_deg = excluded.ra_deg,"
         " dec_deg = excluded.dec_deg, scale_arcsec_px = excluded.scale_arcsec_px,"
         " rotation_deg = excluded.rotation_deg, width_deg = excluded.width_deg,"
-        " height_deg = excluded.height_deg, solved_at = excluded.solved_at",
-        (frame_id, ra_deg, dec_deg, scale, rotation, width, height, now),
+        " height_deg = excluded.height_deg, focal_mm = excluded.focal_mm,"
+        " solved_at = excluded.solved_at",
+        (frame_id, ra_deg, dec_deg, scale, rotation, width, height, focal, now),
     )
 
 

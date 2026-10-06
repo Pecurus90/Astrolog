@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | costruisci | Focale misurata dal cielo (ADR 0016) | ~0,31 M workflow (6 agenti) + esploratore 0,09, sessione principale non contata | 76 workflow | 1 bloccante dal giro (il frame rimandato aspettava il giro dopo) + 3 piccoli chiusi da me |
 | 6/10/2026 | ripara | Meno frame in coda dopo filtro e unione: provato e tolto | ~0,48 M agenti (sviluppatore, due revisori) | ~60 | 3 bloccanti dai revisori (corredi diversi via gruppi di focale); trovato un difetto vero, ora in coda |
 | 6/10/2026 | ripara | Risposte sul tipo: 100 in un Applica da 12,8 s a 0,29 s | sessione principale + un revisore (~0,1 M) | ~50 | 0 dal revisore (200 semi di prova a caso, 0 differenze) |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 6b: `api` resto, fase 2 chiusa | ~0,27 M agenti (uno sviluppatore), sessione principale non contata | 23 agente | 0 |
@@ -274,8 +275,10 @@ Niente di aperto.
   `rigs.find_rig` prende il primo corredo entro la tolleranza. Tre scansioni in tempi diversi
   (CamK 1060, poi 1000, poi 1010) lasciano il frame a 1000 su un corredo suo; rifatti insieme
   finiscono tutti sul corredo a 1060. Lo stesso archivio, letto in un altro ordine, conta le ore su
-  corredi diversi. Rimedio da decidere: gruppi di focale calcolati su tutti i frame della stessa
-  camera e ottica, non su quelli del giro. Prova riprodotta il 6/10 (scratchpad `cx1`).
+  corredi diversi. Prova riprodotta il 6/10 (scratchpad `cx1`). Dalla focale misurata (ADR 0016)
+  vale solo per i frame senza cielo: le misure di un treno ottico stanno nello 0,3 %, e restano a
+  cavallo del 5 % solo le focali scritte a mano. Rimedio se un utente lo incontra: gruppi su tutti
+  i frame della stessa camera e ottica, non su quelli del giro.
 
 ### Macchine che non guardano
 
