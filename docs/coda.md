@@ -215,14 +215,9 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   `refresh_waiting` chiamato a mano in sette punti. Misurato su 20.000 pose: costo uguale
   (scansione 12,0 s contro 12,5; una risposta 74 ms contro 85). Ora lo muove anche chi scrive
   senza passare dagli aiutanti (una risposta tolta, un cielo cancellato).
-- **M1 -- Dall'archivio ai file**: nessuna risposta di Archivio o Notti porta il percorso di un
-  frame. Elenco dei file per oggetto, notte e filtro, in CSV e come lista per i programmi di
-  elaborazione (PixInsight, Siril) <!-- software-ok: elaborano, non riprendono -->.
 - **M2 -- "La cartella ora sta qui"**: le risposte per cartella hanno nella chiave il percorso
   intero (`spine/frame_folder.py`) e una cartella registrata non si sposta (`api/folders.py`);
   cambiare lettera al disco del NAS, o passare a Docker, le perde.
-- **M3 -- Formati**: entrano solo `.fits` e `.fit` (`domini/spina.md`); poi `.fts` e `.fz`, poi
-  XISF, che N.I.N.A. sa salvare.
 - **M4 -- Filtri dell'Archivio** per periodo, camera o corredo, sito (`api/archive.py`).
 - **M5 -- Il backup delle risposte** (*Le dichiarazioni dell'utente non si esportano*, nel
   Parcheggio) va agganciato all'impronta del frame e alla grafia dell'header, non alla notte o al
@@ -231,7 +226,7 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
 L'ordine: le prove che mancano e *L'archivio dice cose false*; poi S1-S4, prima delle
 velocita' che toccano gli stessi pezzi (Applica, fuso di casa, riletture in `row_of`), che con
 S1 e S2 spariscono in parte; poi la fase 2 del refactor, con le velocita' e i doppioni che
-restano; poi M1, M2, M4, M3; M5 dopo S2.
+restano; poi M2, M5, M4 (Marco, 6/10/2026: M1 e M3 non servono, M3 sta fra le *Idee*).
 
 ## Da riparare, nell'ordine
 
@@ -834,6 +829,8 @@ riga per voce.
 
 ### Idee
 
+- **Altri formati di file**: entrano solo `.fits` e `.fit` (`domini/spina.md`); poi `.fts` e
+  `.fz`, poi XISF, che N.I.N.A. sa salvare. Quando un utente salva in un altro formato.
 - **La previsione accanto al meteo vero**, per misurare quanto ci azzeccava su quel sito: oggi la
   previsione di una notte passata si butta.
 - **Dividere i frame di una notte dal fondo cielo, invece che a mano**: il fondo separa bande
