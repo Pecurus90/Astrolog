@@ -3,14 +3,19 @@ e SGP possono scrivere; il catalogo dei modelli per primo; marca e larghezza spo
 spazzatura a None; la camera a colori che schiaccia a OSC tranne i filtri che si avvitano
 davanti. `bayer` e' un booleano: il lettore FITS ha gia' detto se c'e' la matrice."""
 
+import json
+from pathlib import Path
+
 import pytest
 
+from astrolog.vocab import filters
 from astrolog.vocab.filters import (
     BANDS,
     BRAND_PREFIXES,
     FILTER_MAP,
     NARROWBAND_CLIP,
     PASSBANDS,
+    Passband,
     model_of,
     models,
     normalize_filter,
@@ -195,3 +200,9 @@ def test_passband_from_the_declared_bands(bands, expected):
 def test_only_physical_bands_count(bands, expected):
     assert passband_from_bands(bands) == expected
     assert set(BANDS).isdisjoint({"DUO_HAOIII", "TRI_NB", "MULTI_NB", "OSC", "NONE", "UNKNOWN"})
+
+
+def test_the_enum_and_the_file_the_frontend_reads_list_the_same_bands():
+    """`filters.json` `passbands` is what the frontend pill test reads: it must not drift."""
+    data = json.loads(Path(filters.__file__).with_name("filters.json").read_text(encoding="utf-8"))
+    assert set(data["passbands"]) == {str(p) for p in Passband}

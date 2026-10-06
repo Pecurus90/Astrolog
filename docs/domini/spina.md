@@ -337,7 +337,7 @@ Non dipende da nessuno stadio: gira anche prima del solver.
 **I vocabolari dicono solo cio' che i quattro software scrivono**.
 Nei filtri restano le grafie dei quattro; il catalogo dei modelli resta come
 tendina, ma si puo' scrivere qualunque nome con la sua banda; le bande sono 16 piu' `UNKNOWN`
-(`Passband` in `vocab/filters.py`). Il software riconosciuto e' solo quello dei quattro, e la copia calibrata
+(`vocab/filters.json`). Il software riconosciuto e' solo quello dei quattro, e la copia calibrata
 si riconosce dal marchio che il file porta, non dal nome del programma. Le chiavi dell'header sono
 lo standard FITS piu' cio' che i quattro scrivono, salvo le due che dicono che il file e' stato
 riscritto (`CALSTAT`, `CALIBRAT`), da una convenzione pubblica. Le misure scritte nell'header

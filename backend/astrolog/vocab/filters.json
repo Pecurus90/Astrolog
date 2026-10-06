@@ -1,5 +1,5 @@
 {
-  "note": "Il vocabolario dei filtri, in un dato solo, rivisto voce per voce con Marco (2026-09-06): resta solo cio' che N.I.N.A., ASIAIR, Voyager e SGP possono scrivere nel campo FILTER. `words`: le parole generiche -> nome canonico (mai un prodotto). `clip`: i canonici che si avvitano davanti a una camera a colori e su una matrice di Bayer non diventano OSC. `models`: i filtri in commercio della famiglia OSC (li dichiara chi riprende, scegliendo il modello o scrivendo nome e banda), con marca, banda e grafie; un nome conteso fra due marche non e' un modello. `passband_of`: il canonico -> la banda, nel dominio chiuso di `Passband` (`filters.py`). Le marche da spogliare prima della mappa vengono dai modelli.",
+  "note": "Il vocabolario dei filtri, in un dato solo, rivisto voce per voce con Marco (2026-09-06): resta solo cio' che N.I.N.A., ASIAIR, Voyager e SGP possono scrivere nel campo FILTER. `words`: le parole generiche -> nome canonico (mai un prodotto). `clip`: i canonici che si avvitano davanti a una camera a colori e su una matrice di Bayer non diventano OSC. `models`: i filtri in commercio della famiglia OSC (li dichiara chi riprende, scegliendo il modello o scrivendo nome e banda), con marca, banda e grafie; un nome conteso fra due marche non e' un modello. `passbands`: il dominio chiuso delle bande; `passband_of`: il canonico -> la banda. Le marche da spogliare prima della mappa vengono dai modelli.",
   "words": {
     "ha": "Hα", "hα": "Hα", "h-a": "Hα", "h_a": "Hα", "halpha": "Hα", "h-alpha": "Hα",
     "h alpha": "Hα", "hydrogen": "Hα", "hydrogen-alpha": "Hα", "[ha]": "Hα", "[hα]": "Hα",
@@ -28,6 +28,9 @@
     "ir-cut": "IR-Cut", "ircut": "IR-Cut", "uv/ir cut": "IR-Cut", "uv-ir cut": "IR-Cut", "uvir": "IR-Cut"
   },
   "clip": ["Hα", "OIII", "SII", "Hβ", "ALP-T", "Triad", "QuadBand", "Dual-NB", "LPS", "CLS", "UHC"],
+  "passbands": ["L", "R", "G", "B", "HA", "OIII", "SII", "HB",
+                "DUO_HAOIII", "DUO_SIIOIII", "TRI_NB", "MULTI_NB", "OSC_LP", "OSC_UVIR", "OSC",
+                "NONE", "UNKNOWN"],
   "passband_of": {
     "Lum": "L", "R": "R", "G": "G", "B": "B", "RGB": "OSC", "Hα": "HA", "OIII": "OIII", "SII": "SII",
     "Hβ": "HB", "IR-Cut": "OSC_UVIR", "OSC": "OSC", "None": "NONE",
