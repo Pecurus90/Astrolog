@@ -21,7 +21,7 @@ from astrolog.ephemeris import (
     MAX_DECLINATION_DEG,
     RISESET_DEG,
     TRACK_STEP_MIN,
-    corpi,
+    bodies,
     moon,
 )
 from astrolog.ephemeris.grid import first_crossing, night_grid
@@ -63,7 +63,7 @@ def test_rise_and_set_are_told_for_a_normal_place():
     stanno dentro la finestra chiesta."""
     fine = QUANDO + dt.timedelta(hours=24)
     notte = moon.night_track(QUANDO, *CASA, hours=24)
-    sorge, tramonta = notte["rise"], notte["set"]
+    sorge, tramonta = notte.rise, notte.set
 
     assert sorge is not None and tramonta is not None
     for quando in (sorge, tramonta):
@@ -76,14 +76,14 @@ def test_a_moon_that_never_rises_is_a_fact_not_an_error():
     che non esiste -- e chi legge non ha modo di accorgersene."""
     notte = moon.night_track(dt.datetime(2027, 6, 21, 12, 0, tzinfo=dt.UTC), *POLO, hours=24)
 
-    assert notte["rise"] is None or notte["set"] is None, notte
+    assert notte.rise is None or notte.set is None, notte
 
 
 def test_the_times_come_back_with_their_timezone():
     """Un istante senza fuso e' la data del server, non quella della notte dell'utente: e' il
     difetto che l'archivio ha gia' pagato una volta. Cio' che esce di qui porta UTC scritto, e chi
     lo mostra lo porta nel fuso del sito."""
-    sorge = moon.night_track(QUANDO, *CASA, hours=24)["rise"]
+    sorge = moon.night_track(QUANDO, *CASA, hours=24).rise
 
     assert sorge is not None
     assert sorge.tzinfo is not None
@@ -133,7 +133,7 @@ def test_the_times_are_read_in_the_timezone_they_were_asked_in():
     roma = zoneinfo.ZoneInfo("Europe/Rome")
     inizio = dt.datetime(2027, 7, 15, 12, tzinfo=roma)  # ora legale: +02:00
 
-    sorge = moon.night_track(inizio, *CASA, hours=24)["rise"]
+    sorge = moon.night_track(inizio, *CASA, hours=24).rise
 
     assert sorge is not None
     assert sorge.utcoffset() == dt.timedelta(hours=2), sorge
@@ -167,18 +167,18 @@ def test_the_sky_is_asked_once_for_the_whole_night_not_once_per_sample():
     quattrocentottantuno conversioni di coordinate per una notte, e chi riscrivesse questo ciclo
     a uno a uno avrebbe solo una suite piu' lenta, senza che niente cada."""
     quante = 0
-    vera = corpi.get_body
+    vera = bodies.get_body
 
     def conta(*a, **k):
         nonlocal quante
         quante += 1
         return vera(*a, **k)
 
-    corpi.get_body = conta
+    bodies.get_body = conta
     try:
         moon.night_track(QUANDO, *CASA, hours=24)
     finally:
-        corpi.get_body = vera
+        bodies.get_body = vera
 
     assert quante == 1, quante
 
@@ -218,7 +218,7 @@ def test_the_rising_uses_the_horizon_of_the_almanacs_not_zero():
 
     # e il sorgere cade dove l'altezza vale quella soglia, non dove vale zero
     inizio = dt.datetime(2027, 3, 14, 12, tzinfo=dt.UTC)
-    sorge = moon.night_track(inizio, *CASA, hours=24)["rise"]
+    sorge = moon.night_track(inizio, *CASA, hours=24).rise
     assert sorge is not None
     quanto_e_alta = moon.altitudes([sorge], *CASA)[0]
     assert abs(quanto_e_alta - RISESET_DEG) < 0.02, quanto_e_alta
@@ -278,9 +278,9 @@ def test_the_highest_point_of_the_night_is_told_with_its_instant():
     istanti = night_grid(QUANDO, hours=24, step_min=GRID_STEP_MIN)
     alte = moon.altitudes(istanti, *CASA)
 
-    piu_alto = notte["highest"]
-    assert abs(piu_alto["altitude_deg"] - max(alte)) < 0.05, (piu_alto, max(alte))
-    assert piu_alto["at"] == istanti[alte.index(max(alte))].astimezone(QUANDO.tzinfo)
+    piu_alto = notte.highest
+    assert abs(piu_alto.altitude_deg - max(alte)) < 0.05, (piu_alto, max(alte))
+    assert piu_alto.at == istanti[alte.index(max(alte))].astimezone(QUANDO.tzinfo)
 
 
 def test_a_moon_that_never_rises_still_has_a_highest_point():
@@ -291,9 +291,9 @@ def test_a_moon_that_never_rises_still_has_a_highest_point():
     circolo polare non leggerebbe piu' niente invece di leggere quanto poco sale."""
     notte = moon.night_track(dt.datetime(2027, 6, 21, 12, 0, tzinfo=dt.UTC), *POLO, hours=24)
 
-    assert notte["rise"] is None or notte["set"] is None, notte
-    assert notte["highest"]["at"] is not None
-    assert isinstance(notte["highest"]["altitude_deg"], float)
+    assert notte.rise is None or notte.set is None, notte
+    assert notte.highest.at is not None
+    assert isinstance(notte.highest.altitude_deg, float)
 
 
 def test_the_curve_spans_the_whole_night_including_its_last_instant():
@@ -308,11 +308,11 @@ def test_the_curve_spans_the_whole_night_including_its_last_instant():
     notte = moon.night_track(QUANDO, *CASA, hours=ore)
     istanti = night_grid(QUANDO, hours=ore, step_min=GRID_STEP_MIN)
 
-    assert notte["track"][0]["at"] == istanti[0].astimezone(QUANDO.tzinfo)
-    assert notte["track"][-1]["at"] == istanti[-1].astimezone(QUANDO.tzinfo)
+    assert notte.track[0].at == istanti[0].astimezone(QUANDO.tzinfo)
+    assert notte.track[-1].at == istanti[-1].astimezone(QUANDO.tzinfo)
     # e nessun punto due volte: quando la coda cade gia' sul salto, ripeterla sarebbe un segmento
     # lungo zero -- invisibile a schermo, e un punto in piu' nel conto
-    quando = [p["at"] for p in notte["track"]]
+    quando = [p.at for p in notte.track]
     assert len(set(quando)) == len(quando), len(quando) - len(set(quando))
 
 
@@ -324,12 +324,12 @@ def test_the_curve_keeps_the_altitudes_below_the_horizon():
     1)` con `round(max(alte[i], 0.0), 1)` **tutta** la suite restava verde. A schermo una curva
     appoggiata a zero sembra un grafico giusto, ed e' esattamente il difetto che non si vede."""
     notte = moon.night_track(QUANDO, *CASA, hours=24)
-    alte = [p["altitude_deg"] for p in notte["track"]]
+    alte = [p.altitude_deg for p in notte.track]
 
     assert min(alte) < -10, min(alte)
     # e il numero e' quello crudo del cielo, non una versione addolcita
     primo = night_grid(QUANDO, hours=24, step_min=GRID_STEP_MIN)[0]
-    assert notte["track"][0]["altitude_deg"] == round(moon.altitudes([primo], *CASA)[0], 1)
+    assert notte.track[0].altitude_deg == round(moon.altitudes([primo], *CASA)[0], 1)
 
 
 def test_the_ceiling_is_the_highest_the_moon_can_ever_get_from_there():
@@ -421,7 +421,7 @@ def test_a_real_night_never_climbs_above_its_ceiling():
     for latitudine, longitudine in (CASA, POLO):
         notte = moon.night_track(QUANDO, latitudine, longitudine, hours=24)
 
-        assert notte["highest"]["altitude_deg"] <= moon.sky_ceiling(latitudine), latitudine
+        assert notte.highest.altitude_deg <= moon.sky_ceiling(latitudine), latitudine
 
 
 def test_the_curve_step_is_a_multiple_of_the_sampling_step():
@@ -441,8 +441,8 @@ def test_the_curve_carries_its_instants_in_the_asked_timezone():
 
     notte = moon.night_track(inizio, *CASA, hours=24)
 
-    for punto in (notte["track"][0], notte["track"][-1], notte["highest"]):
-        assert punto["at"].utcoffset() == dt.timedelta(hours=2), punto
+    for punto in (notte.track[0], notte.track[-1], notte.highest):
+        assert punto.at.utcoffset() == dt.timedelta(hours=2), punto
 
 
 # Le tavole dell'USNO per due posti e una notte, lette il 20/9/2026 da
@@ -487,5 +487,5 @@ def test_rise_and_set_match_the_usno_tables_within_a_minute(
             continue
         ore, minuti = (int(p) for p in atteso.split(":"))
         quando = inizio.replace(hour=ore, minute=minuti)
-        scarto = abs((cielo[quale] - quando).total_seconds())
-        assert scarto <= 60, f"{posto} {quale}: {cielo[quale]:%H:%M} contro {atteso}"
+        scarto = abs((getattr(cielo, quale) - quando).total_seconds())
+        assert scarto <= 60, f"{posto} {quale}: {getattr(cielo, quale):%H:%M} contro {atteso}"

@@ -5,6 +5,7 @@ solo non puo' sbagliare: **da quale sito**, **in quale notte**, e cosa succede q
 casa non c'e'.
 """
 
+import dataclasses
 import datetime as dt
 import typing
 import zoneinfo
@@ -270,7 +271,7 @@ def test_a_moon_that_never_rises_comes_back_empty_not_invented(client_vuoto, mon
     vera = moon.night_track
     monkeypatch.setattr(
         "astrolog.ephemeris.moon.night_track",
-        lambda *a, **k: {**vera(*a, **k), "rise": None, "set": None},
+        lambda *a, **k: dataclasses.replace(vera(*a, **k), rise=None, set=None),
     )
     crea_sito(client_vuoto, "Longyearbyen", 78.2232, 15.6267)
 

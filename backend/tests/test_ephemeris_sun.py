@@ -12,7 +12,7 @@ import datetime as dt
 
 import pytest
 
-from astrolog.ephemeris import ASTRO_DEG, CIVIL_DEG, NAUTICAL_DEG, RISESET_DEG, corpi
+from astrolog.ephemeris import ASTRO_DEG, CIVIL_DEG, NAUTICAL_DEG, RISESET_DEG, bodies
 from astrolog.ephemeris.grid import night_grid
 from astrolog.ephemeris.sun import altitudes, night_bands, sky_at, sky_bands
 
@@ -24,7 +24,7 @@ def istanti(quanti, passo_min=3):
 
 
 def quali(fasce):
-    return [f["kind"] for f in fasce]
+    return [f.kind for f in fasce]
 
 
 # --- La regola: da una curva di altezze alle fasce. Niente cielo, solo numeri.
@@ -39,10 +39,10 @@ def test_the_bands_cover_the_window_with_no_gaps_and_no_overlaps():
     quando = istanti(9)
     fasce = sky_bands(quando, [5.0, 2.0, -1.0, -4.0, -8.0, -14.0, -20.0, -25.0, -30.0])
 
-    assert fasce[0]["starts_at"] == quando[0]
-    assert fasce[-1]["ends_at"] == quando[-1]
+    assert fasce[0].starts_at == quando[0]
+    assert fasce[-1].ends_at == quando[-1]
     for prima, dopo in zip(fasce, fasce[1:], strict=False):
-        assert prima["ends_at"] == dopo["starts_at"]
+        assert prima.ends_at == dopo.starts_at
 
 
 def test_the_evening_goes_down_through_the_four_thresholds_in_order():
@@ -61,7 +61,7 @@ def test_a_night_that_never_leaves_the_dark_is_one_single_band():
     fasce = sky_bands(quando, [-28.0, -30.0, -31.0, -30.0, -28.0])
 
     assert quali(fasce) == ["dark"]
-    assert (fasce[0]["starts_at"], fasce[0]["ends_at"]) == (quando[0], quando[-1])
+    assert (fasce[0].starts_at, fasce[0].ends_at) == (quando[0], quando[-1])
 
 
 def test_a_window_that_never_leaves_the_day_is_one_single_band():
@@ -82,7 +82,7 @@ def test_the_dark_that_begins_and_does_not_end_is_measured_to_the_edge():
     fasce = sky_bands(quando, [-14.0, -17.0, -19.0, -22.0, -25.0])
 
     assert quali(fasce) == ["astronomical", "dark"]
-    assert fasce[-1]["ends_at"] == quando[-1]
+    assert fasce[-1].ends_at == quando[-1]
 
 
 def test_a_window_that_starts_already_dark_has_no_invented_beginning():
@@ -92,7 +92,7 @@ def test_a_window_that_starts_already_dark_has_no_invented_beginning():
     fasce = sky_bands(quando, [-25.0, -22.0, -19.0, -16.0, -13.0])
 
     assert quali(fasce) == ["dark", "astronomical"]
-    assert fasce[0]["starts_at"] == quando[0]
+    assert fasce[0].starts_at == quando[0]
 
 
 def test_a_boundary_falls_between_the_two_samples_that_straddle_it():
@@ -106,7 +106,7 @@ def test_a_boundary_falls_between_the_two_samples_that_straddle_it():
     quando = istanti(3)
     fasce = sky_bands(quando, [-5.0, -7.0, -9.0])
 
-    confine = fasce[0]["ends_at"]
+    confine = fasce[0].ends_at
     assert confine == quando[0] + dt.timedelta(minutes=1.5)
 
 
@@ -210,10 +210,10 @@ def test_the_bands_come_back_in_the_timezone_they_were_asked_in():
 
     fasce = night_bands(inizio, 45.55, 11.55, hours=24)
 
-    assert fasce[0]["starts_at"] == inizio
+    assert fasce[0].starts_at == inizio
     for fascia in fasce:
-        assert fascia["starts_at"].utcoffset() == inizio.utcoffset(), fascia
-        assert fascia["ends_at"].utcoffset() == inizio.utcoffset(), fascia
+        assert fascia.starts_at.utcoffset() == inizio.utcoffset(), fascia
+        assert fascia.ends_at.utcoffset() == inizio.utcoffset(), fascia
 
 
 def test_the_sun_is_asked_once_for_the_whole_night_not_once_per_sample():
@@ -223,18 +223,18 @@ def test_the_sun_is_asked_once_for_the_whole_night_not_once_per_sample():
     cioe' un secondo e mezzo dentro `GET /tonight`. La Luna ha la sua guardia e passa da
     `get_body`; il Sole passa da `get_sun`, e senza questa riga meta' della regola era scoperta."""
     quante = 0
-    vera = corpi.get_sun
+    vera = bodies.get_sun
 
     def conta(*a, **k):
         nonlocal quante
         quante += 1
         return vera(*a, **k)
 
-    corpi.get_sun = conta
+    bodies.get_sun = conta
     try:
         night_bands(MEZZOGIORNO, 45.55, 11.55, hours=24)
     finally:
-        corpi.get_sun = vera
+        bodies.get_sun = vera
 
     assert quante == 1, quante
 
@@ -251,13 +251,14 @@ def test_a_step_that_climbs_across_two_bands_names_them_in_the_right_order():
 
     assert quali(fasce) == ["dark", "astronomical", "nautical", "civil"]
     for fascia in fasce:
-        assert fascia["ends_at"] > fascia["starts_at"], fascia
+        assert fascia.ends_at > fascia.starts_at, fascia
 
 
 def test_the_sun_asked_the_fast_way_agrees_with_the_slow_one():
     """Le due strade per il Sole danno la stessa altezza, e la veloce si puo' tenere.
 
-    E' la macchina del ramo che `corpi.altezze` prende per il Sole: **125 ms contro 38** per una
+    E' la macchina del ramo che `bodies.body_altitudes` prende per il Sole: **125 ms contro 38**
+    per una
     differenza che qui si misura invece di scriverla in un commento. La soglia e' un centesimo di
     grado -- trentasei secondi d'arco -- che e' mille volte meno del passo fra due soglie di
     crepuscolo: se le due strade divergessero davvero, si vedrebbe molto prima."""
@@ -266,7 +267,7 @@ def test_the_sun_asked_the_fast_way_agrees_with_the_slow_one():
 
     quando = night_grid(MEZZOGIORNO, hours=24, step_min=60)
     dove = EarthLocation(lat=45.55, lon=11.55)
-    momenti = Time([corpi.quando(i) for i in quando])
+    momenti = Time([bodies.as_time(i) for i in quando])
     lenta = get_body("sun", momenti, dove).transform_to(AltAz(obstime=momenti, location=dove))
 
     veloce = altitudes(quando, 45.55, 11.55)
@@ -280,6 +281,6 @@ def test_the_sky_at_an_instant_is_the_band_that_holds_it():
     legge la stessa cosa: la fascia che contiene quell'istante."""
     fasce = night_bands(MEZZOGIORNO, 45.87, 11.51, hours=24)
     ore = [MEZZOGIORNO + dt.timedelta(minutes=30 + 60 * h) for h in range(24)]
-    attese = [next(f["kind"] for f in fasce if f["starts_at"] <= o < f["ends_at"]) for o in ore]
+    attese = [next(f.kind for f in fasce if f.starts_at <= o < f.ends_at) for o in ore]
     assert sky_at(ore, 45.87, 11.51) == attese
     assert {"day", "dark"} <= set(attese)

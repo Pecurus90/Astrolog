@@ -40,8 +40,8 @@ def test_the_phase_is_one_of_the_eight_and_carries_its_light():
     il piede della barra mostra, e nessuno dei due puo' uscire dal suo intervallo."""
     detto = moon.phase(QUANDO)
 
-    assert detto["phase_key"] in moon.PHASES
-    assert 0 <= detto["illumination_pct"] <= 100
+    assert detto.phase_key in moon.PHASES
+    assert 0 <= detto.illumination_pct <= 100
 
 
 def test_the_phases_asked_together_are_the_ones_asked_one_by_one():
@@ -62,12 +62,12 @@ def test_two_lists_of_different_length_are_refused_instead_of_paired(monkeypatch
 
     Non e' un caso che astropy possa produrre oggi -- e' la ragione per cui l'accoppiamento e'
     dichiarato stretto -- quindi si forza qui, ed e' l'unico modo di vedere questa guardia rossa."""
-    corte = moon._longitudini_eclittiche
+    corte = moon._ecliptic_longitudes
 
     def una_di_meno(corpo, eclittica):
         return corte(corpo, eclittica)[:-1]
 
-    monkeypatch.setattr(moon, "_longitudini_eclittiche", una_di_meno)
+    monkeypatch.setattr(moon, "_ecliptic_longitudes", una_di_meno)
 
     with pytest.raises(ValueError, match="zip"):
         moon.phases([QUANDO, QUANDO + dt.timedelta(days=1)])
@@ -131,11 +131,11 @@ def test_the_phase_and_the_light_say_the_same_thing():
     letture = [moon.phase(q) for q in giorni]
 
     for letta in letture:
-        minimo, massimo = LUCE_DELLA_FASE[letta["phase_key"]]
-        assert minimo <= letta["illumination_pct"] <= massimo, letta
+        minimo, massimo = LUCE_DELLA_FASE[letta.phase_key]
+        assert minimo <= letta.illumination_pct <= massimo, letta
 
     # e in un mese non si incontra sempre la stessa fase
-    assert len({letta["phase_key"] for letta in letture}) >= 6
+    assert len({letta.phase_key for letta in letture}) >= 6
 
 
 def test_waxing_comes_before_full_and_waning_after():
@@ -149,11 +149,11 @@ def test_waxing_comes_before_full_and_waning_after():
     c'e' prima e dopo."""
     giorni = [QUANDO + dt.timedelta(days=g) for g in range(30)]
     luci = [moon.phase(q) for q in giorni]
-    piu_piena = max(range(len(luci)), key=lambda i: luci[i]["illumination_pct"])
+    piu_piena = max(range(len(luci)), key=lambda i: luci[i].illumination_pct)
 
     assert 3 <= piu_piena <= len(luci) - 4, f"il massimo cade sul bordo del mese: {piu_piena}"
-    assert luci[piu_piena - 3]["phase_key"].startswith("waxing"), luci[piu_piena - 3]
-    assert luci[piu_piena + 3]["phase_key"].startswith("waning"), luci[piu_piena + 3]
+    assert luci[piu_piena - 3].phase_key.startswith("waxing"), luci[piu_piena - 3]
+    assert luci[piu_piena + 3].phase_key.startswith("waning"), luci[piu_piena + 3]
 
 
 def test_every_one_of_the_eight_phases_is_reachable():
@@ -188,6 +188,6 @@ def test_the_illuminated_fraction_does_not_depend_on_where_you_are():
     prova che confrontasse due chiamate uguali fra loro non potrebbe mai essere vista rossa."""
     quanti = inspect.signature(moon.phase).parameters
 
-    assert list(quanti) == ["istante"], quanti
+    assert list(quanti) == ["instant"], quanti
     # e l'unico posto che chiede un sito e' quello che ne ha bisogno davvero
     assert "latitude" in inspect.signature(moon.night_track).parameters

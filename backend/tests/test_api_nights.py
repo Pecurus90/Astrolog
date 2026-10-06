@@ -5,6 +5,7 @@ sito** (`docs/domini/notti.md`), e i numeri di una riga sono quelli della notte 
 oggetti e i filtri stanno **dentro** la riga, non la moltiplicano.
 """
 
+from dataclasses import asdict
 from unittest import mock
 
 import pytest
@@ -250,7 +251,7 @@ def test_a_night_says_which_moon_there_was(archivio):
     scritto a mano."""
     prima = notti(archivio)["items"][0]
 
-    assert prima["moon"] == moon.phase(midnight_of(prima["night_date"], "Europe/Rome"))
+    assert prima["moon"] == asdict(moon.phase(midnight_of(prima["night_date"], "Europe/Rome")))
 
 
 def test_a_night_whose_site_has_no_timezone_says_nothing_about_the_moon(archivio):

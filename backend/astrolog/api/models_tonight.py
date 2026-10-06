@@ -19,6 +19,7 @@ PhaseKey = Literal[
     "last_quarter",
     "waning_crescent",
 ]
+SkyKind = Literal["day", "civil", "nautical", "astronomical", "dark"]
 
 
 class SkyPointOut(BaseModel):
@@ -90,7 +91,7 @@ class SkyBandOut(BaseModel):
 
     starts_at: str
     ends_at: str
-    kind: Literal["day", "civil", "nautical", "astronomical", "dark"]
+    kind: SkyKind
 
 
 class TonightOut(BaseModel):

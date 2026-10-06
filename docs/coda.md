@@ -72,11 +72,9 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   inglese"), in `backend/astrolog`. La macchina c'e' (`tools/nomi_inglesi.py`, al commit): un
   nome italiano nuovo e' rosso, quelli vecchi stanno in `tools/nomi_italiani.txt`, che solo si
   accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Fatti `db` e
-  `fits` (e il segnaposto `{listed}` di `idlist.grouped`). Gia' visti: `con_cielo`,
-  `lucchettato`, `fra_i_candidati` (`spine/identify*`). In `ephemeris` quasi tutto: il modulo
-  `corpi` e le sue `quando`, `convertito`, `altezze`; `istanti`, `inizio`, `scarti`, `soglia`,
-  `verso`, `FASCE`, `BUIO`, `_UN_FILO`, `_BANDA_DEG`, `_fascia`, `_confini`, `nel_fuso`, `punto`.
-  `sun.BUIO` e' letto da `weather/verdict`. In `weather` quasi tutto: `_scrivi`, `_una`,
+  `fits` (e il segnaposto `{listed}` di `idlist.grouped`), poi `ephemeris` (`corpi` e' `bodies`).
+  Gia' visti: `con_cielo`, `lucchettato`, `fra_i_candidati` (`spine/identify*`). In `weather`
+  quasi tutto: `_scrivi`, `_una`,
   `_fattore`, `_quando`, `_valori`, `_media`, `_con`, `_ORDINE`, `_accordo`, `_spostato`, `_tocca`,
   `_percentili`, `_medie_notturne`, `_in_attesa`, `_da_chiedere`, `_MANCANTI`, `_fascia`, gli
   attributi di `forecast.Cadence` e i parametri italiani di quasi ogni funzione, pubbliche
@@ -175,8 +173,7 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   candidati, voci del catalogo e wcs viaggiano come `dict[str, Any]`: una forma tipata ciascuno.
 - **Forme `dict` che escono dai package di base**: la voce del catalogo
   (`catalog/lookup.by_designation`, `by_slug`, `in_cone`), da tipare col lotto di
-  `spine/identify`: si spalma nei candidati (`**entry`) e i test ne costruiscono a mano; la fase (`ephemeris/moon.phase`, `phases`), la notte della Luna (`moon.night_track`), le fasce
-  (`sun.night_bands`, `sky_bands`), lo snapshot e il record dello stadio (`worker/worker.py`,
+  `spine/identify`: si spalma nei candidati (`**entry`) e i test ne costruiscono a mano; lo snapshot e il record dello stadio (`worker/worker.py`,
   `worker/states.blank_record`), il riassunto e le ore di una notte (`weather/verdict.assess`,
   `weather/nights.hours`: scritti in `weather_nights` e riletti da `api/weather`), i posti trovati
   (`place.search`, che `api/sites` riveste uno per uno in `PlaceOut`).
@@ -184,8 +181,7 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   passa i dict di `spine/filters_used` a un campo `list[FilterUsed]`. Si fa generico quando i
   chiamanti costruiscono righe tipate.
 - **Insiemi chiusi da fare `StrEnum`**, che escono dal package (fatti tipo del frame, software e
-  bande): `ephemeris/moon.PHASES`, i nomi delle fasce di
-  `ephemeris/sun` e gli stati di `worker/states`. In `weather`: gli esiti (`forecast.OK`,
+  bande, fasi della Luna e fasce del cielo): gli stati di `worker/states`. In `weather`: gli esiti (`forecast.OK`,
   `NO_SITE`, `NO_TIMEZONE`, `UNREACHABLE`, `BAD_ANSWER`, `net.REFUSED`, scritti in
   `weather_fetches` e ripetuti come `Literal` in `api/models_weather` e `api/weather_key` oltre
   che in `forecast.Outcome` e `meteoblue.KeyOutcome`), il verdetto `go`/`marginal`/`nogo`, i codici dei
@@ -225,11 +221,7 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   `archive_page` (`api/archive.py`) resta per un'altra ragione: i suoi otto parametri sono la
   query della rotta, e raccoglierli in una dipendenza di FastAPI e' un cambio di forma (fase 2).
 - **Doppioni piccoli dei package di base**: `catalog/load.load_catalog` riscrive a mano
-  `db.transaction` (gli strati non gli lasciano importare `db`: resta). In `ephemeris`: l'interpolazione lineare `t0 + (t1 - t0) * quota` in
-  `grid.first_crossing` e `sun._confini`; il rifiuto dell'istante senza fuso in `corpi.quando` e
-  `grid.night_grid`; `moon.altitudes` e `sun.altitudes`, lo stesso involucro di `corpi.altezze`;
-  `moon.night_track` e `sun.night_bands`, lo stesso percorso (griglia, altezze, fuso del sito).
-  In `weather`: `openmeteo.parse` e `parse_single` aprono con lo stesso preambolo (serie oraria e
+  `db.transaction` (gli strati non gli lasciano importare `db`: resta). In `weather`: `openmeteo.parse` e `parse_single` aprono con lo stesso preambolo (serie oraria e
   orari); `climate._tocca` e `history._in_attesa` la stessa attesa `RETRY_S` dopo un giro andato male (il clima aspetta
   un giorno dopo un `bad_answer`); `meteoblue` ripete come alias
   `OK`, `REFUSED`, `UNREACHABLE`, `BAD_ANSWER`.
@@ -470,9 +462,6 @@ Niente di aperto.
 - **Il totale dell'archivio viaggia in ogni pagina dello scorrimento delle Notti**:
   `nights.archive_totals` fa una scansione piena (14,6-19 ms su 40.000 frame) a ogni "mostra
   altre", e conta solo la prima. Rimedio: i totali solo alla prima pagina.
-- **`Time([...])` costruito un istante per volta** in `ephemeris/moon.py` e `ephemeris/corpi.py`:
-  2,39 ms contro 0,16 per cento istanti nelle fasi, 6,5 su 74,3 ms per una griglia da 280 punti.
-  La guardia sul fuso si tiene lo stesso.
 - **Gli strumenti che il frame nomina costano query per frame, senza cache.**
   `spine/normalize_rig.instruments_on_frame` risolve tre generi uno per uno e non raggruppa come
   `rig_for_frame`: fino a sei query in piu' su ogni frame di N.I.N.A. (non cronometrato). Rimedio:

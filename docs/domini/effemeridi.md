@@ -144,7 +144,7 @@ pagarla due volte per gli stessi numeri. Il Sole e' un corpo diverso e ha il suo
 uno ripetuto. E' l'unica cosa cara che c'e' qui (misurato il 20/9/2026: 140 ms la Luna, 53 il
 Sole, contro i 2 ms di una rotta che legge e basta -- e il Sole costa meno perche' non passa da
 `get_body`, che per lui vale 87 ms in piu' e due centesimi di secondo d'arco: la ragione sta in
-`ephemeris/corpi.py`).
+`ephemeris/bodies.py`).
 
 **Il conto si fa in UTC, la risposta torna nel fuso del sito.** Sommare ore a un istante con un
 fuso vero fa aritmetica da orologio da parete, e la notte del cambio d'ora "ventiquattro ore"

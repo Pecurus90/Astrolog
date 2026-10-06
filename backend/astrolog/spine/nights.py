@@ -4,6 +4,7 @@ objects and filters inside, or the hours would split and two rows look like dupl
 import json
 import sqlite3
 from collections.abc import Sequence
+from dataclasses import asdict
 from typing import Any
 
 from ..clock import midnight_of
@@ -69,7 +70,7 @@ def _lune(righe: Sequence[sqlite3.Row]) -> dict[int, dict[str, Any]]:
     out. Not stored: a derivable number frozen in a column would outlive a corrected formula."""
     quando = {r["id"]: midnight_of(r["night_date"], r["timezone"]) for r in righe}
     certe = {i: q for i, q in quando.items() if q is not None}
-    return dict(zip(certe, moon.phases(list(certe.values())), strict=True))
+    return dict(zip(certe, map(asdict, moon.phases(list(certe.values()))), strict=True))
 
 
 def page(

@@ -3,7 +3,7 @@ downloads, so a lazy import would leave the process online until this route firs
 
 import sqlite3
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends
 
@@ -13,7 +13,15 @@ from ..spine.group_store import home_site
 from ..units import bortle_of
 from . import weather
 from .deps import get_db
-from .models_tonight import MoonOut, SiteSkyOut, SkyBandOut, SkyPointOut, TonightOut
+from .models_tonight import (
+    MoonOut,
+    PhaseKey,
+    SiteSkyOut,
+    SkyBandOut,
+    SkyKind,
+    SkyPointOut,
+    TonightOut,
+)
 
 router = APIRouter(prefix="/api/v1", tags=["stanotte"])
 
@@ -27,16 +35,16 @@ def _sito(riga: dict[str, Any]) -> SiteSkyOut:
     return SiteSkyOut(name=riga["name"], sky_sqm=riga["sky_sqm"], bortle=bortle_of(riga["sky_sqm"]))
 
 
-def _fascia(fascia: dict[str, Any]) -> SkyBandOut:
+def _sky_band(band: sun.SkyBand) -> SkyBandOut:
     return SkyBandOut(
-        starts_at=fascia["starts_at"].isoformat(),
-        ends_at=fascia["ends_at"].isoformat(),
-        kind=fascia["kind"],
+        starts_at=band.starts_at.isoformat(),
+        ends_at=band.ends_at.isoformat(),
+        kind=cast(SkyKind, band.kind),
     )
 
 
-def _sky_point(punto: dict[str, Any]) -> SkyPointOut:
-    return SkyPointOut(at=punto["at"].isoformat(), altitude_deg=punto["altitude_deg"])
+def _sky_point(point: moon.TrackPoint) -> SkyPointOut:
+    return SkyPointOut(at=point.at.isoformat(), altitude_deg=point.altitude_deg)
 
 
 @router.get("/tonight", response_model=TonightOut)
@@ -82,19 +90,19 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
         site=_sito(sito),
         weather=weather.brief_of(conn, sito["id"], notte),
         sky_bands=[
-            _fascia(f)
+            _sky_band(f)
             for f in sun.night_bands(
                 comincia, sito["latitude"], sito["longitude"], hours=quante_ore
             )
         ],
         moon=MoonOut(
-            phase_key=fase["phase_key"],
-            illumination_pct=fase["illumination_pct"],
-            rise=_iso(cielo["rise"]),
-            set=_iso(cielo["set"]),
-            highest=_sky_point(cielo["highest"]),
-            track=[_sky_point(p) for p in cielo["track"]],
+            phase_key=cast(PhaseKey, fase.phase_key),
+            illumination_pct=fase.illumination_pct,
+            rise=_iso(cielo.rise),
+            set=_iso(cielo.set),
+            highest=_sky_point(cielo.highest),
+            track=[_sky_point(p) for p in cielo.track],
             ceiling_deg=moon.sky_ceiling(sito["latitude"]),
-            lit_side=moon.lit_side(fase["phase_key"], sito["latitude"]),
+            lit_side=moon.lit_side(fase.phase_key, sito["latitude"]),
         ),
     )

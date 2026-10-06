@@ -4,6 +4,8 @@ the night's curve (topocentric), and how high it can ever climb from a site."""
 import datetime as dt
 import math
 from collections.abc import Sequence
+from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any, Literal
 
 from astropy.coordinates import (
@@ -13,7 +15,6 @@ from astropy.coordinates import (
     get_body,
     get_sun,
 )
-from astropy.time import Time
 
 from . import (
     CEILING_STEP_DEG,
@@ -21,116 +22,143 @@ from . import (
     MAX_DECLINATION_DEG,
     RISESET_DEG,
     TRACK_STEP_MIN,
-    corpi,
+    bodies,
 )
-from .grid import first_crossing, night_grid
+from .grid import first_crossing
 
-# In the order of the lunar month: the closed list of what this module can answer.
-PHASES = (
-    "new",
-    "waxing_crescent",
-    "first_quarter",
-    "waxing_gibbous",
-    "full",
-    "waning_gibbous",
-    "last_quarter",
-    "waning_crescent",
-)
+
+class MoonPhase(StrEnum):
+    """In the order of the lunar month: the closed list of what this module can answer."""
+
+    NEW = "new"
+    WAXING_CRESCENT = "waxing_crescent"
+    FIRST_QUARTER = "first_quarter"
+    WAXING_GIBBOUS = "waxing_gibbous"
+    FULL = "full"
+    WANING_GIBBOUS = "waning_gibbous"
+    LAST_QUARTER = "last_quarter"
+    WANING_CRESCENT = "waning_crescent"
+
+
+PHASES = tuple(MoonPhase)
+_WAXING = frozenset({MoonPhase.WAXING_CRESCENT, MoonPhase.FIRST_QUARTER, MoonPhase.WAXING_GIBBOUS})
 
 # Half-width of new, quarters and full: "full moon" is a word, not an instant, so each of the
 # four covers twelve degrees and the other four share what is left.
-_BANDA_DEG = 6.0
+_HALF_WIDTH_DEG = 6.0
 
 
-def phase_name(scarto_deg: float) -> str:
+@dataclass(frozen=True, slots=True)
+class Phase:
+    phase_key: MoonPhase
+    illumination_pct: int
+
+
+@dataclass(frozen=True, slots=True)
+class TrackPoint:
+    at: dt.datetime
+    altitude_deg: float
+
+
+@dataclass(frozen=True, slots=True)
+class MoonNight:
+    """A None rise or set means "not in this window", not "never"; `highest` is always there."""
+
+    rise: dt.datetime | None
+    set: dt.datetime | None
+    highest: TrackPoint
+    track: list[TrackPoint]
+
+
+def phase_name(offset_deg: float) -> MoonPhase:
     """From the Moon-Sun ecliptic longitude difference: 0 new, 90 first quarter, 180 full, 270 last
     quarter. Public so the rule is tested directly, not by sampling a real month."""
-    d = scarto_deg % 360
-    if d < _BANDA_DEG or d > 360 - _BANDA_DEG:
-        return "new"
-    for centro, nome in ((90, "first_quarter"), (180, "full"), (270, "last_quarter")):
-        if abs(d - centro) < _BANDA_DEG:
-            return nome
+    d = offset_deg % 360
+    if d < _HALF_WIDTH_DEG or d > 360 - _HALF_WIDTH_DEG:
+        return MoonPhase.NEW
+    for center, name in (
+        (90, MoonPhase.FIRST_QUARTER),
+        (180, MoonPhase.FULL),
+        (270, MoonPhase.LAST_QUARTER),
+    ):
+        if abs(d - center) < _HALF_WIDTH_DEG:
+            return name
     if d < 90:
-        return "waxing_crescent"
+        return MoonPhase.WAXING_CRESCENT
     if d < 180:
-        return "waxing_gibbous"
+        return MoonPhase.WAXING_GIBBOUS
     if d < 270:
-        return "waning_gibbous"
-    return "waning_crescent"
+        return MoonPhase.WANING_GIBBOUS
+    return MoonPhase.WANING_CRESCENT
 
 
-def _longitudini_eclittiche(corpo: SkyCoord, eclittica: BaseCoordinateFrame) -> Any:
+def _ecliptic_longitudes(body: SkyCoord, ecliptic: BaseCoordinateFrame) -> Any:
     """Degrees, one per instant asked: astropy types the angle as optional and the value loosely."""
-    return corpi.convertito(corpo, eclittica).lon.deg  # pyright: ignore[reportOptionalMemberAccess]
+    return bodies.transformed(body, ecliptic).lon.deg  # pyright: ignore[reportOptionalMemberAccess]
 
 
-def phase(istante: dt.datetime) -> dict[str, Any]:
-    """`{"phase_key", "illumination_pct"}`; geocentric, so it takes no site."""
-    return phases([istante])[0]
+def phase(instant: dt.datetime) -> Phase:
+    """Geocentric, so it takes no site."""
+    return phases([instant])[0]
 
 
-def phases(istanti: Sequence[dt.datetime]) -> list[dict[str, Any]]:
+def phases(instants: Sequence[dt.datetime]) -> list[Phase]:
     """All in one astropy call. Empty in, empty out: astropy rejects `Time([])`."""
-    if not istanti:
+    if not instants:
         return []
-    quando = Time([corpi.quando(i) for i in istanti])
-    sole = get_sun(quando)
-    luna = get_body("moon", quando)
-    eclittica = GeocentricMeanEcliptic(obstime=quando)
-    scarti = _longitudini_eclittiche(luna, eclittica) - _longitudini_eclittiche(sole, eclittica)
-    elongazioni: Any = sole.separation(luna).deg  # pyright: ignore[reportArgumentType]
+    times = bodies.as_times(instants)
+    sun = get_sun(times)
+    moon = get_body("moon", times)
+    ecliptic = GeocentricMeanEcliptic(obstime=times)
+    offsets = _ecliptic_longitudes(moon, ecliptic) - _ecliptic_longitudes(sun, ecliptic)
+    elongations: Any = sun.separation(moon).deg  # pyright: ignore[reportArgumentType]
     # Illuminated fraction from the elongation: 0 with Moon and Sun together, 1 when opposite.
     return [
-        {
-            "phase_key": phase_name(float(scarto)),
-            "illumination_pct": round((1 - math.cos(math.radians(float(elongazione)))) / 2 * 100),
-        }
-        for scarto, elongazione in zip(scarti, elongazioni, strict=True)
+        Phase(
+            phase_name(float(offset)),
+            round((1 - math.cos(math.radians(float(elongation)))) / 2 * 100),
+        )
+        for offset, elongation in zip(offsets, elongations, strict=True)
     ]
 
 
-def altitudes(istanti: Sequence[dt.datetime], latitude: float, longitude: float) -> list[float]:
-    return corpi.altezze("moon", istanti, latitude, longitude)
+def altitudes(instants: Sequence[dt.datetime], latitude: float, longitude: float) -> list[float]:
+    return bodies.body_altitudes("moon", instants, latitude, longitude)
 
 
 def lit_side(phase_key: str, latitude: float) -> Literal["left", "right"]:
     """`"left"` or `"right"`: waxing is lit on the right, mirrored from the southern hemisphere,
     where the Moon is seen upside down."""
-    cresce = phase_key in ("waxing_crescent", "first_quarter", "waxing_gibbous")
-    return "right" if cresce != (latitude < 0) else "left"
+    waxing = phase_key in _WAXING
+    return "right" if waxing != (latitude < 0) else "left"
 
 
 def sky_ceiling(latitude: float) -> int:
     """The night chart's top: the highest the Moon can ever reach from this latitude, rounded up to
     the tick, capped at the zenith. It depends on the site only, so nights compare at a glance."""
-    quanto_ci_manca = max(0.0, abs(latitude) - MAX_DECLINATION_DEG)
-    return math.ceil((90 - quanto_ci_manca) / CEILING_STEP_DEG) * CEILING_STEP_DEG
+    beyond_deg = max(0.0, abs(latitude) - MAX_DECLINATION_DEG)
+    return math.ceil((90 - beyond_deg) / CEILING_STEP_DEG) * CEILING_STEP_DEG
 
 
-def night_track(
-    inizio: dt.datetime, latitude: float, longitude: float, hours: float
-) -> dict[str, Any]:
-    """`{"rise", "set", "highest", "track"}` from one sampling, the only costly thing here. A None
-    rise or set means "not in this window", not "never"; `highest` is always there."""
-    istanti = night_grid(inizio, hours=hours, step_min=GRID_STEP_MIN)
-    alte = altitudes(istanti, latitude, longitude)
+def night_track(start: dt.datetime, latitude: float, longitude: float, hours: float) -> MoonNight:
+    """From one sampling, the only costly thing here."""
+    instants, alts = bodies.sampled_night("moon", start, latitude, longitude, hours)
 
     # Computed in UTC, answered in the caller's zone, where astimezone knows about DST.
-    def nel_fuso(quando: dt.datetime | None) -> dt.datetime | None:
-        return quando.astimezone(inizio.tzinfo) if quando else None
+    def local(instant: dt.datetime | None) -> dt.datetime | None:
+        return instant.astimezone(start.tzinfo) if instant else None
 
-    def punto(i: int) -> dict[str, Any]:
-        return {"at": nel_fuso(istanti[i]), "altitude_deg": round(alte[i], 1)}
+    def point(i: int) -> TrackPoint:
+        return TrackPoint(instants[i].astimezone(start.tzinfo), round(alts[i], 1))
 
     # The last sample always closes the curve; a set, so a step that already lands on it adds no
     # duplicate point.
-    passo = TRACK_STEP_MIN // GRID_STEP_MIN
-    quali = sorted({*range(0, len(istanti), passo), len(istanti) - 1})
+    stride = TRACK_STEP_MIN // GRID_STEP_MIN
+    picked = sorted({*range(0, len(instants), stride), len(instants) - 1})
 
-    return {
-        "rise": nel_fuso(first_crossing(istanti, alte, RISESET_DEG, "up")),
-        "set": nel_fuso(first_crossing(istanti, alte, RISESET_DEG, "down")),
-        "highest": punto(alte.index(max(alte))),
-        "track": [punto(i) for i in quali],
-    }
+    return MoonNight(
+        rise=local(first_crossing(instants, alts, RISESET_DEG, "up")),
+        set=local(first_crossing(instants, alts, RISESET_DEG, "down")),
+        highest=point(alts.index(max(alts))),
+        track=[point(i) for i in picked],
+    )

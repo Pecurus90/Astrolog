@@ -5,7 +5,7 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime, timedelta
 from typing import Any
 
-from ..ephemeris.sun import BUIO
+from ..ephemeris.sun import Sky
 
 type Hour = dict[str, Any]
 type Bites = Callable[[Hour], bool]
@@ -31,9 +31,9 @@ _ORDINE = ("rain", "cloud_low", "cloud", "gust", "condensation")
 def window(ore: Sequence[Hour]) -> tuple[list[Hour], str | None]:
     """The dark, else the hours with the Sun below the horizon, and which of the two; none where
     the Sun never sets. Afternoon clouds never weigh on the night."""
-    buie = [o for o in ore if o["sky"] == BUIO]
+    buie = [o for o in ore if o["sky"] == Sky.DARK]
     if buie:
-        return buie, BUIO
+        return buie, Sky.DARK
     giu = [o for o in ore if o["sky"] != "day"]
     return (giu, SUN_DOWN) if giu else ([], None)
 
