@@ -3,17 +3,21 @@ with the forecast, and the upper air is merged per hour from its sources' rows."
 
 import json
 import sqlite3
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from fastapi import APIRouter, Depends
 
 from ..clock import night_date, now_iso
 from ..db import config
+from ..db.transaction import transaction
 from ..spine.group_store import home_site
 from ..weather import forecast, meteoblue, openmeteo, rounds, sky
 from ..weather.fetches import Source
 from .deps import get_db
 from .models_weather import (
+    KeyStatus,
+    MeteoblueKeyIn,
+    MeteoblueKeyOut,
     RefreshStatus,
     WeatherAloftOut,
     WeatherBriefOut,
@@ -24,20 +28,19 @@ from .models_weather import (
     WeatherSourceOut,
 )
 
-router = APIRouter(prefix="/api/v1", tags=["meteo"])
+router = APIRouter(prefix="/api/v1", tags=["weather"])
 
-_NOTTI = (
+_NIGHTS = (
     "SELECT night_date, fetched_at, hourly_json, summary_json FROM weather_nights"
     " WHERE site_id = ? AND kind = ? AND source = ? AND night_date >= ? ORDER BY night_date"
 )
-_ARRIVATA = (
+_LAST_FETCHED = (
     "SELECT MAX(fetched_at) FROM weather_nights WHERE site_id = ? AND kind = ? AND source LIKE ?"
 )
-_FONTI_DEL_CIELO = ", ".join("?" * len(sky.ALL_SOURCES))  # segnaposto-ok: the sources, constants
-# S608: the placeholders are constants.
-_CIELO = (
+_SKY_SOURCES = ", ".join("?" * len(sky.ALL_SOURCES))  # segnaposto-ok: the sources, constants
+_SKY_ROWS = (
     "SELECT night_date, source, fetched_at, hourly_json FROM weather_nights"  # noqa: S608
-    f" WHERE site_id = ? AND kind = ? AND source IN ({_FONTI_DEL_CIELO}) AND night_date >= ?"
+    f" WHERE site_id = ? AND kind = ? AND source IN ({_SKY_SOURCES}) AND night_date >= ?"
 )
 
 _SEEING = ("seeing_from", "seeing_to")
@@ -47,56 +50,54 @@ _SEEING = ("seeing_from", "seeing_to")
 FULL_NIGHTS = 3
 # the current night and the six after: the service sometimes brings one more, which is not shown
 MAX_NIGHTS = 7
-_VENTO = ("wind_700hpa_kmh", "wind_250hpa_kmh", "wind_200hpa_kmh")
-_CAMPI_DEL_CIELO = (
+_WIND = ("wind_700hpa_kmh", "wind_250hpa_kmh", "wind_200hpa_kmh")
+_SKY_FIELDS = (
     "seeing_from", "seeing_to", "transparency_from", "transparency_to",
     "aerosol_optical_depth", "dust_ugm3",
 )  # fmt: skip
 
 
-def _in_quota(
-    ore: list[dict[str, Any]], del_cielo: dict[str, dict[str, Any]]
+def _aloft(
+    hourly: list[dict[str, Any]], from_sky: dict[str, dict[str, Any]]
 ) -> list[WeatherAloftOut]:
     """The wind from the model, the rest from the sky sources at the hour they have; an hour a
     source does not give stays empty."""
     return [
         WeatherAloftOut(
             at=o["at"],
-            **{k: o.get(k) for k in _VENTO},
-            **{k: del_cielo.get(o["at"], {}).get(k) for k in _CAMPI_DEL_CIELO},
+            **{k: o.get(k) for k in _WIND},
+            **{k: from_sky.get(o["at"], {}).get(k) for k in _SKY_FIELDS},
         )
-        for o in ore
+        for o in hourly
     ]
 
 
-def _notte(
-    riga: sqlite3.Row, posto: int, del_cielo: dict[str, dict[str, dict[str, Any]]]
+def _night(
+    row: sqlite3.Row, rank: int, from_sky: dict[str, dict[str, dict[str, Any]]]
 ) -> WeatherNightOut:
-    riassunto = json.loads(riga["summary_json"])
-    if posto >= FULL_NIGHTS:
+    summary = json.loads(row["summary_json"])
+    if rank >= FULL_NIGHTS:
         # the trend carries nothing read from the hours
-        riassunto.update(
-            factors=[], usable_hours=None, wind_700hpa_kmh=None, wind_700hpa_tenths=None
-        )
-        return WeatherNightOut(
-            night=riga["night_date"], trend=True, hours=[], aloft=[], **riassunto
-        )
-    ore = json.loads(riga["hourly_json"])
+        summary.update(factors=[], usable_hours=None, wind_700hpa_kmh=None, wind_700hpa_tenths=None)
+        return WeatherNightOut(night=row["night_date"], trend=True, hours=[], aloft=[], **summary)
+    hourly = json.loads(row["hourly_json"])
     return WeatherNightOut(
-        night=riga["night_date"],
+        night=row["night_date"],
         trend=False,
-        hours=ore,
-        aloft=_in_quota(ore, del_cielo.get(riga["night_date"], {})),
-        **riassunto,
+        hours=hourly,
+        aloft=_aloft(hourly, from_sky.get(row["night_date"], {})),
+        **summary,
     )
 
 
-def _seeing(conn: sqlite3.Connection, site_id: int, arrivate: dict[str, str]) -> WeatherSeeingOut:
+def _seeing(conn: sqlite3.Connection, site_id: int, arrived: dict[str, str]) -> WeatherSeeingOut:
     """Meteoblue's last attempt only with a key: it is what lets the page say why seeing comes from
     7Timer."""
-    fonte = "meteoblue" if "meteoblue" in arrivate else "7timer" if "7timer" in arrivate else None
-    ultimo = meteoblue.last_attempt(conn, site_id) if config.read(conn).meteoblue_key else None
-    return WeatherSeeingOut(source=fonte, meteoblue=ultimo["status"] if ultimo else None)
+    seeing_source = (
+        "meteoblue" if "meteoblue" in arrived else "7timer" if "7timer" in arrived else None
+    )
+    last = meteoblue.last_attempt(conn, site_id) if config.read(conn).meteoblue_key else None
+    return WeatherSeeingOut(source=seeing_source, meteoblue=last["status"] if last else None)
 
 
 @router.get("/weather", response_model=WeatherOut)
@@ -112,11 +113,11 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
     wind. A night that has Meteoblue's seeing takes all of it from there: the hours Meteoblue does
     not cover stay empty instead of taking 7Timer's bands, or the page would say "from Meteoblue"
     over a night of two sources."""
-    scelto = config.read(conn).weather_model
-    vuoto = WeatherOut(
+    chosen = config.read(conn).weather_model
+    empty = WeatherOut(
         site=None,
         missing=None,
-        model=scelto,
+        model=chosen,
         models=list(openmeteo.MODELS),
         fetched_at=None,
         full_nights=FULL_NIGHTS,
@@ -124,41 +125,45 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
         sources=[],
         nights=[],
     )
-    sito = home_site(conn)
-    if sito is None:
-        return vuoto
-    in_corso = night_date(now_iso(), sito["timezone"]) if sito["timezone"] else None
-    if in_corso is None:
-        return vuoto.model_copy(
-            update={"site": sito["name"], "missing": forecast.Outcome.NO_TIMEZONE}
+    home = home_site(conn)
+    if home is None:
+        return empty
+    current = night_date(now_iso(), home["timezone"]) if home["timezone"] else None
+    if current is None:
+        return empty.model_copy(
+            update={"site": home["name"], "missing": forecast.Outcome.NO_TIMEZONE}
         )
-    righe = conn.execute(
-        _NOTTI, (sito["id"], forecast.KIND, forecast.source_of(scelto), in_corso)
+    rows = conn.execute(
+        _NIGHTS, (home["id"], forecast.KIND, forecast.source_of(chosen), current)
     ).fetchall()
-    del_cielo: dict[str, dict[str, dict[str, Any]]] = {}  # night -> hour -> sky source fields
-    arrivate: dict[str, str] = {}  # source -> when it arrived
-    del_sito = conn.execute(
-        _CIELO, (sito["id"], forecast.KIND, *sky.ALL_SOURCES, in_corso)
+    from_sky: dict[str, dict[str, dict[str, Any]]] = {}  # night -> hour -> sky source fields
+    arrived: dict[str, str] = {}  # source -> when it arrived
+    site_rows = conn.execute(
+        _SKY_ROWS, (home["id"], forecast.KIND, *sky.ALL_SOURCES, current)
     ).fetchall()
-    con_meteoblue = {r["night_date"] for r in del_sito if r["source"] == Source.METEOBLUE}
-    for r in del_sito:
-        arrivate[r["source"]] = max(arrivate.get(r["source"], ""), r["fetched_at"])
-        per_ora = del_cielo.setdefault(r["night_date"], {})
-        via = _SEEING if r["source"] == "7timer" and r["night_date"] in con_meteoblue else ()
+    with_meteoblue = {r["night_date"] for r in site_rows if r["source"] == Source.METEOBLUE}
+    for r in site_rows:
+        arrived[r["source"]] = max(arrived.get(r["source"], ""), r["fetched_at"])
+        by_hour = from_sky.setdefault(r["night_date"], {})
+        via = (
+            _SEEING
+            if r["source"] == Source.SEVENTIMER and r["night_date"] in with_meteoblue
+            else ()
+        )
         for o in json.loads(r["hourly_json"]):
-            per_ora.setdefault(o["at"], {}).update(
+            by_hour.setdefault(o["at"], {}).update(
                 {k: v for k, v in o.items() if v is not None and k not in via}
             )
-    return vuoto.model_copy(
+    return empty.model_copy(
         update={
-            "site": sito["name"],
+            "site": home["name"],
             "fetched_at": conn.execute(
-                _ARRIVATA, (sito["id"], forecast.KIND, forecast.source_of("%"))
+                _LAST_FETCHED, (home["id"], forecast.KIND, forecast.source_of("%"))
             ).fetchone()[0],
-            "nights": [_notte(r, i, del_cielo) for i, r in enumerate(righe[:MAX_NIGHTS])],
-            "seeing": _seeing(conn, sito["id"], arrivate),
+            "nights": [_night(r, i, from_sky) for i, r in enumerate(rows[:MAX_NIGHTS])],
+            "seeing": _seeing(conn, home["id"], arrived),
             "sources": [
-                WeatherSourceOut(source=f, fetched_at=q) for f, q in sorted(arrivate.items())
+                WeatherSourceOut(source=f, fetched_at=q) for f, q in sorted(arrived.items())
             ],
         }
     )
@@ -168,17 +173,53 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
 def refresh(conn: sqlite3.Connection = Depends(get_db)) -> WeatherRefreshOut:
     """Asks for the forecast now. If the service is silent the previous one stays, and the reply
     says why."""
-    sito = home_site(conn)
-    status = rounds.refresh(conn, dict(sito) if sito else None)
+    home = home_site(conn)
+    status = rounds.refresh(conn, dict(home) if home else None)
     return WeatherRefreshOut(status=cast(RefreshStatus, status))
 
 
 def brief_of(conn: sqlite3.Connection, site_id: int, night: str) -> WeatherBriefOut | None:
     """One night's summary from the chosen model, as written; Tonight reads it."""
-    scelto = config.read(conn).weather_model
-    riga = conn.execute(
-        _NOTTI + " LIMIT 1", (site_id, forecast.KIND, forecast.source_of(scelto), night)
+    chosen = config.read(conn).weather_model
+    row = conn.execute(
+        _NIGHTS + " LIMIT 1", (site_id, forecast.KIND, forecast.source_of(chosen), night)
     ).fetchone()
-    if riga is None or riga["night_date"] != night:
+    if row is None or row["night_date"] != night:
         return None
-    return WeatherBriefOut(**json.loads(riga["summary_json"]))
+    return WeatherBriefOut(**json.loads(row["summary_json"]))
+
+
+REMOVED: Final = "removed"
+
+
+@router.put("/weather/meteoblue-key", response_model=MeteoblueKeyOut)
+def put_meteoblue_key(
+    body: MeteoblueKeyIn, conn: sqlite3.Connection = Depends(get_db)
+) -> MeteoblueKeyOut:
+    """Tries the key on the account and saves it, or removes it when it is sent empty. A pasted key
+    carries spaces and line breaks along: an invisible character at the end would give a refusal
+    nobody can explain, so they are trimmed.
+
+    **A key the account does not recognise is not saved**, and the hint stays the previous key's:
+    saving it would mean finding out only at the next round, with seeing that does not arrive and
+    no idea why. **A new key is used at once**: the previous seeing and the last attempt are
+    forgotten, and the weather round starts now instead of after Meteoblue's minimum gap
+    (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key."""
+    trimmed = (body.key or "").strip()
+    if not trimmed:
+        with transaction(conn):
+            config.write(conn, "meteoblue_key", None)
+            meteoblue.forget(conn)
+        return MeteoblueKeyOut(status=REMOVED, hint=None)
+    outcome = meteoblue.check_key(trimmed)
+    if outcome != forecast.Outcome.OK:
+        return MeteoblueKeyOut(
+            status=cast(KeyStatus, outcome), hint=config.hint(config.read(conn).meteoblue_key)
+        )
+    with transaction(conn):
+        config.write(conn, "meteoblue_key", trimmed)
+        meteoblue.forget(conn)
+    home = home_site(conn)
+    if home is not None:
+        rounds.refresh(conn, dict(home))
+    return MeteoblueKeyOut(status=cast(KeyStatus, outcome), hint=config.hint(trimmed))

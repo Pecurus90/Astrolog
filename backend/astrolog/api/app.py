@@ -39,7 +39,6 @@ from . import (
     tonight,
     vocab,
     weather,
-    weather_key,
 )
 from .deps import get_db
 from .models import Health
@@ -52,8 +51,7 @@ OPEN_PATHS = ("/docs", "/redoc", "/openapi.json")
 
 
 def _is_open(path: str) -> bool:
-    """Docs, pages and the page's files are public artefacts, not data. Pages are a rule
-    (`page.is_page`), never a list: the frontend router owns the addresses."""
+    """Docs, pages and the page's files are public artefacts, not data."""
     # The trailing slash keeps `/assets-other/x.js` closed while `/assets/x.js` is open.
     return path.startswith((*OPEN_PATHS, page.ASSETS_PATH + "/")) or page.is_page(path)
 
@@ -68,11 +66,7 @@ def _scheduler(state: State, every_s: float, stop_event: threading.Event) -> Non
     while not stop_event.wait(every_s):
         conn = connect(state.db_path)
         try:
-            ids = [
-                r[0]
-                for r in conn.execute("SELECT id FROM folders WHERE retired_at IS NULL ORDER BY id")
-            ]
-            for folder_id in ids:
+            for folder_id in scan.active_folder_ids(conn):
                 if state.worker.is_running():
                     break
                 # A folder that cannot start is logged and skipped; the round goes on.
@@ -95,18 +89,18 @@ _WEATHER_TICK_S = 60
 def _weather_scheduler(db_path: str, every_s: float, stop_event: threading.Event) -> None:
     """Climate, forecast when `forecast.Cadence` says so, and one step of history: each on its own,
     so a fallen one is logged and what was there stays."""
-    cadenza = forecast.Cadence(every_s)
+    cadence = forecast.Cadence(every_s)
     while True:
         conn = connect(db_path)
         try:
-            riga = home_site(conn)
-            sito = None if riga is None else dict(riga)
+            row = home_site(conn)
+            site = None if row is None else dict(row)
             try:
-                climate.step(conn, sito)  # before the forecast, which reads it
+                climate.step(conn, site)  # before the forecast, which reads it
             except Exception:
                 log.exception("meteo: il giro della climatologia e' caduto")
-            if cadenza.due(sito, time.monotonic()):
-                cadenza.done(sito, rounds.refresh(conn, sito), time.monotonic())
+            if cadence.due(site, time.monotonic()):
+                cadence.done(site, rounds.refresh(conn, site), time.monotonic())
         except Exception:
             log.exception("meteo: il giro della previsione e' caduto")
         try:
@@ -255,7 +249,5 @@ def create_app(  # noqa: PLR0913
     app.include_router(tonight.router)
     app.include_router(vocab.router)
     app.include_router(weather.router)
-    app.include_router(weather_key.router)
-    # Last: it catches the remaining addresses, and earlier it would swallow the API.
-    page.mount_fallback(app)
+    page.mount_fallback(app)  # last: `page.mount_fallback` says why
     return app

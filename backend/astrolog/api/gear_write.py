@@ -23,7 +23,7 @@ from .models_gear import (
 )
 from .models_review_apply import FilterCorrection
 
-router = APIRouter(prefix="/api/v1", tags=["attrezzatura"])
+router = APIRouter(prefix="/api/v1", tags=["gear"])
 
 
 @router.post("/gear/instruments", response_model=GearWritten, status_code=201)

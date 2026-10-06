@@ -10,7 +10,7 @@ from . import instrument_answer
 from .deps import get_db
 from .models_gear import GearList
 
-router = APIRouter(prefix="/api/v1", tags=["attrezzatura"])
+router = APIRouter(prefix="/api/v1", tags=["gear"])
 
 
 @router.get("/gear", response_model=GearList)

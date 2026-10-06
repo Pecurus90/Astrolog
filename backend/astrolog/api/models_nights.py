@@ -6,7 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from .models_page import Page
-from .models_tonight import PhaseKey
+from .models_tonight import IlluminationPct, PhaseKey
 from .models_weather import WeatherSkyOut
 
 
@@ -39,7 +39,7 @@ class MoonThatNight(BaseModel):
     # The same phases and bound as tonight's route: it is the same Moon, and two OpenAPI shapes
     # for one fact would be two contracts to keep in agreement.
     phase_key: PhaseKey
-    illumination_pct: int = Field(ge=0, le=100)
+    illumination_pct: IlluminationPct
 
 
 class NightWeather(WeatherSkyOut):

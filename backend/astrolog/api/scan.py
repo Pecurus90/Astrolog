@@ -35,7 +35,7 @@ from .models import (
 )
 from .models_page import page_of
 
-router = APIRouter(prefix="/api/v1", tags=["scansione"])
+router = APIRouter(prefix="/api/v1", tags=["scan"])
 
 
 def _release(state: State, folder_id: int) -> None:
@@ -78,11 +78,7 @@ def start_scan(state: State, conn: sqlite3.Connection, folder_id: int) -> int:
     previous = (state.last_scan, state.scan_runs)
     try:
         run_id = start_run(conn, folder_id, now_iso())
-        stages = _one_folder_stages(state, folder_id, run_id)
-        # before the start, and the receipts before the current one: a poll never sees the old run
-        state.scan_runs = (run_id,)
-        state.last_scan = (folder_id, run_id)
-        state.worker.start(stages)
+        _launch(state, [(folder_id, run_id)], _one_folder_stages(state, folder_id, run_id))
         return run_id
     except Exception as err:
         # whatever broke the start, the open receipt will never have a run
@@ -93,6 +89,20 @@ def start_scan(state: State, conn: sqlite3.Connection, folder_id: int) -> int:
         if isinstance(err, WorkerBusyError):
             raise HTTPException(status_code=409, detail={"code": "worker_busy"}) from err
         raise
+
+
+def _launch(state: State, pairs: Sequence[tuple[int, int]], stages: list[Stage]) -> None:
+    """`pairs` are (folder_id, run_id), the first one current."""
+    # before the start, and the receipts before the current one: a poll never sees the old run
+    state.scan_runs = tuple(run_id for _, run_id in pairs)
+    state.last_scan = pairs[0]
+    state.worker.start(stages)
+
+
+def active_folder_ids(conn: sqlite3.Connection) -> list[int]:
+    return [
+        r[0] for r in conn.execute("SELECT id FROM folders WHERE retired_at IS NULL ORDER BY id")
+    ]
 
 
 def _one_folder_stages(state: State, folder_id: int, run_id: int) -> list[Stage]:
@@ -118,7 +128,7 @@ def _stages_with_cleanup(
     def at_end() -> None:
         for folder_id in locked:
             _release(state, folder_id)
-        _scarta_le_mai_iniziate(state.db_path, started, begun)
+        _discard_never_begun(state.db_path, started, begun)
 
     last = len(steps) - 1
     return [
@@ -127,28 +137,28 @@ def _stages_with_cleanup(
     ]
 
 
-def _pulisci(
-    state: State, conn: sqlite3.Connection, prese: Iterable[int], partite: Iterable[ScanStarted]
+def _forget_start(
+    state: State, conn: sqlite3.Connection, taken: Iterable[int], opened: Iterable[ScanStarted]
 ) -> None:
     """A run that never started leaves nothing behind: no locked folders (they would not reopen
     until a restart), no open receipts that no run will close."""
-    for c in partite:
+    for c in opened:
         discard_run(conn, c.run_id)
-    for folder_id in prese:
+    for folder_id in taken:
         _release(state, folder_id)
 
 
-def _scarta_le_mai_iniziate(
-    db_path: str | Path, partite: Iterable[ScanStarted], iniziate: Container[int]
+def _discard_never_begun(
+    db_path: str | Path, opened: Iterable[ScanStarted], begun_runs: Container[int]
 ) -> None:
     """At the end of a run, its receipts whose reading never began go: no run would ever close them.
     Its own connection: this runs in the worker's thread, the request's one was closed long ago."""
-    orfane = [c.run_id for c in partite if c.run_id not in iniziate]
-    if not orfane:
+    orphans = [c.run_id for c in opened if c.run_id not in begun_runs]
+    if not orphans:
         return
     conn = connect(db_path)
     try:
-        for run_id in orfane:
+        for run_id in orphans:
             discard_run(conn, run_id)
     finally:
         conn.close()
@@ -157,61 +167,53 @@ def _scarta_le_mai_iniziate(
 def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
     """A folder that cannot be read is skipped and reported instead of stopping the others: one NAS
     switched off would otherwise stop every scan. The locks are all taken before the start."""
-    ids = [
-        r[0] for r in conn.execute("SELECT id FROM folders WHERE retired_at IS NULL ORDER BY id")
-    ]
+    ids = active_folder_ids(conn)
     if not ids:
         raise HTTPException(status_code=409, detail={"code": "no_folders"})
-    partite: list[ScanStarted] = []
-    saltate: list[FolderSkipped] = []
-    prese: list[int] = []
+    opened: list[ScanStarted] = []
+    skips: list[FolderSkipped] = []
+    taken: list[int] = []
     for folder_id in ids:
         root, _ = folder_root(conn, folder_id)
         if not root_readable(root):
-            saltate.append(
+            skips.append(
                 FolderSkipped(folder_id=folder_id, root_path=root, reason="root_unreachable")
             )
             continue
         with state.folder_locks_mutex:
             if folder_id in state.folder_locks:
-                saltate.append(
+                skips.append(
                     FolderSkipped(folder_id=folder_id, root_path=root, reason="scan_running")
                 )
                 continue
             state.folder_locks.add(folder_id)
-        prese.append(folder_id)
-    if not prese:
+        taken.append(folder_id)
+    if not taken:
         raise HTTPException(
             status_code=409,
-            detail={"code": "no_readable_folders", "skipped": [s.model_dump() for s in saltate]},
+            detail={"code": "no_readable_folders", "skipped": [s.model_dump() for s in skips]},
         )
     previous = (state.last_scan, state.scan_runs)
     try:
-        for folder_id in prese:
+        for folder_id in taken:
             run_id = start_run(conn, folder_id, now_iso())
-            partite.append(ScanStarted(run_id=run_id, folder_id=folder_id))
-        coppie = [(c.folder_id, c.run_id) for c in partite]
+            opened.append(ScanStarted(run_id=run_id, folder_id=folder_id))
+        pairs = [(c.folder_id, c.run_id) for c in opened]
         # the reply carries every receipt, so they all open now
-        iniziate: set[int] = set()
+        begun_runs: set[int] = set()
 
-        def segui(folder_id: int, run_id: int) -> None:
-            iniziate.add(run_id)
+        def follow(folder_id: int, run_id: int) -> None:
+            begun_runs.add(run_id)
             state.last_scan = (folder_id, run_id)
 
-        steps = queue_folders(state.db_path, coppie, on_folder=segui)
-        stages = _stages_with_cleanup(state, steps, prese, partite, iniziate)
-        # before the start, and the receipts before the current one: a poll never sees the old run
-        state.scan_runs = tuple(run_id for _, run_id in coppie)
-        state.last_scan = coppie[0]
-        state.worker.start(stages)
-        return ScanAllStarted(started=partite, skipped=saltate)
-    except WorkerBusyError as err:
-        _pulisci(state, conn, prese, partite)
+        steps = queue_folders(state.db_path, pairs, on_folder=follow)
+        _launch(state, pairs, _stages_with_cleanup(state, steps, taken, opened, begun_runs))
+        return ScanAllStarted(started=opened, skipped=skips)
+    except Exception as err:
+        _forget_start(state, conn, taken, opened)
         state.last_scan, state.scan_runs = previous
-        raise HTTPException(status_code=409, detail={"code": "worker_busy"}) from err
-    except Exception:
-        _pulisci(state, conn, prese, partite)
-        state.last_scan, state.scan_runs = previous
+        if isinstance(err, WorkerBusyError):
+            raise HTTPException(status_code=409, detail={"code": "worker_busy"}) from err
         raise
 
 

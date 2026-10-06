@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | rifattorizza | Fase 2, lotto 6b: `api` resto, fase 2 chiusa | ~0,27 M agenti (uno sviluppatore), sessione principale non contata | 23 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 6a: `api` Da confermare e Attrezzatura | ~0,21 M agenti (uno sviluppatore), sessione principale non contata | 16 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5e: `spine` Notti e Archivio, indice, Da confermare | ~0,24 M agenti (uno sviluppatore), sessione principale non contata | 23 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5d: `spine` oggetti e mosaici, Applica una lettura | ~0,32 M agenti (uno sviluppatore), sessione principale non contata | 38 agente | 0 |
@@ -57,7 +58,7 @@ annotata; il glob `ANN` di `ruff.toml` copre tutto `backend/astrolog`.
   `# noqa: CODICE - ragione` (che zittisce anche la lunghezza) o un `# pyright: ignore`: la
   ragione va sopra la riga. Dicono ancora "posa" e "luogo" dove il glossario dice "frame" e
   "sito": commenti, docstring e prove di `backend/tests`, i commenti di
-  `backend/astrolog/schema.sql`, il tag OpenAPI `luoghi` di `api/sites.py` e due messaggi di log
+  `backend/astrolog/schema.sql` e due messaggi di log
   (`spine/identify`, `spine/stage_run`). Due rimandi a
   `docs/coda.md` puntano a decisioni che ora vivono altrove: `tests/test_gear_instruments.py` va
   a `docs/domini/spina.md`, *Le schede*;
@@ -76,37 +77,14 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
 `noqa` su `C901`/`PLR` tolti, file piccoli accorpati, e le voci di *Efficienza, misurata* e
 *Doppioni* del package toccato (Marco, 6/10/2026). Si va dalla base in su: `db`, `fits`,
 `catalog`, `vocab`; `ephemeris`, `weather`, i file sciolti; `spine`; `api`. Un lotto per
-package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia' trovato:
-- **I nomi interni in italiano** si rinominano (deciso: `CLAUDE.md`, "Nomi e commenti in
-  inglese"), in `backend/astrolog`. La macchina c'e' (`tools/nomi_inglesi.py`, al commit): un
-  nome italiano nuovo e' rosso, quelli vecchi stanno in `tools/nomi_italiani.txt`, che solo si
-  accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Fatti `db` e
-  `fits` (e il segnaposto `{listed}` di `idlist.grouped`), poi `ephemeris` (`corpi` e' `bodies`).
-  Fatti anche `weather`, `net` e gli altri file sciolti, e tutta `spine`
-  (scansione, normalizzazione, stadi; risoluzione, identificazione, raggruppamento, frame senza
-  tipo, `site_requeue`, `home_nights`; l'attrezzatura, con `night_rig`, `signature`,
-  `signature_page`, `unfiltered`, `declarations`; oggetti e mosaici, con `object_answer`,
-  `object_candidates`, `unnamed`, i cinque `mosaic*` e l'alias di `object_answer` in
-  `api/review_page` e `api/review_write`; Notti e Archivio, con le colonne `meteo`, `chiave`,
-  `nome` e i segnaposto di `archive`). In `api` fatte Da confermare e Attrezzatura (`review`,
-  `review_page`, `review_write`, `review_write_folders`, `gear`, `gear_write`,
-  `instrument_answer`, `lookalike`, `models_review_apply`; `scrivendo` e' `writing`). Restano in
-  italiano, perche' arrivano nel corpo di una risposta o in nessun posto, i messaggi dei
-  validatori di `models_review_apply` (il 422) e delle eccezioni di `review_write*`,
-  `lookalike` e `instrument_answer`. Nel primo lotto di `api`: `cadenza`, `riga`,
-  `sito` (`app`); `_servita`, `pagina_del_router`, il parametro di percorso `percorso` e il
-  segnaposto `{chiave}` di `TOKEN_META` (`page`); `_scansione_interrotta`, `da_fare`
-  (`pipeline`); `manca`, `percorso`, `provate`, `dove` (`settings`). Nel quarto lotto di `api`:
-  `criteri`, `righe`, `quanti`, `oggetti`, `filtri`, `mosaici`, `pannelli` (`archive`); `_sito`,
-  `_fascia`, `istante`, `riga`, `fascia`, `punto`, `sito`, `notte`, `mezzanotte`, `comincia`,
-  `quante_ore`, `fase`, `cielo` (`tonight`); `_NOTTI`, `_ARRIVATA`, `_FONTI_DEL_CIELO`, `_CIELO`,
-  `_VENTO`, `_CAMPI_DEL_CIELO`, `_in_quota`, `_notte`, `ore`, `del_cielo`, `posto`, `riassunto`,
-  `fonte`, `ultimo`, `arrivate`, `scelto`, `vuoto`, `in_corso`, `del_sito`, `con_meteoblue`,
-  `per_ora`, `via`, `righe`, `riga`, `sito` (`weather`); `chiave`, `esito`, `sito`
-  (`weather_key`); `vuoti`, `vecchia`, `scritta`,
-  `nome`, `senza_casa` (`sites`). Nel quinto lotto di `api`: `_pulisci`,
-  `_scarta_le_mai_iniziate`, `prese`, `partite`, `saltate`, `coppie`, `iniziate`, `segui`,
-  `orfane` (`scan`).
+package: prima i nomi, poi doppioni e tipi, poi efficienza e file. **I lotti sono finiti**, `api`
+compreso. Della fase 2 resta solo il debito qui sotto: cio' che cambierebbe una firma usata fuori,
+una forma di risposta o un esito (quindi non e' un refactor), e le righe ancora `dict` che
+aspettano chiamanti tipati. Si chiude quando si tocca il codice dove sta:
+- **I nomi interni in italiano**: fatti tutti in `backend/astrolog` (`tools/nomi_italiani.txt`
+  vuoto); un nome nuovo lo ferma `tools/nomi_inglesi.py` al commit. Restano in italiano, perche' arrivano nel corpo di una risposta, nel log o in nessun posto, i
+  messaggi dei validatori di `models_review_apply` (il 422), delle eccezioni di `review_write*`,
+  `lookalike` e `instrument_answer`, e le righe di log.
 - **`identify`, dopo il terzo lotto di `spine`**: il wcs resta `dict[str, Any]` (la geometria
   legge con `.get`, e `mosaic` e i test passano dict senza i lati: *Mosaici, dichiarazioni e
   archivio* nel Parcheggio). `identify_link._name_it` ha un `cast` sul nome libero della
@@ -291,10 +269,8 @@ Niente di aperto.
 - **Promesse con la prova a meta', o senza.** Delle tabelle *Cosa chiede l'utente* dei contratti,
   ogni prova nominata esiste e passa, ma alcune righe sono provate a meta' o senza prova. Le
   peggiori: **un pezzo scritto a mano e poi nominato dai file** non deve diventare un doppione con
-  le ore spartite (nessuna prova; la riga di `attrezzatura.md` cita il verso opposto); **la
-  scansione a cadenza sul NAS** (`ASTROLOG_SCAN_EVERY_MIN`, `backend/astrolog/__main__.py`) non la
-  legge nessuna prova, e rotta spegnerebbe la scansione in silenzio; **una correzione sulla scheda
-  resiste a una nuova lettura** e' provata per pixel e colore della camera, non per gli altri
+  le ore spartite (nessuna prova; la riga di `attrezzatura.md` cita il verso opposto); **una
+  correzione sulla scheda resiste a una nuova lettura** e' provata per pixel e colore della camera, non per gli altri
   campi. Piu' piccole: il catalogo ("le ore non si
   sparpagliano", "senza rete") provato di sbieco;
   in `spina.md` tre prove che esistono e la riga non cita
@@ -364,8 +340,7 @@ Niente di aperto.
   Da confermare, la tendina dei corredi e l'elenco degli oggetti contano ancora ogni frame a ogni
   apertura. Piu' piccoli: i frame per cartella in `GET /folders`; `stages.pending_by_stage` che
   conta `measure`, stadio che non gira mai (la sua chiave esce in `GET /pipeline/status`:
-  toglierla cambia la risposta); gli errori di una lettura letti tutti per tagliarne
-  una pagina (`api/scan.py`). Ogni ricalcolo tolto entra in un contratto, o in una prova che
+  toglierla cambia la risposta). Ogni ricalcolo tolto entra in un contratto, o in una prova che
   confronta cio' che e' scritto con cio' che le regole direbbero (`tests/test_header_asks.py`).
 - **La normalizzazione tiene in mano camera, copia e marchio di ogni frame in coda per tutto il
   giro** (`spine/normalize.py`, `_before_the_round`; `spine/copies.py`): su 5.800 frame sintetici
@@ -620,15 +595,12 @@ riga per voce.
   (`gear_usage.write`, `object_candidates.write`): se cadono queste, il log dice che il catalogo
   non si e' caricato, ed e' falso, e le tabelle restano vecchie fino al catalogo dopo. Riprendi
   butta il `ScanAllStarted` di `start_scan_all`, quindi le cartelle saltate in parte non si
-  dicono. `GET /settings` non ha docstring (contratto OpenAPI vuoto); `GET /settings` e
+  dicono. `GET /settings` e
   `GET /solver` cercano il solver sul disco a ogni lettura (~7,9 ms contro ~1,5): una lettura che
-  calcola. I tag OpenAPI dei router sono in italiano (fase 2). Doppioni: `[Stage(n, f) for ...]`
-  in `pipeline.run` e `work.after`; i tre verbi del bottone scritti a mano due volte in
-  `frontend/src/Scansiona.tsx` invece del tipo generato; regole dette due volte ("riprendere
-  rilegge le cartelle", il perche' delle ricevute, "una regola, non un elenco" in `app._is_open`
-  e `page.is_page`, "la rotta di ripiego si registra per ultima", i perche' di `solver_found` e
-  `solver_where` ripetuti dalle rotte del solver, i commenti italiani su
-  `PipelineStatus.pending` e `.action`).
+  calcola. Doppioni: i tre verbi del bottone scritti a mano due volte in
+  `frontend/src/Scansiona.tsx` invece del tipo generato; regole dette due volte (il perche' delle
+  ricevute in `pipeline.scan_progress` e `_reading_cut_short`; i perche' di `solver_found` e
+  `solver_where` ripetuti dalle docstring delle rotte del solver, che sono l'OpenAPI).
 - **Il testo di `no_readable_folders`, in una fetta che tocca lo schermo.** Il 409 di
   `POST /pipeline/run` e `POST /scan` scatta anche quando tutte le cartelle sono gia' in
   scansione (`scan_running`), ma `frontend/src/i18n/it.ts` e `en.ts` (riga 47) dicono solo che non
@@ -645,8 +617,9 @@ riga per voce.
   non distingue "rimette la corsa di prima" da "azzera" (lo prova solo il ramo
   `WorkerBusyError`); il caso `stop_from_check=2` di
   `test_resume_reads_one_folder_stopped_before_it_began` conta su quante volte il worker chiede
-  lo Stop prima di consegnare lo stadio. `start_scan` e `start_scan_all` puliscono un avvio
-  fallito con due forme diverse (un `except` con `isinstance`, due `except` con `_pulisci`). A
+  lo Stop prima di consegnare lo stadio. `start_scan` pulisce un avvio fallito a mano e
+  `start_scan_all` con `_forget_start`, in ordine opposto (lucchetto poi ricevuta, ricevuta poi
+  lucchetto): unirli cambia cosa vede una richiesta che arriva in mezzo. A
   fine suite un worker puo' ancora lanciare l'ASTAP vero della macchina e stampare "can't create
   new thread at interpreter shutdown": dipende dai tempi, visto una volta e poi in nessuna di
   quattro corse ripetute.
@@ -654,8 +627,8 @@ riga per voce.
   da un test (i test guardano solo lo stato HTTP, o non arrivano al caso): 409 `root_unreachable`
   di browse, 409 `folder_exists` col suo `folder_id`, 404 `folder_not_found` (`api/folders.py`);
   409 `folder_retired`, 404 `scan_run_not_found` (`api/scan.py`); e la prima registrazione di una
-  cartella che risponde `reactivated: false`. Regole dette due o tre volte: "prima l'avvio, poi le
-  ricevute" (`api/scan.py`); "le stesse funzioni di Da confermare" in `gear_write` (modulo, due
+  cartella che risponde `reactivated: false`. Regole dette due o tre volte: "le stesse funzioni di
+  Da confermare" in `gear_write` (modulo, due
   rotte: il loro testo e' l'OpenAPI) e in `docs/domini/attrezzatura.md`; "`frames` viene dal
   database" in `folders` e in `FolderOut.frames`.
 - **Le rotte di lettura, dopo la fase 1.** `create_site` e `edit_site` (`api/sites.py`)
@@ -665,8 +638,7 @@ riga per voce.
   dice "409 se il nome e' gia' di un altro sito"). Le docstring delle rotte hanno preso la prosa
   della docstring di modulo, e ripetono nell'OpenAPI cio' che i modelli dicono gia': cosa perde
   una notte di tendenza (`weather` e `WeatherNightOut`), il piede con posto e classe (`tonight`
-  e `SiteSkyOut`), `still_reading` (`nights` e `models_nights`). In `api/weather.py` la ragione
-  del `noqa: S608` di `_CIELO` e' scritta due volte in due righe.
+  e `SiteSkyOut`), `still_reading` (`nights` e `models_nights`).
 - **I modelli di revisione e attrezzatura, dopo la fase 1: le regole ripetute ora stanno
   nell'OpenAPI.** I commenti diventati descrizioni portano in `schema.d.ts` regole scritte molte
   volte: "un gruppo gia' risposto resta in pagina per cambiare idea" (otto modelli di
@@ -677,12 +649,10 @@ riga per voce.
   del modello padre, e i campi che rimandano.
 - **I modelli delle pagine, dopo la fase 1**: `Night.frames` e `ArchiveObject.frames` hanno la
   stessa descrizione parola per parola nell'OpenAPI, e quelle di `untimed` sono quasi uguali (il
-  significato ha casa nel glossario); il limite `Field(ge=0, le=100)` della Luna e' scritto in
-  `MoonOut` e di nuovo in `MoonThatNight`, che dice di condividerlo ma condivide solo `PhaseKey`.
-- **Le rotte di lettura di `api`, dopo la fase 1**: `api/weather._seeing` e il ciclo di `weather`
-  scrivono a mano `"meteoblue"` e `"7timer"` accanto a `fetches.Source`; `MeteoblueKeyOut` e
-  `MeteoblueKeyIn` stanno in `api/weather_key.py` e non in `models_weather`. Regola detta due
-  volte: il Bortle che passa da `units.bortle_of` in `api/tonight._sito` e `api/sites._out`.
+  significato ha casa nel glossario).
+- **Le rotte di lettura di `api`, dopo la fase 2**: `api/weather._seeing` scrive a mano
+  `"meteoblue"` e `"7timer"` accanto a `fetches.Source`: il campo e' un `Literal` che ripete
+  apposta, e un membro dell'enum non lo soddisfa per il tipo (servirebbe un `cast`).
 - **Frame senza tipo, dopo la fase 2**: "risolto e' una foto, senza stelle una calibrazione" e'
   detta in `typeless` e nella descrizione OpenAPI di `api/models_review_groups` (toglierla di li'
   cambia lo schema).
@@ -853,6 +823,9 @@ riga per voce.
 - **Due domande di Da confermare leggono righe che poi scartano** (la scheda dell'attrezzatura,
   i siti): su 100.000 frame sintetici la pagina intera sta a circa 0,22 s, e toglierle vale
   qualche decina di millesimi.
+- **Tagliare in SQL la pagina dei file non letti non paga** (`GET /scan-runs/{id}/errors`): su
+  20.000 file `json_each` con `LIMIT` costa 3,3 ms alla prima pagina e 5,8 all'ultima, contro
+  3,2 di leggerli tutti e tagliarli in Python.
 - **La cartella viva come `EXISTS` non paga**: nelle domande sull'attrezzatura e sul nome
   `frame_folder.JOIN` e un `EXISTS` costano lo stesso.
 

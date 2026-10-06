@@ -1,5 +1,5 @@
 """The only progress channel, the same for every device. The scan's remainder cannot be derived
-from the database (its denominator is the folders on disk): resuming re-scans."""
+from the database: its denominator is the folders on disk."""
 
 import sqlite3
 from collections.abc import Iterable
@@ -13,8 +13,9 @@ from ..db.row import Row
 from ..spine.run import ORDER, queue
 from ..spine.scan_store import run_outcomes, run_row
 from ..spine.stages import StageName, count_pending, pending_by_stage
-from ..worker.worker import TERMINAL_STATES, Snapshot, Stage, WorkerBusyError
+from ..worker.worker import TERMINAL_STATES, Snapshot, WorkerBusyError
 from ..worker.worker import State as WorkerState
+from . import work
 from .deps import get_db
 from .models import (
     PipelineAction,
@@ -27,7 +28,7 @@ from .models import (
 )
 from .scan import run_out, start_scan_all
 
-router = APIRouter(prefix="/api/v1", tags=["spina"])
+router = APIRouter(prefix="/api/v1", tags=["pipeline"])
 
 
 def _shown(snapshot: Snapshot) -> WorkerSnapshot:
@@ -116,7 +117,7 @@ def status(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> Pipe
     )
 
 
-def _scansione_interrotta(conn: sqlite3.Connection, state: State) -> bool:
+def _reading_cut_short(conn: sqlite3.Connection, state: State) -> bool:
     """True when, with the worker stopped, the last read did not end (a receipt `stopped` or open,
     or none). Asked of the receipts: after another stopped job the worker no longer knows."""
     if state.last_scan is None or state.worker.snapshot().state != WorkerState.STOPPED:
@@ -152,18 +153,18 @@ def run(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> WorkerO
     reads the folders again, also 409 `no_folders` if no active folder is left, and 409
     `no_readable_folders` with the `skipped` folders when none can be started."""
     state = request.app.state
-    if _scansione_interrotta(conn, state):
+    if _reading_cut_short(conn, state):
         start_scan_all(state, conn)
         return WorkerOut(worker=_shown(state.worker.snapshot()))
     # Only what has a remainder: the order and who pulls whom is `queue`'s.
-    da_fare = queue(
+    steps = queue(
         state.db_path,
         [s for s in ORDER if s != StageName.SCAN and count_pending(conn, s)],
     )
-    if not da_fare:
+    if not steps:
         return WorkerOut(worker=_shown(state.worker.snapshot()))
     try:
-        snapshot = state.worker.start([Stage(n, f) for n, f in da_fare])
+        snapshot = work.start(state, steps)
     except WorkerBusyError as err:
         raise HTTPException(status_code=409, detail={"code": "worker_busy"}) from err
     return WorkerOut(worker=_shown(snapshot))

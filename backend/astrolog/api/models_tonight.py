@@ -1,7 +1,7 @@
 """Every field of tonight's sky may be missing, and missing means something precise (no home site,
 a moon that does not rise): whoever shows it writes a sentence, not a zero."""
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
@@ -20,6 +20,7 @@ PhaseKey = Literal[
     "waning_crescent",
 ]
 SkyKind = Literal["day", "civil", "nautical", "astronomical", "dark"]
+IlluminationPct = Annotated[int, Field(ge=0, le=100)]
 
 
 class SkyPointOut(BaseModel):
@@ -35,7 +36,7 @@ class SkyPointOut(BaseModel):
 
 class MoonOut(BaseModel):
     phase_key: PhaseKey
-    illumination_pct: int = Field(ge=0, le=100)
+    illumination_pct: IlluminationPct
     rise: str | None = Field(
         description="ISO instant with its time zone. `None` when the crossing does not happen "
         "within the night, as above the polar circle, where a written time would be invented."

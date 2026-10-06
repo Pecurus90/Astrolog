@@ -32,7 +32,7 @@ from .models import (
 )
 from .paths import same_folder, validate_root
 
-router = APIRouter(prefix="/api/v1", tags=["cartelle"])
+router = APIRouter(prefix="/api/v1", tags=["folders"])
 
 # "10 seconds is about the limit for keeping the user's attention focused on the dialogue"
 # (Nielsen, *Response Times: The 3 Important Limits*, 1993); checked between folders.

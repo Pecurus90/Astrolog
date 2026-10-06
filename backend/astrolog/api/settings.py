@@ -22,23 +22,23 @@ from ..spine.solve import (
 from .deps import get_db
 from .models_site import Missing, SettingsOut, SettingsPatch, SolverOut, SolverSource
 
-router = APIRouter(prefix="/api/v1", tags=["impostazioni"])
+router = APIRouter(prefix="/api/v1", tags=["settings"])
 
 
 def _missing(conn: sqlite3.Connection) -> list[Missing]:
     """Codes, not sentences. A home site is never elected silently: nights need one, and a site
     nobody declared is invented data."""
-    manca: list[Missing] = []
+    gaps: list[Missing] = []
     if conn.execute("SELECT 1 FROM sites WHERE is_default = 1").fetchone() is None:
-        manca.append(cast(Missing, GroupReason.NO_ACTIVE_SITE))
-    percorso = solver_path(conn)
-    if percorso is None:
-        manca.append(NO_SOLVER)
-    elif not databases_next_to(percorso):
+        gaps.append(cast(Missing, GroupReason.NO_ACTIVE_SITE))
+    exe_path = solver_path(conn)
+    if exe_path is None:
+        gaps.append(NO_SOLVER)
+    elif not databases_next_to(exe_path):
         # Named only to who has ASTAP, and with the path already in hand: two alarms for one
         # problem send the user after two things, and two searches could disagree.
-        manca.append(cast(Missing, NO_STAR_DATABASE))
-    return manca
+        gaps.append(cast(Missing, NO_STAR_DATABASE))
+    return gaps
 
 
 def _out(conn: sqlite3.Connection) -> SettingsOut:
@@ -53,6 +53,9 @@ def _out(conn: sqlite3.Connection) -> SettingsOut:
 
 @router.get("/settings", response_model=SettingsOut)
 def read_settings(conn: sqlite3.Connection = Depends(get_db)) -> SettingsOut:
+    """The preferences as saved, each secret shown only by its hint (`config.hint`), never whole;
+    whether the first start is over (`wizard_done`); and the codes of what the app still lacks
+    (`missing`): no home site, no solver, or a solver without its star database. Always 200."""
     return _out(conn)
 
 
@@ -68,9 +71,9 @@ def write_settings(body: SettingsPatch, conn: sqlite3.Connection = Depends(get_d
     unknown = sorted(k for k in body.values if k not in config.KEYS)
     if unknown:
         raise HTTPException(status_code=422, detail={"code": "unknown_setting", "keys": unknown})
-    provate = sorted(k for k in body.values if k in config.TRIED_ELSEWHERE)
-    if provate:
-        raise HTTPException(status_code=422, detail={"code": "tried_elsewhere", "keys": provate})
+    tried = sorted(k for k in body.values if k in config.TRIED_ELSEWHERE)
+    if tried:
+        raise HTTPException(status_code=422, detail={"code": "tried_elsewhere", "keys": tried})
     try:
         with transaction(conn):
             for key, value in body.values.items():
@@ -80,13 +83,13 @@ def write_settings(body: SettingsPatch, conn: sqlite3.Connection = Depends(get_d
     return _out(conn)
 
 
-def _solver(conn: sqlite3.Connection, dove: tuple[str | None, str | None]) -> SolverOut:
+def _solver(conn: sqlite3.Connection, where: tuple[str | None, str | None]) -> SolverOut:
     return SolverOut(
-        path=dove[0],
+        path=where[0],
         # The `SolverSource` Literal repeats `astap.Source` on purpose (`models_tonight`).
-        source=cast("SolverSource | None", dove[1]),
+        source=cast("SolverSource | None", where[1]),
         declared=config.read(conn).astap_path,
-        databases=list(databases_next_to(dove[0])),
+        databases=list(databases_next_to(where[0])),
     )
 
 

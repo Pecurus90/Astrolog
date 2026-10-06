@@ -758,7 +758,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Read Settings */
+        /**
+         * Read Settings
+         * @description The preferences as saved, each secret shown only by its hint (`config.hint`), never whole;
+         *     whether the first start is over (`wizard_done`); and the codes of what the app still lacks
+         *     (`missing`): no home site, no solver, or a solver without its star database. Always 200.
+         */
         get: operations["read_settings"];
         put?: never;
         post?: never;

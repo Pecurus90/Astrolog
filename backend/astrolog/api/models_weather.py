@@ -137,9 +137,22 @@ class WeatherOut(BaseModel):
 # Repeated rather than imported from `weather`, so the route contract does not change shape with
 # an internal module.
 RefreshStatus = Literal["ok", "no_site", "no_timezone", "unreachable", "bad_answer"]
+KeyStatus = Literal["ok", "removed", "refused", "unreachable", "bad_answer"]
 
 
 class WeatherRefreshOut(BaseModel):
     """How the request went: arrived, or why not."""
 
     status: RefreshStatus
+
+
+class MeteoblueKeyIn(BaseModel):
+    key: str | None
+
+
+class MeteoblueKeyOut(BaseModel):
+    """How it went: saved (`ok`), removed (`removed`), or why not; and the hint of the key that is
+    there now."""
+
+    status: KeyStatus
+    hint: str | None

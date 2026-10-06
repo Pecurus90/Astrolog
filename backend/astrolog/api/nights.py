@@ -10,7 +10,7 @@ from ..weather import history
 from .deps import get_db
 from .models_nights import NightList
 
-router = APIRouter(prefix="/api/v1", tags=["notti"])
+router = APIRouter(prefix="/api/v1", tags=["nights"])
 
 
 @router.get("/nights", response_model=NightList)

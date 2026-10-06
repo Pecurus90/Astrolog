@@ -23,16 +23,15 @@ from .models_tonight import (
     TonightOut,
 )
 
-router = APIRouter(prefix="/api/v1", tags=["stanotte"])
+router = APIRouter(prefix="/api/v1", tags=["tonight"])
 
 
-def _iso(istante: datetime | None) -> str | None:
-    return istante.isoformat() if istante else None
+def _iso(instant: datetime | None) -> str | None:
+    return instant.isoformat() if instant else None
 
 
-def _sito(riga: dict[str, Any]) -> SiteSkyOut:
-    # The class comes from `units`, which the site card uses too: two conversions would drift.
-    return SiteSkyOut(name=riga["name"], sky_sqm=riga["sky_sqm"], bortle=bortle_of(riga["sky_sqm"]))
+def _site_sky(row: dict[str, Any]) -> SiteSkyOut:
+    return SiteSkyOut(name=row["name"], sky_sqm=row["sky_sqm"], bortle=bortle_of(row["sky_sqm"]))
 
 
 def _sky_band(band: sun.SkyBand) -> SkyBandOut:
@@ -69,40 +68,42 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
     **The computation is costly**, because it samples a night of sky twice, once per body. The
     reply carries the night it refers to, so whoever shows it knows when it has expired without
     asking again at every breath."""
-    riga = home_site(conn)
-    if riga is None:
+    row = home_site(conn)
+    if row is None:
         return TonightOut(night=None, site=None, moon=None)
-    sito = dict(riga)
+    home = dict(row)
 
-    notte = night_date(now_iso(), sito["timezone"])
+    the_night = night_date(now_iso(), home["timezone"])
     # Midnight as `clock` composes it, the instant the Nights page uses too: otherwise two screens
     # would ask the same night at two different moments.
-    mezzanotte = midnight_of(notte, sito["timezone"]) if notte else None
-    if notte is None or mezzanotte is None:
+    midnight = midnight_of(the_night, home["timezone"]) if the_night else None
+    if the_night is None or midnight is None:
         # A moment later the computation would raise and the route would become a 500.
-        return TonightOut(night=None, site=_sito(sito), moon=None)
-    comincia, quante_ore = night_window(notte, sito["timezone"])
+        return TonightOut(night=None, site=_site_sky(home), moon=None)
+    window_start, window_hours = night_window(the_night, home["timezone"])
 
-    fase = moon.phase(mezzanotte)
-    cielo = moon.night_track(comincia, sito["latitude"], sito["longitude"], hours=quante_ore)
+    moon_phase = moon.phase(midnight)
+    moon_night = moon.night_track(
+        window_start, home["latitude"], home["longitude"], hours=window_hours
+    )
     return TonightOut(
-        night=notte,
-        site=_sito(sito),
-        weather=weather.brief_of(conn, sito["id"], notte),
+        night=the_night,
+        site=_site_sky(home),
+        weather=weather.brief_of(conn, home["id"], the_night),
         sky_bands=[
             _sky_band(f)
             for f in sun.night_bands(
-                comincia, sito["latitude"], sito["longitude"], hours=quante_ore
+                window_start, home["latitude"], home["longitude"], hours=window_hours
             )
         ],
         moon=MoonOut(
-            phase_key=cast(PhaseKey, fase.phase_key),
-            illumination_pct=fase.illumination_pct,
-            rise=_iso(cielo.rise),
-            set=_iso(cielo.set),
-            highest=_sky_point(cielo.highest),
-            track=[_sky_point(p) for p in cielo.track],
-            ceiling_deg=moon.sky_ceiling(sito["latitude"]),
-            lit_side=moon.lit_side(fase.phase_key, sito["latitude"]),
+            phase_key=cast(PhaseKey, moon_phase.phase_key),
+            illumination_pct=moon_phase.illumination_pct,
+            rise=_iso(moon_night.rise),
+            set=_iso(moon_night.set),
+            highest=_sky_point(moon_night.highest),
+            track=[_sky_point(p) for p in moon_night.track],
+            ceiling_deg=moon.sky_ceiling(home["latitude"]),
+            lit_side=moon.lit_side(moon_phase.phase_key, home["latitude"]),
         ),
     )

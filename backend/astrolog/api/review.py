@@ -22,7 +22,7 @@ from .models_review import BandOut, FilterOut, ReviewOut, SettledObjects
 from .models_review_apply import ReviewApplied, ReviewApply
 from .models_review_groups import GearSignature, MosaicCandidate, TypelessFolder
 
-router = APIRouter(prefix="/api/v1", tags=["da confermare"])
+router = APIRouter(prefix="/api/v1", tags=["review"])
 
 
 def unanswered(rows: Iterable[Mapping[str, Any]]) -> int:

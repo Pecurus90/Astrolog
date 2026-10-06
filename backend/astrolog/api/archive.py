@@ -11,7 +11,7 @@ from ..spine.counts import Subject
 from .deps import get_db
 from .models_archive import ArchiveChoices, ArchiveFound, ArchiveList, ArchiveObject, ArchivePanel
 
-router = APIRouter(prefix="/api/v1", tags=["archivio"])
+router = APIRouter(prefix="/api/v1", tags=["archive"])
 
 # A `Literal` so FastAPI rejects an unknown order before the spine, and the OpenAPI carries it.
 Sort = Literal["name", "hours", "frames"]
@@ -35,23 +35,23 @@ def archive_page(  # noqa: PLR0913
     The factory cap is high (100) because this list is an **inventory**, not a feed to scroll:
     whoever has a hundred thousand frames still has a handful of objects, and asking for twenty at
     a time would be five rounds to see what fits in one."""
-    criteri = {
+    criteria = {
         "q": q,
         "catalog": catalog,
         "constellation": constellation,
         "filter_name": filter_name,
         "mosaic": mosaic,
     }
-    righe, quanti = archive.page(
-        conn, limit=limit, offset=offset, sort=cast(archive.Order, sort), **criteri
+    rows, count = archive.page(
+        conn, limit=limit, offset=offset, sort=cast(archive.Order, sort), **criteria
     )
     # One query per kind of row for the whole page; an object row carries only its frames outside
     # mosaics, like its hours.
-    oggetti = [r["id"] for r in righe if r["mosaic_key"] is None]
-    filtri = filters_used.of(conn, Subject.OBJECT, oggetti, alone=True)
-    mosaici = [r["mosaic_key"] for r in righe if r["mosaic_key"]]
-    filtri |= filters_used.of(conn, Subject.MOSAIC, mosaici)
-    pannelli = archive.panels(conn, mosaici)
+    object_ids = [r["id"] for r in rows if r["mosaic_key"] is None]
+    filters_by_key = filters_used.of(conn, Subject.OBJECT, object_ids, alone=True)
+    mosaic_keys = [r["mosaic_key"] for r in rows if r["mosaic_key"]]
+    filters_by_key |= filters_used.of(conn, Subject.MOSAIC, mosaic_keys)
+    panels_by_key = archive.panels(conn, mosaic_keys)
     return ArchiveList(
         items=[
             ArchiveObject(
@@ -64,14 +64,14 @@ def archive_page(  # noqa: PLR0913
                 untimed=r["untimed"],
                 constellation=r["constellation"],
                 type_code=r["type_code"],
-                filters=filtri.get(r["mosaic_key"] or r["id"], []),
+                filters=filters_by_key.get(r["mosaic_key"] or r["id"], []),
                 panels=r["panels"],
-                panel_list=[ArchivePanel(**p) for p in pannelli.get(r["mosaic_key"], [])],
+                panel_list=[ArchivePanel(**p) for p in panels_by_key.get(r["mosaic_key"], [])],
             )
-            for r in righe
+            for r in rows
         ],
-        total=quanti,
-        found=ArchiveFound(**archive.found(conn, **criteri)),
+        total=count,
+        found=ArchiveFound(**archive.found(conn, **criteria)),
         limit=limit,
         offset=offset,
         choices=ArchiveChoices(**archive.choices(conn)),

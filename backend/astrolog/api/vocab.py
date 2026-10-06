@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from ..vocab import filters
 from .models_review import FilterModelList, FilterModelOut
 
-router = APIRouter(prefix="/api/v1", tags=["vocabolari"])
+router = APIRouter(prefix="/api/v1", tags=["vocabularies"])
 
 
 @router.get("/vocab/filter-models", response_model=FilterModelList)

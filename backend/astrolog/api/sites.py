@@ -25,7 +25,7 @@ from .models_site import (
     Unknown,
 )
 
-router = APIRouter(prefix="/api/v1", tags=["luoghi"])
+router = APIRouter(prefix="/api/v1", tags=["sites"])
 
 _SELECT = (
     "SELECT s.id, s.name, s.latitude, s.longitude, s.elevation_m, s.timezone, s.sky_sqm,"
@@ -39,7 +39,7 @@ def _out(row: sqlite3.Row) -> SiteOut:
     """Bortle is derived here from the brightness and never stored: a convention, not a datum."""
     data = dict(row)
     data["is_default"] = bool(data["is_default"])
-    vuoti: tuple[tuple[Unknown, object], ...] = (
+    blanks: tuple[tuple[Unknown, object], ...] = (
         ("site_no_timezone", data["timezone"]),
         ("site_no_elevation", data["elevation_m"]),
         ("site_no_sky", data["sky_sqm"]),
@@ -48,7 +48,7 @@ def _out(row: sqlite3.Row) -> SiteOut:
         **data,
         bortle=bortle_of(data["sky_sqm"]),
         # zero is a real elevation, not an unknown one
-        unknown=[code for code, value in vuoti if value is None],
+        unknown=[code for code, value in blanks if value is None],
     )
 
 
@@ -67,11 +67,11 @@ def _sky_key(conn: sqlite3.Connection) -> str | None:
 def _make_default(conn: sqlite3.Connection, site_id: int) -> None:
     """Taken from the others before it is given, in the caller's transaction: the unique index
     does not tolerate even an instant with two homes."""
-    vecchia = conn.execute("SELECT id FROM sites WHERE is_default = 1").fetchone()
+    previous = conn.execute("SELECT id FROM sites WHERE is_default = 1").fetchone()
     conn.execute("UPDATE sites SET is_default = 0 WHERE is_default = 1 AND id != ?", (site_id,))
     conn.execute("UPDATE sites SET is_default = 1 WHERE id = ?", (site_id,))
-    if vecchia is not None and vecchia[0] != site_id:
-        site_requeue.adopt_nights(conn, site_id, vecchia[0])
+    if previous is not None and previous[0] != site_id:
+        site_requeue.adopt_nights(conn, site_id, previous[0])
 
 
 @router.get("/places", response_model=PlaceList)
@@ -162,9 +162,9 @@ def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(g
     `longitude` sent empty; 409 `site_name_taken` if another site already has the new name."""
     old = dict(_row(conn, site_id))
     fields = body.model_dump(exclude_unset=True)
-    vuoti = [f for f in ("name", "latitude", "longitude") if f in fields and fields[f] is None]
-    if vuoti:
-        raise HTTPException(status_code=422, detail={"code": "field_required", "fields": vuoti})
+    blanks = [f for f in ("name", "latitude", "longitude") if f in fields and fields[f] is None]
+    if blanks:
+        raise HTTPException(status_code=422, detail={"code": "field_required", "fields": blanks})
 
     latitude = fields.get("latitude", old["latitude"])
     longitude = fields.get("longitude", old["longitude"])
@@ -174,9 +174,9 @@ def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(g
     if "elevation_m" in fields:
         # sent empty means deleted, not asked of the service again: otherwise "empty this field"
         # would mean two different things on two neighbouring fields
-        scritta = fields["elevation_m"]
+        written = fields["elevation_m"]
         elevation_m, elevation_source = (
-            (scritta, place.ElevationSource.DECLARED) if scritta is not None else (None, None)
+            (written, place.ElevationSource.DECLARED) if written is not None else (None, None)
         )
     elif moved and old["elevation_source"] == place.ElevationSource.SERVICE:
         elevation_m, elevation_source = place.elevation_from(latitude, longitude)
@@ -211,11 +211,11 @@ def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(g
             )
             if moved:
                 site_requeue.requeue_nights_of(conn, site_id)
-            nome = fields.get("name", old["name"])
+            new_name = fields.get("name", old["name"])
             site_requeue.requeue_waiting(
                 conn,
                 near=[(old["latitude"], old["longitude"]), (latitude, longitude)] if moved else [],
-                names=[old["name"], nome] if nome != old["name"] else [],
+                names=[old["name"], new_name] if new_name != old["name"] else [],
             )
             home_nights.follow_home(conn)
     except sqlite3.IntegrityError as err:
@@ -231,10 +231,10 @@ def set_default(site_id: int, conn: sqlite3.Connection = Depends(get_db)) -> Sit
     404 `site_not_found`."""
     row = _row(conn, site_id)
     with transaction(conn):
-        senza_casa = conn.execute("SELECT 1 FROM sites WHERE is_default = 1").fetchone() is None
+        no_home = conn.execute("SELECT 1 FROM sites WHERE is_default = 1").fetchone() is None
         _make_default(conn, site_id)
         site_requeue.requeue_waiting(
-            conn, near=[(row["latitude"], row["longitude"])], homeless=senza_casa
+            conn, near=[(row["latitude"], row["longitude"])], homeless=no_home
         )
         home_nights.follow_home(conn)
     return _out(_row(conn, site_id))

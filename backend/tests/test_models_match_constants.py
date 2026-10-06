@@ -23,8 +23,8 @@ from astrolog.api import (
     models_site,
     models_tonight,
     models_weather,
-    weather_key,
 )
+from astrolog.api import weather as api_weather
 from astrolog.db.connect import SCHEMA_PATH
 from astrolog.ephemeris import moon, sun
 from astrolog.fits.frame_type import FrameType
@@ -363,7 +363,7 @@ def test_the_weather_words_are_the_same_in_the_models_and_the_weather_package():
     assert _words(fields["seeing"]) <= set(fetches.Source)
     key_outcomes = {forecast.Outcome.OK, forecast.Outcome.BAD_ANSWER, *net.Failure}
     assert _words(fields["meteoblue"]) == key_outcomes
-    assert set(get_args(weather_key.KeyStatus)) == key_outcomes | {weather_key.REMOVED}
+    assert set(get_args(models_weather.KeyStatus)) == key_outcomes | {api_weather.REMOVED}
     assert set(get_args(models_weather.RefreshStatus)) == set(forecast.Outcome) | {
         net.Failure.UNREACHABLE
     }

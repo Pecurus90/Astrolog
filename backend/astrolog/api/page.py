@@ -11,7 +11,7 @@ from fastapi.staticfiles import StaticFiles
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 PAGE_PATH = "/"
 ASSETS_PATH = "/assets"  # the files the build emits next to the page, with their hashed names
-TOKEN_META = '<meta name="astrolog-token" content="{chiave}">'  # noqa: S105 - template, not a key
+TOKEN_META = '<meta name="astrolog-token" content="{key}">'  # noqa: S105 - template, not a key
 API_PATH = "/api/"
 
 
@@ -29,7 +29,7 @@ def with_key(html: str, token: str | None) -> str:
     and a file on disk would be a secret in a distributed package."""
     if not token:
         return html
-    meta = TOKEN_META.format(chiave=escape(token, quote=True))
+    meta = TOKEN_META.format(key=escape(token, quote=True))
     return html.replace("<head>", "<head>" + meta, 1) if "<head>" in html else meta + html
 
 
@@ -40,7 +40,7 @@ def mount(app: FastAPI) -> None:
     def page() -> HTMLResponse:
         """Outside the OpenAPI: the frontend types are generated from it, and an HTML page there
         would be a type describing nothing."""
-        return _servita(app)
+        return _served(app)
 
     assets = app.state.web_dir / ASSETS_PATH.lstrip("/")
     if assets.is_dir():
@@ -51,14 +51,14 @@ def mount_fallback(app: FastAPI) -> None:
     """Registered last, since FastAPI matches in order: earlier it would answer HTML to the API.
     It makes reload, bookmarks and cold-opened addresses work."""
 
-    @app.get("/{percorso:path}", include_in_schema=False, response_class=HTMLResponse)
-    def pagina_del_router(percorso: str) -> HTMLResponse:
-        if not is_page("/" + percorso):
+    @app.get("/{page_path:path}", include_in_schema=False, response_class=HTMLResponse)
+    def router_page(page_path: str) -> HTMLResponse:
+        if not is_page("/" + page_path):
             raise HTTPException(status_code=404, detail={"code": "not_found"})
-        return _servita(app)
+        return _served(app)
 
 
-def _servita(app: FastAPI) -> HTMLResponse:
+def _served(app: FastAPI) -> HTMLResponse:
     """One home for both routes, so they cannot disagree on the key or on the unbuilt page."""
     index = app.state.web_dir / "index.html"
     if not index.is_file():

@@ -12,6 +12,7 @@ import sys
 
 import pytest
 
+import astrolog.__main__ as avvio
 from astrolog.startup import token_for
 
 
@@ -41,6 +42,21 @@ def test_without_the_variable_the_key_is_born_here_and_is_not_guessable(tmp_path
     assert (tmp_path / "token").read_text(encoding="utf-8") == chiave
     # Due avvii, due chiavi: una chiave che si ripete non e' una chiave per avvio.
     assert token_for("127.0.0.1", tmp_path) != chiave
+
+
+@pytest.mark.parametrize(("minuti", "secondi"), [("60", 3600.0), ("0.5", 30.0), (None, None)])
+def test_the_nas_scan_cadence_reaches_the_app(monkeypatch, minuti, secondi):
+    """`ASTROLOG_SCAN_EVERY_MIN` e' l'unico modo di accendere la scansione a cadenza sul NAS: se
+    l'avvio la leggesse storta, la scansione si spegnerebbe in silenzio. Senza, nessuna cadenza."""
+    chiesto = {}
+    monkeypatch.setattr(avvio, "setup_logging", lambda *a: None)
+    monkeypatch.setattr(avvio, "create_app", lambda *a, **k: chiesto.update(k))
+    monkeypatch.setattr(avvio.uvicorn, "run", lambda *a, **k: None)
+    monkeypatch.delenv("ASTROLOG_SCAN_EVERY_MIN", raising=False)
+    if minuti is not None:
+        monkeypatch.setenv("ASTROLOG_SCAN_EVERY_MIN", minuti)
+    avvio.main()
+    assert chiesto["scan_every_s"] == secondi
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="i permessi POSIX su Windows non significano")
