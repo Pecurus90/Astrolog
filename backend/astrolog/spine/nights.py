@@ -50,10 +50,10 @@ _OGGETTI = f"""
 SELECT f.night_id, o.id AS object_id, o.catalog_slug,{obj.NAME_COLUMNS},
        {counts.AGGREGATE}
 FROM frames f JOIN objects o ON o.id = f.object_id
-WHERE f.night_id IN {{dentro}} AND f.copy_of IS NULL
+WHERE f.night_id IN {{listed}} AND f.copy_of IS NULL
 GROUP BY f.night_id, o.id
 {counts.ORDER_BY_TIME}, o.id
-"""  # noqa: S608 - `dentro` is a placeholder, not a value
+"""  # noqa: S608 - `listed` is a placeholder, not a value
 
 # `group` is the last stage to look at them: a frame another stage skipped stops here with its code.
 _FERME = """

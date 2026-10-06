@@ -20,16 +20,18 @@ def db_path() -> Path:
     return data_dir() / "astrolog.db"
 
 
-def cache_dir() -> Path:
-    d = data_dir() / "cache"
+def _subdir(name: str) -> Path:
+    d = data_dir() / name
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+def cache_dir() -> Path:
+    return _subdir("cache")
 
 
 def log_dir() -> Path:
-    d = data_dir() / "log"
-    d.mkdir(parents=True, exist_ok=True)
-    return d
+    return _subdir("log")
 
 
 def data_root() -> str | None:

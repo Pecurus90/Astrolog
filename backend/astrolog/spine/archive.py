@@ -212,10 +212,10 @@ def choices(conn: sqlite3.Connection) -> dict[str, Any]:
 _PANNELLI = f"""
 SELECT f.mosaic_key, f.panel_id, p.ra_deg, p.dec_deg, {counts.AGGREGATE}, {counts.UNTIMED}
 FROM frames f JOIN panels p ON p.id = f.panel_id
-WHERE f.mosaic_key IN {{dentro}} AND f.copy_of IS NULL
+WHERE f.mosaic_key IN {{listed}} AND f.copy_of IS NULL
 GROUP BY f.mosaic_key, f.panel_id
-{counts.ORDER_BY_TIME}, f.panel_id"""  # noqa: S608 - constant fragments, `dentro` a placeholder
-_OGGETTI_DEI_PANNELLI = subjects_sql("f.panel_id", where="AND f.mosaic_key IN {dentro}")
+{counts.ORDER_BY_TIME}, f.panel_id"""  # noqa: S608 - constant fragments, `listed` a placeholder
+_OGGETTI_DEI_PANNELLI = subjects_sql("f.panel_id", where="AND f.mosaic_key IN {listed}")
 
 
 def panels(conn: sqlite3.Connection, keys: list[str]) -> dict[Any, list[Any]]:
@@ -224,7 +224,7 @@ def panels(conn: sqlite3.Connection, keys: list[str]) -> dict[Any, list[Any]]:
     if not keys:
         return {}  # the page of whoever has no mosaics, nearly all: no query
     with idlist.holding(conn, keys) as elencate:
-        oggetti = subjects_of(conn.execute(_OGGETTI_DEI_PANNELLI.format(dentro=elencate)))
+        oggetti = subjects_of(conn.execute(_OGGETTI_DEI_PANNELLI.format(listed=elencate)))
     return idlist.grouped(
         conn,
         _PANNELLI,

@@ -139,7 +139,7 @@ def test_no_ids_no_query(conn):
     executed: list[str] = []
     conn.set_trace_callback(executed.append)
     try:
-        sql = "SELECT id FROM frames WHERE id IN {dentro}"
+        sql = "SELECT id FROM frames WHERE id IN {listed}"
         assert idlist.grouped(conn, sql, [], "id", dict) == {}
     finally:
         conn.set_trace_callback(None)

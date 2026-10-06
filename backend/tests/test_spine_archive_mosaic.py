@@ -24,7 +24,7 @@ def test_archive_panels_find_their_objects_through_the_mosaic_index(conn):
     dell'archivio. L'elenco vero, non una costante: con una costante SQLite sceglie un altro
     piano, e quello che si guarderebbe non sarebbe quello che gira."""
     with idlist.holding(conn, ["mosaico"]) as elencate:
-        query = archive._OGGETTI_DEI_PANNELLI.format(dentro=elencate)
+        query = archive._OGGETTI_DEI_PANNELLI.format(listed=elencate)
         piano = [r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + query)]
     pose = [p for p in piano if re.match(r"(SCAN|SEARCH) f\b", p)]
     assert pose and all(re.search(r"INDEX frames_mosaic\b", p) for p in pose), piano

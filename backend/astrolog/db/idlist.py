@@ -41,12 +41,12 @@ def grouped(
     key: str,
     row: Callable[[sqlite3.Row], Any],
 ) -> dict[Any, list[Any]]:
-    """One query for many ids, rows split by the `key` column; `sql` carries `{dentro}` where the
+    """One query for many ids, rows split by the `key` column; `sql` carries `{listed}` where the
     list goes. No ids, no query: an empty page costs nothing."""
     if not ids:
         return {}
-    fuori: dict[Any, list[Any]] = {}
-    with holding(conn, ids) as elencate:
-        for r in conn.execute(sql.format(dentro=elencate)):
-            fuori.setdefault(r[key], []).append(row(r))
-    return fuori
+    out: dict[Any, list[Any]] = {}
+    with holding(conn, ids) as listed:
+        for r in conn.execute(sql.format(listed=listed)):
+            out.setdefault(r[key], []).append(row(r))
+    return out

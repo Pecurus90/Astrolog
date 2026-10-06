@@ -16,13 +16,13 @@ def replace_rows(  # noqa: PLR0913
 ) -> None:
     """Table, columns and condition are the caller's constants, never user values: those travel in
     `args`. `rows` are tuples in `columns` order."""
-    elenco = ", ".join(columns)
-    segnaposto = ", ".join("?" * len(columns))  # segnaposto-ok: the columns, not the rows
+    column_list = ", ".join(columns)
+    marks = ", ".join("?" * len(columns))  # segnaposto-ok: the columns, not the rows
     conn.execute("SAVEPOINT replace_rows")
     try:
         conn.execute(f"DELETE FROM {table} WHERE {where}", args)  # noqa: S608 - caller's constants
         conn.executemany(
-            f"INSERT INTO {table}({elenco}) VALUES({segnaposto})",  # noqa: S608 - constants
+            f"INSERT INTO {table}({column_list}) VALUES({marks})",  # noqa: S608 - constants
             rows,
         )
     except Exception:

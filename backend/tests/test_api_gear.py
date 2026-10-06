@@ -163,7 +163,7 @@ def test_the_objects_of_a_piece_do_not_search_the_rigs_row_by_row(db_path):
                 r["detail"]
                 for r in conn.execute(
                     "EXPLAIN QUERY PLAN "
-                    + gear_usage._OGGETTI_DEL_PEZZO.replace("{dentro}", elencati)
+                    + gear_usage._OGGETTI_DEL_PEZZO.replace("{listed}", elencati)
                 )
             ]
     finally:

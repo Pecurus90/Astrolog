@@ -10,10 +10,27 @@ from . import designation
 from .load import unit_vector
 
 _FIELDS = (
-    "slug, name, common_name, ra_deg, dec_deg, constellation, type_code, kinds_json,"
-    " size_major_arcmin, size_minor_arcmin, position_angle_deg, magnitude, magnitude_band,"
-    " surface_brightness, distance_ly, opacity"
+    "slug",
+    "name",
+    "common_name",
+    "ra_deg",
+    "dec_deg",
+    "constellation",
+    "type_code",
+    "kinds_json",
+    "size_major_arcmin",
+    "size_minor_arcmin",
+    "position_angle_deg",
+    "magnitude",
+    "magnitude_band",
+    "surface_brightness",
+    "distance_ly",
+    "opacity",
 )
+
+
+def _columns(prefix: str = "") -> str:
+    return ", ".join(prefix + f for f in _FIELDS)
 
 
 def by_designation(conn: sqlite3.Connection, raw: str | None) -> dict[str, Any] | None:
@@ -22,9 +39,8 @@ def by_designation(conn: sqlite3.Connection, raw: str | None) -> dict[str, Any] 
     key = designation.key(raw)
     if key is None:
         return None
-    fields = ", ".join("e." + f.strip() for f in _FIELDS.split(","))
     row = conn.execute(
-        f"SELECT {fields}, n.is_primary FROM catalog_entries e"  # noqa: S608 - constant columns
+        f"SELECT {_columns('e.')}, n.is_primary FROM catalog_entries e"  # noqa: S608 - constant columns
         " JOIN catalog_names n ON n.slug = e.slug WHERE n.key = ?",
         (key,),
     ).fetchone()
@@ -32,9 +48,8 @@ def by_designation(conn: sqlite3.Connection, raw: str | None) -> dict[str, Any] 
 
 
 def by_slug(conn: sqlite3.Connection, slug: str) -> dict[str, Any] | None:
-    fields = ", ".join(f.strip() for f in _FIELDS.split(","))
     row = conn.execute(
-        f"SELECT {fields} FROM catalog_entries WHERE slug = ?",  # noqa: S608 - constant columns
+        f"SELECT {_columns()} FROM catalog_entries WHERE slug = ?",  # noqa: S608 - constant columns
         (slug,),
     ).fetchone()
     return dict(row) if row else None
@@ -53,7 +68,7 @@ def in_cone(
 
     out = []
     for row in conn.execute(
-        f"SELECT {_FIELDS}, x, y, z FROM catalog_entries"  # noqa: S608 - constant columns
+        f"SELECT {_columns()}, x, y, z FROM catalog_entries"  # noqa: S608 - constant columns
         " WHERE x BETWEEN ? AND ? AND y BETWEEN ? AND ? AND z BETWEEN ? AND ?",
         (cx - chord, cx + chord, cy - chord, cy + chord, cz - chord, cz + chord),
     ):

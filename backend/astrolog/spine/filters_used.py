@@ -23,10 +23,10 @@ def of(
     sql = f"""
     SELECT f.{dove} AS soggetto, x.name, x.passband, {counts.AGGREGATE}
     FROM frames f JOIN filters x ON x.id = f.filter_id
-    WHERE f.{dove} IN {{dentro}} AND f.copy_of IS NULL{solo}
+    WHERE f.{dove} IN {{listed}} AND f.copy_of IS NULL{solo}
     GROUP BY f.{dove}, x.id
     {counts.ORDER_BY_TIME}, x.id
-    """  # noqa: S608 - `dove` comes from the closed list, `dentro` is a placeholder
+    """  # noqa: S608 - `dove` comes from the closed list, `listed` is a placeholder
     return idlist.grouped(
         conn,
         sql,

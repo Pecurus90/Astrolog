@@ -55,7 +55,7 @@ _OGGETTI = f"""
 SELECT {{chiave}} AS chiave, o.id AS object_id, o.catalog_slug,{obj.NAME_COLUMNS},
        {counts.AGGREGATE}
 FROM frames f JOIN objects o ON o.id = f.object_id {{giunzione}}
-WHERE {{campo}} IN {{{{dentro}}}} AND f.copy_of IS NULL
+WHERE {{campo}} IN {{{{listed}}}} AND f.copy_of IS NULL
 GROUP BY chiave, o.id
 {counts.ORDER_BY_TIME}, o.id
 """  # noqa: S608 - constant fragments of the spine, not user values
@@ -76,7 +76,7 @@ _OGGETTI_DEL_PEZZO = _OGGETTI.format(
 _CIELO = """
 SELECT f.rig_id AS chiave, w.scale_arcsec_px, w.width_deg, w.height_deg
 FROM frames f JOIN frame_wcs w ON w.frame_id = f.id
-WHERE f.rig_id IN {dentro} AND f.copy_of IS NULL
+WHERE f.rig_id IN {listed} AND f.copy_of IS NULL
 """
 
 USAGE = ("frames", "integration_s", "untimed", "nights")

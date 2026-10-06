@@ -148,10 +148,6 @@ clock.py:inizio
 clock.py:quando
 clock.py:quante
 clock.py:secondi
-db/idlist.py:elencate
-db/idlist.py:fuori
-db/replace_table.py:elenco
-db/replace_table.py:segnaposto
 ephemeris/corpi.py:altezze
 ephemeris/corpi.py:convertito
 ephemeris/corpi.py:corpo
@@ -218,13 +214,6 @@ ephemeris/sun.py:quota
 ephemeris/sun.py:scendendo
 ephemeris/sun.py:soglia
 ephemeris/sun.py:soglie
-fits/frame_type.py:calibrazione
-fits/frame_type.py:candidato
-fits/frame_type.py:lettere
-fits/frame_type.py:parola
-fits/frame_type.py:riga
-fits/walk.py:attributi
-fits/walk.py:intero
 net.py:_RIFIUTI
 net.py:motivo
 net.py:rifiuto

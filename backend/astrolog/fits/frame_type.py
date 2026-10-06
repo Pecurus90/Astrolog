@@ -2,7 +2,7 @@
 about. A stack only from strong signals, never from exposure: a long light must not vanish."""
 
 import re
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 
 from .header_keys import ACQUISITION_KEYS, WRITER_KEYS, HeaderLike, as_int, get, text
 
@@ -56,16 +56,16 @@ def is_stack(header: HeaderLike) -> bool:
         v = header.get(key)
         if isinstance(v, str) and STACK_WORD_RE.search(v):
             return True
-    return any(STACK_SOURCE_RE.search(str(riga)) for riga in header.get("HISTORY", []))
+    return any(STACK_SOURCE_RE.search(str(line)) for line in header.get("HISTORY", []))
 
 
 def _type_of_word(value: str | None) -> str | None:
     """Compared without separators and in the singular: `Dark Frame`, `DARK-FRAME`, `darkframe`
     and `darks` are all a dark. The only reader of the vocabulary."""
-    parola = SEPARATORS_RE.sub("", (value or "").lower())
-    for candidato in (parola, parola.removesuffix("es"), parola.removesuffix("s")):
-        if candidato in FRAME_TYPES:
-            return FRAME_TYPES[candidato]
+    word = SEPARATORS_RE.sub("", (value or "").lower())
+    for candidate in (word, word.removesuffix("es"), word.removesuffix("s")):
+        if candidate in FRAME_TYPES:
+            return FRAME_TYPES[candidate]
     return None
 
 
@@ -76,45 +76,32 @@ def _calibration_in_object(header: HeaderLike) -> str | None:
     return kind if kind in CALIBRATION_TYPES else None
 
 
-def _as_flag(value: str | None) -> bool | None:
-    """A number or a missing key is a flag; a word is None, left to each key's rule. It arrives as
+def _as_flag(value: str | None, word_rule: Callable[[str], bool]) -> bool:
+    """A number or a missing key is a flag; a word goes to the key's own rule. It arrives as
     `text`, with wrapping quotes removed: otherwise `'T'` and `'F'` swap answers."""
     if value is None:
         return False
     try:
         return bool(float(value))
     except ValueError:
-        return None
+        return word_rule(value.casefold())
 
 
-def _calibrations_applied(value: str | None) -> bool:
+def _calibration_letters(word: str) -> bool:
     """Closed alphabet: true only for convention letters alone (spaces, `-`, `_`; not `BDX`, not
     `B,D,F`) or a logical yes. A letter found anywhere would read `uncalibrated` as calibrated."""
-    flag = _as_flag(value)
-    if flag is not None:
-        return flag
-    assert value is not None  # a missing key is already a flag
-    parola = value.casefold()
-    if parola in YES_WORDS:
+    if word in YES_WORDS:
         return True
-    lettere = SEPARATORS_RE.sub("", parola)
-    return bool(lettere) and all(c in CALIBRATION_LETTERS for c in lettere)
-
-
-def _says_true(value: str | None) -> bool:
-    """CALIBRAT is a yes/no and nothing else: `F` is the FITS false, not the flat letter."""
-    flag = _as_flag(value)
-    if flag is not None:
-        return flag
-    assert value is not None  # a missing key is already a flag
-    return value.casefold() in YES_WORDS
+    letters = SEPARATORS_RE.sub("", word)
+    return bool(letters) and all(c in CALIBRATION_LETTERS for c in letters)
 
 
 def says_calibrated(header: HeaderLike) -> bool:
     """A wrong mark is worse than none: it would pass a real frame off as a copy. The other half of
     the rewrite mark, two programs named together, needs vocab and lives in `spine/rewrite`."""
-    return _calibrations_applied(text(header.get("CALSTAT"))) or _says_true(
-        text(header.get("CALIBRAT"))
+    # CALIBRAT is a yes/no and nothing else: `F` is the FITS false, not the flat letter.
+    return _as_flag(text(header.get("CALSTAT")), _calibration_letters) or _as_flag(
+        text(header.get("CALIBRAT")), YES_WORDS.__contains__
     )
 
 
@@ -132,7 +119,7 @@ def image_type(header: HeaderLike) -> str:
     """`light | dark | flat | bias | dark_flat | stack | unknown`."""
     if is_stack(header):
         return "stack"
-    calibrazione = _calibration_in_object(header)
-    if calibrazione is not None:
-        return calibrazione
+    calibration = _calibration_in_object(header)
+    if calibration is not None:
+        return calibration
     return _type_of_word(text(get(header, "image_type"))) or UNKNOWN

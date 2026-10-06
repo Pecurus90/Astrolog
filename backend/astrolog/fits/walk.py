@@ -45,10 +45,10 @@ def long_path(path: str | os.PathLike[str]) -> str:
     p = str(path)
     if os.name != "nt" or len(p) <= LONG_PATH_THRESHOLD or p.startswith("\\\\?\\"):
         return p
-    intero = os.path.abspath(p)  # on Windows it also normalises forward slashes
-    if intero.startswith("\\\\"):  # \\server\share -> \\?\UNC\server\share
-        return "\\\\?\\UNC" + intero[1:]
-    return "\\\\?\\" + intero
+    absolute = os.path.abspath(p)  # on Windows it also normalises forward slashes
+    if absolute.startswith("\\\\"):  # \\server\share -> \\?\UNC\server\share
+        return "\\\\?\\UNC" + absolute[1:]
+    return "\\\\?\\" + absolute
 
 
 def _apple_double(name: str) -> bool:
@@ -65,10 +65,10 @@ def _hidden(entry: os.DirEntry[str]) -> bool:
     if PLATFORM != "win32":  # the attribute exists only there: elsewhere it is an lstat per folder
         return False
     try:
-        attributi = getattr(entry.stat(follow_symlinks=False), "st_file_attributes", 0)
+        attributes = getattr(entry.stat(follow_symlinks=False), "st_file_attributes", 0)
     except OSError:
         return False
-    return bool(attributi & stat.FILE_ATTRIBUTE_HIDDEN)
+    return bool(attributes & stat.FILE_ATTRIBUTE_HIDDEN)
 
 
 def _online_only(entry: os.DirEntry[str]) -> bool:
