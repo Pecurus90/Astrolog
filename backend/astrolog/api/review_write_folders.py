@@ -113,4 +113,4 @@ def answer_typeless(conn: sqlite3.Connection, edit: TypelessFolderEdit, now: str
     if row is None:
         raise LookupError(f"cartella {edit.key}")
     typeless.declare(conn, edit.key, edit.kind, now)
-    return typeless_answer.apply_answer(conn, {**row, "answer": edit.kind}, now)
+    return typeless_answer.apply_answer(conn, {**row, "answer": edit.kind}, now, rewrite=False)

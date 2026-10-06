@@ -112,6 +112,24 @@ def test_an_answer_moves_the_mark_of_every_frame_of_its_folder(conn):
     _come_la_regola(conn)
 
 
+def test_an_answer_rewrites_only_the_frames_of_its_folder(conn):
+    """Cento risposte su 21.000 pose costavano 8,5 s perche' ognuna riscriveva tutte le pose senza
+    tipo. Le pose di un'altra cartella, o della radice, non si toccano; quelle della cartella si."""
+    radice = add_folder(conn, "D:/Astro")
+    altre = [_posa(conn, radice, f"M51/{i}.fits") for i in range(5)]
+    altre += [_posa(conn, radice, f"{i}.fits") for i in range(5)]
+    dark = [_posa(conn, radice, f"dark/{i}.fits") for i in range(2)]
+    prima = conn.total_changes
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
+    assert conn.total_changes - prima <= 1 + len(dark)
+    assert [_scritto(conn, p) for p in dark] == [1, 1]
+    prima = conn.total_changes
+    typeless.declare(conn, "D:/Astro", TypeAnswer.LIGHT)
+    assert conn.total_changes - prima <= 1 + 5
+    assert [_scritto(conn, p) for p in altre] == [1] * 5 + [0] * 5
+    _come_la_regola(conn)
+
+
 def test_a_frame_whose_folder_changes_takes_the_answer_of_the_new_one(conn):
     """Il file sparito dalla cartella detta "foto" resta solo in una che non ha risposto: torna ad
     aspettare. Ricompare, e torna a non aspettare. La cartella e' quella della prima posizione

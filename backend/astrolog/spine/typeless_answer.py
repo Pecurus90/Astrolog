@@ -35,14 +35,17 @@ def detach(conn: sqlite3.Connection, frame_ids: list[int]) -> None:
     mosaic.settle(conn, mosaic.leave(conn, frame_ids))
 
 
-def apply_answer(conn: sqlite3.Connection, row: Row, now: str | None = None) -> list[int]:
+def apply_answer(
+    conn: sqlite3.Connection, row: Row, now: str | None = None, *, rewrite: bool = True
+) -> list[int]:
     """Returns the requeued frames. "Photos" go on, and those an earlier "calibration" detached go
     back to the sky, which restores it from its cache; "calibration" stops and detaches them."""
+    # `rewrite=False` leaves the derived tables to one `rewrite_derived` after many answers
     frames = typeless.frames_of(conn, row)
     if row["answer"] == TypeAnswer.LIGHT:
         invalidate(conn, solve_store.lost_sky(conn, frames), StageName.SOLVE, now)
     else:
-        _stop(conn, frames, now)
+        _stop(conn, frames, now, rewrite=rewrite)
     return frames
 
 
@@ -77,10 +80,18 @@ def detach_waiting(conn: sqlite3.Connection, now: str | None = None) -> tuple[li
     return frames, requeued
 
 
-def _stop(conn: sqlite3.Connection, frames: list[int], now: str | None) -> None:
+def _stop(
+    conn: sqlite3.Connection, frames: list[int], now: str | None, *, rewrite: bool = True
+) -> None:
     invalidate(conn, frames, WAITING_FROM, now)
     detach(conn, frames)
-    # No stage works these frames any more, so the derived tables they moved are rewritten here.
+    if rewrite:
+        rewrite_derived(conn)
+
+
+def rewrite_derived(conn: sqlite3.Connection) -> None:
+    """No stage works stopped frames any more, so the derived tables they moved are rewritten
+    here: whole, so once after many answers gives what once per answer gave."""
     camera_sky.write(conn)
     gear_usage.write(conn)
     object_candidates.write(conn)

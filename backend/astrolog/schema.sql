@@ -73,7 +73,9 @@ CREATE TABLE folders (
   root_path  TEXT NOT NULL UNIQUE,
   name       TEXT,
   retired_at TEXT,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  -- la radice nella forma delle chiavi di cartella (`spine/frame_folder.py`)
+  root_key   TEXT GENERATED ALWAYS AS (rtrim(replace(root_path, '\', '/'), '/')) VIRTUAL
 ) STRICT;
 
 -- Uno strumento posseduto: ottica, camera, montatura, riduttore, ruota, guida, focheggiatore.
@@ -370,9 +372,13 @@ CREATE TABLE positions (
   mtime      REAL NOT NULL,
   status     TEXT NOT NULL DEFAULT 'present' CHECK (status IN ('present', 'missing')),
   seen_at    TEXT NOT NULL,
+  -- la sottocartella del file, '' alla radice: con `root_key` fa la chiave della cartella
+  rel_dir    TEXT GENERATED ALWAYS AS
+    (trim(rtrim(rel_path, replace(rel_path, '/', '')), '/')) VIRTUAL,
   UNIQUE (folder_id, rel_path)
 ) STRICT;
 CREATE INDEX positions_frame ON positions (frame_id);
+CREATE INDEX positions_dir ON positions (folder_id, rel_dir);
 
 -- Lo stato di ogni frame in ogni stadio: la spina e' un grafo, non una linea, e gli archi
 -- (chi dipende da chi) stanno in `spine/stages.py`. Ogni stadio lavora su cio' che per lui
@@ -444,14 +450,18 @@ CREATE TABLE frame_wcs (
 -- comunque. La chiave della cartella e' `spine/frame_folder.py` (`KEY_OF_FRAME`), le parole sono
 -- `spine/declarations.py`: `tests/test_asks_type.py` confronta il segno con la regola composta da
 -- quelle costanti, dopo ogni strada che cambia un ingresso.
+-- La chiave della cartella di ogni posizione, scritta una volta: la legge la regola, e i trigger
+-- delle risposte ci trovano le pose della cartella risposta.
+CREATE VIEW position_folders AS
+SELECT p.id AS position_id, p.frame_id,
+  d.root_key || CASE WHEN p.rel_dir = '' THEN '' ELSE '/' || p.rel_dir END AS folder_key
+FROM positions p JOIN folders d ON d.id = p.folder_id;
+
 CREATE VIEW frame_waits AS
 SELECT f.id AS frame_id, f.image_type = 'unknown' AND CASE (
   SELECT dc.value FROM declarations dc WHERE dc.entity_type = 'folder'
     AND dc.field = 'image_type' AND dc.entity_key = (
-      SELECT rtrim(replace(d.root_path, '\', '/'), '/')
-        || CASE WHEN trim(rtrim(p.rel_path, replace(p.rel_path, '/', '')), '/') = '' THEN ''
-           ELSE '/' || trim(rtrim(p.rel_path, replace(p.rel_path, '/', '')), '/') END
-      FROM positions p JOIN folders d ON d.id = p.folder_id WHERE p.id = (
+      SELECT pf.folder_key FROM position_folders pf WHERE pf.position_id = (
         SELECT p2.id FROM positions p2 JOIN folders d2 ON d2.id = p2.folder_id
         WHERE p2.frame_id = f.id AND p2.status = 'present' AND d2.retired_at IS NULL
         ORDER BY p2.id LIMIT 1)))
@@ -462,8 +472,8 @@ SELECT f.id AS frame_id, f.image_type = 'unknown' AND CASE (
 FROM frames f;
 
 -- Il segno lo riscrive SQLite a ogni scrittura di un ingresso della regola, non chi scrive: un
--- segno rimasto a 0 manda un dark senza tipo all'oggetto, e diventa ore. Una risposta o una
--- cartella possono toccare qualunque posa senza tipo, e si riscrivono tutte.
+-- segno rimasto a 0 manda un dark senza tipo all'oggetto, e diventa ore. Una risposta riscrive le
+-- pose con una posizione nella sua cartella; una cartella registrata tutte quelle senza tipo.
 CREATE TRIGGER asks_type_frame_in AFTER INSERT ON frames BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.id)
   WHERE id = NEW.id; END;
@@ -498,16 +508,28 @@ CREATE TRIGGER asks_type_sky_out AFTER DELETE ON frame_wcs BEGIN
 CREATE TRIGGER asks_type_answer_in AFTER INSERT ON declarations
   WHEN NEW.entity_type = 'folder' AND NEW.field = 'image_type' BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
-  WHERE image_type = 'unknown'; END;
+  WHERE image_type = 'unknown'
+    AND id IN (SELECT p.frame_id FROM folders d CROSS JOIN positions p ON p.folder_id = d.id
+      AND p.rel_dir = substr(NEW.entity_key, length(d.root_key) + 2)
+    WHERE NEW.entity_key = d.root_key OR substr(NEW.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/'); END;
 CREATE TRIGGER asks_type_answer_moved AFTER UPDATE ON declarations
   WHEN (NEW.entity_type = 'folder' AND NEW.field = 'image_type')
     OR (OLD.entity_type = 'folder' AND OLD.field = 'image_type') BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
-  WHERE image_type = 'unknown'; END;
+  WHERE image_type = 'unknown'
+    AND (id IN (SELECT p.frame_id FROM folders d CROSS JOIN positions p ON p.folder_id = d.id
+      AND p.rel_dir = substr(NEW.entity_key, length(d.root_key) + 2)
+    WHERE NEW.entity_key = d.root_key OR substr(NEW.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/')
+      OR id IN (SELECT p.frame_id FROM folders d CROSS JOIN positions p ON p.folder_id = d.id
+      AND p.rel_dir = substr(OLD.entity_key, length(d.root_key) + 2)
+    WHERE OLD.entity_key = d.root_key OR substr(OLD.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/')); END;
 CREATE TRIGGER asks_type_answer_out AFTER DELETE ON declarations
   WHEN OLD.entity_type = 'folder' AND OLD.field = 'image_type' BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
-  WHERE image_type = 'unknown'; END;
+  WHERE image_type = 'unknown'
+    AND id IN (SELECT p.frame_id FROM folders d CROSS JOIN positions p ON p.folder_id = d.id
+      AND p.rel_dir = substr(OLD.entity_key, length(d.root_key) + 2)
+    WHERE OLD.entity_key = d.root_key OR substr(OLD.entity_key, 1, length(d.root_key) + 1) = d.root_key || '/'); END;
 CREATE TRIGGER asks_type_folder_moved AFTER UPDATE OF root_path, retired_at ON folders BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
   WHERE image_type = 'unknown'; END;

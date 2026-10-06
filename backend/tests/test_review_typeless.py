@@ -529,6 +529,20 @@ def test_a_frame_that_waits_does_not_ask_for_the_filter(db_path, tmp_path):
         assert filtro == [("ZWO ASI2600MM", 1)]
 
 
+def test_the_derived_tables_are_rewritten_once_per_apply(pagina, monkeypatch):
+    """Cento risposte "calibrazione" riscrivevano cento volte le tabelle derivate di tutto
+    l'archivio (4,7 s): una volta per Applica basta, il risultato e' lo stesso."""
+    riscritte = []
+    vera = typeless_answer.camera_sky.write
+    monkeypatch.setattr(
+        typeless_answer.camera_sky, "write", lambda conn: riscritte.append(1) or vera(conn)
+    )
+    chiavi = list(_gruppi(pagina))
+    assert len(chiavi) >= 2
+    apply(pagina, typeless=[{"key": k, "kind": "calibration"} for k in chiavi])
+    assert riscritte == [1]
+
+
 def test_a_folder_that_is_not_there_is_refused(pagina):
     """Una risposta verso una cartella che non chiede niente non si scrive: resterebbe li' per
     sempre senza che nessuno la veda."""

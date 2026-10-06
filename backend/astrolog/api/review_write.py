@@ -9,7 +9,8 @@ from fastapi import HTTPException
 from ..db.transaction import transaction
 from ..spine import coordinates as places
 from ..spine import declarations as decl
-from ..spine import gear, gear_create, mosaic, object_answer, rigs, unnamed
+from ..spine import gear, gear_create, mosaic, object_answer, rigs, typeless_answer, unnamed
+from ..spine.declarations import TypeAnswer
 from ..spine.group import GroupReason
 from ..spine.stages import StageName, invalidate
 from . import instrument_answer, lookalike
@@ -47,6 +48,8 @@ def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> tupl
     for edit in body.typeless:
         requeued.update(folders.answer_typeless(conn, edit, now))
         changed += 1
+    if any(edit.kind == TypeAnswer.CALIBRATION for edit in body.typeless):
+        typeless_answer.rewrite_derived(conn)
     for edit in body.mosaics:
         _answer_mosaic(conn, edit, now)
         changed += 1

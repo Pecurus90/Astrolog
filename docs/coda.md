@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | ripara | Risposte sul tipo: 100 in un Applica da 12,8 s a 0,29 s | sessione principale + un revisore (~0,1 M) | ~50 | 0 dal revisore (200 semi di prova a caso, 0 differenze) |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 6b: `api` resto, fase 2 chiusa | ~0,27 M agenti (uno sviluppatore), sessione principale non contata | 23 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 6a: `api` Da confermare e Attrezzatura | ~0,21 M agenti (uno sviluppatore), sessione principale non contata | 16 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5e: `spine` Notti e Archivio, indice, Da confermare | ~0,24 M agenti (uno sviluppatore), sessione principale non contata | 23 agente | 0 |
@@ -346,12 +347,6 @@ Niente di aperto.
   giro** (`spine/normalize.py`, `_before_the_round`; `spine/copies.py`): su 5.800 frame sintetici
   il picco e' 2.653 KB contro 1.174 del giro doppio, con tempo e query piu' bassi. Pesa alla prima
   lettura di un archivio grande; si rimisura su un NAS vero prima di decidere un rimedio.
-- **Una risposta sul tipo riscrive il segno dell'attesa di ogni frame senza tipo**
-  (il trigger di `declarations` in `schema.sql` riscrive tutto l'archivio), dove basterebbero quelle
-  della cartella, che `declare` non ha: le trova `apply_answer`, subito dopo. Cento risposte in un
-  Applica su 21.000 frame sintetici: 13,0 s, di cui 8,5 nel trigger e 4,7 in `_stop`
-  (`spine/typeless_answer.py`), che per ogni calibrazione riscrive `camera_sky`, `gear_usage` e
-  `object_candidates`; ritrovare la cartella (`typeless.row_of`) costa 0,5 ms in tutto.
 - **Il totale dell'archivio viaggia in ogni pagina dello scorrimento delle Notti**:
   `nights.archive_totals` fa una scansione piena (14,6-19 ms su 40.000 frame) a ogni "mostra
   altre", e conta solo la prima. Rimedio: i totali solo alla prima pagina. Non e' un refactor:
