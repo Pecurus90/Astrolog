@@ -2,19 +2,52 @@
 the whole header is stored on every frame, and anything else is derived from it when needed."""
 
 import re
+from dataclasses import dataclass
 from datetime import UTC
-from typing import Any
 
 from astropy.time import Time
 
 from ..clock import parse_iso
 from ..units import strip_float32_noise
-from .frame_type import image_type
+from .frame_type import FrameType, image_type
 from .header_coords import ra_dec, site
 from .header_keys import HeaderLike, as_float, as_int, get, text
 from .header_wcs import solved
 
 BAYER_RE = re.compile(r"^(RGGB|GRBG|BGGR|GBRG|CMYG|CYGM)$", re.IGNORECASE | re.ASCII)
+
+
+@dataclass(frozen=True, slots=True)
+class FrameFields:
+    """Fields named as the `frames` columns they land in by name (`scan_store._FIELD_OF` renames
+    three); `path` is the file, not a column."""
+
+    path: str
+    image_type: FrameType
+    object_raw: str | None
+    date_obs: str | None
+    exposure_s: float | None
+    filter_raw: str | None
+    gain: float | None
+    offset: float | None
+    telescope_raw: str | None
+    instrument_raw: str | None
+    filter_wheel_raw: str | None
+    focuser_raw: str | None
+    guide_camera_raw: str | None
+    software_raw: str | None
+    bayer_pattern: str | None
+    focal_mm: float | None
+    ccd_temp_c: float | None
+    naxis1: int | None
+    naxis2: int | None
+    binning: int | None
+    pixel_size_um: float | None
+    ra_deg: float | None
+    dec_deg: float | None
+    site_lat: float | None
+    site_lon: float | None
+    site_elev_m: float | None
 
 
 def bayer_pattern(header: HeaderLike) -> str | None:
@@ -58,7 +91,7 @@ def binning(header: HeaderLike) -> int | None:
     return value if value is not None and value >= 1 else None
 
 
-def extract_fields(header: HeaderLike, path: str) -> dict[str, Any]:
+def extract_fields(header: HeaderLike, path: str) -> FrameFields:
     """`frames` columns plus hints for later stages; a missing key gives None, never a crash."""
     focal = as_float(get(header, "focal"))
     # float32 noise is cut here, once; coordinates are true doubles and are left alone
@@ -68,31 +101,31 @@ def extract_fields(header: HeaderLike, path: str) -> dict[str, Any]:
     if ra == 0 and dec == 0 and not has_wcs:  # the 0/0 placeholder of a failed solve
         ra = dec = None
     lat, lon, elev = site(header)
-    return {
-        "path": path,
-        "image_type": image_type(header),
-        "object_raw": text(get(header, "object")),
-        "date_obs": date_obs(header),
-        "exposure_s": as_float(get(header, "exposure")),
-        "filter_raw": text(get(header, "filter")),
-        "gain": as_float(get(header, "gain")),
-        "offset": as_float(get(header, "offset")),
-        "telescope_raw": text(get(header, "telescope")),
-        "instrument_raw": text(get(header, "instrument")),
-        "filter_wheel_raw": text(get(header, "filter_wheel")),
-        "focuser_raw": text(get(header, "focuser")),
-        "guide_camera_raw": text(get(header, "guide_camera")),
-        "software_raw": text(get(header, "software")),
-        "bayer_pattern": bayer_pattern(header),
-        "focal_mm": focal,
-        "ccd_temp_c": strip_float32_noise(as_float(get(header, "ccd_temp"))),
-        "naxis1": as_int(header.get("NAXIS1")),
-        "naxis2": as_int(header.get("NAXIS2")),
-        "binning": binning(header),
-        "pixel_size_um": pixel_um,
-        "ra_deg": ra,
-        "dec_deg": dec,
-        "site_lat": lat,
-        "site_lon": lon,
-        "site_elev_m": elev,
-    }
+    return FrameFields(
+        path=path,
+        image_type=image_type(header),
+        object_raw=text(get(header, "object")),
+        date_obs=date_obs(header),
+        exposure_s=as_float(get(header, "exposure")),
+        filter_raw=text(get(header, "filter")),
+        gain=as_float(get(header, "gain")),
+        offset=as_float(get(header, "offset")),
+        telescope_raw=text(get(header, "telescope")),
+        instrument_raw=text(get(header, "instrument")),
+        filter_wheel_raw=text(get(header, "filter_wheel")),
+        focuser_raw=text(get(header, "focuser")),
+        guide_camera_raw=text(get(header, "guide_camera")),
+        software_raw=text(get(header, "software")),
+        bayer_pattern=bayer_pattern(header),
+        focal_mm=focal,
+        ccd_temp_c=strip_float32_noise(as_float(get(header, "ccd_temp"))),
+        naxis1=as_int(header.get("NAXIS1")),
+        naxis2=as_int(header.get("NAXIS2")),
+        binning=binning(header),
+        pixel_size_um=pixel_um,
+        ra_deg=ra,
+        dec_deg=dec,
+        site_lat=lat,
+        site_lon=lon,
+        site_elev_m=elev,
+    )

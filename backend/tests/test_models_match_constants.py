@@ -14,6 +14,7 @@ import pytest
 from astrolog import astap
 from astrolog.api import models, models_review, models_review_groups, models_site
 from astrolog.db.connect import SCHEMA_PATH
+from astrolog.fits.frame_type import FrameType
 from astrolog.spine import (
     declarations,
     group,
@@ -107,7 +108,7 @@ def test_the_type_a_file_does_not_say_is_the_word_the_schema_allows():
     """Il tipo che l'header non ha detto e' la parola che lo schema ammette: se lo schema e la
     spina divergessero, la domanda non troverebbe nessun frame e sparirebbe dalla pagina."""
     schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
-    assert f"image_type IN ('light', '{typeless.UNKNOWN}')" in schema
+    assert f"image_type IN ('light', '{FrameType.UNKNOWN}')" in schema
 
 
 def test_the_camera_colours_say_what_the_schema_allows():

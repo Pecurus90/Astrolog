@@ -20,7 +20,7 @@ from astrolog.api.review import unanswered
 from astrolog.clock import now_iso
 from astrolog.db.connect import connect
 from astrolog.spine import stages
-from astrolog.vocab.filters import UNKNOWN
+from astrolog.vocab.filters import Passband
 from conftest import apply, by_name, db, review, unnamed_cards, wait_until, write_light
 
 # --- l'elenco -------------------------------------------------------------------------
@@ -37,7 +37,8 @@ def test_the_filter_question_does_not_scan_the_whole_archive_per_filter(client):
     chiedere."""
     with db(client) as conn:
         plan = " ".join(
-            r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + review_api._FILTERS, (UNKNOWN,))
+            r[3]
+            for r in conn.execute("EXPLAIN QUERY PLAN " + review_api._FILTERS, (Passband.UNKNOWN,))
         )
     assert "INDEX frames_filter" in plan, plan
 
@@ -58,7 +59,7 @@ def test_only_the_filters_the_app_does_not_know_are_asked(client):
     page = review(client)
     aperti = [f["name"] for f in page["filters"]]
     assert aperti, "il banco deve avere almeno un filtro con la banda da dire"
-    assert all(f["passband"] == UNKNOWN for f in page["filters"])
+    assert all(f["passband"] == Passband.UNKNOWN for f in page["filters"])
     assert "Lum" not in aperti and "Lum" in [f["name"] for f in page["filter_choices"]]
 
     apply(client)

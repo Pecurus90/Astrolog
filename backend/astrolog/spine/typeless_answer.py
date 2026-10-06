@@ -4,7 +4,7 @@ question because the scan reads the question, and must not reach the stores of o
 import sqlite3
 
 from ..db.row import Row
-from ..fits.frame_type import UNKNOWN
+from ..fits.frame_type import FrameType
 from . import (
     camera_sky,
     gear_usage,
@@ -56,7 +56,7 @@ WHERE {WAITING_SQL} AND (f.object_id IS NOT NULL OR f.night_id IS NOT NULL)
 
 # Lost its sky to a detach, in a live folder not answered "calibration": only the solver's cache
 # puts it back. Without a live folder, or in one answered "calibration", it stays as it is.
-_TYPELESS = f"SELECT f.id FROM frames f WHERE f.image_type = '{UNKNOWN}'"  # noqa: S608 - constants
+_TYPELESS = f"SELECT f.id FROM frames f WHERE f.image_type = '{FrameType.UNKNOWN}'"  # noqa: S608 - constants
 _LET_GO = (
     f"SELECT ({folder.KEY_OF_FRAME}) IS NOT NULL"  # noqa: S608 - constant fragments of the spine
     f" AND IFNULL({FOLDER_SAYS}, '') <> '{domanda.CALIBRATION}' FROM frames f WHERE f.id = ?"

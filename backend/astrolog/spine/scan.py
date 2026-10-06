@@ -6,12 +6,13 @@ import os
 import sqlite3
 import time
 from collections.abc import Callable, Generator, Iterable, Mapping
+from dataclasses import asdict
 from functools import partial
 from typing import Any, TypeGuard
 
 from ..clock import night_date, night_instant, now_iso
 from ..db.transaction import transaction
-from ..fits.frame_type import CALIBRATION_TYPES, UNKNOWN
+from ..fits.frame_type import CALIBRATION_TYPES, FrameType
 from ..fits.header_fields import extract_fields
 from ..fits.header_read import HeaderReadError, frame_fingerprint, header_to_json, read_frame
 from ..fits.walk import long_path, walk_dir
@@ -267,13 +268,15 @@ def _one_file(  # noqa: PLR0913
         _skip(rel, "still_writing", counts, skipped, seen, pos)  # grew while being read
         return
     fields = extract_fields(header, abs_path)
-    kind = fields["image_type"]
-    if kind in CALIBRATION_TYPES or kind == "stack":
-        _skip(rel, "stack" if kind == "stack" else "calibration", counts, skipped, seen, pos)
+    kind = fields.image_type
+    if kind in CALIBRATION_TYPES or kind == FrameType.STACK:
+        _skip(
+            rel, "stack" if kind == FrameType.STACK else "calibration", counts, skipped, seen, pos
+        )
         return
     # A typeless file in a folder the user called calibration is skipped like a calibration; one
     # already a frame still enters, or after a move it would look vanished and keep its hours.
-    detto = typeless.answer_at(conn, root, rel) if kind == UNKNOWN else None
+    detto = typeless.answer_at(conn, root, rel) if kind == FrameType.UNKNOWN else None
     fingerprint = frame_fingerprint(long_path(abs_path), header, block)
     if detto == typeless.CALIBRATION and store.frame_id_by_hash(conn, fingerprint) is None:
         _skip(rel, "calibration", counts, skipped, seen, pos)
@@ -281,8 +284,9 @@ def _one_file(  # noqa: PLR0913
     with transaction(conn):
         frame_id = store.frame_id_by_hash(conn, fingerprint)
         if frame_id is None:
-            notte = night_of(conn, fields, mtime)
-            giudicati = {**fields, **header_asks.of(fields)}
+            columns = asdict(fields)
+            notte = night_of(conn, columns, mtime)
+            giudicati = {**columns, **header_asks.of(columns)}
             frame_id = store.insert_frame(
                 conn, giudicati, fingerprint, header_to_json(header), now, notte
             )

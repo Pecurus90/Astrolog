@@ -29,5 +29,5 @@ def test_the_site_is_read_in_every_written_form(header, atteso):
     senza, si perde la domanda su dove sono state riprese quelle pose."""
     m = extract_fields(header, "x")
     lat, lon = atteso
-    assert m["site_lat"] == pytest.approx(lat)
-    assert m["site_lon"] == (None if lon is None else pytest.approx(lon))
+    assert m.site_lat == pytest.approx(lat)
+    assert m.site_lon == (None if lon is None else pytest.approx(lon))

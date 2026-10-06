@@ -48,7 +48,7 @@ def put_meteoblue_key(
         return MeteoblueKeyOut(status=REMOVED, hint=None)
     esito = meteoblue.check_key(chiave)
     if esito != meteoblue.OK:
-        return MeteoblueKeyOut(status=esito, hint=config.hint(config.read(conn)["meteoblue_key"]))
+        return MeteoblueKeyOut(status=esito, hint=config.hint(config.read(conn).meteoblue_key))
     with transaction(conn):
         config.write(conn, "meteoblue_key", chiave)
         meteoblue.forget(conn)

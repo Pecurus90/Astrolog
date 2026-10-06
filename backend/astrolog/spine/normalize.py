@@ -11,9 +11,8 @@ from ..clock import now_iso
 from ..db.transaction import transaction
 from ..units import focal_buckets
 from ..vocab.filters import (
-    NO_FILTER,
     NO_FILTER_NAME,
-    UNKNOWN,
+    Passband,
     is_broadband_word,
     normalize_filter,
     passband_of,
@@ -230,7 +229,7 @@ def _filter_for(
     if filter_id is None:
         filter_id = create_filter(conn, named, band, now)
         counts["filters"] += 1
-    return filter_id, band != UNKNOWN
+    return filter_id, band != Passband.UNKNOWN
 
 
 def _answered_filter(
@@ -255,5 +254,5 @@ def _no_filter(conn: sqlite3.Connection, frame: sqlite3.Row, now: str) -> tuple[
     if filter_id_by_name(conn, NO_FILTER_NAME) is not None:
         log.warning("normalize: nessun filtro, nome preso", extra={"frame_id": frame["id"]})
         return None, False
-    filter_id = create_filter(conn, NO_FILTER_NAME, NO_FILTER, now, is_none=True)
+    filter_id = create_filter(conn, NO_FILTER_NAME, Passband.NO_FILTER, now, is_none=True)
     return filter_id, True

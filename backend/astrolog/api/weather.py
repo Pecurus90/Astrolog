@@ -93,7 +93,7 @@ def _seeing(conn: sqlite3.Connection, site_id: int, arrivate: dict[str, str]) ->
     """Meteoblue's last attempt only with a key: it is what lets the page say why seeing comes from
     7Timer."""
     fonte = "meteoblue" if "meteoblue" in arrivate else "7timer" if "7timer" in arrivate else None
-    ultimo = meteoblue.last_attempt(conn, site_id) if config.read(conn)["meteoblue_key"] else None
+    ultimo = meteoblue.last_attempt(conn, site_id) if config.read(conn).meteoblue_key else None
     return WeatherSeeingOut(source=fonte, meteoblue=ultimo["status"] if ultimo else None)
 
 
@@ -110,7 +110,7 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
     wind. A night that has Meteoblue's seeing takes all of it from there: the hours Meteoblue does
     not cover stay empty instead of taking 7Timer's bands, or the page would say "from Meteoblue"
     over a night of two sources."""
-    scelto = config.read(conn)["weather_model"]
+    scelto = config.read(conn).weather_model
     vuoto = WeatherOut(
         site=None,
         missing=None,
@@ -170,7 +170,7 @@ def refresh(conn: sqlite3.Connection = Depends(get_db)) -> WeatherRefreshOut:
 
 def brief_of(conn: sqlite3.Connection, site_id: int, night: str) -> WeatherBriefOut | None:
     """One night's summary from the chosen model, as written; Tonight reads it."""
-    scelto = config.read(conn)["weather_model"]
+    scelto = config.read(conn).weather_model
     riga = conn.execute(
         _NOTTI + " LIMIT 1", (site_id, forecast.KIND, forecast.source_of(scelto), night)
     ).fetchone()

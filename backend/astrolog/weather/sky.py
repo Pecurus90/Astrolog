@@ -77,7 +77,7 @@ def _meteoblue(
     conn: sqlite3.Connection, site: Mapping[str, Any], fetch: net.Fetch, adesso: datetime
 ) -> str | None:
     """The outcome, recorded with its attempt; `None` without a key or before it is due."""
-    chiave = config.read(conn)["meteoblue_key"]
+    chiave = config.read(conn).meteoblue_key
     if not chiave or not meteoblue.due(conn, site["id"], adesso):
         return None
     risposta, perche = net.ask_why(

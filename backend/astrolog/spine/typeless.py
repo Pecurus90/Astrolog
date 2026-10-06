@@ -5,7 +5,7 @@ import sqlite3
 from typing import Any
 
 from ..db.row import Row
-from ..fits.frame_type import UNKNOWN
+from ..fits.frame_type import FrameType
 from . import declarations as decl
 from . import frame_folder as folder
 
@@ -58,4 +58,4 @@ def answer_at(conn: sqlite3.Connection, root_path: str, rel_path: str) -> str | 
 
 def frames_of(conn: sqlite3.Connection, row: Row) -> list[int]:
     """Copies included: a copy has its own sky, even though on screen it is not counted."""
-    return [r["id"] for r in folder.frames_in(conn, row) if r["image_type"] == UNKNOWN]
+    return [r["id"] for r in folder.frames_in(conn, row) if r["image_type"] == FrameType.UNKNOWN]

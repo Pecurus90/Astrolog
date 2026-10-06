@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from ..db.inserted import inserted_id
-from ..vocab.filters import UNKNOWN, normalize_filter
+from ..vocab.filters import Passband, normalize_filter
 from ..vocab.header_value import normalize_header_value
 from . import declarations, gear
 
@@ -62,7 +62,7 @@ def filter_declared(  # noqa: PLR0913
             raise SpellingTakenError(f"{grafia} e' una grafia di {gia}")
     if mono and mono != name and filter_id_by_name(conn, mono) is not None:
         raise SpellingTakenError(f"{name} e' il tuo {mono}")
-    filter_id = create_filter(conn, name, UNKNOWN, now)
+    filter_id = create_filter(conn, name, Passband.UNKNOWN, now)
     scheda = {k: v for k, v in (("brand", brand), ("model", model)) if v}
     gear.declare_filter(conn, filter_id, scheda, bands=bands, now=now)
     if mono and mono != name:

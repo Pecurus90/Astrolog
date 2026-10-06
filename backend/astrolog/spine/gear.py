@@ -7,7 +7,7 @@ from typing import Any
 
 from ..db import idlist
 from ..db.row import Row
-from ..vocab.filters import NO_FILTER, UNKNOWN, model_by_id, passband_from_bands
+from ..vocab.filters import Passband, model_by_id, passband_from_bands
 from . import counts, signature
 from . import rigs as corredi
 from .declarations import (
@@ -157,7 +157,7 @@ def declare_filter(  # noqa: PLR0913
         conn.execute(
             "UPDATE filters SET is_none = ?, passband = CASE WHEN ? THEN ? ELSE passband END"
             " WHERE id = ?",
-            (int(is_none), int(is_none), NO_FILTER, filter_id),
+            (int(is_none), int(is_none), Passband.NO_FILTER, filter_id),
         )
     if bands is not None:
         conn.execute("DELETE FROM filter_bands WHERE filter_id = ?", (filter_id,))
@@ -174,9 +174,7 @@ def declare_filter(  # noqa: PLR0913
     modello = model_by_id(catalog_id) if bands is None and catalog_id is not None else None
     if modello:
         # the model carries its band: choosing it is a whole answer, not a brand
-        conn.execute(
-            "UPDATE filters SET passband = ? WHERE id = ?", (modello["passband"], filter_id)
-        )
+        conn.execute("UPDATE filters SET passband = ? WHERE id = ?", (modello.passband, filter_id))
     after = conn.execute("SELECT passband FROM filters WHERE id = ?", (filter_id,)).fetchone()
     if after["passband"] == row["passband"]:
         # brand, model or a note do not change what a frame means: nothing is redone
@@ -253,7 +251,7 @@ def _detach_from_frames(conn: sqlite3.Connection, instrument_id: int) -> set[int
 
 def band_unknown(row: Row) -> bool:
     """The "which filter is it?" question of the review page."""
-    return row["passband"] == UNKNOWN
+    return row["passband"] == Passband.UNKNOWN
 
 
 def filter_target(row: Row) -> bool:

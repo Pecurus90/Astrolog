@@ -2,40 +2,63 @@
 look of the value: a user named "2024" stays text."""
 
 import sqlite3
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, NamedTuple
 
 from ..clock import now_iso
 
-# key -> (type, factory value, where the value comes from: a public convention or a product choice)
-KEYS: dict[str, tuple[type, str | None, str]] = {
-    "user_name": (str, None, "lo dice l'utente nel wizard"),
-    "language": (str, "it", "la lingua in cui l'app si costruisce; l'inglese e' la seconda"),
-    "onboarding_done_at": (str, None, "il timbro del primo avvio: un fatto, non un'euristica"),
-    "astap_path": (
+
+class Key(NamedTuple):
+    kind: type
+    factory: str | None
+    # where the factory value comes from: a public convention or a product choice
+    source: str
+
+
+KEYS: dict[str, Key] = {
+    "user_name": Key(str, None, "lo dice l'utente nel wizard"),
+    "language": Key(str, "it", "la lingua in cui l'app si costruisce; l'inglese e' la seconda"),
+    "onboarding_done_at": Key(str, None, "il timbro del primo avvio: un fatto, non un'euristica"),
+    "astap_path": Key(
         str,
         None,
         "dove sta il solver, quando l'app non lo trova da sola. Lo dichiara l'utente nel primo"
         " avvio o nelle Impostazioni, e vince sulla ricerca automatica: e' la via d'uscita"
         " quando quella sbaglia (una copia vecchia, un nome diverso)",
     ),
-    "sky_service_key": (
+    "sky_service_key": Key(
         str,
         None,
         "la chiave personale del servizio che stima il cielo: gratuita, chiesta con una email"
         " all'autore. Senza, la luminosita' si misura o si sceglie: l'app funziona uguale",
     ),
-    "meteoblue_key": (
+    "meteoblue_key": Key(
         str,
         None,
         "la chiave personale di Meteoblue, per il seeing ora per ora: gratuita, chiesta sul loro"
         " sito. Senza, il seeing viene da 7Timer, a fasce: l'app funziona uguale",
     ),
-    "weather_model": (
+    "weather_model": Key(
         str,
         "best_match",
         "il modello della previsione: di fabbrica quello che Open-Meteo sceglie per il posto",
     ),
 }
+
+
+@dataclass(frozen=True, slots=True)
+class Preferences:
+    """One field per key of `KEYS`, in its order: the settings page lists them so. The two without
+    `None` have a factory value, and a stored NULL falls back to it."""
+
+    user_name: str | None
+    language: str
+    onboarding_done_at: str | None
+    astap_path: str | None
+    sky_service_key: str | None
+    meteoblue_key: str | None
+    weather_model: str
+
 
 # A weather model outside this list would give an empty page with no reason.
 CHOICES = {"weather_model": ("best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless")}
@@ -56,17 +79,17 @@ def hint(value: str | None) -> str | None:
 
 
 def defaults() -> dict[str, Any]:
-    return {k: v for k, (_t, v, _why) in KEYS.items()}
+    return {k: key.factory for k, key in KEYS.items()}
 
 
-def read(conn: sqlite3.Connection) -> dict[str, Any]:
+def read(conn: sqlite3.Connection) -> Preferences:
     """Every key: the saved value in the key's type, or the factory one."""
     values = defaults()
     for row in conn.execute("SELECT key, value FROM config"):
         key = row["key"]
         if key in KEYS and row["value"] is not None:
-            values[key] = KEYS[key][0](row["value"])
-    return values
+            values[key] = KEYS[key].kind(row["value"])
+    return Preferences(**values)
 
 
 def write(conn: sqlite3.Connection, key: str, value: object) -> None:
@@ -74,7 +97,7 @@ def write(conn: sqlite3.Connection, key: str, value: object) -> None:
     where the API can answer 422, not on read."""
     if key not in KEYS:
         raise KeyError(f"chiave di configurazione sconosciuta: {key}")
-    kind = KEYS[key][0]
+    kind = KEYS[key].kind
     if value is not None and (isinstance(value, bool) or not isinstance(value, kind)):
         raise ValueError(f"{key} vuole {kind.__name__}, non {value!r}")
     if value is not None and key in CHOICES and value not in CHOICES[key]:

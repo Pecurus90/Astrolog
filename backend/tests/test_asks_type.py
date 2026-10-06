@@ -12,7 +12,7 @@ scritte a fine stadio, e i piani di chi legge.
 
 import re
 
-from astrolog.fits.frame_type import UNKNOWN
+from astrolog.fits.frame_type import FrameType
 from astrolog.spine import declarations as decl
 from astrolog.spine import scan_store, typeless, typeless_answer
 from astrolog.spine.normalize import normalize_frames
@@ -48,7 +48,7 @@ _CIELO_RISOLTO = """(EXISTS (
   SELECT 1 FROM frame_stages sv WHERE sv.frame_id = f.id AND sv.stage = 'solve'
     AND sv.status = 'done') AND EXISTS (SELECT 1 FROM frame_wcs w WHERE w.frame_id = f.id))"""
 REGOLA = f"""
-f.image_type = '{UNKNOWN}' AND CASE {FOLDER_SAYS}
+f.image_type = '{FrameType.UNKNOWN}' AND CASE {FOLDER_SAYS}
   WHEN '{decl.TYPE_LIGHT}' THEN 0 WHEN '{decl.TYPE_CALIBRATION}' THEN 1
   ELSE NOT {_CIELO_RISOLTO} END
 """  # noqa: S608 - costanti

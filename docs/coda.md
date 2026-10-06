@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | rifattorizza | Fase 2, lotto 1: macchina dei nomi, `db`/`fits`/`catalog`/`vocab` | ~0,18 M agenti (uno sviluppatore), sessione principale non contata | ~70 | 0 (nessun revisore: la prova copre); 1 regola dei commenti presa dal commit |
 
 ### Prima delle funzioni nuove
 
@@ -63,15 +64,16 @@ annotata; il glob `ANN` di `ruff.toml` copre tutto `backend/astrolog`.
 
 **Fase 2 -- semplificare**, sul codice gia' pulito: doppioni uniti, nomi interni in inglese, `dict`
 che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lunghe spezzate e i
-`noqa` su `C901`/`PLR` tolti, file piccoli accorpati. Il debito gia' trovato:
+`noqa` su `C901`/`PLR` tolti, file piccoli accorpati, e le voci di *Efficienza, misurata* e
+*Doppioni* del package toccato (Marco, 6/10/2026). Si va dalla base in su: `db`, `fits`,
+`catalog`, `vocab`; `ephemeris`, `weather`, i file sciolti; `spine`; `api`. Un lotto per
+package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia' trovato:
 - **I nomi interni in italiano** si rinominano (deciso: `CLAUDE.md`, "Nomi e commenti in
   inglese"), in `backend/astrolog`. La macchina c'e' (`tools/nomi_inglesi.py`, al commit): un
   nome italiano nuovo e' rosso, quelli vecchi stanno in `tools/nomi_italiani.txt`, che solo si
-  accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Gia' visti: `con_cielo`, `lucchettato`, `fra_i_candidati` (`spine/identify*`);
-  `fuori`, `elencate` (`db/idlist`), `elenco`, `segnaposto` (`db/replace_table`), `parola`,
-  `candidato`, `lettere`, `calibrazione`, `riga` (`fits/frame_type`), `intero`, `attributi`
-  (`fits/walk`). Il segnaposto `{dentro}` di `idlist.grouped` e' un contratto con le query dei
-  chiamanti in `spine/`: si rinomina insieme a loro. In `ephemeris` quasi tutto: il modulo
+  accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Fatti `db` e
+  `fits` (e il segnaposto `{listed}` di `idlist.grouped`). Gia' visti: `con_cielo`,
+  `lucchettato`, `fra_i_candidati` (`spine/identify*`). In `ephemeris` quasi tutto: il modulo
   `corpi` e le sue `quando`, `convertito`, `altezze`; `istanti`, `inizio`, `scarti`, `soglia`,
   `verso`, `FASCE`, `BUIO`, `_UN_FILO`, `_BANDA_DEG`, `_fascia`, `_confini`, `nel_fuso`, `punto`.
   `sun.BUIO` e' letto da `weather/verdict`. In `weather` quasi tutto: `_scrivi`, `_una`,
@@ -171,11 +173,9 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   chiamano tutti e due. Il letterale del lucchetto dell'utente (`method`/`confidence` `user`,
   `review` falso) e' scritto due volte in `spine/identify.py`: una costante. Decisioni,
   candidati, voci del catalogo e wcs viaggiano come `dict[str, Any]`: una forma tipata ciascuno.
-- **Forme `dict` che escono dai package di base**: il modello di filtro (`vocab/filters.models`,
-  `model_by_id`, letti da `api/vocab` e `spine/gear`), la voce del catalogo
-  (`catalog/lookup.by_designation`, `by_slug`, `in_cone`), i campi del frame
-  (`fits/header_fields.extract_fields`, letti da `spine/scan`), le preferenze (`db/config.read`),
-  la fase (`ephemeris/moon.phase`, `phases`), la notte della Luna (`moon.night_track`), le fasce
+- **Forme `dict` che escono dai package di base**: la voce del catalogo
+  (`catalog/lookup.by_designation`, `by_slug`, `in_cone`), da tipare col lotto di
+  `spine/identify`: si spalma nei candidati (`**entry`) e i test ne costruiscono a mano; la fase (`ephemeris/moon.phase`, `phases`), la notte della Luna (`moon.night_track`), le fasce
   (`sun.night_bands`, `sky_bands`), lo snapshot e il record dello stadio (`worker/worker.py`,
   `worker/states.blank_record`), il riassunto e le ore di una notte (`weather/verdict.assess`,
   `weather/nights.hours`: scritti in `weather_nights` e riletti da `api/weather`), i posti trovati
@@ -183,10 +183,8 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
 - **`db/idlist.grouped` torna `dict[Any, list[Any]]`**: generico in `T` rompe `api/archive.py`, che
   passa i dict di `spine/filters_used` a un campo `list[FilterUsed]`. Si fa generico quando i
   chiamanti costruiscono righe tipate.
-- **Insiemi chiusi da fare `StrEnum`**, che escono dal package e finiscono nel database: il tipo
-  del frame (`fits/frame_type.image_type`, `UNKNOWN`, `CALIBRATION_TYPES`), i quattro software
-  (`vocab/software`), le bande (`vocab/filters`: `NO_FILTER`, `UNKNOWN`, `DUO_*`, `TRI_NB`,
-  `MULTI_NB`); e, che escono dal package, `ephemeris/moon.PHASES`, i nomi delle fasce di
+- **Insiemi chiusi da fare `StrEnum`**, che escono dal package (fatti tipo del frame, software e
+  bande): `ephemeris/moon.PHASES`, i nomi delle fasce di
   `ephemeris/sun` e gli stati di `worker/states`. In `weather`: gli esiti (`forecast.OK`,
   `NO_SITE`, `NO_TIMEZONE`, `UNREACHABLE`, `BAD_ANSWER`, `net.REFUSED`, scritti in
   `weather_fetches` e ripetuti come `Literal` in `api/models_weather` e `api/weather_key` oltre
@@ -221,19 +219,13 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   (le chiavi di `archive.ORDINI`, ripetute in `api/archive.Sort`).
 - **La notte di un frame** (`scan_store.LocalNight`, notte/fuso/istante costruita da
   `scan.night_of` e spacchettata per posizione da `scan_store.insert_frame`) e' un alias di `tuple`: una `NamedTuple` la nomina.
-- **`db/config.KEYS`** ha righe `(tipo, valore di fabbrica, fonte)` lette per posizione, anche nei
-  test (`test_config`, `test_solver_missing`): una `NamedTuple` le nomina senza rompere lo
-  spacchettamento.
 - **Fra i `noqa: PLR0913`**, questi restano perche' toglierli cambia una firma usata fuori:
   `replace_rows` (`db/replace_table.py`), `walk_dir` (`fits/walk.py`, i sei accumulatori in un oggetto solo) e
   `create_app` (`api/app.py`, sei opzioni a parola chiave lette da `__main__`, `tools` e test).
   `archive_page` (`api/archive.py`) resta per un'altra ragione: i suoi otto parametri sono la
   query della rotta, e raccoglierli in una dipendenza di FastAPI e' un cambio di forma (fase 2).
 - **Doppioni piccoli dei package di base**: `catalog/load.load_catalog` riscrive a mano
-  `db.transaction` (gli strati non gli lasciano importare `db`); `db/paths.cache_dir` e `log_dir`
-  sono la stessa funzione; in `catalog/lookup` l'elenco delle colonne si ricompone due volte da
-  `_FIELDS`; in `fits/frame_type` `_calibrations_applied` e `_says_true` aprono con lo stesso
-  preambolo. In `ephemeris`: l'interpolazione lineare `t0 + (t1 - t0) * quota` in
+  `db.transaction` (gli strati non gli lasciano importare `db`: resta). In `ephemeris`: l'interpolazione lineare `t0 + (t1 - t0) * quota` in
   `grid.first_crossing` e `sun._confini`; il rifiuto dell'istante senza fuso in `corpi.quando` e
   `grid.night_grid`; `moon.altitudes` e `sun.altitudes`, lo stesso involucro di `corpi.altezze`;
   `moon.night_track` e `sun.night_bands`, lo stesso percorso (griglia, altezze, fuso del sito).

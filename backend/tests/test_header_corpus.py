@@ -58,12 +58,12 @@ def test_the_corpus_is_not_empty():
 def test_header_corpus_reads_every_file(path):
     header = load(path)
     fields = extract_fields(header, str(path))
-    assert fields["image_type"] in CALIBRATION_TYPES | {"light", "unknown", "stack"}
-    assert isinstance(fields["exposure_s"], float) or fields["exposure_s"] is None
-    assert fields["naxis1"] and fields["naxis2"]
+    assert fields.image_type in CALIBRATION_TYPES | {"light", "unknown", "stack"}
+    assert isinstance(fields.exposure_s, float) or fields.exposure_s is None
+    assert fields.naxis1 and fields.naxis2
     stem = path.stem.split("_")[0]
     expected = EXPECTED_SOFTWARE[stem]
-    assert normalize_software(fields["software_raw"]) == expected, fields["software_raw"]
+    assert normalize_software(fields.software_raw) == expected, fields.software_raw
     # Un file appena scattato non porta il marchio di riscrittura: se lo portasse, la regola
     # della copia calibrata scambierebbe un grezzo per una copia. E' l'unico banco vero che
     # quella regola ha -- gli header di chi elabora non entrano nel corpus, che e' dei quattro.
@@ -104,27 +104,27 @@ def test_no_real_site_coordinates_in_the_corpus(path):
 def test_specific_lessons_from_the_corpus():
     """Le cose che il corpus insegna e che un lettore scritto su un software solo perde."""
     nina = extract_fields(load(CORPUS / "nina.txt"), "x")
-    assert nina["date_obs"] == "2025-06-29T21:11:33.412"  # DATE-OBS (UTC), mai DATE-LOC
-    assert nina["exposure_s"] == 120.0 and nina["image_type"] == "light"
-    assert nina["instrument_raw"] == "ATR2600M(USB2.0)" and nina["focal_mm"] == 560.0
+    assert nina.date_obs == "2025-06-29T21:11:33.412"  # DATE-OBS (UTC), mai DATE-LOC
+    assert nina.exposure_s == 120.0 and nina.image_type == "light"
+    assert nina.instrument_raw == "ATR2600M(USB2.0)" and nina.focal_mm == 560.0
     crudo = load(CORPUS / "asiair.txt")
     asiair = extract_fields(crudo, "x")
-    assert asiair["bayer_pattern"] == "RGGB" and asiair["instrument_raw"] == "Canon EOS 700D"
-    assert asiair["pixel_size_um"] == 4.29  # float32 ripulita al confine del lettore
+    assert asiair.bayer_pattern == "RGGB" and asiair.instrument_raw == "Canon EOS 700D"
+    assert asiair.pixel_size_um == 4.29  # float32 ripulita al confine del lettore
     # il cielo scritto nell'header non e' un campo della posa (lo misura il solver), ma le
     # funzioni che lo leggono sono le stesse, e qui si provano su un header VERO
     assert solved(crudo) is True and wcs_rotation_deg(crudo) is not None
     assert wcs_scale(crudo) == pytest.approx(1.58, abs=0.01)  # dalla matrice CD
-    assert asiair["telescope_raw"] == "EQMod Mount"  # ASIAIR mette la montatura in TELESCOP
+    assert asiair.telescope_raw == "EQMod Mount"  # ASIAIR mette la montatura in TELESCOP
     # I tre pezzi che il programma nomina **sulla singola posa**, letti da header veri e non dal
     # banco sintetico -- che quelle sigle le scriviamo noi, e direbbe di si' anche se fossero
     # sbagliate. N.I.N.A. scrive ruota e focheggiatore, l'ASIAIR la camera di guida, e nessuno dei
     # due nomina la guida.
-    assert nina["filter_wheel_raw"] == "ASCOM ToupTek FilterWheel"
-    assert nina["focuser_raw"] == "ASCOM ToupTek AAF"
-    assert nina["guide_camera_raw"] is None
-    assert asiair["guide_camera_raw"] == "ZWO ASI120MM-S"
-    assert asiair["filter_wheel_raw"] is None and asiair["focuser_raw"] is None
+    assert nina.filter_wheel_raw == "ASCOM ToupTek FilterWheel"
+    assert nina.focuser_raw == "ASCOM ToupTek AAF"
+    assert nina.guide_camera_raw is None
+    assert asiair.guide_camera_raw == "ZWO ASI120MM-S"
+    assert asiair.filter_wheel_raw is None and asiair.focuser_raw is None
 
 
 def test_the_same_software_writes_a_different_mount_for_every_user():
@@ -138,5 +138,5 @@ def test_the_same_software_writes_a_different_mount_for_every_user():
     dice perche'."""
     asiair = [extract_fields(load(p), str(p)) for p in FILES if p.stem.split("_")[0] == "asiair"]
     assert len(asiair) >= 3, "servono tre ASIAIR, di utenti diversi"
-    montature = {f["telescope_raw"] for f in asiair}
+    montature = {f.telescope_raw for f in asiair}
     assert montature >= {"EQMod Mount", "ZWO AM3"}, montature

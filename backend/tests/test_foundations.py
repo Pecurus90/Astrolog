@@ -5,6 +5,7 @@ nessun `running` nel DB. Una regola, un test che si rompe se la regola si rompe.
 import math
 import os
 import sqlite3
+from dataclasses import asdict
 
 import numpy as np
 import pytest
@@ -227,7 +228,9 @@ def test_the_reader_extracts_exactly_what_gets_written(tmp_path):
     ed e' invisibile senza questa guardia, perche' `insert_frame` prende le colonne che gli
     servono e ignora in silenzio le chiavi in piu'. Vale nelle due direzioni: un campo che
     nessuno scrive e' lavoro sprecato, una colonna che nessuno estrae resta vuota per sempre."""
-    estratti = set(extract_fields({}, "x")) - {"path"}  # `path` non e' una colonna: e' il file
+    estratti = set(asdict(extract_fields({}, "x"))) - {
+        "path"
+    }  # `path` non e' una colonna: e' il file
     # e i giudizi sul grezzo, che la scansione aggiunge ai campi prima di scrivere
     estratti |= set(header_asks.of({}))
     colonne = {scan_store._FIELD_OF.get(c, c) for c in scan_store.FRAME_COLUMNS}

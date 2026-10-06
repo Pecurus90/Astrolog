@@ -60,7 +60,7 @@ def _row(conn: sqlite3.Connection, site_id: int) -> sqlite3.Row:
 
 def _sky_key(conn: sqlite3.Connection) -> str | None:
     """Without the sky service's key nobody is asked: the sky is measured or chosen."""
-    return config.read(conn)["sky_service_key"]
+    return config.read(conn).sky_service_key
 
 
 def _make_default(conn: sqlite3.Connection, site_id: int) -> None:

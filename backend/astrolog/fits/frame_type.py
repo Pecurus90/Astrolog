@@ -3,35 +3,46 @@ about. A stack only from strong signals, never from exposure: a long light must 
 
 import re
 from collections.abc import Callable, Iterator
+from enum import StrEnum
 
 from .header_keys import ACQUISITION_KEYS, WRITER_KEYS, HeaderLike, as_int, get, text
 
+
+class FrameType(StrEnum):
+    LIGHT = "light"
+    DARK = "dark"
+    FLAT = "flat"
+    BIAS = "bias"
+    DARK_FLAT = "dark_flat"
+    STACK = "stack"
+    # The type the header did not state: one word, looked for by the typeless question and spine.
+    UNKNOWN = "unknown"
+
+
 # Without separators, since spellings are compared without them (`_type_of_word`): Voyager's and
 # SGP's spelling is unknown, and a spelling must not decide whether a calibration enters.
-FRAME_TYPES = {
-    "light": "light",
-    "lightframe": "light",
-    "science": "light",
-    "scienceframe": "light",
-    "object": "light",
-    "objectframe": "light",
-    "exposure": "light",
-    "dark": "dark",
-    "darkframe": "dark",
-    "flat": "flat",
-    "flatframe": "flat",
-    "flatfield": "flat",
-    "bias": "bias",
-    "biasframe": "bias",
-    "offset": "bias",
-    "zero": "bias",
-    "darkflat": "dark_flat",
-    "flatdark": "dark_flat",
+FRAME_TYPES: dict[str, FrameType] = {
+    "light": FrameType.LIGHT,
+    "lightframe": FrameType.LIGHT,
+    "science": FrameType.LIGHT,
+    "scienceframe": FrameType.LIGHT,
+    "object": FrameType.LIGHT,
+    "objectframe": FrameType.LIGHT,
+    "exposure": FrameType.LIGHT,
+    "dark": FrameType.DARK,
+    "darkframe": FrameType.DARK,
+    "flat": FrameType.FLAT,
+    "flatframe": FrameType.FLAT,
+    "flatfield": FrameType.FLAT,
+    "bias": FrameType.BIAS,
+    "biasframe": FrameType.BIAS,
+    "offset": FrameType.BIAS,
+    "zero": FrameType.BIAS,
+    "darkflat": FrameType.DARK_FLAT,
+    "flatdark": FrameType.DARK_FLAT,
 }
 
-CALIBRATION_TYPES = frozenset({"dark", "flat", "bias", "dark_flat"})
-# The type the header did not state: one word, looked for by the typeless question and the spine.
-UNKNOWN = "unknown"
+CALIBRATION_TYPES = frozenset({FrameType.DARK, FrameType.FLAT, FrameType.BIAS, FrameType.DARK_FLAT})
 
 SEPARATORS_RE = re.compile(r"[\s_\-]+", re.ASCII)
 
@@ -59,7 +70,7 @@ def is_stack(header: HeaderLike) -> bool:
     return any(STACK_SOURCE_RE.search(str(line)) for line in header.get("HISTORY", []))
 
 
-def _type_of_word(value: str | None) -> str | None:
+def _type_of_word(value: str | None) -> FrameType | None:
     """Compared without separators and in the singular: `Dark Frame`, `DARK-FRAME`, `darkframe`
     and `darks` are all a dark. The only reader of the vocabulary."""
     word = SEPARATORS_RE.sub("", (value or "").lower())
@@ -69,7 +80,7 @@ def _type_of_word(value: str | None) -> str | None:
     return None
 
 
-def _calibration_in_object(header: HeaderLike) -> str | None:
+def _calibration_in_object(header: HeaderLike) -> FrameType | None:
     """A calibration library may write `IMAGETYP = LIGHT` and `OBJECT = darkflat`. The whole field,
     never a substring: `Dark Nebula` and `Flaming Star` are real objects."""
     kind = _type_of_word(text(get(header, "object")))
@@ -115,11 +126,10 @@ def _named(header: HeaderLike, keys: tuple[str, ...]) -> Iterator[str]:
     return (n for n in (text(header.get(k)) for k in keys) if n)
 
 
-def image_type(header: HeaderLike) -> str:
-    """`light | dark | flat | bias | dark_flat | stack | unknown`."""
+def image_type(header: HeaderLike) -> FrameType:
     if is_stack(header):
-        return "stack"
+        return FrameType.STACK
     calibration = _calibration_in_object(header)
     if calibration is not None:
         return calibration
-    return _type_of_word(text(get(header, "image_type"))) or UNKNOWN
+    return _type_of_word(text(get(header, "image_type"))) or FrameType.UNKNOWN

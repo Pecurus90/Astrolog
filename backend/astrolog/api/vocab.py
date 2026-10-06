@@ -16,7 +16,7 @@ def filter_models() -> FilterModelList:
     and does not grow with the archive."""
     return FilterModelList(
         items=[
-            FilterModelOut(id=m["id"], brand=m["brand"], name=m["name"], passband=m["passband"])
+            FilterModelOut(id=m.id, brand=m.brand, name=m.name, passband=m.passband)
             for m in filters.models()
         ]
     )

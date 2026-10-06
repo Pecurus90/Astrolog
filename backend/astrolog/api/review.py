@@ -11,7 +11,7 @@ from ..spine import mosaic_proposals as mosaic_reader
 from ..spine import signature_page as gear_reader
 from ..spine import typeless as typeless_reader
 from ..spine.run import STAGE_GROUP, STAGE_IDENTIFY, STAGE_NORMALIZE, STAGE_SOLVE
-from ..vocab.filters import UNKNOWN
+from ..vocab.filters import Passband
 from . import lookalike, work
 from . import review_page as page
 from . import review_write as write
@@ -46,7 +46,7 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
     for r in conn.execute("SELECT filter_id, band, width_nm FROM filter_bands ORDER BY band"):
         bands.setdefault(r["filter_id"], []).append(BandOut(band=r["band"], width_nm=r["width_nm"]))
     # a filter the vocabulary recognises is not a question; the most used first
-    rows = conn.execute(_FILTERS, (UNKNOWN,)).fetchall()
+    rows = conn.execute(_FILTERS, (Passband.UNKNOWN,)).fetchall()
     rows.sort(key=lambda r: (-r["frames"], r["name"]))
     filters = [
         FilterOut(

@@ -4,7 +4,7 @@ The card first, then the files' vote; what sat in front is the gear answer (`sig
 import sqlite3
 from collections.abc import Mapping
 
-from ..vocab.filters import NO_FILTER, normalize_filter, passband_of
+from ..vocab.filters import Passband, normalize_filter, passband_of
 from . import declarations as decl
 from .stages import invalidate
 
@@ -61,7 +61,7 @@ def declare_sensor(
 def says_no_filter(filter_raw: str | None) -> bool:
     """Missing, garbage, or "none"."""
     canonical = normalize_filter(filter_raw, bayer=False)
-    return canonical is None or passband_of(canonical) == NO_FILTER
+    return canonical is None or passband_of(canonical) == Passband.NO_FILTER
 
 
 def requeue(conn: sqlite3.Connection, camera_id: int) -> list[int]:

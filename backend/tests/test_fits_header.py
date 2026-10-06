@@ -67,12 +67,12 @@ def test_clean_header_fields(make_fits):
         "image_type": "unknown",
     }
     for field, value in expected.items():
-        assert m[field] == value, field
+        assert getattr(m, field) == value, field
 
 
 def test_object_with_slash_is_not_truncated(make_fits):
     assert (
-        read(make_fits("s.fits", {"OBJECT": "NGC 7000 / North America"}))["object_raw"]
+        read(make_fits("s.fits", {"OBJECT": "NGC 7000 / North America"})).object_raw
         == "NGC 7000 / North America"
     )
 
@@ -91,43 +91,43 @@ def test_hierarch_cards_are_read(make_fits):
 )
 def test_coordinates_decimal_and_sexagesimal(make_fits, header, ra, dec):
     m = read(make_fits("c.fits", header))
-    assert m["ra_deg"] == pytest.approx(ra, abs=1e-3)
-    assert m["dec_deg"] == pytest.approx(dec, abs=1e-3)
+    assert m.ra_deg == pytest.approx(ra, abs=1e-3)
+    assert m.dec_deg == pytest.approx(dec, abs=1e-3)
 
 
 def test_coordinates_out_of_range_are_none(make_fits):
     m = read(make_fits("o.fits", {"CRVAL1": 400.0, "CRVAL2": 95.0}))
-    assert m["ra_deg"] is None and m["dec_deg"] is None
+    assert m.ra_deg is None and m.dec_deg is None
 
 
 def test_decimal_with_unit_is_none_never_times_15(make_fits):
-    assert read(make_fits("d.fits", {"CRVAL1": "83.633 deg"}))["ra_deg"] is None
+    assert read(make_fits("d.fits", {"CRVAL1": "83.633 deg"})).ra_deg is None
 
 
 def test_zero_zero_without_wcs_is_none_with_wcs_is_kept(make_fits):
     m = read(make_fits("z.fits", {"CRVAL1": 0.0, "CRVAL2": 0.0}))
-    assert m["ra_deg"] is None and m["dec_deg"] is None
+    assert m.ra_deg is None and m.dec_deg is None
     m = read(make_fits("zw.fits", {"CRVAL1": 0.0, "CRVAL2": 0.0, "PLTSOLVD": True}))
-    assert m["ra_deg"] == 0.0 and m["dec_deg"] == 0.0
+    assert m.ra_deg == 0.0 and m.dec_deg == 0.0
     m = read(make_fits("r0.fits", {"CRVAL1": 0.0, "CRVAL2": 41.0}))
-    assert m["ra_deg"] == 0.0 and m["dec_deg"] == 41.0
+    assert m.ra_deg == 0.0 and m.dec_deg == 41.0
 
 
 def test_jnow_equinox_is_precessed_to_icrs(make_fits):
     m = read(make_fits("j.fits", {"CRVAL1": 10.0, "CRVAL2": 41.0, "EQUINOX": 2025.5}))
     exp = SkyCoord(10.0 * u.deg, 41.0 * u.deg, frame=FK5(equinox=Time(2025.5, format="jyear"))).icrs
-    assert m["ra_deg"] == pytest.approx(exp.ra.deg, abs=1e-4)
-    assert m["dec_deg"] == pytest.approx(exp.dec.deg, abs=1e-4)
-    assert m["ra_deg"] != pytest.approx(10.0, abs=1e-2)
+    assert m.ra_deg == pytest.approx(exp.ra.deg, abs=1e-4)
+    assert m.dec_deg == pytest.approx(exp.dec.deg, abs=1e-4)
+    assert m.ra_deg != pytest.approx(10.0, abs=1e-2)
 
 
 def test_fk4_is_converted_and_j2000_untouched(make_fits):
     m = read(make_fits("f.fits", {"CRVAL1": 10.0, "CRVAL2": 41.0, "RADESYS": "FK4"}))
     exp = SkyCoord(10.0 * u.deg, 41.0 * u.deg, frame=FK4(equinox=Time(1950.0, format="byear"))).icrs
-    assert m["ra_deg"] == pytest.approx(exp.ra.deg, abs=1e-4)
+    assert m.ra_deg == pytest.approx(exp.ra.deg, abs=1e-4)
     for hdr in ({"EQUINOX": 2000.0}, {"RADESYS": "ICRS"}, {"RADESYS": "FK5", "EQUINOX": 2000.0}):
         m = read(make_fits("k.fits", {"CRVAL1": 10.0, "CRVAL2": 41.0, **hdr}))
-        assert (m["ra_deg"], m["dec_deg"]) == pytest.approx((10.0, 41.0), abs=1e-6)
+        assert (m.ra_deg, m.dec_deg) == pytest.approx((10.0, 41.0), abs=1e-6)
 
 
 def test_galactic_wcs_becomes_equatorial_but_objctra_does_not(make_fits):
@@ -137,7 +137,7 @@ def test_galactic_wcs_becomes_equatorial_but_objctra_does_not(make_fits):
         )
     )
     exp = SkyCoord(l=120.0 * u.deg, b=-15.0 * u.deg, frame="galactic").icrs
-    assert m["ra_deg"] == pytest.approx(exp.ra.deg, abs=1e-4)
+    assert m.ra_deg == pytest.approx(exp.ra.deg, abs=1e-4)
     m = read(
         make_fits(
             "og.fits",
@@ -149,7 +149,7 @@ def test_galactic_wcs_becomes_equatorial_but_objctra_does_not(make_fits):
             },
         )
     )
-    assert m["ra_deg"] == pytest.approx(83.6333, abs=1e-2)
+    assert m.ra_deg == pytest.approx(83.6333, abs=1e-2)
 
 
 @pytest.mark.parametrize(
@@ -185,11 +185,11 @@ def test_image_type_variants(make_fits, raw, expected):
     l'header vero solo di N.I.N.A. e ASIAIR (scrivono `DARK`): di Voyager e SGP no. Se una
     grafia non si riconosce, quel file di calibrazione entra in archivio come una posa del
     cielo -- ed e' successo, con `darkflat`."""
-    assert read(make_fits("t.fits", {"IMAGETYP": raw}))["image_type"] == expected
+    assert read(make_fits("t.fits", {"IMAGETYP": raw})).image_type == expected
 
 
 def test_image_type_absent_is_unknown_never_light(make_fits):
-    assert read(make_fits("n.fits", {"OBJECT": "M 1"}))["image_type"] == "unknown"
+    assert read(make_fits("n.fits", {"OBJECT": "M 1"})).image_type == "unknown"
 
 
 @pytest.mark.parametrize(
@@ -204,7 +204,7 @@ def test_image_type_absent_is_unknown_never_light(make_fits):
     ],
 )
 def test_stacks_are_unknown(make_fits, header):
-    assert read(make_fits("st.fits", header))["image_type"] == "stack"
+    assert read(make_fits("st.fits", header)).image_type == "stack"
 
 
 @pytest.mark.parametrize(
@@ -219,7 +219,7 @@ def test_stacks_are_unknown(make_fits, header):
 def test_a_count_of_one_is_a_single_frame(make_fits, header):
     """Una chiave che conta i frame sommati dice "stack" solo quando ne conta piu' di uno: un
     file che dichiara di essere la somma di se stesso e' una posa, e non deve sparire."""
-    assert read(make_fits("uno.fits", header))["image_type"] == "light"
+    assert read(make_fits("uno.fits", header)).image_type == "light"
 
 
 def test_a_combined_file_is_not_a_frame(make_fits):
@@ -234,7 +234,7 @@ def test_a_combined_file_is_not_a_frame(make_fits):
             {"IMAGETYP": "LIGHT", "OBJECT": "M83", "HISTORY": "SOURCE1 = 'M83_B_0001.fit'"},
         )
     )
-    assert m["image_type"] == "stack"
+    assert m.image_type == "stack"
 
 
 def test_a_calibration_word_in_the_object_field_is_calibration(make_fits):
@@ -251,7 +251,7 @@ def test_a_calibration_word_in_the_object_field_is_calibration(make_fits):
         ("Darks", "dark"),
     ):
         m = read(make_fits(f"c{parola.strip()}.fits", {"IMAGETYP": "LIGHT", "OBJECT": parola}))
-        assert m["image_type"] == atteso, parola
+        assert m.image_type == atteso, parola
 
 
 def test_an_object_that_merely_contains_a_calibration_word_is_a_frame(make_fits):
@@ -266,7 +266,7 @@ def test_an_object_that_merely_contains_a_calibration_word_is_a_frame(make_fits)
         "Flat Iron",
     ):
         m = read(make_fits("o.fits", {"IMAGETYP": "LIGHT", "OBJECT": nome}))
-        assert m["image_type"] == "light", nome
+        assert m.image_type == "light", nome
 
 
 def test_a_calibrated_frame_is_still_a_frame(make_fits):
@@ -274,13 +274,13 @@ def test_a_calibrated_frame_is_still_a_frame(make_fits):
     le pose calibrate accanto alle originali sparirebbe meta' archivio. Fa un altro mestiere:
     e' il marchio di riscrittura, che vale solo fra due gemelli e non fa sparire niente."""
     m = read(make_fits("cal.fits", {"IMAGETYP": "LIGHT", "OBJECT": "M83", "CALSTAT": "BDF"}))
-    assert m["image_type"] == "light"
+    assert m.image_type == "light"
     assert says_calibrated({"CALSTAT": "BDF"})  # l'altro mestiere della stessa chiave
 
 
 def test_a_long_real_light_is_not_a_stack(make_fits):
     m = read(make_fits("l.fits", {"OBJECT": "M 31", "IMAGETYP": "LIGHT", "EXPTIME": 1200.0}))
-    assert m["image_type"] == "light"
+    assert m.image_type == "light"
 
 
 def test_solved_means_a_real_wcs(make_fits):
@@ -305,7 +305,7 @@ def test_the_scale_comes_from_the_cd_matrix_or_from_cdelt(make_fits):
         0.000402 * 3600.0, abs=1e-4
     )
     # PIXSIZE1 e' di un software non supportato: non si legge, e la dimensione resta None
-    assert read(make_fits("p.fits", {"PIXSIZE1": 3.76}))["pixel_size_um"] is None
+    assert read(make_fits("p.fits", {"PIXSIZE1": 3.76})).pixel_size_um is None
 
 
 def test_rotation_is_crota2_from_cd_matrix(make_fits):
@@ -339,8 +339,8 @@ def test_float32_noise_stops_at_the_reader_but_coordinates_keep_precision(make_f
             },
         )
     )
-    assert m["pixel_size_um"] == 4.29 and m["ccd_temp_c"] == -10.1
-    assert m["ra_deg"] == pytest.approx(81.3784301863022, abs=1e-10)
+    assert m.pixel_size_um == 4.29 and m.ccd_temp_c == -10.1
+    assert m.ra_deg == pytest.approx(81.3784301863022, abs=1e-10)
 
 
 def test_site_and_bayer(make_fits):
@@ -351,35 +351,32 @@ def test_site_and_bayer(make_fits):
             "s.fits", {"SITELAT": 45.5, "SITELONG": 9.2, "SITEELEV": 120.0, "BAYERPAT": "RGGB"}
         )
     )
-    assert (m["site_lat"], m["site_lon"], m["site_elev_m"]) == (45.5, 9.2, 120.0)
-    assert m["bayer_pattern"] == "RGGB"
+    assert (m.site_lat, m.site_lon, m.site_elev_m) == (45.5, 9.2, 120.0)
+    assert m.bayer_pattern == "RGGB"
     m = read(make_fits("bad.fits", {"BAYERPAT": "XRGGB", "SITELAT": 95.0}))
-    assert (m["bayer_pattern"], m["site_lat"]) == (None, None)
+    assert (m.bayer_pattern, m.site_lat) == (None, None)
 
 
 def test_date_obs_chain_and_mjd_fallback(make_fits):
-    d = read(make_fits("m.fits", {"MJD-OBS": 60202.95}))["date_obs"]
+    d = read(make_fits("m.fits", {"MJD-OBS": 60202.95})).date_obs
     assert d is not None and d.startswith("2023-09-15")
     assert (
-        read(make_fits("b.fits", {"DATE-OBS": "2024-01-10T22:00:00", "MJD-OBS": 60202.95}))[
-            "date_obs"
-        ]
+        read(make_fits("b.fits", {"DATE-OBS": "2024-01-10T22:00:00", "MJD-OBS": 60202.95})).date_obs
         == "2024-01-10T22:00:00.000"
     )
     assert (
         # l'ora locale senza fuso non e' una data del DB (tutto in UTC): resta None
-        read(make_fits("l.fits", {"DATE-LOC": "2024-01-10T23:00:00"}))["date_obs"] is None
+        read(make_fits("l.fits", {"DATE-LOC": "2024-01-10T23:00:00"})).date_obs is None
     )
 
 
 def test_software_raw_chain(make_fits):
-    assert read(make_fits("a.fits", {"SWCREATE": "N.I.N.A. 3.1"}))["software_raw"] == "N.I.N.A. 3.1"
+    assert read(make_fits("a.fits", {"SWCREATE": "N.I.N.A. 3.1"})).software_raw == "N.I.N.A. 3.1"
     assert (
-        read(make_fits("b.fits", {"CREATOR": "ZWO ASIAIR Plus"}))["software_raw"]
-        == "ZWO ASIAIR Plus"
+        read(make_fits("b.fits", {"CREATOR": "ZWO ASIAIR Plus"})).software_raw == "ZWO ASIAIR Plus"
     )
     assert (
-        read(make_fits("c.fits", {"PROGRAM": "Elaborazione 1.9"}))["software_raw"]
+        read(make_fits("c.fits", {"PROGRAM": "Elaborazione 1.9"})).software_raw
         == "Elaborazione 1.9"
     )
 
@@ -396,8 +393,8 @@ def test_data_page_header_for_multi_hdu(tmp_path):
         ]
     ).writeto(p)
     m = read(str(p))
-    assert (m["object_raw"], m["exposure_s"], m["image_type"]) == ("M 31", 300.0, "light")
-    assert (m["naxis1"], m["naxis2"]) == (4, 4)
+    assert (m.object_raw, m.exposure_s, m.image_type) == ("M 31", 300.0, "light")
+    assert (m.naxis1, m.naxis2) == (4, 4)
 
 
 def test_missing_keys_give_none_and_defaults(make_fits):
@@ -419,7 +416,7 @@ def test_missing_keys_give_none_and_defaults(make_fits):
         "bayer_pattern",
         "binning",
     ):
-        assert m[field] is None, field
+        assert getattr(m, field) is None, field
 
 
 @pytest.mark.parametrize(
@@ -430,7 +427,7 @@ def test_missing_keys_give_none_and_defaults(make_fits):
 def test_the_binning_is_what_the_header_says_or_unknown(valore, atteso):
     """Un binning che l'header non dice non vale 1: vale "non si sa". Da lui dipende il pixel
     fisico della camera, e un 1 inventato lo sbaglierebbe proprio su chi riprende binnato."""
-    assert extract_fields({"XBINNING": valore}, "x")["binning"] == atteso
+    assert extract_fields({"XBINNING": valore}, "x").binning == atteso
 
 
 def test_broken_files_raise_a_typed_error(tmp_path):
@@ -449,7 +446,7 @@ def test_giant_header_is_read_whole(tmp_path):
         hdr["COMMENT"] = f"filler card numero {i} per superare i 23040 byte"
     p = tmp_path / "giant.fits"
     fits.PrimaryHDU(data=np.zeros((2, 2), dtype=np.int16), header=hdr).writeto(p)
-    assert read(str(p))["object_raw"] == "M 51"
+    assert read(str(p)).object_raw == "M 51"
 
 
 # --- le catene di alias -----------------------------------------------------------------
@@ -481,7 +478,7 @@ def test_every_secondary_spelling_reaches_its_field(key, raw, field, expected):
     """Ogni grafia secondaria di una catena deve arrivare al suo campo: e' l'unica ragione per
     cui la catena esiste. L'header porta SOLO quella grafia, come l'header vero di chi la
     scrive."""
-    assert extract_fields({key: raw, "NAXIS1": 4, "NAXIS2": 3}, "x")[field] == expected
+    assert getattr(extract_fields({key: raw, "NAXIS1": 4, "NAXIS2": 3}, "x"), field) == expected
 
 
 def test_the_historic_spellings_of_the_reference_system_are_read():
@@ -489,23 +486,23 @@ def test_the_historic_spellings_of_the_reference_system_are_read():
     leggessero, un frame in FK4 o in coordinate apparenti entrerebbe con le sue coordinate
     prese per ICRS -- cioe' spostate di mezzo grado, in silenzio."""
     fk4 = extract_fields({"CRVAL1": 10.0, "CRVAL2": 41.0, "RADECSYS": "FK4"}, "x")
-    assert fk4["ra_deg"] != pytest.approx(10.0, abs=1e-2), "RADECSYS non letto"
+    assert fk4.ra_deg != pytest.approx(10.0, abs=1e-2), "RADECSYS non letto"
     jnow = extract_fields({"CRVAL1": 10.0, "CRVAL2": 41.0, "EPOCH": 2025.5}, "x")
-    assert jnow["ra_deg"] != pytest.approx(10.0, abs=1e-2), "EPOCH non letto"
+    assert jnow.ra_deg != pytest.approx(10.0, abs=1e-2), "EPOCH non letto"
 
 
 def test_the_first_value_of_a_chain_must_not_be_empty():
     """ "Primo valore **presente e non vuoto**": una chiave che c'e' ma e' vuota non deve
     zittire la grafia dopo di lei. N.I.N.A. scrive `DATE-OBS` sempre, anche vuota."""
     m = extract_fields({"DATE-OBS": "   ", "DATE-AVG": "2024-05-17T21:00:00"}, "x")
-    assert m["date_obs"] == "2024-05-17T21:00:00.000"
+    assert m.date_obs == "2024-05-17T21:00:00.000"
 
 
 def test_a_not_a_number_never_reaches_the_archive():
     """`NaN` e infinito non sono misure: un `CCD-TEMP = NaN` entrerebbe in archivio come NaN,
     e da li' nell'intestazione salvata -- dove rompe il JSON che la pagina deve leggere."""
     m = extract_fields({"CCD-TEMP": float("nan"), "EXPTIME": float("inf")}, "x")
-    assert m["ccd_temp_c"] is None and m["exposure_s"] is None
+    assert m.ccd_temp_c is None and m.exposure_s is None
 
 
 def test_the_saved_header_is_always_valid_json():
@@ -566,7 +563,7 @@ def test_an_apostrophe_is_part_of_the_name(make_fits):
     apici mangiava le lettere dei nomi veri, e in archivio finiva `Barnards Loop`. Ce ne sono
     diversi in cielo: *Barnard's Loop*, *Hind's Variable Nebula*, *Baade's Window*."""
     for nome in ("Barnard's Loop", "Hind's Variable Nebula", "Baade's Window"):
-        assert read(make_fits("o.fits", {"OBJECT": nome}))["object_raw"] == nome
+        assert read(make_fits("o.fits", {"OBJECT": nome})).object_raw == nome
     # e la coppia che AVVOLGE il valore si toglie ancora: un header letto come testo la porta
     assert text("'M 31'") == "M 31"
     assert text("''") is None
@@ -576,4 +573,4 @@ def test_the_site_out_of_range_is_dropped_never_corrected():
     """Un valore implausibile si scarta, mai si corregge: una latitudine di 95 gradi non
     esiste, e una longitudine di 400 nemmeno. L'altezza resta: e' plausibile."""
     m = extract_fields({"SITELAT": 95.0, "SITELONG": 400.0, "SITEELEV": 120.0}, "x")
-    assert (m["site_lat"], m["site_lon"], m["site_elev_m"]) == (None, None, 120.0)
+    assert (m.site_lat, m.site_lon, m.site_elev_m) == (None, None, 120.0)

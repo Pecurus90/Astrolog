@@ -1,6 +1,8 @@
 """Snapshots of what the program produces: a refactor that must not change behavior proves it
 when these stay identical. Updating them is a decision, never an agent's (the guard hook)."""
 
+from dataclasses import asdict
+
 import pytest
 from syrupy.filters import props
 
@@ -28,7 +30,9 @@ PAGES = ("archive", "review", "gear", "folders", "scan-runs")
 
 @pytest.mark.parametrize("path", FILES, ids=[f.stem for f in FILES])
 def test_the_fields_read_from_real_headers(path, snapshot):
-    assert extract_fields(load(path), path.name) == snapshot
+    fields = asdict(extract_fields(load(path), path.name))
+    # the word that lands in `frames`, not the enum's repr
+    assert {**fields, "image_type": str(fields["image_type"])} == snapshot
 
 
 @pytest.mark.parametrize("page", PAGES)

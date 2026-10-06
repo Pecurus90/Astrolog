@@ -5,7 +5,7 @@ import sqlite3
 
 from ..astap import NO_STARS
 from ..db.replace_table import replace_rows
-from ..fits.frame_type import UNKNOWN
+from ..fits.frame_type import FrameType
 from . import frame_folder as folder
 from . import typeless
 
@@ -16,7 +16,7 @@ SELECT {folder.COLUMNS}, SUM(f.copy_of IS NULL) AS n,
        SUM(sv.status = 'failed' AND IFNULL(sv.reason, '') <> '{NO_STARS}') AS undecided
 FROM frames f {folder.JOIN}
 JOIN frame_stages sv ON sv.frame_id = f.id AND +sv.stage = 'solve'
-WHERE f.image_type = '{UNKNOWN}'
+WHERE f.image_type = '{FrameType.UNKNOWN}'
 GROUP BY root, sub
 """  # noqa: S608 - constants from frame_folder, astap and frame_type, not a user value
 

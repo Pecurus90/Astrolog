@@ -54,13 +54,13 @@ NO_SOLVER = "no_solver"
 def solver_path(conn: sqlite3.Connection) -> str | None:
     """One home for the run and for the warning, or they would disagree on whether ASTAP is there.
     The declared path wins over the automatic search."""
-    return astap.find_exe(config.read(conn).get("astap_path"))
+    return astap.find_exe(config.read(conn).astap_path)
 
 
 def solver_where(conn: sqlite3.Connection) -> tuple[str | None, str | None]:
     """`(path, channel)`: the user must be able to say "not that one", since the automatic search
     is wrong exactly when it finds something."""
-    return astap.where_exe(config.read(conn).get("astap_path"))
+    return astap.where_exe(config.read(conn).astap_path)
 
 
 def databases_next_to(exe: str | Path | None) -> tuple[str, ...]:

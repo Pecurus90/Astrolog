@@ -133,16 +133,14 @@ def test_edge_cases_and_errors():
 
 def test_models_and_map_do_not_contradict_each_other():
     contested = [
-        (k, FILTER_MAP[k], model_of(k)["name"])
+        (k, FILTER_MAP[k], model_of(k).name)
         for k in FILTER_MAP
-        if model_of(k) is not None and model_of(k)["name"] != FILTER_MAP[k]
+        if model_of(k) is not None and model_of(k).name != FILTER_MAP[k]
     ]
     assert contested == []
     families = set(FILTER_MAP.values())
-    assert [
-        (m["id"], n) for m in models() for n in [m["name"], *m["aliases"]] if n in families
-    ] == []
-    names = [m["name"] for m in models()]
+    assert [(m.id, n) for m in models() for n in [m.name, *m.aliases] if n in families] == []
+    names = [m.name for m in models()]
     assert len(set(names)) == len(names)
     assert model_of("CLS") is None and model_of("UV/IR Cut") is None
     assert model_of("Askar D2") is not None
@@ -152,8 +150,8 @@ def test_every_canonical_name_has_a_passband_in_the_closed_domain():
     for canonical in set(FILTER_MAP.values()) | NARROWBAND_CLIP | {"None"}:
         assert passband_of(canonical) in PASSBANDS, canonical
     for m in models():
-        assert m["passband"] in PASSBANDS, m["id"]
-        assert passband_of(m["name"]) == m["passband"]
+        assert m.passband in PASSBANDS, m.id
+        assert passband_of(m.name) == m.passband
     assert passband_of("Hα") == "HA" and passband_of("Lum") == "L"
     assert passband_of("None") == "NONE" and passband_of("QualcosaDiIgnoto") == "UNKNOWN"
     assert not {"IR", "UV", "NB", "NII"} & PASSBANDS  # tolte con Marco

@@ -15,7 +15,7 @@ import pytest
 
 from astrolog.spine import gear
 from astrolog.spine import rigs as corredi
-from astrolog.vocab.software import ASIAIR as SW_ASIAIR
+from astrolog.vocab.software import Software
 from conftest import frame_by_file, one, rows, run_normalize
 
 
@@ -168,7 +168,7 @@ def test_the_mount_asiair_writes_in_telescop_is_not_an_optics(conn, archive):
         conn,
         "SELECT DISTINCT r.id, r.optics_id, r.camera_id FROM frames f"
         " JOIN rigs r ON r.id = f.rig_id WHERE f.software = ?",
-        (SW_ASIAIR,),
+        (Software.ASIAIR,),
     )
     assert len(corredi) == 1
     assert corredi[0]["optics_id"] is None
@@ -273,7 +273,9 @@ def test_a_frame_without_a_rig_still_takes_the_mount_its_file_names(conn, archiv
     from astrolog.spine.normalize_rig import mount_for_frame
 
     conti = {"instruments": 0}
-    montatura = mount_for_frame(conn, {"telescope_raw": "ZWO AM3"}, None, SW_ASIAIR, conti, "ora")
+    montatura = mount_for_frame(
+        conn, {"telescope_raw": "ZWO AM3"}, None, Software.ASIAIR, conti, "ora"
+    )
     assert montatura == _montatura(conn, "ZWO AM3")
 
 

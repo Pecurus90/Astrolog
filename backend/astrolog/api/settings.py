@@ -2,6 +2,7 @@
 reopen the wizard. Key types and defaults live in `db/config.py`; here a refusal becomes a reply."""
 
 import sqlite3
+from dataclasses import asdict
 from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -41,8 +42,8 @@ def _missing(conn: sqlite3.Connection) -> list[Missing]:
 
 
 def _out(conn: sqlite3.Connection) -> SettingsOut:
-    values = config.read(conn)
-    values = {k: config.hint(v) if k in config.SECRETS else v for k, v in values.items()}
+    saved = asdict(config.read(conn))
+    values = {k: config.hint(v) if k in config.SECRETS else v for k, v in saved.items()}
     return SettingsOut(
         values=values,
         wizard_done=values["onboarding_done_at"] is not None,
@@ -84,7 +85,7 @@ def _solver(conn: sqlite3.Connection, dove: tuple[str | None, str | None]) -> So
         path=dove[0],
         # `astap.where_exe` returns a channel of `astap.SOURCES`, typed as plain `str`.
         source=cast("SolverSource | None", dove[1]),
-        declared=config.read(conn).get("astap_path"),
+        declared=config.read(conn).astap_path,
         databases=list(databases_next_to(dove[0])),
     )
 
@@ -113,7 +114,7 @@ def stamp_wizard(conn: sqlite3.Connection = Depends(get_db)) -> SettingsOut:
     """The first start is over: completing or skipping the wizard is the same stamp. Reopening the
     wizard from Settings does not rewrite it: the stamp keeps the first time.
     Returns the settings."""
-    if config.read(conn)["onboarding_done_at"] is None:
+    if config.read(conn).onboarding_done_at is None:
         with transaction(conn):
             config.write(conn, "onboarding_done_at", now_iso())
     return _out(conn)
