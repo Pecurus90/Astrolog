@@ -14,6 +14,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 
 | Data | Tipo | Lavoro | Token | Minuti | Difetti |
 |---|---|---|---|---|---|
+| 6/10/2026 | costruisci | S1, una scheda per firma | ~0,5 M agenti (workflow 0,41 + sviluppatore 0,09), sessione principale non contata | 78 workflow | 2 bloccanti dal giro (ottica persa rispondendo la camera; "a colori" con la camera della notte) + 1 mio dopo (falso avviso nel log) |
 
 ### Prima delle funzioni nuove
 
@@ -99,15 +100,12 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   `conta`, `generi`, `detto`, `uso`, `cielo`, `oggetti`, `con_le_ore`, `visto`, `campo` e i
   segnaposto `{chiave}`, `{giunzione}`, `{campo}` (`gear_usage`); `trovato`, `campo`, `nomi`,
   `_pezzo_id`, `chiave`, `parti`, `ottica`, `focale`, `quando`, `rifatto`, `tolta`, `nome`, `pose`,
-  `_MONTATURE`, `trovata`, `nuova` (`rigs`); `chiave`, `ottica`, `letta`, `trovata`, `risposte`,
-  `domande`, `domanda`, `focale`, `campo`, `pose`, `_POSES_OF_RIGS` (`rig_optics`); `nome`,
+  `_MONTATURE`, `trovata`, `nuova` (`rigs`); `nome`,
   `votato`, `prima`, `colore`, `scelto` (`camera_specs`); `uno`, `valori`, `mezzo`
   (`camera_sky`); `soggetto` (parametro e colonna), `dove`, `solo` (`filters_used`). Nel quinto
-  lotto: `valori`, `detti`, `righe`, `notti`, `risposte`, `gruppi`, `gruppo`, `chiave`,
-  `scritto`, `risposta`, `dato`, `valore`, `_POSES_OF_NIGHT` (`rigless`); `dove`, `per_notte`,
+  lotto: `dove`, `per_notte`,
   `nomi`, `nome`, `grafia`, `righe`, `ottica`, `visto`, `corredi`, `corredo`, `notte`, `viste`,
-  `camere`, `ottiche`, `focali`, `intero`, `dicono` (`night_rig`); `colore`, `gruppi`, `gruppo`,
-  `risposta`, `filtro`, `riga` (`unfiltered`); `risposta` (alias di `object_answer`, anche in
+  `camere`, `ottiche`, `focali`, `intero`, `dicono` (`night_rig`); `risposta` (alias di `object_answer`, anche in
   `identify`, `mosaic`, `mosaic_proposals` e `api/review_write`), `lati`, `campo`, `chiave`,
   `vicini`, `altra`, `distanza`, `notte`, `detto`, `valore`, `nome`, `_POSES_OF_GROUP`
   (`unnamed`); `sorgente`, `righe`, `nomi`, `conti`, `gruppi`, `vuoti`, `trovati`, il parametro
@@ -202,10 +200,10 @@ che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lun
   (`typeless.ANSWERS`, parole di casa in `declarations.TYPE_LIGHT`/`TYPE_CALIBRATION`, ripetute
   in `api/models_review_groups.TypelessAnswer`). Nell'attrezzatura i soggetti
   dell'uso (`instrument`, `rig`, `filter`, scritti in `gear_usage.subject` e passati come stringhe
-  da `rigs` e `api/gear_write`) e i campi dei corredi (`rigs.MOUNT`, `DECLARED`, `rig_optics.OPTICS`,
+  da `rigs` e `api/gear_write`) e i campi dei corredi (`rigs.MOUNT`, `DECLARED`,
   scritti in `declarations.field`). Nelle domande per gruppo le risposte sul filtro
-  (`unfiltered.ANSWERS`, scritte in `declarations` e ripetute in
-  `api/models_review_groups.UnfilteredAnswer`), i tipi del bersaglio (`catalog`, `name`, `none`:
+  (`signature.FILTER_ANSWERS`, scritte in `declarations` e ripetute in
+  `api/models_review_groups.GearFilterAnswer`), i tipi del bersaglio (`catalog`, `name`, `none`:
   `object_answer.read_target`, `unnamed.answer`, ripetuti in `api/models_review_groups`, e
   `unnamed.NONE` riscritto come `Literal["none"]` nel ritorno di `named_by_group`) e i due vuoti
   del cielo (`objects.NOT_YET`, `NOT_FOUND`). Nel sesto lotto il vocabolario di `declarations`
@@ -285,13 +283,13 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
 **S1-S4 decise da Marco: si fanno**, prima della fase 2
 ([ADR 0014](adr/0014-da-confermare-semplificata.md)); S5 si decide misurandola.
 
-- **S1 -- Una domanda sull'attrezzatura invece di tre.** Oggi senza camera (per notte, telescopio,
-  dimensioni e pixel), senza ottica (per camera e focale) e senza filtro (per camera), piu'
-  l'eredita' dalla notte (`night_rig`). Una domanda per firma dell'header (grafia di camera e
-  telescopio, focale, dimensioni) che risponde corredo e filtro insieme; si perde solo la stessa
-  firma con attrezzature diverse in notti diverse.
-- **S2 -- Risposte con chiavi che non si spostano.** Senza camera e senza nome hanno la notte
-  nella chiave, e cambiare il fuso di casa le divide e le riunisce (`spine/home_nights.py`).
+- **S1 -- fatta** (5/10/2026): una scheda per firma dell'header (`spine/signature.py`), che
+  chiede camera, ottica e filtro, solo le parti che mancano; l'eredita' dalla notte resta
+  automatica (Marco). La grafia che l'ASIAIR scrive come montatura non entra nella firma. Si perde
+  anche l'unione di due camere che portava la risposta sul filtro: ogni grafia ha la sua. La
+  scheda a schermo aspetta il disegno (*Per il disegno nuovo*).
+- **S2 -- Risposte con chiavi che non si spostano.** Per l'attrezzatura fatto con S1. Senza nome
+  ha ancora la notte nella chiave, e cambiare il fuso di casa le divide e le riunisce (`spine/home_nights.py`).
   Chiavi dalla firma dell'header, o i frame fissati al momento della risposta; si perde un po'
   del "vale per i frame futuri di quella notte".
 - **S3 -- Una scheda per gruppo di frame invece di Oggetti e Senza nome**, coi candidati del
@@ -413,9 +411,6 @@ Niente di aperto.
   rispettare:** aggiungendoci `sqlite3` o `catalog.lookup`, `lint-imports` resta verde. Serve un
   contratto loro in `backend/pyproject.toml`: quello dei moduli puri vieta `astrolog.spine`, e i
   tre si importano fra loro.
-- **Promessa d'intestazione senza rosso:** `backend/astrolog/spine/rigless.py` promette la
-  normalizzazione di `declarations.instrument_name`, e con uno `strip()` nudo `INSTRUME='(1)'`
-  diventa un nome.
 - **"Idempotente" e' scritto e non e' vero, e la prova non puo' accorgersene.**
   `backend/astrolog/vocab/header_value.py` lo dichiara, ma l'indice ASCOM si toglie una volta sola:
   `'ZWO Focuser (1) (2)'` da' `'zwo focuser (1)'`, che ripassato da' `'zwo focuser'`. La prova
@@ -476,14 +471,15 @@ Niente di aperto.
   `rig_for_frame`: fino a sei query in piu' su ogni frame di N.I.N.A. (non cronometrato). Rimedio:
   risolvere i nomi una volta per passata.
 - **Rispondere a N gruppi in un Applica costa N letture dell'archivio.** Ogni risposta ritrova il
-  suo gruppo rifacendo il lettore da capo dentro la transazione (`row_of` rifa' `by_group` in
-  `spine/rigless.py` e `spine/unnamed.py`, o `by_folder` in `spine/typeless.py`), e poi `requeue`
+  suo gruppo rifacendo il lettore da capo dentro la transazione (`row_of` rifa' `by_signature` in
+  `spine/signature_page.py`, `by_group` in `spine/unnamed.py`, o `by_folder` in `spine/typeless.py`), e poi `requeue`
   rilegge il gruppo, calcolando anche i soggetti per buttarli. Su ~21.000 frame sintetici: cartelle
   senza nome 124 ms con una risposta, 9,6 s con cento. Rimedio: leggere ogni lettore una volta per
   Applica.
-- **Una risposta sul filtro di una camera rimette in coda tutti i suoi frame senza matrice, anche
-  quelli che il filtro lo scrivono** (`_OF_CAMERA` in `spine/unfiltered.py`): 6.558 per 10 su un
-  caso costruito.
+- **Una risposta sul filtro rimette in coda tutti i frame senza matrice della sua camera, anche
+  quelli che il filtro lo scrivono** (`_OF_CAMERA` in `spine/unfiltered.py`, chiamato da
+  `api/review_write_folders._sensor`): 6.558 per 10 su un caso costruito, misurato quando la
+  risposta era per camera.
 - **Unire due grafie di una camera rifa' tutti i frame della camera che resta**
   (`apply_answers` in `api/review_write.py`): 6.990 in coda per 432 cambiati, 6,0 s contro ~0,6.
   Rimedio: rimettere in coda la tenuta solo se la risposta le cambia qualcosa.
@@ -495,8 +491,6 @@ Niente di aperto.
 - **I file senza tipo di una cartella detta di calibrazione si rileggono a ogni scansione**:
   saltati alla porta non hanno una posizione, e il pre-controllo incrementale non li riconosce
   (`spine/scan.py`). Rimedio: ricordare i file saltati con percorso, dimensione e data.
-- **Per un frame senza camera la notte si chiede due volte** in `normalize`:
-  `rigless.key_of_frame` e `night_rig.rig_of_night`.
 - **Il backend non comprime niente**: `StaticFiles` e' montato nudo (`api/page.py`) e nessun
   middleware comprime. Il foglio di stile viaggia per 57,9 kB invece di 10,4, e la previsione ora
   per ora e' la risposta piu' pesante; conta sul NAS guardato dal telefono. Rimedio: una riga di
@@ -607,7 +601,8 @@ riga per voce.
   scegliere la lingua (oggi l'inglese viaggia nel bundle di tutti, il 6,5% del pacchetto); una
   guardia i18n per pagina.
 - **Un numero scritto in un campo e' all'italiana**: oggi coordinate e focale proposta arrivano
-  col punto (`frontend/src/sito.tsx`, `SezioneSenzaCamera.tsx`), e chi scrive col punto deve
+  col punto (`frontend/src/sito.tsx`; la focale proposta e' `focal_suggested` della scheda
+  dell'attrezzatura), e chi scrive col punto deve
   ritrovare cio' che ha scritto.
 - **Nomi in inglese** per file, componenti e funzioni del frontend nuovo, come nel backend.
 - **Il formato del frontend in pre-commit**, con una configurazione che dica lo stile del
@@ -673,10 +668,19 @@ riga per voce.
 - **Sito**: l'altitudine che manca si dice (il backend manda `site_no_elevation`, lo schermo non
   la mostra); la ricerca che cerca mentre si scrive mette un ritardo nella pagina, perche' la
   rotta ne serve una al secondo.
+- **Da confermare, la scheda dell'attrezzatura** (S1, Marco: aspetta il disegno). Il backend la
+  manda gia' (`gear` in `/api/v1/review`, `gear` in Applica); oggi non si vede, e il conto la
+  conta. Una scheda per firma: cio' che i file dicono (camera e telescopio come scritti, focale,
+  sensore, pixel), cosa ci hai ripreso, e solo le parti chieste (`asks_camera`, `asks_optics`,
+  `asks_filter`): la camera da un corredo (`rig_choices`) o scritta con la focale (proposta
+  `focal_suggested`), l'ottica fra le tue (`optics_choices`, proposta `optics`) o scritta, il
+  filtro fra *a colori*, *nessun filtro*, *uno dei miei* (`filter_choices`). Si risponde una
+  parte alla volta; `complete` dice quando non conta piu'; un rifiuto `not_asked` dice una parte
+  che la scheda non chiede.
 - **Da confermare**: le sezioni si spengono finche' l'Applica non torna (oggi una risposta data
   nell'attesa si perde); la barra a sinistra di una riga dice una cosa sola (oggi *Quale filtro
   notte per notte* e *Frame senza nome* segnano il salvato, le altre il da mandare); la tendina
-  dei corredi dei *Frame senza camera* si apre solo premendo; la scelta fra due o tre voci fisse
+  dei corredi della scheda dell'attrezzatura si apre solo premendo; la scelta fra due o tre voci fisse
   e' un segmentato.
 - **Attrezzatura**: un filtro scritto a mano cerca nel catalogo dei modelli, cosi' si possono
   scrivere anche le bande delle camere a colori.
@@ -708,16 +712,16 @@ riga per voce.
   leggono piu' stadi" e "una chiave che sopravvive, mai l'id di riga" (docstring di
   `declarations`, poi `FOLDER_TYPE` e `declare_coordinates`).
 - **Domande per gruppo e oggetti, dopo la fase 1**: `row_of` e' la stessa riga
-  (`next(iter(by_...(conn, only=key)), None)`) in `rigless`, `unnamed`, `typeless` e `rig_optics`,
-  e l'ordine "il piu' numeroso in cima" (`-frames`, `key`) e' riscritto in `rigless`, `unnamed`,
-  `unfiltered`, `rig_optics` e `frame_folder.counted`; "un grezzo senza bianchi o `None`" e'
-  `unnamed._written` e di nuovo a mano in `rigless.by_group`. Due regole senza test: in
+  (`next(iter(by_...(conn, only=key)), None)`) in `signature_page`, `unnamed` e `typeless`,
+  e l'ordine "il piu' numeroso in cima" (`-frames`, `key`) e' riscritto in `signature_page`,
+  `unnamed` e `frame_folder.counted`; "un grezzo senza bianchi o `None`" e'
+  `unnamed._written` e di nuovo a mano in `signature_page._card`. Due regole senza test: in
   `unnamed.assign` un frame senza puntamento non entra in un gruppo della stessa notte aperto con
   un puntamento (tolta la condizione, la suite resta verde e due bersagli prendono una risposta
-  sola); `rigless.row_of` non ricostruisce la pagina intera per ogni risposta (costo al quadrato
-  dei gruppi), e nessun test di costo lo tiene. Regole dette piu' volte: "`IS`, non `=`: anche
-  'nessuna data' e' un gruppo" (`unnamed`, `rigless`); "i frame gia' risposti tornano in coda,
-  cosi' un ripensamento vale" nei `requeue` di `rigless`, `unfiltered` e `unnamed`; gli invarianti
+  sola); `signature_page.row_of` non ricostruisce la pagina intera per ogni risposta (costo al
+  quadrato delle schede), e nessun test di costo lo tiene. Regole dette piu' volte: "i frame gia'
+  risposti tornano in coda, cosi' un ripensamento vale" nei `requeue` di `signature`, `unfiltered`
+  e `unnamed`; gli invarianti
   del nome in `objects.NAME_COLUMNS` e `display_name` ripetono `docs/domini/spina.md` senza
   rimandarci.
 - **La base di `api`, dopo la fase 1.** Senza test: i 409 di `POST /pipeline/run`
@@ -768,8 +772,7 @@ riga per voce.
   misto con una risposta valida e una rifiutata, nessun filtro "nessun filtro" doppio passando da
   Applica. Regole dette piu' volte: Applica conferma cio' che la pagina ha letto (`seen`) in
   `review`, `review_write` e nel commento di `review()`; "una risposta a cio' che non esiste
-  piu' e' una pagina vecchia: 404" in `review_write_folders`, `review_write._answer_unfiltered`
-  e nel contratto; quali filtri sono una domanda, due volte in `review.py`; il "ripensamento che
+  piu' e' una pagina vecchia: 404" in `review_write_folders` e nel contratto; quali filtri sono una domanda, due volte in `review.py`; il "ripensamento che
   sposta" in `review_write._answer_where` e in `coordinates.frames_at`; l'ordine per distanza
   vera in `review_page` e in `place.by_distance`.
 - **Le rotte di scrittura, dopo la fase 1.** Codici d'errore scritti nel contratto e mai provati
@@ -877,7 +880,7 @@ riga per voce.
   prima: i tre giudizi sul grezzo (`spine/header_asks.py`), il software normalizzato, ogni valore
   che `normalize` ricava da un nome. Serve un modo per rifarli prima che una versione cambi il
   vocabolario, o la pagina leggerebbe il giudizio vecchio mentre chi rimette in coda rigiudica col
-  nuovo (`rigless.frames_of`, `rig_optics.requeue`); oggi coincidono, e
+  nuovo (`signature.frames_of`); oggi coincidono, e
   `tests/test_header_asks.py` lo prova.
 - **L'app non si accorge di girare su un database di uno schema vecchio**: la scansione si rompe
   con `no such column`. Lo schema non si migra, ma l'avvio deve dirlo confrontando `schema.sql`
@@ -923,11 +926,11 @@ riga per voce.
   pixel** (`instruments.pixel_from_sky_um`): oggi il campo viene solo da `XPIXSZ`
   (`spine/solve.py`, `_scale_of`). Da misurare su frame veri: un pixel sbagliato manda il solver
   fuori strada.
-- **Frame senza ottica: due ottiche alla stessa focale con la stessa camera sono una domanda
-  sola** (`spine/rig_optics.py`): i file non dicono altro. Si chiude con un'altra chiave, se un
+- **L'ottica che i file non dicono: due ottiche alla stessa focale con la stessa camera sono
+  una domanda sola** (`spine/signature.py`): i file non dicono altro. Si chiude con un'altra chiave, se un
   header vero ne mostrera' una.
-- **Frame senza ottica: la pagina riabbina le risposte ai corredi con la tolleranza della focale**
-  (`rig_optics.by_rig`, `units.same_focal`) a ogni lettura. Rimedio: scrivere sul frame da quale
+- **La scheda dell'attrezzatura riabbina le risposte alle firme con la tolleranza della focale**
+  (`signature.answer_for`, `units.same_focal`) a ogni lettura e a ogni giro di `normalize`. Rimedio: scrivere sul frame da quale
   risposta ha preso l'ottica.
 - **Spostare un sito non ritaglia le sue notti dichiarate**: col fuso cambiato le notti nate da una
   risposta restano tagliate col fuso vecchio, e rifarle lascerebbe vuota per sempre quella di
@@ -1017,10 +1020,10 @@ riga per voce.
   `PYTHONDONTWRITEBYTECODE=1` e non si sono ripetuti col bytecode acceso. La suite del push
   (`python -B`) e il job `instabilita` non lo scrivono, la mutazione notturna si'. Se un rosso
   impossibile ricompare, si guarda qui.
-- **Tre domande di Da confermare leggono righe che poi scartano** (senza camera, senza ottica, i
-  siti): su 100.000 frame sintetici la pagina intera sta a circa 0,22 s, e toglierle vale
+- **Due domande di Da confermare leggono righe che poi scartano** (la scheda dell'attrezzatura,
+  i siti): su 100.000 frame sintetici la pagina intera sta a circa 0,22 s, e toglierle vale
   qualche decina di millesimi.
-- **La cartella viva come `EXISTS` non paga**: nelle domande su camera, ottica e nome
+- **La cartella viva come `EXISTS` non paga**: nelle domande sull'attrezzatura e sul nome
   `frame_folder.JOIN` e un `EXISTS` costano lo stesso.
 
 ### Idee

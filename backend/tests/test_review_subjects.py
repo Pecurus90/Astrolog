@@ -75,7 +75,7 @@ def _pose(conn, nomi, sql, *prima):
 
 def test_the_camera_question_sums_the_subjects_of_all_its_nights(pagina):
     # la copia di a_0 non conta; a_6 fallita e' "non ancora", a_7 saltata e' "non trovato"
-    (camera,) = review(pagina)["unfiltered"]
+    (camera,) = review(pagina)["gear"]
     assert camera["subjects"] == {
         "found": [{"name": "M 45", "frames": 4}, {"name": "M 31", "frames": 2}],
         "not_found": 2,

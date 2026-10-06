@@ -200,20 +200,8 @@ describe("l accessibilita della prima pagina", () => {
           unclear: [
             { key: "45.85,11.58", latitude: 45.85, longitude: 11.58, distance_km: 16.2, frames: 391, nights: ["2024-05-17"], site: null, candidates: [{ id: 1, name: "Casa", distance_km: 16.2 }], subjects: SENZA_SOGGETTI },
           ],
-          // una camera senza filtro (tre scelte in un gruppo) e un gruppo senza camera (la
-          // tendina dei corredi): tutte e due con cio' che axe deve guardare davanti
-          unfiltered: [
-            { key: "Poseidon-C PRO", frames: 3388, answer: "filter", filter_id: 3, subjects: SENZA_SOGGETTI },
-          ],
-          // la tendina dei filtri, aperta perche' la camera ha risposto con uno dei suoi
           filter_choices: [{ id: 3, name: "Lum", passband: "L" }],
-          rigless: [
-            { key: '["2024-05-17", null, 6248, 4176, 3.76]', night: "2024-05-17", telescope: null, width_px: 6248, height_px: 4176, pixel_um: 3.76, frames: 120, optics: "Askar 103Apo", focal_mm: null, focal_suggested: 560, answer: null, subjects: SENZA_SOGGETTI },
-          ],
-          // una camera a una focale che i file non dicono con che ottica: il campo con le scelte
-          opticsless: [
-            { key: "|ZWO ASI2600MC Pro|800.0", camera: "ZWO ASI2600MC Pro", focal_mm: 800, frames: 120, integration_s: 36000, untimed: 0, answer: null, subjects: SENZA_SOGGETTI },
-          ],
+          gear: [],
           optics_choices: ["Askar 103Apo"],
           // un gruppo di pose senza nome: il campo dell'oggetto e la casella "non e' un oggetto"
           unnamed: [{ key: '["2024-06-01", null, null, null, null]', night: "2024-06-01", camera: null, telescope: null, ra_deg: null, dec_deg: null, frames: 4, answer: null, first_frame: "2024-06-01T22:10:00+02:00", last_frame: "2024-06-02T01:40:00+02:00" }],

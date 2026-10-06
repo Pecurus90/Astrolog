@@ -9,10 +9,8 @@ from fastapi import APIRouter, Depends, Query, Request
 
 from ..clock import now_iso
 from ..spine import mosaic_proposals as mosaic_reader
-from ..spine import rig_optics
-from ..spine import rigless as rigless_reader
+from ..spine import signature_page as gear_reader
 from ..spine import typeless as typeless_reader
-from ..spine import unfiltered as unfiltered_reader
 from ..spine import unnamed as unnamed_reader
 from ..spine.run import STAGE_GROUP, STAGE_IDENTIFY, STAGE_NORMALIZE, STAGE_SOLVE
 from ..vocab.filters import UNKNOWN
@@ -23,14 +21,7 @@ from .deps import get_db
 from .models_page import page_of
 from .models_review import BandOut, FilterOut, ReviewOut, ReviewSeen, SettledObjects
 from .models_review_apply import ReviewApplied, ReviewApply
-from .models_review_groups import (
-    MosaicCandidate,
-    OpticslessRig,
-    RiglessGroup,
-    TypelessFolder,
-    UnfilteredCamera,
-    UnnamedGroup,
-)
+from .models_review_groups import GearSignature, MosaicCandidate, TypelessFolder, UnnamedGroup
 
 router = APIRouter(prefix="/api/v1", tags=["da confermare"])
 
@@ -76,13 +67,9 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
 
     objects, certi = page.objects(conn)
     incerte = page.unclear_coordinates(conn)
-    righe_camere = unfiltered_reader.by_camera(conn)
-    da_chiedere = [UnfilteredCamera(**g) for g in righe_camere]
-    righe_senza_camera = rigless_reader.by_group(conn)
+    righe_attrezzatura = gear_reader.by_signature(conn)
     righe_senza_nome = unnamed_reader.by_group(conn)
     righe_senza_tipo = typeless_reader.by_folder(conn)
-    senza_camera = [RiglessGroup(**g) for g in righe_senza_camera]
-    righe_senza_ottica = rig_optics.by_rig(conn)
     righe_mosaici = mosaic_reader.candidates(conn)
     mosaici = [MosaicCandidate(**m) for m in righe_mosaici]
     coppie = lookalike.lookalikes(conn)
@@ -96,9 +83,8 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
         + len(filters)
         + len(coppie)
         + sum(1 for p in incerte if p.site is None)
-        + unanswered(righe_camere)
-        + unanswered(righe_senza_camera)
-        + unanswered(righe_senza_ottica)
+        # a card counts until every part it asks is answered
+        + sum(1 for g in righe_attrezzatura if not g["complete"])
         + unanswered(righe_senza_nome)
         # a mosaic's no closes it too, or a wrong proposal could only be silenced by accepting it
         + unanswered(righe_mosaici)
@@ -113,9 +99,7 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
         settled_objects=len(certi),
         unnamed=[UnnamedGroup(**g) for g in righe_senza_nome],
         unclear=incerte,
-        unfiltered=da_chiedere,
-        rigless=senza_camera,
-        opticsless=[OpticslessRig(**c) for c in righe_senza_ottica],
+        gear=[GearSignature(**g) for g in righe_attrezzatura],
         optics_choices=page.optics_choices(conn),
         typeless=[TypelessFolder(**g) for g in righe_senza_tipo],
         mosaics=mosaici,
@@ -165,7 +149,7 @@ def _stadi_toccati(body: ReviewApply) -> set[str]:
     voluti: set[str] = set()
     if body.lookalikes or body.filters:
         voluti.add(STAGE_NORMALIZE)
-    if body.unfiltered or body.rigless or body.opticsless:
+    if body.gear:
         voluti.add(STAGE_NORMALIZE)  # they change the filter or the rig of their frames
     if body.typeless:
         # the SKY of those frames is requeued: name and night follow from the stage graph

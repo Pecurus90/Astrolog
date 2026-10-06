@@ -65,8 +65,8 @@ def alias_target(conn: sqlite3.Connection, kind: str, header_value: str) -> str 
 
 
 def instrument_name(conn: sqlite3.Connection, kind: str, raw: str | None) -> str | None:
-    """Learned rule, else the name as written. `normalize` and `rigless` both read it: two readings
-    would propose a renamed piece's old name and give birth to a second one."""
+    """Learned rule, else the name as written. `normalize` and the gear question both read it: two
+    readings would propose a renamed piece's old name and give birth to a second one."""
     key = normalize_header_value(raw)
     if not key:
         return None
@@ -81,17 +81,13 @@ def instrument_key(kind: str, name: str) -> str:
 # and the spine recomputes it.
 CAMERA_SPECS = ("camera_type", "pixel_size_um")
 # The words of the `instruments.camera_type` CHECK: the sensor. What sat in front when the file is
-# silent is another field, `UNFILTERED`.
+# silent is the signature's answer (`spine/signature.py`).
 CAMERA_MONO, CAMERA_COLOR = "mono", "color"
-UNFILTERED = "unfiltered"
-# With "one of yours", which: its name in a field of its own, so a filter named like an answer does
-# not become that answer.
-UNFILTERED_FILTER = "unfiltered_filter"
 
-# Answers on a group of frames: the rig on frames that do not say the camera, keyed by the night
-# with the header values; the target on frames with no name and no sky. Their keys differ.
-FRAME_GROUP, GROUP_RIG = "frame_group", "rig"
-GROUP_OBJECT = "object"
+# The gear the files leave out, keyed by the header signature (`spine/signature.py`).
+SIGNATURE, SIGNATURE_GEAR = "signature", "gear"
+# The target on frames with no name and no sky, keyed by the group written on the frame.
+FRAME_GROUP, GROUP_OBJECT = "frame_group", "object"
 # Answers on a folder, keyed by its path.
 FOLDER = "folder"
 # Whether frames that do not say what file they are are a light or a calibration. Here and not in

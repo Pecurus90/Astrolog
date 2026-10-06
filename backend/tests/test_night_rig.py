@@ -137,10 +137,10 @@ def test_renaming_a_camera_carries_the_answer_on_the_group(db_path, tmp_path):
     """La risposta sul gruppo porta il nome della camera: rinominata, la risposta la segue, la
     pagina mostra il nome nuovo, e al giro dopo il vecchio non rinasce."""
     with _gruppo_senza_camera(db_path, tmp_path) as c:
-        gruppi = {g["night"]: g["key"] for g in review(c)["rigless"]}
-        apply(c, rigless=[
-            {"key": gruppi["2026-03-20"], "camera": "ASI2600", "optics": NEWTON, "focal_mm": 800},
-            {"key": gruppi["2026-03-21"], "camera": "QHY268M", "optics": NEWTON, "focal_mm": 800},
+        gruppi = {g["telescope"]: g["key"] for g in review(c)["gear"] if g["asks_camera"]}
+        apply(c, gear=[
+            {"key": gruppi["Newton 8"], "camera": "ASI2600", "optics": NEWTON, "focal_mm": 800},
+            {"key": gruppi["Un altro"], "camera": "QHY268M", "optics": NEWTON, "focal_mm": 800},
         ])  # fmt: skip
 
         assert correct(c, _pezzo(c, "ASI2600"), name="ASI2600 Pro").status_code == 200
@@ -148,18 +148,18 @@ def test_renaming_a_camera_carries_the_answer_on_the_group(db_path, tmp_path):
 
         camere = {p["name"] for p in gear(c)["instruments"] if p["kind"] == "camera"}
         assert "ASI2600" not in camere
-        risposte = {g["night"]: g["answer"]["camera"] for g in review(c)["rigless"]}
+        risposte = {g["telescope"]: g["answer"]["camera"] for g in review(c)["gear"] if g["answer"]}
         # la risposta sull'altra camera non cambia: la rinomina segue solo il suo pezzo
-        assert risposte == {"2026-03-20": "ASI2600 Pro", "2026-03-21": "QHY268M"}
+        assert risposte == {"Newton 8": "ASI2600 Pro", "Un altro": "QHY268M"}
         assert _corredo(c, "20/g.fits")[:2] == (NEWTON, "ASI2600 Pro")
 
 
 def test_merging_the_optics_carries_the_answer_on_the_group(db_path, tmp_path):
     """Lo stesso per l'unione: l'ottica della risposta, unita a una che c'era, non rinasce."""
     with _gruppo_senza_camera(db_path, tmp_path) as c:
-        chiave = next(g["key"] for g in review(c)["rigless"] if g["night"] == "2026-03-20")
+        chiave = next(g["key"] for g in review(c)["gear"] if g["telescope"] == "Newton 8")
         risposta = {"key": chiave, "camera": CAM, "optics": "Newton 8", "focal_mm": 800}
-        apply(c, rigless=[risposta])
+        apply(c, gear=[risposta])
 
         r = correct(c, _pezzo(c, "Newton 8"), merge_into=_pezzo(c, NEWTON))
         assert r.status_code == 200, r.text
@@ -167,7 +167,7 @@ def test_merging_the_optics_carries_the_answer_on_the_group(db_path, tmp_path):
 
         ottiche = {p["name"] for p in gear(c)["instruments"] if p["kind"] == "optics"}
         assert "Newton 8" not in ottiche
-        gruppo = next(g for g in review(c)["rigless"] if g["key"] == chiave)
+        gruppo = next(g for g in review(c)["gear"] if g["key"] == chiave)
         assert gruppo["answer"]["optics"] == NEWTON
         assert _corredo(c, "20/g.fits")[0] == NEWTON
 

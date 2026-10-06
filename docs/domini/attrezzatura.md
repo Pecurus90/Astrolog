@@ -37,7 +37,7 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi un 
 | Un pezzo nuovo, trovato nei file o scritto da me, non e' una domanda: lo vedo qui | `test_a_piece_you_wrote_yourself_is_not_a_question`, `test_review_only_new_things` |
 | Creo a mano un **filtro** o un **corredo**, anche prima di averci ripreso | `test_you_can_write_a_filter_you_have_not_used_yet`, `test_you_can_write_a_rig_before_shooting_with_it`; *scrivo a mano un filtro, con la sua banda*, *scrivo a mano un corredo, con ottica e camera fra i miei pezzi e la focale* |
 | E sono quelli che i file porteranno, non un doppione | `test_a_filter_you_wrote_is_the_one_the_files_bring_later`, `test_a_rig_you_wrote_is_the_one_the_files_bring_later` |
-| Un corredo che ho scritto io resta anche senza frame; uno che l'app aveva trovato nei file e a cui una mia risposta ha tolto tutti i frame sparisce, invece di restare con zero ore | `test_a_rig_written_by_hand_stays_even_without_poses`, `test_the_answer_gives_the_optics_and_the_poses_join_the_rig_that_has_it` (`backend/tests/test_review_opticsless.py`) |
+| Un corredo che ho scritto io resta anche senza frame; uno che l'app aveva trovato nei file e a cui una mia risposta ha tolto tutti i frame sparisce, invece di restare con zero ore | `test_a_rig_written_by_hand_stays_even_without_poses`, `test_the_answer_gives_the_optics_and_the_poses_join_the_rig_that_has_it` (`backend/tests/test_review_gear.py`) |
 | Un filtro scritto col nome dei miei file prende le pose mono, e quelle a colori restano OSC | `test_a_filter_written_by_hand_takes_the_mono_frames_and_leaves_the_colour_ones_osc`, `test_a_mono_frame_that_writes_the_app_name_goes_to_the_filter_written_by_hand`, `test_a_colour_frame_stays_osc_after_a_filter_written_by_hand`, `test_a_colour_frame_that_writes_the_app_name_stays_osc_after_a_filter_written_by_hand`, `test_a_colour_frame_that_writes_the_app_name_stays_osc_after_a_rename` |
 | Un filtro senza banda, un nome che ho gia' o che e' gia' la grafia di un mio filtro, o un filtro che ho gia' col nome che gli da' l'app, un corredo che ho gia' o fatto di pezzi sbagliati si rifiutano e me lo dicono | `test_a_filter_needs_a_name_you_do_not_own_and_its_band`, `test_a_name_that_is_already_the_spelling_of_another_filter_is_refused`, `test_a_filter_you_already_have_under_the_app_name_is_not_written_twice`, `test_a_rig_you_have_or_not_made_of_optics_and_camera_is_refused`, `test_a_rig_you_already_have_is_refused`, `test_a_rig_is_made_of_an_optics_and_a_camera_you_own`; *un corredo che ho gia' si rifiuta, e me lo dice* |
 | Il corredo che ho scritto non sparisce se unisco due grafie della sua ottica o della sua camera, e se quello tenuto ce l'ha gia' ne resta uno | `test_a_rig_you_wrote_survives_the_merge_of_its_camera`, `test_a_merge_into_a_rig_you_already_have_keeps_one` |
@@ -157,8 +157,8 @@ e i pezzi di un archivio vero sono una manciata, non mille.
 scritto tu, si vede qui, e Da confermare non si riaccende per lui. Da confermare chiede
 dell'attrezzatura solo cio' che l'app non puo' sapere -- che filtro e' uno che non riconosce, e se due
 grafie che sembrano la stessa camera sono lo stesso pezzo -- e alcune sue risposte scrivono anche qui:
-"nessun filtro" scrive mono sulla scheda della camera, e la camera scritta per dei frame senza camera
-diventa un pezzo.
+"nessun filtro" scrive mono sulla scheda della camera, "a colori" scrive colore, e la camera scritta
+nella scheda della firma diventa un pezzo.
 
 **L'unione passa dalla stessa mano di *Da confermare***: `api/instrument_answer.py`, non una
 seconda strada. Due strade vorrebbero dire due verita' sullo stesso pezzo -- le pose rimesse in

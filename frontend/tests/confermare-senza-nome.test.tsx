@@ -43,9 +43,8 @@ const PAGINA = {
   objects: [],
   mosaics: [],
   unclear: [],
-  unfiltered: [],
+  gear: [],
   filter_choices: [],
-  rigless: [],
   unnamed: [
     {
       key: ROSETTA, night: "2024-03-12", ...GRUPPO, ra_deg: 98.03, dec_deg: 4.92, frames: 21, answer: null,

@@ -19,6 +19,7 @@ from astrolog.spine import (
     group,
     identify_decide,
     scan_store,
+    signature,
     solve,
     typeless,
     unfiltered,
@@ -82,8 +83,10 @@ def test_finish_run_refuses_an_outcome_outside_the_vocabulary(conn):
 
 def test_the_answers_about_a_camera_are_the_words_the_spine_reads():
     """Le risposte sulle pose che non dicono il filtro: l'API accetta le stesse parole che
-    `normalize` legge, o una risposta arriverebbe e non sposterebbe niente."""
-    assert set(get_args(models_review_groups.UnfilteredAnswer)) == set(unfiltered.ANSWERS)
+    `normalize` legge -- piu' "a colori", che va sulla scheda della camera --, o una risposta
+    arriverebbe e non sposterebbe niente."""
+    parole = set(get_args(models_review_groups.GearFilterAnswer))
+    assert parole == {*signature.FILTER_ANSWERS, unfiltered.COLOR}
 
 
 def test_the_answers_about_a_mosaic_are_the_words_the_spine_reads():

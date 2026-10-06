@@ -6,7 +6,7 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .models_review import Band, ReviewSeen
-from .models_review_groups import MosaicAnswer, TypelessAnswer, UnfilteredAnswer
+from .models_review_groups import GearFilterAnswer, MosaicAnswer, TypelessAnswer
 
 
 class BandIn(BaseModel):
@@ -70,60 +70,40 @@ class CoordinatesEdit(BaseModel):
     site_id: int
 
 
-class UnfilteredEdit(BaseModel):
-    """The answer about a camera: its frames that do not tell the filter are of a colour camera
-    (`color`), taken with no filter (`no_filter`), or with one of your filters (`filter`, and
-    `filter_id` says which)."""
+class GearEdit(BaseModel):
+    """The answer about a signature, the parts it asks: the camera -- a rig among those the app
+    knows (`rig_id`, what the page holds after a click) **or** the written camera with its focal
+    length, plus the optics if needed --, the optics alone, and what sat in front (`filter`, with
+    `filter_id` for "one of yours"). What is written is always **names**: the pieces come into
+    being from them as from a header. A part not sent keeps its earlier answer."""
 
-    key: str = Field(min_length=1, description="The camera name read from the page.")
-    answer: UnfilteredAnswer
-    filter_id: int | None = None
-
-    @model_validator(mode="after")
-    def a_filter_says_which(self) -> Self:
-        """Without the filter, "one of yours" would not say which; with another answer it would be
-        a second target for us to choose between."""
-        if (self.filter_id is None) == (self.answer == "filter"):
-            raise ValueError("filter_id con la risposta filter, e solo con lei")
-        return self
-
-
-class OpticslessEdit(BaseModel):
-    """The answer about a camera at one focal length: with which optics. The **name** is written:
-    one the Gear page does not have makes the piece come into being, like a header."""
-
-    key: str = Field(min_length=1, description="The key read from the page.")
-    optics: str = Field(
-        min_length=1, pattern=r"\S", description="A name of only spaces is not a name."
-    )
-
-
-class RiglessGroupEdit(BaseModel):
-    """The answer about a group: with which rig those frames were taken. A rig among those the app
-    knows (`rig_id`, what the page holds after a click) **or** the written pieces: the camera and
-    the **focal length**, plus the optics if needed. What is written is always the **names**, and
-    the pieces come into being from those names as they do from a header."""
-
-    key: str = Field(min_length=1, description="The group key read from the page.")
+    key: str = Field(min_length=1, description="The signature read from the page.")
     rig_id: int | None = None
-    optics: str | None = Field(None, min_length=1)
-    camera: str | None = Field(None, min_length=1)
+    camera: str | None = Field(
+        None, min_length=1, pattern=r"\S", description="A name of only spaces is not a name."
+    )
+    optics: str | None = Field(None, min_length=1, pattern=r"\S")
     focal_mm: float | None = Field(
         None, gt=0, description="Unknown focal length, never invented: no zeros."
     )
+    filter: GearFilterAnswer | None = None
+    filter_id: int | None = None
 
     @model_validator(mode="after")
-    def one_way_only(self) -> Self:
+    def one_way_each(self) -> Self:
         """Accepting both a listed rig and written pieces would mean choosing which one wins.
         Checked here so the OpenAPI declares it and the answer is the usual 422."""
-        if bool(self.rig_id) == bool(self.camera):
-            raise ValueError("un corredo dall'elenco, oppure la camera scritta")
-        if self.rig_id and (self.optics or self.focal_mm):
+        if self.rig_id and (self.camera or self.optics or self.focal_mm):
             raise ValueError("un corredo dall'elenco porta i suoi pezzi")
-        if self.camera and self.focal_mm is None:
+        if bool(self.camera) != (self.focal_mm is not None):
             # A rig is optics + camera at one focal length: without it, this rig and the one the
             # files name tomorrow would stay twins forever, splitting the hours between them.
-            raise ValueError("con la camera si scrive anche la focale")
+            raise ValueError("la camera con la sua focale, e la focale solo con la camera")
+        if (self.filter_id is None) == (self.filter == "filter"):
+            # without it "one of yours" would not say which; beside another answer, a second target
+            raise ValueError("filter_id con la risposta filter, e solo con lei")
+        if not (self.rig_id or self.camera or self.optics or self.filter):
+            raise ValueError("una risposta dice almeno una parte")
         return self
 
 
@@ -193,9 +173,7 @@ class ReviewApply(BaseModel):
     filters: list[FilterEdit] = []
     objects: list[ObjectEdit] = []
     unclear: list[CoordinatesEdit] = []
-    unfiltered: list[UnfilteredEdit] = []
-    rigless: list[RiglessGroupEdit] = []
-    opticsless: list[OpticslessEdit] = []
+    gear: list[GearEdit] = []
     unnamed: list[UnnamedEdit] = []
     typeless: list[TypelessFolderEdit] = []
     mosaics: list[MosaicEdit] = []

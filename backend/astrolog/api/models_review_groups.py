@@ -91,28 +91,6 @@ class UnclearCoordinates(BaseModel):
     subjects: Subjects
 
 
-# The words of `spine.unfiltered`, kept glued by a test. The sensor is told by the card
-# (`CameraType`).
-UnfilteredAnswer = Literal["color", "no_filter", "filter"]
-
-
-class UnfilteredCamera(BaseModel):
-    """The frames that do not tell the filter, grouped by **camera**: without `BAYERPAT` a mono and
-    a colour camera cannot be told apart, and one asks only once. A camera the card or the files
-    say is colour is not there: its frames are OSC. `answer` is the answer already given: an
-    answered group stays on the page because one must be able to change one's mind."""
-
-    key: str = Field(description="The camera name: it is the key one answers with.")
-    frames: int
-    answer: Literal["no_filter", "filter"] | None = Field(
-        description='"Colour" removes it from the page.'
-    )
-    filter_id: int | None = Field(
-        description='With "one of yours", which one; empty if that filter is no longer there.'
-    )
-    subjects: Subjects
-
-
 # The words of `spine.typeless.ANSWERS`, kept glued by a test. No "don't know": not knowing is
 # already the starting state, and a third answer would move those frames nowhere.
 TypelessAnswer = Literal["light", "calibration"]
@@ -134,56 +112,49 @@ class TypelessFolder(BaseModel):
     answer: TypelessAnswer | None
 
 
-class GroupRig(BaseModel):
-    """The rig the user named for a group: the **names** of the pieces, never the row numbers.
-    Empty `optics` means they did not say it, not that there was none."""
+# What sat in front, as an answer: "colour" goes on the camera's card, the other two on the
+# signature (`spine.signature.FILTER_ANSWERS`, kept glued by a test).
+GearFilterAnswer = Literal["color", "no_filter", "filter"]
 
+
+class GearAnswer(BaseModel):
+    """What the user said about a signature: the **names** of the pieces, never row numbers. An
+    empty field is a part not answered, not a part that was not there."""
+
+    camera: str | None
     optics: str | None
-    camera: str
     focal_mm: float | None
-
-
-class OpticslessRig(BaseModel):
-    """The frames whose files do not name the optics (the ASIAIR writes the mount there, others do
-    not write it at all), one question per **camera and focal length**: "which optics was it?". The
-    answer also holds for the frames still to come; an answered question stays on the page to allow
-    a change of mind."""
-
-    key: str = Field(description="The key of the camera at that focal length: one answers with it.")
-    camera: str
-    focal_mm: float | None
-    frames: int
-    integration_s: float
-    untimed: int
-    answer: str | None = Field(description="The name of the optics already given.")
-    subjects: Subjects
-
-
-class RiglessGroup(BaseModel):
-    """The frames that do not tell which camera took them, grouped by **night and header values**:
-    one asks per group, never per frame, and never per folder. The group shows with the night --
-    empty for frames without a date -- and the values that make it. The frames that carry the
-    telescope but not the camera fall here too (the ASIAIR writes the mount in `TELESCOP`).
-    `optics` and `focal_mm` are what the frames already say, when they say a single thing;
-    `focal_suggested` the native focal length of the optics on the card, to propose where the frames
-    do not carry it. An answered group stays on the page because one must be able to change one's
-    mind."""
-
-    key: str = Field(description="The group key: one answers with it, and it does not reopen.")
-    night: str | None = Field(
-        description="The night, YYYY-MM-DD; empty for those that do not say when."
+    filter: Literal["no_filter", "filter"] | None = Field(
+        description="Colour is written on the camera's card, not here."
     )
-    telescope: str | None = Field(
-        description="`TELESCOP` as written in the file: it is in the key, and goes on screen."
+    filter_id: int | None = Field(
+        description='With "one of yours", which; empty if that filter is no longer there.'
     )
+
+
+class GearSignature(BaseModel):
+    """The frames whose files leave out camera, optics or filter, one card per **header
+    signature**: the spelling of camera and telescope, the focal, the sensor -- never the night or
+    the folder. `asks_*` say which parts the card asks: what the night or the camera's colour
+    settles is not asked. `optics` and `focal_mm` are what the frames already say, when they say a
+    single thing; `focal_suggested` the native focal of that optics, where the frames carry none.
+    An answered card stays on the page because one must be able to change one's mind."""
+
+    key: str = Field(description="The signature: one answers with it, and it does not move.")
+    camera: str | None = Field(description="`INSTRUME` as written in the file.")
+    telescope: str | None = Field(description="`TELESCOP` as written in the file.")
     width_px: int | None
     height_px: int | None
     pixel_um: float | None
     frames: int
+    asks_camera: bool
+    asks_optics: bool
+    asks_filter: bool
     optics: str | None
     focal_mm: float | None
     focal_suggested: float | None
-    answer: GroupRig | None
+    answer: GearAnswer | None
+    complete: bool = Field(description="Every part asked has its answer: it no longer counts.")
     subjects: Subjects
 
 

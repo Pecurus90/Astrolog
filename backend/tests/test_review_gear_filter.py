@@ -1,8 +1,10 @@
-"""Da confermare, le pose che non dicono il filtro: una domanda per camera (Marco, 2026-09-11).
+"""Da confermare, la parte "filtro" della scheda per firma (ADR 0014, S1): le pose che non dicono il
+filtro.
 
 Senza `BAYERPAT` l'app non distingue una mono da una camera a colori, quindi "FILTER assente" e
-"FILTER=none" sono la stessa domanda: che camera e'. Una camera che i suoi file dicono a colori
-non si chiede (Marco, 23/9/2026). Le regole stanno in `spine/unfiltered.py` e nel contratto
+"FILTER=none" sono la stessa domanda: cosa c'era davanti. Una camera che i suoi file dicono a
+colori non si chiede (Marco, 23/9/2026). "A colori" si scrive sulla scheda della camera; "nessun
+filtro" e "uno dei tuoi" sulla firma. Le regole stanno in `spine/signature.py` e nel contratto
 `docs/domini/spina.md`. L'archivio e' fatto qui, piccolo: una mono che non scrive il filtro (con
 una copia calibrata), una camera con un solo file che porta la matrice, e una OSC.
 """
@@ -11,6 +13,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from astrolog.api.app import create_app
+from astrolog.spine import signature
 from astrolog.spine.normalize import normalize_frames
 from astrolog.spine.scan import scan_folder
 from astrolog.spine.unfiltered import says_no_filter
@@ -32,7 +35,7 @@ MONO, COLORI, OSC = "ZWO ASI6200MM", "ZWO ASI533MC", "ZWO ASI2600MC"
 
 
 def _posa(path, minuto, **header):
-    # il pixel c'e', come in ogni header vero; e l'ottica, o il banco chiederebbe anche quella
+    # il pixel c'e', come in ogni header vero; e l'ottica, o la scheda chiederebbe anche quella
     card = {"IMAGETYP": "Light Frame", "OBJECT": "M 31", "EXPTIME": 300.0, "TELESCOP": "RC8"}
     card |= {"XPIXSZ": 3.76, "XBINNING": 1}
     return write_fits(path, {**card, "DATE-OBS": f"2024-05-17T21:{minuto:02d}:00", **header})
@@ -60,8 +63,28 @@ def pagina(db_path, tmp_path):
         yield c
 
 
-def _gruppi(client):
-    return {g["key"]: g for g in review(client)["unfiltered"]}
+def _schede(client):
+    """Per camera come la scrive il file: qui ogni camera ha una firma sola."""
+    return {g["camera"]: g for g in review(client)["gear"]}
+
+
+def _chiede(client, camera):
+    """Se la scheda di quella camera chiede il filtro: una risposta resta in pagina anche quando
+    la camera, diventata a colori, non lo chiede piu'."""
+    scheda = _schede(client).get(camera)
+    return bool(scheda and scheda["asks_filter"])
+
+
+def _rispondi(client, camera, filtro, filter_id=None):
+    risposta = {"key": _schede(client)[camera]["key"], "filter": filtro}
+    if filter_id is not None:
+        risposta["filter_id"] = filter_id
+    return apply(client, gear=[risposta])
+
+
+def _risposta(client, camera):
+    risposta = _schede(client)[camera]["answer"]
+    return risposta and risposta["filter"]
 
 
 def _filtri_senza_nome(client, camera):
@@ -98,14 +121,16 @@ def _scansiona_ancora(client):
 
 
 def test_a_question_per_camera_with_the_largest_first(pagina):
-    """Una domanda per camera, la piu' numerosa in cima, con quante pose -- `open` e' come `none`,
-    la copia calibrata non e' un'altra posa. Un solo file con la matrice su tre non fa la camera a
-    colori: decide la maggioranza dei file, e le due senza restano da chiedere. Quella con la
-    matrice non si conta: e' OSC, e nessuna risposta la sposta."""
-    assert [senza_soggetti(g) for g in review(pagina)["unfiltered"]] == [
-        {"key": MONO, "frames": 5, "answer": None, "filter_id": None},
-        {"key": COLORI, "frames": 2, "answer": None, "filter_id": None},
+    """Una scheda per firma -- qui una per camera --, la piu' numerosa in cima, con quante pose:
+    `open` e' come `none`, la copia calibrata non e' un'altra posa. Un solo file con la matrice su
+    tre non fa la camera a colori: decide la maggioranza dei file, e le due senza restano da
+    chiedere. Quella con la matrice non si conta: e' OSC, e nessuna risposta la sposta."""
+    schede = [senza_soggetti(g) for g in review(pagina)["gear"]]
+    assert [(g["camera"], g["frames"], g["asks_filter"], g["answer"]) for g in schede] == [
+        (MONO, 5, True, None),
+        (COLORI, 2, True, None),
     ]
+    assert not any(g["asks_camera"] or g["asks_optics"] for g in schede)
     assert _filtri_senza_nome(pagina, COLORI) == {None}
 
 
@@ -114,35 +139,37 @@ def test_a_camera_its_files_say_colour_is_not_asked_and_its_poses_are_osc(pagina
     23/9/2026): le sue pose che non dicono il filtro sono OSC, anche quella di un programma che la
     matrice non la scrive: i file votano prima del giro. La posa che il filtro lo scrive resta col
     suo filtro."""
-    assert OSC not in _gruppi(pagina)
+    assert OSC not in _schede(pagina)
     assert _filtro_del_file(pagina, "osc_0.fits") == "OSC"
     assert _filtro_del_file(pagina, "osc_senza.fits") == "OSC"
     assert _filtro_del_file(pagina, "osc_duo.fits") == "L-eXtreme"
 
 
 def test_answering_no_filter_on_a_colour_camera_does_not_call_it_mono(pagina):
-    """Su una camera a colori "nessun filtro" vuol dire il sensore nudo, cioe' OSC: la risposta
-    parla del filtro e non riscrive il sensore sulla scheda. La pagina non la chiede piu', ma una
-    pagina aperta prima del voto dei file puo' ancora mandarla."""
-    apply(pagina, unfiltered=[{"key": OSC, "answer": "no_filter"}])
+    """Su una camera a colori il filtro non si chiede, e una pagina vecchia che lo manda lo stesso
+    si sente dire che quella domanda non c'e': la scheda della camera resta a colori."""
+    with db(pagina) as conn:
+        riga = conn.execute(
+            "SELECT f.* FROM frames f JOIN positions p ON p.frame_id = f.id"
+            " WHERE p.rel_path LIKE '%osc_senza.fits'"
+        ).fetchone()
+        chiave = signature.key_of(signature.parts_of(riga))
+    corpo = {"gear": [{"key": chiave, "filter": "no_filter"}]}
+    assert pagina.post("/api/v1/review/apply", json=corpo).status_code == 404
     assert _scheda(pagina, OSC)["camera_type"] == "color"
     assert _filtro_del_file(pagina, "osc_0.fits") == "OSC"
-    # restano le altre due camere (la COLORI ha un file con la matrice e due senza, e la
-    # maggioranza non la dice a colori)
-    assert review(pagina)["to_confirm"] == 2
 
 
 def test_answering_colour_makes_those_poses_osc_and_the_next_ones_too(pagina, tmp_path):
     """ "A colori" vale per le pose che ci sono e per quelle che verranno, e come per chi scrive
     `BAYERPAT` un filtro a banda larga su una camera a colori e' OSC. Da li' la camera e' a colori
     e non si chiede piu': la risposta si cambia sulla sua scheda."""
-    out = apply(pagina, unfiltered=[{"key": MONO, "answer": "color"}])
+    out = _rispondi(pagina, MONO, "color")
     assert out["requeued"] == 8  # le pose di quella camera senza matrice, copia compresa
     assert _filtri_senza_nome(pagina, MONO) == {"OSC"}
     assert _filtro_del_file(pagina, "mono_l.fits") == "OSC"
-    assert MONO not in _gruppi(pagina)
-    # resta la COLORI
-    assert review(pagina)["to_confirm"] == 1
+    assert not _chiede(pagina, MONO)
+    assert review(pagina)["to_confirm"] == 1  # resta la COLORI
     _posa(tmp_path / "lib" / "mono_dopo.fits", 40, INSTRUME=MONO)
     _scansiona_ancora(pagina)
     assert _filtro_del_file(pagina, "mono_dopo.fits") == "OSC"
@@ -152,18 +179,19 @@ def test_answering_mono_with_no_filter_puts_them_on_no_filter(pagina):
     """ "Mono, nessun filtro": le pose vanno sulla riga esplicita "nessun filtro", che nel database
     non e' una frase italiana (a tradurla e' la pagina). E si puo' cambiare idea, in tutti e due i
     versi."""
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "no_filter"}])
+    _rispondi(pagina, MONO, "no_filter")
     assert _filtri_senza_nome(pagina, MONO) == {"None"}
     assert da_rivedere(pagina) == 0  # una risposta data: il filtro adesso si sa
     with db(pagina) as conn:
         riga = conn.execute("SELECT name, passband FROM filters WHERE is_none = 1").fetchall()
     assert [tuple(r) for r in riga] == [("None", "NONE")]
-    assert _gruppi(pagina)[MONO]["answer"] == "no_filter"
-    # la riga nata dalla risposta non si richiede, e resta aperta la COLORI
-    assert review(pagina)["to_confirm"] == 1
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "color"}])
+    assert _risposta(pagina, MONO) == "no_filter"
+    assert review(pagina)["to_confirm"] == 1  # resta aperta la COLORI
+    _rispondi(pagina, MONO, "color")
     assert _filtri_senza_nome(pagina, MONO) == {"OSC"}
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "no_filter"}])
+    _scheda_mono = _scheda(pagina, MONO)
+    correct(pagina, _scheda_mono["id"], camera_type="mono")
+    _rispondi(pagina, MONO, "no_filter")
     assert _filtri_senza_nome(pagina, MONO) == {"None"}
 
 
@@ -179,48 +207,38 @@ def _id_del_filtro(client, nome):
 
 def test_answering_one_of_my_filters_puts_them_on_it(pagina):
     """ "Uno dei tuoi filtri" (Marco, 25/9/2026): le pose vanno su quel filtro, che si sceglie fra
-    quelli con la banda nota -- mai la riga "nessun filtro", che e' un'altra risposta. La camera ha
+    quelli con la banda nota -- mai la riga "nessun filtro", che e' un'altra risposta. La scheda ha
     risposto e non conta piu'."""
     scelte = {f["name"] for f in review(pagina)["filter_choices"]}
-    assert {"H\u03b1", "Lum"} <= scelte and "None" not in scelte
-    apply(
-        pagina,
-        unfiltered=[{"key": MONO, "answer": "filter", "filter_id": _id_del_filtro(pagina, "Lum")}],
-    )
+    assert {"Hα", "Lum"} <= scelte and "None" not in scelte
+    _rispondi(pagina, MONO, "filter", _id_del_filtro(pagina, "Lum"))
     assert _filtri_senza_nome(pagina, MONO) == {"Lum"}
     assert da_rivedere(pagina) == 0
-    assert {k: _gruppi(pagina)[MONO][k] for k in ("answer", "filter_id")} == {
-        "answer": "filter",
-        "filter_id": _id_del_filtro(pagina, "Lum"),
-    }
-    # resta la COLORI
-    assert review(pagina)["to_confirm"] == 1
+    risposta = _schede(pagina)[MONO]["answer"]
+    assert (risposta["filter"], risposta["filter_id"]) == ("filter", _id_del_filtro(pagina, "Lum"))
+    assert review(pagina)["to_confirm"] == 1  # resta la COLORI
 
 
 def test_the_answer_follows_its_filter_when_it_is_renamed_or_merged(pagina):
     """La risposta tiene il NOME del filtro: rinominarlo o unirlo a un altro la porta con se', o
     quelle pose lo perderebbero con un avviso in un log."""
-    apply(
-        pagina,
-        unfiltered=[{"key": MONO, "answer": "filter", "filter_id": _id_del_filtro(pagina, "Lum")}],
-    )
+    _rispondi(pagina, MONO, "filter", _id_del_filtro(pagina, "Lum"))
     apply(pagina, filters=[{"id": _id_del_filtro(pagina, "Lum"), "name": "Astronomik L"}])
     assert _filtri_senza_nome(pagina, MONO) == {"Astronomik L"}
-    assert _gruppi(pagina)[MONO]["filter_id"] == _id_del_filtro(pagina, "Astronomik L")
-    ha = _id_del_filtro(pagina, "H\u03b1")
+    assert _schede(pagina)[MONO]["answer"]["filter_id"] == _id_del_filtro(pagina, "Astronomik L")
+    ha = _id_del_filtro(pagina, "Hα")
     apply(pagina, filters=[{"id": _id_del_filtro(pagina, "Astronomik L"), "merge_into": ha}])
-    assert _filtri_senza_nome(pagina, MONO) == {"H\u03b1"}
+    assert _filtri_senza_nome(pagina, MONO) == {"Hα"}
 
 
 def test_one_of_my_filters_does_not_beat_colour(pagina, tmp_path):
     """La risposta dice cosa c'era davanti a una mono: passando ad "a colori" quei frame vanno su
     OSC, e un frame con la matrice che arriva dopo e' OSC, qualunque cosa dica la risposta."""
-    lum = _id_del_filtro(pagina, "Lum")
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "filter", "filter_id": lum}])
+    _rispondi(pagina, MONO, "filter", _id_del_filtro(pagina, "Lum"))
     _posa(tmp_path / "lib" / "mono_matrice.fits", 45, INSTRUME=MONO, BAYERPAT="RGGB")
     _scansiona_ancora(pagina)
     assert _filtro_del_file(pagina, "mono_matrice.fits") == "OSC"
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "color"}])
+    _rispondi(pagina, MONO, "color")
     assert _filtri_senza_nome(pagina, MONO) == {"OSC"}
 
 
@@ -229,38 +247,39 @@ def test_a_filter_named_like_an_answer_stays_a_filter(pagina):
     chiama proprio `no_filter` resta quel filtro, e non diventa la risposta "nessun filtro"."""
     lum = _id_del_filtro(pagina, "Lum")
     apply(pagina, filters=[{"id": lum, "name": "no_filter"}])
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "filter", "filter_id": lum}])
+    _rispondi(pagina, MONO, "filter", lum)
     assert _filtri_senza_nome(pagina, MONO) == {"no_filter"}
 
 
 def test_one_of_my_filters_is_one_of_the_choices(pagina, tmp_path):
     """ "Uno dei tuoi" si sceglie fra i filtri con la banda nota: la riga "nessun filtro" e'
     un'altra risposta, e un filtro di cui non si sa la banda non dice cosa c'era davanti."""
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "no_filter"}])
+    _rispondi(pagina, MONO, "no_filter")
     _posa(tmp_path / "lib" / "mono_strano.fits", 46, INSTRUME=MONO, FILTER="Filter 3")
     _scansiona_ancora(pagina)
     strano = next(f for f in review(pagina)["filters"] if f["name"] == "Filter 3")
     assert strano["passband"] == "UNKNOWN"
     assert strano["id"] not in {f["id"] for f in review(pagina)["filter_choices"]}
+    chiave = _schede(pagina)[MONO]["key"]
     for filtro in (_id_nessun_filtro(pagina), strano["id"]):
-        corpo = {"unfiltered": [{"key": MONO, "answer": "filter", "filter_id": filtro}]}
+        corpo = {"gear": [{"key": chiave, "filter": "filter", "filter_id": filtro}]}
         assert pagina.post("/api/v1/review/apply", json=corpo).status_code == 404
 
 
 @pytest.mark.parametrize(
     "risposta",
-    [{"answer": "filter"}, {"answer": "no_filter", "filter_id": 1}],
+    [{"filter": "filter"}, {"filter": "no_filter", "filter_id": 1}, {"filter_id": 1}],
 )
 def test_a_filter_goes_with_one_of_my_filters_and_only_there(pagina, risposta):
     """ "Uno dei tuoi" senza dire quale non e' una risposta, e un filtro accanto a un'altra risposta
     sarebbe un secondo bersaglio fra cui scegliere noi."""
-    r = pagina.post("/api/v1/review/apply", json={"unfiltered": [{"key": MONO, **risposta}]})
-    assert r.status_code == 422
+    corpo = {"gear": [{"key": _schede(pagina)[MONO]["key"], **risposta}]}
+    assert pagina.post("/api/v1/review/apply", json=corpo).status_code == 422
 
 
 def test_a_filter_that_is_not_there_is_refused(pagina):
     """Un filtro che non c'e' piu' (la pagina era vecchia) si dice, prima di scrivere."""
-    corpo = {"unfiltered": [{"key": MONO, "answer": "filter", "filter_id": 999}]}
+    corpo = {"gear": [{"key": _schede(pagina)[MONO]["key"], "filter": "filter", "filter_id": 999}]}
     assert pagina.post("/api/v1/review/apply", json=corpo).status_code == 404
 
 
@@ -271,7 +290,7 @@ def test_writing_colour_on_the_card_answers_too(pagina):
     out = correct(pagina, camera["id"], camera_type="color").json()
     assert out["requeued"] == 8
     assert _filtri_senza_nome(pagina, MONO) == {"OSC"}
-    assert MONO not in _gruppi(pagina)
+    assert not _chiede(pagina, MONO)
 
 
 def test_the_answer_about_the_filter_survives_a_change_of_sensor(pagina):
@@ -279,14 +298,14 @@ def test_the_answer_about_the_filter_survives_a_change_of_sensor(pagina):
     ritira "nessun filtro", la rilegge -- a colori e a nudo vuol dire OSC -- e tornando a mono le
     pose tornano sulla riga "nessun filtro", invece di lasciare una domanda riaperta a vuoto."""
     camera = _scheda(pagina, MONO)
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "no_filter"}])
+    _rispondi(pagina, MONO, "no_filter")
     correct(pagina, camera["id"], camera_type="mono")
-    assert _gruppi(pagina)[MONO]["answer"] == "no_filter"
+    assert _risposta(pagina, MONO) == "no_filter"
     correct(pagina, camera["id"], camera_type="color")
-    assert MONO not in _gruppi(pagina)
+    assert not _chiede(pagina, MONO)
     assert _filtri_senza_nome(pagina, MONO) == {"OSC"}
     correct(pagina, camera["id"], camera_type="mono")
-    assert _gruppi(pagina)[MONO]["answer"] == "no_filter"
+    assert _risposta(pagina, MONO) == "no_filter"
     assert _filtri_senza_nome(pagina, MONO) == {"None"}
 
 
@@ -294,7 +313,7 @@ def test_renaming_no_filter_does_not_answer_for_the_other_cameras(pagina, tmp_pa
     """Rinominare la riga "nessun filtro" non insegna una regola: una regola su `none`
     risponderebbe per ogni camera, anche per quella a cui nessuno ha chiesto e per quella che la
     matrice dice a colori."""
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "no_filter"}])
+    _rispondi(pagina, MONO, "no_filter")
     apply(pagina, filters=[{"id": _id_nessun_filtro(pagina), "name": "Nessun filtro"}])
     _posa(tmp_path / "lib" / "mono_dopo.fits", 43, INSTRUME=MONO)  # la riga si ritrova rinominata
     _posa(tmp_path / "lib" / "colori_none.fits", 40, INSTRUME=COLORI, FILTER="none")
@@ -321,7 +340,7 @@ def test_a_no_filter_name_already_taken_is_said_not_crashed(pagina, caplog):
     with db(pagina) as conn:
         ha = conn.execute("SELECT id FROM filters WHERE passband = 'HA'").fetchone()["id"]
     apply(pagina, filters=[{"id": ha, "name": "None"}])
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "no_filter"}])
+    _rispondi(pagina, MONO, "no_filter")
     assert _filtri_senza_nome(pagina, MONO) == {None}
     assert da_rivedere(pagina) == 6  # restano da rivedere, copia compresa
     assert "nessun filtro, nome preso" in caplog.text  # e si dice
@@ -329,31 +348,34 @@ def test_a_no_filter_name_already_taken_is_said_not_crashed(pagina, caplog):
     assert next(s for s in stadi if s["name"] == "normalize")["tally"]["errors"] == 0
 
 
-def test_merging_two_cameras_carries_the_answer_to_the_one_kept(pagina, tmp_path):
-    """Due grafie, una camera: la risposta della camera assorbita passa a quella tenuta, e le pose
-    di quella tenuta la sentono anche loro."""
+def test_merging_two_cameras_leaves_each_signature_its_answer(pagina, tmp_path):
+    """La risposta sta sulla firma, cioe' sulla grafia del file (ADR 0014, S1): unire due camere
+    non la sposta. Le pose di ciascuna grafia tengono la sua, e la grafia che non ha risposto
+    resta da chiedere."""
     _posa(tmp_path / "lib" / "asi6200_0.fits", 50, INSTRUME="ASI6200")
     _scansiona_ancora(pagina)
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "no_filter"}])
+    _rispondi(pagina, MONO, "no_filter")
     pezzi = {i["name"]: i["id"] for i in gear(pagina)["instruments"]}
     correct(pagina, pezzi[MONO], merge_into=pezzi["ASI6200"])
-    assert _filtro_del_file(pagina, "asi6200_0.fits") == "None"
-    assert _gruppi(pagina)["ASI6200"]["answer"] == "no_filter"
+    assert _filtro_del_file(pagina, "mono_0.fits") == "None"
+    assert _filtro_del_file(pagina, "asi6200_0.fits") is None
+    assert _risposta(pagina, MONO) == "no_filter"
+    assert _risposta(pagina, "ASI6200") is None
 
 
 def test_renaming_a_camera_carries_its_answer(pagina):
-    """La risposta sta sotto il nome della camera: rinominarla dall'Attrezzatura se la porta
-    dietro, invece di lasciarla a un nome che non c'e' piu'."""
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "no_filter"}])
+    """La firma e' la grafia del file: rinominare la camera dall'Attrezzatura lascia la scheda e
+    la sua risposta dove sono, e le pose sulla riga "nessun filtro"."""
+    _rispondi(pagina, MONO, "no_filter")
     correct(pagina, _scheda(pagina, MONO)["id"], name="Mia mono")
-    assert _gruppi(pagina)["Mia mono"]["answer"] == "no_filter"
+    assert _risposta(pagina, MONO) == "no_filter"
     assert _filtri_senza_nome(pagina, "Mia mono") == {"None"}
 
 
 def test_no_filter_is_not_merged_into_another_filter(pagina):
     """La riga "nessun filtro" non si unisce a un altro filtro: la sua grafia diventerebbe una
-    regola su `none`, che risponderebbe per ogni camera. Si cambia la risposta sulla camera."""
-    apply(pagina, unfiltered=[{"key": MONO, "answer": "no_filter"}])
+    regola su `none`, che risponderebbe per ogni camera. Si cambia la risposta sulla scheda."""
+    _rispondi(pagina, MONO, "no_filter")
     ha = next(f for f in review(pagina)["filter_choices"] if f["passband"] == "HA")
     corpo = {"filters": [{"id": _id_nessun_filtro(pagina), "merge_into": ha["id"]}]}
     r = pagina.post("/api/v1/review/apply", json=corpo)
@@ -361,24 +383,55 @@ def test_no_filter_is_not_merged_into_another_filter(pagina):
 
 
 def test_merging_into_a_colour_camera_keeps_the_answer_that_arrives(pagina, tmp_path):
-    """La risposta dell'assorbita passa alla tenuta anche quando la tenuta dice "a colori": li' e'
-    il sensore a essere scritto, non il filtro. Finche' dice "a colori" le pose sono OSC; se la
-    scheda torna mono la risposta e' ancora li', invece di essere sparita nell'unione."""
+    """Unita a una camera a colori, la grafia che aveva risposto "nessun filtro" non si chiede
+    piu' -- le sue pose sono OSC -- ma la risposta resta sulla sua firma: se la scheda torna mono,
+    e' ancora li', invece di essere sparita nell'unione."""
     _posa(tmp_path / "lib" / "asi6200_0.fits", 50, INSTRUME="ASI6200")
     _scansiona_ancora(pagina)
-    apply(pagina, unfiltered=[{"key": "ASI6200", "answer": "no_filter"}])
+    _rispondi(pagina, "ASI6200", "no_filter")
     pezzi = {i["name"]: i["id"] for i in gear(pagina)["instruments"]}
     correct(pagina, pezzi[MONO], camera_type="color")
     correct(pagina, pezzi["ASI6200"], merge_into=pezzi[MONO])
-    assert MONO not in _gruppi(pagina)
+    assert not _chiede(pagina, "ASI6200")
+    assert _filtro_del_file(pagina, "asi6200_0.fits") == "OSC"
     correct(pagina, pezzi[MONO], camera_type="mono")
-    assert _gruppi(pagina)[MONO]["answer"] == "no_filter"
+    assert _risposta(pagina, "ASI6200") == "no_filter"
+    assert _filtro_del_file(pagina, "asi6200_0.fits") == "None"
 
 
 def test_an_answer_about_a_camera_that_is_not_there_is_refused(pagina):
-    """Una camera che non c'e' (la pagina era vecchia) si dice, invece di scrivere una regola
-    verso il nulla."""
-    r = pagina.post(
-        "/api/v1/review/apply", json={"unfiltered": [{"key": "Nessuna", "answer": "color"}]}
-    )
-    assert r.status_code == 404
+    """Una firma che non c'e' (la pagina era vecchia) si dice, invece di scrivere una regola verso
+    il nulla."""
+    corpo = {"gear": [{"key": '["nessuna", null, null, 4, 3, null]', "filter": "color"}]}
+    assert pagina.post("/api/v1/review/apply", json=corpo).status_code == 404
+
+
+@pytest.mark.parametrize("filtro, sensore", [("color", "color"), ("no_filter", "mono")])
+def test_the_camera_of_the_night_takes_the_answer_about_the_sensor(
+    db_path, tmp_path, filtro, sensore
+):
+    """La posa muta prende la camera dalla notte, e la sua scheda chiede solo il filtro: la
+    risposta sul sensore va sulla scheda di quella camera, come se il file la dicesse."""
+    root = tmp_path / "lib"
+    _posa(root / "detta.fits", 1, INSTRUME=COLORI, FILTER="L")
+    _posa(root / "muta.fits", 2, **{"INSTRUME": None})
+    populate(db_path, root)
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        scheda = review(c)["gear"][0]
+        assert (scheda["asks_camera"], scheda["asks_filter"]) == (False, True)
+        apply(c, gear=[{"key": scheda["key"], "filter": filtro}])
+        assert _scheda(c, COLORI)["camera_type"] == sensore
+        if filtro == "color":
+            assert _filtro_del_file(c, "muta.fits") == "OSC"
+
+
+def test_colour_without_a_camera_is_refused(db_path, tmp_path):
+    """ "A colori" si scrive sulla scheda della camera: se la firma non la dice e nessuno l'ha
+    ancora detta, non c'e' dove scriverlo, e si dice -- prima la camera."""
+    root = tmp_path / "lib"
+    _posa(root / "senza.fits", 1, **{"INSTRUME": None})
+    populate(db_path, root)
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        chiave = review(c)["gear"][0]["key"]
+        r = c.post("/api/v1/review/apply", json={"gear": [{"key": chiave, "filter": "color"}]})
+        assert r.status_code == 422 and r.json()["detail"]["code"] == "not_asked"

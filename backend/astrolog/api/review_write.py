@@ -14,7 +14,6 @@ from ..spine import gear, gear_create, mosaic
 from ..spine import object_answer as risposta
 from ..spine import objects as obj
 from ..spine import rigs as corredi
-from ..spine import unfiltered as unfiltered_reader
 from ..spine.group import SITE_UNCLEAR
 from ..spine.stages import invalidate
 from . import instrument_answer as strumento
@@ -27,7 +26,6 @@ from .models_review_apply import (
     FilterCorrection,
     MosaicEdit,
     ReviewApply,
-    UnfilteredEdit,
 )
 
 _CONSTRAINT_CODES = {
@@ -60,16 +58,14 @@ def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> tupl
     the same Apply carries the answer along instead of leaving it looking for a vanished name."""
     changed = 0
     requeued: set[int] = set()
-    for edit in body.unfiltered:
-        requeued.update(_answer_unfiltered(conn, edit, now))
-        changed += 1
-    # the rigs to choose from do not change inside Apply: read once
-    scelte = {c.id: c for c in page.rig_choices(conn)} if body.rigless else {}
-    for edit in body.rigless:
-        requeued.update(folders.answer_rigless(conn, edit, now, scelte))
-        changed += 1
-    for edit in body.opticsless:
-        requeued.update(folders.answer_opticsless(conn, edit, now))
+    # the rigs and filters to choose from do not change inside Apply: read once
+    scelte = (
+        ({c.id: c for c in page.rig_choices(conn)}, {f.id: f for f in page.filter_choices(conn)})
+        if body.gear
+        else ({}, {})
+    )
+    for edit in body.gear:
+        requeued.update(folders.answer_gear(conn, edit, now, scelte))
         changed += 1
     for edit in body.unnamed:
         requeued.update(folders.answer_unnamed(conn, edit, now))
@@ -125,22 +121,25 @@ def scrivendo(conn: sqlite3.Connection) -> Iterator[None]:
         raise rifiuto from err
 
 
+# The refusals of the rules, as (status, code): words a page can show.
+_REFUSALS: tuple[tuple[type[Exception], int, str], ...] = (
+    (gear.MergeRefusedError, 422, "merge_refused"),
+    (folders.NotAskedError, 422, "not_asked"),
+    (decl.UnknownTargetError, 422, "unknown_target"),
+    (corredi.NotAMountError, 422, "not_a_mount"),
+    (corredi.WrongKindError, 422, "wrong_kind"),
+    (gear_create.SpellingTakenError, 409, "spelling_taken"),
+    (corredi.RigExistsError, 409, "rig_exists"),
+)
+
+
 def _rifiuto(err: Exception) -> HTTPException | None:
     """`None` if the error is a failure of ours."""
     if isinstance(err, strumento.FieldNotOfKindError):
         return strumento.refused(err)
-    if isinstance(err, gear.MergeRefusedError):
-        return HTTPException(status_code=422, detail={"code": "merge_refused"})
-    if isinstance(err, decl.UnknownTargetError):
-        return HTTPException(status_code=422, detail={"code": "unknown_target"})
-    if isinstance(err, corredi.NotAMountError):
-        return HTTPException(status_code=422, detail={"code": "not_a_mount"})
-    if isinstance(err, corredi.WrongKindError):
-        return HTTPException(status_code=422, detail={"code": "wrong_kind"})
-    if isinstance(err, gear_create.SpellingTakenError):
-        return HTTPException(status_code=409, detail={"code": "spelling_taken"})
-    if isinstance(err, corredi.RigExistsError):
-        return HTTPException(status_code=409, detail={"code": "rig_exists"})
+    for tipo, status, code in _REFUSALS:
+        if isinstance(err, tipo):
+            return HTTPException(status_code=status, detail={"code": code})
     # a `KeyError` is a `LookupError` but a failure of ours: a 404 would tell the user their
     # piece is not there
     if isinstance(err, LookupError) and not isinstance(err, KeyError):
@@ -148,22 +147,6 @@ def _rifiuto(err: Exception) -> HTTPException | None:
     if isinstance(err, sqlite3.IntegrityError):
         return HTTPException(status_code=409, detail={"code": constraint_code(err)})
     return None
-
-
-def _answer_unfiltered(conn: sqlite3.Connection, edit: UnfilteredEdit, now: str) -> list[int]:
-    """A camera or a filter no longer there is an old page, said before writing. The filter's
-    NAME is written, not its id: a merge deletes the row, and the answer must survive."""
-    camera_id = gear.instrument_id(conn, "camera", edit.key)
-    if camera_id is None:
-        raise LookupError(f"camera {edit.key}")
-    nome = None
-    if edit.filter_id is not None:
-        scelte = {f.id: f.name for f in page.filter_choices(conn)}
-        if edit.filter_id not in scelte:
-            raise LookupError(f"filtro {edit.filter_id}")
-        nome = scelte[edit.filter_id]
-    unfiltered_reader.declare(conn, edit.key, edit.answer, nome, now)
-    return unfiltered_reader.requeue(conn, camera_id)
 
 
 def _answer_mosaic(conn: sqlite3.Connection, edit: MosaicEdit, now: str) -> None:

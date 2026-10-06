@@ -259,12 +259,13 @@ def review(client):
 def to_confirm_without(pagina, sezione):
     """Quanto conta la pagina di Da confermare tolta una sezione, ricomposto dai suoi campi: e' un
     oracolo scritto dalla pagina, non dal codice che conta, e un numero a memoria invecchierebbe."""
-    gruppi = ("unfiltered", "unnamed", "rigless", "opticsless", "typeless", "mosaics")
+    gruppi = ("unnamed", "typeless", "mosaics")
     conti = {
         "lookalikes": len(pagina["lookalikes"]),
         "filters": len(pagina["filters"]),
         "objects": sum(1 for o in pagina["objects"] if not o["confirmed"]),
         "unclear": sum(1 for p in pagina["unclear"] if p["site"] is None),
+        "gear": sum(1 for g in pagina["gear"] if not g["complete"]),
         **{g: sum(1 for r in pagina[g] if r["answer"] is None) for g in gruppi},
     }
     assert sezione in conti, sezione

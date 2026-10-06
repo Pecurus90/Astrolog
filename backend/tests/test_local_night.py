@@ -141,17 +141,3 @@ def test_an_hour_in_a_zone_that_does_not_exist_is_not_invented():
     come se fosse del posto."""
     assert local_iso("2026-03-14T11:30:00", "Da/Nessuna_Parte") is None
     assert local_iso("2026-03-14T11:30:00") == "2026-03-14T11:30:00+00:00"
-
-
-def test_poses_without_a_date_from_two_years_are_two_questions(db_path, tmp_path):
-    """Pose senza data e senza camera di due anni diversi sono due domande: la notte e' quella
-    del file."""
-    root = tmp_path / "lib"
-    for nome, quando in (("a.fits", "2024-05-17T21:00:00"), ("b.fits", "2025-08-02T21:00:00")):
-        percorso = write_fits(root / nome, {"IMAGETYP": "Light Frame", "EXPTIME": 300.0})
-        _sul_disco(percorso, quando)
-
-    with _apri(db_path, root) as c:
-        notti = sorted(g["night"] for g in review(c)["rigless"])
-
-    assert notti == ["2024-05-17", "2025-08-02"]

@@ -106,13 +106,13 @@ def test_review_lists_what_was_found(client):
     assert sum(g["frames"] for g in page["unnamed"]) == 2
 
     # le domande aperte e gli oggetti non ancora visti: prima si poteva leggere "0 da confermare"
-    # con tutto l'archivio senza un nome. E le camere che non dicono il filtro, finche' non si
-    # risponde (`test_review_unfiltered.py`).
+    # con tutto l'archivio senza un nome. E le schede sull'attrezzatura, finche' non si risponde
+    # (`test_review_gear.py`).
     atteso = len(page["lookalikes"]) + len(page["filters"]) + len(page["objects"])
-    atteso += len(page["unfiltered"]) + len(page["unnamed"])  # e le cartelle senza nome
-    # e le pose ASIAIR, che la camera la dicono e l'ottica no: una domanda per camera e focale
-    assert [(d["camera"], d["frames"]) for d in page["opticsless"]] == [("Canon EOS 700D", 3)]
-    atteso += len(page["opticsless"])
+    atteso += len(page["gear"]) + len(page["unnamed"])  # e le cartelle senza nome
+    # le pose ASIAIR, che la camera la dicono e l'ottica no: una scheda che chiede l'ottica
+    ottica = [(g["camera"], g["frames"]) for g in page["gear"] if g["asks_optics"]]
+    assert ottica == [("Canon EOS 700D", 3)]
     assert page["to_confirm"] == atteso
 
 

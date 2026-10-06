@@ -8,7 +8,7 @@ from typing import Any
 from ..db import idlist
 from ..db.row import Row
 from ..vocab.filters import NO_FILTER, UNKNOWN, model_by_id, passband_from_bands
-from . import counts, unfiltered
+from . import counts, signature
 from . import rigs as corredi
 from .declarations import (
     ALIAS_KINDS,
@@ -149,7 +149,7 @@ def declare_filter(  # noqa: PLR0913
         # The "no filter" row's name comes from the vocabulary: a rule on "none" would decide for
         # every camera in place of its answer.
         rename(conn, "filter", row["name"], new_name, now)
-        unfiltered.follow_filter(conn, row["name"], new_name)  # the camera keeps the NAME
+        signature.follow_filter(conn, row["name"], new_name)  # the answer keeps the NAME
     _set_fields(conn, "filters", filter_id, fields, FILTER_FIELDS)
     if is_none is not None:
         # "no filter" IS a band of the closed domain: the switch alone would leave the old band,
@@ -279,7 +279,7 @@ def merge_filter(
     if not filter_mergeable(src, dst):
         raise MergeRefusedError("si unisce un filtro vero in un altro, con la banda nota")
     rename(conn, "filter", src["name"], dst["name"], now)
-    unfiltered.follow_filter(conn, src["name"], dst["name"])  # "the same filter" there too
+    signature.follow_filter(conn, src["name"], dst["name"])  # "the same filter" there too
     frames = [r[0] for r in conn.execute("SELECT id FROM frames WHERE filter_id = ?", (from_id,))]
     conn.execute("UPDATE frames SET filter_id = NULL WHERE filter_id = ?", (from_id,))
     conn.execute("DELETE FROM filters WHERE id = ?", (from_id,))

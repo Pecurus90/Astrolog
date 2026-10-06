@@ -519,10 +519,11 @@ def test_a_frame_that_waits_does_not_ask_for_the_filter(db_path, tmp_path):
     _muto(root / "boh" / "x.fits", FILTER=None)
     populate(db_path, root)
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
-        assert review(c)["unfiltered"] == []
+        assert [g for g in review(c)["gear"] if g["asks_filter"]] == []
         apply(c, typeless=[{"key": _chiave(c, "boh"), "kind": "light"}])
         c.app.state.worker.join(20.0)
-        assert [(g["key"], g["frames"]) for g in review(c)["unfiltered"]] == [("ZWO ASI2600MM", 1)]
+        filtro = [(g["camera"], g["frames"]) for g in review(c)["gear"] if g["asks_filter"]]
+        assert filtro == [("ZWO ASI2600MM", 1)]
 
 
 def test_a_folder_that_is_not_there_is_refused(pagina):

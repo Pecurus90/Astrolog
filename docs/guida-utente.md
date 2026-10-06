@@ -414,7 +414,8 @@ di una camera a colori restano *OSC* -- e un corredo con la stessa ottica, la st
 focale entro il 5% e' quello. Per la stessa ragione, se quel filtro ce l'hai gia' (le tue pose `L`
 stanno gia' su *Lum*) o se hai gia' un corredo uguale, te lo dice invece di fartene un secondo: il
 filtro si rinomina con *Correggi*. Con l'ASIAIR i file non dicono l'ottica: le sue pose vanno in un
-corredo senza ottica, finche' non dici quale era in *Da confermare* (*Frame senza ottica*).
+corredo senza ottica, finche' non dici quale era in *Da confermare* (*Attrezzatura da
+completare*).
 
 ## Da confermare
 
@@ -455,36 +456,38 @@ a guardare, perche' non sono la stessa cosa.
   l'app riconosce non te li chiede. A differenza delle altre domande, un filtro a cui hai risposto
   esce dalla pagina. Nell'Attrezzatura, con *Correggi* accanto al filtro, ne cambi nome, marca e
   modello, o lo unisci a un altro; la banda, per ora, no.
-- **Frame senza filtro.** Per le camere i cui frame non scrivono il filtro scegli una volta sola
-  cosa c'era davanti: *a colori, senza filtro*, *nessun filtro* o *uno dei miei filtri*, che scegli
-  da una tendina fra i filtri che l'app conosce. Vale anche per i frame che arriveranno. Se con
-  quella camera cambiavi filtri senza che il file li scrivesse non c'e' una risposta giusta:
-  quei frame restano senza filtro. Una camera che i suoi file dicono a colori non te la chiede: i
-  suoi frame senza filtro vanno su OSC da soli.
-- **Frame senza camera.** Un frame che non dice la camera prende quella degli altri frame della
-  stessa notte, se dicono tutti la stessa; e se non dice l'ottica, prende quella della notte quando
-  la notte ne dice una sola a una focale sola, con la focale se il frame non la dice (una focale sua
-  diversa invece non prende l'ottica della notte). Te lo chiede quando nessun frame di quella notte
-  dice la camera, o quando ne dicono piu' d'una. La notte va da mezzogiorno a mezzogiorno nell'ora
-  del posto -- dove l'hai ripreso, se il file lo dice, o di casa; senza nessuno dei due, di
-  Greenwich (UTC) -- e un frame che non dice quando e' stato ripreso prende il giorno in cui il
-  file e' stato scritto. Se dichiari casa dopo la prima lettura, o la sposti in un altro fuso, i
-  frame che non dicono dove sono stati ripresi passano all'ora della casa nuova, e le risposte che
-  hai dato per notte li seguono; se due gruppi a cui avevi risposto in modo diverso diventano uno,
-  la domanda torna aperta.
-  Te li mostra raggruppati per notte e per cio' che dicono i file (sensore, pixel, telescopio),
-  non per cartella. Per ogni gruppo scegli uno dei tuoi corredi, oppure scrivi ottica, camera e
-  focale: l'app ti propone l'ottica che i frame dicono e la focale nativa. La tua risposta vale
-  anche per i frame che arriveranno con la stessa notte e gli stessi valori, da qualunque
-  cartella, e vale anche se poi la notte direbbe un'altra camera. Se poi rinomini o unisci la
-  camera o l'ottica che hai scritto, la risposta le segue.
-- **Frame senza ottica.** Frame che hanno una camera ma nessuna ottica: i loro file non la
-  nominano (l'ASIAIR al suo posto scrive la montatura, altri programmi non scrivono il
-  telescopio), oppure la camera l'hanno presa dalla loro notte o da una tua risposta in *Frame
-  senza camera*. Te lo chiede una volta per camera e focale, con quanti frame e cosa ci hai ripreso: scegli una delle tue ottiche o ne
-  scrivi il nome, e se non ce l'hai nasce in Attrezzatura. I frame vanno nel corredo che quell'ottica
-  ha gia' con quella camera, e la risposta vale anche per i frame che arriveranno. Due ottiche
-  diverse usate alla stessa focale con la stessa camera ti arrivano come una domanda sola.
+- **Attrezzatura da completare.** Quando i file non dicono con che camera, con che ottica o con
+  che filtro hai ripreso, l'app te lo chiede in **una scheda sola** per ogni gruppo di file che
+  scrivono le stesse cose: lo stesso nome di camera e di telescopio, la stessa focale (a meno del
+  5%) e lo stesso sensore. Non per notte e non per cartella: la tua risposta vale per tutti quei
+  frame, anche per quelli che arriveranno, in qualunque notte e da qualunque cartella. La scheda
+  ti chiede solo cio' che manca.
+  - *La camera.* Se un frame non la dice, prende quella degli altri frame della stessa notte, se
+    dicono tutti la stessa, e non te la chiede; e se non dice l'ottica, prende quella della notte
+    quando la notte ne dice una sola a una focale sola. Te la chiede quando nessun frame di quella
+    notte dice la camera, o quando ne dicono piu' d'una. Scegli uno dei tuoi corredi, oppure
+    scrivi la camera e la focale, e l'ottica se serve: l'app ti propone l'ottica che i frame
+    dicono e la focale nativa. La tua risposta vale anche se poi la notte direbbe un'altra camera.
+  - *L'ottica.* Con l'ASIAIR il file scrive la montatura al posto dell'ottica, e altri programmi
+    il telescopio non lo scrivono: scegli una delle tue ottiche o ne scrivi il nome, e se non ce
+    l'hai nasce in Attrezzatura. I frame vanno nel corredo che quell'ottica ha gia' con quella
+    camera. Il nome della montatura non conta: due montature con la stessa camera alla stessa
+    focale sono una scheda sola. Due ottiche diverse usate alla stessa focale con la stessa camera
+    ti arrivano come una domanda sola.
+  - *Il filtro.* Scegli cosa c'era davanti: *a colori, senza filtro* (si scrive sulla scheda della
+    camera, quindi prima serve sapere qual e' la camera), *nessun filtro* o *uno dei miei filtri*,
+    che scegli da una tendina fra i filtri che l'app conosce. Se cambiavi filtri senza che il file
+    li scrivesse non c'e' una risposta giusta: quei frame restano senza filtro. Una camera che i
+    suoi file dicono a colori non te lo chiede: i suoi frame senza filtro vanno su OSC da soli.
+
+  La scheda conta fra le cose da confermare finche' non hai risposto a tutte le parti che chiede;
+  puoi rispondere una parte alla volta, e quella gia' data resta. Se rinomini o unisci la camera,
+  l'ottica o il filtro che hai scritto, la risposta li segue; se rinomini o unisci una camera dei
+  tuoi file, la risposta resta sul nome che i file scrivono. Se cambi casa o il suo fuso, le
+  risposte sull'attrezzatura restano dove sono.
+
+  **In questa versione la scheda non si vede ancora**: arriva col disegno nuovo della pagina. Fino
+  ad allora il numero di *Da confermare* la conta, e quei frame restano senza le parti che mancano.
 - **Frame senza tipo.** Alcuni programmi non scrivono nel file se e' una foto del cielo o un file
   di calibrazione. Lo capisce l'app guardando il cielo: se riesce a riconoscere dove punta e' una
   foto, se non trova stelle e' una calibrazione (bias, flat e dark con pochi pixel caldi non ne hanno; e
@@ -496,7 +499,7 @@ a guardare, perche' non sono la stessa cosa.
   -- e da li' in poi l'app salta anche i file senza tipo che arriveranno in quella cartella e che
   l'archivio non ha ancora, contandoli fra i saltati della scansione. La tua risposta vale per
   tutti i file senza tipo della cartella, anche per quelli che l'app aveva gia' capito. Finche' non rispondi quei frame non contano nelle
-  ore e non te li chiede fra i Frame senza nome ne' fra i Frame senza filtro: prima si sa **che
+  ore e non te li chiede fra i Frame senza nome ne' per il filtro: prima si sa **che
   file sono**, poi cosa inquadrano. La risposta e' della cartella, e vale anche per i file che ci
   sposti: in una cartella a cui non hai ancora risposto torna ad aspettare un file che il cielo non
   ha riconosciuto, in una cartella che hai detto di calibrazione qualunque file senza tipo, anche

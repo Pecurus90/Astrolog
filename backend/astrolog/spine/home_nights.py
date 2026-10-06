@@ -1,5 +1,5 @@
-"""The night of frames whose header does not say where they were shot follows home's zone, and the
-per-group answers carrying that night in their key follow it (contract: `docs/domini/spina.md`)."""
+"""The night of frames whose header does not say where they were shot follows home's zone, and so
+do the unnamed groups keyed by it; gear answers carry no night (contract: `domini/spina.md`)."""
 
 import json
 import sqlite3
@@ -7,8 +7,7 @@ import sqlite3
 from ..clock import NIGHT_SQL, night_date
 from ..place import timezone_of_frame
 from . import declarations as decl
-from . import rigless, unnamed
-from .night_rig import asks_camera
+from . import unnamed
 from .scan_store import home_timezone
 from .stages import invalidate
 
@@ -19,14 +18,12 @@ type Towards = dict[str, set[str]]
 
 _PLACES = "SELECT DISTINCT site_lat, site_lon FROM frames WHERE local_tz IS NOT ?"
 _OF_PLACE = """
-SELECT f.id, f.local_night, f.night_instant, f.unnamed_key, f.instrument_raw, f.telescope_raw,
-  f.naxis1, f.naxis2, f.pixel_size_um
+SELECT f.id, f.local_night, f.night_instant, f.unnamed_key
 FROM frames f WHERE f.local_tz IS NOT ? AND f.site_lat IS ? AND f.site_lon IS ?
 """
 _REWRITE = "UPDATE frames SET local_night = ?, local_tz = ? WHERE id = ?"
 _OF_NIGHTS = f"""
-SELECT f.id, {NIGHT_SQL} AS night, f.unnamed_key, f.instrument_raw, f.telescope_raw, f.naxis1,
-  f.naxis2, f.pixel_size_um
+SELECT f.id, {NIGHT_SQL} AS night, f.unnamed_key
 FROM frames f WHERE {NIGHT_SQL} IN (SELECT value FROM json_each(?))
 """  # noqa: S608 - constant fragments
 
@@ -53,24 +50,9 @@ def follow_home(conn: sqlite3.Connection) -> None:
     )
     spostati = {r["id"] for r, _ in moved}
     fermi = [r for r in conn.execute(_OF_NIGHTS, (notti,)) if r["id"] not in spostati]
-    rig_fermi = {
-        rigless.key_of_row(r, r["night"]) for r in fermi if asks_camera(r["instrument_raw"])
-    }
-    _carry(conn, decl.GROUP_RIG, _rigless_moves(moved), rig_fermi)
     oggetto_fermi = {r["unnamed_key"] for r in fermi}
     _carry(conn, decl.GROUP_OBJECT, _unnamed_moves(conn, moved), oggetto_fermi)
     invalidate(conn, [r["id"] for r in conn.execute(_OF_NIGHTS, (notti,))], "normalize")
-
-
-def _rigless_moves(moved: list[Move]) -> Towards:
-    """Only frames that do not say their camera: the key is composed from the night, so it moves by
-    itself and the answer must go with it."""
-    verso: Towards = {}
-    for r, notte in moved:
-        if asks_camera(r["instrument_raw"]):
-            vecchia = rigless.key_of_row(r, r["local_night"])
-            verso.setdefault(rigless.key_of_row(r, notte), set()).add(vecchia)
-    return verso
 
 
 def _unnamed_moves(conn: sqlite3.Connection, moved: list[Move]) -> Towards:

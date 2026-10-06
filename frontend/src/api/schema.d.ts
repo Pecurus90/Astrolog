@@ -1452,6 +1452,62 @@ export interface components {
              */
             reason: "root_unreachable" | "scan_running";
         };
+        /**
+         * GearAnswer
+         * @description What the user said about a signature: the **names** of the pieces, never row numbers. An
+         *     empty field is a part not answered, not a part that was not there.
+         */
+        GearAnswer: {
+            /** Camera */
+            camera: string | null;
+            /** Optics */
+            optics: string | null;
+            /** Focal Mm */
+            focal_mm: number | null;
+            /**
+             * Filter
+             * @description Colour is written on the camera's card, not here.
+             */
+            filter: ("no_filter" | "filter") | null;
+            /**
+             * Filter Id
+             * @description With "one of yours", which; empty if that filter is no longer there.
+             */
+            filter_id: number | null;
+        };
+        /**
+         * GearEdit
+         * @description The answer about a signature, the parts it asks: the camera -- a rig among those the app
+         *     knows (`rig_id`, what the page holds after a click) **or** the written camera with its focal
+         *     length, plus the optics if needed --, the optics alone, and what sat in front (`filter`, with
+         *     `filter_id` for "one of yours"). What is written is always **names**: the pieces come into
+         *     being from them as from a header. A part not sent keeps its earlier answer.
+         */
+        GearEdit: {
+            /**
+             * Key
+             * @description The signature read from the page.
+             */
+            key: string;
+            /** Rig Id */
+            rig_id?: number | null;
+            /**
+             * Camera
+             * @description A name of only spaces is not a name.
+             */
+            camera?: string | null;
+            /** Optics */
+            optics?: string | null;
+            /**
+             * Focal Mm
+             * @description Unknown focal length, never invented: no zeros.
+             */
+            focal_mm?: number | null;
+            /** Filter */
+            filter?: ("color" | "no_filter" | "filter") | null;
+            /** Filter Id */
+            filter_id?: number | null;
+        };
         /** GearList */
         GearList: {
             /** Instruments */
@@ -1483,6 +1539,59 @@ export interface components {
             integration_s: number;
         };
         /**
+         * GearSignature
+         * @description The frames whose files leave out camera, optics or filter, one card per **header
+         *     signature**: the spelling of camera and telescope, the focal, the sensor -- never the night or
+         *     the folder. `asks_*` say which parts the card asks: what the night or the camera's colour
+         *     settles is not asked. `optics` and `focal_mm` are what the frames already say, when they say a
+         *     single thing; `focal_suggested` the native focal of that optics, where the frames carry none.
+         *     An answered card stays on the page because one must be able to change one's mind.
+         */
+        GearSignature: {
+            /**
+             * Key
+             * @description The signature: one answers with it, and it does not move.
+             */
+            key: string;
+            /**
+             * Camera
+             * @description `INSTRUME` as written in the file.
+             */
+            camera: string | null;
+            /**
+             * Telescope
+             * @description `TELESCOP` as written in the file.
+             */
+            telescope: string | null;
+            /** Width Px */
+            width_px: number | null;
+            /** Height Px */
+            height_px: number | null;
+            /** Pixel Um */
+            pixel_um: number | null;
+            /** Frames */
+            frames: number;
+            /** Asks Camera */
+            asks_camera: boolean;
+            /** Asks Optics */
+            asks_optics: boolean;
+            /** Asks Filter */
+            asks_filter: boolean;
+            /** Optics */
+            optics: string | null;
+            /** Focal Mm */
+            focal_mm: number | null;
+            /** Focal Suggested */
+            focal_suggested: number | null;
+            answer: components["schemas"]["GearAnswer"] | null;
+            /**
+             * Complete
+             * @description Every part asked has its answer: it no longer counts.
+             */
+            complete: boolean;
+            subjects: components["schemas"]["Subjects"];
+        };
+        /**
          * GearWritten
          * @description What happened while writing. `requeued` is not zero when the answer changes the meaning of
          *     some frame -- the colour of a camera does -- and then the work restarts by itself.
@@ -1494,19 +1603,6 @@ export interface components {
             requeued: number;
             /** Run Started */
             run_started: boolean;
-        };
-        /**
-         * GroupRig
-         * @description The rig the user named for a group: the **names** of the pieces, never the row numbers.
-         *     Empty `optics` means they did not say it, not that there was none.
-         */
-        GroupRig: {
-            /** Optics */
-            optics: string | null;
-            /** Camera */
-            camera: string;
-            /** Focal Mm */
-            focal_mm: number | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2063,53 +2159,6 @@ export interface components {
              */
             candidates: components["schemas"]["ObjectCandidate"][];
         };
-        /**
-         * OpticslessEdit
-         * @description The answer about a camera at one focal length: with which optics. The **name** is written:
-         *     one the Gear page does not have makes the piece come into being, like a header.
-         */
-        OpticslessEdit: {
-            /**
-             * Key
-             * @description The key read from the page.
-             */
-            key: string;
-            /**
-             * Optics
-             * @description A name of only spaces is not a name.
-             */
-            optics: string;
-        };
-        /**
-         * OpticslessRig
-         * @description The frames whose files do not name the optics (the ASIAIR writes the mount there, others do
-         *     not write it at all), one question per **camera and focal length**: "which optics was it?". The
-         *     answer also holds for the frames still to come; an answered question stays on the page to allow
-         *     a change of mind.
-         */
-        OpticslessRig: {
-            /**
-             * Key
-             * @description The key of the camera at that focal length: one answers with it.
-             */
-            key: string;
-            /** Camera */
-            camera: string;
-            /** Focal Mm */
-            focal_mm: number | null;
-            /** Frames */
-            frames: number;
-            /** Integration S */
-            integration_s: number;
-            /** Untimed */
-            untimed: number;
-            /**
-             * Answer
-             * @description The name of the optics already given.
-             */
-            answer: string | null;
-            subjects: components["schemas"]["Subjects"];
-        };
         /** PathInfo */
         PathInfo: {
             /**
@@ -2247,20 +2296,10 @@ export interface components {
              */
             unclear: components["schemas"]["CoordinatesEdit"][];
             /**
-             * Unfiltered
+             * Gear
              * @default []
              */
-            unfiltered: components["schemas"]["UnfilteredEdit"][];
-            /**
-             * Rigless
-             * @default []
-             */
-            rigless: components["schemas"]["RiglessGroupEdit"][];
-            /**
-             * Opticsless
-             * @default []
-             */
-            opticsless: components["schemas"]["OpticslessEdit"][];
+            gear: components["schemas"]["GearEdit"][];
             /**
              * Unnamed
              * @default []
@@ -2293,7 +2332,7 @@ export interface components {
             filters: components["schemas"]["FilterOut"][];
             /**
              * Rig Choices
-             * @description The rigs among which one answers about the frames without a camera.
+             * @description The rigs among which one answers a card that asks the camera.
              */
             rig_choices: components["schemas"]["RigChoice"][];
             /**
@@ -2314,28 +2353,18 @@ export interface components {
              */
             unclear: components["schemas"]["UnclearCoordinates"][];
             /**
-             * Unfiltered
-             * @description The cameras whose frames do not tell the filter.
+             * Gear
+             * @description The header signatures whose frames leave out camera, optics or filter.
              */
-            unfiltered: components["schemas"]["UnfilteredCamera"][];
+            gear: components["schemas"]["GearSignature"][];
             /**
              * Filter Choices
              * @description The filters with a known band, among which one answers.
              */
             filter_choices: components["schemas"]["FilterCandidate"][];
             /**
-             * Rigless
-             * @description The groups of frames that do not tell the camera.
-             */
-            rigless: components["schemas"]["RiglessGroup"][];
-            /**
-             * Opticsless
-             * @description The cameras at one focal length whose frames do not name the optics.
-             */
-            opticsless: components["schemas"]["OpticslessRig"][];
-            /**
              * Optics Choices
-             * @description The optics you own, among which one answers that question.
+             * @description The optics you own, among which one answers a card that asks the optics.
              */
             optics_choices: string[];
             /**
@@ -2375,7 +2404,7 @@ export interface components {
         /**
          * RigChoice
          * @description One of your rigs, among which one chooses which camera took some frames: only those with a
-         *     camera, because one without does not answer that question.
+         *     camera, because one without does not answer that part.
          */
         RigChoice: {
             /** Id */
@@ -2469,75 +2498,6 @@ export interface components {
             width_deg: number | null;
             /** Height Deg */
             height_deg: number | null;
-        };
-        /**
-         * RiglessGroup
-         * @description The frames that do not tell which camera took them, grouped by **night and header values**:
-         *     one asks per group, never per frame, and never per folder. The group shows with the night --
-         *     empty for frames without a date -- and the values that make it. The frames that carry the
-         *     telescope but not the camera fall here too (the ASIAIR writes the mount in `TELESCOP`).
-         *     `optics` and `focal_mm` are what the frames already say, when they say a single thing;
-         *     `focal_suggested` the native focal length of the optics on the card, to propose where the frames
-         *     do not carry it. An answered group stays on the page because one must be able to change one's
-         *     mind.
-         */
-        RiglessGroup: {
-            /**
-             * Key
-             * @description The group key: one answers with it, and it does not reopen.
-             */
-            key: string;
-            /**
-             * Night
-             * @description The night, YYYY-MM-DD; empty for those that do not say when.
-             */
-            night: string | null;
-            /**
-             * Telescope
-             * @description `TELESCOP` as written in the file: it is in the key, and goes on screen.
-             */
-            telescope: string | null;
-            /** Width Px */
-            width_px: number | null;
-            /** Height Px */
-            height_px: number | null;
-            /** Pixel Um */
-            pixel_um: number | null;
-            /** Frames */
-            frames: number;
-            /** Optics */
-            optics: string | null;
-            /** Focal Mm */
-            focal_mm: number | null;
-            /** Focal Suggested */
-            focal_suggested: number | null;
-            answer: components["schemas"]["GroupRig"] | null;
-            subjects: components["schemas"]["Subjects"];
-        };
-        /**
-         * RiglessGroupEdit
-         * @description The answer about a group: with which rig those frames were taken. A rig among those the app
-         *     knows (`rig_id`, what the page holds after a click) **or** the written pieces: the camera and
-         *     the **focal length**, plus the optics if needed. What is written is always the **names**, and
-         *     the pieces come into being from those names as they do from a header.
-         */
-        RiglessGroupEdit: {
-            /**
-             * Key
-             * @description The group key read from the page.
-             */
-            key: string;
-            /** Rig Id */
-            rig_id?: number | null;
-            /** Optics */
-            optics?: string | null;
-            /** Camera */
-            camera?: string | null;
-            /**
-             * Focal Mm
-             * @description Unknown focal length, never invented: no zeros.
-             */
-            focal_mm?: number | null;
         };
         /**
          * ScanAllStarted
@@ -3088,53 +3048,6 @@ export interface components {
             /** Candidates */
             candidates: components["schemas"]["SiteCandidate"][];
             subjects: components["schemas"]["Subjects"];
-        };
-        /**
-         * UnfilteredCamera
-         * @description The frames that do not tell the filter, grouped by **camera**: without `BAYERPAT` a mono and
-         *     a colour camera cannot be told apart, and one asks only once. A camera the card or the files
-         *     say is colour is not there: its frames are OSC. `answer` is the answer already given: an
-         *     answered group stays on the page because one must be able to change one's mind.
-         */
-        UnfilteredCamera: {
-            /**
-             * Key
-             * @description The camera name: it is the key one answers with.
-             */
-            key: string;
-            /** Frames */
-            frames: number;
-            /**
-             * Answer
-             * @description "Colour" removes it from the page.
-             */
-            answer: ("no_filter" | "filter") | null;
-            /**
-             * Filter Id
-             * @description With "one of yours", which one; empty if that filter is no longer there.
-             */
-            filter_id: number | null;
-            subjects: components["schemas"]["Subjects"];
-        };
-        /**
-         * UnfilteredEdit
-         * @description The answer about a camera: its frames that do not tell the filter are of a colour camera
-         *     (`color`), taken with no filter (`no_filter`), or with one of your filters (`filter`, and
-         *     `filter_id` says which).
-         */
-        UnfilteredEdit: {
-            /**
-             * Key
-             * @description The camera name read from the page.
-             */
-            key: string;
-            /**
-             * Answer
-             * @enum {string}
-             */
-            answer: "color" | "no_filter" | "filter";
-            /** Filter Id */
-            filter_id?: number | null;
         };
         /**
          * UnnamedAnswer

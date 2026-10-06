@@ -1369,6 +1369,62 @@
         'passband': 'UNKNOWN',
       }),
     ]),
+    'gear': list([
+      dict({
+        'answer': None,
+        'asks_camera': False,
+        'asks_filter': False,
+        'asks_optics': True,
+        'camera': 'Canon EOS 700D',
+        'complete': False,
+        'focal_mm': 560.0,
+        'focal_suggested': None,
+        'frames': 3,
+        'height_px': 3,
+        'key': '["canon eos 700d", null, 560.0, 4, 3, 4.29]',
+        'optics': None,
+        'pixel_um': 4.29,
+        'subjects': dict({
+          'found': list([
+            dict({
+              'frames': 1,
+              'name': 'IC 1396',
+            }),
+          ]),
+          'not_found': 2,
+          'not_yet': 0,
+        }),
+        'telescope': 'EQMod Mount',
+        'width_px': 4,
+      }),
+      dict({
+        'answer': None,
+        'asks_camera': False,
+        'asks_filter': True,
+        'asks_optics': False,
+        'camera': 'ATR2600M(USB2.0)',
+        'complete': False,
+        'focal_mm': 560.0,
+        'focal_suggested': None,
+        'frames': 1,
+        'height_px': 3,
+        'key': '["atr2600m(usb2 0)", "askar 103apo", 560.0, 4, 3, 3.76]',
+        'optics': 'Askar 103Apo',
+        'pixel_um': 3.76,
+        'subjects': dict({
+          'found': list([
+            dict({
+              'frames': 1,
+              'name': 'M 42',
+            }),
+          ]),
+          'not_found': 0,
+          'not_yet': 0,
+        }),
+        'telescope': 'Askar 103Apo',
+        'width_px': 4,
+      }),
+    ]),
     'lookalikes': list([
       dict({
         'frames': 1,
@@ -1472,27 +1528,6 @@
       'RC8',
       'TS 130 APO',
     ]),
-    'opticsless': list([
-      dict({
-        'answer': None,
-        'camera': 'Canon EOS 700D',
-        'focal_mm': 560.0,
-        'frames': 3,
-        'integration_s': 660.0,
-        'key': '|Canon EOS 700D|560.0',
-        'subjects': dict({
-          'found': list([
-            dict({
-              'frames': 1,
-              'name': 'IC 1396',
-            }),
-          ]),
-          'not_found': 2,
-          'not_yet': 0,
-        }),
-        'untimed': 0,
-      }),
-    ]),
     'rig_choices': list([
       dict({
         'camera': 'ATR2600M(USB2.0)',
@@ -1530,8 +1565,6 @@
         'optics': 'TS 130 APO',
       }),
     ]),
-    'rigless': list([
-    ]),
     'seen': dict({
       'objects': 6,
     }),
@@ -1540,24 +1573,6 @@
     'typeless': list([
     ]),
     'unclear': list([
-    ]),
-    'unfiltered': list([
-      dict({
-        'answer': None,
-        'filter_id': None,
-        'frames': 1,
-        'key': 'ATR2600M(USB2.0)',
-        'subjects': dict({
-          'found': list([
-            dict({
-              'frames': 1,
-              'name': 'M 42',
-            }),
-          ]),
-          'not_found': 0,
-          'not_yet': 0,
-        }),
-      }),
     ]),
     'unnamed': list([
       dict({

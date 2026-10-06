@@ -5,7 +5,8 @@ L'archivio di prova e' quello sintetico (`synthetic.py`), non quello di Marco: g
 sono dei quattro software supportati piu' i casi che rompono le assunzioni.
 """
 
-from astrolog.spine import stages, unfiltered
+from astrolog.spine import signature, stages
+from astrolog.spine import signature_page as cards
 from astrolog.spine.normalize import normalize_frames
 from conftest import (
     frame_by_file,
@@ -468,7 +469,7 @@ def test_normalize_reads_the_colour_of_the_camera_not_of_the_single_pose(conn, t
     run_normalize(conn)
     dopo = frame_by_file(conn, "4.fits")
     assert one(conn, "SELECT name FROM filters WHERE id = ?", (dopo["filter_id"],)) == "OSC"
-    assert unfiltered.by_camera(conn) == []
+    assert [g for g in cards.by_signature(conn) if g["asks_filter"]] == []
 
 
 def test_normalize_a_copy_does_not_vote_the_colour_before_the_round(conn, tmp_path):
@@ -515,8 +516,9 @@ def test_normalize_passes_each_pose_once(conn, tmp_path, monkeypatch):
 
 
 def test_normalize_a_camera_answered_no_filter_gives_unfiltered_poses_one_row(conn, tmp_path):
-    """ "Mono, nessun filtro": le pose vanno sulla riga "nessun filtro", una sola, ritrovata anche
-    rinominata. Se manca e il suo nome e' gia' di un altro filtro, la posa resta da rivedere."""
+    """ "Nessun filtro" sulla firma: le pose vanno sulla riga "nessun filtro", una sola, ritrovata
+    anche rinominata. Se manca e il suo nome e' gia' di un altro filtro, la posa resta da
+    rivedere."""
     for i in range(2):
         write_fits(tmp_path / f"{i}.fits", {**CARD, "INSTRUME": "Mono",
                                             "DATE-OBS": f"2024-05-17T21:0{i}:00"})  # fmt: skip
@@ -529,9 +531,10 @@ def test_normalize_a_camera_answered_no_filter_gives_unfiltered_poses_one_row(co
         stages.invalidate(conn, ids, "normalize")
         return run_normalize(conn)["to_review"]
 
-    unfiltered.declare(conn, "Mono", unfiltered.NO_FILTER_ANSWER)
+    chiave = signature.key_of(signature.parts_of(rows(conn, "SELECT * FROM frames")[0]))
+    signature.declare(conn, chiave, signature.Answer(filter=signature.NO_FILTER))
     assert rinormalizza() == 0
-    assert [g["answer"] for g in unfiltered.by_camera(conn)] == ["no_filter"]
+    assert [g["answer"]["filter"] for g in cards.by_signature(conn)] == ["no_filter"]
     assert rows(conn, "SELECT name, is_none FROM filters") == [{"name": "None", "is_none": 1}]
     conn.execute("UPDATE filters SET name = 'Nessun filtro'")
     assert rinormalizza() == 0 and one(conn, "SELECT COUNT(*) FROM filters") == 1

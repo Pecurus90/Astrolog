@@ -1,12 +1,13 @@
 """The rig as the declarer sees it: its fingerprint, its key, what the user writes on it. A merge
 can delete the row, so name and mount live among the declarations, on a key that outlives it."""
 
+import json
 import sqlite3
 
 from ..clock import now_iso
 from ..db.inserted import inserted_id
 from ..units import same_focal
-from . import gear_usage, rigless
+from . import gear_usage, signature
 from .declarations import forget, rig_key, rig_key_parts, values_of, write_declaration
 from .stages import invalidate
 
@@ -63,8 +64,25 @@ def find_rig(
     return None
 
 
-# What a rig carries to its frames' new key; the answer on the optics stays where it is.
+# What a rig carries to its frames' new key.
 CARRIED_FIELDS = ("name", MOUNT)
+
+
+def optics_less_key(
+    conn: sqlite3.Connection, camera: str | None, focal_mm: float | None
+) -> str | None:
+    """The key the user named or mounted the optics-less rig on, focal by the rigs' rule: the rig
+    may be gone, its declarations are not."""
+    chiavi = conn.execute(
+        "SELECT DISTINCT entity_key FROM declarations WHERE entity_type = 'rig'"
+        " AND field IN (SELECT value FROM json_each(?)) ORDER BY entity_key",
+        (json.dumps(CARRIED_FIELDS),),
+    )
+    for (chiave,) in chiavi:
+        parti = rig_key_parts(chiave)
+        if parti and parti[0] is None and parti[1] == camera and same_focal(parti[2], focal_mm):
+            return chiave
+    return None
 
 
 def carry_declarations(conn: sqlite3.Connection, old_key: str, rig_id: int, now: str) -> None:
@@ -225,19 +243,18 @@ def declare_rig(conn: sqlite3.Connection, rig_id: int, name: str, now: str | Non
 KEY_KINDS = ("optics", "camera")
 
 
-# The pieces a rig declaration carries in its value, with the kind as field: the mount you give
-# it, and the optics you tell the camera at a focal (`spine/rig_optics.py`).
-VALUE_KINDS = (MOUNT, "optics")
+# The pieces a rig declaration carries in its value, with the kind as field: the mount you give it.
+VALUE_KINDS = (MOUNT,)
 
 
 def follow_piece(
     conn: sqlite3.Connection, kind: str, old_name: str, new_name: str, now: str | None = None
 ) -> None:
-    """Optics and camera move the rig key, mount and optics the value naming them; no other kind is
-    touched."""
+    """Optics and camera move the rig key and the gear answers, a mount the value naming it; no
+    other kind is touched."""
     if kind in KEY_KINDS:
         follow_rename(conn, old_name, new_name, now)
-        rigless.follow_piece(conn, kind, old_name, new_name, now)  # and the answers on the groups
+        signature.follow_piece(conn, kind, old_name, new_name, now)  # and the gear answers
     if kind in VALUE_KINDS:
         conn.execute(
             "UPDATE declarations SET value = ?"

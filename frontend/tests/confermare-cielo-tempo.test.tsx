@@ -28,9 +28,8 @@ const PAGINA = {
   filters: [],
   rigs: [],
   objects: [],
-  unfiltered: [],
+  gear: [],
   filter_choices: [],
-  rigless: [],
   unnamed: [],
   unclear: [
     {

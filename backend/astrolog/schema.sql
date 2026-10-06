@@ -165,11 +165,11 @@ CREATE TABLE header_aliases (
 -- campo `site` dice il NOME del sito a cui appartengono le pose riprese di li'. Sono la chiave
 -- giusta perche' la risposta e' un fatto sul posto e non su una notte: vale anche per le notti
 -- che verranno.
--- Per le pose che non dicono con che CAMERA sono state riprese (`folder`) la chiave e' il percorso
--- della CARTELLA che le contiene -- quella dei file, non la radice registrata -- con le barre
--- sempre in avanti, cosi' e' la stessa su Windows, su Mac e sul NAS; il campo `rig` tiene i NOMI di
--- ottica e camera con la focale, e i pezzi nascono da quei nomi come nascono da un header. Li' la
--- risposta vale anche per le pose che arriveranno in quella cartella (Marco, 12/9/2026). Sulla stessa
+-- Per l'ATTREZZATURA che i file non dicono (`signature`) la chiave e' la firma dell'header: grafia
+-- di camera e telescopio, focale, sensore (ADR 0014, S1); il campo `gear` tiene in JSON i NOMI di
+-- camera e ottica, la focale e cosa c'era davanti (`no_filter`, o `filter` col nome del filtro).
+-- Vale anche per le pose che arriveranno con la stessa firma, in qualunque notte.
+-- Per i gruppi di pose senza oggetto (`frame_group`) la chiave e' scritta sulla posa; sulla stessa
 -- chiave il campo `object` risponde per le pose che non dicono l'OGGETTO e di cui il cielo non dice
 -- niente: "catalog:<slug>", "name:<nome>" oppure "none", cioe' non e' un oggetto (Marco, 15/9/2026).
 -- Per un mosaico (`mosaic`) la chiave e' quella del mosaico -- l'impronta di una delle sue pose,
@@ -177,7 +177,7 @@ CREATE TABLE header_aliases (
 -- "no", oppure DI COSA e' il mosaico, "catalog:<slug>" o "name:<nome>", che e' il si' (Marco,
 -- 22/9/2026). Si scrive una volta, e nessuno la ricalcola (Marco, 23/9/2026).
 CREATE TABLE declarations (
-  entity_type TEXT NOT NULL CHECK (entity_type IN ('object', 'rig', 'instrument', 'night', 'session', 'coordinates', 'folder', 'frame_group', 'mosaic')),
+  entity_type TEXT NOT NULL CHECK (entity_type IN ('object', 'rig', 'instrument', 'night', 'session', 'coordinates', 'folder', 'frame_group', 'mosaic', 'signature')),
   entity_key  TEXT NOT NULL,
   field       TEXT NOT NULL,
   value       ANY,

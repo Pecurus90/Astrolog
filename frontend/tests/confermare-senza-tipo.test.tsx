@@ -24,10 +24,9 @@ const PAGINA = {
   objects: [],
   mosaics: [],
   unclear: [],
-  unfiltered: [],
+  gear: [],
   filter_choices: [],
   unnamed: [],
-  rigless: [],
   rigs: [],
   typeless: [
     { key: "D:/Astro/2024-05-17/dark", frames: 120, answer: null },

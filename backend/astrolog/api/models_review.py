@@ -6,12 +6,10 @@ from pydantic import BaseModel, Field
 
 from .models_page import Page
 from .models_review_groups import (
+    GearSignature,
     MosaicCandidate,
-    OpticslessRig,
-    RiglessGroup,
     TypelessFolder,
     UnclearCoordinates,
-    UnfilteredCamera,
     UnnamedGroup,
 )
 
@@ -82,7 +80,7 @@ class FilterOut(BaseModel):
 
 class RigChoice(BaseModel):
     """One of your rigs, among which one chooses which camera took some frames: only those with a
-    camera, because one without does not answer that question."""
+    camera, because one without does not answer that part."""
 
     id: int
     name: str | None = Field(
@@ -171,7 +169,7 @@ class ReviewOut(BaseModel):
     )
     filters: list[FilterOut]
     rig_choices: list[RigChoice] = Field(
-        description="The rigs among which one answers about the frames without a camera."
+        description="The rigs among which one answers a card that asks the camera."
     )
     objects: list[ObjectOut] = Field(
         description="Those to decide and the new ones; the doubts on top."
@@ -183,20 +181,14 @@ class ReviewOut(BaseModel):
     unclear: list[UnclearCoordinates] = Field(
         description="The places the app asks about: empty when it does not ask."
     )
-    unfiltered: list[UnfilteredCamera] = Field(
-        description="The cameras whose frames do not tell the filter."
+    gear: list[GearSignature] = Field(
+        description="The header signatures whose frames leave out camera, optics or filter."
     )
     filter_choices: list[FilterCandidate] = Field(
         description="The filters with a known band, among which one answers."
     )
-    rigless: list[RiglessGroup] = Field(
-        description="The groups of frames that do not tell the camera."
-    )
-    opticsless: list[OpticslessRig] = Field(
-        description="The cameras at one focal length whose frames do not name the optics."
-    )
     optics_choices: list[str] = Field(
-        description="The optics you own, among which one answers that question."
+        description="The optics you own, among which one answers a card that asks the optics."
     )
     typeless: list[TypelessFolder] = Field(
         description="The folders whose frames do not tell what file they are."

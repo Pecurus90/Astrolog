@@ -7,8 +7,9 @@ import sqlite3
 
 import pytest
 
-from astrolog.spine import camera_specs, gear, normalize, unfiltered
+from astrolog.spine import camera_specs, gear, normalize, signature, unfiltered
 from astrolog.spine import declarations as decl
+from astrolog.spine import signature_page as cards
 from astrolog.spine.normalize import normalize_frames
 from astrolog.units import most_frequent, physical_pixel_um
 from conftest import senza_soggetti, write_light
@@ -219,38 +220,49 @@ def test_the_colour_follows_the_files_too(conn, tmp_path):
 
 def test_the_card_says_the_sensor_and_the_answer_stays_and_the_pixel_does_nothing(conn, tmp_path):
     """La risposta sulle pose che non dicono il filtro parla del FILTRO, la scheda del SENSORE
-    (`spine/unfiltered.py`): scrivere "a colori" non la ritira -- la camera non si chiede piu',
+    (`spine/signature.py`): scrivere "a colori" non la ritira -- la camera non si chiede piu',
     perche' un sensore nudo a colori E' OSC -- e tornando a mono la risposta e' ancora quella. Il
     pixel non c'entra con nessuna delle due."""
     pose(conn, tmp_path / "lib", {**BIN1, "FILTER": ""})
     cam = camera_id(conn)
-    unfiltered.declare(conn, CAMERA, unfiltered.NO_FILTER_ANSWER)
+    nessun_filtro(conn, CAMERA)
     gear.declare_instrument(conn, cam, {"pixel_size_um": 3.8})
-    assert risposte(conn) == [(CAMERA, unfiltered.NO_FILTER_ANSWER)]
+    assert risposte(conn) == [(CAMERA, signature.NO_FILTER)]
     gear.declare_instrument(conn, cam, {"camera_type": "color"})
     assert risposte(conn) == []
     gear.declare_instrument(conn, cam, {"camera_type": "mono"})
-    assert risposte(conn) == [(CAMERA, unfiltered.NO_FILTER_ANSWER)]
+    assert risposte(conn) == [(CAMERA, signature.NO_FILTER)]
 
 
 def risposte(conn):
-    """Le risposte sulle pose che non dicono il filtro, come le vede la pagina: per camera."""
-    return [(g["key"], g["answer"]) for g in unfiltered.by_camera(conn)]
+    """Le schede che chiedono il filtro, come le vede la pagina: camera del file e risposta."""
+    return [
+        (g["camera"], g["answer"] and g["answer"]["filter"])
+        for g in cards.by_signature(conn)
+        if g["asks_filter"]
+    ]
+
+
+def nessun_filtro(conn, camera_raw):
+    """ "Nessun filtro" sulla firma della prima posa che scrive quella camera."""
+    posa = conn.execute("SELECT * FROM frames WHERE instrument_raw = ?", (camera_raw,)).fetchone()
+    chiave = signature.key_of(signature.parts_of(posa))
+    signature.declare(conn, chiave, signature.Answer(filter=signature.NO_FILTER))
 
 
 def test_the_unfiltered_answer_follows_the_camera_when_renamed(conn, tmp_path):
-    """La risposta sulle pose che non dicono il filtro e' agganciata al nome della camera, come la
-    scheda: rinominarla la porta con se'."""
+    """La risposta sulle pose che non dicono il filtro e' agganciata alla firma, cioe' alla grafia
+    del file: rinominare la camera non la sposta, e la scheda resta con la sua risposta."""
     pose(conn, tmp_path / "lib", {"FILTER": ""})
-    unfiltered.declare(conn, CAMERA, unfiltered.NO_FILTER_ANSWER)
+    nessun_filtro(conn, CAMERA)
     gear.declare_instrument(conn, camera_id(conn), {"name": "La mia mono"})
-    assert risposte(conn) == [("La mia mono", unfiltered.NO_FILTER_ANSWER)]
+    assert risposte(conn) == [(CAMERA, signature.NO_FILTER)]
 
 
 def test_merging_into_a_colour_camera_carries_the_answer_even_there(conn, tmp_path):
-    """Nell'unione la risposta dell'assorbita passa alla tenuta anche quando la tenuta dice "a
-    colori": la scheda dice il sensore, la risposta dice il filtro, e tornando a mono la risposta
-    e' ancora li' invece di essere sparita."""
+    """Unita a una camera a colori, la grafia che aveva risposto non si chiede piu', ma la risposta
+    resta sulla sua firma: la scheda dice il sensore, la risposta dice il filtro, e tornando a mono
+    la risposta e' ancora li' invece di essere sparita."""
     pose(
         conn,
         tmp_path / "lib",
@@ -258,30 +270,37 @@ def test_merging_into_a_colour_camera_carries_the_answer_even_there(conn, tmp_pa
         {"INSTRUME": "CAMB", "FILTER": ""},
     )
     a, b = camera_id(conn, "CAMA"), camera_id(conn, "CAMB")
-    unfiltered.declare(conn, "CAMA", unfiltered.NO_FILTER_ANSWER)
+    nessun_filtro(conn, "CAMA")
     gear.declare_instrument(conn, b, {"camera_type": "color"})
     gear.merge_instrument(conn, a, b)
+    run_normalize(conn)
     assert risposte(conn) == []
     gear.declare_instrument(conn, b, {"camera_type": "mono"})
-    assert risposte(conn) == [("CAMB", unfiltered.NO_FILTER_ANSWER)]
+    run_normalize(conn)
+    assert sorted(risposte(conn), key=str) == [("CAMA", signature.NO_FILTER), ("CAMB", None)]
+
+
+# l'ottica scritta, o la scheda chiederebbe anche quella
+RC8 = {"TELESCOP": "RC8"}
 
 
 def test_the_unfiltered_poses_are_asked_per_camera(conn, tmp_path):
-    """Le pose che non dicono il filtro si raggruppano per camera, la piu' numerosa in cima
-    (`spine/unfiltered.py`): `open` e' come un filtro che manca, una posa col suo filtro non si
-    conta, e un file con la matrice contro uno senza non fa la camera a colori."""
+    """Le pose che non dicono il filtro si raggruppano per firma -- qui una per camera --, la piu'
+    numerosa in cima (`spine/signature_page.py`): `open` e' come un filtro che manca, una posa col
+    suo filtro non si conta, e un file con la matrice contro uno senza non fa la camera a colori."""
     pose(
         conn,
         tmp_path / "lib",
-        {"INSTRUME": "B mono", "FILTER": "open"},
-        {"INSTRUME": "B mono", "FILTER": ""},
-        {"INSTRUME": "B mono", "FILTER": "L"},
-        {"INSTRUME": "A colori", "FILTER": ""},
-        {"INSTRUME": "A colori", "BAYERPAT": "RGGB"},
+        {"INSTRUME": "B mono", "FILTER": "open", **RC8},
+        {"INSTRUME": "B mono", "FILTER": "", **RC8},
+        {"INSTRUME": "B mono", "FILTER": "L", **RC8},
+        {"INSTRUME": "A colori", "FILTER": "", **RC8},
+        {"INSTRUME": "A colori", "BAYERPAT": "RGGB", **RC8},
     )
-    assert [senza_soggetti(g) for g in unfiltered.by_camera(conn)] == [
-        {"key": "B mono", "frames": 2, "answer": None, "filter_id": None},
-        {"key": "A colori", "frames": 1, "answer": None, "filter_id": None},
+    schede = [senza_soggetti(g) for g in cards.by_signature(conn)]
+    assert [(g["camera"], g["frames"], g["asks_filter"]) for g in schede] == [
+        ("B mono", 2, True),
+        ("A colori", 1, True),
     ]
 
 

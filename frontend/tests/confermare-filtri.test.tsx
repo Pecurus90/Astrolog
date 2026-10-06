@@ -41,8 +41,7 @@ const PAGINA = {
   objects: [],
   mosaics: [],
   unclear: [],
-  unfiltered: [],
-  rigless: [],
+  gear: [],
   unnamed: [],
 }
 

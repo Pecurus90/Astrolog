@@ -452,14 +452,14 @@ def test_an_answer_that_is_not_yes_or_no_is_refused(pagina, cambio, perche_):
 
 @pytest.mark.parametrize("answer", ["yes", "no"])
 def test_saying_the_camera_of_the_poses_keeps_the_mosaic(db_path, tmp_path, answer):
-    """Pose che non dicono la camera: si risponde sul mosaico, poi su *Frame senza camera*, e le
-    pose passano al corredo vero. Il mosaico resta com'era -- col si' nell'Archivio col suo nome,
+    """Pose che non dicono la camera: si risponde sul mosaico, poi sulla scheda della loro firma, e
+    le pose passano al corredo vero. Il mosaico resta com'era -- col si' nell'Archivio col suo nome,
     col no senza tornare fra le domande -- invece di sparire in silenzio alla corsa dopo."""
     _archivio(tmp_path / "lib", db_path, corredo=False)
     with TestClient(create_app(db_path), base_url="http://localhost") as pagina:
         _risposta(pagina, _mosaici(pagina)[0], answer)
-        cartella = review(pagina)["rigless"][0]["key"]
-        apply(pagina, rigless=[{"key": cartella, "optics": OTT, "camera": CAM, "focal_mm": 800.0}])
+        firma = next(g["key"] for g in review(pagina)["gear"] if g["asks_camera"])
+        apply(pagina, gear=[{"key": firma, "optics": OTT, "camera": CAM, "focal_mm": 800.0}])
         with db(pagina) as conn:
             list(normalize_frames(conn))
             list(identify_frames(conn))

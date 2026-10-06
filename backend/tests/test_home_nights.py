@@ -1,5 +1,6 @@
 """La notte delle pose che non dicono dove sono state fatte segue il fuso di casa, e le risposte
-per gruppo che portano quella notte nella chiave la seguono. Le regole stanno in
+sui frame senza nome, che portano quella notte nella chiave, la seguono. Quelle sull'attrezzatura
+no: la loro chiave e' la firma dell'header, senza notte (ADR 0014, S1). Le regole stanno in
 `spine/home_nights.py`.
 
 A Tokyo il confine della notte (mezzogiorno locale) cade alle 03:00 UTC, e quello UTC alle 21:00
@@ -15,8 +16,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from astrolog.api.app import create_app
-from astrolog.spine import declarations as decl
-from astrolog.spine import rigless, unnamed
+from astrolog.spine import signature, unnamed
 from conftest import db, frame_by_file, populate, write_fits
 
 TOKYO = {"name": "Tokyo", "latitude": 35.68, "longitude": 139.69}
@@ -28,8 +28,7 @@ POSE = {"a": "2026-03-14T02:00:00", "b": "2026-03-14T04:00:00", "c": "2026-03-14
 
 def _posa(path, date_obs=None, **header):
     """Una posa che, se `header` non aggiunge niente, non dice camera, nome ne' coordinate: la notte
-    la decide casa, e le due domande per gruppo che portano la notte nella chiave (camera, oggetto)
-    la chiedono."""
+    la decide casa, e la domanda sull'oggetto, che porta la notte nella chiave, la chiede."""
     card = {"IMAGETYP": "Light Frame", "EXPTIME": 300.0, "TELESCOP": "Newton 200"}
     if date_obs:
         card["DATE-OBS"] = date_obs
@@ -73,23 +72,6 @@ def _notte(client, nome):
     with db(client) as conn:
         riga = frame_by_file(conn, f"{nome}.fits")
     return riga["local_night"], riga["local_tz"]
-
-
-def _chiave_camera(client, nome):
-    with db(client) as conn:
-        return rigless.key_of_frame(conn, frame_by_file(conn, f"{nome}.fits"))
-
-
-def _risposta_camera(client, chiave):
-    with db(client) as conn:
-        return rigless.answer(conn, chiave)
-
-
-def _dichiara_camera(client, nome, camera):
-    chiave = _chiave_camera(client, nome)
-    with db(client) as conn:
-        rigless.declare(conn, chiave, None, camera, None)
-    return chiave
 
 
 def test_before_a_home_the_poses_that_do_not_say_where_are_in_utc(pagina):
@@ -156,50 +138,6 @@ def test_without_a_home_they_go_back_to_utc(pagina):
     assert _notte(pagina, "b") == ("2026-03-13", None)
 
 
-def test_a_camera_answer_goes_with_every_part_of_a_group_that_splits(pagina):
-    """Il gruppo di a e b, notte UTC del 13, si divide fra il 13 e il 14 di Tokyo: la risposta
-    va su tutte e due le parti. La c del 14, che non aveva risposta, prende quella di b."""
-    detta = _dichiara_camera(pagina, "a", "ZWO ASI2600MM")
-    assert _chiave_camera(pagina, "b") == detta
-    _casa(pagina)
-    assert _chiave_camera(pagina, "b") != detta
-    assert _chiave_camera(pagina, "b") == _chiave_camera(pagina, "c")
-    for nome in ("a", "b", "c"):
-        chiave = _chiave_camera(pagina, nome)
-        assert _risposta_camera(pagina, chiave)["camera"] == "ZWO ASI2600MM"
-
-
-def test_two_camera_answers_that_disagree_fall_when_their_groups_become_one(pagina):
-    """b (UTC 13) e c (UTC 14) finiscono nello stesso gruppo del 14 di Tokyo con due risposte
-    diverse: scegliere fra due risposte dell'utente vorrebbe dire inventarne una, e la domanda
-    torna aperta. La parte che resta sola nel 13 tiene la sua."""
-    _dichiara_camera(pagina, "a", "ZWO ASI2600MM")
-    _dichiara_camera(pagina, "c", "QHY 268M")
-    _casa(pagina)
-    assert _risposta_camera(pagina, _chiave_camera(pagina, "c")) is None
-    assert _risposta_camera(pagina, _chiave_camera(pagina, "a"))["camera"] == "ZWO ASI2600MM"
-
-
-def test_the_same_camera_answer_on_two_groups_that_become_one_stays(pagina):
-    """b e c finiscono nello stesso gruppo del 14 di Tokyo con la stessa risposta: resta."""
-    _dichiara_camera(pagina, "a", "ZWO ASI2600MM")
-    _dichiara_camera(pagina, "c", "ZWO ASI2600MM")
-    _casa(pagina)
-    assert _risposta_camera(pagina, _chiave_camera(pagina, "c"))["camera"] == "ZWO ASI2600MM"
-
-
-def test_an_answer_left_without_poses_does_not_stay_behind(pagina):
-    """A Honolulu c passa dal 14 al 13, e nessuna posa porta piu' la chiave del 14: la sua
-    risposta va con c e da li' si toglie. La notte e' una data, e restando varrebbe per pose
-    diverse che arrivassero domani con la stessa data e gli stessi valori."""
-    detta = _dichiara_camera(pagina, "c", "QHY 268M")
-    _casa(pagina, **HONOLULU)
-    assert _notte(pagina, "c") == ("2026-03-13", "Pacific/Honolulu")
-    with db(pagina) as conn:
-        assert decl.declared(conn, decl.FRAME_GROUP, detta, decl.GROUP_RIG) is None
-    assert _risposta_camera(pagina, _chiave_camera(pagina, "c"))["camera"] == "QHY 268M"
-
-
 def _chiave_oggetto(client, nome):
     with db(client) as conn:
         return frame_by_file(conn, f"{nome}.fits")["unnamed_key"]
@@ -252,54 +190,15 @@ def test_two_object_answers_that_disagree_fall_when_their_groups_become_one(pagi
         assert unnamed.answer(conn, _chiave_oggetto(pagina, "a"))["name"] == "Cometa di prova"
 
 
-def test_a_pose_that_says_its_camera_carries_no_camera_answer(db_path, tmp_path, offline):
-    """Il gruppo della camera e' fatto di chi non la dice: m ha la camera nell'header e passa dal
-    13 al 14 di Tokyo accanto a c, ma non porta con se' la risposta del 13 -- che avrebbe fatto
-    cadere quella di c, o inventato una risposta dove non ce n'era."""
-    pose = [
-        ("a", POSE["a"], {}),
-        ("c", POSE["c"], {}),
-        ("m", POSE["b"], {"INSTRUME": "ZWO ASI2600MM"}),
-    ]
-    with _archivio(db_path, tmp_path / "lib", pose) as pagina:
-        _dichiara_camera(pagina, "a", "ZWO ASI2600MM")
-        _dichiara_camera(pagina, "c", "QHY 268M")
-        _casa(pagina)
-        assert _notte(pagina, "m") == ("2026-03-14", "Asia/Tokyo")
-        assert _risposta_camera(pagina, _chiave_camera(pagina, "c"))["camera"] == "QHY 268M"
-        assert _risposta_camera(pagina, _chiave_camera(pagina, "a"))["camera"] == "ZWO ASI2600MM"
-
-
-def test_a_pose_that_says_its_camera_does_not_keep_an_answer_alive(db_path, tmp_path, offline):
-    """A Honolulu c passa dal 14 al 13 e lascia la chiave del 14 senza pose senza camera: resta
-    solo n, che la camera la dice e non fa parte del gruppo. La risposta del 14 si toglie lo
-    stesso."""
-    pose = [("c", POSE["c"], {}), ("n", "2026-03-15T08:00:00", {"INSTRUME": "ZWO ASI2600MM"})]
-    with _archivio(db_path, tmp_path / "lib", pose) as pagina:
-        detta = _dichiara_camera(pagina, "c", "QHY 268M")
-        assert _chiave_camera(pagina, "n") == detta
-        _casa(pagina, **HONOLULU)
-        assert _notte(pagina, "n") == ("2026-03-14", "Pacific/Honolulu")
-        with db(pagina) as conn:
-            assert decl.declared(conn, decl.FRAME_GROUP, detta, decl.GROUP_RIG) is None
-
-
-def test_answers_move_along_a_chain_of_nights(db_path, tmp_path, offline):
-    """Sessioni in notti consecutive a Tokyo: la parte serale di ognuna sta nella notte UTC prima.
-    La chiave del 14 e' la nuova per b (dal 13) e la vecchia per z (verso il 15): il 14 prende due
-    risposte diverse e la perde, e il 15 deve prendere quella che il 14 aveva PRIMA."""
-    pose = [
-        ("a", "2026-03-14T02:00:00", {}),  # UTC 13 -> Tokyo 13
-        ("b", "2026-03-14T04:00:00", {}),  # UTC 13 -> Tokyo 14
-        ("c", "2026-03-14T13:00:00", {}),  # UTC 14 -> Tokyo 14
-        ("z", "2026-03-15T04:00:00", {}),  # UTC 14 -> Tokyo 15
-        ("w", "2026-03-15T13:00:00", {}),  # UTC 15 -> Tokyo 15
-    ]
-    with _archivio(db_path, tmp_path / "lib", pose) as pagina:
-        _dichiara_camera(pagina, "a", "ZWO ASI2600MM")
-        _dichiara_camera(pagina, "c", "QHY 268M")
-        _casa(pagina)
-        assert _notte(pagina, "z") == ("2026-03-15", "Asia/Tokyo")
-        assert _risposta_camera(pagina, _chiave_camera(pagina, "a"))["camera"] == "ZWO ASI2600MM"
-        assert _risposta_camera(pagina, _chiave_camera(pagina, "c")) is None
-        assert _risposta_camera(pagina, _chiave_camera(pagina, "w"))["camera"] == "QHY 268M"
+def test_a_camera_answer_stays_put_when_home_moves(pagina):
+    """La risposta sulla camera sta sulla firma, che non porta la notte: a, b e c dividono e
+    riuniscono le notti cambiando fuso, ma la risposta resta una, e vale per tutte e tre."""
+    with db(pagina) as conn:
+        chiave = signature.key_of(signature.parts_of(frame_by_file(conn, "a.fits")))
+        signature.declare(conn, chiave, signature.Answer(camera="ZWO ASI2600MM", focal_mm=800.0))
+    _casa(pagina)
+    with db(pagina) as conn:
+        for nome in ("a", "b", "c"):
+            frame = frame_by_file(conn, f"{nome}.fits")
+            assert signature.key_of(signature.parts_of(frame)) == chiave
+        assert signature.answer(conn, chiave).camera == "ZWO ASI2600MM"

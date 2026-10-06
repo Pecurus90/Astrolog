@@ -8,10 +8,7 @@ import { SezioneFiltri } from "./SezioneFiltri"
 import { SezioneLuoghi } from "./SezioneLuoghi"
 import { SezioneMosaici } from "./SezioneMosaici"
 import { SezioneOggetti } from "./SezioneOggetti"
-import { SezioneSenzaCamera } from "./SezioneSenzaCamera"
-import { SezioneSenzaFiltro } from "./SezioneSenzaFiltro"
 import { SezioneSenzaNome } from "./SezioneSenzaNome"
-import { SezioneSenzaOttica } from "./SezioneSenzaOttica"
 import { SezioneSenzaTipo } from "./SezioneSenzaTipo"
 import { api } from "./api/client"
 import { motivo } from "./api/motivo"
@@ -24,9 +21,6 @@ type Schema = components["schemas"]
 type Accumulo = {
   lookalikes: Record<string, Schema["LookalikeEdit"]>
   filters: Record<number, Schema["FilterEdit"]>
-  unfiltered: Record<string, Schema["UnfilteredEdit"]>
-  rigless: Record<string, Schema["RiglessGroupEdit"]>
-  opticsless: Record<string, Schema["OpticslessEdit"]>
   typeless: Record<string, Schema["TypelessFolderEdit"]>
   unnamed: Record<string, Schema["UnnamedEdit"]>
   unclear: Record<string, Schema["CoordinatesEdit"]>
@@ -36,9 +30,6 @@ type Accumulo = {
 const VUOTO: Accumulo = {
   lookalikes: {},
   filters: {},
-  unfiltered: {},
-  rigless: {},
-  opticsless: {},
   typeless: {},
   unnamed: {},
   unclear: {},
@@ -110,9 +101,8 @@ export function Confermare() {
         body: {
           lookalikes: Object.values(accumulo.lookalikes),
           filters: Object.values(accumulo.filters),
-          unfiltered: Object.values(accumulo.unfiltered),
-          rigless: Object.values(accumulo.rigless),
-          opticsless: Object.values(accumulo.opticsless),
+          // no gear card yet: it waits for its design (ADR 0014)
+          gear: [],
           typeless: Object.values(accumulo.typeless),
           unnamed: Object.values(accumulo.unnamed),
           unclear: Object.values(accumulo.unclear),
@@ -182,30 +172,6 @@ export function Confermare() {
           modelli={modelli.data ?? []}
           risposte={accumulo.filters}
           onRisposta={scrivi("filters")}
-        />
-      )}
-      {!!dati?.unfiltered?.length && (
-        <SezioneSenzaFiltro
-          gruppi={dati.unfiltered}
-          filtri={dati.filter_choices}
-          risposte={accumulo.unfiltered}
-          onRisposta={scrivi("unfiltered")}
-        />
-      )}
-      {!!dati?.rigless?.length && (
-        <SezioneSenzaCamera
-          gruppi={dati.rigless}
-          corredi={dati.rig_choices}
-          risposte={accumulo.rigless}
-          onRisposta={scrivi("rigless")}
-        />
-      )}
-      {!!dati?.opticsless?.length && (
-        <SezioneSenzaOttica
-          domande={dati.opticsless}
-          ottiche={dati.optics_choices}
-          risposte={accumulo.opticsless}
-          onRisposta={scrivi("opticsless")}
         />
       )}
       {!!dati?.typeless?.length && (

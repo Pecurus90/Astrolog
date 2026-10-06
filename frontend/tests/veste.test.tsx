@@ -31,10 +31,9 @@ const PAGINA = {
   objects: [],
   mosaics: [],
   unclear: [],
-  unfiltered: [],
   filter_choices: [],
   unnamed: [],
-  rigless: [],
+  gear: [],
   rig_choices: [],
   typeless: [],
 }
@@ -121,17 +120,9 @@ describe("una riga di Da confermare", () => {
         corpo: {
           ...PAGINA,
           to_confirm: 2,
-          rigless: [
-            {
-              key: '["2024-05-17", null, 6248, 4176, 3.76]',
-              night: "2024-05-17", telescope: null, width_px: 6248, height_px: 4176, pixel_um: 3.76,
-              frames: 12,
-              optics: null,
-              answer: null,
-              subjects: SENZA_SOGGETTI,
-            },
-          ],
-          unnamed: [{ key: '["2024-06-01", null, null, null, null]', night: "2024-06-01", camera: null, telescope: null, ra_deg: null, dec_deg: null, frames: 4, answer: null, subjects: SENZA_SOGGETTI }],
+          typeless: [{ key: "D:/Astro/2024-05-17/dark", frames: 12, answer: null }],
+          // gia' risposta: il suo campo sta dietro "Cambia"
+          unnamed: [{ key: '["2024-06-01", null, null, null, null]', night: "2024-06-01", camera: null, telescope: null, ra_deg: null, dec_deg: null, frames: 4, answer: { kind: "name", value: "M 51", name: "M 51" }, subjects: SENZA_SOGGETTI }],
         },
       },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
@@ -140,10 +131,9 @@ describe("una riga di Da confermare", () => {
     })
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
-    await screen.findByRole("region", { name: /frame senza camera/i })
-    // si apre tutto cio' che si apre, e solo dopo si guarda. `non c'e'` apre la strada a mano di
-    // *Frame senza camera*, che porta i tre campi rimasti nudi piu' a lungo
-    const apre = /cambia|completa|dagli un nome|non c'e'/i
+    await screen.findByRole("region", { name: /frame senza nome/i })
+    // si apre tutto cio' che si apre, e solo dopo si guarda
+    const apre = /cambia|completa|dagli un nome/i
     for (const b of screen.queryAllByRole("button", { name: apre })) {
       fireEvent.click(b)
     }

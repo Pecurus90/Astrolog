@@ -2,15 +2,33 @@
 
 import sqlite3
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 from ..units import known_focal, same_focal
 from ..vocab.software import telescope_is_mount
-from . import counts, declarations, gear, gear_create, rig_optics
+from . import counts, declarations, gear, gear_create
 from . import rigs as corredi
+from .signature import Answer
 
-# a rig as the group's answer or the night gives it
-GivenRig = Mapping[str, Any]
+
+@dataclass(frozen=True)
+class Given:
+    """What a frame is given where its header is silent, decided before the round writes: the
+    camera, the signature's answer, the night's rig."""
+
+    camera: str | None
+    answer: Answer | None
+    night: Mapping[str, Any] | None
+
+
+@dataclass(frozen=True)
+class Writing:
+    """What every write of the round shares."""
+
+    counts: dict[str, int]
+    now: str
+    buckets: Mapping[float, float]
 
 
 def instrument_named(
@@ -64,29 +82,27 @@ def mount_for_frame(  # noqa: PLR0913
     return detta if detta is not None else dal_file
 
 
-def rig_for_frame(  # noqa: PLR0913
+def rig_for_frame(
     conn: sqlite3.Connection,
     frame: sqlite3.Row,
-    buckets: Mapping[float, float],
-    counts: dict[str, int],
-    now: str,
-    camera: str | None,
-    detto: GivenRig | None,
+    writing: Writing,
+    given: Given,
     software: str | None,
-    notte: GivenRig | None = None,
 ) -> int | None:
     """Optics + camera at a focal. Where `TELESCOP` is the mount the file gives no optics: the
-    declared optics, the night's rig (at its focal) or the camera+focal answer fill it."""
+    answer's optics, or the night's rig at its focal, fill it. The answer's optics wins."""
+    counts, now, answer, notte = writing.counts, writing.now, given.answer, given.night
     if telescope_is_mount(software):
         optics_id = None  # it is the mount, written by `mount_for_frame`
     else:
         optics_id = instrument_for(conn, "optics", frame["telescope_raw"], counts, now)
-    camera_id = instrument_named(conn, "camera", camera, counts, now)
-    focal = known_focal(buckets.get(frame["focal_mm_raw"], frame["focal_mm_raw"]))
-    if detto is not None:
-        optics_id = instrument_named(conn, "optics", detto["optics"], counts, now) or optics_id
+    camera_id = instrument_named(conn, "camera", given.camera, counts, now)
+    focal = known_focal(writing.buckets.get(frame["focal_mm_raw"], frame["focal_mm_raw"]))
+    detta = answer is not None and answer.optics is not None
+    if answer is not None:
+        optics_id = instrument_named(conn, "optics", answer.optics, counts, now) or optics_id
         # the declared focal fills a silent one, or the rig born here would twin the detected one
-        focal = focal if focal is not None else detto["focal_mm"]
+        focal = focal if focal is not None else answer.focal_mm
     if (
         notte is not None
         and optics_id is None
@@ -94,15 +110,13 @@ def rig_for_frame(  # noqa: PLR0913
     ):
         optics_id = instrument_named(conn, "optics", notte["optics"], counts, now)
         focal = notte["focal_mm"] if focal is None else focal
-    detta = rig_optics.declared(conn, camera, focal) if optics_id is None and camera else None
-    if detta is not None:
-        optics_id = instrument_named(conn, "optics", detta[1], counts, now)
     if optics_id is None and camera_id is None:
         return None
     rig_id, created = corredi.rig_for(conn, optics_id, camera_id, focal, now)
     counts["rigs"] += 1 if created else 0
     # a rig born from an answer takes the name and mount given to the optics-less one; an existing
     # rig keeps its own word
-    if detta is not None and created:
-        corredi.carry_declarations(conn, detta[0], rig_id, now)
+    senza = corredi.optics_less_key(conn, given.camera, focal) if detta and created else None
+    if senza is not None:
+        corredi.carry_declarations(conn, senza, rig_id, now)
     return rig_id

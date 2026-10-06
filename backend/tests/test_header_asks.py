@@ -7,9 +7,10 @@ import re
 
 import pytest
 
-from astrolog.spine import header_asks, rig_optics, rigless, unfiltered
+from astrolog.spine import header_asks
+from astrolog.spine import signature_page as cards
+from astrolog.spine.header_asks import names_the_optics
 from astrolog.spine.night_rig import asks_camera
-from astrolog.spine.rig_optics import names_the_optics
 from astrolog.spine.unfiltered import says_no_filter
 from astrolog.vocab.software import normalize_software
 from conftest import rows, scan, write_light
@@ -45,17 +46,10 @@ def test_the_fallback_is_what_an_empty_header_asks(conn):
     assert ripiego == header_asks.of({})
 
 
-@pytest.mark.parametrize(
-    ("query", "indice"),
-    [
-        (rigless._BY_GROUP, "frames_asks_camera"),
-        (rig_optics._BY_RIG, "frames_no_optics"),
-        (unfiltered._BY_CAMERA, "frames_asks_filter"),
-    ],
-    ids=["rigless", "rig_optics", "unfiltered"],
-)
-def test_each_reader_finds_its_poses_through_the_index(conn, query, indice):
-    """Senza il suo indice, ogni lettore scorre l'archivio intero a ogni apertura della pagina,
-    anche quando non c'e' niente da chiedere: si chiede il piano a SQLite invece di cronometrare."""
-    piano = " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + query))
+@pytest.mark.parametrize("indice", ["frames_asks_camera", "frames_no_optics", "frames_asks_filter"])
+def test_each_reader_finds_its_poses_through_the_index(conn, indice):
+    """Senza i suoi indici, la scheda dell'attrezzatura scorre l'archivio intero a ogni apertura
+    della pagina, anche quando non c'e' niente da chiedere: si chiede il piano a SQLite invece di
+    cronometrare. Una parte, un indice."""
+    piano = " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + cards._BY_FRAME))
     assert re.search(rf"INDEX {indice}\b", piano), piano

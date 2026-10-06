@@ -7,8 +7,7 @@
  *   terzo si dice quanti altri, perche' una camera copre anni di notti.
  * - **I due vuoti si dicono diversi**: una posa in cui il cielo non ha trovato niente non e' una posa
  *   che non ha ancora guardato o non e' riuscito a guardare. Un vuoto a zero non si scrive.
- * - **Vale in tutte le sezioni che chiedono per gruppo**: notti, camere senza filtro, cartelle senza
- *   camera e luoghi.
+ * - **Vale in tutte le sezioni che chiedono per gruppo**: oggi i luoghi.
  */
 import { screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
@@ -28,7 +27,6 @@ const MOLTI = {
   not_found: 21,
   not_yet: 3,
 }
-const UNO = { found: [{ name: "M 101", frames: 56 }], not_found: 0, not_yet: 0 }
 // esattamente quanti se ne nominano: nessun "altri"
 const TRE = {
   found: [
@@ -50,35 +48,41 @@ const PAGINA = {
   objects: [],
   mosaics: [],
   unnamed: [],
-  unfiltered: [
-    { key: "Canon EOS 700D", frames: 109, answer: null, filter_id: null, subjects: MOLTI },
-    { key: "Canon EOS 6D", frames: 60, answer: null, filter_id: null, subjects: TRE },
-    { key: "Nikon D810", frames: 4, answer: null, filter_id: null, subjects: NIENTE },
-  ],
   filter_choices: [],
-  rigless: [
-    {
-      key: '["2024-05-17", null, 6248, 4176, 3.76]',
-      night: "2024-05-17", telescope: null, width_px: 6248, height_px: 4176, pixel_um: 3.76,
-      frames: 56,
-      optics: null,
-      focal_mm: null,
-      focal_suggested: null,
-      answer: null,
-      subjects: UNO,
-    },
-  ],
+  gear: [],
   unclear: [
     {
       key: "45.85,11.58",
       latitude: 45.85,
       longitude: 11.58,
       distance_km: 16.2,
-      frames: 56,
+      frames: 109,
       nights: ["2024-05-17"],
       site: null,
       candidates: [],
-      subjects: UNO,
+      subjects: MOLTI,
+    },
+    {
+      key: "46.10,11.20",
+      latitude: 46.1,
+      longitude: 11.2,
+      distance_km: 40.1,
+      frames: 60,
+      nights: ["2024-05-18"],
+      site: null,
+      candidates: [],
+      subjects: TRE,
+    },
+    {
+      key: "44.50,10.90",
+      latitude: 44.5,
+      longitude: 10.9,
+      distance_km: 120.4,
+      frames: 4,
+      nights: ["2024-05-19"],
+      site: null,
+      candidates: [],
+      subjects: NIENTE,
     },
   ],
 }
@@ -96,7 +100,7 @@ function aperta() {
 describe("Da confermare -- cosa hai ripreso", () => {
   it("i primi tre oggetti con le loro pose, quanti altri, e i due vuoti detti diversi", async () => {
     aperta()
-    const notte = riga(await vaiASezione(/frame senza filtro/i), "Canon EOS 700D")
+    const notte = riga(await vaiASezione(/frame senza sito/i), "45.85,11.58")
     expect(notte.textContent).toMatch(
       /ripreso: M 81 \(68 frame\), M 82 \(12 frame\), NGC 3077 \(3 frame\) e altri 2/,
     )
@@ -107,20 +111,18 @@ describe("Da confermare -- cosa hai ripreso", () => {
 
   it("un vuoto a zero non si scrive, e con tre oggetti nemmeno 'altri'", async () => {
     aperta()
-    const notte = riga(await vaiASezione(/frame senza filtro/i), "Canon EOS 6D")
+    const notte = riga(await vaiASezione(/frame senza sito/i), "46.10,11.20")
     expect(notte.textContent).toMatch(/ripreso: M 101 \(56 frame\), NGC 5474 \(3 frame\), NGC 5477 \(1 frame\)/)
     expect(notte.textContent).not.toMatch(/altri|non ha trovato|non ha ancora/)
   })
 
   it("se il cielo non ha niente da dire, la riga non dice 'ripreso'", async () => {
     aperta()
-    const notte = riga(await vaiASezione(/frame senza filtro/i), "Nikon D810")
+    const notte = riga(await vaiASezione(/frame senza sito/i), "44.50,10.90")
     expect(notte.textContent).not.toMatch(/ripreso/)
   })
 
   it.each([
-    [/frame senza filtro/i, "Canon EOS 700D"],
-    [/frame senza camera/i, "notte del 17 mag 2024"],
     [/frame senza sito/i, "45.85,11.58"],
   ])("anche la sezione %s dice cosa hai ripreso", async (sezione, chiave) => {
     aperta()

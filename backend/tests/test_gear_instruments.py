@@ -35,14 +35,14 @@ def test_the_colour_on_the_card_redoes_the_poses_only_when_it_changes_something(
 
 def test_answering_no_filter_writes_mono_on_the_card(client):
     """ "Nessun filtro" su una camera di cui i file non dicono il colore scrive mono sulla scheda
-    (`unfiltered.declare`): e' la stessa risposta, e la scheda la mostra."""
+    (`unfiltered.declare_sensor`): e' la stessa risposta, e la scheda la mostra."""
     pezzi = {i["name"]: i for i in gear(client)["instruments"]}
-    chiedono = [g["key"] for g in review(client)["unfiltered"]]
-    camera = next(c for c in chiedono if pezzi[c]["camera_type"] is None)
+    chiedono = [g for g in review(client)["gear"] if g["asks_filter"] and g["camera"] in pezzi]
+    scheda = next(g for g in chiedono if pezzi[g["camera"]]["camera_type"] is None)
 
-    apply(client, unfiltered=[{"key": camera, "answer": "no_filter"}])
+    apply(client, gear=[{"key": scheda["key"], "filter": "no_filter"}])
 
-    assert by_name(gear(client)["instruments"], camera)["camera_type"] == "mono"
+    assert by_name(gear(client)["instruments"], scheda["camera"])["camera_type"] == "mono"
 
 
 def test_renaming_a_piece_keeps_the_name_of_its_rig(client):

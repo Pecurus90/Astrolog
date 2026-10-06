@@ -83,9 +83,8 @@ const PAGINA = {
   ],
   mosaics: [],
   unclear: [],
-  unfiltered: [],
+  gear: [],
   filter_choices: [],
-  rigless: [],
   unnamed: [],
   settled_objects: 0,
 }
