@@ -610,6 +610,8 @@ CREATE TABLE nights (
   created_at  TEXT NOT NULL,
   UNIQUE (site_id, night_date)
 ) STRICT;
+-- L'ordine della pagina delle Notti: senza, conta tutte le notti e le ordina prima del `LIMIT`.
+CREATE INDEX nights_date ON nights (night_date DESC, id DESC);
 
 -- Una sessione: oggetto x notte x corredo.
 CREATE TABLE sessions (

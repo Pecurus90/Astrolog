@@ -128,8 +128,8 @@ def test_every_order_ends_with_something_that_never_ties():
     o un mosaico, e nessuno dei due ha la chiave dell'altro. Senza, a pari merito SQLite e'
     **libero** di dare le righe come vuole, e due pagine consecutive potrebbero ripetere una riga o
     saltarne una: oggi non succede perche' il piano e' lo stesso, domani basta un indice nuovo."""
-    for chiave, ordine in archive.ORDINI.items():
-        assert ordine.rstrip().endswith("r.chiave"), chiave
+    for chiave, ordine in archive.ORDERS.items():
+        assert ordine.rstrip().endswith("r.row_key"), chiave
 
 
 def test_the_sort_is_a_key_from_a_closed_list(archivio):
@@ -141,7 +141,7 @@ def test_the_sort_is_a_key_from_a_closed_list(archivio):
 
 def test_the_route_and_the_spine_know_the_same_three_orders():
     """Gli ordini sono un elenco chiuso scritto **due volte**: il `Literal` della rotta, che li
-    rifiuta prima di arrivare qui, e le chiavi di `ORDINI`, che li traducono in SQL. Il frontend
+    rifiuta prima di arrivare qui, e le chiavi di `ORDERS`, che li traducono in SQL. Il frontend
     la sua copia non ce l'ha -- legge l'OpenAPI -- ma il backend si', e una voce aggiunta al
     `Literal` e dimenticata qui sarebbe un `KeyError` non catturato, cioe' un 500 in faccia
     all'utente. Questa prova e' il legame."""
@@ -149,7 +149,7 @@ def test_the_route_and_the_spine_know_the_same_three_orders():
 
     from astrolog.api.archive import Sort
 
-    assert set(get_args(Sort)) == set(archive.ORDINI)
+    assert set(get_args(Sort)) == set(archive.ORDERS)
 
 
 @pytest.mark.parametrize("scritto", ["m31", "M 31", "  M31  ", "ngc 224", "224"])

@@ -52,9 +52,10 @@ _ASKED = "COALESCE(f.empty_cone, 1) = 1"
 # Copies and frames with a sky included: `identify` makes the choice again.
 _FRAMES_OF_GROUP = f"SELECT f.id FROM frames f {folder.JOIN} WHERE f.unnamed_key = ?"  # noqa: S608
 
-# Two are enough to tell one answer from a disagreement.
+# Two are enough to tell one answer from a disagreement. `CROSS JOIN` starts from the group's
+# frames, or SQLite would walk every frame answer for each group.
 _ANSWERS_OF_GROUP = f"""
-SELECT DISTINCT d.value FROM frames f JOIN declarations d ON d.entity_type = ?
+SELECT DISTINCT d.value FROM frames f CROSS JOIN declarations d ON d.entity_type = ?
   AND d.entity_key = f.frame_hash AND d.field = ?
 WHERE f.unnamed_key = ? AND {_ASKED} LIMIT 2
 """  # noqa: S608 - constant fragment of this file

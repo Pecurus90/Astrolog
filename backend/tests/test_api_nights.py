@@ -15,6 +15,7 @@ from astrolog.api.app import create_app
 from astrolog.clock import midnight_of
 from astrolog.db.connect import connect
 from astrolog.ephemeris import moon
+from astrolog.spine import nights
 from conftest import db
 from group_bench import ROMA, corri, filtro, luogo, posa, prepara
 
@@ -101,6 +102,17 @@ def test_the_page_opens_with_what_the_whole_archive_holds(archivio):
     quante righe si stanno guardando."""
     totali = notti(archivio, limit=1)["totals"]
     assert totali == {"nights": 2, "frames": 4, "integration_s": 1320.0, "untimed": 0}
+
+
+def test_the_archive_totals_read_the_frames_once_whatever_the_nights(archivio):
+    """`notti.md`: il totale in cima non costa una query in piu' per riga, e' una sola
+    sull'archivio. Con due notti, un conto per notte leggerebbe le pose due volte."""
+    lette = []
+    with db(archivio) as conn:
+        conn.set_trace_callback(lette.append)
+        nights.archive_totals(conn)
+        conn.set_trace_callback(None)
+    assert len([s for s in lette if "frames" in s]) == 1
 
 
 def test_two_sites_on_the_same_date_stay_two_nights(archivio):

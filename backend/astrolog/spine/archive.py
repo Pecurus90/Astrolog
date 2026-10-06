@@ -2,6 +2,7 @@
 share one condition, and nothing from outside becomes SQL (`docs/domini/archivio.md`)."""
 
 import sqlite3
+from enum import StrEnum
 from typing import Any
 
 from ..db import idlist
@@ -12,8 +13,8 @@ from .objects import NAME_COLUMNS, subjects_of, subjects_sql, together
 
 # Rows say only who they are; hours are counted after the filter, or the count would pay for them.
 # The `NOT IN` uses the partial index; `object_id IS NOT NULL` since one NULL in it fails them all.
-_OGGETTI = f"""
-SELECT 'o:' || o.id AS chiave, o.id, NULL AS mosaic_key, o.catalog_slug, {NAME_COLUMNS},
+_OBJECTS = f"""
+SELECT 'o:' || o.id AS row_key, o.id, NULL AS mosaic_key, o.catalog_slug, {NAME_COLUMNS},
        e.constellation, e.type_code, c.catalog, c.designation, NULL AS panels
 FROM objects o
 LEFT JOIN catalog_entries e ON e.slug = o.catalog_slug
@@ -24,155 +25,168 @@ WHERE o.id NOT IN (SELECT f.object_id FROM frames f WHERE f.mosaic_key IS NOT NU
               AND {counts.ALONE})"""  # noqa: S608 - constant fragments of the spine
 
 # The user's target, slug or written name; as in `read_target`, a blank target is not one.
-_SLUG, _NOME = f"substr(d.value, {len(CATALOG) + 1})", f"substr(d.value, {len(NAME) + 1})"
-_DEL_SLUG = f"CASE WHEN d.value LIKE '{CATALOG}%' AND TRIM({_SLUG}) <> '' THEN {_SLUG} END"
-_DEL_NOME = f"CASE WHEN d.value LIKE '{NAME}%' AND TRIM({_NOME}) <> '' THEN {_NOME} END"
+_SLUG, _NAME = f"substr(d.value, {len(CATALOG) + 1})", f"substr(d.value, {len(NAME) + 1})"
+_OF_SLUG = f"CASE WHEN d.value LIKE '{CATALOG}%' AND TRIM({_SLUG}) <> '' THEN {_SLUG} END"
+_OF_NAME = f"CASE WHEN d.value LIKE '{NAME}%' AND TRIM({_NAME}) <> '' THEN {_NAME} END"
 
-# Grouped first, so the answer is found by mosaic key on the `declarations` index.
-_MOSAICI = f"""
-SELECT 'm:' || g.mosaic_key AS chiave, NULL AS id, g.mosaic_key, t.slug AS catalog_slug,
-       t.nome AS primary_name, e.name AS catalog_name,
+# Grouped first, so the answer is found by mosaic key on the `declarations` index. Constant
+# fragments of the spine, hence the `noqa`.
+_MOSAICS = f"""
+SELECT 'm:' || g.mosaic_key AS row_key, NULL AS id, g.mosaic_key, t.slug AS catalog_slug,
+       t.name AS primary_name, e.name AS catalog_name,
        e.constellation, e.type_code, c.catalog, c.designation, g.panels
 FROM (SELECT f.mosaic_key, COUNT(DISTINCT f.panel_id) AS panels FROM frames f
       WHERE f.mosaic_key IS NOT NULL AND f.copy_of IS NULL GROUP BY f.mosaic_key) g
-LEFT JOIN (SELECT d.entity_key, d.field, {_DEL_SLUG} AS slug, {_DEL_NOME} AS nome
+LEFT JOIN (SELECT d.entity_key, d.field, {_OF_SLUG} AS slug, {_OF_NAME} AS name
            FROM declarations d
            WHERE d.entity_type = '{EntityType.MOSAIC}' AND d.field = '{MOSAIC_FIELD}') t
        ON t.entity_key = g.mosaic_key
 LEFT JOIN catalog_entries e ON e.slug = t.slug
-LEFT JOIN catalog_names c ON c.slug = t.slug AND c.is_primary = 1"""  # noqa: S608 - constant fragments of the spine
+LEFT JOIN catalog_names c ON c.slug = t.slug AND c.is_primary = 1"""  # noqa: S608
 
-_RIGHE = f"({_OGGETTI} UNION ALL {_MOSAICI}) r"
-_ORE = counts.counts_on(counts.Subject.ROW)
+_ROWS = f"({_OBJECTS} UNION ALL {_MOSAICS}) r"
+_HOURS = counts.counts_on(counts.Subject.ROW)
+
+
+class Order(StrEnum):
+    NAME = "name"
+    HOURS = "hours"
+    FRAMES = "frames"
+
 
 # By name is catalog then number, or `M 13` would follow `M 103`; `NOCASE` or `vdB` follows `WR`.
 # The row key always closes, or two consecutive pages could repeat or skip a row.
-ORDINI = {
-    "name": (
+ORDERS = {
+    Order.NAME: (
         "ORDER BY (r.catalog_slug IS NULL), r.catalog COLLATE NOCASE,"
         " CAST(r.designation AS INTEGER), r.designation COLLATE NOCASE,"
-        " r.primary_name COLLATE NOCASE, r.chiave"
+        " r.primary_name COLLATE NOCASE, r.row_key"
     ),
-    "hours": f"{counts.ORDER_BY_TIME}, r.chiave",
-    "frames": "ORDER BY frames DESC, integration_s DESC, r.chiave",
+    Order.HOURS: f"{counts.ORDER_BY_TIME}, r.row_key",
+    Order.FRAMES: "ORDER BY frames DESC, integration_s DESC, r.row_key",
 }
 
 # An object row's objects are itself, even without frames, or a catalog filter would lose it;
 # panels are looked up only for a mosaic, elsewhere the search would find nothing new.
-_POSE_DELLA_RIGA = f"f.copy_of IS NULL AND {counts.of(counts.Subject.ROW)}"
-_PANNELLI = (
+_ROW_FRAMES = f"f.copy_of IS NULL AND {counts.of(counts.Subject.ROW)}"
+_IN_ROW_PANELS = (
     "r.mosaic_key IS NOT NULL AND o2.id IN (SELECT f.object_id FROM frames f"  # noqa: S608
     f" WHERE f.copy_of IS NULL AND {counts.of(counts.Subject.MOSAIC)})"
 )
-_OGGETTI_DELLA_RIGA = f"(o2.id = r.id OR ({_PANNELLI}))"
+_ROW_OBJECTS = f"(o2.id = r.id OR ({_IN_ROW_PANELS}))"
 
 # One frame is enough: the question is "what did I shoot in Ha", not "mostly in Ha".
-_CON_IL_FILTRO = (
+_WITH_FILTER = (
     "EXISTS (SELECT 1 FROM frames f JOIN filters x ON x.id = f.filter_id"  # noqa: S608
-    f" WHERE {_POSE_DELLA_RIGA} AND x.name = ?)"
+    f" WHERE {_ROW_FRAMES} AND x.name = ?)"
 )
 # For a mosaic, start from its frames (`CROSS JOIN` fixes the order), or SQLite would start from
 # the chosen catalog's thousands of entries, for every mosaic.
-_DAI_PANNELLI = (
+_FROM_PANELS = (
     "r.mosaic_key IS NOT NULL AND EXISTS (SELECT 1 FROM frames f CROSS JOIN objects o2"  # noqa: S608
-    " CROSS JOIN {tabella} WHERE f.copy_of IS NULL AND " + counts.of(counts.Subject.MOSAIC) +
-    " AND o2.id = f.object_id AND {legame} AND {colonna} = ?)"
+    " CROSS JOIN {table} WHERE f.copy_of IS NULL AND " + counts.of(counts.Subject.MOSAIC) +
+    " AND o2.id = f.object_id AND {link} AND {column} = ?)"
 )  # fmt: skip
-_DEL_CATALOGO = (
+_OF_CATALOG = (
     "(r.catalog = ? OR ("
-    + _DAI_PANNELLI.format(  # noqa: S608 - constants
-        tabella="catalog_names c2",
-        legame="c2.slug = o2.catalog_slug AND c2.is_primary = 1",
-        colonna="c2.catalog",
+    + _FROM_PANELS.format(  # noqa: S608 - constants
+        table="catalog_names c2",
+        link="c2.slug = o2.catalog_slug AND c2.is_primary = 1",
+        column="c2.catalog",
     )
     + "))"
 )
-_NELLA_COSTELLAZIONE = (
+_IN_CONSTELLATION = (
     "(r.constellation = ? OR ("
-    + _DAI_PANNELLI.format(  # noqa: S608
-        tabella="catalog_entries e2", legame="e2.slug = o2.catalog_slug", colonna="e2.constellation"
+    + _FROM_PANELS.format(  # noqa: S608
+        table="catalog_entries e2", link="e2.slug = o2.catalog_slug", column="e2.constellation"
     )
     + "))"
 )
 
 # ASCII only, as SQLite's `LOWER()`: half of a rule that lives on both sides.
-_MINUSCOLE_ASCII = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
+_ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 
-_PIEGATO = "REPLACE(LOWER({}), ' ', '') LIKE ? ESCAPE '\\'"
-_CERCATO = (
-    "(EXISTS (SELECT 1 FROM objects o2 WHERE " + _OGGETTI_DELLA_RIGA +  # noqa: S608
+_FOLDED = "REPLACE(LOWER({}), ' ', '') LIKE ? ESCAPE '\\'"
+_SEARCHED = (
+    "(EXISTS (SELECT 1 FROM objects o2 WHERE " + _ROW_OBJECTS +  # noqa: S608
     "   AND (EXISTS (SELECT 1 FROM object_names n WHERE n.object_id = o2.id AND "
-    + _PIEGATO.format("n.name") + ")"
+    + _FOLDED.format("n.name") + ")"
     "   OR EXISTS (SELECT 1 FROM catalog_names k WHERE k.slug = o2.catalog_slug AND "
-    + _PIEGATO.format("k.catalog || k.designation") + ")))"
-    " OR " + _PIEGATO.format("r.primary_name") +
+    + _FOLDED.format("k.catalog || k.designation") + ")))"
+    " OR " + _FOLDED.format("r.primary_name") +
     " OR EXISTS (SELECT 1 FROM catalog_names k WHERE k.slug = r.catalog_slug AND "
-    + _PIEGATO.format("k.catalog || k.designation") + "))"
+    + _FOLDED.format("k.catalog || k.designation") + "))"
 )  # fmt: skip
 
 
-def _cercando(q: str | None) -> tuple[str, list[str]]:
+def _searching(q: str | None) -> tuple[str, list[str]]:
     """Blanks or an emptied field are no search, or a `LIKE '%   %'` would find nothing. `%` and
     `_` are escaped: who types them is looking for those signs."""
-    scritto = (q or "").strip().translate(_MINUSCOLE_ASCII).replace(" ", "")
-    if not scritto:
+    typed = (q or "").strip().translate(_ASCII_LOWER).replace(" ", "")
+    if not typed:
         return "", []
-    scudato = scritto.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-    return _CERCATO, [f"%{scudato}%"] * _CERCATO.count("LIKE ?")
+    escaped = typed.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return _SEARCHED, [f"%{escaped}%"] * _SEARCHED.count("LIKE ?")
 
 
-def _dove(
+def _where(
     q: str | None = None,
     catalog: str | None = None,
     constellation: str | None = None,
     filter_name: str | None = None,
     mosaic: bool = False,
 ) -> tuple[str, list[str]]:
-    """One condition for rows and counts: two copies would say "3 objects" and show 4."""
-    pezzi, valori = ["1 = 1"], []
+    parts, values = ["1 = 1"], []
     if mosaic:
-        pezzi.append("r.mosaic_key IS NOT NULL")
-    cercato, suoi = _cercando(q)
-    if cercato:
-        pezzi.append(cercato)
-        valori += suoi
-    for pezzo, valore in ((_DEL_CATALOGO, catalog), (_NELLA_COSTELLAZIONE, constellation)):
-        if valore:
-            pezzi.append(pezzo)
-            valori += [valore, valore]
+        parts.append("r.mosaic_key IS NOT NULL")
+    searched, its_values = _searching(q)
+    if searched:
+        parts.append(searched)
+        values += its_values
+    for part, value in ((_OF_CATALOG, catalog), (_IN_CONSTELLATION, constellation)):
+        if value:
+            parts.append(part)
+            values += [value, value]
     if filter_name:
-        pezzi.append(_CON_IL_FILTRO)
-        valori.append(filter_name)
-    return " AND ".join(pezzi), valori
+        parts.append(_WITH_FILTER)
+        values.append(filter_name)
+    return " AND ".join(parts), values
 
 
 def page(
-    conn: sqlite3.Connection, *, limit: int, offset: int, sort: str = "name", **criteri: Any
+    conn: sqlite3.Connection,
+    *,
+    limit: int,
+    offset: int,
+    sort: Order = Order.NAME,
+    **conditions: Any,
 ) -> tuple[list[dict[str, Any]], int]:
-    """The rows and how many pass the filter, `criteri` being `_dove`'s: with a filter on, the
+    """The rows and how many pass the filter, `conditions` being `_where`'s: with a filter on, the
     archive's total would lie, and the page decides on it whether another follows."""
-    ordine = ORDINI[sort]  # from a closed list: nothing from outside becomes `ORDER BY`
-    dove, valori = _dove(**criteri)
-    righe = conn.execute(
-        f"SELECT r.*, {_ORE} FROM {_RIGHE} WHERE {dove} {ordine} LIMIT ? OFFSET ?",  # noqa: S608
-        (*valori, limit, offset),
+    order = ORDERS[sort]  # from a closed list: nothing from outside becomes `ORDER BY`
+    where, values = _where(**conditions)
+    rows = conn.execute(
+        f"SELECT r.*, {_HOURS} FROM {_ROWS} WHERE {where} {order} LIMIT ? OFFSET ?",  # noqa: S608
+        (*values, limit, offset),
     )
-    quanti = conn.execute(
-        f"SELECT COUNT(*) FROM {_RIGHE} WHERE {dove}",  # noqa: S608 - `dove` are placeholders
-        valori,
+    total = conn.execute(
+        f"SELECT COUNT(*) FROM {_ROWS} WHERE {where}",  # noqa: S608 - `where` are placeholders
+        values,
     ).fetchone()[0]
-    return [dict(r) for r in righe], quanti
+    return [dict(r) for r in rows], total
 
 
-def found(conn: sqlite3.Connection, **criteri: Any) -> dict[str, int]:
+def found(conn: sqlite3.Connection, **conditions: Any) -> dict[str, int]:
     """Objects and mosaics apart: the on-screen count does not call a mosaic an object."""
-    dove, valori = _dove(**criteri)
+    where, values = _where(**conditions)
+    # `where` are placeholders, hence the `noqa`
     sql = (
-        "SELECT COALESCE(SUM(r.mosaic_key IS NULL), 0), COALESCE(SUM(r.mosaic_key IS NOT NULL), 0)"  # noqa: S608 - `dove` are placeholders
-        f" FROM {_RIGHE} WHERE {dove}"
+        "SELECT COALESCE(SUM(r.mosaic_key IS NULL), 0), COALESCE(SUM(r.mosaic_key IS NOT NULL), 0)"  # noqa: S608
+        f" FROM {_ROWS} WHERE {where}"
     )
-    oggetti, mosaici = conn.execute(sql, valori).fetchone()
-    return {"objects": oggetti, "mosaics": mosaici}
+    n_objects, n_mosaics = conn.execute(sql, values).fetchone()
+    return {"objects": n_objects, "mosaics": n_mosaics}
 
 
 # The first good frame per filter is enough, and the `frames.filter_id` index keeps the search
@@ -184,23 +198,23 @@ FILTERS_USED = (
 
 
 def choices(conn: sqlite3.Connection) -> dict[str, Any]:
-    """What the archive holds, not what the catalog knows; `NOCASE` like the rows, or `vdB` would
-    sort apart here and there, and the user's filter names mix case for sure."""
+    """What the archive holds, not what the catalog knows; `NOCASE` like the rows, and the user's
+    filter names mix case for sure."""
     return {
-        "catalogs": _elenco(
+        "catalogs": _column(
             conn,
             "SELECT DISTINCT c.catalog FROM objects o"
             " JOIN catalog_names c ON c.slug = o.catalog_slug AND c.is_primary = 1"
             " ORDER BY c.catalog COLLATE NOCASE",
         ),
-        "constellations": _elenco(
+        "constellations": _column(
             conn,
             "SELECT DISTINCT e.constellation FROM objects o"
             " JOIN catalog_entries e ON e.slug = o.catalog_slug"
             " ORDER BY e.constellation COLLATE NOCASE",
         ),
         # filters that shot an object: one owned and never used narrows nothing
-        "filters": _elenco(conn, FILTERS_USED),
+        "filters": _column(conn, FILTERS_USED),
         # offered to whoever has a confirmed mosaic: the partial index says so at once
         "mosaics": conn.execute(
             "SELECT EXISTS (SELECT 1 FROM frames WHERE mosaic_key IS NOT NULL)"
@@ -210,13 +224,13 @@ def choices(conn: sqlite3.Connection) -> dict[str, Any]:
 
 
 # By framing, with the centre `group` wrote, counted like every row, longest first.
-_PANNELLI = f"""
+_PANELS = f"""
 SELECT f.mosaic_key, f.panel_id, p.ra_deg, p.dec_deg, {counts.AGGREGATE}, {counts.UNTIMED}
 FROM frames f JOIN panels p ON p.id = f.panel_id
 WHERE f.mosaic_key IN {{listed}} AND f.copy_of IS NULL
 GROUP BY f.mosaic_key, f.panel_id
 {counts.ORDER_BY_TIME}, f.panel_id"""  # noqa: S608 - constant fragments, `listed` a placeholder
-_OGGETTI_DEI_PANNELLI = subjects_sql("f.panel_id", where="AND f.mosaic_key IN {listed}")
+_PANEL_OBJECTS = subjects_sql("f.panel_id", where="AND f.mosaic_key IN {listed}")
 
 
 def panels(conn: sqlite3.Connection, keys: list[str]) -> dict[Any, list[Any]]:
@@ -224,15 +238,15 @@ def panels(conn: sqlite3.Connection, keys: list[str]) -> dict[Any, list[Any]]:
     null `object`: a name is not invented."""
     if not keys:
         return {}  # the page of whoever has no mosaics, nearly all: no query
-    with idlist.holding(conn, keys) as elencate:
-        oggetti = subjects_of(conn.execute(_OGGETTI_DEI_PANNELLI.format(listed=elencate)))
+    with idlist.holding(conn, keys) as held:
+        names = subjects_of(conn.execute(_PANEL_OBJECTS.format(listed=held)))
     return idlist.grouped(
         conn,
-        _PANNELLI,
+        _PANELS,
         keys,
         "mosaic_key",
         lambda r: {
-            "object": together(oggetti.get(r["panel_id"], [])) or None,
+            "object": together(names.get(r["panel_id"], [])) or None,
             "ra_deg": r["ra_deg"],
             "dec_deg": r["dec_deg"],
             "frames": r["frames"],
@@ -242,5 +256,5 @@ def panels(conn: sqlite3.Connection, keys: list[str]) -> dict[Any, list[Any]]:
     )
 
 
-def _elenco(conn: sqlite3.Connection, sql: str) -> list[str]:
+def _column(conn: sqlite3.Connection, sql: str) -> list[str]:
     return [r[0] for r in conn.execute(sql)]

@@ -13,8 +13,10 @@ from typing import get_args
 import pytest
 
 from astrolog import astap, net, place
+from astrolog.api import archive as api_archive
 from astrolog.api import (
     models,
+    models_nights,
     models_review,
     models_review_groups,
     models_site,
@@ -26,11 +28,13 @@ from astrolog.db.connect import SCHEMA_PATH
 from astrolog.ephemeris import moon, sun
 from astrolog.fits.frame_type import FrameType
 from astrolog.spine import (
+    archive,
     declarations,
     gear_usage,
     group,
     identify_decide,
     mosaic_proposals,
+    nights,
     object_answer,
     objects,
     rewrite,
@@ -349,3 +353,11 @@ def test_the_weather_words_are_the_same_in_the_models_and_the_weather_package():
     assert set(get_args(models_weather.RefreshStatus)) == set(forecast.Outcome) | {
         net.Failure.UNREACHABLE
     }
+
+
+def test_the_nights_and_archive_words_are_the_same_in_the_routes_and_the_spine():
+    """Where a waiting frame is answered, and the Archive orders: `Literal` on purpose."""
+    assert _words(models_nights.WaitingPoses.model_fields["answer_at"].annotation) == set(
+        nights.AnswerAt
+    )
+    assert set(get_args(api_archive.Sort)) == set(archive.Order)

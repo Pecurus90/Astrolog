@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | rifattorizza | Fase 2, lotto 5e: `spine` Notti e Archivio, indice, Da confermare | ~0,24 M agenti (uno sviluppatore), sessione principale non contata | 23 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5d: `spine` oggetti e mosaici, Applica una lettura | ~0,32 M agenti (uno sviluppatore), sessione principale non contata | 38 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5c: `spine` attrezzatura | ~0,35 M agenti (uno sviluppatore), sessione principale non contata | 27 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5b: `spine` solve, identify, group | ~0,29 M agenti (uno sviluppatore), sessione principale non contata | 22 agente | 0 |
@@ -80,23 +81,13 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   nome italiano nuovo e' rosso, quelli vecchi stanno in `tools/nomi_italiani.txt`, che solo si
   accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Fatti `db` e
   `fits` (e il segnaposto `{listed}` di `idlist.grouped`), poi `ephemeris` (`corpi` e' `bodies`).
-  Fatti anche `weather`, `net` e gli altri file sciolti, e i primi cinque lotti di `spine`
+  Fatti anche `weather`, `net` e gli altri file sciolti, e tutta `spine`
   (scansione, normalizzazione, stadi; risoluzione, identificazione, raggruppamento, frame senza
   tipo, `site_requeue`, `home_nights`; l'attrezzatura, con `night_rig`, `signature`,
   `signature_page`, `unfiltered`, `declarations`; oggetti e mosaici, con `object_answer`,
   `object_candidates`, `unnamed`, i cinque `mosaic*` e l'alias di `object_answer` in
-  `api/review_page` e `api/review_write`). Nel sesto lotto: `_DOVE`,
-  `_PAGINA`, `_QUANTE`, `_TOTALI`, `_OGGETTI`, `_FERME`, `_SENZA_CIELO`, `_lune`, `_meteo` e il
-  suo parametro `fuso_riconosciuto`, la colonna `meteo`, `righe`, `lune`, `oggetti`, `filtri`,
-  `riga`, `quando`, `certe`, `somme`, `dove`, `ordinati`, `voce`, `quanti` (`nights`); `ORDINI`
-  (pubblico, letto da `test_spine_archive`), `_OGGETTI`, `_SLUG`, `_NOME`, `_DEL_SLUG`,
-  `_DEL_NOME`, `_MOSAICI`, `_RIGHE`, `_ORE`, `_POSE_DELLA_RIGA`, `_PANNELLI`,
-  `_OGGETTI_DELLA_RIGA`, `_CON_IL_FILTRO`, `_DAI_PANNELLI` coi segnaposto `{tabella}`,
-  `{legame}`, `{colonna}`, `_DEL_CATALOGO`, `_NELLA_COSTELLAZIONE`, `_MINUSCOLE_ASCII`,
-  `_PIEGATO`, `_CERCATO`, `_OGGETTI_DEI_PANNELLI` (letto da `test_spine_archive_mosaic`),
-  `_cercando`, `_dove`, `_elenco`, le colonne `chiave` e `nome`, `criteri`, `scritto`, `scudato`,
-  `pezzi`, `pezzo`, `valori`, `valore`, `cercato`, `suoi`, `ordine`, `dove`, `righe`, `quanti`,
-  `oggetti`, `mosaici`, `elencate` (`archive`). Nel primo lotto di `api`: `cadenza`, `riga`,
+  `api/review_page` e `api/review_write`; Notti e Archivio, con le colonne `meteo`, `chiave`,
+  `nome` e i segnaposto di `archive`). Nel primo lotto di `api`: `cadenza`, `riga`,
   `sito` (`app`); `_servita`, `pagina_del_router`, il parametro di percorso `percorso` e il
   segnaposto `{chiave}` di `TOKEN_META` (`page`); `_scansione_interrotta`, `da_fare`
   (`pipeline`); `manca`, `percorso`, `provate`, `dove` (`settings`). Nel quarto lotto di `api`:
@@ -138,11 +129,10 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   nomi e stati degli stadi, soggetti del conto, motivi di `group`, risposte sul tipo, metodi,
   fiducie, rami e motivi di `identify`; soggetti dell'uso, campi dei corredi, risposte sul filtro,
   tipi di camera, risposte sul mosaico, tipi di entita'; tipi del bersaglio di una risposta e
-  vuoti del cielo, `object_answer.TargetKind` e `objects.SkyVoid`). In `weather` restano stringhe i generi di
+  vuoti del cielo, `object_answer.TargetKind` e `objects.SkyVoid`; `nights.AnswerAt` e
+  `archive.Order`). In `weather` restano stringhe i generi di
   riga (`forecast.KIND`, `history.KIND`) e le fonti per modello (`forecast.source_of`), aperte
-  quanto la scelta dei modelli. Nel sesto lotto i posti dove si risponde
-  (`nights.REVIEW`, `SITE`, `NEVER`, ripetuti in `api/models_nights`) e gli ordini dell'archivio
-  (le chiavi di `archive.ORDINI`, ripetute in `api/archive.Sort`). Dentro l'SQL restano scritti a
+  quanto la scelta dei modelli. Dentro l'SQL restano scritti a
   mano tipi di entita' e soggetti dell'uso (`'rig'`, `'instrument'`; `'filter'` in
   `spine/inventory.py`): li tiene il `CHECK`, che una prova lega all'enum.
 - **Attrezzatura, dopo il quarto lotto di `spine`**: restano `dict` le schede di
@@ -171,6 +161,9 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   geometria e' pura e le proposte sono un lettore, ognuno col suo contratto in `pyproject.toml`;
   `mosaic_weight` porta una soglia con la sua fonte, citata da `domini/mosaico.md`, e
   `mosaic_describe` un'altra regola (centro e nome).
+- **Notti e Archivio, dopo il sesto lotto di `spine`**: restano `dict` le righe, i totali, le
+  scelte e i pannelli di `nights` e `archive`, che vanno dritti nei modelli della rotta; le righe
+  di `archive.page` le leggono anche `objects.stable_key` e `display_name`.
 - **Doppioni piccoli dei package di base**: `catalog/load.load_catalog` riscrive a mano
   `db.transaction` (gli strati non gli lasciano importare `db`: resta).
 
@@ -306,8 +299,7 @@ Niente di aperto.
   scansione a cadenza sul NAS** (`ASTROLOG_SCAN_EVERY_MIN`, `backend/astrolog/__main__.py`) non la
   legge nessuna prova, e rotta spegnerebbe la scansione in silenzio; **una correzione sulla scheda
   resiste a una nuova lettura** e' provata per pixel e colore della camera, non per gli altri
-  campi. Piu' piccole: i totali delle Notti in una
-  query sola, promessi in `notti.md`, che nessuna prova conta; il catalogo ("le ore non si
+  campi. Piu' piccole: il catalogo ("le ore non si
   sparpagliano", "senza rete") provato di sbieco;
   in `spina.md` tre prove che esistono e la riga non cita
   (`test_scan_root_gone_midway_aborts_without_marking_missing`,
@@ -393,25 +385,20 @@ Niente di aperto.
   lettura di un archivio grande; si rimisura su un NAS vero prima di decidere un rimedio.
 - **Una risposta sul tipo riscrive il segno dell'attesa di ogni frame senza tipo**
   (il trigger di `declarations` in `schema.sql` riscrive tutto l'archivio), dove basterebbero quelle
-  della cartella, che `declare` non ha: le trova `apply_answer`, subito dopo.
-- **Alle notti manca un indice.** La query della pagina valuta i tre conteggi su tutte le notti e
-  ordina in una tabella temporanea prima del `LIMIT`: su 1.000 notti e 40.000 frame 12,81 ms, che
-  con `CREATE INDEX nights_date ON nights(night_date DESC, id DESC)` diventano 1,05, anche a
-  pagina 10.
+  della cartella, che `declare` non ha: le trova `apply_answer`, subito dopo. Cento risposte in un
+  Applica su 21.000 frame sintetici: 13,0 s, di cui 8,5 nel trigger e 4,7 in `_stop`
+  (`spine/typeless_answer.py`), che per ogni calibrazione riscrive `camera_sky`, `gear_usage` e
+  `object_candidates`; ritrovare la cartella (`typeless.row_of`) costa 0,5 ms in tutto.
 - **Il totale dell'archivio viaggia in ogni pagina dello scorrimento delle Notti**:
   `nights.archive_totals` fa una scansione piena (14,6-19 ms su 40.000 frame) a ogni "mostra
-  altre", e conta solo la prima. Rimedio: i totali solo alla prima pagina.
-- **Rispondere a N gruppi in un Applica costa N letture dell'archivio.** Ogni risposta ritrova il
-  suo gruppo rifacendo il lettore da capo dentro la transazione (`row_of` rifa' `by_signature` in
-  `spine/signature_page.py` o `by_folder` in `spine/typeless.py`), e poi `requeue` rilegge il
-  gruppo, calcolando anche i soggetti per buttarli. Su ~21.000 frame sintetici: cartelle senza nome
-  124 ms con una risposta, 9,6 s con cento. Rimedio: leggere ogni lettore una volta per Applica,
-  come gia' i gruppi senza nome (`api/review_write`: su 20.000 frame e 400 gruppi, cento risposte
-  da 4,36 s a 0,12 s).
-- **La risposta di un gruppo senza nome parte dalle dichiarazioni**: `_ANSWERS_OF_GROUP`
-  (`spine/unnamed.py`) cerca per `entity_type` e scorre tutte quelle sui frame, a ogni gruppo. Su
-  20.000 frame e 400 gruppi `by_group` (la pagina di Da confermare) passa da 0,04 s a 4,8 s con
-  cento gruppi risposti (5.000 frame). Rimedio: partire dai frame del gruppo (`CROSS JOIN`), stesso risultato.
+  altre", e conta solo la prima. Rimedio: i totali solo alla prima pagina. Non e' un refactor:
+  le pagine dopo la prima cambiano forma (`totals` e' obbligatorio in `NightList`).
+- **Rispondere a N schede dell'attrezzatura in un Applica costa N letture**: `row_of` rifa'
+  `by_signature` (`spine/signature_page.py`) per ogni risposta, 44 ms a lettura su 21.000 frame
+  sintetici. Leggerlo una volta non e' un refactor: una risposta cambia le altre schede (il colore
+  scritto sulla camera spegne la domanda del filtro sulle schede della stessa camera; la risposta
+  salvata puo' prendersi righe di una firma vicina entro la tolleranza della focale; la stessa
+  firma due volte nello stesso Applica).
 - **Una risposta sul filtro rimette in coda tutti i frame senza matrice della sua camera, anche
   quelli che il filtro lo scrivono** (`_OF_CAMERA` in `spine/unfiltered.py`, chiamato da
   `api/review_write_folders._sensor`): 6.558 per 10 su un caso costruito, misurato quando la
@@ -622,26 +609,20 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
-- **Mosaici, dichiarazioni e archivio, dopo la fase 1**: `archive._PANNELLI` e' assegnato due
-  volte (il pezzo di `WHERE` sui pannelli di una riga, poi la query dei pannelli in fondo al
-  file): il primo vale solo perche' `_OGGETTI_DELLA_RIGA` lo legge prima che il secondo lo
-  copra; due nomi. Le pose e i
+- **Mosaici, dichiarazioni e archivio, dopo la fase 1**: le pose e i
   pannelli di `mosaic` e `mosaic_geometry` restano `dict[str, Any]`, non `db/row.Row`, perche'
   `identify_geometry.frame_shape`/`frame_radius_deg` leggono con `.get` (un `sqlite3.Row` non ce
   l'ha, e i test passano dict senza i lati): passare a `[]` cambia comportamento, quindi aspetta.
   `mosaic_geometry` non e' uno stadio: quando il mosaico lo diventera', entra nel contratto di
-  indipendenza in `backend/pyproject.toml`. Due righe di `archive.py` passano i 100 caratteri con
-  la ragione del `noqa` dopo il codice. La docstring di
+  indipendenza in `backend/pyproject.toml`. La docstring di
   `nights.still_reading` dice "`measure`, which nobody runs yet": invecchia quando uno stadio lo
-  lancera'. Regole dette due volte: "righe e conta usano una condizione sola" (docstring di
-  `archive` e di `_dove`); `COLLATE NOCASE` (`archive.ORDINI` e `choices`).
+  lancera'.
 - **Domande per gruppo e oggetti, dopo la fase 1**: `row_of` e' la stessa riga
   (`next(iter(by_...(conn, only=key)), None)`) in `signature_page` e `typeless`, e l'ordine "il
   piu' numeroso in cima" (`-frames`, `key`) e' riscritto in `signature_page`, `unnamed` e
   `frame_folder.counted`; "un grezzo senza bianchi o `None`" e' `unnamed._written` e di nuovo a
-  mano in `signature_page._card`: nessuna casa comune fra i tre senza un modulo nuovo. Senza test:
-  `signature_page.row_of` non ricostruisce la pagina intera per ogni risposta (costo al quadrato
-  delle schede). Regola detta piu' volte: "i frame gia' risposti tornano in coda, cosi' un
+  mano in `signature_page._card`: nessuna casa comune fra i tre senza un modulo nuovo. Regola
+  detta piu' volte: "i frame gia' risposti tornano in coda, cosi' un
   ripensamento vale" nei `requeue` di `signature`, `unfiltered` e `unnamed`.
 - **La base di `api`, dopo la fase 1.** Senza test: i 409 di `POST /pipeline/run`
   (`no_folders`, `no_readable_folders`, `worker_busy`) e il suo 200 "niente da avviare" a corsa
@@ -723,9 +704,8 @@ riga per voce.
   `MoonOut` e di nuovo in `MoonThatNight`, che dice di condividerlo ma condivide solo `PhaseKey`.
 - **Le rotte di lettura di `api`, dopo la fase 1**: `api/weather._seeing` e il ciclo di `weather`
   scrivono a mano `"meteoblue"` e `"7timer"` accanto a `fetches.Source`; `MeteoblueKeyOut` e
-  `MeteoblueKeyIn` stanno in `api/weather_key.py` e non in `models_weather`. Regole dette due
-  volte: "l'ordine lo decide il backend" nei moduli `api/archive` e `api/nights`; il Bortle che
-  passa da `units.bortle_of` in `api/tonight._sito` e `api/sites._out`.
+  `MeteoblueKeyIn` stanno in `api/weather_key.py` e non in `models_weather`. Regola detta due
+  volte: il Bortle che passa da `units.bortle_of` in `api/tonight._sito` e `api/sites._out`.
 - **Da confermare, dopo la fase 1**: il 409 `none_filter_exists` di `POST /review/apply` e'
   scritto nel contratto ma nessun test lo prova.
 - **Frame senza tipo, dopo la fase 2**: "risolto e' una foto, senza stelle una calibrazione" e'

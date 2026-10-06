@@ -29,6 +29,7 @@ ENGLISH = frozenset(
         "astro",
         "auto",
         "camera",
+        "criteria",
         "crota",
         "data",
         "duo",

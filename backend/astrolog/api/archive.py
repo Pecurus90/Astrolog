@@ -1,8 +1,8 @@
 """Filtering and order happen in SQL (`spine/archive.page`): a search over downloaded rows finds
-only those; the backend orders even the user's sort, or two views would agree only by chance."""
+only those. The user's sort too, for the reason in `api/nights`."""
 
 import sqlite3
-from typing import Literal
+from typing import Literal, cast
 
 from fastapi import APIRouter, Depends, Query
 
@@ -42,7 +42,9 @@ def archive_page(  # noqa: PLR0913
         "filter_name": filter_name,
         "mosaic": mosaic,
     }
-    righe, quanti = archive.page(conn, limit=limit, offset=offset, sort=sort, **criteri)
+    righe, quanti = archive.page(
+        conn, limit=limit, offset=offset, sort=cast(archive.Order, sort), **criteri
+    )
     # One query per kind of row for the whole page; an object row carries only its frames outside
     # mosaics, like its hours.
     oggetti = [r["id"] for r in righe if r["mosaic_key"] is None]

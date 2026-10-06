@@ -286,6 +286,26 @@ def test_a_focal_that_drifts_finds_the_same_answer(conn):
     assert _risposta_della_posa(conn, c) is None
 
 
+def test_one_card_is_dressed_without_the_whole_page(conn, monkeypatch):
+    """Applica ritrova ogni scheda con `row_of`: vestire tutta la pagina per ogni risposta
+    costerebbe il quadrato delle schede. Si veste solo quella chiesta."""
+    radice = add_folder(conn, "/vol/astro")
+    a = _posa(conn, radice, "a.fits", instrument=CAM)
+    _posa(conn, radice, "b.fits", instrument=CAM, size=(100, 100))
+    vestite = []
+    vera = cards.obj.subjects
+
+    def contate(c, schede):
+        schede = list(schede)
+        vestite.append(len(schede))
+        return vera(c, schede)
+
+    monkeypatch.setattr(cards.obj, "subjects", contate)
+    assert len(cards.by_signature(conn)) == 2
+    assert cards.row_of(conn, _chiave(conn, a))["key"] == _chiave(conn, a)
+    assert vestite == [2, 1]
+
+
 def test_the_answer_of_a_group_that_is_not_there_is_not_found(conn):
     """Una firma che non ha piu' pose da chiedere non c'e': la pagina era vecchia."""
     assert cards.row_of(conn, "mai") is None
