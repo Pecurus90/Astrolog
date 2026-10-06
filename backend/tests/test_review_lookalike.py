@@ -127,7 +127,10 @@ def test_seeing_the_page_does_not_answer_the_question(client):
     dopo = review(client)
     assert _proposte(client, "ATR2600M") == [_id(client, "ATR2600M(USB2.0)")]
     assert dopo["to_confirm"] == prima["to_confirm"] - sum(
-        1 for o in prima["objects"] if not o["confirmed"]
+        # seeing confirms the found objects; a group card waits for its answer
+        1
+        for o in prima["objects"]
+        if o["group"] is None and not o["confirmed"]
     )
 
 

@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import create_app
 from astrolog.clock import local_iso
 from astrolog.spine.solve_store import SOLVE_ORDER_KEY
-from conftest import db, populate, review, write_fits
+from conftest import db, populate, review, unnamed_cards, write_fits
 
 TOKYO = {"SITELAT": 35.68, "SITELONG": 139.69}
 
@@ -111,7 +111,8 @@ def test_the_question_on_poses_without_a_name_says_their_hours(db_path, tmp_path
     _posa(root / "b.fits", **{"DATE-OBS": "2026-03-14T13:40:00", **TOKYO})
 
     with _apri(db_path, root) as c:
-        (gruppo,) = review(c)["unnamed"]
+        (scheda,) = unnamed_cards(review(c))
+        gruppo = scheda["group"]
 
     assert (gruppo["first_frame"], gruppo["last_frame"]) == (
         "2026-03-14T20:30:00+09:00",
@@ -127,9 +128,10 @@ def test_the_hours_are_those_of_the_poses_that_say_when(db_path, tmp_path):
     _sul_disco(_posa(root / "b.fits", **TOKYO), "2026-03-14T13:40:00")
 
     with _apri(db_path, root) as c:
-        (gruppo,) = review(c)["unnamed"]
+        (scheda,) = unnamed_cards(review(c))
+        gruppo = scheda["group"]
 
-    assert (gruppo["frames"], gruppo["first_frame"], gruppo["last_frame"]) == (
+    assert (scheda["frames"], gruppo["first_frame"], gruppo["last_frame"]) == (
         2,
         "2026-03-14T20:30:00+09:00",
         "2026-03-14T20:30:00+09:00",

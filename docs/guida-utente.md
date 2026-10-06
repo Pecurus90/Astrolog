@@ -526,7 +526,19 @@ a guardare, perche' non sono la stessa cosa.
   lungo (le pose, se i file non dicono la durata): i pochi frame spostati di un giro al meridiano
   non ti fanno proporre un mosaico, e restano col loro oggetto. Un frame di cui non si sa quanto e'
   grande il campo non entra nei mosaici.
-- **Frame senza nome.** I frame che non dicono cosa hai ripreso, e di cui il cielo non dice niente
+- **Che oggetto e'.** L'oggetto te lo chiede in **una scheda per gruppo di frame**, sempre uguale:
+  i frame che l'app ha messo su un oggetto, oppure un gruppo di frame che non dicono cosa hai
+  ripreso e di cui il cielo non dice niente. A ogni scheda rispondi allo stesso modo: scegli una
+  voce fra quelle che il cielo ha trovato -- quando ne ha trovate --, scrivi il nome, oppure spunta
+  *non e' un oggetto*, per un frame di prova o una messa a fuoco. *Non e' un oggetto* vale anche
+  per un oggetto che l'app ha riconosciuto: quei frame escono dalle ore, e la scheda resta, con
+  quello che il cielo aveva trovato, per cambiare idea. Vale per i frame che c'erano quando hai
+  risposto: se ne riprendi altri dello stesso oggetto, l'app li riconosce come prima.
+
+  **In questa versione la scheda non si vede ancora**: arriva col disegno nuovo della pagina. Fino
+  ad allora il numero di *Da confermare* la conta.
+
+  *I frame senza nome.* I frame che non dicono cosa hai ripreso, e di cui il cielo non dice niente
   -- non ci ha trovato oggetti, o non e' riuscito a guardarli -- si chiedono per gruppo: la notte,
   la camera, il telescopio e **dove puntava la montatura**, non la cartella. I frame che puntano a
   meno di un campo inquadrato dal primo del gruppo sono lo stesso oggetto, cosi' il dithering non
@@ -541,19 +553,20 @@ a guardare, perche' non sono la stessa cosa.
   messa a fuoco: la risposta vale anche per i frame che arriveranno nello stesso gruppo. La
   risposta resta scritta sui frame: se cambi casa o il suo fuso e un frame passa a un'altra notte,
   la porta con se'; se in un gruppo finiscono frame con due risposte diverse, la domanda torna
-  aperta. Dove invece il cielo ha trovato qualcosa decide lui, e un frame che il nome lo scrive
-  tiene il suo.
-- **Oggetti.** In cima ci sono quelli su cui l'app ha un dubbio, ognuno con cio' che il cielo ha
-  trovato nel campo di quel frame da cliccare, quando ha trovato qualcosa; se nessuno e' quello
-  giusto, o se non c'e' niente da cliccare, il nome lo scrivi tu. Sotto ci sono gli altri oggetti
-  nuovi, che non hai ancora visto. Una volta visti, gli oggetti su cui non c'e' niente da scegliere
-  -- anche un dubbio senza niente da cliccare -- stanno chiusi in
-  *Mostra gli oggetti gia' visti*: li apri quando ti serve correggerne uno, e arrivano un po' per
-  volta con *Mostrane altri*. Accanto a
-  ogni oggetto trovi quanti frame sono e quante ore, e a parte i frame il cui header non dice il
-  tempo.
+  aperta. Dove invece il cielo ha trovato qualcosa decide lui -- anche *non e' un oggetto* detto
+  per il gruppo non tocca un frame che il cielo ha riconosciuto, nemmeno se lo riconosce dopo la
+  tua risposta --, e un frame che il nome lo
+  scrive tiene il suo.
 
-Quando scrivi a mano un oggetto -- negli Oggetti o nei Frame senza nome -- una **sigla** che il
+  *Gli oggetti trovati.* In cima ci sono quelli su cui l'app ha un dubbio, ognuno con cio' che il
+  cielo ha trovato nel campo di quel frame da cliccare, quando ha trovato qualcosa; se nessuno e'
+  quello giusto, o se non c'e' niente da cliccare, il nome lo scrivi tu. Sotto ci sono gli altri
+  oggetti nuovi, che non hai ancora visto. Una volta visti, gli oggetti su cui non c'e' niente da
+  scegliere -- anche un dubbio senza niente da cliccare -- stanno chiusi, e li apri a pagine
+  quando ti serve correggerne uno. Su ogni scheda trovi quanti frame sono e quante ore, e a parte
+  i frame il cui header non dice il tempo.
+
+Quando scrivi a mano un oggetto una **sigla** che il
 catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altro nome resta com'e'.
 
 ## Cosa non fa ancora

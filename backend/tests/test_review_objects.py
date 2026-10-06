@@ -14,7 +14,7 @@ from astrolog.api.app import create_app
 from astrolog.spine import declarations as decl
 from astrolog.spine import object_answer, objects, stages
 from astrolog.spine.identify import identify_frames
-from conftest import all_objects, apply, by_name, db, populate, review, settled
+from conftest import all_objects, apply, by_name, db, populate, review, settled, unnamed_cards
 from identify_bench import M45
 from synthetic import build_archive
 
@@ -114,8 +114,9 @@ def test_the_frames_with_no_name_and_no_sky_are_asked_by_group(client):
     """Si chiede per gruppo, mai per file: `le N pose di quella notte, puntate li', non hanno un
     oggetto`."""
     page = review(client)
-    assert page["unnamed"]
-    for gruppo in page["unnamed"]:
+    gruppi = unnamed_cards(page)
+    assert gruppi
+    for gruppo in gruppi:
         assert gruppo["key"] and gruppo["frames"] > 0
 
 
@@ -228,7 +229,9 @@ def test_two_targets_are_refused_even_when_the_name_is_a_designation(client_col_
     conn = db(client_col_catalogo)
     try:
         with pytest.raises(ValueError):
-            object_answer.declare_object(conn, m31["key"], slug="m-45", name="m 31")
+            object_answer.declare_object(
+                conn, m31["key"].removeprefix("object:"), slug="m-45", name="m 31"
+            )
     finally:
         conn.close()
 
@@ -316,7 +319,9 @@ def test_an_answer_does_not_become_a_rule_when_the_spelling_is_a_placeholder(cli
         conn.close()
 
     page = review(client)
-    apply(client, objects=[{"key": primo, "name": "La mia nebulosa"}], seen=page["seen"])
+    apply(
+        client, objects=[{"key": f"object:{primo}", "name": "La mia nebulosa"}], seen=page["seen"]
+    )
 
     conn = db(client)
     try:
@@ -384,7 +389,9 @@ def test_an_answer_with_both_a_slug_and_a_name_is_refused(client):
 
 
 def test_an_answer_on_an_object_that_is_not_there_is_a_404(client):
-    r = client.post("/api/v1/review/apply", json={"objects": [{"key": "non-c-e", "slug": "m-45"}]})
+    r = client.post(
+        "/api/v1/review/apply", json={"objects": [{"key": "object:non-c-e", "slug": "m-45"}]}
+    )
     assert r.status_code == 404, r.text
 
 
@@ -415,7 +422,7 @@ def test_an_answer_travels_on_a_stable_key_not_on_a_row_number(client_banco):
     silenzio l'oggetto che quel numero ce l'ha adesso."""
     page = review(client_banco)
     m45 = next(o for o in page["objects"] if o["slug"] == "m-45")
-    assert m45["key"] == "m-45"
+    assert m45["key"] == "object:m-45"
 
     # l'oggetto sparisce e un altro nasce sul suo numero di riga (scritto a mano: vedi sopra)
     conn = db(client_banco)

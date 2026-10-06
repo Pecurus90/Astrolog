@@ -47,14 +47,6 @@ function singolare(chiave: string, valori?: Record<string, string | number>): st
   return DIZIONARI[lingua][una] ?? it[una as Chiave]
 }
 
-/** Il nome di un gruppo di frame su cui Da confermare chiede: la notte, o "senza data", e poi i
- *  pezzi che lo distinguono dagli altri gruppi, quelli che ci sono. Una casa sola per le sezioni
- *  che chiedono per gruppo, cosi' si leggono tutte allo stesso modo. */
-export function nomeDelGruppo(night: string | null, parti: (string | null)[]): string {
-  const prima = night === null ? t("review.group.noDate") : t("review.group.night", { notte: notte(night) })
-  return [prima, ...parti.filter((p): p is string => p !== null)].join(" \u00b7 ")
-}
-
 /** Un punto del cielo come si legge accanto a un gruppo: `RA 98 Dec 4,9`, al decimo di grado. Dove
  *  puntava la montatura, o il centro di un mosaico, si riconosce a colpo d'occhio: non si misura. */
 export function cielo(ra: number, dec: number): string {

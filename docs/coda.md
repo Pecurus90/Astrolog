@@ -15,6 +15,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | Data | Tipo | Lavoro | Token | Minuti | Difetti |
 |---|---|---|---|---|---|
 | 6/10/2026 | costruisci | S1, una scheda per firma | ~0,5 M agenti (workflow 0,41 + sviluppatore 0,09), sessione principale non contata | 78 workflow | 2 bloccanti dal giro (ottica persa rispondendo la camera; "a colori" con la camera della notte) + 1 mio dopo (falso avviso nel log) |
+| 6/10/2026 | costruisci | S3, una scheda per gruppo di frame | ~0,68 M agenti (workflow 0,50 + due sviluppatore 0,18), sessione principale non contata | 67 workflow | 2 bloccanti dal giro (il "non e' un oggetto" di un gruppo scavalcava un cielo arrivato dopo; cambiare idea non riportava i frame legati dal gruppo) + import-linter rosso |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 
 ### Prima delle funzioni nuove
@@ -294,8 +295,11 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   portano, cosi' vale per chi arriva dopo. `home_nights` risceglie solo il gruppo, non trasporta
   risposte. Si perde il frame arrivato dopo la risposta che il fuso nuovo porta in un gruppo senza
   frame risposti.
-- **S3 -- Una scheda per gruppo di frame invece di Oggetti e Senza nome**, coi candidati del
-  cielo (anche zero).
+- **S3 -- fatta** (6/10/2026): una scheda per gruppo di frame (`ObjectCard`) al posto di Oggetti
+  e Senza nome: un oggetto trovato o un gruppo senza nome, coi candidati del cielo (anche zero) e
+  una risposta sola. *Non e' un oggetto* vale anche su un oggetto trovato (Marco): si scrive
+  sull'impronta dei frame, `identify` lo legge prima del cielo e tiene cio' che aveva trovato in
+  `frames.found_key`, che tiene la scheda. La scheda a schermo aspetta il disegno.
 - **S4 -- Applica conferma solo cio' a cui si e' risposto**, e un oggetto che il cielo riconosce
   con certezza non si chiede; si perde l'avviso degli oggetti nuovi (`ReviewSeen`).
 - **S5 -- Il segno "aspetta il tipo" ricalcolato da solo sui frame toccati**, invece di
@@ -679,9 +683,17 @@ riga per voce.
   filtro fra *a colori*, *nessun filtro*, *uno dei miei* (`filter_choices`). Si risponde una
   parte alla volta; `complete` dice quando non conta piu'; un rifiuto `not_asked` dice una parte
   che la scheda non chiede.
+- **Da confermare, la scheda dell'oggetto** (S3, aspetta il disegno). Il backend la manda gia'
+  (`objects` in `/api/v1/review`, pagine in `/review/objects/settled`, `objects` in Applica);
+  oggi non si vede, e il conto la conta. Una scheda per gruppo di frame: un oggetto trovato
+  (`name`, `confidence`, `candidates` da cliccare) o frame senza nome e senza cielo (`group`:
+  notte, camera, telescopio, puntamento, dalla prima all'ultima posa nell'ora del posto). Ore e
+  frame su ogni scheda (`integration_s`, `untimed`). Risposta: un candidato (`slug`), un nome
+  scritto, o *non e' un oggetto*; `answer` dice quella data, e una scheda risposta resta in pagina.
+  Erano le sezioni Oggetti e Senza nome, tolte dallo schermo con S3.
 - **Da confermare**: le sezioni si spengono finche' l'Applica non torna (oggi una risposta data
   nell'attesa si perde); la barra a sinistra di una riga dice una cosa sola (oggi *Quale filtro
-  notte per notte* e *Frame senza nome* segnano il salvato, le altre il da mandare); la tendina
+  notte per notte* segna il salvato, le altre il da mandare); la tendina
   dei corredi della scheda dell'attrezzatura si apre solo premendo; la scelta fra due o tre voci fisse
   e' un segmentato.
 - **Attrezzatura**: un filtro scritto a mano cerca nel catalogo dei modelli, cosi' si possono

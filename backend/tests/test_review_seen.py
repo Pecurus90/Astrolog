@@ -30,7 +30,7 @@ def _oggetto_nuovo(client, created_at):
 
 
 def _confermato(client):
-    return next(o for o in all_objects(client) if o["key"] == "m-42")["confirmed"]
+    return next(o for o in all_objects(client) if o["key"] == "object:m-42")["confirmed"]
 
 
 def test_review_does_not_confirm_what_arrived_after_the_page_was_read(client):

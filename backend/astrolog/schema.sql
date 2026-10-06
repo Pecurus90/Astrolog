@@ -290,7 +290,12 @@ CREATE TABLE frames (
   -- chiave porta la notte, la camera, il telescopio e il puntamento di chi ha aperto il gruppo, con
   -- cui si confronta chi arriva dopo.
   unnamed_key    TEXT,                                                        -- identify
-  rig_id         INTEGER REFERENCES rigs (id),     -- normalize
+  -- Cosa `identify` aveva trovato (slug o nome) per una posa che l'utente ha detto "non e' un
+  -- oggetto": la chiave della sua scheda in Da confermare, che cosi' resta e si cambia. NULL
+  -- altrimenti; una rimessa in coda non lo azzera. La risposta lo scrive subito: distingue il "non
+  -- e' un oggetto" di una scheda da quello di un gruppo, che il cielo coi candidati scavalca.
+  found_key      TEXT,                                                        -- identify, risposta
+  rig_id        INTEGER REFERENCES rigs (id),     -- normalize
   filter_wheel_id  INTEGER REFERENCES instruments (id),   -- normalize
   focuser_id       INTEGER REFERENCES instruments (id),   -- normalize
   guide_camera_id  INTEGER REFERENCES instruments (id),   -- normalize
@@ -324,6 +329,7 @@ CREATE INDEX frames_unnamed ON frames (unnamed_key) WHERE unnamed_key IS NOT NUL
 -- Chi arriva cerca i gruppi della sua notte: senza, ogni posa rileggerebbe tutte le altre.
 CREATE INDEX frames_unnamed_night ON frames (json_extract(unnamed_key, '$[0]'))
   WHERE unnamed_key IS NOT NULL;
+CREATE INDEX frames_found ON frames (found_key) WHERE found_key IS NOT NULL;
 -- Le pose di un oggetto, con cio' che serve a contarle: l'elenco degli oggetti di Da confermare le
 -- conta tutte a ogni apertura, e dall'indice non legge la tabella.
 CREATE INDEX frames_object ON frames (object_id, copy_of, exposure_s);
@@ -603,17 +609,19 @@ CREATE TABLE gear_usage (
   PRIMARY KEY (subject, subject_id)
 ) STRICT;
 
--- I candidati del cielo per un oggetto in dubbio (DERIVATO: li scrive `spine/object_candidates.py`,
--- che dice quando; Da confermare li legge). `rank` e' l'ordine, dal piu' probabile; `in_frame`
--- NULL quando il cielo non porta lati o rotazione.
+-- I candidati del cielo per la scheda di un oggetto in dubbio, o di pose dette "non e' un oggetto"
+-- (DERIVATO: li scrive `spine/object_candidates.py`, che dice quando; Da confermare li legge).
+-- `object_key` e' la chiave stabile della scheda, perche' la riga dell'oggetto puo' non esserci
+-- piu'. `rank` e' l'ordine, dal piu' probabile; `in_frame` NULL quando il cielo non porta lati o
+-- rotazione.
 CREATE TABLE object_candidates (
-  object_id   INTEGER NOT NULL REFERENCES objects (id) ON DELETE CASCADE,
+  object_key  TEXT NOT NULL,
   rank        INTEGER NOT NULL,
   slug        TEXT NOT NULL,
   name        TEXT NOT NULL,
   common_name TEXT,
   in_frame    INTEGER CHECK (in_frame IN (0, 1)),
-  PRIMARY KEY (object_id, rank)
+  PRIMARY KEY (object_key, rank)
 ) STRICT;
 
 -- Le cartelle della domanda sul tipo di file, coi frame senza tipo che contano (DERIVATO: le scrive

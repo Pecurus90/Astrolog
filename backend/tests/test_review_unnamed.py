@@ -23,7 +23,7 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import create_app
 from astrolog.spine import stages, unnamed
 from astrolog.spine.identify import identify_frames
-from conftest import all_objects, apply, db, populate, review, write_fits
+from conftest import all_objects, apply, db, populate, review, unnamed_cards, write_fits
 
 ROSETTA, M81, CALIBRATE = "2024-03-12_Rosetta/LIGHT", "2024-04-01_M81", "calibrate"
 
@@ -56,19 +56,19 @@ def pagina(db_path, tmp_path):
 
 
 def _chiave(client, sotto):
-    """La chiave del gruppo delle pose senza nome di quella cartella: nell'archivio di prova ogni
-    cartella ne fa uno solo."""
+    """La chiave della scheda del gruppo delle pose senza nome di quella cartella: nell'archivio di
+    prova ogni cartella ne fa uno solo."""
     with db(client) as conn:
         (frame_id,) = conn.execute(
             "SELECT f.id FROM frames f JOIN positions p ON p.frame_id = f.id"
             " WHERE p.rel_path LIKE ? AND f.object_raw IS NULL ORDER BY f.id",
             (f"{sotto}/%",),
         ).fetchone()
-        return unnamed.key_of_frame(conn, frame_id)
+        return f"frames:{unnamed.key_of_frame(conn, frame_id)}"
 
 
 def _gruppi(client):
-    return {g["key"]: g for g in review(client)["unnamed"]}
+    return {g["key"]: g for g in unnamed_cards(review(client))}
 
 
 def _col_cielo(client, sotto, nome, ra, dec):
@@ -88,8 +88,34 @@ def _col_cielo(client, sotto, nome, ra, dec):
     return frame_id
 
 
-def _senza_ore(gruppo):
-    return {k: v for k, v in gruppo.items() if k not in ("first_frame", "last_frame")}
+def _senza_ore(scheda):
+    ore = ("first_frame", "last_frame")
+    return {**scheda, "group": {k: v for k, v in scheda["group"].items() if k not in ore}}
+
+
+def _scheda(key, ra_deg, dec_deg, frames, answer):
+    """A group card as the page shows it, hours aside: 120 s frames, nothing found by the app."""
+    return {
+        "key": key,
+        "id": None,
+        "name": None,
+        "slug": None,
+        "method": None,
+        "confidence": None,
+        "group": {
+            "night": "2024-03-12",
+            "camera": "Canon EOS 700D",
+            "telescope": None,
+            "ra_deg": ra_deg,
+            "dec_deg": dec_deg,
+        },
+        "frames": frames,
+        "integration_s": 120.0 * frames,
+        "untimed": 0,
+        "confirmed": False,
+        "candidates": [],
+        "answer": answer,
+    }
 
 
 def test_a_question_per_group_with_what_makes_it(pagina):
@@ -97,32 +123,14 @@ def test_a_question_per_group_with_what_makes_it(pagina):
     puntamento che lo fanno; la posa col nome non c'e', e la copia calibrata -- in un'altra
     cartella, con lo stesso header -- non e' un'altra posa. Le ore le prova `test_local_night.py`;
     qui, senza sito, sono quelle UTC delle pose."""
-    gruppi = review(pagina)["unnamed"]
-    assert (gruppi[0]["first_frame"], gruppi[0]["last_frame"]) == (
+    gruppi = unnamed_cards(review(pagina))
+    assert (gruppi[0]["group"]["first_frame"], gruppi[0]["group"]["last_frame"]) == (
         "2024-03-12T21:00:00+00:00",
         "2024-03-12T21:02:00+00:00",
     )
     assert [_senza_ore(g) for g in gruppi] == [
-        {
-            "key": _chiave(pagina, ROSETTA),
-            "night": "2024-03-12",
-            "camera": "Canon EOS 700D",
-            "telescope": None,
-            "ra_deg": 98.0,
-            "dec_deg": 4.9,
-            "frames": 3,
-            "answer": None,
-        },
-        {
-            "key": _chiave(pagina, M81),
-            "night": "2024-03-12",
-            "camera": "Canon EOS 700D",
-            "telescope": None,
-            "ra_deg": 149.0,
-            "dec_deg": 69.0,
-            "frames": 2,
-            "answer": None,
-        },
+        _scheda(_chiave(pagina, ROSETTA), 98.0, 4.9, 3, None),
+        _scheda(_chiave(pagina, M81), 149.0, 69.0, 2, None),
     ]
 
 
@@ -170,7 +178,7 @@ def test_a_file_that_is_gone_and_a_retired_folder_do_not_ask_anything(pagina):
     assert _gruppi(pagina)[_chiave(pagina, M81)]["frames"] == 1
     with db(pagina) as conn:
         conn.execute("UPDATE folders SET retired_at = '2026-09-15'")
-    assert review(pagina)["unnamed"] == []
+    assert unnamed_cards(review(pagina)) == []
 
 
 def test_a_solved_pose_whose_sky_finds_nothing_is_asked_like_the_others(pagina):
@@ -194,20 +202,13 @@ def test_a_pose_whose_sky_has_candidates_is_not_asked(db_path_col_catalogo, tmp_
 def test_answering_with_a_name_moves_the_poses_and_the_group_keeps_its_answer(pagina):
     """La risposta arriva allo stadio -- l'Applica lo avvia, e le pose vanno su quell'oggetto -- e
     il gruppo resta in pagina con la risposta, perche' si deve poter cambiare idea."""
-    out = apply(pagina, unnamed=[{"key": _chiave(pagina, ROSETTA), "name": "Nebulosa Rosetta"}])
+    out = apply(pagina, objects=[{"key": _chiave(pagina, ROSETTA), "name": "Nebulosa Rosetta"}])
     assert out["requeued"] == 4  # anche la copia in `calibrate/`: stesso header, stesso gruppo
     assert {o["name"]: o["frames"] for o in all_objects(pagina)}["Nebulosa Rosetta"] == 3
     detta = {"kind": "name", "value": "Nebulosa Rosetta", "name": "Nebulosa Rosetta"}
-    assert _senza_ore(_gruppi(pagina)[_chiave(pagina, ROSETTA)]) == {
-        "key": _chiave(pagina, ROSETTA),
-        "night": "2024-03-12",
-        "camera": "Canon EOS 700D",
-        "telescope": None,
-        "ra_deg": 98.0,
-        "dec_deg": 4.9,
-        "frames": 3,
-        "answer": detta,
-    }
+    assert _senza_ore(_gruppi(pagina)[_chiave(pagina, ROSETTA)]) == _scheda(
+        _chiave(pagina, ROSETTA), 98.0, 4.9, 3, detta
+    )
 
 
 def test_an_open_group_counts_and_an_answered_one_does_not(pagina):
@@ -217,7 +218,7 @@ def test_an_open_group_counts_and_an_answered_one_does_not(pagina):
     prima = review(pagina)["to_confirm"]
     apply(
         pagina,
-        unnamed=[{"key": _chiave(pagina, M81), "not_an_object": True}],
+        objects=[{"key": _chiave(pagina, M81), "not_an_object": True}],
         seen={},  # non ho visto niente: nient'altro si conferma vedendo
     )
     assert review(pagina)["to_confirm"] == prima - 1
@@ -228,7 +229,7 @@ def test_the_object_named_by_the_answer_is_not_another_question(pagina):
     `seen` vuoto -- non ho visto niente -- cosi' nient'altro si conferma vedendo."""
     apply(
         pagina,
-        unnamed=[{"key": _chiave(pagina, M81), "name": "Galassia di Bode"}],
+        objects=[{"key": _chiave(pagina, M81), "name": "Galassia di Bode"}],
         seen={},
     )
     oggetti = {o["name"]: o for o in all_objects(pagina)}
@@ -237,10 +238,10 @@ def test_the_object_named_by_the_answer_is_not_another_question(pagina):
 
 def test_not_an_object_is_an_answer_too_and_i_can_change_my_mind(pagina):
     chiave = _chiave(pagina, M81)
-    out = apply(pagina, unnamed=[{"key": chiave, "not_an_object": True}])
+    out = apply(pagina, objects=[{"key": chiave, "not_an_object": True}])
     assert out["requeued"] == 2  # le due senza nome: la posa col nome non c'entra
     assert _gruppi(pagina)[chiave]["answer"] == {"kind": "none", "value": None, "name": None}
-    apply(pagina, unnamed=[{"key": chiave, "name": "Galassia di Bode"}])
+    apply(pagina, objects=[{"key": chiave, "name": "Galassia di Bode"}])
     assert _gruppi(pagina)[chiave]["answer"] == {
         "kind": "name",
         "value": "Galassia di Bode",
@@ -256,7 +257,7 @@ def test_answering_with_a_catalog_entry(db_path_col_catalogo, tmp_path):
     populate(db_path_col_catalogo, root)
     with TestClient(create_app(db_path_col_catalogo), base_url="http://localhost") as c:
         chiave = _chiave(c, M81)
-        apply(c, unnamed=[{"key": chiave, "slug": "m-81"}])
+        apply(c, objects=[{"key": chiave, "slug": "m-81"}])
         assert _gruppi(c)[chiave]["answer"] == {"kind": "catalog", "value": "m-81", "name": "M 81"}
 
 
@@ -269,14 +270,16 @@ def test_a_designation_written_by_hand_is_the_catalog_entry(db_path_col_catalogo
     populate(db_path_col_catalogo, root)
     with TestClient(create_app(db_path_col_catalogo), base_url="http://localhost") as c:
         chiave = _chiave(c, M81)
-        apply(c, unnamed=[{"key": chiave, "name": "m 81"}])
+        apply(c, objects=[{"key": chiave, "name": "m 81"}])
         assert _gruppi(c)[chiave]["answer"] == {"kind": "catalog", "value": "m-81", "name": "M 81"}
-        assert [(o["slug"], o["frames"]) for o in all_objects(c)] == [("m-81", 2)]
+        trovati = [o for o in all_objects(c) if o["group"] is None]  # the group card stays too
+        assert [(o["slug"], o["frames"]) for o in trovati] == [("m-81", 2)]
 
 
 def test_a_group_that_is_not_there_is_refused(pagina):
     r = pagina.post(
-        "/api/v1/review/apply", json={"unnamed": [{"key": '["2000-01-01", null]', "name": "M 1"}]}
+        "/api/v1/review/apply",
+        json={"objects": [{"key": 'frames:["2000-01-01", null]', "name": "M 1"}]},
     )
     assert r.status_code == 404, r.text
 
@@ -284,7 +287,7 @@ def test_a_group_that_is_not_there_is_refused(pagina):
 def test_a_catalog_entry_that_does_not_exist_is_refused(pagina):
     r = pagina.post(
         "/api/v1/review/apply",
-        json={"unnamed": [{"key": _chiave(pagina, M81), "slug": "non-esiste-123"}]},
+        json={"objects": [{"key": _chiave(pagina, M81), "slug": "non-esiste-123"}]},
     )
     assert r.status_code == 422, r.text
     assert r.json()["detail"]["code"] == "unknown_target"
@@ -302,6 +305,6 @@ def test_a_catalog_entry_that_does_not_exist_is_refused(pagina):
 )
 def test_an_answer_that_says_two_things_or_none_is_refused(pagina, corpo):
     r = pagina.post(
-        "/api/v1/review/apply", json={"unnamed": [{"key": _chiave(pagina, M81), **corpo}]}
+        "/api/v1/review/apply", json={"objects": [{"key": _chiave(pagina, M81), **corpo}]}
     )
     assert r.status_code == 422, r.text

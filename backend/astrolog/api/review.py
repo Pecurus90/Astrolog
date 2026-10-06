@@ -11,7 +11,6 @@ from ..clock import now_iso
 from ..spine import mosaic_proposals as mosaic_reader
 from ..spine import signature_page as gear_reader
 from ..spine import typeless as typeless_reader
-from ..spine import unnamed as unnamed_reader
 from ..spine.run import STAGE_GROUP, STAGE_IDENTIFY, STAGE_NORMALIZE, STAGE_SOLVE
 from ..vocab.filters import UNKNOWN
 from . import lookalike, work
@@ -21,7 +20,7 @@ from .deps import get_db
 from .models_page import page_of
 from .models_review import BandOut, FilterOut, ReviewOut, ReviewSeen, SettledObjects
 from .models_review_apply import ReviewApplied, ReviewApply
-from .models_review_groups import GearSignature, MosaicCandidate, TypelessFolder, UnnamedGroup
+from .models_review_groups import GearSignature, MosaicCandidate, TypelessFolder
 
 router = APIRouter(prefix="/api/v1", tags=["da confermare"])
 
@@ -68,24 +67,22 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
     objects, certi = page.objects(conn)
     incerte = page.unclear_coordinates(conn)
     righe_attrezzatura = gear_reader.by_signature(conn)
-    righe_senza_nome = unnamed_reader.by_group(conn)
     righe_senza_tipo = typeless_reader.by_folder(conn)
     righe_mosaici = mosaic_reader.candidates(conn)
     mosaici = [MosaicCandidate(**m) for m in righe_mosaici]
     coppie = lookalike.lookalikes(conn)
     # the highest LISTED row, not `SELECT MAX(id)`: a row written while the page is composed
     # stays out of the confirmation
-    seen = ReviewSeen(objects=max((o.id for o in objects), default=0))
+    seen = ReviewSeen(objects=max((o.id for o in objects if o.id is not None), default=0))
     # Seeing a question is not answering it: each one counts until answered, or the count would
     # drop to zero while the frames still wait.
     to_confirm = (
-        sum(1 for o in objects if not o.confirmed)
+        sum(1 for o in objects if page.asks(o))
         + len(filters)
         + len(coppie)
         + sum(1 for p in incerte if p.site is None)
         # a card counts until every part it asks is answered
         + sum(1 for g in righe_attrezzatura if not g["complete"])
-        + unanswered(righe_senza_nome)
         # a mosaic's no closes it too, or a wrong proposal could only be silenced by accepting it
         + unanswered(righe_mosaici)
         + unanswered(righe_senza_tipo)
@@ -97,7 +94,6 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
         rig_choices=page.rig_choices(conn),
         objects=objects,
         settled_objects=len(certi),
-        unnamed=[UnnamedGroup(**g) for g in righe_senza_nome],
         unclear=incerte,
         gear=[GearSignature(**g) for g in righe_attrezzatura],
         optics_choices=page.optics_choices(conn),
@@ -154,7 +150,7 @@ def _stadi_toccati(body: ReviewApply) -> set[str]:
     if body.typeless:
         # the SKY of those frames is requeued: name and night follow from the stage graph
         voluti.add(STAGE_SOLVE)
-    if body.objects or body.unnamed:
+    if body.objects:
         voluti.add(STAGE_IDENTIFY)
     elif body.unclear:
         # a place answer changes only where those frames sit: the last stage is enough

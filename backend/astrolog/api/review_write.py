@@ -25,6 +25,7 @@ from .models_review_apply import (
     CoordinatesEdit,
     FilterCorrection,
     MosaicEdit,
+    ObjectEdit,
     ReviewApply,
 )
 
@@ -45,9 +46,10 @@ def confirm_seen(conn: sqlite3.Connection, seen: ReviewSeen | None, now: str) ->
     still open (`object_still_open`) is not confirmed by seeing it; gear is not confirmed here."""
     fino_a = seen or _SENZA_LIMITI
     count = 0
+    cliccabili = page.keys_with_candidates(conn)
     for row in obj.identities(conn):
         chiave = obj.stable_key(row)
-        if chiave and row["id"] <= fino_a.objects and not page.object_still_open(conn, row):
+        if chiave and row["id"] <= fino_a.objects and not page.object_still_open(row, cliccabili):
             decl.confirm(conn, "object", chiave, now)
             count += 1
     return count
@@ -67,9 +69,6 @@ def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> tupl
     for edit in body.gear:
         requeued.update(folders.answer_gear(conn, edit, now, scelte))
         changed += 1
-    for edit in body.unnamed:
-        requeued.update(folders.answer_unnamed(conn, edit, now))
-        changed += 1
     for edit in body.typeless:
         requeued.update(folders.answer_typeless(conn, edit, now))
         changed += 1
@@ -83,9 +82,7 @@ def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> tupl
         requeued.update(rimesse)
         changed += int(scritta)
     for edit in body.objects:
-        requeued.update(
-            risposta.declare_object(conn, edit.key, slug=edit.slug, name=edit.name, now=now)
-        )
+        requeued.update(_answer_object(conn, edit, now))
         changed += 1
     for edit in body.unclear:
         requeued.update(_answer_where(conn, edit, now))
@@ -157,6 +154,19 @@ def _answer_mosaic(conn: sqlite3.Connection, edit: MosaicEdit, now: str) -> None
         slug, name = risposta.resolved(conn, None, (edit.name or "").strip())
         value = risposta.target_value(slug, name)
     mosaic.write_answer(conn, edit.key, value, now)
+
+
+def _answer_object(conn: sqlite3.Connection, edit: ObjectEdit, now: str) -> list[int]:
+    """The card's key says who writes: the found object's, or the group's of frames with no name
+    and no sky. A key with neither head is a card that is not there."""
+    if edit.key.startswith(page.FRAMES_KEY):
+        return folders.answer_unnamed(conn, edit.key.removeprefix(page.FRAMES_KEY), edit, now)
+    if not edit.key.startswith(page.OBJECT_KEY):
+        raise LookupError(f"scheda {edit.key}")
+    chiave = edit.key.removeprefix(page.OBJECT_KEY)
+    if edit.not_an_object:
+        return risposta.declare_not_an_object(conn, chiave, now)
+    return risposta.declare_found(conn, chiave, slug=edit.slug, name=edit.name, now=now)
 
 
 def _answer_where(conn: sqlite3.Connection, edit: CoordinatesEdit, now: str) -> list[int]:

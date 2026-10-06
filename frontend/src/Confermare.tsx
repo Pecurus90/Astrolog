@@ -7,8 +7,6 @@ import { SezioneStessoPezzo } from "./SezioneStessoPezzo"
 import { SezioneFiltri } from "./SezioneFiltri"
 import { SezioneLuoghi } from "./SezioneLuoghi"
 import { SezioneMosaici } from "./SezioneMosaici"
-import { SezioneOggetti } from "./SezioneOggetti"
-import { SezioneSenzaNome } from "./SezioneSenzaNome"
 import { SezioneSenzaTipo } from "./SezioneSenzaTipo"
 import { api } from "./api/client"
 import { motivo } from "./api/motivo"
@@ -22,19 +20,15 @@ type Accumulo = {
   lookalikes: Record<string, Schema["LookalikeEdit"]>
   filters: Record<number, Schema["FilterEdit"]>
   typeless: Record<string, Schema["TypelessFolderEdit"]>
-  unnamed: Record<string, Schema["UnnamedEdit"]>
   unclear: Record<string, Schema["CoordinatesEdit"]>
   mosaics: Record<string, Schema["MosaicEdit"]>
-  objects: Record<string, Schema["ObjectEdit"]>
 }
 const VUOTO: Accumulo = {
   lookalikes: {},
   filters: {},
   typeless: {},
-  unnamed: {},
   unclear: {},
   mosaics: {},
-  objects: {},
 }
 
 /**
@@ -104,10 +98,10 @@ export function Confermare() {
           // no gear card yet: it waits for its design (ADR 0014)
           gear: [],
           typeless: Object.values(accumulo.typeless),
-          unnamed: Object.values(accumulo.unnamed),
           unclear: Object.values(accumulo.unclear),
           mosaics: Object.values(accumulo.mosaics),
-          objects: Object.values(accumulo.objects),
+          // no object card yet: it waits for its design (ADR 0014)
+          objects: [],
           ...(pagina.data?.seen ? { seen: pagina.data.seen } : {}),
         },
       })
@@ -189,17 +183,6 @@ export function Confermare() {
           mosaici={dati.mosaics}
           risposte={accumulo.mosaics}
           onRisposta={scrivi("mosaics")}
-        />
-      )}
-      {!!dati?.unnamed?.length && (
-        <SezioneSenzaNome gruppi={dati.unnamed} onRisposta={scrivi("unnamed")} />
-      )}
-      {(!!dati?.objects?.length || !!dati?.settled_objects) && (
-        <SezioneOggetti
-          oggetti={dati.objects}
-          certi={dati.settled_objects}
-          risposte={accumulo.objects}
-          onRisposta={scrivi("objects")}
         />
       )}
       </Fragment>

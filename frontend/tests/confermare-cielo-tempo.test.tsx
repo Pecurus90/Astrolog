@@ -30,7 +30,6 @@ const PAGINA = {
   objects: [],
   gear: [],
   filter_choices: [],
-  unnamed: [],
   unclear: [
     {
       key: "45.85,11.58",

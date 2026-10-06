@@ -113,13 +113,20 @@ def _one_frame(conn: sqlite3.Connection, frame_id: int, counts: dict[str, int]) 
         # A rule is the user's word where the sky cannot contradict it: locked.
         decision = {**decision, "method": "user", "confidence": "user", "review": False}
     decision = _as_the_user_said(conn, decision)
+    # The user's "not an object" beats name and sky, a group's (no `found_key`) only without
+    # candidates. What was found is the card's key; a frame finding nothing keeps the card's.
+    fuori = risposta.said_not_an_object(conn, frame["frame_hash"]) and bool(
+        frame["found_key"] or not cands
+    )
+    found_key = (decision["slug"] or decision["name"] or frame["found_key"]) if fuori else None
 
     now = now_iso()
     with transaction(conn):
         store.set_empty_cone(conn, frame_id, int(not cands) if sky else None)
-        if decision["branch"] == "nothing":
+        store.set_found_key(conn, frame_id, found_key)
+        if fuori or decision["branch"] == "nothing":
             # Not a fault: `skipped`, not `pending`, or the backlog never reaches zero.
-            motivo = rule.NOT_AN_OBJECT if detto == unnamed.NONE else rule.NO_NAME_NO_SKY
+            motivo = rule.NOT_AN_OBJECT if fuori or detto == unnamed.NONE else rule.NO_NAME_NO_SKY
             set_status(conn, frame_id, "identify", "skipped", reason=motivo, now=now)
             counts["waiting"] += motivo == rule.NO_NAME_NO_SKY
         else:

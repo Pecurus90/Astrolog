@@ -95,7 +95,7 @@ che il `traduttore` legge per primo.
 | la dimensione di un pixel del sensore, senza binning: e' quella della scheda della camera | `instruments.pixel_size_um` | dimensione del pixel | pitch |
 | la stessa grandezza come l'header la scrive (`XPIXSZ`), col binning gia' dentro: sta sul frame | `frames.pixel_size_um` | -- | pixel fisico |
 | quanto e' servito ogni pezzo, corredo e filtro -- frame, ore, notti, oggetti, e per i corredi il cielo misurato -- scritto a fine giro di ogni stadio e letto dall'Attrezzatura | `gear_usage` | quanto ti e' servito | statistiche, contatori |
-| i candidati del cielo di un oggetto in dubbio, dal piu' probabile: li scrive `spine/object_candidates.py` e li legge Da confermare | `object_candidates` | candidati | proposte, suggerimenti |
+| i candidati del cielo di una scheda dell'oggetto in dubbio, o di frame detti "non e' un oggetto", dal piu' probabile: li scrive `spine/object_candidates.py` e li legge Da confermare | `object_candidates` | candidati | proposte, suggerimenti |
 | se chi conta ha gia' contato un pezzo: falso per uno nato a meta' giro, che la pagina dice "si sta contando" e non "non si sa" | `counted` | si sta contando | in attesa, pending |
 | il pixel di una camera ricavato dalla scala misurata sulle sue pose, la focale del corredo e il binning, quando i file non lo dicono | `instruments.pixel_from_sky_um` | pixel ricavato dal cielo | pixel stimato, pixel calcolato |
 | il filtro davanti al sensore, come strumento | `filter` | filtro | vetro |
@@ -114,7 +114,9 @@ che il `traduttore` legge per primo.
 | la camera che gli header di una notte (la notte della posa) dicono, quando e' una sola, con l'ottica e la focale se anche quelle sono una sola: il frame che non le dice prende cio' che il suo file tace | `night_rigs` | corredo della notte | camera della notte, camera dedotta, camera indovinata |
 | la cartella che contiene il file di un frame, non la radice registrata: una sola per frame, ed e' quella con cui si chiede che file sono i frame senza tipo | `frame_folder` | cartella dei frame | sottocartella, radice, sorgente |
 | i frame che non dicono l'oggetto e di cui il cielo non dice niente, raggruppati per notte, camera, telescopio e dove puntava la montatura (entro un campo inquadrato da chi ha aperto il gruppo, scelto quando il frame arriva e riscelto solo se casa cambia fuso e con lei la notte del frame), non per cartella | `unnamed` | frame senza nome | orfane, sconosciute, non identificate |
-| la risposta su un gruppo di frame senza nome: un oggetto di catalogo, un nome scritto, oppure "non e' un oggetto" | `UnnamedAnswer` | oggetto del gruppo | oggetto dichiarato, etichetta, risposta sulla cartella |
+| la scheda di Da confermare che chiede l'oggetto di un gruppo di frame: quelli che l'app ha messo su un oggetto, o un gruppo di frame senza nome; coi candidati del cielo, anche zero | `ObjectCard` | scheda dell'oggetto | sezione Oggetti, sezione Senza nome |
+| la risposta su una scheda dell'oggetto: un oggetto di catalogo, un nome scritto, oppure "non e' un oggetto" | `ObjectAnswer` | oggetto del gruppo | oggetto dichiarato, etichetta, risposta sulla cartella |
+| cio' che `identify` aveva trovato per un frame detto "non e' un oggetto": la chiave della sua scheda, che resta per cambiare idea | `found_key` | -- | oggetto originale, vecchio oggetto |
 | la risposta su quel gruppo: i nomi di ottica e camera con la focale, e da quei nomi i pezzi nascono | `GroupRig` | risposta sul gruppo | corredo dichiarato, assegnazione |
 | la combinazione di bande di un progetto (LRGB, SHO, HOO) | `scheme` | schema | palette |
 

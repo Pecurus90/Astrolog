@@ -26,7 +26,6 @@ const PAGINA = {
   unclear: [],
   gear: [],
   filter_choices: [],
-  unnamed: [],
   rigs: [],
   typeless: [
     { key: "D:/Astro/2024-05-17/dark", frames: 120, answer: null },

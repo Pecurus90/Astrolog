@@ -3,18 +3,21 @@
 
 import logging
 import sqlite3
-from typing import Any
+from typing import Any, Final
 
 from ..catalog import lookup
 from ..clock import now_iso
 from ..vocab.object_label import clean_object_name
 from . import objects
 from .declarations import (
+    FRAME,
+    FRAME_OBJECT,
     MOSAIC_NO,
     MOSAIC_YES,
     UnknownTargetError,
     confirm,
     declared,
+    forget,
     learn,
     write_declaration,
 )
@@ -27,6 +30,101 @@ log = logging.getLogger(__name__)
 CORRECTION = "correction"
 
 CATALOG, NAME = "catalog:", "name:"  # the target's kind, at the head of the value
+NONE: Final = "none"  # "not an object": the value written on a frame, and the answer's kind
+
+# The frames the user put out of the archive, under what `identify` had found for them. Copies
+# count nowhere; a frame still linked waits for `identify` and counts on its object.
+_OUT = f"""
+SELECT f.found_key AS key, COUNT(*) AS frames,
+  COALESCE(SUM(f.exposure_s), 0) AS integration_s, SUM(f.exposure_s IS NULL) AS untimed
+FROM frames f JOIN declarations d ON d.entity_type = '{FRAME}' AND d.entity_key = f.frame_hash
+  AND d.field = '{FRAME_OBJECT}' AND d.value = '{NONE}'
+WHERE f.found_key IS NOT NULL AND f.object_id IS NULL AND f.copy_of IS NULL
+GROUP BY f.found_key
+"""  # noqa: S608 - constants of the spine
+
+# Linked frames already answered "not an object", per object: between Apply and `identify`.
+_LINKED_OUT = f"""
+SELECT f.object_id, COUNT(*) FROM frames f JOIN declarations d ON d.entity_type = '{FRAME}'
+  AND d.entity_key = f.frame_hash AND d.field = '{FRAME_OBJECT}' AND d.value = '{NONE}'
+WHERE f.object_id IS NOT NULL AND f.copy_of IS NULL GROUP BY f.object_id
+"""  # noqa: S608 - constants of the spine
+
+
+def said_not_an_object(conn: sqlite3.Connection, frame_hash: str) -> bool:
+    """The user's word on this frame itself, from its group or from the card of what was found."""
+    return declared(conn, FRAME, frame_hash, FRAME_OBJECT) == NONE
+
+
+def out_of_archive(conn: sqlite3.Connection) -> dict[str, dict[str, Any]]:
+    """Per found key, the frames put out: their card stays on the page so one can change one's
+    mind. `name` is the catalog's, None for a key the catalog does not know."""
+    out: dict[str, dict[str, Any]] = {}
+    for r in conn.execute(_OUT).fetchall():
+        voce = lookup.by_slug(conn, r["key"])
+        out[r["key"]] = {**dict(r), "name": voce["name"] if voce else None}
+    return out
+
+
+def linked_out(conn: sqlite3.Connection) -> dict[int, int]:
+    return dict(conn.execute(_LINKED_OUT).fetchall())
+
+
+def _card_frames(conn: sqlite3.Connection, key: str) -> list[sqlite3.Row]:
+    """Every frame of the card, copies too: those on the object and those put out under its key."""
+    return conn.execute(
+        "SELECT id, frame_hash, object_raw, empty_cone FROM frames"
+        " WHERE (found_key = ? AND object_id IS NULL) OR object_id = ?",
+        (key, (objects.by_key(conn, key) or {}).get("id")),
+    ).fetchall()
+
+
+def declare_not_an_object(conn: sqlite3.Connection, key: str, now: str | None = None) -> list[int]:
+    """On each frame's fingerprint, fixed now, read by `identify` before name and sky; `found_key`
+    written now tells it from a group's answer, which a sky with candidates overrides."""
+    righe = _card_frames(conn, key)
+    if not righe:
+        raise LookupError(f"oggetto {key}")
+    for r in righe:
+        write_declaration(conn, FRAME, r["frame_hash"], FRAME_OBJECT, NONE, now)
+        conn.execute("UPDATE frames SET found_key = ? WHERE id = ?", (key, r["id"]))
+    frames = [r["id"] for r in righe]
+    invalidate(conn, frames, "identify")
+    return frames
+
+
+def declare_found(
+    conn: sqlite3.Connection,
+    key: str,
+    *,
+    slug: str | None = None,
+    name: str | None = None,
+    now: str | None = None,
+) -> list[int]:
+    """The card of what was found, answered with a target: the frames put out come back, and the
+    correction moves them all. Without the object's row only the correction is written."""
+    righe = _card_frames(conn, key)
+    if not righe:
+        raise LookupError(f"oggetto {key}")
+    if objects.by_key(conn, key) is not None:
+        declare_object(conn, key, slug=slug, name=name, now=now)
+    else:
+        refuse_unknown_slug(conn, slug)
+        slug, name = resolved(conn, slug, name)
+        correct_object(conn, key, slug=slug, name=name, now=now)
+        confirm(conn, "object", slug or name, now)
+    # Without name and sky only the frame's own word can bring it back: the target, not silence.
+    target = target_value(*resolved(conn, slug, name))
+    for r in righe:
+        if not said_not_an_object(conn, r["frame_hash"]):
+            continue
+        if not clean_object_name(r["object_raw"]) and r["empty_cone"] in (None, 1):
+            write_declaration(conn, FRAME, r["frame_hash"], FRAME_OBJECT, target, now)
+        else:
+            forget(conn, FRAME, r["frame_hash"], FRAME_OBJECT)
+    frames = [r["id"] for r in righe]
+    invalidate(conn, frames, "identify")
+    return frames
 
 
 def correct_object(

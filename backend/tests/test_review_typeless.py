@@ -19,7 +19,7 @@ from astrolog.spine import typeless, typeless_answer, typeless_folders
 from astrolog.spine.frame_folder import folder_key
 from astrolog.spine.identify import identify_frames
 from astrolog.spine.stages import WAITING_SQL, invalidate, set_status
-from conftest import apply, db, populate, review, sky_solved, write_fits
+from conftest import apply, db, populate, review, sky_solved, unnamed_cards, write_fits
 
 DARK, M51, FOTO = "2026-03-14/dark", "2026-03-14/M51", "2026-03-14/foto"
 
@@ -90,7 +90,7 @@ def test_those_frames_are_not_asked_among_the_unnamed_ones(pagina):
     pagine = review(pagina)
     assert _chiave(pagina, DARK) in {g["key"] for g in pagine["typeless"]}
     # fra i frame senza nome resta il solo file che il tipo lo dice: il muto no, e i dark nemmeno
-    assert [g["frames"] for g in pagine["unnamed"]] == [1]
+    assert [g["frames"] for g in unnamed_cards(pagine)] == [1]
 
 
 def test_a_frame_that_waits_is_not_work_left_to_do(pagina):
@@ -180,7 +180,9 @@ def test_frames_without_stars_are_calibration_and_are_not_asked(pagina):
     _cielo(pagina, DARK, "failed", NO_STARS)
     pagine = review(pagina)
     assert _chiave(pagina, DARK) not in _gruppi(pagina)
-    assert _chiave(pagina, DARK) not in {g["key"] for g in pagine["unnamed"]}
+    assert _chiave(pagina, DARK) not in {
+        g["key"].removeprefix("frames:") for g in unnamed_cards(pagine)
+    }
     assert _aspetta(pagina, "d_0.fits")
 
 

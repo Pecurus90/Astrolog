@@ -25,7 +25,7 @@ from astrolog.spine import stages, unnamed
 from astrolog.spine.identify import identify_frames
 from astrolog.spine.normalize import normalize_frames
 from astrolog.spine.scan import scan_folder
-from conftest import db, populate, review, write_fits
+from conftest import db, populate, review, unnamed_cards, write_fits
 
 ROSETTA, M81 = "2024-03-12_Rosetta/LIGHT", "2024-04-01_M81"
 
@@ -109,7 +109,8 @@ def _oggetti_dei_file(client, sotto):
 
 
 def _frames_nel_gruppo(client, sotto):
-    return {g["key"]: g["frames"] for g in review(client)["unnamed"]}.get(_chiave(client, sotto))
+    schede = {g["key"]: g["frames"] for g in unnamed_cards(review(client))}
+    return schede.get(f"frames:{_chiave(client, sotto)}")
 
 
 def _col_cielo(client, sotto, nome, ra, dec):

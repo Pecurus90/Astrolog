@@ -2,18 +2,30 @@
 are written by identify, since the catalog cone is costly; the rest is composed here."""
 
 import sqlite3
+from typing import Final
 
 from ..db.row import Row
 from ..place import by_distance, distance_km
 from ..spine import coordinates as places
 from ..spine import declarations as decl
-from ..spine import gear
+from ..spine import gear, unnamed
+from ..spine import object_answer as risposta
 from ..spine import objects as obj
 from ..spine import rigs as corredi
 from ..spine.group import SITE_UNCLEAR
 from ..spine.identify_decide import DOUBT
-from .models_review import FilterCandidate, ObjectCandidate, ObjectOut, RigChoice
-from .models_review_groups import SiteCandidate, UnclearCoordinates
+from .models_review import (
+    FilterCandidate,
+    ObjectAnswer,
+    ObjectCandidate,
+    ObjectCard,
+    RigChoice,
+)
+from .models_review_groups import SiteCandidate, UnclearCoordinates, UnnamedGroup
+
+# The head of a card's key says which kind of group it is: one answer, two writers.
+OBJECT_KEY: Final = "object:"
+FRAMES_KEY: Final = "frames:"
 
 
 def filter_choices(conn: sqlite3.Connection) -> list[FilterCandidate]:
@@ -60,10 +72,14 @@ def rig_choices(conn: sqlite3.Connection) -> list[RigChoice]:
     ]
 
 
-def object_still_open(conn: sqlite3.Connection, row: Row) -> bool:
+def keys_with_candidates(conn: sqlite3.Connection) -> set[str]:
+    return {r[0] for r in conn.execute("SELECT DISTINCT object_key FROM object_candidates")}
+
+
+def object_still_open(row: Row, with_candidates: set[str]) -> bool:
     """A doubt AND the candidates the page shows: without a catalog, or before ASTAP, a doubt has
     nothing to click, and the count would never clear."""
-    return row["identity_confidence"] == DOUBT and bool(_sky_candidates(conn, row["id"]))
+    return row["identity_confidence"] == DOUBT and obj.stable_key(row) in with_candidates
 
 
 def unclear_coordinates(conn: sqlite3.Connection) -> list[UnclearCoordinates]:
@@ -98,50 +114,113 @@ def unclear_coordinates(conn: sqlite3.Connection) -> list[UnclearCoordinates]:
     return out
 
 
-def objects(conn: sqlite3.Connection) -> tuple[list[ObjectOut], list[ObjectOut]]:
-    """`(open, settled)`: open are the new ones and those with something to click, doubts first, so
-    whoever opens the page sees the work. Candidates are read only for those to decide."""
-    confermati = decl.confirmed_keys(conn, "object")
-    out: list[ObjectOut] = []
-    for row in obj.listing(conn):
-        nome = obj.display_name(row)
-        chiave = obj.stable_key(row)
-        dubbio = row["identity_confidence"] == DOUBT
-        out.append(
-            ObjectOut(
-                id=row["id"],
-                key=chiave,
-                name=nome,
-                slug=row["catalog_slug"],
-                method=row["identity_method"],
-                confidence=row["identity_confidence"],
-                frames=row["frames"],
-                integration_s=row["integration_s"],
-                untimed=row["untimed"],
-                confirmed=chiave in confermati,
-                candidates=_sky_candidates(conn, row["id"]) if dubbio else [],
-            )
-        )
-    out.sort(key=lambda o: (o.confidence != DOUBT, -o.frames, o.name or ""))
-    aperti: list[ObjectOut] = []
-    certi: list[ObjectOut] = []
-    for o in out:
-        (aperti if not o.confirmed or o.candidates else certi).append(o)
+NONE_ANSWER = ObjectAnswer(kind="none", value=None, name=None)
+
+
+def asks(card: ObjectCard) -> bool:
+    """Counts among the things to confirm: no answer yet, and a found object never seen."""
+    return card.answer is None and (card.group is not None or not card.confirmed)
+
+
+def objects(conn: sqlite3.Connection) -> tuple[list[ObjectCard], list[ObjectCard]]:
+    """`(open, settled)`: open asks, is new, has something to click or an answer; questions and
+    doubts first, so the work shows. Settled: found objects seen, with nothing to click."""
+    out = _found_cards(conn) + _group_cards(conn)
+    out.sort(key=lambda c: (not asks(c), c.confidence != DOUBT, -c.frames, c.name or c.key))
+    aperti: list[ObjectCard] = []
+    certi: list[ObjectCard] = []
+    for c in out:
+        aperto = c.group or c.answer or not c.confirmed or c.candidates
+        (aperti if aperto else certi).append(c)
     return aperti, certi
 
 
-def _sky_candidates(conn: sqlite3.Connection, object_id: int) -> list[ObjectCandidate]:
-    """What one clicks to answer, and for "the sky says something else" the answer to why."""
+def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
+    """The archive's objects, joined by their key with the frames put out under it; then the keys
+    whose frames are all out, which have no object row any more."""
+    confermati = decl.confirmed_keys(conn, "object")
+    fuori = risposta.out_of_archive(conn)
+    collegati_fuori = risposta.linked_out(conn)
+    candidati = _sky_candidates(conn)
+    out: list[ObjectCard] = []
+    for row in obj.listing(conn):
+        chiave = obj.stable_key(row)
+        extra = fuori.pop(chiave, {"frames": 0, "integration_s": 0.0, "untimed": 0})
+        # every frame answered "not an object", the ones still waiting for `identify` included
+        tutti_fuori = row["frames"] and collegati_fuori.get(row["id"], 0) == row["frames"]
+        out.append(
+            ObjectCard(
+                key=OBJECT_KEY + chiave,
+                id=row["id"],
+                name=obj.display_name(row),
+                slug=row["catalog_slug"],
+                method=row["identity_method"],
+                confidence=row["identity_confidence"],
+                group=None,
+                frames=row["frames"] + extra["frames"],
+                integration_s=row["integration_s"] + extra["integration_s"],
+                untimed=row["untimed"] + extra["untimed"],
+                confirmed=chiave in confermati,
+                candidates=candidati.get(chiave, []),
+                answer=NONE_ANSWER if tutti_fuori else None,
+            )
+        )
+    for chiave, conti in fuori.items():
+        out.append(
+            ObjectCard(
+                key=OBJECT_KEY + chiave,
+                id=None,
+                name=conti["name"] or chiave,
+                slug=chiave if conti["name"] else None,
+                method=None,
+                confidence=None,
+                group=None,
+                frames=conti["frames"],
+                integration_s=conti["integration_s"],
+                untimed=conti["untimed"],
+                confirmed=chiave in confermati,
+                candidates=candidati.get(chiave, []),
+                answer=NONE_ANSWER,
+            )
+        )
+    return out
+
+
+def _group_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
+    """Frames with no name and no sky: the sky has nothing to click there."""
     return [
-        ObjectCandidate(
-            slug=r["slug"],
-            name=r["name"],
-            common_name=r["common_name"],
-            in_frame=None if r["in_frame"] is None else bool(r["in_frame"]),
+        ObjectCard(
+            key=FRAMES_KEY + g["key"],
+            id=None,
+            name=None,
+            slug=None,
+            method=None,
+            confidence=None,
+            group=UnnamedGroup(**g),
+            frames=g["frames"],
+            integration_s=g["integration_s"],
+            untimed=g["untimed"],
+            confirmed=False,
+            candidates=[],
+            answer=None if g["answer"] is None else ObjectAnswer(**g["answer"]),
         )
-        for r in conn.execute(
-            "SELECT slug, name, common_name, in_frame FROM object_candidates"
-            " WHERE object_id = ? ORDER BY rank",
-            (object_id,),
-        )
+        for g in unnamed.by_group(conn)
     ]
+
+
+def _sky_candidates(conn: sqlite3.Connection) -> dict[str, list[ObjectCandidate]]:
+    """What one clicks to answer, and for "the sky says something else" the answer to why."""
+    out: dict[str, list[ObjectCandidate]] = {}
+    for r in conn.execute(
+        "SELECT object_key, slug, name, common_name, in_frame FROM object_candidates"
+        " ORDER BY object_key, rank"
+    ):
+        out.setdefault(r["object_key"], []).append(
+            ObjectCandidate(
+                slug=r["slug"],
+                name=r["name"],
+                common_name=r["common_name"],
+                in_frame=None if r["in_frame"] is None else bool(r["in_frame"]),
+            )
+        )
+    return out

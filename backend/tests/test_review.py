@@ -21,7 +21,7 @@ from astrolog.clock import now_iso
 from astrolog.db.connect import connect
 from astrolog.spine import stages
 from astrolog.vocab.filters import UNKNOWN
-from conftest import apply, by_name, db, review, wait_until, write_light
+from conftest import apply, by_name, db, review, unnamed_cards, wait_until, write_light
 
 # --- l'elenco -------------------------------------------------------------------------
 
@@ -103,13 +103,14 @@ def test_review_lists_what_was_found(client):
     oggetti = {o["name"]: o["frames"] for o in page["objects"]}
     assert oggetti["M 31"] == 5 and oggetti["NGC 6888"] == 2
     # le due pose ASIAIR senza OBJECT: senza nome e senza cielo, elencate per cartella
-    assert sum(g["frames"] for g in page["unnamed"]) == 2
+    assert sum(g["frames"] for g in unnamed_cards(page)) == 2
 
     # le domande aperte e gli oggetti non ancora visti: prima si poteva leggere "0 da confermare"
     # con tutto l'archivio senza un nome. E le schede sull'attrezzatura, finche' non si risponde
     # (`test_review_gear.py`).
+    # gli oggetti contano anche le schede delle pose senza nome
     atteso = len(page["lookalikes"]) + len(page["filters"]) + len(page["objects"])
-    atteso += len(page["gear"]) + len(page["unnamed"])  # e le cartelle senza nome
+    atteso += len(page["gear"])
     # le pose ASIAIR, che la camera la dicono e l'ottica no: una scheda che chiede l'ottica
     ottica = [(g["camera"], g["frames"]) for g in page["gear"] if g["asks_optics"]]
     assert ottica == [("Canon EOS 700D", 3)]

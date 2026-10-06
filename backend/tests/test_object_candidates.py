@@ -10,6 +10,7 @@ import pytest
 from astrolog.spine import (
     identify,
     object_candidates,
+    objects,
     stages,
     typeless,
     typeless_answer,
@@ -41,11 +42,13 @@ def test_identify_writes_the_candidates_of_the_doubtful_objects_only(client_banc
     """Solo gli oggetti in dubbio: uno sicuro non ha niente da cliccare, e cercargli i candidati
     sarebbe pagare un cono per niente."""
     with db(client_banco) as conn:
-        righe = conn.execute(
-            "SELECT DISTINCT o.identity_confidence FROM object_candidates c"
-            " JOIN objects o ON o.id = c.object_id"
-        ).fetchall()
-    assert [r[0] for r in righe] == ["low"]
+        chiavi = {r[0] for r in conn.execute("SELECT object_key FROM object_candidates")}
+        fiducia = {
+            o["identity_confidence"]
+            for o in objects.identities(conn)
+            if objects.stable_key(o) in chiavi
+        }
+    assert sorted(fiducia) == ["low"]
 
 
 def test_an_answered_object_takes_its_candidates_away(client_banco):
@@ -79,8 +82,8 @@ def test_calibration_answered_takes_the_candidates_of_that_sky_away(conn):
     frame_id = _frame(conn, radice, "dark/a.fits", sky="done")
     conn.execute("UPDATE frames SET object_id = ? WHERE id = ?", (oggetto, frame_id))
     conn.execute(
-        "INSERT INTO object_candidates(object_id, rank, slug, name) VALUES(?, 0, 'm-31', 'M 31')",
-        (oggetto,),
+        "INSERT INTO object_candidates(object_key, rank, slug, name)"
+        " VALUES('m-45', 0, 'm-31', 'M 31')"
     )
     typeless.declare(conn, "D:/Astro/dark", typeless.CALIBRATION)
     typeless_folders.write(conn)  # come a fine stadio: risolta dal cielo, chiede solo se risposta

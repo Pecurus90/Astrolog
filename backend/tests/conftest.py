@@ -259,17 +259,27 @@ def review(client):
 def to_confirm_without(pagina, sezione):
     """Quanto conta la pagina di Da confermare tolta una sezione, ricomposto dai suoi campi: e' un
     oracolo scritto dalla pagina, non dal codice che conta, e un numero a memoria invecchierebbe."""
-    gruppi = ("unnamed", "typeless", "mosaics")
+    gruppi = ("typeless", "mosaics")
     conti = {
         "lookalikes": len(pagina["lookalikes"]),
         "filters": len(pagina["filters"]),
-        "objects": sum(1 for o in pagina["objects"] if not o["confirmed"]),
+        # a group card is never confirmed: it counts until answered
+        "objects": sum(
+            1
+            for o in pagina["objects"]
+            if o["answer"] is None and (o["group"] is not None or not o["confirmed"])
+        ),
         "unclear": sum(1 for p in pagina["unclear"] if p["site"] is None),
         "gear": sum(1 for g in pagina["gear"] if not g["complete"]),
         **{g: sum(1 for r in pagina[g] if r["answer"] is None) for g in gruppi},
     }
     assert sezione in conti, sezione
     return sum(n for nome, n in conti.items() if nome != sezione)
+
+
+def unnamed_cards(pagina):
+    """The cards of frames with no name and no sky: those with a `group`."""
+    return [o for o in pagina["objects"] if o["group"] is not None]
 
 
 def apply(client, **body):

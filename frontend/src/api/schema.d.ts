@@ -2081,6 +2081,23 @@ export interface components {
             state: "ok" | "waiting" | "unknown";
         };
         /**
+         * ObjectAnswer
+         * @description What the user said on a card: a catalog object (`value` is the slug), a written name, or "it
+         *     is not an object" (`value` empty). `name` is how the object shows: the entry's, or the written
+         *     one.
+         */
+        ObjectAnswer: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "catalog" | "name" | "none";
+            /** Value */
+            value: string | null;
+            /** Name */
+            name: string | null;
+        };
+        /**
          * ObjectCandidate
          * @description An entry the sky found in the field of this object: it is what one clicks to answer. The
          *     identification writes it, and the page reads it.
@@ -2099,37 +2116,24 @@ export interface components {
             in_frame: boolean | null;
         };
         /**
-         * ObjectEdit
-         * @description The answer about an object: a catalog slug (usually a clicked candidate) or a hand-written
-         *     name.
+         * ObjectCard
+         * @description One card per group of frames, asking what object they are (ADR 0014, S3): the frames
+         *     `identify` put on one object, or -- `group` -- frames the header does not name and the sky says
+         *     nothing about. Same answer for both. `name`, `slug`, `method`, `confidence` are what the app
+         *     found: empty on a `group`, and `method`/`confidence` also on frames put out as "not an object",
+         *     which no longer have an object.
          */
-        ObjectEdit: {
+        ObjectCard: {
             /**
              * Key
-             * @description The stable key read from the page, never the row id.
+             * @description What one answers with: `object:` and the found object's stable key, or `frames:` and the group's key.
              */
             key: string;
-            /** Slug */
-            slug?: string | null;
-            /** Name */
-            name?: string | null;
-        };
-        /**
-         * ObjectOut
-         * @description An object of the archive. `name` is the two steps of the contract already done by the
-         *     backend: the primary name, or the one the catalog gives to the slug.
-         */
-        ObjectOut: {
             /**
              * Id
-             * @description The row number: it serves the frontend as a list key, not for answering.
+             * @description The object's row number, for the page's `seen`; empty without an object row.
              */
-            id: number;
-            /**
-             * Key
-             * @description The stable key one answers with: the catalog slug, or the name.
-             */
-            key: string;
+            id: number | null;
             /** Name */
             name: string | null;
             /** Slug */
@@ -2138,6 +2142,8 @@ export interface components {
             method: ("coord_confirmed" | "coord_review" | "exact_name" | "historic_name" | "user") | null;
             /** Confidence */
             confidence: ("certain" | "high" | "low" | "user") | null;
+            /** @description Where and when, for frames with no name and no sky; empty otherwise. */
+            group: components["schemas"]["UnnamedGroup"] | null;
             /** Frames */
             frames: number;
             /**
@@ -2150,14 +2156,39 @@ export interface components {
              * @description How many of those frames do not tell their time: they are not worth zero, they are counted here.
              */
             untimed: number;
-            /** Confirmed */
+            /**
+             * Confirmed
+             * @description The found object was seen once already; a group is never confirmed.
+             */
             confirmed: boolean;
             /**
              * Candidates
-             * @description Only on those still to decide.
-             * @default []
+             * @description What the sky found, to click: on doubts and on frames put out; zero is a card too.
              */
             candidates: components["schemas"]["ObjectCandidate"][];
+            /** @description An answered card stays on the page, so one can change one's mind. */
+            answer: components["schemas"]["ObjectAnswer"] | null;
+        };
+        /**
+         * ObjectEdit
+         * @description The answer on an object card: a catalog slug (usually a clicked candidate), a hand-written
+         *     name, or "it is not an object".
+         */
+        ObjectEdit: {
+            /**
+             * Key
+             * @description The card's key read from the page.
+             */
+            key: string;
+            /** Slug */
+            slug?: string | null;
+            /** Name */
+            name?: string | null;
+            /**
+             * Not An Object
+             * @default false
+             */
+            not_an_object: boolean;
         };
         /** PathInfo */
         PathInfo: {
@@ -2301,11 +2332,6 @@ export interface components {
              */
             gear: components["schemas"]["GearEdit"][];
             /**
-             * Unnamed
-             * @default []
-             */
-            unnamed: components["schemas"]["UnnamedEdit"][];
-            /**
              * Typeless
              * @default []
              */
@@ -2337,16 +2363,14 @@ export interface components {
             rig_choices: components["schemas"]["RigChoice"][];
             /**
              * Objects
-             * @description Those to decide and the new ones; the doubts on top.
+             * @description The object cards to decide, the new ones and the answered ones; open questions on top.
              */
-            objects: components["schemas"]["ObjectOut"][];
+            objects: components["schemas"]["ObjectCard"][];
             /**
              * Settled Objects
              * @description How many the others are, already seen: they are read in pages.
              */
             settled_objects: number;
-            /** Unnamed */
-            unnamed: components["schemas"]["UnnamedGroup"][];
             /**
              * Unclear
              * @description The places the app asks about: empty when it does not ask.
@@ -2697,7 +2721,7 @@ export interface components {
          */
         SettledObjects: {
             /** Items */
-            items: components["schemas"]["ObjectOut"][];
+            items: components["schemas"]["ObjectCard"][];
             /** Total */
             total: number;
             /** Limit */
@@ -3050,56 +3074,12 @@ export interface components {
             subjects: components["schemas"]["Subjects"];
         };
         /**
-         * UnnamedAnswer
-         * @description What the user said about a group of frames with no name and no sky: a catalog object
-         *     (`value` is the slug), a written name, or "it is not an object" (`value` empty). `name` is how
-         *     the object shows: the name of the entry, or the written one.
-         */
-        UnnamedAnswer: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "catalog" | "name" | "none";
-            /** Value */
-            value: string | null;
-            /** Name */
-            name: string | null;
-        };
-        /**
-         * UnnamedEdit
-         * @description The answer about a group of frames with no name and no sky: which object it is -- a catalog
-         *     slug or a written name -- or "it is not an object".
-         */
-        UnnamedEdit: {
-            /**
-             * Key
-             * @description The group key read from the page.
-             */
-            key: string;
-            /** Slug */
-            slug?: string | null;
-            /** Name */
-            name?: string | null;
-            /**
-             * Not An Object
-             * @default false
-             */
-            not_an_object: boolean;
-        };
-        /**
          * UnnamedGroup
-         * @description The frames the header does not name and the sky says nothing about, grouped by **night,
-         *     camera, telescope and pointing**, never by file or folder. The group shows with those values;
-         *     the pointing is that of the frame that opened it. An answered group stays on the page with
-         *     `answer`, because one must be able to change one's mind.
+         * @description Where and when of frames the header does not name and the sky says nothing about, grouped
+         *     by **night, camera, telescope and pointing**, never by file or folder; the pointing is that of
+         *     the frame that opened the group.
          */
         UnnamedGroup: {
-            /**
-             * Key
-             * @description The group key: one answers with it, and it does not reopen.
-             */
-            key: string;
             /**
              * Night
              * @description The night, YYYY-MM-DD; empty for those that do not say when.
@@ -3122,9 +3102,6 @@ export interface components {
             ra_deg: number | null;
             /** Dec Deg */
             dec_deg: number | null;
-            /** Frames */
-            frames: number;
-            answer: components["schemas"]["UnnamedAnswer"] | null;
             /**
              * First Frame
              * @description The first and the last frame, ISO in the night's time zone: two objects without pointing in the same night are a single group, and the hours tell whoever answers whether they are two. Frames with `DATE-OBS` count: null if none says it.

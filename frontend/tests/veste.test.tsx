@@ -19,7 +19,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { APERTE, GRUPPI, TITOLI } from "../src/pagine"
-import { SALUTE, SENZA_SOGGETTI, STANOTTE, disegna, fuoriDaiMattoni, impostazioni, pulisci, riga, rispondi, vaiASezione } from "./banco"
+import { SALUTE, STANOTTE, disegna, fuoriDaiMattoni, impostazioni, pulisci, riga, rispondi, vaiASezione } from "./banco"
 
 afterEach(pulisci)
 
@@ -32,7 +32,6 @@ const PAGINA = {
   mosaics: [],
   unclear: [],
   filter_choices: [],
-  unnamed: [],
   gear: [],
   rig_choices: [],
   typeless: [],
@@ -121,8 +120,10 @@ describe("una riga di Da confermare", () => {
           ...PAGINA,
           to_confirm: 2,
           typeless: [{ key: "D:/Astro/2024-05-17/dark", frames: 12, answer: null }],
-          // gia' risposta: il suo campo sta dietro "Cambia"
-          unnamed: [{ key: '["2024-06-01", null, null, null, null]', night: "2024-06-01", camera: null, telescope: null, ra_deg: null, dec_deg: null, frames: 4, answer: { kind: "name", value: "M 51", name: "M 51" }, subjects: SENZA_SOGGETTI }],
+          // already a yes: its name field is open (the unnamed section left with ADR 0014 S3)
+          mosaics: [
+            { key: "impronta-m42", ra_deg: 83.8, dec_deg: -5.4, object: "M 42", panels: 3, frames: 90, integration_s: 10800, untimed: 0, answer: "yes", answer_name: "M 42", names: ["M 42"], proposed: "M 42" },
+          ],
         },
       },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
@@ -131,7 +132,7 @@ describe("una riga di Da confermare", () => {
     })
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
-    await screen.findByRole("region", { name: /frame senza nome/i })
+    await screen.findByRole("region", { name: /mosaici/i })
     // si apre tutto cio' che si apre, e solo dopo si guarda
     const apre = /cambia|completa|dagli un nome/i
     for (const b of screen.queryAllByRole("button", { name: apre })) {

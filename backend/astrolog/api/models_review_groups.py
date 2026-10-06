@@ -29,23 +29,11 @@ class Subjects(BaseModel):
     not_yet: int
 
 
-class UnnamedAnswer(BaseModel):
-    """What the user said about a group of frames with no name and no sky: a catalog object
-    (`value` is the slug), a written name, or "it is not an object" (`value` empty). `name` is how
-    the object shows: the name of the entry, or the written one."""
-
-    kind: Literal["catalog", "name", "none"]
-    value: str | None
-    name: str | None
-
-
 class UnnamedGroup(BaseModel):
-    """The frames the header does not name and the sky says nothing about, grouped by **night,
-    camera, telescope and pointing**, never by file or folder. The group shows with those values;
-    the pointing is that of the frame that opened it. An answered group stays on the page with
-    `answer`, because one must be able to change one's mind."""
+    """Where and when of frames the header does not name and the sky says nothing about, grouped
+    by **night, camera, telescope and pointing**, never by file or folder; the pointing is that of
+    the frame that opened the group."""
 
-    key: str = Field(description="The group key: one answers with it, and it does not reopen.")
     night: str | None = Field(
         description="The night, YYYY-MM-DD; empty for those that do not say when."
     )
@@ -53,8 +41,6 @@ class UnnamedGroup(BaseModel):
     telescope: str | None = Field(description="`TELESCOP` as written in the file.")
     ra_deg: float | None = Field(description="Where the mount pointed, from the header.")
     dec_deg: float | None
-    frames: int
-    answer: UnnamedAnswer | None
     first_frame: str | None = Field(
         description="The first and the last frame, ISO in the night's time zone: two objects "
         "without pointing in the same night are a single group, and the hours tell whoever "

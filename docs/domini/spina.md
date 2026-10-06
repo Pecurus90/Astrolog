@@ -66,8 +66,11 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | Dichiaro un filtro che possiedo con la sua marca, il suo modello e le larghezze di banda, e i frame che lo usano lo prendono | `test_review_declares_a_filter_with_its_bands` |
 | Alla fine della scansione vedo le domande che l'app non sa risolvere da sola, e gli oggetti: con "Applica" le risposte diventano le regole dell'archivio. L'attrezzatura non e' una domanda: la vedo e la correggo nell'Attrezzatura | `test_review_lists_what_was_found`, `test_review_only_new_things` |
 | Due grafie che hanno l'aria di essere la stessa camera me le chiede -- "sono lo stesso pezzo?" --; si' le unisce, no non me lo chiede piu' per quella coppia, e guardare non e' rispondere | `test_a_yes_merges_the_two_spellings`, `test_a_no_silences_the_pair_for_good_whichever_way_it_leans`, `test_seeing_the_page_does_not_answer_the_question` |
+| L'oggetto me lo chiede in **una scheda per gruppo di frame** (ADR 0014, S3): i frame che l'app ha messo su un oggetto, o un gruppo di frame senza nome e senza cielo; la stessa scheda per tutti e due, coi candidati del cielo da cliccare -- anche zero -- e la stessa risposta | `test_found_objects_and_unnamed_groups_are_one_list_of_cards`, `test_an_answer_that_says_two_things_or_none_is_refused`, `test_a_card_that_is_not_there_is_refused` |
+| Anche a un oggetto trovato rispondo "non e' un oggetto": i suoi frame escono dalle ore e da ogni oggetto, la scheda resta in pagina coi candidati e non conta piu', e cambio idea; vale per i frame che c'erano quando ho risposto | `test_not_an_object_on_a_found_object_takes_its_frames_out_and_the_card_stays`, `test_the_card_of_frames_put_out_keeps_the_sky_candidates` |
+| "Non e' un oggetto" detto per un gruppo di frame senza nome non tocca un frame del gruppo che il cielo ha riconosciuto | `test_not_an_object_said_for_a_group_does_not_reach_a_frame_the_sky_recognised`, `test_a_sky_that_comes_after_the_group_answer_still_decides` |
 | Vedo cosa l'app ha capito di ogni oggetto, e cio' su cui ha un dubbio sta in cima | `test_the_objects_section_shows_the_archive_objects_not_the_header_spellings`, `test_the_ones_to_decide_come_first` |
-| Gli oggetti gia' visti, su cui non c'e' niente da scegliere, non riempiono la pagina: stanno chiusi, si aprono a pagine, e da li' si correggono | `test_the_settled_objects_leave_the_page_and_come_in_pages`, *gli oggetti gia' visti stanno chiusi, e si aprono a pagine* (`frontend/tests/confermare-oggetti.test.tsx`) |
+| Gli oggetti gia' visti, su cui non c'e' niente da scegliere, non riempiono la pagina: stanno chiusi, si aprono a pagine, e da li' si correggono | `test_the_settled_objects_leave_the_page_and_come_in_pages` |
 | Quando mi chiede quale oggetto era, mi mostra cosa c'e' a quelle coordinate e mi basta cliccare | `test_a_doubtful_object_carries_the_candidates_the_sky_found` |
 | Se rispondo che quei frame sono un altro oggetto, ci vanno davvero -- e non tornano indietro | `test_answering_on_an_object_moves_its_frames_and_locks_it`, `test_a_correction_survives_a_second_run` |
 | Se scrivo a mano una sigla che il catalogo conosce (`M 81`, `m81`), e' quella voce, non un oggetto fuori catalogo con lo stesso nome: le mie ore non si dividono su due voci | `test_a_designation_written_by_hand_is_the_catalog_entry` |
@@ -77,7 +80,7 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | La mia risposta vale anche per i frame futuri con quello stesso nome, ma non quando quel nome e' un segnaposto | `test_a_learned_rule_names_a_future_frame_without_asking_again`, `test_an_answer_does_not_become_a_rule_when_the_spelling_is_a_placeholder` |
 | E una regola non mi mette in archivio un frame che il cielo dice essere un'altra cosa: dove il cielo c'e', decide lui | `test_a_learned_rule_does_not_touch_a_frame_that_has_a_sky` |
 | Se mi ero sbagliato, rispondo di nuovo e la seconda risposta vale | `test_a_second_answer_corrects_the_first` |
-| I frame senza nome e senza cielo me li chiede per gruppo -- notte, camera, telescopio e dove puntava la montatura --, non uno per uno e non per cartella: due oggetti della stessa notte si separano col puntamento; e la domanda dice dalla prima all'ultima posa, nell'ora del posto, cosi' vedo se senza puntamento sono due; le ore sono quelle dei frame che dicono quando | `test_the_question_on_poses_without_a_name_says_their_hours`, `test_the_hours_are_those_of_the_poses_that_say_when`, *la riga dice dalla prima all'ultima posa, nell'ora del posto* (`frontend/tests/confermare-senza-nome.test.tsx`), `test_the_frames_with_no_name_and_no_sky_are_asked_by_group`, `test_a_question_per_group_with_what_makes_it`, `test_two_objects_of_the_same_night_are_two_questions`, `test_a_dither_stays_in_the_same_group`, `test_a_pose_without_sky_is_asked_whatever_identify_has_done_with_it`, `test_an_object_made_only_of_spaces_is_not_a_name` |
+| I frame senza nome e senza cielo me li chiede per gruppo -- notte, camera, telescopio e dove puntava la montatura --, non uno per uno e non per cartella: due oggetti della stessa notte si separano col puntamento; e la domanda dice dalla prima all'ultima posa, nell'ora del posto, cosi' vedo se senza puntamento sono due; le ore sono quelle dei frame che dicono quando | `test_the_question_on_poses_without_a_name_says_their_hours`, `test_the_hours_are_those_of_the_poses_that_say_when`, `test_the_frames_with_no_name_and_no_sky_are_asked_by_group`, `test_a_question_per_group_with_what_makes_it`, `test_two_objects_of_the_same_night_are_two_questions`, `test_a_dither_stays_in_the_same_group`, `test_a_pose_without_sky_is_asked_whatever_identify_has_done_with_it`, `test_an_object_made_only_of_spaces_is_not_a_name` |
 | Non me li chiede finche' il cielo puo' ancora arrivare, e nemmeno dove il cielo ha dei candidati; un cielo che non trova niente vale come nessun cielo | `test_a_pose_the_solver_has_not_looked_at_yet_is_not_asked`, `test_a_pose_whose_sky_has_candidates_is_not_asked`, `test_a_solved_pose_whose_sky_finds_nothing_is_asked_like_the_others` |
 | Un file che non si trova piu' e una cartella che ho ritirato non mi chiedono niente | `test_a_file_that_is_gone_and_a_retired_folder_do_not_ask_anything` |
 | L'oggetto del gruppo -- dal catalogo o scritto -- sposta i suoi frame senza nome, anche in un'altra cartella, vale anche per quelli che arriveranno e si cambia; si scrive sull'impronta di ogni frame, anche mancante, non su una chiave con la notte, e due risposte diverse nello stesso gruppo non sono una risposta; "non e' un oggetto" li chiude senza inventare un soggetto | `test_a_name_said_for_the_group_puts_its_poses_on_that_object`, `test_the_answer_hangs_on_the_poses_not_on_a_key_with_the_night`, `test_two_answers_in_one_group_are_no_answer`, `test_the_answer_reaches_a_pose_of_the_same_group_in_another_folder`, `test_a_catalog_entry_puts_the_poses_on_its_object`, `test_not_an_object_closes_the_poses_and_they_wait_for_nothing`, `test_the_rule_holds_for_the_poses_that_arrive_later`, `test_i_can_change_my_mind_and_the_poses_follow`, `test_changing_my_mind_reaches_a_missing_pose_too` |
@@ -585,13 +588,12 @@ ogni pezzo trovato e' davanti agli occhi con quanti frame vale.
 
 **Da confermare: solo cio' che l'app non puo' sapere** (Marco, 25/9/2026: un pezzo nuovo non e'
 una domanda, si vede nell'Attrezzatura). Dell'attrezzatura restano due domande: i filtri che l'app
-non riconosce, e due grafie che hanno l'aria di essere la stessa camera. Poi gli *Oggetti*: in cima
-quelli che chiedono una risposta, poi quelli nuovi; i gia' visti, su cui non c'e' niente da scegliere, stanno chiusi, e si
-aprono a pagine (Marco, 27/9/2026). E le domande sui **gruppi
+non riconosce, e due grafie che hanno l'aria di essere la stessa camera. Poi le *schede
+dell'oggetto*, una per gruppo di frame -- un oggetto trovato, o frame senza nome e senza cielo --:
+in cima quelle che chiedono una risposta, poi le nuove; le gia' viste, su cui non c'e' niente da
+scegliere, stanno chiuse, e si aprono a pagine (Marco, 27/9/2026). E le domande sui **gruppi
 di frame**, una per ogni cosa che l'app non puo' sapere:
-il sito, il filtro per camera, con che camera sono
-stati ripresi i frame che non lo dicono, e i frame che l'header non nomina e di cui il cielo
-non dice niente. Quante sezioni siano lo dice `ReviewOut`, non questa riga: un numero scritto qui
+il sito, e l'attrezzatura che i file non dicono. Quante sezioni siano lo dice `ReviewOut`, non questa riga: un numero scritto qui
 direbbe il falso alla prossima domanda che nasce. Dentro l'ordine fisso delle sezioni, prima i
 gruppi che toccano piu' frame (`api/review.py`, `api/review_page.py`; prove
 `test_the_most_used_filters_come_first`, `test_a_question_per_group_with_the_largest_first`,
@@ -697,11 +699,31 @@ solo quella di un attimo prima (`declarations.rename`). Una regola lasciata indi
 nome che non e' piu' di nessuno, e la prima posa nuova con quella grafia fa rinascere il pezzo
 vecchio: senza scheda, senza risposte, con le ore spartite fra due righe.
 
-**Gli oggetti si dichiarano in Da confermare, come i filtri.** In cima quelli su cui l'app ha
-un dubbio (`identity_confidence = 'low'`), coi **candidati che il cielo ha trovato nel suo
-campo** da cliccare quando ne ha trovati; sotto gli altri nuovi. Gli altri -- gia' visti, e senza niente da scegliere,
-compresi i dubbi di cui il cielo non sa dire niente -- stanno chiusi e si aprono a pagine, coi
-conteggi. I frame che l'header non nomina e di
+**Gli oggetti si dichiarano in Da confermare, una scheda per gruppo di frame** (ADR 0014, S3):
+i frame che `identify` ha messo su un oggetto (chiave `object:` e la chiave stabile), o un gruppo
+di frame senza nome e senza cielo (chiave `frames:` e la chiave del gruppo). La scheda e' una
+(`ObjectCard`), e la risposta pure: una voce del catalogo, un nome scritto, o "non e' un
+oggetto". In cima le domande -- senza risposta, e per un oggetto mai visto --, e fra queste
+quelle su cui l'app ha un dubbio (`identity_confidence = 'low'`), coi **candidati che il cielo
+ha trovato nel suo campo** da cliccare quando ne ha trovati; zero candidati e' una scheda come
+le altre. Le schede gia' viste, senza risposta e senza niente da scegliere, compresi i dubbi di
+cui il cielo non sa dire niente, stanno chiuse e si aprono a pagine, coi conteggi.
+
+**"Non e' un oggetto" vale anche su un oggetto trovato** (Marco, 6/10/2026): uno scatto di prova,
+una messa a fuoco. Si scrive sull'impronta di ogni frame della scheda, fissati al momento della
+risposta -- un frame che arriva dopo e il cielo riconosce e' del cielo --, e `identify` lo legge
+**prima** del nome e del cielo: il frame chiude `skipped` con `not_an_object`, fuori dalle ore e
+da ogni oggetto. Cosa aveva trovato resta sul frame (`frames.found_key`), perche' la riga
+dell'oggetto senza frame si cancella e la scheda deve restare, coi candidati del cielo, per
+cambiare idea; la scheda risposta non conta. Rispondendo poi un oggetto, quei frame tornano e la
+correzione li sposta; quelli senza nome ne' cielo, che solo la risposta del gruppo legava, la
+correzione non li raggiunge: prendono l'oggetto sull'impronta, come risposta del loro gruppo, e
+fuori tengono la chiave della scheda anche se senza risposta non troverebbero niente. Un gruppo senza nome scrive e legge la sua risposta solo sui frame senza un
+cielo coi candidati: dove il cielo li ha, decide lui, anche se il frame ha ancora la chiave del
+gruppo e anche se il cielo arriva dopo la risposta. Per distinguerle, la risposta su un oggetto
+trovato scrive subito `frames.found_key`; quella di un gruppo no.
+
+I frame che l'header non nomina e di
 cui il cielo non dice niente si chiedono **per gruppo** (`spine/unnamed.py`): la notte, la camera,
 il telescopio e **dove puntava la montatura** (Marco, 24/9/2026), mai per file e mai per cartella.
 Il gruppo **si sceglie quando il frame arriva, e si scrive sul frame** -- si risceglie solo se casa
@@ -718,8 +740,9 @@ focale o pixel il campo non si sa e quei frame si separano solo per notte, camer
 e due sullo stesso oggetto** -- come due oggetti puntati a meno di un campo l'uno dall'altro. Un
 mosaico a pannelli, coi frame in ordine sparso, puo' invece dividere un pannello fra due gruppi. Ogni notte e' una domanda: lo stesso oggetto ripreso tre notti se ne
 chiede tre volte. `OBJECT` non c'entra: questi frame non lo scrivono. La risposta raggiunge i frame del gruppo da
-qualunque cartella, compresa una copia calibrata. I candidati del cielo di un oggetto in dubbio li
-**scrive chi identifica**, a fine giro e solo per gli oggetti in dubbio, un frame per oggetto
+qualunque cartella, compresa una copia calibrata. I candidati del cielo di una scheda li
+**scrive chi identifica**, a fine giro e solo per gli oggetti in dubbio e per i frame detti "non e'
+un oggetto", un frame per scheda, sotto la chiave stabile
 (`spine/object_candidates.py`, Marco, 22/9/2026: una lettura non calcola mai); si riscrivono anche
 dopo un catalogo nuovo e dopo una risposta "sono file di calibrazione", che stacca il cielo senza
 far lavorare identify. Da confermare li legge, e un contratto le vieta il cono.
@@ -841,6 +864,10 @@ leggendo la prosa di un motivo non e' un test.
 | un nome storico (`NGC 224` per M 31) | niente cielo | **aggancia dal nome** | `historic_name` / `high` | `name_only` |
 | un nome libero | niente cielo | **aggancia a un oggetto fuori catalogo che porta quel nome**, e va in Da confermare | `exact_name` / `low` | `free_name_only` |
 | niente | niente cielo, o un cielo senza candidati | nessun oggetto: lo stadio si chiude `skipped` col codice `no_name_no_sky`, e Da confermare lo chiede **per gruppo** (notte, camera, telescopio, puntamento); se l'utente ha detto che non e' un oggetto, `skipped` col codice `not_an_object` | -- | `nothing` |
+
+Prima di tutte le righe: un frame che l'utente ha detto **"non e' un oggetto"** -- dal suo gruppo
+(solo se il cielo non ha candidati) o dalla scheda di cio' che era stato trovato -- chiude `skipped` col codice `not_an_object`, e
+cio' che il nome e il cielo avrebbero deciso resta in `frames.found_key`.
 
 Con un **oggetto del gruppo** detto dall'utente, il frame senza nome decide come se quel
 nome fosse scritto -- `name_only` per una voce di catalogo, `free_name_only` per un nome scritto --

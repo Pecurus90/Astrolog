@@ -115,18 +115,37 @@ class ObjectCandidate(BaseModel):
     )
 
 
-class ObjectOut(BaseModel):
-    """An object of the archive. `name` is the two steps of the contract already done by the
-    backend: the primary name, or the one the catalog gives to the slug."""
+class ObjectAnswer(BaseModel):
+    """What the user said on a card: a catalog object (`value` is the slug), a written name, or "it
+    is not an object" (`value` empty). `name` is how the object shows: the entry's, or the written
+    one."""
 
-    id: int = Field(
-        description="The row number: it serves the frontend as a list key, not for answering."
+    kind: Literal["catalog", "name", "none"]
+    value: str | None
+    name: str | None
+
+
+class ObjectCard(BaseModel):
+    """One card per group of frames, asking what object they are (ADR 0014, S3): the frames
+    `identify` put on one object, or -- `group` -- frames the header does not name and the sky says
+    nothing about. Same answer for both. `name`, `slug`, `method`, `confidence` are what the app
+    found: empty on a `group`, and `method`/`confidence` also on frames put out as "not an object",
+    which no longer have an object."""
+
+    key: str = Field(
+        description="What one answers with: `object:` and the found object's stable key, or "
+        "`frames:` and the group's key."
     )
-    key: str = Field(description="The stable key one answers with: the catalog slug, or the name.")
+    id: int | None = Field(
+        description="The object's row number, for the page's `seen`; empty without an object row."
+    )
     name: str | None
     slug: str | None
     method: IdentityMethod | None
     confidence: IdentityConfidence | None
+    group: UnnamedGroup | None = Field(
+        description="Where and when, for frames with no name and no sky; empty otherwise."
+    )
     frames: int
     integration_s: float = Field(
         description="The sum of the frames' time; on screen it reads in hours."
@@ -135,13 +154,19 @@ class ObjectOut(BaseModel):
         description="How many of those frames do not tell their time: they are not worth zero, "
         "they are counted here."
     )
-    confirmed: bool
+    confirmed: bool = Field(
+        description="The found object was seen once already; a group is never confirmed."
+    )
     candidates: list[ObjectCandidate] = Field(
-        default=[], description="Only on those still to decide."
+        description="What the sky found, to click: on doubts and on frames put out; zero is a card "
+        "too."
+    )
+    answer: ObjectAnswer | None = Field(
+        description="An answered card stays on the page, so one can change one's mind."
     )
 
 
-class SettledObjects(Page[ObjectOut]):
+class SettledObjects(Page[ObjectCard]):
     """The objects already seen, with nothing to choose, in pages: they are not questions, and they
     grow with the archive. They open from the Objects section, and are corrected from there. A doubt
     the sky can say nothing about stays here once seen: there is nothing to click."""
@@ -171,13 +196,13 @@ class ReviewOut(BaseModel):
     rig_choices: list[RigChoice] = Field(
         description="The rigs among which one answers a card that asks the camera."
     )
-    objects: list[ObjectOut] = Field(
-        description="Those to decide and the new ones; the doubts on top."
+    objects: list[ObjectCard] = Field(
+        description="The object cards to decide, the new ones and the answered ones; open "
+        "questions on top."
     )
     settled_objects: int = Field(
         description="How many the others are, already seen: they are read in pages."
     )
-    unnamed: list[UnnamedGroup]
     unclear: list[UnclearCoordinates] = Field(
         description="The places the app asks about: empty when it does not ask."
     )

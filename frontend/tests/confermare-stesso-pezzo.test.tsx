@@ -35,7 +35,6 @@ const PAGINA = {
   gear: [],
   filter_choices: [],
   typeless: [],
-  unnamed: [],
 }
 
 const RICEVUTA = { stato: 200, corpo: { changed: 1, confirmed: 0, requeued: 1, run_started: false } }

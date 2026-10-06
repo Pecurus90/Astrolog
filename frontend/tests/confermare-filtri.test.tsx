@@ -42,7 +42,6 @@ const PAGINA = {
   mosaics: [],
   unclear: [],
   gear: [],
-  unnamed: [],
 }
 
 function aperta(pagina = PAGINA) {

@@ -170,6 +170,7 @@ describe("l accessibilita della prima pagina", () => {
           // **Con un oggetto vero**: la sezione porta liste annidate, un bottone per candidato e
           // una coppia etichetta/campo per riga -- cioe' tutto cio' che axe deve guardare. Con
           // `objects: []` la guardia collaudava una pagina che quella roba non ce l'aveva.
+          // The object card waits for its design (ADR 0014 S3): the rows stay for when it lands.
           objects: [
             {
               id: 3,
@@ -182,6 +183,7 @@ describe("l accessibilita della prima pagina", () => {
               integration_s: 9720,
               untimed: 2,
               confirmed: false,
+              group: null,
               candidates: [
                 {
                   slug: "ldn-1174",
@@ -190,6 +192,23 @@ describe("l accessibilita della prima pagina", () => {
                   in_frame: false,
                 },
               ],
+              answer: null,
+            },
+            // a group of frames without a name: the object field and the "not an object" box
+            {
+              key: 'frames:["2024-06-01", null, null, null, null]',
+              id: null,
+              name: null,
+              slug: null,
+              method: null,
+              confidence: null,
+              group: { night: "2024-06-01", camera: null, telescope: null, ra_deg: null, dec_deg: null, first_frame: "2024-06-01T22:10:00+02:00", last_frame: "2024-06-02T01:40:00+02:00" },
+              frames: 4,
+              integration_s: 0,
+              untimed: 4,
+              confirmed: false,
+              candidates: [],
+              answer: null,
             },
           ],
           // un mosaico e un posto: due gruppi di scelte da guardare. Che ognuno nomini la
@@ -203,8 +222,6 @@ describe("l accessibilita della prima pagina", () => {
           filter_choices: [{ id: 3, name: "Lum", passband: "L" }],
           gear: [],
           optics_choices: ["Askar 103Apo"],
-          // un gruppo di pose senza nome: il campo dell'oggetto e la casella "non e' un oggetto"
-          unnamed: [{ key: '["2024-06-01", null, null, null, null]', night: "2024-06-01", camera: null, telescope: null, ra_deg: null, dec_deg: null, frames: 4, answer: null, first_frame: "2024-06-01T22:10:00+02:00", last_frame: "2024-06-02T01:40:00+02:00" }],
           // una cartella di file che non dicono che file sono: due scelte in un gruppo, una
           // risposta gia' data e una ancora da dare
           typeless: [

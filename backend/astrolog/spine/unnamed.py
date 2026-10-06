@@ -3,7 +3,7 @@ question, and the answer `identify` reads, which also holds for frames still to 
 
 import json
 import sqlite3
-from typing import Any, Final, Literal
+from typing import Any, Literal
 
 from ..clock import NIGHT_SQL, local_iso
 from ..db.row import Row
@@ -12,9 +12,8 @@ from ..vocab.header_value import normalize_header_value
 from . import declarations as decl
 from . import frame_folder as folder
 from . import object_answer as risposta
+from .object_answer import NONE
 from .stages import WAITING_SQL, invalidate
-
-NONE: Final = "none"  # "not an object": the value written, and the answer's kind
 
 _OF_FRAME = f"""
 SELECT f.unnamed_key, {NIGHT_SQL} AS night, f.instrument_raw, f.telescope_raw, f.ra_hint_deg,
@@ -33,6 +32,8 @@ WHERE unnamed_key IS NOT NULL AND json_extract(unnamed_key, '$[0]') IS ?
 _BY_GROUP = f"""
 SELECT f.unnamed_key AS key, MIN(f.instrument_raw) AS instrument_raw,
   MIN(f.telescope_raw) AS telescope_raw, SUM(f.copy_of IS NULL) AS n,
+  COALESCE(SUM(f.exposure_s) FILTER (WHERE f.copy_of IS NULL), 0) AS integration_s,
+  SUM(f.copy_of IS NULL AND f.exposure_s IS NULL) AS untimed,
   MIN(f.date_obs) AS first_frame, MAX(f.date_obs) AS last_frame, MIN(f.local_tz) AS tz
 FROM frames f {folder.JOIN}
 WHERE f.unnamed_key IS NOT NULL AND NOT ({WAITING_SQL}) AND EXISTS (
@@ -42,15 +43,19 @@ WHERE f.unnamed_key IS NOT NULL AND NOT ({WAITING_SQL}) AND EXISTS (
 GROUP BY f.unnamed_key
 """  # noqa: S608 - constant fragments of the spine
 
+# The frames a group's answer is about: a sky with candidates decides by itself, so those frames
+# neither take the answer nor carry one that counts. Without a sky yet (NULL) they are asked.
+_ASKED = "COALESCE(f.empty_cone, 1) = 1"
+
 # Copies and frames with a sky included: `identify` makes the choice again.
 _POSES_OF_GROUP = f"SELECT f.id FROM frames f {folder.JOIN} WHERE f.unnamed_key = ?"  # noqa: S608
 
 # Two are enough to tell one answer from a disagreement.
-_ANSWERS_OF_GROUP = """
+_ANSWERS_OF_GROUP = f"""
 SELECT DISTINCT d.value FROM frames f JOIN declarations d ON d.entity_type = ?
   AND d.entity_key = f.frame_hash AND d.field = ?
-WHERE f.unnamed_key = ? LIMIT 2
-"""
+WHERE f.unnamed_key = ? AND {_ASKED} LIMIT 2
+"""  # noqa: S608 - constant fragment of this file
 
 
 def _field(r: Row) -> float | None:
@@ -110,7 +115,8 @@ def by_group(conn: sqlite3.Connection, only: str | None = None) -> list[dict[str
         out.append({
             "key": r["key"], "night": notte, "camera": _written(r["instrument_raw"]),
             "telescope": _written(r["telescope_raw"]), "ra_deg": ra, "dec_deg": dec,
-            "frames": r["n"], "answer": answer(conn, r["key"]),
+            "frames": r["n"], "integration_s": r["integration_s"], "untimed": r["untimed"],
+            "answer": answer(conn, r["key"]),
             # two pointing-less targets in one night are one question: the hours tell a series
             # from two. Only frames that say the time count; without a zone it stays UTC
             "first_frame": local_iso(r["first_frame"], r["tz"]),
@@ -138,7 +144,10 @@ def declare(  # noqa: PLR0913
     slug, name = risposta.resolved(conn, slug, name)
     value = NONE if not_an_object else risposta.target_value(slug, name)
     # every frame `answer` reads, missing ones too: a stale one would leave two answers
-    rows = conn.execute("SELECT frame_hash FROM frames WHERE unnamed_key = ?", (key,)).fetchall()
+    rows = conn.execute(
+        f"SELECT f.frame_hash FROM frames f WHERE f.unnamed_key = ? AND {_ASKED}",  # noqa: S608
+        (key,),
+    ).fetchall()
     for r in rows:
         decl.write_declaration(conn, decl.FRAME, r["frame_hash"], decl.FRAME_OBJECT, value, now)
     if not not_an_object:

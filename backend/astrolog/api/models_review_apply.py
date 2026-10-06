@@ -40,21 +40,21 @@ class LookalikeEdit(BaseModel):
 
 
 class ObjectEdit(BaseModel):
-    """The answer about an object: a catalog slug (usually a clicked candidate) or a hand-written
-    name."""
+    """The answer on an object card: a catalog slug (usually a clicked candidate), a hand-written
+    name, or "it is not an object"."""
 
-    key: str = Field(
-        min_length=1, description="The stable key read from the page, never the row id."
-    )
-    slug: str | None = None
+    key: str = Field(min_length=1, description="The card's key read from the page.")
+    slug: str | None = Field(None, min_length=1)
     name: str | None = Field(None, min_length=1)
+    not_an_object: bool = False
 
     @model_validator(mode="after")
-    def one_target_only(self) -> Self:
-        """Exactly one of the two: accepting both would mean choosing for the user which one wins.
-        Checked here so the OpenAPI declares it and the answer is the usual 422."""
-        if bool(self.slug) == bool(self.name):
-            raise ValueError("un bersaglio solo: slug oppure name")
+    def one_answer_only(self) -> Self:
+        """Exactly one: accepting two would mean choosing for the user which one wins. A name of
+        only spaces is no answer: Apply would say "done" with nothing changed."""
+        nome = bool(self.name and self.name.strip())
+        if [bool(self.slug), nome, self.not_an_object].count(True) != 1:
+            raise ValueError("una risposta sola: slug, name oppure not_an_object")
         return self
 
 
@@ -116,25 +116,6 @@ class TypelessFolderEdit(BaseModel):
     kind: TypelessAnswer
 
 
-class UnnamedEdit(BaseModel):
-    """The answer about a group of frames with no name and no sky: which object it is -- a catalog
-    slug or a written name -- or "it is not an object"."""
-
-    key: str = Field(min_length=1, description="The group key read from the page.")
-    slug: str | None = Field(None, min_length=1)
-    name: str | None = Field(None, min_length=1)
-    not_an_object: bool = False
-
-    @model_validator(mode="after")
-    def one_answer_only(self) -> Self:
-        """A name of only spaces is no answer: written, the rule would read it as a bad row and
-        Apply would say "done" with nothing changed."""
-        nome = bool(self.name and self.name.strip())
-        if [bool(self.slug), nome, self.not_an_object].count(True) != 1:
-            raise ValueError("una risposta sola: slug, name oppure not_an_object")
-        return self
-
-
 class MosaicEdit(BaseModel):
     """The answer about a proposed mosaic: yes, those panels are a mosaic (`yes`), or no.
 
@@ -174,7 +155,6 @@ class ReviewApply(BaseModel):
     objects: list[ObjectEdit] = []
     unclear: list[CoordinatesEdit] = []
     gear: list[GearEdit] = []
-    unnamed: list[UnnamedEdit] = []
     typeless: list[TypelessFolderEdit] = []
     mosaics: list[MosaicEdit] = []
     seen: ReviewSeen | None = Field(

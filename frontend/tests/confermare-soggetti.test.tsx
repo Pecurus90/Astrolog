@@ -47,7 +47,6 @@ const PAGINA = {
   rig_choices: [],
   objects: [],
   mosaics: [],
-  unnamed: [],
   filter_choices: [],
   gear: [],
   unclear: [

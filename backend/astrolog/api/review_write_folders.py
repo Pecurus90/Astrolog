@@ -10,7 +10,7 @@ from ..spine import declarations as decl
 from ..spine import gear, signature, typeless, typeless_answer, unfiltered, unnamed
 from ..spine import signature_page as cards
 from .models_review import FilterCandidate, RigChoice
-from .models_review_apply import GearEdit, TypelessFolderEdit, UnnamedEdit
+from .models_review_apply import GearEdit, ObjectEdit, TypelessFolderEdit
 
 
 class NotAskedError(ValueError):
@@ -91,12 +91,12 @@ def rig_parts(
     return scelto.optics, scelto.camera, scelto.focal_mm
 
 
-def answer_unnamed(conn: sqlite3.Connection, edit: UnnamedEdit, now: str) -> list[int]:
-    riga = unnamed.row_of(conn, edit.key)
+def answer_unnamed(conn: sqlite3.Connection, key: str, edit: ObjectEdit, now: str) -> list[int]:
+    riga = unnamed.row_of(conn, key)
     if riga is None:
-        raise LookupError(f"gruppo {edit.key}")
+        raise LookupError(f"gruppo {key}")
     unnamed.declare(
-        conn, edit.key, slug=edit.slug, name=edit.name, not_an_object=edit.not_an_object, now=now
+        conn, key, slug=edit.slug, name=edit.name, not_an_object=edit.not_an_object, now=now
     )
     return unnamed.requeue(conn, riga)
 

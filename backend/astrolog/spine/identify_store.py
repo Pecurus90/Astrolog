@@ -8,8 +8,10 @@ from ..db.inserted import inserted_id
 
 
 def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
-    """The frame: only the header's own object name is needed here."""
-    return conn.execute("SELECT id, object_raw FROM frames WHERE id = ?", (frame_id,)).fetchone()
+    """The header's own object name, and the fingerprint the user's word on the frame hangs on."""
+    return conn.execute(
+        "SELECT id, object_raw, frame_hash, found_key FROM frames WHERE id = ?", (frame_id,)
+    ).fetchone()
 
 
 def wcs(conn: sqlite3.Connection, frame_id: int) -> dict[str, Any]:
@@ -85,6 +87,10 @@ def set_frame_object(conn: sqlite3.Connection, frame_id: int, object_id: int) ->
 
 def set_empty_cone(conn: sqlite3.Connection, frame_id: int, empty: int | None) -> None:
     conn.execute("UPDATE frames SET empty_cone = ? WHERE id = ?", (empty, frame_id))
+
+
+def set_found_key(conn: sqlite3.Connection, frame_id: int, key: str | None) -> None:
+    conn.execute("UPDATE frames SET found_key = ? WHERE id = ?", (key, frame_id))
 
 
 def detach(conn: sqlite3.Connection, frame_ids: list[int]) -> None:
