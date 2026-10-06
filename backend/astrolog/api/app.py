@@ -11,6 +11,7 @@ from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request, Response
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
@@ -199,6 +200,8 @@ def create_app(  # noqa: PLR0913
     app.add_middleware(
         TrustedHostMiddleware, allowed_hosts=[*LOCAL_HOSTS, *(h for h in hosts if h)]
     )
+    # the NAS is often watched from a phone; the stylesheet goes from 57.9 kB to 10.4
+    app.add_middleware(GZipMiddleware)
 
     @app.middleware("http")
     async def require_token(

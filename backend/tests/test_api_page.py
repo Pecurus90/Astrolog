@@ -92,6 +92,17 @@ def test_the_files_the_page_loads_are_served_without_the_key_too(db_path, costru
         assert c.get("/api/health").status_code == 401
 
 
+def test_what_the_backend_sends_travels_compressed(db_path, costruita):
+    """Dal NAS al telefono il foglio di stile viaggiava per 57,9 kB invece di 10,4: il backend
+    comprime cio' che il browser sa scompattare, e il contenuto arriva uguale."""
+    grande = "console.log('astrolog')\n" * 200
+    (costruita / "assets" / "grande.js").write_bytes(grande.encode())
+    with _client(db_path, costruita) as c:
+        risposta = c.get("/assets/grande.js", headers={"Accept-Encoding": "gzip"})
+    assert risposta.headers.get("content-encoding") == "gzip"
+    assert risposta.text == grande
+
+
 def test_the_page_does_not_stay_in_the_browser_cache(db_path, costruita):
     """La pagina porta la chiave, quindi non deve restare nella cache su disco del browser:
     sarebbe il segreto scritto in un file, cioe' proprio cio' che l'iniezione evita."""

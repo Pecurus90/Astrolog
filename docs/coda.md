@@ -376,10 +376,6 @@ Niente di aperto.
 - **I file senza tipo di una cartella detta di calibrazione si rileggono a ogni scansione**:
   saltati alla porta non hanno una posizione, e il pre-controllo incrementale non li riconosce
   (`spine/scan.py`). Rimedio: ricordare i file saltati con percorso, dimensione e data.
-- **Il backend non comprime niente**: `StaticFiles` e' montato nudo (`api/page.py`) e nessun
-  middleware comprime. Il foglio di stile viaggia per 57,9 kB invece di 10,4, e la previsione ora
-  per ora e' la risposta piu' pesante; conta sul NAS guardato dal telefono. Rimedio: una riga di
-  `GZipMiddleware`, per tutte le risposte.
 - **Cercare il catalogo di ASTAP costa una lettura di cartella a ogni domanda** (`GET /settings`,
   `PATCH /settings`, `GET /solver`): 5,2 ms per 1.492 voci su disco locale; su una condivisione di
   rete sarebbe un'altra cosa. Rimedio: tenere la risposta per un po' (una cache: meccanismo
