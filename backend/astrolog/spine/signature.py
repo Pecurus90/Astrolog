@@ -12,7 +12,7 @@ from ..units import known_focal, same_focal
 from ..vocab.header_value import normalize_header_value
 from ..vocab.software import normalize_software, telescope_is_mount
 from . import declarations as decl
-from .stages import invalidate
+from .stages import StageName, invalidate
 
 log = logging.getLogger(__name__)
 
@@ -147,7 +147,7 @@ def frames_of(conn: sqlite3.Connection, key: str) -> list[int]:
 
 def requeue(conn: sqlite3.Connection, key: str) -> list[int]:
     frames = frames_of(conn, key)
-    invalidate(conn, frames, "normalize")
+    invalidate(conn, frames, StageName.NORMALIZE)
     return frames
 
 

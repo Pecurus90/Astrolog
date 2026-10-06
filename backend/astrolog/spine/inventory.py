@@ -6,21 +6,21 @@ import sqlite3
 from typing import Any
 
 from . import gear
-from . import rigs as corredi
+from . import rigs as gear_rigs
 
-_USO = """u.frames, u.integration_s, u.untimed, u.nights, u.scale_arcsec_px, u.width_deg,
+_USAGE = """u.frames, u.integration_s, u.untimed, u.nights, u.scale_arcsec_px, u.width_deg,
        u.height_deg, u.objects_json"""
 
-_STRUMENTI = f"""
-SELECT i.*, {_USO}
+_INSTRUMENTS = f"""
+SELECT i.*, {_USAGE}
 FROM instruments i
 LEFT JOIN gear_usage u ON u.subject = 'instrument' AND u.subject_id = i.id
 ORDER BY i.kind, i.name
 """  # noqa: S608 - constant fragment of this file
 
 # The order the counter wrote (`position`, most used first); a row not yet counted goes last.
-_CORREDI = f"""
-SELECT g.id, g.focal_mm, o.name AS optics, c.name AS camera, {_USO}
+_RIGS = f"""
+SELECT g.id, g.focal_mm, o.name AS optics, c.name AS camera, {_USAGE}
 FROM rigs g LEFT JOIN instruments o ON o.id = g.optics_id
             LEFT JOIN instruments c ON c.id = g.camera_id
 LEFT JOIN gear_usage u ON u.subject = 'rig' AND u.subject_id = g.id
@@ -28,28 +28,28 @@ ORDER BY u.position IS NULL, u.position, g.id
 """  # noqa: S608 - constant fragment of this file
 
 # "No filter" is the row marking a frame with no glass in front, not a filter you own.
-_FILTRI = f"""
-SELECT x.*, {_USO}
+_FILTERS = f"""
+SELECT x.*, {_USAGE}
 FROM filters x
 LEFT JOIN gear_usage u ON u.subject = 'filter' AND u.subject_id = x.id
 WHERE x.is_none = 0
 ORDER BY u.position IS NULL, u.position, x.name
 """  # noqa: S608 - constant fragment of this file
 
-_BANDE = "SELECT filter_id, band, width_nm FROM filter_bands ORDER BY filter_id, band"
+_BANDS = "SELECT filter_id, band, width_nm FROM filter_bands ORDER BY filter_id, band"
 
 
 def instruments(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     # A camera's colour and pixel the user writes among the declarations, not in the column, which
     # belongs to the files: the column alone would show what the files say over the user.
-    dichiarato = gear.camera_specs(conn)
+    declared = gear.camera_specs(conn)
     return [
-        {**_riga(r), **dichiarato.get(r["id"], {}), "no_hours": _senza_ore(r)}
-        for r in conn.execute(_STRUMENTI).fetchall()
+        {**_row(r), **declared.get(r["id"], {}), "no_hours": _no_hours(r)}
+        for r in conn.execute(_INSTRUMENTS).fetchall()
     ]
 
 
-def _senza_ore(r: sqlite3.Row) -> str | None:
+def _no_hours(r: sqlite3.Row) -> str | None:
     """A mount without frames is not "the files are silent": no rig carries it yet, even where
     other mounts have hours."""
     if r["objects_json"] is None:
@@ -60,26 +60,26 @@ def _senza_ore(r: sqlite3.Row) -> str | None:
 
 
 def rigs(conn: sqlite3.Connection) -> list[dict[str, Any]]:
-    nomi, montature = corredi.rig_names(conn), corredi.rig_mounts(conn)
+    names, mounts = gear_rigs.rig_names(conn), gear_rigs.rig_mounts(conn)
     return [
         {
-            **_riga(r),
-            "name": nomi.get(corredi.decl_key(r)),
-            "mount_id": montature.get(corredi.decl_key(r)),
+            **_row(r),
+            "name": names.get(gear_rigs.decl_key(r)),
+            "mount_id": mounts.get(gear_rigs.decl_key(r)),
         }
-        for r in conn.execute(_CORREDI).fetchall()
+        for r in conn.execute(_RIGS).fetchall()
     ]
 
 
 def filters(conn: sqlite3.Connection) -> list[dict[str, Any]]:
-    bande: dict[int, list[dict[str, Any]]] = {}
-    for r in conn.execute(_BANDE):
-        bande.setdefault(r["filter_id"], []).append({"band": r["band"], "width_nm": r["width_nm"]})
-    return [{**_riga(r), "bands": bande.get(r["id"], [])} for r in conn.execute(_FILTRI).fetchall()]
+    bands: dict[int, list[dict[str, Any]]] = {}
+    for r in conn.execute(_BANDS):
+        bands.setdefault(r["filter_id"], []).append({"band": r["band"], "width_nm": r["width_nm"]})
+    return [{**_row(r), "bands": bands.get(r["id"], [])} for r in conn.execute(_FILTERS).fetchall()]
 
 
-def _riga(r: sqlite3.Row) -> dict[str, Any]:
-    riga = {k: r[k] for k in r.keys() if k != "objects_json"}  # noqa: SIM118 - Row iterates values
-    riga["counted"] = r["objects_json"] is not None
-    riga["objects"] = json.loads(r["objects_json"] or "[]")
-    return riga
+def _row(r: sqlite3.Row) -> dict[str, Any]:
+    row = {k: r[k] for k in r.keys() if k != "objects_json"}  # noqa: SIM118 - Row iterates values
+    row["counted"] = r["objects_json"] is not None
+    row["objects"] = json.loads(r["objects_json"] or "[]")
+    return row

@@ -8,7 +8,7 @@ from ..clock import NIGHT_SQL, night_date
 from ..place import timezone_of_frame
 from . import unnamed
 from .scan_store import home_timezone
-from .stages import invalidate
+from .stages import StageName, invalidate
 
 _PLACES = "SELECT DISTINCT site_lat, site_lon FROM frames WHERE local_tz IS NOT ?"
 _OF_PLACE = """
@@ -47,4 +47,4 @@ def follow_home(conn: sqlite3.Connection) -> None:
     notti = json.dumps(
         sorted({n for _, n in moved} | {r["local_night"] for r, _ in moved}, key=str)
     )
-    invalidate(conn, [r["id"] for r in conn.execute(_OF_NIGHTS, (notti,))], "normalize")
+    invalidate(conn, [r["id"] for r in conn.execute(_OF_NIGHTS, (notti,))], StageName.NORMALIZE)

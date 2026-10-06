@@ -25,45 +25,44 @@ ORDER BY f.date_obs, f.id
 
 
 def _rows(conn: sqlite3.Connection, reason: str) -> list[sqlite3.Row]:
-    """The stopped frames, and those an answer already settled: the answer must stay changeable."""
+    """The stopped frames, and those an answer already settled."""
     return conn.execute(_ROWS, (reason,)).fetchall()
 
 
 def unclear_coordinates(conn: sqlite3.Connection, reason: str) -> list[dict[str, Any]]:
     """One row per place, never per frame: the answer is a fact about the place, valid for every
     night shot there, including future ones. Nights are in the zone of those coordinates."""
-    gruppi: dict[str | None, dict[str, Any]] = {}
+    places: dict[str | None, dict[str, Any]] = {}
     for r in _rows(conn, reason):
-        chiave = coordinates_key(r["site_lat"], r["site_lon"])
-        posto = gruppi.setdefault(
-            chiave,
+        coord_key = coordinates_key(r["site_lat"], r["site_lon"])
+        spot = places.setdefault(
+            coord_key,
             {
-                "key": chiave,
+                "key": coord_key,
                 "latitude": r["site_lat"],
                 "longitude": r["site_lon"],
                 "frames": 0,
                 "nights": set(),
             },
         )
-        posto["frames"] += 1
-        obj.count_subject(posto, r["subject"], 1)
+        spot["frames"] += 1
+        obj.count_subject(spot, r["subject"], 1)
         if r["local_night"]:
-            posto["nights"].add(r["local_night"])
+            spot["nights"].add(r["local_night"])
     return [
         {**p, "nights": sorted(p["nights"]), "site": _answered(conn, p["key"])}
-        for p in obj.subjects(conn, gruppi.values())
+        for p in obj.subjects(conn, places.values())
     ]
 
 
 def _answered(conn: sqlite3.Connection, key: str) -> str | None:
     """Only if that site still exists, found the way the stage finds it: renamed or deleted, the
     answer no longer hooks, and the stage, the page and the counter ask again."""
-    detto = decl.site_for_coordinates(conn, key)
-    return detto if detto and store.site_by_name(conn, detto) else None
+    site_name = decl.site_for_coordinates(conn, key)
+    return site_name if site_name and store.site_by_name(conn, site_name) else None
 
 
 def frames_at(conn: sqlite3.Connection, coordinates: str, reason: str) -> list[int]:
-    """Including those a previous answer settled, or changing one's mind would move nothing."""
     return [
         r["id"]
         for r in _rows(conn, reason)

@@ -20,7 +20,7 @@ _CAMERAS = f"""
 SELECT i.id, COUNT(f.id) AS frames
 FROM instruments i
 LEFT JOIN (frames f LEFT JOIN rigs g ON g.id = f.rig_id)
-       ON f.copy_of IS NULL AND {counts.of("instrument", rigs_joined=True)}
+       ON f.copy_of IS NULL AND {counts.of(counts.Subject.INSTRUMENT, rigs_joined=True)}
 WHERE i.id IN (SELECT value FROM json_each(?))
 GROUP BY i.id
 """  # noqa: S608 - a fragment of the spine, not user values

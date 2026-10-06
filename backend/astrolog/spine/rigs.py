@@ -9,7 +9,7 @@ from ..db.inserted import inserted_id
 from ..units import same_focal
 from . import gear_usage, signature
 from .declarations import forget, rig_key, rig_key_parts, values_of, write_declaration
-from .stages import invalidate
+from .stages import StageName, invalidate
 
 MOUNT = "mount"
 DECLARED = "declared"
@@ -200,7 +200,7 @@ def declare_mount(
             return []
         write_declaration(conn, "rig", chiave, MOUNT, nome["name"], now)
     pose = [r[0] for r in conn.execute("SELECT id FROM frames WHERE rig_id = ?", (rig_id,))]
-    invalidate(conn, pose, "normalize", now=now)
+    invalidate(conn, pose, StageName.NORMALIZE, now=now)
     return pose
 
 

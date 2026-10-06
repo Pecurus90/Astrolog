@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Request
 from ..clock import now_iso
 from ..spine import gear, gear_create, gear_usage
 from ..spine import rigs as corredi
-from ..spine.run import STAGE_NORMALIZE
+from ..spine.stages import StageName
 from . import instrument_answer as strumento
 from . import review_write as write
 from . import work
@@ -163,5 +163,5 @@ def edit_filter(
 
 def _scritto(request: Request, row_id: int, requeued: Collection[int]) -> GearWritten:
     """The work restarts only if some frame has to be redone."""
-    started = bool(requeued) and work.after(request.app.state, {STAGE_NORMALIZE})
+    started = bool(requeued) and work.after(request.app.state, {StageName.NORMALIZE})
     return GearWritten(id=row_id, requeued=len(requeued), run_started=started)

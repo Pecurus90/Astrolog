@@ -13,7 +13,7 @@ from . import declarations as decl
 from . import frame_folder as folder
 from . import object_answer as risposta
 from .object_answer import NONE
-from .stages import WAITING_SQL, invalidate
+from .stages import WAITING_SQL, StageName, invalidate
 
 _OF_FRAME = f"""
 SELECT f.unnamed_key, {NIGHT_SQL} AS night, f.instrument_raw, f.telescope_raw, f.ra_hint_deg,
@@ -172,7 +172,7 @@ def requeue(conn: sqlite3.Connection, row: Row) -> list[int]:
     """All of them, copies and frames with a sky included: `identify` redoes the choice, and where
     the sky has candidates it makes the same one."""
     frames = [r["id"] for r in conn.execute(_POSES_OF_GROUP, (row["key"],))]
-    invalidate(conn, frames, "identify")
+    invalidate(conn, frames, StageName.IDENTIFY)
     return frames
 
 

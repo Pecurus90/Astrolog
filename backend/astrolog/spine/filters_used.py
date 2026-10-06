@@ -11,7 +11,7 @@ from . import counts
 
 def of(
     conn: sqlite3.Connection,
-    soggetto: str,
+    soggetto: counts.Subject,
     ids: Collection[int | str | None],
     *,
     alone: bool = False,

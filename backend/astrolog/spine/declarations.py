@@ -2,6 +2,7 @@
 not import another. A declaration hangs on a key that survives a reset, never a row id."""
 
 import sqlite3
+from collections.abc import Mapping
 from typing import Any
 
 from ..clock import now_iso
@@ -66,9 +67,31 @@ def instrument_name(conn: sqlite3.Connection, kind: str, raw: str | None) -> str
     """Learned rule, else the name as written. `normalize` and the gear question both read it: two
     readings would propose a renamed piece's old name and give birth to a second one."""
     key = normalize_header_value(raw)
-    if not key:
-        return None
-    return alias_target(conn, kind, key) or (raw or "").strip()
+    return _named(raw, alias_target(conn, kind, key)) if key else None
+
+
+def _named(raw: str | None, rule: str | None) -> str:
+    return rule or (raw or "").strip()
+
+
+def instrument_names(
+    conn: sqlite3.Connection, raws: Mapping[str, str | None]
+) -> dict[str, str | None]:
+    """`instrument_name` of one raw value per kind, the rules read in one query."""
+    keys = {kind: key for kind, raw in raws.items() if (key := normalize_header_value(raw))}
+    rules: dict[str, str] = {}
+    if keys:
+        pairs = ", ".join("(?, ?)" for _ in keys)  # segnaposto-ok: one pair per kind, not per frame
+        # S608: only placeholders
+        sql = (
+            "SELECT kind, target_key FROM header_aliases"  # noqa: S608
+            f" WHERE (kind, header_value) IN (VALUES {pairs})"
+        )
+        args = [v for pair in keys.items() for v in pair]
+        rules = {r["kind"]: r["target_key"] for r in conn.execute(sql, args)}
+    return {
+        kind: _named(raw, rules.get(kind)) if kind in keys else None for kind, raw in raws.items()
+    }
 
 
 def instrument_key(kind: str, name: str) -> str:

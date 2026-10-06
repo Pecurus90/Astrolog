@@ -15,9 +15,8 @@ from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from ..fits.walk import subfolders, walk_dir
 from ..spine import typeless_answer
-from ..spine.run import STAGE_IDENTIFY, STAGE_SOLVE
 from ..spine.scan import root_readable
-from ..spine.stages import count_pending
+from ..spine.stages import StageName, count_pending
 from . import work
 from .deps import get_db
 from .models import (
@@ -205,6 +204,6 @@ def _move(conn: sqlite3.Connection, state: State, folder_id: int, retired_at: st
         detached, requeued = typeless_answer.detach_waiting(conn)
     # even with nothing detached: a restored folder can make the waiting frames ready again
     if requeued:
-        work.after(state, [STAGE_SOLVE])
-    elif detached or count_pending(conn, STAGE_IDENTIFY):
-        work.after(state, [STAGE_IDENTIFY])
+        work.after(state, [StageName.SOLVE])
+    elif detached or count_pending(conn, StageName.IDENTIFY):
+        work.after(state, [StageName.IDENTIFY])

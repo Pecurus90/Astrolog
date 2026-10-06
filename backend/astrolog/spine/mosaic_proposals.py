@@ -19,7 +19,7 @@ GROUP BY p.mosaic_id HAVING COUNT(DISTINCT f.panel_id) > 1
 
 _MOSAICS = f"""
 SELECT m.id, m.key, m.ra_deg, m.dec_deg, m.proposed, d.value, r.panels,
-       {counts.counts_on("proposal")}
+       {counts.counts_on(counts.Subject.PROPOSAL)}
 FROM mosaics m
 JOIN ({LIVE}) r ON r.mosaic_id = m.id
 LEFT JOIN declarations d ON d.entity_type = ? AND d.entity_key = m.key AND d.field = ?

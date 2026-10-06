@@ -2,26 +2,53 @@
 missing"; `running` never reaches the DB, so a dead process leaves no stuck rows."""
 
 import sqlite3
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
+from enum import StrEnum
 
 from ..clock import now_iso
 from . import declarations as decl
 from . import frame_folder as folder
 
-STAGES = ("solve", "normalize", "identify", "group", "measure")
-STATUSES = ("pending", "done", "failed", "skipped")
+
+class StageName(StrEnum):
+    """What the worker runs. `scan` reads folders and has no row in `frame_stages`."""
+
+    SCAN = "scan"
+    SOLVE = "solve"
+    NORMALIZE = "normalize"
+    IDENTIFY = "identify"
+    GROUP = "group"
+    MEASURE = "measure"
+
+
+# The stages with a row per frame, the words of the `frame_stages.stage` CHECK.
+STAGES = (
+    StageName.SOLVE,
+    StageName.NORMALIZE,
+    StageName.IDENTIFY,
+    StageName.GROUP,
+    StageName.MEASURE,
+)
+
+
+class StageStatus(StrEnum):
+    PENDING = "pending"
+    DONE = "done"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
 
 # stage -> the stages it needs
-DEPENDS = {
-    "solve": (),
-    "normalize": (),
-    "identify": ("solve", "normalize"),
-    "group": ("normalize", "identify"),
-    "measure": ("solve",),
+DEPENDS: dict[StageName, tuple[StageName, ...]] = {
+    StageName.SOLVE: (),
+    StageName.NORMALIZE: (),
+    StageName.IDENTIFY: (StageName.SOLVE, StageName.NORMALIZE),
+    StageName.GROUP: (StageName.NORMALIZE, StageName.IDENTIFY),
+    StageName.MEASURE: (StageName.SOLVE,),
 }
 
 
-def downstream(stage: str) -> tuple[str, ...]:
+def downstream(stage: StageName) -> tuple[StageName, ...]:
     """The stage and every stage that depends on it, directly or not."""
     out, frontier = {stage}, [stage]
     while frontier:
@@ -35,25 +62,32 @@ def downstream(stage: str) -> tuple[str, ...]:
 
 # `identify` takes a frame the solver gave up on, not one it will retry; `group` stops frames
 # `identify` skipped with their reason, else they stay pending and the residue never reaches zero.
-SETTLED = {("identify", "solve"): ("done", "failed"), ("group", "identify"): ("done", "skipped")}
+SETTLED = {
+    (StageName.IDENTIFY, StageName.SOLVE): (StageStatus.DONE, StageStatus.FAILED),
+    (StageName.GROUP, StageName.IDENTIFY): (StageStatus.DONE, StageStatus.SKIPPED),
+}
 
 # An unknown-type frame waits before `identify` until a solved sky or a folder `light` answer frees
 # it (a `calibration` answer keeps it waiting), or a dark would become hours.
-WAITING_FROM = "identify"
-WAITING_STAGES = frozenset(downstream("solve")) - {"solve"}
+WAITING_FROM = StageName.IDENTIFY
+WAITING_STAGES = frozenset(downstream(StageName.SOLVE)) - {StageName.SOLVE}
 
 
 # The answer of a frame's folder; the waiting rule itself is the `frame_waits` view in `schema.sql`.
 FOLDER_SAYS = f"""(
   SELECT dc.value FROM declarations dc WHERE dc.entity_type = '{decl.FOLDER}'
-    AND dc.field = '{decl.FOLDER_TYPE}' AND dc.entity_key = ({folder.KEY_OF_FRAME}))"""  # noqa: S608
+    AND dc.field = '{decl.FOLDER_TYPE}'
+    AND dc.entity_key = ({folder.KEY_OF_FRAME}))"""  # noqa: S608 - constants
 # a mark on the frame, since `invalidate` resets stage rows; the schema's triggers rewrite it on
 # every write to an input of the rule
 WAITING_SQL = "f.asks_type = 1"
 
 
 def ready(
-    conn: sqlite3.Connection, stage: str, limit: int | None = None, frame_id: int | None = None
+    conn: sqlite3.Connection,
+    stage: StageName,
+    limit: int | None = None,
+    frame_id: int | None = None,
 ) -> list[int]:
     """Settled upstream, oldest first; in `WAITING_STAGES` none waiting for a type. `frame_id` asks
     if that one is still ready: removing a folder mid-run can send it back."""
@@ -69,7 +103,7 @@ def ready(
     if stage in WAITING_STAGES:
         sql += f" AND NOT ({WAITING_SQL})"
     for dep in needs:
-        settled = SETTLED.get((stage, dep), ("done",))
+        settled = SETTLED.get((stage, dep), (StageStatus.DONE,))
         marks = ",".join("?" * len(settled))  # segnaposto-ok: two statuses, not one per frame
         # S608: only placeholders, the statuses are bound
         sql += (
@@ -97,12 +131,12 @@ def mark_pending(conn: sqlite3.Connection, frame_id: int, now: str | None = None
 def set_status(  # noqa: PLR0913
     conn: sqlite3.Connection,
     frame_id: int,
-    stage: str,
-    status: str,
+    stage: StageName,
+    status: StageStatus,
     reason: str | None = None,
     now: str | None = None,
 ) -> None:
-    if status not in STATUSES:
+    if status not in StageStatus:
         raise ValueError(f"stato sconosciuto: {status}")
     conn.execute(
         "INSERT INTO frame_stages(frame_id, stage, status, reason, updated_at)"
@@ -114,7 +148,10 @@ def set_status(  # noqa: PLR0913
 
 
 def invalidate(
-    conn: sqlite3.Connection, frame_ids: Collection[int], from_stage: str, now: str | None = None
+    conn: sqlite3.Connection,
+    frame_ids: Collection[int],
+    from_stage: StageName,
+    now: str | None = None,
 ) -> None:
     """The only way back to `pending`, for the stage and everything downstream: every user
     declaration calls it, and the later stages redo themselves."""
@@ -127,37 +164,29 @@ def invalidate(
     )
 
 
-# The same predicate as `WAITING_SQL`, or `ready` and this count would disagree and the residue
-# never reach zero. `CROSS JOIN` starts from the marked frames, not from every queued stage row.
+# The same predicate as `WAITING_SQL`, or `ready` and this count would disagree. `CROSS JOIN`
+# starts from the marked frames, not from every queued stage row.
 _WAITING_BY_STAGE = f"""
 SELECT s.stage, COUNT(*) FROM frames f CROSS JOIN frame_stages s ON s.frame_id = f.id
 WHERE {WAITING_SQL} AND s.status = 'pending' GROUP BY s.stage
 """  # noqa: S608 - the same constant fragment
+_PENDING = "SELECT COUNT(*) FROM frame_stages WHERE stage = ? AND status = 'pending'"
 
 
 def _waiting_by_stage(conn: sqlite3.Connection) -> dict[str, int]:
     return {r[0]: r[1] for r in conn.execute(_WAITING_BY_STAGE)}
 
 
-def count_pending(conn: sqlite3.Connection, stage: str) -> int:
+def count_pending(conn: sqlite3.Connection, stage: StageName) -> int:
+    return pending_by_stage(conn, (stage,))[stage]
+
+
+def pending_by_stage(
+    conn: sqlite3.Connection, stages: Iterable[StageName] = STAGES
+) -> dict[str, int]:
     """Frames waiting for an answer are not work: counted, the residue would never reach zero and
     every run would restart for nothing."""
-    quanti = conn.execute(
-        "SELECT COUNT(*) FROM frame_stages WHERE stage = ? AND status = 'pending'", (stage,)
-    ).fetchone()[0]
-    if stage not in WAITING_STAGES:
-        return quanti
-    return quanti - _waiting_by_stage(conn).get(stage, 0)
-
-
-def pending_by_stage(conn: sqlite3.Connection) -> dict[str, int]:
-    """Pending per stage minus the frames waiting for an answer, these read in one query for all
-    stages instead of one per stage."""
-    totali = {
-        s: conn.execute(
-            "SELECT COUNT(*) FROM frame_stages WHERE stage = ? AND status = 'pending'", (s,)
-        ).fetchone()[0]
-        for s in STAGES
-    }  # five counts on the `frame_stages_pending` index, not one GROUP BY sweep
-    aspettano = _waiting_by_stage(conn)
-    return {s: totali[s] - (aspettano.get(s, 0) if s in WAITING_STAGES else 0) for s in STAGES}
+    # one count per stage on the `frame_stages_pending` index, not one GROUP BY sweep
+    totals = {s: conn.execute(_PENDING, (s,)).fetchone()[0] for s in stages}
+    waiting = _waiting_by_stage(conn) if WAITING_STAGES.intersection(totals) else {}
+    return {s: n - (waiting.get(s, 0) if s in WAITING_STAGES else 0) for s, n in totals.items()}

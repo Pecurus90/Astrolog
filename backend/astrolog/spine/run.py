@@ -12,18 +12,19 @@ from . import typeless_answer
 from .group import group_frames
 from .identify import identify_frames
 from .normalize import normalize_frames
-from .scan import COUNTS, scan_folder
+from .scan import scan_folder
+from .scan_store import COUNTS, ScanStatus
 from .solve import solve_frames
 from .stage_run import Event, Factory, receipt
-from .stages import downstream
+from .stages import StageName, downstream
 
-STAGE_SCAN = "scan"
-STAGE_NORMALIZE = "normalize"
-STAGE_SOLVE = "solve"
-STAGE_IDENTIFY = "identify"
-STAGE_GROUP = "group"
-
-ORDER = (STAGE_SCAN, STAGE_NORMALIZE, STAGE_SOLVE, STAGE_IDENTIFY, STAGE_GROUP)
+ORDER = (
+    StageName.SCAN,
+    StageName.NORMALIZE,
+    StageName.SOLVE,
+    StageName.IDENTIFY,
+    StageName.GROUP,
+)
 
 type Work = Callable[[sqlite3.Connection], Iterable[Event]]
 type OnFolder = Callable[[int, int], object]
@@ -46,42 +47,42 @@ def _detach_waiting(conn: sqlite3.Connection) -> None:
         typeless_answer.detach_waiting(conn)
 
 
-def _then_detach(conn: sqlite3.Connection, eventi: Iterable[Event]) -> Iterator[Event]:
-    """The detach runs before `done`, because the worker stops there."""
-    for evento in eventi:
-        if evento.get("done"):
+def _then_detach(conn: sqlite3.Connection, events: Iterable[Event]) -> Iterator[Event]:
+    """The detach runs before `done` (`stage_run.receipt`)."""
+    for event in events:
+        if event.get("done"):
             _detach_waiting(conn)
-        yield evento
+        yield event
 
 
 def queue(
     db_path: str | Path,
-    stages: Iterable[str],
+    stages: Iterable[StageName],
     *,
     folder_id: int | None = None,
     run_id: int | None = None,
     on_folder: OnFolder | None = None,
-) -> list[tuple[str, Factory]]:
+) -> list[tuple[StageName, Factory]]:
     """The only door: callers say what they need, never the order. Who pulls whom is the graph's
     (`stages.downstream`), so an answer on a filter also requeues names and nights."""
-    chiesti = set(stages)
-    lavoro: dict[str, Work] = {
-        STAGE_NORMALIZE: normalize_frames,
-        STAGE_SOLVE: solve_frames,
-        STAGE_IDENTIFY: identify_frames,
-        STAGE_GROUP: group_frames,
+    asked = set(stages)
+    jobs: dict[StageName, Work] = {
+        StageName.NORMALIZE: normalize_frames,
+        StageName.SOLVE: solve_frames,
+        StageName.IDENTIFY: identify_frames,
+        StageName.GROUP: group_frames,
     }
-    ignoti = chiesti - set(lavoro) - {STAGE_SCAN}
-    if ignoti:  # a stage without work is the caller's mistake, not a shorter queue
-        raise ValueError(f"stadi che non esistono: {sorted(ignoti)}")
-    if STAGE_SCAN in chiesti:
+    unknown = asked - set(jobs) - {StageName.SCAN}
+    if unknown:  # a stage without work is the caller's mistake, not a shorter queue
+        raise ValueError(f"stadi che non esistono: {sorted(map(str, unknown))}")
+    if StageName.SCAN in asked:
         if folder_id is None or run_id is None:
             # later it would break inside the generator, in the worker thread, silently
             raise ValueError("scan vuole folder_id e run_id")
-        lavoro[STAGE_SCAN] = lambda c: _then_detach(c, _scan_one(c, folder_id, run_id, on_folder))
+        jobs[StageName.SCAN] = lambda c: _then_detach(c, _scan_one(c, folder_id, run_id, on_folder))
     # `measure` is in the graph but has no work yet
-    voluti = chiesti | {d for s in chiesti for d in downstream(s) if d in lavoro}
-    return [(s, _with_conn(db_path, lavoro[s])) for s in ORDER if s in voluti]
+    wanted = asked | {d for s in asked for d in downstream(s) if d in jobs}
+    return [(s, _with_conn(db_path, jobs[s])) for s in ORDER if s in wanted]
 
 
 def _scan_one(
@@ -94,35 +95,35 @@ def _scan_one(
 
 def queue_folders(
     db_path: str | Path,
-    cartelle: Sequence[tuple[int, int]],
+    folders: Sequence[tuple[int, int]],
     *,
     on_folder: OnFolder | None = None,
-) -> list[tuple[str, Factory]]:
+) -> list[tuple[StageName, Factory]]:
     """One `scan` stage reading the `(folder_id, run_id)` pairs in turn, then the chain once: what
     follows works on the database, which knows nothing of folders. `on_folder` precedes each."""
-    if not cartelle:
+    if not folders:
         raise ValueError("nessuna cartella da leggere")
 
-    def molte(conn: sqlite3.Connection) -> Iterator[Event]:
-        # one `done` only, after all folders: the worker stops at the first one it sees
-        conti: dict[str, int] = dict.fromkeys(COUNTS, 0)
-        errori: list[dict[str, Any]] = []
-        esiti: list[tuple[Any, Any]] = []
-        for folder_id, run_id in cartelle:
-            for evento in _scan_one(conn, folder_id, run_id, on_folder):
-                if not evento.get("done"):
-                    yield evento
+    def all_folders(conn: sqlite3.Connection) -> Iterator[Event]:
+        # one `done` only, after all folders
+        counts: dict[str, int] = dict.fromkeys(COUNTS, 0)
+        errors: list[dict[str, Any]] = []
+        outcomes: list[tuple[Any, Any]] = []
+        for folder_id, run_id in folders:
+            for event in _scan_one(conn, folder_id, run_id, on_folder):
+                if not event.get("done"):
+                    yield event
                     continue
                 # only the counts: `done` is an int too, and would sum to "done: 2"
-                for chiave in COUNTS:
-                    conti[chiave] += evento.get(chiave, 0)
-                errori.extend(evento.get("errors_detail", []))
-                esiti.append((evento.get("status"), evento.get("reason")))
+                for key in COUNTS:
+                    counts[key] += event.get(key, 0)
+                errors.extend(event.get("errors_detail", []))
+                outcomes.append((event.get("status"), event.get("reason")))
         # ok only if every folder was: a folder dying mid-run must not read as "done"
-        storte = [e for e in esiti if e[0] != "ok"]
-        stato, motivo = storte[0] if storte else ("ok", None)
+        failed = [e for e in outcomes if e[0] != ScanStatus.OK]
+        status, reason = failed[0] if failed else (ScanStatus.OK, None)
         _detach_waiting(conn)
-        yield receipt(stato, motivo, conti, errori)
+        yield receipt(status, reason, counts, errors)
 
-    dopo = [s for s in ORDER if s != STAGE_SCAN]
-    return [(STAGE_SCAN, _with_conn(db_path, molte)), *queue(db_path, dopo)]
+    after = [s for s in ORDER if s != StageName.SCAN]
+    return [(StageName.SCAN, _with_conn(db_path, all_folders)), *queue(db_path, after)]

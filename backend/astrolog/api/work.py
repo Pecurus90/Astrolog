@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from starlette.datastructures import State
 
 from ..spine.run import queue
+from ..spine.stages import StageName
 from ..worker.worker import Stage, WorkerBusyError
 
 log = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ def busy(state: State) -> None:
         raise HTTPException(status_code=409, detail={"code": "worker_busy"})
 
 
-def after(state: State, stages: Iterable[str]) -> bool:
+def after(state: State, stages: Iterable[StageName]) -> bool:
     """True if the run started."""
     try:
         state.worker.start([Stage(n, f) for n, f in queue(state.db_path, stages)])

@@ -7,6 +7,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, Query
 
 from ..spine import archive, filters_used, objects
+from ..spine.counts import Subject
 from .deps import get_db
 from .models_archive import ArchiveChoices, ArchiveFound, ArchiveList, ArchiveObject, ArchivePanel
 
@@ -45,9 +46,9 @@ def archive_page(  # noqa: PLR0913
     # One query per kind of row for the whole page; an object row carries only its frames outside
     # mosaics, like its hours.
     oggetti = [r["id"] for r in righe if r["mosaic_key"] is None]
-    filtri = filters_used.of(conn, "object", oggetti, alone=True)
+    filtri = filters_used.of(conn, Subject.OBJECT, oggetti, alone=True)
     mosaici = [r["mosaic_key"] for r in righe if r["mosaic_key"]]
-    filtri |= filters_used.of(conn, "mosaic", mosaici)
+    filtri |= filters_used.of(conn, Subject.MOSAIC, mosaici)
     pannelli = archive.panels(conn, mosaici)
     return ArchiveList(
         items=[

@@ -10,9 +10,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette.datastructures import State
 
 from ..db.row import Row
-from ..spine.run import ORDER, STAGE_SCAN, queue
+from ..spine.run import ORDER, queue
 from ..spine.scan_store import run_outcomes, run_row
-from ..spine.stages import count_pending, pending_by_stage
+from ..spine.stages import StageName, count_pending, pending_by_stage
 from ..worker.worker import TERMINAL_STATES, Snapshot, Stage, WorkerBusyError
 from ..worker.worker import State as WorkerState
 from .deps import get_db
@@ -75,7 +75,7 @@ def scan_progress(state: State, conn: sqlite3.Connection) -> ScanProgress | None
     if state.last_scan is None:
         return None
     folder_id, run_id = state.last_scan
-    rec = state.worker.stage_record(STAGE_SCAN)
+    rec = state.worker.stage_record(StageName.SCAN)
     # receipts of folders never started are discarded at the end of the run
     rows = run_outcomes(conn, state.scan_runs)
     closed = bool(rows) and all(r["ended_at"] is not None for r in rows)
@@ -158,7 +158,7 @@ def run(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> WorkerO
     # Only what has a remainder: the order and who pulls whom is `queue`'s.
     da_fare = queue(
         state.db_path,
-        [s for s in ORDER if s != STAGE_SCAN and count_pending(conn, s)],
+        [s for s in ORDER if s != StageName.SCAN and count_pending(conn, s)],
     )
     if not da_fare:
         return WorkerOut(worker=_shown(state.worker.snapshot()))

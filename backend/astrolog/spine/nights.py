@@ -34,7 +34,7 @@ _DOVE = {
 # The caller passes the observed weather's kind.
 _PAGINA = f"""
 SELECT n.id, n.night_date, n.site_source, s.name AS site, s.timezone, w.summary_json AS meteo,
-       {counts.counts_on("night")}
+       {counts.counts_on(counts.Subject.NIGHT)}
 FROM nights n JOIN sites s ON s.id = n.site_id
 LEFT JOIN weather_nights w
   ON w.site_id = n.site_id AND w.night_date = n.night_date AND w.kind = ?
@@ -44,7 +44,7 @@ LIMIT ? OFFSET ?
 
 _QUANTE = "SELECT COUNT(*) FROM nights"
 
-_TOTALI = f"SELECT{counts.counts_on('archive')}"
+_TOTALI = f"SELECT{counts.counts_on(counts.Subject.ARCHIVE)}"
 
 # Asked for the whole page at once, never per row.
 _OGGETTI = f"""
@@ -81,7 +81,7 @@ def page(
     ids = [r["id"] for r in righe]
     lune = _lune(righe)
     oggetti = idlist.grouped(conn, _OGGETTI, ids, "night_id", obj.counted)
-    filtri = filters_used.of(conn, "night", ids)
+    filtri = filters_used.of(conn, counts.Subject.NIGHT, ids)
     return [
         {
             "id": r["id"],
@@ -144,4 +144,4 @@ def waiting(conn: sqlite3.Connection) -> list[dict[str, Any]]:
 def still_reading(conn: sqlite3.Connection) -> int:
     """`group`'s residue, not the sum of stages: a frame stuck at `solve` would count three times,
     and `measure`, which nobody runs yet, would never reach zero."""
-    return stages.count_pending(conn, "group")
+    return stages.count_pending(conn, stages.StageName.GROUP)

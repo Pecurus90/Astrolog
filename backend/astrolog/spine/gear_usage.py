@@ -68,7 +68,7 @@ _OGGETTI_DEL_PEZZO = _OGGETTI.format(
     chiave="i.id",
     giunzione=(
         "LEFT JOIN rigs g ON g.id = f.rig_id JOIN instruments i ON "
-        + counts.of("instrument", rigs_joined=True)
+        + counts.of(counts.Subject.INSTRUMENT, rigs_joined=True)
     ),
     campo="i.id",
 )

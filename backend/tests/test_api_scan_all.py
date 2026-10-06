@@ -15,8 +15,7 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
 from astrolog.spine import run
-from astrolog.spine.scan import COUNTS
-from astrolog.spine.scan_store import start_run
+from astrolog.spine.scan_store import COUNTS, start_run
 from astrolog.spine.stages import mark_pending
 from astrolog.worker.worker import Stage, WorkerBusyError
 from conftest import settle, wait_until, write_light
@@ -87,7 +86,7 @@ def test_the_frames_of_every_folder_are_in_the_archive(app):
 
 def test_the_stage_numbers_are_the_sum_of_the_folders(app):
     """La riga dello stadio a schermo e' **una**, e i suoi numeri sono la somma delle cartelle:
-    3 + 2 = 5 trovati. Si sommano solo i conteggi veri (`spine/scan.COUNTS`): sommare ogni
+    3 + 2 = 5 trovati. Si sommano solo i conteggi veri (`spine/scan_store.COUNTS`): sommare ogni
     intero prenderebbe anche `done`, che in Python **e'** un intero, e lo stadio direbbe di
     aver finito due volte invece di aver finito."""
     client, _, _ = app

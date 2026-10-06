@@ -1,5 +1,5 @@
 """Header raw values to filters, instruments and rigs: learned rule, then vocabulary, then raw. What
-stays raw is a question for the user, never a guess; a frame that breaks fails alone."""
+stays raw is a question for the user, never a guess."""
 
 import logging
 import sqlite3
@@ -25,18 +25,18 @@ from . import (
     copies,
     declarations,
     gear_usage,
+    night_rig,
     rewrite,
+    rigs,
     signature,
     typeless_folders,
     unfiltered,
 )
-from . import night_rig as della_notte
 from . import normalize_store as store
-from . import rigs as corredi
 from .gear_create import create_filter, filter_id_by_name
 from .normalize_rig import Given, Writing, instruments_on_frame, mount_for_frame, rig_for_frame
 from .stage_run import Event, FrameError, frame_safely, receipt, watched
-from .stages import invalidate, ready, set_status
+from .stages import StageName, StageStatus, invalidate, ready, set_status
 
 log = logging.getLogger(__name__)
 
@@ -58,12 +58,12 @@ def normalize_frames(conn: sqlite3.Connection) -> Iterator[Event]:
             _at_round_end(conn, context.colours if context else None)
             gear_usage.write(conn)
 
-    with watched("normalize", counts, at_end):
+    with watched(StageName.NORMALIZE, counts, at_end):
         frame_ids, context = _before_the_round(conn)
         for frame_id in frame_ids:
             work = partial(_one_frame, conn, frame_id, context, counts)
             counts["to_review"] += bool(
-                frame_safely(conn, "normalize", frame_id, work, counts, errors)
+                frame_safely(conn, StageName.NORMALIZE, frame_id, work, counts, errors)
             )
             seen += 1
             yield {"current": seen, "total": len(frame_ids), **counts}
@@ -76,25 +76,25 @@ class _Round(NamedTuple):
     buckets: dict[float, float]
     cameras: dict[int, Given]
     copy_of: dict[int, int | None]
-    marks: dict[int, str | None]
+    marks: dict[int, rewrite.RewriteMark | None]
     colours: Colours
 
 
 def _before_the_round(conn: sqlite3.Connection) -> tuple[list[int], _Round]:
     """Frames whose answers these decisions change join this same round."""
-    frame_ids = ready(conn, "normalize")
+    frame_ids = ready(conn, StageName.NORMALIZE)
     if not frame_ids:
         return [], _Round({}, {}, {}, {}, {})
     # a frame that names the camera can change the one its night gives to frames that do not
-    vicine = set(della_notte.in_nights_of(conn, frame_ids)) - set(frame_ids)
-    if vicine:
-        invalidate(conn, vicine, "normalize")
-    frame_ids = ready(conn, "normalize")
+    neighbours = set(night_rig.in_nights_of(conn, frame_ids)) - set(frame_ids)
+    if neighbours:
+        invalidate(conn, neighbours, StageName.NORMALIZE)
+    frame_ids = ready(conn, StageName.NORMALIZE)
     copy_of, marks, redo = copies.decide(store.broods(conn, frame_ids), frame_ids)
     if redo:
-        invalidate(conn, redo, "normalize")
-    frame_ids = ready(conn, "normalize")
-    nights = cache(lambda: della_notte.night_rigs(conn))
+        invalidate(conn, redo, StageName.NORMALIZE)
+    frame_ids = ready(conn, StageName.NORMALIZE)
+    nights = cache(lambda: night_rig.night_rigs(conn))
     answers = signature.answers(conn)
     cameras: dict[int, Given] = {}
     voting: list[tuple[str, bool]] = []
@@ -107,7 +107,7 @@ def _before_the_round(conn: sqlite3.Connection) -> tuple[list[int], _Round]:
             voting.append((camera, frame["bayer_pattern"] is not None))
     colours = camera_specs.ahead(conn, frame_ids, voting)
     # frames without a matrix of a camera that changed colour: only their filter changes
-    for i in ready(conn, "normalize"):
+    for i in ready(conn, StageName.NORMALIZE):
         if i not in cameras:
             cameras[i] = _camera_of(conn, store.frame(conn, i), nights, answers)
             frame_ids.append(i)
@@ -125,20 +125,20 @@ def _camera_of(
     """Where the header is silent the signature's answer, then the night, name the camera: from the
     rig alone those frames would get a filter nobody could ask them about."""
     camera = declarations.instrument_name(conn, "camera", frame["instrument_raw"])
-    trovata = signature.answer_for(answers, signature.parts_of(frame))
-    detto = trovata[1] if trovata else None
-    notte = None
-    if camera is None and (detto is None or detto.camera is None):
-        notte = della_notte.rig_of_night(conn, frame, nights())
-    camera = camera or (detto.camera if detto else None) or (notte or {}).get("camera")
-    return Given(camera, detto, notte)
+    found = signature.answer_for(answers, signature.parts_of(frame))
+    answered = found[1] if found else None
+    night = None
+    if camera is None and (answered is None or answered.camera is None):
+        night = night_rig.rig_of_night(conn, frame, nights())
+    camera = camera or (answered.camera if answered else None) or (night or {}).get("camera")
+    return Given(camera, answered, night)
 
 
 def _at_round_end(conn: sqlite3.Connection, colours: Colours | None) -> None:
     """What the frames moved: camera votes, sky pixels, empty rigs, folders asking for a type."""
     camera_specs.from_files(conn, colours)
     camera_sky.write(conn)
-    corredi.drop_empty(conn)
+    rigs.drop_empty(conn)
     typeless_folders.write(conn)
 
 
@@ -155,27 +155,18 @@ def _one_frame(
         software = normalize_software(frame["software_raw"])
         filter_id, filter_known = _filter_for(conn, frame, writing, given, context.colours)
         rig_id = rig_for_frame(conn, frame, writing, given, software)
-        addosso = instruments_on_frame(conn, frame, counts, now)
-        addosso["mount"] = mount_for_frame(conn, frame, rig_id, software, counts, now)
+        carried = instruments_on_frame(conn, frame, counts, now)
+        carried["mount"] = mount_for_frame(conn, frame, rig_id, software, counts, now)
         copy_of = context.copy_of.get(frame_id, frame["copy_of"])
         counts["copies"] += 1 if copy_of is not None else 0
         was = (frame["filter_id"], frame["rig_id"], frame["software"], frame["copy_of"])
         if (filter_id, rig_id, software, copy_of) != was:
             # these change the answers downstream: always through here, never a hand UPDATE
-            invalidate(conn, [frame["id"]], "normalize", now=now)
-        store.set_normalized(
-            conn,
-            frame["id"],
-            filter_id=filter_id,
-            rig_id=rig_id,
-            on_frame=addosso,
-            software=software,
-            copy_of=copy_of,
-            rewrite_mark=context.marks[frame_id]
-            if frame_id in context.marks
-            else rewrite.mark_of(frame),
-        )
-        set_status(conn, frame["id"], "normalize", "done", now=now)
+            invalidate(conn, [frame["id"]], StageName.NORMALIZE, now=now)
+        mark = context.marks[frame_id] if frame_id in context.marks else rewrite.mark_of(frame)
+        written = store.Normalized(filter_id, rig_id, software, copy_of, mark, carried)
+        store.set_normalized(conn, frame["id"], written)
+        set_status(conn, frame["id"], StageName.NORMALIZE, StageStatus.DONE, now=now)
         counts["normalized"] += 1
         return not filter_known or rig_id is None
 
@@ -189,7 +180,7 @@ def _filter_for(
 ) -> tuple[int | None, bool]:
     """(filter id, is it known?). A filter with an unknown band exists but is not known: it stays a
     question until answered."""
-    counts, now, detto = writing.counts, writing.now, given.answer
+    counts, now, answered = writing.counts, writing.now, given.answer
     # colour belongs to the camera, not the frame: a program that omits `BAYERPAT` is not mono
     bayer = bool(frame["bayer_pattern"])
     colour = bayer or unfiltered.is_colour(conn, given.camera, colours)
@@ -198,8 +189,8 @@ def _filter_for(
     if name is not None:
         filter_id = filter_id_by_name(conn, name)
         # an answer on a word the vocabulary does not know (`Filtro1`) stays the user's
-        larga = colour and is_broadband_word(frame["filter_raw"])
-        if filter_id is not None and not larga:
+        broadband = colour and is_broadband_word(frame["filter_raw"])
+        if filter_id is not None and not broadband:
             return filter_id, True
         if filter_id is None:
             # the rule points to a vanished filter: warn and fall back, since losing it silently is
@@ -212,15 +203,15 @@ def _filter_for(
     # without a Bayer matrix mono and colour look alike, and `none` may be an empty wheel slot: the
     # signature's answer says it. It speaks of a mono; on colour it is OSC anyway.
     if not colour and unfiltered.says_no_filter(frame["filter_raw"]):
-        if detto is not None and detto.filter == signature.NO_FILTER:
+        if answered is not None and answered.filter == signature.NO_FILTER:
             return _no_filter(conn, frame, now)
-        if detto is not None and detto.filter_name:
-            return _answered_filter(conn, frame, detto.filter_name, now)
+        if answered is not None and answered.filter_name:
+            return _answered_filter(conn, frame, answered.filter_name, now)
         return None, False
     canonical = normalize_filter(frame["filter_raw"], bayer=colour)
     # the learned rule also applies to the vocabulary's name, or a renamed filter would be reborn
-    tenuto = declarations.alias_target(conn, "filter", normalize_header_value(canonical or ""))
-    if tenuto and (filter_id := filter_id_by_name(conn, tenuto)) is not None:
+    kept = declarations.alias_target(conn, "filter", normalize_header_value(canonical or ""))
+    if kept and (filter_id := filter_id_by_name(conn, kept)) is not None:
         return filter_id, True
     band = passband_of(canonical)
     # a silent filter returned above, and with a colour matrix it is at least OSC

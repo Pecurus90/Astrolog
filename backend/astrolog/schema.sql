@@ -266,9 +266,8 @@ CREATE TABLE frames (
   -- posizione, la risposta della cartella -- e chi legge legge questo.
   asks_type      INTEGER NOT NULL DEFAULT 0 CHECK (asks_type IN (0, 1)),
   -- Il file dichiara di essere stato lavorato dopo la camera: le calibrazioni applicate
-  -- (`calibrated`), o due programmi diversi nominati insieme (`rewritten`). I due sono in
-  -- ORDINE -- `calibrated` pesa di piu': dice che sono cambiati i pixel, non solo l'header.
-  -- Non dice CHI, e da solo non toglie niente a nessuno: decide quale di due gemelli e'
+  -- (`calibrated`), o due programmi diversi nominati insieme (`rewritten`); il loro peso sta
+  -- in `spine/rewrite.py`. Non dice CHI, e da solo non toglie niente a nessuno: decide quale di due gemelli e'
   -- l'originale. Lo ricava `normalize` dall'header, perche' distinguere due programmi vuole
   -- il vocabolario.
   rewrite_mark   TEXT CHECK (rewrite_mark IN ('calibrated', 'rewritten')),   -- normalize

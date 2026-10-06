@@ -16,7 +16,7 @@ NAME_COLUMNS = """
        (SELECT e.name FROM catalog_entries e WHERE e.slug = o.catalog_slug) AS catalog_name"""
 
 _LIST = f"""
-SELECT o.*, {NAME_COLUMNS},{counts.counts_on("object")}
+SELECT o.*, {NAME_COLUMNS},{counts.counts_on(counts.Subject.OBJECT)}
 FROM objects o
 """  # noqa: S608 - constant fragments of the spine
 

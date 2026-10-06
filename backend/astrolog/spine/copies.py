@@ -7,6 +7,7 @@ from itertools import groupby
 from typing import Any
 
 from . import rewrite
+from .rewrite import RewriteMark
 
 
 def _shot(row: sqlite3.Row) -> tuple[Any, Any, Any]:
@@ -15,12 +16,12 @@ def _shot(row: sqlite3.Row) -> tuple[Any, Any, Any]:
 
 def decide(
     rows: Iterable[sqlite3.Row], frame_ids: Collection[int]
-) -> tuple[dict[int, int | None], dict[int, str | None], list[int]]:
+) -> tuple[dict[int, int | None], dict[int, RewriteMark | None], list[int]]:
     """`(copy of, mark, twins to redo)`; `rows` are the broods sorted by shot. Twins already done
     that point elsewhere are redone: a raw can arrive after its copy, which would count twice."""
     in_queue = set(frame_ids)
     copy_of: dict[int, int | None] = dict.fromkeys(frame_ids)
-    marks: dict[int, str | None] = {}
+    marks: dict[int, RewriteMark | None] = {}
     redo: list[int] = []
     for _, brood in groupby(rows, key=_shot):
         seen = []

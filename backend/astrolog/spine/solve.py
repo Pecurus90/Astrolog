@@ -21,7 +21,7 @@ from ..units import field_deg, scale_arcsec_px
 from . import camera_sky, gear_usage, typeless_folders
 from . import solve_store as store
 from .stage_run import Event, FrameError, frame_safely, receipt, watched
-from .stages import ready, set_status
+from .stages import StageName, StageStatus, ready, set_status
 
 log = logging.getLogger(__name__)
 
@@ -94,13 +94,13 @@ def solve_frames(
         if seen:  # counting costs: only if some frame was looked at
             _at_round_end(conn)
 
-    with watched("solve", counts, at_end, astap=solver) as outcome:
+    with watched(StageName.SOLVE, counts, at_end, astap=solver) as outcome:
         frame_ids = _in_order(conn)
         total = len(frame_ids)
         for frame_id in frame_ids:
             ferma = frame_safely(
                 conn,
-                "solve",
+                StageName.SOLVE,
                 frame_id,
                 partial(_one_frame, conn, frame_id, counts, exe=solver, run=run, cache=solve_cache),
                 counts,
@@ -130,7 +130,7 @@ def _cache_dir(cache: Path | None) -> Path:
 
 
 def _in_order(conn: sqlite3.Connection) -> list[int]:
-    pending = ready(conn, "solve")
+    pending = ready(conn, StageName.SOLVE)
     first = store.first_per_order_key(conn, pending)
     rest = [i for i in pending if i not in set(first)]
     return first + store.newest_first(conn, rest)
@@ -165,7 +165,14 @@ def _one_frame(  # noqa: PLR0913
             if solution.reason in RETRIABLE:
                 counts["waiting"] += 1
             else:
-                set_status(conn, frame["id"], "solve", "failed", reason=solution.reason, now=now)
+                set_status(
+                    conn,
+                    frame["id"],
+                    StageName.SOLVE,
+                    StageStatus.FAILED,
+                    reason=solution.reason,
+                    now=now,
+                )
                 counts["unsolved"] += 1
         else:
             width, height = _field_of(frame, solution.scale_arcsec_px)
@@ -183,7 +190,7 @@ def _one_frame(  # noqa: PLR0913
             if hfd is not None or stars is not None:
                 store.save_metrics(conn, frame["id"], hfd_px=hfd, stars=stars, now=now)
                 counts["measured"] += 1
-            set_status(conn, frame["id"], "solve", "done", now=now)
+            set_status(conn, frame["id"], StageName.SOLVE, StageStatus.DONE, now=now)
             counts["cached" if cached else "solved"] += 1
     return solution.reason if solution.reason in ABORTS_THE_RUN else None
 

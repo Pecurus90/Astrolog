@@ -17,7 +17,7 @@ from . import (
 )
 from . import frame_folder as folder
 from . import typeless as domanda
-from .stages import FOLDER_SAYS, WAITING_FROM, WAITING_SQL, invalidate
+from .stages import FOLDER_SAYS, WAITING_FROM, WAITING_SQL, StageName, invalidate
 
 
 def detach(conn: sqlite3.Connection, frame_ids: list[int]) -> None:
@@ -39,7 +39,7 @@ def apply_answer(conn: sqlite3.Connection, row: Row, now: str | None = None) -> 
     back to the sky, which restores it from its cache; "calibration" stops and detaches them."""
     frames = domanda.frames_of(conn, row)
     if row["answer"] == domanda.LIGHT:
-        invalidate(conn, solve_store.lost_sky(conn, frames), "solve", now)
+        invalidate(conn, solve_store.lost_sky(conn, frames), StageName.SOLVE, now)
     else:
         _stop(conn, frames, now)
     return frames
@@ -71,7 +71,7 @@ def detach_waiting(conn: sqlite3.Connection, now: str | None = None) -> tuple[li
         _stop(conn, frames, now)
     lost = solve_store.lost_sky(conn, [r[0] for r in conn.execute(_TYPELESS)])
     requeued = [i for i in lost if conn.execute(_LET_GO, (i,)).fetchone()[0]]
-    invalidate(conn, requeued, "solve", now)
+    invalidate(conn, requeued, StageName.SOLVE, now)
     typeless_folders.write(conn)
     return frames, requeued
 

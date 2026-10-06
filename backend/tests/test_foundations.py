@@ -18,8 +18,9 @@ from astrolog.fits.header_read import frame_fingerprint, read_header
 from astrolog.spine import header_asks, scan_store, solve_store, stages
 from astrolog.spine import run as run_mod
 from astrolog.spine import scan as scan_mod
-from astrolog.spine.run import ORDER, STAGE_GROUP, STAGE_IDENTIFY, STAGE_SCAN, STAGE_SOLVE, queue
+from astrolog.spine.run import ORDER, queue
 from astrolog.spine.scan import scan_folder
+from astrolog.spine.stages import StageName
 from conftest import add_folder, settle, write_light
 
 
@@ -168,7 +169,7 @@ def test_the_queue_is_in_the_order_of_the_chain_whoever_asks(tmp_path):
     Da confermare -- e i tre non dicevano la stessa cosa."""
     db = str(tmp_path / "x.db")
     cartella = {"folder_id": 1, "run_id": 1}  # servono a `scan`, e solo a lui
-    chiesti = [STAGE_GROUP, STAGE_SCAN, STAGE_SOLVE]  # in disordine apposta
+    chiesti = [StageName.GROUP, StageName.SCAN, StageName.SOLVE]  # in disordine apposta
     # `solve` si porta dietro il nome e le notti (lo dice il grafo), e il tutto esce comunque
     # nell'ordine della catena, non in quello in cui e' stato chiesto
     fila = [s for s, _ in queue(db, chiesti, **cartella)]
@@ -181,8 +182,8 @@ def test_identify_drags_group_along(tmp_path):
     la lascerebbe nella sessione di ieri, e nessuno la rimetterebbe a posto. `group` da solo
     invece resta solo: e' cio' che serve dopo una risposta sul luogo di una notte."""
     db = str(tmp_path / "x.db")
-    assert [s for s, _ in queue(db, [STAGE_IDENTIFY])] == ["identify", "group"]
-    assert [s for s, _ in queue(db, [STAGE_GROUP])] == ["group"]
+    assert [s for s, _ in queue(db, [StageName.IDENTIFY])] == ["identify", "group"]
+    assert [s for s, _ in queue(db, [StageName.GROUP])] == ["group"]
 
 
 def test_a_stage_with_no_work_is_an_error_not_a_shorter_queue(tmp_path):
@@ -196,7 +197,13 @@ def test_scanning_without_a_folder_is_an_error(tmp_path):
     """`scan` senza cartella e senza ricevuta esploderebbe dopo, dentro il generatore, nel
     thread del worker: la scansione risulterebbe partita e morirebbe muta."""
     with pytest.raises(ValueError, match="folder_id"):
-        queue(str(tmp_path / "x.db"), [STAGE_SCAN])
+        queue(str(tmp_path / "x.db"), [StageName.SCAN])
+
+
+def test_scanning_without_a_receipt_is_an_error(tmp_path):
+    """Lo stesso con la cartella ma senza ricevuta: un controllo sul solo `folder_id` passerebbe."""
+    with pytest.raises(ValueError, match="run_id"):
+        queue(str(tmp_path / "x.db"), [StageName.SCAN], folder_id=1)
 
 
 def test_every_stage_closes_its_own_connection(tmp_path, monkeypatch):
@@ -211,7 +218,7 @@ def test_every_stage_closes_its_own_connection(tmp_path, monkeypatch):
 
     monkeypatch.setattr(run_mod, "connect", lambda *a, **k: FintaConnessione())
     monkeypatch.setattr(run_mod, "group_frames", lambda conn: iter([{"n": 1}, {"n": 2}]))
-    ((_, fabbrica),) = run_mod.queue(str(tmp_path / "x.db"), [STAGE_GROUP])
+    ((_, fabbrica),) = run_mod.queue(str(tmp_path / "x.db"), [StageName.GROUP])
 
     list(fabbrica())  # corsa intera
     assert chiuse == [1]
@@ -264,7 +271,7 @@ def test_ready_waits_for_the_stages_upstream(conn, tmp_path):
 def test_running_does_not_exist_in_the_db(conn, tmp_path):
     with pytest.raises(ValueError):
         stages.set_status(conn, 1, "solve", "running")
-    assert "running" not in stages.STATUSES
+    assert "running" not in stages.StageStatus
     conn.execute(
         "INSERT INTO frames(frame_hash, image_type, header_json, created_at)"
         " VALUES('h1', 'light', '[]', 'now')"

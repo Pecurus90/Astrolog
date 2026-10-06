@@ -7,7 +7,7 @@ import pytest
 
 from astrolog.db.transaction import transaction
 from astrolog.spine import scan_store
-from astrolog.spine.scan import COUNTS
+from astrolog.spine.scan_store import COUNTS
 
 _A_FRAME = (
     "INSERT INTO frames(frame_hash, image_type, header_json, created_at)"

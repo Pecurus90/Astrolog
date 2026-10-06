@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 from ..vocab.filters import Passband, normalize_filter, passband_of
 from . import declarations as decl
-from .stages import invalidate
+from .stages import StageName, invalidate
 
 COLOR = decl.CAMERA_COLOR
 
@@ -68,5 +68,5 @@ def requeue(conn: sqlite3.Connection, camera_id: int) -> list[int]:
     """Copies and frames already answered included, or changing one's mind would move nothing.
     Frames with a matrix stay out: OSC whatever the answer, reworking them would be dead work."""
     frames = [r[0] for r in conn.execute(_OF_CAMERA, (camera_id,))]
-    invalidate(conn, frames, "normalize")
+    invalidate(conn, frames, StageName.NORMALIZE)
     return frames

@@ -22,7 +22,7 @@ from . import identify_score as score
 from . import identify_store as store
 from . import object_answer as risposta
 from .stage_run import Event, frame_safely, receipt, watched
-from .stages import ready, set_status
+from .stages import StageName, StageStatus, ready, set_status
 
 log = logging.getLogger(__name__)
 
@@ -65,16 +65,16 @@ def identify_frames(conn: sqlite3.Connection) -> Iterator[Event]:
         if frame_ids:  # detach and sweep already ran, even before the first frame
             _at_round_end(conn)
 
-    with watched("identify", counts, at_end):
-        frame_ids = ready(conn, "identify")
+    with watched(StageName.IDENTIFY, counts, at_end):
+        frame_ids = ready(conn, StageName.IDENTIFY)
         store.detach(conn, frame_ids)
         counts["swept"] = _sweep(conn)
         total = len(frame_ids)
         for frame_id in frame_ids:
             # Removing a folder mid-run can send a listed frame back to waiting.
-            if ready(conn, "identify", frame_id=frame_id):
+            if ready(conn, StageName.IDENTIFY, frame_id=frame_id):
                 work = partial(_one_frame, conn, frame_id, counts)
-                frame_safely(conn, "identify", frame_id, work, counts, errors)
+                frame_safely(conn, StageName.IDENTIFY, frame_id, work, counts, errors)
             seen += 1
             yield {"current": seen, "total": total, **counts}
     yield receipt("ok", None, counts, errors, total=seen)
@@ -127,13 +127,15 @@ def _one_frame(conn: sqlite3.Connection, frame_id: int, counts: dict[str, int]) 
         if fuori or decision["branch"] == "nothing":
             # Not a fault: `skipped`, not `pending`, or the backlog never reaches zero.
             motivo = rule.NOT_AN_OBJECT if fuori or detto == unnamed.NONE else rule.NO_NAME_NO_SKY
-            set_status(conn, frame_id, "identify", "skipped", reason=motivo, now=now)
+            set_status(
+                conn, frame_id, StageName.IDENTIFY, StageStatus.SKIPPED, reason=motivo, now=now
+            )
             counts["waiting"] += motivo == rule.NO_NAME_NO_SKY
         else:
             entry = link.entry_for(conn, decision["slug"], hit, cands)
             object_id, lucchettato = link.hang(conn, decision, raw, entry, now, counts)
             store.set_frame_object(conn, frame_id, object_id)
-            set_status(conn, frame_id, "identify", "done", now=now)
+            set_status(conn, frame_id, StageName.IDENTIFY, StageStatus.DONE, now=now)
             counts["linked"] += 1
             # Only counted if the page will actually ask: a locked object's doubt does not reach it.
             if decision["review"] and not lucchettato:

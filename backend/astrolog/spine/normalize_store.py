@@ -3,9 +3,11 @@ lives in `gear_create` and `rigs`, because hand-written answers need them too.""
 
 import sqlite3
 from collections.abc import Iterable, Iterator, Mapping
+from dataclasses import dataclass
 
 from ..db import idlist
 from . import counts
+from .rewrite import RewriteMark
 
 
 def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
@@ -74,7 +76,6 @@ def broods(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> Iterator[sqlit
 
 
 def pending_focals(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> list[float | None]:
-    """All together, so they are bucketed before writing and the file order does not change rigs."""
     with idlist.holding(conn, frame_ids) as listed:
         return [
             r[0]
@@ -84,31 +85,32 @@ def pending_focals(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> list[f
         ]
 
 
-def set_normalized(  # noqa: PLR0913
-    conn: sqlite3.Connection,
-    frame_id: int,
-    *,
-    filter_id: int | None,
-    rig_id: int | None,
-    software: str | None,
-    copy_of: int | None,
-    rewrite_mark: str | None,
-    on_frame: Mapping[str, int | None],
-) -> None:
-    """`on_frame` holds the carried instruments by kind; column `<kind>_id`, kinds from
-    `counts.CARRIED`."""
-    colonne = "".join(f", {k}_id = ?" for k in counts.CARRIED)
+@dataclass(frozen=True, slots=True)
+class Normalized:
+    """What `normalize` writes on a frame. `on_frame` holds the carried instruments by kind; column
+    `<kind>_id`, kinds from `counts.CARRIED`."""
+
+    filter_id: int | None
+    rig_id: int | None
+    software: str | None
+    copy_of: int | None
+    rewrite_mark: RewriteMark | None
+    on_frame: Mapping[str, int | None]
+
+
+def set_normalized(conn: sqlite3.Connection, frame_id: int, row: Normalized) -> None:
+    columns = "".join(f", {k}_id = ?" for k in counts.CARRIED)
     # kinds are ours, never user values
     conn.execute(
         "UPDATE frames SET filter_id = ?, rig_id = ?, software = ?, copy_of = ?,"  # noqa: S608
-        f" rewrite_mark = ?{colonne} WHERE id = ?",
+        f" rewrite_mark = ?{columns} WHERE id = ?",
         (
-            filter_id,
-            rig_id,
-            software,
-            copy_of,
-            rewrite_mark,
-            *(on_frame[k] for k in counts.CARRIED),
+            row.filter_id,
+            row.rig_id,
+            row.software,
+            row.copy_of,
+            row.rewrite_mark,
+            *(row.on_frame[k] for k in counts.CARRIED),
             frame_id,
         ),
     )

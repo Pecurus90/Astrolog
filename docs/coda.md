@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | rifattorizza | Fase 2, lotto 5a: `spine` scansione, normalizzazione, stadi | ~0,29 M agenti (uno sviluppatore), sessione principale non contata | 25 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 4: file sciolti e `worker` | ~0,19 M agenti (uno sviluppatore), sessione principale non contata | 15 agente | 1 mio sul resoconto (un fuso non valido cambiava esito: rimesso com'era) |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 3: `weather` | ~0,21 M agenti (uno sviluppatore), sessione principale non contata | 17 agente | 0 (la prova copre; confronto byte per byte delle tabelle del meteo) |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 2: `ephemeris` | sessione principale sola | ~35 | 0 |
@@ -77,18 +78,8 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Fatti `db` e
   `fits` (e il segnaposto `{listed}` di `idlist.grouped`), poi `ephemeris` (`corpi` e' `bodies`).
   Fatti anche `weather`, `net` e gli altri file sciolti. Gia' visti: `con_cielo`, `lucchettato`, `fra_i_candidati`
-  (`spine/identify*`). Nel primo lotto di `spine`: `detto`, `notte`, `giudicati`, `fuso`, `istante` (`scan`); `prima`
-  (`scan_store`); `_DENTRO`, `dentro`, `dritto` (`frame_folder`); `corredi` (alias di `rigs`),
-  `_USO`, `_STRUMENTI`, `_CORREDI`, `_FILTRI`, `_BANDE`, `dichiarato`, `_senza_ore`, `nomi`,
-  `montature`, `bande`, `_riga`, `riga` (`inventory`); `gruppi`, `chiave`, `posto`, `detto`
-  (`coordinates`); `programmi` (`rewrite`). Nel secondo lotto: `della_notte` (alias di
-  `night_rig`), `corredi` (alias di `rigs`), `vicine`, `detto`, `notte`, `addosso`, `larga`,
-  `filtro`, `tenuto` (`normalize`); `colonne` (`normalize_store`); `corredi` (alias di `rigs`),
-  `conti`, `dal_file`, `detta`, `detto`, `notte` (`normalize_rig`); `quanti`, `totali`, `aspettano` (`stages`); `chiesti`, `lavoro`, `ignoti`,
-  `voluti`, `eventi`, `evento`, `cartelle` (parametro di `queue_folders`), `molte`, `conti`,
-  `errori`, `esiti`, `chiave`, `storte`, `stato`, `motivo`, `dopo` (`run`); `_pezzo`,
-  `dai_corredi`, `_DAI_CORREDI`, `_DEL_MOSAICO`, `_SOGGETTI`, `_UNA_COLONNA`, `soggetto`, `dove`,
-  `trovata`, `tre` (`counts`). Nel terzo lotto: `ferma` (`solve`); `luoghi`, `tolte`, `dove`,
+  (`spine/identify*`). Fatti i primi due lotti di `spine` (scansione, normalizzazione, stadi).
+  Nel terzo lotto: `ferma` (`solve`); `luoghi`, `tolte`, `dove`,
   `risposta`, `fuori`, `data`, `lontano`, `detto`, `vicini`, `riga` (`group`); `domanda` (alias
   di `typeless`, in `typeless_answer`); `casa`, `riscritte`, `notte`, `notti`, `spostati`,
   `fermi`, `rig_fermi`, `oggetto_fermi`, `verso`, `vecchia`, `vecchie`, `nuova`, `toccati`,
@@ -173,13 +164,9 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   chiamanti costruiscono righe tipate.
 - **Insiemi chiusi da fare `StrEnum`**, che escono dal package (fatti tipo del frame, software e
   bande, fasi della Luna e fasce del cielo, meteo, `net.Failure`, stati del worker, motivi e
-  canali di `astap`, fonti di `place`). In `weather` restano stringhe i generi di riga (`forecast.KIND`, `history.KIND`) e
-  le fonti per modello (`forecast.source_of`), aperte quanto la scelta dei modelli. Nella scansione: esiti, motivi,
-  file non letti e saltati (`scan_store.STATUSES`, `REASONS`, `FILE_ERRORS`, `SKIP_REASONS`,
-  scritti in `scan_runs` e ripetuti in `api/models`) e il marchio `calibrated`/`rewritten`
-  (`rewrite.MARK_WEIGHT`, scritto in `frames.rewrite_mark`). Negli stadi: i nomi e gli stati
-  (`stages.STAGES`, `STATUSES`, scritti in `frame_stages`, e `run.STAGE_*`, letti da `api`) e i
-  soggetti del conto (le chiavi di `counts._SOGGETTI`, passate come stringhe da chi conta). Nel
+  canali di `astap`, fonti di `place`, esiti e motivi della scansione, marchio di riscrittura,
+  nomi e stati degli stadi, soggetti del conto). In `weather` restano stringhe i generi di riga (`forecast.KIND`, `history.KIND`) e
+  le fonti per modello (`forecast.source_of`), aperte quanto la scelta dei modelli. Nel
   raggruppamento i motivi di `group` (`NO_ACTIVE_SITE`, `SITE_NO_TIMEZONE`, `SITE_UNCLEAR`,
   `NO_OBJECT`, `NO_DATE`, scritti in `frame_stages.reason`); le risposte sul tipo
   (`typeless.ANSWERS`, parole di casa in `declarations.TYPE_LIGHT`/`TYPE_CALIBRATION`, ripetute
@@ -198,11 +185,11 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   `declarations.entity_type`, passati anche come stringhe nude), i posti dove si risponde
   (`nights.REVIEW`, `SITE`, `NEVER`, ripetuti in `api/models_nights`) e gli ordini dell'archivio
   (le chiavi di `archive.ORDINI`, ripetute in `api/archive.Sort`).
-- **La notte di un frame** (`scan_store.LocalNight`, notte/fuso/istante costruita da
-  `scan.night_of` e spacchettata per posizione da `scan_store.insert_frame`) e' un alias di `tuple`: una `NamedTuple` la nomina.
 - **Fra i `noqa: PLR0913`**, questi restano perche' toglierli cambia una firma usata fuori:
-  `replace_rows` (`db/replace_table.py`), `walk_dir` (`fits/walk.py`, i sei accumulatori in un oggetto solo) e
-  `create_app` (`api/app.py`, sei opzioni a parola chiave lette da `__main__`, `tools` e test).
+  `replace_rows` (`db/replace_table.py`), `walk_dir` (`fits/walk.py`, i sei accumulatori in un oggetto solo),
+  `create_app` (`api/app.py`, sei opzioni a parola chiave lette da `__main__`, `tools` e test),
+  `scan_store.finish_run` e `upsert_position` e `normalize_rig.mount_for_frame` (chiamati dai
+  test), `stages.set_status` e `stage_run.frame_safely` (chiamati da ogni stadio).
   `archive_page` (`api/archive.py`) resta per un'altra ragione: i suoi otto parametri sono la
   query della rotta, e raccoglierli in una dipendenza di FastAPI e' un cambio di forma (fase 2).
 - **Doppioni piccoli dei package di base**: `catalog/load.load_catalog` riscrive a mano
@@ -427,7 +414,8 @@ Niente di aperto.
   leggero non deve scrivere in due case il predicato di cosa e' una domanda aperta. Dei lettori di
   Da confermare, la tendina dei corredi e l'elenco degli oggetti contano ancora ogni frame a ogni
   apertura. Piu' piccoli: i frame per cartella in `GET /folders`; `stages.pending_by_stage` che
-  conta `measure`, stadio che non gira mai; gli errori di una lettura letti tutti per tagliarne
+  conta `measure`, stadio che non gira mai (la sua chiave esce in `GET /pipeline/status`:
+  toglierla cambia la risposta); gli errori di una lettura letti tutti per tagliarne
   una pagina (`api/scan.py`). Ogni ricalcolo tolto entra in un contratto, o in una prova che
   confronta cio' che e' scritto con cio' che le regole direbbero (`tests/test_header_asks.py`).
 - **La normalizzazione tiene in mano camera, copia e marchio di ogni frame in coda per tutto il
@@ -444,10 +432,6 @@ Niente di aperto.
 - **Il totale dell'archivio viaggia in ogni pagina dello scorrimento delle Notti**:
   `nights.archive_totals` fa una scansione piena (14,6-19 ms su 40.000 frame) a ogni "mostra
   altre", e conta solo la prima. Rimedio: i totali solo alla prima pagina.
-- **Gli strumenti che il frame nomina costano query per frame, senza cache.**
-  `spine/normalize_rig.instruments_on_frame` risolve tre generi uno per uno e non raggruppa come
-  `rig_for_frame`: fino a sei query in piu' su ogni frame di N.I.N.A. (non cronometrato). Rimedio:
-  risolvere i nomi una volta per passata.
 - **Rispondere a N gruppi in un Applica costa N letture dell'archivio.** Ogni risposta ritrova il
   suo gruppo rifacendo il lettore da capo dentro la transazione (`row_of` rifa' `by_signature` in
   `spine/signature_page.py`, `by_group` in `spine/unnamed.py`, o `by_folder` in `spine/typeless.py`), e poi `requeue`
@@ -482,12 +466,6 @@ Niente di aperto.
 
 - **`rigs._pezzo_id` e' `gear.instrument_id` scritta due volte.** Vive in `rigs` perche' `gear`
   importa `rigs`: va in un modulo che tutti e due possono importare.
-- **I nomi degli otto conti di una scansione stanno in tre case.** La casa e' `COUNTS`
-  (`spine/scan.py`); `finish_run` (`spine/scan_store.py`) li riscrive come colonne SQL e come
-  chiavi, mentre le liste della ricevuta, nello stesso file, derivano da `RECEIPT_LISTS`. Un nono
-  conto aggiunto a `COUNTS` e al modello resterebbe zero con la suite verde
-  (`test_models_match_constants.py` controlla solo i nomi del modello). Rimedio: derivarli come le
-  liste.
 - **I soggetti di un mosaico si leggono in due posti** (`_most_poses` in
   `spine/mosaic_describe.py`, `_SUBJECTS` in `spine/mosaic_proposals.py`): la stessa giunzione
   frame-pannelli, una per il piu' frequente e una per l'insieme.
@@ -685,7 +663,7 @@ riga per voce.
   l'ha, e i test passano dict senza i lati): passare a `[]` cambia comportamento, quindi aspetta.
   `mosaic_geometry` non e' uno stadio: quando il mosaico lo diventera', entra nel contratto di
   indipendenza in `backend/pyproject.toml`. Due righe di `archive.py` passano i 100 caratteri con
-  la ragione del `noqa` dopo il codice, come quelle di `counts.py` e `stages.py`. La docstring di
+  la ragione del `noqa` dopo il codice. La docstring di
   `nights.still_reading` dice "`measure`, which nobody runs yet": invecchia quando uno stadio lo
   lancera'. Regole dette due volte: "righe e conta usano una condizione sola" (docstring di
   `archive` e di `_dove`); `COLLATE NOCASE` (`archive.ORDINI` e `choices`); "sta qui perche' la
@@ -812,27 +790,9 @@ riga per voce.
 - **Attrezzatura, dopo la fase 1**: `rigs.declared_mount` riscrive la query di `rigs._rig`
   (`RIG_ROWS` per id) invece di chiamarla; `filters_used.of` e `idlist` accettano anche chiavi di
   testo (i mosaici dell'Archivio) in una tabella `id INTEGER`, che le tiene per affinita' di SQLite.
-- **Normalizzazione e stadi, dopo la fase 1**: `count_pending` e `pending_by_stage`
-  (`spine/stages.py`) hanno la stessa query e la stessa sottrazione di `_waiting_by_stage`, e il
-  commento "five counts" scrive a mano `len(STAGES)`; il controllo `scan` di `run.queue` ha un
-  solo test (`test_scanning_without_a_folder_is_an_error`), che lascia fuori sia `folder_id` sia
-  `run_id`, cosi' un controllo solo su `folder_id` passerebbe; `counts.py` e `stages.py` hanno
-  ancora una riga oltre i 100 caratteri dietro `# noqa: S608` (quella di `stages.py` senza
-  ragione); per un alias di tipo `worker/worker.py` importa `spine.stage_run` (da solo, 16 moduli
-  invece di 3; nell'app intera costo zero; toglierlo vuole un import sotto `TYPE_CHECKING`, che
-  il repo non usa ancora). Regole dette piu' volte: "il worker si ferma al primo
-  evento con `done`" (`run._then_detach`, `run.molte`, `stage_run.receipt`); "il residuo non
-  arriva mai a zero" e "un dark senza tipo diventa ore" in `stages.py`; "una posa rotta fallisce
-  da sola" in `stage_run` (modulo e `watched`) e in `normalize`; la forma per chi ha gia' `rigs g`
-  (`counts._WITH_RIGS` e `counts.of`); le focali raggruppate prima di scrivere
-  (`normalize_store.pending_focals` e `normalize.py`).
-- **La scansione, dopo la fase 1, dice due volte la stessa regola**: in `spine/coordinates.py`
-  "un posto gia' risposto resta in elenco, cosi' la risposta si cambia" sta nella docstring del
-  modulo, di `_rows` e di `frames_at`; il perche' di `calibrated` che pesa piu' di `rewritten` sta
-  sopra `rewrite.MARK_WEIGHT` e in `schema.sql` (`frames.rewrite_mark`); la docstring di
-  `scan.night_of` ripete la notte da mezzogiorno a mezzogiorno (`clock.night_date`) e la ricaduta
-  del fuso (`place.timezone_of_frame`, `scan_store.home_timezone`); "radice e sottocartella
-  viaggiano nella riga" sta nella docstring di `spine/frame_folder.py` e in quella di `group_of`.
+- **Stadi, dopo la fase 1**: per un alias di tipo `worker/worker.py` importa `spine.stage_run`
+  (da solo, 16 moduli invece di 3; nell'app intera costo zero; toglierlo vuole un import sotto
+  `TYPE_CHECKING`, che il repo non usa ancora).
 - **I file sciolti, dopo la fase 2**: `astap.analyse` inghiotte timeout e `OSError` e torna
   `(None, None)` senza scrivere nel log, mentre `solve` lo scrive (HFD e stelle vuoti senza
   traccia in Diagnostica: aggiungere la riga cambia il log, quindi non e' un refactor); `astap.solve`

@@ -10,7 +10,7 @@ from ..clock import now_iso
 from ..spine import mosaic_proposals as mosaic_reader
 from ..spine import signature_page as gear_reader
 from ..spine import typeless as typeless_reader
-from ..spine.run import STAGE_GROUP, STAGE_IDENTIFY, STAGE_NORMALIZE, STAGE_SOLVE
+from ..spine.stages import StageName
 from ..vocab.filters import Passband
 from . import lookalike, work
 from . import review_page as page
@@ -131,20 +131,20 @@ def apply(
     return ReviewApplied(changed=changed, requeued=len(requeued), run_started=started)
 
 
-def _stadi_toccati(body: ReviewApply) -> set[str]:
+def _stadi_toccati(body: ReviewApply) -> set[StageName]:
     """An answer on objects alone changes nothing upstream, but a MIXED answer needs both stages,
     in this order, or the object answer would wait for someone to click Start."""
-    voluti: set[str] = set()
+    voluti: set[StageName] = set()
     if body.lookalikes or body.filters:
-        voluti.add(STAGE_NORMALIZE)
+        voluti.add(StageName.NORMALIZE)
     if body.gear:
-        voluti.add(STAGE_NORMALIZE)  # they change the filter or the rig of their frames
+        voluti.add(StageName.NORMALIZE)  # they change the filter or the rig of their frames
     if body.typeless:
         # the SKY of those frames is requeued: name and night follow from the stage graph
-        voluti.add(STAGE_SOLVE)
+        voluti.add(StageName.SOLVE)
     if body.objects:
-        voluti.add(STAGE_IDENTIFY)
+        voluti.add(StageName.IDENTIFY)
     elif body.unclear:
         # a place answer changes only where those frames sit: the last stage is enough
-        voluti.add(STAGE_GROUP)
+        voluti.add(StageName.GROUP)
     return voluti

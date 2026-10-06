@@ -20,7 +20,7 @@ from .declarations import (
     learn,
     write_declaration,
 )
-from .stages import invalidate
+from .stages import StageName, invalidate
 
 log = logging.getLogger(__name__)
 
@@ -88,7 +88,7 @@ def declare_not_an_object(conn: sqlite3.Connection, key: str, now: str | None = 
         write_declaration(conn, FRAME, r["frame_hash"], FRAME_OBJECT, NONE, now)
         conn.execute("UPDATE frames SET found_key = ? WHERE id = ?", (key, r["id"]))
     frames = [r["id"] for r in righe]
-    invalidate(conn, frames, "identify")
+    invalidate(conn, frames, StageName.IDENTIFY)
     return frames
 
 
@@ -121,7 +121,7 @@ def declare_found(
         else:
             forget(conn, FRAME, r["frame_hash"], FRAME_OBJECT)
     frames = [r["id"] for r in righe]
-    invalidate(conn, frames, "identify")
+    invalidate(conn, frames, StageName.IDENTIFY)
     return frames
 
 
@@ -228,7 +228,7 @@ def declare_object(
         learn(conn, "object", grafia, target, now=now)
 
     frames = objects.frames_of(conn, object_id)
-    invalidate(conn, frames, "identify")
+    invalidate(conn, frames, StageName.IDENTIFY)
     return frames
 
 

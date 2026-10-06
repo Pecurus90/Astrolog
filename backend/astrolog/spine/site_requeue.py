@@ -9,7 +9,7 @@ from .. import place
 from ..db import idlist
 from .declarations import COORDINATES_SITE
 from .group import NO_ACTIVE_SITE, SAME_PLACE_KM, SITE_NO_TIMEZONE, SITE_UNCLEAR
-from .stages import invalidate
+from .stages import StageName, invalidate
 
 
 def requeue_waiting(
@@ -45,7 +45,7 @@ def requeue_waiting(
         senza_fuso = r["reason"] == SITE_NO_TIMEZONE
         if vicino or nominato or senza_fuso or (homeless and r["reason"] == NO_ACTIVE_SITE):
             frames.append(r["frame_id"])
-    invalidate(conn, frames, "group")
+    invalidate(conn, frames, StageName.GROUP)
 
 
 def requeue_nights_of(conn: sqlite3.Connection, site_id: int) -> None:
@@ -58,7 +58,7 @@ def requeue_nights_of(conn: sqlite3.Connection, site_id: int) -> None:
             (site_id,),
         )
     ]
-    invalidate(conn, frames, "group")
+    invalidate(conn, frames, StageName.GROUP)
 
 
 def adopt_nights(conn: sqlite3.Connection, site_id: int, old_home: int) -> None:
@@ -88,4 +88,4 @@ def adopt_nights(conn: sqlite3.Connection, site_id: int, old_home: int) -> None:
                 f"SELECT id FROM frames WHERE night_id IN {listed}"  # noqa: S608 - our constant
             )
         ]
-    invalidate(conn, frames, "group")
+    invalidate(conn, frames, StageName.GROUP)

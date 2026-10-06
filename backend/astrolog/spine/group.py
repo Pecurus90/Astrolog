@@ -13,7 +13,7 @@ from . import declarations as decl
 from . import gear_usage, mosaic
 from . import group_store as store
 from .stage_run import Event, FrameError, frame_safely, receipt, watched
-from .stages import ready, set_status
+from .stages import StageName, StageStatus, ready, set_status
 
 log = logging.getLogger(__name__)
 
@@ -45,8 +45,8 @@ def group_frames(conn: sqlite3.Connection) -> Iterator[Event]:
         if seen:  # each piece's nights, only if some frame was worked
             gear_usage.write(conn)
 
-    with watched("group", counts, at_end):
-        frame_ids = ready(conn, "group")
+    with watched(StageName.GROUP, counts, at_end):
+        frame_ids = ready(conn, StageName.GROUP)
         store.detach(conn, frame_ids)
         # At the start, not the end: sky and rig are already decided, and a run stopped halfway
         # would leave grouped frames, no longer ready, that nobody would place.
@@ -56,9 +56,9 @@ def group_frames(conn: sqlite3.Connection) -> Iterator[Event]:
         total = len(frame_ids)
         for frame_id in frame_ids:
             # one that meanwhile is no longer ready is skipped (`stages.ready`)
-            if ready(conn, "group", frame_id=frame_id):
+            if ready(conn, StageName.GROUP, frame_id=frame_id):
                 work = partial(_one_frame, conn, frame_id, (site, luoghi), counts)
-                frame_safely(conn, "group", frame_id, work, counts, errors)
+                frame_safely(conn, StageName.GROUP, frame_id, work, counts, errors)
             seen += 1
             yield {"current": seen, "total": total, **counts}
         counts["swept"] = _sweep(conn)
@@ -85,14 +85,14 @@ def _one_frame(
         # `site` is there exactly when there is no reason to stop: both are checked so the pair
         # holds for the reader and the type checker.
         if fuori or site is None:
-            set_status(conn, frame_id, "group", "skipped", reason=fuori, now=now)
+            set_status(conn, frame_id, StageName.GROUP, StageStatus.SKIPPED, reason=fuori, now=now)
             counts["waiting"] += 1
         else:
             data = night_date(frame["date_obs"], site["timezone"])
             night_id = _night(conn, site, data, now, counts, declared=bool(risposta))
             session_id = _session(conn, night_id, frame["object_id"], frame["rig_id"], counts)
             store.set_frame_group(conn, frame_id, night_id, session_id)
-            set_status(conn, frame_id, "group", "done", now=now)
+            set_status(conn, frame_id, StageName.GROUP, StageStatus.DONE, now=now)
             counts["linked"] += 1
 
 

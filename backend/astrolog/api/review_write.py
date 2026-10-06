@@ -13,7 +13,7 @@ from ..spine import gear, gear_create, mosaic
 from ..spine import object_answer as risposta
 from ..spine import rigs as corredi
 from ..spine.group import SITE_UNCLEAR
-from ..spine.stages import invalidate
+from ..spine.stages import StageName, invalidate
 from . import instrument_answer as strumento
 from . import lookalike
 from . import review_page as page
@@ -158,7 +158,7 @@ def _answer_where(conn: sqlite3.Connection, edit: CoordinatesEdit, now: str) -> 
         raise LookupError(f"sito {edit.site_id}")
     decl.declare_coordinates(conn, edit.key, sito["name"], now)
     # frames a previous answer had settled come back too: that is how one changes one's mind
-    invalidate(conn, frames, "group")
+    invalidate(conn, frames, StageName.GROUP)
     return frames
 
 

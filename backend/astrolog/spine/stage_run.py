@@ -7,7 +7,7 @@ from collections.abc import Callable, Generator, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from typing import Any
 
-from .stages import set_status
+from .stages import StageName, StageStatus, set_status
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ type FrameError = dict[str, int | str]
 
 def frame_safely[T](  # noqa: PLR0913
     conn: sqlite3.Connection,
-    stage: str,
+    stage: StageName,
     frame_id: int,
     work: Callable[[], T],
     counts: dict[str, int],
@@ -28,7 +28,7 @@ def frame_safely[T](  # noqa: PLR0913
     try:
         return work()
     except Exception as err:  # noqa: BLE001 - the fault is the frame's, not the run's
-        set_status(conn, frame_id, stage, "failed", reason="internal_error")
+        set_status(conn, frame_id, stage, StageStatus.FAILED, reason="internal_error")
         log.exception("%s: posa non lavorata", stage, extra={"frame_id": frame_id})
         counts["errors"] += 1
         errors.append({"frame_id": frame_id, "reason": f"{type(err).__name__}: {err}"})
@@ -37,7 +37,7 @@ def frame_safely[T](  # noqa: PLR0913
 
 @contextmanager
 def watched(
-    stage: str, counts: Mapping[str, int], at_end: Callable[[], object], **start: object
+    stage: StageName, counts: Mapping[str, int], at_end: Callable[[], object], **start: object
 ) -> Iterator[dict[str, Any]]:
     """`at_end()` runs whether the run ends, is stopped or breaks. The status written into the
     yielded dict goes into the closing log line."""

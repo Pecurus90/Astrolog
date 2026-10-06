@@ -42,7 +42,7 @@ LEFT JOIN catalog_entries e ON e.slug = t.slug
 LEFT JOIN catalog_names c ON c.slug = t.slug AND c.is_primary = 1"""  # noqa: S608 - constant fragments of the spine
 
 _RIGHE = f"({_OGGETTI} UNION ALL {_MOSAICI}) r"
-_ORE = counts.counts_on("row")
+_ORE = counts.counts_on(counts.Subject.ROW)
 
 # By name is catalog then number, or `M 13` would follow `M 103`; `NOCASE` or `vdB` follows `WR`.
 # The row key always closes, or two consecutive pages could repeat or skip a row.
@@ -58,10 +58,10 @@ ORDINI = {
 
 # An object row's objects are itself, even without frames, or a catalog filter would lose it;
 # panels are looked up only for a mosaic, elsewhere the search would find nothing new.
-_POSE_DELLA_RIGA = f"f.copy_of IS NULL AND {counts.of('row')}"
+_POSE_DELLA_RIGA = f"f.copy_of IS NULL AND {counts.of(counts.Subject.ROW)}"
 _PANNELLI = (
     "r.mosaic_key IS NOT NULL AND o2.id IN (SELECT f.object_id FROM frames f"  # noqa: S608
-    f" WHERE f.copy_of IS NULL AND {counts.of('mosaic')})"
+    f" WHERE f.copy_of IS NULL AND {counts.of(counts.Subject.MOSAIC)})"
 )
 _OGGETTI_DELLA_RIGA = f"(o2.id = r.id OR ({_PANNELLI}))"
 
@@ -74,7 +74,7 @@ _CON_IL_FILTRO = (
 # the chosen catalog's thousands of entries, for every mosaic.
 _DAI_PANNELLI = (
     "r.mosaic_key IS NOT NULL AND EXISTS (SELECT 1 FROM frames f CROSS JOIN objects o2"  # noqa: S608
-    " CROSS JOIN {tabella} WHERE f.copy_of IS NULL AND " + counts.of("mosaic") +
+    " CROSS JOIN {tabella} WHERE f.copy_of IS NULL AND " + counts.of(counts.Subject.MOSAIC) +
     " AND o2.id = f.object_id AND {legame} AND {colonna} = ?)"
 )  # fmt: skip
 _DEL_CATALOGO = (

@@ -28,13 +28,15 @@ from astrolog.spine import (
     declarations,
     group,
     identify_decide,
+    rewrite,
     scan_store,
     signature,
     solve,
+    stages,
     typeless,
     unfiltered,
 )
-from astrolog.spine.scan import COUNTS
+from astrolog.spine.scan_store import COUNTS
 from astrolog.units import SQM_MAX, SQM_MIN
 from astrolog.vocab.filters import BANDS, PASSBANDS
 from astrolog.weather import fetches, forecast, verdict
@@ -45,18 +47,18 @@ from conftest import add_folder
 def test_scan_run_status_and_counts_match_the_store():
     status_literal = models.ScanRunOut.model_fields["status"].annotation
     statuses = {a for arg in get_args(status_literal) for a in (get_args(arg) or (arg,))}
-    assert statuses == {*scan_store.STATUSES, type(None)}  # None = corsa aperta
+    assert statuses == {*scan_store.ScanStatus, type(None)}  # None = corsa aperta
     assert set(COUNTS) <= set(models.ScanRunOut.model_fields)
     # cio' che la scansione lascia fuori: una lista di nomi, e le altre case la seguono
     assert set(scan_store.RECEIPT_LISTS) <= set(models.ScanRunOut.model_fields)
     assert set(scan_store.RECEIPT_LISTS) <= STRUCTURAL_KEYS
     schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
     assert all(f"{name}_json" in schema for name in scan_store.RECEIPT_LISTS)
-    assert set(get_args(models.FileError)) == set(scan_store.FILE_ERRORS)
-    assert set(get_args(models.SkipReason)) == set(scan_store.SKIP_REASONS)
+    assert set(get_args(models.FileError)) == set(scan_store.FileError)
+    assert set(get_args(models.SkipReason)) == set(scan_store.SkipReason)
     reason_literal = models.ScanRunOut.model_fields["reason"].annotation
     reasons = {a for arg in get_args(reason_literal) for a in (get_args(arg) or (arg,))}
-    assert reasons == {r for r in scan_store.REASONS if r is not None} | {type(None)}
+    assert reasons == {*scan_store.ScanReason, type(None)}
 
 
 def test_worker_states_match_the_constants():
@@ -83,6 +85,21 @@ def test_finish_run_refuses_an_outcome_outside_the_vocabulary(conn):
             conn, run_id, "ok", None, counts, {"skipped_by_reason": tipo}, [], "now"
         )
     scan_store.finish_run(conn, run_id, "aborted", "root_unreachable", counts, {}, [], "now")
+
+
+def test_the_stage_words_and_the_rewrite_marks_are_the_ones_the_schema_allows():
+    """Stadi, stati e marchi hanno una casa sola in Python e il `CHECK` dello schema li ripete:
+    una parola nuova da una parte sola la rifiuterebbe il database, a corsa avviata."""
+    schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+
+    def check(riga):
+        return set(re.findall(r"'([a-z_]+)'", next(r for r in schema.splitlines() if riga in r)))
+
+    assert check("stage      TEXT NOT NULL CHECK") == set(stages.STAGES)
+    assert set(stages.StageName) - set(stages.STAGES) == {stages.StageName.SCAN}
+    assert check("status     TEXT NOT NULL CHECK (status IN ('pending'") == set(stages.StageStatus)
+    assert check("rewrite_mark   TEXT CHECK") == set(rewrite.RewriteMark)
+    assert set(rewrite.MARK_WEIGHT) == {None, *rewrite.RewriteMark}
 
 
 def test_the_answers_about_a_camera_are_the_words_the_spine_reads():

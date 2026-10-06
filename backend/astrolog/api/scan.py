@@ -3,7 +3,7 @@ and the worker releases it at the end of the RUN, however it goes."""
 
 import json
 import sqlite3
-from collections.abc import Container, Iterable
+from collections.abc import Container, Iterable, Sequence
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -110,7 +110,7 @@ def _one_folder_stages(state: State, folder_id: int, run_id: int) -> list[Stage]
 
 def _stages_with_cleanup(
     state: State,
-    steps: list[tuple[str, Factory]],
+    steps: Sequence[tuple[str, Factory]],
     locked: Iterable[int],
     started: Iterable[ScanStarted],
     begun: Container[int],

@@ -21,8 +21,8 @@ JOIN = f"JOIN positions p ON p.id = ({_FIRST_POSITION}) JOIN folders d ON d.id =
 
 # `folder_key` in SQL, for comparing inside a query; the two must say the same thing.
 _ROOT_KEY = r"rtrim(replace(d.root_path, '\', '/'), '/')"
-_DENTRO = f"trim({_SUB}, '/')"
-KEY = f"{_ROOT_KEY} || CASE WHEN {_DENTRO} = '' THEN '' ELSE '/' || {_DENTRO} END"
+_INSIDE = f"trim({_SUB}, '/')"
+KEY = f"{_ROOT_KEY} || CASE WHEN {_INSIDE} = '' THEN '' ELSE '/' || {_INSIDE} END"
 # For a query that already has `frames f`.
 KEY_OF_FRAME = (
     f"SELECT {KEY} FROM positions p"  # noqa: S608 - constants
@@ -47,14 +47,14 @@ def folder_key(root_path: str, sub: str = "") -> str:
     """Also what is shown. Always forward slashes: Windows accepts them, and the system separator
     would make two machines disagree."""
     root = root_path.replace("\\", "/").rstrip("/")
-    dentro = sub.strip("/")
-    return f"{root}/{dentro}" if dentro else root
+    inside = sub.strip("/")
+    return f"{root}/{inside}" if inside else root
 
 
 def key_of_path(root_path: str, rel_path: str) -> str:
     """Without the DB, for the scan that decides before writing the frame."""
-    dritto = rel_path.replace("\\", "/")
-    return folder_key(root_path, dritto.rsplit("/", 1)[0] if "/" in dritto else "")
+    forward = rel_path.replace("\\", "/")
+    return folder_key(root_path, forward.rsplit("/", 1)[0] if "/" in forward else "")
 
 
 def frames_in(conn: sqlite3.Connection, row: Row) -> list[sqlite3.Row]:
@@ -65,7 +65,7 @@ def frames_in(conn: sqlite3.Connection, row: Row) -> list[sqlite3.Row]:
 
 
 def group_of(groups: dict[str, dict[str, Any]], row: Row, **fields: Any) -> dict[str, Any]:
-    """Created with `fields` the first time; root and subfolder stay in the group."""
+    """Created with `fields` the first time."""
     key = folder_key(row["root"], row["sub"])
     return groups.setdefault(key, {"key": key, "root": row["root"], "sub": row["sub"], **fields})
 

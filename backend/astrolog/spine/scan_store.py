@@ -4,7 +4,9 @@
 import json
 import sqlite3
 from collections.abc import Collection, Iterable, Mapping, Sequence
-from typing import Any
+from dataclasses import dataclass
+from enum import StrEnum
+from typing import Any, NamedTuple
 
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
@@ -97,14 +99,38 @@ def run_outcomes(conn: sqlite3.Connection, run_ids: Iterable[int]) -> list[sqlit
     ]
 
 
-STATUSES = ("ok", "stopped", "aborted", "error")
-REASONS = (None, "root_unreachable", "stop_requested", "internal_error", "database_error")
-# Why a file did not enter: the system will not open it, it is not a FITS, its name cannot be
-# written, or an unexpected fault (the trace is in the log).
-FILE_ERRORS = ("file_unreadable", "header_unreadable", "name_not_utf8", "internal_error")
-SKIP_REASONS = ("calibration", "stack", "still_writing")
+class ScanStatus(StrEnum):
+    OK = "ok"
+    STOPPED = "stopped"
+    ABORTED = "aborted"
+    ERROR = "error"
 
 
+class ScanReason(StrEnum):
+    ROOT_UNREACHABLE = "root_unreachable"
+    STOP_REQUESTED = "stop_requested"
+    INTERNAL_ERROR = "internal_error"
+    DATABASE_ERROR = "database_error"
+
+
+class FileError(StrEnum):
+    """Why a file did not enter: the system will not open it, it is not a FITS, its name cannot be
+    written, or an unexpected fault (the trace is in the log)."""
+
+    FILE_UNREADABLE = "file_unreadable"
+    HEADER_UNREADABLE = "header_unreadable"
+    NAME_NOT_UTF8 = "name_not_utf8"
+    INTERNAL_ERROR = "internal_error"
+
+
+class SkipReason(StrEnum):
+    CALIBRATION = "calibration"
+    STACK = "stack"
+    STILL_WRITING = "still_writing"
+
+
+# The run's counts, each a column of `scan_runs` with the same name.
+COUNTS = ("found", "new", "unchanged", "duplicates", "missing", "skipped", "errors", "online_only")
 # What the scan leaves out, each carried whole in a `<name>_json` column of `scan_runs`. Unread
 # files are not here: they can be thousands, and are read in pages (`errors_detail_json`).
 RECEIPT_LISTS = ("unreadable_dirs", "hidden_dirs", "linked_dirs", "skipped_by_reason")
@@ -113,8 +139,8 @@ RECEIPT_LISTS = ("unreadable_dirs", "hidden_dirs", "linked_dirs", "skipped_by_re
 def finish_run(  # noqa: PLR0913
     conn: sqlite3.Connection,
     run_id: int,
-    status: str,
-    reason: str | None,
+    status: ScanStatus,
+    reason: ScanReason | None,
     counts: Mapping[str, int],
     left_out: Mapping[str, Sequence[Any]],
     errors: Sequence[Mapping[str, str]],
@@ -122,32 +148,24 @@ def finish_run(  # noqa: PLR0913
 ) -> None:
     """Status, reason and file reasons are closed codes: a sentence or a class name here is a
     programming error."""
-    if status not in STATUSES or reason not in REASONS:
+    if status not in ScanStatus or (reason is not None and reason not in ScanReason):
         raise ValueError(f"esito fuori dal vocabolario: {status}/{reason}")
-    codes = {e["reason"] for e in errors} - set(FILE_ERRORS)
-    codes |= {e["reason"] for e in left_out.get("skipped_by_reason", ())} - set(SKIP_REASONS)
+    codes = {e["reason"] for e in errors} - set(FileError)
+    codes |= {e["reason"] for e in left_out.get("skipped_by_reason", ())} - set(SkipReason)
     if codes:
         raise ValueError(f"motivi fuori dal vocabolario: {sorted(codes)}")
-    columns = ", ".join(f"{name}_json = ?" for name in RECEIPT_LISTS)
+    tallies = "".join(f" {name} = ?," for name in COUNTS)
+    lists = ", ".join(f"{name}_json = ?" for name in RECEIPT_LISTS)
     with transaction(conn):
-        # S608: columns from a constant of ours.
+        # S608: columns from constants of ours.
         conn.execute(
             "UPDATE scan_runs SET ended_at = ?, status = ?, reason = ?,"  # noqa: S608
-            " found = ?, new = ?, unchanged = ?, duplicates = ?, missing = ?, skipped = ?,"
-            " errors = ?, online_only = ?,"
-            f" errors_detail_json = ?, {columns} WHERE id = ?",
+            f"{tallies} errors_detail_json = ?, {lists} WHERE id = ?",
             (
                 now,
                 status,
                 reason,
-                counts["found"],
-                counts["new"],
-                counts["unchanged"],
-                counts["duplicates"],
-                counts["missing"],
-                counts["skipped"],
-                counts["errors"],
-                counts["online_only"],
+                *(counts[name] for name in COUNTS),
                 _as_json(errors),
                 *(_as_json(left_out.get(name)) for name in RECEIPT_LISTS),
                 run_id,
@@ -197,20 +215,25 @@ def frame_id_by_hash(conn: sqlite3.Connection, frame_hash: str) -> int | None:
     return row["id"] if row else None
 
 
-# (night, zone, instant) of a frame, as `local_night`, `local_tz`, `night_instant`.
-LocalNight = tuple[str | None, str | None, str]
+class LocalNight(NamedTuple):
+    """In the order of the columns `local_night`, `local_tz`, `night_instant`."""
+
+    night: str | None
+    zone: str | None
+    instant: str
 
 
-def insert_frame(  # noqa: PLR0913
-    conn: sqlite3.Connection,
-    fields: Mapping[str, Any],
-    frame_hash: str,
-    header_json: str,
-    now: str,
-    night: LocalNight,
-) -> int:
+@dataclass(frozen=True, slots=True)
+class NewFrame:
+    fields: Mapping[str, Any]
+    frame_hash: str
+    header_json: str
+    night: LocalNight
+
+
+def insert_frame(conn: sqlite3.Connection, frame: NewFrame, now: str) -> int:
     """Inside a transaction opened by the caller."""
-    values = [fields.get(_FIELD_OF.get(c, c)) for c in FRAME_COLUMNS]
+    values = [frame.fields.get(_FIELD_OF.get(c, c)) for c in FRAME_COLUMNS]
     cols = ", ".join(f'"{c}"' for c in FRAME_COLUMNS)
     marks = ", ".join("?" for _ in FRAME_COLUMNS)  # segnaposto-ok: the columns, not the rows
     # S608: fixed columns.
@@ -218,7 +241,8 @@ def insert_frame(  # noqa: PLR0913
         "INSERT INTO frames(frame_hash, header_json, created_at,"  # noqa: S608
         f" local_night, local_tz, night_instant, {cols}) VALUES(?, ?, ?, ?, ?, ?, {marks})"
     )
-    frame_id = inserted_id(conn.execute(sql, [frame_hash, header_json, now, *night, *values]))
+    row = [frame.frame_hash, frame.header_json, now, *frame.night, *values]
+    frame_id = inserted_id(conn.execute(sql, row))
     mark_pending(conn, frame_id, now)
     return frame_id
 

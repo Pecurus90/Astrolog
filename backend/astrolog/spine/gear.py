@@ -18,7 +18,7 @@ from .declarations import (
     instrument_key,
     rename,
 )
-from .stages import invalidate
+from .stages import StageName, invalidate
 
 # Closed like the preference keys: a field that is not here does not get in.
 INSTRUMENT_FIELDS = (
@@ -51,6 +51,17 @@ def instrument_id(conn: sqlite3.Connection, kind: str, name: str) -> int | None:
         "SELECT id FROM instruments WHERE kind = ? AND name = ?", (kind, name)
     ).fetchone()
     return None if row is None else row["id"]
+
+
+def instrument_ids(conn: sqlite3.Connection, names: Mapping[str, str]) -> dict[str, int]:
+    """`instrument_id` of one name per kind, in one query; a kind with no piece is left out."""
+    if not names:
+        return {}
+    pairs = ", ".join("(?, ?)" for _ in names)  # segnaposto-ok: one pair per kind, not per frame
+    # S608: only placeholders
+    sql = f"SELECT kind, id FROM instruments WHERE (kind, name) IN (VALUES {pairs})"  # noqa: S608
+    args = [v for pair in names.items() for v in pair]
+    return {r["kind"]: r["id"] for r in conn.execute(sql, args)}
 
 
 def declare_instrument(
@@ -180,7 +191,7 @@ def declare_filter(  # noqa: PLR0913
         # brand, model or a note do not change what a frame means: nothing is redone
         return []
     frames = [r[0] for r in conn.execute("SELECT id FROM frames WHERE filter_id = ?", (filter_id,))]
-    invalidate(conn, frames, "normalize", now=now)
+    invalidate(conn, frames, StageName.NORMALIZE, now=now)
     return frames
 
 
@@ -224,7 +235,7 @@ def merge_instrument(
     frames = set(_detach_rigs(conn, rigs)) | _detach_from_frames(conn, from_id)
     conn.execute("DELETE FROM instruments WHERE id = ?", (from_id,))
     corredi.restore_declared(conn, now)
-    invalidate(conn, frames, "normalize", now=now)
+    invalidate(conn, frames, StageName.NORMALIZE, now=now)
     return sorted(frames)
 
 
@@ -281,7 +292,7 @@ def merge_filter(
     frames = [r[0] for r in conn.execute("SELECT id FROM frames WHERE filter_id = ?", (from_id,))]
     conn.execute("UPDATE frames SET filter_id = NULL WHERE filter_id = ?", (from_id,))
     conn.execute("DELETE FROM filters WHERE id = ?", (from_id,))
-    invalidate(conn, frames, "normalize", now=now)
+    invalidate(conn, frames, StageName.NORMALIZE, now=now)
     return frames
 
 
