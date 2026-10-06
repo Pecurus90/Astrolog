@@ -39,7 +39,7 @@ def _mosaici(conn, quanti):
     for m in range(quanti):
         chiave = f"{quanti}-{m}"
         decl.write_declaration(
-            conn, decl.MOSAIC, chiave, decl.MOSAIC_FIELD, f"catalog:{slug[2 * m]}"
+            conn, decl.EntityType.MOSAIC, chiave, decl.MOSAIC_FIELD, f"catalog:{slug[2 * m]}"
         )
         mosaico_id = conn.execute(
             "INSERT INTO mosaics(key, ra_deg, dec_deg, proposed) VALUES(?, 10, 20, '')", (chiave,)

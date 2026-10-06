@@ -41,7 +41,7 @@ def lookalikes(conn: sqlite3.Connection) -> list[LookalikeOut]:
         name = _bare_name(p["name"])
         if name and p["pixel_size_um"] is not None:
             # a missing colour counts as mono: a mono read from the files never carries it
-            same = (name, p["pixel_size_um"], p["camera_type"] or decl.CAMERA_MONO)
+            same = (name, p["pixel_size_um"], p["camera_type"] or decl.CameraType.MONO)
             by_key.setdefault(same, []).append(p)
     # frames are counted only for groups with a pair still to ask: one camera alone, or a group
     # where every pair already had a no, is not a question whichever is the most used
@@ -85,7 +85,7 @@ def answer_all(conn: sqlite3.Connection, edits: Iterable[LookalikeEdit], now: st
             continue
         decl.write_declaration(
             conn,
-            "instrument",
+            decl.EntityType.INSTRUMENT,
             decl.instrument_key("camera", coppia.name),
             decl.not_same_as(coppia.into_name),
             coppia.into_name,

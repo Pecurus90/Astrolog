@@ -1,5 +1,5 @@
 """A camera's pixel derived from the SKY, when the files do not say it: written by whoever changes
-what it depends on, read by the page. The files' or the user's value always wins on the page."""
+what it depends on, read by the page."""
 
 import sqlite3
 
@@ -22,11 +22,10 @@ def write(conn: sqlite3.Connection) -> None:
     measurement noise."""
     pixels: dict[int, list[float | None]] = {}
     for r in conn.execute(_SKY_VOTES):
-        uno = pixel_um_from_scale(r["scale_arcsec_px"], r["focal_mm"], r["binning"])
-        pixels.setdefault(r["camera_id"], []).append(uno)
-    for camera_id, valori in pixels.items():
-        mezzo = median(valori)
-        pixel = hundredths(mezzo)
+        one_pixel = pixel_um_from_scale(r["scale_arcsec_px"], r["focal_mm"], r["binning"])
+        pixels.setdefault(r["camera_id"], []).append(one_pixel)
+    for camera_id, values in pixels.items():
+        pixel = hundredths(median(values))
         conn.execute(
             "UPDATE instruments SET pixel_from_sky_um = ?"
             " WHERE id = ? AND pixel_from_sky_um IS NOT ?",

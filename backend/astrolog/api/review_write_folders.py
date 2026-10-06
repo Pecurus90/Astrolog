@@ -7,7 +7,7 @@ from dataclasses import replace
 from typing import Any
 
 from ..spine import declarations as decl
-from ..spine import gear, signature, typeless, typeless_answer, unfiltered, unnamed
+from ..spine import signature, typeless, typeless_answer, unfiltered, unnamed
 from ..spine import signature_page as cards
 from .models_review import FilterCandidate, RigChoice
 from .models_review_apply import GearEdit, ObjectEdit, TypelessFolderEdit
@@ -46,10 +46,10 @@ def answer_gear(
             or data.camera
             or riga["settled_camera"]
         )
-        rimesse = _sensor(conn, camera, edit.filter == unfiltered.COLOR, now)
-        if edit.filter != unfiltered.COLOR:
+        rimesse = _sensor(conn, camera, edit.filter == decl.CameraType.COLOR, now)
+        if edit.filter != decl.CameraType.COLOR:
             nome = filtri[edit.filter_id].name if edit.filter_id is not None else None
-            data = replace(data, filter=edit.filter, filter_name=nome)
+            data = replace(data, filter=signature.FilterAnswer(edit.filter), filter_name=nome)
     signature.declare(conn, edit.key, data, now)
     return rimesse + signature.requeue(conn, edit.key)
 
@@ -74,7 +74,7 @@ def _sensor(conn: sqlite3.Connection, camera: str | None, colour: bool, now: str
             raise NotAskedError("color")  # no camera to write it on: answer the camera first
         return []
     unfiltered.declare_sensor(conn, camera, colour, now)
-    camera_id = gear.instrument_id(conn, "camera", camera)
+    camera_id = decl.instrument_id(conn, "camera", camera)
     return [] if camera_id is None else unfiltered.requeue(conn, camera_id)
 
 

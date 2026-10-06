@@ -127,8 +127,8 @@ def _rifiuto(err: Exception) -> HTTPException | None:
 def _answer_mosaic(conn: sqlite3.Connection, edit: MosaicEdit, now: str) -> None:
     """No frame is requeued: the answer itself writes the mosaic on the frames. A name the catalog
     knows as a designation goes to its entry: whoever writes `IC 405` means IC 405."""
-    value = decl.MOSAIC_NO
-    if edit.answer == decl.MOSAIC_YES:
+    value = decl.MosaicAnswer.NO
+    if edit.answer == decl.MosaicAnswer.YES:
         slug, name = risposta.resolved(conn, None, (edit.name or "").strip())
         value = risposta.target_value(slug, name)
     mosaic.write_answer(conn, edit.key, value, now)

@@ -8,6 +8,7 @@ prove in `test_api_gear.py`.
 
 import re
 import sqlite3
+from dataclasses import replace
 
 import pytest
 
@@ -113,8 +114,8 @@ def test_the_rewrite_is_all_or_nothing(client, monkeypatch):
     with db(client) as conn:
         prima = conn.execute("SELECT COUNT(*) FROM gear_usage").fetchone()[0]
         assert prima > 0
-        storta = [{**r, "subject": "x"} for r in gear_usage._filtri(conn)][:1]
-        monkeypatch.setattr(gear_usage, "_filtri", lambda conn: storta)
+        storta = [replace(r, subject="x") for r in gear_usage._filters(conn)][:1]
+        monkeypatch.setattr(gear_usage, "_filters", lambda conn: storta)
         with pytest.raises(sqlite3.IntegrityError):
             gear_usage.write(conn)
         assert conn.execute("SELECT COUNT(*) FROM gear_usage").fetchone()[0] == prima
@@ -249,7 +250,7 @@ def test_calibration_answered_takes_its_night_object_and_sky_off_the_gear(conn):
 
 @pytest.mark.parametrize(
     ("query", "indice"),
-    [(gear_usage._CORREDI, "frames_rig"), (gear_usage._FILTRI, "frames_filter")],
+    [(gear_usage._RIGS, "frames_rig"), (gear_usage._FILTERS, "frames_filter")],
     ids=["corredi", "filtri"],
 )
 def test_gear_usage_counts_rigs_and_filters_from_the_index_alone(conn, query, indice):

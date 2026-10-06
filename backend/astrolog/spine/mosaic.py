@@ -143,8 +143,8 @@ def _sweep(conn: sqlite3.Connection) -> None:
 
 
 def write_answer(conn: sqlite3.Connection, key: str, value: str, now: str | None = None) -> None:
-    """`decl.MOSAIC_NO` or the target. A mosaic that is gone or down to one panel is a stale page,
-    and raises: an answer to nothing would sit there unseen."""
+    """`decl.MosaicAnswer.NO` or the target. A mosaic that is gone or down to one panel is a stale
+    page, and raises: an answer to nothing would sit there unseen."""
     row = conn.execute(
         f"SELECT m.id FROM mosaics m JOIN ({proposte.LIVE}) r ON r.mosaic_id = m.id"  # noqa: S608
         " WHERE m.key = ?",
@@ -152,12 +152,12 @@ def write_answer(conn: sqlite3.Connection, key: str, value: str, now: str | None
     ).fetchone()
     if row is None:
         raise LookupError(f"mosaico {key}")
-    decl.write_declaration(conn, decl.MOSAIC, key, decl.MOSAIC_FIELD, value, now)
+    decl.write_declaration(conn, decl.EntityType.MOSAIC, key, decl.MOSAIC_FIELD, value, now)
     _write_key(conn, row["id"])
 
 
 def answer_of(conn: sqlite3.Connection, key: str) -> str | None:
-    return decl.declared(conn, decl.MOSAIC, key, decl.MOSAIC_FIELD)
+    return decl.declared(conn, decl.EntityType.MOSAIC, key, decl.MOSAIC_FIELD)
 
 
 def _band(
@@ -250,7 +250,7 @@ def _write_key(conn: sqlite3.Connection, mosaic_id: int) -> None:
     """Only a yes writes the key, and not on panels that do not count: those frames keep their
     object."""
     (key,) = conn.execute("SELECT key FROM mosaics WHERE id = ?", (mosaic_id,)).fetchone()
-    confirmed = key if risposta.mosaic_word(answer_of(conn, key)) == decl.MOSAIC_YES else None
+    confirmed = key if risposta.mosaic_word(answer_of(conn, key)) == decl.MosaicAnswer.YES else None
     conn.execute(
         "UPDATE frames SET mosaic_key = CASE WHEN p.counts_in_mosaic = 1 THEN ? END"
         " FROM panels p WHERE frames.panel_id = p.id AND p.mosaic_id = ?",

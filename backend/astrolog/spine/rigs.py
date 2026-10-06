@@ -3,16 +3,32 @@ can delete the row, so name and mount live among the declarations, on a key that
 
 import json
 import sqlite3
+from enum import StrEnum
 
 from ..clock import now_iso
 from ..db.inserted import inserted_id
 from ..units import same_focal
 from . import gear_usage, signature
-from .declarations import forget, rig_key, rig_key_parts, values_of, write_declaration
+from .declarations import (
+    EntityType,
+    forget,
+    instrument_id,
+    rig_key,
+    rig_key_parts,
+    values_of,
+    write_declaration,
+)
+from .gear_usage import UsageSubject
 from .stages import StageName, invalidate
 
-MOUNT = "mount"
-DECLARED = "declared"
+
+class RigField(StrEnum):
+    """The fields of a rig's declarations."""
+
+    NAME = "name"
+    # the kind as field: the value is the mount's name
+    MOUNT = "mount"
+    DECLARED = "declared"
 
 
 class NotAMountError(ValueError):
@@ -24,7 +40,7 @@ class WrongKindError(ValueError):
 
 
 class RigExistsError(ValueError):
-    """You already have that rig: same optics, same camera, focal within 5 %."""
+    """You already have that rig: same optics, same camera, focal within `units.FOCAL_TOLERANCE`."""
 
 
 def rig_for(  # noqa: PLR0913
@@ -38,9 +54,9 @@ def rig_for(  # noqa: PLR0913
 ) -> tuple[int, bool]:
     """(id, created?). `rigs.focal_mm` is fixed at creation: nearby focals join without moving it,
     which would rewrite a value the user has already seen."""
-    trovato = find_rig(conn, optics_id, camera_id, focal_mm)
-    if trovato is not None:
-        return trovato, False
+    found = find_rig(conn, optics_id, camera_id, focal_mm)
+    if found is not None:
+        return found, False
     rig_id = inserted_id(
         conn.execute(
             "INSERT INTO rigs(optics_id, camera_id, focal_mm, detected, created_at)"
@@ -54,7 +70,7 @@ def rig_for(  # noqa: PLR0913
 def find_rig(
     conn: sqlite3.Connection, optics_id: int | None, camera_id: int | None, focal_mm: float | None
 ) -> int | None:
-    """The unique index is on exact equality: the +-5 % focal grouping lives here, in Python."""
+    """The unique index is on exact equality: the focal grouping (`units.same_focal`) lives here."""
     for row in conn.execute(
         "SELECT id, focal_mm FROM rigs WHERE optics_id IS ? AND camera_id IS ?",
         (optics_id, camera_id),
@@ -65,7 +81,7 @@ def find_rig(
 
 
 # What a rig carries to its frames' new key.
-CARRIED_FIELDS = ("name", MOUNT)
+CARRIED_FIELDS = (RigField.NAME, RigField.MOUNT)
 
 
 def optics_less_key(
@@ -73,27 +89,27 @@ def optics_less_key(
 ) -> str | None:
     """The key the user named or mounted the optics-less rig on, focal by the rigs' rule: the rig
     may be gone, its declarations are not."""
-    chiavi = conn.execute(
+    keys = conn.execute(
         "SELECT DISTINCT entity_key FROM declarations WHERE entity_type = 'rig'"
         " AND field IN (SELECT value FROM json_each(?)) ORDER BY entity_key",
         (json.dumps(CARRIED_FIELDS),),
     )
-    for (chiave,) in chiavi:
-        parti = rig_key_parts(chiave)
-        if parti and parti[0] is None and parti[1] == camera and same_focal(parti[2], focal_mm):
-            return chiave
+    for (key,) in keys:
+        parts = rig_key_parts(key)
+        if parts and parts[0] is None and parts[1] == camera and same_focal(parts[2], focal_mm):
+            return key
     return None
 
 
 def carry_declarations(conn: sqlite3.Connection, old_key: str, rig_id: int, now: str) -> None:
     """Copied, not moved: on a change of mind the new rig finds them there."""
-    for campo in CARRIED_FIELDS:
+    for field in CARRIED_FIELDS:
         conn.execute(
             "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"
             " SELECT entity_type, ?, field, value, ? FROM declarations"
             " WHERE entity_type = 'rig' AND entity_key = ? AND field = ?"
             " ON CONFLICT(entity_type, entity_key, field) DO NOTHING",
-            (decl_key(_rig(conn, rig_id)), now, old_key, campo),
+            (decl_key(_rig(conn, rig_id)), now, old_key, field),
         )
 
 
@@ -115,45 +131,38 @@ def create_declared(
 ) -> int:
     """Also written among the declarations: merging its optics or camera deletes the rigs, and
     `normalize` remakes them only from frames."""
-    nomi: dict[str, str] = {}
+    names: dict[str, str] = {}
     for kind, piece_id in (("optics", optics_id), ("camera", camera_id)):
         row = conn.execute(
             "SELECT name FROM instruments WHERE id = ? AND kind = ?", (piece_id, kind)
         ).fetchone()
         if row is None:
             raise WrongKindError(f"{piece_id} non e' un pezzo di genere {kind}")
-        nomi[kind] = row["name"]
+        names[kind] = row["name"]
     if find_rig(conn, optics_id, camera_id, focal_mm) is not None:
-        raise RigExistsError(f"{nomi['optics']} + {nomi['camera']} a {focal_mm} mm")
+        raise RigExistsError(f"{names['optics']} + {names['camera']} a {focal_mm} mm")
     rig_id, _ = rig_for(conn, optics_id, camera_id, focal_mm, now or now_iso(), detected=False)
-    write_declaration(
-        conn, "rig", rig_key(nomi["optics"], nomi["camera"], focal_mm), DECLARED, 1, now
-    )
+    key = rig_key(names["optics"], names["camera"], focal_mm)
+    write_declaration(conn, EntityType.RIG, key, RigField.DECLARED, 1, now)
     return rig_id
-
-
-def _pezzo_id(conn: sqlite3.Connection, kind: str, name: str | None) -> int | None:
-    row = conn.execute(
-        "SELECT id FROM instruments WHERE kind = ? AND name = ?", (kind, name)
-    ).fetchone()
-    return None if row is None else row["id"]
 
 
 def restore_declared(conn: sqlite3.Connection, now: str | None = None) -> None:
     """Remakes your rigs a merge deleted: the key already followed the kept piece
     (`follow_rename`), here the row and its usage row come back."""
-    for chiave, _ in values_of(conn, "rig", DECLARED):
-        parti = rig_key_parts(chiave)
-        if parti is None:
+    for key, _ in values_of(conn, EntityType.RIG, RigField.DECLARED):
+        parts = rig_key_parts(key)
+        if parts is None:
             continue  # a name with the bar inside: as in `follow_rename`, left alone
-        ottica, camera, focale = parti
-        optics_id, camera_id = _pezzo_id(conn, "optics", ottica), _pezzo_id(conn, "camera", camera)
+        optics, camera, focal = parts
+        optics_id = instrument_id(conn, "optics", optics)
+        camera_id = instrument_id(conn, "camera", camera)
         if optics_id is None or camera_id is None:
             continue
-        if find_rig(conn, optics_id, camera_id, focale) is None:
-            quando = now or now_iso()
-            rifatto, _ = rig_for(conn, optics_id, camera_id, focale, quando, detected=False)
-            gear_usage.add_new(conn, "rig", rifatto)
+        if find_rig(conn, optics_id, camera_id, focal) is None:
+            when = now or now_iso()
+            rebuilt, _ = rig_for(conn, optics_id, camera_id, focal, when, detected=False)
+            gear_usage.add_new(conn, UsageSubject.RIG, rebuilt)
 
 
 RIG_ROWS = """
@@ -173,8 +182,12 @@ def decl_key(row: sqlite3.Row) -> str:
     return rig_key(row["optics"], row["camera"], row["focal_mm"])
 
 
+def _rig_or_none(conn: sqlite3.Connection, rig_id: int) -> sqlite3.Row | None:
+    return conn.execute(RIG_ROWS + " WHERE g.id = ?", (rig_id,)).fetchone()
+
+
 def _rig(conn: sqlite3.Connection, rig_id: int) -> sqlite3.Row:
-    row = conn.execute(RIG_ROWS + " WHERE g.id = ?", (rig_id,)).fetchone()
+    row = _rig_or_none(conn, rig_id)
     if row is None:
         raise LookupError(f"corredo {rig_id}")
     return row
@@ -185,26 +198,26 @@ def declare_mount(
 ) -> list[int]:
     """`None` drops the user's word and goes back to the files'. Returns the frames requeued to
     `normalize`, which writes the mount on each: none if nothing changed."""
-    chiave = decl_key(_rig(conn, rig_id))
+    key = decl_key(_rig(conn, rig_id))
     if mount_id is None:
-        tolta = forget(conn, "rig", chiave, MOUNT)
-        if not tolta:
+        dropped = forget(conn, EntityType.RIG, key, RigField.MOUNT)
+        if not dropped:
             return []
     else:
-        nome = conn.execute(
-            "SELECT name FROM instruments WHERE id = ? AND kind = ?", (mount_id, MOUNT)
+        mount_row = conn.execute(
+            "SELECT name FROM instruments WHERE id = ? AND kind = ?", (mount_id, RigField.MOUNT)
         ).fetchone()
-        if nome is None:
+        if mount_row is None:
             raise NotAMountError(f"{mount_id} non e' una montatura")
         if declared_mount(conn, rig_id) == mount_id:
             return []
-        write_declaration(conn, "rig", chiave, MOUNT, nome["name"], now)
-    pose = [r[0] for r in conn.execute("SELECT id FROM frames WHERE rig_id = ?", (rig_id,))]
-    invalidate(conn, pose, StageName.NORMALIZE, now=now)
-    return pose
+        write_declaration(conn, EntityType.RIG, key, RigField.MOUNT, mount_row["name"], now)
+    frames = [r[0] for r in conn.execute("SELECT id FROM frames WHERE rig_id = ?", (rig_id,))]
+    invalidate(conn, frames, StageName.NORMALIZE, now=now)
+    return frames
 
 
-_MONTATURE = """
+_MOUNTS = """
 SELECT d.entity_key, i.id FROM declarations d
 JOIN instruments i ON i.kind = 'mount' AND i.name = d.value
 WHERE d.entity_type = 'rig' AND d.field = 'mount'
@@ -212,20 +225,20 @@ WHERE d.entity_type = 'rig' AND d.field = 'mount'
 
 
 def rig_mounts(conn: sqlite3.Connection) -> dict[str, int]:
-    return {r["entity_key"]: r["id"] for r in conn.execute(_MONTATURE)}
+    return {r["entity_key"]: r["id"] for r in conn.execute(_MOUNTS)}
 
 
 def declared_mount(conn: sqlite3.Connection, rig_id: int) -> int | None:
     """`normalize` asks it for every frame: a lookup by key, not all the declarations."""
-    row = conn.execute(RIG_ROWS + " WHERE g.id = ?", (rig_id,)).fetchone()
+    row = _rig_or_none(conn, rig_id)
     if row is None:
         return None
-    trovata = conn.execute(_MONTATURE + " AND d.entity_key = ?", (decl_key(row),)).fetchone()
-    return None if trovata is None else trovata["id"]
+    found_mount = conn.execute(_MOUNTS + " AND d.entity_key = ?", (decl_key(row),)).fetchone()
+    return None if found_mount is None else found_mount["id"]
 
 
 def rig_names(conn: sqlite3.Connection) -> dict[str, str]:
-    return dict(values_of(conn, "rig", "name"))
+    return dict(values_of(conn, EntityType.RIG, RigField.NAME))
 
 
 def declare_rig(conn: sqlite3.Connection, rig_id: int, name: str, now: str | None = None) -> bool:
@@ -234,7 +247,7 @@ def declare_rig(conn: sqlite3.Connection, rig_id: int, name: str, now: str | Non
     row = _rig(conn, rig_id)
     if not name:
         return False
-    write_declaration(conn, "rig", decl_key(row), "name", name, now)
+    write_declaration(conn, EntityType.RIG, decl_key(row), RigField.NAME, name, now)
     return True
 
 
@@ -244,7 +257,7 @@ KEY_KINDS = ("optics", "camera")
 
 
 # The pieces a rig declaration carries in its value, with the kind as field: the mount you give it.
-VALUE_KINDS = (MOUNT,)
+VALUE_KINDS = (RigField.MOUNT,)
 
 
 def follow_piece(
@@ -269,17 +282,17 @@ def follow_rename(
     """The key carries the piece's name: without following it the rig's name would be orphaned and
     the rebuilt rig would come back nameless."""
     for r in conn.execute(
-        "SELECT entity_type, entity_key, field, value FROM declarations WHERE entity_type = 'rig'"
+        "SELECT entity_key, field, value FROM declarations WHERE entity_type = 'rig'"
     ).fetchall():
-        parti = rig_key_parts(r["entity_key"])
-        if parti is None or old_name not in parti[:2]:
+        parts = rig_key_parts(r["entity_key"])
+        if parts is None or old_name not in parts[:2]:
             continue
-        ottica, camera = (new_name if p == old_name else p for p in parti[:2])
-        nuova = rig_key(ottica, camera, parti[2])
-        forget(conn, r["entity_type"], r["entity_key"], r["field"])
+        optics, camera = (new_name if p == old_name else p for p in parts[:2])
+        new_key = rig_key(optics, camera, parts[2])
+        forget(conn, EntityType.RIG, r["entity_key"], r["field"])
         conn.execute(
             "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"
             " VALUES(?, ?, ?, ?, ?) ON CONFLICT(entity_type, entity_key, field)"
             " DO NOTHING",  # if the target rig already has an answer, its own wins
-            (r["entity_type"], nuova, r["field"], r["value"], now or now_iso()),
+            (EntityType.RIG, new_key, r["field"], r["value"], now or now_iso()),
         )

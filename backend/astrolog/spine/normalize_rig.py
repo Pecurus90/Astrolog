@@ -3,11 +3,11 @@
 import sqlite3
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
 
 from ..units import known_focal, same_focal
 from ..vocab.software import telescope_is_mount
-from . import counts, declarations, gear, gear_create, rigs
+from . import counts, declarations, gear_create, rigs
+from .night_rig import NightRig
 from .signature import Answer
 
 
@@ -18,7 +18,7 @@ class Given:
 
     camera: str | None
     answer: Answer | None
-    night: Mapping[str, Any] | None
+    night: NightRig | None
 
 
 @dataclass(frozen=True)
@@ -36,7 +36,7 @@ def instrument_named(
     """Created if missing: a name the user wrote gives birth to a piece just as a header does."""
     if not name:
         return None
-    instrument_id = gear.instrument_id(conn, kind, name)
+    instrument_id = declarations.instrument_id(conn, kind, name)
     return instrument_id if instrument_id is not None else _created(conn, kind, name, counts, now)
 
 
@@ -63,7 +63,7 @@ def instruments_on_frame(
     wheel would otherwise give birth to a second rig. Names and pieces read once for all kinds."""
     raws = {kind: frame[f"{kind}_raw"] for kind in counts.ON_THE_FRAME}
     named = {k: name for k, name in declarations.instrument_names(conn, raws).items() if name}
-    found = gear.instrument_ids(conn, named)
+    found = declarations.instrument_ids(conn, named)
     carried: dict[str, int | None] = {}
     for kind in counts.ON_THE_FRAME:
         if kind not in named:
@@ -118,10 +118,10 @@ def rig_for_frame(
     if (
         night_rig is not None
         and optics_id is None
-        and (focal is None or same_focal(night_rig["focal_mm"], focal))
+        and (focal is None or same_focal(night_rig.focal_mm, focal))
     ):
-        optics_id = instrument_named(conn, "optics", night_rig["optics"], counts, now)
-        focal = night_rig["focal_mm"] if focal is None else focal
+        optics_id = instrument_named(conn, "optics", night_rig.optics, counts, now)
+        focal = night_rig.focal_mm if focal is None else focal
     if optics_id is None and camera_id is None:
         return None
     rig_id, created = rigs.rig_for(conn, optics_id, camera_id, focal, now)

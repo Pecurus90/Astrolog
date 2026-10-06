@@ -99,7 +99,7 @@ class TypelessFolder(BaseModel):
 
 
 # What sat in front, as an answer: "colour" goes on the camera's card, the other two on the
-# signature (`spine.signature.FILTER_ANSWERS`, kept glued by a test).
+# signature (`spine.signature.FilterAnswer`, kept glued by a test).
 GearFilterAnswer = Literal["color", "no_filter", "filter"]
 
 
@@ -144,7 +144,7 @@ class GearSignature(BaseModel):
     subjects: Subjects
 
 
-# The words of `spine.declarations.MOSAIC_ANSWERS`, kept glued by a test. A no is an answer like a
+# The words of `spine.declarations.MosaicAnswer`, kept glued by a test. A no is an answer like a
 # yes: without it, the only way to silence a wrong proposal would be to accept it.
 MosaicAnswer = Literal["yes", "no"]
 

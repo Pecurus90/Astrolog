@@ -15,8 +15,8 @@ ANSWERS = tuple(decl.TypeAnswer)
 
 _WRITTEN = f"""
 SELECT t.key, t.root, t.sub, t.frames, dc.value AS answer FROM typeless_folders t
-LEFT JOIN declarations dc ON dc.entity_type = '{decl.FOLDER}' AND dc.field = '{decl.FOLDER_TYPE}'
-  AND dc.entity_key = t.key
+LEFT JOIN declarations dc ON dc.entity_type = '{decl.EntityType.FOLDER}'
+  AND dc.field = '{decl.FOLDER_TYPE}' AND dc.entity_key = t.key
 """  # noqa: S608 - `declarations` constants, not a user value
 
 
@@ -41,12 +41,12 @@ def declare(conn: sqlite3.Connection, key: str, kind: str, now: str | None = Non
     detected."""
     if kind not in ANSWERS:  # a word outside the vocabulary is not half an answer: it is a bug
         raise ValueError(f"risposta che non esiste: {kind!r}")
-    decl.write_declaration(conn, decl.FOLDER, key, decl.FOLDER_TYPE, kind, now)
+    decl.write_declaration(conn, decl.EntityType.FOLDER, key, decl.FOLDER_TYPE, kind, now)
 
 
 def answer(conn: sqlite3.Connection, key: str | None) -> str | None:
     """A malformed row counts as no answer: the frames wait instead of becoming hours on a guess."""
-    value = decl.declared(conn, decl.FOLDER, key, decl.FOLDER_TYPE) if key else None
+    value = decl.declared(conn, decl.EntityType.FOLDER, key, decl.FOLDER_TYPE) if key else None
     return value if value in ANSWERS else None
 
 

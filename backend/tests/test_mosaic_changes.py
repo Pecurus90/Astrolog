@@ -55,7 +55,7 @@ def test_merging_two_spellings_of_a_camera_joins_the_confirmed_mosaic(archivio):
     mosaic.place(archivio, altre)
 
     assert [(m["panels"], m["frames"], m["answer"]) for m in proposti(archivio)] == [
-        (2, 4, decl.MOSAIC_YES)
+        (2, 4, decl.MosaicAnswer.YES)
     ]
     assert [chiave_di(archivio, p) for p in altre] == [confermato] * 2
 
@@ -198,7 +198,7 @@ def test_a_panel_joining_an_answer_and_a_question_takes_the_answer(archivio):
     rispondi(archivio, SI, riga=1)
     posa(archivio, C)
     (riga,) = proposti(archivio)
-    assert (riga["panels"], riga["answer"]) == (5, decl.MOSAIC_YES)
+    assert (riga["panels"], riga["answer"]) == (5, decl.MosaicAnswer.YES)
 
 
 def test_a_panel_joining_two_answers_does_not_merge_them(archivio):
@@ -207,9 +207,9 @@ def test_a_panel_joining_two_answers_does_not_merge_them(archivio):
     for cielo in (A, B, D, E):
         posa(archivio, cielo)
     rispondi(archivio, SI, riga=0)
-    rispondi(archivio, decl.MOSAIC_NO, riga=1)
+    rispondi(archivio, decl.MosaicAnswer.NO, riga=1)
     posa(archivio, C)
     assert [(m["panels"], m["answer"]) for m in proposti(archivio)] == [
-        (3, decl.MOSAIC_YES),
-        (2, decl.MOSAIC_NO),
+        (3, decl.MosaicAnswer.YES),
+        (2, decl.MosaicAnswer.NO),
     ]

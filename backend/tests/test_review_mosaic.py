@@ -30,7 +30,7 @@ def _piano(conn, query, parametri=()):
     ("query", "parametri"),
     [
         (mosaic_proposals.LIVE, ()),
-        (mosaic_proposals._MOSAICS, (decl.MOSAIC, decl.MOSAIC_FIELD)),
+        (mosaic_proposals._MOSAICS, (decl.EntityType.MOSAIC, decl.MOSAIC_FIELD)),
         (mosaic_proposals._SUBJECTS, ()),
         (mosaic_weight._WORK, ("[]",)),
     ],

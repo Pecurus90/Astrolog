@@ -227,11 +227,11 @@ def test_the_card_says_the_sensor_and_the_answer_stays_and_the_pixel_does_nothin
     cam = camera_id(conn)
     nessun_filtro(conn, CAMERA)
     gear.declare_instrument(conn, cam, {"pixel_size_um": 3.8})
-    assert risposte(conn) == [(CAMERA, signature.NO_FILTER)]
+    assert risposte(conn) == [(CAMERA, signature.FilterAnswer.NO_FILTER)]
     gear.declare_instrument(conn, cam, {"camera_type": "color"})
     assert risposte(conn) == []
     gear.declare_instrument(conn, cam, {"camera_type": "mono"})
-    assert risposte(conn) == [(CAMERA, signature.NO_FILTER)]
+    assert risposte(conn) == [(CAMERA, signature.FilterAnswer.NO_FILTER)]
 
 
 def risposte(conn):
@@ -247,7 +247,7 @@ def nessun_filtro(conn, camera_raw):
     """ "Nessun filtro" sulla firma della prima posa che scrive quella camera."""
     posa = conn.execute("SELECT * FROM frames WHERE instrument_raw = ?", (camera_raw,)).fetchone()
     chiave = signature.key_of(signature.parts_of(posa))
-    signature.declare(conn, chiave, signature.Answer(filter=signature.NO_FILTER))
+    signature.declare(conn, chiave, signature.Answer(filter=signature.FilterAnswer.NO_FILTER))
 
 
 def test_the_unfiltered_answer_follows_the_camera_when_renamed(conn, tmp_path):
@@ -256,7 +256,7 @@ def test_the_unfiltered_answer_follows_the_camera_when_renamed(conn, tmp_path):
     pose(conn, tmp_path / "lib", {"FILTER": ""})
     nessun_filtro(conn, CAMERA)
     gear.declare_instrument(conn, camera_id(conn), {"name": "La mia mono"})
-    assert risposte(conn) == [(CAMERA, signature.NO_FILTER)]
+    assert risposte(conn) == [(CAMERA, signature.FilterAnswer.NO_FILTER)]
 
 
 def test_merging_into_a_colour_camera_carries_the_answer_even_there(conn, tmp_path):
@@ -277,7 +277,10 @@ def test_merging_into_a_colour_camera_carries_the_answer_even_there(conn, tmp_pa
     assert risposte(conn) == []
     gear.declare_instrument(conn, b, {"camera_type": "mono"})
     run_normalize(conn)
-    assert sorted(risposte(conn), key=str) == [("CAMA", signature.NO_FILTER), ("CAMB", None)]
+    assert sorted(risposte(conn), key=str) == [
+        ("CAMA", signature.FilterAnswer.NO_FILTER),
+        ("CAMB", None),
+    ]
 
 
 # l'ottica scritta, o la scheda chiederebbe anche quella

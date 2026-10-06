@@ -3,7 +3,7 @@ filter its frames leave out. A part the night or the camera's colour settles is 
 
 import sqlite3
 from collections.abc import Callable
-from dataclasses import replace
+from dataclasses import asdict, replace
 from functools import cache
 from typing import Any
 
@@ -15,7 +15,7 @@ from ..vocab.software import normalize_software, telescope_is_mount
 from . import declarations as decl
 from . import frame_folder as folder
 from . import objects as obj
-from .night_rig import night_rigs
+from .night_rig import NightRig, night_rigs
 from .signature import Answer, Parts, answer_for, answers, as_page, key_of, parts_of
 from .stages import WAITING_SQL
 from .unfiltered import is_colour
@@ -41,43 +41,43 @@ _NATIVE_FOCAL = "SELECT focal_mm FROM instruments WHERE kind = 'optics' AND name
 
 def _bucketed(rows: list[sqlite3.Row]) -> list[tuple[sqlite3.Row, Parts]]:
     """Focals within the rigs' tolerance are one signature, whatever the files' order."""
-    parti = [(r, parts_of(r)) for r in rows]
-    per_sensore: dict[Parts, list[float | None]] = {}
-    for _, p in parti:
-        per_sensore.setdefault(replace(p, focal_mm=None), []).append(p.focal_mm)
-    secchi = {k: focal_buckets(v) for k, v in per_sensore.items()}
+    parts = [(r, parts_of(r)) for r in rows]
+    by_sensor: dict[Parts, list[float | None]] = {}
+    for _, p in parts:
+        by_sensor.setdefault(replace(p, focal_mm=None), []).append(p.focal_mm)
+    buckets = {k: focal_buckets(v) for k, v in by_sensor.items()}
     out = []
-    for r, p in parti:
-        focale = secchi[replace(p, focal_mm=None)].get(p.focal_mm, p.focal_mm)  # type: ignore[arg-type]
-        out.append((r, replace(p, focal_mm=focale)))
+    for r, p in parts:
+        focal = buckets[replace(p, focal_mm=None)].get(p.focal_mm, p.focal_mm)  # type: ignore[arg-type]
+        out.append((r, replace(p, focal_mm=focal)))
     return out
 
 
 def _camera_of(
-    conn: sqlite3.Connection, r: Row, night: dict[str, Any] | None, given: Answer | None
+    conn: sqlite3.Connection, r: Row, night: NightRig | None, given: Answer | None
 ) -> str | None:
     """What normalize settled, else what the header, the answer or the night would give."""
     return (
         r["rig_camera"]
         or decl.instrument_name(conn, "camera", r["instrument_raw"])
         or (given.camera if given else None)
-        or (night or {}).get("camera")
+        or (night.camera if night is not None else None)
     )
 
 
 def _asks(
     conn: sqlite3.Connection,
     r: Row,
-    night: dict[str, Any] | None,
+    night: NightRig | None,
     given: Answer | None,
     colour: Callable[[str | None], bool],
 ) -> tuple[bool, bool, bool]:
     """(camera, optics, filter): what this row needs, answered or not. The night settles a frame
     with no camera, and its optics too when it names one."""
     camera = bool(r["asks_camera"]) and night is None
-    optics = not r["names_optics"] and not (night or {}).get("optics")
-    filtro = bool(r["silent_filter"]) and not colour(_camera_of(conn, r, night, given))
-    return camera, optics, filtro
+    optics = not r["names_optics"] and not (night is not None and night.optics)
+    filter_asked = bool(r["silent_filter"]) and not colour(_camera_of(conn, r, night, given))
+    return camera, optics, filter_asked
 
 
 def _native_focal(conn: sqlite3.Connection, optics_name: str | None) -> float | None:
@@ -91,8 +91,8 @@ def _native_focal(conn: sqlite3.Connection, optics_name: str | None) -> float | 
 
 def _only[T](values: set[T | None]) -> T | None:
     """With two values in one card nothing is chosen for the user, and a blank means "unknown"."""
-    detti = {v for v in values if v is not None}
-    return detti.pop() if len(detti) == 1 else None
+    said = {v for v in values if v is not None}
+    return said.pop() if len(said) == 1 else None
 
 
 def _card(key: str, r: Row) -> dict[str, Any]:
@@ -117,34 +117,34 @@ def _card(key: str, r: Row) -> dict[str, Any]:
 def by_signature(conn: sqlite3.Connection, only: str | None = None) -> list[dict[str, Any]]:
     """Largest first. A row that needs nothing is shown only under an answer, which wins over the
     night. `only` keeps one card: the whole page for each answer of an Apply costs the square."""
-    righe = conn.execute(_BY_FRAME).fetchall()
-    date = answers(conn)
-    chiedono = {r["night"] for r in righe if r["night"] and r["asks_camera"]}
-    notti = night_rigs(conn, chiedono) if chiedono else {}
+    frame_rows = conn.execute(_BY_FRAME).fetchall()
+    stored = answers(conn)
+    asking_nights = {r["night"] for r in frame_rows if r["night"] and r["asks_camera"]}
+    nights = night_rigs(conn, asking_nights) if asking_nights else {}
     colour = cache(lambda name: is_colour(conn, name))
-    schede: dict[str, dict[str, Any]] = {}
-    date_per_scheda: dict[str, Answer | None] = {}
-    for r, parti in _bucketed(righe):
-        trovata = answer_for(date, parti)
-        chiave, data = trovata if trovata else (key_of(parti), None)
-        if only is not None and chiave != only:
+    cards: dict[str, dict[str, Any]] = {}
+    answer_by_card: dict[str, Answer | None] = {}
+    for r, parts in _bucketed(frame_rows):
+        found = answer_for(stored, parts)
+        card_key, data = found if found else (key_of(parts), None)
+        if only is not None and card_key != only:
             continue
-        notte = notti.get(r["night"]) if r["asks_camera"] else None
-        chiede = _asks(conn, r, notte, data, colour)
-        if not any(chiede) and data is None:
+        its_night = nights.get(r["night"]) if r["asks_camera"] else None
+        asked = _asks(conn, r, its_night, data, colour)
+        if not any(asked) and data is None:
             continue
-        scheda = schede.setdefault(chiave, _card(chiave, r))
-        _add(conn, scheda, r, chiede)
-        scheda["cameras"].add(_camera_of(conn, r, notte, data))
-        date_per_scheda[chiave] = data
+        this_card = cards.setdefault(card_key, _card(card_key, r))
+        _add(conn, this_card, r, asked)
+        this_card["cameras"].add(_camera_of(conn, r, its_night, data))
+        answer_by_card[card_key] = data
     # with the ASIAIR `TELESCOP` is the mount, on every card with that spelling
-    montature = {
+    mount_spellings = {
         normalize_header_value(r["telescope_raw"])
-        for r in righe
+        for r in frame_rows
         if telescope_is_mount(normalize_software(r["software_raw"]))
     }
-    gruppi = obj.subjects(conn, schede.values())
-    out = [_shown(conn, s, date_per_scheda[s["key"]], montature) for s in gruppi]
+    with_subjects = obj.subjects(conn, cards.values())
+    out = [_shown(conn, s, answer_by_card[s["key"]], mount_spellings) for s in with_subjects]
     return sorted(out, key=lambda s: (-s["frames"], s["key"]))
 
 
@@ -157,8 +157,8 @@ def _add(
     card["frames"] += r["n"] or 0
     if r["n"]:  # an object with only copies in the card is not another frame
         obj.count_subject(card, r["subject"], r["n"])
-    for campo, chiede in zip(("asks_camera", "asks_optics", "asks_filter"), asks, strict=True):
-        card[campo] = card[campo] or chiede
+    for field, asked in zip(("asks_camera", "asks_optics", "asks_filter"), asks, strict=True):
+        card[field] = card[field] or asked
     card["spellings"].add(normalize_header_value(r["telescope_raw"]))
     card["optics"].add(decl.instrument_name(conn, "optics", r["telescope_raw"]))
     card["focal"].add(known_focal(r["focal_mm_raw"]))
@@ -172,7 +172,7 @@ def _shown(
     optics, focal = _only(card.pop("optics")), _only(card.pop("focal"))
     optics = None if card.pop("spellings") & mounts else optics
     camera = _only(card.pop("cameras"))  # where the sensor answer goes; not on the page
-    manca = [
+    missing = [
         card["asks_camera"] and not (data and data.camera),
         card["asks_optics"] and not (data and data.optics),
         card["asks_filter"] and not (data and data.filter),
@@ -183,8 +183,8 @@ def _shown(
         "optics": optics,
         "focal_mm": focal,
         "focal_suggested": None if focal is not None else _native_focal(conn, optics),
-        "answer": as_page(conn, data) if data else None,
-        "complete": not any(manca),
+        "answer": asdict(as_page(conn, data)) if data else None,
+        "complete": not any(missing),
     }
 
 

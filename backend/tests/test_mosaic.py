@@ -343,7 +343,7 @@ def test_confirming_a_mosaic_is_an_answer_that_lasts(archivio):
     rispondi(archivio, SI)
     posa(archivio, LONTANO)
     (riga,) = proposti(archivio)
-    assert (riga["answer"], riga["answer_name"]) == (decl.MOSAIC_YES, "IC 405")
+    assert (riga["answer"], riga["answer_name"]) == (decl.MosaicAnswer.YES, "IC 405")
 
 
 def test_a_refused_mosaic_is_not_asked_again(archivio):
@@ -351,9 +351,9 @@ def test_a_refused_mosaic_is_not_asked_again(archivio):
     prepara(archivio)
     posa(archivio, A)
     posa(archivio, B)
-    rispondi(archivio, decl.MOSAIC_NO)
+    rispondi(archivio, decl.MosaicAnswer.NO)
     (riga,) = proposti(archivio)
-    assert riga["answer"] == decl.MOSAIC_NO
+    assert riga["answer"] == decl.MosaicAnswer.NO
 
 
 def test_an_answer_nobody_can_read_is_no_answer(archivio):
@@ -381,7 +381,7 @@ def test_the_answer_holds_when_the_mosaic_grows(archivio):
     rispondi(archivio, SI)
     nuovo = posa(archivio, C, quando=ALTRA_NOTTE)
     (riga,) = proposti(archivio)
-    assert (riga["panels"], riga["answer"]) == (3, decl.MOSAIC_YES)
+    assert (riga["panels"], riga["answer"]) == (3, decl.MosaicAnswer.YES)
     assert chiave_di(archivio, nuovo) == riga["key"]
 
 
@@ -391,7 +391,7 @@ def test_an_answer_does_not_silence_another_mosaic_of_the_same_rig(archivio):
     for cielo in (A, B, LONTANO, ACCANTO_A_LONTANO):
         posa(archivio, cielo)
     rispondi(archivio, SI)
-    assert [m["answer"] for m in proposti(archivio)] == [decl.MOSAIC_YES, None]
+    assert [m["answer"] for m in proposti(archivio)] == [decl.MosaicAnswer.YES, None]
 
 
 def test_an_answer_does_not_silence_another_rig(archivio):
@@ -402,7 +402,7 @@ def test_an_answer_does_not_silence_another_rig(archivio):
         posa(archivio, A, corredo=corredo)
         posa(archivio, B, corredo=corredo)
     rispondi(archivio, SI, riga=0)
-    assert [m["answer"] for m in proposti(archivio)] == [decl.MOSAIC_YES, None]
+    assert [m["answer"] for m in proposti(archivio)] == [decl.MosaicAnswer.YES, None]
 
 
 def test_a_confirmed_mosaic_is_written_on_its_poses(archivio):
@@ -431,7 +431,7 @@ def test_dissolving_a_confirmed_mosaic_frees_its_panels(archivio):
     prepara(archivio)
     pose = [posa(archivio, A), posa(archivio, B)]
     rispondi(archivio, SI)
-    rispondi(archivio, decl.MOSAIC_NO)
+    rispondi(archivio, decl.MosaicAnswer.NO)
     assert [chiave_di(archivio, p) for p in pose] == [None, None]
 
 
@@ -442,4 +442,4 @@ def test_the_page_reads_the_name_that_was_answered(archivio):
     posa(archivio, B, oggetto=2)
     rispondi(archivio, "name:La mia regione")
     (riga,) = proposti(archivio)
-    assert (riga["answer"], riga["answer_name"]) == (decl.MOSAIC_YES, "La mia regione")
+    assert (riga["answer"], riga["answer_name"]) == (decl.MosaicAnswer.YES, "La mia regione")

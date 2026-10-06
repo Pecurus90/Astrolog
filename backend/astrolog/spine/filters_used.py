@@ -11,27 +11,27 @@ from . import counts
 
 def of(
     conn: sqlite3.Connection,
-    soggetto: counts.Subject,
+    subject: counts.Subject,
     ids: Collection[int | str | None],
     *,
     alone: bool = False,
 ) -> dict[Any, list[Any]]:
     """`{subject id: [{name, passband, frames, integration_s}]}`, most time first; the band travels
     because it colours the pill. `alone` keeps frames outside confirmed mosaics (`counts.ALONE`)."""
-    dove = counts.column_of(soggetto)  # from a closed list: an unknown key is a KeyError
-    solo = f" AND {counts.ALONE}" if alone else ""
+    column = counts.column_of(subject)  # from a closed list: an unknown key is a KeyError
+    alone_sql = f" AND {counts.ALONE}" if alone else ""
     sql = f"""
-    SELECT f.{dove} AS soggetto, x.name, x.passband, {counts.AGGREGATE}
+    SELECT f.{column} AS owner, x.name, x.passband, {counts.AGGREGATE}
     FROM frames f JOIN filters x ON x.id = f.filter_id
-    WHERE f.{dove} IN {{listed}} AND f.copy_of IS NULL{solo}
-    GROUP BY f.{dove}, x.id
+    WHERE f.{column} IN {{listed}} AND f.copy_of IS NULL{alone_sql}
+    GROUP BY f.{column}, x.id
     {counts.ORDER_BY_TIME}, x.id
-    """  # noqa: S608 - `dove` comes from the closed list, `listed` is a placeholder
+    """  # noqa: S608 - `column` comes from the closed list, `listed` is a placeholder
     return idlist.grouped(
         conn,
         sql,
         ids,
-        "soggetto",
+        "owner",
         lambda r: {
             "name": r["name"],
             "passband": r["passband"],

@@ -532,7 +532,7 @@ def test_normalize_a_camera_answered_no_filter_gives_unfiltered_poses_one_row(co
         return run_normalize(conn)["to_review"]
 
     chiave = signature.key_of(signature.parts_of(rows(conn, "SELECT * FROM frames")[0]))
-    signature.declare(conn, chiave, signature.Answer(filter=signature.NO_FILTER))
+    signature.declare(conn, chiave, signature.Answer(filter=signature.FilterAnswer.NO_FILTER))
     assert rinormalizza() == 0
     assert [g["answer"]["filter"] for g in cards.by_signature(conn)] == ["no_filter"]
     assert rows(conn, "SELECT name, is_none FROM filters") == [{"name": "None", "is_none": 1}]

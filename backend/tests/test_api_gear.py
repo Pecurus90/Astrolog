@@ -162,8 +162,7 @@ def test_the_objects_of_a_piece_do_not_search_the_rigs_row_by_row(db_path):
             piano = [
                 r["detail"]
                 for r in conn.execute(
-                    "EXPLAIN QUERY PLAN "
-                    + gear_usage._OGGETTI_DEL_PEZZO.replace("{listed}", elencati)
+                    "EXPLAIN QUERY PLAN " + gear_usage._PIECE_OBJECTS.replace("{listed}", elencati)
                 )
             ]
     finally:
@@ -240,6 +239,22 @@ def test_a_piece_says_what_you_shot_with_it(archivio):
     assert [o["key"] for o in pezzi(pagina, "optics")[0]["objects"]] == ["m-31"]
     assert [o["key"] for o in pagina["filters"][0]["objects"]] == ["m-31"]
     assert pezzi(pagina, "mount")[0]["objects"] == [], "senza ore non c'e' nemmeno un oggetto"
+
+
+def test_what_a_piece_shot_comes_most_shot_first(archivio):
+    """Two objects, the most shot by time first even with fewer frames: one object alone could not
+    tell the order from none (`counts.ORDER_BY_TIME`)."""
+    with db(archivio) as conn:
+        rig, ha = conn.execute("SELECT rig_id, filter_id FROM frames LIMIT 1").fetchone()
+        posa(conn, quando="2024-05-19T22:00:00Z", oggetto=2, corredo=rig, filtro_id=ha,
+             esposizione=1200.0, hash_="m45")  # fmt: skip
+        gear_usage.write(conn)  # come a fine giro di uno stadio
+        conn.commit()
+    pagina = gear(archivio)
+
+    assert [o["key"] for o in pagina["rigs"][0]["objects"]] == ["m-45", "m-31"]
+    assert [o["key"] for o in pezzi(pagina, "optics")[0]["objects"]] == ["m-45", "m-31"]
+    assert [o["key"] for o in pagina["filters"][0]["objects"]] == ["m-45", "m-31"]
 
 
 def test_the_hours_of_a_piece_come_from_its_rigs(archivio):

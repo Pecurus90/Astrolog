@@ -39,10 +39,10 @@ def candidates(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     one can change one's mind. Keys are the page's (`MosaicCandidate`)."""
     soggetti = obj.subjects_of(conn.execute(_SUBJECTS))
     righe = []
-    for r in conn.execute(_MOSAICS, (decl.MOSAIC, decl.MOSAIC_FIELD)):
+    for r in conn.execute(_MOSAICS, (decl.EntityType.MOSAIC, decl.MOSAIC_FIELD)):
         valore = r["value"]
         parola = risposta.mosaic_word(valore)
-        detto = risposta.shown_target(conn, valore) if parola == decl.MOSAIC_YES else None
+        detto = risposta.shown_target(conn, valore) if parola == decl.MosaicAnswer.YES else None
         nomi = soggetti.get(r["id"], [])
         righe.append(
             {

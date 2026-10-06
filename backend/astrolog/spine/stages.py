@@ -75,7 +75,7 @@ WAITING_STAGES = frozenset(downstream(StageName.SOLVE)) - {StageName.SOLVE}
 
 # The answer of a frame's folder; the waiting rule itself is the `frame_waits` view in `schema.sql`.
 FOLDER_SAYS = f"""(
-  SELECT dc.value FROM declarations dc WHERE dc.entity_type = '{decl.FOLDER}'
+  SELECT dc.value FROM declarations dc WHERE dc.entity_type = '{decl.EntityType.FOLDER}'
     AND dc.field = '{decl.FOLDER_TYPE}'
     AND dc.entity_key = ({folder.KEY_OF_FRAME}))"""  # noqa: S608 - constants
 # a mark on the frame, since `invalidate` resets stage rows; the schema's triggers rewrite it on

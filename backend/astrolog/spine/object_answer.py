@@ -11,10 +11,9 @@ from ..clock import now_iso
 from ..vocab.object_label import clean_object_name
 from . import objects
 from .declarations import (
-    FRAME,
     FRAME_OBJECT,
-    MOSAIC_NO,
-    MOSAIC_YES,
+    EntityType,
+    MosaicAnswer,
     UnknownTargetError,
     declared,
     forget,
@@ -37,23 +36,24 @@ NONE: Final = "none"  # "not an object": the value written on a frame, and the a
 _OUT = f"""
 SELECT f.found_key AS key, COUNT(*) AS frames,
   COALESCE(SUM(f.exposure_s), 0) AS integration_s, SUM(f.exposure_s IS NULL) AS untimed
-FROM frames f JOIN declarations d ON d.entity_type = '{FRAME}' AND d.entity_key = f.frame_hash
-  AND d.field = '{FRAME_OBJECT}' AND d.value = '{NONE}'
+FROM frames f JOIN declarations d ON d.entity_type = '{EntityType.FRAME}'
+  AND d.entity_key = f.frame_hash AND d.field = '{FRAME_OBJECT}' AND d.value = '{NONE}'
 WHERE f.found_key IS NOT NULL AND f.object_id IS NULL AND f.copy_of IS NULL
 GROUP BY f.found_key
 """  # noqa: S608 - constants of the spine
 
 # Linked frames already answered "not an object", per object: between Apply and `identify`.
 _LINKED_OUT = f"""
-SELECT f.object_id, COUNT(*) FROM frames f JOIN declarations d ON d.entity_type = '{FRAME}'
-  AND d.entity_key = f.frame_hash AND d.field = '{FRAME_OBJECT}' AND d.value = '{NONE}'
+SELECT f.object_id, COUNT(*) FROM frames f
+  JOIN declarations d ON d.entity_type = '{EntityType.FRAME}' AND d.entity_key = f.frame_hash
+  AND d.field = '{FRAME_OBJECT}' AND d.value = '{NONE}'
 WHERE f.object_id IS NOT NULL AND f.copy_of IS NULL GROUP BY f.object_id
 """  # noqa: S608 - constants of the spine
 
 
 def said_not_an_object(conn: sqlite3.Connection, frame_hash: str) -> bool:
     """The user's word on this frame itself, from its group or from the card of what was found."""
-    return declared(conn, FRAME, frame_hash, FRAME_OBJECT) == NONE
+    return declared(conn, EntityType.FRAME, frame_hash, FRAME_OBJECT) == NONE
 
 
 def out_of_archive(conn: sqlite3.Connection) -> dict[str, dict[str, Any]]:
@@ -86,7 +86,7 @@ def declare_not_an_object(conn: sqlite3.Connection, key: str, now: str | None = 
     if not righe:
         raise LookupError(f"oggetto {key}")
     for r in righe:
-        write_declaration(conn, FRAME, r["frame_hash"], FRAME_OBJECT, NONE, now)
+        write_declaration(conn, EntityType.FRAME, r["frame_hash"], FRAME_OBJECT, NONE, now)
         conn.execute("UPDATE frames SET found_key = ? WHERE id = ?", (key, r["id"]))
     frames = [r["id"] for r in righe]
     invalidate(conn, frames, StageName.IDENTIFY)
@@ -118,9 +118,9 @@ def declare_found(
         if not said_not_an_object(conn, r["frame_hash"]):
             continue
         if not clean_object_name(r["object_raw"]) and r["empty_cone"] in (None, 1):
-            write_declaration(conn, FRAME, r["frame_hash"], FRAME_OBJECT, target, now)
+            write_declaration(conn, EntityType.FRAME, r["frame_hash"], FRAME_OBJECT, target, now)
         else:
-            forget(conn, FRAME, r["frame_hash"], FRAME_OBJECT)
+            forget(conn, EntityType.FRAME, r["frame_hash"], FRAME_OBJECT)
     frames = [r["id"] for r in righe]
     invalidate(conn, frames, StageName.IDENTIFY)
     return frames
@@ -138,7 +138,7 @@ def correct_object(
     take the frames back; a declaration is read every time and survives a reset."""
     if not found_key or bool(slug) == bool(name):
         raise ValueError("la correzione vuole un bersaglio solo, slug o nome")
-    write_declaration(conn, "object", found_key, CORRECTION, target_value(slug, name), now)
+    write_declaration(conn, EntityType.OBJECT, found_key, CORRECTION, target_value(slug, name), now)
 
 
 def target_value(slug: str | None, name: str | None) -> str:
@@ -183,9 +183,9 @@ def read_target(value: object) -> tuple[str, str] | None:
 
 def mosaic_word(value: str | None) -> str | None:
     """A value that is neither word was written elsewhere: taking it would switch a question off."""
-    if value is None or value == MOSAIC_NO:
+    if value is None or value == MosaicAnswer.NO:
         return value
-    return None if read_target(value) is None else MOSAIC_YES
+    return None if read_target(value) is None else MosaicAnswer.YES
 
 
 def shown_target(conn: sqlite3.Connection, value: str) -> tuple[str, str, str] | None:
@@ -201,7 +201,7 @@ def shown_target(conn: sqlite3.Connection, value: str) -> tuple[str, str, str] |
 
 
 def correction_of(conn: sqlite3.Connection, found_key: str) -> tuple[str, str] | None:
-    value = declared(conn, "object", found_key, CORRECTION)
+    value = declared(conn, EntityType.OBJECT, found_key, CORRECTION)
     return None if value is None else read_target(value)
 
 

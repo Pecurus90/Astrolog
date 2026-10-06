@@ -227,7 +227,7 @@ def test_a_retired_folder_and_a_file_that_is_gone_do_not_ask_anything(conn):
 def test_the_answer_is_read_back_with_its_pieces(conn):
     """La risposta porta i **nomi** dei pezzi, la focale e il filtro, e si rilegge tale e quale.
     Rispondere di nuovo la riscrive: si cambia idea."""
-    data = signature.Answer(CAM, OTT, 530.0, signature.ONE_OF_YOURS, "Lum")
+    data = signature.Answer(CAM, OTT, 530.0, signature.FilterAnswer.ONE_OF_YOURS, "Lum")
     signature.declare(conn, "k", data)
     assert signature.answer(conn, "k") == data
     signature.declare(conn, "k", signature.Answer(camera="Altra"))
@@ -239,7 +239,7 @@ def _scrivi(conn, valore):
     conn.execute(
         "INSERT OR REPLACE INTO declarations(entity_type, entity_key, field, value, created_at)"
         " VALUES(?, 'k', ?, ?, 'ora')",
-        (decl.SIGNATURE, decl.SIGNATURE_GEAR, valore),
+        (decl.EntityType.SIGNATURE, decl.SIGNATURE_GEAR, valore),
     )
 
 
@@ -332,7 +332,7 @@ def test_a_filter_word_that_is_not_an_answer_is_no_filter_answer(conn):
     _scrivi(conn, json.dumps({"camera": CAM, "filter": "color", "filter_name": "Lum"}))
     assert signature.answer(conn, "k") == signature.Answer(camera=CAM)
     _scrivi(conn, json.dumps({"filter": "no_filter", "filter_name": "Lum"}))
-    assert signature.answer(conn, "k") == signature.Answer(filter=signature.NO_FILTER)
+    assert signature.answer(conn, "k") == signature.Answer(filter=signature.FilterAnswer.NO_FILTER)
 
 
 def test_the_key_is_never_split_to_find_the_pieces(conn):
@@ -370,9 +370,13 @@ def test_the_cards_ask_the_rig_only_of_the_nights_of_their_poses(conn, monkeypat
 def test_renaming_a_piece_carries_the_answers_that_name_it(conn):
     """La risposta porta il NOME dei pezzi e del filtro: rinominati, la risposta li segue, o al giro
     dopo il nome vecchio farebbe rinascere un pezzo accanto a quello rinominato."""
-    signature.declare(conn, "k", signature.Answer(CAM, OTT, 530.0, signature.ONE_OF_YOURS, "Lum"))
+    signature.declare(
+        conn, "k", signature.Answer(CAM, OTT, 530.0, signature.FilterAnswer.ONE_OF_YOURS, "Lum")
+    )
     signature.follow_piece(conn, "optics", OTT, "Newton 8")
     signature.follow_piece(conn, "camera", CAM, "La mia")
     signature.follow_filter(conn, "Lum", "Astronomik L")
-    atteso = signature.Answer("La mia", "Newton 8", 530.0, signature.ONE_OF_YOURS, "Astronomik L")
+    atteso = signature.Answer(
+        "La mia", "Newton 8", 530.0, signature.FilterAnswer.ONE_OF_YOURS, "Astronomik L"
+    )
     assert signature.answer(conn, "k") == atteso

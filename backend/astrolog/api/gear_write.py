@@ -107,7 +107,7 @@ def add_filter(
         nuovo = gear_create.filter_declared(
             conn, body.name, bande, now_iso(), brand=body.brand, model=body.model
         )
-        gear_usage.add_new(conn, "filter", nuovo)
+        gear_usage.add_new(conn, gear_usage.UsageSubject.FILTER, nuovo)
     return GearWritten(id=nuovo, requeued=0, run_started=False)
 
 
@@ -125,7 +125,7 @@ def add_rig(
         nuovo = corredi.create_declared(
             conn, body.optics_id, body.camera_id, body.focal_mm, now_iso()
         )
-        gear_usage.add_new(conn, "rig", nuovo)
+        gear_usage.add_new(conn, gear_usage.UsageSubject.RIG, nuovo)
     return GearWritten(id=nuovo, requeued=0, run_started=False)
 
 

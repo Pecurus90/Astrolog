@@ -8,8 +8,7 @@ from typing import Any
 from ..db import idlist
 from ..db.row import Row
 from ..vocab.filters import Passband, model_by_id, passband_from_bands
-from . import counts, signature
-from . import rigs as corredi
+from . import counts, rigs, signature
 from .declarations import (
     ALIAS_KINDS,
     CAMERA_SPECS,
@@ -46,24 +45,6 @@ def _set_fields(
     return True
 
 
-def instrument_id(conn: sqlite3.Connection, kind: str, name: str) -> int | None:
-    row = conn.execute(
-        "SELECT id FROM instruments WHERE kind = ? AND name = ?", (kind, name)
-    ).fetchone()
-    return None if row is None else row["id"]
-
-
-def instrument_ids(conn: sqlite3.Connection, names: Mapping[str, str]) -> dict[str, int]:
-    """`instrument_id` of one name per kind, in one query; a kind with no piece is left out."""
-    if not names:
-        return {}
-    pairs = ", ".join("(?, ?)" for _ in names)  # segnaposto-ok: one pair per kind, not per frame
-    # S608: only placeholders
-    sql = f"SELECT kind, id FROM instruments WHERE (kind, name) IN (VALUES {pairs})"  # noqa: S608
-    args = [v for pair in names.items() for v in pair]
-    return {r["kind"]: r["id"] for r in conn.execute(sql, args)}
-
-
 def declare_instrument(
     conn: sqlite3.Connection,
     instrument_id: int,
@@ -88,7 +69,7 @@ def declare_instrument(
         declare_instrument_spec(conn, row["kind"], row["name"], field, value, now)
     if renamed:  # the rig's key carries the piece's name too
         _move_instrument_declarations(conn, row["kind"], row["name"], new_name, merging=False)
-        corredi.follow_piece(conn, row["kind"], row["name"], new_name, now)
+        rigs.follow_piece(conn, row["kind"], row["name"], new_name, now)
     if changed:
         # from now on the user said it, not the spine
         conn.execute("UPDATE instruments SET detected = 0 WHERE id = ?", (instrument_id,))
@@ -182,10 +163,10 @@ def declare_filter(  # noqa: PLR0913
             (passband_from_bands([b["band"] for b in bands]), filter_id),
         )
     catalog_id = fields.get("catalog_id")
-    modello = model_by_id(catalog_id) if bands is None and catalog_id is not None else None
-    if modello:
+    model = model_by_id(catalog_id) if bands is None and catalog_id is not None else None
+    if model:
         # the model carries its band: choosing it is a whole answer, not a brand
-        conn.execute("UPDATE filters SET passband = ? WHERE id = ?", (modello.passband, filter_id))
+        conn.execute("UPDATE filters SET passband = ? WHERE id = ?", (model.passband, filter_id))
     after = conn.execute("SELECT passband FROM filters WHERE id = ?", (filter_id,)).fetchone()
     if after["passband"] == row["passband"]:
         # brand, model or a note do not change what a frame means: nothing is redone
@@ -229,12 +210,12 @@ def merge_instrument(
     if not mergeable(src, dst):
         raise MergeRefusedError(f"{from_id} non si unisce in {into_id}: non e' `mergeable`")
     rename(conn, src["kind"], src["name"], dst["name"], now)
-    corredi.follow_piece(conn, src["kind"], src["name"], dst["name"], now)
+    rigs.follow_piece(conn, src["kind"], src["name"], dst["name"], now)
     _move_instrument_declarations(conn, src["kind"], src["name"], dst["name"], merging=True)
-    rigs = _rigs_using(conn, from_id)
-    frames = set(_detach_rigs(conn, rigs)) | _detach_from_frames(conn, from_id)
+    rig_ids = _rigs_using(conn, from_id)
+    frames = set(_detach_rigs(conn, rig_ids)) | _detach_from_frames(conn, from_id)
     conn.execute("DELETE FROM instruments WHERE id = ?", (from_id,))
-    corredi.restore_declared(conn, now)
+    rigs.restore_declared(conn, now)
     invalidate(conn, frames, StageName.NORMALIZE, now=now)
     return sorted(frames)
 
@@ -242,22 +223,22 @@ def merge_instrument(
 def _detach_from_frames(conn: sqlite3.Connection, instrument_id: int) -> set[int]:
     """Without it the foreign key keeps the row from being deleted, and the whole Apply fails,
     taking the good answers with it."""
-    staccate: set[int] = set()
+    detached: set[int] = set()
     for kind in counts.CARRIED:
-        pose = [
+        frames = [
             r[0]
             for r in conn.execute(
                 f"SELECT id FROM frames WHERE {kind}_id = ?",  # noqa: S608 - our own kinds
                 (instrument_id,),
             )
         ]
-        if pose:
+        if frames:
             conn.execute(
                 f"UPDATE frames SET {kind}_id = NULL WHERE {kind}_id = ?",  # noqa: S608
                 (instrument_id,),
             )
-            staccate.update(pose)
-    return staccate
+            detached.update(frames)
+    return detached
 
 
 def band_unknown(row: Row) -> bool:
@@ -280,9 +261,9 @@ def filter_mergeable(src: Row, dst: Row) -> bool:
 def merge_filter(
     conn: sqlite3.Connection, from_id: int, into_id: int, now: str | None = None
 ) -> list[int]:
-    riga = "SELECT id, name, is_none, passband FROM filters WHERE id = ?"
-    src = conn.execute(riga, (from_id,)).fetchone()
-    dst = conn.execute(riga, (into_id,)).fetchone()
+    by_id = "SELECT id, name, is_none, passband FROM filters WHERE id = ?"
+    src = conn.execute(by_id, (from_id,)).fetchone()
+    dst = conn.execute(by_id, (into_id,)).fetchone()
     if src is None or dst is None:
         raise LookupError(f"filtro {from_id if src is None else into_id}")
     if not filter_mergeable(src, dst):

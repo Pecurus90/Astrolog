@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | rifattorizza | Fase 2, lotto 5c: `spine` attrezzatura | ~0,35 M agenti (uno sviluppatore), sessione principale non contata | 27 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5b: `spine` solve, identify, group | ~0,29 M agenti (uno sviluppatore), sessione principale non contata | 22 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5a: `spine` scansione, normalizzazione, stadi | ~0,29 M agenti (uno sviluppatore), sessione principale non contata | 25 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 4: file sciolti e `worker` | ~0,19 M agenti (uno sviluppatore), sessione principale non contata | 15 agente | 1 mio sul resoconto (un fuso non valido cambiava esito: rimesso com'era) |
@@ -78,22 +79,10 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   nome italiano nuovo e' rosso, quelli vecchi stanno in `tools/nomi_italiani.txt`, che solo si
   accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Fatti `db` e
   `fits` (e il segnaposto `{listed}` di `idlist.grouped`), poi `ephemeris` (`corpi` e' `bodies`).
-  Fatti anche `weather`, `net` e gli altri file sciolti, e i primi tre lotti di `spine`
+  Fatti anche `weather`, `net` e gli altri file sciolti, e i primi quattro lotti di `spine`
   (scansione, normalizzazione, stadi; risoluzione, identificazione, raggruppamento, frame senza
-  tipo, `site_requeue`, `home_nights`). Nel quarto lotto: `corredi` (alias di
-  `rigs`), `pose`, `staccate`, `modello`, `riga` (`gear`); `grafia`, `gia`, `scheda`
-  (`gear_create`); `_SEMPRE`, `_CONTI`, `_USATI`, `_STRUMENTI`, `_CORREDI`, `_FILTRI`, `_OGGETTI`,
-  `_OGGETTI_DEL_CORREDO`, `_OGGETTI_DEL_FILTRO`, `_OGGETTI_DEL_PEZZO`, `_CIELO`, `_COLONNE`,
-  `_nuova`, `_con_le_ore`, `_riga`, `_strumenti`, `_corredi`, `_filtri`, `righe`, `elenco`,
-  `conta`, `generi`, `detto`, `uso`, `cielo`, `oggetti`, `con_le_ore`, `visto`, `campo` e i
-  segnaposto `{chiave}`, `{giunzione}`, `{campo}` (`gear_usage`); `trovato`, `campo`, `nomi`,
-  `_pezzo_id`, `chiave`, `parti`, `ottica`, `focale`, `quando`, `rifatto`, `tolta`, `nome`, `pose`,
-  `_MONTATURE`, `trovata`, `nuova` (`rigs`); `nome`,
-  `votato`, `prima`, `colore`, `scelto` (`camera_specs`); `uno`, `valori`, `mezzo`
-  (`camera_sky`); `soggetto` (parametro e colonna), `dove`, `solo` (`filters_used`). Nel quinto
-  lotto: `dove`, `per_notte`,
-  `nomi`, `nome`, `grafia`, `righe`, `ottica`, `visto`, `corredi`, `corredo`, `notte`, `viste`,
-  `camere`, `ottiche`, `focali`, `intero`, `dicono` (`night_rig`); `risposta` (alias di `object_answer`, anche in
+  tipo, `site_requeue`, `home_nights`; l'attrezzatura, con `night_rig`, `signature`,
+  `signature_page`, `unfiltered`, `declarations`). Nel quinto lotto: `risposta` (alias di `object_answer`, anche in
   `identify`, `mosaic`, `mosaic_proposals` e `api/review_write`), `lati`, `campo`, `chiave`,
   `vicini`, `altra`, `distanza`, `notte`, `detto`, `valore`, `nome`, `_POSES_OF_GROUP`
   (`unnamed`); `sorgente`, `righe`, `nomi`, `conti`, `gruppi`, `vuoti`, `trovati`, il parametro
@@ -108,7 +97,7 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   (`mosaic_describe`); `raggi`, `b_su_a`,
   `a_su_b` (`mosaic_geometry`); `soggetti`, `righe`, `valore`, `parola`, `detto`, `nomi`
   (`mosaic_proposals`); `per_mosaico`, `pannelli`, `misura`, `lavoro`, `soglia`, `peso`
-  (`mosaic_weight`); `chiave`, `parti`, `ottica`, `camera`, `focale` (`declarations`); `_DOVE`,
+  (`mosaic_weight`); `_DOVE`,
   `_PAGINA`, `_QUANTE`, `_TOTALI`, `_OGGETTI`, `_FERME`, `_SENZA_CIELO`, `_lune`, `_meteo` e il
   suo parametro `fuso_riconosciuto`, la colonna `meteo`, `righe`, `lune`, `oggetti`, `filtri`,
   `riga`, `quando`, `certe`, `somme`, `dove`, `ordinati`, `voce`, `quanti` (`nights`); `ORDINI`
@@ -159,27 +148,30 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   bande, fasi della Luna e fasce del cielo, meteo, `net.Failure`, stati del worker, motivi e
   canali di `astap`, fonti di `place`, esiti e motivi della scansione, marchio di riscrittura,
   nomi e stati degli stadi, soggetti del conto, motivi di `group`, risposte sul tipo, metodi,
-  fiducie, rami e motivi di `identify`). In `weather` restano stringhe i generi di riga
-  (`forecast.KIND`, `history.KIND`) e le fonti per modello (`forecast.source_of`), aperte quanto
-  la scelta dei modelli. Nell'attrezzatura i soggetti dell'uso (`instrument`, `rig`, `filter`, scritti in `gear_usage.subject` e passati come stringhe
-  da `rigs` e `api/gear_write`) e i campi dei corredi (`rigs.MOUNT`, `DECLARED`,
-  scritti in `declarations.field`). Nelle domande per gruppo le risposte sul filtro
-  (`signature.FILTER_ANSWERS`, scritte in `declarations` e ripetute in
-  `api/models_review_groups.GearFilterAnswer`), i tipi del bersaglio (`catalog`, `name`, `none`:
-  `object_answer.read_target`, `unnamed.answer`, ripetuti in `api/models_review_groups`, e
+  fiducie, rami e motivi di `identify`; soggetti dell'uso, campi dei corredi, risposte sul filtro,
+  tipi di camera, risposte sul mosaico, tipi di entita'). In `weather` restano stringhe i generi di
+  riga (`forecast.KIND`, `history.KIND`) e le fonti per modello (`forecast.source_of`), aperte
+  quanto la scelta dei modelli. Nelle domande per gruppo i tipi del bersaglio (`catalog`, `name`,
+  `none`: `object_answer.read_target`, `unnamed.answer`, ripetuti in `api/models_review_groups`, e
   `unnamed.NONE` riscritto come `Literal["none"]` nel ritorno di `named_by_group`) e i due vuoti
-  del cielo (`objects.NOT_YET`, `NOT_FOUND`). Nel sesto lotto il vocabolario di `declarations`
-  (`MOSAIC_YES`/`MOSAIC_NO`, ripetuti in `api/models_review_groups.MosaicAnswer`;
-  `CAMERA_MONO`/`CAMERA_COLOR`,
-  ripetuti in `api/models_review.CameraType`; i tipi di entita' del `CHECK` di
-  `declarations.entity_type`, passati anche come stringhe nude), i posti dove si risponde
+  del cielo (`objects.NOT_YET`, `NOT_FOUND`). Nel sesto lotto i posti dove si risponde
   (`nights.REVIEW`, `SITE`, `NEVER`, ripetuti in `api/models_nights`) e gli ordini dell'archivio
-  (le chiavi di `archive.ORDINI`, ripetute in `api/archive.Sort`).
+  (le chiavi di `archive.ORDINI`, ripetute in `api/archive.Sort`). Dentro l'SQL restano scritti a
+  mano tipi di entita' e soggetti dell'uso (`'rig'`, `'instrument'`; `'filter'` in
+  `spine/inventory.py`): li tiene il `CHECK`, che una prova lega all'enum.
+- **Attrezzatura, dopo il quarto lotto di `spine`**: restano `dict` le schede di
+  `gear.camera_specs` (spalmate nelle righe di `inventory` e `api/lookalike`), le righe di
+  `filters_used.of` (vanno nel `list[FilterUsed]` di `api/archive` e in `nights`: vedi
+  `idlist.grouped` qui sotto) e le schede di `signature_page` (le riempie `objects.subjects`,
+  comune a `unnamed` e `typeless`); `rigs.rigs_with_keys` passa `sqlite3.Row`.
 - **Fra i `noqa: PLR0913`**, questi restano perche' toglierli cambia una firma usata fuori:
   `replace_rows` (`db/replace_table.py`), `walk_dir` (`fits/walk.py`, i sei accumulatori in un oggetto solo),
   `create_app` (`api/app.py`, sei opzioni a parola chiave lette da `__main__`, `tools` e test),
   `scan_store.finish_run` e `upsert_position` e `normalize_rig.mount_for_frame` (chiamati dai
-  test), `stages.set_status` e `stage_run.frame_safely` (chiamati da ogni stadio).
+  test), `stages.set_status` e `stage_run.frame_safely` (chiamati da ogni stadio),
+  `rigs.rig_for` (`normalize_rig`), `gear.declare_filter` (`gear_create`, `api/review_write`),
+  `gear_create.filter_declared` (`api/gear_write`), `declarations.write_declaration` e
+  `declare_instrument_spec` (chiamati da molti moduli).
   `identify_link.hang` resta per un'altra ragione: togliere `counts` vuol dire contare dopo le
   scritture, e un frame che cade a meta' cambierebbe i conti della ricevuta.
   `archive_page` (`api/archive.py`) resta per un'altra ragione: i suoi otto parametri sono la
@@ -319,9 +311,7 @@ Niente di aperto.
   scansione a cadenza sul NAS** (`ASTROLOG_SCAN_EVERY_MIN`, `backend/astrolog/__main__.py`) non la
   legge nessuna prova, e rotta spegnerebbe la scansione in silenzio; **una correzione sulla scheda
   resiste a una nuova lettura** e' provata per pixel e colore della camera, non per gli altri
-  campi; **l'ordine "dal piu' ripreso" dell'Attrezzatura** (`spine/gear_usage.py`) si prova con un
-  oggetto solo (`test_a_piece_says_what_you_shot_with_it`, citata da `attrezzatura.md`): con due
-  oggetti di ore diverse l'ordine non e' controllato. Piu' piccole: i totali delle Notti in una
+  campi. Piu' piccole: i totali delle Notti in una
   query sola, promessi in `notti.md`, che nessuna prova conta; il catalogo ("le ore non si
   sparpagliano", "senza rete") provato di sbieco;
   in `spina.md` tre prove che esistono e la riga non cita
@@ -431,10 +421,13 @@ Niente di aperto.
 - **Una risposta sul filtro rimette in coda tutti i frame senza matrice della sua camera, anche
   quelli che il filtro lo scrivono** (`_OF_CAMERA` in `spine/unfiltered.py`, chiamato da
   `api/review_write_folders._sensor`): 6.558 per 10 su un caso costruito, misurato quando la
-  risposta era per camera.
+  risposta era per camera; 1.750 per 750 muti sul filtro, 220 ms, su 2.000 frame sintetici (6/10).
 - **Unire due grafie di una camera rifa' tutti i frame della camera che resta**
-  (`apply_answers` in `api/review_write.py`): 6.990 in coda per 432 cambiati, 6,0 s contro ~0,6.
+  (`api/instrument_answer.merge`, da Applica e da `PATCH /gear/instruments`): 6.990 in coda per
+  432 cambiati, 6,0 s contro ~0,6; 2.000 per 250 assorbiti, 238 ms, su 2.000 frame (6/10).
   Rimedio: rimettere in coda la tenuta solo se la risposta le cambia qualcosa.
+- Questi due non sono un refactor: meno frame in coda cambia `requeued` nella risposta e le righe
+  di `frame_stages`. Vanno in un `/ripara`.
 - **Cambiare il fuso di casa tiene il database dentro la richiesta**, e il tempo cresce coi frame
   che cambiano data (`spine/home_nights.py`): il grosso e' `unnamed.assign` frame per frame. Su un
   archivio grande senza coordinate una scrittura del worker puo' avvicinarsi al `busy_timeout`
@@ -455,8 +448,6 @@ Niente di aperto.
 
 ### Doppioni -- lo stesso pezzo scritto piu' volte
 
-- **`rigs._pezzo_id` e' `gear.instrument_id` scritta due volte.** Vive in `rigs` perche' `gear`
-  importa `rigs`: va in un modulo che tutti e due possono importare.
 - **I soggetti di un mosaico si leggono in due posti** (`_most_poses` in
   `spine/mosaic_describe.py`, `_SUBJECTS` in `spine/mosaic_proposals.py`): la stessa giunzione
   frame-pannelli, una per il piu' frequente e una per l'insieme.
@@ -646,8 +637,7 @@ riga per voce.
   copra; due nomi. `declarations.learn` (`target_key`) e `confirm` (`key`) accettano
   `str | None` perche' `object_answer.declare_object` e `unnamed.declare` passano `slug or name`
   da `resolved`, che torna due opzionali; un `None` cadrebbe sul `NOT NULL`: lo toglie un
-  bersaglio risolto tipato `str`. `declarations.values_of` torna `list[Any]` (righe che `rigs`
-  spacchetta in coppie con `dict()`): coppie tipate quando la riga avra' una forma. Le pose e i
+  bersaglio risolto tipato `str`. Le pose e i
   pannelli di `mosaic` e `mosaic_geometry` restano `dict[str, Any]`, non `db/row.Row`, perche'
   `identify_geometry.frame_shape`/`frame_radius_deg` leggono con `.get` (un `sqlite3.Row` non ce
   l'ha, e i test passano dict senza i lati): passare a `[]` cambia comportamento, quindi aspetta.
@@ -656,9 +646,7 @@ riga per voce.
   la ragione del `noqa` dopo il codice. La docstring di
   `nights.still_reading` dice "`measure`, which nobody runs yet": invecchia quando uno stadio lo
   lancera'. Regole dette due volte: "righe e conta usano una condizione sola" (docstring di
-  `archive` e di `_dove`); `COLLATE NOCASE` (`archive.ORDINI` e `choices`); "sta qui perche' la
-  leggono piu' stadi" e "una chiave che sopravvive, mai l'id di riga" (docstring di
-  `declarations`, poi `FOLDER_TYPE` e `declare_coordinates`).
+  `archive` e di `_dove`); `COLLATE NOCASE` (`archive.ORDINI` e `choices`).
 - **Domande per gruppo e oggetti, dopo la fase 1**: `row_of` e' la stessa riga
   (`next(iter(by_...(conn, only=key)), None)`) in `signature_page`, `unnamed` e `typeless`,
   e l'ordine "il piu' numeroso in cima" (`-frames`, `key`) e' riscritto in `signature_page`,
@@ -762,15 +750,10 @@ riga per voce.
   passa da `units.bortle_of` in `api/tonight._sito` e `api/sites._out`.
 - **Da confermare, dopo la fase 1**: il 409 `none_filter_exists` di `POST /review/apply` e'
   scritto nel contratto ma nessun test lo prova.
-- **L'attrezzatura, dopo la fase 1**: le docstring di `rigs.find_rig` e `rigs.RigExistsError`
-  scrivono a mano il 5 % di `units.FOCAL_TOLERANCE`; "la scheda dell'utente vince su file e cielo"
-  e' detta in `camera_sky`, `camera_specs` e `gear.camera_specs`, ma vive solo in
-  `gear.camera_specs`.
 - **Frame senza tipo, dopo la fase 2**: "risolto e' una foto, senza stelle una calibrazione" e'
   detta in `typeless` e nella descrizione OpenAPI di `api/models_review_groups` (toglierla di li'
   cambia lo schema).
-- **Attrezzatura, dopo la fase 1**: `rigs.declared_mount` riscrive la query di `rigs._rig`
-  (`RIG_ROWS` per id) invece di chiamarla; `filters_used.of` e `idlist` accettano anche chiavi di
+- **Attrezzatura, dopo la fase 1**: `filters_used.of` e `idlist` accettano anche chiavi di
   testo (i mosaici dell'Archivio) in una tabella `id INTEGER`, che le tiene per affinita' di SQLite.
 - **Stadi, dopo la fase 1**: per un alias di tipo `worker/worker.py` importa `spine.stage_run`
   (da solo, 16 moduli invece di 3; nell'app intera costo zero; toglierlo vuole un import sotto

@@ -20,7 +20,28 @@ class UnknownTargetError(ValueError):
     """The answer points at a catalog entry that does not exist."""
 
 
-def declared(conn: sqlite3.Connection, entity_type: str, entity_key: str | None, field: str) -> Any:
+class EntityType(StrEnum):
+    """The words of the `declarations.entity_type` CHECK."""
+
+    OBJECT = "object"
+    RIG = "rig"
+    INSTRUMENT = "instrument"
+    NIGHT = "night"
+    SESSION = "session"
+    COORDINATES = "coordinates"
+    # answers on a folder, keyed by its path
+    FOLDER = "folder"
+    # the target on frames with no name and no sky, keyed by the frame's fingerprint: the group's
+    # key carries the night, which moves with home's zone
+    FRAME = "frame"
+    MOSAIC = "mosaic"
+    # the gear the files leave out, keyed by the header signature (`spine/signature.py`)
+    SIGNATURE = "signature"
+
+
+def declared(
+    conn: sqlite3.Connection, entity_type: EntityType, entity_key: str | None, field: str
+) -> Any:
     """The row's presence wins over what was detected."""
     if entity_key is None:
         return None
@@ -33,7 +54,7 @@ def declared(conn: sqlite3.Connection, entity_type: str, entity_key: str | None,
 
 def write_declaration(  # noqa: PLR0913
     conn: sqlite3.Connection,
-    entity_type: str,
+    entity_type: EntityType,
     entity_key: str,
     field: str,
     value: Any,
@@ -48,7 +69,7 @@ def write_declaration(  # noqa: PLR0913
     )
 
 
-def forget(conn: sqlite3.Connection, entity_type: str, entity_key: str, field: str) -> int:
+def forget(conn: sqlite3.Connection, entity_type: EntityType, entity_key: str, field: str) -> int:
     """How many went: the question opens again."""
     return conn.execute(
         "DELETE FROM declarations WHERE entity_type = ? AND entity_key = ? AND field = ?",
@@ -95,6 +116,25 @@ def instrument_names(
     }
 
 
+def instrument_id(conn: sqlite3.Connection, kind: str, name: str | None) -> int | None:
+    """Here, not in `gear`: `rigs` needs it too, and `gear` imports `rigs`."""
+    row = conn.execute(
+        "SELECT id FROM instruments WHERE kind = ? AND name = ?", (kind, name)
+    ).fetchone()
+    return None if row is None else row["id"]
+
+
+def instrument_ids(conn: sqlite3.Connection, names: Mapping[str, str]) -> dict[str, int]:
+    """`instrument_id` of one name per kind, in one query; a kind with no piece is left out."""
+    if not names:
+        return {}
+    pairs = ", ".join("(?, ?)" for _ in names)  # segnaposto-ok: one pair per kind, not per frame
+    # S608: only placeholders
+    sql = f"SELECT kind, id FROM instruments WHERE (kind, name) IN (VALUES {pairs})"  # noqa: S608
+    args = [v for pair in names.items() for v in pair]
+    return {r["kind"]: r["id"] for r in conn.execute(sql, args)}
+
+
 def instrument_key(kind: str, name: str) -> str:
     return f"{kind}|{name}"
 
@@ -102,19 +142,21 @@ def instrument_key(kind: str, name: str) -> str:
 # Camera fields the files can also tell: the user's word lives here, since the column is detected
 # and the spine recomputes it.
 CAMERA_SPECS = ("camera_type", "pixel_size_um")
-# The words of the `instruments.camera_type` CHECK: the sensor. What sat in front when the file is
-# silent is the signature's answer (`spine/signature.py`).
-CAMERA_MONO, CAMERA_COLOR = "mono", "color"
 
-# The gear the files leave out, keyed by the header signature (`spine/signature.py`).
-SIGNATURE, SIGNATURE_GEAR = "signature", "gear"
-# The target on frames with no name and no sky, keyed by the frame's fingerprint: the group's key
-# carries the night, which moves with home's zone.
-FRAME, FRAME_OBJECT = "frame", "object"
-# Answers on a folder, keyed by its path.
-FOLDER = "folder"
-# Whether frames that do not say what file they are are a light or a calibration. Here and not in
-# `typeless` because `stages` reads them too, and the imports would go round.
+
+class CameraType(StrEnum):
+    """The words of the `instruments.camera_type` CHECK: the sensor. What sat in front when the file
+    is silent is the signature's answer (`spine/signature.py`)."""
+
+    MONO = "mono"
+    COLOR = "color"
+
+
+# The field of each entity type's answer.
+SIGNATURE_GEAR = "gear"
+FRAME_OBJECT = "object"
+MOSAIC_FIELD = "answer"
+# Whether frames that do not say what file they are are a light or a calibration.
 FOLDER_TYPE = "image_type"
 
 
@@ -123,12 +165,12 @@ class TypeAnswer(StrEnum):
     CALIBRATION = "calibration"
 
 
-# The answer on a mosaic, keyed by the mosaic's key.
-MOSAIC, MOSAIC_FIELD = "mosaic", "answer"
-# A no is an answer, or accepting would silence a wrong proposal. A yes is written as the target
-# (`object_answer.target_value`). Not in `mosaic`: the proposals page must not import geometry.
-MOSAIC_YES, MOSAIC_NO = "yes", "no"
-MOSAIC_ANSWERS = (MOSAIC_YES, MOSAIC_NO)
+class MosaicAnswer(StrEnum):
+    """A no is an answer, or accepting would silence a wrong proposal; a yes is written as the
+    target (`object_answer.target_value`). Not in `mosaic`: proposals must not import geometry."""
+
+    YES = "yes"
+    NO = "no"
 
 
 # The "not the same piece" answer on a camera: one field per other camera, its name in field and
@@ -162,7 +204,7 @@ def declare_instrument_spec(  # noqa: PLR0913
     value: Any,
     now: str | None = None,
 ) -> None:
-    write_declaration(conn, "instrument", instrument_key(kind, name), field, value, now)
+    write_declaration(conn, EntityType.INSTRUMENT, instrument_key(kind, name), field, value, now)
 
 
 def rig_key(optics_name: str | None, camera_name: str | None, focal_mm: float | None) -> str:
@@ -172,19 +214,24 @@ def rig_key(optics_name: str | None, camera_name: str | None, focal_mm: float | 
 def rig_key_parts(key: str) -> tuple[str | None, str | None, float | None] | None:
     """`None` when unreadable: a name with a bar in it makes more than three parts, and where to
     cut is not guessed."""
-    parti = key.split("|")
-    if len(parti) != 3:
+    parts = key.split("|")
+    if len(parts) != 3:
         return None
-    ottica, camera, focale = parti
-    return ottica or None, camera or None, float(focale) if focale else None
+    optics, camera, focal = parts
+    return optics or None, camera or None, float(focal) if focal else None
 
 
-def values_of(conn: sqlite3.Connection, entity_type: str, field: str) -> list[Any]:
+def values_of(
+    conn: sqlite3.Connection, entity_type: EntityType, field: str
+) -> list[tuple[str, Any]]:
     """`(key, value)` pairs."""
-    return conn.execute(
-        "SELECT entity_key, value FROM declarations WHERE entity_type = ? AND field = ?",
-        (entity_type, field),
-    ).fetchall()
+    return [
+        (r["entity_key"], r["value"])
+        for r in conn.execute(
+            "SELECT entity_key, value FROM declarations WHERE entity_type = ? AND field = ?",
+            (entity_type, field),
+        )
+    ]
 
 
 # A fact about the place, not a night, so it holds for nights to come: keyed by rounded coordinates
@@ -195,13 +242,15 @@ COORDINATES_SITE = "site"
 def declare_coordinates(
     conn: sqlite3.Connection, coordinates_key: str, site_name: str, now: str | None = None
 ) -> None:
-    """The name, not the id: ids are reused and the answer would land on another site silently; a
-    renamed site no longer matches and the app asks again, the safe way."""
-    write_declaration(conn, "coordinates", coordinates_key, COORDINATES_SITE, site_name, now)
+    """The site's name, not its id: a renamed site no longer matches and the app asks again, the
+    safe way."""
+    write_declaration(
+        conn, EntityType.COORDINATES, coordinates_key, COORDINATES_SITE, site_name, now
+    )
 
 
 def site_for_coordinates(conn: sqlite3.Connection, coordinates_key: str | None) -> str | None:
-    value = declared(conn, "coordinates", coordinates_key, COORDINATES_SITE)
+    value = declared(conn, EntityType.COORDINATES, coordinates_key, COORDINATES_SITE)
     return value if isinstance(value, str) and value else None
 
 

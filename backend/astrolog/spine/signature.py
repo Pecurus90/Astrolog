@@ -5,20 +5,27 @@ import json
 import logging
 import sqlite3
 from dataclasses import asdict, dataclass, replace
-from typing import Any
+from enum import StrEnum
 
 from ..db.row import Row
 from ..units import known_focal, same_focal
 from ..vocab.header_value import normalize_header_value
 from ..vocab.software import normalize_software, telescope_is_mount
 from . import declarations as decl
+from .declarations import EntityType
 from .stages import StageName, invalidate
 
 log = logging.getLogger(__name__)
 
-# The filter words of an answer; "colour" is not one: it is written on the camera's card.
-NO_FILTER, ONE_OF_YOURS = "no_filter", "filter"
-FILTER_ANSWERS = (NO_FILTER, ONE_OF_YOURS)
+
+class FilterAnswer(StrEnum):
+    """The filter words of an answer; "colour" is not one: it is written on the camera's card."""
+
+    NO_FILTER = "no_filter"
+    ONE_OF_YOURS = "filter"
+
+
+_FILTER_WORDS = tuple(FilterAnswer)
 
 # Copies included: whoever answers requeues them too. The sensor narrows by index-free equality.
 _SAME_SENSOR = """
@@ -27,7 +34,7 @@ FROM frames WHERE naxis1 IS ? AND naxis2 IS ? AND pixel_size_um IS ?
 """
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Parts:
     """What the header says, spellings normalized as an alias is: a rename leaves the key alone."""
 
@@ -45,24 +52,35 @@ class Parts:
         )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class Answer:
     """NAMES, never row ids: a merge deletes the row, and the answer must survive it."""
 
     camera: str | None = None
     optics: str | None = None
     focal_mm: float | None = None
-    filter: str | None = None
+    filter: FilterAnswer | None = None
     filter_name: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class AnswerOnPage:
+    """The filter by id, as the dropdown holds it; `None` once that filter is gone."""
+
+    camera: str | None
+    optics: str | None
+    focal_mm: float | None
+    filter: FilterAnswer | None
+    filter_id: int | None
 
 
 def parts_of(r: Row) -> Parts:
     """A `TELESCOP` the software calls the mount says nothing of the optics: two mount names of one
     ASIAIR user would otherwise ask the same camera twice."""
-    montatura = telescope_is_mount(normalize_software(r["software_raw"]))
+    on_mount = telescope_is_mount(normalize_software(r["software_raw"]))
     return Parts(
         normalize_header_value(r["instrument_raw"]) or None,
-        None if montatura else normalize_header_value(r["telescope_raw"]) or None,
+        None if on_mount else normalize_header_value(r["telescope_raw"]) or None,
         known_focal(r["focal_mm_raw"]),
         r["naxis1"],
         r["naxis2"],
@@ -77,8 +95,8 @@ def key_of(parts: Parts) -> str:
 def parts_of_key(key: str) -> Parts | None:
     """`None` for a key no reader wrote: a malformed answer is no answer."""
     try:
-        valori = json.loads(key)
-        return Parts(*valori) if isinstance(valori, list) else None
+        items = json.loads(key)
+        return Parts(*items) if isinstance(items, list) else None
     except (ValueError, TypeError):
         return None
 
@@ -90,19 +108,22 @@ def _text(value: object) -> str | None:
 def _read(value: object) -> Answer | None:
     """A malformed row counts as no answer, and is logged: it is a user's answer being lost."""
     try:
-        dato = json.loads(value) if isinstance(value, str) else None
+        data = json.loads(value) if isinstance(value, str) else None
     except ValueError:
-        dato = None
-    if not isinstance(dato, dict):
+        data = None
+    if not isinstance(data, dict):
         log.warning("signature: risposta illeggibile, ignorata")
         return None
-    filtro = dato.get("filter") if dato.get("filter") in FILTER_ANSWERS else None
+    word = data.get("filter")
+    filter_word = FilterAnswer(word) if word in _FILTER_WORDS else None
     return Answer(
-        camera=_text(dato.get("camera")),
-        optics=_text(dato.get("optics")),
-        focal_mm=known_focal(dato.get("focal_mm")),
-        filter=filtro,
-        filter_name=_text(dato.get("filter_name")) if filtro == ONE_OF_YOURS else None,
+        camera=_text(data.get("camera")),
+        optics=_text(data.get("optics")),
+        focal_mm=known_focal(data.get("focal_mm")),
+        filter=filter_word,
+        filter_name=(
+            _text(data.get("filter_name")) if filter_word == FilterAnswer.ONE_OF_YOURS else None
+        ),
     )
 
 
@@ -112,12 +133,11 @@ type Answers = list[tuple[Parts, str, Answer]]
 def answers(conn: sqlite3.Connection) -> Answers:
     """All of them, read once per round or page: an archive has a handful of signatures."""
     out: Answers = []
-    for chiave, valore in sorted(
-        decl.values_of(conn, decl.SIGNATURE, decl.SIGNATURE_GEAR), key=lambda r: r[0]
-    ):
-        parti, risposta = parts_of_key(chiave), _read(valore)
-        if parti is not None and risposta is not None:
-            out.append((parti, chiave, risposta))
+    stored = decl.values_of(conn, EntityType.SIGNATURE, decl.SIGNATURE_GEAR)
+    for answer_key, raw in sorted(stored, key=lambda r: r[0]):
+        sought, stored_answer = parts_of_key(answer_key), _read(raw)
+        if sought is not None and stored_answer is not None:
+            out.append((sought, answer_key, stored_answer))
     return out
 
 
@@ -127,22 +147,22 @@ def answer_for(given: Answers, parts: Parts) -> tuple[str, Answer] | None:
 
 
 def answer(conn: sqlite3.Connection, key: str) -> Answer | None:
-    valore = decl.declared(conn, decl.SIGNATURE, key, decl.SIGNATURE_GEAR)
-    return None if valore is None else _read(valore)  # no answer yet is not a lost one
+    raw = decl.declared(conn, EntityType.SIGNATURE, key, decl.SIGNATURE_GEAR)
+    return None if raw is None else _read(raw)  # no answer yet is not a lost one
 
 
 def declare(conn: sqlite3.Connection, key: str, given: Answer, now: str | None = None) -> None:
     value = json.dumps(asdict(given))
-    decl.write_declaration(conn, decl.SIGNATURE, key, decl.SIGNATURE_GEAR, value, now)
+    decl.write_declaration(conn, EntityType.SIGNATURE, key, decl.SIGNATURE_GEAR, value, now)
 
 
 def frames_of(conn: sqlite3.Connection, key: str) -> list[int]:
     """Copies and frames an earlier answer settled included: that is how one changes one's mind."""
-    parti = parts_of_key(key)
-    if parti is None:
+    sought = parts_of_key(key)
+    if sought is None:
         return []
-    righe = conn.execute(_SAME_SENSOR, (parti.width, parti.height, parti.pixel_um))
-    return [r["id"] for r in righe if parts_of(r).same_as(parti)]
+    rows = conn.execute(_SAME_SENSOR, (sought.width, sought.height, sought.pixel_um))
+    return [r["id"] for r in rows if parts_of(r).same_as(sought)]
 
 
 def requeue(conn: sqlite3.Connection, key: str) -> list[int]:
@@ -153,33 +173,34 @@ def requeue(conn: sqlite3.Connection, key: str) -> list[int]:
 
 def _every_answer(conn: sqlite3.Connection) -> list[tuple[str, Answer]]:
     """Also under a key no reader parses: a name followed is never left behind."""
-    lette = decl.values_of(conn, decl.SIGNATURE, decl.SIGNATURE_GEAR)
-    return [(k, a) for k, v in lette if (a := _read(v)) is not None]
+    stored = decl.values_of(conn, EntityType.SIGNATURE, decl.SIGNATURE_GEAR)
+    return [(k, a) for k, v in stored if (a := _read(v)) is not None]
 
 
 def follow_piece(
     conn: sqlite3.Connection, kind: str, old_name: str, new_name: str, now: str | None = None
 ) -> None:
     """On the old name the piece would be reborn beside the new one at the next round."""
-    for chiave, risposta in _every_answer(conn):
-        if getattr(risposta, kind) == old_name:
-            declare(conn, chiave, replace(risposta, **{kind: new_name}), now)
+    for answer_key, stored_answer in _every_answer(conn):
+        if getattr(stored_answer, kind) == old_name:
+            declare(conn, answer_key, replace(stored_answer, **{kind: new_name}), now)
 
 
 def follow_filter(conn: sqlite3.Connection, old_name: str, new_name: str) -> None:
     """Renamed or merged, the filter carries the answer along, or its frames lose it."""
-    for chiave, risposta in _every_answer(conn):
-        if risposta.filter_name == old_name:
-            declare(conn, chiave, replace(risposta, filter_name=new_name))
+    for answer_key, stored_answer in _every_answer(conn):
+        if stored_answer.filter_name == old_name:
+            declare(conn, answer_key, replace(stored_answer, filter_name=new_name))
 
 
-def as_page(conn: sqlite3.Connection, given: Answer) -> dict[str, Any]:
-    """The filter by id, as the dropdown holds it; `None` once that filter is gone."""
-    riga = conn.execute("SELECT id FROM filters WHERE name = ?", (given.filter_name,)).fetchone()
-    return {
-        "camera": given.camera,
-        "optics": given.optics,
-        "focal_mm": given.focal_mm,
-        "filter": given.filter,
-        "filter_id": riga and riga["id"],
-    }
+def as_page(conn: sqlite3.Connection, given: Answer) -> AnswerOnPage:
+    filter_row = conn.execute(
+        "SELECT id FROM filters WHERE name = ?", (given.filter_name,)
+    ).fetchone()
+    return AnswerOnPage(
+        given.camera,
+        given.optics,
+        given.focal_mm,
+        given.filter,
+        None if filter_row is None else filter_row["id"],
+    )

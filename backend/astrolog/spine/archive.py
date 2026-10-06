@@ -6,7 +6,7 @@ from typing import Any
 
 from ..db import idlist
 from . import counts
-from .declarations import MOSAIC, MOSAIC_FIELD
+from .declarations import MOSAIC_FIELD, EntityType
 from .object_answer import CATALOG, NAME
 from .objects import NAME_COLUMNS, subjects_of, subjects_sql, together
 
@@ -36,7 +36,8 @@ SELECT 'm:' || g.mosaic_key AS chiave, NULL AS id, g.mosaic_key, t.slug AS catal
 FROM (SELECT f.mosaic_key, COUNT(DISTINCT f.panel_id) AS panels FROM frames f
       WHERE f.mosaic_key IS NOT NULL AND f.copy_of IS NULL GROUP BY f.mosaic_key) g
 LEFT JOIN (SELECT d.entity_key, d.field, {_DEL_SLUG} AS slug, {_DEL_NOME} AS nome
-           FROM declarations d WHERE d.entity_type = '{MOSAIC}' AND d.field = '{MOSAIC_FIELD}') t
+           FROM declarations d
+           WHERE d.entity_type = '{EntityType.MOSAIC}' AND d.field = '{MOSAIC_FIELD}') t
        ON t.entity_key = g.mosaic_key
 LEFT JOIN catalog_entries e ON e.slug = t.slug
 LEFT JOIN catalog_names c ON c.slug = t.slug AND c.is_primary = 1"""  # noqa: S608 - constant fragments of the spine

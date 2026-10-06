@@ -130,7 +130,11 @@ def _camera_of(
     night = None
     if camera is None and (answered is None or answered.camera is None):
         night = night_rig.rig_of_night(conn, frame, nights())
-    camera = camera or (answered.camera if answered else None) or (night or {}).get("camera")
+    camera = (
+        camera
+        or (answered.camera if answered else None)
+        or (night.camera if night is not None else None)
+    )
     return Given(camera, answered, night)
 
 
@@ -203,7 +207,7 @@ def _filter_for(
     # without a Bayer matrix mono and colour look alike, and `none` may be an empty wheel slot: the
     # signature's answer says it. It speaks of a mono; on colour it is OSC anyway.
     if not colour and unfiltered.says_no_filter(frame["filter_raw"]):
-        if answered is not None and answered.filter == signature.NO_FILTER:
+        if answered is not None and answered.filter == signature.FilterAnswer.NO_FILTER:
             return _no_filter(conn, frame, now)
         if answered is not None and answered.filter_name:
             return _answered_filter(conn, frame, answered.filter_name, now)

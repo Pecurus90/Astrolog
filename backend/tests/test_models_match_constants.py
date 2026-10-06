@@ -26,6 +26,7 @@ from astrolog.ephemeris import moon, sun
 from astrolog.fits.frame_type import FrameType
 from astrolog.spine import (
     declarations,
+    gear_usage,
     group,
     identify_decide,
     rewrite,
@@ -34,7 +35,6 @@ from astrolog.spine import (
     solve,
     stages,
     typeless,
-    unfiltered,
 )
 from astrolog.spine.scan_store import COUNTS
 from astrolog.units import SQM_MAX, SQM_MIN
@@ -107,14 +107,14 @@ def test_the_answers_about_a_camera_are_the_words_the_spine_reads():
     `normalize` legge -- piu' "a colori", che va sulla scheda della camera --, o una risposta
     arriverebbe e non sposterebbe niente."""
     parole = set(get_args(models_review_groups.GearFilterAnswer))
-    assert parole == {*signature.FILTER_ANSWERS, unfiltered.COLOR}
+    assert parole == {*signature.FilterAnswer, declarations.CameraType.COLOR}
 
 
 def test_the_answers_about_a_mosaic_are_the_words_the_spine_reads():
     """Le due risposte su un mosaico: l'API accetta le stesse parole che il lettore riconosce. Una
     che divergesse verrebbe scritta e poi **scartata come illeggibile** -- il lettore tratta un
     valore che non conosce come nessuna risposta -- e la domanda tornerebbe senza dire perche'."""
-    assert set(get_args(models_review_groups.MosaicAnswer)) == set(declarations.MOSAIC_ANSWERS)
+    assert set(get_args(models_review_groups.MosaicAnswer)) == set(declarations.MosaicAnswer)
 
 
 def test_the_answers_about_a_file_type_are_the_words_the_spine_reads():
@@ -139,8 +139,7 @@ def test_the_camera_colours_say_what_the_schema_allows():
     riga = next(r for r in schema.splitlines() if "camera_type     TEXT CHECK" in r)
     dallo_schema = set(re.findall(r"'([a-z]+)'", riga))
     assert set(get_args(models_review.CameraType)) == dallo_schema
-    assert {declarations.CAMERA_MONO, declarations.CAMERA_COLOR} == dallo_schema
-    assert unfiltered.COLOR == declarations.CAMERA_COLOR
+    assert set(declarations.CameraType) == dallo_schema
 
 
 def test_the_declaration_types_the_spine_names_are_the_ones_the_schema_allows():
@@ -150,8 +149,15 @@ def test_the_declaration_types_the_spine_names_are_the_ones_the_schema_allows():
     schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
     riga = next(r for r in schema.splitlines() if "entity_type TEXT NOT NULL CHECK" in r)
     dallo_schema = set(re.findall(r"'([a-z_]+)'", riga))
-    tipi = {declarations.FOLDER, declarations.MOSAIC, declarations.FRAME}
-    assert tipi <= dallo_schema
+    assert set(declarations.EntityType) == dallo_schema
+
+
+def test_the_gear_usage_subjects_are_the_ones_the_schema_allows():
+    """The `gear_usage.subject` CHECK and `UsageSubject` are one vocabulary: a word on one side only
+    would make the end-of-stage rewrite fail, all or nothing."""
+    schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+    riga = next(r for r in schema.splitlines() if "subject         TEXT NOT NULL CHECK" in r)
+    assert set(re.findall(r"'([a-z_]+)'", riga)) == set(gear_usage.UsageSubject)
 
 
 def test_declarable_bands_are_the_physical_ones_of_the_vocabulary():

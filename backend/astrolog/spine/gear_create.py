@@ -56,15 +56,15 @@ def filter_declared(  # noqa: PLR0913
     """A name the vocabulary turns into another (`L` -> `Lum`) is learnt as a rename, read after the
     colour, so colour frames stay OSC. A taken name is refused: a twin would split the hours."""
     mono = normalize_filter(name, bayer=False)
-    for grafia in {name, mono} - {None}:
-        gia = declarations.alias_target(conn, "filter", normalize_header_value(grafia))
-        if gia is not None and gia != name:
-            raise SpellingTakenError(f"{grafia} e' una grafia di {gia}")
+    for spelling in {name, mono} - {None}:
+        taken = declarations.alias_target(conn, "filter", normalize_header_value(spelling))
+        if taken is not None and taken != name:
+            raise SpellingTakenError(f"{spelling} e' una grafia di {taken}")
     if mono and mono != name and filter_id_by_name(conn, mono) is not None:
         raise SpellingTakenError(f"{name} e' il tuo {mono}")
     filter_id = create_filter(conn, name, Passband.UNKNOWN, now)
-    scheda = {k: v for k, v in (("brand", brand), ("model", model)) if v}
-    gear.declare_filter(conn, filter_id, scheda, bands=bands, now=now)
+    card = {k: v for k, v in (("brand", brand), ("model", model)) if v}
+    gear.declare_filter(conn, filter_id, card, bands=bands, now=now)
     if mono and mono != name:
         declarations.learn(conn, "filter", mono, name, now)
     return filter_id

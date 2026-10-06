@@ -183,7 +183,9 @@ def test_an_answer_that_cannot_be_read_is_no_answer(conn, scritto):
     ore su un'ipotesi. Le due parole ammesse sono quelle del vocabolario, non una qualunque."""
     radice = add_folder(conn, "D:/Astro")
     _frame(conn, radice, "dark/a.fits")
-    decl.write_declaration(conn, decl.FOLDER, "D:/Astro/dark", decl.FOLDER_TYPE, scritto, "ora")
+    decl.write_declaration(
+        conn, decl.EntityType.FOLDER, "D:/Astro/dark", decl.FOLDER_TYPE, scritto, "ora"
+    )
     assert typeless.answer(conn, "D:/Astro/dark") is None
     assert _riga(conn, "D:/Astro/dark")["answer"] is None
 

@@ -150,13 +150,17 @@ def declare(  # noqa: PLR0913
         (key,),
     ).fetchall()
     for r in rows:
-        decl.write_declaration(conn, decl.FRAME, r["frame_hash"], decl.FRAME_OBJECT, value, now)
+        decl.write_declaration(
+            conn, decl.EntityType.FRAME, r["frame_hash"], decl.FRAME_OBJECT, value, now
+        )
 
 
 def answer(conn: sqlite3.Connection, key: str | None) -> dict[str, Any] | None:
     """`{"kind", "value", "name"}`: the one answer its frames carry, which newcomers take. Two
     answers are none, and so is a gone catalog entry: its frames stay a question."""
-    dette = conn.execute(_ANSWERS_OF_GROUP, (decl.FRAME, decl.FRAME_OBJECT, key)).fetchall()
+    dette = conn.execute(
+        _ANSWERS_OF_GROUP, (decl.EntityType.FRAME, decl.FRAME_OBJECT, key)
+    ).fetchall()
     if len(dette) != 1:
         return None
     value = dette[0][0]

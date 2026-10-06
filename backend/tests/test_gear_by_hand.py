@@ -138,6 +138,6 @@ def test_a_declared_rig_whose_piece_is_gone_is_not_born_half(conn):
     from astrolog.spine.declarations import write_declaration
 
     _pezzo(conn, "optics", "TS 130 APO")
-    write_declaration(conn, "rig", "TS 130 APO|Sparita|500.0", corredi.DECLARED, 1, "ora")
+    write_declaration(conn, "rig", "TS 130 APO|Sparita|500.0", corredi.RigField.DECLARED, 1, "ora")
     corredi.restore_declared(conn, "ora")
     assert one(conn, "SELECT COUNT(*) FROM rigs") == 0

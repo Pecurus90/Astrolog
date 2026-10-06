@@ -82,7 +82,7 @@ def _di(client, sotto, value):
         for (impronta,) in conn.execute(
             "SELECT frame_hash FROM frames WHERE unnamed_key = ?", (chiave,)
         ).fetchall():
-            decl.write_declaration(conn, decl.FRAME, impronta, decl.FRAME_OBJECT, value)
+            decl.write_declaration(conn, decl.EntityType.FRAME, impronta, decl.FRAME_OBJECT, value)
         conn.commit()
     return _rigira(client)
 

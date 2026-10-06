@@ -1,5 +1,5 @@
 """What the FILES say of a camera's card, physical pixel and colour, voted by its frames. The most
-frequent value wins and a tie gives none; the user's card wins on reading (`gear.camera_specs`)."""
+frequent value wins and a tie gives none; who wins on reading: `gear.camera_specs`."""
 
 import sqlite3
 from collections import Counter
@@ -22,8 +22,8 @@ def ahead(
     for camera, bayer in pending:
         votes.setdefault(camera, Counter())[bayer] += 1
     colours = {camera: _colour(v) for camera, v in votes.items()}
-    for camera_id, (nome, votato) in store.camera_colours(conn).items():
-        if colours[nome] != votato and unfiltered.written_colour(conn, nome) is None:
+    for camera_id, (name, voted) in store.camera_colours(conn).items():
+        if colours[name] != voted and unfiltered.written_colour(conn, name) is None:
             unfiltered.requeue(conn, camera_id)
     return colours
 
@@ -31,18 +31,18 @@ def ahead(
 def from_files(conn: sqlite3.Connection, used: Mapping[str, str | None] | None = None) -> None:
     """Redone after every pass that worked a frame, so the first file does not decide for good. A
     colour other than the one the frames chose with requeues the camera's matrix-less frames."""
-    prima = store.camera_colours(conn)
-    for camera_id, (colore, pixel) in _voted(store.camera_votes(conn)).items():
-        store.set_camera_specs(conn, camera_id, colore, pixel)
-        nome, votato = prima[camera_id]
-        scelto = (used or {}).get(nome, votato)  # the colour the frames chose with
-        if scelto != colore and unfiltered.written_colour(conn, nome) is None:
+    before = store.camera_colours(conn)
+    for camera_id, (colour, pixel) in _voted(store.camera_votes(conn)).items():
+        store.set_camera_specs(conn, camera_id, colour, pixel)
+        name, voted = before[camera_id]
+        chosen = (used or {}).get(name, voted)  # the colour the frames chose with
+        if chosen != colour and unfiltered.written_colour(conn, name) is None:
             unfiltered.requeue(conn, camera_id)
 
 
 def _colour(votes: Counter[bool]) -> str | None:
     """A tie gives none: between two values of the same weight none is picked at random."""
-    return decl.CAMERA_COLOR if most_frequent(+votes) else None
+    return decl.CameraType.COLOR if most_frequent(+votes) else None
 
 
 def _voted(rows: Iterable[sqlite3.Row]) -> dict[int, tuple[str | None, float | None]]:

@@ -152,7 +152,7 @@ def test_any_write_to_an_input_moves_the_mark_without_a_helper(conn):
     typeless.declare(conn, "D:/Astro/luci", TypeAnswer.LIGHT)
     posa = _posa(conn, radice, "luci/a.fits")
     assert _scritto(conn, posa) == 0
-    decl.forget(conn, decl.FOLDER, "D:/Astro/luci", decl.FOLDER_TYPE)
+    decl.forget(conn, decl.EntityType.FOLDER, "D:/Astro/luci", decl.FOLDER_TYPE)
     assert _scritto(conn, posa) == 1
     sky_solved(conn, posa)
     assert _scritto(conn, posa) == 0

@@ -40,7 +40,7 @@ def nomi(righe):
 def mosaico(conn, pose, bersaglio="catalog:ic-405"):
     """Il mosaico confermato su quelle pose, come lo lascia chi risponde: la dichiarazione e la
     chiave scritta sulle pose. Chi la scrive ha le sue prove; qui si guarda chi la legge."""
-    decl.write_declaration(conn, decl.MOSAIC, CHIAVE, decl.MOSAIC_FIELD, bersaglio)
+    decl.write_declaration(conn, decl.EntityType.MOSAIC, CHIAVE, decl.MOSAIC_FIELD, bersaglio)
     mosaico_id = conn.execute(
         "INSERT INTO mosaics(key, ra_deg, dec_deg, proposed) VALUES(?, 80, 34, 'IC 405')", (CHIAVE,)
     ).lastrowid

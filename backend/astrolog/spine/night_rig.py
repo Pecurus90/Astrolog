@@ -4,7 +4,7 @@ columns: the night's frames may not be normalized yet when it is asked."""
 import json
 import sqlite3
 from collections.abc import Iterable
-from typing import Any
+from dataclasses import dataclass
 
 from ..clock import NIGHT_SQL
 from ..db.row import Row
@@ -17,10 +17,10 @@ from . import declarations as decl
 def rigs_by_night(listed: bool) -> str:
     """One row per night and raw values, never per frame. `listed` keeps the nights of a JSON list,
     which are looked up through the index."""
-    dove = f"{NIGHT_SQL} IN (SELECT value FROM json_each(?))" if listed else "1"  # noqa: S608
+    where = f"{NIGHT_SQL} IN (SELECT value FROM json_each(?))" if listed else "1"  # noqa: S608
     return f"""
 SELECT {NIGHT_SQL} AS night, f.instrument_raw, f.telescope_raw, f.software_raw, f.focal_mm_raw
-FROM frames f WHERE {NIGHT_SQL} IS NOT NULL AND f.instrument_raw IS NOT NULL AND {dove}
+FROM frames f WHERE {NIGHT_SQL} IS NOT NULL AND f.instrument_raw IS NOT NULL AND {where}
 GROUP BY night, f.instrument_raw, f.telescope_raw, f.software_raw, f.focal_mm_raw
 """  # noqa: S608 - constant fragments
 
@@ -47,59 +47,68 @@ def asks_camera(instrument_raw: str | None) -> bool:
     return not normalize_header_value(instrument_raw)
 
 
+@dataclass(frozen=True, slots=True)
+class NightRig:
+    """The camera a night names, and optics and focal only if the night says one."""
+
+    camera: str
+    optics: str | None
+    focal_mm: float | None
+
+
 def night_rigs(
     conn: sqlite3.Connection, nights: Iterable[str] | None = None
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, NightRig]:
     """Nights whose headers name one camera. Optics and focal only if the night says one: the
     ASIAIR's "no optics" is an answer too. `nights` spares reading the whole archive."""
-    per_notte: dict[str, list[_Seen]] = {}
-    nomi: dict[tuple[str, str | None], str | None] = {}
+    by_night: dict[str, list[_Seen]] = {}
+    names: dict[tuple[str, str | None], str | None] = {}
     if nights is None:
-        righe = conn.execute(rigs_by_night(False))
+        raw_rows = conn.execute(rigs_by_night(False))
     else:
-        righe = conn.execute(rigs_by_night(True), (json.dumps(sorted(nights)),))
+        raw_rows = conn.execute(rigs_by_night(True), (json.dumps(sorted(nights)),))
 
-    def nome(kind: str, grafia: str | None) -> str | None:  # one lookup per spelling, not per night
-        if (kind, grafia) not in nomi:
-            nomi[kind, grafia] = decl.instrument_name(conn, kind, grafia) if grafia else None
-        return nomi[kind, grafia]
+    def name_of(kind: str, spelling: str | None) -> str | None:  # once per spelling, not per night
+        if (kind, spelling) not in names:
+            names[kind, spelling] = decl.instrument_name(conn, kind, spelling) if spelling else None
+        return names[kind, spelling]
 
-    for r in righe:
-        if (camera := nome("camera", r["instrument_raw"])) is None:
+    for r in raw_rows:
+        if (camera := name_of("camera", r["instrument_raw"])) is None:
             continue
         mount = telescope_is_mount(normalize_software(r["software_raw"]))
-        ottica = None if mount else nome("optics", r["telescope_raw"])
-        visto = (camera, ottica, known_focal(r["focal_mm_raw"]))
-        per_notte.setdefault(r["night"], []).append(visto)
-    corredi = {notte: _rig_of(viste) for notte, viste in per_notte.items()}
-    return {notte: corredo for notte, corredo in corredi.items() if corredo is not None}
+        optics = None if mount else name_of("optics", r["telescope_raw"])
+        seen = (camera, optics, known_focal(r["focal_mm_raw"]))
+        by_night.setdefault(r["night"], []).append(seen)
+    found = {night: _rig_of(sightings) for night, sightings in by_night.items()}
+    return {night: rig for night, rig in found.items() if rig is not None}
 
 
-def _rig_of(viste: list[_Seen]) -> dict[str, Any] | None:
-    camere, ottiche = {v[0] for v in viste}, {v[1] for v in viste}
-    if len(camere) != 1:
+def _rig_of(sightings: list[_Seen]) -> NightRig | None:
+    cameras, optics_seen = {v[0] for v in sightings}, {v[1] for v in sightings}
+    if len(cameras) != 1:
         return None
-    focali = [v[2] for v in viste]
-    intero = len(ottiche) == 1 and all(same_focal(focali[0], f) for f in focali)
-    return {
-        "camera": camere.pop(),
-        "optics": ottiche.pop() if intero else None,
-        "focal_mm": focali[0] if intero else None,
-    }
+    focals = [v[2] for v in sightings]
+    whole = len(optics_seen) == 1 and all(same_focal(focals[0], f) for f in focals)
+    return NightRig(
+        cameras.pop(),
+        optics_seen.pop() if whole else None,
+        focals[0] if whole else None,
+    )
 
 
 def rig_of_night(
-    conn: sqlite3.Connection, frame: Row, rigs: dict[str, dict[str, Any]]
-) -> dict[str, Any] | None:
+    conn: sqlite3.Connection, frame: Row, rigs: dict[str, NightRig]
+) -> NightRig | None:
     return rigs.get(conn.execute(NIGHT_OF, (frame["id"],)).fetchone()["night"])
 
 
 def in_nights_of(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> list[int]:
     """Camera-less frames in the nights of these camera-naming frames: their night's rig may have
     changed, so the caller requeues them."""
-    dicono = [r["id"] for r in conn.execute(_RAW_OF, (json.dumps(list(frame_ids)),))
+    naming = [r["id"] for r in conn.execute(_RAW_OF, (json.dumps(list(frame_ids)),))
               if not asks_camera(r["instrument_raw"])]  # fmt: skip
-    if not dicono:
+    if not naming:
         return []
-    rows = conn.execute(_IN_NIGHTS_OF, (json.dumps(dicono),))
+    rows = conn.execute(_IN_NIGHTS_OF, (json.dumps(naming),))
     return [r["id"] for r in rows if asks_camera(r["instrument_raw"])]
