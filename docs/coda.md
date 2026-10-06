@@ -18,6 +18,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S3, una scheda per gruppo di frame | ~0,68 M agenti (workflow 0,50 + due sviluppatore 0,18), sessione principale non contata | 67 workflow | 2 bloccanti dal giro (il "non e' un oggetto" di un gruppo scavalcava un cielo arrivato dopo; cambiare idea non riportava i frame legati dal gruppo) + import-linter rosso |
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
+| 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
 
 ### Prima delle funzioni nuove
 
@@ -305,8 +306,11 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   dubbio (`low`), non se il cielo lo riconosce ne' se l'header scrive una sigla del catalogo senza
   cielo (`high`, Marco). Spariti `seen` e la dichiarazione `confirmed`, e con loro l'avviso degli
   oggetti nuovi.
-- **S5 -- Il segno "aspetta il tipo" ricalcolato da solo sui frame toccati**, invece di
-  `refresh_waiting` chiamato a mano da chi cambia un suo ingresso; prima si misura il costo.
+- **S5 -- fatta** (6/10/2026): il segno "aspetta il tipo" lo riscrivono i trigger di
+  `schema.sql` (vista `frame_waits`) a ogni scrittura di un ingresso, al posto di
+  `refresh_waiting` chiamato a mano in sette punti. Misurato su 20.000 pose: costo uguale
+  (scansione 12,0 s contro 12,5; una risposta 74 ms contro 85). Ora lo muove anche chi scrive
+  senza passare dagli aiutanti (una risposta tolta, un cielo cancellato).
 - **M1 -- Dall'archivio ai file**: nessuna risposta di Archivio o Notti porta il percorso di un
   frame. Elenco dei file per oggetto, notte e filtro, in CSV e come lista per i programmi di
   elaborazione (PixInsight, Siril) <!-- software-ok: elaborano, non riprendono -->.
@@ -463,7 +467,7 @@ Niente di aperto.
   il picco e' 2.653 KB contro 1.174 del giro doppio, con tempo e query piu' bassi. Pesa alla prima
   lettura di un archivio grande; si rimisura su un NAS vero prima di decidere un rimedio.
 - **Una risposta sul tipo riscrive il segno dell'attesa di ogni frame senza tipo**
-  (`typeless.declare` chiama `refresh_waiting` su tutto l'archivio), dove basterebbero quelle
+  (il trigger di `declarations` in `schema.sql` riscrive tutto l'archivio), dove basterebbero quelle
   della cartella, che `declare` non ha: le trova `apply_answer`, subito dopo.
 - **Alle notti manca un indice.** La query della pagina valuta i tre conteggi su tutte le notti e
   ordina in una tabella temporanea prima del `LIMIT`: su 1.000 notti e 40.000 frame 12,81 ms, che

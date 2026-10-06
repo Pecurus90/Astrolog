@@ -8,7 +8,6 @@ from ..db.row import Row
 from ..fits.frame_type import UNKNOWN
 from . import declarations as decl
 from . import frame_folder as folder
-from .stages import refresh_waiting
 
 # The words live in `declarations`, because `stages` reads them too to know who is ready.
 LIGHT, CALIBRATION = decl.TYPE_LIGHT, decl.TYPE_CALIBRATION
@@ -44,7 +43,6 @@ def declare(conn: sqlite3.Connection, key: str, kind: str, now: str | None = Non
     if kind not in ANSWERS:  # a word outside the vocabulary is not half an answer: it is a bug
         raise ValueError(f"risposta che non esiste: {kind!r}")
     decl.write_declaration(conn, decl.FOLDER, key, decl.FOLDER_TYPE, kind, now)
-    refresh_waiting(conn)
 
 
 def answer(conn: sqlite3.Connection, key: str | None) -> str | None:

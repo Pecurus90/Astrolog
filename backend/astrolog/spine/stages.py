@@ -2,10 +2,9 @@
 missing"; `running` never reaches the DB, so a dead process leaves no stuck rows."""
 
 import sqlite3
-from collections.abc import Collection, Iterable
+from collections.abc import Collection
 
 from ..clock import now_iso
-from ..fits.frame_type import UNKNOWN
 from . import declarations as decl
 from . import frame_folder as folder
 
@@ -44,31 +43,13 @@ WAITING_FROM = "identify"
 WAITING_STAGES = frozenset(downstream("solve")) - {"solve"}
 
 
-# read once per frame: composing the key is the costly part
+# The answer of a frame's folder; the waiting rule itself is the `frame_waits` view in `schema.sql`.
 FOLDER_SAYS = f"""(
   SELECT dc.value FROM declarations dc WHERE dc.entity_type = '{decl.FOLDER}'
     AND dc.field = '{decl.FOLDER_TYPE}' AND dc.entity_key = ({folder.KEY_OF_FRAME}))"""  # noqa: S608
-# solved and with the sky still there: a detach keeps the stage done, and `identify` would name the
-# frame from its header
-_SKY_SOLVED = """(EXISTS (
-  SELECT 1 FROM frame_stages sv WHERE sv.frame_id = f.id AND sv.stage = 'solve'
-    AND sv.status = 'done') AND EXISTS (SELECT 1 FROM frame_wcs w WHERE w.frame_id = f.id))"""
-WAITING_RULE = f"""
-f.image_type = '{UNKNOWN}' AND CASE {FOLDER_SAYS}
-  WHEN '{decl.TYPE_LIGHT}' THEN 0 WHEN '{decl.TYPE_CALIBRATION}' THEN 1 ELSE NOT {_SKY_SOLVED} END
-"""  # noqa: S608 - spine constants, no user values
-# a mark on the frame, since `invalidate` resets stage rows: whoever changes an input of the rule
-# calls `refresh_waiting` at once, or a stale 0 sends a typeless dark to `identify`
+# a mark on the frame, since `invalidate` resets stage rows; the schema's triggers rewrite it on
+# every write to an input of the rule
 WAITING_SQL = "f.asks_type = 1"
-_REFRESH = f"UPDATE frames AS f SET asks_type = ({WAITING_RULE})"  # noqa: S608 - constants
-
-
-def refresh_waiting(conn: sqlite3.Connection, frame_ids: Iterable[int] | None = None) -> None:
-    """Without ids every typeless frame: a changed answer or folder can touch any of them."""
-    if frame_ids is None:
-        conn.execute(_REFRESH + " WHERE f.image_type = ?", (UNKNOWN,))
-    else:
-        conn.executemany(_REFRESH + " WHERE f.id = ?", [(i,) for i in frame_ids])
 
 
 def ready(
@@ -130,8 +111,6 @@ def set_status(  # noqa: PLR0913
         " reason = excluded.reason, updated_at = excluded.updated_at",
         (frame_id, stage, status, reason, now or now_iso()),
     )
-    if stage == "solve":
-        refresh_waiting(conn, [frame_id])
 
 
 def invalidate(
@@ -146,8 +125,6 @@ def invalidate(
         " WHERE frame_id = ? AND stage = ?",
         [(now, frame_id, s) for frame_id in frame_ids for s in stages],
     )
-    if "solve" in stages:
-        refresh_waiting(conn, frame_ids)
 
 
 # The same predicate as `WAITING_SQL`, or `ready` and this count would disagree and the residue

@@ -310,8 +310,9 @@ una rinuncia per qualunque altro
 motivo (nessuna soluzione, tempo scaduto, un errore) e' il cielo che non sa dire, e si chiede. Finche' non si sa **si ferma prima dell'oggetto**: il `failed` del cielo, che per un light
 manda avanti dal nome, qui non manda avanti niente, e quel frame non conta nel residuo di cio' che
 viene dopo il cielo (`spine/stages.py`: chi aspetta non e' lavoro da fare). Che aspetta e' scritto
-sulla posa (`frames.asks_type`), e lo riscrive subito chi cambia cio' da cui dipende -- il cielo, la
-posizione del file, la risposta della cartella --: chi legge non rifa' la regola. Cosi' non diventa ore
+sulla posa (`frames.asks_type`), e lo riscrive SQLite (i trigger della vista `frame_waits` in
+`schema.sql`) a ogni scrittura di cio' da cui dipende -- il cielo, la posizione del file, la risposta
+della cartella --, chiunque scriva: chi legge non rifa' la regola. Cosi' non diventa ore
 e non finisce fra i **Frame senza nome**, dove la domanda e' "cosa hai ripreso" e non "che file
 e'". Una foto del cielo tutta coperta dalle nuvole non ha stelle, e finisce fra le calibrazioni:
 non ha dati, e non conta nelle ore. La domanda si fa per **cartella** (`spine/typeless.py`) e

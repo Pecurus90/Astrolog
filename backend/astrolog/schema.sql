@@ -261,9 +261,9 @@ CREATE TABLE frames (
   asks_camera    INTEGER NOT NULL DEFAULT 1 CHECK (asks_camera IN (0, 1)),
   asks_filter    INTEGER NOT NULL DEFAULT 1 CHECK (asks_filter IN (0, 1)),
   names_optics   INTEGER NOT NULL DEFAULT 0 CHECK (names_optics IN (0, 1)),
-  -- La posa aspetta una risposta sul tipo di file (DERIVATO dalla regola in `spine/stages.py`):
-  -- chi cambia un suo ingresso -- il cielo, la posizione, la risposta della cartella -- lo
-  -- riscrive subito, e chi legge legge questo.
+  -- La posa aspetta una risposta sul tipo di file (DERIVATO dalla vista `frame_waits`): i
+  -- trigger accanto alla vista lo riscrivono a ogni scrittura di un ingresso -- il cielo, la
+  -- posizione, la risposta della cartella -- e chi legge legge questo.
   asks_type      INTEGER NOT NULL DEFAULT 0 CHECK (asks_type IN (0, 1)),
   -- Il file dichiara di essere stato lavorato dopo la camera: le calibrazioni applicate
   -- (`calibrated`), o due programmi diversi nominati insieme (`rewritten`). I due sono in
@@ -439,6 +439,79 @@ CREATE TABLE frame_wcs (
   height_deg      REAL,
   solved_at       TEXT NOT NULL
 ) STRICT;
+
+-- La regola di `frames.asks_type`: una posa senza tipo aspetta, se la cartella della sua prima
+-- posizione viva non ha risposto "light", finche' il cielo non la risolve; "calibration" la ferma
+-- comunque. La chiave della cartella e' `spine/frame_folder.py` (`KEY_OF_FRAME`), le parole sono
+-- `spine/declarations.py`: `tests/test_asks_type.py` confronta il segno con la regola composta da
+-- quelle costanti, dopo ogni strada che cambia un ingresso.
+CREATE VIEW frame_waits AS
+SELECT f.id AS frame_id, f.image_type = 'unknown' AND CASE (
+  SELECT dc.value FROM declarations dc WHERE dc.entity_type = 'folder'
+    AND dc.field = 'image_type' AND dc.entity_key = (
+      SELECT rtrim(replace(d.root_path, '\', '/'), '/')
+        || CASE WHEN trim(rtrim(p.rel_path, replace(p.rel_path, '/', '')), '/') = '' THEN ''
+           ELSE '/' || trim(rtrim(p.rel_path, replace(p.rel_path, '/', '')), '/') END
+      FROM positions p JOIN folders d ON d.id = p.folder_id WHERE p.id = (
+        SELECT p2.id FROM positions p2 JOIN folders d2 ON d2.id = p2.folder_id
+        WHERE p2.frame_id = f.id AND p2.status = 'present' AND d2.retired_at IS NULL
+        ORDER BY p2.id LIMIT 1)))
+  WHEN 'light' THEN 0 WHEN 'calibration' THEN 1
+  ELSE NOT (EXISTS (SELECT 1 FROM frame_stages sv WHERE sv.frame_id = f.id AND sv.stage = 'solve'
+                      AND sv.status = 'done')
+            AND EXISTS (SELECT 1 FROM frame_wcs w WHERE w.frame_id = f.id)) END AS waits
+FROM frames f;
+
+-- Il segno lo riscrive SQLite a ogni scrittura di un ingresso della regola, non chi scrive: un
+-- segno rimasto a 0 manda un dark senza tipo all'oggetto, e diventa ore. Una risposta o una
+-- cartella possono toccare qualunque posa senza tipo, e si riscrivono tutte.
+CREATE TRIGGER asks_type_frame_in AFTER INSERT ON frames BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.id)
+  WHERE id = NEW.id; END;
+CREATE TRIGGER asks_type_frame_type AFTER UPDATE OF image_type ON frames BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.id)
+  WHERE id = NEW.id; END;
+CREATE TRIGGER asks_type_position_in AFTER INSERT ON positions BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.frame_id)
+  WHERE id = NEW.frame_id; END;
+-- `seen_at` cambia a ogni scansione e non tocca la regola
+CREATE TRIGGER asks_type_position_moved AFTER UPDATE ON positions
+  WHEN NEW.frame_id IS NOT OLD.frame_id OR NEW.folder_id IS NOT OLD.folder_id
+    OR NEW.rel_path IS NOT OLD.rel_path OR NEW.status IS NOT OLD.status BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
+  WHERE id IN (NEW.frame_id, OLD.frame_id); END;
+CREATE TRIGGER asks_type_position_out AFTER DELETE ON positions BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = OLD.frame_id)
+  WHERE id = OLD.frame_id; END;
+CREATE TRIGGER asks_type_solve_in AFTER INSERT ON frame_stages WHEN NEW.stage = 'solve' BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.frame_id)
+  WHERE id = NEW.frame_id; END;
+CREATE TRIGGER asks_type_solve_moved AFTER UPDATE OF status ON frame_stages
+  WHEN NEW.stage = 'solve' BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.frame_id)
+  WHERE id = NEW.frame_id; END;
+CREATE TRIGGER asks_type_sky_in AFTER INSERT ON frame_wcs BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.frame_id)
+  WHERE id = NEW.frame_id; END;
+CREATE TRIGGER asks_type_sky_out AFTER DELETE ON frame_wcs BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = OLD.frame_id)
+  WHERE id = OLD.frame_id; END;
+CREATE TRIGGER asks_type_answer_in AFTER INSERT ON declarations
+  WHEN NEW.entity_type = 'folder' AND NEW.field = 'image_type' BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
+  WHERE image_type = 'unknown'; END;
+CREATE TRIGGER asks_type_answer_moved AFTER UPDATE ON declarations
+  WHEN (NEW.entity_type = 'folder' AND NEW.field = 'image_type')
+    OR (OLD.entity_type = 'folder' AND OLD.field = 'image_type') BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
+  WHERE image_type = 'unknown'; END;
+CREATE TRIGGER asks_type_answer_out AFTER DELETE ON declarations
+  WHEN OLD.entity_type = 'folder' AND OLD.field = 'image_type' BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
+  WHERE image_type = 'unknown'; END;
+CREATE TRIGGER asks_type_folder_moved AFTER UPDATE OF root_path, retired_at ON folders BEGIN
+  UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
+  WHERE image_type = 'unknown'; END;
 
 -- Le misure per frame. Prima quelle che il solver da' nella stessa passata (HFD, stelle,
 -- SNR), poi eccentricita' e fondo cielo (casella misura). NULL = non misurata.

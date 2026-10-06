@@ -17,7 +17,7 @@ from ..fits.walk import subfolders, walk_dir
 from ..spine import typeless_answer
 from ..spine.run import STAGE_IDENTIFY, STAGE_SOLVE
 from ..spine.scan import root_readable
-from ..spine.stages import count_pending, refresh_waiting
+from ..spine.stages import count_pending
 from . import work
 from .deps import get_db
 from .models import (
@@ -202,7 +202,6 @@ def _move(conn: sqlite3.Connection, state: State, folder_id: int, retired_at: st
     # removing must always work; `identify` and `group` recheck every frame before working it.
     with transaction(conn):
         conn.execute("UPDATE folders SET retired_at = ? WHERE id = ?", (retired_at, folder_id))
-        refresh_waiting(conn)  # a frame's folder changed without going through the positions
         detached, requeued = typeless_answer.detach_waiting(conn)
     # even with nothing detached: a restored folder can make the waiting frames ready again
     if requeued:

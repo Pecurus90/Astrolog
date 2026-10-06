@@ -8,7 +8,7 @@ from typing import Any
 
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
-from .stages import mark_pending, refresh_waiting
+from .stages import mark_pending
 
 FRAME_COLUMNS = (
     "image_type",
@@ -181,15 +181,9 @@ def position(conn: sqlite3.Connection, folder_id: int, rel_path: str) -> sqlite3
 
 
 def set_position_present(conn: sqlite3.Connection, position_id: int, now: str) -> None:
-    with transaction(conn):
-        conn.execute(
-            "UPDATE positions SET status = 'present', seen_at = ? WHERE id = ?", (now, position_id)
-        )
-        refresh_waiting(conn, [_frame_of(conn, position_id)])
-
-
-def _frame_of(conn: sqlite3.Connection, position_id: int) -> int:
-    return conn.execute("SELECT frame_id FROM positions WHERE id = ?", (position_id,)).fetchone()[0]
+    conn.execute(
+        "UPDATE positions SET status = 'present', seen_at = ? WHERE id = ?", (now, position_id)
+    )
 
 
 def home_timezone(conn: sqlite3.Connection) -> str | None:
@@ -238,9 +232,7 @@ def upsert_position(  # noqa: PLR0913
     mtime: float,
     now: str,
 ) -> None:
-    """A different file at the same path takes the position over, and the frame before may have
-    lost the folder that answered its type."""
-    prima = position(conn, folder_id, rel_path)
+    """A different file at the same path takes the position over."""
     conn.execute(
         "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, status, seen_at)"
         " VALUES(?, ?, ?, ?, ?, 'present', ?)"
@@ -249,7 +241,6 @@ def upsert_position(  # noqa: PLR0913
         " seen_at = excluded.seen_at",
         (frame_id, folder_id, rel_path, filesize, mtime, now),
     )
-    refresh_waiting(conn, {frame_id} | ({prima["frame_id"]} if prima else set()))
 
 
 def mark_missing(
@@ -275,6 +266,5 @@ def mark_missing(
                     "UPDATE positions SET status = 'missing', seen_at = ? WHERE id = ?",
                     (now, r["id"]),
                 )
-                refresh_waiting(conn, [r["frame_id"]])
                 missing += 1
     return missing

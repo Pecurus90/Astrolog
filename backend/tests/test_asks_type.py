@@ -1,7 +1,8 @@
 """Chi aspetta una risposta sul tipo e' scritto sulla posa (`frames.asks_type`), e lo scritto e'
-cio' che la regola direbbe dopo ogni strada che cambia un suo ingresso.
+cio' che la regola direbbe dopo ogni strada che cambia un suo ingresso: lo riscrivono i trigger di
+`schema.sql`, non chi scrive.
 
-La regola (`stages.WAITING_RULE`) guarda il tipo del file, la risposta della cartella della sua
+La regola (la vista `frame_waits`) guarda il tipo del file, la risposta della cartella della sua
 prima posizione viva e lo stato del cielo. Chi legge -- il residuo, `ready`, Da confermare, lo
 stacco -- legge il segno. Un segno rimasto a 0 su una posa che la regola ferma e' il caso
 pericoloso: `identify` la prenderebbe, e un dark diventerebbe ore. Per questo ogni prova di una
@@ -11,13 +12,15 @@ scritte a fine stadio, e i piani di chi legge.
 
 import re
 
+from astrolog.fits.frame_type import UNKNOWN
+from astrolog.spine import declarations as decl
 from astrolog.spine import scan_store, typeless, typeless_answer
 from astrolog.spine.normalize import normalize_frames
 from astrolog.spine.scan import scan_folder
 from astrolog.spine.solve import solve_frames
 from astrolog.spine.stages import (
     _WAITING_BY_STAGE,
-    WAITING_RULE,
+    FOLDER_SAYS,
     invalidate,
     mark_pending,
     set_status,
@@ -39,13 +42,25 @@ def _posa(conn, folder_id, rel_path, image_type="unknown"):
     return frame_id
 
 
+# La regola composta dalle costanti della spina, non letta dallo schema: se la vista e le costanti
+# (chiave della cartella, parole della risposta) si separano, il confronto lo vede.
+_CIELO_RISOLTO = """(EXISTS (
+  SELECT 1 FROM frame_stages sv WHERE sv.frame_id = f.id AND sv.stage = 'solve'
+    AND sv.status = 'done') AND EXISTS (SELECT 1 FROM frame_wcs w WHERE w.frame_id = f.id))"""
+REGOLA = f"""
+f.image_type = '{UNKNOWN}' AND CASE {FOLDER_SAYS}
+  WHEN '{decl.TYPE_LIGHT}' THEN 0 WHEN '{decl.TYPE_CALIBRATION}' THEN 1
+  ELSE NOT {_CIELO_RISOLTO} END
+"""  # noqa: S608 - costanti
+
+
 def _scritto(conn, frame_id):
     return conn.execute("SELECT asks_type FROM frames WHERE id = ?", (frame_id,)).fetchone()[0]
 
 
 def _come_la_regola(conn):
     """Nessuna posa ha un segno diverso da cio' che la regola dice adesso."""
-    sql = f"SELECT f.id, f.asks_type, ({WAITING_RULE}) AS regola FROM frames f"  # noqa: S608 - costante
+    sql = f"SELECT f.id, f.asks_type, ({REGOLA}) AS regola FROM frames f"  # noqa: S608 - costante
     storte = [(r["id"], r["asks_type"], r["regola"]) for r in conn.execute(sql)]
     assert [s for s in storte if s[1] != s[2]] == []
 
@@ -126,6 +141,25 @@ def test_a_position_that_changes_file_moves_both_marks(conn):
     mark_pending(conn, nuovo, "ora")
     scan_store.upsert_position(conn, nuovo, radice, "luci/a.fits", 2, 2.0, "ora")
     assert (_scritto(conn, vecchio), _scritto(conn, nuovo)) == (1, 0)
+    _come_la_regola(conn)
+
+
+def test_any_write_to_an_input_moves_the_mark_without_a_helper(conn):
+    """Il segno lo tiene SQLite, non chi scrive: una risposta tolta, una cartella ritirata e il
+    cielo cancellato a mano lo muovono come le strade dell'app."""
+    radice = add_folder(conn, "D:/Astro")
+    typeless.declare(conn, "D:/Astro/luci", typeless.LIGHT)
+    posa = _posa(conn, radice, "luci/a.fits")
+    assert _scritto(conn, posa) == 0
+    decl.forget(conn, decl.FOLDER, "D:/Astro/luci", decl.FOLDER_TYPE)
+    assert _scritto(conn, posa) == 1
+    sky_solved(conn, posa)
+    assert _scritto(conn, posa) == 0
+    conn.execute("DELETE FROM frame_wcs WHERE frame_id = ?", (posa,))
+    assert _scritto(conn, posa) == 1
+    typeless.declare(conn, "D:/Astro/luci", typeless.LIGHT)
+    conn.execute("UPDATE folders SET retired_at = 'ora' WHERE id = ?", (radice,))
+    assert _scritto(conn, posa) == 1
     _come_la_regola(conn)
 
 
