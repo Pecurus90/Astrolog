@@ -364,6 +364,14 @@ def test_only_a_mount_you_own_can_be_the_mount_of_a_rig(archivio):
     assert monta(archivio, 9999, None).status_code == 404
 
 
+def test_a_mount_that_is_not_a_mount_is_refused_with_its_code(archivio):
+    """The 422 the contract names, so the page can say which piece is wrong."""
+    rig = archivio.get("/api/v1/gear").json()["rigs"][0]
+    optics = pezzo(archivio, "optics", "TS 130 APO")["id"]
+    r = monta(archivio, rig["id"], optics)
+    assert (r.status_code, r.json()["detail"]["code"]) == (422, "not_a_mount")
+
+
 def test_you_can_write_a_filter_you_have_not_used_yet(archivio):
     """Nasce subito nell'elenco, con la sua banda e zero ore, e non e' una domanda."""
     prima = archivio.get("/api/v1/review").json()["to_confirm"]

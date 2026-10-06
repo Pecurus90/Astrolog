@@ -6,7 +6,7 @@ import sqlite3
 from fastapi import APIRouter, Depends
 
 from ..spine import gear, inventory
-from . import instrument_answer as strumento
+from . import instrument_answer
 from .deps import get_db
 from .models_gear import GearList
 
@@ -20,20 +20,20 @@ def gear_list(conn: sqlite3.Connection = Depends(get_db)) -> GearList:
     No pagination, and not by oversight: anyone's gear fits in one screen -- whoever has a hundred
     thousand frames still has a handful of telescopes -- and paging it would mean one more round to
     see what fits in one."""
-    pezzi = inventory.instruments(conn)
-    for p in pezzi:
+    pieces = inventory.instruments(conn)
+    for p in pieces:
         # only the merges the spine accepts: the same rule as the answer
-        p["mergeable_into"] = [o["id"] for o in pezzi if gear.mergeable(p, o)]
-    filtri = inventory.filters(conn)
-    for f in filtri:
-        f["mergeable_into"] = [o["id"] for o in filtri if gear.filter_mergeable(f, o)]
+        p["mergeable_into"] = [o["id"] for o in pieces if gear.mergeable(p, o)]
+    filters = inventory.filters(conn)
+    for f in filters:
+        f["mergeable_into"] = [o["id"] for o in filters if gear.filter_mergeable(f, o)]
     return GearList.model_validate(
         {
-            "instruments": pezzi,
+            "instruments": pieces,
             "rigs": inventory.rigs(conn),
-            "filters": filtri,
+            "filters": filters,
             # The api, not the spine, knows which fields a kind's card asks for: the same table
             # with which the answer rejects a field that kind does not have.
-            "cards": strumento.CARD,
+            "cards": instrument_answer.CARD,
         }
     )

@@ -313,6 +313,29 @@ def test_review_says_when_a_name_is_taken(client):
     assert by_name(review(client)["filters"], "H")["name"] == "H"
 
 
+def test_a_second_no_filter_row_is_refused_with_its_code(client):
+    """One "no filter" row only: a second is the 409 the contract names, and nothing is written."""
+    page = review(client)
+    osc, h = _filtro(page, "OSC"), by_name(page["filters"], "H")
+    apply(client, filters=[{"id": osc["id"], "name": "Nessun filtro", "is_none": True}])
+    r = client.post("/api/v1/review/apply", json={"filters": [{"id": h["id"], "is_none": True}]})
+    assert (r.status_code, r.json()["detail"]["code"]) == (409, "none_filter_exists")
+    assert by_name(review(client)["filters"], "H")["is_none"] is False
+
+
+def test_apply_writes_every_answer_or_none(client):
+    """A body with a valid answer and a refused one writes neither: the contract's all or none."""
+    with db(client) as conn:
+        before = conn.execute("SELECT COUNT(*) FROM declarations").fetchone()[0]
+    h = by_name(review(client)["filters"], "H")
+    body = {"filters": [{"id": h["id"], "brand": "Baader"}, {"id": 99999, "brand": "Baader"}]}
+    r = client.post("/api/v1/review/apply", json=body)
+    assert (r.status_code, r.json()["detail"]["code"]) == (404, "not_found")
+    assert by_name(review(client)["filters"], "H")["brand"] is None
+    with db(client) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM declarations").fetchone()[0] == before
+
+
 def test_review_a_card_alone_does_not_redo_the_work(client):
     """Scrivere marca e peso non cambia cosa vuol dire una posa: non si rilavora niente.
 

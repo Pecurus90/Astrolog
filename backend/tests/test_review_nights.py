@@ -73,6 +73,24 @@ def test_the_nights_section_asks_about_the_places_that_do_not_add_up(client):
     assert vicina["latitude"] == pytest.approx(VICINO[0], abs=0.01)
 
 
+def test_the_place_with_more_frames_comes_first(db_path):
+    """The rule of `spina.md`: most frames first. The place with one frame is shot first, so the
+    order of the frames alone would put it on top."""
+    conn = connect(db_path)
+    try:
+        prepara(conn)
+        luogo(conn, ROMA)
+        posa(conn, quando="2024-05-16T22:00:00Z", coord=LONTANO, hash_="lontano")
+        posa(conn, quando="2024-05-18T22:00:00Z", coord=VICINO, hash_="fuori1")
+        posa(conn, quando="2024-05-19T22:00:00Z", coord=VICINO, hash_="fuori2")
+        corri(conn)
+        conn.commit()
+    finally:
+        conn.close()
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        assert [n["frames"] for n in notti(review(c))] == [2, 1]
+
+
 def test_a_place_says_what_the_sky_found_there(client):
     """Cosa hai ripreso in quel posto, per ricordare dov'eri (`test_review_subjects`)."""
     vicina = next(n for n in notti(review(client)) if n["frames"] == 2)

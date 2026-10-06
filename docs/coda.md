@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | rifattorizza | Fase 2, lotto 6a: `api` Da confermare e Attrezzatura | ~0,21 M agenti (uno sviluppatore), sessione principale non contata | 16 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5e: `spine` Notti e Archivio, indice, Da confermare | ~0,24 M agenti (uno sviluppatore), sessione principale non contata | 23 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5d: `spine` oggetti e mosaici, Applica una lettura | ~0,32 M agenti (uno sviluppatore), sessione principale non contata | 38 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5c: `spine` attrezzatura | ~0,35 M agenti (uno sviluppatore), sessione principale non contata | 27 agente | 0 |
@@ -87,7 +88,12 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   `signature_page`, `unfiltered`, `declarations`; oggetti e mosaici, con `object_answer`,
   `object_candidates`, `unnamed`, i cinque `mosaic*` e l'alias di `object_answer` in
   `api/review_page` e `api/review_write`; Notti e Archivio, con le colonne `meteo`, `chiave`,
-  `nome` e i segnaposto di `archive`). Nel primo lotto di `api`: `cadenza`, `riga`,
+  `nome` e i segnaposto di `archive`). In `api` fatte Da confermare e Attrezzatura (`review`,
+  `review_page`, `review_write`, `review_write_folders`, `gear`, `gear_write`,
+  `instrument_answer`, `lookalike`, `models_review_apply`; `scrivendo` e' `writing`). Restano in
+  italiano, perche' arrivano nel corpo di una risposta o in nessun posto, i messaggi dei
+  validatori di `models_review_apply` (il 422) e delle eccezioni di `review_write*`,
+  `lookalike` e `instrument_answer`. Nel primo lotto di `api`: `cadenza`, `riga`,
   `sito` (`app`); `_servita`, `pagina_del_router`, il parametro di percorso `percorso` e il
   segnaposto `{chiave}` di `TOKEN_META` (`page`); `_scansione_interrotta`, `da_fare`
   (`pipeline`); `manca`, `percorso`, `provate`, `dove` (`settings`). Nel quarto lotto di `api`:
@@ -98,19 +104,9 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   `fonte`, `ultimo`, `arrivate`, `scelto`, `vuoto`, `in_corso`, `del_sito`, `con_meteoblue`,
   `per_ora`, `via`, `righe`, `riga`, `sito` (`weather`); `chiave`, `esito`, `sito`
   (`weather_key`); `vuoti`, `vecchia`, `scritta`,
-  `nome`, `senza_casa` (`sites`); `pezzi`, `filtri`, l'alias `strumento` (`gear`). Nel quinto
-  lotto di `api`: `_pulisci`, `_scarta_le_mai_iniziate`, `prese`, `partite`, `saltate`, `coppie`,
-  `iniziate`, `segui`, `orfane` (`scan`); `_scritto`, `scheda`, `bande`, `nuovo`,
-  gli alias `corredi` e `strumento` (`gear_write`); `fuori`, `scheda` (`instrument_answer`);
-  `domande`, `coppia`, `nomi`, l'alias `strumento` (`lookalike`). Nel sesto lotto di `api`:
-  `_stadi_toccati`, `voluti`, `certi`, `incerte`, `righe_camere`, `da_chiedere`,
-  `righe_senza_camera`, `righe_senza_nome`, `righe_senza_tipo`, `righe_senza_ottica`,
-  `righe_mosaici`, `senza_camera`, `mosaici`, `coppie` (`review`); `righe`, `usati`, `nomi`,
-  `posti`, `luoghi`, `casa`, `posto`, `vicini`, `quanto`, `confermati`, `nome`, `chiave`,
-  `dubbio`, `aperti`, `certi`, l'alias `corredi` (`review_page`); `scrivendo` (letto anche da
-  `gear_write`), `_rifiuto`, `rifiuto`, `_TUTTO`, `_SENZA_LIMITI`, `fino_a`, `chiave`, `scelte`,
-  `rimesse`, `scritta`, `nome`, `sito`, gli alias `corredi`, `strumento`
-  (`review_write`); `riga`, `scelte`, `scelto` (`review_write_folders`).
+  `nome`, `senza_casa` (`sites`). Nel quinto lotto di `api`: `_pulisci`,
+  `_scarta_le_mai_iniziate`, `prese`, `partite`, `saltate`, `coppie`, `iniziate`, `segui`,
+  `orfane` (`scan`).
 - **`identify`, dopo il terzo lotto di `spine`**: il wcs resta `dict[str, Any]` (la geometria
   legge con `.get`, e `mosaic` e i test passano dict senza i lati: *Mosaici, dichiarazioni e
   archivio* nel Parcheggio). `identify_link._name_it` ha un `cast` sul nome libero della
@@ -311,14 +307,6 @@ Niente di aperto.
 - **La regola "le misure dell'header non si leggono" (`spina.md`) non ha una prova**: la guarda
   solo un commento in `fits/header_keys.py`. Rimedio: un test su `header_keys.KEYS` che rifiuti
   FWHM, HFR, SNR e STARCOUNT.
-- **L'ordine "piu' frame prima" dei siti in Da confermare (`spina.md`) non ha una prova.**
-  `api/review_page.py` (`unclear_coordinates`) ordina per frame, ma `test_review_nights.py` sceglie
-  il sito per numero di frame e non guarda mai la posizione: tolto l'ordine, la suite resta verde.
-  Rimedio: un test che chieda `[n["frames"] for n in notti(review(client))] == [2, 1]`.
-- **L'ordine "piu' frame prima" degli oggetti in Da confermare (`spina.md`) non ha una prova.**
-  `api/review_page.py` ordina per (in dubbio, frame, nome), ma `test_the_ones_to_decide_come_first`
-  guarda solo che i dubbi stiano in cima: tolto `-o.frames`, la suite resta verde. Rimedio: un test
-  con due oggetti dello stesso livello e frame diversi, ordinati per frame decrescenti.
 - **Una misura di tempo non ha niente che le impedisca di girare sotto carico.**
   `test_catalog_load_seconds_does_not_regress` (`backend/tests/test_perf_catalog.py`, `lento`)
   confronta un tempo col tetto di `backend/tests/perf_baseline.json`. In CI gira da solo, ma chi
@@ -662,24 +650,14 @@ riga per voce.
   fine suite un worker puo' ancora lanciare l'ASTAP vero della macchina e stampare "can't create
   new thread at interpreter shutdown": dipende dai tempi, visto una volta e poi in nessuna di
   quattro corse ripetute.
-- **La revisione in `api`, dopo la fase 1.** Il contratto di `POST /review/apply` promette
-  "tutte le risposte o nessuna" e 409 `none_filter_exists`, e nessun test lo prova: nessun corpo
-  misto con una risposta valida e una rifiutata, nessun filtro "nessun filtro" doppio passando da
-  Applica. Regole dette piu' volte: "una risposta a cio' che non esiste
-  piu' e' una pagina vecchia: 404" in `review_write_folders` e nel contratto; quali filtri sono una domanda, due volte in `review.py`; il "ripensamento che
-  sposta" in `review_write._answer_where` e in `coordinates.frames_at`; l'ordine per distanza
-  vera in `review_page` e in `place.by_distance`.
 - **Le rotte di scrittura, dopo la fase 1.** Codici d'errore scritti nel contratto e mai provati
   da un test (i test guardano solo lo stato HTTP, o non arrivano al caso): 409 `root_unreachable`
   di browse, 409 `folder_exists` col suo `folder_id`, 404 `folder_not_found` (`api/folders.py`);
-  409 `folder_retired`, 404 `scan_run_not_found` (`api/scan.py`); 409 `none_filter_exists`, 422
-  `not_a_mount` (`api/gear_write.py`); e la prima registrazione di una cartella che risponde
-  `reactivated: false`. Regole dette due o tre volte: "prima l'avvio, poi le ricevute" (`api/scan.py`); il
-  criterio delle camere simili e "il no si scrive col nome dell'altra" in `lookalike` (modulo,
-  `lookalikes`, `answer_all`, `_bare_name`, un commento) e in `docs/domini/spina.md`; "le stesse
-  funzioni di Da confermare" in `gear_write` (modulo, due rotte) e in
-  `docs/domini/attrezzatura.md`; "`frames` viene dal database" in `folders` e in
-  `FolderOut.frames`.
+  409 `folder_retired`, 404 `scan_run_not_found` (`api/scan.py`); e la prima registrazione di una
+  cartella che risponde `reactivated: false`. Regole dette due o tre volte: "prima l'avvio, poi le
+  ricevute" (`api/scan.py`); "le stesse funzioni di Da confermare" in `gear_write` (modulo, due
+  rotte: il loro testo e' l'OpenAPI) e in `docs/domini/attrezzatura.md`; "`frames` viene dal
+  database" in `folders` e in `FolderOut.frames`.
 - **Le rotte di lettura, dopo la fase 1.** `create_site` e `edit_site` (`api/sites.py`)
   prendono `sqlite3.IntegrityError` su tutta la transazione, non solo sull'`INSERT`/`UPDATE` del
   nome: un vincolo violato in `_make_default`, nei `requeue` o in `home_nights.follow_home`
@@ -696,8 +674,7 @@ riga per voce.
   ogni `key` di `models_review*`), "`null` finche' non e' contato" in tre modelli di `models_gear`, le
   descrizioni di `key`, `night`, `integration_s` e `untimed` uguali fra gruppi, "Checked here so
   the OpenAPI declares it" in due validatori. Rimedio: la regola nella docstring del modulo o
-  del modello padre, e i campi che rimandano. Senza test: `OpticslessAnswer.optics` che rifiuta
-  una risposta vuota o di soli spazi (il 422 di `pattern`).
+  del modello padre, e i campi che rimandano.
 - **I modelli delle pagine, dopo la fase 1**: `Night.frames` e `ArchiveObject.frames` hanno la
   stessa descrizione parola per parola nell'OpenAPI, e quelle di `untimed` sono quasi uguali (il
   significato ha casa nel glossario); il limite `Field(ge=0, le=100)` della Luna e' scritto in
@@ -706,8 +683,6 @@ riga per voce.
   scrivono a mano `"meteoblue"` e `"7timer"` accanto a `fetches.Source`; `MeteoblueKeyOut` e
   `MeteoblueKeyIn` stanno in `api/weather_key.py` e non in `models_weather`. Regola detta due
   volte: il Bortle che passa da `units.bortle_of` in `api/tonight._sito` e `api/sites._out`.
-- **Da confermare, dopo la fase 1**: il 409 `none_filter_exists` di `POST /review/apply` e'
-  scritto nel contratto ma nessun test lo prova.
 - **Frame senza tipo, dopo la fase 2**: "risolto e' una foto, senza stelle una calibrazione" e'
   detta in `typeless` e nella descrizione OpenAPI di `api/models_review_groups` (toglierla di li'
   cambia lo schema).

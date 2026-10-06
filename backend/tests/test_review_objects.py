@@ -122,6 +122,13 @@ def test_the_ones_to_decide_come_first(client_banco):
     assert livelli[: len(dubbi)] == dubbi
 
 
+def test_among_doubts_the_most_frames_come_first(client):
+    """The rule of `spina.md`: on the same level, most frames first, not the name."""
+    frames = [o["frames"] for o in review(client)["objects"] if o["confidence"] == "low"]
+    assert len(set(frames)) > 1, "the doubts must differ in frames, or the order proves nothing"
+    assert frames == sorted(frames, reverse=True)
+
+
 def test_the_objects_count_in_what_is_left_to_confirm(client):
     """Prima gli oggetti non entravano nel contatore della pagina: si poteva leggere `0 da
     confermare` con tutto l'archivio senza un nome."""

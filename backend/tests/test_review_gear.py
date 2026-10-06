@@ -405,6 +405,7 @@ def test_a_part_the_card_does_not_ask_is_refused(pagina):
         ({"key": "/x", "rig_id": 1, "optics": OTT}, "un corredo porta i suoi pezzi"),
         ({"key": "/x", "camera": ""}, "una camera senza nome"),
         ({"key": "/x", "camera": "   ", "focal_mm": 800.0}, "una camera di soli spazi"),
+        ({"key": "/x", "optics": "   "}, "an optics of only spaces"),
         ({"key": "/x", "camera": CAM, "focal_mm": 0}, "una focale che non e' una focale"),
         ({"key": "/x", "camera": CAM}, "la camera senza la sua focale: nascerebbe un gemello"),
         ({"key": "/x", "optics": OTT, "focal_mm": 800.0}, "la focale senza la camera"),

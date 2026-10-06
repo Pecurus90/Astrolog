@@ -15,6 +15,7 @@ import pytest
 from astrolog import astap, net, place
 from astrolog.api import archive as api_archive
 from astrolog.api import (
+    instrument_answer,
     models,
     models_nights,
     models_review,
@@ -116,6 +117,19 @@ def test_the_answers_about_a_camera_are_the_words_the_spine_reads():
     arriverebbe e non sposterebbe niente."""
     parole = set(get_args(models_review_groups.GearFilterAnswer))
     assert parole == {*signature.FilterAnswer, declarations.CameraType.COLOR}
+
+
+def test_a_signature_answer_shows_the_filter_words_the_spine_writes():
+    """The answer read back on a card: a word the spine writes and the `Literal` lacks would fail
+    the whole page."""
+    annotation = models_review_groups.GearAnswer.model_fields["filter"].annotation
+    words = {a for arg in get_args(annotation) for a in (get_args(arg) or (arg,))}
+    assert words - {type(None)} == set(signature.FilterAnswer)
+
+
+def test_every_instrument_kind_has_its_card():
+    """The Gear page reads the card per kind: a kind without one could not be written."""
+    assert set(get_args(models_review.InstrumentKind)) == set(instrument_answer.CARD)
 
 
 def test_the_answers_about_a_mosaic_are_the_words_the_spine_reads():

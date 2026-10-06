@@ -1,5 +1,5 @@
-"""The group is checked BEFORE writing: an answer to a group that no longer asks anything is an
-old page, and would stay forever unseen. Hence LookupError, which the route turns into 404."""
+"""Each answer checks its group BEFORE writing: one written on a group no longer asked would stay
+forever unseen. The `LookupError` is the 404 of `POST /review/apply`."""
 
 import sqlite3
 from collections.abc import Collection, Mapping
@@ -25,45 +25,49 @@ def answer_gear(
 ) -> list[int]:
     """The parts sent replace the earlier ones, the others stay. The pieces come into being from
     the names on the next round (`normalize_rig.instrument_named`)."""
-    riga = cards.row_of(conn, edit.key)
-    if riga is None:
+    row = cards.row_of(conn, edit.key)
+    if row is None:
         raise LookupError(f"firma {edit.key}")
-    _only_what_is_asked(riga, edit)
-    corredi, filtri = choices
+    _only_what_is_asked(row, edit)
+    rig_choices, filter_choices = choices
     data = signature.answer(conn, edit.key) or signature.Answer()
     if edit.rig_id is not None or edit.camera is not None:
-        optics, camera, focal = rig_parts(edit, corredi)
+        optics, camera, focal = rig_parts(edit, rig_choices)
         optics = data.optics if optics is None else optics  # a part not sent keeps the earlier one
         data = replace(data, camera=camera, optics=optics, focal_mm=focal)
     elif edit.optics is not None:
         data = replace(data, optics=edit.optics.strip())
-    rimesse: list[int] = []
+    requeued: list[int] = []
     if edit.filter is not None:
-        if edit.filter_id is not None and edit.filter_id not in filtri:
+        if edit.filter_id is not None and edit.filter_id not in filter_choices:
             raise LookupError(f"filtro {edit.filter_id}")  # an old page, said before writing
         camera = (  # the night's camera too: the card asks the filter because of it
-            decl.instrument_name(conn, "camera", riga["camera"])
+            decl.instrument_name(conn, "camera", row["camera"])
             or data.camera
-            or riga["settled_camera"]
+            or row["settled_camera"]
         )
-        rimesse = _sensor(conn, camera, edit.filter == decl.CameraType.COLOR, now)
+        requeued = _sensor(conn, camera, edit.filter == decl.CameraType.COLOR, now)
         if edit.filter != decl.CameraType.COLOR:
-            nome = filtri[edit.filter_id].name if edit.filter_id is not None else None
-            data = replace(data, filter=signature.FilterAnswer(edit.filter), filter_name=nome)
+            filter_name = (
+                filter_choices[edit.filter_id].name if edit.filter_id is not None else None
+            )
+            data = replace(
+                data, filter=signature.FilterAnswer(edit.filter), filter_name=filter_name
+            )
     signature.declare(conn, edit.key, data, now)
-    return rimesse + signature.requeue(conn, edit.key)
+    return requeued + signature.requeue(conn, edit.key)
 
 
 def _only_what_is_asked(card: Mapping[str, Any], edit: GearEdit) -> None:
-    fuori = []
+    stray = []
     if (edit.rig_id is not None or edit.camera is not None) and not card["asks_camera"]:
-        fuori.append("camera")
+        stray.append("camera")
     if edit.optics is not None and not (card["asks_optics"] or card["asks_camera"]):
-        fuori.append("optics")
+        stray.append("optics")
     if edit.filter is not None and not card["asks_filter"]:
-        fuori.append("filter")
-    if fuori:
-        raise NotAskedError(", ".join(fuori))
+        stray.append("filter")
+    if stray:
+        raise NotAskedError(", ".join(stray))
 
 
 def _sensor(conn: sqlite3.Connection, camera: str | None, colour: bool, now: str) -> list[int]:
@@ -85,10 +89,10 @@ def rig_parts(
     `choices` does not offer (one without a camera, say) is a target that does not exist."""
     if edit.rig_id is None:
         return edit.optics, edit.camera, edit.focal_mm
-    scelto = choices.get(edit.rig_id)
-    if scelto is None:
+    chosen = choices.get(edit.rig_id)
+    if chosen is None:
         raise decl.UnknownTargetError(f"corredo {edit.rig_id}")
-    return scelto.optics, scelto.camera, scelto.focal_mm
+    return chosen.optics, chosen.camera, chosen.focal_mm
 
 
 def answer_unnamed(
@@ -105,8 +109,8 @@ def answer_unnamed(
 
 def answer_typeless(conn: sqlite3.Connection, edit: TypelessFolderEdit, now: str) -> list[int]:
     """Only sky pictures go back in the queue: a calibration file has no sky to look for."""
-    riga = typeless.row_of(conn, edit.key)
-    if riga is None:
+    row = typeless.row_of(conn, edit.key)
+    if row is None:
         raise LookupError(f"cartella {edit.key}")
     typeless.declare(conn, edit.key, edit.kind, now)
-    return typeless_answer.apply_answer(conn, {**riga, "answer": edit.kind}, now)
+    return typeless_answer.apply_answer(conn, {**row, "answer": edit.kind}, now)

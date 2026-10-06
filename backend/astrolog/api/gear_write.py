@@ -7,12 +7,10 @@ from collections.abc import Collection
 from fastapi import APIRouter, Depends, Request
 
 from ..clock import now_iso
-from ..spine import gear, gear_create, gear_usage
-from ..spine import rigs as corredi
+from ..spine import gear, gear_create, gear_usage, rigs
 from ..spine.stages import StageName
-from . import instrument_answer as strumento
+from . import instrument_answer, work
 from . import review_write as write
-from . import work
 from .deps import get_db
 from .models_gear import (
     FilterNew,
@@ -41,13 +39,13 @@ def add_instrument(
     does not ask for."""
     work.busy(request.app.state)
     now = now_iso()
-    with write.scrivendo(conn):
+    with write.writing(conn):
         new_id = gear_create.instrument(conn, body.kind, body.name, now, detected=False)
-        scheda = strumento.of_the_kind(body.kind, body.model_dump(exclude_none=True))
+        card = instrument_answer.of_the_kind(body.kind, body.model_dump(exclude_none=True))
         # without kind and name: resending them would be a rename onto itself, which would set
         # `detected` by hand and hide that a piece you write is born declared
         gear.declare_instrument(
-            conn, new_id, {c: v for c, v in scheda.items() if c not in ("kind", "name")}, now
+            conn, new_id, {c: v for c, v in card.items() if c not in ("kind", "name")}, now
         )
         # the page shows the usage at once (zero, or unknown for a kind no frame names)
         gear_usage.add_piece(conn, new_id, body.kind)
@@ -73,9 +71,9 @@ def edit_instrument(
     `merge_refused`."""
     work.busy(request.app.state)
     now = now_iso()
-    with write.scrivendo(conn):
-        requeued = strumento.answer(conn, instrument_id, body, now)
-    return _scritto(request, instrument_id, requeued)
+    with write.writing(conn):
+        requeued = instrument_answer.answer(conn, instrument_id, body, now)
+    return _written(request, instrument_id, requeued)
 
 
 @router.patch("/gear/rigs/{rig_id}", response_model=GearWritten)
@@ -87,8 +85,8 @@ def name_rig(
 
     409 `worker_busy`; 404 `not_found`."""
     work.busy(request.app.state)
-    with write.scrivendo(conn):
-        corredi.declare_rig(conn, rig_id, body.name, now_iso())
+    with write.writing(conn):
+        rigs.declare_rig(conn, rig_id, body.name, now_iso())
     return GearWritten(id=rig_id, requeued=0, run_started=False)
 
 
@@ -102,13 +100,13 @@ def add_filter(
     409 `worker_busy`; 409 `name_taken`, or `spelling_taken` if the name is already a spelling of
     another filter of yours."""
     work.busy(request.app.state)
-    with write.scrivendo(conn):
-        bande = [b.model_dump() for b in body.bands]
-        nuovo = gear_create.filter_declared(
-            conn, body.name, bande, now_iso(), brand=body.brand, model=body.model
+    with write.writing(conn):
+        bands = [b.model_dump() for b in body.bands]
+        new_id = gear_create.filter_declared(
+            conn, body.name, bands, now_iso(), brand=body.brand, model=body.model
         )
-        gear_usage.add_new(conn, gear_usage.UsageSubject.FILTER, nuovo)
-    return GearWritten(id=nuovo, requeued=0, run_started=False)
+        gear_usage.add_new(conn, gear_usage.UsageSubject.FILTER, new_id)
+    return GearWritten(id=new_id, requeued=0, run_started=False)
 
 
 @router.post("/gear/rigs", response_model=GearWritten, status_code=201)
@@ -121,12 +119,12 @@ def add_rig(
     409 `worker_busy`; 409 `rig_exists`; 422 `wrong_kind` if the optics or the camera is not a
     piece of that kind."""
     work.busy(request.app.state)
-    with write.scrivendo(conn):
-        nuovo = corredi.create_declared(
+    with write.writing(conn):
+        new_id = rigs.create_declared(
             conn, body.optics_id, body.camera_id, body.focal_mm, now_iso()
         )
-        gear_usage.add_new(conn, gear_usage.UsageSubject.RIG, nuovo)
-    return GearWritten(id=nuovo, requeued=0, run_started=False)
+        gear_usage.add_new(conn, gear_usage.UsageSubject.RIG, new_id)
+    return GearWritten(id=new_id, requeued=0, run_started=False)
 
 
 @router.put("/gear/rigs/{rig_id}/mount", response_model=GearWritten)
@@ -138,9 +136,9 @@ def mount_rig(
 
     409 `worker_busy`; 404 `not_found`; 422 `not_a_mount`."""
     work.busy(request.app.state)
-    with write.scrivendo(conn):
-        requeued = corredi.declare_mount(conn, rig_id, body.mount_id, now_iso())
-    return _scritto(request, rig_id, requeued)
+    with write.writing(conn):
+        requeued = rigs.declare_mount(conn, rig_id, body.mount_id, now_iso())
+    return _written(request, rig_id, requeued)
 
 
 @router.patch("/gear/filters/{filter_id}", response_model=GearWritten)
@@ -156,12 +154,12 @@ def edit_filter(
     filter's; 422 `merge_refused`."""
     work.busy(request.app.state)
     now = now_iso()
-    with write.scrivendo(conn):
+    with write.writing(conn):
         requeued, _ = write.answer_filter(conn, filter_id, body, now)
-    return _scritto(request, filter_id, requeued)
+    return _written(request, filter_id, requeued)
 
 
-def _scritto(request: Request, row_id: int, requeued: Collection[int]) -> GearWritten:
+def _written(request: Request, row_id: int, requeued: Collection[int]) -> GearWritten:
     """The work restarts only if some frame has to be redone."""
     started = bool(requeued) and work.after(request.app.state, {StageName.NORMALIZE})
     return GearWritten(id=row_id, requeued=len(requeued), run_started=started)

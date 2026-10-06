@@ -46,7 +46,7 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
     bands: dict[int, list[BandOut]] = {}
     for r in conn.execute("SELECT filter_id, band, width_nm FROM filter_bands ORDER BY band"):
         bands.setdefault(r["filter_id"], []).append(BandOut(band=r["band"], width_nm=r["width_nm"]))
-    # a filter the vocabulary recognises is not a question; the most used first
+    # the most used first
     rows = conn.execute(_FILTERS, (Passband.UNKNOWN,)).fetchall()
     rows.sort(key=lambda r: (-r["frames"], r["name"]))
     filters = [
@@ -64,38 +64,38 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
         for r in rows
     ]
 
-    objects, certi = page.objects(conn)
-    incerte = page.unclear_coordinates(conn)
-    righe_attrezzatura = gear_reader.by_signature(conn)
-    righe_senza_tipo = typeless_reader.by_folder(conn)
-    righe_mosaici = mosaic_reader.candidates(conn)
-    mosaici = [MosaicCandidate(**asdict(m)) for m in righe_mosaici]
-    coppie = lookalike.lookalikes(conn)
+    objects, settled = page.objects(conn)
+    unclear = page.unclear_coordinates(conn)
+    gear_rows = gear_reader.by_signature(conn)
+    typeless_rows = typeless_reader.by_folder(conn)
+    mosaic_rows = mosaic_reader.candidates(conn)
+    mosaics = [MosaicCandidate(**asdict(m)) for m in mosaic_rows]
+    pairs = lookalike.lookalikes(conn)
     # Seeing a question is not answering it: each one counts until answered, or the count would
     # drop to zero while the frames still wait.
     to_confirm = (
         sum(1 for o in objects if page.asks(o))
         + len(filters)
-        + len(coppie)
-        + sum(1 for p in incerte if p.site is None)
+        + len(pairs)
+        + sum(1 for p in unclear if p.site is None)
         # a card counts until every part it asks is answered
-        + sum(1 for g in righe_attrezzatura if not g["complete"])
+        + sum(1 for g in gear_rows if not g["complete"])
         # a mosaic's no closes it too, or a wrong proposal could only be silenced by accepting it
-        + sum(1 for m in righe_mosaici if m.answer is None)
-        + unanswered(righe_senza_tipo)
+        + sum(1 for m in mosaic_rows if m.answer is None)
+        + unanswered(typeless_rows)
     )
     return ReviewOut(
-        lookalikes=coppie,
+        lookalikes=pairs,
         filters=filters,
         filter_choices=page.filter_choices(conn),
         rig_choices=page.rig_choices(conn),
         objects=objects,
-        settled_objects=len(certi),
-        unclear=incerte,
-        gear=[GearSignature(**g) for g in righe_attrezzatura],
+        settled_objects=len(settled),
+        unclear=unclear,
+        gear=[GearSignature(**g) for g in gear_rows],
         optics_choices=page.optics_choices(conn),
-        typeless=[TypelessFolder(**g) for g in righe_senza_tipo],
-        mosaics=mosaici,
+        typeless=[TypelessFolder(**g) for g in typeless_rows],
+        mosaics=mosaics,
         to_confirm=to_confirm,
     )
 
@@ -107,8 +107,8 @@ def settled_objects(
     conn: sqlite3.Connection = Depends(get_db),
 ) -> SettledObjects:
     """The objects the app knows, with nothing to choose, in pages, in the page's order."""
-    _, certi = page.objects(conn)
-    return SettledObjects(**page_of(certi, limit, offset))
+    _, settled = page.objects(conn)
+    return SettledObjects(**page_of(settled, limit, offset))
 
 
 @router.post("/review/apply", response_model=ReviewApplied)
@@ -125,27 +125,27 @@ def apply(
     state = request.app.state
     work.busy(state)
     now = now_iso()
-    with write.scrivendo(conn):
+    with write.writing(conn):
         changed, requeued = write.apply_answers(conn, body, now)
     # without frames to redo the worker is not taken for nothing
-    started = bool(requeued) and work.after(state, _stadi_toccati(body))
+    started = bool(requeued) and work.after(state, _stages_touched(body))
     return ReviewApplied(changed=changed, requeued=len(requeued), run_started=started)
 
 
-def _stadi_toccati(body: ReviewApply) -> set[StageName]:
+def _stages_touched(body: ReviewApply) -> set[StageName]:
     """An answer on objects alone changes nothing upstream, but a MIXED answer needs both stages,
     in this order, or the object answer would wait for someone to click Start."""
-    voluti: set[StageName] = set()
+    wanted: set[StageName] = set()
     if body.lookalikes or body.filters:
-        voluti.add(StageName.NORMALIZE)
+        wanted.add(StageName.NORMALIZE)
     if body.gear:
-        voluti.add(StageName.NORMALIZE)  # they change the filter or the rig of their frames
+        wanted.add(StageName.NORMALIZE)  # they change the filter or the rig of their frames
     if body.typeless:
         # the SKY of those frames is requeued: name and night follow from the stage graph
-        voluti.add(StageName.SOLVE)
+        wanted.add(StageName.SOLVE)
     if body.objects:
-        voluti.add(StageName.IDENTIFY)
+        wanted.add(StageName.IDENTIFY)
     elif body.unclear:
         # a place answer changes only where those frames sit: the last stage is enough
-        voluti.add(StageName.GROUP)
-    return voluti
+        wanted.add(StageName.GROUP)
+    return wanted

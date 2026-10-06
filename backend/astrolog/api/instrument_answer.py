@@ -42,9 +42,9 @@ def of_the_kind(kind: str, fields: dict[str, Any]) -> dict[str, Any]:
     """Refused, not dropped: a field the kind lacks is the caller's mistake, and swallowing it would
     accept an answer that did not do what it said."""
     # they say which piece and its name, for every kind: not card fields
-    fuori = sorted(set(fields) - {"kind", "name", "merge_into", *CARD[kind]})
-    if fuori:
-        raise FieldNotOfKindError(kind, fuori)
+    stray = sorted(set(fields) - {"kind", "name", "merge_into", *CARD[kind]})
+    if stray:
+        raise FieldNotOfKindError(kind, stray)
     return fields
 
 
@@ -64,10 +64,10 @@ def answer(
         return merge(conn, instrument_id, edit.merge_into, now)
     colour_before = _colour(conn, instrument_id)
     kind = _kind(conn, instrument_id)  # None: `declare_instrument` raises the LookupError
-    scheda = edit.model_dump(exclude_none=True)
+    card = edit.model_dump(exclude_none=True)
     if kind is not None:
-        of_the_kind(kind, scheda)
-    if not gear.declare_instrument(conn, instrument_id, scheda, now):
+        of_the_kind(kind, card)
+    if not gear.declare_instrument(conn, instrument_id, card, now):
         return set()
     # The colour also answers for the frames that do not name their filter, requeued only if it
     # changes: "mono" on a camera already treated as mono moves nothing.

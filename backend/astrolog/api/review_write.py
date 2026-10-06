@@ -9,12 +9,10 @@ from fastapi import HTTPException
 from ..db.transaction import transaction
 from ..spine import coordinates as places
 from ..spine import declarations as decl
-from ..spine import gear, gear_create, mosaic, object_answer, unnamed
-from ..spine import rigs as corredi
+from ..spine import gear, gear_create, mosaic, object_answer, rigs, unnamed
 from ..spine.group import GroupReason
 from ..spine.stages import StageName, invalidate
-from . import instrument_answer as strumento
-from . import lookalike
+from . import instrument_answer, lookalike
 from . import review_page as page
 from . import review_write_folders as folders
 from .models_review_apply import (
@@ -38,13 +36,13 @@ def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> tupl
     changed = 0
     requeued: set[int] = set()
     # the rigs and filters to choose from do not change inside Apply: read once
-    scelte = (
+    choices = (
         ({c.id: c for c in page.rig_choices(conn)}, {f.id: f for f in page.filter_choices(conn)})
         if body.gear
         else ({}, {})
     )
     for edit in body.gear:
-        requeued.update(folders.answer_gear(conn, edit, now, scelte))
+        requeued.update(folders.answer_gear(conn, edit, now, choices))
         changed += 1
     for edit in body.typeless:
         requeued.update(folders.answer_typeless(conn, edit, now))
@@ -55,9 +53,9 @@ def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> tupl
     requeued.update(lookalike.answer_all(conn, body.lookalikes, now))
     changed += len(body.lookalikes)
     for edit in body.filters:
-        rimesse, scritta = answer_filter(conn, edit.id, edit, now)
-        requeued.update(rimesse)
-        changed += int(scritta)
+        filter_requeued, written = answer_filter(conn, edit.id, edit, now)
+        requeued.update(filter_requeued)
+        changed += int(written)
     # objects' answers move no unnamed group in or out: read them once, not once per answer
     groups = (
         {g.key for g in unnamed.by_group(conn)}
@@ -88,17 +86,17 @@ def answer_filter(
 
 
 @contextmanager
-def scrivendo(conn: sqlite3.Connection) -> Iterator[None]:
+def writing(conn: sqlite3.Connection) -> Iterator[None]:
     """All or nothing, and the refusals of the database or the rules become words a page can show,
     not failures. One home for Apply and for the Gear gestures."""
     try:
         with transaction(conn):
             yield
     except Exception as err:
-        rifiuto = _rifiuto(err)
-        if rifiuto is None:
+        refusal = _refusal(err)
+        if refusal is None:
             raise
-        raise rifiuto from err
+        raise refusal from err
 
 
 # The refusals of the rules, as (status, code): words a page can show.
@@ -106,19 +104,19 @@ _REFUSALS: tuple[tuple[type[Exception], int, str], ...] = (
     (gear.MergeRefusedError, 422, "merge_refused"),
     (folders.NotAskedError, 422, "not_asked"),
     (decl.UnknownTargetError, 422, "unknown_target"),
-    (corredi.NotAMountError, 422, "not_a_mount"),
-    (corredi.WrongKindError, 422, "wrong_kind"),
+    (rigs.NotAMountError, 422, "not_a_mount"),
+    (rigs.WrongKindError, 422, "wrong_kind"),
     (gear_create.SpellingTakenError, 409, "spelling_taken"),
-    (corredi.RigExistsError, 409, "rig_exists"),
+    (rigs.RigExistsError, 409, "rig_exists"),
 )
 
 
-def _rifiuto(err: Exception) -> HTTPException | None:
+def _refusal(err: Exception) -> HTTPException | None:
     """`None` if the error is a failure of ours."""
-    if isinstance(err, strumento.FieldNotOfKindError):
-        return strumento.refused(err)
-    for tipo, status, code in _REFUSALS:
-        if isinstance(err, tipo):
+    if isinstance(err, instrument_answer.FieldNotOfKindError):
+        return instrument_answer.refused(err)
+    for error_type, status, code in _REFUSALS:
+        if isinstance(err, error_type):
             return HTTPException(status_code=status, detail={"code": code})
     # a `KeyError` is a `LookupError` but a failure of ours: a 404 would tell the user their
     # piece is not there
@@ -149,10 +147,10 @@ def _answer_object(
         return folders.answer_unnamed(conn, key, edit, now, groups)
     if not edit.key.startswith(page.OBJECT_KEY):
         raise LookupError(f"scheda {edit.key}")
-    chiave = edit.key.removeprefix(page.OBJECT_KEY)
+    object_key = edit.key.removeprefix(page.OBJECT_KEY)
     if edit.not_an_object:
-        return object_answer.declare_not_an_object(conn, chiave, now)
-    return object_answer.declare_found(conn, chiave, slug=edit.slug, name=edit.name, now=now)
+        return object_answer.declare_not_an_object(conn, object_key, now)
+    return object_answer.declare_found(conn, object_key, slug=edit.slug, name=edit.name, now=now)
 
 
 def _answer_where(conn: sqlite3.Connection, edit: CoordinatesEdit, now: str) -> list[int]:
@@ -161,11 +159,10 @@ def _answer_where(conn: sqlite3.Connection, edit: CoordinatesEdit, now: str) -> 
     frames = places.frames_at(conn, edit.key, GroupReason.SITE_UNCLEAR)
     if not frames:
         raise LookupError(f"coordinate {edit.key}")
-    sito = conn.execute("SELECT name FROM sites WHERE id = ?", (edit.site_id,)).fetchone()
-    if sito is None:
+    site = conn.execute("SELECT name FROM sites WHERE id = ?", (edit.site_id,)).fetchone()
+    if site is None:
         raise LookupError(f"sito {edit.site_id}")
-    decl.declare_coordinates(conn, edit.key, sito["name"], now)
-    # frames a previous answer had settled come back too: that is how one changes one's mind
+    decl.declare_coordinates(conn, edit.key, site["name"], now)
     invalidate(conn, frames, StageName.GROUP)
     return frames
 

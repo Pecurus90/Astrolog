@@ -52,8 +52,8 @@ class ObjectEdit(BaseModel):
     def one_answer_only(self) -> Self:
         """Exactly one: accepting two would mean choosing for the user which one wins. A name of
         only spaces is no answer: Apply would say "done" with nothing changed."""
-        nome = bool(self.name and self.name.strip())
-        if [bool(self.slug), nome, self.not_an_object].count(True) != 1:
+        named = bool(self.name and self.name.strip())
+        if [bool(self.slug), named, self.not_an_object].count(True) != 1:
             raise ValueError("una risposta sola: slug, name oppure not_an_object")
         return self
 
@@ -132,8 +132,8 @@ class MosaicEdit(BaseModel):
     def a_yes_says_what(self) -> Self:
         """A single question: the yes says of what, the no says nothing. A name of only spaces
         would name the mosaic with a blank."""
-        nome = bool(self.name and self.name.strip())
-        if nome != (self.answer == "yes") or (self.name is not None and not nome):
+        named = bool(self.name and self.name.strip())
+        if named != (self.answer == "yes") or (self.name is not None and not named):
             raise ValueError("il si' con il nome del mosaico, il no senza")
         return self
 

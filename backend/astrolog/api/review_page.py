@@ -7,9 +7,8 @@ from typing import Final
 
 from ..place import by_distance, distance_km
 from ..spine import coordinates as places
-from ..spine import gear, object_answer, unnamed
+from ..spine import gear, object_answer, rigs, unnamed
 from ..spine import objects as obj
-from ..spine import rigs as corredi
 from ..spine.group import GroupReason
 from ..spine.identify_decide import DOUBT
 from .models_review import (
@@ -29,20 +28,20 @@ FRAMES_KEY: Final = "frames:"
 def filter_choices(conn: sqlite3.Connection) -> list[FilterCandidate]:
     """Filters with a known band, minus the "no filter" row, which is another answer. One home for
     the dropdowns and for the writer: Apply does not accept a filter the dropdown does not offer."""
-    righe = conn.execute("SELECT id, name, passband, is_none FROM filters ORDER BY name")
+    rows = conn.execute("SELECT id, name, passband, is_none FROM filters ORDER BY name")
     return [
         FilterCandidate(id=r["id"], name=r["name"], passband=r["passband"])
-        for r in righe
+        for r in rows
         if gear.filter_target(r)
     ]
 
 
 def optics_choices(conn: sqlite3.Connection) -> list[str]:
     """A name that is not here can be written too, and the piece comes into being."""
-    righe = conn.execute(
+    rows = conn.execute(
         "SELECT name FROM instruments WHERE kind = 'optics' ORDER BY name COLLATE NOCASE"
     )
-    return [r["name"] for r in righe]
+    return [r["name"] for r in rows]
 
 
 # copies included: the dropdown asks who is used, not the hours
@@ -52,50 +51,47 @@ USED_RIGS = "SELECT rig_id, COUNT(*) AS n FROM frames WHERE rig_id IS NOT NULL G
 def rig_choices(conn: sqlite3.Connection) -> list[RigChoice]:
     """A rig without a camera does not answer the question; one with no frame left is the residue
     of an answer that moved them. One home for the dropdown and the writer, like the filters."""
-    usati = {r["rig_id"]: r["n"] for r in conn.execute(USED_RIGS)}
-    nomi = corredi.rig_names(conn)
-    righe = [
-        (key, r) for key, r in corredi.rigs_with_keys(conn) if r["camera"] and r["id"] in usati
-    ]
-    righe.sort(key=lambda kr: (-usati[kr[1]["id"]], kr[1]["id"]))
+    used = {r["rig_id"]: r["n"] for r in conn.execute(USED_RIGS)}
+    names = rigs.rig_names(conn)
+    rows = [(key, r) for key, r in rigs.rigs_with_keys(conn) if r["camera"] and r["id"] in used]
+    rows.sort(key=lambda kr: (-used[kr[1]["id"]], kr[1]["id"]))
     return [
         RigChoice(
             id=r["id"],
-            name=nomi.get(key),
+            name=names.get(key),
             optics=r["optics"],
             camera=r["camera"],
             focal_mm=r["focal_mm"],
         )
-        for key, r in righe
+        for key, r in rows
     ]
 
 
 def unclear_coordinates(conn: sqlite3.Connection) -> list[UnclearCoordinates]:
     """The nearest declared site first, almost always the right answer. Distances are recomputed on
     read: three multiplications, while a stored state would go stale at the first new site."""
-    posti = places.unclear_coordinates(conn, GroupReason.SITE_UNCLEAR)
-    if not posti:
+    spots = places.unclear_coordinates(conn, GroupReason.SITE_UNCLEAR)
+    if not spots:
         return []
-    luoghi = conn.execute("SELECT id, name, latitude, longitude, is_default FROM sites").fetchall()
-    casa = next((s for s in luoghi if s["is_default"]), None)
+    sites = conn.execute("SELECT id, name, latitude, longitude, is_default FROM sites").fetchall()
+    home = next((s for s in sites if s["is_default"]), None)
     out: list[UnclearCoordinates] = []
-    for posto in posti:
-        # sorted on the true distance before building the models: `SiteCandidate` rounds it, and
-        # rounded ones would tie two sites under a hundred metres apart
-        vicini = [
-            SiteCandidate(id=s["id"], name=s["name"], distance_km=quanto)
-            for quanto, s in by_distance(posto["latitude"], posto["longitude"], luoghi)
+    for spot in spots:
+        # sorted before building the models, which round the distance (`place.by_distance`)
+        nearest = [
+            SiteCandidate(id=s["id"], name=s["name"], distance_km=km)
+            for km, s in by_distance(spot["latitude"], spot["longitude"], sites)
         ]
         out.append(
             UnclearCoordinates(
-                **posto,
+                **spot,
                 # without a home site there is no distance: zero would say "you are home"
                 distance_km=distance_km(
-                    posto["latitude"], posto["longitude"], casa["latitude"], casa["longitude"]
+                    spot["latitude"], spot["longitude"], home["latitude"], home["longitude"]
                 )
-                if casa
+                if home
                 else None,
-                candidates=vicini,
+                candidates=nearest,
             )
         )
     out.sort(key=lambda n: -n.frames)
@@ -116,28 +112,28 @@ def objects(conn: sqlite3.Connection) -> tuple[list[ObjectCard], list[ObjectCard
     work shows. Settled: found objects the app knows, with nothing to click."""
     out = _found_cards(conn) + _group_cards(conn)
     out.sort(key=lambda c: (not asks(c), c.confidence != DOUBT, -c.frames, c.name or c.key))
-    aperti: list[ObjectCard] = []
-    certi: list[ObjectCard] = []
+    open_cards: list[ObjectCard] = []
+    settled: list[ObjectCard] = []
     for c in out:
-        (aperti if asks(c) or c.answer or c.candidates else certi).append(c)
-    return aperti, certi
+        (open_cards if asks(c) or c.answer or c.candidates else settled).append(c)
+    return open_cards, settled
 
 
 def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
     """The archive's objects, joined by their key with the frames put out under it; then the keys
     whose frames are all out, which have no object row any more."""
-    fuori = object_answer.out_of_archive(conn)
-    collegati_fuori = object_answer.linked_out(conn)
-    candidati = _sky_candidates(conn)
+    put_out = object_answer.out_of_archive(conn)
+    linked_out = object_answer.linked_out(conn)
+    candidates = _sky_candidates(conn)
     out: list[ObjectCard] = []
     for row in obj.listing(conn):
-        chiave = obj.stable_key(row)
-        extra = fuori.pop(chiave, None)
+        object_key = obj.stable_key(row)
+        extra = put_out.pop(object_key, None)
         # every frame answered "not an object", the ones still waiting for `identify` included
-        tutti_fuori = row["frames"] and collegati_fuori.get(row["id"], 0) == row["frames"]
+        all_out = row["frames"] and linked_out.get(row["id"], 0) == row["frames"]
         out.append(
             ObjectCard(
-                key=OBJECT_KEY + chiave,
+                key=OBJECT_KEY + object_key,
                 name=obj.display_name(row),
                 slug=row["catalog_slug"],
                 method=row["identity_method"],
@@ -146,23 +142,23 @@ def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
                 frames=row["frames"] + (extra.frames if extra else 0),
                 integration_s=row["integration_s"] + (extra.integration_s if extra else 0.0),
                 untimed=row["untimed"] + (extra.untimed if extra else 0),
-                candidates=candidati.get(chiave, []),
-                answer=NONE_ANSWER if tutti_fuori else None,
+                candidates=candidates.get(object_key, []),
+                answer=NONE_ANSWER if all_out else None,
             )
         )
-    for chiave, conti in fuori.items():
+    for object_key, totals in put_out.items():
         out.append(
             ObjectCard(
-                key=OBJECT_KEY + chiave,
-                name=conti.name or chiave,
-                slug=chiave if conti.name else None,
+                key=OBJECT_KEY + object_key,
+                name=totals.name or object_key,
+                slug=object_key if totals.name else None,
                 method=None,
                 confidence=None,
                 group=None,
-                frames=conti.frames,
-                integration_s=conti.integration_s,
-                untimed=conti.untimed,
-                candidates=candidati.get(chiave, []),
+                frames=totals.frames,
+                integration_s=totals.integration_s,
+                untimed=totals.untimed,
+                candidates=candidates.get(object_key, []),
                 answer=NONE_ANSWER,
             )
         )
