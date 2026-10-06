@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | ripara | Meno frame in coda dopo filtro e unione: provato e tolto | ~0,48 M agenti (sviluppatore, due revisori) | ~60 | 3 bloccanti dai revisori (corredi diversi via gruppi di focale); trovato un difetto vero, ora in coda |
 | 6/10/2026 | ripara | Risposte sul tipo: 100 in un Applica da 12,8 s a 0,29 s | sessione principale + un revisore (~0,1 M) | ~50 | 0 dal revisore (200 semi di prova a caso, 0 differenze) |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 6b: `api` resto, fase 2 chiusa | ~0,27 M agenti (uno sviluppatore), sessione principale non contata | 23 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 6a: `api` Da confermare e Attrezzatura | ~0,21 M agenti (uno sviluppatore), sessione principale non contata | 16 agente | 0 |
@@ -264,6 +265,17 @@ Niente di aperto.
   l'impronta ripiega sull'header (`fits/header_read.frame_fingerprint`). Provato su cinque
   troncati sintetici; con header veri, che differiscono almeno per `DATE-OBS`, e' improbabile ma
   nessuna prova lo esclude.
+- **Una risposta su una firma non rimette in coda tutti i frame che la leggono**: `answer_for`
+  confronta la focale dal lato della chiave, `frames_of` (`spine/signature.py`) dal lato del frame,
+  e `same_focal` non e' simmetrica: la chiave a 1052 mm risponde al frame a 1000 (52 <= 52,6) ma
+  `frames_of` non lo trova (52 > 50), e quel frame resta con la risposta vecchia fino a un altro giro.
+- **Il corredo di un frame dipende da quando e' stato letto**: `normalize` sostituisce la focale
+  con la mediana del suo gruppo (`focal_buckets`), calcolato sui soli frame del giro, e
+  `rigs.find_rig` prende il primo corredo entro la tolleranza. Tre scansioni in tempi diversi
+  (CamK 1060, poi 1000, poi 1010) lasciano il frame a 1000 su un corredo suo; rifatti insieme
+  finiscono tutti sul corredo a 1060. Lo stesso archivio, letto in un altro ordine, conta le ore su
+  corredi diversi. Rimedio da decidere: gruppi di focale calcolati su tutti i frame della stessa
+  camera e ottica, non su quelli del giro. Prova riprodotta il 6/10 (scratchpad `cx1`).
 
 ### Macchine che non guardano
 
@@ -358,16 +370,11 @@ Niente di aperto.
   scritto sulla camera spegne la domanda del filtro sulle schede della stessa camera; la risposta
   salvata puo' prendersi righe di una firma vicina entro la tolleranza della focale; la stessa
   firma due volte nello stesso Applica).
-- **Una risposta sul filtro rimette in coda tutti i frame senza matrice della sua camera, anche
-  quelli che il filtro lo scrivono** (`_OF_CAMERA` in `spine/unfiltered.py`, chiamato da
-  `api/review_write_folders._sensor`): 6.558 per 10 su un caso costruito, misurato quando la
-  risposta era per camera; 1.750 per 750 muti sul filtro, 220 ms, su 2.000 frame sintetici (6/10).
-- **Unire due grafie di una camera rifa' tutti i frame della camera che resta**
-  (`api/instrument_answer.merge`, da Applica e da `PATCH /gear/instruments`): 6.990 in coda per
-  432 cambiati, 6,0 s contro ~0,6; 2.000 per 250 assorbiti, 238 ms, su 2.000 frame (6/10).
-  Rimedio: rimettere in coda la tenuta solo se la risposta le cambia qualcosa.
-- Questi due non sono un refactor: meno frame in coda cambia `requeued` nella risposta e le righe
-  di `frame_stages`. Vanno in un `/ripara`.
+- **Una risposta sul filtro e l'unione di due grafie di una camera rimettono in coda piu' frame del
+  necessario** (`api/review_write_folders._sensor`, `api/instrument_answer.merge`): su 2.000 frame
+  1.750 invece di 500 e 2.000 invece di 250 (worker 1,15 s contro 0,57; 1,18 contro 0,23).
+  Provato il 6/10 e tolto: con meno frame nel giro cambiano i gruppi di focale, e tre controesempi
+  danno corredi diversi. Aspetta *Il corredo di un frame dipende da quando e' stato letto*.
 - **Cambiare il fuso di casa tiene il database dentro la richiesta**, e il tempo cresce coi frame
   che cambiano data (`spine/home_nights.py`): il grosso e' `unnamed.assign` frame per frame. Su un
   archivio grande senza coordinate una scrittura del worker puo' avvicinarsi al `busy_timeout`
