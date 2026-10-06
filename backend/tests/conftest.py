@@ -263,11 +263,11 @@ def to_confirm_without(pagina, sezione):
     conti = {
         "lookalikes": len(pagina["lookalikes"]),
         "filters": len(pagina["filters"]),
-        # a group card is never confirmed: it counts until answered
+        # a group, or a doubt, counts until answered (ADR 0014, S4)
         "objects": sum(
             1
             for o in pagina["objects"]
-            if o["answer"] is None and (o["group"] is not None or not o["confirmed"])
+            if o["answer"] is None and (o["group"] is not None or o["confidence"] == "low")
         ),
         "unclear": sum(1 for p in pagina["unclear"] if p["site"] is None),
         "gear": sum(1 for g in pagina["gear"] if not g["complete"]),

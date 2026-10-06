@@ -339,9 +339,9 @@ def test_an_archive_with_nothing_to_ask_asks_nothing(client_pulito):
 
 
 def _domande(pagina):
-    """Le altre domande della pagina: gli oggetti non ancora visti, i filtri da dire, le grafie
+    """Le altre domande della pagina: gli oggetti senza risposta, i filtri da dire, le grafie
     che sembrano un pezzo solo."""
-    oggetti = [o for o in pagina["objects"] if not o["confirmed"]]
+    oggetti = [o for o in pagina["objects"] if o["answer"] is None]
     return oggetti + pagina["filters"] + pagina["lookalikes"]
 
 

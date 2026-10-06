@@ -97,7 +97,6 @@ def _scheda(key, ra_deg, dec_deg, frames, answer):
     """A group card as the page shows it, hours aside: 120 s frames, nothing found by the app."""
     return {
         "key": key,
-        "id": None,
         "name": None,
         "slug": None,
         "method": None,
@@ -112,7 +111,6 @@ def _scheda(key, ra_deg, dec_deg, frames, answer):
         "frames": frames,
         "integration_s": 120.0 * frames,
         "untimed": 0,
-        "confirmed": False,
         "candidates": [],
         "answer": answer,
     }
@@ -216,24 +214,17 @@ def test_an_open_group_counts_and_an_answered_one_does_not(pagina):
     risposta, resta in pagina ma non conta piu'. "Non e' un oggetto": nessun oggetto nasce, quindi
     il conto scende esattamente di uno."""
     prima = review(pagina)["to_confirm"]
-    apply(
-        pagina,
-        objects=[{"key": _chiave(pagina, M81), "not_an_object": True}],
-        seen={},  # non ho visto niente: nient'altro si conferma vedendo
-    )
+    apply(pagina, objects=[{"key": _chiave(pagina, M81), "not_an_object": True}])
     assert review(pagina)["to_confirm"] == prima - 1
 
 
 def test_the_object_named_by_the_answer_is_not_another_question(pagina):
-    """L'oggetto nominato dall'utente non torna in pagina da confermare: l'ha appena detto lui.
-    `seen` vuoto -- non ho visto niente -- cosi' nient'altro si conferma vedendo."""
-    apply(
-        pagina,
-        objects=[{"key": _chiave(pagina, M81), "name": "Galassia di Bode"}],
-        seen={},
-    )
+    """L'oggetto nominato dall'utente non torna in pagina da confermare: l'ha appena detto lui."""
+    prima = review(pagina)["to_confirm"]
+    apply(pagina, objects=[{"key": _chiave(pagina, M81), "name": "Galassia di Bode"}])
     oggetti = {o["name"]: o for o in all_objects(pagina)}
-    assert oggetti["Galassia di Bode"]["confirmed"] is True
+    assert oggetti["Galassia di Bode"]["confidence"] == "user"
+    assert review(pagina)["to_confirm"] == prima - 1
 
 
 def test_not_an_object_is_an_answer_too_and_i_can_change_my_mind(pagina):

@@ -431,11 +431,11 @@ cosa stai per mandare anche se non distingui i colori. La pagina si rilegge e ti
 risposte ha applicato e quanti frame ha rimesso in lavorazione. Ogni risposta vale anche per i frame che
 arriveranno, e **si cambia**: un gruppo a cui hai risposto resta in pagina con la sua risposta.
 
-Il conto scende quando **rispondi**, non quando guardi. Le cose su cui l'app ti sta chiedendo
-qualcosa -- un filtro che non riconosce, due camere che sembrano la stessa, un oggetto con dei
-candidati da cliccare, un gruppo di frame senza risposta -- restano contate finche' non rispondi.
-Gli altri oggetti si considerano visti quando premi *Applica*. Il tuo equipaggiamento qui non c'e':
-un pezzo nuovo, trovato nei file o scritto da te, lo vedi e lo completi nell'*Attrezzatura*.
+Il conto scende quando **rispondi**, non quando guardi: *Applica* scrive solo le risposte che hai
+dato. Le cose su cui l'app ti sta chiedendo qualcosa -- un filtro che non riconosce, due camere che
+sembrano la stessa, un oggetto su cui ha un dubbio, un gruppo di frame senza risposta -- restano
+contate finche' non rispondi. Il tuo equipaggiamento qui non c'e': un pezzo nuovo, trovato nei
+file o scritto da te, lo vedi e lo completi nell'*Attrezzatura*.
 
 Accanto ai gruppi di frame c'e' **cosa hai ripreso**: gli oggetti che l'app ha riconosciuto in
 quei frame, con quanti frame ciascuno (i primi tre, e quanti altri), per rispondere senza dover
@@ -527,13 +527,18 @@ a guardare, perche' non sono la stessa cosa.
   non ti fanno proporre un mosaico, e restano col loro oggetto. Un frame di cui non si sa quanto e'
   grande il campo non entra nei mosaici.
 - **Che oggetto e'.** L'oggetto te lo chiede in **una scheda per gruppo di frame**, sempre uguale:
-  i frame che l'app ha messo su un oggetto, oppure un gruppo di frame che non dicono cosa hai
-  ripreso e di cui il cielo non dice niente. A ogni scheda rispondi allo stesso modo: scegli una
+  i frame che l'app ha messo su un oggetto di cui non e' sicura, oppure un gruppo di frame che non
+  dicono cosa hai ripreso e di cui il cielo non dice niente. Non ti chiede un oggetto che il cielo
+  riconosce, ne' una sigla del catalogo scritta nel file (`M 31`) anche se il cielo non c'e': quelli
+  li trovi fra gli oggetti gia' a posto, aperti a pagine, e li correggi da li'. Ti chiede un nome
+  che il catalogo non conosce, e quello su cui nome e cielo non vanno d'accordo, o il cielo esita
+  fra piu' oggetti vicini. A ogni scheda rispondi allo stesso modo: scegli una
   voce fra quelle che il cielo ha trovato -- quando ne ha trovate --, scrivi il nome, oppure spunta
   *non e' un oggetto*, per un frame di prova o una messa a fuoco. *Non e' un oggetto* vale anche
   per un oggetto che l'app ha riconosciuto: quei frame escono dalle ore, e la scheda resta, con
   quello che il cielo aveva trovato, per cambiare idea. Vale per i frame che c'erano quando hai
-  risposto: se ne riprendi altri dello stesso oggetto, l'app li riconosce come prima.
+  risposto: se ne riprendi altri dello stesso oggetto, l'app li riconosce come prima. L'app non ti
+  avvisa piu' di un oggetto nuovo che sa riconoscere da sola: lo trovi nell'Archivio.
 
   **In questa versione la scheda non si vede ancora**: arriva col disegno nuovo della pagina. Fino
   ad allora il numero di *Da confermare* la conta.
@@ -560,10 +565,9 @@ a guardare, perche' non sono la stessa cosa.
 
   *Gli oggetti trovati.* In cima ci sono quelli su cui l'app ha un dubbio, ognuno con cio' che il
   cielo ha trovato nel campo di quel frame da cliccare, quando ha trovato qualcosa; se nessuno e'
-  quello giusto, o se non c'e' niente da cliccare, il nome lo scrivi tu. Sotto ci sono gli altri
-  oggetti nuovi, che non hai ancora visto. Una volta visti, gli oggetti su cui non c'e' niente da
-  scegliere -- anche un dubbio senza niente da cliccare -- stanno chiusi, e li apri a pagine
-  quando ti serve correggerne uno. Su ogni scheda trovi quanti frame sono e quante ore, e a parte
+  quello giusto, o se non c'e' niente da cliccare, il nome lo scrivi tu. Un dubbio resta aperto
+  finche' non rispondi. Gli oggetti che l'app riconosce da sola stanno gia' chiusi, e li apri a
+  pagine quando ti serve correggerne uno. Su ogni scheda trovi quanti frame sono e quante ore, e a parte
   i frame il cui header non dice il tempo.
 
 Quando scrivi a mano un oggetto una **sigla** che il

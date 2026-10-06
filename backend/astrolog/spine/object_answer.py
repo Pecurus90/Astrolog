@@ -1,4 +1,4 @@
-"""The user's answer on an OBJECT: correction, learned rule, confirmation. It never touches
+"""The user's answer on an OBJECT: correction and learned rule. It never touches
 `objects` or `object_names`: `identify` rewrites them, so the answer is one truth in one place."""
 
 import logging
@@ -15,7 +15,6 @@ from .declarations import (
     MOSAIC_NO,
     MOSAIC_YES,
     UnknownTargetError,
-    confirm,
     declared,
     forget,
     learn,
@@ -112,7 +111,6 @@ def declare_found(
         refuse_unknown_slug(conn, slug)
         slug, name = resolved(conn, slug, name)
         correct_object(conn, key, slug=slug, name=name, now=now)
-        confirm(conn, "object", slug or name, now)
     # Without name and sky only the frame's own word can bring it back: the target, not silence.
     target = target_value(*resolved(conn, slug, name))
     for r in righe:
@@ -228,7 +226,6 @@ def declare_object(
     target = slug or name
     for grafia in _unambiguous_spellings(conn, object_id):
         learn(conn, "object", grafia, target, now=now)
-    confirm(conn, "object", target, now)
 
     frames = objects.frames_of(conn, object_id)
     invalidate(conn, frames, "identify")

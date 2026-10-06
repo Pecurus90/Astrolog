@@ -70,13 +70,13 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | Anche a un oggetto trovato rispondo "non e' un oggetto": i suoi frame escono dalle ore e da ogni oggetto, la scheda resta in pagina coi candidati e non conta piu', e cambio idea; vale per i frame che c'erano quando ho risposto | `test_not_an_object_on_a_found_object_takes_its_frames_out_and_the_card_stays`, `test_the_card_of_frames_put_out_keeps_the_sky_candidates` |
 | "Non e' un oggetto" detto per un gruppo di frame senza nome non tocca un frame del gruppo che il cielo ha riconosciuto | `test_not_an_object_said_for_a_group_does_not_reach_a_frame_the_sky_recognised`, `test_a_sky_that_comes_after_the_group_answer_still_decides` |
 | Vedo cosa l'app ha capito di ogni oggetto, e cio' su cui ha un dubbio sta in cima | `test_the_objects_section_shows_the_archive_objects_not_the_header_spellings`, `test_the_ones_to_decide_come_first` |
-| Gli oggetti gia' visti, su cui non c'e' niente da scegliere, non riempiono la pagina: stanno chiusi, si aprono a pagine, e da li' si correggono | `test_the_settled_objects_leave_the_page_and_come_in_pages` |
+| Gli oggetti che l'app sa, su cui non c'e' niente da scegliere, non riempiono la pagina: stanno chiusi, si aprono a pagine, e da li' si correggono | `test_the_settled_objects_leave_the_page_and_come_in_pages` |
 | Quando mi chiede quale oggetto era, mi mostra cosa c'e' a quelle coordinate e mi basta cliccare | `test_a_doubtful_object_carries_the_candidates_the_sky_found` |
 | Se rispondo che quei frame sono un altro oggetto, ci vanno davvero -- e non tornano indietro | `test_answering_on_an_object_moves_its_frames_and_locks_it`, `test_a_correction_survives_a_second_run` |
 | Se scrivo a mano una sigla che il catalogo conosce (`M 81`, `m81`), e' quella voce, non un oggetto fuori catalogo con lo stesso nome: le mie ore non si dividono su due voci | `test_a_designation_written_by_hand_is_the_catalog_entry` |
 | E dopo che ho risposto l'app non me lo richiede piu', neanche sull'oggetto su cui era in dubbio | `test_a_correction_closes_the_question_on_a_doubtful_object` |
-| Il conto delle cose da confermare scende quando **rispondo**, non quando guardo: premere Applica non spegne una domanda che ho lasciato li' | `test_only_the_filters_the_app_does_not_know_are_asked`, `test_apply_does_not_silence_an_object_the_app_is_still_unsure_about` |
-| Ma un oggetto che la pagina mi ha **mostrato** si spegne sempre, per quanto vicini siano nati due oggetti: non torna a chiedermelo per un caso dell'orologio | `test_what_the_page_showed_is_confirmed_even_if_its_clock_ran_ahead`, `test_review_does_not_confirm_what_arrived_after_the_page_was_read` |
+| Il conto delle cose da confermare scende quando **rispondo**, non quando guardo: Applica scrive solo le risposte, e non spegne una domanda che ho lasciato li' (ADR 0014, S4) | `test_only_the_filters_the_app_does_not_know_are_asked`, `test_apply_without_answers_silences_no_object`, `test_answering_a_doubt_closes_it` |
+| Una pagina aperta prima di un aggiornamento, che manda un campo di ieri (`seen`), si sente dire 422 e non scrive niente | `test_an_answer_with_a_field_we_do_not_know_is_refused` |
 | La mia risposta vale anche per i frame futuri con quello stesso nome, ma non quando quel nome e' un segnaposto | `test_a_learned_rule_names_a_future_frame_without_asking_again`, `test_an_answer_does_not_become_a_rule_when_the_spelling_is_a_placeholder` |
 | E una regola non mi mette in archivio un frame che il cielo dice essere un'altra cosa: dove il cielo c'e', decide lui | `test_a_learned_rule_does_not_touch_a_frame_that_has_a_sky` |
 | Se mi ero sbagliato, rispondo di nuovo e la seconda risposta vale | `test_a_second_answer_corrects_the_first` |
@@ -86,7 +86,7 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | L'oggetto del gruppo -- dal catalogo o scritto -- sposta i suoi frame senza nome, anche in un'altra cartella, vale anche per quelli che arriveranno e si cambia; si scrive sull'impronta di ogni frame, anche mancante, non su una chiave con la notte, e due risposte diverse nello stesso gruppo non sono una risposta; "non e' un oggetto" li chiude senza inventare un soggetto | `test_a_name_said_for_the_group_puts_its_poses_on_that_object`, `test_the_answer_hangs_on_the_poses_not_on_a_key_with_the_night`, `test_two_answers_in_one_group_are_no_answer`, `test_the_answer_reaches_a_pose_of_the_same_group_in_another_folder`, `test_a_catalog_entry_puts_the_poses_on_its_object`, `test_not_an_object_closes_the_poses_and_they_wait_for_nothing`, `test_the_rule_holds_for_the_poses_that_arrive_later`, `test_i_can_change_my_mind_and_the_poses_follow`, `test_changing_my_mind_reaches_a_missing_pose_too` |
 | Dove il cielo ha dei candidati decide lui, e l'oggetto del gruppo non lo scavalca; un frame risolto ma senza niente nel cono resta nella sua domanda anche dopo | `test_the_sky_wins_over_the_group_where_it_has_candidates`, `test_a_solved_pose_whose_sky_finds_nothing_is_reached_and_stays_in_the_group`, `test_a_pose_whose_sky_finds_nothing_stays_asked_while_it_waits_to_be_redone` |
 | Rispondo da Da confermare che quel gruppo e' un oggetto -- dal catalogo o scritto -- oppure che non e' un oggetto, una risposta sola; il gruppo resta in pagina con la mia risposta e la cambio, e l'oggetto che nomino non torna da confermare; finche' non rispondo il gruppo conta fra le cose da confermare | `test_answering_with_a_name_moves_the_poses_and_the_group_keeps_its_answer`, `test_an_open_group_counts_and_an_answered_one_does_not`, `test_the_object_named_by_the_answer_is_not_another_question`, `test_answering_with_a_catalog_entry`, `test_not_an_object_is_an_answer_too_and_i_can_change_my_mind`, `test_an_answer_that_says_two_things_or_none_is_refused` |
-| La schermata torna solo quando compare qualcosa che non ho mai confermato, e non mi blocca mai: i frame sono gia' in archivio | `test_review_only_new_things` |
+| Un oggetto che l'app sa non me lo chiede: quello che il cielo riconosce con certezza, e una sigla del catalogo scritta nel file anche senza cielo (Marco, 6/10/2026); me lo chiede solo col dubbio. La pagina non mi blocca mai: i frame sono gia' in archivio | `test_an_object_the_sky_is_sure_of_is_not_asked`, `test_a_catalog_name_without_a_sky_is_not_asked`, `test_review_only_new_things` |
 | L'attrezzatura che i file non dicono -- la camera, l'ottica, il filtro -- me la chiede in **una scheda per firma dell'header** (grafia di camera e telescopio, focale entro il 5 %, sensore), non per notte ne' per cartella, e solo le parti che mancano; un `TELESCOP` che il programma dice montatura (l'ASIAIR) non entra nella firma (ADR 0014, S1) | `test_a_question_per_group_with_the_largest_first`, `test_the_signature_is_the_header_not_the_night_or_the_folder`, `test_each_value_of_the_key_makes_its_own_group_and_the_row_says_it`, `test_the_key_is_made_in_one_place_from_what_the_header_says`, `test_renaming_the_optics_does_not_move_the_key`, `test_only_the_poses_whose_header_does_not_say_the_camera_are_asked`, `test_a_part_the_files_say_is_not_asked`, `test_the_focal_is_shown_only_when_the_poses_agree`, `test_two_mount_names_of_one_asiair_are_one_card`, `test_poses_that_do_not_name_the_optics_are_asked_once_per_camera_and_focal`, `test_the_answer_is_for_that_camera_only` |
 | Rispondo alla camera scegliendo un corredo che l'app conosce o scrivendo camera e focale (e l'ottica se serve), all'ottica scegliendone una mia o scrivendone il nome: i pezzi scritti a mano diventano miei, i frame vanno nel corredo che quei pezzi hanno gia', e la risposta vale anche per i frame che arriveranno con la stessa firma, **in qualunque notte** | `test_answering_with_the_pieces_makes_the_rig_and_moves_the_poses`, `test_choosing_a_rig_from_the_list_writes_its_names`, `test_the_camera_written_by_hand_becomes_a_piece_and_the_filter_question_follows`, `test_the_answer_holds_for_the_poses_that_arrive_later_in_that_group`, `test_the_answer_gives_the_optics_and_the_poses_join_the_rig_that_has_it`, `test_an_optics_written_by_name_is_born_like_from_a_header`, `test_a_pose_that_arrives_later_takes_the_answer_by_itself`, `test_the_pose_reads_the_answer_of_its_own_group`, `test_a_focal_that_drifts_finds_the_same_answer`, `test_the_answer_is_read_back_with_its_pieces`, `test_the_key_is_never_split_to_find_the_pieces` |
 | Una scheda conta fra le cose da confermare finche' ogni parte che chiede non ha la sua risposta; risposta, resta in pagina; una parte che non mando tiene la risposta di prima; una risposta illeggibile vale nessuna risposta | `test_an_unanswered_group_counts_among_the_things_to_confirm`, `test_the_camera_written_by_hand_becomes_a_piece_and_the_filter_question_follows`, `test_an_answer_that_cannot_be_read_is_no_answer`, `test_a_focal_that_is_not_a_focal_leaves_the_answer_standing`, `test_an_optics_that_is_not_a_name_is_no_optics`, `test_a_filter_word_that_is_not_an_answer_is_no_filter_answer` |
@@ -590,7 +590,7 @@ ogni pezzo trovato e' davanti agli occhi con quanti frame vale.
 una domanda, si vede nell'Attrezzatura). Dell'attrezzatura restano due domande: i filtri che l'app
 non riconosce, e due grafie che hanno l'aria di essere la stessa camera. Poi le *schede
 dell'oggetto*, una per gruppo di frame -- un oggetto trovato, o frame senza nome e senza cielo --:
-in cima quelle che chiedono una risposta, poi le nuove; le gia' viste, su cui non c'e' niente da
+in cima quelle che chiedono una risposta; quelle che l'app sa, su cui non c'e' niente da
 scegliere, stanno chiuse, e si aprono a pagine (Marco, 27/9/2026). E le domande sui **gruppi
 di frame**, una per ogni cosa che l'app non puo' sapere:
 il sito, e l'attrezzatura che i file non dicono. Quante sezioni siano lo dice `ReviewOut`, non questa riga: un numero scritto qui
@@ -602,57 +602,35 @@ gruppi che toccano piu' frame (`api/review.py`, `api/review_page.py`; prove
 per frame degli oggetti e per i siti la prova manca, vedi [`coda.md`](../coda.md) *Macchine che
 non guardano*). Le decisioni si
 prendono cliccando e **"Applica" le scrive in un colpo solo**: diventano dichiarazioni e
-regole (`header_aliases`) valide per tutto l'archivio, non per la sola scansione. Un oggetto
-e' *nuovo* finche' non e' stato confermato almeno una volta -- confermare e' una
-dichiarazione, quindi sopravvive a un azzeramento e si esporta. Percio' la pagina si
-ripropone quando arriva qualcosa di mai visto, e mai per cio' che e' gia' sistemato. Non
-blocca: i frame sono gia' in archivio, confermare migliora i nomi.
+regole (`header_aliases`) valide per tutto l'archivio, non per la sola scansione. **Applica
+scrive solo le risposte** (ADR 0014, S4): niente si conferma guardandolo. Non blocca: i frame
+sono gia' in archivio, rispondere migliora i nomi.
 
 **Due rotte, non venti.** `GET /review` porta tutta la pagina in una risposta: le grafie che
 sembrano un pezzo solo, i filtri che l'app non riconosce e quelli fra cui si sceglie la risposta, i
 corredi fra cui si sceglie, gli oggetti coi
 conteggi, **i gruppi di frame su cui l'app chiede** -- ognuno con la sua chiave stabile, quanti
-frame vale e la risposta gia' data, se c'e' -- e quante voci non sono mai state confermate. `POST /review/apply` prende tutte le
+frame vale e la risposta gia' data, se c'e' -- e quante domande aspettano una risposta. `POST /review/apply` prende tutte le
 decisioni insieme, le scrive in una transazione sola e **fa ripartire il lavoro sui frame
 toccati**: chi risponde vede i conti aggiornati in pochi secondi, non alla prossima
 scansione. I frame non toccati non si rilavorano.
 
-**Confermare e' una dichiarazione** (`declarations`, campo `confirmed`), non una colonna del
-rilevato: sopravvive a un azzeramento, si esporta, e la chiave e' quella che sopravvive --
-il nome dell'oggetto, non il suo numero di riga. Percio' "e' nuovo" si sa senza aggiungere
-niente allo schema: e' nuovo cio' che non ha la sua dichiarazione. **Anche il nome che si
-da' a un corredo e' una dichiarazione**, con la chiave (ottica, camera, focale): la riga di
-`rigs` e' rilevata e un'unione di due grafie la cancella, il nome invece deve tornare quando
-la spina ricostruisce lo stesso corredo. E si conferma **cio' che la pagina letta mostrava**:
-`GET /review` dice **fin dove ha guardato** -- il numero di riga piu' alto fra gli oggetti che
-ha elencato -- `Applica` lo rimanda, e una voce nata nel frattempo da una scansione resta
-nuova, perche' nessuno l'ha ancora vista.
+**Un oggetto si chiede solo col dubbio** (ADR 0014, S4): `identity_confidence = 'low'`, senza
+risposta (`review_page.asks`). Non si chiede cio' che l'app sa: nome e cielo concordi (`certain`)
+e una sigla del catalogo nell'header senza cielo (`high`, Marco 6/10/2026). Si chiede un nome
+che il catalogo non conosce, e senza catalogo lo e' ogni nome. Un dubbio senza candidati si
+risponde scrivendo il nome, quindi rispondendo a tutto il conto torna a **zero**. La risposta fa
+nascere l'oggetto `user`, che non si chiede piu'. Prima Applica confermava cio' che la pagina
+aveva mostrato (`seen`, una dichiarazione `confirmed`): spariti, e con loro l'avviso
+dell'oggetto nuovo. **Il nome che si da' a un corredo resta una dichiarazione**, con la chiave
+(ottica, camera, focale): la riga di `rigs` e' rilevata e un'unione di due grafie la cancella, il
+nome invece deve tornare quando la spina ricostruisce lo stesso corredo.
 
-**Fin dove, e non quando**: due righe nate nello stesso istante non si ordinano. L'orologio di
-Windows avanza a **scatti di 2,1 ms** (minimo 1,5, massimo 5,9, misurati il 14/9/2026), e cio' che
-nasce dentro uno scatto porta lo stesso millesimo di cio' che lo precede: con gli orari una voce
-mostrata poteva non spegnersi -- costava una scheda riproposta all'utente, e un rosso a caso circa
-una corsa di test su dieci. I numeri di riga sono esatti e crescenti, e per questo quelle
-tabelle **non li riusano** (`AUTOINCREMENT` in `schema.sql`, anche sui filtri, che non si
-confermano ma si rispondono col numero): un numero riciclato dopo una cancellazione farebbe nascere
-una riga gia' confermata, o le darebbe la risposta scritta per quella di prima. E' `seen` a dirlo,
-e porta il piu' alto fra i numeri **elencati**, non il piu' alto della tabella.
-
-**Ma vedere non e' rispondere** (Marco, 14/9/2026). Cio' su cui l'app sta **chiedendo** qualcosa
-non si conferma guardandolo -- un oggetto col dubbio e i candidati del cielo davanti; i filtri
-in pagina sono solo domande, e non si confermano affatto -- altrimenti il conto scende senza che nessuno abbia risposto: sul
-suo archivio passava da **62 a 4** con una risposta sola. Misurato voce per voce: un Applica a
-vuoto ne spegneva **58** (7 strumenti, 5 corredi, 8 filtri, 38 oggetti), e di quelle **sette**
-erano domande aperte -- 3 filtri senza banda e 4 oggetti col dubbio e i candidati davanti. Il 14/9/2026
-lo stesso Applica a vuoto si fermava a **11**. Il **dubbio da solo non basta** a tenere aperta una domanda, ed e'
-misurato: finche' ASTAP non e' installato i frame non hanno cielo e **ogni** oggetto nasce dubbio
--- uno stato dichiarato e voluto -- quindi quella regola terrebbe il contatore acceso per sempre
-su un archivio dove **nessuna domanda e' mai comparsa a schermo**, e cadrebbe la promessa che
-rispondendo a tutto si torna a **zero**. E la misura non **somiglia** a quella della pagina: e'
-la stessa, dalla stessa funzione -- e' una domanda dove ci sono i candidati da cliccare. Chiedere
-invece "ha un frame col cielo" sembrava lo stesso ed era un'altra cosa: col cielo misurato ma
-**senza catalogo** il cono non torna niente, e quell'oggetto sarebbe rimasto da confermare per
-sempre senza niente da cliccare.
+**Vedere non e' rispondere** (Marco, 14/9/2026): sul suo archivio un Applica a vuoto spegneva
+**58** voci, e **sette** erano domande aperte. Con S4 un Applica a vuoto non spegne niente.
+I numeri di riga di quelle tabelle **non si riusano** (`AUTOINCREMENT` in `schema.sql`): i filtri
+si rispondono col numero, e un numero riciclato darebbe a una riga la risposta scritta per
+quella di prima.
 **La scheda chiede solo i campi del suo tipo**, e li manda l'API (`cards` dell'Attrezzatura):
 quali siano lo dice *Le schede* piu' sotto, scritto una volta in
 `instrument_answer.CARD`. **Si unisce solo dove la spina accetta** (`mergeable_into`: stesso tipo, e
@@ -703,11 +681,10 @@ vecchio: senza scheda, senza risposte, con le ore spartite fra due righe.
 i frame che `identify` ha messo su un oggetto (chiave `object:` e la chiave stabile), o un gruppo
 di frame senza nome e senza cielo (chiave `frames:` e la chiave del gruppo). La scheda e' una
 (`ObjectCard`), e la risposta pure: una voce del catalogo, un nome scritto, o "non e' un
-oggetto". In cima le domande -- senza risposta, e per un oggetto mai visto --, e fra queste
-quelle su cui l'app ha un dubbio (`identity_confidence = 'low'`), coi **candidati che il cielo
-ha trovato nel suo campo** da cliccare quando ne ha trovati; zero candidati e' una scheda come
-le altre. Le schede gia' viste, senza risposta e senza niente da scegliere, compresi i dubbi di
-cui il cielo non sa dire niente, stanno chiuse e si aprono a pagine, coi conteggi.
+oggetto". In cima le domande -- i gruppi e i dubbi (`identity_confidence = 'low'`) senza
+risposta --, coi **candidati che il cielo ha trovato nel suo campo** da cliccare quando ne ha
+trovati; zero candidati e' una scheda come le altre. Le schede degli oggetti che l'app sa, senza
+niente da scegliere, stanno chiuse e si aprono a pagine, coi conteggi.
 
 **"Non e' un oggetto" vale anche su un oggetto trovato** (Marco, 6/10/2026): uno scatto di prova,
 una messa a fuoco. Si scrive sull'impronta di ogni frame della scheda, fissati al momento della
@@ -763,7 +740,8 @@ frame, mai farli sparire, e nemmeno puntare al nulla.
 **E una risposta chiude la domanda.** L'oggetto corretto vale `user`/`user` -- anche, e
 soprattutto, dove il cielo era in dubbio, che sono i due rami per cui questa pagina esiste: la
 correzione e' agganciata alla chiave che la pagina mostrava, quindi e' la risposta a *quella*
-domanda. Lasciarlo `low` voleva dire rimetterlo in cima coi suoi candidati subito dopo il clic, e
+domanda. Vale anche quando la risposta nomina proprio l'oggetto trovato ("e' giusto"): la
+correzione su se' stessa si applica una volta, e l'oggetto diventa `user`. Lasciarlo `low` voleva dire rimetterlo in cima coi suoi candidati subito dopo il clic, e
 poterlo richiedere all'infinito. Per la stessa ragione la ricevuta conta una richiesta solo se la
 pagina la fara' davvero: se il frame finisce su un oggetto gia' lucchettato, il suo dubbio non
 arriva a schermo, e contarlo direbbe "1 da rivedere" con la pagina che ne mostra zero.

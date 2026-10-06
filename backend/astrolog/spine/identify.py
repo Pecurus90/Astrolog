@@ -156,15 +156,15 @@ def _named_by_rule(
 def _as_the_user_said(conn: sqlite3.Connection, decision: dict[str, Any]) -> dict[str, Any]:
     """The decision after the user's corrections, followed as a chain: a later one overrides."""
     found = decision["slug"] or decision["name"]
-    visti = set()
+    visti: set[str] = set()
     while found:
-        visti.add(found)
         target = risposta.correction_of(conn, found)
-        # Checked BEFORE applying: after, it would land right back where it started.
+        # Checked BEFORE applying: after, it would land right back where it started. A target
+        # equal to `found` still applies once: "it is right" makes it the user's.
         if target is None or target[1] in visti:
             break
         # Joins `visti` even on failure, or a missing target would retry forever.
-        visti.add(target[1])
+        visti.update((found, target[1]))
         decision = _towards(conn, decision, target[1], kind=target[0])
         found = decision["slug"] or decision["name"]
     return decision

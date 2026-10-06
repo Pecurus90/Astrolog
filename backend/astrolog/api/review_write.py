@@ -1,5 +1,4 @@
-"""The order in which the answers apply; the rules live in the spine. The objects confirmed are
-those the page READ listed (`seen`): a scan may have slipped in before the click."""
+"""The order in which the answers apply; the rules live in the spine."""
 
 import sqlite3
 from collections.abc import Iterator
@@ -12,7 +11,6 @@ from ..spine import coordinates as places
 from ..spine import declarations as decl
 from ..spine import gear, gear_create, mosaic
 from ..spine import object_answer as risposta
-from ..spine import objects as obj
 from ..spine import rigs as corredi
 from ..spine.group import SITE_UNCLEAR
 from ..spine.stages import invalidate
@@ -20,7 +18,6 @@ from . import instrument_answer as strumento
 from . import lookalike
 from . import review_page as page
 from . import review_write_folders as folders
-from .models_review import ReviewSeen
 from .models_review_apply import (
     CoordinatesEdit,
     FilterCorrection,
@@ -34,25 +31,6 @@ _CONSTRAINT_CODES = {
     "instruments.kind": "name_taken",
     "filters.is_none": "none_filter_exists",
 }
-
-
-# SQLite's largest row id: the limit of whoever sends no `seen`, "confirm what is there now"
-_TUTTO = 2**63 - 1
-_SENZA_LIMITI = ReviewSeen(objects=_TUTTO)
-
-
-def confirm_seen(conn: sqlite3.Connection, seen: ReviewSeen | None, now: str) -> int:
-    """By row number, not time: two rows born in the same instant cannot be ordered. An object
-    still open (`object_still_open`) is not confirmed by seeing it; gear is not confirmed here."""
-    fino_a = seen or _SENZA_LIMITI
-    count = 0
-    cliccabili = page.keys_with_candidates(conn)
-    for row in obj.identities(conn):
-        chiave = obj.stable_key(row)
-        if chiave and row["id"] <= fino_a.objects and not page.object_still_open(row, cliccabili):
-            decl.confirm(conn, "object", chiave, now)
-            count += 1
-    return count
 
 
 def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> tuple[int, set[int]]:

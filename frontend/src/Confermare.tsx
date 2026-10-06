@@ -43,9 +43,7 @@ const VUOTO: Accumulo = {
  * - dopo *Applica* **si ricarica dicendo cosa e' cambiato**, coi numeri della ricevuta: l'elenco
  *   di prima direbbe cose non piu' vere, perche' la risposta rifa' il lavoro sulle pose toccate.
  *
- * `seen` e' fin dove la pagina che si sta applicando aveva guardato: si confermano **solo gli
- * oggetti che erano li' quando l'hai letta**. Uno arrivato dopo, da una scansione finita nel
- * frattempo, resta nuovo.
+ * *Applica* scrive solo le risposte: una domanda guardata e lasciata li' resta aperta (ADR 0014).
  */
 export function Confermare() {
   const [accumulo, setAccumulo] = useState<Accumulo>(VUOTO)
@@ -89,8 +87,7 @@ export function Confermare() {
   const applica = useMutation({
     mutationFn: async () => {
       // L'Applica porta **l'intera pagina**, non solo la sezione che hai toccato: le liste vuote
-      // dicono "di queste non ho risposto", e il contratto le vuole tutte. `seen` c'e' solo se la
-      // pagina e' stata letta: senza, l'Applica confermerebbe anche cio' che nessuno ha guardato.
+      // dicono "di queste non ho risposto", e il contratto le vuole tutte.
       const { data, error } = await api.POST("/api/v1/review/apply", {
         body: {
           lookalikes: Object.values(accumulo.lookalikes),
@@ -102,7 +99,6 @@ export function Confermare() {
           mosaics: Object.values(accumulo.mosaics),
           // no object card yet: it waits for its design (ADR 0014)
           objects: [],
-          ...(pagina.data?.seen ? { seen: pagina.data.seen } : {}),
         },
       })
       if (error) throw new Error(t(motivo(error, RIFIUTI, "review.apply.failed")))

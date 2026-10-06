@@ -16,6 +16,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 |---|---|---|---|---|---|
 | 6/10/2026 | costruisci | S1, una scheda per firma | ~0,5 M agenti (workflow 0,41 + sviluppatore 0,09), sessione principale non contata | 78 workflow | 2 bloccanti dal giro (ottica persa rispondendo la camera; "a colori" con la camera della notte) + 1 mio dopo (falso avviso nel log) |
 | 6/10/2026 | costruisci | S3, una scheda per gruppo di frame | ~0,68 M agenti (workflow 0,50 + due sviluppatore 0,18), sessione principale non contata | 67 workflow | 2 bloccanti dal giro (il "non e' un oggetto" di un gruppo scavalcava un cielo arrivato dopo; cambiare idea non riportava i frame legati dal gruppo) + import-linter rosso |
+| 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 
 ### Prima delle funzioni nuove
@@ -300,8 +301,10 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   una risposta sola. *Non e' un oggetto* vale anche su un oggetto trovato (Marco): si scrive
   sull'impronta dei frame, `identify` lo legge prima del cielo e tiene cio' che aveva trovato in
   `frames.found_key`, che tiene la scheda. La scheda a schermo aspetta il disegno.
-- **S4 -- Applica conferma solo cio' a cui si e' risposto**, e un oggetto che il cielo riconosce
-  con certezza non si chiede; si perde l'avviso degli oggetti nuovi (`ReviewSeen`).
+- **S4 -- fatta** (6/10/2026): Applica scrive solo le risposte; un oggetto si chiede solo col
+  dubbio (`low`), non se il cielo lo riconosce ne' se l'header scrive una sigla del catalogo senza
+  cielo (`high`, Marco). Spariti `seen` e la dichiarazione `confirmed`, e con loro l'avviso degli
+  oggetti nuovi.
 - **S5 -- Il segno "aspetta il tipo" ricalcolato da solo sui frame toccati**, invece di
   `refresh_waiting` chiamato a mano da chi cambia un suo ingresso; prima si misura il costo.
 - **M1 -- Dall'archivio ai file**: nessuna risposta di Archivio o Notti porta il percorso di un
@@ -784,8 +787,7 @@ riga per voce.
 - **La revisione in `api`, dopo la fase 1.** Il contratto di `POST /review/apply` promette
   "tutte le risposte o nessuna" e 409 `none_filter_exists`, e nessun test lo prova: nessun corpo
   misto con una risposta valida e una rifiutata, nessun filtro "nessun filtro" doppio passando da
-  Applica. Regole dette piu' volte: Applica conferma cio' che la pagina ha letto (`seen`) in
-  `review`, `review_write` e nel commento di `review()`; "una risposta a cio' che non esiste
+  Applica. Regole dette piu' volte: "una risposta a cio' che non esiste
   piu' e' una pagina vecchia: 404" in `review_write_folders` e nel contratto; quali filtri sono una domanda, due volte in `review.py`; il "ripensamento che
   sposta" in `review_write._answer_where` e in `coordinates.frames_at`; l'ordine per distanza
   vera in `review_page` e in `place.by_distance`.
@@ -813,8 +815,7 @@ riga per voce.
   nell'OpenAPI.** I commenti diventati descrizioni portano in `schema.d.ts` regole scritte molte
   volte: "un gruppo gia' risposto resta in pagina per cambiare idea" (otto modelli di
   `models_review_groups`), "si risponde con la chiave stabile, mai col numero di riga" (in quasi
-  ogni `key` di `models_review*`), il significato di `seen` (`ReviewSeen`, `ReviewOut.seen`,
-  `ReviewApply.seen`), "`null` finche' non e' contato" in tre modelli di `models_gear`, le
+  ogni `key` di `models_review*`), "`null` finche' non e' contato" in tre modelli di `models_gear`, le
   descrizioni di `key`, `night`, `integration_s` e `untimed` uguali fra gruppi, "Checked here so
   the OpenAPI declares it" in due validatori. Rimedio: la regola nella docstring del modulo o
   del modello padre, e i campi che rimandano. Senza test: `OpticslessAnswer.optics` che rifiuta

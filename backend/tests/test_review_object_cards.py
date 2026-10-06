@@ -114,12 +114,7 @@ def test_found_objects_and_unnamed_groups_are_one_list_of_cards(pagina):
     assert "unnamed" not in pagina_letta
     schede = {s["key"]: s for s in pagina_letta["objects"]}
     rosetta = schede[_gruppo(pagina, ROSETTA)]
-    assert (rosetta["name"], rosetta["id"], rosetta["candidates"], rosetta["answer"]) == (
-        None,
-        None,
-        [],
-        None,
-    )
+    assert (rosetta["name"], rosetta["candidates"], rosetta["answer"]) == (None, [], None)
     assert (rosetta["frames"], rosetta["integration_s"], rosetta["untimed"]) == (3, 360.0, 0)
     assert {k: rosetta["group"][k] for k in ("night", "camera", "ra_deg", "dec_deg")} == {
         "night": "2024-03-12",
@@ -142,11 +137,11 @@ def test_not_an_object_on_a_found_object_takes_its_frames_out_and_the_card_stays
     prima = review(pagina)["to_confirm"]
     with db(pagina) as conn:
         frame_id = _frame(conn, M81, "col_nome.fits")
-    out = apply(pagina, objects=[{"key": "object:M 81", "not_an_object": True}], seen={})
+    out = apply(pagina, objects=[{"key": "object:M 81", "not_an_object": True}])
     assert out["requeued"] == 1
     assert _stato(pagina, frame_id) == (None, "skipped", "not_an_object")
     scheda = _schede(pagina)["object:M 81"]
-    assert (scheda["answer"], scheda["frames"], scheda["id"]) == (NESSUNO, 1, None)
+    assert (scheda["answer"], scheda["frames"]) == (NESSUNO, 1)
     assert review(pagina)["to_confirm"] == prima - 1
 
     apply(pagina, objects=[{"key": "object:M 81", "name": "Galassia di Bode"}])

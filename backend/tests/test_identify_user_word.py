@@ -449,7 +449,7 @@ def test_a_correction_wants_one_key_and_one_target(chiave, slug, nome):
 
 def test_the_instant_the_apply_gives_is_the_one_written(archivio):
     """Un Applica, un istante: l'ora che il chiamante passa e' quella che finisce scritta, nella
-    correzione come nella conferma.
+    correzione come nella regola imparata.
 
     Senza, ogni riga prenderebbe l'ora della propria chiamata: le scritture di una stessa risposta
     smetterebbero di condividere un istante, e sarebbe una perdita che nessuna pagina mostra e di
@@ -461,5 +461,6 @@ def test_the_instant_the_apply_gives_is_the_one_written(archivio):
     righe = archivio.execute(
         "SELECT entity_key, field, created_at FROM declarations WHERE entity_type = 'object'"
     ).fetchall()
-    assert {r["field"] for r in righe} == {risposta.CORRECTION, decl.CONFIRMED}
-    assert {r["created_at"] for r in righe} == {quando}
+    assert {r["field"] for r in righe} == {risposta.CORRECTION}
+    regole = archivio.execute("SELECT created_at FROM header_aliases WHERE kind = 'object'")
+    assert {r["created_at"] for r in [*righe, *regole]} == {quando}

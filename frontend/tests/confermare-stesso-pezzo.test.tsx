@@ -15,7 +15,6 @@ import { SALUTE, STANOTTE, disegna, impostazioni, pulisci, riga, rispondi, scrit
 afterEach(pulisci)
 
 const PAGINA = {
-  seen: { objects: 0 },
   to_confirm: 1,
   lookalikes: [
     {
@@ -37,7 +36,7 @@ const PAGINA = {
   typeless: [],
 }
 
-const RICEVUTA = { stato: 200, corpo: { changed: 1, confirmed: 0, requeued: 1, run_started: false } }
+const RICEVUTA = { stato: 200, corpo: { changed: 1, requeued: 1, run_started: false } }
 
 function aperta(pagina: unknown = PAGINA, apply: { stato: number; corpo: unknown } = RICEVUTA) {
   rispondi({

@@ -4,10 +4,8 @@ are written by identify, since the catalog cone is costly; the rest is composed 
 import sqlite3
 from typing import Final
 
-from ..db.row import Row
 from ..place import by_distance, distance_km
 from ..spine import coordinates as places
-from ..spine import declarations as decl
 from ..spine import gear, unnamed
 from ..spine import object_answer as risposta
 from ..spine import objects as obj
@@ -72,16 +70,6 @@ def rig_choices(conn: sqlite3.Connection) -> list[RigChoice]:
     ]
 
 
-def keys_with_candidates(conn: sqlite3.Connection) -> set[str]:
-    return {r[0] for r in conn.execute("SELECT DISTINCT object_key FROM object_candidates")}
-
-
-def object_still_open(row: Row, with_candidates: set[str]) -> bool:
-    """A doubt AND the candidates the page shows: without a catalog, or before ASTAP, a doubt has
-    nothing to click, and the count would never clear."""
-    return row["identity_confidence"] == DOUBT and obj.stable_key(row) in with_candidates
-
-
 def unclear_coordinates(conn: sqlite3.Connection) -> list[UnclearCoordinates]:
     """The nearest declared site first, almost always the right answer. Distances are recomputed on
     read: three multiplications, while a stored state would go stale at the first new site."""
@@ -118,27 +106,26 @@ NONE_ANSWER = ObjectAnswer(kind="none", value=None, name=None)
 
 
 def asks(card: ObjectCard) -> bool:
-    """Counts among the things to confirm: no answer yet, and a found object never seen."""
-    return card.answer is None and (card.group is not None or not card.confirmed)
+    """No answer yet, on a group or a doubt: what the sky or the catalog settled is not asked, a
+    catalog name without a sky included (ADR 0014, S4)."""
+    return card.answer is None and (card.group is not None or card.confidence == DOUBT)
 
 
 def objects(conn: sqlite3.Connection) -> tuple[list[ObjectCard], list[ObjectCard]]:
-    """`(open, settled)`: open asks, is new, has something to click or an answer; questions and
-    doubts first, so the work shows. Settled: found objects seen, with nothing to click."""
+    """`(open, settled)`: open asks, has something to click or an answer; questions first, so the
+    work shows. Settled: found objects the app knows, with nothing to click."""
     out = _found_cards(conn) + _group_cards(conn)
     out.sort(key=lambda c: (not asks(c), c.confidence != DOUBT, -c.frames, c.name or c.key))
     aperti: list[ObjectCard] = []
     certi: list[ObjectCard] = []
     for c in out:
-        aperto = c.group or c.answer or not c.confirmed or c.candidates
-        (aperti if aperto else certi).append(c)
+        (aperti if asks(c) or c.answer or c.candidates else certi).append(c)
     return aperti, certi
 
 
 def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
     """The archive's objects, joined by their key with the frames put out under it; then the keys
     whose frames are all out, which have no object row any more."""
-    confermati = decl.confirmed_keys(conn, "object")
     fuori = risposta.out_of_archive(conn)
     collegati_fuori = risposta.linked_out(conn)
     candidati = _sky_candidates(conn)
@@ -151,7 +138,6 @@ def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
         out.append(
             ObjectCard(
                 key=OBJECT_KEY + chiave,
-                id=row["id"],
                 name=obj.display_name(row),
                 slug=row["catalog_slug"],
                 method=row["identity_method"],
@@ -160,7 +146,6 @@ def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
                 frames=row["frames"] + extra["frames"],
                 integration_s=row["integration_s"] + extra["integration_s"],
                 untimed=row["untimed"] + extra["untimed"],
-                confirmed=chiave in confermati,
                 candidates=candidati.get(chiave, []),
                 answer=NONE_ANSWER if tutti_fuori else None,
             )
@@ -169,7 +154,6 @@ def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
         out.append(
             ObjectCard(
                 key=OBJECT_KEY + chiave,
-                id=None,
                 name=conti["name"] or chiave,
                 slug=chiave if conti["name"] else None,
                 method=None,
@@ -178,7 +162,6 @@ def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
                 frames=conti["frames"],
                 integration_s=conti["integration_s"],
                 untimed=conti["untimed"],
-                confirmed=chiave in confermati,
                 candidates=candidati.get(chiave, []),
                 answer=NONE_ANSWER,
             )
@@ -191,7 +174,6 @@ def _group_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
     return [
         ObjectCard(
             key=FRAMES_KEY + g["key"],
-            id=None,
             name=None,
             slug=None,
             method=None,
@@ -200,7 +182,6 @@ def _group_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
             frames=g["frames"],
             integration_s=g["integration_s"],
             untimed=g["untimed"],
-            confirmed=False,
             candidates=[],
             answer=None if g["answer"] is None else ObjectAnswer(**g["answer"]),
         )

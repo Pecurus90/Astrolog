@@ -322,8 +322,7 @@ def test_a_piece_you_wrote_yourself_is_not_a_question(archivio):
     **In su** vorrebbe dire che un pezzo scritto da te torna a chiederti chi e': l'hai appena
     detto -- anche una camera senza pixel ne' colore (Marco, 25/9/2026: un pezzo nuovo si vede
     nell'Attrezzatura). **In giu'** vorrebbe dire che scrivere un pezzo ha confermato le domande
-    degli altri -- e' cio' che sarebbe successo delegando all'Applica, che senza `seen` conferma
-    tutto."""
+    degli altri."""
     prima = archivio.get("/api/v1/review").json()["to_confirm"]
 
     crea(archivio, kind="focuser", name="EAF")

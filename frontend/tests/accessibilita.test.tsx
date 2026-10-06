@@ -147,7 +147,6 @@ describe("l accessibilita della prima pagina", () => {
       "/api/v1/review": {
         stato: 200,
         corpo: {
-          seen: { objects: 0 },
           to_confirm: 1,
           filters: [
             {
@@ -173,7 +172,6 @@ describe("l accessibilita della prima pagina", () => {
           // The object card waits for its design (ADR 0014 S3): the rows stay for when it lands.
           objects: [
             {
-              id: 3,
               key: "ngc-7023",
               name: "NGC 7023",
               slug: "ngc-7023",
@@ -182,7 +180,6 @@ describe("l accessibilita della prima pagina", () => {
               frames: 60,
               integration_s: 9720,
               untimed: 2,
-              confirmed: false,
               group: null,
               candidates: [
                 {
@@ -197,7 +194,6 @@ describe("l accessibilita della prima pagina", () => {
             // a group of frames without a name: the object field and the "not an object" box
             {
               key: 'frames:["2024-06-01", null, null, null, null]',
-              id: null,
               name: null,
               slug: null,
               method: null,
@@ -206,7 +202,6 @@ describe("l accessibilita della prima pagina", () => {
               frames: 4,
               integration_s: 0,
               untimed: 4,
-              confirmed: false,
               candidates: [],
               answer: null,
             },

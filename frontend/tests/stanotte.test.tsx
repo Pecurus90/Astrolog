@@ -49,7 +49,7 @@ function app(stanotte: Record<string, unknown>) {
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
     "/api/v1/review": {
       stato: 200,
-      corpo: { to_confirm: 0, seen: { instruments: 0, rigs: 0, objects: 0 } },
+      corpo: { to_confirm: 0 },
     },
     "/api/health": { stato: 200, corpo: SALUTE },
     "/api/v1/pipeline/status": { stato: 200, corpo: FERMO },
@@ -150,7 +150,7 @@ describe("il piede della barra", () => {
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
       "/api/v1/review": {
         stato: 200,
-        corpo: { to_confirm: 0, seen: { instruments: 0, rigs: 0, objects: 0 } },
+        corpo: { to_confirm: 0 },
       },
       "/api/health": { stato: 200, corpo: SALUTE },
       "/api/v1/pipeline/status": { stato: 200, corpo: FERMO },

@@ -29,7 +29,6 @@ const MODELLI = [
 /** Due filtri che l'app non riconosce, il piu' usato in cima: l'ordine e' quello che manda l'API,
  *  e la pagina non lo tocca. E uno dei tuoi, fra cui scegliere. */
 const PAGINA = {
-  seen: { instruments: 0, rigs: 0, objects: 0 },
   to_confirm: 2,
   filters: [
     { id: 7, name: "H", brand: null, model: null, catalog_id: null, passband: "UNKNOWN", is_none: false, bands: [], frames: 120 },
@@ -50,7 +49,7 @@ function aperta(pagina = PAGINA) {
     "/api/v1/vocab/filter-models": { stato: 200, corpo: { items: MODELLI } },
     "/api/v1/review/apply": {
       stato: 200,
-      corpo: { changed: 1, confirmed: 0, requeued: 120, run_started: true },
+      corpo: { changed: 1, requeued: 120, run_started: true },
     },
     "/api/v1/review": { stato: 200, corpo: pagina },
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
@@ -290,9 +289,8 @@ describe("Da confermare -- i filtri", () => {
     expect(screen.queryByRole("region", { name: /filtri/i })).toBeNull()
   })
 
-  it("Applica manda seen: si conferma solo cio che era li quando hai letto", async () => {
-    // La riga che evita di confermare cio' che non hai visto: una voce arrivata dopo, da una
-    // scansione finita nel frattempo, resta nuova.
+  it("Applica manda solo le risposte, senza seen", async () => {
+    // Applica scrive solo le risposte (ADR 0014): il server rifiuta un campo che non conosce.
     aperta()
     const sezione = await vaiAConfermare()
     const suHa = riga(sezione, "H")
@@ -303,9 +301,8 @@ describe("Da confermare -- i filtri", () => {
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
     await waitFor(() => {
       const scritta = scritture().find((s) => s.url.includes("/api/v1/review/apply"))
-      expect(scritta?.corpo).toMatchObject({
-        seen: { instruments: 0, rigs: 0, objects: 0 },
-      })
+      expect(scritta?.corpo).toBeDefined()
+      expect(scritta?.corpo).not.toHaveProperty("seen")
     })
   })
 

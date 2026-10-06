@@ -358,17 +358,15 @@ def test_merging_two_cameras_keeps_the_card_of_the_one_that_stays(conn, tmp_path
     assert gear.camera_specs(conn)[b]["pixel_size_um"] == 5.5
 
 
-def test_renaming_carries_the_confirmation_and_beats_leftovers(conn, tmp_path):
-    """Rinominando, la conferma va col pezzo, e sotto il nome nuovo vince cio' che si sposta:
-    li' non puo' esserci un pezzo vivo, solo resti."""
+def test_renaming_carries_what_i_wrote_and_beats_leftovers(conn, tmp_path):
+    """Rinominando, cio' che ho scritto va col pezzo, e sotto il nome nuovo vince cio' che si
+    sposta: li' non puo' esserci un pezzo vivo, solo resti."""
     pose(conn, tmp_path / "lib", BIN1)
     cam = camera_id(conn)
-    decl.confirm(conn, "instrument", decl.instrument_key("camera", CAMERA))
     gear.declare_instrument(conn, cam, {"pixel_size_um": 3.8})
     decl.write_declaration(conn, "instrument", "camera|Nuova", "pixel_size_um", 1.0)
     gear.declare_instrument(conn, cam, {"name": "Nuova"})
     assert gear.camera_specs(conn)[cam]["pixel_size_um"] == 3.8
-    assert "camera|Nuova" in decl.confirmed_keys(conn, "instrument")
 
 
 def test_renaming_the_camera_keeps_what_i_wrote(conn, tmp_path):

@@ -402,7 +402,7 @@ def test_resume_does_not_re_read_when_the_reading_had_finished(app):
 
     blocco, porta, visto = _holding("identify_frames")
     with blocco:
-        client.post("/api/v1/review/apply", json={"seen": {}})  # rimette in coda il lavoro a valle
+        client.post("/api/v1/review/apply", json={})  # rimette in coda il lavoro a valle
         client.post("/api/v1/pipeline/run")
         assert wait_until(lambda: visto != [])
         client.post("/api/v1/pipeline/stop")

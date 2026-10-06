@@ -24,7 +24,6 @@ import { SALUTE, STANOTTE, disegna, fuoriDaiMattoni, impostazioni, pulisci, riga
 afterEach(pulisci)
 
 const PAGINA = {
-  seen: { objects: 0 },
   to_confirm: 0,
   lookalikes: [],
   filters: [],

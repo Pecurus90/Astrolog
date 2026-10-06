@@ -61,7 +61,7 @@ def test_only_the_filters_the_app_does_not_know_are_asked(client):
     assert all(f["passband"] == UNKNOWN for f in page["filters"])
     assert "Lum" not in aperti and "Lum" in [f["name"] for f in page["filter_choices"]]
 
-    apply(client, seen=page["seen"])
+    apply(client)
 
     dopo = review(client)
     assert [f["name"] for f in dopo["filters"]] == aperti
@@ -129,13 +129,12 @@ def test_review_is_empty_on_an_empty_archive(db_path):
 
 
 def test_review_only_new_things(client):
-    """Confermato una volta, non si richiede piu': la pagina torna solo per cio' che non ha
-    mai avuto una risposta. E un pezzo nuovo non e' una domanda (Marco, 25/9/2026)."""
-    prima = review(client)["to_confirm"]
-    assert prima > 0
-    # una domanda aperta resta tale finche' non si risponde: l'Applica conferma, non risponde
+    """La pagina chiede solo cio' che non ha una risposta, e un Applica senza risposte non spegne
+    niente (ADR 0014, S4). E un pezzo nuovo non e' una domanda (Marco, 25/9/2026)."""
+    domande = review(client)["to_confirm"]
+    assert domande > 0
     out = apply(client)
-    domande = prima - out["confirmed"]
+    assert "confirmed" not in out
     assert review(client)["to_confirm"] == domande
 
     nuovo = client.app.state.db_path
@@ -146,6 +145,20 @@ def test_review_only_new_things(client):
             (now_iso(),),
         )
     assert review(client)["to_confirm"] == domande
+
+
+@pytest.mark.parametrize("ieri", [{"instruments": [], "rigs": []}, {"seen": {"objects": 9}}])
+def test_an_answer_with_a_field_we_do_not_know_is_refused(client, ieri):
+    """Una pagina aperta prima di un aggiornamento del server manda i nomi di ieri: `instruments`
+    e `rigs`, o `seen` (ADR 0014, S4). Scartarli in silenzio farebbe credere a quella pagina di
+    aver detto qualcosa; sul NAS e' lo scenario ordinario -- una scheda lasciata aperta sul tablet
+    -- quindi si risponde 422 e la pagina lo dice."""
+    r = client.post("/api/v1/review/apply", json=ieri)
+    assert r.status_code == 422, r.text
+
+    with db(client) as conn:
+        quante = conn.execute("SELECT COUNT(*) FROM declarations").fetchone()[0]
+    assert quante == 0, "rifiutata la richiesta, ma l'archivio e' stato scritto lo stesso"
 
 
 def test_review_declares_a_filter_with_its_bands(client):

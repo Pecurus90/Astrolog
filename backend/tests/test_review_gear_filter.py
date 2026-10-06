@@ -27,6 +27,7 @@ from conftest import (
     populate,
     review,
     senza_soggetti,
+    to_confirm_without,
     write_fits,
 )
 
@@ -73,6 +74,12 @@ def _chiede(client, camera):
     la camera, diventata a colori, non lo chiede piu'."""
     scheda = _schede(client).get(camera)
     return bool(scheda and scheda["asks_filter"])
+
+
+def _schede_aperte(client):
+    """The gear cards still asking: the objects of this bench are questions of their own."""
+    pagina = review(client)
+    return pagina["to_confirm"] - to_confirm_without(pagina, "gear")
 
 
 def _rispondi(client, camera, filtro, filter_id=None):
@@ -169,7 +176,7 @@ def test_answering_colour_makes_those_poses_osc_and_the_next_ones_too(pagina, tm
     assert _filtri_senza_nome(pagina, MONO) == {"OSC"}
     assert _filtro_del_file(pagina, "mono_l.fits") == "OSC"
     assert not _chiede(pagina, MONO)
-    assert review(pagina)["to_confirm"] == 1  # resta la COLORI
+    assert _schede_aperte(pagina) == 1  # resta la COLORI
     _posa(tmp_path / "lib" / "mono_dopo.fits", 40, INSTRUME=MONO)
     _scansiona_ancora(pagina)
     assert _filtro_del_file(pagina, "mono_dopo.fits") == "OSC"
@@ -186,7 +193,7 @@ def test_answering_mono_with_no_filter_puts_them_on_no_filter(pagina):
         riga = conn.execute("SELECT name, passband FROM filters WHERE is_none = 1").fetchall()
     assert [tuple(r) for r in riga] == [("None", "NONE")]
     assert _risposta(pagina, MONO) == "no_filter"
-    assert review(pagina)["to_confirm"] == 1  # resta aperta la COLORI
+    assert _schede_aperte(pagina) == 1  # resta aperta la COLORI
     _rispondi(pagina, MONO, "color")
     assert _filtri_senza_nome(pagina, MONO) == {"OSC"}
     _scheda_mono = _scheda(pagina, MONO)
@@ -216,7 +223,7 @@ def test_answering_one_of_my_filters_puts_them_on_it(pagina):
     assert da_rivedere(pagina) == 0
     risposta = _schede(pagina)[MONO]["answer"]
     assert (risposta["filter"], risposta["filter_id"]) == ("filter", _id_del_filtro(pagina, "Lum"))
-    assert review(pagina)["to_confirm"] == 1  # resta la COLORI
+    assert _schede_aperte(pagina) == 1  # resta la COLORI
 
 
 def test_the_answer_follows_its_filter_when_it_is_renamed_or_merged(pagina):

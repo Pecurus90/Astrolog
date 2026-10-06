@@ -40,7 +40,6 @@ const TRE = {
 const NIENTE = { found: [], not_found: 0, not_yet: 0 }
 
 const PAGINA = {
-  seen: { objects: 0 },
   to_confirm: 5,
   lookalikes: [],
   filters: [],

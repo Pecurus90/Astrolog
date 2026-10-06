@@ -150,9 +150,6 @@ def declare(  # noqa: PLR0913
     ).fetchall()
     for r in rows:
         decl.write_declaration(conn, decl.FRAME, r["frame_hash"], decl.FRAME_OBJECT, value, now)
-    if not not_an_object:
-        # the user named the object: it does not come back to the page asking to be confirmed
-        decl.confirm(conn, "object", slug or name, now)
 
 
 def answer(conn: sqlite3.Connection, key: str | None) -> dict[str, Any] | None:

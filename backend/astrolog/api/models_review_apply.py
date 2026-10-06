@@ -5,7 +5,7 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .models_review import Band, ReviewSeen
+from .models_review import Band
 from .models_review_groups import GearFilterAnswer, MosaicAnswer, TypelessAnswer
 
 
@@ -139,14 +139,13 @@ class MosaicEdit(BaseModel):
 
 
 class ReviewApply(BaseModel):
-    """All the decisions together: they are written in a single transaction, and what is listed on
-    the page stays confirmed even if it was not touched.
+    """All the answers together, written in a single transaction; only what is answered is
+    written (ADR 0014, S4).
 
     **A field that does not exist is an error, not a slip to ignore** (`extra="forbid"`): a page
-    opened before a server update would send the old name, Pydantic would discard it silently and
-    Apply would confirm **everything**, including what that page never showed. On the NAS it is the
-    ordinary scenario -- a tab left open on the tablet -- and the damage falls on the side nobody
-    looks at again. Better a 422 that shows."""
+    opened before a server update would send the old name, and Pydantic would discard it silently.
+    On the NAS it is the ordinary scenario -- a tab left open on the tablet. Better a 422 that
+    shows."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -157,16 +156,10 @@ class ReviewApply(BaseModel):
     gear: list[GearEdit] = []
     typeless: list[TypelessFolderEdit] = []
     mosaics: list[MosaicEdit] = []
-    seen: ReviewSeen | None = Field(
-        default=None,
-        description='How far the page being applied had looked. Absent means "confirm what is '
-        "there now\": asked by whoever did not read a page, and it is not the button's way.",
-    )
 
 
 class ReviewApplied(BaseModel):
     changed: int = Field(description="Answers written.")
-    confirmed: int = Field(description="Entries that from now on are no longer asked.")
     requeued: int = Field(
         description="Frames put back in the queue because the answer concerns them."
     )

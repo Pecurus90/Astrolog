@@ -23,7 +23,7 @@ function configurata() {
   rispondi({
     ...STANOTTE,
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
-    "/api/v1/review": { stato: 200, corpo: { to_confirm: 7, seen: { instruments: 0, rigs: 0, objects: 0 } } },
+    "/api/v1/review": { stato: 200, corpo: { to_confirm: 7 } },
     "/api/health": { stato: 200, corpo: SALUTE },
     ...SPINA,
   })

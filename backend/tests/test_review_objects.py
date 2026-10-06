@@ -11,7 +11,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from astrolog.api.app import create_app
-from astrolog.spine import declarations as decl
 from astrolog.spine import object_answer, objects, stages
 from astrolog.spine.identify import identify_frames
 from conftest import all_objects, apply, by_name, db, populate, review, settled, unnamed_cards
@@ -32,41 +31,65 @@ def client_col_catalogo(db_path_col_catalogo, tmp_path):
 # --- la sezione Oggetti -------------------------------------------------------------------
 
 
-def test_apply_does_not_silence_an_object_the_app_is_still_unsure_about(client_banco):
-    """Un oggetto su cui l'app ha un **dubbio** e' una domanda aperta: la pagina lo mette in cima
-    e gli da' i candidati del cielo da cliccare. "Ho visto la pagina" non e' una risposta a "quale
-    oggetto era", quindi l'Applica non lo spegne -- lo spegne solo la risposta.
+def _chieste(pagina):
+    return sorted(o["key"] for o in pagina["objects"] if o["answer"] is None)
 
-    Il banco misto serve proprio qui: l'oggetto **sicuro** deve continuare a spegnersi vedendolo
-    (la pagina e' anche un inventario, e un conto che non puo' tornare a zero e' rumore), il
-    **dubbio** no. Su un banco dove tutti gli oggetti sono dubbi questa distinzione sarebbe vera
-    per caso.
 
-    Il dubbio si guarda **coi suoi candidati**, che e' quello che `object_still_open` chiede: un
-    dubbio senza niente da cliccare non e' una domanda aperta, e restare acceso gli impedirebbe
-    per sempre di tornare a zero."""
-    page = review(client_banco)
-    dubbi = sorted(
-        o["key"] for o in page["objects"] if o["confidence"] == "low" and o["candidates"]
+def test_apply_without_answers_silences_no_object(client_banco):
+    """Applica scrive solo le risposte (ADR 0014, S4): un dubbio resta una domanda, coi candidati
+    da cliccare e senza, finche' non gli si risponde. Senza candidati si risponde scrivendo."""
+    prima = review(client_banco)
+    dubbi = [o for o in prima["objects"] if o["confidence"] == "low"]
+    assert any(o["candidates"] for o in dubbi) and any(not o["candidates"] for o in dubbi), (
+        "il banco misto deve avere un dubbio coi candidati e uno senza"
     )
-    assert dubbi, "il banco misto deve avere un oggetto dubbio coi candidati da cliccare"
+    assert _chieste(prima) == sorted(o["key"] for o in dubbi)
 
-    apply(client_banco, seen=page["seen"])
+    apply(client_banco)
 
-    dopo = all_objects(client_banco)
-    ancora = {o["key"]: o for o in dopo if o["confidence"] == "low" and o["candidates"]}
-    assert sorted(ancora) == dubbi, "un dubbio e' sparito senza che nessuno gli rispondesse"
-    for chiave, riga in ancora.items():
-        assert riga["confirmed"] is False, f"{chiave}: spento senza avergli risposto"
-    assert by_name(dopo, "M 31")["confirmed"] is True
+    dopo = review(client_banco)
+    assert _chieste(dopo) == _chieste(prima), "un dubbio e' sparito senza risposta"
+    assert dopo["to_confirm"] == prima["to_confirm"]
 
-    # E l'altra meta', che senza questa riga non ha nessuna guardia: un dubbio **senza** candidati
-    # si spegne vedendolo. Non e' una svista, e' la promessa che il conto puo' tornare a zero --
-    # senza niente da cliccare, quella domanda non si chiuderebbe mai (`review_page.py`).
-    muti = [o for o in dopo if o["confidence"] == "low" and not o["candidates"]]
-    assert muti, "il banco misto deve avere anche un dubbio senza niente da cliccare"
-    for riga in muti:
-        assert riga["confirmed"] is True, f"{riga['key']}: resta acceso e nessuno puo' spegnerlo"
+
+def test_an_object_the_sky_is_sure_of_is_not_asked(client_banco):
+    """Nome e cielo concordi: l'app lo sa, non e' una domanda e non conta. Sta fra i gia' visti."""
+    page = review(client_banco)
+    certi = [o for o in all_objects(client_banco) if o["confidence"] == "certain"]
+    assert certi, "il banco misto deve avere un oggetto sicuro"
+    for o in certi:
+        assert o["key"] not in {p["key"] for p in page["objects"]}
+        assert o["key"] in {s["key"] for s in settled(client_banco)}
+    assert page["to_confirm"] == len(_chieste(page))
+
+
+def test_a_catalog_name_without_a_sky_is_not_asked(client_col_catalogo):
+    """Una sigla del catalogo nell'header, senza cielo (ASTAP assente, frame non risolto): l'app
+    la sa (`high`), quindi non la chiede (Marco, 6/10/2026)."""
+    m31 = next(o for o in all_objects(client_col_catalogo) if o["slug"] == "m-31")
+    assert m31["confidence"] == "high"
+    assert m31["key"] not in {o["key"] for o in review(client_col_catalogo)["objects"]}
+
+
+def test_answering_a_doubt_closes_it(client_banco):
+    """La risposta spegne la domanda: l'oggetto nasce dalla parola dell'utente (`user`)."""
+    page = review(client_banco)
+    dubbio = next(o for o in page["objects"] if o["confidence"] == "low" and o["candidates"])
+    apply(client_banco, objects=[{"key": dubbio["key"], "slug": dubbio["candidates"][0]["slug"]}])
+    dopo = review(client_banco)
+    assert dubbio["key"] not in _chieste(dopo)
+    assert dopo["to_confirm"] == page["to_confirm"] - 1
+
+
+def test_saying_the_doubt_is_right_closes_it(client_banco):
+    """Risposta "e' giusto": nomina l'oggetto gia' trovato. Senza conferma e' la risposta stessa a
+    farlo `user`; prima la correzione su se' stessa si fermava e la domanda restava."""
+    page = review(client_banco)
+    dubbio = next(o for o in page["objects"] if o["confidence"] == "low" and o["slug"])
+    apply(client_banco, objects=[{"key": dubbio["key"], "slug": dubbio["slug"]}])
+    dopo = review(client_banco)
+    assert dubbio["key"] not in _chieste(dopo)
+    assert dopo["to_confirm"] == page["to_confirm"] - 1
 
 
 def test_the_objects_section_shows_the_archive_objects_not_the_header_spellings(client):
@@ -75,9 +98,8 @@ def test_the_objects_section_shows_the_archive_objects_not_the_header_spellings(
     grafie."""
     page = review(client)
     m31 = by_name(page["objects"], "M 31")
-    assert m31["id"] and m31["frames"] == 5
+    assert m31["frames"] == 5
     assert m31["method"] == "exact_name" and m31["confidence"] == "low"
-    assert m31["confirmed"] is False
     # senza catalogo caricato l'oggetto e' fuori catalogo, e non e' un guasto
     assert m31["slug"] is None
 
@@ -94,8 +116,7 @@ def test_an_object_carries_its_hours_and_the_copy_does_not_count(client):
 def test_the_ones_to_decide_come_first(client_banco):
     """La regola della pagina: in cima cio' su cui l'app ha un dubbio, sotto gli altri.
     Chi apre deve vedere il lavoro, non scorrere per trovarlo."""
-    page = review(client_banco)
-    livelli = [o["confidence"] for o in page["objects"]]
+    livelli = [o["confidence"] for o in all_objects(client_banco)]
     assert "low" in livelli and set(livelli) != {"low"}, "il banco non e' misto: non prova niente"
     dubbi = [c for c in livelli if c == "low"]
     assert livelli[: len(dubbi)] == dubbi
@@ -105,7 +126,7 @@ def test_the_objects_count_in_what_is_left_to_confirm(client):
     """Prima gli oggetti non entravano nel contatore della pagina: si poteva leggere `0 da
     confermare` con tutto l'archivio senza un nome."""
     page = review(client)
-    da_confermare = [o for o in page["objects"] if not o["confirmed"]]
+    da_confermare = _chieste(page)
     assert da_confermare
     assert page["to_confirm"] >= len(da_confermare)
 
@@ -156,8 +177,7 @@ def test_a_sure_object_carries_no_candidates(client_banco):
 
     Il banco e' misto apposta: l'oggetto sicuro ha un cielo, quindi i candidati li AVREBBE --
     e' la sola forma in cui questo test puo' fallire se il filtro sparisce."""
-    page = review(client_banco)
-    sicuri = [o for o in page["objects"] if o["confidence"] != "low"]
+    sicuri = [o for o in all_objects(client_banco) if o["confidence"] != "low"]
     assert sicuri, "il banco non ha nessun oggetto sicuro: il test non prova niente"
     for o in sicuri:
         assert o["candidates"] == []
@@ -172,7 +192,8 @@ def test_an_object_of_the_catalog_with_no_names_of_its_own_is_named_by_the_catal
     conn = db(client_banco)
     try:
         propri = conn.execute(
-            "SELECT COUNT(*) FROM object_names WHERE object_id = ?", (m45["id"],)
+            "SELECT COUNT(*) FROM object_names n JOIN objects o ON o.id = n.object_id"
+            " WHERE o.catalog_slug = 'm-45'"
         ).fetchone()[0]
     finally:
         conn.close()
@@ -183,10 +204,8 @@ def test_an_object_of_the_catalog_with_no_names_of_its_own_is_named_by_the_catal
 def test_answering_on_an_object_moves_its_frames_and_locks_it(client_col_catalogo):
     """Il giro intero: si risponde, e le pose ci vanno davvero. Non basta scrivere la
     dichiarazione -- `identify` deve rifare il lavoro e portarcele."""
-    page = review(client_col_catalogo)
-    m31 = by_name(page["objects"], "M 31")
-    esito = apply(client_col_catalogo, objects=[{"key": m31["key"], "slug": "m-45"}],
-                  seen=page["seen"])  # fmt: skip
+    m31 = by_name(all_objects(client_col_catalogo), "M 31")
+    esito = apply(client_col_catalogo, objects=[{"key": m31["key"], "slug": "m-45"}])
     # sei e non cinque: si rimette in coda anche la copia riscritta, che un oggetto ce l'ha
     # come le altre -- e' solo nei CONTEGGI a schermo che non vale un'ora in piu'
     assert esito["changed"] == 1 and esito["requeued"] == 6
@@ -207,10 +226,8 @@ def test_answering_on_an_object_moves_its_frames_and_locks_it(client_col_catalog
 def test_a_designation_written_by_hand_is_the_catalog_entry(client_col_catalogo):
     """Chi scrive `M 45` a mano intende la voce del catalogo, non un oggetto fuori catalogo che si
     chiama cosi': le sue ore finirebbero su due voci, una accanto all'altra."""
-    page = review(client_col_catalogo)
-    m31 = by_name(page["objects"], "M 31")
-    apply(client_col_catalogo, objects=[{"key": m31["key"], "name": "m45"}],
-          seen=page["seen"])  # fmt: skip
+    m31 = by_name(all_objects(client_col_catalogo), "M 31")
+    apply(client_col_catalogo, objects=[{"key": m31["key"], "name": "m45"}])
     conn = db(client_col_catalogo)
     try:
         slug = conn.execute(
@@ -225,7 +242,7 @@ def test_a_designation_written_by_hand_is_the_catalog_entry(client_col_catalogo)
 def test_two_targets_are_refused_even_when_the_name_is_a_designation(client_col_catalogo):
     """Risolvere la sigla non deve fondere uno slug e un nome in un bersaglio solo: con tutti e due
     la spina rifiuta, anche se il nome e' una sigla che il catalogo conosce."""
-    m31 = by_name(review(client_col_catalogo)["objects"], "M 31")
+    m31 = by_name(all_objects(client_col_catalogo), "M 31")
     conn = db(client_col_catalogo)
     try:
         with pytest.raises(ValueError):
@@ -242,10 +259,8 @@ def test_a_name_the_catalog_does_not_have_stays_a_name_even_with_the_catalog(
 ):
     """Col catalogo caricato, un nome libero -- e una sigla ben fatta che il catalogo non ha --
     restano un nome scritto: la sigla si risolve solo dove la voce c'e'."""
-    page = review(client_col_catalogo)
-    m31 = by_name(page["objects"], "M 31")
-    apply(client_col_catalogo, objects=[{"key": m31["key"], "name": scritto}],
-          seen=page["seen"])  # fmt: skip
+    m31 = by_name(all_objects(client_col_catalogo), "M 31")
+    apply(client_col_catalogo, objects=[{"key": m31["key"], "name": scritto}])
     oggetti = {o["name"]: o["slug"] for o in all_objects(client_col_catalogo)}
     assert scritto in oggetti and oggetti[scritto] is None
 
@@ -255,7 +270,7 @@ def test_an_answer_can_name_an_object_the_catalog_does_not_know(client):
     nome invece di cliccare un candidato."""
     page = review(client)
     m31 = by_name(page["objects"], "M 31")
-    apply(client, objects=[{"key": m31["key"], "name": "Il mio campo"}], seen=page["seen"])
+    apply(client, objects=[{"key": m31["key"], "name": "Il mio campo"}])
 
     conn = db(client)
     try:
@@ -272,8 +287,7 @@ def test_an_answer_becomes_a_rule_when_the_header_spelling_is_not_ambiguous(clie
     """La promessa della pagina: le risposte diventano regole riusabili. `M 31` nell'archivio
     sintetico punta a un oggetto solo, quindi la regola si impara."""
     page = review(client)
-    apply(client, objects=[{"key": by_name(page["objects"], "M 31")["key"], "name": "Andromeda"}],
-          seen=page["seen"])  # fmt: skip
+    apply(client, objects=[{"key": by_name(page["objects"], "M 31")["key"], "name": "Andromeda"}])
 
     conn = db(client)
     try:
@@ -318,10 +332,7 @@ def test_an_answer_does_not_become_a_rule_when_the_spelling_is_a_placeholder(cli
     finally:
         conn.close()
 
-    page = review(client)
-    apply(
-        client, objects=[{"key": f"object:{primo}", "name": "La mia nebulosa"}], seen=page["seen"]
-    )
+    apply(client, objects=[{"key": f"object:{primo}", "name": "La mia nebulosa"}])
 
     conn = db(client)
     try:
@@ -334,45 +345,18 @@ def test_an_answer_does_not_become_a_rule_when_the_spelling_is_a_placeholder(cli
         conn.close()
 
 
-def test_applying_confirms_the_objects_that_were_on_the_page(client):
-    """Confermare e' una dichiarazione: un oggetto e' "nuovo" finche' non lo si e' visto una
-    volta, e la pagina si ripropone solo quando arriva qualcosa di mai visto."""
-    page = review(client)
-    assert any(not o["confirmed"] for o in page["objects"])
-    apply(client, seen=page["seen"])
-    assert not any(o["confirmed"] for o in review(client)["objects"])
-    visti = settled(client)
-    assert visti and all(o["confirmed"] for o in visti)
-
-
-def test_a_seen_object_that_has_something_to_click_stays_on_top(client_banco):
-    """Un oggetto gia' visto che ha dei candidati da cliccare -- un dubbio nato dopo, o confermato
-    per altre strade -- e' ancora una domanda: resta in cima, non si chiude fra i gia' visti."""
-    dubbio = next(
-        o for o in review(client_banco)["objects"] if o["confidence"] == "low" and o["candidates"]
-    )
-    with db(client_banco) as conn:
-        decl.confirm(conn, "object", dubbio["key"])
-    assert dubbio["key"] in {o["key"] for o in review(client_banco)["objects"]}
-    assert dubbio["key"] not in {o["key"] for o in settled(client_banco)}
-
-
 def test_the_settled_objects_leave_the_page_and_come_in_pages(client_banco):
-    """Gli oggetti gia' visti, senza niente da scegliere, non stanno fra le domande (Marco,
-    27/9/2026): la pagina ne dice quanti sono, e si leggono a pagine. In cima restano quelli con
-    qualcosa da cliccare e quelli nuovi, che contano fra le cose da confermare; nessuno si perde e
-    nessuno sta in due posti."""
-    prima = review(client_banco)
-    tutti = {o["key"] for o in prima["objects"]}
-    assert prima["settled_objects"] == 0  # a pagina mai vista, ogni oggetto e' nuovo
-    apply(client_banco, seen=prima["seen"])
-
-    dopo = review(client_banco)
-    aperti = {o["key"] for o in dopo["objects"]}
-    assert all(o["confidence"] == "low" or not o["confirmed"] for o in dopo["objects"])
+    """Gli oggetti che l'app sa, senza niente da scegliere, non stanno fra le domande (Marco,
+    27/9/2026): la pagina ne dice quanti sono, e si leggono a pagine. In pagina restano i dubbi;
+    nessuno si perde e nessuno sta in due posti."""
+    page = review(client_banco)
+    aperti = {o["key"] for o in page["objects"]}
+    assert all(o["confidence"] == "low" for o in page["objects"])
     certi = [o["key"] for o in settled(client_banco, limit=1)]
-    assert len(certi) == dopo["settled_objects"] > 0
+    assert len(certi) == page["settled_objects"] > 0
     assert len(set(certi)) == len(certi) and not aperti & set(certi)
+    with db(client_banco) as conn:
+        tutti = {"object:" + objects.stable_key(o) for o in objects.listing(conn)}
     assert aperti | set(certi) == tutti
 
 
@@ -416,10 +400,9 @@ def test_an_answer_travels_on_a_stable_key_not_on_a_row_number(client_banco):
     chiave stabile, **mai un numero di riga**.
 
     Qui il caso si **costruisce**: l'oggetto sparisce e un altro nasce sul suo numero di riga.
-    In archivio non capita piu' da solo -- `objects.id` e' AUTOINCREMENT, perche' Da confermare
-    usa i numeri di riga per dire "ho visto fin qui" -- ma la regola non deve dipendere da
-    questo: una risposta viaggia sulla chiave, e su un id sbagliato deve dire 404, non colpire in
-    silenzio l'oggetto che quel numero ce l'ha adesso."""
+    In archivio non capita da solo -- `objects.id` e' AUTOINCREMENT -- ma la regola non deve
+    dipendere da questo: una risposta viaggia sulla chiave, e su un id sbagliato deve dire 404,
+    non colpire in silenzio l'oggetto che quel numero ce l'ha adesso."""
     page = review(client_banco)
     m45 = next(o for o in page["objects"] if o["slug"] == "m-45")
     assert m45["key"] == "object:m-45"
@@ -427,7 +410,9 @@ def test_an_answer_travels_on_a_stable_key_not_on_a_row_number(client_banco):
     # l'oggetto sparisce e un altro nasce sul suo numero di riga (scritto a mano: vedi sopra)
     conn = db(client_banco)
     try:
-        vecchio_id = m45["id"]
+        vecchio_id = conn.execute("SELECT id FROM objects WHERE catalog_slug = 'm-45'").fetchone()[
+            0
+        ]
         conn.execute("UPDATE frames SET object_id = NULL WHERE object_id = ?", (vecchio_id,))
         conn.execute("DELETE FROM objects WHERE id = ?", (vecchio_id,))
         conn.execute(
@@ -476,7 +461,6 @@ def test_a_mixed_answer_runs_both_stages(client):
             client,
             objects=[{"key": primo["key"], "name": "La mia cometa"}],
             filters=[{"id": h["id"], "bands": [{"band": "HA", "width_nm": 3.0}]}],
-            seen=page["seen"],
         )
     assert [s.name for s in start.call_args[0][0]] == ["normalize", "identify", "group"]
 
@@ -494,7 +478,6 @@ def test_an_answer_on_a_filter_alone_also_redoes_the_names_and_the_nights(client
         apply(
             client,
             filters=[{"id": h["id"], "bands": [{"band": "HA", "width_nm": 3.0}]}],
-            seen=page["seen"],
         )
     assert [s.name for s in start.call_args[0][0]] == ["normalize", "identify", "group"]
 
@@ -508,6 +491,5 @@ def test_an_answer_on_the_objects_alone_leaves_the_normalization_alone(client):
         apply(
             client,
             objects=[{"key": primo["key"], "name": "La mia cometa"}],
-            seen=page["seen"],
         )
     assert [s.name for s in start.call_args[0][0]] == ["identify", "group"]

@@ -60,7 +60,7 @@ function app(cartelle: unknown = CARTELLE) {
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
     "/api/v1/review": {
       stato: 200,
-      corpo: { to_confirm: 0, seen: { instruments: 0, rigs: 0, objects: 0 } },
+      corpo: { to_confirm: 0 },
     },
     "/api/health": { stato: 200, corpo: SALUTE },
     "/api/v1/folders/path-info": { stato: 200, corpo: { family: "windows", data_root: null } },
@@ -210,7 +210,7 @@ describe("Impostazioni", () => {
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
       "/api/v1/review": {
         stato: 200,
-        corpo: { to_confirm: 0, seen: { instruments: 0, rigs: 0, objects: 0 } },
+        corpo: { to_confirm: 0 },
       },
       "/api/health": { stato: 200, corpo: SALUTE },
       "/api/v1/folders/path-info": { stato: 200, corpo: { family: "windows", data_root: null } },

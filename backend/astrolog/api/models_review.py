@@ -130,14 +130,11 @@ class ObjectCard(BaseModel):
     `identify` put on one object, or -- `group` -- frames the header does not name and the sky says
     nothing about. Same answer for both. `name`, `slug`, `method`, `confidence` are what the app
     found: empty on a `group`, and `method`/`confidence` also on frames put out as "not an object",
-    which no longer have an object."""
+    which no longer have an object. Asked: a group or a doubt (`low`), until answered (S4)."""
 
     key: str = Field(
         description="What one answers with: `object:` and the found object's stable key, or "
         "`frames:` and the group's key."
-    )
-    id: int | None = Field(
-        description="The object's row number, for the page's `seen`; empty without an object row."
     )
     name: str | None
     slug: str | None
@@ -154,9 +151,6 @@ class ObjectCard(BaseModel):
         description="How many of those frames do not tell their time: they are not worth zero, "
         "they are counted here."
     )
-    confirmed: bool = Field(
-        description="The found object was seen once already; a group is never confirmed."
-    )
     candidates: list[ObjectCandidate] = Field(
         description="What the sky found, to click: on doubts and on frames put out; zero is a card "
         "too."
@@ -167,23 +161,8 @@ class ObjectCard(BaseModel):
 
 
 class SettledObjects(Page[ObjectCard]):
-    """The objects already seen, with nothing to choose, in pages: they are not questions, and they
-    grow with the archive. They open from the Objects section, and are corrected from there. A doubt
-    the sky can say nothing about stays here once seen: there is nothing to click."""
-
-
-class ReviewSeen(BaseModel):
-    """How far the page looked at the objects: the highest row number it really listed. Apply sends
-    it back and confirms only up to there.
-
-    Row numbers and not times, because **two rows born in the same instant cannot be ordered**
-    (the measurement and the why are in `docs/domini/spina.md`, section Da confermare).
-
-    Zero means "I saw nothing", and it is also the value when the page lists no object: it is not a
-    missing limit, it is a limit that lets nothing through. Whoever does not send `seen` at all is
-    saying something else -- "confirm what is there now" -- and its home is `ReviewApply`."""
-
-    objects: int = 0
+    """The objects the app knows, with nothing to choose, in pages: they are not questions, and
+    they grow with the archive. They open from the Objects section, and are corrected from there."""
 
 
 class ReviewOut(BaseModel):
@@ -197,11 +176,10 @@ class ReviewOut(BaseModel):
         description="The rigs among which one answers a card that asks the camera."
     )
     objects: list[ObjectCard] = Field(
-        description="The object cards to decide, the new ones and the answered ones; open "
-        "questions on top."
+        description="The object cards to decide and the answered ones; open questions on top."
     )
     settled_objects: int = Field(
-        description="How many the others are, already seen: they are read in pages."
+        description="How many the others are, which the app knows: they are read in pages."
     )
     unclear: list[UnclearCoordinates] = Field(
         description="The places the app asks about: empty when it does not ask."
@@ -220,7 +198,3 @@ class ReviewOut(BaseModel):
     )
     mosaics: list[MosaicCandidate] = Field(description="The regions taken in side-by-side panels.")
     to_confirm: int
-    seen: ReviewSeen = Field(
-        description="How far this page looked: Apply sends it back and confirms only what was "
-        "listed, never what arrived in the meantime."
-    )

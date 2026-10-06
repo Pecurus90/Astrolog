@@ -1,5 +1,4 @@
-"""The page sends back its `seen` because Apply confirms the objects the page READ listed, not
-what is in the table at the moment of the click."""
+"""Apply writes only the answers: seeing a question does not close it (ADR 0014, S4)."""
 
 import sqlite3
 from collections.abc import Iterable, Mapping
@@ -18,7 +17,7 @@ from . import review_page as page
 from . import review_write as write
 from .deps import get_db
 from .models_page import page_of
-from .models_review import BandOut, FilterOut, ReviewOut, ReviewSeen, SettledObjects
+from .models_review import BandOut, FilterOut, ReviewOut, SettledObjects
 from .models_review_apply import ReviewApplied, ReviewApply
 from .models_review_groups import GearSignature, MosaicCandidate, TypelessFolder
 
@@ -71,9 +70,6 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
     righe_mosaici = mosaic_reader.candidates(conn)
     mosaici = [MosaicCandidate(**m) for m in righe_mosaici]
     coppie = lookalike.lookalikes(conn)
-    # the highest LISTED row, not `SELECT MAX(id)`: a row written while the page is composed
-    # stays out of the confirmation
-    seen = ReviewSeen(objects=max((o.id for o in objects if o.id is not None), default=0))
     # Seeing a question is not answering it: each one counts until answered, or the count would
     # drop to zero while the frames still wait.
     to_confirm = (
@@ -100,7 +96,6 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
         typeless=[TypelessFolder(**g) for g in righe_senza_tipo],
         mosaics=mosaici,
         to_confirm=to_confirm,
-        seen=seen,
     )
 
 
@@ -110,7 +105,7 @@ def settled_objects(
     offset: int = Query(0, ge=0),
     conn: sqlite3.Connection = Depends(get_db),
 ) -> SettledObjects:
-    """The objects already seen, with nothing to choose, in pages, in the page's order."""
+    """The objects the app knows, with nothing to choose, in pages, in the page's order."""
     _, certi = page.objects(conn)
     return SettledObjects(**page_of(certi, limit, offset))
 
@@ -131,12 +126,9 @@ def apply(
     now = now_iso()
     with write.scrivendo(conn):
         changed, requeued = write.apply_answers(conn, body, now)
-        confirmed = write.confirm_seen(conn, body.seen, now)
     # without frames to redo the worker is not taken for nothing
     started = bool(requeued) and work.after(state, _stadi_toccati(body))
-    return ReviewApplied(
-        changed=changed, confirmed=confirmed, requeued=len(requeued), run_started=started
-    )
+    return ReviewApplied(changed=changed, requeued=len(requeued), run_started=started)
 
 
 def _stadi_toccati(body: ReviewApply) -> set[str]:

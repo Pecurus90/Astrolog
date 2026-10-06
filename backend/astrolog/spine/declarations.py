@@ -9,8 +9,6 @@ from ..vocab.header_value import normalize_header_value
 from ..vocab.object_label import clean_object_name
 from . import counts
 
-CONFIRMED = "confirmed"
-
 # The kinds the spine creates from a header: without a rule, a renamed piece comes back doubled on
 # the next night. `filter` and `object` stay out: they map a spelling, never merge two.
 ALIAS_KINDS = ("optics", "camera", "mount", *counts.ON_THE_FRAME)
@@ -158,21 +156,6 @@ def values_of(conn: sqlite3.Connection, entity_type: str, field: str) -> list[An
         "SELECT entity_key, value FROM declarations WHERE entity_type = ? AND field = ?",
         (entity_type, field),
     ).fetchall()
-
-
-def confirmed_keys(conn: sqlite3.Connection, entity_type: str) -> set[str]:
-    """What is not in here is new."""
-    return {chiave for chiave, _ in values_of(conn, entity_type, CONFIRMED)}
-
-
-def confirm(
-    conn: sqlite3.Connection, entity_type: str, key: str | None, now: str | None = None
-) -> None:
-    conn.execute(
-        "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"
-        " VALUES(?, ?, ?, 1, ?) ON CONFLICT(entity_type, entity_key, field) DO NOTHING",
-        (entity_type, key, CONFIRMED, now or now_iso()),
-    )
 
 
 # A fact about the place, not a night, so it holds for nights to come: keyed by rounded coordinates

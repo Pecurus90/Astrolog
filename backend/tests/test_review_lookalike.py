@@ -123,15 +123,10 @@ def test_seeing_the_page_does_not_answer_the_question(client):
     """L'app non puo' sapere se sono lo stesso pezzo (Marco, 25/9/2026): un Applica a vuoto non e'
     una risposta, e la domanda resta nel conto."""
     prima = review(client)
-    apply(client, seen=prima["seen"])
+    apply(client)
     dopo = review(client)
     assert _proposte(client, "ATR2600M") == [_id(client, "ATR2600M(USB2.0)")]
-    assert dopo["to_confirm"] == prima["to_confirm"] - sum(
-        # seeing confirms the found objects; a group card waits for its answer
-        1
-        for o in prima["objects"]
-        if o["group"] is None and not o["confirmed"]
-    )
+    assert dopo["to_confirm"] == prima["to_confirm"]
 
 
 def test_a_yes_merges_the_two_spellings(client):

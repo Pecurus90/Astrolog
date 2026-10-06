@@ -57,7 +57,7 @@ function app(siti: unknown[] = [CASA, USCITA], piu: Record<string, unknown> = {}
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
     "/api/v1/review": {
       stato: 200,
-      corpo: { to_confirm: 0, seen: { instruments: 0, rigs: 0, objects: 0 } },
+      corpo: { to_confirm: 0 },
     },
     "/api/health": { stato: 200, corpo: SALUTE },
     ...piu,

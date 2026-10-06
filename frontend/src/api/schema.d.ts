@@ -601,7 +601,7 @@ export interface paths {
         };
         /**
          * Settled Objects
-         * @description The objects already seen, with nothing to choose, in pages, in the page's order.
+         * @description The objects the app knows, with nothing to choose, in pages, in the page's order.
          */
         get: operations["settled_objects"];
         put?: never;
@@ -2121,7 +2121,7 @@ export interface components {
          *     `identify` put on one object, or -- `group` -- frames the header does not name and the sky says
          *     nothing about. Same answer for both. `name`, `slug`, `method`, `confidence` are what the app
          *     found: empty on a `group`, and `method`/`confidence` also on frames put out as "not an object",
-         *     which no longer have an object.
+         *     which no longer have an object. Asked: a group or a doubt (`low`), until answered (S4).
          */
         ObjectCard: {
             /**
@@ -2129,11 +2129,6 @@ export interface components {
              * @description What one answers with: `object:` and the found object's stable key, or `frames:` and the group's key.
              */
             key: string;
-            /**
-             * Id
-             * @description The object's row number, for the page's `seen`; empty without an object row.
-             */
-            id: number | null;
             /** Name */
             name: string | null;
             /** Slug */
@@ -2156,11 +2151,6 @@ export interface components {
              * @description How many of those frames do not tell their time: they are not worth zero, they are counted here.
              */
             untimed: number;
-            /**
-             * Confirmed
-             * @description The found object was seen once already; a group is never confirmed.
-             */
-            confirmed: boolean;
             /**
              * Candidates
              * @description What the sky found, to click: on doubts and on frames put out; zero is a card too.
@@ -2279,11 +2269,6 @@ export interface components {
              */
             changed: number;
             /**
-             * Confirmed
-             * @description Entries that from now on are no longer asked.
-             */
-            confirmed: number;
-            /**
              * Requeued
              * @description Frames put back in the queue because the answer concerns them.
              */
@@ -2296,14 +2281,13 @@ export interface components {
         };
         /**
          * ReviewApply
-         * @description All the decisions together: they are written in a single transaction, and what is listed on
-         *     the page stays confirmed even if it was not touched.
+         * @description All the answers together, written in a single transaction; only what is answered is
+         *     written (ADR 0014, S4).
          *
          *     **A field that does not exist is an error, not a slip to ignore** (`extra="forbid"`): a page
-         *     opened before a server update would send the old name, Pydantic would discard it silently and
-         *     Apply would confirm **everything**, including what that page never showed. On the NAS it is the
-         *     ordinary scenario -- a tab left open on the tablet -- and the damage falls on the side nobody
-         *     looks at again. Better a 422 that shows.
+         *     opened before a server update would send the old name, and Pydantic would discard it silently.
+         *     On the NAS it is the ordinary scenario -- a tab left open on the tablet. Better a 422 that
+         *     shows.
          */
         ReviewApply: {
             /**
@@ -2341,8 +2325,6 @@ export interface components {
              * @default []
              */
             mosaics: components["schemas"]["MosaicEdit"][];
-            /** @description How far the page being applied had looked. Absent means "confirm what is there now": asked by whoever did not read a page, and it is not the button's way. */
-            seen?: components["schemas"]["ReviewSeen"] | null;
         };
         /**
          * ReviewOut
@@ -2363,12 +2345,12 @@ export interface components {
             rig_choices: components["schemas"]["RigChoice"][];
             /**
              * Objects
-             * @description The object cards to decide, the new ones and the answered ones; open questions on top.
+             * @description The object cards to decide and the answered ones; open questions on top.
              */
             objects: components["schemas"]["ObjectCard"][];
             /**
              * Settled Objects
-             * @description How many the others are, already seen: they are read in pages.
+             * @description How many the others are, which the app knows: they are read in pages.
              */
             settled_objects: number;
             /**
@@ -2403,27 +2385,6 @@ export interface components {
             mosaics: components["schemas"]["MosaicCandidate"][];
             /** To Confirm */
             to_confirm: number;
-            /** @description How far this page looked: Apply sends it back and confirms only what was listed, never what arrived in the meantime. */
-            seen: components["schemas"]["ReviewSeen"];
-        };
-        /**
-         * ReviewSeen
-         * @description How far the page looked at the objects: the highest row number it really listed. Apply sends
-         *     it back and confirms only up to there.
-         *
-         *     Row numbers and not times, because **two rows born in the same instant cannot be ordered**
-         *     (the measurement and the why are in `docs/domini/spina.md`, section Da confermare).
-         *
-         *     Zero means "I saw nothing", and it is also the value when the page lists no object: it is not a
-         *     missing limit, it is a limit that lets nothing through. Whoever does not send `seen` at all is
-         *     saying something else -- "confirm what is there now" -- and its home is `ReviewApply`.
-         */
-        ReviewSeen: {
-            /**
-             * Objects
-             * @default 0
-             */
-            objects: number;
         };
         /**
          * RigChoice
@@ -2715,9 +2676,8 @@ export interface components {
         };
         /**
          * SettledObjects
-         * @description The objects already seen, with nothing to choose, in pages: they are not questions, and they
-         *     grow with the archive. They open from the Objects section, and are corrected from there. A doubt
-         *     the sky can say nothing about stays here once seen: there is nothing to click.
+         * @description The objects the app knows, with nothing to choose, in pages: they are not questions, and
+         *     they grow with the archive. They open from the Objects section, and are corrected from there.
          */
         SettledObjects: {
             /** Items */
