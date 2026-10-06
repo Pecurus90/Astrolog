@@ -30,9 +30,13 @@ def object_by_slug(conn: sqlite3.Connection, slug: str) -> dict[str, Any] | None
     return dict(row) if row else None
 
 
-def object_by_name(conn: sqlite3.Connection, name: str) -> dict[str, Any] | None:
+# A name is unique across objects (schema), so the owner is one row or none.
+_OWNER = "SELECT object_id FROM object_names WHERE name = ?"
+
+
+def object_by_name(conn: sqlite3.Connection, name: str | None) -> dict[str, Any] | None:
     row = conn.execute(
-        "SELECT o.* FROM objects o JOIN object_names n ON n.object_id = o.id WHERE n.name = ?",
+        f"SELECT * FROM objects WHERE id = ({_OWNER})",  # noqa: S608 - a constant
         (name,),
     ).fetchone()
     return dict(row) if row else None
@@ -40,12 +44,17 @@ def object_by_name(conn: sqlite3.Connection, name: str) -> dict[str, Any] | None
 
 def name_owner(conn: sqlite3.Connection, name: str) -> int | None:
     """Which object already owns this name, if any: one name, one object."""
-    row = conn.execute("SELECT object_id FROM object_names WHERE name = ?", (name,)).fetchone()
+    row = conn.execute(_OWNER, (name,)).fetchone()
     return row[0] if row else None
 
 
 def create_object(
-    conn: sqlite3.Connection, *, slug: str | None, method: str, confidence: str, now: str
+    conn: sqlite3.Connection,
+    *,
+    slug: str | None,
+    method: str | None,
+    confidence: str | None,
+    now: str,
 ) -> int:
     return inserted_id(
         conn.execute(
@@ -57,7 +66,12 @@ def create_object(
 
 
 def set_identity(
-    conn: sqlite3.Connection, object_id: int, *, method: str, confidence: str, now: str
+    conn: sqlite3.Connection,
+    object_id: int,
+    *,
+    method: str | None,
+    confidence: str | None,
+    now: str,
 ) -> None:
     conn.execute(
         "UPDATE objects SET identity_method = ?, identity_confidence = ?, identified_at = ?"
@@ -71,9 +85,9 @@ def add_name(
 ) -> bool:
     """True if the object ends up with the name; False only when another object owns it.
     Kept here so the caller does not repeat the ownership query."""
-    padrone = name_owner(conn, name)
-    if padrone is not None:
-        return padrone == object_id
+    owner = name_owner(conn, name)
+    if owner is not None:
+        return owner == object_id
     conn.execute(
         "INSERT INTO object_names(object_id, name, origin, is_primary) VALUES(?, ?, ?, ?)",
         (object_id, name, origin, is_primary),

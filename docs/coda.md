@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | rifattorizza | Fase 2, lotto 5b: `spine` solve, identify, group | ~0,29 M agenti (uno sviluppatore), sessione principale non contata | 22 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5a: `spine` scansione, normalizzazione, stadi | ~0,29 M agenti (uno sviluppatore), sessione principale non contata | 25 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 4: file sciolti e `worker` | ~0,19 M agenti (uno sviluppatore), sessione principale non contata | 15 agente | 1 mio sul resoconto (un fuso non valido cambiava esito: rimesso com'era) |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 3: `weather` | ~0,21 M agenti (uno sviluppatore), sessione principale non contata | 17 agente | 0 (la prova copre; confronto byte per byte delle tabelle del meteo) |
@@ -77,13 +78,9 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   nome italiano nuovo e' rosso, quelli vecchi stanno in `tools/nomi_italiani.txt`, che solo si
   accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Fatti `db` e
   `fits` (e il segnaposto `{listed}` di `idlist.grouped`), poi `ephemeris` (`corpi` e' `bodies`).
-  Fatti anche `weather`, `net` e gli altri file sciolti. Gia' visti: `con_cielo`, `lucchettato`, `fra_i_candidati`
-  (`spine/identify*`). Fatti i primi due lotti di `spine` (scansione, normalizzazione, stadi).
-  Nel terzo lotto: `ferma` (`solve`); `luoghi`, `tolte`, `dove`,
-  `risposta`, `fuori`, `data`, `lontano`, `detto`, `vicini`, `riga` (`group`); `domanda` (alias
-  di `typeless`, in `typeless_answer`); `casa`, `riscritte`, `notte`, `notti`, `spostati`,
-  `fermi`, `rig_fermi`, `oggetto_fermi`, `verso`, `vecchia`, `vecchie`, `nuova`, `toccati`,
-  `tutte`, `prima`, `fonti`, `dette` (`home_nights`). Nel quarto lotto: `corredi` (alias di
+  Fatti anche `weather`, `net` e gli altri file sciolti, e i primi tre lotti di `spine`
+  (scansione, normalizzazione, stadi; risoluzione, identificazione, raggruppamento, frame senza
+  tipo, `site_requeue`, `home_nights`). Nel quarto lotto: `corredi` (alias di
   `rigs`), `pose`, `staccate`, `modello`, `riga` (`gear`); `grafia`, `gia`, `scheda`
   (`gear_create`); `_SEMPRE`, `_CONTI`, `_USATI`, `_STRUMENTI`, `_CORREDI`, `_FILTRI`, `_OGGETTI`,
   `_OGGETTI_DEL_CORREDO`, `_OGGETTI_DEL_FILTRO`, `_OGGETTI_DEL_PEZZO`, `_CIELO`, `_COLONNE`,
@@ -122,8 +119,7 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   `_PIEGATO`, `_CERCATO`, `_OGGETTI_DEI_PANNELLI` (letto da `test_spine_archive_mosaic`),
   `_cercando`, `_dove`, `_elenco`, le colonne `chiave` e `nome`, `criteri`, `scritto`, `scudato`,
   `pezzi`, `pezzo`, `valori`, `valore`, `cercato`, `suoi`, `ordine`, `dove`, `righe`, `quanti`,
-  `oggetti`, `mosaici`, `elencate` (`archive`); `chiavi`, `vicino`, `punto`, `nominato`,
-  `senza_fuso`, `da_spostare` (`site_requeue`). Nel primo lotto di `api`: `cadenza`, `riga`,
+  `oggetti`, `mosaici`, `elencate` (`archive`). Nel primo lotto di `api`: `cadenza`, `riga`,
   `sito` (`app`); `_servita`, `pagina_del_router`, il parametro di percorso `percorso` e il
   segnaposto `{chiave}` di `TOKEN_META` (`page`); `_scansione_interrotta`, `da_fare`
   (`pipeline`); `manca`, `percorso`, `provate`, `dove` (`settings`). Nel quarto lotto di `api`:
@@ -147,31 +143,25 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   `gear_write`), `_rifiuto`, `rifiuto`, `_TUTTO`, `_SENZA_LIMITI`, `fino_a`, `chiave`, `scelte`,
   `rimesse`, `scritta`, `nome`, `sito`, gli alias `risposta`, `corredi`, `strumento`
   (`review_write`); `riga`, `scelte`, `scelto` (`review_write_folders`).
-- **`group._where`** torna il sito ma non la data: `_one_frame` la ricalcola, e cosi' arriva
-  `str | None` fino a `group_store.night` e `create_night`; e il "lo ha detto l'utente" e'
-  `bool | None` (passato con `bool()`) perche' la terna non distingue chi si ferma da chi entra.
-  Una `dataclass` (sito, data, dichiarato) o un motivo li stringe tutti e due.
-- **`identify`**: la rotazione dello scarto negli assi del sensore e' scritta due volte
-  (`identify_geometry.in_frame` e `mosaic_geometry._in_axes`): va in `identify_geometry` e la
-  chiamano tutti e due. Il letterale del lucchetto dell'utente (`method`/`confidence` `user`,
-  `review` falso) e' scritto due volte in `spine/identify.py`: una costante. Decisioni,
-  candidati, voci del catalogo e wcs viaggiano come `dict[str, Any]`: una forma tipata ciascuno.
-- **Forme `dict` che escono dai package di base**: la voce del catalogo
-  (`catalog/lookup.by_designation`, `by_slug`, `in_cone`), da tipare col lotto di
-  `spine/identify`: si spalma nei candidati (`**entry`) e i test ne costruiscono a mano.
+- **`identify`, dopo il terzo lotto di `spine`**: il wcs resta `dict[str, Any]` (la geometria
+  legge con `.get`, e `mosaic` e i test passano dict senza i lati: *Mosaici, dichiarazioni e
+  archivio* nel Parcheggio). `identify_link._name_it` ha un `cast` sul nome libero della
+  decisione: una decisione senza voce di catalogo ha sempre il nome (`decide`, `_towards`), ma
+  `Decision.name` e' `str | None`; lo toglie una decisione che dica col tipo "slug o nome".
+  `api/settings._missing` fa `cast` a `Missing` di `GroupReason.NO_ACTIVE_SITE` e
+  `solve.NO_STAR_DATABASE`, che resta: il `Literal` ripete apposta (`models_tonight`).
+  `solve.NO_SOLVER` resta una stringa: il suo insieme e' `Missing`, che mescola parole di
+  `group` e `solve`, e un `StrEnum` comune non ha una casa negli stadi.
 - **`db/idlist.grouped` torna `dict[Any, list[Any]]`**: generico in `T` rompe `api/archive.py`, che
   passa i dict di `spine/filters_used` a un campo `list[FilterUsed]`. Si fa generico quando i
   chiamanti costruiscono righe tipate.
 - **Insiemi chiusi da fare `StrEnum`**, che escono dal package (fatti tipo del frame, software e
   bande, fasi della Luna e fasce del cielo, meteo, `net.Failure`, stati del worker, motivi e
   canali di `astap`, fonti di `place`, esiti e motivi della scansione, marchio di riscrittura,
-  nomi e stati degli stadi, soggetti del conto). In `weather` restano stringhe i generi di riga (`forecast.KIND`, `history.KIND`) e
-  le fonti per modello (`forecast.source_of`), aperte quanto la scelta dei modelli. Nel
-  raggruppamento i motivi di `group` (`NO_ACTIVE_SITE`, `SITE_NO_TIMEZONE`, `SITE_UNCLEAR`,
-  `NO_OBJECT`, `NO_DATE`, scritti in `frame_stages.reason`); le risposte sul tipo
-  (`typeless.ANSWERS`, parole di casa in `declarations.TYPE_LIGHT`/`TYPE_CALIBRATION`, ripetute
-  in `api/models_review_groups.TypelessAnswer`). Nell'attrezzatura i soggetti
-  dell'uso (`instrument`, `rig`, `filter`, scritti in `gear_usage.subject` e passati come stringhe
+  nomi e stati degli stadi, soggetti del conto, motivi di `group`, risposte sul tipo, metodi,
+  fiducie, rami e motivi di `identify`). In `weather` restano stringhe i generi di riga
+  (`forecast.KIND`, `history.KIND`) e le fonti per modello (`forecast.source_of`), aperte quanto
+  la scelta dei modelli. Nell'attrezzatura i soggetti dell'uso (`instrument`, `rig`, `filter`, scritti in `gear_usage.subject` e passati come stringhe
   da `rigs` e `api/gear_write`) e i campi dei corredi (`rigs.MOUNT`, `DECLARED`,
   scritti in `declarations.field`). Nelle domande per gruppo le risposte sul filtro
   (`signature.FILTER_ANSWERS`, scritte in `declarations` e ripetute in
@@ -190,6 +180,8 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   `create_app` (`api/app.py`, sei opzioni a parola chiave lette da `__main__`, `tools` e test),
   `scan_store.finish_run` e `upsert_position` e `normalize_rig.mount_for_frame` (chiamati dai
   test), `stages.set_status` e `stage_run.frame_safely` (chiamati da ogni stadio).
+  `identify_link.hang` resta per un'altra ragione: togliere `counts` vuol dire contare dopo le
+  scritture, e un frame che cade a meta' cambierebbe i conti della ricevuta.
   `archive_page` (`api/archive.py`) resta per un'altra ragione: i suoi otto parametri sono la
   query della rotta, e raccoglierli in una dipendenza di FastAPI e' un cambio di forma (fase 2).
 - **Doppioni piccoli dei package di base**: `catalog/load.load_catalog` riscrive a mano
@@ -371,10 +363,6 @@ Niente di aperto.
 - **Una promessa d'intestazione senza macchina:** `backend/astrolog/api/models_review_groups.py`
   promette che ogni gruppo porta chiave e `answer`; oggi e' vero anche per `MosaicCandidate`, ma
   nessuna prova lo controlla.
-- **Un ramo che non esiste passa tutte e due le guardie.** La tabella delle situazioni di
-  `docs/domini/spina.md` e `BRANCHES` in `backend/astrolog/spine/identify_decide.py` si controllano
-  a vicenda: una riga inventata in tutti e due resta verde. Manca la macchina che chieda a ogni
-  ramo un produttore in `decide` e un test.
 - **La purezza di `identify_decide`, `identify_score` e `identify_geometry` e' scritta e non fatta
   rispettare:** aggiungendoci `sqlite3` o `catalog.lookup`, `lint-imports` resta verde. Serve un
   contratto loro in `backend/pyproject.toml`: quello dei moduli puri vieta `astrolog.spine`, e i
@@ -398,8 +386,10 @@ Niente di aperto.
   frame). Si rimanda al pacchetto, dove si misura ASTAP su un NAS arm64 vero. Le misure che dicono
   di **non** limare altrove: `identify` rilegge il catalogo per ogni corsa ma pesa 6,3 s;
   `normalize` fa circa 19 query a frame ma dura 2,8 s; il commit per frame costa 4,3 s ed e' una
-  promessa con le sue guardie. Resta una pulizia: `_as_the_user_said` (`spine/identify.py`)
-  interroga `declarations` una volta a frame anche a mani vuote.
+  promessa con le sue guardie. `_as_the_user_said` (`spine/identify.py`) interroga
+  `declarations` una volta a frame anche a mani vuote: 2,8 µs a frame, ~31 ms sugli ~11.000
+  frame veri (0,5% dei 6,3 s). Saltarla vuole una foto delle correzioni a inizio giro, e una
+  correzione scritta a giro in corso non varrebbe per i frame dopo: resta.
 - **La suite ricostruisce il modello del catalogo per ogni worker** (0,271 s a processo): il
   fixture e' di sessione ma per processo, senza lucchetto fra processi.
 - **Chi non ha nemmeno un `IMAGETYP` paga il solver sui suoi dark.** Un file senza tipo passa dal
@@ -448,8 +438,9 @@ Niente di aperto.
 - **Cambiare il fuso di casa tiene il database dentro la richiesta**, e il tempo cresce coi frame
   che cambiano data (`spine/home_nights.py`): il grosso e' `unnamed.assign` frame per frame. Su un
   archivio grande senza coordinate una scrittura del worker puo' avvicinarsi al `busy_timeout`
-  (`db/connect.py`). Rimedio: scegliere il gruppo una volta per notte, camera e telescopio, o
-  portare il lavoro fuori dalla richiesta.
+  (`db/connect.py`). Rimedio: portare il lavoro fuori dalla richiesta. Scegliere il gruppo una
+  volta per notte, camera e telescopio non e' un refactor: `assign` confronta ogni frame col
+  puntamento di chi ha aperto il gruppo, frame dopo frame, e i gruppi cambierebbero.
 - **I file senza tipo di una cartella detta di calibrazione si rileggono a ogni scansione**:
   saltati alla porta non hanno una posizione, e il pre-controllo incrementale non li riconosce
   (`spine/scan.py`). Rimedio: ricordare i file saltati con percorso, dimensione e data.
@@ -475,8 +466,7 @@ Niente di aperto.
   salvato non valido (oggi `bad_answer` se la risposta non ha ore), quindi va in un `/ripara`.
 - **Piu' piccoli**: `CATALOG_PRIORITY` (`spine/identify_score.py`) senza sei sigle che `parse`
   produce; frasi dei contratti copiate nelle docstring (da ricontare); i siti senza una casa in
-  lettura come oggetti e notti; `identify_store.object_by_name` e `name_owner`, che fanno quasi la
-  stessa query; la riga che chiede a SQLite il piano di una query, scritta a mano in 16 file di
+  lettura come oggetti e notti; la riga che chiede a SQLite il piano di una query, scritta a mano in 16 file di
   prova (`grep "EXPLAIN QUERY PLAN" backend/tests`), da fare aiutante in `conftest.py`; lo stadio
   tenuto fermo a meta' con una porta (`_holding` in `test_api_scan_all.py`), ricopiato in
   `test_api_scan.py` e `test_review.py`. Non sono doppioni: i tre `detach` staccano tabelle
@@ -776,17 +766,9 @@ riga per voce.
   scrivono a mano il 5 % di `units.FOCAL_TOLERANCE`; "la scheda dell'utente vince su file e cielo"
   e' detta in `camera_sky`, `camera_specs` e `gear.camera_specs`, ma vive solo in
   `gear.camera_specs`.
-- **Risoluzione, raggruppamento e frame senza tipo, dopo la fase 1**: nessun test distingue la
-  regola "cielo dalla cache e disco staccato: niente `analyse`" in `spine/solve.py` (una mutazione
-  come `path or _old_path` passerebbe); le ragioni di `group` sono ripetute come `Literal` in
-  `api/models_site.py` (`Missing`, `Unknown`) e scritte a mano in `api/sites.py`;
-  `solve.NO_STAR_DATABASE` ripete `astap.Reason.NO_STAR_DATABASE` come stringa nuda (finisce in
-  `list[Missing]` di `api/settings`), e `solve.NO_SOLVER` non e' in un insieme chiuso.
-  Regole dette piu' volte: il binning gia' dentro `XPIXSZ` (`solve._scale_of` e
-  `units.physical_pixel_um`); il percorso scritto a mano che non si sovrascrive
-  (`solve.solver_found` e `api/settings.search_solver`); "risolto e' una foto, senza stelle una calibrazione"
-  (`typeless`, `typeless_folders`, `api/models_review_groups`); la notte da mezzogiorno a
-  mezzogiorno nella docstring di `group`, senza rimando a `clock.night_date`.
+- **Frame senza tipo, dopo la fase 2**: "risolto e' una foto, senza stelle una calibrazione" e'
+  detta in `typeless` e nella descrizione OpenAPI di `api/models_review_groups` (toglierla di li'
+  cambia lo schema).
 - **Attrezzatura, dopo la fase 1**: `rigs.declared_mount` riscrive la query di `rigs._rig`
   (`RIG_ROWS` per id) invece di chiamarla; `filters_used.of` e `idlist` accettano anche chiavi di
   testo (i mosaici dell'Archivio) in una tabella `id INTEGER`, che le tiene per affinita' di SQLite.

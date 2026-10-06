@@ -3,9 +3,10 @@
 
 import logging
 import sqlite3
+from dataclasses import asdict
 from typing import Any, Final
 
-from ..catalog import lookup
+from ..catalog import NamedEntry, lookup
 from ..clock import now_iso
 from ..vocab.object_label import clean_object_name
 from . import objects
@@ -61,7 +62,7 @@ def out_of_archive(conn: sqlite3.Connection) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
     for r in conn.execute(_OUT).fetchall():
         voce = lookup.by_slug(conn, r["key"])
-        out[r["key"]] = {**dict(r), "name": voce["name"] if voce else None}
+        out[r["key"]] = {**dict(r), "name": voce.name if voce else None}
     return out
 
 
@@ -145,11 +146,11 @@ def target_value(slug: str | None, name: str | None) -> str:
     return f"{CATALOG}{slug}" if slug else f"{NAME}{name}"
 
 
-def catalog_target(conn: sqlite3.Connection, slug: str) -> tuple[str, dict[str, Any]] | None:
+def catalog_target(conn: sqlite3.Connection, slug: str) -> tuple[str, NamedEntry] | None:
     """`is_primary` because a rule points at the ENTRY, not one spelling: the decider says
     `exact_name` instead of `historic_name`."""
     entry = lookup.by_slug(conn, slug)
-    return None if entry is None else (entry["name"], {**entry, "is_primary": 1})
+    return None if entry is None else (entry.name, NamedEntry(**asdict(entry), is_primary=1))
 
 
 def resolved(
@@ -158,7 +159,7 @@ def resolved(
     """A written name the catalog knows as a designation goes to its entry, or the hours split over
     two. Only without a slug: with both, "one target" refuses it later."""
     hit = lookup.by_designation(conn, name) if name and not slug else None
-    return (hit["slug"], None) if hit else (slug, name)
+    return (hit.slug, None) if hit else (slug, name)
 
 
 def refuse_unknown_slug(conn: sqlite3.Connection, slug: str | None) -> None:
@@ -196,7 +197,7 @@ def shown_target(conn: sqlite3.Connection, value: str) -> tuple[str, str, str] |
     if kind == "name":
         return kind, valore, valore
     entry = lookup.by_slug(conn, valore)
-    return None if entry is None else (kind, valore, entry["name"])
+    return None if entry is None else (kind, valore, entry.name)
 
 
 def correction_of(conn: sqlite3.Connection, found_key: str) -> tuple[str, str] | None:

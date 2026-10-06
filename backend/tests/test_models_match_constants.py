@@ -214,8 +214,8 @@ def test_the_words_group_uses_are_the_words_the_api_shows():
     manca") e nel motivo scritto sulla posa che e' rimasta fuori. Devono essere **la stessa
     parola**: erano due stringhe a mano in due file, e chi ne cambiava una avrebbe lasciato
     l'altra a dire il falso senza che niente diventasse rosso."""
-    assert group.NO_ACTIVE_SITE in get_args(models_site.Missing)
-    assert group.SITE_NO_TIMEZONE in get_args(models_site.Unknown)
+    assert group.GroupReason.NO_ACTIVE_SITE in get_args(models_site.Missing)
+    assert group.GroupReason.SITE_NO_TIMEZONE in get_args(models_site.Unknown)
 
 
 def test_instrument_kinds_say_what_the_schema_allows():
@@ -252,8 +252,8 @@ def test_the_identity_vocabularies_say_what_the_schema_allows():
     stringhe a mano, e uno scarto si sarebbe visto solo su una posa vera, a valle."""
     schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
     for colonna, costanti in (
-        ("identity_method", identify_decide.IDENTITY_METHODS),
-        ("identity_confidence", identify_decide.IDENTITY_CONFIDENCES),
+        ("identity_method", identify_decide.IdentityMethod),
+        ("identity_confidence", identify_decide.IdentityConfidence),
     ):
         blocco = re.search(rf"{colonna} +TEXT CHECK \(.*?\)\)", schema, re.DOTALL)
         assert blocco, colonna
@@ -265,9 +265,9 @@ def test_the_identity_literals_of_the_api_match_the_spine():
     sarebbe un campo che non compila, e uno che l'API non dichiara sarebbe un valore che arriva
     e non e' documentato. La catena e' schema -> `identify_decide` -> modelli, e ogni anello ha
     la sua guardia."""
-    assert set(get_args(models_review.IdentityMethod)) == set(identify_decide.IDENTITY_METHODS)
+    assert set(get_args(models_review.IdentityMethod)) == set(identify_decide.IdentityMethod)
     assert set(get_args(models_review.IdentityConfidence)) == set(
-        identify_decide.IDENTITY_CONFIDENCES
+        identify_decide.IdentityConfidence
     )
 
 

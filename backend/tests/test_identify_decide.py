@@ -9,7 +9,9 @@ from pathlib import Path
 
 import pytest
 
+from astrolog.catalog import NamedEntry
 from astrolog.spine import identify_decide as decide
+from astrolog.spine.identify_score import Candidate
 
 # Le coordinate vere: la separazione fra due candidati si misura su queste, e un test che le
 # inventasse proverebbe l'aritmetica invece della decisione.
@@ -29,29 +31,55 @@ CIELO = {
 }
 
 
+# I campi della voce che la decisione non legge.
+_VUOTA = dict(
+    constellation="And",
+    type_code="GALAXY",
+    kinds_json=None,
+    size_minor_arcmin=None,
+    position_angle_deg=None,
+    surface_brightness=None,
+    distance_ly=None,
+    opacity=None,
+)
+
+
 def voce(slug, name="M 31", size=180.0, mag=3.4, band="V", sep=0.0, in_frame=True):
     """Un candidato come lo consegna `identify.candidates`. La magnitudine e la sua banda
     possono mancare -- il catalogo non le ha per tutti --, e `in_frame` dice se il candidato e'
     dentro il rettangolo dell'inquadratura o solo sovrapposto."""
     ra, dec = CIELO[slug]
-    return {
-        "slug": slug,
-        "name": name,
-        "common_name": None,
-        "ra_deg": ra,
-        "dec_deg": dec,
-        "size_major_arcmin": size,
-        "magnitude": mag,
-        "magnitude_band": band,
-        "sep_deg": sep,
-        "score": 1.0,
-        "in_frame": in_frame,
-    }
+    return Candidate(
+        **_VUOTA,
+        slug=slug,
+        name=name,
+        common_name=None,
+        ra_deg=ra,
+        dec_deg=dec,
+        size_major_arcmin=size,
+        magnitude=mag,
+        magnitude_band=band,
+        sep_deg=sep,
+        score=1.0,
+        in_frame=in_frame,
+    )
 
 
 def sigla(slug, primary=1):
     """La voce che il catalogo restituisce cercando la sigla dell'header."""
-    return {"slug": slug, "name": "M 31", "is_primary": primary}
+    ra, dec = CIELO[slug]
+    return NamedEntry(
+        **_VUOTA,
+        slug=slug,
+        name="M 31",
+        common_name=None,
+        ra_deg=ra,
+        dec_deg=dec,
+        size_major_arcmin=None,
+        magnitude=None,
+        magnitude_band=None,
+        is_primary=primary,
+    )
 
 
 # --- con il cielo -----------------------------------------------------------------------
@@ -59,9 +87,9 @@ def sigla(slug, primary=1):
 
 def test_the_designation_and_the_sky_agree():
     d = decide.decide(raw_name="M 31", hit=sigla("m-31"), cands=[voce("m-31")], fov_radius_deg=1.0)
-    assert d["branch"] == "name_and_sky_agree"
-    assert (d["slug"], d["method"], d["confidence"]) == ("m-31", "coord_confirmed", "certain")
-    assert d["review"] is False
+    assert d.branch == "name_and_sky_agree"
+    assert (d.slug, d.method, d.confidence) == ("m-31", "coord_confirmed", "certain")
+    assert d.review is False
 
 
 def test_the_designation_settles_the_tie_when_the_sky_has_two_contenders():
@@ -72,8 +100,8 @@ def test_the_designation_settles_the_tie_when_the_sky_has_two_contenders():
         voce("m-82", "M 82", size=10.99, mag=8.3, sep=0.32),
     ]
     d = decide.decide(raw_name="M 81", hit=sigla("m-81"), cands=cands, fov_radius_deg=1.0)
-    assert d["branch"] == "name_and_sky_agree"
-    assert d["review"] is False
+    assert d.branch == "name_and_sky_agree"
+    assert d.review is False
 
 
 def test_the_sky_says_another_thing():
@@ -83,9 +111,9 @@ def test_the_sky_says_another_thing():
     d = decide.decide(
         raw_name="M 31", hit=sigla("m-31"), cands=[voce("m-45", "M 45")], fov_radius_deg=1.0
     )
-    assert d["branch"] == "sky_disagrees"
-    assert (d["slug"], d["method"], d["confidence"]) == ("m-31", "coord_review", "low")
-    assert d["review"] is True
+    assert d.branch == "sky_disagrees"
+    assert (d.slug, d.method, d.confidence) == ("m-31", "coord_review", "low")
+    assert d.review is True
 
 
 def test_the_designation_in_the_field_wins_even_when_it_is_not_the_best_guess():
@@ -97,9 +125,9 @@ def test_the_designation_in_the_field_wins_even_when_it_is_not_the_best_guess():
     stesso complesso, e chiedere non cambierebbe niente."""
     cands = [voce("m-42", "M 42", sep=0.1), voce("ngc-1977", "NGC 1977", sep=0.6)]
     d = decide.decide(raw_name="NGC 1977", hit=sigla("ngc-1977"), cands=cands, fov_radius_deg=1.0)
-    assert d["branch"] == "name_and_sky_agree"
-    assert (d["slug"], d["method"], d["confidence"]) == ("ngc-1977", "coord_confirmed", "certain")
-    assert d["review"] is False
+    assert d.branch == "name_and_sky_agree"
+    assert (d.slug, d.method, d.confidence) == ("ngc-1977", "coord_confirmed", "certain")
+    assert d.review is False
 
 
 def test_the_designation_settles_it_from_anywhere_in_the_field():
@@ -119,9 +147,9 @@ def test_the_designation_settles_it_from_anywhere_in_the_field():
         voce("ngc-1977", "NGC 1977", size=10.2, mag=None, band=None, sep=0.545341),
     ]
     d = decide.decide(raw_name="NGC 1977", hit=sigla("ngc-1977"), cands=cands, fov_radius_deg=1.0)
-    assert d["branch"] == "name_and_sky_agree"
-    assert d["slug"] == "ngc-1977"
-    assert d["review"] is False
+    assert d.branch == "name_and_sky_agree"
+    assert d.slug == "ngc-1977"
+    assert d.review is False
 
 
 def test_the_designation_wins_even_with_its_centre_outside_the_frame():
@@ -136,16 +164,16 @@ def test_the_designation_wins_even_with_its_centre_outside_the_frame():
         voce("ngc-1977", "NGC 1977", size=10.2, mag=None, band=None, in_frame=False),
     ]
     d = decide.decide(raw_name="NGC 1977", hit=sigla("ngc-1977"), cands=cands, fov_radius_deg=1.0)
-    assert d["branch"] == "name_and_sky_agree"
-    assert d["slug"] == "ngc-1977"
-    assert d["review"] is False
+    assert d.branch == "name_and_sky_agree"
+    assert d.slug == "ngc-1977"
+    assert d.review is False
 
 
 def test_no_designation_and_one_sure_thing_in_the_sky():
     d = decide.decide(raw_name="Snapshot", hit=None, cands=[voce("m-31")], fov_radius_deg=1.0)
-    assert d["branch"] == "sky_only"
-    assert (d["slug"], d["method"], d["confidence"]) == ("m-31", "coord_confirmed", "certain")
-    assert d["review"] is False
+    assert d.branch == "sky_only"
+    assert (d.slug, d.method, d.confidence) == ("m-31", "coord_confirmed", "certain")
+    assert d.review is False
 
 
 def test_no_designation_and_two_contenders_in_the_sky():
@@ -155,17 +183,17 @@ def test_no_designation_and_two_contenders_in_the_sky():
         voce("m-82", "M 82", size=10.99, mag=8.3, sep=0.32),
     ]
     d = decide.decide(raw_name=None, hit=None, cands=cands, fov_radius_deg=1.0)
-    assert d["branch"] == "sky_ambiguous"
-    assert (d["slug"], d["method"], d["confidence"]) == ("m-81", "coord_review", "low")
-    assert d["review"] is True
+    assert d.branch == "sky_ambiguous"
+    assert (d.slug, d.method, d.confidence) == ("m-81", "coord_review", "low")
+    assert d.review is True
 
 
 def test_a_free_name_never_creates_an_object_when_the_sky_is_there():
     """Dove il cielo c'e', il cielo e' la misura e il nome e' un'etichetta: nessun oggetto
     fuori catalogo, mai."""
     d = decide.decide(raw_name="Andromeda_finale", hit=None, cands=[voce("m-31")], fov_radius_deg=1)
-    assert d["slug"] == "m-31"
-    assert d["name"] is None
+    assert d.slug == "m-31"
+    assert d.name is None
 
 
 def test_a_comet_never_takes_the_object_behind_it():
@@ -174,10 +202,10 @@ def test_a_comet_never_takes_the_object_behind_it():
     d = decide.decide(
         raw_name="12P/Pons-Brooks", hit=None, cands=[voce("m-31")], fov_radius_deg=1.0
     )
-    assert d["branch"] == "moving"
-    assert (d["slug"], d["name"]) == (None, "12P/Pons-Brooks")
-    assert (d["method"], d["confidence"]) == ("exact_name", "high")
-    assert d["review"] is False
+    assert d.branch == "moving"
+    assert (d.slug, d.name) == (None, "12P/Pons-Brooks")
+    assert (d.method, d.confidence) == ("exact_name", "high")
+    assert d.review is False
 
 
 def test_a_comet_whose_designation_is_also_a_catalog_one_still_wins_the_sky():
@@ -185,14 +213,14 @@ def test_a_comet_whose_designation_is_also_a_catalog_one_still_wins_the_sky():
     d = decide.decide(
         raw_name="C/2023 A3", hit=sigla("m-31"), cands=[voce("m-31")], fov_radius_deg=1.0
     )
-    assert d["branch"] == "moving"
+    assert d.branch == "moving"
 
 
 def test_a_fixed_object_is_not_taken_for_moving():
     """Il verso in cui la guardia sbaglia: chi cade fuori resta visibile e correggibile."""
     for nome in ("M 31", "NGC 7023", "Sh2 155", "C 49"):
         d = decide.decide(raw_name=nome, hit=sigla("m-31"), cands=[], fov_radius_deg=None)
-        assert d["branch"] == "name_only", nome
+        assert d.branch == "name_only", nome
 
 
 # --- senza cielo ------------------------------------------------------------------------
@@ -200,9 +228,9 @@ def test_a_fixed_object_is_not_taken_for_moving():
 
 def test_a_designation_without_sky_hangs_on_the_name():
     d = decide.decide(raw_name="M 31", hit=sigla("m-31"), cands=[], fov_radius_deg=None)
-    assert d["branch"] == "name_only"
-    assert (d["slug"], d["method"], d["confidence"]) == ("m-31", "exact_name", "high")
-    assert d["review"] is False
+    assert d.branch == "name_only"
+    assert (d.slug, d.method, d.confidence) == ("m-31", "exact_name", "high")
+    assert d.review is False
 
 
 def test_a_historic_name_without_sky_says_so():
@@ -211,39 +239,39 @@ def test_a_historic_name_without_sky_says_so():
     d = decide.decide(
         raw_name="NGC 224", hit=sigla("m-31", primary=0), cands=[], fov_radius_deg=None
     )
-    assert d["branch"] == "name_only"
-    assert (d["method"], d["confidence"]) == ("historic_name", "high")
+    assert d.branch == "name_only"
+    assert (d.method, d.confidence) == ("historic_name", "high")
 
 
 def test_the_sole_name_is_never_certain():
     """Il contratto: `certain` e' riservato a nome e cielo concordi."""
     d = decide.decide(raw_name="M 31", hit=sigla("m-31"), cands=[], fov_radius_deg=None)
-    assert d["confidence"] != "certain"
+    assert d.confidence != "certain"
 
 
 def test_a_free_name_without_sky_becomes_an_object_of_its_own():
     """Le sette pose di M 101 del collaudo dicevano soltanto `Snapshot`: restano insieme sotto
     quel nome, e un gesto solo in Da confermare le sistema tutte (Marco, 2026-09-09)."""
     d = decide.decide(raw_name="Snapshot", hit=None, cands=[], fov_radius_deg=None)
-    assert d["branch"] == "free_name_only"
-    assert (d["slug"], d["name"]) == (None, "Snapshot")
-    assert (d["method"], d["confidence"]) == ("exact_name", "low")
-    assert d["review"] is True
+    assert d.branch == "free_name_only"
+    assert (d.slug, d.name) == (None, "Snapshot")
+    assert (d.method, d.confidence) == ("exact_name", "low")
+    assert d.review is True
 
 
 def test_a_designation_the_catalog_does_not_know_is_a_free_name():
     """`NGC 99999` sembra una sigla ma non e' nessuno: vale quanto `Snapshot`, non di piu'."""
     d = decide.decide(raw_name="NGC 99999", hit=None, cands=[], fov_radius_deg=None)
-    assert d["branch"] == "free_name_only"
-    assert d["name"] == "NGC 99999"
+    assert d.branch == "free_name_only"
+    assert d.name == "NGC 99999"
 
 
 @pytest.mark.parametrize("vuoto", [None, "", "   "])
 def test_no_name_and_no_sky_leaves_no_object(vuoto):
     d = decide.decide(raw_name=vuoto, hit=None, cands=[], fov_radius_deg=None)
-    assert d["branch"] == "nothing"
-    assert (d["slug"], d["name"], d["method"], d["confidence"]) == (None, None, None, None)
-    assert d["review"] is False  # non e' una domanda: e' un elenco, e lo mostra Da confermare
+    assert d.branch == "nothing"
+    assert (d.slug, d.name, d.method, d.confidence) == (None, None, None, None)
+    assert d.review is False  # non e' una domanda: e' un elenco, e lo mostra Da confermare
 
 
 # --- il vocabolario chiuso --------------------------------------------------------------
@@ -263,23 +291,23 @@ def test_every_branch_says_a_word_of_the_closed_vocabulary():
     ]
     for caso in casi:
         d = decide.decide(**caso)
-        assert d["method"] in (*decide.IDENTITY_METHODS, None), d
-        assert d["confidence"] in (*decide.IDENTITY_CONFIDENCES, None), d
-        assert d["branch"] in decide.BRANCHES, d
+        assert d.method in (*decide.IdentityMethod, None), d
+        assert d.confidence in (*decide.IdentityConfidence, None), d
+        assert d.branch in set(decide.Branch), d
         # o si aggancia una voce di catalogo, o si crea un oggetto col suo nome, mai tutti e due
-        assert not (d["slug"] and d["name"]), d
+        assert not (d.slug and d.name), d
 
 
 def test_the_user_answer_is_in_the_vocabulary_but_no_branch_writes_it():
     """`user`/`user` e' la risposta dell'utente, che arriva da Da confermare e non da qui: se
     un ramo cominciasse a scriverla, sovrascriverebbe cio' che non si sovrascrive mai."""
-    assert "user" in decide.IDENTITY_METHODS and "user" in decide.IDENTITY_CONFIDENCES
+    assert "user" in set(decide.IdentityMethod) and "user" in set(decide.IdentityConfidence)
     casi = [
         dict(raw_name="M 31", hit=sigla("m-31"), cands=[voce("m-31")], fov_radius_deg=1.0),
         dict(raw_name="Snapshot", hit=None, cands=[], fov_radius_deg=None),
         dict(raw_name=None, hit=None, cands=[voce("m-31")], fov_radius_deg=1.0),
     ]
-    assert all(decide.decide(**c)["method"] != "user" for c in casi)
+    assert all(decide.decide(**c).method != "user" for c in casi)
 
 
 @pytest.mark.sorgente
@@ -296,4 +324,24 @@ def test_the_branches_are_the_ones_the_contract_lists():
     righe = tabella.splitlines()
     corpo = righe[righe.index(next(r for r in righe if "---" in r)) + 1 :]
     dal_contratto = {r.strip().strip("|").rsplit("|", 1)[-1].strip().strip("`") for r in corpo}
-    assert dal_contratto == set(decide.BRANCHES)
+    assert dal_contratto == set(decide.Branch)
+
+
+def test_every_branch_has_a_case_that_produces_it():
+    """Il contratto e `Branch` si guardano a vicenda, ma un ramo scritto in tutti e due e mai
+    prodotto da `decide` resterebbe verde. Qui ogni ramo vuole un caso che lo faccia nascere."""
+    m81_m82 = [
+        voce("m-81", "M 81", size=21.63, mag=6.92, sep=0.30),
+        voce("m-82", "M 82", size=10.99, mag=8.3, sep=0.32),
+    ]
+    casi = [
+        dict(raw_name="12P/Pons-Brooks", hit=None, cands=[], fov_radius_deg=None),
+        dict(raw_name="M 31", hit=sigla("m-31"), cands=[voce("m-31")], fov_radius_deg=1.0),
+        dict(raw_name="M 31", hit=sigla("m-31"), cands=[voce("m-45")], fov_radius_deg=1.0),
+        dict(raw_name=None, hit=None, cands=[voce("m-31")], fov_radius_deg=1.0),
+        dict(raw_name=None, hit=None, cands=m81_m82, fov_radius_deg=1.0),
+        dict(raw_name="M 31", hit=sigla("m-31"), cands=[], fov_radius_deg=None),
+        dict(raw_name="Snapshot", hit=None, cands=[], fov_radius_deg=None),
+        dict(raw_name=None, hit=None, cands=[], fov_radius_deg=None),
+    ]
+    assert {decide.decide(**c).branch for c in casi} == set(decide.Branch)

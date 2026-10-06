@@ -33,7 +33,5 @@ def write(conn: sqlite3.Connection) -> None:
     righe: list[tuple[Any, ...]] = []
     for chiave, cielo in cieli.items():
         for rank, c in enumerate(identify.candidates(conn, cielo)):
-            righe.append(
-                (chiave, rank, *(c[k] for k in ("slug", "name", "common_name")), c["in_frame"])
-            )
+            righe.append((chiave, rank, c.slug, c.name, c.common_name, c.in_frame))
     replace_rows(conn, "object_candidates", _COLONNE, righe)

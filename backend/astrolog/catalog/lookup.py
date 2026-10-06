@@ -3,37 +3,20 @@ x, y, z, then the dot product decides, with no right ascension wrap at 0/360 to 
 
 import math
 import sqlite3
-from typing import Any
+from dataclasses import fields
 
 from .. import units
-from . import designation
+from . import CatalogEntry, NamedEntry, NearEntry, designation
 from .load import unit_vector
 
-_FIELDS = (
-    "slug",
-    "name",
-    "common_name",
-    "ra_deg",
-    "dec_deg",
-    "constellation",
-    "type_code",
-    "kinds_json",
-    "size_major_arcmin",
-    "size_minor_arcmin",
-    "position_angle_deg",
-    "magnitude",
-    "magnitude_band",
-    "surface_brightness",
-    "distance_ly",
-    "opacity",
-)
+_FIELDS = tuple(f.name for f in fields(CatalogEntry))
 
 
 def _columns(prefix: str = "") -> str:
     return ", ".join(prefix + f for f in _FIELDS)
 
 
-def by_designation(conn: sqlite3.Connection, raw: str | None) -> dict[str, Any] | None:
+def by_designation(conn: sqlite3.Connection, raw: str | None) -> NamedEntry | None:
     """Also `is_primary`, whether the name searched is the entry's own: `NGC 224` and `M 31` are
     one object, and identify tells `exact_name` from `historic_name` by it."""
     key = designation.key(raw)
@@ -44,20 +27,20 @@ def by_designation(conn: sqlite3.Connection, raw: str | None) -> dict[str, Any] 
         " JOIN catalog_names n ON n.slug = e.slug WHERE n.key = ?",
         (key,),
     ).fetchone()
-    return dict(row) if row else None
+    return NamedEntry(**dict(row)) if row else None
 
 
-def by_slug(conn: sqlite3.Connection, slug: str) -> dict[str, Any] | None:
+def by_slug(conn: sqlite3.Connection, slug: str) -> CatalogEntry | None:
     row = conn.execute(
         f"SELECT {_columns()} FROM catalog_entries WHERE slug = ?",  # noqa: S608 - constant columns
         (slug,),
     ).fetchone()
-    return dict(row) if row else None
+    return CatalogEntry(**dict(row)) if row else None
 
 
 def in_cone(
     conn: sqlite3.Connection, ra_deg: float, dec_deg: float, radius_deg: float
-) -> list[dict[str, Any]]:
+) -> list[NearEntry]:
     """Nearest first, each with its `sep_deg`: choosing the subject needs the offset, not only the
     list."""
     radius_deg = min(max(radius_deg, 0.0), 180.0)  # beyond half the sky the cone is the whole sky
@@ -76,6 +59,5 @@ def in_cone(
         cos_sep = entry.pop("x") * cx + entry.pop("y") * cy + entry.pop("z") * cz
         if cos_sep < min_cos:
             continue  # inside the box but outside the circle: the corners of the square
-        entry["sep_deg"] = units.separation_deg_from_cosine(cos_sep)
-        out.append(entry)
-    return sorted(out, key=lambda e: e["sep_deg"])
+        out.append(NearEntry(**entry, sep_deg=units.separation_deg_from_cosine(cos_sep)))
+    return sorted(out, key=lambda e: e.sep_deg)

@@ -66,10 +66,15 @@ def in_frame(
     if shape == "circle":
         circle = frame_radius_deg(wcs)
         return True if circle is None else math.hypot(east, north) <= circle + radius
-    t = math.radians(wcs["rotation_deg"])
-    x = east * math.cos(t) + north * math.sin(t)
-    y = -east * math.sin(t) + north * math.cos(t)
+    x, y = in_axes(offset, wcs["rotation_deg"])
     return abs(x) <= wcs["width_deg"] / 2.0 + radius and abs(y) <= wcs["height_deg"] / 2.0 + radius
+
+
+def in_axes(offset: tuple[float, float], rotation_deg: float) -> tuple[float, float]:
+    """`(east, north)` in the axes of a field rotated by `rotation_deg`."""
+    east, north = offset
+    t = math.radians(rotation_deg)
+    return east * math.cos(t) + north * math.sin(t), -east * math.sin(t) + north * math.cos(t)
 
 
 def reach_deg(fov_radius_deg: float, size_major_arcmin: float | None) -> float:

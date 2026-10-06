@@ -16,6 +16,7 @@ from astrolog.spine import (
     typeless_answer,
     typeless_folders,
 )
+from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.identify import identify_frames
 from conftest import add_folder, apply, db, review
 from test_typeless import _frame
@@ -85,7 +86,7 @@ def test_calibration_answered_takes_the_candidates_of_that_sky_away(conn):
         "INSERT INTO object_candidates(object_key, rank, slug, name)"
         " VALUES('m-45', 0, 'm-31', 'M 31')"
     )
-    typeless.declare(conn, "D:/Astro/dark", typeless.CALIBRATION)
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
     typeless_folders.write(conn)  # come a fine stadio: risolta dal cielo, chiede solo se risposta
     typeless_answer.apply_answer(conn, typeless.row_of(conn, "D:/Astro/dark"))
     assert conn.execute("SELECT COUNT(*) FROM object_candidates").fetchone()[0] == 0

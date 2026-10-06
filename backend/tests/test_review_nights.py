@@ -14,7 +14,7 @@ from astrolog.clock import now_iso
 from astrolog.db.connect import connect
 from astrolog.spine import coordinates
 from astrolog.spine import declarations as decl
-from astrolog.spine.group import SITE_UNCLEAR
+from astrolog.spine.group import GroupReason
 from conftest import apply, db, review
 from group_bench import ARIZONA, ROMA, VICINO, corri, luogo, notte_di, posa, prepara, stato
 
@@ -23,7 +23,12 @@ def test_unclear_coordinates_start_from_the_two_ways_a_pose_concerns_them(conn):
     """Una posa riguarda i luoghi incerti per due strade -- ferma su un posto incerto, o in una
     notte a cui hai detto il luogo -- e ognuna si cerca col suo indice: partire dagli stadi di tutto
     l'archivio vorrebbe dire passare da ogni posa a ogni apertura di Da confermare."""
-    piano = [r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + coordinates._ROWS, (SITE_UNCLEAR,))]
+    piano = [
+        r[3]
+        for r in conn.execute(
+            "EXPLAIN QUERY PLAN " + coordinates._ROWS, (GroupReason.SITE_UNCLEAR,)
+        )
+    ]
     ferme = [p for p in piano if "frame_stages_pending" in p]
     assert ferme and all("(stage=? AND status=?)" in p for p in ferme), piano
     assert any("INDEX frames_night" in p for p in piano), piano

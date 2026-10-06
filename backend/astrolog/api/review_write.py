@@ -12,7 +12,7 @@ from ..spine import declarations as decl
 from ..spine import gear, gear_create, mosaic
 from ..spine import object_answer as risposta
 from ..spine import rigs as corredi
-from ..spine.group import SITE_UNCLEAR
+from ..spine.group import GroupReason
 from ..spine.stages import StageName, invalidate
 from . import instrument_answer as strumento
 from . import lookalike
@@ -150,7 +150,7 @@ def _answer_object(conn: sqlite3.Connection, edit: ObjectEdit, now: str) -> list
 def _answer_where(conn: sqlite3.Connection, edit: CoordinatesEdit, now: str) -> list[int]:
     """Coordinates with no frame and a deleted site are checked before writing, or the declaration
     would point at nothing. The site's NAME is written, since ids are reused."""
-    frames = places.frames_at(conn, edit.key, SITE_UNCLEAR)
+    frames = places.frames_at(conn, edit.key, GroupReason.SITE_UNCLEAR)
     if not frames:
         raise LookupError(f"coordinate {edit.key}")
     sito = conn.execute("SELECT name FROM sites WHERE id = ?", (edit.site_id,)).fetchone()

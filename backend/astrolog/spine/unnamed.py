@@ -5,6 +5,7 @@ import json
 import sqlite3
 from typing import Any, Literal
 
+from ..catalog import NamedEntry
 from ..clock import NIGHT_SQL, local_iso
 from ..db.row import Row
 from ..units import angular_separation_deg, field_deg, scale_arcsec_px
@@ -178,7 +179,7 @@ def requeue(conn: sqlite3.Connection, row: Row) -> list[int]:
 
 def named_by_group(
     conn: sqlite3.Connection, key: str | None
-) -> tuple[str, dict[str, Any] | None] | Literal["none"] | None:
+) -> tuple[str, NamedEntry | None] | Literal["none"] | None:
     """`(name, catalog entry)`, `NONE` for "not an object", `None` for no answer or a vanished slug:
     the user's word moves frames, it never makes them disappear."""
     detto = answer(conn, key)

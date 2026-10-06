@@ -6,6 +6,7 @@ import logging
 import os
 import sqlite3
 from collections.abc import Iterator
+from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 from pathlib import Path
@@ -29,7 +30,7 @@ COUNTS = ("solved", "cached", "unsolved", "waiting", "measured", "errors")
 
 # ASTAP without its star catalogue starts and recognises nothing. One word for a frame's reason,
 # for what stops the run, and for the `missing` line that warns before a whole scan.
-NO_STAR_DATABASE = "no_star_database"
+NO_STAR_DATABASE: Final = astap.Reason.NO_STAR_DATABASE
 
 # Not marked `failed`: nobody would requeue it, and installing ASTAP or reattaching the disk the
 # next day would never solve anything again. It stays pending and the next run retries it.
@@ -51,6 +52,15 @@ FIND_IT: Final = _Sentinel.FIND_IT
 NO_SOLVER = "no_solver"
 
 
+@dataclass(frozen=True, slots=True)
+class _Solver:
+    """What one run solves with: looked up once, not per frame."""
+
+    exe: str | None
+    run: astap.Run | None
+    cache: Path
+
+
 def solver_path(conn: sqlite3.Connection) -> str | None:
     """One home for the run and for the warning, or they would disagree on whether ASTAP is there.
     The declared path wins over the automatic search."""
@@ -69,8 +79,7 @@ def databases_next_to(exe: str | Path | None) -> tuple[str, ...]:
 
 
 def solver_found() -> tuple[str | None, astap.Source | None]:
-    """What the search finds ignoring the preferences. It only proposes: silently overwriting a
-    hand-written path would remove the way out when the search picks the wrong program."""
+    """What the search finds ignoring the preferences; why it only proposes: `api/settings`."""
     return astap.where_exe(None)
 
 
@@ -87,29 +96,28 @@ def solve_frames(
     status, reason = "ok", None
     errors: list[FrameError] = []
     seen = 0
-    solver = solver_path(conn) if exe is FIND_IT else exe
-    solve_cache = _cache_dir(cache)
+    solver = _Solver(solver_path(conn) if exe is FIND_IT else exe, run, _cache_dir(cache))
 
     def at_end() -> None:
         if seen:  # counting costs: only if some frame was looked at
             _at_round_end(conn)
 
-    with watched(StageName.SOLVE, counts, at_end, astap=solver) as outcome:
+    with watched(StageName.SOLVE, counts, at_end, astap=solver.exe) as outcome:
         frame_ids = _in_order(conn)
         total = len(frame_ids)
         for frame_id in frame_ids:
-            ferma = frame_safely(
+            stop_reason = frame_safely(
                 conn,
                 StageName.SOLVE,
                 frame_id,
-                partial(_one_frame, conn, frame_id, counts, exe=solver, run=run, cache=solve_cache),
+                partial(_one_frame, conn, frame_id, counts, solver),
                 counts,
                 errors,
             )
             seen += 1
             yield {"current": seen, "total": total, **counts}
-            if ferma:
-                status, reason = "aborted", ferma
+            if stop_reason:
+                status, reason = "aborted", stop_reason
                 outcome.update(status=status, reason=reason)
                 break
     yield receipt(status, reason, counts, errors, total=seen)
@@ -136,20 +144,14 @@ def _in_order(conn: sqlite3.Connection) -> list[int]:
     return first + store.newest_first(conn, rest)
 
 
-def _one_frame(  # noqa: PLR0913
-    conn: sqlite3.Connection,
-    frame_id: int,
-    counts: dict[str, int],
-    *,
-    exe: str | None,
-    run: astap.Run | None,
-    cache: Path,
+def _one_frame(
+    conn: sqlite3.Connection, frame_id: int, counts: dict[str, int], solver: _Solver
 ) -> str | None:
     """The reason that stops the run (`ABORTS_THE_RUN`), or None: a frame's fault never stops it,
     an installation's fault does."""
     frame = store.frame(conn, frame_id)
     now = now_iso()
-    solution, cached = _solution_for(conn, frame, exe=exe, run=run, cache=cache)
+    solution, cached = _solution_for(conn, frame, solver)
     hfd: float | None = None
     stars: int | None = None
     path = _path_of(frame)
@@ -158,7 +160,7 @@ def _one_frame(  # noqa: PLR0913
     if solution.ok and path and not store.has_metrics(conn, frame["id"]):
         # Asked even for a cached sky: after a database reset the solution comes back from the
         # cache, but HFD and stars would be lost for good.
-        hfd, stars = astap.analyse(path, exe=exe, run=run)
+        hfd, stars = astap.analyse(path, exe=solver.exe, run=solver.run)
 
     with transaction(conn):
         if not solution.ok:
@@ -196,24 +198,19 @@ def _one_frame(  # noqa: PLR0913
 
 
 def _solution_for(
-    conn: sqlite3.Connection,
-    frame: sqlite3.Row,
-    *,
-    exe: str | None,
-    run: astap.Run | None,
-    cache: Path,
+    conn: sqlite3.Connection, frame: sqlite3.Row, solver: _Solver
 ) -> tuple[astap.Solution, bool]:
     """The solution and whether it came from the cache, keyed on the frame's hash: it survives a
     move, a rename and a database reset."""
-    out_base = cache / frame["frame_hash"]
+    out_base = solver.cache / frame["frame_hash"]
     saved = astap.from_ini(astap.read_ini(f"{out_base}.ini"))
     if saved.ok:
         return saved, True
     path = _path_of(frame)
     if path is None:
         return astap.Solution(ok=False, reason=astap.Reason.FILE_MISSING), False
-    if exe:
-        solution = _launch(conn, frame, path, out_base, exe=exe, run=run)
+    if solver.exe:
+        solution = _launch(conn, frame, path, out_base, solver)
     else:
         # Every run walks all waiting frames just to ask the cache: hint and cleanup are for a
         # launch.
@@ -221,14 +218,8 @@ def _solution_for(
     return solution, False
 
 
-def _launch(  # noqa: PLR0913
-    conn: sqlite3.Connection,
-    frame: sqlite3.Row,
-    path: str,
-    out_base: Path,
-    *,
-    exe: str,
-    run: astap.Run | None,
+def _launch(
+    conn: sqlite3.Connection, frame: sqlite3.Row, path: str, out_base: Path, solver: _Solver
 ) -> astap.Solution:
     # A leftover that is not a solution goes first, or an ASTAP failing without writing would
     # leave it to be read back.
@@ -240,8 +231,8 @@ def _launch(  # noqa: PLR0913
         field_deg=_field_hint(frame),
         ra_deg=ra,
         dec_deg=dec,
-        exe=exe,
-        run=run,
+        exe=solver.exe,
+        run=solver.run,
     )
     if not solution.ok:
         # Not cached: tomorrow ASTAP may have a denser catalogue, or the frame a sister's hint.
@@ -271,8 +262,7 @@ def _hint_for(conn: sqlite3.Connection, frame: sqlite3.Row) -> tuple[float | Non
 
 
 def _scale_of(frame: sqlite3.Row) -> float | None:
-    """Binning is not multiplied: by convention `XPIXSZ` already includes it (sources in
-    `docs/domini/spina.md`)."""
+    """Binning is not multiplied: `XPIXSZ` already includes it (`units.physical_pixel_um`)."""
     return scale_arcsec_px(frame["pixel_size_um"], frame["focal_mm_raw"])
 
 

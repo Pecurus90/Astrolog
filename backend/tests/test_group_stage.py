@@ -139,7 +139,7 @@ def test_group_asks_when_the_coordinates_say_elsewhere(archivio):
     luogo(archivio, ROMA)
     f = posa(archivio, quando="2024-05-17T22:00:00Z", coord=(45.6, 11.667))  # 12 km
     ricevuta = corri(archivio)
-    assert stato(archivio, f) == ("skipped", group.SITE_UNCLEAR)
+    assert stato(archivio, f) == ("skipped", group.GroupReason.SITE_UNCLEAR)
     assert ricevuta["waiting"] == 1 and ricevuta["linked"] == 0
 
 
@@ -154,7 +154,7 @@ def test_a_pose_just_past_the_threshold_is_still_a_question(archivio):
     luogo(archivio, ROMA)
     f = posa(archivio, quando="2024-05-17T22:00:00Z", coord=(45.554853, 11.5354))
     corri(archivio)
-    assert stato(archivio, f) == ("skipped", group.SITE_UNCLEAR)
+    assert stato(archivio, f) == ("skipped", group.GroupReason.SITE_UNCLEAR)
 
 
 def test_group_invents_no_night_without_an_answer(archivio):
@@ -220,7 +220,7 @@ def test_a_declared_site_without_a_timezone_says_so(archivio):
     luogo(archivio, ("Senza fuso", *VICINO, None), casa=False)
     f = posa(archivio, quando="2024-05-17T22:00:00Z", coord=VICINO)
     corri(archivio)
-    assert stato(archivio, f) == ("skipped", group.SITE_NO_TIMEZONE)
+    assert stato(archivio, f) == ("skipped", group.GroupReason.SITE_NO_TIMEZONE)
 
 
 def test_a_frame_within_the_tolerance_does_not_ask(archivio):
@@ -249,7 +249,7 @@ def test_no_home_place_no_nights_and_it_says_so(archivio):
     luogo, e il fuso e' del luogo. Non se ne elegge uno da sola."""
     f = posa(archivio, quando="2024-05-17T22:00:00Z")
     ricevuta = corri(archivio)
-    assert stato(archivio, f) == ("skipped", group.NO_ACTIVE_SITE)
+    assert stato(archivio, f) == ("skipped", group.GroupReason.NO_ACTIVE_SITE)
     assert archivio.execute("SELECT COUNT(*) FROM nights").fetchone()[0] == 0
     assert ricevuta["waiting"] == 1
 
@@ -274,7 +274,7 @@ def test_a_site_without_a_timezone_does_not_guess_one(archivio):
     )
     f = posa(archivio, quando="2024-05-17T22:00:00Z")
     corri(archivio)
-    assert stato(archivio, f) == ("skipped", group.SITE_NO_TIMEZONE)
+    assert stato(archivio, f) == ("skipped", group.GroupReason.SITE_NO_TIMEZONE)
 
 
 def test_a_frame_identify_left_without_an_object_stops_here(archivio):
@@ -289,7 +289,7 @@ def test_a_frame_identify_left_without_an_object_stops_here(archivio):
     luogo(archivio, ROMA)
     f = posa(archivio, quando="2024-05-17T22:00:00Z", oggetto=None, identify="skipped")
     ricevuta = corri(archivio)
-    assert stato(archivio, f) == ("skipped", group.NO_OBJECT)
+    assert stato(archivio, f) == ("skipped", group.GroupReason.NO_OBJECT)
     assert ricevuta["waiting"] == 1
     assert (
         archivio.execute(
@@ -307,7 +307,7 @@ def test_a_frame_without_a_date_stops_here(archivio):
     luogo(archivio, ROMA)
     f = posa(archivio, quando=None)
     corri(archivio)
-    assert stato(archivio, f) == ("skipped", group.NO_DATE)
+    assert stato(archivio, f) == ("skipped", group.GroupReason.NO_DATE)
 
 
 # --- rifare non rovina ----------------------------------------------------------------------

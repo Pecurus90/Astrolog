@@ -10,8 +10,7 @@ from . import declarations as decl
 from . import frame_folder as folder
 
 # The words live in `declarations`, because `stages` reads them too to know who is ready.
-LIGHT, CALIBRATION = decl.TYPE_LIGHT, decl.TYPE_CALIBRATION
-ANSWERS = (LIGHT, CALIBRATION)
+ANSWERS = tuple(decl.TypeAnswer)
 
 
 _WRITTEN = f"""

@@ -9,7 +9,7 @@ from ..fits.frame_type import FrameType
 from . import frame_folder as folder
 from . import typeless
 
-# Starless frames are calibrations, not asked. The `+` before `sv.stage` keeps the query on the
+# Starless frames are not asked (`typeless`). The `+` before `sv.stage` keeps the query on the
 # file-type index: without it, it starts from the stages even where nothing is typeless.
 _BY_FOLDER = f"""
 SELECT {folder.COLUMNS}, SUM(f.copy_of IS NULL) AS n,

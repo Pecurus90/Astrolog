@@ -10,7 +10,7 @@ from ..spine import gear, unnamed
 from ..spine import object_answer as risposta
 from ..spine import objects as obj
 from ..spine import rigs as corredi
-from ..spine.group import SITE_UNCLEAR
+from ..spine.group import GroupReason
 from ..spine.identify_decide import DOUBT
 from .models_review import (
     FilterCandidate,
@@ -73,7 +73,7 @@ def rig_choices(conn: sqlite3.Connection) -> list[RigChoice]:
 def unclear_coordinates(conn: sqlite3.Connection) -> list[UnclearCoordinates]:
     """The nearest declared site first, almost always the right answer. Distances are recomputed on
     read: three multiplications, while a stored state would go stale at the first new site."""
-    posti = places.unclear_coordinates(conn, SITE_UNCLEAR)
+    posti = places.unclear_coordinates(conn, GroupReason.SITE_UNCLEAR)
     if not posti:
         return []
     luoghi = conn.execute("SELECT id, name, latitude, longitude, is_default FROM sites").fetchall()

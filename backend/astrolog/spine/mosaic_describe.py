@@ -36,10 +36,10 @@ def _catalog_name(conn: sqlite3.Connection, ra: float, dec: float, reach: float)
     dentro = [
         v
         for v in voci
-        if v["size_major_arcmin"] and v["sep_deg"] <= units.radius_deg(v["size_major_arcmin"])
+        if v.size_major_arcmin and v.sep_deg <= units.radius_deg(v.size_major_arcmin)
     ]
     scelta = (dentro or voci or [None])[0]
-    return None if scelta is None else scelta["name"]
+    return None if scelta is None else scelta.name
 
 
 def _most_poses(conn: sqlite3.Connection, mosaic_id: int) -> str:

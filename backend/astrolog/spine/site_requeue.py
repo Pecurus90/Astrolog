@@ -8,7 +8,7 @@ from collections.abc import Collection, Iterable
 from .. import place
 from ..db import idlist
 from .declarations import COORDINATES_SITE
-from .group import NO_ACTIVE_SITE, SAME_PLACE_KM, SITE_NO_TIMEZONE, SITE_UNCLEAR
+from .group import SAME_PLACE_KM, GroupReason
 from .stages import StageName, invalidate
 
 
@@ -21,7 +21,7 @@ def requeue_waiting(
 ) -> None:
     """Frames stopped on their place: near a touched point, answered with a renamed site, waiting
     for a home, and always those of a site without a zone, which a moved site may give one."""
-    chiavi = {
+    named_keys = {
         r[0]
         for r in conn.execute(
             "SELECT entity_key FROM declarations WHERE entity_type = 'coordinates'"
@@ -34,16 +34,16 @@ def requeue_waiting(
         "SELECT s.frame_id, s.reason, f.site_lat, f.site_lon FROM frame_stages s"
         " JOIN frames f ON f.id = s.frame_id WHERE s.stage = 'group' AND s.status = 'skipped'"
         " AND s.reason IN (?, ?, ?)",
-        (SITE_UNCLEAR, NO_ACTIVE_SITE, SITE_NO_TIMEZONE),
+        (GroupReason.SITE_UNCLEAR, GroupReason.NO_ACTIVE_SITE, GroupReason.SITE_NO_TIMEZONE),
     ):
-        vicino = any(
-            (km := place.distance_km(r["site_lat"], r["site_lon"], *punto)) is not None
+        is_near = any(
+            (km := place.distance_km(r["site_lat"], r["site_lon"], *point)) is not None
             and km <= SAME_PLACE_KM
-            for punto in near
+            for point in near
         )
-        nominato = place.coordinates_key(r["site_lat"], r["site_lon"]) in chiavi
-        senza_fuso = r["reason"] == SITE_NO_TIMEZONE
-        if vicino or nominato or senza_fuso or (homeless and r["reason"] == NO_ACTIVE_SITE):
+        named = place.coordinates_key(r["site_lat"], r["site_lon"]) in named_keys
+        no_zone = r["reason"] == GroupReason.SITE_NO_TIMEZONE
+        if is_near or named or no_zone or (homeless and r["reason"] == GroupReason.NO_ACTIVE_SITE):
             frames.append(r["frame_id"])
     invalidate(conn, frames, StageName.GROUP)
 
@@ -65,7 +65,7 @@ def adopt_nights(conn: sqlite3.Connection, site_id: int, old_home: int) -> None:
     """The app's guesses follow the new home; declared nights are answers and stay. So does a date
     the new site already has: failing the move would be worse, and that night moves by hand."""
     # one date at a time: two detected nights of a date on two sites would collide moving together
-    da_spostare = [
+    to_move = [
         r[0]
         for r in conn.execute(
             "SELECT MIN(id) FROM nights WHERE site_source = 'detected' AND site_id = ?"
@@ -74,9 +74,9 @@ def adopt_nights(conn: sqlite3.Connection, site_id: int, old_home: int) -> None:
             (old_home, site_id),
         )
     ]
-    if not da_spostare:
+    if not to_move:
         return
-    with idlist.holding(conn, da_spostare) as listed:
+    with idlist.holding(conn, to_move) as listed:
         conn.execute(
             f"UPDATE nights SET site_id = ? WHERE id IN {listed}",  # noqa: S608 - our constant
             (site_id,),

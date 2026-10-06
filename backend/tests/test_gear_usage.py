@@ -22,6 +22,7 @@ from astrolog.spine import (
     typeless_answer,
     typeless_folders,
 )
+from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.group import group_frames
 from astrolog.spine.identify import identify_frames
 from astrolog.spine.solve import solve_frames
@@ -240,7 +241,7 @@ def test_calibration_answered_takes_its_night_object_and_sky_off_the_gear(conn):
         ).fetchone()
 
     assert tuple(uso())[0] is not None and tuple(uso())[2] == 1
-    typeless.declare(conn, "D:/Astro/dark", typeless.CALIBRATION)
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
     typeless_folders.write(conn)  # come a fine stadio: risolta dal cielo, chiede solo se risposta
     typeless_answer.apply_answer(conn, typeless.row_of(conn, "D:/Astro/dark"))
     assert tuple(uso()) == (None, "[]", 0)

@@ -14,6 +14,7 @@ import pytest
 
 from astrolog.spine import declarations as decl
 from astrolog.spine import frame_folder, solve_store, typeless, typeless_answer, typeless_folders
+from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.stages import STAGES, count_pending, invalidate, mark_pending, ready, set_status
 from conftest import add_folder, sky_solved
 
@@ -171,9 +172,9 @@ def test_a_folder_stays_a_question_until_someone_answers(conn):
     _frame(conn, radice, "dark/a.fits")
     riga = _riga(conn, "D:/Astro/dark")
     assert riga["answer"] is None
-    typeless.declare(conn, "D:/Astro/dark", typeless.CALIBRATION)
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
     riga = _riga(conn, "D:/Astro/dark")
-    assert riga["answer"] == typeless.CALIBRATION
+    assert riga["answer"] == TypeAnswer.CALIBRATION
 
 
 @pytest.mark.parametrize("scritto", ["luce", "", None, 42])
@@ -241,7 +242,7 @@ def test_calibration_written_by_the_user_holds_even_where_the_sky_solved(conn):
     radice = add_folder(conn, "D:/Astro")
     muto = _frame(conn, radice, "dark/a.fits", sky="done", normalized=True)
     _frame(conn, radice, "dark/b.fits")
-    typeless.declare(conn, "D:/Astro/dark", typeless.CALIBRATION)
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
     assert muto not in ready(conn, "identify")
 
 
@@ -273,7 +274,7 @@ def test_saying_it_is_a_photo_of_the_sky_sends_those_frames_on(conn):
     strada di un light: il cielo non li aveva risolti, e l'oggetto si prende dal nome."""
     radice = add_folder(conn, "D:/Astro")
     frame_id = _frame(conn, radice, "M51/a.fits", normalized=True)
-    typeless.declare(conn, "D:/Astro/M51", typeless.LIGHT)
+    typeless.declare(conn, "D:/Astro/M51", TypeAnswer.LIGHT)
     assert typeless_answer.apply_answer(conn, _riga(conn, "D:/Astro/M51")) == [frame_id]
     assert ready(conn, "identify") == [frame_id]
 
@@ -283,7 +284,7 @@ def test_saying_it_is_calibration_leaves_those_frames_where_they_are(conn):
     entrano, e questi, gia' entrati, restano dove sono, senza diventare ore."""
     radice = add_folder(conn, "D:/Astro")
     muto = _frame(conn, radice, "dark/a.fits")
-    typeless.declare(conn, "D:/Astro/dark", typeless.CALIBRATION)
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
     typeless_answer.apply_answer(conn, _riga(conn, "D:/Astro/dark"))
     assert muto not in ready(conn, "identify")
 
@@ -303,7 +304,7 @@ def test_changing_idea_to_calibration_takes_back_what_the_sky_had_written(conn):
         (frame_id,),
     )
     solve_store.save_metrics(conn, frame_id, hfd_px=3.1, stars=800, now="ora")
-    typeless.declare(conn, "D:/Astro/dark", typeless.CALIBRATION)
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
     assert typeless_answer.apply_answer(conn, _riga(conn, "D:/Astro/dark")) == [frame_id]
     riga = conn.execute("SELECT object_id, night_id, session_id FROM frames").fetchone()
     assert tuple(riga) == (None, None, None)
@@ -322,7 +323,7 @@ def test_changing_idea_back_to_sky_gives_the_frames_their_sky_again(conn):
     radice = add_folder(conn, "D:/Astro")
     frame_id = _frame(conn, radice, "M51/a.fits", sky="done", normalized=True)
     senza = _frame(conn, radice, "M51/b.fits", normalized=True)  # il cielo non sapeva dire
-    for risposta in (typeless.CALIBRATION, typeless.LIGHT):
+    for risposta in (TypeAnswer.CALIBRATION, TypeAnswer.LIGHT):
         typeless.declare(conn, "D:/Astro/M51", risposta)
         typeless_answer.apply_answer(conn, _riga(conn, "D:/Astro/M51"))
     assert ready(conn, "solve") == [frame_id]
@@ -337,7 +338,7 @@ def test_a_frame_that_kept_its_sky_is_not_sent_back_to_the_solver(conn):
     radice = add_folder(conn, "D:/Astro")
     _frame(conn, radice, "M51/a.fits", sky="done", normalized=True)
     _frame(conn, radice, "M51/b.fits")
-    typeless.declare(conn, "D:/Astro/M51", typeless.LIGHT)
+    typeless.declare(conn, "D:/Astro/M51", TypeAnswer.LIGHT)
     typeless_answer.apply_answer(conn, _riga(conn, "D:/Astro/M51"))
     assert ready(conn, "solve") == []
 
@@ -345,8 +346,8 @@ def test_a_frame_that_kept_its_sky_is_not_sent_back_to_the_solver(conn):
 def test_the_answer_is_found_from_the_path_before_a_file_is_read(conn):
     """La scansione deve sapere cosa fare **prima** di scrivere il frame: la chiave si compone dal
     percorso del file, con le stesse barre in avanti della cartella."""
-    typeless.declare(conn, "D:/Astro/dark", typeless.CALIBRATION)
-    assert typeless.answer_at(conn, "D:\\Astro", "dark/a.fits") == typeless.CALIBRATION
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
+    assert typeless.answer_at(conn, "D:\\Astro", "dark/a.fits") == TypeAnswer.CALIBRATION
     assert typeless.answer_at(conn, "D:/Astro", "M51/a.fits") is None
 
 
@@ -355,10 +356,10 @@ def test_a_folder_answered_stays_on_the_page_with_its_frames(conn):
     frame non si saprebbe piu' di cosa si sta parlando."""
     radice = add_folder(conn, "D:/Astro")
     _frame(conn, radice, "dark/a.fits")
-    typeless.declare(conn, "D:/Astro/dark", typeless.CALIBRATION)
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
     righe = _cartelle(conn)
     assert [(g["key"], g["frames"], g["answer"]) for g in righe] == [
-        ("D:/Astro/dark", 1, typeless.CALIBRATION)
+        ("D:/Astro/dark", 1, TypeAnswer.CALIBRATION)
     ]
 
 
@@ -378,14 +379,14 @@ def test_a_frame_that_goes_back_to_waiting_during_a_run_is_skipped(conn, monkeyp
         "INSERT INTO sites(name, latitude, longitude, timezone, is_default, created_at)"
         " VALUES('Casa', 45.4, 11.9, 'Europe/Rome', 1, 'ora')"
     )
-    typeless.declare(conn, "D:/Astro/M51", typeless.LIGHT)
+    typeless.declare(conn, "D:/Astro/M51", TypeAnswer.LIGHT)
     if stadio == "group":
         list(importlib.import_module("astrolog.spine.identify").identify_frames(conn))
 
     def e_intanto_la_cartella_cambia(c, stage, limit=None, frame_id=None):
         scelti = ready(c, stage, limit, frame_id)
         if frame_id is None:
-            typeless.declare(c, "D:/Astro/M51", typeless.CALIBRATION)
+            typeless.declare(c, "D:/Astro/M51", TypeAnswer.CALIBRATION)
         return scelti
 
     monkeypatch.setattr(modulo, "ready", e_intanto_la_cartella_cambia)

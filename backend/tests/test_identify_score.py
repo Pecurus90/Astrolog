@@ -9,17 +9,44 @@ I casi qui sotto usano i valori **veri** del catalogo impacchettato, non numeri 
 proprio quelli che hanno imposto la formula, e se i pesi si spostano questi test lo dicono.
 """
 
+from dataclasses import replace
+
 import pytest
 
+from astrolog.catalog import NearEntry
 from astrolog.spine import identify_score as score
 
+
+def nel_cono(*, name, sep_deg=0.0, size_major_arcmin=None, magnitude=None):
+    """Una voce come la consegna `lookup.in_cone`: i campi che il punteggio non legge sono finti."""
+    return NearEntry(
+        slug=name.lower().replace(" ", "-"),
+        name=name,
+        common_name=None,
+        ra_deg=0.0,
+        dec_deg=0.0,
+        constellation="And",
+        type_code="GALAXY",
+        kinds_json=None,
+        size_major_arcmin=size_major_arcmin,
+        size_minor_arcmin=None,
+        position_angle_deg=None,
+        magnitude=magnitude,
+        magnitude_band=None,
+        surface_brightness=None,
+        distance_ly=None,
+        opacity=None,
+        sep_deg=sep_deg,
+    )
+
+
 # Valori letti dal catalogo impacchettato. Il commento accanto e' cio' che il caso prova.
-M31 = {"name": "M 31", "sep_deg": 0.4039, "size_major_arcmin": 177.83, "magnitude": 3.44}
-M32 = {"name": "M 32", "sep_deg": 0.0030, "size_major_arcmin": 7.74, "magnitude": 8.13}
-M101 = {"name": "M 101", "sep_deg": 0.1291, "size_major_arcmin": 23.99, "magnitude": 7.9}
-NGC5447 = {"name": "NGC 5447", "sep_deg": 0.0, "size_major_arcmin": None, "magnitude": None}
-ROSETTA = {"name": "NGC 2237", "sep_deg": 0.0723, "size_major_arcmin": 80.0, "magnitude": 9.0}
-CED76 = {"name": "Ced 76", "sep_deg": 0.0, "size_major_arcmin": None, "magnitude": None}
+M31 = nel_cono(name="M 31", sep_deg=0.4039, size_major_arcmin=177.83, magnitude=3.44)
+M32 = nel_cono(name="M 32", sep_deg=0.0030, size_major_arcmin=7.74, magnitude=8.13)
+M101 = nel_cono(name="M 101", sep_deg=0.1291, size_major_arcmin=23.99, magnitude=7.9)
+NGC5447 = nel_cono(name="NGC 5447", sep_deg=0.0, size_major_arcmin=None, magnitude=None)
+ROSETTA = nel_cono(name="NGC 2237", sep_deg=0.0723, size_major_arcmin=80.0, magnitude=9.0)
+CED76 = nel_cono(name="Ced 76", sep_deg=0.0, size_major_arcmin=None, magnitude=None)
 
 
 # --- il fatto duro: il piu' vicino e' quello sbagliato ---------------------------------------
@@ -36,15 +63,15 @@ CED76 = {"name": "Ced 76", "sep_deg": 0.0, "size_major_arcmin": None, "magnitude
 def test_the_subject_is_the_one_that_contains_the_pointing(soggetto, vicino, fov, caso):
     """Sono i tre casi veri che hanno imposto il punteggio. Prendere il primo della lista per
     scarto crescente darebbe la risposta sbagliata in tutti e tre."""
-    assert vicino["sep_deg"] < soggetto["sep_deg"], f"{caso}: il vicino non e' il piu' vicino"
+    assert vicino.sep_deg < soggetto.sep_deg, f"{caso}: il vicino non e' il piu' vicino"
     assert score.score_candidate(soggetto, fov) > score.score_candidate(vicino, fov), caso
 
 
 def test_a_bright_one_at_the_edge_loses_to_a_faint_one_centred():
     """Il difetto strutturale che la formula corregge: un premio di luminosita' indipendente
     dalla geometria fa vincere l'oggetto brillante che nella foto quasi non c'e'."""
-    bordo = {"name": "Ced 27", "sep_deg": 1.17, "size_major_arcmin": None, "magnitude": 5.27}
-    centrata = {"name": "LBN 777", "sep_deg": 0.22, "size_major_arcmin": 20.0, "magnitude": None}
+    bordo = nel_cono(name="Ced 27", sep_deg=1.17, size_major_arcmin=None, magnitude=5.27)
+    centrata = nel_cono(name="LBN 777", sep_deg=0.22, size_major_arcmin=20.0, magnitude=None)
     assert score.score_candidate(centrata, 1.3) > score.score_candidate(bordo, 1.3)
 
 
@@ -53,17 +80,17 @@ def test_the_brightness_prize_shrinks_with_the_distance_from_the_centre():
     centrale della formula: un premio di luminosita' che non guarda la geometria fa vincere
     l'oggetto brillante che nella foto quasi non c'e'. Qui si prova sul premio stesso, perche'
     un confronto fra due candidati resta vero anche con la somma e non tiene ferma la regola."""
-    voce = {"name": "Ced 27", "size_major_arcmin": None}
+    voce = nel_cono(name="Ced 27", size_major_arcmin=None)
     # al bordo la centratura vale zero, quindi la magnitudine non deve valere NIENTE: averla o
     # non averla dev'essere lo stesso punteggio. Sommandola, al bordo ne resterebbe tutta.
-    al_bordo = {**voce, "sep_deg": 1.3}
-    assert score.score_candidate({**al_bordo, "magnitude": 5.27}, 1.3) == pytest.approx(
-        score.score_candidate({**al_bordo, "magnitude": None}, 1.3), abs=1e-9
+    al_bordo = replace(voce, sep_deg=1.3)
+    assert score.score_candidate(replace(al_bordo, magnitude=5.27), 1.3) == pytest.approx(
+        score.score_candidate(replace(al_bordo, magnitude=None), 1.3), abs=1e-9
     )
     # al centro invece vale tutta
-    al_centro = {**voce, "sep_deg": 0.0}
-    premio = score.score_candidate({**al_centro, "magnitude": 5.27}, 1.3) - score.score_candidate(
-        {**al_centro, "magnitude": None}, 1.3
+    al_centro = replace(voce, sep_deg=0.0)
+    premio = score.score_candidate(replace(al_centro, magnitude=5.27), 1.3) - score.score_candidate(
+        replace(al_centro, magnitude=None), 1.3
     )
     assert premio == pytest.approx(score.W_MAGNITUDE * score._magnitude_term(5.27), abs=1e-9)
 
@@ -72,9 +99,9 @@ def test_the_centring_bonus_is_worth_something():
     """Il peso della centratura non e' decorativo: azzerarlo cambia chi vince. Fra due
     candidati identici, quello centrato deve staccare quello al bordo **anche** senza
     magnitudine, e la differenza deve valere quanto il peso dichiarato."""
-    muto = {"name": "Ced 27", "size_major_arcmin": None, "magnitude": None}
-    centro = score.score_candidate({**muto, "sep_deg": 0.0}, 1.0)
-    bordo = score.score_candidate({**muto, "sep_deg": 1.0}, 1.0)
+    muto = nel_cono(name="Ced 27", size_major_arcmin=None, magnitude=None)
+    centro = score.score_candidate(replace(muto, sep_deg=0.0), 1.0)
+    bordo = score.score_candidate(replace(muto, sep_deg=1.0), 1.0)
     assert centro - bordo == pytest.approx(score.W_CONTAINMENT + score.W_CENTERING, abs=1e-9)
     assert score.W_CENTERING > 0
 
@@ -132,7 +159,7 @@ def test_without_a_field_the_centring_is_neutral_and_does_not_add_up():
     # e senza campo l'addendo non c'e' proprio: il punteggio e' fatto solo dei quattro termini
     # che non guardano il campo. Se entrasse, ognuno prenderebbe lo stesso 0,6 in piu'.
     a_mano = (
-        score.W_CONTAINMENT * (1.0 - min(1.0, M31["sep_deg"] / score.ranking_scale_deg(177.83)))
+        score.W_CONTAINMENT * (1.0 - min(1.0, M31.sep_deg / score.ranking_scale_deg(177.83)))
         + score.W_MAGNITUDE * score._magnitude_term(3.44) * 0.5
         + score.W_SIZE * score._size_term(177.83)
         + score.W_CATALOG * score.catalog_priority("M 31")
@@ -153,8 +180,8 @@ def test_a_faint_object_never_scores_worse_than_one_with_no_magnitude():
     assert score._magnitude_term(1.2) == score._magnitude_term(3.0)  # M 45: sotto il pavimento
     assert score._magnitude_term(3.0) == 1.0
 
-    debole = {"name": "LDN 1", "sep_deg": 0.1, "size_major_arcmin": 10.0, "magnitude": 24.9}
-    muto = {"name": "LDN 2", "sep_deg": 0.1, "size_major_arcmin": 10.0, "magnitude": None}
+    debole = nel_cono(name="LDN 1", sep_deg=0.1, size_major_arcmin=10.0, magnitude=24.9)
+    muto = nel_cono(name="LDN 2", sep_deg=0.1, size_major_arcmin=10.0, magnitude=None)
     assert score.score_candidate(debole, 1.0) == score.score_candidate(muto, 1.0)
 
 
@@ -168,8 +195,8 @@ def test_a_tiny_object_never_scores_worse_than_one_with_no_size():
     assert score._size_term(1560.0) == 1.0  # la piu' grande: dentro il tetto
     assert 0.0 < score._size_term(30.0) < 1.0
 
-    minuscolo = {"name": "LDN 1", "sep_deg": 0.1, "size_major_arcmin": 0.005, "magnitude": 8.0}
-    muto = {"name": "LDN 2", "sep_deg": 0.1, "size_major_arcmin": None, "magnitude": 8.0}
+    minuscolo = nel_cono(name="LDN 1", sep_deg=0.1, size_major_arcmin=0.005, magnitude=8.0)
+    muto = nel_cono(name="LDN 2", sep_deg=0.1, size_major_arcmin=None, magnitude=8.0)
     assert score.score_candidate(minuscolo, 1.0) >= score.score_candidate(muto, 1.0)
 
 
@@ -236,8 +263,8 @@ def test_the_catalogue_a_designation_comes_from_counts():
 def test_two_separate_objects_with_close_scores_are_ambiguous():
     """M 81 e M 82 stanno a 0,61 gradi e in un campo largo ci stanno tutte e due: quale sia il
     soggetto lo sa solo chi ha scattato. Qui l'app non tira a indovinare, chiede."""
-    m81 = {"name": "M 81", "sep_deg": 0.30, "size_major_arcmin": 21.63, "magnitude": 6.92}
-    m82 = {"name": "M 82", "sep_deg": 0.32, "size_major_arcmin": 10.99, "magnitude": 8.3}
+    m81 = nel_cono(name="M 81", sep_deg=0.30, size_major_arcmin=21.63, magnitude=6.92)
+    m82 = nel_cono(name="M 82", sep_deg=0.32, size_major_arcmin=10.99, magnitude=8.3)
     assert score.is_ambiguous(m81, m82, separation_deg=0.6148) is True
 
 
@@ -245,10 +272,10 @@ def test_the_same_subject_written_twice_is_not_ambiguous():
     """L'ammasso della Rosetta (C 50) e la sua nebulosa (NGC 2237) distano 0,28 gradi: sono lo
     stesso soggetto descritto due volte, non due bersagli che contendono. Chiedere qui sarebbe
     far lavorare l'utente per niente."""
-    nebulosa = {"name": "NGC 2237", "sep_deg": 0.05, "size_major_arcmin": 80.0, "magnitude": 9.0}
+    nebulosa = nel_cono(name="NGC 2237", sep_deg=0.05, size_major_arcmin=80.0, magnitude=9.0)
     # la voce si chiama `NGC 2239`: `C 50` e' una sua sigla, non il suo nome, e la priorita'
     # di catalogo legge proprio quel campo
-    ammasso = {"name": "NGC 2239", "sep_deg": 0.30, "size_major_arcmin": 9.3, "magnitude": 4.8}
+    ammasso = nel_cono(name="NGC 2239", sep_deg=0.30, size_major_arcmin=9.3, magnitude=4.8)
     assert score.is_ambiguous(nebulosa, ammasso, separation_deg=0.2744) is False
 
 
@@ -267,8 +294,8 @@ def test_a_host_bigger_than_its_guest_is_not_a_rival_either():
     -- 0,1001 gradi fra i centri contro un raggio di 0,3059 -- e guardare solo il raggio del
     primo (0,0833) mandava a conferma tutte e quaranta. La domanda giusta e' "uno contiene
     l'altro?", e non ha un verso privilegiato."""
-    iris = {"name": "NGC 7023", "sep_deg": 0.0008, "size_major_arcmin": 10.0, "magnitude": 6.8}
-    nube = {"name": "LDN 1174", "sep_deg": 0.0996, "size_major_arcmin": 36.71, "magnitude": None}
+    iris = nel_cono(name="NGC 7023", sep_deg=0.0008, size_major_arcmin=10.0, magnitude=6.8)
+    nube = nel_cono(name="LDN 1174", sep_deg=0.0996, size_major_arcmin=36.71, magnitude=None)
     assert score.is_ambiguous(iris, nube, separation_deg=0.1001, fov_radius_deg=0.806) is False
 
 
@@ -282,8 +309,8 @@ def test_containment_far_from_the_frame_is_not_containment():
     metro viene dalla foto invece che da una soglia: NGC 1977 dista 0,5454 gradi da M 42 e la
     foto ha raggio 0,2043, quindi si chiede. Senza campo noto non si pretende: `overlaps_frame`
     fa lo stesso, non si scarta per un dato che manca a noi."""
-    running = {"name": "NGC 1977", "sep_deg": 0.0, "size_major_arcmin": 10.2, "magnitude": None}
-    m42 = {"name": "M 42", "sep_deg": 0.5453, "size_major_arcmin": 90.0, "magnitude": 4.0}
+    running = nel_cono(name="NGC 1977", sep_deg=0.0, size_major_arcmin=10.2, magnitude=None)
+    m42 = nel_cono(name="M 42", sep_deg=0.5453, size_major_arcmin=90.0, magnitude=4.0)
     assert score.is_ambiguous(running, m42, separation_deg=0.5454, fov_radius_deg=0.2043) is True
     # la stessa coppia in una foto larga abbastanza da contenerli tutti e due: uno dentro l'altro
     assert score.is_ambiguous(running, m42, separation_deg=0.5454, fov_radius_deg=1.5) is False
@@ -294,8 +321,8 @@ def test_without_a_size_the_old_fixed_threshold_still_answers():
     ricade sulla soglia fissa invece di lasciar passare tutto."""
     # due voci senza dimensione, a pari scarto dal puntamento: quanto distino **fra loro**
     # dipende da che angolo stanno, e con questi scarti va da 0,01 a 0,91 gradi
-    uno = {"name": "Ced 76", "sep_deg": 0.45, "size_major_arcmin": None, "magnitude": None}
-    altro = {"name": "Ced 77", "sep_deg": 0.46, "size_major_arcmin": None, "magnitude": None}
+    uno = nel_cono(name="Ced 76", sep_deg=0.45, size_major_arcmin=None, magnitude=None)
+    altro = nel_cono(name="Ced 77", sep_deg=0.46, size_major_arcmin=None, magnitude=None)
     assert score.is_ambiguous(uno, altro, separation_deg=0.9) is True  # due oggetti: si chiede
     assert score.is_ambiguous(uno, altro, separation_deg=0.2) is False  # a ridosso: uno solo
     # e la soglia fissa non e' una scorciatoia per saltare l'inquadratura: gli stessi due, in
@@ -313,12 +340,12 @@ def test_a_competitive_score_is_needed_and_not_just_two_distinct_objects():
     punteggi lontani non sono un dubbio: il primo ha vinto, e chiedere sarebbe far lavorare
     l'utente per niente. E' la soglia sul rapporto a dirlo, e senza di lei ogni campo affollato
     finirebbe a conferma."""
-    grosso = {"name": "M 31", "sep_deg": 0.0, "size_major_arcmin": 177.83, "magnitude": 3.44}
-    minuscolo = {"name": "LDN 1", "sep_deg": 1.5, "size_major_arcmin": 2.0, "magnitude": None}
+    grosso = nel_cono(name="M 31", sep_deg=0.0, size_major_arcmin=177.83, magnitude=3.44)
+    minuscolo = nel_cono(name="LDN 1", sep_deg=1.5, size_major_arcmin=2.0, magnitude=None)
     assert score.is_ambiguous(grosso, minuscolo, separation_deg=1.5, fov_radius_deg=2.0) is False
 
     rapporto = score.score_candidate(minuscolo, 2.0) / score.score_candidate(grosso, 2.0)
     assert rapporto < score.AMBIGUOUS_SCORE_RATIO  # e' proprio la soglia a decidere, qui
 
-    quasi_pari = {"name": "NGC 224", "sep_deg": 0.1, "size_major_arcmin": 150.0, "magnitude": 3.6}
+    quasi_pari = nel_cono(name="NGC 224", sep_deg=0.1, size_major_arcmin=150.0, magnitude=3.6)
     assert score.is_ambiguous(grosso, quasi_pari, separation_deg=1.5, fov_radius_deg=2.0) is True

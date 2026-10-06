@@ -15,6 +15,7 @@ import re
 from astrolog.fits.frame_type import FrameType
 from astrolog.spine import declarations as decl
 from astrolog.spine import scan_store, typeless, typeless_answer
+from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.normalize import normalize_frames
 from astrolog.spine.scan import scan_folder
 from astrolog.spine.solve import solve_frames
@@ -49,7 +50,7 @@ _CIELO_RISOLTO = """(EXISTS (
     AND sv.status = 'done') AND EXISTS (SELECT 1 FROM frame_wcs w WHERE w.frame_id = f.id))"""
 REGOLA = f"""
 f.image_type = '{FrameType.UNKNOWN}' AND CASE {FOLDER_SAYS}
-  WHEN '{decl.TYPE_LIGHT}' THEN 0 WHEN '{decl.TYPE_CALIBRATION}' THEN 1
+  WHEN '{decl.TypeAnswer.LIGHT}' THEN 0 WHEN '{decl.TypeAnswer.CALIBRATION}' THEN 1
   ELSE NOT {_CIELO_RISOLTO} END
 """  # noqa: S608 - costanti
 
@@ -78,7 +79,7 @@ def test_a_new_frame_without_type_waits_from_the_start(conn):
 def test_a_frame_that_enters_a_folder_answered_light_does_not_wait(conn):
     """La risposta vale anche per i file che arrivano dopo: il segno lo riscrive la posizione."""
     radice = add_folder(conn, "D:/Astro")
-    typeless.declare(conn, "D:/Astro/M51", typeless.LIGHT)
+    typeless.declare(conn, "D:/Astro/M51", TypeAnswer.LIGHT)
     posa = _posa(conn, radice, "M51/a.fits")
     assert _scritto(conn, posa) == 0
     _come_la_regola(conn)
@@ -105,8 +106,8 @@ def test_an_answer_moves_the_mark_of_every_frame_of_its_folder(conn):
     sky_solved(conn, risolta)
     muta = _posa(conn, radice, "flat/b.fits")
     altrove = _posa(conn, radice, "M51/c.fits")
-    typeless.declare(conn, "D:/Astro/dark", typeless.CALIBRATION)
-    typeless.declare(conn, "D:/Astro/flat", typeless.LIGHT)
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
+    typeless.declare(conn, "D:/Astro/flat", TypeAnswer.LIGHT)
     assert [_scritto(conn, p) for p in (risolta, muta, altrove)] == [1, 0, 1]
     _come_la_regola(conn)
 
@@ -116,7 +117,7 @@ def test_a_frame_whose_folder_changes_takes_the_answer_of_the_new_one(conn):
     aspettare. Ricompare, e torna a non aspettare. La cartella e' quella della prima posizione
     viva."""
     radice = add_folder(conn, "D:/Astro")
-    typeless.declare(conn, "D:/Astro/luci", typeless.LIGHT)
+    typeless.declare(conn, "D:/Astro/luci", TypeAnswer.LIGHT)
     posa = _posa(conn, radice, "luci/a.fits")
     scan_store.upsert_position(conn, posa, radice, "copie/a.fits", 1, 1.0, "ora")
     assert _scritto(conn, posa) == 0
@@ -132,7 +133,7 @@ def test_a_position_that_changes_file_moves_both_marks(conn):
     """Lo stesso percorso con un file diverso: la posizione passa all'altro frame, e quello di
     prima, rimasto senza cartella, non ha piu' la risposta che lo lasciava andare."""
     radice = add_folder(conn, "D:/Astro")
-    typeless.declare(conn, "D:/Astro/luci", typeless.LIGHT)
+    typeless.declare(conn, "D:/Astro/luci", TypeAnswer.LIGHT)
     vecchio = _posa(conn, radice, "luci/a.fits")
     nuovo = conn.execute(
         "INSERT INTO frames(frame_hash, image_type, header_json, created_at)"
@@ -148,7 +149,7 @@ def test_any_write_to_an_input_moves_the_mark_without_a_helper(conn):
     """Il segno lo tiene SQLite, non chi scrive: una risposta tolta, una cartella ritirata e il
     cielo cancellato a mano lo muovono come le strade dell'app."""
     radice = add_folder(conn, "D:/Astro")
-    typeless.declare(conn, "D:/Astro/luci", typeless.LIGHT)
+    typeless.declare(conn, "D:/Astro/luci", TypeAnswer.LIGHT)
     posa = _posa(conn, radice, "luci/a.fits")
     assert _scritto(conn, posa) == 0
     decl.forget(conn, decl.FOLDER, "D:/Astro/luci", decl.FOLDER_TYPE)
@@ -157,7 +158,7 @@ def test_any_write_to_an_input_moves_the_mark_without_a_helper(conn):
     assert _scritto(conn, posa) == 0
     conn.execute("DELETE FROM frame_wcs WHERE frame_id = ?", (posa,))
     assert _scritto(conn, posa) == 1
-    typeless.declare(conn, "D:/Astro/luci", typeless.LIGHT)
+    typeless.declare(conn, "D:/Astro/luci", TypeAnswer.LIGHT)
     conn.execute("UPDATE folders SET retired_at = 'ora' WHERE id = ?", (radice,))
     assert _scritto(conn, posa) == 1
     _come_la_regola(conn)

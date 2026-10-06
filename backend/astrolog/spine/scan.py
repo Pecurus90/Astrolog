@@ -19,6 +19,7 @@ from ..fits.walk import long_path, walk_dir
 from ..place import timezone_of_frame
 from . import header_asks, typeless
 from . import scan_store as store
+from .declarations import TypeAnswer
 from .scan_store import COUNTS, FileError, ScanReason, ScanStatus, SkipReason
 from .stage_run import Event, receipt
 
@@ -269,7 +270,7 @@ def _one_file(run: _Run, abs_path: str, rel: str) -> None:
     # already a frame still enters, or after a move it would look vanished and keep its hours.
     folder_says = typeless.answer_at(conn, run.root, rel) if kind == FrameType.UNKNOWN else None
     fingerprint = frame_fingerprint(long_path(abs_path), header, block)
-    if folder_says == typeless.CALIBRATION and store.frame_id_by_hash(conn, fingerprint) is None:
+    if folder_says == TypeAnswer.CALIBRATION and store.frame_id_by_hash(conn, fingerprint) is None:
         _skip(run, rel, SkipReason.CALIBRATION, pos)
         return
     with transaction(conn):

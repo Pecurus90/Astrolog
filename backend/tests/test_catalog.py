@@ -58,16 +58,16 @@ def catalogo(conn, tmp_path):
 
 def test_a_designation_finds_its_object(catalogo):
     voce = lookup.by_designation(catalogo, "M 31")
-    assert voce["slug"] == "m-31" and voce["common_name"] == "Andromeda Galaxy"
+    assert voce.slug == "m-31" and voce.common_name == "Andromeda Galaxy"
 
 
 def test_different_designations_of_one_object_land_on_the_same_entry(catalogo):
     """E' il motivo per cui le ore non si sparpagliano: qualunque cosa scriva il software di
     ripresa -- `NGC 2237`, `NGC 2238`, `C 49` -- e' la stessa Rosetta."""
-    slug = {lookup.by_designation(catalogo, s)["slug"] for s in ("NGC 2237", "NGC 2238", "C 49")}
+    slug = {lookup.by_designation(catalogo, s).slug for s in ("NGC 2237", "NGC 2238", "C 49")}
     assert slug == {"ngc-2237"}
     m31 = lookup.by_designation(catalogo, "M 31")
-    assert m31["slug"] == lookup.by_designation(catalogo, "NGC 224")["slug"]
+    assert m31.slug == lookup.by_designation(catalogo, "NGC 224").slug
 
 
 def test_the_spelling_of_a_designation_does_not_matter(catalogo):
@@ -75,7 +75,7 @@ def test_the_spelling_of_a_designation_does_not_matter(catalogo):
     nessuno di questi e' piu' giusto degli altri. Il giro completo sulle ventiquattromila
     designazioni vere sta in `test_designation.py`."""
     for scritto in ("M 31", "M31", "m31", "M  31", " M 31 ", "m 31", "M 031", "Messier 31"):
-        assert lookup.by_designation(catalogo, scritto)["slug"] == "m-31", scritto
+        assert lookup.by_designation(catalogo, scritto).slug == "m-31", scritto
 
 
 def test_a_designation_that_does_not_exist_is_not_an_error(catalogo):
@@ -106,33 +106,33 @@ def test_the_search_by_designation_uses_the_index(catalogo):
 def test_the_cone_finds_what_is_inside_and_leaves_out_the_rest(catalogo):
     """E' la domanda su cui `identify` e' costruito: dato il cielo misurato di una posa, cosa
     c'e' li'. M 110 sta a 39 primi da M 31: dentro un grado, fuori da mezzo."""
-    dentro = {v["slug"] for v in lookup.in_cone(catalogo, 10.6847, 41.269, 1.0)}
+    dentro = {v.slug for v in lookup.in_cone(catalogo, 10.6847, 41.269, 1.0)}
     assert dentro == {"m-31", "m-110"}
 
-    stretto = {v["slug"] for v in lookup.in_cone(catalogo, 10.6847, 41.269, 0.5)}
+    stretto = {v.slug for v in lookup.in_cone(catalogo, 10.6847, 41.269, 0.5)}
     assert stretto == {"m-31"}
 
-    assert lookup.in_cone(catalogo, 97.97, 4.95, 0.5)[0]["slug"] == "ngc-2237"
+    assert lookup.in_cone(catalogo, 97.97, 4.95, 0.5)[0].slug == "ngc-2237"
 
 
 def test_the_cone_says_how_far_each_one_is(catalogo):
     """Chi sceglie il soggetto ha bisogno dello scarto, non solo dell'elenco: e' meta' del
     criterio (l'altra meta' e' quanto e' esteso)."""
-    trovati = {v["slug"]: v for v in lookup.in_cone(catalogo, 10.6847, 41.269, 1.0)}
-    assert trovati["m-31"]["sep_deg"] == pytest.approx(0.0, abs=0.001)
-    assert trovati["m-110"]["sep_deg"] == pytest.approx(0.65, abs=0.05)
+    trovati = {v.slug: v for v in lookup.in_cone(catalogo, 10.6847, 41.269, 1.0)}
+    assert trovati["m-31"].sep_deg == pytest.approx(0.0, abs=0.001)
+    assert trovati["m-110"].sep_deg == pytest.approx(0.65, abs=0.05)
 
 
 def test_the_cone_is_sorted_by_nearest_first(catalogo):
     trovati = lookup.in_cone(catalogo, 10.6847, 41.269, 2.0)
-    assert [v["sep_deg"] for v in trovati] == sorted(v["sep_deg"] for v in trovati)
+    assert [v.sep_deg for v in trovati] == sorted(v.sep_deg for v in trovati)
 
 
 def test_the_cone_survives_the_zero_of_right_ascension(catalogo):
     """A 0 gradi l'ascensione retta torna a 360: due oggetti a mezzo grado l'uno dall'altro
     hanno coordinate 0,5 e 359,5. Un filtro sulle coordinate sferiche li perderebbe; il
     versore no, ed e' il motivo per cui esiste."""
-    trovati = {v["slug"] for v in lookup.in_cone(catalogo, 0.0, 60.0, 1.0)}
+    trovati = {v.slug for v in lookup.in_cone(catalogo, 0.0, 60.0, 1.0)}
     assert trovati == {"ldn-1", "ldn-2"}
 
 
@@ -140,7 +140,7 @@ def test_a_wide_cone_still_catches_what_sits_on_its_edge(catalogo):
     """Il riquadro che sgrossa e' largo **la corda**, `2 sin(r/2)`, non il seno dell'angolo:
     su un cono largo il seno e' piu' corto della corda e taglierebbe via proprio il bordo,
     che e' dove stanno gli oggetti piu' interessanti di una ricerca larga."""
-    lontani = {v["slug"] for v in lookup.in_cone(catalogo, 10.6847, 41.269, 100.0)}
+    lontani = {v.slug for v in lookup.in_cone(catalogo, 10.6847, 41.269, 100.0)}
     assert {"ldn-1", "ldn-2"} <= lontani  # a 40 gradi da M 31: dentro un cono di 100
 
     tutto = lookup.in_cone(catalogo, 10.6847, 41.269, 180.0)
@@ -222,7 +222,7 @@ def test_a_load_that_fails_halfway_leaves_the_old_catalogue_whole(conn, tmp_path
 
     assert conn.execute("SELECT COUNT(*) FROM catalog_entries").fetchone()[0] == len(VOCI)
     assert load.loaded_version(conn) == "prova-1"
-    assert lookup.by_designation(conn, "NGC 2237")["slug"] == "ngc-2237"
+    assert lookup.by_designation(conn, "NGC 2237").slug == "ngc-2237"
 
 
 def test_a_catalogue_that_does_not_load_does_not_stop_the_app(conn, tmp_path):
@@ -259,8 +259,8 @@ def test_a_designation_claimed_twice_does_not_leave_an_entry_nameless(conn, tmp_
         load.load_catalog(conn, scrivi(tmp_path / "catalogo-x.json", "x", [primo, secondo]))
     assert "rivendicate da piu' voci" in caplog.text
 
-    assert lookup.by_designation(conn, "NGC 1")["slug"] == "uno"
-    assert lookup.by_designation(conn, "M 9")["slug"] == "due"
+    assert lookup.by_designation(conn, "NGC 1").slug == "uno"
+    assert lookup.by_designation(conn, "M 9").slug == "due"
     senza_principale = [
         slug
         for (slug,) in conn.execute(
@@ -333,8 +333,8 @@ def test_the_bundled_catalogue_loads_and_answers(conn):
     quante = load.load_catalog(conn, file)
     assert quante > 20000, f"il catalogo ha solo {quante} voci"
 
-    assert lookup.by_designation(conn, "Sh2 155")["slug"]
-    assert lookup.by_designation(conn, "M 31")["common_name"]
+    assert lookup.by_designation(conn, "Sh2 155").slug
+    assert lookup.by_designation(conn, "M 31").common_name
     senza_famiglia = conn.execute(
         "SELECT COUNT(*) FROM catalog_entries WHERE kinds_json IS NULL"
     ).fetchone()[0]
@@ -356,7 +356,7 @@ def test_the_app_loads_the_catalogue_when_it_starts(db_path, tmp_path, monkeypat
     create_app(db_path)
     conn = connect(db_path)
     assert load.loaded_version(conn) == "prova-1"
-    assert lookup.by_designation(conn, "M 31")["slug"] == "m-31"
+    assert lookup.by_designation(conn, "M 31").slug == "m-31"
     conn.close()
 
 

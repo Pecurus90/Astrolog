@@ -3,6 +3,7 @@ not import another. A declaration hangs on a key that survives a reset, never a 
 
 import sqlite3
 from collections.abc import Mapping
+from enum import StrEnum
 from typing import Any
 
 from ..clock import now_iso
@@ -115,7 +116,12 @@ FOLDER = "folder"
 # Whether frames that do not say what file they are are a light or a calibration. Here and not in
 # `typeless` because `stages` reads them too, and the imports would go round.
 FOLDER_TYPE = "image_type"
-TYPE_LIGHT, TYPE_CALIBRATION = "light", "calibration"
+
+
+class TypeAnswer(StrEnum):
+    LIGHT = "light"
+    CALIBRATION = "calibration"
+
 
 # The answer on a mosaic, keyed by the mosaic's key.
 MOSAIC, MOSAIC_FIELD = "mosaic", "answer"

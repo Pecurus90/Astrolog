@@ -12,23 +12,17 @@ from ..db import idlist
 from ..ephemeris import moon
 from . import counts, filters_used, stages
 from . import objects as obj
-from .group import (
-    NO_ACTIVE_SITE,
-    NO_DATE,
-    NO_OBJECT,
-    SITE_NO_TIMEZONE,
-    SITE_UNCLEAR,
-)
+from .group import GroupReason
 
 # Where a frame no night took is answered: one waiting for its site, or one with nothing to answer
 # (no date), sent to the review page would find a list with nothing for it.
 REVIEW, SITE, NEVER = "review", "site", "never"
 _DOVE = {
-    SITE_UNCLEAR: REVIEW,
-    NO_OBJECT: REVIEW,
-    NO_ACTIVE_SITE: SITE,
-    SITE_NO_TIMEZONE: SITE,
-    NO_DATE: NEVER,
+    GroupReason.SITE_UNCLEAR: REVIEW,
+    GroupReason.NO_OBJECT: REVIEW,
+    GroupReason.NO_ACTIVE_SITE: SITE,
+    GroupReason.SITE_NO_TIMEZONE: SITE,
+    GroupReason.NO_DATE: NEVER,
 }
 
 # The caller passes the observed weather's kind.

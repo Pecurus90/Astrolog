@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from ..clock import now_iso
 from ..db import config
 from ..db.transaction import transaction
-from ..spine.group import NO_ACTIVE_SITE
+from ..spine.group import GroupReason
 from ..spine.solve import (
     NO_SOLVER,
     NO_STAR_DATABASE,
@@ -30,14 +30,14 @@ def _missing(conn: sqlite3.Connection) -> list[Missing]:
     nobody declared is invented data."""
     manca: list[Missing] = []
     if conn.execute("SELECT 1 FROM sites WHERE is_default = 1").fetchone() is None:
-        manca.append(NO_ACTIVE_SITE)
+        manca.append(cast(Missing, GroupReason.NO_ACTIVE_SITE))
     percorso = solver_path(conn)
     if percorso is None:
         manca.append(NO_SOLVER)
     elif not databases_next_to(percorso):
         # Named only to who has ASTAP, and with the path already in hand: two alarms for one
         # problem send the user after two things, and two searches could disagree.
-        manca.append(NO_STAR_DATABASE)
+        manca.append(cast(Missing, NO_STAR_DATABASE))
     return manca
 
 

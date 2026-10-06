@@ -16,6 +16,7 @@ from astrolog.api import work
 from astrolog.api.app import create_app
 from astrolog.astap import Reason
 from astrolog.spine import typeless, typeless_answer, typeless_folders
+from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.frame_folder import folder_key
 from astrolog.spine.identify import identify_frames
 from astrolog.spine.stages import WAITING_SQL, invalidate, set_status
@@ -123,7 +124,7 @@ def test_an_unanswered_folder_counts_among_the_things_to_confirm(pagina):
     aperte = {g["key"] for g in review(pagina)["typeless"] if g["answer"] is None}
     assert len(aperte) == 2
     with db(pagina) as conn:
-        typeless.declare(conn, _chiave(pagina, DARK), typeless.CALIBRATION)
+        typeless.declare(conn, _chiave(pagina, DARK), TypeAnswer.CALIBRATION)
     dopo = review(pagina)
     assert {g["key"] for g in dopo["typeless"] if g["answer"] is None} == aperte - {
         _chiave(pagina, DARK)
@@ -294,7 +295,7 @@ def test_a_frame_moved_from_calibration_into_a_photo_folder_goes_back_to_the_sky
     (tmp_path / "lib" / M51 / "a_0.fits").replace(tmp_path / "lib" / DARK / "a_0.fits")
     _rileggi(pagina, "tutte")
     with db(pagina) as conn:
-        typeless.declare(conn, _chiave(pagina, FOTO), typeless.LIGHT)
+        typeless.declare(conn, _chiave(pagina, FOTO), TypeAnswer.LIGHT)
     (tmp_path / "lib" / FOTO).mkdir()
     (tmp_path / "lib" / DARK / "a_0.fits").replace(tmp_path / "lib" / FOTO / "a_0.fits")
     _rileggi(pagina, "tutte")
@@ -444,7 +445,7 @@ def test_putting_back_a_folder_sends_a_frame_that_lost_its_sky_back_to_the_sky(
     (altra / "altrove").mkdir(parents=True)
     shutil.copy2(tmp_path / "lib" / M51 / "a_0.fits", altra / "altrove" / "a_0.fits")
     with db(pagina) as conn:
-        typeless.declare(conn, folder_key(str(altra), "altrove/"), typeless.CALIBRATION)
+        typeless.declare(conn, folder_key(str(altra), "altrove/"), TypeAnswer.CALIBRATION)
     r = pagina.post("/api/v1/folders", json={"root_path": str(altra), "name": "Altra"})
     assert r.status_code == 201, r.text
     assert pagina.post(f"/api/v1/folders/{r.json()['id']}/scan").status_code == 202
@@ -474,7 +475,7 @@ def test_retiring_a_folder_moves_a_frame_that_is_also_elsewhere(pagina, tmp_path
     pagina.app.state.worker.join(20.0)
     assert None not in _attaccato(pagina, "a_0.fits")
     with db(pagina) as conn:  # la cartella ritirata non si chiede: la risposta si scrive dritta
-        typeless.declare(conn, _chiave(pagina, M51), typeless.CALIBRATION)
+        typeless.declare(conn, _chiave(pagina, M51), TypeAnswer.CALIBRATION)
     _rimetti_la_prima(pagina, tmp_path)
     assert _attaccato(pagina, "a_0.fits") == (None, None, None)
 

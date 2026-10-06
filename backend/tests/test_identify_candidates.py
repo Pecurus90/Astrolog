@@ -60,14 +60,14 @@ def test_the_subject_is_not_the_nearest_one(catalogo, wcs, soggetto, piu_vicino,
     trovati = identify.candidates(catalogo, wcs)
     assert trovati, caso
 
-    per_scarto = sorted(trovati, key=lambda c: c["sep_deg"])
-    assert per_scarto[0]["name"] == piu_vicino, f"{caso}: non e' lui il piu' vicino"
-    assert trovati[0]["name"] == soggetto, f"{caso}: proposto {trovati[0]['name']}"
+    per_scarto = sorted(trovati, key=lambda c: c.sep_deg)
+    assert per_scarto[0].name == piu_vicino, f"{caso}: non e' lui il piu' vicino"
+    assert trovati[0].name == soggetto, f"{caso}: proposto {trovati[0].name}"
 
 
 def test_the_candidates_come_sorted_by_score(catalogo):
     trovati = identify.candidates(catalogo, campo(10.6743, 40.8653, 3.0, 2.0))
-    assert [c["score"] for c in trovati] == sorted((c["score"] for c in trovati), reverse=True)
+    assert [c.score for c in trovati] == sorted((c.score for c in trovati), reverse=True)
 
 
 # --- cosa e' nella foto, e cosa era solo li' vicino -------------------------------------------
@@ -79,19 +79,19 @@ def test_each_candidate_says_whether_it_is_really_in_the_picture(catalogo):
     **nell'inquadratura no**. Sono due informazioni diverse e l'utente le vuole tutte e due:
     "e' nella foto" e "era li' accanto" non si dicono nello stesso modo."""
     per_nome = {
-        c["name"]: c for c in identify.candidates(catalogo, campo(10.6848, 41.2691, 0.5, 0.35))
+        c.name: c for c in identify.candidates(catalogo, campo(10.6848, 41.2691, 0.5, 0.35))
     }
-    assert per_nome["M 31"]["in_frame"] is True
-    assert per_nome["NGC 206"]["in_frame"] is False
-    assert per_nome["NGC 206"]["sep_deg"] < 1.0  # nel cono c'era eccome
+    assert per_nome["M 31"].in_frame is True
+    assert per_nome["NGC 206"].in_frame is False
+    assert per_nome["NGC 206"].sep_deg < 1.0  # nel cono c'era eccome
 
 
 def test_what_does_not_even_touch_the_frame_is_left_out(catalogo):
     """Chi filtra e' `overlaps_frame`, e sbaglia apposta per difetto. Con quel campo M 110 non
     sfiora nemmeno l'inquadratura: non e' un candidato improbabile, e' un oggetto che nella
     foto non c'e'. Allargando il campo torna in gara."""
-    stretto = [c["name"] for c in identify.candidates(catalogo, campo(10.6848, 41.2691, 0.5, 0.35))]
-    largo = [c["name"] for c in identify.candidates(catalogo, campo(10.6848, 41.2691, 3.0, 2.0))]
+    stretto = [c.name for c in identify.candidates(catalogo, campo(10.6848, 41.2691, 0.5, 0.35))]
+    largo = [c.name for c in identify.candidates(catalogo, campo(10.6848, 41.2691, 3.0, 2.0))]
     assert "M 110" not in stretto
     assert "M 110" in largo
 
@@ -101,13 +101,13 @@ def test_a_narrow_field_still_finds_the_big_object_around_it(catalogo):
     suo centro sta a un grado: cercando solo quanto e' larga la foto non tornerebbe mai, e la
     posa resterebbe senza soggetto."""
     lungo = campo(10.6743, 40.8653, 0.30, 0.20)  # mezza diagonale 0,18 gradi
-    per_nome = {c["name"]: c for c in identify.candidates(catalogo, lungo)}
+    per_nome = {c.name: c for c in identify.candidates(catalogo, lungo)}
     assert "M 31" in per_nome
     # e ci deve arrivare **con la sua dimensione**: il centro di M 31 e' a 0,4 gradi, fuori dal
     # rettangolo, ma la galassia e' larga tre gradi e la foto e' tutta dentro di lei. Senza
     # passare la dimensione, la posa direbbe che nell'inquadratura non c'era niente.
-    assert per_nome["M 31"]["in_frame"] is True
-    assert per_nome["M 31"]["sep_deg"] > 0.3
+    assert per_nome["M 31"].in_frame is True
+    assert per_nome["M 31"].sep_deg > 0.3
 
 
 def test_the_list_stops_at_a_handful(catalogo):
@@ -125,8 +125,8 @@ def test_the_pleiades_win_over_their_own_nebulosity(catalogo):
     delle sette stelle. E' il caso che il piano aveva scelto per provare un campo affollato di
     voci vere tutte dentro l'inquadratura."""
     trovati = identify.candidates(catalogo, campo(56.75, 24.1167, 3.0, 2.0))
-    assert trovati[0]["name"] == "M 45", f"proposto {trovati[0]['name']}"
-    assert trovati[0]["in_frame"] is True
+    assert trovati[0].name == "M 45", f"proposto {trovati[0].name}"
+    assert trovati[0].in_frame is True
 
 
 def test_two_real_rivals_are_asked_about_and_a_companion_is_not(catalogo):
@@ -140,16 +140,16 @@ def test_two_real_rivals_are_asked_about_and_a_companion_is_not(catalogo):
     def primi_due(wcs):
         due = identify.candidates(catalogo, wcs)[:2]
         est, nord = geometry.tangent_offset_deg(
-            due[0]["ra_deg"], due[0]["dec_deg"], due[1]["ra_deg"], due[1]["dec_deg"]
+            due[0].ra_deg, due[0].dec_deg, due[1].ra_deg, due[1].dec_deg
         )
         return due, math.hypot(est, nord), geometry.frame_radius_deg(wcs)
 
     due, fra_loro, fov = primi_due(campo(148.93, 69.37, 1.5, 1.0))
-    assert {due[0]["name"], due[1]["name"]} == {"M 81", "M 82"}
+    assert {due[0].name, due[1].name} == {"M 81", "M 82"}
     assert score.is_ambiguous(due[0], due[1], separation_deg=fra_loro, fov_radius_deg=fov) is True
 
     due, fra_loro, fov = primi_due(campo(10.6743, 40.8653, 3.0, 2.0))
-    assert {due[0]["name"], due[1]["name"]} == {"M 31", "M 32"}
+    assert {due[0].name, due[1].name} == {"M 31", "M 32"}
     assert score.is_ambiguous(due[0], due[1], separation_deg=fra_loro, fov_radius_deg=fov) is False
 
 
@@ -180,7 +180,7 @@ def test_pointing_at_a_real_target_proposes_that_target_back(catalogo):
         lato = max(b["size_major_arcmin"] / 60.0 * 2.0, 0.25)  # si inquadra largo il doppio
         wcs = campo(b["ra_deg"], b["dec_deg"], lato, lato * 2 / 3)
         proposti = identify.candidates(catalogo, wcs, limit=1)
-        presi += bool(proposti and proposti[0]["slug"] == b["slug"])
+        presi += bool(proposti and proposti[0].slug == b["slug"])
     quota = presi / len(bersagli)
     assert quota >= 0.95, f"solo {presi}/{len(bersagli)} ({quota:.1%}): un peso si e' spostato"
 

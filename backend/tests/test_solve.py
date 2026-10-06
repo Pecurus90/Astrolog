@@ -231,6 +231,23 @@ def test_a_cached_sky_still_gets_its_quality_back(db_path, archivio_letto, tmp_p
     conn.close()
 
 
+def test_a_cached_sky_on_an_unplugged_disc_launches_nothing(db_path, archivio_letto, tmp_path):
+    """La cache risponde anche a disco staccato, ma l'analisi vuole il file: senza il controllo
+    sul percorso partirebbe un processo per posa su un file che non c'e'."""
+    cache = tmp_path / "cache"
+    conn = connect(db_path)
+    corri(conn, solver(), cache=cache)
+    stages.invalidate(conn, [r[0] for r in conn.execute("SELECT id FROM frames")], "solve")
+    conn.execute("DELETE FROM frame_metrics")
+    conn.execute("UPDATE positions SET status = 'missing'")
+
+    run = solver()
+    ricevuta = corri(conn, run, cache=cache)
+    assert ricevuta["cached"] == 5 and ricevuta["measured"] == 0
+    assert run.calls == []
+    conn.close()
+
+
 # --- cosa si salva ---------------------------------------------------------------------------
 
 

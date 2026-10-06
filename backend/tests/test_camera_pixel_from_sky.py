@@ -7,6 +7,7 @@ basta. Rischio dichiarato: un riduttore che la focale dell'header non conta spos
 """
 
 from astrolog.spine import camera_sky, stages, typeless, typeless_answer, typeless_folders
+from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.solve import solve_frames
 from astrolog.units import ARCSEC_PER_RAD_PER_1000
 from conftest import add_folder, by_name, correct, db, gear, run_normalize
@@ -167,7 +168,7 @@ def test_calibration_answered_takes_back_the_pixel_its_sky_gave(conn):
     _risolvi(conn, frame_id, _scala(3.76, 500.0))
     camera_sky.write(conn)
     assert _ricavato(conn, "Muta") == 3.76
-    typeless.declare(conn, "D:/Astro/dark", typeless.CALIBRATION)
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
     typeless_folders.write(conn)  # come a fine stadio: risolta dal cielo, chiede solo se risposta
     typeless_answer.apply_answer(conn, typeless.row_of(conn, "D:/Astro/dark"))
     assert _ricavato(conn, "Muta") is None

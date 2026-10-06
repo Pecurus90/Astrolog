@@ -11,6 +11,7 @@ import astrolog.fits.walk as walk_mod
 import astrolog.spine.scan as scan_mod
 from astrolog.fits.header_read import HeaderReadError
 from astrolog.spine import frame_folder, typeless
+from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.scan import scan_folder
 from astrolog.spine.stages import STAGES, WAITING_SQL, count_pending
 from conftest import (
@@ -205,7 +206,7 @@ def test_scan_skips_a_folder_the_user_called_calibration(conn, tmp_path):
     non entrano affatto e la ricevuta li conta per motivo, come quelli che lo dicono da soli. Un
     frame gia' in archivio spostato li' invece entra (`test_review_typeless.py`)."""
     folder_id = add_folder(conn, tmp_path)
-    typeless.declare(conn, frame_folder.folder_key(str(tmp_path)), typeless.CALIBRATION)
+    typeless.declare(conn, frame_folder.folder_key(str(tmp_path)), TypeAnswer.CALIBRATION)
     _muto(tmp_path, "dark.fits")
     done = run(conn, folder_id)
     assert (done["new"], done["skipped"]) == (0, 1)
@@ -217,7 +218,7 @@ def test_scan_lets_in_a_folder_the_user_called_sky(conn, tmp_path):
     """Detto che in quella cartella ci sono foto del cielo, i file che arrivano dopo fanno la
     strada di un light da subito: la risposta vale anche per loro, senza ri-chiedere."""
     folder_id = add_folder(conn, tmp_path)
-    typeless.declare(conn, frame_folder.folder_key(str(tmp_path)), typeless.LIGHT)
+    typeless.declare(conn, frame_folder.folder_key(str(tmp_path)), TypeAnswer.LIGHT)
     _muto(tmp_path)
     done = run(conn, folder_id)
     assert done["new"] == 1

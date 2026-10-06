@@ -5,7 +5,7 @@ import math
 from enum import StrEnum
 from typing import Any
 
-from .identify_geometry import frame_radius_deg, frame_shape, tangent_offset_deg
+from .identify_geometry import frame_radius_deg, frame_shape, in_axes, tangent_offset_deg
 
 
 class Relation(StrEnum):
@@ -67,7 +67,7 @@ def _between_rectangles(
     sensor axes, so B keeps only its relative rotation; four axes are enough."""
     ax, ay = a["width_deg"] / 2.0, a["height_deg"] / 2.0
     bx, by = b["width_deg"] / 2.0, b["height_deg"] / 2.0
-    cx, cy = _in_axes(offset, a["rotation_deg"])
+    cx, cy = in_axes(offset, a["rotation_deg"])
     t = math.radians(b["rotation_deg"] - a["rotation_deg"])
     cos_t, sin_t = abs(math.cos(t)), abs(math.sin(t))
 
@@ -75,7 +75,7 @@ def _between_rectangles(
     b_su_a = (bx * cos_t + by * sin_t, bx * sin_t + by * cos_t)
     a_su_b = (ax * cos_t + ay * sin_t, ax * sin_t + ay * cos_t)
     # only magnitudes count here, so the offset is not reversed: a sign no test could tell apart
-    ux, uy = _in_axes((cx, cy), math.degrees(t))
+    ux, uy = in_axes((cx, cy), math.degrees(t))
 
     if abs(cx) > ax + b_su_a[0] or abs(cy) > ay + b_su_a[1]:
         return Relation.DISJOINT
@@ -86,10 +86,3 @@ def _between_rectangles(
     if abs(ux) + a_su_b[0] <= bx and abs(uy) + a_su_b[1] <= by:
         return Relation.NESTED
     return Relation.PARTIAL
-
-
-def _in_axes(offset: tuple[float, float], rotation_deg: float) -> tuple[float, float]:
-    """`(east, north)` in the axes of a field rotated by `rotation_deg`."""
-    east, north = offset
-    t = math.radians(rotation_deg)
-    return east * math.cos(t) + north * math.sin(t), -east * math.sin(t) + north * math.cos(t)

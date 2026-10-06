@@ -13,10 +13,11 @@ from . import (
     mosaic,
     object_candidates,
     solve_store,
+    typeless,
     typeless_folders,
 )
 from . import frame_folder as folder
-from . import typeless as domanda
+from .declarations import TypeAnswer
 from .stages import FOLDER_SAYS, WAITING_FROM, WAITING_SQL, StageName, invalidate
 
 
@@ -37,8 +38,8 @@ def detach(conn: sqlite3.Connection, frame_ids: list[int]) -> None:
 def apply_answer(conn: sqlite3.Connection, row: Row, now: str | None = None) -> list[int]:
     """Returns the requeued frames. "Photos" go on, and those an earlier "calibration" detached go
     back to the sky, which restores it from its cache; "calibration" stops and detaches them."""
-    frames = domanda.frames_of(conn, row)
-    if row["answer"] == domanda.LIGHT:
+    frames = typeless.frames_of(conn, row)
+    if row["answer"] == TypeAnswer.LIGHT:
         invalidate(conn, solve_store.lost_sky(conn, frames), StageName.SOLVE, now)
     else:
         _stop(conn, frames, now)
@@ -59,7 +60,7 @@ WHERE {WAITING_SQL} AND (f.object_id IS NOT NULL OR f.night_id IS NOT NULL)
 _TYPELESS = f"SELECT f.id FROM frames f WHERE f.image_type = '{FrameType.UNKNOWN}'"  # noqa: S608 - constants
 _LET_GO = (
     f"SELECT ({folder.KEY_OF_FRAME}) IS NOT NULL"  # noqa: S608 - constant fragments of the spine
-    f" AND IFNULL({FOLDER_SAYS}, '') <> '{domanda.CALIBRATION}' FROM frames f WHERE f.id = ?"
+    f" AND IFNULL({FOLDER_SAYS}, '') <> '{TypeAnswer.CALIBRATION}' FROM frames f WHERE f.id = ?"
 )
 
 

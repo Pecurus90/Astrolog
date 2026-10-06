@@ -27,7 +27,7 @@ def sites(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     return conn.execute(_SITE).fetchall()
 
 
-def night(conn: sqlite3.Connection, site_id: int, night_date: str | None) -> sqlite3.Row | None:
+def night(conn: sqlite3.Connection, site_id: int, night_date: str) -> sqlite3.Row | None:
     return conn.execute(
         "SELECT id FROM nights WHERE site_id = ? AND night_date = ?", (site_id, night_date)
     ).fetchone()
@@ -41,7 +41,7 @@ def site_by_name(conn: sqlite3.Connection, name: str) -> sqlite3.Row | None:
 def create_night(
     conn: sqlite3.Connection,
     site_id: int,
-    night_date: str | None,
+    night_date: str,
     now: str,
     *,
     declared: bool = False,

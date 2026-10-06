@@ -5,22 +5,24 @@ A learned rule names only where the sky is silent; a user's correction applies e
 import logging
 import sqlite3
 from collections.abc import Iterator
+from dataclasses import asdict, replace
 from functools import partial
 from typing import Any
 
-from ..catalog import lookup
+from ..catalog import NamedEntry, lookup
 from ..clock import now_iso
 from ..db.transaction import transaction
 from ..vocab.header_value import normalize_header_value
 from ..vocab.object_label import clean_object_name
 from . import declarations as decl
-from . import gear_usage, object_candidates, unnamed
+from . import gear_usage, object_answer, object_candidates, unnamed
 from . import identify_decide as rule
 from . import identify_geometry as geometry
 from . import identify_link as link
 from . import identify_score as score
 from . import identify_store as store
-from . import object_answer as risposta
+from .identify_decide import Branch, Decision, IdentifyReason, IdentityConfidence, IdentityMethod
+from .identify_score import Candidate
 from .stage_run import Event, frame_safely, receipt, watched
 from .stages import StageName, StageStatus, ready, set_status
 
@@ -32,7 +34,7 @@ CANDIDATES_LIMIT = 6
 
 def candidates(
     conn: sqlite3.Connection, wcs: dict[str, Any], limit: int | None = CANDIDATES_LIMIT
-) -> list[dict[str, Any]]:
+) -> list[Candidate]:
     """Catalog entries competing for this frame, best first, each with `score` and `in_frame`."""
     if wcs.get("ra_deg") is None or wcs.get("dec_deg") is None:
         return []
@@ -42,17 +44,17 @@ def candidates(
 
     running = []
     for entry in found:
-        size = entry.get("size_major_arcmin")
-        if not geometry.overlaps_frame(entry["sep_deg"], size, fov):
+        size = entry.size_major_arcmin
+        if not geometry.overlaps_frame(entry.sep_deg, size, fov):
             continue
         running.append(
-            {
-                **entry,
-                "score": score.score_candidate(entry, fov),
-                "in_frame": geometry.in_frame(wcs, entry["ra_deg"], entry["dec_deg"], size),
-            }
+            Candidate(
+                **asdict(entry),
+                score=score.score_candidate(entry, fov),
+                in_frame=geometry.in_frame(wcs, entry.ra_deg, entry.dec_deg, size),
+            )
         )
-    running.sort(key=lambda c: c["score"], reverse=True)
+    running.sort(key=lambda c: c.score, reverse=True)
     return running[:limit]
 
 
@@ -88,10 +90,10 @@ def _at_round_end(conn: sqlite3.Connection) -> None:
 
 def _sweep(conn: sqlite3.Connection) -> int:
     """After the detach and at the start, not the end: the names it frees go to this same pass."""
-    tolti = store.drop_empty_objects(conn)
-    if tolti:
-        log.info("identify: oggetti rimasti senza pose, tolti", extra={"quanti": tolti})
-    return tolti
+    dropped = store.drop_empty_objects(conn)
+    if dropped:
+        log.info("identify: oggetti rimasti senza pose, tolti", extra={"quanti": dropped})
+    return dropped
 
 
 def _one_frame(conn: sqlite3.Connection, frame_id: int, counts: dict[str, int]) -> None:
@@ -103,78 +105,82 @@ def _one_frame(conn: sqlite3.Connection, frame_id: int, counts: dict[str, int]) 
     cands = candidates(conn, sky, limit=None)
     fov = geometry.frame_radius_deg(sky) if sky else None
     # `raw` stays the header's spelling; the name that DECIDES is the ruled one.
-    named, hit, da_regola = _named_by_rule(conn, raw, con_cielo=bool(cands))
+    named, hit, ruled = _named_by_rule(conn, raw, with_sky=bool(cands))
     # No name and no candidates: fall back to the frame's group.
-    detto = None if raw or cands else unnamed.named_by_group(conn, unnamed.assign(conn, frame_id))
-    if detto and detto != unnamed.NONE:
-        (named, hit), da_regola = detto, True
+    group_said = (
+        None if raw or cands else unnamed.named_by_group(conn, unnamed.assign(conn, frame_id))
+    )
+    if group_said and group_said != unnamed.NONE:
+        (named, hit), ruled = group_said, True
     decision = rule.decide(raw_name=named, hit=hit, cands=cands, fov_radius_deg=fov)
-    if da_regola:
+    if ruled:
         # A rule is the user's word where the sky cannot contradict it: locked.
-        decision = {**decision, "method": "user", "confidence": "user", "review": False}
+        decision = _users(decision)
     decision = _as_the_user_said(conn, decision)
     # The user's "not an object" beats name and sky, a group's (no `found_key`) only without
     # candidates. What was found is the card's key; a frame finding nothing keeps the card's.
-    fuori = risposta.said_not_an_object(conn, frame["frame_hash"]) and bool(
+    put_out = object_answer.said_not_an_object(conn, frame["frame_hash"]) and bool(
         frame["found_key"] or not cands
     )
-    found_key = (decision["slug"] or decision["name"] or frame["found_key"]) if fuori else None
+    found_key = (decision.slug or decision.name or frame["found_key"]) if put_out else None
 
     now = now_iso()
     with transaction(conn):
         store.set_empty_cone(conn, frame_id, int(not cands) if sky else None)
         store.set_found_key(conn, frame_id, found_key)
-        if fuori or decision["branch"] == "nothing":
+        if put_out or decision.branch == Branch.NOTHING:
             # Not a fault: `skipped`, not `pending`, or the backlog never reaches zero.
-            motivo = rule.NOT_AN_OBJECT if fuori or detto == unnamed.NONE else rule.NO_NAME_NO_SKY
-            set_status(
-                conn, frame_id, StageName.IDENTIFY, StageStatus.SKIPPED, reason=motivo, now=now
+            skip_reason = (
+                IdentifyReason.NOT_AN_OBJECT
+                if put_out or group_said == unnamed.NONE
+                else IdentifyReason.NO_NAME_NO_SKY
             )
-            counts["waiting"] += motivo == rule.NO_NAME_NO_SKY
+            set_status(
+                conn, frame_id, StageName.IDENTIFY, StageStatus.SKIPPED, reason=skip_reason, now=now
+            )
+            counts["waiting"] += skip_reason == IdentifyReason.NO_NAME_NO_SKY
         else:
-            entry = link.entry_for(conn, decision["slug"], hit, cands)
-            object_id, lucchettato = link.hang(conn, decision, raw, entry, now, counts)
+            entry = link.entry_for(conn, decision.slug, hit, cands)
+            object_id, locked = link.hang(conn, decision, raw, entry, now, counts)
             store.set_frame_object(conn, frame_id, object_id)
             set_status(conn, frame_id, StageName.IDENTIFY, StageStatus.DONE, now=now)
             counts["linked"] += 1
             # Only counted if the page will actually ask: a locked object's doubt does not reach it.
-            if decision["review"] and not lucchettato:
+            if decision.review and not locked:
                 counts["review"] += 1
 
 
 def _named_by_rule(
-    conn: sqlite3.Connection, raw: str | None, *, con_cielo: bool
-) -> tuple[str | None, dict[str, Any] | None, bool]:
+    conn: sqlite3.Connection, raw: str | None, *, with_sky: bool
+) -> tuple[str | None, NamedEntry | None, bool]:
     """`(name, entry, ruled)` after the learned rules."""
     if not raw:
         return raw, None, False
-    target = None if con_cielo else decl.alias_target(conn, "object", normalize_header_value(raw))
+    target = None if with_sky else decl.alias_target(conn, "object", normalize_header_value(raw))
     if target:
-        named, entry = risposta.catalog_target(conn, target) or (target, None)
+        named, entry = object_answer.catalog_target(conn, target) or (target, None)
         return named, entry, True
     return raw, lookup.by_designation(conn, raw), False
 
 
-def _as_the_user_said(conn: sqlite3.Connection, decision: dict[str, Any]) -> dict[str, Any]:
+def _as_the_user_said(conn: sqlite3.Connection, decision: Decision) -> Decision:
     """The decision after the user's corrections, followed as a chain: a later one overrides."""
-    found = decision["slug"] or decision["name"]
-    visti: set[str] = set()
+    found = decision.slug or decision.name
+    visited: set[str] = set()
     while found:
-        target = risposta.correction_of(conn, found)
+        target = object_answer.correction_of(conn, found)
         # Checked BEFORE applying: after, it would land right back where it started. A target
         # equal to `found` still applies once: "it is right" makes it the user's.
-        if target is None or target[1] in visti:
+        if target is None or target[1] in visited:
             break
-        # Joins `visti` even on failure, or a missing target would retry forever.
-        visti.update((found, target[1]))
+        # Joins `visited` even on failure, or a missing target would retry forever.
+        visited.update((found, target[1]))
         decision = _towards(conn, decision, target[1], kind=target[0])
-        found = decision["slug"] or decision["name"]
+        found = decision.slug or decision.name
     return decision
 
 
-def _towards(
-    conn: sqlite3.Connection, decision: dict[str, Any], value: str, kind: str
-) -> dict[str, Any]:
+def _towards(conn: sqlite3.Connection, decision: Decision, value: str, kind: str) -> Decision:
     """The decision moved onto `value`, a catalog slug or a free-text name."""
     entry = lookup.by_slug(conn, value)
     if kind == "catalog" and entry is None:
@@ -182,8 +188,16 @@ def _towards(
             "identify: la parola dell'utente punta a uno slug che non c'e'", extra={"a": value}
         )
         return decision
-    # Born from the user's own word: `user`/`user`, which also locks it.
-    detto = {"method": "user", "confidence": "user", "review": False}
     if entry is not None:
-        return {**decision, **detto, "slug": value, "name": None}
-    return {**decision, **detto, "slug": None, "name": value}
+        return replace(_users(decision), slug=value, name=None)
+    return replace(_users(decision), slug=None, name=value)
+
+
+def _users(decision: Decision) -> Decision:
+    """Born from the user's own word: `user`/`user`, which also locks it."""
+    return replace(
+        decision,
+        method=IdentityMethod.USER,
+        confidence=IdentityConfidence.USER,
+        review=False,
+    )
