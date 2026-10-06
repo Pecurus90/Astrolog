@@ -65,7 +65,9 @@ annotata; il glob `ANN` di `ruff.toml` copre tutto `backend/astrolog`.
 che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lunghe spezzate e i
 `noqa` su `C901`/`PLR` tolti, file piccoli accorpati. Il debito gia' trovato:
 - **I nomi interni in italiano** si rinominano (deciso: `CLAUDE.md`, "Nomi e commenti in
-  inglese"), in `backend/astrolog`, con una macchina che poi lo impedisca. Gia' visti: `con_cielo`, `lucchettato`, `fra_i_candidati` (`spine/identify*`);
+  inglese"), in `backend/astrolog`. La macchina c'e' (`tools/nomi_inglesi.py`, al commit): un
+  nome italiano nuovo e' rosso, quelli vecchi stanno in `tools/nomi_italiani.txt`, che solo si
+  accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Gia' visti: `con_cielo`, `lucchettato`, `fra_i_candidati` (`spine/identify*`);
   `fuori`, `elencate` (`db/idlist`), `elenco`, `segnaposto` (`db/replace_table`), `parola`,
   `candidato`, `lettere`, `calibrazione`, `riga` (`fits/frame_type`), `intero`, `attributi`
   (`fits/walk`). Il segnaposto `{dentro}` di `idlist.grouped` e' un contratto con le query dei

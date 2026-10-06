@@ -75,6 +75,14 @@ repos:
         entry: python tools/commenti.py
         files: ^backend/astrolog/.*\.py$
         stages: [pre-commit, manual]
+      # CLAUDE.md's naming rule: internal names in English; the list of old ones only shrinks.
+      - id: english-names
+        name: internal names in English
+        language: system
+        entry: python tools/nomi_inglesi.py
+        pass_filenames: false
+        files: ^(backend/astrolog/.*\.py|tools/nomi_italiani\.txt)$
+        stages: [pre-commit, manual]
       # A test that disappears is declared with its reason, never lost in a diff.
       - id: removed-tests
         name: removed tests are declared
