@@ -83,7 +83,7 @@ def write_settings(body: SettingsPatch, conn: sqlite3.Connection = Depends(get_d
 def _solver(conn: sqlite3.Connection, dove: tuple[str | None, str | None]) -> SolverOut:
     return SolverOut(
         path=dove[0],
-        # `astap.where_exe` returns a channel of `astap.SOURCES`, typed as plain `str`.
+        # The `SolverSource` Literal repeats `astap.Source` on purpose (`models_tonight`).
         source=cast("SolverSource | None", dove[1]),
         declared=config.read(conn).astap_path,
         databases=list(databases_next_to(dove[0])),

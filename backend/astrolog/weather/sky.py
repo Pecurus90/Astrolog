@@ -6,10 +6,10 @@ import sqlite3
 import zoneinfo
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
-from typing import Any, cast
+from typing import Any
 
 from .. import net
-from ..clock import iso_z, night_date
+from ..clock import iso_z, night_of
 from ..db import config
 from . import cams, meteoblue, nights, seventimer
 from .fetches import Source
@@ -50,7 +50,7 @@ def _write(
         return Outcome.BAD_ANSWER
     times, values = series
     tz = zoneinfo.ZoneInfo(site["timezone"])
-    current = cast("str", night_date(iso_z(now), site["timezone"]))  # a valid instant and zone
+    current = night_of(now.astimezone(tz))
     rows = []
     for night, pairs in nights.covered(site["timezone"], times, current, whole=False):
         hours = nights.hours(values, pairs, tz)

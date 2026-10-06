@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 
 from astrolog.api import work
 from astrolog.api.app import create_app
-from astrolog.astap import NO_STARS
+from astrolog.astap import Reason
 from astrolog.spine import typeless, typeless_answer, typeless_folders
 from astrolog.spine.frame_folder import folder_key
 from astrolog.spine.identify import identify_frames
@@ -177,7 +177,7 @@ def _cielo(client, sotto, stato, motivo=None):
 def test_frames_without_stars_are_calibration_and_are_not_asked(pagina):
     """Il cielo non trova stelle: sono file di calibrazione (Marco, 23/9/2026). Non si chiedono,
     non finiscono fra i Frame senza nome, e non diventano ore."""
-    _cielo(pagina, DARK, "failed", NO_STARS)
+    _cielo(pagina, DARK, "failed", Reason.NO_STARS)
     pagine = review(pagina)
     assert _chiave(pagina, DARK) not in _gruppi(pagina)
     assert _chiave(pagina, DARK) not in {

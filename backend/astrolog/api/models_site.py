@@ -5,7 +5,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from ..place import ElevationSource, SkySource
 from ..units import SQM_MAX, SQM_MIN
 from .models_page import Page
 
@@ -13,6 +12,8 @@ from .models_page import Page
 # untranslated.
 Missing = Literal["no_active_site", "no_solver", "no_star_database"]
 SolverSource = Literal["declared", "env", "path", "known_place"]
+SkySource = Literal["measured", "service", "scale"]
+ElevationSource = Literal["declared", "service"]
 
 # A null alone does not tell "I don't know" from "I didn't ask": each empty field carries its code.
 Unknown = Literal["site_no_timezone", "site_no_elevation", "site_no_sky"]

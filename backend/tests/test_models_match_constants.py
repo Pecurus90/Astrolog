@@ -11,7 +11,7 @@ from typing import get_args
 
 import pytest
 
-from astrolog import astap, net
+from astrolog import astap, net, place
 from astrolog.api import (
     models,
     models_review,
@@ -38,7 +38,7 @@ from astrolog.spine.scan import COUNTS
 from astrolog.units import SQM_MAX, SQM_MIN
 from astrolog.vocab.filters import BANDS, PASSBANDS
 from astrolog.weather import fetches, forecast, verdict
-from astrolog.worker import states
+from astrolog.worker.worker import STRUCTURAL_KEYS, State
 from conftest import add_folder
 
 
@@ -49,7 +49,7 @@ def test_scan_run_status_and_counts_match_the_store():
     assert set(COUNTS) <= set(models.ScanRunOut.model_fields)
     # cio' che la scansione lascia fuori: una lista di nomi, e le altre case la seguono
     assert set(scan_store.RECEIPT_LISTS) <= set(models.ScanRunOut.model_fields)
-    assert set(scan_store.RECEIPT_LISTS) <= states.STRUCTURAL_KEYS
+    assert set(scan_store.RECEIPT_LISTS) <= STRUCTURAL_KEYS
     schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
     assert all(f"{name}_json" in schema for name in scan_store.RECEIPT_LISTS)
     assert set(get_args(models.FileError)) == set(scan_store.FILE_ERRORS)
@@ -60,16 +60,9 @@ def test_scan_run_status_and_counts_match_the_store():
 
 
 def test_worker_states_match_the_constants():
-    worker_states = {
-        states.IDLE,
-        states.RUNNING,
-        states.STOPPED,
-        states.COMPLETED,
-        states.COMPLETED_WITH_ERRORS,
-        states.ERROR,
-    }
+    worker_states = set(State) - {State.NOT_RUN}
     assert set(get_args(models.WorkerSnapshot.model_fields["state"].annotation)) == worker_states
-    stage_states = (worker_states - {states.IDLE}) | {states.NOT_RUN}
+    stage_states = (worker_states - {State.IDLE}) | {State.NOT_RUN}
     assert set(get_args(models.StageRecord.model_fields["state"].annotation)) == stage_states
 
 
@@ -159,7 +152,7 @@ def test_the_channels_the_solver_can_come_from_are_one_list():
 
     E si confronta col tipo, non con quattro parole ricopiate qui: un elenco scritto a mano
     contro un altro scritto a mano e' una macchina che si fa dire di si'."""
-    assert set(astap.SOURCES) == set(get_args(models_site.SolverSource))
+    assert set(astap.Source) == set(get_args(models_site.SolverSource))
 
     # E i canali che la ricerca **scrive davvero**: la costante potrebbe essere d'accordo col tipo
     # e tutti e due in disaccordo col codice che gira.
@@ -170,17 +163,21 @@ def test_the_channels_the_solver_can_come_from_are_one_list():
     # L'albero i commenti non ce l'ha.
     #
     # **Uguaglianza, non inclusione**: `<=` passa anche con la lettura sganciata, ed e' la forma
-    # che rassicura senza guardare. Il prezzo e' che una parola di una parola sola scritta in
-    # `_cerca` e non dichiarata fa cadere questa prova -- ed e' il prezzo giusto: e' una funzione
-    # di venti righe che non scrive altro che canali.
+    # che rassicura senza guardare. Si contano i membri di `Source` che `_search` nomina: un
+    # canale dell'enum che la ricerca non scrive fa cadere questa prova.
     detti = {
-        n.value
-        for n in ast.walk(ast.parse(textwrap.dedent(inspect.getsource(astap._cerca))))
-        if isinstance(n, ast.Constant)
-        and isinstance(n.value, str)
-        and re.fullmatch(r"\w+", n.value)
+        n.attr
+        for n in ast.walk(ast.parse(textwrap.dedent(inspect.getsource(astap._search))))
+        if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "Source"
     }
-    assert detti == set(astap.SOURCES), detti ^ set(astap.SOURCES)
+    canali = set(astap.Source.__members__)
+    assert detti == canali, detti ^ canali
+
+
+def test_the_sources_of_a_site_are_the_same_in_the_models_and_in_place():
+    """The routes repeat them as `Literal` on purpose (`models_tonight`): never drifted."""
+    assert set(get_args(models_site.SkySource)) == set(place.SkySource)
+    assert set(get_args(models_site.ElevationSource)) == set(place.ElevationSource)
 
 
 def test_the_word_for_the_missing_solver_is_one_word():
@@ -191,7 +188,7 @@ def test_the_word_for_the_missing_solver_is_one_word():
     # E la parola per "ASTAP c'e' ma il suo catalogo no", che vive in tre punti: il motivo di una
     # posa fallita, cio' che ferma la corsa, e la riga di `missing`. Una sola casa per tutte e tre.
     assert solve.NO_STAR_DATABASE in get_args(models_site.Missing)
-    assert solve.NO_STAR_DATABASE in astap.REASONS
+    assert solve.NO_STAR_DATABASE in set(astap.Reason)
     assert solve.ABORTS_THE_RUN == (solve.NO_STAR_DATABASE,)
 
 

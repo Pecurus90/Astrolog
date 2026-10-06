@@ -18,8 +18,7 @@ from astrolog.spine import run
 from astrolog.spine.scan import COUNTS
 from astrolog.spine.scan_store import start_run
 from astrolog.spine.stages import mark_pending
-from astrolog.worker.states import Stage
-from astrolog.worker.worker import WorkerBusyError
+from astrolog.worker.worker import Stage, WorkerBusyError
 from conftest import settle, wait_until, write_light
 
 
@@ -107,7 +106,7 @@ def test_the_end_of_the_run_is_not_a_number(db_path, tmp_path):
     """`done` dice "ho finito", non "quante": in Python **e' un intero** (`True`), quindi una
     somma che prendesse ogni intero lo conterebbe, e la riga finale direbbe `done: 2` con due
     cartelle. Si guarda l'**evento** e non il riassunto dello stadio: quello toglie `done` per
-    conto suo (`worker/states.py`), quindi li' l'errore non si vedrebbe mai."""
+    conto suo (`worker/worker.py`), quindi li' l'errore non si vedrebbe mai."""
     root = tmp_path / "lib"
     write_light(root / "a.fits", obj="M 1")
     with connect(db_path) as conn:
@@ -194,7 +193,7 @@ def test_the_first_folder_is_not_covered_by_the_last(app, tmp_path, prima_fa_alt
     if prima_fa_altro:  # un lavoro che finisce bene, o lo stato del worker direbbe gia' `error`
         client.app.state.worker.start([Stage("normalize", _un_lavoro_finito)])
         client.app.state.worker.join(5.0)
-        assert client.app.state.worker.snapshot()["state"] == "completed"
+        assert client.app.state.worker.snapshot().state == "completed"
     assert status(client)["scan"]["state"] == esito
 
 

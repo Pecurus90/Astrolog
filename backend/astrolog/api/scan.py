@@ -23,8 +23,7 @@ from ..spine.scan_store import (
     start_run,
 )
 from ..spine.stage_run import Factory
-from ..worker.states import Stage
-from ..worker.worker import WorkerBusyError
+from ..worker.worker import Stage, WorkerBusyError
 from .deps import get_db
 from .models import (
     FolderSkipped,

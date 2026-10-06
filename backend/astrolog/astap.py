@@ -9,6 +9,7 @@ import shutil
 import subprocess
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 
 from .fits.header_keys import as_float
@@ -46,26 +47,33 @@ TIMEOUT_S = 60
 SEARCH_RADIUS_DEG = 30
 BLIND_RADIUS_DEG = 180
 
-NO_STARS = "no_stars"  # with no stars, a typeless file is a calibration frame (`typeless`)
+
 # Closed list of codes, never ASTAP's sentence: sentences change between versions and would
 # reach the screen in English.
-REASONS = (NO_STARS, "no_solution", "timeout", "astap_missing", "file_missing",
-           "no_star_database", "internal_error")  # fmt: skip
+class Reason(StrEnum):
+    NO_STARS = "no_stars"  # with no stars, a typeless file is a calibration frame (`typeless`)
+    NO_SOLUTION = "no_solution"
+    TIMEOUT = "timeout"
+    ASTAP_MISSING = "astap_missing"
+    FILE_MISSING = "file_missing"
+    NO_STAR_DATABASE = "no_star_database"
+    INTERNAL_ERROR = "internal_error"
+
 
 # Compared lowercase and by containment: the exact text changes, the key words do not.
 _ERROR_WORDS = (
-    ("not enough stars", NO_STARS),
-    ("file not found", "file_missing"),
+    ("not enough stars", Reason.NO_STARS),
+    ("file not found", Reason.FILE_MISSING),
     # Both `No star database found.` (missing) and `Error reading star database.` (truncated
     # download), as ASTAP CLI-2025.11.19 prints them: a half download is as common as none.
-    ("star database", "no_star_database"),
+    ("star database", Reason.NO_STAR_DATABASE),
 )
 
 
 @dataclass(frozen=True)
 class Solution:
     ok: bool
-    reason: str | None = None
+    reason: Reason | None = None
     ra_deg: float | None = None
     dec_deg: float | None = None
     scale_arcsec_px: float | None = None
@@ -73,7 +81,11 @@ class Solution:
 
 
 # Codes, not sentences: they are shown on screen, and a new word would arrive untranslated.
-SOURCES = ("declared", "env", "path", "known_place")
+class Source(StrEnum):
+    DECLARED = "declared"
+    ENV = "env"
+    PATH = "path"
+    KNOWN_PLACE = "known_place"
 
 
 type Which = Callable[[str], str | None]
@@ -85,9 +97,9 @@ def find_exe(
     which: Which = shutil.which,
     candidates: Iterable[str | Path] = CANDIDATES,
 ) -> str | None:
-    """Calls `_cerca`, not `where_exe`: the suite's fence replaces both public ones, and one going
+    """Calls `_search`, not `where_exe`: the suite's fence replaces both public ones, and one going
     through the other would pick up the stub even when captured on purpose beforehand."""
-    return _cerca(declared, env, which, candidates)[0]
+    return _search(declared, env, which, candidates)[0]
 
 
 def where_exe(
@@ -95,34 +107,34 @@ def where_exe(
     env: Mapping[str, str] | None = None,
     which: Which = shutil.which,
     candidates: Iterable[str | Path] = CANDIDATES,
-) -> tuple[str | None, str | None]:
+) -> tuple[str | None, Source | None]:
     """The channel is shown because the automatic search is wrong exactly when it finds something
     (an old ASTAP in PATH). The user's choice beats the variable, set by the NAS admin."""
-    return _cerca(declared, env, which, candidates)
+    return _search(declared, env, which, candidates)
 
 
-def _cerca(
+def _search(
     declared: str | None,
     env: Mapping[str, str] | None,
     which: Which,
     candidates: Iterable[str | Path],
-) -> tuple[str | None, str | None]:
+) -> tuple[str | None, Source | None]:
     env = os.environ if env is None else env
-    scritto, canale = (declared, "declared") if declared else (env.get(ENV_EXE), "env")
-    if scritto:
+    written, channel = (declared, Source.DECLARED) if declared else (env.get(ENV_EXE), Source.ENV)
+    if written:
         # Windows' *Copy as path* wraps it in quotes: with them inside the file is never found,
         # and the warning would blame the wrong thing.
-        scritto = scritto.strip().strip("\"'")
+        written = written.strip().strip("\"'")
         # A written wrong path, or a folder, stops the search: falling back on PATH would say
         # "found" to whoever wrote it wrong.
-        return (scritto, canale) if Path(scritto).is_file() else (None, None)
+        return (written, channel) if Path(written).is_file() else (None, None)
     for name in EXE_NAMES:
         found = which(name)
         if found:
-            return found, "path"
+            return found, Source.PATH
     for candidate in candidates:
         if Path(candidate).is_file():
-            return str(candidate), "known_place"
+            return str(candidate), Source.KNOWN_PLACE
     return None, None
 
 
@@ -132,8 +144,8 @@ def star_databases(exe: str | Path | None) -> tuple[str, ...]:
     if exe is None:
         return ()
     with contextlib.suppress(OSError):  # folder gone, disk unplugged, permission denied
-        nomi = (DB_NAME.match(f.name) for f in Path(exe).resolve().parent.iterdir())
-        return tuple(sorted({m.group(1).lower() for m in nomi if m}))
+        matches = (DB_NAME.match(f.name) for f in Path(exe).resolve().parent.iterdir())
+        return tuple(sorted({m.group(1).lower() for m in matches if m}))
     return ()
 
 
@@ -174,22 +186,21 @@ def read_ini(path: str | Path) -> dict[str, str]:
         return {}
 
 
-def _reason_of(ini: Mapping[str, str]) -> str:
+def _reason_of(ini: Mapping[str, str]) -> Reason:
     message = str(ini.get("ERROR", "")).lower()
     for words, code in _ERROR_WORDS:
         if words in message:
             return code
-    return "no_solution"
+    return Reason.NO_SOLUTION
 
 
-def command(  # noqa: PLR0913
+def command(
     fits_path: str | Path,
     out_base: str | Path,
     *,
     exe: str,
     field_deg: float | None = None,
-    ra_deg: float | None = None,
-    dec_deg: float | None = None,
+    pointing: tuple[float, float] | None = None,
 ) -> list[str]:
     """Built without running it, so a test proves the forbidden flags are absent and the units
     are the ones ASTAP wants."""
@@ -207,7 +218,8 @@ def command(  # noqa: PLR0913
         "0",
         "-wcs",
     ]
-    if ra_deg is not None and dec_deg is not None:
+    if pointing is not None:
+        ra_deg, dec_deg = pointing
         # ASTAP wants HOURS of right ascension and the distance from the SOUTH pole: getting them
         # wrong gives no error, it gives the sky of another point.
         cmd += ["-ra", f"{ra_deg / 15.0:.5f}", "-spd", f"{dec_deg + 90.0:.4f}", "-r",
@@ -231,16 +243,17 @@ def solve(  # noqa: PLR0913
     """Writes `<out_base>.ini` and `.wcs` where we say, never beside the user's FITS. Never raises
     for the solver's fault: a missing or hung ASTAP is a frame without sky and its reason."""
     if not exe:
-        return Solution(ok=False, reason="astap_missing")
-    cmd = command(fits_path, out_base, exe=exe, field_deg=field_deg, ra_deg=ra_deg, dec_deg=dec_deg)
+        return Solution(ok=False, reason=Reason.ASTAP_MISSING)
+    pointing = (ra_deg, dec_deg) if ra_deg is not None and dec_deg is not None else None
+    cmd = command(fits_path, out_base, exe=exe, field_deg=field_deg, pointing=pointing)
     try:
         (run or _run)(cmd, timeout_s)
     except (subprocess.TimeoutExpired, TimeoutError):
         log.info("astap: tempo scaduto", extra={"file": str(fits_path)})
-        return Solution(ok=False, reason="timeout")
+        return Solution(ok=False, reason=Reason.TIMEOUT)
     except OSError as err:
         log.warning("astap: non si e' potuto lanciare", extra={"error": str(err)})
-        return Solution(ok=False, reason="astap_missing")
+        return Solution(ok=False, reason=Reason.ASTAP_MISSING)
 
     return from_ini(read_ini(f"{out_base}.ini"))
 
@@ -258,7 +271,7 @@ def from_ini(ini: dict[str, str]) -> Solution:
         rotation_deg=wcs_rotation_deg(ini),
     )
     if None in (found.ra_deg, found.dec_deg, found.scale_arcsec_px):
-        return Solution(ok=False, reason="no_solution")
+        return Solution(ok=False, reason=Reason.NO_SOLUTION)
     return found
 
 
@@ -270,7 +283,7 @@ def analyse(
     timeout_s: float = TIMEOUT_S,
 ) -> tuple[float | None, int | None]:
     """`(median HFD, stars)` from a second ASTAP pass: the only way to these two numbers that
-    leaves no file in the user's folder, since `-extract` would write a CSV beside the FITS."""
+    leaves no file in the user's folder."""
     if not exe:
         return None, None
     try:

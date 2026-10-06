@@ -167,12 +167,29 @@ def test_searching_a_place_gives_name_and_coordinates():
         {"display_name": "Asiago, Alberta, Canada", "lat": "53.5", "lon": "-113.5"},
     ]
     trovati = place.search("Asiago", fetch=fake(risposta))
-    assert [p["name"] for p in trovati] == [
+    assert [p.name for p in trovati] == [
         "Asiago, Vicenza, Veneto, 36012, Italia",
         "Asiago, Alberta, Canada",
     ]
-    assert trovati[0]["latitude"] == pytest.approx(45.9133)
-    assert trovati[0]["longitude"] == pytest.approx(11.5025)
+    assert trovati[0].latitude == pytest.approx(45.9133)
+    assert trovati[0].longitude == pytest.approx(11.5025)
+
+
+@pytest.mark.parametrize("vuoto", range(4))
+def test_a_distance_needs_all_four_coordinates(vuoto):
+    """Ciascuna delle quattro coordinate mancanti da' una distanza ignota, mai zero."""
+    punti = [45.0, 11.0, 45.1, 11.1]
+    assert place.distance_km(*punti) is not None
+    punti[vuoto] = None
+    assert place.distance_km(*punti) is None
+
+
+def test_sites_without_coordinates_stay_out_of_the_distance_order():
+    vicino = {"latitude": 45.01, "longitude": 11.0}
+    lontano = {"latitude": 46.0, "longitude": 11.0}
+    senza = {"latitude": None, "longitude": None}
+    ordinati = place.by_distance(45.0, 11.0, [lontano, senza, vicino])
+    assert [s for _km, s in ordinati] == [vicino, lontano]
 
 
 def test_searching_survives_a_service_that_answers_badly():

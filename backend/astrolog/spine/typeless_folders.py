@@ -3,7 +3,7 @@ every typeless frame's folder at each opening. An answer does not rewrite them: 
 
 import sqlite3
 
-from ..astap import NO_STARS
+from ..astap import Reason
 from ..db.replace_table import replace_rows
 from ..fits.frame_type import FrameType
 from . import frame_folder as folder
@@ -13,7 +13,7 @@ from . import typeless
 # file-type index: without it, it starts from the stages even where nothing is typeless.
 _BY_FOLDER = f"""
 SELECT {folder.COLUMNS}, SUM(f.copy_of IS NULL) AS n,
-       SUM(sv.status = 'failed' AND IFNULL(sv.reason, '') <> '{NO_STARS}') AS undecided
+       SUM(sv.status = 'failed' AND IFNULL(sv.reason, '') <> '{Reason.NO_STARS}') AS undecided
 FROM frames f {folder.JOIN}
 JOIN frame_stages sv ON sv.frame_id = f.id AND +sv.stage = 'solve'
 WHERE f.image_type = '{FrameType.UNKNOWN}'

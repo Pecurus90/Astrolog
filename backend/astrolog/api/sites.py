@@ -2,6 +2,7 @@
 yield (zone, elevation, sky) is derived on write and saved, so an opening page never waits."""
 
 import sqlite3
+from dataclasses import asdict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -78,7 +79,7 @@ def search_places(q: str = Query(min_length=1)) -> PlaceList:
     """The places bearing that name, to fill in the coordinates without typing them by hand.
     It does not touch the database: searching creates nothing, and without network it returns an
     empty list -- the manual way always stays open. No pages: the cap is `place.search`'s."""
-    return PlaceList(items=[PlaceOut(**p) for p in place.search(q)])
+    return PlaceList(items=[PlaceOut(**asdict(p)) for p in place.search(q)])
 
 
 @router.get("/sites", response_model=SiteList)
@@ -175,9 +176,9 @@ def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(g
         # would mean two different things on two neighbouring fields
         scritta = fields["elevation_m"]
         elevation_m, elevation_source = (
-            (scritta, "declared") if scritta is not None else (None, None)
+            (scritta, place.ElevationSource.DECLARED) if scritta is not None else (None, None)
         )
-    elif moved and old["elevation_source"] == "service":
+    elif moved and old["elevation_source"] == place.ElevationSource.SERVICE:
         elevation_m, elevation_source = place.elevation_from(latitude, longitude)
     else:
         elevation_m, elevation_source = old["elevation_m"], old["elevation_source"]
@@ -186,7 +187,7 @@ def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(g
         sky_sqm, sky_source = place.sky_of(
             latitude, longitude, sqm=fields.get("sky_sqm"), bortle=fields.get("bortle")
         )
-    elif moved and old["sky_source"] == "service":
+    elif moved and old["sky_source"] == place.SkySource.SERVICE:
         sky_sqm, sky_source = place.sky_of(latitude, longitude, key=_sky_key(conn))
     else:
         sky_sqm, sky_source = old["sky_sqm"], old["sky_source"]

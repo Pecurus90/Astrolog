@@ -8,8 +8,7 @@ from fastapi import HTTPException
 from starlette.datastructures import State
 
 from ..spine.run import queue
-from ..worker.states import Stage
-from ..worker.worker import WorkerBusyError
+from ..worker.worker import Stage, WorkerBusyError
 
 log = logging.getLogger(__name__)
 

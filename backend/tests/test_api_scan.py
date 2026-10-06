@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import TOKEN_HEADER, create_app
 from astrolog.db.connect import connect
 from astrolog.spine.scan_store import run_outcomes, start_run
-from astrolog.worker.states import IDLE, STOPPED
+from astrolog.worker.worker import State
 from conftest import blocking_reader, settle, wait_until, write_light
 
 
@@ -204,7 +204,7 @@ def test_scan_lock_stop_and_the_button_verb(app):
         client.post("/api/v1/pipeline/stop")
         gate.set()
         worker.join(10.0)
-    assert worker.snapshot()["state"] == STOPPED
+    assert worker.snapshot().state == State.STOPPED
     s = status(client)
     assert s["action"] == "resume" and s["scan"]["folder_id"] == fid  # cosa riprendere
     assert s["scan"]["receipt"]["status"] == "stopped"  # dal DB: il generatore non la emette
@@ -239,7 +239,7 @@ def test_a_second_folder_finds_the_worker_busy_and_leaves_no_open_receipt(app, t
 
 def test_no_autostart_and_precheck_409s(app):
     client, fid, root = app
-    assert client.app.state.worker.snapshot()["state"] == IDLE
+    assert client.app.state.worker.snapshot().state == State.IDLE
     assert status(client)["action"] == "start" and status(client)["scan"] is None
     assert client.post("/api/v1/folders/9999/scan").status_code == 404
     for p in root.iterdir():

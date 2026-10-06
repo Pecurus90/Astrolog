@@ -149,7 +149,7 @@ def test_a_failure_becomes_a_closed_reason(tmp_path, codice, ini, atteso):
     run = fake_run(codice=codice, scrive=scrive)
     esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", exe="astap", run=run)
     assert esito.ok is False and esito.reason == atteso
-    assert esito.reason in astap.REASONS
+    assert esito.reason in set(astap.Reason)
 
 
 def test_a_solver_that_never_comes_back_is_a_reason(tmp_path):

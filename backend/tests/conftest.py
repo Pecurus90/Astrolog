@@ -335,8 +335,8 @@ def da_rivedere(client):
     """Quante pose l'ultima normalizzazione ha lasciato da rivedere: e' il numero che dice se una
     posa e' a posto o se le manca ancora qualcosa, e senza guardarlo un filtro dato male e un
     filtro dato bene si assomigliano troppo."""
-    stadi = client.app.state.worker.snapshot()["stages"]
-    return next(s for s in stadi if s["name"] == "normalize")["tally"]["to_review"]
+    stadi = client.app.state.worker.snapshot().stages
+    return next(s for s in stadi if s.name == "normalize").tally["to_review"]
 
 
 @pytest.fixture

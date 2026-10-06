@@ -6,17 +6,7 @@ import time
 
 import pytest
 
-from astrolog.worker.states import (
-    COMPLETED,
-    COMPLETED_WITH_ERRORS,
-    ERROR,
-    IDLE,
-    NOT_RUN,
-    RUNNING,
-    STOPPED,
-    Stage,
-)
-from astrolog.worker.worker import Worker, WorkerBusyError
+from astrolog.worker.worker import Stage, State, Worker, WorkerBusyError
 from conftest import wait_until
 
 
@@ -60,8 +50,8 @@ def test_a_stage_that_aborted_is_not_reported_as_completed():
     w = Worker()
     w.start([Stage("solve", factory)])
     w.join(5.0)
-    stadio = w.snapshot()["stages"][0]
-    assert (stadio["state"], stadio["reason"]) == (ERROR, "no_star_database")
+    stadio = w.snapshot().stages[0]
+    assert (stadio.state, stadio.reason) == (State.ERROR, "no_star_database")
 
 
 def test_worker_events_stages_run_in_order_one_at_a_time():
@@ -71,11 +61,11 @@ def test_worker_events_stages_run_in_order_one_at_a_time():
     w.join(5.0)
     assert log == ["scan:1", "scan:2", "scan:3", "solve:1", "solve:2"]
     snap = w.snapshot()
-    assert snap["state"] == COMPLETED
-    assert [s["name"] for s in snap["stages"]] == ["scan", "solve"]
-    assert all(s["state"] == COMPLETED for s in snap["stages"])
-    assert snap["stages"][0]["tally"] == {"processed": 3}
-    assert snap["stages"][0]["total"] == 3
+    assert snap.state == State.COMPLETED
+    assert [s.name for s in snap.stages] == ["scan", "solve"]
+    assert all(s.state == State.COMPLETED for s in snap.stages)
+    assert snap.stages[0].tally == {"processed": 3}
+    assert snap.stages[0].total == 3
 
 
 def test_the_state_says_there_were_errors_without_carrying_them():
@@ -94,9 +84,9 @@ def test_the_state_says_there_were_errors_without_carrying_them():
     w = Worker()
     w.start([Stage("scan", factory)])
     w.join(5.0)
-    stadio = w.snapshot()["stages"][0]
-    assert stadio["state"] == COMPLETED_WITH_ERRORS
-    assert "errors_detail" not in stadio
+    stadio = w.snapshot().stages[0]
+    assert stadio.state == State.COMPLETED_WITH_ERRORS
+    assert all("errors_detail" not in m for m in (stadio.tally, stadio.last_event or {}))
 
 
 def test_worker_stop_cooperative():
@@ -118,21 +108,21 @@ def test_worker_stop_cooperative():
     w.start([Stage("scan", stopper), fake_stage("solve", 2, log, gate)])
     w.join(5.0)
     snap = w.snapshot()
-    assert snap["state"] == STOPPED
+    assert snap.state == State.STOPPED
     assert "solve:1" not in log  # fermare ferma, non trasforma
-    assert snap["stages"][0]["state"] == STOPPED and snap["stages"][1]["state"] == NOT_RUN
+    assert snap.stages[0].state == State.STOPPED and snap.stages[1].state == State.NOT_RUN
     assert log == ["scan:1", "scan:2"]  # si ferma al confine dopo l'elemento in corso
 
 
 def test_worker_no_autostart_and_stop_when_idle_is_a_noop():
     w = Worker()
-    assert w.snapshot()["state"] == IDLE and not w.is_running()
+    assert w.snapshot().state == State.IDLE and not w.is_running()
     w.stop()
-    assert w.snapshot()["state"] == IDLE
+    assert w.snapshot().state == State.IDLE
     log = []
     w.start([fake_stage("a", 2, log)])
     w.join(3.0)
-    assert w.snapshot()["state"] == COMPLETED and len(log) == 2
+    assert w.snapshot().state == State.COMPLETED and len(log) == 2
 
 
 def test_worker_one_job_at_a_time():
@@ -140,7 +130,7 @@ def test_worker_one_job_at_a_time():
     gate = threading.Event()
     w = Worker()
     w.start([fake_stage("scan", 2, log, gate)])
-    assert wait_until(lambda: w.snapshot()["state"] == RUNNING)
+    assert wait_until(lambda: w.snapshot().state == State.RUNNING)
     with pytest.raises(WorkerBusyError):
         w.start([fake_stage("altro", 1, log)])
     gate.set()
@@ -162,16 +152,16 @@ def test_worker_on_finish_runs_once_even_if_the_stage_explodes():
     w.start([Stage("esplode", boom, on_finish=lambda: released.append("esplode")),
              Stage("mai", lambda: iter(()), on_finish=lambda: released.append("mai"))])  # fmt: skip
     w.join(5.0)
-    assert released == ["esplode", "mai"] and w.snapshot()["state"] == ERROR
+    assert released == ["esplode", "mai"] and w.snapshot().state == State.ERROR
 
 
 def test_worker_stamps_and_reset():
     w = Worker()
-    assert w.snapshot()["started_at"] is None and w.snapshot()["ended_at"] is None
+    assert w.snapshot().started_at is None and w.snapshot().ended_at is None
     w.start([Stage("noop", lambda: iter([{"done": True}]))])
     w.join(3.0)
     snap = w.snapshot()
-    assert snap["started_at"] <= snap["ended_at"] and snap["ended_at"].endswith("Z")
+    assert snap.started_at <= snap.ended_at and snap.ended_at.endswith("Z")
     time.sleep(0.01)
     snap = w.reset()
-    assert snap["state"] == IDLE and snap["started_at"] is None
+    assert snap.state == State.IDLE and snap.started_at is None

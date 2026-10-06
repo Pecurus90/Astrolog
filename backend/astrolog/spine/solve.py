@@ -33,7 +33,7 @@ NO_STAR_DATABASE = "no_star_database"
 
 # Not marked `failed`: nobody would requeue it, and installing ASTAP or reattaching the disk the
 # next day would never solve anything again. It stays pending and the next run retries it.
-RETRIABLE = ("astap_missing", "file_missing", NO_STAR_DATABASE)
+RETRIABLE = (astap.Reason.ASTAP_MISSING, astap.Reason.FILE_MISSING, NO_STAR_DATABASE)
 
 # Without the catalogue every frame fails the same way: stop at the first and say so.
 ABORTS_THE_RUN = (NO_STAR_DATABASE,)
@@ -57,9 +57,8 @@ def solver_path(conn: sqlite3.Connection) -> str | None:
     return astap.find_exe(config.read(conn).astap_path)
 
 
-def solver_where(conn: sqlite3.Connection) -> tuple[str | None, str | None]:
-    """`(path, channel)`: the user must be able to say "not that one", since the automatic search
-    is wrong exactly when it finds something."""
+def solver_where(conn: sqlite3.Connection) -> tuple[str | None, astap.Source | None]:
+    """`(path, channel)`, so the user can say "not that one" (`astap.where_exe`)."""
     return astap.where_exe(config.read(conn).astap_path)
 
 
@@ -69,7 +68,7 @@ def databases_next_to(exe: str | Path | None) -> tuple[str, ...]:
     return astap.star_databases(exe)
 
 
-def solver_found() -> tuple[str | None, str | None]:
+def solver_found() -> tuple[str | None, astap.Source | None]:
     """What the search finds ignoring the preferences. It only proposes: silently overwriting a
     hand-written path would remove the way out when the search picks the wrong program."""
     return astap.where_exe(None)
@@ -205,13 +204,13 @@ def _solution_for(
         return saved, True
     path = _path_of(frame)
     if path is None:
-        return astap.Solution(ok=False, reason="file_missing"), False
+        return astap.Solution(ok=False, reason=astap.Reason.FILE_MISSING), False
     if exe:
         solution = _launch(conn, frame, path, out_base, exe=exe, run=run)
     else:
         # Every run walks all waiting frames just to ask the cache: hint and cleanup are for a
         # launch.
-        solution = astap.Solution(ok=False, reason="astap_missing")
+        solution = astap.Solution(ok=False, reason=astap.Reason.ASTAP_MISSING)
     return solution, False
 
 
@@ -271,8 +270,7 @@ def _scale_of(frame: sqlite3.Row) -> float | None:
 
 
 def _field_hint(frame: sqlite3.Row) -> float | None:
-    """The field height is the solver's speed lever; `None` without focal or pixel: the search
-    is blind and slow."""
+    """The field height, the speed lever of `astap.command`; `None` without focal or pixel."""
     return field_deg(frame["naxis2"], _scale_of(frame))
 
 

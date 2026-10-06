@@ -7,7 +7,9 @@ import time
 import urllib.parse
 import zoneinfo
 from collections.abc import Callable, Iterable
-from typing import Any, Literal
+from dataclasses import dataclass
+from enum import StrEnum
+from typing import Any
 
 from tzfpy import get_tz
 
@@ -33,11 +35,27 @@ _last_search = 0.0
 
 _ZONES: set[str] | None = None
 
+
 # How a place's sky brightness is known; `sky_of` says which way wins.
-SkySource = Literal["measured", "service", "scale"]
+class SkySource(StrEnum):
+    MEASURED = "measured"
+    SERVICE = "service"
+    SCALE = "scale"
+
 
 # Moving the place redoes only what came from the coordinates: what the user wrote stays theirs.
-ElevationSource = Literal["declared", "service"]
+class ElevationSource(StrEnum):
+    DECLARED = "declared"
+    SERVICE = "service"
+
+
+@dataclass(frozen=True, slots=True)
+class Place:
+    """A place found by name: a candidate, not a site."""
+
+    name: str
+    latitude: float
+    longitude: float
 
 
 # The real call, named in this module so the tests replace it here.
@@ -64,9 +82,9 @@ def distance_km(
     distances it differs from the spherical one by metres."""
     if lat_a is None or lon_a is None or lat_b is None or lon_b is None:
         return None
-    nord = (lat_a - lat_b) * _KM_PER_DEGREE
-    est = (lon_a - lon_b) * _KM_PER_DEGREE * math.cos(math.radians((lat_a + lat_b) / 2))
-    return math.hypot(nord, est)
+    north = (lat_a - lat_b) * _KM_PER_DEGREE
+    east = (lon_a - lon_b) * _KM_PER_DEGREE * math.cos(math.radians((lat_a + lat_b) / 2))
+    return math.hypot(north, east)
 
 
 def by_distance[S: Row](
@@ -74,12 +92,12 @@ def by_distance[S: Row](
 ) -> list[tuple[float, S]]:
     """Sorted on the true distance: rounded ones would tie two near sites, and comparing the rows
     on a tie would raise instead of sorting. Sites without coordinates stay out."""
-    misurati = []
+    measured = []
     for site in sites:
         km = distance_km(latitude, longitude, site["latitude"], site["longitude"])
         if km is not None:
-            misurati.append((km, site))
-    return sorted(misurati, key=lambda coppia: coppia[0])
+            measured.append((km, site))
+    return sorted(measured, key=lambda pair: pair[0])
 
 
 def coordinates_key(latitude: float | None, longitude: float | None) -> str | None:
@@ -158,9 +176,9 @@ def elevation_from(
     """Never an elevation without its source: an old number left on new coordinates would be
     indistinguishable from a measure."""
     if declared is not None:
-        return declared, "declared"
+        return declared, ElevationSource.DECLARED
     asked = elevation_of(latitude, longitude, fetch=fetch)
-    return (asked, "service") if asked is not None else (None, None)
+    return (asked, ElevationSource.SERVICE) if asked is not None else (None, None)
 
 
 def sky_of(  # noqa: PLR0913
@@ -175,11 +193,11 @@ def sky_of(  # noqa: PLR0913
     """In order of trust: the measure is a fact; the chosen class beats the service because who
     chooses it is looking at that sky, while the service looks at a 2015 map."""
     if sqm is not None:
-        return sqm, "measured"
+        return sqm, SkySource.MEASURED
     if bortle is not None:
-        return sqm_of_bortle(bortle), "scale"
+        return sqm_of_bortle(bortle), SkySource.SCALE
     asked = sky_sqm_of(latitude, longitude, key, fetch=fetch)
-    return (asked, "service") if asked is not None else (None, None)
+    return (asked, SkySource.SERVICE) if asked is not None else (None, None)
 
 
 type Clock = Callable[[], float]
@@ -203,7 +221,7 @@ def search(
     limit: int = 5,
     now: Clock = time.monotonic,
     sleep: Sleep = time.sleep,
-) -> list[dict[str, Any]]:
+) -> list[Place]:
     """Empty when nothing is found or the service is silent: the manual way stays open."""
     if not name or not name.strip():
         return []
@@ -220,5 +238,5 @@ def search(
             latitude, longitude = float(row["lat"]), float(row["lon"])
         except (KeyError, TypeError, ValueError):
             continue  # a place without readable coordinates is not a place
-        out.append({"name": row["display_name"], "latitude": latitude, "longitude": longitude})
+        out.append(Place(row["display_name"], latitude, longitude))
     return out

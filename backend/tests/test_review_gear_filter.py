@@ -351,8 +351,8 @@ def test_a_no_filter_name_already_taken_is_said_not_crashed(pagina, caplog):
     assert _filtri_senza_nome(pagina, MONO) == {None}
     assert da_rivedere(pagina) == 6  # restano da rivedere, copia compresa
     assert "nessun filtro, nome preso" in caplog.text  # e si dice
-    stadi = pagina.app.state.worker.snapshot()["stages"]
-    assert next(s for s in stadi if s["name"] == "normalize")["tally"]["errors"] == 0
+    stadi = pagina.app.state.worker.snapshot().stages
+    assert next(s for s in stadi if s.name == "normalize").tally["errors"] == 0
 
 
 def test_merging_two_cameras_leaves_each_signature_its_answer(pagina, tmp_path):

@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | rifattorizza | Fase 2, lotto 4: file sciolti e `worker` | ~0,19 M agenti (uno sviluppatore), sessione principale non contata | 15 agente | 1 mio sul resoconto (un fuso non valido cambiava esito: rimesso com'era) |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 3: `weather` | ~0,21 M agenti (uno sviluppatore), sessione principale non contata | 17 agente | 0 (la prova copre; confronto byte per byte delle tabelle del meteo) |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 2: `ephemeris` | sessione principale sola | ~35 | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 1: macchina dei nomi, `db`/`fits`/`catalog`/`vocab` | ~0,18 M agenti (uno sviluppatore), sessione principale non contata | ~70 | 0 (nessun revisore: la prova copre); 1 regola dei commenti presa dal commit |
@@ -61,8 +62,8 @@ annotata; il glob `ANN` di `ruff.toml` copre tutto `backend/astrolog`.
   lasciato un secondo in `objects.stable_key`: lo slug o il nome mostrato, mai `None` perche' un
   oggetto fuori catalogo ha sempre un primario (`docs/domini/spina.md`, invariante 3), ma
   `display_name` torna `str | None`; lo toglie una riga d'oggetto tipata che dica l'invariante.
-  Annotare `api/settings` ne ha lasciato un terzo in `settings._solver` (*I file sciolti, dopo
-  la fase 1*, sotto).
+  Il `cast` di `settings._solver` resta: `SolverSource` ripete `astap.Source` come `Literal`
+  apposta (`models_tonight`).
 
 **Fase 2 -- semplificare**, sul codice gia' pulito: doppioni uniti, nomi interni in inglese, `dict`
 che escono dal package -> `dataclass`, insiemi chiusi -> `StrEnum`, funzioni lunghe spezzate e i
@@ -75,12 +76,8 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   nome italiano nuovo e' rosso, quelli vecchi stanno in `tools/nomi_italiani.txt`, che solo si
   accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Fatti `db` e
   `fits` (e il segnaposto `{listed}` di `idlist.grouped`), poi `ephemeris` (`corpi` e' `bodies`).
-  Fatti anche `weather` e `net`. Gia' visti: `con_cielo`, `lucchettato`, `fra_i_candidati`
-  (`spine/identify*`). Nei file sciolti: `_cerca`, `canale`, `nomi`, `scritto`
-  (`astap`); `_ORA_DI_INIZIO`, `comincia`, `fine`, `finisce`, `fuso`, `giorno`, `inizio`,
-  `quando`, `quante`, `secondi` (`clock`); `misurati`,
-  `coppia`, `nord`, `est` (`place`); `CASA`, `MODO_SOLO_UTENTE` (`startup`); `classe` (`units`).
-  Nel primo lotto di `spine`: `detto`, `notte`, `giudicati`, `fuso`, `istante` (`scan`); `prima`
+  Fatti anche `weather`, `net` e gli altri file sciolti. Gia' visti: `con_cielo`, `lucchettato`, `fra_i_candidati`
+  (`spine/identify*`). Nel primo lotto di `spine`: `detto`, `notte`, `giudicati`, `fuso`, `istante` (`scan`); `prima`
   (`scan_store`); `_DENTRO`, `dentro`, `dritto` (`frame_folder`); `corredi` (alias di `rigs`),
   `_USO`, `_STRUMENTI`, `_CORREDI`, `_FILTRI`, `_BANDE`, `dichiarato`, `_senza_ore`, `nomi`,
   `montature`, `bande`, `_riga`, `riga` (`inventory`); `gruppi`, `chiave`, `posto`, `detto`
@@ -170,16 +167,13 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   candidati, voci del catalogo e wcs viaggiano come `dict[str, Any]`: una forma tipata ciascuno.
 - **Forme `dict` che escono dai package di base**: la voce del catalogo
   (`catalog/lookup.by_designation`, `by_slug`, `in_cone`), da tipare col lotto di
-  `spine/identify`: si spalma nei candidati (`**entry`) e i test ne costruiscono a mano; lo snapshot e il record dello stadio (`worker/worker.py`,
-  `worker/states.blank_record`), i posti trovati
-  (`place.search`, che `api/sites` riveste uno per uno in `PlaceOut`).
+  `spine/identify`: si spalma nei candidati (`**entry`) e i test ne costruiscono a mano.
 - **`db/idlist.grouped` torna `dict[Any, list[Any]]`**: generico in `T` rompe `api/archive.py`, che
   passa i dict di `spine/filters_used` a un campo `list[FilterUsed]`. Si fa generico quando i
   chiamanti costruiscono righe tipate.
 - **Insiemi chiusi da fare `StrEnum`**, che escono dal package (fatti tipo del frame, software e
-  bande, fasi della Luna e fasce del cielo, meteo e `net.Failure`): gli stati di `worker/states`.
-  Nei file sciolti: `astap.REASONS` e `SOURCES`, `place.SkySource` ed `ElevationSource` (scritti
-  in `sites`). In `weather` restano stringhe i generi di riga (`forecast.KIND`, `history.KIND`) e
+  bande, fasi della Luna e fasce del cielo, meteo, `net.Failure`, stati del worker, motivi e
+  canali di `astap`, fonti di `place`). In `weather` restano stringhe i generi di riga (`forecast.KIND`, `history.KIND`) e
   le fonti per modello (`forecast.source_of`), aperte quanto la scelta dei modelli. Nella scansione: esiti, motivi,
   file non letti e saltati (`scan_store.STATUSES`, `REASONS`, `FILE_ERRORS`, `SKIP_REASONS`,
   scritti in `scan_runs` e ripetuti in `api/models`) e il marchio `calibrated`/`rewritten`
@@ -481,7 +475,8 @@ Niente di aperto.
   `GZipMiddleware`, per tutte le risposte.
 - **Cercare il catalogo di ASTAP costa una lettura di cartella a ogni domanda** (`GET /settings`,
   `PATCH /settings`, `GET /solver`): 5,2 ms per 1.492 voci su disco locale; su una condivisione di
-  rete sarebbe un'altra cosa. Rimedio: tenere la risposta per un po'.
+  rete sarebbe un'altra cosa. Rimedio: tenere la risposta per un po' (una cache: meccanismo
+  nuovo, fuori dal refactor).
 
 ### Doppioni -- lo stesso pezzo scritto piu' volte
 
@@ -496,11 +491,10 @@ Niente di aperto.
 - **I soggetti di un mosaico si leggono in due posti** (`_most_poses` in
   `spine/mosaic_describe.py`, `_SUBJECTS` in `spine/mosaic_proposals.py`): la stessa giunzione
   frame-pannelli, una per il piu' frequente e una per l'insieme.
-- **Il meteo, due doppioni**: la condizione "il meteo di questa notte" in SQL due volte (la pagina
-  delle Notti e lo storico), per cui la spina conosce la tabella del meteo senza importarla; e "un
-  sito con fuso ha sempre la sua notte" detto da due `cast` (`forecast.refresh`, `sky`) che
-  nascondono a pyright il `None` di `clock.night_date`: si chiude annotando `night_date` quando si
-  tocca `clock`.
+- **Il meteo**: la condizione "il meteo di questa notte" in SQL due volte (la pagina delle Notti e
+  lo storico), per cui la spina conosce la tabella del meteo senza importarla. Resta il `cast` di
+  `night_date` in `forecast.refresh`: toglierlo con `clock.night_of` cambia l'esito di un fuso
+  salvato non valido (oggi `bad_answer` se la risposta non ha ore), quindi va in un `/ripara`.
 - **Piu' piccoli**: `CATALOG_PRIORITY` (`spine/identify_score.py`) senza sei sigle che `parse`
   produce; frasi dei contratti copiate nelle docstring (da ricontare); i siti senza una casa in
   lettura come oggetti e notti; `identify_store.object_by_name` e `name_owner`, che fanno quasi la
@@ -807,14 +801,12 @@ riga per voce.
 - **Risoluzione, raggruppamento e frame senza tipo, dopo la fase 1**: nessun test distingue la
   regola "cielo dalla cache e disco staccato: niente `analyse`" in `spine/solve.py` (una mutazione
   come `path or _old_path` passerebbe); le ragioni di `group` sono ripetute come `Literal` in
-  `api/models_site.py` (`Missing`, `Unknown`) e scritte a mano in `api/sites.py`, e
-  `solve.RETRIABLE` riscrive "astap_missing" e "file_missing" invece di prenderli da
-  `astap.REASONS` (`solve.NO_SOLVER` e `NO_STAR_DATABASE` mancano dall'inventario della fase 2).
+  `api/models_site.py` (`Missing`, `Unknown`) e scritte a mano in `api/sites.py`;
+  `solve.NO_STAR_DATABASE` ripete `astap.Reason.NO_STAR_DATABASE` come stringa nuda (finisce in
+  `list[Missing]` di `api/settings`), e `solve.NO_SOLVER` non e' in un insieme chiuso.
   Regole dette piu' volte: il binning gia' dentro `XPIXSZ` (`solve._scale_of` e
-  `units.physical_pixel_um`); "la ricerca automatica sbaglia proprio quando trova qualcosa"
-  (`solve.solver_where` e `astap.where_exe`) e il percorso scritto a mano che non si sovrascrive
-  (`solve.solver_found` e `api/settings.search_solver`); il campo come leva di velocita'
-  (`solve._field_hint` e `astap.solve`); "risolto e' una foto, senza stelle una calibrazione"
+  `units.physical_pixel_um`); il percorso scritto a mano che non si sovrascrive
+  (`solve.solver_found` e `api/settings.search_solver`); "risolto e' una foto, senza stelle una calibrazione"
   (`typeless`, `typeless_folders`, `api/models_review_groups`); la notte da mezzogiorno a
   mezzogiorno nella docstring di `group`, senza rimando a `clock.night_date`.
 - **Attrezzatura, dopo la fase 1**: `rigs.declared_mount` riscrive la query di `rigs._rig`
@@ -826,8 +818,9 @@ riga per voce.
   solo test (`test_scanning_without_a_folder_is_an_error`), che lascia fuori sia `folder_id` sia
   `run_id`, cosi' un controllo solo su `folder_id` passerebbe; `counts.py` e `stages.py` hanno
   ancora una riga oltre i 100 caratteri dietro `# noqa: S608` (quella di `stages.py` senza
-  ragione); per un alias di tipo `worker/states.py` importa `spine.stage_run` (da solo, 16 moduli
-  invece di 3; nell'app intera costo zero). Regole dette piu' volte: "il worker si ferma al primo
+  ragione); per un alias di tipo `worker/worker.py` importa `spine.stage_run` (da solo, 16 moduli
+  invece di 3; nell'app intera costo zero; toglierlo vuole un import sotto `TYPE_CHECKING`, che
+  il repo non usa ancora). Regole dette piu' volte: "il worker si ferma al primo
   evento con `done`" (`run._then_detach`, `run.molte`, `stage_run.receipt`); "il residuo non
   arriva mai a zero" e "un dark senza tipo diventa ore" in `stages.py`; "una posa rotta fallisce
   da sola" in `stage_run` (modulo e `watched`) e in `normalize`; la forma per chi ha gia' `rigs g`
@@ -840,15 +833,11 @@ riga per voce.
   `scan.night_of` ripete la notte da mezzogiorno a mezzogiorno (`clock.night_date`) e la ricaduta
   del fuso (`place.timezone_of_frame`, `scan_store.home_timezone`); "radice e sottocartella
   viaggiano nella riga" sta nella docstring di `spine/frame_folder.py` e in quella di `group_of`.
-- **I file sciolti, dopo la fase 1**: `astap.analyse` inghiotte timeout e `OSError` e torna
+- **I file sciolti, dopo la fase 2**: `astap.analyse` inghiotte timeout e `OSError` e torna
   `(None, None)` senza scrivere nel log, mentre `solve` lo scrive (HFD e stelle vuoti senza
-  traccia in Diagnostica); i quattro canali del solver sono scritti in `astap.SOURCES` e in
-  `api/models_site.SolverSource`, e `astap.where_exe` li torna come `str` (da qui il `cast` in
-  `api/settings._solver`): uno `StrEnum` in `astap` toglie entrambi; la data della notte si legge con lo stesso `strptime` e lo
-  stesso `noqa: DTZ007` in `clock.midnight_of` e `clock.night_window`; "`-extract` lascia un CSV
-  accanto al FITS" sta sia nella docstring del modulo `astap` sia in quella di `analyse`;
-  nessun test prova che `place.by_distance` lasci fuori i siti senza coordinate, ne' ciascuno dei
-  quattro `is None` di `place.distance_km`; il log d'accesso scrive la query intera, quindi
+  traccia in Diagnostica: aggiungere la riga cambia il log, quindi non e' un refactor); `astap.solve`
+  e `place.sky_of` tengono il `noqa: PLR0913` perche' la firma e' usata fuori (`spine/solve`,
+  `api/sites`); il log d'accesso scrive la query intera, quindi
   una chiave messa a mano in un indirizzo (`/?token=...`) finirebbe in `log/astrolog.log`, ma l'app
   non la mette mai in un indirizzo (ADR 0002: arriva nella pagina e viaggia in un header).
 - **`tools/guardia_test.py` non vede due forme di test del frontend**: `it.each([...])(...)` e i

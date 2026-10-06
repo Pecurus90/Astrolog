@@ -152,17 +152,17 @@ def believable_sqm(sqm: float | None) -> float | None:
 def bortle_of(sqm: float | None) -> int | None:
     if sqm is None:
         return None
-    for classe, floor in BORTLE_FLOORS:
+    for bortle, floor in BORTLE_FLOORS:
         if sqm >= floor:
-            return classe
+            return bortle
     return 9
 
 
-def sqm_of_bortle(classe: int) -> float | None:
+def sqm_of_bortle(bortle: int) -> float | None:
     """The centre of the class, so reading it back gives the same class."""
     floors = dict(BORTLE_FLOORS)
-    low = floors.get(classe, BORTLE_BOTTOM)
-    high = floors.get(classe - 1, BORTLE_TOP)
+    low = floors.get(bortle, BORTLE_BOTTOM)
+    high = floors.get(bortle - 1, BORTLE_TOP)
     return hundredths((low + high) / 2)
 
 
