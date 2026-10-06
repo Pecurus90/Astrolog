@@ -40,10 +40,10 @@ def same_pointing(a: dict[str, Any], b: dict[str, Any]) -> bool | None:
     offset = tangent_offset_deg(a["ra_deg"], a["dec_deg"], b["ra_deg"], b["dec_deg"])
     if offset is None:
         return False  # on the other side of the sky
-    raggi = [r for r in (frame_radius_deg(a), frame_radius_deg(b)) if r]
-    if len(raggi) < 2:
+    half_diagonals = [r for r in (frame_radius_deg(a), frame_radius_deg(b)) if r]
+    if len(half_diagonals) < 2:
         return False
-    return math.hypot(*offset) < min(raggi) * SAME_POINTING_FRACTION
+    return math.hypot(*offset) < min(half_diagonals) * SAME_POINTING_FRACTION
 
 
 def _between_circles(a: dict[str, Any], b: dict[str, Any], offset: tuple[float, float]) -> Relation:
@@ -72,17 +72,17 @@ def _between_rectangles(
     cos_t, sin_t = abs(math.cos(t)), abs(math.sin(t))
 
     # how far B reaches along A's axes, and A along B's
-    b_su_a = (bx * cos_t + by * sin_t, bx * sin_t + by * cos_t)
-    a_su_b = (ax * cos_t + ay * sin_t, ax * sin_t + ay * cos_t)
+    b_on_a = (bx * cos_t + by * sin_t, bx * sin_t + by * cos_t)
+    a_on_b = (ax * cos_t + ay * sin_t, ax * sin_t + ay * cos_t)
     # only magnitudes count here, so the offset is not reversed: a sign no test could tell apart
     ux, uy = in_axes((cx, cy), math.degrees(t))
 
-    if abs(cx) > ax + b_su_a[0] or abs(cy) > ay + b_su_a[1]:
+    if abs(cx) > ax + b_on_a[0] or abs(cy) > ay + b_on_a[1]:
         return Relation.DISJOINT
-    if abs(ux) > bx + a_su_b[0] or abs(uy) > by + a_su_b[1]:
+    if abs(ux) > bx + a_on_b[0] or abs(uy) > by + a_on_b[1]:
         return Relation.DISJOINT
-    if abs(cx) + b_su_a[0] <= ax and abs(cy) + b_su_a[1] <= ay:
+    if abs(cx) + b_on_a[0] <= ax and abs(cy) + b_on_a[1] <= ay:
         return Relation.NESTED  # B entirely inside A
-    if abs(ux) + a_su_b[0] <= bx and abs(uy) + a_su_b[1] <= by:
+    if abs(ux) + a_on_b[0] <= bx and abs(uy) + a_on_b[1] <= by:
         return Relation.NESTED
     return Relation.PARTIAL

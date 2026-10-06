@@ -8,17 +8,14 @@ from typing import Any
 
 from ..db.inserted import inserted_id
 from . import declarations as decl
-from . import mosaic_describe as descrizione
-from . import mosaic_proposals as proposte
-from . import mosaic_weight as peso
-from . import object_answer as risposta
+from . import mosaic_describe, mosaic_proposals, mosaic_weight, object_answer
 from .identify_geometry import frame_radius_deg, frame_shape
 from .mosaic_geometry import Relation, overlap, same_pointing
 
 _SKY = ("ra_deg", "dec_deg", "width_deg", "height_deg", "rotation_deg")
 
 # In shooting order. Copies are not another frame.
-_POSES = f"""
+_FRAMES = f"""
 SELECT f.id, f.frame_hash, f.rig_id, f.panel_id, {", ".join("w." + c for c in _SKY)}
 FROM frames f JOIN frame_wcs w ON w.frame_id = f.id
 WHERE f.id IN (SELECT value FROM json_each(?)) AND f.copy_of IS NULL
@@ -41,41 +38,41 @@ def place(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> None:
     """A panel is measured on the frame that opened it: without a fixed anchor, a chain of steps
     under the threshold would walk across the sky."""
     widest: dict[int | None, float] = {}
-    pannelli: set[int] = set()
-    for pose in map(dict, conn.execute(_POSES, (json.dumps(list(frame_ids)),)).fetchall()):
-        if pose["panel_id"] is not None:
-            pannelli.add(pose["panel_id"])  # the one it leaves too: its mosaic is reweighed
-            if _stays(conn, pose):
+    panels: set[int] = set()
+    for frame in map(dict, conn.execute(_FRAMES, (json.dumps(list(frame_ids)),)).fetchall()):
+        if frame["panel_id"] is not None:
+            panels.add(frame["panel_id"])  # the one it leaves too: its mosaic is reweighed
+            if _stays(conn, frame):
                 continue
-        if frame_shape(pose) is None or frame_radius_deg(pose) is None:
+        if frame_shape(frame) is None or frame_radius_deg(frame) is None:
             continue  # without a sky, or the field's size, what it frames is unknown
-        band = _band(conn, pose, widest)
-        panel = next((p for p in band if same_pointing(p, pose)), None)
-        panel_id = panel["id"] if panel else _open(conn, pose, band, widest)
-        conn.execute("UPDATE frames SET panel_id = ? WHERE id = ?", (panel_id, pose["id"]))
-        pannelli.add(panel_id)
-    settle(conn, _mosaics_of(conn, pannelli))
+        band = _band(conn, frame, widest)
+        panel = next((p for p in band if same_pointing(p, frame)), None)
+        panel_id = panel["id"] if panel else _open(conn, frame, band, widest)
+        conn.execute("UPDATE frames SET panel_id = ? WHERE id = ?", (panel_id, frame["id"]))
+        panels.add(panel_id)
+    settle(conn, _mosaics_of(conn, panels))
 
 
 def settle(conn: sqlite3.Connection, mosaic_ids: Iterable[int]) -> None:
     """Only the mosaics frames reached or left: reweighing them all would cost the whole archive
     on every run."""
     _sweep(conn)
-    vivi = [
+    live = [
         r[0]
         for r in conn.execute(
             "SELECT id FROM mosaics WHERE id IN (SELECT value FROM json_each(?))",
             (json.dumps(sorted(mosaic_ids)),),
         )
     ]
-    peso.weigh(conn, vivi)
-    for mosaic_id in vivi:
-        descrizione.describe(conn, mosaic_id)
+    mosaic_weight.weigh(conn, live)
+    for mosaic_id in live:
+        mosaic_describe.describe(conn, mosaic_id)
         _write_key(conn, mosaic_id)
     conn.execute(
         "UPDATE frames SET mosaic_key = NULL"  # noqa: S608 - constant fragments
         " WHERE mosaic_key IS NOT NULL AND mosaic_key NOT IN"
-        f" (SELECT m.key FROM mosaics m JOIN ({proposte.LIVE}) r ON r.mosaic_id = m.id)"
+        f" (SELECT m.key FROM mosaics m JOIN ({mosaic_proposals.LIVE}) r ON r.mosaic_id = m.id)"
     )
 
 
@@ -94,40 +91,40 @@ def _mosaics_of(conn: sqlite3.Connection, panel_ids: Iterable[int]) -> set[int]:
 def leave(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> set[int]:
     """The mosaics they leave, to reweigh with `settle`: after the detach nothing says so any
     more."""
-    lista = json.dumps(list(frame_ids))
-    lasciati = _mosaics_of(
+    listed = json.dumps(list(frame_ids))
+    left = _mosaics_of(
         conn,
         [r[0] for r in conn.execute(
             "SELECT panel_id FROM frames WHERE id IN (SELECT value FROM json_each(?))"
-            " AND panel_id IS NOT NULL", (lista,),
+            " AND panel_id IS NOT NULL", (listed,),
         )],
     )  # fmt: skip
     conn.execute(
         "UPDATE frames SET panel_id = NULL, mosaic_key = NULL"
         " WHERE id IN (SELECT value FROM json_each(?))",
-        (lista,),
+        (listed,),
     )
-    return lasciati
+    return left
 
 
-def _stays(conn: sqlite3.Connection, pose: dict[str, Any]) -> bool:
+def _stays(conn: sqlite3.Connection, frame: dict[str, Any]) -> bool:
     """A frame that changed rig stays if its mosaic has an answer, the panel taking the new rig
     once all its frames have it; otherwise it re-places and joins that rig's mosaic there."""
     row = conn.execute(
         "SELECT p.rig_id, m.key FROM panels p LEFT JOIN mosaics m ON m.id = p.mosaic_id"
         " WHERE p.id = ?",
-        (pose["panel_id"],),
+        (frame["panel_id"],),
     ).fetchone()
-    if row["rig_id"] == pose["rig_id"]:
+    if row["rig_id"] == frame["rig_id"]:
         return True
     if row["key"] is not None and answer_of(conn, row["key"]) is not None:
         conn.execute(
             "UPDATE panels SET rig_id = ? WHERE id = ? AND NOT EXISTS"
             " (SELECT 1 FROM frames f WHERE f.panel_id = ? AND f.rig_id IS NOT ?)",
-            (pose["rig_id"], pose["panel_id"], pose["panel_id"], pose["rig_id"]),
+            (frame["rig_id"], frame["panel_id"], frame["panel_id"], frame["rig_id"]),
         )
         return True
-    leave(conn, [pose["id"]])
+    leave(conn, [frame["id"]])
     return False
 
 
@@ -146,7 +143,8 @@ def write_answer(conn: sqlite3.Connection, key: str, value: str, now: str | None
     """`decl.MosaicAnswer.NO` or the target. A mosaic that is gone or down to one panel is a stale
     page, and raises: an answer to nothing would sit there unseen."""
     row = conn.execute(
-        f"SELECT m.id FROM mosaics m JOIN ({proposte.LIVE}) r ON r.mosaic_id = m.id"  # noqa: S608
+        f"SELECT m.id FROM mosaics m JOIN ({mosaic_proposals.LIVE}) r"  # noqa: S608
+        " ON r.mosaic_id = m.id"
         " WHERE m.key = ?",
         (key,),
     ).fetchone()
@@ -161,34 +159,36 @@ def answer_of(conn: sqlite3.Connection, key: str) -> str | None:
 
 
 def _band(
-    conn: sqlite3.Connection, pose: dict[str, Any], widest: dict[int | None, float]
+    conn: sqlite3.Connection, frame: dict[str, Any], widest: dict[int | None, float]
 ) -> list[dict[str, Any]]:
     """The rig's panels within reach in declination, never the archive; right ascension is left to
     the geometry. The rig's widest radius is asked once per run."""
-    rig = pose["rig_id"]
+    rig = frame["rig_id"]
     if rig not in widest:
         (widest[rig],) = conn.execute(
             "SELECT COALESCE(MAX(radius_deg), 0) FROM panels WHERE rig_id IS ?", (rig,)
         ).fetchone()
-    reach = widest[rig] + (frame_radius_deg(pose) or 0.0)
-    righe = conn.execute(_BAND, (pose["rig_id"], pose["dec_deg"] - reach, pose["dec_deg"] + reach))
-    return [dict(r) for r in righe]
+    reach = widest[rig] + (frame_radius_deg(frame) or 0.0)
+    rows = conn.execute(
+        _BAND, (frame["rig_id"], frame["dec_deg"] - reach, frame["dec_deg"] + reach)
+    )
+    return [dict(r) for r in rows]
 
 
 def _open(
     conn: sqlite3.Connection,
-    pose: dict[str, Any],
+    frame: dict[str, Any],
     band: list[dict[str, Any]],
     widest: dict[int | None, float],
 ) -> int:
-    radius = frame_radius_deg(pose) or 0.0
-    widest[pose["rig_id"]] = max(widest.get(pose["rig_id"], 0.0), radius)
+    radius = frame_radius_deg(frame) or 0.0
+    widest[frame["rig_id"]] = max(widest.get(frame["rig_id"], 0.0), radius)
     panel_id = inserted_id(
-        conn.execute(_NEW_PANEL, (pose["rig_id"], *(pose[c] for c in _SKY), radius))
+        conn.execute(_NEW_PANEL, (frame["rig_id"], *(frame[c] for c in _SKY), radius))
     )
-    touching = [p for p in band if overlap(p, pose) == Relation.PARTIAL]
+    touching = [p for p in band if overlap(p, frame) == Relation.PARTIAL]
     if touching:
-        _join(conn, panel_id, pose["frame_hash"], touching)
+        _join(conn, panel_id, frame["frame_hash"], touching)
     return panel_id
 
 
@@ -250,7 +250,8 @@ def _write_key(conn: sqlite3.Connection, mosaic_id: int) -> None:
     """Only a yes writes the key, and not on panels that do not count: those frames keep their
     object."""
     (key,) = conn.execute("SELECT key FROM mosaics WHERE id = ?", (mosaic_id,)).fetchone()
-    confirmed = key if risposta.mosaic_word(answer_of(conn, key)) == decl.MosaicAnswer.YES else None
+    said = object_answer.mosaic_word(answer_of(conn, key))
+    confirmed = key if said == decl.MosaicAnswer.YES else None
     conn.execute(
         "UPDATE frames SET mosaic_key = CASE WHEN p.counts_in_mosaic = 1 THEN ? END"
         " FROM panels p WHERE frames.panel_id = p.id AND p.mosaic_id = ?",

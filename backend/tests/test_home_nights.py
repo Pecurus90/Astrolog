@@ -155,8 +155,8 @@ def test_an_object_answer_follows_its_poses_into_the_new_night(pagina):
     assert json.loads(nuova)[0] == "2026-03-14"
     assert nuova == _chiave_oggetto(pagina, "c")
     with db(pagina) as conn:
-        assert unnamed.answer(conn, nuova)["name"] == "Cometa di prova"
-        assert unnamed.answer(conn, _chiave_oggetto(pagina, "a"))["name"] == "Cometa di prova"
+        assert unnamed.answer(conn, nuova).name == "Cometa di prova"
+        assert unnamed.answer(conn, _chiave_oggetto(pagina, "a")).name == "Cometa di prova"
 
 
 def test_the_poses_of_the_nights_that_changed_are_worked_again(pagina):
@@ -187,7 +187,7 @@ def test_two_object_answers_that_disagree_fall_when_their_groups_become_one(pagi
     _casa(pagina)
     with db(pagina) as conn:
         assert unnamed.answer(conn, _chiave_oggetto(pagina, "c")) is None
-        assert unnamed.answer(conn, _chiave_oggetto(pagina, "a"))["name"] == "Cometa di prova"
+        assert unnamed.answer(conn, _chiave_oggetto(pagina, "a")).name == "Cometa di prova"
 
 
 def test_a_camera_answer_stays_put_when_home_moves(pagina):

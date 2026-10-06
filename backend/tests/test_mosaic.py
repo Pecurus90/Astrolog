@@ -9,6 +9,7 @@ altro soggetto.
 """
 
 import itertools
+from dataclasses import asdict
 
 import pytest
 
@@ -70,7 +71,7 @@ def posa(
 
 
 def proposti(conn):
-    return proposte.candidates(conn)
+    return [asdict(m) for m in proposte.candidates(conn)]
 
 
 def chiavi(trovati):
@@ -99,6 +100,21 @@ def test_two_panels_side_by_side_are_a_mosaic(archivio):
     assert chiavi(proposti(archivio)) == [("IC 401", 2, 2)]
     impronta = archivio.execute("SELECT frame_hash FROM frames WHERE id = ?", (prima,)).fetchone()
     assert proposti(archivio)[0]["key"] == impronta[0], "la chiave e' la posa piu' vecchia"
+
+
+def test_panels_without_the_rotation_still_make_a_mosaic(archivio):
+    """The solver may leave the rotation out: grouping places the frame on the circle around its
+    field instead of dropping the panel (the geometry's side is `test_mosaic_geometry.py`)."""
+    prepara(archivio)
+    for cielo in (A, B):
+        frame_id = posa(archivio, None)
+        archivio.execute(
+            "INSERT INTO frame_wcs(frame_id, ra_deg, dec_deg, scale_arcsec_px, width_deg,"
+            " height_deg, rotation_deg, solved_at) VALUES(?, ?, ?, 2.0, 0.6, 0.4, NULL, 'now')",
+            (frame_id, *cielo),
+        )
+        mosaic.place(archivio, [frame_id])
+    assert chiavi(proposti(archivio)) == [("IC 401", 2, 2)]
 
 
 def test_a_vertical_strip_is_a_mosaic_whatever_field_comes_first(archivio):

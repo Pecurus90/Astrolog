@@ -7,6 +7,7 @@ import sqlite3
 from .. import units
 from ..catalog import lookup
 from ..catalog.load import unit_vector
+from . import mosaic_proposals as proposals
 from . import objects as obj
 
 
@@ -23,7 +24,7 @@ def describe(conn: sqlite3.Connection, mosaic_id: int) -> None:
         units.angular_separation_deg(ra, dec, c["ra_deg"], c["dec_deg"]) + c["radius_deg"]
         for c in centres
     )
-    proposed = _catalog_name(conn, ra, dec, reach) or _most_poses(conn, mosaic_id)
+    proposed = _catalog_name(conn, ra, dec, reach) or _most_frames(conn, mosaic_id)
     conn.execute(
         "UPDATE mosaics SET ra_deg = ?, dec_deg = ?, proposed = ? WHERE id = ?",
         (ra, dec, proposed, mosaic_id),
@@ -32,29 +33,29 @@ def describe(conn: sqlite3.Connection, mosaic_id: int) -> None:
 
 def _catalog_name(conn: sqlite3.Connection, ra: float, dec: float, reach: float) -> str | None:
     """The nearest entry the centre falls in, else the nearest."""
-    voci = lookup.in_cone(conn, ra, dec, reach)
-    dentro = [
+    entries = lookup.in_cone(conn, ra, dec, reach)
+    inside = [
         v
-        for v in voci
+        for v in entries
         if v.size_major_arcmin and v.sep_deg <= units.radius_deg(v.size_major_arcmin)
     ]
-    scelta = (dentro or voci or [None])[0]
-    return None if scelta is None else scelta.name
+    chosen = (inside or entries or [None])[0]
+    return None if chosen is None else chosen.name
 
 
-def _most_poses(conn: sqlite3.Connection, mosaic_id: int) -> str:
-    righe = conn.execute(
-        f"SELECT o.catalog_slug, o.id, {obj.NAME_COLUMNS} FROM frames f"  # noqa: S608
-        " JOIN panels p ON p.id = f.panel_id JOIN objects o ON o.id = f.object_id"
-        " WHERE p.mosaic_id = ? AND p.counts_in_mosaic = 1 AND f.copy_of IS NULL",
+def _most_frames(conn: sqlite3.Connection, mosaic_id: int) -> str:
+    rows = conn.execute(
+        f"SELECT o.catalog_slug, o.id, {obj.NAME_COLUMNS}"  # noqa: S608 - constant fragments
+        f" FROM {proposals.PANEL_FRAMES} JOIN objects o ON o.id = f.object_id"
+        f" WHERE p.mosaic_id = ? AND {proposals.COUNTING} AND f.copy_of IS NULL",
         (mosaic_id,),
     ).fetchall()
-    nomi = [obj.label(r) for r in righe]
-    return max(sorted(set(nomi)), key=nomi.count) if nomi else ""
+    names = [obj.label(r) for r in rows]
+    return max(sorted(set(names)), key=names.count) if names else ""
 
 
 def _mean_direction(points: list[tuple[float, float]]) -> tuple[float, float]:
     """The mean of unit vectors, which does not break at RA 0/360."""
-    versori = [unit_vector(ra, dec) for ra, dec in points]
-    x, y, z = (sum(v[i] for v in versori) for i in range(3))
+    vectors = [unit_vector(ra, dec) for ra, dec in points]
+    x, y, z = (sum(v[i] for v in vectors) for i in range(3))
     return math.degrees(math.atan2(y, x)) % 360.0, math.degrees(math.atan2(z, math.hypot(x, y)))

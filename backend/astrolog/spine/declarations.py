@@ -258,7 +258,7 @@ def learn(
     conn: sqlite3.Connection,
     kind: str,
     header_value: str | None,
-    target_key: str | None,
+    target_key: str,
     now: str | None = None,
 ) -> None:
     """Normalised once here, as the schema declares and the readers expect: a raw spelling would

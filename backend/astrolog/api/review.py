@@ -2,6 +2,7 @@
 
 import sqlite3
 from collections.abc import Iterable, Mapping
+from dataclasses import asdict
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -68,7 +69,7 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
     righe_attrezzatura = gear_reader.by_signature(conn)
     righe_senza_tipo = typeless_reader.by_folder(conn)
     righe_mosaici = mosaic_reader.candidates(conn)
-    mosaici = [MosaicCandidate(**m) for m in righe_mosaici]
+    mosaici = [MosaicCandidate(**asdict(m)) for m in righe_mosaici]
     coppie = lookalike.lookalikes(conn)
     # Seeing a question is not answering it: each one counts until answered, or the count would
     # drop to zero while the frames still wait.
@@ -80,7 +81,7 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
         # a card counts until every part it asks is answered
         + sum(1 for g in righe_attrezzatura if not g["complete"])
         # a mosaic's no closes it too, or a wrong proposal could only be silenced by accepting it
-        + unanswered(righe_mosaici)
+        + sum(1 for m in righe_mosaici if m.answer is None)
         + unanswered(righe_senza_tipo)
     )
     return ReviewOut(

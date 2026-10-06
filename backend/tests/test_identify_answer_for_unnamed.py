@@ -16,6 +16,8 @@ Regole, e il test che le rompe:
   sono, mai fatte sparire.
 """
 
+from dataclasses import asdict
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -236,7 +238,7 @@ def test_a_catalog_entry_puts_the_poses_on_its_object(db_path_col_catalogo, tmp_
         _di(c, M81, "catalog:m-81")
         assert _oggetti_dei_file(c, M81) == {("M 81", "done", None)}
         with db(c) as conn:
-            assert unnamed.answer(conn, _chiave(c, M81)) == {
+            assert asdict(unnamed.answer(conn, _chiave(c, M81))) == {
                 "kind": "catalog",
                 "value": "m-81",
                 "name": "M 81",

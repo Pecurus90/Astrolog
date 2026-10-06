@@ -120,3 +120,14 @@ def test_the_objects_listing_counts_the_poses_from_the_index_alone(conn):
     pose = [p for p in piano if re.match(r"(SCAN|SEARCH) f\b", p)]
     assert pose, piano
     assert all(re.search(r"COVERING INDEX frames_object\b", p) for p in pose), piano
+
+
+def test_a_name_spelled_like_a_slug_loses_to_the_catalog_object(conn):
+    """`by_key` looks a key up as slug and as primary name: an out-of-catalog name spelled like a
+    slug (`OBJECT = m-31`) must not win over the catalog object, whatever the row order."""
+    oggetto(conn, id_=1, slug=None)
+    conn.execute(
+        "INSERT INTO object_names(object_id, name, origin, is_primary) VALUES(1, 'm-31', 'raw', 1)"
+    )
+    oggetto(conn, id_=2, slug="m-31")
+    assert obj.by_key(conn, "m-31")["id"] == 2

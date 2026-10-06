@@ -23,6 +23,7 @@ from . import identify_score as score
 from . import identify_store as store
 from .identify_decide import Branch, Decision, IdentifyReason, IdentityConfidence, IdentityMethod
 from .identify_score import Candidate
+from .object_answer import TargetKind
 from .stage_run import Event, frame_safely, receipt, watched
 from .stages import StageName, StageStatus, ready, set_status
 
@@ -110,7 +111,7 @@ def _one_frame(conn: sqlite3.Connection, frame_id: int, counts: dict[str, int]) 
     group_said = (
         None if raw or cands else unnamed.named_by_group(conn, unnamed.assign(conn, frame_id))
     )
-    if group_said and group_said != unnamed.NONE:
+    if group_said and group_said != TargetKind.NONE:
         (named, hit), ruled = group_said, True
     decision = rule.decide(raw_name=named, hit=hit, cands=cands, fov_radius_deg=fov)
     if ruled:
@@ -132,7 +133,7 @@ def _one_frame(conn: sqlite3.Connection, frame_id: int, counts: dict[str, int]) 
             # Not a fault: `skipped`, not `pending`, or the backlog never reaches zero.
             skip_reason = (
                 IdentifyReason.NOT_AN_OBJECT
-                if put_out or group_said == unnamed.NONE
+                if put_out or group_said == TargetKind.NONE
                 else IdentifyReason.NO_NAME_NO_SKY
             )
             set_status(
@@ -180,10 +181,12 @@ def _as_the_user_said(conn: sqlite3.Connection, decision: Decision) -> Decision:
     return decision
 
 
-def _towards(conn: sqlite3.Connection, decision: Decision, value: str, kind: str) -> Decision:
+def _towards(
+    conn: sqlite3.Connection, decision: Decision, value: str, kind: TargetKind
+) -> Decision:
     """The decision moved onto `value`, a catalog slug or a free-text name."""
     entry = lookup.by_slug(conn, value)
-    if kind == "catalog" and entry is None:
+    if kind == TargetKind.CATALOG and entry is None:
         log.warning(
             "identify: la parola dell'utente punta a uno slug che non c'e'", extra={"a": value}
         )

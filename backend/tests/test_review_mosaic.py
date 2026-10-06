@@ -316,6 +316,18 @@ def test_the_app_proposes_a_mosaic_and_never_merges_by_itself(pagina):
     assert (righe[0]["panels"], righe[0]["frames"], righe[0]["answer"]) == (4, 8, None)
 
 
+def test_before_an_answer_no_frame_is_merged(pagina):
+    """The proposal alone writes nothing on the frames: no mosaic key, and every panel keeps the
+    object `identify` gave it. Merging waits for the user's yes."""
+    with db(pagina) as conn:
+        merged = conn.execute("SELECT COUNT(*) FROM frames WHERE mosaic_key IS NOT NULL")
+        assert merged.fetchone()[0] == 0
+        objects = conn.execute(
+            "SELECT COUNT(DISTINCT object_id) FROM frames WHERE panel_id IS NOT NULL"
+        ).fetchone()[0]
+    assert objects == len(set(NOMI)) + 1  # the four panels' three subjects, and the lone M 51
+
+
 def test_the_panels_are_gathered_even_though_they_are_three_different_objects(pagina):
     """I quattro pannelli di questo banco portano **tre** nomi diversi: ogni pannello inquadra
     una parte diversa del complesso. Raggruppando per soggetto il mosaico si spezzerebbe, quindi il

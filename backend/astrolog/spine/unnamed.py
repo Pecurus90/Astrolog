@@ -3,7 +3,8 @@ question, and the answer `identify` reads, which also holds for frames still to 
 
 import json
 import sqlite3
-from typing import Any, Literal
+from dataclasses import dataclass
+from typing import Literal
 
 from ..catalog import NamedEntry
 from ..clock import NIGHT_SQL, local_iso
@@ -12,8 +13,8 @@ from ..units import angular_separation_deg, field_deg, scale_arcsec_px
 from ..vocab.header_value import normalize_header_value
 from . import declarations as decl
 from . import frame_folder as folder
-from . import object_answer as risposta
-from .object_answer import NONE
+from . import object_answer
+from .object_answer import Answer, TargetKind
 from .stages import WAITING_SQL, StageName, invalidate
 
 _OF_FRAME = f"""
@@ -49,7 +50,7 @@ GROUP BY f.unnamed_key
 _ASKED = "COALESCE(f.empty_cone, 1) = 1"
 
 # Copies and frames with a sky included: `identify` makes the choice again.
-_POSES_OF_GROUP = f"SELECT f.id FROM frames f {folder.JOIN} WHERE f.unnamed_key = ?"  # noqa: S608
+_FRAMES_OF_GROUP = f"SELECT f.id FROM frames f {folder.JOIN} WHERE f.unnamed_key = ?"  # noqa: S608
 
 # Two are enough to tell one answer from a disagreement.
 _ANSWERS_OF_GROUP = f"""
@@ -59,12 +60,31 @@ WHERE f.unnamed_key = ? AND {_ASKED} LIMIT 2
 """  # noqa: S608 - constant fragment of this file
 
 
+@dataclass(frozen=True, slots=True)
+class Group:
+    """A group as the page asks it, with the opener's pointing. `first_frame` and `last_frame`
+    tell two pointing-less targets of one night apart: only frames that say the time count."""
+
+    key: str
+    night: str | None
+    camera: str | None
+    telescope: str | None
+    ra_deg: float | None
+    dec_deg: float | None
+    frames: int
+    integration_s: float
+    untimed: int
+    answer: Answer | None
+    first_frame: str | None
+    last_frame: str | None
+
+
 def _field(r: Row) -> float | None:
     """The short side of the field, in degrees."""
-    lati = [p for p in (r["naxis1"], r["naxis2"]) if p]
+    sides = [p for p in (r["naxis1"], r["naxis2"]) if p]
     return (
-        field_deg(min(lati), scale_arcsec_px(r["pixel_size_um"], r["focal_mm_raw"]))
-        if lati
+        field_deg(min(sides), scale_arcsec_px(r["pixel_size_um"], r["focal_mm_raw"]))
+        if sides
         else None
     )
 
@@ -77,23 +97,23 @@ def assign(conn: sqlite3.Connection, frame_id: int) -> str:
         return r["unnamed_key"]
     camera = normalize_header_value(r["instrument_raw"]) or None
     telescope = normalize_header_value(r["telescope_raw"]) or None
-    ra, dec, campo = r["ra_hint_deg"], r["dec_hint_deg"], _field(r)
+    ra, dec, fov = r["ra_hint_deg"], r["dec_hint_deg"], _field(r)
     # without pointing, focal or pixel the field is unknown: the night's pointing-less group
-    pointing = None if ra is None or dec is None or campo is None else (ra, dec, campo)
-    chiave = json.dumps([r["night"], camera, telescope, *(pointing or (None, None))[:2]])
-    vicini = []
-    for (altra,) in conn.execute(_GROUPS_OF_NIGHT, (r["night"],)):
-        _, c, t, a_ra, a_dec = json.loads(altra)
+    pointing = None if ra is None or dec is None or fov is None else (ra, dec, fov)
+    key = json.dumps([r["night"], camera, telescope, *(pointing or (None, None))[:2]])
+    near = []
+    for (other,) in conn.execute(_GROUPS_OF_NIGHT, (r["night"],)):
+        _, c, t, a_ra, a_dec = json.loads(other)
         if (c, t) != (camera, telescope) or (a_ra is None) != (pointing is None):
             continue
         if pointing is None:
-            vicini.append((0.0, altra))
-        elif (distanza := angular_separation_deg(*pointing[:2], a_ra, a_dec)) < pointing[2]:
-            vicini.append((distanza, altra))
-    if vicini:
-        chiave = min(vicini)[1]
-    conn.execute("UPDATE frames SET unnamed_key = ? WHERE id = ?", (chiave, frame_id))
-    return chiave
+            near.append((0.0, other))
+        elif (distance := angular_separation_deg(*pointing[:2], a_ra, a_dec)) < pointing[2]:
+            near.append((distance, other))
+    if near:
+        key = min(near)[1]
+    conn.execute("UPDATE frames SET unnamed_key = ? WHERE id = ?", (key, frame_id))
+    return key
 
 
 def key_of_frame(conn: sqlite3.Connection, frame_id: int) -> str | None:
@@ -105,29 +125,23 @@ def _written(value: str | None) -> str | None:
     return (value or "").strip() or None
 
 
-def by_group(conn: sqlite3.Connection, only: str | None = None) -> list[dict[str, Any]]:
-    """Largest first, with the opener's pointing; `only` keeps one group. A group of only copies
-    asks nothing."""
+def by_group(conn: sqlite3.Connection) -> list[Group]:
+    """Largest first. A group of only copies asks nothing."""
     out = []
     for r in conn.execute(_BY_GROUP):
-        if not r["n"] or (only is not None and r["key"] != only):
+        if not r["n"]:
             continue
-        notte, _, _, ra, dec = json.loads(r["key"])
-        out.append({
-            "key": r["key"], "night": notte, "camera": _written(r["instrument_raw"]),
-            "telescope": _written(r["telescope_raw"]), "ra_deg": ra, "dec_deg": dec,
-            "frames": r["n"], "integration_s": r["integration_s"], "untimed": r["untimed"],
-            "answer": answer(conn, r["key"]),
-            # two pointing-less targets in one night are one question: the hours tell a series
-            # from two. Only frames that say the time count; without a zone it stays UTC
-            "first_frame": local_iso(r["first_frame"], r["tz"]),
-            "last_frame": local_iso(r["last_frame"], r["tz"]),
-        })  # fmt: skip
-    return sorted(out, key=lambda g: (-g["frames"], g["key"]))
-
-
-def row_of(conn: sqlite3.Connection, key: str) -> dict[str, Any] | None:
-    return next(iter(by_group(conn, only=key)), None)
+        night, _, _, ra, dec = json.loads(r["key"])
+        out.append(Group(
+            key=r["key"], night=night, camera=_written(r["instrument_raw"]),
+            telescope=_written(r["telescope_raw"]), ra_deg=ra, dec_deg=dec,
+            frames=r["n"], integration_s=r["integration_s"], untimed=r["untimed"],
+            answer=answer(conn, r["key"]),
+            # without a zone it stays UTC
+            first_frame=local_iso(r["first_frame"], r["tz"]),
+            last_frame=local_iso(r["last_frame"], r["tz"]),
+        ))  # fmt: skip
+    return sorted(out, key=lambda g: (-g.frames, g.key))
 
 
 def declare(  # noqa: PLR0913
@@ -141,9 +155,9 @@ def declare(  # noqa: PLR0913
 ) -> None:
     """On every frame's fingerprint, so a frame that changes group carries it. Rewritable; an
     unknown slug is refused before writing."""
-    risposta.refuse_unknown_slug(conn, slug)
-    slug, name = risposta.resolved(conn, slug, name)
-    value = NONE if not_an_object else risposta.target_value(slug, name)
+    object_answer.refuse_unknown_slug(conn, slug)
+    slug, name = object_answer.resolved(conn, slug, name)
+    value = TargetKind.NONE if not_an_object else object_answer.target_value(slug, name)
     # every frame `answer` reads, missing ones too: a stale one would leave two answers
     rows = conn.execute(
         f"SELECT f.frame_hash FROM frames f WHERE f.unnamed_key = ? AND {_ASKED}",  # noqa: S608
@@ -155,42 +169,44 @@ def declare(  # noqa: PLR0913
         )
 
 
-def answer(conn: sqlite3.Connection, key: str | None) -> dict[str, Any] | None:
-    """`{"kind", "value", "name"}`: the one answer its frames carry, which newcomers take. Two
-    answers are none, and so is a gone catalog entry: its frames stay a question."""
-    dette = conn.execute(
+def _said(conn: sqlite3.Connection, key: str | None) -> str | None:
+    """The one answer its frames carry, which newcomers take. Two answers are none."""
+    said = conn.execute(
         _ANSWERS_OF_GROUP, (decl.EntityType.FRAME, decl.FRAME_OBJECT, key)
     ).fetchall()
-    if len(dette) != 1:
-        return None
-    value = dette[0][0]
-    if value == NONE:
-        return {"kind": NONE, "value": None, "name": None}
-    detto = risposta.shown_target(conn, value)
-    if detto is None:
-        return None
-    kind, valore, nome = detto
-    return {"kind": kind, "value": valore, "name": nome}
+    return said[0][0] if len(said) == 1 else None
 
 
-def requeue(conn: sqlite3.Connection, row: Row) -> list[int]:
+def answer(conn: sqlite3.Connection, key: str | None) -> Answer | None:
+    """A gone catalog entry is no answer: its frames stay a question."""
+    value = _said(conn, key)
+    if value is None:
+        return None
+    if value == TargetKind.NONE:
+        return Answer(TargetKind.NONE, None, None)
+    return object_answer.shown_target(conn, value)
+
+
+def requeue(conn: sqlite3.Connection, key: str) -> list[int]:
     """All of them, copies and frames with a sky included: `identify` redoes the choice, and where
     the sky has candidates it makes the same one."""
-    frames = [r["id"] for r in conn.execute(_POSES_OF_GROUP, (row["key"],))]
+    frames = [r["id"] for r in conn.execute(_FRAMES_OF_GROUP, (key,))]
     invalidate(conn, frames, StageName.IDENTIFY)
     return frames
 
 
 def named_by_group(
     conn: sqlite3.Connection, key: str | None
-) -> tuple[str, NamedEntry | None] | Literal["none"] | None:
+) -> tuple[str, NamedEntry | None] | Literal[TargetKind.NONE] | None:
     """`(name, catalog entry)`, `NONE` for "not an object", `None` for no answer or a vanished slug:
     the user's word moves frames, it never makes them disappear."""
-    detto = answer(conn, key)
-    if detto is None:
+    value = _said(conn, key)
+    if value == TargetKind.NONE:
+        return TargetKind.NONE
+    read = object_answer.read_target(value)
+    if read is None:
         return None
-    if detto["kind"] == NONE:
-        return NONE
-    if detto["kind"] == "name":
-        return detto["value"], None
-    return risposta.catalog_target(conn, detto["value"])
+    kind, target = read
+    if kind == TargetKind.NAME:
+        return target, None
+    return object_answer.catalog_target(conn, target)

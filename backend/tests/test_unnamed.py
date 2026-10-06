@@ -6,6 +6,7 @@ Che poi l'app lo faccia davvero lo guardano `test_review_unnamed.py` e
 """
 
 import re
+from dataclasses import asdict
 
 from astrolog.clock import night_date
 from astrolog.spine import unnamed
@@ -75,7 +76,16 @@ def test_two_objects_of_the_same_night_are_two_questions(conn):
     altra = _posa(conn, radice, "altra/r_1.fits")
     m81 = _posa(conn, radice, "M81/m_0.fits", pointing=M81)
     assert _chiave(conn, rosetta) == _chiave(conn, altra) != _chiave(conn, m81)
-    assert sorted(g["frames"] for g in unnamed.by_group(conn)) == [1, 2]
+    assert sorted(g.frames for g in unnamed.by_group(conn)) == [1, 2]
+
+
+def test_a_frame_without_pointing_does_not_join_a_group_opened_with_one(conn):
+    """Same night and camera, but one frame says where the mount pointed and the other does not:
+    two questions. Joined, two targets would take a single answer."""
+    radice = add_folder(conn, "D:/Astro")
+    puntata = _posa(conn, radice, "Rosetta/r_0.fits")
+    cieca = _posa(conn, radice, "Rosetta/r_1.fits", pointing=None)
+    assert _chiave(conn, puntata) != _chiave(conn, cieca)
 
 
 def test_a_dither_stays_in_the_same_group(conn):
@@ -134,7 +144,7 @@ def test_the_row_says_what_makes_the_group(conn):
     cio' che la distingue dalle altre, al posto del percorso di una cartella."""
     radice = add_folder(conn, "D:/Astro")
     _posa(conn, radice, "R/a.fits", telescope="  Newton 200/800 ")
-    (riga,) = unnamed.by_group(conn)
+    (riga,) = [asdict(g) for g in unnamed.by_group(conn)]
     assert {k: riga[k] for k in ("night", "camera", "telescope")} == {
         "night": "2024-03-12",
         "camera": "Canon EOS 700D",

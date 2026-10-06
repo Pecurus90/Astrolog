@@ -3,6 +3,7 @@ uno stato o un contatore cambia, l'OpenAPI non deve mentire in silenzio. E la ri
 chiusa in DB rifiuta esiti fuori vocabolario."""
 
 import ast
+import dataclasses
 import inspect
 import re
 import textwrap
@@ -29,6 +30,9 @@ from astrolog.spine import (
     gear_usage,
     group,
     identify_decide,
+    mosaic_proposals,
+    object_answer,
+    objects,
     rewrite,
     scan_store,
     signature,
@@ -115,6 +119,35 @@ def test_the_answers_about_a_mosaic_are_the_words_the_spine_reads():
     che divergesse verrebbe scritta e poi **scartata come illeggibile** -- il lettore tratta un
     valore che non conosce come nessuna risposta -- e la domanda tornerebbe senza dire perche'."""
     assert set(get_args(models_review_groups.MosaicAnswer)) == set(declarations.MosaicAnswer)
+
+
+def test_an_object_answer_has_the_kinds_the_spine_writes():
+    """The routes repeat them as `Literal` on purpose (`models_tonight`): never drifted."""
+    kind = models_review.ObjectAnswer.model_fields["kind"].annotation
+    assert set(get_args(kind)) == set(object_answer.TargetKind)
+    assert {f.name for f in dataclasses.fields(object_answer.Answer)} == set(
+        models_review.ObjectAnswer.model_fields
+    )
+
+
+def test_the_two_sky_blanks_are_fields_of_the_subjects():
+    """A blank the spine counts and the page does not carry would be frames lost from the sum."""
+    found = {"found"}
+    assert set(objects.SkyVoid) | found == set(models_review_groups.Subjects.model_fields)
+
+
+def test_every_group_the_page_asks_carries_its_key_and_its_answer():
+    """The promise of `models_review_groups`: a group is answered by its key and keeps the answer
+    on the page. Coordinates answer with `site`, their own word for it."""
+    for model in (
+        models_review_groups.TypelessFolder,
+        models_review_groups.GearSignature,
+        models_review_groups.MosaicCandidate,
+    ):
+        assert {"key", "answer"} <= set(model.model_fields), model.__name__
+    assert {"key", "site"} <= set(models_review_groups.UnclearCoordinates.model_fields)
+    proposal = {f.name for f in dataclasses.fields(mosaic_proposals.Proposal)}
+    assert proposal == set(models_review_groups.MosaicCandidate.model_fields)
 
 
 def test_the_answers_about_a_file_type_are_the_words_the_spine_reads():

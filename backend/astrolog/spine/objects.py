@@ -3,13 +3,14 @@ stage's store because many read them, and a stage may not import another."""
 
 import sqlite3
 from collections.abc import Iterable
+from enum import StrEnum
 from typing import Any, cast
 
 from ..db.row import Row
 from . import counts
 
 # A name is two steps, not a column: the primary in `object_names`, else the catalog's name for the
-# slug. A catalog object whose catalog names were all taken has no primary.
+# slug (`docs/domini/spina.md`, the three invariants of an object's name).
 NAME_COLUMNS = """
        (SELECT n.name FROM object_names n
          WHERE n.object_id = o.id AND n.is_primary = 1) AS primary_name,
@@ -20,13 +21,21 @@ SELECT o.*, {NAME_COLUMNS},{counts.counts_on(counts.Subject.OBJECT)}
 FROM objects o
 """  # noqa: S608 - constant fragments of the spine
 
+
+class SkyVoid(StrEnum):
+    """A frame's subject when the sky named none: not looked yet, or looked and found nothing."""
+
+    NOT_YET = "not_yet"
+    NOT_FOUND = "not_found"
+
+
 # The STATE before the object: a requeued, failed or skipped frame keeps its old `object_id`, which
 # the sky did not say. LEFT, so a frame never drops out of its group's count.
-NOT_YET, NOT_FOUND = "not_yet", "not_found"
 SUBJECT_JOIN = "LEFT JOIN frame_stages si ON si.frame_id = f.id AND si.stage = 'identify'"
 SUBJECT = (
-    f"CASE WHEN si.status IN ('pending', 'failed') THEN '{NOT_YET}'"
-    f" WHEN si.status = 'skipped' OR f.object_id IS NULL THEN '{NOT_FOUND}' ELSE f.object_id END"
+    f"CASE WHEN si.status IN ('pending', 'failed') THEN '{SkyVoid.NOT_YET}'"
+    f" WHEN si.status = 'skipped' OR f.object_id IS NULL THEN '{SkyVoid.NOT_FOUND}'"
+    " ELSE f.object_id END"
 )
 _NAMES = f"""
 SELECT o.id, o.catalog_slug, o.identity_confidence, {NAME_COLUMNS} FROM objects o
@@ -34,7 +43,8 @@ SELECT o.id, o.catalog_slug, o.identity_confidence, {NAME_COLUMNS} FROM objects 
 
 
 def display_name(row: Row) -> str | None:
-    """`None` only for an object with neither catalog nor names, which nothing should create."""
+    """`None` only for an object with neither catalog nor names, which nothing should create
+    (`docs/domini/spina.md`, invariant 3)."""
     return row["primary_name"] or row["catalog_name"]
 
 
@@ -60,55 +70,57 @@ def label(row: Row) -> str:
     return display_name(row) or stable_key(row)
 
 
-def subjects_sql(per: str, sorgente: str = "frames f", where: str = "") -> str:
+def subjects_sql(per: str, source: str = "frames f", where: str = "") -> str:
     """One row per (group, object); `where` is an `AND ...`. Duplicates go before the name lookup
     and the join drops object-less frames: asking inside makes SQLite leave the narrowing index."""
     return f"""
-SELECT s.gruppo, o.id, o.catalog_slug, {NAME_COLUMNS}
-FROM (SELECT DISTINCT {per} AS gruppo, f.object_id FROM {sorgente}
+SELECT s.owner, o.id, o.catalog_slug, {NAME_COLUMNS}
+FROM (SELECT DISTINCT {per} AS owner, f.object_id FROM {source}
       WHERE f.copy_of IS NULL {where}) s
 JOIN objects o ON o.id = s.object_id
 """  # noqa: S608 - constant fragments from the caller
 
 
-def subjects_of(righe: Iterable[Row]) -> dict[Any, list[str]]:
-    nomi: dict[Any, set[str]] = {}
-    for r in righe:
-        nomi.setdefault(r["gruppo"], set()).add(label(r))
-    return {g: sorted(n) for g, n in nomi.items()}
+def subjects_of(rows: Iterable[Row]) -> dict[Any, list[str]]:
+    names: dict[Any, set[str]] = {}
+    for r in rows:
+        names.setdefault(r["owner"], set()).add(label(r))
+    return {g: sorted(n) for g, n in names.items()}
 
 
-def together(nomi: Iterable[str]) -> str:
-    return ", ".join(nomi)
+def together(names: Iterable[str]) -> str:
+    return ", ".join(names)
 
 
-def count_subject(gruppo: dict[str, Any], subject: int | str, n: int) -> None:
+def count_subject(group: dict[str, Any], subject: int | str, n: int) -> None:
     """`subject` is a row's `SUBJECT`: an object id or one of the two blanks."""
-    conti = gruppo.setdefault("subjects", {})
-    conti[subject] = conti.get(subject, 0) + n
+    tally = group.setdefault("subjects", {})
+    tally[subject] = tally.get(subject, 0) + n
 
 
-def subjects[G: Iterable[dict[str, Any]]](conn: sqlite3.Connection, gruppi: G) -> G:
+def subjects[G: Iterable[dict[str, Any]]](conn: sqlite3.Connection, groups: G) -> G:
     """Names are read once for every group: an archive has a handful of objects, and the groups can
     be hundreds."""
-    nomi = {r["id"]: label(r) for r in conn.execute(_NAMES)}
-    for g in gruppi:
-        conti = g.get("subjects", {})
-        vuoti = (NOT_YET, NOT_FOUND)
-        trovati = [{"name": nomi[s], "frames": n} for s, n in conti.items() if s not in vuoti]
+    names = {r["id"]: label(r) for r in conn.execute(_NAMES)}
+    voids = tuple(SkyVoid)
+    for g in groups:
+        tally = g.get("subjects", {})
+        found = [{"name": names[s], "frames": n} for s, n in tally.items() if s not in voids]
         g["subjects"] = {
-            "found": sorted(trovati, key=lambda t: (-t["frames"], t["name"])),
-            "not_found": conti.get(NOT_FOUND, 0),
-            "not_yet": conti.get(NOT_YET, 0),
+            "found": sorted(found, key=lambda t: (-t["frames"], t["name"])),
+            "not_found": tally.get(SkyVoid.NOT_FOUND, 0),
+            "not_yet": tally.get(SkyVoid.NOT_YET, 0),
         }
-    return gruppi
+    return groups
 
 
 def by_key(conn: sqlite3.Connection, key: str) -> dict[str, Any] | None:
     row = conn.execute(
         f"{_LIST} WHERE o.catalog_slug = ?"  # noqa: S608 - constant query of this file
         " OR (o.catalog_slug IS NULL AND o.id IN"
-        "     (SELECT object_id FROM object_names WHERE name = ? AND is_primary = 1))",
+        "     (SELECT object_id FROM object_names WHERE name = ? AND is_primary = 1))"
+        # a name spelled like a slug loses to the catalog object: a rule, not the query plan
+        " ORDER BY o.catalog_slug IS NULL",
         (key, key),
     ).fetchone()
     return dict(row) if row else None

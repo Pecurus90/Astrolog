@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 6/10/2026 | rifattorizza | Fase 2, lotto 5d: `spine` oggetti e mosaici, Applica una lettura | ~0,32 M agenti (uno sviluppatore), sessione principale non contata | 38 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5c: `spine` attrezzatura | ~0,35 M agenti (uno sviluppatore), sessione principale non contata | 27 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5b: `spine` solve, identify, group | ~0,29 M agenti (uno sviluppatore), sessione principale non contata | 22 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 5a: `spine` scansione, normalizzazione, stadi | ~0,29 M agenti (uno sviluppatore), sessione principale non contata | 25 agente | 0 |
@@ -79,25 +80,12 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   nome italiano nuovo e' rosso, quelli vecchi stanno in `tools/nomi_italiani.txt`, che solo si
   accorcia. Non legge le stringhe: colonne SQL e segnaposto si cercano a mano. Fatti `db` e
   `fits` (e il segnaposto `{listed}` di `idlist.grouped`), poi `ephemeris` (`corpi` e' `bodies`).
-  Fatti anche `weather`, `net` e gli altri file sciolti, e i primi quattro lotti di `spine`
+  Fatti anche `weather`, `net` e gli altri file sciolti, e i primi cinque lotti di `spine`
   (scansione, normalizzazione, stadi; risoluzione, identificazione, raggruppamento, frame senza
   tipo, `site_requeue`, `home_nights`; l'attrezzatura, con `night_rig`, `signature`,
-  `signature_page`, `unfiltered`, `declarations`). Nel quinto lotto: `risposta` (alias di `object_answer`, anche in
-  `identify`, `mosaic`, `mosaic_proposals` e `api/review_write`), `lati`, `campo`, `chiave`,
-  `vicini`, `altra`, `distanza`, `notte`, `detto`, `valore`, `nome`, `_POSES_OF_GROUP`
-  (`unnamed`); `sorgente`, `righe`, `nomi`, `conti`, `gruppi`, `vuoti`, `trovati`, il parametro
-  `gruppo` di `count_subject` (il dizionario del gruppo) e la colonna `gruppo` di `subjects_sql`,
-  alias interno letto solo da `subjects_of` (`subjects_sql` la usano anche `mosaic_proposals` e
-  `archive`, che non leggono `gruppo`) (`objects`); `prefisso`, `letto`, `valore`, `grafia`,
-  `tocca`, `grezzo`, `altro_id`, `mie` (`object_answer`); `_COLONNE`, `righe`, `cielo`
-  (`object_candidates`). Nel sesto lotto: `descrizione`, `proposte`, `peso` (alias di
-  `mosaic_describe`, `mosaic_proposals`, `mosaic_weight`), `pose` (variabile e parametro di
-  `_stays`, `_band`, `_open`), `_POSES`, `pannelli`, `vivi`, `lista`, `lasciati`, `righe`
-  (`mosaic`); `_most_poses`, `voci`, `dentro`, `scelta`, `righe`, `nomi`, `versori`
-  (`mosaic_describe`); `raggi`, `b_su_a`,
-  `a_su_b` (`mosaic_geometry`); `soggetti`, `righe`, `valore`, `parola`, `detto`, `nomi`
-  (`mosaic_proposals`); `per_mosaico`, `pannelli`, `misura`, `lavoro`, `soglia`, `peso`
-  (`mosaic_weight`); `_DOVE`,
+  `signature_page`, `unfiltered`, `declarations`; oggetti e mosaici, con `object_answer`,
+  `object_candidates`, `unnamed`, i cinque `mosaic*` e l'alias di `object_answer` in
+  `api/review_page` e `api/review_write`). Nel sesto lotto: `_DOVE`,
   `_PAGINA`, `_QUANTE`, `_TOTALI`, `_OGGETTI`, `_FERME`, `_SENZA_CIELO`, `_lune`, `_meteo` e il
   suo parametro `fuso_riconosciuto`, la colonna `meteo`, `righe`, `lune`, `oggetti`, `filtri`,
   `riga`, `quando`, `certe`, `somme`, `dove`, `ordinati`, `voce`, `quanti` (`nights`); `ORDINI`
@@ -130,7 +118,7 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   `posti`, `luoghi`, `casa`, `posto`, `vicini`, `quanto`, `confermati`, `nome`, `chiave`,
   `dubbio`, `aperti`, `certi`, l'alias `corredi` (`review_page`); `scrivendo` (letto anche da
   `gear_write`), `_rifiuto`, `rifiuto`, `_TUTTO`, `_SENZA_LIMITI`, `fino_a`, `chiave`, `scelte`,
-  `rimesse`, `scritta`, `nome`, `sito`, gli alias `risposta`, `corredi`, `strumento`
+  `rimesse`, `scritta`, `nome`, `sito`, gli alias `corredi`, `strumento`
   (`review_write`); `riga`, `scelte`, `scelto` (`review_write_folders`).
 - **`identify`, dopo il terzo lotto di `spine`**: il wcs resta `dict[str, Any]` (la geometria
   legge con `.get`, e `mosaic` e i test passano dict senza i lati: *Mosaici, dichiarazioni e
@@ -149,12 +137,10 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   canali di `astap`, fonti di `place`, esiti e motivi della scansione, marchio di riscrittura,
   nomi e stati degli stadi, soggetti del conto, motivi di `group`, risposte sul tipo, metodi,
   fiducie, rami e motivi di `identify`; soggetti dell'uso, campi dei corredi, risposte sul filtro,
-  tipi di camera, risposte sul mosaico, tipi di entita'). In `weather` restano stringhe i generi di
+  tipi di camera, risposte sul mosaico, tipi di entita'; tipi del bersaglio di una risposta e
+  vuoti del cielo, `object_answer.TargetKind` e `objects.SkyVoid`). In `weather` restano stringhe i generi di
   riga (`forecast.KIND`, `history.KIND`) e le fonti per modello (`forecast.source_of`), aperte
-  quanto la scelta dei modelli. Nelle domande per gruppo i tipi del bersaglio (`catalog`, `name`,
-  `none`: `object_answer.read_target`, `unnamed.answer`, ripetuti in `api/models_review_groups`, e
-  `unnamed.NONE` riscritto come `Literal["none"]` nel ritorno di `named_by_group`) e i due vuoti
-  del cielo (`objects.NOT_YET`, `NOT_FOUND`). Nel sesto lotto i posti dove si risponde
+  quanto la scelta dei modelli. Nel sesto lotto i posti dove si risponde
   (`nights.REVIEW`, `SITE`, `NEVER`, ripetuti in `api/models_nights`) e gli ordini dell'archivio
   (le chiavi di `archive.ORDINI`, ripetute in `api/archive.Sort`). Dentro l'SQL restano scritti a
   mano tipi di entita' e soggetti dell'uso (`'rig'`, `'instrument'`; `'filter'` in
@@ -171,11 +157,20 @@ package: prima i nomi, poi doppioni e tipi, poi efficienza e file. Il debito gia
   test), `stages.set_status` e `stage_run.frame_safely` (chiamati da ogni stadio),
   `rigs.rig_for` (`normalize_rig`), `gear.declare_filter` (`gear_create`, `api/review_write`),
   `gear_create.filter_declared` (`api/gear_write`), `declarations.write_declaration` e
-  `declare_instrument_spec` (chiamati da molti moduli).
+  `declare_instrument_spec` (chiamati da molti moduli), `unnamed.declare` (`api/review_write_folders`
+  e i test, a parola chiave).
   `identify_link.hang` resta per un'altra ragione: togliere `counts` vuol dire contare dopo le
   scritture, e un frame che cade a meta' cambierebbe i conti della ricevuta.
   `archive_page` (`api/archive.py`) resta per un'altra ragione: i suoi otto parametri sono la
   query della rotta, e raccoglierli in una dipendenza di FastAPI e' un cambio di forma (fase 2).
+- **Oggetti e mosaici, dopo il quinto lotto di `spine`**: restano `dict` le righe d'oggetto di
+  `objects.by_key`, `listing`, `identities` (`o.*` largo; `display_name` e `stable_key` le leggono
+  anche da `sqlite3.Row` in sei moduli di altri lotti: il `cast` di `stable_key` aspetta loro),
+  `objects.counted` (va in `idlist.grouped`) e i soggetti di `objects.subjects`, scritti nei
+  dizionari dei gruppi di `signature_page` e `coordinates`. I cinque `mosaic*` restano file: la
+  geometria e' pura e le proposte sono un lettore, ognuno col suo contratto in `pyproject.toml`;
+  `mosaic_weight` porta una soglia con la sua fonte, citata da `domini/mosaico.md`, e
+  `mosaic_describe` un'altra regola (centro e nome).
 - **Doppioni piccoli dei package di base**: `catalog/load.load_catalog` riscrive a mano
   `db.transaction` (gli strati non gli lasciano importare `db`: resta).
 
@@ -350,9 +345,6 @@ Niente di aperto.
   fallito" invece di "manca npm". (b) `tools/test_chiave_due_case.py` e' cieco alla casa che
   sparisce (`if f.is_file()`): tolto `frontend/src/api/client.ts` passa. (c) La mutazione notturna
   guarda solo `backend/astrolog` (`paths_to_mutate`).
-- **Una promessa d'intestazione senza macchina:** `backend/astrolog/api/models_review_groups.py`
-  promette che ogni gruppo porta chiave e `answer`; oggi e' vero anche per `MosaicCandidate`, ma
-  nessuna prova lo controlla.
 - **La purezza di `identify_decide`, `identify_score` e `identify_geometry` e' scritta e non fatta
   rispettare:** aggiungendoci `sqlite3` o `catalog.lookup`, `lint-imports` resta verde. Serve un
   contratto loro in `backend/pyproject.toml`: quello dei moduli puri vieta `astrolog.spine`, e i
@@ -363,9 +355,6 @@ Niente di aperto.
   (`test_header_value_is_idempotent_and_keeps_distinct_things_distinct`) usa un campione senza
   indice in coda. Rimedio: riparare la promessa (il ciclo) o toglierla; in tutti e due i casi il
   campione deve portarne uno.
-- **Promesse del mosaico senza rosso**: "l'app propone e non fonde niente" e' provata solo sulla
-  proposta; il pannello senza rotazione e' provato solo nella geometria
-  (`backend/tests/test_mosaic_geometry.py`), non nel raggruppamento.
 - **I tipi costano al push:** `tools/test_tipi.py` lancia tre volte il generatore, e ogni
   estrazione dello schema OpenAPI costruisce un'app vera e ricarica l'intero catalogo.
 
@@ -414,10 +403,15 @@ Niente di aperto.
   altre", e conta solo la prima. Rimedio: i totali solo alla prima pagina.
 - **Rispondere a N gruppi in un Applica costa N letture dell'archivio.** Ogni risposta ritrova il
   suo gruppo rifacendo il lettore da capo dentro la transazione (`row_of` rifa' `by_signature` in
-  `spine/signature_page.py`, `by_group` in `spine/unnamed.py`, o `by_folder` in `spine/typeless.py`), e poi `requeue`
-  rilegge il gruppo, calcolando anche i soggetti per buttarli. Su ~21.000 frame sintetici: cartelle
-  senza nome 124 ms con una risposta, 9,6 s con cento. Rimedio: leggere ogni lettore una volta per
-  Applica.
+  `spine/signature_page.py` o `by_folder` in `spine/typeless.py`), e poi `requeue` rilegge il
+  gruppo, calcolando anche i soggetti per buttarli. Su ~21.000 frame sintetici: cartelle senza nome
+  124 ms con una risposta, 9,6 s con cento. Rimedio: leggere ogni lettore una volta per Applica,
+  come gia' i gruppi senza nome (`api/review_write`: su 20.000 frame e 400 gruppi, cento risposte
+  da 4,36 s a 0,12 s).
+- **La risposta di un gruppo senza nome parte dalle dichiarazioni**: `_ANSWERS_OF_GROUP`
+  (`spine/unnamed.py`) cerca per `entity_type` e scorre tutte quelle sui frame, a ogni gruppo. Su
+  20.000 frame e 400 gruppi `by_group` (la pagina di Da confermare) passa da 0,04 s a 4,8 s con
+  cento gruppi risposti (5.000 frame). Rimedio: partire dai frame del gruppo (`CROSS JOIN`), stesso risultato.
 - **Una risposta sul filtro rimette in coda tutti i frame senza matrice della sua camera, anche
   quelli che il filtro lo scrivono** (`_OF_CAMERA` in `spine/unfiltered.py`, chiamato da
   `api/review_write_folders._sensor`): 6.558 per 10 su un caso costruito, misurato quando la
@@ -448,9 +442,6 @@ Niente di aperto.
 
 ### Doppioni -- lo stesso pezzo scritto piu' volte
 
-- **I soggetti di un mosaico si leggono in due posti** (`_most_poses` in
-  `spine/mosaic_describe.py`, `_SUBJECTS` in `spine/mosaic_proposals.py`): la stessa giunzione
-  frame-pannelli, una per il piu' frequente e una per l'insieme.
 - **Il meteo**: la condizione "il meteo di questa notte" in SQL due volte (la pagina delle Notti e
   lo storico), per cui la spina conosce la tabella del meteo senza importarla. Resta il `cast` di
   `night_date` in `forecast.refresh`: toglierlo con `clock.night_of` cambia l'esito di un fuso
@@ -634,10 +625,7 @@ riga per voce.
 - **Mosaici, dichiarazioni e archivio, dopo la fase 1**: `archive._PANNELLI` e' assegnato due
   volte (il pezzo di `WHERE` sui pannelli di una riga, poi la query dei pannelli in fondo al
   file): il primo vale solo perche' `_OGGETTI_DELLA_RIGA` lo legge prima che il secondo lo
-  copra; due nomi. `declarations.learn` (`target_key`) e `confirm` (`key`) accettano
-  `str | None` perche' `object_answer.declare_object` e `unnamed.declare` passano `slug or name`
-  da `resolved`, che torna due opzionali; un `None` cadrebbe sul `NOT NULL`: lo toglie un
-  bersaglio risolto tipato `str`. Le pose e i
+  copra; due nomi. Le pose e i
   pannelli di `mosaic` e `mosaic_geometry` restano `dict[str, Any]`, non `db/row.Row`, perche'
   `identify_geometry.frame_shape`/`frame_radius_deg` leggono con `.get` (un `sqlite3.Row` non ce
   l'ha, e i test passano dict senza i lati): passare a `[]` cambia comportamento, quindi aspetta.
@@ -648,18 +636,13 @@ riga per voce.
   lancera'. Regole dette due volte: "righe e conta usano una condizione sola" (docstring di
   `archive` e di `_dove`); `COLLATE NOCASE` (`archive.ORDINI` e `choices`).
 - **Domande per gruppo e oggetti, dopo la fase 1**: `row_of` e' la stessa riga
-  (`next(iter(by_...(conn, only=key)), None)`) in `signature_page`, `unnamed` e `typeless`,
-  e l'ordine "il piu' numeroso in cima" (`-frames`, `key`) e' riscritto in `signature_page`,
-  `unnamed` e `frame_folder.counted`; "un grezzo senza bianchi o `None`" e'
-  `unnamed._written` e di nuovo a mano in `signature_page._card`. Due regole senza test: in
-  `unnamed.assign` un frame senza puntamento non entra in un gruppo della stessa notte aperto con
-  un puntamento (tolta la condizione, la suite resta verde e due bersagli prendono una risposta
-  sola); `signature_page.row_of` non ricostruisce la pagina intera per ogni risposta (costo al
-  quadrato delle schede), e nessun test di costo lo tiene. Regole dette piu' volte: "i frame gia'
-  risposti tornano in coda, cosi' un ripensamento vale" nei `requeue` di `signature`, `unfiltered`
-  e `unnamed`; gli invarianti
-  del nome in `objects.NAME_COLUMNS` e `display_name` ripetono `docs/domini/spina.md` senza
-  rimandarci.
+  (`next(iter(by_...(conn, only=key)), None)`) in `signature_page` e `typeless`, e l'ordine "il
+  piu' numeroso in cima" (`-frames`, `key`) e' riscritto in `signature_page`, `unnamed` e
+  `frame_folder.counted`; "un grezzo senza bianchi o `None`" e' `unnamed._written` e di nuovo a
+  mano in `signature_page._card`: nessuna casa comune fra i tre senza un modulo nuovo. Senza test:
+  `signature_page.row_of` non ricostruisce la pagina intera per ogni risposta (costo al quadrato
+  delle schede). Regola detta piu' volte: "i frame gia' risposti tornano in coda, cosi' un
+  ripensamento vale" nei `requeue` di `signature`, `unfiltered` e `unnamed`.
 - **La base di `api`, dopo la fase 1.** Senza test: i 409 di `POST /pipeline/run`
   (`no_folders`, `no_readable_folders`, `worker_busy`) e il suo 200 "niente da avviare" a corsa
   in giro; `POST /pipeline/stop` a worker fermo; `GET /pipeline/status` con una scansione fermata
@@ -682,11 +665,6 @@ riga per voce.
   scansione (`scan_running`), ma `frontend/src/i18n/it.ts` e `en.ts` (riga 47) dicono solo che non
   si riescono a leggere: un doppio clic su Scansiona mostra "non si riesce a leggere". Il testo
   deve dire anche il caso della scansione gia' in corso.
-- **`objects.by_key` cerca slug e nome primario con un `OR`**: un nome fuori catalogo scritto
-  come uno slug (`OBJECT = m-31`) e un oggetto di catalogo con quello slug danno due righe, e
-  vince la prima che SQLite trova. Misurato: col piano di query di oggi vince lo slug anche
-  inserendo prima l'oggetto fuori catalogo, quindi il caso non nasce; un `ORDER BY` che metta lo
-  slug davanti lo renderebbe una regola invece di un piano.
 - **La lista delle cartelle sotto un tetto unico** (`api/folders._reachable`): una condivisione
   che non risponde lascia indietro il suo thread a ogni `GET /folders`, e finche' resta morta i
   thread si sommano; quando il tempo scade la cartella diventa `reachable: false` senza una riga

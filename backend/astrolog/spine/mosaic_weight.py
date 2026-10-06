@@ -21,14 +21,14 @@ GROUP BY p.id
 def weigh(conn: sqlite3.Connection, mosaic_ids: Iterable[int]) -> None:
     """Time is weighed, frames only when one frame in the mosaic lacks its time, or a panel of
     such frames would weigh zero."""
-    per_mosaico: dict[int, list[sqlite3.Row]] = {}
+    by_mosaic: dict[int, list[sqlite3.Row]] = {}
     for r in conn.execute(_WORK, (json.dumps(sorted(mosaic_ids)),)):
-        per_mosaico.setdefault(r["mosaic_id"], []).append(r)
-    for pannelli in per_mosaico.values():
-        misura = "untimed" if any(p["untimed"] for p in pannelli) else "seconds"
-        lavoro = {p["id"]: p["frames"] if misura == "untimed" else p["seconds"] for p in pannelli}
-        soglia = MIN_SHARE * max(lavoro.values())
+        by_mosaic.setdefault(r["mosaic_id"], []).append(r)
+    for panels in by_mosaic.values():
+        measure = "untimed" if any(p["untimed"] for p in panels) else "seconds"
+        work = {p["id"]: p["frames"] if measure == "untimed" else p["seconds"] for p in panels}
+        threshold = MIN_SHARE * max(work.values())
         conn.executemany(
             "UPDATE panels SET counts_in_mosaic = ? WHERE id = ?",
-            [(int(peso >= soglia), pid) for pid, peso in lavoro.items()],
+            [(int(weight >= threshold), pid) for pid, weight in work.items()],
         )

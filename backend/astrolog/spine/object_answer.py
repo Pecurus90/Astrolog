@@ -3,8 +3,8 @@
 
 import logging
 import sqlite3
-from dataclasses import asdict
-from typing import Any, Final
+from dataclasses import asdict, dataclass
+from enum import StrEnum
 
 from ..catalog import NamedEntry, lookup
 from ..clock import now_iso
@@ -29,7 +29,36 @@ log = logging.getLogger(__name__)
 CORRECTION = "correction"
 
 CATALOG, NAME = "catalog:", "name:"  # the target's kind, at the head of the value
-NONE: Final = "none"  # "not an object": the value written on a frame, and the answer's kind
+
+
+class TargetKind(StrEnum):
+    """An answer's kind. `NONE` is "not an object", and also the value written on a frame."""
+
+    CATALOG = "catalog"
+    NAME = "name"
+    NONE = "none"
+
+
+@dataclass(frozen=True, slots=True)
+class Answer:
+    """An answer as a card shows it: `value` the slug or the written name, `name` how it reads;
+    both empty for "not an object"."""
+
+    kind: TargetKind
+    value: str | None
+    name: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class OutOfArchive:
+    """The frames put out under one found key; `name` is the catalog's, None for an unknown key."""
+
+    key: str
+    frames: int
+    integration_s: float
+    untimed: int
+    name: str | None
+
 
 # The frames the user put out of the archive, under what `identify` had found for them. Copies
 # count nowhere; a frame still linked waits for `identify` and counts on its object.
@@ -37,7 +66,7 @@ _OUT = f"""
 SELECT f.found_key AS key, COUNT(*) AS frames,
   COALESCE(SUM(f.exposure_s), 0) AS integration_s, SUM(f.exposure_s IS NULL) AS untimed
 FROM frames f JOIN declarations d ON d.entity_type = '{EntityType.FRAME}'
-  AND d.entity_key = f.frame_hash AND d.field = '{FRAME_OBJECT}' AND d.value = '{NONE}'
+  AND d.entity_key = f.frame_hash AND d.field = '{FRAME_OBJECT}' AND d.value = '{TargetKind.NONE}'
 WHERE f.found_key IS NOT NULL AND f.object_id IS NULL AND f.copy_of IS NULL
 GROUP BY f.found_key
 """  # noqa: S608 - constants of the spine
@@ -46,23 +75,23 @@ GROUP BY f.found_key
 _LINKED_OUT = f"""
 SELECT f.object_id, COUNT(*) FROM frames f
   JOIN declarations d ON d.entity_type = '{EntityType.FRAME}' AND d.entity_key = f.frame_hash
-  AND d.field = '{FRAME_OBJECT}' AND d.value = '{NONE}'
+  AND d.field = '{FRAME_OBJECT}' AND d.value = '{TargetKind.NONE}'
 WHERE f.object_id IS NOT NULL AND f.copy_of IS NULL GROUP BY f.object_id
 """  # noqa: S608 - constants of the spine
 
 
 def said_not_an_object(conn: sqlite3.Connection, frame_hash: str) -> bool:
     """The user's word on this frame itself, from its group or from the card of what was found."""
-    return declared(conn, EntityType.FRAME, frame_hash, FRAME_OBJECT) == NONE
+    return declared(conn, EntityType.FRAME, frame_hash, FRAME_OBJECT) == TargetKind.NONE
 
 
-def out_of_archive(conn: sqlite3.Connection) -> dict[str, dict[str, Any]]:
+def out_of_archive(conn: sqlite3.Connection) -> dict[str, OutOfArchive]:
     """Per found key, the frames put out: their card stays on the page so one can change one's
-    mind. `name` is the catalog's, None for a key the catalog does not know."""
-    out: dict[str, dict[str, Any]] = {}
+    mind."""
+    out: dict[str, OutOfArchive] = {}
     for r in conn.execute(_OUT).fetchall():
-        voce = lookup.by_slug(conn, r["key"])
-        out[r["key"]] = {**dict(r), "name": voce.name if voce else None}
+        entry = lookup.by_slug(conn, r["key"])
+        out[r["key"]] = OutOfArchive(**dict(r), name=entry.name if entry else None)
     return out
 
 
@@ -82,13 +111,15 @@ def _card_frames(conn: sqlite3.Connection, key: str) -> list[sqlite3.Row]:
 def declare_not_an_object(conn: sqlite3.Connection, key: str, now: str | None = None) -> list[int]:
     """On each frame's fingerprint, fixed now, read by `identify` before name and sky; `found_key`
     written now tells it from a group's answer, which a sky with candidates overrides."""
-    righe = _card_frames(conn, key)
-    if not righe:
+    rows = _card_frames(conn, key)
+    if not rows:
         raise LookupError(f"oggetto {key}")
-    for r in righe:
-        write_declaration(conn, EntityType.FRAME, r["frame_hash"], FRAME_OBJECT, NONE, now)
+    for r in rows:
+        write_declaration(
+            conn, EntityType.FRAME, r["frame_hash"], FRAME_OBJECT, TargetKind.NONE, now
+        )
         conn.execute("UPDATE frames SET found_key = ? WHERE id = ?", (key, r["id"]))
-    frames = [r["id"] for r in righe]
+    frames = [r["id"] for r in rows]
     invalidate(conn, frames, StageName.IDENTIFY)
     return frames
 
@@ -103,8 +134,8 @@ def declare_found(
 ) -> list[int]:
     """The card of what was found, answered with a target: the frames put out come back, and the
     correction moves them all. Without the object's row only the correction is written."""
-    righe = _card_frames(conn, key)
-    if not righe:
+    rows = _card_frames(conn, key)
+    if not rows:
         raise LookupError(f"oggetto {key}")
     if objects.by_key(conn, key) is not None:
         declare_object(conn, key, slug=slug, name=name, now=now)
@@ -114,14 +145,14 @@ def declare_found(
         correct_object(conn, key, slug=slug, name=name, now=now)
     # Without name and sky only the frame's own word can bring it back: the target, not silence.
     target = target_value(*resolved(conn, slug, name))
-    for r in righe:
+    for r in rows:
         if not said_not_an_object(conn, r["frame_hash"]):
             continue
         if not clean_object_name(r["object_raw"]) and r["empty_cone"] in (None, 1):
             write_declaration(conn, EntityType.FRAME, r["frame_hash"], FRAME_OBJECT, target, now)
         else:
             forget(conn, EntityType.FRAME, r["frame_hash"], FRAME_OBJECT)
-    frames = [r["id"] for r in righe]
+    frames = [r["id"] for r in rows]
     invalidate(conn, frames, StageName.IDENTIFY)
     return frames
 
@@ -133,12 +164,21 @@ def correct_object(
     slug: str | None = None,
     name: str | None = None,
     now: str | None = None,
-) -> None:
+) -> str:
     """A correction, not a lock: the user lock guards the object, not the frame, so `identify` would
     take the frames back; a declaration is read every time and survives a reset."""
-    if not found_key or bool(slug) == bool(name):
-        raise ValueError("la correzione vuole un bersaglio solo, slug o nome")
+    target = _one_target(found_key, slug, name)
     write_declaration(conn, EntityType.OBJECT, found_key, CORRECTION, target_value(slug, name), now)
+    return target
+
+
+def _one_target(found_key: str, slug: str | None, name: str | None) -> str:
+    """The slug or the name, never both: two would let the correction pick for the user."""
+    if found_key and slug and not name:
+        return slug
+    if found_key and name and not slug:
+        return name
+    raise ValueError("la correzione vuole un bersaglio solo, slug o nome")
 
 
 def target_value(slug: str | None, name: str | None) -> str:
@@ -169,14 +209,14 @@ def refuse_unknown_slug(conn: sqlite3.Connection, slug: str | None) -> None:
         raise UnknownTargetError(slug)
 
 
-def read_target(value: object) -> tuple[str, str] | None:
+def read_target(value: object) -> tuple[TargetKind, str] | None:
     """The prefix is checked, not assumed: cutting a value written elsewhere would mangle a name. A
     blank target is not a target."""
     if not isinstance(value, str):
         return None
-    for prefisso, kind in ((CATALOG, "catalog"), (NAME, "name")):
-        if value.startswith(prefisso) and value[len(prefisso) :].strip():
-            return kind, value[len(prefisso) :]
+    for prefix, kind in ((CATALOG, TargetKind.CATALOG), (NAME, TargetKind.NAME)):
+        if value.startswith(prefix) and value[len(prefix) :].strip():
+            return kind, value[len(prefix) :]
     log.warning("declarations: bersaglio senza tipo, ignorato", extra={"value": value})
     return None
 
@@ -188,19 +228,19 @@ def mosaic_word(value: str | None) -> str | None:
     return None if read_target(value) is None else MosaicAnswer.YES
 
 
-def shown_target(conn: sqlite3.Connection, value: str) -> tuple[str, str, str] | None:
+def shown_target(conn: sqlite3.Connection, value: str) -> Answer | None:
     """A catalog entry that is gone counts as no target: its slug would show a name nobody wrote."""
-    letto = read_target(value)
-    if letto is None:
+    read = read_target(value)
+    if read is None:
         return None
-    kind, valore = letto
-    if kind == "name":
-        return kind, valore, valore
-    entry = lookup.by_slug(conn, valore)
-    return None if entry is None else (kind, valore, entry.name)
+    kind, target = read
+    if kind == TargetKind.NAME:
+        return Answer(kind, target, target)
+    entry = lookup.by_slug(conn, target)
+    return None if entry is None else Answer(kind, target, entry.name)
 
 
-def correction_of(conn: sqlite3.Connection, found_key: str) -> tuple[str, str] | None:
+def correction_of(conn: sqlite3.Connection, found_key: str) -> tuple[TargetKind, str] | None:
     value = declared(conn, EntityType.OBJECT, found_key, CORRECTION)
     return None if value is None else read_target(value)
 
@@ -223,10 +263,9 @@ def declare_object(
     slug, name = resolved(conn, slug, name)
     object_id = row["id"]
 
-    correct_object(conn, key, slug=slug, name=name, now=now)
-    target = slug or name
-    for grafia in _unambiguous_spellings(conn, object_id):
-        learn(conn, "object", grafia, target, now=now)
+    target = correct_object(conn, key, slug=slug, name=name, now=now)
+    for spelling in _unambiguous_spellings(conn, object_id):
+        learn(conn, "object", spelling, target, now=now)
 
     frames = objects.frames_of(conn, object_id)
     invalidate(conn, frames, StageName.IDENTIFY)
@@ -236,8 +275,8 @@ def declare_object(
 def _unambiguous_spellings(conn: sqlite3.Connection, object_id: int) -> list[str]:
     """Compared cleaned of palette words, the form `identify` looks rules up in: `Snapshot LRGB` and
     `Snapshot` are one spelling, or the rule would never hook."""
-    tocca: dict[str | None, set[int]] = {}
-    for grezzo, altro_id in objects.raw_names_with_objects(conn):
-        tocca.setdefault(clean_object_name(grezzo), set()).add(altro_id)
-    mie = {clean_object_name(g) for g in objects.raw_names_of(conn, object_id)}
-    return [g for g in mie if g and len(tocca.get(g, ())) == 1]
+    touches: dict[str | None, set[int]] = {}
+    for raw, other_id in objects.raw_names_with_objects(conn):
+        touches.setdefault(clean_object_name(raw), set()).add(other_id)
+    mine = {clean_object_name(g) for g in objects.raw_names_of(conn, object_id)}
+    return [g for g in mine if g and len(touches.get(g, ())) == 1]

@@ -1,7 +1,7 @@
 """The order in which the answers apply; the rules live in the spine."""
 
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator
 from contextlib import contextmanager
 
 from fastapi import HTTPException
@@ -9,8 +9,7 @@ from fastapi import HTTPException
 from ..db.transaction import transaction
 from ..spine import coordinates as places
 from ..spine import declarations as decl
-from ..spine import gear, gear_create, mosaic
-from ..spine import object_answer as risposta
+from ..spine import gear, gear_create, mosaic, object_answer, unnamed
 from ..spine import rigs as corredi
 from ..spine.group import GroupReason
 from ..spine.stages import StageName, invalidate
@@ -59,8 +58,14 @@ def apply_answers(conn: sqlite3.Connection, body: ReviewApply, now: str) -> tupl
         rimesse, scritta = answer_filter(conn, edit.id, edit, now)
         requeued.update(rimesse)
         changed += int(scritta)
+    # objects' answers move no unnamed group in or out: read them once, not once per answer
+    groups = (
+        {g.key for g in unnamed.by_group(conn)}
+        if any(e.key.startswith(page.FRAMES_KEY) for e in body.objects)
+        else set()
+    )
     for edit in body.objects:
-        requeued.update(_answer_object(conn, edit, now))
+        requeued.update(_answer_object(conn, edit, now, groups))
         changed += 1
     for edit in body.unclear:
         requeued.update(_answer_where(conn, edit, now))
@@ -129,22 +134,25 @@ def _answer_mosaic(conn: sqlite3.Connection, edit: MosaicEdit, now: str) -> None
     knows as a designation goes to its entry: whoever writes `IC 405` means IC 405."""
     value = decl.MosaicAnswer.NO
     if edit.answer == decl.MosaicAnswer.YES:
-        slug, name = risposta.resolved(conn, None, (edit.name or "").strip())
-        value = risposta.target_value(slug, name)
+        slug, name = object_answer.resolved(conn, None, (edit.name or "").strip())
+        value = object_answer.target_value(slug, name)
     mosaic.write_answer(conn, edit.key, value, now)
 
 
-def _answer_object(conn: sqlite3.Connection, edit: ObjectEdit, now: str) -> list[int]:
+def _answer_object(
+    conn: sqlite3.Connection, edit: ObjectEdit, now: str, groups: Collection[str]
+) -> list[int]:
     """The card's key says who writes: the found object's, or the group's of frames with no name
     and no sky. A key with neither head is a card that is not there."""
     if edit.key.startswith(page.FRAMES_KEY):
-        return folders.answer_unnamed(conn, edit.key.removeprefix(page.FRAMES_KEY), edit, now)
+        key = edit.key.removeprefix(page.FRAMES_KEY)
+        return folders.answer_unnamed(conn, key, edit, now, groups)
     if not edit.key.startswith(page.OBJECT_KEY):
         raise LookupError(f"scheda {edit.key}")
     chiave = edit.key.removeprefix(page.OBJECT_KEY)
     if edit.not_an_object:
-        return risposta.declare_not_an_object(conn, chiave, now)
-    return risposta.declare_found(conn, chiave, slug=edit.slug, name=edit.name, now=now)
+        return object_answer.declare_not_an_object(conn, chiave, now)
+    return object_answer.declare_found(conn, chiave, slug=edit.slug, name=edit.name, now=now)
 
 
 def _answer_where(conn: sqlite3.Connection, edit: CoordinatesEdit, now: str) -> list[int]:

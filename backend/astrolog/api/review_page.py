@@ -2,12 +2,12 @@
 are written by identify, since the catalog cone is costly; the rest is composed here."""
 
 import sqlite3
+from dataclasses import asdict
 from typing import Final
 
 from ..place import by_distance, distance_km
 from ..spine import coordinates as places
-from ..spine import gear, unnamed
-from ..spine import object_answer as risposta
+from ..spine import gear, object_answer, unnamed
 from ..spine import objects as obj
 from ..spine import rigs as corredi
 from ..spine.group import GroupReason
@@ -126,13 +126,13 @@ def objects(conn: sqlite3.Connection) -> tuple[list[ObjectCard], list[ObjectCard
 def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
     """The archive's objects, joined by their key with the frames put out under it; then the keys
     whose frames are all out, which have no object row any more."""
-    fuori = risposta.out_of_archive(conn)
-    collegati_fuori = risposta.linked_out(conn)
+    fuori = object_answer.out_of_archive(conn)
+    collegati_fuori = object_answer.linked_out(conn)
     candidati = _sky_candidates(conn)
     out: list[ObjectCard] = []
     for row in obj.listing(conn):
         chiave = obj.stable_key(row)
-        extra = fuori.pop(chiave, {"frames": 0, "integration_s": 0.0, "untimed": 0})
+        extra = fuori.pop(chiave, None)
         # every frame answered "not an object", the ones still waiting for `identify` included
         tutti_fuori = row["frames"] and collegati_fuori.get(row["id"], 0) == row["frames"]
         out.append(
@@ -143,9 +143,9 @@ def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
                 method=row["identity_method"],
                 confidence=row["identity_confidence"],
                 group=None,
-                frames=row["frames"] + extra["frames"],
-                integration_s=row["integration_s"] + extra["integration_s"],
-                untimed=row["untimed"] + extra["untimed"],
+                frames=row["frames"] + (extra.frames if extra else 0),
+                integration_s=row["integration_s"] + (extra.integration_s if extra else 0.0),
+                untimed=row["untimed"] + (extra.untimed if extra else 0),
                 candidates=candidati.get(chiave, []),
                 answer=NONE_ANSWER if tutti_fuori else None,
             )
@@ -154,14 +154,14 @@ def _found_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
         out.append(
             ObjectCard(
                 key=OBJECT_KEY + chiave,
-                name=conti["name"] or chiave,
-                slug=chiave if conti["name"] else None,
+                name=conti.name or chiave,
+                slug=chiave if conti.name else None,
                 method=None,
                 confidence=None,
                 group=None,
-                frames=conti["frames"],
-                integration_s=conti["integration_s"],
-                untimed=conti["untimed"],
+                frames=conti.frames,
+                integration_s=conti.integration_s,
+                untimed=conti.untimed,
                 candidates=candidati.get(chiave, []),
                 answer=NONE_ANSWER,
             )
@@ -173,17 +173,17 @@ def _group_cards(conn: sqlite3.Connection) -> list[ObjectCard]:
     """Frames with no name and no sky: the sky has nothing to click there."""
     return [
         ObjectCard(
-            key=FRAMES_KEY + g["key"],
+            key=FRAMES_KEY + g.key,
             name=None,
             slug=None,
             method=None,
             confidence=None,
-            group=UnnamedGroup(**g),
-            frames=g["frames"],
-            integration_s=g["integration_s"],
-            untimed=g["untimed"],
+            group=UnnamedGroup(**asdict(g)),
+            frames=g.frames,
+            integration_s=g.integration_s,
+            untimed=g.untimed,
             candidates=[],
-            answer=None if g["answer"] is None else ObjectAnswer(**g["answer"]),
+            answer=None if g.answer is None else ObjectAnswer(**asdict(g.answer)),
         )
         for g in unnamed.by_group(conn)
     ]

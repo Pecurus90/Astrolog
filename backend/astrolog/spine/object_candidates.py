@@ -9,7 +9,7 @@ from . import identify
 from . import objects as obj
 from .identify_decide import DOUBT
 
-_COLONNE = ("object_key", "rank", "slug", "name", "common_name", "in_frame")
+_COLUMNS = ("object_key", "rank", "slug", "name", "common_name", "in_frame")
 
 # One measured sky per key: its frames look at the same patch.
 _OUT_SKIES = """
@@ -24,14 +24,14 @@ WHERE f.found_key IS NOT NULL AND f.object_id IS NULL
 
 def write(conn: sqlite3.Connection) -> None:
     """Most likely first; all or nothing (`replace_rows`)."""
-    cieli: dict[str, dict[str, Any]] = {}
+    skies: dict[str, dict[str, Any]] = {}
     for r in conn.execute(_OUT_SKIES).fetchall():
-        cieli[r["key"]] = {k: r[k] for k in r.keys() if k != "key"}  # noqa: SIM118 - a Row
-    for riga in obj.identities(conn):
-        if riga["identity_confidence"] == DOUBT and (cielo := obj.a_frame_of(conn, riga["id"])):
-            cieli[obj.stable_key(riga)] = cielo
-    righe: list[tuple[Any, ...]] = []
-    for chiave, cielo in cieli.items():
-        for rank, c in enumerate(identify.candidates(conn, cielo)):
-            righe.append((chiave, rank, c.slug, c.name, c.common_name, c.in_frame))
-    replace_rows(conn, "object_candidates", _COLONNE, righe)
+        skies[r["key"]] = {k: r[k] for k in r.keys() if k != "key"}  # noqa: SIM118 - a Row
+    for row in obj.identities(conn):
+        if row["identity_confidence"] == DOUBT and (sky := obj.a_frame_of(conn, row["id"])):
+            skies[obj.stable_key(row)] = sky
+    rows: list[tuple[Any, ...]] = []
+    for key, sky in skies.items():
+        for rank, c in enumerate(identify.candidates(conn, sky)):
+            rows.append((key, rank, c.slug, c.name, c.common_name, c.in_frame))
+    replace_rows(conn, "object_candidates", _COLUMNS, rows)

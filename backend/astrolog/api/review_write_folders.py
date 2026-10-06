@@ -2,7 +2,7 @@
 old page, and would stay forever unseen. Hence LookupError, which the route turns into 404."""
 
 import sqlite3
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import replace
 from typing import Any
 
@@ -91,14 +91,16 @@ def rig_parts(
     return scelto.optics, scelto.camera, scelto.focal_mm
 
 
-def answer_unnamed(conn: sqlite3.Connection, key: str, edit: ObjectEdit, now: str) -> list[int]:
-    riga = unnamed.row_of(conn, key)
-    if riga is None:
+def answer_unnamed(
+    conn: sqlite3.Connection, key: str, edit: ObjectEdit, now: str, groups: Collection[str]
+) -> list[int]:
+    """`groups` are the unnamed groups that ask, read once for the whole Apply."""
+    if key not in groups:
         raise LookupError(f"gruppo {key}")
     unnamed.declare(
         conn, key, slug=edit.slug, name=edit.name, not_an_object=edit.not_an_object, now=now
     )
-    return unnamed.requeue(conn, riga)
+    return unnamed.requeue(conn, key)
 
 
 def answer_typeless(conn: sqlite3.Connection, edit: TypelessFolderEdit, now: str) -> list[int]:
