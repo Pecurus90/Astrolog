@@ -249,8 +249,12 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   a discesa sotto il campo, divisi per tipo, poche voci per tipo, con frecce e Invio. Un risultato
   apre la pagina che gia' lo mostra: l'oggetto l'Archivio ristretto a lui, la notte le Notti su
   quella notte, un pezzo la sua scheda in Attrezzatura, un sito il sito nelle Impostazioni; nessuna
-  pagina nuova. Ora: il brief a Claude Design (campo aperto, menu per tipo, stati, telefono) e la
-  rotta del backend; il campo dopo il disegno.
+  pagina nuova. Una notte si trova per data, nelle forme comuni ("25/9", "2026-09-25", "25
+  settembre", "settembre 2026"), o per l'oggetto ripreso: "M31" mette nel gruppo Notti anche le
+  notti di M 31 (Marco, 7/10/2026). Oggi solo l'Archivio si apre da indirizzo (`/archivio?q=`):
+  Notti, Attrezzatura e il sito nelle Impostazioni vogliono il loro parametro. Fette: (1) le pagine
+  che si aprono su una voce dall'indirizzo, (2) la rotta `GET /api/v1/search`, (3) il campo nella
+  barra dopo il disegno (brief dato a Marco il 7/10).
 - **M4 -- fatta** (7/10/2026): l'Archivio stringe per periodo (anno o date), sito, ottica e
   camera, e la riga dice solo le pose che passano (`counts.Scope`, `docs/domini/archivio.md`).
 
