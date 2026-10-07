@@ -9,7 +9,8 @@ from fastapi.testclient import TestClient
 
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
-from astrolog.weather import forecast, meteoblue, sky
+from astrolog.spine.group_store import home_site
+from astrolog.weather import forecast, meteoblue, sky, view
 from test_api_weather import dintorni_del_cielo, metti_casa
 from test_weather_meteoblue import CHIAVE, rifiuto, seeing
 
@@ -83,7 +84,7 @@ def test_with_the_key_the_seeing_comes_from_meteoblue_hour_by_hour(app):
     detto = app.get("/api/v1/weather").json()
     assert detto["seeing"] == {"key": True, "source": "meteoblue", "meteoblue": "ok"}
     notte = detto["nights"][0]
-    assert {o["seeing_arcsec"] for o in notte["aloft"]} == {0.9}  # ogni ora, un valore solo
+    assert {o["seeing_arcsec"] for o in notte["hours"]} == {0.9}  # ogni ora, un valore solo
     assert {f["source"] for f in detto["sources"]} >= {"meteoblue"}
 
 
@@ -107,7 +108,7 @@ def test_without_a_key_there_is_no_seeing_and_meteoblue_is_not_mentioned(app):
     app.post("/api/v1/weather/refresh")
     detto = app.get("/api/v1/weather").json()
     assert detto["seeing"] == {"key": False, "source": None, "meteoblue": None}
-    assert {o["seeing_arcsec"] for o in detto["nights"][0]["aloft"]} == {None}
+    assert {o["seeing_arcsec"] for o in detto["nights"][0]["hours"]} == {None}
 
 
 def test_removing_the_key_removes_its_seeing(app):
@@ -130,7 +131,7 @@ def test_a_new_key_is_asked_at_once_not_twelve_hours_later(app, monkeypatch):
     monkeypatch.setattr(forecast, "_fetch", altro)
     app.put("/api/v1/weather/meteoblue-key", json={"key": OTHER_KEY})
     notte = app.get("/api/v1/weather").json()["nights"][0]
-    assert {o["seeing_arcsec"] for o in notte["aloft"]} == {1.5}
+    assert {o["seeing_arcsec"] for o in notte["hours"]} == {1.5}
 
 
 def test_the_hours_meteoblue_does_not_cover_stay_without_seeing(app, db_path):
@@ -146,8 +147,9 @@ def test_the_hours_meteoblue_does_not_cover_stay_without_seeing(app, db_path):
         "UPDATE weather_nights SET hourly_json = ? WHERE source = 'meteoblue' AND night_date = ?",
         (json.dumps(ore[len(ore) // 2 :]), riga["night_date"]),
     )
+    view.rebuild(c, dict(home_site(c)))  # chi scrive riscrive la vista
     c.close()
     notte = next(
         n for n in app.get("/api/v1/weather").json()["nights"] if n["night"] == riga["night_date"]
     )
-    assert {o["seeing_arcsec"] for o in notte["aloft"]} == {0.9, None}
+    assert {o["seeing_arcsec"] for o in notte["hours"]} == {0.9, None}

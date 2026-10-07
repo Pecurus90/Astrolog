@@ -10,7 +10,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from astrolog.weather import climate, forecast, position
+from astrolog.weather import climate, forecast, position, view
 from test_weather_forecast import (  # noqa: F401 - `db` e' una fixture
     SITO,
     Finto,
@@ -159,12 +159,15 @@ def test_the_position_is_how_many_nights_in_ten_had_less_wind(vento, decimi):
 
 
 def test_the_forecast_says_where_each_night_falls_once_the_climate_is_there(db, minimo_di_un_mese):  # noqa: F811
-    forecast.refresh(db, SITO, fetch=Finto(risposta(wind_700hpa_kmh=40.0)), now=ADESSO)
-    prima = json.loads(righe(db)[0]["summary_json"])
+    def scritta(vento):
+        forecast.refresh(db, SITO, fetch=Finto(risposta(wind_700hpa_kmh=vento)), now=ADESSO)
+        view.rebuild(db, SITO)
+        riga = db.execute("SELECT summary_json FROM weather_view ORDER BY night_date").fetchone()
+        return json.loads(riga["summary_json"])
+
+    prima = scritta(40.0)
     assert prima["wind_700hpa_kmh"] == 40.0
     assert prima["wind_700hpa_tenths"] is None  # senza climatologia non si confronta
     climate.step(db, SITO, fetch=Finto(mese(valore=lambda i: 20.0 + i % 7)), now=ADESSO)
-    forecast.refresh(db, SITO, fetch=Finto(risposta(wind_700hpa_kmh=40.0)), now=ADESSO)
-    assert json.loads(righe(db)[0]["summary_json"])["wind_700hpa_tenths"] == 10
-    forecast.refresh(db, SITO, fetch=Finto(risposta(wind_700hpa_kmh=5.0)), now=ADESSO)
-    assert json.loads(righe(db)[0]["summary_json"])["wind_700hpa_tenths"] == 0
+    assert scritta(40.0)["wind_700hpa_tenths"] == 10
+    assert scritta(5.0)["wind_700hpa_tenths"] == 0

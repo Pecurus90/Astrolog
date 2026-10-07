@@ -5,21 +5,39 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+Level = Literal["go", "marginal", "nogo"]
+# Repeated rather than imported from `weather.judge`, so the route contract does not change shape
+# with an internal module; a test holds the two lists equal.
+MeasureCode = Literal[
+    "cloud", "cloud_low", "rain", "gust", "wind", "condensation", "jet", "seeing", "aerosol",
+    "moon", "cloud_mid", "cloud_high", "humidity", "temperature", "dew_point", "wind_700",
+    "wind_200", "dust",
+]  # fmt: skip
+JudgedCode = Literal[
+    "cloud", "cloud_low", "rain", "gust", "wind", "condensation", "jet", "seeing", "aerosol", "moon"
+]
 
-class WeatherFactorOut(BaseModel):
-    """A reason that weighs on the night: the value, the threshold it exceeds, and when it bites.
-    `hours` next to `since`/`until` tells whether the window is full or patchy."""
 
-    code: Literal["rain", "cloud_low", "cloud", "gust", "condensation"]
-    value: float
-    threshold: float
-    since: str | None
-    until: str | None
-    hours: int
+class WeatherLevelsOut(BaseModel):
+    """Each judged measure's word for the hour; `None` where the value is missing (the Moon: where
+    it is below the horizon; the aerosol: also between clear and very hazy)."""
+
+    cloud: Level | None
+    cloud_low: Level | None
+    rain: Level | None
+    gust: Level | None
+    wind: Level | None
+    condensation: Level | None
+    jet: Level | None
+    seeing: Level | None
+    aerosol: Level | None
+    moon: Level | None
 
 
 class WeatherHourOut(BaseModel):
-    """An hour of the night, in the site's time zone, with the sky it has at that moment."""
+    """An hour of the night, in the site's time zone, with the sky band it has, every source's
+    value joined (the model's; Meteoblue's seeing in arcseconds, only with the key; CAMS aerosol
+    and dust; the Moon's lit percentage while it is up) and each judged measure's word."""
 
     at: str
     sky: Literal["day", "civil", "nautical", "astronomical", "dark"]
@@ -33,20 +51,52 @@ class WeatherHourOut(BaseModel):
     wind_kmh: float | None
     wind_gust_kmh: float | None
     precip_mm: float | None
-
-
-class WeatherAloftOut(BaseModel):
-    """An hour of the upper air: the wind at 700, 250 and 200 hPa from the chosen model; Meteoblue's
-    seeing in arcseconds, only with the user's key; aerosol and dust from CAMS. `None` means the
-    source says nothing for that hour."""
-
-    at: str
     wind_700hpa_kmh: float | None
     wind_250hpa_kmh: float | None
     wind_200hpa_kmh: float | None
     seeing_arcsec: float | None
     aerosol_optical_depth: float | None
     dust_ugm3: float | None
+    moon_pct: float | None
+    levels: WeatherLevelsOut
+
+
+class WeatherMeasureOut(BaseModel):
+    """A measure over the night's window. `level` is its worst hour's word (for `cloud`, the
+    verdict) and `since`/`until`/`hours` the hours with that word; `weighs` when it is marginal or
+    no-go and is not the clouds, which make the verdict. `value` is the mean of the known hours
+    (for `rain`, the total), `peak` the worst hour's value and when; `known_*` say which hours were
+    known, so a mean over part of the night is said as such. Neutral measures have no `level`."""
+
+    code: MeasureCode
+    level: Level | None
+    weighs: bool
+    value: float | None
+    peak: float | None
+    peak_at: str | None
+    since: str | None
+    until: str | None
+    hours: int
+    known_hours: int
+    known_since: str | None
+    known_until: str | None
+
+
+class WeatherStepOut(BaseModel):
+    """From `bound` on (beyond it when `strict`) an hour has `level`; `None`: no word."""
+
+    level: Level | None
+    bound: float
+    strict: bool
+
+
+class WeatherScaleOut(BaseModel):
+    """A judged measure's thresholds, worst first, the same the judgement uses: an hour that
+    crosses none is `go`. `lower_is_worse`: the steps count downwards (condensation)."""
+
+    code: JudgedCode
+    steps: list[WeatherStepOut]
+    lower_is_worse: bool
 
 
 class WeatherAgreementOut(BaseModel):
@@ -79,19 +129,24 @@ class WeatherBriefOut(WeatherSkyOut):
     (`None` until the site's climatology exists). It is what Tonight says."""
 
     agreement: WeatherAgreementOut
+    usable_since: str | None
+    usable_until: str | None
     wind_700hpa_kmh: float | None
     wind_700hpa_tenths: int | None
 
 
 class WeatherNightOut(WeatherBriefOut):
-    """A forecast night: the summary, the factors, and its hours from noon to noon. A `trend`
-    night carries the summary without usable hours: no factors, no hours, no upper air."""
+    """A forecast night: the summary, its measures in order of importance (the clouds, then the
+    worst word earliest first, then the neutral ones), and its hours from noon to noon. `shown_*`
+    is the stretch the page draws, from the last hour of day before twilight to the first after
+    dawn. A `trend` night carries the summary without usable hours, measures or hours."""
 
     night: str
     trend: bool
-    factors: list[WeatherFactorOut]
+    shown_from: str | None
+    shown_until: str | None
+    measures: list[WeatherMeasureOut]
     hours: list[WeatherHourOut]
-    aloft: list[WeatherAloftOut]
 
 
 class WeatherSourceOut(BaseModel):
@@ -129,6 +184,7 @@ class WeatherOut(BaseModel):
     full_nights: int
     seeing: WeatherSeeingOut
     sources: list[WeatherSourceOut]
+    scales: list[WeatherScaleOut]
     nights: list[WeatherNightOut]
 
 

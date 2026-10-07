@@ -1076,8 +1076,9 @@ export interface paths {
          *     missing or unknown, `missing` is `no_timezone`.
          *
          *     **Three full nights, then a trend**: from the fourth (`trend`) only the verdict, the clouds,
-         *     the dark hours and the agreement, without usable hours, factors, hours, upper sky or upper
-         *     wind. Seeing comes only from Meteoblue: an hour it does not cover stays empty.
+         *     the dark hours and the agreement, without usable hours, measures, hours or upper wind. Seeing
+         *     comes only from Meteoblue: an hour it does not cover stays empty. `scales` are the thresholds
+         *     the judgement used, for the page to draw.
          */
         get: operations["weather"];
         put?: never;
@@ -3355,28 +3356,6 @@ export interface components {
             total: number;
         };
         /**
-         * WeatherAloftOut
-         * @description An hour of the upper air: the wind at 700, 250 and 200 hPa from the chosen model; Meteoblue's
-         *     seeing in arcseconds, only with the user's key; aerosol and dust from CAMS. `None` means the
-         *     source says nothing for that hour.
-         */
-        WeatherAloftOut: {
-            /** At */
-            at: string;
-            /** Wind 700Hpa Kmh */
-            wind_700hpa_kmh: number | null;
-            /** Wind 250Hpa Kmh */
-            wind_250hpa_kmh: number | null;
-            /** Wind 200Hpa Kmh */
-            wind_200hpa_kmh: number | null;
-            /** Seeing Arcsec */
-            seeing_arcsec: number | null;
-            /** Aerosol Optical Depth */
-            aerosol_optical_depth: number | null;
-            /** Dust Ugm3 */
-            dust_ugm3: number | null;
-        };
-        /**
          * WeatherBriefOut
          * @description A forecast night in brief: its sky, the models' agreement, and the night's mean upper-air
          *     wind with its rank among the site's nights of the last year -- how many in ten had less
@@ -3394,36 +3373,20 @@ export interface components {
             /** Window Hours */
             window_hours: number | null;
             agreement: components["schemas"]["WeatherAgreementOut"];
+            /** Usable Since */
+            usable_since: string | null;
+            /** Usable Until */
+            usable_until: string | null;
             /** Wind 700Hpa Kmh */
             wind_700hpa_kmh: number | null;
             /** Wind 700Hpa Tenths */
             wind_700hpa_tenths: number | null;
         };
         /**
-         * WeatherFactorOut
-         * @description A reason that weighs on the night: the value, the threshold it exceeds, and when it bites.
-         *     `hours` next to `since`/`until` tells whether the window is full or patchy.
-         */
-        WeatherFactorOut: {
-            /**
-             * Code
-             * @enum {string}
-             */
-            code: "rain" | "cloud_low" | "cloud" | "gust" | "condensation";
-            /** Value */
-            value: number;
-            /** Threshold */
-            threshold: number;
-            /** Since */
-            since: string | null;
-            /** Until */
-            until: string | null;
-            /** Hours */
-            hours: number;
-        };
-        /**
          * WeatherHourOut
-         * @description An hour of the night, in the site's time zone, with the sky it has at that moment.
+         * @description An hour of the night, in the site's time zone, with the sky band it has, every source's
+         *     value joined (the model's; Meteoblue's seeing in arcseconds, only with the key; CAMS aerosol
+         *     and dust; the Moon's lit percentage while it is up) and each judged measure's word.
          */
         WeatherHourOut: {
             /** At */
@@ -3453,11 +3416,92 @@ export interface components {
             wind_gust_kmh: number | null;
             /** Precip Mm */
             precip_mm: number | null;
+            /** Wind 700Hpa Kmh */
+            wind_700hpa_kmh: number | null;
+            /** Wind 250Hpa Kmh */
+            wind_250hpa_kmh: number | null;
+            /** Wind 200Hpa Kmh */
+            wind_200hpa_kmh: number | null;
+            /** Seeing Arcsec */
+            seeing_arcsec: number | null;
+            /** Aerosol Optical Depth */
+            aerosol_optical_depth: number | null;
+            /** Dust Ugm3 */
+            dust_ugm3: number | null;
+            /** Moon Pct */
+            moon_pct: number | null;
+            levels: components["schemas"]["WeatherLevelsOut"];
+        };
+        /**
+         * WeatherLevelsOut
+         * @description Each judged measure's word for the hour; `None` where the value is missing (the Moon: where
+         *     it is below the horizon; the aerosol: also between clear and very hazy).
+         */
+        WeatherLevelsOut: {
+            /** Cloud */
+            cloud: ("go" | "marginal" | "nogo") | null;
+            /** Cloud Low */
+            cloud_low: ("go" | "marginal" | "nogo") | null;
+            /** Rain */
+            rain: ("go" | "marginal" | "nogo") | null;
+            /** Gust */
+            gust: ("go" | "marginal" | "nogo") | null;
+            /** Wind */
+            wind: ("go" | "marginal" | "nogo") | null;
+            /** Condensation */
+            condensation: ("go" | "marginal" | "nogo") | null;
+            /** Jet */
+            jet: ("go" | "marginal" | "nogo") | null;
+            /** Seeing */
+            seeing: ("go" | "marginal" | "nogo") | null;
+            /** Aerosol */
+            aerosol: ("go" | "marginal" | "nogo") | null;
+            /** Moon */
+            moon: ("go" | "marginal" | "nogo") | null;
+        };
+        /**
+         * WeatherMeasureOut
+         * @description A measure over the night's window. `level` is its worst hour's word (for `cloud`, the
+         *     verdict) and `since`/`until`/`hours` the hours with that word; `weighs` when it is marginal or
+         *     no-go and is not the clouds, which make the verdict. `value` is the mean of the known hours
+         *     (for `rain`, the total), `peak` the worst hour's value and when; `known_*` say which hours were
+         *     known, so a mean over part of the night is said as such. Neutral measures have no `level`.
+         */
+        WeatherMeasureOut: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "cloud" | "cloud_low" | "rain" | "gust" | "wind" | "condensation" | "jet" | "seeing" | "aerosol" | "moon" | "cloud_mid" | "cloud_high" | "humidity" | "temperature" | "dew_point" | "wind_700" | "wind_200" | "dust";
+            /** Level */
+            level: ("go" | "marginal" | "nogo") | null;
+            /** Weighs */
+            weighs: boolean;
+            /** Value */
+            value: number | null;
+            /** Peak */
+            peak: number | null;
+            /** Peak At */
+            peak_at: string | null;
+            /** Since */
+            since: string | null;
+            /** Until */
+            until: string | null;
+            /** Hours */
+            hours: number;
+            /** Known Hours */
+            known_hours: number;
+            /** Known Since */
+            known_since: string | null;
+            /** Known Until */
+            known_until: string | null;
         };
         /**
          * WeatherNightOut
-         * @description A forecast night: the summary, the factors, and its hours from noon to noon. A `trend`
-         *     night carries the summary without usable hours: no factors, no hours, no upper air.
+         * @description A forecast night: the summary, its measures in order of importance (the clouds, then the
+         *     worst word earliest first, then the neutral ones), and its hours from noon to noon. `shown_*`
+         *     is the stretch the page draws, from the last hour of day before twilight to the first after
+         *     dawn. A `trend` night carries the summary without usable hours, measures or hours.
          */
         WeatherNightOut: {
             /** Verdict */
@@ -3471,6 +3515,10 @@ export interface components {
             /** Window Hours */
             window_hours: number | null;
             agreement: components["schemas"]["WeatherAgreementOut"];
+            /** Usable Since */
+            usable_since: string | null;
+            /** Usable Until */
+            usable_until: string | null;
             /** Wind 700Hpa Kmh */
             wind_700hpa_kmh: number | null;
             /** Wind 700Hpa Tenths */
@@ -3479,12 +3527,14 @@ export interface components {
             night: string;
             /** Trend */
             trend: boolean;
-            /** Factors */
-            factors: components["schemas"]["WeatherFactorOut"][];
+            /** Shown From */
+            shown_from: string | null;
+            /** Shown Until */
+            shown_until: string | null;
+            /** Measures */
+            measures: components["schemas"]["WeatherMeasureOut"][];
             /** Hours */
             hours: components["schemas"]["WeatherHourOut"][];
-            /** Aloft */
-            aloft: components["schemas"]["WeatherAloftOut"][];
         };
         /**
          * WeatherOut
@@ -3508,6 +3558,8 @@ export interface components {
             seeing: components["schemas"]["WeatherSeeingOut"];
             /** Sources */
             sources: components["schemas"]["WeatherSourceOut"][];
+            /** Scales */
+            scales: components["schemas"]["WeatherScaleOut"][];
             /** Nights */
             nights: components["schemas"]["WeatherNightOut"][];
         };
@@ -3521,6 +3573,22 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "no_site" | "no_timezone" | "unreachable" | "bad_answer";
+        };
+        /**
+         * WeatherScaleOut
+         * @description A judged measure's thresholds, worst first, the same the judgement uses: an hour that
+         *     crosses none is `go`. `lower_is_worse`: the steps count downwards (condensation).
+         */
+        WeatherScaleOut: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "cloud" | "cloud_low" | "rain" | "gust" | "wind" | "condensation" | "jet" | "seeing" | "aerosol" | "moon";
+            /** Steps */
+            steps: components["schemas"]["WeatherStepOut"][];
+            /** Lower Is Worse */
+            lower_is_worse: boolean;
         };
         /**
          * WeatherSeeingOut
@@ -3550,6 +3618,18 @@ export interface components {
             source: string;
             /** Fetched At */
             fetched_at: string;
+        };
+        /**
+         * WeatherStepOut
+         * @description From `bound` on (beyond it when `strict`) an hour has `level`; `None`: no word.
+         */
+        WeatherStepOut: {
+            /** Level */
+            level: ("go" | "marginal" | "nogo") | null;
+            /** Bound */
+            bound: number;
+            /** Strict */
+            strict: boolean;
         };
         /** WorkerOut */
         WorkerOut: {

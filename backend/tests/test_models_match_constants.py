@@ -48,7 +48,7 @@ from astrolog.spine import (
 from astrolog.spine.scan_store import COUNTS
 from astrolog.units import SQM_MAX, SQM_MIN
 from astrolog.vocab.filters import BANDS, PASSBANDS
-from astrolog.weather import fetches, forecast, verdict
+from astrolog.weather import fetches, forecast, judge, verdict
 from astrolog.worker.worker import STRUCTURAL_KEYS, State
 from conftest import add_folder
 
@@ -350,7 +350,9 @@ def test_the_weather_words_are_the_same_in_the_models_and_the_weather_package():
         for name, model, field in (
             ("verdict", models_weather.WeatherSkyOut, "verdict"),
             ("window", models_weather.WeatherSkyOut, "window"),
-            ("code", models_weather.WeatherFactorOut, "code"),
+            ("measure", models_weather.WeatherMeasureOut, "code"),
+            ("judged", models_weather.WeatherScaleOut, "code"),
+            ("level", models_weather.WeatherMeasureOut, "level"),
             ("missing", models_weather.WeatherOut, "missing"),
             ("seeing", models_weather.WeatherSeeingOut, "source"),
             ("meteoblue", models_weather.WeatherSeeingOut, "meteoblue"),
@@ -358,7 +360,10 @@ def test_the_weather_words_are_the_same_in_the_models_and_the_weather_package():
     }
     assert _words(fields["verdict"]) == set(verdict.Verdict)
     assert _words(fields["window"]) == set(verdict.Window)
-    assert _words(fields["code"]) == set(verdict.FactorCode)
+    assert _words(fields["measure"]) == set(judge.Measure)
+    assert _words(fields["judged"]) == set(judge.SCALES)
+    assert _words(fields["level"]) == set(verdict.Verdict)
+    assert set(models_weather.WeatherLevelsOut.model_fields) == set(judge.SCALES)
     assert _words(fields["missing"]) == {forecast.Outcome.NO_TIMEZONE}
     assert _words(fields["seeing"]) <= set(fetches.Source)
     key_outcomes = {forecast.Outcome.OK, forecast.Outcome.BAD_ANSWER, *net.Failure}

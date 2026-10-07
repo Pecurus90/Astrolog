@@ -40,20 +40,27 @@ function ora(at: string, sky: string, campi: Record<string, number | null> = {})
     wind_kmh: 5,
     wind_gust_kmh: 10,
     precip_mm: 0,
-    ...campi,
-  }
-}
-
-function quota(at: string, campi: Record<string, number | null> = {}) {
-  return {
-    at,
     wind_700hpa_kmh: 30,
     wind_250hpa_kmh: 120,
     wind_200hpa_kmh: 110,
     seeing_arcsec: null,
     aerosol_optical_depth: 0.12,
     dust_ugm3: null,
+    moon_pct: null,
+    levels: GIUDIZI,
     ...campi,
+  }
+}
+
+const GIUDIZI = {
+  cloud: "go", cloud_low: "go", rain: "go", gust: "go", wind: "go", condensation: "go",
+  jet: "go", seeing: null, aerosol: null, moon: null,
+}
+
+function misura(code: string, campi: Record<string, unknown> = {}) {
+  return {
+    code, level: null, weighs: false, value: null, peak: null, peak_at: null, since: null,
+    until: null, hours: 0, known_hours: 0, known_since: null, known_until: null, ...campi,
   }
 }
 
@@ -66,26 +73,29 @@ const NOTTE = {
   verdict: "marginal",
   cloud_total_pct: 40,
   usable_hours: 3,
+  usable_since: "2026-09-26T23:00:00+02:00",
+  usable_until: "2026-09-27T02:00:00+02:00",
   window: "dark",
   window_hours: 8,
-  factors: [
-    {
-      code: "gust",
-      value: 35,
-      threshold: 29,
+  shown_from: "2026-09-26T18:00:00+02:00",
+  shown_until: "2026-09-27T08:00:00+02:00",
+  measures: [
+    misura("cloud", { level: "marginal", value: 40 }),
+    misura("gust", {
+      level: "nogo",
+      weighs: true,
+      value: 20,
+      peak: 35,
       since: "2026-09-26T21:00:00+02:00",
       until: "2026-09-26T23:00:00+02:00",
       hours: 2,
-    },
+    }),
+    misura("humidity", { value: 60 }),
   ],
   hours: [
-    ora("2026-09-26T12:00:00+02:00", "day"),
-    ora("2026-09-26T22:00:00+02:00", "dark", { wind_gust_kmh: 35, dew_point_c: null }),
-  ],
-  aloft: [
-    quota("2026-09-26T12:00:00+02:00", { seeing_arcsec: 1.25 }),
-    quota("2026-09-26T22:00:00+02:00", { seeing_arcsec: 2.5 }),
-    quota("2026-09-26T23:00:00+02:00", { wind_200hpa_kmh: 105, dust_ugm3: 7 }),
+    ora("2026-09-26T12:00:00+02:00", "day", { seeing_arcsec: 1.25 }),
+    ora("2026-09-26T22:00:00+02:00", "dark", { wind_gust_kmh: 35, dew_point_c: null, seeing_arcsec: 2.5 }),
+    ora("2026-09-26T23:00:00+02:00", "dark", { wind_200hpa_kmh: 105, dust_ugm3: 7 }),
   ],
 }
 
@@ -96,9 +106,8 @@ const TENDENZA = {
   usable_hours: null,
   verdict: "go",
   agreement: { go: 2, marginal: 1, nogo: 1, unknown: 0, total: 4 },
-  factors: [],
+  measures: [],
   hours: [],
-  aloft: [],
 }
 
 function meteo(corpo: Record<string, unknown>, altre: Record<string, Voce> = {}) {
@@ -118,6 +127,7 @@ function meteo(corpo: Record<string, unknown>, altre: Record<string, Voce> = {})
         sources: [
           { source: "cams", fetched_at: "2026-09-25T15:00:00.000Z" },
         ],
+        scales: [],
         nights: [],
         ...corpo,
       },
@@ -147,7 +157,9 @@ describe("il Meteo", () => {
     expect(testo).toMatch(/incerta/i)
     expect(testo).toContain("40%")
     expect(testo).toContain("3 ore utili su 8 di buio")
-    expect(testo).toContain("Raffiche fino a 35 km/h")
+    expect(testo).toContain("Raffiche: niente.")
+    // pesa solo cio' che e' incerto o niente: le nuvole sono il verdetto, l'umidita' non ha soglia
+    expect(within(notte).getAllByRole("listitem")).toHaveLength(1)
     expect(testo).toContain("Dalle 21:00 alle 23:00, 2 ore")
   })
 
@@ -157,7 +169,7 @@ describe("il Meteo", () => {
 
     const [tabella] = await screen.findAllByRole("table")
     const righe = within(tabella as HTMLElement).getAllByRole("row")
-    expect(righe).toHaveLength(3)
+    expect(righe).toHaveLength(4)
     expect(righe[2]?.textContent).toContain("22:00")
     expect(righe[2]?.textContent).toContain("buio")
     expect(righe[2]?.textContent).toContain("non lo dice")
@@ -180,8 +192,8 @@ describe("il Meteo", () => {
   })
 
   it("dove il buio non arriva lo dice, e dove il Sole non tramonta non da' un verdetto finto", async () => {
-    const nord = { ...NOTTE, night: "2026-06-21", window: "sun_down", factors: [] }
-    const polo = { ...NOTTE, night: "2026-06-22", verdict: null, cloud_total_pct: null, usable_hours: null, window: null, window_hours: 0, factors: [] }
+    const nord = { ...NOTTE, night: "2026-06-21", window: "sun_down", measures: [] }
+    const polo = { ...NOTTE, night: "2026-06-22", verdict: null, cloud_total_pct: null, usable_hours: null, window: null, window_hours: 0, measures: [] }
     meteo({ fetched_at: "2026-06-21T10:00:00.000Z", nights: [nord, polo] })
     await apriMeteo()
 
@@ -381,7 +393,7 @@ describe("il Meteo, da dove viene il seeing", () => {
 
 describe("il Meteo, il seeing di Meteoblue", () => {
   it("il seeing si scrive come un numero, in secondi d'arco", async () => {
-    const conMeteoblue = { ...NOTTE, aloft: [quota("2026-09-26T22:00:00+02:00", { seeing_arcsec: 0.9 })] }
+    const conMeteoblue = { ...NOTTE, hours: [ora("2026-09-26T22:00:00+02:00", "dark", { seeing_arcsec: 0.9 })] }
     meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [conMeteoblue] })
     await apriMeteo()
 

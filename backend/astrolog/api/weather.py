@@ -1,9 +1,10 @@
-"""The read does not compute: verdict, factors, usable hours and agreement are written per model
-with the forecast, and the upper air is merged per hour from its sources' rows."""
+"""The read does not compute: each night is read as `weather.view` wrote it, with the sources
+joined, every measure judged and the models' agreement counted."""
 
 import json
 import sqlite3
-from typing import Any, Final, cast
+from dataclasses import asdict
+from typing import Final, cast
 
 from fastapi import APIRouter, Depends
 
@@ -11,35 +12,38 @@ from ..clock import night_date, now_iso
 from ..db import config
 from ..db.transaction import transaction
 from ..spine.group_store import home_site
-from ..weather import forecast, meteoblue, openmeteo, rounds, sky
+from ..weather import forecast, judge, meteoblue, openmeteo, rounds, sky, view
 from .deps import get_db
 from .models_weather import (
+    JudgedCode,
     KeyStatus,
     MeteoblueKeyIn,
     MeteoblueKeyOut,
     RefreshStatus,
-    WeatherAloftOut,
     WeatherBriefOut,
     WeatherNightOut,
     WeatherOut,
     WeatherRefreshOut,
+    WeatherScaleOut,
     WeatherSeeingOut,
     WeatherSourceOut,
+    WeatherStepOut,
 )
 
 router = APIRouter(prefix="/api/v1", tags=["weather"])
 
 _NIGHTS = (
-    "SELECT night_date, fetched_at, hourly_json, summary_json FROM weather_nights"
-    " WHERE site_id = ? AND kind = ? AND source = ? AND night_date >= ? ORDER BY night_date"
+    "SELECT night_date, hours_json, summary_json FROM weather_view"
+    " WHERE site_id = ? AND model = ? AND night_date >= ? ORDER BY night_date"
 )
 _LAST_FETCHED = (
     "SELECT MAX(fetched_at) FROM weather_nights WHERE site_id = ? AND kind = ? AND source LIKE ?"
 )
 _SKY_SOURCES = ", ".join("?" * len(sky.ALL_SOURCES))  # segnaposto-ok: the sources, constants
-_SKY_ROWS = (
-    "SELECT night_date, source, fetched_at, hourly_json FROM weather_nights"  # noqa: S608
+_ARRIVED = (
+    "SELECT source, MAX(fetched_at) AS fetched_at FROM weather_nights"  # noqa: S608
     f" WHERE site_id = ? AND kind = ? AND source IN ({_SKY_SOURCES}) AND night_date >= ?"
+    " GROUP BY source ORDER BY source"
 )
 
 # A product choice, not a threshold: no source found says from which day an hourly forecast stops
@@ -47,40 +51,32 @@ _SKY_ROWS = (
 FULL_NIGHTS = 3
 # the current night and the six after: the service sometimes brings one more, which is not shown
 MAX_NIGHTS = 7
-_WIND = ("wind_700hpa_kmh", "wind_250hpa_kmh", "wind_200hpa_kmh")
-_SKY_FIELDS = ("seeing_arcsec", "aerosol_optical_depth", "dust_ugm3")
+
+SCALES = [
+    WeatherScaleOut(
+        code=cast(JudgedCode, s.code),
+        steps=[WeatherStepOut(**asdict(x)) for x in s.steps],
+        lower_is_worse=s.lower_is_worse,
+    )
+    for s in judge.scales()
+]
 
 
-def _aloft(
-    hourly: list[dict[str, Any]], from_sky: dict[str, dict[str, Any]]
-) -> list[WeatherAloftOut]:
-    """The wind from the model, the rest from the sky sources at the hour they have; an hour a
-    source does not give stays empty."""
-    return [
-        WeatherAloftOut(
-            at=o["at"],
-            **{k: o.get(k) for k in _WIND},
-            **{k: from_sky.get(o["at"], {}).get(k) for k in _SKY_FIELDS},
-        )
-        for o in hourly
-    ]
-
-
-def _night(
-    row: sqlite3.Row, rank: int, from_sky: dict[str, dict[str, dict[str, Any]]]
-) -> WeatherNightOut:
+def _night(row: sqlite3.Row, rank: int) -> WeatherNightOut:
     summary = json.loads(row["summary_json"])
     if rank >= FULL_NIGHTS:
         # the trend carries nothing read from the hours
-        summary.update(factors=[], usable_hours=None, wind_700hpa_kmh=None, wind_700hpa_tenths=None)
-        return WeatherNightOut(night=row["night_date"], trend=True, hours=[], aloft=[], **summary)
-    hourly = json.loads(row["hourly_json"])
+        summary.update(
+            measures=[],
+            usable_hours=None,
+            usable_since=None,
+            usable_until=None,
+            wind_700hpa_kmh=None,
+            wind_700hpa_tenths=None,
+        )
+        return WeatherNightOut(night=row["night_date"], trend=True, hours=[], **summary)
     return WeatherNightOut(
-        night=row["night_date"],
-        trend=False,
-        hours=hourly,
-        aloft=_aloft(hourly, from_sky.get(row["night_date"], {})),
-        **summary,
+        night=row["night_date"], trend=False, hours=json.loads(row["hours_json"]), **summary
     )
 
 
@@ -104,8 +100,9 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
     missing or unknown, `missing` is `no_timezone`.
 
     **Three full nights, then a trend**: from the fourth (`trend`) only the verdict, the clouds,
-    the dark hours and the agreement, without usable hours, factors, hours, upper sky or upper
-    wind. Seeing comes only from Meteoblue: an hour it does not cover stays empty."""
+    the dark hours and the agreement, without usable hours, measures, hours or upper wind. Seeing
+    comes only from Meteoblue: an hour it does not cover stays empty. `scales` are the thresholds
+    the judgement used, for the page to draw."""
     chosen = config.read(conn).weather_model
     empty = WeatherOut(
         site=None,
@@ -118,6 +115,7 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
             key=bool(config.read(conn).meteoblue_key), source=None, meteoblue=None
         ),
         sources=[],
+        scales=SCALES,
         nights=[],
     )
     home = home_site(conn)
@@ -128,30 +126,20 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
         return empty.model_copy(
             update={"site": home["name"], "missing": forecast.Outcome.NO_TIMEZONE}
         )
-    rows = conn.execute(
-        _NIGHTS, (home["id"], forecast.KIND, forecast.source_of(chosen), current)
-    ).fetchall()
-    from_sky: dict[str, dict[str, dict[str, Any]]] = {}  # night -> hour -> sky source fields
-    arrived: dict[str, str] = {}  # source -> when it arrived
-    site_rows = conn.execute(
-        _SKY_ROWS, (home["id"], forecast.KIND, *sky.ALL_SOURCES, current)
-    ).fetchall()
-    for r in site_rows:
-        arrived[r["source"]] = max(arrived.get(r["source"], ""), r["fetched_at"])
-        by_hour = from_sky.setdefault(r["night_date"], {})
-        for o in json.loads(r["hourly_json"]):
-            by_hour.setdefault(o["at"], {}).update({k: v for k, v in o.items() if v is not None})
+    rows = conn.execute(_NIGHTS, (home["id"], chosen, current)).fetchall()
+    arrived = {
+        r["source"]: r["fetched_at"]
+        for r in conn.execute(_ARRIVED, (home["id"], forecast.KIND, *sky.ALL_SOURCES, current))
+    }
     return empty.model_copy(
         update={
             "site": home["name"],
             "fetched_at": conn.execute(
                 _LAST_FETCHED, (home["id"], forecast.KIND, forecast.source_of("%"))
             ).fetchone()[0],
-            "nights": [_night(r, i, from_sky) for i, r in enumerate(rows[:MAX_NIGHTS])],
+            "nights": [_night(r, i) for i, r in enumerate(rows[:MAX_NIGHTS])],
             "seeing": _seeing(conn, home["id"], arrived),
-            "sources": [
-                WeatherSourceOut(source=f, fetched_at=q) for f, q in sorted(arrived.items())
-            ],
+            "sources": [WeatherSourceOut(source=f, fetched_at=q) for f, q in arrived.items()],
         }
     )
 
@@ -168,9 +156,7 @@ def refresh(conn: sqlite3.Connection = Depends(get_db)) -> WeatherRefreshOut:
 def brief_of(conn: sqlite3.Connection, site_id: int, night: str) -> WeatherBriefOut | None:
     """One night's summary from the chosen model, as written; Tonight reads it."""
     chosen = config.read(conn).weather_model
-    row = conn.execute(
-        _NIGHTS + " LIMIT 1", (site_id, forecast.KIND, forecast.source_of(chosen), night)
-    ).fetchone()
+    row = conn.execute(_NIGHTS + " LIMIT 1", (site_id, chosen, night)).fetchone()
     if row is None or row["night_date"] != night:
         return None
     return WeatherBriefOut(**json.loads(row["summary_json"]))
@@ -197,6 +183,9 @@ def put_meteoblue_key(
         with transaction(conn):
             config.write(conn, "meteoblue_key", None)
             meteoblue.forget(conn)
+            home = home_site(conn)
+            if home is not None:
+                view.rebuild(conn, dict(home))
         return MeteoblueKeyOut(status=REMOVED, hint=None)
     outcome = meteoblue.check_key(trimmed)
     if outcome != forecast.Outcome.OK:

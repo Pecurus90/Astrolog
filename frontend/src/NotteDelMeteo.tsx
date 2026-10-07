@@ -2,9 +2,8 @@ import type { components } from "./api/schema"
 import { type Chiave, giornoDellaSettimana, notte, numero, oraDelSito, t } from "./i18n"
 
 type Notte = components["schemas"]["WeatherNightOut"]
-type Fattore = Notte["factors"][number]
+type Misura = Notte["measures"][number]
 type Ora = Notte["hours"][number]
-type InQuota = Notte["aloft"][number]
 // il cielo di una notte, per forma: lo porta una notte del Meteo e una delle Notti
 type Cielo = Pick<Notte, "window" | "usable_hours" | "window_hours">
 type Breve = components["schemas"]["WeatherBriefOut"]
@@ -39,15 +38,17 @@ export function UnaNotte({ notte: n, piene }: { notte: Notte; piene: number }) {
       <Giudizio breve={n} />
       <Accordo breve={n} />
       <VentoInQuota breve={n} />
-      {n.factors.length > 0 && (
+      {n.measures.some((m) => m.weighs) && (
         <>
           <h3>{t("weather.factors")}</h3>
           <ul>
-            {n.factors.map((f) => (
-              <li key={f.code}>
-                <UnFattore fattore={f} />
-              </li>
-            ))}
+            {n.measures
+              .filter((m) => m.weighs)
+              .map((m) => (
+                <li key={m.code}>
+                  <CosaPesa misura={m} />
+                </li>
+              ))}
           </ul>
         </>
       )}
@@ -59,7 +60,7 @@ export function UnaNotte({ notte: n, piene }: { notte: Notte; piene: number }) {
           </details>
           <details>
             <summary>{t("weather.aloft")}</summary>
-            <CieloInQuota ore={n.aloft} />
+            <CieloInQuota ore={n.hours} />
           </details>
         </>
       )}
@@ -76,8 +77,17 @@ export function Finestra({ cielo: c }: { cielo: Cielo }) {
   return <>{t(`weather.usable.${c.window}`, { n: numero(c.usable_hours), su: numero(c.window_hours) })}</>
 }
 
-function UnFattore({ fattore: f }: { fattore: Fattore }) {
-  const cosa = t(`weather.factor.${f.code}`, { v: numero(f.value), s: numero(f.threshold) })
+/** La parola di un giudizio: Luna e aerosol hanno le loro, le altre misure quelle del verdetto. */
+function parola(m: Misura) {
+  if (m.level === null) return ""
+  if (m.code === "moon" || m.code === "aerosol") return t(`weather.word.${m.code}.${m.level}` as Chiave)
+  return t(`weather.word.${m.level}`)
+}
+
+/** Una misura che pesa: il nome, la sua parola, e quando -- dalla prima ora con quella parola
+ *  alla fine dell'ultima, col conto, perche' una finestra a tratti non sembri piena. */
+function CosaPesa({ misura: f }: { misura: Misura }) {
+  const cosa = t("weather.weighs", { nome: t(`weather.measure.${f.code}` as Chiave), parola: parola(f) })
   if (f.since === null || f.until === null) return <>{cosa}</>
   const quando =
     f.hours === 1
@@ -125,7 +135,7 @@ function OraPerOra({ ore }: { ore: Ora[] }) {
   )
 }
 
-function CieloInQuota({ ore }: { ore: InQuota[] }) {
+function CieloInQuota({ ore }: { ore: Ora[] }) {
   return (
     <table>
       <thead>

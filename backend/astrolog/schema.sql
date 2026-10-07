@@ -590,9 +590,9 @@ CREATE UNIQUE INDEX object_names_name ON object_names (name);
 -- Il meteo di una notte, per sito (RILEVATO: lo portano i servizi meteo, `astrolog.weather`,
 -- contratto in `docs/domini/meteo.md`). Una riga per tipo -- la previsione o lo storico -- e per
 -- fonte: un modello di Open-Meteo, Meteoblue, CAMS. Non sta su `nights`, che spazza le
--- notti senza pose: la notte di domani non ne ha ancora. La serie ora per ora e il riassunto
--- (verdetto, fattori, ore utili) si scrivono quando arrivano, e chi legge non calcola; il
--- riassunto e' NULL per una fonte che da sola non fa un verdetto (il seeing).
+-- notti senza pose: la notte di domani non ne ha ancora. Si tiene la serie ora per ora com'e'
+-- arrivata; il riassunto (verdetto, ore utili) c'e' solo per lo storico, che le Notti leggono. La
+-- previsione si legge da `weather_view`, che unisce le fonti.
 -- L'ultimo tentativo di una fonte meteo che non deve ripetersi troppo spesso (Meteoblue per i
 -- crediti, lo storico per non martellare l'archivio dopo un rifiuto): quando e
 -- com'e' andata. Serve a non rispendere crediti a ogni riavvio, e a dire perche' il seeing non
@@ -626,6 +626,20 @@ CREATE TABLE weather_nights (
   hourly_json  TEXT NOT NULL,                      -- da mezzogiorno a mezzogiorno, ora per ora
   summary_json TEXT,
   PRIMARY KEY (site_id, night_date, kind, source)
+) STRICT;
+
+-- Le notti della previsione pronte per la pagina (DERIVATO: le riscrive `weather/view.py` dopo
+-- ogni scrittura della previsione o del cielo, da `weather_nights` e dalla Luna). Per sito, notte
+-- e modello: le ore con le fonti unite e il giudizio di ogni misura, e il riassunto (verdetto, ore
+-- serene, misure in ordine, accordo dei modelli). Chi legge non calcola.
+CREATE TABLE weather_view (
+  site_id      INTEGER NOT NULL REFERENCES sites (id) ON DELETE CASCADE,
+  night_date   TEXT NOT NULL,
+  model        TEXT NOT NULL,
+  fetched_at   TEXT NOT NULL,                      -- quando e' arrivata la previsione del modello
+  hours_json   TEXT NOT NULL,
+  summary_json TEXT NOT NULL,
+  PRIMARY KEY (site_id, night_date, model)
 ) STRICT;
 
 -- Una notte: da mezzogiorno a mezzogiorno nel fuso del sito. Due siti, stessa data: due notti.

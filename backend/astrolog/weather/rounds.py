@@ -1,5 +1,5 @@
-"""A weather round, for the background loop and the button: the models' forecast, then the sky
-aloft. Without a site or its timezone the sky sources are not even asked."""
+"""A weather round, for the loop and the button: the forecast, the sky aloft, then the nights the
+page reads (`view`). Without a site or its timezone the sky sources are not even asked."""
 
 import sqlite3
 from collections.abc import Mapping
@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, cast
 
 from ..net import Fetch
-from . import forecast, sky
+from . import forecast, sky, view
 from .forecast import Outcome
 
 
@@ -22,5 +22,7 @@ def refresh(
     outcome = forecast.refresh(conn, site, fetch=fetch, now=now)
     if outcome not in (Outcome.NO_SITE, Outcome.NO_TIMEZONE):
         # past those two outcomes there is a site
-        sky.refresh(conn, cast("Mapping[str, Any]", site), fetch=fetch, now=now)
+        known = cast("Mapping[str, Any]", site)
+        sky.refresh(conn, known, fetch=fetch, now=now)
+        view.rebuild(conn, known)
     return outcome

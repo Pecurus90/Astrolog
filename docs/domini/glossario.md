@@ -157,14 +157,17 @@ che il `traduttore` legge per primo.
 | sotto i diciotto gradi: la luce del Sole e' meno di quella delle stelle, ed e' il buio di chi fotografa il cielo | `dark` (una fascia) | buio | notte (che e' la finestra da mezzogiorno a mezzogiorno), nero, **buio pieno** (che e' la classe 1 di Bortle, e si legge nello stesso piede) |
 | ore di buio con cielo sereno (sotto la soglia) | `usable_hours` | ore utili | ore buone |
 | la parola del meteo sulla notte: si fa / incerta / no | `verdict` (`go`, `marginal`, `nogo`) | verdetto | voto, punteggio |
-| un motivo che pesa sul verdetto (nuvole basse, raffiche, condensa, seeing...) | `factor` | fattore | allarme |
-| i motivi della previsione, dal piu' grave: pioggia, nuvole basse, nuvole, raffiche, condensa | `rain`, `cloud_low`, `cloud`, `gust`, `condensation` | pioggia, nuvole basse, nuvole, raffiche, condensa | umidita' (che e' un'altra grandezza) |
+| una grandezza della notte, col suo valore, il picco e (se ha soglia) la sua parola | `measure`, `measures` | misura | parametro, indicatore |
+| una misura che nella notte diventa incerta o niente: sta accanto al verdetto e non lo cambia | `weighs` | pesa, cosa pesa | fattore, allarme |
+| la parola di una misura in un'ora o nella notte: buona, incerta, niente (aerosol: limpido, molto fosco; Luna: al limite, solo banda stretta) | `level`, `levels` (`go`, `marginal`, `nogo`) | giudizio | voto, punteggio, semaforo (che e' il verdetto) |
+| le misure con soglia | `cloud`, `cloud_low`, `rain`, `gust`, `wind`, `condensation`, `jet`, `seeing`, `aerosol`, `moon` | nuvole, nuvole basse, pioggia, raffiche, vento, condensa, jet stream, seeing, aerosol, Luna | umidita' (che e' neutra) |
+| le soglie di ogni misura, dalla peggiore, come le usa il giudizio | `scales`, `steps` | soglie | limiti |
 | su quali ore si giudica una notte: il buio, o dove il buio non arriva l'arco col Sole sotto l'orizzonte | `window` (`dark`, `sun_down`) | le ore di buio / col Sole sotto l'orizzonte | finestra osservativa |
 | il modello numerico da cui viene la previsione, che l'utente sceglie | `weather_model`, `model` (`best_match`, `ecmwf_ifs025`, `icon_seamless`, `gfs_seamless`) | modello della previsione | fonte, servizio (il servizio e' Open-Meteo) |
 | quando e' arrivata la previsione che si legge | `fetched_at` | arrivata il... alle... | aggiornata, scaricata |
 | una notte oltre la terza: il verdetto, le nuvole, le ore di buio e l'accordo, detti meno affidabili | `trend` | tendenza | previsione lunga |
 | quanti modelli dicono si fa, incerta, no | `agreement` | modelli d'accordo | consenso, affidabilita' |
-| cio' che conta per la planetaria, ora per ora: vento in quota, seeing, aerosol | `aloft` | il cielo in quota | alta quota, atmosfera |
+| cio' che conta per la planetaria, ora per ora: vento in quota, seeing, aerosol (campi dell'ora) | `wind_*hpa_kmh`, `seeing_arcsec`, `aerosol_optical_depth`, `dust_ugm3` | il cielo in quota | alta quota, atmosfera |
 | il vento a 250 e 200 hPa | `wind_250hpa_kmh`, `wind_200hpa_kmh` | jet stream | corrente a getto |
 | il vento a 700 hPa, circa 3.000 metri, medio nelle ore su cui si giudica una notte | `wind_700hpa_kmh` | vento in quota | turbolenza |
 | il vento in quota solito di un sito: un anno di notti, scritto una volta l'anno | `weather_climate`, `climate.py` | il solito del sito | climatologia, media |

@@ -131,13 +131,6 @@ def test_the_night_the_clocks_change_has_its_true_hours(db):
     assert len(json.loads(riga["hourly_json"])) == 25
 
 
-def test_the_summary_is_written_with_the_forecast(db):
-    """Chi legge non ricalcola: il verdetto si scrive quando arriva la previsione."""
-    forecast.refresh(db, SITO, fetch=Finto(risposta(cloud_total_pct=80.0)), now=ADESSO)
-    for r in righe(db):
-        assert json.loads(r["summary_json"])["verdict"] == "nogo"
-
-
 def test_a_night_the_answer_does_not_reach_is_not_written(db):
     """Oltre l'orizzonte del modello la notte non c'e': meglio nessuna notte che una vuota."""
     forecast.refresh(db, SITO, fetch=Finto(risposta(ore=3 * 24)), now=ADESSO)
@@ -148,12 +141,6 @@ def test_a_model_that_sends_only_empty_hours_writes_no_night(db):
     vuoto: dict[str, Any] = {nostro: None for nostro in openmeteo.VARIABLES.values()}
     forecast.refresh(db, SITO, fetch=Finto(risposta(**vuoto)), now=ADESSO)
     assert righe(db) == []
-
-
-def test_a_night_without_the_total_cloud_is_written_without_a_verdict(db):
-    forecast.refresh(db, SITO, fetch=Finto(risposta(cloud_total_pct=None)), now=ADESSO)
-    assert righe(db)
-    assert all(json.loads(r["summary_json"])["verdict"] is None for r in righe(db))
 
 
 @pytest.mark.parametrize(("guasto", "codice"), [(None, "unreachable"), ("<html/>", "bad_answer")])
@@ -181,7 +168,7 @@ def test_a_new_forecast_replaces_the_old_one_of_that_site(db):
     forecast.refresh(db, SITO, fetch=Finto(risposta(inizio="2026-09-25T00:00")), now=dopo)
     notti = {r["night_date"] for r in righe(db)}
     assert "2026-09-25" not in notti  # la notte passata non resta come se fosse una previsione
-    assert all(json.loads(r["summary_json"])["verdict"] == "go" for r in righe(db))
+    assert all(json.loads(r["hourly_json"])[12]["cloud_total_pct"] == 0.0 for r in righe(db))
 
 
 def test_an_answer_that_brings_no_whole_night_leaves_the_last_forecast_alone(db):
@@ -247,40 +234,3 @@ def test_a_silent_service_is_said_once_in_the_log_and_a_wrong_answer_is_said(db,
     caplog.clear()
     forecast.refresh(db, SITO, fetch=Finto("<html/>"), now=ADESSO)
     assert [r.name for r in caplog.records] == ["astrolog.weather.forecast"]
-
-
-def test_each_night_says_how_many_models_agree(db):
-    """L'accordo si scrive con la previsione, uguale in ogni modello: chi legge non conta."""
-    diversi = {"ecmwf_ifs025": {"cloud_total_pct": 40.0}, "gfs_seamless": {"cloud_total_pct": None}}
-    forecast.refresh(db, SITO, fetch=Finto(risposta(per_modello=diversi)), now=ADESSO)
-    for r in righe(db):
-        if r["night_date"] == "2026-09-25":
-            accordo = json.loads(r["summary_json"])["agreement"]
-            assert accordo == {"go": 2, "marginal": 1, "nogo": 0, "unknown": 1, "total": 4}
-
-
-def test_a_model_that_says_nothing_on_a_night_counts_among_those_that_do_not_know(db):
-    vuoto = {nostro: None for nostro in openmeteo.VARIABLES.values()}
-    forecast.refresh(
-        db, SITO, fetch=Finto(risposta(per_modello={"gfs_seamless": vuoto})), now=ADESSO
-    )
-    (riga,) = [
-        r for r in righe(db) if r["night_date"] == "2026-09-25" and "best_match" in r["source"]
-    ]
-    assert json.loads(riga["summary_json"])["agreement"] == {
-        "go": 3, "marginal": 0, "nogo": 0, "unknown": 1, "total": 4
-    }  # fmt: skip
-
-
-def test_each_night_has_its_own_agreement(db):
-    """ECMWF vede nuvole solo la prima notte: la seconda i modelli sono tutti d'accordo."""
-    prima_notte = {"cloud_total_pct": lambda i: 40.0 if i < 24 + 36 else 0.0}
-    forecast.refresh(
-        db, SITO, fetch=Finto(risposta(per_modello={"ecmwf_ifs025": prima_notte})), now=ADESSO
-    )
-    accordi = {
-        r["night_date"]: json.loads(r["summary_json"])["agreement"]["go"]
-        for r in righe(db)
-        if "best_match" in r["source"]
-    }
-    assert (accordi["2026-09-25"], accordi["2026-09-26"]) == (3, 4)

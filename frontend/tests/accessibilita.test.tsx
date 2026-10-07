@@ -385,6 +385,17 @@ describe("l accessibilita della prima pagina", () => {
       wind_kmh: 5,
       wind_gust_kmh: 31,
       precip_mm: 0,
+      wind_700hpa_kmh: 30,
+      wind_250hpa_kmh: 120,
+      wind_200hpa_kmh: null,
+      seeing_arcsec: 1.25,
+      aerosol_optical_depth: 0.1,
+      dust_ugm3: 2,
+      moon_pct: null,
+      levels: {
+        cloud: "go", cloud_low: "go", rain: "go", gust: "nogo", wind: "go", condensation: "go",
+        jet: "go", seeing: "go", aerosol: null, moon: null,
+      },
     })
     rispondi({
       ...STANOTTE,
@@ -398,6 +409,7 @@ describe("l accessibilita della prima pagina", () => {
           fetched_at: "2026-09-25T15:00:00.000Z",
           full_nights: 3,
           seeing: { key: true, source: null, meteoblue: "refused" },
+          scales: [],
           sources: [{ source: "cams", fetched_at: "2026-09-25T15:00:00.000Z" }],
           nights: [
             {
@@ -409,23 +421,21 @@ describe("l accessibilita della prima pagina", () => {
               verdict: "go",
               cloud_total_pct: 10,
               usable_hours: 2,
+              usable_since: "2026-09-26T22:00:00+02:00",
+              usable_until: "2026-09-27T00:00:00+02:00",
               window: "dark",
               window_hours: 2,
-              factors: [
-                { code: "gust", value: 31, threshold: 29, since: "2026-09-26T22:00:00+02:00", until: "2026-09-26T23:00:00+02:00", hours: 2 },
-              ],
-              hours: [ora("2026-09-26T22:00:00+02:00", "dark"), ora("2026-09-26T23:00:00+02:00", "dark")],
-              aloft: [
+              shown_from: "2026-09-26T22:00:00+02:00",
+              shown_until: "2026-09-26T23:00:00+02:00",
+              measures: [
                 {
-                  at: "2026-09-26T22:00:00+02:00",
-                  wind_700hpa_kmh: 30,
-                  wind_250hpa_kmh: 120,
-                  wind_200hpa_kmh: null,
-                  seeing_arcsec: 1.25,
-                  aerosol_optical_depth: 0.1,
-                  dust_ugm3: 2,
+                  code: "gust", level: "nogo", weighs: true, value: 31, peak: 31,
+                  peak_at: "2026-09-26T22:00:00+02:00", since: "2026-09-26T22:00:00+02:00",
+                  until: "2026-09-27T00:00:00+02:00", hours: 2, known_hours: 2,
+                  known_since: "2026-09-26T22:00:00+02:00", known_until: "2026-09-27T00:00:00+02:00",
                 },
               ],
+              hours: [ora("2026-09-26T22:00:00+02:00", "dark"), ora("2026-09-26T23:00:00+02:00", "dark")],
             },
           ],
         },

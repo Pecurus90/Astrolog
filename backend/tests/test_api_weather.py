@@ -83,9 +83,8 @@ def test_the_switch_reads_another_model_without_asking_again(letto, monkeypatch,
     monkeypatch.setattr(forecast, "_fetch", finto)
     c = connect(db_path)
     c.execute(
-        "UPDATE weather_nights SET summary_json = json_set(summary_json, '$.verdict', 'nogo')"
-        " WHERE source = ?",
-        (forecast.source_of("icon_seamless"),),
+        "UPDATE weather_view SET summary_json = json_set(summary_json, '$.verdict', 'nogo')"
+        " WHERE model = 'icon_seamless'",
     )
     c.close()
     letto.patch("/api/v1/settings", json={"values": {"weather_model": "icon_seamless"}})
@@ -145,6 +144,7 @@ def test_the_time_of_the_forecast_is_of_the_site_even_when_a_model_brought_no_ni
     """Un modello che l'ultima risposta non portava non fa dire "nessuna previsione ancora"."""
     c = connect(db_path)
     c.execute("DELETE FROM weather_nights WHERE source = ?", (forecast.source_of("gfs_seamless"),))
+    c.execute("DELETE FROM weather_view WHERE model = 'gfs_seamless'")
     c.close()
     letto.patch("/api/v1/settings", json={"values": {"weather_model": "gfs_seamless"}})
     detto = letto.get("/api/v1/weather").json()
@@ -182,11 +182,11 @@ def test_three_nights_are_full_and_the_following_are_a_trend(letto):
     notti = letto.get("/api/v1/weather").json()["nights"]
     assert len(notti) > 3
     assert [n["trend"] for n in notti[:3]] == [False, False, False]
-    assert all(n["hours"] and n["aloft"] for n in notti[:3])
-    assert all(n["trend"] and not n["hours"] and not n["aloft"] for n in notti[3:])
+    assert all(n["hours"] and n["measures"] for n in notti[:3])
+    assert all(n["trend"] and not n["hours"] and not n["measures"] for n in notti[3:])
     assert all(n["verdict"] and n["agreement"] for n in notti[3:])
     # la tendenza non porta cio' che si legge dalle ore, e le notti si fermano alla settima
-    assert all(n["usable_hours"] is None and not n["factors"] for n in notti[3:])
+    assert all(n["usable_hours"] is None and n["usable_since"] is None for n in notti[3:])
     assert all(n["cloud_total_pct"] is not None and n["window_hours"] > 0 for n in notti[3:])
     assert len(notti) == 7
     detto = letto.get("/api/v1/weather").json()
@@ -196,19 +196,34 @@ def test_three_nights_are_full_and_the_following_are_a_trend(letto):
 
 def test_the_sky_aloft_joins_the_wind_of_the_model_and_the_seeing_of_its_hour(letto):
     notte = letto.get("/api/v1/weather").json()["nights"][1]
-    assert [o["at"] for o in notte["aloft"]] == [o["at"] for o in notte["hours"]]
-    assert {o["wind_250hpa_kmh"] for o in notte["aloft"]} == {150.0}
-    assert {o["wind_200hpa_kmh"] for o in notte["aloft"]} == {140.0}
+    assert {o["wind_250hpa_kmh"] for o in notte["hours"]} == {150.0}
+    assert {o["wind_200hpa_kmh"] for o in notte["hours"]} == {140.0}
     # senza chiave Meteoblue il seeing non c'e': nessuna fonte lo stima al suo posto
-    assert {o["seeing_arcsec"] for o in notte["aloft"]} == {None}
-    assert all("transparency_from" not in o for o in notte["aloft"])
-    assert {o["aerosol_optical_depth"] for o in notte["aloft"]} == {0.12}
+    assert {o["seeing_arcsec"] for o in notte["hours"]} == {None}
+    assert all("transparency_from" not in o for o in notte["hours"])
+    assert {o["aerosol_optical_depth"] for o in notte["hours"]} == {0.12}
+    # 150 km/h a 250 hPa: oltre i 126 di meteoblue, la corrente a getto pesa
+    assert {o["levels"]["jet"] for o in notte["hours"]} == {"nogo"}
+    (getto,) = [m for m in notte["measures"] if m["code"] == "jet"]
+    assert (getto["level"], getto["weighs"], getto["value"]) == ("nogo", True, 150.0)
+    assert notte["measures"][0]["code"] == "cloud"
+
+
+def test_the_page_gets_the_thresholds_the_judgement_used(letto):
+    """Le soglie arrivano dal backend, le stesse del giudizio: la pagina le disegna, non le sa."""
+    scale = {s["code"]: s["steps"] for s in letto.get("/api/v1/weather").json()["scales"]}
+    assert scale["jet"] == [{"level": "nogo", "bound": 126.0, "strict": False}]
+    assert scale["seeing"][1] == {"level": "marginal", "bound": 2.0, "strict": True}
+    # la condensa si conta verso il basso: lo dice il dato, non una nota
+    verso = {s["code"]: s["lower_is_worse"] for s in letto.get("/api/v1/weather").json()["scales"]}
+    assert verso["condensation"] is True
+    assert verso["jet"] is False
 
 
 def test_the_wind_aloft_is_the_one_of_the_chosen_model(letto):
     letto.patch("/api/v1/settings", json={"values": {"weather_model": "icon_seamless"}})
     notte = letto.get("/api/v1/weather").json()["nights"][1]
-    assert {o["wind_250hpa_kmh"] for o in notte["aloft"]} == {90.0}
+    assert {o["wind_250hpa_kmh"] for o in notte["hours"]} == {90.0}
 
 
 def test_the_time_of_the_forecast_is_the_one_of_the_models_not_of_the_sky(letto, db_path):
@@ -295,7 +310,7 @@ def test_tonight_without_a_forecast_says_nothing_of_the_weather(con_casa):
 
 def test_the_sky_aloft_carries_the_wind_at_700_hpa(letto):
     notte = letto.get("/api/v1/weather").json()["nights"][1]
-    assert {o["wind_700hpa_kmh"] for o in notte["aloft"]} == {0.0}
+    assert {o["wind_700hpa_kmh"] for o in notte["hours"]} == {0.0}
 
 
 def test_a_trend_night_does_not_carry_the_wind_aloft(letto):

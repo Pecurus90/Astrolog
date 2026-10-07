@@ -3,7 +3,7 @@
 **Com'e' la notte, prima e dopo.** Prima: le prossime notti ora per ora, col verdetto, le ore utili
 e cio' che serve alla planetaria. Dopo: il meteo vero delle notti che hai ripreso, accanto alle
 pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`marginal`/`nogo`),
-*ore utili*, *fattore*; le notti da mezzogiorno a mezzogiorno nel fuso del sito sono di
+*ore utili*, *misura*, *pesa*, *giudizio*; le notti da mezzogiorno a mezzogiorno nel fuso del sito sono di
 [`notti.md`](notti.md); le decisioni ereditate sul meteo, da verificare portandole, stanno in
 [`ereditato.md`](ereditato.md), sezione G.
 
@@ -12,6 +12,10 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 | richiesta | prova |
 |---|---|
 | Apro Meteo e vedo le prossime notti del mio sito, ognuna col verdetto, le ore utili e cosa lo decide | `test_each_model_writes_its_nights_from_the_current_one`, `test_the_summary_is_written_with_the_forecast`, *una notte dice il verdetto, le nuvole, le ore utili e cosa pesa, con l'ora del posto* |
+| Il semaforo lo fanno le nuvole; ogni altra misura con soglia dice la sua parola ora per ora e per la notte, con l'intervallo e il conto, e pesa accanto senza cambiarlo | `test_each_measure_judges_an_hour_at_the_edges_of_its_source`, `test_condensation_comes_under_three_degrees_between_air_and_dew_point`, `test_a_measure_takes_the_worst_hour_of_the_night_and_says_its_hours`, `test_the_clouds_are_the_verdict_and_never_weigh`, `test_good_and_neutral_measures_do_not_weigh`, `test_every_hour_carries_the_judgement_of_each_judged_measure`, `test_the_round_writes_the_nights_with_the_sky_sources_joined_and_judged` |
+| Le misure arrivano in ordine d'importanza, con la media delle ore vere, il picco, e la parte di notte che coprono; le soglie arrivano dal backend | `test_the_order_is_clouds_then_nogo_then_marginal_then_go_earliest_first_then_neutral`, `test_the_night_value_is_the_mean_of_the_true_numbers_and_rain_is_a_total`, `test_the_peak_is_the_worst_hour_and_says_when`, `test_a_measure_known_only_in_part_of_the_night_says_which_part`, `test_every_scale_is_sent_with_its_steps`, `test_the_page_gets_the_thresholds_the_judgement_used` |
+| La Luna pesa per la banda larga solo quando e' sopra l'orizzonte col buio | `test_the_moon_up_brings_its_lit_part_and_down_brings_nothing`, `test_the_moon_is_left_out_when_it_is_never_up_in_the_dark` |
+| Le ore serene sono un intervallo e un conto, e la pagina sa da che ora a che ora disegnare | `test_the_usable_hours_are_said_as_an_interval_and_a_count`, `test_the_end_of_an_interval_is_the_next_hour_of_the_night_even_when_the_clocks_change`, `test_the_page_shows_from_the_last_hour_of_day_to_the_first_after_dawn` |
 | Ora per ora nuvole basse, medie e alte, vento, raffiche, umidita' e punto di rugiada, da mezzogiorno a mezzogiorno | `test_a_night_carries_its_hours_from_noon_to_noon_with_the_sky_of_each`, `test_the_night_the_clocks_change_has_its_true_hours`, *ora per ora, un numero che il modello non da' si dice, non si scrive zero* |
 | Scelgo il modello (ECMWF, ICON, GFS, o quello che il servizio sceglie per il mio posto) e la pagina cambia senza rifare conti | `test_the_switch_reads_another_model_without_asking_again`, `test_a_model_outside_the_list_is_refused`, `test_the_time_of_the_forecast_is_of_the_site_even_when_a_model_brought_no_night`, *lo switch salva il modello scelto e rilegge*, *un modello senza notti lo dice, anche se la previsione e' arrivata* |
 | Senza rete vedo l'ultima previsione con l'ora in cui e' arrivata, o che non c'e' ancora; mai numeri inventati | `test_a_silent_service_keeps_the_last_forecast_and_says_so`, `test_a_silent_service_says_why_and_the_last_forecast_stays`, *prima della prima previsione lo dice, invece di un elenco vuoto muto* |
@@ -62,24 +66,41 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   d'arco" non esiste, e le app che la mostrano usano soglie senza fonte. Il vento in quota si
   mostra com'e'.
 - **Piu' modelli con uno switch**: di fabbrica il modello che Open-Meteo sceglie per il posto
-  (`best_match`). Il riassunto -- verdetto, fattori, ore utili -- si scrive per ogni modello quando
+  (`best_match`). Il riassunto -- verdetto, misure, ore utili -- si scrive per ogni modello quando
   arriva la previsione, e lo switch legge soltanto.
-- **Le soglie del verdetto vengono da convenzioni pubbliche**, verificate sulla fonte e citate
-  accanto al numero in `backend/astrolog/weather/verdict.py`; le prove ne tengono i confini
-  (`test_the_verdict_follows_the_okta_classes_of_the_total_cloud` e le sue vicine):
-  - la copertura media nel buio in okta (WMO 2700, classi dei METAR): **si fa** fino a 2 okta
-    (FEW), **incerta** fino a 4 (SCT), **no** da BKN in su, contando in ottavi (2/8 = 25%, 4/8 = 50%);
-  - le **ore utili** sono le ore di buio che il verdetto direbbe serene, cosi' non si contraddicono;
-  - i **fattori**, dal piu' grave: pioggia (qualunque, nel buio), nuvole basse oltre 2 okta, nuvole
-    oltre 2 okta, raffiche da Beaufort 5 (29 km/h), condensa sotto i 3 gradi fra aria e rugiada
-    (regola FAA dei 5 gradi Fahrenheit). Ognuno dice quando morde e quante ore, perche' una
-    finestra a tratti non sembri piena.
-- **Tre notti piene, poi tendenza fino alla settima** (Marco, 26/9/2026): le ore e i fattori delle
+- **Il semaforo lo decidono solo le nuvole** (DECISIONI del disegno, 3/10/2026): la copertura
+  media nel buio in okta (WMO 2700, classi dei METAR): **si fa** fino a 2 okta (FEW), **incerta**
+  fino a 4 (SCT), **no** da BKN in su, contando in ottavi (2/8 = 25%, 4/8 = 50%). Le **ore utili**
+  sono le ore di buio che il verdetto direbbe serene, cosi' non si contraddicono, dette come
+  intervallo e conto ("dalle 23 alle 04, 4 ore"), mai in minuti: i dati sono orari.
+- **Le altre misure pesano accanto, senza cambiarlo.** Ogni misura con soglia ha la sua parola
+  ora per ora (buona, incerta, niente) e per la notte quella dell'ora peggiore, con l'intervallo e
+  il conto delle ore che la portano. Le soglie stanno in `backend/astrolog/weather/judge.py`, con
+  la fonte accanto al numero (verificate il 7/10/2026), e la rotta le manda alla pagina (`scales`):
+  - nuvole basse come il totale (okta); pioggia: qualunque e' niente; raffiche: niente da Beaufort 5
+    (29 km/h); vento medio: incerta da Beaufort 4 (20 km/h), niente da 5;
+  - condensa: niente sotto i 3 gradi fra aria e rugiada (regola FAA dei 5 gradi Fahrenheit);
+  - jet stream (250 hPa): niente da 126 km/h, i 35 m/s che meteoblue dice "seeing
+    cattivo"; nessuna fonte per un gradino incerto, quindi non c'e';
+  - seeing: buona fino a 2", incerta fino a 4", niente oltre (classi del Canadian Meteorological
+    Centre, quelle di Clear Sky Chart);
+  - aerosol: sotto 0,1 *limpido*, da 1 *molto fosco* (NASA Earth Observatory); in mezzo nessuna
+    parola, che per la notte e' peggio di *limpido* (un'ora limpida non fa limpida la notte);
+  - Luna, per la banda larga: buona fino al 25% illuminata (la regola diffusa fra chi riprende),
+    *al limite* fino al 50%, oltre *solo banda stretta* (il 50 e' di Marco, 7/10/2026); pesa solo
+    nelle ore in cui e' sopra l'orizzonte (-0,833 gradi, convenzione del Nautical Almanac).
+  Neutri, senza parola: nuvole medie e alte, umidita', temperatura, punto di rugiada, vento a 700
+  hPa (si confronta col solito del sito), vento a 200 hPa, polveri.
+- **L'ordine d'importanza** lo scrive il backend: le nuvole, poi le misure giudicate da "niente" a
+  "buona", a pari parola quella che comincia prima, poi i neutri. Il valore della notte e' la media
+  delle ore che hanno un numero (la pioggia, il totale); il picco e' l'ora peggiore; se una misura
+  copre solo parte della notte lo dice, cosi' una media parziale non passa per intera.
+- **Tre notti piene, poi tendenza fino alla settima** (Marco, 26/9/2026): le ore e le misure delle
   prime tre notti, dalla quarta il verdetto, le nuvole, le ore di buio e l'accordo, detti meno
   affidabili. Nessuna fonte trovata
   dice un giorno preciso in cui la previsione ora per ora smette di valere: e' una scelta di
   prodotto, non una soglia.
-- **Il vento in quota non e' un fattore: si confronta col solito del sito.** Il progetto di prima
+- **Il vento in quota non ha giudizio: si confronta col solito del sito.** Il progetto di prima
   lo faceva pesare oltre il 60esimo percentile, un numero scelto sul suo archivio: nessuna
   convenzione pubblica dice quando il vento a 700 hPa rovina una notte. La notte dice quante notti
   su dieci dell'ultimo anno, **da quel sito**, avevano meno vento nelle ore su cui si giudica la notte; la distribuzione si
@@ -97,7 +118,10 @@ storico **da solo, dopo la scansione, in sottofondo** (Marco, 25/9/2026). Fuori 
 avanti uguale.
 
 **Dove si scrive.** Una tabella sua, `weather_nights`, per sito, notte, tipo (previsione o storico) e
-fonte, con la serie ora per ora e il riassunto gia' calcolato: una lettura non calcola mai. Non sta
+fonte, con la serie ora per ora come arriva (lo storico col suo riassunto). Le notti della
+previsione pronte per la pagina stanno in `weather_view`, derivata: la riscrive il giro del meteo
+(`weather/view.py`) dopo previsione e cielo, unendo per ogni modello aerosol, seeing e Luna, coi
+giudizi e l'accordo gia' fatti. Una lettura non calcola mai. Non sta
 nella tabella delle notti, che spazza le notti senza pose -- e la notte di domani non ne ha ancora.
 Si tiene cio' che l'app usa, mai la risposta intera del servizio.
 

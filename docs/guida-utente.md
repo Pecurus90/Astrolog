@@ -330,10 +330,17 @@ la pagina tace invece di scrivere un numero che nessuno ha misurato.
 **Com'e' il cielo nelle prossime notti del tuo sito di casa.** Per ogni notte leggi il
 **verdetto** -- *si fa*, *incerta*, *no* -- con le nuvole in media nelle ore di buio, **quanti
 modelli sono d'accordo** (*3 modelli su 4 dicono che si fa*: e' cio' che ti dice quanto fidarti),
-e le **ore utili**: quante ore di buio avranno il cielo abbastanza sereno. Sotto c'e' **cosa pesa**: la
-pioggia, le nuvole basse, le nuvole, le raffiche che fanno vibrare la montatura, la condensa. Ogni
-motivo dice il suo numero, da dove comincia a pesare, e **quando**: *dalle 01:00 alle 05:00, 3
-ore* vuol dire che in quelle quattro ore ce n'e' una libera. Aprendo **ora per ora** vedi la notte da
+e le **ore utili**: quante ore di buio avranno il cielo abbastanza sereno.
+Il verdetto lo decidono **solo le nuvole**. Sotto c'e' **cosa pesa**: le altre misure che in qualche
+ora della notte diventano *incerte* o *niente* -- le nuvole basse, la pioggia, le raffiche che fanno
+vibrare la montatura, il vento, la condensa, il jet stream, il seeing, l'aerosol (*molto
+fosco*) e la Luna (*al limite* o *solo banda stretta* per chi riprende in banda larga, e solo se e'
+sopra l'orizzonte col buio). Pesano accanto al verdetto, senza cambiarlo. Ognuna dice la sua parola e
+**quando**: *dalle 01:00 alle 05:00, 3 ore* vuol dire che in quelle quattro ore ce n'e' una diversa.
+Le soglie vengono da convenzioni pubbliche: gli ottavi di cielo dei bollettini per le nuvole, la
+scala Beaufort per il vento, le classi del servizio meteo canadese per il seeing, la NASA per
+l'aerosol, meteoblue per il jet stream; per la Luna, la regola diffusa del 25% per la banda
+larga. Aprendo **ora per ora** vedi la notte da
 mezzogiorno a mezzogiorno: le nuvole basse, medie e alte, la temperatura, l'umidita', il punto di
 rugiada, il vento, le raffiche e la pioggia, con accanto se in quell'ora e' giorno, crepuscolo o
 buio. Un numero che il modello non da' si legge *non lo dice*, mai uno zero.

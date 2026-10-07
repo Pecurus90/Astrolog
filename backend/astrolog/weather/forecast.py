@@ -1,12 +1,11 @@
 """Writes the forecast: asks the service, splits the hours into nights and writes each night per
-model with its summary already made, so the page's model switch only reads."""
+model as it came. The page reads `view`, rebuilt by the round once the sky sources are in too."""
 
-import json
 import logging
 import sqlite3
 import zoneinfo
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import asdict, astuple, dataclass, fields
+from dataclasses import astuple, dataclass, fields
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, TypeGuard, cast
@@ -14,7 +13,7 @@ from typing import Any, TypeGuard, cast
 from .. import net
 from ..clock import iso_z, night_date
 from ..db.replace_table import replace_rows
-from . import nights, openmeteo, position, verdict
+from . import nights, openmeteo
 
 log = logging.getLogger(__name__)
 
@@ -57,25 +56,8 @@ class NightRow:
 COLUMNS = tuple(f.name for f in fields(NightRow))
 
 
-@dataclass(frozen=True, slots=True)
-class _ModelNight:
-    night: str
-    model: str
-    hours: list[verdict.Hour]
-    summary: verdict.Summary
-    tenths: int | None
-
-
 def source_of(model: str) -> str:
     return f"open-meteo/{model}"
-
-
-def _agreement(verdicts: Iterable[verdict.Verdict | None]) -> dict[str, int]:
-    """How many models say go, marginal, nogo or do not know, and out of how many."""
-    counts: dict[str, int] = {**dict.fromkeys(verdict.Verdict, 0), "unknown": 0}
-    for v in verdicts:
-        counts[v or "unknown"] += 1
-    return {**counts, "total": sum(counts.values())}
 
 
 def write_rows(
@@ -94,56 +76,33 @@ def write_rows(
     )
 
 
-def _model_nights(
-    conn: sqlite3.Connection,
+def _rows(
     site: Mapping[str, Any],
     models: Mapping[str, Mapping[str, list[Any]]],
     covered: Sequence[nights.Night],
-) -> list[_ModelNight]:
-    """Each model's nights that carry a value, assessed and placed against the site's usual."""
+    fetched_at: str,
+) -> list[NightRow]:
+    """Each model's nights that carry a value, with each hour's sky band; the judgement is
+    `view`'s, which joins the sky sources first."""
     sky = nights.sky(site["latitude"], site["longitude"], covered)
-    usual = position.percentiles(conn, site)
     tz = zoneinfo.ZoneInfo(site["timezone"])
-    found = []
+    rows = []
     for model, series in models.items():
         for night, pairs in covered:
             hours = nights.hours(series, pairs, tz, sky=sky)
             if not nights.empty(hours):
-                summary = verdict.assess(hours)
-                wind = summary.wind_700hpa_kmh
-                tenths = position.tenths_below(usual, wind) if usual and wind is not None else None
-                found.append(_ModelNight(night, model, hours, summary, tenths))
-    return found
-
-
-def _rows(
-    site_id: int, written: Sequence[_ModelNight], model_count: int, fetched_at: str
-) -> list[NightRow]:
-    """A night's agreement is the same in every model and written in each, so a reader of one
-    model need not read the others."""
-    agreements = {}
-    for night in {w.night for w in written}:
-        said = [w.summary.verdict for w in written if w.night == night]
-        # a model that wrote nothing that night does not know; it is not one model fewer
-        agreements[night] = _agreement(said + [None] * (model_count - len(said)))
-    return [
-        NightRow(
-            site_id,
-            w.night,
-            KIND,
-            source_of(w.model),
-            fetched_at,
-            nights.hours_json(w.hours),
-            json.dumps(
-                {
-                    **asdict(w.summary),
-                    "wind_700hpa_tenths": w.tenths,
-                    "agreement": agreements[w.night],
-                }
-            ),
-        )
-        for w in written
-    ]
+                rows.append(
+                    NightRow(
+                        site["id"],
+                        night,
+                        KIND,
+                        source_of(model),
+                        fetched_at,
+                        nights.hours_json(hours),
+                        None,
+                    )
+                )
+    return rows
 
 
 def refresh(
@@ -174,11 +133,10 @@ def refresh(
     if not covered:
         log.info("meteo: la risposta non porta nessuna notte intera")
         return Outcome.BAD_ANSWER
-    written = _model_nights(conn, site, models, covered)
-    if not written:
+    rows = _rows(site, models, covered, iso_z(moment))
+    if not rows:
         log.info("meteo: la risposta porta solo ore vuote")
         return Outcome.BAD_ANSWER
-    rows = _rows(site["id"], written, len(models), iso_z(moment))
     write_rows(conn, site["id"], [source_of(m) for m in openmeteo.MODELS], rows)
     return Outcome.OK
 
