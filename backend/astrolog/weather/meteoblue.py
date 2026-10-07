@@ -40,8 +40,8 @@ def url(latitude: float, longitude: float, key: str) -> str:
 
 
 def parse(payload: Any) -> Series:
-    """Seeing is one value, so the range has equal ends. The declared `utc_timeoffset` is removed
-    even though UTC is asked: if the parameter were ever ignored, nothing slips."""
+    """The declared `utc_timeoffset` is removed even though UTC is asked: if the parameter were
+    ever ignored, nothing slips."""
     data = payload.get("data_1h") if isinstance(payload, dict) else None
     if not isinstance(data, dict) or not isinstance(data.get("time"), list):
         raise BadAnswerError("manca la serie oraria del seeing")
@@ -56,7 +56,7 @@ def parse(payload: Any) -> Series:
     values = data.get("seeing_arcsec")
     if not isinstance(values, list) or len(values) != len(instants):
         raise BadAnswerError("manca il seeing")
-    return instants, {"seeing_from": list(values), "seeing_to": list(values)}
+    return instants, {"seeing_arcsec": list(values)}
 
 
 def check_key(key: str, *, fetch: net.Fetch | None = None) -> KeyOutcome:
@@ -92,6 +92,6 @@ def forget(conn: sqlite3.Connection) -> None:
 
 
 def drop_seeing(conn: sqlite3.Connection) -> None:
-    """The seeing of a key that no longer holds must not pose as the current one; the night falls
-    back to 7Timer."""
+    """The seeing of a key that no longer holds must not pose as the current one: the night stays
+    without seeing."""
     conn.execute("DELETE FROM weather_nights WHERE source = ?", (Source.METEOBLUE,))

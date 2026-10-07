@@ -164,7 +164,7 @@ che il `traduttore` legge per primo.
 | quando e' arrivata la previsione che si legge | `fetched_at` | arrivata il... alle... | aggiornata, scaricata |
 | una notte oltre la terza: il verdetto, le nuvole, le ore di buio e l'accordo, detti meno affidabili | `trend` | tendenza | previsione lunga |
 | quanti modelli dicono si fa, incerta, no | `agreement` | modelli d'accordo | consenso, affidabilita' |
-| cio' che conta per la planetaria, ora per ora: vento in quota, seeing, trasparenza, aerosol | `aloft` | il cielo in quota | alta quota, atmosfera |
+| cio' che conta per la planetaria, ora per ora: vento in quota, seeing, aerosol | `aloft` | il cielo in quota | alta quota, atmosfera |
 | il vento a 250 e 200 hPa | `wind_250hpa_kmh`, `wind_200hpa_kmh` | jet stream | corrente a getto |
 | il vento a 700 hPa, circa 3.000 metri, medio nelle ore su cui si giudica una notte | `wind_700hpa_kmh` | vento in quota | turbolenza |
 | il vento in quota solito di un sito: un anno di notti, scritto una volta l'anno | `weather_climate`, `climate.py` | il solito del sito | climatologia, media |
@@ -175,10 +175,10 @@ che il `traduttore` legge per primo.
 | se il cielo di una notte c'e', arriva, o non si puo' sapere | `weather.state` (`ok`, `waiting`, `unknown`) | -- | -- |
 | la chiave personale di Meteoblue, per il seeing ora per ora; fuori esce solo come finisce | `meteoblue_key`, `hint` | chiave Meteoblue | password, token |
 | l'ultimo tentativo di una fonte che non deve ripetersi troppo spesso (Meteoblue, lo storico), e com'e' andato | `weather_fetches`, `status` (`ok`, `refused`, `unreachable`, `bad_answer`) | ultimo tentativo | log, cronologia |
-| da dove viene il seeing che si legge | `seeing.source` (`meteoblue`, `7timer`) | il seeing viene da... | fonte del seeing |
+| se il seeing c'e': viene solo da Meteoblue, con la chiave dell'utente | `seeing.source` (`meteoblue` o vuoto) | il seeing viene da Meteoblue | fonte del seeing |
 | la sezione delle Impostazioni con le chiavi dei servizi | `/impostazioni/servizi` | Servizi | account, integrazioni |
-| lo spessore ottico degli aerosol e le polveri, da CAMS | `aerosol_optical_depth`, `dust_ugm3` | aerosol, polveri | trasparenza (che e' di 7Timer), smog |
-| il seeing e la trasparenza come fascia del servizio: da, a (un estremo aperto e' vuoto) | `seeing_from`/`seeing_to`, `transparency_from`/`transparency_to` | seeing, trasparenza | qualita' del cielo |
+| lo spessore ottico degli aerosol e le polveri, da CAMS | `aerosol_optical_depth`, `dust_ugm3` | aerosol, polveri | trasparenza, smog |
+| il seeing di Meteoblue in secondi d'arco, un valore per ora | `seeing_arcsec` | seeing | qualita' del cielo, fascia |
 | i modi di restringere una ricerca nel Planner | `criteria` | criteri | filtri |
 | la linea di alberi e case attorno a un sito | `horizon` | orizzonte | maschera, profilo |
 | altezza minima, distanza dalla Luna, ore minime: i tre numeri di fabbrica | `thresholds` | soglie | preferenze |

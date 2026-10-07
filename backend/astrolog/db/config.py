@@ -36,7 +36,7 @@ KEYS: dict[str, Key] = {
         str,
         None,
         "la chiave personale di Meteoblue, per il seeing ora per ora: gratuita, chiesta sul loro"
-        " sito. Senza, il seeing viene da 7Timer, a fasce: l'app funziona uguale",
+        " sito. Senza, il seeing non c'e': il resto del meteo funziona uguale",
     ),
     "weather_model": Key(
         str,

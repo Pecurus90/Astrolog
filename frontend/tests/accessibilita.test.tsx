@@ -397,7 +397,7 @@ describe("l accessibilita della prima pagina", () => {
           models: ["best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless"],
           fetched_at: "2026-09-25T15:00:00.000Z",
           full_nights: 3,
-          seeing: { source: "7timer", meteoblue: "refused" },
+          seeing: { key: true, source: null, meteoblue: "refused" },
           sources: [{ source: "cams", fetched_at: "2026-09-25T15:00:00.000Z" }],
           nights: [
             {
@@ -421,10 +421,7 @@ describe("l accessibilita della prima pagina", () => {
                   wind_700hpa_kmh: 30,
                   wind_250hpa_kmh: 120,
                   wind_200hpa_kmh: null,
-                  seeing_from: 1.25,
-                  seeing_to: 1.5,
-                  transparency_from: null,
-                  transparency_to: null,
+                  seeing_arcsec: 1.25,
                   aerosol_optical_depth: 0.1,
                   dust_ugm3: 2,
                 },

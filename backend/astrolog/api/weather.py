@@ -12,7 +12,6 @@ from ..db import config
 from ..db.transaction import transaction
 from ..spine.group_store import home_site
 from ..weather import forecast, meteoblue, openmeteo, rounds, sky
-from ..weather.fetches import Source
 from .deps import get_db
 from .models_weather import (
     KeyStatus,
@@ -43,18 +42,13 @@ _SKY_ROWS = (
     f" WHERE site_id = ? AND kind = ? AND source IN ({_SKY_SOURCES}) AND night_date >= ?"
 )
 
-_SEEING = ("seeing_from", "seeing_to")
-
 # A product choice, not a threshold: no source found says from which day an hourly forecast stops
 # being worth reading.
 FULL_NIGHTS = 3
 # the current night and the six after: the service sometimes brings one more, which is not shown
 MAX_NIGHTS = 7
 _WIND = ("wind_700hpa_kmh", "wind_250hpa_kmh", "wind_200hpa_kmh")
-_SKY_FIELDS = (
-    "seeing_from", "seeing_to", "transparency_from", "transparency_to",
-    "aerosol_optical_depth", "dust_ugm3",
-)  # fmt: skip
+_SKY_FIELDS = ("seeing_arcsec", "aerosol_optical_depth", "dust_ugm3")
 
 
 def _aloft(
@@ -91,13 +85,14 @@ def _night(
 
 
 def _seeing(conn: sqlite3.Connection, site_id: int, arrived: dict[str, str]) -> WeatherSeeingOut:
-    """Meteoblue's last attempt only with a key: it is what lets the page say why seeing comes from
-    7Timer."""
-    seeing_source = (
-        "meteoblue" if "meteoblue" in arrived else "7timer" if "7timer" in arrived else None
+    """Meteoblue's last attempt only with a key: it is what lets the page say why there is no
+    seeing."""
+    seeing_source = "meteoblue" if "meteoblue" in arrived else None
+    key = bool(config.read(conn).meteoblue_key)
+    last = meteoblue.last_attempt(conn, site_id) if key else None
+    return WeatherSeeingOut(
+        key=key, source=seeing_source, meteoblue=last["status"] if last else None
     )
-    last = meteoblue.last_attempt(conn, site_id) if config.read(conn).meteoblue_key else None
-    return WeatherSeeingOut(source=seeing_source, meteoblue=last["status"] if last else None)
 
 
 @router.get("/weather", response_model=WeatherOut)
@@ -110,9 +105,7 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
 
     **Three full nights, then a trend**: from the fourth (`trend`) only the verdict, the clouds,
     the dark hours and the agreement, without usable hours, factors, hours, upper sky or upper
-    wind. A night that has Meteoblue's seeing takes all of it from there: the hours Meteoblue does
-    not cover stay empty instead of taking 7Timer's bands, or the page would say "from Meteoblue"
-    over a night of two sources."""
+    wind. Seeing comes only from Meteoblue: an hour it does not cover stays empty."""
     chosen = config.read(conn).weather_model
     empty = WeatherOut(
         site=None,
@@ -121,7 +114,9 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
         models=list(openmeteo.MODELS),
         fetched_at=None,
         full_nights=FULL_NIGHTS,
-        seeing=WeatherSeeingOut(source=None, meteoblue=None),
+        seeing=WeatherSeeingOut(
+            key=bool(config.read(conn).meteoblue_key), source=None, meteoblue=None
+        ),
         sources=[],
         nights=[],
     )
@@ -141,19 +136,11 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
     site_rows = conn.execute(
         _SKY_ROWS, (home["id"], forecast.KIND, *sky.ALL_SOURCES, current)
     ).fetchall()
-    with_meteoblue = {r["night_date"] for r in site_rows if r["source"] == Source.METEOBLUE}
     for r in site_rows:
         arrived[r["source"]] = max(arrived.get(r["source"], ""), r["fetched_at"])
         by_hour = from_sky.setdefault(r["night_date"], {})
-        via = (
-            _SEEING
-            if r["source"] == Source.SEVENTIMER and r["night_date"] in with_meteoblue
-            else ()
-        )
         for o in json.loads(r["hourly_json"]):
-            by_hour.setdefault(o["at"], {}).update(
-                {k: v for k, v in o.items() if v is not None and k not in via}
-            )
+            by_hour.setdefault(o["at"], {}).update({k: v for k, v in o.items() if v is not None})
     return empty.model_copy(
         update={
             "site": home["name"],

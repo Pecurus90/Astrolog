@@ -589,7 +589,7 @@ CREATE UNIQUE INDEX object_names_name ON object_names (name);
 
 -- Il meteo di una notte, per sito (RILEVATO: lo portano i servizi meteo, `astrolog.weather`,
 -- contratto in `docs/domini/meteo.md`). Una riga per tipo -- la previsione o lo storico -- e per
--- fonte: un modello di Open-Meteo, Meteoblue, 7Timer, CAMS. Non sta su `nights`, che spazza le
+-- fonte: un modello di Open-Meteo, Meteoblue, CAMS. Non sta su `nights`, che spazza le
 -- notti senza pose: la notte di domani non ne ha ancora. La serie ora per ora e il riassunto
 -- (verdetto, fattori, ore utili) si scrivono quando arrivano, e chi legge non calcola; il
 -- riassunto e' NULL per una fonte che da sola non fa un verdetto (il seeing).

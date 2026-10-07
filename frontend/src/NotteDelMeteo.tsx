@@ -95,16 +95,6 @@ function valore(v: number | null) {
   return v === null ? t("weather.unknown") : numero(v)
 }
 
-/** Una fascia come la da' il servizio: da-a, sotto, sopra, o niente; e un valore solo quando i
- *  due estremi coincidono (il seeing di Meteoblue). */
-function fascia(da: number | null, a: number | null) {
-  if (da !== null && da === a) return numero(da)
-  if (da !== null && a !== null) return t("weather.range", { da: numero(da), a: numero(a) })
-  if (a !== null) return t("weather.range.below", { a: numero(a) })
-  if (da !== null) return t("weather.range.above", { da: numero(da) })
-  return t("weather.unknown")
-}
-
 function OraPerOra({ ore }: { ore: Ora[] }) {
   return (
     <table>
@@ -145,7 +135,6 @@ function CieloInQuota({ ore }: { ore: InQuota[] }) {
           <th scope="col">{t("weather.col.wind250")}</th>
           <th scope="col">{t("weather.col.wind200")}</th>
           <th scope="col">{t("weather.col.seeing")}</th>
-          <th scope="col">{t("weather.col.transparency")}</th>
           <th scope="col">{t("weather.col.aerosol")}</th>
           <th scope="col">{t("weather.col.dust")}</th>
         </tr>
@@ -157,8 +146,7 @@ function CieloInQuota({ ore }: { ore: InQuota[] }) {
             <td>{valore(o.wind_700hpa_kmh)}</td>
             <td>{valore(o.wind_250hpa_kmh)}</td>
             <td>{valore(o.wind_200hpa_kmh)}</td>
-            <td>{fascia(o.seeing_from, o.seeing_to)}</td>
-            <td>{fascia(o.transparency_from, o.transparency_to)}</td>
+            <td>{valore(o.seeing_arcsec)}</td>
             <td>{valore(o.aerosol_optical_depth)}</td>
             <td>{valore(o.dust_ugm3)}</td>
           </tr>

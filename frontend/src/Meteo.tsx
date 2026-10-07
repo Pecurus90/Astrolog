@@ -120,12 +120,6 @@ function Modelli({ detto, scegli, occupato }: { detto: Meteo; scegli: (m: string
 /** Come si cita una fonte del cielo, per nome: una fonte che la pagina non conosce non si cita con
  *  le parole di un'altra. */
 function Citazione({ fonte, arrivata }: { fonte: string; arrivata: string }) {
-  if (fonte === "7timer")
-    return (
-      <p>
-        <a href="https://www.7timer.info/">{t("weather.attribution.7timer")}</a>
-      </p>
-    )
   if (fonte === "meteoblue")
     return (
       <p>
@@ -136,14 +130,16 @@ function Citazione({ fonte, arrivata }: { fonte: string; arrivata: string }) {
   return null
 }
 
-/** Da dove viene il seeing, e -- quando c'e' la chiave e Meteoblue non l'ha dato -- perche'. */
+/** Il seeing viene solo da Meteoblue: se c'e' lo dice, se manca dice perche' -- senza chiave, o la
+ *  chiave che Meteoblue non accetta, o il servizio che non ha risposto. Con la chiave e niente
+ *  ancora da dire, tace. */
 function DaDoveIlSeeing({ seeing }: { seeing: Meteo["seeing"] }) {
-  if (seeing.source === null) return null
+  if (!seeing.key) return <p>{t("weather.seeing.none")}</p>
   const perche = seeing.meteoblue && seeing.meteoblue !== "ok" ? (`weather.seeing.why.${seeing.meteoblue}` as const) : null
+  if (seeing.source === null && perche === null) return null
   return (
     <p>
-      {t(seeing.source === "meteoblue" ? "weather.seeing.meteoblue" : "weather.seeing.7timer")}{" "}
-      {perche && t(perche)}
+      {seeing.source === "meteoblue" && t("weather.seeing.meteoblue")} {perche && t(perche)}
     </p>
   )
 }

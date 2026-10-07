@@ -38,7 +38,7 @@ export const enWizard = {
   "wizard.step.solver": "The sky matcher",
   "wizard.step.folders": "Where the files are",
   "wizard.step.services": "Seeing for planetary imaging",
-  "wizard.services.why": "If you have a Meteoblue key, the seeing arrives hour by hour and for seven nights. It is not required: without one, it comes from 7Timer, in bands. You can skip and add it later in the Settings.",
+  "wizard.services.why": "If you have a Meteoblue key, the seeing arrives hour by hour and for seven nights. It is not required: without one there is no seeing, and the rest of the weather works the same. You can skip and add it later in the Settings.",
   "wizard.skip": "Skip for now",
   "wizard.next": "Next",
   "wizard.back": "Back",

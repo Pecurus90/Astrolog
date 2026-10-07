@@ -1,5 +1,5 @@
 """Nights of a service's hourly series, noon to noon in the site's timezone. Whole or not depends
-on the source: one not sampling every hour (7Timer) would never have a whole night."""
+on the source: a sky source whose series starts late still gives the night under way."""
 
 import json
 import zoneinfo

@@ -226,9 +226,15 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   il semaforo lo decidono solo le nuvole, le altre misure "pesano" con parola e ora; soglie e
   giudizio ora per ora mandati dal backend; ore serene come intervallo e conto ("dalle 23 alle 04,
   4 ore"), mai minuti; vento a 250, 700 (contro il solito del sito) e 200 hPa, polvere. Ogni
-  soglia del disegno si verifica su una fonte pubblica; dove non c'e' (Luna 25/50 %, seeing 2/4",
-  aerosol 0,1/1, corrente a getto 108/126 km/h) si decide con Marco a video. Poi la pagina, gia'
+  soglia del disegno si verifica su una fonte pubblica. Poi la pagina, gia'
   nel foglio v28 (`47-parametro`, `50-strato`, `63-cielo`, `64-scala`, `71-pagina-meteo`).
+  Fetta 1 fatta (7/10/2026): 7Timer uscito, seeing solo Meteoblue (`seeing_arcsec`). Soglie
+  verificate o decise (7/10/2026), da scrivere nella fetta 2: vento medio 20/29 km/h (Beaufort 4 e
+  5); aerosol sotto 0,1 limpido, da 1 molto fosco (NASA Earth Observatory); seeing 2/4" (categorie
+  del Canadian Meteorological Centre, via Clear Sky Chart); corrente a getto solo "niente" oltre
+  126 km/h (meteoblue: oltre 35 m/s seeing cattivo; 108 senza fonte, tolto); Luna fino al 25 %
+  buona (regola diffusa per la banda larga), 25-50 % "al limite", oltre 50 % "solo banda stretta"
+  (il 50 e' di Marco).
 - **La ricerca nella barra -- dopo il Meteo** (Marco, 7/10/2026): prima si decide con Marco cosa
   cerca, con quali nomi, dove mostra i risultati e cosa apre; poi un brief di cinque righe a
   Claude Design (campo aperto, risultati, stati, telefono); la rotta del backend puo' partire
@@ -664,7 +670,7 @@ riga per voce.
   stessa descrizione parola per parola nell'OpenAPI, e quelle di `untimed` sono quasi uguali (il
   significato ha casa nel glossario).
 - **Le rotte di lettura di `api`, dopo la fase 2**: `api/weather._seeing` scrive a mano
-  `"meteoblue"` e `"7timer"` accanto a `fetches.Source`: il campo e' un `Literal` che ripete
+  `"meteoblue"` accanto a `fetches.Source`: il campo e' un `Literal` che ripete
   apposta, e un membro dell'enum non lo soddisfa per il tipo (servirebbe un `cast`).
 - **Frame senza tipo, dopo la fase 2**: "risolto e' una foto, senza stelle una calibrazione" e'
   detta in `typeless` e nella descrizione OpenAPI di `api/models_review_groups` (toglierla di li'

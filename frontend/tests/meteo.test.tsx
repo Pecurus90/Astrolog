@@ -50,10 +50,7 @@ function quota(at: string, campi: Record<string, number | null> = {}) {
     wind_700hpa_kmh: 30,
     wind_250hpa_kmh: 120,
     wind_200hpa_kmh: 110,
-    seeing_from: null,
-    seeing_to: null,
-    transparency_from: null,
-    transparency_to: null,
+    seeing_arcsec: null,
     aerosol_optical_depth: 0.12,
     dust_ugm3: null,
     ...campi,
@@ -86,8 +83,8 @@ const NOTTE = {
     ora("2026-09-26T22:00:00+02:00", "dark", { wind_gust_kmh: 35, dew_point_c: null }),
   ],
   aloft: [
-    quota("2026-09-26T12:00:00+02:00", { seeing_from: 1.25, seeing_to: 1.5, transparency_to: 0.3 }),
-    quota("2026-09-26T22:00:00+02:00", { seeing_from: 2.5 }),
+    quota("2026-09-26T12:00:00+02:00", { seeing_arcsec: 1.25 }),
+    quota("2026-09-26T22:00:00+02:00", { seeing_arcsec: 2.5 }),
     quota("2026-09-26T23:00:00+02:00", { wind_200hpa_kmh: 105, dust_ugm3: 7 }),
   ],
 }
@@ -117,9 +114,8 @@ function meteo(corpo: Record<string, unknown>, altre: Record<string, Voce> = {})
         models: MODELLI,
         fetched_at: null,
         full_nights: 3,
-        seeing: { source: "7timer", meteoblue: null },
+        seeing: { key: false, source: null, meteoblue: null },
         sources: [
-          { source: "7timer", fetched_at: "2026-09-25T15:00:00.000Z" },
           { source: "cams", fetched_at: "2026-09-25T15:00:00.000Z" },
         ],
         nights: [],
@@ -281,25 +277,25 @@ describe("il Meteo, dopo le prime notti e in quota", () => {
     expect(within(tendenza as HTMLElement).queryByText(/ora per ora/i)).toBeNull()
   })
 
-  it("il cielo in quota scrive le fasce del seeing come le da' il servizio", async () => {
+  it("il cielo in quota scrive il seeing ora per ora, e un'ora senza lo dice", async () => {
     meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE] })
     await apriMeteo()
 
     const [, quota] = await screen.findAllByRole("table")
     const righe = within(quota as HTMLElement).getAllByRole("row")
-    // le celle nell'ordine delle colonne: 700, 250 e 200 hPa, seeing, trasparenza, aerosol, polveri
+    // le celle nell'ordine delle colonne: 700, 250 e 200 hPa, seeing, aerosol, polveri
     const celle = (r: number) => within(righe[r] as HTMLElement).getAllByRole("cell").map((c) => c.textContent)
-    expect(celle(1)).toEqual(["30", "120", "110", "1,25-1,5", "sotto 0,3", "0,12", "non lo dice"])
-    expect(celle(2)).toEqual(["30", "120", "110", "sopra 2,5", "non lo dice", "0,12", "non lo dice"])
-    expect(celle(3)).toEqual(["30", "120", "105", "non lo dice", "non lo dice", "0,12", "7"])
+    expect(celle(1)).toEqual(["30", "120", "110", "1,25", "0,12", "non lo dice"])
+    expect(celle(2)).toEqual(["30", "120", "110", "2,5", "0,12", "non lo dice"])
+    expect(celle(3)).toEqual(["30", "120", "105", "non lo dice", "0,12", "7"])
   })
 
-  it("cita 7Timer e i dati Copernicus con l'anno", async () => {
+  it("cita i dati Copernicus con l'anno, e 7Timer non c'e' piu'", async () => {
     meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE] })
     await apriMeteo()
 
-    expect(await screen.findByRole("link", { name: /7Timer/ })).toBeDefined()
-    expect(screen.getByText(/Copernicus Atmosphere Monitoring Service information 2026/)).toBeDefined()
+    expect(await screen.findByText(/Copernicus Atmosphere Monitoring Service information 2026/)).toBeDefined()
+    expect(screen.queryByText(/7Timer/)).toBeNull()
   })
 })
 
@@ -342,18 +338,33 @@ describe("il Meteo, le fonti citate", () => {
 
 describe("il Meteo, da dove viene il seeing", () => {
   it("dice che il seeing viene da Meteoblue quando c'e' la chiave", async () => {
-    meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE], seeing: { source: "meteoblue", meteoblue: "ok" } })
+    meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE], seeing: { key: true, source: "meteoblue", meteoblue: "ok" } })
     await apriMeteo()
 
     expect(await screen.findByText(/viene da Meteoblue, ora per ora/)).toBeDefined()
   })
 
-  it("se Meteoblue rifiuta la chiave dice perche' il seeing viene da 7Timer", async () => {
-    meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE], seeing: { source: "7timer", meteoblue: "refused" } })
+  it("se Meteoblue non accetta la chiave lo dice, e manda alle Impostazioni", async () => {
+    meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE], seeing: { key: true, source: null, meteoblue: "refused" } })
     await apriMeteo()
 
-    const riga = await screen.findByText(/viene da 7Timer/)
-    expect(riga.textContent).toMatch(/rifiutato la tua chiave/)
+    const riga = await screen.findByText(/Meteoblue non accetta la chiave/)
+    expect(riga.textContent).toMatch(/Impostazioni/)
+  })
+
+  it("senza chiave dice che il seeing vuole una chiave Meteoblue", async () => {
+    meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE], seeing: { key: false, source: null, meteoblue: null } })
+    await apriMeteo()
+
+    expect(await screen.findByText(/serve una chiave Meteoblue, gratuita/)).toBeDefined()
+  })
+
+  it("con la chiave appena messa e Meteoblue non ancora chiesto non chiede la chiave", async () => {
+    meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE], seeing: { key: true, source: null, meteoblue: null } })
+    await apriMeteo()
+
+    await screen.findByRole("link", { name: "Weather data by Open-Meteo.com" })
+    expect(screen.queryByText(/serve una chiave Meteoblue/)).toBeNull()
   })
 
   it("cita Meteoblue quando il seeing viene da li'", async () => {
@@ -369,8 +380,8 @@ describe("il Meteo, da dove viene il seeing", () => {
 })
 
 describe("il Meteo, il seeing di Meteoblue", () => {
-  it("un seeing con un valore solo si scrive come un numero, non come un intervallo", async () => {
-    const conMeteoblue = { ...NOTTE, aloft: [quota("2026-09-26T22:00:00+02:00", { seeing_from: 0.9, seeing_to: 0.9 })] }
+  it("il seeing si scrive come un numero, in secondi d'arco", async () => {
+    const conMeteoblue = { ...NOTTE, aloft: [quota("2026-09-26T22:00:00+02:00", { seeing_arcsec: 0.9 })] }
     meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [conMeteoblue] })
     await apriMeteo()
 

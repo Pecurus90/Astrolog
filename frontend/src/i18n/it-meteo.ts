@@ -65,13 +65,8 @@ export const itMeteo = {
   "weather.col.wind250": "Vento a 250 hPa (km/h)",
   "weather.col.wind200": "Vento a 200 hPa (km/h)",
   "weather.col.seeing": "Seeing (arcosecondi)",
-  "weather.col.transparency": "Trasparenza (magnitudini per massa d'aria)",
   "weather.col.aerosol": "Aerosol (spessore ottico)",
   "weather.col.dust": "Polveri (microgrammi per metro cubo)",
-  // Le fasce come le da' il servizio: un intervallo, o un estremo aperto.
-  "weather.range": "{da}-{a}",
-  "weather.range.below": "sotto {a}",
-  "weather.range.above": "sopra {da}",
   "weather.factor.rain": "Pioggia: {v} mm nelle ore di buio.",
   "weather.factor.cloud_low": "Nuvole basse al {v}%, oltre il {s}%: bloccano, non velano.",
   "weather.factor.cloud": "Nuvole al {v}%, oltre il {s}%.",
@@ -104,23 +99,22 @@ export const itMeteo = {
   // Open-Meteo chiede di essere citato con queste parole (licenza CC BY 4.0): restano cosi' in
   // ogni lingua.
   "weather.attribution": "Weather data by Open-Meteo.com",
-  "weather.attribution.7timer": "Trasparenza, e seeing a fasce: 7Timer!",
   "weather.attribution.meteoblue": "Seeing: meteoblue",
-  // Da dove viene il seeing, e perche' non da Meteoblue quando la chiave c'e'.
+  // Il seeing viene solo da Meteoblue: se manca, perche'.
   "weather.seeing.meteoblue": "Il seeing viene da Meteoblue, ora per ora, con la tua chiave.",
-  "weather.seeing.7timer": "Il seeing viene da 7Timer, a fasce.",
-  "weather.seeing.why.refused": "Meteoblue ha rifiutato la tua chiave per il seeing: controllala nelle Impostazioni.",
+  "weather.seeing.none": "Per il seeing serve una chiave Meteoblue, gratuita: si mette nelle Impostazioni.",
+  "weather.seeing.why.refused": "Meteoblue non accetta la chiave. Controlla nelle Impostazioni che sia intera e non scaduta.",
   "weather.seeing.why.unreachable": "Meteoblue non ha risposto l'ultima volta: si riprova piu' tardi.",
   "weather.seeing.why.bad_answer": "Meteoblue ha risposto qualcosa che non e' un seeing: si riprova piu' tardi.",
   // La chiave Meteoblue, nel primo avvio e nelle Impostazioni.
   "meteoblue.label": "Chiave Meteoblue",
-  "meteoblue.none": "Nessuna chiave: il seeing viene da 7Timer, a fasce.",
+  "meteoblue.none": "Nessuna chiave: il seeing non c'e'.",
   "meteoblue.current": "Chiave salvata, che finisce con {fine}.",
   "meteoblue.where": "Come si chiede una chiave gratuita",
   "meteoblue.save": "Prova e salva",
   "meteoblue.remove": "Togli la chiave",
   "meteoblue.saved": "La chiave vale: il seeing ora viene da Meteoblue.",
-  "meteoblue.removed": "Chiave tolta: il seeing torna a 7Timer.",
+  "meteoblue.removed": "Chiave tolta: il seeing non c'e' piu'.",
   "meteoblue.refused": "Meteoblue non riconosce questa chiave: non l'ho salvata.",
   "meteoblue.unreachable": "Meteoblue non risponde: non ho potuto provare la chiave, e non l'ho salvata.",
   "meteoblue.badAnswer": "Meteoblue ha risposto in un modo che non capisco: non ho salvato la chiave.",

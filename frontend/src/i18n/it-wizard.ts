@@ -43,7 +43,7 @@ export const itWizard = {
   "wizard.step.solver": "Il riconoscitore",
   "wizard.step.folders": "Dove stanno i file",
   "wizard.step.services": "Il seeing per la planetaria",
-  "wizard.services.why": "Se hai una chiave Meteoblue, il seeing arriva ora per ora e per sette notti. Non e' obbligatoria: senza, viene da 7Timer, a fasce. Puoi saltare e metterla dopo nelle Impostazioni.",
+  "wizard.services.why": "Se hai una chiave Meteoblue, il seeing arriva ora per ora e per sette notti. Non e' obbligatoria: senza, il seeing non c'e' e il resto del meteo funziona uguale. Puoi saltare e metterla dopo nelle Impostazioni.",
   "wizard.skip": "Salta per ora",
   "wizard.next": "Avanti",
   "wizard.back": "Indietro",

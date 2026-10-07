@@ -162,11 +162,10 @@ def test_a_home_site_without_a_timezone_is_said(db_path, client_vuoto):
 def dintorni_del_cielo():
     """I tre servizi, con risposte intorno ad adesso qualunque giorno giri la prova. Il vento in
     quota e' diverso per modello e per livello: una colonna letta dal posto sbagliato si vede."""
-    from test_weather_sky import Instradato, aria, settetimer
+    from test_weather_sky import Instradato, aria
 
     adesso = datetime.now(UTC)
     inizio = (adesso - timedelta(days=2)).strftime("%Y-%m-%dT00:00")
-    run = (adesso - timedelta(hours=6)).strftime("%Y%m%d%H")
     return Instradato(**{
         "/v1/forecast": risposta(
             inizio=inizio,
@@ -175,7 +174,6 @@ def dintorni_del_cielo():
             wind_200hpa_kmh=140.0,
             per_modello={"icon_seamless": {"wind_250hpa_kmh": 90.0}},
         ),
-        "7timer": settetimer(init=run),
         "air-quality": aria(inizio=inizio, ore=10 * 24),
     })  # fmt: skip
 
@@ -193,7 +191,7 @@ def test_three_nights_are_full_and_the_following_are_a_trend(letto):
     assert len(notti) == 7
     detto = letto.get("/api/v1/weather").json()
     assert detto["full_nights"] == 3
-    assert {f["source"] for f in detto["sources"]} == {"7timer", "cams"}
+    assert {f["source"] for f in detto["sources"]} == {"cams"}
 
 
 def test_the_sky_aloft_joins_the_wind_of_the_model_and_the_seeing_of_its_hour(letto):
@@ -201,8 +199,9 @@ def test_the_sky_aloft_joins_the_wind_of_the_model_and_the_seeing_of_its_hour(le
     assert [o["at"] for o in notte["aloft"]] == [o["at"] for o in notte["hours"]]
     assert {o["wind_250hpa_kmh"] for o in notte["aloft"]} == {150.0}
     assert {o["wind_200hpa_kmh"] for o in notte["aloft"]} == {140.0}
-    visti = [o for o in notte["aloft"] if o["seeing_from"] is not None]
-    assert visti and len(visti) < len(notte["aloft"])  # ogni tre ore, e le altre lo dicono
+    # senza chiave Meteoblue il seeing non c'e': nessuna fonte lo stima al suo posto
+    assert {o["seeing_arcsec"] for o in notte["aloft"]} == {None}
+    assert all("transparency_from" not in o for o in notte["aloft"])
     assert {o["aerosol_optical_depth"] for o in notte["aloft"]} == {0.12}
 
 
@@ -216,7 +215,7 @@ def test_the_time_of_the_forecast_is_the_one_of_the_models_not_of_the_sky(letto,
     prima = letto.get("/api/v1/weather").json()["fetched_at"]
     c = connect(db_path)
     c.execute(
-        "UPDATE weather_nights SET fetched_at = '2999-01-01T00:00:00.000Z' WHERE source = '7timer'"
+        "UPDATE weather_nights SET fetched_at = '2999-01-01T00:00:00.000Z' WHERE source = 'cams'"
     )
     c.close()
     assert letto.get("/api/v1/weather").json()["fetched_at"] == prima

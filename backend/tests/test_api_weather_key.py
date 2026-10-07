@@ -81,14 +81,13 @@ def test_the_other_service_key_does_not_come_out_whole_either(app):
 def test_with_the_key_the_seeing_comes_from_meteoblue_hour_by_hour(app):
     app.put("/api/v1/weather/meteoblue-key", json={"key": CHIAVE})
     detto = app.get("/api/v1/weather").json()
-    assert detto["seeing"] == {"source": "meteoblue", "meteoblue": "ok"}
+    assert detto["seeing"] == {"key": True, "source": "meteoblue", "meteoblue": "ok"}
     notte = detto["nights"][0]
-    valori = {(o["seeing_from"], o["seeing_to"]) for o in notte["aloft"]}
-    assert valori == {(0.9, 0.9)}  # ogni ora, e non le fasce di 7Timer
+    assert {o["seeing_arcsec"] for o in notte["aloft"]} == {0.9}  # ogni ora, un valore solo
     assert {f["source"] for f in detto["sources"]} >= {"meteoblue"}
 
 
-def test_a_refused_key_falls_back_to_7timer_and_says_why(app, monkeypatch, db_path):
+def test_a_refused_key_leaves_the_night_without_seeing_and_says_why(app, monkeypatch, db_path):
     app.put("/api/v1/weather/meteoblue-key", json={"key": CHIAVE})
     c = connect(db_path)
     c.execute("UPDATE weather_fetches SET attempted_at = '2000-01-01T00:00:00.000Z'")
@@ -98,14 +97,17 @@ def test_a_refused_key_falls_back_to_7timer_and_says_why(app, monkeypatch, db_pa
     monkeypatch.setattr(forecast, "_fetch", rifiutata)
     app.post("/api/v1/weather/refresh")
     assert app.get("/api/v1/weather").json()["seeing"] == {
-        "source": "7timer",
+        "key": True,
+        "source": None,
         "meteoblue": "refused",
     }
 
 
-def test_without_a_key_the_seeing_is_7timer_and_meteoblue_is_not_mentioned(app):
+def test_without_a_key_there_is_no_seeing_and_meteoblue_is_not_mentioned(app):
     app.post("/api/v1/weather/refresh")
-    assert app.get("/api/v1/weather").json()["seeing"] == {"source": "7timer", "meteoblue": None}
+    detto = app.get("/api/v1/weather").json()
+    assert detto["seeing"] == {"key": False, "source": None, "meteoblue": None}
+    assert {o["seeing_arcsec"] for o in detto["nights"][0]["aloft"]} == {None}
 
 
 def test_removing_the_key_removes_its_seeing(app):
@@ -116,6 +118,7 @@ def test_removing_the_key_removes_its_seeing(app):
     }
     detto = app.get("/api/v1/weather").json()
     assert detto["seeing"]["meteoblue"] is None
+    assert detto["seeing"]["key"] is False
     assert "meteoblue" not in {f["source"] for f in detto["sources"]}
 
 
@@ -127,17 +130,16 @@ def test_a_new_key_is_asked_at_once_not_twelve_hours_later(app, monkeypatch):
     monkeypatch.setattr(forecast, "_fetch", altro)
     app.put("/api/v1/weather/meteoblue-key", json={"key": OTHER_KEY})
     notte = app.get("/api/v1/weather").json()["nights"][0]
-    assert {o["seeing_from"] for o in notte["aloft"]} == {1.5}
+    assert {o["seeing_arcsec"] for o in notte["aloft"]} == {1.5}
 
 
-def test_a_night_with_meteoblue_takes_no_seeing_from_7timer(app, db_path):
-    """Dove Meteoblue da' la notte, le ore che non copre restano vuote invece di prendere le fasce
-    di 7Timer: la pagina dice "viene da Meteoblue", e una notte a due fonti direbbe il falso."""
+def test_the_hours_meteoblue_does_not_cover_stay_without_seeing(app, db_path):
+    """Un'ora che Meteoblue non da' resta vuota: nessuna fonte la riempie al suo posto."""
     app.put("/api/v1/weather/meteoblue-key", json={"key": CHIAVE})
     c = connect(db_path)
     riga = c.execute(
         "SELECT night_date, hourly_json FROM weather_nights WHERE source = 'meteoblue'"
-        " ORDER BY night_date LIMIT 1 OFFSET 1"  # la notte dopo: 7Timer la copre tutta
+        " ORDER BY night_date LIMIT 1 OFFSET 1"
     ).fetchone()
     ore = json.loads(riga["hourly_json"])
     c.execute(
@@ -148,6 +150,4 @@ def test_a_night_with_meteoblue_takes_no_seeing_from_7timer(app, db_path):
     notte = next(
         n for n in app.get("/api/v1/weather").json()["nights"] if n["night"] == riga["night_date"]
     )
-    visti = {(o["seeing_from"], o["seeing_to"]) for o in notte["aloft"]}
-    assert visti <= {(0.9, 0.9), (None, None)}
-    assert (None, None) in visti
+    assert {o["seeing_arcsec"] for o in notte["aloft"]} == {0.9, None}

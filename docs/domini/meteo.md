@@ -22,11 +22,11 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 | D'estate al nord, dove il buio non arriva, il verdetto guarda le ore col Sole sotto l'orizzonte e lo dice; dove il Sole non tramonta non c'e' verdetto | `test_without_dark_the_night_is_the_hours_with_the_sun_down`, `test_where_the_sun_never_sets_there_is_no_verdict` |
 | Le prime tre notti hanno le ore; dalla quarta alla settima vedo solo la tendenza, detta meno affidabile | `test_three_nights_are_full_and_the_following_are_a_trend`, *dalla quarta notte mostra la tendenza, senza ore* |
 | Accanto al verdetto leggo quanti modelli sono d'accordo | `test_each_night_says_how_many_models_agree`, *accanto al verdetto dice quanti modelli sono d'accordo*, *un modello solo si dice al singolare* |
-| Per la planetaria vedo il jet stream, il seeing e la trasparenza dei servizi, e l'aerosol | `test_the_sky_aloft_joins_the_wind_of_the_model_and_the_seeing_of_its_hour`, `test_the_seeing_bands_become_the_ranges_the_service_documents`, `test_a_source_every_three_hours_still_gives_the_night_that_is_under_way`, *il cielo in quota scrive le fasce del seeing come le da' il servizio* |
+| Per la planetaria vedo il jet stream, l'aerosol e, con la chiave Meteoblue, il seeing; nessun dato a fasce o ogni tre ore | `test_the_sky_aloft_joins_the_wind_of_the_model_and_the_seeing_of_its_hour`, `test_without_a_key_the_sky_is_asked_only_to_cams`, *il cielo in quota scrive il seeing ora per ora, e un'ora senza lo dice* |
 | Una fonte del cielo che tace tiene le sue righe e non ferma le altre, e la previsione non le tocca | `test_each_source_writes_only_its_rows_and_a_silent_one_keeps_them` |
 | Con la mia chiave Meteoblue, che metto nel primo avvio o nelle Impostazioni, ho il seeing Meteoblue ora per ora | `test_with_the_key_the_seeing_comes_from_meteoblue_hour_by_hour`, `test_the_seeing_is_read_hour_by_hour_in_utc_as_a_single_value`, *una chiave che vale si manda al backend, e dopo si vede solo come finisce* |
 | La chiave si prova sul conto prima di salvarla, e non esce mai intera: ne' dall'API, ne' nel log | `test_a_key_the_account_refuses_is_not_kept`, `test_the_key_cannot_be_written_without_being_tried`, `test_a_good_key_is_kept_and_shown_only_by_its_last_four_characters`, `test_the_other_service_key_does_not_come_out_whole_either`, `test_a_short_key_never_comes_out_whole`, `test_the_key_never_reaches_the_log` |
-| Se Meteoblue rifiuta la chiave il seeing torna a 7Timer, se tace resta quello di prima; e la pagina dice perche' | `test_a_refused_key_falls_back_to_7timer_and_says_why`, `test_a_key_the_service_refuses_drops_its_seeing_and_says_why`, `test_a_silent_service_keeps_the_seeing_it_gave_last_time`, `test_only_a_refusal_of_the_key_is_a_refusal_and_a_broken_service_is_not`, *se Meteoblue rifiuta la chiave dice perche' il seeing viene da 7Timer* |
+| Senza chiave la pagina dice che il seeing la vuole; se Meteoblue non accetta la chiave il seeing sparisce, se tace resta quello di prima; e la pagina dice perche' | `test_without_a_key_there_is_no_seeing_and_meteoblue_is_not_mentioned`, `test_a_refused_key_leaves_the_night_without_seeing_and_says_why`, `test_a_key_the_service_refuses_drops_its_seeing_and_says_why`, `test_a_silent_service_keeps_the_seeing_it_gave_last_time`, `test_only_a_refusal_of_the_key_is_a_refusal_and_a_broken_service_is_not`, `test_the_hours_meteoblue_does_not_cover_stay_without_seeing`, *senza chiave dice che il seeing vuole una chiave Meteoblue*, *con la chiave appena messa e Meteoblue non ancora chiesto non chiede la chiave*, *se Meteoblue non accetta la chiave lo dice, e manda alle Impostazioni* |
 | Meteoblue si chiede al massimo due volte al giorno, anche dopo un riavvio; una chiave nuova si usa subito | `test_with_a_key_the_seeing_is_written_and_not_asked_again_before_its_time`, `test_meteoblue_is_asked_at_most_twice_a_day_and_the_credits_would_allow_more`, `test_a_new_key_is_asked_at_once_not_twelve_hours_later` |
 | Le notti che ho ripreso hanno il loro meteo vero, arrivato da solo dopo la scansione | `test_a_night_older_than_five_days_gets_its_observed_weather`, `test_the_history_arrives_by_itself_in_the_background`, `test_the_nights_page_reads_the_weather_of_each_night_as_written`, *una notte ripresa dice com'era il cielo, e quante ore sono state serene* |
 | Una notte aspetta la rianalisi finche' il suo mattino non ha cinque giorni, e lo dice; una notte senza fuso dice che non si puo' sapere | `test_a_recent_night_waits_for_the_reanalysis`, `test_the_first_night_old_enough_is_the_one_whose_morning_has_five_days`, `test_a_site_without_a_timezone_is_not_asked`, *una notte il cui meteo non e' ancora arrivato lo dice*, *una notte di un sito senza fuso dice che il meteo non si puo' sapere* |
@@ -42,8 +42,8 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 | compito | fonte | perche' |
 |---|---|---|
 | previsione, fino a 16 giorni | Open-Meteo, piu' modelli dalla stessa chiamata | gratis, senza chiave, nuvole su tre strati, CC BY 4.0 |
-| seeing e jet stream | vento a 700, 250 e 200 hPa da Open-Meteo; seeing e trasparenza da 7Timer ASTRO; seeing Meteoblue `seeing-1h` con la chiave dell'utente | i primi due gratis per chiunque; Meteoblue e' il piu' curato ma vuole la chiave |
-| trasparenza, fumo, aerosol | Open-Meteo Air Quality (dati CAMS) | gratis e mondiale |
+| seeing e jet stream | vento a 700, 250 e 200 hPa da Open-Meteo; seeing Meteoblue `seeing-1h` con la chiave dell'utente | il vento gratis per chiunque; il seeing ora per ora c'e' solo da Meteoblue |
+| limpidezza: aerosol e polveri | Open-Meteo Air Quality (dati CAMS) | gratis e mondiale |
 | storico di una notte passata | Open-Meteo Archive (ERA5), definitivo dopo 5 giorni | gratis dal 1940 |
 | il vento in quota solito del sito | Open-Meteo Historical Forecast, un anno a 700 hPa | l'archivio ERA5 a 700 hPa non risponde, questo si' |
 
@@ -52,15 +52,12 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 - **Meteoblue non e' la base**: il gratuito regge meno di due chiamate al giorno con le nuvole ora
   per ora e scade dopo un anno. Il seeing Meteoblue si chiede al massimo due volte al giorno --
   il tetto dei crediti ne reggerebbe di piu' (`backend/astrolog/weather/meteoblue.py`) -- e
-  l'ultimo tentativo si scrive (`weather_fetches`) cosi' un riavvio non rispende crediti. Una notte
-  che ha il seeing di Meteoblue lo prende tutto da li': le ore che non copre restano vuote, invece
-  di mescolarsi con le fasce di 7Timer. Se Meteoblue rifiuta la chiave, il suo seeing
-  si toglie e torna quello di 7Timer; se tace, resta quello di prima. In tutti e due i casi la
-  pagina dice perche'.
-- **Il seeing e la trasparenza di 7Timer restano a fasce**: senza chiave, per le prime notti e non
-  ogni ora, in otto fasce (https://www.7timer.info/doc.php?lang=en); la pagina scrive l'intervallo, e un
-  numero in mezzo sarebbe una misura che nessuno ha fatto. L'aerosol si mostra com'e', senza una scala che non
-  abbiamo trovato su una fonte.
+  l'ultimo tentativo si scrive (`weather_fetches`) cosi' un riavvio non rispende crediti. Le ore che
+  Meteoblue non copre restano vuote. Se Meteoblue rifiuta la chiave, il suo seeing si toglie; se
+  tace, resta quello di prima. In tutti e due i casi la pagina dice perche'.
+- **7Timer esce** (Marco, 3/10/2026): dava seeing e trasparenza a fasce e ogni tre ore. In tutta
+  l'app nessun dato a fasce e nessun dato ogni tre ore: senza chiave Meteoblue il seeing non c'e', e
+  la pagina dice che per averlo serve la chiave, gratuita. La limpidezza la dice l'aerosol.
 - **Il seeing non lo stimiamo noi**: una formula pubblicata "vento in quota -> seeing in secondi
   d'arco" non esiste, e le app che la mostrano usano soglie senza fonte. Il vento in quota si
   mostra com'e'.
@@ -107,7 +104,7 @@ Si tiene cio' che l'app usa, mai la risposta intera del servizio.
 **A mani vuote.** Il meteo funziona appena c'e' un sito di casa, senza chiavi. Il primo avvio ha un
 passo facoltativo per la chiave Meteoblue, saltabile; la stessa chiave si cambia nelle Impostazioni,
 non si mostra mai intera e si prova sul conto prima di salvarla. Sotto i dati, le attribuzioni che i
-servizi chiedono: "Weather data by Open-Meteo.com", 7Timer, e per CAMS la frase della licenza
+servizi chiedono: "Weather data by Open-Meteo.com", e per CAMS la frase della licenza
 Copernicus con l'anno dei dati; meteoblue quando il seeing viene da li'.
 
 **Niente grafica** (Marco, 25/9/2026): la pagina nasce semplice, coi dati veri in righe e tabelle; i

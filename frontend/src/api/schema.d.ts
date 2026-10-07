@@ -1077,9 +1077,7 @@ export interface paths {
          *
          *     **Three full nights, then a trend**: from the fourth (`trend`) only the verdict, the clouds,
          *     the dark hours and the agreement, without usable hours, factors, hours, upper sky or upper
-         *     wind. A night that has Meteoblue's seeing takes all of it from there: the hours Meteoblue does
-         *     not cover stay empty instead of taking 7Timer's bands, or the page would say "from Meteoblue"
-         *     over a night of two sources.
+         *     wind. Seeing comes only from Meteoblue: an hour it does not cover stays empty.
          */
         get: operations["weather"];
         put?: never;
@@ -3358,10 +3356,9 @@ export interface components {
         };
         /**
          * WeatherAloftOut
-         * @description An hour of the upper air: the wind at 700, 250 and 200 hPa from the chosen model; seeing as
-         *     a range -- 7Timer's bands, or Meteoblue's value with both ends equal, when the key is there --
-         *     and 7Timer's transparency (an open end is `None`, and both `None` means the source says nothing
-         *     for that hour); aerosol and dust from CAMS.
+         * @description An hour of the upper air: the wind at 700, 250 and 200 hPa from the chosen model; Meteoblue's
+         *     seeing in arcseconds, only with the user's key; aerosol and dust from CAMS. `None` means the
+         *     source says nothing for that hour.
          */
         WeatherAloftOut: {
             /** At */
@@ -3372,14 +3369,8 @@ export interface components {
             wind_250hpa_kmh: number | null;
             /** Wind 200Hpa Kmh */
             wind_200hpa_kmh: number | null;
-            /** Seeing From */
-            seeing_from: number | null;
-            /** Seeing To */
-            seeing_to: number | null;
-            /** Transparency From */
-            transparency_from: number | null;
-            /** Transparency To */
-            transparency_to: number | null;
+            /** Seeing Arcsec */
+            seeing_arcsec: number | null;
             /** Aerosol Optical Depth */
             aerosol_optical_depth: number | null;
             /** Dust Ugm3 */
@@ -3533,13 +3524,16 @@ export interface components {
         };
         /**
          * WeatherSeeingOut
-         * @description Where seeing comes from (`meteoblue`, `7timer`, or `None` if nowhere) and, when the
-         *     Meteoblue key is there, how its last attempt went: `ok`, `refused`, `unreachable`,
-         *     `bad_answer`, or `None` if it has not been asked yet.
+         * @description Whether the user has a Meteoblue key, whether seeing is there (`meteoblue`, its only
+         *     source, or `None`) and, with the key, how its last attempt went: `ok`, `refused`,
+         *     `unreachable`, `bad_answer`, or `None` if it has not been asked yet for this site. `key` tells
+         *     "no key" from "not asked yet", which `meteoblue` alone cannot.
          */
         WeatherSeeingOut: {
+            /** Key */
+            key: boolean;
             /** Source */
-            source: ("meteoblue" | "7timer") | null;
+            source: "meteoblue" | null;
             /** Meteoblue */
             meteoblue: ("ok" | "refused" | "unreachable" | "bad_answer") | null;
         };

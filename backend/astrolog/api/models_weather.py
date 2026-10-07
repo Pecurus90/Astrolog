@@ -36,19 +36,15 @@ class WeatherHourOut(BaseModel):
 
 
 class WeatherAloftOut(BaseModel):
-    """An hour of the upper air: the wind at 700, 250 and 200 hPa from the chosen model; seeing as
-    a range -- 7Timer's bands, or Meteoblue's value with both ends equal, when the key is there --
-    and 7Timer's transparency (an open end is `None`, and both `None` means the source says nothing
-    for that hour); aerosol and dust from CAMS."""
+    """An hour of the upper air: the wind at 700, 250 and 200 hPa from the chosen model; Meteoblue's
+    seeing in arcseconds, only with the user's key; aerosol and dust from CAMS. `None` means the
+    source says nothing for that hour."""
 
     at: str
     wind_700hpa_kmh: float | None
     wind_250hpa_kmh: float | None
     wind_200hpa_kmh: float | None
-    seeing_from: float | None
-    seeing_to: float | None
-    transparency_from: float | None
-    transparency_to: float | None
+    seeing_arcsec: float | None
     aerosol_optical_depth: float | None
     dust_ugm3: float | None
 
@@ -110,11 +106,13 @@ class WeatherSourceOut(BaseModel):
 
 
 class WeatherSeeingOut(BaseModel):
-    """Where seeing comes from (`meteoblue`, `7timer`, or `None` if nowhere) and, when the
-    Meteoblue key is there, how its last attempt went: `ok`, `refused`, `unreachable`,
-    `bad_answer`, or `None` if it has not been asked yet."""
+    """Whether the user has a Meteoblue key, whether seeing is there (`meteoblue`, its only
+    source, or `None`) and, with the key, how its last attempt went: `ok`, `refused`,
+    `unreachable`, `bad_answer`, or `None` if it has not been asked yet for this site. `key` tells
+    "no key" from "not asked yet", which `meteoblue` alone cannot."""
 
-    source: Literal["meteoblue", "7timer"] | None
+    key: bool
+    source: Literal["meteoblue"] | None
     meteoblue: Literal["ok", "refused", "unreachable", "bad_answer"] | None
 
 

@@ -33,8 +33,8 @@ La prima volta l'app ti fa **quattro domande**, e poi si toglie di mezzo.
    quindi ti fa **sfogliare** le cartelle e ti mostra in alto dove sei arrivato.
 4. **Il seeing per la planetaria.** Se hai una **chiave Meteoblue** la scrivi qui: l'app la prova
    sul tuo conto e la tiene solo se vale, e da li' il seeing arriva ora per ora per sette notti.
-   Non e' obbligatoria, e la maggior parte di chi comincia non ce l'ha: senza, il seeing viene da
-   7Timer, a fasce. La puoi mettere anche dopo, nelle Impostazioni.
+   Non e' obbligatoria, e la maggior parte di chi comincia non ce l'ha: senza, il seeing non c'e' e
+   il resto del meteo funziona uguale. La puoi mettere anche dopo, nelle Impostazioni.
 
 **Puoi saltare, da qualunque passo, e non ti viene chiesta nessuna conferma.** Saltare e'
 una scelta legittima: l'app cataloga e cerca lo stesso. L'unica cosa che non puo' fare e' creare
@@ -157,7 +157,7 @@ La quarta e' **Servizi**: le chiavi personali dei servizi che l'app interroga. O
 **Meteoblue**: la scrivi, premi *Prova e salva*, e l'app la prova sul tuo conto prima di tenerla --
 se il conto non la riconosce te lo dice e non la salva. Una chiave salvata non la rivedi mai
 intera: l'app ti mostra come finisce, che basta a sapere se e' quella giusta. Con *Togli la chiave*
-il seeing torna a quello di 7Timer.
+il seeing sparisce dal Meteo.
 
 La quinta e' **Le letture**: una per ogni volta che l'app ha letto le tue cartelle. Di
 ognuna trovi quale cartella, quando, quanto e' durata, com'e' andata -- e i conti: quanti file ha
@@ -344,13 +344,11 @@ vento che altrove sarebbe normale da te puo' essere raro, e viceversa. Il solito
 sola una volta l'anno; finche' non c'e' leggi il vento senza il confronto.
 
 Aprendo **il cielo in quota** vedi, ora per ora, cio' che conta per la planetaria: il vento a 700,
-a 250 e a 200 hPa -- gli ultimi due sono il *jet stream* -- del modello che hai scelto, il **seeing** e la **trasparenza** di
-7Timer e l'**aerosol** e le **polveri** di Copernicus. Seeing e trasparenza non arrivano per ogni ora, e
-arrivano come il servizio li da', a fasce: *1,25-1,5* arcosecondi, *sotto 0,5*, *sopra 2,5*; l'app non ci
-mette un numero suo in mezzo. Nelle ore che il servizio non copre leggi *non lo dice*. Se hai
-messo la tua **chiave Meteoblue**, il seeing viene da li', ora per ora e in arcosecondi, e la
-pagina lo dice sopra le notti. Se Meteoblue rifiuta la chiave il seeing torna a 7Timer; se non
-risponde, resta quello che aveva dato l'ultima volta. In tutti e due i casi la pagina ti dice
+a 250 e a 200 hPa -- gli ultimi due sono il *jet stream* -- del modello che hai scelto, l'**aerosol** e le **polveri** di Copernicus e, se hai messo la
+tua **chiave Meteoblue**, il **seeing**, ora per ora e in arcosecondi. Il seeing viene solo da
+Meteoblue: senza chiave la pagina ti dice che per averlo serve, gratuita; nelle ore che il
+servizio non copre leggi *non lo dice*. Se Meteoblue non accetta la chiave il seeing sparisce; se
+non risponde, resta quello che aveva dato l'ultima volta. In tutti e due i casi la pagina ti dice
 perche'. Meteoblue si chiede al massimo due volte al
 giorno, perche' la chiave gratuita ha un tetto di chiamate l'anno.
 
@@ -374,7 +372,7 @@ pulsante la chiedi subito. Se il servizio non risponde -- sei senza rete, o e' g
 quella di prima, con l'ora in cui e' arrivata; se l'hai chiesta col pulsante, l'app ti dice
 anche perche' non e' cambiata. Se del tuo sito di casa non si riconosce il fuso orario, le sue
 notti non si possono dividere e la pagina te lo dice (in mare aperto vale il fuso nautico). I
-dati vengono da Open-Meteo, 7Timer e Copernicus, che la pagina cita in fondo.
+dati vengono da Open-Meteo e Copernicus, e il seeing da Meteoblue: la pagina li cita in fondo.
 
 ## Attrezzatura
 

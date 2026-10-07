@@ -32,7 +32,7 @@ const ESITI: Record<Esito, { frase: Chiave; bene: boolean }> = {
  * - **La chiave non torna mai indietro intera**: l'app ne mostra le ultime quattro cifre, che
  *   bastano a dire se e' quella che hai messo tu.
  * - **Una chiave che il conto rifiuta non si salva**, e il perche' si legge qui, dove l'hai scritta.
- * - **Toglierla e' un gesto**, e il seeing torna a quello di 7Timer.
+ * - **Toglierla e' un gesto**, e il seeing sparisce: viene solo da Meteoblue.
  */
 export function ChiaveMeteoblue({ id }: { id: string }) {
   const cache = useQueryClient()

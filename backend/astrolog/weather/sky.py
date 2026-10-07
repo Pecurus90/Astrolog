@@ -11,7 +11,7 @@ from typing import Any
 from .. import net
 from ..clock import iso_z, night_of
 from ..db import config
-from . import cams, meteoblue, nights, seventimer
+from . import cams, meteoblue, nights
 from .fetches import Source
 from .forecast import KIND, NightRow, Outcome, Status, write_rows
 from .openmeteo import BadAnswerError, Series
@@ -21,8 +21,8 @@ log = logging.getLogger(__name__)
 type Parse = Callable[[Any], Series]
 
 # The keyless sources -> the module that asks and reads each.
-SOURCES = {Source.SEVENTIMER: seventimer, Source.CAMS: cams}
-# Every sky source; the reader takes a night's seeing from Meteoblue when it is there, else 7Timer.
+SOURCES = {Source.CAMS: cams}
+# Every sky source; seeing comes only from Meteoblue, with the user's key.
 ALL_SOURCES = (*SOURCES, Source.METEOBLUE)
 
 # The real call, named in this module so the route tests replace it here.

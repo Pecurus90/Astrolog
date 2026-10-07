@@ -13,7 +13,6 @@ from .forecast import RETRY_S, Outcome, Status
 class Source(StrEnum):
     """A source's name as written in its rows; the forecast's go by model (`forecast.source_of`)."""
 
-    SEVENTIMER = "7timer"
     CAMS = "cams"
     METEOBLUE = "meteoblue"
     ARCHIVE = "open-meteo/archive"

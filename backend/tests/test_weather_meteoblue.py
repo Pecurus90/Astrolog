@@ -14,7 +14,7 @@ import pytest
 from astrolog.db import config
 from astrolog.weather import meteoblue, sky
 from test_weather_forecast import ADESSO, SITO, db, righe  # noqa: F401 - `db` e' una fixture
-from test_weather_sky import Instradato, aria, settetimer
+from test_weather_sky import Instradato, aria
 
 CHIAVE = "segretissima1234"
 
@@ -37,9 +37,7 @@ def rifiuto(url):
 
 
 def servizi(**cambi):
-    return Instradato(**{
-        "7timer": settetimer(), "air-quality": aria(), "packages/seeing-1h": seeing(), **cambi
-    })  # fmt: skip
+    return Instradato(**{"air-quality": aria(), "packages/seeing-1h": seeing(), **cambi})
 
 
 def con_la_chiave(conn):
@@ -56,7 +54,7 @@ def test_the_seeing_is_read_hour_by_hour_in_utc_as_a_single_value():
         "2026-09-25T00:00:00+00:00",
         "2026-09-25T01:00:00+00:00",
     ]
-    assert serie == {"seeing_from": [1.24, 1.24], "seeing_to": [1.24, 1.24]}
+    assert serie == {"seeing_arcsec": [1.24, 1.24]}
 
 
 def test_the_offset_the_service_declares_is_applied():
@@ -110,13 +108,12 @@ def test_meteoblue_is_asked_at_most_twice_a_day_and_the_credits_would_allow_more
 
 def test_a_key_the_service_refuses_drops_its_seeing_and_says_why(db):  # noqa: F811
     """Una chiave rifiutata non vale piu': il suo seeing vecchio non resta a fingere di essere
-    quello di stanotte, e il seeing torna a 7Timer."""
+    quello di stanotte: la notte resta senza seeing."""
     con_la_chiave(db)
     sky.refresh(db, SITO, fetch=servizi(), now=ADESSO)
     rifiutata = servizi(**{"packages/seeing-1h": rifiuto("https://x?apikey=" + CHIAVE)})
     sky.refresh(db, SITO, fetch=rifiutata, now=ADESSO + timedelta(hours=12))
     assert "meteoblue" not in {r["source"] for r in righe(db)}
-    assert "7timer" in {r["source"] for r in righe(db)}
     assert meteoblue.last_attempt(db, SITO["id"])["status"] == "refused"
 
 

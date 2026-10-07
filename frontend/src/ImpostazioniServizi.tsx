@@ -3,7 +3,7 @@ import { t } from "./i18n"
 
 /**
  * La sezione **Servizi**: le chiavi personali dei servizi che l'app interroga. Oggi quella di
- * Meteoblue, per il seeing ora per ora; senza, il seeing viene da 7Timer e l'app funziona uguale.
+ * Meteoblue, per il seeing ora per ora; senza, il seeing non c'e' e il resto funziona uguale.
  */
 export function Servizi() {
   return (
