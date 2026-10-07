@@ -242,10 +242,15 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   una carta ("incerta dalle 21:00, niente dalle 22:00") esce dal bordo a larghezza desktop; nel
   generatore `meteo.js` la parola della prima ora sulla scala di destra non si scrive mai (il
   controllo delle sovrapposizioni parte da G+4 e la prima parola sta a G+3).
-- **La ricerca nella barra -- dopo il Meteo** (Marco, 7/10/2026): prima si decide con Marco cosa
-  cerca, con quali nomi, dove mostra i risultati e cosa apre; poi un brief di cinque righe a
-  Claude Design (campo aperto, risultati, stati, telefono); la rotta del backend puo' partire
-  dopo la decisione, il campo dopo il disegno.
+- **La ricerca nella barra -- prossima** (decisa con Marco, 7/10/2026): trova oggetti, notti,
+  attrezzatura e siti dell'archivio, da ogni pagina; non le pagine dell'app, che il binario ha gia'.
+  Un oggetto si trova per ogni suo nome (anche il nome proprio, "Andromeda") e si mostra sempre col
+  nome di catalogo ("M 31 · Andromeda"), come vuole il glossario. I risultati stanno in un menu
+  a discesa sotto il campo, divisi per tipo, poche voci per tipo, con frecce e Invio. Un risultato
+  apre la pagina che gia' lo mostra: l'oggetto l'Archivio ristretto a lui, la notte le Notti su
+  quella notte, un pezzo la sua scheda in Attrezzatura, un sito il sito nelle Impostazioni; nessuna
+  pagina nuova. Ora: il brief a Claude Design (campo aperto, menu per tipo, stati, telefono) e la
+  rotta del backend; il campo dopo il disegno.
 - **M4 -- fatta** (7/10/2026): l'Archivio stringe per periodo (anno o date), sito, ottica e
   camera, e la riga dice solo le pose che passano (`counts.Scope`, `docs/domini/archivio.md`).
 
