@@ -104,6 +104,17 @@ al momento si raggiungono. Da li' ne aggiungi una (scrivendo il percorso, o sfog
 gira sul NAS) e ne togli una -- e togliere **non cancella niente**: l'app smette di leggerla, e i
 frame gia' entrati restano con la loro storia. Te lo richiede prima, coi numeri davanti.
 
+**Se sposti le foto** -- su un altro disco, perche' il disco ha cambiato lettera, o perche' passi
+al NAS -- non togliere la cartella e non aggiungerla di nuovo: le risposte che hai dato in *Da
+confermare* su che file sono resterebbero legate al percorso vecchio. Hai due strade. Se aggiungi
+il posto nuovo, l'app guarda dentro e, se ci trova gli stessi file di una cartella che conosce e
+che non raggiunge piu' (o che avevi tolto), te lo dice -- *E' la cartella ... spostata qui* -- e
+con *Usala da qui* la sposta invece di aggiungerne una nuova. Oppure, su ogni cartella
+dell'elenco, *Cambia percorso*: indichi dove stanno adesso i file e l'app la sposta. In tutti e
+due i casi controlla prima che siano davvero gli stessi file: se non lo sono, te lo dice e non
+cambia niente. Dopo lo spostamento la cartella e' la stessa di prima, con i suoi frame e le tue
+risposte, e leggendola di nuovo non entra niente due volte.
+
 La seconda e' **Il sito**: da dove osservi. Ci trovi i posti che hai dichiarato, con le loro
 coordinate e che cielo hanno, e uno segnato **di casa** -- e' quello da cui l'app calcola le notti
 e l'altezza degli oggetti; gli altri servono alle uscite. Di ognuno puoi correggere nome,

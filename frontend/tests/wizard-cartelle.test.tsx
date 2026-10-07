@@ -31,7 +31,14 @@ function dove() {
   return nomi[0] === "/" ? `/${nomi.slice(1).join("/")}` : nomi.join("/")
 }
 
-const SONDA = { reachable: true, fits_count: 12, complete: true, root_path: "D:/Astro" }
+const SONDA = {
+  reachable: true,
+  fits_count: 12,
+  complete: true,
+  root_path: "D:/Astro",
+  moved_from: null,
+  moved_check: "none",
+}
 
 /** Le cartelle come le manda `GET /folders`. La stessa risposta serve anche al POST -- il banco
  *  sceglie per indirizzo, non per metodo -- e chi registra guarda solo se c'e' stato un errore. */
@@ -392,6 +399,45 @@ describe("le cartelle del primo avvio", () => {
 
     expect(screen.getByText(/scrivi il percorso di una cartella/i)).toBeDefined()
     expect(screen.queryByText(/gira dentro un container/i)).toBeNull()
+  })
+})
+
+describe("una cartella spostata", () => {
+  it("la sonda la riconosce, e il tasto la sposta invece di registrarne una nuova", async () => {
+    // Registrata di nuovo, ogni frame avrebbe due posti e le risposte date resterebbero sul
+    // percorso vecchio.
+    primoAvvio({
+      "POST /api/v1/folders/7/move": { stato: 200, corpo: {} },
+      "POST /api/v1/folders/probe": {
+        stato: 200,
+        corpo: {
+          ...SONDA,
+          root_path: "E:/Astro",
+          moved_from: { id: 7, root_path: "D:/Astro" },
+          moved_check: "found",
+        },
+      },
+    })
+    await alTerzoPasso()
+    fireEvent.change(screen.getByLabelText(/dove stanno i file|percorso/i), {
+      target: { value: "E:/Astro" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /guarda/i }))
+
+    expect(await screen.findByText(/e' la cartella D:\/Astro spostata qui/i)).toBeDefined()
+    expect(screen.queryByRole("button", { name: /aggiungi/i })).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: /usala da qui/i }))
+
+    await waitFor(() =>
+      expect(
+        scritture().some(
+          (s) =>
+            s.url.endsWith("/api/v1/folders/7/move") &&
+            (s.corpo as { root_path: string }).root_path === "E:/Astro",
+        ),
+      ).toBe(true),
+    )
+    expect(scritture().some((s) => s.url.endsWith("/api/v1/folders"))).toBe(false)
   })
 })
 

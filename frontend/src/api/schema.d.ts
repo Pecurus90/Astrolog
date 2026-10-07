@@ -310,6 +310,9 @@ export interface paths {
          *     there, even if not on the disk, and whoever keeps the archive under OneDrive must not read "0"
          *     on the folder they have just chosen.
          *
+         *     `moved_from` is the registered folder these files belonged to, when the place is one moved here
+         *     (`moved_check` says why it is missing). Count and recognition share `PROBE_SECONDS`.
+         *
          *     422 when the path is refused, with the reason as its code.
          */
         post: operations["probe"];
@@ -368,6 +371,32 @@ export interface paths {
          *     refused, with the reason as its code.
          */
         post: operations["create_folder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/folders/{folder_id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Move Folder
+         * @description The folder's files are now at `root_path`: same folder, so frames, scans and the answers
+         *     on its folders follow it. Only to a place with the same files (`folder_move.same_files`); a
+         *     retired folder comes back (`reactivated`).
+         *
+         *     404 `folder_not_found`; 409 `folder_exists` with its `folder_id` if the path is registered,
+         *     active or retired; 409 `root_unreachable` with the `path`; 409 `not_the_same_folder`; 422 when
+         *     the path is refused, with the reason as its code.
+         */
+        post: operations["move_folder"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1413,6 +1442,11 @@ export interface components {
             /** Offset */
             offset: number;
         };
+        /** FolderMove */
+        FolderMove: {
+            /** Root Path */
+            root_path: string;
+        };
         /** FolderOut */
         FolderOut: {
             /** Id */
@@ -1976,6 +2010,19 @@ export interface components {
             name?: string | null;
         };
         /**
+         * MoveCheck
+         * @description Whether the probed place is a registered folder moved there.
+         * @enum {string}
+         */
+        MoveCheck: "found" | "none" | "place_unreachable" | "out_of_time";
+        /** MovedFrom */
+        MovedFrom: {
+            /** Id */
+            id: number;
+            /** Root Path */
+            root_path: string;
+        };
+        /**
          * Night
          * @description A row: **one night**, with what you did in it.
          */
@@ -2256,6 +2303,9 @@ export interface components {
              * @description False = the count stopped at the time limit: there are "more than" fits_count.
              */
             complete: boolean | null;
+            /** @description The registered folder these same files belonged to; set when moved_check is `found`. */
+            moved_from: components["schemas"]["MovedFrom"] | null;
+            moved_check: components["schemas"]["MoveCheck"];
         };
         /** RetireOut */
         RetireOut: {
@@ -3835,6 +3885,41 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FolderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    move_folder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folder_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FolderMove"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

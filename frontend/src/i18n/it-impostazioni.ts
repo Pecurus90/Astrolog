@@ -76,6 +76,22 @@ export const itImpostazioni = {
   "settings.folders.cancel": "Annulla",
   "settings.folders.stop": "Smetti di leggerla",
 
+  // Chi ha spostato le foto (un altro disco, un'altra lettera, il NAS): stessa cartella, posto nuovo.
+  "settings.folders.move": "Cambia percorso",
+  "settings.folders.move.title": "Dove sta ora {percorso}?",
+  "settings.folders.move.what":
+    "Se hai spostato le foto, indica dove stanno adesso. Controllo che siano gli stessi file: la cartella resta la stessa, con le risposte che hai gia' dato.",
+  "settings.folders.move.label": "Percorso nuovo",
+  "settings.folders.move.look": "Sposta qui",
+  "folders.move.foundTitle": "E' una cartella che conosco",
+  "folders.move.found":
+    "E' la cartella {percorso} spostata qui: ci sono gli stessi file. Usandola da qui, le foto e le risposte che hai dato la seguono.",
+  "folders.move.here": "Usala da qui",
+  "folders.move.notSame": "Li' non ci sono gli stessi file di questa cartella: non la sposto.",
+  "folders.move.exists": "Quel percorso e' gia' fra le cartelle che leggo.",
+  "folders.move.unreachable": "Non raggiungo quel percorso: collega il disco e riprova.",
+  "folders.move.failed": "Non sono riuscito a cambiare il percorso.",
+
   "settings.site.title": "I tuoi siti",
   "settings.site.what":
     "Le notti e l'altezza degli oggetti si calcolano dal sito di casa. Gli altri servono alle uscite.",

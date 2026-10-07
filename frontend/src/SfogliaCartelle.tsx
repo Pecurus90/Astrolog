@@ -50,8 +50,12 @@ export function SfogliaCartelle({
   radice,
   onGuarda,
   scrivi,
+  dove = "wizard",
 }: {
   radice: string
+  /** Prima parte degli id della pagina: il dialogo di Cambia percorso ne apre un secondo accanto a
+   *  quello di Aggiungi, e due id uguali legherebbero un'etichetta all'elenco sbagliato. */
+  dove?: string
   /** Guarda dentro la cartella dove si e' arrivati: e' l'altro mestiere, e lo fa chi registra. */
   onGuarda: (percorso: string) => void
   /** La strada a mano, che torna utile proprio quando l'elenco non arriva. */
@@ -73,7 +77,7 @@ export function SfogliaCartelle({
 
   return (
     <>
-      <p className="as-carta__domanda" id="wizard-browse">
+      <p className="as-carta__domanda" id={`${dove}-browse`}>
         {t("wizard.folders.choose")}
       </p>
       {/* Dove sei lo sa `apri`, non la risposta: appena si clicca un nome la query cambia chiave
@@ -89,7 +93,7 @@ export function SfogliaCartelle({
           si appiattisce senza separatori (`Sei in/dataNotti`), perche' i chevron sono
           decorazione. Quindi la frase la porta il testo nascosto, e le briciole -- che nessuno
           puo' cliccare -- non si sentono due volte. */}
-      <p className="as-percorso" id="wizard-dove">
+      <p className="as-percorso" id={`${dove}-dove`}>
         <span className="as-solo-lettori">{`${t("wizard.folders.here")} ${qui}`}</span>
         {briciole(qui).map((pezzo, i, tutte) => (
           <Fragment key={pezzo.strada}>
@@ -117,7 +121,7 @@ export function SfogliaCartelle({
         {/* tenue e non primario: il primario di questo passo e' *Aggiungi*, che registra.
             Guardare cosa c'e' dentro una cartella e' il gesto prima, non l'azione. */}
         <Bottone
-          descrittoDa="wizard-dove"
+          descrittoDa={`${dove}-dove`}
           onClick={() => onGuarda(qui)}
           disabled={sfoglia.isPending}
         >
@@ -137,7 +141,7 @@ export function SfogliaCartelle({
           className="as-carta__corpo as-carta__corpo--stretto"
           style={{ maxHeight: "var(--elenco-alto)", overflow: "auto" }}
         >
-          <ul className="as-elenco" aria-labelledby="wizard-browse">
+          <ul className="as-elenco" aria-labelledby={`${dove}-browse`}>
             {sfoglia.data?.folders.map((c) => (
               <li key={c.path}>
                 <Riga nome={c.name}>

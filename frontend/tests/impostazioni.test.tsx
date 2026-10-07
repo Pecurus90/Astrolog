@@ -6,7 +6,7 @@
  * una pagina vera e non un buco, che una sezione non ancora nata non si mostri, e che togliere
  * una cartella passi da un dialogo che dice cosa succede davvero.
  */
-import { fireEvent, screen, within } from "@testing-library/react"
+import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { SEZIONI } from "../src/Impostazioni"
@@ -254,6 +254,58 @@ describe("Impostazioni", () => {
     expect(scritture().some((s) => s.metodo === "DELETE" && s.url.includes("/folders/1"))).toBe(
       true,
     )
+  })
+
+  it("Cambia percorso sposta la cartella dove stanno ora i suoi file", async () => {
+    // Chi cambia lettera al disco o passa al NAS: stessa cartella, posto nuovo, e le risposte
+    // date restano. Registrarla di nuovo le avrebbe lasciate sul percorso vecchio.
+    await app()
+    await vaiAImpostazioni()
+    fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
+    const dialogo = await screen.findByRole("dialog")
+
+    fireEvent.change(within(dialogo).getByLabelText(/percorso nuovo/i), {
+      target: { value: "E:/Astro/2025" },
+    })
+    fireEvent.click(within(dialogo).getByRole("button", { name: /sposta qui/i }))
+
+    await waitFor(() =>
+      expect(
+        scritture().some(
+          (s) =>
+            s.metodo === "POST" &&
+            s.url.endsWith("/api/v1/folders/1/move") &&
+            (s.corpo as { root_path: string }).root_path === "E:/Astro/2025",
+        ),
+      ).toBe(true),
+    )
+  })
+
+  it("se li non ci sono gli stessi file lo dice, e il dialogo resta aperto", async () => {
+    await app()
+    await vaiAImpostazioni()
+    cambia({
+      ...STANOTTE,
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+      "/api/v1/folders/path-info": { stato: 200, corpo: { family: "windows", data_root: null } },
+      "POST /api/v1/folders/1/move": {
+        stato: 409,
+        corpo: { detail: { code: "not_the_same_folder" } },
+      },
+      "/api/v1/folders": { stato: 200, corpo: CARTELLE },
+      ...SPINA,
+    })
+    fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
+    const dialogo = await screen.findByRole("dialog")
+    fireEvent.change(within(dialogo).getByLabelText(/percorso nuovo/i), {
+      target: { value: "E:/Altro" },
+    })
+    fireEvent.click(within(dialogo).getByRole("button", { name: /sposta qui/i }))
+
+    expect(await within(dialogo).findByText(/non ci sono gli stessi file/i)).toBeDefined()
+    expect(screen.getByRole("dialog")).toBeDefined()
   })
 
   it("senza cartelle dice cosa manca, invece di un elenco vuoto", async () => {

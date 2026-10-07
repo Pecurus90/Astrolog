@@ -52,6 +52,7 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | Fermare ferma entro il file in corso, e non fa partire altro; chiudere la finestra non ferma niente | `test_worker_stop_cooperative`, `test_scan_answers_at_once_and_the_receipt_arrives_in_status` |
 | Una lettura fermata prima di cominciare, o che non riesce a partire, non lascia una ricevuta aperta per sempre, che sia di una cartella o di tutte; Riprendi la rilegge lo stesso | `test_resume_reads_one_folder_stopped_before_it_began`, `test_a_start_that_breaks_unexpectedly_leaves_nothing_behind`, `test_a_stop_does_not_leave_receipts_open_forever`, `test_a_busy_worker_leaves_no_folder_locked` |
 | La ricevuta di una cartella tolta dice che la cartella e' ritirata, cosi' so perche' quel percorso non si aggiorna piu' | `test_duplicate_is_409_and_retire_reactivate_keep_data` |
+| Se sposto le foto (un altro disco, un'altra lettera, il NAS) la cartella resta la stessa: le risposte *che file sono* la seguono, i frame non si muovono e una scansione dopo non ne crea di nuovi; l'app riconosce da sola la cartella spostata quando guardo nel posto nuovo, e non la sposta dove non ci sono gli stessi file | `test_a_moved_folder_takes_its_answer_and_its_frames_stay`, `test_the_root_and_every_subfolder_move_and_a_neighbour_does_not`, `test_moving_to_the_same_files_keeps_everything_and_a_scan_adds_nothing`, `test_a_place_with_other_files_is_refused_and_nothing_changes`, `test_moving_onto_a_registered_folder_is_409`, `test_the_probe_recognises_an_unreachable_folder_moved_here`, `test_the_probe_recognises_a_retired_folder_and_moving_it_brings_it_back`, `test_a_copy_of_a_reachable_folder_is_not_a_move`, *la sonda la riconosce, e il tasto la sposta invece di registrarne una nuova* (`frontend/tests/wizard-cartelle.test.tsx`), *Cambia percorso sposta la cartella dove stanno ora i suoi file* (`frontend/tests/impostazioni.test.tsx`) |
 | Riaprendo l'app non parte nessun lavoro da solo; sul NAS la scansione gira ogni ora solo se chi lancia l'app lo chiede (`ASTROLOG_SCAN_EVERY_MIN=60`); c'e' sempre il pulsante Scansiona, nella barra in alto di ogni pagina | `test_worker_no_autostart_and_stop_when_idle_is_a_noop`, `test_scan_schedule_nas`, `test_the_nas_scan_cadence_reaches_the_app` |
 | Due scansioni insieme non si pestano: la seconda riceve "gia' in corso" | `test_scan_lock_stop_and_the_button_verb` |
 | Una pagina aperta mentre l'app lavora in sottofondo non cade con "database is locked", anche su Windows con l'antivirus: l'app tiene il database aperto finche' gira, e il file accanto all'archivio non resta gonfio per questo | `test_closing_a_request_is_never_the_last_close`, `test_the_wal_shrinks_back_while_a_connection_stays_open` |
@@ -237,6 +238,22 @@ seguono** -- per Python una giunzione e' una cartella qualunque, e una verso un 
 girare il walk a vuoto -- **e la ricevuta li nomina** (`linked_dirs`). Percorsi lunghi su Windows
 in forma `\\?\`, e una cartella di rete nella sua (`\\?\UNC\server\share`, come vuole la
 documentazione di Windows: col prefisso sbagliato non si apre).
+
+**Spostare una cartella e' cambiarle percorso, non registrarne un'altra** (`spine/folder_move.py`).
+Stessa riga di `folders`, `root_path` nuovo: le posizioni sono relative alla radice, i frame si
+riconoscono dall'impronta, le letture stanno per `folder_id`. Seguono il percorso solo le
+risposte per cartella, che lo hanno nella chiave: quelle uguali alla vecchia radice o che
+cominciano con lei e una barra passano al prefisso nuovo (forma di `frame_folder.folder_key`), e
+`typeless_folders` si riscrive, tutto in una transazione. **Si sposta solo dove ci sono gli stessi
+file**: i primi 5 file sotto il posto nuovo, in ordine di percorso, fra quelli di cui la cartella
+ha una posizione con lo stesso percorso relativo (i file di calibrazione non ne hanno), letti come
+li legge la scansione; tutte le impronte uguali e' la stessa cartella, zero file o un'impronta
+diversa no (`409 not_the_same_folder`). Il percorso nuovo passa la validazione di quando si
+registra; gia' registrato, attivo o ritirato, e' `409 folder_exists`. Una cartella ritirata
+spostata torna attiva. **La sonda riconosce lo spostamento da sola** (`moved_from`, e
+`moved_check` dice perche' manca): la candidata e' una cartella ritirata o che non si
+raggiunge, entro lo stesso `PROBE_SECONDS`; una ancora raggiungibile con gli stessi file e' una
+copia, e non si propone.
 
 **Sul NAS la cartella si sceglie da un elenco.** Dentro il container l'utente non sa quale
 percorso ha la cartella che conosce come `/volume1/photo`: `GET /folders/browse` elenca le

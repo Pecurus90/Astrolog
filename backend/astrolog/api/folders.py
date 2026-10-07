@@ -14,7 +14,7 @@ from ..clock import now_iso
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from ..fits.walk import subfolders, walk_dir
-from ..spine import typeless_answer
+from ..spine import folder_move, typeless_answer
 from ..spine.scan import root_readable
 from ..spine.stages import StageName, count_pending
 from . import work
@@ -24,7 +24,10 @@ from .models import (
     FolderCreate,
     FolderEntry,
     FolderList,
+    FolderMove,
     FolderOut,
+    MoveCheck,
+    MovedFrom,
     PathInfo,
     PathProbe,
     ProbeOut,
@@ -45,7 +48,7 @@ _SELECT = (
 )
 
 
-def _reachable(roots: list[str]) -> dict[str, bool]:
+def _reachable(roots: list[str], deadline: float | None = None) -> dict[str, bool]:
     """Every folder asked at once under one deadline: a dead share is "not reachable" when time is
     up, and its thread is left behind instead of holding the answer."""
     answers: dict[str, bool] = {}
@@ -56,7 +59,8 @@ def _reachable(roots: list[str]) -> dict[str, bool]:
     threads = [threading.Thread(target=ask, args=(r,), daemon=True) for r in set(roots)]
     for thread in threads:
         thread.start()
-    deadline = time.monotonic() + PROBE_SECONDS
+    if deadline is None:
+        deadline = time.monotonic() + PROBE_SECONDS
     for thread in threads:
         thread.join(max(0.0, deadline - time.monotonic()))
     return {root: answers.get(root, False) for root in roots}
@@ -77,29 +81,59 @@ def path_info(request: Request) -> PathInfo:
 
 
 @router.post("/folders/probe", response_model=ProbeOut)
-def probe(body: PathProbe, request: Request) -> ProbeOut:
+def probe(
+    body: PathProbe, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> ProbeOut:
     """Looks at a path without registering it. It also counts the online-only FITS: they are
     there, even if not on the disk, and whoever keeps the archive under OneDrive must not read "0"
     on the folder they have just chosen.
 
+    `moved_from` is the registered folder these files belonged to, when the place is one moved here
+    (`moved_check` says why it is missing). Count and recognition share `PROBE_SECONDS`.
+
     422 when the path is refused, with the reason as its code."""
     canonical = validate_root(body.root_path, request.app.state.data_root)
     if not root_readable(canonical):
-        return ProbeOut(root_path=canonical, reachable=False, fits_count=None, complete=None)
+        return ProbeOut(
+            root_path=canonical,
+            reachable=False,
+            fits_count=None,
+            complete=None,
+            moved_from=None,
+            moved_check=MoveCheck.PLACE_UNREACHABLE,
+        )
+    deadline = time.monotonic() + PROBE_SECONDS
     online: list[str] = []
     unvisited: list[str] = []
-    found = walk_dir(
-        canonical,
-        online_only=online,
-        deadline=time.monotonic() + PROBE_SECONDS,
-        unvisited=unvisited,
-    )
+    found = walk_dir(canonical, online_only=online, deadline=deadline, unvisited=unvisited)
+    moved_from, check = _moved_here(conn, canonical, found, deadline)
     return ProbeOut(
         root_path=canonical,
         reachable=True,
         fits_count=len(found) + len(online),
         complete=not unvisited,
+        moved_from=moved_from,
+        moved_check=check,
     )
+
+
+def _moved_here(
+    conn: sqlite3.Connection, root: str, found: list[str], deadline: float
+) -> tuple[MovedFrom | None, MoveCheck]:
+    """Only a folder that is gone (retired, or not answering) can have moved: one still reachable
+    holding the same files is a copy."""
+    rows = conn.execute("SELECT id, root_path, retired_at FROM folders ORDER BY id").fetchall()
+    if any(r["root_path"] == root for r in rows):
+        return None, MoveCheck.NONE  # already registered: adding it says so
+    reach = _reachable([r["root_path"] for r in rows if r["retired_at"] is None], deadline)
+    for row in rows:
+        if row["retired_at"] is None and reach[row["root_path"]]:
+            continue
+        if time.monotonic() >= deadline:
+            return None, MoveCheck.OUT_OF_TIME
+        if folder_move.same_files(conn, row["id"], root, found):
+            return MovedFrom(id=row["id"], root_path=row["root_path"]), MoveCheck.FOUND
+    return None, MoveCheck.NONE
 
 
 @router.get("/folders/browse", response_model=BrowseOut)
@@ -173,6 +207,40 @@ def create_folder(
         )
     )
     return _out(conn.execute(_SELECT + " WHERE f.id = ?", (folder_id,)).fetchone())
+
+
+@router.post("/folders/{folder_id}/move", response_model=FolderOut)
+def move_folder(
+    folder_id: int, body: FolderMove, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> FolderOut:
+    """The folder's files are now at `root_path`: same folder, so frames, scans and the answers
+    on its folders follow it. Only to a place with the same files (`folder_move.same_files`); a
+    retired folder comes back (`reactivated`).
+
+    404 `folder_not_found`; 409 `folder_exists` with its `folder_id` if the path is registered,
+    active or retired; 409 `root_unreachable` with the `path`; 409 `not_the_same_folder`; 422 when
+    the path is refused, with the reason as its code."""
+    row = conn.execute("SELECT id, retired_at FROM folders WHERE id = ?", (folder_id,)).fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail={"code": "folder_not_found"})
+    canonical = validate_root(body.root_path, request.app.state.data_root)
+    existing = conn.execute("SELECT id FROM folders WHERE root_path = ?", (canonical,)).fetchone()
+    if existing is not None:
+        raise HTTPException(
+            status_code=409, detail={"code": "folder_exists", "folder_id": existing["id"]}
+        )
+    if not root_readable(canonical):
+        raise HTTPException(status_code=409, detail={"code": "root_unreachable", "path": canonical})
+    found = walk_dir(canonical, deadline=time.monotonic() + PROBE_SECONDS)
+    if not folder_move.same_files(conn, folder_id, canonical, found):
+        raise HTTPException(status_code=409, detail={"code": "not_the_same_folder"})
+    folder_move.move(conn, folder_id, canonical)
+    retired = row["retired_at"] is not None
+    if retired:
+        _move(conn, request.app.state, folder_id, None)
+    return _out(
+        conn.execute(_SELECT + " WHERE f.id = ?", (folder_id,)).fetchone(), reactivated=retired
+    )
 
 
 @router.delete("/folders/{folder_id}", response_model=RetireOut)

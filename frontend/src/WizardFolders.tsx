@@ -48,10 +48,12 @@ export function WizardFolders() {
       {cartelle.vista && (
         <VistaDellaSonda
           inCorso={cartelle.inCorso}
+          nonSpostata={cartelle.nonSpostata}
           onAggiungi={() => {
             setPath("")
             void cartelle.aggiungi()
           }}
+          onSposta={(id) => void cartelle.spostaQui(id)}
           prefisso="wizard.folders"
           vista={cartelle.vista}
         />

@@ -72,6 +72,21 @@ export const enImpostazioni = {
   "settings.folders.cancel": "Cancel",
   "settings.folders.stop": "Stop reading it",
 
+  "settings.folders.move": "Change path",
+  "settings.folders.move.title": "Where is {percorso} now?",
+  "settings.folders.move.what":
+    "If you moved your photos, tell me where they are now. I check they are the same files: the folder stays the same, with the answers you already gave.",
+  "settings.folders.move.label": "New path",
+  "settings.folders.move.look": "Move here",
+  "folders.move.foundTitle": "I know this folder",
+  "folders.move.found":
+    "It is the folder {percorso}, moved here: the same files are in it. Using it from here, the photos and the answers you gave follow it.",
+  "folders.move.here": "Use it from here",
+  "folders.move.notSame": "The files there are not this folder's: I am not moving it.",
+  "folders.move.exists": "That path is already one of the folders I read.",
+  "folders.move.unreachable": "I cannot reach that path: connect the disk and try again.",
+  "folders.move.failed": "I could not change the path.",
+
   "settings.site.title": "Your sites",
   "settings.site.what":
     "Nights and object altitudes are worked out from the home site. The others are for trips.",

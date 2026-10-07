@@ -8,8 +8,8 @@ import { SfogliaCartelle } from "./SfogliaCartelle"
 import { NotaDelVuoto, Vuoto } from "./Vuoto"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
-import { ScriviPercorso, VistaDellaSonda, useCartelle } from "./cartelle"
-import { giorno, numero, t } from "./i18n"
+import { ScriviPercorso, VistaDellaSonda, sposta, useCartelle } from "./cartelle"
+import { type Chiave, giorno, numero, t } from "./i18n"
 import { useRadiceDati } from "./radiceDati"
 
 type Cartella = components["schemas"]["FolderOut"]
@@ -26,12 +26,15 @@ type Cartella = components["schemas"]["FolderOut"]
  *   che e' andata, e la cartella e' ancora li'.
  * - **Una cartella irraggiungibile non ferma le altre**: lo dice la sua riga, e i frame che ne
  *   sono gia' entrati restano.
+ * - **Cambia percorso** e' per chi ha spostato le foto: la rotta controlla che siano gli stessi
+ *   file, e il dialogo resta aperto col perche' se non lo sono.
  */
 export function Cartelle() {
   const [percorso, setPercorso] = useState("")
   const [daTogliere, setDaTogliere] = useState<Cartella>()
   const [nonTolta, setNonTolta] = useState(false)
   const [togliendo, setTogliendo] = useState(false)
+  const [daSpostare, setDaSpostare] = useState<Cartella>()
   const cartelle = useCartelle("settings.folders.failed")
   const radice = useRadiceDati()
 
@@ -81,7 +84,11 @@ export function Cartelle() {
             <ul className="as-elenco">
               {cartelle.elenco.data?.items.map((c) => (
                 <li key={c.id}>
-                  <Voce cartella={c} onTogli={() => setDaTogliere(c)} />
+                  <Voce
+                    cartella={c}
+                    onSposta={() => setDaSpostare(c)}
+                    onTogli={() => setDaTogliere(c)}
+                  />
                 </li>
               ))}
             </ul>
@@ -114,9 +121,14 @@ export function Cartelle() {
           {cartelle.vista && (
             <VistaDellaSonda
               inCorso={cartelle.inCorso}
+              nonSpostata={cartelle.nonSpostata}
               onAggiungi={() => {
                 setPercorso("")
                 void cartelle.aggiungi()
+              }}
+              onSposta={(id) => {
+                setPercorso("")
+                void cartelle.spostaQui(id)
               }}
               prefisso="settings.folders"
               vista={cartelle.vista}
@@ -164,12 +176,91 @@ export function Cartelle() {
           {nonTolta && <Avviso esito="allarme">{t("settings.folders.removeFailed")}</Avviso>}
         </Dialogo>
       )}
+
+      {daSpostare && (
+        <CambiaPercorso
+          cartella={daSpostare}
+          onChiudi={() => setDaSpostare(undefined)}
+          onFatto={() => {
+            setDaSpostare(undefined)
+            void cartelle.elenco.refetch()
+          }}
+          radice={radice}
+        />
+      )}
     </>
   )
 }
 
+/** Dove stanno ora i file di una cartella: lo stesso selettore di Aggiungi, e un gesto solo. */
+function CambiaPercorso({
+  cartella,
+  radice,
+  onChiudi,
+  onFatto,
+}: {
+  cartella: Cartella
+  radice: string | null
+  onChiudi: () => void
+  onFatto: () => void
+}) {
+  const [percorso, setPercorso] = useState("")
+  const [inCorso, setInCorso] = useState(false)
+  const [rifiuto, setRifiuto] = useState<Chiave>()
+
+  const spostaIn = async (dove: string) => {
+    setInCorso(true)
+    const perche = await sposta(cartella.id, dove)
+    setInCorso(false)
+    setRifiuto(perche)
+    if (!perche) onFatto()
+  }
+
+  const scrivi = (
+    <ScriviPercorso
+      id="cartella-spostata"
+      onGuarda={() => void spostaIn(percorso)}
+      onScrivi={setPercorso}
+      prefisso="settings.folders.move"
+      valore={percorso}
+    />
+  )
+  return (
+    <Dialogo
+      azioni={
+        <Bottone disabled={inCorso} verso="nudo" onClick={onChiudi}>
+          {t("settings.folders.cancel")}
+        </Bottone>
+      }
+      onChiudi={onChiudi}
+      titolo={t("settings.folders.move.title", { percorso: cartella.root_path })}
+    >
+      <p className="as-dialogo__testo">{t("settings.folders.move.what")}</p>
+      {radice === null ? (
+        scrivi
+      ) : (
+        <SfogliaCartelle
+          dove="cartella-spostata"
+          onGuarda={(dove) => void spostaIn(dove)}
+          radice={radice}
+          scrivi={scrivi}
+        />
+      )}
+      {rifiuto && <Avviso esito="allarme">{t(rifiuto)}</Avviso>}
+    </Dialogo>
+  )
+}
+
 /** Una cartella nell'elenco: dove sta, se si raggiunge, cosa ne e' entrato, da quando. */
-function Voce({ cartella, onTogli }: { cartella: Cartella; onTogli: () => void }) {
+function Voce({
+  cartella,
+  onSposta,
+  onTogli,
+}: {
+  cartella: Cartella
+  onSposta: () => void
+  onTogli: () => void
+}) {
   return (
     <Riga
       dettagli={
@@ -195,6 +286,9 @@ function Voce({ cartella, onTogli }: { cartella: Cartella; onTogli: () => void }
       }
       stato={cartella.reachable ? undefined : "errore"}
     >
+      <Bottone piccolo verso="tenue" onClick={onSposta}>
+        {t("settings.folders.move")}
+      </Bottone>
       <Bottone piccolo verso="tenue" onClick={onTogli}>
         {t("settings.folders.remove")}
       </Bottone>

@@ -1,6 +1,7 @@
 """Spine shapes. "Don't know" is a coded field, never a silent null; archive row lists are paged
 (`Page`), an action's answer is not. Each domain keeps its models in its own `models_*` file."""
 
+from enum import StrEnum
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -31,6 +32,20 @@ class PathProbe(BaseModel):
     root_path: str = Field(min_length=1)
 
 
+class MoveCheck(StrEnum):
+    """Whether the probed place is a registered folder moved there."""
+
+    FOUND = "found"
+    NONE = "none"
+    PLACE_UNREACHABLE = "place_unreachable"
+    OUT_OF_TIME = "out_of_time"
+
+
+class MovedFrom(BaseModel):
+    id: int
+    root_path: str
+
+
 class ProbeOut(BaseModel):
     root_path: str
     reachable: bool
@@ -40,6 +55,15 @@ class ProbeOut(BaseModel):
     complete: bool | None = Field(
         description='False = the count stopped at the time limit: there are "more than" fits_count.'
     )
+    moved_from: MovedFrom | None = Field(
+        description="The registered folder these same files belonged to; set when moved_check is"
+        " `found`."
+    )
+    moved_check: MoveCheck
+
+
+class FolderMove(BaseModel):
+    root_path: str = Field(min_length=1)
 
 
 class FolderEntry(BaseModel):

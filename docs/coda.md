@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 7/10/2026 | costruisci | M2, la cartella ora sta qui | ~0,46 M workflow (5 agenti), sessione principale non contata | 28 workflow | 0 bloccanti; 8 piccoli parcheggiati (3 dello schermo da riparare subito) |
 | 6/10/2026 | costruisci | Focale misurata dal cielo (ADR 0016) | ~0,31 M workflow (6 agenti) + esploratore 0,09, sessione principale non contata | 76 workflow | 1 bloccante dal giro (il frame rimandato aspettava il giro dopo) + 3 piccoli chiusi da me |
 | 6/10/2026 | ripara | Meno frame in coda dopo filtro e unione: provato e tolto | ~0,48 M agenti (sviluppatore, due revisori) | ~60 | 3 bloccanti dai revisori (corredi diversi via gruppi di focale); trovato un difetto vero, ora in coda |
 | 6/10/2026 | ripara | Risposte sul tipo: 100 in un Applica da 12,8 s a 0,29 s | sessione principale + un revisore (~0,1 M) | ~50 | 0 dal revisore (200 semi di prova a caso, 0 differenze) |
@@ -215,9 +216,6 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   `refresh_waiting` chiamato a mano in sette punti. Misurato su 20.000 pose: costo uguale
   (scansione 12,0 s contro 12,5; una risposta 74 ms contro 85). Ora lo muove anche chi scrive
   senza passare dagli aiutanti (una risposta tolta, un cielo cancellato).
-- **M2 -- "La cartella ora sta qui"**: le risposte per cartella hanno nella chiave il percorso
-  intero (`spine/frame_folder.py`) e una cartella registrata non si sposta (`api/folders.py`);
-  cambiare lettera al disco del NAS, o passare a Docker, le perde.
 - **M4 -- Filtri dell'Archivio** per periodo, camera o corredo, sito (`api/archive.py`).
 - **M5 -- Il backup delle risposte** (*Le dichiarazioni dell'utente non si esportano*, nel
   Parcheggio) va agganciato all'impronta del frame e alla grafia dell'header, non alla notte o al
@@ -226,7 +224,7 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
 L'ordine: le prove che mancano e *L'archivio dice cose false*; poi S1-S4, prima delle
 velocita' che toccano gli stessi pezzi (Applica, fuso di casa, riletture in `row_of`), che con
 S1 e S2 spariscono in parte; poi la fase 2 del refactor, con le velocita' e i doppioni che
-restano; poi M2, M5, M4 (Marco, 6/10/2026: M1 e M3 non servono, M3 sta fra le *Idee*).
+restano; poi M5, M4 (Marco, 6/10/2026: M1 e M3 non servono, M3 sta fra le *Idee*).
 
 ## Da riparare, nell'ordine
 
