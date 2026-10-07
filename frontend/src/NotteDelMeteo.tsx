@@ -1,4 +1,7 @@
+import { useState } from "react"
+
 import { CARTE_GRANDI, CARTE_PICCOLE, CartaDelParametro, parola } from "./CartaDelParametro"
+import { CieloDelleNubi } from "./CieloDelleNubi"
 import type { components } from "./api/schema"
 import { type Chiave, giornoENumero, numero, oraDelSito, t } from "./i18n"
 import { Semaforo } from "./Semaforo"
@@ -52,8 +55,12 @@ function verdetto(n: Breve): string {
  */
 export function SchedaDellaNotte({ notte: n, prima, scale, seeing }: { notte: Notte; prima: boolean; scale: Scala[]; seeing: Seeing }) {
   const ore = n.hours.filter((o) => o.shown)
+  // l'ora che il filo sul cielo indica: porta tutte le carte a quell'ora
+  const [ora, setOra] = useState<number | null>(null)
+  const qui = ora === null ? undefined : ore[ora]
   const carta = (m: Misura) => (
-    <CartaDelParametro key={m.code} misura={m} notte={n} ore={ore} scala={scale.find((s) => s.code === m.code)} seeing={seeing} />
+    <CartaDelParametro key={m.code} misura={m} notte={n} ore={ore} scala={scale.find((s) => s.code === m.code)} seeing={seeing}
+      oraDelCielo={ora} />
   )
   return (
     <>
@@ -62,13 +69,24 @@ export function SchedaDellaNotte({ notte: n, prima, scale, seeing }: { notte: No
         {n.window !== null && <Pesano notte={n} />}
       </div>
       {/* senza buio nessuna ora e' giudicata: le carte direbbero "non fornito" a dati che ci sono */}
-      {n.window !== null && <div className="as-meteo__parte">
-        <div className="as-meteo__capo">
-          <p className="as-soprattitolo">{t("weather.cards")}</p>
-        </div>
-        <div className="as-parametri">{n.measures.filter((m) => CARTE_GRANDI.includes(m.code)).map(carta)}</div>
-        <div className="as-parametri as-parametri--piccole">{n.measures.filter((m) => CARTE_PICCOLE.includes(m.code)).map(carta)}</div>
-      </div>}
+      {n.window !== null && (
+        <>
+          <div className="as-meteo__parte">
+            <div className="as-meteo__capo">
+              <p className="as-soprattitolo">{t("weather.sky.title")}</p>
+              <span>{t("weather.sky.hint")}</span>
+            </div>
+            <CieloDelleNubi notte={n} ore={ore} scale={scale} seeing={seeing} ora={ora} scegli={setOra} />
+          </div>
+          <div className="as-meteo__parte">
+            <div className="as-meteo__capo">
+              <p className="as-soprattitolo">{qui ? t("weather.cards.at", { ora: oraDelSito(qui.at) }) : t("weather.cards")}</p>
+            </div>
+            <div className="as-parametri">{n.measures.filter((m) => CARTE_GRANDI.includes(m.code)).map(carta)}</div>
+            <div className="as-parametri as-parametri--piccole">{n.measures.filter((m) => CARTE_PICCOLE.includes(m.code)).map(carta)}</div>
+          </div>
+        </>
+      )}
     </>
   )
 }

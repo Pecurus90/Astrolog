@@ -220,7 +220,7 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   (scansione 12,0 s contro 12,5; una risposta 74 ms contro 85). Ora lo muove anche chi scrive
   senza passare dagli aiutanti (una risposta tolta, un cielo cancellato).
 - **Il telaio -- fatto** (7/10/2026, ADR 0018): tutta l'app nel telaio v28 di Claude Design.
-- **Il Meteo nel disegno nuovo -- prossimo.** Prima il backend, allineato alle decisioni del Meteo
+- **Il Meteo nel disegno nuovo -- fatto** (7/10/2026, cinque commit). Prima il backend, allineato alle decisioni del Meteo
   in `docs/DECISIONI.md` del progetto di disegno (Marco, 3/10/2026), che superano parti di
   `docs/domini/meteo.md`: 7Timer esce (il seeing solo da Meteoblue, niente trasparenza a fasce);
   il semaforo lo decidono solo le nuvole, le altre misure "pesano" con parola e ora; soglie e
@@ -232,10 +232,16 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   fatta (7/10/2026): giudizio per misura (`weather/judge.py`, soglie con fonte in
   `docs/domini/meteo.md`), notti pronte in `weather_view`. Fetta 3a fatta (7/10/2026): la pagina
   nel foglio v28 -- testa, fila delle notti, scheda, pesano, carte con le barrette, tendenza, stati;
-  "jet stream" e non "corrente a getto" (Marco, glossario). Resta la 3b-ii: il cielo delle nubi con la
+  "jet stream" e non "corrente a getto" (Marco, glossario). Fatta anche la 3b-ii (7/10/2026): il cielo delle nubi con la
   scala di destra e il lettore; le carte portate a un'ora col tocco e con le frecce. Lo stato "il
   servizio tace ma la previsione vale" e' fatto (3b-i, 7/10/2026: l'ultimo tentativo della
-  previsione sta in `weather_fetches`).
+  previsione sta in `weather_fetches`). Resta per la veste del telefono: il cielo si stringe col
+  viewBox (1080 di largo) e le scritte rimpiccioliscono, mentre il disegno ne ha uno da 358 con
+  un'ora si' e una no. Da portare a Claude Design nella prossima consegna: le barre della pioggia
+  nel cielo col colore del giudizio (oggi il foglio le riempie sempre di rosso); il giudizio lungo di
+  una carta ("incerta dalle 21:00, niente dalle 22:00") esce dal bordo a larghezza desktop; nel
+  generatore `meteo.js` la parola della prima ora sulla scala di destra non si scrive mai (il
+  controllo delle sovrapposizioni parte da G+4 e la prima parola sta a G+3).
 - **La ricerca nella barra -- dopo il Meteo** (Marco, 7/10/2026): prima si decide con Marco cosa
   cerca, con quali nomi, dove mostra i risultati e cosa apre; poi un brief di cinque righe a
   Claude Design (campo aperto, risultati, stati, telefono); la rotta del backend puo' partire

@@ -354,13 +354,25 @@ vengono da convenzioni pubbliche: la scala Beaufort per il vento, le classi del 
 canadese per il seeing, la NASA per l'aerosol, meteoblue per il jet stream; per la Luna, la regola
 diffusa del 25% per la banda larga.
 
+Sotto c'e' **il cielo della notte**, dall'ultima ora di giorno all'alba sullo sfondo del
+crepuscolo: le nubi basse, medie e alte, ognuna dal suo zero perche' si coprono e non si sommano,
+l'umidita' a tratteggio sulla stessa scala in percento (la spegni col suo interruttore), e in cima un
+tratto chiaro sulle ore di buio sereno. A destra scegli **una misura alla volta** -- pioggia, vento
+con le raffiche, condensa come aria e rugiada, seeing, jet stream, aerosol -- con la sua scala, le
+soglie tratteggiate e il colore del giudizio ora per ora (per la condensa, la cui soglia e' la
+distanza fra aria e rugiada, si colora la fascia fra le due dove si toccano); un'ora che il servizio
+non da' e' a tratteggio, mai uno zero. Si apre da sola su quella che pesa di piu'.
+Passando sul cielo, o con le frecce, un filo indica l'ora e un riquadro dice i valori; **tutte le
+carte vanno a quell'ora**.
+
 Sotto ci sono le **carte**, prima quelle che pesano di piu': nuvole, nuvole basse, poi pioggia,
 vento, condensa, seeing, jet stream e aerosol, e in piccolo temperatura e rugiada, umidita', polvere
 e il vento a 700 e 200 hPa. Ogni carta dice il **valore della notte** e cosa vuol dire (*media nel
 buio*, *in tutto nel buio*, *la minima*), la parola con l'ora in cui comincia (*incerta dalle 22:00,
 niente dalle 01:00*), il **picco** con le sue ore, e ha le barrette **ora per ora** dall'ultima ora
 di giorno all'alba, col colore del giudizio di ogni ora e le soglie tratteggiate. Un'ora che il
-servizio non da' e' a tratteggio, mai uno zero.
+servizio non da' e' a tratteggio, mai uno zero. Tocchi una barretta (o usi le frecce) e la carta va
+a quell'ora e ci resta, col valore e la parola di quell'ora; *x notte* la riporta alla notte.
 
 La carta del **vento a 700 hPa** (circa 3.000 metri) lo legge accanto al **solito del tuo sito**:
 *piu' forte di 8 notti su 10, qui*. Non e' un giudizio: un vento che altrove sarebbe normale da te

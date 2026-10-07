@@ -213,7 +213,7 @@ function Notti({ detto }: { detto: Meteo }) {
           {aperta.trend ? (
             <TendenzaDellaNotte notte={aperta} />
           ) : (
-            <SchedaDellaNotte notte={aperta} prima={aperta === detto.nights[0]} scale={detto.scales} seeing={detto.seeing} />
+            <SchedaDellaNotte key={aperta.night} notte={aperta} prima={aperta === detto.nights[0]} scale={detto.scales} seeing={detto.seeing} />
           )}
         </section>
       )}

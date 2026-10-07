@@ -1,3 +1,4 @@
+import { type KeyboardEvent, type PointerEvent, useState } from "react"
 import { Link } from "react-router"
 
 import type { components } from "./api/schema"
@@ -61,6 +62,9 @@ function conUnita(v: number | null, unita?: Chiave) {
  * Una carta del Meteo (`as-parametro`): il valore della notte, la riga che dice cos'e', il
  * giudizio con le sue ore, le barrette ora per ora dal crepuscolo all'alba e il picco. Tutti i
  * numeri arrivano scritti: qui si sceglie solo dove disegnarli.
+ *
+ * Una carta si porta a un'ora: il filo sul cielo le porta tutte (`oraDelCielo`), il tocco o le
+ * frecce sulle sue barrette porta lei sola e ce la lascia ("x notte" la riporta alla notte).
  */
 export function CartaDelParametro({
   misura: m,
@@ -68,12 +72,14 @@ export function CartaDelParametro({
   ore,
   scala,
   seeing,
+  oraDelCielo = null,
 }: {
   misura: Misura
   notte: Notte
   ore: Ora[]
   scala?: Scala | undefined
   seeing: Seeing
+  oraDelCielo?: number | null
 }) {
   const forma = FORME[m.code]
   if (!forma) return null
@@ -81,29 +87,98 @@ export function CartaDelParametro({
   if (m.code === "seeing" && m.known_hours === 0 && (!seeing.key || seeing.meteoblue === "refused")) {
     return <SeeingSenzaChiave nome={nome} rifiutata={seeing.key} />
   }
+  return <Carta misura={m} notte={n} ore={ore} scala={scala} forma={forma} nome={nome} oraDelCielo={oraDelCielo} />
+}
+
+function Carta({ misura: m, notte: n, ore, scala, forma, nome, oraDelCielo }: {
+  misura: Misura; notte: Notte; ore: Ora[]; scala: Scala | undefined; forma: Forma; nome: string; oraDelCielo: number | null
+}) {
+  const [fissa, setFissa] = useState<number | null>(null)
+  const [sopra, setSopra] = useState<number | null>(null)
+  const ora = fissa ?? sopra ?? oraDelCielo
+  const qui = ora === null ? undefined : ore[ora]
   const unita = forma.unita ? t(forma.unita) : ""
+  const sottoNotte = sotto(m, n, forma)
+  const valoreNotte = m.value === null ? t("weather.card.unknown") : numero(m.value)
+  const livello = qui && m.code in qui.levels ? qui.levels[m.code as keyof Ora["levels"]] : null
+  const oraDa = (ev: PointerEvent<HTMLDivElement>) => {
+    const q = ev.currentTarget.getBoundingClientRect()
+    return Math.min(ore.length - 1, Math.max(0, Math.floor(((ev.clientX - q.left) / q.width) * ore.length)))
+  }
+  const tasto = (ev: KeyboardEvent<HTMLDivElement>) => {
+    const nuova = oraDalTasto(ev.key, ora, ore.length - 1)
+    if (nuova === undefined) return
+    ev.preventDefault()
+    setFissa(nuova)
+  }
+  const valoreQui = qui ? alValore(qui, forma) : null
+  const sottoQui = qui ? sottoAllOra(qui, m) : ""
   return (
-    <article className={forma.piccola ? "as-parametro as-parametro--piccolo" : "as-parametro"}>
+    <article className={forma.piccola ? "as-parametro as-parametro--piccolo" : "as-parametro"} data-a-ora={fissa === null ? undefined : ""}>
       <h3 className="as-parametro__nome">{nome}</h3>
       <p className="as-parametro__valore">
-        <b>{m.value === null ? t("weather.card.unknown") : numero(m.value)}</b>
-        <span>{unita}</span>
+        <b>{qui ? (valoreQui === null ? t("weather.card.unknown") : numero(valoreQui)) : valoreNotte}</b>
+        {(qui ? valoreQui : m.value) !== null && <span>{unita}</span>}
       </p>
       <p className="as-parametro__sotto">
-        <span>{sotto(m, n, forma)}</span>
+        <span>{qui ? sottoQui : sottoNotte}</span>
+        <button className="as-parametro__torna" type="button" hidden={fissa === null} aria-label={t("weather.card.backLabel")}
+          onClick={() => setFissa(null)}>
+          {t("weather.card.back")}
+        </button>
       </p>
-      {m.level !== null && m.code !== "cloud" && m.known_hours > 0 && (
-        <div className="as-parametro__sem">
-          <Semaforo livello={m.level}>{giudizio(m)}</Semaforo>
-        </div>
-      )}
-      <div className="as-parametro__grafico" role="img" aria-label={t("weather.card.hours", { nome })}>
-        <Grafico misura={m} notte={n} ore={ore} forma={forma} scala={scala} />
+      {qui
+        ? livello !== null && (
+            <div className="as-parametro__sem">
+              <Semaforo livello={livello}>{parola(m.code, livello)}</Semaforo>
+            </div>
+          )
+        : m.level !== null && m.code !== "cloud" && m.known_hours > 0 && (
+            <div className="as-parametro__sem">
+              <Semaforo livello={m.level}>{giudizio(m)}</Semaforo>
+            </div>
+          )}
+      <div className="as-parametro__grafico" data-meteo-carta-piano="" tabIndex={0} role="slider" aria-label={t("weather.card.hours", { nome })}
+        aria-valuemin={0} aria-valuemax={ore.length - 1} aria-valuenow={ora ?? undefined}
+        aria-valuetext={qui
+          ? t("weather.card.valueAt", { ora: oraDelSito(qui.at), v: valoreQui === null ? t("weather.card.unknown") : `${numero(valoreQui)} ${unita}` })
+          : t("weather.card.valueNight", { v: `${valoreNotte} ${unita}`, sotto: sottoNotte })}
+        onPointerDown={(ev) => {
+          const i = oraDa(ev)
+          setFissa(fissa === i ? null : i)
+        }}
+        onPointerMove={(ev) => { if (ev.pointerType === "mouse") setSopra(oraDa(ev)) }}
+        onPointerLeave={() => setSopra(null)}
+        onKeyDown={tasto}>
+        <Grafico misura={m} notte={n} ore={ore} forma={forma} scala={scala} ora={ora} />
         <Asse ore={ore} />
       </div>
       {!forma.piccola && <p className="as-parametro__picco">{picco(m, n, forma, scala)}</p>}
     </article>
   )
+}
+
+/** L'ora che un tasto sceglie su un grafico ora per ora: le frecce si spostano (dalla notte
+ *  partono dal bordo), Inizio e Fine vanno ai capi, Esc torna alla notte (`null`); un altro tasto
+ *  non sceglie niente (`undefined`). La usano le carte e il cielo. */
+export function oraDalTasto(tasto: string, ora: number | null, ultima: number): number | null | undefined {
+  if (tasto === "Escape") return null
+  const avanti = ora === null ? 0 : Math.min(ultima, ora + 1)
+  const indietro = ora === null ? ultima : Math.max(0, ora - 1)
+  return ({ ArrowRight: avanti, ArrowUp: avanti, ArrowLeft: indietro, ArrowDown: indietro, Home: 0, End: ultima } as Record<string, number>)[tasto]
+}
+
+/** Il valore di un'ora sulla carta: il campo che la carta disegna. */
+function alValore(o: Ora, forma: Forma): number | null {
+  return o[forma.campo]
+}
+
+/** La riga sotto il valore a un'ora: l'ora, e cio' che la carta porta accanto. */
+function sottoAllOra(o: Ora, m: Misura): string {
+  const ora = oraDelSito(o.at)
+  if (m.code === "temperature" && o.dew_point_c !== null) return t("weather.card.atDew", { ora, r: numero(o.dew_point_c) })
+  if (m.code === "wind" && o.wind_gust_kmh !== null) return t("weather.card.atGust", { ora, r: numero(o.wind_gust_kmh) })
+  return t("weather.card.at", { ora })
 }
 
 function SeeingSenzaChiave({ nome, rifiutata }: { nome: string; rifiutata: boolean }) {
@@ -170,7 +245,7 @@ const LARGO = 240
 const ALTO = 64
 
 /** Le barrette o le linee della carta, ora per ora, sulla scala che il backend ha scritto. */
-function Grafico({ misura: m, notte: n, ore, forma, scala }: { misura: Misura; notte: Notte; ore: Ora[]; forma: Forma; scala?: Scala | undefined }) {
+function Grafico({ misura: m, notte: n, ore, forma, scala, ora }: { misura: Misura; notte: Notte; ore: Ora[]; forma: Forma; scala?: Scala | undefined; ora: number | null }) {
   const id = `carta-${n.night}-${m.code}`
   const passo = LARGO / (ore.length || 1)
   const basso = m.axis_min ?? 0
@@ -190,14 +265,15 @@ function Grafico({ misura: m, notte: n, ore, forma, scala }: { misura: Misura; n
         scala?.steps
           .filter((s) => s.bound > basso && s.bound < alto)
           .map((s) => <line key={s.bound} className="as-parametro__soglia" x1={0} x2={LARGO} y1={y(s.bound)} y2={y(s.bound)} />)}
-      {forma.barre ? <Barre misura={m} ore={ore} campo={forma.campo} passo={passo} y={y} id={id} /> : <Linee misura={m} ore={ore} campo={forma.campo} passo={passo} y={y} />}
+      {forma.barre ? <Barre misura={m} ore={ore} campo={forma.campo} passo={passo} y={y} id={id} ora={ora} /> : <Linee misura={m} ore={ore} campo={forma.campo} passo={passo} y={y} />}
+      {ora !== null && <line className="as-parametro__mira" x1={(ora + 0.5) * passo} x2={(ora + 0.5) * passo} y1={0} y2={ALTO} />}
     </svg>
   )
 }
 
 type Disegno = { misura: Misura; ore: Ora[]; campo: Campo; passo: number; y: (v: number) => number }
 
-function Barre({ misura: m, ore, campo, passo, y, id }: Disegno & { id: string }) {
+function Barre({ misura: m, ore, campo, passo, y, id, ora }: Disegno & { id: string; ora: number | null }) {
   const base = y(m.axis_min ?? 0)
   return (
     <>
@@ -208,7 +284,7 @@ function Barre({ misura: m, ore, campo, passo, y, id }: Disegno & { id: string }
         const livello = m.code in o.levels ? o.levels[m.code as keyof Ora["levels"]] : null
         const cima = y(v)
         return (
-          <rect key={o.at}
+          <rect key={o.at} data-spento={ora !== null && ora !== i ? "" : undefined}
             className={["as-parametro__barra", TINTE[livello ?? "neutro"], o.sky === "dark" ? "" : "as-parametro__barra--chiaro"].filter(Boolean).join(" ")} x={x} y={base - cima < 1.5 ? base - 1.5 : cima}
             width={passo * 0.72} height={base - cima < 1.5 ? 1.5 : base - cima} rx={1.5} />
         )

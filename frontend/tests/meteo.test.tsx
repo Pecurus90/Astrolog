@@ -565,3 +565,213 @@ describe("il Meteo, le fonti citate", () => {
     expect(await screen.findByRole("link", { name: /meteoblue/i })).toBeDefined()
   })
 })
+
+describe("il Meteo, il cielo", () => {
+  const cielo = () => document.querySelector(".as-cielo") as HTMLElement
+
+  it("disegna le nubi basse, medie e alte ognuna dal suo zero, e l'umidita' che si spegne", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    expect(cielo().querySelector(".as-cielo__basse")).not.toBeNull()
+    expect(cielo().querySelector(".as-cielo__medie")).not.toBeNull()
+    expect(cielo().querySelector(".as-cielo__alte")).not.toBeNull()
+    const umidita = within(cielo()).getByRole("button", { name: /umidit/i })
+    expect(cielo().querySelector(".as-cielo__umidita")).not.toBeNull()
+    fireEvent.click(umidita)
+    expect(umidita.getAttribute("aria-pressed")).toBe("false")
+    expect(cielo().querySelector(".as-cielo__umidita")).toBeNull()
+  })
+
+  it("a destra si apre la metrica che pesa di piu', con la sua parola dove cambia; un'altra si sceglie", async () => {
+    const ventoso = NOTTE.hours.map((o, i) => (i >= 2 ? { ...o, wind_kmh: 30, levels: { ...o.levels, wind: "nogo" } } : o))
+    conNotti({ ...NOTTE, hours: ventoso })
+    await apriMeteo()
+
+    await scheda()
+    const vento = within(cielo()).getByRole("button", { name: "vento" })
+    expect(vento.getAttribute("aria-pressed")).toBe("true")
+    expect(cielo().querySelector("svg")?.hasAttribute("data-dx-acceso")).toBe(true)
+    expect(cielo().querySelector(".as-scala__parola--niente")?.textContent).toBe("niente dalle 22")
+    fireEvent.click(within(cielo()).getByRole("button", { name: "pioggia" }))
+    expect(within(cielo()).getByRole("button", { name: "pioggia" }).getAttribute("aria-pressed")).toBe("true")
+    expect(cielo().querySelector(".as-scala__parola--niente")).toBeNull()
+  })
+
+  it("la parola della prima ora si scrive anche lei, all'inizio della scala", async () => {
+    const ventoso = NOTTE.hours.map((o) => ({ ...o, wind_kmh: 30, levels: { ...o.levels, wind: "nogo" } }))
+    conNotti({ ...NOTTE, hours: ventoso })
+    await apriMeteo()
+
+    await scheda()
+    expect(cielo().querySelector(".as-scala__parola--niente")?.textContent).toBe("niente")
+  })
+
+  it("il seeing senza chiave c'e' fra le metriche ma non si sceglie, e dice perche'", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    const seeing = within(cielo()).getAllByRole("button", { name: "seeing" })[0] as HTMLElement
+    expect(seeing.getAttribute("aria-disabled")).toBe("true")
+    fireEvent.click(within(cielo()).getByRole("button", { name: /a destra/i }))
+    expect(within(cielo()).getByRole("menuitemradio", { name: /seeing/ }).textContent).toContain("serve una chiave Meteoblue")
+  })
+
+  it("un'ora che il servizio non da' sulla scala di destra e' un tratteggio con \"non fornito\"", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    // il vento delle 22 manca nella notte di prova
+    expect(within(cielo().querySelector("svg") as unknown as HTMLElement).getByText("non fornito")).toBeDefined()
+  })
+
+  it("la pioggia a destra: barre col colore dell'ora, e l'ora non data a tratteggio, non come uno zero", async () => {
+    const piovosa = NOTTE.hours.map((o, i) =>
+      i === 2 ? { ...o, precip_mm: null } : i === 3 ? { ...o, precip_mm: 0.5, levels: { ...o.levels, rain: "marginal" } } : o)
+    conNotti({ ...NOTTE, hours: piovosa })
+    await apriMeteo()
+
+    await scheda()
+    fireEvent.click(within(cielo()).getByRole("button", { name: "pioggia" }))
+    const svg = cielo().querySelector("svg") as SVGElement
+    expect(svg.querySelectorAll(".as-scala__barra.as-scala__tinta--incerta")).toHaveLength(1)
+    expect(within(svg as unknown as HTMLElement).getByText("non fornito")).toBeDefined()
+  })
+
+  it("la condensa a destra e' sull'asse della temperatura: la soglia dello scarto non vi si disegna", async () => {
+    // un asse da 0 a 12 °C contiene il 3 della soglia, che li' sarebbe 3 °C d'aria
+    const misure = NOTTE.measures.map((m) => (m.code === "temperature" ? { ...m, axis_min: 0 } : m))
+    conNotti({ ...NOTTE, measures: [...misure, misura("condensation", { level: "go" })] })
+    await apriMeteo()
+
+    await scheda()
+    fireEvent.click(within(cielo()).getByRole("button", { name: /condensa/i }))
+    expect(cielo().querySelector(".as-scala__soglia")).toBeNull()
+  })
+
+  it("cambiando notte le carte tornano alla notte e a destra si riapre la metrica che pesa di piu'", async () => {
+    const altra = {
+      ...NOTTE,
+      night: "2026-09-27",
+      measures: NOTTE.measures.map((m) => ({ ...m, weighs: m.code === "rain" })),
+    }
+    conNotti(NOTTE, altra)
+    await apriMeteo()
+
+    await scheda()
+    fireEvent.keyDown(within(carta(/^Vento$/)).getByRole("slider"), { key: "End" })
+    expect(carta(/^Vento$/).hasAttribute("data-a-ora")).toBe(true)
+    fireEvent.click((await screen.findAllByRole("tab"))[1] as HTMLElement)
+    expect(carta(/^Vento$/).hasAttribute("data-a-ora")).toBe(false)
+    expect(within(cielo()).getByRole("button", { name: "pioggia" }).getAttribute("aria-pressed")).toBe("true")
+  })
+
+  it("dice le ore di buio sereno sul tratto sereno", async () => {
+    const serena = NOTTE.hours.map((o, i) => (i === 3 ? { ...o, clear: true } : { ...o, clear: false }))
+    conNotti({ ...NOTTE, hours: serena })
+    await apriMeteo()
+
+    await scheda()
+    expect(cielo().querySelectorAll(".as-cielo__sereno")).toHaveLength(1)
+    expect(cielo().textContent).toContain("buio sereno, 3 ore")
+  })
+
+  it("con le frecce il filo va a un'ora, il lettore la dice e tutte le carte la seguono; Esc torna alla notte", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    const tela = cielo().querySelector(".as-cielo__tela") as HTMLElement
+    fireEvent.keyDown(tela, { key: "ArrowRight" })
+    expect(tela.getAttribute("aria-valuetext")).toContain("alle 19:00")
+    expect(cielo().querySelector(".as-volta__lettore")?.textContent).toContain("nubi basse")
+    expect(screen.getByText("alle 19:00", { selector: ".as-soprattitolo" })).toBeDefined()
+    expect(carta(/^Nuvole$/).textContent).toContain("alle 19:00")
+    fireEvent.keyDown(tela, { key: "Escape" })
+    expect(cielo().querySelector(".as-volta__lettore")).toBeNull()
+    expect(carta(/^Nuvole$/).textContent).toContain("media nel buio")
+  })
+})
+
+describe("il Meteo, una carta a un'ora", () => {
+  it("le frecce sulle barrette portano la carta a un'ora e ce la lasciano; × notte la riporta", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    const vento = carta(/^Vento$/)
+    const barre = within(vento).getByRole("slider")
+    fireEvent.keyDown(barre, { key: "End" })
+    expect(vento.textContent).toContain("alle 23:00")
+    expect(vento.hasAttribute("data-a-ora")).toBe(true)
+    expect(vento.querySelector(".as-parametro__mira")).not.toBeNull()
+    expect(vento.querySelectorAll(".as-parametro__barra[data-spento]").length).toBeGreaterThan(0)
+    // le altre carte restano sulla notte
+    expect(carta(/^Nuvole$/).textContent).toContain("media nel buio")
+    fireEvent.click(within(vento).getByRole("button", { name: /torna alla notte/i }))
+    expect(vento.textContent).toContain("media nel buio, a 10 m")
+    expect(vento.hasAttribute("data-a-ora")).toBe(false)
+  })
+
+  it("a un'ora la carta dice il valore, la parola di quell'ora e cio' che porta accanto", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    const temperatura = carta(/^Temperatura/)
+    fireEvent.keyDown(within(temperatura).getByRole("slider"), { key: "Home" })
+    expect(temperatura.textContent).toContain("alle 19:00 · rugiada 4 °C")
+    const vento = carta(/^Vento$/)
+    fireEvent.keyDown(within(vento).getByRole("slider"), { key: "ArrowRight" })
+    expect(vento.textContent).toContain("raffiche 10 km/h")
+    expect(vento.textContent).toContain("buona")
+  })
+})
+
+describe("il Meteo, rifiniture del cielo e delle carte", () => {
+  const cielo = () => document.querySelector(".as-cielo") as HTMLElement
+
+  it("l'aerosol non ha unita': il lettore dice il numero e basta", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    fireEvent.click(within(cielo()).getAllByRole("button", { name: "aerosol" })[0] as HTMLElement)
+    fireEvent.keyDown(cielo().querySelector(".as-cielo__tela") as HTMLElement, { key: "Home" })
+    const riga = [...cielo().querySelectorAll(".as-volta__lettore-riga")].at(-1)
+    expect(riga?.textContent).toBe("aerosol0,12")
+  })
+
+  it("col dito il filo resta dove l'hai lasciato, finche' non tocchi altrove", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    const tela = cielo().querySelector(".as-cielo__tela") as HTMLElement
+    fireEvent.keyDown(tela, { key: "Home" })
+    fireEvent.pointerLeave(tela, { pointerType: "touch" })
+    expect(cielo().querySelector(".as-volta__lettore")).not.toBeNull()
+  })
+
+  it("le barrette di una carta sono il piano che il foglio veste", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    expect(within(carta(/^Vento$/)).getByRole("slider").hasAttribute("data-meteo-carta-piano")).toBe(true)
+  })
+
+  it("un'ora senza valore dice \"non fornito\" senza l'unita' accanto", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    const vento = carta(/^Vento$/)
+    fireEvent.keyDown(within(vento).getByRole("slider"), { key: "Home" })
+    fireEvent.keyDown(within(vento).getByRole("slider"), { key: "ArrowRight" })
+    expect(vento.querySelector(".as-parametro__valore")?.textContent).toBe("non fornito")
+  })
+})
