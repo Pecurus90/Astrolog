@@ -2,6 +2,7 @@
 fingerprint, so only the folder answers, keyed on the whole path, have to follow."""
 
 import sqlite3
+import time
 from collections.abc import Iterable
 from typing import Final
 
@@ -23,14 +24,22 @@ _KNOWN = (
 )
 
 
-def same_files(conn: sqlite3.Connection, folder_id: int, root: str, found: Iterable[str]) -> bool:
-    """The first `SAMPLE_FILES` under `root`, by path, that the folder has a position for (no
-    calibration file has one), fingerprinted as the scan does. None, or one different: not it."""
+def same_files(
+    conn: sqlite3.Connection,
+    folder_id: int,
+    root: str,
+    found: Iterable[str],
+    deadline: float | None = None,
+) -> bool | None:
+    """The first `SAMPLE_FILES` under `root` the folder has a position for, fingerprinted as the
+    scan does; zero, or one different: not it. `None`: `deadline` passed first, unknown."""
     sampled = 0
     for rel, path in sorted((rel_path(p, root), p) for p in found):
         known = conn.execute(_KNOWN, (folder_id, rel)).fetchone()
         if known is None:
             continue
+        if deadline is not None and time.monotonic() >= deadline:
+            return None
         try:
             header, block = read_frame(long_path(path))
             fingerprint = frame_fingerprint(long_path(path), header, block)

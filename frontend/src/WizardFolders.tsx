@@ -42,7 +42,12 @@ export function WizardFolders() {
       {radice === null ? (
         scrivi
       ) : (
-        <SfogliaCartelle onGuarda={cartelle.guarda} radice={radice} scrivi={scrivi} />
+        <SfogliaCartelle
+          onGuarda={cartelle.guarda}
+          radice={radice}
+          scrivi={scrivi}
+          usa={t("wizard.folders.useThis")}
+        />
       )}
 
       {cartelle.vista && (
@@ -53,7 +58,10 @@ export function WizardFolders() {
             setPath("")
             void cartelle.aggiungi()
           }}
-          onSposta={(id) => void cartelle.spostaQui(id)}
+          onSposta={(id) => {
+            setPath("")
+            void cartelle.spostaQui(id)
+          }}
           prefisso="wizard.folders"
           vista={cartelle.vista}
         />

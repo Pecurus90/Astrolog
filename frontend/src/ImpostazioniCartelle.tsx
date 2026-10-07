@@ -116,7 +116,12 @@ export function Cartelle() {
           {radice === null ? (
             scrivi
           ) : (
-            <SfogliaCartelle onGuarda={cartelle.guarda} radice={radice} scrivi={scrivi} />
+            <SfogliaCartelle
+              onGuarda={cartelle.guarda}
+              radice={radice}
+              scrivi={scrivi}
+              usa={t("wizard.folders.useThis")}
+            />
           )}
           {cartelle.vista && (
             <VistaDellaSonda
@@ -244,6 +249,7 @@ function CambiaPercorso({
           onGuarda={(dove) => void spostaIn(dove)}
           radice={radice}
           scrivi={scrivi}
+          usa={t("settings.folders.move.look")}
         />
       )}
       {rifiuto && <Avviso esito="allarme">{t(rifiuto)}</Avviso>}

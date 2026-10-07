@@ -568,6 +568,13 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **La cartella spostata, tre limiti** (M2, `spine/folder_move.py`, `api/folders._moved_here`):
+  una condivisione bloccata consuma da sola `PROBE_SECONDS` nella raggiungibilita' e la sonda
+  risponde `out_of_time` anche per le altre (serve un tempo a parte: meccanismo nuovo); il
+  campione sono i primi 5 file che la cartella vecchia conosce, quindi un solo file in comune
+  basta a proporre lo spostamento (il clic resta dell'utente); con due cartelle registrate una
+  dentro l'altra, `UPDATE OR REPLACE` sulle dichiarazioni puo' sovrascrivere la risposta
+  dell'altra.
 - **Mosaici, dichiarazioni e archivio, dopo la fase 1**: le pose e i
   pannelli di `mosaic` e `mosaic_geometry` restano `dict[str, Any]`, non `db/row.Row`, perche'
   `identify_geometry.frame_shape`/`frame_radius_deg` leggono con `.get` (un `sqlite3.Row` non ce

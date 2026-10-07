@@ -117,8 +117,16 @@ export function ScriviPercorso({
   onScrivi: (v: string) => void
   onGuarda: () => void
 }) {
+  // A form so that Enter in the field does what the button does; the button stays `type=button`,
+  // a single field submits on its own.
   return (
-    <div style={CAMPO_E_BOTTONE}>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        onGuarda()
+      }}
+      style={CAMPO_E_BOTTONE}
+    >
       <Campo cresce="var(--misura-cerca)" etichetta={t(`${prefisso}.label`)} id={id}>
         <input
           className="as-campo__input as-cifre"
@@ -129,7 +137,7 @@ export function ScriviPercorso({
         />
       </Campo>
       <Bottone onClick={onGuarda}>{t(`${prefisso}.look`)}</Bottone>
-    </div>
+    </form>
   )
 }
 

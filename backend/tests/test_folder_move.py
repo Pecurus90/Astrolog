@@ -4,8 +4,13 @@ quando si guarda dentro il posto nuovo."""
 
 import os
 import shutil
+import threading
+import time
+from types import SimpleNamespace
 
+from astrolog.api import folders
 from astrolog.db.connect import connect
+from astrolog.fits.walk import walk_dir
 from astrolog.spine import folder_move, typeless, typeless_folders
 from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.stages import set_status
@@ -206,6 +211,103 @@ def test_a_copy_of_a_reachable_folder_is_not_a_move(client_vuoto, tmp_path):
     p = _probe(client_vuoto, copy)
 
     assert (p["moved_check"], p["moved_from"]) == ("none", None)
+
+
+def test_recognising_stops_reading_headers_at_the_deadline(
+    client_vuoto, tmp_path, db_path, monkeypatch
+):
+    """Ogni lettura costa un secondo finto: con 1.5 secondi se ne fanno due, poi "non so"."""
+    old = tmp_path / "vecchia"
+    _archive(old)
+    f = _client_folder(client_vuoto, old)
+    _scanned(client_vuoto, f["id"])
+    clock = [0.0]
+    reads = []
+    real = folder_move.read_frame
+
+    def slow(path):
+        reads.append(path)
+        clock[0] += 1.0
+        return real(path)
+
+    monkeypatch.setattr(folder_move, "read_frame", slow)
+    monkeypatch.setattr(folder_move, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+    found = walk_dir(f["root_path"])
+    c = connect(db_path)
+    try:
+        assert folder_move.same_files(c, f["id"], f["root_path"], found, deadline=1.5) is None
+    finally:
+        c.close()
+    assert len(reads) == 2
+
+
+def test_a_folder_that_has_not_said_whether_it_answers_is_not_skipped_as_gone(
+    client_vuoto, tmp_path, monkeypatch
+):
+    """La cartella vecchia risponde, ma tardi: il tempo della sonda finisce prima. Non sapere se si
+    raggiunge non e' "non si raggiunge", e la copia non diventa uno spostamento. L'orologio fermo
+    fa la gara in cui il join torna prima che l'orologio dica scaduto."""
+    old, copy = tmp_path / "vecchia", tmp_path / "copia"
+    _archive(old)
+    f = _client_folder(client_vuoto, old)
+    _scanned(client_vuoto, f["id"])
+    shutil.copytree(old, copy)
+    late = threading.Event()
+    real = folders.root_readable
+
+    def slow(root):
+        if root == f["root_path"]:
+            late.wait(5)
+        return real(root)
+
+    t0 = time.monotonic()
+    still = SimpleNamespace(monotonic=lambda: t0)
+    monkeypatch.setattr(folders, "root_readable", slow)
+    monkeypatch.setattr(folders, "PROBE_SECONDS", 0.3)
+    monkeypatch.setattr(folders, "time", still)
+    monkeypatch.setattr(folder_move, "time", still)
+    try:
+        p = _probe(client_vuoto, copy)
+    finally:
+        late.set()
+
+    assert (p["moved_check"], p["moved_from"]) == ("out_of_time", None)
+
+
+def test_a_silent_unrelated_folder_does_not_hide_a_move(client_vuoto, tmp_path, monkeypatch):
+    """Una condivisione che tace, con altri file, non ferma il riconoscimento delle altre: la
+    cartella spostata si riconosce lo stesso. Stessa gara a orologio fermo del test sopra."""
+    silent, old, new = tmp_path / "nas", tmp_path / "D" / "Astro", tmp_path / "E" / "Astro"
+    silent.mkdir()
+    s = _client_folder(client_vuoto, silent)
+    _archive(old)
+    f = _client_folder(client_vuoto, old)
+    _scanned(client_vuoto, f["id"])
+    new.parent.mkdir()
+    os.rename(old, new)
+    late = threading.Event()
+    real = folders.root_readable
+
+    def slow(root):
+        if root == s["root_path"]:
+            late.wait(5)
+        return real(root)
+
+    t0 = time.monotonic()
+    still = SimpleNamespace(monotonic=lambda: t0)
+    monkeypatch.setattr(folders, "root_readable", slow)
+    monkeypatch.setattr(folders, "PROBE_SECONDS", 0.3)
+    monkeypatch.setattr(folders, "time", still)
+    monkeypatch.setattr(folder_move, "time", still)
+    try:
+        p = _probe(client_vuoto, new)
+    finally:
+        late.set()
+
+    assert (p["moved_check"], p["moved_from"]) == (
+        "found",
+        {"id": f["id"], "root_path": f["root_path"]},
+    )
 
 
 def test_the_probe_of_a_place_it_cannot_reach_does_not_look_for_a_move(client_vuoto, tmp_path):

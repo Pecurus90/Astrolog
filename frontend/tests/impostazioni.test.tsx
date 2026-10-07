@@ -281,6 +281,53 @@ describe("Impostazioni", () => {
     )
   })
 
+  it("Invio nel percorso nuovo sposta, come il tasto", async () => {
+    await app()
+    await vaiAImpostazioni()
+    fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
+    const dialogo = await screen.findByRole("dialog")
+    const campo = within(dialogo).getByLabelText(/percorso nuovo/i)
+
+    fireEvent.change(campo, { target: { value: "E:/Astro/2025" } })
+    fireEvent.submit(campo)
+
+    await waitFor(() =>
+      expect(
+        scritture().some(
+          (s) =>
+            s.metodo === "POST" &&
+            s.url.endsWith("/api/v1/folders/1/move") &&
+            (s.corpo as { root_path: string }).root_path === "E:/Astro/2025",
+        ),
+      ).toBe(true),
+    )
+  })
+
+  it("sul NAS il tasto del selettore dice che sposta, non che usa", async () => {
+    // Qui il clic sposta subito: "Usa questa cartella" e' il testo del primo avvio, dove dopo
+    // c'e' ancora Aggiungi.
+    rispondi({
+      ...STANOTTE,
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+      "/api/v1/folders/path-info": { stato: 200, corpo: { family: "posix", data_root: "/data" } },
+      "/api/v1/folders/browse": {
+        stato: 200,
+        corpo: { path: "/data", parent: null, folders: [] },
+      },
+      "/api/v1/folders": { stato: 200, corpo: CARTELLE },
+      ...SPINA,
+    })
+    await disegna()
+    await vaiAImpostazioni()
+    fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
+    const dialogo = await screen.findByRole("dialog")
+
+    expect(await within(dialogo).findByRole("button", { name: /sposta qui/i })).toBeDefined()
+    expect(within(dialogo).queryByRole("button", { name: /usa questa cartella/i })).toBeNull()
+  })
+
   it("se li non ci sono gli stessi file lo dice, e il dialogo resta aperto", async () => {
     await app()
     await vaiAImpostazioni()

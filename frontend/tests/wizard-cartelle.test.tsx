@@ -438,6 +438,10 @@ describe("una cartella spostata", () => {
       ).toBe(true),
     )
     expect(scritture().some((s) => s.url.endsWith("/api/v1/folders"))).toBe(false)
+    // Come dopo Aggiungi: il percorso usato non resta nel campo a farsi riusare per sbaglio.
+    expect((screen.getByLabelText(/dove stanno i file|percorso/i) as HTMLInputElement).value).toBe(
+      "",
+    )
   })
 })
 

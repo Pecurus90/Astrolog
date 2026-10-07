@@ -50,9 +50,13 @@ export function SfogliaCartelle({
   radice,
   onGuarda,
   scrivi,
+  usa,
   dove = "wizard",
 }: {
   radice: string
+  /** Il testo del tasto che usa la cartella dove sei: al primo avvio dopo c'e' ancora Aggiungi,
+   *  in Cambia percorso il clic sposta subito, e deve dirlo. */
+  usa: string
   /** Prima parte degli id della pagina: il dialogo di Cambia percorso ne apre un secondo accanto a
    *  quello di Aggiungi, e due id uguali legherebbero un'etichetta all'elenco sbagliato. */
   dove?: string
@@ -125,7 +129,7 @@ export function SfogliaCartelle({
           onClick={() => onGuarda(qui)}
           disabled={sfoglia.isPending}
         >
-          {t("wizard.folders.useThis")}
+          {usa}
         </Bottone>
         {sfoglia.data?.parent != null && (
           <Bottone verso="tenue" onClick={() => setApri(sfoglia.data?.parent ?? undefined)}>

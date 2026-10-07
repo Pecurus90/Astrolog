@@ -48,9 +48,9 @@ _SELECT = (
 )
 
 
-def _reachable(roots: list[str], deadline: float | None = None) -> dict[str, bool]:
-    """Every folder asked at once under one deadline: a dead share is "not reachable" when time is
-    up, and its thread is left behind instead of holding the answer."""
+def _reachable(roots: list[str], deadline: float | None = None) -> dict[str, bool | None]:
+    """Every folder asked at once under one deadline: one that has not answered when time is up is
+    `None`, and its thread is left behind instead of holding the answer."""
     answers: dict[str, bool] = {}
 
     def ask(root: str) -> None:
@@ -63,7 +63,7 @@ def _reachable(roots: list[str], deadline: float | None = None) -> dict[str, boo
         deadline = time.monotonic() + PROBE_SECONDS
     for thread in threads:
         thread.join(max(0.0, deadline - time.monotonic()))
-    return {root: answers.get(root, False) for root in roots}
+    return {root: answers.get(root) for root in roots}
 
 
 def _out(row: sqlite3.Row, *, reactivated: bool = False) -> FolderOut:
@@ -127,11 +127,20 @@ def _moved_here(
         return None, MoveCheck.NONE  # already registered: adding it says so
     reach = _reachable([r["root_path"] for r in rows if r["retired_at"] is None], deadline)
     for row in rows:
-        if row["retired_at"] is None and reach[row["root_path"]]:
+        # A silent folder with these files may be the original, this its copy: no proposal.
+        if row["retired_at"] is None and reach[row["root_path"]] is None:
+            same = folder_move.same_files(conn, row["id"], root, found, deadline)
+            if same is None or same:
+                return None, MoveCheck.OUT_OF_TIME
+    for row in rows:
+        if row["retired_at"] is None and reach[row["root_path"]] is not False:
             continue
         if time.monotonic() >= deadline:
             return None, MoveCheck.OUT_OF_TIME
-        if folder_move.same_files(conn, row["id"], root, found):
+        same = folder_move.same_files(conn, row["id"], root, found, deadline)
+        if same is None:
+            return None, MoveCheck.OUT_OF_TIME
+        if same:
             return MovedFrom(id=row["id"], root_path=row["root_path"]), MoveCheck.FOUND
     return None, MoveCheck.NONE
 
@@ -176,7 +185,7 @@ def list_folders(
         _SELECT + " WHERE f.retired_at IS NULL ORDER BY f.id LIMIT ? OFFSET ?", (limit, offset)
     ).fetchall()
     reach = _reachable([r["root_path"] for r in rows])
-    items = [FolderOut(**dict(r), reachable=reach[r["root_path"]]) for r in rows]
+    items = [FolderOut(**dict(r), reachable=reach[r["root_path"]] is True) for r in rows]
     return FolderList(items=items, total=total, limit=limit, offset=offset)
 
 
