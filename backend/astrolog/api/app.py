@@ -37,6 +37,7 @@ from . import (
     pipeline,
     review,
     scan,
+    search,
     settings,
     sites,
     tonight,
@@ -259,6 +260,7 @@ def create_app(  # noqa: PLR0913
     app.include_router(nights.router)
     app.include_router(folders.router)
     app.include_router(scan.router)
+    app.include_router(search.router)
     app.include_router(pipeline.router)
     app.include_router(review.router)
     app.include_router(sites.router)

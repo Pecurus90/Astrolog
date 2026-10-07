@@ -44,12 +44,12 @@ def instruments(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     # belongs to the files: the column alone would show what the files say over the user.
     declared = gear.camera_specs(conn)
     return [
-        {**_row(r), **declared.get(r["id"], {}), "no_hours": _no_hours(r)}
+        {**_row(r), **declared.get(r["id"], {}), "no_hours": no_hours(r)}
         for r in conn.execute(_INSTRUMENTS).fetchall()
     ]
 
 
-def _no_hours(r: sqlite3.Row) -> str | None:
+def no_hours(r: sqlite3.Row) -> str | None:
     """A mount without frames is not "the files are silent": no rig carries it yet, even where
     other mounts have hours."""
     if r["objects_json"] is None:

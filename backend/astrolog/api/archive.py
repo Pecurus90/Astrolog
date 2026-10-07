@@ -23,6 +23,7 @@ def archive_page(  # noqa: PLR0913
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     q: str | None = Query(None, max_length=200),
+    key: str | None = Query(None, max_length=200),
     catalog: str | None = Query(None, max_length=40),
     constellation: str | None = Query(None, max_length=8),
     filter_name: str | None = Query(None, alias="filter", max_length=120),
@@ -42,6 +43,9 @@ def archive_page(  # noqa: PLR0913
     **frames**: a row passes with one of its frames in them, and its hours, filters and panels are
     those frames' only -- narrowed to 2025, a row tells 2025.
 
+    `key` narrows to the one row with that key (`items[].key`): the search opens an object so,
+    where `q` would also find `M 10` and `M 101` for `M 1`.
+
     The factory cap is high (100) because this list is an **inventory**, not a feed to scroll:
     whoever has a hundred thousand frames still has a handful of objects, and asking for twenty at
     a time would be five rounds to see what fits in one."""
@@ -54,6 +58,7 @@ def archive_page(  # noqa: PLR0913
     )
     criteria = {
         "q": q,
+        "key": key,
         "catalog": catalog,
         "constellation": constellation,
         "filter_name": filter_name,
@@ -73,8 +78,7 @@ def archive_page(  # noqa: PLR0913
     return ArchiveList(
         items=[
             ArchiveObject(
-                # a mosaic is named by its answer's key, which no object carries
-                key=r["mosaic_key"] or objects.stable_key(r),
+                key=r["key"],
                 name=objects.display_name(r),
                 slug=r["catalog_slug"],
                 frames=r["frames"],

@@ -111,35 +111,49 @@ _IN_CONSTELLATION = (
 # ASCII only, as SQLite's `LOWER()`: half of a rule that lives on both sides.
 _ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 
-_FOLDED = "REPLACE(LOWER({}), ' ', '') LIKE ? ESCAPE '\\'"
+FOLDED = "REPLACE(LOWER({}), ' ', '') LIKE ? ESCAPE '\\'"
+# Any name of object `{o}`, its own or its catalog's designations; the search bar asks it too.
+NAMED = (
+    "(EXISTS (SELECT 1 FROM object_names n WHERE n.object_id = {o}.id AND "  # noqa: S608
+    + FOLDED.format("n.name") + ")"
+    " OR EXISTS (SELECT 1 FROM catalog_names k WHERE k.slug = {o}.catalog_slug AND "
+    + FOLDED.format("k.catalog || k.designation") + "))"
+)  # fmt: skip
 _SEARCHED = (
     "(EXISTS (SELECT 1 FROM objects o2 WHERE " + _ROW_OBJECTS +  # noqa: S608
-    "   AND (EXISTS (SELECT 1 FROM object_names n WHERE n.object_id = o2.id AND "
-    + _FOLDED.format("n.name") + ")"
-    "   OR EXISTS (SELECT 1 FROM catalog_names k WHERE k.slug = o2.catalog_slug AND "
-    + _FOLDED.format("k.catalog || k.designation") + ")))"
-    " OR " + _FOLDED.format("r.primary_name") +
+    " AND " + NAMED.format(o="o2") + ")"
+    " OR " + FOLDED.format("r.primary_name") +
     " OR EXISTS (SELECT 1 FROM catalog_names k WHERE k.slug = r.catalog_slug AND "
-    + _FOLDED.format("k.catalog || k.designation") + "))"
+    + FOLDED.format("k.catalog || k.designation") + "))"
 )  # fmt: skip
+# A row's key, read as `key` and narrowed by `Criteria.key`: a mosaic's, else `objects.stable_key`.
+_KEY = "COALESCE(r.mosaic_key, r.catalog_slug, r.primary_name, r.catalog_name)"
+
+
+def folded(q: str | None) -> str | None:
+    """The `LIKE` pattern for `FOLDED`; `None` for blanks, or `LIKE '%   %'` would find nothing.
+    `%` and `_` are escaped: who types them is looking for those signs."""
+    typed = (q or "").strip().translate(_ASCII_LOWER).replace(" ", "")
+    if not typed:
+        return None
+    escaped = typed.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"%{escaped}%"
 
 
 def _searching(q: str | None) -> tuple[str, list[str]]:
-    """Blanks or an emptied field are no search, or a `LIKE '%   %'` would find nothing. `%` and
-    `_` are escaped: who types them is looking for those signs."""
-    typed = (q or "").strip().translate(_ASCII_LOWER).replace(" ", "")
-    if not typed:
+    pattern = folded(q)
+    if pattern is None:
         return "", []
-    escaped = typed.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-    return _SEARCHED, [f"%{escaped}%"] * _SEARCHED.count("LIKE ?")
+    return _SEARCHED, [pattern] * _SEARCHED.count("LIKE ?")
 
 
 @dataclass(frozen=True)
 class Criteria:
-    """What the bar asks. `q`, catalog and constellation ask the row; the filter and `scope` its
-    frames, and `scope` also narrows what the row counts."""
+    """What the bar asks. `q`, `key` (one row), catalog and constellation ask the row; the filter
+    and `scope` its frames, and `scope` also narrows what the row counts."""
 
     q: str | None = None
+    key: str | None = None
     catalog: str | None = None
     constellation: str | None = None
     filter_name: str | None = None
@@ -155,6 +169,9 @@ def _where(c: Criteria) -> tuple[str, list[Any]]:
     if searched:
         parts.append(searched)
         values += its_values
+    if c.key:
+        parts.append(f"{_KEY} = ?")
+        values.append(c.key)
     for part, value in ((_OF_CATALOG, c.catalog), (_IN_CONSTELLATION, c.constellation)):
         if value:
             parts.append(part)
@@ -185,7 +202,7 @@ def page(
     narrowed, scope_values = criteria.scope.sql
     hours = counts.counts_on(counts.Subject.ROW, narrowed)
     rows = conn.execute(
-        f"SELECT r.*, {hours} FROM {_ROWS} WHERE {where} {order} LIMIT ? OFFSET ?",  # noqa: S608
+        f"SELECT r.*, {_KEY} AS key, {hours} FROM {_ROWS} WHERE {where} {order} LIMIT ? OFFSET ?",  # noqa: S608
         (*scope_values * 3, *values, limit, offset),
     )
     total = conn.execute(

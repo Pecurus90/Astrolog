@@ -29,6 +29,10 @@ Le prove del frontend si chiamano col loro titolo; stanno in `frontend/tests/sch
 | Cio' che apro si chiude con Esc e il fuoco torna dov'era; il foglio del telefono non lo lascia scappare | *Esc chiude Stanotte, e il fuoco torna alla pastiglia*, *Altro apre le voci che non stanno fra le schede del telefono, ed Esc lo chiude*, *il foglio Altro trattiene il fuoco: Tab non esce dietro il velo* |
 | Il telaio si misura dal suo contenitore, non dalla finestra | *il contenitore misurato e' il genitore del telaio, non il telaio*, *il binario, la barra alta e il corpo stanno nel telaio* (`veste.test.tsx`) |
 | Se fermo e poi riprendo, riprende davvero | `test_resume_after_a_stop_reads_the_files_that_were_left` (`backend/tests/test_api_scan_all.py`) |
+| Cerco un oggetto per ogni suo nome, anche quello comune, e vedo quanto ci ho ripreso | `test_an_object_is_found_by_any_of_its_names` (`backend/tests/test_search.py`, come le tre sotto) |
+| Cerco una notte per data, come la scrivo, o per l'oggetto ripreso | `test_a_night_is_found_by_date_in_the_common_forms`, `test_what_is_not_one_of_your_dates_finds_no_night`, `test_a_night_is_found_by_the_object_shot_in_it` |
+| Cerco un pezzo, un filtro o un sito per nome | `test_a_piece_and_a_filter_are_found_by_name_with_what_is_known_of_them`, `test_no_filter_is_not_a_filter_you_own`, `test_a_site_is_found_by_name_with_its_nights` |
+| Il campo vuoto non apre niente; ogni gruppo dice quanti altri ce ne sono | `test_a_blank_search_finds_nothing_not_everything`, `test_each_group_says_how_many_beyond_the_few_it_shows` |
 
 ## Le decisioni
 
@@ -58,7 +62,14 @@ pagina non ripete il suo titolo (disegno v18).
   leggeva, le cartelle saltate -- e' una **riga di stato in testa al corpo**, con *Vedi* che porta
   dove si ripara (Marco, 7/10/2026). Tacerlo farebbe sembrare completa una scansione che non lo e'.
 - **La ricerca** ("Cerca oggetto, notte, sito") entra quando cerca davvero, con la sua rotta
-  (Marco, 7/10/2026): un campo che non cerca e' una promessa che l'app non mantiene.
+  (Marco, 7/10/2026): un campo che non cerca e' una promessa che l'app non mantiene. La rotta
+  c'e' (`GET /api/v1/search`): quattro gruppi, pochi per gruppo col totale. Gli oggetti col
+  frammento dell'Archivio (tutti i nomi, senza spazi e maiuscole), le notti per data nelle forme
+  comuni -- mesi in italiano e inglese, `5/6` letto nei due versi, perche' la rotta non sa dove
+  hai imparato a scrivere le date -- o per l'oggetto ripreso, pezzi e siti per nome. Una voce
+  dice **chi e'** (chiave, id, genere), non l'indirizzo: le pagine e i loro parametri stanno nel
+  frontend, e una seconda casa diverge. Un oggetto apre l'Archivio con `?key=`: con `?q=M 1`
+  uscirebbero anche M 10 e M 101.
 
 **La pastiglia dice il sito e apre Stanotte** (disegno v25). Senza sito dice "Scegli il sito".
 **Stanotte** e' un pannello: da 1440 px prende una colonna sua, sotto si apre sopra il contenuto

@@ -31,6 +31,7 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Un oggetto solo non mi viene scritto "1 oggetti" | *un oggetto solo non prende il plurale* |
 | Scrivo tre lettere e trovo il mio oggetto, con qualunque sigla lo chiami | `test_you_find_an_object_by_any_name_it_is_known_by`; *cercare stringe l'elenco nel backend, non a schermo* |
 | Cancello quello che avevo scritto e l'archivio torna intero | `test_searching_for_nothing_is_not_searching` |
+| Dalla ricerca nella barra apro un oggetto, e vedo lui solo (`?key=`), non anche quelli che ne contengono la sigla | `test_the_key_opens_the_archive_on_that_object_alone` (`backend/tests/test_search.py`); lo schermo con la fetta 3 della ricerca |
 | Stringo per catalogo, costellazione o filtro usato, e le tendine offrono solo quello che ho | `test_you_can_narrow_down_to_one_catalogue`, `test_you_can_narrow_down_to_one_constellation`, `test_you_can_narrow_down_to_one_filter`, `test_the_choices_are_only_what_the_archive_has`; *le tendine offrono quello che hai, e quella vuota non compare* |
 | Ordino per nome, ore o frame, e l'archivio si apre in ordine di nome | `test_the_archive_is_sorted_by_name_and_a_name_is_catalogue_then_number`, `test_by_hours_and_by_frames_are_two_different_orders`; *l'ordine lo sceglie l'utente e lo fa il backend* |
 | Se un filtro non trova niente me lo dice, e mi lascia il modo di toglierlo | *quando un filtro non trova niente lo dice, e lascia il modo di toglierlo* |

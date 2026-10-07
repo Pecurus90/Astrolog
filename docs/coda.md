@@ -255,15 +255,23 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   Notti, Attrezzatura e il sito nelle Impostazioni vogliono il loro parametro. Fette: (1) le pagine
   che si aprono su una voce dall'indirizzo, (2) la rotta `GET /api/v1/search`, (3) il campo nella
   barra dopo il disegno (brief dato a Marco il 7/10). Fetta 1 fatta (7/10/2026): `/notti?notte=<id>`,
-  `/attrezzatura?pezzo=strumento-<id>` o `filtro-<id>`, `/impostazioni/sito?sito=<id>`. Prossima la fetta 2:
-  `GET /api/v1/search?q=` coi quattro gruppi, ognuno con l'indirizzo da aprire; gli oggetti col
-  frammento di ricerca di `spine/archive.py` (tutti i nomi, piegatura senza spazi), le notti per
-  data (forme comuni) o per oggetto ripreso, i pezzi per `instruments.name`/`filters.name`, i siti
-  per nome. Una voce dice in piccolo cosa ha l'utente (frame, ore): riusare `counts`, non un terzo
-  conto.
-- **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (brief dato a Marco il
-  7/10, si aspetta il disegno), poi Archivio, Da confermare, Attrezzatura. Il brief di ognuna si
+  `/attrezzatura?pezzo=strumento-<id>` o `filtro-<id>`, `/impostazioni/sito?sito=<id>`. Fetta 2 fatta (7/10/2026): `GET /api/v1/search?q=`
+  (`docs/domini/navigazione.md`); una voce dice chi e', non l'indirizzo, e l'oggetto apre
+  l'Archivio con `?key=` (la rotta lo sa gia'). Fetta 3: il campo, che compone gli indirizzi, e
+  l'Archivio che legge `?key=` e mostra a schermo che e' ristretto a un oggetto. Restano dalla
+  revisione della fetta 2: le notti cercate per oggetto usano il frammento, quindi "M 1" porta anche
+  le notti di M 10 e M 101, e non trovano un mosaico per il nome dato dall'utente
+  (`spine/search._NIGHTS_WHERE`); mese e anno solo in cifre ("05/2024", "2024-05") non sono una data.
+- **I filtri in un ordine solo, in tutta l'app -- prossima** (Marco, 7/10/2026): L, R, G, B, Ha,
+  OIII, SII, poi i filtri a colori (OSC). Supera "dal piu' usato" (`spine/filters_used.py`,
+  `docs/domini/notti.md`, `docs/domini/archivio.md`). Da chiedere a Marco dove vanno gli altri
+  (banda doppia, nomi che il vocabolario non conosce, "senza filtro").
+- **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (disegno arrivato il
+  7/10, forma A, il registro), poi Archivio, Da confermare, Attrezzatura. Il brief di ognuna si
   scrive coi dati che l'API manda in quel momento: si rifa' la ricognizione quando tocca a lei.
+  Per montare le Notti il backend deve mandare tre dati che oggi mancano: i frame senza tempo di
+  ogni oggetto nella notte (`NightObject` non ha `untimed`), il giorno in cui arriva il meteo di una
+  notte in attesa, e il totale su cui la riga di lettura fa la percentuale.
 - **M4 -- fatta** (7/10/2026): l'Archivio stringe per periodo (anno o date), sito, ottica e
   camera, e la riga dice solo le pose che passano (`counts.Scope`, `docs/domini/archivio.md`).
 

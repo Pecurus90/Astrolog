@@ -45,6 +45,9 @@ export interface paths {
          *     **frames**: a row passes with one of its frames in them, and its hours, filters and panels are
          *     those frames' only -- narrowed to 2025, a row tells 2025.
          *
+         *     `key` narrows to the one row with that key (`items[].key`): the search opens an object so,
+         *     where `q` would also find `M 10` and `M 101` for `M 1`.
+         *
          *     The factory cap is high (100) because this list is an **inventory**, not a feed to scroll:
          *     whoever has a hundred thousand frames still has a handful of objects, and asking for twenty at
          *     a time would be five rounds to see what fits in one.
@@ -630,6 +633,37 @@ export interface paths {
          *     404 `scan_run_not_found`; 409 `scan_run_open`; 410 `errors_not_kept`.
          */
         get: operations["scan_run_errors"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Archive
+         * @description Objects, nights, gear and sites of the archive matching `q`, at most `limit` per kind, each
+         *     kind with its `total`.
+         *
+         *     - **Objects** by any name: their own, the catalog's designations, the common name; ordered as
+         *       the Archive by hours.
+         *     - **Nights** by date in the common forms (ISO; day/month with or without the year, read
+         *       both ways when both fit; day and month name; month name and year; Italian or English
+         *       months) or by an object shot in them; newest first.
+         *     - **Gear** and **sites** by name.
+         *
+         *     A blank `q` finds nothing, not everything. Not paged: it is a menu of a few per kind, and
+         *     `total` says how many more the page that shows them holds.
+         */
+        get: operations["search_archive"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1678,6 +1712,128 @@ export interface components {
              * @enum {string}
              */
             reason: "root_unreachable" | "scan_running";
+        };
+        /**
+         * FoundNight
+         * @description A night, found by date or by an object shot in it; its counts are the whole night's.
+         */
+        FoundNight: {
+            /** Id */
+            id: number;
+            /** Night Date */
+            night_date: string;
+            /** Site */
+            site: string;
+            /** Frames */
+            frames: number;
+            /** Integration S */
+            integration_s: number;
+            /** Untimed */
+            untimed: number;
+        };
+        /**
+         * FoundObject
+         * @description An Archive row: an object, or a confirmed mosaic (`panels`).
+         */
+        FoundObject: {
+            /**
+             * Key
+             * @description The Archive row's key: `/archive?key=` narrows to it alone.
+             */
+            key: string;
+            /**
+             * Name
+             * @description As the Archive names it.
+             */
+            name: string | null;
+            /**
+             * Common Name
+             * @description The catalog's common name, when it is not already the name.
+             */
+            common_name: string | null;
+            /** Frames */
+            frames: number;
+            /** Integration S */
+            integration_s: number;
+            /** Untimed */
+            untimed: number;
+            /**
+             * Panels
+             * @description A mosaic's panels; null for an object.
+             */
+            panels: number | null;
+        };
+        /**
+         * FoundPiece
+         * @description A piece or a filter you own. Hours not counted yet (`counted` false) or that the files do
+         *     not tell (`no_hours`) arrive null, never zero.
+         */
+        FoundPiece: {
+            /** Id */
+            id: number;
+            /** Kind */
+            kind: ("optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser") | "filter";
+            /** Name */
+            name: string;
+            /** Counted */
+            counted: boolean;
+            /** Frames */
+            frames: number | null;
+            /** Integration S */
+            integration_s: number | null;
+            /** Untimed */
+            untimed: number | null;
+            /** No Hours */
+            no_hours: ("files_silent" | "no_rig") | null;
+        };
+        /** FoundSite */
+        FoundSite: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Nights */
+            nights: number;
+        };
+        /** Found[FoundNight] */
+        Found_FoundNight_: {
+            /** Items */
+            items: components["schemas"]["FoundNight"][];
+            /**
+             * Total
+             * @description How many in all: `items` are the first few.
+             */
+            total: number;
+        };
+        /** Found[FoundObject] */
+        Found_FoundObject_: {
+            /** Items */
+            items: components["schemas"]["FoundObject"][];
+            /**
+             * Total
+             * @description How many in all: `items` are the first few.
+             */
+            total: number;
+        };
+        /** Found[FoundPiece] */
+        Found_FoundPiece_: {
+            /** Items */
+            items: components["schemas"]["FoundPiece"][];
+            /**
+             * Total
+             * @description How many in all: `items` are the first few.
+             */
+            total: number;
+        };
+        /** Found[FoundSite] */
+        Found_FoundSite_: {
+            /** Items */
+            items: components["schemas"]["FoundSite"][];
+            /**
+             * Total
+             * @description How many in all: `items` are the first few.
+             */
+            total: number;
         };
         /**
          * GearAnswer
@@ -2890,6 +3046,13 @@ export interface components {
             /** Folder Id */
             folder_id: number;
         };
+        /** SearchResult */
+        SearchResult: {
+            objects: components["schemas"]["Found_FoundObject_"];
+            nights: components["schemas"]["Found_FoundNight_"];
+            gear: components["schemas"]["Found_FoundPiece_"];
+            sites: components["schemas"]["Found_FoundSite_"];
+        };
         /** SettingsOut */
         SettingsOut: {
             /** Values */
@@ -3751,6 +3914,7 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 q?: string | null;
+                key?: string | null;
                 catalog?: string | null;
                 constellation?: string | null;
                 filter?: string | null;
@@ -4515,6 +4679,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScanErrorList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_archive: {
+        parameters: {
+            query?: {
+                q?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResult"];
                 };
             };
             /** @description Validation Error */
