@@ -3,8 +3,8 @@ objects and filters inside, or the hours would split and two rows look like dupl
 
 import json
 import sqlite3
-from collections.abc import Sequence
-from dataclasses import asdict
+from collections.abc import Callable, Sequence
+from dataclasses import asdict, dataclass
 from enum import StrEnum
 from typing import Any
 
@@ -33,7 +33,16 @@ _ANSWER_AT = {
     GroupReason.NO_DATE: AnswerAt.NEVER,
 }
 
-# The caller passes the observed weather's kind.
+
+@dataclass(frozen=True)
+class Observed:
+    """What the weather's writer knows, passed in: the spine and `weather` do not import each other.
+    `kind` of the observed rows; `arrives_on(night_date, zone)`, the day a young night's comes."""
+
+    kind: str
+    arrives_on: Callable[[str, str], str | None]
+
+
 _PAGE = f"""
 SELECT n.id, n.night_date, n.site_source, s.name AS site, s.timezone, w.summary_json AS weather,
        {counts.counts_on(counts.Subject.NIGHT)}
@@ -52,7 +61,7 @@ _TOTALS = f"SELECT{counts.counts_on(counts.Subject.ARCHIVE)}"
 # Asked for the whole page at once, never per row.
 _OBJECTS = f"""
 SELECT f.night_id, o.id AS object_id, o.catalog_slug,{obj.NAME_COLUMNS},
-       {counts.AGGREGATE}
+       {counts.AGGREGATE}, {counts.UNTIMED}
 FROM frames f JOIN objects o ON o.id = f.object_id
 WHERE f.night_id IN {{listed}} AND f.copy_of IS NULL
 GROUP BY f.night_id, o.id
@@ -81,15 +90,16 @@ def page(
     *,
     limit: int,
     offset: int,
-    observed: str,
+    weather: Observed,
     night: int | None = None,
 ) -> list[dict[str, Any]]:
-    """Most recent first; `observed` is the kind of the weather rows, known to their writer.
-    `night` asks one night by id, wherever it falls in the list (the search opens it)."""
-    rows = conn.execute(_PAGE, (observed, night, night, limit, offset)).fetchall()
+    """Most recent first; `night` asks one night by id, wherever it falls (the search opens it)."""
+    rows = conn.execute(_PAGE, (weather.kind, night, night, limit, offset)).fetchall()
     ids = [r["id"] for r in rows]
     moons = _moons(rows)
-    night_objects = idlist.grouped(conn, _OBJECTS, ids, "night_id", obj.counted)
+    night_objects = idlist.grouped(
+        conn, _OBJECTS, ids, "night_id", lambda r: {**obj.counted(r), "untimed": r["untimed"]}
+    )
     filters = filters_used.of(conn, counts.Subject.NIGHT, ids)
     return [
         {
@@ -103,19 +113,23 @@ def page(
             "objects": night_objects.get(r["id"], []),
             "filters": filters.get(r["id"], []),
             "moon": moons.get(r["id"]),
-            "weather": _weather(r, zone_known=r["id"] in moons),
+            "weather": _weather(r, weather.arrives_on if r["id"] in moons else None),
         }
         for r in rows
     ]
 
 
-def _weather(row: sqlite3.Row, *, zone_known: bool) -> dict[str, Any]:
-    """`unknown` when the site's zone is not recognised, so its nights cannot be split; `waiting`
-    when the night is too young for the reanalysis or the history has not reached it."""
+def _weather(
+    row: sqlite3.Row, arrives_on: Callable[[str, str], str | None] | None
+) -> dict[str, Any]:
+    """`unknown` without the site's zone (no `arrives_on`, as no Moon); `waiting` when the night
+    is too young for the reanalysis, with the day it comes, or the history has not reached it."""
     if row["weather"] is not None:
-        return {"state": "ok", **json.loads(row["weather"])}
-    # whether `_moons` found the zone: one test for Moon and weather
-    return {"state": "waiting" if zone_known else "unknown", **_NO_SKY}
+        return {"state": "ok", **json.loads(row["weather"]), "arrives_on": None}
+    if arrives_on is None:
+        return {"state": "unknown", **_NO_SKY, "arrives_on": None}
+    when = arrives_on(row["night_date"], row["timezone"])
+    return {"state": "waiting", **_NO_SKY, "arrives_on": when}
 
 
 # Every field, empty, as the response shape wants them.
@@ -146,6 +160,18 @@ def waiting(conn: sqlite3.Connection) -> list[dict[str, Any]]:
         sums[place] = sums.get(place, 0) + r["frames"]
     ordered = sorted(sums.items(), key=lambda item: (-item[1], item[0]))
     return [{"answer_at": place, "frames": count} for place, count in ordered]
+
+
+_PLACED = "SELECT COUNT(*) FROM frame_stages WHERE stage = ? AND status = 'done'"
+
+
+def reading_done_pct(conn: sqlite3.Connection, left: int) -> int | None:
+    """Of the frames `group` has to place, how many it placed, rounded down: 100 only when none is
+    left, and then there is no reading to tell."""
+    if not left:
+        return None
+    placed = conn.execute(_PLACED, (stages.StageName.GROUP,)).fetchone()[0]
+    return placed * 100 // (placed + left)
 
 
 def still_reading(conn: sqlite3.Connection) -> int:

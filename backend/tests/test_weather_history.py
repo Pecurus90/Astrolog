@@ -165,7 +165,9 @@ def test_the_nights_page_reads_the_weather_of_each_night_as_written(db):
     history.step(db, fetch=Finto(archivio()), now=ADESSO)
     per_data = {
         r["night_date"]: r["weather"]
-        for r in notti.page(db, limit=10, offset=0, observed=history.KIND)
+        for r in notti.page(
+            db, limit=10, offset=0, weather=notti.Observed(history.KIND, history.arrives_on)
+        )
     }
     assert per_data["2026-03-10"]["state"] == "ok"
     assert per_data["2026-03-10"]["verdict"] == "go"

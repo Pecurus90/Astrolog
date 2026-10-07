@@ -52,17 +52,26 @@ def parse(payload: Any) -> openmeteo.Series:
     return openmeteo.parse_single(payload, VARIABLES)
 
 
+def asked_from(night: str) -> str:
+    """The first night date (noon to noon, site zone) on which the archive is asked for `night`:
+    a night ends the morning after, and that morning must be five days old."""
+    return (date.fromisoformat(night) + timedelta(days=DELAY_DAYS + 1)).isoformat()
+
+
+def arrives_on(night: str, timezone: str, now: datetime | None = None) -> str | None:
+    """The day a young night's weather is asked; `None` once it is due, when only the service's
+    answer is missing and a date would be a promise already broken."""
+    today = night_date(iso_z(now or datetime.now(UTC)), timezone)
+    first = asked_from(night)
+    return first if today is not None and today < first else None
+
+
 def _due_site(conn: sqlite3.Connection, now: datetime) -> tuple[dict[str, Any] | None, list[str]]:
     """The first site with nights old enough for the reanalysis and no weather, and those nights."""
     per_site: dict[int, tuple[dict[str, Any], list[str]]] = {}
     for r in conn.execute(_MISSING, (KIND,)):
         today = night_date(iso_z(now), r["timezone"])
-        # a night ends the morning after: that morning is what must be five days old
-        if (
-            today is None
-            or r["night_date"]
-            >= (date.fromisoformat(today) - timedelta(days=DELAY_DAYS)).isoformat()
-        ):
+        if today is None or today < asked_from(r["night_date"]):
             continue
         per_site.setdefault(r["site_id"], (dict(r), []))[1].append(r["night_date"])
     for site_id, (site, dates) in per_site.items():

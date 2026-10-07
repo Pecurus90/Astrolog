@@ -30,18 +30,24 @@ def night_list(
 
     `night` asks a single night by id, wherever it falls in the list: the search opens it there.
     An id that is not there gives no rows, not an error -- an old address, not a broken request."""
+    left = nights.still_reading(conn)
     # The spine already sends the page's shape: copying it field by field would be two name lists
     # to keep in step, and validating still rejects a missing or mistyped field here.
     return NightList.model_validate(
         {
             "items": nights.page(
-                conn, limit=limit, offset=offset, observed=history.KIND, night=night
+                conn,
+                limit=limit,
+                offset=offset,
+                weather=nights.Observed(history.KIND, history.arrives_on),
+                night=night,
             ),
             "total": nights.how_many(conn, night),
             "limit": limit,
             "offset": offset,
             "totals": nights.archive_totals(conn),
             "waiting": nights.waiting(conn),
-            "still_reading": nights.still_reading(conn),
+            "still_reading": left,
+            "reading_done_pct": nights.reading_done_pct(conn, left),
         }
     )

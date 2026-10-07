@@ -2410,7 +2410,7 @@ export interface components {
             objects: components["schemas"]["NightObject"][];
             /**
              * Filters
-             * @description Most integration time first: the order the page shows them in.
+             * @description In the one filter order of the app: the order the page shows them in.
              */
             filters: components["schemas"]["FilterUsed"][];
             /** @description Null when the site's time zone is not recognised: without a time zone there is no midnight, and the row stays silent instead of describing the sky of another place. */
@@ -2435,6 +2435,11 @@ export interface components {
              * @description How many frames the spine still has to work through: work, not a question.
              */
             still_reading: number;
+            /**
+             * Reading Done Pct
+             * @description How far that work has gone, 0-99, rounded down; null when nothing is left.
+             */
+            reading_done_pct: number | null;
         };
         /**
          * NightObject
@@ -2452,6 +2457,11 @@ export interface components {
             frames: number;
             /** Integration S */
             integration_s: number;
+            /**
+             * Untimed
+             * @description Its frames that do not say how long: they are not zero.
+             */
+            untimed: number;
         };
         /**
          * NightWeather
@@ -2475,6 +2485,11 @@ export interface components {
              * @enum {string}
              */
             state: "ok" | "waiting" | "unknown";
+            /**
+             * Arrives On
+             * @description `waiting` on a young night: the date (site zone) the reanalysis is asked. Null otherwise, also when it is due and only the service's answer is missing.
+             */
+            arrives_on: string | null;
         };
         /**
          * ObjectAnswer

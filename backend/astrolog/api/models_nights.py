@@ -17,6 +17,7 @@ class NightObject(BaseModel):
     name: str | None
     frames: int
     integration_s: float
+    untimed: int = Field(description="Its frames that do not say how long: they are not zero.")
 
 
 class FilterUsed(BaseModel):
@@ -48,6 +49,10 @@ class NightWeather(WeatherSkyOut):
     recognised."""
 
     state: Literal["ok", "waiting", "unknown"]
+    arrives_on: str | None = Field(
+        description="`waiting` on a young night: the date (site zone) the reanalysis is asked. "
+        "Null otherwise, also when it is due and only the service's answer is missing."
+    )
 
 
 class Night(BaseModel):
@@ -71,7 +76,7 @@ class Night(BaseModel):
     )
     objects: list[NightObject]
     filters: list[FilterUsed] = Field(
-        description="Most integration time first: the order the page shows them in."
+        description="In the one filter order of the app: the order the page shows them in."
     )
     moon: MoonThatNight | None = Field(
         description="Null when the site's time zone is not recognised: without a time zone there "
@@ -103,4 +108,7 @@ class NightList(Page[Night]):
     waiting: list[WaitingPoses]
     still_reading: int = Field(
         description="How many frames the spine still has to work through: work, not a question."
+    )
+    reading_done_pct: int | None = Field(
+        description="How far that work has gone, 0-99, rounded down; null when nothing is left."
     )

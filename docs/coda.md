@@ -270,9 +270,10 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (disegno arrivato il
   7/10, forma A, il registro), poi Archivio, Da confermare, Attrezzatura. Il brief di ognuna si
   scrive coi dati che l'API manda in quel momento: si rifa' la ricognizione quando tocca a lei.
-  Per montare le Notti il backend deve mandare tre dati che oggi mancano: i frame senza tempo di
-  ogni oggetto nella notte (`NightObject` non ha `untimed`), il giorno in cui arriva il meteo di una
-  notte in attesa, e il totale su cui la riga di lettura fa la percentuale.
+  I tre dati che la pagina Notti chiedeva li manda gia' `/api/v1/nights` (7/10/2026: `untimed`
+  per oggetto, `weather.arrives_on`, `reading_done_pct`). Per montarla manca il foglio: le sue
+  classi sono ancora `pr-` della proposta, e devono entrare nel foglio (v29, `72-pagina-notti`)
+  come il Meteo nel v27, prima che la pagina le usi.
 - **M4 -- fatta** (7/10/2026): l'Archivio stringe per periodo (anno o date), sito, ottica e
   camera, e la riga dice solo le pose che passano (`counts.Scope`, `docs/domini/archivio.md`).
 
