@@ -15,6 +15,7 @@ class Source(StrEnum):
 
     CAMS = "cams"
     METEOBLUE = "meteoblue"
+    FORECAST = "open-meteo/forecast"
     ARCHIVE = "open-meteo/archive"
     CLIMATE = "open-meteo/climate"
 

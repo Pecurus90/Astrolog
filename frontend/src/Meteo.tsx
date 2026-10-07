@@ -78,9 +78,10 @@ export function Meteo() {
             cambiando={modello.isPending}
           />
           {aggiorna.error && <Avviso esito="allarme">{aggiorna.error.message}</Avviso>}
-          {aggiorna.data && aggiorna.data !== "ok" && (
+          {(aggiorna.data === "no_site" || aggiorna.data === "no_timezone") && (
             <Avviso esito="attesa" pagina>{t(`weather.status.${aggiorna.data}`)}</Avviso>
           )}
+          <RichiestaSenzaRisposta detto={detto} aggiorna={() => aggiorna.mutate()} occupato={aggiorna.isPending} />
           {modello.error && <Avviso esito="allarme">{modello.error.message}</Avviso>}
           <SeeingCheTace seeing={detto.seeing} />
           {detto.fetched_at === null && (
@@ -217,6 +218,21 @@ function Notti({ detto }: { detto: Meteo }) {
         </section>
       )}
     </>
+  )
+}
+
+/** Il servizio che tace ma la previsione vale ancora, lo stato piu' frequente: la pagina resta
+ *  intera, e una riga dice da quando non risponde e di quando e' la previsione che si legge. */
+function RichiestaSenzaRisposta({ detto, aggiorna, occupato }: { detto: Meteo; aggiorna: () => void; occupato: boolean }) {
+  const r = detto.last_request
+  if (r === null || r.status === "ok") return null
+  return (
+    <Avviso esito="attesa" pagina
+      azioni={<Bottone verso="tenue" onClick={aggiorna} disabled={occupato}>{t("weather.refresh")}</Bottone>}>
+      {detto.fetched_at === null
+        ? t(`weather.silent.${r.status}.none`, { ora: orario(r.at) })
+        : t(`weather.silent.${r.status}`, { ora: orario(r.at), prima: orario(detto.fetched_at) })}
+    </Avviso>
   )
 }
 

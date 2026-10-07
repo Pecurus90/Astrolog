@@ -141,6 +141,7 @@ function meteo(corpo: Record<string, unknown>, altre: Record<string, Voce> = {})
         model: "best_match",
         models: MODELLI,
         fetched_at: null,
+        last_request: null,
         full_nights: 3,
         seeing: { key: false, source: null, meteoblue: null },
         sources: [{ source: "cams", fetched_at: "2026-09-25T15:00:00.000Z" }],
@@ -448,14 +449,46 @@ describe("il Meteo, la testa", () => {
     expect(screen.getByRole("menuitemradio", { name: /ECMWF/ }).textContent).toContain("centro europeo")
   })
 
-  it("il pulsante chiede la previsione, e se il servizio tace dice che resta quella di prima", async () => {
-    meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE] }, {
-      "POST /api/v1/weather/refresh": { stato: 200, corpo: { status: "unreachable" } },
+  it("se l'ultima richiesta non ha avuto risposta lo dice, con l'ora della previsione che resta", async () => {
+    meteo({
+      fetched_at: "2026-09-25T06:00:00.000Z",
+      last_request: { at: "2026-09-25T12:00:00.000Z", status: "unreachable" },
+      nights: [NOTTE],
     })
     await apriMeteo()
 
-    fireEvent.click(await screen.findByRole("button", { name: /^aggiorna$/i }))
-    expect(await screen.findByText(/resta la previsione di prima/i)).toBeDefined()
+    const riga = await screen.findByText(/senza risposta: questa e' la previsione delle/)
+    expect(riga.closest(".as-avviso")?.querySelector(".as-bottone--tenue")?.textContent).toMatch(/aggiorna/i)
+  })
+
+  it("anche senza nessuna previsione, una richiesta senza risposta lo dice", async () => {
+    meteo({ last_request: { at: "2026-09-25T12:00:00.000Z", status: "unreachable" } })
+    await apriMeteo()
+
+    expect(await screen.findByText(/senza risposta: non c'e' ancora nessuna previsione/)).toBeDefined()
+  })
+
+  it("dopo Aggiorna senza risposta la pagina rilegge e la riga compare", async () => {
+    meteo({ fetched_at: "2026-09-25T06:00:00.000Z", last_request: { at: "2026-09-25T06:00:00.000Z", status: "ok" }, nights: [NOTTE] }, {
+      "POST /api/v1/weather/refresh": { stato: 200, corpo: { status: "unreachable" } },
+    })
+    await apriMeteo()
+    await scheda()
+    expect(screen.queryByText(/senza risposta/)).toBeNull()
+
+    meteo({ fetched_at: "2026-09-25T06:00:00.000Z", last_request: { at: "2026-09-25T12:00:00.000Z", status: "unreachable" }, nights: [NOTTE] }, {
+      "POST /api/v1/weather/refresh": { stato: 200, corpo: { status: "unreachable" } },
+    })
+    fireEvent.click(screen.getAllByRole("button", { name: /^aggiorna$/i })[0] as HTMLElement)
+    expect(await screen.findByText(/senza risposta: questa e' la previsione delle/)).toBeDefined()
+  })
+
+  it("se l'ultima richiesta e' andata bene non dice niente", async () => {
+    meteo({ fetched_at: "2026-09-25T15:00:00.000Z", last_request: { at: "2026-09-25T15:00:00.000Z", status: "ok" }, nights: [NOTTE] })
+    await apriMeteo()
+
+    await scheda()
+    expect(screen.queryByText(/senza risposta/)).toBeNull()
   })
 
   it("dopo il pulsante anche Stanotte rilegge la notte in corso", async () => {

@@ -100,6 +100,11 @@ def _verdict(clouds: float | None) -> Verdict | None:
     return Verdict.MARGINAL if clouds <= CLOUD_MARGINAL_MAX_PCT else Verdict.NOGO
 
 
+def is_clear(h: Hour) -> bool:
+    """An hour the verdict calls clear: one rule for the usable hours and the clear stretch."""
+    return (c := h.values.get("cloud_total_pct")) is not None and c <= CLOUD_GO_MAX_PCT
+
+
 def _shown(hours: Sequence[Hour]) -> tuple[str | None, str | None]:
     night = [i for i, h in enumerate(hours) if h.sky != Sky.DAY]
     if not night:
@@ -116,11 +121,7 @@ def assess(hours: Sequence[Hour]) -> Summary:
     cover: list[Any] = [h.values.get("cloud_total_pct") for h in night]
     complete = bool(night) and None not in cover
     clouds = _mean([c for c in cover if c is not None]) if complete else None
-    since, until, clear = when(
-        night,
-        lambda h: (c := h.values.get("cloud_total_pct")) is not None and c <= CLOUD_GO_MAX_PCT,
-        after,
-    )
+    since, until, clear = when(night, is_clear, after)
     shown_from, shown_until = _shown(hours)
     return Summary(
         verdict=_verdict(clouds),

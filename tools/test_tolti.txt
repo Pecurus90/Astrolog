@@ -181,3 +181,4 @@ un sito di casa senza fuso orario lo dice, invece di aspettare una previsione - 
 una fonte che la pagina non conosce non si cita con le parole di un'altra - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
 una notte dice il verdetto, le nuvole, le ore utili e cosa pesa, con l'ora del posto - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
 una notte senza il vento in quota non ne parla - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+il pulsante chiede la previsione, e se il servizio tace dice che resta quella di prima - la riga dell'ultima richiesta senza risposta (3b-i) la sostituisce: dopo Aggiorna senza risposta la pagina rilegge e la riga compare

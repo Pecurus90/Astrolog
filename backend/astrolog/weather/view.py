@@ -74,7 +74,11 @@ def _agreement(said: Sequence[verdict.Verdict | None], total: int) -> dict[str, 
 
 
 def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary) -> str:
+    """Each hour with its words, whether the page draws it and whether it is one of the clear hours
+    of the night, the same the usable hours count."""
     shown = {h.at for h in judge.shown_hours(hours, summary)}
+    night, _ = verdict.window(hours)
+    judged = {h.at for h in night}
     return json.dumps(
         [
             {
@@ -82,6 +86,9 @@ def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary) -> str:
                 "dew_spread_c": judge.spread(h),
                 "levels": judge.hour_levels(h),
                 "shown": h.at in shown,
+                "clear": summary.usable_hours is not None
+                and h.at in judged
+                and verdict.is_clear(h),
             }
             for h in hours
         ]

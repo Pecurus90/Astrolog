@@ -12,7 +12,7 @@ from ..clock import night_date, now_iso
 from ..db import config
 from ..db.transaction import transaction
 from ..spine.group_store import home_site
-from ..weather import forecast, judge, meteoblue, openmeteo, rounds, sky, view
+from ..weather import fetches, forecast, judge, meteoblue, openmeteo, rounds, sky, view
 from .deps import get_db
 from .models_weather import (
     JudgedCode,
@@ -24,6 +24,7 @@ from .models_weather import (
     WeatherNightOut,
     WeatherOut,
     WeatherRefreshOut,
+    WeatherRequestOut,
     WeatherScaleOut,
     WeatherSeeingOut,
     WeatherSourceOut,
@@ -80,6 +81,13 @@ def _night(row: sqlite3.Row, rank: int) -> WeatherNightOut:
     )
 
 
+def _last_request(conn: sqlite3.Connection, site_id: int) -> WeatherRequestOut | None:
+    last = fetches.last(conn, site_id, fetches.Source.FORECAST)
+    return (
+        None if last is None else WeatherRequestOut(at=last["attempted_at"], status=last["status"])
+    )
+
+
 def _seeing(conn: sqlite3.Connection, site_id: int, arrived: dict[str, str]) -> WeatherSeeingOut:
     """Meteoblue's last attempt only with a key: it is what lets the page say why there is no
     seeing."""
@@ -110,6 +118,7 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
         model=chosen,
         models=list(openmeteo.MODELS),
         fetched_at=None,
+        last_request=None,
         full_nights=FULL_NIGHTS,
         seeing=WeatherSeeingOut(
             key=bool(config.read(conn).meteoblue_key), source=None, meteoblue=None
@@ -139,6 +148,7 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
             ).fetchone()[0],
             "nights": [_night(r, i) for i, r in enumerate(rows[:MAX_NIGHTS])],
             "seeing": _seeing(conn, home["id"], arrived),
+            "last_request": _last_request(conn, home["id"]),
             "sources": [WeatherSourceOut(source=f, fetched_at=q) for f, q in arrived.items()],
         }
     )

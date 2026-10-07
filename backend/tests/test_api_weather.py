@@ -103,9 +103,13 @@ def test_a_silent_service_says_why_and_the_last_forecast_stays(con_casa, monkeyp
     monkeypatch.setattr(forecast, "_fetch", Finto(attorno_ad_adesso()))
     con_casa.post("/api/v1/weather/refresh")
     prima = con_casa.get("/api/v1/weather").json()
+    assert prima["last_request"]["status"] == "ok"
     monkeypatch.setattr(forecast, "_fetch", Finto(TimeoutError()))
     assert con_casa.post("/api/v1/weather/refresh").json() == {"status": "unreachable"}
-    assert con_casa.get("/api/v1/weather").json() == prima
+    dopo = con_casa.get("/api/v1/weather").json()
+    # la previsione resta com'era; l'ultima richiesta dice che non ha avuto risposta, e quando
+    assert dopo["last_request"]["status"] == "unreachable"
+    assert {**dopo, "last_request": None} == {**prima, "last_request": None}
 
 
 def test_the_forecast_renews_itself_in_the_background(db_path, monkeypatch):

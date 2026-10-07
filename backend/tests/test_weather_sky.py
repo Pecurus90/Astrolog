@@ -124,3 +124,23 @@ def test_a_source_that_answers_wrong_or_without_nights_keeps_its_rows(db, storta
 def test_an_answer_that_is_not_an_air_series_is_refused(storta):
     with pytest.raises(openmeteo.BadAnswerError):
         cams.parse(storta)
+
+
+def test_the_round_writes_how_the_forecast_request_went(db):  # noqa: F811
+    """Un riavvio, o un'altra pagina, deve poter dire "l'ultima richiesta non ha avuto risposta":
+    l'esito della previsione si scrive come quello di Meteoblue."""
+    from astrolog.weather import fetches
+
+    rounds.refresh(db, SITO, fetch=tutti(), now=ADESSO)
+    assert fetches.last(db, SITO["id"], Source.FORECAST)["status"] == "ok"
+    rounds.refresh(db, SITO, fetch=tutti(**{"/v1/forecast": TimeoutError()}), now=ADESSO)
+    ultimo = fetches.last(db, SITO["id"], Source.FORECAST)
+    assert ultimo["status"] == "unreachable"
+    assert ultimo["attempted_at"].startswith("2026-09-25T15:00")
+
+
+def test_a_round_without_a_timezone_writes_no_attempt(db):  # noqa: F811
+    from astrolog.weather import fetches
+
+    rounds.refresh(db, {**SITO, "timezone": None}, fetch=tutti(), now=ADESSO)
+    assert fetches.last(db, SITO["id"], Source.FORECAST) is None

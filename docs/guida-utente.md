@@ -386,8 +386,8 @@ te lo dice e puoi guardarne un altro.
 
 La previsione **arriva da sola** appena hai un sito di casa, e si rinnova ogni tre ore; con
 *Aggiorna* la chiedi subito. Se il servizio non risponde -- sei senza rete, o e' giu' -- resta
-quella di prima, con l'ora in cui e' arrivata; se l'hai chiesta tu, l'app ti dice anche perche' non
-e' cambiata. Se del tuo sito di casa non si riconosce il fuso orario, le sue notti non si possono
+quella di prima, e una riga in testa dice a che ora e' stata l'ultima richiesta senza risposta e di
+che ora e' la previsione che stai leggendo, con *Aggiorna* accanto per riprovare. Se del tuo sito di casa non si riconosce il fuso orario, le sue notti non si possono
 dividere: la pagina te lo dice e ti porta a sistemare il sito (in mare aperto vale il fuso
 nautico). I dati vengono da Open-Meteo e Copernicus, e il seeing da Meteoblue: la pagina li cita in
 fondo.

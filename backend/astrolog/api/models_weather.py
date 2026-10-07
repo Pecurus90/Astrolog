@@ -65,6 +65,9 @@ class WeatherHourOut(BaseModel):
     shown: bool = Field(
         description="Whether the page draws this hour (`shown_from`-`shown_until`)."
     )
+    clear: bool = Field(
+        description="One of the night's clear hours, the ones `usable_hours` counts."
+    )
 
 
 class WeatherSpanOut(BaseModel):
@@ -192,6 +195,14 @@ class WeatherSeeingOut(BaseModel):
     meteoblue: Literal["ok", "refused", "unreachable", "bad_answer"] | None
 
 
+class WeatherRequestOut(BaseModel):
+    """The last request for the forecast and how it went: a silent service keeps the forecast that
+    was there, and the page says since when no answer came."""
+
+    at: str
+    status: Literal["ok", "unreachable", "bad_answer"]
+
+
 class WeatherOut(BaseModel):
     """The next nights of the home site for the chosen model. `fetched_at` is when the site's
     latest forecast arrived, for all models together: `None` until the first one arrives. `missing`
@@ -202,6 +213,7 @@ class WeatherOut(BaseModel):
     model: str
     models: list[str]
     fetched_at: str | None
+    last_request: WeatherRequestOut | None
     full_nights: int
     seeing: WeatherSeeingOut
     sources: list[WeatherSourceOut]

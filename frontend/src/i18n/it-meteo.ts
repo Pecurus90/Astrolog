@@ -19,8 +19,10 @@ export const itMeteo = {
   "weather.refresh": "Aggiorna",
   "weather.refreshing": "Chiedo la previsione...",
   "weather.refresh.failed": "non sono riuscito a chiedere la previsione",
-  "weather.status.unreachable": "Il servizio non risponde: resta la previsione di prima.",
-  "weather.status.bad_answer": "Il servizio ha risposto qualcosa che non e' una previsione: resta quella di prima.",
+  "weather.silent.unreachable": "Ultima richiesta alle {ora} senza risposta: questa e' la previsione delle {prima}.",
+  "weather.silent.unreachable.none": "Ultima richiesta alle {ora} senza risposta: non c'e' ancora nessuna previsione.",
+  "weather.silent.bad_answer.none": "Ultima richiesta alle {ora}: il servizio ha risposto qualcosa che non e' una previsione, e non c'e' ancora nessuna previsione.",
+  "weather.silent.bad_answer": "Ultima richiesta alle {ora}: il servizio ha risposto qualcosa che non e' una previsione. Questa e' quella delle {prima}.",
   "weather.status.no_site": "Manca il sito di casa: la previsione non si puo' chiedere.",
   "weather.status.no_timezone": "Il sito di casa non ha un fuso orario: la previsione non si puo' dividere in notti.",
   // La testa: dove, quando e' arrivata la previsione (e il seeing, che ha un'eta' sua), il modello.

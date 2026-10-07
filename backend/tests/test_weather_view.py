@@ -140,3 +140,21 @@ def test_every_hour_says_whether_the_page_draws_it(db):  # noqa: F811
     assert disegnate[0] == detto["shown_from"]
     assert disegnate[-1] == detto["shown_until"]
     assert not ore[0]["shown"]
+
+
+def test_an_hour_says_whether_it_is_a_clear_hour_of_the_night(db):  # noqa: F811
+    """Il tratto sereno del cielo: le ore della finestra che il verdetto direbbe serene, le stesse
+    che contano le ore utili."""
+    scritta(db, Finto(risposta(cloud_total_pct=lambda i: 80.0 if i % 2 else 0.0)))
+    riga = notte_di(db, "2026-09-25")
+    ore, detto = json.loads(riga["hours_json"]), riassunto(riga)
+    assert sum(o["clear"] for o in ore) == detto["usable_hours"] > 0
+    assert not any(o["clear"] for o in ore if o["sky"] == "day")
+
+
+def test_a_night_without_every_cloud_has_no_clear_hours_as_it_has_no_usable_hours(db):  # noqa: F811
+    """Un'ora serena e' un'ora che conta fra le utili: dove le utili non si sanno, nemmeno lei."""
+    scritta(db, Finto(risposta(cloud_total_pct=lambda i: None if i == 45 else 0.0)))
+    riga = notte_di(db, "2026-09-25")
+    assert riassunto(riga)["usable_hours"] is None
+    assert not any(o["clear"] for o in json.loads(riga["hours_json"]))

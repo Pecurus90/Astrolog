@@ -3441,6 +3441,11 @@ export interface components {
              * @description Whether the page draws this hour (`shown_from`-`shown_until`).
              */
             shown: boolean;
+            /**
+             * Clear
+             * @description One of the night's clear hours, the ones `usable_hours` counts.
+             */
+            clear: boolean;
         };
         /**
          * WeatherLevelsOut
@@ -3573,6 +3578,7 @@ export interface components {
             models: string[];
             /** Fetched At */
             fetched_at: string | null;
+            last_request: components["schemas"]["WeatherRequestOut"] | null;
             /** Full Nights */
             full_nights: number;
             seeing: components["schemas"]["WeatherSeeingOut"];
@@ -3593,6 +3599,20 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "no_site" | "no_timezone" | "unreachable" | "bad_answer";
+        };
+        /**
+         * WeatherRequestOut
+         * @description The last request for the forecast and how it went: a silent service keeps the forecast that
+         *     was there, and the page says since when no answer came.
+         */
+        WeatherRequestOut: {
+            /** At */
+            at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "unreachable" | "bad_answer";
         };
         /**
          * WeatherScaleOut

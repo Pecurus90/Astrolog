@@ -409,6 +409,7 @@ describe("l accessibilita della prima pagina", () => {
           model: "best_match",
           models: ["best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless"],
           fetched_at: "2026-09-25T15:00:00.000Z",
+          last_request: { at: "2026-09-25T18:00:00.000Z", status: "unreachable" },
           full_nights: 3,
           seeing: { key: true, source: null, meteoblue: "refused" },
           scales: [],
