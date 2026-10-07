@@ -16,7 +16,8 @@ Lo stato si legge dal codice e da [`docs/coda.md`](docs/coda.md); le decisioni s
    vuote (primo avvio, zero frame). Tre bersagli: Windows, Mac, NAS (Docker) anche da tablet e
    telefono -- desktop prima, mobile alla fine, quindi i dati escono dall'API gia' fatti e il
    layout non porta logica. **Le soglie vengono da convenzioni pubbliche** (okta WMO, Nyquist,
-   Beaufort), verificate su una fonte vera e citate accanto al numero, mai scritte a memoria.
+   Beaufort), verificate su una fonte vera e citate accanto al numero, mai scritte a memoria. Dove una
+   convenzione non c'e', la soglia o la formula si decide con Marco, a video: mai inventata.
 2. **Marco non e' un programmatore: decide il prodotto, non il codice.** Si chiede solo cio' che
    dipende da lui (gusto, dati suoi, rischio che accetta). Quando serve: **a video, a scelta
    multipla, con la consigliata in cima e il perche' in una riga**. **La consigliata e' la piu'
