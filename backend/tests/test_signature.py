@@ -286,6 +286,19 @@ def test_a_focal_that_drifts_finds_the_same_answer(conn):
     assert _risposta_della_posa(conn, c) is None
 
 
+def test_who_reads_an_answer_is_requeued_when_it_is_given(conn):
+    """Rispondere rimette in coda ogni posa che leggera' la risposta. La tolleranza si misura su
+    una parte sola: la chiave a 1052 mm risponde alla posa a 1000 (52 <= 52,6), e misurata dalla
+    posa (52 > 50) quella posa restava con la risposta vecchia fino a un altro giro."""
+    radice = add_folder(conn, "/vol/astro")
+    chiave = _posa(conn, radice, "a.fits", instrument=CAM, focal=1052.0)
+    posa = _posa(conn, radice, "b.fits", instrument=CAM, focal=1000.0)
+    signature.declare(conn, _chiave(conn, chiave), signature.Answer(optics=OTT))
+
+    assert _risposta_della_posa(conn, posa).optics == OTT
+    assert posa in signature.frames_of(conn, _chiave(conn, chiave))
+
+
 def test_one_card_is_dressed_without_the_whole_page(conn, monkeypatch):
     """Applica ritrova ogni scheda con `row_of`: vestire tutta la pagina per ogni risposta
     costerebbe il quadrato delle schede. Si veste solo quella chiesta."""

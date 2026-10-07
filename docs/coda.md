@@ -259,10 +259,6 @@ Niente di aperto.
   l'impronta ripiega sull'header (`fits/header_read.frame_fingerprint`). Provato su cinque
   troncati sintetici; con header veri, che differiscono almeno per `DATE-OBS`, e' improbabile ma
   nessuna prova lo esclude.
-- **Una risposta su una firma non rimette in coda tutti i frame che la leggono**: `answer_for`
-  confronta la focale dal lato della chiave, `frames_of` (`spine/signature.py`) dal lato del frame,
-  e `same_focal` non e' simmetrica: la chiave a 1052 mm risponde al frame a 1000 (52 <= 52,6) ma
-  `frames_of` non lo trova (52 > 50), e quel frame resta con la risposta vecchia fino a un altro giro.
 - **Il corredo di un frame dipende da quando e' stato letto**: `normalize` sostituisce la focale
   con la mediana del suo gruppo (`focal_buckets`), calcolato sui soli frame del giro, e
   `rigs.find_rig` prende il primo corredo entro la tolleranza. Tre scansioni in tempi diversi
