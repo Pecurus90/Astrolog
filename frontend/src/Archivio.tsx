@@ -9,6 +9,7 @@ import {
   type Criteri,
   ORDINI,
   type Ordine,
+  PERIODO_DATE,
   SOLO_MOSAICI,
   type ScelteDellaBarra,
 } from "./BarraDellArchivio"
@@ -39,7 +40,19 @@ const PANNELLO: Record<Vista, string> = { carte: "vista-carte", elenco: "vista-e
 
 // Quelli che **stringono** l'elenco. L'ordine non ci sta: cambiarlo non toglie righe, e uno
 // stato vuoto che dicesse "nessun oggetto con questi filtri" per un ordinamento sarebbe assurdo.
-const STRINGONO = ["q", "catalog", "constellation", "filter", "mosaic"] as const
+const STRINGONO = [
+  "q",
+  "catalog",
+  "constellation",
+  "filter",
+  "mosaic",
+  "period",
+  "since",
+  "until",
+  "site",
+  "optics",
+  "camera",
+] as const
 
 // L'ordine di partenza, e quello a cui si ripiega un `sort` scritto male nell'indirizzo: un
 // indirizzo storto non e' un errore da mostrare -- si guarda l'archivio per nome.
@@ -78,6 +91,12 @@ export function Archivio() {
     filter: indirizzo.get("filter") ?? "",
     // un valore che non e' quello della tendina non stringe: e' un indirizzo scritto male
     mosaic: indirizzo.get("mosaic") === SOLO_MOSAICI ? SOLO_MOSAICI : "",
+    period: indirizzo.get("period") ?? "",
+    since: inForma(indirizzo.get("since"), DATA),
+    until: inForma(indirizzo.get("until"), DATA),
+    site: inForma(indirizzo.get("site"), ID),
+    optics: inForma(indirizzo.get("optics"), ID),
+    camera: inForma(indirizzo.get("camera"), ID),
     sort: ordineChiesto(indirizzo.get("sort")),
   }
   const stringi = STRINGONO.some((c) => criteri[c])
@@ -123,6 +142,10 @@ export function Archivio() {
             ...(criteri.constellation && { constellation: criteri.constellation }),
             ...(criteri.filter && { filter: criteri.filter }),
             ...(criteri.mosaic && { mosaic: true }),
+            ...notti(criteri),
+            ...(criteri.site && { site: Number(criteri.site) }),
+            ...(criteri.optics && { optics: Number(criteri.optics) }),
+            ...(criteri.camera && { camera: Number(criteri.camera) }),
           },
         },
       })
@@ -241,6 +264,24 @@ function NonTrovato({ onTogli }: { onTogli: (cambio: Record<string, string>) => 
       </AzioniDelVuoto>
     </Vuoto>
   )
+}
+
+// Le forme che la rotta accetta. Un valore storto nell'indirizzo, come un ordine inventato, non
+// stringe: alla rotta sarebbe un 422, e alla prima risposta la pagina resterebbe senza barra.
+const DATA = /^\d{4}-\d{2}-\d{2}$/
+const ID = /^\d+$/
+
+function inForma(scritto: string | null, forma: RegExp) {
+  return scritto !== null && forma.test(scritto) ? scritto : ""
+}
+
+/** Le notti del periodo, le due estreme comprese: un anno va dal primo gennaio al trentuno
+ *  dicembre, le date scelte a mano valgono solo sotto `PERIODO_DATE`. Un anno storto
+ *  nell'indirizzo non stringe: e' un indirizzo scritto male. */
+function notti({ period, since, until }: Criteri) {
+  if (/^\d{4}$/.test(period)) return { since: `${period}-01-01`, until: `${period}-12-31` }
+  if (period !== PERIODO_DATE) return {}
+  return { ...(since && { since }), ...(until && { until }) }
 }
 
 /** L'ordine chiesto dall'indirizzo, se e' uno dei tre. Un valore inventato non e' un errore da

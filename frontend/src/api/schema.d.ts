@@ -41,6 +41,10 @@ export interface paths {
          * @description The archive rows -- confirmed objects and mosaics -- with each one's filters, in the order
          *     `sort` chooses, narrowed by the search parameters.
          *
+         *     `since`/`until` (night dates, both included), `site`, `optics` and `camera` narrow the
+         *     **frames**: a row passes with one of its frames in them, and its hours, filters and panels are
+         *     those frames' only -- narrowed to 2025, a row tells 2025.
+         *
          *     The factory cap is high (100) because this list is an **inventory**, not a feed to scroll:
          *     whoever has a hundred thousand frames still has a handful of objects, and asking for twenty at
          *     a time would be five rounds to see what fits in one.
@@ -1161,6 +1165,26 @@ export interface components {
              */
             filters: string[];
             /**
+             * Years
+             * @description The years of your nights, latest first: the period dropdown offers them.
+             */
+            years: string[];
+            /**
+             * Sites
+             * @description The sites you shot from; empty if only one, which would narrow nothing.
+             */
+            sites: components["schemas"]["ArchivePick"][];
+            /**
+             * Optics
+             * @description The optics you shot with; empty if only one.
+             */
+            optics: components["schemas"]["ArchivePick"][];
+            /**
+             * Cameras
+             * @description The cameras you shot with; empty if only one.
+             */
+            cameras: components["schemas"]["ArchivePick"][];
+            /**
              * Mosaics
              * @description Whether you have at least one confirmed mosaic: without one, "mosaics only" is not offered.
              */
@@ -1279,6 +1303,16 @@ export interface components {
             integration_s: number;
             /** Untimed */
             untimed: number;
+        };
+        /**
+         * ArchivePick
+         * @description A site or a piece of gear to narrow by: its id goes back to the route, its name on screen.
+         */
+        ArchivePick: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
         };
         /**
          * ArchiveTotals
@@ -3587,6 +3621,11 @@ export interface operations {
                 constellation?: string | null;
                 filter?: string | null;
                 mosaic?: boolean;
+                since?: string | null;
+                until?: string | null;
+                site?: number | null;
+                optics?: number | null;
+                camera?: number | null;
                 sort?: "name" | "hours" | "frames";
             };
             header?: never;

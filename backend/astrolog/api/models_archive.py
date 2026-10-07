@@ -56,6 +56,13 @@ class ArchiveObject(BaseModel):
     )
 
 
+class ArchivePick(BaseModel):
+    """A site or a piece of gear to narrow by: its id goes back to the route, its name on screen."""
+
+    id: int
+    name: str
+
+
 class ArchiveChoices(BaseModel):
     """What the toolbar dropdowns offer: **what is in the archive**, not what the catalog knows:
     someone who uses two catalogs must not scroll through every one the catalog carries."""
@@ -67,6 +74,14 @@ class ArchiveChoices(BaseModel):
     filters: list[str] = Field(
         description="The names of the filters you shot at least one object with."
     )
+    years: list[str] = Field(
+        description="The years of your nights, latest first: the period dropdown offers them."
+    )
+    sites: list[ArchivePick] = Field(
+        description="The sites you shot from; empty if only one, which would narrow nothing."
+    )
+    optics: list[ArchivePick] = Field(description="The optics you shot with; empty if only one.")
+    cameras: list[ArchivePick] = Field(description="The cameras you shot with; empty if only one.")
     mosaics: bool = Field(
         description='Whether you have at least one confirmed mosaic: without one, "mosaics '
         'only" is not offered.'

@@ -49,6 +49,13 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Un mosaico dice di esserlo e quanti pannelli ha, nelle due viste e anche a chi ascolta | `test_a_mosaic_row_says_how_many_panels_it_has`; *la carta di un mosaico dice mosaico e quanti pannelli, e si sente*, *anche nell'elenco la riga del mosaico porta la sua etichetta* (`frontend/tests/archivio-mosaici.test.tsx`) |
 | La carta di un mosaico si apre e dice ogni pannello: il suo oggetto, i frame, le ore e dove sta nel cielo | `test_every_panel_of_a_mosaic_says_its_object_its_frames_and_its_hours`, `test_a_panel_counts_like_every_row_copies_out_and_untimed_apart`, `test_a_panel_whose_poses_found_no_object_says_so_with_nothing`, `test_the_route_gives_a_mosaic_its_panels_and_an_object_none`, `test_all_the_panels_of_a_page_come_in_two_questions`; *la carta del mosaico si apre e dice ogni pannello, con oggetto, frame, ore e dove sta*, *un pannello di cui il cielo non ha legato l'oggetto lo dice, e le pose senza tempo a parte*, *un oggetto non ha pannelli da aprire* (`frontend/tests/archivio-mosaici.test.tsx`) |
 | Posso vedere solo i mosaici, e la tendina c'e' solo se ne ho | `test_you_can_narrow_down_to_the_mosaics`, `test_the_mosaic_choice_is_offered_only_to_who_has_a_mosaic`; *la tendina dei mosaici compare solo a chi ne ha, e stringe nel backend*, *chi non ha mosaici non vede la tendina* |
+| Stringo a un anno, o a date mie, e ogni riga dice solo le ore, i frame e i filtri di quel periodo | `test_a_period_keeps_the_rows_shot_in_it_with_their_hours_in_it`, `test_a_period_can_straddle_the_new_year`, `test_the_pills_of_a_row_say_the_narrowed_hours` (`backend/tests/test_spine_archive_scope.py`); *un anno chiede le notti dal primo gennaio al trentuno dicembre*, *scegliere le date apre dal e al, e una stagione a cavallo d'anno arriva intera*, *tornare a un anno dimentica le date scelte prima* (`frontend/tests/archivio-periodo.test.tsx`) |
+| Il periodo guarda la notte, non l'orologio | `test_the_period_reads_the_night_not_the_clock` |
+| Stringo per sito, ottica o camera, e le condizioni valgono sulla stessa posa | `test_you_can_narrow_down_to_one_optics_or_one_camera`, `test_you_can_narrow_down_to_one_site`, `test_the_narrowings_hold_on_the_same_pose`, `test_the_filter_of_the_bar_asks_the_same_poses`; *sito, ottica e camera si leggono col nome e stringono per quello* |
+| Per ore, con un periodo acceso, l'ordine segue le ore del periodo | `test_by_hours_reads_the_narrowed_hours` |
+| Un mosaico stretto a un periodo apre i soli pannelli ripresi allora | `test_a_mosaic_says_only_the_panels_and_hours_shot_in_the_period` |
+| Le tendine offrono gli anni delle mie notti, e sito, ottica e camera solo se ne ho almeno due | `test_the_choices_offer_the_years_sites_and_pieces_you_shot_with`, `test_one_site_or_one_camera_is_not_a_choice`; *con un sito solo, o una camera sola, la tendina non c'e'* |
+| "Togli i filtri" toglie anche periodo e corredo | *togli i filtri toglie anche il periodo e il corredo* |
 | La conta dice quanti oggetti e quanti mosaici ho trovato | `test_the_count_says_how_many_objects_and_how_many_mosaics`; *la conta dice quanti oggetti e quanti mosaici* |
 
 ## Le decisioni
@@ -88,6 +95,23 @@ la geometria, quindi lo scrive sui frame chi la fa (`frames.panel_id`), e la rig
 pannello si legge allo stesso modo: i suoi frame, contati come ogni riga, il suo oggetto e il
 centro che la geometria ha scritto (`panels`); il centro dice **quale** pannello, se due inquadrano
 lo stesso oggetto. Tutti i pannelli della pagina arrivano in due domande, non in una per mosaico.
+
+**Periodo, sito, ottica e camera stringono le pose, e la riga dice quelle** (Marco, 7/10/2026:
+*"se e' per periodo deve mostrare il periodo"*). Catalogo, costellazione e ricerca chiedono chi e'
+la riga; il filtro usato e questi quattro chiedono le sue pose. Il filtro usato fa passare la
+riga e lascia le ore di sempre, perche' le pastiglie gia' dicono le ore per filtro; questi quattro
+invece **restringono** cio' che la riga conta -- ore, frame, pastiglie, pannelli -- perche' "M 31,
+12 h" sotto "2025" direbbe una cosa falsa a chi quell'anno ne ha fatte 2. La condizione e' una
+sola (`counts.Scope`) e si chiede alla stessa posa: "casa e ASI533" e' una posa fatta a casa con
+la ASI533, non un oggetto che ha pose dell'una e dell'altra. Il periodo si legge sulla **notte**
+(`nights.night_date`, nel fuso del sito), mai su `date_obs`; un anno e' dal primo gennaio al
+trentuno dicembre, le due estreme comprese. Il numero dei pannelli di un mosaico resta quello del
+mosaico: e' cio' che il mosaico e', non cio' che e' stato ripreso nel periodo.
+
+**Sito, ottica e camera si offrono solo da due in su.** Con uno solo, sceglierlo non stringe
+niente: e' la tendina con la sola voce "tutti" sotto un altro nome. Gli anni invece si offrono da
+uno, perche' la stessa tendina porta a "Scegli le date". Ottica e camera si leggono dal corredo
+della posa (`rigs`), come le conta l'Attrezzatura.
 
 **E costa quanto le righe che mostra, non quanto le pose che contengono.** Le ore si contano solo
 per le righe della pagina, e la conta non le calcola; un filtro guarda i pannelli solo di un

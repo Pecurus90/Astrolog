@@ -229,6 +229,18 @@ In alto c'e' la **barra**: cerchi un oggetto scrivendo qualunque nome con cui lo
 o **filtro usato**. Le tendine ti offrono solo quello che hai davvero: se riprendi solo Messier,
 non ti fanno scorrere tutti quelli che il catalogo conosce, e quella che non avrebbe niente da
 offrire non compare.
+
+Puoi stringere anche **per periodo**, **sito**, **ottica** e **camera**. Il periodo e' un anno,
+oppure "Scegli le date" e le due date **dal** e **al**, comprese: cosi' una stagione invernale da
+novembre a febbraio sta in una scelta sola. Il periodo guarda la **notte**, non l'orologio: una
+posa delle due del primo gennaio appartiene alla notte del 31 dicembre. Con questi filtri accesi
+ogni oggetto dice **solo cio' che hai chiesto**: stringendo al 2025, M 31 porta le ore, i frame e
+i filtri del 2025, non quelli di sempre, e l'ordine per ore segue quelle. Lo stesso per il sito e
+per il corredo: "con il Newton" sono le pose fatte col Newton. Un mosaico apre i soli pannelli
+ripresi li', ma il numero di pannelli resta quello del mosaico. Le tendine del sito, dell'ottica e
+della camera compaiono solo se ne hai usati almeno due: con uno solo, sceglierlo non cambierebbe
+niente.
+
 Accanto scegli l'**ordine** -- nome, ore o frame -- e l'archivio si apre in ordine di nome, perche'
 e' un inventario: cosa hai ripreso di recente si guarda nelle **Notti**. In fondo alla barra c'e'
 quanti ne ha **trovati**: con un filtro acceso e' quel numero, non quanti ne hai in tutto. Se la

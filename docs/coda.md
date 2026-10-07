@@ -217,7 +217,8 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   `refresh_waiting` chiamato a mano in sette punti. Misurato su 20.000 pose: costo uguale
   (scansione 12,0 s contro 12,5; una risposta 74 ms contro 85). Ora lo muove anche chi scrive
   senza passare dagli aiutanti (una risposta tolta, un cielo cancellato).
-- **M4 -- Filtri dell'Archivio** per periodo, camera o corredo, sito (`api/archive.py`).
+- **M4 -- fatta** (7/10/2026): l'Archivio stringe per periodo (anno o date), sito, ottica e
+  camera, e la riga dice solo le pose che passano (`counts.Scope`, `docs/domini/archivio.md`).
 
 L'ordine: le prove che mancano e *L'archivio dice cose false*; poi S1-S4, prima delle
 velocita' che toccano gli stessi pezzi (Applica, fuso di casa, riletture in `row_of`), che con

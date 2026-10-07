@@ -15,11 +15,13 @@ def of(
     ids: Collection[int | str | None],
     *,
     alone: bool = False,
+    scope: counts.Scope | None = None,
 ) -> dict[Any, list[Any]]:
-    """`{subject id: [{name, passband, frames, integration_s}]}`, most time first; the band travels
-    because it colours the pill. `alone` keeps frames outside confirmed mosaics (`counts.ALONE`)."""
+    """`{subject id: [{name, passband, frames, integration_s}]}`, most time first; band colours the
+    pill. `alone`: frames outside confirmed mosaics (`counts.ALONE`); `scope`: the row's frames."""
     column = counts.column_of(subject)  # from a closed list: an unknown key is a KeyError
-    alone_sql = f" AND {counts.ALONE}" if alone else ""
+    narrowed, values = (scope or counts.Scope()).sql
+    alone_sql = (f" AND {counts.ALONE}" if alone else "") + narrowed
     sql = f"""
     SELECT f.{column} AS owner, x.name, x.passband, {counts.AGGREGATE}
     FROM frames f JOIN filters x ON x.id = f.filter_id
@@ -29,7 +31,7 @@ def of(
     """  # noqa: S608 - `column` comes from the closed list, `listed` is a placeholder
     return idlist.grouped(
         conn,
-        sql,
+        (sql, values),
         ids,
         "owner",
         lambda r: {

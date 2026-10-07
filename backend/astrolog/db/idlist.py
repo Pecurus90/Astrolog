@@ -2,7 +2,7 @@
 how SQLite was built, and batches would change what GROUP BY and ORDER BY mean."""
 
 import sqlite3
-from collections.abc import Callable, Collection, Iterable, Iterator
+from collections.abc import Callable, Collection, Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from typing import Any
 
@@ -36,17 +36,18 @@ def holding(conn: sqlite3.Connection, ids: Iterable[int | str | None]) -> Iterat
 
 def grouped(
     conn: sqlite3.Connection,
-    sql: str,
+    sql: str | tuple[str, Sequence[Any]],
     ids: Collection[int | str | None],
     key: str,
     row: Callable[[sqlite3.Row], Any],
 ) -> dict[Any, list[Any]]:
-    """One query for many ids, rows split by the `key` column; `sql` carries `{listed}` where the
-    list goes. No ids, no query: an empty page costs nothing."""
+    """One query for many ids, split by `key`; `sql` carries `{listed}`, plus its values when it
+    has other placeholders. No ids, no query."""
     if not ids:
         return {}
+    text, values = (sql, ()) if isinstance(sql, str) else sql
     out: dict[Any, list[Any]] = {}
     with holding(conn, ids) as listed:
-        for r in conn.execute(sql.format(listed=listed)):
+        for r in conn.execute(text.format(listed=listed), values):
             out.setdefault(r[key], []).append(row(r))
     return out

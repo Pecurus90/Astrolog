@@ -44,11 +44,26 @@ export type Criteri = {
   /** `SOLO_MOSAICI` o vuoto: nell'indirizzo come gli altri, cosi' un elenco di soli mosaici si
    *  manda a qualcuno. */
   mosaic: string
+  /** Un anno (`2025`), `PERIODO_DATE` per le date scelte a mano, o vuoto. */
+  period: string
+  /** Le date di `PERIODO_DATE`, `YYYY-MM-DD`: notti, non istanti. */
+  since: string
+  until: string
+  /** Gli id di sito, ottica e camera, come li manda la rotta. */
+  site: string
+  optics: string
+  camera: string
   sort: Ordine
 }
 
 /** Il valore che dice "solo i mosaici", nell'indirizzo e nella tendina. */
 export const SOLO_MOSAICI = "1"
+
+/** La voce del periodo che apre "dal" e "al". */
+export const PERIODO_DATE = "date"
+
+/** Un sito o un pezzo del corredo: l'id torna alla rotta, il nome si legge. */
+type Scelta = components["schemas"]["ArchivePick"]
 
 /** Quante righe ha trovato, divise come le manda la rotta: un mosaico non e' un oggetto. */
 export type Trovati = components["schemas"]["ArchiveFound"]
@@ -122,6 +137,63 @@ export function BarraDellArchivio({
         nome={() => t("archive.filter.mosaic.only")}
         aspetta={aspetta}
         onScelto={(mosaic) => onCriteri({ mosaic })}
+      />
+      {/* Cambiare periodo dimentica le date: tornando a "Scegli le date", due date vecchie
+          stringerebbero senza che nessuno le abbia appena scelte. */}
+      <Tendina
+        id="archivio-periodo"
+        etichetta="archive.filter.period"
+        tutti="archive.filter.period.any"
+        valore={criteri.period}
+        voci={scelte.years.length > 0 ? [...scelte.years, PERIODO_DATE] : []}
+        nome={(v) => (v === PERIODO_DATE ? t("archive.filter.period.dates") : v)}
+        aspetta={aspetta}
+        onScelto={(period) => onCriteri({ period, since: "", until: "" })}
+      />
+      {criteri.period === PERIODO_DATE && (
+        <>
+          <Data
+            id="archivio-dal"
+            etichetta="archive.filter.since"
+            valore={criteri.since}
+            aspetta={aspetta}
+            onData={(since) => onCriteri({ since })}
+          />
+          <Data
+            id="archivio-al"
+            etichetta="archive.filter.until"
+            valore={criteri.until}
+            aspetta={aspetta}
+            onData={(until) => onCriteri({ until })}
+          />
+        </>
+      )}
+      <TendinaDiScelte
+        id="archivio-sito"
+        etichetta="archive.filter.site"
+        tutti="archive.filter.site.any"
+        valore={criteri.site}
+        scelte={scelte.sites}
+        aspetta={aspetta}
+        onScelto={(site) => onCriteri({ site })}
+      />
+      <TendinaDiScelte
+        id="archivio-ottica"
+        etichetta="archive.filter.optics"
+        tutti="archive.filter.optics.any"
+        valore={criteri.optics}
+        scelte={scelte.optics}
+        aspetta={aspetta}
+        onScelto={(optics) => onCriteri({ optics })}
+      />
+      <TendinaDiScelte
+        id="archivio-camera"
+        etichetta="archive.filter.camera"
+        tutti="archive.filter.camera.any"
+        valore={criteri.camera}
+        scelte={scelte.cameras}
+        aspetta={aspetta}
+        onScelto={(camera) => onCriteri({ camera })}
       />
       <div className="as-barra__coda">
         <div className="as-barra__gruppo">
@@ -221,6 +293,54 @@ function Cerca({
           placeholder={t("archive.search.placeholder")}
           value={testo}
           onChange={(e) => setTesto(e.target.value)}
+        />
+      </Campo>
+    </div>
+  )
+}
+
+/** Una tendina di siti o pezzi: si legge il nome, nell'indirizzo va l'id. */
+function TendinaDiScelte({
+  scelte,
+  ...resto
+}: Omit<Parameters<typeof Tendina>[0], "voci" | "nome"> & { scelte: Scelta[] }) {
+  const nomi = new Map(scelte.map((s) => [String(s.id), s.name]))
+  return <Tendina {...resto} voci={[...nomi.keys()]} nome={(v) => nomi.get(v) ?? v} />
+}
+
+/** Una data del periodo. Ogni data scelta e' un gesto, e lascia la sua traccia come una tendina. */
+function Data({
+  id,
+  etichetta,
+  valore,
+  aspetta,
+  onData,
+}: {
+  id: string
+  etichetta: Chiave
+  valore: string
+  aspetta: boolean
+  onData: (data: string) => void
+}) {
+  // Non controllato: chi batte `2025` passa per `0002`, `0020`, `0202`, e un valore preso
+  // dall'indirizzo a ogni tasto riscriverebbe l'anno a meta'. Un anno che comincia per 0 e'
+  // ancora da finire e non si consegna; l'indirizzo cambiato da fuori si segue.
+  const campo = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (campo.current && campo.current.value !== valore) campo.current.value = valore
+  }, [valore])
+  return (
+    <div className="as-barra__campo">
+      <Campo id={id} etichetta={t(etichetta)} aspetta={aspetta}>
+        <input
+          ref={campo}
+          className="as-campo__input"
+          id={id}
+          type="date"
+          defaultValue={valore}
+          onChange={(e) => {
+            if (!e.target.value.startsWith("0")) onData(e.target.value)
+          }}
         />
       </Campo>
     </div>

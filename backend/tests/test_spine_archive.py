@@ -326,5 +326,9 @@ def test_an_archive_with_nothing_in_it_offers_no_choices(archivio):
         "catalogs": [],
         "constellations": [],
         "filters": [],
+        "years": [],
+        "sites": [],
+        "optics": [],
+        "cameras": [],
         "mosaics": False,
     }

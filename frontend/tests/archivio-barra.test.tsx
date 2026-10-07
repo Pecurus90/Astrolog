@@ -52,7 +52,7 @@ describe("la barra dell'Archivio", () => {
   it("le tendine offrono quello che hai, e quella vuota non compare", async () => {
     // Una tendina con la sola voce "tutti" e' un controllo che promette di fare qualcosa e non fa
     // niente: chi non ha ancora nessun filtro riconosciuto non deve vederla.
-    archivio([M31], { choices: { catalogs: ["M"], constellations: [], filters: ["Lum"] } })
+    archivio([M31], { choices: { ...SCELTE, catalogs: ["M"], constellations: [], filters: ["Lum"] } })
     await apriArchivio()
 
     expect(await screen.findByLabelText(/catalogo/i)).toBeDefined()
@@ -62,7 +62,7 @@ describe("la barra dell'Archivio", () => {
   it("la tendina delle costellazioni legge i nomi in ordine alfabetico, e sceglie la sigla", async () => {
     // Le sigle arrivano in ordine di sigla: "CVn" dopo "Cep" metterebbe Cepheus prima di Canes
     // Venatici. A schermo si leggono i nomi, e si cercano per nome.
-    archivio([M31], { choices: { catalogs: ["M"], constellations: ["And", "Cep", "CVn", "Cyg"], filters: [] } })
+    archivio([M31], { choices: { ...SCELTE, catalogs: ["M"], constellations: ["And", "Cep", "CVn", "Cyg"], filters: [] } })
     await apriArchivio()
 
     const tendina = (await screen.findByLabelText(/costellazione/i)) as HTMLSelectElement
@@ -212,7 +212,7 @@ describe("la barra dell'Archivio", () => {
     // tutti e due, non "almeno uno": un `or` qui lascerebbe togliere il segno da meta' della
     // barra senza che niente cada -- provato, ed e' successo
     expect(barra?.querySelector(".as-campo--caricamento")).not.toBeNull()
-    expect(barra?.querySelectorAll(".as-scelta--caricamento")).toHaveLength(3)
+    expect(barra?.querySelectorAll(".as-scelta--caricamento")).toHaveLength(4)
     // e **niente si spegne**: cambiare idea a meta' attesa e' legittimo, e su rete lenta l'attesa
     // dura. Spegnere i controlli e' la scorciatoia che ogni barra prende, ed e' anche la ragione
     // per cui `as-segmentato--caricamento` e' stato rifiutato: senza questa riga si potevano
@@ -245,7 +245,7 @@ describe("la barra dell'Archivio", () => {
     await waitFor(() =>
       expect(barra?.querySelector(".as-campo--caricamento")).not.toBeNull(),
     )
-    expect(barra?.querySelectorAll(".as-scelta--caricamento")).toHaveLength(3)
+    expect(barra?.querySelectorAll(".as-scelta--caricamento")).toHaveLength(4)
 
     liberala()
     reso.unmount()
@@ -417,6 +417,12 @@ describe("la barra dell'Archivio", () => {
       constellation: "",
       filter: "",
       mosaic: "",
+      period: "",
+      since: "",
+      until: "",
+      site: "",
+      optics: "",
+      camera: "",
       sort: "name" as const,
     }
     const consegne: string[] = []

@@ -67,6 +67,10 @@ export const SCELTE = {
   catalogs: ["M", "NGC"],
   constellations: ["And", "Cyg"],
   filters: ["Lum", "Ha"],
+  years: ["2025", "2024"],
+  sites: [],
+  optics: [],
+  cameras: [],
   mosaics: false,
 }
 

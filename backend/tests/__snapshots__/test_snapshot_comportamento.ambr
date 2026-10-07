@@ -226,6 +226,28 @@
 # name: test_the_pages_of_the_synthetic_archive[archive]
   dict({
     'choices': dict({
+      'cameras': list([
+        dict({
+          'id': 13,
+          'name': 'ASI2600MM Pro',
+        }),
+        dict({
+          'id': 9,
+          'name': 'ATR2600M',
+        }),
+        dict({
+          'id': 6,
+          'name': 'ATR2600M(USB2.0)',
+        }),
+        dict({
+          'id': 1,
+          'name': 'Canon EOS 700D',
+        }),
+        dict({
+          'id': 11,
+          'name': 'QHY268M',
+        }),
+      ]),
       'catalogs': list([
       ]),
       'constellations': list([
@@ -239,6 +261,24 @@
         'R',
       ]),
       'mosaics': False,
+      'optics': list([
+        dict({
+          'id': 5,
+          'name': 'Askar 103Apo',
+        }),
+        dict({
+          'id': 10,
+          'name': 'RC8',
+        }),
+        dict({
+          'id': 12,
+          'name': 'TS 130 APO',
+        }),
+      ]),
+      'sites': list([
+      ]),
+      'years': list([
+      ]),
     }),
     'found': dict({
       'mosaics': 0,

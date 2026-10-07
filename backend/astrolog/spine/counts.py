@@ -2,7 +2,9 @@
 Rewritten copies never count, and a subject is a key from a closed list, never SQL from outside."""
 
 import re
+from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 # Kinds the frame names itself, each with its `<kind>_raw`; a copy of this list elsewhere would let
 # a new kind be created but never renamed, so it is reborn as a duplicate.
@@ -106,9 +108,54 @@ def of(subject: Subject, *, rigs_joined: bool = False) -> str:
     return _WITH_RIGS
 
 
-def counts_on(subject: Subject) -> str:
-    """The three sub-selects `frames`, `integration_s`, `untimed` for that subject."""
-    where = of(subject)
+@dataclass(frozen=True)
+class Scope:
+    """Which frames count, when the user narrows by period, site or gear: a row then tells what
+    was asked, not its whole life. `since`/`until` are night dates, in the site's time zone."""
+
+    since: str | None = None
+    until: str | None = None
+    site: int | None = None
+    optics: int | None = None
+    camera: int | None = None
+
+    @property
+    def sql(self) -> tuple[str, list[Any]]:
+        """`(" AND ...", values)` on frames `f`, or `("", [])` when nothing narrows."""
+        nights = [
+            (c, v)
+            for c, v in (
+                ("n.night_date >= ?", self.since),
+                ("n.night_date <= ?", self.until),
+                ("n.site_id = ?", self.site),
+            )
+            if v is not None
+        ]
+        rigs = [
+            (c, v)
+            for c, v in (("g.optics_id = ?", self.optics), ("g.camera_id = ?", self.camera))
+            if v is not None
+        ]
+        parts = []
+        if nights:
+            parts.append(
+                "f.night_id IN (SELECT n.id FROM nights n WHERE "  # noqa: S608 - our columns
+                + " AND ".join(c for c, _ in nights)
+                + ")"
+            )
+        if rigs:
+            parts.append(
+                "f.rig_id IN (SELECT g.id FROM rigs g WHERE "  # noqa: S608 - our columns
+                + " AND ".join(c for c, _ in rigs)
+                + ")"
+            )
+        return "".join(f" AND {p}" for p in parts), [v for _, v in nights + rigs]
+
+
+def counts_on(subject: Subject, narrowed: str = "") -> str:
+    """The three sub-selects `frames`, `integration_s`, `untimed` for that subject. `narrowed` is
+    a `Scope`'s SQL: its values go three times, once per sub-select."""
+    where = of(subject) + narrowed
     three = f"""
        (SELECT COUNT(*) FROM frames f
          WHERE {where} AND f.copy_of IS NULL) AS frames,
