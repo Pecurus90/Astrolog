@@ -7,7 +7,7 @@ from enum import StrEnum
 from typing import Any
 
 from ..db import idlist
-from . import counts
+from . import counts, filters_used
 from .declarations import MOSAIC_FIELD, EntityType
 from .object_answer import CATALOG, NAME
 from .objects import NAME_COLUMNS, subjects_of, subjects_sql, together
@@ -227,8 +227,8 @@ def found(conn: sqlite3.Connection, **conditions: Any) -> dict[str, int]:
 # The first good frame per filter is enough, and the `frames.filter_id` index keeps the search
 # short; a `JOIN` with `DISTINCT` would read them all.
 FILTERS_USED = (
-    "SELECT x.name FROM filters x WHERE EXISTS (SELECT 1 FROM frames f WHERE f.filter_id = x.id"
-    " AND f.object_id IS NOT NULL AND f.copy_of IS NULL) ORDER BY x.name COLLATE NOCASE"
+    "SELECT x.name FROM filters x WHERE EXISTS (SELECT 1 FROM frames f WHERE f.filter_id = x.id"  # noqa: S608
+    " AND f.object_id IS NOT NULL AND f.copy_of IS NULL) ORDER BY " + filters_used.order_by("x")
 )
 
 

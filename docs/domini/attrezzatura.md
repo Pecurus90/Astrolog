@@ -28,6 +28,7 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi un 
 | La montatura compare, e dove mancherebbero le ore capisco **perche'** | `test_a_mount_has_no_hours_and_the_page_says_why`, `test_a_mount_no_frame_carries_says_so_even_where_others_have_hours`; *la montatura dice perche' non ha ore*, *una montatura che nessuna posa porta, in un archivio dove altre ce l'hanno, non dice zero* |
 | Un filtro mi dice che banda lascia passare, e quanto e' larga | `test_a_filter_says_which_band_it_passes` |
 | Fra i miei filtri non trovo "nessun filtro", che non e' una cosa che possiedo | `test_no_filter_at_all_is_not_a_filter_you_own` |
+| I miei filtri stanno nell'ordine dei filtri, lo stesso di tutta l'app | `test_the_gear_page_lists_your_filters_in_the_one_order` (`backend/tests/test_filter_order.py`) |
 | Le copie calibrate che tengo accanto agli originali non mi raddoppiano le ore | `test_a_rewritten_copy_is_not_another_hour_of_gear` |
 | Un frame che non dice quanto e' durato non diventa zero ore | `test_a_frame_without_a_time_is_not_zero_hours_of_gear` |
 | Se ancora non ho niente, capisco cosa fare invece di trovare una pagina rotta | `test_an_empty_gear_page_is_an_answer_not_an_error`; *a mani vuote dice cosa fare, non nessun risultato* |

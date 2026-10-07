@@ -182,3 +182,6 @@ una fonte che la pagina non conosce non si cita con le parole di un'altra - pagi
 una notte dice il verdetto, le nuvole, le ore utili e cosa pesa, con l'ora del posto - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
 una notte senza il vento in quota non ne parla - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
 il pulsante chiede la previsione, e se il servizio tace dice che resta quella di prima - la riga dell'ultima richiesta senza risposta (3b-i) la sostituisce: dopo Aggiorna senza risposta la pagina rilegge e la riga compare
+dice con che filtri hai ripreso, dal piu' usato - ordine unico dei filtri (Marco, 7/10/2026): rinominato in "dice con che filtri hai ripreso, nell'ordine dei filtri"
+test_the_filter_with_more_time_comes_first - ordine unico dei filtri (Marco, 7/10/2026): lo sostituisce test_the_order_is_the_one_of_the_bands_not_the_time
+una notte dice i filtri, dal piu' usato - ordine unico dei filtri (Marco, 7/10/2026): rinominato in "una notte dice i filtri, nell'ordine dei filtri"

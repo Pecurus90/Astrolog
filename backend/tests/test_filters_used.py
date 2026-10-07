@@ -31,7 +31,7 @@ def banco(conn):
     oggetto = conn.execute(
         "INSERT INTO objects(catalog_slug, created_at) VALUES('m-31', 'ora')"
     ).lastrowid
-    rosso, verde = filtro(conn, "R", "r"), filtro(conn, "G", "g")
+    rosso, verde = filtro(conn, "R", "R"), filtro(conn, "G", "G")
     for _ in range(2):
         posa(conn, filtro=rosso, notte=notte, oggetto=oggetto)
     posa(conn, filtro=verde, notte=notte, oggetto=oggetto)
@@ -49,16 +49,22 @@ def test_the_same_frames_give_the_same_filters_to_the_night_and_to_the_object(co
 
     assert della_notte == dell_oggetto
     assert della_notte == [
-        {"name": "R", "passband": "r", "frames": 2, "integration_s": 600.0},
-        {"name": "G", "passband": "g", "frames": 1, "integration_s": 300.0},
+        {"name": "R", "passband": "R", "frames": 2, "integration_s": 600.0},
+        {"name": "G", "passband": "G", "frames": 1, "integration_s": 300.0},
     ]
 
 
-def test_the_filter_with_more_time_comes_first(conn):
-    """Prima cio' a cui hai dato piu' tempo, come ovunque si racconti un pezzo di archivio
-    (`counts.ORDER_BY_TIME`): una pastiglia in cima che non e' il filtro dominante racconterebbe
-    una ripresa che non hai fatto."""
-    notte, _ = banco(conn)
+def test_the_order_is_the_one_of_the_bands_not_the_time(conn):
+    """R prima di G anche se al verde va piu' tempo: l'ordine e' uno in tutta l'app (Marco,
+    7/10/2026; il banco intero in `test_filter_order.py`).
+
+    test-tolto: test_the_filter_with_more_time_comes_first -- "dal piu' usato" e' superato
+    dall'ordine unico dei filtri (Marco, 7/10/2026).
+    """
+    notte, oggetto = banco(conn)
+    verde = one(conn, "SELECT id FROM filters WHERE name = 'G'")
+    for _ in range(3):
+        posa(conn, filtro=verde, notte=notte, oggetto=oggetto)
 
     assert [f["name"] for f in filters_used.of(conn, "night", [notte])[notte]] == ["R", "G"]
 
@@ -73,7 +79,7 @@ def test_a_rewritten_copy_is_not_another_filter_hour(conn):
 
     assert filters_used.of(conn, "night", [notte])[notte][0] == {
         "name": "R",
-        "passband": "r",
+        "passband": "R",
         "frames": 2,
         "integration_s": 600.0,
     }

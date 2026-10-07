@@ -30,6 +30,17 @@ class Passband(StrEnum):
     UNKNOWN = "UNKNOWN"
 
 
+# Every list of filters in the app, in this order (`docs/domini/notti.md`): broad, narrow, colour,
+# the other known bands, unknown, "no filter" last.
+DISPLAY_ORDER = (
+    Passband.L, Passband.R, Passband.G, Passband.B,
+    Passband.HA, Passband.OIII, Passband.SII,
+    Passband.OSC, Passband.OSC_LP, Passband.OSC_UVIR,
+    Passband.HB, Passband.DUO_HAOIII, Passband.DUO_SIIOIII, Passband.TRI_NB, Passband.MULTI_NB,
+    Passband.UNKNOWN, Passband.NO_FILTER,
+)  # fmt: skip
+
+
 @dataclass(frozen=True, slots=True)
 class FilterModel:
     id: str

@@ -434,9 +434,8 @@ def test_a_rig_you_have_or_not_made_of_optics_and_camera_is_refused(archivio):
 
 
 def test_what_you_write_by_hand_goes_to_the_bottom_not_the_top(archivio):
-    """L'elenco va dal piu' usato: un filtro o un corredo appena scritto, con zero ore, sta in fondo
-    -- visto dal vivo, nasceva in cima."""
-    archivio.post("/api/v1/gear/filters", json={"name": "Nuovo", "bands": [{"band": "OIII"}]})
+    """I corredi vanno dal piu' usato: uno appena scritto, con zero ore, sta in fondo -- visto dal
+    vivo, nasceva in cima. Un filtro sta invece al posto della sua banda (test_filter_order)."""
     ottica = pezzo(archivio, "optics", "TS 130 APO")["id"]
     camera = crea(archivio, kind="camera", name="ASI533MC").json()["id"]
     archivio.post(
@@ -444,5 +443,4 @@ def test_what_you_write_by_hand_goes_to_the_bottom_not_the_top(archivio):
     )
 
     pagina = archivio.get("/api/v1/gear").json()
-    assert pagina["filters"][-1]["name"] == "Nuovo"
     assert pagina["rigs"][-1]["camera"] == "ASI533MC"

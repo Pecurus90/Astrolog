@@ -88,8 +88,8 @@ def test_a_night_says_where_you_were_and_what_you_shot(archivio):
 
 
 def test_a_night_says_which_filters_and_how_long_each_one_ran(archivio):
-    """I filtri con le loro ore, **dal piu' usato**: e' quello che dice com'e' andata la notte,
-    e il giorno che la veste ne fa una barra proporzionale i numeri sono gia' quelli giusti."""
+    """I filtri con le loro ore, nell'ordine dei filtri (`test_filter_order.py`): la barra
+    proporzionale che la veste ne fa ha gia' i numeri giusti."""
     prima = notti(archivio)["items"][0]
     assert [(f["name"], f["integration_s"]) for f in prima["filters"]] == [
         ("Ha", 600.0),

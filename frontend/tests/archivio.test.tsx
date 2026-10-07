@@ -114,9 +114,9 @@ describe("l'Archivio", () => {
     expect(window.location.search).toContain("vista=elenco")
   })
 
-  it("dice con che filtri hai ripreso, dal piu' usato", async () => {
-    // L'ordine e' del backend (prima il filtro a cui e' andato piu' tempo): rimescolarlo qui
-    // racconterebbe una ripresa che non hai fatto.
+  it("dice con che filtri hai ripreso, nell'ordine dei filtri", async () => {
+    // L'ordine e' del backend, uno in tutta l'app (L, R, G, B, Ha, OIII, SII...): rimescolarlo qui
+    // metterebbe la stessa pastiglia in due posti su due pagine.
     archivio([M31])
     await apriArchivio()
 

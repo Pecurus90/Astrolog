@@ -22,7 +22,7 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Le copie calibrate che tengo accanto agli originali non mi raddoppiano le ore | `test_a_rewritten_copy_is_not_another_hour_of_sky` |
 | Un frame che non dice quanto e' durato non conta come zero: me lo dice a parte | `test_a_pose_without_a_time_is_not_zero_hours`; *un frame che non dice quanto e' durato non diventa zero* |
 | Se nessun frame di un oggetto dice la durata, non mi scrive "0 h" | *se nessun frame dice la durata, non scrive zero ore* |
-| Vedo con che filtri ho ripreso ogni oggetto, dal piu' usato, e quante ore ciascuno | `test_the_filters_of_an_object_come_with_it_from_the_same_house`; *dice con che filtri hai ripreso, dal piu' usato*, *ogni filtro dice le sue ore, nelle carte e nell'elenco*, *un filtro le cui pose non dicono la durata non scrive ore* |
+| Vedo con che filtri ho ripreso ogni oggetto, nell'ordine dei filtri, e quante ore ciascuno | `test_the_filters_of_an_object_come_with_it_from_the_same_house`, `test_a_night_or_an_object_lists_its_filters_in_the_one_order`, `test_the_archive_dropdown_offers_the_filters_in_the_one_order` (`backend/tests/test_filter_order.py`); *dice con che filtri hai ripreso, nell'ordine dei filtri*, *ogni filtro dice le sue ore, nelle carte e nell'elenco*, *un filtro le cui pose non dicono la durata non scrive ore* |
 | Un oggetto di cui i file non dicono il filtro non mi mostra pastiglie finte | *un oggetto senza filtri riconosciuti non mostra pastiglie finte* |
 | L'Archivio si apre a carte, e con un clic lo vedo a colonne per confrontare | *si apre a carte, e l'altra vista e' a un clic* |
 | Se mando a qualcuno il collegamento all'elenco, gli si apre l'elenco | *quale vista stai guardando resta nell'indirizzo* |

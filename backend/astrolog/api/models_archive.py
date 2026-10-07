@@ -48,7 +48,7 @@ class ArchiveObject(BaseModel):
         description="What it is (GALAXY, DARK_NEBULA...), from the catalog."
     )
     filters: list[FilterUsed] = Field(
-        description="Which filters you shot it with, most used first; empty if unknown."
+        description="Which filters you shot it with, in the one filter order; empty if unknown."
     )
     panels: int | None = Field(description="How many panels, for a mosaic; null for an object.")
     panel_list: list[ArchivePanel] = Field(

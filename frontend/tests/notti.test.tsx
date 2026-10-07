@@ -163,7 +163,7 @@ describe("le Notti", () => {
     expect(within(await elenco()).getAllByRole("listitem")).toHaveLength(1)
   })
 
-  it("una notte dice i filtri, dal piu' usato", async () => {
+  it("una notte dice i filtri, nell'ordine dei filtri", async () => {
     notti([DICIOTTO])
     await apriNotti()
 

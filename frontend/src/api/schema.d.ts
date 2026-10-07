@@ -1302,7 +1302,7 @@ export interface components {
             type_code: string | null;
             /**
              * Filters
-             * @description Which filters you shot it with, most used first; empty if unknown.
+             * @description Which filters you shot it with, in the one filter order; empty if unknown.
              */
             filters: components["schemas"]["FilterUsed"][];
             /**

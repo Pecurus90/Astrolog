@@ -17,7 +17,7 @@ col loro titolo e stanno in `frontend/tests/notti.test.tsx`.
 | Apro Notti e vedo le notti che ho ripreso, dalla piu' recente | `test_the_page_lists_the_nights_you_shot`; *elenca le notti, dalla piu' recente* |
 | Ogni notte mi dice che giorno era, da dove, cosa ho ripreso, quante ore e quanti frame | `test_a_night_says_where_you_were_and_what_you_shot`; *una notte porta il giorno, il sito, gli oggetti, le ore e i frame* |
 | Accanto alla data vedo anche che giorno della settimana era | *accanto alla data c'e' il giorno della settimana* |
-| Vedo con che filtri ho ripreso quella notte, e quanto ho dato a ciascuno | `test_a_night_says_which_filters_and_how_long_each_one_ran`; *una notte dice i filtri, dal piu' usato* |
+| Vedo con che filtri ho ripreso quella notte, e quanto ho dato a ciascuno | `test_a_night_says_which_filters_and_how_long_each_one_ran`, `test_a_night_or_an_object_lists_its_filters_in_the_one_order` (`backend/tests/test_filter_order.py`); *una notte dice i filtri, nell'ordine dei filtri* |
 | In cima vedo quante notti, quante ore e quanti frame ho in tutto | `test_the_page_opens_with_what_the_whole_archive_holds`; *in cima ci sono le notti, le ore e i frame di tutto l'archivio* |
 | Due siti nella stessa data restano due notti, non una | `test_two_sites_on_the_same_date_stay_two_nights` |
 | Le copie calibrate che tengo accanto agli originali non mi raddoppiano le ore | `test_a_rewritten_copy_is_not_another_hour_of_the_night` |
@@ -52,9 +52,11 @@ allunga come quello dell'Archivio, senza filtri ne' ordinamenti a scelta: quelli
 pagina avra' i suoi controlli, ed e' la stessa riga scritta li'.
 
 **Una riga dice cosa e con cosa**, che e' il modo in cui una notte si riconosce: gli **oggetti**
-(i primi, e quanti altri) e i **filtri**, ognuno con le sue ore. I filtri stanno **in ordine di
-tempo dato**, non alfabetico: e' quello che dice com'e' andata la notte, e il giorno che la veste
-ne fa una barra proporzionale i numeri sono gia' quelli giusti.
+(i primi, e quanti altri) e i **filtri**, ognuno con le sue ore. I filtri stanno nell'**ordine
+dei filtri**, uno in tutta l'app (Marco, 7/10/2026): L, R, G, B, Ha, OIII, SII, poi a colori, poi
+le altre bande riconosciute, gli sconosciuti per nome, "senza filtro" ultimo; a pari banda per
+nome (`vocab/filters.DISPLAY_ORDER`). La stessa pastiglia sta sempre allo stesso posto, e la
+barra proporzionale ha gia' i suoi numeri.
 
 **Il sito si vede anche nell'elenco.** Nel progetto di prima la vista a colonne lo toglieva
 apposta -- li' una notte era **una data**, e il sito era una curiosita'. Qui una notte e' data

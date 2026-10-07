@@ -104,7 +104,7 @@ export function Mosaico({ riga, forma }: { riga: Riga; forma: keyof typeof FORME
   )
 }
 
-/** Con che filtri l'hai ripreso, dal piu' usato. Nessun filtro riconosciuto non si scrive: una
+/** Con che filtri l'hai ripreso, nell'ordine dei filtri. Nessun filtro riconosciuto non si scrive: una
  *  fila vuota sembrerebbe un guasto, mentre vuol dire solo che i file non lo dicevano. */
 export function Filtri({ riga }: { riga: Riga }) {
   return <FiltriUsati filtri={riga.filters} etichetta={t("archive.filters")} />

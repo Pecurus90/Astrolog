@@ -5,7 +5,7 @@ import json
 import sqlite3
 from typing import Any
 
-from . import gear
+from . import filters_used, gear
 from . import rigs as gear_rigs
 
 _USAGE = """u.frames, u.integration_s, u.untimed, u.nights, u.scale_arcsec_px, u.width_deg,
@@ -33,7 +33,7 @@ SELECT x.*, {_USAGE}
 FROM filters x
 LEFT JOIN gear_usage u ON u.subject = 'filter' AND u.subject_id = x.id
 WHERE x.is_none = 0
-ORDER BY u.position IS NULL, u.position, x.name
+ORDER BY {filters_used.order_by("x")}
 """  # noqa: S608 - constant fragment of this file
 
 _BANDS = "SELECT filter_id, band, width_nm FROM filter_bands ORDER BY filter_id, band"

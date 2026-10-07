@@ -92,7 +92,7 @@ Ogni oggetto porta questo, e nient'altro (`backend/astrolog/api/models_archive.p
 | nome | `M31`, `NGC 7000`, o un nome dato dall'utente | mai |
 | frame | `412` | mai |
 | ore | `18,5 h` -- somma dei tempi di posa | l'oggetto puo' avere **frame che non dicono quanto sono durati**: si mostrano a parte, non valgono zero |
-| filtri | `Lum`, `R`, `G`, `B` -- dal piu' usato, ognuno con la sua **banda canonica**, che e' cio' che gli da' il colore | vuoto: i file non dicevano il filtro. Niente pastiglie, non una pastiglia grigia |
+| filtri | `Lum`, `R`, `G`, `B` -- nell'ordine dei filtri, uno in tutta l'app (L, R, G, B, Ha, OIII, SII, poi a colori, poi gli altri), ognuno con la sua **banda canonica**, che e' cio' che gli da' il colore | vuoto: i file non dicevano il filtro. Niente pastiglie, non una pastiglia grigia |
 | costellazione | `And` (sigla IAU a tre lettere, che la pagina scrive col nome latino ufficiale: *Andromeda*) | nulla se l'oggetto non e' di catalogo: si dichiara, non si mette un trattino muto |
 | tipo | galassia, nebulosa oscura, ammasso globulare... | come sopra |
 | anteprima | **non esiste ancora**: nessun frame ha una miniatura | sempre, per ora: il posto va tenuto, non riempito |

@@ -7,7 +7,7 @@ from typing import Final
 
 from ..place import by_distance, distance_km
 from ..spine import coordinates as places
-from ..spine import gear, object_answer, rigs, unnamed
+from ..spine import filters_used, gear, object_answer, rigs, unnamed
 from ..spine import objects as obj
 from ..spine.group import GroupReason
 from ..spine.identify_decide import DOUBT
@@ -28,7 +28,10 @@ FRAMES_KEY: Final = "frames:"
 def filter_choices(conn: sqlite3.Connection) -> list[FilterCandidate]:
     """Filters with a known band, minus the "no filter" row, which is another answer. One home for
     the dropdowns and for the writer: Apply does not accept a filter the dropdown does not offer."""
-    rows = conn.execute("SELECT id, name, passband, is_none FROM filters ORDER BY name")
+    rows = conn.execute(
+        "SELECT id, name, passband, is_none FROM filters x ORDER BY "  # noqa: S608 - our order
+        + filters_used.order_by("x")
+    )
     return [
         FilterCandidate(id=r["id"], name=r["name"], passband=r["passband"])
         for r in rows

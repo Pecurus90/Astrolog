@@ -262,11 +262,11 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   revisione della fetta 2: le notti cercate per oggetto usano il frammento, quindi "M 1" porta anche
   le notti di M 10 e M 101, e non trovano un mosaico per il nome dato dall'utente
   (`spine/search._NIGHTS_WHERE`); mese e anno solo in cifre ("05/2024", "2024-05") non sono una data.
-- **I filtri in un ordine solo, in tutta l'app -- prossima** (Marco, 7/10/2026): L, R, G, B, Ha,
-  OIII, SII, poi i filtri a colori (OSC). Supera "dal piu' usato" (`spine/filters_used.py`,
-  `docs/domini/notti.md`, `docs/domini/archivio.md`). Gli altri in fondo (Marco, 7/10/2026): prima
-  quelli che l'app riconosce per banda (la banda doppia), poi i nomi sconosciuti per nome, "senza
-  filtro" per ultimo.
+- **I filtri in un ordine solo, in tutta l'app -- fatta** (Marco, 7/10/2026): Notti, righe e
+  tendina dell'Archivio, Attrezzatura, "uno dei miei" in Da confermare
+  (`vocab/filters.DISPLAY_ORDER`, `docs/domini/notti.md`). Resta per ore la sezione Filtri di Da
+  confermare: sono domande, e le piu' usate prima e' l'ordine del lavoro. `gear_usage.position`
+  dei filtri si scrive ancora ma nessuno la legge piu' (`spine/gear_usage.py`): da togliere.
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (disegno arrivato il
   7/10, forma A, il registro), poi Archivio, Da confermare, Attrezzatura. Il brief di ognuna si
   scrive coi dati che l'API manda in quel momento: si rifa' la ricognizione quando tocca a lei.

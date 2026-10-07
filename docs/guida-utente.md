@@ -284,8 +284,10 @@ Appena installata, l'Archivio e' vuoto e **te lo dice**, insieme a cosa fare per
 **Quando hai ripreso.** L'Archivio racconta gli oggetti; qui ci sono le **notti**, una riga
 ciascuna e dalla piu' recente: che **giorno** era -- con il giorno della settimana, perche' una
 notte ce la si ricorda come *"quel sabato"* -- da quale **sito**, quanti **frame**, quante
-**ore**, cosa hai **ripreso** e con quali **filtri**, ognuno con le ore che gli hai dato, dal piu'
-usato.
+**ore**, cosa hai **ripreso** e con quali **filtri**, ognuno con le ore che gli hai dato.
+I filtri stanno sempre nello stesso ordine, in tutta l'app: L, R, G, B, Ha, OIII, SII, poi quelli
+a colori, poi gli altri filtri che l'app riconosce, quelli che non riconosce e per ultimo "senza
+filtro". Cosi' ogni filtro lo ritrovi sempre allo stesso posto.
 
 Una notte e' una **data piu' un luogo**: se nella stessa sera hai ripreso da due postazioni, sono
 due notti, e la riga dice da dove. Una notte con due oggetti resta **una riga sola**: le sue ore
