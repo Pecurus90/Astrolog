@@ -26,6 +26,7 @@ sono state assorbite qui e tolte da [`ereditato.md`](ereditato.md).
 | Se ad ASTAP manca il catalogo stellare me lo dice **prima**, invece di lasciarmi scoprire da una scansione che non riconosce niente; e se ASTAP non ce l'ho affatto, non mi parla anche del suo catalogo | `test_astap_without_its_catalogue_is_a_thing_that_is_missing`, `test_without_astap_nobody_complains_about_its_catalogue`, `test_the_star_databases_are_the_ones_next_to_the_program` |
 | Senza un sito l'app cataloga e cerca, ma **non fa le notti**, e lo dice invece di inventarne uno | `test_no_site_no_nights_and_it_says_so` |
 | Il mio nome resta scritto, se lo scrivo | `test_settings_user_name` |
+| Dalla ricerca apro un sito (`/impostazioni/sito?sito=<id>`): la sua riga e' segnata e in vista, e correggerlo resta un gesto | *con ?sito= la riga di quel sito e' segnata, e la scheda di correzione resta chiusa* |
 
 ## Le decisioni
 

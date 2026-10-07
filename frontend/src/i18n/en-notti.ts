@@ -4,6 +4,8 @@
  */
 export const enNotti = {
   "nights.title": "Nights",
+  "nights.all": "All the nights",
+  "nights.gone": "This night is no longer in the archive.",
   "nights.failed": "could not read the nights",
   "nights.more": "Show more",
   "nights.frames": "{n} frames",

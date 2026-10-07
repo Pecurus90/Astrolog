@@ -383,6 +383,9 @@ export interface paths {
          *     The factory cap is the same as the Archive's (100): there are many more rows -- one per night,
          *     not one per object -- but they are looked at the same way, scrolling back in time, and asking
          *     for twenty at a time would be five rounds to see a year.
+         *
+         *     `night` asks a single night by id, wherever it falls in the list: the search opens it there.
+         *     An id that is not there gives no rows, not an error -- an old address, not a broken request.
          */
         get: operations["night_list"];
         put?: never;
@@ -4164,6 +4167,7 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                night?: number | null;
             };
             header?: never;
             path?: never;

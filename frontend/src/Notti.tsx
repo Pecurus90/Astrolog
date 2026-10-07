@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
-import { Link } from "react-router"
+import { Link, useSearchParams } from "react-router"
 
 import { Avviso } from "./Avviso"
 import { Finestra } from "./NotteDelMeteo"
@@ -47,14 +47,22 @@ const SITO = "site"
  * - **Non avere notti ha quattro motivi**, e sono quattro risposte diverse: nessun frame, nessun
  *   sito di casa, frame fermi su una domanda, o l'app che non ci e' ancora arrivata. Confonderli
  *   manda l'utente a sistemare la cosa sbagliata.
+ * - **Una notte sola si apre dall'indirizzo** (`/notti?notte=<id>`, la usa la ricerca): la pagina
+ *   la chiede per id, dovunque cada nell'elenco, e porta a tutte le altre.
  */
 export function Notti() {
+  const [indirizzo] = useSearchParams()
+  const scritto = indirizzo.get("notte")
+  // solo un id intero positivo si chiede: un indirizzo storto e' una notte che non c'e'
+  const una = scritto !== null && /^[1-9][0-9]*$/.test(scritto) ? Number(scritto) : null
+  const storta = scritto !== null && una === null
   const elenco = useInfiniteQuery({
-    queryKey: ["nights"],
+    queryKey: ["nights", una],
+    enabled: !storta,
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       const { data, error } = await api.GET("/api/v1/nights", {
-        params: { query: { limit: PER_VOLTA, offset: pageParam } },
+        params: { query: { limit: PER_VOLTA, offset: pageParam, ...(una ? { night: una } : {}) } },
       })
       if (error) throw new Error(t("nights.failed"))
       return data
@@ -68,12 +76,19 @@ export function Notti() {
   return (
     <div className="as-pagina">
 
-      {elenco.isPending && <p>{t("app.loading")}</p>}
+      {elenco.isPending && !storta && <p>{t("app.loading")}</p>}
       {elenco.error && <Avviso esito="allarme">{elenco.error.message}</Avviso>}
 
-      {ultima && <Cappello pagina={ultima} />}
+      {scritto !== null && (
+        <p>
+          <Link to="/notti">{t("nights.all")}</Link>
+        </p>
+      )}
+      {(storta || (una !== null && ultima && righe.length === 0)) && <Avviso esito="attesa">{t("nights.gone")}</Avviso>}
 
-      {ultima && righe.length === 0 && <Niente pagina={ultima} />}
+      {scritto === null && ultima && <Cappello pagina={ultima} />}
+
+      {scritto === null && ultima && righe.length === 0 && <Niente pagina={ultima} />}
 
       {righe.length > 0 && (
         <ul aria-label={t("nights.title")}>

@@ -326,3 +326,20 @@ def test_the_nights_list_is_paged_like_every_other(archivio):
     seconda = notti(archivio, limit=1, offset=1)
     assert seconda["items"][0]["night_date"] == "2024-05-17"
     assert seconda["items"][0]["id"] != pagina["items"][0]["id"]
+
+
+def test_a_night_is_asked_by_its_id_wherever_it_falls_in_the_list(archivio):
+    """La ricerca apre una notte precisa (`/notti?notte=<id>`): la pagina la chiede da sola, anche
+    se nell'elenco cadrebbe oltre le prime cento."""
+    tutte = notti(archivio)["items"]
+    vecchia = next(n for n in tutte if n["night_date"] == "2024-05-17")
+    sola = notti(archivio, night=vecchia["id"])
+    assert [n["id"] for n in sola["items"]] == [vecchia["id"]]
+    assert sola["items"][0] == vecchia
+    assert sola["total"] == 1
+
+
+def test_a_night_that_does_not_exist_is_an_empty_list_not_an_error(archivio):
+    """Un indirizzo vecchio, di una notte che non c'e' piu': nessuna riga, e la pagina lo dice."""
+    vuota = notti(archivio, night=999_999)
+    assert (vuota["items"], vuota["total"]) == ([], 0)

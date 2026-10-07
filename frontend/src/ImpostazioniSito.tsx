@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "react-router"
 
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
@@ -25,9 +26,13 @@ type Sito = components["schemas"]["SiteOut"]
  *   senza questa pagina si sceglieva una volta al primo avvio e restava li'.
  * - **Un sito che tiene delle notti non si toglie di nascosto**: la rotta rifiuta e dice quante,
  *   e quella frase si legge dove si e' premuto.
+ * - **Un sito si apre dall'indirizzo** (`?sito=<id>`, la usa la ricerca): la sua riga e' segnata
+ *   e la pagina ci scorre; correggerlo resta un gesto.
  */
 export function Sito() {
   const cache = useQueryClient()
+  const [indirizzo] = useSearchParams()
+  const cercato = Number(indirizzo.get("sito")) || null
   const [daCorreggere, setDaCorreggere] = useState<Sito>()
   const [daAggiungere, setDaAggiungere] = useState(false)
   const [daTogliere, setDaTogliere] = useState<Sito>()
@@ -59,6 +64,10 @@ export function Sito() {
     setDaAggiungere(false)
   }
   const quanti = siti.data?.items.length ?? 0
+  // il sito cercato si porta in vista una volta, quando l'elenco c'e'
+  useEffect(() => {
+    if (cercato && quanti > 0) document.getElementById(`sito-${cercato}`)?.scrollIntoView?.({ block: "center" })
+  }, [cercato, quanti])
 
   return (
     <>
@@ -94,7 +103,7 @@ export function Sito() {
           {quanti > 0 && (
             <ul className="as-elenco">
               {siti.data?.items.map((s) => (
-                <li key={s.id}>
+                <li key={s.id} id={`sito-${s.id}`} aria-current={s.id === cercato ? "true" : undefined}>
                   <Voce
                     onCorreggi={() => setDaCorreggere(s)}
                     onDiCasa={() => void diCasa(s, () => rileggi(true), setCasaRotta)}

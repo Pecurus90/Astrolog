@@ -40,11 +40,12 @@ SELECT n.id, n.night_date, n.site_source, s.name AS site, s.timezone, w.summary_
 FROM nights n JOIN sites s ON s.id = n.site_id
 LEFT JOIN weather_nights w
   ON w.site_id = n.site_id AND w.night_date = n.night_date AND w.kind = ?
+WHERE (? IS NULL OR n.id = ?)
 ORDER BY n.night_date DESC, n.id DESC
 LIMIT ? OFFSET ?
 """  # noqa: S608 - constant fragments of the spine, not user values
 
-_HOW_MANY = "SELECT COUNT(*) FROM nights"
+_HOW_MANY = "SELECT COUNT(*) FROM nights n WHERE (? IS NULL OR n.id = ?)"
 
 _TOTALS = f"SELECT{counts.counts_on(counts.Subject.ARCHIVE)}"
 
@@ -76,10 +77,16 @@ def _moons(rows: Sequence[sqlite3.Row]) -> dict[int, dict[str, Any]]:
 
 
 def page(
-    conn: sqlite3.Connection, *, limit: int, offset: int, observed: str
+    conn: sqlite3.Connection,
+    *,
+    limit: int,
+    offset: int,
+    observed: str,
+    night: int | None = None,
 ) -> list[dict[str, Any]]:
-    """Most recent first; `observed` is the kind of the weather rows, known to their writer."""
-    rows = conn.execute(_PAGE, (observed, limit, offset)).fetchall()
+    """Most recent first; `observed` is the kind of the weather rows, known to their writer.
+    `night` asks one night by id, wherever it falls in the list (the search opens it)."""
+    rows = conn.execute(_PAGE, (observed, night, night, limit, offset)).fetchall()
     ids = [r["id"] for r in rows]
     moons = _moons(rows)
     night_objects = idlist.grouped(conn, _OBJECTS, ids, "night_id", obj.counted)
@@ -115,8 +122,8 @@ def _weather(row: sqlite3.Row, *, zone_known: bool) -> dict[str, Any]:
 _NO_SKY = dict.fromkeys(("verdict", "cloud_total_pct", "usable_hours", "window", "window_hours"))
 
 
-def how_many(conn: sqlite3.Connection) -> int:
-    return conn.execute(_HOW_MANY).fetchone()[0]
+def how_many(conn: sqlite3.Connection, night: int | None = None) -> int:
+    return conn.execute(_HOW_MANY, (night, night)).fetchone()[0]
 
 
 def archive_totals(conn: sqlite3.Connection) -> dict[str, Any]:

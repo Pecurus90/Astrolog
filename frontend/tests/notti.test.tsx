@@ -10,7 +10,7 @@
 import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, SPINA, STANOTTE, disegna, impostazioni, pulisci, rispondi } from "./banco"
+import { SALUTE, SPINA, STANOTTE, chiamate, disegna, impostazioni, pulisci, rispondi } from "./banco"
 
 afterEach(pulisci)
 
@@ -314,5 +314,37 @@ describe("le Notti, il cielo di quella notte", () => {
 
     const riga = within(await elenco()).getByRole("listitem")
     expect(riga.textContent).toContain("non si puo' sapere")
+  })
+})
+
+describe("le Notti, una notte dall'indirizzo", () => {
+  it("con ?notte= chiede quella notte sola e porta a tutte le altre", async () => {
+    notti([DICIOTTO], { total: 1 })
+    window.history.pushState({}, "", `/notti?notte=${DICIOTTO.id}`)
+    await disegna()
+
+    const righe = within(await elenco()).getAllByRole("listitem")
+    expect(righe).toHaveLength(1)
+    expect(chiamate().some((u) => u.includes("/api/v1/nights") && u.includes(`night=${DICIOTTO.id}`))).toBe(true)
+    expect(screen.getByRole("link", { name: "Tutte le notti" }).getAttribute("href")).toBe("/notti")
+  })
+
+  it.each(["-3", "1.5", "abc"])("un indirizzo storto (?notte=%s) dice che la notte non c'e', senza chiederla", async (scritto) => {
+    notti([DICIOTTO])
+    window.history.pushState({}, "", `/notti?notte=${scritto}`)
+    await disegna()
+
+    expect(await screen.findByText(/questa notte non c'e' piu'/i)).toBeDefined()
+    expect(chiamate().some((u) => u.includes("night="))).toBe(false)
+    // niente da aspettare: la pagina non resta "in lettura"
+    expect(screen.queryByText(/un momento/i)).toBeNull()
+  })
+
+  it("una notte che non c'e' piu' lo dice, invece di dire che l'archivio e' vuoto", async () => {
+    notti([], { total: 0 })
+    window.history.pushState({}, "", "/notti?notte=999")
+    await disegna()
+
+    expect(await screen.findByText(/questa notte non c'e' piu'/i)).toBeDefined()
   })
 })

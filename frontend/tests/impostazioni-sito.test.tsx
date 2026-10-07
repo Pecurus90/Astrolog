@@ -431,3 +431,18 @@ describe("Impostazioni / Il sito", () => {
     )
   })
 })
+
+describe("Impostazioni / Il sito, dall'indirizzo", () => {
+  it("con ?sito= la riga di quel sito e' segnata, e la scheda di correzione resta chiusa", async () => {
+    window.history.pushState({}, "", `/impostazioni/sito?sito=${USCITA.id}`)
+    await app()
+
+    // il nome sta anche nel pannello di Stanotte: la riga e' quella della sezione
+    await screen.findAllByText("Passo Giau")
+    const riga = document.getElementById(`sito-${USCITA.id}`) as HTMLElement
+    expect(riga.textContent).toContain("Passo Giau")
+    expect(riga.getAttribute("aria-current")).toBe("true")
+    expect(document.querySelectorAll('li[aria-current="true"]')).toHaveLength(1)
+    expect(screen.queryByLabelText(/nome del sito/i)).toBeNull()
+  })
+})

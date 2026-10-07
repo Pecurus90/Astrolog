@@ -254,7 +254,8 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   notti di M 31 (Marco, 7/10/2026). Oggi solo l'Archivio si apre da indirizzo (`/archivio?q=`):
   Notti, Attrezzatura e il sito nelle Impostazioni vogliono il loro parametro. Fette: (1) le pagine
   che si aprono su una voce dall'indirizzo, (2) la rotta `GET /api/v1/search`, (3) il campo nella
-  barra dopo il disegno (brief dato a Marco il 7/10).
+  barra dopo il disegno (brief dato a Marco il 7/10). Fetta 1 fatta (7/10/2026): `/notti?notte=<id>`,
+  `/attrezzatura?pezzo=strumento-<id>` o `filtro-<id>`, `/impostazioni/sito?sito=<id>`.
 - **M4 -- fatta** (7/10/2026): l'Archivio stringe per periodo (anno o date), sito, ottica e
   camera, e la riga dice solo le pose che passano (`counts.Scope`, `docs/domini/archivio.md`).
 

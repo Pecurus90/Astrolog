@@ -7,6 +7,8 @@
 export const itNotti = {
   "nights.title": "Notti",
   "nights.failed": "non sono riuscito a leggere le notti",
+  "nights.all": "Tutte le notti",
+  "nights.gone": "Questa notte non c'e' piu' nell'archivio.",
   "nights.more": "Mostra altre",
   // La riga: quanti frame, e con che filtri. Le ore le scrive `TempoDellePose`, lo stesso pezzo
   // dell'Archivio, o due pagine direbbero le stesse ore in due modi.

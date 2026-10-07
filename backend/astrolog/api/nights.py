@@ -17,6 +17,7 @@ router = APIRouter(prefix="/api/v1", tags=["nights"])
 def night_list(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
+    night: int | None = Query(None, ge=1),
     conn: sqlite3.Connection = Depends(get_db),
 ) -> NightList:
     """The archive's nights, newest first. Beside them travel the two things that explain a short
@@ -25,13 +26,18 @@ def night_list(
 
     The factory cap is the same as the Archive's (100): there are many more rows -- one per night,
     not one per object -- but they are looked at the same way, scrolling back in time, and asking
-    for twenty at a time would be five rounds to see a year."""
+    for twenty at a time would be five rounds to see a year.
+
+    `night` asks a single night by id, wherever it falls in the list: the search opens it there.
+    An id that is not there gives no rows, not an error -- an old address, not a broken request."""
     # The spine already sends the page's shape: copying it field by field would be two name lists
     # to keep in step, and validating still rejects a missing or mistyped field here.
     return NightList.model_validate(
         {
-            "items": nights.page(conn, limit=limit, offset=offset, observed=history.KIND),
-            "total": nights.how_many(conn),
+            "items": nights.page(
+                conn, limit=limit, offset=offset, observed=history.KIND, night=night
+            ),
+            "total": nights.how_many(conn, night),
             "limit": limit,
             "offset": offset,
             "totals": nights.archive_totals(conn),

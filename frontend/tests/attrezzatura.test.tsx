@@ -11,7 +11,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import { CORREDO, FILTRO, MONTATURA, OTTICA, apriAttrezzatura, attrezzatura } from "./attrezzatura-banco"
-import { SALUTE, SPINA, STANOTTE, impostazioni, pulisci, rispondi, scritture } from "./banco"
+import { SALUTE, SPINA, STANOTTE, disegna, impostazioni, pulisci, rispondi, scritture } from "./banco"
 
 afterEach(pulisci)
 
@@ -370,5 +370,27 @@ describe("i gesti sull attrezzatura", () => {
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
     await waitFor(() => expect(scritture()).toHaveLength(1))
     expect(scritture()[0]?.corpo).toEqual({ merge_into: 4 })
+  })
+})
+
+describe("l Attrezzatura, un pezzo dall'indirizzo", () => {
+  it("con ?pezzo= la riga di quel pezzo e' segnata, e nessun'altra", async () => {
+    attrezzatura()
+    window.history.pushState({}, "", `/attrezzatura?pezzo=strumento-${OTTICA.id}`)
+    await disegna()
+
+    const telescopi = await screen.findByRole("list", { name: /telescopi/i })
+    const riga = within(telescopi).getByText(/TS 130 APO/).closest("li") as HTMLElement
+    expect(riga.getAttribute("aria-current")).toBe("true")
+    expect(document.querySelectorAll('[aria-current="true"]')).toHaveLength(1)
+  })
+
+  it("un filtro si apre allo stesso modo", async () => {
+    attrezzatura()
+    window.history.pushState({}, "", `/attrezzatura?pezzo=filtro-${FILTRO.id}`)
+    await disegna()
+
+    const filtri = await screen.findByRole("list", { name: /filtri/i })
+    expect(within(filtri).getAllByRole("listitem").some((r) => r.getAttribute("aria-current") === "true")).toBe(true)
   })
 })

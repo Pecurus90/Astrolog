@@ -57,6 +57,7 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi un 
 | Nessuna montatura si indovina, nemmeno se ne possiedo una sola | `test_with_one_mount_only_a_rig_the_files_do_not_name_stays_without` |
 | Solo una montatura che possiedo puo' essere la montatura di un corredo | `test_only_a_mount_can_be_the_mount_of_a_rig`, `test_only_a_mount_you_own_can_be_the_mount_of_a_rig`; *senza montature da scegliere il corredo non offre il gesto* |
 | Rinominare o unire una montatura non la stacca dai corredi, e se due corredi diventano uno vince la montatura di quello che resta | `test_a_mount_renamed_or_merged_stays_the_mount_of_its_rigs`, `test_two_rigs_that_become_one_keep_the_mount_of_the_one_kept` |
+| Dalla ricerca apro un pezzo o un filtro (`/attrezzatura?pezzo=strumento-<id>`, `filtro-<id>`): la sua riga e' segnata e in vista | *con ?pezzo= la riga di quel pezzo e' segnata, e nessun'altra*, *un filtro si apre allo stesso modo* |
 
 ## Le decisioni
 

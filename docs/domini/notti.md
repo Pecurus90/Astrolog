@@ -33,6 +33,7 @@ col loro titolo e stanno in `frontend/tests/notti.test.tsx`.
 | Vedo che tempo faceva: nuvole, temperatura, vento (la casa e' [`meteo.md`](meteo.md)) | `test_the_nights_page_reads_the_weather_of_each_night_as_written`; *una notte ripresa dice com'era il cielo, e quante ore sono state serene* |
 | Vedo com'erano i miei frame quella notte: stelle piu' o meno gonfie, quante ne ha trovate | nasce con la casella che misura le pose |
 | Apro una notte e vedo tutto -- oggetto per oggetto, i grafici, le misure, il corredo | nasce con il modale, che e' lo stesso dell'oggetto e della libreria |
+| Dalla ricerca apro una notte precisa (`/notti?notte=<id>`), anche vecchia, e torno a tutte; una notte che non c'e' piu' lo dice | `test_a_night_is_asked_by_its_id_wherever_it_falls_in_the_list`, `test_a_night_that_does_not_exist_is_an_empty_list_not_an_error`, *con ?notte= chiede quella notte sola e porta a tutte le altre*, *una notte che non c'e' piu' lo dice, invece di dire che l'archivio e' vuoto* |
 
 ## Le decisioni
 

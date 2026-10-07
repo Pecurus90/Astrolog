@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
-import type { ReactNode } from "react"
-import { Link } from "react-router"
+import { type ReactNode, useEffect } from "react"
+import { Link, useSearchParams } from "react-router"
 
 import { Avviso } from "./Avviso"
 import { AggiungiUnPezzo } from "./GestiDelPezzo"
@@ -56,8 +56,12 @@ function generiDi(pezzi: Pezzo[]): Pezzo["kind"][] {
  * - **Scrivere un pezzo sta in cima**, fuori dai gruppi: a mani vuote non c'e' nessun gruppo, ed
  *   e' proprio li' che serve.
  * - **Niente paginazione**: l'attrezzatura di chiunque sta in una schermata.
+ * - **Un pezzo si apre dall'indirizzo** (`?pezzo=strumento-12`, `?pezzo=filtro-3`, la usa la
+ *   ricerca): la sua riga e' segnata (`aria-current`) e la pagina ci scorre.
  */
 export function Attrezzatura() {
+  const [indirizzo] = useSearchParams()
+  const cercato = indirizzo.get("pezzo")
   const elenco = useQuery({
     queryKey: ["gear"],
     queryFn: async () => {
@@ -89,12 +93,17 @@ export function Attrezzatura() {
         </Vuoto>
       )}
 
-      {pagina && <Posseduto pagina={pagina} />}
+      {pagina && <Posseduto pagina={pagina} cercato={cercato} />}
     </div>
   )
 }
 
-function Posseduto({ pagina }: { pagina: Pagina }) {
+function Posseduto({ pagina, cercato }: { pagina: Pagina; cercato: string | null }) {
+  // la riga cercata si porta in vista una volta, quando la pagina c'e'
+  useEffect(() => {
+    if (cercato) document.getElementById(`pezzo-${cercato}`)?.scrollIntoView?.({ block: "center" })
+  }, [cercato])
+  const segno = (chiave: string) => ({ id: `pezzo-${chiave}`, "aria-current": chiave === cercato ? ("true" as const) : undefined })
   return (
     <>
       {generiDi(pagina.instruments).map((genere) => (
@@ -106,7 +115,7 @@ function Posseduto({ pagina }: { pagina: Pagina }) {
           {pagina.instruments
             .filter((p) => p.kind === genere)
             .map((p) => (
-              <li key={p.id}>
+              <li key={p.id} {...segno(`strumento-${p.id}`)}>
                 <UnPezzo pezzo={p} campi={pagina.cards[genere] ?? []} tutti={pagina.instruments} />
               </li>
             ))}
@@ -121,7 +130,7 @@ function Posseduto({ pagina }: { pagina: Pagina }) {
       </Gruppo>
       <Gruppo titolo="gear.filters" quanti={pagina.filters.length}>
         {pagina.filters.map((f) => (
-          <li key={f.id}>
+          <li key={f.id} {...segno(`filtro-${f.id}`)}>
             <UnFiltro filtro={f} tutti={pagina.filters} />
           </li>
         ))}
