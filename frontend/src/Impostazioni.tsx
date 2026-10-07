@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router"
 
+import { ImpostazioniBackup } from "./Backup"
 import { Cartelle } from "./ImpostazioniCartelle"
 import { Letture } from "./ImpostazioniLetture"
 import { Riconoscitore } from "./ImpostazioniRiconoscitore"
@@ -22,6 +23,7 @@ export const SEZIONI: readonly Sezione[] = [
   { a: "/impostazioni/riconoscitore", chiave: "settings.solver", elemento: <Riconoscitore /> },
   { a: "/impostazioni/servizi", chiave: "settings.services", elemento: <Servizi /> },
   { a: "/impostazioni/letture", chiave: "settings.readings", elemento: <Letture /> },
+  { a: "/impostazioni/backup", chiave: "settings.backup", elemento: <ImpostazioniBackup /> },
 ]
 
 export function Impostazioni() {

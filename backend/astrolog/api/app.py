@@ -15,6 +15,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
+from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import State
 
 from .. import __version__
@@ -27,6 +28,7 @@ from ..weather import climate, forecast, history, rounds
 from ..worker.worker import Worker
 from . import (
     archive,
+    backup,
     folders,
     gear,
     gear_write,
@@ -196,6 +198,7 @@ def create_app(  # noqa: PLR0913
     app.state.token = token
     app.state.last_scan = None  # (folder_id, run_id) of the last scan started
     app.state.scan_runs = ()  # the receipts of every folder of that gesture: its outcome
+    app.state.backup_offer = backup.offered_on_start(db_path)
 
     app.add_middleware(
         TrustedHostMiddleware, allowed_hosts=[*LOCAL_HOSTS, *(h for h in hosts if h)]
@@ -215,6 +218,16 @@ def create_app(  # noqa: PLR0913
         ):
             return JSONResponse(status_code=401, content={"detail": {"code": "token_required"}})
         return await call_next(request)
+
+    @app.middleware("http")
+    async def keep_the_backup(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        """After every write of the user's that went through, the answers' file (ADR 0017)."""
+        response = await call_next(request)
+        if response.status_code < 300 and backup.is_user_write(request.method, request.url.path):
+            await run_in_threadpool(backup.rewrite, request.app.state.db_path)
+        return response
 
     page.mount(app)
 
@@ -240,6 +253,7 @@ def create_app(  # noqa: PLR0913
         )
 
     app.include_router(archive.router)
+    app.include_router(backup.router)
     app.include_router(gear.router)
     app.include_router(gear_write.router)
     app.include_router(nights.router)

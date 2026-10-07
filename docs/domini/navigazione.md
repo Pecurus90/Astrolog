@@ -47,7 +47,7 @@ L'ordine dentro ogni gruppo **e' parte del contratto**: si legge dall'alto come 
 | -- | Impostazioni |
 
 **Impostazioni e' una pagina con dentro le sue sezioni** (Marco, 16/9/2026), non una voce per ogni
-cosa configurabile: **Cartelle**, *Il sito*, *Il riconoscitore*, *Le letture* -- e poi
+cosa configurabile: **Cartelle**, *Il sito*, *Il riconoscitore*, *Le letture*, *Backup* -- e poi
 *Il tuo nome*, *Servizi*, *Soglie*, e domani *Meteo*. Le cartelle stanno li' e non in barra
 perche' indicarle e' un gesto che si fa una volta ogni tanto, non ogni giorno -- e una voce in
 meno nella barra vale piu' di un clic risparmiato.

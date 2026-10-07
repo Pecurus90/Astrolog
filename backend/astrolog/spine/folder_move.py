@@ -1,6 +1,7 @@
 """A folder moved elsewhere stays the same row: positions are relative and frames are known by their
 fingerprint, so only the folder answers, keyed on the whole path, have to follow."""
 
+import json
 import sqlite3
 import time
 from collections.abc import Iterable
@@ -34,9 +35,11 @@ def same_files(
     """The first `SAMPLE_FILES` under `root` the folder has a position for, fingerprinted as the
     scan does; zero, or one different: not it. `None`: `deadline` passed first, unknown."""
     sampled = 0
+    restored = _restored_sample(conn, folder_id)
     for rel, path in sorted((rel_path(p, root), p) for p in found):
         known = conn.execute(_KNOWN, (folder_id, rel)).fetchone()
-        if known is None:
+        expected = known["frame_hash"] if known is not None else restored.get(rel)
+        if expected is None:
             continue
         if deadline is not None and time.monotonic() >= deadline:
             return None
@@ -45,12 +48,20 @@ def same_files(
             fingerprint = frame_fingerprint(long_path(path), header, block)
         except (HeaderReadError, OSError):
             return False  # unread is unproven
-        if fingerprint != known["frame_hash"]:
+        if fingerprint != expected:
             return False
         sampled += 1
         if sampled == SAMPLE_FILES:
             break
     return sampled > 0
+
+
+def _restored_sample(conn: sqlite3.Connection, folder_id: int) -> dict[str, str]:
+    """The sample a backup brought back (ADR 0017), read only while the folder has no frames."""
+    if conn.execute("SELECT 1 FROM positions WHERE folder_id = ? LIMIT 1", (folder_id,)).fetchone():
+        return {}
+    row = conn.execute("SELECT sample_json FROM folders WHERE id = ?", (folder_id,)).fetchone()
+    return dict(json.loads(row[0])) if row and row[0] else {}
 
 
 def move(conn: sqlite3.Connection, folder_id: int, new_root: str) -> None:

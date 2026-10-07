@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 7/10/2026 | costruisci | M5, backup delle risposte (ADR 0017) | ~0,49 M workflow (8 agenti), sessione principale non contata | 47 workflow | 2 bloccanti dal giro (DB ricreato prima dell'avvio non proposto; percorso di ASTAP nell'Esporta) + 5 piccoli chiusi da me |
 | 7/10/2026 | costruisci | M2, la cartella ora sta qui | ~0,46 M workflow (5 agenti), sessione principale non contata | 28 workflow | 0 bloccanti; 8 piccoli parcheggiati (3 dello schermo da riparare subito) |
 | 6/10/2026 | costruisci | Focale misurata dal cielo (ADR 0016) | ~0,31 M workflow (6 agenti) + esploratore 0,09, sessione principale non contata | 76 workflow | 1 bloccante dal giro (il frame rimandato aspettava il giro dopo) + 3 piccoli chiusi da me |
 | 6/10/2026 | ripara | Meno frame in coda dopo filtro e unione: provato e tolto | ~0,48 M agenti (sviluppatore, due revisori) | ~60 | 3 bloccanti dai revisori (corredi diversi via gruppi di focale); trovato un difetto vero, ora in coda |
@@ -217,9 +218,6 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   (scansione 12,0 s contro 12,5; una risposta 74 ms contro 85). Ora lo muove anche chi scrive
   senza passare dagli aiutanti (una risposta tolta, un cielo cancellato).
 - **M4 -- Filtri dell'Archivio** per periodo, camera o corredo, sito (`api/archive.py`).
-- **M5 -- Il backup delle risposte** (*Le dichiarazioni dell'utente non si esportano*, nel
-  Parcheggio) va agganciato all'impronta del frame e alla grafia dell'header, non alla notte o al
-  percorso: piu' facile dopo S2.
 
 L'ordine: le prove che mancano e *L'archivio dice cose false*; poi S1-S4, prima delle
 velocita' che toccano gli stessi pezzi (Applica, fuso di casa, riletture in `row_of`), che con
@@ -568,6 +566,12 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **Il backup delle risposte, quattro limiti** (ADR 0017, `spine/backup.py`): il campione di una
+  cartella entra nel file solo alla prima risposta dopo la sua scansione (la scansione non lo
+  riscrive), quindi un database perso prima di ogni altra risposta torna con la cartella senza
+  campione; i "pezzi e filtri scritti da te" contano anche i filtri nati dai file (`filters` non
+  dice chi l'ha fatto); i numeri della frase non concordano al singolare ("1 siti"); il nome
+  `risposte.json` sta anche in `frontend/src/Backup.tsx`.
 - **La cartella spostata, tre limiti** (M2, `spine/folder_move.py`, `api/folders._moved_here`):
   una condivisione bloccata consuma da sola `PROBE_SECONDS` nella raggiungibilita' e la sonda
   risponde `out_of_time` anche per le altre (serve un tempo a parte: meccanismo nuovo); il
@@ -674,10 +678,6 @@ riga per voce.
 - **`tools/guardia_test.py` non vede due forme di test del frontend**: `it.each([...])(...)` e i
   titoli che vanno a capo dopo `it(` (`frontend/tests/confermare-soggetti.test.tsx`,
   `frontend/tests/meteo.test.tsx`), quindi toglierli passa inosservato.
-- **Le dichiarazioni dell'utente non si esportano ne' si reimportano**: nomi, correzioni e
-  risposte vivono solo nel database, e ricrearlo le perde (`tools/reset_db.py` le porta via).
-  Rimedio: un file solo del dichiarato, reimportabile; doveva nascere con la seconda pagina, che
-  c'e'.
 - **Dopo il rilascio, cio' che si ricava dal vocabolario va riscritto quando il vocabolario
   cambia.** Oggi il database si ricrea; dopo il rilascio restera' scritto col vocabolario di
   prima: i tre giudizi sul grezzo (`spine/header_asks.py`), il software normalizzato, ogni valore

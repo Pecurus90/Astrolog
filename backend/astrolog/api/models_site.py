@@ -132,3 +132,27 @@ class SettingsPatch(BaseModel):
     lives, and declaring it here as well would mean writing it twice."""
 
     values: dict[str, Any]
+
+
+class BackupCounts(BaseModel):
+    """How many of each thing the file carries, as the offer says them."""
+
+    written_at: str | None
+    sites: int
+    folders: int
+    instruments: int
+    filters: int
+    answers: int
+
+
+class BackupStatus(BaseModel):
+    """The backup next to the database (ADR 0017) and whether to offer it.
+
+    `offer` is `found` only on a database just created with a file beside it, until it is
+    restored or declined; `none` otherwise. `last` is the file as it is now, `null` without one;
+    `unreadable` is true when a file is there but is not a backup this app reads."""
+
+    offer: Literal["found", "none"]
+    last: BackupCounts | None
+    unreadable: bool
+    path: str

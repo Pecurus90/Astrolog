@@ -629,3 +629,19 @@ Tutto in un file solo, fuori dalla cartella del programma:
 - **Docker / NAS**: `/data`
 
 Li' dentro ci sono il database, la cache e i log. I tuoi FITS restano dove sono.
+
+Accanto al database c'e' anche **`risposte.json`, il backup di tutto quello che hai detto
+all'app**: le preferenze, i siti, le cartelle, i pezzi e i filtri che hai scritto tu, i nomi che
+le hai insegnato e ogni risposta di *Da confermare*. Si riscrive da solo dopo ogni tua risposta.
+Le foto non ci sono, e nemmeno cio' che l'app ricava leggendole: frame, corredi, notti si rifanno
+rileggendo le cartelle.
+
+- **Se il database si perde** (reinstallazione, database ricreato, passaggio al NAS con la stessa
+  cartella dati), all'avvio l'app ti dice *"Ho trovato le tue risposte"* e ti chiede se
+  rimetterle; poi rilegge le cartelle e ritrovi tutto come prima. Se preferisci ricominciare da
+  capo, il file si riscrive alla tua prima risposta.
+- **Per portarle su un altro computer**: *Impostazioni > Backup > Esporta le risposte*, e
+  sull'altro computer *Importa le risposte*. Il file esportato **non contiene le chiavi dei
+  servizi** (Meteoblue), che riscrivi a mano, ne' dove sta ASTAP: sull'altro computer l'app lo
+  cerca da sola. L'importazione aggiunge e aggiorna, non cancella niente. Se sull'altro computer le foto stanno in un altro posto, aggiungi la cartella nel posto
+  nuovo: l'app la riconosce dai file e le risposte la seguono.

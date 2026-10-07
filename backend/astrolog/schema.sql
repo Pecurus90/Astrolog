@@ -73,6 +73,9 @@ CREATE TABLE folders (
   root_path  TEXT NOT NULL UNIQUE,
   name       TEXT,
   retired_at TEXT,
+  -- Le coppie (percorso relativo, impronta) che la riconoscono altrove: le rimette il backup
+  -- (ADR 0017) per una cartella che non ha ancora frame; JSON, NULL finche' non serve.
+  sample_json TEXT,
   created_at TEXT NOT NULL,
   -- la radice nella forma delle chiavi di cartella (`spine/frame_folder.py`)
   root_key   TEXT GENERATED ALWAYS AS (rtrim(replace(root_path, '\', '/'), '/')) VIRTUAL

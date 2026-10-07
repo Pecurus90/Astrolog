@@ -54,6 +54,120 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/backup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Backup Status
+         * @description The answers' file next to the database: when it was last written and what it carries.
+         *
+         *     `offer` is `found` when the database holds no answer (new, or recreated) and the file is
+         *     there: the page asks whether to put the answers back. It stays
+         *     `found` until `POST /backup/restore` or `POST /backup/decline`.
+         */
+        get: operations["backup_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/backup/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Backup
+         * @description Puts back the answers of the file beside the database: settings, sites, folders, the
+         *     pieces and filters written by hand, the names learnt and every answer of Da confermare.
+         *     Nothing derived is in the file: the next scan rebuilds frames, rigs and nights.
+         *
+         *     409 `no_backup_offered` unless the database held no answer at start and the file is there.
+         */
+        post: operations["restore_backup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/backup/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decline Backup
+         * @description Starts from scratch: the offer is not made again while the app runs, and the first answer
+         *     rewrites the file, after which a database with answers is never offered one.
+         */
+        post: operations["decline_backup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/backup/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Backup
+         * @description The answers as a file to take to another computer, **without the service keys**: whoever
+         *     has the file does not get them; nor the solver path, wrong on another computer. Import it
+         *     there with `POST /backup/import`.
+         */
+        get: operations["export_backup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/backup/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Backup
+         * @description Puts back the answers of a file exported elsewhere, sent as its JSON content: adds and
+         *     updates, deletes nothing, so it is safe on a database already in use.
+         *
+         *     422 `not_a_backup` when the content is not an answers' file of this version.
+         */
+        post: operations["import_backup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/gear": {
         parameters: {
             query?: never;
@@ -1179,6 +1293,44 @@ export interface components {
             integration_s: number;
             /** Untimed */
             untimed: number;
+        };
+        /**
+         * BackupCounts
+         * @description How many of each thing the file carries, as the offer says them.
+         */
+        BackupCounts: {
+            /** Written At */
+            written_at: string | null;
+            /** Sites */
+            sites: number;
+            /** Folders */
+            folders: number;
+            /** Instruments */
+            instruments: number;
+            /** Filters */
+            filters: number;
+            /** Answers */
+            answers: number;
+        };
+        /**
+         * BackupStatus
+         * @description The backup next to the database (ADR 0017) and whether to offer it.
+         *
+         *     `offer` is `found` only on a database just created with a file beside it, until it is
+         *     restored or declined; `none` otherwise. `last` is the file as it is now, `null` without one;
+         *     `unreadable` is true when a file is there but is not a backup this app reads.
+         */
+        BackupStatus: {
+            /**
+             * Offer
+             * @enum {string}
+             */
+            offer: "found" | "none";
+            last: components["schemas"]["BackupCounts"] | null;
+            /** Unreadable */
+            unreadable: boolean;
+            /** Path */
+            path: string;
         };
         /** BandIn */
         BandIn: {
@@ -3450,6 +3602,121 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArchiveList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    backup_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupStatus"];
+                };
+            };
+        };
+    };
+    restore_backup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupStatus"];
+                };
+            };
+        };
+    };
+    decline_backup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupStatus"];
+                };
+            };
+        };
+    };
+    export_backup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    import_backup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupStatus"];
                 };
             };
             /** @description Validation Error */
