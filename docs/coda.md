@@ -255,7 +255,15 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   Notti, Attrezzatura e il sito nelle Impostazioni vogliono il loro parametro. Fette: (1) le pagine
   che si aprono su una voce dall'indirizzo, (2) la rotta `GET /api/v1/search`, (3) il campo nella
   barra dopo il disegno (brief dato a Marco il 7/10). Fetta 1 fatta (7/10/2026): `/notti?notte=<id>`,
-  `/attrezzatura?pezzo=strumento-<id>` o `filtro-<id>`, `/impostazioni/sito?sito=<id>`.
+  `/attrezzatura?pezzo=strumento-<id>` o `filtro-<id>`, `/impostazioni/sito?sito=<id>`. Prossima la fetta 2:
+  `GET /api/v1/search?q=` coi quattro gruppi, ognuno con l'indirizzo da aprire; gli oggetti col
+  frammento di ricerca di `spine/archive.py` (tutti i nomi, piegatura senza spazi), le notti per
+  data (forme comuni) o per oggetto ripreso, i pezzi per `instruments.name`/`filters.name`, i siti
+  per nome. Una voce dice in piccolo cosa ha l'utente (frame, ore): riusare `counts`, non un terzo
+  conto.
+- **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (brief dato a Marco il
+  7/10, si aspetta il disegno), poi Archivio, Da confermare, Attrezzatura. Il brief di ognuna si
+  scrive coi dati che l'API manda in quel momento: si rifa' la ricognizione quando tocca a lei.
 - **M4 -- fatta** (7/10/2026): l'Archivio stringe per periodo (anno o date), sito, ottica e
   camera, e la riga dice solo le pose che passano (`counts.Scope`, `docs/domini/archivio.md`).
 
