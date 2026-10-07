@@ -181,8 +181,9 @@ def test_the_order_is_clouds_then_nogo_then_marginal_then_go_earliest_first_then
         {"precip_mm": 0.2, "seeing_arcsec": 1.0},
     )
     codici = [m.code for m in judge.measures(ore, verdict.assess(ore))]
-    assert codici[0] == "cloud"
-    assert codici[1:4] == ["gust", "rain", "wind"]
+    # le nuvole e le nuvole basse aprono sempre: sono le carte del semaforo
+    assert codici[:2] == ["cloud", "cloud_low"]
+    assert codici[2:5] == ["gust", "rain", "wind"]
     giudicate = [c for c in codici if c in judge.SCALES]
     neutre = [c for c in codici if c not in judge.SCALES]
     assert codici == giudicate + neutre
@@ -201,3 +202,44 @@ def test_every_scale_is_sent_with_its_steps():
         judge.Step(None, 0.1, strict=False),
     ]
     assert set(passi) == set(judge.SCALES)
+
+
+def test_each_card_says_the_night_as_it_matters():
+    """Il freddo conta al minimo, la rugiada al minimo fra aria e punto di rugiada, l'umidita' al
+    massimo; il resto in media, la pioggia in tutto."""
+    ore = notte(
+        {"temperature_c": 8.0, "dew_point_c": 4.0, "humidity_pct": 70.0},
+        {"temperature_c": 5.0, "dew_point_c": 4.0, "humidity_pct": 95.0},
+    )
+    detto = misure(ore)
+    assert detto["temperature"].value == 5.0
+    assert detto["condensation"].value == 1.0
+    assert detto["humidity"].value == 95.0
+
+
+def test_a_measure_says_each_bad_word_with_its_hours():
+    """Vento incerto alle 20 e alle 22, niente alle 21: "incerta dalle 20, niente dalle 21"."""
+    ore = notte({"wind_kmh": 22.0}, {"wind_kmh": 30.0}, {"wind_kmh": 22.0})
+    assert misure(ore)["wind"].spans == [
+        judge.Span("marginal", "2026-09-25T20:00:00+02:00", "2026-09-25T23:00:00+02:00", 2),
+        judge.Span("nogo", "2026-09-25T21:00:00+02:00", "2026-09-25T22:00:00+02:00", 1),
+    ]
+    assert misure(notte({}))["wind"].spans == []
+
+
+def test_the_peak_ends_at_the_next_hour():
+    """ "Picco tra le 21 e le 22": la fine e' l'ora dopo, letta dalla notte."""
+    ore = notte({"wind_gust_kmh": 12.0}, {"wind_gust_kmh": 35.0}, {})
+    assert misure(ore)["gust"].peak_until == "2026-09-25T22:00:00+02:00"
+
+
+def test_each_chart_has_its_axis_over_the_hours_the_page_draws():
+    """Il vento sale almeno a 45 km/h, o alle raffiche se sono piu' forti; le nuvole vanno da 0 a
+    100; temperatura e rugiada da quella piu' bassa a quella piu' alta."""
+    calmo = misure(notte({"wind_kmh": 10.0, "wind_gust_kmh": 20.0}))
+    assert (calmo["wind"].axis_min, calmo["wind"].axis_max) == (0.0, 45.0)
+    raffiche = misure(notte({"wind_kmh": 10.0, "wind_gust_kmh": 60.0}))
+    assert raffiche["wind"].axis_max == 60.0
+    assert (calmo["cloud"].axis_min, calmo["cloud"].axis_max) == (0.0, 100.0)
+    aria = misure(notte({"temperature_c": 9.0, "dew_point_c": 2.0}, {"temperature_c": 12.0}))
+    assert (aria["temperature"].axis_min, aria["temperature"].axis_max) == (2.0, 12.0)

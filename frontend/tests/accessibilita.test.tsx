@@ -369,7 +369,7 @@ describe("l accessibilita della prima pagina", () => {
     expect(await violazioni(container)).toEqual([])
   })
 
-  it("e nemmeno il Meteo, con una notte aperta ora per ora", async () => {
+  it("e nemmeno il Meteo, con la scheda di una notte aperta", async () => {
     // Piena, col fattore che dice l'ora e la tabella aperta: la tabella, le intestazioni di riga e
     // lo switch dei modelli sono proprio le forme che axe guarda.
     const ora = (at: string, sky: string) => ({
@@ -392,6 +392,8 @@ describe("l accessibilita della prima pagina", () => {
       aerosol_optical_depth: 0.1,
       dust_ugm3: 2,
       moon_pct: null,
+      dew_spread_c: 8,
+      shown: true,
       levels: {
         cloud: "go", cloud_low: "go", rain: "go", gust: "nogo", wind: "go", condensation: "go",
         jet: "go", seeing: "go", aerosol: null, moon: null,
@@ -429,8 +431,17 @@ describe("l accessibilita della prima pagina", () => {
               shown_until: "2026-09-26T23:00:00+02:00",
               measures: [
                 {
+                  code: "wind", level: "go", weighs: false, value: 5, peak: 5,
+                  peak_at: "2026-09-26T22:00:00+02:00", peak_until: "2026-09-26T23:00:00+02:00",
+                  spans: [], axis_min: 0, axis_max: 45, since: "2026-09-26T22:00:00+02:00",
+                  until: "2026-09-27T00:00:00+02:00", hours: 2, known_hours: 2,
+                  known_since: "2026-09-26T22:00:00+02:00", known_until: "2026-09-27T00:00:00+02:00",
+                },
+                {
                   code: "gust", level: "nogo", weighs: true, value: 31, peak: 31,
-                  peak_at: "2026-09-26T22:00:00+02:00", since: "2026-09-26T22:00:00+02:00",
+                  peak_at: "2026-09-26T22:00:00+02:00", peak_until: "2026-09-26T23:00:00+02:00",
+                  spans: [{ level: "nogo", since: "2026-09-26T22:00:00+02:00", until: "2026-09-27T00:00:00+02:00", hours: 2 }],
+                  axis_min: 0, axis_max: 45, since: "2026-09-26T22:00:00+02:00",
                   until: "2026-09-27T00:00:00+02:00", hours: 2, known_hours: 2,
                   known_since: "2026-09-26T22:00:00+02:00", known_until: "2026-09-27T00:00:00+02:00",
                 },
@@ -447,9 +458,9 @@ describe("l accessibilita della prima pagina", () => {
     })
     const { container } = await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /meteo/i }))
-    fireEvent.click(await screen.findByText(/ora per ora/i))
-    fireEvent.click(await screen.findByText(/il cielo in quota/i))
-    await screen.findAllByRole("table")
+    // la scheda della notte, coi semafori, le carte e il loro grafico
+    await screen.findByRole("tabpanel")
+    await screen.findAllByRole("article")
 
     expect(await violazioni(container)).toEqual([])
   })

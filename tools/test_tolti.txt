@@ -160,3 +160,24 @@ test_a_factor_says_when_it_bites_without_inventing_a_continuous_window - fattori
 test_the_end_of_a_factor_is_the_next_hour_of_the_night_even_when_the_clocks_change - fattori passati alle misure di weather/judge.py (DECISIONI del disegno: il semaforo solo dalle nuvole)
 test_the_clouds_bite_only_in_the_hours_beyond_two_oktas - fattori passati alle misure di weather/judge.py (DECISIONI del disegno: il semaforo solo dalle nuvole)
 test_condensation_bites_only_in_the_hours_near_the_dew_point_and_says_nothing_without_it - fattori passati alle misure di weather/judge.py (DECISIONI del disegno: il semaforo solo dalle nuvole)
+accanto al verdetto dice quanti modelli sono d'accordo - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+cita i dati Copernicus con l'anno, e 7Timer non c'e' piu' - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+cita il servizio da cui vengono i dati - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+cita solo le fonti del cielo che hanno scritto qualcosa - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+dalla quarta notte mostra la tendenza, senza ore - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+dice che il seeing viene da Meteoblue quando c'e' la chiave - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+dice quante notti su dieci dell'ultimo anno, qui, avevano meno vento - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+dove il buio non arriva lo dice, e dove il Sole non tramonta non da' un verdetto finto - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+e nemmeno il Meteo, con una notte aperta ora per ora - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+il cielo in quota scrive il seeing ora per ora, e un'ora senza lo dice - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+il seeing si scrive come un numero, in secondi d'arco - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+lo switch salva il modello scelto e rilegge - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+ora per ora, un numero che il modello non da' si dice, non si scrive zero - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+se Meteoblue non accetta la chiave lo dice, e manda alle Impostazioni - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+senza chiave dice che il seeing vuole una chiave Meteoblue - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+senza la storia del sito dice il vento e che il confronto arriva, senza inventarlo - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+un modello solo si dice al singolare - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+un sito di casa senza fuso orario lo dice, invece di aspettare una previsione - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+una fonte che la pagina non conosce non si cita con le parole di un'altra - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+una notte dice il verdetto, le nuvole, le ore utili e cosa pesa, con l'ora del posto - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova
+una notte senza il vento in quota non ne parla - pagina Meteo rifatta nel foglio v28 (ADR 0018): la stessa promessa la prova tests/meteo.test.tsx nella forma nuova

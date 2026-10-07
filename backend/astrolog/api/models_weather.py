@@ -58,7 +58,22 @@ class WeatherHourOut(BaseModel):
     aerosol_optical_depth: float | None
     dust_ugm3: float | None
     moon_pct: float | None
+    dew_spread_c: float | None = Field(
+        description="Air minus dew point, the quantity condensation is judged on."
+    )
     levels: WeatherLevelsOut
+    shown: bool = Field(
+        description="Whether the page draws this hour (`shown_from`-`shown_until`)."
+    )
+
+
+class WeatherSpanOut(BaseModel):
+    """The hours with one word: from the first to the end of the last, and how many."""
+
+    level: Level
+    since: str
+    until: str
+    hours: int
 
 
 class WeatherMeasureOut(BaseModel):
@@ -66,7 +81,9 @@ class WeatherMeasureOut(BaseModel):
     verdict) and `since`/`until`/`hours` the hours with that word; `weighs` when it is marginal or
     no-go and is not the clouds, which make the verdict. `value` is the mean of the known hours
     (for `rain`, the total), `peak` the worst hour's value and when; `known_*` say which hours were
-    known, so a mean over part of the night is said as such. Neutral measures have no `level`."""
+    known, so a mean over part of the night is said as such. Neutral measures have no `level`.
+    `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours.
+    `value` is the cold at its lowest (temperature, condensation), the damp at its highest."""
 
     code: MeasureCode
     level: Level | None
@@ -74,6 +91,10 @@ class WeatherMeasureOut(BaseModel):
     value: float | None
     peak: float | None
     peak_at: str | None
+    peak_until: str | None
+    spans: list[WeatherSpanOut]
+    axis_min: float | None
+    axis_max: float | None
     since: str | None
     until: str | None
     hours: int

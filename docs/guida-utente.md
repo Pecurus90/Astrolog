@@ -327,59 +327,70 @@ la pagina tace invece di scrivere un numero che nessuno ha misurato.
 
 ## Meteo
 
-**Com'e' il cielo nelle prossime notti del tuo sito di casa.** Per ogni notte leggi il
-**verdetto** -- *si fa*, *incerta*, *no* -- con le nuvole in media nelle ore di buio, **quanti
-modelli sono d'accordo** (*3 modelli su 4 dicono che si fa*: e' cio' che ti dice quanto fidarti),
-e le **ore utili**: quante ore di buio avranno il cielo abbastanza sereno.
-Il verdetto lo decidono **solo le nuvole**. Sotto c'e' **cosa pesa**: le altre misure che in qualche
-ora della notte diventano *incerte* o *niente* -- le nuvole basse, la pioggia, le raffiche che fanno
-vibrare la montatura, il vento, la condensa, il jet stream, il seeing, l'aerosol (*molto
-fosco*) e la Luna (*al limite* o *solo banda stretta* per chi riprende in banda larga, e solo se e'
-sopra l'orizzonte col buio). Pesano accanto al verdetto, senza cambiarlo. Ognuna dice la sua parola e
-**quando**: *dalle 01:00 alle 05:00, 3 ore* vuol dire che in quelle quattro ore ce n'e' una diversa.
-Le soglie vengono da convenzioni pubbliche: gli ottavi di cielo dei bollettini per le nuvole, la
-scala Beaufort per il vento, le classi del servizio meteo canadese per il seeing, la NASA per
-l'aerosol, meteoblue per il jet stream; per la Luna, la regola diffusa del 25% per la banda
-larga. Aprendo **ora per ora** vedi la notte da
-mezzogiorno a mezzogiorno: le nuvole basse, medie e alte, la temperatura, l'umidita', il punto di
-rugiada, il vento, le raffiche e la pioggia, con accanto se in quell'ora e' giorno, crepuscolo o
-buio. Un numero che il modello non da' si legge *non lo dice*, mai uno zero.
+**Com'e' il cielo nelle prossime notti del tuo sito di casa, e in quali ore si riprende.** In
+testa leggi per quale sito e' la previsione, **quando e' arrivata** e da quanto (*2 ore fa*), e
+se hai la chiave Meteoblue anche quando e' arrivato il seeing, che ha un'eta' sua. Le ore della
+pagina sono quelle del sito. Accanto scegli il **modello** e c'e' *Aggiorna*.
 
-Ogni notte piena dice anche il **vento in quota** -- a circa 3.000 metri, medio sulle ore della notte -- accanto al
-**solito del tuo sito**: *piu' forte di 8 notti su 10 dell'ultimo anno, qui*. Non e' un giudizio: un
-vento che altrove sarebbe normale da te puo' essere raro, e viceversa. Il solito l'app lo scarica da
-sola una volta l'anno; finche' non c'e' leggi il vento senza il confronto.
+Sotto c'e' la **fila delle sette notti**: ogni notte col suo giorno (*sab 26*), il **semaforo** --
+*buona*, *incerta*, *niente* -- e le ore serene (*3 ore, 23-02*). Le **prime tre** sono ora per
+ora; dalla quarta alla settima vedi solo la **tendenza** -- il semaforo, le ore di buio, le nuvole
+e l'accordo dei modelli -- perche' cosi' avanti la previsione ora per ora vale poco, e l'app lo
+dice invece di farti credere a ore precise. Tocchi una notte e sotto si apre la sua scheda, una
+alla volta.
 
-Aprendo **il cielo in quota** vedi, ora per ora, cio' che conta per la planetaria: il vento a 700,
-a 250 e a 200 hPa -- gli ultimi due sono il *jet stream* -- del modello che hai scelto, l'**aerosol** e le **polveri** di Copernicus e, se hai messo la
-tua **chiave Meteoblue**, il **seeing**, ora per ora e in arcosecondi. Il seeing viene solo da
-Meteoblue: senza chiave la pagina ti dice che per averlo serve, gratuita; nelle ore che il
-servizio non copre leggi *non lo dice*. Se Meteoblue non accetta la chiave il seeing sparisce; se
-non risponde, resta quello che aveva dato l'ultima volta. In tutti e due i casi la pagina ti dice
-perche'. Meteoblue si chiede al massimo due volte al
-giorno, perche' la chiave gratuita ha un tetto di chiamate l'anno.
+In testa alla scheda leggi **quante ore di buio sereno** avra' la notte, il semaforo, **da che ora
+a che ora** (*dalle 23:00 alle 02:00, 3 ore*: se il conto e' piu' piccolo dell'intervallo, in mezzo
+c'e' un'ora coperta) e **quanti modelli sono d'accordo**, che e' cio' che ti dice quanto fidarti.
+Il semaforo lo decidono **solo le nuvole**, perche' sono l'unica cosa che ferma tutti i soggetti
+allo stesso modo: **buona** fino a due ottavi di cielo coperto, **incerta** fino a quattro,
+**niente** oltre -- le soglie dei bollettini meteo.
 
-Le **prime tre notti** sono piene; dalla quarta alla settima vedi solo la **tendenza** -- il
-verdetto, le nuvole, le ore di buio e l'accordo dei modelli -- perche' cosi' avanti la previsione ora per ora vale
-poco, e l'app lo dice invece di farti credere a ore precise.
+Accanto c'e' cio' che **pesa**, senza cambiare il semaforo: le misure che in qualche ora della notte
+diventano *incerte* o *niente* -- le nuvole basse, la pioggia, il vento, la condensa, il jet stream,
+il seeing, l'aerosol (*molto fosco*) e la Luna (*al limite* o *solo banda stretta* per chi riprende in
+banda larga, e solo se e' sopra l'orizzonte col buio). Ognuna dice la sua parola e quando. Le soglie
+vengono da convenzioni pubbliche: la scala Beaufort per il vento, le classi del servizio meteo
+canadese per il seeing, la NASA per l'aerosol, meteoblue per il jet stream; per la Luna, la regola
+diffusa del 25% per la banda larga.
 
-Il verdetto guarda solo le nuvole, perche' sono l'unica cosa che ferma tutti i soggetti allo
-stesso modo; la Luna non entra. Le soglie sono quelle che usa chi fa meteo: **si fa** fino a due
-ottavi di cielo coperto, **incerta** fino a quattro, **no** oltre. D'estate molto a nord, dove il
-buio pieno non arriva, il verdetto guarda le ore col Sole sotto l'orizzonte e te lo dice; dove il
-Sole non tramonta non c'e' verdetto.
+Sotto ci sono le **carte**, prima quelle che pesano di piu': nuvole, nuvole basse, poi pioggia,
+vento, condensa, seeing, jet stream e aerosol, e in piccolo temperatura e rugiada, umidita', polvere
+e il vento a 700 e 200 hPa. Ogni carta dice il **valore della notte** e cosa vuol dire (*media nel
+buio*, *in tutto nel buio*, *la minima*), la parola con l'ora in cui comincia (*incerta dalle 22:00,
+niente dalle 01:00*), il **picco** con le sue ore, e ha le barrette **ora per ora** dall'ultima ora
+di giorno all'alba, col colore del giudizio di ogni ora e le soglie tratteggiate. Un'ora che il
+servizio non da' e' a tratteggio, mai uno zero.
 
-Puoi scegliere il **modello** della previsione: di fabbrica quello che il servizio sceglie per il
-tuo posto, oppure l'europeo (ECMWF), il tedesco (ICON) o l'americano (GFS). Cambiarlo non chiede
-niente a nessuno -- ogni previsione li porta tutti insieme -- e la scelta resta. Se un modello
-quella volta non ha dato notti intere, la pagina te lo dice e puoi guardarne un altro.
+La carta del **vento a 700 hPa** (circa 3.000 metri) lo legge accanto al **solito del tuo sito**:
+*piu' forte di 8 notti su 10, qui*. Non e' un giudizio: un vento che altrove sarebbe normale da te
+puo' essere raro, e viceversa. Il solito l'app lo scarica da sola una volta l'anno; finche' non c'e'
+la carta dice che il confronto arriva.
 
-La previsione **arriva da sola** appena hai un sito di casa, e si rinnova ogni tre ore; col
-pulsante la chiedi subito. Se il servizio non risponde -- sei senza rete, o e' giu' -- resta
-quella di prima, con l'ora in cui e' arrivata; se l'hai chiesta col pulsante, l'app ti dice
-anche perche' non e' cambiata. Se del tuo sito di casa non si riconosce il fuso orario, le sue
-notti non si possono dividere e la pagina te lo dice (in mare aperto vale il fuso nautico). I
-dati vengono da Open-Meteo e Copernicus, e il seeing da Meteoblue: la pagina li cita in fondo.
+Il **seeing** viene solo da **Meteoblue**, ora per ora e in arcosecondi, se hai messo la tua
+chiave: senza, la sua carta ti dice che per averlo serve, gratuita, e ti porta alle Impostazioni. Se
+Meteoblue non accetta la chiave la carta lo dice; se non risponde, resta il seeing che aveva dato
+l'ultima volta e la pagina te lo dice. Se il seeing copre solo una parte della notte, la media lo
+dice (*media fino alle 02:00*). Meteoblue si chiede al massimo due volte al giorno, perche' la
+chiave gratuita ha un tetto di chiamate l'anno.
+
+D'estate molto a nord, dove il buio pieno non arriva, le ore serene si contano col Sole sotto
+l'orizzonte e la scheda lo dice; dove il Sole non tramonta legge *Sole sempre su*, senza carte. Se il modello non
+da' le nuvole di tutte le ore il semaforo dice *non si sa*.
+
+Il **modello** della previsione: di fabbrica quello che il servizio sceglie per il tuo posto,
+oppure l'europeo (ECMWF), il tedesco (ICON) o l'americano (GFS). Sul telefono lo scegli da un
+elenco che dice cos'e' ogni voce. Cambiarlo non chiede niente a nessuno -- ogni previsione li porta
+tutti insieme -- e la scelta resta. Se un modello quella volta non ha dato notti intere, la pagina
+te lo dice e puoi guardarne un altro.
+
+La previsione **arriva da sola** appena hai un sito di casa, e si rinnova ogni tre ore; con
+*Aggiorna* la chiedi subito. Se il servizio non risponde -- sei senza rete, o e' giu' -- resta
+quella di prima, con l'ora in cui e' arrivata; se l'hai chiesta tu, l'app ti dice anche perche' non
+e' cambiata. Se del tuo sito di casa non si riconosce il fuso orario, le sue notti non si possono
+dividere: la pagina te lo dice e ti porta a sistemare il sito (in mare aperto vale il fuso
+nautico). I dati vengono da Open-Meteo e Copernicus, e il seeing da Meteoblue: la pagina li cita in
+fondo.
 
 ## Attrezzatura
 

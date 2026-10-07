@@ -103,9 +103,12 @@ def test_the_moon_up_brings_its_lit_part_and_down_brings_nothing(db):  # noqa: F
 
 
 def test_every_hour_carries_the_judgement_of_each_judged_measure(db):  # noqa: F811
-    scritta(db, Finto(risposta(wind_kmh=22.0)))
+    scritta(db, Finto(risposta(wind_kmh=22.0, temperature_c=9.0, dew_point_c=7.5)))
     ore = json.loads(notte_di(db, "2026-09-25")["hours_json"])
     assert {o["levels"]["wind"] for o in ore} == {"marginal"}
+    # la condensa si giudica sulla distanza fra aria e rugiada: l'ora la porta scritta
+    assert {o["dew_spread_c"] for o in ore} == {1.5}
+    assert {o["levels"]["condensation"] for o in ore} == {"nogo"}
     assert {o["levels"]["cloud"] for o in ore} == {"go"}
 
 
@@ -126,3 +129,14 @@ def test_a_rebuild_leaves_the_other_sites_alone(db):  # noqa: F811
     scritta(db, Finto(risposta()))
     restano = db.execute("SELECT site_id FROM weather_view WHERE site_id = 2").fetchall()
     assert len(restano) == 1
+
+
+def test_every_hour_says_whether_the_page_draws_it(db):  # noqa: F811
+    """La pagina disegna dall'ultima ora di giorno prima del crepuscolo alla prima dopo l'alba."""
+    scritta(db, Finto(risposta()))
+    riga = notte_di(db, "2026-09-25")
+    ore, detto = json.loads(riga["hours_json"]), riassunto(riga)
+    disegnate = [o["at"] for o in ore if o["shown"]]
+    assert disegnate[0] == detto["shown_from"]
+    assert disegnate[-1] == detto["shown_until"]
+    assert not ore[0]["shown"]

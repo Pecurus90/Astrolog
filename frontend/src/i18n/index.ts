@@ -231,3 +231,23 @@ export function giornoDellaSettimana(data: string): string {
     mezzanotteUtc(data),
   )
 }
+
+/** Il giorno di una notte col suo numero, come la chiama il Meteo: *sabato 3*, o breve *sab 3*.
+ *  In UTC come `notte`, per la stessa ragione. */
+export function giornoENumero(data: string, breve = false): string {
+  return new Intl.DateTimeFormat(lingua, {
+    weekday: breve ? "short" : "long",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(mezzanotteUtc(data))
+}
+
+/** Quanto tempo fa, come lo dice la lingua: *2 ore fa*, *ieri*. L'eta' di un istante la sa solo
+ *  chi guarda, adesso: il backend non puo' mandarla scritta. */
+export function fa(istante: string, adesso: Date = new Date()): string {
+  const minuti = (new Date(istante).getTime() - adesso.getTime()) / 60000
+  const formato = new Intl.RelativeTimeFormat(lingua, { numeric: "auto" })
+  if (Math.abs(minuti) < 60) return formato.format(Math.round(minuti), "minute")
+  if (Math.abs(minuti) < 24 * 60) return formato.format(Math.round(minuti / 60), "hour")
+  return formato.format(Math.round(minuti / (24 * 60)), "day")
+}

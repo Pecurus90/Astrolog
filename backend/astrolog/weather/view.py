@@ -73,8 +73,19 @@ def _agreement(said: Sequence[verdict.Verdict | None], total: int) -> dict[str, 
     return {**counts, "total": total}
 
 
-def _hours_json(hours: Sequence[verdict.Hour]) -> str:
-    return json.dumps([{**h.row(), "levels": judge.hour_levels(h)} for h in hours])
+def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary) -> str:
+    shown = {h.at for h in judge.shown_hours(hours, summary)}
+    return json.dumps(
+        [
+            {
+                **h.row(),
+                "dew_spread_c": judge.spread(h),
+                "levels": judge.hour_levels(h),
+                "shown": h.at in shown,
+            }
+            for h in hours
+        ]
+    )
 
 
 def _rows(
@@ -93,7 +104,14 @@ def _rows(
             "measures": [asdict(m) for m in judge.measures(w.hours, w.summary)],
         }
         rows.append(
-            (site["id"], w.night, w.model, w.fetched_at, _hours_json(w.hours), json.dumps(summary))
+            (
+                site["id"],
+                w.night,
+                w.model,
+                w.fetched_at,
+                _hours_json(w.hours, w.summary),
+                json.dumps(summary),
+            )
         )
     return rows
 

@@ -3430,7 +3430,17 @@ export interface components {
             dust_ugm3: number | null;
             /** Moon Pct */
             moon_pct: number | null;
+            /**
+             * Dew Spread C
+             * @description Air minus dew point, the quantity condensation is judged on.
+             */
+            dew_spread_c: number | null;
             levels: components["schemas"]["WeatherLevelsOut"];
+            /**
+             * Shown
+             * @description Whether the page draws this hour (`shown_from`-`shown_until`).
+             */
+            shown: boolean;
         };
         /**
          * WeatherLevelsOut
@@ -3466,6 +3476,8 @@ export interface components {
          *     no-go and is not the clouds, which make the verdict. `value` is the mean of the known hours
          *     (for `rain`, the total), `peak` the worst hour's value and when; `known_*` say which hours were
          *     known, so a mean over part of the night is said as such. Neutral measures have no `level`.
+         *     `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours.
+         *     `value` is the cold at its lowest (temperature, condensation), the damp at its highest.
          */
         WeatherMeasureOut: {
             /**
@@ -3483,6 +3495,14 @@ export interface components {
             peak: number | null;
             /** Peak At */
             peak_at: string | null;
+            /** Peak Until */
+            peak_until: string | null;
+            /** Spans */
+            spans: components["schemas"]["WeatherSpanOut"][];
+            /** Axis Min */
+            axis_min: number | null;
+            /** Axis Max */
+            axis_max: number | null;
             /** Since */
             since: string | null;
             /** Until */
@@ -3618,6 +3638,23 @@ export interface components {
             source: string;
             /** Fetched At */
             fetched_at: string;
+        };
+        /**
+         * WeatherSpanOut
+         * @description The hours with one word: from the first to the end of the last, and how many.
+         */
+        WeatherSpanOut: {
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "go" | "marginal" | "nogo";
+            /** Since */
+            since: string;
+            /** Until */
+            until: string;
+            /** Hours */
+            hours: number;
         };
         /**
          * WeatherStepOut

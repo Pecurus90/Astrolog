@@ -230,8 +230,12 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   nel foglio v28 (`47-parametro`, `50-strato`, `63-cielo`, `64-scala`, `71-pagina-meteo`).
   Fetta 1 fatta (7/10/2026): 7Timer uscito, seeing solo Meteoblue (`seeing_arcsec`). Fetta 2
   fatta (7/10/2026): giudizio per misura (`weather/judge.py`, soglie con fonte in
-  `docs/domini/meteo.md`), notti pronte in `weather_view`. Resta la pagina. Da chiedere a Marco
-  alla pagina: il disegno dice "corrente a getto", il glossario la vieta e dice "jet stream".
+  `docs/domini/meteo.md`), notti pronte in `weather_view`. Fetta 3a fatta (7/10/2026): la pagina
+  nel foglio v28 -- testa, fila delle notti, scheda, pesano, carte con le barrette, tendenza, stati;
+  "jet stream" e non "corrente a getto" (Marco, glossario). Resta la 3b: il cielo delle nubi con la
+  scala di destra e il lettore; le carte portate a un'ora col tocco e con le frecce; lo stato "il
+  servizio tace ma la previsione vale" ("Ultima richiesta alle 14:00 senza risposta"), che vuole
+  l'ultimo tentativo della previsione scritto in `weather_fetches` come quello di Meteoblue.
 - **La ricerca nella barra -- dopo il Meteo** (Marco, 7/10/2026): prima si decide con Marco cosa
   cerca, con quali nomi, dove mostra i risultati e cosa apre; poi un brief di cinque righe a
   Claude Design (campo aperto, risultati, stati, telefono); la rotta del backend puo' partire
