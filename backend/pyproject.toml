@@ -9,15 +9,15 @@ license = "GPL-3.0-or-later"
 dependencies = [
   # ognuna entra col difetto che risolve, la licenza, e una ruota per le cinque
   # architetture (Windows x64, Mac Intel e Apple Silicon, Linux amd64 e arm64) o Python puro
-  "fastapi>=0.115",          # MIT   - le rotte e l'OpenAPI da cui si generano i tipi TS
-  "uvicorn>=0.30",           # BSD   - il server
+  "fastapi>=0.142.2",          # MIT   - le rotte e l'OpenAPI da cui si generano i tipi TS
+  "uvicorn>=0.54.0",           # BSD   - il server
   "pydantic>=2.8",           # MIT   - la forma delle risposte
   "astropy>=6.1",            # BSD   - lettura header FITS (ruote per tutte e cinque)
-  "platformdirs>=4.2",       # MIT   - dove sta il DB su Windows, Mac e Linux
-  "tzfpy>=1.3",              # MIT   - il fuso dalle coordinate, offline e coi confini veri
+  "platformdirs>=4.12.3",       # MIT   - dove sta il DB su Windows, Mac e Linux
+  "tzfpy>=2.1.0",              # MIT   - il fuso dalle coordinate, offline e coi confini veri
                              #         (ruote per tutte e cinque le architetture, 4 MB,
                              #         nessuna dipendenza a sua volta)
-  "tzdata>=2024.1",          # Apache - il database dei fusi (Python puro: una ruota per
+  "tzdata>=2026.5",          # Apache - il database dei fusi (Python puro: una ruota per
                              #         tutte). NON e' facoltativa: Windows non
                              #         ha un tz-db di sistema (zoneinfo.TZPATH e' vuoto) e le
                              #         immagini slim nemmeno. Senza, ogni nome di fuso
@@ -27,7 +27,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=8.3", "pytest-cov>=5.0", "ruff>=0.6", "pyright>=1.1.380", "import-linter>=2.0",
+  "pytest>=8.3", "pytest-cov>=5.0", "ruff>=0.16.10", "pyright>=1.1.414", "import-linter>=2.0",
   # pytest-xdist: MIT, Python puro (con execnet, MIT). Entra col difetto che risolve: la
   # suite veloce era arrivata a 46 s e il cancello a 59,2 s su un tetto di 60 -- e non c'era
   # un test lento da marcare, ma 810 test da qualche decina di millisecondi. In parallelo
@@ -47,7 +47,7 @@ dev = [
 # il rilevatore di duplicati (jscpd) gira da npm, nel frontend: una installazione per tutti e due
 
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools>=84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
