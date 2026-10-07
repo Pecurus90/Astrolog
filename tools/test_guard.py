@@ -128,3 +128,45 @@ def test_the_hook_stays_silent_when_nothing_is_wrong():
         check=True,
     )
     assert out.stdout == ""
+
+
+def powershell(command):
+    return {"tool_name": "PowerShell", "tool_input": {"command": command}}
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        bash("taskkill /F /IM chrome.exe"),
+        bash("cd x; taskkill /im python.exe /f"),
+        bash("pkill -f astrolog"),
+        bash("killall node"),
+        powershell("Stop-Process -Name chrome -Force"),
+        powershell("Get-Process chrome | Stop-Process"),
+        powershell("taskkill /F /IM chrome.exe"),
+    ],
+)
+def test_closing_programs_by_name_is_refused_it_closes_marcos_too(call):
+    """Un audit ha chiuso tutti i Chrome della macchina per spegnere il suo (7/10): si spegne per
+    PID solo cio' che si e' acceso."""
+    assert guard.reason(call, ROOT) is not None
+
+
+@pytest.mark.parametrize(
+    "call",
+    [bash("taskkill /F /PID 4242"), bash("kill 4242"), powershell("Stop-Process -Id 4242")],
+)
+def test_closing_a_process_by_its_pid_passes(call):
+    assert guard.reason(call, ROOT) is None
+
+
+def test_closing_by_name_is_denied_not_asked():
+    payload = json.dumps(bash("taskkill /F /IM chrome.exe"))
+    out = subprocess.run(
+        [sys.executable, os.path.join(ROOT, ".claude", "hooks", "guard.py")],
+        input=payload,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert json.loads(out.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"

@@ -31,6 +31,16 @@ COMMANDS = (
     (re.compile(r"--snapshot-update\b"), "snapshots change only on purpose, never by an agent"),
 )
 
+# Never right: closing a program by name closes Marco's own (an audit once shut every Chrome).
+# Whoever starts a process stops it by its PID.
+KILL_BY_NAME = (
+    re.compile(r"\btaskkill\b[^;&|]*\s/im\b", re.IGNORECASE),
+    re.compile(r"\b(pkill|killall)\b"),
+    re.compile(r"\bStop-Process\b[^;&|]*-Name\b", re.IGNORECASE),
+    re.compile(r"\bGet-Process\b[^;&|]*\|\s*Stop-Process\b", re.IGNORECASE),
+)
+KILL_BY_NAME_WHY = "never close a program by name: stop what you started by its PID"
+
 NPM_CHANGES = {"uninstall", "un", "remove", "rm", "r", "update", "up", "upgrade"}
 NPM_INSTALLS = {"install", "i", "add"}
 NPM_VALUE_OPTIONS = {"--prefix", "-C", "--cache", "--registry", "--workspace", "-w"}
@@ -80,8 +90,10 @@ def reason(payload: dict, root: str) -> str | None:
     if tool in ("Edit", "Write", "NotebookEdit"):
         rel = _relative(data.get("file_path") or data.get("notebook_path") or "", root)
         return next((why for rule, why in PROTECTED if rule.search(rel)), None)
-    if tool == "Bash":
+    if tool in ("Bash", "PowerShell"):
         command = _quoted_out(data.get("command") or "")
+        if any(rule.search(command) for rule in KILL_BY_NAME):
+            return KILL_BY_NAME_WHY
         if _npm_names_a_package(command):
             return "dependencies change only with Marco's approval"
         return next((why for rule, why in COMMANDS if rule.search(command)), None)
@@ -94,7 +106,8 @@ def main() -> int:
     why = reason(payload, root)
     if why is not None:
         # a hand edit of these files is never right; a command that changes them is Marco's click
-        verdict = "ask" if payload.get("tool_name") == "Bash" else "deny"
+        asks = payload.get("tool_name") == "Bash" and why != KILL_BY_NAME_WHY
+        verdict = "ask" if asks else "deny"
         decision = {"hookEventName": "PreToolUse", "permissionDecision": verdict}
         decision["permissionDecisionReason"] = why
         sys.stdout.write(json.dumps({"hookSpecificOutput": decision}) + "\n")
