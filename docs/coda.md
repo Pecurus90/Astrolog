@@ -219,6 +219,20 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   `refresh_waiting` chiamato a mano in sette punti. Misurato su 20.000 pose: costo uguale
   (scansione 12,0 s contro 12,5; una risposta 74 ms contro 85). Ora lo muove anche chi scrive
   senza passare dagli aiutanti (una risposta tolta, un cielo cancellato).
+- **Il telaio -- fatto** (7/10/2026, ADR 0018): tutta l'app nel telaio v28 di Claude Design.
+- **Il Meteo nel disegno nuovo -- prossimo.** Prima il backend, allineato alle decisioni del Meteo
+  in `docs/DECISIONI.md` del progetto di disegno (Marco, 3/10/2026), che superano parti di
+  `docs/domini/meteo.md`: 7Timer esce (il seeing solo da Meteoblue, niente trasparenza a fasce);
+  il semaforo lo decidono solo le nuvole, le altre misure "pesano" con parola e ora; soglie e
+  giudizio ora per ora mandati dal backend; ore serene come intervallo e conto ("dalle 23 alle 04,
+  4 ore"), mai minuti; vento a 250, 700 (contro il solito del sito) e 200 hPa, polvere. Ogni
+  soglia del disegno si verifica su una fonte pubblica; dove non c'e' (Luna 25/50 %, seeing 2/4",
+  aerosol 0,1/1, corrente a getto 108/126 km/h) si decide con Marco a video. Poi la pagina, gia'
+  nel foglio v28 (`47-parametro`, `50-strato`, `63-cielo`, `64-scala`, `71-pagina-meteo`).
+- **La ricerca nella barra -- dopo il Meteo** (Marco, 7/10/2026): prima si decide con Marco cosa
+  cerca, con quali nomi, dove mostra i risultati e cosa apre; poi un brief di cinque righe a
+  Claude Design (campo aperto, risultati, stati, telefono); la rotta del backend puo' partire
+  dopo la decisione, il campo dopo il disegno.
 - **M4 -- fatta** (7/10/2026): l'Archivio stringe per periodo (anno o date), sito, ottica e
   camera, e la riga dice solo le pose che passano (`counts.Scope`, `docs/domini/archivio.md`).
 
