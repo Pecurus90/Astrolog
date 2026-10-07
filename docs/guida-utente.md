@@ -68,36 +68,40 @@ te le richiede.
 
 ## Come ci si muove
 
-A sinistra c'e' una barra con le pagine, raccolte per quello che ci fai: **Guarda** quello che
-hai, **Sistema** l'archivio, **Pianifica** le prossime notti. In cima c'e' **Casa**, in fondo le
-**Impostazioni**. Accanto a *Da confermare* leggi quante cose aspettano una risposta, senza
-aprirla. Se apri un indirizzo che non porta a nessuna pagina -- scritto male, o tenuto
-nei preferiti da una pagina che non c'e' piu' -- l'app te lo dice e ti riporta a Casa.
+A sinistra c'e' il **binario**: le pagine, ognuna con la sua icona e il nome sotto. In cima la
+**Dashboard**, poi Notti, Archivio, Progetti, Statistiche e Attrezzatura; dopo uno stacco le
+pagine per pianificare -- Planner, Carta del cielo, Meteo -- e in fondo, staccate, *Da confermare*
+e le **Impostazioni**. Accanto a *Da confermare* leggi quante cose aspettano una risposta, senza
+aprirla. Alcune pagine non ci sono ancora: la loro voce c'e' gia', al suo posto, e aprendola
+leggi che la pagina sta arrivando. Se apri un indirizzo che non porta a nessuna pagina -- scritto
+male, o tenuto nei preferiti da una pagina che non c'e' piu' -- l'app te lo dice e ti riporta alla
+Dashboard.
 
-In fondo alla barra c'e' **Stanotte**: da dove stai osservando, che cielo ha quel posto, e che
-luna fa -- quanto e' illuminata, che forma ha, come sale e scende durante la notte, e a che ora
-sorge e tramonta. Gli orari
-sono quelli del **tuo sito**, anche se guardi l'app da un altro fuso. Se una notte la Luna non
-sorge o non tramonta, c'e' scritto: non un trattino.
+In alto c'e' il **nome della pagina** che stai guardando, poi la **scansione** e, a destra, la
+**pastiglia di Stanotte**. La scansione dice com'e' messa: a riposo ti dice quando l'app ha letto
+l'ultima volta e ti offre *Scansiona*; al lavoro ti dice cosa sta facendo, con i numeri e una
+barra che avanza, e la puoi fermare da qualunque pagina; fermata ti offre *Riprendi*; se si e'
+bloccata ti dice perche', con *Vedi*, e ti offre *Scansiona* per ripartire. Se qualcosa non si e' potuto leggere -- una cartella
+irraggiungibile, o caduta mentre la leggeva -- lo trovi scritto in cima alla pagina, con *Vedi*
+che ti porta dove si sistema.
 
-Sotto la Luna c'e' **il meteo di stanotte** dal tuo sito di casa: il verdetto, le nuvole, le ore utili, quanti
-modelli sono d'accordo e il vento in quota, col collegamento al **Meteo** per il resto. Se la
-previsione di stanotte non c'e' -- non e' ancora arrivata, o il modello che hai scelto non l'ha data --
-te lo dice, e il Meteo ti spiega perche'.
+La pastiglia dice **da dove osservi** e, col disco, che luna fa. Premila e si apre **Stanotte**:
+- il **sito**: se ne hai piu' di uno li trovi tutti e scegli quello di stanotte -- diventa il tuo
+  sito di casa, e Luna e meteo si aggiornano. Sotto c'e' che cielo ha, con la classe di Bortle e
+  la sua misura, e *Gestisci i siti*. Se non hai ancora un sito, la pastiglia dice *Scegli il
+  sito* e Stanotte ti porta dove lo dichiari;
+- la **Luna**: che fase e', quanto e' illuminata, a che ora sorge e tramonta. Gli orari sono
+  quelli del **tuo sito**, anche se guardi l'app da un altro fuso. Se una notte la Luna non sorge
+  o non tramonta, c'e' scritto: non un trattino;
+- il **meteo di stanotte**: il verdetto, le ore utili, quanti modelli sono d'accordo e il vento in
+  quota, col collegamento al **Meteo** per il resto. Se la previsione non c'e', te lo dice.
 
-Dietro la curva c'e' **il buio**: la notte e' dipinta a fasce -- il giorno, i tre crepuscoli, e il
-buio -- quindi vedi a colpo d'occhio quando comincia il buio vero e dove sta la Luna dentro.
-Dove il Sole non tramonta -- al circolo polare d'estate -- la fascia e' **una sola**, tutta giorno.
-Dove non sorge, invece, il buio non e' automatico: alle Svalbard a gennaio il cielo a mezzogiorno
-risale fino al crepuscolo nautico e poi torna buio. L'app dipinge le fasce che quella notte ha
-davvero, mai cinque per abitudine.
+Su uno schermo largo Stanotte resta aperta accanto alla pagina; su uno piu' stretto si apre
+sopra, e la chiudi con *chiudi*, con Esc o toccando fuori. L'app ricorda se l'avevi lasciata
+aperta. Sul **telefono** le pagine principali -- Dashboard, Notti, Archivio, Progetti -- stanno in
+basso, e *Altro* apre un foglio con la scansione e tutte le altre.
 
-La Luna **si apre**: un clic su quella striscia e il grafico si vede grande, con i gradi e le ore
-scritti accanto, e trovi il numero che in barra non ci sta -- **quanto sale**, e a che ora. E'
-quello che decide se una notte e' buona: una Luna piena che resta bassa disturba meno di una mezza
-che passa allo zenit. Si chiude con *Chiudi* o con Esc, e torni dov'eri.
-
-In fondo alla barra c'e' **Impostazioni**, che e' una pagina sola con dentro le sue sezioni --
+Le **Impostazioni** sono una pagina sola con dentro le sue sezioni --
 ognuna col suo indirizzo, quindi ci torni col tasto indietro e il collegamento si manda a
 qualcuno. La prima e' **Cartelle**: quelle che l'app legge, quante ne e' entrato in archivio, se
 al momento si raggiungono. Da li' ne aggiungi una (scrivendo il percorso, o sfogliando se l'app
@@ -188,7 +192,7 @@ la sta leggendo, te lo dice lo stesso, anche se era la prima e le altre sono and
 quando l'app intanto e' passata ad altro: le altre restano lette, e quella si riprova col prossimo
 *Scansiona*. Quando finisce, i conti si aggiornano da soli.
 
-## Casa
+## Dashboard
 
 La pagina principale ti dice **quante cose ci sono da confermare**: sono le domande che l'app ha
 su cio' che ha letto negli header. Sotto trovi la versione dell'app e due numeri sullo stato
@@ -619,13 +623,11 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
   computer il percorso si scrive.
 - **Un campo della scheda non si svuota**: si corregge scrivendo un altro valore, ma un valore
   scritto non si toglie dalla pagina.
-- **La veste non e' ancora su tutto**: l'app ha i suoi colori, la barra, la Casa, *Da confermare*
-  e il **primo avvio**, che e' ora quello disegnato: a che punto sei con un binario -- la tappa
-  fatta porta una spunta, quella dove sei un disco pieno, quelle che vengono un cerchietto
-  punteggiato -- e ogni passo dice **perche'** l'app chiede quella cosa. L'**Archivio** mostra
-  gia' tutto quello che sa, ma la grafica delle sue righe arriva nel prossimo giro. Il tema
-  chiaro c'e' nel foglio e **non si puo' ancora accendere**: le Impostazioni ci sono, ma non hanno
-  ancora la sezione da cui chiederlo.
+- **La veste nuova e' solo sul telaio**: il binario, la barra in alto e Stanotte sono quelli
+  disegnati, col carattere nuovo. Le pagine dentro -- Dashboard, Archivio, Notti, Da confermare,
+  Attrezzatura, Impostazioni -- funzionano come prima ma sono **spoglie** finche' non arriva il
+  loro disegno; il Meteo e' la prima a riceverlo. Il tema chiaro c'e' nel foglio e **non si puo'
+  ancora accendere**.
 - **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un
   segno -- una spunta se e' andata bene, un triangolo se c'e' un problema -- perche' chi non
   distingue il verde dal rosso deve capire lo stesso. E nel primo avvio tre risposte che prima

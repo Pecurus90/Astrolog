@@ -33,10 +33,7 @@ export function Impostazioni() {
   if (!qui) return null
 
   return (
-    <main className="as-pagina">
-      {/* Il titolo a schermo lo scrive la barra in alto; qui serve **al documento**, che senza
-          comincerebbe da un'intestazione di secondo livello. */}
-      <h1 className="as-solo-lettori">{t("nav.settings")}</h1>
+    <div className="as-pagina">
       <div className="as-impostazioni">
         <nav className="as-impostazioni__lato as-sezioni" aria-label={t("settings.sections")}>
           {aperte.map((s) => (
@@ -54,6 +51,6 @@ export function Impostazioni() {
         </nav>
         <div className="as-impostazioni__corpo">{qui.elemento}</div>
       </div>
-    </main>
+    </div>
   )
 }

@@ -19,6 +19,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
 | 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
 | 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
+| 7/10/2026 | costruisci | Telaio v28 (ADR 0018) | ~0,86 M agenti (workflow 0,55 + due sviluppatore 0,31), sessione principale non contata | 17 workflow | 1 bloccante dall'audit (bloccata senza modo di ripartire) + 5 piccoli chiusi da me + 3 colori del foglio corretti da Design (v28) |
 | 7/10/2026 | costruisci | M4, Archivio per periodo, sito, ottica, camera | ~0,35 M workflow (6 agenti), sessione principale non contata | 39 workflow | 2 bloccanti dall'audit (date non battibili da tastiera; docstring oltre 2 righe) + 1 mio dopo (valore storto nell'indirizzo = 422) |
 | 7/10/2026 | costruisci | M5, backup delle risposte (ADR 0017) | ~0,49 M workflow (8 agenti), sessione principale non contata | 47 workflow | 2 bloccanti dal giro (DB ricreato prima dell'avvio non proposto; percorso di ASTAP nell'Esporta) + 5 piccoli chiusi da me |
 | 7/10/2026 | costruisci | M2, la cartella ora sta qui | ~0,46 M workflow (5 agenti), sessione principale non contata | 28 workflow | 0 bloccanti; 8 piccoli parcheggiati (3 dello schermo da riparare subito) |
@@ -436,12 +437,6 @@ riga per voce.
   pavimento del grafico della notte (-15 gradi) e l'altezza della tela in barra (40px), ricopiati
   in `frontend/src/disegnoDellaLuna.ts` e `frontend/src/Stanotte.tsx`, no; il tetto della Luna
   (il foglio commenta 28,6 gradi, `ephemeris/__init__.py` usa 28,8 come limite superiore) no.
-- **I pavimenti di Bortle 4 e 5 nella fonte del foglio vanno portati a quelli della norma**
-  (`units.BORTLE_FLOORS`, voce *Bortle scale* di Wikipedia): `4 = 20,80 · 5 = 19,25` al posto di
-  `20,40` e `19,10`. Il commento di `.as-bortle` in `frontend/src/stili/astrolog.css` e' gia'
-  corretto qui, con l'impronta di `tools/controlli_veste.py`, per eccezione all'ADR 0012 decisa da
-  Marco: la correzione va chiesta a Claude Design, perche' la prossima consegna non la riporti
-  indietro.
 - **Il fuoco va dove serve**: un bottone che apre un campo ("Non e' questo: lo correggo", "Non e'
   in elenco", "Dagli un nome") ci porta il fuoco; **il dialogo non trattiene il fuoco** oggi
   (`frontend/src/Dialogo.tsx`: col tabulatore si esce sulla pagina dietro), e va chiuso con un
@@ -522,9 +517,8 @@ riga per voce.
 - **Lo scheletro di pagina** (titolo, attesa, avviso d'errore) e i mattoni scritti a mano in piu'
   posti diventano mattoni: la tendina di scelta (cinque posti, voce vuota opzionale), il dato che
   non si sa (`as-dato--ignoto` in tre file, uno solo col segno).
-- **Barra**: il nome del sito nel piede porta alla sua scheda (`domini/navigazione.md`); su
-  telefono si decide cosa apre il pulsante "Sezioni", o si corregge il contratto; il contatore di
-  Da confermare con una lettura sua (*Una lettura non calcola mai*, sopra).
+- **Telaio**: il contatore di Da confermare con una lettura sua (*Una lettura non calcola mai*,
+  sopra); la ricerca nella barra, con la sua rotta (Marco, 7/10/2026).
 - **Stanotte**: senza previsione non rilegge ogni 5 minuti per sempre (`rileggiOgni`); il piede
   sa la scadenza vera al mezzogiorno del sito (*Il piede richiede il cielo a tempo, non a
   scadenza*, nel Parcheggio); sopra gli 84 gradi di latitudine, se il buio tocca tutti e due i

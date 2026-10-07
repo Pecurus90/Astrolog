@@ -3,6 +3,17 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 
 import { App } from "./App"
+// Il carattere del foglio, dentro l'app e mai scaricato (ADR 0018): i pesi che il foglio chiede,
+// 300-700 per il testo, 400-700 per le cifre. Prima del foglio, che lo nomina.
+import "@fontsource/atkinson-hyperlegible-next/300.css"
+import "@fontsource/atkinson-hyperlegible-next/400.css"
+import "@fontsource/atkinson-hyperlegible-next/500.css"
+import "@fontsource/atkinson-hyperlegible-next/600.css"
+import "@fontsource/atkinson-hyperlegible-next/700.css"
+import "@fontsource/atkinson-hyperlegible-mono/400.css"
+import "@fontsource/atkinson-hyperlegible-mono/500.css"
+import "@fontsource/atkinson-hyperlegible-mono/600.css"
+import "@fontsource/atkinson-hyperlegible-mono/700.css"
 // Il foglio della consegna: dentro, prima i token e poi i mattoni che li leggono.
 import "./stili/astrolog.css"
 // e in coda il poco che e' nostro: la catena delle altezze fino al nodo radice.

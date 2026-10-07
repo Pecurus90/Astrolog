@@ -100,6 +100,47 @@ def test_a_class_that_does_not_exist_is_caught(tmp_path):
     assert controlli_veste.classi_inventate(str(tmp_path)) == ["as-elenco-nudo"]
 
 
+def _radice_con_attesa(tmp_path, foglio, codice, attesa):
+    """Una radice finta: il foglio, un file di codice e l'elenco delle classi in attesa."""
+    stili = tmp_path / "frontend" / "src" / "stili"
+    stili.mkdir(parents=True)
+    (stili / controlli_veste.FOGLIO).write_text(foglio, encoding="utf-8")
+    (tmp_path / "frontend" / "src" / "Pagina.tsx").write_text(codice, encoding="utf-8")
+    (tmp_path / "tools").mkdir()
+    (tmp_path / "tools" / "classi_in_attesa.txt").write_text(
+        "# intestazione\n" + "".join(f"{c}\n" for c in attesa), encoding="utf-8"
+    )
+    return str(tmp_path)
+
+
+def test_a_waiting_class_passes_and_a_new_missing_one_does_not(tmp_path):
+    """**L'elenco in attesa copre solo cio' che dichiara** (ADR 0018): una classe del v10 scritta
+    in una pagina non ancora ridisegnata passa, una classe nuova assente dal foglio resta rossa."""
+    radice = _radice_con_attesa(
+        tmp_path,
+        ".as-carta { color: red; }\n",
+        'export const x = <p className="as-carta as-vecchia as-inventata" />\n',
+        ["as-vecchia"],
+    )
+    assert controlli_veste.classi_inventate(radice) == ["as-inventata"]
+
+
+def test_the_waiting_list_only_shrinks(tmp_path):
+    """**La guardia vista rossa sull'elenco.** Una voce che il codice non scrive piu', o che il
+    foglio ora ha, e' un rosso: senza, l'elenco crescerebbe di voci morte e un giorno coprirebbe
+    una classe inventata con lo stesso nome."""
+    radice = _radice_con_attesa(
+        tmp_path,
+        ".as-carta { color: red; }\n.as-arrivata { color: red; }\n",
+        'export const x = <p className="as-carta as-arrivata" />\n',
+        ["as-arrivata", "as-sparita"],
+    )
+    assert controlli_veste.classi_inventate(radice) == [
+        "tools/classi_in_attesa.txt: as-arrivata il foglio ora la ha, togli la voce",
+        "tools/classi_in_attesa.txt: as-sparita il codice non la scrive piu', togli la voce",
+    ]
+
+
 def test_the_filter_variants_in_the_table_are_the_ones_the_brick_writes():
     """`MATTONI` elenca le varianti del filtro **a mano**, e il mattone le scrive nella sua mappa:
     due case dello stesso fatto. Una banda aggiunta al mattone e dimenticata qui non fa rumore --

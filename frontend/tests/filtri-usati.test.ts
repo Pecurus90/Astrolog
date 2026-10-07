@@ -30,6 +30,14 @@ function variantiDelFoglio(): Set<string> {
   return new Set([...testo.matchAll(/\.(as-filtro--[a-z0-9-]+)/g)].map((m) => m[1] as string))
 }
 
+/** Le classi che il codice scrive e il foglio v27 non ha ancora, dichiarate una per una in
+ *  `tools/classi_in_attesa.txt` (ADR 0018): le pastiglie tornano col disegno dell'Archivio. */
+function classiInAttesa(): Set<string> {
+  const file = resolve(process.cwd(), "..", "tools", "classi_in_attesa.txt")
+  const righe = readFileSync(file, "utf-8").split("\n")
+  return new Set(righe.map((r) => r.trim()).filter((r) => r && !r.startsWith("#")))
+}
+
 describe("la pastiglia di un filtro", () => {
   it("conosce ogni banda che il vocabolario produce", () => {
     const bande = bandeDelVocabolario()
@@ -52,10 +60,14 @@ describe("la pastiglia di un filtro", () => {
     // L'altra meta', e la piu' insidiosa: una classe **inventata** non rompe niente -- non si
     // applica, e la pastiglia resta grigia. Senza questa riga la prova misurava solo che una banda
     // avesse *una* chiave, non che quella chiave dipingesse qualcosa.
+    // Una classe assente dal foglio passa solo se e' dichiarata in attesa del disegno.
     const nelFoglio = variantiDelFoglio()
-    expect(nelFoglio.size).toBeGreaterThan(0)
+    const inAttesa = classiInAttesa()
+    expect(nelFoglio.size + inAttesa.size).toBeGreaterThan(0)
 
-    const inventate = [...new Set(Object.values(VARIANTE))].filter((c) => !nelFoglio.has(c))
+    const inventate = [...new Set(Object.values(VARIANTE))].filter(
+      (c) => !nelFoglio.has(c) && !inAttesa.has(c),
+    )
 
     expect(inventate, `classi che il foglio non ha: ${inventate.join(", ")}`).toEqual([])
   })

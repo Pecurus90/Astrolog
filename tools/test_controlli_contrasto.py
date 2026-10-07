@@ -55,7 +55,7 @@ def test_a_sheet_whose_light_block_cannot_be_found_is_refused():
     """**La guardia vista rossa.** Il selettore del tema chiaro scritto altrimenti -- e' il foglio
     a deciderlo, e il foglio arriva da fuori -- deve fermare la misura, non farla passare."""
     with open(FOGLIO, encoding="utf-8") as h:
-        rotto = h.read().replace(':root[data-tema="chiaro"]', ":root[data-tema='chiaro']")
+        rotto = h.read().replace(':root[data-tema="atlante"] {', ":root[data-tema='atlante'] {")
     with pytest.raises(ValueError, match="tema chiaro"):
         controlli_contrasto._valori(rotto, "chiaro")
 
@@ -66,7 +66,7 @@ def test_that_refusal_reaches_the_gate_as_a_line_not_a_traceback(tmp_path):
     stili = tmp_path / "frontend" / "src" / "stili"
     stili.mkdir(parents=True)
     with open(FOGLIO, encoding="utf-8") as h:
-        rotto = h.read().replace(':root[data-tema="chiaro"]', ":root[data-tema='chiaro']")
+        rotto = h.read().replace(':root[data-tema="atlante"] {', ":root[data-tema='atlante'] {")
     (stili / controlli_contrasto.FOGLIO).write_text(rotto, encoding="utf-8")
     colpe = controlli_contrasto.sotto_soglia(str(tmp_path))
     assert any("tema chiaro" in c for c in colpe), colpe
@@ -100,10 +100,37 @@ def test_a_colour_pushed_below_the_threshold_is_caught(tmp_path):
     foglio = FOGLIO
     with open(foglio, encoding="utf-8") as h:
         testo = h.read()
-    rotto = testo.replace("--inchiostro-tenue:     #b3b9c6;", "--inchiostro-tenue:     #2a2c33;")
+    rotto = testo.replace("--inchiostro-tenue:     #b4bcdb;", "--inchiostro-tenue:     #2a2c33;")
     assert rotto != testo, "il token da rompere non e' piu' scritto cosi'"
     finto = tmp_path / "frontend" / "src" / "stili"
     finto.mkdir(parents=True)
     (finto / controlli_contrasto.FOGLIO).write_text(rotto, encoding="utf-8")
     colpe = controlli_contrasto.sotto_soglia(str(tmp_path))
     assert any("inchiostro-tenue" in c for c in colpe), colpe
+
+
+def test_a_colour_written_on_a_tint_in_channels_is_read():
+    """Il v27 scrive i colori come `rgb(var(--tinta-velo) / .34)`, con la tinta in canali "R G B".
+    Senza sostituire il `var()` dentro il colore quei token non si leggono, e sono proprio le
+    linee e i veli che portano significato."""
+    valori = {"--tinta-velo": "255 255 255", "--linea": "rgb(var(--tinta-velo) / .34)"}
+    risolto = controlli_contrasto._risolvi("--linea", valori)
+    assert risolto == "rgb(255 255 255 / .34)"
+    # lo stesso conto a mano della prova sui colori a virgole: le due grafie danno lo stesso colore
+    assert controlli_contrasto.colore(risolto, su="#14151c") == (0x64, 0x65, 0x69)
+    assert controlli_contrasto.colore("rgb(20 21 28)") == (0x14, 0x15, 0x1C)
+
+
+def test_a_tint_darkened_below_the_threshold_is_caught(tmp_path):
+    """**La guardia vista rossa, attraverso la tinta.** Un token che legge la sua tinta in canali
+    deve seguirla: spenta la tinta del velo, la linea che distingue uno stato sparisce, e la
+    misura lo deve dire. Se la guardia leggesse il colore senza la tinta, resterebbe zitta."""
+    with open(FOGLIO, encoding="utf-8") as h:
+        testo = h.read()
+    rotto = testo.replace("--tinta-velo:      205 220 255;", "--tinta-velo:      13 17 34;", 1)
+    assert rotto != testo, "la tinta da spegnere non e' piu' scritta cosi'"
+    finto = tmp_path / "frontend" / "src" / "stili"
+    finto.mkdir(parents=True)
+    (finto / controlli_contrasto.FOGLIO).write_text(rotto, encoding="utf-8")
+    colpe = controlli_contrasto.sotto_soglia(str(tmp_path))
+    assert any(c.startswith("scuro: --linea-significato su --fondo-carta = 1.00:1") for c in colpe)

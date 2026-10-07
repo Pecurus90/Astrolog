@@ -10,13 +10,14 @@
  * ha dimostrato nulla. Qui la dimostrazione resta nella suite per sempre, invece di essere un
  * esperimento fatto una volta e poi perso.
  */
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
   SALUTE,
   SCHEDE,
   SENZA_SOGGETTI,
+  SITO_DI_CASA,
   SPINA,
   STANOTTE,
   disegna,
@@ -85,10 +86,9 @@ describe("l accessibilita della prima pagina", () => {
     expect(await violazioni(container)).toEqual([])
   })
 
-  it("e nemmeno il pannello della Luna, aperto", async () => {
-    // Un dialogo e' il markup dove si sbaglia di piu': il nome della finestra, il titolo che non
-    // e' un titolo, la tela senza nome, la legenda che e' solo colore. Chiuso, axe non vede
-    // niente di tutto questo.
+  it("e nemmeno Stanotte, aperta", async () => {
+    // Un pannello che si apre e' il markup dove si sbaglia di piu': il nome del pannello, il
+    // titolo che non e' un titolo, la scelta del sito senza nome. Chiuso, axe non vede niente.
     rispondi({
       "/api/v1/tonight": {
         stato: 200,
@@ -120,13 +120,20 @@ describe("l accessibilita della prima pagina", () => {
         },
       },
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+      // due siti: con uno solo la scelta non si monta, e axe non la guarderebbe
+      "/api/v1/sites": {
+        stato: 200,
+        corpo: { items: [SITO_DI_CASA, { ...SITO_DI_CASA, id: 2, name: "Passo Giau", is_default: false }], total: 2, limit: 50, offset: 0 },
+      },
       "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
       "/api/health": { stato: 200, corpo: SALUTE },
       ...SPINA,
     })
     const { container } = await disegna()
-    fireEvent.click(await screen.findByRole("button", { name: /gibbosa crescente/i }))
-    await screen.findByRole("dialog")
+    fireEvent.click(await screen.findByRole("button", { name: /stanotte a vicenza/i }))
+    const pannello = await screen.findByRole("complementary", { name: /stanotte/i })
+    await within(pannello).findByRole("radio", { name: /passo giau/i })
+    expect(within(pannello).getByText(/gibbosa crescente/i)).toBeDefined()
     expect(await violazioni(container)).toEqual([])
   })
 

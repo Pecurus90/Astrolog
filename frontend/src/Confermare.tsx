@@ -121,13 +121,8 @@ export function Confermare() {
   const inMano = Object.values(accumulo).reduce((quante, r) => quante + Object.keys(r).length, 0)
 
   return (
-    <main className="as-pagina">
-      <div className="as-testata">
-        <h1 className="as-testata__titolo">{t("review.title")}</h1>
-        <p className="as-testata__sotto">
-          {t("review.count", { n: numero(dati?.to_confirm ?? 0) })}
-        </p>
-      </div>
+    <div className="as-pagina">
+      <p>{t("review.count", { n: numero(dati?.to_confirm ?? 0) })}</p>
 
       {applica.data && (
         <Avviso esito="buono" ruolo="status">
@@ -200,7 +195,7 @@ export function Confermare() {
           </Bottone>
         </div>
       </div>
-    </main>
+    </div>
   )
 }
 

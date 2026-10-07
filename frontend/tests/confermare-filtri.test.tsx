@@ -285,7 +285,7 @@ describe("Da confermare -- i filtri", () => {
     aperta({ ...PAGINA, filters: [], to_confirm: 0 })
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
-    await screen.findByRole("heading", { name: /da confermare/i })
+    await within(await screen.findByRole("main")).findByText(/cos[ae] da confermare/i)
     expect(screen.queryByRole("region", { name: /filtri/i })).toBeNull()
   })
 

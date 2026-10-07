@@ -1,16 +1,16 @@
 // @vitest-environment jsdom
 /**
- * La veste: il guscio che tiene lo scheletro, e la colonna misurata di ogni pagina.
+ * La veste: il telaio che tiene lo scheletro (ADR 0018), e la colonna misurata di ogni pagina.
  *
  * Qui non si prova che un colore sia bello -- quello e' il foglio, e il contrasto lo misura
  * `tools/controlli_veste.py` sui valori veri. Si prova cio' che **la pagina deve avere perche' il
  * foglio possa funzionare**, e che nessuna pagina nuova se lo dimentichi:
  *
- * - **il guscio esiste ed e' uno**: la barra, la testata e il contenuto stanno nella stessa
- *   griglia. Finche' erano tre fratelli sciolti non c'era nessun nodo su cui appenderla;
- * - **il contenitore misurato sta SOPRA il guscio**: un elemento non si stila dalla propria
- *   container query, quindi `.as-guscio-misura` deve essere il genitore e non il guscio stesso --
- *   sbagliarlo non rompe niente a schermo, la colonna stretta semplicemente non arriva mai;
+ * - **il telaio esiste ed e' uno**: il binario, la barra alta e il corpo stanno nella stessa
+ *   griglia. Da fratelli sciolti non ci sarebbe nessun nodo su cui appenderla;
+ * - **il contenitore misurato sta SOPRA il telaio**: un elemento non si stila dalla propria
+ *   container query, quindi `.as-telaio-misura` deve essere il genitore e non il telaio stesso --
+ *   sbagliarlo non rompe niente a schermo, la misura stretta semplicemente non arriva mai;
  * - **ogni pagina apre la sua colonna**: `.as-pagina` e' il contenitore `colonna` da cui le righe
  *   e le tabelle sanno di essere strette. Una pagina che nasce senza non si accorge di niente
  *   finche' qualcuno non stringe la finestra.
@@ -18,7 +18,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { APERTE, GRUPPI, TITOLI } from "../src/pagine"
+import { PAGINE } from "../src/pagine"
 import { SALUTE, STANOTTE, disegna, fuoriDaiMattoni, impostazioni, pulisci, riga, rispondi, vaiASezione } from "./banco"
 
 afterEach(pulisci)
@@ -181,52 +181,40 @@ describe("la veste", () => {
   })
 
 
-  it("la barra, la testata e la pagina stanno nella stessa griglia", async () => {
+  it("il binario, la barra alta e il corpo stanno nel telaio", async () => {
     aperta()
     await disegna()
-    const barra = await screen.findByRole("navigation")
-    const guscio = barra.closest(".as-guscio")
-    expect(guscio).not.toBeNull()
-    expect(guscio?.querySelector("header.as-alto")).not.toBeNull()
-    expect(guscio?.querySelector(".as-principale")).not.toBeNull()
+    const binario = await screen.findByRole("navigation", { name: /pagine/i })
+    const telaio = binario.closest(".as-telaio")
+    expect(telaio).not.toBeNull()
+    expect(binario.classList.contains("as-telaio__binario")).toBe(true)
+    expect(telaio?.querySelector("header.as-telaio__alto")).not.toBeNull()
+    expect(telaio?.querySelector("main.as-telaio__corpo")).not.toBeNull()
   })
 
-  it("il contenitore misurato e' il genitore del guscio, non il guscio", async () => {
+  it("il contenitore misurato e' il genitore del telaio, non il telaio", async () => {
     aperta()
     await disegna()
-    const guscio = (await screen.findByRole("navigation")).closest(".as-guscio")
-    expect(guscio?.classList.contains("as-guscio-misura")).toBe(false)
-    expect(guscio?.parentElement?.classList.contains("as-guscio-misura")).toBe(true)
-  })
-
-  it("ogni gruppo della barra porta con se' il suo nome", async () => {
-    // La barra ha perso `<ul>`/`<li>` per stare nella forma dei mattoni: questo e' cio' che tiene
-    // in piedi la meta' che avevo promesso -- il nome del gruppo resta legato alle sue voci. Senza
-    // la prova, toglierlo per sbaglio non farebbe cadere niente: axe non ha una regola per un
-    // gruppo senza nome, e nessun'altra prova guarda qui.
-    aperta()
-    await disegna()
-    const barra = await screen.findByRole("navigation")
-    const guarda = within(barra).getByRole("group", { name: /guarda/i })
-    expect(within(guarda).getByRole("link", { name: /archivio/i })).toBeDefined()
-    // e i gruppi senza titolo non fingono di essere gruppi: un `group` senza nome non raccoglie
-    // niente, aggiunge solo un livello. Quanti sono si conta dalle pagine che esistono, non a
-    // mano: scritto come numero, cadrebbe il giorno che nasce una pagina, per la ragione sbagliata
-    const conNome = GRUPPI.filter((g) => TITOLI[g] && APERTE.some((p) => p.gruppo === g))
-    expect(within(barra).getAllByRole("group")).toHaveLength(conNome.length)
-    expect(within(barra).getByRole("link", { name: /casa/i })).toBeDefined()
+    const telaio = (await screen.findByRole("navigation", { name: /pagine/i })).closest(".as-telaio")
+    expect(telaio?.classList.contains("as-telaio-misura")).toBe(false)
+    expect(telaio?.parentElement?.classList.contains("as-telaio-misura")).toBe(true)
   })
 
   it("ogni pagina che esiste apre la sua colonna misurata", async () => {
-    for (const p of APERTE) {
+    const esistenti = PAGINE.filter((p) => p.elemento !== undefined)
+    expect(esistenti.length).toBeGreaterThan(0)
+    for (const p of esistenti) {
       aperta()
       // si entra dall'indirizzo, non cliccando: e' cosi' che ci arriva anche chi apre un
       // collegamento, e la prova vale per ogni pagina futura senza sapere dove sta la sua voce
       window.history.pushState({}, "", p.a)
       await disegna()
-      await waitFor(() => expect(document.querySelector("main")).not.toBeNull())
-      const dentro = document.querySelector("main")
-      expect(dentro?.classList.contains("as-pagina"), `${p.a} senza colonna`).toBe(true)
+      const corpo = await screen.findByRole("main")
+      // il corpo del telaio tiene anche le righe di stato della scansione: la colonna e' la
+      // pagina, figlia diretta del corpo
+      await waitFor(() =>
+        expect(corpo.querySelector(":scope > .as-pagina"), `${p.a} senza colonna`).not.toBeNull(),
+      )
       pulisci()
     }
   })

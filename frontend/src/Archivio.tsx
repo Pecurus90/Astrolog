@@ -187,8 +187,7 @@ export function Archivio() {
   const pannelli = elenco.isSuccess && (righe.length > 0 || stringi)
 
   return (
-    <main className="as-pagina">
-      <h1 className="as-testata__titolo">{t("archive.title")}</h1>
+    <div className="as-pagina">
 
       {elenco.isPending && <p>{t("app.loading")}</p>}
       {elenco.error && <Avviso esito="allarme">{elenco.error.message}</Avviso>}
@@ -249,7 +248,7 @@ export function Archivio() {
       )}
 
       <Altre elenco={elenco} testo="archive.more" />
-    </main>
+    </div>
   )
 }
 

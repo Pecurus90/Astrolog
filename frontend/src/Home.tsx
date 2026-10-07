@@ -40,11 +40,7 @@ export function Home() {
   }
 
   return (
-    <main className="as-pagina">
-      <div className="as-testata">
-        <h1 className="as-testata__titolo">{t("app.title")}</h1>
-      </div>
-
+    <div className="as-pagina">
       <section className="as-carta">
         <div className="as-carta__intestazione">
           <div>
@@ -83,6 +79,6 @@ export function Home() {
           </div>
         )}
       </section>
-    </main>
+    </div>
   )
 }

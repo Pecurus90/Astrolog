@@ -44,7 +44,8 @@ describe("la navigazione", () => {
     configurata()
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
-    expect(await screen.findByRole("heading", { name: /da confermare/i })).toBeDefined()
+    const alto = await screen.findByRole("banner")
+    expect(await within(alto).findByRole("heading", { level: 1, name: /da confermare/i })).toBeDefined()
     expect(window.location.pathname).not.toBe("/")
   })
 
@@ -61,13 +62,13 @@ describe("la navigazione", () => {
 })
 
 describe("un indirizzo che non esiste", () => {
-  it("lo dice, e porta a Casa", async () => {
+  it("lo dice, e porta alla Dashboard", async () => {
     // un indirizzo scritto a mano, o tenuto nei preferiti da una pagina che non c'e' piu'
     window.history.pushState({}, "", "/non-esiste")
     configurata()
     await disegna()
-    expect(await screen.findByRole("heading", { name: /questa pagina non c'e'/i })).toBeDefined()
-    fireEvent.click(screen.getByRole("link", { name: /torna a casa/i }))
+    expect(await within(await screen.findByRole("main")).findByText(/questa pagina non c'e'/i)).toBeDefined()
+    fireEvent.click(screen.getByRole("link", { name: /torna alla dashboard/i }))
     expect(window.location.pathname).toBe("/")
   })
 })

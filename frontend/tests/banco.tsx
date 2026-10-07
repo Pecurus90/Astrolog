@@ -157,12 +157,32 @@ export const FERMO = {
 
 export const SPINA = { "/api/v1/pipeline/status": { stato: 200, corpo: FERMO } }
 
+/** Un sito di casa come lo manda `GET /api/v1/sites`, tipato dallo schema. */
+export const SITO_DI_CASA: components["schemas"]["SiteOut"] = {
+  id: 1,
+  name: "Vicenza",
+  latitude: 45.5455,
+  longitude: 11.5354,
+  elevation_m: 39,
+  elevation_source: "declared",
+  timezone: "Europe/Rome",
+  sky_sqm: 20.8,
+  sky_source: "measured",
+  bortle: 4,
+  is_default: true,
+  nights: 0,
+  unknown: [],
+}
+
 /** Il cielo di stanotte **senza sito**: lo stato quieto del piede della barra, che vive nello
  *  scheletro e quindi parla in ogni pagina. Si sparge come `SPINA`, e per la stessa ragione:
  *  **non** si inietta da solo, cosi' una prova puo' ancora accorgersi se `/tonight` viene chiesta
  *  dove non doveva -- per esempio dentro il primo avvio, dove il piede non e' montato. */
 export const STANOTTE = {
   "/api/v1/tonight": { stato: 200, corpo: { night: null, site: null, moon: null, sky_bands: [], weather: null } },
+  // Stanotte chiede i siti per la scelta; uno solo non apre la scelta, quindi non smentisce il
+  // "senza sito" di sopra.
+  "/api/v1/sites": { stato: 200, corpo: { items: [SITO_DI_CASA], total: 1, limit: 50, offset: 0 } },
 }
 
 export function rispondi(mappa: Record<string, Voce>) {
@@ -297,10 +317,12 @@ export function fuoriDaiMattoni() {
         // il loro mattone (`ScalaDelCielo`) e la loro classe nel foglio. Vestirle da `as-bottone`
         // vorrebbe dire dargli il bordo e il fondo di un'azione, che non sono.
         "as-bortle__voce",
-        // La Luna in barra, stessa ragione: e' **un** bersaglio che tiene dentro il disco, il
-        // grafico e gli orari, e il foglio gliela veste da se' (`all: unset`). Con `as-bottone`
-        // diventerebbe un pulsante alto quanto una riga dentro la colonna della barra.
-        "as-luna__apri",
+        // I controlli del telaio, stessa ragione: la voce Altro del binario, la pastiglia di
+        // Stanotte e il velo hanno la loro classe nel foglio (`51-telaio.css`), e da `as-bottone`
+        // prenderebbero il bordo e il fondo di un'azione dentro il binario e la barra.
+        "as-telaio__voce",
+        "as-telaio__pastiglia",
+        "as-telaio__velo",
         // Le voci di un segmentato -- le due viste dell'Archivio, i tre ordini: sono **una** scelta
         // fra poche, non tre azioni, e il foglio le veste da se' (bordo condiviso, quella accesa
         // piena). Vestirle da `as-bottone` darebbe tre pulsanti attaccati.

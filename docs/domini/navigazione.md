@@ -1,136 +1,86 @@
 # La navigazione -- contratto
 
-Lo **scheletro** dell'app: dove stanno le pagine, cosa vive nella barra in alto e in fondo a
-quella laterale, e come tutto
-questo si piega su un telefono. Non e' grafica -- quella la porta il design system, che veste lo
-scheletro e poi le pagine una per una -- e' **dove va cosa**, deciso una volta perche' ogni pagina
-nuova non lo rimetta in discussione (Marco, 16/9/2026). I nomi vengono da [`glossario.md`](glossario.md);
-l'ordine in cui le pagine nascono sta in [`../coda.md`](../coda.md).
+Il **telaio** dell'app: il binario delle pagine, la barra in alto, Stanotte, e come tutto si piega
+su un telefono. La forma viene dal disegno (Claude Design, telaio v26, `51-telaio.css`;
+[ADR 0018](../adr/0018-tutto-nel-telaio-nuovo.md)); qui c'e' **dove va cosa** e perche'. I nomi
+vengono da [`glossario.md`](glossario.md).
 
 ## Cosa chiede l'utente
 
-Le prove del frontend si chiamano col loro titolo, che e' l'unica identita' che hanno; stanno in
-`frontend/tests/scheletro.test.tsx`.
+Le prove del frontend si chiamano col loro titolo; stanno in `frontend/tests/scheletro.test.tsx`
+(binario e barra), `frontend/tests/stanotte.test.tsx` (la pastiglia e il pannello) e
+`frontend/tests/veste.test.tsx` (come il telaio si misura).
 
 | richiesta | prova |
 |---|---|
-| Da qualunque pagina vedo dove sono e dove posso andare | *la barra in alto dice che pagina stai guardando* |
-| Le voci sono raccolte per quello che ci faccio, non per come e' fatta l'app | *i gruppi stanno nell ordine del contratto* |
-| Una voce che clicco mi porta sempre da qualche parte: non esistono voci che non fanno niente | *una pagina che non esiste ancora non e nella barra*, *una sezione non ancora nata non si mostra*, *nell elenco ci sono le sezioni che esistono, e solo quelle* |
-| Una sezione ha il suo indirizzo: il tasto indietro funziona e il collegamento si manda | *un sotto-indirizzo e una pagina vera, non un buco* |
+| Da qualunque pagina vedo dove sono e dove posso andare | *la barra in alto dice che pagina stai guardando*, *la voce della pagina aperta e' accesa, e solo lei* |
+| Le voci stanno nell'ordine del disegno | *le voci del binario stanno nell ordine di pagine.tsx* |
+| Una voce senza pagina mi dice che arriva, invece di sparire | *una voce senza pagina apre la pagina che dice che sta arrivando* |
+| Un indirizzo che non esiste me lo dice e mi riporta alla Dashboard | *lo dice, e porta alla Dashboard* (`navigazione.test.tsx`) |
 | Vedo quante cose ho da confermare senza aprire la pagina | *accanto a Da confermare c e quante cose aspettano* |
-| Vedo da dove sto osservando e che cielo ho, senza aprire niente | *dice da dove osservi, che cielo hai e che luna fa* |
-| Se non ho mai dichiarato che cielo ho, lo leggo lo stesso invece di non vedere niente | *un cielo mai dichiarato si legge, non sparisce* |
-| Vedo che luna fa stanotte senza aprire niente | *l ora e quella del sito, non quella del browser*, *una luna che non tramonta lo dice a parole* |
-| Vedo **dove comincia e dove finisce il buio**, senza aprire niente | *il cielo sta dietro la curva, con la fascia che ogni pezzo di notte ha davvero* |
-| Se voglio gli orari della Luna e il suo grafico li apro da li' | *la Luna e un bersaglio solo, e apre il pannello*, *il pannello porta il numero che in barra non ci sta* |
-| Cio' che apro si chiude come si chiude tutto, e mi ritrovo dov'ero | *chiudendo, il fuoco torna alla striscia da cui si era aperto* |
-| Su telefono la barra si toglie di mezzo e torna quando la chiamo, con le stesse voci | nasce col mobile |
-| Premo Scansiona da dove mi trovo, e vedo che sta lavorando anche se cambio pagina | *il lavoro si vede e si ferma anche da un altra pagina* |
-| Quando il lavoro finisce, i conti che guardo sono di adesso | *quando il lavoro finisce, il conto si rilegge* |
-| Se una cartella non si e' potuta leggere, me lo dice invece di far finta di niente -- sia quando era gia' irraggiungibile, sia quando cade mentre la legge | *le cartelle saltate si dicono, non si buttano*, *una cartella persa mentre la leggeva si dice* |
-| Se fermo e poi riprendo, riprende davvero: i file che non aveva letto li legge | `test_resume_after_a_stop_reads_the_files_that_were_left` (`backend/tests/test_api_scan_all.py`) |
+| Premo Scansiona da dove mi trovo, e la fermo anche da un'altra pagina | *il lavoro si vede e si ferma anche da un altra pagina*, *premere Scansiona chiede di leggere TUTTE le cartelle*, *il verbo del pulsante lo decide il backend, non la pagina* |
+| Mentre lavora vedo cosa fa, coi numeri veri; quando finisce i conti sono di adesso | *mentre gira si legge cosa sta facendo, coi numeri veri*, *quando il lavoro finisce, il conto si rilegge* |
+| Se la scansione si blocca mi dice perche' e la faccio ripartire | *bloccata, la scansione dice perche' e si fa ripartire dalla barra*, *bloccata, la scansione nel foglio dice perche' e porta dove si guarda* |
+| Cio' che non si e' potuto leggere me lo dice in testa alla pagina, e *Vedi* porta dove si ripara | *le cartelle saltate si dicono, non si buttano*, *una cartella persa mentre la leggeva si dice*, *Vedi porta alle Cartelle solo quando il rifiuto e' delle cartelle* |
+| La pastiglia mi dice da dove osservo e apre Stanotte; senza sito mi chiede di sceglierlo | *dice il sito, e apre Stanotte*, *senza sito chiede di sceglierlo* (`stanotte.test.tsx`) |
+| In Stanotte vedo il sito, il suo cielo e la Luna, con l'ora del sito | *dice da dove osservi, che cielo hai e che luna fa*, *l ora e quella del sito, non quella del browser*, *un cielo mai dichiarato si legge, non sparisce*, *una luna che non sorge lo dice a parole*, *una luna che non tramonta lo dice a parole* |
+| Fra piu' siti scelgo quello di stanotte; con uno solo non c'e' scelta | *fra piu' siti, sceglierne un altro lo scrive al backend*, *un sito solo non apre una scelta che non c e* |
+| In Stanotte vedo il meteo della notte, o perche' manca | *dice il verdetto, le ore utili, l'accordo e il vento in quota, e porta al Meteo*, *senza la previsione di stanotte lo dice, e porta al Meteo che spiega perche'* |
+| Cio' che apro si chiude con Esc e il fuoco torna dov'era; il foglio del telefono non lo lascia scappare | *Esc chiude Stanotte, e il fuoco torna alla pastiglia*, *Altro apre le voci che non stanno fra le schede del telefono, ed Esc lo chiude*, *il foglio Altro trattiene il fuoco: Tab non esce dietro il velo* |
+| Il telaio si misura dal suo contenitore, non dalla finestra | *il contenitore misurato e' il genitore del telaio, non il telaio*, *il binario, la barra alta e il corpo stanno nel telaio* (`veste.test.tsx`) |
+| Se fermo e poi riprendo, riprende davvero | `test_resume_after_a_stop_reads_the_files_that_were_left` (`backend/tests/test_api_scan_all.py`) |
 
 ## Le decisioni
 
-**Tre gruppi, per quello che ci fai** (Marco, 16/9/2026): **GUARDA** cio' che hai, **SISTEMA**
-l'archivio, **PIANIFICA** cio' che farai. *Casa* sta sopra i gruppi, da sola, ed e' il crocevia;
-*Impostazioni* sta in fondo, staccata, perche' e' l'unica voce che non e' un pezzo del lavoro.
-L'ordine dentro ogni gruppo **e' parte del contratto**: si legge dall'alto come si lavora.
+**Il binario, nell'ordine del disegno** (Marco in Claude Design, v15-v26): Dashboard, Notti,
+Archivio, Progetti, Statistiche, Attrezzatura; uno stacco; Planner, Carta del cielo, Meteo. In
+fondo, staccate, Da confermare e Impostazioni. Niente gruppi con titolo: lo stacco basta a
+dividere cio' che hai da cio' che pianifichi. Ogni voce e' un'icona con la parola sotto; i nomi
+lunghi vanno a capo dove dice il glossario ("Carta / del cielo", "Da / confermare"). La prima
+pagina si chiama **Dashboard** (glossario del disegno).
 
-| gruppo | voci, in ordine |
-|---|---|
-| -- | Casa |
-| **GUARDA** | Archivio · Notti · Attrezzatura · Statistiche |
-| **SISTEMA** | Da confermare · Diagnostica |
-| **PIANIFICA** | Planner · Progetti · Carta del cielo · Meteo |
-| -- | Impostazioni |
+**Ogni voce si vede, anche senza la sua pagina** (Marco, 7/10/2026): apre una pagina che dice
+che sta arrivando. Supera "una voce nasce con la sua pagina": il binario e' gia' quello finale, e
+chi lo impara non lo reimpara. I **rimandi dentro le pagine** invece restano: un *Apri la notte*
+non si mostra finche' la pagina che aprirebbe non esiste.
 
-**Impostazioni e' una pagina con dentro le sue sezioni** (Marco, 16/9/2026), non una voce per ogni
-cosa configurabile: **Cartelle**, *Il sito*, *Il riconoscitore*, *Le letture*, *Backup* -- e poi
-*Il tuo nome*, *Servizi*, *Soglie*, e domani *Meteo*. Le cartelle stanno li' e non in barra
-perche' indicarle e' un gesto che si fa una volta ogni tanto, non ogni giorno -- e una voce in
-meno nella barra vale piu' di un clic risparmiato.
-**Ogni sezione ha il suo indirizzo** (`/impostazioni/cartelle`): e' cio' che fa funzionare il tasto
-indietro e un collegamento che si manda a qualcuno, ed e' la stessa regola delle pagine.
+**Impostazioni e' una pagina con dentro le sue sezioni** (Marco, 16/9/2026): Cartelle, Il sito,
+Il riconoscitore, Le letture, Backup, e le altre quando nascono. Ogni sezione ha il suo indirizzo
+(`/impostazioni/cartelle`): il tasto indietro funziona e il collegamento si manda.
 
-**Ma cio' che l'app non trova deve portare dove si ripara**: il messaggio *"non c'e' nessuna
-cartella da leggere"* apre la sezione Cartelle. Senza, dopo il primo avvio non esiste nessuna
-strada per aggiungerne una seconda -- e non e' un difetto che si vede provando l'app con
-l'archivio gia' pieno.
+**La barra in alto dice il titolo della pagina, la scansione e la pastiglia di Stanotte.** La
+pagina non ripete il suo titolo (disegno v18).
+- **La scansione** ha quattro stati: a riposo ("Ultima lettura ... ", *Scansiona*), al lavoro
+  (fase, pista, numeri, *Ferma*), fermata (*Riprendi*), bloccata (il motivo, *Vedi* e il verbo per ripartire). Il verbo lo
+  decide il backend. Sta nel telaio perche' **il lavoro sopravvive alla pagina**: cambiando
+  schermata deve restare fermabile. *Riprendi* dopo uno Stop torna a leggere le cartelle rimaste.
+- **Cio' che la scansione non ha potuto fare** -- un rifiuto, una cartella caduta mentre la
+  leggeva, le cartelle saltate -- e' una **riga di stato in testa al corpo**, con *Vedi* che porta
+  dove si ripara (Marco, 7/10/2026). Tacerlo farebbe sembrare completa una scansione che non lo e'.
+- **La ricerca** ("Cerca oggetto, notte, sito") entra quando cerca davvero, con la sua rotta
+  (Marco, 7/10/2026): un campo che non cerca e' una promessa che l'app non mantiene.
 
-**Una voce nasce con la sua pagina, mai prima.** Lo scheletro e' deciso **qui**, tutto intero, ma
-la barra mostra solo le voci che portano da qualche parte: una voce che apre una pagina vuota e'
-una promessa che l'app non mantiene, e chi la clicca la clicca una volta sola. La lista vive in un
-posto solo, con accanto la fetta che la fa nascere, cosi' l'ordine e' gia' deciso quando arriva il
-suo turno e nessuno lo ridiscute.
+**La pastiglia dice il sito e apre Stanotte** (disegno v25). Senza sito dice "Scegli il sito".
+**Stanotte** e' un pannello: da 1440 px prende una colonna sua, sotto si apre sopra il contenuto
+col velo, sul telefono sale dal basso. Dentro, tre blocchi: il **sito** (i siti da scegliere,
+se sono piu' di uno; la classe del cielo letta con la sua misura; *Gestisci i siti*), la **Luna**
+(fase, quanto e' illuminata, quando sorge e tramonta), il **meteo** della notte (verdetto,
+accordo, vento in quota, e il rimando al Meteo). Stanno insieme perche' dipendono tutti dal sito
+acceso. Scegliere un sito cambia il sito di casa: si rileggono stanotte, il meteo e l'elenco.
+L'app ricorda in questo browser se l'avevi lasciato aperto.
 
-**E vale per ogni rimando, non solo per le voci** (Marco, 16/9/2026): un *Apri la notte* o un
-*Vedi le statistiche* dentro una pagina **non si mostra** finche' la pagina che aprirebbe non
-esiste. Niente rimandi spenti col "presto": e' una promessa a schermo, e su un rilascio pubblico
-la legge chiunque.
+**Cio' che si apre si chiude come tutto il resto**: Esc chiude (prima il foglio Altro, poi
+Stanotte), toccare il velo chiude, e il fuoco torna a chi l'aveva aperto.
 
-**In alto vive cio' che vale su ogni pagina**, e niente altro:
-- **Scansiona**, col verbo che decide il backend (*Avvia* / *Ferma* / *Riprendi*), e accanto la
-  fase coi numeri veri mentre gira. Sta li' e non solo dentro una pagina perche' **il lavoro
-  sopravvive alla pagina**: cambiando schermata deve restare fermabile, o resta un lavoro che
-  nessuno puo' piu' fermare (e' la ragione per cui il vecchio lo aveva messo li', e vale ancora).
-  E **un verbo non promette cio' che non fa**: *Riprendi* dopo uno Stop torna a leggere le
-  cartelle rimaste, non solo il lavoro a valle -- un file mai letto non lascia niente in coda,
-  quindi senza quella riga l'app diceva "fatto" con l'archivio a un quarto (misurato il
-  16/9/2026: 7 frame su 9 fuori).
-- **Un avviso quando qualcosa non va**, che compare **solo** se c'e' qualcosa di rotto -- il solver
-  non installato, una cartella irraggiungibile, il catalogo assente -- e porta alla Diagnostica.
-- **Lingua e tema**, che si cambiano al volo e non sono configurazione (decisione ereditata:
-  *"lingua e tema nella barra in alto, non in Impostazioni"*, [`ereditato.md`](ereditato.md)).
-- **Il tuo nome**, se lo hai scritto: senza, non compare niente -- nessun ripiego, nessun "Utente".
-
-**In fondo alla barra vive STANOTTE: da dove osservi, e cosa fa il cielo** (Marco, 19/9/2026).
-Prima il **sito attivo** con la sua classe di cielo, letta come rampa di nove bande: la posizione
-dice quanto e' buono, che una cifra su nove da sola non dice. **La misura in magnitudini qui non
-compare** -- e' una delle due eccezioni dichiarate nel foglio, insieme al primo avvio: in 227px
-la classe e' un promemoria di dov'e' puntata l'app, e la coppia intera si legge dove si corregge.
-Il sito diventa cliccabile quando c'e' la sua scheda; **sotto di
-lui la Luna** -- che fase e', quanto e' illuminata, e la curva di come sale e scende stanotte --
-che si apre su un pannello con gli orari e il grafico grande. **Quanto sale, in gradi, sta nel
-pannello e non in barra**: in 227px il numero toglie posto alla curva, che quella cosa la mostra
-gia' (decisione del disegno, dichiarata nel foglio). Stanno insieme perche' sono **la stessa cosa detta in due righe**: la
-Luna, il buio e il meteo dipendono dal sito acceso, e separarli costringerebbe a guardare in due
-posti per capire una frase sola. In alto resta cio' che riguarda **il lavoro e te** -- la
-scansione, il tuo nome, la lingua e il tema, l'avviso quando qualcosa e' rotto.
-
-**Il piede c'e', e il pannello di cui sopra e' costruito:** tutta la Luna
-e' **un** bersaglio che lo apre, e dentro la stessa curva si vede grande, con le sue scritte. I
-numeri arrivano gia' fatti da `GET /tonight` ([`effemeridi.md`](effemeridi.md)), **il buio
-compreso**: dietro la curva ci sono le cinque fasce del cielo, quindi dove comincia e dove finisce
-si **vede** invece di essere scritto. Una riga che lo scriva a parole non c'e' ancora, e nascera'
-con le Notti -- prima di allora starebbe in 227px a dire con le parole cio' che il disegno dice
-gia'.
-
-**Niente ricerca finta.** Il vecchio aveva un campo che non cercava niente. Un posto vuoto in barra
-e' una promessa che l'app non mantiene: la ricerca entra quando cerca davvero, e allora e' una
-funzione con un suo progetto, non un ornamento.
-
-**Su telefono la barra si ritira dietro un pulsante, e le voci restano tutte.** Nessuna
-destinazione si perde e nessuna cambia posto: *mobile = desktop nel contenuto*. Accanto al pulsante
-compare il **nome della pagina**, che sul desktop non serve (la voce accesa lo dice gia') e li'
-invece e' l'unica cosa che dice dove sei. Il pannello si chiude da solo quando scegli, e si chiude
-con Esc o toccando fuori.
-
-**La soglia si misura sulla COLONNA, non sulla finestra.** Con la barra aperta la colonna del
-contenuto puo' essere larga come un telefono mentre la finestra e' un desktop: chi guarda la
-finestra sbaglia proprio nel caso che conta. E' la stessa regola gia' scritta in
-[`ereditato.md`](ereditato.md).
-
-**Il mobile si disegna ora e si costruisce col mobile.** L'ordine e' desktop prima, mobile quando
-il desktop funziona; ma il desktop nasce sapendo dove si piega -- i dati escono dall'API gia' fatti
-e il layout non porta logica -- cosi' la seconda forma e' una veste e non una riscrittura. Il
-pannello a scomparsa **non si costruisce prima**: una superficie che nessuno puo' aprire e
-collaudare non e' fatta, e resterebbe verde senza che nessuno l'abbia mai vista.
+**Sul telefono** il binario scende in basso con cinque schede -- Dashboard, Notti, Archivio,
+Progetti, Altro -- e "Altro" e' un foglio che sale con la scansione e le altre pagine; Da
+confermare porta il suo conteggio anche sulla scheda Altro. La barra in alto va su due righe, e la
+seconda si ritira scorrendo in giu'. **Le misure si leggono dal contenitore**
+(`.as-telaio-misura`), non dalla finestra: soglie 1440, 1180, 900 del foglio.
 
 ## Cosa NON fa
 
-Non decide come le pagine sono fatte dentro: ogni pagina ha il suo contratto. Non porta dati --
-l'unica eccezione dichiarata e' cio' che la barra **mostra** (quante cose da confermare, la fase
-del lavoro, il sito attivo), che arriva gia' pronto dall'API e non si calcola qui. Non ha una
-pagina "menu": la barra e' la navigazione, e su telefono e' lo stesso pannello.
+Non decide come le pagine sono fatte dentro: ogni pagina ha il suo contratto. Non calcola niente:
+cio' che il telaio mostra -- quante cose da confermare, la fase del lavoro, il sito, la Luna --
+arriva pronto dall'API. Non ha ancora la lingua e il tema al volo, ne' il tuo nome: il disegno
+non li ha messi in barra, e tornano con Impostazioni.

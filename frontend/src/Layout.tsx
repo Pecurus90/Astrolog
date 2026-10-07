@@ -1,35 +1,29 @@
 import { useQuery } from "@tanstack/react-query"
-import type { ReactNode } from "react"
+import { type KeyboardEvent, type ReactNode, type UIEvent, useEffect, useRef, useState } from "react"
 import { Link, useLocation } from "react-router"
 
-import { Scansiona } from "./Scansiona"
-import { Stanotte } from "./Stanotte"
+import { Bottone } from "./Bottone"
+import { Icon, IconSprite } from "./Icons"
+import { AvvisiDellaScansione, Scansiona, ScansioneNelFoglio } from "./Scansiona"
+import { Pastiglia, Stanotte } from "./Stanotte"
 import { api } from "./api/client"
 import { numero, t } from "./i18n"
-import { APERTE, GRUPPI, TITOLI, paginaDi } from "./pagine"
+import { PAGINE, type Pagina, paginaDi } from "./pagine"
 
 /**
- * Lo scheletro: la barra con le pagine, la barra in alto, e dentro la pagina che stai guardando.
- * Il contratto sta in `docs/domini/navigazione.md`.
+ * Il telaio (disegno v26, `51-telaio.css`; contratto in `docs/domini/navigazione.md`): il binario
+ * delle pagine, la barra in alto, Stanotte che si apre dalla pastiglia, e sul telefono il foglio
+ * "Altro". Stesso markup a ogni misura: lo decide il foglio, dal contenitore.
  *
  * - **Qui non si calcola niente**: il conto delle cose da confermare arriva fatto da
- *   `GET /review`, ed e' la stessa query della Casa -- una chiave sola, quindi una chiamata
- *   sola anche quando tutte e due sono a schermo.
- * - **Il nome della pagina in alto** serve al telefono, dove la barra sara' chiusa; sul desktop
- *   ripete la voce accesa, e va bene: e' l'unico posto che lo dira' sempre.
- * - **Il pannello a scomparsa non e' qui**: nasce col mobile, quando si puo' aprire e
- *   collaudare (`navigazione.md`).
- * - **Le voci sono link dentro il loro gruppo, non un elenco**: e' la forma su cui il design
- *   system ha messo i suoi mattoni -- `.as-gruppo` e' il contenitore **diretto** delle voci, e in
- *   colonna stretta e' lui a diventare una fila. Il legame fra il nome del gruppo e le sue voci
- *   resta, detto con `role="group"`; cio' che si perde e' l'annuncio "elenco di N voci", e non e'
- *   un pareggio: si guadagna una barra che si comporta come il design l'ha disegnata e si perde
- *   una comodita' per chi ascolta. Se un giorno pesa piu' quella, la si chiede alla fonte -- una
- *   classe che tolga i pallini senza separare -- invece di rimetterla qui.
+ *   `GET /review`, la stessa query della Dashboard.
+ * - **Gli stati sono attributi** (`data-stanotte`, `data-altro`, `data-ritirata`): il foglio
+ *   legge quelli. Stanotte ricorda l'ultima scelta in questo browser.
+ * - **Il fuoco segue cio' che si apre**, e torna a chi l'ha aperto; Esc chiude, prima Altro.
  */
 export function Layout({ children }: { children: ReactNode }) {
   const dove = useLocation()
-  const pagina = useQuery({
+  const revisione = useQuery({
     queryKey: ["review"],
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/review")
@@ -38,65 +32,240 @@ export function Layout({ children }: { children: ReactNode }) {
     },
   })
   const qui = paginaDi(dove.pathname)
+  const daConfermare = revisione.data?.to_confirm ?? 0
+
+  const [stanotte, setStanotte] = useState(ricordata)
+  const [altro, setAltro] = useState(false)
+  const [ritirata, setRitirata] = useState(false)
+  const pastiglia = useRef<HTMLButtonElement>(null)
+  const titoloStanotte = useRef<HTMLHeadingElement>(null)
+  const apriAltro = useRef<HTMLButtonElement>(null)
+  const titoloAltro = useRef<HTMLHeadingElement>(null)
+  const prima = useRef(0)
+  // Dove va il fuoco dopo il prossimo disegno: il pannello esiste solo dopo, e un focus chiesto
+  // prima cadrebbe su un elemento ancora nascosto.
+  const fuoco = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    fuoco.current?.focus({ preventScroll: true })
+    fuoco.current = null
+  })
+
+  // Cambiare pagina chiude il foglio del telefono: la voce scelta e' gia' la risposta.
+  useEffect(() => setAltro(false), [dove.pathname])
+
+  function cambiaStanotte(apri: boolean) {
+    setStanotte(apri)
+    ricorda(apri)
+    fuoco.current = apri ? titoloStanotte.current : pastiglia.current
+  }
+  function cambiaAltro(apri: boolean) {
+    setAltro(apri)
+    fuoco.current = apri ? titoloAltro.current : apriAltro.current
+  }
+  function chiudiUno() {
+    if (altro) cambiaAltro(false)
+    else if (stanotte) cambiaStanotte(false)
+  }
+  // La seconda riga del telefono si ritira scorrendo in giu' e torna risalendo (soglie della tavola).
+  function scorre(e: UIEvent<HTMLElement>) {
+    const y = e.currentTarget.scrollTop
+    if (y > prima.current + 4 && y > 40) setRitirata(true)
+    else if (y < prima.current - 4 || y < 40) setRitirata(false)
+    prima.current = y
+  }
+
+  const voci = PAGINE.filter((p) => !p.coda)
+  const coda = PAGINE.filter((p) => p.coda)
+  const nelFoglio = PAGINE.filter((p) => !p.telefono)
 
   return (
-    // Due contenitori, e l'ordine conta: la misura sta **sopra** la griglia, perche' un elemento
-    // non si stila dalla propria container query -- il guscio che si misurasse da se' non
-    // vedrebbe mai la colonna stretta.
-    <div className="as-guscio-misura">
-      <div className="as-guscio">
-        <nav className="as-lato" aria-label={t("nav.label")}>
-          <p className="as-lato__marchio">{t("app.title")}</p>
-          {GRUPPI.map((gruppo) => {
-            const voci = APERTE.filter((p) => p.gruppo === gruppo)
-            if (voci.length === 0) return null
-            const titolo = TITOLI[gruppo]
-            return (
-              <div
-                className="as-gruppo"
-                key={gruppo}
-                // `group` **solo** dove c'e' un nome da dargli: un gruppo senza nome non raccoglie
-                // niente per chi ascolta, aggiunge solo un livello da attraversare. `cima` e
-                // `fondo` sono contenitori di posizione, e restano dei semplici contenitori.
-                role={titolo ? "group" : undefined}
-                aria-labelledby={titolo ? `gruppo-${gruppo}` : undefined}
+    <div className="as-telaio-misura">
+      <IconSprite />
+      {/* Esc vale solo col fuoco dentro il telaio, come nella tavola. */}
+      <div
+        className="as-telaio"
+        data-stanotte={stanotte ? "aperta" : "chiusa"}
+        data-altro={altro ? "aperto" : "chiuso"}
+        data-ritirata={ritirata ? "" : undefined}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") chiudiUno()
+        }}
+      >
+        <a className="as-telaio__salta" href="#contenuto">
+          {t("frame.skip")}
+        </a>
+        <nav className="as-telaio__binario" aria-label={t("nav.label")}>
+          <span className="as-telaio__marchio" aria-hidden="true">
+            <span className="as-telaio__segno" />
+          </span>
+          <ul className="as-telaio__voci">
+            {voci.map((p) => (
+              <Voce key={p.a} pagina={p} accesa={p.a === qui?.a} conta={0} />
+            ))}
+          </ul>
+          <ul className="as-telaio__voci as-telaio__voci--coda">
+            {coda.map((p) => (
+              <Voce
+                key={p.a}
+                pagina={p}
+                accesa={p.a === qui?.a}
+                conta={p.a === "/da-confermare" ? daConfermare : 0}
+              />
+            ))}
+            <li className="as-telaio__posto as-telaio__posto--basso as-telaio__posto--telefono">
+              <button
+                className="as-telaio__voce"
+                type="button"
+                aria-expanded={altro}
+                aria-controls="altro"
+                ref={apriAltro}
+                onClick={() => cambiaAltro(!altro)}
               >
-                {titolo && (
-                  <p className="as-gruppo__nome" id={`gruppo-${gruppo}`}>
-                    {t(titolo)}
-                  </p>
-                )}
-                {voci.map((p) => (
-                  <Link
-                    className="as-voce"
-                    key={p.a}
-                    to={p.a}
-                    aria-current={p.a === qui?.a ? "page" : undefined}
+                <Icon name="cursori" />
+                <span className="as-telaio__parola">{t("frame.more")}</span>
+                {daConfermare > 0 && (
+                  <span
+                    className="as-telaio__conta"
+                    aria-label={t("frame.more.count", { n: numero(daConfermare) })}
                   >
-                    {t(p.chiave)}
-                    {p.a === "/da-confermare" && pagina.data && pagina.data.to_confirm > 0 && (
-                      // lo spazio e' per chi ascolta: senza, il nome del link e' "Da confermare12".
-                      // A vedersi non cambia niente, il conteggio si allinea comunque a destra.
-                      <>
-                        {" "}
-                        <span className="as-voce__conteggio">{numero(pagina.data.to_confirm)}</span>
-                      </>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )
-          })}
-          <Stanotte />
+                    {numero(daConfermare)}
+                  </span>
+                )}
+              </button>
+            </li>
+          </ul>
         </nav>
-        <header className="as-alto">
-          <p className="as-alto__titolo">{qui ? t(qui.chiave) : t("nav.unknown")}</p>
-          <div className="as-alto__strumenti">
-            <Scansiona />
-          </div>
+        <header className="as-telaio__alto">
+          <span className="as-telaio__firma" aria-hidden="true">
+            <span className="as-telaio__segno" />
+          </span>
+          <h1 className="as-telaio__titolo">{qui ? t(qui.chiave) : t("nav.unknown")}</h1>
+          <Scansiona />
+          <Pastiglia ref={pastiglia} aperta={stanotte} onApri={() => cambiaStanotte(!stanotte)} />
         </header>
-        <div className="as-principale">{children}</div>
+        <main className="as-telaio__corpo" id="contenuto" tabIndex={-1} onScroll={scorre}>
+          <AvvisiDellaScansione />
+          {children}
+        </main>
+        <button
+          className="as-telaio__velo"
+          type="button"
+          tabIndex={-1}
+          aria-label={t("frame.close")}
+          onClick={chiudiUno}
+        />
+        <Stanotte titolo={titoloStanotte} aperta={stanotte} onChiudi={() => cambiaStanotte(false)} />
+        <div
+          className="as-telaio__altro as-foglio"
+          id="altro"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="altro-titolo"
+          hidden={!altro}
+          onKeyDown={trattieni}
+        >
+          <span className="as-foglio__maniglia" aria-hidden="true" />
+          <div className="as-foglio__testa">
+            <h2 className="as-foglio__titolo" id="altro-titolo" tabIndex={-1} ref={titoloAltro}>
+              {t("frame.more")}
+            </h2>
+            <Bottone verso="nudo" piccolo onClick={() => cambiaAltro(false)}>
+              {t("frame.close.word")}
+            </Bottone>
+          </div>
+          <ScansioneNelFoglio />
+          <ul className="as-foglio__voci">
+            {nelFoglio.map((p) => (
+              <li key={p.a}>
+                <Link className="as-foglio__voce" to={p.a}>
+                  <Icon name={p.icona} />
+                  {t(p.chiave)}
+                  {p.a === "/da-confermare" && daConfermare > 0 && (
+                    <span
+                      className="as-telaio__conta"
+                      aria-label={t("frame.count", { n: numero(daConfermare) })}
+                    >
+                      {numero(daConfermare)}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="as-foglio__piede">{t("app.title")}</p>
+        </div>
       </div>
     </div>
   )
+}
+
+/** Una voce del binario. Il conto si legge per intero a chi ascolta ("12 casi da confermare"). */
+function Voce({ pagina, accesa, conta }: { pagina: Pagina; accesa: boolean; conta: number }) {
+  const nome = t(pagina.chiave)
+  const spazio = nome.indexOf(" ")
+  const parola =
+    pagina.dueRighe && spazio > 0 ? (
+      <>
+        {nome.slice(0, spazio)}
+        {/* lo spazio dopo l'a capo tiene il nome intero per chi ascolta ("Da confermare", non
+            "Daconfermare"); a inizio riga non si vede */}
+        <br /> {nome.slice(spazio + 1)}
+      </>
+    ) : (
+      nome
+    )
+  return (
+    <>
+      {pagina.staccata && <li className="as-telaio__stacco" aria-hidden="true" />}
+      <li className={pagina.telefono ? "as-telaio__posto as-telaio__posto--basso" : "as-telaio__posto"}>
+        <Link className="as-telaio__voce" to={pagina.a} aria-current={accesa ? "page" : undefined}>
+          <Icon name={pagina.icona} />
+          <span className="as-telaio__parola">{parola}</span>
+          {conta > 0 && (
+            <span className="as-telaio__conta" aria-label={t("frame.count", { n: numero(conta) })}>
+              {numero(conta)}
+            </span>
+          )}
+        </Link>
+      </li>
+    </>
+  )
+}
+
+/** Il foglio Altro e' modale: Tab gira fra i suoi controlli e non esce dietro il velo. */
+function trattieni(e: KeyboardEvent<HTMLDivElement>) {
+  if (e.key !== "Tab") return
+  const dentro = e.currentTarget.querySelectorAll<HTMLElement>("a[href], button:not([disabled])")
+  const primo = dentro[0]
+  const ultimo = dentro[dentro.length - 1]
+  if (!primo || !ultimo) return
+  // il titolo, dove il fuoco arriva aprendo, conta come prima del primo
+  const qui = [...dentro].indexOf(document.activeElement as HTMLElement)
+  if (e.shiftKey && qui <= 0) {
+    e.preventDefault()
+    ultimo.focus()
+  } else if (!e.shiftKey && document.activeElement === ultimo) {
+    e.preventDefault()
+    primo.focus()
+  }
+}
+
+const CHIAVE_STANOTTE = "astrolog.stanotte"
+
+/** L'ultima scelta su Stanotte, in questo browser. Senza memoria (navigazione privata) si apre
+ *  chiusa: il contenuto viene prima. */
+function ricordata(): boolean {
+  try {
+    return localStorage.getItem(CHIAVE_STANOTTE) === "aperta"
+  } catch {
+    return false
+  }
+}
+
+function ricorda(aperta: boolean) {
+  try {
+    localStorage.setItem(CHIAVE_STANOTTE, aperta ? "aperta" : "chiusa")
+  } catch {
+    // senza memoria si ricomincia chiusa: non e' un errore da mostrare
+  }
 }

@@ -9,15 +9,13 @@ Vincoli non ovvi:
 * **La soglia non viene da noi**: WCAG 2.2, 1.4.3 chiede 4,5:1 al testo normale e 1.4.11 chiede
   3:1 a cio' che porta significato con la forma (una linea che distingue uno stato, il tratteggio
   del "non si sa").
-* **`--inchiostro-spento` e' fuori dall'elenco, e non e' una scelta pulita**: nasce per il testo
-  disabilitato, che 1.4.3 esenta, ma nel foglio porta anche testo vivo -- il conteggio di un
-  gruppo in tabella e il suggerimento dentro un campo -- e li' non arriva (2,75:1 su carta nello
-  scuro, 2,47:1 nell'incavo nel chiaro). Quei due mattoni l'app non li usa ancora; **quando li
-  usera' la coppia entra qui e il colore si corregge alla fonte**, perche' il foglio si porta alla
-  lettera. Sta scritto in `docs/coda.md` invece che solo qui.
+* **`--inchiostro-spento` e' fuori dall'elenco**: nel v27 porta solo testo disabilitato
+  (`.as-calendario__vai:disabled`), che 1.4.3 esenta, e non arriva a 4,5:1 (fra 2,08 e 2,77:1,
+  misurato). **Il giorno che porta testo vivo la coppia entra qui** e il colore si corregge alla
+  fonte, perche' il foglio si porta alla lettera.
 * **Un colore con trasparenza non ha un contrasto suo**: si compone sul fondo. Misurare un
-  `rgba(255,255,255,.34)` come bianco pieno darebbe 21:1 su qualunque cosa, cioe' un banco che si
-  fa dire di si'.
+  `rgb(var(--tinta-velo) / .34)` come tinta piena darebbe un contrasto alto su qualunque cosa,
+  cioe' un banco che si fa dire di si'.
 * **Ogni inchiostro si prova su TUTTI i fondi di superficie**, non su quello dove lo si e' visto la
   prima volta: la riga sotto il mouse, la riga premuta e il campo sono fondi diversi, e un
   inchiostro che passa solo sul piu' scuro si rompe la prima volta che qualcuno lo mette altrove.
@@ -39,37 +37,34 @@ FONDI = (
     "--fondo-carta",
     "--fondo-carta-alta",
     "--fondo-rilievo",
-    "--fondo-premuto",
     "--fondo-incavo",
 )
 
 # I fondi che **non sono opachi**: un velo non ha un colore suo, prende quello di sotto. Vanno
 # dichiarati con la superficie su cui poggiano, o misurarli vorrebbe dire comporli sul nero e
 # leggere un contrasto che nessuno vede. `--velo-vetro` e' il fondo della barra in alto
-# (`.as-alto`), che questa fetta monta: senza questa tabella non sarebbe misurato.
+# (`.as-telaio__alto`): senza questa tabella non sarebbe misurato.
 FONDI_VELATI = (
     ("--velo-vetro", "--fondo-app"),
     ("--velo-vetro", "--fondo-carta"),
-    ("--fondo-riga-alterna", "--fondo-carta"),
 )
 
 # Le pastiglie: un velo di colore con **il suo** inchiostro, mai un altro. Misurare ogni
 # inchiostro su ogni velo darebbe rossi per accostamenti che nessuno scrive -- un grigio dentro
 # una pastiglia verde -- e un banco che grida al lupo si smette di ascoltarlo come uno che tace.
-# Chi sta dentro cosa lo dice il foglio (`.as-stato--*`, `.as-voce__conteggio`).
+# Chi sta dentro cosa lo dice il foglio (`.as-stato--allarme`, le voci scelte su `--accento-velo`).
 SOPRA_VELO = (
-    ("--esito-buono-inchiostro", "--esito-buono-velo", "--fondo-carta"),
-    ("--esito-attesa-inchiostro", "--esito-attesa-velo", "--fondo-carta"),
     ("--esito-allarme-inchiostro", "--esito-allarme-velo", "--fondo-carta"),
     ("--ignoto-inchiostro", "--ignoto-fondo", "--fondo-carta"),
     ("--inchiostro-accento", "--accento-velo", "--fondo-carta"),
-    ("--inchiostro-accento", "--accento-velo", "--fondo-app-basso"),  # il conteggio nella barra
-    # Le ore sotto la tela della Luna: cadono **dentro** la fascia del terreno -- l'orizzonte sta
-    # sempre piu' in alto della riga delle etichette, a qualunque latitudine -- e li' l'inchiostro
-    # debole non regge (4,30:1 nello scuro, misurato). Il foglio ha la classe apposta
-    # (`.as-grafico__etichetta--sopra-fascia`), e questa riga e' cio' che impedisce di
-    # dimenticarla: senza, axe non se ne accorge, perche' il contrasto del testo SVG non lo guarda.
-    ("--inchiostro", "--grafico-terra", "--fondo-carta-alta"),
+    ("--inchiostro-accento", "--accento-velo", "--fondo-app-basso"),
+    # la voce corrente del telaio e la voce scelta di menu e strati: inchiostro pieno sul velo
+    ("--inchiostro", "--accento-velo", "--fondo-app-basso"),
+    ("--inchiostro", "--accento-velo", "--fondo-carta"),
+    # il bottone premuto, il piu' carico dei tre vetri; il nudo premuto porta l'inchiostro d'accento
+    ("--inchiostro", "--vetro-premuto", "--fondo-carta"),
+    ("--inchiostro-accento", "--vetro-premuto", "--fondo-carta"),
+    ("--inchiostro-tenue", "--vetro-sopra", "--fondo-carta"),  # il segno dell'avviso
 )
 
 # Gli inchiostri che portano parole: 1.4.3, 4,5:1.
@@ -99,63 +94,81 @@ FORME = (
     *(f"--bortle-{n}" for n in range(1, 10)),
 )
 
-# Il bianco sopra un fondo pieno: bottoni, pastiglie, la cella piu' scura della heatmap.
+# Il bianco sopra un fondo pieno: bottoni, il conteggio del telaio, il segno dell'avviso d'allarme.
 SOPRA_PIENO = (
     ("--inchiostro-su-accento", "--accento"),
     ("--inchiostro-su-accento", "--accento-sopra"),
     ("--inchiostro-su-accento", "--accento-premuto"),
-    ("--inchiostro-su-accento", "--heat-4"),
+    ("--inchiostro-su-accento", "--esito-allarme"),
 )
 
 TESTO, FORMA = 4.5, 3.0
 TEMI = ("scuro", "chiaro")
 
 
-def _valori(testo, tema):
+def _valori(testo: str, tema: str) -> dict[str, str]:
     """I token del tema: prima quelli di `:root`, poi cio' che il tema chiaro riscrive.
+
+    Il chiaro si accende sulla radice, `:root[data-tema="atlante"]` (sezione 15 del foglio).
 
     **Afferma di aver trovato il blocco chiaro.** Il modo in cui il foglio scrive quel selettore
     e' una cosa del foglio, e il foglio arriva da fuori: se la prossima consegna lo scrivesse
     altrimenti, senza questa riga la funzione tornerebbe i valori dello scuro e la meta' chiara
     del lavoro smetterebbe di essere misurata **in silenzio**. Un banco che si fa dire di si' e'
     peggio di nessun banco."""
-    blocchi = re.findall(r":root(\[data-tema=\"chiaro\"\])?\s*\{(.*?)\n\}", testo, re.S)
+    blocchi = re.findall(r":root(\[data-tema=\"atlante\"\])?\s*\{(.*?)\n\}", testo, re.S)
     if tema == "chiaro" and not any(chiaro for chiaro, _ in blocchi):
         raise ValueError("il blocco del tema chiaro non si trova: il foglio ha cambiato selettore")
     fuori = {}
     for chiaro, corpo in blocchi:
         if chiaro and tema != "chiaro":
             continue
+        corpo = re.sub(r"/\*.*?\*/", "", corpo, flags=re.S)
         for nome, valore in re.findall(r"(--[a-z0-9-]+)\s*:\s*([^;]+);", corpo):
             fuori[nome] = valore.strip()
     return fuori
 
 
-def _risolvi(nome, valori, visti=()):
-    """Il valore vero di un token, seguendo i `var()` che rimandano a un altro token."""
-    valore = valori[nome]
-    rimando = re.fullmatch(r"var\((--[a-z0-9-]+)\)", valore)
-    if rimando and rimando.group(1) not in visti:
+def _risolvi(nome: str, valori: dict[str, str], visti: tuple[str, ...] = ()) -> str:
+    """Il valore vero di un token, sostituendo ogni `var()` col token a cui rimanda.
+
+    Anche dentro un colore: il v27 scrive `rgb(var(--tinta-velo) / .34)`, con la tinta in canali
+    "R G B", e leggere solo il `var()` intero lascerebbe quei colori illeggibili."""
+
+    def sostituisci(rimando: re.Match[str]) -> str:
+        if rimando.group(1) in visti:
+            raise ValueError(f"{nome}: rimando circolare su {rimando.group(1)}")
         return _risolvi(rimando.group(1), valori, (*visti, nome))
-    return valore
+
+    return re.sub(r"var\((--[a-z0-9-]+)\)", sostituisci, valori[nome])
 
 
-def colore(scritto, su="#000000"):
-    """(r, g, b) di un colore del foglio, composto su `su` se ha trasparenza."""
+def colore(scritto: str, su: str = "#000000") -> tuple[int, int, int]:
+    """(r, g, b) di un colore del foglio, composto su `su` se ha trasparenza.
+
+    Legge le due grafie di `rgb()`: a virgole (`rgba(1,2,3,.5)`) e a spazi (`rgb(1 2 3 / .5)`)."""
     scritto = scritto.strip()
     if scritto.startswith("#"):
         grezzo = scritto.lstrip("#")
         if len(grezzo) == 3:
             grezzo = "".join(c * 2 for c in grezzo)
-        return tuple(int(grezzo[i : i + 2], 16) for i in (0, 2, 4))
+        r, g, b = (int(grezzo[i : i + 2], 16) for i in (0, 2, 4))
+        return r, g, b
     pezzi = re.fullmatch(r"rgba?\(([^)]+)\)", scritto)
     if not pezzi:
         raise ValueError(f"colore che non so leggere: {scritto!r}")
-    numeri = [p.strip() for p in pezzi.group(1).split(",")]
+    canali, _, alfa_scritta = pezzi.group(1).partition("/")
+    numeri = [n for n in re.split(r"[\s,]+", canali.strip()) if n]
+    if alfa_scritta:
+        numeri.append(alfa_scritta.strip())
+    if len(numeri) not in (3, 4):
+        raise ValueError(f"colore che non so leggere: {scritto!r}")
     r, g, b = (int(n) for n in numeri[:3])
     alfa = float(numeri[3]) if len(numeri) > 3 else 1.0
     fondo = colore(su)
-    return tuple(round(c * alfa + f * (1 - alfa)) for c, f in zip((r, g, b), fondo, strict=True))
+    composto = (round(c * alfa + f * (1 - alfa)) for c, f in zip((r, g, b), fondo, strict=True))
+    r, g, b = composto
+    return r, g, b
 
 
 def _luce(rgb):

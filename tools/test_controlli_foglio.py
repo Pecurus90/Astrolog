@@ -1,14 +1,12 @@
-"""I numeri del foglio contro chi li contraddice: la soglia della riga e i pavimenti del cielo.
+"""I numeri del foglio contro chi li contraddice: i pavimenti del cielo.
 
-Prima casa di `controlli_foglio.py`. Le due guardie nascono da due difetti veri: una soglia che
-rendeva **irraggiungibile per costruzione** la forma che il montaggio del fornitore mostra (e che
-e' costata una consegna intera), e un nostro elenco di numeri finito dentro un file che non
-possiamo correggere.
+Prima casa di `controlli_foglio.py`. La guardia nasce da un difetto vero: un nostro elenco di
+numeri finito dentro un file che non possiamo correggere. Le prove sulla soglia della riga sono
+uscite col v27 (`tools/test_tolti.txt`).
 """
 
 import os
 import pathlib
-import re
 import shutil
 import sys
 
@@ -38,44 +36,6 @@ def _consegna():
         return h.read()
 
 
-def test_the_row_threshold_below_the_narrowest_card_is_green():
-    """La consegna di adesso: la riga si affianca dentro la carta del primo avvio."""
-    assert controlli_foglio.soglia_della_riga(ROOT) == []
-
-
-def test_a_row_that_never_fits_side_by_side_is_blocked(tmp_path):
-    """La contraddizione che e' costata una consegna, riprodotta: la soglia sopra la larghezza
-    della carta piu' stretta vuol dire che li' la riga e' incolonnata **sempre**, per
-    costruzione. Nessuna prova del frontend puo' vederlo -- in jsdom il foglio non si applica --
-    e l'impronta dice solo "e' cambiato", mai "e' sbagliato"."""
-    rotto = _consegna().replace(
-        "@container colonna (max-width: 420px)", "@container colonna (max-width: 720px)", 1
-    )
-    colpe = controlli_foglio.soglia_della_riga(_radice_col_foglio(tmp_path, rotto))
-    assert colpe and "720px" in colpe[0] and "680px" in colpe[0], colpe
-
-
-def test_the_guard_reads_the_row_block_not_the_first_threshold_it_meets(tmp_path):
-    """Il foglio ha piu' soglie di colonna con la stessa forma, e una sola riguarda la riga: una
-    guardia che prendesse la prima che incontra direbbe il falso in tutti e due i versi.
-
-    Il "piu' d'una" non si scrive come numero, si **conta qui**: scritto in prosa, la prossima
-    consegna lo falsificherebbe in silenzio."""
-    senza_commenti = controlli_foglio._senza_commenti(_consegna())
-    blocchi = re.findall(
-        r"@container colonna \(max-width:\s*(\d+)px\)\s*\{(.*?)^\}",
-        senza_commenti,
-        re.S | re.M,
-    )
-    con_la_riga = [s for s, corpo in blocchi if re.search(r"(^|[\s,}])\.as-riga\s*[,{.]", corpo)]
-    assert len(blocchi) > 1, "una soglia sola: questa prova non prova piu' niente"
-    assert con_la_riga == ["420"], con_la_riga
-
-    # e spostando **tutte le altre**, la guardia resta verde: guarda il blocco giusto
-    altre = _consegna().replace("(max-width: 720px)", "(max-width: 999px)")
-    assert controlli_foglio.soglia_della_riga(_radice_col_foglio(tmp_path, altre)) == []
-
-
 def test_a_sky_floor_quoted_in_the_sheet_that_drifted_is_blocked(tmp_path):
     """I pavimenti della scala sono un **nostro** fatto scritto in casa loro: il foglio non si
     emenda, quindi il giorno che la nostra tabella cambia quel commento dice il falso e nessuno
@@ -103,21 +63,6 @@ def test_a_sheet_that_stopped_quoting_the_floors_is_said(tmp_path):
         senza = senza.replace(f"{classe} = {pavimento}", "")
     colpe = controlli_foglio.pavimenti_del_cielo(_radice_col_foglio(tmp_path, senza))
     assert colpe == ["astrolog.css: il commento della scala non cita piu' nessun pavimento"], colpe
-
-
-def test_a_comment_naming_the_row_does_not_raise_a_false_alarm(tmp_path):
-    """Il foglio spiega ogni regola in prosa, e un commento che **nomina** `.as-riga` dentro il
-    blocco di un altro mattone la farebbe trovare dove non sta. Qui il costo dell'errore non e'
-    simmetrico: un falso rosso blocca il cancello su un file che non possiamo emendare, e l'unica
-    uscita sarebbe emendare la guardia."""
-    bugiardo = _consegna().replace(
-        "@container colonna (max-width: 720px) {",
-        "@container colonna (max-width: 720px) {"
-        + chr(10)
-        + "  /* qui NON si tocca .as-riga, che ha la sua */",
-        1,
-    )
-    assert controlli_foglio.soglia_della_riga(_radice_col_foglio(tmp_path, bugiardo)) == []
 
 
 def test_one_missing_sky_floor_is_said_not_only_all_of_them(tmp_path):

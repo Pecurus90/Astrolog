@@ -108,7 +108,7 @@ describe("Da confermare -- stesso pezzo?", () => {
     aperta({ ...PAGINA, lookalikes: [] })
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
-    await screen.findByRole("heading", { name: /da confermare/i })
+    await within(await screen.findByRole("main")).findByText(/cos[ae] da confermare/i)
     expect(screen.queryByRole("region", { name: /stesso pezzo/i })).toBeNull()
     expect(screen.queryByRole("region", { name: /strumenti/i })).toBeNull()
     expect(screen.queryByRole("region", { name: /corredi/i })).toBeNull()

@@ -66,8 +66,7 @@ export function Notti() {
   const ultima = pagine.at(-1)
 
   return (
-    <main className="as-pagina">
-      <h1 className="as-testata__titolo">{t("nights.title")}</h1>
+    <div className="as-pagina">
 
       {elenco.isPending && <p>{t("app.loading")}</p>}
       {elenco.error && <Avviso esito="allarme">{elenco.error.message}</Avviso>}
@@ -87,7 +86,7 @@ export function Notti() {
       )}
 
       <Altre elenco={elenco} testo="nights.more" />
-    </main>
+    </div>
   )
 }
 

@@ -106,3 +106,36 @@ test_renaming_carries_the_confirmation_and_beats_leftovers - S4: no confirmation
 test_review_does_not_confirm_what_arrived_after_the_page_was_read - S4: seen is gone (ADR 0014)
 test_review_seen_does_not_count_the_poses - S4: confirm_seen is gone (ADR 0014)
 test_what_the_page_showed_is_confirmed_even_if_its_clock_ran_ahead - S4: seen is gone (ADR 0014)
+test_the_row_threshold_below_the_narrowest_card_is_green - v27: the row no longer stacks and --avvio-largo is gone, soglia_della_riga removed (ADR 0018)
+test_a_row_that_never_fits_side_by_side_is_blocked - v27: the row no longer stacks and --avvio-largo is gone, soglia_della_riga removed (ADR 0018)
+test_the_guard_reads_the_row_block_not_the_first_threshold_it_meets - v27: the row no longer stacks and --avvio-largo is gone, soglia_della_riga removed (ADR 0018)
+test_a_comment_naming_the_row_does_not_raise_a_false_alarm - v27: the row no longer stacks and --avvio-largo is gone, soglia_della_riga removed (ADR 0018)
+la Luna e un bersaglio solo, e apre il pannello - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+il pannello porta il numero che in barra non ci sta - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+i tre orari ci sono, e quello che non succede resta una frase - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+il cielo sta dietro la curva, con la fascia che ogni pezzo di notte ha davvero - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+i due istanti che chiudono il buio sono segnati, che la fascia non si vede - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+chi non vede la tela legge il buio, che e il dato che le fasce mostrano - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+una notte senza fasce non se ne inventa una piatta - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+la legenda e scritta, che un colore da solo non dice niente - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+la tela grande ha il suo asse, e quella in barra no - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+il pannello e' largo, che una tela intera nella misura normale si rimpicciolisce - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+chiudendo, il fuoco torna alla striscia da cui si era aperto - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+il grafico porta il suo dato per chi non lo vede - pannello della Luna uscito col telaio v26 (ADR 0018); il dettaglio della Luna torna con la Dashboard
+e nemmeno il pannello della Luna, aperto - sostituita da 'e nemmeno Stanotte, aperta': il pannello della Luna e' uscito col telaio v26 (ADR 0018)
+i gruppi stanno nell ordine del contratto - niente gruppi nel telaio v26 (ADR 0018); l'ordine lo prova 'le voci del binario stanno nell ordine di pagine.tsx'
+ogni gruppo della barra porta con se' il suo nome - niente gruppi con titolo nel telaio v26 (ADR 0018)
+una pagina che non esiste ancora non e nella barra - rovesciata da Marco 7/10/2026: ogni voce si vede; la prova 'una voce senza pagina apre la pagina che dice che sta arrivando'
+la barra, la testata e la pagina stanno nella stessa griglia - rinominata 'il binario, la barra alta e il corpo stanno nel telaio' (ADR 0018)
+il contenitore misurato e' il genitore del guscio, non il guscio - rinominata 'il contenitore misurato e' il genitore del telaio, non il telaio' (ADR 0018)
+lo dice, e porta a Casa - rinominata 'lo dice, e porta alla Dashboard': Casa si chiama Dashboard (ADR 0018)
+l orizzonte cade dove il fornitore lo disegna - curva della notte uscita col pannello della Luna (ADR 0018)
+la curva comincia a sinistra e finisce a destra, e tocca il tetto dove la luna e alta - curva della notte uscita col pannello della Luna (ADR 0018)
+la riga di adesso sta dove siamo, e sparisce quando la notte e scaduta - curva della notte uscita col pannello della Luna (ADR 0018)
+senza abbastanza punti non si disegna niente, invece di una riga inventata - curva della notte uscita col pannello della Luna (ADR 0018)
+segnano le ore tonde lungo la notte, non due volte lo stesso mezzogiorno - curva della notte uscita col pannello della Luna (ADR 0018)
+stanno dove sta l ora che nominano - curva della notte uscita col pannello della Luna (ADR 0018)
+una notte campionata largo non inventa ore che non ha - curva della notte uscita col pannello della Luna (ADR 0018)
+stanno dove sta l ora che il backend gli ha dato - curva della notte uscita col pannello della Luna (ADR 0018)
+stanno con la curva anche nella notte che non dura ventiquattro ore - curva della notte uscita col pannello della Luna (ADR 0018)
+senza fasce non si dipinge niente - curva della notte uscita col pannello della Luna (ADR 0018)

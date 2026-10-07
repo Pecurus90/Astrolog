@@ -50,8 +50,7 @@ export function Meteo() {
   const detto = meteo.data
 
   return (
-    <main className="as-pagina">
-      <h1 className="as-testata__titolo">{t("weather.title")}</h1>
+    <div className="as-pagina">
       {meteo.isPending && <p>{t("weather.loading")}</p>}
       {meteo.error && <Avviso esito="allarme">{meteo.error.message}</Avviso>}
       {detto && detto.site === null && (
@@ -92,7 +91,7 @@ export function Meteo() {
           ))}
         </>
       )}
-    </main>
+    </div>
   )
 }
 

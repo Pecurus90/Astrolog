@@ -74,8 +74,7 @@ export function Attrezzatura() {
     pagina.filters.length === 0
 
   return (
-    <main className="as-pagina">
-      <h1 className="as-testata__titolo">{t("gear.title")}</h1>
+    <div className="as-pagina">
 
       {elenco.isPending && <p>{t("app.loading")}</p>}
       {elenco.error && <Avviso esito="allarme">{elenco.error.message}</Avviso>}
@@ -91,7 +90,7 @@ export function Attrezzatura() {
       )}
 
       {pagina && <Posseduto pagina={pagina} />}
-    </main>
+    </div>
   )
 }
 

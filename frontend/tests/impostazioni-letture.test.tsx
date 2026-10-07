@@ -75,7 +75,7 @@ describe("Impostazioni / Le letture", () => {
     await app([{ ...LETTURA, found: 120, new: 5, unchanged: 115 }])
     await vaiAlleLetture()
 
-    const riga = await screen.findByRole("listitem")
+    const riga = await within(await screen.findByRole("main")).findByRole("listitem")
     expect(riga.textContent).toContain("D:\\Astro\\2025")
     expect(riga.textContent).toMatch(/2 min 14 s/)
     expect(within(riga).getByText(/letta tutta/i)).toBeTruthy()
@@ -89,7 +89,7 @@ describe("Impostazioni / Le letture", () => {
     await app([{ ...LETTURA, found: 120, unchanged: 120 }])
     await vaiAlleLetture()
 
-    const riga = await screen.findByRole("listitem")
+    const riga = await within(await screen.findByRole("main")).findByRole("listitem")
     expect(riga.textContent).toMatch(/0 nuovi/)
     expect(riga.textContent).not.toMatch(/doppioni/)
     expect(riga.textContent).not.toMatch(/saltati/)
@@ -101,7 +101,7 @@ describe("Impostazioni / Le letture", () => {
     await app([{ ...LETTURA, ended_at: null, duration_s: null, status: null, found: 12 }])
     await vaiAlleLetture()
 
-    const riga = await screen.findByRole("listitem")
+    const riga = await within(await screen.findByRole("main")).findByRole("listitem")
     expect(riga.textContent).toMatch(/sta leggendo adesso/i)
     // ai confini di parola: senza, "0 s" si trova dentro l'ora "21:00 sta..." e la prova
     // passerebbe per il motivo sbagliato
@@ -114,7 +114,7 @@ describe("Impostazioni / Le letture", () => {
     await app([{ ...LETTURA, status: "aborted", reason: "root_unreachable", found: 3 }])
     await vaiAlleLetture()
 
-    const riga = await screen.findByRole("listitem")
+    const riga = await within(await screen.findByRole("main")).findByRole("listitem")
     expect(within(riga).getByText(/^fermata$/i)).toBeTruthy()
     expect(riga.textContent).toMatch(/la cartella non rispondeva piu'/i)
     expect(riga.textContent).not.toMatch(/root_unreachable/)
@@ -126,7 +126,7 @@ describe("Impostazioni / Le letture", () => {
     await app([{ ...LETTURA, status: "stopped", reason: "stop_requested" }])
     await vaiAlleLetture()
 
-    const riga = await screen.findByRole("listitem")
+    const riga = await within(await screen.findByRole("main")).findByRole("listitem")
     expect(within(riga).getByText(/fermata da te/i)).toBeTruthy()
     expect(riga.textContent).not.toMatch(/stop_requested/)
   })
@@ -144,7 +144,7 @@ describe("Impostazioni / Le letture", () => {
     // non mantiene.
     await app([{ ...LETTURA, found: 14, new: 14 }])
     await vaiAlleLetture()
-    await screen.findByRole("listitem")
+    await within(await screen.findByRole("main")).findByRole("listitem")
     expect(screen.queryByRole("button", { name: /rimasto fuori/i })).toBeNull()
 
     pulisci()
@@ -182,7 +182,7 @@ describe("Impostazioni / Le letture", () => {
     // della pagina sarebbe venti elenchi lunghi che nessuno ha chiesto.
     await app([{ ...LETTURA, found: 14, errors: 2 }])
     await vaiAlleLetture()
-    await screen.findByRole("listitem")
+    await within(await screen.findByRole("main")).findByRole("listitem")
     expect(chiamate().filter((c) => c.includes("/errors")).length).toBe(0)
 
     fireEvent.click(screen.getByRole("button", { name: /rimasto fuori/i }))
@@ -238,7 +238,7 @@ describe("Impostazioni / Le letture", () => {
       },
     })
     await vaiAlleLetture()
-    await screen.findByRole("listitem")
+    await within(await screen.findByRole("main")).findByRole("listitem")
 
     cambia({
       "/api/v1/pipeline/status": {
@@ -266,7 +266,7 @@ describe("Impostazioni / Le letture", () => {
   it("si chiedono le precedenti solo se ce ne sono", async () => {
     await app([LETTURA], 1)
     await vaiAlleLetture()
-    await screen.findByRole("listitem")
+    await within(await screen.findByRole("main")).findByRole("listitem")
     expect(screen.queryByRole("button", { name: /letture precedenti/i })).toBeNull()
 
     pulisci()

@@ -20,13 +20,13 @@ import os
 import re
 
 from controlli_contrasto import FOGLIO, STILI, leggi_foglio, sotto_soglia
-from controlli_foglio import pavimenti_del_cielo, soglia_della_riga
+from controlli_foglio import pavimenti_del_cielo
 
 # L'impronta della consegna portata alla lettera. Si cambia SOLO riportando una consegna nuova
 # dal progetto Claude Design, mai per far passare una modifica fatta qui. Resta una **mappa**
 # anche con un foglio solo: quanti sono lo decide la consegna, non noi.
 IMPRONTE = {
-    FOGLIO: "bf17893e77a902b6e88b674439286669ffbcfb5d1fe4c711daaa08112afc2538",
+    FOGLIO: "25e0b954d574f440112930bf2302152b4ba76010f4d78d489a8fb3cdeb7583a2",
 }
 
 
@@ -204,7 +204,7 @@ def avvisi_a_mano(root):
     return sorted(fuori)
 
 
-def tutti(root):
+def tutti(root: str) -> list[tuple[str, list[str]]]:
     """I controlli della veste, gia' col loro titolo: `[(cosa si guarda, cio' che non va)]`.
 
     L'elenco sta qui e non nel cancello perche' e' un fatto di questo modulo -- chi aggiunge un
@@ -215,18 +215,26 @@ def tutti(root):
         ("classi scritte fuori dal loro mattone", classi_fuori_casa(root)),
         ("avvisi scritti senza il mattone Avviso", avvisi_a_mano(root)),
         ("fogli della consegna toccati a mano", fogli_cambiati(root)),
-        ("la riga non si affianca nella carta piu' stretta", soglia_della_riga(root)),
         ("pavimenti della scala citati nel foglio", pavimenti_del_cielo(root)),
     ]
 
 
-def classi_inventate(root):
-    """Le classi `as-*` scritte nel codice che nel foglio non esistono, e i posti dove non si
-    riesce a leggerle.
+# Le classi del v10 che le pagine non ancora ridisegnate scrivono e il foglio v27 non ha (ADR 0018).
+ATTESA = ("tools", "classi_in_attesa.txt")
 
-    Una classe sbagliata non rompe niente: non si applica, e la pagina resta nuda in quel punto
-    senza che nessun test cada. Successo scrivendo questa stessa fetta -- `as-elenco-nudo`, che
-    non e' mai esistito -- e lo ha trovato una rilettura, non una macchina.
+
+def classi_in_attesa(root: str) -> set[str]:
+    """L'elenco dichiarato delle classi in attesa; vuoto se il file non c'e'."""
+    percorso = os.path.join(root, *ATTESA)
+    if not os.path.isfile(percorso):
+        return set()
+    with open(percorso, encoding="utf-8") as h:
+        righe = (r.strip() for r in h)
+        return {r for r in righe if r and not r.startswith("#")}
+
+
+def classi_usate(root: str) -> tuple[set[str], list[str]]:
+    """Le classi `as-*` scritte nel codice, e i posti dove non si riesce a leggerle.
 
     Si leggono le classi **scritte per esteso**, anche dentro le graffe (`className={... "as-x"}`),
     che e' come nascono gli stati di una riga. Dove da un `className={...}` non esce **nessuna**
@@ -234,11 +242,8 @@ def classi_inventate(root):
     si **dice**, e si dice anche se li' dentro la parola `as-` non compare affatto: e' proprio la
     forma in cui una classe sfugge (`className={classeRiga(stato)}`). Una guardia che tace dove non
     arriva e' peggio di una che non c'e', perche' sembra che abbia guardato."""
-    testo = leggi_foglio(root)
-    if isinstance(testo, list):
-        return testo
-    nel_foglio = set(re.findall(r"\.(as-[a-z0-9_-]+)", testo))
-    fuori = set()
+    usate: set[str] = set()
+    illeggibili: list[str] = []
     for percorso in _sorgenti(root):
         if not os.path.isfile(percorso):
             continue
@@ -249,16 +254,43 @@ def classi_inventate(root):
         # dentro l'attributo, e guardare solo `className` lascerebbe fuori proprio i mattoni.
         # Apici soltanto, mai i backtick: in una docstring `as-campo*` e' prosa, non una classe.
         for stringa in re.findall(r"""["']([^"'\n]*\bas-[a-z0-9_-]+[^"'\n]*)["']""", testo):
-            fuori |= {c for c in stringa.split() if c.startswith("as-") and c not in nel_foglio}
+            usate |= {c for c in stringa.split() if c.startswith("as-")}
         for scritto in re.findall(r'class(?:Name)?="([^"]*)"', testo):
-            fuori |= {c for c in scritto.split() if c.startswith("as-") and c not in nel_foglio}
+            usate |= {c for c in scritto.split() if c.startswith("as-")}
         for dentro_graffe in _fra_graffe(testo):
             parole = []
             for stringa in re.findall(r'["\'`]([^"\'`]*)["\'`]', dentro_graffe):
                 parole += stringa.split()
             if not parole:
-                fuori.add(f"{detto}: una classe che non so leggere ({dentro_graffe.strip()[:40]})")
-            fuori |= {c for c in parole if c.startswith("as-") and c not in nel_foglio}
+                illeggibili.append(
+                    f"{detto}: una classe che non so leggere ({dentro_graffe.strip()[:40]})"
+                )
+            usate |= {c for c in parole if c.startswith("as-")}
+    return usate, illeggibili
+
+
+def classi_inventate(root: str) -> list[str]:
+    """Le classi `as-*` scritte nel codice che nel foglio non esistono, e i posti dove non si
+    riesce a leggerle.
+
+    Una classe sbagliata non rompe niente: non si applica, e la pagina resta nuda in quel punto
+    senza che nessun test cada. Successo scrivendo questa stessa fetta -- `as-elenco-nudo`, che
+    non e' mai esistito -- e lo ha trovato una rilettura, non una macchina.
+
+    **Le classi in attesa** (`tools/classi_in_attesa.txt`, ADR 0018) passano: sono le pagine non
+    ancora ridisegnate, che restano funzionanti ma spoglie. L'elenco **solo si accorcia**: una voce
+    che il codice non scrive piu', o che il foglio ora ha, e' un rosso, cosi' non resta li' a
+    coprire una classe nuova con lo stesso nome."""
+    testo = leggi_foglio(root)
+    if isinstance(testo, list):
+        return testo
+    nel_foglio = set(re.findall(r"\.(as-[a-z0-9_-]+)", testo))
+    usate, illeggibili = classi_usate(root)
+    attesa = classi_in_attesa(root)
+    elenco = "/".join(ATTESA)
+    fuori = set(illeggibili) | (usate - nel_foglio - attesa)
+    fuori |= {f"{elenco}: {c} il codice non la scrive piu', togli la voce" for c in attesa - usate}
+    fuori |= {f"{elenco}: {c} il foglio ora la ha, togli la voce" for c in attesa & nel_foglio}
     return sorted(fuori)
 
 

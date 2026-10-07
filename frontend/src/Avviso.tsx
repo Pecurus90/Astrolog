@@ -32,7 +32,8 @@ const SEGNI = { neutro: "i", attesa: "\u2026", buono: "\u2713", allarme: "\u26A0
 const TONI: Record<keyof typeof SEGNI, string> = {
   neutro: "",
   attesa: "as-avviso--attesa",
-  buono: "as-avviso--buono",
+  // il v26 ha tolto il tono buono: resta il segno, la spunta, che lo dice da solo
+  buono: "",
   allarme: "as-avviso--allarme",
 }
 
@@ -41,6 +42,7 @@ export function Avviso({
   titolo,
   azioni,
   ruolo,
+  pagina,
   children,
 }: {
   esito: keyof typeof SEGNI
@@ -50,18 +52,21 @@ export function Avviso({
   azioni?: ReactNode
   /** L'urgenza, quando non e' quella del tono. */
   ruolo?: "alert" | "status"
-
+  /** In testa alla parte che manca, su carta: la riga di stato di pagina del foglio (v21). */
+  pagina?: boolean
   children: ReactNode
 }) {
   return (
-    <div className={["as-avviso", TONI[esito]].filter(Boolean).join(" ")}>
+    <div className={["as-avviso", TONI[esito], pagina ? "as-avviso--pagina" : ""].filter(Boolean).join(" ")}>
       <span className="as-avviso__segno" aria-hidden="true">
         {SEGNI[esito]}
       </span>
-      {titolo && <p className="as-avviso__titolo">{titolo}</p>}
-      <p className="as-avviso__testo" role={ruolo ?? (esito === "allarme" ? "alert" : "status")}>
-        {children}
-      </p>
+      <div className="as-avviso__corpo">
+        {titolo && <p className="as-avviso__titolo">{titolo}</p>}
+        <p className="as-avviso__testo" role={ruolo ?? (esito === "allarme" ? "alert" : "status")}>
+          {children}
+        </p>
+      </div>
       {azioni && <div className="as-avviso__azioni">{azioni}</div>}
     </div>
   )

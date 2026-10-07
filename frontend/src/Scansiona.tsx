@@ -1,50 +1,57 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useMutationState, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
 
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
 import { api } from "./api/client"
+import type { components } from "./api/schema"
 import { motivo } from "./api/motivo"
-import { type Chiave, numero, t } from "./i18n"
+import { type Chiave, giorno, numero, orario, t } from "./i18n"
 
 /**
- * Il pulsante che fa leggere le cartelle, e cosa sta facendo l'app mentre lo fa.
+ * La scansione nel telaio (disegno v26): nella barra in alto in quattro stati -- a riposo, al
+ * lavoro, fermata, bloccata -- nel foglio "Altro" sul telefono, e i suoi avvisi in testa al corpo.
  *
- * - **Il verbo non lo decide questa pagina**: `action` arriva dal backend (`start` / `stop` /
- *   `resume`), che e' l'unico a sapere se un lavoro gira o se ne resta uno a meta'. Deciderlo
- *   qui sarebbe lo stesso fatto in due case, e il vecchio ci era cascato.
- * - **Sta in barra e non dentro una pagina** perche' il lavoro **sopravvive alla pagina**:
- *   cambiando schermata deve restare fermabile, o diventa un lavoro che nessuno puo' fermare.
+ * - **Il verbo non lo decide il frontend**: `action` arriva dal backend (`start` / `stop` /
+ *   `resume`), l'unico a sapere se un lavoro gira o se ne resta uno a meta'.
+ * - **Sta nel telaio e non in una pagina** perche' il lavoro sopravvive alla pagina: cambiando
+ *   schermata deve restare fermabile.
  * - **Il ritmo lo dichiara il contratto della spina**: ogni 1,5 s mentre gira, ogni 60 s da
- *   fermo, e **niente a scheda nascosta** -- un portatile chiuso in borsa non deve interrogare
- *   il NAS ogni secondo.
- * - **Le cartelle che non si sono potute leggere si dicono**: il backend le manda in `skipped`
- *   col loro perche', e tacerle farebbe sembrare completa una scansione che non lo e' -- con un
- *   NAS spento fra tre cartelle, l'utente crederebbe di aver letto tutto.
- * - **Quando il lavoro finisce, cio' che l'app mostra e' vecchio**: la scansione ha appena
- *   aggiunto dei frame, e il conto delle cose da confermare e' di prima. Trovato dal vivo:
- *   18 frame entrati e la Casa che diceva ancora "0 da confermare" finche' non si ricaricava.
- * - Qui non si calcola niente: fase, numeri e verbo arrivano fatti.
+ *   fermo, niente a scheda nascosta.
+ * - **Le cartelle che non si sono potute leggere si dicono**, in testa alla pagina (Marco,
+ *   7/10/2026): tacerle farebbe sembrare completa una scansione che non lo e'.
+ * - **Quando il lavoro finisce, cio' che l'app mostra e' vecchio**: si rilegge.
  */
 
 const MENTRE_GIRA_MS = 1500
 const DA_FERMO_MS = 60000
+const GESTO = ["scan-gesto"]
 
-/** Il verbo del backend e la parola che l'utente legge. Il backend ne manda tre e basta: se
- *  ne comparisse un quarto, qui non compilerebbe invece di finire a schermo come chiave nuda. */
-const VERBI: Record<"start" | "stop" | "resume", Chiave> = {
+type Azione = "start" | "stop" | "resume"
+type Stato = components["schemas"]["PipelineStatus"]
+
+/** Il verbo del backend e la parola che l'utente legge: un quarto verbo non compilerebbe. */
+const VERBI: Record<Azione, Chiave> = {
   start: "scan.start",
   stop: "scan.stop",
   resume: "scan.resume",
 }
 
-/** Perche' una cartella e' stata saltata, nelle parole di chi legge. Chiusa come i verbi: un
- *  motivo nuovo del backend (`folder_retired`, domani) qui non compilerebbe, invece di uscire a
- *  schermo come "non si riesce a leggerla" -- che non e' una parola mancante, e' una **ragione
- *  sbagliata**, e manderebbe a controllare un cavo che sta benissimo. */
-const SALTI: Record<"root_unreachable" | "scan_running", Chiave> = {
+/** Perche' una cartella e' stata saltata. Chiusa: un motivo nuovo qui non compilerebbe, invece
+ *  di uscire a schermo con una ragione sbagliata. */
+const SALTI: Record<components["schemas"]["FolderSkipped"]["reason"], Chiave> = {
   root_unreachable: "scan.skipped.unreachable",
   scan_running: "scan.skipped.running",
+}
+
+/** I rifiuti che si riparano nelle Cartelle: solo questi portano li' con *Vedi*. */
+const DI_CARTELLE: ReadonlySet<Chiave> = new Set(["scan.error.no_folders", "scan.error.no_readable_folders"])
+
+/** Un rifiuto del gesto, con la chiave della sua frase: serve a sapere dove porta *Vedi*. */
+class Rifiuto extends Error {
+  constructor(readonly chiave: Chiave) {
+    super(t(chiave))
+  }
 }
 
 /** I rifiuti che il backend puo' mandare a questo gesto, con la loro frase. */
@@ -54,9 +61,7 @@ const RIFIUTI: Record<string, Chiave> = {
   worker_busy: "scan.error.worker_busy",
 }
 
-/** Le cinque fasi della catena, nelle parole di chi guarda. Qui la mappa resta aperta: una fase
- *  che non conosciamo si scrive com'e' (`measure`, il giorno che si accodera'), che e' un degrado
- *  onesto -- una parola inglese a schermo, non una riga che sparisce. */
+/** Le fasi nelle parole di chi guarda. Aperta: una fase nuova si scrive com'e', un degrado onesto. */
 const FASI: Record<string, Chiave> = {
   scan: "scan.stage.scan",
   normalize: "scan.stage.normalize",
@@ -65,9 +70,8 @@ const FASI: Record<string, Chiave> = {
   group: "scan.stage.group",
 }
 
-export function Scansiona() {
-  const cache = useQueryClient()
-  const stato = useQuery({
+function useStato() {
+  return useQuery({
     queryKey: ["pipeline"],
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/pipeline/status")
@@ -78,77 +82,204 @@ export function Scansiona() {
       q.state.data?.worker.state === "running" ? MENTRE_GIRA_MS : DA_FERMO_MS,
     refetchIntervalInBackground: false,
   })
+}
 
-  const gesto = useMutation({
-    mutationFn: async (azione: "start" | "stop" | "resume") => {
+function useGesto() {
+  const cache = useQueryClient()
+  return useMutation({
+    mutationKey: GESTO,
+    mutationFn: async (azione: Azione) => {
       const { data, error } =
         azione === "stop"
           ? await api.POST("/api/v1/pipeline/stop")
           : azione === "resume"
             ? await api.POST("/api/v1/pipeline/run")
             : await api.POST("/api/v1/scan")
-      if (error) throw new Error(t(motivo(error, RIFIUTI, "scan.failed")))
+      if (error) throw new Rifiuto(motivo(error, RIFIUTI, "scan.failed"))
       return data
     },
     // Il primo giro subito dopo il gesto: aspettare il prossimo battito farebbe sembrare che
     // il pulsante non abbia fatto niente.
     onSettled: () => void cache.invalidateQueries({ queryKey: ["pipeline"] }),
   })
+}
 
-  // Le cartelle che l'ultimo gesto non ha potuto leggere: restano a schermo finche' non se ne
-  // chiede un altro. Ognuna porta gia' il suo percorso, quindi qui non si ricuce niente.
-  const risposta = gesto.data
-  const saltate = risposta && "skipped" in risposta ? risposta.skipped : []
+/** La fase in corso, con la parola e i numeri, o niente se non ce n'e' una. */
+function faseDi(stato: Stato | undefined) {
+  const nome = stato?.worker.stage
+  const corrente = nome ? stato?.worker.stages.find((s) => s.name === nome) : undefined
+  if (!corrente) return null
+  const parola = FASI[corrente.name]
+  const conti = corrente.total !== null && corrente.current !== null
+  return {
+    parola: parola ? t(parola) : corrente.name,
+    conto: conti ? t("scan.progress", { fatti: numero(corrente.current ?? 0), su: numero(corrente.total ?? 0) }) : null,
+    // la larghezza della pista e' un dato, l'unico `style` che il foglio ammette
+    quanto: conti && corrente.total ? `${Math.round(((corrente.current ?? 0) / corrente.total) * 100)}%` : null,
+  }
+}
+
+/** La scansione nella barra in alto. */
+export function Scansiona() {
+  const cache = useQueryClient()
+  const stato = useStato()
+  const gesto = useGesto()
 
   // Il timbro di fine corsa: cambia una volta per corsa, quindi quando cambia il lavoro e'
-  // finito davvero -- e cio' che le pagine mostrano va riletto. Non e' uno stato derivato: e'
-  // un valore dell'API che fa da innesco, e la copia non esiste.
+  // finito davvero -- e cio' che le pagine mostrano va riletto.
   const finita = stato.data?.worker.ended_at ?? null
   useEffect(() => {
     if (finita === null) return
     void cache.invalidateQueries({ queryKey: ["review"] })
-    // E le ricevute: *Le letture* e' la pagina che risponde a "ha funzionato?", e la ricevuta
-    // della corsa appena finita e' l'unica che si sta aspettando.
     void cache.invalidateQueries({ queryKey: ["scan-runs"] })
   }, [finita, cache])
 
   const azione = stato.data?.action ?? "start"
-  const fase = stato.data?.worker.stage
-  const corrente = fase ? stato.data?.worker.stages.find((s) => s.name === fase) : undefined
-  const nomeFase = corrente ? (FASI[corrente.name] ?? null) : null
+  const fase = faseDi(stato.data)
+  const bottone = (verso: "tenue" | "nudo") => (
+    <Bottone verso={verso} piccolo onClick={() => gesto.mutate(azione)} disabled={gesto.isPending}>
+      {t(VERBI[azione])}
+    </Bottone>
+  )
 
+  if (stato.data?.worker.state === "error") {
+    return (
+      <div className="as-telaio__lavoro">
+        <span className="as-stato as-stato--allarme">{t("scan.blocked")}</span>
+        <span className="as-telaio__motivo">{stato.data.worker.error ?? t("scan.blocked.why")}</span>
+        <Bottone verso="tenue" piccolo a="/impostazioni/letture">
+          {t("scan.blocked.see")}
+        </Bottone>
+        {/* bloccata non e' finita: il backend chiede di ripartire, e il desktop non ha altro posto */}
+        {bottone("tenue")}
+      </div>
+    )
+  }
+  if (azione === "stop") {
+    return (
+      <div className="as-telaio__lavoro">
+        <span className="as-telaio__fase">{fase?.parola ?? t("scan.working")}</span>
+        {fase?.quanto && <Pista quanto={fase.quanto} />}
+        {fase?.conto && <span className="as-telaio__conta-lavoro">{fase.conto}</span>}
+        {bottone("nudo")}
+      </div>
+    )
+  }
+  if (azione === "resume") {
+    return (
+      <div className="as-telaio__lavoro">
+        <span className="as-telaio__fase">{t("scan.stopped")}</span>
+        {fase?.quanto && <Pista quanto={fase.quanto} ferma />}
+        {fase?.conto && <span className="as-telaio__conta-lavoro">{fase.conto}</span>}
+        {bottone("tenue")}
+      </div>
+    )
+  }
   return (
-    <div className="as-alto__lavoro">
-      <Bottone
-        verso="primario"
-        piccolo
-        onClick={() => gesto.mutate(azione)}
-        disabled={gesto.isPending}
-      >
-        {t(VERBI[azione])}
-      </Bottone>
-      {corrente && (
-        <span className="as-alto__fase">
-          {nomeFase === null ? corrente.name : t(nomeFase)}
-          {corrente.total !== null && corrente.current !== null && (
-            <> {t("scan.progress", { fatti: numero(corrente.current), su: numero(corrente.total) })}</>
-          )}
+    <div className="as-telaio__lavoro">
+      {finita && (
+        <span className="as-telaio__ultima">
+          {t("scan.last", { giorno: giorno(finita), ora: orario(finita) })}
         </span>
       )}
-      {gesto.error && <Avviso esito="allarme">{gesto.error.message}</Avviso>}
-      {/* Una cartella caduta MENTRE la si leggeva non sta fra le saltate -- il pre-controllo
-          l'aveva passata -- e la sua ricevuta si va a leggere in Impostazioni / Le letture. Senza
-          questa riga l'utente leggerebbe "fatto" con una cartella non letta. */}
-      {stato.data?.scan?.state === "error" && (
-        <Avviso esito="allarme">{t("scan.lostFolder")}</Avviso>
+      {bottone("tenue")}
+    </div>
+  )
+}
+
+function Pista({ quanto, ferma = false }: { quanto: string; ferma?: boolean }) {
+  return (
+    <span className={ferma ? "as-telaio__pista as-telaio__pista--ferma" : "as-telaio__pista"}>
+      <span className="as-telaio__riempi" style={{ width: quanto }} />
+    </span>
+  )
+}
+
+/** La scansione nel foglio "Altro" del telefono: la fase, i numeri e il gesto. Sul telefono la
+ *  barra non la porta: bloccata, il motivo e Vedi stanno qui o in nessun posto. */
+export function ScansioneNelFoglio() {
+  const stato = useStato()
+  const gesto = useGesto()
+  const azione = stato.data?.action ?? "start"
+  const fase = faseDi(stato.data)
+  const bloccata = stato.data?.worker.state === "error"
+  return (
+    <div className="as-foglio__lavoro">
+      <span className="as-stanotte__etichetta">{t("scan.label")}</span>
+      {bloccata && (
+        <div className="as-foglio__lavoro-riga">
+          <span className="as-stato as-stato--allarme">{t("scan.blocked")}</span>
+          <Bottone verso="tenue" piccolo a="/impostazioni/letture">
+            {t("scan.blocked.see")}
+          </Bottone>
+        </div>
       )}
-      {saltate.length > 0 && (
-        <ul className="as-elenco">
-          {saltate.map((c) => (
-            <li key={c.folder_id}>{t(SALTI[c.reason], { cartella: c.root_path })}</li>
-          ))}
-        </ul>
+      <div className="as-foglio__lavoro-riga">
+        <span>
+          {bloccata
+            ? (stato.data?.worker.error ?? t("scan.blocked.why"))
+            : fase
+              ? [fase.parola, fase.conto].filter(Boolean).join(" \u00B7 ")
+              : t("scan.idle")}
+        </span>
+        <Bottone verso="nudo" piccolo onClick={() => gesto.mutate(azione)} disabled={gesto.isPending}>
+          {t(VERBI[azione])}
+        </Bottone>
+      </div>
+      {fase?.quanto && (
+        <span className="as-stanotte__pista">
+          <span className="as-telaio__riempi" style={{ width: fase.quanto }} />
+        </span>
       )}
     </div>
+  )
+}
+
+function isAvvio(dati: unknown): dati is components["schemas"]["ScanAllStarted"] {
+  return typeof dati === "object" && dati !== null && "skipped" in dati
+}
+
+/** Cio' che la scansione non ha potuto fare, come riga di stato in testa alla pagina: un rifiuto,
+ *  una cartella caduta mentre la si leggeva, le cartelle saltate. Ognuno porta dove si ripara. */
+export function AvvisiDellaScansione() {
+  const stato = useStato()
+  const gesti = useMutationState({
+    filters: { mutationKey: GESTO },
+    select: (m) => ({ errore: m.state.error, dati: m.state.data }),
+  })
+  const ultimo = gesti.at(-1)
+  // Solo "avvia tutte" risponde con le saltate; fermare e riprendere no.
+  const dati = ultimo?.dati
+  const saltate = isAvvio(dati) ? dati.skipped : []
+  const errore = ultimo?.errore
+  const vedi = (a: string) => (
+    <Bottone verso="tenue" piccolo a={a}>
+      {t("scan.blocked.see")}
+    </Bottone>
+  )
+  return (
+    <>
+      {errore && (
+        <Avviso
+          esito="allarme"
+          pagina
+          azioni={errore instanceof Rifiuto && DI_CARTELLE.has(errore.chiave) ? vedi("/impostazioni/cartelle") : undefined}
+        >
+          {errore.message}
+        </Avviso>
+      )}
+      {/* Una cartella caduta MENTRE la si leggeva non sta fra le saltate: senza questa riga
+          l'utente leggerebbe "fatto" con una cartella non letta. */}
+      {stato.data?.scan?.state === "error" && (
+        <Avviso esito="allarme" pagina ruolo="status" azioni={vedi("/impostazioni/letture")}>
+          {t("scan.lostFolder")}
+        </Avviso>
+      )}
+      {saltate.map((c) => (
+        <Avviso esito="attesa" pagina key={c.folder_id} azioni={vedi("/impostazioni/cartelle")}>
+          {t(SALTI[c.reason], { cartella: c.root_path })}
+        </Avviso>
+      ))}
+    </>
   )
 }

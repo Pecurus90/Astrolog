@@ -6,7 +6,8 @@ import { Layout } from "./Layout"
 import { PaginaCheNonCe } from "./PaginaCheNonCe"
 import { Wizard } from "./Wizard"
 import { t } from "./i18n"
-import { APERTE, sezioniAperte } from "./pagine"
+import { ComingSoon } from "./ComingSoon"
+import { PAGINE, sezioniAperte } from "./pagine"
 import { usePreferenze } from "./preferenze"
 
 /**
@@ -20,7 +21,7 @@ import { usePreferenze } from "./preferenze"
  * - Le pagine **montano** solo dopo il cancelletto, quindi non serve spegnere le loro chiamate a
  *   mano: cio' che non e' montato non chiede niente.
  * - **Quali pagine esistono lo dice `pagine.tsx`**, che e' la casa sola dello scheletro: qui si
- *   montano le rotte di quelle aperte, e il `Layout` ne fa la barra.
+ *   montano le rotte, e il `Layout` ne fa il binario.
  */
 
 export function App() {
@@ -47,13 +48,13 @@ export function App() {
     <BrowserRouter>
       <Layout>
         <Routes>
-          {APERTE.map((p) => (
-            <Route key={p.a} path={p.a} element={p.elemento} />
+          {PAGINE.map((p) => (
+            <Route key={p.a} path={p.a} element={p.elemento ?? <ComingSoon pagina={p.chiave} />} />
           ))}
           {/* Le sezioni sono indirizzi veri, non ancore: il tasto indietro funziona e il
               collegamento si manda. Portano tutte alla stessa pagina, che legge dall'indirizzo
               quale sezione mostrare. */}
-          {APERTE.flatMap((p) =>
+          {PAGINE.flatMap((p) =>
             sezioniAperte(p.sezioni).map((s) => <Route key={s.a} path={s.a} element={p.elemento} />),
           )}
           <Route path="*" element={<PaginaCheNonCe />} />
