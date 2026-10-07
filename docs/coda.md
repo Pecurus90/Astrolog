@@ -264,8 +264,9 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   (`spine/search._NIGHTS_WHERE`); mese e anno solo in cifre ("05/2024", "2024-05") non sono una data.
 - **I filtri in un ordine solo, in tutta l'app -- prossima** (Marco, 7/10/2026): L, R, G, B, Ha,
   OIII, SII, poi i filtri a colori (OSC). Supera "dal piu' usato" (`spine/filters_used.py`,
-  `docs/domini/notti.md`, `docs/domini/archivio.md`). Da chiedere a Marco dove vanno gli altri
-  (banda doppia, nomi che il vocabolario non conosce, "senza filtro").
+  `docs/domini/notti.md`, `docs/domini/archivio.md`). Gli altri in fondo (Marco, 7/10/2026): prima
+  quelli che l'app riconosce per banda (la banda doppia), poi i nomi sconosciuti per nome, "senza
+  filtro" per ultimo.
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (disegno arrivato il
   7/10, forma A, il registro), poi Archivio, Da confermare, Attrezzatura. Il brief di ognuna si
   scrive coi dati che l'API manda in quel momento: si rifa' la ricognizione quando tocca a lei.
