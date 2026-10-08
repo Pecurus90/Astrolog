@@ -272,6 +272,9 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   (`vocab/filters.DISPLAY_ORDER`, `docs/domini/notti.md`). Resta per ore la sezione Filtri di Da
   confermare: sono domande, e le piu' usate prima e' l'ordine del lavoro. `gear_usage.position`
   dei filtri si scrive ancora ma nessuno la legge piu' (`spine/gear_usage.py`): da togliere.
+- **Archivio, le produzioni** (Marco, 8/10/2026; `docs/domini/archivio.md`): carta riassunto, clic
+  che apre il modale della produzione o il menu di scelta. Brief e risposta a Claude Design dati
+  l'8/10. Prima del montaggio: il riepilogo per corredo nella riga dell'Archivio.
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio, Da confermare, Attrezzatura. Il brief di ognuna si
   scrive coi dati che l'API manda in quel momento: si rifa' la ricognizione quando tocca a lei.
