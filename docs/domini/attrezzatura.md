@@ -12,7 +12,7 @@ parole vengono da [`glossario.md`](glossario.md) -- *strumento*, *corredo*, mai 
 
 Le prove del backend stanno in `backend/tests/test_api_gear.py` (cio' che la pagina mostra) e in
 `backend/tests/test_api_gear_write.py` (i gesti); quelle del frontend si chiamano col loro titolo
-e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi un pezzo*, in
+e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi strumento*, in
 `frontend/tests/attrezzatura-aggiungi.test.tsx`.
 
 | richiesta | prova |
@@ -105,7 +105,7 @@ basta (`spine/inventory.py`), e un contratto in `backend/pyproject.toml` le viet
 riscrive intera in un colpo solo: chi apre la pagina a meta' vede i numeri di prima, mai una tabella
 vuota. Fra un gesto che sposta pose -- un'unione -- e la fine del giro che parte subito dopo, la
 pagina mostra i numeri di prima; un pezzo nato a meta' giro -- alla prima scansione, per minuti --
-dice che **si sta contando**, che non e' "i tuoi file non lo dicono".
+dice **conteggio in corso**, che non e' "non indicato nei file".
 
 **Il pixel di una camera si ricava dal cielo quando i file non lo dicono** (Marco, 23/9/2026). La
 stessa misura letta all'incontrario: per ogni posa risolta, scala per focale del corredo diviso il

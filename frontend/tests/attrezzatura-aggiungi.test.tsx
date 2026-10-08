@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * Il gesto **Aggiungi un pezzo** dell'Attrezzatura: uno strumento che i file non nominano, e dallo
+ * Il gesto **Aggiungi strumento** dell'Attrezzatura: uno strumento che i file non nominano, e dallo
  * stesso gesto un filtro o un corredo (`docs/domini/attrezzatura.md`). Le righe di fabbrica stanno
  * in `attrezzatura-banco.tsx`.
  */
@@ -24,8 +24,8 @@ describe("aggiungo alla mia attrezzatura", () => {
     )
     await apriAttrezzatura()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un pezzo/i }))
-    fireEvent.change(screen.getByLabelText(/genere/i), { target: { value: "focuser" } })
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi strumento$/i }))
+    fireEvent.change(screen.getByLabelText(/^tipo/i), { target: { value: "focuser" } })
     fireEvent.change(screen.getByLabelText(/^nome/i), { target: { value: "EAF" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
 
@@ -38,8 +38,8 @@ describe("aggiungo alla mia attrezzatura", () => {
     attrezzatura({}, { "POST /api/v1/gear/filters": { stato: 201, corpo: { id: 4, requeued: 0, run_started: false } } })
     await apriAttrezzatura()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un pezzo/i }))
-    fireEvent.change(screen.getByLabelText(/genere/i), { target: { value: "filter" } })
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi strumento$/i }))
+    fireEvent.change(screen.getByLabelText(/^tipo/i), { target: { value: "filter" } })
     fireEvent.change(screen.getByLabelText(/^nome/i), { target: { value: "Antlia 3nm" } })
     // senza banda non si salva: e' cio' che sblocca le pose
     expect((screen.getByRole("button", { name: /salva/i }) as HTMLButtonElement).disabled).toBe(true)
@@ -56,11 +56,11 @@ describe("aggiungo alla mia attrezzatura", () => {
     attrezzatura()
     await apriAttrezzatura()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un pezzo/i }))
-    fireEvent.change(screen.getByLabelText(/genere/i), { target: { value: "focuser" } })
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi strumento$/i }))
+    fireEvent.change(screen.getByLabelText(/^tipo/i), { target: { value: "focuser" } })
     fireEvent.change(screen.getByLabelText(/^nome/i), { target: { value: "EAF" } })
-    fireEvent.change(screen.getByLabelText(/genere/i), { target: { value: "filter" } })
-    fireEvent.change(screen.getByLabelText(/genere/i), { target: { value: "focuser" } })
+    fireEvent.change(screen.getByLabelText(/^tipo/i), { target: { value: "filter" } })
+    fireEvent.change(screen.getByLabelText(/^tipo/i), { target: { value: "focuser" } })
 
     // la casella e' vuota, e Salva non manda il nome che non si vede piu'
     expect((screen.getByLabelText(/^nome/i) as HTMLInputElement).value).toBe("")
@@ -75,8 +75,8 @@ describe("aggiungo alla mia attrezzatura", () => {
     )
     await apriAttrezzatura()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un pezzo/i }))
-    fireEvent.change(screen.getByLabelText(/genere/i), { target: { value: "rig" } })
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi strumento$/i }))
+    fireEvent.change(screen.getByLabelText(/^tipo/i), { target: { value: "rig" } })
     const ottiche = within(screen.getByLabelText(/^ottica/i)).getAllByRole("option").map((o) => o.textContent)
     expect(ottiche).toEqual(["--", "TS 130 APO"]) // solo le ottiche, non la montatura
     fireEvent.change(screen.getByLabelText(/^ottica/i), { target: { value: "1" } })
@@ -98,14 +98,14 @@ describe("aggiungo alla mia attrezzatura", () => {
     )
     await apriAttrezzatura()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un pezzo/i }))
-    fireEvent.change(screen.getByLabelText(/genere/i), { target: { value: "rig" } })
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi strumento$/i }))
+    fireEvent.change(screen.getByLabelText(/^tipo/i), { target: { value: "rig" } })
     fireEvent.change(screen.getByLabelText(/^ottica/i), { target: { value: "1" } })
     fireEvent.change(screen.getByLabelText(/^camera/i), { target: { value: "5" } })
     fireEvent.change(screen.getByLabelText(/^focale/i), { target: { value: "920" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
 
-    expect(await screen.findByText(/questo corredo ce l'hai gia'/i)).toBeDefined()
+    expect(await screen.findByText(/corredo gi\u00e0 presente/i)).toBeDefined()
   })
 
   it("cambiando genere non porto con me i campi del genere di prima", async () => {
@@ -120,12 +120,12 @@ describe("aggiungo alla mia attrezzatura", () => {
     )
     await apriAttrezzatura()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un pezzo/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi strumento$/i }))
     fireEvent.change(screen.getByLabelText(/apertura/i), { target: { value: "130" } })
     // La marca invece e' di **tutti** i generi: resta in pagina con cio' che ci ho scritto, e
     // buttarla via vorrebbe dire una casella che dice una cosa e un'app che ne manda un'altra.
     fireEvent.change(screen.getByLabelText(/marca/i), { target: { value: "ZWO" } })
-    fireEvent.change(screen.getByLabelText(/genere/i), { target: { value: "mount" } })
+    fireEvent.change(screen.getByLabelText(/^tipo/i), { target: { value: "mount" } })
     fireEvent.change(screen.getByLabelText(/^nome/i), { target: { value: "EQ6-R" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
 
@@ -139,7 +139,7 @@ describe("aggiungo alla mia attrezzatura", () => {
     attrezzatura()
     await apriAttrezzatura()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un pezzo/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi strumento$/i }))
     const salva = screen.getByRole("button", { name: /salva/i })
     expect(salva).toHaveProperty("disabled", true)
 
@@ -155,7 +155,7 @@ describe("aggiungo alla mia attrezzatura", () => {
     attrezzatura({ instruments: [], rigs: [], filters: [] })
     await apriAttrezzatura()
 
-    expect(await screen.findByRole("button", { name: /aggiungi un pezzo/i })).toBeDefined()
+    expect(await screen.findByRole("button", { name: /^aggiungi strumento$/i })).toBeDefined()
   })
 
   it("un nome che possiedo gia' me lo dice, invece di far finta", async () => {
@@ -167,10 +167,10 @@ describe("aggiungo alla mia attrezzatura", () => {
     )
     await apriAttrezzatura()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un pezzo/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi strumento$/i }))
     fireEvent.change(screen.getByLabelText(/^nome/i), { target: { value: "TS 130 APO" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
 
-    expect(await screen.findByText(/lo possiedi gia'/i)).toBeDefined()
+    expect(await screen.findByText(/nome gi\u00e0 usato da uno strumento dello stesso tipo/i)).toBeDefined()
   })
 })

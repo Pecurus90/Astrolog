@@ -120,7 +120,7 @@ describe("Da confermare -- i filtri", () => {
     aperta()
     const sezione = await vaiAConfermare()
     const suHa = riga(sezione, "H")
-    fireEvent.click(within(suHa).getByRole("button", { name: /non e' in elenco/i }))
+    fireEvent.click(within(suHa).getByRole("button", { name: /non in elenco/i }))
     fireEvent.change(within(suHa).getByLabelText(/^nome/i), { target: { value: "Il mio Ha" } })
     fireEvent.change(within(suHa).getByLabelText(/banda/i), { target: { value: "HA" } })
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
@@ -139,7 +139,7 @@ describe("Da confermare -- i filtri", () => {
     aperta()
     const sezione = await vaiAConfermare()
     const suHa = riga(sezione, "H")
-    fireEvent.click(within(suHa).getByRole("button", { name: /non e' in elenco/i }))
+    fireEvent.click(within(suHa).getByRole("button", { name: /non in elenco/i }))
     fireEvent.change(within(suHa).getByLabelText(/^nome/i), { target: { value: "L-Pro" } })
     fireEvent.change(within(suHa).getByLabelText(/banda/i), { target: { value: "L" } })
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
@@ -192,7 +192,7 @@ describe("Da confermare -- i filtri", () => {
   it("la voce vuota toglie la risposta, invece di mandarne una vuota", async () => {
     aperta()
     const sezione = await vaiAConfermare()
-    const tendina = within(riga(sezione, "H")).getByLabelText(/uno dei miei filtri: H$/i)
+    const tendina = within(riga(sezione, "H")).getByLabelText(/filtro esistente: H$/i)
     fireEvent.change(tendina, { target: { value: "9" } })
     fireEvent.change(tendina, { target: { value: "" } })
     expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
@@ -203,8 +203,8 @@ describe("Da confermare -- i filtri", () => {
     aperta()
     const sezione = await vaiAConfermare()
     const suH = riga(sezione, "H")
-    fireEvent.change(within(suH).getByLabelText(/uno dei miei filtri: H$/i), { target: { value: "9" } })
-    fireEvent.click(within(suH).getByRole("button", { name: /non e' in elenco/i }))
+    fireEvent.change(within(suH).getByLabelText(/filtro esistente: H$/i), { target: { value: "9" } })
+    fireEvent.click(within(suH).getByRole("button", { name: /non in elenco/i }))
     expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
   })
 
@@ -214,8 +214,8 @@ describe("Da confermare -- i filtri", () => {
     aperta()
     const sezione = await vaiAConfermare()
     const suH = riga(sezione, "H")
-    fireEvent.change(within(suH).getByLabelText(/uno dei miei filtri: H$/i), { target: { value: "9" } })
-    fireEvent.click(within(suH).getByRole("button", { name: /non e' in elenco/i }))
+    fireEvent.change(within(suH).getByLabelText(/filtro esistente: H$/i), { target: { value: "9" } })
+    fireEvent.click(within(suH).getByRole("button", { name: /non in elenco/i }))
     fireEvent.change(within(suH).getByLabelText(/^nome/i), { target: { value: "Il mio H" } })
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
     await waitFor(() => {
@@ -231,7 +231,7 @@ describe("Da confermare -- i filtri", () => {
     aperta()
     const sezione = await vaiAConfermare()
     const suH = riga(sezione, "H")
-    const tendina = within(suH).getByLabelText(/uno dei miei filtri: H$/i)
+    const tendina = within(suH).getByLabelText(/filtro esistente: H$/i)
     fireEvent.change(tendina, { target: { value: "9" } })
     fireEvent.change(tendina, { target: { value: "" } })
     fireEvent.change(tendina, { target: { value: "9" } })
@@ -285,7 +285,7 @@ describe("Da confermare -- i filtri", () => {
     aperta({ ...PAGINA, filters: [], to_confirm: 0 })
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
-    await within(await screen.findByRole("main")).findByText(/cos[ae] da confermare/i)
+    await within(await screen.findByRole("main")).findByText(/^\d+ da confermare$/)
     expect(screen.queryByRole("region", { name: /filtri/i })).toBeNull()
   })
 
@@ -337,9 +337,9 @@ describe("Da confermare -- i filtri", () => {
       target: { value: "alp" },
     })
     fireEvent.click(await within(suHa).findByRole("button", { name: /Antlia ALP-T 3nm/ }))
-    fireEvent.click(within(suHa).getByRole("button", { name: /scegli un altro modello/i }))
+    fireEvent.click(within(suHa).getByRole("button", { name: /cambia modello/i }))
     expect(within(suHa).getByLabelText(/cerca fra i modelli per H$/i)).toBeDefined()
-    expect(within(suHa).getByRole("button", { name: /non e' in elenco/i })).toBeDefined()
+    expect(within(suHa).getByRole("button", { name: /non in elenco/i })).toBeDefined()
   })
 
   it("le risposte si accumulano e partono con un solo Applica", async () => {
@@ -374,6 +374,6 @@ describe("Da confermare -- i filtri", () => {
     // quindi cercarlo da solo passava anche togliendo la ricevuta -- provato dal revisore.
     const ricevuta = await screen.findByRole("status")
     expect(ricevuta.textContent).toContain("120")
-    expect(ricevuta.textContent).toMatch(/rimessi in coda/i)
+    expect(ricevuta.textContent).toMatch(/da rielaborare/i)
   })
 })

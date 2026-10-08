@@ -13,8 +13,8 @@ describe("il singolare dei conti", () => {
   })
 
   it("vale anche col numero gia' scritto per lo schermo", () => {
-    expect(t("review.count", { n: numero(1) })).toBe("1 cosa da confermare")
-    expect(t("review.count", { n: numero(1000) })).toBe(`${numero(1000)} cose da confermare`)
+    expect(t("review.count", { n: numero(1) })).toBe("1 da confermare")
+    expect(t("review.count", { n: numero(1000) })).toBe(`${numero(1000)} da confermare`)
   })
 
   it("una chiave senza forma singolare resta com'e'", () => {
@@ -24,9 +24,9 @@ describe("il singolare dei conti", () => {
   })
 
   it("le frasi con un conto solo si leggono al singolare", () => {
-    expect(t("review.applied", { n: 1, pose: 3 })).toBe("applicata 1 risposta, 3 frame rimessi in coda")
+    expect(t("review.applied", { n: 1, pose: 3 })).toBe("1 modifica applicata, 3 frame da rielaborare")
     expect(t("weather.usable.dark", { n: 1, su: 8 })).toBe("1 ora utile su 8 di buio.")
-    expect(t("settings.readings.duplicates", { n: 1 })).toBe("1 doppione")
+    expect(t("settings.readings.duplicates", { n: 1 })).toBe("1 duplicato")
     expect(t("nights.waiting.review", { n: 1 })).toBe("1 frame da confermare")
   })
 })

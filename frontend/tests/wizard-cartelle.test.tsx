@@ -424,9 +424,9 @@ describe("una cartella spostata", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
 
-    expect(await screen.findByText(/e' la cartella D:\/Astro spostata qui/i)).toBeDefined()
+    expect(await screen.findByText(/corrisponde a D:\/Astro: stessi file/i)).toBeDefined()
     expect(screen.queryByRole("button", { name: /aggiungi/i })).toBeNull()
-    fireEvent.click(screen.getByRole("button", { name: /usala da qui/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^usa questo percorso$/i }))
 
     await waitFor(() =>
       expect(

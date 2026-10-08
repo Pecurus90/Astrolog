@@ -86,7 +86,7 @@ describe("una riga di Da confermare", () => {
     const voce = riga(sezione, CARTELLA)
     const corpo = voce.querySelector(".as-riga")
     expect(corpo?.className).toBe("as-riga")
-    fireEvent.click(within(voce).getByLabelText(/file di calibrazione/i))
+    fireEvent.click(within(voce).getByLabelText("Calibrazione"))
     expect(voce.querySelector(".as-riga")?.className).toContain("as-riga--risposta")
   })
 
@@ -96,7 +96,7 @@ describe("una riga di Da confermare", () => {
     conUnaDomanda()
     const sezione = await vaiASezione(/frame senza tipo/i)
     const voce = riga(sezione, CARTELLA)
-    const scelta = within(voce).getByLabelText(/file di calibrazione/i)
+    const scelta = within(voce).getByLabelText("Calibrazione")
     expect(scelta.closest(".as-riga__risposte")).not.toBeNull()
   })
 

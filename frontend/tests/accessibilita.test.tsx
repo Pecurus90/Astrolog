@@ -563,8 +563,8 @@ describe("l accessibilita della prima pagina", () => {
     await screen.findByRole("list", { name: /corredi/i })
     // Anche **i due gesti aperti**: una scheda che si corregge e una che nasce sono campi con le
     // loro etichette, ed e' li' che un modulo senza nomi farebbe danno a chi ascolta.
-    fireEvent.click(screen.getAllByRole("button", { name: /correggi/i })[0] as HTMLElement)
-    fireEvent.click(screen.getByRole("button", { name: /aggiungi un pezzo/i }))
+    fireEvent.click(screen.getAllByRole("button", { name: /^modifica$/i })[0] as HTMLElement)
+    fireEvent.click(screen.getByRole("button", { name: /^aggiungi strumento$/i }))
 
     expect(await violazioni(container)).toEqual([])
   })

@@ -82,7 +82,7 @@ describe("Impostazioni", () => {
     await vaiAImpostazioni()
 
     expect(window.location.pathname).toBe("/impostazioni")
-    expect(await screen.findByText(/le cartelle che leggo/i)).toBeDefined()
+    expect(await screen.findByRole("heading", { level: 2, name: /^cartelle$/i })).toBeDefined()
   })
 
   it("un sotto-indirizzo e una pagina vera, non un buco", async () => {
@@ -92,7 +92,7 @@ describe("Impostazioni", () => {
     window.history.pushState({}, "", "/impostazioni/cartelle")
     await app()
 
-    expect(await screen.findByText(/le cartelle che leggo/i)).toBeDefined()
+    expect(await screen.findByRole("heading", { level: 2, name: /^cartelle$/i })).toBeDefined()
     const barra = await screen.findByRole("navigation", { name: /pagine/i })
     expect(
       within(barra).getByRole("link", { name: /impostazioni/i }).getAttribute("aria-current"),
@@ -132,9 +132,9 @@ describe("Impostazioni", () => {
     // il separatore delle migliaia dipende dall'ambiente: qui si guarda la frase, non la
     // formattazione, che ha gia' la sua prova in formati.test.ts
     expect(screen.getByText(/180 frame in archivio/)).toBeDefined()
-    // esatto: "non si raggiunge" contiene "si raggiunge", e senza l ancora la prova
+    // esatto: "Non raggiungibile" contiene "raggiungibile", e senza l ancora la prova
     // sarebbe verde anche con due righe irraggiungibili
-    expect(screen.getByText(/^si raggiunge$/)).toBeDefined()
+    expect(screen.getByText(/^Raggiungibile$/)).toBeDefined()
   })
 
   it("una cartella che non si raggiunge lo dice, e le altre restano", async () => {
@@ -143,21 +143,21 @@ describe("Impostazioni", () => {
     await app()
     await vaiAImpostazioni()
 
-    expect(await screen.findByText(/non si raggiunge/)).toBeDefined()
-    expect(screen.getByText(/412 frame gia' letti restano in archivio/)).toBeDefined()
+    expect(await screen.findByText(/^Non raggiungibile$/)).toBeDefined()
+    expect(screen.getByText(/412 frame restano in archivio/)).toBeDefined()
     expect(screen.getByText("D:\\Astro\\2025")).toBeDefined()
   })
 
   it("togliere chiede conferma e dice cosa resta, prima di toccare niente", async () => {
     await app()
     await vaiAImpostazioni()
-    const righe = await screen.findAllByRole("button", { name: /togli/i })
+    const righe = await screen.findAllByRole("button", { name: /^rimuovi$/i })
     fireEvent.click(righe[0]!)
 
     const dialogo = await screen.findByRole("dialog")
     expect(within(dialogo).getByText(/frame restano in archivio/)).toBeDefined()
     expect(within(dialogo).getByText(/180/)).toBeDefined()
-    expect(within(dialogo).getByText(/i file sul disco non vengono toccati/)).toBeDefined()
+    expect(within(dialogo).getByText(/^i file su disco non vengono modificati$/)).toBeDefined()
     // e finche' non si conferma, la rotta non e' stata chiamata
     expect(scritture().some((s) => s.metodo === "DELETE")).toBe(false)
   })
@@ -166,7 +166,7 @@ describe("Impostazioni", () => {
     // Un dialogo da cui non si esce con Esc e' una trappola: si apre per sbaglio e non si chiude.
     await app()
     await vaiAImpostazioni()
-    fireEvent.click((await screen.findAllByRole("button", { name: /togli/i }))[0]!)
+    fireEvent.click((await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!)
     await screen.findByRole("dialog")
 
     fireEvent.keyDown(document, { key: "Escape" })
@@ -180,7 +180,7 @@ describe("Impostazioni", () => {
     // **ritorno** del fuoco resterebbe verde per caso: il fuoco non si sarebbe mai mosso.
     await app()
     await vaiAImpostazioni()
-    const togli = (await screen.findAllByRole("button", { name: /togli/i }))[0]!
+    const togli = (await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!
     togli.focus()
     fireEvent.click(togli)
 
@@ -194,7 +194,7 @@ describe("Impostazioni", () => {
     // qualcosa davanti; senza nome, il dialogo si annuncia come "dialogo" e basta.
     await app()
     await vaiAImpostazioni()
-    fireEvent.click((await screen.findAllByRole("button", { name: /togli/i }))[0]!)
+    fireEvent.click((await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!)
 
     const dialogo = await screen.findByRole("dialog")
     expect(dialogo.getAttribute("aria-modal")).toBe("true")
@@ -218,9 +218,9 @@ describe("Impostazioni", () => {
       "/api/v1/folders": { stato: 200, corpo: CARTELLE },
       ...SPINA,
     })
-    fireEvent.click((await screen.findAllByRole("button", { name: /togli/i }))[0]!)
+    fireEvent.click((await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!)
     const dialogo = await screen.findByRole("dialog")
-    fireEvent.click(within(dialogo).getByRole("button", { name: /smetti di leggerla/i }))
+    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi cartella$/i }))
 
     expect(await within(dialogo).findByRole("alert")).toBeDefined()
     expect(screen.getByRole("dialog")).toBeDefined()
@@ -231,7 +231,7 @@ describe("Impostazioni", () => {
     // dialogo lo ha portato via e non glielo ha restituito.
     await app()
     await vaiAImpostazioni()
-    const togli = (await screen.findAllByRole("button", { name: /togli/i }))[0]!
+    const togli = (await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!
     togli.focus()
     fireEvent.click(togli)
     const dialogo = await screen.findByRole("dialog")
@@ -245,12 +245,12 @@ describe("Impostazioni", () => {
   it("confermando si smette di leggerla", async () => {
     await app()
     await vaiAImpostazioni()
-    fireEvent.click((await screen.findAllByRole("button", { name: /togli/i }))[0]!)
+    fireEvent.click((await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!)
     const dialogo = await screen.findByRole("dialog")
 
-    fireEvent.click(within(dialogo).getByRole("button", { name: /smetti di leggerla/i }))
+    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi cartella$/i }))
 
-    await screen.findByText(/le cartelle che leggo/i)
+    await screen.findByRole("heading", { level: 2, name: /^cartelle$/i })
     expect(scritture().some((s) => s.metodo === "DELETE" && s.url.includes("/folders/1"))).toBe(
       true,
     )
@@ -264,10 +264,10 @@ describe("Impostazioni", () => {
     fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
     const dialogo = await screen.findByRole("dialog")
 
-    fireEvent.change(within(dialogo).getByLabelText(/percorso nuovo/i), {
+    fireEvent.change(within(dialogo).getByLabelText(/^nuovo percorso/i), {
       target: { value: "E:/Astro/2025" },
     })
-    fireEvent.click(within(dialogo).getByRole("button", { name: /sposta qui/i }))
+    fireEvent.click(within(dialogo).getByRole("button", { name: /^verifica$/i }))
 
     await waitFor(() =>
       expect(
@@ -286,7 +286,7 @@ describe("Impostazioni", () => {
     await vaiAImpostazioni()
     fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
     const dialogo = await screen.findByRole("dialog")
-    const campo = within(dialogo).getByLabelText(/percorso nuovo/i)
+    const campo = within(dialogo).getByLabelText(/^nuovo percorso/i)
 
     fireEvent.change(campo, { target: { value: "E:/Astro/2025" } })
     fireEvent.submit(campo)
@@ -324,8 +324,8 @@ describe("Impostazioni", () => {
     fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
     const dialogo = await screen.findByRole("dialog")
 
-    expect(await within(dialogo).findByRole("button", { name: /sposta qui/i })).toBeDefined()
-    expect(within(dialogo).queryByRole("button", { name: /usa questa cartella/i })).toBeNull()
+    expect(await within(dialogo).findByRole("button", { name: /^verifica$/i })).toBeDefined()
+    expect(within(dialogo).queryByRole("button", { name: /seleziona cartella/i })).toBeNull()
   })
 
   it("se li non ci sono gli stessi file lo dice, e il dialogo resta aperto", async () => {
@@ -346,12 +346,12 @@ describe("Impostazioni", () => {
     })
     fireEvent.click((await screen.findAllByRole("button", { name: /cambia percorso/i }))[0]!)
     const dialogo = await screen.findByRole("dialog")
-    fireEvent.change(within(dialogo).getByLabelText(/percorso nuovo/i), {
+    fireEvent.change(within(dialogo).getByLabelText(/^nuovo percorso/i), {
       target: { value: "E:/Altro" },
     })
-    fireEvent.click(within(dialogo).getByRole("button", { name: /sposta qui/i }))
+    fireEvent.click(within(dialogo).getByRole("button", { name: /^verifica$/i }))
 
-    expect(await within(dialogo).findByText(/non ci sono gli stessi file/i)).toBeDefined()
+    expect(await within(dialogo).findByText(/i file non corrispondono/i)).toBeDefined()
     expect(screen.getByRole("dialog")).toBeDefined()
   })
 
@@ -360,9 +360,9 @@ describe("Impostazioni", () => {
     await app({ items: [], total: 0, limit: 50, offset: 0 })
     await vaiAImpostazioni()
 
-    const vuoto = await screen.findByText(/non leggo nessuna cartella/i)
+    const vuoto = await screen.findByText(/^nessuna cartella$/i)
     const dentro = vuoto.closest(".as-vuoto")
     expect(dentro).not.toBeNull()
-    expect(within(dentro as HTMLElement).getByText(/nessun file viene spostato/i)).toBeDefined()
+    expect(within(dentro as HTMLElement).getByText(/i file non vengono spostati/i)).toBeDefined()
   })
 })

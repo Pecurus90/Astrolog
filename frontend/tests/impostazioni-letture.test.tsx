@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * Impostazioni, la sezione *Le letture*: le ricevute delle scansioni passate.
+ * Impostazioni, la sezione *Scansioni*: le ricevute delle scansioni passate.
  *
  * Le regole provate qui sono quelle che una lettura del codice non prende: che uno **zero non sia
  * una riga** tranne dove e' la risposta, che una corsa ancora aperta **non duri zero**, che un
@@ -67,10 +67,10 @@ function app(
 async function vaiAlleLetture() {
   const barra = await screen.findByRole("navigation", { name: /pagine/i })
   fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
-  fireEvent.click(await screen.findByRole("link", { name: /le letture/i }))
+  fireEvent.click(await screen.findByRole("link", { name: /^scansioni$/i }))
 }
 
-describe("Impostazioni / Le letture", () => {
+describe("Impostazioni / Scansioni", () => {
   it("una lettura dice quale cartella, quando, quanto e com e andata", async () => {
     await app([{ ...LETTURA, found: 120, new: 5, unchanged: 115 }])
     await vaiAlleLetture()
@@ -78,9 +78,9 @@ describe("Impostazioni / Le letture", () => {
     const riga = await within(await screen.findByRole("main")).findByRole("listitem")
     expect(riga.textContent).toContain("D:\\Astro\\2025")
     expect(riga.textContent).toMatch(/2 min 14 s/)
-    expect(within(riga).getByText(/letta tutta/i)).toBeTruthy()
+    expect(within(riga).getByText(/^completata$/i)).toBeTruthy()
     expect(riga.textContent).toMatch(/5 nuovi/)
-    expect(riga.textContent).toMatch(/120 file guardati/)
+    expect(riga.textContent).toMatch(/120 file esaminati/)
   })
 
   it("uno zero non e una riga, tranne dove e la risposta", async () => {
@@ -91,9 +91,9 @@ describe("Impostazioni / Le letture", () => {
 
     const riga = await within(await screen.findByRole("main")).findByRole("listitem")
     expect(riga.textContent).toMatch(/0 nuovi/)
-    expect(riga.textContent).not.toMatch(/doppioni/)
-    expect(riga.textContent).not.toMatch(/saltati/)
-    expect(riga.textContent).toMatch(/120 gia' in archivio/)
+    expect(riga.textContent).not.toMatch(/duplicat/)
+    expect(riga.textContent).not.toMatch(/esclus/)
+    expect(riga.textContent).toMatch(/120 gi\u00e0 in archivio/)
   })
 
   it("una lettura ancora in corso non dura zero", async () => {
@@ -102,12 +102,12 @@ describe("Impostazioni / Le letture", () => {
     await vaiAlleLetture()
 
     const riga = await within(await screen.findByRole("main")).findByRole("listitem")
-    expect(riga.textContent).toMatch(/sta leggendo adesso/i)
+    expect(riga.textContent).toMatch(/\bin corso\b/)
     // ai confini di parola: senza, "0 s" si trova dentro l'ora "21:00 sta..." e la prova
     // passerebbe per il motivo sbagliato
     expect(riga.textContent).not.toMatch(/\b0 s\b/)
     // e non c'e' nessun esito: non e' andata ne' bene ne' male, non e' finita
-    expect(within(riga).queryByText(/letta tutta/i)).toBeNull()
+    expect(within(riga).queryByText(/^completata$/i)).toBeNull()
   })
 
   it("una corsa fermata da un guasto dice perche', a parole", async () => {
@@ -115,19 +115,19 @@ describe("Impostazioni / Le letture", () => {
     await vaiAlleLetture()
 
     const riga = await within(await screen.findByRole("main")).findByRole("listitem")
-    expect(within(riga).getByText(/^fermata$/i)).toBeTruthy()
-    expect(riga.textContent).toMatch(/la cartella non rispondeva piu'/i)
+    expect(within(riga).getByText(/^interrotta$/i)).toBeTruthy()
+    expect(riga.textContent).toMatch(/cartella non raggiungibile/i)
     expect(riga.textContent).not.toMatch(/root_unreachable/)
   })
 
   it("una corsa fermata da te non ripete il perche'", async () => {
-    // "fermata da te" lo dice gia': aggiungere "perche' l'hai fermata tu" e' una riga che non
+    // "Interrotta dall'utente" lo dice gia': aggiungere "perche' l'hai fermata tu" e' una riga che non
     // porta niente.
     await app([{ ...LETTURA, status: "stopped", reason: "stop_requested" }])
     await vaiAlleLetture()
 
     const riga = await within(await screen.findByRole("main")).findByRole("listitem")
-    expect(within(riga).getByText(/fermata da te/i)).toBeTruthy()
+    expect(within(riga).getByText(/^interrotta dall'utente$/i)).toBeTruthy()
     expect(riga.textContent).not.toMatch(/stop_requested/)
   })
 
@@ -135,8 +135,8 @@ describe("Impostazioni / Le letture", () => {
     await app([], 0)
     await vaiAlleLetture()
 
-    expect(await screen.findByText(/nessuna lettura/i)).toBeTruthy()
-    expect(screen.getByText(/premi scansiona in alto/i)).toBeTruthy()
+    expect(await screen.findByText(/^nessuna scansione$/i)).toBeTruthy()
+    expect(screen.getByText(/aggiungi una cartella e avvia la scansione/i)).toBeTruthy()
   })
 
   it("cosa e rimasto fuori si apre solo se e rimasto fuori qualcosa", async () => {
@@ -145,13 +145,13 @@ describe("Impostazioni / Le letture", () => {
     await app([{ ...LETTURA, found: 14, new: 14 }])
     await vaiAlleLetture()
     await within(await screen.findByRole("main")).findByRole("listitem")
-    expect(screen.queryByRole("button", { name: /rimasto fuori/i })).toBeNull()
+    expect(screen.queryByRole("button", { name: /^file esclusi$/i })).toBeNull()
 
     pulisci()
     const saltati = [{ reason: "calibration", count: 3 }]
     await app([{ ...LETTURA, found: 14, skipped: 3, skipped_by_reason: saltati }])
     await vaiAlleLetture()
-    fireEvent.click(await screen.findByRole("button", { name: /rimasto fuori/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^file esclusi$/i }))
     expect(await screen.findByText(/3 di calibrazione \(dark, flat, bias\)/i)).toBeTruthy()
   })
 
@@ -163,7 +163,7 @@ describe("Impostazioni / Le letture", () => {
     await app([{ ...LETTURA, found: 14, skipped: 1, skipped_by_reason: saltati }])
     await vaiAlleLetture()
 
-    const tasto = await screen.findByRole("button", { name: /rimasto fuori/i })
+    const tasto = await screen.findByRole("button", { name: /^file esclusi$/i })
     expect(tasto.getAttribute("aria-expanded")).toBe("false")
     const governato = tasto.getAttribute("aria-controls")
     expect(governato).toBeTruthy()
@@ -173,7 +173,7 @@ describe("Impostazioni / Le letture", () => {
     expect(tasto.getAttribute("aria-expanded")).toBe("true")
     // e l'id nominato e' davvero il pannello, non una promessa a vuoto
     expect(document.getElementById(governato!)).toBe(
-      screen.getByRole("region", { name: /rimasto fuori/i }),
+      screen.getByRole("region", { name: /^file esclusi$/i }),
     )
   })
 
@@ -185,9 +185,9 @@ describe("Impostazioni / Le letture", () => {
     await within(await screen.findByRole("main")).findByRole("listitem")
     expect(chiamate().filter((c) => c.includes("/errors")).length).toBe(0)
 
-    fireEvent.click(screen.getByRole("button", { name: /rimasto fuori/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^file esclusi$/i }))
     expect(await screen.findByText(/sub\\rotto\.fit/)).toBeTruthy()
-    expect(screen.getByText(/non e' un FITS, o il suo header e' rotto/i)).toBeTruthy()
+    expect(screen.getByText(/un FITS o header non valido/i)).toBeTruthy()
     expect(document.body.textContent).not.toMatch(/header_unreadable/)
   })
 
@@ -199,9 +199,9 @@ describe("Impostazioni / Le letture", () => {
       corpo: { detail: { code: "errors_not_kept" } },
     })
     await vaiAlleLetture()
-    fireEvent.click(await screen.findByRole("button", { name: /rimasto fuori/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^file esclusi$/i }))
 
-    expect(await screen.findByText(/non tiene piu' l'elenco/i)).toBeTruthy()
+    expect(await screen.findByText(/conservato solo per l'ultima scansione di ogni cartella/i)).toBeTruthy()
   })
 
   it("una cartella lasciata fuori dice perche', a parole", async () => {
@@ -215,15 +215,15 @@ describe("Impostazioni / Le letture", () => {
       },
     ])
     await vaiAlleLetture()
-    fireEvent.click(await screen.findByRole("button", { name: /rimasto fuori/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^file esclusi$/i }))
 
-    const fuori = await screen.findByRole("region", { name: /rimasto fuori/i })
+    const fuori = await screen.findByRole("region", { name: /^file esclusi$/i })
     expect(fuori.textContent).toMatch(/cestino/)
-    expect(fuori.textContent).toMatch(/nascoste, e le ho lasciate stare/i)
+    expect(fuori.textContent).toMatch(/cestino nascosta, ignorata/)
     expect(fuori.textContent).toMatch(/scorciatoia/)
-    expect(fuori.textContent).toMatch(/non l'ho seguito/i)
+    expect(fuori.textContent).toMatch(/scorciatoia collegamento simbolico, non seguito/)
     expect(fuori.textContent).toMatch(/protetta/)
-    expect(fuori.textContent).toMatch(/non si sono potute leggere/i)
+    expect(fuori.textContent).toMatch(/protetta non leggibile/)
     // nessuna chiamata per i file: non ce n'erano di non letti
     expect(chiamate().filter((c) => c.includes("/errors")).length).toBe(0)
   })
@@ -267,12 +267,12 @@ describe("Impostazioni / Le letture", () => {
     await app([LETTURA], 1)
     await vaiAlleLetture()
     await within(await screen.findByRole("main")).findByRole("listitem")
-    expect(screen.queryByRole("button", { name: /letture precedenti/i })).toBeNull()
+    expect(screen.queryByRole("button", { name: /scansioni precedenti/i })).toBeNull()
 
     pulisci()
     await app([LETTURA], 40)
     await vaiAlleLetture()
-    const altre = await screen.findByRole("button", { name: /letture precedenti/i })
+    const altre = await screen.findByRole("button", { name: /scansioni precedenti/i })
 
     const prima = chiamate().filter((c) => c.includes("scan-runs")).length
     fireEvent.click(altre)

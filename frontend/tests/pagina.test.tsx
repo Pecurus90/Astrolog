@@ -38,9 +38,10 @@ describe("la prima pagina", () => {
     })
     await disegna()
     const avviso = await screen.findByRole("alert")
-    expect(avviso.textContent).toContain("non ha risposto")
+    expect(avviso.textContent).toContain("Da confermare non disponibile")
     // E soprattutto: nessun conteggio a schermo. Uno zero su un archivio che non ha risposto e'
     // una bugia tranquillizzante, ed e' il difetto che la riga dell'errore in `App.tsx` evita.
-    expect(document.body.textContent).not.toContain("cose da confermare")
+    // minuscolo: e' l'unita' accanto al numero, non il nome della pagina nel binario
+    expect(document.body.textContent).not.toContain("da confermare")
   })
 })

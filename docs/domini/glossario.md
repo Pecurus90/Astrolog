@@ -5,7 +5,7 @@ e' inglese, il nome che **l'utente legge** e' italiano, e ogni cosa ne ha **uno 
 ciascuno. Un identificatore nuovo che non sta qui, o che chiama con un altro nome una cosa
 che qui c'e', e' un rosso per il revisore. Nei documenti si usano le stesse parole -- **tranne
 dove una parola e' di dominio e non di schermo**, e allora la colonna *non si dice* non la
-nomina: `scan_run` a schermo e' **una lettura**, ma nel codice e nei contratti si chiama
+nomina: `scan_run` a schermo e' **una scansione**, ma nel codice e nei contratti si chiama
 **ricevuta**, cioe' cio' che resta di una corsa. Le
 traduzioni nelle altre lingue attive le tiene il file comune di traduzione del frontend,
 che il `traduttore` legge per primo.
@@ -20,10 +20,11 @@ che il `traduttore` legge per primo.
 | la somma del tempo dei frame -- di un oggetto, di un mosaico -- in secondi. Le copie riscritte non contano, e un frame che non dice il tempo **non vale zero**: resta fuori dalla somma e si conta in `untimed`. Se **nessun** frame lo dice, a schermo le ore non compaiono affatto: restano i frame senza durata | `integration_s` | ore | integrazione, tempo totale, somma, esposizione, 0 h (per un tempo che non si sa) |
 | quanti frame, fra quelli contati, non dicono il loro tempo: viaggia accanto alle ore perche' "non lo sappiamo" e "zero ore" non sono la stessa cosa. Zero secondi invece e' una misura, e non si conta qui | `untimed` | senza durata | senza tempo, a zero, mancante, nullo, vuoto |
 | un dark, flat, bias o dark-flat: riconosciuto e contato, non catalogato | `calibration_frame` | file di calibrazione | calibrazioni, master |
-| una volta che l'app ha letto una cartella, con cosa e' entrato, cosa e' rimasto fuori e quanto e' durata: resta, e si rilegge dopo | `scan_run` | lettura | corsa, scansione (il gesto), passata, sessione |
-| un file che la scansione non ha letto, col suo motivo: il sistema non lo apre (`file_unreadable`), non e' un FITS (`header_unreadable`), il nome non si puo' scrivere (`name_not_utf8`), un guasto che nessuno aspettava (`internal_error`) | `errors_detail` | file non letto | errore, fallito, scartato |
-| quanti file la scansione ha saltato, per motivo: calibrazione (`calibration`), somma di frame (`stack`), ancora in scrittura (`still_writing`) | `skipped_by_reason` | saltati | scartati, ignorati, esclusi |
-| il frame riscritto da un programma accanto al suo originale: resta in archivio con le sue posizioni, ma le sue ore le conta l'originale | `copy_of` | copia | doppione, duplicato, gemello |
+| una volta che l'app ha letto una cartella, con cosa e' entrato, cosa e' rimasto fuori e quanto e' durata: resta, e si rilegge dopo | `scan_run` | scansione | lettura, corsa, passata, sessione |
+| un file che la scansione non ha letto, col suo motivo: il sistema non lo apre (`file_unreadable`), non e' un FITS (`header_unreadable`), il nome non si puo' scrivere (`name_not_utf8`), un guasto che nessuno aspettava (`internal_error`) | `errors_detail` | file non leggibile | file non letto, errore, fallito, scartato |
+| quanti file la scansione ha saltato, per motivo: calibrazione (`calibration`), somma di frame (`stack`), ancora in scrittura (`still_writing`) | `skipped_by_reason` | esclusi | saltati, scartati, ignorati |
+| il frame riscritto da un programma accanto al suo originale: resta in archivio con le sue posizioni, ma le sue ore le conta l'originale. Non e' il duplicato di una scansione, qui sotto | `copy_of` | copia | doppione, duplicato, gemello |
+| lo stesso file trovato dalla scansione in un'altra posizione: stessa impronta, quindi un frame solo con due posizioni. La scansione lo conta nella sua riga; non e' una copia riscritta da un programma (`copy_of`) | `duplicates` (`scan_runs`) | duplicato | doppione, copia |
 | cio' che un file dichiara di se': che e' stato calibrato, o che nomina due programmi diversi (uno lo ha scritto, l'altro lo ha ripreso). Non dice **chi**, e da solo non toglie niente: sceglie l'originale fra due copie, e il calibrato pesa piu' del riscritto | `rewrite_mark` | (non a schermo) | flag, elaborato, processato |
 | cio' che l'header di un frame lascia da chiedere in Da confermare: la camera non c'e' (`night_rig.asks_camera`), il filtro non dice niente (`unfiltered.says_no_filter`), e se nomina l'ottica (`header_asks.names_the_optics`: allora sull'ottica non si chiede). Dipende solo dal grezzo e dal vocabolario: lo scrive `scan`, una volta | `asks_camera`, `asks_filter`, `names_optics` (`spine/header_asks.py`) | (non a schermo) | verdetto, flag |
 | l'immagine elaborata che l'utente carica a mano | `final_photo` | foto finale | immagine finale, elaborata, master |
@@ -42,7 +43,7 @@ che il `traduttore` legge per primo.
 | come si sa la luminosita' di un sito: misurata, chiesta al servizio, scelta sulla scala | `sky_source` | (una frase tradotta) | fonte, origine |
 | l'altezza del sito sul livello del mare; assente vuol dire "non fornita", mai zero | `elevation_m` | altitudine | quota, altezza |
 | come si sa l'altitudine di un sito: scritta da chi c'e' stato, o chiesta al servizio | `elevation_source` | (una frase tradotta) | fonte, origine |
-| il sito da cui si osserva di solito: e' lui a dare il fuso alle notti. Uno solo | `is_default` | sito di casa | sito predefinito, principale, attivo |
+| il sito da cui si osserva di solito: e' lui a dare il fuso alle notti. Uno solo | `is_default` | sito predefinito | sito di casa, principale, attivo |
 | le domande del primo avvio (come mi chiamo, da dove osservo, dove stanno i file, la chiave Meteoblue facoltativa) | `wizard` | primo avvio | onboarding, configurazione iniziale, procedura guidata |
 | la data in cui il primo avvio e' stato fatto o saltato: e' un fatto scritto, e non si riscrive | `onboarding_done_at` | timbro del primo avvio | flag, completato |
 
@@ -52,7 +53,7 @@ che il `traduttore` legge per primo.
 |---|---|---|---|
 | cio' che e' stato fotografato, come entita' dell'archivio | `object` | oggetto | target, bersaglio, soggetto |
 | in un campo con piu' oggetti, quello scelto come principale | `subject` | soggetto | oggetto principale, target |
-| gli oggetti che il cielo ha trovato nei frame di un gruppo di Da confermare, il piu' ripreso in cima, coi frame dove non ha trovato niente (`not_found`) e quelli che non ha ancora guardato (`not_yet`): si leggono accanto alla domanda e non la cambiano. La domanda *che file sono* non li porta: li' il cielo non ha guardato niente | `subjects` | ripreso | soggetti, contenuto, target |
+| gli oggetti che il cielo ha trovato nei frame di un gruppo di Da confermare, il piu' ripreso in cima, coi frame dove non ha trovato niente (`not_found`) e quelli che non ha ancora guardato (`not_yet`): si leggono accanto alla domanda e non la cambiano. La domanda *che file sono* non li porta: li' il cielo non ha guardato niente | `subjects` | Oggetti (coi frame "senza oggetti identificati" e "non ancora risolti") | ripreso, soggetti, contenuto, target |
 | una voce del catalogo astronomico | `catalog_entry` | voce di catalogo | oggetto |
 | lo stesso soggetto seguito nel tempo con un corredo, fino alla foto finale; puo' avere un obiettivo | `project` | progetto | piano, lavoro, campagna |
 | una riga dell'Archivio ripresa con la stessa ottica e la stessa camera, finche' non esistono i progetti (Marco, 8/10/2026; `docs/domini/archivio.md`) | `production` | produzione | corredo, sessione, progetto |
@@ -67,7 +68,7 @@ che il `traduttore` legge per primo.
 | centro, rotazione e rettangolo scelti nel Planner | `framing` | inquadratura | framing, campo |
 | centro, scala, rotazione e rettangolo misurati dal solver | `wcs` / `footprint` | il cielo del frame / il campo | astrometria |
 | il gruppo di un frame senza nome e senza cielo: la notte, la camera, il telescopio e il puntamento di chi ha aperto il gruppo. Lo scrive `identify` quando il frame arriva, e si risceglie solo se casa cambia fuso e la notte del frame con lei | `unnamed_key` | -- | cella, id del gruppo |
-| un frame risolto nel cui campo il catalogo non ha nessun candidato: il cielo c'e', ma non dice cosa hai ripreso. Lo scrive `identify`, e resta quando il frame torna in coda | `empty_cone` | il cielo non ha trovato niente | vuoto, senza oggetto, non identificato |
+| un frame risolto nel cui campo il catalogo non ha nessun candidato: il cielo c'e', ma non dice cosa hai ripreso. Lo scrive `identify`, e resta quando il frame torna in coda | `empty_cone` | senza oggetti identificati | il cielo non ha trovato niente, vuoto, senza oggetto |
 | un frame che il solver non ha risolto | `unsolved` | non risolto | senza cielo, da risolvere, fallito |
 | quanto sono larghe le stelle in un frame, in pixel: e' la misura del fuoco. La da' il solver nella sua passata di analisi | `hfd_px` | HFD | fuoco, nitidezza, FWHM |
 | l'identita' di una voce di catalogo, stabile fra due ricostruzioni (gli id invece si rinumerano) | `slug` | sigla-chiave | id, codice, chiave |
@@ -86,10 +87,10 @@ che il `traduttore` legge per primo.
 
 | cosa e' | nel codice | a schermo (it) | non si dice |
 |---|---|---|---|
-| un pezzo: ottica, camera, filtro, montatura, riduttore, ruota, guida, focheggiatore | `instrument` | strumento | componente, dispositivo, device |
-| la montatura di una posa: quella che hai scelto sul corredo, o dove taci quella che il file nomina | `mount_id` (su `frames`), `mount` (dichiarazione del corredo) | sulla {montatura}, Scegli la montatura | setup, postazione (la postazione e' un'altra cosa) |
+| un pezzo: ottica, camera, filtro, montatura, riduttore, ruota, guida, focheggiatore | `instrument` | strumento | pezzo, componente, dispositivo, device |
+| la montatura di una posa: quella che hai scelto sul corredo, o dove taci quella che il file nomina | `mount_id` (su `frames`), `mount` (dichiarazione del corredo) | su {montatura}, Seleziona montatura | sulla {montatura}, Scegli la montatura, setup, postazione (la postazione e' un'altra cosa) |
 | i generi che una posa porta in una colonna sua: ruota, focheggiatore, camera di guida, montatura | `CARRIED` (`spine/counts.py`) | -- | -- |
-| perche' un pezzo contato non ha ore: i file non nominano quel genere, o nessun corredo porta quella montatura | `no_hours` (`files_silent`, `no_rig`) | i tuoi file non dicono..., nessun corredo la porta ancora | -- |
+| perche' un pezzo contato non ha ore: i file non nominano quel genere, o nessun corredo porta quella montatura | `no_hours` (`files_silent`, `no_rig`) | non indicato nei file, non associata a un corredo | i tuoi file non dicono..., nessun corredo la porta ancora |
 | la pagina che li elenca | -- | Attrezzatura | equipaggiamento |
 | ottica + camera (+ riduttore) visti insieme, a una focale | `rig` | corredo | setup, configurazione, attrezzatura, impronta |
 | un corredo simulato nel Planner, mai salvato | `trial_rig` | corredo di prova | -- |
@@ -97,8 +98,8 @@ che il `traduttore` legge per primo.
 | la stessa grandezza come l'header la scrive (`XPIXSZ`), col binning gia' dentro: sta sul frame | `frames.pixel_size_um` | -- | pixel fisico |
 | quanto e' servito ogni pezzo, corredo e filtro -- frame, ore, notti, oggetti, e per i corredi il cielo misurato -- scritto a fine giro di ogni stadio e letto dall'Attrezzatura | `gear_usage` | quanto ti e' servito | statistiche, contatori |
 | i candidati del cielo di una scheda dell'oggetto in dubbio, o di frame detti "non e' un oggetto", dal piu' probabile: li scrive `spine/object_candidates.py` e li legge Da confermare | `object_candidates` | candidati | proposte, suggerimenti |
-| se chi conta ha gia' contato un pezzo: falso per uno nato a meta' giro, che la pagina dice "si sta contando" e non "non si sa" | `counted` | si sta contando | in attesa, pending |
-| il pixel di una camera ricavato dalla scala misurata sulle sue pose, la focale del corredo e il binning, quando i file non lo dicono | `instruments.pixel_from_sky_um` | pixel ricavato dal cielo | pixel stimato, pixel calcolato |
+| se chi conta ha gia' contato un pezzo: falso per uno nato a meta' giro, che la pagina dice "si sta contando" e non "non si sa" | `counted` | conteggio in corso | si sta contando, in attesa, pending |
+| il pixel di una camera ricavato dalla scala misurata sulle sue pose, la focale del corredo e il binning, quando i file non lo dicono | `instruments.pixel_from_sky_um` | pixel (calcolato) | pixel ricavato dal cielo, pixel stimato |
 | il filtro davanti al sensore, come strumento | `filter` | filtro | vetro |
 | la categoria di un filtro (L, R, G, B, Ha, OIII, SII, duo, OSC...) | `passband` | banda | tipo, canale, categoria |
 | il filtro esplicito di chi non ha un vetro davanti: una riga sola, non un vuoto | `is_none` | nessun filtro | vuoto, senza filtro |
@@ -108,7 +109,7 @@ che il `traduttore` legge per primo.
 | i filtri fra cui si sceglie una risposta: quelli con la banda nota, tranne la riga "nessun filtro" | `filter_choices` | i tuoi filtri | candidati, proposte |
 | i corredi fra cui si sceglie con che camera sono stati ripresi dei frame: quelli con una camera e almeno un frame | `rig_choices` | i tuoi corredi | candidati, proposte |
 | i frame che non dicono **che file sono** -- l'header non porta `IMAGETYP` e nessuno l'ha ancora detto -- raggruppati per la cartella che li contiene; ci sono solo quelli su cui il cielo non sa dire (risolto e' una foto, senza stelle una calibrazione). Restano fermi prima dell'oggetto, quindi non diventano ore e non compaiono fra i frame senza nome | `typeless` | frame senza tipo | tipo mancante, tipo sconosciuto, non classificati |
-| la risposta su una cartella di frame senza tipo: una foto del cielo (`light`) o un file di calibrazione (`calibration`) | `TypelessAnswer` | tipo della cartella | classe, categoria |
+| la risposta su una cartella di frame senza tipo: un light (`light`) o una calibrazione (`calibration`) | `TypelessAnswer` | Light / Calibrazione | foto del cielo, tipo della cartella, classe, categoria |
 | il frame aspetta una risposta sul tipo: la regola sta in `spine/stages.py`, e l'esito lo scrive sulla posa chi cambia un suo ingresso -- il cielo, la posizione del file, la risposta della cartella; chi legge legge questo | `asks_type` | aspetta una risposta | bloccato, sospeso |
 | le cartelle della domanda sul tipo coi frame che contano, scritte a fine scansione, a fine cielo e a fine normalizzazione e quando togli o rimetti una cartella, e lette da Da confermare; la risposta si legge dalla sua casa | `typeless_folders` | frame senza tipo | cache, conteggi |
 | la notte di un frame, da mezzogiorno a mezzogiorno nel fuso delle coordinate dell'header o di casa (UTC se non si sa), o del giorno in cui il file e' stato scritto se manca `DATE-OBS`: la scrive `scan` quando il frame entra, e si riscrive se il fuso non viene dalle coordinate dell'header e casa cambia fuso | `local_night`, `local_tz`, `night_instant` (l'istante da cui viene) | notte della posa | notte UTC, data della posa |
@@ -126,12 +127,13 @@ che il `traduttore` legge per primo.
 | cosa e' | nel codice | a schermo (it) | non si dice |
 |---|---|---|---|
 | ricavato dall'app: header, solver, misura, catalogo | `detected` | rilevato | dedotto, calcolato, automatico, letto |
-| impostato dall'utente; vince sul rilevato, sopravvive ai reset, si esporta | `declared` | dichiarato | impostato, manuale, override |
+| impostato dall'utente; vince sul rilevato, sopravvive ai reset, si esporta | `declared` | inserito manualmente | impostato, override |
 | il perche' un valore manca, come codice chiuso | `reason` | (una frase tradotta) | muto, null, n/d |
 | la pagina delle domande dell'app su cio' che la scansione ha trovato -- filtri, grafie che sembrano un pezzo solo, gruppi di frame, siti, mosaici, oggetti -- perche' l'utente risponda a cio' che l'app non puo' sapere | `review` | Da confermare | dati mancanti, revisione, Da completare |
+| una risposta data in Da confermare e non ancora mandata: si accumulano, il piede della pagina dice quante sono e partono insieme con *Applica* | `accumulo` (frontend, `review.inHand`) | modifica da applicare | risposta in mano, risposte in mano |
 | la regola imparata li': "quando l'header dice X, e' Y" | `header_alias` | regola imparata | alias, mappatura, sinonimo |
-| due grafie dello stesso pezzo o dello stesso filtro diventano una riga sola: la grafia assorbita diventa una regola verso quella tenuta, e la regola vale anche sul nome che il vocabolario da'. `mergeable_into` sono i pezzi in cui uno si puo' unire | `merge_into` | unione, "e' lo stesso di" | fusione, accorpamento |
-| due grafie che hanno l'aria di essere la stessa camera -- stesso nome tolte le annotazioni, stesso pixel, stesso colore -- e la domanda se lo sono: si' e' l'unione, no (`not_same_as`, sulla camera chiesta col nome dell'altra, che la segue se cambia nome) la spegne per quella coppia | `lookalike` | stesso pezzo? | doppione, duplicato |
+| due grafie dello stesso pezzo o dello stesso filtro diventano una riga sola: la grafia assorbita diventa una regola verso quella tenuta, e la regola vale anche sul nome che il vocabolario da'. `mergeable_into` sono i pezzi in cui uno si puo' unire | `merge_into` | unione, "Unisci a" | "e' lo stesso di", fusione, accorpamento |
+| due grafie che hanno l'aria di essere la stessa camera -- stesso nome tolte le annotazioni, stesso pixel, stesso colore -- e la domanda se lo sono: si' e' l'unione, no (`not_same_as`, sulla camera chiesta col nome dell'altra, che la segue se cambia nome) la spegne per quella coppia | `lookalike` | Strumenti duplicati (la domanda: "sono lo stesso strumento?") | stesso pezzo?, doppione |
 | la parola dell'utente su un oggetto che l'app ha trovato: "quello, per me e' quest'altro" -- si rilegge a ogni giro, e sposta i frame | `correction` | correzione | mappatura, override, rinomina |
 | la chiave con cui si parla di un oggetto da fuori (lo slug di catalogo, o il suo nome), mai il numero di riga | `stable_key` | chiave dell'oggetto | id, identificativo |
 
@@ -157,29 +159,29 @@ che il `traduttore` legge per primo.
 | fra dodici e diciotto: l'ultima luce del Sole se ne va | `astronomical` | crepuscolo astronomico | -- |
 | sotto i diciotto gradi: la luce del Sole e' meno di quella delle stelle, ed e' il buio di chi fotografa il cielo | `dark` (una fascia) | buio | notte (che e' la finestra da mezzogiorno a mezzogiorno), nero, **buio pieno** (che e' la classe 1 di Bortle, e si legge nello stesso piede) |
 | ore di buio con cielo sereno (sotto la soglia) | `usable_hours` | ore utili | ore buone |
-| la parola del meteo sulla notte: si fa / incerta / no | `verdict` (`go`, `marginal`, `nogo`) | verdetto | voto, punteggio |
+| la parola del meteo sulla notte: Notte buona. / Notte incerta. / Notte non adatta. | `verdict` (`go`, `marginal`, `nogo`) | verdetto | voto, punteggio, "Si fa", "No" |
 | una grandezza della notte, col suo valore, il picco e (se ha soglia) la sua parola | `measure`, `measures` | misura | parametro, indicatore |
-| una misura che nella notte diventa incerta o niente: sta accanto al verdetto e non lo cambia | `weighs` | pesa, cosa pesa | fattore, allarme |
-| la parola di una misura in un'ora o nella notte: buona, incerta, niente (aerosol: limpido, molto fosco; Luna: al limite, solo banda stretta) | `level`, `levels` (`go`, `marginal`, `nogo`) | giudizio | voto, punteggio, semaforo (che e' il verdetto) |
+| una misura che nella notte diventa incerta o non adatta: sta accanto al verdetto e non lo cambia | `weighs` | altri fattori | pesa, cosa pesa, allarme |
+| la parola di una misura in un'ora o nella notte: buona, incerta, non adatta (aerosol: limpido, molto fosco; Luna: al limite, solo banda stretta) | `level`, `levels` (`go`, `marginal`, `nogo`) | giudizio | voto, punteggio, semaforo (che e' il verdetto) |
 | le misure con soglia | `cloud`, `cloud_low`, `rain`, `gust`, `wind`, `condensation`, `jet`, `seeing`, `aerosol`, `moon` | nuvole, nuvole basse, pioggia, raffiche, vento, condensa, jet stream, seeing, aerosol, Luna | umidita' (che e' neutra) |
 | le soglie di ogni misura, dalla peggiore, come le usa il giudizio | `scales`, `steps` | soglie | limiti |
 | su quali ore si giudica una notte: il buio, o dove il buio non arriva l'arco col Sole sotto l'orizzonte | `window` (`dark`, `sun_down`) | le ore di buio / col Sole sotto l'orizzonte | finestra osservativa |
 | il modello numerico da cui viene la previsione, che l'utente sceglie | `weather_model`, `model` (`best_match`, `ecmwf_ifs025`, `icon_seamless`, `gfs_seamless`) | modello della previsione | fonte, servizio (il servizio e' Open-Meteo) |
-| quando e' arrivata la previsione che si legge | `fetched_at` | arrivata il... alle... | aggiornata, scaricata |
+| quando e' arrivata la previsione che si legge | `fetched_at` | Previsione del..., ... | arrivata il... alle..., aggiornata, scaricata |
 | una notte oltre la terza: il verdetto, le nuvole, le ore di buio e l'accordo, detti meno affidabili | `trend` | tendenza | previsione lunga |
-| quanti modelli dicono si fa, incerta, no | `agreement` | modelli d'accordo | consenso, affidabilita' |
+| quanti modelli dicono buona, incerta, non adatta | `agreement` | modelli d'accordo | consenso, affidabilita' |
 | cio' che conta per la planetaria, ora per ora: vento in quota, seeing, aerosol (campi dell'ora) | `wind_*hpa_kmh`, `seeing_arcsec`, `aerosol_optical_depth`, `dust_ugm3` | il cielo in quota | alta quota, atmosfera |
 | il vento a 250 e 200 hPa | `wind_250hpa_kmh`, `wind_200hpa_kmh` | jet stream | corrente a getto |
 | il vento a 700 hPa, circa 3.000 metri, medio nelle ore su cui si giudica una notte | `wind_700hpa_kmh` | vento in quota | turbolenza |
-| il vento in quota solito di un sito: un anno di notti, scritto una volta l'anno | `weather_climate`, `climate.py` | il solito del sito | climatologia, media |
-| quante notti su dieci dell'ultimo anno del sito avevano meno vento in quota | `wind_700hpa_tenths`, `position.py` | piu' forte di N notti su 10 | percentile, soglia |
+| il vento in quota solito di un sito: un anno di notti, scritto una volta l'anno | `weather_climate`, `climate.py` | lo storico del sito | il solito del sito, climatologia, media |
+| quante notti su dieci dell'ultimo anno del sito avevano meno vento in quota | `wind_700hpa_tenths`, `position.py` | superiore a N notti su 10 | piu' forte di N notti su 10, percentile, soglia |
 | il riassunto della notte in corso che legge Stanotte | `WeatherBriefOut`, `tonight.weather` | il meteo di stanotte | -- |
 | il meteo vero di una notte passata, dall'archivio, definitivo dopo cinque giorni | `observed` (tipo di `weather_nights`), `open-meteo/archive` | lo storico, il cielo di quella notte | consuntivo |
 | il cielo di una notte passata detto con le classi del verdetto (FEW, SCT, BKN/OVC) | `verdict` di una riga `observed` | poco, parzialmente, molto nuvoloso | sereno, velato, coperto (velato dice nuvole alte, il verdetto guarda la copertura) |
 | se il cielo di una notte c'e', arriva, o non si puo' sapere | `weather.state` (`ok`, `waiting`, `unknown`) | -- | -- |
 | la chiave personale di Meteoblue, per il seeing ora per ora; fuori esce solo come finisce | `meteoblue_key`, `hint` | chiave Meteoblue | password, token |
 | l'ultimo tentativo di una fonte che non deve ripetersi troppo spesso (Meteoblue, lo storico), e com'e' andato | `weather_fetches`, `status` (`ok`, `refused`, `unreachable`, `bad_answer`) | ultimo tentativo | log, cronologia |
-| se il seeing c'e': viene solo da Meteoblue, con la chiave dell'utente | `seeing.source` (`meteoblue` o vuoto) | il seeing viene da Meteoblue | fonte del seeing |
+| se il seeing c'e': viene solo da Meteoblue, con la chiave dell'utente | `seeing.source` (`meteoblue` o vuoto) | seeing attivo | il seeing viene da Meteoblue, fonte del seeing |
 | la sezione delle Impostazioni con le chiavi dei servizi | `/impostazioni/servizi` | Servizi | account, integrazioni |
 | lo spessore ottico degli aerosol e le polveri, da CAMS | `aerosol_optical_depth`, `dust_ugm3` | aerosol, polveri | trasparenza, smog |
 | il seeing di Meteoblue in secondi d'arco, un valore per ora | `seeing_arcsec` | seeing | qualita' del cielo, fascia |
@@ -203,13 +205,15 @@ manda a qualcuno).
 | i confronti nel tempo: stagioni, corredi, filtri, qualita' | `/statistiche` | Statistiche | analitica, report, grafici |
 | le cartelle di FITS che hai indicato, e cosa e' successo l'ultima volta che l'app le ha lette: **una sezione di Impostazioni**, non una pagina in barra | `/impostazioni/cartelle` | Cartelle | importa, sorgenti, libreria, scansione |
 | le domande dell'app (la voce e' in *Da dove viene un valore*) | `/da-confermare` | Da confermare | revisione, dati mancanti |
-| le letture passate: cosa e' entrato, cosa e' rimasto fuori e perche', **coi file non letti** | `/impostazioni/letture` | Le letture | corse, passate, storico |
+| le scansioni passate: cosa e' entrato, cosa e' rimasto fuori e perche', **coi file non leggibili** | `/impostazioni/letture` | Scansioni | Le letture, corse, passate, storico |
 | perche' l'app non parte o non funziona: il diario, il solver che non si avvia, lo stato del sistema | `/diagnostica` | Diagnostica | log, errori, problemi |
 | dove si decide una ripresa che non esiste ancora: si cerca, si inquadra, nasce un progetto | `/planner` | Planner | pianificatore, programma |
 | i progetti e a che punto sono, con quanto manca all'obiettivo | `/progetti` | Progetti | piani, campagne |
 | la carta su cui si naviga il cielo | `/carta-del-cielo` | Carta del cielo | mappa, sky map, atlante, cielo |
 | la notte ora per ora intorno al buio, col verdetto | `/meteo` | Meteo | previsioni, tempo |
 | cio' che l'app non deduce dai file, a sezioni: le cartelle, i siti, il nome, le chiavi dei servizi, le soglie | `/impostazioni` | Impostazioni | preferenze, configurazione, opzioni |
-| il pulsante che fa leggere le cartelle, col verbo che decide il backend | `action` (`start`/`stop`/`resume`) | Scansiona / Ferma / Riprendi | importa, indicizza, aggiorna, sincronizza |
-| il programma che riconosce cosa hai ripreso confrontando i frame col cielo: si chiama **ASTAP**, col suo nome ovunque: anche il passo del primo avvio e la sezione delle Impostazioni | `astap` / `solver` | ASTAP (cio' che fa si chiama *plate solving*, e si scrive una volta, dove ASTAP si presenta) | riconoscitore, plate solver, risolutore, astrometria |
+| il pulsante che fa leggere le cartelle, col verbo che decide il backend | `action` (`start`/`stop`/`resume`) | Scansiona / Interrompi / Riprendi | Ferma, importa, indicizza, aggiorna, sincronizza |
+| come sta la scansione, nella barra e nel foglio *Altro* | `action` e `worker.state` (`error`) | Inattiva / In corso / Interrotta / Bloccata | a riposo, al lavoro, fermata |
+| la fase in corso della scansione, accanto ai suoi numeri | `stage` (`scan`, `normalize`, `solve`, `identify`, `group`) | Lettura dei file / Normalizzazione dei nomi / Plate solving / Identificazione degli oggetti / Raggruppamento in notti | leggo i file, metto in ordine i nomi, cerco il cielo, riconosco gli oggetti, raccolgo le notti |
+| il programma che riconosce cosa hai ripreso confrontando i frame col cielo: si chiama **ASTAP**, col suo nome ovunque: anche il passo del primo avvio e la sezione delle Impostazioni | `astap` / `solver` | ASTAP (cio' che fa si chiama *plate solving*: lo scrivono la fase della scansione e il punto dove ASTAP si presenta) | riconoscitore, plate solver, risolutore, astrometria |
 | quello che manca all'app per fare il suo mestiere, come codice e non come frase | `missing` (`no_active_site`, `no_solver`) | (una frase tradotta) | errore, allarme |

@@ -87,20 +87,20 @@ in quattro gruppi, con poche voci per gruppo e, quando ce ne sono altre, quante 
 nome, anche quello comune; una notte con la data, come la scrivi tu, o col nome di un oggetto che
 hai ripreso quella notte. Ogni voce dice quanti frame e quante ore porta; se i file non dicono la
 durata leggi "senza durata", mai zero ore. Con le frecce scegli e con Invio apri, oppure tocchi la
-voce: un oggetto apre l'Archivio su di lui solo, una notte la sua notte, un pezzo la sua riga in
+voce: un oggetto apre l'Archivio su di lui solo, una notte la sua notte, uno strumento la sua riga in
 Attrezzatura, un sito il suo posto nelle Impostazioni. Esc chiude; sul telefono c'e' *Annulla*.
 Se non trova niente te lo dice. Le pagine dell'app non si cercano qui: stanno nel binario.
 
-La scansione dice com'e' messa: a riposo ti dice quando l'app ha letto
-l'ultima volta e ti offre *Scansiona*; al lavoro ti dice cosa sta facendo, con i numeri e una
-barra che avanza, e la puoi fermare da qualunque pagina; fermata ti offre *Riprendi*; se si e'
-bloccata ti dice perche', con *Vedi*, e ti offre *Scansiona* per ripartire. Se qualcosa non si e' potuto leggere -- una cartella
-irraggiungibile, o caduta mentre la leggeva -- lo trovi scritto in cima alla pagina, con *Vedi*
+La scansione dice com'e' messa: inattiva ti dice quando e' stata l'ultima (*Ultima scansione*)
+e ti offre *Scansiona*; in corso ti dice cosa sta facendo, con i numeri e una
+barra che avanza, e la puoi interrompere da qualunque pagina con *Interrompi*; *Interrotta* ti offre
+*Riprendi*; se e' *Bloccata* ti dice perche', con *Dettagli*, e ti offre *Scansiona* per ripartire. Se qualcosa non si e' potuto leggere -- una cartella
+irraggiungibile, o caduta mentre la leggeva -- lo trovi scritto in cima alla pagina, con *Dettagli*
 che ti porta dove si sistema.
 
 La pastiglia dice **da dove osservi** e, col disco, che luna fa. Premila e si apre **Stanotte**:
 - il **sito**: se ne hai piu' di uno li trovi tutti e scegli quello di stanotte -- diventa il tuo
-  sito di casa, e Luna e meteo si aggiornano. Sotto c'e' che cielo ha, con la classe di Bortle e
+  sito predefinito, e Luna e meteo si aggiornano. Sotto c'e' che cielo ha, con la classe di Bortle e
   la sua misura, e *Gestisci i siti*. Se non hai ancora un sito, la pastiglia dice *Seleziona
   sito* e Stanotte ti porta dove lo dichiari;
 - la **Luna**: che fase e', quanto e' illuminata, a che ora sorge e tramonta. Gli orari sono
@@ -118,29 +118,30 @@ Le **Impostazioni** sono una pagina sola con dentro le sue sezioni --
 ognuna col suo indirizzo, quindi ci torni col tasto indietro e il collegamento si manda a
 qualcuno. La prima e' **Cartelle**: quelle che l'app legge, quante ne e' entrato in archivio, se
 al momento si raggiungono. Da li' ne aggiungi una (scrivendo il percorso, o sfogliando se l'app
-gira sul NAS) e ne togli una -- e togliere **non cancella niente**: l'app smette di leggerla, e i
+gira sul NAS) e ne rimuovi una con *Rimuovi* -- e rimuovere **non cancella niente**: l'app smette di leggerla, e i
 frame gia' entrati restano con la loro storia. Te lo richiede prima, coi numeri davanti.
 
 **Se sposti le foto** -- su un altro disco, perche' il disco ha cambiato lettera, o perche' passi
-al NAS -- non togliere la cartella e non aggiungerla di nuovo: le risposte che hai dato in *Da
+al NAS -- non rimuovere la cartella e non aggiungerla di nuovo: le risposte che hai dato in *Da
 confermare* su che file sono resterebbero legate al percorso vecchio. Hai due strade. Se aggiungi
 il posto nuovo, l'app guarda dentro e, se ci trova gli stessi file di una cartella che conosce e
-che non raggiunge piu' (o che avevi tolto), te lo dice -- *E' la cartella ... spostata qui* -- e
-con *Usala da qui* la sposta invece di aggiungerne una nuova. Oppure, su ogni cartella
+che non raggiunge piu' (o che avevi rimosso), te lo dice -- *Cartella gia' registrata* -- e
+con *Usa questo percorso* la sposta invece di aggiungerne una nuova. Oppure, su ogni cartella
 dell'elenco, *Cambia percorso*: indichi dove stanno adesso i file e l'app la sposta. In tutti e
 due i casi controlla prima che siano davvero gli stessi file: se non lo sono, te lo dice e non
 cambia niente. Dopo lo spostamento la cartella e' la stessa di prima, con i suoi frame e le tue
 risposte, e leggendola di nuovo non entra niente due volte.
 
-La seconda e' **Il sito**: da dove osservi. Ci trovi i posti che hai dichiarato, con le loro
-coordinate e che cielo hanno, e uno segnato **di casa** -- e' quello da cui l'app calcola le notti
-e l'altezza degli oggetti; gli altri servono alle uscite. Di ognuno puoi correggere nome,
-coordinate e cielo, renderlo quello di casa, o toglierlo. **Il cielo si corregge quando vuoi**:
+La seconda e' **Siti**: da dove osservi. Ci trovi i posti che hai dichiarato, con le loro
+coordinate e che cielo hanno, e uno segnato **predefinito** -- e' quello da cui l'app calcola le notti
+e l'altezza degli oggetti; gli altri servono alle uscite. Di ognuno puoi modificare nome,
+coordinate e cielo (*Modifica*), impostarlo come predefinito (*Imposta come predefinito*), o
+rimuoverlo (*Rimuovi*). **Il cielo si corregge quando vuoi**:
 cambia davvero -- un lampione nuovo, un quartiere che spegne di notte -- e prima lo sceglievi una
 volta al primo avvio e restava li'. Se non sai che cielo hai, lo lasci in bianco: il sito funziona
 lo stesso, quello che manca e' il confronto fra una notte e l'altra quando cambi posto.
 
-Un sito che tiene delle notti **non si toglie**: l'app te lo dice, e ti dice quante ne tiene.
+Un sito che tiene delle notti **non si rimuove**: l'app te lo dice, e ti dice quante ne tiene.
 Aggiungerne uno lo cerchi per nome, oppure ne scrivi le coordinate a mano -- e la strada a mano e'
 sempre aperta, perche' dove si osserva la rete spesso non c'e'.
 
@@ -150,7 +151,7 @@ detto tu, perche' l'ha detto chi ha avviato l'app (sul NAS lo fa chi lo gestisce
 cercato fra i programmi di sistema, o perche' l'ha trovato dove ASTAP si installa di solito --
 quattro strade, e ti dice sempre quale. Sapere **chi ha deciso** conta: se l'app ha pescato da
 sola una copia vecchia rimasta in giro, li' vedi che nessuno gliel'ha detto e che quel percorso
-se l'e' scelto lei. Puoi dirgli tu dove sta, o premere **Cercalo tu** e farlo cercare all'app:
+se l'e' scelto lei. Puoi dirgli tu dove sta, o premere **Cerca ASTAP** e farlo cercare all'app:
 quello che trova te lo **propone**, e lo usa solo se glielo dici. Se il percorso che hai scritto
 non porta a nessun programma, l'app te lo dice subito -- non a scansione finita -- e quel percorso
 resta scritto, cosi' lo correggi invece di ribatterlo.
@@ -167,20 +168,20 @@ l'ha ma senza catalogo: si finisce allo stesso punto -- una scansione che non ri
 e conviene saperlo prima.
 
 La quarta e' **Servizi**: le chiavi personali dei servizi che l'app interroga. Oggi c'e' quella di
-**Meteoblue**: la scrivi, premi *Prova e salva*, e l'app la prova sul tuo conto prima di tenerla --
+**Meteoblue**: la scrivi, premi *Verifica e salva*, e l'app la prova sul tuo conto prima di tenerla --
 se il conto non la riconosce te lo dice e non la salva. Una chiave salvata non la rivedi mai
-intera: l'app ti mostra come finisce, che basta a sapere se e' quella giusta. Con *Togli la chiave*
+intera: l'app ti mostra come finisce, che basta a sapere se e' quella giusta. Con *Rimuovi chiave*
 il seeing sparisce dal Meteo.
 
-La quinta e' **Le letture**: una per ogni volta che l'app ha letto le tue cartelle. Di
+La quinta e' **Scansioni**: una per ogni volta che l'app ha letto le tue cartelle. Di
 ognuna trovi quale cartella, quando, quanto e' durata, com'e' andata -- e i conti: quanti file ha
 guardato, quanti erano nuovi, quanti erano gia' in archivio. Gli zeri non si scrivono, tranne i
 **nuovi**, che sono la domanda che ti stai facendo. Se qualcosa e' **rimasto fuori** lo apri li'
-dentro: quanti file ha saltato apposta e perche' (le calibrazioni, le somme, quelli ancora in
+dentro, con *File esclusi*: quanti file ha saltato apposta e perche' (le calibrazioni, le somme, quelli ancora in
 scrittura), quali cartelle non ha guardato e perche', e i file che non e' riuscito a leggere,
-ognuno col suo motivo a parole. L'elenco dei file non letti lo tiene **l'ultima lettura di ogni
+ognuno col suo motivo a parole. L'elenco dei file non leggibili lo tiene **l'ultima scansione di ogni
 cartella**: delle piu' vecchie restano i numeri, e l'app te lo dice invece di mostrarti un elenco
-vuoto. La lettura di una scansione appena finita compare **da sola**, senza ricaricare.
+vuoto. La riga di una scansione appena finita compare **da sola**, senza ricaricare.
 
 Nella barra compaiono **solo le pagine che esistono**: l'app cresce una pagina alla volta, e una
 voce che si apre su una pagina vuota sarebbe una promessa non mantenuta. Quando una pagina nasce,
@@ -194,8 +195,8 @@ dov'eri.
 
 In alto, su ogni pagina, c'e' il pulsante **Scansiona**: lo premi e l'app legge **tutte** le
 cartelle che le hai indicato -- non ti chiede quale. Mentre lavora, accanto al pulsante, ti dice
-cosa sta facendo e a che punto e' (*leggo i file 120 su 337*), e il pulsante diventa **Ferma**.
-Se fermi, diventa **Riprendi**, e riprende davvero: torna sulle cartelle che non aveva finito di
+cosa sta facendo e a che punto e' (*Lettura dei file 120 su 337*), e il pulsante diventa **Interrompi**.
+Se interrompi, diventa **Riprendi**, e riprende davvero: torna sulle cartelle che non aveva finito di
 leggere -- i file gia' letti li salta -- e poi va avanti col resto. Il lavoro continua anche se
 cambi pagina: per questo il pulsante sta in alto e non dentro una pagina.
 
@@ -369,13 +370,13 @@ la pagina tace invece di scrivere un numero che nessuno ha misurato.
 
 ## Meteo
 
-**Com'e' il cielo nelle prossime notti del tuo sito di casa, e in quali ore si riprende.** In
+**Com'e' il cielo nelle prossime notti del tuo sito predefinito, e in quali ore si riprende.** In
 testa leggi per quale sito e' la previsione, **quando e' arrivata** e da quanto (*2 ore fa*), e
 se hai la chiave Meteoblue anche quando e' arrivato il seeing, che ha un'eta' sua. Le ore della
 pagina sono quelle del sito. Accanto scegli il **modello** e c'e' *Aggiorna*.
 
 Sotto c'e' la **fila delle sette notti**: ogni notte col suo giorno (*sab 26*), il **semaforo** --
-*buona*, *incerta*, *niente* -- e le ore serene (*3 ore, 23-02*). Le **prime tre** sono ora per
+*buona*, *incerta*, *non adatta* -- e le ore serene (*3 ore, 23-02*). Le **prime tre** sono ora per
 ora; dalla quarta alla settima vedi solo la **tendenza** -- il semaforo, le ore di buio, le nuvole
 e l'accordo dei modelli -- perche' cosi' avanti la previsione ora per ora vale poco, e l'app lo
 dice invece di farti credere a ore precise. Tocchi una notte e sotto si apre la sua scheda, una
@@ -386,10 +387,10 @@ a che ora** (*dalle 23:00 alle 02:00, 3 ore*: se il conto e' piu' piccolo dell'i
 c'e' un'ora coperta) e **quanti modelli sono d'accordo**, che e' cio' che ti dice quanto fidarti.
 Il semaforo lo decidono **solo le nuvole**, perche' sono l'unica cosa che ferma tutti i soggetti
 allo stesso modo: **buona** fino a due ottavi di cielo coperto, **incerta** fino a quattro,
-**niente** oltre -- le soglie dei bollettini meteo.
+**non adatta** oltre -- le soglie dei bollettini meteo.
 
-Accanto c'e' cio' che **pesa**, senza cambiare il semaforo: le misure che in qualche ora della notte
-diventano *incerte* o *niente* -- le nuvole basse, la pioggia, il vento, la condensa, il jet stream,
+Accanto ci sono gli **altri fattori**, che non modificano il verdetto: le misure che in qualche ora della notte
+diventano *incerte* o *non adatte* -- le nuvole basse, la pioggia, il vento, la condensa, il jet stream,
 il seeing, l'aerosol (*molto fosco*) e la Luna (*al limite* o *solo banda stretta* per chi riprende in
 banda larga, e solo se e' sopra l'orizzonte col buio). Ognuna dice la sua parola e quando. Le soglie
 vengono da convenzioni pubbliche: la scala Beaufort per il vento, le classi del servizio meteo
@@ -410,16 +411,16 @@ carte vanno a quell'ora**.
 Sotto ci sono le **carte**, prima quelle che pesano di piu': nuvole, nuvole basse, poi pioggia,
 vento, condensa, seeing, jet stream e aerosol, e in piccolo temperatura e rugiada, umidita', polvere
 e il vento a 700 e 200 hPa. Ogni carta dice il **valore della notte** e cosa vuol dire (*media nel
-buio*, *in tutto nel buio*, *la minima*), la parola con l'ora in cui comincia (*incerta dalle 22:00,
-niente dalle 01:00*), il **picco** con le sue ore, e ha le barrette **ora per ora** dall'ultima ora
+buio*, *totale nel buio*, *la minima*), la parola con l'ora in cui comincia (*incerta dalle 22:00,
+non adatta dalle 01:00*), il **picco** con le sue ore, e ha le barrette **ora per ora** dall'ultima ora
 di giorno all'alba, col colore del giudizio di ogni ora e le soglie tratteggiate. Un'ora che il
 servizio non da' e' a tratteggio, mai uno zero. Tocchi una barretta (o usi le frecce) e la carta va
-a quell'ora e ci resta, col valore e la parola di quell'ora; *x notte* la riporta alla notte.
+a quell'ora e ci resta, col valore e la parola di quell'ora; la *x* la riporta alla notte.
 
-La carta del **vento a 700 hPa** (circa 3.000 metri) lo legge accanto al **solito del tuo sito**:
-*piu' forte di 8 notti su 10, qui*. Non e' un giudizio: un vento che altrove sarebbe normale da te
-puo' essere raro, e viceversa. Il solito l'app lo scarica da sola una volta l'anno; finche' non c'e'
-la carta dice che il confronto arriva.
+La carta del **vento a 700 hPa** (circa 3.000 metri) lo legge accanto allo **storico del tuo sito**:
+*superiore a 8 notti su 10 in questo sito*. Non e' un giudizio: un vento che altrove sarebbe normale da te
+puo' essere raro, e viceversa. Lo storico l'app lo scarica da sola una volta l'anno; finche' non c'e'
+la carta dice che il confronto non e' ancora disponibile.
 
 Il **seeing** viene solo da **Meteoblue**, ora per ora e in arcosecondi, se hai messo la tua
 chiave: senza, la sua carta ti dice che per averlo serve, gratuita, e ti porta alle Impostazioni. Se
@@ -428,36 +429,36 @@ l'ultima volta e la pagina te lo dice. Se il seeing copre solo una parte della n
 dice (*media fino alle 02:00*). Meteoblue si chiede al massimo due volte al giorno, perche' la
 chiave gratuita ha un tetto di chiamate l'anno.
 
-D'estate molto a nord, dove il buio pieno non arriva, le ore serene si contano col Sole sotto
-l'orizzonte e la scheda lo dice; dove il Sole non tramonta legge *Sole sempre su*, senza carte. Se il modello non
-da' le nuvole di tutte le ore il semaforo dice *non si sa*.
+D'estate molto a nord, dove il buio astronomico non arriva, le ore serene si contano col Sole sotto
+l'orizzonte e la scheda lo dice; dove il Sole non tramonta legge *Nessuna notte astronomica*, senza carte. Se il modello non
+da' le nuvole di tutte le ore il semaforo dice *Non disponibile*.
 
-Il **modello** della previsione: di fabbrica quello che il servizio sceglie per il tuo posto,
+Il **modello** della previsione: il predefinito e' *Automatico*, quello che il servizio sceglie per il tuo posto,
 oppure l'europeo (ECMWF), il tedesco (ICON) o l'americano (GFS). Sul telefono lo scegli da un
 elenco che dice cos'e' ogni voce. Cambiarlo non chiede niente a nessuno -- ogni previsione li porta
 tutti insieme -- e la scelta resta. Se un modello quella volta non ha dato notti intere, la pagina
 te lo dice e puoi guardarne un altro.
 
-La previsione **arriva da sola** appena hai un sito di casa, e si rinnova ogni tre ore; con
+La previsione **arriva da sola** appena hai un sito predefinito, e si rinnova ogni tre ore; con
 *Aggiorna* la chiedi subito. Se il servizio non risponde -- sei senza rete, o e' giu' -- resta
 quella di prima, e una riga in testa dice a che ora e' stata l'ultima richiesta senza risposta e di
-che ora e' la previsione che stai leggendo, con *Aggiorna* accanto per riprovare. Se del tuo sito di casa non si riconosce il fuso orario, le sue notti non si possono
-dividere: la pagina te lo dice e ti porta a sistemare il sito (in mare aperto vale il fuso
+che ora e' la previsione che stai leggendo, con *Aggiorna* accanto per riprovare. Se del tuo sito predefinito non si riconosce il fuso orario, le sue notti non si possono
+dividere: la pagina te lo dice e con *Modifica sito* ti porta a sistemarlo (in mare aperto vale il fuso
 nautico). I dati vengono da Open-Meteo e Copernicus, e il seeing da Meteoblue: la pagina li cita in
 fondo.
 
 ## Attrezzatura
 
-**Con cosa hai ripreso, e quanto.** I tuoi pezzi raccolti per genere -- telescopi, camere,
+**Con cosa hai ripreso, e quanto.** I tuoi strumenti raccolti per tipo -- telescopi, camere,
 montature, e quello che ci sta intorno -- piu' i **corredi** (l'ottica con la sua camera e la
 focale) e i **filtri**. Di ognuno leggi quante **ore**, quanti **frame** e in quante **notti** ti
 e' servito, e cosa ci hai ripreso. I numeri li conta l'app mentre legge i tuoi file, non quando
-apri la pagina, cosi' la pagina si apre subito anche con un archivio grande: un pezzo appena
-trovato, a meta' di una lettura, dice *si sta contando* finche' la lettura non finisce.
+apri la pagina, cosi' la pagina si apre subito anche con un archivio grande: uno strumento appena
+trovato, a meta' di una scansione, dice *conteggio in corso* finche' la scansione non finisce.
 
-I pezzi li riconosce dai tuoi file: il nome e' quello che l'header scrive, e le correzioni che
-fai qui restano. Un pezzo nuovo non ti viene chiesto altrove: lo trovi qui. Un pezzo che hai
-dichiarato tu e' segnato come tale.
+Gli strumenti li riconosce dai tuoi file: il nome e' quello che l'header scrive, e le correzioni che
+fai qui restano. Uno strumento nuovo non ti viene chiesto altrove: lo trovi qui. Uno strumento che hai
+scritto tu e' segnato *inserito manualmente*.
 
 **La ruota, il focheggiatore e la camera di guida li trova da solo**, se il tuo programma li
 scrive: N.I.N.A. mette nell'header il nome della ruota portafiltri e del focheggiatore, l'ASIAIR
@@ -468,23 +469,23 @@ Se invece il tuo programma quei nomi non li scrive, la ruota che ti sei aggiunto
 dice zero ore**: dice che quelle ore l'app non le sa. Uno zero sarebbe una misura, e sarebbe falsa.
 
 **Quello che i file non nominano lo scrivi tu.** Una guida, un riduttore, una montatura, o un
-pezzo che il tuo programma non nomina: *Aggiungi un pezzo*, in cima alla pagina, li fa esistere -- anche il primo giorno, prima di aver letto una sola cartella.
-Scegli il genere, dai un nome, e compila quello che sai: i campi che ti chiede cambiano col genere
+altro strumento che il tuo programma non nomina: *Aggiungi strumento*, in cima alla pagina, li fa esistere -- anche il primo giorno, prima di aver letto una sola cartella.
+Scegli il tipo, dai un nome, e compila quello che sai: i campi che ti chiede cambiano col tipo
 (la portata la chiede a una montatura, l'apertura a un telescopio). Se quel nome lo possiedi gia'
-te lo dice, invece di farti un doppione: il pezzo che cerchi e' gia' nell'elenco.
+te lo dice, invece di farti un doppione: lo strumento che cerchi e' gia' nell'elenco.
 
-**E ogni scheda si corregge da qui**, col bottone *Correggi* accanto al pezzo: la scheda si apre
+**E ogni scheda si corregge da qui**, col bottone *Modifica* accanto allo strumento: la scheda si apre
 dentro la sua riga. Cambiare il nome non perde niente -- l'app impara che il nome vecchio degli
-header e' quello nuovo, cosi' la scansione dopo non ricrea il pezzo com'era. E cio' che scrivi
-vince sui file: resta anche quando l'archivio viene riletto. Se due righe sono lo stesso pezzo
-scritto in due modi, nella scheda scegli *E' lo stesso pezzo di*: la tendina offre solo quelli dello
-stesso genere. Lo stesso vale per i filtri, con *Correggi* accanto al filtro (nome, marca, modello,
-o *E' lo stesso filtro di*), e un corredo lo chiami come vuoi con *Dagli un nome*.
+header e' quello nuovo, cosi' la scansione dopo non ricrea lo strumento com'era. E cio' che scrivi
+vince sui file: resta anche quando l'archivio viene riletto. Se due righe sono lo stesso strumento
+scritto in due modi, nella scheda scegli *Unisci a*: la tendina offre solo quelli dello
+stesso tipo. Lo stesso vale per i filtri, con *Modifica* accanto al filtro (nome, marca, modello,
+o *Unisci a*), e un corredo lo chiami come vuoi con *Rinomina*.
 
 Se i file di una camera non dicono quanto e' grande il pixel, l'app lo **ricava dal cielo**: dalla
 scala che ha misurato sulle foto risolte e dalla focale del corredo. Serve che i file dicano almeno
-il binning: senza, la scala misurata non dice quanti pixel erano uniti, e l'app non tira a indovinare. Lo leggi con scritto *ricavato
-dal cielo*, perche' non e' la stessa certezza -- un riduttore che il file non dice lo sposta --; se
+il binning: senza, la scala misurata non dice quanti pixel erano uniti, e l'app non tira a indovinare. Lo leggi con scritto
+*(calcolato)*, perche' non e' la stessa certezza -- un riduttore che il file non dice lo sposta --; se
 il pixel lo scrivi tu nella scheda, vale il tuo.
 
 Di un corredo leggi anche **quanto cielo inquadra davvero**: la scala in arcosecondi per pixel e
@@ -494,17 +495,17 @@ mente. Se di un corredo l'app non ha ancora riconosciuto nessuna posa -- perche'
 ripreso, o perche' ASTAP non ci e' ancora arrivato -- la scala non c'e', e te lo dice.
 
 **La montatura ha le sue ore.** Se il tuo programma di ripresa la scrive nei file, l'app la lega
-da sola a ogni posa: fra i programmi che l'app conosce, oggi lo fa l'ASIAIR. Se no, apri un corredo, premi *Scegli la montatura* e
-scegli fra quelle che possiedi (una montatura che non trovi la scrivi con *Aggiungi un pezzo*):
+da sola a ogni posa: fra i programmi che l'app conosce, oggi lo fa l'ASIAIR. Se no, apri un corredo, premi *Seleziona montatura* e
+scegli fra quelle che possiedi (una montatura che non trovi la scrivi con *Aggiungi strumento*):
 da li' la montatura conta le ore, le notti e cosa ci hai ripreso con quel corredo, e la riga del
 corredo dice su quale sta. Quello che scegli tu vale anche dove i file dicono altro; lasciando la
 scelta vuota tornano i file. Finche' nessun corredo la porta, la riga della montatura te lo dice
 invece di scrivere zero.
 
-**Anche un filtro o un corredo li puoi scrivere tu**, dallo stesso *Aggiungi un pezzo*, prima di
+**Anche un filtro o un corredo li puoi scrivere tu**, dallo stesso *Aggiungi strumento*, prima di
 averci ripreso. Un **filtro** vuole il nome e la **banda** che lascia passare -- e' cio' che l'app
 guarda per capire cosa hai ripreso -- e se vuoi marca e modello. Un **corredo** vuole l'ottica e la
-camera, scelte fra i tuoi pezzi, e la **focale** vera, col riduttore se lo usi. La focale dei tuoi
+camera, scelte fra i tuoi strumenti, e la **focale** vera, col riduttore se lo usi. La focale dei tuoi
 file l'app la **misura dal cielo** quando riconosce una foto e conosce il pixel della camera:
 anche se il tuo programma scrive la focale del telescopio senza il riduttore, dopo il
 riconoscimento le pose passano al corredo della focale vera. Dove il cielo non c'e' (dark, flat,
@@ -514,7 +515,7 @@ nome che il tuo programma mette nei file (`L`, per esempio) prende le pose che l
 di una camera a colori restano *OSC* -- e un corredo con la stessa ottica, la stessa camera e una
 focale entro il 5% e' quello. Per la stessa ragione, se quel filtro ce l'hai gia' (le tue pose `L`
 stanno gia' su *Lum*) o se hai gia' un corredo uguale, te lo dice invece di fartene un secondo: il
-filtro si rinomina con *Correggi*. Con l'ASIAIR i file non dicono l'ottica: le sue pose vanno in un
+filtro si rinomina con *Modifica*. Con l'ASIAIR i file non dicono l'ottica: le sue pose vanno in un
 corredo senza ottica, finche' non dici quale era in *Da confermare* (*Attrezzatura da
 completare*).
 
@@ -526,36 +527,37 @@ conteggi, e in alcune schede anche **l'indizio che viene dai tuoi file** da cui 
 cosi' puoi controllare invece di fidarti.
 
 **Le risposte si accumulano**: rispondi a quello che sai, in qualunque scheda, e premi **Applica**
-una volta sola. In fondo alla pagina una barra ti segue e ti dice **quante risposte hai in mano**
-prima di premere; una riga a cui hai risposto si segna con una barra piena a sinistra, cosi' vedi
+una volta sola. In fondo alla pagina una barra ti segue e ti dice **quante modifiche ci sono da
+applicare** prima di premere; una riga a cui hai risposto si segna con una barra piena a sinistra, cosi' vedi
 cosa stai per mandare anche se non distingui i colori. La pagina si rilegge e ti dice quante
-risposte ha applicato e quanti frame ha rimesso in lavorazione. Ogni risposta vale anche per i frame che
+modifiche ha applicato e quanti frame sono da rielaborare. Ogni risposta vale anche per i frame che
 arriveranno, e **si cambia**: un gruppo a cui hai risposto resta in pagina con la sua risposta.
 
 Il conto scende quando **rispondi**, non quando guardi: *Applica* scrive solo le risposte che hai
 dato. Le cose su cui l'app ti sta chiedendo qualcosa -- un filtro che non riconosce, due camere che
 sembrano la stessa, un oggetto su cui ha un dubbio, un gruppo di frame senza risposta -- restano
-contate finche' non rispondi. Il tuo equipaggiamento qui non c'e': un pezzo nuovo, trovato nei
+contate finche' non rispondi. Il tuo equipaggiamento qui non c'e': uno strumento nuovo, trovato nei
 file o scritto da te, lo vedi e lo completi nell'*Attrezzatura*.
 
-Accanto ai gruppi di frame c'e' **cosa hai ripreso**: gli oggetti che l'app ha riconosciuto in
-quei frame, con quanti frame ciascuno (i primi tre, e quanti altri), per rispondere senza dover
+Accanto ai gruppi di frame ci sono gli **oggetti**: quelli che l'app ha riconosciuto in
+quei frame, con quanti frame ciascuno (i primi tre, e un *+ N* per gli altri), per rispondere senza dover
 ricordare -- anche se il file non scrive l'oggetto, come succede con molte reflex. A parte dice i
-frame in cui il cielo non ha trovato niente e quelli che non ha ancora guardato o non e' riuscito
-a guardare, perche' non sono la stessa cosa.
+frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la stessa cosa.
 
-- **Stesso pezzo?** Quando due camere hanno lo stesso nome a parte spazi, segni o un'aggiunta fra
+- **Strumenti duplicati.** Quando due camere hanno lo stesso nome a parte spazi, segni o un'aggiunta fra
   parentesi (per esempio `ATR2600M` e `ATR2600M(USB2.0)`), e lo stesso pixel e lo stesso colore,
   spesso sono la stessa camera vista da due programmi -- ma possono anche essere due camere dello
-  stesso modello, e questo l'app non puo' saperlo. Te lo chiede sulla camera con meno frame: *si'*
-  la unisce a quella con piu' frame, *no* e la domanda non torna piu' per quelle due. Niente e'
-  scelto prima di te, perche' un'unione non si disfa. Per gli altri pezzi non te lo chiede, perche'
+  stesso modello, e questo l'app non puo' saperlo. Te lo chiede sulla camera con meno frame: *Si',
+  unisci a* la unisce a quella con piu' frame, *No, sono distinti* e la domanda non torna piu' per
+  quelle due. Niente e'
+  scelto prima di te, perche' un'unione non si disfa. Per gli altri strumenti non te lo chiede, perche'
   non ha un dato per esserne sicura: l'unione la scegli dall'*Attrezzatura*.
 - **Filtri.** Qui arrivano solo i filtri che l'app non riconosce, come una `H` sola: dici cos'e',
-  una volta, e vale anche per i frame che arriveranno. E' *uno dei miei filtri* (lo scegli fra
-  quelli che l'app conosce), un modello in commercio, o un nome con la sua banda. I filtri che
+  una volta, e vale anche per i frame che arriveranno. E' un *Filtro esistente* (lo scegli fra
+  quelli che l'app conosce), un modello in commercio, o -- con *Non in elenco: nuovo filtro* -- un
+  nome con la sua banda. I filtri che
   l'app riconosce non te li chiede. A differenza delle altre domande, un filtro a cui hai risposto
-  esce dalla pagina. Nell'Attrezzatura, con *Correggi* accanto al filtro, ne cambi nome, marca e
+  esce dalla pagina. Nell'Attrezzatura, con *Modifica* accanto al filtro, ne cambi nome, marca e
   modello, o lo unisci a un altro; la banda, per ora, no.
 - **Attrezzatura da completare.** Quando i file non dicono con che camera, con che ottica o con
   che filtro hai ripreso, l'app te lo chiede in **una scheda sola** per ogni gruppo di file che
@@ -589,14 +591,14 @@ a guardare, perche' non sono la stessa cosa.
 
   **In questa versione la scheda non si vede ancora**: arriva col disegno nuovo della pagina. Fino
   ad allora il numero di *Da confermare* la conta, e quei frame restano senza le parti che mancano.
-- **Frame senza tipo.** Alcuni programmi non scrivono nel file se e' una foto del cielo o un file
-  di calibrazione. Lo capisce l'app guardando il cielo: se riesce a riconoscere dove punta e' una
-  foto, se non trova stelle e' una calibrazione (bias, flat e dark con pochi pixel caldi non ne hanno; e
-  nemmeno una foto tutta coperta dalle nuvole, che cosi' non conta nelle ore). Un dark con molti
+- **Frame senza tipo.** Alcuni programmi non scrivono nel file se e' un Light o un file
+  di calibrazione. Lo capisce l'app guardando il cielo: se riesce a riconoscere dove punta e' un
+  Light, se non trova stelle e' una calibrazione (bias, flat e dark con pochi pixel caldi non ne hanno; e
+  nemmeno un Light tutto coperto dalle nuvole, che cosi' non conta nelle ore). Un dark con molti
   pixel caldi puo' sembrarle un cielo: quello te lo chiede. Te lo chiede in tutti gli altri
   casi: quando vede delle stelle ma non riconosce il cielo, quando non ci riesce in tempo, o quando
-  il file non si lascia leggere. Per quelle cartelle lo dici tu, una volta: *e' una
-  foto del cielo* li manda avanti come gli altri, *sono file di calibrazione* li lascia da parte
+  il file non si lascia leggere. Per quelle cartelle lo dici tu, una volta: *Light* li manda
+  avanti come gli altri, *Calibrazione* li lascia da parte
   -- e da li' in poi l'app salta anche i file senza tipo che arriveranno in quella cartella e che
   l'archivio non ha ancora, contandoli fra i saltati della scansione. La tua risposta vale per
   tutti i file senza tipo della cartella, anche per quelli che l'app aveva gia' capito. Finche' non rispondi quei frame non contano nelle
@@ -605,7 +607,7 @@ a guardare, perche' non sono la stessa cosa.
   sposti: in una cartella a cui non hai ancora risposto torna ad aspettare un file che il cielo non
   ha riconosciuto, in una cartella che hai detto di calibrazione qualunque file senza tipo, anche
   uno che il cielo aveva riconosciuto. In tutti e due i casi le sue ore escono dall'archivio, e
-  tornano quando di quella cartella dici *e' una foto del cielo*, o quando lo rimetti in una
+  tornano quando di quella cartella dici *Light*, o quando lo rimetti in una
   cartella che lo lascia andare. Se invece ce lo copi, e
   l'originale resta dov'era in una cartella che l'app legge, conta la cartella dell'originale e le
   ore restano. Un file che
@@ -618,8 +620,9 @@ a guardare, perche' non sono la stessa cosa.
   **notti** di quei frame, per ricordarti dov'eri: il fuso e' quello delle coordinate -- quando
   avrai risposto sara' quello del sito che scegli, e per una posa vicino a mezzogiorno le due date
   possono non coincidere.
-- **Mosaici proposti.** Dei pannelli affiancati che l'app ti propone come mosaico dici se lo sono o
-  no: un no resta, e non te lo ripropone. Col si' dici anche **di cosa** e' il mosaico: il campo
+- **Mosaici proposti.** Dei pannelli affiancati che l'app ti propone come mosaico dici *Mosaico* o
+  *Non e' un mosaico*: un no resta, e non te lo ripropone. Con *Mosaico* dici anche l'**oggetto del
+  mosaico**: il campo
   arriva gia' compilato con l'oggetto del catalogo che sta al centro del mosaico, e se non e'
   quello scrivi il nome giusto. I pannelli che riprenderai dopo entrano nel mosaico da soli, e
   rinominare la camera o dire con che camera hai ripreso non cambia niente: la risposta resta.
@@ -715,17 +718,17 @@ Tutto in un file solo, fuori dalla cartella del programma:
 Li' dentro ci sono il database, la cache e i log. I tuoi FITS restano dove sono.
 
 Accanto al database c'e' anche **`risposte.json`, il backup di tutto quello che hai detto
-all'app**: le preferenze, i siti, le cartelle, i pezzi e i filtri che hai scritto tu, i nomi che
+all'app**: le preferenze, i siti, le cartelle, gli strumenti e i filtri che hai scritto tu, i nomi che
 le hai insegnato e ogni risposta di *Da confermare*. Si riscrive da solo dopo ogni tua risposta.
 Le foto non ci sono, e nemmeno cio' che l'app ricava leggendole: frame, corredi, notti si rifanno
 rileggendo le cartelle.
 
 - **Se il database si perde** (reinstallazione, database ricreato, passaggio al NAS con la stessa
-  cartella dati), all'avvio l'app ti dice *"Ho trovato le tue risposte"* e ti chiede se
-  rimetterle; poi rilegge le cartelle e ritrovi tutto come prima. Se preferisci ricominciare da
-  capo, il file si riscrive alla tua prima risposta.
-- **Per portarle su un altro computer**: *Impostazioni > Backup > Esporta le risposte*, e
-  sull'altro computer *Importa le risposte*. Il file esportato **non contiene le chiavi dei
+  cartella dati), all'avvio l'app ti dice *"Backup trovato"* e ti chiede se
+  ripristinare i dati (*Ripristina*); poi rilegge le cartelle e ritrovi tutto come prima. Se preferisci
+  *Inizia da zero*, il file si riscrive alla tua prima risposta.
+- **Per portarle su un altro computer**: *Impostazioni > Backup > Esporta backup*, e
+  sull'altro computer *Importa backup*. Il file esportato **non contiene le chiavi dei
   servizi** (Meteoblue), che riscrivi a mano, ne' dove sta ASTAP: sull'altro computer l'app lo
   cerca da sola. L'importazione aggiunge e aggiorna, non cancella niente. Se sull'altro computer le foto stanno in un altro posto, aggiungi la cartella nel posto
   nuovo: l'app la riconosce dai file e le risposte la seguono.

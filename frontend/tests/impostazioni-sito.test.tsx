@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * Impostazioni, la sezione *Il sito*: l'elenco, la scheda che si compila, e il sito che non si
+ * Impostazioni, la sezione *Siti*: l'elenco, la scheda che si compila, e il sito che non si
  * puo' togliere.
  *
  * Le regole provate qui sono quelle che una lettura del codice non prende: che il cielo mai
@@ -72,7 +72,7 @@ async function vaiAlSito() {
   const barra = await screen.findByRole("navigation", { name: /pagine/i })
   fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
   // Nome esatto: col piede della barra senza sito, "Seleziona sito" porta allo stesso posto.
-  fireEvent.click(await screen.findByRole("link", { name: /^il sito$/i }))
+  fireEvent.click(await screen.findByRole("link", { name: /^siti$/i }))
 }
 
 /** Riempie la scheda aperta. Sta qui perche' quattro prove fanno gli stessi tre gesti, e scritti
@@ -86,7 +86,7 @@ async function compila(nome: string, lat = "46,4843", lon = "12,0561") {
 /** Quante volte il piede della barra ha riletto cio' che mostra. */
 const letturaDelPiede = () => chiamate().filter((c) => c.includes("/tonight")).length
 
-describe("Impostazioni / Il sito", () => {
+describe("Impostazioni / Siti", () => {
   it("ogni sito dice dove sta e che cielo ha, e quello di casa si riconosce", async () => {
     await app()
     await vaiAlSito()
@@ -99,9 +99,9 @@ describe("Impostazioni / Il sito", () => {
     // La classe **e la misura**: qui la misura e' la regola, il piede della barra e' l'eccezione.
     expect(cortina.textContent).toMatch(/3/)
     expect(cortina.textContent).toMatch(/21,3/)
-    expect(within(cortina).getByText(/di casa/i)).toBeTruthy()
-    // E solo uno lo e': "di casa" su due righe vorrebbe dire due fusi per la stessa notte.
-    expect(screen.getAllByText(/^di casa$/i)).toHaveLength(1)
+    expect(within(cortina).getByText(/^predefinito$/i)).toBeTruthy()
+    // E solo uno lo e': "predefinito" su due righe vorrebbe dire due fusi per la stessa notte.
+    expect(screen.getAllByText(/^predefinito$/i)).toHaveLength(1)
   })
 
   it("un cielo mai dichiarato lo dice, invece di passare per uno zero", async () => {
@@ -119,7 +119,7 @@ describe("Impostazioni / Il sito", () => {
     await app()
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /correggi Cortina/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
 
     const nome = (await screen.findByLabelText(/nome del sito/i)) as HTMLInputElement
     expect(nome.value).toBe("Cortina")
@@ -134,7 +134,7 @@ describe("Impostazioni / Il sito", () => {
     })
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /correggi Cortina/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
     fireEvent.click(await screen.findByRole("radio", { name: /5/ }))
     fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
 
@@ -150,8 +150,8 @@ describe("Impostazioni / Il sito", () => {
     await vaiAlSito()
 
     // Senza siti la sezione dice cosa manca, invece di un elenco vuoto.
-    expect(await screen.findByText(/^nessun sito dichiarato$/i)).toBeTruthy()
-    fireEvent.click(screen.getByRole("button", { name: /aggiungi un sito/i }))
+    expect(await screen.findByText(/^nessun sito$/i)).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: /^aggiungi sito$/i }))
 
     await compila("Cortina", "46,5405", "12,1357")
     fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
@@ -169,11 +169,11 @@ describe("Impostazioni / Il sito", () => {
     await app()
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /correggi Cortina/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
     expect((await screen.findByLabelText(/nome del sito/i) as HTMLInputElement).value).toBe(
       "Cortina",
     )
-    fireEvent.click(screen.getByRole("button", { name: /correggi Passo Giau/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^modifica Passo Giau$/i }))
     await waitFor(() =>
       expect((screen.getByLabelText(/nome del sito/i) as HTMLInputElement).value).toBe(
         "Passo Giau",
@@ -188,7 +188,7 @@ describe("Impostazioni / Il sito", () => {
     await app([CASA, USCITA], { "PATCH /api/v1/sites": { stato: 200, corpo: CASA } })
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /correggi Cortina/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
     fireEvent.change(await screen.findByLabelText(/nome del sito/i), {
       target: { value: "Cortina d'Ampezzo" },
     })
@@ -204,11 +204,11 @@ describe("Impostazioni / Il sito", () => {
     await app([CASA], { "POST /api/v1/sites": { stato: 500, corpo: { detail: "boom" } } })
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un sito/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
     await compila("Giau")
     fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
 
-    expect(await screen.findByText(/non sono riuscito a salvare il sito/i)).toBeTruthy()
+    expect(await screen.findByText(/^salvataggio non riuscito\.$/i)).toBeTruthy()
     // E cio' che si era scritto e' ancora li': ricominciare da capo dopo un guasto e' la punizione
     // sbagliata per chi non ha fatto niente.
     expect((screen.getByLabelText(/nome del sito/i) as HTMLInputElement).value).toBe("Giau")
@@ -220,7 +220,7 @@ describe("Impostazioni / Il sito", () => {
     await app([CASA], { "POST /api/v1/sites": { stato: 200, corpo: USCITA } })
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un sito/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
     await compila("Giau")
     fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
 
@@ -236,10 +236,10 @@ describe("Impostazioni / Il sito", () => {
     })
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /rendi di casa Passo Giau/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^imposta Passo Giau come predefinito$/i }))
     await waitFor(() => expect(scritture().length).toBeGreaterThan(0))
     expect(scritture()[0]!.url).toMatch(/\/api\/v1\/sites\/2\/default$/)
-    expect(await screen.findByText(/non sono riuscito a cambiare il sito di casa/i)).toBeTruthy()
+    expect(await screen.findByText(/^modifica del sito predefinito non riuscita\.$/i)).toBeTruthy()
   })
 
   it("rendere di casa riesce, e il piede della barra lo rilegge", async () => {
@@ -249,10 +249,10 @@ describe("Impostazioni / Il sito", () => {
     await vaiAlSito()
 
     const prima = letturaDelPiede()
-    fireEvent.click(await screen.findByRole("button", { name: /rendi di casa Passo Giau/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^imposta Passo Giau come predefinito$/i }))
 
     await waitFor(() => expect(letturaDelPiede()).toBeGreaterThan(prima))
-    expect(screen.queryByText(/non sono riuscito a cambiare il sito di casa/i)).toBeNull()
+    expect(screen.queryByText(/^modifica del sito predefinito non riuscita\.$/i)).toBeNull()
   })
 
   it("rendere di casa non spazza via la scheda che si stava compilando", async () => {
@@ -261,26 +261,26 @@ describe("Impostazioni / Il sito", () => {
     await app([CASA, USCITA], { "POST /api/v1/sites": { stato: 200, corpo: USCITA } })
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un sito/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
     await compila("Malga")
-    fireEvent.click(screen.getByRole("button", { name: /rendi di casa Passo Giau/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^imposta Passo Giau come predefinito$/i }))
 
     await waitFor(() => expect(scritture().length).toBeGreaterThan(0))
     expect((screen.getByLabelText(/nome del sito/i) as HTMLInputElement).value).toBe("Malga")
   })
 
   it("togliere un sito non spazza via la scheda che si stava compilando", async () => {
-    // Il gemello della prova sopra, per l'altra porta: anche *Togli* si preme dall'elenco.
+    // Il gemello della prova sopra, per l'altra porta: anche *Rimuovi* si preme dall'elenco.
     await app([CASA, USCITA], {
       "DELETE /api/v1/sites": { stato: 200, corpo: { site_id: 2, deleted: true } },
     })
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un sito/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
     await compila("Malga")
-    fireEvent.click(screen.getByRole("button", { name: /togli Passo Giau/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^rimuovi Passo Giau$/i }))
     const dialogo = await screen.findByRole("dialog")
-    fireEvent.click(within(dialogo).getByRole("button", { name: /togli il sito/i }))
+    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi sito$/i }))
 
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
     expect((screen.getByLabelText(/nome del sito/i) as HTMLInputElement).value).toBe("Malga")
@@ -294,11 +294,11 @@ describe("Impostazioni / Il sito", () => {
     })
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /correggi Passo Giau/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^modifica Passo Giau$/i }))
     await screen.findByLabelText(/nome del sito/i)
-    fireEvent.click(screen.getByRole("button", { name: /togli Passo Giau/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^rimuovi Passo Giau$/i }))
     const dialogo = await screen.findByRole("dialog")
-    fireEvent.click(within(dialogo).getByRole("button", { name: /togli il sito/i }))
+    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi sito$/i }))
 
     await waitFor(() => expect(screen.queryByLabelText(/nome del sito/i)).toBeNull())
   })
@@ -309,26 +309,26 @@ describe("Impostazioni / Il sito", () => {
     await app()
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /correggi Cortina/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
     await waitFor(() => {
       const dove = document.activeElement
       // Il titolo della scheda, non il corpo: `body.textContent` contiene tutta la pagina e
       // farebbe passare questa prova anche col fuoco rimasto dov'era.
       expect(dove?.tagName).toBe("H2")
       expect(dove?.className).toContain("as-carta__titolo")
-      expect(dove?.textContent).toMatch(/correggi il sito/i)
+      expect(dove?.textContent).toMatch(/^modifica sito$/i)
     })
   })
 
   it("due schede aperte insieme non si rubano i campi", async () => {
-    // Dall'elenco si puo' premere *Correggi* mentre *Aggiungi* e' gia' aperta: due campi con lo
+    // Dall'elenco si puo' premere *Modifica* mentre *Aggiungi sito* e' gia' aperta: due campi con lo
     // stesso `id` darebbero il fuoco dell'etichetta a quello sbagliato, e uno dei due resterebbe
     // scollegato dal suo nome per chi ascolta.
     await app()
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un sito/i }))
-    fireEvent.click(await screen.findByRole("button", { name: /correggi Cortina/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
 
     const nomi = await screen.findAllByLabelText(/nome del sito/i)
     expect(nomi).toHaveLength(2)
@@ -344,9 +344,9 @@ describe("Impostazioni / Il sito", () => {
     await app([{ ...USCITA, is_default: false }])
     await vaiAlSito()
 
-    expect(await screen.findByText(/nessun sito e' quello di casa/i)).toBeTruthy()
+    expect(await screen.findByText(/^nessun sito predefinito$/i)).toBeTruthy()
     // E la strada per uscirne sta li': il tasto che elegge quello giusto.
-    expect(screen.getByRole("button", { name: /rendi di casa Passo Giau/i })).toBeTruthy()
+    expect(screen.getByRole("button", { name: /^imposta Passo Giau come predefinito$/i })).toBeTruthy()
   })
 
   it("con un sito di casa l avviso non c e", async () => {
@@ -354,13 +354,13 @@ describe("Impostazioni / Il sito", () => {
     await vaiAlSito()
 
     await screen.findAllByRole("listitem")
-    expect(screen.queryByText(/nessun sito e' quello di casa/i)).toBeNull()
+    expect(screen.queryByText(/^nessun sito predefinito$/i)).toBeNull()
   })
 
   it("dichiarato il sito, il piede della barra lo sa senza ricaricare la pagina", async () => {
     await app([], { "POST /api/v1/sites": { stato: 200, corpo: CASA } })
     await vaiAlSito()
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi un sito/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^aggiungi sito$/i }))
     await compila("Cortina", "46,5405", "12,1357")
 
     const prima = letturaDelPiede()
@@ -380,7 +380,7 @@ describe("Impostazioni / Il sito", () => {
     await app([CASA, USCITA], { "PATCH /api/v1/sites": { stato: 200, corpo: USCITA } })
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /correggi Passo Giau/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^modifica Passo Giau$/i }))
     await compila("Passo Giau 2")
     const prima = letturaDelPiede()
     fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
@@ -397,9 +397,9 @@ describe("Impostazioni / Il sito", () => {
     })
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /togli Passo Giau/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^rimuovi Passo Giau$/i }))
     const dialogo = await screen.findByRole("dialog")
-    fireEvent.click(within(dialogo).getByRole("button", { name: /togli il sito/i }))
+    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi sito$/i }))
 
     await waitFor(() => expect(scritture().length).toBeGreaterThan(0))
     expect(scritture()[0]!.metodo).toBe("DELETE")
@@ -417,9 +417,9 @@ describe("Impostazioni / Il sito", () => {
     })
     await vaiAlSito()
 
-    fireEvent.click(await screen.findByRole("button", { name: /togli Cortina/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^rimuovi Cortina$/i }))
     const dialogo = await screen.findByRole("dialog")
-    fireEvent.click(within(dialogo).getByRole("button", { name: /togli/i }))
+    fireEvent.click(within(dialogo).getByRole("button", { name: /^rimuovi sito$/i }))
 
     // Quante notte lo tengono si legge **dentro il dialogo**, dove si e' premuto: fuori sarebbe
     // una frase da cercare mentre si guarda ancora la domanda.
@@ -432,7 +432,7 @@ describe("Impostazioni / Il sito", () => {
   })
 })
 
-describe("Impostazioni / Il sito, dall'indirizzo", () => {
+describe("Impostazioni / Siti, dall'indirizzo", () => {
   it("con ?sito= la riga di quel sito e' segnata, e la scheda di correzione resta chiusa", async () => {
     window.history.pushState({}, "", `/impostazioni/sito?sito=${USCITA.id}`)
     await app()

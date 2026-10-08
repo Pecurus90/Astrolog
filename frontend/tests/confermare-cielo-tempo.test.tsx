@@ -138,7 +138,7 @@ describe("Da confermare -- da quale luogo", () => {
     const sezione = await vaiASezione(/frame senza sito/i)
     const posto = riga(sezione, "45.85,11.58")
     expect(posto.textContent).toMatch(/391 frame/)
-    expect(posto.textContent).toMatch(/a 16,2 km da casa/)
+    expect(posto.textContent).toMatch(/a 16,2 km dal sito predefinito/)
     expect(posto.textContent).toMatch(/2024-05-17.*2024-06-01/)
     expect(scelte(posto)).toEqual([
       ["Cima Ekar, a 0,4 km", false],
@@ -156,7 +156,7 @@ describe("Da confermare -- da quale luogo", () => {
     const sezione = await vaiASezione(/frame senza sito/i)
 
     const posto = riga(sezione, "34.00,-111.00")
-    expect(posto.textContent).toMatch(/quando avrai detto da dove osservavi/i)
+    expect(posto.textContent).toMatch(/Notti non calcolabili senza sito/)
     expect(posto.textContent).not.toMatch(/notti:\s*$/)
   })
 
@@ -183,7 +183,7 @@ describe("Da confermare -- da quale luogo", () => {
     // `distance_km` nullo e' "non c'e' una casa", non "sei a casa": uno zero sarebbe falso.
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
-    expect(riga(sezione, "46.10,12.00").textContent).not.toMatch(/da casa/)
+    expect(riga(sezione, "46.10,12.00").textContent).not.toMatch(/dal sito predefinito/)
   })
 })
 
@@ -203,9 +203,9 @@ describe("Da confermare -- i mosaici proposti", () => {
     aperta()
     const sezione = await vaiASezione(/mosaici/i)
     const mosaico = riga(sezione, "M 42, NGC 1977")
-    expect(within(mosaico).queryByLabelText(/di cosa/i)).toBeNull()
-    fireEvent.click(within(mosaico).getByLabelText(/^e' un mosaico/i))
-    const campo = within(mosaico).getByLabelText(/di cosa/i) as HTMLInputElement
+    expect(within(mosaico).queryByLabelText(/oggetto del mosaico/i)).toBeNull()
+    fireEvent.click(within(mosaico).getByLabelText("Mosaico"))
+    const campo = within(mosaico).getByLabelText(/oggetto del mosaico/i) as HTMLInputElement
     expect(campo.value).toBe("NGC 1977")
     expect([...(campo.list?.options ?? [])].map((o) => o.value)).toEqual(["M 42", "NGC 1977"])
     expect((await mandato()).mosaics).toEqual([
@@ -217,8 +217,8 @@ describe("Da confermare -- i mosaici proposti", () => {
     aperta()
     const sezione = await vaiASezione(/mosaici/i)
     const mosaico = riga(sezione, "M 42, NGC 1977")
-    fireEvent.click(within(mosaico).getByLabelText(/^e' un mosaico/i))
-    const campo = within(mosaico).getByLabelText(/di cosa/i)
+    fireEvent.click(within(mosaico).getByLabelText("Mosaico"))
+    const campo = within(mosaico).getByLabelText(/oggetto del mosaico/i)
     fireEvent.change(campo, { target: { value: "   " } })
     applicaSpento()
     fireEvent.change(campo, { target: { value: "M 42" } })
@@ -229,7 +229,7 @@ describe("Da confermare -- i mosaici proposti", () => {
     const detto = { ...PAGINA.mosaics[0], answer: "yes", answer_name: "M 42" }
     aperta({ ...PAGINA, mosaics: [detto] })
     const sezione = await vaiASezione(/mosaici/i)
-    const campo = within(riga(sezione, "M 42, NGC 1977")).getByLabelText(/di cosa/i)
+    const campo = within(riga(sezione, "M 42, NGC 1977")).getByLabelText(/oggetto del mosaico/i)
     expect(campo).toHaveProperty("value", "M 42")
     fireEvent.change(campo, { target: { value: "M 43" } })
     fireEvent.change(campo, { target: { value: "M 42" } })
@@ -262,9 +262,9 @@ describe("Da confermare -- i mosaici proposti", () => {
     aperta()
     const sezione = await vaiASezione(/mosaici/i)
     const mosaico = riga(sezione, "M 31")
-    expect(within(mosaico).getByLabelText(/non e' un mosaico/i)).toHaveProperty("checked", true)
-    fireEvent.click(within(mosaico).getByLabelText(/^e' un mosaico/i))
-    fireEvent.click(within(mosaico).getByLabelText(/non e' un mosaico/i))
+    expect(within(mosaico).getByLabelText(/^non \u00e8 un mosaico$/i)).toHaveProperty("checked", true)
+    fireEvent.click(within(mosaico).getByLabelText("Mosaico"))
+    fireEvent.click(within(mosaico).getByLabelText(/^non \u00e8 un mosaico$/i))
     applicaSpento()
   })
 })
@@ -273,7 +273,7 @@ it("le sezioni senza domande non si vedono", async () => {
   aperta({ ...PAGINA, unclear: [], mosaics: [] })
   await disegna()
   fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
-  await within(await screen.findByRole("main")).findByText(/cos[ae] da confermare/i)
+  await within(await screen.findByRole("main")).findByText(/^\d+ da confermare$/)
   for (const nome of [/frame senza sito/i, /mosaici/i]) {
     expect(screen.queryByRole("region", { name: nome })).toBeNull()
   }

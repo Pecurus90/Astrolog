@@ -312,25 +312,32 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   chiama la produzione dei frame senza corredo ("corredo: non si sa"). Dall'audit della 2a: manca
   una prova **di rotta** che `scope` e `alone` arrivino a `productions.of` (le prove della spina la
   chiamano diretta).
-- **Il linguaggio dell'app, pagina per pagina** (Marco, 8/10/2026: nomi veri e tono neutro; la
-  regola sta in `.claude/skills/testi-per-pagina/SKILL.md`). Fatto il primo avvio (approvato riga
-  per riga): passi "Nome utente", "Sito di osservazione", "Percorso dei file", "Seeing
-  (Meteoblue)", "ASTAP"; "il riconoscitore" e' "ASTAP". Restano, una alla volta con Marco, testo
-  di oggi accanto alla proposta: guscio e barra, Archivio, Notti, Meteo, Stanotte, Attrezzatura,
-  Impostazioni (dove "riconoscitore" compare ancora nelle frasi), letture, Da confermare. Con
-  loro: le lettere accentate vere al posto dell'apostrofo ("citta'"), i nomi del codice che
-  dicono ancora `solver`/riconoscitore nei commenti. Da fare a parte: la longitudine accetta "O"
+- **Il linguaggio dell'app -- rivisto** (Marco, 8/10/2026: nomi veri e tono neutro; la regola sta
+  in `.claude/skills/testi-per-pagina/SKILL.md`, le parole in `docs/domini/glossario.md`). Ogni
+  pagina approvata riga per riga, testo di ieri accanto alla proposta: primo avvio, guscio e
+  ricerca, Archivio, Notti, Stanotte, Meteo, Attrezzatura, Impostazioni, Scansioni, scansione
+  nella barra, Da confermare. Parole cambiate in blocco: riconoscitore -> ASTAP; pezzo ->
+  strumento; letture -> scansioni; sito di casa -> sito predefinito; senza tempo -> senza durata;
+  non si sa -> Non disponibile; risposte (del backup) -> backup / conferme; foto del cielo ->
+  Light; il verdetto del Meteo -> Notte buona / incerta / non adatta. **Restano, e sono difetti
+  di codice che i testi nuovi fanno vedere** (un giro di `/ripara`, non una decisione): il backup
+  scrive "1 siti" e un doppio trattino, e senza data la domanda comincia con un punto
+  (`Backup.tsx`); la riga di ASTAP non separa il percorso dalla sua origine
+  (`ImpostazioniRiconoscitore.tsx`); il dialogo "Rimuovi cartella" dice due volte la stessa cosa
+  (`ImpostazioniCartelle.tsx`); nel foglio Altro del telefono una scansione in corso senza fase
+  dice "Inattiva" con "Interrompi" accanto, e una interrotta non lo dice (`Scansiona.tsx`); il
+  motivo di una scansione bloccata esce grezzo dal backend; in Da confermare la domanda del
+  mosaico mette le coordinate in fila con gli oggetti, la risposta gia' data a "frame senza tipo"
+  e' la parola nuda accanto alle scelte, e il nome dell'altro strumento compare tre volte nella
+  riga; "ASTAP trovato" e "Usa questo percorso" valgono per due cose nella stessa pagina; la
+  punteggiatura finale dei titoli d'errore non e' uniforme; nell'elenco dell'Archivio la cella
+  dei filtri dice "Non disponibile" e la carta "Filtri non indicati". Restano anche: le lettere
+  accentate vere nei testi non toccati (ancora "gia'" con l'apostrofo in qualche chiave e in
+  tutta la guida); i titoli dei test e i commenti che dicono ancora pezzo, letture, sito di casa;
+  il glossario vieta "calcolato" e l'app scrive "pixel (calcolato)"; "storico" vale per due cose;
+  `docs/adr/0017` cita il testo vecchio del backup. Da fare a parte: la longitudine accetta "O"
   per ovest oltre a "W". Aperta con Marco: la schermata di chiusura del primo avvio, che Design
-  ha disegnato "da decidere". Design va avanti sul primo avvio solo dopo il linguaggio (Marco). Il punto del cielo dei
-  pannelli e' uscito dalla carta (Marco, 8/10/2026, come nella tavola): li distingue il numero.
-  Restano
-  dall'audit della 1a, non bloccanti: `oreDi`/`senzaTempo` (`RigaDellArchivio.tsx`) ripetono la
-  regola di `TempoDellePose`, composta a mano in carta, elenco e pannelli; il nome "tuo"
-  (`as-nome-oggetto--utente`) si deduce da `panels`, e l'API non lo dice; sul telefono l'elenco
-  impilato mostra tre "non si sa" senza dire di cosa (il v31 non legge `data-etichetta`) e il
-  foglio scrive " frame" da CSS, fuori dalla traduzione; lo scheletro porta `aria-label` su un
-  `div` senza ruolo; l'errore mostra il messaggio grezzo del browser; nella carta stretta
-  "· N senza tempo" va a capo dal punto; le colonne si chiamano ancora "Etichette" e "Tempo".
+  ha disegnato "da decidere". Design riparte sul primo avvio coi nomi nuovi.
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio (v31-v32, montato l'8/10), il primo avvio (Marco, 8/10:
   "anche il wizard bisogna rifare"; brief in `handoff/design-primo-avvio.md`), Da confermare, Attrezzatura. Il brief di ognuna si

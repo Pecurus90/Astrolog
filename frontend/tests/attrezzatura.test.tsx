@@ -68,9 +68,9 @@ describe("l Attrezzatura", () => {
     await apriAttrezzatura()
 
     const telescopi = await screen.findByRole("list", { name: /telescopi/i })
-    expect(telescopi.textContent).toMatch(/si sta contando/)
-    expect(telescopi.textContent).not.toMatch(/non dicono/)
-    expect(screen.getByRole("list", { name: /ruote/i }).textContent).toMatch(/non dicono/)
+    expect(telescopi.textContent).toMatch(/conteggio in corso/)
+    expect(telescopi.textContent).not.toMatch(/non indicato nei file/)
+    expect(screen.getByRole("list", { name: /ruote/i }).textContent).toMatch(/non indicato nei file/)
   })
 
   it("il pixel ricavato dal cielo si dice ricavato, e quello dei file vince", async () => {
@@ -87,11 +87,11 @@ describe("l Attrezzatura", () => {
 
     const camere = await screen.findByRole("list", { name: /camere/i })
     expect(within(camere).getByText(/ATR2600M/).closest("li")?.textContent).toMatch(
-      /pixel 3,8 micron, ricavato dal cielo/,
+      /pixel 3,8 \u00b5m \(calcolato\)/,
     )
     const detto = within(camere).getByText(/ASI2600MM/).closest("li")?.textContent
-    expect(detto).toMatch(/pixel 3,76 micron/)
-    expect(detto).not.toMatch(/ricavato/)
+    expect(detto).toMatch(/pixel 3,76 \u00b5m/)
+    expect(detto).not.toMatch(/calcolato/)
   })
 
   it("un corredo dice quanto cielo inquadra", async () => {
@@ -125,7 +125,7 @@ describe("l Attrezzatura", () => {
     await apriAttrezzatura()
 
     const corredi = await screen.findByRole("list", { name: /corredi/i })
-    expect(corredi.textContent).toMatch(/quando l'app avra' riconosciuto/i)
+    expect(corredi.textContent).toMatch(/campo non ancora disponibile/i)
     expect(corredi.textContent).not.toMatch(/arcosecondi/i)
   })
 
@@ -136,8 +136,9 @@ describe("l Attrezzatura", () => {
     )
     await apriAttrezzatura()
     const elenco = await screen.findByRole("list", { name: /corredi/i })
-    fireEvent.click(within(elenco).getByRole("button", { name: /scegli la montatura/i }))
-    fireEvent.change(screen.getByLabelText(/^montatura/i), { target: { value: "2" } })
+    fireEvent.click(within(elenco).getByRole("button", { name: /^seleziona montatura$/i }))
+    // la tendina, non la regione: anche la scheda ora si chiama "Montatura di ..."
+    fireEvent.change(screen.getByRole("combobox", { name: /^montatura/i }), { target: { value: "2" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
     await waitFor(() => expect(scritture()).toHaveLength(1))
     expect(scritture()[0]?.url).toContain("/api/v1/gear/rigs/10/mount")
@@ -151,9 +152,9 @@ describe("l Attrezzatura", () => {
     )
     await apriAttrezzatura()
     const elenco = await screen.findByRole("list", { name: /corredi/i })
-    expect(elenco.textContent).toContain("sulla EQ6-R")
-    fireEvent.click(within(elenco).getByRole("button", { name: /scegli la montatura/i }))
-    fireEvent.change(screen.getByLabelText(/^montatura/i), { target: { value: "" } })
+    expect(elenco.textContent).toContain("su EQ6-R")
+    fireEvent.click(within(elenco).getByRole("button", { name: /^seleziona montatura$/i }))
+    fireEvent.change(screen.getByRole("combobox", { name: /^montatura/i }), { target: { value: "" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
     await waitFor(() => expect(scritture()).toHaveLength(1))
     expect(scritture()[0]?.corpo).toEqual({ mount_id: null })
@@ -163,7 +164,7 @@ describe("l Attrezzatura", () => {
     attrezzatura({ instruments: [OTTICA] })
     await apriAttrezzatura()
     const elenco = await screen.findByRole("list", { name: /corredi/i })
-    expect(within(elenco).queryByRole("button", { name: /scegli la montatura/i })).toBeNull()
+    expect(within(elenco).queryByRole("button", { name: /^seleziona montatura$/i })).toBeNull()
   })
 
   it("una montatura portata dalle pose ha le sue ore", async () => {
@@ -172,7 +173,7 @@ describe("l Attrezzatura", () => {
     })
     await apriAttrezzatura()
     const montature = await screen.findByRole("list", { name: /montature/i })
-    expect(montature.textContent).not.toMatch(/nessun corredo la porta/i)
+    expect(montature.textContent).not.toMatch(/non associata a un corredo/i)
     expect(montature.textContent).toMatch(/10 h/)
   })
 
@@ -180,7 +181,7 @@ describe("l Attrezzatura", () => {
     attrezzatura({ instruments: [OTTICA, { ...MONTATURA, frames: 0, integration_s: 0, untimed: 0, nights: 0 }] })
     await apriAttrezzatura()
     const montature = await screen.findByRole("list", { name: /montature/i })
-    expect(montature.textContent).toMatch(/nessun corredo la porta ancora/i)
+    expect(montature.textContent).toMatch(/non associata a un corredo/i)
   })
 
   it("la montatura dice perche' non ha ore", async () => {
@@ -188,17 +189,17 @@ describe("l Attrezzatura", () => {
     await apriAttrezzatura()
 
     const montature = await screen.findByRole("list", { name: /montature/i })
-    expect(montature.textContent).toMatch(/nessun corredo la porta ancora/i)
+    expect(montature.textContent).toMatch(/non associata a un corredo/i)
     expect(montature.textContent).not.toMatch(/\b0 h\b/)
-    expect(montature.textContent).toContain("20") // la scheda pero' si legge: regge 20 kg
+    expect(montature.textContent).toContain("20") // la scheda pero' si legge: carico 20 kg
   })
 
   it("a mani vuote dice cosa fare, non nessun risultato", async () => {
     attrezzatura({ instruments: [], rigs: [], filters: [] })
     await apriAttrezzatura()
 
-    expect(await screen.findByText(/non so ancora con cosa riprendi/i)).toBeDefined()
-    expect(screen.getByRole("link", { name: /aggiungi una cartella/i })).toBeDefined()
+    expect(await screen.findByText(/^nessuna attrezzatura$/i)).toBeDefined()
+    expect(screen.getByRole("link", { name: /^aggiungi cartella$/i })).toBeDefined()
   })
 
   it("se l attrezzatura non si legge lo dice, invece di sembrare vuota", async () => {
@@ -212,7 +213,7 @@ describe("l Attrezzatura", () => {
     })
     await apriAttrezzatura()
 
-    expect(await screen.findByText(/non sono riuscito a leggere l'attrezzatura/i)).toBeDefined()
+    expect(await screen.findByText(/attrezzatura non disponibile/i)).toBeDefined()
   })
 })
 
@@ -224,7 +225,7 @@ describe("i gesti sull attrezzatura", () => {
     const riga = within(elenco)
       .getAllByRole("listitem")
       .find((l) => nomeDelPezzo.test(l.textContent ?? ""))
-    fireEvent.click(within(riga as HTMLElement).getByRole("button", { name: /correggi/i }))
+    fireEvent.click(within(riga as HTMLElement).getByRole("button", { name: /^modifica$/i }))
   }
 
   it("correggo la scheda di un pezzo dalla pagina in cui lo guardo", async () => {
@@ -257,7 +258,7 @@ describe("i gesti sull attrezzatura", () => {
     await apriAttrezzatura()
     await apriLaScheda(/montature/i, /EQ6-R/)
 
-    expect(screen.getByLabelText(/carico che regge/i)).toBeDefined()
+    expect(screen.getByLabelText(/carico utile/i)).toBeDefined()
     expect(screen.queryByLabelText(/apertura/i)).toBeNull()
   })
 
@@ -271,7 +272,7 @@ describe("i gesti sull attrezzatura", () => {
     await apriAttrezzatura()
     await apriLaScheda(/camere/i, /ASI2600MM/)
 
-    const colore = screen.getByLabelText(/colore/i)
+    const colore = screen.getByLabelText(/tipo di sensore/i)
     fireEvent.change(colore, { target: { value: "mono" } })
 
     expect((colore as HTMLSelectElement).value).toBe("mono")
@@ -285,7 +286,7 @@ describe("i gesti sull attrezzatura", () => {
     )
     await apriAttrezzatura()
     await apriLaScheda(/telescopi/i, /^TS 130 APO/)
-    fireEvent.change(screen.getByLabelText(/lo stesso pezzo di/i), { target: { value: "5" } })
+    fireEvent.change(screen.getByLabelText(/^unisci a/i), { target: { value: "5" } })
     // scelta l'unione, la scheda si nasconde: non partirebbe, e si perderebbe in silenzio
     expect(screen.queryByLabelText(/apertura/i)).toBeNull()
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
@@ -304,7 +305,7 @@ describe("i gesti sull attrezzatura", () => {
     await apriAttrezzatura()
     await apriLaScheda(/telescopi/i, /^TS 130 APO/)
     fireEvent.change(screen.getByLabelText(/^nome/i), { target: { value: "Pippo" } })
-    const unione = screen.getByLabelText(/lo stesso pezzo di/i)
+    const unione = screen.getByLabelText(/^unisci a/i)
     fireEvent.change(unione, { target: { value: "5" } })
     fireEvent.change(unione, { target: { value: "" } })
     expect(screen.getByLabelText(/^nome/i)).toHaveProperty("value", "TS 130 APO")
@@ -318,7 +319,7 @@ describe("i gesti sull attrezzatura", () => {
     attrezzatura()
     await apriAttrezzatura()
     await apriLaScheda(/montature/i, /EQ6-R/)
-    expect(screen.queryByLabelText(/lo stesso pezzo di/i)).toBeNull()
+    expect(screen.queryByLabelText(/^unisci a/i)).toBeNull()
   })
 
   it("do un nome a un corredo", async () => {
@@ -328,8 +329,9 @@ describe("i gesti sull attrezzatura", () => {
     )
     await apriAttrezzatura()
     const elenco = await screen.findByRole("list", { name: /corredi/i })
-    fireEvent.click(within(elenco).getByRole("button", { name: /dagli un nome/i }))
-    fireEvent.change(screen.getByLabelText(/^nome/i), { target: { value: "Il piccolo" } })
+    fireEvent.click(within(elenco).getByRole("button", { name: /^rinomina$/i }))
+    // la casella, non la regione: anche la scheda ora si chiama "Nome di ..."
+    fireEvent.change(screen.getByRole("textbox", { name: /^nome/i }), { target: { value: "Il piccolo" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
     await waitFor(() => expect(scritture()).toHaveLength(1))
     expect(scritture()[0]?.url).toContain("/api/v1/gear/rigs/10")
@@ -363,7 +365,7 @@ describe("i gesti sull attrezzatura", () => {
     )
     await apriAttrezzatura()
     await apriLaScheda(/filtri/i, /^Ha/)
-    const tendina = screen.getByLabelText(/lo stesso filtro di/i)
+    const tendina = screen.getByLabelText(/^unisci a/i)
     expect(within(tendina).queryByRole("option", { name: "H" })).toBeNull()
     fireEvent.change(tendina, { target: { value: "4" } })
     expect(screen.queryByLabelText(/marca/i)).toBeNull()

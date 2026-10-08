@@ -56,7 +56,7 @@ describe("il primo avvio", () => {
     conTimbro(false)
     await disegna()
     expect(await screen.findByRole("button", { name: /salta/i })).toBeDefined()
-    expect(screen.queryByText(/cose da confermare/)).toBeNull()
+    expect(screen.queryByText(/^da confermare$/)).toBeNull()
   })
 
   it("col timbro l app mostra se stessa e non richiede niente", async () => {
@@ -82,7 +82,7 @@ describe("il primo avvio", () => {
     await disegna()
     const avviso = await screen.findByRole("alert")
     expect(avviso.textContent).toContain("Il servizio non ha risposto")
-    expect(screen.queryByText(/cose da confermare/)).toBeNull()
+    expect(screen.queryByText(/^da confermare$/)).toBeNull()
     expect(screen.queryByRole("button", { name: /salta/i })).toBeNull()
   })
 

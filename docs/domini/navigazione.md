@@ -21,7 +21,7 @@ Le prove del frontend si chiamano col loro titolo; stanno in `frontend/tests/sch
 | Premo Scansiona da dove mi trovo, e la fermo anche da un'altra pagina | *il lavoro si vede e si ferma anche da un altra pagina*, *premere Scansiona chiede di leggere TUTTE le cartelle*, *il verbo del pulsante lo decide il backend, non la pagina* |
 | Mentre lavora vedo cosa fa, coi numeri veri; quando finisce i conti sono di adesso | *mentre gira si legge cosa sta facendo, coi numeri veri*, *quando il lavoro finisce, il conto si rilegge* |
 | Se la scansione si blocca mi dice perche' e la faccio ripartire | *bloccata, la scansione dice perche' e si fa ripartire dalla barra*, *bloccata, la scansione nel foglio dice perche' e porta dove si guarda* |
-| Cio' che non si e' potuto leggere me lo dice in testa alla pagina, e *Vedi* porta dove si ripara | *le cartelle saltate si dicono, non si buttano*, *una cartella persa mentre la leggeva si dice*, *Vedi porta alle Cartelle solo quando il rifiuto e' delle cartelle* |
+| Cio' che non si e' potuto leggere me lo dice in testa alla pagina, e *Dettagli* porta dove si ripara | *le cartelle saltate si dicono, non si buttano*, *una cartella persa mentre la leggeva si dice*, *Dettagli porta alle Cartelle solo quando il rifiuto e' delle cartelle* |
 | La pastiglia mi dice da dove osservo e apre Stanotte; senza sito mi chiede di sceglierlo | *dice il sito, e apre Stanotte*, *senza sito chiede di sceglierlo* (`stanotte.test.tsx`) |
 | In Stanotte vedo il sito, il suo cielo e la Luna, con l'ora del sito | *dice da dove osservi, che cielo hai e che luna fa*, *l ora e quella del sito, non quella del browser*, *un cielo mai dichiarato si legge, non sparisce*, *una luna che non sorge lo dice a parole*, *una luna che non tramonta lo dice a parole* |
 | Fra piu' siti scelgo quello di stanotte; con uno solo non c'e' scelta | *fra piu' siti, sceglierne un altro lo scrive al backend*, *un sito solo non apre una scelta che non c e* |
@@ -52,18 +52,18 @@ che sta arrivando. Supera "una voce nasce con la sua pagina": il binario e' gia'
 chi lo impara non lo reimpara. I **rimandi dentro le pagine** invece restano: un *Apri la notte*
 non si mostra finche' la pagina che aprirebbe non esiste.
 
-**Impostazioni e' una pagina con dentro le sue sezioni** (Marco, 16/9/2026): Cartelle, Il sito,
-Il riconoscitore, Le letture, Backup, e le altre quando nascono. Ogni sezione ha il suo indirizzo
+**Impostazioni e' una pagina con dentro le sue sezioni** (Marco, 16/9/2026): Cartelle, Siti,
+ASTAP, Scansioni, Backup, e le altre quando nascono. Ogni sezione ha il suo indirizzo
 (`/impostazioni/cartelle`): il tasto indietro funziona e il collegamento si manda.
 
 **La barra in alto dice il titolo della pagina, la scansione e la pastiglia di Stanotte.** La
 pagina non ripete il suo titolo (disegno v18).
-- **La scansione** ha quattro stati: a riposo ("Ultima lettura ... ", *Scansiona*), al lavoro
-  (fase, pista, numeri, *Ferma*), fermata (*Riprendi*), bloccata (il motivo, *Vedi* e il verbo per ripartire). Il verbo lo
+- **La scansione** ha quattro stati: inattiva ("Ultima scansione: ...", *Scansiona*), in corso
+  (fase, pista, numeri, *Interrompi*), interrotta (*Riprendi*), bloccata (il motivo, *Dettagli* e il verbo per ripartire). Il verbo lo
   decide il backend. Sta nel telaio perche' **il lavoro sopravvive alla pagina**: cambiando
   schermata deve restare fermabile. *Riprendi* dopo uno Stop torna a leggere le cartelle rimaste.
 - **Cio' che la scansione non ha potuto fare** -- un rifiuto, una cartella caduta mentre la
-  leggeva, le cartelle saltate -- e' una **riga di stato in testa al corpo**, con *Vedi* che porta
+  leggeva, le cartelle saltate -- e' una **riga di stato in testa al corpo**, con *Dettagli* che porta
   dove si ripara (Marco, 7/10/2026). Tacerlo farebbe sembrare completa una scansione che non lo e'.
 - **La ricerca** ("Cerca oggetto, notte, sito") entra quando cerca davvero, con la sua rotta
   (Marco, 7/10/2026): un campo che non cerca e' una promessa che l'app non mantiene. La rotta

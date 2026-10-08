@@ -196,7 +196,7 @@ describe("il Meteo, la notte", () => {
     const pesano = (await scheda()).querySelector(".as-pesano") as HTMLElement
     const voci = within(pesano).getAllByRole("listitem")
     expect(voci).toHaveLength(1)
-    expect(voci[0]?.textContent).toContain("niente")
+    expect(voci[0]?.textContent).toContain("non adatta")
     expect(voci[0]?.textContent).toContain("Vento dalle 21:00 alle 23:00 \u00b7 2 ore")
   })
 
@@ -204,7 +204,7 @@ describe("il Meteo, la notte", () => {
     conNotti({ ...NOTTE, measures: NOTTE.measures.map((m) => ({ ...m, weighs: false })) })
     await apriMeteo()
 
-    expect((await scheda()).textContent).toContain("Nient'altro pesa sulla notte.")
+    expect((await scheda()).textContent).toContain("Nessun altro fattore.")
   })
 
   it("la fila dice il giorno, il semaforo e le ore serene di ogni notte, e ne apre una alla volta", async () => {
@@ -229,7 +229,7 @@ describe("il Meteo, la notte", () => {
     expect(tendenza.textContent).toContain("8 ore di buio")
     expect(tendenza.textContent).toContain("nuvole al 40% nel buio")
     expect(tendenza.textContent).toContain("accordo dei modelli 2 su 4")
-    expect(tendenza.textContent).toContain("Dalla quarta notte la previsione e' una tendenza")
+    expect(tendenza.textContent).toContain("Dalla quarta notte la previsione \u00e8 una tendenza")
     expect(within(tendenza).queryAllByRole("article")).toHaveLength(0)
   })
 
@@ -242,7 +242,7 @@ describe("il Meteo, la notte", () => {
     conNotti({ ...NOTTE, verdict: null, usable_hours: null, usable_since: null, usable_until: null, window: null, window_hours: 0 })
     await apriMeteo()
     const polo = await scheda()
-    expect(polo.textContent).toContain("Sole sempre su")
+    expect(polo.textContent).toContain("Nessuna notte astronomica")
     expect(polo.querySelector(".as-semaforo--grande")).toBeNull()
     expect(within(polo).queryAllByRole("article")).toHaveLength(0)
   })
@@ -251,7 +251,8 @@ describe("il Meteo, la notte", () => {
     conNotti({ ...NOTTE, verdict: null })
     await apriMeteo()
 
-    expect((await scheda()).textContent).toContain("non si sa")
+    // la parola del verdetto, non quella di una carta: "Non disponibile" lo dicono anche le misure
+    expect((await scheda()).querySelector(".as-meteo__parola")?.textContent).toBe("Non disponibile")
   })
 })
 
@@ -264,7 +265,7 @@ describe("il Meteo, le carte", () => {
     const nomi = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)
     expect(nomi).toEqual([
       "Nuvole", "Nuvole basse", "Vento", "Pioggia", "Seeing", "Aerosol",
-      "Temperatura e rugiada", "Umidita'", "Vento a 700 hPa",
+      "Temperatura e rugiada", "Umidit\u00e0", "Vento a 700 hPa",
     ])
   })
 
@@ -276,7 +277,7 @@ describe("il Meteo, le carte", () => {
     const vento = carta(/^Vento$/)
     expect(vento.textContent).toContain("20")
     expect(vento.textContent).toContain("media nel buio, a 10 m")
-    expect(vento.textContent).toContain("incerta dalle 20:00, niente dalle 21:00")
+    expect(vento.textContent).toContain("incerta dalle 20:00, non adatta dalle 21:00")
     expect(vento.textContent).toContain("raffiche fino a 35 km/h tra le 22:00 e le 23:00")
   })
 
@@ -339,11 +340,11 @@ describe("il Meteo, le carte", () => {
   })
 
   it.each([
-    [8, "piu' forte di 8 notti su 10, qui"],
-    [0, "fra i piu' deboli dell'anno, qui"],
-    [1, "piu' forte di 1 notte su 10, qui"],
-    [10, "fra i piu' forti dell'anno, qui"],
-    [null, "il confronto col solito del sito arriva con piu' notti"],
+    [8, "superiore a 8 notti su 10 in questo sito"],
+    [0, "fra i pi\u00f9 deboli dell'anno in questo sito"],
+    [1, "superiore a 1 notte su 10 in questo sito"],
+    [10, "fra i pi\u00f9 forti dell'anno in questo sito"],
+    [null, "confronto con lo storico non ancora disponibile"],
   ])("il vento a 700 hPa si legge accanto al solito del sito (%s)", async (decimi, frase) => {
     conNotti({ ...NOTTE, wind_700hpa_tenths: decimi })
     await apriMeteo()
@@ -360,7 +361,7 @@ describe("il Meteo, il seeing", () => {
 
     await scheda()
     const seeing = carta(/^Seeing$/)
-    expect(seeing.textContent).toContain("Per il seeing serve una chiave Meteoblue, gratuita.")
+    expect(seeing.textContent).toContain("Il seeing richiede una chiave API Meteoblue (gratuita).")
     expect(within(seeing).getByRole("link", { name: /apri le impostazioni/i }).getAttribute("href")).toBe("/impostazioni/servizi")
   })
 
@@ -369,7 +370,7 @@ describe("il Meteo, il seeing", () => {
     await apriMeteo()
 
     await scheda()
-    expect(carta(/^Seeing$/).textContent).toContain("Meteoblue non accetta la chiave")
+    expect(carta(/^Seeing$/).textContent).toContain("Chiave Meteoblue non valida o scaduta.")
   })
 
   it("con la chiave appena messa e Meteoblue non ancora chiesto non chiede la chiave", async () => {
@@ -377,7 +378,7 @@ describe("il Meteo, il seeing", () => {
     await apriMeteo()
 
     await scheda()
-    expect(screen.queryByText(/serve una chiave Meteoblue/)).toBeNull()
+    expect(screen.queryByText(/richiede una chiave (API )?Meteoblue/i)).toBeNull()
   })
 
   it("Meteoblue che tace la prima volta non promette un seeing di prima che non c'e'", async () => {
@@ -385,14 +386,14 @@ describe("il Meteo, il seeing", () => {
     await apriMeteo()
 
     await scheda()
-    expect(screen.queryByText(/resta il seeing di prima/)).toBeNull()
+    expect(screen.queryByText(/dati precedenti/)).toBeNull()
   })
 
   it("Meteoblue che tace lascia il seeing di prima, e lo dice", async () => {
     meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE], seeing: { key: true, source: "meteoblue", meteoblue: "unreachable" } })
     await apriMeteo()
 
-    expect(await screen.findByText(/resta il seeing di prima/)).toBeDefined()
+    expect(await screen.findByText(/aggiornamento del seeing non riuscito: dati precedenti/)).toBeDefined()
   })
 
   it("un seeing che copre solo parte della notte lo dice nella media e nel picco", async () => {
@@ -406,7 +407,7 @@ describe("il Meteo, il seeing", () => {
     await scheda()
     const testo = carta(/^Seeing$/).textContent
     expect(testo).toContain("media fino alle 02:00, Meteoblue")
-    expect(testo).toContain("dalle 02:00 non fornito")
+    expect(testo).toContain("dalle 02:00 non disponibile")
   })
 })
 
@@ -418,8 +419,8 @@ describe("il Meteo, la testa", () => {
     await scheda()
     const testa = document.querySelector(".as-meteo__testa") as HTMLElement
     expect(testa.textContent).toContain("meteo a Casa")
-    expect(testa.textContent).toContain("Previsione arrivata il")
-    expect(testa.textContent).toContain("ore del sito")
+    expect(testa.textContent).toContain("Previsione del")
+    expect(testa.textContent).toContain("ora locale del sito")
   })
 
   it("lo switch salva il modello scelto e rilegge, anche Stanotte", async () => {
@@ -457,7 +458,7 @@ describe("il Meteo, la testa", () => {
     })
     await apriMeteo()
 
-    const riga = await screen.findByText(/senza risposta: questa e' la previsione delle/)
+    const riga = await screen.findByText(/^Aggiornamento delle \S+ non riuscito\. Previsione delle/)
     expect(riga.closest(".as-avviso")?.querySelector(".as-bottone--tenue")?.textContent).toMatch(/aggiorna/i)
   })
 
@@ -465,7 +466,7 @@ describe("il Meteo, la testa", () => {
     meteo({ last_request: { at: "2026-09-25T12:00:00.000Z", status: "unreachable" } })
     await apriMeteo()
 
-    expect(await screen.findByText(/senza risposta: non c'e' ancora nessuna previsione/)).toBeDefined()
+    expect(await screen.findByText(/^Aggiornamento delle \S+ non riuscito\. Nessuna previsione disponibile/)).toBeDefined()
   })
 
   it("dopo Aggiorna senza risposta la pagina rilegge e la riga compare", async () => {
@@ -474,13 +475,13 @@ describe("il Meteo, la testa", () => {
     })
     await apriMeteo()
     await scheda()
-    expect(screen.queryByText(/senza risposta/)).toBeNull()
+    expect(screen.queryByText(/^Aggiornamento delle \S+ non riuscito/)).toBeNull()
 
     meteo({ fetched_at: "2026-09-25T06:00:00.000Z", last_request: { at: "2026-09-25T12:00:00.000Z", status: "unreachable" }, nights: [NOTTE] }, {
       "POST /api/v1/weather/refresh": { stato: 200, corpo: { status: "unreachable" } },
     })
     fireEvent.click(screen.getAllByRole("button", { name: /^aggiorna$/i })[0] as HTMLElement)
-    expect(await screen.findByText(/senza risposta: questa e' la previsione delle/)).toBeDefined()
+    expect(await screen.findByText(/^Aggiornamento delle \S+ non riuscito\. Previsione delle/)).toBeDefined()
   })
 
   it("se l'ultima richiesta e' andata bene non dice niente", async () => {
@@ -488,7 +489,7 @@ describe("il Meteo, la testa", () => {
     await apriMeteo()
 
     await scheda()
-    expect(screen.queryByText(/senza risposta/)).toBeNull()
+    expect(screen.queryByText(/^Aggiornamento delle \S+ non riuscito/)).toBeNull()
   })
 
   it("dopo il pulsante anche Stanotte rilegge la notte in corso", async () => {
@@ -508,15 +509,15 @@ describe("il Meteo, quando manca qualcosa", () => {
     meteo({ site: null })
     await apriMeteo()
 
-    expect(await screen.findByText(/manca il sito di casa/i)).toBeDefined()
-    expect(within(screen.getByRole("main")).getByRole("link", { name: /aggiungi il sito/i })).toBeDefined()
+    expect(await screen.findByText(/sito predefinito mancante/i)).toBeDefined()
+    expect(within(screen.getByRole("main")).getByRole("link", { name: /^aggiungi sito$/i })).toBeDefined()
   })
 
   it("prima della prima previsione lo dice, invece di un elenco vuoto muto", async () => {
     meteo({})
     await apriMeteo()
 
-    expect(await screen.findByText(/non e' ancora arrivata nessuna previsione/i)).toBeDefined()
+    expect(await screen.findByText(/^nessuna previsione disponibile\.$/i)).toBeDefined()
     // nessuna fonte ha ancora scritto niente: nessuna si cita
     expect(screen.queryByRole("link", { name: "Weather data by Open-Meteo.com" })).toBeNull()
     expect(screen.queryByRole("tablist", { name: /notti/i })).toBeNull()
@@ -526,16 +527,16 @@ describe("il Meteo, quando manca qualcosa", () => {
     meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [] })
     await apriMeteo()
 
-    expect(await screen.findByText(/questo modello non ha notti/i)).toBeDefined()
+    expect(await screen.findByText(/nessuna notte disponibile per questo modello/i)).toBeDefined()
   })
 
   it("un sito di casa senza fuso orario lo dice, e porta a sistemarlo", async () => {
     meteo({ missing: "no_timezone" })
     await apriMeteo()
 
-    expect(await screen.findByText(/non ha un fuso orario/i)).toBeDefined()
-    expect(within(screen.getByRole("main")).getByRole("link", { name: /sistema il sito/i })).toBeDefined()
-    expect(screen.queryByText(/non e' ancora arrivata/i)).toBeNull()
+    expect(await screen.findByText(/fuso orario del sito non riconosciuto/i)).toBeDefined()
+    expect(within(screen.getByRole("main")).getByRole("link", { name: /^modifica sito$/i })).toBeDefined()
+    expect(screen.queryByText(/nessuna previsione disponibile/i)).toBeNull()
   })
 })
 
@@ -593,7 +594,7 @@ describe("il Meteo, il cielo", () => {
     const vento = within(cielo()).getByRole("button", { name: "vento" })
     expect(vento.getAttribute("aria-pressed")).toBe("true")
     expect(cielo().querySelector("svg")?.hasAttribute("data-dx-acceso")).toBe(true)
-    expect(cielo().querySelector(".as-scala__parola--niente")?.textContent).toBe("niente dalle 22")
+    expect(cielo().querySelector(".as-scala__parola--niente")?.textContent).toBe("non adatta dalle 22")
     fireEvent.click(within(cielo()).getByRole("button", { name: "pioggia" }))
     expect(within(cielo()).getByRole("button", { name: "pioggia" }).getAttribute("aria-pressed")).toBe("true")
     expect(cielo().querySelector(".as-scala__parola--niente")).toBeNull()
@@ -605,7 +606,7 @@ describe("il Meteo, il cielo", () => {
     await apriMeteo()
 
     await scheda()
-    expect(cielo().querySelector(".as-scala__parola--niente")?.textContent).toBe("niente")
+    expect(cielo().querySelector(".as-scala__parola--niente")?.textContent).toBe("non adatta")
   })
 
   it("il seeing senza chiave c'e' fra le metriche ma non si sceglie, e dice perche'", async () => {
@@ -615,17 +616,17 @@ describe("il Meteo, il cielo", () => {
     await scheda()
     const seeing = within(cielo()).getAllByRole("button", { name: "seeing" })[0] as HTMLElement
     expect(seeing.getAttribute("aria-disabled")).toBe("true")
-    fireEvent.click(within(cielo()).getByRole("button", { name: /a destra/i }))
-    expect(within(cielo()).getByRole("menuitemradio", { name: /seeing/ }).textContent).toContain("serve una chiave Meteoblue")
+    fireEvent.click(within(cielo()).getByRole("button", { name: /^scala di destra/i }))
+    expect(within(cielo()).getByRole("menuitemradio", { name: /seeing/ }).textContent).toContain("Richiede una chiave Meteoblue")
   })
 
-  it("un'ora che il servizio non da' sulla scala di destra e' un tratteggio con \"non fornito\"", async () => {
+  it("un'ora che il servizio non da' sulla scala di destra e' un tratteggio con \"Non disponibile\"", async () => {
     conNotti(NOTTE)
     await apriMeteo()
 
     await scheda()
     // il vento delle 22 manca nella notte di prova
-    expect(within(cielo().querySelector("svg") as unknown as HTMLElement).getByText("non fornito")).toBeDefined()
+    expect(within(cielo().querySelector("svg") as unknown as HTMLElement).getByText("Non disponibile")).toBeDefined()
   })
 
   it("la pioggia a destra: barre col colore dell'ora, e l'ora non data a tratteggio, non come uno zero", async () => {
@@ -638,11 +639,11 @@ describe("il Meteo, il cielo", () => {
     fireEvent.click(within(cielo()).getByRole("button", { name: "pioggia" }))
     const svg = cielo().querySelector("svg") as SVGElement
     expect(svg.querySelectorAll(".as-scala__barra.as-scala__tinta--incerta")).toHaveLength(1)
-    expect(within(svg as unknown as HTMLElement).getByText("non fornito")).toBeDefined()
+    expect(within(svg as unknown as HTMLElement).getByText("Non disponibile")).toBeDefined()
   })
 
   it("la condensa a destra e' sull'asse della temperatura: la soglia dello scarto non vi si disegna", async () => {
-    // un asse da 0 a 12 °C contiene il 3 della soglia, che li' sarebbe 3 °C d'aria
+    // un asse da 0 a 12 gradi contiene il 3 della soglia, che li' sarebbe 3 gradi d'aria
     const misure = NOTTE.measures.map((m) => (m.code === "temperature" ? { ...m, axis_min: 0 } : m))
     conNotti({ ...NOTTE, measures: [...misure, misura("condensation", { level: "go" })] })
     await apriMeteo()
@@ -697,7 +698,7 @@ describe("il Meteo, il cielo", () => {
 })
 
 describe("il Meteo, una carta a un'ora", () => {
-  it("le frecce sulle barrette portano la carta a un'ora e ce la lasciano; × notte la riporta", async () => {
+  it("le frecce sulle barrette portano la carta a un'ora e ce la lasciano; \u00d7 la riporta alla notte", async () => {
     conNotti(NOTTE)
     await apriMeteo()
 
@@ -711,7 +712,7 @@ describe("il Meteo, una carta a un'ora", () => {
     expect(vento.querySelectorAll(".as-parametro__barra[data-spento]").length).toBeGreaterThan(0)
     // le altre carte restano sulla notte
     expect(carta(/^Nuvole$/).textContent).toContain("media nel buio")
-    fireEvent.click(within(vento).getByRole("button", { name: /torna alla notte/i }))
+    fireEvent.click(within(vento).getByRole("button", { name: /^torna al riepilogo della notte$/i }))
     expect(vento.textContent).toContain("media nel buio, a 10 m")
     expect(vento.hasAttribute("data-a-ora")).toBe(false)
   })
@@ -723,7 +724,7 @@ describe("il Meteo, una carta a un'ora", () => {
     await scheda()
     const temperatura = carta(/^Temperatura/)
     fireEvent.keyDown(within(temperatura).getByRole("slider"), { key: "Home" })
-    expect(temperatura.textContent).toContain("alle 19:00 · rugiada 4 °C")
+    expect(temperatura.textContent).toContain("alle 19:00 \u00b7 rugiada 4 \u00b0C")
     const vento = carta(/^Vento$/)
     fireEvent.keyDown(within(vento).getByRole("slider"), { key: "ArrowRight" })
     expect(vento.textContent).toContain("raffiche 10 km/h")
@@ -764,7 +765,7 @@ describe("il Meteo, rifiniture del cielo e delle carte", () => {
     expect(within(carta(/^Vento$/)).getByRole("slider").hasAttribute("data-meteo-carta-piano")).toBe(true)
   })
 
-  it("un'ora senza valore dice \"non fornito\" senza l'unita' accanto", async () => {
+  it("un'ora senza valore dice \"Non disponibile\" senza l'unita' accanto", async () => {
     conNotti(NOTTE)
     await apriMeteo()
 
@@ -772,6 +773,6 @@ describe("il Meteo, rifiniture del cielo e delle carte", () => {
     const vento = carta(/^Vento$/)
     fireEvent.keyDown(within(vento).getByRole("slider"), { key: "Home" })
     fireEvent.keyDown(within(vento).getByRole("slider"), { key: "ArrowRight" })
-    expect(vento.querySelector(".as-parametro__valore")?.textContent).toBe("non fornito")
+    expect(vento.querySelector(".as-parametro__valore")?.textContent).toBe("Non disponibile")
   })
 })

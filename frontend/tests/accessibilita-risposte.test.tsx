@@ -141,15 +141,15 @@ describe("l accessibilita di dove si risponde", () => {
     const { container } = await disegna()
     const barra = await screen.findByRole("navigation", { name: /pagine/i })
     fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
-    await screen.findByText(/le cartelle che leggo/i)
+    await screen.findByRole("heading", { level: 2, name: /^cartelle$/i })
     expect(await violazioni(container)).toEqual([])
 
-    fireEvent.click((await screen.findAllByRole("button", { name: /togli/i }))[0]!)
+    fireEvent.click((await screen.findAllByRole("button", { name: /^rimuovi$/i }))[0]!)
     await screen.findByRole("dialog")
     expect(await violazioni(container)).toEqual([])
   })
 
-  it("e nemmeno Il sito, con la scheda aperta e la scala del cielo dentro", async () => {
+  it("e nemmeno Siti, con la scheda aperta e la scala del cielo dentro", async () => {
     // La scala e' un `radiogroup` scritto a mano, con una fermata sola per il tabulatore: e' il
     // pezzo che axe prende se un `role` resta spaiato o se un nome manca.
     rispondi({
@@ -189,11 +189,11 @@ describe("l accessibilita di dove si risponde", () => {
     const { container } = await disegna()
     const barra = await screen.findByRole("navigation", { name: /pagine/i })
     fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
-    fireEvent.click(await screen.findByRole("link", { name: /^il sito$/i }))
-    await screen.findByText(/i tuoi siti/i)
+    fireEvent.click(await screen.findByRole("link", { name: /^siti$/i }))
+    await screen.findByText(/^siti di osservazione$/i)
     expect(await violazioni(container)).toEqual([])
 
-    fireEvent.click(await screen.findByRole("button", { name: /correggi Cortina/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^modifica Cortina$/i }))
     await screen.findByRole("radiogroup")
     expect(await violazioni(container)).toEqual([])
   })
@@ -218,17 +218,17 @@ describe("l accessibilita di dove si risponde", () => {
     const barra = await screen.findByRole("navigation", { name: /pagine/i })
     fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
     fireEvent.click(await screen.findByRole("link", { name: /^astap$/i }))
-    await screen.findByText(/non trovo astap/i)
+    await screen.findByText(/^astap non trovato\./i)
     expect(await violazioni(container)).toEqual([])
 
     // La proposta porta dentro di se' cosa farci: e' un avviso con un'azione, ed e' la forma
     // dove un nome che manca non si vede a schermo.
-    fireEvent.click(screen.getByRole("button", { name: /cercalo tu/i }))
-    await screen.findByText(/ne ho trovato uno/i)
+    fireEvent.click(screen.getByRole("button", { name: /^cerca astap$/i }))
+    await screen.findByText(/^astap trovato$/i)
     expect(await violazioni(container)).toEqual([])
   })
 
-  it("e nemmeno Le letture, con una ricevuta per ogni esito", async () => {
+  it("e nemmeno Scansioni, con una ricevuta per ogni esito", async () => {
     // Tre righe con tre esiti diversi: lo stato e' colore **piu'** parola, e una riga senza la
     // parola sarebbe leggibile solo da chi distingue il verde dal rosso.
     const base = {
@@ -274,12 +274,12 @@ describe("l accessibilita di dove si risponde", () => {
     const { container } = await disegna()
     const barra = await screen.findByRole("navigation", { name: /pagine/i })
     fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
-    fireEvent.click(await screen.findByRole("link", { name: /le letture/i }))
+    fireEvent.click(await screen.findByRole("link", { name: /^scansioni$/i }))
     await screen.findAllByRole("listitem")
     // e col pannello aperto: e' il bottone che dichiara cosa governa, e una regione in piu' dentro
     // una riga -- due cose che axe guarda e che chiuso non ci sono
-    fireEvent.click((await screen.findAllByRole("button", { name: /rimasto fuori/i }))[0]!)
-    await screen.findByText(/non e' un FITS/i)
+    fireEvent.click((await screen.findAllByRole("button", { name: /^file esclusi$/i }))[0]!)
+    await screen.findByText(/un FITS o header non valido/i)
     expect(await violazioni(container)).toEqual([])
   })
 

@@ -97,10 +97,10 @@ describe("lo scheletro", () => {
     const alto = await screen.findByRole("banner")
     expect(await within(alto).findByRole("heading", { level: 1, name: "Da confermare" })).toBeDefined()
     // "si vede" e' meta' della promessa: la fase e i suoi numeri devono essere li' anche qui
-    expect(await within(alto).findByText(/leggo i file/)).toBeDefined()
+    expect(await within(alto).findByText(/Lettura dei file/)).toBeDefined()
     expect(within(alto).getByText(/3 su 14/)).toBeDefined()
 
-    fireEvent.click(within(alto).getByRole("button", { name: "Ferma" }))
+    fireEvent.click(within(alto).getByRole("button", { name: "Interrompi" }))
     await waitFor(() =>
       expect(scritture().some((s) => s.url.endsWith("/api/v1/pipeline/stop"))).toBe(true),
     )
@@ -113,7 +113,7 @@ describe("lo scheletro", () => {
     await disegna()
     const alto = await screen.findByRole("banner")
     expect(await within(alto).findByText("solver assente")).toBeDefined()
-    expect(within(alto).getByRole("link", { name: "Vedi" }).getAttribute("href")).toBe("/impostazioni/letture")
+    expect(within(alto).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/letture")
     fireEvent.click(within(alto).getByRole("button", { name: "Scansiona" }))
     await waitFor(() => expect(scritture().some((s) => s.url.endsWith("/api/v1/scan"))).toBe(true))
   })
@@ -128,10 +128,10 @@ describe("lo scheletro", () => {
     })
     await disegna()
     const corpo = await screen.findByRole("main")
-    const testo = await within(corpo).findByText(/non si e' potuta leggere fino in fondo/)
+    const testo = await within(corpo).findByText(/Lettura di una cartella non completata/)
     const riga = testo.closest(".as-avviso") as HTMLElement
     expect(riga.classList.contains("as-avviso--pagina")).toBe(true)
-    expect(within(riga).getByRole("link", { name: "Vedi" }).getAttribute("href")).toBe("/impostazioni/letture")
+    expect(within(riga).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/letture")
   })
 
   it("le cartelle saltate si dicono, non si buttano", async () => {
@@ -149,27 +149,27 @@ describe("lo scheletro", () => {
     const testo = await within(corpo).findByText(/\/\/nas\/foto/)
     const riga = testo.closest(".as-avviso") as HTMLElement
     expect(riga.classList.contains("as-avviso--pagina")).toBe(true)
-    expect(within(riga).getByRole("link", { name: "Vedi" }).getAttribute("href")).toBe("/impostazioni/cartelle")
+    expect(within(riga).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/cartelle")
   })
 
-  it("Vedi porta alle Cartelle solo quando il rifiuto e' delle cartelle", async () => {
+  it("Dettagli porta alle Cartelle solo quando il rifiuto e' delle cartelle", async () => {
     // "C'e' gia' un lavoro in corso" non si ripara nelle Cartelle: mandarci l'utente vorrebbe
     // dire fargli cercare un guasto dove non c'e'.
     rispondi({ ...mappa(), "/api/v1/scan": { stato: 409, corpo: { detail: { code: "worker_busy" } } } })
     await disegna()
     fireEvent.click(await screen.findByRole("button", { name: "Scansiona" }))
     const corpo = await screen.findByRole("main")
-    const occupato = (await within(corpo).findByText(/gia' un lavoro in corso/)).closest(".as-avviso") as HTMLElement
-    expect(within(occupato).queryByRole("link", { name: "Vedi" })).toBeNull()
+    const occupato = (await within(corpo).findByText(/Operazione gi\u00e0 in corso/)).closest(".as-avviso") as HTMLElement
+    expect(within(occupato).queryByRole("link", { name: "Dettagli" })).toBeNull()
     pulisci()
 
     rispondi({ ...mappa(), "/api/v1/scan": { stato: 409, corpo: { detail: { code: "no_folders" } } } })
     await disegna()
     fireEvent.click(await screen.findByRole("button", { name: "Scansiona" }))
-    const senza = (await within(await screen.findByRole("main")).findByText(/nessuna cartella da leggere/)).closest(
+    const senza = (await within(await screen.findByRole("main")).findByText(/Nessuna cartella da leggere/)).closest(
       ".as-avviso",
     ) as HTMLElement
-    expect(within(senza).getByRole("link", { name: "Vedi" }).getAttribute("href")).toBe("/impostazioni/cartelle")
+    expect(within(senza).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/cartelle")
   })
 
   it("una voce senza pagina apre la pagina che dice che sta arrivando", async () => {
@@ -216,7 +216,7 @@ describe("lo scheletro", () => {
     // case, ed e' l'errore che il vecchio aveva fatto.
     app({ ...FERMO, action: "stop", worker: { ...FERMO.worker, state: "running", stage: "solve" } })
     await disegna()
-    expect(await screen.findByRole("button", { name: "Ferma" })).toBeDefined()
+    expect(await screen.findByRole("button", { name: "Interrompi" })).toBeDefined()
     expect(screen.queryByRole("button", { name: "Scansiona" })).toBeNull()
   })
 
@@ -235,7 +235,7 @@ describe("lo scheletro", () => {
     })
     await disegna()
     const alto = await screen.findByRole("banner")
-    expect(await within(alto).findByText(/cerco il cielo/)).toBeDefined()
+    expect(await within(alto).findByText(/Plate solving/)).toBeDefined()
     expect(await within(alto).findByText(/120 su 337/)).toBeDefined()
   })
 
@@ -335,7 +335,7 @@ describe("il foglio Altro", () => {
     fireEvent.click(await screen.findByRole("button", { name: /^altro/i }))
     const foglio = await screen.findByRole("dialog", { name: "Altro" })
     expect(await within(foglio).findByText("solver assente")).toBeDefined()
-    expect(within(foglio).getByText("bloccata")).toBeDefined()
-    expect(within(foglio).getByRole("link", { name: "Vedi" }).getAttribute("href")).toBe("/impostazioni/letture")
+    expect(within(foglio).getByText("Bloccata")).toBeDefined()
+    expect(within(foglio).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/letture")
   })
 })

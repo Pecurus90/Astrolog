@@ -57,10 +57,10 @@ describe("Impostazioni / Servizi", () => {
 
     fireEvent.change(screen.getByLabelText(/chiave meteoblue/i), { target: { value: "segretissima1234" } })
     cambia({ "PUT /api/v1/weather/meteoblue-key": { stato: 200, corpo: { status: "ok", hint: "...1234" } }, ...comune("...1234") })
-    fireEvent.click(screen.getByRole("button", { name: /prova e salva/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^verifica e salva$/i }))
 
-    expect(await screen.findByText(/la chiave vale/i)).toBeDefined()
-    expect(await screen.findByText(/finisce con \.\.\.1234/i)).toBeDefined()
+    expect(await screen.findByText(/chiave valida: seeing attivo/i)).toBeDefined()
+    expect(await screen.findByText(/termina con \.\.\.1234/i)).toBeDefined()
     await waitFor(() =>
       expect(scritture()).toContainEqual({
         url: expect.stringContaining("/api/v1/weather/meteoblue-key"),
@@ -76,17 +76,17 @@ describe("Impostazioni / Servizi", () => {
     await app(null, { stato: 200, corpo: { status: "refused", hint: null } })
     await vaiAiServizi()
     fireEvent.change(await screen.findByLabelText(/chiave meteoblue/i), { target: { value: "sbagliata" } })
-    fireEvent.click(screen.getByRole("button", { name: /prova e salva/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^verifica e salva$/i }))
 
-    expect(await screen.findByText(/non riconosce questa chiave/i)).toBeDefined()
+    expect(await screen.findByText(/chiave non riconosciuta da meteoblue/i)).toBeDefined()
   })
 
   it("una chiave salvata si toglie", async () => {
     await app("...1234", { stato: 200, corpo: { status: "removed", hint: null } })
     await vaiAiServizi()
-    fireEvent.click(await screen.findByRole("button", { name: /togli la chiave/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^rimuovi chiave$/i }))
 
-    expect(await screen.findByText(/chiave tolta/i)).toBeDefined()
+    expect(await screen.findByText(/chiave rimossa/i)).toBeDefined()
     await waitFor(() =>
       expect(scritture()).toContainEqual({
         url: expect.stringContaining("/api/v1/weather/meteoblue-key"),
@@ -99,7 +99,7 @@ describe("Impostazioni / Servizi", () => {
   it("senza niente scritto non si prova niente", async () => {
     await app(null, { stato: 200, corpo: { status: "ok", hint: null } })
     await vaiAiServizi()
-    const bottone = await screen.findByRole("button", { name: /prova e salva/i })
+    const bottone = await screen.findByRole("button", { name: /^verifica e salva$/i })
     expect((bottone as HTMLButtonElement).disabled).toBe(true)
   })
 })
@@ -108,7 +108,7 @@ describe("Impostazioni / Servizi, la veste e chi non vede", () => {
   it("la sezione passa dai mattoni e dalla guardia di accessibilita', con la chiave salvata", async () => {
     const { container } = await app("...1234", { stato: 200, corpo: { status: "ok", hint: "...1234" } })
     await vaiAiServizi()
-    await screen.findByRole("button", { name: /togli la chiave/i })
+    await screen.findByRole("button", { name: /^rimuovi chiave$/i })
 
     expect(fuoriDaiMattoni()).toEqual([])
     expect(await violazioni(container)).toEqual([])

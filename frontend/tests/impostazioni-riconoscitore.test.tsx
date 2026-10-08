@@ -62,15 +62,15 @@ describe("Impostazioni / ASTAP", () => {
 
     expect(await screen.findByText(/astap_cli\.exe/)).toBeTruthy()
     // Il canale accanto al percorso: senza, "trovato" non si puo' smentire.
-    expect(screen.getByText(/gliel'hai detto tu/i)).toBeTruthy()
+    expect(screen.getByText(/percorso inserito manualmente/i)).toBeTruthy()
   })
 
   it("ogni canale ha la sua frase, e nessuno resta un codice a schermo", async () => {
     // Quattro rami, e il codice del backend non deve arrivare a schermo in nessuno.
     for (const [source, frase] of [
-      ["env", /chi ha avviato l'app/i],
-      ["path", /programmi di sistema/i],
-      ["known_place", /dove si installa di solito/i],
+      ["env", /variabile ASTROLOG_ASTAP/i],
+      ["path", /PATH di sistema/i],
+      ["known_place", /cartella di installazione predefinita/i],
     ] as const) {
       pulisci()
       await app({ ...TROVATO, source })
@@ -84,7 +84,7 @@ describe("Impostazioni / ASTAP", () => {
     await app({ path: null, source: null, declared: null, databases: [] })
     await vaiAlRiconoscitore()
 
-    expect(await screen.findByText(/non trovo astap/i)).toBeTruthy()
+    expect(await screen.findByText(/^astap non trovato\./i)).toBeTruthy()
     // Non e' un allarme: manca un programma, non si e' rotto niente.
     expect(screen.getByText(/^senza astap$/i)).toBeTruthy()
     expect(screen.getByText(/gli oggetti ripresi non vengono identificati/i)).toBeTruthy()
@@ -119,7 +119,7 @@ describe("Impostazioni / ASTAP", () => {
     await app({ path: null, source: null, declared: null, databases: [] })
     await vaiAlRiconoscitore()
 
-    expect(await screen.findByText(/non trovo astap/i)).toBeTruthy()
+    expect(await screen.findByText(/^astap non trovato\./i)).toBeTruthy()
     expect(screen.queryByText(/catalogo stellare/i)).toBeNull()
   })
 
@@ -128,7 +128,7 @@ describe("Impostazioni / ASTAP", () => {
     await app({ path: null, source: null, declared: "D:\\sbagliato\\astap.exe" })
     await vaiAlRiconoscitore()
 
-    expect(await screen.findByText(/non porta a nessun programma/i)).toBeTruthy()
+    expect(await screen.findByText(/percorso non valido:/i)).toBeTruthy()
     expect(screen.getByText("D:\\sbagliato\\astap.exe")).toBeTruthy()
     // e il campo parte da li', cosi' si corregge invece di riscriverlo da capo
     expect((screen.getByLabelText(/percorso di astap/i) as HTMLInputElement).value).toBe(
@@ -136,15 +136,15 @@ describe("Impostazioni / ASTAP", () => {
     )
   })
 
-  it("cercalo tu propone, e non scrive niente finche' non si adotta", async () => {
+  it("Cerca ASTAP propone, e non scrive niente finche' non si adotta", async () => {
     await app(
       { path: null, source: null, declared: "D:\\sbagliato\\astap.exe" },
       { "POST /api/v1/solver": { stato: 200, corpo: { ...TROVATO, source: "path" } } },
     )
     await vaiAlRiconoscitore()
 
-    fireEvent.click(await screen.findByRole("button", { name: /cercalo tu/i }))
-    expect(await screen.findByText(/ne ho trovato uno/i)).toBeTruthy()
+    fireEvent.click(await screen.findByRole("button", { name: /^cerca astap$/i }))
+    expect(await screen.findByText(/^astap trovato$/i)).toBeTruthy()
     // La ricerca ha guardato, e **non ha scritto**: nessuna PATCH sulle impostazioni.
     expect(scritture().some((s) => s.url.includes("/settings"))).toBe(false)
   })
@@ -159,21 +159,22 @@ describe("Impostazioni / ASTAP", () => {
     )
     await vaiAlRiconoscitore()
 
-    fireEvent.click(await screen.findByRole("button", { name: /cercalo tu/i }))
-    fireEvent.click(await screen.findByRole("button", { name: /usa quello che hai trovato/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^cerca astap$/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^usa questo percorso$/i }))
 
     await waitFor(() => expect(scritture().some((s) => s.metodo === "PATCH")).toBe(true))
     const scritta = scritture().find((s) => s.metodo === "PATCH")!
     expect(scritta.corpo).toMatchObject({ values: { astap_path: TROVATO.path } })
     // E la proposta se ne va: adottata, non e' piu' una proposta -- restando, lo stesso percorso
     // sarebbe a schermo due volte, una delle quali come domanda.
-    await waitFor(() => expect(screen.queryByText(/ne ho trovato uno/i)).toBeNull())
+    // Si guarda il suo tasto, non il titolo: "ASTAP trovato" lo dice anche l'esito del percorso.
+    await waitFor(() => expect(screen.queryByRole("button", { name: /^usa questo percorso$/i })).toBeNull())
     expect((screen.getByLabelText(/percorso di astap/i) as HTMLInputElement).value).toBe(TROVATO.path)
   })
 
   it("scritto il percorso, la riga di stato lo sa senza ricaricare", async () => {
     // La risposta della scrittura non porta il canale, quindi dove sta il solver si **richiede**.
-    // Senza, dopo aver adottato la proposta la riga continua a dire "Non trovo ASTAP" mentre il
+    // Senza, dopo aver adottato la proposta la riga continua a dire "ASTAP non trovato" mentre il
     // campo sotto mostra il percorso giusto: due verita' sulla stessa cosa, a due centimetri.
     await app(
       { path: null, source: null, declared: null, databases: [] },
@@ -183,7 +184,7 @@ describe("Impostazioni / ASTAP", () => {
       },
     )
     await vaiAlRiconoscitore()
-    expect(await screen.findByText(/non trovo astap/i)).toBeTruthy()
+    expect(await screen.findByText(/^astap non trovato\./i)).toBeTruthy()
 
     // dopo la scrittura il backend dice un'altra cosa, e la sezione deve andare a risentirlo
     cambia({
@@ -196,11 +197,11 @@ describe("Impostazioni / ASTAP", () => {
       "/api/v1/solver": { stato: 200, corpo: TROVATO },
       ...SPINA,
     })
-    fireEvent.click(screen.getByRole("button", { name: /cercalo tu/i }))
-    fireEvent.click(await screen.findByRole("button", { name: /usa quello che hai trovato/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^cerca astap$/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^usa questo percorso$/i }))
 
-    expect(await screen.findByText(/gliel'hai detto tu/i)).toBeTruthy()
-    expect(screen.queryByText(/non trovo astap/i)).toBeNull()
+    expect(await screen.findByText(/percorso inserito manualmente/i)).toBeTruthy()
+    expect(screen.queryByText(/^astap non trovato\./i)).toBeNull()
   })
 
   it("lo stesso percorso si scrive una volta sola, da qualunque parte arrivi", async () => {
@@ -247,8 +248,8 @@ describe("Impostazioni / ASTAP", () => {
     )
     await vaiAlRiconoscitore()
 
-    fireEvent.click(await screen.findByRole("button", { name: /cercalo tu/i }))
-    expect(await screen.findByText(/non c'e'/i)).toBeTruthy()
+    fireEvent.click(await screen.findByRole("button", { name: /^cerca astap$/i }))
+    expect(await screen.findByText(/astap non trovato nel PATH/i)).toBeTruthy()
   })
 
   it("l app non scarica niente da sola, e lo dice", async () => {

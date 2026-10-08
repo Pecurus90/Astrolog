@@ -48,7 +48,7 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | Un guasto uguale su mille file non riempie il log: una traccia per tipo | `test_the_same_unexpected_fault_leaves_one_trace_in_the_log` |
 | L'elenco dei file non letti lo leggo a pagine, e lo tiene l'ultima scansione di ogni cartella (e, se quella non e' arrivata in fondo, l'ultima che ci e' arrivata) | `test_the_files_not_read_are_listed_a_page_at_a_time`, `test_only_the_last_scans_of_a_folder_keep_the_names` |
 | La ricevuta dice quanti file ha saltato e perche', calibrazioni comprese | `test_the_receipt_counts_the_skipped_by_reason` |
-| Mentre scansiona vedo un pulsante che dice cosa fa (Scansiona / Ferma / Riprendi) e la fase in corso coi suoi numeri veri, e a fine corsa una ricevuta, che resta in Impostazioni / Le letture (la catena intera delle fasi non ha ancora una pagina) | `test_worker_events_stages_run_in_order_one_at_a_time`, `test_scan_receipt` |
+| Mentre scansiona vedo un pulsante che dice cosa fa (Scansiona / Interrompi / Riprendi) e la fase in corso coi suoi numeri veri, e a fine corsa una ricevuta, che resta in Impostazioni / Scansioni (la catena intera delle fasi non ha ancora una pagina) | `test_worker_events_stages_run_in_order_one_at_a_time`, `test_scan_receipt` |
 | Fermare ferma entro il file in corso, e non fa partire altro; chiudere la finestra non ferma niente | `test_worker_stop_cooperative`, `test_scan_answers_at_once_and_the_receipt_arrives_in_status` |
 | Una lettura fermata prima di cominciare, o che non riesce a partire, non lascia una ricevuta aperta per sempre, che sia di una cartella o di tutte; Riprendi la rilegge lo stesso | `test_resume_reads_one_folder_stopped_before_it_began`, `test_a_start_that_breaks_unexpectedly_leaves_nothing_behind`, `test_a_stop_does_not_leave_receipts_open_forever`, `test_a_busy_worker_leaves_no_folder_locked` |
 | La ricevuta di una cartella tolta dice che la cartella e' ritirata, cosi' so perche' quel percorso non si aggiorna piu' | `test_duplicate_is_409_and_retire_reactivate_keep_data` |
@@ -67,7 +67,7 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | Cambio idea quante volte voglio: rinomino un pezzo gia' rinominato o gia' unito, e tutte le grafie di prima continuano a portare a lui -- anche per un filtro | `test_a_second_rename_carries_the_spelling_learned_by_the_first`, `test_renaming_a_piece_carries_the_spellings_it_absorbed`, `test_renaming_a_filter_carries_the_spelling_it_absorbed` |
 | Dichiaro un filtro che possiedo con la sua marca, il suo modello e le larghezze di banda, e i frame che lo usano lo prendono | `test_review_declares_a_filter_with_its_bands` |
 | Alla fine della scansione vedo le domande che l'app non sa risolvere da sola, e gli oggetti: con "Applica" le risposte diventano le regole dell'archivio. L'attrezzatura non e' una domanda: la vedo e la correggo nell'Attrezzatura | `test_review_lists_what_was_found`, `test_review_only_new_things` |
-| Due grafie che hanno l'aria di essere la stessa camera me le chiede -- "sono lo stesso pezzo?" --; si' le unisce, no non me lo chiede piu' per quella coppia, e guardare non e' rispondere | `test_a_yes_merges_the_two_spellings`, `test_a_no_silences_the_pair_for_good_whichever_way_it_leans`, `test_seeing_the_page_does_not_answer_the_question` |
+| Due grafie che hanno l'aria di essere la stessa camera me le chiede -- "sono lo stesso strumento?" --; si' le unisce, no non me lo chiede piu' per quella coppia, e guardare non e' rispondere | `test_a_yes_merges_the_two_spellings`, `test_a_no_silences_the_pair_for_good_whichever_way_it_leans`, `test_seeing_the_page_does_not_answer_the_question` |
 | L'oggetto me lo chiede in **una scheda per gruppo di frame** (ADR 0014, S3): i frame che l'app ha messo su un oggetto, o un gruppo di frame senza nome e senza cielo; la stessa scheda per tutti e due, coi candidati del cielo da cliccare -- anche zero -- e la stessa risposta | `test_found_objects_and_unnamed_groups_are_one_list_of_cards`, `test_an_answer_that_says_two_things_or_none_is_refused`, `test_a_card_that_is_not_there_is_refused` |
 | Anche a un oggetto trovato rispondo "non e' un oggetto": i suoi frame escono dalle ore e da ogni oggetto, la scheda resta in pagina coi candidati e non conta piu', e cambio idea; vale per i frame che c'erano quando ho risposto | `test_not_an_object_on_a_found_object_takes_its_frames_out_and_the_card_stays`, `test_the_card_of_frames_put_out_keeps_the_sky_candidates` |
 | "Non e' un oggetto" detto per un gruppo di frame senza nome non tocca un frame del gruppo che il cielo ha riconosciuto | `test_not_an_object_said_for_a_group_does_not_reach_a_frame_the_sky_recognised`, `test_a_sky_that_comes_after_the_group_answer_still_decides` |
@@ -338,8 +338,8 @@ e non finisce fra i **Frame senza nome**, dove la domanda e' "cosa hai ripreso" 
 e'". Una foto del cielo tutta coperta dalle nuvole non ha stelle, e finisce fra le calibrazioni:
 non ha dati, e non conta nelle ore. La domanda si fa per **cartella** (`spine/typeless.py`) e
 conta tutti i frame senza tipo della cartella, perche' la risposta li sposta tutti, anche quelli
-che il cielo aveva gia' deciso: detto "sono foto del cielo" quei frame ripartono, detto "sono file
-di calibrazione" restano fermi anche se il cielo li aveva risolti, e i file che arrivano dopo in
+che il cielo aveva gia' deciso: detto "Light" quei frame ripartono, detto "Calibrazione"
+restano fermi anche se il cielo li aveva risolti, e i file che arrivano dopo in
 quella cartella, se l'archivio non li ha gia', non entrano nemmeno. Il software di
 ripresa supportato e' N.I.N.A., ASIAIR, Voyager e SGP; il corpus (`backend/tests/header/`) ha
 per ora i primi due -- Voyager e SGP mancano, e stanno in coda finche' non arriva un file
@@ -680,7 +680,7 @@ porta mai, e dire "mono" su una sola grafia non deve separare le due). "Comincia
 Gli altri generi no -- ottiche, montature, ruote, focheggiatori, camere di guida: non hanno un
 dato che provi niente, e si uniscono dall'Attrezzatura. Si chiede
 sulla grafia con meno frame, verso quella con piu' frame (`lookalike.lookalikes`): "sono lo stesso
-pezzo?", perche' l'app non puo' saperlo -- due camere dello stesso modello sono due pezzi (Marco,
+strumento?", perche' l'app non puo' saperlo -- due camere dello stesso modello sono due pezzi (Marco,
 25/9/2026). Niente e' preselezionato, e conta fra le cose da confermare finche' non si risponde:
 guardarla non e' rispondere. Si' e' l'unione; **no e' una risposta come il si'** -- senza, l'unico
 modo di far tacere una domanda sbagliata, come due corpi distinti apposta con una parentesi

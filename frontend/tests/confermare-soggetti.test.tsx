@@ -100,31 +100,30 @@ describe("Da confermare -- cosa hai ripreso", () => {
     aperta()
     const notte = riga(await vaiASezione(/frame senza sito/i), "45.85,11.58")
     expect(notte.textContent).toMatch(
-      /ripreso: M 81 \(68 frame\), M 82 \(12 frame\), NGC 3077 \(3 frame\) e altri 2/,
+      /Oggetti: M 81 \(68 frame\), M 82 \(12 frame\), NGC 3077 \(3 frame\) \+ 2;/,
     )
-    expect(notte.textContent).toMatch(/21 frame in cui il cielo non ha trovato niente/)
-    // una posa su cui il lavoro si e' guastato non riparte da sola: "ancora" da solo farebbe aspettare
-    expect(notte.textContent).toMatch(/3 frame che il cielo non ha ancora guardato o non e' riuscito a guardare/)
+    expect(notte.textContent).toMatch(/21 frame senza oggetti identificati/)
+    expect(notte.textContent).toMatch(/3 frame non risolti/)
   })
 
-  it("un vuoto a zero non si scrive, e con tre oggetti nemmeno 'altri'", async () => {
+  it("un vuoto a zero non si scrive, e con tre oggetti nemmeno '+ N'", async () => {
     aperta()
     const notte = riga(await vaiASezione(/frame senza sito/i), "46.10,11.20")
-    expect(notte.textContent).toMatch(/ripreso: M 101 \(56 frame\), NGC 5474 \(3 frame\), NGC 5477 \(1 frame\)/)
-    expect(notte.textContent).not.toMatch(/altri|non ha trovato|non ha ancora/)
+    expect(notte.textContent).toMatch(/Oggetti: M 101 \(56 frame\), NGC 5474 \(3 frame\), NGC 5477 \(1 frame\)/)
+    expect(notte.textContent).not.toMatch(/\+ \d|senza oggetti|non risolti/)
   })
 
-  it("se il cielo non ha niente da dire, la riga non dice 'ripreso'", async () => {
+  it("se il cielo non ha niente da dire, la riga non dice 'Oggetti'", async () => {
     aperta()
     const notte = riga(await vaiASezione(/frame senza sito/i), "44.50,10.90")
-    expect(notte.textContent).not.toMatch(/ripreso/)
+    expect(notte.textContent).not.toMatch(/Oggetti/)
   })
 
   it.each([
     [/frame senza sito/i, "45.85,11.58"],
   ])("anche la sezione %s dice cosa hai ripreso", async (sezione, chiave) => {
     aperta()
-    expect(riga(await vaiASezione(sezione), chiave).textContent).toMatch(/ripreso: M (81|101)/)
+    expect(riga(await vaiASezione(sezione), chiave).textContent).toMatch(/Oggetti: M (81|101)/)
     expect(screen.queryByText(/review\./)).toBeNull() // nessuna chiave di traduzione grezza
   })
 })

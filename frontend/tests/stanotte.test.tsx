@@ -286,7 +286,7 @@ describe("il meteo di stanotte, sotto la Luna", () => {
     expect(await within(pannello).findByText(/3 modelli su 4/)).toBeDefined()
     expect(within(pannello).getByText(/Nuvole in media al 40%/)).toBeDefined()
     expect(within(pannello).getByText(/3 ore utili su 8 di buio/)).toBeDefined()
-    expect(within(pannello).getByText(/piu' forte di 8 notti su 10/)).toBeDefined()
+    expect(within(pannello).getByText(/superiore a 8 notti su 10/)).toBeDefined()
     expect(within(pannello).getByRole("link", { name: "Apri il Meteo" }).getAttribute("href")).toBe("/meteo")
   })
 

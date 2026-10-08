@@ -36,13 +36,13 @@ function app(offer: "found" | "none", fatto: boolean) {
   return disegna()
 }
 
-describe("Il backup delle risposte", () => {
+describe("Il backup", () => {
   it("su un database nuovo chiede di rimetterle, prima del primo avvio", async () => {
     await app("found", false)
-    expect(await screen.findByText(/ho trovato le tue risposte/i)).toBeDefined()
-    expect(screen.getByText(/42 risposte, 1 siti, 2 cartelle, 4 pezzi/i)).toBeDefined()
+    expect(await screen.findByText(/^backup trovato$/i)).toBeDefined()
+    expect(screen.getByText(/42 conferme, 1 siti, 2 cartelle, 4 strumenti e filtri/i)).toBeDefined()
 
-    fireEvent.click(screen.getByRole("button", { name: /rimettile/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^ripristina$/i }))
 
     await waitFor(() => {
       const fatte = scritture().map((s) => `${s.metodo} ${new URL(s.url).pathname}`)
@@ -54,13 +54,13 @@ describe("Il backup delle risposte", () => {
   it("senza nulla da proporre non chiede niente", async () => {
     await app("none", true)
     await screen.findByRole("navigation", { name: /pagine/i })
-    expect(screen.queryByText(/ho trovato le tue risposte/i)).toBeNull()
+    expect(screen.queryByText(/^backup trovato$/i)).toBeNull()
   })
 
   it("in Impostazioni dice dove sta il file e quando e' stato scritto", async () => {
     window.history.pushState({}, "", "/impostazioni/backup")
     await app("none", true)
-    expect(await screen.findByText(/il backup delle risposte/i)).toBeDefined()
+    expect(await screen.findByRole("heading", { name: /^backup$/i })).toBeDefined()
     expect(await screen.findByText("C:\\dati\\risposte.json")).toBeDefined()
   })
 })

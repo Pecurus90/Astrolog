@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 /**
- * La domanda **che file sono**: una per cartella, due risposte -- foto del cielo o file di
- * calibrazione.
+ * La domanda **che file sono**: una per cartella, due risposte -- Light o Calibrazione.
  *
  * - **Niente e' preselezionato**: finche' l'utente non sceglie, l'app non decide per lui.
  * - **Una cartella risposta resta in pagina** con la sua risposta, e si cambia scegliendo l'altra.
@@ -76,14 +75,14 @@ describe("Da confermare -- i file che non dicono che file sono", () => {
     aperta()
     const sezione = await vaiASezione(/frame senza tipo/i)
     const cartella = riga(sezione, "D:/Astro/2024-05-17/dark")
-    fireEvent.click(within(cartella).getByLabelText(/file di calibrazione/i))
+    fireEvent.click(within(cartella).getByLabelText("Calibrazione"))
     expect((await mandato()).typeless).toEqual([
       { key: "D:/Astro/2024-05-17/dark", kind: "calibration" },
     ])
   })
 
   it("la risposta gia' data si legge, e tornarci sopra non manda niente", async () => {
-    // Il giro e' quello vero: la riga porta gia' "foto del cielo", si sceglie l'altra (l'Applica
+    // Il giro e' quello vero: la riga porta gia' "Light", si sceglie l'altra (l'Applica
     // si accende) e poi si torna sulla prima -- li' la risposta esce dall'accumulatore e l'Applica
     // torna spento. Cliccare due volte la stessa scelta non proverebbe niente: sulla radio gia'
     // spuntata il browser non manda nessun evento, e il test resterebbe verde anche senza la
@@ -91,11 +90,12 @@ describe("Da confermare -- i file che non dicono che file sono", () => {
     aperta()
     const sezione = await vaiASezione(/frame senza tipo/i)
     const risposta = riga(sezione, "D:/Astro/2024-06-01/M51")
-    expect(risposta.textContent).toMatch(/risposta: foto del cielo/i)
-    expect(within(risposta).getByLabelText(/foto del cielo/i)).toHaveProperty("checked", true)
-    fireEvent.click(within(risposta).getByLabelText(/file di calibrazione/i))
+    // la risposta salvata sta in testa alla riga, accanto ai frame: la scelta ha lo stesso nome
+    expect(risposta.querySelector(".as-riga__testa")?.textContent).toMatch(/30 frame\s+Light$/)
+    expect(within(risposta).getByLabelText("Light")).toHaveProperty("checked", true)
+    fireEvent.click(within(risposta).getByLabelText("Calibrazione"))
     expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", false)
-    fireEvent.click(within(risposta).getByLabelText(/foto del cielo/i))
+    fireEvent.click(within(risposta).getByLabelText("Light"))
     applicaSpento()
   })
 
@@ -105,16 +105,16 @@ describe("Da confermare -- i file che non dicono che file sono", () => {
     aperta()
     const sezione = await vaiASezione(/frame senza tipo/i)
     const cartella = riga(sezione, "D:/Astro/2024-05-17/dark")
-    fireEvent.click(within(cartella).getByLabelText(/file di calibrazione/i))
-    expect(within(cartella).getByLabelText(/file di calibrazione/i)).toHaveProperty("checked", true)
-    expect(within(cartella).getByLabelText(/foto del cielo/i)).toHaveProperty("checked", false)
+    fireEvent.click(within(cartella).getByLabelText("Calibrazione"))
+    expect(within(cartella).getByLabelText("Calibrazione")).toHaveProperty("checked", true)
+    expect(within(cartella).getByLabelText("Light")).toHaveProperty("checked", false)
   })
 
   it("si cambia idea scegliendo l'altra", async () => {
     aperta()
     const sezione = await vaiASezione(/frame senza tipo/i)
     const risposta = riga(sezione, "D:/Astro/2024-06-01/M51")
-    fireEvent.click(within(risposta).getByLabelText(/file di calibrazione/i))
+    fireEvent.click(within(risposta).getByLabelText("Calibrazione"))
     expect((await mandato()).typeless).toEqual([
       { key: "D:/Astro/2024-06-01/M51", kind: "calibration" },
     ])
