@@ -195,28 +195,28 @@ describe("le Notti", () => {
     await apriNotti()
 
     const testo = (await elenco()).textContent ?? ""
-    expect(testo).toContain("4 senza tempo")
+    expect(testo).toContain("4 senza durata")
     expect(testo).not.toMatch(/\b0 h\b/)
     // e i filtri senza ore dicono i frame, e che il tempo non si sa
-    expect(testo).toContain("Lum2 \u00b7 senza tempo")
+    expect(testo).toContain("Lum2 \u00b7 senza durata")
   })
 
   it("in cima ci sono le notti, le ore e i frame di tutto l'archivio", async () => {
     notti([DICIOTTO], { totals: { nights: 42, frames: 900, integration_s: 360000, untimed: 3 } })
     await apriNotti()
 
-    const testa = (await screen.findByText(/le copie riscritte/i)).parentElement?.textContent ?? ""
+    const testa = (await screen.findByText(/le copie calibrate/i)).parentElement?.textContent ?? ""
     expect(testa).toContain("42notti")
     expect(testa).toContain("900frame")
     expect(testa).toContain("100ore") // 360.000 s = 100 h, gia' sommate dal backend
-    expect(testa).toContain("3senza tempo")
+    expect(testa).toContain("3senza durata")
   })
 
   it("un'ora sola in archivio non diventa \"1 ore\"", async () => {
     notti([DICIOTTO], { totals: { nights: 1, frames: 3, integration_s: 3510, untimed: 0 } })
     await apriNotti()
 
-    const testa = (await screen.findByText(/le copie riscritte/i)).parentElement?.textContent ?? ""
+    const testa = (await screen.findByText(/le copie calibrate/i)).parentElement?.textContent ?? ""
     expect(testa).toContain("1ora")
   })
 
@@ -224,7 +224,7 @@ describe("le Notti", () => {
     notti([DICIOTTO], { waiting: [{ answer_at: "review", frames: 12 }] })
     await apriNotti()
 
-    expect(await screen.findByText(/12 frame aspettano una tua risposta/i)).toBeDefined()
+    expect(await screen.findByText(/^12 frame da confermare$/i)).toBeDefined()
     // dentro la pagina: `link` da solo pesca anche la voce della barra, che c'e' sempre
     const dentro = within(screen.getByRole("main"))
     expect(dentro.getByRole("link", { name: /da confermare/i })).toBeDefined()
@@ -236,7 +236,7 @@ describe("le Notti", () => {
     notti([DICIOTTO], { waiting: [{ answer_at: "site", frames: 5 }] })
     await apriNotti()
 
-    expect(await screen.findByText(/5 frame aspettano il sito/i)).toBeDefined()
+    expect(await screen.findByText(/^5 frame senza sito$/i)).toBeDefined()
     const dentro = within(screen.getByRole("main"))
     expect(dentro.queryByRole("link", { name: /da confermare/i })).toBeNull()
     expect(dentro.getByRole("link", { name: /apri le impostazioni/i }).getAttribute("href")).toBe("/impostazioni/sito")
@@ -258,7 +258,7 @@ describe("le Notti", () => {
     notti([DICIOTTO], { still_reading: 431, reading_done_pct: 64 })
     const { container } = await apriNotti()
 
-    expect(await screen.findByText(/sto ancora leggendo/i)).toBeDefined()
+    expect(await screen.findByText(/^scansione in corso: /i)).toBeDefined()
     expect(screen.getByText(/431/)).toBeDefined()
     // la pista dice quanto ha fatto, col numero che manda il backend
     expect((container.querySelector(".as-avanza__riempi") as HTMLElement).style.width).toBe("64%")
@@ -279,7 +279,7 @@ describe("le Notti", () => {
     const riga = await carta()
     expect(riga.textContent).toContain("M 3")
     expect(riga.textContent).not.toContain("M 4")
-    expect(riga.textContent).toContain("e 2 altri")
+    expect(riga.querySelector(".as-notte__altri")?.textContent).toBe("+ 2")
     const barre = [...container.querySelectorAll<HTMLElement>(".as-notte__barra-ore")]
     expect(barre.map((b) => b.style.getPropertyValue("--quanto"))).toEqual(["100%", "50%", "33%"])
   })
@@ -289,36 +289,36 @@ describe("le Notti", () => {
     await apriNotti()
 
     const riga = await carta()
-    expect(riga.textContent).toContain("M 31senza tempo")
+    expect(riga.textContent).toContain("M 31senza durata")
   })
 
   it("i quattro modi di non avere notti dicono quattro cose diverse", async () => {
     const senzaNotti = { totals: { nights: 0, frames: 0, integration_s: 0, untimed: 0 } }
     notti([], senzaNotti)
     await apriNotti()
-    expect(await screen.findByText(/nessuna notte, per ora/i)).toBeDefined()
+    expect(await screen.findByText(/^nessuna notte$/i)).toBeDefined()
 
     pulisci()
     notti([], { ...senzaNotti, waiting: [{ answer_at: "site", frames: 8 }] })
     await apriNotti()
-    expect(await screen.findByText(/non so da dove osservavi/i)).toBeDefined()
+    expect(await screen.findByText(/^sito mancante$/i)).toBeDefined()
 
     pulisci()
     notti([], { ...senzaNotti, waiting: [{ answer_at: "review", frames: 8 }] })
     await apriNotti()
-    expect(await screen.findByText(/l'app ti sta aspettando/i)).toBeDefined()
+    expect(await screen.findByText(/^nessuna notte: frame da confermare$/i)).toBeDefined()
 
     pulisci()
     notti([], { ...senzaNotti, still_reading: 90 })
     await apriNotti()
-    expect(await screen.findByText(/le notti stanno arrivando/i)).toBeDefined()
+    expect(await screen.findByText(/^scansione in corso$/i)).toBeDefined()
   })
 
   it("quando ce n e' piu' di una pagina, si vedono anche le altre", async () => {
     notti([DICIOTTO], { total: 2 })
     await apriNotti()
 
-    expect(await screen.findByRole("button", { name: /mostra altre/i })).toBeDefined()
+    expect(await screen.findByRole("button", { name: /carica altre/i })).toBeDefined()
     expect(screen.getByText("1 notti di 2")).toBeDefined()
   })
 
@@ -333,7 +333,7 @@ describe("le Notti", () => {
     })
     await apriNotti()
 
-    expect(await screen.findByText(/non sono riuscito a leggere le notti/i)).toBeDefined()
+    expect(await screen.findByText(/^notti non disponibili$/i)).toBeDefined()
   })
 })
 
@@ -353,8 +353,8 @@ describe("le Notti, il cielo di quella notte", () => {
     await apriNotti()
 
     const riga = await carta()
-    expect(riga.textContent).toContain("il meteo non e' ancora arrivato")
-    expect(riga.textContent).toContain("non ha ancora risposto")
+    expect(riga.textContent).toContain("Meteo non ancora disponibile")
+    expect(riga.textContent).toContain("non ha ancora fornito i dati")
   })
 
   it("una notte giovane dice il giorno in cui arriva il meteo", async () => {
@@ -362,7 +362,7 @@ describe("le Notti, il cielo di quella notte", () => {
     await apriNotti()
 
     const riga = await carta()
-    expect(riga.textContent).toMatch(/il meteo arriva il 23 mag/)
+    expect(riga.textContent).toMatch(/Meteo disponibile dal 23 mag/)
   })
 
   it("una notte che l'archivio non racconta lo dice, invece di un cielo inventato", async () => {
@@ -370,7 +370,7 @@ describe("le Notti, il cielo di quella notte", () => {
     await apriNotti()
 
     const riga = await carta()
-    expect(riga.textContent).toContain("non dice com'era il cielo")
+    expect(riga.textContent).toContain("Dati meteo non disponibili per questa notte")
   })
 
   it("una notte di un sito senza fuso dice che il meteo non si puo' sapere", async () => {
@@ -378,7 +378,8 @@ describe("le Notti, il cielo di quella notte", () => {
     await apriNotti()
 
     const riga = await carta()
-    expect(riga.textContent).toContain("non si puo' sapere")
+    expect(riga.textContent).toContain("Non disponibile")
+    expect(riga.textContent).toContain("Fuso orario del sito non riconosciuto")
   })
 })
 
@@ -399,10 +400,12 @@ describe("le Notti, una notte dall'indirizzo", () => {
     window.history.pushState({}, "", `/notti?notte=${scritto}`)
     await disegna()
 
-    expect(await screen.findByText(/questa notte non c'e' piu'/i)).toBeDefined()
+    expect(await screen.findByText(/^notte non trovata$/i)).toBeDefined()
     expect(chiamate().some((u) => u.includes("night="))).toBe(false)
     // niente da aspettare: la pagina non resta "in lettura"
-    expect(screen.queryByText(/un momento/i)).toBeNull()
+    // dentro la pagina: Stanotte, chiusa, puo' avere il suo "Caricamento" e non e' la pagina
+    expect(within(screen.getByRole("main")).queryByText(/caricamento/i)).toBeNull()
+    expect(screen.queryByLabelText(/caricamento delle notti/i)).toBeNull()
   })
 
   it("una notte che non c'e' piu' lo dice, invece di dire che l'archivio e' vuoto", async () => {
@@ -410,6 +413,6 @@ describe("le Notti, una notte dall'indirizzo", () => {
     window.history.pushState({}, "", "/notti?notte=999")
     await disegna()
 
-    expect(await screen.findByText(/questa notte non c'e' piu'/i)).toBeDefined()
+    expect(await screen.findByText(/^notte non trovata$/i)).toBeDefined()
   })
 })

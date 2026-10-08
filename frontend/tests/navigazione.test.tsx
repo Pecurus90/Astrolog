@@ -67,7 +67,7 @@ describe("un indirizzo che non esiste", () => {
     window.history.pushState({}, "", "/non-esiste")
     configurata()
     await disegna()
-    expect(await within(await screen.findByRole("main")).findByText(/questa pagina non c'e'/i)).toBeDefined()
+    expect(await within(await screen.findByRole("main")).findByText(/^pagina non trovata$/i)).toBeDefined()
     fireEvent.click(screen.getByRole("link", { name: /torna alla dashboard/i }))
     expect(window.location.pathname).toBe("/")
   })

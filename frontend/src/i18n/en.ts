@@ -65,7 +65,7 @@ export const en = {
   "review.filters.change": "Pick another model",
   "review.filters.band": "Band",
   "review.objects.hours": "{h} h",
-  "review.objects.untimed": "{n} without exposure time",
+  "review.objects.untimed": "{n} no duration",
   "review.lookalikes": "Same piece?",
   "review.lookalikes.why":
     "These cameras have the same sensor and almost the same name: often it is one camera seen by two programs. The app cannot know -- two cameras of the same model are two pieces -- so it asks. Once merged, they cannot be split again.",

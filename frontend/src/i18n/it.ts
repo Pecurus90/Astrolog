@@ -65,7 +65,7 @@ export const it = {
   "review.filters.change": "Scegli un altro modello",
   "review.filters.band": "Banda",
   "review.objects.hours": "{h} h",
-  "review.objects.untimed": "{n} senza tempo",
+  "review.objects.untimed": "{n} senza durata",
   "review.lookalikes": "Stesso pezzo?",
   "review.lookalikes.why":
     "Queste camere hanno lo stesso sensore e quasi lo stesso nome: spesso e' la stessa camera vista da due programmi. L'app non puo' saperlo -- due camere dello stesso modello sono due pezzi -- quindi lo chiede. Unite, non si possono piu' separare.",

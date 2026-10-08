@@ -81,7 +81,7 @@ describe("la ricerca nella barra", () => {
   it("mostra i quattro gruppi, ognuno con quante voci ha in tutto", async () => {
     conRicerca(TROVATI)
     await cerca("m31")
-    const menu = await screen.findByRole("listbox", { name: /trovati nell'archivio/i })
+    const menu = await screen.findByRole("listbox", { name: /^risultati$/i })
     const oggetti = within(menu).getByRole("group", { name: /oggetti/i })
     expect(within(oggetti).getByRole("option", { name: /M 31.*Andromeda Galaxy.*10\.200 frame.*17 h/ })).toBeTruthy()
     // un mosaico dice i suoi pannelli
@@ -90,15 +90,15 @@ describe("la ricerca nella barra", () => {
     const notti = within(menu).getByRole("group", { name: /notti/i })
     expect(notti.textContent).toContain("2 di 7")
     expect(within(notti).getByRole("option", { name: /4 ott 2026.*Cima Ekar.*141 frame.*2,4 h/ })).toBeTruthy()
-    // mai "0 h": una notte senza durata dice "senza tempo"
+    // mai "0 h": una notte senza durata dice "senza durata"
     const senzaTempo = within(notti).getByRole("option", { name: /14 ago 2026/ })
-    expect(senzaTempo.textContent).toContain("120 frame senza tempo")
+    expect(senzaTempo.textContent).toContain("120 frame senza durata")
     expect(senzaTempo.textContent).not.toMatch(/\b0 h/)
     const pezzi = within(menu).getByRole("group", { name: /attrezzatura/i })
     expect(within(pezzi).getByRole("option", { name: /ZWO ASI2600MM Pro.*camera.*18\.420 frame.*210,5 h/ })).toBeTruthy()
     // ore non contate o non dette: il perche', mai uno zero
-    expect(within(pezzi).getByRole("option", { name: /ZWO ASI533MC Pro/ }).textContent).toMatch(/non ancora contat/)
-    expect(within(pezzi).getByRole("option", { name: /ZWO Duo-Band.*filtro/ }).textContent).toMatch(/i file non lo dicono/)
+    expect(within(pezzi).getByRole("option", { name: /ZWO ASI533MC Pro/ }).textContent).toMatch(/Conteggio in corso/)
+    expect(within(pezzi).getByRole("option", { name: /ZWO Duo-Band.*filtro/ }).textContent).toMatch(/Non indicato nei file/)
     const siti = within(menu).getByRole("group", { name: /siti/i })
     expect(within(siti).getByRole("option", { name: /Casa.*64 notti/ })).toBeTruthy()
   })
@@ -113,7 +113,7 @@ describe("la ricerca nella barra", () => {
   it("niente trovato lo dice, e dice cosa si cerca qui", async () => {
     conRicerca(NIENTE)
     await cerca("m 1033")
-    expect(await screen.findByText(/niente nell'archivio per «m 1033»/i)).toBeTruthy()
+    expect(await screen.findByText(/nessun risultato per \u00abm 1033\u00bb/i)).toBeTruthy()
     expect(screen.getByText(/oggetti, notti, attrezzatura e siti/i)).toBeTruthy()
     expect(screen.queryByRole("listbox")).toBeNull()
   })
@@ -162,7 +162,7 @@ describe("la ricerca nella barra", () => {
     fireEvent.keyDown(campo, { key: "Enter" })
     expect(window.location.pathname + window.location.search).not.toContain("key=m-31")
     // la ricerca resta aperta e lo dice: sta cercando il testo nuovo
-    expect(screen.getByText(/cerco/i)).toBeTruthy()
+    expect(screen.getByText(/^ricerca\u2026$/i)).toBeTruthy()
     expect(await screen.findByRole("listbox")).toBeTruthy()
   })
 
@@ -176,7 +176,7 @@ describe("la ricerca nella barra", () => {
     const riaperto = await screen.findByRole("combobox", { name: /cerca nell'archivio/i })
     fireEvent.change(riaperto, { target: { value: "zzzqq" } })
     expect(screen.queryByRole("listbox")).toBeNull()
-    expect(await screen.findByText(/niente nell'archivio per «zzzqq»/i)).toBeTruthy()
+    expect(await screen.findByText(/nessun risultato per \u00abzzzqq\u00bb/i)).toBeTruthy()
     expect(screen.queryByRole("listbox")).toBeNull()
   })
 
@@ -222,7 +222,7 @@ describe("l'Archivio aperto dalla ricerca", () => {
     await screen.findByRole("heading", { name: /archivio/i })
     window.history.replaceState(null, "", "/archivio?key=m-31")
     fireEvent.popState(window)
-    const torna = await screen.findByRole("link", { name: /tutto l'archivio/i })
+    const torna = await screen.findByRole("link", { name: /archivio completo/i })
     expect(torna.getAttribute("href")).toBe("/archivio")
     expect(torna.closest(".as-archivio__ristretto")?.textContent).toContain("M 31")
     expect(chiamate().some((u) => u.includes("/api/v1/archive") && u.includes("key=m-31"))).toBe(true)
@@ -250,7 +250,7 @@ describe("l'Archivio aperto dalla ricerca", () => {
     expect(document.querySelector(".as-archivio__ristretto")).toBeNull()
 
     liberala()
-    const torna = await screen.findByRole("link", { name: /tutto l'archivio/i })
+    const torna = await screen.findByRole("link", { name: /archivio completo/i })
     expect(torna.closest(".as-archivio__ristretto")?.textContent).toContain("M 31")
   })
 
@@ -261,8 +261,8 @@ describe("l'Archivio aperto dalla ricerca", () => {
     await screen.findByRole("heading", { name: /archivio/i })
     window.history.replaceState(null, "", "/archivio?key=non-c-e")
     fireEvent.popState(window)
-    expect(await screen.findByText(/questo oggetto non c'e'/i)).toBeTruthy()
-    expect(screen.getByRole("link", { name: /tutto l'archivio/i })).toBeTruthy()
-    expect(screen.queryByText(/non ci sono ancora/i)).toBeNull()
+    expect(await screen.findByText(/^oggetto non trovato$/i)).toBeTruthy()
+    expect(screen.getByRole("link", { name: /archivio completo/i })).toBeTruthy()
+    expect(screen.queryByText(/^archivio vuoto$/i)).toBeNull()
   })
 })

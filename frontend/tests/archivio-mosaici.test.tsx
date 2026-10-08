@@ -63,7 +63,7 @@ describe("i mosaici nell'Archivio", () => {
     await apriArchivio()
 
     // dal v31 e' un interruttore, non una tendina con due voci
-    const solo = await screen.findByRole("button", { name: /solo i mosaici/i })
+    const solo = await screen.findByRole("button", { name: /^solo mosaici$/i })
     expect(solo.getAttribute("aria-pressed")).toBe("false")
     fireEvent.click(solo)
 
@@ -116,7 +116,7 @@ describe("l'Archivio, i pannelli del mosaico", () => {
 
     const elenco = within(await screen.findByRole("article")).getByRole("list", { name: /i pannelli/i })
     const ultimo = testoDi(within(elenco).getAllByRole("listitem")[3] as HTMLElement)
-    expect(ultimo).toMatch(/^4\s*nessun oggetto riconosciuto\s*20 \u00b7 2 h 2 senza tempo$/)
+    expect(ultimo).toMatch(/^4\s*Nessun oggetto identificato\s*20 \u00b7 2 h 2 senza durata$/)
   })
 
   it("un oggetto non ha pannelli da aprire", async () => {

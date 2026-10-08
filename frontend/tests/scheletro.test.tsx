@@ -184,7 +184,7 @@ describe("lo scheletro", () => {
       fireEvent.click(within(binario).getByRole("link", { name: t(p.chiave) }))
       const corpo = await screen.findByRole("main")
       expect(
-        await within(corpo).findByText(`${t(p.chiave)} sta arrivando`),
+        await within(corpo).findByText(`${t(p.chiave)}: non ancora disponibile`),
       ).toBeDefined()
       expect(window.location.pathname).toBe(p.a)
     }
@@ -197,10 +197,10 @@ describe("lo scheletro", () => {
     // `find`, non `get`: il numero arriva dall'API e il binario si disegna prima che risponda.
     // E si guarda **dentro la sua voce**: cercandolo in tutto il binario, il numero potrebbe
     // finire accanto a un'altra pagina e la prova resterebbe verde.
-    const voce = await within(binario).findByRole("link", { name: /12 casi da confermare/ })
+    const voce = await within(binario).findByRole("link", { name: /12 da confermare/ })
     expect(voce.getAttribute("href")).toBe("/da-confermare")
     // il numero si vede, e chi ascolta lo sente per intero
-    expect(within(voce).getByLabelText("12 casi da confermare").textContent).toBe("12")
+    expect(within(voce).getByLabelText("12 da confermare").textContent).toBe("12")
   })
 
   it("la barra in alto dice che pagina stai guardando", async () => {
@@ -246,7 +246,7 @@ describe("lo scheletro", () => {
     app({ ...FERMO, worker: { ...FERMO.worker, state: "running", stage: "scan" } })
     await disegna()
     const binario = await screen.findByRole("navigation", { name: /pagine/i })
-    await within(binario).findByRole("link", { name: /12 casi da confermare/ })
+    await within(binario).findByRole("link", { name: /12 da confermare/ })
     const prima = chiamate().filter((u) => u.endsWith("/api/v1/review")).length
 
     cambia({
@@ -263,7 +263,7 @@ describe("lo scheletro", () => {
 
     // il battito dello stato mentre gira e' 1,5 s: si aspetta quello, non un tempo inventato
     expect(
-      await within(binario).findByRole("link", { name: /40 casi da confermare/ }, { timeout: 5000 }),
+      await within(binario).findByRole("link", { name: /40 da confermare/ }, { timeout: 5000 }),
     ).toBeDefined()
     expect(chiamate().filter((u) => u.endsWith("/api/v1/review")).length).toBeGreaterThan(prima)
   })

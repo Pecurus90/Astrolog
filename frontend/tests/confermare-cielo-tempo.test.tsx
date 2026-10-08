@@ -195,7 +195,7 @@ describe("Da confermare -- i mosaici proposti", () => {
     expect(mosaico.textContent).toMatch(/3 pannelli/)
     expect(mosaico.textContent).toMatch(/90 frame/)
     expect(mosaico.textContent).toMatch(/3 h/)
-    expect(mosaico.textContent).toMatch(/2 senza tempo/)
+    expect(mosaico.textContent).toMatch(/2 senza durata/)
     expect(scelte(mosaico).map(([, spuntata]) => spuntata)).toEqual([false, false])
   })
 
@@ -255,7 +255,7 @@ describe("Da confermare -- i mosaici proposti", () => {
     const sezione = await vaiASezione(/mosaici/i)
     const mosaico = riga(sezione, "M 42, NGC 1977")
     expect(mosaico.textContent).not.toMatch(/\b0 h/)
-    expect(mosaico.textContent).toMatch(/90 senza tempo/)
+    expect(mosaico.textContent).toMatch(/90 senza durata/)
   })
 
   it("un no e' una risposta, resta, e ridarlo uguale non manda niente", async () => {

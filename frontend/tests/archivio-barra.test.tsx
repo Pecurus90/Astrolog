@@ -38,10 +38,10 @@ afterEach(pulisci)
 /** La conta come si legge: i numeri stanno in un `<b>`, quindi il testo e' su piu' nodi. */
 const laConta = () => document.querySelector(".as-archivio__conta")?.textContent
 
-/** Il bottone "Togli i filtri" del vuoto: quando un filtro non trova niente ce n'e' anche uno nella
+/** Il bottone "Rimuovi filtri" del vuoto: quando un filtro non trova niente ce n'e' anche uno nella
  *  barra, e questo e' quello che sta dove l'utente guarda. */
 const togliDalVuoto = () =>
-  within(screen.getByRole("tabpanel")).getByRole("button", { name: /togli i filtri/i })
+  within(screen.getByRole("tabpanel")).getByRole("button", { name: /^rimuovi filtri$/i })
 
 describe("la barra dell'Archivio", () => {
   it("cercare stringe l'elenco nel backend, non a schermo", async () => {
@@ -253,7 +253,7 @@ describe("la barra dell'Archivio", () => {
     // che e' la risposta a una domanda vecchia, e senza segno lo si legge come la nuova.
     archivio([])
     const reso = await apriArchivioSu("/archivio?q=zzz")
-    await screen.findByText(/nessun oggetto con questi filtri/i)
+    await screen.findByText(/^nessun risultato$/i)
 
     let liberala = () => {}
     cambia(conArchivio({
@@ -285,7 +285,7 @@ describe("la barra dell'Archivio", () => {
 
     await scegli(/catalogo/i, "M")
 
-    expect(await screen.findByText(/nessun oggetto con questi filtri/i)).toBeDefined()
+    expect(await screen.findByText(/^nessun risultato$/i)).toBeDefined()
     const schede = screen.getAllByRole("tab")
     expect(schede).toHaveLength(2)
     for (const scheda of schede) {
@@ -307,13 +307,13 @@ describe("la barra dell'Archivio", () => {
     expect(await screen.findByRole("alert")).toBeDefined()
     expect(await laTendina(/catalogo/i)).toBeDefined()
     // e il filtro si toglie da li': la x accanto alla tendina c'e'
-    expect(screen.getByRole("button", { name: /togli catalogo: M/i })).toBeDefined()
+    expect(screen.getByRole("button", { name: /rimuovi catalogo: M/i })).toBeDefined()
     expect(screen.getByLabelText(/cerca un oggetto/i)).toBeDefined()
     // e la conta **dice che non sa**, e nient'altro: zero sarebbe l'unica risposta che sappiamo
     // falsa, e toglierla farebbe saltare l'ordine sotto le dita
-    expect(laConta()).toBe("non so quanti")
+    expect(laConta()).toBe("Conteggio non disponibile")
     // e **non** dice "non ho trovato niente": non lo sappiamo, la richiesta e' fallita
-    expect(screen.queryByText(/nessun oggetto con questi filtri/i)).toBeNull()
+    expect(screen.queryByText(/^nessun risultato$/i)).toBeNull()
   })
 
   it("e resta anche se a cadere e' un cambio d'ordine", async () => {
@@ -341,8 +341,8 @@ describe("la barra dell'Archivio", () => {
     archivio([])
     const reso = await apriArchivioSu("/archivio?q=zzz&catalog=M&vista=elenco")
 
-    expect(await screen.findByText(/nessun oggetto con questi filtri/i)).toBeDefined()
-    expect(screen.queryByText(/non c'e' ancora niente/i)).toBeNull()
+    expect(await screen.findByText(/^nessun risultato$/i)).toBeDefined()
+    expect(screen.queryByText(/^archivio vuoto$/i)).toBeNull()
     expect(screen.getByLabelText(/cerca un oggetto/i)).toBeDefined()
 
     fireEvent.click(togliDalVuoto())
@@ -363,7 +363,7 @@ describe("la barra dell'Archivio", () => {
   })
 
   it("togliere i filtri non fa dire all'app che l'archivio e' vuoto", async () => {
-    // La strada: cerchi, non trovi niente, premi "togli i filtri". La risposta senza criteri non
+    // La strada: cerchi, non trovi niente, premi "Rimuovi filtri". La risposta senza criteri non
     // e' in cache, quindi per tutto il giro di rete restano a schermo **zero righe vecchie** e
     // nessun criterio -- che assomigliano a un primo avvio e non lo sono. Chi ha milleduecento
     // oggetti si vedrebbe dire di non averne nessuno, e perderebbe la barra col fuoco dentro.
@@ -373,7 +373,7 @@ describe("la barra dell'Archivio", () => {
     archivio([])
     window.history.replaceState(null, "", "/archivio?q=zzz")
     const reso = await disegna()
-    await screen.findByText(/nessun oggetto con questi filtri/i)
+    await screen.findByText(/^nessun risultato$/i)
 
     // e l'archivio, senza quel filtro, e' **pieno**
     let liberala = () => {}
@@ -387,7 +387,7 @@ describe("la barra dell'Archivio", () => {
     fireEvent.click(togliDalVuoto())
 
     await waitFor(() => expect(window.location.search).not.toContain("q="))
-    expect(screen.queryByText(/non c'e' ancora niente/i)).toBeNull()
+    expect(screen.queryByText(/^archivio vuoto$/i)).toBeNull()
     expect(screen.getByLabelText(/cerca un oggetto/i)).toBeDefined()
     // E cosa si vede, non solo cosa non si vede: sotto la barra resta il vuoto -- le righe di
     // prima erano zero -- quindi il segno d'attesa sulla barra e' **l'unica** cosa che dice che
@@ -396,7 +396,7 @@ describe("la barra dell'Archivio", () => {
     expect(barra).toHaveProperty("ariaBusy", "true")
     // nessun controllo della barra ha chiesto: il segno **visibile** c'e' lo stesso
     await waitFor(() => expect(barra?.querySelector(".as-attesa")).not.toBeNull())
-    expect(screen.queryByText(/nessun oggetto con questi filtri/i)).toBeNull()
+    expect(screen.queryByText(/^nessun risultato$/i)).toBeNull()
 
     liberala()
     reso.unmount()
@@ -435,7 +435,7 @@ describe("la barra dell'Archivio", () => {
     const prima = quantiControlli()
     window.history.replaceState(null, "", "/archivio?catalog=M&period=date&since=2026-08-01")
     fireEvent.popState(window)
-    await screen.findByRole("button", { name: /togli catalogo: M/i })
+    await screen.findByRole("button", { name: /rimuovi catalogo: M/i })
     await screen.findByLabelText(/^dal$/i)
 
     expect(quantiControlli()).toBeGreaterThan(prima)
@@ -532,10 +532,10 @@ describe("la barra dell'Archivio", () => {
     archivio([M31])
     const reso = await apriArchivioSu("/archivio?catalog=M")
 
-    fireEvent.click(await screen.findByRole("button", { name: /togli catalogo: M/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /rimuovi catalogo: M/i }))
 
     await waitFor(() => expect(window.location.search).not.toContain("catalog="))
-    await waitFor(() => expect(screen.queryByRole("button", { name: /togli catalogo: M/i })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole("button", { name: /rimuovi catalogo: M/i })).toBeNull())
     expect((await laTendina(/catalogo/i)).classList.contains("as-tendina--scelta")).toBe(false)
     reso.unmount()
   })
@@ -567,13 +567,13 @@ describe("la barra dell'Archivio", () => {
     await waitFor(() => expect(document.activeElement).toBe(scelta))
   })
 
-  it("Togli i filtri nella barra li toglie tutti", async () => {
+  it("Rimuovi filtri nella barra li toglie tutti", async () => {
     // Con le righe a schermo il vuoto non c'e': questo e' il bottone in fondo alle tendine.
     archivio([M31])
     const reso = await apriArchivioSu("/archivio?catalog=M&constellation=And")
     const barra = (await laBarra()) as HTMLElement
 
-    fireEvent.click(await within(barra).findByRole("button", { name: /togli i filtri/i }))
+    fireEvent.click(await within(barra).findByRole("button", { name: /^rimuovi filtri$/i }))
 
     await waitFor(() => expect(window.location.search).not.toContain("catalog="))
     expect(window.location.search).not.toContain("constellation=")

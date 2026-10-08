@@ -44,7 +44,7 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Appena installata, la pagina mi dice cosa fare invece di sembrare rotta | `test_an_empty_archive_is_an_answer_not_an_error`; *a mani vuote dice cosa fare, non nessun risultato* |
 | Se l'archivio non risponde me lo dice, invece di sembrare vuoto, e posso riprovare | *se l archivio non risponde lo dice, invece di sembrare vuoto, e si riprova* |
 | Mentre legge, la pagina tiene il posto delle carte | *mentre legge tiene il posto delle carte, e lo dice a chi ascolta* |
-| Accanto a *Mostra altri* leggo quanti ne vedo e quanti sono | *accanto a Mostra altri dice quanti ne stai vedendo e quanti sono* |
+| Accanto a *Carica altri* leggo quanti ne vedo e quanti sono | *accanto a Carica altri dice quanti ne stai vedendo e quanti sono* |
 | Cio' che il catalogo o i file non dicono, la carta lo dice a parole | *un oggetto che il catalogo non conosce lo dice nella carta, tipo e costellazione*, *un oggetto senza filtri riconosciuti non mostra pastiglie finte*, *un tipo che la pagina non conosce non arriva a schermo come sigla: dice che non si sa* |
 | Il posto dell'anteprima c'e' gia', vuoto | *il posto dell'anteprima c'e', vuoto, e chi ascolta non lo sente* |
 | Ogni riga dice con quali corredi l'ho ripresa: una produzione per ottica e camera, e insieme fanno la riga | `test_an_object_shot_with_two_rigs_has_two_productions_most_time_first`, `test_the_productions_of_a_row_add_up_to_the_row`, `test_each_production_says_its_own_filters_in_the_order_of_the_row`, `test_a_rewritten_copy_is_not_a_frame_of_a_production`, `test_a_narrowed_row_tells_the_productions_of_what_was_asked`, `test_a_mosaic_has_its_productions_too_and_the_object_alone_keeps_its_own` (`backend/tests/test_spine_archive_productions.py`); `test_each_row_carries_its_productions_and_they_add_up_to_the_row` |
@@ -57,14 +57,14 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Un mosaico proposto e non ancora confermato non cambia l'Archivio | `test_without_a_confirmed_mosaic_nothing_changes` |
 | Un mosaico dice di esserlo e quanti pannelli ha, nelle due viste e anche a chi ascolta | `test_a_mosaic_row_says_how_many_panels_it_has`; *la carta di un mosaico dice mosaico e quanti pannelli, e si sente*, *anche nell'elenco la riga del mosaico porta la sua etichetta* (`frontend/tests/archivio-mosaici.test.tsx`) |
 | La carta di un mosaico dice ogni pannello, numerato: il suo oggetto, i frame e le ore (il punto del cielo arriva dalla rotta e non si scrive: Marco, 8/10/2026) | `test_every_panel_of_a_mosaic_says_its_object_its_frames_and_its_hours`, `test_a_panel_counts_like_every_row_copies_out_and_untimed_apart`, `test_a_panel_whose_poses_found_no_object_says_so_with_nothing`, `test_the_route_gives_a_mosaic_its_panels_and_an_object_none`, `test_all_the_panels_of_a_page_come_in_two_questions`; *la carta del mosaico dice ogni pannello, con oggetto, frame e ore*, *un pannello di cui il cielo non ha legato l'oggetto lo dice, e le pose senza tempo a parte*, *un oggetto non ha pannelli da aprire* (`frontend/tests/archivio-mosaici.test.tsx`) |
-| Posso vedere solo i mosaici, e l'interruttore *Solo i mosaici* c'e' solo se ne ho | `test_you_can_narrow_down_to_the_mosaics`, `test_the_mosaic_choice_is_offered_only_to_who_has_a_mosaic`; *la tendina dei mosaici compare solo a chi ne ha, e stringe nel backend*, *chi non ha mosaici non vede la tendina* |
+| Posso vedere solo i mosaici, e l'interruttore *Solo mosaici* c'e' solo se ne ho | `test_you_can_narrow_down_to_the_mosaics`, `test_the_mosaic_choice_is_offered_only_to_who_has_a_mosaic`; *la tendina dei mosaici compare solo a chi ne ha, e stringe nel backend*, *chi non ha mosaici non vede la tendina* |
 | Stringo a un anno, o a date mie, e ogni riga dice solo le ore, i frame e i filtri di quel periodo | `test_a_period_keeps_the_rows_shot_in_it_with_their_hours_in_it`, `test_a_period_can_straddle_the_new_year`, `test_the_pills_of_a_row_say_the_narrowed_hours` (`backend/tests/test_spine_archive_scope.py`); *un anno chiede le notti dal primo gennaio al trentuno dicembre*, *scegliere le date apre dal e al, e una stagione a cavallo d'anno arriva intera*, *tornare a un anno dimentica le date scelte prima* (`frontend/tests/archivio-periodo.test.tsx`) |
 | Il periodo guarda la notte, non l'orologio | `test_the_period_reads_the_night_not_the_clock` |
 | Stringo per sito, ottica o camera, e le condizioni valgono sulla stessa posa | `test_you_can_narrow_down_to_one_optics_or_one_camera`, `test_you_can_narrow_down_to_one_site`, `test_the_narrowings_hold_on_the_same_pose`, `test_the_filter_of_the_bar_asks_the_same_poses`; *sito, ottica e camera si leggono col nome e stringono per quello* |
 | Per ore, con un periodo acceso, l'ordine segue le ore del periodo | `test_by_hours_reads_the_narrowed_hours` |
 | Un mosaico stretto a un periodo apre i soli pannelli ripresi allora | `test_a_mosaic_says_only_the_panels_and_hours_shot_in_the_period` |
 | Le tendine offrono gli anni delle mie notti, e sito, ottica e camera solo se ne ho almeno due | `test_the_choices_offer_the_years_sites_and_pieces_you_shot_with`, `test_one_site_or_one_camera_is_not_a_choice`; *con un sito solo, o una camera sola, la tendina non c'e'* |
-| "Togli i filtri" toglie anche periodo e corredo | *togli i filtri toglie anche il periodo e il corredo* |
+| "Rimuovi filtri" toglie anche periodo e corredo | *rimuovi filtri toglie anche il periodo e il corredo* |
 | La conta dice quanti oggetti e quanti mosaici ho trovato | `test_the_count_says_how_many_objects_and_how_many_mosaics`; *la conta dice quanti oggetti e quanti mosaici* |
 
 ## Le decisioni
@@ -119,7 +119,7 @@ mosaico: e' cio' che il mosaico e', non cio' che e' stato ripreso nel periodo.
 
 **Sito, ottica e camera si offrono solo da due in su.** Con uno solo, sceglierlo non stringe
 niente: e' la tendina con la sola voce "tutti" sotto un altro nome. Gli anni invece si offrono da
-uno, perche' la stessa tendina porta a "Scegli le date". Ottica e camera si leggono dal corredo
+uno, perche' la stessa tendina porta a "Intervallo di date". Ottica e camera si leggono dal corredo
 della posa (`rigs`), come le conta l'Attrezzatura.
 
 **E costa quanto le righe che mostra, non quanto le pose che contengono.** Le ore si contano solo
@@ -163,7 +163,7 @@ pagina a ogni ricerca smonterebbe il campo e con lui il **fuoco**, a meta' parol
 c'era pero' vuol dire che per un attimo la conta, le righe -- o lo stato vuoto -- rispondono a una
 domanda vecchia. Il segno sta su **chi ha chiesto** -- il campo di ricerca, con la parola *cerco*, o la
 tendina appena cambiata -- e su campo e tendine insieme quando la richiesta non parte dalla barra
-(il tasto indietro, *Togli i filtri*); non sulle righe: le
+(il tasto indietro, *Rimuovi filtri*); non sulle righe: le
 righe possono essere zero, ed e' proprio li' che serve di piu'. E la barra lo **dichiara**
 (`aria-busy`), perche' chi ascolta non vede il movimento. **Niente si spegne**: cambiare idea a
 meta' attesa e' legittimo.

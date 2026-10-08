@@ -48,7 +48,7 @@ describe("l'Archivio per periodo e corredo", () => {
     archivio([M31])
     await apriArchivio()
 
-    expect(await vociDi(/periodo/i)).toEqual(["Sempre", ...SCELTE.years, "Scegli le date"])
+    expect(await vociDi(/periodo/i)).toEqual(["Tutto il periodo", ...SCELTE.years, "Intervallo di date"])
     fireEvent.click(screen.getByRole("menuitemradio", { name: "2025" }))
 
     await waitFor(() => expect(window.location.search).toContain("period=2025"))
@@ -60,7 +60,7 @@ describe("l'Archivio per periodo e corredo", () => {
     await apriArchivio()
     expect(screen.queryByLabelText(/^dal$/i)).toBeNull()
 
-    await scegli(/periodo/i, "Scegli le date")
+    await scegli(/periodo/i, "Intervallo di date")
     fireEvent.change(await screen.findByLabelText(/^dal$/i), { target: { value: "2024-11-01" } })
     fireEvent.change(await screen.findByLabelText(/^al$/i), { target: { value: "2025-02-28" } })
 
@@ -87,8 +87,8 @@ describe("l'Archivio per periodo e corredo", () => {
     archivio([M31])
     await apriArchivioSu("/archivio?period=date&since=2024-11-01&until=2025-02-28")
 
-    // con le date a schermo la tendina non c'e': si torna a "sempre", e da li' all'anno
-    fireEvent.click(await screen.findByRole("button", { name: /togli il periodo/i }))
+    // con le date a schermo la tendina non c'e': si torna a "tutto il periodo", e da li' all'anno
+    fireEvent.click(await screen.findByRole("button", { name: /^rimuovi periodo$/i }))
     await scegli(/periodo/i, "2024")
 
     await waitFor(() => expect(window.location.search).toContain("period=2024"))
@@ -124,7 +124,7 @@ describe("l'Archivio per periodo e corredo", () => {
     await waitFor(() => expect(periodo?.querySelector(".as-attesa")).toBeNull())
   })
 
-  it("Togli il periodo riporta a sempre", async () => {
+  it("Rimuovi periodo riporta a tutto il periodo", async () => {
     archivio([M31])
     await apriArchivioSu("/archivio?period=date&since=2026-08-01")
     await screen.findByRole("group", { name: /periodo/i })
@@ -132,11 +132,11 @@ describe("l'Archivio per periodo e corredo", () => {
     const diNome = screen.getAllByRole("button", { name: /periodo/i })
     expect(diNome.filter((b) => b.classList.contains("as-tendina"))).toEqual([])
 
-    fireEvent.click(await screen.findByRole("button", { name: /togli il periodo/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /^rimuovi periodo$/i }))
 
     await waitFor(() => expect(window.location.search).not.toContain("period="))
     expect(window.location.search).not.toContain("since=")
-    expect((await laTendina(/periodo/i)).querySelector("b")?.textContent).toBe("sempre")
+    expect((await laTendina(/periodo/i)).querySelector("b")?.textContent).toBe("tutto")
     expect(screen.queryByRole("group", { name: /periodo/i })).toBeNull()
     expect(screen.queryByLabelText(/^dal$/i)).toBeNull()
   })
@@ -146,7 +146,7 @@ describe("l'Archivio per periodo e corredo", () => {
     archivio([M31])
     await apriArchivioSu("/archivio?period=date&since=2026-08-01&until=2026-07-15")
 
-    const errore = await screen.findByText(/viene prima di/i)
+    const errore = await screen.findByText(/la data finale precede quella iniziale/i)
     expect(errore.closest(".as-dal-al__errore")).not.toBeNull()
     const al = screen.getByLabelText(/^al$/i)
     expect(al.getAttribute("aria-invalid")).toBe("true")
@@ -157,7 +157,7 @@ describe("l'Archivio per periodo e corredo", () => {
     fireEvent.change(al, { target: { value: "2026-08-20" } })
 
     await waitFor(() => expect(window.location.search).toContain("until=2026-08-20"))
-    await waitFor(() => expect(screen.queryByText(/viene prima di/i)).toBeNull())
+    await waitFor(() => expect(screen.queryByText(/la data finale precede quella iniziale/i)).toBeNull())
     expect(screen.getByLabelText(/^al$/i).hasAttribute("aria-invalid")).toBe(false)
   })
 
@@ -199,12 +199,12 @@ describe("l'Archivio per periodo e corredo", () => {
     expect(screen.getByLabelText(/^al$/i)).toHaveProperty("value", "2025-02-28")
   })
 
-  it("togli i filtri toglie anche il periodo e il corredo", async () => {
+  it("rimuovi filtri toglie anche il periodo e il corredo", async () => {
     archivio([], { choices: CORREDO, found: { objects: 0, mosaics: 0 }, total: 0 })
     await apriArchivioSu("/archivio?period=date&since=2030-01-01&optics=5&camera=7&site=1")
 
     // due bottoni lo dicono, quello della barra e quello del vuoto: tolgono le stesse cose
-    const togli = await screen.findAllByRole("button", { name: /togli i filtri/i })
+    const togli = await screen.findAllByRole("button", { name: /^rimuovi filtri$/i })
     expect(togli).toHaveLength(2)
     fireEvent.click(togli[1] as HTMLElement)
 

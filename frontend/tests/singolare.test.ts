@@ -27,6 +27,6 @@ describe("il singolare dei conti", () => {
     expect(t("review.applied", { n: 1, pose: 3 })).toBe("applicata 1 risposta, 3 frame rimessi in coda")
     expect(t("weather.usable.dark", { n: 1, su: 8 })).toBe("1 ora utile su 8 di buio.")
     expect(t("settings.readings.duplicates", { n: 1 })).toBe("1 doppione")
-    expect(t("nights.waiting.review", { n: 1 })).toMatch(/^1 frame aspetta una tua risposta/)
+    expect(t("nights.waiting.review", { n: 1 })).toBe("1 frame da confermare")
   })
 })

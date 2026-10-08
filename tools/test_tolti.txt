@@ -194,3 +194,8 @@ in elenco ogni bottone si chiama col suo posto, non tutti Scegli - testi del pri
 mentre l elenco arriva, Usa questa cartella non punta a quella di prima - testi del primo avvio (Marco, 8/10/2026): il bottone ora dice Seleziona cartella; rinominato in "mentre l elenco arriva, Seleziona cartella non punta a quella di prima"
 e nemmeno Il riconoscitore, con la proposta della ricerca aperta - testi del primo avvio (Marco, 8/10/2026): la sezione ora si chiama ASTAP; rinominato in "e nemmeno ASTAP, con la proposta della ricerca aperta"
 e nemmeno Il riconoscitore con ASTAP ma senza il suo catalogo - testi del primo avvio (Marco, 8/10/2026): la sezione ora si chiama ASTAP; rinominato in "e nemmeno ASTAP, trovato ma senza il suo catalogo"
+Togli i filtri nella barra li toglie tutti - testi dell'Archivio (Marco, 8/10/2026): il bottone ora dice Rimuovi filtri; rinominato in "Rimuovi filtri nella barra li toglie tutti"
+togli i filtri toglie anche il periodo e il corredo - testi dell'Archivio (Marco, 8/10/2026): il bottone ora dice Rimuovi filtri; rinominato in "rimuovi filtri toglie anche il periodo e il corredo"
+Togli il periodo riporta a sempre - testi dell'Archivio (Marco, 8/10/2026): il bottone ora dice Rimuovi periodo e la tendina Tutto il periodo; rinominato in "Rimuovi periodo riporta a tutto il periodo"
+ore, frame e senza tempo stanno in pezzi che non si spezzano - testi dell'Archivio (Marco, 8/10/2026): senza tempo ora e' senza durata; rinominato in "ore, frame e senza durata stanno in pezzi che non si spezzano"
+accanto a Mostra altri dice quanti ne stai vedendo e quanti sono - testi dell'Archivio (Marco, 8/10/2026): il bottone ora dice Carica altri; rinominato in "accanto a Carica altri dice quanti ne stai vedendo e quanti sono"

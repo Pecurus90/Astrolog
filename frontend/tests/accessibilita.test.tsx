@@ -307,7 +307,7 @@ describe("l accessibilita della prima pagina", () => {
     })
     const { container } = await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /archivio/i }))
-    await screen.findByRole("button", { name: /mostra altri/i })
+    await screen.findByRole("button", { name: /carica altri/i })
 
     expect(await violazioni(container)).toEqual([])
 
@@ -323,7 +323,7 @@ describe("l accessibilita della prima pagina", () => {
     // pannelli veri -- e finora axe l'Archivio lo vedeva solo pieno.
     archivio([])
     const { container } = await apriArchivioSu("/archivio?q=zzz")
-    await screen.findByText(/nessun oggetto con questi filtri/i)
+    await screen.findByText(/^nessun risultato$/i)
 
     expect(await violazioni(container)).toEqual([])
   })
@@ -366,7 +366,7 @@ describe("l accessibilita della prima pagina", () => {
     })
     const { container } = await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /notti/i }))
-    await screen.findByRole("button", { name: /mostra altre/i })
+    await screen.findByRole("button", { name: /carica altre/i })
 
     expect(await violazioni(container)).toEqual([])
   })

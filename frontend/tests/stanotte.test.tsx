@@ -93,8 +93,8 @@ describe("la pastiglia", () => {
 
   it("senza sito chiede di sceglierlo", async () => {
     await app({ night: null, site: null, moon: null })
-    const pastiglia = await screen.findByRole("button", { name: "Scegli il sito" })
-    expect(pastiglia.textContent).toContain("Scegli il sito")
+    const pastiglia = await screen.findByRole("button", { name: "Seleziona sito" })
+    expect(pastiglia.textContent).toContain("Seleziona sito")
   })
 
   it("Esc chiude Stanotte, e il fuoco torna alla pastiglia", async () => {
@@ -144,7 +144,7 @@ describe("il pannello di Stanotte", () => {
     })
     const pannello = await apri(/stanotte a longyearbyen/i)
 
-    expect(await within(pannello).findByText(/non sorge stanotte/)).toBeDefined()
+    expect(await within(pannello).findByText("non sorge")).toBeDefined()
     expect(within(pannello).queryByText("15:49")).toBeNull()
   })
 
@@ -156,7 +156,7 @@ describe("il pannello di Stanotte", () => {
     })
     const pannello = await apri(/stanotte a longyearbyen/i)
 
-    expect(await within(pannello).findByText(/non tramonta stanotte/)).toBeDefined()
+    expect(await within(pannello).findByText("non tramonta")).toBeDefined()
     expect(within(pannello).queryByText("23:48")).toBeNull()
   })
 
@@ -166,17 +166,17 @@ describe("il pannello di Stanotte", () => {
     await app({ night: null, site: VICENZA, moon: null })
     const pannello = await apri(/stanotte a vicenza/i)
 
-    expect(await within(pannello).findByText(/il fuso di questo sito non si riconosce/i)).toBeDefined()
+    expect(await within(pannello).findByText(/fuso orario del sito non riconosciuto/i)).toBeDefined()
   })
 
   it("senza sito dice cosa manca, e non promette una pagina che non c e", async () => {
     await app({ night: null, site: null, moon: null })
-    const pannello = await apri(/scegli il sito/i)
+    const pannello = await apri(/^seleziona sito$/i)
 
-    expect(await within(pannello).findByText(/Non so da dove osservi/)).toBeDefined()
+    expect(await within(pannello).findByText(/Nessun sito selezionato/)).toBeDefined()
     // E ci porta davvero: la sezione del sito esiste, quindi il rimando va **li'**, non sulla
     // pagina generica.
-    const rimando = within(pannello).getByRole("link", { name: /scegli il sito/i })
+    const rimando = within(pannello).getByRole("link", { name: /^seleziona sito$/i })
     expect(rimando.getAttribute("href")).toBe("/impostazioni/sito")
   })
 
@@ -221,9 +221,9 @@ describe("il pannello di Stanotte", () => {
       "/api/v1/tonight": { stato: 500, corpo: {} },
     })
     await disegna()
-    const pannello = await apri(/scegli il sito/i)
+    const pannello = await apri(/^seleziona sito$/i)
 
-    expect((await within(pannello).findByRole("alert")).textContent).toMatch(/Non riesco a leggere il cielo/)
+    expect((await within(pannello).findByRole("alert")).textContent).toMatch(/Dati di stanotte non disponibili/)
   })
 
   it("il lembo illuminato e quello che dice il backend, non uno a caso", async () => {
@@ -295,7 +295,7 @@ describe("il meteo di stanotte, sotto la Luna", () => {
     const pannello = await apri(/stanotte a vicenza/i)
 
     expect(
-      await within(pannello).findByText("Non c'e' ancora una previsione di stanotte: il Meteo ti dice perche'."),
+      await within(pannello).findByText("Previsione non disponibile. Dettagli nella pagina Meteo."),
     ).toBeDefined()
     expect(within(pannello).getByRole("link", { name: "Apri il Meteo" })).toBeDefined()
   })
@@ -308,7 +308,7 @@ describe("il meteo di stanotte, senza fuso", () => {
 
     expect(await within(pannello).findByText(/fuso/i)).toBeDefined()
     expect(
-      within(pannello).queryByText("Non c'e' ancora una previsione di stanotte: il Meteo ti dice perche'."),
+      within(pannello).queryByText("Previsione non disponibile. Dettagli nella pagina Meteo."),
     ).toBeNull()
   })
 })

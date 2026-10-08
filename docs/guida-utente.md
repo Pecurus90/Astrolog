@@ -86,7 +86,7 @@ in quattro gruppi, con poche voci per gruppo e, quando ce ne sono altre, quante 
 ("5 di 23"): per vedere le altre scrivi qualche lettera in piu'. Un oggetto lo trovi con ogni suo
 nome, anche quello comune; una notte con la data, come la scrivi tu, o col nome di un oggetto che
 hai ripreso quella notte. Ogni voce dice quanti frame e quante ore porta; se i file non dicono la
-durata leggi "senza tempo", mai zero ore. Con le frecce scegli e con Invio apri, oppure tocchi la
+durata leggi "senza durata", mai zero ore. Con le frecce scegli e con Invio apri, oppure tocchi la
 voce: un oggetto apre l'Archivio su di lui solo, una notte la sua notte, un pezzo la sua riga in
 Attrezzatura, un sito il suo posto nelle Impostazioni. Esc chiude; sul telefono c'e' *Annulla*.
 Se non trova niente te lo dice. Le pagine dell'app non si cercano qui: stanno nel binario.
@@ -101,7 +101,7 @@ che ti porta dove si sistema.
 La pastiglia dice **da dove osservi** e, col disco, che luna fa. Premila e si apre **Stanotte**:
 - il **sito**: se ne hai piu' di uno li trovi tutti e scegli quello di stanotte -- diventa il tuo
   sito di casa, e Luna e meteo si aggiornano. Sotto c'e' che cielo ha, con la classe di Bortle e
-  la sua misura, e *Gestisci i siti*. Se non hai ancora un sito, la pastiglia dice *Scegli il
+  la sua misura, e *Gestisci i siti*. Se non hai ancora un sito, la pastiglia dice *Seleziona
   sito* e Stanotte ti porta dove lo dichiari;
 - la **Luna**: che fase e', quanto e' illuminata, a che ora sorge e tramonta. Gli orari sono
   quelli del **tuo sito**, anche se guardi l'app da un altro fuso. Se una notte la Luna non sorge
@@ -221,20 +221,20 @@ non ha potuto leggere.
 **ore**, e con che **filtri**: una barra divisa nei colori dei filtri, larga per ognuno quanto le
 sue ore, e sotto il nome di ognuno coi suoi frame e le sue ore. Leggi anche che cos'e' e in che
 **costellazione** sta, col suo nome latino ufficiale, uguale in ogni lingua: nella carta su due
-righe, *galassia* e sotto *Andromeda*. Cio' che l'app non sa lo dice a parole -- *tipo: non si sa*, *filtri: non si sa* --
-e i frame che non dicono la durata sono *senza tempo*, mai zero ore.
+righe, *galassia* e sotto *Andromeda*. Cio' che l'app non sa lo dice a parole -- *Tipo non disponibile*, *Filtri non indicati* --
+e i frame che non dicono la durata sono *senza durata*, mai zero ore.
 
 Un **mosaico** che hai confermato in *Da confermare* e' **una riga sola**, col nome che gli hai
 dato e i frame e le ore di tutti i suoi pannelli, e porta il segno *mosaico · 4 pannelli*: sulla
-carta sotto le ore, nell'elenco nella colonna *Etichette*. Se hai almeno un
-mosaico, nella barra compare anche **Solo i mosaici**, per vedere solo quelli, e accanto all'ordine leggi
+carta sotto le ore, nell'elenco nella colonna *Mosaico*. Se hai almeno un
+mosaico, nella barra compare anche **Solo mosaici**, per vedere solo quelli, e accanto all'ordine leggi
 quanti oggetti e quanti mosaici hai trovato (*3 oggetti e 1 mosaico*). Un oggetto che hai ripreso anche da solo, fuori
 dal mosaico, ha la sua riga con quelle sole riprese: niente si conta due volte. Cercando o
 filtrando, il mosaico compare se **uno** dei suoi pannelli risponde -- chi cerca il pezzo di cielo
 di un pannello trova il mosaico. In fondo alla carta del mosaico c'e'
 l'elenco dei pannelli, numerati, da quello a cui hai dato piu' tempo: per ognuno l'oggetto, i
 frame e le ore. Un pannello
-i cui frame non sono legati a nessun oggetto dice *nessun oggetto riconosciuto*; uno legato a un
+i cui frame non sono legati a nessun oggetto dice *Nessun oggetto identificato*; uno legato a un
 oggetto fuori catalogo porta il nome che ha.
 
 La pagina ha **due viste**, e si cambia col pulsante in alto a sinistra:
@@ -252,18 +252,18 @@ In alto c'e' la **barra**: cerchi un oggetto scrivendo qualunque nome con cui lo
 o **filtro usato**. Ogni filtro e' una **tendina**: una pillola che dice cosa stringe e il valore
 scelto (*Catalogo tutti*, *Costellazione Andromeda*); la tocchi, scegli dall'elenco, e si applica
 subito. Quando stringe qualcosa si colora e accanto compare una **×** che la toglie; oppure scegli
-la prima voce dell'elenco (*Tutti i cataloghi*). *Togli i filtri*, in coda alle tendine, li toglie
+la prima voce dell'elenco (*Tutti i cataloghi*). *Rimuovi filtri*, in coda alle tendine, li toglie
 tutti insieme. Le tendine ti offrono solo quello che hai davvero: se riprendi solo Messier,
 non ti fanno scorrere tutti quelli che il catalogo conosce, e quella che non avrebbe niente da
-offrire non compare. Se hai almeno un mosaico c'e' anche **Solo i mosaici**, che si accende e si
+offrire non compare. Se hai almeno un mosaico c'e' anche **Solo mosaici**, che si accende e si
 spegne.
 
 Sul **telefono** le tendine stanno dietro **Filtri**, che dice quanti ne hai scelti: lo tocchi e
 si aprono sotto la barra, una per riga.
 
 Puoi stringere anche **per periodo**, **sito**, **ottica** e **camera**. Il periodo e' un anno,
-oppure "Scegli le date": al posto della tendina compaiono le due date **dal** e **al**, comprese,
-con la × che torna a *sempre*. Cosi' una stagione invernale da novembre a febbraio sta in una
+oppure "Intervallo di date": al posto della tendina compaiono le due date **dal** e **al**, comprese,
+con la × che torna a *Tutto il periodo*. Cosi' una stagione invernale da novembre a febbraio sta in una
 scelta sola. Se "al" viene prima di "dal" l'app te lo dice sotto, invece di mostrarti un elenco
 vuoto senza un perche'. Il periodo guarda la **notte**, non l'orologio: una
 posa delle due del primo gennaio appartiene alla notte del 31 dicembre. Con questi filtri accesi
@@ -277,12 +277,12 @@ niente.
 A destra scegli l'**ordine** -- nome, ore o frame, anche lui una tendina -- e l'archivio si apre in
 ordine di nome, perche' e' un inventario: cosa hai ripreso di recente si guarda nelle **Notti**.
 Accanto all'ordine c'e' quanti ne ha **trovati**: con un filtro acceso e' quel numero, non quanti ne hai in tutto. Se la
-richiesta non e' andata a buon fine dice "non so quanti", che e' la verita': zero sarebbe l'unica
+richiesta non e' andata a buon fine dice "Conteggio non disponibile", che e' la verita': zero sarebbe l'unica
 risposta che sappiamo falsa.
 
 Mentre l'app cerca, quello che avevi sotto resta a schermo -- finche' c'e' qualcosa da mostrare:
 se la ricerca di prima non aveva trovato niente, sotto la barra resta il vuoto -- e il segno
-dell'attesa compare **su cio' che hai appena toccato**: nel campo, con la parola *cerco*, o sulla
+dell'attesa compare **su cio' che hai appena toccato**: nel campo, con la parola *Ricerca…*, o sulla
 tendina che hai cambiato. Se la richiesta non parte dalla barra -- il bottone per togliere i
 filtri sotto, il tasto indietro, un collegamento -- il segno compare sul campo e su tutte le
 tendine. Cosi' non perdi il punto in cui stavi scrivendo, e sai che quello che
@@ -291,9 +291,9 @@ vedi e' ancora la risposta di prima.
 Se una ricerca non trova niente l'app te lo dice, e non usa le parole dell'archivio vuoto: e'
 questa ricerca che non pesca -- e trovi il bottone per togliere i filtri.
 
-Quando apri un oggetto dalla **ricerca in alto**, l'Archivio mostra lui solo e lo dice: "Solo
-M 31, aperto dalla ricerca". La barra dei filtri non c'e', perche' non c'e' niente da restringere;
-restano le due viste, e *Tutto l'archivio* ti riporta all'elenco intero. Se quell'oggetto non c'e'
+Quando apri un oggetto dalla **ricerca in alto**, l'Archivio mostra lui solo e lo dice: "Risultato
+della ricerca: M 31". La barra dei filtri non c'e', perche' non c'e' niente da restringere;
+restano le due viste, e *Archivio completo* ti riporta all'elenco intero. Se quell'oggetto non c'e'
 piu' -- i suoi frame sono stati tolti -- l'app te lo dice, invece di mostrarti un archivio vuoto.
 
 **Tutto quello che stai guardando finisce nell'indirizzo**: la vista, la ricerca, i filtri e
@@ -307,12 +307,12 @@ Le ore sono quelle vere:
 
 - se tieni accanto agli originali anche le **copie calibrate**, non contano due volte;
 - un frame che **non dice quanto e' durato** non vale zero: non entra nelle ore, e l'app te lo
-  dice a parte (*3 senza tempo*), come in *Da confermare*;
+  dice a parte (*3 senza durata*), come in *Da confermare*;
 - se **nessun** frame di un oggetto dice la durata, non leggi "0 h": le ore non compaiono, e
-  restano solo i frame senza tempo;
+  restano solo i frame senza durata;
 - un tempo piccolo ma vero non diventa zero: leggi **< 0,1 h**, qui e in *Da confermare*.
 
-Se hai molti oggetti, in fondo trovi **Mostra altri**.
+Se hai molti oggetti, in fondo trovi **Carica altri**.
 
 Appena installata, l'Archivio e' vuoto e **te lo dice**, insieme a cosa fare per riempirlo.
 

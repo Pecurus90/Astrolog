@@ -11,20 +11,20 @@ export const itStanotte = {
   "tonight.moon": "luna",
   "tonight.weather": "meteo",
   "tonight.sites.manage": "Gestisci i siti",
-  "tonight.sites.failed": "Non riesco a cambiare il sito.",
-  "tonight.sites.unread": "Non riesco a leggere i tuoi siti.",
+  "tonight.sites.failed": "Cambio del sito non riuscito.",
+  "tonight.sites.unread": "Siti non disponibili.",
   "tonight.sky": "Bortle {n}",
   // Il sito c'e' ma non gli e' mai stata data una classe di cielo: non e' un guasto, e' una cosa
   // che manca.
-  "tonight.sky.none": "cielo non dichiarato",
+  "tonight.sky.none": "Bortle non indicato",
   // La rampa di nove bande e' un disegno: chi ascolta sente questa frase al suo posto.
-  "tonight.sky.label": "Bortle {n} di nove: il cielo di {sito}",
-  "tonight.sky.none.label": "Classe di cielo non dichiarata per {sito}",
-  "tonight.nosite": "Non so da dove osservi.",
-  "tonight.nosite.how": "Scegli il sito",
-  "tonight.loading": "Leggo il cielo...",
-  "tonight.failed": "Non riesco a leggere il cielo di stanotte.",
-  "tonight.notimezone": "Il fuso di questo sito non si riconosce, quindi la Luna non si calcola.",
+  "tonight.sky.label": "Bortle {n} su 9, sito {sito}",
+  "tonight.sky.none.label": "Bortle non indicato per {sito}",
+  "tonight.nosite": "Nessun sito selezionato.",
+  "tonight.nosite.how": "Seleziona sito",
+  "tonight.loading": "Caricamento\u2026",
+  "tonight.failed": "Dati di stanotte non disponibili.",
+  "tonight.notimezone": "Fuso orario del sito non riconosciuto: Luna non calcolabile.",
   "tonight.illuminated": "illuminata al {pct}%",
   // Il grafico in barra non ha assi ne' etichette: questa frase e' il suo dato, per chi non lo
   // vede. E' anche l'unico posto in barra dove il numero di quanto sale compare -- a schermo sta
@@ -33,14 +33,14 @@ export const itStanotte = {
   // mostrano, e senza questa frase resterebbe solo un colore. E' **buio** e non "buio pieno": in
   // questo stesso piede "buio pieno" e' gia' la classe 1 di Bortle (`sky.low`), che e' quanto e'
   // scuro il posto, non quando e' scuro stanotte.
-  "tonight.weather.none": "Non c'e' ancora una previsione di stanotte: il Meteo ti dice perche'.",
+  "tonight.weather.none": "Previsione non disponibile. Dettagli nella pagina Meteo.",
   "tonight.weather.open": "Apri il Meteo",
   // In barra c'e' il verbo e l'ora, e basta: quanto sale lo mostra il grafico, e il numero si
   // legge nel pannello. Decisione del disegno, dichiarata nel foglio.
   "tonight.rise": "sorge",
   "tonight.set": "tramonta",
-  "tonight.rise.never": "non sorge stanotte",
-  "tonight.set.never": "non tramonta stanotte",
+  "tonight.rise.never": "non sorge",
+  "tonight.set.never": "non tramonta",
   // --- Il pannello. Si apre dalla striscia, e dice cio' che in 227px non ci sta. Il bottone che
   // lo apre **non ha un nome suo**: il suo nome e' cio' che ci sta dentro -- fase, percentuale,
   // grafico e orari -- e un'etichetta lo coprirebbe togliendo quei dati a chi ascolta.

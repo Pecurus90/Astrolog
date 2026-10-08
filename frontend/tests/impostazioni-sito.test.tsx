@@ -71,7 +71,7 @@ function app(siti: unknown[] = [CASA, USCITA], piu: Record<string, unknown> = {}
 async function vaiAlSito() {
   const barra = await screen.findByRole("navigation", { name: /pagine/i })
   fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
-  // Nome esatto: col piede della barra senza sito, "Scegli il sito" porta allo stesso posto.
+  // Nome esatto: col piede della barra senza sito, "Seleziona sito" porta allo stesso posto.
   fireEvent.click(await screen.findByRole("link", { name: /^il sito$/i }))
 }
 
@@ -150,7 +150,7 @@ describe("Impostazioni / Il sito", () => {
     await vaiAlSito()
 
     // Senza siti la sezione dice cosa manca, invece di un elenco vuoto.
-    expect(await screen.findByText(/nessun sito/i)).toBeTruthy()
+    expect(await screen.findByText(/^nessun sito dichiarato$/i)).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: /aggiungi un sito/i }))
 
     await compila("Cortina", "46,5405", "12,1357")
@@ -339,7 +339,7 @@ describe("Impostazioni / Il sito", () => {
 
   it("senza un sito di casa la sezione lo dice, invece di lasciare l app muta", async () => {
     // La rotta che toglie **non elegge** un altro sito di casa, di proposito: e senza quello
-    // `GET /tonight` non ha niente da dire, cosi' la barra torna a "non so da dove osservi"
+    // `GET /tonight` non ha niente da dire, cosi' la barra torna a "Nessun sito selezionato"
     // mentre l'elenco qui e' pieno. E' lo stato in cui si finisce togliendo il sito di casa.
     await app([{ ...USCITA, is_default: false }])
     await vaiAlSito()
@@ -367,7 +367,7 @@ describe("Impostazioni / Il sito", () => {
     fireEvent.click(screen.getByRole("button", { name: /^salva$/i }))
 
     // Il piede sta **fuori** da questa pagina e tiene la sua risposta per un'ora: senza buttarla
-    // via, chi dichiara il sito qui continua a leggere "non so da dove osservi". Visto dal vivo.
+    // via, chi dichiara il sito qui continua a leggere "Nessun sito selezionato". Visto dal vivo.
     await waitFor(() =>
       expect(letturaDelPiede()).toBeGreaterThan(prima),
     )

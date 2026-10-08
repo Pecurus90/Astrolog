@@ -60,27 +60,27 @@ describe("l'Archivio", () => {
     archivio([IGNOTO])
     await apriArchivio()
 
-    expect(await screen.findByText(/12 senza tempo/i)).toBeDefined()
+    expect(await screen.findByText(/12 senza durata/i)).toBeDefined()
   })
 
-  it("ore, frame e senza tempo stanno in pezzi che non si spezzano", async () => {
+  it("ore, frame e senza durata stanno in pezzi che non si spezzano", async () => {
     // A capo va un pezzo intero, e il punto resta col pezzo prima: mai un punto a inizio riga.
     archivio([IGNOTO])
     await apriArchivio()
 
     const carta = await screen.findByRole("article")
     const pezzi = [...carta.querySelectorAll(".as-carta-oggetto__pezzo")].map((p) => p.textContent)
-    expect(pezzi).toEqual(["2 h\u00a0\u00b7", "40 frame\u00a0\u00b7", "12 senza tempo"])
+    expect(pezzi).toEqual(["2 h\u00a0\u00b7", "40 frame\u00a0\u00b7", "12 senza durata"])
   })
 
   it("se nessun frame dice la durata, non scrive zero ore", async () => {
     // Zero ore e "non lo so" sono due risposte diverse: dove il tempo non si sa, il numero delle
-    // ore non compare, e restano solo i frame senza tempo.
+    // ore non compare, e restano solo i frame senza durata.
     archivio([{ ...IGNOTO, frames: 3, untimed: 3, integration_s: 0 }])
     await apriArchivio()
 
     const carta = await screen.findByRole("article")
-    expect(carta.textContent).toContain("3 senza tempo")
+    expect(carta.textContent).toContain("3 senza durata")
     expect(carta.textContent).not.toMatch(/\b0 h\b/)
   })
 
@@ -167,7 +167,7 @@ describe("l'Archivio", () => {
     const carta = await screen.findByRole("article")
     expect(carta.querySelector(".as-filtri__barra")).toBeNull()
     // e lo dice: una carta muta sui filtri sembrerebbe un guasto
-    expect(within(carta).getByText(/filtri: non si sa/i).className).toBe("as-nonsisa")
+    expect(within(carta).getByText(/^filtri non indicati$/i).className).toBe("as-nonsisa")
   })
 
   it("un oggetto che il catalogo non conosce lo dice nella carta, tipo e costellazione", async () => {
@@ -176,8 +176,8 @@ describe("l'Archivio", () => {
     await apriArchivio()
 
     const carta = await screen.findByRole("article")
-    expect(within(carta).getByText(/tipo: non si sa/i).className).toBe("as-nonsisa")
-    expect(within(carta).getByText(/costellazione: non si sa/i).className).toBe("as-nonsisa")
+    expect(within(carta).getByText(/^tipo non disponibile$/i).className).toBe("as-nonsisa")
+    expect(within(carta).getByText(/^costellazione non disponibile$/i).className).toBe("as-nonsisa")
   })
 
   it("il posto dell'anteprima c'e', vuoto, e chi ascolta non lo sente", async () => {
@@ -201,7 +201,7 @@ describe("l'Archivio", () => {
     // tipo, costellazione e filtri: tre celle che il catalogo non sa riempire, e ognuna lo dice
     // con una **parola** E con la forma della terza forma del dato -- non col solo colore, e non
     // con `as-dato--vuoto`, che nel foglio vuol dire "una misura vera che vale zero"
-    expect(within(tabella).getAllByText(/non si sa/i)).toHaveLength(3)
+    expect(within(tabella).getAllByText(/non disponibile$/i)).toHaveLength(3)
     expect(tabella.querySelectorAll(".as-nonsisa")).toHaveLength(3)
   })
 
@@ -225,9 +225,9 @@ describe("l'Archivio", () => {
     archivio([])
     await apriArchivio()
 
-    expect(await screen.findByText(/non c'e' ancora niente/i)).toBeDefined()
+    expect(await screen.findByText(/^archivio vuoto$/i)).toBeDefined()
     // e porta al gesto che lo riempie, invece di lasciarti fermo li'
-    expect(screen.getByRole("link", { name: /scegli le cartelle/i })).toBeDefined()
+    expect(screen.getByRole("link", { name: /^aggiungi cartelle$/i })).toBeDefined()
     expect(screen.queryByRole("alert")).toBeNull()
   })
 
@@ -238,7 +238,7 @@ describe("l'Archivio", () => {
     archivio([])
     const reso = await apriArchivioSu("/archivio?sort=hours")
 
-    expect(await screen.findByText(/non c'e' ancora niente/i)).toBeDefined()
+    expect(await screen.findByText(/^archivio vuoto$/i)).toBeDefined()
     expect(screen.queryByLabelText(/cerca un oggetto/i)).toBeNull()
     reso.unmount()
   })
@@ -282,7 +282,7 @@ describe("l'Archivio", () => {
     const carta = await screen.findByRole("article")
     expect(carta.textContent).toContain("Andromeda")
     expect(carta.textContent).not.toContain("CODICE_INVENTATO")
-    expect(within(carta).getByText(/tipo: non si sa/i)).toBeDefined()
+    expect(within(carta).getByText(/^tipo non disponibile$/i)).toBeDefined()
   })
 
   it("se l archivio non risponde lo dice, invece di sembrare vuoto, e si riprova", async () => {
@@ -304,19 +304,19 @@ describe("l'Archivio", () => {
     rispondi(conArchivio({ ...voceArchivio([M31]), attesa }))
     await apriArchivio()
 
-    const posto = await screen.findByLabelText(/sto leggendo l'archivio/i)
+    const posto = await screen.findByLabelText(/caricamento dell'archivio/i)
     expect(posto.getAttribute("aria-busy")).toBe("true")
     expect(posto.querySelectorAll(".as-archivio__scheletro-carta").length).toBeGreaterThan(0)
     arriva(null)
     expect(await screen.findByRole("article")).toBeDefined()
-    expect(screen.queryByLabelText(/sto leggendo l'archivio/i)).toBeNull()
+    expect(screen.queryByLabelText(/caricamento dell'archivio/i)).toBeNull()
   })
 
-  it("accanto a Mostra altri dice quanti ne stai vedendo e quanti sono", async () => {
+  it("accanto a Carica altri dice quanti ne stai vedendo e quanti sono", async () => {
     archivio([M31], { total: 600, limit: 1 })
     await apriArchivio()
 
-    const altri = await screen.findByRole("button", { name: /mostra altri/i })
+    const altri = await screen.findByRole("button", { name: /carica altri/i })
     expect(altri.closest(".as-archivio__carico")?.textContent).toContain("1 di 600")
   })
 
@@ -326,7 +326,7 @@ describe("l'Archivio", () => {
     archivio([M31], { total: 600, limit: 1 })
     await apriArchivio()
 
-    expect(await screen.findByRole("button", { name: /mostra altri/i })).toBeDefined()
+    expect(await screen.findByRole("button", { name: /carica altri/i })).toBeDefined()
   })
 
   it("e quando sono tutte li', non offre di caricarne altre", async () => {
@@ -334,7 +334,7 @@ describe("l'Archivio", () => {
     await apriArchivio()
 
     await screen.findAllByRole("article")
-    expect(screen.queryByRole("button", { name: /mostra altri/i })).toBeNull()
+    expect(screen.queryByRole("button", { name: /carica altri/i })).toBeNull()
   })
 })
 
@@ -360,7 +360,7 @@ describe("l'Archivio, filtri e costellazioni", () => {
     await apriArchivio()
 
     const voce = (await screen.findByRole("article")).querySelector(".as-filtri__voce")
-    expect(voce?.textContent).toBe("Lum80 \u00b7 senza tempo")
+    expect(voce?.textContent).toBe("Lum80 \u00b7 senza durata")
   })
 
   it("la costellazione si legge col suo nome latino, non con la sigla", async () => {
