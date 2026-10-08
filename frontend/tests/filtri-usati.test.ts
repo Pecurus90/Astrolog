@@ -72,12 +72,15 @@ describe("la pastiglia di un filtro", () => {
     expect(inventate, `classi che il foglio non ha: ${inventate.join(", ")}`).toEqual([])
   })
 
-  it("ogni banda ha il SUO colore, non quello di una vicina", () => {
-    // Il foglio ne disegna una per banda, coi suoi colori. Accorpare due bande -- le tre `OSC*`,
-    // le due `DUO_*` -- vuol dire dare a un filtro il colore di un altro, e chi riprende in banda
-    // stretta con un duo-band si ritroverebbe due pastiglie identiche per due filtri diversi.
-    const colori = Object.values(VARIANTE)
+  it("ogni banda larga e stretta ha il SUO colore; a colori e le altre bande sono famiglie", () => {
+    // Il foglio v29 disegna un colore per L, R, G, B, Ha, OIII, SII, e uno per famiglia per gli
+    // altri: i filtri a colori, le altre bande riconosciute. Il nome accanto li distingue.
+    const proprie = ["L", "R", "G", "B", "HA", "OIII", "SII"].map((b) => VARIANTE[b])
+    expect(new Set(proprie).size).toBe(proprie.length)
 
-    expect(new Set(colori).size).toBe(colori.length)
+    const famiglie = [VARIANTE.OSC, VARIANTE.HB, VARIANTE.UNKNOWN, VARIANTE.NONE]
+    expect(new Set([...proprie, ...famiglie]).size).toBe(proprie.length + famiglie.length)
+    expect(new Set(["OSC", "OSC_LP", "OSC_UVIR"].map((b) => VARIANTE[b])).size).toBe(1)
+    expect(new Set(["HB", "DUO_HAOIII", "DUO_SIIOIII", "TRI_NB", "MULTI_NB"].map((b) => VARIANTE[b])).size).toBe(1)
   })
 })

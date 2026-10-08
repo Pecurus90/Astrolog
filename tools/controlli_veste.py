@@ -26,7 +26,7 @@ from controlli_foglio import pavimenti_del_cielo
 # dal progetto Claude Design, mai per far passare una modifica fatta qui. Resta una **mappa**
 # anche con un foglio solo: quanti sono lo decide la consegna, non noi.
 IMPRONTE = {
-    FOGLIO: "25e0b954d574f440112930bf2302152b4ba76010f4d78d489a8fb3cdeb7583a2",
+    FOGLIO: "3b56ae5a261970fe1bad45a5239b362eee27f4a80c40f76b30f15a00c0977964",
 }
 
 
@@ -58,10 +58,7 @@ def _sorgenti(root):
 # foglio lo prova `frontend/tests/filtri-usati.test.ts`, e che questo elenco sia quello che il
 # mattone scrive davvero lo prova `test_the_filter_variants_in_the_table...` accanto a questo
 # file: senza, una banda dimenticata qui spegnerebbe la guardia proprio su quella classe.
-_VARIANTI = (
-    "l", "r", "g", "b", "ha", "hb", "oiii", "sii", "duo-haoiii", "duo-siioiii",
-    "tri-nb", "multi-nb", "osc", "osc-lp", "osc-uvir", "nessuno", "ignoto",
-)  # fmt: skip
+_VARIANTI = ("l", "r", "g", "b", "ha", "oiii", "sii", "colori", "altra", "ignoto", "senza")
 
 MATTONI = {
     "frontend/src/Riga.tsx": ("as-riga__conteggio", "as-riga__prova"),
@@ -79,6 +76,11 @@ MATTONI = {
         "as-ore-filtro",
         "as-ore-filtro__voce",
         "as-ore-filtro__nome",
+        "as-filtri",
+        "as-filtri__barra",
+        "as-filtri__legenda",
+        "as-filtri__voce",
+        "as-filtri__pallino",
         *(f"as-filtro--{v}" for v in _VARIANTI),
     ),  # fmt: skip
     # La scala del cielo ha **tre forme**, e il foglio da' a ognuna un nome suo: `as-bortle*`

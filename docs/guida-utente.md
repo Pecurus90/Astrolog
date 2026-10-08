@@ -281,16 +281,19 @@ Appena installata, l'Archivio e' vuoto e **te lo dice**, insieme a cosa fare per
 
 ## Notti
 
-**Quando hai ripreso.** L'Archivio racconta gli oggetti; qui ci sono le **notti**, una riga
-ciascuna e dalla piu' recente: che **giorno** era -- con il giorno della settimana, perche' una
-notte ce la si ricorda come *"quel sabato"* -- da quale **sito**, quanti **frame**, quante
-**ore**, cosa hai **ripreso** e con quali **filtri**, ognuno con le ore che gli hai dato.
+**Quando hai ripreso.** L'Archivio racconta gli oggetti; qui ci sono le **notti**, una carta
+ciascuna e dalla piu' recente, in cinque colonne che si confrontano dall'alto in basso: che
+**giorno** era -- con il giorno della settimana, perche' una notte ce la si ricorda come *"quel
+sabato"* -- e da quale **sito**; quante **ore** e quanti **frame**; cosa hai **ripreso**, i primi
+tre oggetti ognuno con una barra lunga quanto le sue ore e gli altri contati; con quali **filtri**,
+in una barra divisa per ore e sotto il nome, i frame e le ore di ognuno; e **che cielo** c'era.
+Sul telefono la carta si impila, senza perdere niente.
 I filtri stanno sempre nello stesso ordine, in tutta l'app: L, R, G, B, Ha, OIII, SII, poi quelli
 a colori, poi gli altri filtri che l'app riconosce, quelli che non riconosce e per ultimo "senza
 filtro". Cosi' ogni filtro lo ritrovi sempre allo stesso posto.
 
 Una notte e' una **data piu' un luogo**: se nella stessa sera hai ripreso da due postazioni, sono
-due notti, e la riga dice da dove. Una notte con due oggetti resta **una riga sola**: le sue ore
+due notti, e la riga dice da dove. Una notte con due oggetti resta **una carta sola**: le sue ore
 sono le ore di quella notte, e gli oggetti stanno dentro.
 
 In cima leggi quante notti, quanti frame e quante ore hai **in tutto** -- tutte le tue notti, non
@@ -301,8 +304,8 @@ solo quelle che stai guardando -- e cio' che spiega un elenco piu' corto del pre
   sito e oggetto, nelle **Impostazioni** quando manca il sito da cui osservi;
 - i frame che **non dicono quando** sono stati ripresi te li conta e basta: a quelli non c'e'
   risposta che rimedi, e mandarti da qualche parte sarebbe una promessa vuota;
-- se l'app **sta ancora leggendo** l'archivio, te lo dice con quanti frame mancano: cosi' un
-  elenco a meta' non sembra tutto quello che hai.
+- se l'app **sta ancora leggendo** l'archivio, te lo dice con quanti frame mancano e una pista che
+  dice quanto ha fatto: cosi' un elenco a meta' non sembra tutto quello che hai.
 
 Se non hai ancora notti, l'app ti dice **quale** dei motivi e', perche' portano a gesti diversi:
 non hai ancora frame (si parte dalla scansione), non hai detto **da dove osservi** (e allora le
@@ -319,9 +322,9 @@ parzialmente o molto nuvoloso -- le stesse tre classi del verdetto del Meteo -- 
 ore di buio e le **ore utili**. Arriva **da solo**
 dopo la scansione, senza che tu chieda niente, dall'archivio meteo di Open-Meteo. Arriva quando
 il mattino di quella notte ha cinque giorni: prima, l'archivio ha solo una previsione e non ancora
-la ricostruzione definitiva, e leggi che non e' ancora arrivato. Se un archivio di anni e' appena
+la ricostruzione definitiva, e leggi **il giorno in cui arriva**. Se un archivio di anni e' appena
 entrato, l'app lo chiede un pezzo per volta, per non martellare il servizio; senza rete, o se
-l'archivio non risponde, aspetta e riprova, e intanto leggi lo stesso che non e' ancora arrivato. Una notte di un sito senza fuso orario
+l'archivio non risponde, aspetta e riprova, e intanto leggi che non e' ancora arrivato, senza una data che non sa. Una notte di un sito senza fuso orario
 dice che il meteo non si puo' sapere.
 
 Non ci sono ancora le **misure** dei tuoi frame di quella notte: arrivano, e finche' non ci sono

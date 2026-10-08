@@ -267,13 +267,19 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   (`vocab/filters.DISPLAY_ORDER`, `docs/domini/notti.md`). Resta per ore la sezione Filtri di Da
   confermare: sono domande, e le piu' usate prima e' l'ordine del lavoro. `gear_usage.position`
   dei filtri si scrive ancora ma nessuno la legge piu' (`spine/gear_usage.py`): da togliere.
-- **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (disegno arrivato il
+- **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio, Da confermare, Attrezzatura. Il brief di ognuna si
   scrive coi dati che l'API manda in quel momento: si rifa' la ricognizione quando tocca a lei.
   I tre dati che la pagina Notti chiedeva li manda gia' `/api/v1/nights` (7/10/2026: `untimed`
-  per oggetto, `weather.arrives_on`, `reading_done_pct`). Per montarla manca il foglio: le sue
-  classi sono ancora `pr-` della proposta, e devono entrare nel foglio (v29, `72-pagina-notti`)
-  come il Meteo nel v27, prima che la pagina le usi.
+  per oggetto, `weather.arrives_on`, `reading_done_pct`). Notti montate sul foglio v29 (8/10/2026,
+  forma A, il registro). Resta: il vuoto del disegno e' una frase e un'azione, il mattone `Vuoto`
+  dell'app scrive ancora titolo e disegno (classi in attesa): si allinea quando il disegno passa a
+  un'altra pagina che lo usa. In una notte con tempo, un filtro i cui frame non dicono la durata pesa zero nella barra
+  e resta solo lo stacco minimo (lo nomina la legenda): da chiedere al disegno se basta.
+- **Un colore per banda -- prossima** (Marco, 8/10/2026): il v29 da' un colore solo ai filtri a
+  colori e uno solo alle altre bande; si chiede a Claude Design un colore per ognuna delle 17 bande
+  del vocabolario, le doppie e multiple coi colori delle loro righe. Arrivato il foglio, cambia la
+  tabella `VARIANTE` in `FiltriUsati.tsx` e `_VARIANTI` in `tools/controlli_veste.py`.
 - **M4 -- fatta** (7/10/2026): l'Archivio stringe per periodo (anno o date), sito, ottica e
   camera, e la riga dice solo le pose che passano (`counts.Scope`, `docs/domini/archivio.md`).
 

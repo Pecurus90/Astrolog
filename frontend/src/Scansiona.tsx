@@ -132,6 +132,7 @@ export function Scansiona() {
     if (finita === null) return
     void cache.invalidateQueries({ queryKey: ["review"] })
     void cache.invalidateQueries({ queryKey: ["scan-runs"] })
+    void cache.invalidateQueries({ queryKey: ["nights"] })
   }, [finita, cache])
 
   const azione = stato.data?.action ?? "start"

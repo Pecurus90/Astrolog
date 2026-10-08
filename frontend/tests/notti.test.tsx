@@ -23,16 +23,17 @@ const DICIOTTO = {
   integration_s: 10800,
   untimed: 0,
   objects: [
-    { key: "m-51", name: "M 51", frames: 2, integration_s: 7200 },
-    { key: "m-101", name: "M 101", frames: 1, integration_s: 3600 },
+    { key: "m-51", name: "M 51", frames: 2, integration_s: 7200, untimed: 0, bar_pct: 100 },
+    { key: "m-101", name: "M 101", frames: 1, integration_s: 3600, untimed: 0, bar_pct: 50 },
   ],
   filters: [
-    { name: "Ha", frames: 2, integration_s: 7200 },
-    { name: "OIII", frames: 1, integration_s: 3600 },
+    { name: "Ha", passband: "HA", frames: 2, integration_s: 7200 },
+    { name: "OIII", passband: "OIII", frames: 1, integration_s: 3600 },
   ],
-  moon: { phase_key: "waxing_gibbous", illumination_pct: 69 },
+  moon: { phase_key: "waxing_gibbous", illumination_pct: 69, lit_side: "right" },
   weather: {
     state: "ok",
+    arrives_on: null,
     verdict: "go",
     cloud_total_pct: 8,
     usable_hours: 7,
@@ -49,10 +50,10 @@ const DICIASSETTE = {
   frames: 1,
   integration_s: 600,
   untimed: 0,
-  objects: [{ key: "m-31", name: "M 31", frames: 1, integration_s: 600 }],
+  objects: [{ key: "m-31", name: "M 31", frames: 1, integration_s: 600, untimed: 0, bar_pct: 100 }],
   filters: [],
   moon: null,
-  weather: { state: "waiting" },
+  weather: { state: "waiting", arrives_on: null },
 }
 
 const NIENTE_ORE = {
@@ -63,9 +64,10 @@ const NIENTE_ORE = {
   integration_s: 0,
   untimed: 4,
   // un filtro le cui pose non dicono la durata: ha ripreso, e non si sa per quanto
+  objects: [{ key: "m-31", name: "M 31", frames: 4, integration_s: 0, untimed: 4, bar_pct: 0 }],
   filters: [
-    { name: "Lum", frames: 2, integration_s: 0 },
-    { name: "OIII", frames: 2, integration_s: 0 },
+    { name: "Lum", passband: "L", frames: 2, integration_s: 0 },
+    { name: "OIII", passband: "OIII", frames: 2, integration_s: 0 },
   ],
 }
 
@@ -82,6 +84,7 @@ function notti(items: unknown[], extra: Record<string, unknown> = {}) {
         totals: { nights: items.length, frames: 4, integration_s: 11400, untimed: 0 },
         waiting: [],
         still_reading: 0,
+        reading_done_pct: null,
         ...extra,
       },
     },
@@ -103,12 +106,24 @@ async function apriNotti() {
 
 const elenco = () => screen.findByRole("list", { name: /notti/i })
 
+/** Le carte delle notti: i figli diretti dell'elenco, perche' dentro una carta ci sono altri
+ *  elenchi (gli oggetti, la legenda dei filtri) le cui voci non sono notti. */
+async function carte(): Promise<HTMLElement[]> {
+  return [...(await elenco()).querySelectorAll<HTMLElement>(":scope > [role=listitem]")]
+}
+
+async function carta(): Promise<HTMLElement> {
+  const tutte = await carte()
+  expect(tutte).toHaveLength(1)
+  return tutte[0] as HTMLElement
+}
+
 describe("le Notti", () => {
   it("elenca le notti, dalla piu' recente", async () => {
     notti([DICIOTTO, DICIASSETTE])
     await apriNotti()
 
-    const righe = within(await elenco()).getAllByRole("listitem")
+    const righe = await carte()
     expect(righe).toHaveLength(2)
     expect(righe[0]?.textContent).toContain("18")
     expect(righe[1]?.textContent).toContain("17")
@@ -118,7 +133,7 @@ describe("le Notti", () => {
     notti([DICIOTTO])
     await apriNotti()
 
-    const riga = within(await elenco()).getByRole("listitem")
+    const riga = await carta()
     expect(riga.textContent).toContain("Cima Ekar")
     expect(riga.textContent).toContain("M 51")
     expect(riga.textContent).toContain("M 101")
@@ -131,7 +146,7 @@ describe("le Notti", () => {
     notti([DICIOTTO])
     await apriNotti()
 
-    const riga = within(await elenco()).getByRole("listitem")
+    const riga = await carta()
     expect(riga.textContent).toContain("Gibbosa crescente")
     expect(riga.textContent).toContain("69")
   })
@@ -142,7 +157,7 @@ describe("le Notti", () => {
     notti([DICIASSETTE])
     await apriNotti()
 
-    const riga = within(await elenco()).getByRole("listitem")
+    const riga = await carta()
     expect(riga.textContent).not.toMatch(/luna|%/i)
   })
 
@@ -160,14 +175,14 @@ describe("le Notti", () => {
     notti([DICIOTTO])
     await apriNotti()
 
-    expect(within(await elenco()).getAllByRole("listitem")).toHaveLength(1)
+    expect(await carte()).toHaveLength(1)
   })
 
   it("una notte dice i filtri, nell'ordine dei filtri", async () => {
     notti([DICIOTTO])
     await apriNotti()
 
-    const riga = within(await elenco()).getByRole("listitem")
+    const riga = await carta()
     const testo = riga.textContent ?? ""
     expect(testo).toContain("Ha")
     expect(testo).toContain("OIII")
@@ -182,18 +197,27 @@ describe("le Notti", () => {
     const testo = (await elenco()).textContent ?? ""
     expect(testo).toContain("4 senza tempo")
     expect(testo).not.toMatch(/\b0 h\b/)
-    // e i filtri senza ore restano leggibili: senza questa riga uscirebbe "Lum , OIII"
-    expect(testo).toContain("Lum, OIII")
+    // e i filtri senza ore dicono i frame, e che il tempo non si sa
+    expect(testo).toContain("Lum2 \u00b7 senza tempo")
   })
 
   it("in cima ci sono le notti, le ore e i frame di tutto l'archivio", async () => {
     notti([DICIOTTO], { totals: { nights: 42, frames: 900, integration_s: 360000, untimed: 3 } })
     await apriNotti()
 
-    expect(await screen.findByText(/42 notti in archivio/i)).toBeDefined()
-    const cappello = screen.getByText(/900 frame in tutto/i)
-    expect(cappello.textContent).toContain("100") // 360.000 s = 100 h, gia' sommate dal backend
-    expect(cappello.textContent).toContain("3 senza tempo")
+    const testa = (await screen.findByText(/le copie riscritte/i)).parentElement?.textContent ?? ""
+    expect(testa).toContain("42notti")
+    expect(testa).toContain("900frame")
+    expect(testa).toContain("100ore") // 360.000 s = 100 h, gia' sommate dal backend
+    expect(testa).toContain("3senza tempo")
+  })
+
+  it("un'ora sola in archivio non diventa \"1 ore\"", async () => {
+    notti([DICIOTTO], { totals: { nights: 1, frames: 3, integration_s: 3510, untimed: 0 } })
+    await apriNotti()
+
+    const testa = (await screen.findByText(/le copie riscritte/i)).parentElement?.textContent ?? ""
+    expect(testa).toContain("1ora")
   })
 
   it("dice quanti frame aspettano una risposta, e porta a Da confermare", async () => {
@@ -212,10 +236,10 @@ describe("le Notti", () => {
     notti([DICIOTTO], { waiting: [{ answer_at: "site", frames: 5 }] })
     await apriNotti()
 
-    expect(await screen.findByText(/5 frame aspettano di sapere da dove osservavi/i)).toBeDefined()
+    expect(await screen.findByText(/5 frame aspettano il sito/i)).toBeDefined()
     const dentro = within(screen.getByRole("main"))
     expect(dentro.queryByRole("link", { name: /da confermare/i })).toBeNull()
-    expect(dentro.getByRole("link", { name: /dichiara il tuo sito/i })).toBeDefined()
+    expect(dentro.getByRole("link", { name: /apri le impostazioni/i }).getAttribute("href")).toBe("/impostazioni/sito")
   })
 
   it("un frame senza risposta possibile non porta da nessuna parte", async () => {
@@ -224,18 +248,48 @@ describe("le Notti", () => {
     notti([DICIOTTO], { waiting: [{ answer_at: "never", frames: 4 }] })
     await apriNotti()
 
-    expect(await screen.findByText(/4 frame non dicono quando sono stati ripresi/i)).toBeDefined()
+    expect(await screen.findByText(/4 frame senza data/i)).toBeDefined()
     const dentro = within(screen.getByRole("main"))
     expect(dentro.queryByRole("link", { name: /da confermare/i })).toBeNull()
   })
 
   it("dice che la lettura non e' finita", async () => {
     // Senza questa riga, chi apre la pagina a meta' corsa vede tre notti e crede di averne tre.
-    notti([DICIOTTO], { still_reading: 431 })
-    await apriNotti()
+    notti([DICIOTTO], { still_reading: 431, reading_done_pct: 64 })
+    const { container } = await apriNotti()
 
     expect(await screen.findByText(/sto ancora leggendo/i)).toBeDefined()
     expect(screen.getByText(/431/)).toBeDefined()
+    // la pista dice quanto ha fatto, col numero che manda il backend
+    expect((container.querySelector(".as-avanza__riempi") as HTMLElement).style.width).toBe("64%")
+  })
+
+  it("di ogni oggetto dice le ore con la sua barra, e conta quelli oltre i primi tre", async () => {
+    const tanti = [100, 50, 33, 25, 20].map((pct, i) => ({
+      key: `m-${i + 1}`,
+      name: `M ${i + 1}`,
+      frames: 1,
+      integration_s: 36 * pct,
+      untimed: 0,
+      bar_pct: pct,
+    }))
+    notti([{ ...DICIOTTO, objects: tanti }])
+    const { container } = await apriNotti()
+
+    const riga = await carta()
+    expect(riga.textContent).toContain("M 3")
+    expect(riga.textContent).not.toContain("M 4")
+    expect(riga.textContent).toContain("e 2 altri")
+    const barre = [...container.querySelectorAll<HTMLElement>(".as-notte__barra-ore")]
+    expect(barre.map((b) => b.style.getPropertyValue("--quanto"))).toEqual(["100%", "50%", "33%"])
+  })
+
+  it("un oggetto senza tempo lo dice, invece di zero ore", async () => {
+    notti([NIENTE_ORE])
+    await apriNotti()
+
+    const riga = await carta()
+    expect(riga.textContent).toContain("M 31senza tempo")
   })
 
   it("i quattro modi di non avere notti dicono quattro cose diverse", async () => {
@@ -265,6 +319,7 @@ describe("le Notti", () => {
     await apriNotti()
 
     expect(await screen.findByRole("button", { name: /mostra altre/i })).toBeDefined()
+    expect(screen.getByText("1 notti di 2")).toBeDefined()
   })
 
   it("se le notti non si leggono lo dice, invece di sembrare un archivio vuoto", async () => {
@@ -287,8 +342,9 @@ describe("le Notti, il cielo di quella notte", () => {
     notti([DICIOTTO])
     await apriNotti()
 
-    const riga = within(await elenco()).getByRole("listitem")
-    expect(riga.textContent).toContain("poco nuvoloso (nuvole al 8%)")
+    const riga = await carta()
+    expect(riga.textContent).toContain("buona")
+    expect(riga.textContent).toContain("poco nuvoloso, in media 8%")
     expect(riga.textContent).toContain("7 ore utili su 8 di buio")
   })
 
@@ -296,15 +352,24 @@ describe("le Notti, il cielo di quella notte", () => {
     notti([DICIASSETTE])
     await apriNotti()
 
-    const riga = within(await elenco()).getByRole("listitem")
-    expect(riga.textContent).toContain("il meteo di quella notte non e' ancora arrivato")
+    const riga = await carta()
+    expect(riga.textContent).toContain("il meteo non e' ancora arrivato")
+    expect(riga.textContent).toContain("non ha ancora risposto")
+  })
+
+  it("una notte giovane dice il giorno in cui arriva il meteo", async () => {
+    notti([{ ...DICIASSETTE, weather: { state: "waiting", arrives_on: "2024-05-23" } }])
+    await apriNotti()
+
+    const riga = await carta()
+    expect(riga.textContent).toMatch(/il meteo arriva il 23 mag/)
   })
 
   it("una notte che l'archivio non racconta lo dice, invece di un cielo inventato", async () => {
     notti([{ ...DICIASSETTE, weather: { state: "ok", verdict: null, cloud_total_pct: null, usable_hours: null, window: null, window_hours: null } }])
     await apriNotti()
 
-    const riga = within(await elenco()).getByRole("listitem")
+    const riga = await carta()
     expect(riga.textContent).toContain("non dice com'era il cielo")
   })
 
@@ -312,7 +377,7 @@ describe("le Notti, il cielo di quella notte", () => {
     notti([{ ...DICIASSETTE, weather: { state: "unknown" } }])
     await apriNotti()
 
-    const riga = within(await elenco()).getByRole("listitem")
+    const riga = await carta()
     expect(riga.textContent).toContain("non si puo' sapere")
   })
 })
@@ -323,10 +388,10 @@ describe("le Notti, una notte dall'indirizzo", () => {
     window.history.pushState({}, "", `/notti?notte=${DICIOTTO.id}`)
     await disegna()
 
-    const righe = within(await elenco()).getAllByRole("listitem")
+    const righe = await carte()
     expect(righe).toHaveLength(1)
     expect(chiamate().some((u) => u.includes("/api/v1/nights") && u.includes(`night=${DICIOTTO.id}`))).toBe(true)
-    expect(screen.getByRole("link", { name: "Tutte le notti" }).getAttribute("href")).toBe("/notti")
+    expect(screen.getByRole("link", { name: /tutte le notti/i }).getAttribute("href")).toBe("/notti")
   })
 
   it.each(["-3", "1.5", "abc"])("un indirizzo storto (?notte=%s) dice che la notte non c'e', senza chiederla", async (scritto) => {

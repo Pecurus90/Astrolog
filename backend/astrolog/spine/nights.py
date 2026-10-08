@@ -44,7 +44,8 @@ class Observed:
 
 
 _PAGE = f"""
-SELECT n.id, n.night_date, n.site_source, s.name AS site, s.timezone, w.summary_json AS weather,
+SELECT n.id, n.night_date, n.site_source, s.name AS site, s.timezone, s.latitude,
+       w.summary_json AS weather,
        {counts.counts_on(counts.Subject.NIGHT)}
 FROM nights n JOIN sites s ON s.id = n.site_id
 LEFT JOIN weather_nights w
@@ -82,7 +83,24 @@ def _moons(rows: Sequence[sqlite3.Row]) -> dict[int, dict[str, Any]]:
     out. Not stored: a derivable number frozen in a column would outlive a corrected formula."""
     when = {r["id"]: midnight_of(r["night_date"], r["timezone"]) for r in rows}
     known = {i: q for i, q in when.items() if q is not None}
-    return dict(zip(known, map(asdict, moon.phases(list(known.values()))), strict=True))
+    latitude = {r["id"]: r["latitude"] for r in rows}
+    return {
+        i: {**asdict(p), "lit_side": moon.lit_side(p.phase_key, latitude[i])}
+        for i, p in zip(known, moon.phases(list(known.values())), strict=True)
+    }
+
+
+# Under this a bar would vanish and read as "no time"; the floor is for time, never for none.
+_SLIVER_PCT = 2
+
+
+def _with_bars(objects: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Each object's hours as a share of the night's longest, the first by `ORDER_BY_TIME`."""
+    longest = objects[0]["integration_s"] if objects else 0
+    for o in objects:
+        share = round(o["integration_s"] * 100 / longest) if longest else 0
+        o["bar_pct"] = max(share, _SLIVER_PCT) if o["integration_s"] > 0 else 0
+    return objects
 
 
 def page(
@@ -110,7 +128,7 @@ def page(
             "frames": r["frames"],
             "integration_s": r["integration_s"],
             "untimed": r["untimed"],
-            "objects": night_objects.get(r["id"], []),
+            "objects": _with_bars(night_objects.get(r["id"], [])),
             "filters": filters.get(r["id"], []),
             "moon": moons.get(r["id"]),
             "weather": _weather(r, weather.arrives_on if r["id"] in moons else None),

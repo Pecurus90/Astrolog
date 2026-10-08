@@ -263,7 +263,9 @@ def test_a_night_says_which_moon_there_was(archivio):
     scritto a mano."""
     prima = notti(archivio)["items"][0]
 
-    assert prima["moon"] == asdict(moon.phase(midnight_of(prima["night_date"], "Europe/Rome")))
+    fase = moon.phase(midnight_of(prima["night_date"], "Europe/Rome"))
+    # Casa sta a nord: il lato illuminato e' quello della fase, non specchiato
+    assert prima["moon"] == {**asdict(fase), "lit_side": moon.lit_side(fase.phase_key, 45.5455)}
 
 
 def test_a_night_whose_site_has_no_timezone_says_nothing_about_the_moon(archivio):

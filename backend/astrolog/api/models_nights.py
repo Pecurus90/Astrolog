@@ -18,6 +18,10 @@ class NightObject(BaseModel):
     frames: int
     integration_s: float
     untimed: int = Field(description="Its frames that do not say how long: they are not zero.")
+    bar_pct: int = Field(
+        description="Its hours as a share of the night's longest object, 0-100; at least 2 when "
+        "it has any time, so a bar never vanishes; 0 without time."
+    )
 
 
 class FilterUsed(BaseModel):
@@ -41,6 +45,9 @@ class MoonThatNight(BaseModel):
     # for one fact would be two contracts to keep in agreement.
     phase_key: PhaseKey
     illumination_pct: IlluminationPct
+    lit_side: Literal["left", "right"] = Field(
+        description="Which side of the disc is lit, from the phase and the site's hemisphere."
+    )
 
 
 class NightWeather(WeatherSkyOut):

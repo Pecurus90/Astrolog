@@ -128,11 +128,11 @@ describe("l'Archivio", () => {
   })
 
   it("ogni filtro porta il colore della sua banda, nella forma che il foglio disegna", async () => {
-    // Tre regole in una: la variante sta **sulla voce** (il foglio risolve i quattro slot di
-    // colore sullo stesso elemento che porta la classe, non su un involucro dentro), dentro c'e'
-    // la pastiglia, e il nome ha la sua classe. Le macchine della veste non possono vederlo --
-    // guardano le classi **scritte**, non su quale elemento finiscono -- ed e' proprio il pezzo
-    // che ha cambiato forma due volte.
+    // Tre regole in una: la variante sta **sulla pastiglia**, non sulla voce (dal v29
+    // `.as-filtro--<banda>` dipinge il fondo dell'elemento che la porta: sulla voce farebbe una
+    // fascia piena sotto il nome, e il nome di L, quasi bianco su quasi bianco, non si leggerebbe),
+    // e il nome ha la sua classe. Le macchine della veste non possono vederlo -- guardano le
+    // classi **scritte**, non su quale elemento finiscono.
     archivio([M31])
     await apriArchivio()
 
@@ -140,12 +140,12 @@ describe("l'Archivio", () => {
       await screen.findByRole("list", { name: /con che filtri/i }),
     ).getAllByRole("listitem")
 
-    expect(voci.map((v) => v.className)).toEqual([
-      "as-ore-filtro__voce as-filtro--l",
-      "as-ore-filtro__voce as-filtro--ha",
+    expect(voci.map((v) => v.className)).toEqual(["as-ore-filtro__voce", "as-ore-filtro__voce"])
+    expect(voci.map((v) => v.querySelector(".as-filtro__pastiglia")?.className)).toEqual([
+      "as-filtro__pastiglia as-filtro--l",
+      "as-filtro__pastiglia as-filtro--ha",
     ])
     const prima = voci[0]
-    expect(prima?.querySelector(".as-filtro__pastiglia")).not.toBeNull()
     expect(prima?.querySelector(".as-ore-filtro__nome")?.textContent).toBe("Lum")
   })
 

@@ -90,3 +90,36 @@ def test_the_reading_says_how_far_it_has_gone(banco):
 
 def test_nothing_to_read_has_no_percentage(client_vuoto):
     assert notti(client_vuoto)["reading_done_pct"] is None
+
+
+def test_each_object_bar_is_its_share_of_the_longest_of_the_night(banco):
+    """La barra di un oggetto e' lunga quanto le sue ore rispetto al piu' lungo della notte; un
+    oggetto senza tempo non ha barra, invece di una barra finta."""
+    notte = per_data(notti(banco))["2024-05-17"]
+
+    assert {o["key"]: o["bar_pct"] for o in notte["objects"]} == {"m-31": 100, "m-45": 0}
+
+
+def test_a_short_object_still_shows_a_sliver(db_path):
+    """Un minuto accanto a dieci ore e' 0,17%: arrotondato sparirebbe, e sembrerebbe senza tempo."""
+    conn = connect(db_path)
+    try:
+        prepara(conn)
+        luogo(conn, ROMA)
+        posa(conn, quando="2024-05-17T21:00:00Z", esposizione=36000.0, hash_="a1")
+        posa(conn, quando="2024-05-17T22:00:00Z", oggetto=2, esposizione=60.0, hash_="a2")
+        corri(conn)
+        conn.commit()
+    finally:
+        conn.close()
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        notte = notti(c)["items"][0]
+
+    assert {o["key"]: o["bar_pct"] for o in notte["objects"]} == {"m-31": 100, "m-45": 2}
+
+
+def test_the_moon_of_a_night_says_which_side_is_lit(banco):
+    """Il disco della Luna come in Stanotte: il lato illuminato dipende dalla fase e dall'emisfero
+    del sito, e lo decide l'effemeride, non la pagina."""
+    # il 17 maggio 2024 la Luna cresceva (nuova l'8, piena il 23): a nord e' illuminata a destra
+    assert per_data(notti(banco))["2024-05-17"]["moon"]["lit_side"] == "right"

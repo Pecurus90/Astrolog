@@ -142,11 +142,13 @@
         'integration_s': 720.0,
         'moon': dict({
           'illumination_pct': 80,
+          'lit_side': 'right',
           'phase_key': 'waxing_gibbous',
         }),
         'night_date': '2024-05-18',
         'objects': list([
           dict({
+            'bar_pct': 100,
             'frames': 1,
             'integration_s': 600.0,
             'key': 'm-31',
@@ -154,6 +156,7 @@
             'untimed': 0,
           }),
           dict({
+            'bar_pct': 20,
             'frames': 1,
             'integration_s': 120.0,
             'key': 'm-45',
@@ -188,11 +191,13 @@
         'integration_s': 600.0,
         'moon': dict({
           'illumination_pct': 72,
+          'lit_side': 'right',
           'phase_key': 'waxing_gibbous',
         }),
         'night_date': '2024-05-17',
         'objects': list([
           dict({
+            'bar_pct': 100,
             'frames': 2,
             'integration_s': 600.0,
             'key': 'm-31',

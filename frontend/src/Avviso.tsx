@@ -23,8 +23,8 @@ import type { ReactNode } from "react"
 // Il neutro e' una `i` e non il glifo dell'informazione: quello, senza selettore di
 // variazione, molti sistemi lo rendono come **emoji colorata** -- cioe' un segno che torna a
 // dire le cose col colore, e per giunta senza prendere il carattere delle cifre che il foglio
-// gli mette.
-const SEGNI = { neutro: "i", attesa: "\u2026", buono: "\u2713", allarme: "\u26A0" }
+// gli mette. Il lavoro non ha glifo: il suo segno e' l'anello aperto che il foglio disegna (v21).
+const SEGNI = { neutro: "i", attesa: "\u2026", buono: "\u2713", allarme: "\u26A0", lavoro: "" }
 
 // Solo il **modificatore**: il blocco si scrive dove la classe si monta, o la guardia del
 // cancello non saprebbe leggere cio' che esce da qui e lo direbbe -- giustamente, perche' una
@@ -35,6 +35,7 @@ const TONI: Record<keyof typeof SEGNI, string> = {
   // il v26 ha tolto il tono buono: resta il segno, la spunta, che lo dice da solo
   buono: "",
   allarme: "as-avviso--allarme",
+  lavoro: "as-avviso--lavoro",
 }
 
 export function Avviso({
@@ -43,6 +44,7 @@ export function Avviso({
   azioni,
   ruolo,
   pagina,
+  sotto,
   children,
 }: {
   esito: keyof typeof SEGNI
@@ -54,6 +56,8 @@ export function Avviso({
   ruolo?: "alert" | "status"
   /** In testa alla parte che manca, su carta: la riga di stato di pagina del foglio (v21). */
   pagina?: boolean
+  /** Sotto la frase, nel corpo: la pista di un lavoro che avanza. */
+  sotto?: ReactNode
   children: ReactNode
 }) {
   return (
@@ -66,6 +70,7 @@ export function Avviso({
         <p className="as-avviso__testo" role={ruolo ?? (esito === "allarme" ? "alert" : "status")}>
           {children}
         </p>
+        {sotto}
       </div>
       {azioni && <div className="as-avviso__azioni">{azioni}</div>}
     </div>

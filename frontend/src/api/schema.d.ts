@@ -2273,6 +2273,12 @@ export interface components {
             phase_key: "new" | "waxing_crescent" | "first_quarter" | "waxing_gibbous" | "full" | "waning_gibbous" | "last_quarter" | "waning_crescent";
             /** Illumination Pct */
             illumination_pct: number;
+            /**
+             * Lit Side
+             * @description Which side of the disc is lit, from the phase and the site's hemisphere.
+             * @enum {string}
+             */
+            lit_side: "left" | "right";
         };
         /**
          * MosaicCandidate
@@ -2462,6 +2468,11 @@ export interface components {
              * @description Its frames that do not say how long: they are not zero.
              */
             untimed: number;
+            /**
+             * Bar Pct
+             * @description Its hours as a share of the night's longest object, 0-100; at least 2 when it has any time, so a bar never vanishes; 0 without time.
+             */
+            bar_pct: number;
         };
         /**
          * NightWeather

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AstroLog — astrolog.css  ·  v28 (07/10/2026)
+   AstroLog — astrolog.css  ·  v29 (08/10/2026)
 
    FILE GENERATO: non si modifica qui. Le sorgenti stanno in foglio/, un
    file per famiglia; questo foglio e' la loro unione, nell'ordine qui
@@ -47,8 +47,11 @@
      62-andamento.css
      63-cielo.css
      64-scala.css
+     65-filtri.css
+     66-notte.css
      70-pagina-dashboard.css
      71-pagina-meteo.css
+     72-pagina-notti.css
    ========================================================================== */
 
 /* ── foglio/10-token.css ──────────────────────────────────────────────── */
@@ -413,6 +416,23 @@
   --tratto-marte:             #ff8a78;
   --tratto-venere:            #ffffff;
   --tratto-luna:              #f3e3b0;
+  /* v29 · dalle Notti: le colonne minime della carta della notte (66) */
+  --notte-quando:             11rem;
+  --notte-fatto:              7rem;
+  --notte-oggetti:            11rem;
+  --notte-filtri:             15rem;
+  --notte-cielo:              13rem;
+  --notte-quando-compatta:    10rem;
+  --notte-cielo-compatta:     12rem;
+  --notte-nome:               5.5rem;  /* il nome dell'oggetto prima della barra */
+  --notte-barra-minima:       2.5rem;
+  --registro-scheletro:       7.5rem;  /* una notte che aspetta */
+  --registro-scheletro-cifre: 22rem;   /* i totali che aspettano */
+  /* i filtri senza una banda propria (65): leggono i token dei filtri e del
+     ruolo, cosi' Atlante li scurisce da se'. A colori e' un motivo: R, G, B. */
+  --filtro-a-colori:          linear-gradient(90deg, var(--filtro-r), var(--filtro-g), var(--filtro-b));
+  --filtro-altra-banda:       var(--inchiostro-tenue);
+  --filtro-senza:             var(--linea-significato);
 }
 
 /* ── foglio/15-tema-atlante.css ───────────────────────────────────────── */
@@ -2122,6 +2142,113 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 [data-dx-acceso] .as-cielo__alte, [data-dx-acceso] .as-cielo__medie, [data-dx-acceso] .as-cielo__basse { opacity: .14; }
 [data-dx-acceso] .as-cielo__alte-filo, [data-dx-acceso] .as-cielo__medie-filo, [data-dx-acceso] .as-cielo__basse-filo, [data-dx-acceso] .as-cielo__umidita { opacity: .45; }
 
+/* ── foglio/65-filtri.css ─────────────────────────────────────────────── */
+/* ==========================================================================
+   FILTRI — quanto tempo per filtro, in una barra e nella sua legenda
+   (v29, dalle Notti). L'ordine e' quello di tutta l'app, non quello della
+   notte: L, R, G, B, Ha, OIII, SII, poi a colori, poi le altre bande, poi
+   quelli che non si sanno, «senza filtro» ultimo; lo mette in fila chi
+   scrive la pagina. Ogni pezzo della barra pesa le sue ore
+   (style="--peso: 2.4"; se la notte e' senza tempo, i frame). Il colore non
+   e' mai solo: la legenda scrive sempre il nome, i frame e le ore.
+   ========================================================================== */
+.as-filtri { display: grid; gap: var(--spazio-2); }
+.as-filtri__barra { display: flex; gap: var(--stacco-minimo); height: var(--tratto-alto); margin: 0; }
+.as-filtri__barra > i { flex: var(--peso, 1) 1 0; min-width: var(--stacco-minimo); box-sizing: border-box; }
+.as-filtri__barra > i:first-child { border-radius: var(--raggio-pillola) 0 0 var(--raggio-pillola); }
+.as-filtri__barra > i:last-child { border-radius: 0 var(--raggio-pillola) var(--raggio-pillola) 0; }
+.as-filtri__barra > i:only-child { border-radius: var(--raggio-pillola); }
+.as-filtri__legenda { display: flex; flex-wrap: wrap; gap: var(--spazio-1) var(--spazio-4); margin: 0; padding: 0; list-style: none; font-size: var(--testo-minuto); }
+.as-filtri__voce { display: inline-flex; align-items: center; gap: var(--spazio-2); white-space: nowrap; }
+.as-filtri__voce b { font-weight: var(--peso-medio); }
+.as-filtri__voce span { font-family: var(--carattere-cifre); color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; }
+.as-filtri__pallino { flex: none; box-sizing: border-box; width: var(--pallino); height: var(--pallino); border-radius: 50%; }
+.as-filtro--l { background: var(--filtro-l); }
+.as-filtro--r { background: var(--filtro-r); }
+.as-filtro--g { background: var(--filtro-g); }
+.as-filtro--b { background: var(--filtro-b); }
+.as-filtro--ha { background: var(--filtro-ha); }
+.as-filtro--oiii { background: var(--filtro-oiii); }
+.as-filtro--sii { background: var(--filtro-sii); }
+.as-filtro--colori { background: var(--filtro-a-colori); }
+.as-filtro--altra { background: var(--filtro-altra-banda); }
+/* il filtro che non si sa: il tratteggio dell'ignoto, vuoto dentro */
+.as-filtro--ignoto { background: none; border: var(--segno-filo) dashed var(--ignoto-tratteggio); }
+.as-filtro--senza { background: var(--filtro-senza); }
+
+/* ── foglio/66-notte.css ──────────────────────────────────────────────── */
+/* ==========================================================================
+   NOTTE — una notte passata in una carta (v29, dalle Notti, forma A «il
+   registro»). Si scrive <article class="as-carta as-notte">: la pelle e'
+   della carta (32), qui solo come stanno i pezzi. Cinque colonne che si
+   confrontano dall'alto in basso fra una notte e l'altra: quando e dove,
+   ore e frame, oggetti (ognuno con la barra delle sue ore, style="--quanto:
+   72%"), filtri (.as-filtri, 65), Luna e meteo (.as-luna__fase, 49;
+   .as-semaforo, 46). --capi e' la riga delle intestazioni, una volta sola
+   in cima, senza carta. Sotto 1180 la Luna e il meteo prendono una colonna
+   a destra; sotto 900 la carta si impila, senza togliere dati.
+   La famiglia dei mattoni (30-50) e' piena: la notte sta coi dati.
+   ========================================================================== */
+.as-notte {
+  display: grid; align-items: start;
+  grid-template-columns: minmax(var(--notte-quando), 1.1fr) minmax(var(--notte-fatto), .6fr) minmax(var(--notte-oggetti), 1.1fr) minmax(var(--notte-filtri), 1.6fr) minmax(var(--notte-cielo), 1.1fr);
+  grid-template-areas: "quando fatto oggetti filtri cielo";
+  gap: var(--spazio-3) var(--spazio-5);
+  padding: var(--spazio-4) var(--spazio-5);
+  font-size: var(--testo-corpo); color: var(--inchiostro);
+}
+.as-notte p, .as-notte h3, .as-notte ul { margin: 0; }
+.as-notte ul { padding: 0; list-style: none; }
+.as-notte--capi { padding-block: 0; }
+.as-notte--capi .as-soprattitolo { margin: 0; }
+.as-notte__quando { grid-area: quando; }
+.as-notte__fatto { grid-area: fatto; }
+.as-notte__oggetti { grid-area: oggetti; }
+.as-notte__filtri { grid-area: filtri; padding-top: var(--spazio-1); }
+.as-notte__cielo { grid-area: cielo; display: grid; gap: var(--spazio-2); align-content: start; }
+
+/* quando e dove */
+.as-notte__data { font-size: var(--titolo-riga); font-weight: var(--peso-forte); line-height: var(--interlinea-stretta); }
+.as-notte__giorno { font-weight: var(--peso-normale); color: var(--inchiostro-tenue); }
+.as-notte__sito { display: flex; align-items: center; gap: var(--spazio-1); margin-top: var(--spazio-1) !important; color: var(--inchiostro-tenue); }
+.as-notte__segno { flex: none; width: var(--icona-meteo-piccola); height: var(--icona-meteo-piccola); color: var(--inchiostro-debole); }
+
+/* quanto: le ore in grande; senza tempo, le parole */
+.as-notte__ore { font-size: var(--cifra-lettura); font-weight: var(--peso-cifra); line-height: var(--interlinea-stretta); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.as-notte__ore--parole { font-size: var(--testo-lungo); font-weight: var(--peso-medio); letter-spacing: 0; }
+.as-notte__frame { color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; }
+.as-notte__frame--senza { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+
+/* cosa: i primi tre oggetti, la barra lunga quanto le sue ore in quella notte */
+.as-notte__lista { display: grid; gap: var(--spazio-1); }
+.as-notte__oggetto { display: grid; grid-template-columns: minmax(var(--notte-nome), max-content) minmax(var(--notte-barra-minima), 1fr) auto; gap: var(--spazio-2); align-items: center; }
+.as-notte__nome { font-family: var(--carattere-cifre); font-weight: var(--peso-medio); color: var(--freddo); overflow-wrap: anywhere; }
+.as-notte__barra-ore { display: block; height: var(--avanza-pista); border-radius: var(--raggio-pillola); background: linear-gradient(90deg, var(--accento) var(--quanto, 0%), var(--vetro-sopra) var(--quanto, 0%)); }
+.as-notte__cifra { font-family: var(--carattere-cifre); font-size: var(--testo-minuto); color: var(--inchiostro-tenue); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.as-notte__altri { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+
+/* il cielo di quella notte: la Luna e il meteo vero */
+.as-notte__luna .as-luna__quanto { font-family: var(--carattere-testo); }
+.as-notte__meteo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-1) var(--spazio-3); }
+.as-notte__nuvole { color: var(--inchiostro-tenue); }
+.as-notte__utili { font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-notte__utili b { color: var(--inchiostro); font-weight: var(--peso-medio); }
+/* il meteo che non e' ancora arrivato: il tondo tratteggiato dell'attesa,
+   con la data se la notte e' giovane, senza se il servizio non ha risposto */
+.as-notte__attesa { display: inline-flex; align-items: center; gap: var(--spazio-2); font-size: var(--testo-minuto); font-weight: var(--peso-forte); color: var(--esito-attesa-inchiostro); }
+.as-notte__attesa::before { content: ""; flex: none; box-sizing: border-box; width: var(--semaforo-lampada-grande); height: var(--semaforo-lampada-grande); border-radius: 50%; border: var(--segno-filo) dashed var(--esito-attesa); }
+
+@container colonna (max-width: 1179px) {          /* soglia = compatta */
+  .as-notte { grid-template-columns: minmax(var(--notte-quando-compatta), .9fr) minmax(0, 1.4fr) minmax(var(--notte-cielo-compatta), 1fr); grid-template-areas: "quando oggetti cielo" "fatto filtri cielo"; }
+  .as-notte--capi { display: none; }
+}
+@container colonna (max-width: 899px) {           /* soglia = telefono */
+  .as-notte { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "quando fatto" "oggetti oggetti" "filtri filtri" "cielo cielo"; gap: var(--spazio-4) var(--spazio-3); padding: var(--spazio-4); }
+  .as-notte__fatto { text-align: end; }
+  .as-notte__filtri { padding-top: 0; }
+  .as-notte__cielo { padding-top: var(--spazio-3); border-top: 1px solid var(--linea); }
+}
+
 /* ── foglio/70-pagina-dashboard.css ───────────────────────────────────── */
 /* ==========================================================================
    PAGINA — la Dashboard (v24)
@@ -2238,4 +2365,45 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
   .as-meteo__grande, .as-meteo__parola { font-size: var(--cifra-frase-telefono); }
   .as-meteo__grande b { display: block; font-size: var(--cifra-testa-telefono); margin: 0 0 var(--spazio-1); }
   .as-meteo__solo-largo { display: none !important; }
+}
+
+/* ── foglio/72-pagina-notti.css ───────────────────────────────────────── */
+/* ==========================================================================
+   PAGINA — le Notti (v29, forma A «il registro»)
+   Il blocco e' .as-registro: .as-notti e' la fila delle notti del Meteo.
+   Le sole regole che valgono qui. In testa i totali dell'archivio intero
+   (__totali), sotto una riga di stato per motivo (__stati, .as-avviso con
+   l'azione a destra sopra 900), poi l'elenco delle notti (.as-notte, 66)
+   con le intestazioni in cima, e «Mostra altre» (__carico). Una notte sola
+   dall'indirizzo: __ritorno e la sua carta, senza totali.
+   ========================================================================== */
+.as-registro { display: grid; gap: var(--spazio-6); font-size: var(--testo-corpo); color: var(--inchiostro); }
+.as-registro a:not(.as-bottone) { color: var(--inchiostro-accento); text-underline-offset: var(--sottolineatura-stacco); }
+.as-registro a:not(.as-bottone):hover { color: var(--inchiostro); }
+.as-registro p, .as-registro h2 { margin: 0; }
+
+.as-registro__testa { display: grid; gap: var(--spazio-2); }
+.as-registro__testa .as-soprattitolo { margin: 0; }
+.as-registro__totali { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--spazio-2) var(--spazio-6); }
+.as-registro__totale { display: flex; align-items: baseline; gap: var(--spazio-2); font-size: var(--testo-lungo); color: var(--inchiostro-tenue); }
+.as-registro__totale b { font-size: var(--cifra-lettura-prima); font-weight: var(--peso-cifra); letter-spacing: -.02em; color: var(--inchiostro); font-variant-numeric: tabular-nums; }
+.as-registro__nota { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+
+/* le righe di stato: una per motivo, divise da un filo; sopra 900 l'azione
+   sta a destra della frase, cosi' la riga resta bassa */
+.as-registro__stati { display: grid; }
+.as-registro__stati > .as-avviso { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
+.as-registro__stati > .as-avviso + .as-avviso { border-top: 1px solid var(--linea); }
+.as-registro__stati .as-avviso__segno { align-self: start; }
+.as-registro__stati .as-avviso__azioni { grid-column: 3; }
+
+.as-registro__elenco { display: grid; gap: var(--spazio-3); }
+.as-registro__carico { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--spazio-3) var(--spazio-5); color: var(--inchiostro-tenue); }
+.as-registro__ritorno { justify-self: start; }
+.as-registro__scheletro { height: var(--registro-scheletro); border-radius: var(--raggio-carta); }
+.as-registro__scheletro-cifre { width: var(--registro-scheletro-cifre); max-width: 100%; height: var(--cifra-lettura-prima); }
+
+@container colonna (max-width: 899px) {
+  .as-registro__stati > .as-avviso { grid-template-columns: auto minmax(0, 1fr); }
+  .as-registro__stati .as-avviso__azioni { grid-column: 2; }
 }

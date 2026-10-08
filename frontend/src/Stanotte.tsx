@@ -40,8 +40,15 @@ function useStanotte() {
 
 type LunaDetta = components["schemas"]["MoonOut"]
 
-/** Il disco della Luna: il cerchio spento e la parte illuminata. */
-function Disco({ luna, className = "" }: { luna: LunaDetta; className?: string }) {
+/** Il disco della Luna: il cerchio spento e la parte illuminata. Lo usano anche le Notti, con la
+ *  Luna di quella sera. */
+export function Disco({
+  luna,
+  className = "",
+}: {
+  luna: Pick<LunaDetta, "illumination_pct" | "lit_side">
+  className?: string
+}) {
   const illuminata = tracciatoDellaLuna(luna.illumination_pct, luna.lit_side === "right")
   return (
     <svg className={`as-luna__faccia ${className}`.trim()} viewBox="-12 -12 24 24" aria-hidden="true">
