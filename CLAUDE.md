@@ -82,6 +82,8 @@ va nel riassunto. Una regola controllabile da una macchina sta in una macchina, 
   si scrive. Un fatto corretto si corregge in tutte le sue case, cercate col grep anche con le
   parole che legge l'utente.
 - **Una superficie si collauda nel browser**, guardando il contenuto (skill `collaudo-dal-vivo`).
+- **Un'idea di Marco "per dopo" resta un'idea**: non diventa una richiesta al disegno ne' una
+  decisione nel contratto finche' non dice di farla.
 - **Quando Marco mi corregge su un modo di sbagliare**, nello stesso turno: prima uno strumento
   (test, hook, controllo di pre-commit), solo se non si puo' una riga qui.
 - **Una fetta arriva a schermo**: parte da cio' che l'utente vedra' e ci arriva in un commit.
