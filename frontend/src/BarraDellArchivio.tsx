@@ -1,41 +1,18 @@
 import { type ReactNode, useEffect, useRef, useState } from "react"
 
-import { Campo, EtichettaDiGruppo } from "./Campo"
+import { Bottone } from "./Bottone"
+import { CampoDiRicerca, Cerco } from "./CampoDiRicerca"
+import { ApriLeTendine, Spunta, Tendina, Togli, type VoceDiTendina } from "./Tendina"
 import type { components, operations } from "./api/schema"
-import { type Chiave, numero, t } from "./i18n"
+import { type Chiave, notte, numero, t } from "./i18n"
 import { costellazione, inOrdineDiNome } from "./costellazioni"
 
-/**
- * La **barra dell'Archivio**: cerca, le tendine, ordina, e quanti ne hai trovati.
- *
- * - **Qui non si filtra niente.** Ogni controllo scrive nell'indirizzo, e chi disegna la pagina
- *   chiede al backend: cercare fra le cento righe gia' scaricate troverebbe solo quelle, e un
- *   archivio di seicento oggetti direbbe "non trovato" mentendo.
- * - **Le tendine offrono cio' che l'archivio ha**, non cio' che il catalogo conosce: l'elenco
- *   arriva gia' fatto dalla rotta.
- * - **La ricerca aspetta un attimo prima di partire.** Chi scrive `m31` batte tre tasti, e tre
- *   domande al backend per una parola sono due giri buttati: il campo tiene cio' che scrivi e lo
- *   consegna quando ti fermi, cosi' quello che vedi scritto e' sempre quello che hai battuto.
- * - **Mentre la risposta arriva la barra lo dice**, e lo **dichiara** (`aria-busy`): sotto ci
- *   sono ancora le righe e la conta di prima, e senza un segno l'utente le prenderebbe per la
- *   risposta a cio' che ha appena chiesto. Il segno sta sul **campo** e sulle **tendine** e non
- *   sulle righe, per due ragioni: le righe possono essere **zero** -- ed e' li' che serve di piu',
- *   perche' resta a schermo lo stato vuoto di prima -- e nel foglio i modificatori delle righe
- *   fanno altro, col perche' per esteso accanto alla tendina qui sotto. Niente si spegne mentre
- *   si aspetta: cambiare idea a meta' attesa e' legittimo.
- */
-
-/** Cosa offrono le tendine, come la rotta le manda. */
+/** Cio' che le tendine offrono: lo manda la rotta, e sono solo i valori che l'archivio ha. */
 export type ScelteDellaBarra = components["schemas"]["ArchiveChoices"]
 
-/** I tre ordini, **presi dall'API**: e' il backend a ordinare, e i suoi sono quelli veri. Scritto
- *  a mano qui sarebbe un secondo posto dove decidere quali ordini esistono, e un refuso
- *  compilerebbe. */
-export type Ordine = NonNullable<
-  NonNullable<operations["archive_page"]["parameters"]["query"]>["sort"]
->
+/** L'ordine dell'elenco: i suoi valori sono quelli della rotta, non una copia. */
+export type Ordine = NonNullable<NonNullable<operations["archive_page"]["parameters"]["query"]>["sort"]>
 
-/** Cosa stai guardando: i valori che vivono nell'indirizzo, tolta la vista. */
 export type Criteri = {
   q: string
   catalog: string
@@ -56,189 +33,259 @@ export type Criteri = {
   sort: Ordine
 }
 
-/** Il valore che dice "solo i mosaici", nell'indirizzo e nella tendina. */
 export const SOLO_MOSAICI = "1"
 
-/** La voce del periodo che apre "dal" e "al". */
 export const PERIODO_DATE = "date"
 
-/** Un sito o un pezzo del corredo: l'id torna alla rotta, il nome si legge. */
-type Scelta = components["schemas"]["ArchivePick"]
-
-/** Quante righe ha trovato, divise come le manda la rotta: un mosaico non e' un oggetto. */
 export type Trovati = components["schemas"]["ArchiveFound"]
 
-/** I tre ordini con la parola che si legge, e **l'elenco di chi li conosce**: chi legge
- *  l'indirizzo si fa dire da qui quali esistono, invece di riscriverne la lista. */
 export const ORDINI: { chiave: Ordine; testo: Chiave }[] = [
   { chiave: "name", testo: "archive.sort.name" },
   { chiave: "hours", testo: "archive.sort.hours" },
   { chiave: "frames", testo: "archive.sort.frames" },
 ]
 
+// I criteri che stringono, e che "Filtri" conta sul telefono. L'ordine e la ricerca no: l'ordine
+// non toglie righe, e cio' che hai scritto si vede nel campo.
+const FILTRI = ["catalog", "constellation", "filter", "mosaic", "period", "site", "optics", "camera"] as const
+
+const TENDINE = "archivio-tendine"
+
+/**
+ * La barra dell'Archivio (disegno v31, `.as-restringi`): in alto la vista, il campo, l'ordine e
+ * la conta; sotto le tendine, che offrono solo cio' che l'archivio ha. Sul telefono le tendine
+ * stanno dietro "Filtri" e si aprono nel flusso.
+ *
+ * - **Ogni scelta va nell'indirizzo** (`onCriteri`): la barra non tiene niente di suo, tranne chi
+ *   ha chiesto per ultimo e se le tendine sono aperte.
+ * - **L'attesa sta su chi ha chiesto**: il campo o la tendina che ha cambiato porta il segno
+ *   finche' la risposta non arriva; le righe di prima restano. Niente si spegne. Se non ha
+ *   chiesto nessuno della barra, il segno lo portano il campo e tutte le tendine.
+ * - **Una tendina senza scelte non compare**: con un sito solo non c'e' niente da scegliere.
+ */
 export function BarraDellArchivio({
   criteri,
   scelte,
   trovati,
   aspetta,
   onCriteri,
+  onTogli,
   children,
 }: {
   criteri: Criteri
   scelte: ScelteDellaBarra
-  /** Quanti ne sono stati trovati, o `null` quando non lo sappiamo -- dopo una richiesta
-   *  andata in errore, per esempio. Zero sarebbe l'unica risposta che sappiamo falsa. */
+  /** Quanti ne ha trovati, o `null` se la richiesta e' caduta: zero sarebbe una bugia. */
   trovati: Trovati | null
-  /** Le righe sotto sono ancora quelle di prima e la risposta sta arrivando. */
   aspetta: boolean
   onCriteri: (cambio: Partial<Criteri>) => void
-  /** L'interruttore fra le due viste: il disegno lo mette in questa riga, ma non e' un criterio
-   *  -- non stringe l'elenco -- quindi lo compone chi disegna la pagina. */
+  /** Toglie ogni filtro insieme. */
+  onTogli: () => void
+  /** L'interruttore di vista, che la pagina governa. */
   children?: ReactNode
 }) {
+  const [aperte, setAperte] = useState(false)
+  // chi ha chiesto per ultimo: e' lui a portare il segno dell'attesa
+  const [chiesto, setChiesto] = useState<{ chi: keyof Criteri; criteri: Criteri } | null>(null)
+  const quanti = FILTRI.filter((c) => criteri[c]).length
+
+  function chiedi(chi: keyof Criteri, cambio: Partial<Criteri>) {
+    setChiesto({ chi, criteri: { ...criteri, ...cambio } })
+    onCriteri(cambio)
+  }
+  // Il segno e' suo finche' l'indirizzo e' quello che ha chiesto lui. Se la richiesta viene da
+  // fuori (il "togli i filtri" del vuoto, il tasto indietro, un collegamento) lo portano tutti:
+  // sotto possono esserci zero righe, e senza segno l'attesa non si vedrebbe.
+  const suo = chiesto !== null && (Object.keys(criteri) as (keyof Criteri)[]).every((c) => criteri[c] === chiesto.criteri[c])
+  const attende = (chi: keyof Criteri) => aspetta && (!suo || chiesto.chi === chi)
+  const siti = new Map(scelte.sites.map((s) => [String(s.id), s.name]))
+  const ottiche = new Map(scelte.optics.map((s) => [String(s.id), s.name]))
+  const camere = new Map(scelte.cameras.map((s) => [String(s.id), s.name]))
+  const nomeDelPeriodo = (v: string) => (v === PERIODO_DATE ? t("archive.filter.period.dates") : v)
+
   return (
-    <div className="as-barra" aria-busy={aspetta}>
-      {children}
-      <Cerca scritto={criteri.q} aspetta={aspetta} onScritto={(q) => onCriteri({ q })} />
-      <Tendina
-        id="archivio-catalogo"
-        etichetta="archive.filter.catalog"
-        tutti="archive.filter.catalog.any"
-        valore={criteri.catalog}
-        voci={scelte.catalogs}
-        aspetta={aspetta}
-        onScelto={(catalog) => onCriteri({ catalog })}
-      />
-      <Tendina
-        id="archivio-costellazione"
-        etichetta="archive.filter.constellation"
-        tutti="archive.filter.constellation.any"
-        valore={criteri.constellation}
-        voci={inOrdineDiNome(scelte.constellations)}
-        nome={costellazione}
-        aspetta={aspetta}
-        onScelto={(constellation) => onCriteri({ constellation })}
-      />
-      <Tendina
-        id="archivio-filtro"
-        etichetta="archive.filter.filter"
-        tutti="archive.filter.filter.any"
-        valore={criteri.filter}
-        voci={scelte.filters}
-        aspetta={aspetta}
-        onScelto={(filter) => onCriteri({ filter })}
-      />
-      <Tendina
-        id="archivio-mosaici"
-        etichetta="archive.filter.mosaic"
-        tutti="archive.filter.mosaic.any"
-        valore={criteri.mosaic}
-        voci={scelte.mosaics ? [SOLO_MOSAICI] : []}
-        nome={() => t("archive.filter.mosaic.only")}
-        aspetta={aspetta}
-        onScelto={(mosaic) => onCriteri({ mosaic })}
-      />
-      {/* Cambiare periodo dimentica le date: tornando a "Scegli le date", due date vecchie
-          stringerebbero senza che nessuno le abbia appena scelte. */}
-      <Tendina
-        id="archivio-periodo"
-        etichetta="archive.filter.period"
-        tutti="archive.filter.period.any"
-        valore={criteri.period}
-        voci={scelte.years.length > 0 ? [...scelte.years, PERIODO_DATE] : []}
-        nome={(v) => (v === PERIODO_DATE ? t("archive.filter.period.dates") : v)}
-        aspetta={aspetta}
-        onScelto={(period) => onCriteri({ period, since: "", until: "" })}
-      />
-      {criteri.period === PERIODO_DATE && (
-        <>
-          <Data
-            id="archivio-dal"
-            etichetta="archive.filter.since"
-            valore={criteri.since}
-            aspetta={aspetta}
-            onData={(since) => onCriteri({ since })}
+    <div
+      className="as-restringi"
+      role="search"
+      aria-label={t("archive.bar")}
+      aria-busy={aspetta}
+      data-aperta={aperte ? "" : undefined}
+    >
+      <div className="as-restringi__riga">
+        {children}
+        <Cerca scritto={criteri.q} aspetta={attende("q")} onScritto={(q) => chiedi("q", { q })} />
+        <ApriLeTendine
+          aperte={aperte}
+          governa={TENDINE}
+          quanti={quanti > 0 ? <b>{numero(quanti)}</b> : null}
+          onCambia={setAperte}
+        >
+          {t("archive.bar.filters")}{" "}
+        </ApriLeTendine>
+        <div className="as-restringi__fine">
+          <Tendina
+            etichetta={t("archive.sort")}
+            valore={t(ORDINI.find((o) => o.chiave === criteri.sort)?.testo ?? "archive.sort.name")}
+            voci={ORDINI.map((o) => ({ chiave: o.chiave, nome: t(o.testo) }))}
+            scelta={criteri.sort}
+            aspetta={attende("sort")}
+            onScelta={(sort) => chiedi("sort", { sort: sort as Ordine })}
           />
-          <Data
-            id="archivio-al"
-            etichetta="archive.filter.until"
-            valore={criteri.until}
-            aspetta={aspetta}
-            onData={(until) => onCriteri({ until })}
-          />
-        </>
-      )}
-      <TendinaDiScelte
-        id="archivio-sito"
-        etichetta="archive.filter.site"
-        tutti="archive.filter.site.any"
-        valore={criteri.site}
-        scelte={scelte.sites}
-        aspetta={aspetta}
-        onScelto={(site) => onCriteri({ site })}
-      />
-      <TendinaDiScelte
-        id="archivio-ottica"
-        etichetta="archive.filter.optics"
-        tutti="archive.filter.optics.any"
-        valore={criteri.optics}
-        scelte={scelte.optics}
-        aspetta={aspetta}
-        onScelto={(optics) => onCriteri({ optics })}
-      />
-      <TendinaDiScelte
-        id="archivio-camera"
-        etichetta="archive.filter.camera"
-        tutti="archive.filter.camera.any"
-        valore={criteri.camera}
-        scelte={scelte.cameras}
-        aspetta={aspetta}
-        onScelto={(camera) => onCriteri({ camera })}
-      />
-      <div className="as-barra__coda">
-        <div className="as-barra__gruppo">
-          <EtichettaDiGruppo>{t("archive.sort")}</EtichettaDiGruppo>
-          {/* Niente segno d'attesa qui: nel foglio `as-segmentato--caricamento` mette
-              `pointer-events: none` sulle voci, che spegne il mouse e **non** la tastiera. Un
-              controllo morto per meta' delle mani e' peggio di uno vivo. Segnalato a Design. */}
-          <div className="as-segmentato" role="group" aria-label={t("archive.sort")}>
-            {ORDINI.map((o) => (
-              <button
-                key={o.chiave}
-                type="button"
-                className="as-segmentato__voce"
-                aria-pressed={criteri.sort === o.chiave}
-                onClick={() => onCriteri({ sort: o.chiave })}
-              >
-                {t(o.testo)}
-              </button>
-            ))}
-          </div>
+          <Conta trovati={trovati} />
         </div>
-        {/* Dopo un errore non sappiamo quanti siano, e zero sarebbe l'unica risposta che
-            sappiamo falsa. **Si dice**, non si tace: togliere la conta accorcerebbe la coda --
-            che sta a destra -- e i tre bottoni dell'ordine salterebbero sotto le dita nello
-            stesso istante in cui uno di loro e' stato appena premuto. */}
-        <span className="as-barra__conta">{laConta(trovati)}</span>
+      </div>
+      <div className="as-restringi__tendine" id={TENDINE}>
+        <Filtro
+          etichetta="archive.filter.catalog"
+          tutti="archive.filter.catalog.any"
+          nessuno="archive.any.m"
+          valore={criteri.catalog}
+          voci={scelte.catalogs}
+          aspetta={attende("catalog")}
+          onScelto={(catalog) => chiedi("catalog", { catalog })}
+        />
+        <Filtro
+          etichetta="archive.filter.constellation"
+          tutti="archive.filter.constellation.any"
+          nessuno="archive.any.f"
+          valore={criteri.constellation}
+          voci={inOrdineDiNome(scelte.constellations)}
+          nome={costellazione}
+          aspetta={attende("constellation")}
+          onScelto={(constellation) => chiedi("constellation", { constellation })}
+        />
+        <Filtro
+          etichetta="archive.filter.filter"
+          tutti="archive.filter.filter.any"
+          nessuno="archive.any.m"
+          valore={criteri.filter}
+          voci={scelte.filters}
+          aspetta={attende("filter")}
+          onScelto={(filter) => chiedi("filter", { filter })}
+        />
+        {scelte.mosaics && (
+          <Spunta
+            accesa={criteri.mosaic === SOLO_MOSAICI}
+            aspetta={attende("mosaic")}
+            onCambia={(solo) => chiedi("mosaic", { mosaic: solo ? SOLO_MOSAICI : "" })}
+          >
+            {t("archive.filter.mosaic.only")}
+          </Spunta>
+        )}
+        {/* Cambiare periodo dimentica le date: resterebbero nell'indirizzo, e tornando a "scegli le
+            date" stringerebbero senza che nessuno le abbia appena scelte. */}
+        {criteri.period === PERIODO_DATE ? (
+          <DalAl
+            dal={criteri.since}
+            al={criteri.until}
+            aspetta={attende("since") || attende("until")}
+            onDal={(since) => chiedi("since", { since })}
+            onAl={(until) => chiedi("until", { until })}
+            onTogli={() => chiedi("period", { period: "", since: "", until: "" })}
+          />
+        ) : (
+          <Filtro
+            etichetta="archive.filter.period"
+            tutti="archive.filter.period.any"
+            nessuno="archive.filter.period.short"
+            valore={criteri.period}
+            voci={scelte.years.length > 0 ? [...scelte.years, PERIODO_DATE] : []}
+            nome={nomeDelPeriodo}
+            aspetta={attende("period")}
+            onScelto={(period) => chiedi("period", { period, since: "", until: "" })}
+          />
+        )}
+        <Filtro
+          etichetta="archive.filter.site"
+          tutti="archive.filter.site.any"
+          nessuno="archive.any.m"
+          valore={criteri.site}
+          voci={[...siti.keys()]}
+          nome={(v) => siti.get(v) ?? v}
+          aspetta={attende("site")}
+          onScelto={(site) => chiedi("site", { site })}
+        />
+        <Filtro
+          etichetta="archive.filter.optics"
+          tutti="archive.filter.optics.any"
+          nessuno="archive.any.f"
+          valore={criteri.optics}
+          voci={[...ottiche.keys()]}
+          nome={(v) => ottiche.get(v) ?? v}
+          aspetta={attende("optics")}
+          onScelto={(optics) => chiedi("optics", { optics })}
+        />
+        <Filtro
+          etichetta="archive.filter.camera"
+          tutti="archive.filter.camera.any"
+          nessuno="archive.any.f"
+          valore={criteri.camera}
+          voci={[...camere.keys()]}
+          nome={(v) => camere.get(v) ?? v}
+          aspetta={attende("camera")}
+          onScelto={(camera) => chiedi("camera", { camera })}
+        />
+        {/* In coda alle tendine; la nota "si applicano subito" il foglio la mostra solo sul telefono. */}
+        <div className="as-restringi__chiudi">
+          <span className="as-archivio__nota">{t("archive.bar.applied")}</span>
+          {quanti > 0 && (
+            <Bottone verso="nudo" piccolo onClick={onTogli}>
+              {t("archive.nothing.clear")}
+            </Bottone>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
-/** Quanti ne sono stati trovati, come si legge, e "non so quanti" quando la risposta non e'
- *  arrivata. Un mosaico non si chiama oggetto: *3 oggetti e 1 mosaico*, e i mosaici si tacciono
- *  quando non ce ne sono. */
-function laConta(trovati: Trovati | null) {
-  if (trovati === null) return t("archive.count.unknown")
+/**
+ * Quanti ne ha trovati: gli oggetti e i mosaici, coi numeri in evidenza. Se la richiesta e' caduta
+ * dice "non so quanti": zero e' l'unica risposta che sappiamo falsa. **Si dice**, non si tace:
+ * togliere la conta sposterebbe l'ordine sotto le dita di chi l'ha appena toccato.
+ */
+function Conta({ trovati }: { trovati: Trovati | null }) {
+  if (trovati === null) {
+    return (
+      <p className="as-archivio__conta" aria-live="polite">
+        {t("archive.count.unknown")}
+      </p>
+    )
+  }
   const { objects: oggetti, mosaics: mosaici } = trovati
-  const diOggetti = t("archive.count", { n: numero(oggetti) })
-  if (mosaici === 0) return diOggetti
-  const diMosaici = t("archive.count.mosaics", { n: numero(mosaici) })
-  return oggetti === 0 ? diMosaici : t("archive.count.and", { prima: diOggetti, dopo: diMosaici })
+  const diOggetti = (
+    <>
+      <b>{numero(oggetti)}</b> {t("archive.count.objects", { n: oggetti })}
+    </>
+  )
+  const diMosaici = (
+    <>
+      <b>{numero(mosaici)}</b> {t("archive.count.mosaics.word", { n: mosaici })}
+    </>
+  )
+  return (
+    <p className="as-archivio__conta" aria-live="polite">
+      {mosaici === 0 ? (
+        diOggetti
+      ) : oggetti === 0 ? (
+        diMosaici
+      ) : (
+        <>
+          {diOggetti} {t("archive.count.join")} {diMosaici}
+        </>
+      )}
+    </p>
+  )
 }
 
-/** Il campo di ricerca. Tiene cio' che scrivi e lo consegna quando ti fermi: senza, ogni tasto
- *  sarebbe un giro di rete, e la riga sotto ballerebbe mentre batti. */
+/**
+ * Il campo di ricerca. **Aspetta che tu finisca di scrivere** prima di chiedere: una richiesta per
+ * parola, non per tasto. Cio' che scrivi sta qui dentro; l'indirizzo lo riceve dopo 250 ms.
+ *
+ * - `consegna` in un ref: il padre cambia funzione a ogni disegno, e metterla fra le dipendenze
+ *   farebbe ripartire il ritardo a ogni risposta.
+ * - `consegnato`: il campo si riallinea all'indirizzo solo quando cambia **da fuori** (indietro,
+ *   "togli i filtri"). Senza, un tasto battuto mentre la consegna torna indietro sparirebbe.
+ */
 function Cerca({
   scritto,
   aspetta,
@@ -250,20 +297,11 @@ function Cerca({
 }) {
   const [testo, setTesto] = useState(scritto)
 
-  // Chi chiama passa una funzione nuova a ogni suo disegno, e il genitore si ridisegna anche
-  // mentre aspetta: senza fermarla qui, l'attesa ripartirebbe da capo a ogni suo giro e una
-  // ricerca su rete lenta non partirebbe mai. L'effetto dipende da cio' che si e' scritto, non
-  // dall'identita' di chi la riceve.
   const consegna = useRef(onScritto)
   useEffect(() => {
     consegna.current = onScritto
   })
 
-  // `scritto` cambia anche da fuori -- il tasto indietro, un collegamento aperto -- e allora il
-  // campo deve seguirlo: e' l'indirizzo a dire cosa stai guardando, non questo stato. Ma cambia
-  // **anche per colpa nostra**, un attimo dopo ogni consegna, e fra i due momenti ci sta un tasto:
-  // riallinearsi a quel ritorno lo cancellerebbe in silenzio. Si segue solo cio' che dice una cosa
-  // diversa da cio' che abbiamo appena consegnato.
   const consegnato = useRef(scritto)
   useEffect(() => {
     if (scritto === consegnato.current) return
@@ -280,119 +318,142 @@ function Cerca({
     return () => clearTimeout(quando)
   }, [testo, scritto])
 
-  // Solo `as-barra__cerca`: `as-cerca` nel foglio e' il campo **con i suggerimenti** (`combobox`
-  // piu' `listbox`), che qui non ci sono, e col suo `max-width` piu' largo cancellerebbe il tetto
-  // che la barra da' al campo. Segnalato a Design.
   return (
-    <div className="as-barra__cerca">
-      <Campo id="archivio-cerca" etichetta={t("archive.search")} aspetta={aspetta}>
-        <input
-          className="as-campo__input"
-          id="archivio-cerca"
-          type="search"
-          placeholder={t("archive.search.placeholder")}
-          value={testo}
-          onChange={(e) => setTesto(e.target.value)}
-        />
-      </Campo>
-    </div>
+    <CampoDiRicerca
+      nellaBarra
+      etichetta={t("archive.search")}
+      placeholder={t("archive.search.placeholder")}
+      value={testo}
+      onChange={(e) => setTesto(e.target.value)}
+      coda={(aspetta || testo !== scritto) && <Cerco />}
+    />
   )
 }
 
-/** Una tendina di siti o pezzi: si legge il nome, nell'indirizzo va l'id. */
-function TendinaDiScelte({
-  scelte,
-  ...resto
-}: Omit<Parameters<typeof Tendina>[0], "voci" | "nome"> & { scelte: Scelta[] }) {
-  const nomi = new Map(scelte.map((s) => [String(s.id), s.name]))
-  return <Tendina {...resto} voci={[...nomi.keys()]} nome={(v) => nomi.get(v) ?? v} />
-}
-
-/** Una data del periodo. Ogni data scelta e' un gesto, e lascia la sua traccia come una tendina. */
-function Data({
-  id,
-  etichetta,
-  valore,
-  aspetta,
-  onData,
-}: {
-  id: string
-  etichetta: Chiave
-  valore: string
-  aspetta: boolean
-  onData: (data: string) => void
-}) {
-  // Non controllato: chi batte `2025` passa per `0002`, `0020`, `0202`, e un valore preso
-  // dall'indirizzo a ogni tasto riscriverebbe l'anno a meta'. Un anno che comincia per 0 e'
-  // ancora da finire e non si consegna; l'indirizzo cambiato da fuori si segue.
-  const campo = useRef<HTMLInputElement>(null)
-  useEffect(() => {
-    if (campo.current && campo.current.value !== valore) campo.current.value = valore
-  }, [valore])
-  return (
-    <div className="as-barra__campo">
-      <Campo id={id} etichetta={t(etichetta)} aspetta={aspetta}>
-        <input
-          ref={campo}
-          className="as-campo__input"
-          id={id}
-          type="date"
-          defaultValue={valore}
-          onChange={(e) => {
-            if (!e.target.value.startsWith("0")) onData(e.target.value)
-          }}
-        />
-      </Campo>
-    </div>
-  )
-}
-
-/** Una tendina che stringe l'elenco. Non compare se non c'e' niente da scegliere: una tendina con
- *  la sola voce "tutti" e' un controllo che promette di fare qualcosa e non fa niente. */
-function Tendina({
-  id,
+/** Una tendina che stringe: la prima voce la toglie ("tutti"), le altre sono cio' che l'archivio
+ *  ha. Senza scelte non compare. `nome` traduce il valore in cio' che si legge. */
+function Filtro({
   etichetta,
   tutti,
+  nessuno,
   valore,
   voci,
   nome = (v) => v,
   aspetta,
   onScelto,
 }: {
-  id: string
   etichetta: Chiave
+  /** La voce che toglie il filtro, per intero: "Tutti i cataloghi". */
   tutti: Chiave
+  /** La stessa cosa accanto all'etichetta, corta: "tutti". */
+  nessuno: Chiave
   valore: string
   voci: string[]
-  /** Come si legge una voce: il suo valore, se non e' una parola dell'app. */
   nome?: (voce: string) => string
   aspetta: boolean
   onScelto: (scelto: string) => void
 }) {
   if (voci.length === 0) return null
+  const elenco: VoceDiTendina[] = [{ chiave: "", nome: t(tutti) }, ...voci.map((v) => ({ chiave: v, nome: nome(v) }))]
   return (
-    <div className="as-barra__campo">
-      <Campo id={id} etichetta={t(etichetta)}>
-        {/* Il segno dell'attesa sta **qui**, sui controlli, e non sulle righe: nel foglio
-            `as-carta--caricamento` nasconde `as-carta__titolo` (dove sta il nome dell'oggetto:
-            le carte resterebbero senza) e `as-tabella--caricamento` ha due sole regole, tutte e
-            due sull'evidenziazione al passaggio, quindi **non dipinge niente** -- e le righe possono
-            essere **zero**, ed e' proprio li' che il segno serve. `as-scelta--caricamento` anima
-            e basta: non spegne il puntatore, quindi si puo' cambiare idea mentre si aspetta. */}
-        <select
-          className={aspetta ? "as-scelta as-scelta--caricamento" : "as-scelta"}
-          id={id}
-          value={valore}
-          onChange={(e) => onScelto(e.target.value)}
-        >
-          <option value="">{t(tutti)}</option>
-          {voci.map((v) => (
-            <option key={v} value={v}>
-              {nome(v)}
-            </option>
-          ))}
-        </select>
-      </Campo>
+    <Tendina
+      etichetta={t(etichetta)}
+      valore={valore ? nome(valore) : t(nessuno)}
+      voci={elenco}
+      scelta={valore}
+      accesa={valore !== ""}
+      aspetta={aspetta}
+      togli={valore ? t("archive.filter.remove", { cosa: t(etichetta).toLowerCase(), valore: nome(valore) }) : undefined}
+      onScelta={onScelto}
+    />
+  )
+}
+
+/**
+ * Il periodo scelto a giorni (v32, `.as-dal-al`): "dal" e "al" in una pillola, al posto della
+ * tendina del periodo, e la x che torna a "sempre".
+ *
+ * - **Se "al" viene prima di "dal" lo dice** sotto, col segno e la frase, e il campo porta
+ *   `aria-invalid`: due date scambiate non trovano niente, e senza un motivo sembrerebbe un
+ *   archivio vuoto.
+ */
+function DalAl({
+  dal,
+  al,
+  aspetta,
+  onDal,
+  onAl,
+  onTogli,
+}: {
+  dal: string
+  al: string
+  aspetta: boolean
+  onDal: (data: string) => void
+  onAl: (data: string) => void
+  onTogli: () => void
+}) {
+  const scambiate = dal !== "" && al !== "" && al < dal
+  return (
+    <div
+      className={dal || al ? "as-dal-al as-dal-al--scelta" : "as-dal-al"}
+      role="group"
+      aria-labelledby="archivio-periodo"
+    >
+      <div className="as-dal-al__pillola">
+        <span className="as-dal-al__eti" id="archivio-periodo">
+          {t("archive.filter.period")}
+        </span>
+        {/* Il foglio non ha una veste d'attesa per le date: il segno comune sta accanto al nome. */}
+        {aspetta && <span className="as-attesa" aria-hidden="true" />}
+        <Data etichetta="archive.filter.since" valore={dal} onData={onDal} />
+        <Data etichetta="archive.filter.until" valore={al} sbagliata={scambiate} onData={onAl} />
+        <Togli nome={t("archive.filter.period.remove")} onTogli={onTogli} />
+      </div>
+      {scambiate && (
+        <p className="as-dal-al__errore" id="archivio-periodo-errore">
+          <span className="as-dal-al__segno" aria-hidden="true">
+            !
+          </span>
+          {t("archive.filter.dates.wrong", { giorno: notte(dal) })}
+        </p>
+      )}
     </div>
+  )
+}
+
+/**
+ * Una data del periodo. Il campo **non e' controllato**: un `value` controllato riscrive il campo
+ * a ogni risposta, e mentre batti l'anno il browser passa da date a meta' (`0002-...`) che
+ * tornerebbero indietro a cancellare cio' che stai scrivendo. Si consegna solo una data intera.
+ */
+function Data({
+  etichetta,
+  valore,
+  sbagliata = false,
+  onData,
+}: {
+  etichetta: Chiave
+  valore: string
+  sbagliata?: boolean
+  onData: (data: string) => void
+}) {
+  const campo = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (campo.current && campo.current.value !== valore) campo.current.value = valore
+  }, [valore])
+  return (
+    <label className="as-dal-al__campo">
+      <span>{t(etichetta)}</span>
+      <input
+        ref={campo}
+        type="date"
+        defaultValue={valore}
+        aria-invalid={sbagliata || undefined}
+        aria-describedby={sbagliata ? "archivio-periodo-errore" : undefined}
+        onChange={(e) => {
+          if (!e.target.value.startsWith("0")) onData(e.target.value)
+        }}
+      />
+    </label>
   )
 }

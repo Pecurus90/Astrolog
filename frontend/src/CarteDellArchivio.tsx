@@ -52,17 +52,28 @@ function UnaCarta({ riga }: { riga: Riga }) {
         <h2 className="as-carta-oggetto__nome">
           <Nome riga={riga} />
         </h2>
-        <p className="as-archivio__chi as-carta-oggetto__chi">
-          <Tipo riga={riga} lungo /> {"\u00b7"} <Costellazione riga={riga} lungo />
+        <p className="as-carta-oggetto__chi">
+          <span>
+            <Tipo riga={riga} lungo />
+          </span>
+          <span>
+            <Costellazione riga={riga} lungo />
+          </span>
         </p>
+        {/* Ogni pezzo non si spezza, e il punto sta col pezzo prima: a capo va un pezzo intero. */}
         <p className="as-carta-oggetto__ore">
-          <b>{ore ?? senzaTempo(riga.untimed)}</b> {"\u00b7"} {t("archive.frames", { n: numero(riga.frames) })}
+          <span className="as-carta-oggetto__pezzo">
+            <b>{ore ?? senzaTempo(riga.untimed)}</b>
+            {"\u00a0\u00b7"}
+          </span>{" "}
+          <span className="as-carta-oggetto__pezzo">
+            {t("archive.frames", { n: numero(riga.frames) })}
+            {ore !== null && riga.untimed > 0 && "\u00a0\u00b7"}
+          </span>
           {ore !== null && riga.untimed > 0 && (
             <>
               {" "}
-              <span className="as-archivio__senza">
-                {"\u00b7"} {senzaTempo(riga.untimed)}
-              </span>
+              <span className="as-carta-oggetto__pezzo">{senzaTempo(riga.untimed)}</span>
             </>
           )}
         </p>

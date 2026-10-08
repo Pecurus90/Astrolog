@@ -131,5 +131,29 @@ export async function vaiAll(vista: RegExp) {
 /** La barra che contiene il campo di ricerca: e' il posto dove vivono `aria-busy` e i segni
  *  dell'attesa, e pescarla dal campo e' l'unico modo stabile -- la barra non ha un ruolo suo. */
 export async function laBarra() {
-  return (await screen.findByLabelText(/cerca un oggetto/i)).closest(".as-barra")
+  return (await screen.findByLabelText(/cerca un oggetto/i)).closest(".as-restringi")
+}
+
+/** Sceglie una voce da una tendina come farebbe l'utente: la apre, e tocca la voce. La tendina si
+ *  cerca per la sua etichetta ("Catalogo"), la voce per il nome che si legge ("Andromeda"), non
+ *  per il valore che va nell'indirizzo. */
+export async function scegli(tendina: RegExp, voce: RegExp | string): Promise<void> {
+  fireEvent.click(await laTendina(tendina))
+  fireEvent.click(await screen.findByRole("menuitemradio", { name: voce }))
+}
+
+/** Le voci che una tendina offre, come si leggono, dopo averla aperta. */
+export async function vociDi(tendina: RegExp): Promise<(string | null)[]> {
+  fireEvent.click(await laTendina(tendina))
+  return (await screen.findAllByRole("menuitemradio")).map((v) => v.textContent)
+}
+
+/** La pillola di una tendina, per la sua etichetta. Quando stringe ha accanto la x che la toglie,
+ *  e il nome della x ripete l'etichetta ("Togli catalogo: M"): per nome sono due bottoni. Deve
+ *  essercene **una**: due pillole con lo stesso nome sarebbero un difetto, non una scelta. */
+export async function laTendina(nome: RegExp): Promise<HTMLElement> {
+  const bottoni = await screen.findAllByRole("button", { name: nome })
+  const pillole = bottoni.filter((b) => b.classList.contains("as-tendina"))
+  if (pillole.length !== 1) throw new Error(`le tendine di nome ${String(nome)} sono ${pillole.length}, non una`)
+  return pillole[0] as HTMLElement
 }

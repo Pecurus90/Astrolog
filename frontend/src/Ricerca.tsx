@@ -3,6 +3,7 @@ import { type FocusEvent, type KeyboardEvent, type ReactNode, useEffect, useRef,
 import { useNavigate } from "react-router"
 
 import { Bottone } from "./Bottone"
+import { CampoDiRicerca, Cerco } from "./CampoDiRicerca"
 import { Icon } from "./Icons"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
@@ -134,34 +135,28 @@ export function Ricerca({ aperta, onAperta }: { aperta: boolean; onAperta: (aper
   let posto = 0
   return (
     <div className="as-cerca" onBlur={esce}>
-      <label className="as-campo">
-        <Icon name="cerca" className="as-campo__icona" />
-        <input
-          type="search"
-          role="combobox"
-          aria-label={t("search.label")}
-          aria-expanded={voci.length > 0}
-          aria-controls={MENU}
-          aria-activedescendant={attiva}
-          aria-autocomplete="list"
-          autoComplete="off"
-          placeholder={t("search.placeholder")}
-          ref={campo}
-          value={testo}
-          onChange={(e) => setTesto(e.target.value)}
-          onKeyDown={tasti}
-        />
-        {scritto && (!fresca || risposta.isFetching) ? (
-          <span className="as-campo__attesa">
-            <span className="as-attesa" aria-hidden="true" />
-            {t("search.busy")}
-          </span>
-        ) : (
-          <span className="as-telaio__tasto" aria-hidden="true">
-            {t("search.key.esc")}
-          </span>
-        )}
-      </label>
+      <CampoDiRicerca
+        etichetta={t("search.label")}
+        role="combobox"
+        aria-expanded={voci.length > 0}
+        aria-controls={MENU}
+        aria-activedescendant={attiva}
+        aria-autocomplete="list"
+        placeholder={t("search.placeholder")}
+        ref={campo}
+        value={testo}
+        onChange={(e) => setTesto(e.target.value)}
+        onKeyDown={tasti}
+        coda={
+          scritto && (!fresca || risposta.isFetching) ? (
+            <Cerco />
+          ) : (
+            <span className="as-telaio__tasto" aria-hidden="true">
+              {t("search.key.esc")}
+            </span>
+          )
+        }
+      />
       {/* la classe sta su un involucro: il bottone e' un mattone e non ne prende altre */}
       <span className="as-cerca__annulla">
         <Bottone verso="nudo" piccolo onClick={() => chiudi(true)}>

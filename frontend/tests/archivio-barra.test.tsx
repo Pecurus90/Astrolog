@@ -26,11 +26,22 @@ import {
   archivio,
   conArchivio,
   laBarra,
+  laTendina,
+  scegli,
   vaiAll,
   voceArchivio,
+  vociDi,
 } from "./archivio-banco"
 
 afterEach(pulisci)
+
+/** La conta come si legge: i numeri stanno in un `<b>`, quindi il testo e' su piu' nodi. */
+const laConta = () => document.querySelector(".as-archivio__conta")?.textContent
+
+/** Il bottone "Togli i filtri" del vuoto: quando un filtro non trova niente ce n'e' anche uno nella
+ *  barra, e questo e' quello che sta dove l'utente guarda. */
+const togliDalVuoto = () =>
+  within(screen.getByRole("tabpanel")).getByRole("button", { name: /togli i filtri/i })
 
 describe("la barra dell'Archivio", () => {
   it("cercare stringe l'elenco nel backend, non a schermo", async () => {
@@ -55,8 +66,8 @@ describe("la barra dell'Archivio", () => {
     archivio([M31], { choices: { ...SCELTE, catalogs: ["M"], constellations: [], filters: ["Lum"] } })
     await apriArchivio()
 
-    expect(await screen.findByLabelText(/catalogo/i)).toBeDefined()
-    expect(screen.queryByLabelText(/costellazione/i)).toBeNull()
+    expect(await screen.findByRole("button", { name: /catalogo/i })).toBeDefined()
+    expect(screen.queryByRole("button", { name: /costellazione/i })).toBeNull()
   })
 
   it("la tendina delle costellazioni legge i nomi in ordine alfabetico, e sceglie la sigla", async () => {
@@ -65,10 +76,16 @@ describe("la barra dell'Archivio", () => {
     archivio([M31], { choices: { ...SCELTE, catalogs: ["M"], constellations: ["And", "Cep", "CVn", "Cyg"], filters: [] } })
     await apriArchivio()
 
-    const tendina = (await screen.findByLabelText(/costellazione/i)) as HTMLSelectElement
-    const voci = [...tendina.options].slice(1)
-    expect(voci.map((o) => o.textContent)).toEqual(["Andromeda", "Canes Venatici", "Cepheus", "Cygnus"])
-    expect(voci.map((o) => o.value)).toEqual(["And", "CVn", "Cep", "Cyg"])
+    const nomi = ["Andromeda", "Canes Venatici", "Cepheus", "Cygnus"]
+    expect((await vociDi(/costellazione/i)).slice(1)).toEqual(nomi)
+    fireEvent.click(screen.getByRole("button", { name: /costellazione/i })) // la richiude
+
+    // cio' che va nell'indirizzo e' la sigla, voce per voce
+    const sigle = ["And", "CVn", "Cep", "Cyg"]
+    for (const [i, nome] of nomi.entries()) {
+      await scegli(/costellazione/i, nome)
+      await waitFor(() => expect(window.location.search).toContain(`constellation=${sigle[i]}`))
+    }
   })
 
   it("scegliere un catalogo lo scrive nell'indirizzo, senza toccare la vista", async () => {
@@ -76,7 +93,7 @@ describe("la barra dell'Archivio", () => {
     await apriArchivio()
     await vaiAll(/elenco/i)
 
-    fireEvent.change(await screen.findByLabelText(/catalogo/i), { target: { value: "NGC" } })
+    await scegli(/catalogo/i, "NGC")
 
     await waitFor(() => expect(window.location.search).toContain("catalog=NGC"))
     expect(window.location.search).toContain("vista=elenco")
@@ -89,10 +106,9 @@ describe("la barra dell'Archivio", () => {
     // Gli ordini sono tre. Il tipo che viene dall'OpenAPI impedisce di **scriverne uno storto**,
     // non di **dimenticarne uno**: togliere una riga dall'elenco compila, e l'utente perde un
     // ordine senza che niente cada. Lato backend la coppia rotta-spina ce l'ha gia' un test suo.
-    const gruppo = await screen.findByRole("group", { name: /ordina/i })
-    expect(within(gruppo).getAllByRole("button")).toHaveLength(3)
+    expect(await vociDi(/ordina/i)).toEqual(["Nome", "Ore", "Frame"])
 
-    fireEvent.click(await screen.findByRole("button", { name: /^ore$/i }))
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Ore" }))
 
     await waitFor(() =>
       expect(chiamate().some((u) => u.includes("/archive") && u.includes("sort=hours"))).toBe(true),
@@ -125,9 +141,9 @@ describe("la barra dell'Archivio", () => {
     archivio([M31])
     await apriArchivio()
 
-    fireEvent.change(await screen.findByLabelText(/catalogo/i), { target: { value: "M" } })
+    await scegli(/catalogo/i, "M")
     await waitFor(() => expect(window.location.search).toContain("catalog=M"))
-    fireEvent.change(await screen.findByLabelText(/catalogo/i), { target: { value: "NGC" } })
+    await scegli(/catalogo/i, "NGC")
     await waitFor(() => expect(window.location.search).toContain("catalog=NGC"))
 
     window.history.back()
@@ -181,10 +197,14 @@ describe("la barra dell'Archivio", () => {
     const reso = await apriArchivioSu("/archivio?sort=pippo")
 
     expect(await screen.findByRole("article")).toBeDefined()
-    expect(await screen.findByRole("button", { name: /^nome$/i })).toHaveProperty(
-      "ariaPressed",
-      "true",
+    // la tendina dice l'ordine con cui la pagina si e' aperta, e la sua voce e' quella accesa
+    const ordina = await screen.findByRole("button", { name: /ordina/i })
+    expect(ordina.querySelector("b")?.textContent).toBe("Nome")
+    fireEvent.click(ordina)
+    const accese = (await screen.findAllByRole("menuitemradio")).filter(
+      (v) => v.getAttribute("aria-checked") === "true",
     )
+    expect(accese.map((v) => v.textContent)).toEqual(["Nome"])
     reso.unmount()
   })
 
@@ -203,26 +223,28 @@ describe("la barra dell'Archivio", () => {
         corpo: { items: [], total: 0, limit: 100, offset: 0, choices: SCELTE },
         attesa: new Promise<unknown>((r) => (liberala = () => r(null))),
       }))
-    fireEvent.change(await screen.findByLabelText(/catalogo/i), { target: { value: "M" } })
+    await scegli(/catalogo/i, "M")
 
     await waitFor(() => expect(barra).toHaveProperty("ariaBusy", "true"))
-    // e il segno si **vede**: sono i due modificatori che nel foglio animano davvero, e stanno
-    // sui controlli della barra perche' li' ci sono sempre -- anche quando le righe sono zero,
-    // che e' proprio il caso in cui un segno sulle righe non esisterebbe
-    // tutti e due, non "almeno uno": un `or` qui lascerebbe togliere il segno da meta' della
-    // barra senza che niente cada -- provato, ed e' successo
-    expect(barra?.querySelector(".as-campo--caricamento")).not.toBeNull()
-    expect(barra?.querySelectorAll(".as-scelta--caricamento")).toHaveLength(4)
+    // e il segno si **vede**, su chi ha chiesto e **solo** li': sta su un controllo della barra
+    // perche' quello c'e' sempre -- anche quando le righe sono zero, che e' proprio il caso in cui
+    // un segno sulle righe non esisterebbe. Uno solo, non "almeno uno": un segno su ogni tendina
+    // non direbbe piu' quale scelta sta aspettando.
+    const catalogo = await laTendina(/catalogo/i)
+    expect(catalogo.querySelector(".as-attesa")).not.toBeNull()
+    expect(barra?.querySelectorAll(".as-attesa")).toHaveLength(1)
+    expect([...(barra?.querySelectorAll("[aria-busy='true']") ?? [])]).toEqual([catalogo])
+    // le righe di prima restano
+    expect(screen.getAllByRole("article").length).toBeGreaterThan(0)
     // e **niente si spegne**: cambiare idea a meta' attesa e' legittimo, e su rete lenta l'attesa
-    // dura. Spegnere i controlli e' la scorciatoia che ogni barra prende, ed e' anche la ragione
-    // per cui `as-segmentato--caricamento` e' stato rifiutato: senza questa riga si potevano
-    // aggiungere tre `disabled` e la suite restava verde.
+    // dura. Spegnere i controlli e' la scorciatoia che ogni barra prende: senza questa riga si
+    // potevano aggiungere tre `disabled` e la suite restava verde.
     expect(barra?.querySelectorAll("[disabled], [aria-disabled='true']")).toHaveLength(0)
 
     liberala()
     await waitFor(() => expect(barra).toHaveProperty("ariaBusy", "false"))
-    expect(barra?.querySelector(".as-campo--caricamento")).toBeNull()
-    expect(barra?.querySelector(".as-scelta--caricamento")).toBeNull()
+    expect(barra?.querySelector(".as-attesa")).toBeNull()
+    expect(barra?.querySelector("[aria-busy='true']")).toBeNull()
   })
 
   it("e lo dice anche quando le righe sono zero", async () => {
@@ -239,13 +261,14 @@ describe("la barra dell'Archivio", () => {
         corpo: { items: [], total: 0, limit: 100, offset: 0, choices: SCELTE },
         attesa: new Promise<unknown>((r) => (liberala = () => r(null))),
       }))
-    fireEvent.change(await screen.findByLabelText(/catalogo/i), { target: { value: "M" } })
+    await scegli(/catalogo/i, "M")
 
     const barra = await laBarra()
-    await waitFor(() =>
-      expect(barra?.querySelector(".as-campo--caricamento")).not.toBeNull(),
-    )
-    expect(barra?.querySelectorAll(".as-scelta--caricamento")).toHaveLength(4)
+    await waitFor(() => expect(barra).toHaveProperty("ariaBusy", "true"))
+    const catalogo = await laTendina(/catalogo/i)
+    expect(catalogo.querySelector(".as-attesa")).not.toBeNull()
+    expect(barra?.querySelectorAll(".as-attesa")).toHaveLength(1)
+    expect([...(barra?.querySelectorAll("[aria-busy='true']") ?? [])]).toEqual([catalogo])
 
     liberala()
     reso.unmount()
@@ -260,7 +283,7 @@ describe("la barra dell'Archivio", () => {
     await apriArchivio()
     cambia(conArchivio(voceArchivio([])))
 
-    fireEvent.change(await screen.findByLabelText(/catalogo/i), { target: { value: "M" } })
+    await scegli(/catalogo/i, "M")
 
     expect(await screen.findByText(/nessun oggetto con questi filtri/i)).toBeDefined()
     const schede = screen.getAllByRole("tab")
@@ -279,15 +302,16 @@ describe("la barra dell'Archivio", () => {
     await apriArchivio()
     cambia(conArchivio({ stato: 500, corpo: { detail: "boom" } }))
 
-    fireEvent.change(await screen.findByLabelText(/catalogo/i), { target: { value: "M" } })
+    await scegli(/catalogo/i, "M")
 
     expect(await screen.findByRole("alert")).toBeDefined()
-    expect(screen.getByLabelText(/catalogo/i)).toBeDefined()
+    expect(await laTendina(/catalogo/i)).toBeDefined()
+    // e il filtro si toglie da li': la x accanto alla tendina c'e'
+    expect(screen.getByRole("button", { name: /togli catalogo: M/i })).toBeDefined()
     expect(screen.getByLabelText(/cerca un oggetto/i)).toBeDefined()
-    // e la conta **dice che non sa**: zero sarebbe l'unica risposta che sappiamo falsa, e
-    // toglierla farebbe saltare i bottoni dell'ordine sotto le dita
-    expect(screen.getByText(/non so quanti/i)).toBeDefined()
-    expect(screen.queryByText(/oggetti?$/i)).toBeNull()
+    // e la conta **dice che non sa**, e nient'altro: zero sarebbe l'unica risposta che sappiamo
+    // falsa, e toglierla farebbe saltare l'ordine sotto le dita
+    expect(laConta()).toBe("non so quanti")
     // e **non** dice "non ho trovato niente": non lo sappiamo, la richiesta e' fallita
     expect(screen.queryByText(/nessun oggetto con questi filtri/i)).toBeNull()
   })
@@ -301,10 +325,10 @@ describe("la barra dell'Archivio", () => {
     await apriArchivio()
     cambia(conArchivio({ stato: 500, corpo: { detail: "boom" } }))
 
-    fireEvent.click(await screen.findByRole("button", { name: /^ore$/i }))
+    await scegli(/ordina/i, "Ore")
 
     expect(await screen.findByRole("alert")).toBeDefined()
-    expect(screen.getByRole("button", { name: /^nome$/i })).toBeDefined()
+    expect(screen.getByRole("button", { name: /ordina/i })).toBeDefined()
   })
 
   it("quando un filtro non trova niente lo dice, e lascia il modo di toglierlo", async () => {
@@ -321,7 +345,7 @@ describe("la barra dell'Archivio", () => {
     expect(screen.queryByText(/non c'e' ancora niente/i)).toBeNull()
     expect(screen.getByLabelText(/cerca un oggetto/i)).toBeDefined()
 
-    fireEvent.click(screen.getByRole("button", { name: /togli i filtri/i }))
+    fireEvent.click(togliDalVuoto())
 
     await waitFor(() => expect(window.location.search).not.toContain("q="))
     expect(window.location.search).not.toContain("catalog=")
@@ -335,7 +359,7 @@ describe("la barra dell'Archivio", () => {
     archivio([M31], { total: 1 })
     await apriArchivio()
 
-    expect(await screen.findByText(/^1 oggetto$/)).toBeDefined()
+    await waitFor(() => expect(laConta()).toBe("1 oggetto"))
   })
 
   it("togliere i filtri non fa dire all'app che l'archivio e' vuoto", async () => {
@@ -360,7 +384,7 @@ describe("la barra dell'Archivio", () => {
         attesa: new Promise<unknown>((r) => (liberala = () => r(null))),
       }),
     )
-    fireEvent.click(screen.getByRole("button", { name: /togli i filtri/i }))
+    fireEvent.click(togliDalVuoto())
 
     await waitFor(() => expect(window.location.search).not.toContain("q="))
     expect(screen.queryByText(/non c'e' ancora niente/i)).toBeNull()
@@ -368,7 +392,10 @@ describe("la barra dell'Archivio", () => {
     // E cosa si vede, non solo cosa non si vede: sotto la barra resta il vuoto -- le righe di
     // prima erano zero -- quindi il segno d'attesa sulla barra e' **l'unica** cosa che dice che
     // sta succedendo qualcosa. La guida lo racconta cosi'.
-    expect(await laBarra()).toHaveProperty("ariaBusy", "true")
+    const barra = await laBarra()
+    expect(barra).toHaveProperty("ariaBusy", "true")
+    // nessun controllo della barra ha chiesto: il segno **visibile** c'e' lo stesso
+    await waitFor(() => expect(barra?.querySelector(".as-attesa")).not.toBeNull())
     expect(screen.queryByText(/nessun oggetto con questi filtri/i)).toBeNull()
 
     liberala()
@@ -378,14 +405,14 @@ describe("la barra dell'Archivio", () => {
   it("ricliccare la scelta gia' accesa non lascia una tappa morta", async () => {
     // Tre clic sulla scheda che stai gia' guardando sarebbero tre tappe identiche, e tre pressioni
     // del tasto indietro che non fanno niente -- la promessa "il tasto indietro disfa l'ultima
-    // scelta" rotta nel modo piu' banale. Vale per tutti e due i segmentati.
+    // scelta" rotta nel modo piu' banale. Vale per la vista e per l'ordine.
     archivio([M31])
     await apriArchivio()
-    await screen.findByLabelText(/catalogo/i)
+    await screen.findByRole("button", { name: /catalogo/i })
     const prima = window.history.length
 
     fireEvent.click(screen.getByRole("tab", { name: /carte/i }))
-    fireEvent.click(screen.getByRole("button", { name: /^nome$/i }))
+    await scegli(/ordina/i, "Nome")
 
     expect(window.history.length).toBe(prima)
     // e quella **diversa** la tappa la lascia: la potatura non deve spegnere il gesto vero
@@ -394,15 +421,24 @@ describe("la barra dell'Archivio", () => {
   })
 
   it("i controlli della barra sono mattoni, non classi scritte a mano", async () => {
-    // La barra porta quattro controlli veri -- un campo, tre tendine -- piu' tre bottoni: e' la
-    // superficie piu' fitta di controlli fuori dal primo avvio, e finora questa guardia
-    // sull'Archivio non era mai girata. Un `as-campo__etichetta` appeso a un `<label>` scritto a
-    // mano si vede identico e si comporta diverso il giorno che il foglio cambia.
+    // La barra porta un campo, le tendine e l'ordine: e' la superficie piu' fitta di controlli
+    // fuori dal primo avvio. Una classe del foglio appesa a un controllo scritto a mano si vede
+    // identica e si comporta diversa il giorno che il foglio cambia.
     archivio([M31])
     await apriArchivio()
-    await screen.findByLabelText(/catalogo/i)
+    await screen.findByRole("button", { name: /catalogo/i })
 
     expect(quantiControlli()).toBeGreaterThan(3)
+    expect(fuoriDaiMattoni()).toEqual([])
+
+    // e con una tendina scelta e il periodo a giorni: la x e le due date sono controlli in piu'
+    const prima = quantiControlli()
+    window.history.replaceState(null, "", "/archivio?catalog=M&period=date&since=2026-08-01")
+    fireEvent.popState(window)
+    await screen.findByRole("button", { name: /togli catalogo: M/i })
+    await screen.findByLabelText(/^dal$/i)
+
+    expect(quantiControlli()).toBeGreaterThan(prima)
     expect(fuoriDaiMattoni()).toEqual([])
   })
 
@@ -433,6 +469,7 @@ describe("la barra dell'Archivio", () => {
         trovati={{ objects: 1, mosaics: 0 }}
         aspetta={false}
         onCriteri={(cambio) => consegne.push(cambio.q as string)}
+        onTogli={() => {}}
       />
     )
     const { rerender } = render(barra(""))
@@ -445,5 +482,101 @@ describe("la barra dell'Archivio", () => {
 
     expect(campo.value).toBe("m314")
     await waitFor(() => expect(consegne).toEqual(["m31", "m314"]))
+  })
+
+  it("Filtri apre e chiude le tendine, e dice quanti filtri sono scelti", async () => {
+    // Sul telefono le tendine stanno dietro questo bottone: chi ascolta deve sentire se sono
+    // aperte, e chi guarda deve sapere che un filtro stringe anche a tendine chiuse.
+    archivio([M31])
+    await apriArchivio()
+    const barra = await laBarra()
+    const filtri = screen.getByRole("button", { name: /^filtri/i })
+    expect(filtri.getAttribute("aria-expanded")).toBe("false")
+    expect(barra?.hasAttribute("data-aperta")).toBe(false)
+    expect(filtri.querySelector("b")).toBeNull()
+
+    fireEvent.click(filtri)
+    expect(barra?.hasAttribute("data-aperta")).toBe(true)
+    expect(filtri.getAttribute("aria-expanded")).toBe("true")
+
+    fireEvent.click(filtri)
+    expect(barra?.hasAttribute("data-aperta")).toBe(false)
+    expect(filtri.getAttribute("aria-expanded")).toBe("false")
+
+    window.history.replaceState(null, "", "/archivio?catalog=M&constellation=And")
+    fireEvent.popState(window)
+    await waitFor(() => expect(filtri.querySelector("b")?.textContent).toBe("2"))
+  })
+
+  it("una tendina che stringe lo mostra, e la prima voce la toglie", async () => {
+    archivio([M31])
+    await apriArchivio()
+
+    await scegli(/catalogo/i, "M")
+    // la pillola si ripesca a ogni sguardo: con la x accanto cambia posto nel documento, e un nodo
+    // tenuto in mano da prima direbbe lo stato di allora
+    await waitFor(async () =>
+      expect((await laTendina(/catalogo/i)).classList.contains("as-tendina--scelta")).toBe(true),
+    )
+    expect((await laTendina(/catalogo/i)).querySelector("b")?.textContent).toBe("M")
+
+    await scegli(/catalogo/i, /tutti i cataloghi/i)
+    await waitFor(() => expect(window.location.search).not.toContain("catalog="))
+    await waitFor(async () =>
+      expect((await laTendina(/catalogo/i)).classList.contains("as-tendina--scelta")).toBe(false),
+    )
+  })
+
+  it("la x accanto a una tendina scelta la toglie", async () => {
+    // L'altra strada, senza aprire l'elenco: un bottone suo, col nome di cio' che toglie.
+    archivio([M31])
+    const reso = await apriArchivioSu("/archivio?catalog=M")
+
+    fireEvent.click(await screen.findByRole("button", { name: /togli catalogo: M/i }))
+
+    await waitFor(() => expect(window.location.search).not.toContain("catalog="))
+    await waitFor(() => expect(screen.queryByRole("button", { name: /togli catalogo: M/i })).toBeNull())
+    expect((await laTendina(/catalogo/i)).classList.contains("as-tendina--scelta")).toBe(false)
+    reso.unmount()
+  })
+
+  it("Esc chiude la tendina aperta e riporta il fuoco al suo bottone", async () => {
+    archivio([M31])
+    await apriArchivio()
+    const catalogo = await screen.findByRole("button", { name: /catalogo/i })
+
+    fireEvent.click(catalogo)
+    const voce = await screen.findByRole("menuitemradio", { name: /tutti i cataloghi/i })
+    expect(document.activeElement).toBe(voce)
+    fireEvent.keyDown(voce, { key: "Escape" })
+
+    expect(screen.queryByRole("menu")).toBeNull()
+    expect(document.activeElement).toBe(catalogo)
+  })
+
+  it("scelta una voce, il fuoco torna alla sua tendina, anche se ora ha la x accanto", async () => {
+    // La pillola scelta cambia posto (entra nella coppia con la x): il fuoco deve ritrovarla, o chi
+    // usa la tastiera ricomincia dall'inizio della pagina.
+    archivio([M31])
+    await apriArchivio()
+
+    await scegli(/catalogo/i, "M")
+    await waitFor(() => expect(window.location.search).toContain("catalog=M"))
+    const scelta = await laTendina(/catalogo/i)
+    expect(scelta.className).toContain("as-tendina--scelta")
+    await waitFor(() => expect(document.activeElement).toBe(scelta))
+  })
+
+  it("Togli i filtri nella barra li toglie tutti", async () => {
+    // Con le righe a schermo il vuoto non c'e': questo e' il bottone in fondo alle tendine.
+    archivio([M31])
+    const reso = await apriArchivioSu("/archivio?catalog=M&constellation=And")
+    const barra = (await laBarra()) as HTMLElement
+
+    fireEvent.click(await within(barra).findByRole("button", { name: /togli i filtri/i }))
+
+    await waitFor(() => expect(window.location.search).not.toContain("catalog="))
+    expect(window.location.search).not.toContain("constellation=")
+    reso.unmount()
   })
 })

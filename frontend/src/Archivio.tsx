@@ -220,6 +220,7 @@ export function Archivio() {
           trovati={prima?.found ?? null}
           aspetta={elenco.isPlaceholderData}
           onCriteri={cambia}
+          onTogli={() => cambia(NIENTE)}
         >
           {pannelli && (
             <InterruttoreDiVista vista={vista} onVista={(scelta) => cambia({ vista: scelta })} />

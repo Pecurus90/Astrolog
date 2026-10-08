@@ -3,12 +3,6 @@
 # Letto da tools/controlli_veste.py (classi_inventate). L'elenco solo si accorcia, pagina per
 # pagina: una classe nuova assente dal foglio e' un rosso, e una voce che il codice non scrive
 # piu' o che il foglio ora ha e' un rosso finche' non si toglie da qui.
-as-barra
-as-barra__campo
-as-barra__cerca
-as-barra__coda
-as-barra__conta
-as-barra__gruppo
 as-bortle
 as-bortle-scala__voce--1
 as-bortle-scala__voce--2
@@ -98,7 +92,6 @@ as-riga__prova
 as-riga__risposte
 as-riga__testa
 as-scelta
-as-scelta--caricamento
 as-sezioni
 as-sezioni__voce
 as-stato--attesa

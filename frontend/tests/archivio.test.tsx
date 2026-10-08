@@ -35,6 +35,7 @@ import {
   apriArchivioSu,
   archivio,
   conArchivio,
+  scegli,
   vaiAll,
   voceArchivio,
 } from "./archivio-banco"
@@ -60,6 +61,16 @@ describe("l'Archivio", () => {
     await apriArchivio()
 
     expect(await screen.findByText(/12 senza tempo/i)).toBeDefined()
+  })
+
+  it("ore, frame e senza tempo stanno in pezzi che non si spezzano", async () => {
+    // A capo va un pezzo intero, e il punto resta col pezzo prima: mai un punto a inizio riga.
+    archivio([IGNOTO])
+    await apriArchivio()
+
+    const carta = await screen.findByRole("article")
+    const pezzi = [...carta.querySelectorAll(".as-carta-oggetto__pezzo")].map((p) => p.textContent)
+    expect(pezzi).toEqual(["2 h\u00a0\u00b7", "40 frame\u00a0\u00b7", "12 senza tempo"])
   })
 
   it("se nessun frame dice la durata, non scrive zero ore", async () => {
@@ -106,7 +117,7 @@ describe("l'Archivio", () => {
     await apriArchivio()
     // un parametro **vero** della barra: quando questa prova e' nata la barra non c'era ancora e
     // ne usava uno inventato, che non avrebbe protetto niente
-    fireEvent.click(await screen.findByRole("button", { name: /^ore$/i }))
+    await scegli(/ordina/i, "Ore")
     await waitFor(() => expect(window.location.search).toContain("sort=hours"))
 
     await vaiAll(/elenco/i)
@@ -201,7 +212,10 @@ describe("l'Archivio", () => {
     archivio([M31], { total: 600, limit: 1 })
     await apriArchivio()
 
-    expect(await screen.findByText(/600 oggetti/i)).toBeDefined()
+    // i numeri della conta stanno in un `<b>`: il testo e' su piu' nodi, si legge intero
+    await waitFor(() =>
+      expect(document.querySelector(".as-archivio__conta")?.textContent).toBe("600 oggetti"),
+    )
     expect(await screen.findAllByRole("article")).toHaveLength(1)
   })
 
@@ -252,7 +266,11 @@ describe("l'Archivio", () => {
     const carte = await screen.findAllByRole("article")
     expect(carte).toHaveLength(codici.length)
     for (const [i, carta] of carte.entries()) {
-      expect(carta.textContent, `il codice ${codici[i]} non ha una parola`).toMatch(/\S \u00b7 Andromeda/)
+      // tipo e costellazione su due righe: la parola del tipo sta nella prima, e non e' "non si sa"
+      const [tipo, dove] = [...carta.querySelectorAll(".as-carta-oggetto__chi > span")]
+      expect(tipo?.textContent, `il codice ${codici[i]} non ha una parola`).toMatch(/\S/)
+      expect(tipo?.querySelector(".as-nonsisa"), `il codice ${codici[i]} non ha una parola`).toBeNull()
+      expect(dove?.textContent).toBe("Andromeda")
       expect(carta.textContent).not.toContain(codici[i])
     }
   })

@@ -286,10 +286,24 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   dei filtri si scrive ancora ma nessuno la legge piu' (`spine/gear_usage.py`): da togliere.
 - **Archivio nel disegno v31** (Marco, 8/10/2026; `docs/domini/archivio.md`). Fetta 1a fatta
   (8/10): carta "Di lato" con un posto di anteprima vuoto, elenco, pannelli del mosaico, scheletro
-  di lettura, errore con Riprova, "N di M" accanto a Mostra altri. Fetta 1b, prossima: la barra in
-  fila (tendine del foglio al posto dei select, "Filtri" sul telefono, periodo con gli anni e il
-  calendario, ordine, conta), il niente-trovato che dice quali filtri, l'attesa sulla tendina che
-  ha chiesto. Fetta 2: le **produzioni**, decise da Marco l'8/10 (stesso oggetto + stessa ottica +
+  di lettura, errore con Riprova, "N di M" accanto a Mostra altri. Fetta 1b fatta (8/10): la barra in
+  fila -- tendine del foglio al posto dei select (`Tendina.tsx`), campo di ricerca del foglio
+  (`CampoDiRicerca.tsx`, lo stesso della barra in alto), "Filtri" sul telefono, ordine come
+  tendina, conta coi numeri in evidenza, l'attesa su chi ha chiesto. Foglio **v32** portato lo stesso giorno
+  (Marco: carte disallineate): carte allineate per riga (subgrid), colonna dei dati piu' larga,
+  tipo e costellazione su due righe, ore e frame in pezzi che non si spezzano, un anello solo sul
+  campo di ricerca, la x che toglie una tendina fuori dal bottone, il periodo a giorni in una
+  pillola con "dal" e "al" e l'errore se sono scambiati, "Togli i filtri" anche sul desktop,
+  la forma lunga del "non si sa" nell'elenco; il campo di ricerca del foglio ora e'
+  `.as-campo-cerca` e l'elenco della tendina `.as-tendina-elenco`. Restano: il niente-trovato non
+  dice ancora quali filtri; `FILTRI` (`BarraDellArchivio.tsx`) e `STRINGONO` (`Archivio.tsx`) sono
+  due elenchi degli stessi criteri; la tendina va collaudata su Safari e su un telefono vero
+  (chiude al blur); un filtro la cui tendina non compare (`?site=3` con un sito solo) si toglie
+  solo con "Togli i filtri"; i campi "dal" e "al" non hanno ancora `min` e `max` come nella tavola
+  (il primo e l'ultimo giorno ripreso, che la rotta non manda); `classi_inventate` legge anche i
+  commenti del foglio, e il v32 nomina `.as-elenco` in un commento: le nove liste vecchie che la
+  scrivono non risultano ne' nel foglio ne' in attesa; `banco.tsx` esenta ancora
+  `.as-barra__gruppo`, che non esiste piu'. Fetta 2: le **produzioni**, decise da Marco l'8/10 (stesso oggetto + stessa ottica +
   stessa camera): il backend le manda per oggetto, la carta mostra un'anteprima per produzione,
   quante sono e il menu di scelta; il modale resta rimandato. Il punto del cielo dei
   pannelli e' uscito dalla carta (Marco, 8/10/2026, come nella tavola): li distingue il numero.
@@ -302,7 +316,8 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   `div` senza ruolo; l'errore mostra il messaggio grezzo del browser; nella carta stretta
   "· N senza tempo" va a capo dal punto; le colonne si chiamano ancora "Etichette" e "Tempo".
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
-  7/10, forma A, il registro), poi Archivio, Da confermare, Attrezzatura. Il brief di ognuna si
+  7/10, forma A, il registro), poi Archivio (v31-v32, montato l'8/10), il primo avvio (Marco, 8/10:
+  "anche il wizard bisogna rifare"; brief in `handoff/design-primo-avvio.md`), Da confermare, Attrezzatura. Il brief di ognuna si
   scrive coi dati che l'API manda in quel momento: si rifa' la ricognizione quando tocca a lei.
   I tre dati che la pagina Notti chiedeva li manda gia' `/api/v1/nights` (7/10/2026: `untimed`
   per oggetto, `weather.arrives_on`, `reading_done_pct`). Notti montate sul foglio v29 (8/10/2026,

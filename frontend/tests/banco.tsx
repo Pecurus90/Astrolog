@@ -328,7 +328,16 @@ export function fuoriDaiMattoni() {
         // fra poche, non tre azioni, e il foglio le veste da se' (bordo condiviso, quella accesa
         // piena). Vestirle da `as-bottone` darebbe tre pulsanti attaccati.
         "as-segmentato__voce",
-      ].some((c) => e.classList.contains(c)),
+        // La tendina del foglio v31 (`Tendina`): una pillola che apre un menu, col suo mattone.
+        "as-tendina",
+        // La x accanto a una tendina scelta, e quella del periodo a giorni: stesso mattone (`Togli`).
+        "as-tendina__togli",
+      ].some((c) => e.classList.contains(c)) &&
+      // Il campo di ricerca del foglio (`CampoDiRicerca`): il pozzo e' il `<label>`, e l'input
+      // dentro non ha classe sua -- lo veste il pozzo.
+      e.closest("label.as-campo-cerca") === null &&
+      // Le due date del periodo a giorni (`.as-dal-al`): stessa forma, le veste la loro etichetta.
+      e.closest("label.as-dal-al__campo") === null,
   )
   const pezzi = document.querySelectorAll(".as-campo__etichetta, .as-campo__input, .as-scelta")
   // Fuori da `as-campo-modulo` c'e' una forma voluta: l'etichetta di un **gruppo** di controlli

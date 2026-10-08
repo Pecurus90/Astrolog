@@ -16,6 +16,9 @@ afterEach(pulisci)
 
 const CON_MOSAICI = { choices: { ...SCELTE, mosaics: true }, found: { objects: 1, mosaics: 1 } }
 
+/** La conta come si legge: i numeri stanno in un `<b>`, quindi il testo e' su piu' nodi. */
+const laConta = () => document.querySelector(".as-archivio__conta")?.textContent
+
 describe("i mosaici nell'Archivio", () => {
   it("la carta di un mosaico dice mosaico e quanti pannelli, e si sente", async () => {
     archivio([MOSAICO, M31], CON_MOSAICI)
@@ -45,23 +48,27 @@ describe("i mosaici nell'Archivio", () => {
     archivio([MOSAICO, M31], CON_MOSAICI)
     await apriArchivio()
 
-    expect(await screen.findByText("1 oggetto e 1 mosaico")).toBeDefined()
+    await waitFor(() => expect(laConta()).toBe("1 oggetto e 1 mosaico"))
   })
 
   it("solo mosaici: la conta non parla di oggetti", async () => {
     archivio([MOSAICO], { ...CON_MOSAICI, found: { objects: 0, mosaics: 1 } })
     await apriArchivio()
 
-    expect(await screen.findByText("1 mosaico")).toBeDefined()
+    await waitFor(() => expect(laConta()).toBe("1 mosaico"))
   })
 
   it("la tendina dei mosaici compare solo a chi ne ha, e stringe nel backend", async () => {
     archivio([MOSAICO, M31], CON_MOSAICI)
     await apriArchivio()
 
-    fireEvent.change(await screen.findByLabelText(/^mosaici$/i), { target: { value: "1" } })
+    // dal v31 e' un interruttore, non una tendina con due voci
+    const solo = await screen.findByRole("button", { name: /solo i mosaici/i })
+    expect(solo.getAttribute("aria-pressed")).toBe("false")
+    fireEvent.click(solo)
 
     await waitFor(() => expect(window.location.search).toContain("mosaic=1"))
+    expect(solo.getAttribute("aria-pressed")).toBe("true")
     await waitFor(() =>
       expect(chiamate().some((u) => u.includes("/archive") && u.includes("mosaic=true"))).toBe(true),
     )
@@ -71,8 +78,8 @@ describe("i mosaici nell'Archivio", () => {
     archivio([M31])
     await apriArchivio()
 
-    await screen.findByLabelText(/catalogo/i)
-    expect(screen.queryByLabelText(/^mosaici$/i)).toBeNull()
+    await screen.findByRole("button", { name: /catalogo/i })
+    expect(screen.queryByRole("button", { name: /mosaici/i })).toBeNull()
   })
 
   it("un indirizzo scritto male non stringe", async () => {
@@ -100,7 +107,7 @@ describe("l'Archivio, i pannelli del mosaico", () => {
     expect(pannelli).toHaveLength(4)
     // nell'ordine in cui arrivano: dal backend, dal pannello a cui e' andato piu' tempo
     expect(pannelli[0]).toMatch(/^1\s*IC 405\s*40 \u00b7 4 h$/)
-    expect(pannelli[1]).toMatch(/^2\s*LBN 796, Sh2 230\s*30 · 3 h$/)
+    expect(pannelli[1]).toMatch(/^2\s*LBN 796, Sh2 230\s*30 \u00b7 3 h$/)
   })
 
   it("un pannello di cui il cielo non ha legato l'oggetto lo dice, e le pose senza tempo a parte", async () => {

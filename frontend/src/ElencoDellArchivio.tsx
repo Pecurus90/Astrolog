@@ -52,10 +52,10 @@ function UnaRiga({ riga }: { riga: Riga }) {
         <Nome riga={riga} inRiga />
       </td>
       <td className="as-archivio__col-tipo">
-        <Tipo riga={riga} />
+        <Tipo riga={riga} lungo />
       </td>
       <td className="as-archivio__col-cost">
-        <Costellazione riga={riga} />
+        <Costellazione riga={riga} lungo />
       </td>
       <td className="as-tabella__num as-archivio__col-frame">{numero(riga.frames)}</td>
       <td className="as-tabella__num as-archivio__col-ore">

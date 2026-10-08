@@ -53,7 +53,7 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Un mosaico proposto e non ancora confermato non cambia l'Archivio | `test_without_a_confirmed_mosaic_nothing_changes` |
 | Un mosaico dice di esserlo e quanti pannelli ha, nelle due viste e anche a chi ascolta | `test_a_mosaic_row_says_how_many_panels_it_has`; *la carta di un mosaico dice mosaico e quanti pannelli, e si sente*, *anche nell'elenco la riga del mosaico porta la sua etichetta* (`frontend/tests/archivio-mosaici.test.tsx`) |
 | La carta di un mosaico dice ogni pannello, numerato: il suo oggetto, i frame e le ore (il punto del cielo arriva dalla rotta e non si scrive: Marco, 8/10/2026) | `test_every_panel_of_a_mosaic_says_its_object_its_frames_and_its_hours`, `test_a_panel_counts_like_every_row_copies_out_and_untimed_apart`, `test_a_panel_whose_poses_found_no_object_says_so_with_nothing`, `test_the_route_gives_a_mosaic_its_panels_and_an_object_none`, `test_all_the_panels_of_a_page_come_in_two_questions`; *la carta del mosaico dice ogni pannello, con oggetto, frame e ore*, *un pannello di cui il cielo non ha legato l'oggetto lo dice, e le pose senza tempo a parte*, *un oggetto non ha pannelli da aprire* (`frontend/tests/archivio-mosaici.test.tsx`) |
-| Posso vedere solo i mosaici, e la tendina c'e' solo se ne ho | `test_you_can_narrow_down_to_the_mosaics`, `test_the_mosaic_choice_is_offered_only_to_who_has_a_mosaic`; *la tendina dei mosaici compare solo a chi ne ha, e stringe nel backend*, *chi non ha mosaici non vede la tendina* |
+| Posso vedere solo i mosaici, e l'interruttore *Solo i mosaici* c'e' solo se ne ho | `test_you_can_narrow_down_to_the_mosaics`, `test_the_mosaic_choice_is_offered_only_to_who_has_a_mosaic`; *la tendina dei mosaici compare solo a chi ne ha, e stringe nel backend*, *chi non ha mosaici non vede la tendina* |
 | Stringo a un anno, o a date mie, e ogni riga dice solo le ore, i frame e i filtri di quel periodo | `test_a_period_keeps_the_rows_shot_in_it_with_their_hours_in_it`, `test_a_period_can_straddle_the_new_year`, `test_the_pills_of_a_row_say_the_narrowed_hours` (`backend/tests/test_spine_archive_scope.py`); *un anno chiede le notti dal primo gennaio al trentuno dicembre*, *scegliere le date apre dal e al, e una stagione a cavallo d'anno arriva intera*, *tornare a un anno dimentica le date scelte prima* (`frontend/tests/archivio-periodo.test.tsx`) |
 | Il periodo guarda la notte, non l'orologio | `test_the_period_reads_the_night_not_the_clock` |
 | Stringo per sito, ottica o camera, e le condizioni valgono sulla stessa posa | `test_you_can_narrow_down_to_one_optics_or_one_camera`, `test_you_can_narrow_down_to_one_site`, `test_the_narrowings_hold_on_the_same_pose`, `test_the_filter_of_the_bar_asks_the_same_poses`; *sito, ottica e camera si leggono col nome e stringono per quello* |
@@ -157,7 +157,9 @@ carte: chi lo manda a qualcuno manderebbe un'altra pagina.
 **Mentre la risposta arriva resta a schermo cio' che c'era, e la barra lo dice.** Svuotare la
 pagina a ogni ricerca smonterebbe il campo e con lui il **fuoco**, a meta' parola. Tenere cio' che
 c'era pero' vuol dire che per un attimo la conta, le righe -- o lo stato vuoto -- rispondono a una
-domanda vecchia. Il segno sta sul **campo di ricerca** e sulle **tendine**, non sulle righe: le
+domanda vecchia. Il segno sta su **chi ha chiesto** -- il campo di ricerca, con la parola *cerco*, o la
+tendina appena cambiata -- e su campo e tendine insieme quando la richiesta non parte dalla barra
+(il tasto indietro, *Togli i filtri*); non sulle righe: le
 righe possono essere zero, ed e' proprio li' che serve di piu'. E la barra lo **dichiara**
 (`aria-busy`), perche' chi ascolta non vede il movimento. **Niente si spegne**: cambiare idea a
 meta' attesa e' legittimo.

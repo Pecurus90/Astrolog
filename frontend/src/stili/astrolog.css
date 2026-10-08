@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AstroLog — astrolog.css  ·  v31 (08/10/2026)
+   AstroLog — astrolog.css  ·  v32 (08/10/2026)
 
    FILE GENERATO: non si modifica qui. Le sorgenti stanno in foglio/, un
    file per famiglia; questo foglio e' la loro unione, nell'ordine qui
@@ -42,7 +42,7 @@
      50-strato.css
      51-telaio.css
      52-pagina.css
-     53-campo.css
+     53-campo-cerca.css
      54-tendina.css
      55-trova.css
      60-volta.css
@@ -458,8 +458,10 @@
   --trova-largo:              34rem;  /* il menu della ricerca */
   --elenco-minimo:            14rem;  /* l'elenco che si apre sotto una tendina */
   --produzioni-largo:         30rem;  /* il menu di scelta delle produzioni, sul desktop */
-  --carta-oggetto-minima:     19rem;  /* la carta: abbastanza larga perche' la colonna dei dati respiri */
-  --carta-oggetto-anteprime:  9rem;   /* la colonna delle anteprime */
+  --carta-oggetto-minima:     22rem;  /* v32: da 19, la colonna dei dati ha almeno 176 px */
+  --carta-oggetto-anteprime:  8rem;   /* v32: da 9, la colonna delle anteprime, due per riga */
+  --carta-oggetto-anteprima-una: 6rem; /* v32: con una produzione sola */
+  --dal-al-campo-alto:        28px;   /* v32: il campo data dentro la pillola, sul desktop */
   --filtro-pezzo-minimo:      var(--spazio-3); /* nella carta: con sette filtri R, G, B restano leggibili */
   --pannello-numero:          20px;   /* il numero del pannello di un mosaico */
 }
@@ -1954,37 +1956,50 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
   .as-pagina { padding: var(--spazio-4); gap: var(--spazio-5); }
 }
 
-/* ── foglio/53-campo.css ──────────────────────────────────────────────── */
+/* ── foglio/53-campo-cerca.css ────────────────────────────────────────── */
 /* ==========================================================================
-   IL CAMPO DI RICERCA — .as-campo (v31, dall'Archivio)
+   IL CAMPO DI RICERCA — .as-campo-cerca (v31, dall'Archivio; v32 il nome:
+   .as-campo nell'app e' il campo dei moduli)
    Un pozzo con la lente; al fuoco il filo d'accento e l'alone (--fuoco lo
    mostra fermo nelle tavole). __attesa: il segno dell'attesa con la parola,
    finche' la risposta non arriva. Il tasto (Esc) e' quello del telaio.
    I mattoni 30-50 sono pieni: il campo, la tendina e il menu della ricerca
    prendono 53-55, dopo il telaio.
    ========================================================================== */
-.as-campo {
+.as-campo-cerca {
   position: relative; display: flex; align-items: center; gap: var(--spazio-2); min-width: 0;
   height: var(--riga-alta); padding: 0 var(--spazio-3);
   border-radius: var(--raggio-medio); background: var(--fondo-incavo); box-shadow: inset 0 0 0 1px var(--linea-forte);
   color: var(--inchiostro-debole);
 }
-.as-campo:focus-within, .as-campo--fuoco { box-shadow: inset 0 0 0 1px var(--accento-sopra), 0 0 0 3px var(--accento-velo); }
-.as-campo__icona { flex: none; width: var(--icona-meteo-piccola); height: var(--icona-meteo-piccola); fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
-.as-campo input { all: unset; flex: 1; min-width: 0; font-size: var(--testo-campo, var(--testo-corpo)); color: var(--inchiostro); }
-.as-campo input::placeholder { color: var(--inchiostro-debole); }
-.as-campo .as-telaio__tasto { flex: none; }
-.as-campo__attesa { display: inline-flex; align-items: center; gap: var(--spazio-1); flex: none; font-size: var(--testo-minuto); color: var(--esito-attesa-inchiostro); }
+.as-campo-cerca:focus-within, .as-campo-cerca--fuoco { box-shadow: inset 0 0 0 1px var(--accento-sopra), 0 0 0 3px var(--accento-velo); }
+.as-campo-cerca__icona { flex: none; width: var(--icona-meteo-piccola); height: var(--icona-meteo-piccola); fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.as-campo-cerca input { all: unset; flex: 1; min-width: 0; font-size: var(--testo-campo, var(--testo-corpo)); color: var(--inchiostro); }
+.as-campo-cerca input::placeholder { color: var(--inchiostro-debole); }
+/* v32: l'anello e' uno, quello del pozzo; l'input dentro non ha il suo, e la
+   × del browser non c'e' (si svuota con Esc, il tasto che il campo mostra) */
+.as-campo-cerca input:focus, .as-campo-cerca input:focus-visible { outline: none; box-shadow: none; }
+.as-campo-cerca input::-webkit-search-cancel-button, .as-campo-cerca input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
+.as-campo-cerca .as-telaio__tasto { flex: none; }
+.as-campo-cerca__attesa { display: inline-flex; align-items: center; gap: var(--spazio-1); flex: none; font-size: var(--testo-minuto); color: var(--esito-attesa-inchiostro); }
 
 /* ── foglio/54-tendina.css ────────────────────────────────────────────── */
 /* ==========================================================================
    LA TENDINA — .as-tendina (v31, dall'Archivio)
    Un bottone a pillola: l'etichetta debole, il valore in inchiostro, la
-   freccia. --scelta: il velo e il filo d'accento, e la × per toglierla.
+   freccia. --scelta: il velo e il filo d'accento. v32: la × che la toglie
+   non sta piu' dentro il bottone: .as-tendina-coppia tiene insieme la
+   tendina scelta e il suo .as-tendina__togli, due bottoni, due fermate di
+   Tab, una pillola sola a vedersi.
    Con aria-pressed e __spunta e' un interruttore («Solo i mosaici»). Il
    bersaglio e' 44 anche quando la pillola e' piu' bassa.
-   .as-elenco: l'elenco che si apre sotto una tendina, con le voci del
-   menu (44) e __stacco prima della voce che apre altro.
+   .as-tendina-elenco: l'elenco che si apre sotto una tendina, con le voci del
+   menu (44) e __stacco prima della voce che apre altro (v32 il nome:
+   .as-elenco nell'app e' la lista).
+   .as-dal-al (v32): il periodo scelto a giorni, al posto della tendina
+   Periodo: «dal» e «al», due campi data, e la × che torna a «sempre».
+   --scelta coi giorni messi; __errore sotto, col segno e la frase, se «al»
+   viene prima di «dal» (il campo ha aria-invalid e il filo d'allarme).
    ========================================================================== */
 .as-tendina {
   all: unset; box-sizing: border-box; cursor: pointer; position: relative;
@@ -2000,15 +2015,34 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-tendina__freccia { flex: none; width: var(--spazio-2); height: var(--spazio-2); margin-top: calc(-1 * var(--spazio-1)); border-right: var(--segno-filo) solid currentColor; border-bottom: var(--segno-filo) solid currentColor; rotate: 45deg; }
 .as-tendina[aria-expanded="true"] .as-tendina__freccia { rotate: 225deg; margin-top: var(--spazio-1); }
 .as-tendina--scelta { background: var(--accento-velo); box-shadow: inset 0 0 0 1px var(--accento-sopra); color: var(--inchiostro-tenue); }
-.as-tendina__togli { font-size: var(--testo-corpo); line-height: 1; color: var(--inchiostro); }
 .as-tendina__spunta { flex: none; box-sizing: border-box; width: var(--strato-segno); height: var(--strato-segno); border-radius: var(--raggio-appena); box-shadow: inset 0 0 0 var(--segno-filo) var(--linea-significato); display: grid; place-items: center; font-size: var(--strato-segno-testo); line-height: 1; color: var(--inchiostro-su-accento); }
 .as-tendina[aria-pressed="true"] { background: var(--accento-velo); box-shadow: inset 0 0 0 1px var(--accento-sopra); color: var(--inchiostro); }
 .as-tendina[aria-pressed="true"] .as-tendina__spunta { background: var(--accento); box-shadow: none; }
 
-.as-elenco { position: relative; }
-.as-elenco__voci { position: absolute; z-index: 2; top: calc(100% + var(--spazio-1)); left: 0; min-width: var(--elenco-minimo); padding: var(--spazio-1); border-radius: var(--raggio-medio); background: var(--fondo-carta); box-shadow: inset 0 0 0 1px var(--linea-forte), var(--ombra-comparsa); }
-.as-elenco__voci .as-menu__voce { min-height: var(--riga-alta); }
-.as-elenco__stacco { height: 1px; margin: var(--spazio-1) var(--spazio-2); background: var(--linea); }
+.as-tendina-coppia { display: inline-flex; align-items: stretch; border-radius: var(--raggio-pillola); background: var(--accento-velo); box-shadow: inset 0 0 0 1px var(--accento-sopra); }
+.as-tendina-coppia > .as-tendina--scelta { background: none; box-shadow: none; padding-right: var(--spazio-2); }
+.as-tendina__togli { all: unset; box-sizing: border-box; cursor: pointer; position: relative; display: inline-grid; place-items: center; min-width: var(--segmentato-alto); min-height: var(--segmentato-alto); padding: 0 var(--spazio-2); border-radius: 0 var(--raggio-pillola) var(--raggio-pillola) 0; box-shadow: inset 1px 0 0 var(--accento-sopra); font-size: var(--testo-corpo); line-height: 1; color: var(--inchiostro); }
+.as-tendina__togli::before { content: ""; position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: max(100%, var(--bersaglio-minimo)); height: max(100%, var(--bersaglio-minimo)); }
+.as-tendina__togli:hover { background: var(--vetro-sopra); }
+.as-tendina__togli:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
+
+.as-dal-al { display: inline-grid; gap: var(--spazio-1); max-width: 100%; }
+.as-dal-al__pillola { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-1) var(--spazio-3); min-height: var(--segmentato-alto); padding-left: var(--spazio-3); border-radius: var(--raggio-pillola); box-shadow: inset 0 0 0 1px var(--linea-forte); font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-dal-al--scelta .as-dal-al__pillola { background: var(--accento-velo); box-shadow: inset 0 0 0 1px var(--accento-sopra); color: var(--inchiostro-tenue); }
+.as-dal-al__pillola .as-tendina__togli { box-shadow: inset 1px 0 0 var(--linea-forte); }
+.as-dal-al--scelta .as-dal-al__pillola .as-tendina__togli { box-shadow: inset 1px 0 0 var(--accento-sopra); }
+.as-dal-al__campo { display: inline-flex; align-items: center; gap: var(--spazio-1); }
+.as-dal-al__campo input { appearance: none; -webkit-appearance: none; box-sizing: border-box; height: var(--dal-al-campo-alto); padding: 0 var(--spazio-2); border: 0; border-radius: var(--raggio-medio); background: var(--fondo-incavo); box-shadow: inset 0 0 0 1px var(--linea-forte); font: inherit; color: var(--inchiostro); font-variant-numeric: tabular-nums; color-scheme: inherit; }
+.as-dal-al__campo input:focus { outline: none; }
+.as-dal-al__campo input:focus-visible, .as-dal-al__campo--fuoco input { box-shadow: inset 0 0 0 1px var(--accento-sopra), 0 0 0 3px var(--accento-velo); }
+.as-dal-al__campo input[aria-invalid="true"] { box-shadow: inset 0 0 0 var(--segno-filo) var(--esito-allarme-inchiostro); }
+.as-dal-al__errore { display: flex; align-items: center; gap: var(--spazio-2); margin: 0; font-size: var(--testo-minuto); color: var(--esito-allarme-inchiostro); }
+.as-dal-al__segno { flex: none; display: inline-grid; place-items: center; width: var(--strato-segno); height: var(--strato-segno); border-radius: 50%; background: var(--esito-allarme); color: var(--inchiostro-su-accento); font-size: var(--testo-micro); font-weight: var(--peso-forte); line-height: 1; }
+
+.as-tendina-elenco { position: relative; }
+.as-tendina-elenco__voci { position: absolute; z-index: 2; top: calc(100% + var(--spazio-1)); left: 0; min-width: var(--elenco-minimo); padding: var(--spazio-1); border-radius: var(--raggio-medio); background: var(--fondo-carta); box-shadow: inset 0 0 0 1px var(--linea-forte), var(--ombra-comparsa); }
+.as-tendina-elenco__voci .as-menu__voce { min-height: var(--riga-alta); }
+.as-tendina-elenco__stacco { height: 1px; margin: var(--spazio-1) var(--spazio-2); background: var(--linea); }
 
 /* ── foglio/55-trova.css ──────────────────────────────────────────────── */
 /* ==========================================================================
@@ -2023,7 +2057,7 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
    larghezza, e «Annulla» chiude.
    ========================================================================== */
 .as-cerca { position: relative; margin-left: auto; flex: 0 1 var(--cerca-aperta); min-width: 0; display: flex; align-items: center; gap: var(--spazio-2); }
-.as-cerca .as-campo { flex: 1; height: var(--cerca-campo-alto); font-size: var(--testo-minuto); }
+.as-cerca .as-campo-cerca { flex: 1; height: var(--cerca-campo-alto); font-size: var(--testo-minuto); }
 .as-cerca__annulla { display: none !important; }
 .as-trova {
   position: absolute; z-index: 5; top: calc(100% + var(--spazio-2)); right: 0; width: max(100%, var(--trova-largo));
@@ -2061,7 +2095,7 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
   .as-telaio__alto--cerca { overflow: visible; grid-template-rows: var(--barra-alta-telefono) 0; position: relative; z-index: 6; }
   .as-telaio__alto--cerca .as-telaio__titolo, .as-telaio__alto--cerca .as-telaio__lavoro, .as-telaio__alto--cerca .as-telaio__pastiglia { display: none; }
   .as-telaio__alto--cerca .as-cerca { grid-row: 1; grid-column: 2 / -1; position: static; margin: 0; }
-  .as-telaio__alto--cerca .as-cerca .as-campo { height: var(--riga-alta); font-size: var(--testo-corpo); }
+  .as-telaio__alto--cerca .as-cerca .as-campo-cerca { height: var(--riga-alta); font-size: var(--testo-corpo); }
   .as-telaio__alto--cerca .as-telaio__tasto { display: none; }
   .as-telaio__alto--cerca .as-cerca__annulla { display: inline-flex !important; }
   .as-telaio__alto--cerca .as-trova { top: 100%; left: 0; right: 0; width: auto; border-radius: 0 0 var(--raggio-carta) var(--raggio-carta); }
@@ -2582,7 +2616,7 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 
 /* ── foglio/73-pagina-archivio.css ────────────────────────────────────── */
 /* ==========================================================================
-   PAGINA — l'Archivio (v31, forma A «la barra in fila»)
+   PAGINA — l'Archivio (v31, forma A «la barra in fila»; v32 la carta)
    Il blocco e' .as-archivio. Le sole regole che valgono qui. In testa la
    barra che restringe (.as-restringi): sopra la vista, il campo (53), in
    coda l'ordine e la conta; sotto le tendine (54). Sul telefono il campo
@@ -2628,25 +2662,37 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-restringi__fine { margin-left: auto; display: flex; align-items: center; gap: var(--spazio-4); }
 .as-restringi__tendine { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2); }
 .as-restringi__apri { display: none; }
-.as-restringi__chiudi { display: none; }
+/* v32: «Togli i filtri» anche sul desktop, in coda alle tendine; la nota
+   «Si applicano subito» e' solo del telefono */
+.as-restringi__chiudi { display: contents; }
+.as-restringi__chiudi > .as-archivio__nota { display: none; }
 
 /* --- la carta «Di lato»: una anteprima per produzione ----------------------
-   Le anteprime in una colonna a sinistra, due per riga; una sola prende la
-   colonna (--una), oltre quattro tre per riga (--molte). A destra i dati;
-   sotto i filtri, che sono la somma di tutte. Il posto e' un incavo col
-   filo, 3:2; con l'immagine la foto lo riempie, sulla cornice delle foto.
-   Solo con piu' produzioni il nome e' il collegamento, e copre la carta. */
+   Le anteprime in una colonna a sinistra, due per riga (oltre quattro, tre
+   per riga: --molte); con una produzione sola la colonna e' piu' stretta
+   (--una), e i dati hanno piu' posto. A destra i dati: il nome, il tipo e
+   la costellazione su due righe, ore, frame e frame senza tempo (ogni pezzo
+   non si spezza e il punto sta col pezzo prima), le pastiglie. Sotto la
+   barra dei filtri, poi i pannelli di un mosaico.
+   v32: ogni carta prende tre righe della griglia e le condivide con le
+   carte della sua riga (subgrid): in alto anteprime e dati, poi i filtri,
+   poi i pannelli. Cosi' la barra dei filtri sta alla stessa altezza in
+   tutte le carte della riga, e lo spazio che avanza resta in fondo.
+   Il posto e' un incavo col filo, 3:2; con l'immagine la foto lo riempie,
+   sulla cornice delle foto. Solo con piu' produzioni il nome e' il
+   collegamento, e copre la carta. */
 .as-archivio__carte { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(var(--carta-oggetto-minima), 100%), 1fr)); gap: var(--spazio-4); }
-.as-archivio__carte > li { position: relative; min-width: 0; display: grid; }
-.as-carta-oggetto { position: relative; display: grid; grid-template-columns: var(--carta-oggetto-anteprime) minmax(0, 1fr); align-items: start; gap: var(--spazio-3) var(--spazio-4); padding: var(--spazio-4); font-size: var(--testo-corpo); color: var(--inchiostro); }
-.as-carta-oggetto__anteprime { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spazio-1); }
+.as-archivio__carte > li { position: relative; min-width: 0; display: grid; grid-row: span 3; grid-template-rows: subgrid; row-gap: var(--spazio-3); }
+.as-carta-oggetto { position: relative; grid-row: 1 / -1; display: grid; grid-template-rows: subgrid; grid-template-columns: var(--carta-oggetto-anteprime) minmax(0, 1fr); align-items: start; column-gap: var(--spazio-4); padding: var(--spazio-4); font-size: var(--testo-corpo); color: var(--inchiostro); }
+.as-carta-oggetto--una { grid-template-columns: var(--carta-oggetto-anteprima-una) minmax(0, 1fr); }
+.as-carta-oggetto__anteprime { grid-row: 1; grid-column: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spazio-1); }
 .as-carta-oggetto--una .as-carta-oggetto__anteprime { grid-template-columns: minmax(0, 1fr); }
 .as-carta-oggetto--molte .as-carta-oggetto__anteprime { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .as-carta-oggetto__anteprima { display: block; }
 .as-carta-oggetto__immagine { display: block; aspect-ratio: 3 / 2; overflow: hidden; border-radius: var(--raggio-medio); background: var(--fondo-incavo); box-shadow: inset 0 0 0 1px var(--linea); }
 .as-carta-oggetto__immagine:has(img) { background: var(--cornice-foto); box-shadow: none; }
 .as-carta-oggetto__immagine img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.as-carta-oggetto__dati { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--stacco-minimo); align-content: start; min-width: 0; }
+.as-carta-oggetto__dati { grid-row: 1; grid-column: 2; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--stacco-minimo); align-content: start; min-width: 0; }
 .as-carta-oggetto__nome { font-family: var(--carattere-titolo); font-size: var(--testo-lungo); font-weight: var(--peso-forte); line-height: 1.2; min-width: 0; }
 .as-carta-oggetto__apri { color: inherit; text-decoration: none; }
 .as-carta-oggetto__apri::after { content: ""; position: absolute; inset: 0; border-radius: var(--raggio-carta); }
@@ -2654,12 +2700,15 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-carta-oggetto:has(.as-carta-oggetto__apri:focus-visible) { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
 .as-carta-oggetto:has(.as-carta-oggetto__apri:hover) { background: var(--fondo-rilievo); }
 .as-carta-oggetto:has(.as-carta-oggetto__apri[aria-expanded="true"]) { box-shadow: inset 0 0 0 1px var(--accento-sopra), var(--ombra-carta); }
-.as-carta-oggetto__chi, .as-carta-oggetto__quante { font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
-.as-carta-oggetto__dati .as-nonsisa, .as-carta-oggetto__dati .as-archivio__mosaico { white-space: normal; overflow-wrap: anywhere; }
+.as-carta-oggetto__chi { display: grid; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-carta-oggetto__quante { font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-carta-oggetto__dati .as-nonsisa { white-space: normal; }
 .as-carta-oggetto__ore { margin-top: var(--spazio-1) !important; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; }
 .as-carta-oggetto__ore b { font-size: var(--testo-corpo); font-weight: var(--peso-medio); color: var(--inchiostro); }
+.as-carta-oggetto__pezzo { white-space: nowrap; }
 .as-carta-oggetto__segni { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-1) var(--spazio-2); }
-.as-carta-oggetto > .as-carta-oggetto__filtri, .as-carta-oggetto > .as-pannelli { grid-column: 1 / -1; padding-top: var(--spazio-3); border-top: 1px solid var(--linea); }
+.as-carta-oggetto > .as-carta-oggetto__filtri { grid-row: 2; grid-column: 1 / -1; padding-top: var(--spazio-3); border-top: 1px solid var(--linea); }
+.as-carta-oggetto > .as-pannelli { grid-row: 3; grid-column: 1 / -1; padding-top: var(--spazio-3); border-top: 1px solid var(--linea); }
 .as-carta-oggetto__filtri .as-filtri__legenda { flex-wrap: wrap; gap: var(--stacco-minimo) var(--spazio-3); font-size: var(--testo-minuto); }
 .as-carta-oggetto__filtri .as-filtri__barra > i { min-width: var(--filtro-pezzo-minimo); }
 p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
@@ -2713,12 +2762,27 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
   .as-restringi__riga { gap: var(--spazio-3) var(--spazio-4); }
   .as-restringi__fine { gap: var(--spazio-3); }
   .as-restringi__tendine { display: none; }
+  .as-restringi__chiudi { display: none; }
+  .as-restringi__chiudi > .as-archivio__nota { display: inline; }
   .as-restringi__apri { display: inline-flex; }
   .as-restringi[data-aperta] .as-restringi__tendine { display: grid; gap: var(--stacco-minimo); padding: var(--spazio-2); border-radius: var(--raggio-medio); background: var(--fondo-carta); box-shadow: var(--ombra-carta); }
   .as-restringi[data-aperta] .as-restringi__tendine .as-tendina { display: flex; width: 100%; min-height: var(--riga-alta); border-radius: var(--raggio-medio); box-shadow: none; }
   .as-restringi[data-aperta] .as-restringi__tendine .as-tendina b { margin-left: auto; }
   .as-restringi[data-aperta] .as-restringi__tendine .as-tendina--scelta, .as-restringi[data-aperta] .as-restringi__tendine .as-tendina[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--accento-sopra); }
   .as-restringi[data-aperta] .as-restringi__chiudi { display: flex; justify-content: space-between; align-items: center; padding: var(--spazio-1) 0 0 var(--spazio-3); }
+  /* la tendina scelta e la sua ×, una riga; dal… al… su due righe, i campi alti 44 */
+  .as-restringi[data-aperta] .as-tendina-coppia { display: flex; width: 100%; border-radius: var(--raggio-medio); }
+  .as-restringi[data-aperta] .as-restringi__tendine .as-tendina-coppia > .as-tendina { flex: 1; width: auto; border-radius: var(--raggio-medio) 0 0 var(--raggio-medio); box-shadow: none; }
+  .as-restringi[data-aperta] .as-tendina__togli { min-width: var(--bersaglio-minimo); border-radius: 0 var(--raggio-medio) var(--raggio-medio) 0; }
+  .as-restringi[data-aperta] .as-dal-al { display: grid; width: 100%; }
+  .as-restringi[data-aperta] .as-dal-al__pillola { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; grid-template-areas: "eti eti togli" "dal al togli"; gap: var(--spazio-1) var(--spazio-2); padding: var(--spazio-2) 0 var(--spazio-2) var(--spazio-3); border-radius: var(--raggio-medio); }
+  .as-restringi[data-aperta] .as-dal-al__eti { grid-area: eti; }
+  .as-restringi[data-aperta] .as-dal-al__campo { display: grid; gap: var(--stacco-minimo); }
+  .as-restringi[data-aperta] .as-dal-al__campo:first-of-type { grid-area: dal; }
+  .as-restringi[data-aperta] .as-dal-al__campo:last-of-type { grid-area: al; }
+  .as-restringi[data-aperta] .as-dal-al__campo input { width: 100%; height: var(--riga-alta); }
+  .as-restringi[data-aperta] .as-dal-al__pillola .as-tendina__togli { grid-area: togli; align-self: stretch; margin: calc(-1 * var(--spazio-2)) 0; border-radius: 0 var(--raggio-medio) var(--raggio-medio) 0; }
+  .as-restringi[data-aperta] .as-dal-al__errore { padding: 0 var(--spazio-2) var(--spazio-1); }
   .as-produzioni { width: 100%; }
   .as-archivio__ristretto .as-segmentato { margin-left: 0; }
 }
