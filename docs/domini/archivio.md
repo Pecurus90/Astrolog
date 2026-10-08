@@ -204,19 +204,16 @@ tabella che li porta.
 **L'elenco si impagina come gli altri, ma largo** (cento righe per volta). E' un inventario, non
 un flusso da scorrere: chi ha centomila frame ha comunque una manciata di oggetti.
 
-## Le produzioni (Marco, 8/10/2026, in disegno)
+## La carta e' un riassunto (Marco, 8/10/2026)
 
-La carta resta un **riassunto** e dice quante **produzioni** ha l'oggetto. Una produzione, finche'
-i progetti non esistono, e' l'oggetto ripreso con un **corredo** (ottica + camera); domani sara'
-un progetto concluso. Al clic su carta o riga: con una produzione sola si apre il **modale** di
-quella produzione; con piu' d'una, prima un **menu di scelta** col riepilogo di ognuna (corredo,
-filtri con le ore, ore, frame, senza tempo), e da li' il modale. Cosa sta nel modale lo propone il
-disegno coi dati che ci sono. Supera "niente scheda dell'oggetto". Per costruirlo l'API deve
-mandare il riepilogo per corredo di ogni riga: oggi le ore sono solo dell'oggetto intero.
+La carta non mostra tutto: niente anteprime affiancate per corredo, un posto solo. **Idea per
+dopo, non da disegnare ora**: cliccando un oggetto con una **produzione** sola (l'oggetto ripreso
+con un corredo, domani un progetto) si aprira' quella; con piu' d'una, prima un menu col riepilogo
+di ognuna (corredo, filtri, ore). Quando si fara', l'API dovra' mandare il riepilogo per corredo.
 
 ## Cosa NON fa
 
-Non ha ancora l'etichetta dei **progetti**, che non esistono. I
+Non ha ancora l'etichetta dei **progetti**, che non esistono, ne' la **scheda** di un oggetto. I
 pannelli di un mosaico si aprono dalla sua **carta**, non dall'elenco. Non mostra **anteprime**: sono decise (la foto finale dell'utente, o
 il suo frame migliore) ma non esistono ancora, e il pozzo che le aspetta tiene gia' il suo posto
 nella carta. Non mostra piu' **l'ultima notte** (Marco, 22/9/2026): quel posto e' dei progetti, e
