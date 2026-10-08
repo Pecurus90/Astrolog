@@ -52,10 +52,10 @@ function app(solver: unknown = TROVATO, piu: Record<string, unknown> = {}) {
 async function vaiAlRiconoscitore() {
   const barra = await screen.findByRole("navigation", { name: /pagine/i })
   fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
-  fireEvent.click(await screen.findByRole("link", { name: /riconoscitore/i }))
+  fireEvent.click(await screen.findByRole("link", { name: /^astap$/i }))
 }
 
-describe("Impostazioni / Il riconoscitore", () => {
+describe("Impostazioni / ASTAP", () => {
   it("dice dove sta, e da cosa l app l ha dedotto", async () => {
     await app()
     await vaiAlRiconoscitore()
@@ -86,8 +86,8 @@ describe("Impostazioni / Il riconoscitore", () => {
 
     expect(await screen.findByText(/non trovo astap/i)).toBeTruthy()
     // Non e' un allarme: manca un programma, non si e' rotto niente.
-    expect(screen.getByText(/cosa cambia senza/i)).toBeTruthy()
-    expect(screen.getByText(/non sapra' dirti cosa hai ripreso/i)).toBeTruthy()
+    expect(screen.getByText(/^senza astap$/i)).toBeTruthy()
+    expect(screen.getByText(/gli oggetti ripresi non vengono identificati/i)).toBeTruthy()
   })
 
   it("dice quale catalogo stellare c e", async () => {
@@ -95,7 +95,7 @@ describe("Impostazioni / Il riconoscitore", () => {
     await vaiAlRiconoscitore()
 
     expect(await screen.findByText(/catalogo stellare: d80/i)).toBeTruthy()
-    expect(screen.queryByText(/manca il catalogo stellare/i)).toBeNull()
+    expect(screen.queryByText(/catalogo stellare mancante/i)).toBeNull()
   })
 
   it("ASTAP senza catalogo lo dice, e porta dove si prende", async () => {
@@ -104,8 +104,8 @@ describe("Impostazioni / Il riconoscitore", () => {
     await app({ ...TROVATO, databases: [] })
     await vaiAlRiconoscitore()
 
-    expect(await screen.findByText(/manca il catalogo stellare/i)).toBeTruthy()
-    expect(screen.getByText(/si ferma alla prima posa/i)).toBeTruthy()
+    expect(await screen.findByText(/^catalogo stellare mancante$/i)).toBeTruthy()
+    expect(screen.getByText(/senza catalogo gli oggetti non vengono identificati/i)).toBeTruthy()
     const dove = screen.getByRole("link", { name: /scarica il catalogo/i })
     expect(dove.getAttribute("href")).toContain("star_databases")
     expect(dove.getAttribute("rel")).toContain("noopener")
@@ -131,7 +131,7 @@ describe("Impostazioni / Il riconoscitore", () => {
     expect(await screen.findByText(/non porta a nessun programma/i)).toBeTruthy()
     expect(screen.getByText("D:\\sbagliato\\astap.exe")).toBeTruthy()
     // e il campo parte da li', cosi' si corregge invece di riscriverlo da capo
-    expect((screen.getByLabelText(/dove sta/i) as HTMLInputElement).value).toBe(
+    expect((screen.getByLabelText(/percorso di astap/i) as HTMLInputElement).value).toBe(
       "D:\\sbagliato\\astap.exe",
     )
   })
@@ -168,7 +168,7 @@ describe("Impostazioni / Il riconoscitore", () => {
     // E la proposta se ne va: adottata, non e' piu' una proposta -- restando, lo stesso percorso
     // sarebbe a schermo due volte, una delle quali come domanda.
     await waitFor(() => expect(screen.queryByText(/ne ho trovato uno/i)).toBeNull())
-    expect((screen.getByLabelText(/dove sta/i) as HTMLInputElement).value).toBe(TROVATO.path)
+    expect((screen.getByLabelText(/percorso di astap/i) as HTMLInputElement).value).toBe(TROVATO.path)
   })
 
   it("scritto il percorso, la riga di stato lo sa senza ricaricare", async () => {
@@ -213,10 +213,10 @@ describe("Impostazioni / Il riconoscitore", () => {
     )
     await vaiAlRiconoscitore()
 
-    const campo = await screen.findByLabelText(/dove sta/i)
+    const campo = await screen.findByLabelText(/percorso di astap/i)
     fireEvent.change(campo, { target: { value: "D:/astap/astap_cli.exe" } })
     fireEvent.blur(campo)
-    fireEvent.click(screen.getByRole("button", { name: /^usa questo$/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^verifica percorso$/i }))
 
     await waitFor(() => expect(scritture().some((s) => s.metodo === "PATCH")).toBe(true))
     expect(scritture().filter((s) => s.metodo === "PATCH")).toHaveLength(1)
@@ -231,13 +231,13 @@ describe("Impostazioni / Il riconoscitore", () => {
     )
     await vaiAlRiconoscitore()
 
-    const campo = await screen.findByLabelText(/dove sta/i)
+    const campo = await screen.findByLabelText(/percorso di astap/i)
     fireEvent.change(campo, { target: { value: "D:/sbagliato" } })
-    fireEvent.click(screen.getByRole("button", { name: /^usa questo$/i }))
-    expect(await screen.findByText(/li' non c'e' astap/i)).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: /^verifica percorso$/i }))
+    expect(await screen.findByText(/astap non trovato in questo percorso/i)).toBeTruthy()
 
     fireEvent.change(campo, { target: { value: "D:/un-altro" } })
-    expect(screen.queryByText(/li' non c'e' astap/i)).toBeNull()
+    expect(screen.queryByText(/astap non trovato in questo percorso/i)).toBeNull()
   })
 
   it("una ricerca a vuoto lo dice, invece di non rispondere", async () => {
@@ -260,6 +260,6 @@ describe("Impostazioni / Il riconoscitore", () => {
     expect(dove.getAttribute("href")).toContain("hnsky.org")
     // e un collegamento che porta fuori si apre altrove, senza dare a quella pagina la nostra
     expect(dove.getAttribute("rel")).toContain("noopener")
-    expect(screen.getByText(/non scarica e non installa niente/i)).toBeTruthy()
+    expect(screen.getByText(/non scarica n\u00e9 installa astap/i)).toBeTruthy()
   })
 })

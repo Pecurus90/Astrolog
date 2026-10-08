@@ -211,5 +211,5 @@ manda a qualcuno).
 | la notte ora per ora intorno al buio, col verdetto | `/meteo` | Meteo | previsioni, tempo |
 | cio' che l'app non deduce dai file, a sezioni: le cartelle, i siti, il nome, le chiavi dei servizi, le soglie | `/impostazioni` | Impostazioni | preferenze, configurazione, opzioni |
 | il pulsante che fa leggere le cartelle, col verbo che decide il backend | `action` (`start`/`stop`/`resume`) | Scansiona / Ferma / Riprendi | importa, indicizza, aggiorna, sincronizza |
-| il programma che riconosce cosa hai ripreso confrontando i frame col cielo: si chiama **ASTAP**, e nel primo avvio il passo che lo riguarda si chiama col suo mestiere | `astap` / `solver` | ASTAP, *il riconoscitore* (il passo) | plate solver, risolutore, astrometria |
+| il programma che riconosce cosa hai ripreso confrontando i frame col cielo: si chiama **ASTAP**, col suo nome ovunque: anche il passo del primo avvio e la sezione delle Impostazioni | `astap` / `solver` | ASTAP (cio' che fa si chiama *plate solving*, e si scrive una volta, dove ASTAP si presenta) | riconoscitore, plate solver, risolutore, astrometria |
 | quello che manca all'app per fare il suo mestiere, come codice e non come frase | `missing` (`no_active_site`, `no_solver`) | (una frase tradotta) | errore, allarme |

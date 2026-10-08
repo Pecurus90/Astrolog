@@ -2,8 +2,8 @@
 export const enImpostazioni = {
   "settings.sections": "Settings sections",
   "settings.folders": "Folders",
-  "settings.solver": "The solver",
-  "settings.solver.title": "The sky solver",
+  "settings.solver": "ASTAP",
+  "settings.solver.title": "ASTAP",
   "settings.solver.what":
     "It is ASTAP that looks at the stars in frame and says where each shot points. Here you see whether the app finds it, and where.",
   "settings.solver.here": "found",
@@ -17,7 +17,7 @@ export const enImpostazioni = {
   "settings.solver.searchedFound": "I found one",
   "settings.solver.searchedNothing": "I looked among the system programs and where ASTAP is usually installed: it is not there.",
   "settings.solver.adopt": "Use the one you found",
-  "settings.solver.failed": "I can't tell where the solver is.",
+  "settings.solver.failed": "ASTAP path not available.",
   "settings.solver.searchFailed": "I couldn't look for it.",
   "settings.site": "The site",
   "settings.readings": "The readings",

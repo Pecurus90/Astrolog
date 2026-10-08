@@ -160,7 +160,7 @@ export const it = {
   "health.catalogEntries.one": "1 voce di catalogo",
   "action.reload": "Ricarica",
   "action.retry": "Riprova",
-  "settings.failed": "le impostazioni non hanno risposto",
+  "settings.failed": "Il servizio non ha risposto.",
   // **Che cielo hai**, le nove classi di Bortle. I nomi e le descrizioni vengono dalla colonna
   // *Title* della voce *Bortle scale* di Wikipedia, letta nel sorgente grezzo
   // (https://en.wikipedia.org/w/index.php?title=Bortle_scale&action=raw), che e' una delle tre
@@ -178,9 +178,9 @@ export const it = {
   // Ogni riga dice **cosa ci si vede**, non quanto e' buio: e' l'unica cosa su cui chi ha appena
   // installato puo' davvero rispondere.
   "sky.scale": "Classe di Bortle, da 1 a 9",
-  "sky.label": "Che cielo hai",
+  "sky.label": "Qualit\u00e0 del cielo (scala di Bortle)",
   "sky.chosen": "Bortle {n} - {cielo}",
-  "sky.optional": "Facoltativo: se non sai che cielo hai, vai avanti. La misura del cielo la ricava l'app dalla classe.",
+  "sky.optional": "Facoltativo.",
   "sky.low": "1 - buio pieno",
   "sky.high": "9 - centro citta'",
   "sky.1": "cielo eccellente, buio pieno",

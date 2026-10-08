@@ -13,6 +13,23 @@ su ogni pagina, non un progetto. La regola vale per pagina, non per stringa: men
 struttura si muove, tradurre ogni riga piu' volte e' lavoro che si butta. Il mobile, che
 arriva alla fine, riusa le stesse chiavi: si traducono solo quelle che nascono con lui.
 
+**Il tono** (Marco, 8/10/2026: "nomi professionali ... che corrispondono a quello che sono e un
+tono neutro come ogni app al mondo"). Due regole, e valgono per ogni testo nuovo o toccato:
+
+- **Nomi veri.** Ogni cosa si chiama col suo nome: ASTAP, sito di osservazione, cartella, chiave
+  API. Mai un nome inventato dall'app ("il riconoscitore"), mai una metafora. Il nome tecnico
+  vero si usa (seeing, plate solving); il gergo di chi programma no (container si', "spina" no).
+- **Tono neutro.** L'app non parla in prima persona ("non trovo", "la leggo"), non spiega
+  perche' fa le cose, non rassicura ("non e' un guasto"), non da' del tu discorsivo. Dice cosa
+  c'e' e cosa fare: "Cartella non raggiungibile", "Salva sito", "Facoltativo." Un bottone e' un
+  verbo o un verbo e un nome; un titolo e' un nome; un errore dice cosa non e' riuscito e, se
+  c'e', il rimedio.
+- **Le lettere accentate sono vere a schermo** (`è`, non `e'`): il file resta ASCII con gli
+  escape. I testi vecchi scritti con l'apostrofo si correggono quando si tocca la loro pagina.
+
+La casa delle parole e' `docs/domini/glossario.md`; le pagine si rivedono una alla volta, con
+Marco, testo di oggi accanto alla proposta.
+
 **Le chiavi e i file sono in inglese** (`night.hours`, non `notte.ore`): sono nomi nel
 codice. I **valori** italiani sono la sorgente.
 

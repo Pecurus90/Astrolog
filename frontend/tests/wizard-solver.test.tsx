@@ -60,7 +60,7 @@ describe("il passo del riconoscitore, quando manca", () => {
     await disegna()
 
     await screen.findAllByRole("listitem")
-    expect(nomiDeiPassi()).toEqual(["Come ti chiami", "Da dove osservi", "Dove stanno i file", "Il seeing per la planetaria"])
+    expect(nomiDeiPassi()).toEqual(["Nome utente", "Sito di osservazione", "Percorso dei file", "Seeing (Meteoblue)"])
   })
 
   it("se manca, il passo c e e dice cosa ci perdi", async () => {
@@ -68,18 +68,18 @@ describe("il passo del riconoscitore, quando manca", () => {
     await disegna()
 
     await screen.findAllByRole("listitem")
-    expect(nomiDeiPassi()).toContain("Il riconoscitore")
+    expect(nomiDeiPassi()).toContain("ASTAP")
 
     avanti()
     avanti()
     avanti()
     avanti()
-    expect(screen.getByText(/non sapra' dirti cosa hai ripreso/i)).toBeDefined()
+    expect(screen.getByText(/gli oggetti ripresi non vengono identificati/i)).toBeDefined()
     // non un allarme: manca una cosa da fare, non e' un guasto
     expect(screen.queryByRole("alert")).toBeNull()
     // E gli si dice **anche del catalogo**: chi installa ASTAP dopo aver chiuso il primo avvio
     // non ripassa piu' di qua, e cadrebbe nella trappola che questa schermata esiste per evitare.
-    expect(screen.getByText(/serve anche il suo catalogo stellare/i)).toBeDefined()
+    expect(screen.getByText(/serve anche il catalogo stellare/i)).toBeDefined()
   })
 
   it("scritto un percorso giusto, la conferma resta e la schermata non cambia sotto le mani", async () => {
@@ -91,21 +91,21 @@ describe("il passo del riconoscitore, quando manca", () => {
     })
     await alPassoDelSolver()
 
-    fireEvent.change(await screen.findByLabelText(/dove sta/i), {
+    fireEvent.change(await screen.findByLabelText(/percorso di astap/i), {
       target: { value: "D:/astap/astap_cli.exe" },
     })
-    fireEvent.click(screen.getByRole("button", { name: /usa questo/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^verifica percorso$/i }))
 
-    expect(await screen.findByText(/riconoscera' cosa hai ripreso/i)).toBeDefined()
+    expect(await screen.findByText(/gli oggetti ripresi verranno identificati/i)).toBeDefined()
     // il campo e' ancora li', con dentro cio' che si e' scritto
-    expect((screen.getByLabelText(/dove sta/i) as HTMLInputElement).value).toBe(
+    expect((screen.getByLabelText(/percorso di astap/i) as HTMLInputElement).value).toBe(
       "D:/astap/astap_cli.exe",
     )
     // E l'intestazione resta **quella di quando si e' entrati**: i passi e le loro ragioni si
     // congelano li', percio' continua a dire cio' che mancava allora. Cambiarla adesso vorrebbe
     // dire riscrivere la schermata sotto chi ci sta scrivendo, che e' il difetto che questa
     // prova sorveglia.
-    expect(screen.getByText(/sul computer non trovo astap/i)).toBeDefined()
+    expect(screen.getByText(/astap non \u00e8 installato/i)).toBeDefined()
     // e i passi restano quelli: toglierne uno adesso lascerebbe una schermata vuota sotto i
     // piedi di chi ci sta dentro
     expect(screen.getAllByRole("listitem")).toHaveLength(5)
@@ -119,13 +119,13 @@ describe("il passo del riconoscitore, quando manca", () => {
     })
     await alPassoDelSolver()
 
-    fireEvent.change(await screen.findByLabelText(/dove sta/i), {
+    fireEvent.change(await screen.findByLabelText(/percorso di astap/i), {
       target: { value: "D:/astap/astap_cli.exe" },
     })
-    fireEvent.click(screen.getByRole("button", { name: /usa questo/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^verifica percorso$/i }))
 
-    expect(await screen.findByText(/manca ancora il catalogo stellare/i)).toBeDefined()
-    expect(screen.queryByText(/riconoscera' cosa hai ripreso/i)).toBeNull()
+    expect(await screen.findByText(/catalogo stellare mancante: senza/i)).toBeDefined()
+    expect(screen.queryByText(/gli oggetti ripresi verranno identificati/i)).toBeNull()
   })
 
   it("il passo c e anche a chi ha ASTAP senza il suo catalogo", async () => {
@@ -136,7 +136,7 @@ describe("il passo del riconoscitore, quando manca", () => {
     await disegna()
 
     await screen.findAllByRole("listitem")
-    expect(nomiDeiPassi()).toContain("Il riconoscitore")
+    expect(nomiDeiPassi()).toContain("ASTAP")
 
     avanti()
     avanti()
@@ -148,11 +148,11 @@ describe("il passo del riconoscitore, quando manca", () => {
     expect(await screen.findByRole("link", { name: /scarica il catalogo/i })).toBeTruthy()
     // Il percorso qui non si chiede: e' gia' giusto, e chiederlo manda a correggere cio' che
     // non e' sbagliato.
-    expect(screen.queryByLabelText(/dove sta/i)).toBeNull()
+    expect(screen.queryByLabelText(/percorso di astap/i)).toBeNull()
     // E la ragione e' **la sua**: "non trovo ASTAP" a chi ce l'ha manda a cercare la cosa
     // sbagliata.
-    expect(screen.queryByText(/sul computer non trovo astap/i)).toBeNull()
-    expect(screen.getByText(/senza catalogo/i)).toBeTruthy()
+    expect(screen.queryByText(/astap non \u00e8 installato/i)).toBeNull()
+    expect(screen.getByText(/^catalogo mancante$/i)).toBeTruthy()
   })
 
   it("il collegamento per prenderlo c e, e l app non lo scarica da sola", async () => {
@@ -170,10 +170,10 @@ describe("il passo del riconoscitore, quando manca", () => {
     primoAvvio(["no_solver"])
     await alPassoDelSolver()
 
-    fireEvent.change(await screen.findByLabelText(/dove sta/i), {
+    fireEvent.change(await screen.findByLabelText(/percorso di astap/i), {
       target: { value: "D:/astap/astap.exe" },
     })
-    fireEvent.click(screen.getByRole("button", { name: /usa questo/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^verifica percorso$/i }))
 
     await waitFor(() => {
       const scritta = scritture().find((s) => s.url.endsWith("/api/v1/settings"))
@@ -188,7 +188,7 @@ describe("il passo del riconoscitore, quando manca", () => {
     primoAvvio(["no_solver"])
     await alPassoDelSolver()
 
-    const campo = await screen.findByLabelText(/dove sta/i)
+    const campo = await screen.findByLabelText(/percorso di astap/i)
     fireEvent.change(campo, { target: { value: "D:/astap/astap_cli.exe" } })
     fireEvent.blur(campo)
 
@@ -205,12 +205,12 @@ describe("il passo del riconoscitore, quando manca", () => {
     primoAvvio(["no_solver"])
     await alPassoDelSolver()
 
-    fireEvent.change(await screen.findByLabelText(/dove sta/i), {
+    fireEvent.change(await screen.findByLabelText(/percorso di astap/i), {
       target: { value: "D:/sbagliato" },
     })
-    fireEvent.click(screen.getByRole("button", { name: /usa questo/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^verifica percorso$/i }))
 
-    expect(await screen.findByText(/non c'e' ASTAP/i)).toBeDefined()
+    expect(await screen.findByText(/astap non trovato in questo percorso/i)).toBeDefined()
   })
 
   it("anche il passo del riconoscitore passa dai mattoni", async () => {
@@ -229,6 +229,6 @@ describe("il passo del riconoscitore, quando manca", () => {
     await alPassoDelSolver()
 
     expect(screen.getByRole("button", { name: /salta/i })).toBeDefined()
-    expect(screen.getByRole("button", { name: /fatto/i })).toBeDefined()
+    expect(screen.getByRole("button", { name: /^fine$/i })).toBeDefined()
   })
 })

@@ -81,7 +81,7 @@ describe("il primo avvio", () => {
     })
     await disegna()
     const avviso = await screen.findByRole("alert")
-    expect(avviso.textContent).toContain("impostazioni")
+    expect(avviso.textContent).toContain("Il servizio non ha risposto")
     expect(screen.queryByText(/cose da confermare/)).toBeNull()
     expect(screen.queryByRole("button", { name: /salta/i })).toBeNull()
   })
@@ -153,11 +153,11 @@ describe("il primo avvio", () => {
     fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
       target: { value: "D:/Astro" },
     })
-    fireEvent.click(screen.getByRole("button", { name: /guarda/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
     // Il numero si vede **prima** di registrare: e' cosi' che si capisce di aver puntato la
     // cartella giusta invece di scoprirlo a scansione finita.
     expect(await screen.findByText(/10\.957 file FITS/)).toBeDefined()
-    fireEvent.click(screen.getByRole("button", { name: /aggiungi la cartella/i }))
+    fireEvent.click(screen.getByRole("button", { name: /aggiungi cartella/i }))
     await waitFor(() => {
       const scritta = scritture().find(
         (s) => s.url.includes("/api/v1/folders") && !s.url.includes("probe"),
@@ -184,8 +184,8 @@ describe("il primo avvio", () => {
     fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
       target: { value: "D:/Astro" },
     })
-    fireEvent.click(screen.getByRole("button", { name: /guarda/i }))
-    expect(await screen.findByText(/ho smesso di contare/)).toBeDefined()
+    fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
+    expect(await screen.findByText(/conteggio interrotto a/i)).toBeDefined()
     expect(screen.getByText(/957/)).toBeDefined()
   })
 
@@ -205,8 +205,8 @@ describe("il primo avvio", () => {
     fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
       target: { value: "D:/Astro" },
     })
-    fireEvent.click(screen.getByRole("button", { name: /guarda/i }))
-    fireEvent.click(await screen.findByRole("button", { name: /aggiungi la cartella/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
+    fireEvent.click(await screen.findByRole("button", { name: /aggiungi cartella/i }))
     expect(await screen.findByRole("alert")).toBeDefined()
     expect(chiamate().some((u) => u.includes("/settings/wizard-done"))).toBe(false)
   })
@@ -225,9 +225,9 @@ describe("il primo avvio", () => {
     fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
       target: { value: "Z:/via" },
     })
-    fireEvent.click(screen.getByRole("button", { name: /guarda/i }))
-    expect(await screen.findByText(/non si raggiunge/i)).toBeDefined()
-    expect(screen.queryByRole("button", { name: /aggiungi la cartella/i })).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
+    expect(await screen.findByText(/cartella non raggiungibile/i)).toBeDefined()
+    expect(screen.queryByRole("button", { name: /aggiungi cartella/i })).toBeNull()
   })
 
   it("una sonda che non riesce a guardare lo dice", async () => {
@@ -242,7 +242,7 @@ describe("il primo avvio", () => {
     fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
       target: { value: "casa" },
     })
-    fireEvent.click(screen.getByRole("button", { name: /guarda/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
     expect(await screen.findByRole("alert")).toBeDefined()
   })
 
@@ -266,7 +266,7 @@ describe("il primo avvio", () => {
     conTimbro(false)
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    expect(nomiDeiPassi()).toEqual(["Come ti chiami", "Da dove osservi", "Dove stanno i file", "Il seeing per la planetaria"])
+    expect(nomiDeiPassi()).toEqual(["Nome utente", "Sito di osservazione", "Percorso dei file", "Seeing (Meteoblue)"])
     const corrente = () =>
       screen.getAllByRole("listitem").findIndex((li) => li.getAttribute("aria-current") === "step")
     expect(corrente()).toBe(0)
@@ -293,13 +293,13 @@ describe("il primo avvio", () => {
     expect(tappe()[0]?.textContent).toContain("sei qui")
     expect(tappe()[1]?.textContent).not.toContain("sei qui")
     // e quelle che vengono non dicono niente: dirlo sarebbe rumore su cio' che non e' successo
-    expect(tappe()[2]?.textContent?.trim()).toBe("3Dove stanno i file")
+    expect(tappe()[2]?.textContent?.trim()).toBe("3Percorso dei file")
 
     vaiAlPasso(1)
     // la prima ora e' fatta, e lo dice in tutti e tre i modi: il segno, la forma, la parola.
     // Il segno **per intero**, non "contiene": lasciando il numero al posto della spunta la
     // tappa fatta direbbe "1" e senza questa riga la suite non se ne accorgerebbe.
-    expect(tappe()[0]?.textContent?.trim()).toBe("\u2713Come ti chiami - fatto")
+    expect(tappe()[0]?.textContent?.trim()).toBe("\u2713Nome utente - fatto")
     expect(tappe()[0]?.className).toContain("as-passi__tappa--fatto")
     expect(tappe()[1]?.textContent).toContain("sei qui")
   })
@@ -325,7 +325,7 @@ describe("il primo avvio", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    expect(screen.getByLabelText(/nome del posto/i)).toBeDefined()
+    expect(screen.getByLabelText(/localit\u00e0/i)).toBeDefined()
     fireEvent.click(screen.getByRole("button", { name: /indietro/i }))
     expect(screen.getByLabelText(/^nome$/i)).toBeDefined()
   })
@@ -338,9 +338,9 @@ describe("il primo avvio", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    expect(screen.getByText(/le notti non nascono/i)).toBeDefined()
+    expect(screen.getByText(/calcolare le notti/i)).toBeDefined()
     vaiAlPasso(1)
-    expect(screen.queryByText(/le notti non nascono/i)).toBeNull()
+    expect(screen.queryByText(/calcolare le notti/i)).toBeNull()
   })
 
   it("ogni passo dice a che punto sei e perche' l app chiede", async () => {
@@ -365,11 +365,11 @@ describe("il primo avvio", () => {
     const perche = () =>
       document.querySelector(".as-carta__intestazione .as-carta__domanda")?.textContent ?? ""
     const attesi = [
-      /serve a salutarti/i,
-      /le notti non nascono/i,
-      /scrivi il percorso di una cartella/i,
-      /chiave Meteoblue/i,
-      /non trovo ASTAP/i,
+      /intestare le statistiche/i,
+      /calcolare le notti/i,
+      /indica una cartella/i,
+      /chiave API Meteoblue/i,
+      /ASTAP non \u00e8 installato/i,
     ]
     for (const [i, atteso] of attesi.entries()) {
       expect(screen.getByText(new RegExp(`passo ${i + 1} di 5`, "i"))).toBeDefined()
@@ -406,7 +406,7 @@ describe("il primo avvio", () => {
     vaiAlPasso(3)
     // All'ultimo passo "Avanti" non ha piu' senso: al suo posto c'e' la fine.
     expect(screen.queryByRole("button", { name: /avanti/i })).toBeNull()
-    fireEvent.click(screen.getByRole("button", { name: /^fatto$/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
     await waitFor(() =>
       expect(chiamate().some((u) => u.includes("/settings/wizard-done"))).toBe(true),
     )

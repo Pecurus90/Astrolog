@@ -13,25 +13,25 @@ apertamente, invece di essere lasciato indovinare.
 
 La prima volta l'app ti fa **quattro domande**, e poi si toglie di mezzo.
 
-1. **Come ti chiami.** Per ora l'app lo conserva soltanto. Si puo' lasciare vuoto.
-2. **Da dove osservi.** Cerchi il sito per nome e scegli fra quelli che compaiono -- ognuno ti
+1. **Nome utente.** Per ora l'app lo conserva soltanto. Si puo' lasciare vuoto.
+2. **Sito di osservazione.** Cerchi il sito per nome e scegli fra quelli che compaiono -- ognuno ti
    mostra le sue coordinate, cosi' scegli sapendo su cosa: l'app le riempie da sola, e da quelle
    ricava **il fuso orario e l'altitudine** senza chiedertele. Se preferisci, o se sei senza
    rete, **scrivi tu nome e coordinate**: la strada manuale e' sempre aperta, e non e' un
    ripiego -- e' li' fin dall'inizio, perche' i siti bui dove si osserva spesso la rete non ce
    l'hanno. Le coordinate le puoi scrivere come le scrivi di solito -- `46,4843` o `46.4843`, e
    anche `46,4843 N` -- e se una e' fuori scala te lo dice **sotto il campo**, prima che tu prema.
-   Poi ti chiede **che cielo hai**, fra le nove classi di Bortle: non scegli un numero al buio,
+   Poi ti chiede la **Qualita' del cielo (scala di Bortle)**, fra le nove classi: non scegli un numero al buio,
    scegli guardando **cosa ci si vede** -- se la Via Lattea proietta ombre o se di notte si legge
    il giornale -- e la misura del cielo la ricava l'app da quella. Puoi **non rispondere**: il
    sito si salva lo stesso, e il cielo resta vuoto invece di prendersi un valore che non hai
    dato.
-3. **Dove stanno i file.** Scrivi il percorso di una cartella e premi *Guarda*: l'app conta i
+3. **Percorso dei file.** Scrivi il percorso di una cartella e premi *Verifica*: l'app conta i
    FITS che ci sono **prima** di registrarla, cosi' ti accorgi subito se hai puntato la cartella
    sbagliata. Se la cartella non si raggiunge te lo dice, e non ti lascia aggiungerla. Sul NAS
    il percorso non lo scrivi: l'app gira dentro un container e i suoi percorsi non sono i tuoi,
    quindi ti fa **sfogliare** le cartelle e ti mostra in alto dove sei arrivato.
-4. **Il seeing per la planetaria.** Se hai una **chiave Meteoblue** la scrivi qui: l'app la prova
+4. **Seeing (Meteoblue).** Se hai una **chiave Meteoblue** la scrivi qui: l'app la prova
    sul tuo conto e la tiene solo se vale, e da li' il seeing arriva ora per ora per sette notti.
    Non e' obbligatoria, e la maggior parte di chi comincia non ce l'ha: senza, il seeing non c'e' e
    il resto del meteo funziona uguale. La puoi mettere anche dopo, nelle Impostazioni.
@@ -45,8 +45,8 @@ Al terzo passo puoi indicare **quante cartelle vuoi**: ne aggiungi una, compare 
 aggiungi un'altra. Prima di registrarne una l'app la **guarda** e ti dice quanti file FITS ci sono
 dentro, cosi' ti accorgi subito se hai puntato la cartella sbagliata. Dove l'app ha una radice dei
 dati -- e' il caso del NAS -- le cartelle si **scelgono da un elenco** invece di scrivere il
-percorso a mano: entri dentro con un clic, risali con *Sali di una cartella*, e quando sei dove
-vuoi premi *Usa questa cartella*. L'elenco parte dalla cartella dei dati e non esce da li'.
+percorso a mano: entri dentro con un clic, risali con *Cartella superiore*, e quando sei dove
+vuoi premi *Seleziona cartella*. L'elenco parte dalla cartella dei dati e non esce da li'.
 
 Se l'app non trova **ASTAP** sul tuo computer, aggiunge un **quinto passo**: ASTAP e' il
 programma gratuito con cui l'app riconosce cosa hai ripreso, confrontando le tue foto col cielo.
@@ -54,7 +54,7 @@ Ti dice dove prenderlo, e se ce l'hai gia' ti lascia indicare dove sta -- il **p
 cartella dove l'hai installato. Puoi incollarlo come te lo copia Windows, virgolette comprese.
 Appena scrivi il percorso l'app ti risponde se quel programma c'e'
 davvero, cosi' un percorso sbagliato lo correggi subito invece di scoprirlo a lettura finita, e
-quello che hai scritto si salva anche se non premi *Usa questo*. L'app non scarica e non installa
+quello che hai scritto si salva anche se non premi *Verifica percorso*. L'app non scarica e non installa
 niente da sola. Puoi saltarlo: senza, l'app cataloga i file, mette in ordine i nomi e conta le ore,
 ma non sa dirti **cosa** hai fotografato -- e quando lo installerai, i frame che aspettano verranno
 riconosciuti. Se hai tutto a posto quel passo non compare nemmeno.
@@ -144,7 +144,7 @@ Un sito che tiene delle notti **non si toglie**: l'app te lo dice, e ti dice qua
 Aggiungerne uno lo cerchi per nome, oppure ne scrivi le coordinate a mano -- e la strada a mano e'
 sempre aperta, perche' dove si osserva la rete spesso non c'e'.
 
-La terza e' **Il riconoscitore**: ASTAP, il programma che guarda le stelle inquadrate e dice dove
+La terza e' **ASTAP**: il programma che guarda le stelle inquadrate e dice dove
 punta ogni ripresa. Qui vedi se l'app lo trova, **dove**, e da cosa l'ha capito: perche' gliel'hai
 detto tu, perche' l'ha detto chi ha avviato l'app (sul NAS lo fa chi lo gestisce), perche' l'ha
 cercato fra i programmi di sistema, o perche' l'ha trovato dove ASTAP si installa di solito --
@@ -491,7 +491,7 @@ Di un corredo leggi anche **quanto cielo inquadra davvero**: la scala in arcosec
 il rettangolo in gradi, **misurati** sulle pose che l'app ha risolto -- non calcolati da focale e
 pixel. Cosi' un riduttore e' gia' dentro il numero, invece di essere una correzione da fare a
 mente. Se di un corredo l'app non ha ancora riconosciuto nessuna posa -- perche' non hai ancora
-ripreso, o perche' il riconoscitore non ci e' ancora arrivato -- la scala non c'e', e te lo dice.
+ripreso, o perche' ASTAP non ci e' ancora arrivato -- la scala non c'e', e te lo dice.
 
 **La montatura ha le sue ore.** Se il tuo programma di ripresa la scrive nei file, l'app la lega
 da sola a ogni posa: fra i programmi che l'app conosce, oggi lo fa l'ASIAIR. Se no, apri un corredo, premi *Scegli la montatura* e
@@ -687,7 +687,7 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
   tuoi frame, e **una notte non si apre**: il suo dettaglio, come quello di un
   oggetto, arrivera' tutto insieme; le Notti non si filtrano e non si riordinano. Nell'Archivio
   i pannelli di un mosaico si aprono dalla sua carta, non dall'elenco.
-- **Il tuo nome si dichiara solo al primo avvio**: le cartelle, il sito e il riconoscitore ora si
+- **Il tuo nome si dichiara solo al primo avvio**: le cartelle, il sito e ASTAP ora si
   rivedono dalle Impostazioni, il nome no.
 - **Le cartelle si sfogliano da un elenco solo sul NAS**, dove l'app ha una radice dei dati; sul
   computer il percorso si scrive.
@@ -701,8 +701,8 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
 - **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un
   segno -- una spunta se e' andata bene, un triangolo se c'e' un problema -- perche' chi non
   distingue il verde dal rosso deve capire lo stesso. E nel primo avvio tre risposte che prima
-  comparivano in silenzio -- la cartella che non si raggiunge, quanti file ha trovato, se il
-  riconoscitore c'e' -- ora vengono **lette ad alta voce** da un lettore di schermo.
+  comparivano in silenzio -- la cartella che non si raggiunge, quanti file ha trovato, se
+  ASTAP c'e' -- ora vengono **lette ad alta voce** da un lettore di schermo.
 
 ## Dove stanno i tuoi dati
 

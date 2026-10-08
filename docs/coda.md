@@ -312,12 +312,16 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   chiama la produzione dei frame senza corredo ("corredo: non si sa"). Dall'audit della 2a: manca
   una prova **di rotta** che `scope` e `alone` arrivino a `productions.of` (le prove della spina la
   chiamano diretta).
-- **I nomi del primo avvio e ASTAP** (Marco, 8/10/2026, a scelta multipla): i passi si chiamano
-  "Come ti chiami", "Da dove osservi", "Il percorso dei file", "Il seeing (Meteoblue)", "ASTAP, per
-  riconoscere il cielo"; in tutta l'app "il riconoscitore" diventa "ASTAP" (testi, guida, glossario,
-  test). Da fare, come lavoro suo. Con lui: la longitudine accetta "O" per ovest oltre a "W" (la
-  tavola del primo avvio la scrive cosi'). Aperta con Marco: la schermata di chiusura del primo
-  avvio, che Design ha disegnato "da decidere". Il punto del cielo dei
+- **Il linguaggio dell'app, pagina per pagina** (Marco, 8/10/2026: nomi veri e tono neutro; la
+  regola sta in `.claude/skills/testi-per-pagina/SKILL.md`). Fatto il primo avvio (approvato riga
+  per riga): passi "Nome utente", "Sito di osservazione", "Percorso dei file", "Seeing
+  (Meteoblue)", "ASTAP"; "il riconoscitore" e' "ASTAP". Restano, una alla volta con Marco, testo
+  di oggi accanto alla proposta: guscio e barra, Archivio, Notti, Meteo, Stanotte, Attrezzatura,
+  Impostazioni (dove "riconoscitore" compare ancora nelle frasi), letture, Da confermare. Con
+  loro: le lettere accentate vere al posto dell'apostrofo ("citta'"), i nomi del codice che
+  dicono ancora `solver`/riconoscitore nei commenti. Da fare a parte: la longitudine accetta "O"
+  per ovest oltre a "W". Aperta con Marco: la schermata di chiusura del primo avvio, che Design
+  ha disegnato "da decidere". Design va avanti sul primo avvio solo dopo il linguaggio (Marco). Il punto del cielo dei
   pannelli e' uscito dalla carta (Marco, 8/10/2026, come nella tavola): li distingue il numero.
   Restano
   dall'audit della 1a, non bloccanti: `oreDi`/`senzaTempo` (`RigaDellArchivio.tsx`) ripetono la

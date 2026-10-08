@@ -2,8 +2,8 @@
 export const itImpostazioni = {
   "settings.sections": "Sezioni delle impostazioni",
   "settings.folders": "Cartelle",
-  "settings.solver": "Il riconoscitore",
-  "settings.solver.title": "Il riconoscitore del cielo",
+  "settings.solver": "ASTAP",
+  "settings.solver.title": "ASTAP",
   "settings.solver.what":
     "E' ASTAP che guarda le stelle inquadrate e dice dove punta ogni ripresa. Qui vedi se l'app lo trova, e dove.",
   "settings.solver.here": "trovato",
@@ -17,7 +17,7 @@ export const itImpostazioni = {
   "settings.solver.searchedFound": "Ne ho trovato uno",
   "settings.solver.searchedNothing": "Ho guardato fra i programmi di sistema e dove ASTAP si installa di solito: non c'e'.",
   "settings.solver.adopt": "Usa quello che hai trovato",
-  "settings.solver.failed": "Non riesco a sapere dove sta il riconoscitore.",
+  "settings.solver.failed": "Percorso di ASTAP non disponibile.",
   "settings.solver.searchFailed": "Non sono riuscito a cercarlo.",
   "settings.site": "Il sito",
   "settings.readings": "Le letture",

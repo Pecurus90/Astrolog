@@ -93,7 +93,7 @@ describe("l accessibilita di dove si risponde", () => {
     const { container } = await disegna()
     await screen.findByRole("button", { name: /salta/i })
     for (let i = 0; i < 4; i++) fireEvent.click(screen.getByRole("button", { name: /avanti/i }))
-    await screen.findByLabelText(/dove sta/i)
+    await screen.findByLabelText(/percorso di astap/i)
 
     expect(await violazioni(container)).toEqual([])
   })
@@ -198,7 +198,7 @@ describe("l accessibilita di dove si risponde", () => {
     expect(await violazioni(container)).toEqual([])
   })
 
-  it("e nemmeno Il riconoscitore, con la proposta della ricerca aperta", async () => {
+  it("e nemmeno ASTAP, con la proposta della ricerca aperta", async () => {
     rispondi({
       ...STANOTTE,
       "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
@@ -217,7 +217,7 @@ describe("l accessibilita di dove si risponde", () => {
     const { container } = await disegna()
     const barra = await screen.findByRole("navigation", { name: /pagine/i })
     fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
-    fireEvent.click(await screen.findByRole("link", { name: /riconoscitore/i }))
+    fireEvent.click(await screen.findByRole("link", { name: /^astap$/i }))
     await screen.findByText(/non trovo astap/i)
     expect(await violazioni(container)).toEqual([])
 
@@ -283,7 +283,7 @@ describe("l accessibilita di dove si risponde", () => {
     expect(await violazioni(container)).toEqual([])
   })
 
-  it("e nemmeno Il riconoscitore con ASTAP ma senza il suo catalogo", async () => {
+  it("e nemmeno ASTAP, trovato ma senza il suo catalogo", async () => {
     // Un ramo diverso dal precedente: qui c'e' un avviso d'attesa con dentro un collegamento che
     // porta fuori, che e' la forma dove un `target="_blank"` senza avvertimento axe lo prende.
     rispondi({
@@ -300,8 +300,8 @@ describe("l accessibilita di dove si risponde", () => {
     const { container } = await disegna()
     const barra = await screen.findByRole("navigation", { name: /pagine/i })
     fireEvent.click(within(barra).getByRole("link", { name: /impostazioni/i }))
-    fireEvent.click(await screen.findByRole("link", { name: /riconoscitore/i }))
-    await screen.findByText(/manca il catalogo stellare/i)
+    fireEvent.click(await screen.findByRole("link", { name: /^astap$/i }))
+    await screen.findByText(/^catalogo stellare mancante$/i)
     expect(await violazioni(container)).toEqual([])
   })
 

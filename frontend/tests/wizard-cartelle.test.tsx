@@ -89,10 +89,10 @@ async function alTerzoPasso() {
 }
 
 async function indica(percorso: string) {
-  fireEvent.change(screen.getByLabelText(/dove stanno i file|percorso/i), {
+  fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
     target: { value: percorso },
   })
-  fireEvent.click(screen.getByRole("button", { name: /guarda/i }))
+  fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
   fireEvent.click(await screen.findByRole("button", { name: /aggiungi/i }))
   // Si aspetta che la registrazione sia **partita**: il clic la mette in volo, e chi legge le
   // scritture subito dopo ne conta una in meno -- un rosso che sembra del codice ed e' del test.
@@ -152,7 +152,7 @@ describe("le cartelle del primo avvio", () => {
     expect(await screen.findByText("E:/Nuova")).toBeDefined()
   })
 
-  it("mentre l elenco arriva, Usa questa cartella non punta a quella di prima", async () => {
+  it("mentre l elenco arriva, Seleziona cartella non punta a quella di prima", async () => {
     // Il difetto piu' insidioso di tutta la fetta, e si vede **solo** se la risposta tarda: appena
     // clicchi un nome la richiesta parte, e per un istante l'app non ha ancora l'elenco nuovo.
     // Ripiegando su cio' che aveva in mano, in quell'istante lo schermo diceva `/data` e "Usa
@@ -188,10 +188,10 @@ describe("le cartelle del primo avvio", () => {
     expect(dove()).toBe("/data/Notti")
     // e finche' non arriva non si registra niente: sondare una cartella mentre se ne carica
     // un'altra non ha senso in nessun caso
-    expect(screen.getByRole("button", { name: /usa questa cartella/i }).hasAttribute("disabled")).toBe(true)
+    expect(screen.getByRole("button", { name: /^seleziona cartella$/i }).hasAttribute("disabled")).toBe(true)
 
     arriva()
-    expect(await screen.findByRole("button", { name: /sali/i })).toBeDefined()
+    expect(await screen.findByRole("button", { name: /cartella superiore/i })).toBeDefined()
   })
 
   it("nell elenco del NAS si entra, e si registra la cartella dove sei", async () => {
@@ -227,11 +227,11 @@ describe("le cartelle del primo avvio", () => {
     // dove sei lo dice lo schermo, e da li' in poi e' quella la cartella in gioco
     await waitFor(() => expect(dove()).toBe("/data/Notti"))
     // una cartella senza altre dentro lo dice: non e' un guasto, quella dove sei si usa lo stesso
-    expect(await screen.findByText(/non ci sono altre cartelle/i)).toBeDefined()
+    expect(await screen.findByText(/nessuna sottocartella/i)).toBeDefined()
     // e adesso si puo' risalire: il tasto esiste solo quando si e' scesi
-    expect(screen.getByRole("button", { name: /sali/i })).toBeDefined()
+    expect(screen.getByRole("button", { name: /cartella superiore/i })).toBeDefined()
 
-    fireEvent.click(screen.getByRole("button", { name: /usa questa cartella/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^seleziona cartella$/i }))
     fireEvent.click(await screen.findByRole("button", { name: /aggiungi/i }))
 
     await waitFor(() =>
@@ -267,7 +267,7 @@ describe("le cartelle del primo avvio", () => {
     expect(fuoriDaiMattoni()).toEqual([])
 
     // e quella dopo la sonda, che porta l'esito e il tasto che registra
-    fireEvent.click(screen.getByRole("button", { name: /usa questa cartella/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^seleziona cartella$/i }))
     await screen.findByRole("button", { name: /aggiungi/i })
     expect(fuoriDaiMattoni()).toEqual([])
   })
@@ -292,7 +292,7 @@ describe("le cartelle del primo avvio", () => {
     await indica("D:/Astro/2024")
 
     fireEvent.click(screen.getByRole("button", { name: /avanti/i }))
-    fireEvent.click(screen.getByRole("button", { name: /fatto/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
 
     await waitFor(() =>
       expect(scritture().some((s) => s.url.endsWith("/api/v1/scan"))).toBe(true),
@@ -387,8 +387,8 @@ describe("le cartelle del primo avvio", () => {
     })
     await alTerzoPasso()
 
-    expect(await screen.findByText(/gira dentro un container/i)).toBeDefined()
-    expect(screen.queryByText(/scrivi il percorso di una cartella/i)).toBeNull()
+    expect(await screen.findByText(/l'app \u00e8 in un container/i)).toBeDefined()
+    expect(screen.queryByText(/indica una cartella/i)).toBeNull()
   })
 
   it("sul computer la carta spiega che si scrive, non che si sfoglia", async () => {
@@ -397,8 +397,8 @@ describe("le cartelle del primo avvio", () => {
     primoAvvio()
     await alTerzoPasso()
 
-    expect(screen.getByText(/scrivi il percorso di una cartella/i)).toBeDefined()
-    expect(screen.queryByText(/gira dentro un container/i)).toBeNull()
+    expect(screen.getByText(/indica una cartella/i)).toBeDefined()
+    expect(screen.queryByText(/l'app \u00e8 in un container/i)).toBeNull()
   })
 })
 
@@ -419,10 +419,10 @@ describe("una cartella spostata", () => {
       },
     })
     await alTerzoPasso()
-    fireEvent.change(screen.getByLabelText(/dove stanno i file|percorso/i), {
+    fireEvent.change(screen.getByLabelText(/percorso della cartella/i), {
       target: { value: "E:/Astro" },
     })
-    fireEvent.click(screen.getByRole("button", { name: /guarda/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
 
     expect(await screen.findByText(/e' la cartella D:\/Astro spostata qui/i)).toBeDefined()
     expect(screen.queryByRole("button", { name: /aggiungi/i })).toBeNull()
@@ -439,7 +439,7 @@ describe("una cartella spostata", () => {
     )
     expect(scritture().some((s) => s.url.endsWith("/api/v1/folders"))).toBe(false)
     // Come dopo Aggiungi: il percorso usato non resta nel campo a farsi riusare per sbaglio.
-    expect((screen.getByLabelText(/dove stanno i file|percorso/i) as HTMLInputElement).value).toBe(
+    expect((screen.getByLabelText(/percorso della cartella/i) as HTMLInputElement).value).toBe(
       "",
     )
   })
@@ -461,12 +461,12 @@ describe("il percorso per chi ascolta", () => {
       },
     })
     await alTerzoPasso()
-    await screen.findByRole("button", { name: /usa questa cartella/i })
+    await screen.findByRole("button", { name: /^seleziona cartella$/i })
 
     const detto = document.querySelector("#wizard-dove .as-solo-lettori")?.textContent
     expect(detto).toContain("/data/Notti")
     // e il tasto che registra e' descritto proprio da quella riga
-    const tasto = screen.getByRole("button", { name: /usa questa cartella/i })
+    const tasto = screen.getByRole("button", { name: /^seleziona cartella$/i })
     expect(tasto.getAttribute("aria-describedby")).toBe("wizard-dove")
     // e le briciole a vista **non si sentono**: lasciandole, la descrizione tornerebbe a essere
     // la frase intera piu' i nomi appiccicati una seconda volta
@@ -525,7 +525,7 @@ describe("il percorso per chi ascolta", () => {
     fireEvent.click(await screen.findByRole("button", { name: /apri notti/i }))
 
     const dentro = (await screen.findByRole("alert")).closest(".as-avviso") as HTMLElement
-    fireEvent.click(within(dentro).getByRole("button", { name: /torna alla cartella dei dati/i }))
+    fireEvent.click(within(dentro).getByRole("button", { name: /^cartella dei dati$/i }))
 
     await waitFor(() => expect(dove()).toBe("/data"))
   })
