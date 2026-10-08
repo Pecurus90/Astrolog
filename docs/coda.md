@@ -14,6 +14,11 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 
 | Data | Tipo | Lavoro | Token | Minuti | Difetti |
 |---|---|---|---|---|---|
+| 8/10/2026 | costruisci | Un colore per banda (foglio v30) | ~0,20 M workflow (4 agenti), sessione principale non contata | 12 workflow | 0 |
+| 8/10/2026 | costruisci | Notti nel disegno v29 | ~0,35 M workflow (6 agenti), sessione principale non contata | 18 workflow | 1 bloccante dall'audit (le righe dei filtri dell'Archivio diventate fasce di colore col v29), chiuso dal correttore + 2 piccoli chiusi da me ("1 ore", pista ferma) |
+| 8/10/2026 | costruisci | Notti, i tre dati del disegno (backend) | ~0,10 M workflow (3 agenti), sessione principale non contata | 26 workflow | 0 |
+| 7/10/2026 | costruisci | I filtri in un ordine solo | ~0,11 M workflow (3 agenti), sessione principale non contata | 26 workflow | 0 bloccanti; 3 frasi rimaste sull'ordine vecchio chiuse da me |
+| 7/10/2026 | costruisci | Ricerca, fetta 2: la rotta | workflow (3 agenti), token non annotati | 7 workflow | 0 bloccanti; 1 chiuso da me (la chiave di riga in tre posti) |
 | 6/10/2026 | costruisci | S1, una scheda per firma | ~0,5 M agenti (workflow 0,41 + sviluppatore 0,09), sessione principale non contata | 78 workflow | 2 bloccanti dal giro (ottica persa rispondendo la camera; "a colori" con la camera della notte) + 1 mio dopo (falso avviso nel log) |
 | 6/10/2026 | costruisci | S3, una scheda per gruppo di frame | ~0,68 M agenti (workflow 0,50 + due sviluppatore 0,18), sessione principale non contata | 67 workflow | 2 bloccanti dal giro (il "non e' un oggetto" di un gruppo scavalcava un cielo arrivato dopo; cambiare idea non riportava i frame legati dal gruppo) + import-linter rosso |
 | 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
