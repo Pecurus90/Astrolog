@@ -80,6 +80,8 @@ export const itArchivio = {
   "archive.filter.remove": "Togli {cosa}: {valore}",
   "archive.filter.period.remove": "Togli il periodo",
   "archive.filter.dates.wrong": "\u00abal\u00bb viene prima di \u00abdal\u00bb: scegli un giorno dal {giorno} in poi.",
+  "archive.productions": "{n} produzioni",
+  "archive.productions.one": "1 produzione",
   "archive.nothing": "Nessun oggetto con questi filtri",
   "archive.nothing.why":
     "Questa ricerca non trova niente. Cambia quello che hai scritto, o togli i filtri.",

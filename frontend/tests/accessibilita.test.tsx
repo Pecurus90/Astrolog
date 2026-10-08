@@ -259,6 +259,7 @@ describe("l accessibilita della prima pagina", () => {
         { name: "Lum", passband: "L", frames: 80, integration_s: 28800 },
         { name: "Ha", passband: "HA", frames: 40, integration_s: 14400 },
       ],
+      productions: [{ optics: "Newton", camera: "ASI2600", frames: 1, integration_s: 1, untimed: 0, filters: [] }],
       panels: null,
       panel_list: [],
     }
@@ -267,6 +268,7 @@ describe("l accessibilita della prima pagina", () => {
       ...riga,
       key: "impronta-ic405", // gitleaks:allow
       name: "IC 405",
+      productions: [{ optics: "Newton", camera: "ASI2600", frames: 1, integration_s: 1, untimed: 0, filters: [] }],
       panels: 2,
       panel_list: [
         { object: "IC 405", ra_deg: 79.07, dec_deg: 34.25, frames: 40, integration_s: 14400, untimed: 0 },

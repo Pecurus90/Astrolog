@@ -7,10 +7,17 @@ from typing import Literal, cast
 
 from fastapi import APIRouter, Depends, Query
 
-from ..spine import archive, filters_used, objects
+from ..spine import archive, filters_used, objects, productions
 from ..spine.counts import Scope, Subject
 from .deps import get_db
-from .models_archive import ArchiveChoices, ArchiveFound, ArchiveList, ArchiveObject, ArchivePanel
+from .models_archive import (
+    ArchiveChoices,
+    ArchiveFound,
+    ArchiveList,
+    ArchiveObject,
+    ArchivePanel,
+    ArchiveProduction,
+)
 
 router = APIRouter(prefix="/api/v1", tags=["archive"])
 
@@ -40,8 +47,8 @@ def archive_page(  # noqa: PLR0913
     `sort` chooses, narrowed by the search parameters.
 
     `since`/`until` (night dates, both included), `site`, `optics` and `camera` narrow the
-    **frames**: a row passes with one of its frames in them, and its hours, filters and panels are
-    those frames' only -- narrowed to 2025, a row tells 2025.
+    **frames**: a row passes with one of its frames in them, and its hours, filters, productions
+    and panels are those frames' only -- narrowed to 2025, a row tells 2025.
 
     `key` narrows to the one row with that key (`items[].key`): the search opens an object so,
     where `q` would also find `M 10` and `M 101` for `M 1`.
@@ -74,6 +81,8 @@ def archive_page(  # noqa: PLR0913
     filters_by_key = filters_used.of(conn, Subject.OBJECT, object_ids, alone=True, scope=scope)
     mosaic_keys = [r["mosaic_key"] for r in rows if r["mosaic_key"]]
     filters_by_key |= filters_used.of(conn, Subject.MOSAIC, mosaic_keys, scope=scope)
+    made_by_key = productions.of(conn, Subject.OBJECT, object_ids, alone=True, scope=scope)
+    made_by_key |= productions.of(conn, Subject.MOSAIC, mosaic_keys, scope=scope)
     panels_by_key = archive.panels(conn, mosaic_keys, scope)
     return ArchiveList(
         items=[
@@ -87,6 +96,9 @@ def archive_page(  # noqa: PLR0913
                 constellation=r["constellation"],
                 type_code=r["type_code"],
                 filters=filters_by_key.get(r["mosaic_key"] or r["id"], []),
+                productions=[
+                    ArchiveProduction(**p) for p in made_by_key.get(r["mosaic_key"] or r["id"], [])
+                ],
                 panels=r["panels"],
                 panel_list=[ArchivePanel(**p) for p in panels_by_key.get(r["mosaic_key"], [])],
             )

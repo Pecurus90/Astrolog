@@ -313,6 +313,23 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'productions': list([
+          dict({
+            'camera': 'Canon EOS 700D',
+            'filters': list([
+              dict({
+                'frames': 1,
+                'integration_s': 300.0,
+                'name': 'L-eXtreme',
+                'passband': 'DUO_HAOIII',
+              }),
+            ]),
+            'frames': 1,
+            'integration_s': 300.0,
+            'optics': None,
+            'untimed': 0,
+          }),
+        ]),
         'slug': None,
         'type_code': None,
         'untimed': 0,
@@ -340,6 +357,44 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'productions': list([
+          dict({
+            'camera': 'ATR2600M(USB2.0)',
+            'filters': list([
+              dict({
+                'frames': 3,
+                'integration_s': 360.0,
+                'name': 'Lum',
+                'passband': 'L',
+              }),
+              dict({
+                'frames': 1,
+                'integration_s': 120.0,
+                'name': 'R',
+                'passband': 'R',
+              }),
+            ]),
+            'frames': 4,
+            'integration_s': 480.0,
+            'optics': 'Askar 103Apo',
+            'untimed': 0,
+          }),
+          dict({
+            'camera': 'ATR2600M',
+            'filters': list([
+              dict({
+                'frames': 1,
+                'integration_s': 120.0,
+                'name': 'Lum',
+                'passband': 'L',
+              }),
+            ]),
+            'frames': 1,
+            'integration_s': 120.0,
+            'optics': 'Askar 103Apo',
+            'untimed': 0,
+          }),
+        ]),
         'slug': None,
         'type_code': None,
         'untimed': 0,
@@ -355,6 +410,17 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'productions': list([
+          dict({
+            'camera': 'ATR2600M(USB2.0)',
+            'filters': list([
+            ]),
+            'frames': 1,
+            'integration_s': 60.0,
+            'optics': 'Askar 103Apo',
+            'untimed': 0,
+          }),
+        ]),
         'slug': None,
         'type_code': None,
         'untimed': 0,
@@ -376,6 +442,23 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'productions': list([
+          dict({
+            'camera': 'QHY268M',
+            'filters': list([
+              dict({
+                'frames': 1,
+                'integration_s': 240.0,
+                'name': 'R',
+                'passband': 'R',
+              }),
+            ]),
+            'frames': 1,
+            'integration_s': 240.0,
+            'optics': 'RC8',
+            'untimed': 0,
+          }),
+        ]),
         'slug': None,
         'type_code': None,
         'untimed': 0,
@@ -403,6 +486,29 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'productions': list([
+          dict({
+            'camera': 'ATR2600M(USB2.0)',
+            'filters': list([
+              dict({
+                'frames': 1,
+                'integration_s': 300.0,
+                'name': 'H',
+                'passband': 'UNKNOWN',
+              }),
+              dict({
+                'frames': 1,
+                'integration_s': 300.0,
+                'name': 'O',
+                'passband': 'UNKNOWN',
+              }),
+            ]),
+            'frames': 2,
+            'integration_s': 600.0,
+            'optics': 'Askar 103Apo',
+            'untimed': 0,
+          }),
+        ]),
         'slug': None,
         'type_code': None,
         'untimed': 0,
@@ -424,6 +530,23 @@
         'panel_list': list([
         ]),
         'panels': None,
+        'productions': list([
+          dict({
+            'camera': 'ASI2600MM Pro',
+            'filters': list([
+              dict({
+                'frames': 1,
+                'integration_s': 600.0,
+                'name': 'Hα',
+                'passband': 'HA',
+              }),
+            ]),
+            'frames': 1,
+            'integration_s': 600.0,
+            'optics': 'TS 130 APO',
+            'untimed': 0,
+          }),
+        ]),
         'slug': None,
         'type_code': None,
         'untimed': 0,

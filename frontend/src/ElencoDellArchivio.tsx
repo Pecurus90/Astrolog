@@ -50,6 +50,12 @@ function UnaRiga({ riga }: { riga: Riga }) {
     <tr>
       <td>
         <Nome riga={riga} inRiga />
+        {/* Una sola e' la regola e non si scrive: il segno dice quando sono di piu'. */}
+        {riga.productions.length > 1 && (
+          <span className="as-archivio__produzioni">
+            {t("archive.productions", { n: numero(riga.productions.length) })}
+          </span>
+        )}
       </td>
       <td className="as-archivio__col-tipo">
         <Tipo riga={riga} lungo />

@@ -47,6 +47,10 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Accanto a *Mostra altri* leggo quanti ne vedo e quanti sono | *accanto a Mostra altri dice quanti ne stai vedendo e quanti sono* |
 | Cio' che il catalogo o i file non dicono, la carta lo dice a parole | *un oggetto che il catalogo non conosce lo dice nella carta, tipo e costellazione*, *un oggetto senza filtri riconosciuti non mostra pastiglie finte*, *un tipo che la pagina non conosce non arriva a schermo come sigla: dice che non si sa* |
 | Il posto dell'anteprima c'e' gia', vuoto | *il posto dell'anteprima c'e', vuoto, e chi ascolta non lo sente* |
+| Ogni riga dice con quali corredi l'ho ripresa: una produzione per ottica e camera, e insieme fanno la riga | `test_an_object_shot_with_two_rigs_has_two_productions_most_time_first`, `test_the_productions_of_a_row_add_up_to_the_row`, `test_each_production_says_its_own_filters_in_the_order_of_the_row`, `test_a_rewritten_copy_is_not_a_frame_of_a_production`, `test_a_narrowed_row_tells_the_productions_of_what_was_asked`, `test_a_mosaic_has_its_productions_too_and_the_object_alone_keeps_its_own` (`backend/tests/test_spine_archive_productions.py`); `test_each_row_carries_its_productions_and_they_add_up_to_the_row` |
+| Un riduttore non fa un'altra produzione; i frame senza corredo lo dicono | `test_the_same_optics_and_camera_at_two_focal_lengths_are_one_production`, `test_frames_that_do_not_say_their_rig_are_a_production_that_says_so`, `test_a_rig_that_knows_only_its_camera_is_its_own_production` |
+| Le produzioni di una pagina costano due domande, non una per riga | `test_all_the_productions_of_a_page_come_in_two_questions` |
+| La carta ha un'anteprima per produzione e dice quante sono; l'elenco lo dice quando sono piu' d'una | *la carta ha un posto di anteprima per produzione, e dice quante sono*, *una produzione sola stringe la colonna delle anteprime, e lo dice al singolare*, *oltre quattro produzioni le anteprime vanno tre per riga, senza nasconderne*, *nell'elenco il segno delle produzioni c'e' solo quando sono piu' d'una* |
 | Un mosaico che ho confermato e' una riga sola, col nome che gli ho dato e le ore di tutti i pannelli | `test_a_confirmed_mosaic_is_one_row_with_the_hours_of_all_its_panels`, `test_after_the_yes_the_archive_shows_the_mosaic_as_one_row` (`backend/tests/test_review_mosaic.py`) |
 | Un oggetto ripreso dentro un mosaico e anche da solo ha la sua riga con le sole riprese sue, e niente si conta due volte | `test_an_object_shot_inside_and_outside_a_mosaic_keeps_its_own_poses`, `test_the_pills_of_a_row_are_the_filters_of_its_own_poses` |
 | Cercando o filtrando, un mosaico compare intero se uno dei suoi pannelli risponde | `test_a_filter_of_the_bar_lets_the_mosaic_through_if_one_of_its_poses_passes`, `test_the_filter_used_is_asked_of_the_poses_of_the_row`, `test_a_mosaic_named_with_a_free_name_is_found_by_that_name` |
@@ -216,11 +220,17 @@ Disegno v31, la carta "Di lato": a sinistra il posto dell'anteprima, a destra no
 costellazione, ore e frame; sotto i filtri (la barra delle Notti) e, per un mosaico, i pannelli.
 
 **Una produzione** e' lo stesso oggetto ripreso con la stessa ottica e la stessa camera (Marco,
-8/10/2026), finche' non esistono i progetti; domani sara' un progetto concluso. La carta avra' un
-posto di anteprima **per produzione** e dira' quante sono; con piu' d'una, toccarla aprira' un menu
-col riepilogo di ognuna (corredo, filtri, ore). Il modale della produzione e' rimandato: finche'
-non c'e', una carta con una produzione sola non apre niente. **Non ancora fatto**: l'API non manda
-le produzioni, e la carta ha un posto solo, vuoto.
+8/10/2026), finche' non esistono i progetti; domani sara' un progetto concluso. La rotta le
+manda con ogni riga (`productions`, `spine/productions.py`): ottica, camera, frame, ore, frame
+senza tempo e i filtri di quei frame, da quella a cui e' andato piu' tempo. Insieme fanno la riga:
+niente si conta due volte. Decisioni (8/10/2026): due corredi con la stessa ottica e la stessa
+camera a focali diverse (un riduttore) sono **una** produzione; i frame che non dicono il corredo
+sono una produzione col corredo che non si sa, e meta' corredo (solo la camera) e' una produzione
+sua; un mosaico ha le sue produzioni come ogni riga; stringendo la barra, le produzioni sono
+quelle dei frame chiesti. La carta ha un posto di anteprima **per produzione** e dice quante
+sono; l'elenco lo dice solo quando sono piu' d'una. **Non ancora fatto**: il menu di scelta (con
+piu' d'una, toccare la carta apre il riepilogo di ognuna: corredo, filtri, ore) e il modale della
+produzione, rimandato: finche' non c'e', una carta con una produzione sola non apre niente.
 
 ## Cosa NON fa
 

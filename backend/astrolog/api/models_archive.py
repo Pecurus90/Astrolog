@@ -22,6 +22,19 @@ class ArchivePanel(BaseModel):
     untimed: int
 
 
+class ArchiveProduction(BaseModel):
+    """The row shot with one optics and one camera: a production, until projects exist."""
+
+    optics: str | None = Field(description="The optics' name; null if the frames do not say it.")
+    camera: str | None = Field(description="The camera's name; null if the frames do not say it.")
+    frames: int = Field(description="Its frames, rewritten copies excluded.")
+    integration_s: float = Field(description="The sum of its frames' time, in seconds.")
+    untimed: int = Field(description="How many of its frames do not say how long they lasted.")
+    filters: list[FilterUsed] = Field(
+        description="The filters of these frames, in the one filter order; empty if unknown."
+    )
+
+
 class ArchiveObject(BaseModel):
     """A row of the Archive: a group of frames -- an object, or a confirmed mosaic -- and what you
     put into it. An object's row carries only the frames no mosaic has taken."""
@@ -49,6 +62,10 @@ class ArchiveObject(BaseModel):
     )
     filters: list[FilterUsed] = Field(
         description="Which filters you shot it with, in the one filter order; empty if unknown."
+    )
+    productions: list[ArchiveProduction] = Field(
+        description="One per optics and camera, most time first: together they are the row. "
+        "Frames that do not say their rig are one production with null optics and camera."
     )
     panels: int | None = Field(description="How many panels, for a mosaic; null for an object.")
     panel_list: list[ArchivePanel] = Field(

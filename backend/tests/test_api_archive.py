@@ -56,6 +56,20 @@ def test_the_archive_lists_what_you_shot(client):
     assert riga["integration_s"] >= 0
 
 
+def test_each_row_carries_its_productions_and_they_add_up_to_the_row(client):
+    """Una produzione e' la riga ripresa con un'ottica e una camera: insieme fanno la riga, senza
+    contare un frame due volte e senza perderne."""
+    risposta = archivio(client)
+
+    for riga in risposta["items"]:
+        sue = riga["productions"]
+        assert sue, riga["name"]
+        assert sum(p["frames"] for p in sue) == riga["frames"]
+        assert sum(p["integration_s"] for p in sue) == riga["integration_s"]
+        assert sum(p["untimed"] for p in sue) == riga["untimed"]
+        assert all({"optics", "camera", "filters"} <= p.keys() for p in sue)
+
+
 def test_a_rewritten_copy_is_not_another_hour_of_sky(client, db_path):
     """Una copia calibrata dello stesso scatto **non** e' un'altra ora di cielo: chi elabora
     tiene grezzo e calibrato nella stessa cartella, e contarli tutti e due raddoppierebbe la

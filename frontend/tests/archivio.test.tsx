@@ -378,3 +378,63 @@ describe("l'Archivio, filtri e costellazioni", () => {
   })
 })
 
+/** Tante produzioni quante ne chiedi, ognuna con un corredo diverso: come le manda la rotta. */
+function conProduzioni(quante: number) {
+  const una = M31.productions[0]
+  return { ...M31, productions: Array.from({ length: quante }, (_, i) => ({ ...una, camera: `Camera ${i}` })) }
+}
+
+describe("l'Archivio, le produzioni", () => {
+  it("la carta ha un posto di anteprima per produzione, e dice quante sono", async () => {
+    archivio([conProduzioni(2)])
+    await apriArchivio()
+
+    const carta = await screen.findByRole("article")
+    expect(carta.querySelectorAll(".as-carta-oggetto__immagine")).toHaveLength(2)
+    expect(within(carta).getByText("2 produzioni").className).toBe("as-carta-oggetto__quante")
+    // due per riga: ne' la colonna stretta di una sola, ne' le tre per riga di tante
+    expect(carta.className).toBe("as-carta as-carta-oggetto")
+  })
+
+  it("una produzione sola stringe la colonna delle anteprime, e lo dice al singolare", async () => {
+    archivio([M31])
+    await apriArchivio()
+
+    const carta = await screen.findByRole("article")
+    expect(carta.className).toContain("as-carta-oggetto--una")
+    expect(within(carta).getByText("1 produzione")).toBeDefined()
+  })
+
+  it("oltre quattro produzioni le anteprime vanno tre per riga, senza nasconderne", async () => {
+    archivio([conProduzioni(5)])
+    await apriArchivio()
+
+    const carta = await screen.findByRole("article")
+    expect(carta.className).toContain("as-carta-oggetto--molte")
+    expect(carta.querySelectorAll(".as-carta-oggetto__immagine")).toHaveLength(5)
+  })
+
+  it("una riga senza frame contati tiene il suo posto vuoto, e non scrive zero produzioni", async () => {
+    // Un oggetto i cui frame sono tutti copie non ha produzioni: la carta resta com'e' sempre
+    // stata, col suo posto, invece di restare senza anteprima e dire "0 produzioni".
+    archivio([{ ...M31, frames: 0, integration_s: 0, productions: [] }])
+    await apriArchivio()
+
+    const carta = await screen.findByRole("article")
+    expect(carta.querySelectorAll(".as-carta-oggetto__immagine")).toHaveLength(1)
+    expect(carta.className).toContain("as-carta-oggetto--una")
+    expect(carta.textContent).not.toMatch(/produzion/)
+  })
+
+  it("nell'elenco il segno delle produzioni c'e' solo quando sono piu' d'una", async () => {
+    archivio([conProduzioni(3), IGNOTO])
+    await apriArchivio()
+    await vaiAll(/elenco/i)
+
+    const tante = (await screen.findByText("M 31")).closest("tr") as HTMLElement
+    expect(within(tante).getByText("3 produzioni").className).toBe("as-archivio__produzioni")
+    const una = screen.getByText("NGC 7000").closest("tr") as HTMLElement
+    expect(una.textContent).not.toMatch(/produzion/)
+  })
+})
+

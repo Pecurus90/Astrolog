@@ -42,8 +42,8 @@ export interface paths {
          *     `sort` chooses, narrowed by the search parameters.
          *
          *     `since`/`until` (night dates, both included), `site`, `optics` and `camera` narrow the
-         *     **frames**: a row passes with one of its frames in them, and its hours, filters and panels are
-         *     those frames' only -- narrowed to 2025, a row tells 2025.
+         *     **frames**: a row passes with one of its frames in them, and its hours, filters, productions
+         *     and panels are those frames' only -- narrowed to 2025, a row tells 2025.
          *
          *     `key` narrows to the one row with that key (`items[].key`): the search opens an object so,
          *     where `q` would also find `M 10` and `M 101` for `M 1`.
@@ -1306,6 +1306,11 @@ export interface components {
              */
             filters: components["schemas"]["FilterUsed"][];
             /**
+             * Productions
+             * @description One per optics and camera, most time first: together they are the row. Frames that do not say their rig are one production with null optics and camera.
+             */
+            productions: components["schemas"]["ArchiveProduction"][];
+            /**
              * Panels
              * @description How many panels, for a mosaic; null for an object.
              */
@@ -1349,6 +1354,42 @@ export interface components {
             id: number;
             /** Name */
             name: string;
+        };
+        /**
+         * ArchiveProduction
+         * @description The row shot with one optics and one camera: a production, until projects exist.
+         */
+        ArchiveProduction: {
+            /**
+             * Optics
+             * @description The optics' name; null if the frames do not say it.
+             */
+            optics: string | null;
+            /**
+             * Camera
+             * @description The camera's name; null if the frames do not say it.
+             */
+            camera: string | null;
+            /**
+             * Frames
+             * @description Its frames, rewritten copies excluded.
+             */
+            frames: number;
+            /**
+             * Integration S
+             * @description The sum of its frames' time, in seconds.
+             */
+            integration_s: number;
+            /**
+             * Untimed
+             * @description How many of its frames do not say how long they lasted.
+             */
+            untimed: number;
+            /**
+             * Filters
+             * @description The filters of these frames, in the one filter order; empty if unknown.
+             */
+            filters: components["schemas"]["FilterUsed"][];
         };
         /**
          * ArchiveTotals

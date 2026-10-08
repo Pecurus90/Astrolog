@@ -239,9 +239,13 @@ oggetto fuori catalogo porta il nome che ha.
 
 La pagina ha **due viste**, e si cambia col pulsante in alto a sinistra:
 
-- **carte**, che e' come si apre: una per riga, col posto gia' pronto per l'immagine a sinistra
-  (l'app non la mostra ancora, e quel riquadro la aspetta);
-- **elenco**, a colonne allineate, per confrontare a colpo d'occhio chi ha piu' ore o piu' frame.
+- **carte**, che e' come si apre: una per riga. A sinistra c'e' un riquadro per ogni
+  **produzione**, cioe' per ogni coppia di ottica e camera con cui hai ripreso quell'oggetto, e
+  sotto i dati leggi quante sono (*2 produzioni*). I riquadri sono vuoti: sono il posto delle
+  immagini, che l'app non mostra ancora. Un riduttore non fa un'altra produzione; i frame che non
+  dicono con che corredo sono stati ripresi ne fanno una a parte;
+- **elenco**, a colonne allineate, per confrontare a colpo d'occhio chi ha piu' ore o piu' frame;
+  accanto al nome leggi quante produzioni ha, quando sono piu' d'una.
 
 In alto c'e' la **barra**: cerchi un oggetto scrivendo qualunque nome con cui lo conosci -- `m31`,
 `M 31`, `NGC 224` sono la stessa galassia -- e stringi l'elenco per **catalogo**, **costellazione**

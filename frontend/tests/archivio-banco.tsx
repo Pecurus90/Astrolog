@@ -24,6 +24,16 @@ export const M31 = {
     { name: "Lum", passband: "L", frames: 80, integration_s: 28800 },
     { name: "Ha", passband: "HA", frames: 40, integration_s: 14400 },
   ],
+  productions: [
+    {
+      optics: "Rifrattore",
+      camera: "ASI2600",
+      frames: 120,
+      integration_s: 43200,
+      untimed: 0,
+      filters: [],
+    },
+  ],
   panels: null,
   panel_list: [],
 }
@@ -40,6 +50,16 @@ export const IGNOTO = {
   constellation: null,
   type_code: null,
   filters: [],
+  productions: [
+    {
+      optics: "Rifrattore",
+      camera: "ASI2600",
+      frames: 40,
+      integration_s: 7200,
+      untimed: 12,
+      filters: [],
+    },
+  ],
   panels: null,
   panel_list: [],
 }

@@ -303,9 +303,21 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   (il primo e l'ultimo giorno ripreso, che la rotta non manda); `classi_inventate` legge anche i
   commenti del foglio, e il v32 nomina `.as-elenco` in un commento: le nove liste vecchie che la
   scrivono non risultano ne' nel foglio ne' in attesa; `banco.tsx` esenta ancora
-  `.as-barra__gruppo`, che non esiste piu'. Fetta 2: le **produzioni**, decise da Marco l'8/10 (stesso oggetto + stessa ottica +
-  stessa camera): il backend le manda per oggetto, la carta mostra un'anteprima per produzione,
-  quante sono e il menu di scelta; il modale resta rimandato. Il punto del cielo dei
+  `.as-barra__gruppo`, che non esiste piu'. Fetta 2a fatta (8/10): le **produzioni**, decise da Marco l'8/10 (stesso oggetto + stessa
+  ottica + stessa camera): la rotta le manda con ogni riga (`spine/productions.py`), la carta ha
+  un'anteprima per produzione e dice quante sono, l'elenco lo dice quando sono piu' d'una. Fetta
+  2b, prossima: il menu di scelta (sotto la carta sul desktop, foglio dal basso sul telefono, col
+  velo del telaio; nell'elenco lo apre la riga), che le classi `as-produzioni*` del foglio
+  aspettano; il modale resta rimandato. Da decidere con Marco quando si vedra' a schermo: come si
+  chiama la produzione dei frame senza corredo ("corredo: non si sa"). Dall'audit della 2a: manca
+  una prova **di rotta** che `scope` e `alone` arrivino a `productions.of` (le prove della spina la
+  chiamano diretta).
+- **I nomi del primo avvio e ASTAP** (Marco, 8/10/2026, a scelta multipla): i passi si chiamano
+  "Come ti chiami", "Da dove osservi", "Il percorso dei file", "Il seeing (Meteoblue)", "ASTAP, per
+  riconoscere il cielo"; in tutta l'app "il riconoscitore" diventa "ASTAP" (testi, guida, glossario,
+  test). Da fare, come lavoro suo. Con lui: la longitudine accetta "O" per ovest oltre a "W" (la
+  tavola del primo avvio la scrive cosi'). Aperta con Marco: la schermata di chiusura del primo
+  avvio, che Design ha disegnato "da decidere". Il punto del cielo dei
   pannelli e' uscito dalla carta (Marco, 8/10/2026, come nella tavola): li distingue il numero.
   Restano
   dall'audit della 1a, non bloccanti: `oreDi`/`senzaTempo` (`RigaDellArchivio.tsx`) ripetono la

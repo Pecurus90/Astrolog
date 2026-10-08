@@ -54,7 +54,8 @@ che il `traduttore` legge per primo.
 | in un campo con piu' oggetti, quello scelto come principale | `subject` | soggetto | oggetto principale, target |
 | gli oggetti che il cielo ha trovato nei frame di un gruppo di Da confermare, il piu' ripreso in cima, coi frame dove non ha trovato niente (`not_found`) e quelli che non ha ancora guardato (`not_yet`): si leggono accanto alla domanda e non la cambiano. La domanda *che file sono* non li porta: li' il cielo non ha guardato niente | `subjects` | ripreso | soggetti, contenuto, target |
 | una voce del catalogo astronomico | `catalog_entry` | voce di catalogo | oggetto |
-| lo stesso soggetto seguito nel tempo con un corredo, fino alla foto finale; puo' avere un obiettivo | `project` | progetto | produzione, piano, lavoro, campagna |
+| lo stesso soggetto seguito nel tempo con un corredo, fino alla foto finale; puo' avere un obiettivo | `project` | progetto | piano, lavoro, campagna |
+| una riga dell'Archivio ripresa con la stessa ottica e la stessa camera, finche' non esistono i progetti (Marco, 8/10/2026; `docs/domini/archivio.md`) | `production` | produzione | corredo, sessione, progetto |
 | le ore che si vogliono raggiungere su un progetto | `goal_hours` (`goal_seconds` in schema) | obiettivo | traguardo, target, meta |
 | le ore per filtro dentro l'obiettivo | `recipe` | ricetta | piano filtri |
 | progetto con pannelli affiancati sullo stesso soggetto | `mosaic` | mosaico | -- |
@@ -205,7 +206,7 @@ manda a qualcuno).
 | le letture passate: cosa e' entrato, cosa e' rimasto fuori e perche', **coi file non letti** | `/impostazioni/letture` | Le letture | corse, passate, storico |
 | perche' l'app non parte o non funziona: il diario, il solver che non si avvia, lo stato del sistema | `/diagnostica` | Diagnostica | log, errori, problemi |
 | dove si decide una ripresa che non esiste ancora: si cerca, si inquadra, nasce un progetto | `/planner` | Planner | pianificatore, programma |
-| i progetti e a che punto sono, con quanto manca all'obiettivo | `/progetti` | Progetti | produzioni, piani, campagne |
+| i progetti e a che punto sono, con quanto manca all'obiettivo | `/progetti` | Progetti | piani, campagne |
 | la carta su cui si naviga il cielo | `/carta-del-cielo` | Carta del cielo | mappa, sky map, atlante, cielo |
 | la notte ora per ora intorno al buio, col verdetto | `/meteo` | Meteo | previsioni, tempo |
 | cio' che l'app non deduce dai file, a sezioni: le cartelle, i siti, il nome, le chiavi dei servizi, le soglie | `/impostazioni` | Impostazioni | preferenze, configurazione, opzioni |

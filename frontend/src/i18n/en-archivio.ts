@@ -80,6 +80,8 @@ export const enArchivio = {
   "archive.filter.remove": "Remove {cosa}: {valore}",
   "archive.filter.period.remove": "Remove the period",
   "archive.filter.dates.wrong": "\u201cto\u201d comes before \u201cfrom\u201d: pick a day from {giorno} on.",
+  "archive.productions": "{n} productions",
+  "archive.productions.one": "1 production",
   "archive.nothing": "No object matches these filters",
   "archive.nothing.why":
     "This search finds nothing. Change what you typed, or clear the filters.",
