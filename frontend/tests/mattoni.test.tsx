@@ -227,7 +227,7 @@ describe("Campo", () => {
         <input className="as-campo__input" id="lat" />
       </Campo>,
     )
-    expect(container.querySelector(".as-campo")?.className).toContain("as-campo--errore")
+    expect(container.querySelector(".as-campo-modulo")?.className).toContain("as-campo--errore")
     expect(container.querySelector(".as-campo__errore")?.textContent).toBe("fra -90 e 90")
   })
 
@@ -296,7 +296,7 @@ describe("Campo", () => {
     )
     expect(screen.getByLabelText("Nome").getAttribute("aria-invalid")).toBeNull()
     expect(screen.getByLabelText("Nome").getAttribute("aria-describedby")).toBeNull()
-    expect(container.querySelector(".as-campo")?.className).toBe("as-campo")
+    expect(container.querySelector(".as-campo-modulo")?.className).toBe("as-campo-modulo")
   })
 })
 

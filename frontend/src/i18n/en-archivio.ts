@@ -62,6 +62,12 @@ export const enArchivio = {
   "archive.sort.name": "Name",
   "archive.sort.hours": "Hours",
   "archive.sort.frames": "Frames",
+  "archive.all": "\u2190 The whole archive",
+  "archive.all.short": "The whole archive",
+  "archive.only.before": "Only",
+  "archive.only.after": ", opened from the search.",
+  "archive.gone": "This object is not in the archive",
+  "archive.gone.why": "Its frames were removed or moved, or the address is mistyped.",
   "archive.nothing": "No object matches these filters",
   "archive.nothing.why":
     "This search finds nothing. Change what you typed, or clear the filters.",

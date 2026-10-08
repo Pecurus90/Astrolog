@@ -59,10 +59,10 @@ export function Campo({
       // funzione la guardia della veste non la legge, e lo dice -- l'ha detto.
       className={
         errore
-          ? "as-campo as-campo--errore"
+          ? "as-campo-modulo as-campo--errore"
           : aspetta
-            ? "as-campo as-campo--caricamento"
-            : "as-campo"
+            ? "as-campo-modulo as-campo--caricamento"
+            : "as-campo-modulo"
       }
       style={{ flex: cresce && `1 1 ${cresce}`, maxWidth: tetto }}
     >

@@ -26,7 +26,7 @@ from controlli_foglio import pavimenti_del_cielo
 # dal progetto Claude Design, mai per far passare una modifica fatta qui. Resta una **mappa**
 # anche con un foglio solo: quanti sono lo decide la consegna, non noi.
 IMPRONTE = {
-    FOGLIO: "ac0c4be28ee85c864d4628c2916950454d1c18ee153dabe6312521d453dce7e4",
+    FOGLIO: "1dd0cb56837487c22024e2c8e5833a156c56fd2a8e06a7aeeb39feda6941dbe7",
 }
 
 
@@ -65,7 +65,10 @@ _VARIANTI = (
 
 MATTONI = {
     "frontend/src/Riga.tsx": ("as-riga__conteggio", "as-riga__prova"),
-    "frontend/src/Campo.tsx": ("as-campo", "as-campo__etichetta"),
+    # Dal v31 `as-campo` e' il campo di ricerca del foglio: il campo dei moduli, che aspetta
+    # ancora il suo disegno, ha preso un nome suo per non vestirsi da ricerca.
+    "frontend/src/Campo.tsx": ("as-campo-modulo", "as-campo__etichetta"),
+    "frontend/src/Ricerca.tsx": ("as-campo", "as-cerca", "as-trova"),
     "frontend/src/Bottone.tsx": ("as-bottone",),
     "frontend/src/Avviso.tsx": ("as-avviso",),
     "frontend/src/Semaforo.tsx": ("as-semaforo", "as-semaforo__lampade"),

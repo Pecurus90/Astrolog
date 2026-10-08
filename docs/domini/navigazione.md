@@ -33,6 +33,10 @@ Le prove del frontend si chiamano col loro titolo; stanno in `frontend/tests/sch
 | Cerco una notte per data, come la scrivo, o per l'oggetto ripreso | `test_a_night_is_found_by_date_in_the_common_forms`, `test_what_is_not_one_of_your_dates_finds_no_night`, `test_a_night_is_found_by_the_object_shot_in_it` |
 | Cerco un pezzo, un filtro o un sito per nome | `test_a_piece_and_a_filter_are_found_by_name_with_what_is_known_of_them`, `test_no_filter_is_not_a_filter_you_own`, `test_a_site_is_found_by_name_with_its_nights` |
 | Il campo vuoto non apre niente; ogni gruppo dice quanti altri ce ne sono | `test_a_blank_search_finds_nothing_not_everything`, `test_each_group_says_how_many_beyond_the_few_it_shows` |
+| La ricerca sta nella barra: chiusa e' un bottone, toccata (o con Ctrl K) un campo | *chiusa e' un bottone, e toccata diventa un campo col fuoco*, *Ctrl K la apre da ogni pagina*, *aperta, la barra lo dice al foglio* (`ricerca.test.tsx`, come le tre sotto) |
+| Scrivo e vedo i trovati per gruppo, con frame e ore, o perche' le ore non ci sono | *mostra i quattro gruppi, ognuno con quante voci ha in tutto*, *un gruppo senza voci non si mostra*, *un campo vuoto non chiede niente alla rotta*, *niente trovato lo dice, e dice cosa si cerca qui* |
+| Scelgo con le frecce e apro con Invio o col tocco; ogni voce apre la pagina che gia' la mostra | *le frecce scelgono e Invio apre*, *la voce ... apre la pagina che gia' la mostra* |
+| Esc chiude la ricerca e il fuoco torna al bottone | *Esc chiude e riporta il fuoco al bottone*, *il menu aperto non ha difetti di accessibilita'* |
 
 ## Le decisioni
 
@@ -69,7 +73,12 @@ pagina non ripete il suo titolo (disegno v18).
   hai imparato a scrivere le date -- o per l'oggetto ripreso, pezzi e siti per nome. Una voce
   dice **chi e'** (chiave, id, genere), non l'indirizzo: le pagine e i loro parametri stanno nel
   frontend, e una seconda casa diverge. Un oggetto apre l'Archivio con `?key=`: con `?q=M 1`
-  uscirebbero anche M 10 e M 101.
+  uscirebbero anche M 10 e M 101. Il campo c'e' (`Ricerca.tsx`, disegno v31): chiede dopo 250 ms
+  dall'ultima lettera, mostra solo le voci del testo che c'e' scritto (nell'attesa dice "cerco":
+  le voci di prima aprirebbero un'altra ricerca), e il fuoco resta nel campo
+  (le frecce spostano `aria-activedescendant`). `combobox` sta sull'input e non sull'involucro
+  come nella tavola (ARIA 1.2). Il perche' di una notte ("con M 31") la rotta non lo manda, e il
+  campo non lo scrive.
 
 **La pastiglia dice il sito e apre Stanotte** (disegno v25). Senza sito dice "Scegli il sito".
 **Stanotte** e' un pannello: da 1440 px prende una colonna sua, sotto si apre sopra il contenuto

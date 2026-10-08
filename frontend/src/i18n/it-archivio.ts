@@ -62,6 +62,12 @@ export const itArchivio = {
   "archive.sort.name": "Nome",
   "archive.sort.hours": "Ore",
   "archive.sort.frames": "Frame",
+  "archive.all": "\u2190 Tutto l'archivio",
+  "archive.all.short": "Tutto l'archivio",
+  "archive.only.before": "Solo",
+  "archive.only.after": ", aperto dalla ricerca.",
+  "archive.gone": "Questo oggetto non c'e' nell'archivio",
+  "archive.gone.why": "I suoi frame sono stati tolti o spostati, o l'indirizzo e' scritto male.",
   "archive.nothing": "Nessun oggetto con questi filtri",
   "archive.nothing.why":
     "Questa ricerca non trova niente. Cambia quello che hai scritto, o togli i filtri.",

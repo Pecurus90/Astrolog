@@ -40,9 +40,9 @@ as-bortle__voce--8
 as-bortle__voce--9
 as-bottone--distruttivo
 as-bottone--errore
-as-campo
 as-campo--caricamento
 as-campo--errore
+as-campo-modulo
 as-campo__aiuto
 as-campo__errore
 as-campo__etichetta
@@ -81,7 +81,6 @@ as-dialogo__azioni
 as-dialogo__perdi
 as-dialogo__testo
 as-dialogo__titolo
-as-elenco
 as-entra
 as-entra--alone
 as-filtro__pastiglia

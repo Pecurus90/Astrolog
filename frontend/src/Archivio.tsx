@@ -99,7 +99,9 @@ export function Archivio() {
     camera: inForma(indirizzo.get("camera"), ID),
     sort: ordineChiesto(indirizzo.get("sort")),
   }
-  const stringi = STRINGONO.some((c) => criteri[c])
+  // La riga sola che la ricerca nella barra apre (`?key=`): la rotta la stringe da se'.
+  const chiave = inForma(indirizzo.get("key"), CHIAVE)
+  const stringi = chiave !== "" || STRINGONO.some((c) => criteri[c])
 
   // Scrivere **sostituisce**: una traccia per ogni parola battuta riempirebbe la cronologia di
   // `m`, `m3`, `m31` e il tasto indietro diventerebbe inutile. Ogni altra scelta -- una tendina,
@@ -128,7 +130,7 @@ export function Archivio() {
   const elenco = useInfiniteQuery({
     // i criteri stanno nella chiave: sono **un'altra pagina**, non la stessa ricaricata, e senza
     // di loro la cache servirebbe le righe di prima alla ricerca dopo
-    queryKey: ["archive", criteri],
+    queryKey: ["archive", criteri, chiave],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
       const { data, error } = await api.GET("/api/v1/archive", {
@@ -137,6 +139,7 @@ export function Archivio() {
             limit: PER_VOLTA,
             offset: pageParam,
             sort: criteri.sort,
+            ...(chiave && { key: chiave }),
             ...(criteri.q && { q: criteri.q }),
             ...(criteri.catalog && { catalog: criteri.catalog }),
             ...(criteri.constellation && { constellation: criteri.constellation }),
@@ -183,8 +186,10 @@ export function Archivio() {
   // I pannelli hanno una condizione **diversa**: senza una risposta buona non sappiamo se l'elenco
   // e' vuoto, e scrivere "non ho trovato niente" sarebbe la stessa bugia della conta a zero, detta
   // a parole. E l'interruttore sta con loro, o governerebbe il nulla.
-  const barra = Boolean(scelte) && !appenaInstallata
-  const pannelli = elenco.isSuccess && (righe.length > 0 || stringi)
+  const barra = Boolean(scelte) && !appenaInstallata && chiave === ""
+  // Una chiave che non trova niente non e' "nessun oggetto con questi filtri": quell'oggetto non c'e'.
+  const sparito = chiave !== "" && elenco.isSuccess && !elenco.isPlaceholderData && righe.length === 0
+  const pannelli = elenco.isSuccess && !sparito && (righe.length > 0 || stringi)
 
   return (
     <div className="as-pagina">
@@ -208,6 +213,30 @@ export function Archivio() {
             <InterruttoreDiVista vista={vista} onVista={(scelta) => cambia({ vista: scelta })} />
           )}
         </BarraDellArchivio>
+      )}
+
+      {/* Aperto dalla ricerca: la barra esce, resta la vista, e si dice come tornare (tavola v31).
+          Solo a risposta assestata: sulle righe di prima direbbe ristretto a un oggetto non chiesto. */}
+      {chiave !== "" && pannelli && !elenco.isPlaceholderData && (
+        <div className="as-archivio">
+          <div className="as-archivio__ristretto">
+            <Bottone verso="nudo" a="/archivio">
+              {t("archive.all")}
+            </Bottone>
+            <p>
+              {t("archive.only.before")} <b>{righe[0]?.name ?? chiave}</b>
+              {t("archive.only.after")}
+            </p>
+            <InterruttoreDiVista vista={vista} onVista={(scelta) => cambia({ vista: scelta })} />
+          </div>
+        </div>
+      )}
+      {sparito && (
+        <Vuoto sotto={1} titolo="archive.gone" perche="archive.gone.why">
+          <AzioniDelVuoto>
+            <Bottone a="/archivio">{t("archive.all.short")}</Bottone>
+          </AzioniDelVuoto>
+        </Vuoto>
       )}
 
       {appenaInstallata && (
@@ -269,6 +298,8 @@ function NonTrovato({ onTogli }: { onTogli: (cambio: Record<string, string>) => 
 // stringe: alla rotta sarebbe un 422, e alla prima risposta la pagina resterebbe senza barra.
 const DATA = /^\d{4}-\d{2}-\d{2}$/
 const ID = /^\d+$/
+// la rotta rifiuta una chiave oltre i 200 caratteri: una cosi' e' un indirizzo scritto male
+const CHIAVE = /^.{1,200}$/s
 
 function inForma(scritto: string | null, forma: RegExp) {
   return scritto !== null && forma.test(scritto) ? scritto : ""

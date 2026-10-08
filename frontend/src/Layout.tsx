@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router"
 
 import { Bottone } from "./Bottone"
 import { Icon, IconSprite } from "./Icons"
+import { Ricerca } from "./Ricerca"
 import { AvvisiDellaScansione, Scansiona, ScansioneNelFoglio } from "./Scansiona"
 import { Pastiglia, Stanotte } from "./Stanotte"
 import { api } from "./api/client"
@@ -37,6 +38,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const [stanotte, setStanotte] = useState(ricordata)
   const [altro, setAltro] = useState(false)
   const [ritirata, setRitirata] = useState(false)
+  const [cerca, setCerca] = useState(false)
   const pastiglia = useRef<HTMLButtonElement>(null)
   const titoloStanotte = useRef<HTMLHeadingElement>(null)
   const apriAltro = useRef<HTMLButtonElement>(null)
@@ -135,11 +137,13 @@ export function Layout({ children }: { children: ReactNode }) {
             </li>
           </ul>
         </nav>
-        <header className="as-telaio__alto">
+        {/* Con la ricerca aperta il foglio da' al campo la prima riga del telefono. */}
+        <header className={cerca ? "as-telaio__alto as-telaio__alto--cerca" : "as-telaio__alto"}>
           <span className="as-telaio__firma" aria-hidden="true">
             <span className="as-telaio__segno" />
           </span>
           <h1 className="as-telaio__titolo">{qui ? t(qui.chiave) : t("nav.unknown")}</h1>
+          <Ricerca aperta={cerca} onAperta={setCerca} />
           <Scansiona />
           <Pastiglia ref={pastiglia} aperta={stanotte} onApri={() => cambiaStanotte(!stanotte)} />
         </header>

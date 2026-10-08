@@ -286,7 +286,7 @@ export function riga(sezione: HTMLElement, nome: string) {
  * - **Un controllo senza la sua classe** (`.as-campo__input`, `.as-campo__area`, `.as-scelta`,
  *   `.as-bottone`) non ha ne' l'altezza dei mattoni ne' gli stati: si vede subito a schermo, ma
  *   nessuna prova cadrebbe.
- * - **Un campo senza `.as-campo`** non e' una griglia: l'etichetta e il controllo diventano due
+ * - **Un campo senza `.as-campo-modulo`** non e' una griglia: l'etichetta e il controllo diventano due
  *   elementi affiancati, e lo stesso campo si dispone in due modi nella stessa pagina.
  *
  * Torna i **nomi** di cio' che ha trovato, non quanti sono: un elenco vuoto atteso si legge, un
@@ -318,11 +318,12 @@ export function fuoriDaiMattoni() {
         // vorrebbe dire dargli il bordo e il fondo di un'azione, che non sono.
         "as-bortle__voce",
         // I controlli del telaio, stessa ragione: la voce Altro del binario, la pastiglia di
-        // Stanotte e il velo hanno la loro classe nel foglio (`51-telaio.css`), e da `as-bottone`
-        // prenderebbero il bordo e il fondo di un'azione dentro il binario e la barra.
+        // Stanotte, il velo e la ricerca chiusa hanno la loro classe nel foglio (`51-telaio.css`),
+        // e da `as-bottone` prenderebbero il bordo e il fondo di un'azione dentro il binario e la barra.
         "as-telaio__voce",
         "as-telaio__pastiglia",
         "as-telaio__velo",
+        "as-telaio__cerca",
         // Le voci di un segmentato -- le due viste dell'Archivio, i tre ordini: sono **una** scelta
         // fra poche, non tre azioni, e il foglio le veste da se' (bordo condiviso, quella accesa
         // piena). Vestirle da `as-bottone` darebbe tre pulsanti attaccati.
@@ -330,13 +331,13 @@ export function fuoriDaiMattoni() {
       ].some((c) => e.classList.contains(c)),
   )
   const pezzi = document.querySelectorAll(".as-campo__etichetta, .as-campo__input, .as-scelta")
-  // Fuori da `as-campo` c'e' una forma voluta: l'etichetta di un **gruppo** di controlli
-  // (`EtichettaDiGruppo`), che nomina tre bottoni e non un campo -- un `as-campo` intorno le
+  // Fuori da `as-campo-modulo` c'e' una forma voluta: l'etichetta di un **gruppo** di controlli
+  // (`EtichettaDiGruppo`), che nomina tre bottoni e non un campo -- un `as-campo-modulo` intorno le
   // darebbe la spaziatura di un campo che non c'e'. Dichiarata qui perche' questa guardia gira
   // **anche sull'Archivio**, dove quella forma vive.
   const orfani = [...pezzi].filter(
     (e) =>
-      e.closest(".as-campo") === null &&
+      e.closest(".as-campo-modulo") === null &&
       !(e.classList.contains("as-campo__etichetta") && e.closest(".as-barra__gruppo")),
   )
   return [...nudi, ...orfani].map((e) => e.getAttribute("id") ?? e.textContent)

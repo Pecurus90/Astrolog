@@ -14,6 +14,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 
 | Data | Tipo | Lavoro | Token | Minuti | Difetti |
 |---|---|---|---|---|---|
+| 8/10/2026 | costruisci | Ricerca nella barra, fetta 3 (foglio v31) | ~0,53 M workflow (8 agenti) + ~0,10 M esploratore, sessione principale non contata | 25 workflow | 1 bloccante dall'audit (il menu apriva le voci della ricerca di prima), chiuso dal correttore + 1 dal revisore (la striscia "Solo ..." col nome sbagliato nell'attesa) |
 | 8/10/2026 | costruisci | Un colore per banda (foglio v30) | ~0,20 M workflow (4 agenti), sessione principale non contata | 12 workflow | 0 |
 | 8/10/2026 | costruisci | Notti nel disegno v29 | ~0,35 M workflow (6 agenti), sessione principale non contata | 18 workflow | 1 bloccante dall'audit (le righe dei filtri dell'Archivio diventate fasce di colore col v29), chiuso dal correttore + 2 piccoli chiusi da me ("1 ore", pista ferma) |
 | 8/10/2026 | costruisci | Notti, i tre dati del disegno (backend) | ~0,10 M workflow (3 agenti), sessione principale non contata | 26 workflow | 0 |
@@ -247,7 +248,7 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   una carta ("incerta dalle 21:00, niente dalle 22:00") esce dal bordo a larghezza desktop; nel
   generatore `meteo.js` la parola della prima ora sulla scala di destra non si scrive mai (il
   controllo delle sovrapposizioni parte da G+4 e la prima parola sta a G+3).
-- **La ricerca nella barra -- prossima** (decisa con Marco, 7/10/2026): trova oggetti, notti,
+- **La ricerca nella barra -- fatta** (decisa con Marco, 7/10/2026): trova oggetti, notti,
   attrezzatura e siti dell'archivio, da ogni pagina; non le pagine dell'app, che il binario ha gia'.
   Un oggetto si trova per ogni suo nome (anche il nome proprio, "Andromeda") e si mostra sempre col
   nome di catalogo ("M 31 · Andromeda"), come vuole il glossario. I risultati stanno in un menu
@@ -262,8 +263,19 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   barra dopo il disegno (brief dato a Marco il 7/10). Fetta 1 fatta (7/10/2026): `/notti?notte=<id>`,
   `/attrezzatura?pezzo=strumento-<id>` o `filtro-<id>`, `/impostazioni/sito?sito=<id>`. Fetta 2 fatta (7/10/2026): `GET /api/v1/search?q=`
   (`docs/domini/navigazione.md`); una voce dice chi e', non l'indirizzo, e l'oggetto apre
-  l'Archivio con `?key=` (la rotta lo sa gia'). Fetta 3: il campo, che compone gli indirizzi, e
-  l'Archivio che legge `?key=` e mostra a schermo che e' ristretto a un oggetto. Restano dalla
+  l'Archivio con `?key=` (la rotta lo sa gia'). Fetta 3 fatta (8/10/2026, foglio v31):
+  il campo (`Ricerca.tsx`), che compone gli indirizzi, e l'Archivio che legge `?key=` e dice che
+  e' ristretto a un oggetto. Restano dalla fetta 3: il perche' di una notte trovata ("con M 31",
+  "5 giugno e 6 maggio") la tavola lo disegna e la rotta non lo manda; il v31 chiama `.as-campo`
+  il campo di ricerca e `.as-elenco` l'elenco sotto una tendina, nomi che l'app usava gia' -- il
+  campo dei moduli e' diventato `as-campo-modulo`, `as-elenco` (nove liste non ridisegnate) prende
+  dal foglio solo `position: relative` e va rinominato quando l'Archivio v31 monta le tendine: da
+  dire a Design col prossimo brief. Dall'audit, non bloccanti: una voce con frame in parte senza
+  durata dice solo frame e ore, e tace i "senza tempo" che la rotta manda (`untimed`; Archivio e
+  Notti li dicono con `TempoDellePose`); `/archivio?key=...&q=...` scritto a mano applica anche il
+  filtro e puo' dire "questo oggetto non c'e'" di un oggetto che c'e', con la barra nascosta; il
+  totale di un gruppo ("5 di 7") non arriva a chi ascolta (`aria-hidden`). Il resto del v31 (barra, carta, produzioni dell'Archivio) e'
+  nel foglio e non ancora montato. Restano dalla
   revisione della fetta 2: le notti cercate per oggetto usano il frammento, quindi "M 1" porta anche
   le notti di M 10 e M 101, e non trovano un mosaico per il nome dato dall'utente
   (`spine/search._NIGHTS_WHERE`); mese e anno solo in cifre ("05/2024", "2024-05") non sono una data.

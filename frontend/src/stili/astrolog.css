@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AstroLog — astrolog.css  ·  v30 (08/10/2026)
+   AstroLog — astrolog.css  ·  v31 (08/10/2026)
 
    FILE GENERATO: non si modifica qui. Le sorgenti stanno in foglio/, un
    file per famiglia; questo foglio e' la loro unione, nell'ordine qui
@@ -42,6 +42,9 @@
      50-strato.css
      51-telaio.css
      52-pagina.css
+     53-campo.css
+     54-tendina.css
+     55-trova.css
      60-volta.css
      61-heat.css
      62-andamento.css
@@ -52,6 +55,7 @@
      70-pagina-dashboard.css
      71-pagina-meteo.css
      72-pagina-notti.css
+     73-pagina-archivio.css
    ========================================================================== */
 
 /* ── foglio/10-token.css ──────────────────────────────────────────────── */
@@ -445,6 +449,19 @@
   --filtro-sii-oiii:          repeating-linear-gradient(135deg, var(--filtro-sii) 0 var(--filtro-striscia), var(--filtro-oiii) 0 calc(2 * var(--filtro-striscia)));
   --filtro-tri:               repeating-linear-gradient(135deg, var(--filtro-ha) 0 var(--filtro-striscia), var(--filtro-hb) 0 calc(2 * var(--filtro-striscia)), var(--filtro-oiii) 0 calc(3 * var(--filtro-striscia)));
   --filtro-quad:              repeating-linear-gradient(135deg, var(--filtro-ha) 0 var(--filtro-striscia), var(--filtro-hb) 0 calc(2 * var(--filtro-striscia)), var(--filtro-oiii) 0 calc(3 * var(--filtro-striscia)), var(--filtro-sii) 0 calc(4 * var(--filtro-striscia)));
+  /* v31 · dall'Archivio e dalla ricerca nella barra */
+  --archivio-cerca-massima:   36rem;  /* il campo della barra dell'Archivio */
+  --archivio-scheletro-carta: 13rem;
+  --archivio-scheletro-riga:  3.25rem;
+  --cerca-aperta:             28rem;  /* il campo della barra in alto, aperto */
+  --cerca-campo-alto:         36px;   /* alto come la ricerca chiusa */
+  --trova-largo:              34rem;  /* il menu della ricerca */
+  --elenco-minimo:            14rem;  /* l'elenco che si apre sotto una tendina */
+  --produzioni-largo:         30rem;  /* il menu di scelta delle produzioni, sul desktop */
+  --carta-oggetto-minima:     19rem;  /* la carta: abbastanza larga perche' la colonna dei dati respiri */
+  --carta-oggetto-anteprime:  9rem;   /* la colonna delle anteprime */
+  --filtro-pezzo-minimo:      var(--spazio-3); /* nella carta: con sette filtri R, G, B restano leggibili */
+  --pannello-numero:          20px;   /* il numero del pannello di un mosaico */
 }
 
 /* ── foglio/15-tema-atlante.css ───────────────────────────────────────── */
@@ -702,6 +719,23 @@ body.as-app, .as-app {
 .as-parziale--finora { color: var(--esito-attesa-inchiostro); }
 .as-parziale--a-lettura-finita { color: var(--inchiostro-debole); }
 .as-parziale--a-lettura-finita::before { border-style: dotted; border-color: var(--ignoto-tratteggio); }
+
+/* --- non si sa (v31, dall'Archivio): il tondo tratteggiato dell'ignoto e
+   la parola. Una cella, una riga, una carta che il dato non lo hanno. */
+.as-nonsisa { display: inline-flex; align-items: center; gap: var(--spazio-1); color: var(--ignoto-inchiostro); white-space: nowrap; }
+.as-nonsisa::before { content: ""; flex: none; box-sizing: border-box; width: var(--parziale-segno); height: var(--parziale-segno); border-radius: 50%; border: var(--segno-filo) dashed var(--ignoto-tratteggio); }
+
+/* --- il segno dell'attesa (v31): il tondo tratteggiato che respira, dove
+   una risposta non e' ancora arrivata (sul campo, sulla tendina che ha
+   chiesto). E' lo stesso del valore parziale. */
+.as-attesa { flex: none; display: inline-block; box-sizing: border-box; width: var(--parziale-segno); height: var(--parziale-segno); border-radius: 50%; border: var(--segno-filo) dashed var(--esito-attesa); }
+@media (prefers-reduced-motion: no-preference) { .as-attesa { animation: as-respira var(--durata-scorre) ease-in-out infinite alternate; } }
+
+/* --- il nome dell'oggetto (v31): in cifre e in freddo se e' di catalogo,
+   nel testo se l'ha dato l'utente (--utente); --riga piu' piccolo. */
+.as-nome-oggetto { font-family: var(--carattere-cifre); font-weight: var(--peso-forte); font-size: var(--titolo-riga); line-height: var(--interlinea-stretta); color: var(--freddo); overflow-wrap: anywhere; }
+.as-nome-oggetto--utente { font-family: var(--carattere-testo); color: var(--inchiostro); }
+.as-nome-oggetto--riga { font-size: var(--testo-lungo); }
 
 /* ── foglio/32-carta.css ──────────────────────────────────────────────── */
 /* ==========================================================================
@@ -1920,6 +1954,120 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
   .as-pagina { padding: var(--spazio-4); gap: var(--spazio-5); }
 }
 
+/* ── foglio/53-campo.css ──────────────────────────────────────────────── */
+/* ==========================================================================
+   IL CAMPO DI RICERCA — .as-campo (v31, dall'Archivio)
+   Un pozzo con la lente; al fuoco il filo d'accento e l'alone (--fuoco lo
+   mostra fermo nelle tavole). __attesa: il segno dell'attesa con la parola,
+   finche' la risposta non arriva. Il tasto (Esc) e' quello del telaio.
+   I mattoni 30-50 sono pieni: il campo, la tendina e il menu della ricerca
+   prendono 53-55, dopo il telaio.
+   ========================================================================== */
+.as-campo {
+  position: relative; display: flex; align-items: center; gap: var(--spazio-2); min-width: 0;
+  height: var(--riga-alta); padding: 0 var(--spazio-3);
+  border-radius: var(--raggio-medio); background: var(--fondo-incavo); box-shadow: inset 0 0 0 1px var(--linea-forte);
+  color: var(--inchiostro-debole);
+}
+.as-campo:focus-within, .as-campo--fuoco { box-shadow: inset 0 0 0 1px var(--accento-sopra), 0 0 0 3px var(--accento-velo); }
+.as-campo__icona { flex: none; width: var(--icona-meteo-piccola); height: var(--icona-meteo-piccola); fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.as-campo input { all: unset; flex: 1; min-width: 0; font-size: var(--testo-campo, var(--testo-corpo)); color: var(--inchiostro); }
+.as-campo input::placeholder { color: var(--inchiostro-debole); }
+.as-campo .as-telaio__tasto { flex: none; }
+.as-campo__attesa { display: inline-flex; align-items: center; gap: var(--spazio-1); flex: none; font-size: var(--testo-minuto); color: var(--esito-attesa-inchiostro); }
+
+/* ── foglio/54-tendina.css ────────────────────────────────────────────── */
+/* ==========================================================================
+   LA TENDINA — .as-tendina (v31, dall'Archivio)
+   Un bottone a pillola: l'etichetta debole, il valore in inchiostro, la
+   freccia. --scelta: il velo e il filo d'accento, e la × per toglierla.
+   Con aria-pressed e __spunta e' un interruttore («Solo i mosaici»). Il
+   bersaglio e' 44 anche quando la pillola e' piu' bassa.
+   .as-elenco: l'elenco che si apre sotto una tendina, con le voci del
+   menu (44) e __stacco prima della voce che apre altro.
+   ========================================================================== */
+.as-tendina {
+  all: unset; box-sizing: border-box; cursor: pointer; position: relative;
+  display: inline-flex; align-items: center; gap: var(--spazio-2);
+  min-height: var(--segmentato-alto); padding: 0 var(--spazio-3);
+  border-radius: var(--raggio-pillola); box-shadow: inset 0 0 0 1px var(--linea-forte);
+  font-size: var(--testo-minuto); color: var(--inchiostro-debole); white-space: nowrap;
+}
+.as-tendina::before { content: ""; position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: max(100%, var(--bersaglio-minimo)); height: max(100%, var(--bersaglio-minimo)); }
+.as-tendina:hover { background: var(--vetro-sopra); }
+.as-tendina:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
+.as-tendina b { font-weight: var(--peso-medio); color: var(--inchiostro); }
+.as-tendina__freccia { flex: none; width: var(--spazio-2); height: var(--spazio-2); margin-top: calc(-1 * var(--spazio-1)); border-right: var(--segno-filo) solid currentColor; border-bottom: var(--segno-filo) solid currentColor; rotate: 45deg; }
+.as-tendina[aria-expanded="true"] .as-tendina__freccia { rotate: 225deg; margin-top: var(--spazio-1); }
+.as-tendina--scelta { background: var(--accento-velo); box-shadow: inset 0 0 0 1px var(--accento-sopra); color: var(--inchiostro-tenue); }
+.as-tendina__togli { font-size: var(--testo-corpo); line-height: 1; color: var(--inchiostro); }
+.as-tendina__spunta { flex: none; box-sizing: border-box; width: var(--strato-segno); height: var(--strato-segno); border-radius: var(--raggio-appena); box-shadow: inset 0 0 0 var(--segno-filo) var(--linea-significato); display: grid; place-items: center; font-size: var(--strato-segno-testo); line-height: 1; color: var(--inchiostro-su-accento); }
+.as-tendina[aria-pressed="true"] { background: var(--accento-velo); box-shadow: inset 0 0 0 1px var(--accento-sopra); color: var(--inchiostro); }
+.as-tendina[aria-pressed="true"] .as-tendina__spunta { background: var(--accento); box-shadow: none; }
+
+.as-elenco { position: relative; }
+.as-elenco__voci { position: absolute; z-index: 2; top: calc(100% + var(--spazio-1)); left: 0; min-width: var(--elenco-minimo); padding: var(--spazio-1); border-radius: var(--raggio-medio); background: var(--fondo-carta); box-shadow: inset 0 0 0 1px var(--linea-forte), var(--ombra-comparsa); }
+.as-elenco__voci .as-menu__voce { min-height: var(--riga-alta); }
+.as-elenco__stacco { height: 1px; margin: var(--spazio-1) var(--spazio-2); background: var(--linea); }
+
+/* ── foglio/55-trova.css ──────────────────────────────────────────────── */
+/* ==========================================================================
+   LA RICERCA NELLA BARRA — .as-cerca, .as-trova (v31)
+   Da ogni pagina, nella barra in alto. Toccata, la ricerca diventa un
+   campo (.as-cerca, col campo di 53); alla prima lettera si apre sotto il
+   menu (.as-trova), diviso per gruppo (oggetti, notti, attrezzatura, siti):
+   il capo dice il gruppo, perche' e quante; cinque voci per gruppo. La voce
+   scelta col velo e il filo. --fermo: il menu fuori dal campo, nelle tavole.
+   Sul telefono il campo aperto prende la prima riga della barra
+   (.as-telaio__alto--cerca), la seconda si ritira, il menu prende la
+   larghezza, e «Annulla» chiude.
+   ========================================================================== */
+.as-cerca { position: relative; margin-left: auto; flex: 0 1 var(--cerca-aperta); min-width: 0; display: flex; align-items: center; gap: var(--spazio-2); }
+.as-cerca .as-campo { flex: 1; height: var(--cerca-campo-alto); font-size: var(--testo-minuto); }
+.as-cerca__annulla { display: none !important; }
+.as-trova {
+  position: absolute; z-index: 5; top: calc(100% + var(--spazio-2)); right: 0; width: max(100%, var(--trova-largo));
+  display: grid; gap: var(--spazio-1); padding: var(--spazio-2);
+  border-radius: var(--raggio-carta); background: var(--fondo-carta);
+  box-shadow: inset 0 0 0 1px var(--linea-forte), var(--ombra-comparsa);
+  font-size: var(--testo-corpo); color: var(--inchiostro); text-align: left;
+}
+.as-trova p, .as-trova ul { margin: 0; padding: 0; list-style: none; }
+.as-trova--fermo { position: static; width: 100%; max-width: var(--trova-largo); box-shadow: inset 0 0 0 1px var(--linea-forte), var(--ombra-rilievo); }
+.as-trova__voci { display: grid; gap: var(--stacco-minimo); }
+.as-trova__gruppo { display: grid; gap: var(--stacco-minimo); }
+.as-trova__gruppo + .as-trova__gruppo { padding-top: var(--spazio-2); border-top: 1px solid var(--linea); }
+.as-trova__capo { display: flex; align-items: baseline; gap: var(--spazio-2); padding: var(--spazio-1) var(--spazio-3) 0; }
+.as-trova__perche { white-space: nowrap; font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-trova__quante { margin-left: auto; font-family: var(--carattere-cifre); font-size: var(--testo-micro); color: var(--inchiostro-debole); }
+.as-trova__voce { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: var(--spazio-1) var(--spazio-4); min-height: var(--riga-alta); padding: var(--spazio-2) var(--spazio-3); border-radius: var(--raggio-medio); cursor: pointer; box-sizing: border-box; }
+.as-trova__voce:hover { background: var(--fondo-rilievo); }
+.as-trova__voce[aria-selected="true"] { background: var(--accento-velo); }
+.as-trova__voce[aria-selected="true"]::before { content: ""; position: absolute; left: 0; top: var(--spazio-2); bottom: var(--spazio-2); width: var(--filo); border-radius: var(--raggio-appena); background: var(--accento-sopra); }
+.as-trova__nome { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--spazio-2); min-width: 0; }
+.as-trova__nome b { font-weight: var(--peso-medio); }
+.as-trova__nome .as-nome-oggetto { font-size: var(--testo-corpo); }
+.as-trova__comune { color: var(--inchiostro-tenue); }
+.as-trova__dice { font-size: var(--testo-minuto); color: var(--inchiostro-tenue); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.as-trova__dice--non { color: var(--inchiostro-debole); }
+.as-trova__niente { padding: var(--spazio-3) var(--spazio-3) 0; font-weight: var(--peso-medio); }
+.as-trova__nota { padding: 0 var(--spazio-3) var(--spazio-3); font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-trova__piede { display: flex; flex-wrap: wrap; gap: var(--spazio-1) var(--spazio-4); padding: var(--spazio-2) var(--spazio-3) var(--spazio-1); border-top: 1px solid var(--linea); font-size: var(--testo-micro); color: var(--inchiostro-debole); }
+.as-trova__piede span { display: inline-flex; align-items: center; gap: var(--spazio-1); }
+@container colonna (max-width: 899px) {
+  .as-cerca { flex: 1 1 auto; }
+}
+@container telaio (max-width: 899px) {
+  .as-telaio__alto--cerca { overflow: visible; grid-template-rows: var(--barra-alta-telefono) 0; position: relative; z-index: 6; }
+  .as-telaio__alto--cerca .as-telaio__titolo, .as-telaio__alto--cerca .as-telaio__lavoro, .as-telaio__alto--cerca .as-telaio__pastiglia { display: none; }
+  .as-telaio__alto--cerca .as-cerca { grid-row: 1; grid-column: 2 / -1; position: static; margin: 0; }
+  .as-telaio__alto--cerca .as-cerca .as-campo { height: var(--riga-alta); font-size: var(--testo-corpo); }
+  .as-telaio__alto--cerca .as-telaio__tasto { display: none; }
+  .as-telaio__alto--cerca .as-cerca__annulla { display: inline-flex !important; }
+  .as-telaio__alto--cerca .as-trova { top: 100%; left: 0; right: 0; width: auto; border-radius: 0 0 var(--raggio-carta) var(--raggio-carta); }
+  .as-telaio__alto--cerca .as-trova__piede { display: none; }
+}
+
 /* ── foglio/60-volta.css ──────────────────────────────────────────────── */
 /* ==========================================================================
    LA VOLTA — .as-volta (dato, v24 dalla Dashboard)
@@ -2430,4 +2578,165 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 @container colonna (max-width: 899px) {
   .as-registro__stati > .as-avviso { grid-template-columns: auto minmax(0, 1fr); }
   .as-registro__stati .as-avviso__azioni { grid-column: 2; }
+}
+
+/* ── foglio/73-pagina-archivio.css ────────────────────────────────────── */
+/* ==========================================================================
+   PAGINA — l'Archivio (v31, forma A «la barra in fila»)
+   Il blocco e' .as-archivio. Le sole regole che valgono qui. In testa la
+   barra che restringe (.as-restringi): sopra la vista, il campo (53), in
+   coda l'ordine e la conta; sotto le tendine (54). Sul telefono il campo
+   prende la riga e le tendine stanno dietro «Filtri», nel flusso.
+   Poi le carte (.as-carta-oggetto, «Di lato») o la tabella, e «Mostra
+   altri» (__carico). Un oggetto con piu' produzioni apre il menu di scelta
+   (.as-produzioni sotto la carta; sul telefono .as-produzioni-foglio sale
+   dal basso come Altro). Una produzione sola non apre niente finche' il
+   modale della produzione non c'e': niente collegamento, niente segno.
+   ========================================================================== */
+.as-archivio { display: grid; gap: var(--spazio-5); font-size: var(--testo-corpo); color: var(--inchiostro); }
+.as-archivio .as-bottone { white-space: nowrap; }
+.as-archivio p, .as-archivio h3, .as-archivio ol, .as-archivio ul { margin: 0; }
+.as-archivio ol, .as-archivio ul { padding: 0; list-style: none; }
+.as-archivio__conta { font-size: var(--testo-minuto); color: var(--inchiostro-tenue); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.as-archivio__conta b { font-size: var(--testo-corpo); font-weight: var(--peso-medio); color: var(--inchiostro); }
+.as-archivio__nota { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-archivio__chi { font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-archivio__ore { font-size: var(--cifra-lettura); font-weight: var(--peso-cifra); line-height: var(--interlinea-stretta); letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.as-archivio__ore--parole { font-size: var(--testo-lungo); font-weight: var(--peso-medio); letter-spacing: 0; }
+.as-archivio__frame { color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.as-archivio__senza { font-size: var(--testo-minuto); color: var(--inchiostro-debole); white-space: nowrap; }
+.as-archivio__mosaico { display: inline-flex; align-items: center; gap: var(--spazio-1); padding: var(--stacco-minimo) var(--spazio-2); border-radius: var(--raggio-pillola); background: var(--vetro-sopra); font-size: var(--testo-minuto); color: var(--inchiostro); white-space: nowrap; }
+.as-archivio__mosaico svg { width: var(--pastiglia); height: var(--pastiglia); fill: none; stroke: currentColor; stroke-width: 1.6; }
+.as-archivio__produzioni { display: inline-flex; align-items: center; padding: var(--stacco-minimo) var(--spazio-2); border-radius: var(--raggio-pillola); background: var(--vetro-sopra); font-size: var(--testo-minuto); color: var(--inchiostro); white-space: nowrap; }
+/* i pannelli di un mosaico */
+.as-pannelli { display: grid; gap: var(--stacco-minimo); font-size: var(--testo-minuto); }
+.as-pannelli li { display: grid; grid-template-columns: var(--pannello-numero) minmax(0, 1fr) auto; gap: var(--spazio-2); align-items: baseline; }
+.as-pannelli__n { font-family: var(--carattere-cifre); color: var(--inchiostro-debole); text-align: center; }
+.as-pannelli__ogg { font-family: var(--carattere-cifre); font-weight: var(--peso-medio); color: var(--freddo); }
+.as-pannelli__nessuno { color: var(--inchiostro-debole); }
+.as-pannelli__cifre { font-family: var(--carattere-cifre); color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.as-archivio__carico { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--spazio-3) var(--spazio-5); color: var(--inchiostro-tenue); }
+.as-archivio__ristretto { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2) var(--spazio-4); padding-bottom: var(--spazio-3); border-bottom: 1px solid var(--linea); }
+.as-archivio__ristretto p { color: var(--inchiostro-tenue); }
+.as-archivio__ristretto b { font-family: var(--carattere-cifre); color: var(--freddo); font-weight: var(--peso-medio); }
+.as-archivio__ristretto .as-segmentato { margin-left: auto; }
+
+/* --- la barra che restringe ------------------------------------------------ */
+.as-restringi { display: grid; gap: var(--spazio-3); }
+.as-restringi__riga { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2) var(--spazio-5); }
+.as-restringi__cerca { flex: 1 1 18rem; max-width: var(--archivio-cerca-massima); }
+.as-restringi__fine { margin-left: auto; display: flex; align-items: center; gap: var(--spazio-4); }
+.as-restringi__tendine { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2); }
+.as-restringi__apri { display: none; }
+.as-restringi__chiudi { display: none; }
+
+/* --- la carta «Di lato»: una anteprima per produzione ----------------------
+   Le anteprime in una colonna a sinistra, due per riga; una sola prende la
+   colonna (--una), oltre quattro tre per riga (--molte). A destra i dati;
+   sotto i filtri, che sono la somma di tutte. Il posto e' un incavo col
+   filo, 3:2; con l'immagine la foto lo riempie, sulla cornice delle foto.
+   Solo con piu' produzioni il nome e' il collegamento, e copre la carta. */
+.as-archivio__carte { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(var(--carta-oggetto-minima), 100%), 1fr)); gap: var(--spazio-4); }
+.as-archivio__carte > li { position: relative; min-width: 0; display: grid; }
+.as-carta-oggetto { position: relative; display: grid; grid-template-columns: var(--carta-oggetto-anteprime) minmax(0, 1fr); align-items: start; gap: var(--spazio-3) var(--spazio-4); padding: var(--spazio-4); font-size: var(--testo-corpo); color: var(--inchiostro); }
+.as-carta-oggetto__anteprime { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spazio-1); }
+.as-carta-oggetto--una .as-carta-oggetto__anteprime { grid-template-columns: minmax(0, 1fr); }
+.as-carta-oggetto--molte .as-carta-oggetto__anteprime { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.as-carta-oggetto__anteprima { display: block; }
+.as-carta-oggetto__immagine { display: block; aspect-ratio: 3 / 2; overflow: hidden; border-radius: var(--raggio-medio); background: var(--fondo-incavo); box-shadow: inset 0 0 0 1px var(--linea); }
+.as-carta-oggetto__immagine:has(img) { background: var(--cornice-foto); box-shadow: none; }
+.as-carta-oggetto__immagine img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.as-carta-oggetto__dati { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--stacco-minimo); align-content: start; min-width: 0; }
+.as-carta-oggetto__nome { font-family: var(--carattere-titolo); font-size: var(--testo-lungo); font-weight: var(--peso-forte); line-height: 1.2; min-width: 0; }
+.as-carta-oggetto__apri { color: inherit; text-decoration: none; }
+.as-carta-oggetto__apri::after { content: ""; position: absolute; inset: 0; border-radius: var(--raggio-carta); }
+.as-carta-oggetto__apri:focus-visible { outline: none; }
+.as-carta-oggetto:has(.as-carta-oggetto__apri:focus-visible) { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
+.as-carta-oggetto:has(.as-carta-oggetto__apri:hover) { background: var(--fondo-rilievo); }
+.as-carta-oggetto:has(.as-carta-oggetto__apri[aria-expanded="true"]) { box-shadow: inset 0 0 0 1px var(--accento-sopra), var(--ombra-carta); }
+.as-carta-oggetto__chi, .as-carta-oggetto__quante { font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-carta-oggetto__dati .as-nonsisa, .as-carta-oggetto__dati .as-archivio__mosaico { white-space: normal; overflow-wrap: anywhere; }
+.as-carta-oggetto__ore { margin-top: var(--spazio-1) !important; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; }
+.as-carta-oggetto__ore b { font-size: var(--testo-corpo); font-weight: var(--peso-medio); color: var(--inchiostro); }
+.as-carta-oggetto__segni { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-1) var(--spazio-2); }
+.as-carta-oggetto > .as-carta-oggetto__filtri, .as-carta-oggetto > .as-pannelli { grid-column: 1 / -1; padding-top: var(--spazio-3); border-top: 1px solid var(--linea); }
+.as-carta-oggetto__filtri .as-filtri__legenda { flex-wrap: wrap; gap: var(--stacco-minimo) var(--spazio-3); font-size: var(--testo-minuto); }
+.as-carta-oggetto__filtri .as-filtri__barra > i { min-width: var(--filtro-pezzo-minimo); }
+p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
+
+/* --- il menu di scelta delle produzioni ------------------------------------
+   Sul desktop sotto la carta, sopra le altre; una riga per produzione.
+   Le righe si scorrono con le frecce (il velo e il filo); non aprono
+   ancora niente, e non ne hanno il segno: il modale e' rimandato. */
+.as-produzioni { position: absolute; z-index: 3; top: calc(100% + var(--spazio-1)); left: 0; width: max(100%, var(--produzioni-largo)); display: grid; gap: var(--spazio-1); padding: var(--spazio-2); border-radius: var(--raggio-carta); background: var(--fondo-carta); box-shadow: inset 0 0 0 1px var(--linea-forte), var(--ombra-comparsa); box-sizing: border-box; }
+.as-produzioni__capo { margin: 0; padding: var(--spazio-1) var(--spazio-3) 0; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-produzioni__voci { display: grid; gap: var(--stacco-minimo); margin: 0; padding: 0; list-style: none; }
+.as-produzioni__voci > li + li { border-top: 1px solid var(--linea); padding-top: var(--stacco-minimo); }
+.as-produzioni__voce { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "corredo cifre" "filtri filtri"; gap: var(--spazio-2) var(--spazio-4); min-height: var(--bersaglio-minimo); padding: var(--spazio-3); border-radius: var(--raggio-medio); color: var(--inchiostro); box-sizing: border-box; }
+.as-produzioni__voce:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: calc(-1 * var(--fuoco-spessore)); }
+.as-produzioni__voce[data-fuoco] { background: var(--accento-velo); }
+.as-produzioni__voce[data-fuoco]::before { content: ""; position: absolute; left: 0; top: var(--spazio-2); bottom: var(--spazio-2); width: var(--filo); border-radius: var(--raggio-appena); background: var(--accento-sopra); }
+.as-produzioni__corredo { grid-area: corredo; display: grid; gap: var(--stacco-minimo); min-width: 0; }
+.as-produzioni__corredo b { font-weight: var(--peso-medio); }
+.as-produzioni__corredo span { font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-produzioni__cifre { grid-area: cifre; display: grid; justify-items: end; align-content: start; gap: var(--stacco-minimo); font-size: var(--testo-minuto); color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.as-produzioni__cifre b { font-size: var(--testo-lungo); font-weight: var(--peso-medio); color: var(--inchiostro); }
+.as-produzioni__filtri { grid-area: filtri; }
+.as-produzioni__filtri .as-filtri__legenda { gap: var(--stacco-minimo) var(--spazio-3); }
+/* sul telefono: il foglio dal basso, come Altro, sopra il velo */
+.as-telaio[data-produzioni] .as-telaio__velo { display: block; z-index: 3; }
+.as-produzioni-foglio { display: flex; grid-column: corpo; grid-row: corpo; align-self: end; z-index: 4; gap: var(--spazio-3); }
+.as-produzioni-foglio__titolo { display: flex; align-items: baseline; gap: var(--spazio-3); min-width: 0; white-space: nowrap; }
+.as-produzioni-foglio__quante { font-family: var(--carattere-testo); font-size: var(--testo-minuto); font-weight: var(--peso-normale); color: var(--inchiostro-tenue); }
+.as-produzioni-foglio .as-produzioni__capo { padding: 0; }
+.as-produzioni-foglio .as-produzioni__voce { padding: var(--spazio-3) var(--spazio-2) var(--spazio-3) var(--spazio-3); }
+
+/* --- l'elenco: la tabella; sotto 720 ogni riga si impila ------------------- */
+.as-archivio__guscio { overflow-x: auto; }
+.as-archivio__tabella th[aria-sort] { color: var(--inchiostro); }
+.as-archivio__tabella .as-filtri { min-width: 12rem; }
+.as-archivio__tabella .as-filtri__legenda { gap: 0 var(--spazio-3); }
+.as-archivio__tabella .as-archivio__produzioni { margin-left: var(--spazio-2); vertical-align: middle; }
+.as-archivio__tabella tbody tr[aria-haspopup] { cursor: pointer; }
+.as-archivio__col-ore { font-size: var(--testo-lungo); }
+.as-archivio__col-ore .as-archivio__senza { display: block; font-size: var(--testo-minuto); }
+
+/* --- gli scheletri --------------------------------------------------------- */
+.as-archivio__scheletro-barra { height: var(--segmentato-alto); width: 100%; border-radius: var(--raggio-pillola); }
+.as-archivio__scheletro-campo { height: var(--riga-alta); width: 100%; max-width: var(--archivio-cerca-massima); border-radius: var(--raggio-medio); }
+.as-archivio__scheletro-carta { height: var(--archivio-scheletro-carta); border-radius: var(--raggio-carta); }
+.as-archivio__scheletro-riga { height: var(--archivio-scheletro-riga); border-radius: var(--raggio-minimo); }
+
+/* --- sotto 900: il telefono ------------------------------------------------- */
+@container colonna (max-width: 899px) {
+  .as-restringi__cerca { flex-basis: 100%; max-width: none; order: -1; }
+  .as-restringi__riga { gap: var(--spazio-3) var(--spazio-4); }
+  .as-restringi__fine { gap: var(--spazio-3); }
+  .as-restringi__tendine { display: none; }
+  .as-restringi__apri { display: inline-flex; }
+  .as-restringi[data-aperta] .as-restringi__tendine { display: grid; gap: var(--stacco-minimo); padding: var(--spazio-2); border-radius: var(--raggio-medio); background: var(--fondo-carta); box-shadow: var(--ombra-carta); }
+  .as-restringi[data-aperta] .as-restringi__tendine .as-tendina { display: flex; width: 100%; min-height: var(--riga-alta); border-radius: var(--raggio-medio); box-shadow: none; }
+  .as-restringi[data-aperta] .as-restringi__tendine .as-tendina b { margin-left: auto; }
+  .as-restringi[data-aperta] .as-restringi__tendine .as-tendina--scelta, .as-restringi[data-aperta] .as-restringi__tendine .as-tendina[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--accento-sopra); }
+  .as-restringi[data-aperta] .as-restringi__chiudi { display: flex; justify-content: space-between; align-items: center; padding: var(--spazio-1) 0 0 var(--spazio-3); }
+  .as-produzioni { width: 100%; }
+  .as-archivio__ristretto .as-segmentato { margin-left: 0; }
+}
+/* --- sotto 720: la tabella si impila ---------------------------------------- */
+@container colonna (max-width: 719px) {
+  .as-archivio__tabella, .as-archivio__tabella tbody { display: block; }
+  .as-archivio__tabella thead { display: none; }
+  .as-archivio__tabella tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--spazio-1) var(--spazio-3); padding: var(--spazio-3) 0; border-bottom: 1px solid var(--linea); }
+  .as-archivio__tabella td { display: block; padding: 0 !important; border: 0 !important; }
+  .as-archivio__tabella tbody tr:hover td { background: none; }
+  .as-archivio__tabella td:first-child { grid-column: 1; }
+  .as-archivio__tabella .as-tabella__num { text-align: end; }
+  .as-archivio__tabella .as-archivio__col-ore { grid-column: 2; grid-row: 1; }
+  .as-archivio__tabella .as-archivio__col-frame { grid-column: 2; grid-row: 2; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+  .as-archivio__tabella .as-archivio__col-frame::after { content: " frame"; }
+  .as-archivio__tabella .as-archivio__col-tipo, .as-archivio__tabella .as-archivio__col-cost { grid-column: 1; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+  .as-archivio__tabella .as-archivio__col-filtri, .as-archivio__tabella .as-archivio__col-mosaico { grid-column: 1 / -1; width: auto; }
+  .as-archivio__tabella .as-archivio__col-filtri { padding-top: var(--spazio-2) !important; }
+  .as-archivio__tabella .as-archivio__col-mosaico:empty { display: none; }
+  .as-archivio__tabella .as-filtri { min-width: 0; }
 }

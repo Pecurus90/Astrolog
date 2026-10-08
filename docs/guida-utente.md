@@ -77,8 +77,21 @@ leggi che la pagina sta arrivando. Se apri un indirizzo che non porta a nessuna 
 male, o tenuto nei preferiti da una pagina che non c'e' piu' -- l'app te lo dice e ti riporta alla
 Dashboard.
 
-In alto c'e' il **nome della pagina** che stai guardando, poi la **scansione** e, a destra, la
-**pastiglia di Stanotte**. La scansione dice com'e' messa: a riposo ti dice quando l'app ha letto
+In alto c'e' il **nome della pagina** che stai guardando, poi la **ricerca**, la **scansione** e,
+a destra, la **pastiglia di Stanotte**.
+
+La **ricerca** trova cio' che hai nell'archivio, da qualunque pagina: oggetti, notti, attrezzatura
+e siti. Premi *Cerca* (o Ctrl K; sul Mac Cmd K) e scrivi: sotto il campo si apre un elenco diviso
+in quattro gruppi, con poche voci per gruppo e, quando ce ne sono altre, quante sono in tutto
+("5 di 23"): per vedere le altre scrivi qualche lettera in piu'. Un oggetto lo trovi con ogni suo
+nome, anche quello comune; una notte con la data, come la scrivi tu, o col nome di un oggetto che
+hai ripreso quella notte. Ogni voce dice quanti frame e quante ore porta; se i file non dicono la
+durata leggi "senza tempo", mai zero ore. Con le frecce scegli e con Invio apri, oppure tocchi la
+voce: un oggetto apre l'Archivio su di lui solo, una notte la sua notte, un pezzo la sua riga in
+Attrezzatura, un sito il suo posto nelle Impostazioni. Esc chiude; sul telefono c'e' *Annulla*.
+Se non trova niente te lo dice. Le pagine dell'app non si cercano qui: stanno nel binario.
+
+La scansione dice com'e' messa: a riposo ti dice quando l'app ha letto
 l'ultima volta e ti offre *Scansiona*; al lavoro ti dice cosa sta facendo, con i numeri e una
 barra che avanza, e la puoi fermare da qualunque pagina; fermata ti offre *Riprendi*; se si e'
 bloccata ti dice perche', con *Vedi*, e ti offre *Scansiona* per ripartire. Se qualcosa non si e' potuto leggere -- una cartella
@@ -258,6 +271,11 @@ che vedi e' ancora la risposta di prima.
 
 Se una ricerca non trova niente l'app te lo dice, e non usa le parole dell'archivio vuoto: e'
 questa ricerca che non pesca -- e trovi il bottone per togliere i filtri.
+
+Quando apri un oggetto dalla **ricerca in alto**, l'Archivio mostra lui solo e lo dice: "Solo
+M 31, aperto dalla ricerca". La barra dei filtri non c'e', perche' non c'e' niente da restringere;
+restano le due viste, e *Tutto l'archivio* ti riporta all'elenco intero. Se quell'oggetto non c'e'
+piu' -- i suoi frame sono stati tolti -- l'app te lo dice, invece di mostrarti un archivio vuoto.
 
 **Tutto quello che stai guardando finisce nell'indirizzo**: la vista, la ricerca, i filtri e
 l'ordine. Se mandi il collegamento a qualcuno, gli si apre esattamente quello che vedi tu. E il

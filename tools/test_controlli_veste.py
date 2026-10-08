@@ -231,17 +231,18 @@ def test_a_class_named_in_prose_is_not_a_copy(tmp_path):
 
 
 def test_the_class_the_audit_named_is_covered(tmp_path):
-    """**`as-campo`, per nome.** E' la classe che l'audit ha trovato scritta a mano in sette file, e
+    """**`as-campo-modulo`, per nome** (`as-campo` fino al v31, che ha dato quel nome al campo di
+    ricerca). E' la classe che l'audit ha trovato scritta a mano in sette file, e
     la guardia e' nata per quella: se l'elenco la dimenticasse, la macchina sarebbe verde proprio
     sul difetto che l'ha fatta nascere. Provato: togliendola da `MATTONI`, senza questa riga non
     cadrebbe nessun'altra prova."""
     fatto = tmp_path / "frontend" / "src"
     fatto.mkdir(parents=True)
     (fatto / "SezioneFinta.tsx").write_text(
-        'export const x = <div className="as-campo" />\n', encoding="utf-8"
+        'export const x = <div className="as-campo-modulo" />\n', encoding="utf-8"
     )
     colpe = controlli_veste.classi_fuori_casa(str(tmp_path))
-    assert colpe == ["frontend/src/SezioneFinta.tsx: as-campo (sta in Campo.tsx)"], colpe
+    assert colpe == ["frontend/src/SezioneFinta.tsx: as-campo-modulo (sta in Campo.tsx)"], colpe
 
 
 def test_the_control_class_stays_with_the_control(tmp_path):

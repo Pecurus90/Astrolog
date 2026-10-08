@@ -108,7 +108,7 @@ describe("una riga di Da confermare", () => {
     // **Due sezioni, non tutte**: una pagina piena esiste gia' in `accessibilita.test.tsx`, e
     // ricopiarne qui la fixture sarebbe il doppione che questa fetta e' nata per togliere. Il
     // giorno che quella fixture vive nel banco, questa prova le passa davanti tutte (`docs/coda.md`).
-    // Senza `.as-campo` (griglia) l'etichetta e il controllo diventano due elementi affiancati
+    // Senza `.as-campo-modulo` (griglia) l'etichetta e il controllo diventano due elementi affiancati
     // dentro `.as-riga__risposte`, che e' un flex allineato a destra: lo stesso campo si dispone
     // in due modi nella stessa pagina.
     rispondi({
@@ -167,7 +167,7 @@ describe("la veste", () => {
     document.body.innerHTML = `
       <label for="nudo">Latitudine</label><input id="nudo" />
       <button>Cerca</button>
-      <div class="as-campo">
+      <div class="as-campo-modulo">
         <label class="as-campo__etichetta" for="vestito">Nome</label>
         <input class="as-campo__input" id="vestito" />
       </div>
