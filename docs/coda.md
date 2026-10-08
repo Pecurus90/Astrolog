@@ -284,9 +284,23 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   (`vocab/filters.DISPLAY_ORDER`, `docs/domini/notti.md`). Resta per ore la sezione Filtri di Da
   confermare: sono domande, e le piu' usate prima e' l'ordine del lavoro. `gear_usage.position`
   dei filtri si scrive ancora ma nessuno la legge piu' (`spine/gear_usage.py`): da togliere.
-- **Archivio, le produzioni -- idea per dopo** (Marco, 8/10/2026; `docs/domini/archivio.md`): la
-  carta e' un riassunto; un giorno il clic aprira' la produzione, o un menu se sono piu' d'una.
-  Non ora: niente modale, niente disegno.
+- **Archivio nel disegno v31** (Marco, 8/10/2026; `docs/domini/archivio.md`). Fetta 1a fatta
+  (8/10): carta "Di lato" con un posto di anteprima vuoto, elenco, pannelli del mosaico, scheletro
+  di lettura, errore con Riprova, "N di M" accanto a Mostra altri. Fetta 1b, prossima: la barra in
+  fila (tendine del foglio al posto dei select, "Filtri" sul telefono, periodo con gli anni e il
+  calendario, ordine, conta), il niente-trovato che dice quali filtri, l'attesa sulla tendina che
+  ha chiesto. Fetta 2: le **produzioni**, decise da Marco l'8/10 (stesso oggetto + stessa ottica +
+  stessa camera): il backend le manda per oggetto, la carta mostra un'anteprima per produzione,
+  quante sono e il menu di scelta; il modale resta rimandato. Il punto del cielo dei
+  pannelli e' uscito dalla carta (Marco, 8/10/2026, come nella tavola): li distingue il numero.
+  Restano
+  dall'audit della 1a, non bloccanti: `oreDi`/`senzaTempo` (`RigaDellArchivio.tsx`) ripetono la
+  regola di `TempoDellePose`, composta a mano in carta, elenco e pannelli; il nome "tuo"
+  (`as-nome-oggetto--utente`) si deduce da `panels`, e l'API non lo dice; sul telefono l'elenco
+  impilato mostra tre "non si sa" senza dire di cosa (il v31 non legge `data-etichetta`) e il
+  foglio scrive " frame" da CSS, fuori dalla traduzione; lo scheletro porta `aria-label` su un
+  `div` senza ruolo; l'errore mostra il messaggio grezzo del browser; nella carta stretta
+  "· N senza tempo" va a capo dal punto; le colonne si chiamano ancora "Etichette" e "Tempo".
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio, Da confermare, Attrezzatura. Il brief di ognuna si
   scrive coi dati che l'API manda in quel momento: si rifa' la ricognizione quando tocca a lei.

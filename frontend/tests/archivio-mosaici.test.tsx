@@ -24,7 +24,7 @@ describe("i mosaici nell'Archivio", () => {
     const carta = (await screen.findByRole("heading", { name: "IC 405" })).closest("article")
     // l'etichetta sta su un'anteprima che, vuota, si tace: qui non deve tacere con lei
     const etichetta = within(carta as HTMLElement).getByText(/mosaico/i)
-    expect(etichetta.textContent).toMatch(/mosaico 4 pannelli/)
+    expect(etichetta.textContent).toMatch(/mosaico \u00b7 4 pannelli/)
     expect(etichetta.closest('[aria-hidden="true"]')).toBeNull()
     const altra = screen.getByRole("heading", { name: "M 31" }).closest("article")
     expect((altra as HTMLElement).textContent).not.toMatch(/mosaico/i)
@@ -37,7 +37,7 @@ describe("i mosaici nell'Archivio", () => {
 
     const righe = screen.getAllByRole("row")
     const delMosaico = righe.find((r) => r.textContent?.includes("IC 405"))
-    expect(delMosaico?.textContent).toMatch(/mosaico 4 pannelli/)
+    expect(delMosaico?.textContent).toMatch(/mosaico \u00b7 4 pannelli/)
     expect(righe.find((r) => r.textContent?.includes("M 31"))?.textContent).not.toMatch(/mosaico/)
   })
 
@@ -90,38 +90,32 @@ function testoDi(el: HTMLElement) {
 }
 
 describe("l'Archivio, i pannelli del mosaico", () => {
-  it("la carta del mosaico si apre e dice ogni pannello, con oggetto, frame, ore e dove sta", async () => {
+  it("la carta del mosaico dice ogni pannello, con oggetto, frame e ore", async () => {
     archivio([MOSAICO])
     await apriArchivio()
 
     const carta = await screen.findByRole("article")
-    const apri = within(carta).getByText(/ogni pannello/i)
-    const cassetto = apri.closest("details") as HTMLDetailsElement
-    // chiusa di suo: la carta resta alla misura delle altre finche' non la apri tu
-    expect(cassetto.open).toBe(false)
-    fireEvent.click(apri)
-    expect(cassetto.open).toBe(true)
-
-    const pannelli = within(cassetto).getAllByRole("listitem").map(testoDi)
+    const elenco = within(carta).getByRole("list", { name: /i pannelli/i })
+    const pannelli = within(elenco).getAllByRole("listitem").map(testoDi)
     expect(pannelli).toHaveLength(4)
     // nell'ordine in cui arrivano: dal backend, dal pannello a cui e' andato piu' tempo
-    expect(pannelli[0]).toMatch(/^IC 405 40 frame 4 h a RA 79,1 Dec 34,3$/)
-    expect(pannelli[1]).toMatch(/^LBN 796, Sh2 230 /)
+    expect(pannelli[0]).toMatch(/^1\s*IC 405\s*40 \u00b7 4 h$/)
+    expect(pannelli[1]).toMatch(/^2\s*LBN 796, Sh2 230\s*30 · 3 h$/)
   })
 
   it("un pannello di cui il cielo non ha legato l'oggetto lo dice, e le pose senza tempo a parte", async () => {
     archivio([MOSAICO])
     await apriArchivio()
 
-    const cassetto = (await screen.findByRole("article")).querySelector("details") as HTMLElement
-    const ultimo = testoDi(within(cassetto).getAllByRole("listitem")[3] as HTMLElement)
-    expect(ultimo).toMatch(/^nessun oggetto riconosciuto 20 frame 2 h 2 senza tempo a RA 79,9 Dec 33,1$/)
+    const elenco = within(await screen.findByRole("article")).getByRole("list", { name: /i pannelli/i })
+    const ultimo = testoDi(within(elenco).getAllByRole("listitem")[3] as HTMLElement)
+    expect(ultimo).toMatch(/^4\s*nessun oggetto riconosciuto\s*20 \u00b7 2 h 2 senza tempo$/)
   })
 
   it("un oggetto non ha pannelli da aprire", async () => {
     archivio([M31])
     await apriArchivio()
 
-    expect((await screen.findByRole("article")).querySelector("details")).toBeNull()
+    expect(within(await screen.findByRole("article")).queryByRole("list", { name: /i pannelli/i })).toBeNull()
   })
 })

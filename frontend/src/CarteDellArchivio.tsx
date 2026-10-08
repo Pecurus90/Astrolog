@@ -1,23 +1,32 @@
 import { PannelliDelMosaico } from "./PannelliDelMosaico"
-import { Filtri, Misure, Mosaico, doveECosa, nomeDi } from "./RigaDellArchivio"
+import {
+  Costellazione,
+  Filtri,
+  Mosaico,
+  Nome,
+  NonSiSa,
+  Tipo,
+  nomeDi,
+  oreDi,
+  senzaTempo,
+} from "./RigaDellArchivio"
 import type { components } from "./api/schema"
-import { t } from "./i18n"
+import { numero, t } from "./i18n"
 
 type Riga = components["schemas"]["ArchiveObject"]
 
 /**
- * L'Archivio **a carte**: il caso "guardo cosa ho".
+ * L'Archivio **a carte** (disegno v31, la carta "Di lato"): il caso "guardo cosa ho".
  *
- * - **Il pozzo dell'anteprima e' vuoto e tiene il suo posto.** L'immagine non esiste ancora (ne' la
- *   foto finale che caricherai tu, ne' il frame migliore): il foglio l'ha disegnato apposta perche'
- *   aspetti. Vuoto e' il suo stato, non un guasto -- e chi ascolta non lo sente affatto, perche' un
- *   riquadro senza contenuto non e' un'informazione.
- * - **La griglia la fa il foglio**, non questa pagina: quante colonne stanno in una finestra e'
- *   una domanda di larghezza, e una risposta scritta qui sarebbe un secondo posto dove deciderlo.
+ * - **Il posto dell'anteprima e' vuoto e tiene il suo posto.** L'immagine non esiste ancora: vuoto
+ *   e' il suo stato, non un guasto, e chi ascolta non lo sente. Oggi e' uno solo; con le
+ *   produzioni sara' uno per produzione.
+ * - **La griglia la fa il foglio**, non questa pagina.
+ * - **La carta non si tocca**: non apre niente finche' le produzioni non ci sono.
  */
 export function CarteDellArchivio({ righe }: { righe: Riga[] }) {
   return (
-    <ul className="as-griglia" aria-label={t("archive.title")}>
+    <ul className="as-archivio__carte" aria-label={t("archive.title")}>
       {righe.map((riga) => (
         <li key={riga.key}>
           <UnaCarta riga={riga} />
@@ -28,31 +37,48 @@ export function CarteDellArchivio({ righe }: { righe: Riga[] }) {
 }
 
 function UnaCarta({ riga }: { riga: Riga }) {
-  const dove = doveECosa(riga)
+  const ore = oreDi(riga.integration_s)
+  const filtri = <Filtri riga={riga} />
   return (
-    <article className="as-carta">
-      {/* Il pozzo vuoto non dice niente e si tace; quando porta l'etichetta del mosaico -- che il
-          foglio mette **sopra** l'anteprima, perche' dice cos'e' prima che si legga il nome -- si
-          sente, o chi ascolta non saprebbe mai di avere davanti un mosaico. */}
-      {riga.panels === null ? (
-        <div className="as-carta__anteprima" aria-hidden="true" />
+    <article className="as-carta as-carta-oggetto as-carta-oggetto--una" aria-label={nomeDi(riga)}>
+      <ul className="as-carta-oggetto__anteprime" aria-hidden="true">
+        <li>
+          <span className="as-carta-oggetto__anteprima">
+            <span className="as-carta-oggetto__immagine" />
+          </span>
+        </li>
+      </ul>
+      <div className="as-carta-oggetto__dati">
+        <h2 className="as-carta-oggetto__nome">
+          <Nome riga={riga} />
+        </h2>
+        <p className="as-archivio__chi as-carta-oggetto__chi">
+          <Tipo riga={riga} lungo /> {"\u00b7"} <Costellazione riga={riga} lungo />
+        </p>
+        <p className="as-carta-oggetto__ore">
+          <b>{ore ?? senzaTempo(riga.untimed)}</b> {"\u00b7"} {t("archive.frames", { n: numero(riga.frames) })}
+          {ore !== null && riga.untimed > 0 && (
+            <>
+              {" "}
+              <span className="as-archivio__senza">
+                {"\u00b7"} {senzaTempo(riga.untimed)}
+              </span>
+            </>
+          )}
+        </p>
+        {riga.panels !== null && (
+          <span className="as-carta-oggetto__segni">
+            <Mosaico riga={riga} />
+          </span>
+        )}
+      </div>
+      {riga.filters.length > 0 ? (
+        <div className="as-carta-oggetto__filtri">{filtri}</div>
       ) : (
-        <div className="as-carta__anteprima">
-          <div className="as-carta__segni">
-            <Mosaico riga={riga} forma="sopra" />
-          </div>
-        </div>
+        <p className="as-carta-oggetto__filtri">
+          <NonSiSa>{t("archive.unknown.filters")}</NonSiSa>
+        </p>
       )}
-      <div className="as-carta__intestazione">
-        <div>
-          {dove && <p className="as-soprattitolo as-soprattitolo--riga">{dove}</p>}
-          <h2 className="as-carta__titolo as-carta__titolo--riga">{nomeDi(riga)}</h2>
-        </div>
-      </div>
-      <div className="as-carta__corpo as-carta__corpo--colonna">
-        <Misure riga={riga} />
-        <Filtri riga={riga} />
-      </div>
       <PannelliDelMosaico pannelli={riga.panel_list} />
     </article>
   )

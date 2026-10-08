@@ -218,27 +218,29 @@ non ha potuto leggere.
 ## Archivio
 
 **Cosa hai ripreso, e quanto.** Ogni riga e' un oggetto, o un mosaico: quanti **frame** gli hai dedicato, quante
-**ore**, e con che **filtri** -- ognuno con la pastiglia del suo colore e le sue ore, quando le
-pose le dicono. Per gli oggetti di catalogo leggi anche la **costellazione**, col suo nome latino
-ufficiale, uguale in ogni lingua, e che cosa sono (*Andromeda · galassia*).
+**ore**, e con che **filtri**: una barra divisa nei colori dei filtri, larga per ognuno quanto le
+sue ore, e sotto il nome di ognuno coi suoi frame e le sue ore. Leggi anche che cos'e' e in che
+**costellazione** sta, col suo nome latino ufficiale, uguale in ogni lingua (*galassia ·
+Andromeda*). Cio' che l'app non sa lo dice a parole -- *tipo: non si sa*, *filtri: non si sa* --
+e i frame che non dicono la durata sono *senza tempo*, mai zero ore.
 
 Un **mosaico** che hai confermato in *Da confermare* e' **una riga sola**, col nome che gli hai
-dato e i frame e le ore di tutti i suoi pannelli, e porta l'etichetta *mosaico 4 pannelli*: sulla
-carta sopra il riquadro dell'immagine, nell'elenco nella colonna *Etichette*. Se hai almeno un
+dato e i frame e le ore di tutti i suoi pannelli, e porta il segno *mosaico · 4 pannelli*: sulla
+carta sotto le ore, nell'elenco nella colonna *Etichette*. Se hai almeno un
 mosaico, nella barra compare anche la tendina **Mosaici**, per vedere solo quelli, e in fondo leggi
 quanti oggetti e quanti mosaici hai trovato (*3 oggetti e 1 mosaico*). Un oggetto che hai ripreso anche da solo, fuori
 dal mosaico, ha la sua riga con quelle sole riprese: niente si conta due volte. Cercando o
 filtrando, il mosaico compare se **uno** dei suoi pannelli risponde -- chi cerca il pezzo di cielo
-di un pannello trova il mosaico. Sulla carta del mosaico, **Cosa c'e' in ogni pannello** apre
-l'elenco dei pannelli, da quello a cui hai dato piu' tempo: per ognuno l'oggetto, i frame, le ore
-e il punto del cielo, che dice quale pannello e' se due inquadrano lo stesso oggetto. Un pannello
+di un pannello trova il mosaico. In fondo alla carta del mosaico c'e'
+l'elenco dei pannelli, numerati, da quello a cui hai dato piu' tempo: per ognuno l'oggetto, i
+frame e le ore. Un pannello
 i cui frame non sono legati a nessun oggetto dice *nessun oggetto riconosciuto*; uno legato a un
 oggetto fuori catalogo porta il nome che ha.
 
 La pagina ha **due viste**, e si cambia col pulsante in alto a sinistra:
 
-- **carte**, che e' come si apre: una per riga, col posto gia' pronto per l'immagine (l'app non
-  la mostra ancora, e quel riquadro la aspetta);
+- **carte**, che e' come si apre: una per riga, col posto gia' pronto per l'immagine a sinistra
+  (l'app non la mostra ancora, e quel riquadro la aspetta);
 - **elenco**, a colonne allineate, per confrontare a colpo d'occhio chi ha piu' ore o piu' frame.
 
 In alto c'e' la **barra**: cerchi un oggetto scrivendo qualunque nome con cui lo conosci -- `m31`,

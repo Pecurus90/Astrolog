@@ -27,7 +27,7 @@ import { resolve } from "node:path"
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { pulisci, rispondi } from "./banco"
+import { chiamate, pulisci, rispondi } from "./banco"
 import {
   IGNOTO,
   M31,
@@ -36,6 +36,7 @@ import {
   archivio,
   conArchivio,
   vaiAll,
+  voceArchivio,
 } from "./archivio-banco"
 
 afterEach(pulisci)
@@ -120,10 +121,8 @@ describe("l'Archivio", () => {
     archivio([M31])
     await apriArchivio()
 
-    const filtri = await screen.findByRole("list", { name: /con che filtri/i })
-    const nomi = within(filtri)
-      .getAllByRole("listitem")
-      .map((l) => l.querySelector(".as-ore-filtro__nome")?.textContent)
+    const carta = await screen.findByRole("article")
+    const nomi = [...carta.querySelectorAll(".as-filtri__voce b")].map((b) => b.textContent)
     expect(nomi).toEqual(["Lum", "Ha"])
   })
 
@@ -136,17 +135,16 @@ describe("l'Archivio", () => {
     archivio([M31])
     await apriArchivio()
 
-    const voci = within(
-      await screen.findByRole("list", { name: /con che filtri/i }),
-    ).getAllByRole("listitem")
+    const carta = await screen.findByRole("article")
+    const voci = [...carta.querySelectorAll(".as-filtri__voce")]
 
-    expect(voci.map((v) => v.className)).toEqual(["as-ore-filtro__voce", "as-ore-filtro__voce"])
-    expect(voci.map((v) => v.querySelector(".as-filtro__pastiglia")?.className)).toEqual([
-      "as-filtro__pastiglia as-filtro--l",
-      "as-filtro__pastiglia as-filtro--ha",
+    expect(voci.map((v) => v.querySelector("i")?.className)).toEqual([
+      "as-filtri__pallino as-filtro--l",
+      "as-filtri__pallino as-filtro--ha",
     ])
-    const prima = voci[0]
-    expect(prima?.querySelector(".as-ore-filtro__nome")?.textContent).toBe("Lum")
+    // la barra pesa le ore di ogni filtro, e dice a parole cio' che mostra a colori
+    const barra = within(carta).getByRole("img", { name: /filtri: lum .*8 h, ha .*4 h/i })
+    expect([...barra.querySelectorAll("i")].map((i) => i.className)).toEqual(["as-filtro--l", "as-filtro--ha"])
   })
 
   it("un oggetto senza filtri riconosciuti non mostra pastiglie finte", async () => {
@@ -155,18 +153,31 @@ describe("l'Archivio", () => {
 
     // si aspetta la **carta**, non il titolo: il titolo c'e' gia' mentre la pagina carica, e un
     // `queryBy` su una pagina ancora vuota non trova niente qualunque cosa faccia il codice
-    await screen.findByRole("article")
-    expect(screen.queryByRole("list", { name: /con che filtri/i })).toBeNull()
+    const carta = await screen.findByRole("article")
+    expect(carta.querySelector(".as-filtri__barra")).toBeNull()
+    // e lo dice: una carta muta sui filtri sembrerebbe un guasto
+    expect(within(carta).getByText(/filtri: non si sa/i).className).toBe("as-nonsisa")
   })
 
-  it("un oggetto che il catalogo non conosce non porta un soprattitolo vuoto", async () => {
-    // Un paragrafo vuoto non si vede, ma il suo margine si vede: in una griglia il titolo di
-    // quella carta scende rispetto a tutte le altre, e nessuno capisce perche'.
+  it("un oggetto che il catalogo non conosce lo dice nella carta, tipo e costellazione", async () => {
+    // Mai un trattino e mai un vuoto: la parola dice cosa manca, il tondo tratteggiato che non si sa.
     archivio([IGNOTO])
     await apriArchivio()
 
     const carta = await screen.findByRole("article")
-    expect(carta.querySelector(".as-soprattitolo")).toBeNull()
+    expect(within(carta).getByText(/tipo: non si sa/i).className).toBe("as-nonsisa")
+    expect(within(carta).getByText(/costellazione: non si sa/i).className).toBe("as-nonsisa")
+  })
+
+  it("il posto dell'anteprima c'e', vuoto, e chi ascolta non lo sente", async () => {
+    archivio([M31])
+    await apriArchivio()
+
+    const carta = await screen.findByRole("article", { name: "M 31" })
+    const posto = carta.querySelector(".as-carta-oggetto__anteprime")
+    expect(posto?.getAttribute("aria-hidden")).toBe("true")
+    expect(posto?.querySelectorAll(".as-carta-oggetto__immagine")).toHaveLength(1)
+    expect(posto?.querySelector("img")).toBeNull()
   })
 
   it("nell'elenco le celle che non sanno lo dicono con una forma, non con un vuoto", async () => {
@@ -180,8 +191,7 @@ describe("l'Archivio", () => {
     // con una **parola** E con la forma della terza forma del dato -- non col solo colore, e non
     // con `as-dato--vuoto`, che nel foglio vuol dire "una misura vera che vale zero"
     expect(within(tabella).getAllByText(/non si sa/i)).toHaveLength(3)
-    expect(tabella.querySelectorAll(".as-dato--ignoto")).toHaveLength(3)
-    expect(tabella.querySelector(".as-dato--vuoto")).toBeNull()
+    expect(tabella.querySelectorAll(".as-nonsisa")).toHaveLength(3)
   })
 
   it("dice quanti ne ha trovati, non quanti ne stai vedendo", async () => {
@@ -242,26 +252,54 @@ describe("l'Archivio", () => {
     const carte = await screen.findAllByRole("article")
     expect(carte).toHaveLength(codici.length)
     for (const [i, carta] of carte.entries()) {
-      expect(carta.textContent, `il codice ${codici[i]} non ha una parola`).toMatch(/Andromeda \u00b7 \S/)
+      expect(carta.textContent, `il codice ${codici[i]} non ha una parola`).toMatch(/\S \u00b7 Andromeda/)
       expect(carta.textContent).not.toContain(codici[i])
     }
   })
 
-  it("un tipo che la pagina non conosce non si mostra affatto", async () => {
+  it("un tipo che la pagina non conosce non arriva a schermo come sigla: dice che non si sa", async () => {
     archivio([{ ...M31, type_code: "CODICE_INVENTATO" }])
     await apriArchivio()
 
     const carta = await screen.findByRole("article")
-    expect(carta.textContent).toContain("And")
+    expect(carta.textContent).toContain("Andromeda")
     expect(carta.textContent).not.toContain("CODICE_INVENTATO")
-    expect(carta.textContent).not.toContain("\u00b7")
+    expect(within(carta).getByText(/tipo: non si sa/i)).toBeDefined()
   })
 
-  it("se l archivio non risponde lo dice, invece di sembrare vuoto", async () => {
+  it("se l archivio non risponde lo dice, invece di sembrare vuoto, e si riprova", async () => {
     rispondi(conArchivio({ stato: 500, corpo: { detail: "boom" } }))
     await apriArchivio()
 
     expect(await screen.findByRole("alert")).toBeDefined()
+    const prima = chiamate().filter((u) => u.includes("/api/v1/archive")).length
+    fireEvent.click(screen.getByRole("button", { name: /riprova/i }))
+    await waitFor(() =>
+      expect(chiamate().filter((u) => u.includes("/api/v1/archive")).length).toBeGreaterThan(prima),
+    )
+  })
+
+  it("mentre legge tiene il posto delle carte, e lo dice a chi ascolta", async () => {
+    // Uno scheletro della misura delle carte: quando arrivano niente salta.
+    let arriva: (v: unknown) => void = () => {}
+    const attesa = new Promise((fatto) => (arriva = fatto))
+    rispondi(conArchivio({ ...voceArchivio([M31]), attesa }))
+    await apriArchivio()
+
+    const posto = await screen.findByLabelText(/sto leggendo l'archivio/i)
+    expect(posto.getAttribute("aria-busy")).toBe("true")
+    expect(posto.querySelectorAll(".as-archivio__scheletro-carta").length).toBeGreaterThan(0)
+    arriva(null)
+    expect(await screen.findByRole("article")).toBeDefined()
+    expect(screen.queryByLabelText(/sto leggendo l'archivio/i)).toBeNull()
+  })
+
+  it("accanto a Mostra altri dice quanti ne stai vedendo e quanti sono", async () => {
+    archivio([M31], { total: 600, limit: 1 })
+    await apriArchivio()
+
+    const altri = await screen.findByRole("button", { name: /mostra altri/i })
+    expect(altri.closest(".as-archivio__carico")?.textContent).toContain("1 di 600")
   })
 
   it("quando ce n e piu' di una pagina, si possono vedere anche gli altri", async () => {
@@ -287,15 +325,15 @@ describe("l'Archivio, filtri e costellazioni", () => {
     archivio([M31])
     await apriArchivio()
 
-    const filtri = await screen.findByRole("list", { name: /filtri/i })
+    const carta = await screen.findByRole("article")
     // 28.800 s = 8 h al Lum, 14.400 s = 4 h all'Ha: arrivano gia' sommate dal backend
-    expect(filtri.textContent).toMatch(/Lum\s*8 h/)
-    expect(filtri.textContent).toMatch(/Ha\s*4 h/)
+    expect(carta.textContent).toMatch(/Lum80 \u00b7 8 h/)
+    expect(carta.textContent).toMatch(/Ha40 \u00b7 4 h/)
 
     await vaiAll(/elenco/i)
     const riga = (await screen.findByText("M 31")).closest("tr") as HTMLElement
-    expect(riga.textContent).toMatch(/Lum\s*8 h/)
-    expect(riga.textContent).toMatch(/Ha\s*4 h/)
+    expect(riga.textContent).toMatch(/Lum80 \u00b7 8 h/)
+    expect(riga.textContent).toMatch(/Ha40 \u00b7 4 h/)
   })
 
   it("un filtro le cui pose non dicono la durata non scrive ore", async () => {
@@ -303,10 +341,8 @@ describe("l'Archivio, filtri e costellazioni", () => {
     archivio([{ ...M31, filters: [{ name: "Lum", passband: "L", frames: 80, integration_s: 0 }] }])
     await apriArchivio()
 
-    const filtri = await screen.findByRole("list", { name: /filtri/i })
-    expect(filtri.textContent).toBe("Lum")
-    // e niente casella delle ore vuota, che il foglio disegnerebbe comunque
-    expect(filtri.querySelector(".as-ore-filtro__ore")).toBeNull()
+    const voce = (await screen.findByRole("article")).querySelector(".as-filtri__voce")
+    expect(voce?.textContent).toBe("Lum80 \u00b7 senza tempo")
   })
 
   it("la costellazione si legge col suo nome latino, non con la sigla", async () => {

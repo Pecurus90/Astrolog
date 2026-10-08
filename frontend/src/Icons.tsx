@@ -40,6 +40,14 @@ const PATHS = {
       <circle cx="6.7" cy="14" r="1.7" />
     </>
   ),
+  mosaico: (
+    <>
+      <rect x="3" y="3" width="6" height="6" rx="1" />
+      <rect x="11" y="3" width="6" height="6" rx="1" />
+      <rect x="3" y="11" width="6" height="6" rx="1" />
+      <rect x="11" y="11" width="6" height="6" rx="1" />
+    </>
+  ),
   cerca: (
     <>
       <circle cx="9" cy="9" r="5.5" />

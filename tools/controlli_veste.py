@@ -78,10 +78,6 @@ MATTONI = {
     # -- ed e' **una per banda**, perche' accorparne due da' a un filtro il colore di un altro.
     "frontend/src/FiltriUsati.tsx": (
         "as-filtro",
-        "as-filtro__pastiglia",
-        "as-ore-filtro",
-        "as-ore-filtro__voce",
-        "as-ore-filtro__nome",
         "as-filtri",
         "as-filtri__barra",
         "as-filtri__legenda",

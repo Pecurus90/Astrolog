@@ -1,6 +1,5 @@
 import type { CSSProperties } from "react"
 
-import { TempoDellePose } from "./TempoDellePose"
 import type { components } from "./api/schema"
 import { numero, ore, t } from "./i18n"
 
@@ -45,31 +44,6 @@ export const VARIANTE: Record<string, string> = {
   OSC_UVIR: "as-filtro--colori-uvir",
   NONE: "as-filtro--senza",
   UNKNOWN: "as-filtro--ignoto",
-}
-
-export function FiltriUsati({ filtri, etichetta }: { filtri: Filtro[]; etichetta: string }) {
-  if (filtri.length === 0) return null
-  return (
-    <ul className="as-ore-filtro" aria-label={etichetta}>
-      {filtri.map((f) => (
-        <li key={f.name} className="as-ore-filtro__voce">
-          {/* La pastiglia e' il **colore**, e il colore da solo non dice mai niente (WCAG 1.4.1):
-              accanto c'e' sempre il nome, che e' la forma. La variante sta qui e non sulla voce:
-              dal v29 dipinge il fondo dell'elemento che la porta. */}
-          <span
-            className={`as-filtro__pastiglia ${VARIANTE[f.passband] ?? "as-filtro--ignoto"}`}
-            aria-hidden="true"
-          />
-          <span className="as-ore-filtro__nome">{f.name}</span>
-          {f.integration_s > 0 && (
-            <span className="as-ore-filtro__ore">
-              <TempoDellePose secondi={f.integration_s} senzaTempo={0} />
-            </span>
-          )}
-        </li>
-      ))}
-    </ul>
-  )
 }
 
 /** Cosa dice un filtro nella legenda: frame, e ore se le pose le dicono. */

@@ -42,13 +42,17 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | La costellazione la leggo col nome latino ufficiale, uguale in ogni lingua | *la costellazione si legge col suo nome latino, non con la sigla*, *ogni sigla del catalogo ha il suo nome*, *il nome e' quello latino ufficiale, anche con la dieresi*, *una sigla che non conosce resta la sigla, invece di sparire* |
 | Se ho molti oggetti li vedo tutti, non solo i primi | `test_the_list_is_paged_like_every_other`; *quando ce n e piu' di una pagina, si possono vedere anche gli altri* |
 | Appena installata, la pagina mi dice cosa fare invece di sembrare rotta | `test_an_empty_archive_is_an_answer_not_an_error`; *a mani vuote dice cosa fare, non nessun risultato* |
-| Se l'archivio non risponde me lo dice, invece di sembrare vuoto | *se l archivio non risponde lo dice, invece di sembrare vuoto* |
+| Se l'archivio non risponde me lo dice, invece di sembrare vuoto, e posso riprovare | *se l archivio non risponde lo dice, invece di sembrare vuoto, e si riprova* |
+| Mentre legge, la pagina tiene il posto delle carte | *mentre legge tiene il posto delle carte, e lo dice a chi ascolta* |
+| Accanto a *Mostra altri* leggo quanti ne vedo e quanti sono | *accanto a Mostra altri dice quanti ne stai vedendo e quanti sono* |
+| Cio' che il catalogo o i file non dicono, la carta lo dice a parole | *un oggetto che il catalogo non conosce lo dice nella carta, tipo e costellazione*, *un oggetto senza filtri riconosciuti non mostra pastiglie finte*, *un tipo che la pagina non conosce non arriva a schermo come sigla: dice che non si sa* |
+| Il posto dell'anteprima c'e' gia', vuoto | *il posto dell'anteprima c'e', vuoto, e chi ascolta non lo sente* |
 | Un mosaico che ho confermato e' una riga sola, col nome che gli ho dato e le ore di tutti i pannelli | `test_a_confirmed_mosaic_is_one_row_with_the_hours_of_all_its_panels`, `test_after_the_yes_the_archive_shows_the_mosaic_as_one_row` (`backend/tests/test_review_mosaic.py`) |
 | Un oggetto ripreso dentro un mosaico e anche da solo ha la sua riga con le sole riprese sue, e niente si conta due volte | `test_an_object_shot_inside_and_outside_a_mosaic_keeps_its_own_poses`, `test_the_pills_of_a_row_are_the_filters_of_its_own_poses` |
 | Cercando o filtrando, un mosaico compare intero se uno dei suoi pannelli risponde | `test_a_filter_of_the_bar_lets_the_mosaic_through_if_one_of_its_poses_passes`, `test_the_filter_used_is_asked_of_the_poses_of_the_row`, `test_a_mosaic_named_with_a_free_name_is_found_by_that_name` |
 | Un mosaico proposto e non ancora confermato non cambia l'Archivio | `test_without_a_confirmed_mosaic_nothing_changes` |
 | Un mosaico dice di esserlo e quanti pannelli ha, nelle due viste e anche a chi ascolta | `test_a_mosaic_row_says_how_many_panels_it_has`; *la carta di un mosaico dice mosaico e quanti pannelli, e si sente*, *anche nell'elenco la riga del mosaico porta la sua etichetta* (`frontend/tests/archivio-mosaici.test.tsx`) |
-| La carta di un mosaico si apre e dice ogni pannello: il suo oggetto, i frame, le ore e dove sta nel cielo | `test_every_panel_of_a_mosaic_says_its_object_its_frames_and_its_hours`, `test_a_panel_counts_like_every_row_copies_out_and_untimed_apart`, `test_a_panel_whose_poses_found_no_object_says_so_with_nothing`, `test_the_route_gives_a_mosaic_its_panels_and_an_object_none`, `test_all_the_panels_of_a_page_come_in_two_questions`; *la carta del mosaico si apre e dice ogni pannello, con oggetto, frame, ore e dove sta*, *un pannello di cui il cielo non ha legato l'oggetto lo dice, e le pose senza tempo a parte*, *un oggetto non ha pannelli da aprire* (`frontend/tests/archivio-mosaici.test.tsx`) |
+| La carta di un mosaico dice ogni pannello, numerato: il suo oggetto, i frame e le ore (il punto del cielo arriva dalla rotta e non si scrive: Marco, 8/10/2026) | `test_every_panel_of_a_mosaic_says_its_object_its_frames_and_its_hours`, `test_a_panel_counts_like_every_row_copies_out_and_untimed_apart`, `test_a_panel_whose_poses_found_no_object_says_so_with_nothing`, `test_the_route_gives_a_mosaic_its_panels_and_an_object_none`, `test_all_the_panels_of_a_page_come_in_two_questions`; *la carta del mosaico dice ogni pannello, con oggetto, frame e ore*, *un pannello di cui il cielo non ha legato l'oggetto lo dice, e le pose senza tempo a parte*, *un oggetto non ha pannelli da aprire* (`frontend/tests/archivio-mosaici.test.tsx`) |
 | Posso vedere solo i mosaici, e la tendina c'e' solo se ne ho | `test_you_can_narrow_down_to_the_mosaics`, `test_the_mosaic_choice_is_offered_only_to_who_has_a_mosaic`; *la tendina dei mosaici compare solo a chi ne ha, e stringe nel backend*, *chi non ha mosaici non vede la tendina* |
 | Stringo a un anno, o a date mie, e ogni riga dice solo le ore, i frame e i filtri di quel periodo | `test_a_period_keeps_the_rows_shot_in_it_with_their_hours_in_it`, `test_a_period_can_straddle_the_new_year`, `test_the_pills_of_a_row_say_the_narrowed_hours` (`backend/tests/test_spine_archive_scope.py`); *un anno chiede le notti dal primo gennaio al trentuno dicembre*, *scegliere le date apre dal e al, e una stagione a cavallo d'anno arriva intera*, *tornare a un anno dimentica le date scelte prima* (`frontend/tests/archivio-periodo.test.tsx`) |
 | Il periodo guarda la notte, non l'orologio | `test_the_period_reads_the_night_not_the_clock` |
@@ -204,17 +208,22 @@ tabella che li porta.
 **L'elenco si impagina come gli altri, ma largo** (cento righe per volta). E' un inventario, non
 un flusso da scorrere: chi ha centomila frame ha comunque una manciata di oggetti.
 
-## La carta e' un riassunto (Marco, 8/10/2026)
+## La carta e le produzioni (Marco, 8/10/2026)
 
-La carta non mostra tutto: niente anteprime affiancate per corredo, un posto solo. **Idea per
-dopo, non da disegnare ora**: cliccando un oggetto con una **produzione** sola (l'oggetto ripreso
-con un corredo, domani un progetto) si aprira' quella; con piu' d'una, prima un menu col riepilogo
-di ognuna (corredo, filtri, ore). Quando si fara', l'API dovra' mandare il riepilogo per corredo.
+Disegno v31, la carta "Di lato": a sinistra il posto dell'anteprima, a destra nome, tipo e
+costellazione, ore e frame; sotto i filtri (la barra delle Notti) e, per un mosaico, i pannelli.
+
+**Una produzione** e' lo stesso oggetto ripreso con la stessa ottica e la stessa camera (Marco,
+8/10/2026), finche' non esistono i progetti; domani sara' un progetto concluso. La carta avra' un
+posto di anteprima **per produzione** e dira' quante sono; con piu' d'una, toccarla aprira' un menu
+col riepilogo di ognuna (corredo, filtri, ore). Il modale della produzione e' rimandato: finche'
+non c'e', una carta con una produzione sola non apre niente. **Non ancora fatto**: l'API non manda
+le produzioni, e la carta ha un posto solo, vuoto.
 
 ## Cosa NON fa
 
 Non ha ancora l'etichetta dei **progetti**, che non esistono, ne' la **scheda** di un oggetto. I
-pannelli di un mosaico si aprono dalla sua **carta**, non dall'elenco. Non mostra **anteprime**: sono decise (la foto finale dell'utente, o
+pannelli di un mosaico stanno nella sua **carta**, non nell'elenco. Non mostra **anteprime**: sono decise (la foto finale dell'utente, o
 il suo frame migliore) ma non esistono ancora, e il pozzo che le aspetta tiene gia' il suo posto
 nella carta. Non mostra piu' **l'ultima notte** (Marco, 22/9/2026): quel posto e' dei progetti, e
 quando l'hai ripreso l'ultima volta si guarda nelle Notti.

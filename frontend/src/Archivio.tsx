@@ -18,7 +18,7 @@ import { Altre, paginaDopo } from "./Elenco"
 import { ElencoDellArchivio } from "./ElencoDellArchivio"
 import { AzioniDelVuoto, Vuoto } from "./Vuoto"
 import { api } from "./api/client"
-import { t } from "./i18n"
+import { numero, t } from "./i18n"
 
 // Quante righe per volta. Alto di proposito: l'Archivio e' un inventario, non un flusso da
 // scorrere -- chi ha centomila frame ha comunque una manciata di oggetti, e farglieli chiedere
@@ -193,9 +193,21 @@ export function Archivio() {
 
   return (
     <div className="as-pagina">
-
-      {elenco.isPending && <p>{t("app.loading")}</p>}
-      {elenco.error && <Avviso esito="allarme">{elenco.error.message}</Avviso>}
+     <div className="as-archivio">
+      {elenco.isPending && <InLettura />}
+      {elenco.error && (
+        <Avviso
+          esito="allarme"
+          pagina
+          azioni={
+            <Bottone verso="primario" onClick={() => void elenco.refetch()}>
+              {t("archive.retry")}
+            </Bottone>
+          }
+        >
+          {elenco.error.message}
+        </Avviso>
+      )}
 
       {/* La barra resta anche quando non c'e' niente da mostrare -- un filtro che non trova
           niente, o una richiesta andata in errore: toglierla lascerebbe senza il modo di disfare
@@ -218,17 +230,15 @@ export function Archivio() {
       {/* Aperto dalla ricerca: la barra esce, resta la vista, e si dice come tornare (tavola v31).
           Solo a risposta assestata: sulle righe di prima direbbe ristretto a un oggetto non chiesto. */}
       {chiave !== "" && pannelli && !elenco.isPlaceholderData && (
-        <div className="as-archivio">
-          <div className="as-archivio__ristretto">
-            <Bottone verso="nudo" a="/archivio">
-              {t("archive.all")}
-            </Bottone>
-            <p>
-              {t("archive.only.before")} <b>{righe[0]?.name ?? chiave}</b>
-              {t("archive.only.after")}
-            </p>
-            <InterruttoreDiVista vista={vista} onVista={(scelta) => cambia({ vista: scelta })} />
-          </div>
+        <div className="as-archivio__ristretto">
+          <Bottone verso="nudo" a="/archivio">
+            {t("archive.all")}
+          </Bottone>
+          <p>
+            {t("archive.only.before")} <b>{righe[0]?.name ?? chiave}</b>
+            {t("archive.only.after")}
+          </p>
+          <InterruttoreDiVista vista={vista} onVista={(scelta) => cambia({ vista: scelta })} />
         </div>
       )}
       {sparito && (
@@ -276,8 +286,36 @@ export function Archivio() {
         </>
       )}
 
-      <Altre elenco={elenco} testo="archive.more" />
+      {/* Quante ne stai vedendo e quante sono: "Mostra altri" da solo non dice quanto manca. */}
+      {elenco.hasNextPage && prima && (
+        <div className="as-archivio__carico">
+          <span>{t("archive.loaded", { n: numero(righe.length), tot: numero(prima.total) })}</span>
+          <Altre elenco={elenco} testo="archive.more" />
+        </div>
+      )}
+     </div>
     </div>
+  )
+}
+
+/** La prima risposta non e' arrivata: lo scheletro tiene il posto della barra e delle carte, della
+ *  loro misura, cosi' niente salta quando arrivano. */
+function InLettura() {
+  return (
+    <>
+      <div className="as-restringi" aria-hidden="true">
+        <span className="as-scheletro as-archivio__scheletro-campo" />
+        <span className="as-scheletro as-archivio__scheletro-barra" />
+      </div>
+      <div className="as-archivio__carte" aria-busy="true" aria-label={t("archive.loading")}>
+        <span className="as-scheletro as-archivio__scheletro-carta" />
+        <span className="as-scheletro as-archivio__scheletro-carta" />
+        <span className="as-scheletro as-archivio__scheletro-carta" />
+        <span className="as-scheletro as-archivio__scheletro-carta" />
+        <span className="as-scheletro as-archivio__scheletro-carta" />
+        <span className="as-scheletro as-archivio__scheletro-carta" />
+      </div>
+    </>
   )
 }
 

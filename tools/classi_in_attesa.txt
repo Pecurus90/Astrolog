@@ -3,12 +3,6 @@
 # Letto da tools/controlli_veste.py (classi_inventate). L'elenco solo si accorcia, pagina per
 # pagina: una classe nuova assente dal foglio e' un rosso, e una voce che il codice non scrive
 # piu' o che il foglio ora ha e' un rosso finche' non si toglie da qui.
-as-badge
-as-badge--mosaico
-as-badge--muto
-as-badge--sopra
-as-badge__conta
-as-badge__segno
 as-barra
 as-barra__campo
 as-barra__cerca
@@ -55,9 +49,7 @@ as-carta__corpo--stretto
 as-carta__domanda
 as-carta__piede
 as-carta__piede--prosa
-as-carta__segni
 as-carta__titolo
-as-carta__titolo--riga
 as-cerca__niente
 as-cifre
 as-colonna
@@ -73,7 +65,6 @@ as-conferma-tutto__azioni
 as-conferma-tutto__conta
 as-dato
 as-dato--ignoto
-as-dato__segno
 as-dialogo
 as-dialogo--largo
 as-dialogo-fondale
@@ -83,21 +74,11 @@ as-dialogo__testo
 as-dialogo__titolo
 as-entra
 as-entra--alone
-as-filtro__pastiglia
 as-impostazioni
 as-impostazioni__corpo
 as-impostazioni__lato
-as-misure
-as-misure__dato
-as-misure__nome
-as-misure__voce
-as-num
 as-numero
 as-numero__unita
-as-ore-filtro
-as-ore-filtro__nome
-as-ore-filtro__ore
-as-ore-filtro__voce
 as-pagina__azioni
 as-passi
 as-passi__nome
@@ -120,11 +101,9 @@ as-scelta
 as-scelta--caricamento
 as-sezioni
 as-sezioni__voce
-as-soprattitolo--riga
 as-stato--attesa
 as-stato--buono
 as-stato--conteggio
-as-tabella-guscio
 as-testata
 as-testata__sotto
 as-testata__titolo
