@@ -185,4 +185,4 @@ il pulsante chiede la previsione, e se il servizio tace dice che resta quella di
 dice con che filtri hai ripreso, dal piu' usato - ordine unico dei filtri (Marco, 7/10/2026): rinominato in "dice con che filtri hai ripreso, nell'ordine dei filtri"
 test_the_filter_with_more_time_comes_first - ordine unico dei filtri (Marco, 7/10/2026): lo sostituisce test_the_order_is_the_one_of_the_bands_not_the_time
 una notte dice i filtri, dal piu' usato - ordine unico dei filtri (Marco, 7/10/2026): rinominato in "una notte dice i filtri, nell'ordine dei filtri"
-ogni banda ha il SUO colore, non quello di una vicina - foglio v29 (Marco, 8/10/2026): a colori e altre bande sono famiglie; lo sostituisce "ogni banda larga e stretta ha il SUO colore; a colori e le altre bande sono famiglie"
+ogni banda larga e stretta ha il SUO colore; a colori e le altre bande sono famiglie - foglio v30 (Marco, 8/10/2026): un colore per banda, torna "ogni banda ha il SUO colore, non quello di una vicina"

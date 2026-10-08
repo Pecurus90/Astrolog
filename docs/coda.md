@@ -276,10 +276,8 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   dell'app scrive ancora titolo e disegno (classi in attesa): si allinea quando il disegno passa a
   un'altra pagina che lo usa. In una notte con tempo, un filtro i cui frame non dicono la durata pesa zero nella barra
   e resta solo lo stacco minimo (lo nomina la legenda): da chiedere al disegno se basta.
-- **Un colore per banda -- prossima** (Marco, 8/10/2026): il v29 da' un colore solo ai filtri a
-  colori e uno solo alle altre bande; si chiede a Claude Design un colore per ognuna delle 17 bande
-  del vocabolario, le doppie e multiple coi colori delle loro righe. Arrivato il foglio, cambia la
-  tabella `VARIANTE` in `FiltriUsati.tsx` e `_VARIANTI` in `tools/controlli_veste.py`.
+- **Un colore per banda -- fatta** (Marco, 8/10/2026): foglio v30, una classe per ognuna delle 17
+  bande, le doppie e multiple come strisce delle loro righe (`FiltriUsati.VARIANTE`).
 - **M4 -- fatta** (7/10/2026): l'Archivio stringe per periodo (anno o date), sito, ottica e
   camera, e la riga dice solo le pose che passano (`counts.Scope`, `docs/domini/archivio.md`).
 

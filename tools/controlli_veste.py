@@ -26,7 +26,7 @@ from controlli_foglio import pavimenti_del_cielo
 # dal progetto Claude Design, mai per far passare una modifica fatta qui. Resta una **mappa**
 # anche con un foglio solo: quanti sono lo decide la consegna, non noi.
 IMPRONTE = {
-    FOGLIO: "3b56ae5a261970fe1bad45a5239b362eee27f4a80c40f76b30f15a00c0977964",
+    FOGLIO: "ac0c4be28ee85c864d4628c2916950454d1c18ee153dabe6312521d453dce7e4",
 }
 
 
@@ -58,7 +58,10 @@ def _sorgenti(root):
 # foglio lo prova `frontend/tests/filtri-usati.test.ts`, e che questo elenco sia quello che il
 # mattone scrive davvero lo prova `test_the_filter_variants_in_the_table...` accanto a questo
 # file: senza, una banda dimenticata qui spegnerebbe la guardia proprio su quella classe.
-_VARIANTI = ("l", "r", "g", "b", "ha", "oiii", "sii", "colori", "altra", "ignoto", "senza")
+_VARIANTI = (
+    "l", "r", "g", "b", "ha", "hb", "oiii", "sii", "ha-oiii", "sii-oiii", "tri", "quad",
+    "colori", "colori-lp", "colori-uvir", "ignoto", "senza",
+)  # fmt: skip
 
 MATTONI = {
     "frontend/src/Riga.tsx": ("as-riga__conteggio", "as-riga__prova"),

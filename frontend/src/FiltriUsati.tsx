@@ -22,27 +22,27 @@ type Filtro = components["schemas"]["FilterUsed"]
  *   un'informazione -- hai ripreso con qualcosa, e l'app non sa cosa.
  */
 
-/** Dalla banda canonica alla variante che il foglio disegna (v29, `65-filtri`): una per banda
- *  larga e stretta, una per i filtri a colori, una per le altre bande che l'app riconosce.
- *  Scritte per esteso perche' una classe composta a pezzi nessuna guardia la vede; che qui ci sia
- *  ogni banda del vocabolario **e che ogni classe esista nel foglio** lo prova
- *  `frontend/tests/filtri-usati.test.ts`. */
+/** Dalla banda canonica alla variante che il foglio disegna (v30, `65-filtri`): **una per banda**,
+ *  e le bande con piu' righe sono le strisce delle loro righe. Accorparne due darebbe a un filtro
+ *  il colore di un altro, e due pezzi affiancati della barra si confonderebbero. Scritte per esteso
+ *  perche' una classe composta a pezzi nessuna guardia la vede; che qui ci sia ogni banda del
+ *  vocabolario **e che ogni classe esista nel foglio** lo prova `frontend/tests/filtri-usati.test.ts`. */
 export const VARIANTE: Record<string, string> = {
   L: "as-filtro--l",
   R: "as-filtro--r",
   G: "as-filtro--g",
   B: "as-filtro--b",
   HA: "as-filtro--ha",
+  HB: "as-filtro--hb",
   OIII: "as-filtro--oiii",
   SII: "as-filtro--sii",
+  DUO_HAOIII: "as-filtro--ha-oiii",
+  DUO_SIIOIII: "as-filtro--sii-oiii",
+  TRI_NB: "as-filtro--tri",
+  MULTI_NB: "as-filtro--quad",
   OSC: "as-filtro--colori",
-  OSC_LP: "as-filtro--colori",
-  OSC_UVIR: "as-filtro--colori",
-  HB: "as-filtro--altra",
-  DUO_HAOIII: "as-filtro--altra",
-  DUO_SIIOIII: "as-filtro--altra",
-  TRI_NB: "as-filtro--altra",
-  MULTI_NB: "as-filtro--altra",
+  OSC_LP: "as-filtro--colori-lp",
+  OSC_UVIR: "as-filtro--colori-uvir",
   NONE: "as-filtro--senza",
   UNKNOWN: "as-filtro--ignoto",
 }

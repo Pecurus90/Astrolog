@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AstroLog — astrolog.css  ·  v29 (08/10/2026)
+   AstroLog — astrolog.css  ·  v30 (08/10/2026)
 
    FILE GENERATO: non si modifica qui. Le sorgenti stanno in foglio/, un
    file per famiglia; questo foglio e' la loro unione, nell'ordine qui
@@ -151,15 +151,23 @@
   --ignoto-fondo:         rgb(var(--tinta-velo) / .035);
 
   /* --- filtri: il colore e' un promemoria, non l'informazione ----------
-     Lunghezze d'onda vere, spinte al contrasto necessario. Il nome del
-     filtro e' SEMPRE scritto accanto alla pastiglia.                     */
-  --filtro-l:          #dfe4ee;   /* luminanza */
-  --filtro-r:          #e0524f;
-  --filtro-g:          #4fb960;
-  --filtro-b:          #4e7fe6;
-  --filtro-ha:         #e0405a;   /* 656 nm */
-  --filtro-oiii:       #29c2b6;   /* 501 nm */
-  --filtro-sii:        #b8455f;   /* 672 nm */
+     v30: un colore per banda. Lunghezze d'onda vere, spinte finche' ogni
+     coppia si distingue affiancata nella barra (OKLab >= 0,10) e ogni
+     tinta sta a 3:1 su ogni fondo; lo misura controlla-contrasto.js. R va
+     verso l'arancio e SII verso il magenta perche' Ha, R e SII sono tutti
+     rossi. Le doppie, le multiple e «a colori» non hanno una tinta: sono
+     le strisce delle loro righe (12-token-componenti). Il nome del filtro
+     e' SEMPRE scritto accanto alla pastiglia.                            */
+  --filtro-l:         #dfe4ee;   /* luminanza */
+  --filtro-r:         #ff7a45;
+  --filtro-g:         #4fc05a;
+  --filtro-b:         #4a78f0;
+  --filtro-ha:        #ff3b5c;   /* 656 nm */
+  --filtro-hb:        #7cc8ff;   /* 486 nm */
+  --filtro-oiii:      #2fd8c4;   /* 501 nm */
+  --filtro-sii:       #d24aa0;   /* 672 nm */
+  --filtro-colori-lp: #f0c040;
+  --filtro-colori-uvir: #a98cff;
 
   /* --- grafici ------------------------------------------------------------
      La volta, la heatmap e il grafico di una misura hanno i loro colori
@@ -428,11 +436,15 @@
   --notte-barra-minima:       2.5rem;
   --registro-scheletro:       7.5rem;  /* una notte che aspetta */
   --registro-scheletro-cifre: 22rem;   /* i totali che aspettano */
-  /* i filtri senza una banda propria (65): leggono i token dei filtri e del
-     ruolo, cosi' Atlante li scurisce da se'. A colori e' un motivo: R, G, B. */
-  --filtro-a-colori:          linear-gradient(90deg, var(--filtro-r), var(--filtro-g), var(--filtro-b));
-  --filtro-altra-banda:       var(--inchiostro-tenue);
-  --filtro-senza:             var(--linea-significato);
+  /* v30 · le bande con piu' righe (65): strisce oblique delle loro righe,
+     cosi' anche un pezzo stretto della barra le mostra tutte. E' un motivo.
+     Leggono le tinte dei filtri, quindi Atlante le scurisce da se'. */
+  --filtro-striscia:          3px;
+  --filtro-a-colori:          repeating-linear-gradient(135deg, var(--filtro-r) 0 var(--filtro-striscia), var(--filtro-g) 0 calc(2 * var(--filtro-striscia)), var(--filtro-b) 0 calc(3 * var(--filtro-striscia)));
+  --filtro-ha-oiii:           repeating-linear-gradient(135deg, var(--filtro-ha) 0 var(--filtro-striscia), var(--filtro-oiii) 0 calc(2 * var(--filtro-striscia)));
+  --filtro-sii-oiii:          repeating-linear-gradient(135deg, var(--filtro-sii) 0 var(--filtro-striscia), var(--filtro-oiii) 0 calc(2 * var(--filtro-striscia)));
+  --filtro-tri:               repeating-linear-gradient(135deg, var(--filtro-ha) 0 var(--filtro-striscia), var(--filtro-hb) 0 calc(2 * var(--filtro-striscia)), var(--filtro-oiii) 0 calc(3 * var(--filtro-striscia)));
+  --filtro-quad:              repeating-linear-gradient(135deg, var(--filtro-ha) 0 var(--filtro-striscia), var(--filtro-hb) 0 calc(2 * var(--filtro-striscia)), var(--filtro-oiii) 0 calc(3 * var(--filtro-striscia)), var(--filtro-sii) 0 calc(4 * var(--filtro-striscia)));
 }
 
 /* ── foglio/15-tema-atlante.css ───────────────────────────────────────── */
@@ -502,14 +514,17 @@
   --ignoto-tratteggio:    rgb(var(--tinta-velo) / .52);   /* v28: 3,14:1 sul fondo basso; .48 faceva 2,83:1 */
   --ignoto-fondo:         rgb(var(--tinta-velo) / .03);
 
-  /* filtri: gli stessi colori, scuriti per stare su fondo chiaro */
-  --filtro-l:          #8e97a8;
-  --filtro-r:          #c22f2c;
-  --filtro-g:          #1f8c3a;
-  --filtro-b:          #2a5bc4;
-  --filtro-ha:         #c21f3c;
-  --filtro-oiii:       #0a8c84;
-  --filtro-sii:        #96203f;
+  /* filtri: gli stessi colori, scuriti per stare su fondo chiaro (3:1) */
+  --filtro-l:         #7a8291;   /* luminanza */
+  --filtro-r:         #c85a00;
+  --filtro-g:         #3a8a12;
+  --filtro-b:         #2453c8;
+  --filtro-ha:        #c8102e;   /* 656 nm */
+  --filtro-hb:        #0a78b8;   /* 486 nm */
+  --filtro-oiii:      #00857f;   /* 501 nm */
+  --filtro-sii:       #a3207a;   /* 672 nm */
+  --filtro-colori-lp: #8f7200;
+  --filtro-colori-uvir: #7a4fd8;
 
   --ombra-carta:    0 1px 2px rgb(var(--tinta-ombra) / .07);
   --ombra-rilievo:  0 6px 18px rgb(var(--tinta-ombra) / .1);
@@ -2145,12 +2160,14 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 /* ── foglio/65-filtri.css ─────────────────────────────────────────────── */
 /* ==========================================================================
    FILTRI — quanto tempo per filtro, in una barra e nella sua legenda
-   (v29, dalle Notti). L'ordine e' quello di tutta l'app, non quello della
-   notte: L, R, G, B, Ha, OIII, SII, poi a colori, poi le altre bande, poi
-   quelli che non si sanno, «senza filtro» ultimo; lo mette in fila chi
+   (v29, dalle Notti; dal v30 una classe per banda, diciassette).
+   L'ordine e' quello di tutta l'app, non quello della notte: L, R, G, B,
+   Ha, Hβ, OIII, SII, Ha/OIII, SII/OIII, tri-band, quad-band, a colori, a
+   colori LP, a colori UV/IR, non si sa, senza filtro; lo mette in fila chi
    scrive la pagina. Ogni pezzo della barra pesa le sue ore
-   (style="--peso: 2.4"; se la notte e' senza tempo, i frame). Il colore non
-   e' mai solo: la legenda scrive sempre il nome, i frame e le ore.
+   (style="--peso: 2.4"; se la notte e' senza tempo, i frame). Le bande con
+   piu' righe sono le strisce delle loro righe. Il colore non e' mai solo:
+   la legenda scrive sempre il nome, i frame e le ore.
    ========================================================================== */
 .as-filtri { display: grid; gap: var(--spazio-2); }
 .as-filtri__barra { display: flex; gap: var(--stacco-minimo); height: var(--tratto-alto); margin: 0; }
@@ -2168,13 +2185,20 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-filtro--g { background: var(--filtro-g); }
 .as-filtro--b { background: var(--filtro-b); }
 .as-filtro--ha { background: var(--filtro-ha); }
+.as-filtro--hb { background: var(--filtro-hb); }
 .as-filtro--oiii { background: var(--filtro-oiii); }
 .as-filtro--sii { background: var(--filtro-sii); }
+.as-filtro--ha-oiii { background: var(--filtro-ha-oiii); }
+.as-filtro--sii-oiii { background: var(--filtro-sii-oiii); }
+.as-filtro--tri { background: var(--filtro-tri); }
+.as-filtro--quad { background: var(--filtro-quad); }
 .as-filtro--colori { background: var(--filtro-a-colori); }
-.as-filtro--altra { background: var(--filtro-altra-banda); }
+.as-filtro--colori-lp { background: var(--filtro-colori-lp); }
+.as-filtro--colori-uvir { background: var(--filtro-colori-uvir); }
 /* il filtro che non si sa: il tratteggio dell'ignoto, vuoto dentro */
 .as-filtro--ignoto { background: none; border: var(--segno-filo) dashed var(--ignoto-tratteggio); }
-.as-filtro--senza { background: var(--filtro-senza); }
+/* senza filtro: vuoto, col filo pieno (non si confonde con L, che e' grigio pieno) */
+.as-filtro--senza { background: none; border: var(--segno-filo) solid var(--linea-significato); }
 
 /* ── foglio/66-notte.css ──────────────────────────────────────────────── */
 /* ==========================================================================
