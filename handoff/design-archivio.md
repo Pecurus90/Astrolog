@@ -25,8 +25,10 @@ solo quelli fuori. La conta lo dice: "12 oggetti e 1 mosaico".
 Domani la riga sara' un **progetto concluso** (i progetti non esistono ancora): cambiera' quali
 righe arrivano, non come si mostrano. Il disegno non va rifatto quel giorno.
 
-Due viste, gia' montate: **carte** (di apertura: "guardo cosa ho") ed **elenco** ("confronto").
-La vista sta nell'indirizzo (`?vista=elenco`).
+**Vanno disegnate tutte e due le viste**, gia' montate: **carte** (di apertura: "guardo cosa ho")
+ed **elenco** ("confronto", una tabella con oggetto, tipo, costellazione, frame, ore, filtri,
+mosaico). Si passa dall'una all'altra con un clic, e la vista sta nell'indirizzo
+(`?vista=elenco`). Ogni proposta le mostra entrambe, coi loro stati, sul desktop e sul telefono.
 
 ## 2. I dati di una riga
 
