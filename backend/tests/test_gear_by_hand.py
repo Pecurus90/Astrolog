@@ -45,6 +45,22 @@ def test_a_name_that_is_already_the_spelling_of_another_filter_is_refused(conn):
         gear_create.filter_declared(conn, "Halpha", [{"band": "HA"}], "ora")
 
 
+@pytest.mark.parametrize("kind", ["camera", "optics"])
+def test_a_piece_you_wrote_is_the_one_the_files_bring_later(conn, tmp_path, kind):
+    """Una camera o un'ottica scritte a mano col nome dei file: le pose vanno a quel pezzo, e un
+    secondo non nasce -- o le ore si spartirebbero fra due righe della stessa cosa."""
+    nome = {"camera": "ATR2600M(USB2.0)", "optics": "Askar 103Apo"}[kind]
+    scritto = _pezzo(conn, kind, nome)
+    _dopo_la_scansione(conn, tmp_path)
+
+    colonna = {"camera": "camera_id", "optics": "optics_id"}[kind]
+    corredo = frame_by_file(conn, "L_001.fits")["rig_id"]
+    assert one(conn, f"SELECT {colonna} FROM rigs WHERE id = ?", (corredo,)) == scritto  # noqa: S608
+    assert (
+        one(conn, "SELECT COUNT(*) FROM instruments WHERE kind = ? AND name = ?", (kind, nome)) == 1
+    )
+
+
 def test_a_rig_you_wrote_is_the_one_the_files_bring_later(conn, tmp_path):
     """La focale scritta a mano puo' non essere quella esatta dei file: entro il 5 % e' la stessa,
     come fra due scansioni."""

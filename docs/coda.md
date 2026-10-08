@@ -337,11 +337,9 @@ Niente di aperto.
 ### Macchine che non guardano
 
 - **Promesse con la prova a meta', o senza.** Delle tabelle *Cosa chiede l'utente* dei contratti,
-  ogni prova nominata esiste e passa, ma alcune righe sono provate a meta' o senza prova. Le
-  peggiori: **un pezzo scritto a mano e poi nominato dai file** non deve diventare un doppione con
-  le ore spartite (nessuna prova; la riga di `attrezzatura.md` cita il verso opposto); **una
-  correzione sulla scheda resiste a una nuova lettura** e' provata per pixel e colore della camera, non per gli altri
-  campi. Piu' piccole: il catalogo ("le ore non si
+  ogni prova nominata esiste e passa, ma alcune righe sono provate a meta' o senza prova. La
+  peggiore: **una correzione sulla scheda resiste a una nuova lettura** e' provata per pixel e
+  colore della camera, non per gli altri campi. Piu' piccole: il catalogo ("le ore non si
   sparpagliano", "senza rete") provato di sbieco;
   in `spina.md` tre prove che esistono e la riga non cita
   (`test_scan_root_gone_midway_aborts_without_marking_missing`,
