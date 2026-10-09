@@ -126,6 +126,41 @@ describe("le cartelle del primo avvio", () => {
     expect(screen.getByRole("button", { name: /avanti/i })).toBeDefined()
   })
 
+  it("cio' che la verifica trova sta in un esito, col comando che aggiunge dentro", async () => {
+    // Il comando pieno del passo e' quello che registra: sta nell'esito che lo motiva, e Avanti
+    // gli cede il posto, cosi' il pieno resta uno solo.
+    primoAvvio({}, [])
+    await alTerzoPasso()
+    const campo = screen.getByLabelText(/percorso della cartella/i)
+    expect(campo.closest("form")?.className).toBe("as-campo-riga")
+    const avanti = () => screen.getByRole("button", { name: /^avanti$/i })
+    expect(avanti().className).toContain("as-bottone--primario")
+
+    fireEvent.change(campo, { target: { value: "D:/Astro" } })
+    fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
+    const aggiungi = await screen.findByRole("button", { name: /aggiungi cartella/i })
+    const esito = aggiungi.closest(".as-esito") as HTMLElement
+    expect(esito.querySelector(".as-avviso")?.className).toContain("as-avviso--buono")
+    expect(aggiungi.closest(".as-avviso__azioni")).not.toBeNull()
+    expect(aggiungi.className).toContain("as-bottone--primario")
+    expect(avanti().className).toContain("as-bottone--tenue")
+    expect(document.querySelectorAll(".as-bottone--primario")).toHaveLength(1)
+  })
+
+  it("le cartelle aggiunte sono un elenco del foglio: percorso e frame di ognuna", async () => {
+    primoAvvio({}, ["D:/Astro/2024", "E:/Vecchie"])
+    await alTerzoPasso()
+    const voci = await waitFor(() => {
+      const trovate = [...document.querySelectorAll(".as-cartelle > .as-cartelle__voce")]
+      expect(trovate).toHaveLength(2)
+      return trovate
+    })
+    expect(voci[0]?.querySelector(".as-cartelle__percorso")?.textContent).toBe("D:/Astro/2024")
+    expect(voci[0]?.querySelector(".as-cartelle__frame")?.textContent).toBe("0 frame")
+    // il titoletto dice quante sono, e sta in una parte sua del passo
+    expect(voci[0]?.closest(".as-passo__parte")?.querySelector(".as-soprattitolo")?.textContent).toMatch(/cartelle aggiunte.*2/i)
+  })
+
   it("le cartelle indicate si vedono in elenco", async () => {
     // Senza l'elenco non sai cosa hai gia' dato: si finisce per aggiungere due volte la stessa
     // cartella (e la seconda volta l'app risponde "c'e' gia'", che sembra un errore tuo).
@@ -370,6 +405,29 @@ describe("le cartelle del primo avvio", () => {
     expect(chiamate().some((u) => u.includes("/api/v1/folders/browse"))).toBe(true)
     // l'altra meta' del titolo: li' il percorso NON si scrive
     expect(screen.queryByLabelText(/percorso della cartella/i)).toBeNull()
+    // la forma del foglio: l'elenco scorre nel suo pozzo, una riga per cartella
+    expect(elenco.className).toBe("as-sfoglia__elenco")
+    expect(elenco.closest(".as-sfoglia")).not.toBeNull()
+    const voce = within(elenco).getByText("M31").closest("li") as HTMLElement
+    expect(voce.className).toBe("as-sfoglia__voce")
+    expect(within(elenco).getByText("M31").className).toBe("as-sfoglia__nome")
+    const apri = within(voce).getByRole("button", { name: /apri m31/i })
+    expect(apri.className).toContain("as-bottone--nudo")
+    // la riga del foglio ha tre colonne (icona, nome, comando): con due figli il nome cade
+    // nella colonna dell'icona e "Apri" si allarga a tutta la riga
+    expect(voce.children).toHaveLength(3)
+    expect(voce.children[1]).toBe(within(elenco).getByText("M31"))
+    expect(voce.children[2]).toBe(apri)
+  })
+
+  it("una cartella senza sottocartelle lo dice nel pozzo dell'elenco", async () => {
+    primoAvvio({
+      "GET /api/v1/folders/path-info": { stato: 200, corpo: { family: "posix", data_root: "/data" } },
+      "GET /api/v1/folders/browse": { stato: 200, corpo: { path: "/data", parent: null, folders: [] } },
+    })
+    await alTerzoPasso()
+    const niente = await screen.findByText("Nessuna sottocartella")
+    expect(niente.className).toBe("as-sfoglia__niente")
   })
 
   it("sul NAS la carta spiega che si sfoglia, non che si scrive", async () => {
@@ -426,6 +484,8 @@ describe("una cartella spostata", () => {
 
     expect(await screen.findByText(/corrisponde a D:\/Astro: stessi file/i)).toBeDefined()
     expect(screen.queryByRole("button", { name: /aggiungi/i })).toBeNull()
+    // quanti file ha trovato lo dice anche qui: riconoscerla non toglie il conteggio
+    expect(screen.getByText("12 file FITS").closest(".as-esito")).not.toBeNull()
     fireEvent.click(screen.getByRole("button", { name: /^usa questo percorso$/i }))
 
     await waitFor(() =>

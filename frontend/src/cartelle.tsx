@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { type ReactNode, useState } from "react"
 
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
@@ -8,7 +8,6 @@ import { api } from "./api/client"
 import { motivo } from "./api/motivo"
 import type { components } from "./api/schema"
 import { type Chiave, numero, t } from "./i18n"
-import { CAMPO_E_BOTTONE } from "./inLinea"
 
 type Probe = components["schemas"]["ProbeOut"]
 
@@ -125,9 +124,9 @@ export function ScriviPercorso({
         e.preventDefault()
         onGuarda()
       }}
-      style={CAMPO_E_BOTTONE}
+      className="as-campo-riga"
     >
-      <Campo cresce="var(--misura-cerca)" etichetta={t(`${prefisso}.label`)} id={id}>
+      <Campo etichetta={t(`${prefisso}.label`)} id={id}>
         <input
           className="as-campo-modulo__input as-campo-modulo__input--cifre"
           id={id}
@@ -173,59 +172,46 @@ export function VistaDellaSonda({
     )
   }
   const alTetto = vista.complete === false
-  return (
-    <>
-      {vista.fits_count !== null && (
-        <Avviso
-          esito={alTetto ? "attesa" : "buono"}
-          ruolo="status"
-          titolo={t(alTetto ? `${prefisso}.atLeastTitle` : `${prefisso}.foundTitle`)}
-        >
-          {t(alTetto ? `${prefisso}.atLeast` : `${prefisso}.found`, {
-            n: numero(vista.fits_count),
-          })}
-        </Avviso>
-      )}
-      {vista.moved_from ? (
-        <Spostata
-          da={vista.moved_from}
-          inCorso={inCorso}
-          nonSpostata={nonSpostata}
-          onSposta={onSposta}
-        />
-      ) : (
-        <div className="as-pagina__azioni">
-          <Bottone disabled={inCorso} verso="primario" onClick={onAggiungi}>
-            {t(`${prefisso}.add`)}
-          </Bottone>
-        </div>
-      )}
-    </>
-  )
-}
-
-function Spostata({
-  da,
-  inCorso,
-  nonSpostata,
-  onSposta,
-}: {
-  da: components["schemas"]["MovedFrom"]
-  inCorso: boolean
-  nonSpostata: Chiave | undefined
-  onSposta: (id: number) => void
-}) {
-  return (
-    <>
-      <Avviso esito="buono" ruolo="status" titolo={t("folders.move.foundTitle")}>
-        {t("folders.move.found", { percorso: da.root_path })}
+  // Quanti file ha trovato, o il pavimento se il conteggio si e' fermato al suo tetto di tempo.
+  const conteggio = (azioni?: ReactNode) =>
+    vista.fits_count !== null && (
+      <Avviso
+        azioni={azioni}
+        esito={alTetto ? "attesa" : "buono"}
+        ruolo="status"
+        titolo={t(alTetto ? `${prefisso}.atLeastTitle` : `${prefisso}.foundTitle`)}
+      >
+        {t(alTetto ? `${prefisso}.atLeast` : `${prefisso}.found`, {
+          n: numero(vista.fits_count),
+        })}
       </Avviso>
-      <div className="as-pagina__azioni">
-        <Bottone disabled={inCorso} verso="primario" onClick={() => onSposta(da.id)}>
-          {t("folders.move.here")}
-        </Bottone>
+    )
+  if (vista.moved_from) {
+    const da = vista.moved_from
+    return (
+      <div className="as-esito">
+        {conteggio()}
+        <Avviso
+          azioni={
+            <Bottone disabled={inCorso} verso="primario" onClick={() => onSposta(da.id)}>
+              {t("folders.move.here")}
+            </Bottone>
+          }
+          esito="buono"
+          ruolo="status"
+          titolo={t("folders.move.foundTitle")}
+        >
+          {t("folders.move.found", { percorso: da.root_path })}
+        </Avviso>
+        {nonSpostata && <Avviso esito="allarme">{t(nonSpostata)}</Avviso>}
       </div>
-      {nonSpostata && <Avviso esito="allarme">{t(nonSpostata)}</Avviso>}
-    </>
+    )
+  }
+  // Il comando che registra sta **dentro** l'esito che lo motiva, su vetro: si stacca dai campi.
+  const aggiungi = (
+    <Bottone disabled={inCorso} verso="primario" onClick={onAggiungi}>
+      {t(`${prefisso}.add`)}
+    </Bottone>
   )
+  return <div className="as-esito">{conteggio(aggiungi) || aggiungi}</div>
 }

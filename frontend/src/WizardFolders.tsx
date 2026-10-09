@@ -1,7 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Avviso } from "./Avviso"
-import { Riga } from "./Riga"
 import { SfogliaCartelle } from "./SfogliaCartelle"
 import { ScriviPercorso, VistaDellaSonda, useCartelle } from "./cartelle"
 import { numero, t } from "./i18n"
@@ -20,10 +19,17 @@ import { useRadiceDati } from "./radiceDati"
  *   l'utente non sa che percorso abbia la sua cartella *dentro* il container, e scriverlo a mano
  *   e' indovinare. Sul desktop non c'e' radice, e il percorso si scrive.
  */
-export function WizardFolders() {
+export function WizardFolders({ onOffre }: { onOffre: (offre: boolean) => void }) {
   const [path, setPath] = useState("")
   const cartelle = useCartelle("wizard.folders.failed")
   const radice = useRadiceDati()
+  // Quando l'esito offre di registrare, il comando pieno e' il suo: il guscio lo deve sapere,
+  // perche' Avanti gli ceda il posto.
+  const offre = cartelle.vista?.reachable === true
+  useEffect(() => {
+    onOffre(offre)
+    return () => onOffre(false)
+  }, [offre, onOffre])
 
   const scrivi = (
     <ScriviPercorso
@@ -35,67 +41,66 @@ export function WizardFolders() {
     />
   )
 
+  const quante = cartelle.elenco.data?.items.length ?? 0
   return (
     <>
-      {/* Due strade, e le decide **dove gira l'app**: sul computer il percorso si scrive, sul NAS
-          non si puo' indovinare e si sfoglia. */}
-      {radice === null ? (
-        scrivi
-      ) : (
-        <SfogliaCartelle
-          onGuarda={cartelle.guarda}
-          radice={radice}
-          scrivi={scrivi}
-          usa={t("wizard.folders.useThis")}
-        />
-      )}
+      <div className="as-passo__parte">
+        {/* Due strade, e le decide **dove gira l'app**: sul computer il percorso si scrive, sul
+            NAS non si puo' indovinare e si sfoglia. */}
+        {radice === null ? (
+          scrivi
+        ) : (
+          <SfogliaCartelle
+            onGuarda={cartelle.guarda}
+            radice={radice}
+            scrivi={scrivi}
+            usa={t("wizard.folders.useThis")}
+          />
+        )}
 
-      {cartelle.vista && (
-        <VistaDellaSonda
-          inCorso={cartelle.inCorso}
-          nonSpostata={cartelle.nonSpostata}
-          onAggiungi={() => {
-            setPath("")
-            void cartelle.aggiungi()
-          }}
-          onSposta={(id) => {
-            setPath("")
-            void cartelle.spostaQui(id)
-          }}
-          prefisso="wizard.folders"
-          vista={cartelle.vista}
-        />
-      )}
+        {cartelle.vista && (
+          <VistaDellaSonda
+            inCorso={cartelle.inCorso}
+            nonSpostata={cartelle.nonSpostata}
+            onAggiungi={() => {
+              setPath("")
+              void cartelle.aggiungi()
+            }}
+            onSposta={(id) => {
+              setPath("")
+              void cartelle.spostaQui(id)
+            }}
+            prefisso="wizard.folders"
+            vista={cartelle.vista}
+          />
+        )}
 
-      {(cartelle.elenco.data?.items.length ?? 0) > 0 && (
-        <>
-          {/* Il conteggio sta **accanto al titoletto**, non contato a occhio sulle righe. */}
-          <p className="as-soprattitolo" id="wizard-added">
-            {t("wizard.folders.added")}{" "}
-            <span className="as-stato as-stato--conteggio">
-              {numero(cartelle.elenco.data?.items.length ?? 0)}
-            </span>
+        {cartelle.rotto && (
+          <Avviso esito="allarme">
+            {t(
+              cartelle.rotto === "guarda" ? "wizard.folders.lookFailed" : "wizard.folders.failed",
+            )}
+          </Avviso>
+        )}
+      </div>
+
+      {quante > 0 && (
+        <div className="as-passo__parte">
+          {/* Quante sono sta **nel titoletto**, non contato a occhio sulle righe. */}
+          <p className="as-soprattitolo as-soprattitolo--nudo" id="wizard-added">
+            {t("wizard.folders.added")}
+            {" \u00b7 "}
+            {numero(quante)}
           </p>
-          <div className="as-carta as-carta--alta">
-            <div className="as-carta__corpo as-carta__corpo--stretto">
-              <ul className="as-elenco" aria-labelledby="wizard-added">
-                {cartelle.elenco.data?.items.map((c) => (
-                  <li key={c.id}>
-                    <Riga nome={c.root_path} frames={c.frames} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </>
-      )}
-
-      {cartelle.rotto && (
-        <Avviso esito="allarme">
-          {t(
-            cartelle.rotto === "guarda" ? "wizard.folders.lookFailed" : "wizard.folders.failed",
-          )}
-        </Avviso>
+          <ul className="as-cartelle" aria-labelledby="wizard-added">
+            {cartelle.elenco.data?.items.map((c) => (
+              <li key={c.id} className="as-cartelle__voce">
+                <span className="as-cartelle__percorso">{c.root_path}</span>
+                <span className="as-cartelle__frame">{t("review.frames", { n: numero(c.frames) })}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </>
   )

@@ -14,7 +14,6 @@ as-bortle-scala__voce--8
 as-bortle-scala__voce--9
 as-bottone--distruttivo
 as-bottone--errore
-as-carta--alta
 as-carta__azioni
 as-carta__corpo
 as-carta__corpo--colonna
@@ -23,7 +22,6 @@ as-carta__domanda
 as-carta__piede
 as-carta__piede--prosa
 as-carta__titolo
-as-cifre
 as-comparsa
 as-comparsa--accanto
 as-comparsa__azioni

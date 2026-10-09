@@ -353,8 +353,15 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   Impostazioni), "Salva sito" unico primario fra i gesti. Da chiedere a Marco: accanto a "Salva
   sito" il disegno scrive "Avanti senza sito", l'app "Avanti". Del passo del sito restano: il
   posto trovato non dice regione e paese a parte (`.as-posti__dove`: la rotta manda un nome
-  solo), "Salvo il sito" sul bottone mentre salva; l'avviso "Sito non salvato" resta a schermo andando avanti e tornando indietro, e su un nome gia' usato (409) dice "Il servizio non ha risposto"; dopo un salvataggio riuscito, tornando indietro il modulo e' vuoto e niente dice che il sito c'e' gia'; "Salva sito" spento si vede come acceso finche' il Bottone non scrive `aria-disabled`; Invio nel campo "Localita'" non cerca. Restano, un passo alla volta: il percorso dei file (`.as-esito`,
-  `.as-cartelle`, `.as-sfoglia`); Seeing e ASTAP (`.as-avviso--ignoto`, `.as-campo-riga`); le
+  solo), "Salvo il sito" sul bottone mentre salva; l'avviso "Sito non salvato" resta a schermo andando avanti e tornando indietro, e su un nome gia' usato (409) dice "Il servizio non ha risposto"; dopo un salvataggio riuscito, tornando indietro il modulo e' vuoto e niente dice che il sito c'e' gia'; "Salva sito" spento si vede come acceso finche' il Bottone non scrive `aria-disabled`; Invio nel campo "Localita'" non cerca. Fatto anche il percorso dei file (9/10): il campo e "Verifica" in `.as-campo-riga`, cio'
+  che la verifica trova in `.as-esito` col comando che aggiunge dentro l'avviso (e "Avanti" gli
+  cede il pieno), le cartelle aggiunte in `.as-cartelle`, il NAS in `.as-sfoglia`; gli stessi
+  pezzi valgono nelle Impostazioni > Cartelle; l'avviso buono ha di nuovo la sua classe
+  (`.as-avviso--buono`). Del percorso dei file restano: l'icona della cartella nelle righe da
+  sfogliare (lo sprite delle icone non e' montato fuori dal telaio; il suo posto nella riga c'e',
+  vuoto, perche' le tre colonne del foglio tengano "Apri" in fondo), il percorso verificato
+  scritto nell'esito (`.as-avviso__dato`), il separatore delle briciole ("›" nell'app, "/"
+  nel disegno). Restano, un passo alla volta: Seeing e ASTAP (`.as-avviso--ignoto`, `.as-campo-riga`); le
   risposte ritrovate (`.as-ritrovate`, `.as-conti`); la chiusura; il bottone spento con
   `aria-disabled` e al lavoro con `aria-busy` (oggi `disabled`); l'attesa nel pozzo
   (`.as-campo-modulo__attesa`, oggi solo `aria-busy`); "Un momento" mentre l'app si apre

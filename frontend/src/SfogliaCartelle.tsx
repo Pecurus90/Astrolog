@@ -3,7 +3,6 @@ import { Fragment, type ReactNode, useState } from "react"
 
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
-import { Riga } from "./Riga"
 import { api } from "./api/client"
 import { t } from "./i18n"
 
@@ -80,8 +79,8 @@ export function SfogliaCartelle({
   })
 
   return (
-    <>
-      <p className="as-carta__domanda" id={`${dove}-browse`}>
+    <div className="as-sfoglia">
+      <p className="as-soprattitolo as-soprattitolo--nudo" id={`${dove}-browse`}>
         {t("wizard.folders.choose")}
       </p>
       {/* Dove sei lo sa `apri`, non la risposta: appena si clicca un nome la query cambia chiave
@@ -108,7 +107,7 @@ export function SfogliaCartelle({
             )}
             <span
               aria-hidden="true"
-              className={i === tutte.length - 1 ? "as-percorso__qui as-cifre" : undefined}
+              className={i === tutte.length - 1 ? "as-percorso__qui" : undefined}
             >
               {pezzo.nome}
             </span>
@@ -121,7 +120,7 @@ export function SfogliaCartelle({
           Bloccato quando per questa cartella non si ha ancora niente (`isPending`), non a ogni
           riletta: rileggendo, cio' che e' a schermo e' gia' quello giusto, e bloccare il tasto
           costava ~200 ms per livello su un NAS -- oltre un secondo in una discesa di sei. */}
-      <div className="as-pagina__azioni">
+      <div className="as-sfoglia__azioni">
         {/* tenue e non primario: il primario di questo passo e' *Aggiungi*, che registra.
             Guardare cosa c'e' dentro una cartella e' il gesto prima, non l'azione. */}
         <Bottone
@@ -132,7 +131,7 @@ export function SfogliaCartelle({
           {usa}
         </Bottone>
         {sfoglia.data?.parent != null && (
-          <Bottone verso="tenue" onClick={() => setApri(sfoglia.data?.parent ?? undefined)}>
+          <Bottone verso="nudo" onClick={() => setApri(sfoglia.data?.parent ?? undefined)}>
             {t("wizard.folders.up")}
           </Bottone>
         )}
@@ -140,34 +139,30 @@ export function SfogliaCartelle({
       {/* L'elenco sta in una **scatola che scorre**: una cartella con duecento sottocartelle
           spingerebbe il piede della pagina fuori dallo schermo, e cio' che serve per andare
           avanti sparirebbe sotto l'elenco. */}
-      <div className="as-carta as-carta--alta">
-        <div
-          className="as-carta__corpo as-carta__corpo--stretto"
-          style={{ maxHeight: "var(--elenco-alto)", overflow: "auto" }}
-        >
-          <ul className="as-elenco" aria-labelledby={`${dove}-browse`}>
-            {sfoglia.data?.folders.map((c) => (
-              <li key={c.path}>
-                <Riga nome={c.name}>
-                  {/* Il nome che si **sente** porta dentro quale cartella: in elenco tutti i
-                      bottoni si chiamano "Apri", e chi naviga per bottoni o comanda a voce non
-                      ne distingue venti. Il nome a vista resta corto, che e' cio' che il
-                      disegno mostra. */}
-                  <Bottone
-                    piccolo
-                    nome={t("wizard.folders.openOne", { nome: c.name })}
-                    onClick={() => setApri(c.path)}
-                  >
-                    {t("wizard.folders.open")}
-                  </Bottone>
-                </Riga>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      {sfoglia.data?.folders.length === 0 && (
-        <p className="as-campo-modulo__aiuto">{t("wizard.folders.empty")}</p>
+      {sfoglia.data?.folders.length === 0 ? (
+        <p className="as-sfoglia__niente">{t("wizard.folders.empty")}</p>
+      ) : (
+        <ul className="as-sfoglia__elenco" aria-labelledby={`${dove}-browse`}>
+          {sfoglia.data?.folders.map((c) => (
+            <li key={c.path} className="as-sfoglia__voce">
+              {/* Il posto dell'icona, vuoto finche' l'icona non c'e': la riga del foglio ha tre
+                  colonne, e con due figli il nome cade nella prima e "Apri" si allarga a tutta
+                  la riga, fino a uscire dal pozzo con un nome lungo. */}
+              <span aria-hidden="true" />
+              <span className="as-sfoglia__nome">{c.name}</span>
+              {/* Il nome che si **sente** porta dentro quale cartella: a vista tutti i bottoni
+                  si chiamano "Apri", e chi comanda a voce non ne distingue venti. */}
+              <Bottone
+                piccolo
+                verso="nudo"
+                nome={t("wizard.folders.openOne", { nome: c.name })}
+                onClick={() => setApri(c.path)}
+              >
+                {t("wizard.folders.open")}
+              </Bottone>
+            </li>
+          ))}
+        </ul>
       )}
       {/* Un elenco che non arriva non puo' lasciare senza strade: si dice, e si torna a scrivere
           il percorso a mano -- che sul NAS e' scomodo, ma e' meglio di niente. */}
@@ -197,6 +192,6 @@ export function SfogliaCartelle({
           <p className="as-campo-modulo__aiuto">{t("wizard.folders.pathHelp")}</p>
         </>
       )}
-    </>
+    </div>
   )
 }

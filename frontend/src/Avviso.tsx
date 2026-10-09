@@ -32,8 +32,7 @@ const SEGNI = { neutro: "i", attesa: "\u2026", buono: "\u2713", allarme: "\u26A0
 const TONI: Record<keyof typeof SEGNI, string> = {
   neutro: "",
   attesa: "as-avviso--attesa",
-  // il v26 ha tolto il tono buono: resta il segno, la spunta, che lo dice da solo
-  buono: "",
+  buono: "as-avviso--buono",
   allarme: "as-avviso--allarme",
   lavoro: "as-avviso--lavoro",
 }

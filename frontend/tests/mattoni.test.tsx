@@ -53,8 +53,7 @@ describe("Avviso", () => {
     const forme: Record<string, string> = {
       neutro: "as-avviso",
       attesa: "as-avviso--attesa",
-      // il v26 ha tolto il tono buono: lo distingue il segno, la spunta (prova qui sopra)
-      buono: "as-avviso",
+      buono: "as-avviso--buono",
       allarme: "as-avviso--allarme",
     }
     for (const [esito, classe] of Object.entries(forme)) {
