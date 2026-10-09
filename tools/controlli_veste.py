@@ -26,7 +26,7 @@ from controlli_foglio import pavimenti_del_cielo
 # dal progetto Claude Design, mai per far passare una modifica fatta qui. Resta una **mappa**
 # anche con un foglio solo: quanti sono lo decide la consegna, non noi.
 IMPRONTE = {
-    FOGLIO: "219df05cb5da089f45bd757a17b9dec98b0ee7e53a3adf680d1a8b6a2917edc6",
+    FOGLIO: "0cf4a2701b95c6ddfc78656acfac48986c78de21af6314ffce3fe41acecb3add",
 }
 
 

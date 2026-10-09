@@ -13,8 +13,8 @@ describe("il singolare dei conti", () => {
   })
 
   it("vale anche col numero gia' scritto per lo schermo", () => {
-    expect(t("review.count", { n: numero(1) })).toBe("1 da confermare")
-    expect(t("review.count", { n: numero(1000) })).toBe(`${numero(1000)} da confermare`)
+    expect(t("review.questions", { n: numero(1) })).toBe("1 domanda")
+    expect(t("review.questions", { n: numero(1000) })).toBe(`${numero(1000)} domande`)
   })
 
   it("una chiave senza forma singolare resta com'e'", () => {

@@ -59,6 +59,8 @@ type Premuto = Comune & {
    *  nominerebbe un id che esiste solo quando lui non c'e'. */
   governa?: string | undefined
   aperto?: boolean
+  /** Al lavoro: il foglio gli mette il segno dell'attesa, e chi ascolta lo sente occupato. */
+  occupato?: boolean
 }
 type Portato = Comune & {
   a: string
@@ -66,6 +68,7 @@ type Portato = Comune & {
   disabled?: never
   governa?: never
   aperto?: never
+  occupato?: never
 }
 
 export function Bottone({
@@ -78,6 +81,7 @@ export function Bottone({
   descrittoDa,
   governa,
   aperto,
+  occupato = false,
   children,
 }: Premuto | Portato) {
   // La veste e' scritta **per esteso in tutti e due i rami**, e non messa in una variabile:
@@ -104,9 +108,11 @@ export function Bottone({
       aria-describedby={descrittoDa}
       aria-controls={governa}
       aria-expanded={governa === undefined ? undefined : aperto === true}
+      aria-busy={occupato || undefined}
       onClick={onClick}
       disabled={disabled}
     >
+      {occupato && <span className="as-attesa" aria-hidden="true" />}
       {children}
     </button>
   )

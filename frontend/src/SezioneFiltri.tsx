@@ -48,7 +48,7 @@ export function SezioneFiltri({
   onRisposta: (id: number, r: Risposta | null) => void
 }) {
   return (
-    <Sezione titolo={t("review.filters")} domanda={t("review.filters.why")}
+    <Sezione quale="filters" domanda={t("review.filters.why")}
       voci={filtri}
       chiave={(f) => f.id}
       riga={(f) => (
@@ -131,10 +131,10 @@ function RigaFiltri({
             onChange={(e) => setCerca(e.target.value)}
           />
         </Campo>
-        <ul className="as-comparsa__righe">
+        <ul className="as-apertura__righe">
           {visti.map((m) => (
             <li key={m.id}>
-              <button className="as-comparsa__voce" type="button" onClick={() => scegli(m)}>
+              <button className="as-apertura__voce" type="button" onClick={() => scegli(m)}>
                 {etichetta(m)}
               </button>
             </li>

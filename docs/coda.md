@@ -386,6 +386,27 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   Attrezzatura non si sono aperti sui dati di prova (zero frame), per loro vale la rinomina;
   accanto ai campi col pozzo la tendina `as-scelta` resta bassa e senza veste; `as-campo__area`
   in `tests/banco.tsx` e' una voce morta.
+- **Da confermare sul foglio v34** (Design, 9/10/2026; forma B, "una cosa aperta alla volta",
+  scelta da Marco; tavole `pagine/da-confermare.html` e `da-confermare-stati.html`). Fatto: il
+  foglio v34 nell'app; l'ossatura (`.as-conferma` con l'indice, il conto, la regola, una carta
+  `.as-conferma-sezione` per sezione, il piede `.as-conferma-tutto` con l'avviso dell'unione,
+  Applica al lavoro con la pagina ferma, l'esito che si chiude, lo scheletro, "Niente da
+  confermare", Riprova). Il pannello che si apre dentro una riga ha cambiato nome
+  (`as-apertura*`, in attesa): `.as-comparsa` nel v34 e' l'elenco che compare scrivendo.
+  Restano, a pezzi: le domande (`.as-domanda` aperta, `.as-domanda-riga` chiusa, `.as-risposta`
+  coi quattro stati, una sola aperta in tutta la pagina, le sezioni finite che si chiudono in
+  `.as-conferma-chiusa`, il perche' solo nella sezione su cui si lavora) e la scelta fissa
+  (`.as-scelta-fissa`) sulle cinque sezioni che esistono -- **finche' restano, dentro le carte le
+  righe sono quelle vecchie, senza veste**; poi Attrezzatura da completare e Oggetti (oggi non
+  disegnate: il conto in cima le conta e l'indice no; con sole domande loro la pagina mostra il
+  conto e nient'altro, "Niente da confermare" si dice solo a conto zero); gli oggetti gia' a posto a pagine;
+  coordinate e notti all'italiana (le manda il backend); il telefono a due livelli
+  (`.as-conferma-tipi`, `.as-conferma-caso`) -- fino ad allora sotto i 900 di colonna l'indice
+  non si mostra (`.as-solo-largo`): nel foglio e' `sticky` a ogni larghezza e in colonna unica
+  copriva le domande e ne prendeva i clic; zero frame ("Scegli le cartelle"). Testi nuovi
+  scritti da me nel tono approvato, da far vedere a Marco riga per riga: l'elenco e' in
+  `frontend/src/i18n/it.ts`, chiavi `review.count.word`, `review.inHand.word`, `review.index*`, `review.rule`, `review.questions`,
+  `review.inHand.label`, `review.merge.warning*`, `review.applying`, `review.none.*`.
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio (v31-v32, montato l'8/10), il primo avvio (Marco, 8/10:
   "anche il wizard bisogna rifare"; brief in `handoff/design-primo-avvio.md`; montato il 9/10 sul v33), Da confermare

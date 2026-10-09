@@ -209,3 +209,4 @@ e nemmeno Le letture, con una ricevuta per ogni esito - testi delle Impostazioni
 Vedi porta alle Cartelle solo quando il rifiuto e' delle cartelle - testi della scansione (Marco, 8/10/2026): il bottone ora dice Dettagli; rinominato in "Dettagli porta alle Cartelle solo quando il rifiuto e' delle cartelle"
 se il cielo non ha niente da dire, la riga non dice 'ripreso' - testi di Da confermare (Marco, 8/10/2026): la riga ora comincia con Oggetti; rinominato in "se il cielo non ha niente da dire, la riga non dice 'Oggetti'"
 un vuoto a zero non si scrive, e con tre oggetti nemmeno 'altri' - testi di Da confermare (Marco, 8/10/2026): gli oggetti oltre il terzo ora sono un + N; rinominato in "un vuoto a zero non si scrive, e con tre oggetti nemmeno '+ N'"
+ogni sezione e' una carta, e il suo elenco sta nel corpo della carta - Da confermare sul foglio v34: la carta non ha piu' un corpo; rinominato in "ogni sezione e' una carta, dentro la colonna misurata della pagina"

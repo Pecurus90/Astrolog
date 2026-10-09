@@ -73,11 +73,11 @@ function Azioni({
   valido: boolean
 }) {
   return (
-    // `as-comparsa__azioni` e non `as-carta__azioni`: la seconda nel foglio esiste solo come
+    // `as-apertura__azioni` e non `as-carta__azioni`: la seconda nel foglio esiste solo come
     // figlia dell'intestazione di una carta, e qui dentro non prenderebbe ne' la disposizione
     // ne' lo spazio fra i bottoni. La guardia sulle classi inventate non lo vede, perche' quel
     // nome nel foglio c'e' -- dentro un selettore composto.
-    <div className="as-comparsa__azioni">
+    <div className="as-apertura__azioni">
       <Bottone verso="primario" disabled={salvando || !valido} onClick={onManda}>
         {t("gear.write.save")}
       </Bottone>{" "}
@@ -136,9 +136,9 @@ export function Modulo({
   children: React.ReactNode
 }) {
   return (
-    <div className="as-comparsa as-comparsa--accanto" role="region" aria-labelledby={`${base}-nome`}>
+    <div className="as-apertura as-apertura--accanto" role="region" aria-labelledby={`${base}-nome`}>
       <fieldset>
-        <legend className="as-comparsa__titolo" id={`${base}-nome`}>
+        <legend className="as-apertura__titolo" id={`${base}-nome`}>
           {titolo}
         </legend>
         {children}

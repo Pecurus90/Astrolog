@@ -108,7 +108,7 @@ describe("Da confermare -- strumenti duplicati", () => {
     aperta({ ...PAGINA, lookalikes: [] })
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
-    await within(await screen.findByRole("main")).findByText(/^\d+ da confermare$/)
+    await waitFor(() => expect(document.querySelector(".as-conferma__conta")?.textContent).toMatch(/^\d+ da confermare$/))
     expect(screen.queryByRole("region", { name: /strumenti duplicati/i })).toBeNull()
     expect(screen.queryByRole("region", { name: /strumenti/i })).toBeNull()
     expect(screen.queryByRole("region", { name: /corredi/i })).toBeNull()

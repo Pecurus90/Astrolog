@@ -25,7 +25,7 @@ export const SezioneStessoPezzo = memo(function SezioneStessoPezzo({
   onRisposta,
 }: PerGruppo<Coppia, Risposta>) {
   return (
-    <Sezione titolo={t("review.lookalikes")} domanda={t("review.lookalikes.why")}
+    <Sezione quale="lookalikes" domanda={t("review.lookalikes.why")}
       voci={gruppi}
       chiave={(c) => c.id}
       riga={(c) => (

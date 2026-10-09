@@ -32,7 +32,7 @@ export function SezioneMosaici({
   onRisposta: (chiave: string, r: Risposta | null) => void
 }) {
   return (
-    <Sezione titolo={t("review.mosaics")} domanda={t("review.mosaics.why")}
+    <Sezione quale="mosaics" domanda={t("review.mosaics.why")}
       voci={mosaici}
       chiave={(m) => m.key}
       riga={(m) => <RigaMosaici mosaico={m} risposta={risposte[m.key]} onRisposta={onRisposta} />}

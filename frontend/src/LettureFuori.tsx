@@ -41,24 +41,24 @@ export function Fuori({ lettura, id }: { lettura: Lettura; id: string }) {
   return (
     <div
       aria-labelledby={`${id}-name`}
-      className="as-comparsa as-comparsa--accanto"
+      className="as-apertura as-apertura--accanto"
       id={id}
       role="region"
     >
       {/* `h3`, non `h4`: il titolo della carta e' un `h2`, e un livello saltato e' un capitolo
           che manca per chi si muove fra le intestazioni. */}
-      <h3 className="as-comparsa__titolo" id={`${id}-name`}>
+      <h3 className="as-apertura__titolo" id={`${id}-name`}>
         {t("settings.readings.leftOut")}
       </h3>
-      <ul className="as-comparsa__righe">
+      <ul className="as-apertura__righe">
         {lettura.skipped_by_reason.map((s) => (
-          <li className="as-comparsa__voce" key={s.reason}>
+          <li className="as-apertura__voce" key={s.reason}>
             {t(`settings.readings.skip.${s.reason}`, { n: numero(s.count) })}
           </li>
         ))}
         {CARTELLE.map((campo) =>
           lettura[campo].map((cartella) => (
-            <li className="as-comparsa__voce" key={`${campo}-${cartella}`}>
+            <li className="as-apertura__voce" key={`${campo}-${cartella}`}>
               <Prova>{cartella}</Prova> {t(`settings.readings.${campo}`)}
             </li>
           )),
@@ -91,22 +91,22 @@ function NonLetti({ lettura }: { lettura: number }) {
 
   return (
     <>
-      <h4 className="as-comparsa__titolo">{t("settings.readings.files")}</h4>
+      <h4 className="as-apertura__titolo">{t("settings.readings.files")}</h4>
       {file.isError && <Avviso esito="allarme">{t("settings.readings.filesFailed")}</Avviso>}
       {file.data === null && (
-        <p className="as-comparsa__testo">{t("settings.readings.filesGone")}</p>
+        <p className="as-apertura__testo">{t("settings.readings.filesGone")}</p>
       )}
       {presi > 0 && (
-        <ul className="as-comparsa__righe">
+        <ul className="as-apertura__righe">
           {file.data?.items.map((f) => (
-            <li className="as-comparsa__voce" key={f.file}>
+            <li className="as-apertura__voce" key={f.file}>
               <Prova>{f.file}</Prova> {t(`settings.readings.error.${f.reason}`)}
             </li>
           ))}
         </ul>
       )}
       {(file.data?.total ?? 0) > presi && (
-        <div className="as-comparsa__azioni">
+        <div className="as-apertura__azioni">
           <Bottone piccolo onClick={() => setQuanti((n) => n + PER_VOLTA)}>
             {t("settings.readings.filesMore")}
           </Bottone>

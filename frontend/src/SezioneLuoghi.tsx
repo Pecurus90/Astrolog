@@ -28,7 +28,7 @@ export function SezioneLuoghi({
   onRisposta: (chiave: string, r: Risposta | null) => void
 }) {
   return (
-    <Sezione titolo={t("review.unclear")} domanda={t("review.unclear.why")}
+    <Sezione quale="unclear" domanda={t("review.unclear.why")}
       voci={posti}
       chiave={(p) => p.key}
       riga={(p) => (

@@ -124,7 +124,7 @@ describe("Da confermare -- i file che non dicono che file sono", () => {
     aperta({ ...PAGINA, typeless: [], to_confirm: 0 })
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
-    await waitFor(() => expect(screen.getByRole("button", { name: /applica/i })).toBeDefined())
+    expect(await screen.findByText("Niente da confermare")).toBeDefined()
     expect(screen.queryByRole("heading", { name: /frame senza tipo/i })).toBeNull()
   })
 })

@@ -285,7 +285,7 @@ describe("Da confermare -- i filtri", () => {
     aperta({ ...PAGINA, filters: [], to_confirm: 0 })
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
-    await within(await screen.findByRole("main")).findByText(/^\d+ da confermare$/)
+    await waitFor(() => expect(document.querySelector(".as-conferma__conta")?.textContent).toMatch(/^\d+ da confermare$/))
     expect(screen.queryByRole("region", { name: /filtri/i })).toBeNull()
   })
 

@@ -32,7 +32,7 @@ export const SezioneSenzaTipo = memo(function SezioneSenzaTipo({
   onRisposta,
 }: PerGruppo<Gruppo, Risposta>) {
   return (
-    <Sezione titolo={t("review.typeless")} domanda={t("review.typeless.why")}
+    <Sezione quale="typeless" domanda={t("review.typeless.why")}
       voci={gruppi}
       chiave={(g) => g.key}
       riga={(g) => (

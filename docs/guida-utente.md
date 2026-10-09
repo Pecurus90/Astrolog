@@ -547,6 +547,14 @@ cosa stai per mandare anche se non distingui i colori. La pagina si rilegge e ti
 modifiche ha applicato e quanti frame sono da rielaborare. Ogni risposta vale anche per i frame che
 arriveranno, e **si cambia**: un gruppo a cui hai risposto resta in pagina con la sua risposta.
 
+In cima leggi **quante domande aspettano**. A sinistra c'e' l'**indice** delle schede: accanto a
+ognuna quante domande sono ancora senza risposta, o una spunta quando le hai risposte tutte; un
+clic ti porta alla scheda. Sul telefono, e in una finestra stretta, l'indice non c'e': le schede stanno una sotto l'altra. Se fra le modifiche c'e'
+un'**unione di strumenti**, la barra in fondo te lo dice prima di *Applica*: e' l'unica risposta
+che non si annulla. Mentre l'app applica, la pagina si ferma; l'esito si chiude con *Chiudi*.
+Quando non c'e' niente da chiedere la pagina dice *Niente da confermare*; se l'ultimo *Applica*
+ha risposto a tutto, sopra resta il suo esito finche' non lo chiudi.
+
 Il conto scende quando **rispondi**, non quando guardi: *Applica* scrive solo le risposte che hai
 dato. Le cose su cui l'app ti sta chiedendo qualcosa -- un filtro che non riconosce, due camere che
 sembrano la stessa, un oggetto su cui ha un dubbio, un gruppo di frame senza risposta -- restano

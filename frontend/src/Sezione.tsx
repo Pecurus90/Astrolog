@@ -1,5 +1,8 @@
 import type { ReactNode } from "react"
 
+import { numero, t } from "./i18n"
+import { type QualeSezione, SEZIONI } from "./sezioniDaConfermare"
+
 /**
  * Come si presenta una sezione che chiede **per gruppo**: le voci, le risposte gia' in mano e il
  * modo di darne una. Nove sezioni su dodici hanno questa identica firma, e riscriverla ogni volta
@@ -26,8 +29,9 @@ export type PerGruppo<G, R> = {
  * involucro (`section` > `h2` > `p` > `ul`), e la veste l'avrebbe fatto scrivere dodici volte
  * ancora.
  *
- * - **Il titolo nomina la sezione** (`aria-label`): e' cosi' che le prove la trovano e che chi
- *   ascolta sa dove si trova, e i due devono restare la stessa cosa.
+ * - **Il titolo nomina la sezione** (`aria-labelledby`): e' cosi' che le prove la trovano e che
+ *   chi ascolta sa dove si trova. Nome e ancora vengono da `sezioniDaConfermare`, dove li legge
+ *   anche l'indice.
  * - **La domanda e' prosa e sta in cima**, non accanto alle righe: dice *perche'* l'app chiede, e
  *   si legge una volta sola.
  * - **L'elenco sta nel CORPO della carta**, non attaccato alla carta: il corpo e' un contenitore
@@ -38,18 +42,18 @@ export type PerGruppo<G, R> = {
  * - **L'elenco lo monta lei**: le dodici sezioni scrivevano lo stesso `map` con lo stesso `<li>`,
  *   e due di loro erano diventate abbastanza uguali da far scattare il rilevatore di doppioni. Chi
  *   la usa passa le **voci** e dice come si disegna una riga, non come si fa un elenco.
- * - **Niente conti qui dentro**: se un giorno accanto al titolo va "4 da risolvere", quel numero
- *   arriva dall'API come tutti gli altri. Un `voci.length` sarebbe un conto nel frontend.
+ * - **Accanto al titolo quante domande sono**: le righe che la sezione disegna, non un numero
+ *   del dominio.
  */
 export function Sezione<V>({
-  titolo,
+  quale,
   domanda,
   voci,
   chiave,
   riga,
   piede,
 }: {
-  titolo: string
+  quale: QualeSezione
   domanda?: ReactNode
   /** Cio' su cui si risponde, nell'ordine in cui l'API lo manda: questa pagina non riordina. */
   voci: V[]
@@ -61,24 +65,22 @@ export function Sezione<V>({
   /** Cio' che sta sotto le righe: il bottone che allunga un elenco a pagine. */
   piede?: ReactNode
 }) {
+  const { ancora, titolo } = SEZIONI[quale]
   return (
-    <section className="as-carta" aria-label={titolo}>
-      <div className="as-carta__intestazione">
-        <div>
-          <h2 className="as-carta__titolo">{titolo}</h2>
-          {domanda && <p className="as-carta__domanda">{domanda}</p>}
-        </div>
-      </div>
-      {/* `--stretto` toglie il padding: le righe hanno gia' il loro, e sommarli le staccherebbe
-          dal bordo della carta */}
-      <div className="as-carta__corpo as-carta__corpo--stretto">
-        <ul className="as-elenco">
-          {voci.map((v, indice) => (
-            <li key={chiave(v)}>{riga(v, indice)}</li>
-          ))}
-        </ul>
-        {piede}
-      </div>
+    <section className="as-carta as-conferma-sezione" id={ancora} aria-labelledby={`${ancora}-nome`}>
+      <header className="as-conferma-sezione__testa">
+        <h2 className="as-conferma-sezione__nome" id={`${ancora}-nome`}>
+          {t(titolo)}
+        </h2>
+        <span className="as-conferma-sezione__quante">{t("review.questions", { n: numero(voci.length) })}</span>
+        {domanda && <p className="as-conferma-sezione__perche">{domanda}</p>}
+      </header>
+      <ul className="as-elenco">
+        {voci.map((v, indice) => (
+          <li key={chiave(v)}>{riga(v, indice)}</li>
+        ))}
+      </ul>
+      {piede}
     </section>
   )
 }

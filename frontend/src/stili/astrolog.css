@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AstroLog — astrolog.css  ·  v33 (09/10/2026)
+   AstroLog — astrolog.css  ·  v34 (09/10/2026)
 
    FILE GENERATO: non si modifica qui. Le sorgenti stanno in foglio/, un
    file per famiglia; questo foglio e' la loro unione, nell'ordine qui
@@ -46,6 +46,8 @@
      54-tendina.css
      55-trova.css
      56-campo-modulo.css
+     57-scelta-fissa.css
+     58-comparsa.css
      60-volta.css
      61-heat.css
      62-andamento.css
@@ -58,6 +60,7 @@
      72-pagina-notti.css
      73-pagina-archivio.css
      74-pagina-primo-avvio.css
+     75-pagina-conferma.css
    ========================================================================== */
 
 /* ── foglio/10-token.css ──────────────────────────────────────────────── */
@@ -482,6 +485,15 @@
   --entra-sola:               600px;  /* la colonna senza passi: risposte ritrovate, attesa */
   --sfoglia-alto:             18rem;  /* l'elenco delle cartelle che scorre */
   --passo-segno:              var(--avviso-segno);
+  /* v34 · Da confermare (75) e la comparsa (58) */
+  --conferma-indice:          15rem;   /* la colonna dell'indice delle sezioni */
+  --conferma-prova:           9.5rem;  /* la colonna dei nomi nella prova di una domanda */
+  --conferma-riga-chi:        15rem;   /* di cosa si parla, in una domanda chiusa */
+  --conferma-avverte-min:     16rem;   /* l'avvertenza nel piede, prima di andare a capo */
+  --conferma-vai-min:         10rem;   /* un gesto fra «caso prima» e il tipo dopo */
+  --conferma-sk-chiusa:       4.25rem; /* lo scheletro di una sezione chiusa */
+  --conferma-sk-carta:        22rem;   /* lo scheletro di una sezione aperta */
+  --comparsa-alto:            15rem;   /* l'elenco che compare scrivendo, prima di scorrere */
 }
 
 /* ── foglio/15-tema-atlante.css ───────────────────────────────────────── */
@@ -2273,6 +2285,93 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
   .as-campo-riga > .as-bottone { margin-top: 0; }
 }
 
+/* v34 · la tendina dei moduli (--tendina): il pozzo del campo con dentro una
+   <select> senza la veste del sistema, e la freccia; il menu che apre e'
+   quello del sistema. Da Da confermare; serve anche ad Attrezzatura e
+   Impostazioni. --sola: il campo che si legge e non si scrive (readonly):
+   niente incavo, resta il filo. */
+.as-campo-modulo--tendina .as-campo-modulo__pozzo { position: relative; }
+.as-campo-modulo--tendina .as-campo-modulo__input { appearance: none; cursor: pointer; padding-right: var(--spazio-6); }
+.as-campo-modulo--tendina option { background: var(--fondo-carta); color: var(--inchiostro); }
+.as-campo-modulo--tendina .as-campo-modulo__pozzo::after {
+  content: ""; position: absolute; right: var(--spazio-4); top: 50%; pointer-events: none;
+  width: var(--spazio-2); height: var(--spazio-2); box-sizing: border-box;
+  border-right: var(--segno-filo) solid var(--inchiostro-tenue); border-bottom: var(--segno-filo) solid var(--inchiostro-tenue);
+  transform: translateY(-70%) rotate(45deg);
+}
+.as-campo-modulo--sola .as-campo-modulo__pozzo { background: none; box-shadow: inset 0 0 0 1px var(--linea); }
+
+/* ── foglio/57-scelta-fissa.css ───────────────────────────────────────── */
+/* ==========================================================================
+   LA SCELTA FISSA — .as-scelta-fissa (v34, da Da confermare)
+   Due, tre o qualche voce fissa, se ne sceglie una: radio vestiti da
+   pillole, alti --riga-alta (44 anche sul desktop: e' la stessa scelta in
+   cinque sezioni). La scelta ha il velo d'accento, il filo tutt'intorno e
+   la spunta: non il colore da solo. Una voce con la sua riga sotto (__sub,
+   «dentro l'inquadratura») prende l'angolo grande. La voce spenta resta
+   leggibile, in inchiostro debole, e chi la spegne dice accanto perche'.
+   La domanda e' la legend del fieldset; quando la scheda la dice gia', la
+   legend resta per chi legge con la voce (.as-solo-lettori).
+   __dopo: cio' che la scelta apre (un campo, una tendina), sotto le voci.
+   Qui 57 e non nella famiglia 30–50, che e' piena.
+   <fieldset class="as-scelta-fissa"><legend class="as-scelta-fissa__domanda">Tipo dei frame</legend>
+     <div class="as-scelta-fissa__voci"><label class="as-scelta-fissa__voce"><input type="radio" name="t">
+     <span class="as-scelta-fissa__testo"><span class="as-scelta-fissa__nome">Light</span></span></label>…</div>
+     <div class="as-scelta-fissa__dopo">…</div></fieldset>
+   ========================================================================== */
+.as-scelta-fissa { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: var(--spazio-3); }
+.as-scelta-fissa__domanda { padding: 0; margin-bottom: var(--spazio-3); font-size: var(--testo-corpo); font-weight: var(--peso-medio); color: var(--inchiostro); overflow-wrap: anywhere; }
+.as-scelta-fissa__voci { display: flex; flex-wrap: wrap; gap: var(--spazio-2); min-width: 0; }
+.as-scelta-fissa__voce {
+  position: relative; box-sizing: border-box;
+  display: inline-flex; align-items: center; gap: var(--spazio-2);
+  min-height: var(--riga-alta); padding: var(--spazio-2) var(--spazio-5);
+  border-radius: var(--raggio-pillola); background: var(--vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo);
+  cursor: pointer;
+}
+:root[data-tema="atlante"] .as-scelta-fissa__voce { box-shadow: inset 0 0 0 1px var(--linea-forte); }
+/* il radio vero copre la voce, invisibile: il tocco, la tastiera e il lettore restano suoi */
+.as-scelta-fissa__voce input { appearance: none; position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; border: 0; border-radius: inherit; background: none; opacity: 0; cursor: inherit; }
+.as-scelta-fissa__voce:has(.as-scelta-fissa__sub) { border-radius: var(--raggio-grande); padding: var(--spazio-2) var(--spazio-4); }
+.as-scelta-fissa__voce:hover { background: var(--vetro-sopra); }
+.as-scelta-fissa__voce:has(:focus-visible) { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
+.as-scelta-fissa__voce:has(:checked) { background: var(--accento-velo); box-shadow: inset 0 0 0 var(--filo) var(--accento-sopra); }
+.as-scelta-fissa__voce:has(:checked)::before { content: "✓"; font: var(--peso-grosso) var(--testo-corpo)/1 var(--carattere-cifre); color: var(--inchiostro-accento); }
+.as-scelta-fissa__voce:has(:disabled) { cursor: default; background: none; }
+.as-scelta-fissa__testo { display: grid; gap: var(--stacco-minimo); min-width: 0; }
+.as-scelta-fissa__nome { font-size: var(--testo-corpo); color: var(--inchiostro); overflow-wrap: anywhere; }
+.as-scelta-fissa__voce:has(:checked) .as-scelta-fissa__nome { font-weight: var(--peso-medio); }
+.as-scelta-fissa__voce:has(:disabled) .as-scelta-fissa__nome { color: var(--inchiostro-debole); }
+.as-scelta-fissa__sub { font-size: var(--testo-minuto); line-height: var(--interlinea-corpo); color: var(--inchiostro-tenue); }
+.as-scelta-fissa__sub .as-nonsisa::before { display: inline-block; margin-right: var(--spazio-1); vertical-align: -1px; }
+.as-scelta-fissa__dopo { display: grid; gap: var(--spazio-3); min-width: 0; }
+
+/* ── foglio/58-comparsa.css ───────────────────────────────────────────── */
+/* ==========================================================================
+   LA COMPARSA — .as-comparsa (v34, da Da confermare)
+   L'elenco che compare scrivendo in un campo dei moduli (i modelli di
+   filtro): sotto il campo, nel flusso, non galleggia. Prima della prima
+   lettera non c'e'. Scorre oltre --comparsa-alto. La voce scelta con le
+   frecce ha il velo e il filo, come in tutta l'app. Ogni voce e' alta
+   --riga-alta. __marca in inchiostro tenue, il nome in pieno.
+   --niente: la ricerca non trova; la frase dice cosa manca e dove andare.
+   <ul class="as-comparsa" role="listbox"><li class="as-comparsa__voce" role="option" aria-selected="true">
+   <span class="as-comparsa__marca">Antlia</span>3nm Narrowband OIII Pro</li></ul>
+   ========================================================================== */
+.as-comparsa {
+  margin: 0; padding: var(--spazio-1); list-style: none;
+  display: grid; max-height: var(--comparsa-alto); overflow-y: auto;
+  border-radius: var(--raggio-medio); background: var(--fondo-incavo); box-shadow: inset 0 0 0 1px var(--linea-forte);
+}
+.as-comparsa__voce {
+  box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--spazio-2);
+  min-height: var(--riga-alta); padding: var(--spazio-1) var(--spazio-3);
+  border-radius: var(--raggio-minimo); font-size: var(--testo-corpo); color: var(--inchiostro); cursor: pointer;
+}
+.as-comparsa__voce:hover, .as-comparsa__voce[aria-selected="true"] { background: var(--accento-velo); box-shadow: inset var(--filo) 0 0 var(--accento-sopra); }
+.as-comparsa__marca { color: var(--inchiostro-tenue); }
+.as-comparsa--niente { display: block; padding: var(--spazio-3) var(--spazio-4); font-size: var(--testo-minuto); line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue); }
+
 /* ── foglio/60-volta.css ──────────────────────────────────────────────── */
 /* ==========================================================================
    LA VOLTA — .as-volta (dato, v24 dalla Dashboard)
@@ -3138,3 +3237,177 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
   .as-ritrovate { padding: var(--spazio-5) var(--spazio-4); }
   .as-ritrovate__azioni { flex-direction: column-reverse; align-items: stretch; }
 }
+
+/* ── foglio/75-pagina-conferma.css ────────────────────────────────────── */
+/* ==========================================================================
+   LA PAGINA DA CONFERMARE — .as-conferma (v34)
+   Le sole regole di questa pagina. I mattoni che usa stanno altrove: la
+   scelta fissa (57), la comparsa (58), il campo dei moduli con la tendina
+   (56), l'avviso (40), lo scheletro (30).
+   La forma (DECISIONI, 9 ottobre): una cosa aperta alla volta.
+     .as-conferma--indice   sopra 900 di colonna l'indice a sinistra
+                            (.as-conferma-indice, un elenco solo, nell'ordine
+                            delle sezioni), le sezioni a destra
+     .as-conferma--ferma    Applica al lavoro: indice e sezioni spenti (e
+                            inert nel markup), cosi' non si risponde mentre scrive
+     .as-conferma__testa    il conto delle domande senza risposta, la regola,
+                            sotto l'esito dell'ultimo Applica
+     .as-conferma-sezione   una carta per tipo: nome, quante, il perche'
+                            (solo nella sezione su cui si lavora)
+     .as-conferma-chiusa    una sezione con tutte le risposte, in una riga,
+                            al suo posto
+     .as-domanda            la domanda aperta, una in tutta la pagina: a
+                            sinistra di cosa si parla e la prova, a destra la
+                            scelta; --prima senza il filo sopra
+     .as-domanda-riga       una domanda chiusa: chi, la risposta in breve,
+                            lo stato, il gesto
+     .as-risposta           lo stato della risposta, segno e parola:
+                            --dare (anello vuoto), --ora (pieno), --salvata
+                            (spunta), --cambiata (mezzo pieno, e __era)
+     .as-conferma-avverte   cio' che non si annulla: anello d'attesa col «!»
+     .as-conferma-aposto    gli oggetti gia' a posto, in coda alla sezione;
+                            --aperto con le righe a pagine e .as-conferma-pagine
+     .as-conferma-tutto     il piede: barra di vetro in fondo al corpo, sempre
+                            in vista, il conto delle modifiche e «Applica»
+     .as-conferma-tipi, .as-conferma-caso   il telefono: prima i tipi, poi un
+                            caso alla volta
+   ========================================================================== */
+.as-conferma { display: grid; gap: var(--spazio-5); align-content: start; min-width: 0; }
+.as-conferma .as-bottone { white-space: nowrap; }   /* un bottone corto non va a capo dentro la pillola */
+.as-conferma__colonna { display: grid; gap: var(--spazio-5); align-content: start; min-width: 0; }
+.as-conferma__testa { display: grid; gap: var(--spazio-2); }
+.as-conferma__conta { margin: 0; display: flex; align-items: baseline; gap: var(--spazio-2); font-size: var(--testo-lungo); color: var(--inchiostro-tenue); }
+.as-conferma__conta b { font-size: var(--cifra-lettura-prima); font-weight: var(--peso-cifra); letter-spacing: -.02em; line-height: 1; color: var(--inchiostro); font-variant-numeric: tabular-nums; }
+.as-conferma__regola { margin: 0; max-width: var(--colonna-prosa); font-size: var(--testo-corpo); line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue); text-wrap: pretty; }
+.as-conferma__cifre { font-family: var(--carattere-cifre); }
+.as-conferma--ferma .as-conferma__colonna, .as-conferma--ferma .as-conferma-indice { opacity: var(--opacita-attesa); }
+@container colonna (min-width: 900px) {          /* soglia = telefono */
+  .as-conferma--indice { grid-template-columns: var(--conferma-indice) minmax(0, 1fr); column-gap: var(--spazio-6); align-items: start; }
+  .as-conferma--indice > .as-conferma-tutto { grid-column: 1 / -1; }
+}
+
+/* --- l'indice: le sezioni, quante senza risposta, la spunta ------------- */
+.as-conferma-indice { position: sticky; top: var(--spazio-5); display: grid; gap: var(--spazio-2); }
+.as-conferma-indice ol { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--stacco-minimo); }
+.as-conferma-indice a { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--spazio-2); min-height: var(--riga-alta); padding: var(--spazio-1) var(--spazio-3); border-radius: var(--raggio-minimo); font-size: var(--testo-corpo); color: var(--inchiostro-tenue); text-decoration: none; }
+.as-conferma-indice a:hover { background: var(--vetro); color: var(--inchiostro); }
+.as-conferma-indice a[aria-current] { background: var(--accento-velo); box-shadow: inset var(--filo) 0 0 var(--accento-sopra); color: var(--inchiostro); font-weight: var(--peso-medio); }
+.as-conferma-indice__n { font-family: var(--carattere-cifre); font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-conferma-indice__fatto { font-family: var(--carattere-cifre); font-weight: var(--peso-grosso); color: var(--esito-buono-inchiostro); }
+
+/* --- la sezione e la sezione chiusa ------------------------------------- */
+.as-conferma-sezione__testa { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: var(--spazio-1) var(--spazio-4); padding: var(--spazio-5) var(--spazio-5) var(--spazio-4); }
+.as-conferma-sezione__nome { margin: 0; font-size: var(--titolo-sezione); font-weight: var(--peso-forte); line-height: var(--interlinea-stretta); }
+.as-conferma-sezione__quante { font-size: var(--testo-minuto); color: var(--inchiostro-debole); white-space: nowrap; }
+.as-conferma-sezione__perche { grid-column: 1 / -1; margin: 0; max-width: var(--colonna-prosa); font-size: var(--testo-corpo); line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue); text-wrap: pretty; }
+.as-conferma-chiusa { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2) var(--spazio-4); padding: var(--spazio-3) var(--spazio-3) var(--spazio-3) var(--spazio-5); }
+.as-conferma-chiusa__nome { margin: 0; font-size: var(--titolo-riga); font-weight: var(--peso-forte); }
+.as-conferma-chiusa > .as-bottone { margin-left: auto; }
+
+/* --- la domanda aperta --------------------------------------------------- */
+.as-domanda { display: grid; gap: var(--spazio-4) var(--spazio-6); padding: var(--spazio-5); border-top: 1px solid var(--linea-forte); }
+.as-domanda--prima { border-top: 0; }
+@container colonna (min-width: 900px) { .as-domanda { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } }
+.as-domanda__testa { display: grid; gap: var(--spazio-2); align-content: start; min-width: 0; }
+.as-domanda__capo { display: grid; justify-items: start; gap: var(--spazio-2); }
+.as-domanda__nome { margin: 0; min-width: 0; font-size: var(--titolo-riga); font-weight: var(--peso-forte); line-height: var(--interlinea-stretta); overflow-wrap: anywhere; }
+.as-domanda__nome .as-nome-oggetto { font-size: inherit; }
+.as-domanda__frame { margin: 0; color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; }
+.as-domanda__corpo { display: grid; gap: var(--spazio-4); align-content: start; min-width: 0; }
+/* due strumenti a confronto: il nome una volta, i frame sotto */
+.as-domanda-coppia { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--spazio-1) var(--spazio-2); }
+.as-domanda-coppia__uno { display: inline-grid; font-family: var(--carattere-cifre); }
+.as-domanda-coppia__frame { font-family: var(--carattere-testo); font-size: var(--testo-minuto); font-weight: var(--peso-normale); color: var(--inchiostro-tenue); }
+.as-domanda-coppia__e { font-weight: var(--peso-normale); color: var(--inchiostro-tenue); }
+/* la prova: cio' che aiuta a rispondere, voce per voce */
+.as-domanda-prova { margin: 0; display: grid; gap: var(--spazio-2); font-size: var(--testo-minuto); line-height: var(--interlinea-corpo); }
+.as-domanda-prova > div { display: grid; grid-template-columns: minmax(0, var(--conferma-prova)) minmax(0, 1fr); gap: var(--spazio-3); }
+.as-domanda-prova dt { color: var(--inchiostro-debole); }
+.as-domanda-prova dd { margin: 0; color: var(--inchiostro-tenue); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.as-domanda-prova .as-nonsisa { display: inline; white-space: normal; }
+.as-domanda-prova .as-nonsisa::before { display: inline-block; margin-right: var(--spazio-1); vertical-align: -1px; }
+/* le notti a mesi: il mese, poi i giorni */
+.as-domanda-mesi { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--spazio-1); }
+.as-domanda-mesi b { color: var(--inchiostro); font-weight: var(--peso-medio); margin-right: var(--spazio-2); }
+/* i modi dei filtri e cio' che la scelta apre */
+.as-domanda-modo { display: grid; gap: var(--spazio-3); padding: var(--spazio-4); border-radius: var(--raggio-medio); box-shadow: inset 0 0 0 1px var(--linea); min-width: 0; }
+.as-domanda-modo__fila { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--spazio-3); }
+.as-domanda-modo__fila > .as-campo-modulo { flex: 1 1 var(--campo-riga-minimo); }
+.as-domanda-modo__fila > .as-bottone { flex: none; }
+/* l'attrezzatura: una parte per cio' che manca */
+.as-domanda-parti { display: grid; gap: var(--spazio-5); }
+.as-domanda-parte { display: grid; gap: var(--spazio-3); min-width: 0; }
+.as-domanda-parte + .as-domanda-parte { padding-top: var(--spazio-5); border-top: 1px solid var(--linea); }
+.as-domanda-parte__capo { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--spazio-2); }
+
+/* --- la domanda chiusa ---------------------------------------------------- */
+.as-domanda-riga { display: grid; grid-template-columns: minmax(0, var(--conferma-riga-chi)) minmax(0, 1fr) auto auto; grid-template-areas: "chi breve stato gesto"; align-items: center; gap: var(--spazio-2) var(--spazio-4); min-height: var(--riga-alta); padding: var(--spazio-3) var(--spazio-4) var(--spazio-3) var(--spazio-5); border-top: 1px solid var(--linea); }
+.as-domanda-riga__chi { grid-area: chi; display: grid; min-width: 0; }
+.as-domanda-riga__nome { font-weight: var(--peso-medio); overflow-wrap: anywhere; }
+.as-domanda-riga__nome .as-nome-oggetto { font-size: var(--testo-lungo); }
+.as-domanda-riga__frame { font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-domanda-riga__breve { grid-area: breve; margin: 0; min-width: 0; font-size: var(--testo-corpo); color: var(--inchiostro-tenue); overflow-wrap: anywhere; }
+.as-domanda-riga__breve b { color: var(--inchiostro); font-weight: var(--peso-medio); }
+.as-domanda-riga > .as-risposta { grid-area: stato; }
+.as-domanda-riga > .as-bottone { grid-area: gesto; }
+@container colonna (max-width: 719px) {          /* soglia = --soglia-stretta */
+  .as-domanda-riga { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "chi gesto" "breve breve" "stato stato"; padding: var(--spazio-3) var(--spazio-4); }
+}
+
+/* --- lo stato della risposta: segno, parola, e cio' che era --------------- */
+.as-risposta { flex: none; white-space: nowrap; display: inline-flex; align-items: center; gap: var(--spazio-2); font-size: var(--testo-minuto); font-weight: var(--peso-medio); line-height: var(--interlinea-stretta); }
+.as-risposta::before { content: ""; flex: none; box-sizing: border-box; width: var(--parziale-segno); height: var(--parziale-segno); border-radius: 50%; }
+.as-risposta--dare { color: var(--inchiostro-debole); font-weight: var(--peso-normale); }
+.as-risposta--dare::before { border: var(--segno-filo) solid var(--linea-significato); }
+.as-risposta--ora, .as-risposta--cambiata { color: var(--inchiostro-accento); }
+.as-risposta--ora::before { background: var(--inchiostro-accento); }
+.as-risposta--cambiata::before { border: var(--segno-filo) solid var(--inchiostro-accento); background: linear-gradient(90deg, var(--inchiostro-accento) 50%, transparent 50%); }
+.as-risposta--salvata { color: var(--esito-buono-inchiostro); }
+.as-risposta--salvata::before { content: "✓"; width: auto; height: auto; border-radius: 0; font: var(--peso-grosso) var(--testo-minuto)/1 var(--carattere-cifre); }
+.as-risposta__era { font-weight: var(--peso-normale); color: var(--inchiostro-tenue); }
+
+/* --- cio' che non si annulla ---------------------------------------------- */
+.as-conferma-avverte { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--spazio-2); align-items: start; font-size: var(--testo-minuto); line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue); text-wrap: pretty; }
+.as-conferma-avverte::before { content: "!"; display: grid; place-items: center; width: var(--campo-modulo-segno); height: var(--campo-modulo-segno); margin-top: var(--campo-modulo-segno-stacco); border-radius: 50%; box-shadow: inset 0 0 0 var(--segno-filo) var(--esito-attesa); color: var(--esito-attesa-inchiostro); font: var(--peso-grosso) var(--testo-micro)/1 var(--carattere-cifre); }
+.as-conferma-avverte b { color: var(--esito-attesa-inchiostro); font-weight: var(--peso-forte); }
+
+/* --- gli oggetti gia' a posto ---------------------------------------------- */
+.as-conferma-aposto { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spazio-3); padding: var(--spazio-4) var(--spazio-5); border-top: 1px solid var(--linea); }
+.as-conferma-aposto p { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--spazio-2); color: var(--inchiostro-tenue); }
+.as-conferma-aposto b { font-family: var(--carattere-cifre); font-size: var(--titolo-riga); font-weight: var(--peso-forte); color: var(--inchiostro); }
+.as-conferma-aposto--aperto { border-top-color: var(--linea-forte); }
+.as-conferma-pagine { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2) var(--spazio-4); padding: var(--spazio-3) var(--spazio-4) var(--spazio-4) var(--spazio-5); border-top: 1px solid var(--linea); }
+.as-conferma-pagine__dove { margin: 0 auto 0 0; font-family: var(--carattere-cifre); font-size: var(--testo-minuto); color: var(--inchiostro-debole); white-space: nowrap; }
+
+/* --- il piede ------------------------------------------------------------------ */
+.as-conferma-tutto { position: sticky; bottom: 0; z-index: 2; margin: 0 calc(-1 * var(--spazio-5)) calc(-1 * var(--spazio-5)); padding: var(--spazio-4) var(--spazio-5); display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2) var(--spazio-5); background: var(--velo-vetro); backdrop-filter: blur(var(--sfocatura)); -webkit-backdrop-filter: blur(var(--sfocatura)); border-top: 1px solid var(--linea-forte); }
+.as-conferma-tutto__conta { margin: 0; font-size: var(--testo-lungo); color: var(--inchiostro-tenue); }
+.as-conferma-tutto__conta b { font-family: var(--carattere-cifre); font-weight: var(--peso-forte); color: var(--inchiostro); }
+.as-conferma-tutto .as-conferma-avverte { flex: 1 1 var(--conferma-avverte-min); }
+.as-conferma-tutto > .as-bottone { margin-left: auto; }
+@container colonna (max-width: 899px) {          /* soglia = telefono */
+  .as-conferma-tutto { margin: 0 calc(-1 * var(--spazio-4)) calc(-1 * var(--spazio-4)); padding: var(--spazio-3) var(--spazio-4); gap: var(--spazio-2) var(--spazio-4); }
+  .as-conferma-tutto > .as-bottone { flex: 1 1 100%; white-space: normal; }
+}
+
+/* --- il telefono: i tipi, poi un caso alla volta -------------------------- */
+.as-conferma-tipi { margin: 0; padding: 0; list-style: none; display: grid; }
+.as-conferma-tipi li + li { border-top: 1px solid var(--linea); }
+.as-conferma-tipo { all: unset; box-sizing: border-box; cursor: pointer; position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--spazio-1) var(--spazio-3); width: 100%; min-height: var(--riga-alta); padding: var(--spazio-3) var(--spazio-4); }
+.as-conferma-tipo:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: calc(-1 * var(--fuoco-spessore)); }
+.as-conferma-tipo__nome { font-size: var(--testo-lungo); font-weight: var(--peso-medio); color: var(--inchiostro); }
+.as-conferma-tipo__stati { grid-column: 1; display: flex; flex-wrap: wrap; gap: var(--spazio-1) var(--spazio-4); }
+.as-conferma-tipo::after { content: ""; grid-column: 2; grid-row: 1 / span 2; width: var(--spazio-2); height: var(--spazio-2); box-sizing: border-box; border-right: var(--segno-filo) solid var(--inchiostro-tenue); border-top: var(--segno-filo) solid var(--inchiostro-tenue); transform: rotate(45deg); margin-right: var(--spazio-1); }
+.as-conferma-caso { display: grid; gap: var(--spazio-3); }
+.as-conferma-caso__dove { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spazio-2); margin-left: calc(-1 * var(--spazio-2)); }
+.as-conferma-caso__quale { white-space: nowrap; font-family: var(--carattere-cifre); font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-conferma-caso__nome { margin: 0; font-size: var(--titolo-sezione); font-weight: var(--peso-forte); }
+.as-conferma-caso__vai { display: flex; flex-wrap: wrap; gap: var(--spazio-2); padding: var(--spazio-4) var(--spazio-4) var(--spazio-5); border-top: 1px solid var(--linea); }
+.as-conferma-caso__vai > .as-bottone { flex: 1 1 var(--conferma-vai-min); }
+
+/* --- lo scheletro: le misure del contenuto vero (larghezze in %, sono dato) */
+.as-conferma__sk-voce { height: var(--riga-alta); }
+.as-conferma__sk-conto { height: var(--cifra-lettura-prima); width: 30%; }
+.as-conferma__sk-frase { height: 1em; width: 70%; }
+.as-conferma__sk-chiusa { height: var(--conferma-sk-chiusa); border-radius: var(--raggio-carta); }
+.as-conferma__sk-carta { height: var(--conferma-sk-carta); border-radius: var(--raggio-carta); }

@@ -145,15 +145,13 @@ describe("una riga di Da confermare", () => {
     expect(fuoriDaiMattoni()).toEqual([])
   })
 
-  it("ogni sezione e' una carta, e il suo elenco sta nel corpo della carta", async () => {
-    // Il corpo di una carta e' un contenitore **misurato**: le regole di colonna stretta delle
-    // righe si misurano su di lui. Saltarlo non si vede finche' qualcuno non stringe la finestra,
-    // e allora la soglia scatta sul numero sbagliato -- e' il foglio stesso ad avvisarne.
+  it("ogni sezione e' una carta, dentro la colonna misurata della pagina", async () => {
+    // Le soglie del foglio (l'indice a sinistra sopra 900) si misurano su `.as-pagina`: fuori
+    // da lei la pagina non cambia forma, e non si vede finche' qualcuno non allarga la finestra.
     conUnaDomanda()
     const sezione = await vaiASezione(/frame senza tipo/i)
-    expect(sezione.className).toContain("as-carta")
-    const elenco = sezione.querySelector("ul.as-elenco")
-    expect(elenco?.parentElement?.className).toContain("as-carta__corpo")
+    expect(sezione.className).toBe("as-carta as-conferma-sezione")
+    expect(sezione.closest(".as-conferma")?.parentElement?.className).toBe("as-pagina")
   })
 })
 
