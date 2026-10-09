@@ -399,10 +399,13 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   `.as-conferma-chiusa` al loro posto con "Riapri", il perche' solo nella sezione su cui si
   lavora, le scelte fisse su `.as-scelta-fissa` (`Scelte.tsx`). Delle domande restano: i dati
   che aiutano a rispondere stanno ancora in riga sotto i frame e non nella tabellina
-  `.as-domanda-prova`; la coppia di strumenti non usa `.as-domanda-coppia`; dentro la domanda dei
-  filtri i tre modi sono ancora quelli vecchi (tendina `as-scelta`, elenco dei modelli
-  `as-apertura__*`), senza le pillole "Uno dei miei / Un modello del catalogo / Nuovo filtro" e
-  senza `.as-comparsa` (la tendina invece ha gia' la veste: `Campo` mette ogni `<select>` nel pozzo con `--tendina`, in tutta l'app); l'avviso di cio' che non si annulla dentro la domanda dell'unione. Testi
+  `.as-domanda-prova`; la coppia di strumenti non usa `.as-domanda-coppia`; i tre modi dei filtri sono fatti (9/10: pillole
+  "Filtro esistente / Modello da catalogo / Nuovo filtro" su `.as-scelta-fissa`, uno alla volta
+  in `.as-domanda-modo`, l'elenco dei modelli su `.as-comparsa` con le voci `role=option` e
+  "Nessun modello per..." quando non trova; restano: il nuovo filtro a meta' -- solo il nome o
+  solo la banda -- conta ancora fra le modifiche; con l'elenco dei modelli non disponibile la
+  pillola del catalogo non si spegne, lo dice solo l'avviso in cima; nell'elenco le frecce non
+  spostano il fuoco fra le voci, si usa Tab); l'avviso di cio' che non si annulla dentro la domanda dell'unione. Testi
   nuovi anche qui, da far vedere a Marco: `review.answer`, `review.change`, `review.reopen`,
   `review.state.*`, `review.closed.*`. Dalla revisione delle domande: aprendo una domanda o
   riaprendo una sezione da tastiera il fuoco cade sul corpo della pagina (un Tab riparte dal

@@ -1,13 +1,13 @@
 import { useState } from "react"
 import { Campo } from "./Campo"
-import { Bottone } from "./Bottone"
+import { Scelte } from "./Scelte"
 import { TendinaDellaBanda } from "./TendinaDellaBanda"
 import { TendinaDiScelta } from "./TendinaDiScelta"
 
 import { Domanda } from "./Domanda"
 import { Sezione } from "./Sezione"
 import type { components } from "./api/schema"
-import { t } from "./i18n"
+import { type Chiave, t } from "./i18n"
 
 type Filtro = components["schemas"]["FilterOut"]
 type Mio = components["schemas"]["FilterCandidate"]
@@ -22,9 +22,9 @@ type Risposta = components["schemas"]["FilterEdit"]
  *
  * - **uno dei miei**: si sceglie fra i filtri con la banda nota, e la risposta e' l'unione -- la
  *   grafia dell'header diventa per sempre quel filtro.
- * - **dal catalogo**: si cerca scrivendo fra i modelli in commercio; marca, nome e banda si
- *   compilano e restano **fissi**, perche' sono il modello -- correggerli farebbe nascere un
- *   doppione travestito da voce ufficiale, con `catalog_id` a dire una cosa che il nome smentisce.
+ * - **dal catalogo**: si cerca scrivendo fra i modelli in commercio, e quello scelto e' la voce
+ *   scelta dell'elenco. Marca, nome e banda **non si scrivono**, perche' sono il modello --
+ *   correggerli farebbe nascere un doppione travestito da voce ufficiale.
  * - **a mano**: chi ha un filtro che il catalogo non conosce scrive nome e banda, e `catalog_id`
  *   resta fuori ("NULL se nome libero", lo dice lo schema).
  *
@@ -64,6 +64,14 @@ export function SezioneFiltri({
   )
 }
 
+// I tre modi di rispondere, esclusivi: se ne vede uno alla volta.
+const MODI = {
+  mio: "review.filters.way.mine",
+  catalogo: "review.filters.way.catalog",
+  nuovo: "review.filters.way.new",
+} as const satisfies Record<string, Chiave>
+type Modo = keyof typeof MODI
+
 function RigaFiltri({
   filtro,
   miei,
@@ -78,25 +86,28 @@ function RigaFiltri({
   onRisposta: (id: number, r: Risposta | null) => void
 }) {
   const [cerca, setCerca] = useState("")
-  // Parte dalla risposta in mano: la sezione si rimonta quando si chiude e si riapre, e una
-  // risposta che non e' ne' un'unione ne' un modello e' stata scritta a mano.
-  const [aMano, setAMano] = useState(
-    risposta !== undefined && risposta.merge_into == null && risposta.catalog_id == null,
+  // Parte dalla risposta in mano: la sezione si rimonta quando si chiude e si riapre. Senza
+  // risposta si parte dal catalogo, che e' la strada di quasi tutti.
+  const [modo, setModo] = useState<Modo>(
+    risposta === undefined || risposta.catalog_id != null
+      ? "catalogo"
+      : risposta.merge_into != null
+        ? "mio"
+        : "nuovo",
   )
-  const dalCatalogo = risposta?.catalog_id != null
 
-  // **L'elenco si apre scrivendo, non prima.** Collaudando sull'archivio vero: otto filtri da
-  // rispondere per 38 modelli facevano **304 bottoni** tutti insieme, e il renderer del browser
-  // e' andato in timeout. Una tendina si apre quando la si usa.
+  // **L'elenco compare scrivendo, non prima.** Collaudando sull'archivio vero: otto filtri da
+  // rispondere per 38 modelli facevano 304 voci tutte insieme, e il browser e' andato in timeout.
   // La ricerca guarda marca e nome insieme: uno scrive "antlia" o "alp" senza pensare a quale dei
   // due campi sia.
   const scritto = cerca.trim().toLowerCase()
-  const visti = scritto
-    ? modelli.filter((m) => etichetta(m).toLowerCase().includes(scritto))
-    : []
+  const scelto = modelli.find((m) => m.id === risposta?.catalog_id)
+  const trovati = scritto ? modelli.filter((m) => etichetta(m).toLowerCase().includes(scritto)) : []
+  // Il modello gia' scelto resta in vista, in cima, anche se la ricerca non lo comprende: una
+  // risposta che sta per partire non sparisce dallo schermo.
+  const visti = scelto && !trovati.includes(scelto) ? [scelto, ...trovati] : trovati
 
-  const scegli = (m: Modello) => {
-    setAMano(false)
+  const scegli = (m: Modello) =>
     onRisposta(filtro.id, {
       id: filtro.id,
       catalog_id: m.id,
@@ -104,9 +115,9 @@ function RigaFiltri({
       name: etichetta(m),
       model: m.name,
     })
-  }
 
   const mio = miei.find((m) => m.id === risposta?.merge_into)
+  const idCerca = `cerca-${filtro.id}`
   return (
     <Domanda
       id={`filters:${filtro.id}`}
@@ -116,74 +127,91 @@ function RigaFiltri({
       frames={filtro.frames}
       salvata={false}
       inMano={risposta !== undefined}
-      breve={risposta ? <b>{mio?.name ?? risposta.name ?? ""}</b> : null}
+      breve={
+        risposta ? (
+          <b>{mio?.name ?? risposta.name ?? ""}</b>
+        ) : (
+          Object.values(MODI)
+            .map((parola) => t(parola))
+            .join(" \u00b7 ")
+        )
+      }
     >
-      {!aMano && !dalCatalogo && (
-      <>
-        {/* La voce vuota toglie la risposta, invece di mandarne una vuota. */}
-        <TendinaDiScelta
-          id={`mio-${filtro.id}`}
-          etichetta={t("review.filters.mine", { nome: filtro.name })}
-          altri={miei}
-          valore={risposta?.merge_into ?? undefined}
-          onScelta={(mio) =>
-            onRisposta(filtro.id, mio === undefined ? null : { id: filtro.id, merge_into: mio })
-          }
-        />
-        {/* L'etichetta nomina il filtro: con due filtri da rispondere ci sono due tendine, e
-            due campi che si chiamano uguale non si distinguono -- ne' per chi legge con uno
-            schermo, ne' per chi ci scrive dentro. */}
-        <Campo id={`cerca-${filtro.id}`} etichetta={t("review.filters.searchFor", { nome: filtro.name })}>
-          <input
-            className="as-campo-modulo__input"
-            id={`cerca-${filtro.id}`}
-            value={cerca}
-            onChange={(e) => setCerca(e.target.value)}
+      <Scelte
+        domanda={t("review.filters.how", { nome: filtro.name })}
+        nome={`modo-${filtro.id}`}
+        opzioni={(Object.keys(MODI) as Modo[]).map((valore) => ({ valore, etichetta: t(MODI[valore]) }))}
+        scelta={modo}
+        onScelta={(nuovo) => {
+          // Sono strade diverse e non si sommano: la risposta data per un'altra non resta in
+          // mano, nascosta, a partire con Applica.
+          setModo(nuovo)
+          if (risposta) onRisposta(filtro.id, null)
+        }}
+      />
+      <div className="as-domanda-modo">
+        {modo === "mio" && (
+          // La voce vuota toglie la risposta, invece di mandarne una vuota.
+          <TendinaDiScelta
+            id={`mio-${filtro.id}`}
+            etichetta={t("review.filters.mine", { nome: filtro.name })}
+            altri={miei}
+            valore={risposta?.merge_into ?? undefined}
+            onScelta={(quale) =>
+              onRisposta(filtro.id, quale === undefined ? null : { id: filtro.id, merge_into: quale })
+            }
           />
-        </Campo>
-        <ul className="as-apertura__righe">
-          {visti.map((m) => (
-            <li key={m.id}>
-              <button className="as-apertura__voce" type="button" onClick={() => scegli(m)}>
-                {etichetta(m)}
-              </button>
-            </li>
-          ))}
-        </ul>
-        <Bottone
-          verso="nudo"
-          piccolo
-          onClick={() => {
-            // e' l'altra strada: "uno dei miei" scelto prima non resta in mano, nascosto
-            setAMano(true)
-            if (risposta?.merge_into != null) onRisposta(filtro.id, null)
-          }}
-        >
-          {t("review.filters.notListed")}
-        </Bottone>
-      </>
-      )}
-
-      {dalCatalogo && (
-        <>
-          <Campo id={`nome-${filtro.id}`} etichetta={t("review.filters.name")}>            {/* Fisso, non spento: si legge e si copia, ma non si corregge -- e' il modello. */}
-            <input
-              className="as-campo-modulo__input"
-              id={`nome-${filtro.id}`}
-              value={risposta?.name ?? ""}
-              readOnly
-            />
-          </Campo>
-          {/* **Si torna indietro.** Prima, scelto un modello, sparivano sia la ricerca sia "non
-              e' in elenco": un clic sbagliato non si correggeva piu' senza ricaricare la pagina.
-              Una scelta non e' un vicolo cieco finche' non si preme Applica. */}
-          <Bottone piccolo onClick={() => onRisposta(filtro.id, null)}>
-            {t("review.filters.change")}
-          </Bottone>
-        </>
-      )}
-
-      {aMano && <AMano filtro={filtro} risposta={risposta} onRisposta={onRisposta} />}
+        )}
+        {modo === "catalogo" && (
+          <>
+            {/* L'etichetta nomina il filtro: con due filtri ci sono due campi, e due campi che si
+                chiamano uguale non si distinguono. */}
+            <Campo id={idCerca} etichetta={t("review.filters.searchFor", { nome: filtro.name })}>
+              <input
+                className="as-campo-modulo__input"
+                id={idCerca}
+                placeholder={t("review.filters.searchHint")}
+                value={cerca}
+                onChange={(e) => setCerca(e.target.value)}
+              />
+            </Campo>
+            {visti.length > 0 && (
+              <ul className="as-comparsa" role="listbox" aria-label={t("review.filters.found")}>
+                {visti.map((m) => (
+                  // Una voce si sceglie col clic, o con Invio e Spazio quando ha il fuoco.
+                  <li
+                    key={m.id}
+                    className="as-comparsa__voce"
+                    role="option"
+                    aria-selected={m.id === risposta?.catalog_id}
+                    tabIndex={0}
+                    onClick={() => scegli(m)}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter" && e.key !== " ") return
+                      e.preventDefault()
+                      scegli(m)
+                    }}
+                  >
+                    {/* La marca a parte, senza ripeterla quando il nome la porta gia' dentro. */}
+                    {!conMarca(m) && (
+                      <>
+                        <span className="as-comparsa__marca">{m.brand}</span>{" "}
+                      </>
+                    )}
+                    {m.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {scritto !== "" && trovati.length === 0 && (
+              <p className="as-comparsa as-comparsa--niente" aria-live="polite">
+                {t("review.filters.noneFound", { cerca: cerca.trim() })}
+              </p>
+            )}
+          </>
+        )}
+        {modo === "nuovo" && <AMano filtro={filtro} risposta={risposta} onRisposta={onRisposta} />}
+      </div>
     </Domanda>
   )
 }
@@ -233,5 +261,10 @@ function AMano({
  *  nome che si SCRIVE nella risposta, non solo per quello che si legge: il doppione finirebbe
  *  nell'archivio. */
 function etichetta(m: Modello) {
-  return m.name.toLowerCase().startsWith(m.brand.toLowerCase()) ? m.name : `${m.brand} ${m.name}`
+  return conMarca(m) ? m.name : `${m.brand} ${m.name}`
+}
+
+/** Il nome del modello comincia gia' con la marca. */
+function conMarca(m: Modello) {
+  return m.name.toLowerCase().startsWith(m.brand.toLowerCase())
 }

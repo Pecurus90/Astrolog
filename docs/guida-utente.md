@@ -582,9 +582,11 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
   scelto prima di te, perche' un'unione non si disfa. Per gli altri strumenti non te lo chiede, perche'
   non ha un dato per esserne sicura: l'unione la scegli dall'*Attrezzatura*.
 - **Filtri.** Qui arrivano solo i filtri che l'app non riconosce, come una `H` sola: dici cos'e',
-  una volta, e vale anche per i frame che arriveranno. E' un *Filtro esistente* (lo scegli fra
-  quelli che l'app conosce), un modello in commercio, o -- con *Non in elenco: nuovo filtro* -- un
-  nome con la sua banda. I filtri che
+  una volta, e vale anche per i frame che arriveranno. Scegli come rispondere fra tre modi, uno
+  alla volta: *Filtro esistente* (lo scegli fra quelli che l'app conosce), *Modello da catalogo*
+  (scrivi la marca o il nome, e scegli dall'elenco che compare; se non trova niente te lo dice) o
+  *Nuovo filtro* (un nome con la sua banda). Cambiare modo toglie la risposta data con quello di
+  prima. I filtri che
   l'app riconosce non te li chiede. A differenza delle altre domande, un filtro a cui hai risposto
   esce dalla pagina. Nell'Attrezzatura, con *Modifica* accanto al filtro, ne cambi nome, marca e
   modello, o lo unisci a un altro; la banda, per ora, no.

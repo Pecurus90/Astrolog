@@ -61,6 +61,10 @@ function aperta(pagina: unknown = PAGINA) {
  *  banco: le fanno tutte le sezioni, e scriverle qui sarebbe lo stesso pezzo in undici case. */
 const vaiAConfermare = () => vaiASezione(/filtri/i)
 
+/** Sceglie uno dei tre modi di rispondere: sono esclusivi, e si vede solo quello scelto. */
+const modo = (dove: HTMLElement, quale: RegExp) =>
+  fireEvent.click(within(dove).getByRole("radio", { name: quale }))
+
 describe("Da confermare -- i filtri", () => {
   it("l ordine e quello dell API, e la pagina non lo tocca", async () => {
     // In cima chi chiede una risposta, poi i piu' usati: l'ordine e' una decisione del backend
@@ -70,6 +74,10 @@ describe("Da confermare -- i filtri", () => {
     const righe = [...sezione.querySelectorAll(".as-domanda, .as-domanda-riga")]
     expect(righe.at(0)?.textContent).toMatch(/^H/)
     expect(righe.at(1)?.textContent).toMatch(/^Filter 3/)
+    // chiusa e senza risposta, la riga dice fra cosa si sceglie
+    expect(righe.at(1)?.querySelector(".as-domanda-riga__breve")?.textContent).toBe(
+      "Filtro esistente · Modello da catalogo · Nuovo filtro",
+    )
   })
 
   it("scrivendo nella tendina l elenco si restringe", async () => {
@@ -79,12 +87,12 @@ describe("Da confermare -- i filtri", () => {
     fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), {
       target: { value: "alp" },
     })
-    expect(await within(suHa).findByRole("button", { name: /ALP-T 3nm/ })).toBeDefined()
-    expect(within(suHa).queryByRole("button", { name: /L-eXtreme/ })).toBeNull()
+    expect(await within(suHa).findByRole("option", { name: /ALP-T 3nm/ })).toBeDefined()
+    expect(within(suHa).queryByRole("option", { name: /L-eXtreme/ })).toBeNull()
   })
 
-  it("scelto un modello dal catalogo, marca nome e banda sono FISSI", async () => {
-    // Sono il modello: se si potessero correggere nascerebbe un doppione che si spaccia per voce
+  it("scelto un modello dal catalogo, e' la voce scelta dell'elenco: il suo nome non si scrive", async () => {
+    // E' il modello: se si potesse correggere nascerebbe un doppione che si spaccia per voce
     // ufficiale, e `catalog_id` direbbe una cosa che il nome smentisce.
     aperta()
     const sezione = await vaiAConfermare()
@@ -92,8 +100,62 @@ describe("Da confermare -- i filtri", () => {
     fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), {
       target: { value: "alp" },
     })
-    fireEvent.click(await within(suHa).findByRole("button", { name: /Antlia ALP-T 3nm/ }))
-    expect(within(suHa).getByLabelText(/^nome/i)).toHaveProperty("readOnly", true)
+    const voce = await within(suHa).findByRole("option", { name: /Antlia ALP-T 3nm/ })
+    expect(voce.getAttribute("aria-selected")).toBe("false")
+    fireEvent.click(voce)
+    expect(within(suHa).getByRole("option", { name: /Antlia ALP-T 3nm/ }).getAttribute("aria-selected")).toBe("true")
+    expect(within(suHa).queryByLabelText(/^nome/i)).toBeNull()
+  })
+
+  it("i tre modi sono pillole, se ne vede uno alla volta, e cambiarlo toglie la risposta", async () => {
+    aperta()
+    const sezione = await vaiAConfermare()
+    const suH = riga(sezione, "H")
+    const modi = within(suH).getByRole("group", { name: "Come rispondere per H" })
+    expect(modi.className).toBe("as-scelta-fissa")
+    expect(within(modi).getAllByRole("radio").map((r) => r.closest("label")?.textContent)).toEqual([
+      "Filtro esistente",
+      "Modello da catalogo",
+      "Nuovo filtro",
+    ])
+    // si parte dal catalogo: e' la strada di quasi tutti
+    expect(within(modi).getByRole("radio", { name: "Modello da catalogo" })).toHaveProperty("checked", true)
+    expect(within(suH).getByLabelText(/cerca fra i modelli per H$/i).closest(".as-domanda-modo")).not.toBeNull()
+    expect(within(suH).queryByLabelText(/filtro esistente: H$/i)).toBeNull()
+
+    modo(suH, /^filtro esistente$/i)
+    expect(within(suH).queryByLabelText(/cerca fra i modelli/i)).toBeNull()
+    fireEvent.change(within(suH).getByLabelText(/filtro esistente: H$/i), { target: { value: "9" } })
+    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", false)
+    // un'altra strada non si somma a quella di prima
+    modo(suH, /^modello da catalogo$/i)
+    expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
+  })
+
+  it("una ricerca che non trova niente lo dice, e dice dove andare", async () => {
+    aperta()
+    const sezione = await vaiAConfermare()
+    const suH = riga(sezione, "H")
+    fireEvent.change(within(suH).getByLabelText(/cerca fra i modelli per H$/i), { target: { value: "baader 7nm" } })
+    const niente = within(suH).getByText(/nessun modello per \u00abbaader 7nm\u00bb/i)
+    expect(niente.className).toBe("as-comparsa as-comparsa--niente")
+    expect(niente.textContent).toMatch(/nuovo filtro/i)
+    expect(within(suH).queryByRole("listbox")).toBeNull()
+  })
+
+  it("l'elenco dei modelli e' il mattone del foglio, e si sceglie anche da tastiera", async () => {
+    aperta()
+    const sezione = await vaiAConfermare()
+    const suH = riga(sezione, "H")
+    fireEvent.change(within(suH).getByLabelText(/cerca fra i modelli per H$/i), { target: { value: "alp" } })
+    const elenco = await within(suH).findByRole("listbox", { name: "Modelli trovati" })
+    expect(elenco.className).toBe("as-comparsa")
+    const voce = within(elenco).getAllByRole("option")[0]!
+    expect(voce.className).toBe("as-comparsa__voce")
+    expect(voce.querySelector(".as-comparsa__marca")?.textContent).toBe("Antlia")
+    expect(voce.tabIndex).toBe(0)
+    fireEvent.keyDown(voce, { key: "Enter" })
+    expect(within(elenco).getAllByRole("option")[0]?.getAttribute("aria-selected")).toBe("true")
   })
 
   it("e la risposta porta il catalog_id del modello scelto", async () => {
@@ -103,7 +165,7 @@ describe("Da confermare -- i filtri", () => {
     fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), {
       target: { value: "alp" },
     })
-    fireEvent.click(await within(suHa).findByRole("button", { name: /Antlia ALP-T 3nm/ }))
+    fireEvent.click(await within(suHa).findByRole("option", { name: /Antlia ALP-T 3nm/ }))
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
     await waitFor(() => {
       const scritta = scritture().find((s) => s.url.includes("/api/v1/review/apply"))
@@ -120,7 +182,7 @@ describe("Da confermare -- i filtri", () => {
     aperta()
     const sezione = await vaiAConfermare()
     const suHa = riga(sezione, "H")
-    fireEvent.click(within(suHa).getByRole("button", { name: /non in elenco/i }))
+    modo(suHa, /^nuovo filtro$/i)
     fireEvent.change(within(suHa).getByLabelText(/^nome/i), { target: { value: "Il mio Ha" } })
     fireEvent.change(within(suHa).getByLabelText(/banda/i), { target: { value: "HA" } })
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
@@ -143,7 +205,7 @@ describe("Da confermare -- i filtri", () => {
     })
     const sezione = await vaiAConfermare()
     const suHa = riga(sezione, "H")
-    fireEvent.click(within(suHa).getByRole("button", { name: /non in elenco/i }))
+    modo(suHa, /^nuovo filtro$/i)
     fireEvent.change(within(suHa).getByLabelText(/^nome/i), { target: { value: "Il mio Ha" } })
     fireEvent.click(screen.getByRole("button", { name: "Rispondi: D:/Astro/dark" }))
     fireEvent.click(screen.getByRole("button", { name: /^Riapri: Filtri/ }))
@@ -158,7 +220,7 @@ describe("Da confermare -- i filtri", () => {
     aperta()
     const sezione = await vaiAConfermare()
     const suHa = riga(sezione, "H")
-    fireEvent.click(within(suHa).getByRole("button", { name: /non in elenco/i }))
+    modo(suHa, /^nuovo filtro$/i)
     fireEvent.change(within(suHa).getByLabelText(/^nome/i), { target: { value: "L-Pro" } })
     fireEvent.change(within(suHa).getByLabelText(/banda/i), { target: { value: "L" } })
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
@@ -175,11 +237,11 @@ describe("Da confermare -- i filtri", () => {
     aperta()
     const sezione = await vaiAConfermare()
     const suHa = riga(sezione, "H")
-    expect(within(suHa).queryByRole("button", { name: /ALP-T 3nm/ })).toBeNull()
+    expect(within(suHa).queryByRole("option", { name: /ALP-T 3nm/ })).toBeNull()
     fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), {
       target: { value: "alp" },
     })
-    expect(await within(suHa).findByRole("button", { name: /ALP-T 3nm/ })).toBeDefined()
+    expect(await within(suHa).findByRole("option", { name: /ALP-T 3nm/ })).toBeDefined()
   })
 
   it("il nome del modello non ripete la marca", async () => {
@@ -204,14 +266,16 @@ describe("Da confermare -- i filtri", () => {
     fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), {
       target: { value: "quad" },
     })
-    const voce = await within(suHa).findByRole("button", { name: /Quad Band/ })
+    const voce = await within(suHa).findByRole("option", { name: /Quad Band/ })
     expect(voce.textContent).toBe("Antlia Quad Band")
   })
 
   it("la voce vuota toglie la risposta, invece di mandarne una vuota", async () => {
     aperta()
     const sezione = await vaiAConfermare()
-    const tendina = within(riga(sezione, "H")).getByLabelText(/filtro esistente: H$/i)
+    const suH = riga(sezione, "H")
+    modo(suH, /^filtro esistente$/i)
+    const tendina = within(suH).getByLabelText(/filtro esistente: H$/i)
     fireEvent.change(tendina, { target: { value: "9" } })
     fireEvent.change(tendina, { target: { value: "" } })
     expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
@@ -222,8 +286,9 @@ describe("Da confermare -- i filtri", () => {
     aperta()
     const sezione = await vaiAConfermare()
     const suH = riga(sezione, "H")
+    modo(suH, /^filtro esistente$/i)
     fireEvent.change(within(suH).getByLabelText(/filtro esistente: H$/i), { target: { value: "9" } })
-    fireEvent.click(within(suH).getByRole("button", { name: /non in elenco/i }))
+    modo(suH, /^nuovo filtro$/i)
     expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
   })
 
@@ -233,8 +298,9 @@ describe("Da confermare -- i filtri", () => {
     aperta()
     const sezione = await vaiAConfermare()
     const suH = riga(sezione, "H")
+    modo(suH, /^filtro esistente$/i)
     fireEvent.change(within(suH).getByLabelText(/filtro esistente: H$/i), { target: { value: "9" } })
-    fireEvent.click(within(suH).getByRole("button", { name: /non in elenco/i }))
+    modo(suH, /^nuovo filtro$/i)
     fireEvent.change(within(suH).getByLabelText(/^nome/i), { target: { value: "Il mio H" } })
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
     await waitFor(() => {
@@ -250,6 +316,7 @@ describe("Da confermare -- i filtri", () => {
     aperta()
     const sezione = await vaiAConfermare()
     const suH = riga(sezione, "H")
+    modo(suH, /^filtro esistente$/i)
     const tendina = within(suH).getByLabelText(/filtro esistente: H$/i)
     fireEvent.change(tendina, { target: { value: "9" } })
     fireEvent.change(tendina, { target: { value: "" } })
@@ -293,7 +360,7 @@ describe("Da confermare -- i filtri", () => {
     fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), {
       target: { value: "alp" },
     })
-    fireEvent.click(await within(suHa).findByRole("button", { name: /Antlia ALP-T 3nm/ }))
+    fireEvent.click(await within(suHa).findByRole("option", { name: /Antlia ALP-T 3nm/ }))
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
     expect(await screen.findByRole("alert")).toBeDefined()
   })
@@ -316,7 +383,7 @@ describe("Da confermare -- i filtri", () => {
     fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), {
       target: { value: "alp" },
     })
-    fireEvent.click(await within(suHa).findByRole("button", { name: /Antlia ALP-T 3nm/ }))
+    fireEvent.click(await within(suHa).findByRole("option", { name: /Antlia ALP-T 3nm/ }))
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
     await waitFor(() => {
       const scritta = scritture().find((s) => s.url.includes("/api/v1/review/apply"))
@@ -334,7 +401,7 @@ describe("Da confermare -- i filtri", () => {
     fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), {
       target: { value: "alp" },
     })
-    fireEvent.click(await within(suHa).findByRole("button", { name: /Antlia ALP-T 3nm/ }))
+    fireEvent.click(await within(suHa).findByRole("option", { name: /Antlia ALP-T 3nm/ }))
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
     await screen.findByRole("status")
     // la pagina si e' riletta: due chiamate a /review, quella d'apertura e quella dopo
@@ -345,20 +412,23 @@ describe("Da confermare -- i filtri", () => {
     expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", true)
   })
 
-  it("un clic sbagliato si corregge: si torna a scegliere", async () => {
-    // Prima, scelto un modello, sparivano sia la ricerca sia "non e' in elenco": l'unico modo di
-    // cambiare idea era ricaricare la pagina. Una scelta non e' un vicolo cieco finche' non si
-    // preme Applica.
+  it("un clic sbagliato si corregge: si sceglie un altro modello, o un altro modo", async () => {
+    // Una scelta non e' un vicolo cieco finche' non si preme Applica.
     aperta()
     const sezione = await vaiAConfermare()
     const suHa = riga(sezione, "H")
     fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), {
       target: { value: "alp" },
     })
-    fireEvent.click(await within(suHa).findByRole("button", { name: /Antlia ALP-T 3nm/ }))
-    fireEvent.click(within(suHa).getByRole("button", { name: /cambia modello/i }))
-    expect(within(suHa).getByLabelText(/cerca fra i modelli per H$/i)).toBeDefined()
-    expect(within(suHa).getByRole("button", { name: /non in elenco/i })).toBeDefined()
+    fireEvent.click(await within(suHa).findByRole("option", { name: /Antlia ALP-T 3nm/ }))
+    fireEvent.click(within(suHa).getByRole("option", { name: /Antlia ALP-T 5nm/ }))
+    const scelte = within(suHa).getAllByRole("option").filter((o) => o.getAttribute("aria-selected") === "true")
+    expect(scelte.map((o) => o.textContent)).toEqual(["Antlia ALP-T 5nm"])
+    // una ricerca che non lo comprende non lo toglie dalla vista: sta per partire con Applica
+    fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), { target: { value: "zzz" } })
+    expect(within(suHa).getByRole("option", { name: /Antlia ALP-T 5nm/ }).getAttribute("aria-selected")).toBe("true")
+    expect(within(suHa).getByText(/nessun modello per/i)).toBeDefined()
+    expect(within(suHa).getByRole("radio", { name: /^nuovo filtro$/i })).toBeDefined()
   })
 
   it("le risposte si accumulano e partono con un solo Applica", async () => {
@@ -369,7 +439,7 @@ describe("Da confermare -- i filtri", () => {
     fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), {
       target: { value: "alp" },
     })
-    fireEvent.click(await within(suHa).findByRole("button", { name: /Antlia ALP-T 3nm/ }))
+    fireEvent.click(await within(suHa).findByRole("option", { name: /Antlia ALP-T 3nm/ }))
     // Prima di Applica non e' partita nessuna scrittura: le risposte stanno nella pagina.
     expect(scritture().some((s) => s.url.includes("/apply"))).toBe(false)
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
@@ -387,7 +457,7 @@ describe("Da confermare -- i filtri", () => {
     fireEvent.change(within(suHa).getByLabelText(/cerca fra i modelli per H$/i), {
       target: { value: "alp" },
     })
-    fireEvent.click(await within(suHa).findByRole("button", { name: /Antlia ALP-T 3nm/ }))
+    fireEvent.click(await within(suHa).findByRole("option", { name: /Antlia ALP-T 3nm/ }))
     fireEvent.click(screen.getByRole("button", { name: /applica/i }))
     // Si cerca la RICEVUTA, non il numero: "120 frame" e' gia' a schermo nella riga del filtro,
     // quindi cercarlo da solo passava anche togliendo la ricevuta -- provato dal revisore.

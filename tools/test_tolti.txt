@@ -211,3 +211,5 @@ se il cielo non ha niente da dire, la riga non dice 'ripreso' - testi di Da conf
 un vuoto a zero non si scrive, e con tre oggetti nemmeno 'altri' - testi di Da confermare (Marco, 8/10/2026): gli oggetti oltre il terzo ora sono un + N; rinominato in "un vuoto a zero non si scrive, e con tre oggetti nemmeno '+ N'"
 ogni sezione e' una carta, e il suo elenco sta nel corpo della carta - Da confermare sul foglio v34: la carta non ha piu' un corpo; rinominato in "ogni sezione e' una carta, dentro la colonna misurata della pagina"
 una tendina non prende il pozzo: ha gia' il suo bordo - foglio v34: la tendina ha il pozzo del campo; rinominato in "una tendina sta nel pozzo del campo, e il campo dice che e' una tendina"
+scelto un modello dal catalogo, marca nome e banda sono FISSI - Da confermare sul foglio v34: il modello scelto e' la voce scelta dell'elenco; rinominato in "scelto un modello dal catalogo, e' la voce scelta dell'elenco: il suo nome non si scrive"
+un clic sbagliato si corregge: si torna a scegliere - Da confermare sul foglio v34: non c'e' piu' "Cambia modello"; rinominato in "un clic sbagliato si corregge: si sceglie un altro modello, o un altro modo"
