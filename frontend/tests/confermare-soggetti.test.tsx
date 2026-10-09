@@ -98,9 +98,9 @@ function aperta() {
 describe("Da confermare -- cosa hai ripreso", () => {
   it("i primi tre oggetti con le loro pose, quanti altri, e i due vuoti detti diversi", async () => {
     aperta()
-    const notte = riga(await vaiASezione(/frame senza sito/i), "45.85,11.58")
+    const notte = riga(await vaiASezione(/frame senza sito/i), "45,8500 N - 11,5800 E")
     expect(notte.textContent).toMatch(
-      /Oggetti: M 81 \(68 frame\), M 82 \(12 frame\), NGC 3077 \(3 frame\) \+ 2;/,
+      /Oggetti\s*M 81 \(68 frame\), M 82 \(12 frame\), NGC 3077 \(3 frame\) \+ 2/,
     )
     expect(notte.textContent).toMatch(/21 frame senza oggetti identificati/)
     expect(notte.textContent).toMatch(/3 frame non risolti/)
@@ -108,22 +108,22 @@ describe("Da confermare -- cosa hai ripreso", () => {
 
   it("un vuoto a zero non si scrive, e con tre oggetti nemmeno '+ N'", async () => {
     aperta()
-    const notte = riga(await vaiASezione(/frame senza sito/i), "46.10,11.20")
-    expect(notte.textContent).toMatch(/Oggetti: M 101 \(56 frame\), NGC 5474 \(3 frame\), NGC 5477 \(1 frame\)/)
+    const notte = riga(await vaiASezione(/frame senza sito/i), "46,1000 N - 11,2000 E")
+    expect(notte.textContent).toMatch(/Oggetti\s*M 101 \(56 frame\), NGC 5474 \(3 frame\), NGC 5477 \(1 frame\)/)
     expect(notte.textContent).not.toMatch(/\+ \d|senza oggetti|non risolti/)
   })
 
   it("se il cielo non ha niente da dire, la riga non dice 'Oggetti'", async () => {
     aperta()
-    const notte = riga(await vaiASezione(/frame senza sito/i), "44.50,10.90")
+    const notte = riga(await vaiASezione(/frame senza sito/i), "44,5000 N - 10,9000 E")
     expect(notte.textContent).not.toMatch(/Oggetti/)
   })
 
   it.each([
-    [/frame senza sito/i, "45.85,11.58"],
+    [/frame senza sito/i, "45,8500 N - 11,5800 E"],
   ])("anche la sezione %s dice cosa hai ripreso", async (sezione, chiave) => {
     aperta()
-    expect(riga(await vaiASezione(sezione), chiave).textContent).toMatch(/Oggetti: M (81|101)/)
+    expect(riga(await vaiASezione(sezione), chiave).textContent).toMatch(/Oggetti\s*M (81|101)/)
     expect(screen.queryByText(/review\./)).toBeNull() // nessuna chiave di traduzione grezza
   })
 })

@@ -224,6 +224,21 @@ function mezzanotteUtc(data: string): Date {
   return new Date(`${data}T00:00:00Z`)
 }
 
+/** Le notti raggruppate per mese, come si leggono in un elenco lungo: il mese una volta, poi i
+ *  giorni. In UTC come `notte`: sono date, non istanti. Nell'ordine in cui arrivano. */
+export function nottiPerMese(notti: readonly string[]): { mese: string; giorni: string }[] {
+  const mese = new Intl.DateTimeFormat(lingua, { month: "short", year: "numeric", timeZone: "UTC" })
+  const gruppi: { mese: string; giorni: number[] }[] = []
+  for (const notte of notti) {
+    const quando = mezzanotteUtc(notte)
+    const nome = mese.format(quando)
+    const ultimo = gruppi.at(-1)
+    if (ultimo?.mese === nome) ultimo.giorni.push(quando.getUTCDate())
+    else gruppi.push({ mese: nome, giorni: [quando.getUTCDate()] })
+  }
+  return gruppi.map((g) => ({ mese: g.mese, giorni: g.giorni.join(", ") }))
+}
+
 /** Che giorno della settimana era quella notte: *sabato*, *venerdi'*. In UTC come `notte`, o a
  *  ovest di Greenwich uscirebbe il nome del giorno prima. */
 export function giornoDellaSettimana(data: string): string {

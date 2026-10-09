@@ -1,7 +1,5 @@
 import type { ReactNode } from "react"
 
-import { Soggetti } from "./Soggetti"
-import type { components } from "./api/schema"
 import { numero, t } from "./i18n"
 
 /**
@@ -15,8 +13,6 @@ import { numero, t } from "./i18n"
  *
  * La forma di una riga, e cosa il foglio si aspetta, stanno nell'intestazione di `Riga`.
  */
-
-type CosaHaiRipreso = components["schemas"]["Subjects"]
 
 // "errore" nasce con la sezione Cartelle: una riga che dice **non si raggiunge** porta il filo
 // d'allarme a sinistra, e il colore non e' l'unico segno -- accanto al nome c'e' la parola.
@@ -69,7 +65,6 @@ export function Riga({
   nome,
   nomeDiCatalogo = false,
   frames,
-  ripreso,
   dettagli,
   perche,
   stato,
@@ -82,9 +77,6 @@ export function Riga({
   /** Quanti frame: la cosa che **ogni** domanda per gruppo mostra, e che dodici sezioni
    *  scrivevano uguale. Si passa il numero, non la frase gia' fatta. */
   frames?: number | undefined
-  /** Cosa il cielo ha trovato in quel gruppo. Non ce l'ha *Frame senza tipo*, e ha una ragione
-   *  scritta (`docs/domini/spina.md`): su quei frame il cielo non ha saputo dire. */
-  ripreso?: CosaHaiRipreso | undefined
   /** Cio' che quella domanda ha **di suo**, dopo i frame e il cielo. */
   dettagli?: ReactNode
   /** Perche' l'app lo chiede: prosa, o gli esempi presi dai file. */
@@ -115,7 +107,6 @@ export function Riga({
           {nome}
         </span>{" "}
         {frames !== undefined && <Dettaglio>{t("review.frames", { n: numero(frames) })}</Dettaglio>}{" "}
-        {ripreso && <Soggetti soggetti={ripreso} />}{" "}
         {dettagli}
       </div>
       {perche && <div className="as-riga__perche">{perche}</div>}

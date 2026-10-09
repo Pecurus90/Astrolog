@@ -2,7 +2,6 @@ import { useState } from "react"
 import { CampoConScelte } from "./CampoConScelte"
 import { Scelte } from "./Scelte"
 import { Domanda } from "./Domanda"
-import { Dettaglio, Prova } from "./Riga"
 import { Sezione } from "./Sezione"
 import type { components } from "./api/schema"
 import { TempoDellePose } from "./TempoDellePose"
@@ -88,16 +87,19 @@ function RigaMosaici({
       // In breve si legge la risposta che c'e' -- in mano o salvata --, non la scelta a meta':
       // un si' col nome svuotato non e' una risposta.
       breve={detta ? <b>{detta === "yes" ? `${si}: ${dettoDi}` : no}</b> : `${si} \u00b7 ${no}`}
-      dettagli={
-        <>
-          <Dettaglio>{t("review.mosaics.panels", { n: numero(mosaico.panels) })}</Dettaglio>{" "}
-          <TempoDellePose secondi={mosaico.integration_s} senzaTempo={mosaico.untimed} />{" "}
-          {/* La regione dice QUALE: lo stesso soggetto ripreso in due parti fa due righe, e senza
-              il punto le due righe e i loro gruppi di scelte avrebbero lo stesso nome. RA e Dec
-              restano col punto decimale, come in ogni catalogo. */}
-          <Prova>{t("review.mosaics.where", { dove })}</Prova>
-        </>
-      }
+      accanto={t("review.mosaics.panels", { n: numero(mosaico.panels) })}
+      prova={[
+        ...(mosaico.integration_s > 0 || mosaico.untimed > 0
+          ? [
+              {
+                nome: t("review.proof.time"),
+                dato: <TempoDellePose secondi={mosaico.integration_s} senzaTempo={mosaico.untimed} stacco={" \u00b7 "} />,
+              },
+            ]
+          : []),
+        // La regione dice QUALE: lo stesso soggetto ripreso in due parti fa due domande.
+        { nome: t("review.proof.where"), dato: dove },
+      ]}
     >
       <Scelte
         domanda={t("review.mosaics.question", { soggetti: mosaico.object, dove })}

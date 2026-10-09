@@ -1,9 +1,9 @@
 import { Scelte } from "./Scelte"
 import { Domanda } from "./Domanda"
-import { Dettaglio } from "./Riga"
 import { Sezione } from "./Sezione"
 import type { components } from "./api/schema"
-import { numero, t } from "./i18n"
+import { coordinate, nottiPerMese, numero, t } from "./i18n"
+import { provaDeiSoggetti } from "./Soggetti"
 
 type Posto = components["schemas"]["UnclearCoordinates"]
 type Risposta = components["schemas"]["CoordinatesEdit"]
@@ -52,35 +52,45 @@ function RigaLuoghi({
   // e a deciderlo e' il backend, lo stesso che la conta
   const data = posto.candidates.find((c) => c.name === posto.site)
   const scelto = posto.candidates.find((c) => c.id === (risposta?.site_id ?? data?.id))
+  // Le coordinate come si scrivono; la chiave resta quella con cui si risponde.
+  const dove = coordinate(posto.latitude, posto.longitude)
   return (
     <Domanda
       id={`unclear:${posto.key}`}
-      voce={posto.key}
-      nome={posto.key}
+      voce={dove}
+      nome={dove}
       cifre
       frames={posto.frames}
-      ripreso={posto.subjects}
+      prova={[
+        ...provaDeiSoggetti(posto.subjects),
+        // La distanza da casa solo se c'e' una casa: senza, non e' zero.
+        ...(posto.distance_km === null
+          ? []
+          : [{ nome: t("review.proof.distance"), dato: t("review.unclear.fromHome", { km: numero(posto.distance_km) }) }]),
+        // Un elenco vuoto non e' una riga vuota: l'app non sa in che notte cadano, e lo dice.
+        posto.nights.length === 0
+          ? { nome: t("review.proof.nights"), dato: t("review.unclear.nights.later") }
+          : {
+              nome: `${t("review.proof.nights")} \u00b7 ${numero(posto.nights.length)}`,
+              dato: (
+                <ul className="as-domanda-mesi">
+                  {nottiPerMese(posto.nights).map((m) => (
+                    <li key={m.mese}>
+                      <b>{m.mese}</b>
+                      {m.giorni}
+                    </li>
+                  ))}
+                </ul>
+              ),
+            },
+      ]}
       salvata={data !== undefined}
       inMano={risposta !== undefined}
       era={data?.name}
       breve={scelto ? <b>{scelto.name}</b> : posto.candidates.map((c) => c.name).join(" \u00b7 ")}
-      dettagli={
-        <>
-          {posto.distance_km !== null && (
-            <Dettaglio>{t("review.unclear.fromHome", { km: numero(posto.distance_km) })}</Dettaglio>
-          )}{" "}
-          {/* Un elenco vuoto non e' una riga vuota: l'app non sa ancora in che notte cadano
-              queste pose e non ne indovina una, e lo dice. */}
-          <Dettaglio>
-            {posto.nights.length === 0
-              ? t("review.unclear.nights.later")
-              : t("review.unclear.nights", { notti: posto.nights.join(", ") })}
-          </Dettaglio>
-        </>
-      }
     >
       <Scelte
-        domanda={t("review.unclear.question", { posto: posto.key })}
+        domanda={t("review.unclear.question", { posto: dove })}
         nome={`luogo-${posto.key}`}
         opzioni={posto.candidates.map((c) => ({
           valore: c.id,

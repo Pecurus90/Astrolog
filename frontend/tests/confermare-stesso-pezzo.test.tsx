@@ -66,7 +66,7 @@ describe("Da confermare -- strumenti duplicati", () => {
   it("la riga dice a chi somiglia, e con quante pose", async () => {
     aperta()
     const sezione = await vaiASezione(/strumenti duplicati/i)
-    expect(riga(sezione, "ATR 2600M").textContent).toMatch(/simile a ATR2600M\(USB2\.0\) \(6.?558 frame\)/)
+    expect(riga(sezione, "ATR 2600M").textContent).toMatch(/Simile a\s*ATR2600M\(USB2\.0\) · 6.?558 frame/)
   })
 
   it("una grafia che somiglia a un altra propone l unione, senza sceglierla", async () => {

@@ -1,7 +1,6 @@
 import { memo } from "react"
 
 import { Domanda } from "./Domanda"
-import { Dettaglio } from "./Riga"
 import { Scelte } from "./Scelte"
 import { type PerGruppo, Sezione } from "./Sezione"
 import type { components } from "./api/schema"
@@ -58,14 +57,12 @@ function RigaStessoPezzo({
       salvata={false}
       inMano={risposta !== undefined}
       breve={scelta ? <b>{scelta === "same" ? unisci : distinti}</b> : `${unisci} \u00b7 ${distinti}`}
-      dettagli={
-        <Dettaglio>
-          {t("review.lookalikes.looksLike", {
-            nome: coppia.into_name,
-            pose: numero(coppia.into_frames),
-          })}
-        </Dettaglio>
-      }
+      prova={[
+        {
+          nome: t("review.proof.like"),
+          dato: `${coppia.into_name} \u00b7 ${t("review.frames", { n: numero(coppia.into_frames) })}`,
+        },
+      ]}
     >
       <Scelte
         domanda={t("review.lookalikes.question", { nome: coppia.name, altra: coppia.into_name })}

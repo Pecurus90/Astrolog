@@ -397,9 +397,11 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   chiusa con la risposta in breve, `.as-risposta` coi quattro stati), una sola aperta in tutta
   la pagina (la prima senza risposta, poi quella che si apre), le sezioni finite chiuse in
   `.as-conferma-chiusa` al loro posto con "Riapri", il perche' solo nella sezione su cui si
-  lavora, le scelte fisse su `.as-scelta-fissa` (`Scelte.tsx`). Delle domande restano: i dati
-  che aiutano a rispondere stanno ancora in riga sotto i frame e non nella tabellina
-  `.as-domanda-prova`; la coppia di strumenti non usa `.as-domanda-coppia`; i tre modi dei filtri sono fatti (9/10: pillole
+  lavora, le scelte fisse su `.as-scelta-fissa` (`Scelte.tsx`). Fatta anche la tabellina dei dati
+  (9/10: `.as-domanda-prova` con parola e dato, le notti a mesi in `.as-domanda-mesi`, le
+  coordinate di un posto scritte come si leggono -- le formatta la pagina da `latitude` e
+  `longitude`, la chiave resta per rispondere --, i pannelli accanto ai frame). Delle domande
+  restano: la coppia di strumenti non usa `.as-domanda-coppia`; i tre modi dei filtri sono fatti (9/10: pillole
   "Filtro esistente / Modello da catalogo / Nuovo filtro" su `.as-scelta-fissa`, uno alla volta
   in `.as-domanda-modo`, l'elenco dei modelli su `.as-comparsa` con le voci `role=option` e
   "Nessun modello per..." quando non trova; restano: il nuovo filtro a meta' -- solo il nome o
@@ -416,7 +418,7 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   e "Riapri" sono alti 32 px. Restano poi: Attrezzatura da completare e Oggetti (oggi non
   disegnate: il conto in cima le conta e l'indice no; con sole domande loro la pagina mostra il
   conto e nient'altro, "Niente da confermare" si dice solo a conto zero); gli oggetti gia' a posto a pagine;
-  coordinate e notti all'italiana (le manda il backend); il telefono a due livelli
+  il telefono a due livelli
   (`.as-conferma-tipi`, `.as-conferma-caso`) -- fino ad allora sotto i 900 di colonna l'indice
   non si mostra (`.as-solo-largo`): nel foglio e' `sticky` a ogni larghezza e in colonna unica
   copriva le domande e ne prendeva i clic; zero frame ("Scegli le cartelle"). Testi nuovi

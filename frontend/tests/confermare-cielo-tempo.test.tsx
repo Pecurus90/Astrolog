@@ -136,10 +136,10 @@ describe("Da confermare -- da quale luogo", () => {
   it("un posto con quante pose, le sue notti e i luoghi dal piu' vicino, senza sceglierne uno", async () => {
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
-    const posto = riga(sezione, "45.85,11.58")
+    const posto = riga(sezione, "45,8500 N - 11,5800 E")
     expect(posto.textContent).toMatch(/391 frame/)
-    expect(posto.textContent).toMatch(/a 16,2 km dal sito predefinito/)
-    expect(posto.textContent).toMatch(/2024-05-17.*2024-06-01/)
+    expect(posto.textContent).toMatch(/Distanza\s*16,2 km dal sito predefinito/)
+    expect(posto.textContent).toMatch(/mag 2024\s*17.*giu 2024\s*1/)
     expect(scelte(posto)).toEqual([
       ["Cima Ekar, a 0,4 km", false],
       ["Casa, a 16,2 km", false],
@@ -155,7 +155,7 @@ describe("Da confermare -- da quale luogo", () => {
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
 
-    const posto = riga(sezione, "34.00,-111.00")
+    const posto = riga(sezione, "34,0000 N - 111,0000 O")
     expect(posto.textContent).toMatch(/Notti non calcolabili senza sito/)
     expect(posto.textContent).not.toMatch(/notti:\s*$/)
   })
@@ -163,16 +163,16 @@ describe("Da confermare -- da quale luogo", () => {
   it("la risposta porta le coordinate e il luogo scelto", async () => {
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
-    fireEvent.click(within(riga(sezione, "45.85,11.58")).getByLabelText(/cima ekar/i))
+    fireEvent.click(within(riga(sezione, "45,8500 N - 11,5800 E")).getByLabelText(/cima ekar/i))
     expect((await mandato()).unclear).toEqual([{ key: "45.85,11.58", site_id: 3 }])
   })
 
   it("la risposta gia' data si legge, e ridarla uguale non manda niente", async () => {
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
-    const posto = riga(sezione, "46.10,12.00")
+    const posto = riga(sezione, "46,1000 N - 12,0000 E")
     // il gruppo di scelte nomina il posto: con due posti aperti le scelte sono uguali
-    expect(within(sezione).getByRole("group", { name: /46\.10,12\.00/ })).toBeDefined()
+    expect(within(sezione).getByRole("group", { name: /46,1000 N - 12,0000 E/ })).toBeDefined()
     expect(within(posto).getByLabelText(/^casa/i)).toHaveProperty("checked", true)
     fireEvent.click(within(posto).getByLabelText(/cima ekar/i))
     fireEvent.click(within(posto).getByLabelText(/^casa/i))
@@ -183,7 +183,7 @@ describe("Da confermare -- da quale luogo", () => {
     // `distance_km` nullo e' "non c'e' una casa", non "sei a casa": uno zero sarebbe falso.
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
-    expect(riga(sezione, "46.10,12.00").textContent).not.toMatch(/dal sito predefinito/)
+    expect(riga(sezione, "46,1000 N - 12,0000 E").textContent).not.toMatch(/dal sito predefinito/)
   })
 })
 
@@ -196,6 +196,8 @@ describe("Da confermare -- i mosaici proposti", () => {
     expect(mosaico.textContent).toMatch(/90 frame/)
     expect(mosaico.textContent).toMatch(/3 h/)
     expect(mosaico.textContent).toMatch(/2 senza durata/)
+    // fra le ore e i frame senza durata c'e' un punto, non uno spazio solo
+    expect(mosaico.textContent).toMatch(/3 h · 2 senza durata/)
     expect(scelte(mosaico).map(([, spuntata]) => spuntata)).toEqual([false, false])
   })
 

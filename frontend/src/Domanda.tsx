@@ -1,11 +1,7 @@
 import { type ReactNode, createContext, useContext } from "react"
 
 import { Bottone } from "./Bottone"
-import { Soggetti } from "./Soggetti"
-import type { components } from "./api/schema"
 import { numero, t } from "./i18n"
-
-type CosaHaiRipreso = components["schemas"]["Subjects"]
 
 /**
  * Quale domanda e' aperta: **una sola in tutta la pagina**. Lo tiene la pagina e lo leggono le
@@ -57,8 +53,8 @@ export function Domanda({
   nome,
   cifre = false,
   frames,
-  ripreso,
-  dettagli,
+  accanto,
+  prova = [],
   salvata,
   inMano,
   era,
@@ -73,9 +69,10 @@ export function Domanda({
   /** Un percorso, una sigla, due coordinate: col carattere delle cifre. */
   cifre?: boolean
   frames: number
-  ripreso?: CosaHaiRipreso | undefined
-  /** Cio' che quella domanda ha di suo, dopo i frame. */
-  dettagli?: ReactNode
+  /** Accanto ai frame, sulla stessa riga: i pannelli di un mosaico. */
+  accanto?: string | undefined
+  /** I dati che aiutano a rispondere: la parola, e il dato. */
+  prova?: readonly { nome: string; dato: ReactNode }[]
   salvata: boolean
   inMano: boolean
   era?: string | undefined
@@ -84,7 +81,7 @@ export function Domanda({
   children: ReactNode
 }) {
   const { aperta, apri } = useContext(DomandaAperta)
-  const quanti = t("review.frames", { n: numero(frames) })
+  const quanti = [t("review.frames", { n: numero(frames) }), accanto].filter(Boolean).join(" \u00b7 ")
   const stato = <Risposta era={era} inMano={inMano} salvata={salvata} />
 
   if (aperta !== id) {
@@ -111,11 +108,17 @@ export function Domanda({
           <h3 className={cifre ? "as-domanda__nome as-conferma__cifre" : "as-domanda__nome"}>{nome}</h3>{" "}
           {stato}
         </div>
-        {/* Fra un dato e l'altro c'e' uno spazio scritto: nel testo, che e' cio' che leggono le
-            prove e chi ascolta, senza di lui si attaccano. */}
-        <p className="as-domanda__frame">
-          {quanti} {ripreso && <Soggetti soggetti={ripreso} />} {dettagli}
-        </p>
+        <p className="as-domanda__frame">{quanti}</p>
+        {prova.length > 0 && (
+          <dl className="as-domanda-prova">
+            {prova.map((riga) => (
+              <div key={riga.nome}>
+                <dt>{riga.nome}</dt>
+                <dd>{riga.dato}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
       </div>
       <div className="as-domanda__corpo">{children}</div>
     </article>

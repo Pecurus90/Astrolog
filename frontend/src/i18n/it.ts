@@ -74,7 +74,6 @@ export const it = {
   "review.lookalikes": "Strumenti duplicati",
   "review.lookalikes.why":
     "Strumenti con nome simile e stesse caratteristiche: possono essere lo stesso strumento rilevato da due programmi. L'unione non \u00e8 reversibile.",
-  "review.lookalikes.looksLike": "simile a {nome} ({pose} frame)",
   "review.lookalikes.question": "{nome} e {altra} sono lo stesso strumento?",
   "review.lookalikes.same": "S\u00ec, unisci a {nome}",
   "review.lookalikes.distinct": "No, sono distinti",
@@ -109,8 +108,7 @@ export const it = {
   "review.unclear": "Frame senza sito",
   "review.unclear.why":
     "Frame ripresi a coordinate che non corrispondono a nessun sito. L'associazione vale anche per le notti future.",
-  "review.unclear.fromHome": "a {km} km dal sito predefinito",
-  "review.unclear.nights": "notti: {notti}",
+  "review.unclear.fromHome": "{km} km dal sito predefinito",
   // Quando la notte non si sa ancora: nomina la domanda di questa riga.
   "review.unclear.nights.later": "Notti non calcolabili senza sito",
   "review.unclear.question": "Sito per le coordinate {posto}",
@@ -120,14 +118,12 @@ export const it = {
     "Pannelli adiacenti ripresi con lo stesso corredo. Vengono uniti solo dopo conferma.",
   "review.mosaics.panels": "{n} pannelli",
   "review.mosaics.panels.one": "1 pannello",
-  "review.mosaics.where": "a {dove}",
   "review.mosaics.question": "{soggetti}, {dove}: mosaico?",
   "review.mosaics.yes": "Mosaico",
   "review.mosaics.no": "Non \u00e8 un mosaico",
   "review.mosaics.name": "Oggetto del mosaico ({dove})",
   "review.frames": "{n} frame",
   "review.frames.one": "1 frame",
-  "review.subjects": "Oggetti: {oggetti}",
   "review.subjects.item": "{nome} ({pose})",
   "review.subjects.more": "+ {n}",
   "review.subjects.more.one": "+ 1",
@@ -161,6 +157,13 @@ export const it = {
   "review.closed.inHand.one": "1 risposta da applicare",
   "review.closed.saved": "{n} risposte salvate",
   "review.closed.saved.one": "1 risposta salvata",
+  "review.proof.like": "Simile a",
+  "review.proof.objects": "Oggetti",
+  "review.proof.others": "Altri frame",
+  "review.proof.distance": "Distanza",
+  "review.proof.nights": "Notti",
+  "review.proof.time": "Durata",
+  "review.proof.where": "Posizione",
   "review.apply": "Applica",
   // il piede dice cosa si sta per mandare: un Applica che non dice quanto e' un salto nel buio
   // girata cosi' si legge bene con ogni numero

@@ -164,4 +164,35 @@ describe("Da confermare -- una domanda aperta alla volta", () => {
     expect(stato(riga).className).toBe("as-risposta as-risposta--salvata")
     expect(stato(riga).textContent).toBe("1 risposta salvata")
   })
+  it("i dati che aiutano a rispondere stanno in una tabellina: la parola, e il dato", async () => {
+    // In riga, uno dopo l'altro, si leggevano male: "46.10,12.00 52 frame Oggetti: ... notti: ...".
+    await apri({
+      ...PAGINA,
+      lookalikes: [],
+      typeless: [],
+      unclear: [
+        {
+          key: "46.10,12.00", latitude: 46.1, longitude: 12.0, distance_km: 38.2, frames: 52,
+          nights: ["2025-07-31", "2025-08-12", "2025-08-13"], site: null,
+          candidates: [{ id: 2, name: "Malga", distance_km: 2.1 }],
+          subjects: { found: [{ name: "M 31", frames: 12 }], not_found: 8, not_yet: 5 },
+        },
+      ],
+    })
+    const domanda = aperte()[0] as HTMLElement
+    // le coordinate come si scrivono, non la chiave
+    expect(domanda.querySelector(".as-domanda__nome")?.textContent).toBe("46,1000 N - 12,0000 E")
+    const righe = [...domanda.querySelectorAll("dl.as-domanda-prova > div")].map(
+      (r) => `${r.querySelector("dt")?.textContent}=${r.querySelector("dd")?.textContent}`,
+    )
+    expect(righe).toEqual([
+      "Oggetti=M 31 (12 frame)",
+      "Altri frame=8 frame senza oggetti identificati · 5 frame non risolti",
+      "Distanza=38,2 km dal sito predefinito",
+      "Notti · 3=lug 202531ago 202512, 13",
+    ])
+    // le notti a mesi: il mese una volta, poi i giorni
+    const mesi = [...domanda.querySelectorAll(".as-domanda-mesi > li")]
+    expect(mesi.map((m) => m.querySelector("b")?.textContent)).toEqual(["lug 2025", "ago 2025"])
+  })
 })

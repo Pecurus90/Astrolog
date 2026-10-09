@@ -554,6 +554,11 @@ o *Cambia*; quella di prima si chiude. Le scelte fra poche voci sono pillole. Un
 tutte le risposte si chiude in una riga, al suo posto, e si riapre con *Riapri*; la spiegazione
 di una scheda si legge solo in quella su cui stai lavorando.
 
+Nella domanda aperta, sotto il nome, una tabellina raccoglie **i dati che aiutano a rispondere**:
+a sinistra la parola (*Oggetti*, *Altri frame*, *Distanza*, *Notti*, *Durata*, *Posizione*, *Simile
+a*), a destra il dato. In un mosaico i pannelli stanno accanto ai frame. Le notti sono raggruppate per mese, e le coordinate di un posto sono scritte come si
+leggono (*46,1000 N - 12,0000 E*).
+
 In cima leggi **quante domande aspettano**. A sinistra c'e' l'**indice** delle schede: accanto a
 ognuna quante domande sono ancora senza risposta, o una spunta quando le hai risposte tutte; un
 clic ti porta alla scheda. Sul telefono, e in una finestra stretta, l'indice non c'e': le schede stanno una sotto l'altra. Se fra le modifiche c'e'
