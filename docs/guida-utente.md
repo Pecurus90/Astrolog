@@ -561,7 +561,11 @@ leggono (*46,1000 N - 12,0000 E*).
 
 In cima leggi **quante domande aspettano**. A sinistra c'e' l'**indice** delle schede: accanto a
 ognuna quante domande sono ancora senza risposta, o una spunta quando le hai risposte tutte; un
-clic ti porta alla scheda. Sul telefono, e in una finestra stretta, l'indice non c'e': le schede stanno una sotto l'altra. Se fra le modifiche c'e'
+clic ti porta alla scheda. Sul telefono, e in una finestra stretta, la pagina ha un'altra forma: prima vedi l'elenco dei
+**tipi di domanda** (*Filtri*, *Oggetti*...), ognuno con quante risposte ha e in che stato; toccandone
+uno vedi **un caso alla volta**, con in alto *Tutti i tipi* e *caso 1 di 2*, e in fondo *Caso
+prima* e *Caso dopo* (ai due capi, *Tipo prima* e *Tipo dopo*). Le risposte sono le stesse, e
+*Applica* resta in fondo. Se fra le modifiche c'e'
 un'**unione di strumenti**, la barra in fondo te lo dice prima di *Applica*: e' l'unica risposta
 che non si annulla. Mentre l'app applica, la pagina si ferma; l'esito si chiude con *Chiudi*.
 Quando non c'e' niente da chiedere la pagina dice *Niente da confermare*; se l'ultimo *Applica*

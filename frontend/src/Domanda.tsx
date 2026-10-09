@@ -12,6 +12,12 @@ export const DomandaAperta = createContext<{ aperta: string | null; apri: (id: s
   apri: () => {},
 })
 
+/**
+ * Sul telefono si vede **un caso alla volta**: quale caso della sezione, come si torna ai tipi, e
+ * i gesti che portano al caso accanto. `null` sulla pagina larga.
+ */
+export const UnCaso = createContext<{ caso: number; indietro: () => void; vai: ReactNode } | null>(null)
+
 /** Lo stato di una risposta: segno e parola, mai il colore da solo. `era` dice cosa c'era prima. */
 export function Risposta({
   salvata,
@@ -85,6 +91,8 @@ export function Domanda({
   children: ReactNode
 }) {
   const { aperta, apri } = useContext(DomandaAperta)
+  // il caso, non un oggetto a posto che si corregge sotto di lui
+  const sola = useContext(UnCaso) !== null && !aPosto
   const quanti = [t("review.frames", { n: numero(frames) }), accanto].filter(Boolean).join(" \u00b7 ")
   const stato = aPosto && !inMano ? null : <Risposta era={era} inMano={inMano} salvata={salvata} />
 
@@ -105,7 +113,7 @@ export function Domanda({
     )
   }
   return (
-    <article className="as-domanda" aria-label={voce}>
+    <article className={sola ? "as-domanda as-domanda--prima" : "as-domanda"} aria-label={voce}>
       <div className="as-domanda__testa">
         <div className="as-domanda__capo">
           {/* Dopo il nome uno spazio scritto: nel testo non si attacca a cio' che lo segue. */}

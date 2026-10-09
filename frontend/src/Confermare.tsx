@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Bottone } from "./Bottone"
-import { Fragment, useMemo, useState } from "react"
+import { Fragment, type ReactNode, useCallback, useMemo, useState } from "react"
 
 import { Avviso } from "./Avviso"
-import { DomandaAperta, Risposta } from "./Domanda"
+import { DomandaAperta, Risposta, UnCaso } from "./Domanda"
 import { SezioneStessoPezzo } from "./SezioneStessoPezzo"
 import { SezioneAttrezzatura } from "./SezioneAttrezzatura"
 import { SezioneFiltri } from "./SezioneFiltri"
@@ -53,15 +53,33 @@ const VUOTO: Accumulo = {
  *
  * *Applica* scrive solo le risposte: una domanda guardata e lasciata li' resta aperta (ADR 0014).
  */
+// The sheet's own threshold: `@container colonna (max-width: 899px)`, "soglia = telefono".
+const SOGLIA_TELEFONO = 900
+
 export function Confermare() {
+  // La colonna si misura: sotto la soglia la pagina ha un'altra forma, non un'altra veste.
+  const [stretta, setStretta] = useState(false)
+  const misura = useCallback((el: HTMLDivElement | null) => {
+    if (!el || typeof ResizeObserver === "undefined") return
+    const occhio = new ResizeObserver((voci) => {
+      const larga = voci[0]?.contentRect.width
+      if (larga !== undefined) setStretta(larga < SOGLIA_TELEFONO)
+    })
+    occhio.observe(el)
+    return () => occhio.disconnect()
+  }, [])
   return (
-    <div className="as-pagina">
-      <LaPagina />
+    <div className="as-pagina" ref={misura}>
+      <LaPagina stretta={stretta} />
     </div>
   )
 }
 
-function LaPagina() {
+function LaPagina({ stretta }: { stretta: boolean }) {
+  // Sul telefono: il tipo scelto (`null` = l'elenco dei tipi), il caso, e cio' che si apre fuori dal caso.
+  const [tipo, setTipo] = useState<QualeSezione | null>(null)
+  const [caso, setCaso] = useState(0)
+  const [fuoriCaso, setFuoriCaso] = useState<string | undefined>(undefined)
   const [accumulo, setAccumulo] = useState<Accumulo>(VUOTO)
   // Quante volte la pagina e' stata applicata e riletta: le sezioni si rimontano da capo, o
   // quelle che tengono un modulo in mano mostrerebbero ancora cio' che era scritto prima.
@@ -131,6 +149,7 @@ function LaPagina() {
       await cache.invalidateQueries({ queryKey: ["review"] })
       setAccumulo(VUOTO)
       setScelta(undefined)
+      setFuoriCaso(undefined)
       setRiaperte([])
       setGiro((g) => g + 1)
     },
@@ -289,6 +308,167 @@ function LaPagina() {
   const unisce = Object.values(accumulo.lookalikes).some((r) => r.same)
   const ferma = applica.isPending
 
+  // Le sezioni, scritte una volta: la pagina larga le mette in fila, il telefono una alla volta.
+  const sezioni: Record<QualeSezione, ReactNode> = {
+    lookalikes: <SezioneStessoPezzo gruppi={dati.lookalikes} risposte={accumulo.lookalikes} onRisposta={scrivi("lookalikes")} />,
+    filters: (
+      <SezioneFiltri
+        filtri={dati.filters}
+        miei={dati.filter_choices}
+        modelli={modelli.data ?? []}
+        risposte={accumulo.filters}
+        onRisposta={scrivi("filters")}
+      />
+    ),
+    gear: (
+      <SezioneAttrezzatura
+        schede={dati.gear}
+        corredi={dati.rig_choices}
+        ottiche={dati.optics_choices}
+        filtri={dati.filter_choices}
+        risposte={accumulo.gear}
+        onRisposta={scrivi("gear")}
+      />
+    ),
+    objects: (
+      <SezioneOggetti schede={dati.objects} aPosto={dati.settled_objects} risposte={accumulo.objects} onRisposta={scrivi("objects")} />
+    ),
+    typeless: <SezioneSenzaTipo gruppi={dati.typeless} risposte={accumulo.typeless} onRisposta={scrivi("typeless")} />,
+    unclear: <SezioneLuoghi posti={dati.unclear} risposte={accumulo.unclear} onRisposta={scrivi("unclear")} />,
+    mosaics: <SezioneMosaici mosaici={dati.mosaics} risposte={accumulo.mosaics} onRisposta={scrivi("mosaics")} />,
+  }
+  const piede = (
+    <div className="as-conferma-tutto" role="region" aria-label={t("review.inHand.label")}>
+      <p className="as-conferma-tutto__conta" aria-live="polite">
+        <b>{numero(inMano)}</b> {t("review.inHand.word", { n: inMano })}
+      </p>
+      {unisce && (
+        <p className="as-conferma-avverte">
+          <span>
+            <b>{t("review.merge.warning")}</b> {t("review.merge.warning.rest")}
+          </span>
+        </p>
+      )}
+      <Bottone
+        occupato={ferma}
+        verso="primario"
+        onClick={() => {
+          setEsitoChiuso(false)
+          applica.mutate()
+        }}
+        disabled={ferma || inMano === 0}
+      >
+        {ferma ? t("review.applying") : t("review.apply")}
+      </Bottone>
+    </div>
+  )
+  const avvisi = (
+    <>
+      {esiti}
+      {/* senza domande la pagina c'e' solo per gli oggetti a posto: che non c'e' da fare si dice lo stesso */}
+      {presenti.every((s) => domande[s].length === 0) && niente}
+      {/* **Una coda che non si e' potuta leggere non e' una coda vuota.** Senza questa riga, se
+          l'elenco dei modelli cade la tendina diventa un catalogo vuoto: chi cerca il suo filtro
+          non lo trova, conclude che in commercio non c'e', e lo scrive a mano per sempre. E' il
+          principio portato da `old/`, ed e' la bugia piu' costosa di questa pagina. */}
+      {modelli.error && <Avviso esito="allarme">{modelli.error.message}</Avviso>}
+    </>
+  )
+
+  if (stretta) {
+    const vado = (s: QualeSezione | null, k = 0) => {
+      setTipo(s)
+      setCaso(k)
+      setFuoriCaso(undefined)
+    }
+    // Dopo un Applica il tipo scelto puo' non esserci piu': si torna ai tipi.
+    const qui = tipo !== null && presenti.includes(tipo) ? tipo : null
+    if (qui === null) {
+      // Quante risposte di un tipo stanno in ognuno dei quattro stati, nell'ordine in cui si leggono.
+      const stati = (s: QualeSezione) => {
+        // in mano anche cio' che non e' una domanda: la correzione di un oggetto a posto
+        const fuori = Object.keys(inManoDi(s)).filter((c) => !domande[s].some((d) => d.chiave === c)).length
+        const conto = (salvata: boolean, mia: boolean) =>
+          domande[s].filter((d) => d.salvata === salvata && Boolean(inManoDi(s)[d.chiave]) === mia).length +
+          (!salvata && mia ? fuori : 0)
+        return (
+          [
+            { chiave: "review.type.open", salvata: false, inMano: false },
+            { chiave: "review.type.inHand", salvata: false, inMano: true },
+            { chiave: "review.type.saved", salvata: true, inMano: false },
+            { chiave: "review.type.changed", salvata: true, inMano: true },
+          ] as const
+        )
+          .map((v) => ({ ...v, n: conto(v.salvata, v.inMano) }))
+          .filter((v) => v.n > 0)
+      }
+      return (
+        <div className={ferma ? "as-conferma as-conferma--ferma" : "as-conferma"}>
+          <div className="as-conferma__colonna" inert={ferma}>
+            <div className="as-conferma__testa">
+              {conta}
+              <p className="as-conferma__regola">{t("review.rule")}</p>
+            </div>
+            {avvisi}
+            <div className="as-carta">
+              <ul className="as-conferma-tipi" aria-label={t("review.types")}>
+                {presenti.map((s) => (
+                  <li key={s}>
+                    <button className="as-conferma-tipo" type="button" onClick={() => vado(s)}>
+                      <span className="as-conferma-tipo__nome">{t(SEZIONI[s].titolo)}</span>
+                      <span className="as-conferma-tipo__stati">
+                        {stati(s).map((v) => (
+                          <Risposta inMano={v.inMano} key={v.chiave} salvata={v.salvata}>
+                            {t(v.chiave, { n: numero(v.n) })}
+                          </Risposta>
+                        ))}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          {piede}
+        </div>
+      )
+    }
+    const casi = domande[qui]
+    const k = Math.min(caso, Math.max(0, casi.length - 1))
+    const prima = presenti[presenti.indexOf(qui) - 1]
+    const dopo = presenti[presenti.indexOf(qui) + 1]
+    const idCaso = casi[k] ? `${qui}:${casi[k].chiave}` : null
+    // senza un caso accanto ne' un altro tipo non c'e' dove andare: niente fascia vuota
+    const vai = (k > 0 || k < casi.length - 1 || prima || dopo) && (
+      <div className="as-conferma-caso__vai">
+        {k > 0 ? (
+          <Bottone onClick={() => vado(qui, k - 1)}>{t("review.phone.before")}</Bottone>
+        ) : (
+          prima && <Bottone onClick={() => vado(prima)}>{t("review.phone.typeBefore", { nome: t(SEZIONI[prima].titolo) })}</Bottone>
+        )}
+        {k < casi.length - 1 ? (
+          <Bottone onClick={() => vado(qui, k + 1)}>{t("review.phone.after")}</Bottone>
+        ) : (
+          dopo && <Bottone onClick={() => vado(dopo)}>{t("review.phone.typeAfter", { nome: t(SEZIONI[dopo].titolo) })}</Bottone>
+        )}
+      </div>
+    )
+    return (
+      <div className={ferma ? "as-conferma as-conferma--ferma" : "as-conferma"}>
+        <div className="as-conferma__colonna" inert={ferma}>
+          {avvisi}
+          {/* Aperto e' il caso; un oggetto a posto che si corregge lo chiude, come sulla pagina larga. */}
+          <DomandaAperta.Provider value={{ aperta: fuoriCaso ?? idCaso, apri: setFuoriCaso }}>
+            <UnCaso.Provider value={{ caso: k, indietro: () => vado(null), vai }}>
+              <Fragment key={`${giro}:${qui}:${k}`}>{sezioni[qui]}</Fragment>
+            </UnCaso.Provider>
+          </DomandaAperta.Provider>
+        </div>
+        {piede}
+      </div>
+    )
+  }
+
   return (
     <div className={ferma ? "as-conferma as-conferma--indice as-conferma--ferma" : "as-conferma as-conferma--indice"}>
       {/* Only above 900 of column: the sheet keeps the index sticky at every width, and in a
@@ -323,71 +503,14 @@ function LaPagina() {
         <p className="as-conferma__regola">{t("review.rule")}</p>
       </div>
 
-      {esiti}
-      {/* senza domande la pagina c'e' solo per gli oggetti a posto: che non c'e' da fare si dice lo stesso */}
-      {presenti.every((s) => domande[s].length === 0) && niente}
-      {/* **Una coda che non si e' potuta leggere non e' una coda vuota.** Senza questa riga, se
-          l'elenco dei modelli cade la tendina diventa un catalogo vuoto: chi cerca il suo filtro
-          non lo trova, conclude che in commercio non c'e', e lo scrive a mano per sempre. E' il
-          principio portato da `old/`, ed e' la bugia piu' costosa di questa pagina. */}
-      {modelli.error && <Avviso esito="allarme">{modelli.error.message}</Avviso>}
+      {avvisi}
 
       {/* L'ordine delle sezioni e' fisso: prima i pezzi, poi come si montano insieme, poi il
           dove e il quando, poi il cielo. Una sezione che si sposta a seconda di cosa contiene non
           si ritrova. */}
       <DomandaAperta.Provider value={{ aperta, apri: setScelta }}>
       <Fragment key={giro}>
-      {chiusa("lookalikes") ? chiusaDi("lookalikes") : !!dati?.lookalikes?.length && (
-        <SezioneStessoPezzo
-          gruppi={dati.lookalikes}
-          risposte={accumulo.lookalikes}
-          onRisposta={scrivi("lookalikes")}
-        />
-      )}
-      {chiusa("filters") ? chiusaDi("filters") : !!dati?.filters?.length && (
-        <SezioneFiltri
-          filtri={dati.filters}
-          miei={dati.filter_choices}
-          modelli={modelli.data ?? []}
-          risposte={accumulo.filters}
-          onRisposta={scrivi("filters")}
-        />
-      )}
-      {chiusa("gear") ? chiusaDi("gear") : !!dati?.gear?.length && (
-        <SezioneAttrezzatura
-          schede={dati.gear}
-          corredi={dati.rig_choices}
-          ottiche={dati.optics_choices}
-          filtri={dati.filter_choices}
-          risposte={accumulo.gear}
-          onRisposta={scrivi("gear")}
-        />
-      )}
-      {chiusa("objects") ? chiusaDi("objects") : (!!dati?.objects?.length || soloAPosto) && (
-        <SezioneOggetti
-          schede={dati.objects}
-          aPosto={dati.settled_objects}
-          risposte={accumulo.objects}
-          onRisposta={scrivi("objects")}
-        />
-      )}
-      {chiusa("typeless") ? chiusaDi("typeless") : !!dati?.typeless?.length && (
-        <SezioneSenzaTipo
-          gruppi={dati.typeless}
-          risposte={accumulo.typeless}
-          onRisposta={scrivi("typeless")}
-        />
-      )}
-      {chiusa("unclear") ? chiusaDi("unclear") : !!dati?.unclear?.length && (
-        <SezioneLuoghi posti={dati.unclear} risposte={accumulo.unclear} onRisposta={scrivi("unclear")} />
-      )}
-      {chiusa("mosaics") ? chiusaDi("mosaics") : !!dati?.mosaics?.length && (
-        <SezioneMosaici
-          mosaici={dati.mosaics}
-          risposte={accumulo.mosaics}
-          onRisposta={scrivi("mosaics")}
-        />
-      )}
+        {presenti.map((s) => (chiusa(s) ? chiusaDi(s) : <Fragment key={s}>{sezioni[s]}</Fragment>))}
       </Fragment>
       </DomandaAperta.Provider>
       </div>
@@ -395,29 +518,7 @@ function LaPagina() {
       {/* Il piede resta in vista e dice **cosa si sta per mandare**: le risposte si accumulano
           scorrendo le sezioni, e un Applica che non dice quante ne porta chiede un salto nel buio.
           Il conto e' dello stato in mano all'utente, non dell'API. */}
-      <div className="as-conferma-tutto" role="region" aria-label={t("review.inHand.label")}>
-        <p className="as-conferma-tutto__conta" aria-live="polite">
-          <b>{numero(inMano)}</b> {t("review.inHand.word", { n: inMano })}
-        </p>
-        {unisce && (
-          <p className="as-conferma-avverte">
-            <span>
-              <b>{t("review.merge.warning")}</b> {t("review.merge.warning.rest")}
-            </span>
-          </p>
-        )}
-        <Bottone
-          occupato={ferma}
-          verso="primario"
-          onClick={() => {
-            setEsitoChiuso(false)
-            applica.mutate()
-          }}
-          disabled={ferma || inMano === 0}
-        >
-          {ferma ? t("review.applying") : t("review.apply")}
-        </Bottone>
-      </div>
+      {piede}
     </div>
   )
 }

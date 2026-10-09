@@ -443,11 +443,16 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   con una camera diversa in mano l'ottica scelta nella sua parte non parte (corredo e ottica
   scritta insieme sono un 422) e il suo radio resta acceso su "senza risposta": con un corredo
   senza ottica servono due Applica; sulla scheda che chiede camera e ottica, "Altra camera" con
-  l'ottica vuota e' una risposta valida (renderla obbligatoria e' di Marco). Restano poi:
-  il telefono a due livelli
-  (`.as-conferma-tipi`, `.as-conferma-caso`) -- fino ad allora sotto i 900 di colonna l'indice
-  non si mostra (`.as-solo-largo`): nel foglio e' `sticky` a ogni larghezza e in colonna unica
-  copriva le domande e ne prendeva i clic. Fatto lo stato a zero frame (9/10: `empty` in
+  l'ottica vuota e' una risposta valida (renderla obbligatoria e' di Marco). Fatto il telefono a due livelli (9/10:
+  sotto i 900 di colonna -- misurati con `ResizeObserver` sulla `.as-pagina`, la soglia del
+  foglio -- `.as-conferma-tipi` coi quattro stati contati per tipo, poi `.as-conferma-caso` con
+  un caso solo aperto (`.as-domanda--prima`) e `.as-conferma-caso__vai`; le sezioni sono le
+  stesse, `Sezione` le disegna a un caso quando c'e' `UnCaso`; testi `review.types`,
+  `review.type.*`, `review.phone.*` miei). Del telefono restano: dopo "Tipo prima" si arriva al
+  primo caso, non all'ultimo; cambiando caso il fuoco non si sposta; la tavola per Attrezzatura
+  scrive "manca il filtro" al posto del conto. Cambiando caso cio' che e' scelto a meta' (un nome
+  non ancora scritto) si perde, come sulla pagina larga chiudendo una domanda. Sulla pagina larga sotto i 900 non si arriva piu',
+  quindi l'indice `.as-solo-largo` resta solo per il momento prima della misura. Fatto lo stato a zero frame (9/10: `empty` in
   `GET /review`, `.as-vuoto` con "Aggiungi cartelle", solo se non c'e' nessuna domanda; testi `review.empty*`
   miei; resta: con cartelle gia' aggiunte e non ancora lette il gesto "Aggiungi cartelle" e' fuori
   bersaglio). Testi nuovi

@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode, useContext } from "react"
 
-import { DomandaAperta } from "./Domanda"
+import { Bottone } from "./Bottone"
+import { DomandaAperta, UnCaso } from "./Domanda"
 import { numero, t } from "./i18n"
 import { type QualeSezione, SEZIONI } from "./sezioniDaConfermare"
 
@@ -69,6 +70,34 @@ export function Sezione<V>({
   const { ancora, titolo } = SEZIONI[quale]
   // Il perche' si legge solo nella sezione su cui si sta lavorando: quella con la domanda aperta.
   const quiSiLavora = useContext(DomandaAperta).aperta?.startsWith(`${quale}:`) ?? false
+  const telefono = useContext(UnCaso)
+  // Sul telefono la sezione e' un caso solo: in testa dove si e', sotto come si va avanti.
+  if (telefono) {
+    const voce = voci[telefono.caso]
+    return (
+      <>
+        <div className="as-conferma-caso">
+          <div className="as-conferma-caso__dove">
+            <Bottone piccolo verso="nudo" onClick={telefono.indietro}>
+              {t("review.phone.all")}
+            </Bottone>
+            {voce !== undefined && (
+              <span className="as-conferma-caso__quale">
+                {t("review.phone.case", { k: numero(telefono.caso + 1), n: numero(voci.length) })}
+              </span>
+            )}
+          </div>
+          <h2 className="as-conferma-caso__nome">{t(titolo)}</h2>
+          {domanda && <p className="as-conferma__regola">{domanda}</p>}
+        </div>
+        <div className="as-carta">
+          {voce !== undefined && riga(voce, telefono.caso)}
+          {piede}
+          {telefono.vai}
+        </div>
+      </>
+    )
+  }
   return (
     <section className="as-carta as-conferma-sezione" id={ancora} aria-labelledby={`${ancora}-nome`}>
       <header className="as-conferma-sezione__testa">
