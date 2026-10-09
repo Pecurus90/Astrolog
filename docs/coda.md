@@ -388,7 +388,8 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   in `tests/banco.tsx` e' una voce morta.
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio (v31-v32, montato l'8/10), il primo avvio (Marco, 8/10:
-  "anche il wizard bisogna rifare"; brief in `handoff/design-primo-avvio.md`), Da confermare, Attrezzatura. Il brief di ognuna si
+  "anche il wizard bisogna rifare"; brief in `handoff/design-primo-avvio.md`; montato il 9/10 sul v33), Da confermare
+  (brief scritto il 9/10 in `handoff/design-da-confermare.md`, dato a Marco per Design), Attrezzatura. Il brief di ognuna si
   scrive coi dati che l'API manda in quel momento: si rifa' la ricognizione quando tocca a lei.
   I tre dati che la pagina Notti chiedeva li manda gia' `/api/v1/nights` (7/10/2026: `untimed`
   per oggetto, `weather.arrives_on`, `reading_done_pct`). Notti montate sul foglio v29 (8/10/2026,
