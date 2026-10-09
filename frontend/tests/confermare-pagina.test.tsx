@@ -149,6 +149,25 @@ describe("Da confermare -- l'ossatura della pagina", () => {
     expect(screen.queryByRole("region", { name: "Modifiche da applicare" })).toBeNull()
   })
 
+  it("senza nessun frame dice da dove si comincia: niente conto e niente piede", async () => {
+    // "Niente da confermare" a chi non ha ancora scelto le cartelle sarebbe vero e inutile.
+    aperta({ ...VUOTA, empty: true })
+    await apri()
+    const testo = await screen.findByText("Nessun frame in archivio. Le domande compaiono dopo la lettura delle cartelle.")
+    const vuoto = testo.closest(".as-vuoto") as HTMLElement
+    expect(within(vuoto).getByRole("link", { name: "Aggiungi cartelle" }).getAttribute("href")).toBe("/impostazioni/cartelle")
+    expect(screen.queryByText("Niente da confermare")).toBeNull()
+    expect(document.querySelector(".as-conferma__conta")).toBeNull()
+    expect(screen.queryByRole("region", { name: "Modifiche da applicare" })).toBeNull()
+  })
+
+  it("senza frame ma con una domanda, la domanda si vede: le risposte ripristinate ne portano", async () => {
+    aperta({ ...PAGINA, empty: true })
+    await apri()
+    expect(await screen.findByRole("region", { name: "Strumenti duplicati" })).toBeDefined()
+    expect(document.querySelector(".as-vuoto")).toBeNull()
+  })
+
   it("con sole domande di sezioni non ancora disegnate non dice che non c'e' niente", async () => {
     // Il conto in cima conta anche Oggetti e Attrezzatura da completare: negarle sarebbe falso.
     aperta({ ...VUOTA, to_confirm: 5 })

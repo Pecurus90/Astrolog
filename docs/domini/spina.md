@@ -642,7 +642,9 @@ sono gia' in archivio, rispondere migliora i nomi.
 sembrano un pezzo solo, i filtri che l'app non riconosce e quelli fra cui si sceglie la risposta, i
 corredi fra cui si sceglie, gli oggetti coi
 conteggi, **i gruppi di frame su cui l'app chiede** -- ognuno con la sua chiave stabile, quanti
-frame vale e la risposta gia' data, se c'e' -- e quante domande aspettano una risposta. `POST /review/apply` prende tutte le
+frame vale e la risposta gia' data, se c'e' --, quante domande aspettano una risposta, e se
+l'archivio e' ancora senza frame (`empty`: non c'e' niente da chiedere, che non e' "niente da
+confermare"; `test_the_page_says_when_the_archive_holds_no_frame_yet`). `POST /review/apply` prende tutte le
 decisioni insieme, le scrive in una transazione sola e **fa ripartire il lavoro sui frame
 toccati**: chi risponde vede i conti aggiornati in pochi secondi, non alla prossima
 scansione. I frame non toccati non si rilavorano.

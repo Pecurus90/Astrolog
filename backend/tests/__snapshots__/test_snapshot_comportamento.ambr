@@ -1490,6 +1490,7 @@
 # ---
 # name: test_the_pages_of_the_synthetic_archive[review]
   dict({
+    'empty': False,
     'filter_choices': list([
       dict({
         'id': 4,

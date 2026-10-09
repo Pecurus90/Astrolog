@@ -2849,6 +2849,11 @@ export interface components {
              * @description The regions taken in side-by-side panels.
              */
             mosaics: components["schemas"]["MosaicCandidate"][];
+            /**
+             * Empty
+             * @description The archive holds no frame yet: there is nothing to ask, not nothing left.
+             */
+            empty: boolean;
             /** To Confirm */
             to_confirm: number;
         };

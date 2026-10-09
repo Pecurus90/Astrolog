@@ -188,6 +188,8 @@ export const it = {
   "review.merge.warning": "Include un'unione di strumenti:",
   "review.merge.warning.rest": "non \u00e8 reversibile.",
   "review.applying": "Applicazione in corso\u2026",
+  "review.empty": "Nessun frame in archivio. Le domande compaiono dopo la lettura delle cartelle.",
+  "review.empty.how": "Aggiungi cartelle",
   "review.none.title": "Niente da confermare",
   "review.none.text": "Nessuna domanda aperta.",
   "review.fix": "Correggi",

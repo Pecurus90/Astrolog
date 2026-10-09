@@ -231,6 +231,22 @@ function LaPagina() {
       {t("review.none.text")}
     </Avviso>
   )
+  // Primo avvio: non c'e' niente da chiedere perche' non c'e' ancora niente. Senza conto e senza piede.
+  // Solo senza domande: risposte ripristinate su un archivio nuovo ne portano anche a zero frame.
+  if (dati.empty && presenti.length === 0) {
+    return (
+      <div className="as-conferma">
+        <div className="as-vuoto">
+          <p className="as-vuoto__testo">{t("review.empty")}</p>
+          <div className="as-vuoto__azioni">
+            <Bottone a="/impostazioni/cartelle" verso="primario">
+              {t("review.empty.how")}
+            </Bottone>
+          </div>
+        </div>
+      </div>
+    )
+  }
   // Lo stato in cui la pagina sta quasi sempre: niente indice e niente piede, non c'e' da fare.
   if (presenti.length === 0) {
     return (

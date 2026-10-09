@@ -186,6 +186,8 @@ export const en = {
   "review.merge.warning": "Includes merging two instruments:",
   "review.merge.warning.rest": "it cannot be undone.",
   "review.applying": "Applying\u2026",
+  "review.empty": "No frames in the archive. Questions appear once the folders are read.",
+  "review.empty.how": "Add folders",
   "review.none.title": "Nothing to confirm",
   "review.none.text": "No open questions.",
   "review.fix": "Correct",

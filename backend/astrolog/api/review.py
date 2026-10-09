@@ -96,6 +96,7 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
         optics_choices=page.optics_choices(conn),
         typeless=[TypelessFolder(**g) for g in typeless_rows],
         mosaics=mosaics,
+        empty=conn.execute("SELECT NOT EXISTS (SELECT 1 FROM frames)").fetchone()[0] == 1,
         to_confirm=to_confirm,
     )
 

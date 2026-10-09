@@ -31,6 +31,16 @@ def _filtro(page, nome):
     return by_name(page["filters"] + page["filter_choices"], nome)
 
 
+def test_the_page_says_when_the_archive_holds_no_frame_yet(client_vuoto):
+    """A mani vuote la pagina non ha domande perche' non c'e' ancora niente da leggere: lo dice
+    l'API, o lo schermo direbbe "niente da confermare" a chi non ha ancora scelto le cartelle."""
+    assert review(client_vuoto)["empty"] is True
+
+
+def test_an_archive_with_frames_is_not_empty(client):
+    assert review(client)["empty"] is False
+
+
 def test_the_filter_question_does_not_scan_the_whole_archive_per_filter(client):
     """La domanda sui filtri conta le pose dei soli filtri sconosciuti, e le trova con l'indice:
     senza, e' una scansione dell'archivio intero per ogni filtro, anche quando non c'e' niente da

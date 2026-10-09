@@ -197,4 +197,7 @@ class ReviewOut(BaseModel):
         description="The folders whose frames do not tell what file they are."
     )
     mosaics: list[MosaicCandidate] = Field(description="The regions taken in side-by-side panels.")
+    empty: bool = Field(
+        description="The archive holds no frame yet: there is nothing to ask, not nothing left."
+    )
     to_confirm: int

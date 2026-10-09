@@ -447,7 +447,10 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   il telefono a due livelli
   (`.as-conferma-tipi`, `.as-conferma-caso`) -- fino ad allora sotto i 900 di colonna l'indice
   non si mostra (`.as-solo-largo`): nel foglio e' `sticky` a ogni larghezza e in colonna unica
-  copriva le domande e ne prendeva i clic; zero frame ("Scegli le cartelle"). Testi nuovi
+  copriva le domande e ne prendeva i clic. Fatto lo stato a zero frame (9/10: `empty` in
+  `GET /review`, `.as-vuoto` con "Aggiungi cartelle", solo se non c'e' nessuna domanda; testi `review.empty*`
+  miei; resta: con cartelle gia' aggiunte e non ancora lette il gesto "Aggiungi cartelle" e' fuori
+  bersaglio). Testi nuovi
   scritti da me nel tono approvato, da far vedere a Marco riga per riga: l'elenco e' in
   `frontend/src/i18n/it.ts`, chiavi `review.count.word`, `review.inHand.word`, `review.index*`, `review.rule`, `review.questions`,
   `review.inHand.label`, `review.merge.warning*`, `review.applying`, `review.none.*`.
