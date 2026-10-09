@@ -62,7 +62,10 @@ describe("Impostazioni / ASTAP", () => {
 
     expect(await screen.findByText(/astap_cli\.exe/)).toBeTruthy()
     // Il canale accanto al percorso: senza, "trovato" non si puo' smentire.
-    expect(screen.getByText(/percorso inserito manualmente/i)).toBeTruthy()
+    const riga = screen.getByText(/percorso inserito manualmente/i)
+    expect(riga).toBeTruthy()
+    // il percorso e la sua origine sono due cose: fra loro c'e' un separatore, non uno spazio
+    expect(riga.textContent).toMatch(/astap_cli\S*\s+\u00b7\s+percorso inserito manualmente/)
   })
 
   it("ogni canale ha la sua frase, e nessuno resta un codice a schermo", async () => {

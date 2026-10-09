@@ -327,6 +327,46 @@ describe("il foglio Altro", () => {
     expect(document.activeElement).toBe(ultimo)
   })
 
+  it("nel foglio una scansione al lavoro senza fase dice che e' in corso, non inattiva", async () => {
+    // Il bottone accanto dice Interrompi: "Inattiva" accanto a "Interrompi" si contraddiceva.
+    app({ ...FERMO, action: "stop", worker: { ...FERMO.worker, state: "running" } })
+    await disegna()
+    fireEvent.click(await screen.findByRole("button", { name: /^altro/i }))
+    const foglio = await screen.findByRole("dialog", { name: "Altro" })
+    expect(await within(foglio).findByText("In corso")).toBeDefined()
+    expect(within(foglio).queryByText("Inattiva")).toBeNull()
+    expect(within(foglio).getByRole("button", { name: "Interrompi" })).toBeDefined()
+  })
+
+  it("nel foglio una scansione interrotta lo dice, accanto a Riprendi", async () => {
+    app({ ...FERMO, action: "resume", worker: { ...FERMO.worker, state: "idle" } })
+    await disegna()
+    fireEvent.click(await screen.findByRole("button", { name: /^altro/i }))
+    const foglio = await screen.findByRole("dialog", { name: "Altro" })
+    expect(await within(foglio).findByText(/^Interrotta/)).toBeDefined()
+    expect(within(foglio).getByRole("button", { name: "Riprendi" })).toBeDefined()
+  })
+
+  it("nel foglio una scansione interrotta a meta' di una fase dice che e' interrotta, e dove", async () => {
+    // La fase da sola ("Lettura dei file 3 su 14") accanto a Riprendi sembrava una scansione viva.
+    app({
+      ...FERMO,
+      action: "resume",
+      worker: {
+        ...FERMO.worker,
+        state: "idle",
+        stage: "scan",
+        stages: [{ name: "scan", state: "stopped", current: 3, total: 14, tally: {}, reason: null }],
+      },
+    })
+    await disegna()
+    fireEvent.click(await screen.findByRole("button", { name: /^altro/i }))
+    const foglio = await screen.findByRole("dialog", { name: "Altro" })
+    const riga = await within(foglio).findByText(/^Interrotta/)
+    expect(riga.textContent).toContain("Lettura dei file")
+    expect(riga.textContent).toContain("3 su 14")
+  })
+
   it("bloccata, la scansione nel foglio dice perche' e porta dove si guarda", async () => {
     // Sul telefono la barra non porta la scansione: il foglio e' l'unico posto. Senza, una
     // scansione bloccata si leggeva "ferma", senza motivo e senza Vedi.

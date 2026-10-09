@@ -219,9 +219,15 @@ export function ScansioneNelFoglio() {
         <span>
           {bloccata
             ? (stato.data?.worker.error ?? t("scan.blocked.why"))
-            : fase
-              ? [fase.parola, fase.conto].filter(Boolean).join(" \u00B7 ")
-              : t("scan.idle")}
+            : // lo stato lo dice la stessa parola della barra: al lavoro senza fase e' "In corso",
+              // interrotta lo dice anche quando una fase c'e', perche' accanto c'e' Riprendi
+              [
+                azione === "resume" ? t("scan.stopped") : null,
+                fase?.parola ?? (azione === "stop" ? t("scan.working") : azione === "resume" ? null : t("scan.idle")),
+                fase?.conto,
+              ]
+                .filter(Boolean)
+                .join(" \u00B7 ")}
         </span>
         <Bottone verso="nudo" piccolo onClick={() => gesto.mutate(azione)} disabled={gesto.isPending}>
           {t(VERBI[azione])}

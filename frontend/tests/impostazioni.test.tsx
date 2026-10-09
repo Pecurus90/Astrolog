@@ -158,6 +158,10 @@ describe("Impostazioni", () => {
     expect(within(dialogo).getByText(/frame restano in archivio/)).toBeDefined()
     expect(within(dialogo).getByText(/180/)).toBeDefined()
     expect(within(dialogo).getByText(/^i file su disco non vengono modificati$/)).toBeDefined()
+    // il paragrafo introduce l'elenco e non lo ripete: ogni effetto si legge una volta sola
+    expect(within(dialogo).getByText("Effetti della rimozione:")).toBeDefined()
+    expect(within(dialogo).getAllByText(/non vengono modificati/)).toHaveLength(1)
+    expect(within(dialogo).getAllByText(/restano in archivio|vengono conservati/)).toHaveLength(1)
     // e finche' non si conferma, la rotta non e' stata chiamata
     expect(scritture().some((s) => s.metodo === "DELETE")).toBe(false)
   })

@@ -66,11 +66,11 @@ export const enImpostazioni = {
 
   "settings.folders.confirm": "Remove {percorso}?",
   "settings.folders.confirm.what":
-    "Frames already in the archive are kept. Files on disk are not modified.",
+    "Effects of removing it:",
   "settings.folders.confirm.frames": "frames stay in the archive",
   "settings.folders.confirm.files": "files on disk are not modified",
   "settings.folders.confirm.stop":
-    "New files in this folder will no longer be read.",
+    "new files in this folder are no longer read",
   "settings.folders.cancel": "Cancel",
   "settings.folders.stop": "Remove folder",
 
@@ -134,7 +134,7 @@ export const enImpostazioni = {
   "backup.what":
     "The backup contains the data you entered (equipment, objects, sites, preferences). It does not contain the FITS files.",
   "backup.when": "Last backup: {giorno}, {ora}",
-  "backup.counts": "{risposte} confirmations, {siti} sites, {cartelle} folders, {pezzi} instruments and filters",
+  "backup.counts": "confirmations {risposte}, sites {siti}, folders {cartelle}, instruments and filters {pezzi}",
   "backup.none": "No backup.",
   "backup.unreadable": "Backup file unreadable: it will be recreated.",
   "backup.export": "Export backup",
@@ -146,7 +146,7 @@ export const enImpostazioni = {
   "backup.failed": "Backup status not available.",
   "backup.restoreFailed": "Restore failed.",
   "backup.found.title": "Backup found",
-  "backup.found.question": "{quando}. Restore the saved data? The folders will be read again.",
+  "backup.found.question": "Restore the saved data? The folders will be read again.",
   "backup.found.restore": "Restore",
   "backup.found.decline": "Start from scratch",
 }

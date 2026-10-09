@@ -68,11 +68,11 @@ export const itImpostazioni = {
 
   "settings.folders.confirm": "Rimuovere {percorso}?",
   "settings.folders.confirm.what":
-    "I frame gi\u00e0 in archivio vengono conservati. I file su disco non vengono modificati.",
+    "Effetti della rimozione:",
   "settings.folders.confirm.frames": "frame restano in archivio",
   "settings.folders.confirm.files": "i file su disco non vengono modificati",
   "settings.folders.confirm.stop":
-    "I nuovi file di questa cartella non verranno pi\u00f9 letti.",
+    "i nuovi file di questa cartella non vengono pi\u00f9 letti",
   "settings.folders.cancel": "Annulla",
   "settings.folders.stop": "Rimuovi cartella",
 
@@ -137,7 +137,7 @@ export const itImpostazioni = {
   "backup.what":
     "Il backup contiene i dati inseriti (attrezzatura, oggetti, siti, preferenze). Non contiene i file FITS.",
   "backup.when": "Ultimo backup: {giorno}, {ora}",
-  "backup.counts": "{risposte} conferme, {siti} siti, {cartelle} cartelle, {pezzi} strumenti e filtri",
+  "backup.counts": "conferme {risposte}, siti {siti}, cartelle {cartelle}, strumenti e filtri {pezzi}",
   "backup.none": "Nessun backup.",
   "backup.unreadable": "File di backup non leggibile: verr\u00e0 ricreato.",
   "backup.export": "Esporta backup",
@@ -149,7 +149,7 @@ export const itImpostazioni = {
   "backup.failed": "Stato del backup non disponibile.",
   "backup.restoreFailed": "Ripristino non riuscito.",
   "backup.found.title": "Backup trovato",
-  "backup.found.question": "{quando}. Ripristinare i dati salvati? Le cartelle verranno rilette.",
+  "backup.found.question": "Ripristinare i dati salvati? Le cartelle verranno rilette.",
   "backup.found.restore": "Ripristina",
   "backup.found.decline": "Inizia da zero",
 }

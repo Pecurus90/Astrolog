@@ -319,19 +319,17 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   nella barra, Da confermare. Parole cambiate in blocco: riconoscitore -> ASTAP; pezzo ->
   strumento; letture -> scansioni; sito di casa -> sito predefinito; senza tempo -> senza durata;
   non si sa -> Non disponibile; risposte (del backup) -> backup / conferme; foto del cielo ->
-  Light; il verdetto del Meteo -> Notte buona / incerta / non adatta. **Restano, e sono difetti
-  di codice che i testi nuovi fanno vedere** (un giro di `/ripara`, non una decisione): il backup
-  scrive "1 siti" e un doppio trattino, e senza data la domanda comincia con un punto
-  (`Backup.tsx`); la riga di ASTAP non separa il percorso dalla sua origine
-  (`ImpostazioniRiconoscitore.tsx`); il dialogo "Rimuovi cartella" dice due volte la stessa cosa
-  (`ImpostazioniCartelle.tsx`); nel foglio Altro del telefono una scansione in corso senza fase
-  dice "Inattiva" con "Interrompi" accanto, e una interrotta non lo dice (`Scansiona.tsx`); il
-  motivo di una scansione bloccata esce grezzo dal backend; in Da confermare la domanda del
-  mosaico mette le coordinate in fila con gli oggetti, la risposta gia' data a "frame senza tipo"
-  e' la parola nuda accanto alle scelte, e il nome dell'altro strumento compare tre volte nella
-  riga; "ASTAP trovato" e "Usa questo percorso" valgono per due cose nella stessa pagina; la
-  punteggiatura finale dei titoli d'errore non e' uniforme; nell'elenco dell'Archivio la cella
-  dei filtri dice "Non disponibile" e la carta "Filtri non indicati". Restano anche: le lettere
+  Light; il verdetto del Meteo -> Notte buona / incerta / non adatta. Riparati il 9/10/2026: il conto del backup ("1 siti", doppio
+  trattino, punto in testa alla domanda), il separatore nella riga di ASTAP, la scansione nel
+  foglio Altro del telefono (al lavoro "In corso", interrotta lo dice), i filtri che mancano
+  nell'elenco dell'Archivio, il dialogo "Rimuovi cartella" che si ripeteva. **Restano, e chiedono
+  di cambiare come la pagina e' fatta, non una parola**: il motivo di una scansione bloccata
+  esce grezzo dal backend; in Da confermare la domanda del mosaico mette le coordinate in fila
+  con gli oggetti, la risposta gia' data a "frame senza tipo" e' la parola nuda accanto alle
+  scelte, e il nome dell'altro strumento compare tre volte nella riga; "ASTAP trovato" e "Usa
+  questo percorso" valgono per due cose nella stessa pagina; la punteggiatura finale dei titoli
+  d'errore non e' uniforme; interrotta a meta' fase, la barra del desktop non dice la fase e il
+  foglio del telefono si'. Restano anche: le lettere
   accentate vere nei testi non toccati (ancora "gia'" con l'apostrofo in qualche chiave e in
   tutta la guida); i titoli dei test e i commenti che dicono ancora pezzo, letture, sito di casa;
   il glossario vieta "calcolato" e l'app scrive "pixel (calcolato)"; "storico" vale per due cose;

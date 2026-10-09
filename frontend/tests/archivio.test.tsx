@@ -201,8 +201,10 @@ describe("l'Archivio", () => {
     // tipo, costellazione e filtri: tre celle che il catalogo non sa riempire, e ognuna lo dice
     // con una **parola** E con la forma della terza forma del dato -- non col solo colore, e non
     // con `as-dato--vuoto`, che nel foglio vuol dire "una misura vera che vale zero"
-    expect(within(tabella).getAllByText(/non disponibile$/i)).toHaveLength(3)
+    expect(within(tabella).getAllByText(/non disponibile$/i)).toHaveLength(2)
     expect(tabella.querySelectorAll(".as-nonsisa")).toHaveLength(3)
+    // i filtri dicono la stessa cosa nella carta e nell'elenco
+    expect(within(tabella).getByText("Filtri non indicati")).toBeDefined()
   })
 
   it("dice quanti ne ha trovati, non quanti ne stai vedendo", async () => {

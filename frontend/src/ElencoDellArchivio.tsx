@@ -72,7 +72,7 @@ function UnaRiga({ riga }: { riga: Riga }) {
         )}
       </td>
       <td className="as-archivio__col-filtri">
-        {riga.filters.length > 0 ? <Filtri riga={riga} /> : <NonSiSa>{t("archive.unknown")}</NonSiSa>}
+        {riga.filters.length > 0 ? <Filtri riga={riga} /> : <NonSiSa>{t("archive.unknown.filters")}</NonSiSa>}
       </td>
       {/* Un oggetto senza segni non e' un dato che non si sa: e' vuoto davvero, e si tace. */}
       <td className="as-archivio__col-mosaico">

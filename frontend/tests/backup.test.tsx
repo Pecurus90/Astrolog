@@ -40,7 +40,7 @@ describe("Il backup", () => {
   it("su un database nuovo chiede di rimetterle, prima del primo avvio", async () => {
     await app("found", false)
     expect(await screen.findByText(/^backup trovato$/i)).toBeDefined()
-    expect(screen.getByText(/42 conferme, 1 siti, 2 cartelle, 4 strumenti e filtri/i)).toBeDefined()
+    expect(screen.getByText(/conferme 42, siti 1, cartelle 2, strumenti e filtri 4/i)).toBeDefined()
 
     fireEvent.click(screen.getByRole("button", { name: /^ripristina$/i }))
 
@@ -62,5 +62,32 @@ describe("Il backup", () => {
     await app("none", true)
     expect(await screen.findByRole("heading", { name: /^backup$/i })).toBeDefined()
     expect(await screen.findByText("C:\\dati\\risposte.json")).toBeDefined()
+  })
+
+  it("il conto del backup non scrive un plurale sbagliato, e non usa il doppio trattino", async () => {
+    // Un sito solo: "1 siti" era il difetto. Ogni voce dice prima cosa conta, poi quanto.
+    window.history.pushState({}, "", "/impostazioni/backup")
+    await app("none", true)
+    const riga = (await screen.findByText("C:\\dati\\risposte.json")).closest("p")
+    expect(riga?.textContent).toContain("siti 1")
+    expect(riga?.textContent).not.toMatch(/1 siti/)
+    expect(riga?.textContent).not.toContain("--")
+  })
+
+  it("se il backup non dice quando e' stato scritto, la domanda non comincia con un punto", async () => {
+    rispondi({
+      ...STANOTTE,
+      ...SPINA,
+      "/api/v1/backup": {
+        stato: 200,
+        corpo: { offer: "found", last: { ...CONTI, written_at: null }, unreadable: false, path: "x" },
+      },
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(false) },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+    })
+    await disegna()
+    const domanda = await screen.findByText(/ripristinare i dati salvati/i)
+    expect(domanda.textContent).toMatch(/^Ripristinare/)
   })
 })

@@ -66,7 +66,8 @@ export function RipristinoProposto({ stato }: { stato: Stato }) {
             <h1 className="as-carta__titolo">{t("backup.found.title")}</h1>
             {conti && (
               <p className="as-carta__domanda">
-                {t("backup.found.question", { quando: quando(conti) })}
+                {/* la data, se c'e', e' una frase sua: senza, la domanda non comincia con un punto */}
+                {[quando(conti), t("backup.found.question")].filter(Boolean).join(". ")}
               </p>
             )}
           </div>
@@ -137,7 +138,7 @@ export function ImpostazioniBackup() {
         {stato.error && <Avviso esito="allarme">{stato.error.message}</Avviso>}
         {stato.data && (
           <p>
-            {ultimo ? `${quando(ultimo)} -- ${contenuto(ultimo)}` : t("backup.none")}
+            {ultimo ? [quando(ultimo), contenuto(ultimo)].filter(Boolean).join(" \u00b7 ") : t("backup.none")}
             <br />
             <code>{stato.data.path}</code>
           </p>

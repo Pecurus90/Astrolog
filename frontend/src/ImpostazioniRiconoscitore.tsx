@@ -98,8 +98,9 @@ function Stato({ solver }: { solver: Solver }) {
   return (
     <p className="as-carta__domanda">
       <span className="as-stato as-stato--buono">{t("settings.solver.here")}</span>{" "}
-      <Prova>{solver.path}</Prova>{" "}
-      {solver.source !== null && t(`settings.solver.from.${solver.source}`)}
+      <Prova>{solver.path}</Prova>
+      {/* il percorso e la sua origine sono due cose: un separatore, non uno spazio */}
+      {solver.source !== null && ` \u00b7 ${t(`settings.solver.from.${solver.source}`)}`}
     </p>
   )
 }
