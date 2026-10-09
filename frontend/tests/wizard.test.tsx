@@ -328,7 +328,8 @@ describe("il primo avvio", () => {
 
     vaiAlPasso(1)
     expect(screen.getByRole("region", { name: "Sito di osservazione" })).toBeDefined()
-    expect(gesti().map((g) => g.textContent)).toEqual(["Salta", "Indietro", "Avanti"])
+    // al sito il comando che salva e' l'ultimo, e Avanti gli cede il posto di primario
+    expect(gesti().map((g) => g.textContent)).toEqual(["Salta", "Indietro", "Avanti", "Salva sito"])
   })
 
   it("Indietro riporta al passo di prima", async () => {

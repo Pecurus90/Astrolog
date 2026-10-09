@@ -125,7 +125,7 @@ describe("Impostazioni / Siti", () => {
     expect(nome.value).toBe("Cortina")
     expect((screen.getByLabelText(/latitudine/i) as HTMLInputElement).value).toBe("46.5405")
     // E la classe che ha e' gia' quella scelta: ripartire da nessuna la cancellerebbe salvando.
-    expect(screen.getByRole("radio", { checked: true }).textContent).toMatch(/3/)
+    expect((screen.getByRole("radio", { checked: true }) as HTMLInputElement).value).toBe("3")
   })
 
   it("il cielo corretto arriva alla rotta, e col verbo che non crea un sito nuovo", async () => {

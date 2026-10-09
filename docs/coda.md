@@ -347,9 +347,13 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
 - **Primo avvio sul foglio v33** (Design, 9/10/2026; tavole `pagine/primo-avvio.html` e
   `primo-avvio-stati.html`). Fatto: il foglio v33 nell'app; il campo dei moduli (`Campo`) scrive
   le classi `as-campo-modulo*` e mette l'input nel suo pozzo, in tutta l'app; il guscio (`.as-entra`
-  coi passi di lato, la carta `.as-passo`, i gesti `.as-gesti`). Restano, un passo alla volta: il
-  sito (`.as-passo__parte`, `.as-campo-riga`, `.as-campo-coppia`, `.as-posti`, `.as-bortle-scegli`,
-  e un solo primario: "Usa questo sito" nei gesti); il percorso dei file (`.as-esito`,
+  coi passi di lato, la carta `.as-passo`, i gesti `.as-gesti`). Fatto anche il passo del sito (9/10): le tre
+  parti, la ricerca in `.as-campo-riga` coi posti in `.as-posti`, le coordinate in
+  `.as-campo-coppia`, la scala del cielo su nove radio veri (`.as-bortle-scegli`, anche nelle
+  Impostazioni), "Salva sito" unico primario fra i gesti. Da chiedere a Marco: accanto a "Salva
+  sito" il disegno scrive "Avanti senza sito", l'app "Avanti". Del passo del sito restano: il
+  posto trovato non dice regione e paese a parte (`.as-posti__dove`: la rotta manda un nome
+  solo), "Salvo il sito" sul bottone mentre salva; l'avviso "Sito non salvato" resta a schermo andando avanti e tornando indietro, e su un nome gia' usato (409) dice "Il servizio non ha risposto"; dopo un salvataggio riuscito, tornando indietro il modulo e' vuoto e niente dice che il sito c'e' gia'; "Salva sito" spento si vede come acceso finche' il Bottone non scrive `aria-disabled`; Invio nel campo "Localita'" non cerca. Restano, un passo alla volta: il percorso dei file (`.as-esito`,
   `.as-cartelle`, `.as-sfoglia`); Seeing e ASTAP (`.as-avviso--ignoto`, `.as-campo-riga`); le
   risposte ritrovate (`.as-ritrovate`, `.as-conti`); la chiusura; il bottone spento con
   `aria-disabled` e al lavoro con `aria-busy` (oggi `disabled`); l'attesa nel pozzo

@@ -29,7 +29,8 @@ alto e i comandi restano sempre in vista in fondo allo schermo.
    scegli guardando **cosa ci si vede** -- se la Via Lattea proietta ombre o se di notte si legge
    il giornale -- e la misura del cielo la ricava l'app da quella. Puoi **non rispondere**: il
    sito si salva lo stesso, e il cielo resta vuoto invece di prendersi un valore che non hai
-   dato.
+   dato. Il sito si salva con **Salva sito**, in fondo insieme agli altri comandi, e poi si passa
+   al passo dopo; **Avanti** va oltre senza salvare.
 3. **Percorso dei file.** Scrivi il percorso di una cartella e premi *Verifica*: l'app conta i
    FITS che ci sono **prima** di registrarla, cosi' ti accorgi subito se hai puntato la cartella
    sbagliata. Se la cartella non si raggiunge te lo dice, e non ti lascia aggiungerla. Sul NAS

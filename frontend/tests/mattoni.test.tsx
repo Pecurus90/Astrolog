@@ -356,7 +356,7 @@ describe("ScalaDelCielo", () => {
     render(<ScalaDelCielo onScegli={() => {}} />)
 
     expect(voci()).toHaveLength(9)
-    expect(voci().map((v) => v.textContent?.trim())).toEqual([
+    expect(voci().map((v) => v.closest("label")?.querySelector(".as-bortle-scegli__cifra")?.textContent)).toEqual([
       "1",
       "2",
       "3",
@@ -419,22 +419,38 @@ describe("ScalaDelCielo", () => {
 
     const fermate = voci().filter((v) => v.getAttribute("tabindex") === "0")
     expect(fermate).toHaveLength(1)
-    expect(fermate[0]?.textContent?.trim()).toBe("1")
+    expect((fermate[0] as HTMLInputElement).value).toBe("1")
     // e restare raggiungibili non vuol dire essere scelti
-    expect(fermate[0]?.getAttribute("aria-checked")).toBe("false")
+    expect((fermate[0] as HTMLInputElement).checked).toBe(false)
   })
 
   it("ogni fascia porta la classe che il foglio le da', non una tinta scritta qui", () => {
     // La rampa dal ciano al rosa **e' del foglio**, una classe per fascia
-    // (`as-bortle__voce--1` ... `--9`). Scrivere il colore in linea sarebbe una seconda verita'
+    // (`as-bortle-scegli__voce--1` ... `--9`). Scrivere il colore in linea sarebbe una seconda verita'
     // sullo stesso colore, e nessuna macchina la vedrebbe: una classe che **esiste** non e' una
     // classe inventata, quindi la guardia del cancello tace. Qui si guarda che la classe ci sia.
     render(<ScalaDelCielo onScegli={() => {}} />)
 
-    const tinte = voci().map((v, i) => v.classList.contains(`as-bortle__voce--${i + 1}`))
+    const tinte = voci().map((v, i) => v.closest("label")?.classList.contains(`as-bortle-scegli__voce--${i + 1}`))
     expect(tinte).toEqual(CLASSI.map(() => true))
     // e il colore non e' scritto sull'elemento: se ci fosse, verrebbe da noi e non dal foglio
     expect(voci().every((v) => v.getAttribute("style") === null)).toBe(true)
+  })
+
+  it("e' il gruppo di scelte del foglio: nove radio veri, e sotto cio' che si e' scelto", () => {
+    // Il foglio veste `.as-bortle-scegli` su radio veri (`:has(input:checked)`): nove bottoni
+    // con un ruolo scritto a mano non prenderebbero ne' la tinta ne' il segno della scelta.
+    const { container, rerender } = render(<ScalaDelCielo onScegli={() => {}} />)
+    expect(scala().tagName).toBe("FIELDSET")
+    expect(scala().className).toBe("as-bortle-scegli")
+    expect(container.querySelectorAll(".as-bortle-scegli__scala > label.as-bortle-scegli__voce > input[type=radio]")).toHaveLength(9)
+    // senza scelta lo dice, invece di lasciare un vuoto
+    expect(container.querySelector(".as-bortle-scegli__letta--niente")?.textContent).toBe("Nessuna classe selezionata.")
+
+    rerender(<ScalaDelCielo scelta={5} onScegli={() => {}} />)
+    expect(container.querySelector(".as-bortle-scegli__letta--niente")).toBeNull()
+    expect(container.querySelector(".as-bortle-scegli__letta b")?.textContent).toMatch(/^Bortle 5/)
+    expect(container.querySelector(".as-bortle-scegli__letta span")?.textContent).toBeTruthy()
   })
 
   it("il tabulatore trova UNA voce sola, e le frecce spostano la scelta", () => {
@@ -472,8 +488,8 @@ describe("ScalaDelCielo", () => {
   it("dice quale ha scelto, e una sola", () => {
     render(<ScalaDelCielo scelta={4} onScegli={() => {}} />)
 
-    expect(voci().filter((v) => v.getAttribute("aria-checked") === "true")).toHaveLength(1)
-    expect(voci()[3]?.getAttribute("aria-checked")).toBe("true")
+    expect(voci().filter((v) => (v as HTMLInputElement).checked)).toHaveLength(1)
+    expect((voci()[3] as HTMLInputElement).checked).toBe(true)
   })
 
   it("senza scelta nessuna classe e' scelta: un cielo non dichiarato non e' il migliore", () => {
@@ -481,14 +497,14 @@ describe("ScalaDelCielo", () => {
     // quello e' il numero che poi finisce nel database.
     render(<ScalaDelCielo onScegli={() => {}} />)
 
-    expect(voci().filter((v) => v.getAttribute("aria-checked") === "true")).toHaveLength(0)
+    expect(voci().filter((v) => (v as HTMLInputElement).checked)).toHaveLength(0)
   })
 
   it("i due estremi si leggono a parole, non solo dai colori", () => {
     // Chi non vede la rampa deve sapere da che parte si va: e' scritto sotto la scala.
     render(<ScalaDelCielo onScegli={() => {}} />)
 
-    const estremi = document.querySelector(".as-bortle__estremi")?.textContent ?? ""
+    const estremi = document.querySelector(".as-bortle-scegli__estremi")?.textContent ?? ""
     expect(estremi).toMatch(/buio/i)
     expect(estremi).toMatch(/citt/i)
   })

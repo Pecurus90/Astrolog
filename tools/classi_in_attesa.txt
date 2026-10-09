@@ -3,7 +3,6 @@
 # Letto da tools/controlli_veste.py (classi_inventate). L'elenco solo si accorcia, pagina per
 # pagina: una classe nuova assente dal foglio e' un rosso, e una voce che il codice non scrive
 # piu' o che il foglio ora ha e' un rosso finche' non si toglie da qui.
-as-bortle
 as-bortle-scala__voce--1
 as-bortle-scala__voce--2
 as-bortle-scala__voce--3
@@ -13,19 +12,6 @@ as-bortle-scala__voce--6
 as-bortle-scala__voce--7
 as-bortle-scala__voce--8
 as-bortle-scala__voce--9
-as-bortle__estremi
-as-bortle__fascia
-as-bortle__scala
-as-bortle__voce
-as-bortle__voce--1
-as-bortle__voce--2
-as-bortle__voce--3
-as-bortle__voce--4
-as-bortle__voce--5
-as-bortle__voce--6
-as-bortle__voce--7
-as-bortle__voce--8
-as-bortle__voce--9
 as-bottone--distruttivo
 as-bottone--errore
 as-carta--alta
@@ -37,7 +23,6 @@ as-carta__domanda
 as-carta__piede
 as-carta__piede--prosa
 as-carta__titolo
-as-cerca__niente
 as-cifre
 as-comparsa
 as-comparsa--accanto

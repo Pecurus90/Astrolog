@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import { useId, useRef } from "react"
 
 import { numero, t } from "./i18n"
 
@@ -15,9 +15,8 @@ import { numero, t } from "./i18n"
  * - **Il colore non dice mai da solo che classe e'** (WCAG 2.2, 1.4.1): la fascia colorata e'
  *   decorazione e non si sente, la cifra e' sempre scritta, e i due estremi stanno **a parole**
  *   sotto la scala. Chi non distingue il ciano dal rosa legge lo stesso da che parte si va.
- * - **Una fermata sola per il tabulatore** (*roving tabindex*): un gruppo di scelte si attraversa
- *   con un tasto e si sceglie con le frecce. Nove fermate vorrebbero dire nove pressioni per
- *   passare oltre, e il foglio aggancia la veste ad `aria-checked`, non a una classe nostra.
+ * - **Nove radio veri**: il foglio aggancia la veste a `:has(input:checked)`, e un gruppo di
+ *   radio si attraversa con un tasto e si sceglie con le frecce.
  * - **Le frecce non girano**: dal centro citta' non si salta al buio pieno con un tasto. La scala
  *   ha due estremi veri, e un giro li nasconderebbe.
  * - **Senza scelta nessuna classe e' scelta.** Partire dalla 1 dichiarerebbe un cielo eccellente
@@ -31,22 +30,22 @@ export const CLASSI = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const
 
 // La tinta di ogni classe **ce l'ha il foglio**, una classe per fascia: la rampa e' sua, e
 // scriverla qui vorrebbe dire due verita' sullo stesso colore. Scritte per esteso e non composte
-// (`as-bortle__voce--${n}`) perche' un nome costruito a pezzi la guardia delle classi non lo sa
+// (`as-bortle-scegli__voce--${n}`) perche' un nome costruito a pezzi la guardia delle classi non lo sa
 // leggere: il giorno che il design ne rinomina una, un nome per esteso e' rosso e uno costruito no.
 const TINTE: Record<ClasseDiCielo, string> = {
-  1: "as-bortle__voce--1",
-  2: "as-bortle__voce--2",
-  3: "as-bortle__voce--3",
-  4: "as-bortle__voce--4",
-  5: "as-bortle__voce--5",
-  6: "as-bortle__voce--6",
-  7: "as-bortle__voce--7",
-  8: "as-bortle__voce--8",
-  9: "as-bortle__voce--9",
+  1: "as-bortle-scegli__voce--1",
+  2: "as-bortle-scegli__voce--2",
+  3: "as-bortle-scegli__voce--3",
+  4: "as-bortle-scegli__voce--4",
+  5: "as-bortle-scegli__voce--5",
+  6: "as-bortle-scegli__voce--6",
+  7: "as-bortle-scegli__voce--7",
+  8: "as-bortle-scegli__voce--8",
+  9: "as-bortle-scegli__voce--9",
 }
 
 // Le stesse nove tinte per la **terza forma**, quella del piede della barra: il foglio le mappa
-// tutte e tre (`.as-bortle__voce--N, .as-bortle-letta__fascia--N, .as-bortle-scala__voce--N`) ma
+// tutte e tre (`.as-bortle-scegli__voce--N, .as-bortle-letta__fascia--N, .as-bortle-scala__voce--N`) ma
 // i nomi sono diversi, e per la guardia delle classi vanno scritti per esteso come sopra.
 export const TINTE_IN_BARRA: Record<ClasseDiCielo, string> = {
   1: "as-bortle-scala__voce--1",
@@ -133,10 +132,11 @@ export function ScalaDelCielo({
   scelta?: ClasseDiCielo | undefined
   onScegli: (classe: ClasseDiCielo) => void
 }) {
-  const voci = useRef<(HTMLButtonElement | null)[]>([])
+  const voci = useRef<(HTMLInputElement | null)[]>([])
+  const gruppo = useId()
 
   // La fermata del tabulatore: quella scelta, o la prima finche' non si e' scelto niente. Serve
-  // un posto dove entrare, e la prima non e' "scelta" -- lo dice `aria-checked`, non il fuoco.
+  // un posto dove entrare, e la prima non e' "scelta" -- lo dice `checked`, non il fuoco.
   const fermata = scelta ?? CLASSI[0]
 
   const conLeFrecce = (e: React.KeyboardEvent, classe: ClasseDiCielo) => {
@@ -144,45 +144,56 @@ export function ScalaDelCielo({
     const indietro = e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0
     if (passo === 0 && indietro === 0) return
     const dove = CLASSI.indexOf(classe) + passo + indietro
+    // Sempre fermato: da solo, un gruppo di radio gira dall'ultima alla prima.
+    e.preventDefault()
     // Fuori dalla scala non si va: la 9 e la 1 sono estremi veri, non un anello.
     if (dove < 0 || dove >= CLASSI.length) return
-    e.preventDefault()
     onScegli(CLASSI[dove]!)
     voci.current[dove]?.focus()
   }
 
   return (
-    <div className="as-bortle">
-      <div className="as-bortle__scala" role="radiogroup" aria-label={t("sky.scale")}>
+    <fieldset className="as-bortle-scegli" role="radiogroup">
+      <legend className="as-solo-lettori">{t("sky.scale")}</legend>
+      <div className="as-bortle-scegli__scala">
         {CLASSI.map((classe, i) => (
-          <button
-            key={classe}
-            ref={(nodo) => {
-              voci.current[i] = nodo
-            }}
-            className={`as-bortle__voce ${TINTE[classe]}`}
-            type="button"
-            role="radio"
-            aria-checked={scelta === classe}
-            // Il nome che si sente e il titolo dell'avviso sono **la stessa frase**, e sta
-            // nel dizionario: composta qui, il separatore e l'ordine sfuggivano al traduttore,
-            // e una lingua che li vuole diversi avrebbe cambiato l'avviso e non cio' che sente
-            // chi usa lo schermo.
-            aria-label={t("sky.chosen", { n: classe, cielo: nomeDelCielo(classe) })}
-            tabIndex={fermata === classe ? 0 : -1}
-            onClick={() => onScegli(classe)}
-            onKeyDown={(e) => conLeFrecce(e, classe)}
-          >
-            <span className="as-bortle__fascia" aria-hidden="true" />
-            {classe}
-          </button>
+          <label key={classe} className={`as-bortle-scegli__voce ${TINTE[classe]}`}>
+            <input
+              ref={(nodo) => {
+                voci.current[i] = nodo
+              }}
+              type="radio"
+              name={gruppo}
+              value={classe}
+              checked={scelta === classe}
+              // Il nome che si sente e la riga sotto la scala sono la stessa frase del dizionario.
+              aria-label={t("sky.chosen", { n: classe, cielo: nomeDelCielo(classe) })}
+              tabIndex={fermata === classe ? 0 : -1}
+              onChange={() => onScegli(classe)}
+              onKeyDown={(e) => conLeFrecce(e, classe)}
+            />
+            <span className="as-bortle-scegli__cifra">{classe}</span>
+            {/* Sul telefono la scala e' una colonna, e il foglio mostra qui il nome e la frase. */}
+            <span className="as-bortle-scegli__nome" aria-hidden="true">
+              {nomeDelCielo(classe)}
+              <span className="as-bortle-scegli__frase">{cosaSiVede(classe)}</span>
+            </span>
+          </label>
         ))}
       </div>
       {/* Da che parte si va, **scritto**: la rampa da sola lo direbbe col colore soltanto. */}
-      <p className="as-bortle__estremi">
+      <p className="as-bortle-scegli__estremi" aria-hidden="true">
         <span>{t("sky.low")}</span>
         <span>{t("sky.high")}</span>
       </p>
-    </div>
+      {scelta === undefined ? (
+        <p className="as-bortle-scegli__letta as-bortle-scegli__letta--niente" aria-live="polite">{t("sky.noneChosen")}</p>
+      ) : (
+        <p className="as-bortle-scegli__letta" aria-live="polite">
+          <b>{t("sky.chosen", { n: numero(scelta), cielo: nomeDelCielo(scelta) })}</b>
+          <span>{cosaSiVede(scelta)}</span>
+        </p>
+      )}
+    </fieldset>
   )
 }

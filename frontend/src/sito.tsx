@@ -3,12 +3,10 @@ import { useState } from "react"
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
 import { Campo } from "./Campo"
-import { Prova, Riga } from "./Riga"
-import { type ClasseDiCielo, ScalaDelCielo, cosaSiVede, nomeDelCielo } from "./ScalaDelCielo"
+import { type ClasseDiCielo, ScalaDelCielo } from "./ScalaDelCielo"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { type Asse, coordinataDa, coordinate, numero, t } from "./i18n"
-import { CAMPO_E_BOTTONE } from "./inLinea"
 
 type Posto = components["schemas"]["PlaceOut"]
 
@@ -100,6 +98,15 @@ export function useCampiDelSito(iniziale?: {
       setLat(String(p.latitude))
       setLon(String(p.longitude))
     },
+    /** Dopo un salvataggio riuscito, dove il modulo non si smonta: coi campi pieni lo stesso
+     *  sito si offrirebbe di nuovo, e il nome e' unico. */
+    azzera: () => {
+      setNome("")
+      setLat("")
+      setLon("")
+      setCielo(undefined)
+      setCieloToccato(false)
+    },
   }
 }
 
@@ -107,7 +114,7 @@ export function useCampiDelSito(iniziale?: {
  *  sola, un punto sulla Terra, e incolonnate si compilano come due domande separate. */
 export function CampiDelSito({ campi, id }: { campi: CampiDelSito; id: string }) {
   return (
-    <>
+    <div className="as-modulo">
       <Campo
         id={`${id}-name`}
         etichetta={t("site.name")}
@@ -125,12 +132,11 @@ export function CampiDelSito({ campi, id }: { campi: CampiDelSito; id: string })
           value={campi.nome}
         />
       </Campo>
-      <div style={{ display: "flex", gap: "var(--spazio-3)", flexWrap: "wrap" }}>
+      <div className="as-campo-coppia">
         <Campo
           id={`${id}-lat`}
           etichetta={t("site.lat")}
           errore={campi.fuoriScala(campi.lat, "lat", 90)}
-          tetto="var(--misura-coordinata)"
         >
           <input
             className="as-campo-modulo__input as-campo-modulo__input--cifre"
@@ -145,7 +151,6 @@ export function CampiDelSito({ campi, id }: { campi: CampiDelSito; id: string })
           id={`${id}-lon`}
           etichetta={t("site.lon")}
           errore={campi.fuoriScala(campi.lon, "lon", 180)}
-          tetto="var(--misura-coordinata)"
         >
           <input
             className="as-campo-modulo__input as-campo-modulo__input--cifre"
@@ -157,7 +162,7 @@ export function CampiDelSito({ campi, id }: { campi: CampiDelSito; id: string })
           />
         </Campo>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -177,16 +182,8 @@ export function SceltaDelCielo({
 }) {
   return (
     <>
-      <p className="as-soprattitolo">{t("sky.label")}</p>
+      <p className="as-soprattitolo as-soprattitolo--nudo">{t("sky.label")}</p>
       <ScalaDelCielo scelta={cielo} onScegli={onScegli} />
-      {cielo !== undefined && (
-        <Avviso
-          esito="neutro"
-          titolo={t("sky.chosen", { n: numero(cielo), cielo: nomeDelCielo(cielo) })}
-        >
-          {cosaSiVede(cielo)}
-        </Avviso>
-      )}
       {facoltativo && <p className="as-campo-modulo__aiuto">{t("sky.optional")}</p>}
     </>
   )
@@ -224,8 +221,8 @@ export function CercaIlPosto({
 
   return (
     <>
-      <div style={CAMPO_E_BOTTONE}>
-        <Campo cresce="var(--misura-cerca)" etichetta={t("site.searchLabel")} id={id}>
+      <div className="as-campo-riga">
+        <Campo etichetta={t("site.searchLabel")} id={id}>
           <input
             className="as-campo-modulo__input"
             id={id}
@@ -239,38 +236,36 @@ export function CercaIlPosto({
         </Bottone>
       </div>
 
-      {trovati?.length === 0 && <p className="as-cerca__niente">{t("site.none")}</p>}
+      {trovati?.length === 0 && <Avviso esito="neutro">{t("site.none")}</Avviso>}
       {trovati && trovati.length > 0 && (
-        <div className="as-carta as-carta--alta">
-          <div className="as-carta__corpo as-carta__corpo--stretto">
-            <ul className="as-elenco">
-              {trovati.map((p) => (
-                <li key={chiave(p)}>
-                  <Riga
-                    dettagli={<Prova>{coordinate(p.latitude, p.longitude)}</Prova>}
-                    nome={p.name}
-                    stato={postoScelto === chiave(p) ? "risposta" : undefined}
-                  >
-                    {postoScelto === chiave(p) ? (
-                      <span className="as-stato as-stato--buono">{t("site.chosen")}</span>
-                    ) : (
-                      <Bottone
-                        nome={t("site.chooseOne", { nome: p.name })}
-                        piccolo
-                        onClick={() => {
-                          setPostoScelto(chiave(p))
-                          onScegli(p)
-                        }}
-                      >
-                        {t("site.choose")}
-                      </Bottone>
-                    )}
-                  </Riga>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <ul className="as-posti" aria-label={t("site.found")}>
+          {trovati.map((p) => (
+            <li
+              key={chiave(p)}
+              className="as-posti__voce"
+              aria-current={postoScelto === chiave(p) ? "true" : undefined}
+            >
+              <span>
+                <span className="as-posti__nome">{p.name}</span>
+                <span className="as-posti__cifre">{coordinate(p.latitude, p.longitude)}</span>
+              </span>
+              {postoScelto === chiave(p) ? (
+                <span className="as-posti__scelto">{t("site.chosen")}</span>
+              ) : (
+                <Bottone
+                  nome={t("site.chooseOne", { nome: p.name })}
+                  piccolo
+                  onClick={() => {
+                    setPostoScelto(chiave(p))
+                    onScegli(p)
+                  }}
+                >
+                  {t("site.choose")}
+                </Bottone>
+              )}
+            </li>
+          ))}
+        </ul>
       )}
 
       {rotta && (

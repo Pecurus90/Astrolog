@@ -10,7 +10,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { STANOTTE, chiamate, disegna, impostazioni, pulisci, rispondi, scritture } from "./banco"
+import { STANOTTE, type Voce, chiamate, disegna, impostazioni, pulisci, rispondi, scritture } from "./banco"
 
 afterEach(pulisci)
 
@@ -18,7 +18,7 @@ afterEach(pulisci)
  *  Il ramo "col timbro" non esiste apposta -- portato qui accanto al guscio sarebbe una copia
  *  che diverge senza che nessuno la percorra, e diverge gia'. Le rotte piu' lunghe stanno
  *  davanti: il banco sceglie la prima che l'indirizzo contiene. */
-function senzaTimbro(extra: Record<string, { stato: number; corpo: unknown }> = {}) {
+function senzaTimbro(extra: Record<string, Voce> = {}) {
   rispondi({
     ...STANOTTE,
     "GET /api/v1/folders/path-info": { stato: 200, corpo: { family: "windows", data_root: null } },
@@ -124,6 +124,25 @@ describe("il posto da cui osservi", () => {
     // E soprattutto: si resta qui, dove il problema si puo' ancora risolvere.
     expect(screen.getByLabelText(/localit\u00e0/i)).toBeDefined()
   })
+  it("una scrittura che non arriva al servizio lo dice, e Salva sito resta premibile", async () => {
+    // Rete caduta: la richiesta **rigetta**, non torna un errore. Senza guardia `salvando` restava
+    // acceso, e lo stato vive nel guscio: il tasto restava spento per tutto il primo avvio.
+    const caduta = Promise.reject(new Error("rete caduta"))
+    caduta.catch(() => undefined)
+    senzaTimbro({ "POST /api/v1/sites": { stato: 0, corpo: null, attesa: caduta } })
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(1)
+    fireEvent.change(screen.getByLabelText(/nome del sito/i), { target: { value: "Casa" } })
+    fireEvent.change(screen.getByLabelText(/latitudine/i), { target: { value: "45" } })
+    fireEvent.change(screen.getByLabelText(/longitudine/i), { target: { value: "11" } })
+    fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
+
+    expect(await screen.findByRole("alert")).toBeDefined()
+    expect(screen.getByRole("button", { name: /salva sito/i }).hasAttribute("disabled")).toBe(false)
+    // i campi restano: a rete tornata si riprova senza riscrivere
+    expect(screen.getByLabelText(/nome del sito/i).getAttribute("value")).toBe("Casa")
+  })
   it("chi non ha rete deve poter dare un nome al suo luogo", async () => {
     // Il difetto piu' grave della fetta: il nome veniva preso dalla casella di RICERCA, quindi
     // chi prende la strada manuale -- coordinate a mano, senza cercare, che e' esattamente il
@@ -203,7 +222,7 @@ describe("il posto da cui osservi", () => {
 
     fireEvent.click(screen.getByRole("radio", { name: /^Bortle 3 -/ }))
     // e la scelta si legge: la riga dice cosa ci si vede, non solo il numero
-    expect(screen.getByText(/Via Lattea/i)).toBeDefined()
+    expect(document.querySelector(".as-bortle-scegli__letta span")?.textContent).toMatch(/Via Lattea/i)
 
     fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
     await waitFor(() => {
@@ -358,6 +377,72 @@ describe("il posto da cui osservi", () => {
     fireEvent.change(lat, { target: { value: "45 W" } })
     expect(lat.getAttribute("aria-invalid")).toBe("true")
   })
+  it("il passo ha un solo comando pieno, Salva sito, e sta in fondo con gli altri", async () => {
+    // Due bottoni pieni -- Salva sito nel passo e Avanti nel piede -- si confondevano: chi premeva
+    // Avanti credeva di aver salvato.
+    senzaTimbro()
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(1)
+    const gesti = document.querySelector(".as-gesti") as HTMLElement
+    expect(gesti.className).toBe("as-gesti as-gesti--due")
+    expect([...gesti.children].map((g) => g.textContent)).toEqual(["Salta", "Indietro", "Avanti", "Salva sito"])
+    expect(document.querySelectorAll(".as-bottone--primario")).toHaveLength(1)
+    expect(gesti.lastElementChild?.className).toContain("as-bottone--primario")
+    // e fuori dal passo del sito i comandi tornano quelli di sempre
+    fireEvent.click(screen.getByRole("button", { name: /indietro/i }))
+    expect(document.querySelector(".as-gesti")?.className).toBe("as-gesti")
+  })
+
+  it("tornando al passo dopo aver salvato, il sito non si offre di nuovo", async () => {
+    // Lo stato vive nel guscio e sopravvive al passo: coi campi ancora pieni, un secondo Salva
+    // sito rimanda lo stesso nome, la rotta risponde 409 e il passo dice non salvato un sito che
+    // lo e'.
+    senzaTimbro({ "/api/v1/sites": { stato: 201, corpo: { id: 1, name: "Casa" } } })
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(1)
+    fireEvent.change(screen.getByLabelText(/nome del sito/i), { target: { value: "Casa" } })
+    fireEvent.change(screen.getByLabelText(/latitudine/i), { target: { value: "45" } })
+    fireEvent.change(screen.getByLabelText(/longitudine/i), { target: { value: "11" } })
+    fireEvent.click(screen.getByRole("radio", { name: /^Bortle 3 -/ }))
+    fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
+    await waitFor(() => expect(screen.queryByRole("button", { name: /salva sito/i })).toBeNull())
+
+    fireEvent.click(screen.getByRole("button", { name: /indietro/i }))
+    expect(screen.getByLabelText(/nome del sito/i).getAttribute("value")).toBe("")
+    expect(screen.getByLabelText(/latitudine/i).getAttribute("value")).toBe("")
+    expect(screen.getAllByRole("radio").some((r) => (r as HTMLInputElement).checked)).toBe(false)
+    expect(screen.getByRole("button", { name: /salva sito/i }).hasAttribute("disabled")).toBe(true)
+  })
+
+  it("le parti del passo, i campi e i posti trovati hanno la forma del foglio", async () => {
+    senzaTimbro({
+      "/api/v1/places": {
+        stato: 200,
+        corpo: { items: [{ name: "Verona", latitude: 45.44, longitude: 10.99 }] },
+      },
+    })
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(1)
+    expect(document.querySelectorAll(".as-passo__parti > .as-passo__parte")).toHaveLength(3)
+    // il campo e il suo bottone in una riga, le due coordinate in coppia
+    expect(screen.getByLabelText(/localit\u00e0/i).closest(".as-campo-riga")).not.toBeNull()
+    expect(screen.getByLabelText(/latitudine/i).closest(".as-campo-coppia")).toBe(
+      screen.getByLabelText(/longitudine/i).closest(".as-campo-coppia"),
+    )
+    fireEvent.change(screen.getByLabelText(/localit\u00e0/i), { target: { value: "Verona" } })
+    fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
+    const voce = (await screen.findByText("Verona")).closest("li") as HTMLElement
+    expect(voce.className).toBe("as-posti__voce")
+    expect(voce.parentElement?.className).toBe("as-posti")
+    expect(voce.getAttribute("aria-current")).toBeNull()
+    fireEvent.click(within(voce).getByRole("button", { name: /seleziona/i }))
+    expect(voce.getAttribute("aria-current")).toBe("true")
+    expect(voce.querySelector(".as-posti__scelto")?.textContent).toBe("Selezionato")
+  })
+
   it("due posti con lo stesso nome non si accendono insieme", async () => {
     // Una ricerca per "Verona" torna quella italiana e quella dello stato di New York. Col solo
     // nome, sceglierne una accendeva "scelto" su tutte e due, e chi guarda non sa piu' quale

@@ -4,6 +4,8 @@
  * Impostazioni, dove si corregge. Erano sotto `wizard.site.*`, che sulla pagina delle
  * Impostazioni sarebbe stato un nome che mente. */
 export const enSito = {
+  "site.found": "Search results",
+  "sky.noneChosen": "No class selected.",
   "site.choose": "Select",
   "site.chooseOne": "Select {nome}",
   "site.chosen": "Selected",

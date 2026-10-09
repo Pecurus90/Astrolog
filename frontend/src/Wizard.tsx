@@ -7,7 +7,7 @@ import { Campo } from "./Campo"
 import { ChiaveMeteoblue } from "./ChiaveMeteoblue"
 import { BinarioDeiPassi } from "./BinarioDeiPassi"
 import { WizardFolders } from "./WizardFolders"
-import { WizardSite } from "./WizardSite"
+import { WizardSite, useSitoDelPasso } from "./WizardSite"
 import { WizardSolver } from "./WizardSolver"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
@@ -99,6 +99,8 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
   const [failed, setFailed] = useState(false)
   const saved = useRef<string | undefined>(undefined)
   const last = step === passi.length - 1
+  const sito = useSitoDelPasso(() => setStep(2))
+  const alSito = step === 1
   const titolo = useId()
 
   const stamp = useMutation({
@@ -182,7 +184,7 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
                   <p className="as-campo-modulo__aiuto">{t("wizard.name.hint")}</p>
                 </Campo>
               )}
-              {step === 1 && <WizardSite onSaved={() => setStep(2)} />}
+              {alSito && <WizardSite sito={sito} />}
               {/* Aggiungere una cartella non chiude il primo avvio: a chiudere e' Fatto. */}
               {step === 2 && <WizardFolders />}
               {passi[step] === "wizard.step.services" && <ChiaveMeteoblue id="wizard-meteoblue-key" />}
@@ -197,15 +199,24 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
           </div>
 
           {/* Saltare sta per primo, lontano da cio' che manda avanti; al primo passo Indietro
-              non c'e'. Il primario e' l'ultimo. */}
-          <div className="as-gesti">
+              non c'e'. Il primario e' l'ultimo, e uno solo: al sito e' quello che salva. */}
+          <div className={alSito ? "as-gesti as-gesti--due" : "as-gesti"}>
             <Bottone verso="nudo" onClick={() => stamp.mutate()} disabled={stamp.isPending}>
               {t("wizard.skip")}
             </Bottone>
             {step > 0 && <Bottone onClick={() => setStep((s) => s - 1)}>{t("wizard.back")}</Bottone>}
             {!last && (
-              <Bottone verso="primario" onClick={() => void next()}>
+              <Bottone verso={alSito ? "tenue" : "primario"} onClick={() => void next()}>
                 {t("wizard.next")}
+              </Bottone>
+            )}
+            {alSito && (
+              <Bottone
+                disabled={!sito.campi.valido || sito.salvando}
+                verso="primario"
+                onClick={() => void sito.salva()}
+              >
+                {t("wizard.site.save")}
               </Bottone>
             )}
             {last && (
