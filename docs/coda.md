@@ -361,7 +361,15 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   sfogliare (lo sprite delle icone non e' montato fuori dal telaio; il suo posto nella riga c'e',
   vuoto, perche' le tre colonne del foglio tengano "Apri" in fondo), il percorso verificato
   scritto nell'esito (`.as-avviso__dato`), il separatore delle briciole ("›" nell'app, "/"
-  nel disegno). Restano, un passo alla volta: Seeing e ASTAP (`.as-avviso--ignoto`, `.as-campo-riga`); le
+  nel disegno). Fatti anche Seeing e ASTAP (9/10): lo stato della chiave e' un avviso (senza chiave col
+  segno dell'ignoto, `.as-avviso--ignoto`), i campi coi loro bottoni in `.as-campo-riga`, il passo
+  ASTAP in tre parti; chi salva (aggiungi cartella, verifica e salva, verifica percorso) prende il
+  pieno quando c'e' qualcosa da salvare e cio' che manda avanti scende a tenue
+  (`pienoDelPasso.ts`), anche nelle Impostazioni. Di questi due passi restano: il passo ASTAP
+  mai visto dal vivo (sulla macchina di collaudo ASTAP c'e'); "Scarica il catalogo stellare" e'
+  ancora un collegamento nel testo e non un bottone nell'avviso (`Bottone` porta solo dentro
+  l'app). Dalla revisione: verificato il percorso, l'intestazione del passo ASTAP dice
+  ancora "Non trovato" sopra l'avviso "ASTAP trovato" (la ragione del passo si decide entrando). Restano, un passo alla volta: le
   risposte ritrovate (`.as-ritrovate`, `.as-conti`); la chiusura; il bottone spento con
   `aria-disabled` e al lavoro con `aria-busy` (oggi `disabled`); l'attesa nel pozzo
   (`.as-campo-modulo__attesa`, oggi solo `aria-busy`); "Un momento" mentre l'app si apre

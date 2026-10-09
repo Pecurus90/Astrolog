@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { Avviso } from "./Avviso"
 import { SfogliaCartelle } from "./SfogliaCartelle"
 import { ScriviPercorso, VistaDellaSonda, useCartelle } from "./cartelle"
 import { numero, t } from "./i18n"
+import { usePienoDelPasso } from "./pienoDelPasso"
 import { useRadiceDati } from "./radiceDati"
 
 /**
@@ -25,11 +26,7 @@ export function WizardFolders({ onOffre }: { onOffre: (offre: boolean) => void }
   const radice = useRadiceDati()
   // Quando l'esito offre di registrare, il comando pieno e' il suo: il guscio lo deve sapere,
   // perche' Avanti gli ceda il posto.
-  const offre = cartelle.vista?.reachable === true
-  useEffect(() => {
-    onOffre(offre)
-    return () => onOffre(false)
-  }, [offre, onOffre])
+  usePienoDelPasso(onOffre, cartelle.vista?.reachable === true)
 
   const scrivi = (
     <ScriviPercorso

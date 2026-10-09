@@ -7,8 +7,8 @@ import { Campo } from "./Campo"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { type Chiave, t } from "./i18n"
+import { usePienoDelPasso } from "./pienoDelPasso"
 import { usePreferenze } from "./preferenze"
-import { CAMPO_E_BOTTONE } from "./inLinea"
 
 // Dove si chiede la chiave: un indirizzo, non un testo da tradurre.
 const DOVE_SI_CHIEDE = "https://www.meteoblue.com/en/weather-api"
@@ -34,7 +34,14 @@ const ESITI: Record<Esito, { frase: Chiave; bene: boolean }> = {
  * - **Una chiave che il conto rifiuta non si salva**, e il perche' si legge qui, dove l'hai scritta.
  * - **Toglierla e' un gesto**, e il seeing sparisce: viene solo da Meteoblue.
  */
-export function ChiaveMeteoblue({ id }: { id: string }) {
+export function ChiaveMeteoblue({
+  id,
+  onOffre,
+}: {
+  id: string
+  /** Il primo avvio ascolta: scritta una chiave, il comando pieno e' quello che la salva. */
+  onOffre?: (offre: boolean) => void
+}) {
   const cache = useQueryClient()
   const impostazioni = usePreferenze()
   const [chiave, setChiave] = useState("")
@@ -52,17 +59,22 @@ export function ChiaveMeteoblue({ id }: { id: string }) {
   })
   const salvata = impostazioni.data?.values["meteoblue_key"] ?? null
   const esito = salva.data ? ESITI[salva.data] : undefined
+  const scritta = chiave.trim() !== ""
+  usePienoDelPasso(onOffre, scritta)
 
   return (
     <>
-      <p>
-        {salvata ? t("meteoblue.current", { fine: salvata }) : t("meteoblue.none")}{" "}
+      {/* Senza chiave non e' un guasto: il seeing non c'e', e lo dice col segno dell'ignoto. */}
+      <Avviso esito={salvata ? "buono" : "ignoto"}>
+        {salvata ? t("meteoblue.current", { fine: salvata }) : t("meteoblue.none")}
+      </Avviso>
+      <p className="as-campo-modulo__aiuto">
         <a href={DOVE_SI_CHIEDE}>{t("meteoblue.where")}</a>
       </p>
-      <div style={CAMPO_E_BOTTONE}>
+      <div className="as-campo-riga">
         <Campo id={id} etichetta={t("meteoblue.label")} aspetta={salva.isPending}>
           <input
-            className="as-campo-modulo__input"
+            className="as-campo-modulo__input as-campo-modulo__input--cifre"
             id={id}
             autoComplete="off"
             spellCheck={false}
@@ -71,9 +83,9 @@ export function ChiaveMeteoblue({ id }: { id: string }) {
           />
         </Campo>
         <Bottone
-          verso="primario"
+          verso={scritta ? "primario" : "tenue"}
           onClick={() => salva.mutate(chiave)}
-          disabled={salva.isPending || chiave.trim() === ""}
+          disabled={salva.isPending || !scritta}
         >
           {t("meteoblue.save")}
         </Bottone>

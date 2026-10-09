@@ -1,4 +1,3 @@
-import { Avviso } from "./Avviso"
 import { t } from "./i18n"
 import { CampoDelPercorso, DoveSiPrende, IlCatalogo, useDoveStaASTAP } from "./riconoscitore"
 
@@ -17,31 +16,45 @@ import { CampoDelPercorso, DoveSiPrende, IlCatalogo, useDoveStaASTAP } from "./r
  *   in ordine i nomi e conta le ore -- quello che non sa dire e' **cosa** hai ripreso.
  * - Si salta come ogni altro passo: chi vuole solo catalogare non deve installare niente.
  */
-export function WizardSolver({ senzaCatalogo }: { senzaCatalogo: boolean }) {
+export function WizardSolver({
+  senzaCatalogo,
+  onOffre,
+}: {
+  senzaCatalogo: boolean
+  onOffre: (offre: boolean) => void
+}) {
   const dove = useDoveStaASTAP()
 
   // **ASTAP c'e', gli manca il catalogo**: qui il percorso non si chiede, perche' e' gia' giusto.
   // Chiederlo manderebbe a correggere una cosa che non e' sbagliata.
-  if (senzaCatalogo) return <IlCatalogo quali={[]} />
+  if (senzaCatalogo) {
+    return (
+      <div className="as-passo__parte">
+        <IlCatalogo quali={[]} />
+      </div>
+    )
+  }
 
   return (
     <>
-      {/* **Cosa cambia senza**, e non e' un guasto: il tono neutro lo dice senza allarmare, e il
-          titolo separa la cosa dalla sua spiegazione. Un allarme qui direbbe che qualcosa si e'
-          rotto, mentre non si e' rotto niente -- manca un programma, e si puo' installare dopo. */}
-      <Avviso esito="neutro" titolo={t("solver.withoutTitle")}>
-        {t("solver.without")}
-      </Avviso>
+      {/* **Cosa cambia senza**, e non e' un guasto: una parte del passo, senza allarme. Manca un
+          programma, e si puo' installare dopo. */}
+      <div className="as-passo__parte">
+        <p className="as-soprattitolo as-soprattitolo--nudo">{t("solver.withoutTitle")}</p>
+        <p className="as-passo__nota">{t("solver.without")}</p>
+      </div>
 
-      <DoveSiPrende />
-      {/* **Anche il catalogo, e detto qui**: chi installa ASTAP dopo aver chiuso il primo avvio
-          non ripassa piu' di qua, e cadrebbe esattamente nella trappola che questa schermata
-          esiste per evitare. Una riga, non un secondo allarme: il problema da risolvere adesso
-          resta uno. */}
-      <p className="as-campo-modulo__aiuto">{t("solver.alsoTheDatabase")}</p>
+      <div className="as-passo__parte">
+        <DoveSiPrende />
+        {/* **Anche il catalogo, e detto qui**: chi installa ASTAP dopo aver chiuso il primo avvio
+            non ripassa piu' di qua. Una riga, non un secondo avviso. */}
+        <p className="as-passo__nota">{t("solver.alsoTheDatabase")}</p>
+      </div>
 
-      <p className="as-soprattitolo">{t("solver.haveItGroup")}</p>
-      <CampoDelPercorso dove={dove} id="wizard-solver-path" />
+      <div className="as-passo__parte">
+        <p className="as-soprattitolo as-soprattitolo--nudo">{t("solver.haveItGroup")}</p>
+        <CampoDelPercorso dove={dove} id="wizard-solver-path" onOffre={onOffre} />
+      </div>
     </>
   )
 }

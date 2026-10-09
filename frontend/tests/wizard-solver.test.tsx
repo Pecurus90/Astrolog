@@ -52,6 +52,58 @@ async function alPassoDelSolver() {
   avanti()
 }
 
+describe("la forma dei passi Seeing e ASTAP", () => {
+  const pieni = () => [...document.querySelectorAll(".as-bottone--primario")].map((b) => b.textContent)
+
+  it("al Seeing lo stato della chiave e' un avviso, e il comando pieno e' uno solo", async () => {
+    primoAvvio(["no_active_site"])
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    avanti()
+    avanti()
+    avanti()
+    // senza chiave: non si sa, e lo dice col segno dell'ignoto, non con un allarme
+    const stato = (await screen.findByText(/nessuna chiave/i)).closest(".as-avviso")
+    expect(stato?.className).toContain("as-avviso--ignoto")
+    const campo = screen.getByLabelText(/chiave meteoblue/i)
+    expect(campo.closest(".as-campo-riga")).not.toBeNull()
+    // a campo vuoto il pieno e' quello che chiude; scritta la chiave lo prende chi la salva
+    expect(pieni()).toEqual(["Fine"])
+    fireEvent.change(campo, { target: { value: "abc123" } })
+    expect(pieni()).toEqual(["Verifica e salva"])
+    fireEvent.change(campo, { target: { value: "" } })
+    expect(pieni()).toEqual(["Fine"])
+  })
+
+  it("al passo ASTAP le tre parti hanno il loro titoletto, e il pieno e' uno solo", async () => {
+    primoAvvio(["no_active_site", "no_solver"])
+    await alPassoDelSolver()
+    const parti = [...document.querySelectorAll(".as-passo__parti > .as-passo__parte")]
+    expect(parti.map((p) => p.querySelector(".as-soprattitolo")?.textContent)).toEqual([
+      "Senza ASTAP",
+      "Download",
+      "Gi\u00e0 installato",
+    ])
+    const campo = screen.getByLabelText(/percorso di astap/i)
+    expect(campo.closest(".as-campo-riga")).not.toBeNull()
+    expect(pieni()).toEqual(["Fine"])
+    fireEvent.change(campo, { target: { value: "C:/astap/astap_cli.exe" } })
+    expect(pieni()).toEqual(["Verifica percorso"])
+  })
+
+  it("verificato il percorso di ASTAP, il comando pieno torna a quello che chiude", async () => {
+    // A lavoro fatto il pieno restava su Verifica percorso, che non faceva piu' niente.
+    primoAvvio(["no_active_site", "no_solver"], {
+      "PATCH /api/v1/settings": { stato: 200, corpo: conManca(["no_active_site"]) },
+    })
+    await alPassoDelSolver()
+    fireEvent.change(screen.getByLabelText(/percorso di astap/i), { target: { value: "C:/astap/astap_cli.exe" } })
+    fireEvent.click(screen.getByRole("button", { name: /^verifica percorso$/i }))
+    await screen.findByText("ASTAP trovato")
+    await waitFor(() => expect(pieni()).toEqual(["Fine"]))
+  })
+})
+
 describe("il passo del riconoscitore, quando manca", () => {
   it("con tutto a posto i passi restano quattro", async () => {
     // La regola che tiene onesto il primo avvio: il quinto non e' un passo in piu' per tutti,

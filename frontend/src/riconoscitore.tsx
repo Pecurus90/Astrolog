@@ -4,9 +4,9 @@ import { useRef, useState } from "react"
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
 import { Campo } from "./Campo"
+import { usePienoDelPasso } from "./pienoDelPasso"
 import { api } from "./api/client"
 import { t } from "./i18n"
-import { CAMPO_E_BOTTONE } from "./inLinea"
 
 /**
  * Dire all'app dove sta ASTAP, e sapere subito se li' c'e'.
@@ -103,15 +103,27 @@ export function useDoveStaASTAP(iniziale = "") {
 }
 
 /** Il campo del percorso e il suo bottone: un gesto solo, quindi sulla stessa riga. */
-export function CampoDelPercorso({ id, dove }: { id: string; dove: DoveStaASTAP }) {
+export function CampoDelPercorso({
+  id,
+  dove,
+  onOffre,
+}: {
+  id: string
+  dove: DoveStaASTAP
+  /** Il primo avvio ascolta: scritto un percorso, il comando pieno e' quello che lo verifica. */
+  onOffre?: (offre: boolean) => void
+}) {
+  const scritto = Boolean(dove.path)
+  // Pieno finche' c'e' qualcosa da verificare: a percorso trovato il gesto che resta e' chiudere.
+  const daVerificare = scritto && (dove.esito === undefined || dove.esito === "notThere")
+  usePienoDelPasso(onOffre, daVerificare)
   return (
     <>
-      <div style={CAMPO_E_BOTTONE}>
+      <div className="as-campo-riga">
         <Campo
           id={id}
           etichetta={t("solver.label")}
           errore={dove.esito === "notThere" ? t("solver.notThere") : undefined}
-          cresce="var(--misura-cerca)"
         >
           <input
             className="as-campo-modulo__input as-campo-modulo__input--cifre"
@@ -129,7 +141,11 @@ export function CampoDelPercorso({ id, dove }: { id: string; dove: DoveStaASTAP 
             onBlur={dove.manda}
           />
         </Campo>
-        <Bottone verso="primario" onClick={dove.manda} disabled={dove.salva.isPending || !dove.path}>
+        <Bottone
+          verso={daVerificare ? "primario" : "tenue"}
+          onClick={dove.manda}
+          disabled={dove.salva.isPending || !scritto}
+        >
           {t("solver.use")}
         </Bottone>
       </div>
@@ -191,7 +207,7 @@ export function IlCatalogo({ quali }: { quali: readonly string[] }) {
 export function DoveSiPrende() {
   return (
     <>
-      <p className="as-soprattitolo">{t("solver.whereGroup")}</p>
+      <p className="as-soprattitolo as-soprattitolo--nudo">{t("solver.whereGroup")}</p>
       <a href={DOVE_SI_SCARICA} target="_blank" rel="noopener noreferrer">
         {t("solver.download")}
       </a>

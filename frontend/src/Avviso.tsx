@@ -24,7 +24,7 @@ import type { ReactNode } from "react"
 // variazione, molti sistemi lo rendono come **emoji colorata** -- cioe' un segno che torna a
 // dire le cose col colore, e per giunta senza prendere il carattere delle cifre che il foglio
 // gli mette. Il lavoro non ha glifo: il suo segno e' l'anello aperto che il foglio disegna (v21).
-const SEGNI = { neutro: "i", attesa: "\u2026", buono: "\u2713", allarme: "\u26A0", lavoro: "" }
+const SEGNI = { neutro: "i", attesa: "\u2026", buono: "\u2713", allarme: "\u26A0", lavoro: "", ignoto: "" }
 
 // Solo il **modificatore**: il blocco si scrive dove la classe si monta, o la guardia del
 // cancello non saprebbe leggere cio' che esce da qui e lo direbbe -- giustamente, perche' una
@@ -35,6 +35,8 @@ const TONI: Record<keyof typeof SEGNI, string> = {
   buono: "as-avviso--buono",
   allarme: "as-avviso--allarme",
   lavoro: "as-avviso--lavoro",
+  // cio' che non c'e' o non si sa, senza allarme: il foglio gli disegna il tondo punteggiato
+  ignoto: "as-avviso--ignoto",
 }
 
 export function Avviso({

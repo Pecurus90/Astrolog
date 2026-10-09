@@ -27,8 +27,6 @@ export function Campo({
   etichetta,
   errore,
   aspetta,
-  cresce,
-  tetto,
   children,
 }: {
   /** Lo stesso che va sul controllo: e' cio' che lega l'etichetta a cio' che si scrive. */
@@ -40,14 +38,6 @@ export function Campo({
    *  spegne il controllo, perche' cambiare idea mentre si aspetta e' legittimo. Non convive con
    *  l'errore -- un campo o sta aspettando o ha gia' una risposta da dare. */
   aspetta?: boolean
-  /** Quanto e' largo **da fermo**, quando il campo deve prendersi lo spazio che avanza accanto
-   *  al suo bottone. Un token, non un numero. La misura va **sul campo** e non sul controllo,
-   *  come fa il disegno: messa sull'input, l'etichetta resta larga quanto la riga e il campo non
-   *  si stringe piu' insieme allo schermo. */
-  cresce?: string
-  /** La larghezza che il campo non passa, quando cio' che ci si scrive e' corto e un campo largo
-   *  mezza pagina prometterebbe una frase. Un token, non un numero. */
-  tetto?: string
   /** Il controllo **per primo**, e dopo di lui quello che lo accompagna (l'aiuto, un
    *  suggerimento): l'errore si lega al primo, e scriverlo secondo lo legherebbe all'aiuto. */
   children: ReactNode
@@ -64,7 +54,6 @@ export function Campo({
             ? "as-campo-modulo as-campo-modulo--attesa"
             : "as-campo-modulo"
       }
-      style={{ flex: cresce && `1 1 ${cresce}`, maxWidth: tetto }}
     >
       <label className="as-campo-modulo__etichetta" htmlFor={id}>
         {etichetta}

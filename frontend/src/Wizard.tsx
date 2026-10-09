@@ -101,8 +101,9 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
   const last = step === passi.length - 1
   const sito = useSitoDelPasso(() => setStep(2))
   const alSito = step === 1
-  // Il passo delle cartelle ha un comando pieno suo solo quando la verifica offre di aggiungere.
-  const [offreCartella, setOffreCartella] = useState(false)
+  // Un passo puo' avere un comando pieno suo (aggiungi la cartella, verifica e salva): quando lo
+  // offre, cio' che manda avanti scende a tenue e il pieno a schermo resta uno solo.
+  const [pienoDelPasso, setPienoDelPasso] = useState(false)
   const titolo = useId()
 
   const stamp = useMutation({
@@ -188,9 +189,15 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
               )}
               {alSito && <WizardSite sito={sito} />}
               {/* Aggiungere una cartella non chiude il primo avvio: a chiudere e' Fatto. */}
-              {step === 2 && <WizardFolders onOffre={setOffreCartella} />}
-              {passi[step] === "wizard.step.services" && <ChiaveMeteoblue id="wizard-meteoblue-key" />}
-              {passi[step] === PASSO_SOLVER && <WizardSolver senzaCatalogo={senzaCatalogo} />}
+              {step === 2 && <WizardFolders onOffre={setPienoDelPasso} />}
+              {passi[step] === "wizard.step.services" && (
+                <div className="as-passo__parte">
+                  <ChiaveMeteoblue id="wizard-meteoblue-key" onOffre={setPienoDelPasso} />
+                </div>
+              )}
+              {passi[step] === PASSO_SOLVER && (
+                <WizardSolver senzaCatalogo={senzaCatalogo} onOffre={setPienoDelPasso} />
+              )}
               {/* Una scrittura fallita si dice nel passo che l'ha provocata, e ci si resta. */}
               {(failed || stamp.error) && (
                 <Avviso esito="allarme" titolo={t("wizard.savedFailedTitle")}>
@@ -208,7 +215,7 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
             </Bottone>
             {step > 0 && <Bottone onClick={() => setStep((s) => s - 1)}>{t("wizard.back")}</Bottone>}
             {!last && (
-              <Bottone verso={alSito || offreCartella ? "tenue" : "primario"} onClick={() => void next()}>
+              <Bottone verso={alSito || pienoDelPasso ? "tenue" : "primario"} onClick={() => void next()}>
                 {t("wizard.next")}
               </Bottone>
             )}
@@ -222,7 +229,11 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
               </Bottone>
             )}
             {last && (
-              <Bottone verso="primario" onClick={() => stamp.mutate()} disabled={stamp.isPending}>
+              <Bottone
+                verso={pienoDelPasso ? "tenue" : "primario"}
+                onClick={() => stamp.mutate()}
+                disabled={stamp.isPending}
+              >
                 {t("wizard.done")}
               </Bottone>
             )}
