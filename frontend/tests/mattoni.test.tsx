@@ -301,13 +301,16 @@ describe("Campo", () => {
     expect(container.querySelector(".as-campo-modulo__etichetta")?.textContent).toBe("Nome")
   })
 
-  it("una tendina non prende il pozzo: ha gia' il suo bordo", () => {
+  it("una tendina sta nel pozzo del campo, e il campo dice che e' una tendina", () => {
+    // Il foglio v34 veste la tendina col pozzo del campo e la sua freccia: fuori dal pozzo resta
+    // un controllo nudo, alto la meta' dei campi accanto.
     const { container } = render(
       <Campo id="tipo" etichetta="Tipo">
-        <select className="as-scelta" id="tipo" />
+        <select className="as-campo-modulo__input" id="tipo" />
       </Campo>,
     )
-    expect(container.querySelector(".as-campo-modulo__pozzo")).toBeNull()
+    expect(container.querySelector(".as-campo-modulo")?.className).toBe("as-campo-modulo as-campo-modulo--tendina")
+    expect(container.querySelector(".as-campo-modulo__pozzo > select")).not.toBeNull()
   })
 
   it("mentre aspetta, il campo lo dice anche a chi ascolta", () => {

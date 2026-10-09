@@ -402,7 +402,7 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   `.as-domanda-prova`; la coppia di strumenti non usa `.as-domanda-coppia`; dentro la domanda dei
   filtri i tre modi sono ancora quelli vecchi (tendina `as-scelta`, elenco dei modelli
   `as-apertura__*`), senza le pillole "Uno dei miei / Un modello del catalogo / Nuovo filtro" e
-  senza `.as-comparsa`; l'avviso di cio' che non si annulla dentro la domanda dell'unione. Testi
+  senza `.as-comparsa` (la tendina invece ha gia' la veste: `Campo` mette ogni `<select>` nel pozzo con `--tendina`, in tutta l'app); l'avviso di cio' che non si annulla dentro la domanda dell'unione. Testi
   nuovi anche qui, da far vedere a Marco: `review.answer`, `review.change`, `review.reopen`,
   `review.state.*`, `review.closed.*`. Dalla revisione delle domande: aprendo una domanda o
   riaprendo una sezione da tastiera il fuoco cade sul corpo della pagina (un Tab riparte dal

@@ -298,7 +298,7 @@ export function riga(sezione: HTMLElement, nome: string) {
  * quelle classi, non sarebbe fra i trovati, e la prova tornerebbe verde sulla regressione che
  * deve impedire.
  *
- * - **Un controllo senza la sua classe** (`.as-campo-modulo__input`, `.as-campo__area`, `.as-scelta`,
+ * - **Un controllo senza la sua classe** (`.as-campo-modulo__input`, `.as-campo__area`,
  *   `.as-bottone`) non ha ne' l'altezza dei mattoni ne' gli stati: si vede subito a schermo, ma
  *   nessuna prova cadrebbe.
  * - **Un campo senza `.as-campo-modulo`** non e' una griglia: l'etichetta e il controllo diventano due
@@ -325,7 +325,6 @@ export function fuoriDaiMattoni() {
       ![
         "as-campo-modulo__input",
         "as-campo__area",
-        "as-scelta",
         "as-bottone",
         "as-campo-modulo__etichetta",
         // Le nove voci della scala del cielo: sono bottoni, ma non sono bottoni dell'app -- hanno
@@ -354,7 +353,7 @@ export function fuoriDaiMattoni() {
       // Le due date del periodo a giorni (`.as-dal-al`): stessa forma, le veste la loro etichetta.
       e.closest("label.as-dal-al__campo") === null,
   )
-  const pezzi = document.querySelectorAll(".as-campo-modulo__etichetta, .as-campo-modulo__input, .as-scelta")
+  const pezzi = document.querySelectorAll(".as-campo-modulo__etichetta, .as-campo-modulo__input")
   // Fuori da `as-campo-modulo` c'e' una forma voluta: l'etichetta di un **gruppo** di controlli
   // (`EtichettaDiGruppo`), che nomina tre bottoni e non un campo -- un `as-campo-modulo` intorno le
   // darebbe la spaziatura di un campo che non c'e'. Dichiarata qui perche' questa guardia gira

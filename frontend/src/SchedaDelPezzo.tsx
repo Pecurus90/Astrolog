@@ -33,7 +33,7 @@ export function CampoDellaScheda({
     return (
       <Campo id={id} etichetta={t(etichetta)}>
         <select
-          className="as-scelta"
+          className="as-campo-modulo__input"
           id={id}
           value={valore ?? ""}
           onChange={(e) => onValore(e.target.value || undefined)}

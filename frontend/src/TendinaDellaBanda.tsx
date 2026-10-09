@@ -32,7 +32,7 @@ export function TendinaDellaBanda({
   return (
     <Campo id={id} etichetta={etichetta}>
       <select
-        className="as-scelta"
+        className="as-campo-modulo__input"
         id={id}
         value={valore ?? ""}
         onChange={(e) => onBanda(e.target.value as Banda)}

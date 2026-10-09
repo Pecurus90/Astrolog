@@ -19,7 +19,7 @@ export function TendinaDiScelta({
   return (
     <Campo id={id} etichetta={etichetta}>
       <select
-        className="as-scelta"
+        className="as-campo-modulo__input"
         id={id}
         value={valore ?? ""}
         onChange={(e) => onScelta(e.target.value ? Number(e.target.value) : undefined)}

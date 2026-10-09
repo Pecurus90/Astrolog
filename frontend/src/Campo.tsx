@@ -43,17 +43,19 @@ export function Campo({
   children: ReactNode
 }) {
   const detto = `${id}-errore`
+  // Una tendina ha la freccia e il cursore suoi: il foglio li mette se il campo lo dice.
+  const primo = Children.toArray(children)[0]
+  const tendina = isValidElement(primo) && primo.type === "select"
   return (
     <div
-      // I tre rami stanno **qui**, scritti per esteso: una classe composta dentro una
-      // funzione la guardia della veste non la legge, e lo dice -- l'ha detto.
-      className={
-        errore
-          ? "as-campo-modulo as-campo-modulo--errore"
-          : aspetta
-            ? "as-campo-modulo as-campo-modulo--attesa"
-            : "as-campo-modulo"
-      }
+      // Scritte per esteso: una classe composta altrove la guardia della veste non la legge.
+      className={[
+        "as-campo-modulo",
+        errore ? "as-campo-modulo--errore" : aspetta ? "as-campo-modulo--attesa" : "",
+        tendina ? "as-campo-modulo--tendina" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       <label className="as-campo-modulo__etichetta" htmlFor={id}>
         {etichetta}
@@ -78,8 +80,8 @@ export function Campo({
                 errore ? { "aria-describedby": detto, "aria-invalid": true } : { "aria-busy": true },
               )
             : figlio
-        // Il bordo e il fuoco il foglio li disegna sul pozzo. Una tendina ha gia' i suoi.
-        return figlio.type === "input" ? (
+        // Il bordo e il fuoco il foglio li disegna sul pozzo: del campo di testo e della tendina.
+        return figlio.type === "input" || figlio.type === "select" ? (
           <div className="as-campo-modulo__pozzo" key="pozzo">
             {controllo}
           </div>

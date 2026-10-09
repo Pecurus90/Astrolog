@@ -53,7 +53,6 @@ as-riga__perche
 as-riga__prova
 as-riga__risposte
 as-riga__testa
-as-scelta
 as-sezioni
 as-sezioni__voce
 as-stato--buono

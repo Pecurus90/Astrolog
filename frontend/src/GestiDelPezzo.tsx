@@ -68,7 +68,7 @@ export function AggiungiUnPezzo({ schede, pezzi }: { schede: Schede; pezzi: Pezz
   const scelta = (
     <Campo id="aggiungi-kind" etichetta={t("gear.write.kind")}>
       <select
-        className="as-scelta"
+        className="as-campo-modulo__input"
         id="aggiungi-kind"
         value={genere}
         onChange={(e) => cambiaGenere(e.target.value as DaScrivere)}
