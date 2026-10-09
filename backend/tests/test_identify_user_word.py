@@ -69,16 +69,35 @@ def test_a_correction_on_a_free_name_moves_those_frames_too(archivio):
     assert oggetto_di(archivio, frame)["catalog_slug"] == "m-101"
 
 
-def test_a_ring_of_corrections_stops_where_it_is(archivio):
-    """`m-31` -> `m-45` e `m-45` -> `m-31`: la catena si segue, ma un anello si ferma dove si
-    chiude. Applicare il passo che riporta indietro rimetterebbe la posa esattamente da dove era
-    partita, quindi si guarda PRIMA di applicarlo: si esce su `m-45`, che e' l'ultima parola
-    dell'utente che aggiunge qualcosa."""
+def test_a_second_thought_undoes_the_correction_it_reverses(archivio):
+    """`m-31` -> `m-45`, poi `m-45` -> `m-31`: l'utente ci ha ripensato, e vince l'ultima parola.
+    La correzione vecchia che riporterebbe indietro si toglie quando arriva la nuova: tenerle
+    tutte e due farebbe un anello, e la posa resterebbe dove l'utente ha appena detto di no."""
     frame = posa(archivio, obj="M 31", cielo=M31)
     risposta.correct_object(archivio, "m-31", slug="m-45")
     risposta.correct_object(archivio, "m-45", slug="m-31")
+    assert risposta.correction_of(archivio, "m-31") is None
     corri(archivio)
-    assert oggetto_di(archivio, frame)["catalog_slug"] == "m-45"
+    assert oggetto_di(archivio, frame)["catalog_slug"] == "m-31"
+
+
+def test_a_renamed_object_comes_back_from_its_own_card(archivio):
+    """Il caso di chi preme "Correggi": M 31 rinominato in un nome libero, e poi quel nome
+    riportato a M 31. La posa torna su M 31, e non resta sul nome che l'utente ha disfatto."""
+    frame = posa(archivio, obj="M 31", cielo=M31)
+    corri(archivio)
+    risposta.declare_object(archivio, "m-31", name="Cometa di prova")
+    corri(archivio)
+    assert oggetto_di(archivio, frame)["catalog_slug"] is None
+    risposta.declare_object(archivio, "Cometa di prova", slug="m-31")
+    corri(archivio)
+    assert oggetto_di(archivio, frame)["catalog_slug"] == "m-31"
+
+
+def test_saying_it_is_right_keeps_its_own_correction(archivio):
+    """Dire "e' giusto" e' una correzione verso se stesso: non e' un anello da disfare."""
+    risposta.correct_object(archivio, "m-31", slug="m-31")
+    assert risposta.correction_of(archivio, "m-31") is not None
 
 
 def test_a_correction_without_its_prefix_is_ignored_not_trimmed(archivio):

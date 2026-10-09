@@ -169,7 +169,24 @@ def correct_object(
     take the frames back; a declaration is read every time and survives a reset."""
     target = _one_target(found_key, slug, name)
     write_declaration(conn, EntityType.OBJECT, found_key, CORRECTION, target_value(slug, name), now)
+    if target != found_key and _leads_back(conn, target, found_key):
+        # A second thought: the last word wins, so the older step that takes it back goes.
+        forget(conn, EntityType.OBJECT, target, CORRECTION)
     return target
+
+
+def _leads_back(conn: sqlite3.Connection, start: str, home: str) -> bool:
+    """Whether the corrections followed from `start` reach `home`: the new one closed a ring."""
+    visited = {start}
+    here = start
+    while (step := correction_of(conn, here)) is not None:
+        here = step[1]
+        if here == home:
+            return True
+        if here in visited:
+            return False
+        visited.add(here)
+    return False
 
 
 def _one_target(found_key: str, slug: str | None, name: str | None) -> str:

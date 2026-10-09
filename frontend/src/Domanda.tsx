@@ -58,6 +58,7 @@ export function Domanda({
   salvata,
   inMano,
   era,
+  aPosto = false,
   breve,
   children,
 }: {
@@ -76,16 +77,19 @@ export function Domanda({
   salvata: boolean
   inMano: boolean
   era?: string | undefined
+  /** Non e' una domanda: cio' che l'app sa gia'. Niente stato finche' non la si corregge, e il
+   *  gesto e' "Correggi". */
+  aPosto?: boolean
   /** La risposta in breve, o fra cosa si sceglie: si legge da chiusa. */
   breve: ReactNode
   children: ReactNode
 }) {
   const { aperta, apri } = useContext(DomandaAperta)
   const quanti = [t("review.frames", { n: numero(frames) }), accanto].filter(Boolean).join(" \u00b7 ")
-  const stato = <Risposta era={era} inMano={inMano} salvata={salvata} />
+  const stato = aPosto && !inMano ? null : <Risposta era={era} inMano={inMano} salvata={salvata} />
 
   if (aperta !== id) {
-    const gesto = t(salvata || inMano ? "review.change" : "review.answer")
+    const gesto = t(aPosto ? "review.fix" : salvata || inMano ? "review.change" : "review.answer")
     return (
       <div className="as-domanda-riga">
         <div className="as-domanda-riga__chi">

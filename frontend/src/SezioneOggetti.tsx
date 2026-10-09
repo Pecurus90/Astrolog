@@ -1,9 +1,13 @@
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
+import { Avviso } from "./Avviso"
+import { Bottone } from "./Bottone"
 import { Campo } from "./Campo"
 import { Domanda } from "./Domanda"
 import { Scelte } from "./Scelte"
 import { Sezione } from "./Sezione"
+import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { cielo, notte, numero, oraDelSito, ore, t } from "./i18n"
 
@@ -25,6 +29,8 @@ const NON_OGGETTO = "nessuno"
  * - **Una scheda risposta resta in pagina**, e ridare la stessa risposta non manda niente.
  * - **Puntamento, camera e ore ci sono solo nei frame senza nome**: per un oggetto in dubbio
  *   l'API non li manda.
+ * - **Gli oggetti a posto non sono domande**: stanno chiusi in fondo, si aprono a pagine, e si
+ *   correggono con la stessa scheda, col nome di adesso gia' scelto.
  */
 export function SezioneOggetti({
   schede,
@@ -47,16 +53,81 @@ export function SezioneOggetti({
       riga={(s, indice) => (
         <RigaOggetti indice={indice} scheda={s} risposta={risposte[s.key]} onRisposta={onRisposta} />
       )}
-      piede={
-        aPosto > 0 && (
-          <div className="as-conferma-aposto">
-            <p>
-              <b>{numero(aPosto)}</b> {t("review.objects.settled", { n: aPosto })}
-            </p>
-          </div>
-        )
-      }
+      piede={aPosto > 0 && <APosto daIndice={schede.length} quanti={aPosto} risposte={risposte} onRisposta={onRisposta} />}
     />
+  )
+}
+
+const PER_PAGINA = 20
+
+function APosto({
+  quanti,
+  daIndice,
+  risposte,
+  onRisposta,
+}: {
+  quanti: number
+  /** Da dove contano gli id dei campi: dopo le schede di sopra, per non ripeterli. */
+  daIndice: number
+  risposte: Record<string, Risposta>
+  onRisposta: (chiave: string, r: Risposta | null) => void
+}) {
+  const [aperti, setAperti] = useState(false)
+  const [da, setDa] = useState(0)
+  // Sotto la chiave della pagina: l'Applica che la rilegge rilegge anche questi.
+  const pagina = useQuery({
+    queryKey: ["review", "settled", da],
+    enabled: aperti,
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/review/objects/settled", {
+        params: { query: { limit: PER_PAGINA, offset: da } },
+      })
+      if (error) throw new Error(t("review.settled.failed"))
+      return data
+    },
+    placeholderData: keepPreviousData,
+  })
+  const dati = pagina.data
+  return (
+    <>
+      <div className={aperti ? "as-conferma-aposto as-conferma-aposto--aperto" : "as-conferma-aposto"}>
+        <p>
+          <b>{numero(quanti)}</b> {t("review.objects.settled", { n: quanti })}
+        </p>
+        {aperti ? (
+          <Bottone piccolo verso="nudo" onClick={() => setAperti(false)}>
+            {t("frame.close")}
+          </Bottone>
+        ) : (
+          <Bottone piccolo onClick={() => setAperti(true)}>
+            {t("review.settled.open")}
+          </Bottone>
+        )}
+      </div>
+      {aperti && pagina.error && <Avviso esito="allarme">{pagina.error.message}</Avviso>}
+      {aperti && dati && (
+        <>
+          {dati.items.map((s, i) => (
+            <RigaOggetti aPosto indice={daIndice + i} key={s.key} scheda={s} risposta={risposte[s.key]} onRisposta={onRisposta} />
+          ))}
+          <div className="as-conferma-pagine">
+            <p className="as-conferma-pagine__dove">
+              {t("review.settled.range", {
+                da: numero(dati.offset + 1),
+                a: numero(dati.offset + dati.items.length),
+                n: numero(dati.total),
+              })}
+            </p>
+            <Bottone disabled={da === 0} piccolo onClick={() => setDa(Math.max(0, da - PER_PAGINA))}>
+              {t("review.settled.before")}
+            </Bottone>
+            <Bottone disabled={da + PER_PAGINA >= dati.total} piccolo onClick={() => setDa(da + PER_PAGINA)}>
+              {t("review.settled.after")}
+            </Bottone>
+          </div>
+        </>
+      )}
+    </>
   )
 }
 
@@ -65,7 +136,10 @@ export function SezioneOggetti({
  * Una sigla che non e' fra le voci del campo e' stata scritta in "Altro nome": il catalogo
  * l'ha riconosciuta, ma la scelta da mostrare resta il nome.
  */
-function salvataDi(scheda: Scheda): string | null {
+function salvataDi(scheda: Scheda, aPosto: boolean): string | null {
+  // Un oggetto a posto non ha risposta: cio' che vale e' il nome che l'app gli ha dato. Senza
+  // sigla (una cometa, un nome scritto) quel nome sta nel campo di "Altro nome".
+  if (aPosto) return scheda.slug ?? (scheda.name ? ALTRO_NOME : null)
   const data = scheda.answer
   if (!data) return null
   if (data.kind === "none") return NON_OGGETTO
@@ -77,14 +151,17 @@ function RigaOggetti({
   scheda,
   risposta,
   onRisposta,
+  aPosto = false,
 }: {
   indice: number
   scheda: Scheda
+  /** Un oggetto che l'app riconosce da sola: si corregge, non si risponde. */
+  aPosto?: boolean
   risposta: Risposta | undefined
   onRisposta: (chiave: string, r: Risposta | null) => void
 }) {
-  const salvata = salvataDi(scheda)
-  const nomeSalvato = salvata === ALTRO_NOME ? (scheda.answer?.name ?? "") : ""
+  const salvata = salvataDi(scheda, aPosto)
+  const nomeSalvato = salvata === ALTRO_NOME ? (scheda.answer?.name ?? (aPosto ? scheda.name : null) ?? "") : ""
   // La scelta e il nome sono della riga: un nome a meta' non sta nell'accumulo, e senza tenerlo
   // qui il campo si svuoterebbe sotto le dita. Partono dalla risposta in mano, poi dalla salvata.
   const [scelta, setScelta] = useState<string | null>(
@@ -118,6 +195,7 @@ function RigaOggetti({
     .filter(Boolean)
     .join(" \u00b7 ")
   // Cio' che vale adesso: la risposta in mano, o quella salvata. Una scelta a meta' non e' una risposta.
+  // Un oggetto a posto non ripete il suo nome: e' gia' il titolo della riga.
   const detta = risposta
     ? risposta.not_an_object
       ? t("review.objects.none")
@@ -126,7 +204,9 @@ function RigaOggetti({
       ? scheda.answer.kind === "none"
         ? t("review.objects.none")
         : (scheda.answer.name ?? "")
-      : null
+      : aPosto
+        ? ""
+        : null
   // La chiave di un gruppo porta spazi e virgolette: un id valido si fa col posto in elenco.
   const idNome = `oggetto-nome-${indice}`
 
@@ -137,6 +217,7 @@ function RigaOggetti({
       nome={scheda.name ? <span className="as-nome-oggetto">{scheda.name}</span> : titolo}
       frames={scheda.frames}
       accanto={durata || undefined}
+      aPosto={aPosto}
       salvata={scheda.answer !== null}
       inMano={risposta !== undefined}
       era={scheda.answer ? (scheda.answer.kind === "none" ? t("review.objects.none") : (scheda.answer.name ?? undefined)) : undefined}
@@ -177,6 +258,7 @@ function RigaOggetti({
         domanda={t("review.objects.question", { nome: titolo })}
         nome={`oggetto-${scheda.key}`}
         opzioni={[
+          ...(aPosto && scheda.slug ? [{ valore: scheda.slug, etichetta: scheda.name ?? scheda.slug }] : []),
           ...scheda.candidates.map((c) => ({
             valore: c.slug,
             etichetta: voce(c),

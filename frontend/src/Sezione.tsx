@@ -75,7 +75,10 @@ export function Sezione<V>({
         <h2 className="as-conferma-sezione__nome" id={`${ancora}-nome`}>
           {t(titolo)}
         </h2>
-        <span className="as-conferma-sezione__quante">{t("review.questions", { n: numero(voci.length) })}</span>
+        {/* senza domande la sezione c'e' per il suo piede: "0 domande" non direbbe niente */}
+        {voci.length > 0 && (
+          <span className="as-conferma-sezione__quante">{t("review.questions", { n: numero(voci.length) })}</span>
+        )}
         {domanda && quiSiLavora && <p className="as-conferma-sezione__perche">{domanda}</p>}
       </header>
       {voci.map((v, indice) => (

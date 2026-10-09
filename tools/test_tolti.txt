@@ -213,3 +213,4 @@ ogni sezione e' una carta, e il suo elenco sta nel corpo della carta - Da confer
 una tendina non prende il pozzo: ha gia' il suo bordo - foglio v34: la tendina ha il pozzo del campo; rinominato in "una tendina sta nel pozzo del campo, e il campo dice che e' una tendina"
 scelto un modello dal catalogo, marca nome e banda sono FISSI - Da confermare sul foglio v34: il modello scelto e' la voce scelta dell'elenco; rinominato in "scelto un modello dal catalogo, e' la voce scelta dell'elenco: il suo nome non si scrive"
 un clic sbagliato si corregge: si torna a scegliere - Da confermare sul foglio v34: non c'e' piu' "Cambia modello"; rinominato in "un clic sbagliato si corregge: si sceglie un altro modello, o un altro modo"
+test_a_ring_of_corrections_stops_where_it_is - a second thought now undoes the correction it reverses (Marco, 2026-10-09); rinominato in "test_a_second_thought_undoes_the_correction_it_reverses"

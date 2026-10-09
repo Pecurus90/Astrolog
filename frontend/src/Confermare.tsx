@@ -174,7 +174,9 @@ function LaPagina() {
   const tutte = Object.keys(SEZIONI) as QualeSezione[]
   const inManoDi = (s: QualeSezione) => accumulo[s] as Record<string, unknown>
   const senzaRisposta = (s: QualeSezione) => domande[s].filter((d) => !d.salvata && !inManoDi(s)[d.chiave])
-  const presenti = tutte.filter((s) => domande[s].length > 0)
+  // Oggetti c'e' anche senza domande: gli oggetti a posto si correggono da li'.
+  const soloAPosto = domande.objects.length === 0 && dati.settled_objects > 0
+  const presenti = tutte.filter((s) => domande[s].length > 0 || (s === "objects" && soloAPosto))
   const aspettano = Object.fromEntries(tutte.map((s) => [s, senzaRisposta(s).length])) as Record<QualeSezione, number>
   // Aperta e' quella scelta; finche' nessuno sceglie, la prima che aspetta una risposta.
   const prima = presenti.flatMap((s) => senzaRisposta(s).map((d) => `${s}:${d.chiave}`))[0] ?? null
@@ -223,6 +225,12 @@ function LaPagina() {
     </>
   )
 
+  // "Niente" si dice solo se il conto e' zero: lo decide l'API, non le sezioni a schermo.
+  const niente = dati.to_confirm === 0 && (
+    <Avviso esito="buono" pagina ruolo="status" titolo={t("review.none.title")}>
+      {t("review.none.text")}
+    </Avviso>
+  )
   // Lo stato in cui la pagina sta quasi sempre: niente indice e niente piede, non c'e' da fare.
   if (presenti.length === 0) {
     return (
@@ -230,12 +238,7 @@ function LaPagina() {
         <div className="as-conferma__colonna">
           <div className="as-conferma__testa">{conta}</div>
           {esiti}
-          {/* "Niente" si dice solo se il conto e' zero: lo decide l'API, non le sezioni a schermo. */}
-          {dati.to_confirm === 0 && (
-            <Avviso esito="buono" pagina ruolo="status" titolo={t("review.none.title")}>
-              {t("review.none.text")}
-            </Avviso>
-          )}
+          {niente}
         </div>
       </div>
     )
@@ -244,7 +247,8 @@ function LaPagina() {
   /** La riga di una sezione chiusa: il nome, quante risposte e in che stato, e come si riapre.
    *  Porta l'ancora della sezione, che da chiusa non e' montata: l'indice arriva qui. */
   const chiusaDi = (s: QualeSezione) => {
-    const mie = domande[s].filter((d) => inManoDi(s)[d.chiave]).length
+    // tutte quelle in mano, anche la correzione di un oggetto a posto, che non e' una domanda
+    const mie = Object.keys(inManoDi(s)).length
     return (
       <div className="as-carta as-conferma-chiusa" id={SEZIONI[s].ancora} key={s}>
         <h2 className="as-conferma-chiusa__nome">{t(SEZIONI[s].titolo)}</h2>
@@ -304,6 +308,8 @@ function LaPagina() {
       </div>
 
       {esiti}
+      {/* senza domande la pagina c'e' solo per gli oggetti a posto: che non c'e' da fare si dice lo stesso */}
+      {presenti.every((s) => domande[s].length === 0) && niente}
       {/* **Una coda che non si e' potuta leggere non e' una coda vuota.** Senza questa riga, se
           l'elenco dei modelli cade la tendina diventa un catalogo vuoto: chi cerca il suo filtro
           non lo trova, conclude che in commercio non c'e', e lo scrive a mano per sempre. E' il
@@ -341,7 +347,7 @@ function LaPagina() {
           onRisposta={scrivi("gear")}
         />
       )}
-      {chiusa("objects") ? chiusaDi("objects") : !!dati?.objects?.length && (
+      {chiusa("objects") ? chiusaDi("objects") : (!!dati?.objects?.length || soloAPosto) && (
         <SezioneOggetti
           schede={dati.objects}
           aPosto={dati.settled_objects}

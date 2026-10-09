@@ -762,8 +762,12 @@ il resto: *cio' che avete trovato come `ngc-7023`, per me e' `ldn-1174`*. Il luc
 `identify` rifarebbe la sua strada dal cielo e riporterebbe i frame dov'erano -- la risposta
 sarebbe muta. La correzione invece sta in `declarations`, si rilegge a ogni giro e sopravvive a
 un azzeramento del rilevato. **Si segue a catena** -- se l'utente si corregge, la seconda
-risposta scavalca la prima -- tenendo conto di dove si e' gia' passati, cosi' un anello che si
-chiude si ferma dov'e'. E la risposta viaggia su una **chiave stabile** (lo slug, o il nome), mai
+risposta scavalca la prima. **Un ripensamento disfa cio' che rovescia** (Marco, 9/10/2026):
+se la correzione nuova chiude un anello -- *M 9 e' la Cometa*, poi *la Cometa e' M 9* -- vince
+l'ultima, e quella vecchia che riporterebbe indietro si toglie quando la nuova si scrive
+(`test_a_second_thought_undoes_the_correction_it_reverses`,
+`test_a_renamed_object_comes_back_from_its_own_card`). Chi legge la catena tiene comunque conto
+di dove e' gia' passato: un anello scritto da fuori non gira all'infinito. E la risposta viaggia su una **chiave stabile** (lo slug, o il nome), mai
 sul numero di riga: gli oggetti rimasti senza frame si cancellano e rinascono con numeri nuovi, e
 una risposta agganciata a un numero punterebbe al nulla. Un bersaglio che il
 catalogo non conosce si rifiuta **subito**, con un codice: una dichiarazione puo' spostare dei

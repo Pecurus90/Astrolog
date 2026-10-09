@@ -218,7 +218,7 @@ describe("Da confermare -- gli oggetti", () => {
   it("in fondo dice quanti oggetti sono gia' riconosciuti", async () => {
     aperta()
     const sezione = await vaiASezione(/^oggetti$/i)
-    expect(sezione.querySelector(".as-conferma-aposto")?.textContent).toBe("218 oggetti riconosciuti")
+    expect(sezione.querySelector(".as-conferma-aposto p")?.textContent).toBe("218 oggetti riconosciuti")
     expect(sezione.querySelector(".as-conferma-aposto b")?.textContent).toBe("218")
   })
 })

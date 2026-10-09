@@ -418,9 +418,17 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   e "Riapri" sono alti 32 px. Fatta anche la sezione Oggetti (9/10: `SezioneOggetti.tsx`, una scheda
   per gruppo con le voci del campo -- ognuna dice se e' nell'inquadratura --, "Altro nome" col
   suo campo, "Non e' un oggetto"; i frame senza nome col titolo della notte e camera, puntamento
-  e ore nella tabellina; in fondo quanti oggetti sono riconosciuti). Di Oggetti restano: gli
-  oggetti gia' a posto si contano ma non si aprono (`.as-conferma-aposto--aperto`,
-  `.as-conferma-pagine`, la rotta `GET /review/objects/settled` c'e' gia'). Dalla revisione: una scheda con voci, senza
+  e ore nella tabellina; in fondo quanti oggetti sono riconosciuti). Fatti anche gli oggetti gia' a posto
+  (9/10: "Apri" in `.as-conferma-aposto`, venti per pagina da `GET /review/objects/settled`,
+  `.as-conferma-pagine` con "Precedenti"/"Successivi", righe senza stato col gesto "Correggi" che
+  aprono la stessa scheda col nome di adesso scelto -- senza sigla, "Altro nome" col nome nel campo; la sezione c'e' anche con zero domande, e
+  "Niente da confermare" si dice lo stesso). Degli oggetti a posto restano: la tavola li vuole in
+  ordine di nome e col nome comune nella riga ("M 13 - Ammasso di Ercole"), l'API li manda per
+  frame decrescenti e senza nome comune; una correzione in mano non si vede piu' cambiando pagina
+  o premendo "Chiudi" (il piede la conta, Applica la manda); la sezione che si chiude perche'
+  tutte le sue domande hanno risposta richiude anche l'elenco. Con "Correggi" il ripensamento e' un gesto normale: una
+  correzione che ne rovescia una vecchia la toglie (`object_answer.correct_object`, contratto in
+  `docs/domini/spina.md`). Testi miei da far vedere a Marco: `review.fix`, `review.settled.*`. Dalla revisione: una scheda con voci, senza
   risposta e senza dubbio la pagina la conta fra quelle da dare e l'API no; due gruppi senza nome
   della stessa notte hanno lo stesso titolo; un nome riscritto con un'altra grafia (`m31` per
   `M 31`) parte come risposta nuova; "Altro nome" scelto e lasciato vuoto su una scheda salvata

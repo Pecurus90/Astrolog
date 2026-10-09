@@ -674,7 +674,7 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
   i frame che l'app ha messo su un oggetto di cui non e' sicura, oppure un gruppo di frame che non
   dicono cosa hai ripreso e di cui il cielo non dice niente. Non ti chiede un oggetto che il cielo
   riconosce, ne' una sigla del catalogo scritta nel file (`M 31`) anche se il cielo non c'e': quelli
-  li conta fra gli oggetti gia' riconosciuti (correggerli da questa pagina non si puo' ancora). Ti chiede un nome
+  li conta fra gli oggetti gia' riconosciuti, che correggi dal fondo della sezione. Ti chiede un nome
   che il catalogo non conosce, e quello su cui nome e cielo non vanno d'accordo, o il cielo esita
   fra piu' oggetti vicini. A ogni scheda rispondi allo stesso modo: scegli una
   voce fra quelle che il cielo ha trovato -- quando ne ha trovate --, scrivi il nome, oppure spunta
@@ -687,7 +687,13 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
   Nella scheda ogni voce trovata nel campo dice se sta *nell'inquadratura*, *fuori
   dall'inquadratura* o se la *posizione non e' nota*; *Altro nome* apre il campo dove lo scrivi.
   In fondo alla sezione leggi quanti oggetti l'app riconosce da sola (*218 oggetti
-  riconosciuti*): in questa versione si contano e basta, non si aprono ancora da qui.
+  riconosciuti*). Con *Apri* li vedi venti alla volta, e ti sposti con *Precedenti* e
+  *Successivi*; *Chiudi* li toglie di nuovo. Non sono domande, quindi non hanno uno stato: accanto
+  a ognuno c'e' *Correggi*, che apre la stessa scheda con il nome di adesso gia' scelto. Un oggetto
+  che non e' in un catalogo (una cometa, un nome che hai scritto tu) si apre su *Altro nome*, col
+  suo nome gia' nel campo. Da li'
+  scrivi un altro nome o spunti *non e' un oggetto*; la correzione parte con *Applica*, insieme
+  alle altre risposte. La sezione c'e' anche quando non ha domande, proprio per questo.
 
   *I frame senza nome.* I frame che non dicono cosa hai ripreso, e di cui il cielo non dice niente
   -- non ci ha trovato oggetti, o non e' riuscito a guardarli -- si chiedono per gruppo: la notte,
