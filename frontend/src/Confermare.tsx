@@ -5,6 +5,7 @@ import { Fragment, useMemo, useState } from "react"
 import { Avviso } from "./Avviso"
 import { DomandaAperta, Risposta } from "./Domanda"
 import { SezioneStessoPezzo } from "./SezioneStessoPezzo"
+import { SezioneAttrezzatura } from "./SezioneAttrezzatura"
 import { SezioneFiltri } from "./SezioneFiltri"
 import { SezioneLuoghi } from "./SezioneLuoghi"
 import { SezioneMosaici } from "./SezioneMosaici"
@@ -22,6 +23,7 @@ type Schema = components["schemas"]
 type Accumulo = {
   lookalikes: Record<string, Schema["LookalikeEdit"]>
   filters: Record<number, Schema["FilterEdit"]>
+  gear: Record<string, Schema["GearEdit"]>
   objects: Record<string, Schema["ObjectEdit"]>
   typeless: Record<string, Schema["TypelessFolderEdit"]>
   unclear: Record<string, Schema["CoordinatesEdit"]>
@@ -30,6 +32,7 @@ type Accumulo = {
 const VUOTO: Accumulo = {
   lookalikes: {},
   filters: {},
+  gear: {},
   objects: {},
   typeless: {},
   unclear: {},
@@ -111,8 +114,7 @@ function LaPagina() {
         body: {
           lookalikes: Object.values(accumulo.lookalikes),
           filters: Object.values(accumulo.filters),
-          // no gear card yet: it waits for its design (ADR 0014)
-          gear: [],
+          gear: Object.values(accumulo.gear),
           typeless: Object.values(accumulo.typeless),
           unclear: Object.values(accumulo.unclear),
           mosaics: Object.values(accumulo.mosaics),
@@ -162,6 +164,8 @@ function LaPagina() {
   const domande: Record<QualeSezione, { chiave: string; salvata: boolean }[]> = {
     lookalikes: (dati.lookalikes ?? []).map((g) => ({ chiave: String(g.id), salvata: false })),
     filters: (dati.filters ?? []).map((f) => ({ chiave: String(f.id), salvata: false })),
+    // una scheda a meta' conta finche' non ha tutte le parti che chiede
+    gear: (dati.gear ?? []).map((g) => ({ chiave: g.key, salvata: g.complete })),
     objects: (dati.objects ?? []).map((o) => ({ chiave: o.key, salvata: o.answer !== null })),
     typeless: (dati.typeless ?? []).map((g) => ({ chiave: g.key, salvata: g.answer !== null })),
     unclear: (dati.unclear ?? []).map((p) => ({ chiave: p.key, salvata: p.site !== null })),
@@ -226,8 +230,7 @@ function LaPagina() {
         <div className="as-conferma__colonna">
           <div className="as-conferma__testa">{conta}</div>
           {esiti}
-          {/* Il conto somma anche Attrezzatura da completare, che qui non ha ancora la sua
-              sezione: "niente" si dice solo se il conto e' zero. */}
+          {/* "Niente" si dice solo se il conto e' zero: lo decide l'API, non le sezioni a schermo. */}
           {dati.to_confirm === 0 && (
             <Avviso esito="buono" pagina ruolo="status" titolo={t("review.none.title")}>
               {t("review.none.text")}
@@ -326,6 +329,16 @@ function LaPagina() {
           modelli={modelli.data ?? []}
           risposte={accumulo.filters}
           onRisposta={scrivi("filters")}
+        />
+      )}
+      {chiusa("gear") ? chiusaDi("gear") : !!dati?.gear?.length && (
+        <SezioneAttrezzatura
+          schede={dati.gear}
+          corredi={dati.rig_choices}
+          ottiche={dati.optics_choices}
+          filtri={dati.filter_choices}
+          risposte={accumulo.gear}
+          onRisposta={scrivi("gear")}
         />
       )}
       {chiusa("objects") ? chiusaDi("objects") : !!dati?.objects?.length && (

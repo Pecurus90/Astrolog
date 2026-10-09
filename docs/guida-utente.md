@@ -607,6 +607,8 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
     notte dice la camera, o quando ne dicono piu' d'una. Scegli uno dei tuoi corredi, oppure
     scrivi la camera e la focale, e l'ottica se serve: l'app ti propone l'ottica che i frame
     dicono e la focale nativa. La tua risposta vale anche se poi la notte direbbe un'altra camera.
+    Se la scheda chiede anche l'ottica e il corredo scelto non ne ha una, o non la scrivi, dopo
+    *Applica* la scheda te la chiede da sola, sotto la camera.
   - *L'ottica.* Con l'ASIAIR il file scrive la montatura al posto dell'ottica, e altri programmi
     il telescopio non lo scrivono: scegli una delle tue ottiche o ne scrivi il nome, e se non ce
     l'hai nasce in Attrezzatura. I frame vanno nel corredo che quell'ottica ha gia' con quella
@@ -614,7 +616,7 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
     focale sono una scheda sola. Due ottiche diverse usate alla stessa focale con la stessa camera
     ti arrivano come una domanda sola.
   - *Il filtro.* Scegli cosa c'era davanti: *a colori, senza filtro* (si scrive sulla scheda della
-    camera, quindi prima serve sapere qual e' la camera), *nessun filtro* o *uno dei miei filtri*,
+    camera, quindi prima serve sapere qual e' la camera: se la togli, la scelta non parte), *nessun filtro* o *filtro esistente*,
     che scegli da una tendina fra i filtri che l'app conosce. Se cambiavi filtri senza che il file
     li scrivesse non c'e' una risposta giusta: quei frame restano senza filtro. Una camera che i
     suoi file dicono a colori non te lo chiede: i suoi frame senza filtro vanno su OSC da soli.
@@ -625,8 +627,10 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
   tuoi file, la risposta resta sul nome che i file scrivono. Se cambi casa o il suo fuso, le
   risposte sull'attrezzatura restano dove sono.
 
-  **In questa versione la scheda non si vede ancora**: arriva col disegno nuovo della pagina. Fino
-  ad allora il numero di *Da confermare* la conta, e quei frame restano senza le parti che mancano.
+  La scheda aperta mostra a sinistra cio' che i file scrivono (camera, telescopio, sensore, ottica
+  e focale, gli oggetti ripresi) e a destra una parte per ogni cosa che manca, ognuna col suo
+  stato: *senza risposta*, *da applicare*, *salvata*. Chiusa, la riga dice in breve cosa hai gia'
+  dato e cosa resta da indicare.
 - **Frame senza tipo.** Alcuni programmi non scrivono nel file se e' un Light o un file
   di calibrazione. Lo capisce l'app guardando il cielo: se riesce a riconoscere dove punta e' un
   Light, se non trova stelle e' una calibrazione (bias, flat e dark con pochi pixel caldi non ne hanno; e

@@ -19,8 +19,9 @@ export function Scelte<V extends string | number>({
 }: {
   domanda: string
   nome: string
-  /** `sub` e' la riga sotto il nome di una voce: cosa comporta sceglierla, o dove sta. */
-  opzioni: readonly { valore: V; etichetta: string; sub?: string }[]
+  /** `sub` e' la riga sotto il nome di una voce: cosa comporta sceglierla, o dove sta. `spenta`
+   *  e' una voce che ora non si puo' scegliere: chi la spegne dice accanto perche'. */
+  opzioni: readonly { valore: V; etichetta: string; sub?: string; spenta?: boolean }[]
   scelta: V | null | undefined
   onScelta: (valore: V) => void
   /** Cio' che la scelta apre (un campo, una tendina): sotto le voci. */
@@ -38,6 +39,7 @@ export function Scelte<V extends string | number>({
               name={nome}
               value={String(o.valore)}
               checked={scelta === o.valore}
+              disabled={o.spenta === true}
               onChange={() => onScelta(o.valore)}
             />
             <span className="as-scelta-fissa__testo">

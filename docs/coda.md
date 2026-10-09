@@ -424,9 +424,18 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   risposta e senza dubbio la pagina la conta fra quelle da dare e l'API no; due gruppi senza nome
   della stessa notte hanno lo stesso titolo; un nome riscritto con un'altra grafia (`m31` per
   `M 31`) parte come risposta nuova; "Altro nome" scelto e lasciato vuoto su una scheda salvata
-  lascia la riga chiusa sulla risposta di prima. Restano poi: Attrezzatura da completare (oggi non
-  disegnata: il conto in cima la conta e l'indice no; con sole domande sue la pagina mostra il
-  conto e nient'altro, "Niente da confermare" si dice solo a conto zero);
+  lascia la riga chiusa sulla risposta di prima. Fatta anche Attrezzatura da completare
+  (9/10: `SezioneAttrezzatura.tsx`, una scheda per firma con cio' che i file scrivono nella
+  tabellina e una parte per cosa che manca in `.as-domanda-parti` -- camera da un corredo o a
+  mano con focale e ottica, ottica fra le proprie o scritta, filtro con "A colori" spenta finche'
+  la camera non e' data e non mandata se la camera torna a mancare; l'ottica ha la sua parte
+  anche a camera salvata senza ottica; si manda solo la parte toccata, e la camera rimessa
+  com'era salvata non e' toccata; testi `review.gear.*` e
+  `review.proof.fileCamera/fileTelescope/sensor/frameOptics`, da far vedere a Marco). Di Attrezzatura resta:
+  con una camera diversa in mano l'ottica scelta nella sua parte non parte (corredo e ottica
+  scritta insieme sono un 422) e il suo radio resta acceso su "senza risposta": con un corredo
+  senza ottica servono due Applica; sulla scheda che chiede camera e ottica, "Altra camera" con
+  l'ottica vuota e' una risposta valida (renderla obbligatoria e' di Marco). Restano poi:
   il telefono a due livelli
   (`.as-conferma-tipi`, `.as-conferma-caso`) -- fino ad allora sotto i 900 di colonna l'indice
   non si mostra (`.as-solo-largo`): nel foglio e' `sticky` a ogni larghezza e in colonna unica
