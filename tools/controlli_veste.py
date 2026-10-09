@@ -176,8 +176,13 @@ def classi_fuori_casa(root):
 # I mattoni che un ruolo lo scrivono **di mestiere**, e che portano gia' il segno non cromatico
 # che il foglio da' loro: `Avviso` (spunta e triangolo) e `Campo`, il cui errore vive dentro
 # `as-campo--errore`. Non e' una allowlist di comodo -- ci entra un mattone, cioe' la casa unica
-# di una classe, e per la stessa ragione per cui la regola esiste: il segno c'e'.
-MATTONI_CHE_PARLANO = {"frontend/src/Avviso.tsx", "frontend/src/Campo.tsx"}
+# di una classe, e per la stessa ragione per cui la regola esiste: il segno c'e'. `CartaSola`
+# porta "l'app si apre", col segno dell'attesa del foglio (`.as-entra__attesa`).
+MATTONI_CHE_PARLANO = {
+    "frontend/src/Avviso.tsx",
+    "frontend/src/Campo.tsx",
+    "frontend/src/CartaSola.tsx",
+}
 
 
 def avvisi_a_mano(root):

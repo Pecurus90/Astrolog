@@ -32,7 +32,7 @@ const DOPO = {
 
 /** Le risposte dell'API con o senza il timbro. Le rotte piu' lunghe stanno davanti: il banco
  *  sceglie la prima che l'indirizzo contiene, e `/api/v1/settings` ingoierebbe il timbro. */
-function conTimbro(fatto: boolean, extra: Record<string, { stato: number; corpo: unknown }> = {}) {
+function conTimbro(fatto: boolean, extra: Parameters<typeof rispondi>[0] = {}) {
   rispondi({
     ...STANOTTE,
     // Il terzo passo chiede sempre queste due: dove stanno i dati (per sapere se le cartelle si
@@ -411,6 +411,152 @@ describe("il primo avvio", () => {
       expect(fuoriDaiMattoni(), `al passo ${passo}`).toEqual([])
       if (passo < 3) vaiAlPasso(1)
     }
+  })
+
+  it("mentre l'app si apre lo dice, col segno dell'attesa", async () => {
+    conTimbro(false, {
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(false), attesa: new Promise(() => {}) },
+    })
+    await disegna()
+    const attesa = screen.getByRole("status")
+    expect(attesa.className).toBe("as-entra__attesa")
+    expect(attesa.querySelector(".as-attesa")).not.toBeNull()
+    expect(attesa.closest(".as-entra")).not.toBeNull()
+    expect(screen.queryByRole("main")).toBeNull()
+  })
+
+  it("dopo Fine una schermata dice cosa e' stato dato, e da li' si apre l'app", async () => {
+    // Chi ha sbagliato qualcosa lo vede prima di cominciare. Dice solo cio' che e' vero: qui il
+    // nome c'e', il sito e le cartelle no, la chiave nemmeno.
+    conTimbro(false, {
+      "/api/v1/settings/wizard-done": {
+        stato: 200,
+        corpo: { ...impostazioni(true), values: { ...impostazioni(true).values, user_name: "Marco" } },
+      },
+      "/api/v1/sites": { stato: 200, corpo: { items: [], total: 0, limit: 50, offset: 0 } },
+    })
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Marco" } })
+    vaiAlPasso(1)
+    await screen.findByRole("region", { name: "Sito di osservazione" })
+    vaiAlPasso(2)
+    fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
+
+    const carta = await screen.findByRole("region", { name: "Configurazione completata" })
+    expect(carta.className).toBe("as-carta as-ritrovate")
+    const conti = [...carta.querySelectorAll(".as-conti > .as-conti__voce")].map(
+      (v) => `${v.querySelector(".as-conti__nome")?.textContent}=${v.querySelector(".as-conti__dato")?.textContent}`,
+    )
+    expect(conti).toEqual([
+      "Nome utente=Marco",
+      "Sito di osservazione=Nessun sito",
+      "Cartelle=Nessuna",
+      "Seeing=Senza chiave",
+    ])
+    // il timbro e' gia' scritto, ma nell'app si entra col suo comando: l'unico, e pieno
+    expect(chiamate().some((u) => u.includes("/settings/wizard-done"))).toBe(true)
+    const quante = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
+    const prima = quante()
+    const apri = screen.getByRole("button", { name: "Apri AstroLog" })
+    expect(apri.className).toContain("as-bottone--primario")
+    fireEvent.click(apri)
+    await waitFor(() => expect(quante()).toBeGreaterThan(prima))
+  })
+
+  it("la chiusura legge dal database: pagina ricaricata a meta', nome e sito ci sono lo stesso", async () => {
+    // Nome e sito salvati prima del ricaricamento: questa pagina non li ha mai visti scrivere.
+    conTimbro(false, {
+      "/api/v1/settings/wizard-done": {
+        stato: 200,
+        corpo: { ...impostazioni(true), values: { ...impostazioni(true).values, user_name: "Marco" } },
+      },
+    })
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(3)
+    fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
+
+    const carta = await screen.findByRole("region", { name: "Configurazione completata" })
+    const dati = [...carta.querySelectorAll(".as-conti__dato")].map((v) => v.textContent)
+    expect(dati.slice(0, 2)).toEqual(["Marco", "Vicenza · Bortle 4"])
+  })
+
+  it("la chiusura resta finche' non si preme Apri AstroLog, anche a impostazioni rilette", async () => {
+    // Il timbro e' scritto a Fine: tornando sulla scheda le impostazioni si rileggono e dicono
+    // "fatto". Senza memoria in App il primo avvio si smonta e la chiusura sparisce da sola.
+    conTimbro(false)
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(3)
+    fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
+    await screen.findByRole("region", { name: "Configurazione completata" })
+
+    cambia({
+      ...STANOTTE,
+      "GET /api/v1/folders": { stato: 200, corpo: { items: [], total: 0 } },
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+      ...DOPO,
+    })
+    const quante = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
+    const prima = quante()
+    window.dispatchEvent(new Event("visibilitychange"))
+    await waitFor(() => expect(quante()).toBeGreaterThan(prima))
+    // la risposta nuova deve arrivare ed essere disegnata, prima di guardare
+    await new Promise((r) => setTimeout(r, 50))
+    expect(screen.getByRole("region", { name: "Configurazione completata" })).toBeDefined()
+    expect(screen.queryByRole("navigation")).toBeNull()
+
+    fireEvent.click(screen.getByRole("button", { name: "Apri AstroLog" }))
+    await screen.findByRole("navigation")
+    expect(screen.queryByText("Configurazione completata")).toBeNull()
+  })
+
+  it("una rilettura delle impostazioni che fallisce non toglie la chiusura da sotto gli occhi", async () => {
+    // Tornando sulla scheda col backend che non risponde, l'errore prendeva il posto della pagina
+    // e la chiusura andava persa: cio' che si sapeva gia' resta a schermo.
+    conTimbro(false)
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(3)
+    fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
+    await screen.findByRole("region", { name: "Configurazione completata" })
+
+    cambia({ ...STANOTTE, "/api/v1/settings": { stato: 500, corpo: {} }, ...DOPO })
+    const quante = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
+    const prima = quante()
+    window.dispatchEvent(new Event("visibilitychange"))
+    await waitFor(() => expect(quante()).toBeGreaterThan(prima))
+    await new Promise((r) => setTimeout(r, 50))
+    expect(screen.getByRole("region", { name: "Configurazione completata" })).toBeDefined()
+  })
+
+  it("cio' che non si e' saputo la chiusura lo tace: non dice Nessuna a chi le cartelle le ha", async () => {
+    // Le due letture della chiusura falliscono: "Nessun sito" e "Nessuna" sarebbero un fatto
+    // falso per chi sito e cartelle li ha dati.
+    conTimbro(false)
+    await disegna()
+    await screen.findByRole("button", { name: /salta/i })
+    vaiAlPasso(3)
+    cambia({
+      "GET /api/v1/folders": { stato: 500, corpo: { detail: { code: "rotto" } } },
+      "/api/v1/sites": { stato: 500, corpo: { detail: { code: "rotto" } } },
+      "/api/v1/settings/wizard-done": { stato: 200, corpo: impostazioni(true) },
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(false) },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
+
+    const carta = await screen.findByRole("region", { name: "Configurazione completata" })
+    const nomi = [...carta.querySelectorAll(".as-conti__nome")].map((v) => v.textContent)
+    expect(nomi).toEqual(["Nome utente", "Seeing"])
+  })
+
+  it("chi salta entra subito: nessuna schermata di chiusura", async () => {
+    conTimbro(false)
+    await disegna()
+    fireEvent.click(await screen.findByRole("button", { name: /salta/i }))
+    await waitFor(() => expect(chiamate().some((u) => u.includes("/settings/wizard-done"))).toBe(true))
+    expect(screen.queryByText("Configurazione completata")).toBeNull()
   })
 
   it("si completa, e completare timbra come saltare", async () => {

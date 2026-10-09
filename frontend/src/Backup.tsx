@@ -3,9 +3,10 @@ import { useRef } from "react"
 
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
+import { CartaSola } from "./CartaSola"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
-import { giorno, orario, t } from "./i18n"
+import { giorno, numero, orario, t } from "./i18n"
 
 type Stato = components["schemas"]["BackupStatus"]
 type Conti = components["schemas"]["BackupCounts"]
@@ -59,34 +60,34 @@ export function RipristinoProposto({ stato }: { stato: Stato }) {
   const conti = stato.last
 
   return (
-    <main className="as-pagina">
-      <section className="as-carta">
-        <div className="as-carta__intestazione">
-          <div>
-            <h1 className="as-carta__titolo">{t("backup.found.title")}</h1>
-            {conti && (
-              <p className="as-carta__domanda">
-                {/* la data, se c'e', e' una frase sua: senza, la domanda non comincia con un punto */}
-                {[quando(conti), t("backup.found.question")].filter(Boolean).join(". ")}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="as-carta__corpo as-carta__corpo--colonna">
-          {conti && <p>{contenuto(conti)}</p>}
-          <div>
-            <Bottone verso="primario" onClick={() => rimetti.mutate()} disabled={rimetti.isPending}>
-              {t("backup.found.restore")}
-            </Bottone>{" "}
-            <Bottone onClick={() => ricomincia.mutate()} disabled={rimetti.isPending}>
-              {t("backup.found.decline")}
-            </Bottone>
-          </div>
-          {rimetti.error && <Avviso esito="allarme">{rimetti.error.message}</Avviso>}
-          {ricomincia.error && <Avviso esito="allarme">{ricomincia.error.message}</Avviso>}
-        </div>
-      </section>
-    </main>
+    <CartaSola
+      titolo={t("backup.found.title")}
+      // la data, se c'e', e' una frase sua: senza, la domanda non comincia con un punto
+      sotto={[conti ? quando(conti) : "", t("backup.found.question")].filter(Boolean).join(". ")}
+      conti={
+        conti
+          ? [
+              { nome: t("backup.count.answers"), dato: numero(conti.answers) },
+              { nome: t("backup.count.sites"), dato: numero(conti.sites) },
+              { nome: t("backup.count.folders"), dato: numero(conti.folders) },
+              { nome: t("backup.count.gear"), dato: numero(conti.instruments + conti.filters) },
+            ]
+          : []
+      }
+      azioni={
+        <>
+          <Bottone onClick={() => ricomincia.mutate()} disabled={rimetti.isPending}>
+            {t("backup.found.decline")}
+          </Bottone>
+          <Bottone verso="primario" onClick={() => rimetti.mutate()} disabled={rimetti.isPending}>
+            {t("backup.found.restore")}
+          </Bottone>
+        </>
+      }
+    >
+      {rimetti.error && <Avviso esito="allarme">{rimetti.error.message}</Avviso>}
+      {ricomincia.error && <Avviso esito="allarme">{ricomincia.error.message}</Avviso>}
+    </CartaSola>
   )
 }
 

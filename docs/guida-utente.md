@@ -68,6 +68,12 @@ Quando chiudi il primo avvio, **l'app si mette a leggere da sola** le cartelle c
 non devi cercare nessun pulsante. Se non ne hai indicata nessuna non parte niente, e l'app funziona
 lo stesso.
 
+Dopo *Fine* l'app ti mostra **cosa hai dato**: il nome utente, il sito col suo cielo, quante
+cartelle e se la scansione e' partita, e se c'e' la chiave per il seeing. Cio' che non hai dato
+lo dice (*Nessun sito*, *Nessuna*, *Senza chiave*); se del sito o delle cartelle non riesce a
+sapere, quella riga non la mostra. Da li' entri con *Apri AstroLog*: finche' non lo premi la
+schermata resta. Se invece premi *Salta*, entri subito.
+
 Che tu completi o che tu salti, l'app **si segna che le hai gia' viste**, e al prossimo avvio non
 te le richiede.
 
@@ -732,7 +738,8 @@ Le foto non ci sono, e nemmeno cio' che l'app ricava leggendole: frame, corredi,
 rileggendo le cartelle.
 
 - **Se il database si perde** (reinstallazione, database ricreato, passaggio al NAS con la stessa
-  cartella dati), all'avvio l'app ti dice *"Backup trovato"* e ti chiede se
+  cartella dati), all'avvio l'app ti dice *"Backup trovato"*, ti mostra quando e' stato
+  scritto e cosa contiene (conferme, siti, cartelle, strumenti e filtri) e ti chiede se
   ripristinare i dati (*Ripristina*); poi rilegge le cartelle e ritrovi tutto come prima. Se preferisci
   *Inizia da zero*, il file si riscrive alla tua prima risposta.
 - **Per portarle su un altro computer**: *Impostazioni > Backup > Esporta backup*, e

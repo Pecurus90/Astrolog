@@ -4,6 +4,7 @@ import { useId, useRef, useState } from "react"
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
 import { Campo } from "./Campo"
+import { CartaSola } from "./CartaSola"
 import { ChiaveMeteoblue } from "./ChiaveMeteoblue"
 import { BinarioDeiPassi } from "./BinarioDeiPassi"
 import { WizardFolders } from "./WizardFolders"
@@ -11,7 +12,8 @@ import { WizardSite, useSitoDelPasso } from "./WizardSite"
 import { WizardSolver } from "./WizardSolver"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
-import { type Chiave, t } from "./i18n"
+import { type Chiave, numero, t } from "./i18n"
+import { usePreferenze } from "./preferenze"
 import { useRadiceDati } from "./radiceDati"
 
 // Cosa manca all'app, coi codici generati dall'API: scritto `string[]` a mano, un codice
@@ -52,6 +54,15 @@ const PERCHE: Record<Passo, Chiave> = {
   "wizard.step.solver": "wizard.solver.intro",
 }
 
+/** Il sito di casa com'e' nel database, per la chiusura. `null` = nessun sito; `undefined` = la
+ *  lettura e' fallita e non si sa: la chiusura tace invece di dire "Nessun sito" a chi l'ha dato. */
+async function sitoDiCasa() {
+  const { data } = await api.GET("/api/v1/sites").catch(() => ({ data: undefined }))
+  if (!data) return undefined
+  const sito = data.items.find((s) => s.is_default) ?? data.items[0]
+  return sito ? { nome: sito.name, bortle: sito.bortle } : null
+}
+
 /**
  * Il primo avvio: quattro domande -- come ti chiami, da dove osservi, dove stanno i file, e la
  * chiave Meteoblue se ce l'hai -- piu' una quinta a chi manca il riconoscitore, e poi si toglie di mezzo. Le decisioni stanno nel contratto
@@ -75,7 +86,16 @@ const PERCHE: Record<Passo, Chiave> = {
  *   fare. Ma una **scrittura fallita si dice**, perche' tacerla lascerebbe credere fatto qualcosa
  *   che non e' successo.
  */
-export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) {
+export function Wizard({
+  onDone,
+  onChiusura,
+  manca,
+}: {
+  onDone: () => void
+  /** "Fine" e' stato premuto: da qui si esce solo con `onDone`, anche a timbro gia' scritto. */
+  onChiusura: () => void
+  manca: Manca
+}) {
   const [passi] = useState<readonly Passo[]>(() =>
     RICONOSCITORE_NON_PRONTO.some((c) => manca.includes(c)) ? [...STEPS, PASSO_SOLVER] : STEPS,
   )
@@ -106,10 +126,28 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
   const [pienoDelPasso, setPienoDelPasso] = useState(false)
   const titolo = useId()
 
+  // Dopo Fine, cio' che la chiusura racconta: letto dal database a timbro scritto, non da cio'
+  // che questa pagina ricorda -- ricaricata a meta', nome e sito salvati prima ci sono lo stesso.
+  const [chiuso, setChiuso] = useState<{
+    nome: string | null
+    sito: Awaited<ReturnType<typeof sitoDiCasa>>
+    // `null`: quante sono non si e' saputo, e la chiusura tace la riga.
+    cartelle: number | null
+    letta: boolean
+  }>()
+  const preferenze = usePreferenze()
   const stamp = useMutation({
-    mutationFn: async () => {
-      const { error } = await api.POST("/api/v1/settings/wizard-done", {})
+    // `mostra`: Fine passa dalla chiusura, Salta entra subito.
+    mutationFn: async (mostra: boolean) => {
+      // prima del timbro: scritto quello, una rilettura delle impostazioni smonterebbe la pagina
+      if (mostra) onChiusura()
+      const { data: scritte, error } = await api.POST("/api/v1/settings/wizard-done", {})
       if (error) throw new Error(t("settings.failed"))
+      const dati = {
+        mostra,
+        nome: scritte.values["user_name"] ?? null,
+        sito: mostra ? await sitoDiCasa() : undefined,
+      }
       // **Finito il primo avvio, l'app si mette a leggere.** Chi ha appena installato non deve
       // sapere che esiste un pulsante: indica dove stanno le foto, chiude, e l'archivio si
       // riempie. Si chiede **solo se una cartella c'e'**: senza, il backend risponderebbe "non
@@ -118,16 +156,24 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
       // E **il timbro comanda**: se questa parte va storta si esce lo stesso. Il timbro e' gia'
       // scritto, quindi tenere l'utente dentro il primo avvio vorrebbe dire chiuderlo in una
       // stanza di cui ha gia' la chiave -- e la lettura si chiede col pulsante in barra.
+      let cartelle: number | null = null
       try {
         // `limit: 1` perche' qui serve solo **quante** sono: l'elenco intero e' 27 KB su
         // trecento cartelle, e nessuno lo guarda (misurato: 319 byte contro 27.156).
         const { data } = await api.GET("/api/v1/folders", { params: { query: { limit: 1 } } })
-        if ((data?.total ?? 0) > 0) await api.POST("/api/v1/scan")
+        cartelle = data?.total ?? null
+        if (!cartelle) return { ...dati, cartelle, letta: false }
+        const { error: nonLetta } = await api.POST("/api/v1/scan")
+        return { ...dati, cartelle, letta: !nonLetta }
       } catch {
         // niente: l'archivio si leggera' col pulsante, e il primo avvio e' finito comunque
+        return { ...dati, cartelle, letta: false }
       }
     },
-    onSuccess: onDone,
+    onSuccess: (esito) => {
+      if (esito.mostra) setChiuso(esito)
+      else onDone()
+    },
   })
 
   // Il nome si scrive lasciando il passo, non a ogni tasto -- e non si riscrive se non e'
@@ -142,6 +188,55 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
       saved.current = name
     }
     setStep((s) => s + 1)
+  }
+
+  // La chiusura dice solo cio' che e' vero: cosa e' stato dato, e se la scansione e' partita. Il
+  // timbro e' gia' scritto; nell'app si entra col suo comando.
+  if (chiuso) {
+    // Una riga di cui non si e' saputo il dato (lettura fallita) si tace: non si scrive "Nessuna".
+    const { sito: casa, cartelle } = chiuso
+    return (
+      <CartaSola
+        titolo={t("wizard.closed.title")}
+        conti={[
+          { nome: t("wizard.step.name"), dato: chiuso.nome || t("wizard.closed.noName") },
+          ...(casa === undefined
+            ? []
+            : [
+                {
+                  nome: t("wizard.step.site"),
+                  dato: casa
+                    ? [casa.nome, casa.bortle && t("site.bortle", { n: casa.bortle })]
+                        .filter(Boolean)
+                        .join(" \u00b7 ")
+                    : t("wizard.closed.noSite"),
+                },
+              ]),
+          ...(cartelle === null
+            ? []
+            : [
+                {
+                  nome: t("wizard.closed.folders"),
+                  dato:
+                    cartelle === 0
+                      ? t("wizard.closed.noFolders")
+                      : [numero(cartelle), chiuso.letta && t("wizard.closed.scanStarted")]
+                          .filter(Boolean)
+                          .join(" \u00b7 "),
+                },
+              ]),
+          {
+            nome: t("wizard.closed.seeing"),
+            dato: t(preferenze.data?.values["meteoblue_key"] ? "wizard.closed.key" : "wizard.closed.noKey"),
+          },
+        ]}
+        azioni={
+          <Bottone verso="primario" onClick={onDone}>
+            {t("wizard.closed.open")}
+          </Bottone>
+        }
+      />
+    )
   }
 
   return (
@@ -210,7 +305,7 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
           {/* Saltare sta per primo, lontano da cio' che manda avanti; al primo passo Indietro
               non c'e'. Il primario e' l'ultimo, e uno solo: al sito e' quello che salva. */}
           <div className={alSito ? "as-gesti as-gesti--due" : "as-gesti"}>
-            <Bottone verso="nudo" onClick={() => stamp.mutate()} disabled={stamp.isPending}>
+            <Bottone verso="nudo" onClick={() => stamp.mutate(false)} disabled={stamp.isPending}>
               {t("wizard.skip")}
             </Bottone>
             {step > 0 && <Bottone onClick={() => setStep((s) => s - 1)}>{t("wizard.back")}</Bottone>}
@@ -231,7 +326,7 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
             {last && (
               <Bottone
                 verso={pienoDelPasso ? "tenue" : "primario"}
-                onClick={() => stamp.mutate()}
+                onClick={() => stamp.mutate(true)}
                 disabled={stamp.isPending}
               >
                 {t("wizard.done")}

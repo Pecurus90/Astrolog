@@ -113,7 +113,12 @@ servizio vero e' un test che fallisce il giorno che il servizio cambia.
 **Il primo avvio e' un timbro, non un'euristica.** "L'ho gia' visto" e' una data scritta in
 Impostazioni: l'euristica "sembra vuoto" tornerebbe vera mesi dopo, dopo un azzeramento.
 Completare e saltare scrivono lo stesso timbro; riaprire il wizard dalle Impostazioni non lo
-riscrive.
+riscrive. **Completare passa dalla chiusura** (Marco, 9/10/2026): timbrato, l'app mostra cosa e'
+stato dato, letto dal database e non dalla memoria della pagina -- nome, sito, cartelle e se la
+scansione e' partita, chiave del seeing -- e si entra
+con "Apri AstroLog"; saltare entra subito. Una riga di cui la lettura e' fallita (sito, cartelle)
+si tace: "Nessuna" a chi le ha date sarebbe falso. La chiusura resta finche' non si preme il
+comando, anche se le impostazioni si rileggono col timbro gia' scritto: lo ricorda `App.tsx`.
 
 **A schermo il primo avvio e' un cancelletto, non un indirizzo** (14/9/2026): senza il timbro
 l'app mostra le sue domande, col timbro mostra se stessa -- non c'e' una pagina `/wizard` dove

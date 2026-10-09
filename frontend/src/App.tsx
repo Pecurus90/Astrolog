@@ -1,7 +1,9 @@
+import { useState } from "react"
 import { BrowserRouter, Route, Routes } from "react-router"
 
 import { Avviso } from "./Avviso"
 import { RipristinoProposto, useBackup } from "./Backup"
+import { SiApre } from "./CartaSola"
 import { Layout } from "./Layout"
 import { PaginaCheNonCe } from "./PaginaCheNonCe"
 import { Wizard } from "./Wizard"
@@ -27,20 +29,32 @@ import { usePreferenze } from "./preferenze"
 export function App() {
   const settings = usePreferenze()
   const backup = useBackup()
+  // Dopo "Fine" il timbro e' scritto, ma il primo avvio resta a schermo con la sua chiusura
+  // finche' non si preme "Apri AstroLog": senza questo, una rilettura delle impostazioni (basta
+  // tornare sulla scheda) la toglierebbe da sotto gli occhi. Lo accende il primo avvio stesso,
+  // quando chiude: dedotto dal timbro che manca, si accenderebbe anche a meta' di un ripristino.
+  const [inChiusura, setInChiusura] = useState(false)
 
   // Finche' non si sa, non si sceglie: mostrare l'app e poi sostituirla col primo avvio sarebbe
   // uno sfarfallio che dice due cose diverse in mezzo secondo. E se la domanda non ha risposta
   // non si tira a indovinare: mostrare l'app direbbe "tutto configurato" senza saperlo.
-  if (settings.isPending || backup.isPending) return <p>{t("app.loading")}</p>
-  if (settings.error) return <Avviso esito="allarme">{settings.error.message}</Avviso>
+  if (settings.isPending || backup.isPending) return <SiApre>{t("app.loading")}</SiApre>
+  // L'errore prende lo schermo solo se non si sa niente: una rilettura fallita lascia cio' che
+  // si sapeva gia', invece di togliere la pagina da sotto gli occhi.
+  if (settings.error && !settings.data) return <Avviso esito="allarme">{settings.error.message}</Avviso>
   // Un database nuovo con le risposte accanto: prima si chiede se rimetterle, poi il primo avvio
   // (che, rimesse, non serve piu'). Se lo stato del backup non si sa, si va avanti senza.
   if (backup.data?.offer === "found") return <RipristinoProposto stato={backup.data} />
-  if (settings.data && !settings.data.wizard_done) {
+  if (settings.data && (inChiusura || !settings.data.wizard_done)) {
     // `missing` dice cosa manca all'app: il primo avvio guarda il **riconoscitore** -- il
     // programma, e il suo catalogo -- per decidere se fare la domanda in piu', e quale.
     return (
-      <Wizard onDone={() => void settings.refetch()} manca={settings.data.missing} />
+      <Wizard
+        onChiusura={() => setInChiusura(true)}
+        // Si spegne a impostazioni rilette: prima, per un attimo varrebbe il timbro vecchio.
+        onDone={() => void settings.refetch().then(() => setInChiusura(false))}
+        manca={settings.data.missing}
+      />
     )
   }
 

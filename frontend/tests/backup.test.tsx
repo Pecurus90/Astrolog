@@ -40,7 +40,17 @@ describe("Il backup", () => {
   it("su un database nuovo chiede di rimetterle, prima del primo avvio", async () => {
     await app("found", false)
     expect(await screen.findByText(/^backup trovato$/i)).toBeDefined()
-    expect(screen.getByText(/conferme 42, siti 1, cartelle 2, strumenti e filtri 4/i)).toBeDefined()
+    // la forma del foglio: una carta sola al centro, i conti in elenco, il pieno per ultimo
+    expect(screen.getByRole("main").className).toBe("as-entra")
+    const carta = screen.getByRole("region", { name: /^backup trovato$/i })
+    expect(carta.className).toBe("as-carta as-ritrovate")
+    const conti = [...carta.querySelectorAll(".as-conti > .as-conti__voce")].map(
+      (v) => `${v.querySelector(".as-conti__nome")?.textContent}=${v.querySelector(".as-conti__dato")?.textContent}`,
+    )
+    expect(conti).toEqual(["Conferme=42", "Siti=1", "Cartelle=2", "Strumenti e filtri=4"])
+    const azioni = [...carta.querySelectorAll(".as-ritrovate__azioni > *")]
+    expect(azioni.map((a) => a.textContent)).toEqual(["Inizia da zero", "Ripristina"])
+    expect(azioni.at(-1)?.className).toContain("as-bottone--primario")
 
     fireEvent.click(screen.getByRole("button", { name: /^ripristina$/i }))
 
@@ -49,6 +59,31 @@ describe("Il backup", () => {
       expect(fatte).toContain("POST /api/v1/backup/restore")
       expect(fatte).toContain("POST /api/v1/scan")
     })
+  })
+
+  it("ripristinato un backup che porta il timbro, si entra nell'app e non nel primo avvio", async () => {
+    // Il backup rimette anche il timbro: il primo avvio, mai mostrato, non deve comparire dopo.
+    await app("found", false)
+    await screen.findByText(/^backup trovato$/i)
+    rispondi({
+      ...STANOTTE,
+      ...SPINA,
+      "POST /api/v1/backup/restore": { stato: 200, corpo: { offer: "none", last: CONTI, unreadable: false, path: "x" } },
+      "POST /api/v1/scan": { stato: 202, corpo: {} },
+      "/api/v1/backup": { stato: 200, corpo: { offer: "none", last: CONTI, unreadable: false, path: "x" } },
+      // le impostazioni arrivano dopo il backup, come dal vivo: per un attimo l'app sa che non
+      // c'e' piu' niente da proporre e ha ancora in mano il timbro vecchio
+      "/api/v1/settings": {
+        stato: 200,
+        corpo: impostazioni(true),
+        attesa: new Promise((fatto) => setTimeout(fatto, 60)),
+      },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /^ripristina$/i }))
+    expect(await screen.findByRole("navigation", { name: /pagine/i })).toBeDefined()
+    expect(screen.queryByRole("button", { name: /^salta$/i })).toBeNull()
   })
 
   it("senza nulla da proporre non chiede niente", async () => {

@@ -369,11 +369,18 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   mai visto dal vivo (sulla macchina di collaudo ASTAP c'e'); "Scarica il catalogo stellare" e'
   ancora un collegamento nel testo e non un bottone nell'avviso (`Bottone` porta solo dentro
   l'app). Dalla revisione: verificato il percorso, l'intestazione del passo ASTAP dice
-  ancora "Non trovato" sopra l'avviso "ASTAP trovato" (la ragione del passo si decide entrando). Restano, un passo alla volta: le
-  risposte ritrovate (`.as-ritrovate`, `.as-conti`); la chiusura; il bottone spento con
+  ancora "Non trovato" sopra l'avviso "ASTAP trovato" (la ragione del passo si decide entrando). Fatte anche le risposte ritrovate, "si apre" e la chiusura (9/10): `CartaSola.tsx` e' la
+  carta sola al centro (`.as-ritrovate`, `.as-conti`) per il backup trovato e per la chiusura
+  dopo "Fine" (Marco: la chiusura resta; "Salta" entra subito, scelta mia detta a Marco; resta a
+  schermo fino ad "Apri AstroLog" anche a impostazioni rilette, e tace la riga del sito o delle
+  cartelle se la lettura e' fallita), e
+  porta "l'app si apre" (`.as-entra__attesa`). Testi della chiusura scritti da me nel tono
+  approvato, mostrati a Marco. Dalla revisione: dopo "Ripristina" il primo avvio lampeggia per un attimo
+  prima dell'app (backup e impostazioni si rileggono in parallelo); una rilettura fallita delle
+  impostazioni non toglie piu' la pagina (`App.tsx`), ma nessuno dice che non e' riuscita. Restano: il bottone spento con
   `aria-disabled` e al lavoro con `aria-busy` (oggi `disabled`); l'attesa nel pozzo
-  (`.as-campo-modulo__attesa`, oggi solo `aria-busy`); "Un momento" mentre l'app si apre
-  (`.as-entra__attesa`). Finche' restano, i passi dentro la carta scrivono ancora le classi
+  (`.as-campo-modulo__attesa`, oggi solo `aria-busy`); di "l'app si apre" resta solo il testo: dice
+  "Caricamento" (`app.loading`) e non "Un momento" del disegno, parola di Marco. Finche' restano, i passi dentro la carta scrivono ancora le classi
   vecchie in attesa. Dalla revisione: il passo ASTAP non e' stato
   visto dal vivo (sulla macchina di collaudo ASTAP c'e'); i moduli di Da confermare e di
   Attrezzatura non si sono aperti sui dati di prova (zero frame), per loro vale la rinomina;
