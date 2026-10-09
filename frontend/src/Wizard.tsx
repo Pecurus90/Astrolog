@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query"
-import { type CSSProperties, useRef, useState } from "react"
+import { useId, useRef, useState } from "react"
 
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
@@ -99,6 +99,7 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
   const [failed, setFailed] = useState(false)
   const saved = useRef<string | undefined>(undefined)
   const last = step === passi.length - 1
+  const titolo = useId()
 
   const stamp = useMutation({
     mutationFn: async () => {
@@ -139,108 +140,69 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
   }
 
   return (
-    /* La pagina del primo avvio e' l'unica **centrata**: non e' una pagina di lavoro, e' una
-       lettura che si attraversa una volta. Il posizionamento sta in linea e non in una classe
-       perche' il foglio non ha un mattone per questa pagina -- e il disegno del fornitore fa lo
-       stesso, dichiarando l'alone "decorazione della pagina, non un mattone". Sono tre
-       dichiarazioni con i loro token, non una veste nostra. */
-    <main
-      className="as-pagina"
-      style={{ position: "relative", overflow: "clip", display: "grid", justifyItems: "center" }}
-    >
-      {/* L'alone di cielo dietro la colonna: decorazione, niente significato, e chi ascolta non
-          lo incontra. Entra piu' lento di tutto il resto -- `--alone` e' la variante lenta --
-          perche' e' la luce che sale, non un pezzo che arriva. */}
-      <div
-        className="as-entra as-entra--alone"
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "radial-gradient(56% 64% at 50% 0%, var(--accento-velo), transparent 70%)",
-        }}
-      />
-
-      {/* La colonna ha un tetto di larghezza (`--avvio-largo`): una riga lunga mezzo schermo si
-          perde a meta', e qui si legge prima di rispondere. */}
-      <div
-        className="as-colonna"
-        style={{
-          position: "relative",
-          width: "min(var(--avvio-largo), 100%)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--spazio-4)",
-        }}
-      >
-        {/* Il movimento d'apertura: un ingresso, **una volta sola**. La classe non si toglie mai
-            -- un'animazione CSS parte quando l'elemento nasce, e questo nasce col primo avvio e
-            muore con lui. Toglierla e rimetterla al variare del passo la farebbe ripartire
-            premendo Indietro, che e' il contrario di cio' che promette. */}
-        <div className="as-entra as-testata">
-          <h1 className="as-testata__titolo">{t("wizard.title")}</h1>
-          <p className="as-testata__sotto">{t("wizard.reassure")}</p>
+    /* Fuori dal telaio: lo schermo e' `.as-entra`, coi passi di lato e la carta del passo. Sotto
+       900 il foglio mette i passi in fila e i gesti in una barra in fondo. */
+    <main className="as-entra">
+      <div className="as-entra__colonna">
+        <div className="as-entra__lato">
+          <header className="as-entra__testata">
+            <h1 className="as-entra__titolo">{t("wizard.title")}</h1>
+            <p className="as-entra__sotto">{t("wizard.reassure")}</p>
+          </header>
+          <BinarioDeiPassi passi={passi} step={step} />
         </div>
 
-        <BinarioDeiPassi passi={passi} step={step} />
-
-        {/* Un passo e' una carta: il suo nome in intestazione, e **un corpo solo** -- una colonna
-          con la sua spaziatura, che il foglio porta da se'. Prima erano piu' corpi di fila,
-          perche' dentro un corpo i figli si toccavano: il mattone che risolve quel buco e'
-          arrivato, e il ripiego se ne va con lui.
-          L'intestazione ripete il nome del passo che il binario mostra gia': non e' un doppione
-          ma un'ancora, perche' chi arriva sulla schermata a meta' non guarda in alto. */}
-        <section className="as-carta as-entra" style={{ "--ritardo": passi.length + 2 } as CSSProperties}>
-        <div className="as-carta__intestazione">
-          <div>
-            <h2 className="as-carta__titolo">{t(passi[step]!)}</h2>
-            {/* **Perche' l'app lo chiede**, accanto al nome del passo e non dentro il corpo: chi
-                sta per rispondere legge prima la ragione e poi la domanda, non il contrario. */}
-            <p className="as-carta__domanda">{t(perche(passi[step]!))}</p>
-          </div>
-          {/* Lo stato del riconoscitore sta nell'intestazione, dove si guarda per primo: e'
-              **attesa** e non allarme, perche' non averlo non e' un guasto. */}
-          {passi[step] === PASSO_SOLVER && (
-            <div className="as-carta__azioni">
-              <span className="as-stato as-stato--attesa">
-                {t(senzaCatalogo ? "wizard.solver.state.noDatabase" : "wizard.solver.state")}
-              </span>
+        {/* La carta ripete il nome del passo che il lato mostra gia': chi arriva a meta' non
+            guarda di lato, e sul telefono i nomi di lato non si vedono. */}
+        <section className="as-carta as-passo" aria-labelledby={titolo}>
+          <div className="as-passo__corpo">
+            <div className="as-passo__capo">
+              <h2 className="as-passo__titolo" id={titolo}>
+                {t(passi[step]!)}
+                {/* Attesa e non allarme: non avere ASTAP e' una cosa da fare, non un guasto. */}
+                {passi[step] === PASSO_SOLVER && (
+                  <span className="as-passo__pastiglia">
+                    {t(senzaCatalogo ? "wizard.solver.state.noDatabase" : "wizard.solver.state")}
+                  </span>
+                )}
+              </h2>
+              {/* La ragione prima della domanda: chi sta per rispondere legge prima perche'. */}
+              <p className="as-passo__perche">{t(perche(passi[step]!))}</p>
             </div>
-          )}
-        </div>
-        <div className="as-carta__corpo as-carta__corpo--colonna">
-          {step === 0 && (
-            <Campo id="wizard-name" etichetta={t("wizard.name.label")}>
-              <input
-                className="as-campo__input"
-                id="wizard-name"
-                placeholder={t("wizard.name.placeholder")}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <p className="as-campo__aiuto">{t("wizard.name.hint")}</p>
-            </Campo>
-          )}
-          {step === 1 && <WizardSite onSaved={() => setStep(2)} />}
-          {/* Aggiungere una cartella NON chiude il primo avvio: a chiudere e' Fatto. Prima
-              timbrava qui, ed e' il motivo per cui se ne poteva indicare una sola. */}
-          {step === 2 && <WizardFolders />}
-          {passi[step] === "wizard.step.services" && <ChiaveMeteoblue id="wizard-meteoblue-key" />}
-          {passi[step] === PASSO_SOLVER && <WizardSolver senzaCatalogo={senzaCatalogo} />}
-        </div>
+            <div className="as-passo__parti">
+              {step === 0 && (
+                <Campo id="wizard-name" etichetta={t("wizard.name.label")}>
+                  <input
+                    className="as-campo-modulo__input"
+                    id="wizard-name"
+                    placeholder={t("wizard.name.placeholder")}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                  <p className="as-campo-modulo__aiuto">{t("wizard.name.hint")}</p>
+                </Campo>
+              )}
+              {step === 1 && <WizardSite onSaved={() => setStep(2)} />}
+              {/* Aggiungere una cartella non chiude il primo avvio: a chiudere e' Fatto. */}
+              {step === 2 && <WizardFolders />}
+              {passi[step] === "wizard.step.services" && <ChiaveMeteoblue id="wizard-meteoblue-key" />}
+              {passi[step] === PASSO_SOLVER && <WizardSolver senzaCatalogo={senzaCatalogo} />}
+              {/* Una scrittura fallita si dice nel passo che l'ha provocata, e ci si resta. */}
+              {(failed || stamp.error) && (
+                <Avviso esito="allarme" titolo={t("wizard.savedFailedTitle")}>
+                  {t("settings.failed")}
+                </Avviso>
+              )}
+            </div>
+          </div>
 
-        {/* **Saltare sta a sinistra, lontano dalla mano che va avanti**, e cio' che porta al
-            passo dopo sta tutto a destra: sono due gesti diversi, e messi in fila si preme
-            quello sbagliato. Al primo passo *Indietro* non c'e' affatto -- un bottone che non
-            porta da nessuna parte e' peggio di un bottone assente. */}
-        <div className="as-carta__piede">
-          <Bottone verso="nudo" onClick={() => stamp.mutate()} disabled={stamp.isPending}>
-            {t("wizard.skip")}
-          </Bottone>
-          <div className="as-pagina__azioni" style={{ marginLeft: "auto" }}>
-            {step > 0 && (
-              <Bottone onClick={() => setStep((s) => s - 1)}>{t("wizard.back")}</Bottone>
-            )}
+          {/* Saltare sta per primo, lontano da cio' che manda avanti; al primo passo Indietro
+              non c'e'. Il primario e' l'ultimo. */}
+          <div className="as-gesti">
+            <Bottone verso="nudo" onClick={() => stamp.mutate()} disabled={stamp.isPending}>
+              {t("wizard.skip")}
+            </Bottone>
+            {step > 0 && <Bottone onClick={() => setStep((s) => s - 1)}>{t("wizard.back")}</Bottone>}
             {!last && (
               <Bottone verso="primario" onClick={() => void next()}>
                 {t("wizard.next")}
@@ -252,17 +214,7 @@ export function Wizard({ onDone, manca }: { onDone: () => void; manca: Manca }) 
               </Bottone>
             )}
           </div>
-        </div>
         </section>
-
-        {/* L'avviso di una scrittura fallita sta **dentro la colonna**, sotto la carta che l'ha
-            provocata: staccato fuori, resterebbe largo quanto la pagina mentre cio' che lo
-            riguarda e' largo quanto la colonna. */}
-        {(failed || stamp.error) && (
-          <Avviso esito="allarme" titolo={t("wizard.savedFailedTitle")}>
-            {t("settings.failed")}
-          </Avviso>
-        )}
       </div>
     </main>
   )

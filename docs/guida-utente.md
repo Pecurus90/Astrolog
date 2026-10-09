@@ -13,6 +13,10 @@ apertamente, invece di essere lasciato indovinare.
 
 La prima volta l'app ti fa **quattro domande**, e poi si toglie di mezzo.
 
+A sinistra vedi i passi, col loro nome e quello dove sei; a destra la domanda di quel passo, e in
+fondo i comandi: *Salta*, *Indietro*, *Avanti*. Sul telefono i passi diventano una fila di segni in
+alto e i comandi restano sempre in vista in fondo allo schermo.
+
 1. **Nome utente.** Per ora l'app lo conserva soltanto. Si puo' lasciare vuoto.
 2. **Sito di osservazione.** Cerchi il sito per nome e scegli fra quelli che compaiono -- ognuno ti
    mostra le sue coordinate, cosi' scegli sapendo su cosa: l'app le riempie da sola, e da quelle

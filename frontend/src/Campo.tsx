@@ -59,14 +59,14 @@ export function Campo({
       // funzione la guardia della veste non la legge, e lo dice -- l'ha detto.
       className={
         errore
-          ? "as-campo-modulo as-campo--errore"
+          ? "as-campo-modulo as-campo-modulo--errore"
           : aspetta
-            ? "as-campo-modulo as-campo--caricamento"
+            ? "as-campo-modulo as-campo-modulo--attesa"
             : "as-campo-modulo"
       }
       style={{ flex: cresce && `1 1 ${cresce}`, maxWidth: tetto }}
     >
-      <label className="as-campo__etichetta" htmlFor={id}>
+      <label className="as-campo-modulo__etichetta" htmlFor={id}>
         {etichetta}
       </label>
       {/* Gli attributi vanno **sul controllo**, e ce li mette il campo: su un involucro non
@@ -80,21 +80,31 @@ export function Campo({
           figli falsi li scarta, quindi il primo e' il controllo. Oggi nessuna delle ventisette
           chiamate scrive il controllo dietro una condizione -- ma la forma costa una parola e il
           difetto sarebbe muto. Cio' che segue (l'aiuto, un suggerimento) resta com'e'. */}
-      {Children.toArray(children).map((figlio, i) =>
-        i === 0 && errore && isValidElement(figlio)
-          ? cloneElement(figlio as ReactElement<Record<string, unknown>>, {
-              "aria-describedby": detto,
-              "aria-invalid": true,
-            })
-          : figlio,
-      )}
+      {Children.toArray(children).map((figlio, i) => {
+        if (i !== 0 || !isValidElement(figlio)) return figlio
+        const controllo =
+          errore || aspetta
+            ? cloneElement(
+                figlio as ReactElement<Record<string, unknown>>,
+                errore ? { "aria-describedby": detto, "aria-invalid": true } : { "aria-busy": true },
+              )
+            : figlio
+        // Il bordo e il fuoco il foglio li disegna sul pozzo. Una tendina ha gia' i suoi.
+        return figlio.type === "input" ? (
+          <div className="as-campo-modulo__pozzo" key="pozzo">
+            {controllo}
+          </div>
+        ) : (
+          controllo
+        )
+      })}
       {/* **Il motivo si annuncia**, non solo si lega: `aria-describedby` lo fa sentire a chi ha
           il fuoco **sul campo**, e quando l'errore arriva dopo aver premuto un bottone il fuoco
           sta sul bottone -- il motivo compariva in silenzio. Era cosi' per il percorso del
           riconoscitore, che nasce proprio da un clic. Il segno non cromatico ce lo mette il
-          foglio (`as-campo--errore`), quindi qui non manca niente di cio' che `Avviso` porta. */}
+          foglio (`as-campo-modulo--errore`), quindi qui non manca niente di cio' che `Avviso` porta. */}
       {errore && (
-        <p className="as-campo__errore" id={detto} role="alert">
+        <p className="as-campo-modulo__errore" id={detto} role="alert">
           {errore}
         </p>
       )}
@@ -107,5 +117,5 @@ export function Campo({
  *  forma pero' e' la stessa, e la sua classe vive qui col resto del mattone: scritta a mano
  *  altrove, il giorno che il design la rinomina non la segnalerebbe niente. */
 export function EtichettaDiGruppo({ children }: { children: ReactNode }) {
-  return <span className="as-campo__etichetta">{children}</span>
+  return <span className="as-campo-modulo__etichetta">{children}</span>
 }

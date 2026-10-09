@@ -1,4 +1,5 @@
 # Tests removed on purpose, one per line: name - reason. Checked by tools/guardia_test.py.
+il movimento d'apertura non riparte tornando indietro - the v33 sheet has no entrance animation: .as-entra is the first-run page
 test_only_hardening_closes_the_review_in_one_round_and_is_parked - esegui.js replaced by costruisci.js (ADR 0015)
 test_a_defect_is_fixed_and_a_hardening_twice_is_parked_once - esegui.js replaced by costruisci.js (ADR 0015)
 test_a_finding_without_kind_is_fixed_not_parked - esegui.js replaced by costruisci.js (ADR 0015)

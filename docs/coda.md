@@ -342,8 +342,24 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   tutta la guida); i titoli dei test e i commenti che dicono ancora pezzo, letture, sito di casa;
   il glossario vieta "calcolato" e l'app scrive "pixel (calcolato)"; "storico" vale per due cose;
   `docs/adr/0017` cita il testo vecchio del backup. Da fare a parte: la longitudine accetta "O"
-  per ovest oltre a "W". Aperta con Marco: la schermata di chiusura del primo avvio, che Design
-  ha disegnato "da decidere". Design riparte sul primo avvio coi nomi nuovi.
+  per ovest oltre a "W". La schermata di chiusura del primo avvio, che Design ha disegnato "da
+  decidere": Marco l'ha voluta (9/10/2026), e' da montare.
+- **Primo avvio sul foglio v33** (Design, 9/10/2026; tavole `pagine/primo-avvio.html` e
+  `primo-avvio-stati.html`). Fatto: il foglio v33 nell'app; il campo dei moduli (`Campo`) scrive
+  le classi `as-campo-modulo*` e mette l'input nel suo pozzo, in tutta l'app; il guscio (`.as-entra`
+  coi passi di lato, la carta `.as-passo`, i gesti `.as-gesti`). Restano, un passo alla volta: il
+  sito (`.as-passo__parte`, `.as-campo-riga`, `.as-campo-coppia`, `.as-posti`, `.as-bortle-scegli`,
+  e un solo primario: "Usa questo sito" nei gesti); il percorso dei file (`.as-esito`,
+  `.as-cartelle`, `.as-sfoglia`); Seeing e ASTAP (`.as-avviso--ignoto`, `.as-campo-riga`); le
+  risposte ritrovate (`.as-ritrovate`, `.as-conti`); la chiusura; il bottone spento con
+  `aria-disabled` e al lavoro con `aria-busy` (oggi `disabled`); l'attesa nel pozzo
+  (`.as-campo-modulo__attesa`, oggi solo `aria-busy`); "Un momento" mentre l'app si apre
+  (`.as-entra__attesa`). Finche' restano, i passi dentro la carta scrivono ancora le classi
+  vecchie in attesa. Dalla revisione: il passo ASTAP non e' stato
+  visto dal vivo (sulla macchina di collaudo ASTAP c'e'); i moduli di Da confermare e di
+  Attrezzatura non si sono aperti sui dati di prova (zero frame), per loro vale la rinomina;
+  accanto ai campi col pozzo la tendina `as-scelta` resta bassa e senza veste; `as-campo__area`
+  in `tests/banco.tsx` e' una voce morta.
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio (v31-v32, montato l'8/10), il primo avvio (Marco, 8/10:
   "anche il wizard bisogna rifare"; brief in `handoff/design-primo-avvio.md`), Da confermare, Attrezzatura. Il brief di ognuna si

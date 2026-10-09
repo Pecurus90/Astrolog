@@ -98,7 +98,7 @@ export function NomeDelPezzo({
   return (
     <Campo id={id} etichetta={t("gear.write.name")}>
       <input
-        className="as-campo__input"
+        className="as-campo-modulo__input"
         id={id}
         defaultValue={cheCera ?? ""}
         onChange={(e) => onNome(testo(e.target.value, cheCera))}

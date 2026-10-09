@@ -167,7 +167,7 @@ export function SfogliaCartelle({
         </div>
       </div>
       {sfoglia.data?.folders.length === 0 && (
-        <p className="as-campo__aiuto">{t("wizard.folders.empty")}</p>
+        <p className="as-campo-modulo__aiuto">{t("wizard.folders.empty")}</p>
       )}
       {/* Un elenco che non arriva non puo' lasciare senza strade: si dice, e si torna a scrivere
           il percorso a mano -- che sul NAS e' scomodo, ma e' meglio di niente. */}
@@ -194,7 +194,7 @@ export function SfogliaCartelle({
             {t("wizard.folders.browseFailed")}
           </Avviso>
           {scrivi}
-          <p className="as-campo__aiuto">{t("wizard.folders.pathHelp")}</p>
+          <p className="as-campo-modulo__aiuto">{t("wizard.folders.pathHelp")}</p>
         </>
       )}
     </>

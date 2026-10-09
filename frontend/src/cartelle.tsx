@@ -129,7 +129,7 @@ export function ScriviPercorso({
     >
       <Campo cresce="var(--misura-cerca)" etichetta={t(`${prefisso}.label`)} id={id}>
         <input
-          className="as-campo__input as-cifre"
+          className="as-campo-modulo__input as-campo-modulo__input--cifre"
           id={id}
           onChange={(e) => onScrivi(e.target.value)}
           spellCheck={false}

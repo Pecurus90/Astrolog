@@ -282,7 +282,7 @@ describe("le cartelle del primo avvio", () => {
     await alTerzoPasso()
 
     expect(await screen.findByRole("alert")).toBeDefined()
-    expect(await screen.findByLabelText(/percorso/i)).toBeDefined()
+    expect(await screen.findByLabelText(/percorso della cartella/i)).toBeDefined()
   })
 
   it("alla fine la lettura parte da sola", async () => {
@@ -369,7 +369,7 @@ describe("le cartelle del primo avvio", () => {
     expect(await within(elenco).findByText("M31")).toBeDefined()
     expect(chiamate().some((u) => u.includes("/api/v1/folders/browse"))).toBe(true)
     // l'altra meta' del titolo: li' il percorso NON si scrive
-    expect(screen.queryByLabelText(/percorso/i)).toBeNull()
+    expect(screen.queryByLabelText(/percorso della cartella/i)).toBeNull()
   })
 
   it("sul NAS la carta spiega che si sfoglia, non che si scrive", async () => {
@@ -493,7 +493,7 @@ describe("il percorso per chi ascolta", () => {
     const avviso = await screen.findByRole("alert")
     const dentro = avviso.closest(".as-avviso") as HTMLElement
     // e il percorso si puo' tornare a scrivere a mano, che e' l'altra strada
-    expect(screen.getByLabelText(/percorso/i)).toBeDefined()
+    expect(screen.getByLabelText(/percorso della cartella/i)).toBeDefined()
 
     // e *Riprova* **rilegge davvero**: un bottone che c'e' e non fa niente e' peggio di un
     // bottone assente, e una prova che guarda solo la presenza non lo distingue

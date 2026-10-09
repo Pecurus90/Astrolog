@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react"
-
 import { type Chiave, numero, t } from "./i18n"
 
 /**
@@ -15,26 +13,20 @@ import { type Chiave, numero, t } from "./i18n"
  *   navigazione con dentro cose che non portano da nessuna parte inganna chi lo cerca. Sarebbe
  *   anche il **secondo** dell'app, e le prove che lo cercano al singolare -- quelle senza nome,
  *   che si contano col grep -- cadrebbero tutte. Il nome sta sulla lista, che lo accetta.
- * - **Il ritardo e' un numero d'ordine, non una durata**: il foglio lo moltiplica per la sua, cosi'
- *   con *riduci il movimento* si azzera insieme al moto invece di restare in piedi da solo.
+ * - **Sul telefono i nomi li nasconde il foglio**, non questa pagina: restano per chi ascolta.
  */
 export function BinarioDeiPassi({ passi, step }: { passi: readonly Chiave[]; step: number }) {
   return (
-    <>
-      <p className="as-soprattitolo as-entra" style={{ "--ritardo": 1 } as CSSProperties}>
+    <div className="as-passi">
+      <p className="as-soprattitolo as-soprattitolo--nudo as-passi__quanti">
         {t("wizard.passo", { n: numero(step + 1), tot: numero(passi.length) })}
       </p>
-      <ol className="as-passi" aria-label={t("wizard.steps")}>
+      <ol className="as-passi__elenco" aria-label={t("wizard.steps")}>
         {passi.map((quale, i) => (
           <li
             key={quale}
-            className={
-              i < step
-                ? "as-passi__tappa as-passi__tappa--fatto as-entra"
-                : "as-passi__tappa as-entra"
-            }
+            className={i < step ? "as-passi__tappa as-passi__tappa--fatto" : "as-passi__tappa"}
             aria-current={i === step ? "step" : undefined}
-            style={{ "--ritardo": i + 2 } as CSSProperties}
           >
             <span className="as-passi__segno" aria-hidden="true">
               {i < step ? "\u2713" : i + 1}
@@ -51,6 +43,6 @@ export function BinarioDeiPassi({ passi, step }: { passi: readonly Chiave[]; ste
           </li>
         ))}
       </ol>
-    </>
+    </div>
   )
 }

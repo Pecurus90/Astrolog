@@ -25,7 +25,7 @@ export function CampoConScelte({
   return (
     <Campo id={id} etichetta={etichetta}>
       <input
-        className="as-campo__input"
+        className="as-campo-modulo__input"
         id={id}
         list={`${id}-scelte`}
         value={valore}

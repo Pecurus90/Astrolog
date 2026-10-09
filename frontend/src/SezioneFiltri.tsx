@@ -125,7 +125,7 @@ function RigaFiltri({
             schermo, ne' per chi ci scrive dentro. */}
         <Campo id={`cerca-${filtro.id}`} etichetta={t("review.filters.searchFor", { nome: filtro.name })}>
           <input
-            className="as-campo__input"
+            className="as-campo-modulo__input"
             id={`cerca-${filtro.id}`}
             value={cerca}
             onChange={(e) => setCerca(e.target.value)}
@@ -158,7 +158,7 @@ function RigaFiltri({
         <>
           <Campo id={`nome-${filtro.id}`} etichetta={t("review.filters.name")}>            {/* Fisso, non spento: si legge e si copia, ma non si corregge -- e' il modello. */}
             <input
-              className="as-campo__input"
+              className="as-campo-modulo__input"
               id={`nome-${filtro.id}`}
               value={risposta?.name ?? ""}
               readOnly
@@ -198,7 +198,7 @@ function AMano({
     <>
       <Campo id={`nome-${filtro.id}`} etichetta={t("review.filters.name")}>
           <input
-          className="as-campo__input"
+          className="as-campo-modulo__input"
           id={`nome-${filtro.id}`}
           value={risposta?.name ?? ""}
           onChange={(e) =>

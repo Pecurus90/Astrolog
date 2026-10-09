@@ -114,7 +114,7 @@ export function CampoDelPercorso({ id, dove }: { id: string; dove: DoveStaASTAP 
           cresce="var(--misura-cerca)"
         >
           <input
-            className="as-campo__input as-cifre"
+            className="as-campo-modulo__input as-campo-modulo__input--cifre"
             id={id}
             placeholder={t("solver.placeholder")}
             value={dove.path}
@@ -133,8 +133,8 @@ export function CampoDelPercorso({ id, dove }: { id: string; dove: DoveStaASTAP 
           {t("solver.use")}
         </Bottone>
       </div>
-      <p className="as-campo__aiuto">{t("solver.pathHelp")}</p>
-      <p className="as-campo__aiuto">{t("solver.checkNow")}</p>
+      <p className="as-campo-modulo__aiuto">{t("solver.pathHelp")}</p>
+      <p className="as-campo-modulo__aiuto">{t("solver.checkNow")}</p>
 
       {/* **Il percorso sbagliato lo dice il campo**, non un avviso staccato: chi sta correggendo
           quello che ha scritto guarda li'. Qui resta solo la conferma di quando va bene --
@@ -173,12 +173,12 @@ export function IlCatalogo({ quali }: { quali: readonly string[] }) {
   return (
     <Avviso esito="attesa" titolo={t("solver.databaseTitle")}>
       {t("solver.databaseWhy")}
-      <p className="as-campo__aiuto">
+      <p className="as-campo-modulo__aiuto">
         <a href={DOVE_SI_SCARICA_IL_CATALOGO} rel="noopener noreferrer" target="_blank">
           {t("solver.databaseGet")}
         </a>
       </p>
-      <p className="as-campo__aiuto">{t("solver.databaseWhich")}</p>
+      <p className="as-campo-modulo__aiuto">{t("solver.databaseWhich")}</p>
     </Avviso>
   )
 }
@@ -195,7 +195,7 @@ export function DoveSiPrende() {
       <a href={DOVE_SI_SCARICA} target="_blank" rel="noopener noreferrer">
         {t("solver.download")}
       </a>
-      <p className="as-campo__aiuto">{t("solver.noDownload")}</p>
+      <p className="as-campo-modulo__aiuto">{t("solver.noDownload")}</p>
     </>
   )
 }

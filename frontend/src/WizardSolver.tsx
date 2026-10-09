@@ -38,7 +38,7 @@ export function WizardSolver({ senzaCatalogo }: { senzaCatalogo: boolean }) {
           non ripassa piu' di qua, e cadrebbe esattamente nella trappola che questa schermata
           esiste per evitare. Una riga, non un secondo allarme: il problema da risolvere adesso
           resta uno. */}
-      <p className="as-campo__aiuto">{t("solver.alsoTheDatabase")}</p>
+      <p className="as-campo-modulo__aiuto">{t("solver.alsoTheDatabase")}</p>
 
       <p className="as-soprattitolo">{t("solver.haveItGroup")}</p>
       <CampoDelPercorso dove={dove} id="wizard-solver-path" />

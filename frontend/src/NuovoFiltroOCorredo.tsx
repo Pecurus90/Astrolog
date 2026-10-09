@@ -55,10 +55,10 @@ export function NuovoFiltro({ scelta, onChiudi }: { scelta: ReactNode; onChiudi:
         onBanda={(b) => setBanda(b || undefined)}
       />
       <Campo id="aggiungi-brand" etichetta={t("review.card.brand")}>
-        <input className="as-campo__input" id="aggiungi-brand" onChange={(e) => setMarca(e.target.value)} />
+        <input className="as-campo-modulo__input" id="aggiungi-brand" onChange={(e) => setMarca(e.target.value)} />
       </Campo>
       <Campo id="aggiungi-model" etichetta={t("review.card.model")}>
-        <input className="as-campo__input" id="aggiungi-model" onChange={(e) => setModello(e.target.value)} />
+        <input className="as-campo-modulo__input" id="aggiungi-model" onChange={(e) => setModello(e.target.value)} />
       </Campo>
     </Modulo>
   )
@@ -112,7 +112,7 @@ export function NuovoCorredo({
       />
       <Campo id="aggiungi-focal" etichetta={t("gear.write.focal")}>
         <input
-          className="as-campo__input"
+          className="as-campo-modulo__input"
           id="aggiungi-focal"
           type="number"
           min="1"

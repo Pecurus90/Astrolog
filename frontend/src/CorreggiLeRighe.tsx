@@ -228,7 +228,7 @@ export function CorreggiIlFiltro({
         (["brand", "model"] as const).map((campo) => (
           <Campo key={campo} id={`${base}-${campo}`} etichetta={t(`review.card.${campo}`)}>
             <input
-              className="as-campo__input"
+              className="as-campo-modulo__input"
               id={`${base}-${campo}`}
               defaultValue={filtro[campo] ?? ""}
               onChange={(e) => cambia(campo, testo(e.target.value, filtro[campo]))}

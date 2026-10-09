@@ -118,7 +118,7 @@ export function CampiDelSito({ campi, id }: { campi: CampiDelSito; id: string })
         }
       >
         <input
-          className="as-campo__input"
+          className="as-campo-modulo__input"
           id={`${id}-name`}
           onChange={(e) => campi.setNome(e.target.value)}
           placeholder={t("site.namePlaceholder")}
@@ -133,7 +133,7 @@ export function CampiDelSito({ campi, id }: { campi: CampiDelSito; id: string })
           tetto="var(--misura-coordinata)"
         >
           <input
-            className="as-campo__input as-cifre"
+            className="as-campo-modulo__input as-campo-modulo__input--cifre"
             id={`${id}-lat`}
             inputMode="decimal"
             onChange={(e) => campi.setLat(e.target.value)}
@@ -148,7 +148,7 @@ export function CampiDelSito({ campi, id }: { campi: CampiDelSito; id: string })
           tetto="var(--misura-coordinata)"
         >
           <input
-            className="as-campo__input as-cifre"
+            className="as-campo-modulo__input as-campo-modulo__input--cifre"
             id={`${id}-lon`}
             inputMode="decimal"
             onChange={(e) => campi.setLon(e.target.value)}
@@ -187,7 +187,7 @@ export function SceltaDelCielo({
           {cosaSiVede(cielo)}
         </Avviso>
       )}
-      {facoltativo && <p className="as-campo__aiuto">{t("sky.optional")}</p>}
+      {facoltativo && <p className="as-campo-modulo__aiuto">{t("sky.optional")}</p>}
     </>
   )
 }
@@ -227,7 +227,7 @@ export function CercaIlPosto({
       <div style={CAMPO_E_BOTTONE}>
         <Campo cresce="var(--misura-cerca)" etichetta={t("site.searchLabel")} id={id}>
           <input
-            className="as-campo__input"
+            className="as-campo-modulo__input"
             id={id}
             onChange={(e) => setDomanda(e.target.value)}
             type="search"

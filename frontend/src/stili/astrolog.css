@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AstroLog — astrolog.css  ·  v32 (08/10/2026)
+   AstroLog — astrolog.css  ·  v33 (09/10/2026)
 
    FILE GENERATO: non si modifica qui. Le sorgenti stanno in foglio/, un
    file per famiglia; questo foglio e' la loro unione, nell'ordine qui
@@ -45,6 +45,7 @@
      53-campo-cerca.css
      54-tendina.css
      55-trova.css
+     56-campo-modulo.css
      60-volta.css
      61-heat.css
      62-andamento.css
@@ -56,6 +57,7 @@
      71-pagina-meteo.css
      72-pagina-notti.css
      73-pagina-archivio.css
+     74-pagina-primo-avvio.css
    ========================================================================== */
 
 /* ── foglio/10-token.css ──────────────────────────────────────────────── */
@@ -464,6 +466,22 @@
   --dal-al-campo-alto:        28px;   /* v32: il campo data dentro la pillola, sul desktop */
   --filtro-pezzo-minimo:      var(--spazio-3); /* nella carta: con sette filtri R, G, B restano leggibili */
   --pannello-numero:          20px;   /* il numero del pannello di un mosaico */
+  /* v33 · il campo dei moduli (56) */
+  --campo-modulo-alone:       3px;    /* l'alone del fuoco attorno al pozzo */
+  --campo-modulo-segno:       16px;   /* il «!» dell'errore */
+  --campo-modulo-segno-stacco: 2px;   /* lo allinea alla prima riga della frase */
+  --campo-riga-minimo:        14rem;  /* sotto, il bottone accanto al campo scende */
+  --campo-coordinata:         12rem;  /* un campo di coordinata: «46,4843 N» e l'errore sotto */
+  /* v33 · il Bortle da scegliere (48) */
+  --bortle-voce:              48px;   /* una classe in fila */
+  --bortle-striscia:          var(--spazio-7); /* la striscia della tinta, in colonna */
+  --bortle-cifra:             #05060d; /* la cifra sulla tinta: le tinte di Nebulosa sono chiare (dato; Atlante in 15) */
+  /* v33 · il primo avvio (74) */
+  --entra-largo:              960px;  /* la colonna: il lato coi passi e la carta */
+  --entra-lato:               15rem;  /* il lato coi passi; i nomi vanno a capo */
+  --entra-sola:               600px;  /* la colonna senza passi: risposte ritrovate, attesa */
+  --sfoglia-alto:             18rem;  /* l'elenco delle cartelle che scorre */
+  --passo-segno:              var(--avviso-segno);
 }
 
 /* ── foglio/15-tema-atlante.css ───────────────────────────────────────── */
@@ -562,6 +580,7 @@
   --bortle-7:  #874779;
   --bortle-8:  #9a3d75;
   --bortle-9:  #ad3471;
+  --bortle-cifra: #ffffff;   /* v33: sulla rampa scurita la cifra e' bianca */
 
 
   /* v24 · dalla Dashboard: la heatmap si rovescia (piu' ore, piu' scuro),
@@ -880,6 +899,24 @@ body.as-app, .as-app {
 .as-bottone--primario:active { background: var(--accento-premuto); box-shadow: var(--bottone-luce); }
 .as-bottone--tenue:hover { color: var(--inchiostro); }
 
+/* v33 · spento: aria-disabled e non disabled, cosi' resta nel giro del Tab
+   e il lettore lo annuncia. Perde la luce e l'accento in ogni variante;
+   la parola resta leggibile (inchiostro debole, 4,5:1). Chi lo spegne dice
+   accanto perche' (l'aiuto del campo). */
+.as-bottone[aria-disabled="true"],
+.as-bottone[aria-disabled="true"]:hover,
+.as-bottone[aria-disabled="true"]:active {
+  cursor: default; transform: none; text-decoration: none;
+  background: var(--vetro); box-shadow: none;
+  --bottone-linea: var(--vetro-filo); --bottone-inchiostro: var(--inchiostro-debole);
+}
+.as-bottone--nudo[aria-disabled="true"] { background: transparent; --bottone-linea: transparent; }
+/* al lavoro: il segno dell'attesa (.as-attesa) prima della parola, che dice
+   cosa fa («Salvo…»). Il bottone tiene la sua variante e non risponde. */
+.as-bottone[aria-busy="true"] { cursor: progress; pointer-events: none; }
+.as-bottone--primario[aria-busy="true"] { background: var(--accento-premuto); box-shadow: var(--bottone-luce); }
+.as-bottone--primario[aria-busy="true"] .as-attesa { border-color: var(--inchiostro-su-accento); border-right-color: transparent; }
+
 /* ── foglio/36-segmentato.css ─────────────────────────────────────────── */
 /* ==========================================================================
    SCELTA SEGMENTATA — .as-segmentato (v24: forma a3)
@@ -1043,6 +1080,9 @@ body.as-app, .as-app {
      --lavoro   anello aperto; sotto la frase la pista (.as-avanza)
      --ora      il numero del passo, pieno
      --dopo     il numero del passo, spento
+     --neutro   anello pieno, vuoto: un fatto, ne' buono ne' cattivo (v33)
+     --ignoto   tondo punteggiato: il dato non c'e' (v33)
+   __dato: un percorso o un codice nella frase, in cifre (v33).
    UN SOLO PRIMARIO PER STATO. Se piu' parti mancano insieme, il primario
    (.as-bottone--primario) va alla prima in quest'ordine: sito, archivio,
    meteo, progetto, casi; le altre azioni della pagina scendono a tenue.
@@ -1079,6 +1119,14 @@ body.as-app, .as-app {
 .as-avviso--ora .as-avviso__segno  { background: var(--accento); color: var(--inchiostro-su-accento); }
 .as-avviso--dopo .as-avviso__segno  { background: none; box-shadow: inset 0 0 0 var(--segno-filo) var(--inchiostro-debole); color: var(--inchiostro-debole); }
 .as-avviso--dopo .as-avviso__titolo { color: var(--inchiostro-tenue); }
+/* v33 · dal primo avvio: il buono aveva il commento e non la regola */
+.as-avviso--buono .as-avviso__segno  { background: var(--vetro-sopra); color: var(--esito-buono-inchiostro); }
+.as-avviso--buono .as-avviso__titolo { color: var(--esito-buono-inchiostro); }
+.as-avviso--neutro .as-avviso__segno { background: none; box-shadow: inset 0 0 0 var(--segno-filo) var(--linea-significato); }
+.as-avviso--ignoto .as-avviso__segno { background: none; border: var(--segno-filo) dotted var(--ignoto-tratteggio); }
+.as-avviso--ignoto .as-avviso__titolo { color: var(--inchiostro-tenue); }
+.as-avviso__dato { font-family: var(--carattere-cifre); font-size: var(--testo-minuto); color: var(--inchiostro-tenue); overflow-wrap: anywhere; }
+.as-avviso__dato code, .as-avviso__titolo code { font-family: var(--carattere-cifre); color: var(--inchiostro); }
 
 /* --pagina: lo stato di una parte della pagina. Sta su carta perche' si
    stacchi dai dati che ha intorno; il passo «dopo» perde la carta e tiene
@@ -1439,6 +1487,65 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-bortle-letta__fascia--7 { --bortle-colore: var(--bortle-7); }
 .as-bortle-letta__fascia--8 { --bortle-colore: var(--bortle-8); }
 .as-bortle-letta__fascia--9 { --bortle-colore: var(--bortle-9); }
+
+/* ==========================================================================
+   v33 · il Bortle da scegliere (.as-bortle-scegli): primo avvio e
+   Impostazioni, il sito. Un gruppo di nove radio (fieldset, legenda per chi
+   legge); nessuna classe scelta in partenza.
+   Largo: nove voci in fila con la cifra sulla tinta; la scelta si alza, ha
+   l'anello d'inchiostro e il trattino sotto; gli estremi a parole; sotto,
+   __letta: nome e frase della classe scelta (aria-live).
+   Telefono (sotto 900 di colonna): in fila sarebbero bersagli da 36. Una
+   colonna di nove righe alte una riga: la tinta e' una striscia sola, dal
+   freddo in alto al caldo in basso, il nome sempre scritto, la frase solo
+   sulla scelta. Estremi e __letta spariscono: lo dicono le righe.
+   ========================================================================== */
+.as-bortle-scegli { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: var(--spazio-3); }
+.as-bortle-scegli__scala { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: var(--spazio-1); }
+.as-bortle-scegli__voce {
+  position: relative; cursor: pointer; display: grid; place-items: center;
+  min-height: var(--bortle-voce); border-radius: var(--raggio-minimo);
+  background: var(--bortle-colore); color: var(--bortle-cifra);
+  transition: transform var(--durata-lampo) var(--curva);
+}
+.as-bortle-scegli__voce input { position: absolute; opacity: 0; pointer-events: none; }
+.as-bortle-scegli__voce:has(input:focus-visible) { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
+.as-bortle-scegli__cifra { font: var(--peso-grosso) var(--testo-lungo)/1 var(--carattere-cifre); }
+.as-bortle-scegli__nome, .as-bortle-scegli__frase { display: none; }
+.as-bortle-scegli__voce:has(input:checked) { transform: translateY(calc(-1 * var(--spazio-1))); box-shadow: 0 0 0 var(--filo) var(--fondo-carta), 0 0 0 calc(var(--filo) * 2) var(--inchiostro); }
+.as-bortle-scegli__voce:has(input:checked)::after { content: ""; position: absolute; bottom: calc(-1 * var(--spazio-3)); width: var(--spazio-4); height: var(--filo); border-radius: var(--raggio-appena); background: var(--inchiostro); }
+.as-bortle-scegli__estremi { margin: 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--spazio-1) var(--spazio-3); font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-bortle-scegli__letta { margin: 0; display: grid; gap: var(--spazio-1); }
+.as-bortle-scegli__letta b { font-size: var(--testo-corpo); color: var(--inchiostro); }
+.as-bortle-scegli__letta span { max-width: var(--colonna-prosa); font-size: var(--testo-minuto); line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue); text-wrap: pretty; }
+.as-bortle-scegli__letta--niente { font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-bortle-scegli__voce--1 { --bortle-colore: var(--bortle-1); }
+.as-bortle-scegli__voce--2 { --bortle-colore: var(--bortle-2); }
+.as-bortle-scegli__voce--3 { --bortle-colore: var(--bortle-3); }
+.as-bortle-scegli__voce--4 { --bortle-colore: var(--bortle-4); }
+.as-bortle-scegli__voce--5 { --bortle-colore: var(--bortle-5); }
+.as-bortle-scegli__voce--6 { --bortle-colore: var(--bortle-6); }
+.as-bortle-scegli__voce--7 { --bortle-colore: var(--bortle-7); }
+.as-bortle-scegli__voce--8 { --bortle-colore: var(--bortle-8); }
+.as-bortle-scegli__voce--9 { --bortle-colore: var(--bortle-9); }
+@container colonna (max-width: 899px) {          /* soglia = telefono */
+  .as-bortle-scegli__scala { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .as-bortle-scegli__voce {
+    min-height: var(--riga-alta); place-items: center start;
+    grid-template-columns: var(--bortle-striscia) minmax(0, 1fr); gap: var(--spazio-3);
+    padding-right: var(--spazio-3); border-radius: 0; background: none; color: var(--inchiostro);
+  }
+  .as-bortle-scegli__cifra { align-self: stretch; display: grid; place-items: center; width: 100%; background: var(--bortle-colore); color: var(--bortle-cifra); font-size: var(--testo-corpo); }
+  .as-bortle-scegli__voce:first-child .as-bortle-scegli__cifra { border-radius: var(--raggio-minimo) var(--raggio-minimo) 0 0; }
+  .as-bortle-scegli__voce:last-child .as-bortle-scegli__cifra { border-radius: 0 0 var(--raggio-minimo) var(--raggio-minimo); }
+  .as-bortle-scegli__nome { display: block; padding: var(--spazio-2) 0; font-size: var(--testo-corpo); }
+  .as-bortle-scegli__voce:has(input:checked) { transform: none; box-shadow: none; background: var(--accento-velo); border-radius: 0 var(--raggio-minimo) var(--raggio-minimo) 0; }
+  .as-bortle-scegli__voce:has(input:checked)::after { display: none; }
+  .as-bortle-scegli__voce:has(input:checked) .as-bortle-scegli__cifra { box-shadow: inset 0 0 0 var(--filo) var(--inchiostro); }
+  .as-bortle-scegli__voce:has(input:checked) .as-bortle-scegli__nome { font-weight: var(--peso-forte); }
+  .as-bortle-scegli__voce:has(input:checked) .as-bortle-scegli__frase { display: block; margin-top: var(--spazio-1); font-size: var(--testo-minuto); font-weight: var(--peso-normale); line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue); }
+  .as-bortle-scegli__estremi, .as-bortle-scegli__letta { display: none; }
+}
 
 /* ── foglio/49-luna.css ───────────────────────────────────────────────── */
 /* ==========================================================================
@@ -2100,6 +2207,70 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
   .as-telaio__alto--cerca .as-cerca__annulla { display: inline-flex !important; }
   .as-telaio__alto--cerca .as-trova { top: 100%; left: 0; right: 0; width: auto; border-radius: 0 0 var(--raggio-carta) var(--raggio-carta); }
   .as-telaio__alto--cerca .as-trova__piede { display: none; }
+}
+
+/* ── foglio/56-campo-modulo.css ───────────────────────────────────────── */
+/* ==========================================================================
+   IL CAMPO DEI MODULI — .as-campo-modulo (v33)
+   Il campo dove si scrive un dato da salvare: primo avvio, Impostazioni,
+   Da confermare. Il campo di ricerca e' un altro mattone (53, la pillola).
+   Qui 56 e non nella famiglia 30–50, che e' piena.
+   Struttura: __etichetta (con __facoltativo), __pozzo (l'__input e, mentre
+   lavora, __attesa: il segno e la parola), __errore, __aiuto.
+   L'errore ha il filo d'allarme sul pozzo, il segno «!» e la frase: mai il
+   colore da solo. L'input dice aria-invalid e aria-describedby verso la frase.
+   Accanto: .as-campo-riga (il campo e il suo bottone, Cerca/Guarda/Prova),
+   .as-campo-coppia (due campi corti affiancati, come le coordinate), e
+   .as-modulo (campi uno sotto l'altro).
+   Nessuna larghezza sui testi: l'etichetta va a capo, il pozzo prende
+   la riga; solo .as-campo-coppia ha una misura, quella del dato.
+   ========================================================================== */
+.as-campo-modulo { display: grid; gap: var(--spazio-2); min-width: 0; }
+.as-campo-modulo__etichetta { font-size: var(--testo-corpo); font-weight: var(--peso-medio); line-height: var(--interlinea-stretta); color: var(--inchiostro); }
+.as-campo-modulo__facoltativo { font-weight: var(--peso-normale); color: var(--inchiostro-debole); }
+.as-campo-modulo__pozzo {
+  display: flex; align-items: center; gap: var(--spazio-2); min-width: 0;
+  min-height: var(--riga-alta); padding: 0 var(--spazio-3);
+  border-radius: var(--raggio-medio); background: var(--fondo-incavo);
+  box-shadow: inset 0 0 0 1px var(--linea-forte);
+  transition: box-shadow var(--durata-lampo) var(--curva);
+}
+.as-campo-modulo__pozzo:focus-within { box-shadow: inset 0 0 0 1px var(--accento-sopra), 0 0 0 var(--campo-modulo-alone) var(--accento-velo); }
+.as-campo-modulo__input {
+  flex: 1; min-width: 0; align-self: stretch;
+  border: 0; outline: 0; padding: 0; background: none;
+  font: var(--peso-normale) var(--testo-corpo)/1.4 var(--carattere-testo); color: var(--inchiostro);
+}
+.as-campo-modulo__input::placeholder { color: var(--inchiostro-debole); opacity: 1; }
+.as-campo-modulo__input--cifre { font-family: var(--carattere-cifre); font-variant-numeric: tabular-nums; }
+.as-campo-modulo__attesa { flex: none; display: inline-flex; align-items: center; gap: var(--spazio-1); font-size: var(--testo-minuto); color: var(--esito-attesa-inchiostro); }
+.as-campo-modulo__aiuto { margin: 0; max-width: var(--colonna-prosa); font-size: var(--testo-minuto); line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue); text-wrap: pretty; }
+.as-campo-modulo__errore {
+  margin: 0; max-width: var(--colonna-prosa);
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--spazio-2); align-items: start;
+  font-size: var(--testo-minuto); line-height: var(--interlinea-prosa); color: var(--esito-allarme-inchiostro); text-wrap: pretty;
+}
+.as-campo-modulo__errore::before {
+  content: "!"; display: grid; place-items: center;
+  width: var(--campo-modulo-segno); height: var(--campo-modulo-segno); margin-top: var(--campo-modulo-segno-stacco);
+  border-radius: 50%; background: var(--esito-allarme); color: var(--inchiostro-su-accento);
+  font: var(--peso-grosso) var(--testo-micro)/1 var(--carattere-cifre);
+}
+.as-campo-modulo--errore .as-campo-modulo__pozzo { box-shadow: inset 0 0 0 var(--filo) var(--esito-allarme); }
+.as-campo-modulo--errore .as-campo-modulo__pozzo:focus-within { box-shadow: inset 0 0 0 var(--filo) var(--esito-allarme), 0 0 0 var(--campo-modulo-alone) var(--accento-velo); }
+.as-campo-modulo--attesa .as-campo-modulo__input { cursor: progress; }
+
+.as-modulo { display: grid; gap: var(--spazio-4); }
+/* il campo e il suo bottone, in fondo al pozzo; sotto 420 di colonna il bottone scende */
+.as-campo-riga { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--spazio-2); }
+.as-campo-riga > .as-campo-modulo { flex: 1 1 var(--campo-riga-minimo); }
+.as-campo-riga > .as-bottone { flex: none; margin-top: calc(var(--testo-corpo) * var(--interlinea-stretta) + var(--spazio-2)); }
+/* due dati corti affiancati: la misura e' quella del dato, non del testo */
+.as-campo-coppia { display: grid; grid-template-columns: repeat(2, minmax(0, var(--campo-coordinata))); gap: var(--spazio-4); align-items: start; }
+@container colonna (max-width: 899px) {          /* soglia = telefono */
+  .as-campo-coppia { grid-template-columns: minmax(0, 1fr); }
+  .as-campo-riga > .as-campo-modulo { flex-basis: 100%; }
+  .as-campo-riga > .as-bottone { margin-top: 0; }
 }
 
 /* ── foglio/60-volta.css ──────────────────────────────────────────────── */
@@ -2803,4 +2974,167 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
   .as-archivio__tabella .as-archivio__col-filtri { padding-top: var(--spazio-2) !important; }
   .as-archivio__tabella .as-archivio__col-mosaico:empty { display: none; }
   .as-archivio__tabella .as-filtri { min-width: 0; }
+}
+
+/* ── foglio/74-pagina-primo-avvio.css ─────────────────────────────────── */
+/* ==========================================================================
+   IL PRIMO AVVIO — .as-entra (v33)
+   Non e' una pagina del telaio: niente binario, barra, Stanotte. Lo schermo
+   (.as-entra) e' il contenitore «colonna»; dentro, __colonna.
+   Largo (da 900): il lato coi passi, fermo, e la carta del passo. Telefono:
+   i passi in una fila di segni, la carta da bordo a bordo fino in fondo, i
+   gesti in una barra di vetro sempre in vista.
+   Un solo primario per passo: quello che salva, se c'e' qualcosa da salvare
+   (Usa questo sito, Aggiungi la cartella, Prova e salva, Usa questo); se no
+   «Avanti». Chi scrive la pagina sceglie quale, il foglio non lo indovina.
+   Nessuna larghezza sui testi: titoli, nomi dei passi e bottoni vanno a capo.
+   ========================================================================== */
+.as-entra {
+  container: colonna / inline-size;
+  min-height: 100dvh; display: flex; flex-direction: column; align-items: center;
+  background: var(--fondo-app); color: var(--inchiostro);
+}
+.as-entra__colonna {
+  box-sizing: border-box; width: min(100%, var(--entra-largo));
+  padding: var(--spazio-8) var(--spazio-6) var(--spazio-7);
+  display: grid; grid-template-columns: var(--entra-lato) minmax(0, 1fr); gap: var(--spazio-7); align-items: start;
+}
+.as-entra__colonna--sola { width: min(100%, var(--entra-sola)); grid-template-columns: minmax(0, 1fr); gap: var(--spazio-6); }
+.as-entra__lato { display: grid; gap: var(--spazio-6); position: sticky; top: var(--spazio-6); }
+.as-entra__testata { display: grid; gap: var(--spazio-2); }
+.as-entra__titolo { margin: 0; font-family: var(--carattere-titolo); font-size: var(--titolo-pagina); font-weight: var(--peso-grosso); letter-spacing: var(--spaziatura-titolo); line-height: var(--interlinea-stretta); text-wrap: balance; }
+.as-entra__sotto { margin: 0; font-size: var(--testo-corpo); line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue); text-wrap: pretty; }
+.as-entra__attesa { display: inline-flex; align-items: center; gap: var(--spazio-2); font-size: var(--testo-corpo); color: var(--esito-attesa-inchiostro); }
+
+/* --- i passi: un elenco, non una navigazione; le tappe non si toccano --- */
+.as-passi { display: grid; gap: var(--spazio-3); }
+.as-passi__quanti { margin: 0; }
+.as-passi__elenco { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--stacco-minimo); }
+.as-passi__tappa {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--spazio-3);
+  min-height: var(--riga-alta); padding: var(--spazio-2) var(--spazio-3);
+  border-radius: var(--raggio-medio); color: var(--inchiostro-tenue);
+}
+.as-passi__tappa:not(:last-child)::after {   /* il filo che lega un segno al seguente */
+  content: ""; position: absolute; width: 1px; background: var(--linea-forte);
+  left: calc(var(--spazio-3) + var(--passo-segno) / 2);
+  top: calc(50% + var(--passo-segno) / 2 + var(--spazio-1));
+  height: calc(100% - var(--passo-segno) - var(--spazio-2) + var(--stacco-minimo));
+}
+.as-passi__segno {
+  box-sizing: border-box; display: grid; place-items: center; width: var(--passo-segno); height: var(--passo-segno);
+  border-radius: 50%; font: var(--peso-grosso) var(--testo-micro)/1 var(--carattere-cifre);
+  box-shadow: inset 0 0 0 var(--segno-filo) var(--linea-significato); color: var(--inchiostro-debole);
+}
+.as-passi__nome { font-size: var(--testo-corpo); line-height: var(--interlinea-stretta); overflow-wrap: anywhere; }
+.as-passi__tappa--fatto .as-passi__segno { box-shadow: none; background: var(--vetro-sopra); color: var(--esito-buono-inchiostro); }
+/* dove sei: la voce scelta dell'app, velo e filo a sinistra */
+.as-passi__tappa[aria-current="step"] { background: var(--accento-velo); color: var(--inchiostro); }
+.as-passi__tappa[aria-current="step"]::before { content: ""; position: absolute; left: 0; top: var(--spazio-2); bottom: var(--spazio-2); width: var(--filo); border-radius: var(--raggio-appena); background: var(--accento-sopra); }
+.as-passi__tappa[aria-current="step"] .as-passi__segno { box-shadow: none; background: var(--accento); color: var(--inchiostro-su-accento); }
+.as-passi__tappa[aria-current="step"] .as-passi__nome { font-weight: var(--peso-forte); }
+.as-passi__nota { margin: 0; font-size: var(--testo-minuto); line-height: var(--interlinea-prosa); color: var(--inchiostro-debole); }
+
+/* --- la carta del passo --------------------------------------------------- */
+.as-passo { display: grid; grid-template-rows: 1fr auto; }
+.as-passo__corpo { display: grid; align-content: start; gap: var(--spazio-6); padding: var(--spazio-6) var(--spazio-6) var(--spazio-5); }
+.as-passo__capo { display: grid; gap: var(--spazio-2); }
+.as-passo__titolo { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2) var(--spazio-3); font-family: var(--carattere-titolo); font-size: var(--titolo-sezione); font-weight: var(--peso-forte); line-height: var(--interlinea-stretta); overflow-wrap: anywhere; }
+.as-passo__perche { margin: 0; max-width: var(--colonna-prosa); font-size: var(--testo-lungo); line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue); text-wrap: pretty; }
+/* accanto al titolo: una cosa da fare, non un guasto (segno dell'attesa) */
+.as-passo__pastiglia { display: inline-flex; align-items: center; gap: var(--spazio-2); padding: var(--stacco-minimo) var(--spazio-3); border-radius: var(--raggio-pillola); box-shadow: inset 0 0 0 1px var(--linea-forte); font: var(--peso-forte) var(--testo-micro)/1.35 var(--carattere-testo); color: var(--esito-attesa-inchiostro); }
+.as-passo__pastiglia::before { content: ""; flex: none; box-sizing: border-box; width: var(--parziale-segno); height: var(--parziale-segno); border-radius: 50%; border: var(--segno-filo) dashed var(--esito-attesa); }
+/* le parti del passo: soprattitolo e filo, come in Stanotte */
+.as-passo__parti { display: grid; gap: var(--spazio-5); }
+.as-passo__parte { display: grid; gap: var(--spazio-3); padding-top: var(--spazio-5); border-top: 1px solid var(--linea); }
+.as-passo__parte:first-child { padding-top: 0; border-top: 0; }
+.as-passo__nota { margin: 0; max-width: var(--colonna-prosa); font-size: var(--testo-minuto); line-height: var(--interlinea-prosa); color: var(--inchiostro-tenue); text-wrap: pretty; }
+.as-passo__nota a { color: var(--inchiostro-accento); text-underline-offset: var(--sottolineatura-stacco); }
+
+/* i gesti: a sinistra si salta, a destra si va. Il primario e' l'ultimo. */
+.as-gesti { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--spazio-2); padding: var(--spazio-4) var(--spazio-6); border-top: 1px solid var(--linea); }
+.as-gesti > :first-child { margin-right: auto; }
+
+/* un esito con un'azione: su vetro, perche' si stacchi dai campi */
+.as-esito { display: grid; gap: var(--spazio-3); padding: var(--spazio-4); border-radius: var(--raggio-grande); background: var(--vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo); }
+.as-esito .as-avviso { padding: 0; }
+.as-passo .as-avviso { padding: 0; }
+
+/* --- i posti trovati ------------------------------------------------------ */
+.as-posti { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--stacco-minimo); }
+.as-posti__voce { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--spazio-1) var(--spazio-3); min-height: var(--riga-alta); padding: var(--spazio-2) var(--spazio-3); border-radius: var(--raggio-medio); background: var(--vetro); }
+.as-posti__nome { font-weight: var(--peso-medio); }
+.as-posti__dove { display: block; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-posti__cifre { display: block; font: var(--testo-minuto)/1.4 var(--carattere-cifre); font-variant-numeric: tabular-nums; color: var(--inchiostro-debole); }
+.as-posti__voce[aria-current="true"] { background: var(--accento-velo); }
+.as-posti__voce[aria-current="true"]::before { content: ""; position: absolute; left: 0; top: var(--spazio-2); bottom: var(--spazio-2); width: var(--filo); border-radius: var(--raggio-appena); background: var(--accento-sopra); }
+.as-posti__scelto { padding: 0 var(--spazio-3); font-size: var(--testo-minuto); font-weight: var(--peso-forte); color: var(--inchiostro-accento); }
+
+/* --- il percorso a briciole: dice dove sei, non si tocca; va a capo ------ */
+.as-percorso { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--spazio-1); font: var(--testo-corpo)/1.5 var(--carattere-cifre); color: var(--inchiostro-debole); overflow-wrap: anywhere; }
+.as-percorso__separa { color: var(--inchiostro-debole); }
+.as-percorso__qui { color: var(--inchiostro); font-weight: var(--peso-forte); }
+
+/* --- le cartelle da sfogliare (NAS): l'elenco scorre in un pozzo -------- */
+.as-sfoglia { display: grid; gap: var(--spazio-3); }
+.as-sfoglia__azioni { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-2); }
+.as-sfoglia__elenco { margin: 0; padding: var(--spazio-1); list-style: none; max-height: var(--sfoglia-alto); overflow-y: auto; display: grid; align-content: start; gap: var(--stacco-minimo); border-radius: var(--raggio-grande); background: var(--fondo-incavo); box-shadow: inset 0 0 0 1px var(--linea); }
+.as-sfoglia__voce { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--spazio-3); min-height: var(--riga-alta); padding: 0 var(--spazio-1) 0 var(--spazio-3); border-radius: var(--raggio-minimo); }
+.as-sfoglia__voce:hover { background: var(--vetro); }
+.as-sfoglia__voce svg { width: var(--icona-meteo-piccola); height: var(--icona-meteo-piccola); color: var(--inchiostro-debole); }
+.as-sfoglia__nome { font-family: var(--carattere-cifre); font-size: var(--testo-corpo); overflow-wrap: anywhere; }
+.as-sfoglia__niente { margin: 0; padding: var(--spazio-4) var(--spazio-3); font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+
+/* --- le cartelle indicate -------------------------------------------------- */
+.as-cartelle { margin: 0; padding: 0; list-style: none; display: grid; }
+.as-cartelle__voce { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--spazio-1) var(--spazio-4); padding: var(--spazio-3) 0; border-top: 1px solid var(--linea); }
+.as-cartelle__percorso { min-width: 0; font: var(--testo-corpo)/1.4 var(--carattere-cifre); overflow-wrap: anywhere; }
+.as-cartelle__frame { font: var(--testo-minuto)/1.4 var(--carattere-cifre); font-variant-numeric: tabular-nums; color: var(--inchiostro-tenue); }
+
+/* --- le risposte ritrovate (e la chiusura, se resta) ----------------------- */
+.as-ritrovate { display: grid; gap: var(--spazio-5); padding: var(--spazio-6); }
+.as-ritrovate__titolo { margin: 0; font-family: var(--carattere-titolo); font-size: var(--titolo-sezione); font-weight: var(--peso-forte); line-height: var(--interlinea-stretta); text-wrap: balance; }
+.as-ritrovate__quando { margin: 0; font-size: var(--testo-corpo); color: var(--inchiostro-tenue); }
+.as-ritrovate__azioni { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--spazio-2); }
+/* i conti: la parola a sinistra, il dato a destra; vanno a capo, nessuna colonna fissa */
+.as-conti { margin: 0; padding: 0; list-style: none; display: grid; }
+.as-conti__voce { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--spazio-1) var(--spazio-4); padding: var(--spazio-3) 0; border-top: 1px solid var(--linea); font-size: var(--testo-corpo); }
+.as-conti__nome { font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-conti__dato { font-family: var(--carattere-cifre); font-weight: var(--peso-forte); text-align: right; }
+
+/* --- telefono: sotto 900 di colonna ------------------------------------------- */
+@container colonna (max-width: 899px) {
+  .as-entra__colonna { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; gap: var(--spazio-4); flex: 1; align-items: stretch; padding: var(--spazio-5) var(--spazio-4) 0; }
+  .as-entra__colonna--sola { grid-template-rows: none; flex: none; align-items: start; gap: var(--spazio-5); padding-bottom: var(--spazio-6); }
+  .as-entra__lato { position: static; gap: var(--spazio-4); }
+  .as-entra__testata { gap: var(--spazio-1); }
+  .as-entra__titolo { font-size: var(--titolo-sezione); }
+  .as-entra__sotto { font-size: var(--testo-minuto); }
+  /* i passi in fila: segni legati da un filo, il nome solo per chi legge */
+  .as-passi { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .as-passi__quanti { grid-column: 2; grid-row: 1; }
+  .as-passi__elenco { grid-column: 1; grid-row: 1; display: flex; gap: 0; }
+  .as-passi__tappa { flex: 1; grid-template-columns: auto; min-height: 0; padding: 0; }
+  .as-passi__tappa:last-child { flex: none; }
+  .as-passi__tappa[aria-current="step"] { background: none; }
+  .as-passi__tappa[aria-current="step"]::before { display: none; }
+  .as-passi__tappa:not(:last-child)::after { left: calc(var(--passo-segno) + var(--spazio-1)); right: var(--spazio-1); top: 50%; width: auto; height: 1px; }
+  .as-passi__nome { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .as-passi__tappa[aria-current="step"] .as-passi__segno { box-shadow: 0 0 0 var(--campo-modulo-alone) var(--accento-velo); }
+  .as-passi__nota { display: none; }
+  /* la carta da bordo a bordo, fino in fondo */
+  .as-passo { margin: 0 calc(-1 * var(--spazio-4)); border-radius: var(--raggio-carta) var(--raggio-carta) 0 0; }
+  .as-passo__corpo { gap: var(--spazio-5); padding: var(--spazio-5) var(--spazio-4); }
+  .as-passo__perche { font-size: var(--testo-corpo); }
+  /* i gesti restano in vista; con due modi di andare avanti il primario prende una riga sua, sopra */
+  .as-gesti {
+    position: sticky; bottom: 0; z-index: 2;
+    padding: var(--spazio-3) var(--spazio-4) var(--spazio-4);
+    background: var(--velo-vetro); backdrop-filter: blur(var(--sfocatura)); border-top: 1px solid var(--linea-forte);
+  }
+  .as-gesti .as-bottone { padding: 0 var(--spazio-3); }
+  .as-gesti--due .as-bottone--primario { order: -1; flex: 1 1 100%; }
+  .as-esito { padding: var(--spazio-3); }
+  .as-ritrovate { padding: var(--spazio-5) var(--spazio-4); }
+  .as-ritrovate__azioni { flex-direction: column-reverse; align-items: stretch; }
 }

@@ -62,7 +62,7 @@ export function ChiaveMeteoblue({ id }: { id: string }) {
       <div style={CAMPO_E_BOTTONE}>
         <Campo id={id} etichetta={t("meteoblue.label")} aspetta={salva.isPending}>
           <input
-            className="as-campo__input"
+            className="as-campo-modulo__input"
             id={id}
             autoComplete="off"
             spellCheck={false}

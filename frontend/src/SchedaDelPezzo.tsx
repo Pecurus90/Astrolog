@@ -52,7 +52,7 @@ export function CampoDellaScheda({
     return (
       <Campo id={id} etichetta={t(etichetta)}>
         <input
-          className="as-campo__input"
+          className="as-campo-modulo__input"
           id={id}
           defaultValue={valore ?? ""}
           onChange={(e) => onValore(testo(e.target.value))}
@@ -63,7 +63,7 @@ export function CampoDellaScheda({
   return (
     <Campo id={id} etichetta={t(etichetta)}>
       <input
-        className="as-campo__input"
+        className="as-campo-modulo__input"
         id={id}
         type="number"
         min={0}

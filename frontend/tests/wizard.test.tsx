@@ -304,20 +304,31 @@ describe("il primo avvio", () => {
     expect(tappe()[1]?.textContent).toContain("sei qui")
   })
 
-  it("il movimento d'apertura non riparte tornando indietro", async () => {
-    // Un ingresso si vede **una volta**: se la classe si togliesse e si rimettesse al variare del
-    // passo, premere Indietro la farebbe ripartire -- e la promessa scritta nel foglio ("passare
-    // dal passo 2 al 3 non porta .as-entra") sarebbe falsa proprio dove si torna indietro.
+  it("la pagina ha i passi di lato, il passo in una carta col suo nome, e i gesti in fondo", async () => {
+    // La forma del foglio: senza `.as-entra` la pagina non e' una colonna centrata, senza
+    // `.as-passo` la carta non ha il piede, e i gesti fuori da `.as-gesti` non restano in vista
+    // sul telefono.
     conTimbro(false)
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    const entrano = () => document.querySelectorAll(".as-entra").length
-    const quanti = entrano()
-    expect(quanti).toBeGreaterThan(0)
+    const pagina = screen.getByRole("main")
+    expect(pagina.className).toBe("as-entra")
+    const lato = pagina.querySelector(".as-entra__colonna > .as-entra__lato")
+    expect(lato?.querySelector(".as-entra__titolo")?.textContent).toBe("Primo avvio")
+    expect(lato?.querySelector(".as-passi > .as-passi__elenco")).not.toBeNull()
+    expect(lato?.querySelector(".as-passi__quanti")?.textContent).toMatch(/passo 1 di 4/i)
+    // la carta porta il nome del passo, per chi ascolta e per chi guarda
+    const carta = screen.getByRole("region", { name: "Nome utente" })
+    expect(carta.className).toBe("as-carta as-passo")
+    expect(carta.querySelector(".as-passo__titolo")?.textContent).toBe("Nome utente")
+    // saltare sta per primo, lontano da cio' che manda avanti; il primario e' l'ultimo
+    const gesti = () => [...document.querySelectorAll(".as-gesti > *")]
+    expect(gesti().map((g) => g.textContent)).toEqual(["Salta", "Avanti"])
+    expect(gesti().at(-1)?.className).toContain("as-bottone--primario")
+
     vaiAlPasso(1)
-    expect(entrano()).toBe(quanti)
-    fireEvent.click(screen.getByRole("button", { name: /indietro/i }))
-    expect(entrano()).toBe(quanti)
+    expect(screen.getByRole("region", { name: "Sito di osservazione" })).toBeDefined()
+    expect(gesti().map((g) => g.textContent)).toEqual(["Salta", "Indietro", "Avanti"])
   })
 
   it("Indietro riporta al passo di prima", async () => {
@@ -363,7 +374,7 @@ describe("il primo avvio", () => {
     await screen.findByRole("button", { name: /salta/i })
 
     const perche = () =>
-      document.querySelector(".as-carta__intestazione .as-carta__domanda")?.textContent ?? ""
+      document.querySelector(".as-passo__capo .as-passo__perche")?.textContent ?? ""
     const attesi = [
       /intestare le statistiche/i,
       /calcolare le notti/i,
@@ -376,6 +387,8 @@ describe("il primo avvio", () => {
       expect(perche()).toMatch(atteso)
       if (i < attesi.length - 1) vaiAlPasso(1)
     }
+    // all'ultimo passo lo stato di ASTAP sta accanto al titolo, col segno dell'attesa del foglio
+    expect(document.querySelector(".as-passo__titolo > .as-passo__pastiglia")?.textContent).toBeTruthy()
   })
 
   it("ogni campo e ogni bottone dei quattro passi passa dal suo mattone", async () => {

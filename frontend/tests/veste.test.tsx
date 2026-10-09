@@ -140,7 +140,7 @@ describe("una riga di Da confermare", () => {
     // che i campi ci siano davvero si guarda prima: `fuoriDaiMattoni` torna vuoto anche su una
     // pagina senza campi, e questa prova diventerebbe verde per il motivo sbagliato
     expect(
-      document.querySelectorAll(".as-campo__etichetta, .as-campo__input, .as-scelta").length,
+      document.querySelectorAll(".as-campo-modulo__etichetta, .as-campo-modulo__input, .as-scelta").length,
     ).toBeGreaterThan(0)
     expect(fuoriDaiMattoni()).toEqual([])
   })
@@ -168,8 +168,8 @@ describe("la veste", () => {
       <label for="nudo">Latitudine</label><input id="nudo" />
       <button>Cerca</button>
       <div class="as-campo-modulo">
-        <label class="as-campo__etichetta" for="vestito">Nome</label>
-        <input class="as-campo__input" id="vestito" />
+        <label class="as-campo-modulo__etichetta" for="vestito">Nome</label>
+        <input class="as-campo-modulo__input" id="vestito" />
       </div>
       <button class="as-bottone" id="vestito-2">Avanti</button>
       <fieldset><input type="radio" id="scelta" /><label for="scelta">Non e' un oggetto</label></fieldset>

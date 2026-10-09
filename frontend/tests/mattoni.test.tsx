@@ -176,7 +176,7 @@ describe("Campo", () => {
         <input id="x" />
       </Campo>,
     )
-    expect(container.querySelector(".as-campo--caricamento")).not.toBeNull()
+    expect(container.querySelector(".as-campo-modulo--attesa")).not.toBeNull()
 
     rerender(
       <Campo id="x" etichetta="Nome" aspetta errore="non va">
@@ -184,8 +184,8 @@ describe("Campo", () => {
       </Campo>,
     )
 
-    expect(container.querySelector(".as-campo--errore")).not.toBeNull()
-    expect(container.querySelector(".as-campo--caricamento")).toBeNull()
+    expect(container.querySelector(".as-campo-modulo--errore")).not.toBeNull()
+    expect(container.querySelector(".as-campo-modulo--attesa")).toBeNull()
   })
 
   it("l'errore sta sotto il campo, e chi ascolta lo sente col campo", () => {
@@ -194,7 +194,7 @@ describe("Campo", () => {
     // dice che quel campo e' quello rotto.
     render(
       <Campo id="lat" etichetta="Latitudine" errore="fra -90 e 90">
-        <input className="as-campo__input" id="lat" />
+        <input className="as-campo-modulo__input" id="lat" />
       </Campo>,
     )
     const campo = screen.getByLabelText("Latitudine")
@@ -211,7 +211,7 @@ describe("Campo", () => {
     // zero regioni vive intorno a quel testo.
     render(
       <Campo id="solver" etichetta="Dove sta" errore="Li' non c'e' ASTAP">
-        <input className="as-campo__input" id="solver" />
+        <input className="as-campo-modulo__input" id="solver" />
       </Campo>,
     )
     const detto = screen.getByLabelText("Dove sta").getAttribute("aria-describedby")
@@ -224,11 +224,11 @@ describe("Campo", () => {
     // restava verde -- un campo rotto identico a uno sano, per chi guarda.
     const { container } = render(
       <Campo id="lat" etichetta="Latitudine" errore="fra -90 e 90">
-        <input className="as-campo__input" id="lat" />
+        <input className="as-campo-modulo__input" id="lat" />
       </Campo>,
     )
-    expect(container.querySelector(".as-campo-modulo")?.className).toContain("as-campo--errore")
-    expect(container.querySelector(".as-campo__errore")?.textContent).toBe("fra -90 e 90")
+    expect(container.querySelector(".as-campo-modulo")?.className).toContain("as-campo-modulo--errore")
+    expect(container.querySelector(".as-campo-modulo__errore")?.textContent).toBe("fra -90 e 90")
   })
 
   it("lega il controllo anche quando e' scritto dietro una condizione", () => {
@@ -240,8 +240,8 @@ describe("Campo", () => {
     render(
       <Campo id="lon" etichetta="Longitudine" errore="fra -180 e 180">
         {conSuggerimento && <span>suggerimento</span>}
-        <input className="as-campo__input" id="lon" />
-        <p className="as-campo__aiuto">in gradi decimali</p>
+        <input className="as-campo-modulo__input" id="lon" />
+        <p className="as-campo-modulo__aiuto">in gradi decimali</p>
       </Campo>,
     )
     const campo = screen.getByLabelText("Longitudine")
@@ -258,10 +258,10 @@ describe("Campo", () => {
     render(
       <>
         <Campo id="lat" etichetta="Latitudine" errore="fra -90 e 90">
-          <input className="as-campo__input" id="lat" />
+          <input className="as-campo-modulo__input" id="lat" />
         </Campo>
         <Campo id="lon" etichetta="Longitudine" errore="fra -180 e 180">
-          <input className="as-campo__input" id="lon" />
+          <input className="as-campo-modulo__input" id="lon" />
         </Campo>
       </>,
     )
@@ -279,19 +279,51 @@ describe("Campo", () => {
     // ammesso -- e chi ascolta sentirebbe due cose rotte invece di una.
     const { container } = render(
       <Campo id="lat" etichetta="Latitudine" errore="fra -90 e 90">
-        <input className="as-campo__input" id="lat" />
-        <p className="as-campo__aiuto">in gradi decimali</p>
+        <input className="as-campo-modulo__input" id="lat" />
+        <p className="as-campo-modulo__aiuto">in gradi decimali</p>
       </Campo>,
     )
-    const aiuto = container.querySelector(".as-campo__aiuto")
+    const aiuto = container.querySelector(".as-campo-modulo__aiuto")
     expect(aiuto?.getAttribute("aria-invalid")).toBeNull()
     expect(aiuto?.getAttribute("aria-describedby")).toBeNull()
+  })
+
+  it("il campo di testo sta nel suo pozzo, e l'aiuto resta fuori", () => {
+    // Il foglio disegna il bordo e il fuoco sul pozzo, non sull'input: senza, il campo non si vede.
+    const { container } = render(
+      <Campo id="nome" etichetta="Nome">
+        <input className="as-campo-modulo__input" id="nome" />
+        <p className="as-campo-modulo__aiuto">facoltativo</p>
+      </Campo>,
+    )
+    const pozzo = container.querySelector(".as-campo-modulo__pozzo")
+    expect(pozzo?.contains(screen.getByLabelText("Nome"))).toBe(true)
+    expect(pozzo?.querySelector(".as-campo-modulo__aiuto")).toBeNull()
+    expect(container.querySelector(".as-campo-modulo__etichetta")?.textContent).toBe("Nome")
+  })
+
+  it("una tendina non prende il pozzo: ha gia' il suo bordo", () => {
+    const { container } = render(
+      <Campo id="tipo" etichetta="Tipo">
+        <select className="as-scelta" id="tipo" />
+      </Campo>,
+    )
+    expect(container.querySelector(".as-campo-modulo__pozzo")).toBeNull()
+  })
+
+  it("mentre aspetta, il campo lo dice anche a chi ascolta", () => {
+    render(
+      <Campo id="x" etichetta="Nome" aspetta>
+        <input className="as-campo-modulo__input" id="x" />
+      </Campo>,
+    )
+    expect(screen.getByLabelText("Nome").getAttribute("aria-busy")).toBe("true")
   })
 
   it("senza errore non dichiara niente, e l'involucro resta pulito", () => {
     const { container } = render(
       <Campo id="nome" etichetta="Nome">
-        <input className="as-campo__input" id="nome" />
+        <input className="as-campo-modulo__input" id="nome" />
       </Campo>,
     )
     expect(screen.getByLabelText("Nome").getAttribute("aria-invalid")).toBeNull()
