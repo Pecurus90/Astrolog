@@ -51,6 +51,7 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Un riduttore non fa un'altra produzione; i frame senza corredo lo dicono | `test_the_same_optics_and_camera_at_two_focal_lengths_are_one_production`, `test_frames_that_do_not_say_their_rig_are_a_production_that_says_so`, `test_a_rig_that_knows_only_its_camera_is_its_own_production` |
 | Le produzioni di una pagina costano due domande, non una per riga | `test_all_the_productions_of_a_page_come_in_two_questions` |
 | La carta ha un'anteprima per produzione e dice quante sono; l'elenco lo dice quando sono piu' d'una | *la carta ha un posto di anteprima per produzione, e dice quante sono*, *una produzione sola stringe la colonna delle anteprime, e lo dice al singolare*, *oltre quattro produzioni le anteprime vanno tre per riga, senza nasconderne*, *nell'elenco il segno delle produzioni c'e' solo quando sono piu' d'una* |
+| Con piu' produzioni la carta apre il loro riepilogo; una sola non apre niente | *con piu' produzioni il nome apre il loro riepilogo: corredo, ore, frame e filtri di ognuna*, *una produzione sola non apre niente: il nome non e' un comando*, *il riepilogo si chiude con Esc, ricliccando il nome e toccando fuori*, *una produzione senza corredo lo dice, invece di restare senza nome*, *sotto una carta dell'ultima colonna il riepilogo si allinea a destra, e non esce dalla pagina* |
 | Un mosaico che ho confermato e' una riga sola, col nome che gli ho dato e le ore di tutti i pannelli | `test_a_confirmed_mosaic_is_one_row_with_the_hours_of_all_its_panels`, `test_after_the_yes_the_archive_shows_the_mosaic_as_one_row` (`backend/tests/test_review_mosaic.py`) |
 | Un oggetto ripreso dentro un mosaico e anche da solo ha la sua riga con le sole riprese sue, e niente si conta due volte | `test_an_object_shot_inside_and_outside_a_mosaic_keeps_its_own_poses`, `test_the_pills_of_a_row_are_the_filters_of_its_own_poses` |
 | Cercando o filtrando, un mosaico compare intero se uno dei suoi pannelli risponde | `test_a_filter_of_the_bar_lets_the_mosaic_through_if_one_of_its_poses_passes`, `test_the_filter_used_is_asked_of_the_poses_of_the_row`, `test_a_mosaic_named_with_a_free_name_is_found_by_that_name` |
@@ -228,9 +229,13 @@ camera a focali diverse (un riduttore) sono **una** produzione; i frame che non 
 sono una produzione col corredo che non si sa, e meta' corredo (solo la camera) e' una produzione
 sua; un mosaico ha le sue produzioni come ogni riga; stringendo la barra, le produzioni sono
 quelle dei frame chiesti. La carta ha un posto di anteprima **per produzione** e dice quante
-sono; l'elenco lo dice solo quando sono piu' d'una. **Non ancora fatto**: il menu di scelta (con
-piu' d'una, toccare la carta apre il riepilogo di ognuna: corredo, filtri, ore) e il modale della
-produzione, rimandato: finche' non c'e', una carta con una produzione sola non apre niente.
+sono; l'elenco lo dice solo quando sono piu' d'una. Con piu' d'una, toccare la carta apre sotto
+di lei il **riepilogo** di ognuna (corredo, ore, frame, filtri); si chiude con Esc, ritoccando la
+carta o toccando fuori. Sotto una carta dell'ultima colonna si allinea a destra per non uscire
+dalla pagina, e la pagina scorre quanto serve a mostrarlo. Le voci non portano da nessuna parte: e' una regione da leggere, non un
+menu, finche' il modale della produzione non c'e'. **Non ancora fatto**: il modale (rimandato:
+una carta con una produzione sola non apre niente), il foglio dal basso sul telefono, il
+riepilogo dalla riga dell'elenco.
 
 ## Cosa NON fa
 

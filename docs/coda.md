@@ -306,9 +306,17 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   `.as-barra__gruppo`, che non esiste piu'. Fetta 2a fatta (8/10): le **produzioni**, decise da Marco l'8/10 (stesso oggetto + stessa
   ottica + stessa camera): la rotta le manda con ogni riga (`spine/productions.py`), la carta ha
   un'anteprima per produzione e dice quante sono, l'elenco lo dice quando sono piu' d'una. Fetta
-  2b, prossima: il menu di scelta (sotto la carta sul desktop, foglio dal basso sul telefono, col
-  velo del telaio; nell'elenco lo apre la riga), che le classi `as-produzioni*` del foglio
-  aspettano; il modale resta rimandato. Da decidere con Marco quando si vedra' a schermo: come si
+  2b fatta (9/10): con piu' produzioni la carta apre sotto di lei il loro riepilogo
+  (`.as-produzioni`), regione da leggere e non menu perche' le voci non aprono ancora niente.
+  Restano: il foglio dal basso sul telefono (`.as-produzioni-foglio`, col velo del telaio), il
+  riepilogo dalla riga dell'elenco, il modale della produzione; il foglio veste
+  `.as-carta-oggetto__apri` solo su un'ancora, quindi il comando e' `a role="button"`: da
+  chiedere a Design la veste su `button`, e una variante del foglio per il riepilogo allineato
+  a destra (oggi lo sposta la pagina con uno stile misurato, sotto le carte dell'ultima colonna). Dalla
+  revisione della 2b: da tastiera due riepiloghi restano aperti insieme (chiude solo il clic
+  fuori); lo scorrimento che mostra il riepilogo non ha una prova automatica e lo lascia a filo
+  del bordo; a due colonne il riepilogo sporge di 8 px oltre la carta, dentro il margine; sul
+  telefono, scorrendo l'Archivio, la riga del sito spunta a meta' sotto la testata (c'era gia'). Da decidere con Marco quando si vedra' a schermo: come si
   chiama la produzione dei frame senza corredo ("corredo: non si sa"). Dall'audit della 2a: manca
   una prova **di rotta** che `scope` e `alone` arrivino a `productions.of` (le prove della spina la
   chiamano diretta).

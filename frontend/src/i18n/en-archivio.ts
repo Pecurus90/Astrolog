@@ -82,6 +82,7 @@ export const enArchivio = {
   "archive.filter.dates.wrong": "The end date is before the start date.",
   "archive.productions": "{n} productions",
   "archive.productions.one": "1 production",
+  "archive.productions.of": "Productions of {nome}",
   "archive.nothing": "No results",
   "archive.nothing.why":
     "Change the search or remove the filters.",

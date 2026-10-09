@@ -25,7 +25,7 @@ import { readFileSync, readdirSync } from "node:fs"
 import { resolve } from "node:path"
 
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { chiamate, pulisci, rispondi } from "./banco"
 import {
@@ -437,6 +437,111 @@ describe("l'Archivio, le produzioni", () => {
     expect(within(tante).getByText("3 produzioni").className).toBe("as-archivio__produzioni")
     const una = screen.getByText("NGC 7000").closest("tr") as HTMLElement
     expect(una.textContent).not.toMatch(/produzion/)
+  })
+
+  it("con piu' produzioni il nome apre il loro riepilogo: corredo, ore, frame e filtri di ognuna", async () => {
+    const m31 = {
+      ...M31,
+      productions: [
+        { optics: "Rifrattore", camera: "ASI2600", frames: 100, integration_s: 36000, untimed: 0, filters: M31.filters },
+        { optics: "Newton", camera: "ASI533", frames: 20, integration_s: 7200, untimed: 3, filters: [] },
+      ],
+    }
+    archivio([m31])
+    await apriArchivio()
+
+    const carta = await screen.findByRole("article")
+    const apri = within(carta).getByRole("button", { name: "M 31" })
+    expect(apri.getAttribute("aria-expanded")).toBe("false")
+    expect(screen.queryByRole("region", { name: /produzioni di m 31/i })).toBeNull()
+
+    fireEvent.click(apri)
+
+    expect(apri.getAttribute("aria-expanded")).toBe("true")
+    const riepilogo = await screen.findByRole("region", { name: /produzioni di m 31/i })
+    expect(apri.getAttribute("aria-controls")).toBe(riepilogo.id)
+    // la legenda dei filtri ha le sue voci: qui si contano le produzioni
+    const voci = riepilogo.querySelectorAll(".as-produzioni__voci > li")
+    expect(voci).toHaveLength(2)
+    expect(voci[0]?.textContent).toMatch(/Rifrattore.*ASI2600.*10 h.*100 frame/)
+    expect(voci[0]?.querySelector(".as-filtri__barra")).not.toBeNull()
+    // frame senza durata a parte, e i filtri che mancano detti a parole
+    expect(voci[1]?.textContent).toMatch(/Newton.*ASI533.*2 h.*20 frame.*3 senza durata/)
+    expect(within(voci[1] as HTMLElement).getByText("Filtri non indicati")).toBeDefined()
+  })
+
+  it("una produzione sola non apre niente: il nome non e' un comando", async () => {
+    archivio([M31])
+    await apriArchivio()
+
+    const carta = await screen.findByRole("article")
+    expect(within(carta).queryByRole("button", { name: "M 31" })).toBeNull()
+    expect(within(carta).getByText("M 31")).toBeDefined()
+  })
+
+  it("il riepilogo si chiude con Esc, ricliccando il nome e toccando fuori", async () => {
+    archivio([conProduzioni(2)])
+    await apriArchivio()
+    const apri = within(await screen.findByRole("article")).getByRole("button", { name: "M 31" })
+    const aperto = () => screen.queryByRole("region", { name: /produzioni di m 31/i })
+
+    fireEvent.click(apri)
+    expect(aperto()).not.toBeNull()
+    fireEvent.keyDown(apri, { key: "Escape" })
+    expect(aperto()).toBeNull()
+
+    // dopo un clic sul testo del riepilogo il fuoco e' sul body: Esc chiude lo stesso
+    fireEvent.click(apri)
+    fireEvent.keyDown(document.body, { key: "Escape" })
+    expect(aperto()).toBeNull()
+    expect(document.activeElement).toBe(apri)
+
+    fireEvent.click(apri)
+    fireEvent.click(apri)
+    expect(aperto()).toBeNull()
+
+    fireEvent.click(apri)
+    fireEvent.mouseDown(document.body)
+    expect(aperto()).toBeNull()
+    expect(apri.getAttribute("aria-expanded")).toBe("false")
+  })
+
+  it("sotto una carta dell'ultima colonna il riepilogo si allinea a destra, e non esce dalla pagina", async () => {
+    // Il riepilogo e' piu' largo della carta: partendo dal suo bordo sinistro usciva dalla finestra.
+    const misura = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      return { left: 0, right: this.classList.contains("as-produzioni") ? 1390 : 1400 } as DOMRect
+    })
+    // La barra verticale occupa 15 px del corpo: il riepilogo che ci finisce sotto e' gia' fuori.
+    const utile = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(1385)
+    archivio([conProduzioni(2)])
+    await apriArchivio()
+    const apri = within(await screen.findByRole("article")).getByRole("button", { name: "M 31" })
+
+    fireEvent.click(apri)
+    const fuori = await screen.findByRole("region", { name: /produzioni di m 31/i })
+    expect(fuori.style.right).toBe("0px")
+    expect(fuori.style.left).toBe("auto")
+
+    // se ci sta, resta dov'e': nessuna misura scritta a mano
+    fireEvent.click(apri)
+    misura.mockImplementation(() => ({ left: 0, right: 500 }) as DOMRect)
+    fireEvent.click(apri)
+    expect((await screen.findByRole("region", { name: /produzioni di m 31/i })).getAttribute("style")).toBeNull()
+    misura.mockRestore()
+    utile.mockRestore()
+  })
+
+  it("una produzione senza corredo lo dice, invece di restare senza nome", async () => {
+    const m31 = { ...conProduzioni(1), productions: [...conProduzioni(1).productions, { ...M31.productions[0], optics: null, camera: null }] }
+    archivio([m31])
+    await apriArchivio()
+
+    fireEvent.click(within(await screen.findByRole("article")).getByRole("button", { name: "M 31" }))
+    const riepilogo = await screen.findByRole("region", { name: /produzioni di m 31/i })
+    const voci = riepilogo.querySelectorAll(".as-produzioni__voci > li")
+    expect(voci[1]?.textContent).toMatch(/ottica non indicata.*camera non indicata/i)
   })
 })
 

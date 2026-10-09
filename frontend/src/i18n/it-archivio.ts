@@ -82,6 +82,7 @@ export const itArchivio = {
   "archive.filter.dates.wrong": "La data finale precede quella iniziale.",
   "archive.productions": "{n} produzioni",
   "archive.productions.one": "1 produzione",
+  "archive.productions.of": "Produzioni di {nome}",
   "archive.nothing": "Nessun risultato",
   "archive.nothing.why":
     "Modifica la ricerca o rimuovi i filtri.",

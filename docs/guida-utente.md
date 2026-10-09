@@ -244,7 +244,10 @@ La pagina ha **due viste**, e si cambia col pulsante in alto a sinistra:
   **produzione**, cioe' per ogni coppia di ottica e camera con cui hai ripreso quell'oggetto, e
   sotto i dati leggi quante sono (*2 produzioni*). I riquadri sono vuoti: sono il posto delle
   immagini, che l'app non mostra ancora. Un riduttore non fa un'altra produzione; i frame che non
-  dicono con che corredo sono stati ripresi ne fanno una a parte;
+  dicono con che corredo sono stati ripresi ne fanno una a parte. Se le produzioni sono piu'
+  d'una, un clic sulla carta apre sotto di lei il loro riepilogo: per ognuna l'ottica e la
+  camera, le ore, i frame e i filtri. Si chiude con Esc, con un altro clic sulla carta o con un
+  clic fuori;
 - **elenco**, a colonne allineate, per confrontare a colpo d'occhio chi ha piu' ore o piu' frame;
   accanto al nome leggi quante produzioni ha, quando sono piu' d'una.
 
