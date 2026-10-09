@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { CampoConScelte } from "./CampoConScelte"
 import { Scelte } from "./Scelte"
-import { Dettaglio, Prova, Riga } from "./Riga"
+import { Domanda } from "./Domanda"
+import { Dettaglio, Prova } from "./Riga"
 import { Sezione } from "./Sezione"
 import type { components } from "./api/schema"
 import { TempoDellePose } from "./TempoDellePose"
@@ -54,7 +55,8 @@ function RigaMosaici({
   // La scelta e il nome sono della riga e non dell'accumulatore: ridando la risposta gia' salvata
   // la voce nell'accumulatore si toglie, e un campo che leggesse da li' si svuoterebbe sotto le dita.
   const [scelta, setScelta] = useState<Parola | null>(risposta?.answer ?? mosaico.answer ?? null)
-  const [nome, setNome] = useState(mosaico.answer_name ?? mosaico.proposed)
+  // Parte dal nome in mano, se c'e': la sezione si rimonta quando si chiude e si riapre.
+  const [nome, setNome] = useState(risposta?.name ?? mosaico.answer_name ?? mosaico.proposed)
   const idCampo = `mosaico-nome-${chiave}`
 
   const manda = (parola: Parola, scritto: string) => {
@@ -70,12 +72,22 @@ function RigaMosaici({
     onRisposta(chiave, detto ? { ...punto, answer: "yes", name: detto.trim() } : null)
   }
 
+  const detta = risposta?.answer ?? mosaico.answer
+  const dettoDi = risposta?.name ?? mosaico.answer_name ?? ""
+  const si = t(PAROLE.yes)
+  const no = t(PAROLE.no)
   return (
-    <Riga
+    <Domanda
+      id={`mosaics:${chiave}`}
+      voce={`${mosaico.object}, ${dove}`}
+      nome={<span className="as-nome-oggetto">{mosaico.object}</span>}
       frames={mosaico.frames}
-      nome={mosaico.object}
-      nomeDiCatalogo
-      stato={risposta ? "risposta" : undefined}
+      salvata={mosaico.answer !== null}
+      inMano={risposta !== undefined}
+      era={mosaico.answer ? t(PAROLE[mosaico.answer]) : undefined}
+      // In breve si legge la risposta che c'e' -- in mano o salvata --, non la scelta a meta':
+      // un si' col nome svuotato non e' una risposta.
+      breve={detta ? <b>{detta === "yes" ? `${si}: ${dettoDi}` : no}</b> : `${si} \u00b7 ${no}`}
       dettagli={
         <>
           <Dettaglio>{t("review.mosaics.panels", { n: numero(mosaico.panels) })}</Dettaglio>{" "}
@@ -93,21 +105,20 @@ function RigaMosaici({
         opzioni={RISPOSTE.map(([valore, parola]) => ({ valore, etichetta: t(parola) }))}
         scelta={scelta}
         onScelta={(valore) => manda(valore, nome)}
-      />
-      {/* Una domanda sola: col si' si dice anche DI COSA, e il campo arriva gia' compilato con la
-          proposta. I soggetti dei pannelli sono i suggerimenti; una sigla scritta la porta il
-          backend sulla voce del catalogo. L'etichetta dice quale mosaico: il campo si ripete su
-          ogni riga. */}
-      {scelta === "yes" && (
-        <CampoConScelte
-          id={idCampo}
-          etichetta={t("review.mosaics.name", { dove })}
-          valore={nome}
-          scelte={mosaico.names}
-          onScrivi={(scritto) => manda("yes", scritto)}
-        />
-      )}
-    </Riga>
+      >
+        {/* Col si' si dice anche DI COSA, e il campo arriva gia' compilato con la proposta. I
+            soggetti dei pannelli sono i suggerimenti. L'etichetta dice quale mosaico. */}
+        {scelta === "yes" && (
+          <CampoConScelte
+            id={idCampo}
+            etichetta={t("review.mosaics.name", { dove })}
+            valore={nome}
+            scelte={mosaico.names}
+            onScrivi={(scritto) => manda("yes", scritto)}
+          />
+        )}
+      </Scelte>
+    </Domanda>
   )
 }
 

@@ -80,24 +80,26 @@ describe("una riga di Da confermare", () => {
 
   it("la riga a cui hai risposto lo dice con una forma, non con un colore", async () => {
     // WCAG 2.2, 1.4.1: chi non distingue i colori deve vedere lo stesso quali righe sta per
-    // mandare. La barra piena a sinistra e' quella forma.
+    // mandare. Lo stato ha un segno e una parola.
     conUnaDomanda()
     const sezione = await vaiASezione(/frame senza tipo/i)
     const voce = riga(sezione, CARTELLA)
-    const corpo = voce.querySelector(".as-riga")
-    expect(corpo?.className).toBe("as-riga")
+    const stato = () => voce.querySelector(".as-risposta")
+    expect(stato()?.className).toBe("as-risposta as-risposta--dare")
+    expect(stato()?.textContent).toBe("senza risposta")
     fireEvent.click(within(voce).getByLabelText("Calibrazione"))
-    expect(voce.querySelector(".as-riga")?.className).toContain("as-riga--risposta")
+    expect(stato()?.className).toBe("as-risposta as-risposta--ora")
+    expect(stato()?.textContent).toBe("da applicare")
   })
 
   it("cio' che si puo' fare sta nella colonna delle risposte", async () => {
-    // `.as-riga` e' una griglia a due colonne: una risposta lasciata fuori finirebbe in mezzo
-    // alla prosa, e in colonna stretta non scenderebbe sotto la domanda.
+    // La domanda aperta ha due colonne: di cosa si parla, e i controlli. Un controllo lasciato
+    // fuori dal corpo finirebbe in mezzo ai dati.
     conUnaDomanda()
     const sezione = await vaiASezione(/frame senza tipo/i)
     const voce = riga(sezione, CARTELLA)
     const scelta = within(voce).getByLabelText("Calibrazione")
-    expect(scelta.closest(".as-riga__risposte")).not.toBeNull()
+    expect(scelta.closest(".as-domanda__corpo")).not.toBeNull()
   })
 
   it("i campi di due sezioni hanno il loro involucro, anche dietro un clic", async () => {
@@ -131,17 +133,16 @@ describe("una riga di Da confermare", () => {
     })
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
-    await screen.findByRole("region", { name: /mosaici/i })
-    // si apre tutto cio' che si apre, e solo dopo si guarda
-    const apre = /cambia|completa|dagli un nome/i
-    for (const b of screen.queryAllByRole("button", { name: apre })) {
-      fireEvent.click(b)
-    }
+    await screen.findByRole("region", { name: /frame senza tipo/i })
+    // la sezione gia' risposta e' chiusa in una riga: si riapre, poi si apre la sua domanda. Una
+    // sola e' aperta alla volta, quindi si guarda dopo ogni apertura.
+    fireEvent.click(screen.getByRole("button", { name: /^riapri: mosaici/i }))
+    fireEvent.click(screen.getByRole("button", { name: /^cambia: M 42/i }))
     // che i campi ci siano davvero si guarda prima: `fuoriDaiMattoni` torna vuoto anche su una
     // pagina senza campi, e questa prova diventerebbe verde per il motivo sbagliato
-    expect(
-      document.querySelectorAll(".as-campo-modulo__etichetta, .as-campo-modulo__input, .as-scelta").length,
-    ).toBeGreaterThan(0)
+    expect(document.querySelectorAll(".as-campo-modulo__etichetta, .as-campo-modulo__input").length).toBeGreaterThan(0)
+    expect(fuoriDaiMattoni()).toEqual([])
+    fireEvent.click(screen.getByRole("button", { name: /^rispondi: D:/i }))
     expect(fuoriDaiMattoni()).toEqual([])
   })
 

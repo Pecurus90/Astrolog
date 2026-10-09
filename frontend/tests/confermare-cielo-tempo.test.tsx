@@ -242,12 +242,20 @@ describe("Da confermare -- i mosaici proposti", () => {
     const gemello = { ...PAGINA.mosaics[0], key: "impronta-gemello", ra_deg: 84.9, dec_deg: -1.2 }
     aperta({ ...PAGINA, mosaics: [PAGINA.mosaics[0], gemello] })
     const sezione = await vaiASezione(/mosaici/i)
-    const nomi = within(sezione)
-      .getAllByRole("group")
-      .map((g) => g.querySelector("legend")?.textContent)
-    expect(nomi).toHaveLength(2)
+    // una sola domanda e' aperta: i due gesti che le aprono dicono gia' quale, e una volta aperta
+    // ognuna nomina il suo gruppo
+    const gesti = within(sezione).getAllByRole("button", { name: /^(rispondi|cambia): M 42/i })
+    const tutte = [...sezione.querySelectorAll(".as-domanda, .as-domanda-riga")]
+    expect(tutte).toHaveLength(2)
+    expect(gesti.length).toBeGreaterThan(0)
+    const nomi: (string | null | undefined)[] = []
+    for (const quale of [/83,8/, /84,9/]) {
+      const gesto = within(sezione).queryByRole("button", { name: quale })
+      if (gesto) fireEvent.click(gesto)
+      nomi.push(within(sezione).getByRole("group").querySelector("legend")?.textContent)
+    }
+    expect(nomi[0]).toMatch(/M 42.*83,8/)
     expect(new Set(nomi).size).toBe(2)
-    expect(within(sezione).getByRole("group", { name: /M 42.*83,8/ })).toBeDefined()
   })
 
   it("un mosaico senza tempo non scrive zero ore", async () => {

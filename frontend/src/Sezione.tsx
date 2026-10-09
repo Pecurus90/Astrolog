@@ -1,5 +1,6 @@
-import type { ReactNode } from "react"
+import { Fragment, type ReactNode, useContext } from "react"
 
+import { DomandaAperta } from "./Domanda"
 import { numero, t } from "./i18n"
 import { type QualeSezione, SEZIONI } from "./sezioniDaConfermare"
 
@@ -66,6 +67,8 @@ export function Sezione<V>({
   piede?: ReactNode
 }) {
   const { ancora, titolo } = SEZIONI[quale]
+  // Il perche' si legge solo nella sezione su cui si sta lavorando: quella con la domanda aperta.
+  const quiSiLavora = useContext(DomandaAperta).aperta?.startsWith(`${quale}:`) ?? false
   return (
     <section className="as-carta as-conferma-sezione" id={ancora} aria-labelledby={`${ancora}-nome`}>
       <header className="as-conferma-sezione__testa">
@@ -73,13 +76,11 @@ export function Sezione<V>({
           {t(titolo)}
         </h2>
         <span className="as-conferma-sezione__quante">{t("review.questions", { n: numero(voci.length) })}</span>
-        {domanda && <p className="as-conferma-sezione__perche">{domanda}</p>}
+        {domanda && quiSiLavora && <p className="as-conferma-sezione__perche">{domanda}</p>}
       </header>
-      <ul className="as-elenco">
-        {voci.map((v, indice) => (
-          <li key={chiave(v)}>{riga(v, indice)}</li>
-        ))}
-      </ul>
+      {voci.map((v, indice) => (
+        <Fragment key={chiave(v)}>{riga(v, indice)}</Fragment>
+      ))}
       {piede}
     </section>
   )

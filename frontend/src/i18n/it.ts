@@ -100,8 +100,6 @@ export const it = {
   "review.typeless.question": "Tipo dei frame in {cartella}",
   "review.typeless.light": "Light",
   "review.typeless.calibration": "Calibrazione",
-  "review.typeless.answerLight": "Light",
-  "review.typeless.answerCalibration": "Calibrazione",
   "sky.point": "RA {ra} Dec {dec}",
   "review.unclear": "Frame senza sito",
   "review.unclear.why":
@@ -146,6 +144,18 @@ export const it = {
   "review.applying": "Applicazione in corso\u2026",
   "review.none.title": "Niente da confermare",
   "review.none.text": "Nessuna domanda aperta.",
+  "review.answer": "Rispondi",
+  "review.change": "Cambia",
+  "review.reopen": "Riapri",
+  "review.state.open": "senza risposta",
+  "review.state.inHand": "da applicare",
+  "review.state.saved": "salvata",
+  "review.state.changed": "cambiata, da applicare",
+  "review.state.was": "era {era}",
+  "review.closed.inHand": "{n} risposte da applicare",
+  "review.closed.inHand.one": "1 risposta da applicare",
+  "review.closed.saved": "{n} risposte salvate",
+  "review.closed.saved.one": "1 risposta salvata",
   "review.apply": "Applica",
   // il piede dice cosa si sta per mandare: un Applica che non dice quanto e' un salto nel buio
   // girata cosi' si legge bene con ogni numero

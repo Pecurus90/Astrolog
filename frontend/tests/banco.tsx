@@ -17,7 +17,7 @@
  *   tornano rosse con "Failed to parse URL from /api/v1/review".
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import axe from "axe-core"
 import { vi } from "vitest"
 
@@ -254,6 +254,14 @@ export async function disegna() {
 export async function vaiASezione(nome: RegExp) {
   await disegna()
   fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
+  // Una sezione con tutte le risposte e' chiusa in una riga: la si riapre, come fa chi la usa.
+  await waitFor(() => {
+    if (!document.querySelector(".as-conferma__conta")) throw new Error("la pagina non c'e' ancora")
+  })
+  const chiusa = [...document.querySelectorAll<HTMLElement>(".as-conferma-chiusa")].find((c) =>
+    nome.test(c.querySelector(".as-conferma-chiusa__nome")?.textContent ?? ""),
+  )
+  if (chiusa) fireEvent.click(within(chiusa).getByRole("button"))
   return screen.findByRole("region", { name: nome })
 }
 
@@ -265,10 +273,17 @@ export async function vaiASezione(nome: RegExp) {
  * candidati dentro l'oggetto) non ingannano: `find` torna la prima in ordine di documento, che e'
  * sempre quella che le contiene. */
 export function riga(sezione: HTMLElement, nome: string) {
-  const voci = within(sezione).getAllByRole("listitem")
-  const trovata = voci.find((v) => v.textContent?.startsWith(nome))
+  // Una domanda sola e' aperta in tutta la pagina: se quella cercata e' chiusa la si apre col suo
+  // gesto, come fa chi usa la pagina, e si torna la scheda coi controlli.
+  const cerca = () =>
+    [...sezione.querySelectorAll<HTMLElement>(".as-domanda, .as-domanda-riga")].find((v) =>
+      v.textContent?.startsWith(nome),
+    )
+  const trovata = cerca()
   if (!trovata) throw new Error(`nessuna riga che comincia con "${nome}"`)
-  return trovata
+  if (!trovata.classList.contains("as-domanda-riga")) return trovata
+  fireEvent.click(within(trovata).getByRole("button"))
+  return cerca() as HTMLElement
 }
 
 /** Cio' che a schermo **non passa dal suo mattone**: i controlli scritti a mano e i pezzi di un

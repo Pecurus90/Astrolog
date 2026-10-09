@@ -542,10 +542,17 @@ cosi' puoi controllare invece di fidarti.
 
 **Le risposte si accumulano**: rispondi a quello che sai, in qualunque scheda, e premi **Applica**
 una volta sola. In fondo alla pagina una barra ti segue e ti dice **quante modifiche ci sono da
-applicare** prima di premere; una riga a cui hai risposto si segna con una barra piena a sinistra, cosi' vedi
+applicare** prima di premere; una riga a cui hai risposto lo dice con un segno e una parola, cosi' vedi
 cosa stai per mandare anche se non distingui i colori. La pagina si rilegge e ti dice quante
 modifiche ha applicato e quanti frame sono da rielaborare. Ogni risposta vale anche per i frame che
 arriveranno, e **si cambia**: un gruppo a cui hai risposto resta in pagina con la sua risposta.
+
+**Una domanda sola e' aperta alla volta**: le altre sono righe chiuse, che dicono di cosa si
+parla, la risposta in breve (o fra cosa si sceglie) e il suo stato -- *senza risposta*, *da
+applicare*, *salvata*, *cambiata, da applicare* (con cos'era prima). Apri una riga con *Rispondi*
+o *Cambia*; quella di prima si chiude. Le scelte fra poche voci sono pillole. Una scheda con
+tutte le risposte si chiude in una riga, al suo posto, e si riapre con *Riapri*; la spiegazione
+di una scheda si legge solo in quella su cui stai lavorando.
 
 In cima leggi **quante domande aspettano**. A sinistra c'e' l'**indice** delle schede: accanto a
 ognuna quante domande sono ancora senza risposta, o una spunta quando le hai risposte tutte; un

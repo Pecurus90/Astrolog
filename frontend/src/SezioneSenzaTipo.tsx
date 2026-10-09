@@ -1,7 +1,7 @@
 import { memo } from "react"
 
 import { Scelte } from "./Scelte"
-import { Dettaglio, Riga } from "./Riga"
+import { Domanda } from "./Domanda"
 import { type PerGruppo, Sezione } from "./Sezione"
 import type { components } from "./api/schema"
 import { type Chiave, t } from "./i18n"
@@ -55,15 +55,17 @@ function RigaSenzaTipo({
   // leggendo solo la salvata, chi sceglie non vedrebbe succedere niente finche' non applica.
   const scelta = risposta?.kind ?? gruppo.answer
   return (
-    <Riga
-      frames={gruppo.frames}
+    <Domanda
+      id={`typeless:${gruppo.key}`}
+      voce={gruppo.key}
       nome={gruppo.key}
-      stato={risposta ? "risposta" : undefined}
-      dettagli={
-        <>
-          {gruppo.answer && <Dettaglio>{t(DETTO[gruppo.answer])}</Dettaglio>}
-        </>
-      }
+      cifre
+      frames={gruppo.frames}
+      salvata={gruppo.answer !== null}
+      inMano={risposta !== undefined}
+      era={gruppo.answer ? t(PAROLE[gruppo.answer]) : undefined}
+      // La risposta e' la scelta stessa, in evidenza: non una parola accanto alle due voci.
+      breve={scelta ? <b>{t(PAROLE[scelta])}</b> : SCELTE.map(([, parola]) => t(parola)).join(" \u00b7 ")}
     >
       <Scelte
         domanda={t("review.typeless.question", { cartella: gruppo.key })}
@@ -74,7 +76,7 @@ function RigaSenzaTipo({
           onRisposta(gruppo.key, kind === gruppo.answer ? null : { key: gruppo.key, kind })
         }
       />
-    </Riga>
+    </Domanda>
   )
 }
 
@@ -86,9 +88,3 @@ const PAROLE: Record<Scelta, Chiave> = {
 }
 const SCELTE = Object.entries(PAROLE) as [Scelta, Chiave][]
 
-/** Come si legge la risposta gia' data, accanto alla cartella. Stessa regola: una parola per
- *  risposta, e una risposta nuova non compila finche' non ne ha una. */
-const DETTO: Record<Scelta, Chiave> = {
-  light: "review.typeless.answerLight",
-  calibration: "review.typeless.answerCalibration",
-}

@@ -90,8 +90,8 @@ describe("Da confermare -- i file che non dicono che file sono", () => {
     aperta()
     const sezione = await vaiASezione(/frame senza tipo/i)
     const risposta = riga(sezione, "D:/Astro/2024-06-01/M51")
-    // la risposta salvata sta in testa alla riga, accanto ai frame: la scelta ha lo stesso nome
-    expect(risposta.querySelector(".as-riga__testa")?.textContent).toMatch(/30 frame\s+Light$/)
+    // la risposta salvata e' la scelta stessa, e lo stato lo dice: non una parola accanto
+    expect(risposta.querySelector(".as-risposta")?.textContent).toBe("salvata")
     expect(within(risposta).getByLabelText("Light")).toHaveProperty("checked", true)
     fireEvent.click(within(risposta).getByLabelText("Calibrazione"))
     expect(screen.getByRole("button", { name: /applica/i })).toHaveProperty("disabled", false)

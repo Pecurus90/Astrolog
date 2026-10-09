@@ -43,7 +43,7 @@ const PAGINA = {
   gear: [],
 }
 
-function aperta(pagina = PAGINA) {
+function aperta(pagina: unknown = PAGINA) {
   rispondi({
     ...STANOTTE,
     "/api/v1/vocab/filter-models": { stato: 200, corpo: { items: MODELLI } },
@@ -67,7 +67,7 @@ describe("Da confermare -- i filtri", () => {
     // (`review.py` lo dichiara). Se la pagina riordinasse, sarebbero due case per lo stesso fatto.
     aperta()
     const sezione = await vaiAConfermare()
-    const righe = within(sezione).getAllByRole("listitem")
+    const righe = [...sezione.querySelectorAll(".as-domanda, .as-domanda-riga")]
     expect(righe.at(0)?.textContent).toMatch(/^H/)
     expect(righe.at(1)?.textContent).toMatch(/^Filter 3/)
   })
@@ -131,6 +131,25 @@ describe("Da confermare -- i filtri", () => {
       expect(filtro).toMatchObject({ id: 7, name: "Il mio Ha" })
       expect(filtro?.catalog_id).toBeUndefined()
     })
+  })
+
+  it("un filtro scritto a mano si rivede com'e' dopo che la sezione si e' chiusa e riaperta", async () => {
+    // Una sezione chiusa si smonta: la strada "a mano" si rilegge dalla risposta in mano, o alla
+    // riapertura si vedrebbe la tendina vuota mentre Applica manda il nome scritto.
+    aperta({
+      ...PAGINA,
+      filters: PAGINA.filters.slice(0, 1),
+      typeless: [{ key: "D:/Astro/dark", frames: 120, answer: null }],
+    })
+    const sezione = await vaiAConfermare()
+    const suHa = riga(sezione, "H")
+    fireEvent.click(within(suHa).getByRole("button", { name: /non in elenco/i }))
+    fireEvent.change(within(suHa).getByLabelText(/^nome/i), { target: { value: "Il mio Ha" } })
+    fireEvent.click(screen.getByRole("button", { name: "Rispondi: D:/Astro/dark" }))
+    fireEvent.click(screen.getByRole("button", { name: /^Riapri: Filtri/ }))
+    const riaperta = riga(screen.getByRole("region", { name: /filtri/i }), "H")
+    expect(within(riaperta).getByLabelText(/^nome/i)).toHaveProperty("value", "Il mio Ha")
+    expect(within(riaperta).queryByLabelText(/filtro esistente: H$/i)).toBeNull()
   })
 
   it("la larghezza in nanometri e facoltativa: si risponde anche senza", async () => {

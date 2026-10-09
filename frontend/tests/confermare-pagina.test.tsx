@@ -96,8 +96,8 @@ describe("Da confermare -- l'ossatura della pagina", () => {
   it("rispondendo, l'indice conta una domanda in meno, e a zero mette la spunta", async () => {
     aperta()
     await apri()
-    const sezione = await screen.findByRole("region", { name: "Frame senza tipo" })
-    fireEvent.click(within(sezione).getAllByRole("radio", { name: "Light" })[0]!)
+    fireEvent.click(await screen.findByRole("button", { name: "Rispondi: D:/Astro/dark" }))
+    fireEvent.click(screen.getByRole("radio", { name: "Light" }))
     expect(indice()).toEqual(["Strumenti duplicati1", "Frame senza tipo\u2713"])
     // la spunta non e' sola: chi ascolta sente che sono tutte risposte
     expect(within(screen.getByRole("navigation", { name: "Sezioni" })).getByLabelText("tutte con risposta")).toBeDefined()
@@ -199,8 +199,8 @@ describe("Da confermare -- l'ossatura della pagina", () => {
       },
     })
     await apri()
-    const sezione = await screen.findByRole("region", { name: "Frame senza tipo" })
-    fireEvent.click(within(sezione).getAllByRole("radio", { name: "Light" })[0]!)
+    fireEvent.click(await screen.findByRole("button", { name: "Rispondi: D:/Astro/dark" }))
+    fireEvent.click(screen.getByRole("radio", { name: "Light" }))
     fireEvent.click(screen.getByRole("button", { name: "Applica" }))
 
     // al lavoro: una risposta data adesso si perderebbe, quindi le sezioni non si toccano

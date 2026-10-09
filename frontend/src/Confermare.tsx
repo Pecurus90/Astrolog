@@ -3,6 +3,7 @@ import { Bottone } from "./Bottone"
 import { Fragment, useMemo, useState } from "react"
 
 import { Avviso } from "./Avviso"
+import { DomandaAperta, Risposta } from "./Domanda"
 import { SezioneStessoPezzo } from "./SezioneStessoPezzo"
 import { SezioneFiltri } from "./SezioneFiltri"
 import { SezioneLuoghi } from "./SezioneLuoghi"
@@ -59,6 +60,10 @@ function LaPagina() {
   // Quante volte la pagina e' stata applicata e riletta: le sezioni si rimontano da capo, o
   // quelle che tengono un modulo in mano mostrerebbero ancora cio' che era scritto prima.
   const [giro, setGiro] = useState(0)
+  // La domanda aperta, una in tutta la pagina: `undefined` finche' non si sceglie, e allora e'
+  // la prima senza risposta. E le sezioni finite che l'utente ha riaperto.
+  const [scelta, setScelta] = useState<string | undefined>(undefined)
+  const [riaperte, setRiaperte] = useState<readonly QualeSezione[]>([])
   // L'esito dell'ultimo Applica si chiude: non deve restare a schermo fino al prossimo.
   const [esitoChiuso, setEsitoChiuso] = useState(false)
   const cache = useQueryClient()
@@ -121,6 +126,8 @@ function LaPagina() {
       // ripartirebbero dalla pagina vecchia.
       await cache.invalidateQueries({ queryKey: ["review"] })
       setAccumulo(VUOTO)
+      setScelta(undefined)
+      setRiaperte([])
       setGiro((g) => g + 1)
     },
   })
@@ -148,14 +155,33 @@ function LaPagina() {
   const inMano = Object.values(accumulo).reduce((quante, r) => quante + Object.keys(r).length, 0)
   // Quante domande di ogni sezione aspettano ancora: senza risposta salvata e senza una in mano.
   // Dipende da cio' che l'utente ha appena scelto, quindi si conta qui e non nell'API.
-  const aspettano: Record<QualeSezione, number | null> = {
-    lookalikes: quante(dati.lookalikes, (g) => !accumulo.lookalikes[g.id]),
-    filters: quante(dati.filters, (f) => !accumulo.filters[f.id]),
-    typeless: quante(dati.typeless, (g) => g.answer === null && !accumulo.typeless[g.key]),
-    unclear: quante(dati.unclear, (p) => p.site === null && !accumulo.unclear[p.key]),
-    mosaics: quante(dati.mosaics, (m) => m.answer === null && !accumulo.mosaics[m.key]),
+  // Per ogni sezione, le sue domande come le vede la pagina: la chiave, e se ha una risposta
+  // salvata. Nell'ordine dell'API, che e' quello in cui si disegnano.
+  const domande: Record<QualeSezione, { chiave: string; salvata: boolean }[]> = {
+    lookalikes: (dati.lookalikes ?? []).map((g) => ({ chiave: String(g.id), salvata: false })),
+    filters: (dati.filters ?? []).map((f) => ({ chiave: String(f.id), salvata: false })),
+    typeless: (dati.typeless ?? []).map((g) => ({ chiave: g.key, salvata: g.answer !== null })),
+    unclear: (dati.unclear ?? []).map((p) => ({ chiave: p.key, salvata: p.site !== null })),
+    mosaics: (dati.mosaics ?? []).map((m) => ({ chiave: m.key, salvata: m.answer !== null })),
   }
-  const presenti = (Object.keys(SEZIONI) as QualeSezione[]).filter((s) => aspettano[s] !== null)
+  const tutte = Object.keys(SEZIONI) as QualeSezione[]
+  const inManoDi = (s: QualeSezione) => accumulo[s] as Record<string, unknown>
+  const senzaRisposta = (s: QualeSezione) => domande[s].filter((d) => !d.salvata && !inManoDi(s)[d.chiave])
+  const presenti = tutte.filter((s) => domande[s].length > 0)
+  const aspettano = Object.fromEntries(tutte.map((s) => [s, senzaRisposta(s).length])) as Record<QualeSezione, number>
+  // Aperta e' quella scelta; finche' nessuno sceglie, la prima che aspetta una risposta.
+  const prima = presenti.flatMap((s) => senzaRisposta(s).map((d) => `${s}:${d.chiave}`))[0] ?? null
+  const aperta = scelta ?? prima
+  // Fissata al primo disegno: se seguisse "la prima che aspetta", rispondendo salterebbe alla
+  // domanda dopo e la sezione si chiuderebbe sotto le mani.
+  if (scelta === undefined && prima !== null) setScelta(prima)
+  // Una sezione con tutte le risposte si chiude in una riga, al suo posto. Non quella su cui si
+  // sta lavorando: si chiuderebbe sotto le mani.
+  const chiusa = (s: QualeSezione) =>
+    domande[s].length > 0 &&
+    aspettano[s] === 0 &&
+    !riaperte.includes(s) &&
+    !(aperta?.startsWith(`${s}:`) ?? false)
   const conta = (
     <p className="as-conferma__conta">
       <b>{numero(dati.to_confirm)}</b> {t("review.count.word", { n: dati.to_confirm })}
@@ -209,6 +235,30 @@ function LaPagina() {
     )
   }
 
+  /** La riga di una sezione chiusa: il nome, quante risposte e in che stato, e come si riapre.
+   *  Porta l'ancora della sezione, che da chiusa non e' montata: l'indice arriva qui. */
+  const chiusaDi = (s: QualeSezione) => {
+    const mie = domande[s].filter((d) => inManoDi(s)[d.chiave]).length
+    return (
+      <div className="as-carta as-conferma-chiusa" id={SEZIONI[s].ancora} key={s}>
+        <h2 className="as-conferma-chiusa__nome">{t(SEZIONI[s].titolo)}</h2>
+        <Risposta inMano={mie > 0} salvata={mie === 0}>
+          {mie > 0
+            ? t("review.closed.inHand", { n: numero(mie) })
+            : t("review.closed.saved", { n: numero(domande[s].length) })}
+        </Risposta>
+        <Bottone
+          nome={`${t("review.reopen")}: ${t(SEZIONI[s].titolo)}`}
+          piccolo
+          verso="nudo"
+          onClick={() => setRiaperte((prima) => [...prima, s])}
+        >
+          {t("review.reopen")}
+        </Bottone>
+      </div>
+    )
+  }
+
   // Unire due strumenti non si annulla: se fra le risposte in mano ce n'e' una, si dice qui.
   const unisce = Object.values(accumulo.lookalikes).some((r) => r.same)
   const ferma = applica.isPending
@@ -230,9 +280,9 @@ function LaPagina() {
                 ) : (
                   <span
                     className="as-conferma-indice__n"
-                    aria-label={t("review.index.open", { n: numero(aspettano[s] ?? 0) })}
+                    aria-label={t("review.index.open", { n: numero(aspettano[s]) })}
                   >
-                    {numero(aspettano[s] ?? 0)}
+                    {numero(aspettano[s])}
                   </span>
                 )}
               </a>
@@ -257,15 +307,16 @@ function LaPagina() {
       {/* L'ordine delle sezioni e' fisso: prima i pezzi, poi come si montano insieme, poi il
           dove e il quando, poi il cielo. Una sezione che si sposta a seconda di cosa contiene non
           si ritrova. */}
+      <DomandaAperta.Provider value={{ aperta, apri: setScelta }}>
       <Fragment key={giro}>
-      {!!dati?.lookalikes?.length && (
+      {chiusa("lookalikes") ? chiusaDi("lookalikes") : !!dati?.lookalikes?.length && (
         <SezioneStessoPezzo
           gruppi={dati.lookalikes}
           risposte={accumulo.lookalikes}
           onRisposta={scrivi("lookalikes")}
         />
       )}
-      {!!dati?.filters?.length && (
+      {chiusa("filters") ? chiusaDi("filters") : !!dati?.filters?.length && (
         <SezioneFiltri
           filtri={dati.filters}
           miei={dati.filter_choices}
@@ -274,17 +325,17 @@ function LaPagina() {
           onRisposta={scrivi("filters")}
         />
       )}
-      {!!dati?.typeless?.length && (
+      {chiusa("typeless") ? chiusaDi("typeless") : !!dati?.typeless?.length && (
         <SezioneSenzaTipo
           gruppi={dati.typeless}
           risposte={accumulo.typeless}
           onRisposta={scrivi("typeless")}
         />
       )}
-      {!!dati?.unclear?.length && (
+      {chiusa("unclear") ? chiusaDi("unclear") : !!dati?.unclear?.length && (
         <SezioneLuoghi posti={dati.unclear} risposte={accumulo.unclear} onRisposta={scrivi("unclear")} />
       )}
-      {!!dati?.mosaics?.length && (
+      {chiusa("mosaics") ? chiusaDi("mosaics") : !!dati?.mosaics?.length && (
         <SezioneMosaici
           mosaici={dati.mosaics}
           risposte={accumulo.mosaics}
@@ -292,6 +343,7 @@ function LaPagina() {
         />
       )}
       </Fragment>
+      </DomandaAperta.Provider>
       </div>
 
       {/* Il piede resta in vista e dice **cosa si sta per mandare**: le risposte si accumulano
@@ -322,11 +374,6 @@ function LaPagina() {
       </div>
     </div>
   )
-}
-
-/** Quante voci di una sezione aspettano ancora; `null` se la sezione non c'e'. */
-function quante<V>(voci: V[] | undefined, aspetta: (v: V) => boolean): number | null {
-  return voci?.length ? voci.filter(aspetta).length : null
 }
 
 /** Mentre legge: lo scheletro tiene il posto dell'indice, del conto e delle sezioni. */

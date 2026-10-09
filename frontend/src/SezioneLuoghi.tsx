@@ -1,5 +1,6 @@
 import { Scelte } from "./Scelte"
-import { Dettaglio, Riga } from "./Riga"
+import { Domanda } from "./Domanda"
+import { Dettaglio } from "./Riga"
 import { Sezione } from "./Sezione"
 import type { components } from "./api/schema"
 import { numero, t } from "./i18n"
@@ -50,12 +51,19 @@ function RigaLuoghi({
   // `site` c'e' solo se quel luogo esiste ancora: una risposta che non aggancia piu' torna domanda,
   // e a deciderlo e' il backend, lo stesso che la conta
   const data = posto.candidates.find((c) => c.name === posto.site)
+  const scelto = posto.candidates.find((c) => c.id === (risposta?.site_id ?? data?.id))
   return (
-    <Riga
+    <Domanda
+      id={`unclear:${posto.key}`}
+      voce={posto.key}
+      nome={posto.key}
+      cifre
       frames={posto.frames}
       ripreso={posto.subjects}
-      nome={posto.key}
-      stato={risposta ? "risposta" : undefined}
+      salvata={data !== undefined}
+      inMano={risposta !== undefined}
+      era={data?.name}
+      breve={scelto ? <b>{scelto.name}</b> : posto.candidates.map((c) => c.name).join(" \u00b7 ")}
       dettagli={
         <>
           {posto.distance_km !== null && (
@@ -83,6 +91,6 @@ function RigaLuoghi({
           onRisposta(posto.key, id === data?.id ? null : { key: posto.key, site_id: id })
         }
       />
-    </Riga>
+    </Domanda>
   )
 }

@@ -1,6 +1,7 @@
 import { memo } from "react"
 
-import { Dettaglio, Riga } from "./Riga"
+import { Domanda } from "./Domanda"
+import { Dettaglio } from "./Riga"
 import { Scelte } from "./Scelte"
 import { type PerGruppo, Sezione } from "./Sezione"
 import type { components } from "./api/schema"
@@ -45,11 +46,18 @@ function RigaStessoPezzo({
   onRisposta: (chiave: string, r: Risposta | null) => void
 }) {
   const scelta: Scelta | undefined = risposta && (risposta.same ? "same" : "distinct")
+  const unisci = t("review.lookalikes.same", { nome: coppia.into_name })
+  const distinti = t("review.lookalikes.distinct")
   return (
-    <Riga
-      frames={coppia.frames}
+    <Domanda
+      id={`lookalikes:${coppia.id}`}
+      voce={coppia.name}
       nome={coppia.name}
-      stato={risposta ? "risposta" : undefined}
+      cifre
+      frames={coppia.frames}
+      salvata={false}
+      inMano={risposta !== undefined}
+      breve={scelta ? <b>{scelta === "same" ? unisci : distinti}</b> : `${unisci} \u00b7 ${distinti}`}
       dettagli={
         <Dettaglio>
           {t("review.lookalikes.looksLike", {
@@ -63,8 +71,8 @@ function RigaStessoPezzo({
         domanda={t("review.lookalikes.question", { nome: coppia.name, altra: coppia.into_name })}
         nome={`stesso-pezzo-${coppia.id}`}
         opzioni={[
-          { valore: "same" as const, etichetta: t("review.lookalikes.same", { nome: coppia.into_name }) },
-          { valore: "distinct" as const, etichetta: t("review.lookalikes.distinct") },
+          { valore: "same" as const, etichetta: unisci },
+          { valore: "distinct" as const, etichetta: distinti },
         ]}
         scelta={scelta}
         onScelta={(v) =>
@@ -75,6 +83,6 @@ function RigaStessoPezzo({
           })
         }
       />
-    </Riga>
+    </Domanda>
   )
 }

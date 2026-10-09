@@ -4,7 +4,7 @@ import { Bottone } from "./Bottone"
 import { TendinaDellaBanda } from "./TendinaDellaBanda"
 import { TendinaDiScelta } from "./TendinaDiScelta"
 
-import { Riga } from "./Riga"
+import { Domanda } from "./Domanda"
 import { Sezione } from "./Sezione"
 import type { components } from "./api/schema"
 import { t } from "./i18n"
@@ -78,7 +78,11 @@ function RigaFiltri({
   onRisposta: (id: number, r: Risposta | null) => void
 }) {
   const [cerca, setCerca] = useState("")
-  const [aMano, setAMano] = useState(false)
+  // Parte dalla risposta in mano: la sezione si rimonta quando si chiude e si riapre, e una
+  // risposta che non e' ne' un'unione ne' un modello e' stata scritta a mano.
+  const [aMano, setAMano] = useState(
+    risposta !== undefined && risposta.merge_into == null && risposta.catalog_id == null,
+  )
   const dalCatalogo = risposta?.catalog_id != null
 
   // **L'elenco si apre scrivendo, non prima.** Collaudando sull'archivio vero: otto filtri da
@@ -102,11 +106,17 @@ function RigaFiltri({
     })
   }
 
+  const mio = miei.find((m) => m.id === risposta?.merge_into)
   return (
-    <Riga
+    <Domanda
+      id={`filters:${filtro.id}`}
+      voce={filtro.name}
       nome={filtro.name}
+      cifre
       frames={filtro.frames}
-      stato={risposta ? "risposta" : undefined}
+      salvata={false}
+      inMano={risposta !== undefined}
+      breve={risposta ? <b>{mio?.name ?? risposta.name ?? ""}</b> : null}
     >
       {!aMano && !dalCatalogo && (
       <>
@@ -174,7 +184,7 @@ function RigaFiltri({
       )}
 
       {aMano && <AMano filtro={filtro} risposta={risposta} onRisposta={onRisposta} />}
-    </Riga>
+    </Domanda>
   )
 }
 

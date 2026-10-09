@@ -393,11 +393,24 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   Applica al lavoro con la pagina ferma, l'esito che si chiude, lo scheletro, "Niente da
   confermare", Riprova). Il pannello che si apre dentro una riga ha cambiato nome
   (`as-apertura*`, in attesa): `.as-comparsa` nel v34 e' l'elenco che compare scrivendo.
-  Restano, a pezzi: le domande (`.as-domanda` aperta, `.as-domanda-riga` chiusa, `.as-risposta`
-  coi quattro stati, una sola aperta in tutta la pagina, le sezioni finite che si chiudono in
-  `.as-conferma-chiusa`, il perche' solo nella sezione su cui si lavora) e la scelta fissa
-  (`.as-scelta-fissa`) sulle cinque sezioni che esistono -- **finche' restano, dentro le carte le
-  righe sono quelle vecchie, senza veste**; poi Attrezzatura da completare e Oggetti (oggi non
+  Fatte anche le domande (9/10): `Domanda.tsx` (`.as-domanda` aperta, `.as-domanda-riga`
+  chiusa con la risposta in breve, `.as-risposta` coi quattro stati), una sola aperta in tutta
+  la pagina (la prima senza risposta, poi quella che si apre), le sezioni finite chiuse in
+  `.as-conferma-chiusa` al loro posto con "Riapri", il perche' solo nella sezione su cui si
+  lavora, le scelte fisse su `.as-scelta-fissa` (`Scelte.tsx`). Delle domande restano: i dati
+  che aiutano a rispondere stanno ancora in riga sotto i frame e non nella tabellina
+  `.as-domanda-prova`; la coppia di strumenti non usa `.as-domanda-coppia`; dentro la domanda dei
+  filtri i tre modi sono ancora quelli vecchi (tendina `as-scelta`, elenco dei modelli
+  `as-apertura__*`), senza le pillole "Uno dei miei / Un modello del catalogo / Nuovo filtro" e
+  senza `.as-comparsa`; l'avviso di cio' che non si annulla dentro la domanda dell'unione. Testi
+  nuovi anche qui, da far vedere a Marco: `review.answer`, `review.change`, `review.reopen`,
+  `review.state.*`, `review.closed.*`. Dalla revisione delle domande: aprendo una domanda o
+  riaprendo una sezione da tastiera il fuoco cade sul corpo della pagina (un Tab riparte dal
+  punto giusto, ma chi ascolta non sente che si e' aperta); la prima domanda di una sezione non
+  scrive `.as-domanda--prima`; una sezione riaperta con "Riapri" non si richiude fino ad Applica;
+  una sezione chiusa con una risposta in mano e una salvata dice solo quella in mano; manca la
+  prova che dopo Applica si riparta dalla prima senza risposta; sul telefono "Rispondi", "Cambia"
+  e "Riapri" sono alti 32 px. Restano poi: Attrezzatura da completare e Oggetti (oggi non
   disegnate: il conto in cima le conta e l'indice no; con sole domande loro la pagina mostra il
   conto e nient'altro, "Niente da confermare" si dice solo a conto zero); gli oggetti gia' a posto a pagine;
   coordinate e notti all'italiana (le manda il backend); il telefono a due livelli
