@@ -7,6 +7,7 @@ import type { Chiave } from "./i18n"
 export const SEZIONI = {
   lookalikes: { ancora: "strumenti-duplicati", titolo: "review.lookalikes" },
   filters: { ancora: "filtri", titolo: "review.filters" },
+  objects: { ancora: "oggetti", titolo: "review.objects" },
   typeless: { ancora: "frame-senza-tipo", titolo: "review.typeless" },
   unclear: { ancora: "frame-senza-sito", titolo: "review.unclear" },
   mosaics: { ancora: "mosaici-proposti", titolo: "review.mosaics" },

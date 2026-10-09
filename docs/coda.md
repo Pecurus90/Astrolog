@@ -415,9 +415,18 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   scrive `.as-domanda--prima`; una sezione riaperta con "Riapri" non si richiude fino ad Applica;
   una sezione chiusa con una risposta in mano e una salvata dice solo quella in mano; manca la
   prova che dopo Applica si riparta dalla prima senza risposta; sul telefono "Rispondi", "Cambia"
-  e "Riapri" sono alti 32 px. Restano poi: Attrezzatura da completare e Oggetti (oggi non
-  disegnate: il conto in cima le conta e l'indice no; con sole domande loro la pagina mostra il
-  conto e nient'altro, "Niente da confermare" si dice solo a conto zero); gli oggetti gia' a posto a pagine;
+  e "Riapri" sono alti 32 px. Fatta anche la sezione Oggetti (9/10: `SezioneOggetti.tsx`, una scheda
+  per gruppo con le voci del campo -- ognuna dice se e' nell'inquadratura --, "Altro nome" col
+  suo campo, "Non e' un oggetto"; i frame senza nome col titolo della notte e camera, puntamento
+  e ore nella tabellina; in fondo quanti oggetti sono riconosciuti). Di Oggetti restano: gli
+  oggetti gia' a posto si contano ma non si aprono (`.as-conferma-aposto--aperto`,
+  `.as-conferma-pagine`, la rotta `GET /review/objects/settled` c'e' gia'). Dalla revisione: una scheda con voci, senza
+  risposta e senza dubbio la pagina la conta fra quelle da dare e l'API no; due gruppi senza nome
+  della stessa notte hanno lo stesso titolo; un nome riscritto con un'altra grafia (`m31` per
+  `M 31`) parte come risposta nuova; "Altro nome" scelto e lasciato vuoto su una scheda salvata
+  lascia la riga chiusa sulla risposta di prima. Restano poi: Attrezzatura da completare (oggi non
+  disegnata: il conto in cima la conta e l'indice no; con sole domande sue la pagina mostra il
+  conto e nient'altro, "Niente da confermare" si dice solo a conto zero);
   il telefono a due livelli
   (`.as-conferma-tipi`, `.as-conferma-caso`) -- fino ad allora sotto i 900 di colonna l'indice
   non si mostra (`.as-solo-largo`): nel foglio e' `sticky` a ogni larghezza e in colonna unica

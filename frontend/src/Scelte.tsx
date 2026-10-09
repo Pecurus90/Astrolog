@@ -19,7 +19,8 @@ export function Scelte<V extends string | number>({
 }: {
   domanda: string
   nome: string
-  opzioni: readonly { valore: V; etichetta: string }[]
+  /** `sub` e' la riga sotto il nome di una voce: cosa comporta sceglierla, o dove sta. */
+  opzioni: readonly { valore: V; etichetta: string; sub?: string }[]
   scelta: V | null | undefined
   onScelta: (valore: V) => void
   /** Cio' che la scelta apre (un campo, una tendina): sotto le voci. */
@@ -41,6 +42,7 @@ export function Scelte<V extends string | number>({
             />
             <span className="as-scelta-fissa__testo">
               <span className="as-scelta-fissa__nome">{o.etichetta}</span>
+              {o.sub && <span className="as-scelta-fissa__sub">{o.sub}</span>}
             </span>
           </label>
         ))}

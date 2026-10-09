@@ -8,6 +8,7 @@ import { SezioneStessoPezzo } from "./SezioneStessoPezzo"
 import { SezioneFiltri } from "./SezioneFiltri"
 import { SezioneLuoghi } from "./SezioneLuoghi"
 import { SezioneMosaici } from "./SezioneMosaici"
+import { SezioneOggetti } from "./SezioneOggetti"
 import { SezioneSenzaTipo } from "./SezioneSenzaTipo"
 import { api } from "./api/client"
 import { motivo } from "./api/motivo"
@@ -21,6 +22,7 @@ type Schema = components["schemas"]
 type Accumulo = {
   lookalikes: Record<string, Schema["LookalikeEdit"]>
   filters: Record<number, Schema["FilterEdit"]>
+  objects: Record<string, Schema["ObjectEdit"]>
   typeless: Record<string, Schema["TypelessFolderEdit"]>
   unclear: Record<string, Schema["CoordinatesEdit"]>
   mosaics: Record<string, Schema["MosaicEdit"]>
@@ -28,6 +30,7 @@ type Accumulo = {
 const VUOTO: Accumulo = {
   lookalikes: {},
   filters: {},
+  objects: {},
   typeless: {},
   unclear: {},
   mosaics: {},
@@ -113,8 +116,7 @@ function LaPagina() {
           typeless: Object.values(accumulo.typeless),
           unclear: Object.values(accumulo.unclear),
           mosaics: Object.values(accumulo.mosaics),
-          // no object card yet: it waits for its design (ADR 0014)
-          objects: [],
+          objects: Object.values(accumulo.objects),
         },
       })
       if (error) throw new Error(t(motivo(error, RIFIUTI, "review.apply.failed")))
@@ -160,6 +162,7 @@ function LaPagina() {
   const domande: Record<QualeSezione, { chiave: string; salvata: boolean }[]> = {
     lookalikes: (dati.lookalikes ?? []).map((g) => ({ chiave: String(g.id), salvata: false })),
     filters: (dati.filters ?? []).map((f) => ({ chiave: String(f.id), salvata: false })),
+    objects: (dati.objects ?? []).map((o) => ({ chiave: o.key, salvata: o.answer !== null })),
     typeless: (dati.typeless ?? []).map((g) => ({ chiave: g.key, salvata: g.answer !== null })),
     unclear: (dati.unclear ?? []).map((p) => ({ chiave: p.key, salvata: p.site !== null })),
     mosaics: (dati.mosaics ?? []).map((m) => ({ chiave: m.key, salvata: m.answer !== null })),
@@ -223,8 +226,8 @@ function LaPagina() {
         <div className="as-conferma__colonna">
           <div className="as-conferma__testa">{conta}</div>
           {esiti}
-          {/* Il conto somma anche Oggetti e Attrezzatura da completare, che qui non hanno ancora
-              la loro sezione: "niente" si dice solo se il conto e' zero. */}
+          {/* Il conto somma anche Attrezzatura da completare, che qui non ha ancora la sua
+              sezione: "niente" si dice solo se il conto e' zero. */}
           {dati.to_confirm === 0 && (
             <Avviso esito="buono" pagina ruolo="status" titolo={t("review.none.title")}>
               {t("review.none.text")}
@@ -323,6 +326,14 @@ function LaPagina() {
           modelli={modelli.data ?? []}
           risposte={accumulo.filters}
           onRisposta={scrivi("filters")}
+        />
+      )}
+      {chiusa("objects") ? chiusaDi("objects") : !!dati?.objects?.length && (
+        <SezioneOggetti
+          schede={dati.objects}
+          aPosto={dati.settled_objects}
+          risposte={accumulo.objects}
+          onRisposta={scrivi("objects")}
         />
       )}
       {chiusa("typeless") ? chiusaDi("typeless") : !!dati?.typeless?.length && (

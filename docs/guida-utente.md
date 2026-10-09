@@ -670,7 +670,7 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
   i frame che l'app ha messo su un oggetto di cui non e' sicura, oppure un gruppo di frame che non
   dicono cosa hai ripreso e di cui il cielo non dice niente. Non ti chiede un oggetto che il cielo
   riconosce, ne' una sigla del catalogo scritta nel file (`M 31`) anche se il cielo non c'e': quelli
-  li trovi fra gli oggetti gia' a posto, aperti a pagine, e li correggi da li'. Ti chiede un nome
+  li conta fra gli oggetti gia' riconosciuti (correggerli da questa pagina non si puo' ancora). Ti chiede un nome
   che il catalogo non conosce, e quello su cui nome e cielo non vanno d'accordo, o il cielo esita
   fra piu' oggetti vicini. A ogni scheda rispondi allo stesso modo: scegli una
   voce fra quelle che il cielo ha trovato -- quando ne ha trovate --, scrivi il nome, oppure spunta
@@ -680,8 +680,10 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
   risposto: se ne riprendi altri dello stesso oggetto, l'app li riconosce come prima. L'app non ti
   avvisa piu' di un oggetto nuovo che sa riconoscere da sola: lo trovi nell'Archivio.
 
-  **In questa versione la scheda non si vede ancora**: arriva col disegno nuovo della pagina. Fino
-  ad allora il numero di *Da confermare* la conta.
+  Nella scheda ogni voce trovata nel campo dice se sta *nell'inquadratura*, *fuori
+  dall'inquadratura* o se la *posizione non e' nota*; *Altro nome* apre il campo dove lo scrivi.
+  In fondo alla sezione leggi quanti oggetti l'app riconosce da sola (*218 oggetti
+  riconosciuti*): in questa versione si contano e basta, non si aprono ancora da qui.
 
   *I frame senza nome.* I frame che non dicono cosa hai ripreso, e di cui il cielo non dice niente
   -- non ci ha trovato oggetti, o non e' riuscito a guardarli -- si chiedono per gruppo: la notte,
