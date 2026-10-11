@@ -1,5 +1,9 @@
 # Brief per Claude Design -- Attrezzatura
 
+> **Dopo la consegna (Marco, 11/10/2026).** Scelta la seconda proposta, "schede grafiche". Marco
+> ha tolto dalla pagina gli oggetti ripresi (4.2) e, dell'uso (4.1), frame, notti e "N senza
+> durata": resta l'ora sola. Dove questo brief li chiede, vale la proposta.
+
 Dopo Da confermare (v34). Vale tutto il primo brief (`design-brief.md`) e il foglio attuale (v34).
 Si chiede **una cosa**: la pagina **Attrezzatura**, cioe' il posto dove l'utente vede con cosa ha
 ripreso e quanto, e dove corregge o aggiunge i suoi pezzi.

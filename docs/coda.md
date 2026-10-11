@@ -480,7 +480,14 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   cio' che i file dicono si rinomina, non si sostituisce); la montatura tiene la sua regola del
   26/9 (la tua parola vince). Riduttore e ottica di guida oggi non hanno una colonna sul frame:
   servono `reducer_id` e `guide_scope_id` in `frames` e in `counts.CARRIED`, cosi' ore e parti
-  escono dalla stessa casa degli altri.
+  escono dalla stessa casa degli altri. **Forma scelta** (Marco, 11/10/2026): la seconda
+  proposta di Design, "schede grafiche" (`pagine/attrezzatura.html` e `attrezzatura-stati.html`,
+  classi `pr-`). Marco ha fatto togliere, e non vanno rimessi: gli oggetti ripresi (corredo e
+  tessere) e, dell'uso, frame, notti e "N senza durata" -- resta l'ora sola; i frame restano
+  accanto alle parti del corredo, i filtri del corredo in proporzione senza cifre. Si monta
+  quando Design porta la forma nel foglio (v35). Testi da scrivere: la parola sotto il cielo del
+  campo, l'avviso dell'unione, "scansione in corso" prima di salvare, l'esito, la frase della
+  tessera d'arrivo per chi ascolta; parole di tavola "da scegliere", "scelto".
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio (v31-v32, montato l'8/10), il primo avvio (Marco, 8/10:
   "anche il wizard bisogna rifare"; brief in `handoff/design-primo-avvio.md`; montato il 9/10 sul v33), Da confermare
