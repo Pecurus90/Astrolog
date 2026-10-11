@@ -75,23 +75,26 @@ def instruments_on_frame(
     return carried
 
 
-def mount_for_frame(  # noqa: PLR0913
+def carried_by_frame(  # noqa: PLR0913
     conn: sqlite3.Connection,
     frame: sqlite3.Row,
     rig_id: int | None,
     software: str | None,
-    counts: dict[str, int],
+    tally: dict[str, int],
     now: str,
-) -> int | None:
-    """The user's mount on the rig wins; the file's mount is created anyway, because the user's word
-    chooses what goes on the frame, it does not delete a piece the files name."""
-    from_file = (
-        instrument_for(conn, "mount", frame["telescope_raw"], counts, now)
-        if telescope_is_mount(software)
-        else None
-    )
-    declared = rigs.declared_mount(conn, rig_id) if rig_id is not None else None
-    return declared if declared is not None else from_file
+) -> dict[str, int | None]:
+    """The file's piece, or the rig's choice (`rigs.OVER_THE_FILE` says which wins). The file's
+    piece is created anyway: the user's word picks what goes on the frame, it deletes no piece."""
+    carried = instruments_on_frame(conn, frame, tally, now)
+    if telescope_is_mount(software):
+        carried["mount"] = instrument_for(conn, "mount", frame["telescope_raw"], tally, now)
+    chosen = rigs.chosen_for(conn, rig_id) if rig_id is not None else {}
+    for kind in counts.CARRIED:
+        from_file = carried.get(kind)
+        mine = chosen.get(kind)
+        wins = mine is not None and (kind in rigs.OVER_THE_FILE or from_file is None)
+        carried[kind] = mine if wins else from_file
+    return carried
 
 
 def rig_for_frame(
@@ -105,7 +108,7 @@ def rig_for_frame(
     answer's optics, or the night's rig at its focal, fill it. The answer's optics wins."""
     counts, now, answer, night_rig = writing.counts, writing.now, given.answer, given.night
     if telescope_is_mount(software):
-        optics_id = None  # it is the mount, written by `mount_for_frame`
+        optics_id = None  # it is the mount, written by `carried_by_frame`
     else:
         optics_id = instrument_for(conn, "optics", frame["telescope_raw"], counts, now)
     camera_id = instrument_named(conn, "camera", given.camera, counts, now)

@@ -88,8 +88,8 @@ che il `traduttore` legge per primo.
 | cosa e' | nel codice | a schermo (it) | non si dice |
 |---|---|---|---|
 | un pezzo: ottica, camera, filtro, montatura, riduttore, ruota, guida, focheggiatore | `instrument` | strumento | pezzo, componente, dispositivo, device |
-| la montatura di una posa: quella che hai scelto sul corredo, o dove taci quella che il file nomina | `mount_id` (su `frames`), `mount` (dichiarazione del corredo) | su {montatura}, Seleziona montatura | sulla {montatura}, Scegli la montatura, setup, postazione (la postazione e' un'altra cosa) |
-| i generi che una posa porta in una colonna sua: ruota, focheggiatore, camera di guida, montatura | `CARRIED` (`spine/counts.py`) | -- | -- |
+| la montatura di una posa: quella che hai scelto sul corredo, o dove taci quella che il file nomina | `mount_id` (su `frames`), `mount` (dichiarazione del corredo), `chosen` (sulla parte) | su {montatura}, Seleziona montatura | sulla {montatura}, Scegli la montatura, setup, postazione (la postazione e' un'altra cosa) |
+| i generi che una posa porta in una colonna sua: ruota, focheggiatore, camera di guida, montatura, e i due che ci stanno solo per scelta (riduttore, ottica di guida: `CHOSEN_ONLY`) | `CARRIED` (`spine/counts.py`) | -- | -- |
 | perche' un pezzo contato non ha ore: i file non nominano quel genere, o nessun corredo porta quella montatura | `no_hours` (`files_silent`, `no_rig`) | non indicato nei file, non associata a un corredo | i tuoi file non dicono..., nessun corredo la porta ancora |
 | la pagina che li elenca | -- | Attrezzatura | equipaggiamento |
 | ottica + camera (+ riduttore) visti insieme, a una focale | `rig` | corredo | setup, configurazione, attrezzatura, impronta |

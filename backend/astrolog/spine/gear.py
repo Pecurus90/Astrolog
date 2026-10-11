@@ -8,7 +8,7 @@ from typing import Any
 from ..db import idlist
 from ..db.row import Row
 from ..vocab.filters import Passband, model_by_id, passband_from_bands
-from . import counts, rigs, signature
+from . import counts, gear_usage, rigs, signature
 from .declarations import (
     ALIAS_KINDS,
     CAMERA_SPECS,
@@ -215,7 +215,7 @@ def merge_instrument(
     rig_ids = _rigs_using(conn, from_id)
     frames = set(_detach_rigs(conn, rig_ids)) | _detach_from_frames(conn, from_id)
     conn.execute("DELETE FROM instruments WHERE id = ?", (from_id,))
-    rigs.restore_declared(conn, now)
+    gear_usage.restore_rigs(conn, now)
     invalidate(conn, frames, StageName.NORMALIZE, now=now)
     return sorted(frames)
 

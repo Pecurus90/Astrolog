@@ -331,8 +331,18 @@ def test_a_piece_you_wrote_yourself_is_not_a_question(archivio):
     assert archivio.get("/api/v1/review").json()["to_confirm"] == prima
 
 
+def scegli(client, rig_id, kind, piece_id):
+    return client.put(f"/api/v1/gear/rigs/{rig_id}/parts/{kind}", json={"piece_id": piece_id})
+
+
 def monta(client, rig_id, mount_id):
-    return client.put(f"/api/v1/gear/rigs/{rig_id}/mount", json={"mount_id": mount_id})
+    return scegli(client, rig_id, "mount", mount_id)
+
+
+def scelte(client, n=0):
+    """Le parti che hai scelto tu sul corredo `n`, per genere."""
+    parti = client.get("/api/v1/gear").json()["rigs"][n]["parts"]
+    return {p["kind"]: p["id"] for p in parti if p["chosen"]}
 
 
 def test_a_rig_gets_its_mount_from_its_card_and_its_frames_go_back_to_be_read(archivio):
@@ -341,18 +351,18 @@ def test_a_rig_gets_its_mount_from_its_card_and_its_frames_go_back_to_be_read(ar
     che la montatura prende le ore."""
     montatura = crea(archivio, kind="mount", name="EQ6-R").json()["id"]
     corredo = archivio.get("/api/v1/gear").json()["rigs"][0]
-    assert corredo["mount_id"] is None
+    assert scelte(archivio) == {}
 
     with mock.patch.object(work, "after", return_value=True):
         risposta = monta(archivio, corredo["id"], montatura)
 
     assert risposta.status_code == 200, risposta.text
     assert risposta.json()["requeued"] == 2
-    assert archivio.get("/api/v1/gear").json()["rigs"][0]["mount_id"] == montatura
+    assert scelte(archivio) == {"mount": montatura}
 
     with mock.patch.object(work, "after", return_value=True):
         monta(archivio, corredo["id"], None)
-    assert archivio.get("/api/v1/gear").json()["rigs"][0]["mount_id"] is None
+    assert scelte(archivio) == {}
 
 
 def test_only_a_mount_you_own_can_be_the_mount_of_a_rig(archivio):
@@ -369,7 +379,32 @@ def test_a_mount_that_is_not_a_mount_is_refused_with_its_code(archivio):
     rig = archivio.get("/api/v1/gear").json()["rigs"][0]
     optics = pezzo(archivio, "optics", "TS 130 APO")["id"]
     r = monta(archivio, rig["id"], optics)
-    assert (r.status_code, r.json()["detail"]["code"]) == (422, "not_a_mount")
+    assert (r.status_code, r.json()["detail"]["code"]) == (422, "not_of_kind")
+
+
+def test_a_part_you_choose_reads_as_chosen_at_once(archivio):
+    """Il riduttore nessun file lo nomina: scelto sul corredo si legge subito fra le sue parti,
+    segnato come scelto, prima ancora che le pose siano rilavorate. Una parte letta dai file non
+    e' scelta."""
+    riduttore = crea(archivio, kind="reducer", name="0,8x").json()["id"]
+    corredo = archivio.get("/api/v1/gear").json()["rigs"][0]
+
+    with mock.patch.object(work, "after", return_value=True):
+        risposta = scegli(archivio, corredo["id"], "reducer", riduttore)
+
+    assert (risposta.status_code, risposta.json()["requeued"]) == (200, 2)
+    parti = archivio.get("/api/v1/gear").json()["rigs"][0]["parts"]
+    assert [(p["kind"], p["name"], p["chosen"]) for p in parti if p["kind"] == "reducer"] == [
+        ("reducer", "0,8x", True)
+    ]
+    assert not any(p["chosen"] for p in parti if p["kind"] != "reducer")
+
+
+def test_a_kind_a_rig_cannot_be_given_is_refused(archivio):
+    """Ottica e camera fanno il corredo, non si scelgono: e un genere che non esiste nemmeno."""
+    corredo = archivio.get("/api/v1/gear").json()["rigs"][0]
+    for genere in ("optics", "camera", "software", "filter"):
+        assert scegli(archivio, corredo["id"], genere, None).status_code == 422, genere
 
 
 def test_you_can_write_a_filter_you_have_not_used_yet(archivio):

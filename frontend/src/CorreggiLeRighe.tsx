@@ -171,11 +171,12 @@ export function MontaturaDelCorredo({
   montature: { id: number; name: string }[]
   onChiudi: () => void
 }) {
-  const [scelta, setScelta] = useState(corredo.mount_id ?? undefined)
+  const montata = corredo.parts.find((p) => p.kind === "mount" && p.chosen)?.id ?? null
+  const [scelta, setScelta] = useState(montata ?? undefined)
   const scrivi = useScrittura(async () => {
-    const { error } = await api.PUT("/api/v1/gear/rigs/{rig_id}/mount", {
-      params: { path: { rig_id: corredo.id } },
-      body: { mount_id: scelta ?? null },
+    const { error } = await api.PUT("/api/v1/gear/rigs/{rig_id}/parts/{kind}", {
+      params: { path: { rig_id: corredo.id, kind: "mount" } },
+      body: { piece_id: scelta ?? null },
     })
     if (error) throw error
   }, onChiudi)
@@ -186,7 +187,7 @@ export function MontaturaDelCorredo({
       onManda={() => scrivi.mutate()}
       onAnnulla={onChiudi}
       salvando={scrivi.isPending}
-      valido={(scelta ?? null) !== corredo.mount_id}
+      valido={(scelta ?? null) !== montata}
       errore={scrivi.error}
     >
       <TendinaDiScelta

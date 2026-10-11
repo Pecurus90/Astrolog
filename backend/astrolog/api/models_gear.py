@@ -71,11 +71,14 @@ class RigNew(BaseModel):
     focal_mm: float = Field(gt=0)
 
 
-class RigMount(BaseModel):
-    """The mount you use a rig with, among those you own; `None` goes back to the one the files
-    say."""
+ChosenKind = Literal["filter_wheel", "focuser", "guide_camera", "mount", "reducer", "guide_scope"]
 
-    mount_id: int | None
+
+class RigPartChoice(BaseModel):
+    """The piece you use a rig with, among those you own of that kind; `None` goes back to what
+    the files say."""
+
+    piece_id: int | None
 
 
 class GearObject(BaseModel):
@@ -138,13 +141,26 @@ class InstrumentOnPage(BaseModel):
 class RigPart(BaseModel):
     """One thing a rig's frames used besides optics and camera."""
 
-    kind: Literal["mount", "filter_wheel", "focuser", "guide_camera", "software", "filter"]
+    kind: Literal[
+        "mount",
+        "filter_wheel",
+        "focuser",
+        "guide_camera",
+        "reducer",
+        "guide_scope",
+        "software",
+        "filter",
+    ]
     id: int | None = Field(
         description="The instrument, or the filter for `filter`; null for `software`, which is "
         "not a piece."
     )
     name: str
     frames: int = Field(description="How many of the rig's frames used it, rewritten copies out.")
+    chosen: bool = Field(
+        description="You gave it to the rig, instead of the files naming it. A mount you choose "
+        "goes on every frame; any other kind only where the file names none."
+    )
 
 
 class RigOnPage(BaseModel):
@@ -152,10 +168,6 @@ class RigOnPage(BaseModel):
 
     id: int
     name: str | None = Field(description="The name you gave it, if you gave it one.")
-    mount_id: int | None = Field(
-        description="The mount you gave it; where you are silent, the frames take the one the "
-        "file names."
-    )
     optics: str | None
     camera: str | None
     focal_mm: float | None
@@ -176,9 +188,10 @@ class RigOnPage(BaseModel):
     width_deg: float | None
     height_deg: float | None
     parts: list[RigPart] = Field(
-        description="What its frames say they used, kind by kind in the card's order (mount, "
-        "wheel, focuser, guide camera, capture software, filters), each from the most used. "
-        "Empty until it is counted, and for a kind no frame names."
+        description="What its frames used and what you chose for it, kind by kind in the card's "
+        "order (mount, wheel, focuser, guide camera, reducer, guide scope, capture software, "
+        "filters), each from the most used. A kind no frame names and you did not choose is not "
+        "listed."
     )
 
 

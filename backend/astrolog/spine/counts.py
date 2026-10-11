@@ -9,9 +9,11 @@ from typing import Any
 # Kinds the frame names itself, each with its `<kind>_raw`; a copy of this list elsewhere would let
 # a new kind be created but never renamed, so it is reborn as a duplicate.
 ON_THE_FRAME = ("filter_wheel", "focuser", "guide_camera")
+# Kinds no capture software writes: on the frame only by the user's choice on its rig.
+CHOSEN_ONLY = ("reducer", "guide_scope")
 # Kinds the frame carries in a column of its own; forgetting one where hours are tied or a piece is
 # detached makes a merge crash.
-CARRIED = (*ON_THE_FRAME, "mount")
+CARRIED = (*ON_THE_FRAME, "mount", *CHOSEN_ONLY)
 
 
 def _piece(through_rigs: str) -> str:

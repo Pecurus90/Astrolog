@@ -18,6 +18,7 @@ export const itAttrezzatura = {
   "gear.kind.guide_camera": "Camere di guida",
   "gear.kind.focuser": "Focheggiatori",
   "gear.part": "{parte}: {nome} ({frame})",
+  "gear.part.chosen": "{parte}: {nome} (tua scelta)",
   "gear.part.software": "programma di ripresa",
   "gear.part.filter": "filtro",
   "gear.rigs": "Corredi",

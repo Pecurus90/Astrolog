@@ -34,7 +34,7 @@ from . import (
 )
 from . import normalize_store as store
 from .gear_create import create_filter, filter_id_by_name
-from .normalize_rig import Given, Writing, instruments_on_frame, mount_for_frame, rig_for_frame
+from .normalize_rig import Given, Writing, carried_by_frame, rig_for_frame
 from .stage_run import Event, FrameError, frame_safely, receipt, watched
 from .stages import StageName, StageStatus, invalidate, ready, set_status
 
@@ -159,8 +159,7 @@ def _one_frame(
         software = normalize_software(frame["software_raw"])
         filter_id, filter_known = _filter_for(conn, frame, writing, given, context.colours)
         rig_id = rig_for_frame(conn, frame, writing, given, software)
-        carried = instruments_on_frame(conn, frame, counts, now)
-        carried["mount"] = mount_for_frame(conn, frame, rig_id, software, counts, now)
+        carried = carried_by_frame(conn, frame, rig_id, software, counts, now)
         copy_of = context.copy_of.get(frame_id, frame["copy_of"])
         counts["copies"] += 1 if copy_of is not None else 0
         was = (frame["filter_id"], frame["rig_id"], frame["software"], frame["copy_of"])

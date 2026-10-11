@@ -140,6 +140,22 @@ quando si e' contato (`test_a_rig_says_every_part_its_frames_used`,
 `test_a_part_renamed_reads_with_its_new_name`). Il programma di ripresa non e' un pezzo: si legge
 e basta.
 
+**Una parte si puo' scegliere sul corredo** (Marco, 11/10/2026): `PUT
+/gear/rigs/{id}/parts/{kind}`, un gesto solo per montatura, ruota, focheggiatore, camera di guida,
+riduttore, ottica di guida (`counts.CARRIED`); `piece_id` nullo toglie la scelta. La scelta sta
+fra le dichiarazioni del corredo col nome del pezzo, quindi segue rinomina e unione, e le pose del
+corredo tornano a `normalize`. Due regole, in `rigs.OVER_THE_FILE`: la **montatura** scelta vale
+su tutte le pose, anche dove il file ne nomina un'altra (26/9/2026); per **gli altri generi** la
+scelta riempie solo il silenzio del file -- cio' che i file nominano si rinomina, non si
+sostituisce. Riduttore e ottica di guida nessun programma li scrive (`counts.CHOSEN_ONLY`): stanno
+sulla posa (`reducer_id`, `guide_scope_id`) solo per scelta, e da li' prendono ore e parti come
+gli altri. Ogni parte dice `chosen`, scritto dalla spina in `rig_parts` (la lettura non lo
+ricava); una scelta che nessuna posa porta ancora si legge subito, con zero frame, perche' la
+rotta riscrive le parti (`gear_usage.write_parts`) (`test_a_part_you_choose_reads_as_chosen_at_once`,
+`test_a_wheel_you_choose_fills_only_the_frames_whose_file_is_silent`,
+`test_a_part_the_files_never_name_is_carried_once_you_choose_it`). Ottica, camera e focale non si
+scelgono: fanno il corredo.
+
 **E non entrano nell'impronta di un corredo.** Un corredo e' ottica + camera + focale: infilarci
 la ruota farebbe nascere un secondo corredo a chi ne cambia una, e l'archivio di prima si
 spezzerebbe in due senza che nessuno abbia cambiato telescopio.

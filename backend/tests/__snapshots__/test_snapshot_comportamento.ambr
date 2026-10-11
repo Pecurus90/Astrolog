@@ -1361,7 +1361,6 @@
         'height_deg': None,
         'id': 2,
         'integration_s': 1140.0,
-        'mount_id': None,
         'name': None,
         'nights': 0,
         'objects': list([
@@ -1387,42 +1386,49 @@
         'optics': 'Askar 103Apo',
         'parts': list([
           dict({
+            'chosen': False,
             'frames': 7,
             'id': 7,
             'kind': 'filter_wheel',
             'name': 'ASCOM ToupTek FilterWheel',
           }),
           dict({
+            'chosen': False,
             'frames': 7,
             'id': 8,
             'kind': 'focuser',
             'name': 'ASCOM ToupTek AAF',
           }),
           dict({
+            'chosen': False,
             'frames': 7,
             'id': None,
             'kind': 'software',
             'name': 'N.I.N.A.',
           }),
           dict({
+            'chosen': False,
             'frames': 3,
             'id': 4,
             'kind': 'filter',
             'name': 'Lum',
           }),
           dict({
+            'chosen': False,
             'frames': 1,
             'id': 3,
             'kind': 'filter',
             'name': 'H',
           }),
           dict({
+            'chosen': False,
             'frames': 1,
             'id': 5,
             'kind': 'filter',
             'name': 'O',
           }),
           dict({
+            'chosen': False,
             'frames': 1,
             'id': 6,
             'kind': 'filter',
@@ -1441,7 +1447,6 @@
         'height_deg': None,
         'id': 1,
         'integration_s': 660.0,
-        'mount_id': None,
         'name': None,
         'nights': 0,
         'objects': list([
@@ -1455,36 +1460,42 @@
         'optics': None,
         'parts': list([
           dict({
+            'chosen': False,
             'frames': 2,
             'id': 3,
             'kind': 'mount',
             'name': 'EQMod Mount',
           }),
           dict({
+            'chosen': False,
             'frames': 1,
             'id': 4,
             'kind': 'mount',
             'name': 'ZWO AM3',
           }),
           dict({
+            'chosen': False,
             'frames': 3,
             'id': 2,
             'kind': 'guide_camera',
             'name': 'ZWO ASI120MM-S',
           }),
           dict({
+            'chosen': False,
             'frames': 3,
             'id': None,
             'kind': 'software',
             'name': 'ASIAIR',
           }),
           dict({
+            'chosen': False,
             'frames': 2,
             'id': 1,
             'kind': 'filter',
             'name': 'OSC',
           }),
           dict({
+            'chosen': False,
             'frames': 1,
             'id': 2,
             'kind': 'filter',
@@ -1503,7 +1514,6 @@
         'height_deg': None,
         'id': 5,
         'integration_s': 600.0,
-        'mount_id': None,
         'name': None,
         'nights': 0,
         'objects': list([
@@ -1517,12 +1527,14 @@
         'optics': 'TS 130 APO',
         'parts': list([
           dict({
+            'chosen': False,
             'frames': 1,
             'id': None,
             'kind': 'software',
             'name': 'Voyager',
           }),
           dict({
+            'chosen': False,
             'frames': 1,
             'id': 7,
             'kind': 'filter',
@@ -1541,7 +1553,6 @@
         'height_deg': None,
         'id': 4,
         'integration_s': 240.0,
-        'mount_id': None,
         'name': None,
         'nights': 0,
         'objects': list([
@@ -1555,12 +1566,14 @@
         'optics': 'RC8',
         'parts': list([
           dict({
+            'chosen': False,
             'frames': 1,
             'id': None,
             'kind': 'software',
             'name': 'Sequence Generator Pro',
           }),
           dict({
+            'chosen': False,
             'frames': 1,
             'id': 6,
             'kind': 'filter',
@@ -1579,7 +1592,6 @@
         'height_deg': None,
         'id': 3,
         'integration_s': 120.0,
-        'mount_id': None,
         'name': None,
         'nights': 0,
         'objects': list([
@@ -1593,24 +1605,28 @@
         'optics': 'Askar 103Apo',
         'parts': list([
           dict({
+            'chosen': False,
             'frames': 1,
             'id': 7,
             'kind': 'filter_wheel',
             'name': 'ASCOM ToupTek FilterWheel',
           }),
           dict({
+            'chosen': False,
             'frames': 1,
             'id': 8,
             'kind': 'focuser',
             'name': 'ASCOM ToupTek AAF',
           }),
           dict({
+            'chosen': False,
             'frames': 1,
             'id': None,
             'kind': 'software',
             'name': 'N.I.N.A.',
           }),
           dict({
+            'chosen': False,
             'frames': 1,
             'id': 4,
             'kind': 'filter',

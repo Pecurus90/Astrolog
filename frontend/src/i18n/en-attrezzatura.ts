@@ -18,6 +18,7 @@ export const enAttrezzatura = {
   "gear.kind.guide_camera": "Guide cameras",
   "gear.kind.focuser": "Focusers",
   "gear.part": "{parte}: {nome} ({frame})",
+  "gear.part.chosen": "{parte}: {nome} (your choice)",
   "gear.part.software": "capture software",
   "gear.part.filter": "filter",
   "gear.rigs": "Rigs",

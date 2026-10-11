@@ -224,6 +224,15 @@ def test_the_parts_of_a_rig_are_one_vocabulary():
     assert set(get_args(RigPart.model_fields["kind"].annotation)) == set(gear_usage.PART_KINDS)
 
 
+def test_the_parts_one_can_choose_are_the_kinds_a_frame_carries():
+    """The kinds the route accepts and the columns `normalize` writes are one list: a kind on the
+    route only would be a choice no frame ever takes."""
+    from astrolog.api.models_gear import ChosenKind
+    from astrolog.spine import counts, rigs
+
+    assert set(get_args(ChosenKind)) == set(counts.CARRIED) == set(rigs.PART_FIELDS)
+
+
 def test_declarable_bands_are_the_physical_ones_of_the_vocabulary():
     """Le bande che l'API accetta sono quelle che il vocabolario chiama fisiche: se domani
     ne nasce una, i due elenchi non devono poter divergere in silenzio."""

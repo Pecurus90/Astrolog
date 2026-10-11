@@ -12,7 +12,7 @@ from .. import place
 from ..clock import now_iso
 from ..db import config
 from ..db.transaction import transaction
-from . import rigs
+from . import gear_usage
 from .folder_move import SAMPLE_FILES
 
 log = logging.getLogger(__name__)
@@ -192,7 +192,7 @@ def restore(conn: sqlite3.Connection, data: dict[str, Any]) -> None:
                 " created_at) VALUES(?, ?, ?, ?, ?)",
                 (d["entity_type"], d["entity_key"], d["field"], d["value"], d["created_at"]),
             )
-        rigs.restore_declared(conn, now)
+        gear_usage.restore_rigs(conn, now)
 
 
 class _Table(NamedTuple):

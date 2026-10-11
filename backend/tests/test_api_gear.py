@@ -98,6 +98,31 @@ def test_a_rig_says_every_part_its_frames_used(archivio):
     assert all(p["id"] is not None for p in corredo_["parts"])
 
 
+def test_a_part_carried_only_by_choice_is_counted_like_the_others(archivio):
+    """Riduttore e ottica di guida stanno sulle pose solo perche' li hai scelti: una volta li',
+    il corredo li elenca coi loro frame e il pezzo ha le sue ore, dopo i pezzi che i file nominano
+    e prima dei filtri."""
+    with db(archivio) as conn:
+        riduttore = attrezzo(conn, "reducer", "0,8x")
+        guida = attrezzo(conn, "guide_scope", "30 mm f/4")
+        conn.execute("UPDATE frames SET reducer_id = ?, guide_scope_id = ?", (riduttore, guida))
+        gear_usage.write(conn)  # come a fine giro di uno stadio
+        conn.commit()
+
+    pagina = gear(archivio)
+    generi = [p["kind"] for p in pagina["rigs"][0]["parts"]]
+    assert [g for g in generi if g in ("reducer", "guide_scope", "filter")][:3] == [
+        "reducer",
+        "guide_scope",
+        "filter",
+    ]
+    assert [
+        (p["frames"], p["chosen"]) for p in pagina["rigs"][0]["parts"] if p["kind"] == "reducer"
+    ] == [(2, False)]
+    assert pezzi(pagina, "reducer")[0]["frames"] == 2
+    assert pezzi(pagina, "guide_scope")[0]["no_hours"] is None
+
+
 def test_a_rig_used_with_two_of_a_kind_lists_both_most_used_first(archivio):
     """Due programmi di ripresa, due ruote: si elencano tutti, dal piu' usato. Nasconderne uno
     farebbe sembrare che non sia mai stato usato (Marco, 11/10/2026). Una copia riscritta non
@@ -126,6 +151,8 @@ def test_a_rig_used_with_two_of_a_kind_lists_both_most_used_first(archivio):
     ]
     # il programma non e' un pezzo: non ha un id
     assert [p["id"] for p in corredo_["parts"] if p["kind"] == "software"] == [None, None]
+    # e niente qui e' una scelta tua: lo dicono i file
+    assert not any(p["chosen"] for p in corredo_["parts"])
 
 
 def test_a_part_renamed_reads_with_its_new_name(archivio):

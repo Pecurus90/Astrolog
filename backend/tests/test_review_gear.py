@@ -646,7 +646,7 @@ def test_the_name_and_mount_of_the_rig_without_optics_go_with_its_poses(ottiche)
     assert montatura.status_code in (200, 201), montatura.text
     corredo = f"/api/v1/gear/rigs/{senza['id']}"
     assert ottiche.patch(corredo, json={"name": "Il piccolo"}).status_code == 200
-    r = ottiche.put(f"{corredo}/mount", json={"mount_id": montatura.json()["id"]})
+    r = ottiche.put(f"{corredo}/parts/mount", json={"piece_id": montatura.json()["id"]})
     assert r.status_code == 200, r.text
     ottiche.app.state.worker.join(10.0)
     chiave = _chiave(ottiche, "m_0.fits")
@@ -654,10 +654,11 @@ def test_the_name_and_mount_of_the_rig_without_optics_go_with_its_poses(ottiche)
     for ottica in ("Takahashi FSQ-85", "Askar 107PHQ"):
         apply(ottiche, gear=[{"key": chiave, "optics": ottica}])
         nuovo = next(g for g in gear(ottiche)["rigs"] if g["camera"] == ALTRA)
-        assert (nuovo["optics"], nuovo["name"], nuovo["mount_id"]) == (
+        scelte = [(p["kind"], p["id"]) for p in nuovo["parts"] if p["chosen"]]
+        assert (nuovo["optics"], nuovo["name"], scelte) == (
             ottica,
             "Il piccolo",
-            montatura.json()["id"],
+            [("mount", montatura.json()["id"])],
         )
         with db(ottiche) as conn:
             pose = conn.execute(

@@ -11,7 +11,7 @@ from typing import Any
 from ..db import idlist
 from ..db.replace_table import replace_rows
 from ..units import hundredths, median
-from . import counts
+from . import counts, rigs
 from . import objects as obj
 
 
@@ -98,9 +98,10 @@ FROM frames f WHERE f.copy_of IS NULL AND f.rig_id IS NOT NULL AND f.{kind}_id I
 GROUP BY f.rig_id, f.{kind}_id
 """
 # The words of the `rig_parts.kind` CHECK, in the card's order.
-PART_KINDS = ("mount", *counts.ON_THE_FRAME, "software", "filter")
+_PIECE_KINDS = ("mount", *counts.ON_THE_FRAME, *counts.CHOSEN_ONLY)
+PART_KINDS = (*_PIECE_KINDS, "software", "filter")
 _PARTS = (
-    *(_PIECE_PART.format(kind=kind) for kind in ("mount", *counts.ON_THE_FRAME)),
+    *(_PIECE_PART.format(kind=kind) for kind in _PIECE_KINDS),
     """
 SELECT f.rig_id, 'software' AS kind, NULL AS piece_id, f.software, COUNT(*) AS frames
 FROM frames f WHERE f.copy_of IS NULL AND f.rig_id IS NOT NULL AND f.software IS NOT NULL
@@ -113,7 +114,7 @@ WHERE f.copy_of IS NULL AND f.rig_id IS NOT NULL
 GROUP BY f.rig_id, f.filter_id
 """,
 )
-_PART_COLUMNS = ("rig_id", "kind", "piece_id", "software", "frames", "position")
+_PART_COLUMNS = ("rig_id", "kind", "piece_id", "software", "frames", "chosen", "position")
 
 USAGE = ("frames", "integration_s", "untimed", "nights")
 _SKY_FIELDS = ("scale_arcsec_px", "width_deg", "height_deg")
@@ -145,19 +146,43 @@ def write(conn: sqlite3.Connection) -> None:
         for n, r in enumerate(listing)
     ]
     replace_rows(conn, "gear_usage", _COLUMNS, rows)
+    write_parts(conn)
+
+
+def write_parts(conn: sqlite3.Connection) -> None:
+    """Alone after a choice on a rig, so the page reads it before the frames are reworked."""
     replace_rows(conn, "rig_parts", _PART_COLUMNS, _parts(conn))
 
 
+def restore_rigs(conn: sqlite3.Connection, now: str | None = None) -> None:
+    """Your rigs a merge deleted come back with their usage row, or the page would not list them."""
+    for rig_id in rigs.restore_declared(conn, now):
+        add_new(conn, UsageSubject.RIG, rig_id)
+
+
 def _parts(conn: sqlite3.Connection) -> list[tuple[Any, ...]]:
-    """Kind by kind in the card's order, each from the most used; the position runs per rig."""
-    placed: dict[int, int] = {}
-    rows: list[tuple[Any, ...]] = []
-    for query in _PARTS:
+    """Kind by kind in the card's order, each from the most used; the position runs per rig. A
+    part the user chose says so, and is listed even before a frame carries it."""
+    counted: dict[tuple[int, str], list[tuple[int | None, str | None, int]]] = {}
+    for kind, query in zip(PART_KINDS, _PARTS, strict=True):
         ordered = f"{query} ORDER BY frames DESC, piece_id, software"
         for r in conn.execute(ordered).fetchall():
-            position = placed.get(r["rig_id"], 0)
-            placed[r["rig_id"]] = position + 1
-            rows.append((*(r[c] for c in _PART_COLUMNS[:-1]), position))
+            part = (r["piece_id"], r["software"], r["frames"])
+            counted.setdefault((r["rig_id"], kind), []).append(part)
+    choices = rigs.chosen_parts(conn)
+    rows: list[tuple[Any, ...]] = []
+    for key, rig in rigs.rigs_with_keys(conn):
+        mine = choices.get(key, {})
+        position = 0
+        for kind in PART_KINDS:
+            listed = list(counted.get((rig["id"], kind), []))
+            if kind in mine and mine[kind] not in [piece for piece, _, _ in listed]:
+                listed.append((mine[kind], None, 0))
+            for piece, software, frames in listed:
+                # asked by kind first: the software has no id, and no id is not a choice
+                chosen = kind in mine and mine[kind] == piece
+                rows.append((rig["id"], kind, piece, software, frames, int(chosen), position))
+                position += 1
     return rows
 
 

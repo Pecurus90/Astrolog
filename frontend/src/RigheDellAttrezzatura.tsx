@@ -135,13 +135,15 @@ const PARTE: Record<Corredo["parts"][number]["kind"], Chiave> = {
   filter_wheel: "review.kind.filter_wheel",
   focuser: "review.kind.focuser",
   guide_camera: "review.kind.guide_camera",
+  reducer: "review.kind.reducer",
+  guide_scope: "review.kind.guide_scope",
   software: "gear.part.software",
   filter: "gear.part.filter",
 }
 
 export function UnCorredo({ corredo, montature }: { corredo: Corredo; montature: Pezzo[] }) {
   const [apro, setApro] = useState<"nome" | "montatura" | null>(null)
-  const montata = montature.find((m) => m.id === corredo.mount_id)
+  const montata = corredo.parts.find((p) => p.kind === "mount" && p.chosen)
   const fatto = t("gear.rig", {
     ottica: corredo.optics ?? t("gear.rig.noOptics"),
     camera: corredo.camera ?? t("gear.rig.noCamera"),
@@ -156,13 +158,16 @@ export function UnCorredo({ corredo, montature }: { corredo: Corredo; montature:
             <Dettaglio>{t("gear.focal", { mm: numero(corredo.focal_mm) })}</Dettaglio>
           )}{" "}
           {montata && <Dettaglio>{t("gear.rig.mount", { nome: montata.name })}</Dettaglio>}{" "}
-          {/* le parti che i frame dicono, tutte; la montatura scelta e' gia' scritta qui sopra */}
+          {/* le parti, tutte; la montatura scelta e' gia' scritta qui sopra. Una parte scelta dice
+              che lo e', al posto dei frame: appena scelta non ne ha ancora */}
           {corredo.parts
-            .filter((p) => !(p.kind === "mount" && p.id === corredo.mount_id))
+            .filter((p) => p !== montata)
             .map((p) => (
               <span data-parte={p.kind} key={`${p.kind}:${p.id ?? p.name}`}>
                 <Dettaglio>
-                  {t("gear.part", { parte: t(PARTE[p.kind]), nome: p.name, frame: t("gear.frames", { n: numero(p.frames) }) })}
+                  {p.chosen
+                    ? t("gear.part.chosen", { parte: t(PARTE[p.kind]), nome: p.name })
+                    : t("gear.part", { parte: t(PARTE[p.kind]), nome: p.name, frame: t("gear.frames", { n: numero(p.frames) }) })}
                 </Dettaglio>{" "}
               </span>
             ))}

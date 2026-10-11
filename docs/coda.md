@@ -130,7 +130,7 @@ aspettano chiamanti tipati. Si chiude quando si tocca il codice dove sta:
 - **Fra i `noqa: PLR0913`**, questi restano perche' toglierli cambia una firma usata fuori:
   `replace_rows` (`db/replace_table.py`), `walk_dir` (`fits/walk.py`, i sei accumulatori in un oggetto solo),
   `create_app` (`api/app.py`, sei opzioni a parola chiave lette da `__main__`, `tools` e test),
-  `scan_store.finish_run` e `upsert_position` e `normalize_rig.mount_for_frame` (chiamati dai
+  `scan_store.finish_run` e `upsert_position` e `normalize_rig.carried_by_frame` (chiamati dai
   test), `stages.set_status` e `stage_run.frame_safely` (chiamati da ogni stadio),
   `rigs.rig_for` (`normalize_rig`), `gear.declare_filter` (`gear_create`, `api/review_write`),
   `gear_create.filter_declared` (`api/gear_write`), `declarations.write_declaration` e
@@ -468,19 +468,18 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   coi loro frame. L'impronta resta ottica + camera + focale. Fatto (11/10): `GET /gear` manda per
   ogni corredo `parts` -- montatura, ruota, focheggiatore, camera di guida, programma, filtri,
   coi frame -- scritte dalla spina in `rig_parts`; la pagina di oggi le scrive in fila nella riga
-  del corredo (testi `gear.part*` miei). Resta nel backend: la scelta dell'utente per le parti
-  che i file non dicono (riduttore, ottica di guida, e ruota/focheggiatore/camera di guida dove
-  il programma tace), sul modello della montatura (`PUT /gear/rigs/{id}/mount`,
-  `rigs.declare_mount`, `RigField`); e rinominare un pezzo dalla scheda del corredo, che e' solo
-  disegno (il gesto e' il "Modifica" del pezzo). Piano della scelta (mio, da costruire): un
-  gesto solo per genere, `PUT /gear/rigs/{id}/parts/{kind}`, che generalizza `declare_mount`
-  (`RigField`, `CARRIED_FIELDS`, `VALUE_KINDS` in `spine/rigs.py`; la dichiarazione tiene il NOME
-  del pezzo, cosi' rinomina e unione la seguono). Per ruota, focheggiatore e camera di guida la
-  scelta **riempie il silenzio**: vale solo sui frame il cui file non nomina quel genere (Marco:
-  cio' che i file dicono si rinomina, non si sostituisce); la montatura tiene la sua regola del
-  26/9 (la tua parola vince). Riduttore e ottica di guida oggi non hanno una colonna sul frame:
-  servono `reducer_id` e `guide_scope_id` in `frames` e in `counts.CARRIED`, cosi' ore e parti
-  escono dalla stessa casa degli altri. **Forma scelta** (Marco, 11/10/2026): la seconda
+  del corredo (testi `gear.part*` miei). Fatta anche la scelta dell'utente (11/10): `PUT
+  /gear/rigs/{id}/parts/{kind}` per i sei generi che la posa porta, `chosen` su ogni parte,
+  contratto in `docs/domini/attrezzatura.md`. La regola "per ruota, focheggiatore e camera di
+  guida la scelta riempie solo il silenzio del file" l'ho dedotta io da "cio' che i file dicono
+  si rinomina, non si sostituisce": detta a Marco, non ancora confermata. La pagina di oggi
+  offre il gesto solo per la montatura; gli altri generi aspettano il foglio v35. Resta:
+  rinominare un pezzo dalla scheda del corredo, che e' solo disegno (il gesto e' il "Modifica"
+  del pezzo); la parola a schermo di una parte scelta oggi e' "tua scelta" (mia, provvisoria:
+  il disegno dice "scelto", che in italiano vuole il genere). Da decidere con Marco: un
+  riduttore o un'ottica di guida mai scelti dicono "non indicato nei file" finche' nessuno e'
+  scelto, e zero ore dopo che un altro lo e' (`inventory.no_hours` ha "nessun corredo la porta"
+  solo per la montatura). **Forma scelta** (Marco, 11/10/2026): la seconda
   proposta di Design, "schede grafiche" (`pagine/attrezzatura.html` e `attrezzatura-stati.html`,
   classi `pr-`). Marco ha fatto togliere, e non vanno rimessi: gli oggetti ripresi (corredo e
   tessere) e, dell'uso, frame, notti e "N senza durata" -- resta l'ora sola; i frame restano

@@ -1,5 +1,5 @@
 """The rig as the declarer sees it: its fingerprint, its key, what the user writes on it. A merge
-can delete the row, so name and mount live among the declarations, on a key that outlives it."""
+can delete the row, so name and parts live among the declarations, on a key that outlives it."""
 
 import json
 import sqlite3
@@ -8,7 +8,7 @@ from enum import StrEnum
 from ..clock import now_iso
 from ..db.inserted import inserted_id
 from ..units import same_focal
-from . import gear_usage, signature
+from . import counts, signature
 from .declarations import (
     EntityType,
     forget,
@@ -18,7 +18,6 @@ from .declarations import (
     values_of,
     write_declaration,
 )
-from .gear_usage import UsageSubject
 from .stages import StageName, invalidate
 
 
@@ -26,13 +25,18 @@ class RigField(StrEnum):
     """The fields of a rig's declarations."""
 
     NAME = "name"
-    # the kind as field: the value is the mount's name
-    MOUNT = "mount"
     DECLARED = "declared"
 
 
-class NotAMountError(ValueError):
-    """The piece asked to mount on a rig is not a mount."""
+# A part you give a rig is a declaration too: the kind as field, the piece's name as value.
+PART_FIELDS = counts.CARRIED
+# Where your word wins over the file's; for the other kinds it only fills the file's silence, since
+# a piece the files name is renamed, never replaced.
+OVER_THE_FILE = ("mount",)
+
+
+class NotOfKindError(ValueError):
+    """The piece given to a rig as a part is not a piece of that kind."""
 
 
 class WrongKindError(ValueError):
@@ -81,7 +85,7 @@ def find_rig(
 
 
 # What a rig carries to its frames' new key.
-CARRIED_FIELDS = (RigField.NAME, RigField.MOUNT)
+CARRIED_FIELDS = (RigField.NAME, *PART_FIELDS)
 
 
 def optics_less_key(
@@ -147,9 +151,10 @@ def create_declared(
     return rig_id
 
 
-def restore_declared(conn: sqlite3.Connection, now: str | None = None) -> None:
+def restore_declared(conn: sqlite3.Connection, now: str | None = None) -> list[int]:
     """Remakes your rigs a merge deleted: the key already followed the kept piece
-    (`follow_rename`), here the row and its usage row come back."""
+    (`follow_rename`), here the row comes back. Returns the rigs remade."""
+    remade: list[int] = []
     for key, _ in values_of(conn, EntityType.RIG, RigField.DECLARED):
         parts = rig_key_parts(key)
         if parts is None:
@@ -162,7 +167,8 @@ def restore_declared(conn: sqlite3.Connection, now: str | None = None) -> None:
         if find_rig(conn, optics_id, camera_id, focal) is None:
             when = now or now_iso()
             rebuilt, _ = rig_for(conn, optics_id, camera_id, focal, when, detected=False)
-            gear_usage.add_new(conn, UsageSubject.RIG, rebuilt)
+            remade.append(rebuilt)
+    return remade
 
 
 RIG_ROWS = """
@@ -193,48 +199,55 @@ def _rig(conn: sqlite3.Connection, rig_id: int) -> sqlite3.Row:
     return row
 
 
-def declare_mount(
-    conn: sqlite3.Connection, rig_id: int, mount_id: int | None, now: str | None = None
+def declare_part(
+    conn: sqlite3.Connection, rig_id: int, kind: str, piece_id: int | None, now: str | None = None
 ) -> list[int]:
     """`None` drops the user's word and goes back to the files'. Returns the frames requeued to
-    `normalize`, which writes the mount on each: none if nothing changed."""
+    `normalize`, which writes the part on each: none if nothing changed."""
+    if kind not in PART_FIELDS:
+        raise NotOfKindError(f"{kind} non e' una parte che si sceglie")
     key = decl_key(_rig(conn, rig_id))
-    if mount_id is None:
-        dropped = forget(conn, EntityType.RIG, key, RigField.MOUNT)
+    if piece_id is None:
+        dropped = forget(conn, EntityType.RIG, key, kind)
         if not dropped:
             return []
     else:
-        mount_row = conn.execute(
-            "SELECT name FROM instruments WHERE id = ? AND kind = ?", (mount_id, RigField.MOUNT)
+        piece = conn.execute(
+            "SELECT name FROM instruments WHERE id = ? AND kind = ?", (piece_id, kind)
         ).fetchone()
-        if mount_row is None:
-            raise NotAMountError(f"{mount_id} non e' una montatura")
-        if declared_mount(conn, rig_id) == mount_id:
+        if piece is None:
+            raise NotOfKindError(f"{piece_id} non e' un pezzo di genere {kind}")
+        if chosen_for(conn, rig_id).get(kind) == piece_id:
             return []
-        write_declaration(conn, EntityType.RIG, key, RigField.MOUNT, mount_row["name"], now)
+        write_declaration(conn, EntityType.RIG, key, kind, piece["name"], now)
     frames = [r[0] for r in conn.execute("SELECT id FROM frames WHERE rig_id = ?", (rig_id,))]
     invalidate(conn, frames, StageName.NORMALIZE, now=now)
     return frames
 
 
-_MOUNTS = """
-SELECT d.entity_key, i.id FROM declarations d
-JOIN instruments i ON i.kind = 'mount' AND i.name = d.value
-WHERE d.entity_type = 'rig' AND d.field = 'mount'
+# The field is the piece's kind, so a guide camera named like a camera is never taken for it.
+_CHOSEN = """
+SELECT d.entity_key, d.field AS kind, i.id FROM declarations d
+JOIN instruments i ON i.kind = d.field AND i.name = d.value
+WHERE d.entity_type = 'rig'
 """
 
 
-def rig_mounts(conn: sqlite3.Connection) -> dict[str, int]:
-    return {r["entity_key"]: r["id"] for r in conn.execute(_MOUNTS)}
+def chosen_parts(conn: sqlite3.Connection) -> dict[str, dict[str, int]]:
+    """Per rig key, the piece you gave it for each kind."""
+    chosen: dict[str, dict[str, int]] = {}
+    for r in conn.execute(_CHOSEN):
+        chosen.setdefault(r["entity_key"], {})[r["kind"]] = r["id"]
+    return chosen
 
 
-def declared_mount(conn: sqlite3.Connection, rig_id: int) -> int | None:
+def chosen_for(conn: sqlite3.Connection, rig_id: int) -> dict[str, int]:
     """`normalize` asks it for every frame: a lookup by key, not all the declarations."""
     row = _rig_or_none(conn, rig_id)
     if row is None:
-        return None
-    found_mount = conn.execute(_MOUNTS + " AND d.entity_key = ?", (decl_key(row),)).fetchone()
-    return None if found_mount is None else found_mount["id"]
+        return {}
+    found = conn.execute(_CHOSEN + " AND d.entity_key = ?", (decl_key(row),))
+    return {r["kind"]: r["id"] for r in found}
 
 
 def rig_names(conn: sqlite3.Connection) -> dict[str, str]:
@@ -256,15 +269,15 @@ def declare_rig(conn: sqlite3.Connection, rig_id: int, name: str, now: str | Non
 KEY_KINDS = ("optics", "camera")
 
 
-# The pieces a rig declaration carries in its value, with the kind as field: the mount you give it.
-VALUE_KINDS = (RigField.MOUNT,)
+# The pieces a rig declaration carries in its value, with the kind as field: the parts you give it.
+VALUE_KINDS = PART_FIELDS
 
 
 def follow_piece(
     conn: sqlite3.Connection, kind: str, old_name: str, new_name: str, now: str | None = None
 ) -> None:
-    """Optics and camera move the rig key and the gear answers, a mount the value naming it; no
-    other kind is touched."""
+    """Optics and camera move the rig key and the gear answers, a chosen part the value naming
+    it."""
     if kind in KEY_KINDS:
         follow_rename(conn, old_name, new_name, now)
         signature.follow_piece(conn, kind, old_name, new_name, now)  # and the gear answers

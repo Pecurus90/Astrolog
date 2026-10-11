@@ -13,13 +13,14 @@ from . import instrument_answer, work
 from . import review_write as write
 from .deps import get_db
 from .models_gear import (
+    ChosenKind,
     FilterNew,
     GearWritten,
     InstrumentCorrection,
     InstrumentNew,
-    RigMount,
     RigNaming,
     RigNew,
+    RigPartChoice,
 )
 from .models_review_apply import FilterCorrection
 
@@ -127,17 +128,24 @@ def add_rig(
     return GearWritten(id=new_id, requeued=0, run_started=False)
 
 
-@router.put("/gear/rigs/{rig_id}/mount", response_model=GearWritten)
-def mount_rig(
-    rig_id: int, body: RigMount, request: Request, conn: sqlite3.Connection = Depends(get_db)
+@router.put("/gear/rigs/{rig_id}/parts/{kind}", response_model=GearWritten)
+def choose_rig_part(
+    rig_id: int,
+    kind: ChosenKind,
+    body: RigPartChoice,
+    request: Request,
+    conn: sqlite3.Connection = Depends(get_db),
 ) -> GearWritten:
-    """A rig's mount, from its card. It is kept among the declarations like the name, and the
-    rig's frames go back to `normalize`, which writes it on each.
+    """A part of a rig, chosen from its card. It is kept among the declarations like the name, and
+    the rig's frames go back to `normalize`, which writes it on each: the mount on all of them,
+    any other kind where the file names none.
 
-    409 `worker_busy`; 404 `not_found`; 422 `not_a_mount`."""
+    409 `worker_busy`; 404 `not_found`; 422 `not_of_kind`."""
     work.busy(request.app.state)
     with write.writing(conn):
-        requeued = rigs.declare_mount(conn, rig_id, body.mount_id, now_iso())
+        requeued = rigs.declare_part(conn, rig_id, kind, body.piece_id, now_iso())
+        # the page shows the choice at once, before `normalize` has put it on the frames
+        gear_usage.write_parts(conn)
     return _written(request, rig_id, requeued)
 
 

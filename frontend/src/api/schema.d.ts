@@ -324,7 +324,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/gear/rigs/{rig_id}/mount": {
+    "/api/v1/gear/rigs/{rig_id}/parts/{kind}": {
         parameters: {
             query?: never;
             header?: never;
@@ -333,13 +333,14 @@ export interface paths {
         };
         get?: never;
         /**
-         * Mount Rig
-         * @description A rig's mount, from its card. It is kept among the declarations like the name, and the
-         *     rig's frames go back to `normalize`, which writes it on each.
+         * Choose Rig Part
+         * @description A part of a rig, chosen from its card. It is kept among the declarations like the name, and
+         *     the rig's frames go back to `normalize`, which writes it on each: the mount on all of them,
+         *     any other kind where the file names none.
          *
-         *     409 `worker_busy`; 404 `not_found`; 422 `not_a_mount`.
+         *     409 `worker_busy`; 404 `not_found`; 422 `not_of_kind`.
          */
-        put: operations["mount_rig"];
+        put: operations["choose_rig_part"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2878,15 +2879,6 @@ export interface components {
             focal_mm: number | null;
         };
         /**
-         * RigMount
-         * @description The mount you use a rig with, among those you own; `None` goes back to the one the files
-         *     say.
-         */
-        RigMount: {
-            /** Mount Id */
-            mount_id: number | null;
-        };
-        /**
          * RigNaming
          * @description The name you give a rig: it is how it is declared.
          */
@@ -2919,11 +2911,6 @@ export interface components {
              * @description The name you gave it, if you gave it one.
              */
             name: string | null;
-            /**
-             * Mount Id
-             * @description The mount you gave it; where you are silent, the frames take the one the file names.
-             */
-            mount_id: number | null;
             /** Optics */
             optics: string | null;
             /** Camera */
@@ -2956,7 +2943,7 @@ export interface components {
             height_deg: number | null;
             /**
              * Parts
-             * @description What its frames say they used, kind by kind in the card's order (mount, wheel, focuser, guide camera, capture software, filters), each from the most used. Empty until it is counted, and for a kind no frame names.
+             * @description What its frames used and what you chose for it, kind by kind in the card's order (mount, wheel, focuser, guide camera, reducer, guide scope, capture software, filters), each from the most used. A kind no frame names and you did not choose is not listed.
              */
             parts: components["schemas"]["RigPart"][];
         };
@@ -2969,7 +2956,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "mount" | "filter_wheel" | "focuser" | "guide_camera" | "software" | "filter";
+            kind: "mount" | "filter_wheel" | "focuser" | "guide_camera" | "reducer" | "guide_scope" | "software" | "filter";
             /**
              * Id
              * @description The instrument, or the filter for `filter`; null for `software`, which is not a piece.
@@ -2982,6 +2969,20 @@ export interface components {
              * @description How many of the rig's frames used it, rewritten copies out.
              */
             frames: number;
+            /**
+             * Chosen
+             * @description You gave it to the rig, instead of the files naming it. A mount you choose goes on every frame; any other kind only where the file names none.
+             */
+            chosen: boolean;
+        };
+        /**
+         * RigPartChoice
+         * @description The piece you use a rig with, among those you own of that kind; `None` goes back to what
+         *     the files say.
+         */
+        RigPartChoice: {
+            /** Piece Id */
+            piece_id: number | null;
         };
         /**
          * ScanAllStarted
@@ -4356,18 +4357,19 @@ export interface operations {
             };
         };
     };
-    mount_rig: {
+    choose_rig_part: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 rig_id: number;
+                kind: "filter_wheel" | "focuser" | "guide_camera" | "mount" | "reducer" | "guide_scope";
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RigMount"];
+                "application/json": components["schemas"]["RigPartChoice"];
             };
         };
         responses: {

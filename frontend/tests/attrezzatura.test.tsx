@@ -132,7 +132,7 @@ describe("l Attrezzatura", () => {
   it("scelgo la montatura di un corredo dalla sua scheda", async () => {
     attrezzatura(
       {},
-      { "PUT /api/v1/gear/rigs/10/mount": { stato: 200, corpo: { id: 10, requeued: 120, run_started: true } } },
+      { "PUT /api/v1/gear/rigs/10/parts/mount": { stato: 200, corpo: { id: 10, requeued: 120, run_started: true } } },
     )
     await apriAttrezzatura()
     const elenco = await screen.findByRole("list", { name: /corredi/i })
@@ -141,8 +141,8 @@ describe("l Attrezzatura", () => {
     fireEvent.change(screen.getByRole("combobox", { name: /^montatura/i }), { target: { value: "2" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
     await waitFor(() => expect(scritture()).toHaveLength(1))
-    expect(scritture()[0]?.url).toContain("/api/v1/gear/rigs/10/mount")
-    expect(scritture()[0]?.corpo).toEqual({ mount_id: 2 })
+    expect(scritture()[0]?.url).toContain("/api/v1/gear/rigs/10/parts/mount")
+    expect(scritture()[0]?.corpo).toEqual({ piece_id: 2 })
   })
 
   it("un corredo dice tutte le parti che i suoi frame hanno usato, ognuna coi suoi frame", async () => {
@@ -151,12 +151,12 @@ describe("l Attrezzatura", () => {
         {
           ...CORREDO,
           parts: [
-            { kind: "filter_wheel", id: 7, name: "ZWO EFW", frames: 100 },
-            { kind: "filter_wheel", id: 8, name: "Ruota vecchia", frames: 20 },
-            { kind: "focuser", id: 9, name: "EAF", frames: 120 },
-            { kind: "software", id: null, name: "N.I.N.A.", frames: 119 },
-            { kind: "software", id: null, name: "ASIAIR", frames: 1 },
-            { kind: "filter", id: 3, name: "Ha 3nm", frames: 60 },
+            { kind: "filter_wheel", id: 7, name: "ZWO EFW", frames: 100, chosen: false },
+            { kind: "filter_wheel", id: 8, name: "Ruota vecchia", frames: 20, chosen: false },
+            { kind: "focuser", id: 9, name: "EAF", frames: 120, chosen: false },
+            { kind: "software", id: null, name: "N.I.N.A.", frames: 119, chosen: false },
+            { kind: "software", id: null, name: "ASIAIR", frames: 1, chosen: false },
+            { kind: "filter", id: 3, name: "Ha 3nm", frames: 60, chosen: false },
           ],
         },
       ],
@@ -176,17 +176,38 @@ describe("l Attrezzatura", () => {
   })
 
   it("la montatura che hai scelto non si ripete fra le parti", async () => {
-    attrezzatura({ rigs: [{ ...CORREDO, mount_id: 2, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 120 }] }] })
+    attrezzatura({ rigs: [{ ...CORREDO, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 120, chosen: true }] }] })
     await apriAttrezzatura()
     const corredi = await screen.findByRole("list", { name: /corredi/i })
     expect(corredi.textContent).toContain("su EQ6-R")
     expect(corredi.querySelectorAll("[data-parte]")).toHaveLength(0)
   })
 
+  it("una parte che hai scelto tu dice che e' scelta, al posto dei frame", async () => {
+    attrezzatura({
+      rigs: [
+        {
+          ...CORREDO,
+          parts: [
+            { kind: "mount", id: 2, name: "EQ6-R", frames: 120, chosen: false },
+            { kind: "reducer", id: 30, name: "0,8x", frames: 120, chosen: true },
+            { kind: "guide_scope", id: 31, name: "30 mm f/4", frames: 0, chosen: true },
+          ],
+        },
+      ],
+    })
+    await apriAttrezzatura()
+    const corredi = await screen.findByRole("list", { name: /corredi/i })
+    const parti = [...corredi.querySelectorAll("[data-parte]")].map((p) => p.textContent?.trim())
+    expect(parti).toEqual(["montatura: EQ6-R (120 frame)", "riduttore: 0,8x (tua scelta)", "ottica di guida: 30 mm f/4 (tua scelta)"])
+    // una montatura letta dai file non e' "la tua": la tendina parte vuota
+    expect(corredi.textContent).not.toContain("su EQ6-R")
+  })
+
   it("un corredo dice su che montatura sta, e la voce vuota torna ai file", async () => {
     attrezzatura(
-      { rigs: [{ ...CORREDO, mount_id: 2 }] },
-      { "PUT /api/v1/gear/rigs/10/mount": { stato: 200, corpo: { id: 10, requeued: 120, run_started: true } } },
+      { rigs: [{ ...CORREDO, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 0, chosen: true }] }] },
+      { "PUT /api/v1/gear/rigs/10/parts/mount": { stato: 200, corpo: { id: 10, requeued: 120, run_started: true } } },
     )
     await apriAttrezzatura()
     const elenco = await screen.findByRole("list", { name: /corredi/i })
@@ -195,7 +216,7 @@ describe("l Attrezzatura", () => {
     fireEvent.change(screen.getByRole("combobox", { name: /^montatura/i }), { target: { value: "" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
     await waitFor(() => expect(scritture()).toHaveLength(1))
-    expect(scritture()[0]?.corpo).toEqual({ mount_id: null })
+    expect(scritture()[0]?.corpo).toEqual({ piece_id: null })
   })
 
   it("senza montature da scegliere il corredo non offre il gesto", async () => {

@@ -40,7 +40,7 @@ _BANDS = "SELECT filter_id, band, width_nm FROM filter_bands ORDER BY filter_id,
 
 # The name is the piece's now, not the one it had when counted: a rename reads at once.
 _PARTS = """
-SELECT p.rig_id, p.kind, p.piece_id AS id, p.frames,
+SELECT p.rig_id, p.kind, p.piece_id AS id, p.frames, p.chosen,
        COALESCE(p.software, x.name, i.name) AS name
 FROM rig_parts p
 LEFT JOIN filters x ON p.kind = 'filter' AND x.id = p.piece_id
@@ -70,18 +70,17 @@ def no_hours(r: sqlite3.Row) -> str | None:
 
 
 def rigs(conn: sqlite3.Connection) -> list[dict[str, Any]]:
-    names, mounts = gear_rigs.rig_names(conn), gear_rigs.rig_mounts(conn)
+    names = gear_rigs.rig_names(conn)
     parts: dict[int, list[dict[str, Any]]] = {}
     for p in conn.execute(_PARTS):
         # a piece merged away since the count has no name until the next one: left out, not blank
         if p["name"] is not None:
             part = {k: p[k] for k in ("kind", "id", "name", "frames")}
-            parts.setdefault(p["rig_id"], []).append(part)
+            parts.setdefault(p["rig_id"], []).append({**part, "chosen": bool(p["chosen"])})
     return [
         {
             **_row(r),
             "name": names.get(gear_rigs.decl_key(r)),
-            "mount_id": mounts.get(gear_rigs.decl_key(r)),
             "parts": parts.get(r["id"], []),
         }
         for r in conn.execute(_RIGS).fetchall()

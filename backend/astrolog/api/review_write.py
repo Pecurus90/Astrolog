@@ -107,7 +107,7 @@ _REFUSALS: tuple[tuple[type[Exception], int, str], ...] = (
     (gear.MergeRefusedError, 422, "merge_refused"),
     (folders.NotAskedError, 422, "not_asked"),
     (decl.UnknownTargetError, 422, "unknown_target"),
-    (rigs.NotAMountError, 422, "not_a_mount"),
+    (rigs.NotOfKindError, 422, "not_of_kind"),
     (rigs.WrongKindError, 422, "wrong_kind"),
     (gear_create.SpellingTakenError, 409, "spelling_taken"),
     (rigs.RigExistsError, 409, "rig_exists"),

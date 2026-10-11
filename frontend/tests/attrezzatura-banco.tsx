@@ -53,7 +53,6 @@ export const MONTATURA = {
 export const CORREDO = {
   id: 10,
   name: "Il grande",
-  mount_id: null as number | null,
   optics: "TS 130 APO",
   camera: "ASI2600MM",
   focal_mm: 910,
@@ -66,7 +65,7 @@ export const CORREDO = {
   scale_arcsec_px: 0.85,
   width_deg: 1.5,
   height_deg: 1,
-  parts: [] as { kind: string; id: number | null; name: string; frames: number }[],
+  parts: [] as { kind: string; id: number | null; name: string; frames: number; chosen: boolean }[],
 }
 
 export const FILTRO = {

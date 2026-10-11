@@ -306,6 +306,10 @@ CREATE TABLE frames (
   -- La montatura: quella che hai dato al corredo, o dove taci quella che il file nomina
   -- (`spine/normalize_rig.py`). Non ha un grezzo suo: con l'ASIAIR sta in `telescope_raw`.
   mount_id         INTEGER REFERENCES instruments (id),   -- normalize
+  -- Riduttore e ottica di guida: nessun programma li scrive, ci sono solo se li hai scelti sul
+  -- corredo.
+  reducer_id       INTEGER REFERENCES instruments (id),   -- normalize
+  guide_scope_id   INTEGER REFERENCES instruments (id),   -- normalize
   -- La copia calibrata dello stesso scatto (l'elaborazione la riscrive nella cartella di
   -- acquisizione): resta in archivio con le sue posizioni, ma non e' un'altra ora di cielo.
   -- Chi conta le ore filtra `copy_of IS NULL`. Lo decide `normalize`; il grezzo vince.
@@ -733,10 +737,13 @@ CREATE TABLE gear_usage (
 CREATE TABLE rig_parts (
   rig_id   INTEGER NOT NULL REFERENCES rigs (id) ON DELETE CASCADE,
   kind     TEXT NOT NULL CHECK (kind IN
-             ('mount', 'filter_wheel', 'focuser', 'guide_camera', 'software', 'filter')),
+             ('mount', 'filter_wheel', 'focuser', 'guide_camera', 'reducer', 'guide_scope',
+              'software', 'filter')),
   piece_id INTEGER,
   software TEXT,
   frames   INTEGER NOT NULL,
+  -- La parte l'hai scelta tu sul corredo; una scelta che nessuna posa porta ancora ha zero frame.
+  chosen   INTEGER NOT NULL DEFAULT 0 CHECK (chosen IN (0, 1)),
   position INTEGER NOT NULL,                       -- l'ordine della scheda: genere, poi uso
   PRIMARY KEY (rig_id, position),
   CHECK ((kind = 'software') = (piece_id IS NULL) AND (kind = 'software') = (software IS NOT NULL))
