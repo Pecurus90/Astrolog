@@ -472,7 +472,15 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   che i file non dicono (riduttore, ottica di guida, e ruota/focheggiatore/camera di guida dove
   il programma tace), sul modello della montatura (`PUT /gear/rigs/{id}/mount`,
   `rigs.declare_mount`, `RigField`); e rinominare un pezzo dalla scheda del corredo, che e' solo
-  disegno (il gesto e' il "Modifica" del pezzo).
+  disegno (il gesto e' il "Modifica" del pezzo). Piano della scelta (mio, da costruire): un
+  gesto solo per genere, `PUT /gear/rigs/{id}/parts/{kind}`, che generalizza `declare_mount`
+  (`RigField`, `CARRIED_FIELDS`, `VALUE_KINDS` in `spine/rigs.py`; la dichiarazione tiene il NOME
+  del pezzo, cosi' rinomina e unione la seguono). Per ruota, focheggiatore e camera di guida la
+  scelta **riempie il silenzio**: vale solo sui frame il cui file non nomina quel genere (Marco:
+  cio' che i file dicono si rinomina, non si sostituisce); la montatura tiene la sua regola del
+  26/9 (la tua parola vince). Riduttore e ottica di guida oggi non hanno una colonna sul frame:
+  servono `reducer_id` e `guide_scope_id` in `frames` e in `counts.CARRIED`, cosi' ore e parti
+  escono dalla stessa casa degli altri.
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio (v31-v32, montato l'8/10), il primo avvio (Marco, 8/10:
   "anche il wizard bisogna rifare"; brief in `handoff/design-primo-avvio.md`; montato il 9/10 sul v33), Da confermare
