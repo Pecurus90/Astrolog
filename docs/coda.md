@@ -459,6 +459,18 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   scritti da me nel tono approvato, da far vedere a Marco riga per riga: l'elenco e' in
   `frontend/src/i18n/it.ts`, chiavi `review.count.word`, `review.inHand.word`, `review.index*`, `review.rule`, `review.questions`,
   `review.inHand.label`, `review.merge.warning*`, `review.applying`, `review.none.*`.
+- **Attrezzatura: i corredi completi in cima** (Marco, 11/10/2026; brief in
+  `handoff/design-attrezzatura.md`). Deciso: in cima i corredi, sotto i componenti per tipo; un
+  corredo mostra tutte le sue parti (montatura, ruota, focheggiatore, riduttore, guida, camera di
+  guida, programma di ripresa, filtri); di un corredo trovato dai file i pezzi si rinominano e
+  non si sostituiscono; una parte che i file non dicono si sceglie da una tendina fra i propri
+  pezzi, con "aggiungine uno"; piu' pezzi dello stesso tipo si elencano tutti, dal piu' usato,
+  coi loro frame. L'impronta resta ottica + camera + focale. Da fare nel backend, prima del
+  disegno: `GET /gear` manda per ogni corredo le sue parti con l'uso (ruota, focheggiatore,
+  camera di guida e programma stanno gia' sul frame: `filter_wheel_raw`, `focuser_raw`,
+  `guide_camera_raw`, `software`; li scrive la spina, la lettura non calcola), e la scelta
+  dell'utente per le parti che i file non dicono (oggi c'e' solo la montatura, `PUT
+  /gear/rigs/{id}/mount`). Il contratto `docs/domini/attrezzatura.md` si aggiorna con la fetta.
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio (v31-v32, montato l'8/10), il primo avvio (Marco, 8/10:
   "anche il wizard bisogna rifare"; brief in `handoff/design-primo-avvio.md`; montato il 9/10 sul v33), Da confermare

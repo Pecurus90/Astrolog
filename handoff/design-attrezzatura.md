@@ -19,9 +19,14 @@ riscritti**. Se un testo non regge nella forma che proponi, dillo a parte.
 
 "Con cosa hai ripreso, e quanto." Tre famiglie di cose:
 
-- gli **strumenti**, divisi per tipo (un telescopio, una camera, una montatura...);
-- i **corredi**: un'ottica piu' una camera a una focale, cioe' la combinazione con cui si riprende;
+- i **corredi**: la combinazione con cui si riprende davvero. Un corredo e' un'ottica piu' una
+  camera a una focale, e **porta dentro tutto il resto** con cui e' stato usato: montatura, ruota
+  portafiltri, focheggiatore, riduttore, guida, camera di guida, programma di ripresa, filtri;
+- i **componenti**, divisi per tipo (un telescopio, una camera, una montatura...): l'inventario;
 - i **filtri**.
+
+**La forma l'ha decisa Marco (11/10/2026): in cima i corredi completi, sotto i componenti per
+tipo.** Il corredo e' cio' che l'utente riconosce ("il mio setup"); i pezzi sciolti vengono dopo.
 
 Per ognuno: quanti frame, quante ore, quante notti, e quali oggetti ci sono stati ripresi.
 
@@ -35,6 +40,12 @@ Regole che la forma deve far capire:
 - **Cio' che l'utente scrive vince sui file** e resta anche quando l'archivio viene riletto.
 - **Un pezzo non si cancella.** Si corregge, si rinomina, si unisce a un altro. L'unione **non si
   annulla**.
+- **Di un corredo trovato dai file i pezzi si rinominano, non si sostituiscono.** "Askar 103APO
+  F/6.8 Triplet" diventa "Askar 103 APO": il nome nuovo vale ovunque quel pezzo compare (negli
+  altri corredi, nell'elenco dei componenti). Dire "questa camera in realta' era un'altra" non e'
+  un gesto di questa pagina.
+- **Un pezzo che i file non dicono si sceglie**: il suo posto nel corredo c'e', vuoto, con una
+  tendina fra i pezzi dell'utente di quel tipo e il modo di aggiungerne uno.
 - **Niente da quando ce l'hai**: nessuna data d'acquisto, nessuna prima notte.
 - **Tutti i pezzi stanno in una pagina sola**, senza ricerca interna, senza ordinamenti, senza
   pagine: l'attrezzatura di una persona e' una manciata di cose, non mille.
@@ -49,14 +60,14 @@ non supera le decine di righe; molti gruppi hanno una riga sola.
 ## 2. Cosa c'e' in pagina, dall'alto
 
 1. **Il gesto "Aggiungi strumento"**, in cima, sempre: anche il primo giorno, anche a mani vuote.
-2. **Un gruppo per tipo di strumento**, in quest'ordine fisso, ognuno col suo titolo:
+2. **"Corredi"**: una scheda per corredo, completa (3.2).
+3. **I componenti, un gruppo per tipo**, in quest'ordine fisso, ognuno col suo titolo:
    "Telescopi e obiettivi", "Camere", "Montature", "Riduttori e spianatori", "Ruote portafiltri",
    "Guide", "Camere di guida", "Focheggiatori".
-3. **"Corredi"**.
 4. **"Filtri"**.
 
 **Un gruppo senza righe non si disegna**: niente titolo, niente "nessuna camera". Chi ha solo un
-telescopio e una camera vede due gruppi e i corredi.
+telescopio e una camera vede un corredo e due gruppi.
 
 ## 3. Le righe, una per una
 
@@ -121,15 +132,46 @@ Se il corredo ha un nome dato dall'utente, sotto il nome resta scritto "{ottica}
 focale e pixel. Se nessuna posa e' ancora risolta la riga dice "campo non ancora disponibile". Non
 vuol dire "mai ripreso": vuol dire che la misura non c'e' ancora.
 
-**Gesti: due.**
+**Le parti del corredo.** Oltre a ottica, camera e focale, che lo definiscono, la scheda ha un
+posto per ognuna di queste parti:
 
-- **"Rinomina"**: apre nella riga "Nome di {nome}", un solo campo "Nome".
-- **"Seleziona montatura"**: c'e' **solo se** l'utente possiede almeno una montatura. Apre
-  "Montatura di {nome}" con una tendina "Montatura (vuoto: dai file)" fra le sue montature. La
-  scelta vuota vuol dire "torna a cio' che dicono i file". "Salva" e' spento finche' la scelta non
-  cambia.
+| parte | da dove viene | piu' d'una? |
+|---|---|---|
+| montatura | dai file (ASIAIR la scrive) o scelta dall'utente | una |
+| ruota portafiltri | dai file, frame per frame (N.I.N.A.) o scelta | si' |
+| focheggiatore | dai file, frame per frame (N.I.N.A.) o scelto | si' |
+| camera di guida | dai file, frame per frame (ASIAIR) o scelta | si' |
+| riduttore / spianatore | solo scelto: i file non lo scrivono | una |
+| ottica di guida | solo scelta: i file non la scrivono | una |
+| programma di ripresa | dai file | si' |
+| filtri | dai file: quelli usati con questo corredo | si', di solito molti |
 
-Un corredo **non si unisce e non si cancella**.
+Ogni parte ha **tre forme**:
+
+- **trovata dai file**: il nome del pezzo, e quanti frame di questo corredo l'hanno usato. Gesto:
+  rinominarlo;
+- **piu' d'una** (due ruote negli anni, N.I.N.A. e poi ASIAIR): **tutte, dalla piu' usata**,
+  ognuna coi suoi frame. Decisione di Marco: nasconderne una farebbe sembrare che non sia mai
+  stata usata;
+- **non detta dai file**: il posto vuoto, con la tendina fra i pezzi dell'utente di quel tipo e
+  "aggiungine uno". E' il gesto che oggi esiste per la montatura ("Seleziona montatura", tendina
+  "Montatura (vuoto: dai file)"): la scelta vuota vuol dire "torna a cio' che dicono i file".
+
+Il programma di ripresa non e' un pezzo: si legge e basta (N.I.N.A., ASIAIR, Voyager, SGP), non si
+rinomina e non si sceglie.
+
+**Cio' che arriva dopo.** Oggi l'API manda, del corredo, solo ottica, camera, focale, montatura,
+uso, oggetti, scala e campo. Le altre parti arrivano con un lavoro di backend gia' deciso: vanno
+disegnate adesso, coi testi lasciati come posto vuoto dove non esistono.
+
+**Gesti del corredo.**
+
+- **"Rinomina"**: il nome del corredo stesso. Apre "Nome di {nome}", un solo campo "Nome".
+- **Rinominare un pezzo** dalla scheda del corredo: lo stesso "Modifica" del componente (3.1),
+  raggiunto da qui.
+- **Scegliere una parte mancante** (sopra).
+
+Un corredo **non si unisce e non si cancella**, e ottica, camera e focale **non si sostituiscono**.
 
 ### 3.3 Un filtro
 
@@ -242,7 +284,12 @@ Stessi dati, stessi gesti. Le righe portano molto (nome, scheda, uso, oggetti, u
 - **I testi che non esistono**: l'avviso dell'unione nella scheda, l'esito di un salvataggio, lo
   stato "scansione in corso" detto prima di salvare, il segno della riga su cui si arriva per chi
   ascolta. Il testo lo scrive Marco: lasciare il posto.
-- **Cio' che la pagina non fa, per scelta**: cancellare un pezzo, correggere la banda di un filtro,
+- **Quanto pesa una scheda di corredo.** Con otto parti, l'uso, gli oggetti, scala e campo e' la
+  cosa piu' densa della pagina, e chi ha un corredo solo vede quasi solo quella. Dire come si
+  legge chiusa e aperta, e cosa resta in vista di un corredo con parti mancanti.
+- **I testi che non esistono per le parti**: i nomi delle parti dentro la scheda, "aggiungine uno",
+  la frase di una parte che i file non dicono. Li scrive Marco.
+- **Cio' che la pagina non fa, per scelta**: sostituire ottica, camera o focale di un corredo, cancellare un pezzo, correggere la banda di un filtro,
   correggere la focale di un corredo, svuotare un campo, il valore in denaro, la manutenzione, la
   posizione di un filtro nella ruota, il peso del corredo contro il carico della montatura. Non
   vanno disegnati.
