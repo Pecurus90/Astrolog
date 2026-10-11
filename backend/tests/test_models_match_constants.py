@@ -211,6 +211,19 @@ def test_the_gear_usage_subjects_are_the_ones_the_schema_allows():
     assert set(re.findall(r"'([a-z_]+)'", riga)) == set(gear_usage.UsageSubject)
 
 
+def test_the_parts_of_a_rig_are_one_vocabulary():
+    """The `rig_parts.kind` CHECK, what the spine writes and what the API promises are one list: a
+    word on one side only would fail the rewrite, or a page that reads it."""
+    from astrolog.api.models_gear import RigPart
+
+    schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+    tabella = schema[schema.index("CREATE TABLE rig_parts") :]
+    check = tabella[tabella.index("CHECK (kind IN") : tabella.index("piece_id")]
+    dallo_schema = set(re.findall(r"'([a-z_]+)'", check))
+    assert dallo_schema == set(gear_usage.PART_KINDS)
+    assert set(get_args(RigPart.model_fields["kind"].annotation)) == set(gear_usage.PART_KINDS)
+
+
 def test_declarable_bands_are_the_physical_ones_of_the_vocabulary():
     """Le bande che l'API accetta sono quelle che il vocabolario chiama fisiche: se domani
     ne nasce una, i due elenchi non devono poter divergere in silenzio."""

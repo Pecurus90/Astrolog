@@ -508,6 +508,12 @@ pixel. Cosi' un riduttore e' gia' dentro il numero, invece di essere una correzi
 mente. Se di un corredo l'app non ha ancora riconosciuto nessuna posa -- perche' non hai ancora
 ripreso, o perche' ASTAP non ci e' ancora arrivato -- la scala non c'e', e te lo dice.
 
+Di ogni corredo leggi anche **tutte le parti che i suoi frame dicono di aver usato**: la
+montatura, la ruota portafiltri, il focheggiatore, la camera di guida, il programma di ripresa, i
+filtri. Accanto a ognuna, quanti frame. Se negli anni hai cambiato ruota, o sei passato da un
+programma a un altro, le trovi tutte, dalla piu' usata. Una parte che i file non scrivono non
+compare.
+
 **La montatura ha le sue ore.** Se il tuo programma di ripresa la scrive nei file, l'app la lega
 da sola a ogni posa: fra i programmi che l'app conosce, oggi lo fa l'ASIAIR. Se no, apri un corredo, premi *Seleziona montatura* e
 scegli fra quelle che possiedi (una montatura che non trovi la scrivi con *Aggiungi strumento*):

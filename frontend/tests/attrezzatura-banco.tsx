@@ -66,6 +66,7 @@ export const CORREDO = {
   scale_arcsec_px: 0.85,
   width_deg: 1.5,
   height_deg: 1,
+  parts: [] as { kind: string; id: number | null; name: string; frames: number }[],
 }
 
 export const FILTRO = {

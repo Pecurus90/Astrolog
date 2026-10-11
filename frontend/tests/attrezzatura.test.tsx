@@ -145,6 +145,44 @@ describe("l Attrezzatura", () => {
     expect(scritture()[0]?.corpo).toEqual({ mount_id: 2 })
   })
 
+  it("un corredo dice tutte le parti che i suoi frame hanno usato, ognuna coi suoi frame", async () => {
+    attrezzatura({
+      rigs: [
+        {
+          ...CORREDO,
+          parts: [
+            { kind: "filter_wheel", id: 7, name: "ZWO EFW", frames: 100 },
+            { kind: "filter_wheel", id: 8, name: "Ruota vecchia", frames: 20 },
+            { kind: "focuser", id: 9, name: "EAF", frames: 120 },
+            { kind: "software", id: null, name: "N.I.N.A.", frames: 119 },
+            { kind: "software", id: null, name: "ASIAIR", frames: 1 },
+            { kind: "filter", id: 3, name: "Ha 3nm", frames: 60 },
+          ],
+        },
+      ],
+    })
+    await apriAttrezzatura()
+    const corredi = await screen.findByRole("list", { name: /corredi/i })
+    const parti = [...corredi.querySelectorAll("[data-parte]")].map((p) => p.textContent?.trim())
+    // tutte, nell'ordine dell'API: due ruote e due programmi restano due
+    expect(parti).toEqual([
+      "ruota portafiltri: ZWO EFW (100 frame)",
+      "ruota portafiltri: Ruota vecchia (20 frame)",
+      "focheggiatore: EAF (120 frame)",
+      "programma di ripresa: N.I.N.A. (119 frame)",
+      "programma di ripresa: ASIAIR (1 frame)",
+      "filtro: Ha 3nm (60 frame)",
+    ])
+  })
+
+  it("la montatura che hai scelto non si ripete fra le parti", async () => {
+    attrezzatura({ rigs: [{ ...CORREDO, mount_id: 2, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 120 }] }] })
+    await apriAttrezzatura()
+    const corredi = await screen.findByRole("list", { name: /corredi/i })
+    expect(corredi.textContent).toContain("su EQ6-R")
+    expect(corredi.querySelectorAll("[data-parte]")).toHaveLength(0)
+  })
+
   it("un corredo dice su che montatura sta, e la voce vuota torna ai file", async () => {
     attrezzatura(
       { rigs: [{ ...CORREDO, mount_id: 2 }] },

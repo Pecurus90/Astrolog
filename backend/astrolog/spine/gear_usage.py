@@ -90,6 +90,31 @@ FROM frames f JOIN frame_wcs w ON w.frame_id = f.id
 WHERE f.rig_id IN {listed} AND f.copy_of IS NULL
 """
 
+# What a rig's frames used besides optics and camera, in the card's order. Written copies do not
+# count, as in the hours; "no filter" is not a filter you own.
+_PIECE_PART = """
+SELECT f.rig_id, '{kind}' AS kind, f.{kind}_id AS piece_id, NULL AS software, COUNT(*) AS frames
+FROM frames f WHERE f.copy_of IS NULL AND f.rig_id IS NOT NULL AND f.{kind}_id IS NOT NULL
+GROUP BY f.rig_id, f.{kind}_id
+"""
+# The words of the `rig_parts.kind` CHECK, in the card's order.
+PART_KINDS = ("mount", *counts.ON_THE_FRAME, "software", "filter")
+_PARTS = (
+    *(_PIECE_PART.format(kind=kind) for kind in ("mount", *counts.ON_THE_FRAME)),
+    """
+SELECT f.rig_id, 'software' AS kind, NULL AS piece_id, f.software, COUNT(*) AS frames
+FROM frames f WHERE f.copy_of IS NULL AND f.rig_id IS NOT NULL AND f.software IS NOT NULL
+GROUP BY f.rig_id, f.software
+""",
+    """
+SELECT f.rig_id, 'filter' AS kind, f.filter_id AS piece_id, NULL AS software, COUNT(*) AS frames
+FROM frames f JOIN filters x ON x.id = f.filter_id AND x.is_none = 0
+WHERE f.copy_of IS NULL AND f.rig_id IS NOT NULL
+GROUP BY f.rig_id, f.filter_id
+""",
+)
+_PART_COLUMNS = ("rig_id", "kind", "piece_id", "software", "frames", "position")
+
 USAGE = ("frames", "integration_s", "untimed", "nights")
 _SKY_FIELDS = ("scale_arcsec_px", "width_deg", "height_deg")
 _COLUMNS = ("subject", "subject_id", *USAGE, *_SKY_FIELDS, "objects_json", "position")
@@ -120,6 +145,20 @@ def write(conn: sqlite3.Connection) -> None:
         for n, r in enumerate(listing)
     ]
     replace_rows(conn, "gear_usage", _COLUMNS, rows)
+    replace_rows(conn, "rig_parts", _PART_COLUMNS, _parts(conn))
+
+
+def _parts(conn: sqlite3.Connection) -> list[tuple[Any, ...]]:
+    """Kind by kind in the card's order, each from the most used; the position runs per rig."""
+    placed: dict[int, int] = {}
+    rows: list[tuple[Any, ...]] = []
+    for query in _PARTS:
+        ordered = f"{query} ORDER BY frames DESC, piece_id, software"
+        for r in conn.execute(ordered).fetchall():
+            position = placed.get(r["rig_id"], 0)
+            placed[r["rig_id"]] = position + 1
+            rows.append((*(r[c] for c in _PART_COLUMNS[:-1]), position))
+    return rows
 
 
 def add_piece(conn: sqlite3.Connection, instrument_id: int, kind: str) -> None:

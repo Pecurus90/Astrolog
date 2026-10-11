@@ -725,6 +725,23 @@ CREATE TABLE gear_usage (
   PRIMARY KEY (subject, subject_id)
 ) STRICT;
 
+-- Le parti di un corredo: cio' che i suoi frame dicono di aver usato oltre a ottica e camera
+-- (DERIVATO: lo riscrive `spine/gear_usage.py` insieme a `gear_usage`, la pagina lo legge e
+-- basta). `piece_id` e' la riga di `instruments`, o di `filters` per `filter`; il programma di
+-- ripresa non e' un pezzo e sta in `software`. Il nome non si copia: lo da' il pezzo, cosi' una
+-- rinomina si legge subito. Piu' pezzi dello stesso genere stanno tutti, dal piu' usato.
+CREATE TABLE rig_parts (
+  rig_id   INTEGER NOT NULL REFERENCES rigs (id) ON DELETE CASCADE,
+  kind     TEXT NOT NULL CHECK (kind IN
+             ('mount', 'filter_wheel', 'focuser', 'guide_camera', 'software', 'filter')),
+  piece_id INTEGER,
+  software TEXT,
+  frames   INTEGER NOT NULL,
+  position INTEGER NOT NULL,                       -- l'ordine della scheda: genere, poi uso
+  PRIMARY KEY (rig_id, position),
+  CHECK ((kind = 'software') = (piece_id IS NULL) AND (kind = 'software') = (software IS NOT NULL))
+) STRICT;
+
 -- I candidati del cielo per la scheda di un oggetto in dubbio, o di pose dette "non e' un oggetto"
 -- (DERIVATO: li scrive `spine/object_candidates.py`, che dice quando; Da confermare li legge).
 -- `object_key` e' la chiave stabile della scheda, perche' la riga dell'oggetto puo' non esserci

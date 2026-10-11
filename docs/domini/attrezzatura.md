@@ -130,6 +130,16 @@ con un programma che la ruota non la scrive, e se la e' scritta a mano, non ha f
 ha ore che l'app non sa, e la riga lo dice. E' lo stesso pezzo che racconta due cose a due utenti,
 e a deciderlo e' cio' che i loro file dicono.
 
+**Il corredo dice tutte le sue parti** (Marco, 11/10/2026): oltre a ottica e camera, cio' che i
+suoi frame dicono di aver usato -- montatura, ruota, focheggiatore, camera di guida, programma di
+ripresa, filtri -- ognuna con quanti frame, copie riscritte escluse. Piu' pezzi dello stesso
+genere si elencano tutti, dal piu' usato: nasconderne uno direbbe che non e' mai stato usato. Le
+scrive la spina in `rig_parts`, insieme ai conteggi; il nome e' quello del pezzo adesso, non di
+quando si e' contato (`test_a_rig_says_every_part_its_frames_used`,
+`test_a_rig_used_with_two_of_a_kind_lists_both_most_used_first`,
+`test_a_part_renamed_reads_with_its_new_name`). Il programma di ripresa non e' un pezzo: si legge
+e basta.
+
 **E non entrano nell'impronta di un corredo.** Un corredo e' ottica + camera + focale: infilarci
 la ruota farebbe nascere un secondo corredo a chi ne cambia una, e l'archivio di prima si
 spezzerebbe in due senza che nessuno abbia cambiato telescopio.

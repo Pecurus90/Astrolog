@@ -38,6 +38,16 @@ ORDER BY {filters_used.order_by("x")}
 
 _BANDS = "SELECT filter_id, band, width_nm FROM filter_bands ORDER BY filter_id, band"
 
+# The name is the piece's now, not the one it had when counted: a rename reads at once.
+_PARTS = """
+SELECT p.rig_id, p.kind, p.piece_id AS id, p.frames,
+       COALESCE(p.software, x.name, i.name) AS name
+FROM rig_parts p
+LEFT JOIN filters x ON p.kind = 'filter' AND x.id = p.piece_id
+LEFT JOIN instruments i ON p.kind NOT IN ('filter', 'software') AND i.id = p.piece_id
+ORDER BY p.rig_id, p.position
+"""
+
 
 def instruments(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     # A camera's colour and pixel the user writes among the declarations, not in the column, which
@@ -61,11 +71,18 @@ def no_hours(r: sqlite3.Row) -> str | None:
 
 def rigs(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     names, mounts = gear_rigs.rig_names(conn), gear_rigs.rig_mounts(conn)
+    parts: dict[int, list[dict[str, Any]]] = {}
+    for p in conn.execute(_PARTS):
+        # a piece merged away since the count has no name until the next one: left out, not blank
+        if p["name"] is not None:
+            part = {k: p[k] for k in ("kind", "id", "name", "frames")}
+            parts.setdefault(p["rig_id"], []).append(part)
     return [
         {
             **_row(r),
             "name": names.get(gear_rigs.decl_key(r)),
             "mount_id": mounts.get(gear_rigs.decl_key(r)),
+            "parts": parts.get(r["id"], []),
         }
         for r in conn.execute(_RIGS).fetchall()
     ]

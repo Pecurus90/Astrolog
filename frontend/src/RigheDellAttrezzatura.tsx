@@ -5,7 +5,7 @@ import { CorreggiIlFiltro, CorreggiIlPezzo, MontaturaDelCorredo, NomeDelCorredo 
 import { Dettaglio, Riga } from "./Riga"
 import { TempoDellePose } from "./TempoDellePose"
 import type { components } from "./api/schema"
-import { numero, t } from "./i18n"
+import { type Chiave, numero, t } from "./i18n"
 
 type Pezzo = components["schemas"]["InstrumentOnPage"]
 type Corredo = components["schemas"]["RigOnPage"]
@@ -129,6 +129,16 @@ export function UnPezzo({
   )
 }
 
+/** Come si chiama una parte del corredo: i pezzi col nome del loro genere, e le due che non lo sono. */
+const PARTE: Record<Corredo["parts"][number]["kind"], Chiave> = {
+  mount: "review.kind.mount",
+  filter_wheel: "review.kind.filter_wheel",
+  focuser: "review.kind.focuser",
+  guide_camera: "review.kind.guide_camera",
+  software: "gear.part.software",
+  filter: "gear.part.filter",
+}
+
 export function UnCorredo({ corredo, montature }: { corredo: Corredo; montature: Pezzo[] }) {
   const [apro, setApro] = useState<"nome" | "montatura" | null>(null)
   const montata = montature.find((m) => m.id === corredo.mount_id)
@@ -146,6 +156,16 @@ export function UnCorredo({ corredo, montature }: { corredo: Corredo; montature:
             <Dettaglio>{t("gear.focal", { mm: numero(corredo.focal_mm) })}</Dettaglio>
           )}{" "}
           {montata && <Dettaglio>{t("gear.rig.mount", { nome: montata.name })}</Dettaglio>}{" "}
+          {/* le parti che i frame dicono, tutte; la montatura scelta e' gia' scritta qui sopra */}
+          {corredo.parts
+            .filter((p) => !(p.kind === "mount" && p.id === corredo.mount_id))
+            .map((p) => (
+              <span data-parte={p.kind} key={`${p.kind}:${p.id ?? p.name}`}>
+                <Dettaglio>
+                  {t("gear.part", { parte: t(PARTE[p.kind]), nome: p.name, frame: t("gear.frames", { n: numero(p.frames) }) })}
+                </Dettaglio>{" "}
+              </span>
+            ))}
           <Uso pezzo={corredo} /> <Ripreso oggetti={corredo.objects} />{" "}
           <QuantoInquadra corredo={corredo} />
         </>

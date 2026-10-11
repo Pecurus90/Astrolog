@@ -533,6 +533,7 @@ describe("l accessibilita della prima pagina", () => {
               scale_arcsec_px: null,
               width_deg: null,
               height_deg: null,
+              parts: [{ kind: "focuser", id: 9, name: "EAF", frames: 120 }],
             },
           ],
           filters: [

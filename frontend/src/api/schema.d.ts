@@ -2954,6 +2954,34 @@ export interface components {
             width_deg: number | null;
             /** Height Deg */
             height_deg: number | null;
+            /**
+             * Parts
+             * @description What its frames say they used, kind by kind in the card's order (mount, wheel, focuser, guide camera, capture software, filters), each from the most used. Empty until it is counted, and for a kind no frame names.
+             */
+            parts: components["schemas"]["RigPart"][];
+        };
+        /**
+         * RigPart
+         * @description One thing a rig's frames used besides optics and camera.
+         */
+        RigPart: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "mount" | "filter_wheel" | "focuser" | "guide_camera" | "software" | "filter";
+            /**
+             * Id
+             * @description The instrument, or the filter for `filter`; null for `software`, which is not a piece.
+             */
+            id: number | null;
+            /** Name */
+            name: string;
+            /**
+             * Frames
+             * @description How many of the rig's frames used it, rewritten copies out.
+             */
+            frames: number;
         };
         /**
          * ScanAllStarted

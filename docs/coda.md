@@ -465,12 +465,14 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   guida, programma di ripresa, filtri); di un corredo trovato dai file i pezzi si rinominano e
   non si sostituiscono; una parte che i file non dicono si sceglie da una tendina fra i propri
   pezzi, con "aggiungine uno"; piu' pezzi dello stesso tipo si elencano tutti, dal piu' usato,
-  coi loro frame. L'impronta resta ottica + camera + focale. Da fare nel backend, prima del
-  disegno: `GET /gear` manda per ogni corredo le sue parti con l'uso (ruota, focheggiatore,
-  camera di guida e programma stanno gia' sul frame: `filter_wheel_raw`, `focuser_raw`,
-  `guide_camera_raw`, `software`; li scrive la spina, la lettura non calcola), e la scelta
-  dell'utente per le parti che i file non dicono (oggi c'e' solo la montatura, `PUT
-  /gear/rigs/{id}/mount`). Il contratto `docs/domini/attrezzatura.md` si aggiorna con la fetta.
+  coi loro frame. L'impronta resta ottica + camera + focale. Fatto (11/10): `GET /gear` manda per
+  ogni corredo `parts` -- montatura, ruota, focheggiatore, camera di guida, programma, filtri,
+  coi frame -- scritte dalla spina in `rig_parts`; la pagina di oggi le scrive in fila nella riga
+  del corredo (testi `gear.part*` miei). Resta nel backend: la scelta dell'utente per le parti
+  che i file non dicono (riduttore, ottica di guida, e ruota/focheggiatore/camera di guida dove
+  il programma tace), sul modello della montatura (`PUT /gear/rigs/{id}/mount`,
+  `rigs.declare_mount`, `RigField`); e rinominare un pezzo dalla scheda del corredo, che e' solo
+  disegno (il gesto e' il "Modifica" del pezzo).
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio (v31-v32, montato l'8/10), il primo avvio (Marco, 8/10:
   "anche il wizard bisogna rifare"; brief in `handoff/design-primo-avvio.md`; montato il 9/10 sul v33), Da confermare

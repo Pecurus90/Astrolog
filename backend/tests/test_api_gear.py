@@ -80,6 +80,63 @@ def archivio(db_path):
         yield c
 
 
+def parti(corredo):
+    return [(p["kind"], p["name"], p["frames"]) for p in corredo["parts"]]
+
+
+def test_a_rig_says_every_part_its_frames_used(archivio):
+    """Il corredo completo: oltre a ottica e camera, cio' che i suoi frame dicono di aver usato --
+    ruota, focheggiatore, camera di guida, filtri -- ognuno con quanti frame. Nell'ordine fisso
+    delle parti; la montatura non c'e' perche' nessun frame la porta."""
+    corredo_ = gear(archivio)["rigs"][0]  # il piu' usato: quello della fixture
+    assert parti(corredo_) == [
+        ("filter_wheel", "Il mio filter_wheel", 2),
+        ("focuser", "Il mio focuser", 2),
+        ("guide_camera", "Il mio guide_camera", 2),
+        ("filter", "Ha", 2),
+    ]
+    assert all(p["id"] is not None for p in corredo_["parts"])
+
+
+def test_a_rig_used_with_two_of_a_kind_lists_both_most_used_first(archivio):
+    """Due programmi di ripresa, due ruote: si elencano tutti, dal piu' usato. Nasconderne uno
+    farebbe sembrare che non sia mai stato usato (Marco, 11/10/2026). Una copia riscritta non
+    conta, come nelle ore."""
+    with db(archivio) as conn:
+        rig = conn.execute("SELECT id FROM rigs WHERE optics_id IS NOT NULL").fetchone()[0]
+        altra = attrezzo(conn, "filter_wheel", "Ruota vecchia")
+        for n, (programma, ruota) in enumerate(
+            [("N.I.N.A.", None), ("N.I.N.A.", None), ("N.I.N.A.", None), ("ASIAIR", altra)]
+        ):
+            f = posa(conn, quando=f"2024-05-19T2{n}:00:00Z", esposizione=60.0, hash_=f"s{n}")
+            conn.execute(
+                "UPDATE frames SET rig_id = ?, software = ?, filter_wheel_id = ? WHERE id = ?",
+                (rig, programma, ruota, f),
+            )
+        copia = posa(conn, quando="2024-05-19T23:30:00Z", hash_="copia", copia_di=f)
+        conn.execute("UPDATE frames SET rig_id = ?, software = 'ASIAIR' WHERE id = ?", (rig, copia))
+        gear_usage.write(conn)
+        conn.commit()
+    corredo_ = gear(archivio)["rigs"][0]  # il piu' usato: quello della fixture
+    assert [p for p in parti(corredo_) if p[0] in ("software", "filter_wheel")] == [
+        ("filter_wheel", "Il mio filter_wheel", 2),
+        ("filter_wheel", "Ruota vecchia", 1),
+        ("software", "N.I.N.A.", 3),
+        ("software", "ASIAIR", 1),
+    ]
+    # il programma non e' un pezzo: non ha un id
+    assert [p["id"] for p in corredo_["parts"] if p["kind"] == "software"] == [None, None]
+
+
+def test_a_part_renamed_reads_with_its_new_name(archivio):
+    """Il nome di una parte e' quello del pezzo adesso, non quello di quando si e' contato."""
+    with db(archivio) as conn:
+        conn.execute("UPDATE instruments SET name = 'EAF' WHERE kind = 'focuser'")
+        conn.commit()
+    corredo_ = gear(archivio)["rigs"][0]  # il piu' usato: quello della fixture
+    assert ("focuser", "EAF", 2) in parti(corredo_)
+
+
 @pytest.mark.parametrize("genere", ["filter_wheel", "focuser", "guide_camera"])
 def test_a_piece_the_files_name_on_every_frame_has_its_hours(archivio, genere):
     """La ruota portafiltri, il focheggiatore e la camera di guida stanno **sulla posa**, non sul
