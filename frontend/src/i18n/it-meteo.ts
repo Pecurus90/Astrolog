@@ -231,5 +231,5 @@ export const itMeteo = {
   "meteoblue.failed": "Invio della chiave non riuscito",
   // La licenza Copernicus chiede queste parole, con l'anno dei dati, e la frase sulla responsabilita'.
   "weather.attribution.cams":
-    "Aerosol e polveri: Generated using Copernicus Atmosphere Monitoring Service information {anno}. N00e9 la Commissione europea n00e9 l'ECMWF rispondono dell'uso di questi dati.",
+    "Aerosol e polveri: Generated using Copernicus Atmosphere Monitoring Service information {anno}. N\u00e9 la Commissione europea n\u00e9 l'ECMWF rispondono dell'uso di questi dati.",
 }
