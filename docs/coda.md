@@ -829,6 +829,29 @@ riga per voce.
   e' un segmentato.
 - **Attrezzatura**: un filtro scritto a mano cerca nel catalogo dei modelli, cosi' si possono
   scrivere anche le bande delle camere a colori.
+- **Meteo, le aggiunte** (Marco, 12/10/2026, dal confronto con Astrospheric, Clear Outside,
+  Clear Sky Chart, 7Timer, meteoblue). Nell'ordine: (1) **nebbia e visibilita'** (Open-Meteo
+  `visibility`; la soglia WMO della nebbia va letta alla fonte prima di scriverla); (2)
+  **probabilita' di sereno** dai membri dell'ensemble (Open-Meteo Ensemble, `cloud_cover`): si
+  mostra il numero, nessuna convenzione da' una soglia; (3) **previsto contro ripreso**: quanto
+  la previsione ha azzeccato le notti in cui ci sono frame, e vuole le previsioni archiviate
+  (nessuno strumento guardato lo fa); (4) **via le carte doppie**: *Vento a 200 hPa* ripete il
+  jet stream a 250; *Umidita'* e *Temperatura e rugiada* da pesare contro la *Condensa*, con
+  Marco. Fuori: trasparenza (aerosol e polveri la coprono), instabilita', aurora, satelliti.
+- **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,
+  Voyager, Telescopius, SkyTools, TheAstroImagingPlanner). La disposizione non cambia: sono
+  colonne. (1) **distanza dalla Luna** del progetto stanotte; (2) **ore utili stanotte** (buio,
+  altezza, Luna) al posto di *sopra 30 gradi*; (3) **transito** e *finestra che si chiude* (per
+  quante settimane l'oggetto resta riprendibile); con le tre l'ordine *meglio stanotte*; (4)
+  **ore per filtro e per pannello** dentro il progetto, dagli header; (5) **qualita' dell'ultima
+  notte** (FWHM, stelle), che aspetta `measure`. Vogliono le effemeridi dell'oggetto (tappa 6) e i
+  progetti (tappa 7).
+- **La Luna si giudica per bersaglio** (Marco, 12/10/2026): la distanza Luna-bersaglio prende il
+  posto delle soglie al 25 e al 50% di illuminazione, che non hanno una fonte pubblica. La
+  formula e' la lorentziana del BAIT di Berkeley (`MOONDIST / (1 + (age / MOONWIDTH)^2)`,
+  https://w.astro.berkeley.edu/bait/baitman/request.html), ripresa da ACP, Voyager e dal Target
+  Scheduler di N.I.N.A. I due parametri (distanza e larghezza, per banda larga e stretta) si
+  decidono con Marco, a video, prima del codice.
 - **Mobile**: le frasi di posto ("qui accanto") si rileggono con la veste stretta.
 - **Errori**: se `/api/v1/settings` non risponde arriva una frase giusta anche senza corpo (il
   502 del proxy) e quando il fetch fallisce.
