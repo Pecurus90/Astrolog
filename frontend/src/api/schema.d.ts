@@ -2210,7 +2210,7 @@ export interface components {
             counted: boolean;
             /**
              * No Hours
-             * @description Why a counted piece has no hours to show: the files do not name that kind, or it is a mount no rig carries yet. `None` when the hours are there.
+             * @description Why a counted piece has no hours to show: the files do not name that kind, or it is a mount, reducer or guide scope no rig carries yet. `None` when the hours are there.
              */
             no_hours: ("files_silent" | "no_rig") | null;
         };

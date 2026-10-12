@@ -33,6 +33,8 @@ PART_FIELDS = counts.CARRIED
 # Where your word wins over the file's; for the other kinds it only fills the file's silence, since
 # a piece the files name is renamed, never replaced.
 OVER_THE_FILE = ("mount",)
+# Without frames these say "no rig carries it", not "the files are silent": a rig is the remedy.
+NEEDS_A_RIG = ("mount", *counts.CHOSEN_ONLY)
 
 
 class NotOfKindError(ValueError):

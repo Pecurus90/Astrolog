@@ -22,6 +22,13 @@ type Schede = components["schemas"]["GearList"]["cards"]
  *   ha ancora ripreso. La riga scrive **perche'** mancano, e chi decide e' il backend.
  */
 
+/** "Nessun corredo lo porta", una frase per genere: in italiano l'aggettivo segue il pezzo. */
+const SENZA_CORREDO: Partial<Record<Pezzo["kind"], Chiave>> = {
+  mount: "gear.noHours.mount",
+  reducer: "gear.noHours.reducer",
+  guide_scope: "gear.noHours.guide_scope",
+}
+
 /** Quanto un pezzo e' servito: le ore col pezzo di sempre, i frame, le notti. Dove il legame con
  *  le pose non esiste -- la montatura, o un genere che i tuoi file non nominano mai -- si scrive
  *  **perche'**, che e' un dato anche quello. */
@@ -31,7 +38,8 @@ function Uso({ pezzo }: { pezzo: Pezzo | Corredo | Filtro }) {
   // il perche' lo decide il backend; corredi e filtri contati le ore le hanno sempre
   const perche = "no_hours" in pezzo ? pezzo.no_hours : null
   if (perche !== null || pezzo.frames === null || pezzo.integration_s === null) {
-    return <Dettaglio>{t(perche === "no_rig" ? "gear.noHours.mount" : "gear.noHours")}</Dettaglio>
+    const senzaCorredo = perche === "no_rig" && "kind" in pezzo ? SENZA_CORREDO[pezzo.kind] : undefined
+    return <Dettaglio>{t(senzaCorredo ?? "gear.noHours")}</Dettaglio>
   }
   return (
     <>

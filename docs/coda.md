@@ -472,14 +472,13 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   /gear/rigs/{id}/parts/{kind}` per i sei generi che la posa porta, `chosen` su ogni parte,
   contratto in `docs/domini/attrezzatura.md`. La regola "per ruota, focheggiatore e camera di
   guida la scelta riempie solo il silenzio del file" l'ho dedotta io da "cio' che i file dicono
-  si rinomina, non si sostituisce": detta a Marco, non ancora confermata. La pagina di oggi
+  si rinomina, non si sostituisce": confermata da Marco il 12/10/2026. La pagina di oggi
   offre il gesto solo per la montatura; gli altri generi aspettano il foglio v35. Resta:
   rinominare un pezzo dalla scheda del corredo, che e' solo disegno (il gesto e' il "Modifica"
   del pezzo); la parola a schermo di una parte scelta oggi e' "tua scelta" (mia, provvisoria:
-  il disegno dice "scelto", che in italiano vuole il genere). Da decidere con Marco: un
-  riduttore o un'ottica di guida mai scelti dicono "non indicato nei file" finche' nessuno e'
-  scelto, e zero ore dopo che un altro lo e' (`inventory.no_hours` ha "nessun corredo la porta"
-  solo per la montatura). **Forma scelta** (Marco, 11/10/2026): la seconda
+  il disegno dice "scelto", che in italiano vuole il genere). Fatto (Marco, 12/10/2026): un
+  riduttore o un'ottica di guida che nessun corredo porta dice "non associato / non associata a
+  un corredo", come la montatura (`rigs.NEEDS_A_RIG`). **Forma scelta** (Marco, 11/10/2026): la seconda
   proposta di Design, "schede grafiche" (`pagine/attrezzatura.html` e `attrezzatura-stati.html`,
   classi `pr-`). Marco ha fatto togliere, e non vanno rimessi: gli oggetti ripresi (corredo e
   tessere) e, dell'uso, frame, notti e "N senza durata" -- resta l'ora sola; i frame restano

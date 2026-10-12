@@ -134,7 +134,8 @@ class InstrumentOnPage(BaseModel):
     )
     no_hours: Literal["files_silent", "no_rig"] | None = Field(
         description="Why a counted piece has no hours to show: the files do not name that kind, "
-        "or it is a mount no rig carries yet. `None` when the hours are there."
+        "or it is a mount, reducer or guide scope no rig carries yet. `None` when the hours "
+        "are there."
     )
 
 

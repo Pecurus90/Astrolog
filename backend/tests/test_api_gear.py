@@ -597,3 +597,23 @@ def test_a_mount_no_frame_carries_says_so_even_where_others_have_hours(archivio)
     per_nome = {p["name"]: p for p in pezzi(gear(archivio), "mount")}
     assert (per_nome["EQ6-R"]["frames"], per_nome["EQ6-R"]["no_hours"]) == (0, "no_rig")
     assert per_nome["AM5"]["no_hours"] is None
+
+
+@pytest.mark.parametrize("kind", ["reducer", "guide_scope"])
+def test_a_piece_only_a_rig_can_carry_says_no_rig_carries_it(archivio, kind):
+    """Riduttore e ottica di guida i file non li scrivono mai: "non indicato nei file" non dice
+    cosa fare. Senza pose dicono che nessun corredo li porta, anche dove un altro ne ha."""
+    with db(archivio) as conn:
+        attrezzo(conn, kind, "Fermo")
+        gear_usage.write(conn)
+        conn.commit()
+    assert pezzi(gear(archivio), kind)[0]["no_hours"] == "no_rig"
+
+    with db(archivio) as conn:
+        usato = attrezzo(conn, kind, "Usato")
+        conn.execute(f"UPDATE frames SET {kind}_id = ?", (usato,))  # noqa: S608 - test constant
+        gear_usage.write(conn)
+        conn.commit()
+    per_nome = {p["name"]: p for p in pezzi(gear(archivio), kind)}
+    assert (per_nome["Fermo"]["frames"], per_nome["Fermo"]["no_hours"]) == (0, "no_rig")
+    assert per_nome["Usato"]["no_hours"] is None

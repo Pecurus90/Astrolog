@@ -514,7 +514,9 @@ filtri. Accanto a ognuna, quanti frame. Se negli anni hai cambiato ruota, o sei 
 programma a un altro, le trovi tutte, dalla piu' usata. Una parte che i file non scrivono non
 compare, a meno che tu non l'abbia scelta: allora accanto al nome leggi *tua scelta* al posto dei
 frame. Oggi dalla pagina si sceglie la montatura (qui sotto); riduttore, ottica di guida e le
-altre parti si potranno scegliere allo stesso modo con la pagina nuova.
+altre parti si potranno scegliere allo stesso modo con la pagina nuova. Un riduttore o un'ottica
+di guida che nessun corredo porta lo dice nella sua riga (*non associato a un corredo*), come la
+montatura: i file non li scrivono mai, quindi le loro ore arrivano solo da un corredo.
 
 **La montatura ha le sue ore.** Se il tuo programma di ripresa la scrive nei file, l'app la lega
 da sola a ogni posa: fra i programmi che l'app conosce, oggi lo fa l'ASIAIR. Se no, apri un corredo, premi *Seleziona montatura* e

@@ -60,11 +60,11 @@ def instruments(conn: sqlite3.Connection) -> list[dict[str, Any]]:
 
 
 def no_hours(r: sqlite3.Row) -> str | None:
-    """A mount without frames is not "the files are silent": no rig carries it yet, even where
-    other mounts have hours."""
+    """A mount, reducer or guide scope without frames is not "the files are silent": no rig
+    carries it yet, even where others of its kind have hours."""
     if r["objects_json"] is None:
         return None  # not counted yet: `counted` says so
-    if r["kind"] == "mount" and not r["frames"]:
+    if r["kind"] in gear_rigs.NEEDS_A_RIG and not r["frames"]:
         return "no_rig"
     return "files_silent" if r["frames"] is None else None
 

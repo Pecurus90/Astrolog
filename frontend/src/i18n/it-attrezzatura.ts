@@ -32,6 +32,8 @@ export const itAttrezzatura = {
   // non sei tu a dirlo l'app non lo sa.
   "gear.noHours": "non indicato nei file",
   "gear.noHours.mount": "non associata a un corredo",
+  "gear.noHours.reducer": "non associato a un corredo",
+  "gear.noHours.guide_scope": "non associata a un corredo",
   "gear.counting": "conteggio in corso",
   // Il corredo: com'e' fatto e quanto cielo inquadra davvero.
   "gear.rig": "{ottica} + {camera}",

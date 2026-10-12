@@ -29,6 +29,8 @@ export const enAttrezzatura = {
   "gear.nights.one": "1 night",
   "gear.noHours": "not stated in the files",
   "gear.noHours.mount": "not linked to a rig",
+  "gear.noHours.reducer": "not linked to a rig",
+  "gear.noHours.guide_scope": "not linked to a rig",
   "gear.counting": "counting in progress",
   "gear.rig": "{ottica} + {camera}",
   "gear.rig.noOptics": "optics not stated",

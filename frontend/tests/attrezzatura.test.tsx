@@ -243,6 +243,20 @@ describe("l Attrezzatura", () => {
     expect(montature.textContent).toMatch(/non associata a un corredo/i)
   })
 
+  it("un riduttore e una guida che nessun corredo porta lo dicono, ognuno col suo genere", async () => {
+    attrezzatura({
+      instruments: [
+        OTTICA,
+        { ...MONTATURA, id: 8, kind: "reducer", name: "0,8x", payload_kg: null },
+        { ...MONTATURA, id: 9, kind: "guide_scope", name: "30 mm f/4", payload_kg: null },
+      ],
+    })
+    await apriAttrezzatura()
+    const riduttori = await screen.findByRole("list", { name: /riduttori/i })
+    expect(riduttori.textContent).toMatch(/non associato a un corredo/i)
+    expect(screen.getByRole("list", { name: /^guide$/i }).textContent).toMatch(/non associata a un corredo/i)
+  })
+
   it("la montatura dice perche' non ha ore", async () => {
     attrezzatura()
     await apriAttrezzatura()
