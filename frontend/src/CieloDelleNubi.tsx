@@ -89,11 +89,10 @@ export function CieloDelleNubi({
   ora: number | null
   scegli: (i: number | null) => void
 }) {
-  // la metrica che pesa di piu' si apre da sola: le misure arrivano gia' in ordine d'importanza
+  // all'apertura solo le nubi: l'umidita' e la metrica di destra si accendono a mano
   const ordine = n.measures.flatMap((m) => (A_DESTRA as readonly string[]).includes(m.code) ? [m.code as Destra] : [])
-  const prima = n.measures.find((m) => m.weighs && (A_DESTRA as readonly string[]).includes(m.code))?.code as Destra | undefined
-  const [destra, setDestra] = useState<Destra | null>(prima ?? null)
-  const [umidita, setUmidita] = useState(true)
+  const [destra, setDestra] = useState<Destra | null>(null)
+  const [umidita, setUmidita] = useState(false)
   const [menu, setMenu] = useState(false)
   const tela = useRef<HTMLDivElement>(null)
   const passo = (LARGO - SINISTRA - DESTRA) / (ore.length || 1)
@@ -215,7 +214,7 @@ export function CieloDelleNubi({
         {qui && ora !== null && (
           <>
             <div className="as-volta__lettore-filo" style={{ left: `${(x(ora) / LARGO) * 100}%` }} />
-            <Lettore ora={qui} destra={destra} nomeDestra={nomeDestra} sinistra={ora > ore.length / 2} x={(x(ora) / LARGO) * 100} />
+            <Lettore ora={qui} umidita={umidita} destra={destra} nomeDestra={nomeDestra} sinistra={ora > ore.length / 2} x={(x(ora) / LARGO) * 100} />
           </>
         )}
       </div>
@@ -223,8 +222,8 @@ export function CieloDelleNubi({
         <span><i className="as-cielo__campione--basse" />{t("weather.sky.legend.low")}</span>
         <span><i className="as-cielo__campione--medie" />{t("weather.sky.legend.mid")}</span>
         <span><i className="as-cielo__campione--alte" />{t("weather.sky.legend.high")}</span>
-        <span><i className="as-cielo__campione--umidita" />{t("weather.sky.humidity")}</span>
-        <span>{t("weather.sky.legend.right")}</span>
+        {umidita && <span><i className="as-cielo__campione--umidita" />{t("weather.sky.humidity")}</span>}
+        {destra && <span><i className="as-cielo__campione--destra" />{t("weather.sky.legend.right", { nome: nomeDestra })}</span>}
         {ore.length > 0 && (
           <span>{t("weather.sky.legend.span", { da: oraDelSito(ore[0]?.at ?? ""), a: oraDelSito(ore[ore.length - 1]?.at ?? "") })}</span>
         )}
@@ -396,15 +395,15 @@ function Parole({ ore, destra, valore, y, passo }: {
   )
 }
 
-/** Il lettore sotto il filo: l'ora, i tre strati e l'umidita', e la metrica di destra con la sua
- *  parola. */
-function Lettore({ ora: o, destra, nomeDestra, sinistra, x }: { ora: Ora; destra: Destra | null; nomeDestra: string; sinistra: boolean; x: number }) {
+/** Il lettore sotto il filo: l'ora, i tre strati, e l'umidita' e la metrica di destra se sono
+ *  accese. */
+function Lettore({ ora: o, umidita, destra, nomeDestra, sinistra, x }: { ora: Ora; umidita: boolean; destra: Destra | null; nomeDestra: string; sinistra: boolean; x: number }) {
   const righe: [string, string, string][] = [
     ["as-cielo__riga--basse", t("weather.sky.legend.lowFull"), `${valore(o.cloud_low_pct)}%`],
     ["as-cielo__riga--medie", t("weather.sky.legend.midFull"), `${valore(o.cloud_mid_pct)}%`],
     ["as-cielo__riga--alte", t("weather.sky.legend.highFull"), `${valore(o.cloud_high_pct)}%`],
-    ["as-cielo__riga--umidita", t("weather.sky.humidity"), `${valore(o.humidity_pct)}%`],
   ]
+  if (umidita) righe.push(["as-cielo__riga--umidita", t("weather.sky.humidity"), `${valore(o.humidity_pct)}%`])
   if (destra) {
     const l = o.levels[destra]
     const v = o[DISEGNO[destra].campo]

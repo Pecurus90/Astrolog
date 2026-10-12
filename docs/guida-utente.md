@@ -408,21 +408,22 @@ diventano *incerte* o *non adatte* -- le nuvole basse, la pioggia, il vento, la 
 il seeing, l'aerosol (*molto fosco*) e la Luna (*banda larga al limite* o *consigliata banda stretta*, e solo
 se e' sopra l'orizzonte col buio). Ognuna dice la sua parola e quando. La Luna dice anche quanto e'
 illuminata, in che ore e' su e cosa resta nelle altre: "Luna al 55% dalle 23:00 · banda larga fino
-alle 23:00". Le soglie
+alle 23:00". In vista ci sono i primi due, i piu' gravi; se ce ne sono altri, **Altri N fattori**
+li apre sotto. Le soglie
 vengono da convenzioni pubbliche: la scala Beaufort per il vento, le classi del servizio meteo
 canadese per il seeing, la NASA per l'aerosol, meteoblue per il jet stream; per la Luna, la regola
 diffusa del 25% per la banda larga.
 
 Sotto c'e' **il cielo della notte**, dall'ultima ora di giorno all'alba sullo sfondo del
 crepuscolo: le nubi basse, medie e alte, ognuna dal suo zero perche' si coprono e non si sommano,
-l'umidita' a tratteggio sulla stessa scala in percento (la spegni col suo interruttore), e in cima un
-tratto chiaro sulle ore di buio sereno. A destra scegli **una misura alla volta** -- pioggia, vento
+e in cima un tratto chiaro sulle ore di buio sereno. All'apertura ci sono solo le nubi. L'umidita'
+la accendi col suo interruttore, a tratteggio sulla stessa scala in percento. A destra scegli **una misura alla volta** -- pioggia, vento
 con le raffiche, condensa come aria e rugiada, seeing, jet stream, aerosol -- con la sua scala, le
 soglie tratteggiate e il colore del giudizio ora per ora (per la condensa, la cui soglia e' la
 distanza fra aria e rugiada, si colora la fascia fra le due dove si toccano); un'ora che il servizio
-non da' e' a tratteggio, mai uno zero. Si apre da sola su quella che pesa di piu'.
-Passando sul cielo, o con le frecce, un filo indica l'ora e un riquadro dice i valori; **tutte le
-carte vanno a quell'ora**.
+non da' e' a tratteggio, mai uno zero. La legenda sotto dice solo cio' che e' sul grafico.
+Passando sul cielo, toccandolo o con le frecce, un filo indica l'ora e un riquadro dice i valori;
+**tutte le carte vanno a quell'ora**.
 
 Sotto ci sono le **carte**, prima quelle che pesano di piu': nuvole, nuvole basse, poi pioggia,
 vento, condensa, seeing, jet stream e aerosol, e in piccolo temperatura e rugiada, umidita', polvere

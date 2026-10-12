@@ -8,7 +8,7 @@
  * rifare conti.
  */
 import { fireEvent, screen, waitFor, within } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
   SALUTE,
@@ -24,6 +24,7 @@ import {
 } from "./banco"
 
 afterEach(pulisci)
+afterEach(() => vi.unstubAllGlobals())
 
 const MODELLI = ["best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless"]
 
@@ -198,6 +199,48 @@ describe("il Meteo, la notte", () => {
     expect(voci).toHaveLength(1)
     expect(voci[0]?.textContent).toContain("non adatta")
     expect(voci[0]?.textContent).toContain("Vento dalle 21:00 alle 23:00 \u00b7 2 ore")
+  })
+
+  it.each([
+    [5, "Altri 3 fattori"],
+    [3, "Altro fattore"],
+  ])("di %i fattori ne mostra due, gli altri dietro «%s» che li apre senza cambiare testo", async (quanti, testo) => {
+    const codici = ["wind", "rain", "aerosol", "cloud_low", "gust"].slice(0, quanti)
+    const pesa = { level: "nogo", weighs: true, since: "2026-09-26T21:00:00+02:00", until: "2026-09-26T23:00:00+02:00", hours: 2 }
+    conNotti({ ...NOTTE, measures: NOTTE.measures.map((m) => (codici.includes(m.code) ? { ...m, ...pesa } : m)) })
+    await apriMeteo()
+
+    const pesano = (await scheda()).querySelector(".as-pesano") as HTMLElement
+    expect(within(pesano).getAllByRole("listitem")).toHaveLength(2)
+    const altri = within(pesano).getByRole("button", { name: testo })
+    expect(altri.getAttribute("aria-expanded")).toBe("false")
+    fireEvent.click(altri)
+    expect(within(pesano).getAllByRole("listitem")).toHaveLength(quanti)
+    expect(altri.getAttribute("aria-expanded")).toBe("true")
+    expect(altri.textContent).toBe(testo)
+  })
+
+  it("con due fattori soli non c'e' niente da aprire", async () => {
+    const pesa = { level: "nogo", weighs: true, since: "2026-09-26T21:00:00+02:00", until: "2026-09-26T23:00:00+02:00", hours: 2 }
+    conNotti({ ...NOTTE, measures: NOTTE.measures.map((m) => (m.code === "rain" ? { ...m, ...pesa } : m)) })
+    await apriMeteo()
+
+    const pesano = (await scheda()).querySelector(".as-pesano") as HTMLElement
+    expect(within(pesano).getAllByRole("listitem")).toHaveLength(2)
+    expect(within(pesano).queryByRole("button")).toBeNull()
+  })
+
+  it("la frase sopra il grafico dice il gesto che c'e': passare col mouse, toccare col dito", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+    expect((await scheda()).textContent).toContain("Passa sul grafico per vedere i valori di quell'ora.")
+  })
+
+  it("dove non c'e' un mouse la frase dice di toccare il grafico o le barrette", async () => {
+    vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === "(hover: none)" }))
+    conNotti(NOTTE)
+    await apriMeteo()
+    expect((await scheda()).textContent).toContain("Tocca il grafico o le barrette di una carta per vedere i valori di quell'ora.")
   })
 
   it("se non pesa niente lo dice", async () => {
@@ -429,6 +472,8 @@ describe("il Meteo, il seeing", () => {
     const testo = carta(/^Seeing$/).textContent
     expect(testo).toContain("media fino alle 02:00, Meteoblue")
     expect(testo).toContain("dalle 02:00 non disponibile")
+    // il segno dei secondi d'arco ha la sua classe: nel testo era un puntino
+    expect(carta(/^Seeing$/).querySelector(".as-parametro__segno")?.textContent).toBe("″")
   })
 })
 
@@ -591,7 +636,7 @@ describe("il Meteo, le fonti citate", () => {
 describe("il Meteo, il cielo", () => {
   const cielo = () => document.querySelector(".as-cielo") as HTMLElement
 
-  it("disegna le nubi basse, medie e alte ognuna dal suo zero, e l'umidita' che si spegne", async () => {
+  it("all'apertura disegna solo le nubi, ognuna dal suo zero; l'umidita' si accende", async () => {
     conNotti(NOTTE)
     await apriMeteo()
 
@@ -600,19 +645,42 @@ describe("il Meteo, il cielo", () => {
     expect(cielo().querySelector(".as-cielo__medie")).not.toBeNull()
     expect(cielo().querySelector(".as-cielo__alte")).not.toBeNull()
     const umidita = within(cielo()).getByRole("button", { name: /umidit/i })
-    expect(cielo().querySelector(".as-cielo__umidita")).not.toBeNull()
-    fireEvent.click(umidita)
     expect(umidita.getAttribute("aria-pressed")).toBe("false")
     expect(cielo().querySelector(".as-cielo__umidita")).toBeNull()
+    expect(cielo().querySelector("svg")?.hasAttribute("data-dx-acceso")).toBe(false)
+    expect(within(cielo()).getByRole("button", { name: /^scala di destra/i }).textContent).toContain("Nessuna")
+    fireEvent.click(umidita)
+    expect(umidita.getAttribute("aria-pressed")).toBe("true")
+    expect(cielo().querySelector(".as-cielo__umidita")).not.toBeNull()
   })
 
-  it("a destra si apre la metrica che pesa di piu', con la sua parola dove cambia; un'altra si sceglie", async () => {
+  it("la legenda e il lettore dicono solo cio' che e' sul grafico", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    const legenda = () => cielo().querySelector(".as-cielo__legenda")?.textContent ?? ""
+    const tela = cielo().querySelector(".as-cielo__tela") as HTMLElement
+    expect(legenda()).toBe("bassemediealtedal tramonto all'alba, 19:00–23:00")
+    fireEvent.keyDown(tela, { key: "Home" })
+    expect(cielo().querySelector(".as-volta__lettore")?.textContent).not.toContain("umidità")
+    fireEvent.click(within(cielo()).getByRole("button", { name: /umidit/i }))
+    fireEvent.click(within(cielo()).getByRole("button", { name: "pioggia" }))
+    expect(legenda()).toBe("bassemediealteumiditàa destra, pioggiadal tramonto all'alba, 19:00–23:00")
+    expect(cielo().querySelector(".as-cielo__campione--destra")).not.toBeNull()
+    fireEvent.keyDown(tela, { key: "Home" })
+    expect(cielo().querySelector(".as-volta__lettore")?.textContent).toContain("umidità")
+  })
+
+  it("a destra una metrica si sceglie, con la sua parola dove cambia; un'altra la sostituisce", async () => {
     const ventoso = NOTTE.hours.map((o, i) => (i >= 2 ? { ...o, wind_kmh: 30, levels: { ...o.levels, wind: "nogo" } } : o))
     conNotti({ ...NOTTE, hours: ventoso })
     await apriMeteo()
 
     await scheda()
     const vento = within(cielo()).getByRole("button", { name: "vento" })
+    expect(vento.getAttribute("aria-pressed")).toBe("false")
+    fireEvent.click(vento)
     expect(vento.getAttribute("aria-pressed")).toBe("true")
     expect(cielo().querySelector("svg")?.hasAttribute("data-dx-acceso")).toBe(true)
     expect(cielo().querySelector(".as-scala__parola--niente")?.textContent).toBe("non adatta dalle 22")
@@ -627,6 +695,7 @@ describe("il Meteo, il cielo", () => {
     await apriMeteo()
 
     await scheda()
+    fireEvent.click(within(cielo()).getByRole("button", { name: "vento" }))
     expect(cielo().querySelector(".as-scala__parola--niente")?.textContent).toBe("non adatta")
   })
 
@@ -647,6 +716,7 @@ describe("il Meteo, il cielo", () => {
 
     await scheda()
     // il vento delle 22 manca nella notte di prova
+    fireEvent.click(within(cielo()).getByRole("button", { name: "vento" }))
     expect(within(cielo().querySelector("svg") as unknown as HTMLElement).getByText("Non disponibile")).toBeDefined()
   })
 
@@ -674,7 +744,7 @@ describe("il Meteo, il cielo", () => {
     expect(cielo().querySelector(".as-scala__soglia")).toBeNull()
   })
 
-  it("cambiando notte le carte tornano alla notte e a destra si riapre la metrica che pesa di piu'", async () => {
+  it("cambiando notte le carte tornano alla notte e il grafico torna alle sole nubi", async () => {
     const altra = {
       ...NOTTE,
       night: "2026-09-27",
@@ -685,10 +755,11 @@ describe("il Meteo, il cielo", () => {
 
     await scheda()
     fireEvent.keyDown(within(carta(/^Vento$/)).getByRole("slider"), { key: "End" })
+    fireEvent.click(within(cielo()).getByRole("button", { name: "vento" }))
     expect(carta(/^Vento$/).hasAttribute("data-a-ora")).toBe(true)
     fireEvent.click((await screen.findAllByRole("tab"))[1] as HTMLElement)
     expect(carta(/^Vento$/).hasAttribute("data-a-ora")).toBe(false)
-    expect(within(cielo()).getByRole("button", { name: "pioggia" }).getAttribute("aria-pressed")).toBe("true")
+    expect(within(cielo()).queryAllByRole("button", { pressed: true })).toHaveLength(0)
   })
 
   it("dice le ore di buio sereno sul tratto sereno", async () => {

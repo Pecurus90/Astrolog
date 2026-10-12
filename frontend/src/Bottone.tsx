@@ -42,6 +42,9 @@ type Comune = {
    *  ha senso solo insieme a quale cartella sia, che sta scritta accanto. E' l'id di quel
    *  testo, non una sua copia: due verita' sullo stesso percorso divergerebbero. */
   descrittoDa?: string | undefined
+  /** La classe in piu' che il foglio da' a un bottone in un posto solo (la freccia di "Altri N
+   *  fattori"): un insieme chiuso, scritto qui perche' la guardia delle classi lo veda. */
+  aggiunta?: "as-pesano__altri" | undefined
   children: ReactNode
 }
 
@@ -79,6 +82,7 @@ export function Bottone({
   disabled = false,
   nome,
   descrittoDa,
+  aggiunta,
   governa,
   aperto,
   occupato = false,
@@ -102,7 +106,7 @@ export function Bottone({
   }
   return (
     <button
-      className={`${VERSI[verso]}${piccolo ? " as-bottone--piccolo" : ""}`}
+      className={`${VERSI[verso]}${piccolo ? " as-bottone--piccolo" : ""}${aggiunta ? ` ${aggiunta}` : ""}`}
       type="button"
       aria-label={nome}
       aria-describedby={descrittoDa}

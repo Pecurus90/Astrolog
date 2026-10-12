@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AstroLog — astrolog.css  ·  v34 (09/10/2026)
+   AstroLog — astrolog.css  ·  v35 (12/10/2026)
 
    FILE GENERATO: non si modifica qui. Le sorgenti stanno in foglio/, un
    file per famiglia; questo foglio e' la loro unione, nell'ordine qui
@@ -412,7 +412,6 @@
   --parametro-minimo-piccolo: 12rem;   /* umidita', polvere, vento in quota */
   --parametro-grafico:        72px;    /* le barrette ora per ora */
   --parametro-grafico-piccolo: 40px;
-  --pesano-colonna:           6.5rem;  /* il nome della misura che pesa */
   --strato-segno:             16px;    /* il quadretto dell'interruttore */
   --strato-segno-testo:       12px;    /* il segno di spunta dentro */
   /* la heatmap: zero e quattro livelli d'accento (in Atlante si rovesciano) */
@@ -1376,11 +1375,21 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 
 .as-pesano { display: grid; gap: var(--spazio-2); }
 .as-pesano > p { margin: 0; font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+/* una misura per riga: la parola nella pillola, sotto la frase; nessuna colonna da reggere */
 .as-pesano ul { margin: 0; padding: 0; list-style: none; }
-.as-pesano li { display: grid; grid-template-columns: var(--pesano-colonna) minmax(0,1fr); gap: var(--spazio-3); align-items: baseline; padding: var(--spazio-2) 0; border-top: 1px solid var(--linea); color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; }
+.as-pesano li { display: grid; justify-items: start; gap: var(--spazio-1); padding: var(--spazio-2) 0; border-top: 1px solid var(--linea); color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; }
 .as-pesano li:last-child { border-bottom: 1px solid var(--linea); }
 .as-pesano li b { color: var(--inchiostro); font-weight: var(--peso-medio); }
-.as-pesano li .as-semaforo { align-self: center; }
+.as-pesano li .as-semaforo { padding: 2px var(--spazio-3) 2px var(--spazio-2); border-radius: var(--raggio-pillola); background: var(--vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo); }
+:root[data-tema="atlante"] .as-pesano li .as-semaforo { box-shadow: inset 0 0 0 1px var(--linea-forte); }
+.as-pesano li > span:last-child { text-wrap: pretty; }
+/* oltre i primi due, gli altri si aprono sotto: il bottone dice quanti sono, la freccia se e' aperto */
+.as-pesano__altri { justify-self: start; gap: var(--spazio-1); }
+.as-pesano__altri::after { content: ""; width: 6px; height: 6px; margin: 0 2px 3px; border-right: var(--segno-filo) solid currentColor; border-bottom: var(--segno-filo) solid currentColor; transform: rotate(45deg); }
+.as-pesano__altri[aria-expanded="true"]::after { transform: rotate(-135deg); margin-bottom: -3px; }
+.as-pesano__resto { margin-top: calc(-1 * var(--spazio-2)); }
+.as-pesano__resto[hidden] { display: none; }
+.as-pesano__resto li:first-child { border-top: 0; }
 @container colonna (max-width: 899px) {
   .as-letture { grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--spazio-2); }
   .as-lettura { padding: var(--spazio-2) var(--spazio-3); }
@@ -1420,6 +1429,8 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-parametro__valore { display: flex; align-items: baseline; gap: var(--spazio-1); color: var(--inchiostro-tenue); font-size: var(--testo-lungo); }
 .as-parametro__valore b { font-family: var(--carattere-cifre); font-size: var(--cifra-frase); font-weight: var(--peso-cifra); letter-spacing: -.03em; line-height: 1; color: var(--inchiostro); font-variant-numeric: tabular-nums; }
 .as-parametro--piccolo .as-parametro__valore b { font-size: var(--cifra-lettura); }
+/* v35: il segno dei secondi d'arco nel carattere delle cifre e a misura di lettura: nel testo era un puntino */
+.as-parametro__valore .as-parametro__segno { font-family: var(--carattere-cifre); font-size: var(--cifra-lettura); line-height: 1; color: var(--inchiostro); }
 .as-parametro__sotto { display: flex; align-items: center; justify-content: space-between; gap: var(--spazio-2); min-height: 1.5em; font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
 .as-parametro__torna { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; min-height: var(--bersaglio-minimo); margin: calc(-1 * var(--spazio-3)) calc(-1 * var(--spazio-2)); padding: 0 var(--spazio-2); font-size: var(--testo-minuto); color: var(--inchiostro-accento); }
 .as-parametro__torna[hidden] { display: none; }
@@ -2568,6 +2579,9 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-cielo__campione--medie { background: #a9afd6; }
 .as-cielo__campione--alte { background: #dfe3f7; }
 .as-cielo__campione--umidita { height: 0 !important; border-top: 2px dashed #3fbfae; box-shadow: none !important; }
+/* la legenda dice solo cio' che c'e' sul grafico: l'umidita' spenta e la scala di destra su «Nessuna» escono */
+.as-cielo__legenda > [hidden] { display: none; }
+.as-cielo__campione--destra { height: 0 !important; border-top: var(--filo) solid var(--inchiostro); box-shadow: none !important; }
 @container colonna (max-width: 899px) {
   .as-cielo__legenda { gap: var(--spazio-1) var(--spazio-4); }
 }
@@ -2832,6 +2846,9 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-meteo__tendenza { display: grid; gap: var(--spazio-4); }
 .as-meteo__tendenza-nota { color: var(--inchiostro-tenue); max-width: var(--colonna-prosa); }
 .as-meteo__fonti { display: grid; gap: var(--spazio-1); margin: 0; padding: 0; list-style: none; font-size: var(--testo-minuto); color: var(--inchiostro-debole); line-height: var(--interlinea-prosa); max-width: var(--colonna-prosa); }
+/* v35: la fila delle notti sta sotto la testa senza la fascia vuota; le otto carte grandi vanno 4 + 4 */
+.as-meteo__testa + .as-notti { margin-top: calc(var(--spazio-3) - var(--spazio-7)); }
+@container colonna (min-width: 900px) { .as-meteo .as-parametri:not(.as-parametri--piccole) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @container colonna (max-width: 899px) {
   .as-meteo { gap: var(--spazio-6); }
   .as-meteo__testa { grid-template-columns: minmax(0,1fr); }

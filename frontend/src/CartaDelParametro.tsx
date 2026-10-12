@@ -118,7 +118,7 @@ function Carta({ misura: m, notte: n, ore, scala, forma, nome, oraDelCielo }: {
       <h3 className="as-parametro__nome">{nome}</h3>
       <p className="as-parametro__valore">
         <b>{qui ? (valoreQui === null ? t("weather.card.unknown") : numero(valoreQui)) : valoreNotte}</b>
-        {(qui ? valoreQui : m.value) !== null && <span>{unita}</span>}
+        {(qui ? valoreQui : m.value) !== null && <span className={m.code === "seeing" ? "as-parametro__segno" : undefined}>{unita}</span>}
       </p>
       <p className="as-parametro__sotto">
         <span>{qui ? sottoQui : sottoNotte}</span>

@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useId, useState } from "react"
 
+import { Bottone } from "./Bottone"
 import { CARTE_GRANDI, CARTE_PICCOLE, CartaDelParametro, parola } from "./CartaDelParametro"
 import { CieloDelleNubi } from "./CieloDelleNubi"
 import type { components } from "./api/schema"
@@ -13,6 +14,9 @@ type Seeing = components["schemas"]["WeatherSeeingOut"]
 // il cielo di una notte, per forma: lo porta una notte del Meteo e una delle Notti
 type Cielo = Pick<Notte, "window" | "usable_hours" | "window_hours">
 type Breve = components["schemas"]["WeatherBriefOut"]
+
+// dove non si passa col mouse (telefono, tablet) la frase d'aiuto dice di toccare
+const senzaMouse = () => typeof window.matchMedia === "function" && window.matchMedia("(hover: none)").matches
 
 /** Il nome della notte, col giorno della sera: *Notte di sabato 3*. */
 export function nomeDellaNotte(n: Notte, prima: boolean): string {
@@ -74,7 +78,7 @@ export function SchedaDellaNotte({ notte: n, prima, scale, seeing }: { notte: No
           <div className="as-meteo__parte">
             <div className="as-meteo__capo">
               <p className="as-soprattitolo">{t("weather.sky.title")}</p>
-              <span>{t("weather.sky.hint")}</span>
+              <span>{t(senzaMouse() ? "weather.sky.hint.touch" : "weather.sky.hint")}</span>
             </div>
             <CieloDelleNubi notte={n} ore={ore} scale={scale} seeing={seeing} ora={ora} scegli={setOra} />
           </div>
@@ -130,26 +134,35 @@ function CapoDellaNotte({ notte: n, prima }: { notte: Notte; prima: boolean }) {
   )
 }
 
+const IN_VISTA = 2
+
 /** Cio' che pesa: le misure che il backend dice incerte o niente, con la loro parola e le ore.
  *  La Luna dice quanto e' illuminata, in che ore e' su e cosa resta nelle altre. */
 function Pesano({ notte: n }: { notte: Notte }) {
   const pesano = n.measures.filter((m) => m.weighs)
+  // in vista i primi due, i piu' gravi: arrivano gia' in ordine
+  const resto = pesano.slice(IN_VISTA)
+  const [aperto, setAperto] = useState(false)
+  const id = useId()
+  const voce = (m: Misura) => (
+    <li key={m.code}>
+      {m.level && <Semaforo livello={m.level}>{parola(m.code, m.level)}</Semaforo>}
+      <span>
+        <b>{t(`weather.measure.${m.code}` as Chiave)}</b> {quando(m)}
+      </span>
+    </li>
+  )
   return (
     <div className="as-pesano">
       <p>{t("weather.weighs")}</p>
-      {pesano.length === 0 ? (
-        <p>{t("weather.weighs.none")}</p>
-      ) : (
-        <ul>
-          {pesano.map((m) => (
-            <li key={m.code}>
-              {m.level && <Semaforo livello={m.level}>{parola(m.code, m.level)}</Semaforo>}
-              <span>
-                <b>{t(`weather.measure.${m.code}` as Chiave)}</b> {quando(m)}
-              </span>
-            </li>
-          ))}
-        </ul>
+      {pesano.length === 0 ? <p>{t("weather.weighs.none")}</p> : <ul>{pesano.slice(0, IN_VISTA).map(voce)}</ul>}
+      {resto.length > 0 && (
+        <>
+          <Bottone verso="nudo" piccolo aggiunta="as-pesano__altri" governa={id} aperto={aperto} onClick={() => setAperto(!aperto)}>
+            <span>{t("weather.weighs.more", { n: numero(resto.length) })}</span>
+          </Bottone>
+          <ul className="as-pesano__resto" id={id} hidden={!aperto}>{resto.map(voce)}</ul>
+        </>
       )}
     </div>
   )
