@@ -131,7 +131,7 @@ function CapoDellaNotte({ notte: n, prima }: { notte: Notte; prima: boolean }) {
 }
 
 /** Cio' che pesa: le misure che il backend dice incerte o niente, con la loro parola e le ore.
- *  La Luna dice da quando e' su e quanto e' illuminata. */
+ *  La Luna dice quanto e' illuminata, in che ore e' su e cosa resta nelle altre. */
 function Pesano({ notte: n }: { notte: Notte }) {
   const pesano = n.measures.filter((m) => m.weighs)
   return (
@@ -155,9 +155,18 @@ function Pesano({ notte: n }: { notte: Notte }) {
   )
 }
 
+/** La Luna dice le ore in cui e' su (non quelle della parola) e cosa resta nelle ore senza. */
+function quandoLaLuna(m: Misura): string {
+  if (!m.known_since || !m.known_until || (m.level !== "nogo" && m.level !== "marginal")) return ""
+  const valori = { pct: numero(m.value ?? 0), da: oraDelSito(m.known_since), a: oraDelSito(m.known_until) }
+  if (m.known_from_start && m.known_to_end) return t("weather.weighs.moon.all", valori)
+  const forma = m.known_to_end ? "rises" : m.known_from_start ? "sets" : "middle"
+  return t(`weather.weighs.moon.${forma}.${m.level}`, valori)
+}
+
 function quando(m: Misura): string {
+  if (m.code === "moon") return quandoLaLuna(m)
   if (!m.since || !m.until) return ""
-  if (m.code === "moon") return t("weather.weighs.moon", { da: oraDelSito(m.since), pct: numero(m.value ?? 0) })
   return t("weather.weighs.span", { da: oraDelSito(m.since), a: oraDelSito(m.until), n: numero(m.hours) })
 }
 

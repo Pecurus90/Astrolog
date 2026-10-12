@@ -42,11 +42,22 @@ stessa disposizione.
    medio. Domenica, con raffiche fino a 44 km/h, la riga ci deve essere. La carta resta una sola,
    «Vento», con le raffiche disegnate sopra le barrette come oggi.
 
-4. **La riga della Luna fra gli altri fattori: il testo sta cambiando.** Non usare «niente» e
-   «incerta», e non usare la frase «dalle {da}, al {pct}% · solo per la banda larga» del
-   vocabolario: Marco la sta riscrivendo. Lascia il posto col filo tratteggiato, lungo quanto una
-   frase come «Luna al 55% dalle 23 · banda larga fino alle 23, poi banda stretta». La regola non
-   cambia: la Luna compare solo se e' sopra l'orizzonte col buio e illuminata oltre il 25%.
+4. **La riga della Luna fra gli altri fattori e' nuova** (Marco, 12 ottobre). Davanti la parola:
+   «consigliata banda stretta» oltre il 50% illuminata, «banda larga al limite» fra 25 e 50%.
+   Fino al 25%, o se non e' sopra l'orizzonte col buio, la Luna non compare. Poi il dato e le ore
+   in cui e' su, poi cosa resta nelle altre. Le forme, tutte da disegnare:
+
+   | caso | riga |
+   |---|---|
+   | sorge, oltre 50% | consigliata banda stretta · **Luna** al 55% dalle 23:00 · banda larga fino alle 23:00 |
+   | sorge, fra 25 e 50% | banda larga al limite · **Luna** al 45% dalle 00:00 · senza Luna fino alle 00:00 |
+   | su tutta la notte | consigliata banda stretta · **Luna** al 80% tutta la notte |
+   | tramonta, oltre 50% | consigliata banda stretta · **Luna** al 60% fino alle 02:00 · banda larga dalle 02:00 |
+   | tramonta, fra 25 e 50% | banda larga al limite · **Luna** al 45% fino alle 02:00 · senza Luna dalle 02:00 |
+   | su solo a meta' notte | consigliata banda stretta · **Luna** al 55% dalle 23:00 alle 02:00 · banda larga prima e dopo |
+
+   E' la riga piu' lunga fra gli altri fattori: sul telefono va a capo, non si taglia. Sulla
+   tavola oggi la Luna ha «niente» e «incerta»: vanno tolte.
 
 5. **L'ordine delle carte e degli altri fattori** lo decide il backend: Nuvole, Nuvole basse, poi
    le misure giudicate dalla parola peggiore (non adatta, incerta, senza parola, buona), a pari
@@ -167,8 +178,8 @@ forma «una sola» e' il singolare della riga sopra.
 | limpido | `weather.word.aerosol.go` |
 | molto fosco | `weather.word.aerosol.nogo` |
 | buona per la banda larga | `weather.word.moon.go` |
-| al limite | `weather.word.moon.marginal` |
-| solo banda stretta | `weather.word.moon.nogo` |
+| banda larga al limite | `weather.word.moon.marginal` |
+| consigliata banda stretta | `weather.word.moon.nogo` |
 
 ### Altri fattori
 
@@ -177,7 +188,13 @@ forma «una sola» e' il singolare della riga sopra.
 | Altri fattori (non modificano il verdetto) | `weather.weighs` |
 | dalle {da} alle {a} · {n} ore | `weather.weighs.span` |
 | dalle {da} alle {a} · 1 ora | `weather.weighs.span.one` (una sola) |
-| dalle {da}, al {pct}% · solo per la banda larga | `weather.weighs.moon` |
+| al {pct}% tutta la notte | `weather.weighs.moon.all` |
+| al {pct}% dalle {da} · banda larga fino alle {da} | `weather.weighs.moon.rises.nogo` |
+| al {pct}% dalle {da} · senza Luna fino alle {da} | `weather.weighs.moon.rises.marginal` |
+| al {pct}% fino alle {a} · banda larga dalle {a} | `weather.weighs.moon.sets.nogo` |
+| al {pct}% fino alle {a} · senza Luna dalle {a} | `weather.weighs.moon.sets.marginal` |
+| al {pct}% dalle {da} alle {a} · banda larga prima e dopo | `weather.weighs.moon.middle.nogo` |
+| al {pct}% dalle {da} alle {a} · senza Luna prima e dopo | `weather.weighs.moon.middle.marginal` |
 | Nessun altro fattore. | `weather.weighs.none` |
 
 ### Il cielo e la scala di destra

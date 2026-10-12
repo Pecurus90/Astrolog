@@ -837,6 +837,10 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **"al 80%" invece di "all'80%"**: i testi con "al {pct}%" (`weather.weighs.moon.*`,
+  `weather.cloud`, `weather.clear.trendWhen`, `tonight.illuminated`) non elidono davanti a 8, 11 e
+  80-89. Serve una forma sola per tutta l'app, non una pezza per testo.
+
 - **Il backup delle risposte, quattro limiti** (ADR 0017, `spine/backup.py`): il campione di una
   cartella entra nel file solo alla prima risposta dopo la sua scansione (la scansione non lo
   riscrive), quindi un database perso prima di ogni altra risposta torna con la cartella senza

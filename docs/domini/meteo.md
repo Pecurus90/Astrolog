@@ -15,6 +15,7 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 | Il semaforo lo fanno le nuvole; ogni altra misura con soglia dice la sua parola ora per ora e per la notte, con l'intervallo e il conto, e pesa accanto senza cambiarlo | `test_each_measure_judges_an_hour_at_the_edges_of_its_source`, `test_condensation_comes_under_three_degrees_between_air_and_dew_point`, `test_a_measure_takes_the_worst_hour_of_the_night_and_says_its_hours`, `test_the_clouds_are_the_verdict_and_never_weigh`, `test_good_and_neutral_measures_do_not_weigh`, `test_every_hour_carries_the_judgement_of_each_judged_measure`, `test_the_round_writes_the_nights_with_the_sky_sources_joined_and_judged` |
 | Le misure arrivano in ordine d'importanza, con la media delle ore vere, il picco, e la parte di notte che coprono; le soglie arrivano dal backend | `test_the_order_is_clouds_then_nogo_then_marginal_then_go_earliest_first_then_neutral`, `test_the_night_value_is_the_mean_of_the_true_numbers_and_rain_is_a_total`, `test_the_peak_is_the_worst_hour_and_says_when`, `test_a_measure_known_only_in_part_of_the_night_says_which_part`, `test_every_scale_is_sent_with_its_steps`, `test_the_page_gets_the_thresholds_the_judgement_used` |
 | La Luna pesa per la banda larga solo quando e' sopra l'orizzonte col buio | `test_the_moon_up_brings_its_lit_part_and_down_brings_nothing`, `test_the_moon_is_left_out_when_it_is_never_up_in_the_dark` |
+| Quando la Luna pesa leggo cosa riprendere e in che ore: la banda consigliata, quanto e' illuminata, da che ora a che ora e' su, e cosa resta nelle ore senza | `test_a_measure_says_whether_its_known_hours_reach_the_ends_of_the_night`, *la Luna (...) consiglia la banda e dice le ore senza Luna* |
 | Le ore serene sono un intervallo e un conto, e la pagina sa da che ora a che ora disegnare | `test_the_usable_hours_are_said_as_an_interval_and_a_count`, `test_the_end_of_an_interval_is_the_next_hour_of_the_night_even_when_the_clocks_change`, `test_the_page_shows_from_the_last_hour_of_day_to_the_first_after_dawn` |
 | Ora per ora nuvole basse, medie e alte, vento, raffiche, umidita' e punto di rugiada, da mezzogiorno a mezzogiorno | `test_a_night_carries_its_hours_from_noon_to_noon_with_the_sky_of_each`, `test_the_night_the_clocks_change_has_its_true_hours`, *un'ora che il servizio non da' si disegna a tratteggio, mai come uno zero* |
 | Scelgo il modello (ECMWF, ICON, GFS, o quello che il servizio sceglie per il mio posto) e la pagina cambia senza rifare conti | `test_the_switch_reads_another_model_without_asking_again`, `test_a_model_outside_the_list_is_refused`, `test_the_time_of_the_forecast_is_of_the_site_even_when_a_model_brought_no_night`, *lo switch salva il modello scelto e rilegge*, *un modello senza notti lo dice, anche se la previsione e' arrivata* |
@@ -89,8 +90,12 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   - aerosol: sotto 0,1 *limpido*, da 1 *molto fosco* (NASA Earth Observatory); in mezzo nessuna
     parola, che per la notte e' peggio di *limpido* (un'ora limpida non fa limpida la notte);
   - Luna, per la banda larga: buona fino al 25% illuminata (la regola diffusa fra chi riprende),
-    *al limite* fino al 50%, oltre *solo banda stretta* (il 50 e' di Marco, 7/10/2026); pesa solo
-    nelle ore in cui e' sopra l'orizzonte (-0,833 gradi, convenzione del Nautical Almanac).
+    *banda larga al limite* fino al 50%, oltre *consigliata banda stretta* (il 50 e' di Marco,
+    7/10/2026); pesa solo nelle ore in cui e' sopra l'orizzonte (-0,833 gradi, convenzione del
+    Nautical Almanac). La riga dice le ore in cui e' su e cosa resta nelle altre (Marco,
+    12/10/2026): "Luna al 55% dalle 23 · banda larga fino alle 23"; su tutta la notte, solo il
+    dato; fra 25 e 50% le ore libere sono "senza Luna". Nessuna soglia al 75% per la banda
+    stretta: e' un'abitudine riportata da una fonte sola (Telescope Live), non una convenzione.
   Neutri, senza parola: nuvole medie e alte, umidita', temperatura, punto di rugiada, vento a 700
   hPa (si confronta col solito del sito), vento a 200 hPa, polveri.
 - **L'ordine d'importanza** lo scrive il backend: le nuvole, poi le misure giudicate da "niente" a

@@ -405,8 +405,10 @@ allo stesso modo: **buona** fino a due ottavi di cielo coperto, **incerta** fino
 
 Accanto ci sono gli **altri fattori**, che non modificano il verdetto: le misure che in qualche ora della notte
 diventano *incerte* o *non adatte* -- le nuvole basse, la pioggia, il vento, la condensa, il jet stream,
-il seeing, l'aerosol (*molto fosco*) e la Luna (*al limite* o *solo banda stretta* per chi riprende in
-banda larga, e solo se e' sopra l'orizzonte col buio). Ognuna dice la sua parola e quando. Le soglie
+il seeing, l'aerosol (*molto fosco*) e la Luna (*banda larga al limite* o *consigliata banda stretta*, e solo
+se e' sopra l'orizzonte col buio). Ognuna dice la sua parola e quando. La Luna dice anche quanto e'
+illuminata, in che ore e' su e cosa resta nelle altre: "Luna al 55% dalle 23:00 · banda larga fino
+alle 23:00". Le soglie
 vengono da convenzioni pubbliche: la scala Beaufort per il vento, le classi del servizio meteo
 canadese per il seeing, la NASA per l'aerosol, meteoblue per il jet stream; per la Luna, la regola
 diffusa del 25% per la banda larga.

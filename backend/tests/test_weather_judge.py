@@ -53,7 +53,7 @@ def misure(ore):
             "aerosol_optical_depth",
             [(0.09, "go"), (0.1, None), (0.99, None), (1.0, "nogo")],
         ),
-        # banda larga fino al 25 %; 25-50 al limite; oltre solo banda stretta (il 50 e' di Marco)
+        # banda larga fino al 25 %; 25-50 al limite; oltre banda stretta (il 50 e' di Marco)
         (
             "moon",
             "moon_pct",
@@ -172,6 +172,23 @@ def test_good_and_neutral_measures_do_not_weigh():
 def test_the_moon_is_left_out_when_it_is_never_up_in_the_dark():
     assert "moon" not in misure(notte({}, {}))
     assert misure(notte({}, {"moon_pct": 60.0}))["moon"].weighs
+
+
+@pytest.mark.parametrize(
+    ("buie", "da_subito", "fino_in_fondo"),
+    [
+        ([{"moon_pct": 60.0}, {"moon_pct": 60.0}, {"moon_pct": 60.0}], True, True),
+        ([{}, {"moon_pct": 60.0}, {"moon_pct": 60.0}], False, True),
+        ([{"moon_pct": 60.0}, {"moon_pct": 60.0}, {}], True, False),
+        ([{}, {"moon_pct": 60.0}, {}], False, False),
+    ],
+)
+def test_a_measure_says_whether_its_known_hours_reach_the_ends_of_the_night(
+    buie, da_subito, fino_in_fondo
+):
+    """La Luna che sorge, che tramonta, su tutta la notte, su solo a meta': la frase cambia."""
+    luna = misure(notte(*buie))["moon"]
+    assert (luna.known_from_start, luna.known_to_end) == (da_subito, fino_in_fondo)
 
 
 def test_the_order_is_clouds_then_nogo_then_marginal_then_go_earliest_first_then_neutral():

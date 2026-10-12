@@ -3747,7 +3747,8 @@ export interface components {
          *     verdict) and `since`/`until`/`hours` the hours with that word; `weighs` when it is marginal or
          *     no-go and is not the clouds, which make the verdict. `value` is the mean of the known hours
          *     (for `rain`, the total), `peak` the worst hour's value and when; `known_*` say which hours were
-         *     known, so a mean over part of the night is said as such. Neutral measures have no `level`.
+         *     known, so a mean over part of the night is said as such; `known_from_start`/`known_to_end`
+         *     say whether they reach the window's first/last hour. Neutral measures have no `level`.
          *     `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours.
          *     `value` is the cold at its lowest (temperature, condensation), the damp at its highest.
          */
@@ -3787,6 +3788,10 @@ export interface components {
             known_since: string | null;
             /** Known Until */
             known_until: string | null;
+            /** Known From Start */
+            known_from_start: boolean;
+            /** Known To End */
+            known_to_end: boolean;
         };
         /**
          * WeatherNightOut

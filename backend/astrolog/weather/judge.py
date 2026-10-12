@@ -210,6 +210,9 @@ class MeasureNight:
     known_hours: int
     known_since: str | None
     known_until: str | None
+    # the known hours reach the window's first / last hour
+    known_from_start: bool
+    known_to_end: bool
 
 
 def _crosses(scale: Scale, step: Step, v: float) -> bool:
@@ -305,6 +308,8 @@ def _night(
         known_hours=known_span[2],
         known_since=known_span[0],
         known_until=known_span[1],
+        known_from_start=bool(known) and known[0][0].at == night[0].at,
+        known_to_end=bool(known) and known[-1][0].at == night[-1].at,
     )
 
 

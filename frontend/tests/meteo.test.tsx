@@ -64,7 +64,7 @@ function misura(code: string, campi: Record<string, unknown> = {}) {
   return {
     code, level: null, weighs: false, value: null, peak: null, peak_at: null, peak_until: null,
     spans: [], axis_min: 0, axis_max: 100, since: null, until: null, hours: 0, known_hours: 3,
-    known_since: null, known_until: null, ...campi,
+    known_since: null, known_until: null, known_from_start: false, known_to_end: false, ...campi,
   }
 }
 
@@ -205,6 +205,27 @@ describe("il Meteo, la notte", () => {
     await apriMeteo()
 
     expect((await scheda()).textContent).toContain("Nessun altro fattore.")
+  })
+
+  it.each([
+    ["nogo", false, true, "consigliata banda stretta", "Luna al 55% dalle 23:00 · banda larga fino alle 23:00"],
+    ["marginal", false, true, "banda larga al limite", "Luna al 55% dalle 23:00 · senza Luna fino alle 23:00"],
+    ["nogo", true, true, "consigliata banda stretta", "Luna al 55% tutta la notte"],
+    ["nogo", true, false, "consigliata banda stretta", "Luna al 55% fino alle 02:00 · banda larga dalle 02:00"],
+    ["marginal", true, false, "banda larga al limite", "Luna al 55% fino alle 02:00 · senza Luna dalle 02:00"],
+    ["nogo", false, false, "consigliata banda stretta", "Luna al 55% dalle 23:00 alle 02:00 · banda larga prima e dopo"],
+  ])("la Luna %s (dall'inizio %s, fino in fondo %s) consiglia la banda e dice le ore senza Luna", async (level, daSubito, finoInFondo, parola, frase) => {
+    const luna = misura("moon", {
+      level, weighs: true, value: 55, known_from_start: daSubito, known_to_end: finoInFondo,
+      known_since: "2026-09-26T23:00:00+02:00", known_until: "2026-09-27T02:00:00+02:00",
+    })
+    conNotti({ ...NOTTE, measures: [...NOTTE.measures.map((m) => ({ ...m, weighs: false })), luna] })
+    await apriMeteo()
+
+    const voci = within((await scheda()).querySelector(".as-pesano") as HTMLElement).getAllByRole("listitem")
+    expect(voci).toHaveLength(1)
+    expect(voci[0]?.textContent).toContain(parola)
+    expect(voci[0]?.textContent?.endsWith(frase)).toBe(true)
   })
 
   it("la fila dice il giorno, il semaforo e le ore serene di ogni notte, e ne apre una alla volta", async () => {

@@ -162,7 +162,7 @@ che il `traduttore` legge per primo.
 | la parola del meteo sulla notte: Notte buona. / Notte incerta. / Notte non adatta. | `verdict` (`go`, `marginal`, `nogo`) | verdetto | voto, punteggio, "Si fa", "No" |
 | una grandezza della notte, col suo valore, il picco e (se ha soglia) la sua parola | `measure`, `measures` | misura | parametro, indicatore |
 | una misura che nella notte diventa incerta o non adatta: sta accanto al verdetto e non lo cambia | `weighs` | altri fattori | pesa, cosa pesa, allarme |
-| la parola di una misura in un'ora o nella notte: buona, incerta, non adatta (aerosol: limpido, molto fosco; Luna: al limite, solo banda stretta) | `level`, `levels` (`go`, `marginal`, `nogo`) | giudizio | voto, punteggio, semaforo (che e' il verdetto) |
+| la parola di una misura in un'ora o nella notte: buona, incerta, non adatta (aerosol: limpido, molto fosco; Luna: banda larga al limite, consigliata banda stretta) | `level`, `levels` (`go`, `marginal`, `nogo`) | giudizio | voto, punteggio, semaforo (che e' il verdetto) |
 | le misure con soglia | `cloud`, `cloud_low`, `rain`, `gust`, `wind`, `condensation`, `jet`, `seeing`, `aerosol`, `moon` | nuvole, nuvole basse, pioggia, raffiche, vento, condensa, jet stream, seeing, aerosol, Luna | umidita' (che e' neutra) |
 | le soglie di ogni misura, dalla peggiore, come le usa il giudizio | `scales`, `steps` | soglie | limiti |
 | su quali ore si giudica una notte: il buio, o dove il buio non arriva l'arco col Sole sotto l'orizzonte | `window` (`dark`, `sun_down`) | le ore di buio / col Sole sotto l'orizzonte | finestra osservativa |
