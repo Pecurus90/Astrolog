@@ -324,7 +324,7 @@ forma «una sola» e' il singolare della riga sopra.
 | Previsione: | `weather.sources.forecast` |
 | Weather data by Open-Meteo.com | `weather.attribution` |
 | Seeing: meteoblue | `weather.attribution.meteoblue` |
-| Aerosol e polveri: Generated using Copernicus Atmosphere Monitoring Service information {anno}. Ne' la Commissione europea ne' l'ECMWF rispondono dell'uso di questi dati. | `weather.attribution.cams` |
+| Aerosol e polveri: Generated using Copernicus Atmosphere Monitoring Service information {anno}. Né la Commissione europea né l'ECMWF rispondono dell'uso di questi dati. | `weather.attribution.cams` |
 
 ### In Stanotte e nelle Notti (lo stesso riassunto)
 
