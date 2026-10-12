@@ -389,7 +389,7 @@ describe("l accessibilita della prima pagina", () => {
       precip_mm: 0,
       wind_700hpa_kmh: 30,
       wind_250hpa_kmh: 120,
-      wind_200hpa_kmh: null,
+      visibility_km: 12,
       seeing_arcsec: 1.25,
       aerosol_optical_depth: 0.1,
       dust_ugm3: 2,
@@ -398,7 +398,7 @@ describe("l accessibilita della prima pagina", () => {
       shown: true,
       levels: {
         cloud: "go", cloud_low: "go", rain: "go", gust: "nogo", wind: "go", condensation: "go",
-        jet: "go", seeing: "go", aerosol: null, moon: null,
+        jet: "go", seeing: "go", aerosol: null, moon: null, visibility: "go",
       },
     })
     rispondi({

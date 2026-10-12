@@ -830,8 +830,8 @@ riga per voce.
 - **Attrezzatura**: un filtro scritto a mano cerca nel catalogo dei modelli, cosi' si possono
   scrivere anche le bande delle camere a colori.
 - **Meteo, le aggiunte** (Marco, 12/10/2026, dal confronto con Astrospheric, Clear Outside,
-  Clear Sky Chart, 7Timer, meteoblue). Nell'ordine: (1) **nebbia e visibilita'** (Open-Meteo
-  `visibility`; la soglia WMO della nebbia va letta alla fonte prima di scriverla); (2)
+  Clear Sky Chart, 7Timer, meteoblue). Nell'ordine: (1) **nebbia e visibilita'**: fatta,
+  con l'uscita delle carte doppie del punto 4 (`docs/domini/meteo.md`); (2)
   **probabilita' di sereno** dai membri dell'ensemble (Open-Meteo Ensemble, `cloud_cover`): si
   mostra il numero, nessuna convenzione da' una soglia; (3) **previsto contro ripreso**: quanto
   la previsione ha azzeccato le notti in cui ci sono frame, e vuole le previsioni archiviate

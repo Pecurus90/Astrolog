@@ -59,6 +59,8 @@ def misure(ore):
             "moon_pct",
             [(25.0, "go"), (25.1, "marginal"), (50.0, "marginal"), (50.1, "nogo")],
         ),
+        # WMO: nebbia sotto 1 km di visibilita', foschia da 1 km in su
+        ("visibility", "visibility_km", [(1.0, "go"), (0.9, "nogo")]),
     ],
 )
 def test_each_measure_judges_an_hour_at_the_edges_of_its_source(misura, campo, valori):
@@ -75,7 +77,7 @@ def test_condensation_comes_under_three_degrees_between_air_and_dew_point():
 
 def test_a_missing_value_has_no_judgement_and_a_neutral_measure_never_has_one():
     assert livello("seeing", seeing_arcsec=None) is None
-    assert "humidity" not in judge.hour_levels(ora("2026-09-25T22:00:00+02:00"))
+    assert "dust" not in judge.hour_levels(ora("2026-09-25T22:00:00+02:00"))
     assert "cloud" in judge.hour_levels(ora("2026-09-25T22:00:00+02:00"))
 
 
@@ -162,11 +164,11 @@ def test_the_clouds_count_the_hours_as_bad_as_the_verdict_or_worse():
 
 
 def test_good_and_neutral_measures_do_not_weigh():
-    detto = misure(notte({"aerosol_optical_depth": 0.05, "humidity_pct": 99.0}))
+    detto = misure(notte({"aerosol_optical_depth": 0.05, "dust_ugm3": 99.0}))
     assert detto["aerosol"].level == "go"
     assert not detto["aerosol"].weighs
-    assert detto["humidity"].level is None
-    assert not detto["humidity"].weighs
+    assert detto["dust"].level is None
+    assert not detto["dust"].weighs
 
 
 def test_the_moon_is_left_out_when_it_is_never_up_in_the_dark():
@@ -222,16 +224,28 @@ def test_every_scale_is_sent_with_its_steps():
 
 
 def test_each_card_says_the_night_as_it_matters():
-    """Il freddo conta al minimo, la rugiada al minimo fra aria e punto di rugiada, l'umidita' al
-    massimo; il resto in media, la pioggia in tutto."""
+    """Il freddo conta al minimo, la rugiada al minimo fra aria e punto di rugiada, la visibilita'
+    al minimo; il resto in media, la pioggia in tutto."""
     ore = notte(
-        {"temperature_c": 8.0, "dew_point_c": 4.0, "humidity_pct": 70.0},
-        {"temperature_c": 5.0, "dew_point_c": 4.0, "humidity_pct": 95.0},
+        {"temperature_c": 8.0, "dew_point_c": 4.0, "visibility_km": 12.0},
+        {"temperature_c": 5.0, "dew_point_c": 4.0, "visibility_km": 0.4},
     )
     detto = misure(ore)
     assert detto["temperature"].value == 5.0
     assert detto["condensation"].value == 1.0
-    assert detto["humidity"].value == 95.0
+    assert detto["visibility"].value == 0.4
+
+
+def test_the_cards_that_repeated_another_are_gone():
+    """Il vento a 200 hPa ripeteva il jet stream a 250, l'umidita' la condensa."""
+    assert not {"humidity", "wind_200"} & set(judge.Measure)
+
+
+def test_fog_weighs_beside_the_verdict_with_its_hours():
+    ore = notte({"visibility_km": 8.0}, {"visibility_km": 0.6}, {"visibility_km": 0.3})
+    nebbia = misure(ore)["visibility"]
+    assert (nebbia.level, nebbia.weighs, nebbia.hours) == ("nogo", True, 2)
+    assert nebbia.since == "2026-09-25T21:00:00+02:00"
 
 
 def test_a_measure_says_each_bad_word_with_its_hours():

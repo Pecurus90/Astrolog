@@ -25,8 +25,8 @@ KIND = "observed"
 DELAY_DAYS = 5
 MAX_DAYS = 366
 
-# The forecast's quantities without the upper wind: the archive does not carry it.
-VARIABLES = {k: v for k, v in openmeteo.VARIABLES.items() if "hPa" not in k}
+# The forecast's quantities without the upper wind and the visibility: the archive has neither.
+VARIABLES = {k: v for k, v in openmeteo.VARIABLES.items() if "hPa" not in k and k != "visibility"}
 
 # The real call, named in this module so tests replace it here.
 _fetch = net.fetch

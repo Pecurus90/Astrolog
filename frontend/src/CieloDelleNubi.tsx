@@ -1,6 +1,6 @@
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react"
 
-import { oraDalTasto, parola } from "./CartaDelParametro"
+import { oraDalTasto, parola, tondo } from "./CartaDelParametro"
 import type { components } from "./api/schema"
 import { type Chiave, numero, oraDelSito, t } from "./i18n"
 
@@ -10,11 +10,11 @@ type Ora = components["schemas"]["WeatherHourOut"]
 type Scala = components["schemas"]["WeatherScaleOut"]
 type Seeing = components["schemas"]["WeatherSeeingOut"]
 type Livello = NonNullable<Misura["level"]>
-type Destra = "rain" | "wind" | "condensation" | "seeing" | "jet" | "aerosol"
-type Campo = "precip_mm" | "wind_kmh" | "temperature_c" | "seeing_arcsec" | "wind_250hpa_kmh" | "aerosol_optical_depth"
+type Destra = "rain" | "wind" | "condensation" | "seeing" | "jet" | "aerosol" | "visibility"
+type Campo = "precip_mm" | "wind_kmh" | "temperature_c" | "seeing_arcsec" | "wind_250hpa_kmh" | "aerosol_optical_depth" | "visibility_km"
 
 /** Le metriche della scala di destra, una alla volta (DECISIONI del disegno, v27). */
-export const A_DESTRA: readonly Destra[] = ["rain", "wind", "condensation", "seeing", "jet", "aerosol"]
+export const A_DESTRA: readonly Destra[] = ["rain", "wind", "condensation", "seeing", "jet", "aerosol", "visibility"]
 
 // Il campo che ogni metrica disegna, la sua unita' e la misura che da' la scala: la condensa si
 // disegna come aria e rugiada, sulla scala della temperatura.
@@ -26,6 +26,7 @@ const DISEGNO: Record<Destra, { campo: Campo; unita: Chiave | null; scala: Misur
   jet: { campo: "wind_250hpa_kmh", unita: "weather.unit.kmh", scala: "jet" },
   // lo spessore ottico non ha unita': in testa alla scala va il suo nome
   aerosol: { campo: "aerosol_optical_depth", unita: null, scala: "aerosol" },
+  visibility: { campo: "visibility_km", unita: "weather.unit.km", scala: "visibility" },
 }
 
 const TAPPE = {
@@ -407,7 +408,7 @@ function Lettore({ ora: o, umidita, destra, nomeDestra, sinistra, x }: { ora: Or
   if (destra) {
     const l = o.levels[destra]
     const v = o[DISEGNO[destra].campo]
-    const detto = v === null ? t("weather.card.unknown") : `${numero(v)}${DISEGNO[destra].unita ? ` ${t(DISEGNO[destra].unita as Chiave)}` : ""}${l ? `, ${parola(destra, l)}` : ""}`
+    const detto = v === null ? t("weather.card.unknown") : `${numero(tondo(destra, v))}${DISEGNO[destra].unita ? ` ${t(DISEGNO[destra].unita as Chiave)}` : ""}${l ? `, ${parola(destra, l)}` : ""}`
     righe.push([RIGHE[l ?? "sotto"], nomeDestra, detto])
   }
   return (

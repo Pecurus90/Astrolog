@@ -10,12 +10,13 @@ Level = Literal["go", "marginal", "nogo"]
 # with an internal module; a test holds the two lists equal.
 MeasureCode = Literal[
     "cloud", "cloud_low", "rain", "gust", "wind", "condensation", "jet", "seeing", "aerosol",
-    "moon", "cloud_mid", "cloud_high", "humidity", "temperature", "dew_point", "wind_700",
-    "wind_200", "dust",
+    "moon", "visibility", "cloud_mid", "cloud_high", "temperature", "dew_point", "wind_700",
+    "dust",
 ]  # fmt: skip
 JudgedCode = Literal[
-    "cloud", "cloud_low", "rain", "gust", "wind", "condensation", "jet", "seeing", "aerosol", "moon"
-]
+    "cloud", "cloud_low", "rain", "gust", "wind", "condensation", "jet", "seeing", "aerosol",
+    "moon", "visibility",
+]  # fmt: skip
 
 
 class WeatherLevelsOut(BaseModel):
@@ -32,6 +33,7 @@ class WeatherLevelsOut(BaseModel):
     seeing: Level | None
     aerosol: Level | None
     moon: Level | None
+    visibility: Level | None
 
 
 class WeatherHourOut(BaseModel):
@@ -51,9 +53,9 @@ class WeatherHourOut(BaseModel):
     wind_kmh: float | None
     wind_gust_kmh: float | None
     precip_mm: float | None
+    visibility_km: float | None
     wind_700hpa_kmh: float | None
     wind_250hpa_kmh: float | None
-    wind_200hpa_kmh: float | None
     seeing_arcsec: float | None
     aerosol_optical_depth: float | None
     dust_ugm3: float | None
@@ -87,7 +89,7 @@ class WeatherMeasureOut(BaseModel):
     known, so a mean over part of the night is said as such; `known_from_start`/`known_to_end`
     say whether they reach the window's first/last hour. Neutral measures have no `level`.
     `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours.
-    `value` is the cold at its lowest (temperature, condensation), the damp at its highest."""
+    `value` is the cold at its lowest (temperature, condensation), and so the visibility."""
 
     code: MeasureCode
     level: Level | None

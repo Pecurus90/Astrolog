@@ -26,9 +26,10 @@ VARIABLES = {
     "wind_speed_10m": "wind_kmh",
     "wind_gusts_10m": "wind_gust_kmh",
     "precipitation": "precip_mm",
+    # in metres, read in km; not every model gives it (ECMWF sends nulls)
+    "visibility": "visibility_km",
     # the jet stream: shown as it is, no seeing estimate comes out of it
     "wind_speed_250hPa": "wind_250hpa_kmh",
-    "wind_speed_200hPa": "wind_200hpa_kmh",
     # wind at about 3,000 m: compared with the site's usual, it decides nothing
     "wind_speed_700hPa": "wind_700hpa_kmh",
 }
@@ -82,6 +83,11 @@ def _hourly(payload: Any) -> tuple[dict[str, Any], list[datetime]]:
     return hourly, instants
 
 
+def _km(metres: Any) -> list[float | None]:
+    """Cut down to the tenth, never rounded up: 999 m stays under the kilometre of fog."""
+    return [m // 100 / 10 if isinstance(m, int | float) else None for m in metres]
+
+
 def parse(payload: Any) -> tuple[list[datetime], dict[str, dict[str, list[Any]]]]:
     """One time axis for every model."""
     hourly, instants = _hourly(payload)
@@ -90,7 +96,7 @@ def parse(payload: Any) -> tuple[list[datetime], dict[str, dict[str, list[Any]]]
         series = {ours: hourly.get(f"{theirs}_{model}") for theirs, ours in VARIABLES.items()}
         # a model the service did not send stays out, never filled in
         if all(isinstance(v, list) and len(v) == len(instants) for v in series.values()):
-            read[model] = series
+            read[model] = {**series, "visibility_km": _km(series["visibility_km"])}
     return instants, read
 
 

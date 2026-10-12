@@ -19,23 +19,21 @@ class Measure(StrEnum):
     SEEING = "seeing"
     AEROSOL = "aerosol"
     MOON = "moon"
+    VISIBILITY = "visibility"
     CLOUD_MID = "cloud_mid"
     CLOUD_HIGH = "cloud_high"
-    HUMIDITY = "humidity"
     TEMPERATURE = "temperature"
     DEW_POINT = "dew_point"
     WIND_700 = "wind_700"
-    WIND_200 = "wind_200"
     DUST = "dust"
 
 
 class NightValue(StrEnum):
-    """How a measure says the night: the cold at its lowest, the damp at its highest."""
+    """How a measure says the night: the cold and the visibility at their lowest."""
 
     MEAN = "mean"
     TOTAL = "total"
     MIN = "min"
-    MAX = "max"
 
 
 @dataclass(frozen=True, slots=True)
@@ -148,6 +146,16 @@ SCALES: dict[Measure, Scale] = {
             digits=0,
             axis_top=100.0,
         ),
+        # WMO: fog when droplets "reduce horizontal visibility ... to less than 1 km", else mist.
+        # https://cloudatlas.wmo.int/en/fog-compared-with-mist.html
+        Scale(
+            Measure.VISIBILITY,
+            _field("visibility_km"),
+            [Step(NOGO, 1.0, strict=True)],
+            lower_is_worse=True,
+            night=NightValue.MIN,
+            axis_top=10.0,
+        ),
     )
 }
 
@@ -166,10 +174,8 @@ NEUTRAL: dict[Measure, Scale] = {
         Scale(
             Measure.DEW_POINT, _field("dew_point_c"), [], lower_is_worse=True, night=NightValue.MIN
         ),
-        Scale(Measure.HUMIDITY, _field("humidity_pct"), [], night=NightValue.MAX),
         Scale(Measure.DUST, _field("dust_ugm3"), []),
         Scale(Measure.WIND_700, _field("wind_700hpa_kmh"), []),
-        Scale(Measure.WIND_200, _field("wind_200hpa_kmh"), []),
         Scale(Measure.CLOUD_MID, _field("cloud_mid_pct"), [], axis_top=100.0),
         Scale(Measure.CLOUD_HIGH, _field("cloud_high_pct"), [], axis_top=100.0),
     )
@@ -243,7 +249,6 @@ def _value(scale: Scale, values: Sequence[float]) -> float | None:
         NightValue.MEAN: lambda: sum(values) / len(values),
         NightValue.TOTAL: lambda: sum(values),
         NightValue.MIN: lambda: min(values),
-        NightValue.MAX: lambda: max(values),
     }
     return round(by[scale.night](), scale.digits)
 

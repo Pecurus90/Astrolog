@@ -22,6 +22,8 @@ import {
   rispondi,
   scritture,
 } from "./banco"
+import { CARTE_GRANDI, CARTE_PICCOLE } from "../src/CartaDelParametro"
+import { A_DESTRA } from "../src/CieloDelleNubi"
 
 afterEach(pulisci)
 afterEach(() => vi.unstubAllGlobals())
@@ -30,7 +32,7 @@ const MODELLI = ["best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless"]
 
 const GIUDIZI = {
   cloud: "go", cloud_low: "go", rain: "go", gust: "go", wind: "go", condensation: "go",
-  jet: "go", seeing: null, aerosol: null, moon: null,
+  jet: "go", seeing: null, aerosol: null, moon: null, visibility: "go",
 }
 
 function ora(at: string, sky: string, campi: Record<string, unknown> = {}) {
@@ -47,9 +49,9 @@ function ora(at: string, sky: string, campi: Record<string, unknown> = {}) {
     wind_kmh: 5,
     wind_gust_kmh: 10,
     precip_mm: 0,
+    visibility_km: 12,
     wind_700hpa_kmh: 30,
     wind_250hpa_kmh: 120,
-    wind_200hpa_kmh: 110,
     seeing_arcsec: null,
     aerosol_optical_depth: 0.12,
     dust_ugm3: null,
@@ -106,7 +108,8 @@ const NOTTE = {
     misura("aerosol", { level: "go", value: 0.05, axis_max: 0.2 }),
     misura("temperature", { value: 5, axis_min: 4, axis_max: 12 }),
     misura("dew_point", { value: 4 }),
-    misura("humidity", { value: 90 }),
+    misura("visibility", { level: "go", value: 12, peak: 12, axis_max: 12 }),
+    misura("dust", { value: 2, axis_max: 4 }),
     misura("wind_700", { value: 42 }),
   ],
   hours: [
@@ -328,8 +331,8 @@ describe("il Meteo, le carte", () => {
     await scheda()
     const nomi = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)
     expect(nomi).toEqual([
-      "Nuvole", "Nuvole basse", "Vento", "Pioggia", "Seeing", "Aerosol",
-      "Temperatura e rugiada", "Umidit\u00e0", "Vento a 700 hPa",
+      "Nuvole", "Nuvole basse", "Vento", "Pioggia", "Seeing", "Aerosol", "Visibilit\u00e0",
+      "Temperatura e rugiada", "Polvere", "Vento a 700 hPa",
     ])
   })
 
@@ -387,12 +390,50 @@ describe("il Meteo, le carte", () => {
   })
 
   it("una linea si spezza dove il servizio non da' il valore, invece di unire i due lati", async () => {
-    const buco = NOTTE.hours.map((o, i) => (i === 2 ? { ...o, humidity_pct: null } : o))
+    const buco = NOTTE.hours.map((o, i) => ({ ...o, dust_ugm3: i === 2 ? null : 2 }))
     conNotti({ ...NOTTE, hours: buco })
     await apriMeteo()
 
     await scheda()
-    expect(carta(/^Umidit/).querySelectorAll("polyline")).toHaveLength(2)
+    expect(carta(/^Polvere$/).querySelectorAll("polyline")).toHaveLength(2)
+  })
+
+  it("la visibilit\u00e0 dice la minima nel buio in km e che non c'e' nebbia", async () => {
+    conNotti(NOTTE)
+    await apriMeteo()
+
+    await scheda()
+    const visibilita = carta(/^Visibilit/)
+    expect(visibilita.textContent).toContain("12km")
+    expect(visibilita.textContent).toContain("minima nel buio")
+    expect(visibilita.textContent).toContain("buona tutta la notte")
+    expect(visibilita.textContent).toContain("nessuna ora di nebbia")
+  })
+
+  it("con la nebbia la carta dice da che ora, e sotto 10 km il valore porta un decimale", async () => {
+    const nebbia = misura("visibility", {
+      level: "nogo", weighs: true, value: 0.8, peak: 0.8, axis_max: 12, hours: 1,
+      since: "2026-09-26T22:00:00+02:00", until: "2026-09-26T23:00:00+02:00",
+      spans: [{ level: "nogo", since: "2026-09-26T22:00:00+02:00", until: "2026-09-26T23:00:00+02:00", hours: 1 }],
+    })
+    conNotti({ ...NOTTE, measures: [...NOTTE.measures.filter((m) => m.code !== "visibility").map((m) => ({ ...m, weighs: false })), nebbia] })
+    await apriMeteo()
+
+    const pagina = await scheda()
+    const visibilita = carta(/^Visibilit/)
+    expect(visibilita.textContent).toContain("0,8km")
+    expect(visibilita.textContent).toContain("non adatta dalle 22:00")
+    expect(visibilita.textContent).toContain("nebbia dalle 22:00")
+    expect(pagina.querySelector(".as-pesano")?.textContent).toContain("nebbia dalle 22:00 alle 23:00 \u00b7 1 ora")
+  })
+
+  it("la visibilit\u00e0 si sceglie sulla scala di destra del cielo", () => {
+    expect(A_DESTRA).toContain("visibility")
+  })
+
+  it("le carte doppie non ci sono pi\u00f9: n\u00e9 l'umidit\u00e0 n\u00e9 il vento a 200 hPa", () => {
+    expect([...CARTE_GRANDI, ...CARTE_PICCOLE]).not.toContain("humidity")
+    expect([...CARTE_GRANDI, ...CARTE_PICCOLE]).not.toContain("wind_200")
   })
 
   it("la temperatura dice la minima e la rugiada accanto", async () => {

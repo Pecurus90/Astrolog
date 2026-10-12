@@ -163,7 +163,7 @@ che il `traduttore` legge per primo.
 | una grandezza della notte, col suo valore, il picco e (se ha soglia) la sua parola | `measure`, `measures` | misura | parametro, indicatore |
 | una misura che nella notte diventa incerta o non adatta: sta accanto al verdetto e non lo cambia | `weighs` | altri fattori | pesa, cosa pesa, allarme |
 | la parola di una misura in un'ora o nella notte: buona, incerta, non adatta (aerosol: limpido, molto fosco; Luna: banda larga al limite, consigliata banda stretta) | `level`, `levels` (`go`, `marginal`, `nogo`) | giudizio | voto, punteggio, semaforo (che e' il verdetto) |
-| le misure con soglia | `cloud`, `cloud_low`, `rain`, `gust`, `wind`, `condensation`, `jet`, `seeing`, `aerosol`, `moon` | nuvole, nuvole basse, pioggia, raffiche, vento, condensa, jet stream, seeing, aerosol, Luna | umidita' (che e' neutra) |
+| le misure con soglia | `cloud`, `cloud_low`, `rain`, `gust`, `wind`, `condensation`, `jet`, `seeing`, `aerosol`, `moon`, `visibility` | nuvole, nuvole basse, pioggia, raffiche, vento, condensa, jet stream, seeing, aerosol, Luna, visibilita' | umidita' (che e' neutra) |
 | le soglie di ogni misura, dalla peggiore, come le usa il giudizio | `scales`, `steps` | soglie | limiti |
 | su quali ore si giudica una notte: il buio, o dove il buio non arriva l'arco col Sole sotto l'orizzonte | `window` (`dark`, `sun_down`) | le ore di buio / col Sole sotto l'orizzonte | finestra osservativa |
 | il modello numerico da cui viene la previsione, che l'utente sceglie | `weather_model`, `model` (`best_match`, `ecmwf_ifs025`, `icon_seamless`, `gfs_seamless`) | modello della previsione | fonte, servizio (il servizio e' Open-Meteo) |
@@ -171,7 +171,7 @@ che il `traduttore` legge per primo.
 | una notte oltre la terza: il verdetto, le nuvole, le ore di buio e l'accordo, detti meno affidabili | `trend` | tendenza | previsione lunga |
 | quanti modelli dicono buona, incerta, non adatta | `agreement` | modelli d'accordo | consenso, affidabilita' |
 | cio' che conta per la planetaria, ora per ora: vento in quota, seeing, aerosol (campi dell'ora) | `wind_*hpa_kmh`, `seeing_arcsec`, `aerosol_optical_depth`, `dust_ugm3` | il cielo in quota | alta quota, atmosfera |
-| il vento a 250 e 200 hPa | `wind_250hpa_kmh`, `wind_200hpa_kmh` | jet stream | corrente a getto |
+| il vento a 250 hPa | `wind_250hpa_kmh` | jet stream | corrente a getto |
 | il vento a 700 hPa, circa 3.000 metri, medio nelle ore su cui si giudica una notte | `wind_700hpa_kmh` | vento in quota | turbolenza |
 | il vento in quota solito di un sito: un anno di notti, scritto una volta l'anno | `weather_climate`, `climate.py` | lo storico del sito | il solito del sito, climatologia, media |
 | quante notti su dieci dell'ultimo anno del sito avevano meno vento in quota | `wind_700hpa_tenths`, `position.py` | superiore a N notti su 10 | piu' forte di N notti su 10, percentile, soglia |

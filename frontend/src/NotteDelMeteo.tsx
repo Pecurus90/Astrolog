@@ -180,6 +180,7 @@ function quandoLaLuna(m: Misura): string {
 function quando(m: Misura): string {
   if (m.code === "moon") return quandoLaLuna(m)
   if (!m.since || !m.until) return ""
+  if (m.code === "visibility") return t("weather.weighs.fog", { da: oraDelSito(m.since), a: oraDelSito(m.until), n: numero(m.hours) })
   return t("weather.weighs.span", { da: oraDelSito(m.since), a: oraDelSito(m.until), n: numero(m.hours) })
 }
 

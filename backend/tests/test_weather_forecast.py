@@ -83,6 +83,28 @@ def test_the_answer_is_read_per_model_in_utc():
     assert letto["best_match"]["cloud_total_pct"] == [0.0, 10.0]
 
 
+def test_visibility_arrives_in_metres_and_is_read_in_kilometres():
+    """Un modello che non la da' manda `None`: resta `None`, non zero."""
+    _, letto = openmeteo.parse(
+        risposta(
+            ore=2,
+            visibility_km=lambda i: 24140.0 if i else 180.0,
+            per_modello={"ecmwf_ifs025": {"visibility_km": None}},
+        )
+    )
+    assert letto["best_match"]["visibility_km"] == [0.1, 24.1]
+    assert letto["ecmwf_ifs025"]["visibility_km"] == [None, None]
+
+
+def test_visibility_just_under_the_kilometre_is_not_rounded_up_out_of_the_fog():
+    _, letto = openmeteo.parse(risposta(ore=2, visibility_km=lambda i: 1000.0 if i else 999.0))
+    assert letto["best_match"]["visibility_km"] == [0.9, 1.0]
+
+
+def test_the_wind_at_200_hpa_is_no_longer_asked():
+    assert "wind_speed_200hPa" not in openmeteo.VARIABLES
+
+
 def test_a_model_the_service_did_not_send_is_left_out_not_invented():
     _, letto = openmeteo.parse(risposta(ore=2, modelli=("best_match",)))
     assert set(letto) == {"best_match"}

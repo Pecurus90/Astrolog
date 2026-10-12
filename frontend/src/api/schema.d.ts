@@ -3683,12 +3683,12 @@ export interface components {
             wind_gust_kmh: number | null;
             /** Precip Mm */
             precip_mm: number | null;
+            /** Visibility Km */
+            visibility_km: number | null;
             /** Wind 700Hpa Kmh */
             wind_700hpa_kmh: number | null;
             /** Wind 250Hpa Kmh */
             wind_250hpa_kmh: number | null;
-            /** Wind 200Hpa Kmh */
-            wind_200hpa_kmh: number | null;
             /** Seeing Arcsec */
             seeing_arcsec: number | null;
             /** Aerosol Optical Depth */
@@ -3740,6 +3740,8 @@ export interface components {
             aerosol: ("go" | "marginal" | "nogo") | null;
             /** Moon */
             moon: ("go" | "marginal" | "nogo") | null;
+            /** Visibility */
+            visibility: ("go" | "marginal" | "nogo") | null;
         };
         /**
          * WeatherMeasureOut
@@ -3750,14 +3752,14 @@ export interface components {
          *     known, so a mean over part of the night is said as such; `known_from_start`/`known_to_end`
          *     say whether they reach the window's first/last hour. Neutral measures have no `level`.
          *     `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours.
-         *     `value` is the cold at its lowest (temperature, condensation), the damp at its highest.
+         *     `value` is the cold at its lowest (temperature, condensation), and so the visibility.
          */
         WeatherMeasureOut: {
             /**
              * Code
              * @enum {string}
              */
-            code: "cloud" | "cloud_low" | "rain" | "gust" | "wind" | "condensation" | "jet" | "seeing" | "aerosol" | "moon" | "cloud_mid" | "cloud_high" | "humidity" | "temperature" | "dew_point" | "wind_700" | "wind_200" | "dust";
+            code: "cloud" | "cloud_low" | "rain" | "gust" | "wind" | "condensation" | "jet" | "seeing" | "aerosol" | "moon" | "visibility" | "cloud_mid" | "cloud_high" | "temperature" | "dew_point" | "wind_700" | "dust";
             /** Level */
             level: ("go" | "marginal" | "nogo") | null;
             /** Weighs */
@@ -3896,7 +3898,7 @@ export interface components {
              * Code
              * @enum {string}
              */
-            code: "cloud" | "cloud_low" | "rain" | "gust" | "wind" | "condensation" | "jet" | "seeing" | "aerosol" | "moon";
+            code: "cloud" | "cloud_low" | "rain" | "gust" | "wind" | "condensation" | "jet" | "seeing" | "aerosol" | "moon" | "visibility";
             /** Steps */
             steps: components["schemas"]["WeatherStepOut"][];
             /** Lower Is Worse */

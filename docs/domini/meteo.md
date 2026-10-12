@@ -50,7 +50,7 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 | compito | fonte | perche' |
 |---|---|---|
 | previsione, fino a 16 giorni | Open-Meteo, piu' modelli dalla stessa chiamata | gratis, senza chiave, nuvole su tre strati, CC BY 4.0 |
-| seeing e jet stream | vento a 700, 250 e 200 hPa da Open-Meteo; seeing Meteoblue `seeing-1h` con la chiave dell'utente | il vento gratis per chiunque; il seeing ora per ora c'e' solo da Meteoblue |
+| seeing e jet stream | vento a 700 e 250 hPa da Open-Meteo; seeing Meteoblue `seeing-1h` con la chiave dell'utente | il vento gratis per chiunque; il seeing ora per ora c'e' solo da Meteoblue |
 | limpidezza: aerosol e polveri | Open-Meteo Air Quality (dati CAMS) | gratis e mondiale |
 | storico di una notte passata | Open-Meteo Archive (ERA5), definitivo dopo 5 giorni | gratis dal 1940 |
 | il vento in quota solito del sito | Open-Meteo Historical Forecast, un anno a 700 hPa | l'archivio ERA5 a 700 hPa non risponde, questo si' |
@@ -97,8 +97,16 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
     12/10/2026): "Luna al 55% dalle 23 · banda larga fino alle 23"; su tutta la notte, solo il
     dato; fra 25 e 50% le ore libere sono "senza Luna". Nessuna soglia al 75% per la banda
     stretta: e' un'abitudine riportata da una fonte sola (Telescope Live), non una convenzione.
-  Neutri, senza parola: nuvole medie e alte, umidita', temperatura, punto di rugiada, vento a 700
-  hPa (si confronta col solito del sito), vento a 200 hPa, polveri.
+  - visibilita': niente sotto 1 km, la nebbia dell'Atlante WMO ("reduce horizontal visibility
+    ... to less than 1 km", https://cloudatlas.wmo.int/en/fog-compared-with-mist.html); da 1 km
+    in su e' foschia e non ha parola sua. Arriva in metri da Open-Meteo e si scrive in km;
+    ECMWF non la da' (misurato il 12/10/2026: `null` a ogni ora) e la carta dice *Non
+    disponibile*: un modello non prende il valore di un altro. L'archivio delle notti passate
+    non la chiede.
+  Neutri, senza parola: nuvole medie e alte, temperatura, punto di rugiada, vento a 700 hPa (si
+  confronta col solito del sito), polveri. L'umidita' resta nelle ore, per il cielo; la sua carta
+  e quella del vento a 200 hPa sono uscite (Marco, 12/10/2026): ripetevano la condensa e il jet
+  stream.
 - **L'ordine d'importanza** lo scrive il backend: le nuvole, poi le misure giudicate da "niente" a
   "buona", a pari parola quella che comincia prima, poi i neutri. Il valore della notte e' la media
   delle ore che hanno un numero (la pioggia, il totale); il picco e' l'ora peggiore; se una misura

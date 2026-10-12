@@ -12,8 +12,8 @@ type Scala = components["schemas"]["WeatherScaleOut"]
 type Seeing = components["schemas"]["WeatherSeeingOut"]
 type Codice = Misura["code"]
 type Campo = "cloud_total_pct" | "cloud_low_pct" | "precip_mm" | "wind_kmh" | "dew_spread_c"
-  | "seeing_arcsec" | "wind_250hpa_kmh" | "aerosol_optical_depth" | "temperature_c" | "humidity_pct"
-  | "dust_ugm3" | "wind_700hpa_kmh" | "wind_200hpa_kmh"
+  | "seeing_arcsec" | "wind_250hpa_kmh" | "aerosol_optical_depth" | "temperature_c" | "visibility_km"
+  | "dust_ugm3" | "wind_700hpa_kmh"
 
 // Come il disegno (v27) mostra ogni carta: il campo dell'ora, l'unita', la riga sotto il valore e
 // se il grafico e' a barre (le misure con soglia) o a linea (le neutre). Presentazione: i numeri
@@ -28,16 +28,15 @@ const FORME: Partial<Record<Codice, Forma>> = {
   seeing: { campo: "seeing_arcsec", unita: "weather.unit.arcsec", sotto: "weather.card.seeing", barre: true },
   jet: { campo: "wind_250hpa_kmh", unita: "weather.unit.kmh", sotto: "weather.card.jet", barre: true },
   aerosol: { campo: "aerosol_optical_depth", sotto: "weather.card.aerosol", barre: true },
+  visibility: { campo: "visibility_km", unita: "weather.unit.km", sotto: "weather.card.lowest", barre: true },
   temperature: { campo: "temperature_c", unita: "weather.unit.celsius", barre: false, piccola: true },
-  humidity: { campo: "humidity_pct", unita: "weather.unit.pct", sotto: "weather.card.humidity", barre: false, piccola: true },
   dust: { campo: "dust_ugm3", unita: "weather.unit.dust", sotto: "weather.card.mean", barre: false, piccola: true },
   wind_700: { campo: "wind_700hpa_kmh", unita: "weather.unit.kmh", barre: false, piccola: true },
-  wind_200: { campo: "wind_200hpa_kmh", unita: "weather.unit.kmh", sotto: "weather.card.mean", barre: false, piccola: true },
 }
 
 /** Le carte grandi e piccole, nell'ordine che il backend da' alle misure. */
-export const CARTE_GRANDI: readonly Codice[] = ["cloud", "cloud_low", "rain", "wind", "condensation", "seeing", "jet", "aerosol"]
-export const CARTE_PICCOLE: readonly Codice[] = ["temperature", "humidity", "dust", "wind_700", "wind_200"]
+export const CARTE_GRANDI: readonly Codice[] = ["cloud", "cloud_low", "rain", "visibility", "wind", "condensation", "seeing", "jet", "aerosol"]
+export const CARTE_PICCOLE: readonly Codice[] = ["temperature", "dust", "wind_700"]
 
 const TINTE = {
   go: "as-parametro__tinta--buona",
@@ -99,7 +98,7 @@ function Carta({ misura: m, notte: n, ore, scala, forma, nome, oraDelCielo }: {
   const qui = ora === null ? undefined : ore[ora]
   const unita = forma.unita ? t(forma.unita) : ""
   const sottoNotte = sotto(m, n, forma)
-  const valoreNotte = m.value === null ? t("weather.card.unknown") : numero(m.value)
+  const valoreNotte = m.value === null ? t("weather.card.unknown") : numero(tondo(m.code, m.value))
   const livello = qui && m.code in qui.levels ? qui.levels[m.code as keyof Ora["levels"]] : null
   const oraDa = (ev: PointerEvent<HTMLDivElement>) => {
     const q = ev.currentTarget.getBoundingClientRect()
@@ -117,7 +116,7 @@ function Carta({ misura: m, notte: n, ore, scala, forma, nome, oraDelCielo }: {
     <article className={forma.piccola ? "as-parametro as-parametro--piccolo" : "as-parametro"} data-a-ora={fissa === null ? undefined : ""}>
       <h3 className="as-parametro__nome">{nome}</h3>
       <p className="as-parametro__valore">
-        <b>{qui ? (valoreQui === null ? t("weather.card.unknown") : numero(valoreQui)) : valoreNotte}</b>
+        <b>{qui ? (valoreQui === null ? t("weather.card.unknown") : numero(tondo(m.code, valoreQui))) : valoreNotte}</b>
         {(qui ? valoreQui : m.value) !== null && <span className={m.code === "seeing" ? "as-parametro__segno" : undefined}>{unita}</span>}
       </p>
       <p className="as-parametro__sotto">
@@ -141,7 +140,7 @@ function Carta({ misura: m, notte: n, ore, scala, forma, nome, oraDelCielo }: {
       <div className="as-parametro__grafico" data-meteo-carta-piano="" tabIndex={0} role="slider" aria-label={t("weather.card.hours", { nome })}
         aria-valuemin={0} aria-valuemax={ore.length - 1} aria-valuenow={ora ?? undefined}
         aria-valuetext={qui
-          ? t("weather.card.valueAt", { ora: oraDelSito(qui.at), v: valoreQui === null ? t("weather.card.unknown") : `${numero(valoreQui)} ${unita}` })
+          ? t("weather.card.valueAt", { ora: oraDelSito(qui.at), v: valoreQui === null ? t("weather.card.unknown") : `${numero(tondo(m.code, valoreQui))} ${unita}` })
           : t("weather.card.valueNight", { v: `${valoreNotte} ${unita}`, sotto: sottoNotte })}
         onPointerDown={(ev) => {
           const i = oraDa(ev)
@@ -166,6 +165,11 @@ export function oraDalTasto(tasto: string, ora: number | null, ultima: number): 
   const avanti = ora === null ? 0 : Math.min(ultima, ora + 1)
   const indietro = ora === null ? ultima : Math.max(0, ora - 1)
   return ({ ArrowRight: avanti, ArrowUp: avanti, ArrowLeft: indietro, ArrowDown: indietro, Home: 0, End: ultima } as Record<string, number>)[tasto]
+}
+
+/** La visibilita' da 10 km in su si dice a chilometri interi, sotto con un decimale. */
+export function tondo(code: Codice, v: number): number {
+  return code === "visibility" && v >= 10 ? Math.round(v) : v
 }
 
 /** Il valore di un'ora sulla carta: il campo che la carta disegna. */
@@ -233,6 +237,10 @@ function picco(m: Misura, n: Notte, forma: Forma, scala: Scala | undefined): str
     return sotto ? t("weather.card.dewSince", { s: soglia, da: oraDelSito(sotto.since) }) : t("weather.card.dewNever", { s: soglia })
   }
   if (m.code === "rain" && !m.peak) return t("weather.card.noRain")
+  if (m.code === "visibility") {
+    const nebbia = m.spans.find((s) => s.level === "nogo")
+    return nebbia ? t("weather.card.fogSince", { da: oraDelSito(nebbia.since) }) : t("weather.card.noFog")
+  }
   if (m.peak === null || !m.peak_at || !m.peak_until) return ""
   const detto = t("weather.card.peak", { v: conUnita(m.peak, forma.unita), da: oraDelSito(m.peak_at), a: oraDelSito(m.peak_until) })
   if (m.code === "seeing" && m.known_until && m.known_hours < (n.window_hours ?? 0)) {

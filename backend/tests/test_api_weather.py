@@ -175,7 +175,7 @@ def dintorni_del_cielo():
             inizio=inizio,
             ore=12 * 24,
             wind_250hpa_kmh=150.0,
-            wind_200hpa_kmh=140.0,
+            visibility_km=12000.0,
             per_modello={"icon_seamless": {"wind_250hpa_kmh": 90.0}},
         ),
         "air-quality": aria(inizio=inizio, ore=10 * 24),
@@ -201,7 +201,7 @@ def test_three_nights_are_full_and_the_following_are_a_trend(letto):
 def test_the_sky_aloft_joins_the_wind_of_the_model_and_the_seeing_of_its_hour(letto):
     notte = letto.get("/api/v1/weather").json()["nights"][1]
     assert {o["wind_250hpa_kmh"] for o in notte["hours"]} == {150.0}
-    assert {o["wind_200hpa_kmh"] for o in notte["hours"]} == {140.0}
+    assert {o["visibility_km"] for o in notte["hours"]} == {12.0}
     # senza chiave Meteoblue il seeing non c'e': nessuna fonte lo stima al suo posto
     assert {o["seeing_arcsec"] for o in notte["hours"]} == {None}
     assert all("transparency_from" not in o for o in notte["hours"])
