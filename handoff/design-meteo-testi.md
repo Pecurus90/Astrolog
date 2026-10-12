@@ -42,8 +42,11 @@ stessa disposizione.
    medio. Domenica, con raffiche fino a 44 km/h, la riga ci deve essere. La carta resta una sola,
    «Vento», con le raffiche disegnate sopra le barrette come oggi.
 
-4. **Le parole della Luna sono sue**: «buona per la banda larga» fino al 25% illuminata, «al
-   limite» fino al 50%, «solo banda stretta» oltre. Sulla tavola oggi ha «niente» e «incerta».
+4. **La riga della Luna fra gli altri fattori: il testo sta cambiando.** Non usare «niente» e
+   «incerta», e non usare la frase «dalle {da}, al {pct}% · solo per la banda larga» del
+   vocabolario: Marco la sta riscrivendo. Lascia il posto col filo tratteggiato, lungo quanto una
+   frase come «Luna al 55% dalle 23 · banda larga fino alle 23, poi banda stretta». La regola non
+   cambia: la Luna compare solo se e' sopra l'orizzonte col buio e illuminata oltre il 25%.
 
 5. **L'ordine delle carte e degli altri fattori** lo decide il backend: Nuvole, Nuvole basse, poi
    le misure giudicate dalla parola peggiore (non adatta, incerta, senza parola, buona), a pari

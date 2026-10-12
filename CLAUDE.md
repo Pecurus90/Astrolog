@@ -84,6 +84,10 @@ va nel riassunto. Una regola controllabile da una macchina sta in una macchina, 
 - **Una superficie si collauda nel browser**, guardando il contenuto (skill `collaudo-dal-vivo`).
 - **Un'idea di Marco "per dopo" resta un'idea**: non diventa una richiesta al disegno ne' una
   decisione nel contratto finche' non dice di farla.
+- **Prima la risposta, poi il lavoro.** Una domanda di Marco si risponde subito, anche se arriva
+  dentro una scelta. Un testo, una frase o una soglia nuovi si concordano prima del codice: la mia
+  proposta, le convenzioni trovate, poi si scrive. Se Marco aspetta qualcosa da dare ad altri
+  (Design), quello viene prima di tutto.
 - **Quando Marco mi corregge su un modo di sbagliare**, nello stesso turno: prima uno strumento
   (test, hook, controllo di pre-commit), solo se non si puo' una riga qui.
 - **Una fetta arriva a schermo**: parte da cio' che l'utente vedra' e ci arriva in un commit.
