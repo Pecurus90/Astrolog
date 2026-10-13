@@ -429,7 +429,9 @@ Sotto ci sono le **carte**, prima quelle che pesano di piu': nuvole, nuvole bass
 visibilita', vento, condensa, seeing, jet stream e aerosol, e in piccolo temperatura e rugiada,
 polvere e il vento a 700 hPa. La **visibilita'** dice la minima nel buio in chilometri: sotto 1 km
 e' **nebbia** (la definizione dell'Organizzazione meteorologica mondiale), e la carta dice da che
-ora; non tutti i modelli la danno, e allora la carta dice *Non disponibile*. Ogni carta dice il **valore della notte** e cosa vuol dire (*media nel
+ora; non tutti i modelli la danno, e allora la carta dice *Non disponibile*. Le sue barrette
+arrivano a 20 km e si schiacciano in alto, cosi' la soglia della nebbia si legge anche in una notte
+limpida. Ogni carta dice il **valore della notte** e cosa vuol dire (*media nel
 buio*, *totale nel buio*, *la minima*), la parola con l'ora in cui comincia (*incerta dalle 22:00,
 non adatta dalle 01:00*), il **picco** con le sue ore, e ha le barrette **ora per ora** dall'ultima ora
 di giorno all'alba, col colore del giudizio di ogni ora e le soglie tratteggiate. Un'ora che il

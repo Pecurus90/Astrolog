@@ -274,3 +274,12 @@ def test_each_chart_has_its_axis_over_the_hours_the_page_draws():
     assert (calmo["cloud"].axis_min, calmo["cloud"].axis_max) == (0.0, 100.0)
     aria = misure(notte({"temperature_c": 9.0, "dew_point_c": 2.0}, {"temperature_c": 12.0}))
     assert (aria["temperature"].axis_min, aria["temperature"].axis_max) == (2.0, 12.0)
+
+
+def test_the_visibility_chart_stops_at_20_km_and_squeezes_the_high_values():
+    """La nebbia sta sotto 1 km: su una scala che arriva a 40 la soglia non si legge. La scala va
+    da 0 a 20 anche in una notte limpida, e cresce con la radice; le altre restano lineari."""
+    limpida = misure(notte({"visibility_km": 41.0, "wind_kmh": 10.0}))
+    assert (limpida["visibility"].axis_min, limpida["visibility"].axis_max) == (0.0, 20.0)
+    assert limpida["visibility"].axis_curve == "sqrt"
+    assert limpida["wind"].axis_curve == "linear"

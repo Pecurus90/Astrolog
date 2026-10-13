@@ -101,7 +101,9 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
     ... to less than 1 km", https://cloudatlas.wmo.int/en/fog-compared-with-mist.html); da 1 km
     in su e' foschia e non ha parola sua. Arriva in metri da Open-Meteo e si scrive in km;
     ECMWF non la da' (misurato il 12/10/2026: `null` a ogni ora) e la carta dice *Non
-    disponibile*: un modello non prende il valore di un altro. L'archivio delle notti passate
+    disponibile*: un modello non prende il valore di un altro. Il suo grafico va da 0 a 20 km
+    anche in una notte piu' limpida e cresce con la radice del valore (`axis_curve: sqrt`,
+    foglio v36 di Design): lineare, la soglia di 1 km starebbe sul fondo. L'archivio delle notti passate
     non la chiede.
   Neutri, senza parola: nuvole medie e alte, temperatura, punto di rugiada, vento a 700 hPa (si
   confronta col solito del sito), polveri. L'umidita' resta nelle ore, per il cielo; la sua carta

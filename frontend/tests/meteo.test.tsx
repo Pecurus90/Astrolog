@@ -66,7 +66,7 @@ function ora(at: string, sky: string, campi: Record<string, unknown> = {}) {
 function misura(code: string, campi: Record<string, unknown> = {}) {
   return {
     code, level: null, weighs: false, value: null, peak: null, peak_at: null, peak_until: null,
-    spans: [], axis_min: 0, axis_max: 100, since: null, until: null, hours: 0, known_hours: 3,
+    spans: [], axis_min: 0, axis_max: 100, axis_curve: "linear", since: null, until: null, hours: 0, known_hours: 3,
     known_since: null, known_until: null, known_from_start: false, known_to_end: false, ...campi,
   }
 }
@@ -425,6 +425,24 @@ describe("il Meteo, le carte", () => {
     expect(visibilita.textContent).toContain("non adatta dalle 22:00")
     expect(visibilita.textContent).toContain("nebbia dalle 22:00")
     expect(pagina.querySelector(".as-pesano")?.textContent).toContain("nebbia dalle 22:00 alle 23:00 \u00b7 1 ora")
+  })
+
+  it("la carta della visibilit\u00e0 cresce con la radice: la soglia di 1 km si stacca dal fondo e 41 km non escono dalla tela", async () => {
+    const limpida = misura("visibility", { level: "go", value: 41, peak: 41, axis_max: 20, axis_curve: "sqrt" })
+    meteo({
+      fetched_at: "2026-09-25T15:00:00.000Z",
+      nights: [{ ...NOTTE, hours: NOTTE.hours.map((o) => ({ ...o, visibility_km: 41 })), measures: [...NOTTE.measures.filter((m) => m.code !== "visibility"), limpida] }],
+      scales: [{ code: "visibility", steps: [{ level: "nogo", bound: 1, strict: true }], lower_is_worse: true }],
+    })
+    await apriMeteo()
+
+    await scheda()
+    const tela = carta(/^Visibilit/)
+    // the chart is 64 tall: floor at 62, top at 4
+    expect(Number(tela.querySelector(".as-parametro__soglia")?.getAttribute("y1"))).toBeCloseTo(62 - Math.sqrt(1 / 20) * 58, 1)
+    const barre = [...tela.querySelectorAll(".as-parametro__barra")]
+    expect(barre.length).toBeGreaterThan(0)
+    for (const b of barre) expect(Number(b.getAttribute("y"))).toBeCloseTo(4, 1)
   })
 
   it("la visibilit\u00e0 si sceglie sulla scala di destra del cielo", () => {

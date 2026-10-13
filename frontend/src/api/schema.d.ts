@@ -3751,7 +3751,8 @@ export interface components {
          *     (for `rain`, the total), `peak` the worst hour's value and when; `known_*` say which hours were
          *     known, so a mean over part of the night is said as such; `known_from_start`/`known_to_end`
          *     say whether they reach the window's first/last hour. Neutral measures have no `level`.
-         *     `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours.
+         *     `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours
+         *     (`axis_curve` `sqrt`: the chart grows with the square root of the value).
          *     `value` is the cold at its lowest (temperature, condensation), and so the visibility.
          */
         WeatherMeasureOut: {
@@ -3778,6 +3779,11 @@ export interface components {
             axis_min: number | null;
             /** Axis Max */
             axis_max: number | null;
+            /**
+             * Axis Curve
+             * @enum {string}
+             */
+            axis_curve: "linear" | "sqrt";
             /** Since */
             since: string | null;
             /** Until */

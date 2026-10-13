@@ -88,7 +88,8 @@ class WeatherMeasureOut(BaseModel):
     (for `rain`, the total), `peak` the worst hour's value and when; `known_*` say which hours were
     known, so a mean over part of the night is said as such; `known_from_start`/`known_to_end`
     say whether they reach the window's first/last hour. Neutral measures have no `level`.
-    `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours.
+    `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours
+    (`axis_curve` `sqrt`: the chart grows with the square root of the value).
     `value` is the cold at its lowest (temperature, condensation), and so the visibility."""
 
     code: MeasureCode
@@ -101,6 +102,7 @@ class WeatherMeasureOut(BaseModel):
     spans: list[WeatherSpanOut]
     axis_min: float | None
     axis_max: float | None
+    axis_curve: Literal["linear", "sqrt"]
     since: str | None
     until: str | None
     hours: int

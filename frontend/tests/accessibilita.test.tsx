@@ -436,7 +436,7 @@ describe("l accessibilita della prima pagina", () => {
                 {
                   code: "wind", level: "go", weighs: false, value: 5, peak: 5,
                   peak_at: "2026-09-26T22:00:00+02:00", peak_until: "2026-09-26T23:00:00+02:00",
-                  spans: [], axis_min: 0, axis_max: 45, since: "2026-09-26T22:00:00+02:00",
+                  spans: [], axis_min: 0, axis_max: 45, axis_curve: "linear", since: "2026-09-26T22:00:00+02:00",
                   until: "2026-09-27T00:00:00+02:00", hours: 2, known_hours: 2,
                   known_since: "2026-09-26T22:00:00+02:00", known_until: "2026-09-27T00:00:00+02:00",
                 },
@@ -444,7 +444,7 @@ describe("l accessibilita della prima pagina", () => {
                   code: "gust", level: "nogo", weighs: true, value: 31, peak: 31,
                   peak_at: "2026-09-26T22:00:00+02:00", peak_until: "2026-09-26T23:00:00+02:00",
                   spans: [{ level: "nogo", since: "2026-09-26T22:00:00+02:00", until: "2026-09-27T00:00:00+02:00", hours: 2 }],
-                  axis_min: 0, axis_max: 45, since: "2026-09-26T22:00:00+02:00",
+                  axis_min: 0, axis_max: 45, axis_curve: "linear", since: "2026-09-26T22:00:00+02:00",
                   until: "2026-09-27T00:00:00+02:00", hours: 2, known_hours: 2,
                   known_since: "2026-09-26T22:00:00+02:00", known_until: "2026-09-27T00:00:00+02:00",
                 },

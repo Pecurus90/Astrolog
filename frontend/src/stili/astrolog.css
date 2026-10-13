@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AstroLog — astrolog.css  ·  v35 (12/10/2026)
+   AstroLog — astrolog.css  ·  v37 (13/10/2026)
 
    FILE GENERATO: non si modifica qui. Le sorgenti stanno in foglio/, un
    file per famiglia; questo foglio e' la loro unione, nell'ordine qui
@@ -61,6 +61,7 @@
      73-pagina-archivio.css
      74-pagina-primo-avvio.css
      75-pagina-conferma.css
+     79-telefono.css
    ========================================================================== */
 
 /* ── foglio/10-token.css ──────────────────────────────────────────────── */
@@ -387,6 +388,22 @@
   --tabella-segno-colonna-telefono: 30px;
   --tabella-segno-sopra:      18px;  /* il tratto in linea col nome, non con la cella */
   --tabella-barra:            6px;   /* la barra delle ore */
+  /* v37 · il telefono (79) */
+  --tel-freccia:              7px;   /* la freccia della riga di riepilogo */
+  --tel-freccia-piccola:      6px;   /* quella di «Altri fattori» */
+  --tel-freccia-alza:         3px;   /* la freccia girata sta sulla riga del testo */
+  --tel-modello-largo:        8.5rem; /* il bottone del modello in testa al Meteo */
+  --tel-affaccio:             3rem;  /* quanto si vede del gruppo di giorni dopo */
+  --tel-carta-alta:           5.75rem;
+  --tel-carta-segno:          18px;  /* il segno della misura nella carta piccola */
+  --tel-carta-valore:         1.75rem;
+  --tel-carta-barre:          20px;  /* le barrette della notte nella carta piccola */
+  --tel-carta-lato:           6px;   /* il margine di lato: quattro carte in 358 px */
+  --tel-stacco:               3px;
+  --tel-anteprima:            4.75rem; /* l'anteprima della carta dell'Archivio */
+  --tel-sopra:                20;    /* il riquadro di «Altri fattori» sopra la pagina */
+  --tabella-filtro-barra:     32px;  /* v36: la pista della barretta di un filtro (per filtro) */
+  --tabella-filtro-alto:      4px;
   --tratto-largo:             28px;
   --tratto-alto:              8px;
   --suggerimento-minimo:      170px;
@@ -840,6 +857,11 @@ body.as-app, .as-app {
    destra; la barra delle ore nella sua colonna. Il tratto della curva
    (.as-tratto, 38-legenda.css) lega la riga alla sua curva nella volta.
    Sul telefono la colonna di stanotte esce.
+   v36: la barra sta sotto le ore (__col-ore); «per filtro» e' una riga per
+   filtro, la barretta nella tinta della banda (65-filtri) pesata sul filtro
+   piu' lungo della tabella (style="--quanto: 95%"), il nome, le ore.
+   Le colonne __col-largo (per filtro, transito, dalla Luna, finestra)
+   escono sul telefono.
    ========================================================================== */
 .as-tabella { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .as-tabella th { text-align: left; font-weight: var(--peso-normale); font-size: var(--testo-minuto); color: var(--inchiostro-debole); padding: 0 var(--spazio-2) var(--spazio-2); border-bottom: 1px solid var(--linea-forte); }
@@ -854,9 +876,19 @@ body.as-app, .as-app {
 .as-tabella__tipo { display: block; font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
 /* --quanto: la parte fatta, dai dati (style="--quanto: 72%") */
 .as-tabella__barra { display: block; height: var(--tabella-barra); margin-top: var(--spazio-2); border-radius: calc(var(--tabella-barra) / 2); background: linear-gradient(90deg, var(--accento) var(--quanto), var(--linea-forte) var(--quanto)); }
+.as-tabella__col-ore { width: 1%; }
+.as-tabella__col-ore .as-tabella__barra { min-width: calc(var(--tabella-filtro-barra) * 2); }
+.as-tabella__filtri { display: grid; gap: var(--stacco-minimo); margin: 0; padding: 0; list-style: none; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); white-space: nowrap; }
+.as-tabella__filtri li { display: grid; grid-template-columns: var(--tabella-filtro-barra) auto; align-items: center; gap: var(--spazio-2); }
+.as-tabella__filtri b { font-weight: var(--peso-medio); color: var(--inchiostro); margin-right: var(--spazio-1); }
+.as-tabella__filtro { display: block; height: var(--tabella-filtro-alto); border-radius: calc(var(--tabella-filtro-alto) / 2); background: var(--linea); overflow: hidden; }
+.as-tabella__filtro > i { display: block; height: 100%; width: var(--quanto); border-radius: inherit; }
+.as-tabella__pannelli { display: grid; justify-items: start; gap: var(--stacco-minimo); margin-top: var(--spazio-1); font-size: var(--testo-minuto); color: var(--inchiostro-debole); }
+.as-tabella__col-finestra { min-width: 7em; }
 @container colonna (max-width: 899px) {
-  .as-tabella__col-stanotte { display: none; }
+  .as-tabella__col-stanotte, .as-tabella__col-largo { display: none; }
   .as-tabella__col-barra { width: 32%; }
+  .as-tabella__col-ore { width: 32%; }
   .as-tabella td, .as-tabella th { padding-left: var(--spazio-1); padding-right: var(--spazio-1); }
   .as-tabella__col-segno { width: var(--tabella-segno-colonna-telefono); }
 }
@@ -1328,7 +1360,8 @@ body.as-app, .as-app {
    apre l'andamento sotto la fila (.as-pannello). Sul telefono due colonne,
    la frase sotto la cifra solo nelle prime due.
    .as-serate: tre carte basse, l'icona del meteo, giorno e frase, il
-   semaforo; ognuna apre la sua serata (.as-pannello--serata).
+   semaforo; ognuna e' un rimando alla pagina Meteo su quella notte
+   (a.as-serata; button.as-serata resta per chi apre ancora .as-pannello--serata).
    La voce aperta e' quella del resto dell'app: velo e filo d'accento.
    v27, dal Meteo:
    .as-notti: le sette notti in fila, in due gruppi (le tre intere, la
@@ -1355,6 +1388,11 @@ body.as-app, .as-app {
 .as-serate { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: var(--spazio-3); }
 .as-serata { position: relative; width: 100%; display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: var(--spazio-3); align-items: center; padding: var(--spazio-3) var(--spazio-4); border-radius: var(--raggio-grande); background: var(--fondo-carta); box-shadow: var(--ombra-carta); overflow: hidden; }
 :where(button.as-serata) { all: unset; box-sizing: border-box; cursor: pointer; text-align: left; }
+/* la carta che rimanda non e' un link di testo: inchiostro, mai l'accento dei link di pagina */
+/* (classe doppia: vince su .as-dashboard a e .as-meteo a, che vengono dopo nella cascata) */
+a.as-serata.as-serata, a.as-serata.as-serata:hover { color: var(--inchiostro); text-decoration: none; }
+a.as-serata.as-serata:hover { background: var(--fondo-rilievo); }
+a.as-serata:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
 button.as-serata:hover { background: var(--fondo-rilievo); }
 button.as-serata:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
 button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-shadow: inset 0 0 0 1px var(--accento-sopra); }
@@ -1414,13 +1452,25 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
    --niente; --neutro dove la misura non ha soglia), chiare fuori dal buio;
    il dato mancante e' un tratteggio (motivo). Toccata una barretta, la carta
    va a quell'ora e ci resta (data-a-ora, il filo d'accento, «× notte»).
-   .as-parametri: la griglia delle carte; --piccole per umidita', polvere e
-   vento in quota. --avviso: la carta senza dato, con la riga di stato.
+   .as-parametri: la griglia delle carte; --piccole per temperatura e rugiada,
+   polvere e vento a 700 hPa (v36: escono umidita' e vento a 200 hPa); --fila, le sei della Dashboard. --avviso: la carta senza
+   dato, con la riga di stato. Come bottone (button.as-parametro, sulla
+   Dashboard) la carta apre il suo grafico: aperta, il velo d'accento.
    I tratti dentro il grafico (spessori, tratteggi) sono il disegno del
    grafico, come nella volta; i colori sono i token degli esiti.
    ========================================================================== */
 .as-parametri { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--parametro-minimo), 1fr)); gap: var(--spazio-3); }
 .as-parametri--piccole { grid-template-columns: repeat(auto-fill, minmax(var(--parametro-minimo-piccolo), 1fr)); }
+/* la fila da sei della Dashboard: sempre le stesse sei carte, nello stesso posto; tre per riga sotto la soglia compatta */
+.as-parametri--fila { grid-template-columns: repeat(6, minmax(0,1fr)); }
+@container colonna (max-width: 1179px) { .as-parametri.as-parametri--fila { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+@container colonna (max-width: 899px) { .as-parametri.as-parametri--fila { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+/* la carta che apre: sulla Dashboard e' un bottone e apre il suo grafico sotto la fila */
+:where(button.as-parametro) { all: unset; box-sizing: border-box; cursor: pointer; text-align: left; }
+button.as-parametro:hover { background: var(--fondo-rilievo); }
+button.as-parametro:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
+button.as-parametro[aria-expanded="true"] { background: var(--accento-velo); box-shadow: inset 0 0 0 1px var(--accento-sopra); }
+button.as-parametro .as-parametro__sotto { display: block; }
 .as-parametro { display: grid; gap: var(--spazio-1); align-content: start; padding: var(--spazio-4); border-radius: var(--raggio-grande); background: var(--fondo-carta); box-shadow: var(--ombra-carta); min-width: 0; }
 .as-parametro h3, .as-parametro p { margin: 0; }
 .as-parametro[data-a-ora] { box-shadow: var(--ombra-carta), inset 0 0 0 1px var(--accento-sopra); }
@@ -2571,6 +2621,9 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-cielo__riga--incerta { color: #f5c26b; }
 .as-cielo__riga--niente { color: #ff8a78; }
 .as-cielo__riga--sotto { color: #8e95c0; }
+/* sul desktop il lettore aggiunge le misure col verdetto, sotto un filo: si apre dall'alto della tela e si allarga per la parola */
+.as-cielo__lettore-misure { display: grid; gap: 3px; margin-top: 3px; padding-top: 6px; border-top: 1px solid rgba(238,240,255,.14); }
+.as-cielo__tela .as-volta__lettore:has(.as-cielo__lettore-misure) { top: var(--spazio-2); min-width: 250px; }
 /* la legenda sta sul fondo della pagina, i campioni hanno le tinte del cielo */
 .as-cielo__legenda { display: flex; flex-wrap: wrap; gap: var(--spazio-2) var(--spazio-5); margin: 0; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
 .as-cielo__legenda span { display: inline-flex; align-items: center; gap: var(--spazio-2); }
@@ -2602,6 +2655,8 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
    ========================================================================== */
 .as-scala__eti { fill: #9aa1cc; font: 11px var(--carattere-cifre); }
 .as-scala__eti--soglia { fill: #c4c9ec; }
+/* il valore di ogni ora, sul tratto della metrica (texture del cielo: tinta scritta qui come le etichette) */
+.as-scala__valore { fill: #e4e7ff; font: 11px var(--carattere-cifre); paint-order: stroke; stroke: rgba(3,4,15,.55); stroke-width: 3px; stroke-linejoin: round; }
 .as-scala__unita { fill: #eef0ff; font: 600 11px var(--carattere-cifre); }
 .as-scala__soglia { stroke: rgba(238,240,255,.32); stroke-dasharray: 4 4; }
 .as-scala__tratto { fill: none; stroke-linecap: round; stroke-linejoin: round; }
@@ -2772,6 +2827,10 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-dashboard__capo { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spazio-4); }
 .as-dashboard__coppia { display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap: var(--spazio-7); align-items: start; }
 .as-dashboard__progetti, .as-dashboard__lavoro { display: grid; gap: var(--spazio-3); }
+/* v36: l'ordine della tabella accanto al titolo, «Tutti» in fondo */
+.as-dashboard__ordina { margin-right: auto; }
+/* v36: con le sette colonne la tabella sotto la soglia compatta non sta nei due terzi: progetti e lavoro vanno uno sotto l'altro */
+@container colonna (max-width: 1179px) { .as-dashboard__coppia { grid-template-columns: minmax(0,1fr); } }
 .as-dashboard__anno { display: grid; gap: var(--spazio-5); }
 .as-dashboard__medie { margin: 0; display: flex; flex-wrap: wrap; gap: var(--spazio-4) var(--spazio-8); }
 .as-dashboard__medie div { display: grid; }
@@ -2846,9 +2905,10 @@ button.as-serata[aria-expanded="true"] { background: var(--accento-velo); box-sh
 .as-meteo__tendenza { display: grid; gap: var(--spazio-4); }
 .as-meteo__tendenza-nota { color: var(--inchiostro-tenue); max-width: var(--colonna-prosa); }
 .as-meteo__fonti { display: grid; gap: var(--spazio-1); margin: 0; padding: 0; list-style: none; font-size: var(--testo-minuto); color: var(--inchiostro-debole); line-height: var(--interlinea-prosa); max-width: var(--colonna-prosa); }
-/* v35: la fila delle notti sta sotto la testa senza la fascia vuota; le otto carte grandi vanno 4 + 4 */
+/* v35: la fila delle notti sta sotto la testa senza la fascia vuota.
+   v36: nove carte grandi in tre file da tre, e sotto le tre piccole sulle stesse colonne */
 .as-meteo__testa + .as-notti { margin-top: calc(var(--spazio-3) - var(--spazio-7)); }
-@container colonna (min-width: 900px) { .as-meteo .as-parametri:not(.as-parametri--piccole) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@container colonna (min-width: 900px) { .as-meteo .as-parametri { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @container colonna (max-width: 899px) {
   .as-meteo { gap: var(--spazio-6); }
   .as-meteo__testa { grid-template-columns: minmax(0,1fr); }
@@ -3428,3 +3488,188 @@ p.as-carta-oggetto__filtri { font-size: var(--testo-minuto); }
 .as-conferma__sk-frase { height: 1em; width: 70%; }
 .as-conferma__sk-chiusa { height: var(--conferma-sk-chiusa); border-radius: var(--raggio-carta); }
 .as-conferma__sk-carta { height: var(--conferma-sk-carta); border-radius: var(--raggio-carta); }
+
+/* ── foglio/79-telefono.css ───────────────────────────────────────────── */
+/* ==========================================================================
+   IL TELEFONO — .as-tel- (v37, dalle tavole del 12–13 ottobre 2026)
+   Sotto 900 px di telaio il Meteo, la Dashboard, l'Archivio e le Notti si
+   accorciano: queste regole valgono solo dove l'app mette le classi as-tel-
+   (il markup del telefono, vedi pagine/*-telefono.html).
+   .as-tel-righe / __sez / __apri: la riga di riepilogo; si apre (bottone,
+   aria-expanded + __corpo hidden) o porta alla sua pagina (collegamento).
+   --fermo: la testa di una sezione sempre aperta, che non si tocca.
+   .as-tel-carte / .as-tel-carta: le carte piccole delle misure, quattro per
+   riga nel Meteo, tre nella Dashboard (.as-tel-dash); toccata, la carta apre
+   .as-tel-dettaglio sulla riga sotto, una alla volta.
+   .as-tel-testa, __verdetti, __pesanti: il verdetto in testa al Meteo, che
+   apre «Altri fattori» in un riquadro sopra la pagina (eccezione voluta a
+   «niente galleggia», DECISIONI 12/10).
+   Sta in fondo alla cascata (79): deve vincere sulle pagine 70–75.
+   ========================================================================== */
+/* --- la riga di riepilogo: si apre (bottone) o porta alla sua pagina (collegamento) --- */
+.as-tel-righe { margin: 0; padding: 0; list-style: none; display: grid; min-width: 0; overflow: clip; }
+.as-tel-righe > li + li { border-top: 1px solid var(--linea); }
+.as-tel-sez { min-width: 0; }
+.as-tel-sez__h { margin: 0; font: inherit; }
+.as-tel-apri { all: unset; box-sizing: border-box; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "nome dato segno" "sub sub segno"; align-items: center; gap: var(--stacco-minimo) var(--spazio-3); min-height: var(--bersaglio-minimo); padding: var(--spazio-2) var(--spazio-3) var(--spazio-2) var(--spazio-4); color: var(--inchiostro); text-decoration: none; cursor: pointer; }
+.as-tel-apri::after { grid-area: segno; content: ""; width: var(--tel-freccia); height: var(--tel-freccia); margin: 0 var(--spazio-1) var(--tel-freccia-alza); border-right: var(--segno-filo) solid var(--inchiostro-tenue); border-bottom: var(--segno-filo) solid var(--inchiostro-tenue); transform: rotate(45deg); }
+.as-tel-apri[aria-expanded="true"]::after { transform: rotate(-135deg); margin-bottom: calc(-1 * var(--tel-freccia-alza)); }
+a.as-tel-apri::after { transform: rotate(-45deg); margin-bottom: 0; }
+.as-tel-apri:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: calc(-1 * var(--fuoco-spessore)); }
+.as-tel-apri:hover .as-tel-apri__nome { text-decoration: underline; text-underline-offset: var(--sottolineatura-stacco); }
+.as-tel-apri__nome { grid-area: nome; min-width: 0; font-size: var(--testo-corpo); font-weight: var(--peso-medio); line-height: var(--interlinea-stretta); overflow-wrap: anywhere; }
+.as-tel-apri__sub { grid-area: sub; display: flex; align-items: center; gap: var(--spazio-2); min-width: 0; font-size: var(--testo-minuto); line-height: var(--interlinea-stretta); color: var(--inchiostro-tenue); }
+.as-tel-apri__sub:empty { display: none; }
+.as-tel-taglia { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.as-tel-apri__dato { grid-area: dato; display: flex; align-items: baseline; gap: var(--spazio-1); white-space: nowrap; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); font-variant-numeric: tabular-nums; }
+.as-tel-apri__dato b { font-family: var(--carattere-cifre); font-size: var(--titolo-riga); font-weight: var(--peso-cifra); color: var(--inchiostro); }
+.as-tel-apri .as-semaforo { flex: none; align-self: center; }
+.as-tel-corpo { display: grid; gap: var(--spazio-3); min-width: 0; padding: 0 var(--spazio-4) var(--spazio-4); }
+.as-tel-corpo[hidden] { display: none; }
+.as-tel-sez:has(> .as-tel-sez__h [aria-expanded="true"]) { background: var(--fondo-carta-alta); }
+/* dentro la riga aperta niente seconda superficie: un piano solo */
+.as-tel-corpo .as-parametro, .as-tel-corpo .as-carta { padding: 0; background: none; box-shadow: none; border-radius: 0; }
+.as-tel-corpo .as-parametro > .as-parametro__nome { display: none; }
+.as-tel-capo { margin: 0 0 calc(-1 * var(--spazio-2)); }
+/* il segno dell'attesa nella riga: il tondo tratteggiato */
+.as-tel-attesa { display: inline-flex; align-items: center; gap: var(--spazio-1); flex: none; font-weight: var(--peso-forte); color: var(--esito-attesa-inchiostro); white-space: nowrap; }
+.as-tel-attesa::before { content: ""; flex: none; box-sizing: border-box; width: var(--parziale-segno); height: var(--parziale-segno); border-radius: 50%; border: var(--segno-filo) dashed var(--esito-attesa); }
+
+.as-tel-corpo > .as-meteo__capo > .as-soprattitolo { display: none; }
+
+/* --- Meteo: verdetto e modello, i giorni che scorrono, il cielo, le carte delle misure --- */
+.as-meteo.as-tel-meteo { gap: var(--spazio-4); }
+.as-tel-testa { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "verdetto modello" "voci voci"; position: relative; align-items: start; gap: var(--spazio-2) var(--spazio-3); }
+.as-tel-testa > .as-tel-verdetti { grid-area: verdetto; min-width: 0; }
+.as-tel-testa > .as-menu { display: contents; }
+.as-tel-testa .as-menu__apri { grid-area: modello; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: var(--spazio-1); max-width: var(--tel-modello-largo); min-height: var(--bersaglio-minimo); padding: var(--spazio-1) var(--spazio-3); text-align: right; }
+.as-tel-testa .as-menu__apri > span { grid-column: 1; font-size: var(--testo-micro); color: var(--inchiostro-debole); }
+.as-tel-testa .as-menu__apri > b { grid-column: 1; font-size: var(--testo-minuto); line-height: var(--interlinea-stretta); }
+.as-tel-testa .as-menu__apri > i { grid-column: 2; grid-row: 1 / span 2; }
+.as-tel-testa .as-menu__voci { grid-area: voci; }
+/* «pesano»: si apre toccando il verdetto, in un riquadro sopra la pagina (proposta: contraddice «niente galleggia») */
+.as-tel-verdetti { cursor: pointer; border-radius: var(--raggio-medio); }
+.as-tel-verdetti:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
+.as-tel-pesa-segno { display: inline-flex; align-items: center; gap: var(--spazio-1); font-size: var(--testo-minuto); color: var(--inchiostro-accento); white-space: nowrap; }
+.as-tel-pesa-segno::after { content: ""; width: var(--tel-freccia-piccola); height: var(--tel-freccia-piccola); margin: 0 var(--stacco-minimo) var(--tel-freccia-alza); border-right: var(--segno-filo) solid currentColor; border-bottom: var(--segno-filo) solid currentColor; transform: rotate(45deg); }
+[aria-expanded="true"] .as-tel-pesa-segno::after { transform: rotate(-135deg); margin-bottom: calc(-1 * var(--tel-freccia-alza)); }
+.as-tel-testa > .as-tel-pesanti { position: absolute; left: 0; right: 0; top: 100%; z-index: var(--tel-sopra); margin-top: var(--spazio-2); padding: var(--spazio-4); border-radius: var(--raggio-carta); background: var(--fondo-carta); box-shadow: 0 0 0 1px var(--linea-forte), var(--ombra-carta); }
+.as-tel-testa > .as-tel-pesanti[hidden] { display: none; }
+.as-tel-pesanti .as-tel-pesano { flex-direction: column; align-items: stretch; gap: 0; }
+.as-tel-pesanti .as-tel-pesano > li + li { border-top: 1px solid var(--linea); }
+.as-tel-pesano[hidden] { display: none; }
+.as-tel-verdetti { display: grid; }
+.as-tel-verdetto { display: grid; gap: var(--spazio-1); min-width: 0; }
+.as-tel-verdetto[hidden] { display: none; }
+.as-tel-verdetto .as-meteo__notte-nome { margin: 0; font-size: var(--testo-minuto); font-weight: var(--peso-medio); color: var(--inchiostro-tenue); }
+.as-tel-verdetto .as-meteo__verdetto { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-1) var(--spazio-3); margin: 0; }
+.as-tel-verdetto .as-meteo__verdetto .as-meteo__grande { margin: 0; font-size: var(--titolo-sezione); line-height: var(--interlinea-stretta); }
+.as-tel-verdetto .as-meteo__verdetto .as-meteo__grande b { font-size: inherit; margin: 0; display: inline; }
+.as-tel-verdetto .as-meteo__quando { margin: 0; font-size: var(--testo-minuto); color: var(--inchiostro-tenue); }
+.as-tel-arrivo { display: flex; align-items: center; justify-content: space-between; gap: var(--spazio-3); margin-top: calc(-1 * var(--spazio-2)); }
+.as-tel-arrivo .as-meteo__arrivo { margin: 0; font-size: var(--testo-micro); line-height: var(--interlinea-stretta); color: var(--inchiostro-tenue); }
+.as-tel-arrivo > .as-bottone { flex: none; }
+/* i giorni: tre in vista, la tendenza di lato; il quarto si affaccia sul bordo */
+.as-tel-meteo .as-notti { display: flex; gap: var(--spazio-2); margin: 0; padding: 0 0 var(--spazio-1); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.as-tel-meteo .as-notti__gruppo { flex: none; display: grid; align-content: start; gap: var(--spazio-1); min-width: 0; scroll-snap-align: start; }
+.as-tel-meteo .as-notti__gruppo:first-child { width: calc(100% - var(--tel-affaccio)); }
+.as-tel-meteo .as-notti__gruppo:last-child { width: calc((100% - var(--tel-affaccio)) * 4 / 3); }
+.as-tel-meteo .as-notti__gruppo > p { margin: 0; font-size: var(--testo-micro); color: var(--inchiostro-debole); white-space: nowrap; }
+.as-tel-meteo .as-notti__voci { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: var(--spazio-1); margin: 0; padding: 0; overflow: visible; }
+.as-tel-meteo .as-notti__voci .as-voce-notte { box-sizing: border-box; width: auto; min-width: 0; height: 100%; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: start; align-content: start; gap: var(--spazio-1); padding: var(--spazio-2) var(--spazio-3); text-align: left; }
+.as-tel-meteo .as-voce-notte b { font-size: var(--testo-corpo); white-space: nowrap; }
+.as-tel-meteo .as-voce-notte__ore { display: grid; font-size: var(--testo-minuto); line-height: 1.3; color: var(--inchiostro-tenue); white-space: normal; }
+.as-tel-meteo .as-meteo__scheda { display: grid; gap: var(--spazio-4); }
+.as-tel-meteo .as-meteo__scheda[hidden] { display: none; }
+/* le carte delle misure: quattro per riga; aperta, il dettaglio prende la riga sotto (dense riempie i buchi) */
+.as-tel-carte { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: row dense; gap: var(--spazio-2); }
+/* le sei carte della Dashboard: tre per riga, due file piene */
+.as-tel-dash .as-tel-carte { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.as-tel-carta { all: unset; box-sizing: border-box; position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: var(--tel-stacco); min-width: 0; min-height: var(--tel-carta-alta); padding: var(--spazio-2); border-radius: var(--raggio-grande); background: var(--fondo-carta); box-shadow: var(--ombra-carta); color: var(--inchiostro); cursor: pointer; }
+:root[data-tema="atlante"] .as-tel-carta { box-shadow: 0 0 0 1px var(--linea), var(--ombra-carta); }
+.as-tel-carta:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
+.as-tel-carta[aria-expanded="true"] { background: var(--accento-velo); box-shadow: inset 0 0 0 var(--filo) var(--accento-sopra); }
+.as-tel-carta__segno { flex: none; width: var(--tel-carta-segno); height: var(--tel-carta-segno); fill: none; stroke: currentColor; stroke-width: 1.5; color: var(--inchiostro-tenue); }
+.as-tel-carta__nome { font-size: var(--testo-micro); line-height: 1.2; color: var(--inchiostro-tenue); hyphens: auto; overflow-wrap: anywhere; }
+.as-tel-carta__valore { display: flex; align-items: baseline; gap: var(--stacco-minimo); font-size: var(--testo-micro); color: var(--inchiostro-tenue); white-space: nowrap; }
+.as-tel-carta__valore b { font-family: var(--carattere-cifre); font-size: var(--titolo-riga); font-weight: var(--peso-cifra); letter-spacing: -.02em; color: var(--inchiostro); }
+.as-tel-carta__barre { display: block; width: 100%; }
+.as-tel-carta__barre svg { display: block; width: 100%; height: var(--tel-carta-barre); }
+.as-tel-carta > .as-semaforo { margin-top: auto; flex-wrap: wrap; gap: var(--stacco-minimo) var(--tel-stacco); font-size: var(--testo-micro); white-space: normal; }
+.as-tel-carta__capo { display: flex; align-items: flex-start; gap: var(--spazio-1); min-width: 0; }
+.as-tel-carta__capo > .as-tel-carta__segno { width: var(--tel-carta-segno); height: var(--tel-carta-segno); }
+/* «pesano»: pastiglie sotto il verdetto */
+.as-tel-pesano { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: var(--spazio-1) var(--spazio-2); font-size: var(--testo-minuto); }
+.as-tel-pesano > li:first-child { color: var(--inchiostro-debole); }
+.as-tel-pesa { all: unset; box-sizing: border-box; position: relative; display: grid; justify-items: start; gap: var(--spazio-1); width: 100%; min-height: var(--bersaglio-minimo); padding: var(--spazio-1) 0; color: var(--inchiostro-tenue); line-height: var(--interlinea-stretta); text-wrap: pretty; }
+.as-tel-pesa b { font-weight: var(--peso-medio); color: var(--inchiostro); }
+:root[data-tema="atlante"] .as-tel-pesa > .as-semaforo { box-shadow: inset 0 0 0 1px var(--linea-forte); }
+button.as-tel-pesa { cursor: pointer; }
+button.as-tel-pesa:hover > .as-semaforo { background: var(--vetro-sopra); }
+button.as-tel-pesa:focus-visible { outline: var(--fuoco-spessore) solid var(--linea-fuoco); outline-offset: var(--fuoco-stacco); }
+.as-tel-pesa > .as-semaforo { gap: var(--spazio-1); padding: var(--stacco-minimo) var(--spazio-3) var(--stacco-minimo) var(--spazio-2); border-radius: var(--raggio-pillola); background: var(--vetro); box-shadow: inset 0 0 0 1px var(--vetro-filo); }
+.as-tel-pesa .tv-provvisorio { white-space: normal; }
+.as-tel-pesano > li:only-child { color: var(--inchiostro-tenue); }
+.as-tel-dettaglio { grid-column: 1 / -1; min-width: 0; }
+.as-tel-nascosto { display: none !important; }
+.as-tel-voce-sola { padding-bottom: var(--spazio-1); margin-bottom: var(--spazio-1); border-bottom: 1px solid var(--linea); }
+.as-tel-dettaglio[hidden] { display: none; }
+
+/* --- Dashboard: stanotte e la cosa da fare; il resto porta alla sua pagina ----- */
+.as-tel-dash > .as-tel-righe { margin-top: calc(-1 * var(--spazio-2)); }
+/* la testa della sezione aperta e' un titolo: niente freccia, niente sottolineatura */
+.as-tel-apri--fermo { cursor: default; }
+.as-tel-apri--fermo::after { display: none; }
+.as-tel-apri--fermo:hover .as-tel-apri__nome { text-decoration: none; }
+/* 13/10: prossime notti e progetti sempre aperti; il titolo lo dice gia' la testa */
+.as-tel-sez--aperta > .as-tel-corpo--fisso > .as-dashboard__meteo-capo > .as-soprattitolo, .as-tel-sez--aperta > .as-tel-corpo--fisso > .as-soprattitolo, .as-tel-corpo--fisso > .as-dashboard__progetti > .as-dashboard__capo > .as-soprattitolo { display: none; }
+/* la sezione dei progetti entra intera (cosi' l'ordine trova la sua tabella); sul telefono si tocca a 44 px */
+.as-tel-corpo--fisso > .as-dashboard__progetti .as-dashboard__capo :is(.as-segmentato__voce, a) { min-height: var(--bersaglio-minimo); display: inline-flex; align-items: center; }
+.as-tel-adesso { display: grid; gap: var(--spazio-2); }
+
+/* --- Archivio: piu' oggetti per schermo ---------------------------------------- */
+.as-tel-arch .as-restringi { gap: var(--spazio-2); }
+.as-tel-arch .as-restringi__riga { gap: var(--spazio-2) var(--spazio-3); }
+.as-tel-arch .as-archivio__tabella tr { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "nome nome ore" "tipo cost frame" "filtri filtri filtri"; gap: var(--stacco-minimo) var(--spazio-1); padding: var(--spazio-2) 0; }
+.as-tel-arch .as-archivio__tabella td:first-child { grid-area: nome; }
+.as-tel-arch .as-archivio__tabella .as-archivio__col-ore { grid-area: ore; }
+.as-tel-arch .as-archivio__tabella .as-archivio__col-frame { grid-area: frame; }
+.as-tel-arch .as-archivio__tabella .as-archivio__col-tipo { grid-area: tipo; white-space: nowrap; }
+.as-tel-arch .as-archivio__tabella .as-archivio__col-cost { grid-area: cost; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.as-tel-arch .as-archivio__tabella .as-archivio__col-cost::before { content: "· "; }
+.as-tel-arch .as-archivio__tabella .as-archivio__col-filtri { grid-area: filtri; padding-top: var(--spazio-1) !important; }
+.as-tel-arch .as-archivio__tabella .as-archivio__col-mosaico { grid-column: 1 / -1; }
+.as-tel-arch .as-archivio__tabella .as-filtri, .as-tel-arch .as-carta-oggetto__filtri.as-filtri { gap: var(--tel-stacco); }
+.as-tel-arch .as-archivio__tabella .as-filtri__legenda, .as-tel-arch .as-carta-oggetto__filtri .as-filtri__legenda { gap: 0 var(--spazio-3); font-size: var(--testo-micro); line-height: 1.35; }
+.as-tel-arch .as-carta-oggetto { --carta-oggetto-anteprime: var(--tel-anteprima); --carta-oggetto-anteprima-una: var(--tel-anteprima); column-gap: var(--spazio-3); row-gap: var(--spazio-2); padding: var(--spazio-3); }
+.as-tel-arch .as-archivio__carte { gap: var(--spazio-2); }
+.as-tel-arch .as-archivio__carte > li { row-gap: var(--spazio-2); }
+.as-tel-arch .as-carta-oggetto__anteprime, .as-tel-arch .as-carta-oggetto--molte .as-carta-oggetto__anteprime { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tel-stacco); }
+.as-tel-arch .as-carta-oggetto--una .as-carta-oggetto__anteprime { grid-template-columns: minmax(0, 1fr); }
+.as-tel-arch .as-carta-oggetto__immagine { border-radius: var(--raggio-minimo); }
+.as-tel-arch .as-carta-oggetto__chi { display: flex; flex-wrap: wrap; gap: 0 var(--spazio-1); }
+.as-tel-arch .as-carta-oggetto__chi > span + span::before { content: "· "; }
+.as-tel-arch .as-carta-oggetto__ore { margin-top: 0 !important; }
+.as-tel-arch .as-carta-oggetto > .as-carta-oggetto__filtri { padding-top: var(--spazio-2); }
+
+/* --- Notti: i mesi, poi una notte per riga ------------------------------------- */
+.as-tel-mesi { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--spazio-2); }
+.as-tel-mese > .as-tel-sez__h > .as-tel-apri { padding-inline: 0 var(--spazio-3); }
+.as-tel-mese > .as-tel-sez__h .as-tel-apri__nome { font-size: var(--titolo-riga); font-weight: var(--peso-forte); }
+.as-tel-mese:has(> .as-tel-sez__h [aria-expanded="true"]) { background: none; }
+.as-tel-mese > .as-tel-corpo { padding: 0; }
+.as-tel-mese + .as-tel-mese { border-top: 1px solid var(--linea); }
+.as-tel-notte .as-tel-apri__nome b { font-weight: var(--peso-forte); }
+.as-tel-notte .as-tel-apri__nome span { color: var(--inchiostro-tenue); font-weight: var(--peso-normale); }
+.as-tel-notte .as-tel-corpo > .as-notte { gap: var(--spazio-3); }
+.as-tel-notte .as-tel-corpo > .as-notte > .as-notte__quando { display: none; }
+
+/* le carte tutte uguali: ogni pezzo ha la sua riga, qualunque dato mostrino */
+.as-tel-carta { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--tel-carta-segno) calc(2 * 1.2em) var(--tel-carta-valore) var(--tel-carta-barre) minmax(1.3em, auto); row-gap: var(--tel-stacco); align-items: start; min-height: 0; font-size: var(--testo-micro); }
+.as-tel-carta__capo { display: contents; }
+.as-tel-carta__capo > .as-tel-carta__segno { grid-row: 1; width: var(--tel-carta-segno); height: var(--tel-carta-segno); }
+.as-tel-carta__nome { grid-row: 2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: normal; hyphens: auto; }
+.as-tel-carta__valore { grid-row: 3; align-self: end; }
+.as-tel-carta__barre { grid-row: 4; }
+.as-tel-carta > .as-semaforo { grid-row: 5; margin: 0; flex-wrap: nowrap; align-items: flex-start; max-width: 100%; white-space: normal; text-wrap: balance; --semaforo-stacco: var(--stacco-minimo); gap: var(--stacco-minimo); }
+.as-tel-carta { padding: var(--spazio-2) var(--tel-carta-lato); }

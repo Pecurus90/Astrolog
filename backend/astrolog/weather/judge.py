@@ -36,6 +36,13 @@ class NightValue(StrEnum):
     MIN = "min"
 
 
+class Curve(StrEnum):
+    """How a chart grows with its value: `sqrt` squeezes the high values, the low ones get room."""
+
+    LINEAR = "linear"
+    SQRT = "sqrt"
+
+
 @dataclass(frozen=True, slots=True)
 class Step:
     """From `bound` on the hour has `level` (`None`: no word); `strict` means beyond, not from."""
@@ -51,7 +58,7 @@ type Read = Callable[[Hour], float | None]
 @dataclass(frozen=True, slots=True)
 class Scale:
     """How a measure reads an hour; `steps` worst first, an hour crossing none is go. Its chart runs
-    from 0 to at least `axis_top`, else over its values; `second` is a second series on it."""
+    from 0 to at least `axis_top` (no further when `axis_fixed`), else over its values."""
 
     code: Measure
     read: Read
@@ -60,7 +67,9 @@ class Scale:
     night: NightValue = NightValue.MEAN
     digits: int = 1
     axis_top: float | None = None
-    second: Read | None = None
+    axis_fixed: bool = False
+    curve: Curve = Curve.LINEAR
+    second: Read | None = None  # a second series on the same chart
 
 
 def _field(name: str) -> Read:
@@ -154,7 +163,10 @@ SCALES: dict[Measure, Scale] = {
             [Step(NOGO, 1.0, strict=True)],
             lower_is_worse=True,
             night=NightValue.MIN,
-            axis_top=10.0,
+            # Design's sheet v36: up to 20 km on a square root, or the 1 km line sits on the floor.
+            axis_top=20.0,
+            axis_fixed=True,
+            curve=Curve.SQRT,
         ),
     )
 }
@@ -210,6 +222,7 @@ class MeasureNight:
     spans: list[Span]
     axis_min: float | None
     axis_max: float | None
+    axis_curve: Curve
     since: str | None
     until: str | None
     hours: int
@@ -258,7 +271,7 @@ def _axis(scale: Scale, shown: Sequence[Hour]) -> tuple[float | None, float | No
     reads = [scale.read] if scale.second is None else [scale.read, scale.second]
     seen = [v for h in shown for r in reads if (v := r(h)) is not None]
     if scale.axis_top is not None:
-        return 0.0, max([scale.axis_top, *seen])
+        return 0.0, scale.axis_top if scale.axis_fixed else max([scale.axis_top, *seen])
     return (min(seen), max(seen)) if seen else (None, None)
 
 
@@ -307,6 +320,7 @@ def _night(
         spans=_spans(scale, night, after) if scale.steps else [],
         axis_min=axis_min,
         axis_max=axis_max,
+        axis_curve=scale.curve,
         since=at_level[0] if worst else None,
         until=at_level[1] if worst else None,
         hours=at_level[2] if worst else 0,

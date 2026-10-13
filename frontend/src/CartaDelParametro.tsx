@@ -34,6 +34,15 @@ const FORME: Partial<Record<Codice, Forma>> = {
   wind_700: { campo: "wind_700hpa_kmh", unita: "weather.unit.kmh", barre: false, piccola: true },
 }
 
+/** Quanto sale un valore sulla scala che il backend ha scritto, da 0 (il fondo) a 1 (la cima). La
+ *  visibilita' ha la cima ferma e cresce con la radice: oltre la cima un valore resta in cima. */
+export function quota(m: Pick<Misura, "axis_min" | "axis_max" | "axis_curve"> | undefined, v: number): number {
+  const basso = m?.axis_min ?? 0
+  const alto = m?.axis_max ?? 1
+  const lineare = (v - basso) / (alto - basso || 1)
+  return m?.axis_curve === "sqrt" ? Math.sqrt(Math.min(1, Math.max(0, lineare))) : lineare
+}
+
 /** Le carte grandi e piccole, nell'ordine che il backend da' alle misure. */
 export const CARTE_GRANDI: readonly Codice[] = ["cloud", "cloud_low", "rain", "visibility", "wind", "condensation", "seeing", "jet", "aerosol"]
 export const CARTE_PICCOLE: readonly Codice[] = ["temperature", "dust", "wind_700"]
@@ -258,7 +267,7 @@ function Grafico({ misura: m, notte: n, ore, forma, scala, ora }: { misura: Misu
   const passo = LARGO / (ore.length || 1)
   const basso = m.axis_min ?? 0
   const alto = m.axis_max ?? 1
-  const y = (v: number) => ALTO - 2 - ((v - basso) / (alto - basso || 1)) * (ALTO - 6)
+  const y = (v: number) => ALTO - 2 - quota(m, v) * (ALTO - 6)
   return (
     <svg className="as-parametro__tela" viewBox={`0 0 ${LARGO} ${ALTO}`} preserveAspectRatio="none" aria-hidden="true">
       <defs>

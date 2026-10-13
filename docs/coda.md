@@ -838,6 +838,12 @@ riga per voce.
   (nessuno strumento guardato lo fa); (4) **via le carte doppie**: *Vento a 200 hPa* ripete il
   jet stream a 250; *Umidita'* e *Temperatura e rugiada* da pesare contro la *Condensa*, con
   Marco. Fuori: trasparenza (aerosol e polveri la coprono), instabilita', aurora, satelliti.
+- **Meteo e Dashboard sul foglio v37** (Design, 13/10/2026; punto di partenza
+  `docs/consegna-meteo-dashboard.md` nel progetto Design). Fatto: il foglio v37 nell'app, il Meteo
+  desktop a tre file da tre, la scala della visibilita' (0-20 km, a radice). Restano: il markup
+  del telefono (`as-tel-`, Meteo e Dashboard); la Dashboard intera; l'ordine delle carte del Meteo
+  (la tavola lo tiene fisso, il contratto lo vuole dal peggiore: da decidere con Marco). Le tavole
+  intere si scaricano dal browser (`GetFile` del progetto): DesignSync le taglia a 256 KiB.
 - **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,
   Voyager, Telescopius, SkyTools, TheAstroImagingPlanner). La disposizione non cambia: sono
   colonne. (1) **distanza dalla Luna** del progetto stanotte; (2) **ore utili stanotte** (buio,

@@ -1,6 +1,6 @@
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react"
 
-import { oraDalTasto, parola, tondo } from "./CartaDelParametro"
+import { oraDalTasto, parola, quota, tondo } from "./CartaDelParametro"
 import type { components } from "./api/schema"
 import { type Chiave, numero, oraDelSito, t } from "./i18n"
 
@@ -284,7 +284,7 @@ function ScalaDiDestra({ destra, ore, misura: m, scala, x, passo, id }: {
   const { campo, unita } = DISEGNO[destra]
   const basso = m?.axis_min ?? 0
   const alto = m?.axis_max ?? 1
-  const y = (v: number) => FONDO - ((v - basso) / (alto - basso || 1)) * (FONDO - CIMA)
+  const y = (v: number) => FONDO - quota(m, v) * (FONDO - CIMA)
   const livello = (o: Ora) => o.levels[destra]
   const tacche = [basso, ...(scala?.steps ?? []).map((s) => s.bound).filter((b) => b > basso && b < alto), alto]
   const soglie = new Set((scala?.steps ?? []).map((s) => s.bound))
