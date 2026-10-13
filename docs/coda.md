@@ -840,9 +840,9 @@ riga per voce.
   Marco. Fuori: trasparenza (aerosol e polveri la coprono), instabilita', aurora, satelliti.
 - **Meteo e Dashboard sul foglio v37** (Design, 13/10/2026; punto di partenza
   `docs/consegna-meteo-dashboard.md` nel progetto Design). Fatto: il foglio v37 nell'app, il Meteo
-  desktop a tre file da tre, la scala della visibilita' (0-20 km, a radice). Restano: il markup
-  del telefono (`as-tel-`, Meteo e Dashboard); la Dashboard intera; l'ordine delle carte del Meteo
-  (la tavola lo tiene fisso, il contratto lo vuole dal peggiore: da decidere con Marco). Le tavole
+  desktop a tre file da tre, la scala della visibilita' (0-20 km, a radice), le carte al posto
+  fisso della tavola (Marco, 13/10/2026). Restano: il markup del telefono (`as-tel-`, Meteo e
+  Dashboard); la Dashboard intera. Le tavole
   intere si scaricano dal browser (`GetFile` del progetto): DesignSync le taglia a 256 KiB.
 - **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,
   Voyager, Telescopius, SkyTools, TheAstroImagingPlanner). La disposizione non cambia: sono

@@ -110,7 +110,11 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   e quella del vento a 200 hPa sono uscite (Marco, 12/10/2026): ripetevano la condensa e il jet
   stream.
 - **L'ordine d'importanza** lo scrive il backend: le nuvole, poi le misure giudicate da "niente" a
-  "buona", a pari parola quella che comincia prima, poi i neutri. Il valore della notte e' la media
+  "buona", a pari parola quella che comincia prima, poi i neutri. Vale per gli *Altri fattori*;
+  **le carte stanno sempre allo stesso posto** (Marco, 13/10/2026, come la tavola v37): nuvole,
+  nuvole basse, condensa, pioggia, visibilita', vento, seeing, jet stream, aerosol, e in piccolo
+  temperatura e rugiada, polvere, vento a 700 hPa (*stanno sempre allo stesso posto*,
+  `frontend/tests/meteo.test.tsx`). Il valore della notte e' la media
   delle ore che hanno un numero (la pioggia, il totale); il picco e' l'ora peggiore; se una misura
   copre solo parte della notte lo dice, cosi' una media parziale non passa per intera.
 - **Tre notti piene, poi tendenza fino alla settima** (Marco, 26/9/2026): le ore e le misure delle

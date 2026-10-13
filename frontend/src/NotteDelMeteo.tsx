@@ -1,7 +1,7 @@
 import { useId, useState } from "react"
 
 import { Bottone } from "./Bottone"
-import { CARTE_GRANDI, CARTE_PICCOLE, CartaDelParametro, parola } from "./CartaDelParametro"
+import { CARTE_GRANDI, CARTE_PICCOLE, CartaDelParametro, alPosto, parola } from "./CartaDelParametro"
 import { CieloDelleNubi } from "./CieloDelleNubi"
 import type { components } from "./api/schema"
 import { type Chiave, giornoENumero, numero, oraDelSito, t } from "./i18n"
@@ -86,8 +86,8 @@ export function SchedaDellaNotte({ notte: n, prima, scale, seeing }: { notte: No
             <div className="as-meteo__capo">
               <p className="as-soprattitolo">{qui ? t("weather.cards.at", { ora: oraDelSito(qui.at) }) : t("weather.cards")}</p>
             </div>
-            <div className="as-parametri">{n.measures.filter((m) => CARTE_GRANDI.includes(m.code)).map(carta)}</div>
-            <div className="as-parametri as-parametri--piccole">{n.measures.filter((m) => CARTE_PICCOLE.includes(m.code)).map(carta)}</div>
+            <div className="as-parametri">{alPosto(n.measures, CARTE_GRANDI).map(carta)}</div>
+            <div className="as-parametri as-parametri--piccole">{alPosto(n.measures, CARTE_PICCOLE).map(carta)}</div>
           </div>
         </>
       )}

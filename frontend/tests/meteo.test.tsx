@@ -324,14 +324,14 @@ describe("il Meteo, la notte", () => {
 })
 
 describe("il Meteo, le carte", () => {
-  it("vengono nell'ordine del backend, prima le grandi e poi le piccole", async () => {
+  it("stanno sempre allo stesso posto, prima le grandi e poi le piccole, qualunque ordine mandi il backend", async () => {
     conNotti(NOTTE)
     await apriMeteo()
 
     await scheda()
     const nomi = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)
     expect(nomi).toEqual([
-      "Nuvole", "Nuvole basse", "Vento", "Pioggia", "Seeing", "Aerosol", "Visibilit\u00e0",
+      "Nuvole", "Nuvole basse", "Pioggia", "Visibilit\u00e0", "Vento", "Seeing", "Aerosol",
       "Temperatura e rugiada", "Polvere", "Vento a 700 hPa",
     ])
   })

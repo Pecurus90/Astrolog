@@ -43,9 +43,15 @@ export function quota(m: Pick<Misura, "axis_min" | "axis_max" | "axis_curve"> | 
   return m?.axis_curve === "sqrt" ? Math.sqrt(Math.min(1, Math.max(0, lineare))) : lineare
 }
 
-/** Le carte grandi e piccole, nell'ordine che il backend da' alle misure. */
-export const CARTE_GRANDI: readonly Codice[] = ["cloud", "cloud_low", "rain", "visibility", "wind", "condensation", "seeing", "jet", "aerosol"]
+/** Le carte grandi e piccole, ognuna sempre al suo posto: l'ordine d'importanza del backend vale
+ *  per gli altri fattori, non per le carte. */
+export const CARTE_GRANDI: readonly Codice[] = ["cloud", "cloud_low", "condensation", "rain", "visibility", "wind", "seeing", "jet", "aerosol"]
 export const CARTE_PICCOLE: readonly Codice[] = ["temperature", "dust", "wind_700"]
+
+/** Le misure di un gruppo di carte, nell'ordine del gruppo. */
+export function alPosto(misure: readonly Misura[], posti: readonly Codice[]): Misura[] {
+  return posti.flatMap((codice) => misure.filter((m) => m.code === codice))
+}
 
 const TINTE = {
   go: "as-parametro__tinta--buona",

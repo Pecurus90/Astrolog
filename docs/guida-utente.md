@@ -425,8 +425,8 @@ non da' e' a tratteggio, mai uno zero. La legenda sotto dice solo cio' che e' su
 Passando sul cielo, toccandolo o con le frecce, un filo indica l'ora e un riquadro dice i valori;
 **tutte le carte vanno a quell'ora**.
 
-Sotto ci sono le **carte**, prima quelle che pesano di piu': nuvole, nuvole basse, poi pioggia,
-visibilita', vento, condensa, seeing, jet stream e aerosol, e in piccolo temperatura e rugiada,
+Sotto ci sono le **carte**, ognuna sempre allo stesso posto: nuvole, nuvole basse, condensa, pioggia,
+visibilita', vento, seeing, jet stream e aerosol, e in piccolo temperatura e rugiada,
 polvere e il vento a 700 hPa. La **visibilita'** dice la minima nel buio in chilometri: sotto 1 km
 e' **nebbia** (la definizione dell'Organizzazione meteorologica mondiale), e la carta dice da che
 ora; non tutti i modelli la danno, e allora la carta dice *Non disponibile*. Le sue barrette
