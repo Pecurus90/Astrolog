@@ -82,6 +82,7 @@ export function CieloDelleNubi({
   seeing,
   ora,
   scegli,
+  telefono = false,
 }: {
   notte: Notte
   ore: Ora[]
@@ -89,6 +90,8 @@ export function CieloDelleNubi({
   seeing: Seeing
   ora: number | null
   scegli: (i: number | null) => void
+  /** Sul telefono l'umidita' si accende dal menu, con le altre voci. */
+  telefono?: boolean
 }) {
   // all'apertura solo le nubi: l'umidita' e la metrica di destra si accendono a mano
   const ordine = n.measures.flatMap((m) => (A_DESTRA as readonly string[]).includes(m.code) ? [m.code as Destra] : [])
@@ -119,10 +122,12 @@ export function CieloDelleNubi({
     <div className="as-cielo">
       <div className="as-strati" role="group" aria-label={t("weather.right.label")}>
         <span className="as-strati__eti as-meteo__solo-largo">{t("weather.sky.left")}</span>
-        <button className="as-strato" type="button" aria-pressed={umidita} onClick={() => setUmidita(!umidita)}>
-          <i aria-hidden="true" />
-          {t("weather.sky.humidity")}
-        </button>
+        {!telefono && (
+          <button className="as-strato" type="button" aria-pressed={umidita} onClick={() => setUmidita(!umidita)}>
+            <i aria-hidden="true" />
+            {t("weather.sky.humidity")}
+          </button>
+        )}
         <div className="as-menu as-menu--telefono">
           <button className="as-menu__apri" type="button" aria-expanded={menu} onClick={() => setMenu(!menu)}>
             <span>{t("weather.right.menu")}</span>
@@ -130,6 +135,14 @@ export function CieloDelleNubi({
             <i aria-hidden="true">{"\u25be"}</i>
           </button>
           <ul className="as-menu__voci as-menu__voci--elenco" role="menu" hidden={!menu}>
+            {telefono && (
+              <li className="as-tel-voce-sola">
+                <button className="as-menu__voce" type="button" role="menuitemcheckbox" aria-checked={umidita} onClick={() => setUmidita(!umidita)}>
+                  <span className="as-menu__nome">{t("weather.sky.humidity")}</span>
+                  <span className="as-menu__dove">{t("weather.sky.left")}</span>
+                </button>
+              </li>
+            )}
             <li>
               <button className="as-menu__voce" type="button" role="menuitemradio" aria-checked={destra === null}
                 onClick={() => { setDestra(null); setMenu(false) }}>

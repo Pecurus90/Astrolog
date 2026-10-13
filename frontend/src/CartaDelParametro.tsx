@@ -1,6 +1,7 @@
 import { type KeyboardEvent, type PointerEvent, useState } from "react"
 import { Link } from "react-router"
 
+import type { SegnoDellaMisura } from "./Icons"
 import type { components } from "./api/schema"
 import { type Chiave, numero, oraDelSito, t } from "./i18n"
 import { Semaforo } from "./Semaforo"
@@ -102,6 +103,45 @@ export function CartaDelParametro({
     return <SeeingSenzaChiave nome={nome} rifiutata={seeing.key} />
   }
   return <Carta misura={m} notte={n} ore={ore} scala={scala} forma={forma} nome={nome} oraDelCielo={oraDelCielo} />
+}
+
+// il segno di ogni misura sulla carta piccola del telefono (tavole v37)
+const SEGNI: Partial<Record<Codice, SegnoDellaMisura>> = {
+  cloud: "nuvola", cloud_low: "nuvola", condensation: "m-goccia", rain: "m-pioggia", visibility: "m-velato", wind: "m-vento",
+  seeing: "m-seeing", jet: "m-getto", aerosol: "m-occhio", temperature: "m-termometro", dust: "m-velato", wind_700: "m-vento",
+}
+
+/**
+ * La carta piccola del telefono (`as-tel-carta`): il segno, il nome, il valore della notte, le
+ * barrette e la parola sola. E' un bottone: apre la carta intera della sua misura (`governa`).
+ */
+export function CartaDelTelefono({ misura: m, notte: n, ore, scala, aperta, governa, apri }: {
+  misura: Misura; notte: Notte; ore: Ora[]; scala?: Scala | undefined; aperta: boolean; governa: string; apri: () => void
+}) {
+  const forma = FORME[m.code]
+  if (!forma) return null
+  return (
+    <button className="as-tel-carta" type="button" aria-expanded={aperta} aria-controls={governa} onClick={apri}>
+      <span className="as-tel-carta__capo">
+        <svg className="as-tel-carta__segno" viewBox="0 0 20 20" aria-hidden="true">
+          <use href={`#i-${SEGNI[m.code] ?? "nuvola"}`} />
+        </svg>
+        <span className="as-tel-carta__nome">{t(`weather.measure.${m.code}` as Chiave)}</span>
+      </span>
+      <span className="as-tel-carta__valore">
+        {m.value !== null && (
+          <>
+            <b>{numero(tondo(m.code, m.value))}</b>
+            {forma.unita ? t(forma.unita) : ""}
+          </>
+        )}
+      </span>
+      <span className="as-tel-carta__barre" aria-hidden="true">
+        <Grafico misura={m} notte={n} ore={ore} forma={forma} scala={scala} ora={null} dove="piccola" />
+      </span>
+      {m.level !== null && m.code !== "cloud" && m.known_hours > 0 && <Semaforo livello={m.level}>{parola(m.code, m.level)}</Semaforo>}
+    </button>
+  )
 }
 
 function Carta({ misura: m, notte: n, ore, scala, forma, nome, oraDelCielo }: {
@@ -268,8 +308,11 @@ const LARGO = 240
 const ALTO = 64
 
 /** Le barrette o le linee della carta, ora per ora, sulla scala che il backend ha scritto. */
-function Grafico({ misura: m, notte: n, ore, forma, scala, ora }: { misura: Misura; notte: Notte; ore: Ora[]; forma: Forma; scala?: Scala | undefined; ora: number | null }) {
-  const id = `carta-${n.night}-${m.code}`
+function Grafico({ misura: m, notte: n, ore, forma, scala, ora, dove = "carta" }: {
+  misura: Misura; notte: Notte; ore: Ora[]; forma: Forma; scala?: Scala | undefined; ora: number | null; dove?: "carta" | "piccola"
+}) {
+  // la stessa misura si disegna due volte sul telefono (carta piccola e carta aperta): due id
+  const id = `${dove}-${n.night}-${m.code}`
   const passo = LARGO / (ore.length || 1)
   const basso = m.axis_min ?? 0
   const alto = m.axis_max ?? 1

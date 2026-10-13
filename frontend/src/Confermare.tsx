@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Bottone } from "./Bottone"
-import { Fragment, type ReactNode, useCallback, useMemo, useState } from "react"
+import { Fragment, type ReactNode, useMemo, useState } from "react"
 
 import { Avviso } from "./Avviso"
 import { DomandaAperta, Risposta, UnCaso } from "./Domanda"
@@ -12,6 +12,7 @@ import { SezioneMosaici } from "./SezioneMosaici"
 import { SezioneOggetti } from "./SezioneOggetti"
 import { SezioneSenzaTipo } from "./SezioneSenzaTipo"
 import { api } from "./api/client"
+import { useColonnaStretta } from "./colonna"
 import { motivo } from "./api/motivo"
 import type { components } from "./api/schema"
 import { type Chiave, numero, t } from "./i18n"
@@ -53,21 +54,9 @@ const VUOTO: Accumulo = {
  *
  * *Applica* scrive solo le risposte: una domanda guardata e lasciata li' resta aperta (ADR 0014).
  */
-// The sheet's own threshold: `@container colonna (max-width: 899px)`, "soglia = telefono".
-const SOGLIA_TELEFONO = 900
-
 export function Confermare() {
   // La colonna si misura: sotto la soglia la pagina ha un'altra forma, non un'altra veste.
-  const [stretta, setStretta] = useState(false)
-  const misura = useCallback((el: HTMLDivElement | null) => {
-    if (!el || typeof ResizeObserver === "undefined") return
-    const occhio = new ResizeObserver((voci) => {
-      const larga = voci[0]?.contentRect.width
-      if (larga !== undefined) setStretta(larga < SOGLIA_TELEFONO)
-    })
-    occhio.observe(el)
-    return () => occhio.disconnect()
-  }, [])
+  const [stretta, misura] = useColonnaStretta()
   return (
     <div className="as-pagina" ref={misura}>
       <LaPagina stretta={stretta} />

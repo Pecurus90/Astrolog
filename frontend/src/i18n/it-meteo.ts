@@ -106,6 +106,7 @@ export const itMeteo = {
   "weather.word.moon.nogo": "consigliata banda stretta",
   // Cio' che pesa: accanto al semaforo, senza cambiarlo.
   "weather.weighs": "Altri fattori (non modificano il verdetto)",
+  "weather.weighs.short": "Altri fattori",
   "weather.weighs.span": "dalle {da} alle {a} \u00b7 {n} ore",
   "weather.weighs.span.one": "dalle {da} alle {a} \u00b7 1 ora",
   "weather.weighs.fog": "nebbia dalle {da} alle {a} \u00b7 {n} ore",

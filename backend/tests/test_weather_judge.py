@@ -106,6 +106,48 @@ def test_the_night_value_is_the_mean_of_the_true_numbers_and_rain_is_a_total():
     assert detto["rain"].value == 1.5
 
 
+def test_the_night_value_and_the_peak_are_whole_numbers_where_the_board_shows_them_whole():
+    """Nuvole, vento, jet stream, temperatura, polvere: interi, come nelle tavole v37. Pioggia e
+    seeing tengono un decimale, l'aerosol due."""
+    ore = notte(
+        {"cloud_total_pct": 31.0, "wind_kmh": 1.4, "wind_250hpa_kmh": 101.8, "dust_ugm3": 2.4},
+        {"cloud_total_pct": 31.7, "wind_kmh": 2.5, "wind_250hpa_kmh": 113.8, "dust_ugm3": 2.4},
+    )
+    fini = misure(notte({"precip_mm": 0.26, "seeing_arcsec": 1.44, "aerosol_optical_depth": 0.137}))
+    detto = misure(ore)
+    assert (detto["cloud"].value, detto["wind"].value, detto["dust"].value) == (31.0, 2.0, 2.0)
+    assert (detto["jet"].value, detto["jet"].peak) == (108.0, 114.0)
+    assert (fini["rain"].value, fini["seeing"].value, fini["aerosol"].value) == (0.3, 1.4, 0.14)
+
+
+def test_a_cold_at_its_lowest_is_cut_down_and_never_rounded_up_to_its_threshold():
+    """Uno scarto di 2,6 gradi e' condensa (sotto 3): scritto "3" direbbe il contrario."""
+    fredda, tiepida = (
+        {"temperature_c": 6.6, "dew_point_c": 4.0},
+        {"temperature_c": 9.0, "dew_point_c": 4.0},
+    )
+    detto = misure(notte(fredda, tiepida))
+    assert detto["condensation"].value == 2.0
+    assert detto["condensation"].level == "nogo"
+    # the temperature has no threshold: it rounds as a number does
+    assert detto["temperature"].value == 7.0
+
+
+def test_a_shown_number_never_crosses_the_threshold_its_word_did_not_cross():
+    """Un jet a 125,6 e' "buona" (non adatta da 126): scritto "126" starebbe sulla soglia tracciata.
+    Vale in salita e in discesa, per il valore e per il picco, con la soglia stretta e non."""
+    ore = notte(
+        {"cloud_low_pct": 50.4, "wind_kmh": 19.6, "wind_gust_kmh": 28.7, "wind_250hpa_kmh": 125.6},
+        {"cloud_low_pct": 50.4, "wind_kmh": 19.6, "wind_gust_kmh": 28.7, "wind_250hpa_kmh": 125.6},
+    )
+    detto = misure(ore)
+    assert (detto["jet"].level, detto["jet"].value, detto["jet"].peak) == ("go", 125.0, 125.0)
+    assert (detto["gust"].level, detto["gust"].peak) == ("go", 28.0)
+    assert (detto["wind"].level, detto["wind"].value) == ("go", 19.0)
+    # over 50 the low clouds are no-go, and 50 itself is not: the number goes up
+    assert (detto["cloud_low"].level, detto["cloud_low"].value) == ("nogo", 51.0)
+
+
 def test_a_hazy_hour_without_a_word_is_worse_than_a_clear_one():
     """Aerosol 0,5 alle 20 e alle 21, 0,09 alle 22: la notte non e' "limpida" per un'ora sola."""
     ore = notte(

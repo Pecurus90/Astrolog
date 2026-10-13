@@ -1,7 +1,7 @@
-import { useId, useState } from "react"
+import { Fragment, type ReactNode, useId, useState } from "react"
 
 import { Bottone } from "./Bottone"
-import { CARTE_GRANDI, CARTE_PICCOLE, CartaDelParametro, alPosto, parola } from "./CartaDelParametro"
+import { CARTE_GRANDI, CARTE_PICCOLE, CartaDelParametro, CartaDelTelefono, alPosto, parola } from "./CartaDelParametro"
 import { CieloDelleNubi } from "./CieloDelleNubi"
 import type { components } from "./api/schema"
 import { type Chiave, giornoENumero, numero, oraDelSito, t } from "./i18n"
@@ -57,7 +57,11 @@ function verdetto(n: Breve): string {
  * accanto cio' che pesa senza cambiarlo, sotto le carte delle misure nell'ordine che il backend
  * ha dato. Qui non si decide niente: giudizi, ore e ordine arrivano scritti.
  */
-export function SchedaDellaNotte({ notte: n, prima, scale, seeing }: { notte: Notte; prima: boolean; scale: Scala[]; seeing: Seeing }) {
+export function SchedaDellaNotte({ notte: n, prima, scale, seeing, telefono }: {
+  notte: Notte; prima: boolean; scale: Scala[]; seeing: Seeing
+  /** Sul telefono il verdetto sta in testa alla pagina e le misure sono carte piccole: quale e' aperta lo sa la pagina. */
+  telefono?: { aperta: Misura["code"] | null; apri: (c: Misura["code"] | null) => void } | undefined
+}) {
   const ore = n.hours.filter((o) => o.shown)
   // l'ora che il filo sul cielo indica: porta tutte le carte a quell'ora
   const [ora, setOra] = useState<number | null>(null)
@@ -68,10 +72,12 @@ export function SchedaDellaNotte({ notte: n, prima, scale, seeing }: { notte: No
   )
   return (
     <>
-      <div className="as-meteo__capo-notte">
-        <CapoDellaNotte notte={n} prima={prima} />
-        {n.window !== null && <Pesano notte={n} />}
-      </div>
+      {!telefono && (
+        <div className="as-meteo__capo-notte">
+          <CapoDellaNotte notte={n} prima={prima} />
+          {n.window !== null && <Pesano notte={n} />}
+        </div>
+      )}
       {/* senza buio nessuna ora e' giudicata: le carte direbbero "non fornito" a dati che ci sono */}
       {n.window !== null && (
         <>
@@ -80,14 +86,32 @@ export function SchedaDellaNotte({ notte: n, prima, scale, seeing }: { notte: No
               <p className="as-soprattitolo">{t("weather.sky.title")}</p>
               <span>{t(senzaMouse() ? "weather.sky.hint.touch" : "weather.sky.hint")}</span>
             </div>
-            <CieloDelleNubi notte={n} ore={ore} scale={scale} seeing={seeing} ora={ora} scegli={setOra} />
+            <CieloDelleNubi notte={n} ore={ore} scale={scale} seeing={seeing} ora={ora} scegli={setOra} telefono={telefono !== undefined} />
           </div>
           <div className="as-meteo__parte">
             <div className="as-meteo__capo">
               <p className="as-soprattitolo">{qui ? t("weather.cards.at", { ora: oraDelSito(qui.at) }) : t("weather.cards")}</p>
             </div>
-            <div className="as-parametri">{alPosto(n.measures, CARTE_GRANDI).map(carta)}</div>
-            <div className="as-parametri as-parametri--piccole">{alPosto(n.measures, CARTE_PICCOLE).map(carta)}</div>
+            {telefono ? (
+              <div className="as-tel-carte">
+                {[...alPosto(n.measures, CARTE_GRANDI), ...alPosto(n.measures, CARTE_PICCOLE)].map((m) => {
+                  const aperta = telefono.aperta === m.code
+                  const id = `tel-${n.night}-${m.code}`
+                  return (
+                    <Fragment key={m.code}>
+                      <CartaDelTelefono misura={m} notte={n} ore={ore} scala={scale.find((s) => s.code === m.code)} aperta={aperta} governa={id}
+                        apri={() => telefono.apri(aperta ? null : m.code)} />
+                      <div className="as-tel-dettaglio" id={id} hidden={!aperta}>{aperta && carta(m)}</div>
+                    </Fragment>
+                  )
+                })}
+              </div>
+            ) : (
+              <>
+                <div className="as-parametri">{alPosto(n.measures, CARTE_GRANDI).map(carta)}</div>
+                <div className="as-parametri as-parametri--piccole">{alPosto(n.measures, CARTE_PICCOLE).map(carta)}</div>
+              </>
+            )}
           </div>
         </>
       )}
@@ -95,7 +119,9 @@ export function SchedaDellaNotte({ notte: n, prima, scale, seeing }: { notte: No
   )
 }
 
-function CapoDellaNotte({ notte: n, prima }: { notte: Notte; prima: boolean }) {
+/** Il nome della notte, le ore serene col semaforo e da che ora a che ora. `segno` sta accanto al
+ *  semaforo: sul telefono dice che il verdetto si tocca. */
+export function CapoDellaNotte({ notte: n, prima, segno }: { notte: Notte; prima: boolean; segno?: ReactNode }) {
   const finestra = n.window ?? "dark"
   const ore = n.usable_hours ?? 0
   return (
@@ -118,6 +144,7 @@ function CapoDellaNotte({ notte: n, prima }: { notte: Notte; prima: boolean }) {
               )}
             </p>
             {n.verdict === null ? <span className="as-meteo__parola">{verdetto(n)}</span> : <Semaforo livello={n.verdict} grande>{verdetto(n)}</Semaforo>}
+            {segno}
           </>
         )}
       </div>
@@ -177,7 +204,8 @@ function quandoLaLuna(m: Misura): string {
   return t(`weather.weighs.moon.${forma}.${m.level}`, valori)
 }
 
-function quando(m: Misura): string {
+/** Le ore in cui una misura pesa, come le dice la riga degli altri fattori. */
+export function quando(m: Misura): string {
   if (m.code === "moon") return quandoLaLuna(m)
   if (!m.since || !m.until) return ""
   if (m.code === "visibility") return t("weather.weighs.fog", { da: oraDelSito(m.since), a: oraDelSito(m.until), n: numero(m.hours) })
@@ -189,6 +217,20 @@ function quando(m: Misura): string {
 export function TendenzaDellaNotte({ notte: n }: { notte: Notte }) {
   return (
     <>
+      <CapoDellaTendenza notte={n} />
+      <NotaDellaTendenza />
+    </>
+  )
+}
+
+/** Perche' una notte in tendenza non ha altro. */
+export function NotaDellaTendenza() {
+  return <p className="as-meteo__tendenza-nota">{t("weather.trend.note")}</p>
+}
+
+/** La testa di una notte in tendenza: sul telefono sta in testa alla pagina, da sola. */
+export function CapoDellaTendenza({ notte: n }: { notte: Notte }) {
+  return (
       <div className="as-meteo__notte">
         <h2 className="as-meteo__notte-nome">{nomeDellaNotte(n, false)}</h2>
         <div className="as-meteo__verdetto">
@@ -202,8 +244,6 @@ export function TendenzaDellaNotte({ notte: n }: { notte: Notte }) {
           {n.verdict !== null && ` \u00b7 ${t("weather.clear.agreement", { n: numero(n.agreement[n.verdict]), su: numero(n.agreement.total) })}`}
         </p>
       </div>
-      <p className="as-meteo__tendenza-nota">{t("weather.trend.note")}</p>
-    </>
   )
 }
 

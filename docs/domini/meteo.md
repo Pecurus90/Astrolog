@@ -114,7 +114,10 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   **le carte stanno sempre allo stesso posto** (Marco, 13/10/2026, come la tavola v37): nuvole,
   nuvole basse, condensa, pioggia, visibilita', vento, seeing, jet stream, aerosol, e in piccolo
   temperatura e rugiada, polvere, vento a 700 hPa (*stanno sempre allo stesso posto*,
-  `frontend/tests/meteo.test.tsx`). Il valore della notte e' la media
+  `frontend/tests/meteo.test.tsx`). **I valori della notte e i picchi sono interi**, come nelle
+  tavole v37; pioggia, seeing e visibilita' tengono un decimale, l'aerosol due. Un numero
+  scritto resta dal lato della soglia dove sta il valore vero: uno scarto di 2,6 gradi non si
+  scrive "3" (negherebbe la condensa), un jet a 125,6 non si scrive "126" (la dichiarerebbe). Il valore della notte e' la media
   delle ore che hanno un numero (la pioggia, il totale); il picco e' l'ora peggiore; se una misura
   copre solo parte della notte lo dice, cosi' una media parziale non passa per intera.
 - **Tre notti piene, poi tendenza fino alla settima** (Marco, 26/9/2026): le ore e le misure delle

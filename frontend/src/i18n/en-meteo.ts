@@ -96,6 +96,7 @@ export const enMeteo = {
   "weather.word.moon.marginal": "broadband borderline",
   "weather.word.moon.nogo": "narrowband advised",
   "weather.weighs": "Other factors (do not change the verdict)",
+  "weather.weighs.short": "Other factors",
   "weather.weighs.span": "from {da} to {a} \u00b7 {n} hours",
   "weather.weighs.span.one": "from {da} to {a} \u00b7 1 hour",
   "weather.weighs.fog": "fog from {da} to {a} \u00b7 {n} hours",

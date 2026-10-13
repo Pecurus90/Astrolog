@@ -841,8 +841,13 @@ riga per voce.
 - **Meteo e Dashboard sul foglio v37** (Design, 13/10/2026; punto di partenza
   `docs/consegna-meteo-dashboard.md` nel progetto Design). Fatto: il foglio v37 nell'app, il Meteo
   desktop a tre file da tre, la scala della visibilita' (0-20 km, a radice), le carte al posto
-  fisso della tavola (Marco, 13/10/2026). Restano: il markup del telefono (`as-tel-`, Meteo e
-  Dashboard); la Dashboard intera. Le tavole
+  fisso della tavola (Marco, 13/10/2026), il Meteo del telefono (`as-tel-`: verdetto in testa
+  che apre gli altri fattori, carte piccole che aprono la carta intera; la larghezza la misura
+  `useColonnaStretta`), i valori della notte interi. Restano: la Dashboard intera, desktop e
+  telefono; sul telefono la carta piccola di una misura senza valore (seeing senza chiave,
+  visibilita' che il modello non da') resta vuota, la tavola non la disegna: da chiedere a
+  Design; il riquadro degli altri fattori non trattiene il fuoco e non si chiude toccando fuori;
+  i valori ora per ora (lettore del cielo, carta portata a un'ora) tengono i decimali. Le tavole
   intere si scaricano dal browser (`GetFile` del progetto): DesignSync le taglia a 256 KiB.
 - **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,
   Voyager, Telescopius, SkyTools, TheAstroImagingPlanner). La disposizione non cambia: sono

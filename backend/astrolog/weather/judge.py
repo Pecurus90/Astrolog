@@ -1,6 +1,7 @@
 """Each measure's judgement, hour by hour and for the night. Only total cloud makes the verdict;
 the others weigh beside it with their word and their hours, and never change it."""
 
+import math
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -65,7 +66,7 @@ class Scale:
     steps: list[Step]
     lower_is_worse: bool = False
     night: NightValue = NightValue.MEAN
-    digits: int = 1
+    digits: int = 0
     axis_top: float | None = None
     axis_fixed: bool = False
     curve: Curve = Curve.LINEAR
@@ -99,6 +100,7 @@ SCALES: dict[Measure, Scale] = {
             [Step(NOGO, 0.0, strict=True)],
             night=NightValue.TOTAL,
             axis_top=1.5,
+            digits=1,
         ),
         # Beaufort 5 "fresh breeze" from 29 km/h, 4 "moderate breeze" from 20 km/h.
         # https://en.wikipedia.org/wiki/Beaufort_scale
@@ -136,6 +138,7 @@ SCALES: dict[Measure, Scale] = {
             _field("seeing_arcsec"),
             [Step(NOGO, 4.0, strict=True), Step(MARGINAL, 2.0, strict=True)],
             axis_top=5.0,
+            digits=1,
         ),
         # "less than 0.1 ... a crystal clear sky", "a value of 1 ... very hazy"; between, no word.
         # https://science.nasa.gov/earth/earth-observatory/global-maps/aerosol-optical-depth
@@ -166,6 +169,7 @@ SCALES: dict[Measure, Scale] = {
             # Design's sheet v36: up to 20 km on a square root, or the 1 km line sits on the floor.
             axis_top=20.0,
             axis_fixed=True,
+            digits=1,
             curve=Curve.SQRT,
         ),
     )
@@ -263,7 +267,19 @@ def _value(scale: Scale, values: Sequence[float]) -> float | None:
         NightValue.TOTAL: lambda: sum(values),
         NightValue.MIN: lambda: min(values),
     }
-    return round(by[scale.night](), scale.digits)
+    return _shown(scale, by[scale.night]())
+
+
+def _shown(scale: Scale, v: float) -> float:
+    """To the measure's digits, on the side of the threshold where the true value sits: a spread
+    of 2.6 written "3" would deny the fog its threshold calls, a jet at 125.6 as "126" claim it."""
+    near = round(v, scale.digits)
+    word = level(scale, v)
+    if level(scale, near) == word:
+        return near
+    unit = 10**scale.digits
+    sides = (math.floor(v * unit) / unit, math.ceil(v * unit) / unit)
+    return next((s for s in sides if level(scale, s) == word), near)
 
 
 def _axis(scale: Scale, shown: Sequence[Hour]) -> tuple[float | None, float | None]:
@@ -314,7 +330,7 @@ def _night(
         level=worst,
         weighs=scale.code != Measure.CLOUD and worst in (NOGO, MARGINAL),
         value=_value(scale, values),
-        peak=peak,
+        peak=None if peak is None else _shown(scale, peak),
         peak_at=peak_h.at if peak_h else None,
         peak_until=peak_span[1],
         spans=_spans(scale, night, after) if scale.steps else [],

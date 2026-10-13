@@ -1,15 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { type KeyboardEvent, useId, useState } from "react"
 
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
 import { AzioniDelVuoto, Vuoto } from "./Vuoto"
+import { parola } from "./CartaDelParametro"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
+import { useColonnaStretta } from "./colonna"
 import { type Chiave, fa, giorno, orario, t } from "./i18n"
-import { SchedaDellaNotte, TendenzaDellaNotte, VoceDellaNotte, nomeDellaNotte } from "./NotteDelMeteo"
+import { CapoDellaNotte, CapoDellaTendenza, NotaDellaTendenza, SchedaDellaNotte, TendenzaDellaNotte, VoceDellaNotte, nomeDellaNotte, quando } from "./NotteDelMeteo"
+import { Semaforo } from "./Semaforo"
 
 type Meteo = components["schemas"]["WeatherOut"]
+type Notte = Meteo["nights"][number]
+type Codice = Notte["measures"][number]["code"]
 type Esito = components["schemas"]["WeatherRefreshOut"]["status"]
 
 /**
@@ -20,8 +25,9 @@ type Esito = components["schemas"]["WeatherRefreshOut"]["status"]
  * - **Qui non si calcola niente**: verdetto, giudizi, ore serene, ordine e scale arrivano scritti
  *   per ogni modello, e cambiare modello e' leggere un'altra riga.
  * - **Un servizio che tace non toglie niente**: resta la previsione di prima con la sua ora.
- * - Il telefono vede gli stessi controlli: il foglio mostra il segmentato o il menu secondo la
- *   larghezza, la pagina li scrive tutti e due.
+ * - **Il telefono ha un markup suo** (foglio v37, classi `as-tel-`): sotto la soglia della colonna
+ *   il verdetto va in testa e apre gli altri fattori, le misure sono carte piccole. I dati sono
+ *   gli stessi.
  */
 export function Meteo() {
   const cache = useQueryClient()
@@ -51,9 +57,30 @@ export function Meteo() {
     onSuccess: rileggi,
   })
   const detto = meteo.data
+  const [stretta, misura] = useColonnaStretta()
+  // la notte scelta e, sul telefono, la carta aperta: una notte nuova richiude la carta
+  const [scelta, setScelta] = useState(0)
+  const [carta, setCarta] = useState<Codice | null>(null)
+  const aperta = detto?.nights[scelta] ?? detto?.nights[0]
+  const telefono = stretta && aperta !== undefined
+  const scegliNotte = (i: number) => {
+    setScelta(i)
+    setCarta(null)
+  }
+
+  // gli stessi comandi nelle due teste, larga e telefono
+  const comandi = {
+    aggiorna: () => aggiorna.mutate(),
+    occupato: aggiorna.isPending,
+    scegli: (m: string) => {
+      setCarta(null)
+      modello.mutate(m)
+    },
+    cambiando: modello.isPending,
+  }
 
   return (
-    <div className="as-pagina">
+    <div className="as-pagina" ref={misura}>
       {meteo.isPending && <p>{t("weather.loading")}</p>}
       {meteo.error && <Avviso esito="allarme">{meteo.error.message}</Avviso>}
       {detto && detto.site === null && (
@@ -69,14 +96,12 @@ export function Meteo() {
         </Avviso>
       )}
       {detto?.site && detto.missing === null && (
-        <div className="as-meteo">
-          <Testa
-            detto={detto}
-            aggiorna={() => aggiorna.mutate()}
-            occupato={aggiorna.isPending}
-            scegli={(m) => modello.mutate(m)}
-            cambiando={modello.isPending}
-          />
+        <div className={telefono ? "as-meteo as-tel-meteo" : "as-meteo"}>
+          {telefono ? (
+            <TestaDelTelefono key={aperta.night} {...comandi} detto={detto} notte={aperta} prima={aperta === detto.nights[0]} apriCarta={setCarta} />
+          ) : (
+            <Testa {...comandi} detto={detto} />
+          )}
           {aggiorna.error && <Avviso esito="allarme">{aggiorna.error.message}</Avviso>}
           {(aggiorna.data === "no_site" || aggiorna.data === "no_timezone") && (
             <Avviso esito="attesa" pagina>{t(`weather.status.${aggiorna.data}`)}</Avviso>
@@ -90,7 +115,9 @@ export function Meteo() {
             </Avviso>
           )}
           {detto.fetched_at !== null && detto.nights.length === 0 && <p>{t("weather.noNights")}</p>}
-          {detto.nights.length > 0 && <Notti detto={detto} />}
+          {detto.nights.length > 0 && (
+            <Notti detto={detto} aperta={aperta} scegli={scegliNotte} telefono={telefono ? { aperta: carta, apri: setCarta } : undefined} />
+          )}
           {detto.fetched_at !== null && <Fonti detto={detto} />}
         </div>
       )}
@@ -113,22 +140,11 @@ function Testa({
   scegli: (m: string) => void
   cambiando: boolean
 }) {
-  const seeing = detto.sources.find((f) => f.source === "meteoblue")
   return (
     <header className="as-meteo__testa">
       <div className="as-meteo__dice">
         <p className="as-soprattitolo">{t("weather.head.where", { sito: detto.site ?? "" })}</p>
-        <p className="as-meteo__arrivo">
-          {[
-            detto.fetched_at === null
-              ? null
-              : t("weather.head.arrived", { giorno: giorno(detto.fetched_at), ora: orario(detto.fetched_at), fa: fa(detto.fetched_at) }),
-            seeing ? t("weather.head.seeing", { giorno: giorno(seeing.fetched_at), ora: orario(seeing.fetched_at), fa: fa(seeing.fetched_at) }) : null,
-            t("weather.head.siteTime"),
-          ]
-            .filter(Boolean)
-            .join(" \u00b7 ")}
-        </p>
+        <Arrivo detto={detto} />
       </div>
       <Bottone onClick={aggiorna} disabled={occupato}>
         {occupato ? t("weather.refreshing") : t("weather.refresh")}
@@ -148,6 +164,102 @@ function Testa({
         <MenuDelModello detto={detto} scegli={scegli} cambiando={cambiando} />
       </div>
     </header>
+  )
+}
+
+/** Da quando e' la previsione, e il seeing che ha un'eta' sua. */
+function Arrivo({ detto }: { detto: Meteo }) {
+  const seeing = detto.sources.find((f) => f.source === "meteoblue")
+  return (
+    <p className="as-meteo__arrivo">
+      {[
+        detto.fetched_at === null
+          ? null
+          : t("weather.head.arrived", { giorno: giorno(detto.fetched_at), ora: orario(detto.fetched_at), fa: fa(detto.fetched_at) }),
+        seeing ? t("weather.head.seeing", { giorno: giorno(seeing.fetched_at), ora: orario(seeing.fetched_at), fa: fa(seeing.fetched_at) }) : null,
+        t("weather.head.siteTime"),
+      ]
+        .filter(Boolean)
+        .join(" \u00b7 ")}
+    </p>
+  )
+}
+
+// cio' che pesa senza avere una carta sua: la Luna, e le raffiche che stanno nella carta del vento
+const SENZA_CARTA: readonly Codice[] = ["moon", "gust"]
+
+/**
+ * La testa sul telefono (`as-tel-testa`): il verdetto della notte scelta e il modello; sotto, da
+ * quando e' la previsione e *Aggiorna*. Toccato, il verdetto di una notte piena apre gli altri
+ * fattori in un riquadro sopra la pagina; una misura li chiude e apre la sua carta.
+ */
+function TestaDelTelefono({ detto, notte: n, prima, apriCarta, aggiorna, occupato, scegli, cambiando }: {
+  detto: Meteo; notte: Notte; prima: boolean; apriCarta: (c: Codice) => void
+  aggiorna: () => void; occupato: boolean; scegli: (m: string) => void; cambiando: boolean
+}) {
+  const [aperti, setAperti] = useState(false)
+  const id = useId()
+  const siApre = !n.trend && n.window !== null
+  const pesano = n.measures.filter((m) => m.weighs)
+  const tasto = (ev: KeyboardEvent<HTMLDivElement>) => {
+    if (ev.key === "Escape") setAperti(false)
+    if (ev.key !== "Enter" && ev.key !== " ") return
+    ev.preventDefault()
+    setAperti(!aperti)
+  }
+  const tocco = siApre
+    ? { role: "button", tabIndex: 0, "aria-expanded": aperti, "aria-controls": id, onClick: () => setAperti(!aperti), onKeyDown: tasto }
+    : {}
+  return (
+    <>
+      <div className="as-tel-testa">
+        <div className="as-tel-verdetti" {...tocco}>
+          <div className="as-tel-verdetto">
+            {n.trend ? (
+              <CapoDellaTendenza notte={n} />
+            ) : (
+              <CapoDellaNotte notte={n} prima={prima} segno={siApre && <span className="as-tel-pesa-segno">{t("weather.weighs.short")}</span>} />
+            )}
+          </div>
+        </div>
+        <MenuDelModello detto={detto} scegli={scegli} cambiando={cambiando} />
+        {siApre && (
+          <div className="as-tel-pesanti" id={id} role="dialog" aria-label={t("weather.weighs.short")} hidden={!aperti}>
+            <ul className="as-tel-pesano" aria-label={t("weather.weighs")}>
+              <li>{t("weather.weighs")}</li>
+              {pesano.length === 0 && <li>{t("weather.weighs.none")}</li>}
+              {pesano.map((m) => {
+                const dentro = (
+                  <>
+                    {m.level && <Semaforo livello={m.level}>{parola(m.code, m.level)}</Semaforo>}
+                    <span>
+                      <b>{t(`weather.measure.${m.code}` as Chiave)}</b> {quando(m)}
+                    </span>
+                  </>
+                )
+                return (
+                  <li key={m.code}>
+                    {SENZA_CARTA.includes(m.code) ? (
+                      <span className="as-tel-pesa">{dentro}</span>
+                    ) : (
+                      <button className="as-tel-pesa" type="button" onClick={() => { setAperti(false); apriCarta(m.code) }}>
+                        {dentro}
+                      </button>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
+      </div>
+      <div className="as-tel-arrivo">
+        <Arrivo detto={detto} />
+        <Bottone onClick={aggiorna} disabled={occupato}>
+          {occupato ? t("weather.refreshing") : t("weather.refresh")}
+        </Bottone>
+      </div>
+    </>
   )
 }
 
@@ -180,12 +292,13 @@ function MenuDelModello({ detto, scegli, cambiando }: { detto: Meteo; scegli: (m
 }
 
 /** La fila delle notti e la scheda di quella scelta: una sola aperta alla volta. */
-function Notti({ detto }: { detto: Meteo }) {
-  const [scelta, setScelta] = useState(0)
-  const aperta = detto.nights[scelta] ?? detto.nights[0]
-  const voce = (n: Meteo["nights"][number], i: number) => (
+function Notti({ detto, aperta, scegli, telefono }: {
+  detto: Meteo; aperta: Notte | undefined; scegli: (i: number) => void
+  telefono: { aperta: Codice | null; apri: (c: Codice | null) => void } | undefined
+}) {
+  const voce = (n: Notte, i: number) => (
     <button key={n.night} type="button" role="tab" id={`voce-${n.night}`} aria-selected={n === aperta}
-      aria-controls={`notte-${n.night}`} onClick={() => setScelta(i)}
+      aria-controls={`notte-${n.night}`} onClick={() => scegli(i)}
       className={n.trend ? "as-voce-notte as-voce-notte--tendenza" : "as-voce-notte"}>
       <VoceDellaNotte notte={n} />
     </button>
@@ -211,9 +324,10 @@ function Notti({ detto }: { detto: Meteo }) {
           aria-label={nomeDellaNotte(aperta, aperta === detto.nights[0])}
           className={aperta.trend ? "as-meteo__scheda as-meteo__tendenza" : "as-meteo__scheda"}>
           {aperta.trend ? (
-            <TendenzaDellaNotte notte={aperta} />
+            telefono ? <NotaDellaTendenza /> : <TendenzaDellaNotte notte={aperta} />
           ) : (
-            <SchedaDellaNotte key={aperta.night} notte={aperta} prima={aperta === detto.nights[0]} scale={detto.scales} seeing={detto.seeing} />
+            <SchedaDellaNotte key={aperta.night} notte={aperta} prima={aperta === detto.nights[0]} scale={detto.scales} seeing={detto.seeing}
+              telefono={telefono} />
           )}
         </section>
       )}
