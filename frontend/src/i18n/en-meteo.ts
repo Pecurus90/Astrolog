@@ -187,6 +187,7 @@ export const enMeteo = {
   "weather.card.temperature": "lowest in the dark \u00b7 dew point {r} \u00b0C",
   "weather.card.lowest": "lowest in the dark",
   "weather.card.unknown": "Not available",
+  "weather.card.unknownWord": "not available",
   "weather.card.wind700": "stronger than {n} nights in 10 at this site",
   "weather.card.wind700.zero": "among the weakest of the year at this site",
   "weather.card.wind700.one": "stronger than 1 night in 10 at this site",

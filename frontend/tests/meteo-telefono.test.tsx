@@ -77,12 +77,12 @@ describe("il Meteo sul telefono", () => {
     const cieca = { ...NOTTE, measures: NOTTE.measures.map((m) => (m.code === "wind" ? { ...m, value: null, level: null, known_hours: 0 } : m)) }
     const pagina = await sulTelefono(cieca)
 
+    // come la tavola meteo-stati v37.1: niente righe del valore e delle barrette, la parola minuscola
     const vento = piccola(pagina, "Vento")
-    expect(vento.querySelector(".as-tel-carta__valore")?.textContent).toBe("")
-    expect(vento.querySelector(".as-tel-carta__barre")?.childElementCount).toBe(0)
+    expect(vento.querySelector(".as-tel-carta__valore, .as-tel-carta__barre")).toBeNull()
     const semaforo = vento.querySelector(".as-semaforo") as HTMLElement
     expect(semaforo.classList.contains("as-semaforo--ignoto")).toBe(true)
-    expect(semaforo.textContent).toBe("Non disponibile")
+    expect(semaforo.textContent).toBe("non disponibile")
     expect(vento.querySelector(".as-solo-lettori")).toBeNull()
   })
 

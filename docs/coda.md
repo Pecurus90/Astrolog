@@ -839,14 +839,15 @@ riga per voce.
   jet stream a 250; *Umidita'* e *Temperatura e rugiada* da pesare contro la *Condensa*, con
   Marco. Fuori: trasparenza (aerosol e polveri la coprono), instabilita', aurora, satelliti.
 - **Meteo e Dashboard sul foglio v37** (Design, 13/10/2026; punto di partenza
-  `docs/consegna-meteo-dashboard.md` nel progetto Design). Fatto: il foglio v37 nell'app, il Meteo
+  `docs/consegna-meteo-dashboard.md` nel progetto Design). Fatto: il foglio v37.1 nell'app, il Meteo
   desktop a tre file da tre, la scala della visibilita' (0-20 km, a radice), le carte al posto
   fisso della tavola (Marco, 13/10/2026), il Meteo del telefono (`as-tel-`: verdetto in testa
   che apre gli altri fattori, carte piccole che aprono la carta intera; la larghezza la misura
   `useColonnaStretta`, anche senza notti), i valori della notte e delle ore interi, gli altri
   fattori che si chiudono toccando fuori e tengono il fuoco (`useRiquadro`, lo stesso
-  dell'Archivio), la carta piccola senza valore vuota col semaforo spento e «Non disponibile»
-  (DECISIONI di Design, 14/10). Resta la Dashboard intera, desktop e telefono. Le tavole intere
+  dell'Archivio), la carta piccola senza valore col solo semaforo spento e «non disponibile»
+  (DECISIONI di Design, 14/10), le carte intere senza ore come avvisi (seeing senza chiave o
+  rifiutata, misura che il modello non da'), come la tavola meteo-stati. Resta la Dashboard intera, desktop e telefono. Le tavole intere
   si scaricano dal browser (`GetFile` del progetto): DesignSync le taglia a 256 KiB.
 - **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,
   Voyager, Telescopius, SkyTools, TheAstroImagingPlanner). La disposizione non cambia: sono

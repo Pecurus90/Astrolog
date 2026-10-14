@@ -59,7 +59,8 @@ export function Avviso({
   pagina?: boolean
   /** Sotto la frase, nel corpo: la pista di un lavoro che avanza. */
   sotto?: ReactNode
-  children: ReactNode
+  /** Senza: il solo titolo, senza ruolo ne' urgenza (carte statiche del Meteo, tavola meteo-stati). */
+  children?: ReactNode
 }) {
   return (
     <div className={["as-avviso", TONI[esito], pagina ? "as-avviso--pagina" : ""].filter(Boolean).join(" ")}>
@@ -68,9 +69,11 @@ export function Avviso({
       </span>
       <div className="as-avviso__corpo">
         {titolo && <p className="as-avviso__titolo">{titolo}</p>}
-        <p className="as-avviso__testo" role={ruolo ?? (esito === "allarme" ? "alert" : "status")}>
-          {children}
-        </p>
+        {children !== undefined && (
+          <p className="as-avviso__testo" role={ruolo ?? (esito === "allarme" ? "alert" : "status")}>
+            {children}
+          </p>
+        )}
         {sotto}
       </div>
       {azioni && <div className="as-avviso__azioni">{azioni}</div>}

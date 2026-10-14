@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AstroLog — astrolog.css  ·  v37 (13/10/2026)
+   AstroLog — astrolog.css  ·  v37.1 (14/10/2026)
 
    FILE GENERATO: non si modifica qui. Le sorgenti stanno in foglio/, un
    file per famiglia; questo foglio e' la loro unione, nell'ordine qui
@@ -3672,4 +3672,6 @@ button.as-tel-pesa:focus-visible { outline: var(--fuoco-spessore) solid var(--li
 .as-tel-carta__valore { grid-row: 3; align-self: end; }
 .as-tel-carta__barre { grid-row: 4; }
 .as-tel-carta > .as-semaforo { grid-row: 5; margin: 0; flex-wrap: nowrap; align-items: flex-start; max-width: 100%; white-space: normal; text-wrap: balance; --semaforo-stacco: var(--stacco-minimo); gap: var(--stacco-minimo); }
+/* una parola piu' larga della colonna («disponibile» a 360 px) si spezza in sillabe (lang="it"); se il browser non sillaba, si spezza dove serve */
+.as-tel-carta > .as-semaforo { min-width: 0; hyphens: auto; overflow-wrap: anywhere; }
 .as-tel-carta { padding: var(--spazio-2) var(--tel-carta-lato); }

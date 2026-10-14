@@ -322,16 +322,35 @@ describe("il Meteo, il seeing", () => {
 
     await scheda()
     const seeing = carta(/^Seeing$/)
-    expect(seeing.textContent).toContain("Il seeing richiede una chiave API Meteoblue (gratuita).")
-    expect(within(seeing).getByRole("link", { name: /apri le impostazioni/i }).getAttribute("href")).toBe("/impostazioni/servizi")
+    // come la tavola meteo-stati: un avviso d'attesa, la frase nel titolo, il bottone nelle azioni
+    expect(seeing.classList.contains("as-parametro--avviso")).toBe(true)
+    const avviso = seeing.querySelector(".as-avviso.as-avviso--attesa") as HTMLElement
+    expect(avviso.querySelector(".as-avviso__titolo")?.textContent).toBe("Il seeing richiede una chiave API Meteoblue (gratuita).")
+    const porta = within(avviso).getByRole("link", { name: /apri le impostazioni/i })
+    expect(porta.getAttribute("href")).toBe("/impostazioni/servizi")
+    expect(porta.closest(".as-avviso__azioni")).not.toBeNull()
+    expect(porta.classList.contains("as-bottone--tenue")).toBe(true)
   })
 
-  it("se Meteoblue non accetta la chiave la carta lo dice", async () => {
+  it("se Meteoblue non accetta la chiave la carta lo dice con un allarme", async () => {
     meteo({ fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE], seeing: { key: true, source: null, meteoblue: "refused" } })
     await apriMeteo()
 
     await scheda()
-    expect(carta(/^Seeing$/).textContent).toContain("Chiave Meteoblue non valida o scaduta.")
+    const avviso = carta(/^Seeing$/).querySelector(".as-avviso.as-avviso--allarme") as HTMLElement
+    expect(avviso.querySelector(".as-avviso__titolo")?.textContent).toBe("Chiave Meteoblue non valida o scaduta.")
+  })
+
+  it("una misura che il modello non da' ha la carta dell'ignoto, senza numeri ne' grafico", async () => {
+    const senza = { ...NOTTE, measures: NOTTE.measures.map((m) => (m.code === "visibility" ? { ...m, level: null, value: null, peak: null, known_hours: 0 } : m)) }
+    conNotti(senza)
+    await apriMeteo()
+
+    await scheda()
+    const visibilita = carta(/^Visibilit/)
+    expect(visibilita.classList.contains("as-parametro--avviso")).toBe(true)
+    expect(visibilita.querySelector(".as-avviso.as-avviso--ignoto .as-avviso__titolo")?.textContent).toBe("Non disponibile")
+    expect(visibilita.querySelector("svg, .as-parametro__valore")).toBeNull()
   })
 
   it("con la chiave appena messa e Meteoblue non ancora chiesto non chiede la chiave", async () => {

@@ -1,6 +1,7 @@
-import { type KeyboardEvent, type PointerEvent, useState } from "react"
-import { Link } from "react-router"
+import { type KeyboardEvent, type PointerEvent, type ReactNode, useState } from "react"
 
+import { Avviso } from "./Avviso"
+import { Bottone } from "./Bottone"
 import type { SegnoDellaMisura } from "./Icons"
 import type { components } from "./api/schema"
 import { type Chiave, numero, oraDelSito, t } from "./i18n"
@@ -102,6 +103,14 @@ export function CartaDelParametro({
   if (m.code === "seeing" && m.known_hours === 0 && (!seeing.key || seeing.meteoblue === "refused")) {
     return <SeeingSenzaChiave nome={nome} rifiutata={seeing.key} />
   }
+  // le piccole del desktop non hanno l'avviso nella tavola: restano carte, col "Non disponibile"
+  if (m.known_hours === 0 && !forma.piccola) {
+    return (
+      <CartaDellAvviso nome={nome}>
+        <Avviso esito="ignoto" titolo={t("weather.card.unknown")} />
+      </CartaDellAvviso>
+    )
+  }
   return <Carta misura={m} notte={n} ore={ore} scala={scala} forma={forma} nome={nome} oraDelCielo={oraDelCielo} />
 }
 
@@ -128,22 +137,20 @@ export function CartaDelTelefono({ misura: m, notte: n, ore, scala, aperta, gove
         </svg>
         <span className="as-tel-carta__nome">{t(`weather.measure.${m.code}` as Chiave)}</span>
       </span>
-      <span className="as-tel-carta__valore">
-        {m.value !== null && (
-          <>
+      {/* senza valore niente numero ne' barrette: il semaforo spento lo dice (Design, v37.1) */}
+      {m.value === null ? (
+        <Semaforo livello={null}>{t("weather.card.unknownWord")}</Semaforo>
+      ) : (
+        <>
+          <span className="as-tel-carta__valore">
             <b>{numero(tondo(m.code, m.value))}</b>
             {forma.unita ? t(forma.unita) : ""}
-          </>
-        )}
-      </span>
-      {/* senza valore le righe restano vuote e il semaforo spento lo dice (Design, 14/10) */}
-      <span className="as-tel-carta__barre" aria-hidden="true">
-        {m.value !== null && <Grafico misura={m} notte={n} ore={ore} forma={forma} scala={scala} ora={null} dove="piccola" />}
-      </span>
-      {m.value === null ? (
-        <Semaforo livello={null}>{t("weather.card.unknown")}</Semaforo>
-      ) : (
-        m.level !== null && m.code !== "cloud" && m.known_hours > 0 && <Semaforo livello={m.level}>{parola(m.code, m.level)}</Semaforo>
+          </span>
+          <span className="as-tel-carta__barre" aria-hidden="true">
+            <Grafico misura={m} notte={n} ore={ore} forma={forma} scala={scala} ora={null} dove="piccola" />
+          </span>
+          {m.level !== null && m.code !== "cloud" && m.known_hours > 0 && <Semaforo livello={m.level}>{parola(m.code, m.level)}</Semaforo>}
+        </>
       )}
     </button>
   )
@@ -245,15 +252,25 @@ function sottoAllOra(o: Ora, m: Misura): string {
   return t("weather.card.at", { ora })
 }
 
-function SeeingSenzaChiave({ nome, rifiutata }: { nome: string; rifiutata: boolean }) {
+/** La carta di una misura senza ore: un avviso al posto di numero e grafico (tavola meteo-stati). */
+function CartaDellAvviso({ nome, children }: { nome: string; children: ReactNode }) {
   return (
     <article className="as-parametro as-parametro--avviso">
       <h3 className="as-parametro__nome">{nome}</h3>
-      <p className="as-parametro__sotto">
-        {t(rifiutata ? "weather.card.seeing.refused" : "weather.card.seeing.none")}{" "}
-        <Link to="/impostazioni/servizi">{t("weather.card.seeing.how")}</Link>
-      </p>
+      {children}
     </article>
+  )
+}
+
+function SeeingSenzaChiave({ nome, rifiutata }: { nome: string; rifiutata: boolean }) {
+  return (
+    <CartaDellAvviso nome={nome}>
+      <Avviso
+        esito={rifiutata ? "allarme" : "attesa"}
+        titolo={t(rifiutata ? "weather.card.seeing.refused" : "weather.card.seeing.none")}
+        azioni={<Bottone a="/impostazioni/servizi">{t("weather.card.seeing.how")}</Bottone>}
+      />
+    </CartaDellAvviso>
   )
 }
 

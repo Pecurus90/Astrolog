@@ -199,6 +199,8 @@ export const itMeteo = {
   "weather.card.temperature": "minima nel buio \u00b7 rugiada {r} \u00b0C",
   "weather.card.lowest": "minima nel buio",
   "weather.card.unknown": "Non disponibile",
+  // accanto alle lampade, come "buona" e "incerta"
+  "weather.card.unknownWord": "non disponibile",
   "weather.card.wind700": "superiore a {n} notti su 10 in questo sito",
   "weather.card.wind700.zero": "fra i pi\u00f9 deboli dell'anno in questo sito",
   "weather.card.wind700.one": "superiore a 1 notte su 10 in questo sito",
