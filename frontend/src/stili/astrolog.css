@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AstroLog — astrolog.css  ·  v37.2 (14/10/2026)
+   AstroLog — astrolog.css  ·  v37.3 (14/10/2026)
 
    FILE GENERATO: non si modifica qui. Le sorgenti stanno in foglio/, un
    file per famiglia; questo foglio e' la loro unione, nell'ordine qui
@@ -1020,7 +1020,8 @@ body.as-app, .as-app {
 }
 .as-stato::before { font-family: var(--carattere-cifre); font-size: var(--testo-micro); }
 .as-stato--allarme { color: var(--esito-allarme-inchiostro); background: var(--esito-allarme-velo); border-color: var(--esito-allarme); }
-.as-stato--allarme::before { content: "\26A0"; }
+/* «!» come nel segno dell'avviso: «⚠» diventa un'emoji a colori (DECISIONI 14/10) */
+.as-stato--allarme::before { content: "!"; font-weight: var(--peso-grosso); }
 
 /* ==========================================================================
    SEMAFORO DELLA NOTTE — tre lampade e la parola (v21)

@@ -26,7 +26,7 @@ from controlli_foglio import pavimenti_del_cielo
 # dal progetto Claude Design, mai per far passare una modifica fatta qui. Resta una **mappa**
 # anche con un foglio solo: quanti sono lo decide la consegna, non noi.
 IMPRONTE = {
-    FOGLIO: "f270b10839d5aebb4cd9fdcacd20fcdd0dd8c23fcb1c7626758db04837eff047",
+    FOGLIO: "7bab8711792ffc14ed28329236b3d40ef0991e6edfa49c190d2f99868af7f58b",
 }
 
 
@@ -174,7 +174,7 @@ def classi_fuori_casa(root):
 
 
 # I mattoni che un ruolo lo scrivono **di mestiere**, e che portano gia' il segno non cromatico
-# che il foglio da' loro: `Avviso` (spunta e triangolo) e `Campo`, il cui errore vive dentro
+# che il foglio da' loro: `Avviso` (spunta e `!`) e `Campo`, il cui errore vive dentro
 # `as-campo--errore`. Non e' una allowlist di comodo -- ci entra un mattone, cioe' la casa unica
 # di una classe, e per la stessa ragione per cui la regola esiste: il segno c'e'. `CartaSola`
 # porta "l'app si apre", col segno dell'attesa del foglio (`.as-entra__attesa`).
@@ -189,9 +189,9 @@ def avvisi_a_mano(root):
     """Gli avvisi scritti senza passare da `Avviso`.
 
     E' la stessa regola delle classi, su un'altra cosa: il mattone c'e', e chi non lo usa perde
-    cio' che il mattone porta -- qui il **segno non cromatico** (spunta o triangolo), senza il
-    quale l'esito e' detto dal colore soltanto e chi non distingue verde e rosso non lo legge
-    (WCAG 2.2, 1.4.1). Dodici volte in nove file, mentre la regola era scritta in prosa.
+    cio' che il mattone porta -- qui il **segno non cromatico** (spunta o punto esclamativo),
+    senza il quale l'esito e' detto dal colore soltanto e chi non distingue verde e rosso non lo
+    legge (WCAG 2.2, 1.4.1). Dodici volte in nove file, mentre la regola era scritta in prosa.
 
     Si cercano i **due ruoli che `Avviso` sa fare**, `alert` e `status`, e non ogni `role`: la
     barra ne ha uno, una sezione un altro, e una guardia che gridasse su quelli verrebbe spenta.

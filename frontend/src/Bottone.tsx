@@ -10,7 +10,7 @@ import { Link } from "react-router"
  * - **primario**: l'azione che la riga propone (unisci, applica). Uno per riga, o non e' primario.
  * - **tenue**: l'alternativa, o cio' che apre un pannello.
  * - **nudo**: cio' che si fa raramente e non deve tirare l'occhio ("non e' in elenco").
- * - **errore**: l'azione che **non e' andata**, e che si puo' riprovare. Porta il triangolo e il
+ * - **errore**: l'azione che **non e' andata**, e che si puo' riprovare. Porta il `!` e il
  *   bordo d'allarme, ma la parola dice da se' cos'e' successo ("Non salvato -- riprova"): il
  *   colore da solo non dice niente (WCAG 2.2, 1.4.1), e qui non deve, perche' un bottone rosso
  *   somiglia a un bottone che cancella.

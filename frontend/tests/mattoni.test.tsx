@@ -130,7 +130,7 @@ describe("Avviso", () => {
 
 describe("Bottone", () => {
   it("il verso errore porta la parola, non il solo bordo rosso", () => {
-    // Il foglio gli mette un triangolo davanti col `::before`, che in jsdom non esiste: cio' che
+    // Il foglio gli mette un `!` davanti col `::before`, che in jsdom non esiste: cio' che
     // si prova qui e' che la classe ci arrivi, e che la parola dica da se' cosa e' successo.
     render(
       <Bottone verso="errore" onClick={() => {}}>
@@ -216,7 +216,7 @@ describe("Campo", () => {
 
   it("il campo rotto si VEDE, non solo si sente", () => {
     // Le due classi sono la meta' visibile dell'errore: il bordo d'allarme sull'input e il
-    // triangolo davanti al motivo. Senza questa riga si potevano togliere tutte e due e la suite
+    // `!` davanti al motivo. Senza questa riga si potevano togliere tutte e due e la suite
     // restava verde -- un campo rotto identico a uno sano, per chi guarda.
     const { container } = render(
       <Campo id="lat" etichetta="Latitudine" errore="fra -90 e 90">
