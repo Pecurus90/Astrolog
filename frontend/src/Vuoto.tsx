@@ -40,6 +40,17 @@ export function Vuoto({
   )
 }
 
+/** Il vuoto di una **sezione** dentro una pagina che ha altro da dire (i progetti della
+ *  Dashboard): la frase e i gesti, senza disegno ne' titolo. */
+export function VuotoDellaSezione({ testo, children }: { testo: Chiave; children?: ReactNode }) {
+  return (
+    <div className="as-vuoto as-vuoto--sezione">
+      <p className="as-vuoto__testo">{t(testo)}</p>
+      {children}
+    </div>
+  )
+}
+
 /** La riga tenue sotto lo stato vuoto: quella che toglie la paura invece di chiedere qualcosa
  *  ("non cancella niente", "l'app funziona lo stesso"). */
 export function NotaDelVuoto({ children }: { children: ReactNode }) {

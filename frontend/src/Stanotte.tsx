@@ -22,7 +22,7 @@ import { Accordo, type Breve, Giudizio, VentoInQuota } from "./NotteDelMeteo"
  * - **Ogni vuoto e' una frase, mai un trattino.**
  */
 
-function useStanotte() {
+export function useStanotte() {
   return useQuery({
     queryKey: ["tonight"],
     queryFn: async () => {

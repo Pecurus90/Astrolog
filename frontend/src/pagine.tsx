@@ -3,7 +3,7 @@ import type { ReactElement } from "react"
 import { Archivio } from "./Archivio"
 import { Attrezzatura } from "./Attrezzatura"
 import { Confermare } from "./Confermare"
-import { Home } from "./Home"
+import { Dashboard } from "./Dashboard"
 import type { IconName } from "./Icons"
 import { Meteo } from "./Meteo"
 import { Notti } from "./Notti"
@@ -48,7 +48,7 @@ export type Pagina = {
 }
 
 export const PAGINE: readonly Pagina[] = [
-  { a: "/", chiave: "nav.home", icona: "casa", telefono: true, elemento: <Home /> },
+  { a: "/", chiave: "nav.home", icona: "casa", telefono: true, elemento: <Dashboard /> },
   { a: "/notti", chiave: "nav.nights", icona: "luna", telefono: true, elemento: <Notti /> },
   { a: "/archivio", chiave: "nav.archive", icona: "griglia", telefono: true, elemento: <Archivio /> },
   { a: "/progetti", chiave: "nav.projects", icona: "bersaglio", telefono: true },

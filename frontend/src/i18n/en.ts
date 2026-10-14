@@ -2,10 +2,10 @@
  * I testi inglesi: una **traduzione**, non una sorgente. Si scrive in `it.ts` e si porta qui.
  *
  * Le chiavi sono le stesse di `it.ts`, ne' una in piu' ne' una in meno: lo dice la guardia delle
- * traduzioni. `review.toConfirm` resta un frammento che segue un numero, come in italiano, e i
- * segnaposto (`{v}`, `{n}`) sono quelli della sorgente, carattere per carattere.
+ * traduzioni. I segnaposto (`{v}`, `{n}`) sono quelli della sorgente, carattere per carattere.
  */
 import { enArchivio } from "./en-archivio"
+import { enDashboard } from "./en-dashboard"
 import { enAttrezzatura } from "./en-attrezzatura"
 import { enGuscio } from "./en-guscio"
 import { enImpostazioni } from "./en-impostazioni"
@@ -20,6 +20,7 @@ import { enWizard } from "./en-wizard"
 export const en = {
   ...enWizard,
   ...enStanotte,
+  ...enDashboard,
   ...enImpostazioni,
   ...enLetture,
   ...enNotti,
@@ -53,7 +54,6 @@ export const en = {
   "scan.error.no_folders": "No folder to read. Add a folder.",
   "scan.error.no_readable_folders": "No folder reachable",
   "scan.error.worker_busy": "Operation already running",
-  "review.title": "To confirm",
   "review.filters": "Filters",
   "review.filters.why":
     "Filters not recognized. The association also applies to future frames.",
@@ -243,14 +243,8 @@ export const en = {
   "review.models.failed": "Model list not available",
   "review.loading": "Loading\u2026",
   "review.failed": "To confirm not available",
-  "review.toConfirm": "to confirm",
-  "health.failed": "The service did not respond",
-  "health.version": "version {v}",
   "health.tables": "{n} tables in the database",
   "health.tables.one": "1 table in the database",
-  "health.catalogEntries": "{n} catalog entries",
-  "health.catalogEntries.one": "1 catalog entry",
-  "action.reload": "Reload",
   "action.retry": "Try again",
   "settings.failed": "The service did not respond.",
   // I nomi delle nove classi sono i titoli **originali** della voce *Bortle scale* di Wikipedia,

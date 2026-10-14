@@ -36,7 +36,7 @@ export function VoceDellaNotte({ notte: n }: { notte: Notte }) {
   )
 }
 
-function oreDellaVoce(n: Notte): string {
+export function oreDellaVoce(n: Notte): string {
   if (n.trend) return t("weather.night.dark", { n: numero(n.window_hours ?? 0) })
   if (!n.usable_hours || !n.usable_since || !n.usable_until) return t("weather.night.noneClear")
   return t("weather.night.clear", {
@@ -47,7 +47,7 @@ function oreDellaVoce(n: Notte): string {
 }
 
 /** La parola del verdetto, una sola in tutta l'app; senza notte o senza nuvole lo dice. */
-function verdetto(n: Breve): string {
+export function verdetto(n: Breve): string {
   if (n.window === null) return t("weather.verdict.noNight")
   return n.verdict === null ? t("weather.verdict.unknown") : t(`weather.word.${n.verdict}`)
 }
@@ -125,8 +125,6 @@ export function SchedaDellaNotte({ notte: n, prima, scale, seeing, telefono }: {
 /** Il nome della notte, le ore serene col semaforo e da che ora a che ora. `segno` sta accanto al
  *  semaforo: sul telefono dice che il verdetto si tocca. */
 export function CapoDellaNotte({ notte: n, prima, segno }: { notte: Notte; prima: boolean; segno?: ReactNode }) {
-  const finestra = n.window ?? "dark"
-  const ore = n.usable_hours ?? 0
   return (
     <div className="as-meteo__notte">
       <h2 className="as-meteo__notte-nome">{nomeDellaNotte(n, prima)}</h2>
@@ -136,15 +134,7 @@ export function CapoDellaNotte({ notte: n, prima, segno }: { notte: Notte; prima
         ) : (
           <>
             <p className="as-meteo__grande">
-              {ore > 0 ? (
-                <>
-                  <b>{t("weather.clear.hours", { n: numero(ore) })}</b> {t(`weather.clear.${finestra}`, { n: numero(ore) })}
-                </>
-              ) : (
-                <>
-                  <b>{t("weather.clear.none")}</b> {t(`weather.clear.none.${finestra}`)}
-                </>
-              )}
+              <OreSerene cielo={n} />
             </p>
             {n.verdict === null ? <span className="as-meteo__parola">{verdetto(n)}</span> : <Semaforo livello={n.verdict} grande>{verdetto(n)}</Semaforo>}
             {segno}
@@ -161,6 +151,22 @@ export function CapoDellaNotte({ notte: n, prima, segno }: { notte: Notte; prima
         {n.verdict !== null && t("weather.clear.agreement", { n: numero(n.agreement[n.verdict]), su: numero(n.agreement.total) })}
       </p>
     </div>
+  )
+}
+
+/** "3 ore di buio sereno", o "Nessuna ora di buio sereno": il titolo di una notte, nel Meteo e
+ *  nella Dashboard. */
+export function OreSerene({ cielo: c }: { cielo: Cielo }) {
+  const finestra = c.window ?? "dark"
+  const ore = c.usable_hours ?? 0
+  return ore > 0 ? (
+    <>
+      <b>{t("weather.clear.hours", { n: numero(ore) })}</b> {t(`weather.clear.${finestra}`, { n: numero(ore) })}
+    </>
+  ) : (
+    <>
+      <b>{t("weather.clear.none")}</b> {t(`weather.clear.none.${finestra}`)}
+    </>
   )
 }
 

@@ -257,6 +257,14 @@ export function giornoENumero(data: string, breve = false): string {
   }).format(mezzanotteUtc(data))
 }
 
+/** Il giorno di una notte col mese, come lo scrive la Dashboard: *sabato 19 settembre*. In UTC come
+ *  `notte`, per la stessa ragione. */
+export function giornoEMese(data: string): string {
+  return new Intl.DateTimeFormat(lingua, { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(
+    mezzanotteUtc(data),
+  )
+}
+
 /** Quanto tempo fa, come lo dice la lingua: *2 ore fa*, *ieri*. L'eta' di un istante la sa solo
  *  chi guarda, adesso: il backend non puo' mandarla scritta. */
 export function fa(istante: string, adesso: Date = new Date()): string {

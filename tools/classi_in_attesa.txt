@@ -41,8 +41,6 @@ as-dialogo__titolo
 as-impostazioni
 as-impostazioni__corpo
 as-impostazioni__lato
-as-numero
-as-numero__unita
 as-pagina__azioni
 as-riga--errore
 as-riga--risposta

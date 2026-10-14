@@ -847,7 +847,12 @@ riga per voce.
   fattori che si chiudono toccando fuori e tengono il fuoco (`useRiquadro`, lo stesso
   dell'Archivio), la carta piccola senza valore col solo semaforo spento e «non disponibile»
   (DECISIONI di Design, 14/10), le carte intere senza ore come avvisi (seeing senza chiave o
-  rifiutata, misura che il modello non da'), come la tavola meteo-stati. Resta la Dashboard intera, desktop e telefono. Le tavole intere
+  rifiutata, misura che il modello non da'), come la tavola meteo-stati; la Dashboard desktop,
+  prima fetta (testa di stanotte, sei carte che aprono la scala della misura, prossime 3 notti, da
+  riprendere, il vuoto dei progetti: Marco, 14/10/2026). Restano, in quest'ordine (Marco,
+  14/10/2026): il telefono e gli stati delle tavole `dashboard-stati*`; il dettaglio della Luna col
+  calendario; la volta coi pianeti; l'anno. Aspettano Marco: le parole del cielo e il buio senza
+  Luna nelle prossime notti, con la loro icona; "214 frame fuori dai conti". Le tavole intere
   si scaricano dal browser (`GetFile` del progetto): DesignSync le taglia a 256 KiB.
 - **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,
   Voyager, Telescopius, SkyTools, TheAstroImagingPlanner). La disposizione non cambia: sono

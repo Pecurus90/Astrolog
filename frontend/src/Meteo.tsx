@@ -18,6 +18,36 @@ type Notte = Meteo["nights"][number]
 type Codice = Notte["measures"][number]["code"]
 type Esito = components["schemas"]["WeatherRefreshOut"]["status"]
 
+/** La previsione del sito di casa: la leggono il Meteo e la Dashboard. */
+export function usePrevisione() {
+  return useQuery({
+    queryKey: ["weather"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/weather")
+      if (error) throw new Error(t("weather.failed"))
+      return data
+    },
+  })
+}
+
+/** Cio' che la pagina dice prima della previsione: che arriva, che non e' arrivata, o che senza un
+ *  sito di casa non arrivera'. Lo dicono il Meteo e la Dashboard. */
+export function PrimaDellaPrevisione({ meteo }: { meteo: ReturnType<typeof usePrevisione> }) {
+  return (
+    <>
+      {meteo.isPending && <p>{t("weather.loading")}</p>}
+      {meteo.error && <Avviso esito="allarme">{meteo.error.message}</Avviso>}
+      {meteo.data?.site === null && (
+        <Vuoto titolo="weather.noSite.title" perche="weather.noSite.why" sotto={1}>
+          <AzioniDelVuoto>
+            <Bottone a="/impostazioni/sito">{t("weather.noSite.how")}</Bottone>
+          </AzioniDelVuoto>
+        </Vuoto>
+      )}
+    </>
+  )
+}
+
 /**
  * Il **Meteo** nel disegno v27/v28 (forma C, una notte alla volta): in testa il sito, quando e'
  * arrivata la previsione, il modello e *Aggiorna*; sotto la fila delle sette notti, le prime tre
@@ -32,14 +62,7 @@ type Esito = components["schemas"]["WeatherRefreshOut"]["status"]
  */
 export function Meteo() {
   const cache = useQueryClient()
-  const meteo = useQuery({
-    queryKey: ["weather"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/weather")
-      if (error) throw new Error(t("weather.failed"))
-      return data
-    },
-  })
+  const meteo = usePrevisione()
   const rileggi = () => Promise.all(["weather", "tonight"].map((q) => cache.invalidateQueries({ queryKey: [q] })))
   const aggiorna = useMutation({
     mutationFn: async (): Promise<Esito> => {
@@ -82,15 +105,7 @@ export function Meteo() {
 
   return (
     <div className="as-pagina" ref={misura}>
-      {meteo.isPending && <p>{t("weather.loading")}</p>}
-      {meteo.error && <Avviso esito="allarme">{meteo.error.message}</Avviso>}
-      {detto && detto.site === null && (
-        <Vuoto titolo="weather.noSite.title" perche="weather.noSite.why" sotto={1}>
-          <AzioniDelVuoto>
-            <Bottone a="/impostazioni/sito">{t("weather.noSite.how")}</Bottone>
-          </AzioniDelVuoto>
-        </Vuoto>
-      )}
+      <PrimaDellaPrevisione meteo={meteo} />
       {detto?.site && detto.missing === "no_timezone" && (
         <Avviso esito="allarme" pagina azioni={<Bottone a="/impostazioni/sito">{t("weather.noTimezone.how")}</Bottone>}>
           {t("weather.noTimezone")}

@@ -219,13 +219,27 @@ quando l'app intanto e' passata ad altro: le altre restano lette, e quella si ri
 
 ## Dashboard
 
-La pagina principale ti dice **quante cose ci sono da confermare**: sono le domande che l'app ha
-su cio' che ha letto negli header. Sotto trovi la versione dell'app e due numeri sullo stato
-interno (quante tabelle ha il database, quante voci ha il catalogo di oggetti celesti), e un tasto
-per ricaricare.
+La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
 
-Se qualcosa non risponde, l'app **te lo dice**: non ti mostra uno zero al posto di un numero che
-non ha potuto leggere.
+- **In testa**: il sito, quante **ore di buio sereno** ci sono stanotte e il semaforo con la sua
+  parola (buona, incerta, non adatta). Accanto la **Luna**: la fase, quanto e' illuminata, quando
+  sorge e quando tramonta.
+- **Il meteo della notte**: sei carte, sempre nello stesso ordine -- Nuvole, Seeing, Jet stream,
+  Vento, Condensa, Aerosol -- come quelle del Meteo in piccolo: il valore della notte, cosa vuol
+  dire, il giudizio con le sue ore, le barrette ora per ora e il picco. Tocca una carta e sotto si
+  apre il suo grafico **dal tramonto all'alba**, sul cielo coi suoi colori; una alla volta,
+  *chiudi* lo richiude. *Meteo* porta alla pagina intera.
+- **Le prossime 3 notti**: il giorno, le ore serene e il semaforo; ognuna porta al Meteo. La
+  terza e' gia' **tendenza**, come nel Meteo: dice le ore di buio, non quelle serene.
+- **Da riprendere**: quante domande ci sono **da confermare**, con *Rispondi*, e l'ultima notte
+  che hai ripreso -- quanto tempo, su quale oggetto (quello con piu' tempo, e quanti altri) e
+  quanti frame -- che si apre nelle Notti. Se non c'e' niente da riprendere, la sezione non c'e'.
+- **I progetti** non esistono ancora: la pagina lo dice, e *Crea un progetto* porta alla pagina
+  Progetti, che arrivera'.
+
+Senza un sito di casa la pagina ti chiede di sceglierlo; *da riprendere* c'e' lo stesso. Se
+qualcosa non risponde, l'app **te lo dice**: non ti mostra uno zero al posto di un numero che non
+ha potuto leggere.
 
 ## Archivio
 
@@ -760,7 +774,6 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
 - **Sul NAS la scansione puo' partire da sola a intervalli**, se chi avvia l'app imposta
   `ASTROLOG_SCAN_EVERY_MIN`. Per il resto partono da soli solo i giri del meteo -- la previsione,
   lo storico delle notti riprese e il solito del sito: la scansione si chiede col pulsante.
-- **Il Meteo non ha ancora grafici**: arrivano col design.
 - **ASTAP va installato a parte**, col suo catalogo: l'app ti dice se li trova e ti lascia
   indicare dove sta il programma -- al primo avvio e in Impostazioni -- ma non scarica ne' installa
   niente per te. In futuro viaggera' dentro l'app.
@@ -775,10 +788,13 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
 - **Un campo della scheda non si svuota**: si corregge scrivendo un altro valore, ma un valore
   scritto non si toglie dalla pagina.
 - **La veste nuova e' solo sul telaio**: il binario, la barra in alto e Stanotte sono quelli
-  disegnati, col carattere nuovo. Le pagine dentro -- Dashboard, Archivio, Notti, Da confermare,
+  disegnati, col carattere nuovo. Le pagine dentro -- Archivio, Notti, Da confermare,
   Attrezzatura, Impostazioni -- funzionano come prima ma sono **spoglie** finche' non arriva il
-  loro disegno; il Meteo e' la prima a riceverlo. Il tema chiaro c'e' nel foglio e **non si puo'
+  loro disegno; il Meteo e la Dashboard l'hanno gia'. Il tema chiaro c'e' nel foglio e **non si puo'
   ancora accendere**.
+- **Nella Dashboard mancano ancora** il dettaglio della Luna col calendario delle fasi, la volta
+  con le curve degli oggetti, l'anno col calendario colorato e la forma del telefono: arrivano
+  una alla volta.
 - **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un
   tondo con la sua forma -- con una spunta se e' andata bene, un punto esclamativo se c'e' un
   problema, tratteggiato se aspetta -- perche' chi non distingue il verde dal rosso deve capire lo

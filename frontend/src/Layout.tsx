@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query"
 import { type KeyboardEvent, type ReactNode, type UIEvent, useEffect, useRef, useState } from "react"
 import { Link, useLocation } from "react-router"
 
@@ -7,9 +6,9 @@ import { Icon, IconSprite } from "./Icons"
 import { Ricerca } from "./Ricerca"
 import { AvvisiDellaScansione, Scansiona, ScansioneNelFoglio } from "./Scansiona"
 import { Pastiglia, Stanotte } from "./Stanotte"
-import { api } from "./api/client"
 import { numero, t } from "./i18n"
 import { PAGINE, type Pagina, paginaDi } from "./pagine"
+import { useRevisione } from "./revisione"
 
 /**
  * Il telaio (disegno v26, `51-telaio.css`; contratto in `docs/domini/navigazione.md`): il binario
@@ -24,14 +23,7 @@ import { PAGINE, type Pagina, paginaDi } from "./pagine"
  */
 export function Layout({ children }: { children: ReactNode }) {
   const dove = useLocation()
-  const revisione = useQuery({
-    queryKey: ["review"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/review")
-      if (error) throw new Error(t("review.failed"))
-      return data
-    },
-  })
+  const revisione = useRevisione()
   const qui = paginaDi(dove.pathname)
   const daConfermare = revisione.data?.to_confirm ?? 0
 

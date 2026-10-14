@@ -113,10 +113,10 @@ export const TENDENZA = {
   hours: [],
 }
 
+/** La previsione del banco; `altre` aggiunge rotte o sostituisce quelle di qui. */
 export function meteo(corpo: Record<string, unknown>, altre: Record<string, Voce> = {}) {
   rispondi({
     ...STANOTTE,
-    ...altre,
     "/api/v1/weather": {
       stato: 200,
       corpo: {
@@ -141,6 +141,7 @@ export function meteo(corpo: Record<string, unknown>, altre: Record<string, Voce
     "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
     "/api/health": { stato: 200, corpo: SALUTE },
     ...SPINA,
+    ...altre,
   })
 }
 

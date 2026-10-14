@@ -10,8 +10,9 @@ type Ora = components["schemas"]["WeatherHourOut"]
 type Scala = components["schemas"]["WeatherScaleOut"]
 type Seeing = components["schemas"]["WeatherSeeingOut"]
 type Livello = NonNullable<Misura["level"]>
-type Destra = "rain" | "wind" | "condensation" | "seeing" | "jet" | "aerosol" | "visibility"
-type Campo = "precip_mm" | "wind_kmh" | "temperature_c" | "seeing_arcsec" | "wind_250hpa_kmh" | "aerosol_optical_depth" | "visibility_km"
+/** Una misura che si disegna sulla scala di destra: le sette del Meteo, e le nuvole della Dashboard. */
+export type Destra = "cloud" | "rain" | "wind" | "condensation" | "seeing" | "jet" | "aerosol" | "visibility"
+type Campo = "cloud_total_pct" | "precip_mm" | "wind_kmh" | "temperature_c" | "seeing_arcsec" | "wind_250hpa_kmh" | "aerosol_optical_depth" | "visibility_km"
 
 /** Le metriche della scala di destra, una alla volta (DECISIONI del disegno, v27). */
 export const A_DESTRA: readonly Destra[] = ["rain", "wind", "condensation", "seeing", "jet", "aerosol", "visibility"]
@@ -19,6 +20,7 @@ export const A_DESTRA: readonly Destra[] = ["rain", "wind", "condensation", "see
 // Il campo che ogni metrica disegna, la sua unita' e la misura che da' la scala: la condensa si
 // disegna come aria e rugiada, sulla scala della temperatura.
 const DISEGNO: Record<Destra, { campo: Campo; unita: Chiave | null; scala: Misura["code"] }> = {
+  cloud: { campo: "cloud_total_pct", unita: "weather.unit.pct", scala: "cloud" },
   rain: { campo: "precip_mm", unita: "weather.unit.mm", scala: "rain" },
   wind: { campo: "wind_kmh", unita: "weather.unit.kmh", scala: "wind" },
   condensation: { campo: "temperature_c", unita: "weather.unit.celsius", scala: "temperature" },
@@ -45,13 +47,12 @@ const TINTE = {
 const PAROLE = { go: "as-scala__parola--buona", marginal: "as-scala__parola--incerta", nogo: "as-scala__parola--niente" } as const
 const RIGHE = { go: "as-cielo__riga--buona", marginal: "as-cielo__riga--incerta", nogo: "as-cielo__riga--niente", sotto: "as-cielo__riga--sotto" } as const
 
-// La tela: larga quanto il disegno del desktop; sul telefono si stringe col viewBox.
-const LARGO = 1080
-const ALTO = 300
-const SINISTRA = 44
-const DESTRA = 48
-const CIMA = 30
-const FONDO = ALTO - 26
+// La tela: larga quanto il disegno del desktop; sul telefono si stringe col viewBox. La scala sola
+// della Dashboard ha la sua, piu' bassa e senza la scala di sinistra (tavola v37).
+type Tela = { largo: number; alto: number; sinistra: number; destra: number; cima: number; fondo: number }
+const CIELO: Tela = { largo: 1080, alto: 300, sinistra: 44, destra: 48, cima: 30, fondo: 274 }
+const SOLA: Tela = { largo: 1000, alto: 210, sinistra: 12, destra: 46, cima: 30, fondo: 184 }
+const { largo: LARGO, alto: ALTO, sinistra: SINISTRA, destra: DESTRA, cima: CIMA, fondo: FONDO } = CIELO
 
 /** Una metrica di destra che non si sceglie (il seeing senza chiave) e perche'. */
 function bloccata(d: Destra, seeing: Seeing): Chiave | null {
@@ -187,16 +188,7 @@ export function CieloDelleNubi({
         // col dito il filo resta dove si e' alzato: solo il mouse che esce torna alla notte
         onPointerLeave={(ev) => { if (ev.pointerType === "mouse") scegli(null) }} onKeyDown={tasto} onBlur={() => scegli(null)}>
         <svg viewBox={`0 0 ${LARGO} ${ALTO}`} role="img" aria-label={t("weather.sky.img")} data-dx-acceso={destra ? "" : undefined}>
-          <defs>
-            <pattern id={`cielo-${n.night}-tr`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-              <line x1="0" y1="0" x2="0" y2="6" className="as-scala__tratteggio" />
-            </pattern>
-            <linearGradient id={`cielo-${n.night}-c`} x1="0" x2="1">
-              {ore.map((o, i) => (
-                <stop key={o.at} offset={`${((i + 0.5) / ore.length) * 100}%`} className={`${TAPPE[o.sky]}`} />
-              ))}
-            </linearGradient>
-          </defs>
+          <Fondi id={`cielo-${n.night}`} ore={ore} />
           <rect width={LARGO} height={ALTO} fill={`url(#cielo-${n.night}-c)`} />
           {[0, 50, 100].map((v) => (
             <g key={v}>
@@ -215,7 +207,7 @@ export function CieloDelleNubi({
           {destra && (
             <ScalaDiDestra destra={destra} ore={ore} misura={misura(DISEGNO[destra].scala)}
               scala={DISEGNO[destra].scala === destra ? scale.find((s) => s.code === destra) : undefined}
-              x={x} passo={passo} id={`cielo-${n.night}-tr`} />
+              x={x} passo={passo} id={`cielo-${n.night}-tr`} tela={CIELO} />
           )}
           <text className="as-scala__unita" x={SINISTRA - 6} y={CIMA - 10} textAnchor="end">%</text>
           <line className="as-volta__orizzonte" x1={SINISTRA} x2={LARGO} y1={FONDO} y2={FONDO} />
@@ -243,6 +235,47 @@ export function CieloDelleNubi({
         )}
       </p>
     </div>
+  )
+}
+
+/** Una misura sola dal tramonto all'alba, sul cielo coi suoi colori: lo stesso disegno della scala
+ *  di destra (la Dashboard lo apre sotto la sua carta, `handoff/design-dashboard.md`). */
+export function ScalaDellaMisura({ notte: n, ore, scale, codice }: { notte: Notte; ore: Ora[]; scale: Scala[]; codice: Destra }) {
+  const { largo, alto, sinistra, destra, fondo } = SOLA
+  const passo = (largo - sinistra - destra) / (ore.length || 1)
+  const x = (i: number) => sinistra + (i + 0.5) * passo
+  const da = DISEGNO[codice].scala
+  const id = `scala-${n.night}-${codice}`
+  return (
+    <div className="as-cielo__tela">
+      <svg viewBox={`0 0 ${largo} ${alto}`} role="img" aria-label={t("dashboard.weather.img", { nome: t(`weather.measure.${codice}` as Chiave) })}>
+        <Fondi id={id} ore={ore} />
+        <rect width={largo} height={alto} fill={`url(#${id}-c)`} />
+        {/* la terra prima della scala: lo zero della scala le sta sopra, come nella tavola */}
+        <rect className="as-volta__terra" x={0} y={fondo + 0.5} width={largo} height={alto - fondo} />
+        <ScalaDiDestra destra={codice} ore={ore} misura={n.measures.find((m) => m.code === da)}
+          scala={da === codice ? scale.find((s) => s.code === codice) : undefined} x={x} passo={passo} id={`${id}-tr`} tela={SOLA} />
+        {ore.map((o, i) => (
+          <text key={o.at} className="as-volta__ora" x={x(i)} y={alto - 8} textAnchor="middle">{oraDelSito(o.at).slice(0, 2)}</text>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+/** Il tratteggio delle ore senza valore (`<id>-tr`) e i colori del cielo ora per ora (`<id>-c`). */
+function Fondi({ id, ore }: { id: string; ore: Ora[] }) {
+  return (
+    <defs>
+      <pattern id={`${id}-tr`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="6" className="as-scala__tratteggio" />
+      </pattern>
+      <linearGradient id={`${id}-c`} x1="0" x2="1">
+        {ore.map((o, i) => (
+          <stop key={o.at} offset={`${((i + 0.5) / ore.length) * 100}%`} className={`${TAPPE[o.sky]}`} />
+        ))}
+      </linearGradient>
+    </defs>
   )
 }
 
@@ -290,10 +323,11 @@ function Sereno({ notte: n, ore, passo }: { notte: Notte; ore: Ora[]; passo: num
 /** La metrica scelta sulla scala di destra: le tacche delle soglie, il tratto col colore del
  *  giudizio di ogni ora (spezzato dove il giudizio cambia), la parola dove cambia, il tratteggio
  *  dove il servizio tace. La condensa e' aria e rugiada; il vento porta le raffiche. */
-function ScalaDiDestra({ destra, ore, misura: m, scala, x, passo, id }: {
+function ScalaDiDestra({ destra, ore, misura: m, scala, x, passo, id, tela }: {
   destra: Destra; ore: Ora[]; misura: Misura | undefined; scala: Scala | undefined
-  x: (i: number) => number; passo: number; id: string
+  x: (i: number) => number; passo: number; id: string; tela: Tela
 }) {
+  const { largo: LARGO, sinistra: SINISTRA, destra: DESTRA, cima: CIMA, fondo: FONDO } = tela
   const { campo, unita } = DISEGNO[destra]
   const basso = m?.axis_min ?? 0
   const alto = m?.axis_max ?? 1
@@ -311,7 +345,7 @@ function ScalaDiDestra({ destra, ore, misura: m, scala, x, passo, id }: {
       ))}
       <text className="as-scala__unita" x={LARGO - 4} y={CIMA - 10} textAnchor="end">{t(unita ?? "weather.right.aerosol")}</text>
       {destra === "rain" ? (
-        <Tratti ore={ore} valore={(o) => o.precip_mm} livello={livello} x={x} y={y} passo={passo} id={id} classe="" barre />
+        <Tratti ore={ore} valore={(o) => o.precip_mm} livello={livello} x={x} y={y} passo={passo} id={id} classe="" barre tela={tela} />
       ) : (
         <>
           {destra === "condensation" &&
@@ -325,22 +359,23 @@ function ScalaDiDestra({ destra, ore, misura: m, scala, x, passo, id }: {
             <polyline className="as-scala__rugiada" points={ore.flatMap((o, i) => (o.dew_point_c === null ? [] : [`${x(i)},${y(o.dew_point_c)}`])).join(" ")} />
           )}
           {destra === "wind" && (
-            <Tratti ore={ore} valore={(o) => o.wind_gust_kmh} livello={(o) => (o.levels.gust === "nogo" ? "nogo" : null)} x={x} y={y} passo={passo} id={id} classe=" as-scala__tratto--raffiche" />
+            <Tratti ore={ore} valore={(o) => o.wind_gust_kmh} livello={(o) => (o.levels.gust === "nogo" ? "nogo" : null)} x={x} y={y} passo={passo} id={id} classe=" as-scala__tratto--raffiche" tela={tela} />
           )}
-          <Tratti ore={ore} valore={(o) => o[campo]} livello={livello} x={x} y={y} passo={passo} id={id} classe="" />
+          <Tratti ore={ore} valore={(o) => o[campo]} livello={livello} x={x} y={y} passo={passo} id={id} classe="" tela={tela} />
         </>
       )}
-      <Parole ore={ore} destra={destra} valore={(o) => (destra === "rain" ? null : o[campo])} y={y} passo={passo} />
+      <Parole ore={ore} destra={destra} valore={(o) => (destra === "rain" ? null : o[campo])} y={y} passo={passo} tela={tela} />
     </g>
   )
 }
 
 /** Il tratto a pezzi: un pezzo per ogni corsa di ore con la stessa parola, unito a mezz'ora con
  *  quello prima (o a barre, per la pioggia); le ore senza valore sono un tratteggio con "non fornito". */
-function Tratti({ ore, valore, livello, x, y, passo, id, classe, barre = false }: {
+function Tratti({ ore, valore, livello, x, y, passo, id, classe, barre = false, tela }: {
   ore: Ora[]; valore: (o: Ora) => number | null; livello: (o: Ora) => Livello | null
-  x: (i: number) => number; y: (v: number) => number; passo: number; id: string; classe: string; barre?: boolean
+  x: (i: number) => number; y: (v: number) => number; passo: number; id: string; classe: string; barre?: boolean; tela: Tela
 }) {
+  const { sinistra: SINISTRA, cima: CIMA, fondo: FONDO } = tela
   const pezzi: { da: number; a: number; vuoto: boolean; l: Livello | null }[] = []
   ore.forEach((o, i) => {
     const vuoto = valore(o) === null
@@ -382,9 +417,10 @@ function Tratti({ ore, valore, livello, x, y, passo, id, classe, barre = false }
 }
 
 /** La parola del giudizio dove cambia ("niente dalle 22"), senza sovrapporsi alla precedente. */
-function Parole({ ore, destra, valore, y, passo }: {
-  ore: Ora[]; destra: Destra; valore: (o: Ora) => number | null; y: (v: number) => number; passo: number
+function Parole({ ore, destra, valore, y, passo, tela }: {
+  ore: Ora[]; destra: Destra; valore: (o: Ora) => number | null; y: (v: number) => number; passo: number; tela: Tela
 }) {
+  const { largo: LARGO, sinistra: SINISTRA, destra: DESTRA, cima: CIMA } = tela
   const scritte: { i: number; l: Livello; testo: string; x0: number }[] = []
   let fine = SINISTRA
   ore.forEach((o, i) => {

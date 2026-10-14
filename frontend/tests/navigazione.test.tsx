@@ -14,7 +14,7 @@
 import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, SPINA, STANOTTE, disegna, impostazioni, pulisci, rispondi } from "./banco"
+import { CASA, SALUTE, SPINA, STANOTTE, disegna, impostazioni, pulisci, rispondi } from "./banco"
 
 afterEach(pulisci)
 
@@ -25,6 +25,7 @@ function configurata() {
     "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
     "/api/v1/review": { stato: 200, corpo: { to_confirm: 7 } },
     "/api/health": { stato: 200, corpo: SALUTE },
+    ...CASA,
     ...SPINA,
   })
 }
@@ -35,7 +36,7 @@ describe("la navigazione", () => {
     await disegna()
     expect(await screen.findByRole("navigation")).toBeDefined()
     // La home non cambia mestiere: dice quante cose ci sono da confermare.
-    expect(await within(await screen.findByRole("main")).findByText("7")).toBeDefined()
+    expect(await within(await screen.findByRole("main")).findByText("7 da confermare")).toBeDefined()
   })
 
   it("dalla barra si arriva a Da confermare, e l indirizzo cambia", async () => {

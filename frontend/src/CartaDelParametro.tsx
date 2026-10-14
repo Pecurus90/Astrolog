@@ -1,4 +1,4 @@
-import { type KeyboardEvent, type PointerEvent, type ReactNode, useState } from "react"
+import { type KeyboardEvent, type PointerEvent, type ReactNode, type Ref, useState } from "react"
 
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
@@ -152,6 +152,39 @@ export function CartaDelTelefono({ misura: m, notte: n, ore, scala, aperta, gove
           {m.level !== null && m.code !== "cloud" && m.known_hours > 0 && <Semaforo livello={m.level}>{parola(m.code, m.level)}</Semaforo>}
         </>
       )}
+    </button>
+  )
+}
+
+/**
+ * La carta della **Dashboard** (`as-parametro--piccolo` in un bottone): la carta del Meteo in
+ * piccolo -- valore, cosa dice, giudizio, barrette e picco -- che apre sotto il suo grafico
+ * (`governa`). Le Nuvole non hanno la riga del giudizio: la loro parola e' il verdetto in testa.
+ */
+export function CartaDellaDashboard({ misura: m, notte: n, ore, scala, aperta, governa, apri, ref }: {
+  misura: Misura; notte: Notte; ore: Ora[]; scala?: Scala | undefined; aperta: boolean; governa: string; apri: () => void
+  ref?: Ref<HTMLButtonElement>
+}) {
+  const forma = FORME[m.code]
+  if (!forma) return null
+  return (
+    <button ref={ref} className="as-parametro as-parametro--piccolo" type="button" aria-expanded={aperta} aria-controls={governa} onClick={apri}>
+      <span className="as-parametro__nome">{t(`weather.measure.${m.code}` as Chiave)}</span>
+      <span className="as-parametro__valore">
+        <b>{m.value === null ? t("weather.card.unknown") : numero(tondo(m.code, m.value))}</b>
+        {m.value !== null && forma.unita && <span className={m.code === "seeing" ? "as-parametro__segno" : undefined}>{t(forma.unita)}</span>}
+      </span>
+      <span className="as-parametro__sotto">{sotto(m, n, forma)}</span>
+      {m.level !== null && m.code !== "cloud" && m.known_hours > 0 && (
+        <span className="as-parametro__sem">
+          <Semaforo livello={m.level}>{giudizio(m)}</Semaforo>
+        </span>
+      )}
+      <span className="as-parametro__grafico">
+        <Grafico misura={m} notte={n} ore={ore} forma={forma} scala={scala} ora={null} dove="dashboard" />
+        <Asse ore={ore} dentro />
+      </span>
+      <span className="as-parametro__picco">{picco(m, n, forma, scala)}</span>
     </button>
   )
 }
@@ -331,7 +364,7 @@ const ALTO = 64
 
 /** Le barrette o le linee della carta, ora per ora, sulla scala che il backend ha scritto. */
 function Grafico({ misura: m, notte: n, ore, forma, scala, ora, dove = "carta" }: {
-  misura: Misura; notte: Notte; ore: Ora[]; forma: Forma; scala?: Scala | undefined; ora: number | null; dove?: "carta" | "piccola"
+  misura: Misura; notte: Notte; ore: Ora[]; forma: Forma; scala?: Scala | undefined; ora: number | null; dove?: "carta" | "piccola" | "dashboard"
 }) {
   // la stessa misura si disegna due volte sul telefono (carta piccola e carta aperta): due id
   const id = `${dove}-${n.night}-${m.code}`
@@ -423,15 +456,16 @@ function tratti(ore: Ora[], c: Campo): number[][] {
 }
 
 /** Tre ore sotto il grafico: la prima, quella in mezzo, l'ultima. */
-function Asse({ ore }: { ore: Ora[] }) {
+function Asse({ ore, dentro = false }: { ore: Ora[]; dentro?: boolean }) {
+  const Riga = dentro ? "span" : "p"
   const scelte = [0, (ore.length - 1) >> 1, ore.length - 1].filter((i, k, a) => i >= 0 && a.indexOf(i) === k)
   return (
-    <p className="as-parametro__asse" aria-hidden="true">
+    <Riga className="as-parametro__asse" aria-hidden="true">
       {scelte.map((i) => (
         <span key={i} style={{ left: `${((i + 0.5) / ore.length) * 100}%` }}>
           {oraDelSito(ore[i]?.at ?? "")}
         </span>
       ))}
-    </p>
+    </Riga>
   )
 }

@@ -1,13 +1,9 @@
 /**
  * I testi italiani: la **sorgente**. Le chiavi sono in inglese perche' sono nomi nel codice.
- *
- * Vincolo non ovvio: `review.toConfirm` e' un frammento che segue un numero, non una frase
- * intera, perche' a schermo il numero e' in grassetto e il testo no. Regge in italiano e in
- * inglese, dove il numero sta davanti in tutti e due; una lingua che lo volesse altrove avrebbe
- * bisogno di una frase sola con il numero dentro, e questa chiave andrebbe rifatta.
  */
 import { itArchivio } from "./it-archivio"
 import { itAttrezzatura } from "./it-attrezzatura"
+import { itDashboard } from "./it-dashboard"
 import { itGuscio } from "./it-guscio"
 import { itImpostazioni } from "./it-impostazioni"
 import { itLetture } from "./it-letture"
@@ -21,6 +17,7 @@ import { itWizard } from "./it-wizard"
 export const it = {
   ...itWizard,
   ...itStanotte,
+  ...itDashboard,
   ...itImpostazioni,
   ...itLetture,
   ...itNotti,
@@ -54,7 +51,6 @@ export const it = {
   "scan.error.no_folders": "Nessuna cartella da leggere. Aggiungi una cartella.",
   "scan.error.no_readable_folders": "Nessuna cartella raggiungibile",
   "scan.error.worker_busy": "Operazione gi\u00e0 in corso",
-  "review.title": "Da confermare",
   "review.filters": "Filtri",
   "review.filters.why":
     "Filtri non riconosciuti. L'associazione vale anche per i frame futuri.",
@@ -248,14 +244,8 @@ export const it = {
   "review.models.failed": "Elenco dei modelli non disponibile",
   "review.loading": "Caricamento\u2026",
   "review.failed": "Da confermare non disponibile",
-  "review.toConfirm": "da confermare",
-  "health.failed": "Il servizio non ha risposto",
-  "health.version": "versione {v}",
   "health.tables": "{n} tabelle nel database",
   "health.tables.one": "1 tabella nel database",
-  "health.catalogEntries": "{n} voci di catalogo",
-  "health.catalogEntries.one": "1 voce di catalogo",
-  "action.reload": "Ricarica",
   "action.retry": "Riprova",
   "settings.failed": "Il servizio non ha risposto.",
   // **Che cielo hai**, le nove classi di Bortle. I nomi e le descrizioni vengono dalla colonna
