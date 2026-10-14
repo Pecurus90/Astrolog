@@ -845,10 +845,9 @@ riga per voce.
   che apre gli altri fattori, carte piccole che aprono la carta intera; la larghezza la misura
   `useColonnaStretta`, anche senza notti), i valori della notte e delle ore interi, gli altri
   fattori che si chiudono toccando fuori e tengono il fuoco (`useRiquadro`, lo stesso
-  dell'Archivio). Restano: la Dashboard intera, desktop e telefono; sul telefono la carta
-  piccola di una misura senza valore porta un trattino, che la tavola non disegna: Design la
-  conferma o la ridisegna. Le tavole intere si scaricano dal browser (`GetFile` del progetto):
-  DesignSync le taglia a 256 KiB.
+  dell'Archivio), la carta piccola senza valore vuota col semaforo spento e «Non disponibile»
+  (DECISIONI di Design, 14/10). Resta la Dashboard intera, desktop e telefono. Le tavole intere
+  si scaricano dal browser (`GetFile` del progetto): DesignSync le taglia a 256 KiB.
 - **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,
   Voyager, Telescopius, SkyTools, TheAstroImagingPlanner). La disposizione non cambia: sono
   colonne. (1) **distanza dalla Luna** del progetto stanotte; (2) **ore utili stanotte** (buio,

@@ -72,15 +72,18 @@ describe("il Meteo sul telefono", () => {
     expect(pagina.querySelector("article.as-parametro")).toBeNull()
   })
 
-  it("una misura senza valore ha la sua carta piccola col trattino, e chi non vede sente che non c'e'", async () => {
+  it("una misura senza valore ha la carta piccola vuota, col semaforo spento e la parola che lo dice", async () => {
+    // Design, DECISIONI 14/10: niente trattino, la stessa parola a schermo e allo screen reader
     const cieca = { ...NOTTE, measures: NOTTE.measures.map((m) => (m.code === "wind" ? { ...m, value: null, level: null, known_hours: 0 } : m)) }
     const pagina = await sulTelefono(cieca)
 
-    const valore = piccola(pagina, "Vento").querySelector(".as-tel-carta__valore") as HTMLElement
-    expect(valore.querySelector("b")?.textContent).toBe("—")
-    expect(valore.querySelector("b")?.getAttribute("aria-hidden")).toBe("true")
-    expect(valore.querySelector(".as-solo-lettori")?.textContent).toBe("Non disponibile")
-    expect(piccola(pagina, "Vento").querySelector(".as-semaforo")).toBeNull()
+    const vento = piccola(pagina, "Vento")
+    expect(vento.querySelector(".as-tel-carta__valore")?.textContent).toBe("")
+    expect(vento.querySelector(".as-tel-carta__barre")?.childElementCount).toBe(0)
+    const semaforo = vento.querySelector(".as-semaforo") as HTMLElement
+    expect(semaforo.classList.contains("as-semaforo--ignoto")).toBe(true)
+    expect(semaforo.textContent).toBe("Non disponibile")
+    expect(vento.querySelector(".as-solo-lettori")).toBeNull()
   })
 
   it("toccata, una carta apre la sua carta intera sotto; un'altra la sostituisce, lo stesso tocco la chiude", async () => {

@@ -129,23 +129,22 @@ export function CartaDelTelefono({ misura: m, notte: n, ore, scala, aperta, gove
         <span className="as-tel-carta__nome">{t(`weather.measure.${m.code}` as Chiave)}</span>
       </span>
       <span className="as-tel-carta__valore">
-        {m.value === null ? (
-          // il trattino delle tabelle meteo; la carta e' troppo stretta per la parola intera
-          <>
-            <b aria-hidden="true">{"\u2014"}</b>
-            <span className="as-solo-lettori">{t("weather.card.unknown")}</span>
-          </>
-        ) : (
+        {m.value !== null && (
           <>
             <b>{numero(tondo(m.code, m.value))}</b>
             {forma.unita ? t(forma.unita) : ""}
           </>
         )}
       </span>
+      {/* senza valore le righe restano vuote e il semaforo spento lo dice (Design, 14/10) */}
       <span className="as-tel-carta__barre" aria-hidden="true">
-        <Grafico misura={m} notte={n} ore={ore} forma={forma} scala={scala} ora={null} dove="piccola" />
+        {m.value !== null && <Grafico misura={m} notte={n} ore={ore} forma={forma} scala={scala} ora={null} dove="piccola" />}
       </span>
-      {m.level !== null && m.code !== "cloud" && m.known_hours > 0 && <Semaforo livello={m.level}>{parola(m.code, m.level)}</Semaforo>}
+      {m.value === null ? (
+        <Semaforo livello={null}>{t("weather.card.unknown")}</Semaforo>
+      ) : (
+        m.level !== null && m.code !== "cloud" && m.known_hours > 0 && <Semaforo livello={m.level}>{parola(m.code, m.level)}</Semaforo>
+      )}
     </button>
   )
 }
