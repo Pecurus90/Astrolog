@@ -107,9 +107,30 @@ def test_every_hour_carries_the_judgement_of_each_judged_measure(db):  # noqa: F
     ore = json.loads(notte_di(db, "2026-09-25")["hours_json"])
     assert {o["levels"]["wind"] for o in ore} == {"marginal"}
     # la condensa si giudica sulla distanza fra aria e rugiada: l'ora la porta scritta
-    assert {o["dew_spread_c"] for o in ore} == {1.5}
+    assert {o["dew_spread_c"] for o in ore} == {2.0}
     assert {o["levels"]["condensation"] for o in ore} == {"nogo"}
     assert {o["levels"]["cloud"] for o in ore} == {"go"}
+
+
+def test_every_hour_writes_its_values_as_the_night_does_on_the_side_of_their_word(db):  # noqa: F811
+    """Un'ora si scrive con le cifre della sua misura, come la notte; il numero resta dal lato
+    della soglia dove sta il valore vero, e la parola dell'ora viene dal valore vero."""
+    scritta(db, Finto(risposta(
+        wind_kmh=19.6, wind_250hpa_kmh=125.6, precip_mm=0.04, temperature_c=9.4,
+        dew_point_c=6.3, humidity_pct=87.3, cloud_total_pct=12.7,
+    )))  # fmt: skip
+    (ora, *_) = [o for o in json.loads(notte_di(db, "2026-09-25")["hours_json"]) if o["shown"]]
+    detto = {k: ora[k] for k in (
+        "wind_kmh", "wind_250hpa_kmh", "precip_mm", "temperature_c", "dew_point_c",
+        "humidity_pct", "cloud_total_pct", "dew_spread_c",
+    )}  # fmt: skip
+    assert detto == {
+        "wind_kmh": 19.0, "wind_250hpa_kmh": 125.0, "precip_mm": 0.1, "temperature_c": 9.0,
+        "dew_point_c": 6.0, "humidity_pct": 87.0, "cloud_total_pct": 13.0, "dew_spread_c": 3.0,
+    }  # fmt: skip
+    assert (ora["levels"]["wind"], ora["levels"]["jet"], ora["levels"]["rain"]) == (
+        "go", "go", "nogo"
+    )  # fmt: skip
 
 
 def test_the_clear_hours_are_an_interval_and_the_page_window_follows_the_season(db):  # noqa: F811

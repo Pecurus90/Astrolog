@@ -125,7 +125,7 @@ describe("il Meteo sul telefono", () => {
     expect(piccola(pagina, "Vento").getAttribute("aria-expanded")).toBe("true")
   })
 
-  it("Esc chiude gli altri fattori; se niente pesa il riquadro lo dice", async () => {
+  it("aperti, gli altri fattori prendono il fuoco; Esc li chiude e lo rende al verdetto", async () => {
     const calma = { ...NOTTE, measures: NOTTE.measures.map((m) => ({ ...m, weighs: false })) }
     const pagina = await sulTelefono(calma)
 
@@ -134,8 +134,37 @@ describe("il Meteo sul telefono", () => {
     const riquadro = pagina.querySelector(".as-tel-pesanti") as HTMLElement
     expect(riquadro.hidden).toBe(false)
     expect(riquadro.textContent).toContain("Nessun altro fattore.")
-    fireEvent.keyDown(verdetto, { key: "Escape" })
+    expect(riquadro.contains(document.activeElement)).toBe(true)
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Escape" })
     expect(riquadro.hidden).toBe(true)
+    expect(document.activeElement).toBe(verdetto)
+  })
+
+  it("toccando fuori gli altri fattori si chiudono; toccando dentro restano", async () => {
+    const pagina = await sulTelefono(NOTTE)
+
+    const verdetto = within(pagina).getByRole("button", { name: /Altri fattori/ })
+    fireEvent.click(verdetto)
+    const riquadro = pagina.querySelector(".as-tel-pesanti") as HTMLElement
+    fireEvent.mouseDown(riquadro.querySelector("li") as HTMLElement)
+    expect(riquadro.hidden).toBe(false)
+    fireEvent.mouseDown(piccola(pagina, "Pioggia"))
+    expect(riquadro.hidden).toBe(true)
+    // il verdetto toccato di nuovo li riapre, non li chiude e riapre
+    fireEvent.mouseDown(verdetto)
+    fireEvent.click(verdetto)
+    expect(riquadro.hidden).toBe(false)
+  })
+
+  it("cambiando modello la carta aperta si chiude", async () => {
+    const pagina = await sulTelefono(NOTTE)
+
+    fireEvent.click(piccola(pagina, "Vento"))
+    expect(pagina.querySelector("article.as-parametro")).not.toBeNull()
+    const menu = pagina.querySelector(".as-tel-testa .as-menu--telefono") as HTMLElement
+    fireEvent.click(menu.querySelector(".as-menu__apri") as HTMLElement)
+    fireEvent.click(within(menu).getAllByRole("menuitemradio")[1] as HTMLElement)
+    expect(pagina.querySelector("article.as-parametro")).toBeNull()
   })
 
   it("la Luna fra gli altri fattori non e' un bottone: non ha una carta da aprire", async () => {

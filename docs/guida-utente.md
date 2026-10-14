@@ -462,7 +462,7 @@ te lo dice e puoi guardarne un altro.
 
 Sul **telefono** la pagina ha un'altra forma, con gli stessi dati. In testa c'e' il verdetto della
 notte scelta: toccalo e si aprono gli *Altri fattori*; toccando una misura dell'elenco si apre la sua
-carta. Le misure sono carte piccole, quattro per riga, ognuna col valore della notte e la sua parola:
+carta, toccando fuori dall'elenco si richiude. Le misure sono carte piccole, quattro per riga, ognuna col valore della notte e la sua parola:
 toccane una e sotto si apre la carta intera, con le ore e il picco; un'altra la sostituisce. Sul
 grafico del cielo l'umidita' si accende dal menu *Scala di destra*, insieme alle altre voci.
 

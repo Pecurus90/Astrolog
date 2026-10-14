@@ -2,9 +2,10 @@
 the others weigh beside it with their word and their hours, and never change it."""
 
 import math
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 from .verdict import Hour, Summary, Verdict, when, window
 
@@ -280,6 +281,33 @@ def _shown(scale: Scale, v: float) -> float:
     unit = 10**scale.digits
     sides = (math.floor(v * unit) / unit, math.ceil(v * unit) / unit)
     return next((s for s in sides if level(scale, s) == word), near)
+
+
+# An hour's fields by the judged measure that reads them; the others have no word to keep.
+_READ_BY = {
+    "cloud_total_pct": Measure.CLOUD,
+    "cloud_low_pct": Measure.CLOUD_LOW,
+    "precip_mm": Measure.RAIN,
+    "wind_kmh": Measure.WIND,
+    "wind_gust_kmh": Measure.GUST,
+    "dew_spread_c": Measure.CONDENSATION,
+    "wind_250hpa_kmh": Measure.JET,
+    "seeing_arcsec": Measure.SEEING,
+    "aerosol_optical_depth": Measure.AEROSOL,
+    "moon_pct": Measure.MOON,
+    "visibility_km": Measure.VISIBILITY,
+}
+
+
+def shown_values(values: Mapping[str, Any]) -> dict[str, Any]:
+    """An hour's values as the page writes them, like the night's: a judged one to its measure's
+    digits on its word's side of the threshold, any other number to the unit."""
+    return {
+        k: (_shown(SCALES[_READ_BY[k]], v) if k in _READ_BY else float(round(v)))
+        if isinstance(v, float)
+        else v
+        for k, v in values.items()
+    }
 
 
 def _axis(scale: Scale, shown: Sequence[Hour]) -> tuple[float | None, float | None]:

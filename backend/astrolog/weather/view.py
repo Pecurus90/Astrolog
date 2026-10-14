@@ -83,7 +83,7 @@ def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary) -> str:
         [
             {
                 **h.row(),
-                "dew_spread_c": judge.spread(h),
+                **judge.shown_values({**h.values, "dew_spread_c": judge.spread(h)}),
                 "levels": judge.hour_levels(h),
                 "shown": h.at in shown,
                 "clear": summary.usable_hours is not None

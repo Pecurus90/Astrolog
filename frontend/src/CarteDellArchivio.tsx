@@ -1,7 +1,8 @@
-import { type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from "react"
+import { type ReactNode, useId, useLayoutEffect, useRef, useState } from "react"
 
 import { BarraDeiFiltri } from "./FiltriUsati"
 import { PannelliDelMosaico } from "./PannelliDelMosaico"
+import { useRiquadro } from "./riquadro"
 import {
   Costellazione,
   Filtri,
@@ -50,24 +51,10 @@ function PostoDellaCarta({ riga }: { riga: Riga }) {
   const id = useId()
   const apribile = riga.productions.length > 1
 
-  useEffect(() => {
-    if (!aperto) return
-    const fuori = (e: MouseEvent) => {
-      if (!posto.current?.contains(e.target as Node)) setAperto(false)
-    }
-    // Sul documento: dopo un clic sul riepilogo, o su Safari, il fuoco e' sul body.
-    const esc = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return
-      setAperto(false)
-      comando.current?.focus()
-    }
-    document.addEventListener("mousedown", fuori)
-    document.addEventListener("keydown", esc)
-    return () => {
-      document.removeEventListener("mousedown", fuori)
-      document.removeEventListener("keydown", esc)
-    }
-  }, [aperto])
+  useRiquadro(aperto, [posto], (esc) => {
+    setAperto(false)
+    if (esc) comando.current?.focus()
+  })
 
   // Il riepilogo e' piu' largo della carta: se esce dalla pagina si allinea al bordo destro.
   useLayoutEffect(() => {

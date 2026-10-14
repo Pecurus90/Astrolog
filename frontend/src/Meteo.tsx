@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { type KeyboardEvent, useId, useState } from "react"
+import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react"
 
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
@@ -8,6 +8,7 @@ import { parola } from "./CartaDelParametro"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { useColonnaStretta } from "./colonna"
+import { useRiquadro } from "./riquadro"
 import { type Chiave, fa, giorno, orario, t } from "./i18n"
 import { CapoDellaNotte, CapoDellaTendenza, NotaDellaTendenza, SchedaDellaNotte, TendenzaDellaNotte, VoceDellaNotte, nomeDellaNotte, quando } from "./NotteDelMeteo"
 import { Semaforo } from "./Semaforo"
@@ -199,10 +200,19 @@ function TestaDelTelefono({ detto, notte: n, prima, apriCarta, aggiorna, occupat
 }) {
   const [aperti, setAperti] = useState(false)
   const id = useId()
+  const verdetto = useRef<HTMLDivElement>(null)
+  const riquadro = useRef<HTMLDivElement>(null)
   const siApre = !n.trend && n.window !== null
   const pesano = n.measures.filter((m) => m.weighs)
+  useRiquadro(aperti, [verdetto, riquadro], (esc) => {
+    setAperti(false)
+    if (esc) verdetto.current?.focus()
+  })
+  // aperto, il fuoco entra: sulla prima misura, o sul riquadro se niente pesa
+  useEffect(() => {
+    if (aperti) (riquadro.current?.querySelector("button") ?? riquadro.current)?.focus()
+  }, [aperti])
   const tasto = (ev: KeyboardEvent<HTMLDivElement>) => {
-    if (ev.key === "Escape") setAperti(false)
     if (ev.key !== "Enter" && ev.key !== " ") return
     ev.preventDefault()
     setAperti(!aperti)
@@ -213,7 +223,7 @@ function TestaDelTelefono({ detto, notte: n, prima, apriCarta, aggiorna, occupat
   return (
     <>
       <div className="as-tel-testa">
-        <div className="as-tel-verdetti" {...tocco}>
+        <div className="as-tel-verdetti" ref={verdetto} {...tocco}>
           <div className="as-tel-verdetto">
             {n.trend ? (
               <CapoDellaTendenza notte={n} />
@@ -224,7 +234,7 @@ function TestaDelTelefono({ detto, notte: n, prima, apriCarta, aggiorna, occupat
         </div>
         <MenuDelModello detto={detto} scegli={scegli} cambiando={cambiando} />
         {siApre && (
-          <div className="as-tel-pesanti" id={id} role="dialog" aria-label={t("weather.weighs.short")} hidden={!aperti}>
+          <div className="as-tel-pesanti" id={id} ref={riquadro} tabIndex={-1} role="dialog" aria-label={t("weather.weighs.short")} hidden={!aperti}>
             <ul className="as-tel-pesano" aria-label={t("weather.weighs")}>
               <li>{t("weather.weighs")}</li>
               {pesano.length === 0 && <li>{t("weather.weighs.none")}</li>}
