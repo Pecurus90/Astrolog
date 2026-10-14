@@ -129,7 +129,13 @@ export function CartaDelTelefono({ misura: m, notte: n, ore, scala, aperta, gove
         <span className="as-tel-carta__nome">{t(`weather.measure.${m.code}` as Chiave)}</span>
       </span>
       <span className="as-tel-carta__valore">
-        {m.value !== null && (
+        {m.value === null ? (
+          // il trattino delle tabelle meteo; la carta e' troppo stretta per la parola intera
+          <>
+            <b aria-hidden="true">{"\u2014"}</b>
+            <span className="as-solo-lettori">{t("weather.card.unknown")}</span>
+          </>
+        ) : (
           <>
             <b>{numero(tondo(m.code, m.value))}</b>
             {forma.unita ? t(forma.unita) : ""}

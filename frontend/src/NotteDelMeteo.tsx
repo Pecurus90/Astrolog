@@ -52,6 +52,9 @@ function verdetto(n: Breve): string {
   return n.verdict === null ? t("weather.verdict.unknown") : t(`weather.word.${n.verdict}`)
 }
 
+/** Dove si apre la carta intera di una misura, sul telefono: la carta piccola lo governa. */
+export const idDellaCarta = (notte: string, codice: string) => `tel-${notte}-${codice}`
+
 /**
  * Una notte piena del **Meteo**: in testa le ore serene col semaforo e l'accordo dei modelli,
  * accanto cio' che pesa senza cambiarlo, sotto le carte delle misure nell'ordine che il backend
@@ -96,7 +99,7 @@ export function SchedaDellaNotte({ notte: n, prima, scale, seeing, telefono }: {
               <div className="as-tel-carte">
                 {[...alPosto(n.measures, CARTE_GRANDI), ...alPosto(n.measures, CARTE_PICCOLE)].map((m) => {
                   const aperta = telefono.aperta === m.code
-                  const id = `tel-${n.night}-${m.code}`
+                  const id = idDellaCarta(n.night, m.code)
                   return (
                     <Fragment key={m.code}>
                       <CartaDelTelefono misura={m} notte={n} ore={ore} scala={scale.find((s) => s.code === m.code)} aperta={aperta} governa={id}

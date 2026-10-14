@@ -8,9 +8,9 @@ import { parola } from "./CartaDelParametro"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { useColonnaStretta } from "./colonna"
-import { useRiquadro } from "./riquadro"
+import { giraIlFuoco, useRiquadro } from "./riquadro"
 import { type Chiave, fa, giorno, orario, t } from "./i18n"
-import { CapoDellaNotte, CapoDellaTendenza, NotaDellaTendenza, SchedaDellaNotte, TendenzaDellaNotte, VoceDellaNotte, nomeDellaNotte, quando } from "./NotteDelMeteo"
+import { CapoDellaNotte, CapoDellaTendenza, NotaDellaTendenza, SchedaDellaNotte, TendenzaDellaNotte, VoceDellaNotte, idDellaCarta, nomeDellaNotte, quando } from "./NotteDelMeteo"
 import { Semaforo } from "./Semaforo"
 
 type Meteo = components["schemas"]["WeatherOut"]
@@ -63,7 +63,7 @@ export function Meteo() {
   const [scelta, setScelta] = useState(0)
   const [carta, setCarta] = useState<Codice | null>(null)
   const aperta = detto?.nights[scelta] ?? detto?.nights[0]
-  const telefono = stretta && aperta !== undefined
+  const telefono = stretta
   const scegliNotte = (i: number) => {
     setScelta(i)
     setCarta(null)
@@ -99,7 +99,7 @@ export function Meteo() {
       {detto?.site && detto.missing === null && (
         <div className={telefono ? "as-meteo as-tel-meteo" : "as-meteo"}>
           {telefono ? (
-            <TestaDelTelefono key={aperta.night} {...comandi} detto={detto} notte={aperta} prima={aperta === detto.nights[0]} apriCarta={setCarta} />
+            <TestaDelTelefono key={aperta?.night} {...comandi} detto={detto} notte={aperta} prima={aperta === detto.nights[0]} apriCarta={setCarta} />
           ) : (
             <Testa {...comandi} detto={detto} />
           )}
@@ -195,46 +195,53 @@ const SENZA_CARTA: readonly Codice[] = ["moon", "gust"]
  * fattori in un riquadro sopra la pagina; una misura li chiude e apre la sua carta.
  */
 function TestaDelTelefono({ detto, notte: n, prima, apriCarta, aggiorna, occupato, scegli, cambiando }: {
-  detto: Meteo; notte: Notte; prima: boolean; apriCarta: (c: Codice) => void
+  detto: Meteo; notte: Notte | undefined; prima: boolean; apriCarta: (c: Codice) => void
   aggiorna: () => void; occupato: boolean; scegli: (m: string) => void; cambiando: boolean
 }) {
   const [aperti, setAperti] = useState(false)
   const id = useId()
   const verdetto = useRef<HTMLDivElement>(null)
   const riquadro = useRef<HTMLDivElement>(null)
-  const siApre = !n.trend && n.window !== null
-  const pesano = n.measures.filter((m) => m.weighs)
-  useRiquadro(aperti, [verdetto, riquadro], (esc) => {
+  const siApre = n !== undefined && !n.trend && n.window !== null
+  const pesano = n?.measures.filter((m) => m.weighs) ?? []
+  const chiudi = (fuoco: HTMLElement | null) => {
     setAperti(false)
-    if (esc) verdetto.current?.focus()
-  })
+    fuoco?.focus()
+  }
+  useRiquadro(aperti, [verdetto, riquadro], (esc) => chiudi(esc ? verdetto.current : null))
   // aperto, il fuoco entra: sulla prima misura, o sul riquadro se niente pesa
   useEffect(() => {
     if (aperti) (riquadro.current?.querySelector("button") ?? riquadro.current)?.focus()
   }, [aperti])
+  const giro = (ev: KeyboardEvent<HTMLDivElement>) => {
+    if (ev.key === "Tab") giraIlFuoco(ev)
+  }
+  const tocca = () => (aperti ? chiudi(verdetto.current) : setAperti(true))
   const tasto = (ev: KeyboardEvent<HTMLDivElement>) => {
     if (ev.key !== "Enter" && ev.key !== " ") return
     ev.preventDefault()
-    setAperti(!aperti)
+    tocca()
   }
   const tocco = siApre
-    ? { role: "button", tabIndex: 0, "aria-expanded": aperti, "aria-controls": id, onClick: () => setAperti(!aperti), onKeyDown: tasto }
+    ? { role: "button", tabIndex: 0, "aria-expanded": aperti, "aria-controls": id, onClick: tocca, onKeyDown: tasto }
     : {}
   return (
     <>
       <div className="as-tel-testa">
-        <div className="as-tel-verdetti" ref={verdetto} {...tocco}>
-          <div className="as-tel-verdetto">
-            {n.trend ? (
-              <CapoDellaTendenza notte={n} />
-            ) : (
-              <CapoDellaNotte notte={n} prima={prima} segno={siApre && <span className="as-tel-pesa-segno">{t("weather.weighs.short")}</span>} />
-            )}
+        {n && (
+          <div className="as-tel-verdetti" ref={verdetto} {...tocco}>
+            <div className="as-tel-verdetto">
+              {n.trend ? (
+                <CapoDellaTendenza notte={n} />
+              ) : (
+                <CapoDellaNotte notte={n} prima={prima} segno={siApre && <span className="as-tel-pesa-segno">{t("weather.weighs.short")}</span>} />
+              )}
+            </div>
           </div>
-        </div>
+        )}
         <MenuDelModello detto={detto} scegli={scegli} cambiando={cambiando} />
-        {siApre && (
-          <div className="as-tel-pesanti" id={id} ref={riquadro} tabIndex={-1} role="dialog" aria-label={t("weather.weighs.short")} hidden={!aperti}>
+        {n && siApre && (
+          <div className="as-tel-pesanti" id={id} ref={riquadro} tabIndex={-1} role="dialog" aria-label={t("weather.weighs.short")} hidden={!aperti} onKeyDown={giro}>
             <ul className="as-tel-pesano" aria-label={t("weather.weighs")}>
               <li>{t("weather.weighs")}</li>
               {pesano.length === 0 && <li>{t("weather.weighs.none")}</li>}
@@ -252,7 +259,11 @@ function TestaDelTelefono({ detto, notte: n, prima, apriCarta, aggiorna, occupat
                     {SENZA_CARTA.includes(m.code) ? (
                       <span className="as-tel-pesa">{dentro}</span>
                     ) : (
-                      <button className="as-tel-pesa" type="button" onClick={() => { setAperti(false); apriCarta(m.code) }}>
+                      <button className="as-tel-pesa" type="button" onClick={() => {
+                        apriCarta(m.code)
+                        // la carta piccola c'e' gia': il fuoco va li', non si perde nel riquadro chiuso
+                        chiudi(document.querySelector(`[aria-controls="${idDellaCarta(n.night, m.code)}"]`))
+                      }}>
                         {dentro}
                       </button>
                     )}

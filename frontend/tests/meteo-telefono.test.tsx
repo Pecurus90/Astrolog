@@ -72,6 +72,17 @@ describe("il Meteo sul telefono", () => {
     expect(pagina.querySelector("article.as-parametro")).toBeNull()
   })
 
+  it("una misura senza valore ha la sua carta piccola col trattino, e chi non vede sente che non c'e'", async () => {
+    const cieca = { ...NOTTE, measures: NOTTE.measures.map((m) => (m.code === "wind" ? { ...m, value: null, level: null, known_hours: 0 } : m)) }
+    const pagina = await sulTelefono(cieca)
+
+    const valore = piccola(pagina, "Vento").querySelector(".as-tel-carta__valore") as HTMLElement
+    expect(valore.querySelector("b")?.textContent).toBe("—")
+    expect(valore.querySelector("b")?.getAttribute("aria-hidden")).toBe("true")
+    expect(valore.querySelector(".as-solo-lettori")?.textContent).toBe("Non disponibile")
+    expect(piccola(pagina, "Vento").querySelector(".as-semaforo")).toBeNull()
+  })
+
   it("toccata, una carta apre la sua carta intera sotto; un'altra la sostituisce, lo stesso tocco la chiude", async () => {
     const pagina = await sulTelefono(NOTTE)
 
@@ -123,6 +134,28 @@ describe("il Meteo sul telefono", () => {
     fireEvent.click(within(riquadro).getByRole("button", { name: /Vento/ }))
     expect(riquadro.hidden).toBe(true)
     expect(piccola(pagina, "Vento").getAttribute("aria-expanded")).toBe("true")
+    // il fuoco va alla carta che si e' aperta, non si perde
+    expect(document.activeElement).toBe(piccola(pagina, "Vento"))
+  })
+
+  it("con Tab il fuoco gira dentro gli altri fattori; richiusi col verdetto, il fuoco torna li'", async () => {
+    const luna = misura("moon", { level: "nogo", weighs: true, value: 62, known_hours: 2 })
+    const pagina = await sulTelefono({ ...NOTTE, measures: [...NOTTE.measures, luna] })
+
+    const verdetto = within(pagina).getByRole("button", { name: /Altri fattori/ })
+    fireEvent.click(verdetto)
+    const riquadro = pagina.querySelector(".as-tel-pesanti") as HTMLElement
+    const bottoni = [...riquadro.querySelectorAll("button")]
+    const ultimo = bottoni[bottoni.length - 1] as HTMLElement
+    ultimo.focus()
+    fireEvent.keyDown(ultimo, { key: "Tab" })
+    expect(document.activeElement).toBe(bottoni[0])
+    fireEvent.keyDown(bottoni[0] as HTMLElement, { key: "Tab", shiftKey: true })
+    expect(document.activeElement).toBe(ultimo)
+
+    fireEvent.click(verdetto)
+    expect(riquadro.hidden).toBe(true)
+    expect(document.activeElement).toBe(verdetto)
   })
 
   it("aperti, gli altri fattori prendono il fuoco; Esc li chiude e lo rende al verdetto", async () => {
@@ -178,6 +211,20 @@ describe("il Meteo sul telefono", () => {
     const riquadro = pagina.querySelector(".as-tel-pesanti") as HTMLElement
     expect(riquadro.textContent).toContain("Luna")
     expect(within(riquadro).queryByRole("button", { name: /Luna/ })).toBeNull()
+  })
+
+  it("senza notti il telefono tiene la sua testa: il modello, da quando e' la previsione e Aggiorna", async () => {
+    conNotti()
+    colonna(390)
+    const { container: pagina } = await apriMeteo()
+
+    await within(pagina).findByText("Nessuna notte disponibile per questo modello.")
+    expect(pagina.querySelector(".as-meteo__testa")).toBeNull()
+    const testa = pagina.querySelector(".as-tel-testa") as HTMLElement
+    expect(testa.querySelector(".as-tel-verdetti")).toBeNull()
+    expect(testa.querySelector(".as-menu--telefono .as-menu__apri")?.textContent).toContain("Automatico")
+    const arrivo = pagina.querySelector(".as-tel-arrivo") as HTMLElement
+    expect(within(arrivo).getByRole("button", { name: "Aggiorna" })).toBeTruthy()
   })
 
   it("una notte in tendenza ha il verdetto in testa e nessun riquadro da aprire", async () => {
