@@ -780,8 +780,9 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
   loro disegno; il Meteo e' la prima a riceverlo. Il tema chiaro c'e' nel foglio e **non si puo'
   ancora accendere**.
 - **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un
-  segno -- una spunta se e' andata bene, un triangolo se c'e' un problema -- perche' chi non
-  distingue il verde dal rosso deve capire lo stesso. E nel primo avvio tre risposte che prima
+  tondo con la sua forma -- con una spunta se e' andata bene, un punto esclamativo se c'e' un
+  problema, tratteggiato se aspetta -- perche' chi non distingue il verde dal rosso deve capire lo
+  stesso. E nel primo avvio tre risposte che prima
   comparivano in silenzio -- la cartella che non si raggiunge, quanti file ha trovato, se
   ASTAP c'e' -- ora vengono **lette ad alta voce** da un lettore di schermo.
 

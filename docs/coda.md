@@ -839,7 +839,7 @@ riga per voce.
   jet stream a 250; *Umidita'* e *Temperatura e rugiada* da pesare contro la *Condensa*, con
   Marco. Fuori: trasparenza (aerosol e polveri la coprono), instabilita', aurora, satelliti.
 - **Meteo e Dashboard sul foglio v37** (Design, 13/10/2026; punto di partenza
-  `docs/consegna-meteo-dashboard.md` nel progetto Design). Fatto: il foglio v37.1 nell'app, il Meteo
+  `docs/consegna-meteo-dashboard.md` nel progetto Design). Fatto: il foglio v37.2 nell'app, il Meteo
   desktop a tre file da tre, la scala della visibilita' (0-20 km, a radice), le carte al posto
   fisso della tavola (Marco, 13/10/2026), il Meteo del telefono (`as-tel-`: verdetto in testa
   che apre gli altri fattori, carte piccole che aprono la carta intera; la larghezza la misura

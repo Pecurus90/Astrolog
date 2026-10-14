@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AstroLog — astrolog.css  ·  v37.1 (14/10/2026)
+   AstroLog — astrolog.css  ·  v37.2 (14/10/2026)
 
    FILE GENERATO: non si modifica qui. Le sorgenti stanno in foglio/, un
    file per famiglia; questo foglio e' la loro unione, nell'ordine qui
@@ -1125,6 +1125,9 @@ body.as-app, .as-app {
      --dopo     il numero del passo, spento
      --neutro   anello pieno, vuoto: un fatto, ne' buono ne' cattivo (v33)
      --ignoto   tondo punteggiato: il dato non c'e' (v33)
+   Caratteri nel segno: solo «!» (allarme), «✓» (buono) e il numero del
+   passo (ora, dopo). Gli altri toni si distinguono per la forma, e la
+   parola li dice: niente «⚠» (diventa un'emoji a colori), «…», «i» (14/10).
    __dato: un percorso o un codice nella frase, in cifre (v33).
    UN SOLO PRIMARIO PER STATO. Se piu' parti mancano insieme, il primario
    (.as-bottone--primario) va alla prima in quest'ordine: sito, archivio,

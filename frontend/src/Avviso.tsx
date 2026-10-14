@@ -4,9 +4,9 @@ import type { ReactNode } from "react"
  * Un avviso: com'e' andata, e cosa puoi farci.
  *
  * - **Il segno viene prima della parola, e non e' un colore.** WCAG 2.2, 1.4.1: chi non distingue
- *   verde e rosso deve capire lo stesso, quindi ogni tono porta il suo -- e sono quattro segni
- *   diversi, o due toni si leggerebbero uguali. Il segno e' `aria-hidden`: chi ascolta sente gia'
- *   l'urgenza dal ruolo, e sentirla due volte sarebbe rumore.
+ *   verde e rosso deve capire lo stesso. Lo separa la forma del tondo che il foglio disegna per
+ *   tono, e la parola del titolo; un carattere solo per l'allarme e il buono (Design, 14/10). Il
+ *   segno e' `aria-hidden`: chi ascolta sente gia' l'urgenza dal ruolo.
  * - **Il ruolo dice l'urgenza, e di solito lo decide il tono**: solo l'allarme interrompe chi sta
  *   leggendo (`alert`), gli altri aspettano una pausa (`status`). Un esito che non e' un guasto
  *   non ha diritto di tagliare la parola a nessuno. Chi chiama puo' **scavalcarlo**, e serve: la
@@ -20,11 +20,9 @@ import type { ReactNode } from "react"
  * - I segni sono scritti col loro codice e non incollati: il repo e' ASCII, e un glifo incollato
  *   in un file sorgente si rompe in silenzio su un terminale che non lo conosce.
  */
-// Il neutro e' una `i` e non il glifo dell'informazione: quello, senza selettore di
-// variazione, molti sistemi lo rendono come **emoji colorata** -- cioe' un segno che torna a
-// dire le cose col colore, e per giunta senza prendere il carattere delle cifre che il foglio
-// gli mette. Il lavoro non ha glifo: il suo segno e' l'anello aperto che il foglio disegna (v21).
-const SEGNI = { neutro: "i", attesa: "\u2026", buono: "\u2713", allarme: "\u26A0", lavoro: "", ignoto: "" }
+// Come le tavole (DECISIONI di Design, 14/10): "!" e non il segnale di pericolo, che molti sistemi
+// rendono come emoji a colori fuori dal tondo. Gli altri toni hanno solo la forma del tondo.
+const SEGNI = { neutro: "", attesa: "", buono: "\u2713", allarme: "!", lavoro: "", ignoto: "" }
 
 // Solo il **modificatore**: il blocco si scrive dove la classe si monta, o la guardia del
 // cancello non saprebbe leggere cio' che esce da qui e lo direbbe -- giustamente, perche' una

@@ -31,18 +31,15 @@ import { pulisci } from "./banco"
 afterEach(pulisci)
 
 describe("Avviso", () => {
-  it("ha quattro toni, e ognuno porta il suo segno", () => {
-    // WCAG 2.2, 1.4.1: se il tono lo dicesse il solo colore, chi non distingue verde e rosso
-    // leggerebbe quattro avvisi identici. Il segno e' la forma che li separa.
-    const segni = new Set<string>()
-    for (const esito of ["neutro", "attesa", "buono", "allarme"] as const) {
-      const { container, unmount } = render(<Avviso esito={esito}>ciao</Avviso>)
-      const segno = container.querySelector(".as-avviso__segno")
-      expect(segno?.textContent, esito).toBeTruthy()
-      segni.add(segno?.textContent ?? "")
+  it("nel segno un carattere solo per l'allarme e il buono; gli altri toni li dice la forma", () => {
+    // Design, DECISIONI 14/10: "!" e "✓"; niente "⚠" (emoji a colori su molti sistemi),
+    // "…" o "i". Attesa, neutro, ignoto e lavoro li separa il bordo che il foglio disegna.
+    const attesi = { allarme: "!", buono: "✓", attesa: "", neutro: "", ignoto: "", lavoro: "" } as const
+    for (const [esito, carattere] of Object.entries(attesi)) {
+      const { container, unmount } = render(<Avviso esito={esito as keyof typeof attesi}>ciao</Avviso>)
+      expect(container.querySelector(".as-avviso__segno")?.textContent, esito).toBe(carattere)
       unmount()
     }
-    expect(segni.size, "due toni con lo stesso segno non si distinguono").toBe(4)
   })
 
   it("ogni tono porta anche la sua forma, non il solo segno", () => {
