@@ -120,6 +120,7 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
         fetched_at=None,
         last_request=None,
         full_nights=FULL_NIGHTS,
+        retry_s=forecast.RETRY_S,
         seeing=WeatherSeeingOut(
             key=bool(config.read(conn).meteoblue_key), source=None, meteoblue=None
         ),

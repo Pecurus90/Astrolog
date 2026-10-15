@@ -107,6 +107,12 @@ class TonightOut(BaseModel):
         description="Empty when there is no night to split -- no site, or a time zone that does "
         "not resolve -- for the same reason the Moon is `None` there.",
     )
+    dark_s: int | None = Field(
+        default=None,
+        description="How long tonight's astronomical dark lasts, in seconds: the sum of the `dark` "
+        "bands. Computed, not forecast, so it is there when the weather is not; `None` without a "
+        "night, never 0 in its place.",
+    )
     weather: WeatherBriefOut | None = Field(
         default=None,
         description="The current night's weather from the chosen model, as the forecast wrote "

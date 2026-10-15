@@ -86,16 +86,15 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
     moon_night = moon.night_track(
         window_start, home["latitude"], home["longitude"], hours=window_hours
     )
+    bands = sun.night_bands(window_start, home["latitude"], home["longitude"], hours=window_hours)
     return TonightOut(
         night=the_night,
         site=_site_sky(home),
         weather=weather.brief_of(conn, home["id"], the_night),
-        sky_bands=[
-            _sky_band(f)
-            for f in sun.night_bands(
-                window_start, home["latitude"], home["longitude"], hours=window_hours
-            )
-        ],
+        sky_bands=[_sky_band(f) for f in bands],
+        dark_s=round(
+            sum((b.ends_at - b.starts_at).total_seconds() for b in bands if b.kind == sun.Sky.DARK)
+        ),
         moon=MoonOut(
             phase_key=cast(PhaseKey, moon_phase.phase_key),
             illumination_pct=moon_phase.illumination_pct,

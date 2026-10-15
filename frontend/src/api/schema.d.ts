@@ -3464,6 +3464,11 @@ export interface components {
              * @default []
              */
             sky_bands: components["schemas"]["SkyBandOut"][];
+            /**
+             * Dark S
+             * @description How long tonight's astronomical dark lasts, in seconds: the sum of the `dark` bands. Computed, not forecast, so it is there when the weather is not; `None` without a night, never 0 in its place.
+             */
+            dark_s?: number | null;
             /** @description The current night's weather from the chosen model, as the forecast wrote it; `None` until the forecast has arrived. */
             weather?: components["schemas"]["WeatherBriefOut"] | null;
         };
@@ -3861,6 +3866,11 @@ export interface components {
             last_request: components["schemas"]["WeatherRequestOut"] | null;
             /** Full Nights */
             full_nights: number;
+            /**
+             * Retry S
+             * @description How often a silent service is asked again, in seconds.
+             */
+            retry_s: number;
             seeing: components["schemas"]["WeatherSeeingOut"];
             /** Sources */
             sources: components["schemas"]["WeatherSourceOut"][];

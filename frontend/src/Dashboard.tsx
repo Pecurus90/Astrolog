@@ -6,7 +6,7 @@ import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
 import { CartaDelTelefono, CartaDellaDashboard } from "./CartaDelParametro"
 import { type Destra, ScalaDellaMisura } from "./CieloDelleNubi"
-import { PrimaDellaPrevisione, usePrevisione } from "./Meteo"
+import { PrimaDellaPrevisione, senzaPrevisioneIn, silenzio, useAggiorna, usePrevisione } from "./Meteo"
 import { OreSerene, oreDellaVoce, verdetto } from "./NotteDelMeteo"
 import { Semaforo } from "./Semaforo"
 import { ApriStanotte, Disco, useStanotte } from "./Stanotte"
@@ -44,13 +44,28 @@ export function Dashboard() {
   const meteo = usePrevisione()
   const detto = meteo.data
   const [telefono, misura] = useColonnaStretta()
+  // senza una cartella e senza un frame non c'e' archivio: la prima azione e' scegliere la cartella.
+  // Le cartelle tolte lasciano i loro frame, e un archivio con le sue notti non e' vuoto.
+  const cartelle = useQuanteCartelle().data
+  const archivio = useArchivio().data
+  const archivioVuoto = cartelle?.total === 0 && archivio?.totals.frames === 0
+  const sito = detto?.site ?? null
+  // il meteo che non risponde senza una previsione che valga: la notte e le prossime non si dicono
+  const giu = detto ? silenzio(detto) !== null && senzaPrevisioneIn(detto) : false
   return (
     <div className="as-pagina" ref={misura}>
-      <PrimaDellaPrevisione meteo={meteo} />
+      <PrimaDellaPrevisione meteo={meteo} senzaSito={false} />
       <div className={telefono ? "as-dashboard as-tel-dash" : "as-dashboard"}>
-        {detto?.site && <Stanotte detto={detto} sito={detto.site} telefono={telefono} />}
-        {detto?.site && <Prossime detto={detto} telefono={telefono} />}
-        {!telefono && (
+        {detto && sito === null && <PerCominciare archivioVuoto={archivioVuoto} />}
+        {sito && archivioVuoto && <ArchivioVuoto />}
+        {detto && sito && (
+          <Stanotte detto={detto} sito={sito} telefono={telefono}
+            giu={giu ? { quando: detto.fetched_at, ogni: detto.retry_s, primario: !archivioVuoto } : null}
+            progetti={!archivioVuoto} />
+        )}
+        {detto && sito && !giu && <Prossime detto={detto} telefono={telefono} />}
+        {sito && archivioVuoto && <Seguito />}
+        {sito && !archivioVuoto && !telefono && (
           <div className="as-dashboard__coppia">
             <Progetti />
             <DaRiprendere />
@@ -61,11 +76,87 @@ export function Dashboard() {
   )
 }
 
-/** La testa di stanotte e il meteo della notte; sul telefono anche la cosa da fare adesso. */
-function Stanotte({ detto, sito, telefono }: { detto: Meteo; sito: string; telefono: boolean }) {
-  const luna = useStanotte().data?.moon ?? null
+/** L'archivio in una riga: l'ultima notte e i totali (`limit=1`). */
+function useArchivio() {
+  return useQuery({
+    queryKey: ["nights", "ultima"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/nights", { params: { query: { limit: 1 } } })
+      if (error) throw new Error(t("nights.failed"))
+      return data
+    },
+  })
+}
+
+/** Le cartelle d'archivio scelte: la stessa query delle Impostazioni. */
+function useQuanteCartelle() {
+  return useQuery({
+    queryKey: ["folders"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/api/v1/folders")
+      if (error) throw new Error(t("settings.folders.failed"))
+      return data
+    },
+  })
+}
+
+/** Senza sito non si calcola niente (tavola dashboard-stati v37): due passi in fila, il sito aperto
+ *  e l'archivio dopo, spento finche' il primo non e' fatto. Con l'archivio gia' scelto, uno. */
+function PerCominciare({ archivioVuoto }: { archivioVuoto: boolean }) {
+  return (
+    <section className="as-dashboard__inizio" aria-labelledby="dash-inizio">
+      <p className="as-soprattitolo" id="dash-inizio">{t("dashboard.start.kicker")}</p>
+      {archivioVuoto && <p className="as-dashboard__inizio-titolo">{t("dashboard.start.title")}</p>}
+      <div className="as-dashboard__passi">
+        <Avviso esito="ora" segno={numero(1)} pagina titolo={t("dashboard.start.site.title")}
+          azioni={<Bottone verso="primario" a="/impostazioni/sito">{t("dashboard.start.site.how")}</Bottone>}>
+          {t("dashboard.start.site.text")}
+        </Avviso>
+        {archivioVuoto && (
+          <Avviso esito="dopo" segno={numero(2)} pagina titolo={t("dashboard.start.archive.title")}>
+            {t("dashboard.start.archive.text")}
+          </Avviso>
+        )}
+      </div>
+      <p className="as-dashboard__dopo">{t("dashboard.start.after")}</p>
+    </section>
+  )
+}
+
+/** L'archivio senza cartelle: in testa alla pagina, con la sua azione, la prima. */
+function ArchivioVuoto() {
+  return (
+    <Avviso esito="attesa" pagina titolo={t("dashboard.archive.empty.title")}
+      azioni={<Bottone verso="primario" a="/impostazioni/cartelle">{t("dashboard.archive.empty.how")}</Bottone>}>
+      {t("dashboard.archive.empty.text")}
+    </Avviso>
+  )
+}
+
+/** Al posto di progetti, lavoro e anno quando l'archivio non c'e' ancora: una frase sola. */
+function Seguito() {
+  return (
+    <section className="as-dashboard__seguito" aria-labelledby="dash-seguito">
+      <p className="as-soprattitolo" id="dash-seguito">{t("dashboard.later.title")}</p>
+      <div className="as-vuoto as-vuoto--sezione">
+        <p className="as-vuoto__testo">{t("dashboard.later.text")}</p>
+      </div>
+    </section>
+  )
+}
+
+/** Il meteo che non risponde senza una previsione che valga: da quando, ogni quanto riprova. */
+type Giu = { quando: string | null; ogni: number; primario: boolean }
+
+/** La testa di stanotte e il meteo della notte; sul telefono anche la cosa da fare adesso. Col
+ *  meteo giu' la testa dice il buio calcolato, e un allarme prende il posto delle carte. */
+function Stanotte({ detto, sito, telefono, giu, progetti }: {
+  detto: Meteo; sito: string; telefono: boolean; giu: Giu | null; progetti: boolean
+}) {
+  const notte = useStanotte().data
+  const luna = notte?.moon ?? null
   const apriStanotte = useContext(ApriStanotte)
-  const stanotte = detto.nights[0]
+  const stanotte = giu ? undefined : detto.nights[0]
   return (
     <section className="as-dashboard__stanotte" aria-labelledby="dash-titolo">
       <div className="as-dashboard__testa">
@@ -81,11 +172,26 @@ function Stanotte({ detto, sito, telefono }: { detto: Meteo; sito: string; telef
               <Semaforo livello={stanotte.verdict} grande>{verdetto(stanotte)}</Semaforo>
             </div>
           )}
+          {/* il buio e' calcolo, non previsione: c'e' anche col meteo giu' (tavola dashboard-stati-meteo) */}
+          {giu && notte?.dark_s != null && (
+            <div className="as-dashboard__verdetto">
+              {/* d'estate a nord il buio astronomico non arriva: lo dice la parola, non "0 s" */}
+              {notte.dark_s > 0 ? (
+                <p className="as-dashboard__grande">
+                  <b>{durata(notte.dark_s)}</b> {t("weather.clear.trend")}
+                </p>
+              ) : (
+                <span className="as-meteo__parola">{t("weather.verdict.noNight")}</span>
+              )}
+              <Semaforo livello={null} grande>{t("weather.verdict.unknown")}</Semaforo>
+            </div>
+          )}
         </div>
         {luna && <LunaInTesta luna={luna} />}
       </div>
       {/* sul telefono la cosa da fare adesso e' il primario della pagina: senza progetti, crearne uno */}
-      {telefono && <VuotoDeiProgetti />}
+      {telefono && progetti && <VuotoDeiProgetti />}
+      {giu && <MeteoGiu giu={giu} />}
       {stanotte && stanotte.window !== null && stanotte.measures.length > 0 && <MeteoDellaNotte detto={detto} notte={stanotte} telefono={telefono} />}
       {!telefono && (
         <p className="as-dashboard__rimando">
@@ -96,6 +202,21 @@ function Stanotte({ detto, sito, telefono }: { detto: Meteo; sito: string; telef
         </p>
       )}
     </section>
+  )
+}
+
+/** L'allarme del meteo giu': da quando non risponde, ogni quanto riprova da solo, e Riprova ora
+ *  (tenue quando il primario della pagina e' un altro). */
+function MeteoGiu({ giu }: { giu: Giu }) {
+  const riprova = useAggiorna()
+  const ogni = numero(Math.round(giu.ogni / 60))
+  return (
+    <Avviso esito="allarme" pagina titolo={t("dashboard.weather.down.title")}
+      azioni={<Bottone verso={giu.primario ? "primario" : "tenue"} onClick={() => riprova.mutate()} disabled={riprova.isPending}>{t("dashboard.weather.down.how")}</Bottone>}>
+      {giu.quando
+        ? t("dashboard.weather.down.text", { giorno: giorno(giu.quando), ora: orario(giu.quando), fa: fa(giu.quando), minuti: ogni })
+        : t("dashboard.weather.down.text.never", { minuti: ogni })}
+    </Avviso>
   )
 }
 
@@ -273,14 +394,7 @@ function Progetti() {
 function DaRiprendere() {
   const revisione = useRevisione()
   const daConfermare = revisione.data?.to_confirm ?? 0
-  const ultima = useQuery({
-    queryKey: ["nights", "ultima"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/nights", { params: { query: { limit: 1 } } })
-      if (error) throw new Error(t("nights.failed"))
-      return data.items[0] ?? null
-    },
-  }).data
+  const ultima = useArchivio().data?.items[0] ?? null
   if (daConfermare === 0 && !ultima && !revisione.error) return null
   return (
     <section className="as-dashboard__lavoro" aria-labelledby="dash-lavoro">

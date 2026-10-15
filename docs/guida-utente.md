@@ -243,7 +243,20 @@ progetto*), poi le sei carte piccole, tre per riga, che toccate aprono sotto il 
 prossime 3 notti. Alle altre pagine -- le Notti, Da confermare, il Meteo -- si va dalla barra in
 basso.
 
-Senza un sito di casa la pagina ti chiede di sceglierlo; *da riprendere* c'e' lo stesso. Se
+Quando manca qualcosa, in testa alla parte che manca una riga dice cosa e cosa fare, con un'azione
+sola in evidenza; il resto della pagina resta quello che si puo' calcolare:
+
+- **Senza un sito** la pagina mostra solo i passi per cominciare: prima *Scegli il sito*, poi
+  l'archivio, che resta spento finche' il sito non c'e'.
+- **Senza una cartella d'archivio** in testa c'e' *archivio vuoto* con *Scegli la cartella*;
+  stanotte e il meteo ci sono gia', perche' dipendono solo dal sito, e progetti, notti e anno
+  compaiono dopo la prima scansione.
+- **Se il meteo non risponde** e non resta una previsione che valga, in testa leggi quanto dura il
+  buio di stanotte (e' calcolo, non previsione) e *Non disponibile*; al posto delle carte e delle
+  prossime notti un allarme dice da quando non arriva risposta e che l'app riprova da sola ogni 15
+  minuti, con *Riprova ora*.
+
+Se
 qualcosa non risponde, l'app **te lo dice**: non ti mostra uno zero al posto di un numero che non
 ha potuto leggere.
 
@@ -807,8 +820,9 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
   loro disegno; il Meteo e la Dashboard l'hanno gia'. Il tema chiaro c'e' nel foglio e **non si puo'
   ancora accendere**.
 - **Nella Dashboard mancano ancora** il dettaglio della Luna col calendario delle fasi, la volta
-  con le curve degli oggetti, l'anno col calendario colorato e gli stati difficili (primo avvio,
-  meteo che non risponde, scansione al lavoro): arrivano uno alla volta.
+  con le curve degli oggetti, l'anno col calendario colorato, la scansione al lavoro con quanto
+  manca, e nelle prossime notti il cielo in parole e le ore di buio senza Luna: arrivano uno alla
+  volta.
 - **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un
   tondo con la sua forma -- con una spunta se e' andata bene, un punto esclamativo se c'e' un
   problema, tratteggiato se aspetta -- perche' chi non distingue il verde dal rosso deve capire lo

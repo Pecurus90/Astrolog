@@ -63,7 +63,7 @@ describe("il primo avvio", () => {
   it("col timbro l app mostra se stessa e non richiede niente", async () => {
     conTimbro(true)
     await disegna()
-    expect(await within(await screen.findByRole("main")).findByText("7 da confermare")).toBeDefined()
+    expect(await within(await screen.findByRole("main")).findByText("archivio vuoto")).toBeDefined()
     expect(screen.queryByRole("button", { name: /salta/i })).toBeNull()
     // E soprattutto: il timbro e' stato **letto**. Senza questa riga il test sarebbe verde anche
     // se l'app ignorasse del tutto `wizard_done` -- infatti lo era, prima che il primo avvio
@@ -124,7 +124,7 @@ describe("il primo avvio", () => {
     // Prima si aspetta l'app -- la barra c'e' solo dopo il timbro -- e poi si guarda dentro il
     // contenuto: cercando subito, il `main` trovato e' ancora quello del primo avvio.
     await screen.findByRole("navigation")
-    expect(await within(screen.getByRole("main")).findByText("7 da confermare")).toBeDefined()
+    expect(await within(screen.getByRole("main")).findByText("archivio vuoto")).toBeDefined()
   })
 
   it("il primo passo chiede il nome, e quello che scrivo viene salvato", async () => {

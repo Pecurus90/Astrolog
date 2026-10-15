@@ -80,19 +80,38 @@ function SenzaSito() {
  *   il verdetto va in testa e apre gli altri fattori, le misure sono carte piccole. I dati sono
  *   gli stessi.
  */
-export function Meteo() {
+/** Rilegge la previsione e Stanotte, che dice la notte in corso dalla stessa previsione. */
+function useRileggi() {
   const cache = useQueryClient()
-  const meteo = usePrevisione()
-  const rileggi = () => Promise.all(["weather", "tonight"].map((q) => cache.invalidateQueries({ queryKey: [q] })))
-  const aggiorna = useMutation({
+  return () => Promise.all(["weather", "tonight"].map((q) => cache.invalidateQueries({ queryKey: [q] })))
+}
+
+/** Aggiorna: chiede la previsione subito e rilegge. Lo usano il Meteo e la Dashboard. */
+export function useAggiorna() {
+  const rileggi = useRileggi()
+  return useMutation({
     mutationFn: async (): Promise<Esito> => {
       const { data, error } = await api.POST("/api/v1/weather/refresh")
       if (error) throw new Error(t("weather.refresh.failed"))
       return data.status
     },
-    // anche Stanotte, che dice la notte in corso dalla stessa previsione
     onSuccess: rileggi,
   })
+}
+
+/** L'ultima richiesta andata storta, se lo e'. */
+export function silenzio(detto: Meteo): Tace | null {
+  const r = detto.last_request
+  return r && r.status !== "ok" ? { at: r.at, status: r.status } : null
+}
+
+/** Nessuna previsione che valga: mai arrivata, o senza notti. */
+export const senzaPrevisioneIn = (detto: Meteo) => detto.fetched_at === null || detto.nights.length === 0
+
+export function Meteo() {
+  const meteo = usePrevisione()
+  const rileggi = useRileggi()
+  const aggiorna = useAggiorna()
   const modello = useMutation({
     mutationFn: async (scelto: string) => {
       const { error } = await api.PATCH("/api/v1/settings", { body: { values: { weather_model: scelto } } })
@@ -108,9 +127,8 @@ export function Meteo() {
   const aperta = detto?.nights[scelta] ?? detto?.nights[0]
   // senza notti il telefono ha la testa degli stati, come il desktop (tavola meteo-stati v37)
   const telefono = stretta && aperta !== undefined
-  const r = detto?.last_request
-  const tace: Tace | null = r && r.status !== "ok" ? { at: r.at, status: r.status } : null
-  const senzaPrevisione = detto?.fetched_at === null || detto?.nights.length === 0
+  const tace = detto ? silenzio(detto) : null
+  const senzaPrevisione = detto ? senzaPrevisioneIn(detto) : false
   const scegliNotte = (i: number) => {
     setScelta(i)
     setCarta(null)

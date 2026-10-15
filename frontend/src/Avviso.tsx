@@ -22,7 +22,8 @@ import type { ReactNode } from "react"
  */
 // Come le tavole (DECISIONI di Design, 14/10): "!" e non il segnale di pericolo, che molti sistemi
 // rendono come emoji a colori fuori dal tondo. Gli altri toni hanno solo la forma del tondo.
-const SEGNI = { neutro: "", attesa: "", buono: "\u2713", allarme: "!", lavoro: "", ignoto: "" }
+// "ora" e "dopo" sono i passi in fila (primo avvio della Dashboard): il segno e' il loro numero.
+const SEGNI = { neutro: "", attesa: "", buono: "\u2713", allarme: "!", lavoro: "", ignoto: "", ora: "", dopo: "" }
 
 // Solo il **modificatore**: il blocco si scrive dove la classe si monta, o la guardia del
 // cancello non saprebbe leggere cio' che esce da qui e lo direbbe -- giustamente, perche' una
@@ -35,6 +36,9 @@ const TONI: Record<keyof typeof SEGNI, string> = {
   lavoro: "as-avviso--lavoro",
   // cio' che non c'e' o non si sa, senza allarme: il foglio gli disegna il tondo punteggiato
   ignoto: "as-avviso--ignoto",
+  // il passo da fare adesso, e quello che viene dopo e resta spento
+  ora: "as-avviso--ora",
+  dopo: "as-avviso--dopo",
 }
 
 export function Avviso({
@@ -44,9 +48,12 @@ export function Avviso({
   ruolo,
   pagina,
   sotto,
+  segno,
   children,
 }: {
   esito: keyof typeof SEGNI
+  /** Il segno al posto di quello del tono: il numero di un passo. */
+  segno?: string
   /** Cosa e' successo, in poche parole. Il testo sotto dice il resto. */
   titolo?: ReactNode
   /** Cosa si puo' fare adesso: bottoni piccoli, dentro l'avviso. */
@@ -63,7 +70,7 @@ export function Avviso({
   return (
     <div className={["as-avviso", TONI[esito], pagina ? "as-avviso--pagina" : ""].filter(Boolean).join(" ")}>
       <span className="as-avviso__segno" aria-hidden="true">
-        {SEGNI[esito]}
+        {segno ?? SEGNI[esito]}
       </span>
       <div className="as-avviso__corpo">
         {titolo && <p className="as-avviso__titolo">{titolo}</p>}

@@ -199,10 +199,12 @@ export const STANOTTE = {
   "/api/v1/sites": { stato: 200, corpo: { items: [SITO_DI_CASA], total: 1, limit: 50, offset: 0 } },
 }
 
-/** Cio' che la Dashboard chiede, a mani vuote: nessun sito, quindi nessuna previsione, e nessuna
- *  notte. Si sparge come `STANOTTE`, nelle prove che aprono l'app sulla sua prima pagina. */
+/** Cio' che la Dashboard chiede appena dopo il primo avvio: il sito e una cartella ci sono, la
+ *  previsione e le notti non ancora. Si sparge come `STANOTTE`, nelle prove che aprono l'app sulla
+ *  sua prima pagina. (Senza sito la Dashboard mostra solo i passi per cominciare.) */
 export const CASA = {
-  "/api/v1/weather": { stato: 200, corpo: { site: null, missing: null, model: "best_match", models: [], fetched_at: null, last_request: null, full_nights: 3, seeing: { key: false, source: null, meteoblue: null }, sources: [], scales: [], nights: [] } },
+  "/api/v1/folders": { stato: 200, corpo: { items: [], total: 1, limit: 50, offset: 0 } },
+  "/api/v1/weather": { stato: 200, corpo: { site: "Casa", missing: null, model: "best_match", models: [], fetched_at: null, last_request: null, full_nights: 3, retry_s: 900, seeing: { key: false, source: null, meteoblue: null }, sources: [], scales: [], nights: [] } },
   "/api/v1/nights": { stato: 200, corpo: { items: [], total: 0, limit: 1, offset: 0, totals: { nights: 0, frames: 0, integration_s: 0, untimed: 0 }, waiting: [], still_reading: 0, reading_done_pct: null } },
 }
 

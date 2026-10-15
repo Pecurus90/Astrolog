@@ -127,6 +127,7 @@ export function meteo(corpo: Record<string, unknown>, altre: Record<string, Voce
         fetched_at: null,
         last_request: null,
         full_nights: 3,
+        retry_s: 900,
         seeing: { key: false, source: null, meteoblue: null },
         sources: [{ source: "cams", fetched_at: "2026-09-25T15:00:00.000Z" }],
         scales: [

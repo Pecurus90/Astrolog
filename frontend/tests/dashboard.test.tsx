@@ -10,71 +10,14 @@
 import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { STANOTTE, colonna, disegna, pulisci } from "./banco"
-import { NOTTE as DEL_METEO, TENDENZA, meteo, misura } from "./meteo-banco"
-
-// le sei misure della Dashboard: il banco del Meteo non ha jet stream e condensa con un valore
-const NOTTE = {
-  ...DEL_METEO,
-  measures: [
-    ...DEL_METEO.measures,
-    misura("jet", { level: "go", value: 96, axis_max: 200 }),
-    misura("condensation", { level: "go", value: 8, axis_min: -5, axis_max: 15 }),
-  ],
-}
+import { pulisci } from "./banco"
+import { NOTTE_ARCHIVIO, montaDashboard, notti } from "./dashboard-banco"
 
 afterEach(pulisci)
 afterEach(() => vi.unstubAllGlobals())
 
-const STANOTTE_CON_LUNA = {
-  "/api/v1/tonight": {
-    stato: 200,
-    corpo: {
-      night: "2026-09-26",
-      site: null,
-      moon: {
-        phase_key: "waning_gibbous", illumination_pct: 62, rise: "2026-09-26T23:40:00+02:00", set: "2026-09-27T15:17:00+02:00",
-        lit_side: "left", highest: null, track: [], ceiling_deg: 90,
-      },
-      sky_bands: [],
-      weather: null,
-    },
-  },
-}
-
-const NOTTE_ARCHIVIO = {
-  id: 7, night_date: "2026-09-19", site: "Casa", site_source: "header", frames: 180, integration_s: 15120, untimed: 0,
-  objects: [
-    { key: "m31", name: "M 31", frames: 120, integration_s: 9000, untimed: 0, bar_pct: 100 },
-    { key: "m33", name: "M 33", frames: 40, integration_s: 4000, untimed: 0, bar_pct: 44 },
-    { key: "m45", name: "M 45", frames: 20, integration_s: 2120, untimed: 0, bar_pct: 24 },
-  ],
-  filters: [], moon: null, weather: { verdict: null, cloud_total_pct: null, usable_hours: null, window: null, window_hours: null, state: "unknown", arrives_on: null },
-}
-
-function notti(items: unknown[]) {
-  return {
-    "/api/v1/nights": {
-      stato: 200,
-      corpo: { items, total: items.length, limit: 1, offset: 0, totals: { nights: items.length, frames: 0, integration_s: 0, untimed: 0 }, waiting: [], still_reading: 0, reading_done_pct: null },
-    },
-  }
-}
-
-const PROSSIME = [
-  { ...NOTTE, night: "2026-09-27", verdict: "nogo", usable_hours: 0, usable_since: null, usable_until: null },
-  { ...NOTTE, night: "2026-09-28", verdict: "go", usable_hours: 8, usable_since: "2026-09-28T21:00:00+02:00", usable_until: "2026-09-29T05:00:00+02:00" },
-  { ...TENDENZA, night: "2026-09-29", window_hours: 9 },
-]
-
 async function apriDashboard(altre: Record<string, unknown> = {}, larga?: number) {
-  meteo(
-    { fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE, ...PROSSIME] },
-    { ...STANOTTE, ...STANOTTE_CON_LUNA, ...notti([NOTTE_ARCHIVIO]), "/api/v1/review": { stato: 200, corpo: { to_confirm: 32 } }, ...altre } as never,
-  )
-  // dopo `meteo`: il banco non deve togliere la misura della colonna
-  if (larga !== undefined) colonna(larga)
-  await disegna()
+  await montaDashboard({ altre, larga })
   return screen.findByRole("region", { name: /stanotte a Casa/i })
 }
 

@@ -182,6 +182,14 @@ def dintorni_del_cielo():
     })  # fmt: skip
 
 
+def test_the_route_says_how_often_it_retries_a_silent_service(letto):
+    """Ogni quanto si richiede un servizio che tace esce dalla rotta: la Dashboard lo scrive
+    ("Riprovo da solo ogni 15 minuti") e il numero ha una casa sola, il backend che riprova."""
+    from astrolog.weather import forecast
+
+    assert letto.get("/api/v1/weather").json()["retry_s"] == forecast.RETRY_S
+
+
 def test_three_nights_are_full_and_the_following_are_a_trend(letto):
     notti = letto.get("/api/v1/weather").json()["nights"]
     assert len(notti) > 3

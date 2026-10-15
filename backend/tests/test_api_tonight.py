@@ -45,7 +45,14 @@ def test_without_a_home_site_there_is_no_moon_and_it_is_said(client_vuoto):
     assert r.status_code == 200, r.text
     detto = r.json()
     # il cielo segue la stessa regola: niente sito, niente notte da dividere in fasce
-    assert detto == {"night": None, "site": None, "moon": None, "sky_bands": [], "weather": None}
+    assert detto == {
+        "night": None,
+        "site": None,
+        "moon": None,
+        "sky_bands": [],
+        "dark_s": None,
+        "weather": None,
+    }
 
 
 def test_with_a_home_site_the_moon_is_told_with_its_night(client_vuoto):
@@ -305,6 +312,34 @@ def test_the_route_sends_the_bands_of_the_sky_already_made(client_vuoto):
     quali = [f["kind"] for f in fasce]
     assert quali[0] == "day" and quali[-1] == "day"
     assert "dark" in quali
+
+
+def test_the_route_sends_how_long_the_dark_lasts_without_the_weather(client_vuoto):
+    """Quanto dura il **buio astronomico** di stanotte esce scritto, in secondi: e' calcolo, non
+    previsione, quindi c'e' anche quando il meteo non risponde (la Dashboard lo dice in testa,
+    tavola dashboard-stati-meteo v37). E' la somma delle fasce di buio che la rotta manda."""
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    detto = client_vuoto.get("/api/v1/tonight").json()
+
+    somma = sum(
+        (
+            dt.datetime.fromisoformat(f["ends_at"]) - dt.datetime.fromisoformat(f["starts_at"])
+        ).total_seconds()
+        for f in detto["sky_bands"]
+        if f["kind"] == "dark"
+    )
+    assert detto["dark_s"] == round(somma)
+    assert detto["dark_s"] > 0
+
+
+def test_without_a_night_there_is_no_dark_to_count(client_vuoto, monkeypatch):
+    """Senza notte (sito senza fuso) il buio non si conta: `None`, non zero. Zero direbbe "stanotte
+    non fa buio", che e' un'altra cosa."""
+    monkeypatch.setattr("astrolog.api.tonight.night_date", lambda *a, **k: None)
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    assert client_vuoto.get("/api/v1/tonight").json()["dark_s"] is None
 
 
 def test_a_site_that_has_no_timezone_at_all_does_not_break_the_page(client_vuoto):

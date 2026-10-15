@@ -859,11 +859,17 @@ riga per voce.
   riprendere, il vuoto dei progetti: Marco, 14/10/2026); la Dashboard del telefono (`as-tel-dash`:
   stanotte e il vuoto dei progetti, carte piccole che aprono la scala 340x170, prossime notti in una
   riga aperta, niente rimandi) e sul desktop i progetti nella coppia con Rispondi tenue e
-  "Stanotte intera" (15/10/2026). Restano, in quest'ordine (Marco,
-  14/10/2026): gli stati delle tavole `dashboard-stati*`; il dettaglio della Luna col
-  calendario; la volta coi pianeti; l'anno. Aspettano Marco: le parole del cielo e il buio senza
-  Luna nelle prossime notti, con la loro icona; "214 frame fuori dai conti". Le tavole intere
-  si scaricano dal browser (`GetFile` del progetto): DesignSync le taglia a 256 KiB.
+  "Stanotte intera" (15/10/2026); gli stati senza sito (passi in fila), archivio vuoto (nessuna
+  cartella) e meteo giu' (buio calcolato `dark_s` da `/tonight`, `retry_s` da `/weather`), anche
+  insieme (15/10/2026). Restano, in quest'ordine (Marco,
+  14/10/2026): la scansione al lavoro (tempo che manca, prima scansione, conti "finora"), la notte
+  coperta e le parole del cielo nelle prossime notti; il dettaglio della Luna col
+  calendario; la volta coi pianeti; l'anno. Decisi da Marco il 15/10/2026: il tempo che manca alla
+  scansione si stima dal ritmo finora, detto "circa", e tace nel primo minuto; le prossime notti
+  portano le parole del cielo dalle okta WMO sulla copertura nel buio (0 sereno, 1-4 nubi sparse,
+  5-7 nuvoloso, 8 coperto; da verificare sulla fonte e citare) e le ore di buio senza Luna dal
+  backend; "frame fuori dai conti" sono i frame che non stanno in nessuna notte (`waiting`). Le
+  tavole intere si scaricano dal browser (`GetFile` del progetto): DesignSync le taglia a 256 KiB.
 - **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,
   Voyager, Telescopius, SkyTools, TheAstroImagingPlanner). La disposizione non cambia: sono
   colonne. (1) **distanza dalla Luna** del progetto stanotte; (2) **ore utili stanotte** (buio,

@@ -222,6 +222,7 @@ class WeatherOut(BaseModel):
     fetched_at: str | None
     last_request: WeatherRequestOut | None
     full_nights: int
+    retry_s: int = Field(description="How often a silent service is asked again, in seconds.")
     seeing: WeatherSeeingOut
     sources: list[WeatherSourceOut]
     scales: list[WeatherScaleOut]
