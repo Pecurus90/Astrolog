@@ -1,6 +1,9 @@
 /** The Dashboard's texts in English. */
 export const enDashboard = {
   "dashboard.tonight": "tonight at {sito}",
+  "dashboard.tonight.full": "All of tonight",
+  "dashboard.nights.short": "The next 3 nights",
+  "dashboard.projects.title": "projects in progress",
   "dashboard.moon.rise": "rises at {ora}",
   "dashboard.moon.set": "sets at {ora}",
   "dashboard.weather.title": "tonight's weather",

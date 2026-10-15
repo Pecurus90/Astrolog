@@ -3,6 +3,9 @@
  */
 export const itDashboard = {
   "dashboard.tonight": "stanotte a {sito}",
+  "dashboard.tonight.full": "Stanotte intera",
+  "dashboard.nights.short": "Le prossime 3 notti",
+  "dashboard.projects.title": "progetti in corso",
   "dashboard.moon.rise": "sorge alle {ora}",
   "dashboard.moon.set": "tramonta alle {ora}",
   "dashboard.weather.title": "meteo della notte",

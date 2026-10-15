@@ -53,6 +53,7 @@ type Tela = { largo: number; alto: number; sinistra: number; destra: number; cim
 const CIELO: Tela = { largo: 1080, alto: 300, sinistra: 44, destra: 48, cima: 30, fondo: 274, ogni: 1 }
 const TELEFONO: Tela = { largo: 358, alto: 220, sinistra: 38, destra: 36, cima: 30, fondo: 194, ogni: 2 }
 const SOLA: Tela = { largo: 1000, alto: 210, sinistra: 12, destra: 46, cima: 30, fondo: 184, ogni: 1 }
+const SOLA_TELEFONO: Tela = { largo: 340, alto: 170, sinistra: 12, destra: 34, cima: 30, fondo: 144, ogni: 2 }
 // il valore sta sotto il suo punto; il nome di una linea sopra (raffiche, aria) o sotto (rugiada)
 const SOTTO_IL_PUNTO = 16
 const SOPRA_IL_PUNTO = -8
@@ -247,8 +248,13 @@ export function CieloDelleNubi({
 
 /** Una misura sola dal tramonto all'alba, sul cielo coi suoi colori: lo stesso disegno della scala
  *  di destra (la Dashboard lo apre sotto la sua carta, `handoff/design-dashboard.md`). */
-export function ScalaDellaMisura({ notte: n, ore, scale, codice }: { notte: Notte; ore: Ora[]; scale: Scala[]; codice: Destra }) {
-  const { largo, alto, sinistra, destra, fondo } = SOLA
+export function ScalaDellaMisura({ notte: n, ore, scale, codice, telefono = false }: {
+  notte: Notte; ore: Ora[]; scale: Scala[]; codice: Destra
+  /** Sul telefono la tela e' la sua, piu' piccola, con un'ora si' e una no. */
+  telefono?: boolean
+}) {
+  const tela = telefono ? SOLA_TELEFONO : SOLA
+  const { largo, alto, sinistra, destra, fondo } = tela
   const passo = (largo - sinistra - destra) / (ore.length || 1)
   const x = (i: number) => sinistra + (i + 0.5) * passo
   const da = DISEGNO[codice].scala
@@ -261,8 +267,9 @@ export function ScalaDellaMisura({ notte: n, ore, scale, codice }: { notte: Nott
         {/* la terra prima della scala: lo zero della scala le sta sopra, come nella tavola */}
         <rect className="as-volta__terra" x={0} y={fondo + 0.5} width={largo} height={alto - fondo} />
         <ScalaDiDestra destra={codice} ore={ore} misura={n.measures.find((m) => m.code === da)}
-          scala={da === codice ? scale.find((s) => s.code === codice) : undefined} x={x} passo={passo} id={`${id}-tr`} tela={SOLA} />
-        <Ore ore={ore} x={x} tela={SOLA} />
+          scala={da === codice ? scale.find((s) => s.code === codice) : undefined} x={x} passo={passo} id={`${id}-tr`} tela={tela} />
+        <line className="as-volta__orizzonte" x1={sinistra} x2={largo} y1={fondo} y2={fondo} />
+        <Ore ore={ore} x={x} tela={tela} />
       </svg>
     </div>
   )

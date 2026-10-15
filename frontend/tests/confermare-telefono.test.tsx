@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { fireEvent, screen, within } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 
-import { SALUTE, STANOTTE, disegna, impostazioni, pulisci, rispondi } from "./banco"
+import { SALUTE, STANOTTE, colonna, disegna, impostazioni, pulisci, rispondi } from "./banco"
 
 afterEach(pulisci)
 
@@ -27,20 +27,6 @@ const PAGINA = {
     { key: "D:/Astro/dark", frames: 120, answer: null },
     { key: "D:/Astro/M51", frames: 30, answer: "light" },
   ],
-}
-
-/** La colonna misurata stretta: jsdom non impagina, quindi la misura la da' la prova. */
-function colonna(larga: number) {
-  vi.stubGlobal(
-    "ResizeObserver",
-    class {
-      constructor(private dice: (v: { contentRect: { width: number } }[]) => void) {}
-      observe() {
-        this.dice([{ contentRect: { width: larga } }])
-      }
-      disconnect() {}
-    },
-  )
 }
 
 async function aperta(larga = 390) {

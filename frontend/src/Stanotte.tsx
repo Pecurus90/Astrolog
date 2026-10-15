@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import type { Ref, RefObject } from "react"
+import { type Ref, type RefObject, createContext } from "react"
 import { Link } from "react-router"
 
 import { Avviso } from "./Avviso"
@@ -21,6 +21,9 @@ import { Accordo, type Breve, Giudizio, VentoInQuota } from "./NotteDelMeteo"
  *   Luna. Solo il disegno, che sta in `disegnoDellaLuna.ts`.
  * - **Ogni vuoto e' una frase, mai un trattino.**
  */
+
+/** Apre il pannello di Stanotte dalla pagina ("Stanotte intera" della Dashboard): lo da' il telaio. */
+export const ApriStanotte = createContext<(() => void) | null>(null)
 
 export function useStanotte() {
   return useQuery({

@@ -10,7 +10,7 @@
 import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { STANOTTE, disegna, pulisci } from "./banco"
+import { STANOTTE, colonna, disegna, pulisci } from "./banco"
 import { NOTTE as DEL_METEO, TENDENZA, meteo, misura } from "./meteo-banco"
 
 // le sei misure della Dashboard: il banco del Meteo non ha jet stream e condensa con un valore
@@ -67,11 +67,13 @@ const PROSSIME = [
   { ...TENDENZA, night: "2026-09-29", window_hours: 9 },
 ]
 
-async function apriDashboard(altre: Record<string, unknown> = {}) {
+async function apriDashboard(altre: Record<string, unknown> = {}, larga?: number) {
   meteo(
     { fetched_at: "2026-09-25T15:00:00.000Z", nights: [NOTTE, ...PROSSIME] },
     { ...STANOTTE, ...STANOTTE_CON_LUNA, ...notti([NOTTE_ARCHIVIO]), "/api/v1/review": { stato: 200, corpo: { to_confirm: 32 } }, ...altre } as never,
   )
+  // dopo `meteo`: il banco non deve togliere la misura della colonna
+  if (larga !== undefined) colonna(larga)
   await disegna()
   return screen.findByRole("region", { name: /stanotte a Casa/i })
 }
@@ -125,10 +127,12 @@ describe("la Dashboard, stanotte", () => {
     expect(document.activeElement).toBe(condensa)
   })
 
-  it("Meteo porta alla pagina del Meteo", async () => {
+  it("Meteo porta alla pagina del Meteo, Stanotte intera apre Stanotte", async () => {
     const stanotte = await apriDashboard()
 
     expect(within(stanotte).getByRole("link", { name: "Meteo" }).getAttribute("href")).toBe("/meteo")
+    fireEvent.click(within(stanotte).getByRole("button", { name: "Stanotte intera" }))
+    expect(document.querySelector(".as-telaio")?.getAttribute("data-stanotte")).toBe("aperta")
   })
 })
 
@@ -187,10 +191,60 @@ describe("la Dashboard, da riprendere", () => {
 })
 
 describe("la Dashboard, i progetti", () => {
-  it("finche' i progetti non esistono lo dice, con Crea un progetto verso Progetti", async () => {
+  it("finche' i progetti non esistono la loro sezione lo dice, con Crea un progetto primario verso Progetti", async () => {
     const stanotte = await apriDashboard()
 
+    const progetti = await screen.findByRole("region", { name: "progetti in corso" })
+    expect(within(stanotte).queryByText(/^Nessun progetto in corso\./)).toBeNull()
+    expect(within(progetti).getByText(/^Nessun progetto in corso\./)).toBeTruthy()
+    const crea = within(progetti).getByRole("link", { name: "Crea un progetto" })
+    expect(crea.getAttribute("href")).toBe("/progetti")
+    expect(crea.className).toContain("as-bottone--primario")
+    expect(progetti.parentElement?.className).toBe("as-dashboard__coppia")
+  })
+
+  it("col primario sui progetti Rispondi scende a tenue", async () => {
+    await apriDashboard()
+
+    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
+    expect((await within(lavoro).findByRole("link", { name: "Rispondi" })).className).toContain("as-bottone--tenue")
+  })
+})
+
+describe("la Dashboard sul telefono", () => {
+  const sulTelefono = () => apriDashboard({}, 390)
+
+  it("ha il suo markup: stanotte col vuoto dei progetti, niente da riprendere e niente rimandi", async () => {
+    const stanotte = await sulTelefono()
+
+    expect(document.querySelector(".as-dashboard")?.className).toBe("as-dashboard as-tel-dash")
     expect(within(stanotte).getByText(/^Nessun progetto in corso\./)).toBeTruthy()
-    expect(within(stanotte).getByRole("link", { name: "Crea un progetto" }).getAttribute("href")).toBe("/progetti")
+    expect(screen.queryByRole("region", { name: "da riprendere" })).toBeNull()
+    expect(within(stanotte).queryByRole("link", { name: "Meteo" })).toBeNull()
+  })
+
+  it("le sei misure sono carte piccole; toccata, una apre sotto il suo grafico, chiudi lo richiude", async () => {
+    const stanotte = await sulTelefono()
+
+    const carte = [...stanotte.querySelectorAll<HTMLButtonElement>("button.as-tel-carta")]
+    expect(carte.map((c) => c.querySelector(".as-tel-carta__nome")?.textContent)).toEqual(["Nuvole", "Seeing", "Jet stream", "Vento", "Condensa", "Aerosol"])
+    const vento = carte[3] as HTMLButtonElement
+    fireEvent.click(vento)
+    const dettaglio = document.getElementById(vento.getAttribute("aria-controls") ?? "") as HTMLElement
+    expect(dettaglio.className).toBe("as-tel-dettaglio")
+    expect(dettaglio.hidden).toBe(false)
+    expect(dettaglio.querySelector("svg")?.getAttribute("viewBox")).toBe("0 0 340 170")
+    fireEvent.click(within(dettaglio).getByRole("button", { name: "chiudi" }))
+    expect(dettaglio.hidden).toBe(true)
+    expect(document.activeElement).toBe(vento)
+  })
+
+  it("le prossime 3 notti stanno in una riga sempre aperta, senza collegamenti", async () => {
+    await sulTelefono()
+
+    const riga = (await screen.findByRole("heading", { level: 3, name: "Le prossime 3 notti" })).closest("li") as HTMLElement
+    expect(riga.className).toBe("as-tel-sez as-tel-sez--aperta")
+    expect(riga.querySelectorAll("article.as-serata")).toHaveLength(3)
+    expect(within(riga).queryAllByRole("link")).toHaveLength(0)
   })
 })

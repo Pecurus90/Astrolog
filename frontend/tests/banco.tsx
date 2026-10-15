@@ -131,6 +131,20 @@ export const LETTURA: components["schemas"]["ScanRunOut"] = {
 /** Le rotte che il banco conosce. Una rotta non prevista **fallisce**: un banco che risponde a
  *  tutto direbbe di si' anche a una chiamata che non doveva partire. */
 let mappaCorrente: Record<string, Voce> = {}
+/** La colonna misurata (`useColonnaStretta`): jsdom non impagina, quindi la misura la da' la prova. */
+export function colonna(larga: number) {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      constructor(private dice: (v: { contentRect: { width: number } }[]) => void) {}
+      observe() {
+        this.dice([{ contentRect: { width: larga } }])
+      }
+      disconnect() {}
+    },
+  )
+}
+
 /** Una risposta del banco. `attesa` la trattiene finche' la promessa non si risolve: il server
  *  vero ci mette qualche millisecondo, e cio' che la pagina fa **nel frattempo** si vede solo cosi'. */
 export type Voce = { stato: number; corpo: unknown; attesa?: Promise<unknown> }

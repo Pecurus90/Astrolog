@@ -7,25 +7,11 @@
 import { fireEvent, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { pulisci } from "./banco"
+import { colonna, pulisci } from "./banco"
 import { NOTTE, TENDENZA, apriMeteo, conNotti, misura, ora, scheda } from "./meteo-banco"
 
 afterEach(pulisci)
 afterEach(() => vi.unstubAllGlobals())
-
-/** La colonna misurata: jsdom non impagina, quindi la misura la da' la prova. */
-function colonna(larga: number) {
-  vi.stubGlobal(
-    "ResizeObserver",
-    class {
-      constructor(private dice: (v: { contentRect: { width: number } }[]) => void) {}
-      observe() {
-        this.dice([{ contentRect: { width: larga } }])
-      }
-      disconnect() {}
-    },
-  )
-}
 
 async function sulTelefono(...notti: unknown[]) {
   conNotti(...notti)

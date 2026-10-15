@@ -228,14 +228,20 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
   Vento, Condensa, Aerosol -- come quelle del Meteo in piccolo: il valore della notte, cosa vuol
   dire, il giudizio con le sue ore, le barrette ora per ora e il picco. Tocca una carta e sotto si
   apre il suo grafico **dal tramonto all'alba**, sul cielo coi suoi colori; una alla volta,
-  *chiudi* lo richiude. *Meteo* porta alla pagina intera.
+  *chiudi* lo richiude. *Stanotte intera* apre il pannello di Stanotte, *Meteo* porta alla
+  pagina intera.
 - **Le prossime 3 notti**: il giorno, le ore serene e il semaforo; ognuna porta al Meteo. La
   terza e' gia' **tendenza**, come nel Meteo: dice le ore di buio, non quelle serene.
-- **Da riprendere**: quante domande ci sono **da confermare**, con *Rispondi*, e l'ultima notte
+- **I progetti in corso** non esistono ancora: la loro sezione lo dice, e *Crea un progetto* --
+  la cosa da fare adesso -- porta alla pagina Progetti, che arrivera'.
+- **Da riprendere**, accanto: quante domande ci sono **da confermare**, con *Rispondi*, e l'ultima notte
   che hai ripreso -- quanto tempo, su quale oggetto (quello con piu' tempo, e quanti altri) e
   quanti frame -- che si apre nelle Notti. Se non c'e' niente da riprendere, la sezione non c'e'.
-- **I progetti** non esistono ancora: la pagina lo dice, e *Crea un progetto* porta alla pagina
-  Progetti, che arrivera'.
+
+Sul **telefono** la pagina e' piu' corta: in testa stanotte e la cosa da fare adesso (oggi *Crea un
+progetto*), poi le sei carte piccole, tre per riga, che toccate aprono sotto il loro grafico, e le
+prossime 3 notti. Alle altre pagine -- le Notti, Da confermare, il Meteo -- si va dalla barra in
+basso.
 
 Senza un sito di casa la pagina ti chiede di sceglierlo; *da riprendere* c'e' lo stesso. Se
 qualcosa non risponde, l'app **te lo dice**: non ti mostra uno zero al posto di un numero che non
@@ -801,8 +807,8 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
   loro disegno; il Meteo e la Dashboard l'hanno gia'. Il tema chiaro c'e' nel foglio e **non si puo'
   ancora accendere**.
 - **Nella Dashboard mancano ancora** il dettaglio della Luna col calendario delle fasi, la volta
-  con le curve degli oggetti, l'anno col calendario colorato e la forma del telefono: arrivano
-  una alla volta.
+  con le curve degli oggetti, l'anno col calendario colorato e gli stati difficili (primo avvio,
+  meteo che non risponde, scansione al lavoro): arrivano uno alla volta.
 - **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un
   tondo con la sua forma -- con una spunta se e' andata bene, un punto esclamativo se c'e' un
   problema, tratteggiato se aspetta -- perche' chi non distingue il verde dal rosso deve capire lo

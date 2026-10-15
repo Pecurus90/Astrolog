@@ -5,7 +5,7 @@ import { Bottone } from "./Bottone"
 import { Icon, IconSprite } from "./Icons"
 import { Ricerca } from "./Ricerca"
 import { AvvisiDellaScansione, Scansiona, ScansioneNelFoglio } from "./Scansiona"
-import { Pastiglia, Stanotte } from "./Stanotte"
+import { ApriStanotte, Pastiglia, Stanotte } from "./Stanotte"
 import { numero, t } from "./i18n"
 import { PAGINE, type Pagina, paginaDi } from "./pagine"
 import { useRevisione } from "./revisione"
@@ -141,7 +141,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </header>
         <main className="as-telaio__corpo" id="contenuto" tabIndex={-1} onScroll={scorre}>
           <AvvisiDellaScansione />
-          {children}
+          <ApriStanotte value={() => cambiaStanotte(true)}>{children}</ApriStanotte>
         </main>
         <button
           className="as-telaio__velo"

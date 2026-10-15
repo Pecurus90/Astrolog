@@ -856,8 +856,11 @@ riga per voce.
   ore: la tavola non ha il caso). Resta della tavola, non portato: "· a Capo Nord" nel nome della
   notte, che pare un'etichetta della tavola. La Dashboard desktop,
   prima fetta (testa di stanotte, sei carte che aprono la scala della misura, prossime 3 notti, da
-  riprendere, il vuoto dei progetti: Marco, 14/10/2026). Restano, in quest'ordine (Marco,
-  14/10/2026): il telefono e gli stati delle tavole `dashboard-stati*`; il dettaglio della Luna col
+  riprendere, il vuoto dei progetti: Marco, 14/10/2026); la Dashboard del telefono (`as-tel-dash`:
+  stanotte e il vuoto dei progetti, carte piccole che aprono la scala 340x170, prossime notti in una
+  riga aperta, niente rimandi) e sul desktop i progetti nella coppia con Rispondi tenue e
+  "Stanotte intera" (15/10/2026). Restano, in quest'ordine (Marco,
+  14/10/2026): gli stati delle tavole `dashboard-stati*`; il dettaglio della Luna col
   calendario; la volta coi pianeti; l'anno. Aspettano Marco: le parole del cielo e il buio senza
   Luna nelle prossime notti, con la loro icona; "214 frame fuori dai conti". Le tavole intere
   si scaricano dal browser (`GetFile` del progetto): DesignSync le taglia a 256 KiB.
