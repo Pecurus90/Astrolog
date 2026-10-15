@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react"
+import { type KeyboardEvent, type ReactNode, useEffect, useId, useRef, useState } from "react"
 
 import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
@@ -17,6 +17,9 @@ type Meteo = components["schemas"]["WeatherOut"]
 type Notte = Meteo["nights"][number]
 type Codice = Notte["measures"][number]["code"]
 type Esito = components["schemas"]["WeatherRefreshOut"]["status"]
+type Richiesta = NonNullable<Meteo["last_request"]>
+// l'ultima richiesta andata storta: da quando, e come
+type Tace = { at: Richiesta["at"]; status: Exclude<Richiesta["status"], "ok"> }
 
 /** La previsione del sito di casa: la leggono il Meteo e la Dashboard. */
 export function usePrevisione() {
@@ -31,20 +34,37 @@ export function usePrevisione() {
 }
 
 /** Cio' che la pagina dice prima della previsione: che arriva, che non e' arrivata, o che senza un
- *  sito di casa non arrivera'. Lo dicono il Meteo e la Dashboard. */
-export function PrimaDellaPrevisione({ meteo }: { meteo: ReturnType<typeof usePrevisione> }) {
+ *  sito di casa non arrivera'. Lo dicono il Meteo e la Dashboard; il Meteo ha il suo senza sito. */
+export function PrimaDellaPrevisione({ meteo, senzaSito }: { meteo: ReturnType<typeof usePrevisione>; senzaSito?: ReactNode }) {
   return (
     <>
       {meteo.isPending && <p>{t("weather.loading")}</p>}
       {meteo.error && <Avviso esito="allarme">{meteo.error.message}</Avviso>}
-      {meteo.data?.site === null && (
+      {meteo.data?.site === null && (senzaSito ?? (
         <Vuoto titolo="weather.noSite.title" perche="weather.noSite.why" sotto={1}>
           <AzioniDelVuoto>
             <Bottone a="/impostazioni/sito">{t("weather.noSite.how")}</Bottone>
           </AzioniDelVuoto>
         </Vuoto>
-      )}
+      ))}
     </>
+  )
+}
+
+/** Senza sito, come la tavola meteo-stati: la testa dice solo Meteo, l'avviso chiede il sito. */
+function SenzaSito() {
+  return (
+    <div className="as-meteo">
+      <header className="as-meteo__testa">
+        <div className="as-meteo__dice">
+          <p className="as-soprattitolo">{t("nav.weather")}</p>
+        </div>
+      </header>
+      <Avviso esito="attesa" pagina titolo={t("weather.noSite.title")}
+        azioni={<Bottone verso="primario" a="/impostazioni/sito">{t("weather.noSite.how")}</Bottone>}>
+        {t("weather.noSite.why")}
+      </Avviso>
+    </div>
   )
 }
 
@@ -86,15 +106,20 @@ export function Meteo() {
   const [scelta, setScelta] = useState(0)
   const [carta, setCarta] = useState<Codice | null>(null)
   const aperta = detto?.nights[scelta] ?? detto?.nights[0]
-  const telefono = stretta
+  // senza notti il telefono ha la testa degli stati, come il desktop (tavola meteo-stati v37)
+  const telefono = stretta && aperta !== undefined
+  const r = detto?.last_request
+  const tace: Tace | null = r && r.status !== "ok" ? { at: r.at, status: r.status } : null
+  const senzaPrevisione = detto?.fetched_at === null || detto?.nights.length === 0
   const scegliNotte = (i: number) => {
     setScelta(i)
     setCarta(null)
   }
 
-  // gli stessi comandi nelle due teste, larga e telefono
+  // gli stessi comandi nelle due teste, larga e telefono; se il servizio tace e la previsione vale
+  // ancora, Aggiorna sta solo nella riga che lo dice
   const comandi = {
-    aggiorna: () => aggiorna.mutate(),
+    aggiorna: tace && !senzaPrevisione ? undefined : () => aggiorna.mutate(),
     occupato: aggiorna.isPending,
     scegli: (m: string) => {
       setCarta(null)
@@ -105,11 +130,13 @@ export function Meteo() {
 
   return (
     <div className="as-pagina" ref={misura}>
-      <PrimaDellaPrevisione meteo={meteo} />
+      <PrimaDellaPrevisione meteo={meteo} senzaSito={<SenzaSito />} />
       {detto?.site && detto.missing === "no_timezone" && (
-        <Avviso esito="allarme" pagina azioni={<Bottone a="/impostazioni/sito">{t("weather.noTimezone.how")}</Bottone>}>
-          {t("weather.noTimezone")}
-        </Avviso>
+        <div className="as-meteo">
+          <Testa {...comandi} aggiorna={undefined} detto={detto} />
+          <Avviso esito="allarme" pagina titolo={t("weather.noTimezone")}
+            azioni={<Bottone verso="primario" a="/impostazioni/sito">{t("weather.noTimezone.how")}</Bottone>} />
+        </div>
       )}
       {detto?.site && detto.missing === null && (
         <div className={telefono ? "as-meteo as-tel-meteo" : "as-meteo"}>
@@ -122,15 +149,18 @@ export function Meteo() {
           {(aggiorna.data === "no_site" || aggiorna.data === "no_timezone") && (
             <Avviso esito="attesa" pagina>{t(`weather.status.${aggiorna.data}`)}</Avviso>
           )}
-          <RichiestaSenzaRisposta detto={detto} aggiorna={() => aggiorna.mutate()} occupato={aggiorna.isPending} />
+          {tace && (
+            <RichiestaSenzaRisposta detto={detto} tace={tace} senzaPrevisione={senzaPrevisione} aggiorna={() => aggiorna.mutate()} occupato={aggiorna.isPending} />
+          )}
           {modello.error && <Avviso esito="allarme">{modello.error.message}</Avviso>}
-          <SeeingCheTace seeing={detto.seeing} />
-          {detto.fetched_at === null && (
+          <SeeingCheTace seeing={detto.seeing} aggiorna={() => aggiorna.mutate()} occupato={aggiorna.isPending} />
+          {/* un servizio che tace senza previsione l'ha gia' detto, con l'allarme */}
+          {!tace && detto.fetched_at === null && (
             <Avviso esito="attesa" pagina titolo={t("weather.never")}>
               {t("weather.never.how")}
             </Avviso>
           )}
-          {detto.fetched_at !== null && detto.nights.length === 0 && <p>{t("weather.noNights")}</p>}
+          {!tace && detto.fetched_at !== null && detto.nights.length === 0 && <Avviso esito="attesa" pagina titolo={t("weather.noNights")} />}
           {detto.nights.length > 0 && (
             <Notti detto={detto} aperta={aperta} scegli={scegliNotte} telefono={telefono ? { aperta: carta, apri: setCarta } : undefined} />
           )}
@@ -151,7 +181,8 @@ function Testa({
   cambiando,
 }: {
   detto: Meteo
-  aggiorna: () => void
+  /** Senza: niente Aggiorna in testa (sito senza fuso, o servizio che tace con la previsione buona). */
+  aggiorna: (() => void) | undefined
   occupato: boolean
   scegli: (m: string) => void
   cambiando: boolean
@@ -162,9 +193,11 @@ function Testa({
         <p className="as-soprattitolo">{t("weather.head.where", { sito: detto.site ?? "" })}</p>
         <Arrivo detto={detto} />
       </div>
-      <Bottone onClick={aggiorna} disabled={occupato}>
-        {occupato ? t("weather.refreshing") : t("weather.refresh")}
-      </Bottone>
+      {aggiorna && (
+        <Bottone onClick={aggiorna} disabled={occupato}>
+          {occupato ? t("weather.refreshing") : t("weather.refresh")}
+        </Bottone>
+      )}
       <div className="as-meteo__modello">
         <span className="as-meteo__solo-largo" id="meteo-modello">
           {t("weather.model")}
@@ -183,15 +216,14 @@ function Testa({
   )
 }
 
-/** Da quando e' la previsione, e il seeing che ha un'eta' sua. */
+/** Da quando e' la previsione, e il seeing che ha un'eta' sua. Senza previsione la riga resta
+ *  vuota: non c'e' ancora un'ora da dire del sito. */
 function Arrivo({ detto }: { detto: Meteo }) {
   const seeing = detto.sources.find((f) => f.source === "meteoblue")
   return (
     <p className="as-meteo__arrivo">
-      {[
-        detto.fetched_at === null
-          ? null
-          : t("weather.head.arrived", { giorno: giorno(detto.fetched_at), ora: orario(detto.fetched_at), fa: fa(detto.fetched_at) }),
+      {detto.fetched_at !== null && [
+        t("weather.head.arrived", { giorno: giorno(detto.fetched_at), ora: orario(detto.fetched_at), fa: fa(detto.fetched_at) }),
         seeing ? t("weather.head.seeing", { giorno: giorno(seeing.fetched_at), ora: orario(seeing.fetched_at), fa: fa(seeing.fetched_at) }) : null,
         t("weather.head.siteTime"),
       ]
@@ -201,8 +233,10 @@ function Arrivo({ detto }: { detto: Meteo }) {
   )
 }
 
-// cio' che pesa senza avere una carta sua: la Luna, e le raffiche che stanno nella carta del vento
-const SENZA_CARTA: readonly Codice[] = ["moon", "gust"]
+// cio' che pesa senza una carta da aprire: la Luna. Le raffiche aprono quella del vento, dove
+// stanno (tavola meteo-telefono v37).
+const SENZA_CARTA: readonly Codice[] = ["moon"]
+const cartaDi = (c: Codice): Codice => (c === "gust" ? "wind" : c)
 
 /**
  * La testa sul telefono (`as-tel-testa`): il verdetto della notte scelta e il modello; sotto, da
@@ -211,7 +245,7 @@ const SENZA_CARTA: readonly Codice[] = ["moon", "gust"]
  */
 function TestaDelTelefono({ detto, notte: n, prima, apriCarta, aggiorna, occupato, scegli, cambiando }: {
   detto: Meteo; notte: Notte | undefined; prima: boolean; apriCarta: (c: Codice) => void
-  aggiorna: () => void; occupato: boolean; scegli: (m: string) => void; cambiando: boolean
+  aggiorna: (() => void) | undefined; occupato: boolean; scegli: (m: string) => void; cambiando: boolean
 }) {
   const [aperti, setAperti] = useState(false)
   const id = useId()
@@ -275,9 +309,9 @@ function TestaDelTelefono({ detto, notte: n, prima, apriCarta, aggiorna, occupat
                       <span className="as-tel-pesa">{dentro}</span>
                     ) : (
                       <button className="as-tel-pesa" type="button" onClick={() => {
-                        apriCarta(m.code)
+                        apriCarta(cartaDi(m.code))
                         // la carta piccola c'e' gia': il fuoco va li', non si perde nel riquadro chiuso
-                        chiudi(document.querySelector(`[aria-controls="${idDellaCarta(n.night, m.code)}"]`))
+                        chiudi(document.querySelector(`[aria-controls="${idDellaCarta(n.night, cartaDi(m.code))}"]`))
                       }}>
                         {dentro}
                       </button>
@@ -291,9 +325,11 @@ function TestaDelTelefono({ detto, notte: n, prima, apriCarta, aggiorna, occupat
       </div>
       <div className="as-tel-arrivo">
         <Arrivo detto={detto} />
-        <Bottone onClick={aggiorna} disabled={occupato}>
-          {occupato ? t("weather.refreshing") : t("weather.refresh")}
-        </Bottone>
+        {aggiorna && (
+          <Bottone onClick={aggiorna} disabled={occupato}>
+            {occupato ? t("weather.refreshing") : t("weather.refresh")}
+          </Bottone>
+        )}
       </div>
     </>
   )
@@ -336,7 +372,7 @@ function Notti({ detto, aperta, scegli, telefono }: {
     <button key={n.night} type="button" role="tab" id={`voce-${n.night}`} aria-selected={n === aperta}
       aria-controls={`notte-${n.night}`} onClick={() => scegli(i)}
       className={n.trend ? "as-voce-notte as-voce-notte--tendenza" : "as-voce-notte"}>
-      <VoceDellaNotte notte={n} />
+      <VoceDellaNotte notte={n} telefono={telefono !== undefined} />
     </button>
   )
   const piene = detto.nights.flatMap((n, i) => (n.trend ? [] : [voce(n, i)]))
@@ -371,28 +407,35 @@ function Notti({ detto, aperta, scegli, telefono }: {
   )
 }
 
-/** Il servizio che tace ma la previsione vale ancora, lo stato piu' frequente: la pagina resta
- *  intera, e una riga dice da quando non risponde e di quando e' la previsione che si legge. */
-function RichiestaSenzaRisposta({ detto, aggiorna, occupato }: { detto: Meteo; aggiorna: () => void; occupato: boolean }) {
-  const r = detto.last_request
-  if (r === null || r.status === "ok") return null
+/** Il servizio che tace (tavola meteo-stati v37). Con la previsione che vale ancora, lo stato piu'
+ *  frequente, la pagina resta intera e una riga d'attesa dice da quando non risponde, con Aggiorna
+ *  tenue; senza una previsione valida e' un allarme, e Aggiorna e' l'azione. */
+function RichiestaSenzaRisposta({ detto, tace, senzaPrevisione, aggiorna, occupato }: {
+  detto: Meteo; tace: Tace; senzaPrevisione: boolean; aggiorna: () => void; occupato: boolean
+}) {
+  const { status } = tace
+  if (senzaPrevisione || detto.fetched_at === null) {
+    return (
+      <Avviso esito="allarme" pagina titolo={t(`weather.silent.${status}.none`, { ora: orario(tace.at) })}
+        azioni={<Bottone verso="primario" onClick={aggiorna} disabled={occupato}>{t("weather.refresh")}</Bottone>} />
+    )
+  }
   return (
-    <Avviso esito="attesa" pagina
-      azioni={<Bottone verso="tenue" onClick={aggiorna} disabled={occupato}>{t("weather.refresh")}</Bottone>}>
-      {detto.fetched_at === null
-        ? t(`weather.silent.${r.status}.none`, { ora: orario(r.at) })
-        : t(`weather.silent.${r.status}`, { ora: orario(r.at), prima: orario(detto.fetched_at) })}
-    </Avviso>
+    <Avviso esito="attesa" titolo={t(`weather.silent.${status}`, { ora: orario(tace.at), prima: orario(detto.fetched_at) })}
+      azioni={<Bottone verso="tenue" onClick={aggiorna} disabled={occupato}>{t("weather.refresh")}</Bottone>} />
   )
 }
 
 /** Meteoblue che tace o risponde storto: resta il seeing di prima, con la sua eta' in testa. Il
  *  seeing che manca del tutto lo dice la sua carta. */
-function SeeingCheTace({ seeing }: { seeing: Meteo["seeing"] }) {
+function SeeingCheTace({ seeing, aggiorna, occupato }: { seeing: Meteo["seeing"]; aggiorna: () => void; occupato: boolean }) {
   // senza un seeing di prima non c'e' niente che resti: lo dice la sua carta
   if (seeing.source === null) return null
   if (seeing.meteoblue !== "unreachable" && seeing.meteoblue !== "bad_answer") return null
-  return <Avviso esito="attesa" pagina>{t(`weather.seeing.why.${seeing.meteoblue}`)}</Avviso>
+  return (
+    <Avviso esito="attesa" titolo={t(`weather.seeing.why.${seeing.meteoblue}`)}
+      azioni={<Bottone verso="tenue" onClick={aggiorna} disabled={occupato}>{t("weather.refresh")}</Bottone>} />
+  )
 }
 
 /** Le fonti, con le parole che i servizi chiedono; una fonte che non ha scritto niente non si

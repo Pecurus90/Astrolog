@@ -620,7 +620,7 @@ describe("il Meteo, il cielo", () => {
     await apriMeteo()
 
     await scheda()
-    const seeing = within(cielo()).getAllByRole("button", { name: "seeing" })[0] as HTMLElement
+    const seeing = within(cielo()).getAllByRole("button", { name: /^seeing/ })[0] as HTMLElement
     expect(seeing.getAttribute("aria-disabled")).toBe("true")
     fireEvent.click(within(cielo()).getByRole("button", { name: /^scala di destra/i }))
     expect(within(cielo()).getByRole("menuitemradio", { name: /seeing/ }).textContent).toContain("Richiede una chiave Meteoblue")

@@ -8,7 +8,7 @@ import { fireEvent, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { pulisci } from "./banco"
-import { NOTTE, TENDENZA, apriMeteo, conNotti, misura, scheda } from "./meteo-banco"
+import { NOTTE, TENDENZA, apriMeteo, conNotti, misura, ora, scheda } from "./meteo-banco"
 
 afterEach(pulisci)
 afterEach(() => vi.unstubAllGlobals())
@@ -216,18 +216,45 @@ describe("il Meteo sul telefono", () => {
     expect(within(riquadro).queryByRole("button", { name: /Luna/ })).toBeNull()
   })
 
-  it("senza notti il telefono tiene la sua testa: il modello, da quando e' la previsione e Aggiorna", async () => {
+  it("senza notti il telefono ha la testa degli stati: il sito, da quando e' la previsione, Aggiorna e il modello", async () => {
     conNotti()
     colonna(390)
     const { container: pagina } = await apriMeteo()
 
     await within(pagina).findByText("Nessuna notte disponibile per questo modello.")
-    expect(pagina.querySelector(".as-meteo__testa")).toBeNull()
-    const testa = pagina.querySelector(".as-tel-testa") as HTMLElement
-    expect(testa.querySelector(".as-tel-verdetti")).toBeNull()
+    expect(pagina.querySelector(".as-tel-testa")).toBeNull()
+    expect(pagina.querySelector(".as-tel-meteo")).toBeNull()
+    const testa = pagina.querySelector(".as-meteo__testa") as HTMLElement
+    expect(testa.textContent).toContain("meteo a Casa")
     expect(testa.querySelector(".as-menu--telefono .as-menu__apri")?.textContent).toContain("Automatico")
-    const arrivo = pagina.querySelector(".as-tel-arrivo") as HTMLElement
-    expect(within(arrivo).getByRole("button", { name: "Aggiorna" })).toBeTruthy()
+    expect(within(testa).getByRole("button", { name: "Aggiorna" })).toBeTruthy()
+  })
+
+  it("le raffiche fra gli altri fattori aprono la carta del vento", async () => {
+    const raffiche = misura("gust", { level: "nogo", weighs: true, peak: 45, since: "2026-09-26T21:00:00+02:00", until: "2026-09-26T23:00:00+02:00", hours: 2 })
+    const pagina = await sulTelefono({ ...NOTTE, measures: [...NOTTE.measures.filter((m) => m.code !== "gust"), raffiche] })
+
+    fireEvent.click(within(pagina).getByRole("button", { name: /Altri fattori/ }))
+    fireEvent.click(within(pagina.querySelector(".as-tel-pesanti") as HTMLElement).getByRole("button", { name: /Raffiche/ }))
+    expect(pagina.querySelector("article.as-parametro .as-parametro__nome")?.textContent).toBe("Vento")
+    expect(document.activeElement).toBe(piccola(pagina, "Vento"))
+  })
+
+  it("nella fila delle notti le ore serene e la finestra stanno su due righe", async () => {
+    const pagina = await sulTelefono(NOTTE)
+
+    const ore = pagina.querySelector(".as-voce-notte .as-voce-notte__ore") as HTMLElement
+    expect([...ore.children].map((s) => s.textContent)).toEqual(["3 ore", "23–02"])
+  })
+
+  it("il cielo ha la tela del telefono: un'ora si e una no, e la legenda senza la riga della notte", async () => {
+    const ore = Array.from({ length: 6 }, (_, i) => ora(`2026-09-26T${String(19 + i).padStart(2, "0")}:00:00+02:00`, "dark"))
+    const pagina = await sulTelefono({ ...NOTTE, hours: ore })
+
+    const cielo = pagina.querySelector(".as-cielo") as HTMLElement
+    expect(cielo.querySelector("svg")?.getAttribute("viewBox")).toBe("0 0 358 220")
+    expect([...cielo.querySelectorAll(".as-volta__ora")].map((o) => o.textContent)).toEqual(["19", "21", "23"])
+    expect(cielo.querySelector(".as-cielo__legenda")?.textContent).toBe("bassemediealte")
   })
 
   it("una notte in tendenza ha il verdetto in testa e nessun riquadro da aprire", async () => {

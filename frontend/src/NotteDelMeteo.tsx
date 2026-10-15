@@ -25,13 +25,20 @@ export function nomeDellaNotte(n: Notte, prima: boolean): string {
   return prima ? `${nome} \u00b7 ${t("weather.night.tonight")}` : nome
 }
 
-/** Una voce della fila delle notti: il giorno, il semaforo, le ore serene o quelle di buio. */
-export function VoceDellaNotte({ notte: n }: { notte: Notte }) {
+/** Una voce della fila delle notti: il giorno, il semaforo, le ore serene o quelle di buio. Sul
+ *  telefono le ore serene e la finestra vanno su due righe (tavola meteo-telefono v37). */
+export function VoceDellaNotte({ notte: n, telefono = false }: { notte: Notte; telefono?: boolean }) {
+  const righe = telefono && !n.trend && n.usable_hours && n.usable_since && n.usable_until
+    ? [t("weather.clear.hours", { n: numero(n.usable_hours) }),
+      t("weather.night.span", { da: oraDelSito(n.usable_since).slice(0, 2), a: oraDelSito(n.usable_until).slice(0, 2) })]
+    : [oreDellaVoce(n)]
   return (
     <>
       <b>{giornoENumero(n.night, true)}</b>
       <Semaforo livello={n.verdict}>{verdetto(n)}</Semaforo>
-      <span className="as-voce-notte__ore">{oreDellaVoce(n)}</span>
+      <span className="as-voce-notte__ore">
+        {telefono ? righe.map((r) => <span key={r}>{r}</span>) : righe[0]}
+      </span>
     </>
   )
 }
@@ -129,20 +136,26 @@ export function CapoDellaNotte({ notte: n, prima, segno }: { notte: Notte; prima
     <div className="as-meteo__notte">
       <h2 className="as-meteo__notte-nome">{nomeDellaNotte(n, prima)}</h2>
       <div className="as-meteo__verdetto">
-        {n.window === null ? (
-          <span className="as-meteo__parola">{verdetto(n)}</span>
+        {/* senza notte, o senza le nuvole di tutte le ore, la parola sola (tavola meteo-stati v37) */}
+        {n.window === null || n.verdict === null ? (
+          <>
+            <span className="as-meteo__parola">{verdetto(n)}</span>
+            {n.window !== null && segno}
+          </>
         ) : (
           <>
             <p className="as-meteo__grande">
               <OreSerene cielo={n} />
             </p>
-            {n.verdict === null ? <span className="as-meteo__parola">{verdetto(n)}</span> : <Semaforo livello={n.verdict} grande>{verdetto(n)}</Semaforo>}
+            <Semaforo livello={n.verdict} grande>{verdetto(n)}</Semaforo>
             {segno}
           </>
         )}
       </div>
       <p className="as-meteo__quando">
-        {n.usable_hours && n.usable_since && n.usable_until ? (
+        {n.window === null && t("weather.window.none")}
+        {n.window !== null && n.verdict === null && t("weather.verdict.none")}
+        {n.verdict !== null && n.usable_hours && n.usable_since && n.usable_until ? (
           <>
             <b>{t("weather.clear.when", { n: numero(n.usable_hours), da: oraDelSito(n.usable_since), a: oraDelSito(n.usable_until) })}</b>
             {" \u00b7 "}

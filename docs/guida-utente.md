@@ -435,7 +435,10 @@ la accendi col suo interruttore, a tratteggio sulla stessa scala in percento. A 
 con le raffiche, condensa come aria e rugiada, seeing, jet stream, aerosol -- con la sua scala, le
 soglie tratteggiate e il colore del giudizio ora per ora (per la condensa, la cui soglia e' la
 distanza fra aria e rugiada, si colora la fascia fra le due dove si toccano); un'ora che il servizio
-non da' e' a tratteggio, mai uno zero. La legenda sotto dice solo cio' che e' sul grafico.
+non da' e' a tratteggio, mai uno zero. Sotto la linea c'e' il **valore di ogni ora** (sul telefono
+di un'ora si' e una no), e accanto all'ultima ora una parola dice quale linea sono le raffiche,
+quale l'aria e quale la rugiada. Il seeing senza chiave c'e' fra le misure ma non si sceglie, e il
+suo bottone dice perche'. La legenda sotto dice solo cio' che e' sul grafico.
 Passando sul cielo, toccandolo o con le frecce, un filo indica l'ora e un riquadro dice i valori;
 **tutte le carte vanno a quell'ora**.
 
@@ -465,8 +468,9 @@ dice (*media fino alle 02:00*). Meteoblue si chiede al massimo due volte al gior
 chiave gratuita ha un tetto di chiamate l'anno.
 
 D'estate molto a nord, dove il buio astronomico non arriva, le ore serene si contano col Sole sotto
-l'orizzonte e la scheda lo dice; dove il Sole non tramonta legge *Nessuna notte astronomica*, senza carte. Se il modello non
-da' le nuvole di tutte le ore il semaforo dice *Non disponibile*.
+l'orizzonte e la scheda lo dice; dove il Sole non tramonta legge *Nessuna notte astronomica* e, sotto,
+che non c'e' nessuna ora di buio, senza carte. Se il modello non da' le nuvole di tutte le ore la
+notte dice solo *Non disponibile*, senza ore serene, e sotto perche' non si puo' valutare.
 
 Il **modello** della previsione: il predefinito e' *Automatico*, quello che il servizio sceglie per il tuo posto,
 oppure l'europeo (ECMWF), il tedesco (ICON) o l'americano (GFS). Sul telefono lo scegli da un
@@ -476,15 +480,19 @@ te lo dice e puoi guardarne un altro.
 
 Sul **telefono** la pagina ha un'altra forma, con gli stessi dati. In testa c'e' il verdetto della
 notte scelta: toccalo e si aprono gli *Altri fattori*; toccando una misura dell'elenco si apre la sua
-carta, toccando fuori dall'elenco si richiude. Le misure sono carte piccole, quattro per riga,
+carta (le raffiche aprono quella del vento), toccando fuori dall'elenco si richiude. Nella fila
+delle notti le ore serene e la finestra stanno su due righe. Le misure sono carte piccole, quattro per riga,
 ognuna col valore della notte e la sua parola (*non disponibile* se quella misura non arriva): toccane
 una e sotto si apre la carta intera, con le ore e il picco; un'altra la sostituisce. Sul
 grafico del cielo l'umidita' si accende dal menu *Scala di destra*, insieme alle altre voci.
 
 La previsione **arriva da sola** appena hai un sito predefinito, e si rinnova ogni tre ore; con
 *Aggiorna* la chiedi subito. Se il servizio non risponde -- sei senza rete, o e' giu' -- resta
-quella di prima, e una riga in testa dice a che ora e' stata l'ultima richiesta senza risposta e di
-che ora e' la previsione che stai leggendo, con *Aggiorna* accanto per riprovare. Se del tuo sito predefinito non si riconosce il fuso orario, le sue notti non si possono
+quella di prima, e una riga sotto la testa dice a che ora e' stata l'ultima richiesta senza risposta e di
+che ora e' la previsione che stai leggendo, con *Aggiorna* accanto per riprovare (e solo li').
+Se invece della previsione di prima non resta nessuna notte valida, la pagina lo dice con un
+allarme, e *Aggiorna* e' l'unica cosa da fare. Senza un sito predefinito la pagina ti chiede di
+aggiungerlo. Se del tuo sito predefinito non si riconosce il fuso orario, le sue notti non si possono
 dividere: la pagina te lo dice e con *Modifica sito* ti porta a sistemarlo (in mare aperto vale il fuso
 nautico). I dati vengono da Open-Meteo e Copernicus, e il seeing da Meteoblue: la pagina li cita in
 fondo.

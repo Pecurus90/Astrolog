@@ -847,7 +847,14 @@ riga per voce.
   fattori che si chiudono toccando fuori e tengono il fuoco (`useRiquadro`, lo stesso
   dell'Archivio), la carta piccola senza valore col solo semaforo spento e «non disponibile»
   (DECISIONI di Design, 14/10), le carte intere senza ore come avvisi (seeing senza chiave o
-  rifiutata, misura che il modello non da'), come la tavola meteo-stati; la Dashboard desktop,
+  rifiutata, misura che il modello non da'), come la tavola meteo-stati; il Meteo intero sulle
+  tavole (15/10/2026): gli stati della pagina col loro tono e azione (senza sito, senza fuso,
+  servizio che tace con e senza previsione, modello senza notti, Meteoblue muto), la notte senza
+  buio e quella che non si sa con la frase sotto, la scala di destra coi valori ora per ora e i nomi
+  delle linee, la tela del telefono (358x220, un'ora si' e una no), le raffiche che aprono il vento,
+  le ore della fila su due righe; un valore vicino allo zero va sopra il punto (sotto ci sono le
+  ore: la tavola non ha il caso). Resta della tavola, non portato: "· a Capo Nord" nel nome della
+  notte, che pare un'etichetta della tavola. La Dashboard desktop,
   prima fetta (testa di stanotte, sei carte che aprono la scala della misura, prossime 3 notti, da
   riprendere, il vuoto dei progetti: Marco, 14/10/2026). Restano, in quest'ordine (Marco,
   14/10/2026): il telefono e gli stati delle tavole `dashboard-stati*`; il dettaglio della Luna col

@@ -47,12 +47,17 @@ const TINTE = {
 const PAROLE = { go: "as-scala__parola--buona", marginal: "as-scala__parola--incerta", nogo: "as-scala__parola--niente" } as const
 const RIGHE = { go: "as-cielo__riga--buona", marginal: "as-cielo__riga--incerta", nogo: "as-cielo__riga--niente", sotto: "as-cielo__riga--sotto" } as const
 
-// La tela: larga quanto il disegno del desktop; sul telefono si stringe col viewBox. La scala sola
-// della Dashboard ha la sua, piu' bassa e senza la scala di sinistra (tavola v37).
-type Tela = { largo: number; alto: number; sinistra: number; destra: number; cima: number; fondo: number }
-const CIELO: Tela = { largo: 1080, alto: 300, sinistra: 44, destra: 48, cima: 30, fondo: 274 }
-const SOLA: Tela = { largo: 1000, alto: 210, sinistra: 12, destra: 46, cima: 30, fondo: 184 }
-const { largo: LARGO, alto: ALTO, sinistra: SINISTRA, destra: DESTRA, cima: CIMA, fondo: FONDO } = CIELO
+// Le tele delle tavole v37: il cielo del desktop, quello del telefono (un'ora si' e una no, per le
+// ore e per i valori) e la scala sola della Dashboard, piu' bassa e senza la scala di sinistra.
+type Tela = { largo: number; alto: number; sinistra: number; destra: number; cima: number; fondo: number; ogni: number }
+const CIELO: Tela = { largo: 1080, alto: 300, sinistra: 44, destra: 48, cima: 30, fondo: 274, ogni: 1 }
+const TELEFONO: Tela = { largo: 358, alto: 220, sinistra: 38, destra: 36, cima: 30, fondo: 194, ogni: 2 }
+const SOLA: Tela = { largo: 1000, alto: 210, sinistra: 12, destra: 46, cima: 30, fondo: 184, ogni: 1 }
+// il valore sta sotto il suo punto; il nome di una linea sopra (raffiche, aria) o sotto (rugiada)
+const SOTTO_IL_PUNTO = 16
+const SOPRA_IL_PUNTO = -8
+const SOPRA_LA_LINEA = -7
+const SOTTO_LA_LINEA = 15
 
 /** Una metrica di destra che non si sceglie (il seeing senza chiave) e perche'. */
 function bloccata(d: Destra, seeing: Seeing): Chiave | null {
@@ -91,15 +96,17 @@ export function CieloDelleNubi({
   seeing: Seeing
   ora: number | null
   scegli: (i: number | null) => void
-  /** Sul telefono l'umidita' si accende dal menu, con le altre voci. */
+  /** Sul telefono l'umidita' si accende dal menu, con le altre voci, e la tela e' la sua. */
   telefono?: boolean
 }) {
+  const tela = telefono ? TELEFONO : CIELO
+  const { largo: LARGO, alto: ALTO, sinistra: SINISTRA, destra: DESTRA, cima: CIMA, fondo: FONDO } = tela
   // all'apertura solo le nubi: l'umidita' e la metrica di destra si accendono a mano
   const ordine = n.measures.flatMap((m) => (A_DESTRA as readonly string[]).includes(m.code) ? [m.code as Destra] : [])
   const [destra, setDestra] = useState<Destra | null>(null)
   const [umidita, setUmidita] = useState(false)
   const [menu, setMenu] = useState(false)
-  const tela = useRef<HTMLDivElement>(null)
+  const piano = useRef<HTMLDivElement>(null)
   const passo = (LARGO - SINISTRA - DESTRA) / (ore.length || 1)
   const x = (i: number) => SINISTRA + (i + 0.5) * passo
   const y = (v: number) => FONDO - (v / 100) * (FONDO - CIMA)
@@ -173,12 +180,12 @@ export function CieloDelleNubi({
               aria-disabled={perche !== null} title={perche ? t(perche) : undefined}
               onClick={() => { if (perche === null) setDestra(destra === d ? null : d) }}>
               <i aria-hidden="true" />
-              {t(`weather.right.${d}` as Chiave)}
+              {perche ? t("weather.right.blocked", { nome: t(`weather.right.${d}` as Chiave), perche: t(perche) }) : t(`weather.right.${d}` as Chiave)}
             </button>
           )
         })}
       </div>
-      <div ref={tela} className="as-cielo__tela" tabIndex={0} role="slider" aria-label={t("weather.sky.label")}
+      <div ref={piano} className="as-cielo__tela" tabIndex={0} role="slider" aria-label={t("weather.sky.label")}
         aria-valuemin={0} aria-valuemax={ore.length - 1} aria-valuenow={ora ?? undefined}
         aria-valuetext={qui ? t("weather.sky.at", {
           ora: oraDelSito(qui.at),
@@ -190,15 +197,17 @@ export function CieloDelleNubi({
         <svg viewBox={`0 0 ${LARGO} ${ALTO}`} role="img" aria-label={t("weather.sky.img")} data-dx-acceso={destra ? "" : undefined}>
           <Fondi id={`cielo-${n.night}`} ore={ore} />
           <rect width={LARGO} height={ALTO} fill={`url(#cielo-${n.night}-c)`} />
+          {/* la terra prima di tutto: i valori bassi della scala di destra le stanno sopra (tavola v37) */}
+          <rect className="as-volta__terra" x={0} y={FONDO + 0.5} width={LARGO} height={ALTO - FONDO} />
           {[0, 50, 100].map((v) => (
             <g key={v}>
               <line className="as-volta__griglia" x1={SINISTRA} x2={LARGO - DESTRA} y1={y(v)} y2={y(v)} />
               <text className="as-volta__gradi" x={SINISTRA - 6} y={y(v) + 4} textAnchor="end">{`${v}%`}</text>
             </g>
           ))}
-          <Strato ore={ore} campo="cloud_high_pct" classe="as-cielo__alte" filo="as-cielo__alte-filo" x={x} y={y} />
-          <Strato ore={ore} campo="cloud_mid_pct" classe="as-cielo__medie" filo="as-cielo__medie-filo" x={x} y={y} />
-          <Strato ore={ore} campo="cloud_low_pct" classe="as-cielo__basse" filo="as-cielo__basse-filo" x={x} y={y} />
+          <Strato ore={ore} campo="cloud_high_pct" classe="as-cielo__alte" filo="as-cielo__alte-filo" x={x} y={y} fondo={FONDO} />
+          <Strato ore={ore} campo="cloud_mid_pct" classe="as-cielo__medie" filo="as-cielo__medie-filo" x={x} y={y} fondo={FONDO} />
+          <Strato ore={ore} campo="cloud_low_pct" classe="as-cielo__basse" filo="as-cielo__basse-filo" x={x} y={y} fondo={FONDO} />
           {umidita && (
             <polyline className="as-cielo__umidita"
               points={ore.flatMap((o, i) => (o.humidity_pct === null ? [] : [`${x(i)},${y(o.humidity_pct)}`])).join(" ")} />
@@ -207,15 +216,12 @@ export function CieloDelleNubi({
           {destra && (
             <ScalaDiDestra destra={destra} ore={ore} misura={misura(DISEGNO[destra].scala)}
               scala={DISEGNO[destra].scala === destra ? scale.find((s) => s.code === destra) : undefined}
-              x={x} passo={passo} id={`cielo-${n.night}-tr`} tela={CIELO} />
+              x={x} passo={passo} id={`cielo-${n.night}-tr`} tela={tela} />
           )}
           <text className="as-scala__unita" x={SINISTRA - 6} y={CIMA - 10} textAnchor="end">%</text>
           <line className="as-volta__orizzonte" x1={SINISTRA} x2={LARGO} y1={FONDO} y2={FONDO} />
-          <rect className="as-volta__terra" x={0} y={FONDO + 0.5} width={LARGO} height={ALTO - FONDO} />
-          <Sereno notte={n} ore={ore} passo={passo} />
-          {ore.map((o, i) => (
-            <text key={o.at} className="as-volta__ora" x={x(i)} y={ALTO - 8} textAnchor="middle">{oraDelSito(o.at).slice(0, 2)}</text>
-          ))}
+          <Sereno notte={n} ore={ore} passo={passo} tela={tela} />
+          <Ore ore={ore} x={x} tela={tela} />
         </svg>
         {qui && ora !== null && (
           <>
@@ -230,7 +236,8 @@ export function CieloDelleNubi({
         <span><i className="as-cielo__campione--alte" />{t("weather.sky.legend.high")}</span>
         {umidita && <span><i className="as-cielo__campione--umidita" />{t("weather.sky.humidity")}</span>}
         {destra && <span><i className="as-cielo__campione--destra" />{t("weather.sky.legend.right", { nome: nomeDestra })}</span>}
-        {ore.length > 0 && (
+        {/* la riga della notte e' della tavola larga: sul telefono non c'e' */}
+        {!telefono && ore.length > 0 && (
           <span>{t("weather.sky.legend.span", { da: oraDelSito(ore[0]?.at ?? ""), a: oraDelSito(ore[ore.length - 1]?.at ?? "") })}</span>
         )}
       </p>
@@ -255,9 +262,7 @@ export function ScalaDellaMisura({ notte: n, ore, scale, codice }: { notte: Nott
         <rect className="as-volta__terra" x={0} y={fondo + 0.5} width={largo} height={alto - fondo} />
         <ScalaDiDestra destra={codice} ore={ore} misura={n.measures.find((m) => m.code === da)}
           scala={da === codice ? scale.find((s) => s.code === codice) : undefined} x={x} passo={passo} id={`${id}-tr`} tela={SOLA} />
-        {ore.map((o, i) => (
-          <text key={o.at} className="as-volta__ora" x={x(i)} y={alto - 8} textAnchor="middle">{oraDelSito(o.at).slice(0, 2)}</text>
-        ))}
+        <Ore ore={ore} x={x} tela={SOLA} />
       </svg>
     </div>
   )
@@ -279,14 +284,21 @@ function Fondi({ id, ore }: { id: string; ore: Ora[] }) {
   )
 }
 
+/** Le ore sotto la tela; sul telefono una si' e una no. */
+function Ore({ ore, x, tela }: { ore: Ora[]; x: (i: number) => number; tela: Tela }) {
+  return ore.map((o, i) => (i % tela.ogni === 0 ? (
+    <text key={o.at} className="as-volta__ora" x={x(i)} y={tela.alto - 8} textAnchor="middle">{oraDelSito(o.at).slice(0, 2)}</text>
+  ) : null))
+}
+
 function valore(v: number | null): string {
   return v === null ? t("weather.card.unknown") : numero(v)
 }
 
 /** Uno strato di nubi dal suo zero, mai sommato agli altri: si coprono. */
-function Strato({ ore, campo, classe, filo, x, y }: {
+function Strato({ ore, campo, classe, filo, x, y, fondo: FONDO }: {
   ore: Ora[]; campo: "cloud_low_pct" | "cloud_mid_pct" | "cloud_high_pct"; classe: string; filo: string
-  x: (i: number) => number; y: (v: number) => number
+  x: (i: number) => number; y: (v: number) => number; fondo: number
 }) {
   const punti = ore.flatMap((o, i) => (o[campo] === null ? [] : [`${x(i)},${y(o[campo] as number)}`]))
   if (punti.length === 0) return null
@@ -298,8 +310,11 @@ function Strato({ ore, campo, classe, filo, x, y }: {
   )
 }
 
-/** Il tratto sereno sull'orizzonte: le ore che il backend dice serene, a pezzi, e quante sono. */
-function Sereno({ notte: n, ore, passo }: { notte: Notte; ore: Ora[]; passo: number }) {
+/** Il tratto sereno in cima: le ore che il backend dice serene, a pezzi, e quante sono. Sul
+ *  telefono la scritta sta sopra il tratto, al centro; sul desktop dopo la sua fine. */
+function Sereno({ notte: n, ore, passo, tela }: { notte: Notte; ore: Ora[]; passo: number; tela: Tela }) {
+  const { sinistra: SINISTRA } = tela
+  const stretta = tela === TELEFONO
   const pezzi: [number, number][] = []
   ore.forEach((o, i) => {
     if (!o.clear) return
@@ -307,13 +322,18 @@ function Sereno({ notte: n, ore, passo }: { notte: Notte; ore: Ora[]; passo: num
     if (ultimo && ultimo[1] === i - 1) ultimo[1] = i
     else pezzi.push([i, i])
   })
+  const inizio = SINISTRA + (pezzi[0]?.[0] ?? 0) * passo + 2
   const fine = pezzi.length ? SINISTRA + ((pezzi[pezzi.length - 1]?.[1] ?? 0) + 1) * passo - 2 : SINISTRA
+  const riga = stretta ? 18 : 13
+  const scritta = !pezzi.length
+    ? { x: SINISTRA, y: stretta ? 11 : 17 }
+    : stretta ? { x: (inizio + fine) / 2, y: 11, textAnchor: "middle" as const } : { x: fine + 6, y: 17 }
   return (
     <>
       {pezzi.map(([a, b]) => (
-        <line key={a} className="as-cielo__sereno" x1={SINISTRA + a * passo + 2} x2={SINISTRA + (b + 1) * passo - 2} y1={13} y2={13} />
+        <line key={a} className="as-cielo__sereno" x1={SINISTRA + a * passo + 2} x2={SINISTRA + (b + 1) * passo - 2} y1={riga} y2={riga} />
       ))}
-      <text className="as-volta__scritta" x={pezzi.length ? fine + 6 : SINISTRA} y={17}>
+      <text className="as-volta__scritta" {...scritta}>
         {n.usable_hours ? t("weather.sky.clear", { n: numero(n.usable_hours) }) : t("weather.sky.noClear")}
       </text>
     </>
@@ -362,11 +382,41 @@ function ScalaDiDestra({ destra, ore, misura: m, scala, x, passo, id, tela }: {
             <Tratti ore={ore} valore={(o) => o.wind_gust_kmh} livello={(o) => (o.levels.gust === "nogo" ? "nogo" : null)} x={x} y={y} passo={passo} id={id} classe=" as-scala__tratto--raffiche" tela={tela} />
           )}
           <Tratti ore={ore} valore={(o) => o[campo]} livello={livello} x={x} y={y} passo={passo} id={id} classe="" tela={tela} />
+          {destra === "wind" && <NomeDellaLinea ore={ore} valore={(o) => o.wind_gust_kmh} nome="weather.right.line.gust" scarto={SOPRA_LA_LINEA} x={x} y={y} />}
+          {destra === "condensation" && (
+            <>
+              <NomeDellaLinea ore={ore} valore={(o) => o.dew_point_c} nome="weather.right.line.dew" scarto={SOTTO_LA_LINEA} x={x} y={y} />
+              <NomeDellaLinea ore={ore} valore={(o) => o.temperature_c} nome="weather.right.line.air" scarto={SOPRA_LA_LINEA} x={x} y={y} />
+            </>
+          )}
+          {ore.map((o, i) => {
+            const v = o[campo]
+            if (v === null || i % tela.ogni !== 0) return null
+            // vicino allo zero sotto il punto c'e' la terra con le ore: il valore va sopra
+            const sotto = y(v) + SOTTO_IL_PUNTO
+            return (
+              <text key={`v-${o.at}`} className="as-scala__valore" x={x(i)} y={sotto > FONDO - 2 ? y(v) + SOPRA_IL_PUNTO : sotto} textAnchor="middle">
+                {numero(tondo(destra, v))}
+              </text>
+            )
+          })}
         </>
       )}
       <Parole ore={ore} destra={destra} valore={(o) => (destra === "rain" ? null : o[campo])} y={y} passo={passo} tela={tela} />
     </g>
   )
+}
+
+/** Il nome di una linea accanto alla sua ultima ora: quale sono le raffiche, quale l'aria e quale
+ *  la rugiada. */
+function NomeDellaLinea({ ore, valore, nome, scarto, x, y }: {
+  ore: Ora[]; valore: (o: Ora) => number | null; nome: Chiave; scarto: number; x: (i: number) => number; y: (v: number) => number
+}) {
+  const i = ore.length - 1
+  const ultima = ore[i]
+  const v = ultima ? valore(ultima) : null
+  if (v === null) return null
+  return <text className="as-scala__eti" x={x(i) - 4} y={y(v) + scarto} textAnchor="end">{t(nome)}</text>
 }
 
 /** Il tratto a pezzi: un pezzo per ogni corsa di ore con la stessa parola, unito a mezz'ora con
