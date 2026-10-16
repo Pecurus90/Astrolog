@@ -11,7 +11,8 @@ import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { pulisci } from "./banco"
-import { NOTTE_ARCHIVIO, montaDashboard, notti } from "./dashboard-banco"
+import { NOTTE, NOTTE_ARCHIVIO, PROSSIME, montaDashboard, notti } from "./dashboard-banco"
+import { misura } from "./meteo-banco"
 
 afterEach(pulisci)
 afterEach(() => vi.unstubAllGlobals())
@@ -102,6 +103,26 @@ describe("la Dashboard, le prossime tre notti", () => {
     const terza = within(prossime).getAllByRole("link")[2]
     expect(terza?.querySelector("b")?.textContent).toBe("Martedì 29 · tendenza")
     expect(terza?.textContent).toContain("9 ore di buio")
+  })
+})
+
+describe("la Dashboard, il cielo delle prossime notti", () => {
+  it("ogni notte dice il cielo in parole col suo segno, la pioggia e le ore di buio senza Luna", async () => {
+    const pioggia = misura("rain", { level: "nogo", since: "2026-09-27T17:00:00+02:00" })
+    const notti = [
+      { ...PROSSIME[0], sky_word: "overcast", moonless_dark_hours: 0, measures: [pioggia] },
+      { ...PROSSIME[1], sky_word: "clear", moonless_dark_hours: 3 },
+      { ...PROSSIME[2], sky_word: "scattered", moonless_dark_hours: 4 },
+    ]
+    await montaDashboard({ previsione: { nights: [NOTTE, ...notti] } })
+
+    const serate = within(await screen.findByRole("region", { name: "meteo delle prossime 3 notti" })).getAllByRole("link")
+    expect(serate.map((s) => s.querySelector("p span:last-child")?.textContent)).toEqual([
+      "Coperto, pioggia dalle 17",
+      "Sereno · 3 h di buio senza Luna",
+      "Nubi sparse · 4 h di buio senza Luna",
+    ])
+    expect(serate.map((s) => s.querySelector("svg.as-icona-meteo use")?.getAttribute("href"))).toEqual(["#i-m-pioggia", "#i-m-sereno", "#i-m-velato"])
   })
 })
 

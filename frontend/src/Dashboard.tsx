@@ -2,10 +2,12 @@ import { useQuery } from "@tanstack/react-query"
 import { Fragment, type ReactNode, useContext, useRef, useState } from "react"
 import { Link } from "react-router"
 
-import { Avviso } from "./Avviso"
+import { Avanza, Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
+import type { SegnoDellaMisura } from "./Icons"
 import { CartaDelTelefono, CartaDellaDashboard } from "./CartaDelParametro"
 import { type Destra, ScalaDellaMisura } from "./CieloDelleNubi"
+import { useStato } from "./Scansiona"
 import { PrimaDellaPrevisione, senzaPrevisioneIn, silenzio, useAggiorna, usePrevisione } from "./Meteo"
 import { OreSerene, oreDellaVoce, verdetto } from "./NotteDelMeteo"
 import { Semaforo } from "./Semaforo"
@@ -50,6 +52,9 @@ export function Dashboard() {
   const archivio = useArchivio().data
   const archivioVuoto = cartelle?.total === 0 && archivio?.totals.frames === 0
   const sito = detto?.site ?? null
+  // la prima scansione al lavoro: i conti crescono ancora, e la pagina lo dice
+  const scan = useStato().data?.scan
+  const lettura = scan?.first && scan.state === "running" && scan.last_event ? { ...scan.last_event, manca: scan.remaining_s ?? null } : null
   // il meteo che non risponde senza una previsione che valga: la notte e le prossime non si dicono
   const giu = detto ? silenzio(detto) !== null && senzaPrevisioneIn(detto) : false
   return (
@@ -64,11 +69,12 @@ export function Dashboard() {
             progetti={!archivioVuoto} />
         )}
         {detto && sito && !giu && <Prossime detto={detto} telefono={telefono} />}
+        {lettura && <PrimaLettura lettura={lettura} />}
         {sito && archivioVuoto && <Seguito />}
         {sito && !archivioVuoto && !telefono && (
           <div className="as-dashboard__coppia">
             <Progetti />
-            <DaRiprendere />
+            <DaRiprendere finora={lettura !== null} />
           </div>
         )}
       </div>
@@ -314,12 +320,19 @@ function Prossime({ detto, telefono }: { detto: Meteo; telefono: boolean }) {
   const serata = (n: Notte) => {
     const dentro = (
       <>
-        {/* il posto dell'icona del cielo: aspetta, con le parole del cielo, la scelta di Marco */}
-        <span aria-hidden="true" />
+        {/* senza le nuvole misurate nessun segno: un cielo disegnato sarebbe inventato */}
+        {n.sky_word || pioveDalle(n) ? (
+          <svg className="as-icona-meteo" viewBox="0 0 20 20" aria-hidden="true">
+            <use href={`#i-${segnoDelCielo(n)}`} />
+          </svg>
+        ) : (
+          <span aria-hidden="true" />
+        )}
         <p>
           {/* dalla quarta notte la previsione e' una tendenza, e lo dice (Marco, 26/9 e 14/10/2026) */}
           <b>{n.trend ? `${conMaiuscola(giornoENumero(n.night))} \u00b7 ${t("weather.night.trend")}` : conMaiuscola(giornoENumero(n.night))}</b>
           <span>{oreDellaVoce(n)}</span>
+          {n.sky_word && <span>{cieloInParole(n)}</span>}
         </p>
         <Semaforo livello={n.verdict}>{verdetto(n)}</Semaforo>
       </>
@@ -349,6 +362,25 @@ function Prossime({ detto, telefono }: { detto: Meteo; telefono: boolean }) {
   )
 }
 
+/** Il segno del cielo di una notte (tavola v37): la pioggia vince sulle nuvole. */
+function segnoDelCielo(n: Notte): SegnoDellaMisura {
+  if (pioveDalle(n)) return "m-pioggia"
+  if (n.sky_word === "clear") return "m-sereno"
+  return n.sky_word === "scattered" ? "m-velato" : "nuvola"
+}
+
+/** L'ora in cui comincia la pioggia che non si puo', se c'e'. */
+const pioveDalle = (n: Notte) => n.measures.find((m) => m.code === "rain" && m.level === "nogo")?.since ?? null
+
+/** "Coperto, pioggia dalle 17", "Sereno \u00b7 3 h di buio senza Luna": le parole del cielo
+ *  (okta WMO, scritte dal backend), la pioggia e le ore di buio con la Luna giu'. */
+function cieloInParole(n: Notte): string {
+  const pioggia = pioveDalle(n)
+  const cielo = `${t(`weather.sky.word.${n.sky_word ?? "clear"}`)}${pioggia ? t("dashboard.nights.rain", { ora: oraDelSito(pioggia).slice(0, 2) }) : ""}`
+  const senzaLuna = n.moonless_dark_hours ? t("dashboard.nights.moonless", { durata: durata(n.moonless_dark_hours * 3600) ?? "" }) : null
+  return senzaLuna ? `${cielo} \u00b7 ${senzaLuna}` : cielo
+}
+
 /** Una riga del telefono sempre aperta (`as-tel-sez--aperta`): il nome in testa, il corpo sotto. */
 function RigaAperta({ nome, children }: { nome: string; children: ReactNode }) {
   return (
@@ -362,6 +394,18 @@ function RigaAperta({ nome, children }: { nome: string; children: ReactNode }) {
       </h3>
       <div className="as-tel-corpo as-tel-corpo--fisso">{children}</div>
     </li>
+  )
+}
+
+/** La prima scansione al lavoro (tavola dashboard-stati-lettura v37): quanti file su quanti, quanto
+ *  manca al ritmo finora (lo stima il backend; nel primo minuto tace), e che non serve fare niente. */
+function PrimaLettura({ lettura: l }: { lettura: { current: number; total: number; manca: number | null } }) {
+  const valori = { fatti: numero(l.current), su: numero(l.total) }
+  return (
+    <Avviso esito="lavoro" pagina titolo={t("dashboard.scan.title")}
+      sotto={<Avanza pct={l.total ? Math.round((l.current / l.total) * 100) : 0} nome={t("dashboard.scan.bar")} />}>
+      {l.manca === null ? t("dashboard.scan.text.noEta", valori) : t("dashboard.scan.text", { ...valori, quanto: durata(l.manca) ?? "" })}
+    </Avviso>
   )
 }
 
@@ -391,17 +435,27 @@ function Progetti() {
 
 /** Cio' che resta da fare: le domande da confermare e l'ultima notte ripresa. Vuoto, non c'e'; c'e'
  *  anche senza sito, perche' l'archivio non dipende dal sito. */
-function DaRiprendere() {
+function DaRiprendere({ finora }: { finora: boolean }) {
   const revisione = useRevisione()
   const daConfermare = revisione.data?.to_confirm ?? 0
   const ultima = useArchivio().data?.items[0] ?? null
-  if (daConfermare === 0 && !ultima && !revisione.error) return null
+  if (!finora && daConfermare === 0 && !ultima && !revisione.error) return null
   return (
     <section className="as-dashboard__lavoro" aria-labelledby="dash-lavoro">
       <p className="as-soprattitolo" id="dash-lavoro">{t("dashboard.work.title")}</p>
       {/* uno zero su un archivio che non ha risposto sarebbe una bugia tranquillizzante */}
       {revisione.error && <Avviso esito="allarme">{revisione.error.message}</Avviso>}
-      {daConfermare > 0 && (
+      {/* durante la prima scansione i casi da confermare non sono ancora contati */}
+      {finora && (
+        <div className="as-riga">
+          <span className="as-riga__segno as-riga__segno--attesa" aria-hidden="true" />
+          <span>
+            <b>{t("dashboard.work.toConfirm")}</b>
+            {t("dashboard.work.toConfirm.later")}
+          </span>
+        </div>
+      )}
+      {!finora && daConfermare > 0 && (
         <div className="as-riga">
           <span className="as-riga__segno as-riga__segno--attesa" aria-hidden="true" />
           <span>
@@ -416,7 +470,7 @@ function DaRiprendere() {
           <span className="as-riga__segno" aria-hidden="true" />
           <span>
             <b>{conMaiuscola(giornoEMese(ultima.night_date))}</b>
-            {comeEAndata(ultima)}
+            {finora ? t("dashboard.work.night.sofar") : comeEAndata(ultima)}
           </span>
           <span className="as-riga__freccia" aria-hidden="true">{"\u2192"}</span>
         </Link>

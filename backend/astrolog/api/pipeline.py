@@ -1,14 +1,17 @@
 """The only progress channel, the same for every device. The scan's remainder cannot be derived
 from the database: its denominator is the folders on disk."""
 
+import json
 import sqlite3
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict
-from typing import cast
+from datetime import UTC, datetime
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette.datastructures import State
 
+from ..clock import parse_iso
 from ..db.row import Row
 from ..spine.run import ORDER, queue
 from ..spine.scan_store import run_outcomes, run_row
@@ -70,6 +73,43 @@ def _state_of(rows: Iterable[Row]) -> WorkerState:
     return next(s for s in _SEVERITY if s in states)
 
 
+# The pace of the first files is not the real one yet (decision in docs/coda.md).
+ETA_AFTER_S = 60
+
+
+def remaining_s(current: int, total: int, elapsed_s: float) -> int | None:
+    """What is left at the pace so far: the files still to read divided by the files read per
+    second. `None` in the first minute, before any file, and once all are read."""
+    if current <= 0 or current >= total or elapsed_s < ETA_AFTER_S:
+        return None
+    return round(elapsed_s * (total - current) / current)
+
+
+# A folder of the gesture never read to the end outside it: a reading stopped or broken does not
+# count as one, so Stop then Resume is still the first reading of what was not read.
+_NEVER_READ = (
+    "SELECT 1 FROM scan_runs AS cur WHERE cur.id IN (SELECT value FROM json_each(?1))"
+    " AND NOT EXISTS (SELECT 1 FROM scan_runs AS prev WHERE prev.folder_id = cur.folder_id"
+    " AND prev.status = 'ok' AND prev.id NOT IN (SELECT value FROM json_each(?1))) LIMIT 1"
+)
+
+
+def is_first_scan(conn: sqlite3.Connection, run_ids: Iterable[int]) -> bool:
+    """The gesture reads at least one folder for the first time: its counts are still growing. A
+    folder added to a read archive is a first reading too, of that folder."""
+    return conn.execute(_NEVER_READ, (json.dumps(list(run_ids)),)).fetchone() is not None
+
+
+def _remaining(last: Mapping[str, Any] | None) -> int | None:
+    """The estimate of the folder being read, from when its reading began: the receipts of a
+    gesture all open together, so theirs would count the folders read before."""
+    started = parse_iso(last.get("since")) if last is not None else None
+    if last is None or started is None:
+        return None
+    elapsed = (datetime.now(UTC) - started).total_seconds()
+    return remaining_s(last["current"], last["total"], elapsed)
+
+
 def scan_progress(state: State, conn: sqlite3.Connection) -> ScanProgress | None:
     """The outcome is read from the receipts, not the worker: the worker forgets it as soon as it
     does something else."""
@@ -94,6 +134,8 @@ def scan_progress(state: State, conn: sqlite3.Connection) -> ScanProgress | None
         run_id=run_id,
         last_event=ScanEvent(**last) if last else None,
         receipt=run_out(row) if row is not None else None,
+        remaining_s=None if finished else _remaining(last),
+        first=is_first_scan(conn, state.scan_runs),
     )
 
 

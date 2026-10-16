@@ -3026,6 +3026,11 @@ export interface components {
             run_id: number;
             /** Folder Id */
             folder_id: number;
+            /**
+             * Since
+             * @description When this folder's reading began: the pace starts here.
+             */
+            since?: string | null;
             /** Found */
             found: number;
             /** New */
@@ -3059,6 +3064,17 @@ export interface components {
             run_id: number;
             last_event: components["schemas"]["ScanEvent"] | null;
             receipt: components["schemas"]["ScanRunOut"] | null;
+            /**
+             * Remaining S
+             * @description Seconds left for the folder being read, at the pace so far; `None` in the first minute, before any file and once the reading is over.
+             */
+            remaining_s?: number | null;
+            /**
+             * First
+             * @description No folder had ever ended a reading before this gesture: the archive is being read for the first time, and its counts are still growing.
+             * @default false
+             */
+            first: boolean;
         };
         /** ScanRunList */
         ScanRunList: {
@@ -3653,6 +3669,16 @@ export interface components {
             wind_700hpa_kmh: number | null;
             /** Wind 700Hpa Tenths */
             wind_700hpa_tenths: number | null;
+            /**
+             * Sky Word
+             * @description The sky in words from the mean cover in the dark, in okta classes (WMO 2700): 0 clear, 1-4 scattered, 5-7 broken, 8 overcast. `None` without the clouds.
+             */
+            sky_word?: ("clear" | "scattered" | "broken" | "overcast") | null;
+            /**
+             * Moonless Dark Hours
+             * @description Hours of dark with the Moon below the horizon.
+             */
+            moonless_dark_hours?: number | null;
         };
         /**
          * WeatherHourOut
@@ -3833,6 +3859,16 @@ export interface components {
             wind_700hpa_kmh: number | null;
             /** Wind 700Hpa Tenths */
             wind_700hpa_tenths: number | null;
+            /**
+             * Sky Word
+             * @description The sky in words from the mean cover in the dark, in okta classes (WMO 2700): 0 clear, 1-4 scattered, 5-7 broken, 8 overcast. `None` without the clouds.
+             */
+            sky_word?: ("clear" | "scattered" | "broken" | "overcast") | null;
+            /**
+             * Moonless Dark Hours
+             * @description Hours of dark with the Moon below the horizon.
+             */
+            moonless_dark_hours?: number | null;
             /** Night */
             night: string;
             /** Trend */

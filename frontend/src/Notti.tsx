@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 import type { CSSProperties } from "react"
 import { useSearchParams } from "react-router"
 
-import { Avviso } from "./Avviso"
+import { Avanza, Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
 import { Altre, paginaDopo } from "./Elenco"
 import { BarraDeiFiltri } from "./FiltriUsati"
@@ -229,15 +229,7 @@ function Lettura({ pagina }: { pagina: Elenco }) {
     <Avviso
       esito="lavoro"
       titolo={t("nights.reading", { n: numero(pagina.still_reading) })}
-      sotto={
-        fatto != null && (
-          <div className="as-avanza">
-            <div className="as-avanza__pista">
-              <div className="as-avanza__riempi" style={{ width: `${fatto}%` }} />
-            </div>
-          </div>
-        )
-      }
+      sotto={fatto != null && <Avanza pct={fatto} />}
     >
       {t("nights.reading.why")}
     </Avviso>

@@ -179,3 +179,29 @@ def test_a_night_without_every_cloud_has_no_clear_hours_as_it_has_no_usable_hour
     riga = notte_di(db, "2026-09-25")
     assert riassunto(riga)["usable_hours"] is None
     assert not any(o["clear"] for o in json.loads(riga["hours_json"]))
+
+
+def test_each_night_says_its_sky_in_okta_classes(db):  # noqa: F811
+    """La parola del cielo dalla copertura media nel buio, in okta (WMO 2700, classi dei METAR;
+    Marco, 15/10/2026): 0 sereno, 1-4 nubi sparse, 5-7 nuvoloso, 8 coperto."""
+    for pct, parola in ((0.0, "clear"), (40.0, "scattered"), (75.0, "broken"), (100.0, "overcast")):
+        scritta(db, Finto(risposta(cloud_total_pct=pct)))
+        assert riassunto(notte_di(db, "2026-09-25"))["sky_word"] == parola, pct
+
+
+def test_a_night_without_its_clouds_has_no_sky_word(db):  # noqa: F811
+    scritta(db, Finto(risposta(cloud_total_pct=None)))
+    assert riassunto(notte_di(db, "2026-09-25"))["sky_word"] is None
+
+
+def test_each_night_counts_its_moonless_dark_hours(db):  # noqa: F811
+    """Le ore di buio con la Luna sotto l'orizzonte, quelle buone per la banda larga: la notte del
+    3/10/2026 la Luna sorge verso le 00: meno di tutte le ore di buio, e piu' di zero."""
+    adesso = ADESSO.replace(month=10, day=3)
+    forecast.refresh(db, SITO, fetch=Finto(risposta(inizio="2026-10-02T00:00")), now=adesso)
+    view.rebuild(db, SITO)
+    riga = notte_di(db, "2026-10-03")
+    ore = json.loads(riga["hours_json"])
+    attese = sum(1 for o in ore if o["sky"] == "dark" and o["moon_pct"] is None)
+    assert riassunto(riga)["moonless_dark_hours"] == attese
+    assert 0 < attese < sum(1 for o in ore if o["sky"] == "dark")

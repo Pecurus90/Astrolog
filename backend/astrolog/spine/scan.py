@@ -161,6 +161,8 @@ def _walk(run: _Run) -> Iterator[Event]:
         dirs[:] = [_shown(rel_path(d, run.root)) for d in dirs]
     total = len(files)
     run.counts["found"] = total + len(online)
+    # when this folder's reading began: the pace for what is left starts here, not at the gesture
+    since = now_iso()
     for abs_path in online:
         rel = rel_path(abs_path, run.root)
         _safely(run, rel, partial(_not_on_disk, run, rel))
@@ -173,6 +175,7 @@ def _walk(run: _Run) -> Iterator[Event]:
             "file": _shown(os.path.basename(abs_path)),
             "run_id": run.run_id,
             "folder_id": run.folder_id,
+            "since": since,
             **run.counts,
         }
     # Files under a folder that would not open have not vanished: nobody knows. Their positions

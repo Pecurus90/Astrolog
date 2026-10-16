@@ -232,6 +232,9 @@ class ScanEvent(BaseModel):
     file: str
     run_id: int
     folder_id: int
+    since: str | None = Field(
+        default=None, description="When this folder's reading began: the pace starts here."
+    )
     found: int
     new: int
     unchanged: int
@@ -250,6 +253,16 @@ class ScanProgress(BaseModel):
     run_id: int
     last_event: ScanEvent | None
     receipt: ScanRunOut | None
+    remaining_s: int | None = Field(
+        default=None,
+        description="Seconds left for the folder being read, at the pace so far; `None` in the "
+        "first minute, before any file and once the reading is over.",
+    )
+    first: bool = Field(
+        default=False,
+        description="No folder had ever ended a reading before this gesture: the archive is being "
+        "read for the first time, and its counts are still growing.",
+    )
 
 
 PipelineAction = Literal["start", "stop", "resume"]

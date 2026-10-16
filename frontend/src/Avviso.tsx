@@ -41,6 +41,19 @@ const TONI: Record<keyof typeof SEGNI, string> = {
   dopo: "as-avviso--dopo",
 }
 
+/** La pista di un lavoro che avanza, sotto la frase di un avviso: la larghezza e' un dato, l'unico
+ *  `style` che il foglio ammette. Col nome e' una barra di avanzamento per chi ascolta. */
+export function Avanza({ pct, nome }: { pct: number; nome?: string }) {
+  const barra = nome ? { role: "progressbar", "aria-valuemin": 0, "aria-valuemax": 100, "aria-valuenow": pct, "aria-label": nome } : {}
+  return (
+    <div className="as-avanza" {...barra}>
+      <div className="as-avanza__pista">
+        <div className="as-avanza__riempi" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  )
+}
+
 export function Avviso({
   esito,
   titolo,

@@ -74,6 +74,59 @@ describe("la Dashboard con l'archivio vuoto", () => {
   })
 })
 
+/** La prima scansione al lavoro: 1240 file letti su 8310, ne mancano circa 20 minuti. */
+function prima(campi: Record<string, unknown> = {}) {
+  const evento = { current: 1240, total: 8310, file: "D:/Astro/a.fits", run_id: 1, folder_id: 1, found: 1240, new: 1240, unchanged: 0, duplicates: 0, missing: 0, skipped: 0, errors: 0, online_only: 0 }
+  return {
+    "/api/v1/pipeline/status": {
+      stato: 200,
+      corpo: {
+        worker: { state: "running", stage: "scan", started_at: "2026-09-25T15:00:00Z", ended_at: null, stages: [] },
+        scan: { state: "running", folder_id: 1, run_id: 1, last_event: evento, receipt: null, remaining_s: 1200, first: true, ...campi },
+        pending: {},
+        action: "stop",
+      },
+    },
+  }
+}
+
+describe("la Dashboard durante la prima scansione", () => {
+  it("in testa la riga del lavoro: quanti file su quanti, quanto manca, e la pista", async () => {
+    await montaDashboard({ altre: prima() })
+
+    const a = await avviso("prima scansione")
+    expect(a.classi).toBe("as-avviso as-avviso--lavoro as-avviso--pagina")
+    expect(a.testo).toBe(
+      "1240 file letti su 8310, ancora circa 20 min. I conteggi qui sotto crescono man mano; medie e casi da confermare arrivano a scansione finita. Non serve fare niente.",
+    )
+    const pista = within(a.nodo).getByRole("progressbar", { name: "Lettura dell'archivio" })
+    expect(pista.getAttribute("aria-valuenow")).toBe("15")
+  })
+
+  it("nel primo minuto il tempo che manca tace", async () => {
+    await montaDashboard({ altre: prima({ remaining_s: null }) })
+
+    expect((await avviso("prima scansione")).testo).toMatch(/^1240 file letti su 8310\. I conteggi/)
+  })
+
+  it("da riprendere dice che i casi si contano alla fine, e l'ultima notte e' quella trovata finora", async () => {
+    await montaDashboard({ altre: prima() })
+
+    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
+    expect(await within(lavoro).findByText("si contano a scansione finita")).toBeTruthy()
+    expect(within(lavoro).queryByRole("link", { name: "Rispondi" })).toBeNull()
+    expect((await within(lavoro).findByRole("link", { name: /Sabato 19 settembre/ })).textContent).toContain("la notte pi\u00f9 recente trovata finora")
+  })
+
+  it("una scansione che non e' la prima non cambia la pagina", async () => {
+    await montaDashboard({ altre: prima({ first: false }) })
+
+    await screen.findByRole("region", { name: "da riprendere" })
+    expect(screen.queryByText("prima scansione")).toBeNull()
+    expect(await screen.findByText("32 da confermare")).toBeTruthy()
+  })
+})
+
 describe("la Dashboard con le cartelle tolte", () => {
   it("un archivio che ha ancora i suoi frame non e' vuoto, anche senza cartelle attive", async () => {
     const conFrame = notti([NOTTE_ARCHIVIO])["/api/v1/nights"]

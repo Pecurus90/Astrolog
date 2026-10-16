@@ -1,6 +1,7 @@
 """A night's verdict, its clear hours and the hours worth showing. Only total cover makes the
 verdict, blocking every object alike; the other measures weigh beside it (`judge`)."""
 
+import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -13,6 +14,28 @@ from ..ephemeris.sun import Sky
 # https://www.nodc.noaa.gov/archive/arc0021/0000907/1.1/data/0-data/HTML/WMO-CODE/WMO2700.HTM
 CLOUD_GO_MAX_PCT = 25.0
 CLOUD_MARGINAL_MAX_PCT = 50.0
+
+
+class SkyWord(StrEnum):
+    """The night's sky in words, from the mean cover in the dark in okta (WMO 2700, METAR classes;
+    choice in docs/coda.md): 0 clear, 1-4 scattered (FEW and SCT), 5-7 broken, 8 overcast."""
+
+    CLEAR = "clear"
+    SCATTERED = "scattered"
+    BROKEN = "broken"
+    OVERCAST = "overcast"
+
+
+def sky_word(cloud_pct: float | None) -> SkyWord | None:
+    """The nearest eighth of the sky, then its class."""
+    if cloud_pct is None:
+        return None
+    eighths = math.floor(cloud_pct / 12.5 + 0.5)
+    if eighths == 0:
+        return SkyWord.CLEAR
+    if eighths <= 4:
+        return SkyWord.SCATTERED
+    return SkyWord.BROKEN if eighths <= 7 else SkyWord.OVERCAST
 
 
 class Verdict(StrEnum):

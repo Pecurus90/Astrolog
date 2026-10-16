@@ -70,7 +70,8 @@ const FASI: Record<string, Chiave> = {
   group: "scan.stage.group",
 }
 
-function useStato() {
+/** Lo stato del lavoro di sottofondo: la barra, il foglio Altro e la Dashboard leggono questo. */
+export function useStato() {
   return useQuery({
     queryKey: ["pipeline"],
     queryFn: async () => {

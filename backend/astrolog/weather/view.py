@@ -10,6 +10,7 @@ from typing import Any
 
 from ..db.replace_table import replace_rows
 from ..ephemeris import RISESET_DEG, moon
+from ..ephemeris.sun import Sky
 from . import judge, openmeteo, position, verdict
 from .fetches import Source
 
@@ -108,6 +109,11 @@ def _rows(
             if usual and wind is not None
             else None,
             "agreement": _agreement(said, len(openmeteo.MODELS)),
+            "sky_word": verdict.sky_word(w.summary.cloud_total_pct),
+            # the dark with the Moon below the horizon: the hours good for broadband
+            "moonless_dark_hours": sum(
+                1 for h in w.hours if h.sky == Sky.DARK and h.values.get("moon_pct") is None
+            ),
             "measures": [asdict(m) for m in judge.measures(w.hours, w.summary)],
         }
         rows.append(

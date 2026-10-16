@@ -255,6 +255,16 @@ sola in evidenza; il resto della pagina resta quello che si puo' calcolare:
   buio di stanotte (e' calcolo, non previsione) e *Non disponibile*; al posto delle carte e delle
   prossime notti un allarme dice da quando non arriva risposta e che l'app riprova da sola ogni 15
   minuti, con *Riprova ora*.
+- **Durante la prima scansione** sotto le prossime notti una riga dice quanti file ha letto su
+  quanti della cartella che sta leggendo e, dopo il primo minuto, quanto le manca al ritmo tenuto
+  finora; i conti crescono man mano. Vale anche per una cartella nuova aggiunta a un archivio gia'
+  letto: e' la sua prima lettura.
+  In *da riprendere* i casi da confermare si contano a scansione finita, e l'ultima notte e' la
+  piu' recente trovata finora.
+- **Le prossime 3 notti** dicono anche il cielo in parole, col suo segno -- *Sereno*, *Nubi sparse*,
+  *Nuvoloso*, *Coperto*, dalla copertura media nel buio contata in ottavi di cielo come fanno i
+  bollettini meteo (okta) -- la pioggia da che ora, e le ore di buio senza Luna, quelle buone per
+  la banda larga.
 
 Se
 qualcosa non risponde, l'app **te lo dice**: non ti mostra uno zero al posto di un numero che non
@@ -820,9 +830,7 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
   loro disegno; il Meteo e la Dashboard l'hanno gia'. Il tema chiaro c'e' nel foglio e **non si puo'
   ancora accendere**.
 - **Nella Dashboard mancano ancora** il dettaglio della Luna col calendario delle fasi, la volta
-  con le curve degli oggetti, l'anno col calendario colorato, la scansione al lavoro con quanto
-  manca, e nelle prossime notti il cielo in parole e le ore di buio senza Luna: arrivano uno alla
-  volta.
+  con le curve degli oggetti e l'anno col calendario colorato: arrivano uno alla volta.
 - **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un
   tondo con la sua forma -- con una spunta se e' andata bene, un punto esclamativo se c'e' un
   problema, tratteggiato se aspetta -- perche' chi non distingue il verde dal rosso deve capire lo

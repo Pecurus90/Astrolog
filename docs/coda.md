@@ -861,9 +861,14 @@ riga per voce.
   riga aperta, niente rimandi) e sul desktop i progetti nella coppia con Rispondi tenue e
   "Stanotte intera" (15/10/2026); gli stati senza sito (passi in fila), archivio vuoto (nessuna
   cartella) e meteo giu' (buio calcolato `dark_s` da `/tonight`, `retry_s` da `/weather`), anche
-  insieme (15/10/2026). Restano, in quest'ordine (Marco,
-  14/10/2026): la scansione al lavoro (tempo che manca, prima scansione, conti "finora"), la notte
-  coperta e le parole del cielo nelle prossime notti; il dettaglio della Luna col
+  insieme (15/10/2026); la prima scansione al lavoro (`remaining_s` e `first` in
+  `/pipeline/status`, la riga col tempo che manca, da riprendere "finora"; 15/10/2026). Resta
+  fuori il vuoto dei progetti "finora la lettura ha trovato N oggetti": manca il conto degli
+  oggetti trovati. Le prossime notti col cielo in parole (`sky_word` dalle okta, scritto da
+  `weather/view.py`), il segno, la pioggia e le ore di buio senza Luna (`moonless_dark_hours`, ore
+  di buio con la Luna sotto l'orizzonte; 15/10/2026). Restano, in quest'ordine (Marco,
+  14/10/2026): la notte coperta (le carte di nuvolosita' e pioggia al posto di seeing e aerosol); il
+  dettaglio della Luna col
   calendario; la volta coi pianeti; l'anno. Decisi da Marco il 15/10/2026: il tempo che manca alla
   scansione si stima dal ritmo finora, detto "circa", e tace nel primo minuto; le prossime notti
   portano le parole del cielo dalle okta WMO sulla copertura nel buio (0 sereno, 1-4 nubi sparse,

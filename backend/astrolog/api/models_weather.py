@@ -164,6 +164,14 @@ class WeatherBriefOut(WeatherSkyOut):
     usable_until: str | None
     wind_700hpa_kmh: float | None
     wind_700hpa_tenths: int | None
+    sky_word: Literal["clear", "scattered", "broken", "overcast"] | None = Field(
+        default=None,
+        description="The sky in words from the mean cover in the dark, in okta classes (WMO "
+        "2700): 0 clear, 1-4 scattered, 5-7 broken, 8 overcast. `None` without the clouds.",
+    )
+    moonless_dark_hours: int | None = Field(
+        default=None, description="Hours of dark with the Moon below the horizon."
+    )
 
 
 class WeatherNightOut(WeatherBriefOut):
