@@ -923,7 +923,6 @@ riga per voce.
   decidono con Marco, a video, prima del codice.
 - **Telefono, dopo il 16/10**: in `astrolog.css` restano `.as-heat__mesi` e `.as-heat__mese`
   senza componente (il foglio viene dal Design: si toglie la' alla prossima consegna).
-- **Mobile**: le frasi di posto ("qui accanto") si rileggono con la veste stretta.
 
 ## Parcheggio
 

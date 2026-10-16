@@ -161,7 +161,8 @@ describe("la volta della Dashboard", () => {
     const lettore = document.querySelector(".as-volta__lettore")
     expect(lettore?.querySelector(".as-volta__lettore-ora")?.textContent).toBe("01:00")
     expect([...(lettore?.querySelectorAll(".as-volta__lettore-riga") ?? [])].map((r) => r.textContent)).toEqual([
-      "Saturno30°", "Luna 62%7°", "Giovesotto l'orizzonte", "Martesotto l'orizzonte", "Veneresotto l'orizzonte",
+      // "sotto", come la tavola: "sotto l'orizzonte" esce dal riquadro (visto dal vivo)
+      "Saturno30°", "Luna 62%7°", "Giovesotto", "Martesotto", "Veneresotto",
     ])
   })
 

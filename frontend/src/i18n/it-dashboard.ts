@@ -107,6 +107,8 @@ export const itDashboard = {
   "dashboard.chart.legend": "Le curve: tocca per evidenziarne una",
   "dashboard.chart.below": "sotto l'orizzonte",
   "dashboard.chart.moonlessLeft": "Senza Luna ancora",
+  // nel lettore, stretto, come la tavola v37: "sotto l'orizzonte" esce dal riquadro
+  "dashboard.chart.reader.below": "sotto",
   "dashboard.work.outside.one": "1 frame fuori dai conti",
   "dashboard.work.night.sofar": "la notte pi\u00f9 recente trovata finora",
   "dashboard.moon.rise": "sorge alle {ora}",

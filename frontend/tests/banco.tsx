@@ -131,8 +131,8 @@ export const LETTURA: components["schemas"]["ScanRunOut"] = {
   skipped_by_reason: [],
 }
 
-/** Le rotte che il banco conosce. Una rotta non prevista **fallisce**: un banco che risponde a
- *  tutto direbbe di si' anche a una chiamata che non doveva partire. */
+/** Le rotte che il banco conosce. Una rotta non prevista **fallisce** come una rete caduta (il client
+ *  la fa diventare un 503 `unreachable`): un banco che risponde a tutto direbbe di si' a tutto. */
 let mappaCorrente: Record<string, Voce> = {}
 /** La colonna misurata (`useColonnaStretta`): jsdom non impagina, quindi la misura la da' la prova. */
 export function colonna(larga: number) {

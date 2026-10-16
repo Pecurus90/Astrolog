@@ -87,6 +87,21 @@ describe("il primo avvio", () => {
     expect(screen.queryByRole("button", { name: /salta/i })).toBeNull()
   })
 
+  it("un errore senza corpo (il 502 di un proxy) dice la stessa frase, non tace", async () => {
+    rispondi({ ...STANOTTE, "/api/v1/settings": { stato: 502, corpo: undefined }, ...DOPO })
+    await disegna()
+    const avviso = await screen.findByRole("alert")
+    expect(avviso.textContent).toContain("Il servizio non ha risposto")
+  })
+
+  it("una richiesta che non arriva (rete caduta) dice la stessa frase, non l'errore del browser", async () => {
+    rispondi({ ...STANOTTE, ...DOPO })
+    await disegna()
+    const avviso = await screen.findByRole("alert")
+    expect(avviso.textContent).toContain("Il servizio non ha risposto")
+    expect(avviso.textContent).not.toContain("rotta non prevista")
+  })
+
   it("si salta da OGNI passo, non solo dal primo", async () => {
     conTimbro(false)
     await disegna()

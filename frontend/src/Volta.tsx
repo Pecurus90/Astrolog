@@ -306,7 +306,7 @@ function Lettore({ istante: { at: istante, moonless_dark_left_s: resta }, astri,
           <span key={r.chiave} className={(r.gradi ?? 0) < 0 ? "as-volta__lettore-riga as-volta__lettore-riga--sotto" : `as-volta__lettore-riga ${VOCE[r.chiave].riga}`}>
             <i />
             <span>{r.nome}</span>
-            <b>{(r.gradi ?? 0) < 0 ? t("dashboard.chart.below") : `${numero(Math.round(r.gradi ?? 0))}\u00b0`}</b>
+            <b>{(r.gradi ?? 0) < 0 ? t("dashboard.chart.reader.below") : `${numero(Math.round(r.gradi ?? 0))}\u00b0`}</b>
           </span>
         ))}
       </div>

@@ -24,3 +24,22 @@ export const api = createClient<paths>({
   // sarebbe una chiave sbagliata, cioe' un 401 su ogni richiesta.
   ...(chiave === null ? {} : { headers: { [CHIAVE_HEADER]: chiave } }),
 })
+
+/** Un rifiuto con un corpo che dice perche', come quelli del backend. */
+function rifiuto(status: number, code: string): Response {
+  return new Response(JSON.stringify({ detail: { code } }), { status, headers: { "Content-Type": "application/json" } })
+}
+
+// Un errore senza corpo (il 502 di un proxy) darebbe `error` vuoto, e chi chiama `if (error)` non
+// se ne accorgerebbe; una rete caduta lancerebbe l'errore del browser. Tutti e due diventano rifiuti.
+api.use({
+  async onResponse({ response }) {
+    if (response.ok || (await response.clone().text()) !== "") return undefined
+    return rifiuto(response.status, "no_body")
+  },
+  onError({ error }) {
+    // un annullamento non e' un guasto: resta un'eccezione, che chi annulla scarta
+    if (error instanceof DOMException && error.name === "AbortError") return undefined
+    return rifiuto(503, "unreachable")
+  },
+})

@@ -106,6 +106,7 @@ export const enDashboard = {
   "dashboard.chart.legend": "The curves: tap to highlight one",
   "dashboard.chart.below": "below the horizon",
   "dashboard.chart.moonlessLeft": "Without the Moon for another",
+  "dashboard.chart.reader.below": "below",
   "dashboard.work.night.sofar": "the most recent night found so far",
   "dashboard.moon.rise": "rises at {ora}",
   "dashboard.moon.set": "sets at {ora}",
