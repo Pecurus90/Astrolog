@@ -99,6 +99,9 @@ class ArchiveTotals(BaseModel):
     frames: int
     integration_s: float
     untimed: int
+    objects: int = Field(
+        description="The objects named so far, in a night or still waiting for one."
+    )
 
 
 class WaitingPoses(BaseModel):
@@ -114,7 +117,8 @@ class NightList(Page[Night]):
     totals: ArchiveTotals
     waiting: list[WaitingPoses]
     waiting_frames: int = Field(
-        description="The frames of `waiting` together: the ones outside every night."
+        description="The frames of `waiting` together, except those of `review`: To confirm counts "
+        "them already."
     )
     still_reading: int = Field(
         description="How many frames the spine still has to work through: work, not a question."

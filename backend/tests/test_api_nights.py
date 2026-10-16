@@ -101,7 +101,27 @@ def test_the_page_opens_with_what_the_whole_archive_holds(archivio):
     """In cima, l'archivio intero: e' la domanda che ci si fa aprendo la pagina, e non dipende da
     quante righe si stanno guardando."""
     totali = notti(archivio, limit=1)["totals"]
-    assert totali == {"nights": 2, "frames": 4, "integration_s": 1320.0, "untimed": 0}
+    oggetti = {o["key"] for n in notti(archivio)["items"] for o in n["objects"]}
+    # Gli oggetti li dice la Dashboard durante la prima scansione ("finora ... N oggetti").
+    assert totali == {
+        "nights": 2,
+        "frames": 4,
+        "integration_s": 1320.0,
+        "untimed": 0,
+        "objects": len(oggetti),
+    }
+    assert len(oggetti) > 0
+
+
+def test_an_object_counts_before_its_frames_have_a_night(archivio):
+    """Durante la prima scansione `identify` nomina gli oggetti prima che `group` dia le notti: la
+    Dashboard li conta mentre crescono, non solo a notti fatte."""
+    prima = notti(archivio)["totals"]["objects"]
+    with db(archivio) as conn:
+        conn.execute("UPDATE frames SET night_id = NULL")
+        conn.commit()
+
+    assert notti(archivio)["totals"]["objects"] == prima
 
 
 def test_the_archive_totals_read_the_frames_once_whatever_the_nights(archivio):
@@ -185,8 +205,9 @@ def test_the_page_counts_the_poses_still_waiting_for_an_answer(archivio):
         {"answer_at": "never", "frames": 2},
         {"answer_at": "review", "frames": 1},
     ]
-    # La Dashboard ne dice il totale ("3 frame fuori dai conti"): arriva gia' sommato.
-    assert notti(archivio)["waiting_frames"] == 3
+    # La Dashboard ne dice il totale ("2 frame fuori dai conti"), senza quelli da confermare: la
+    # riga *Cose da confermare* li conta gia' (Marco, 16/10/2026).
+    assert notti(archivio)["waiting_frames"] == 2
 
 
 def test_the_page_says_when_the_reading_is_not_over(archivio):

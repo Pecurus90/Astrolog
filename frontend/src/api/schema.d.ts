@@ -1451,6 +1451,11 @@ export interface components {
             integration_s: number;
             /** Untimed */
             untimed: number;
+            /**
+             * Objects
+             * @description The objects named so far, in a night or still waiting for one.
+             */
+            objects: number;
         };
         /**
          * BackupCounts
@@ -2620,7 +2625,7 @@ export interface components {
             waiting: components["schemas"]["WaitingPoses"][];
             /**
              * Waiting Frames
-             * @description The frames of `waiting` together: the ones outside every night.
+             * @description The frames of `waiting` together, except those of `review`: To confirm counts them already.
              */
             waiting_frames: number;
             /**

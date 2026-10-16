@@ -114,6 +114,12 @@ export const enDashboard = {
   "dashboard.nights.label": "Weather for {giorno}",
   "dashboard.projects.none":
     "No project in progress. A project adds up an object's hours towards a goal, and its curve joins the sky.",
+  "dashboard.projects.sofar":
+    "No project yet. So far the scan has found {n} objects; a project can be created from Projects even now.",
+  "dashboard.projects.sofar.one":
+    "No project yet. So far the scan has found 1 object; a project can be created from Projects even now.",
+  "dashboard.projects.searching":
+    "No project yet. The scan is still looking for the objects; a project can be created from Projects even now.",
   "dashboard.projects.create": "Create a project",
   "dashboard.work.title": "to pick up",
   "dashboard.work.answer": "Answer",

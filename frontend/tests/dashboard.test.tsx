@@ -163,6 +163,15 @@ describe("la Dashboard, da riprendere", () => {
     expect(within(lavoro).queryByRole("link", { name: "Rispondi" })).toBeNull()
   })
 
+  it("mentre i casi da confermare caricano i frame fuori dai conti non diventano un rimando a Notti", async () => {
+    const mai = new Promise(() => {})
+    await apriDashboard({ ...notti([NOTTE_ARCHIVIO], 3), "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 }, attesa: mai } })
+
+    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
+    await within(lavoro).findByRole("link", { name: /Sabato 19 settembre/ })
+    expect(within(lavoro).queryByRole("link", { name: /fuori dai conti/ })).toBeNull()
+  })
+
   it("senza frame fuori dai conti la riga non ne parla", async () => {
     await apriDashboard()
 

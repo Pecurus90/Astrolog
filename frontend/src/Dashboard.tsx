@@ -52,13 +52,18 @@ export function Dashboard() {
   // senza una cartella e senza un frame non c'e' archivio: la prima azione e' scegliere la cartella.
   // Le cartelle tolte lasciano i loro frame, e un archivio con le sue notti non e' vuoto.
   // la prima scansione al lavoro: i conti crescono ancora, e la pagina lo dice
-  const scan = useStato().data?.scan
+  const stato = useStato().data
+  const scan = stato?.scan
   const lettura = scan?.first && scan.state === "running" && scan.last_event ? { ...scan.last_event, manca: scan.remaining_s ?? null } : null
   const cartelle = useQuanteCartelle().data
-  const archivio = useArchivio(lettura !== null).data
+  // rilegge finche' la spina lavora alla prima lettura, non solo mentre si leggono i file
+  const primaInCorso = scan?.first === true && stato?.worker.state === "running"
+  const archivio = useArchivio(primaInCorso).data
   // la prima lettura finisce quando `group` ha dato a ogni frame la sua notte, non con lo stadio scan
-  const ancoraInLettura = lettura !== null || (scan?.first === true && (archivio?.still_reading ?? 0) > 0)
+  const ancoraInLettura = lettura !== null || (scan?.first === true && (archivio ? archivio.still_reading > 0 : primaInCorso))
   const archivioVuoto = cartelle?.total === 0 && archivio?.totals.frames === 0
+  // per tutta la prima lettura; finche' le notti non rispondono, zero: "sta ancora cercando"
+  const trovati = ancoraInLettura ? archivio?.totals.objects ?? 0 : null
   const sito = detto?.site ?? null
   // il meteo che non risponde senza una previsione che valga: la notte e le prossime non si dicono
   const giu = detto ? silenzio(detto) !== null && senzaPrevisioneIn(detto) : false
@@ -71,14 +76,14 @@ export function Dashboard() {
         {detto && sito && (
           <Stanotte detto={detto} sito={sito} telefono={telefono}
             giu={giu ? { quando: detto.fetched_at, ogni: detto.retry_s, primario: !archivioVuoto } : null}
-            progetti={!archivioVuoto} />
+            progetti={!archivioVuoto} trovati={trovati} />
         )}
         {detto && sito && !giu && <Prossime detto={detto} telefono={telefono} />}
         {lettura && <PrimaLettura lettura={lettura} />}
         {sito && archivioVuoto && <Seguito />}
         {sito && !archivioVuoto && !telefono && (
           <div className="as-dashboard__coppia">
-            <Progetti />
+            <Progetti trovati={trovati} />
             <DaRiprendere finora={lettura !== null} />
           </div>
         )}
@@ -167,8 +172,8 @@ type Giu = { quando: string | null; ogni: number; primario: boolean }
 
 /** La testa di stanotte e il meteo della notte; sul telefono anche la cosa da fare adesso. Col
  *  meteo giu' la testa dice il buio calcolato, e un allarme prende il posto delle carte. */
-function Stanotte({ detto, sito, telefono, giu, progetti }: {
-  detto: Meteo; sito: string; telefono: boolean; giu: Giu | null; progetti: boolean
+function Stanotte({ detto, sito, telefono, giu, progetti, trovati }: {
+  detto: Meteo; sito: string; telefono: boolean; giu: Giu | null; progetti: boolean; trovati: number | null
 }) {
   const notte = useStanotte().data
   const luna = notte?.moon ?? null
@@ -212,7 +217,7 @@ function Stanotte({ detto, sito, telefono, giu, progetti }: {
         {luna && <LunaInTesta luna={luna} aperto={lunaAperta} apri={() => setLunaAperta(!lunaAperta)} />}
       </div>
       {/* sul telefono la cosa da fare adesso e' il primario della pagina: senza progetti, crearne uno */}
-      {telefono && progetti && <VuotoDeiProgetti />}
+      {telefono && progetti && <VuotoDeiProgetti trovati={trovati} />}
       {luna && notte?.night && lunaAperta && <LunaDettaglio luna={luna} notte={notte.night} chiudi={chiudiLuna} />}
       {notte && (
         <Volta stanotte={notte} telefono={telefono}
@@ -414,8 +419,11 @@ function PrimaLettura({ lettura: l }: { lettura: { current: number; total: numbe
   )
 }
 
-/** Il vuoto dei progetti: una frase e Crea un progetto, il primario della pagina. */
-function VuotoDeiProgetti() {
+/** Il vuoto dei progetti: una frase e Crea un progetto, il primario della pagina. Durante la prima
+ *  scansione (`trovati`) dice gli oggetti trovati finora, senza bottone (tavola dashboard-stati-lettura). */
+function VuotoDeiProgetti({ trovati }: { trovati: number | null }) {
+  if (trovati === 0) return <VuotoDellaSezione testo="dashboard.projects.searching" />
+  if (trovati !== null) return <VuotoDellaSezione testo="dashboard.projects.sofar" valori={{ n: numero(trovati) }} />
   return (
     <VuotoDellaSezione testo="dashboard.projects.none">
       <AzioniDelVuoto>
@@ -426,14 +434,14 @@ function VuotoDeiProgetti() {
 }
 
 /** I progetti in corso: finche' non esistono, la sezione lo dice (tavola dashboard-stati-progetti). */
-function Progetti() {
+function Progetti({ trovati }: { trovati: number | null }) {
   return (
     <section className="as-dashboard__progetti" aria-labelledby="dash-progetti">
       {/* un div e non l'header della tavola: per chi ascolta sarebbe un secondo "banner" accanto alla barra */}
       <div className="as-dashboard__capo">
         <p className="as-soprattitolo" id="dash-progetti">{t("dashboard.projects.title")}</p>
       </div>
-      <VuotoDeiProgetti />
+      <VuotoDeiProgetti trovati={trovati} />
     </section>
   )
 }
@@ -442,14 +450,15 @@ function Progetti() {
  *  anche senza sito, perche' l'archivio non dipende dal sito. */
 function DaRiprendere({ finora }: { finora: boolean }) {
   const revisione = useRevisione()
-  const daConfermare = revisione.data?.to_confirm ?? 0
+  // `undefined` mentre carica: la riga verso Notti aspetta di sapere che non c'e' niente da confermare
+  const daConfermare = revisione.data?.to_confirm
   const archivio = useArchivio(finora).data
   const ultima = archivio?.items[0] ?? null
   // i frame che non stanno in nessuna notte (tavola dashboard-stati-coperta): durante la prima
   // scansione non sono ancora contati
   const fuori = finora ? 0 : archivio?.waiting_frames ?? 0
   const fuoriDaiConti = fuori > 0 ? t("dashboard.work.outside", { n: numero(fuori) }) : null
-  if (!finora && daConfermare === 0 && !fuori && !ultima && !revisione.error) return null
+  if (!finora && !daConfermare && !fuori && !ultima && !revisione.error) return null
   return (
     <section className="as-dashboard__lavoro" aria-labelledby="dash-lavoro">
       <p className="as-soprattitolo" id="dash-lavoro">{t("dashboard.work.title")}</p>
@@ -465,7 +474,7 @@ function DaRiprendere({ finora }: { finora: boolean }) {
           </span>
         </div>
       )}
-      {!finora && daConfermare > 0 && (
+      {!finora && daConfermare !== undefined && daConfermare > 0 && (
         <div className="as-riga">
           <span className="as-riga__segno as-riga__segno--attesa" aria-hidden="true" />
           <span>
@@ -477,7 +486,7 @@ function DaRiprendere({ finora }: { finora: boolean }) {
         </div>
       )}
       {/* niente da confermare: si risponde altrove (sito, data), e Notti dice dove */}
-      {!finora && daConfermare === 0 && fuoriDaiConti && (
+      {!finora && (daConfermare === 0 || revisione.error) && fuoriDaiConti && (
         <Link className="as-riga" to="/notti">
           <span className="as-riga__segno as-riga__segno--attesa" aria-hidden="true" />
           <span>

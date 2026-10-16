@@ -862,11 +862,9 @@ riga per voce.
   "Stanotte intera" (15/10/2026); gli stati senza sito (passi in fila), archivio vuoto (nessuna
   cartella) e meteo giu' (buio calcolato `dark_s` da `/tonight`, `retry_s` da `/weather`), anche
   insieme (15/10/2026); la prima scansione al lavoro (`remaining_s` e `first` in
-  `/pipeline/status`, la riga col tempo che manca, da riprendere "finora"; 15/10/2026). Resta
-  fuori il vuoto dei progetti "finora la lettura ha trovato N oggetti": manca il conto degli
-  oggetti trovati. Le prossime notti col cielo in parole (`sky_word` dalle okta, scritto da
-  `weather/view.py`), il segno, la pioggia e le ore di buio senza Luna (`moonless_dark_hours`, ore
-  di buio con la Luna sotto l'orizzonte; okta verificate su WMO 2700; 15/10/2026). Decisi da
+  `/pipeline/status`, la riga col tempo che manca, da riprendere "finora"; 15/10/2026). Le
+  prossime notti col cielo in parole (`sky_word` dalle okta, scritto da `weather/view.py`), il
+  segno, la pioggia e le ore di buio senza Luna (`moonless_dark_hours`, ore di buio con la Luna sotto l'orizzonte; okta verificate su WMO 2700; 15/10/2026). Decisi da
   Marco il 15/10/2026: il tempo che manca alla scansione si stima dal ritmo finora della cartella in
   lettura, detto "circa", e tace nel primo minuto; "prima scansione" = il gesto legge almeno una
   cartella mai letta fino in fondo; "frame fuori dai conti" sono i frame che non stanno in nessuna
@@ -884,10 +882,8 @@ riga per voce.
   ordine:
   1. ~~La notte coperta~~: fatta il 16/10. Testa, verdetto e prossime notti c'erano gia'; lo
      scambio delle carte e' caduto il 12/10 (`handoff/design-dashboard.md`). Nuovo: "N frame
-     fuori dai conti" (`waiting_frames`) in *da riprendere*. Resta: mentre `/api/v1/review`
-     carica, la riga verso Notti puo' sfarfallare (`DaRiprendere` legge `to_confirm ?? 0`); il
-     silenzio durante la prima scansione non ha test; i frame fuori dai conti includono quelli
-     da confermare (`answer_at=review`), come la tavola: da rileggere con Marco.
+     fuori dai conti" (`waiting_frames`) in *da riprendere*, senza quelli da confermare
+     (`answer_at=review`, Marco, 16/10: la riga sopra li conta gia').
   2. ~~Il dettaglio della Luna~~: fatto il 16/10. Calendario in `moon_nights` (DERIVATO, lo scrive
      il giro del meteo, `spine/moon_calendar.py`); soglie nella sezione Impostazioni *Luna*
      (scelta di Marco, 16/10). "culmina" e' il punto piu' alto della finestra, non la culminazione
@@ -908,8 +904,10 @@ riga per voce.
      "al mese" divide per almeno un mese intero (Marco, 16/10); "0 s" al posto di "0 h" per le ore vuote e nel title dei giorni
      vuoti; "1 notti" senza singolare; `spine/year.py` riscrive a mano il join di `counts.Subject.NIGHT`;
      senza sito (meteo giu') l'anno non si mostra; il rileggersi a 15 s non ha test.
-  5. **Il vuoto dei progetti durante la scansione**: "Finora la lettura ha trovato N oggetti" vuole
-     il conto degli oggetti trovati dall'API.
+  5. ~~Il vuoto dei progetti durante la scansione~~: fatto il 16/10 (`totals.objects` in
+     `/api/v1/nights`, gli oggetti nominati, con la notte o senza). Per tutta la prima lettura;
+     a zero dice "sta ancora cercando gli oggetti" (Marco, 16/10: gli oggetti nascono dopo la
+     lettura dei file).
   Della tavola del Meteo non e' portato solo "· a Capo Nord" nel nome della notte (pare
   un'etichetta della tavola). Commit da pubblicare: Marco li guarda e fa `git push origin main`.
 - **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,

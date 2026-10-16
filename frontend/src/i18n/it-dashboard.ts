@@ -116,6 +116,12 @@ export const itDashboard = {
   "dashboard.nights.label": "Meteo di {giorno}",
   "dashboard.projects.none":
     "Nessun progetto in corso. Un progetto somma le ore di un oggetto verso un obiettivo, e la sua curva entra nella volta.",
+  "dashboard.projects.sofar":
+    "Nessun progetto ancora. Finora la lettura ha trovato {n} oggetti; un progetto si crea da Progetti anche adesso.",
+  "dashboard.projects.sofar.one":
+    "Nessun progetto ancora. Finora la lettura ha trovato 1 oggetto; un progetto si crea da Progetti anche adesso.",
+  "dashboard.projects.searching":
+    "Nessun progetto ancora. La lettura sta ancora cercando gli oggetti; un progetto si crea da Progetti anche adesso.",
   "dashboard.projects.create": "Crea un progetto",
   "dashboard.work.title": "da riprendere",
   "dashboard.work.answer": "Rispondi",

@@ -48,7 +48,9 @@ def night_list(
             "offset": offset,
             "totals": nights.archive_totals(conn),
             "waiting": waiting,
-            "waiting_frames": sum(w["frames"] for w in waiting),
+            "waiting_frames": sum(
+                w["frames"] for w in waiting if w["answer_at"] != nights.AnswerAt.REVIEW
+            ),
             "still_reading": left,
             "reading_done_pct": nights.reading_done_pct(conn, left),
         }

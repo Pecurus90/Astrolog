@@ -255,13 +255,16 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
 - **Le prossime 3 notti**: il giorno, le ore serene e il semaforo; ognuna porta al Meteo. La
   terza e' gia' **tendenza**, come nel Meteo: dice le ore di buio, non quelle serene.
 - **I progetti in corso** non esistono ancora: la loro sezione lo dice, e *Crea un progetto* --
-  la cosa da fare adesso -- porta alla pagina Progetti, che arrivera'.
+  la cosa da fare adesso -- porta alla pagina Progetti, che arrivera'. Durante la **prima
+  scansione** la sezione dice invece quanti oggetti la lettura ha trovato finora -- o, finche'
+  non ne ha riconosciuto nessuno, che li sta ancora cercando.
 - **Da riprendere**, accanto: quante domande ci sono **da confermare**, con *Rispondi*, e sotto
-  quanti frame sono **fuori dai conti** -- quelli che non stanno ancora in nessuna notte, perche'
-  aspettano una risposta. Se da confermare non c'e' niente ma qualche frame aspetta lo stesso (il
-  sito, una data), la riga porta alle Notti, che dicono dove si risponde. Poi l'ultima notte
-  che hai ripreso -- quanto tempo, su quale oggetto (quello con piu' tempo, e quanti altri) e
-  quanti frame -- che si apre nelle Notti. Se non c'e' niente da riprendere, la sezione non c'e'.
+  quanti frame sono **fuori dai conti** -- quelli che non stanno ancora in nessuna notte e non
+  aspettano una tua risposta in Da confermare (quelli li conta gia' la riga sopra): il sito da
+  dichiarare, o una data che manca. Se da confermare non c'e' niente, la riga porta alle Notti, che
+  dicono dove si risponde. Durante la prima scansione i frame fuori dai conti non si contano
+  ancora. Poi l'ultima notte che hai ripreso -- quanto tempo, su quale oggetto (quello con piu'
+  tempo, e quanti altri) e quanti frame -- che si apre nelle Notti. Se non c'e' niente da riprendere, la sezione non c'e'.
 - **L'anno**, in fondo: *il 2026, fino a oggi*, con quante **notti** hai ripreso, quante **ore**,
   quante ore **a notte in media** e quante **notti al mese**. Sotto, un **quadretto per giorno**
   da gennaio a dicembre, una colonna per settimana da lunedi': piu' e' chiaro, piu' ore hai ripreso

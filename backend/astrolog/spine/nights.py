@@ -57,7 +57,9 @@ LIMIT ? OFFSET ?
 
 _HOW_MANY = "SELECT COUNT(*) FROM nights n WHERE (? IS NULL OR n.id = ?)"
 
-_TOTALS = f"SELECT{counts.counts_on(counts.Subject.ARCHIVE)}"
+# Objects with or without a night: `identify` names them before `group` places them.
+_TOTALS = f"""SELECT{counts.counts_on(counts.Subject.ARCHIVE)},
+       (SELECT COUNT(DISTINCT f.object_id) FROM frames f WHERE f.copy_of IS NULL) AS objects"""  # noqa: S608 - our columns
 
 # Asked for the whole page at once, never per row.
 _OBJECTS = f"""
@@ -166,6 +168,7 @@ def archive_totals(conn: sqlite3.Connection) -> dict[str, Any]:
         "frames": r["frames"],
         "integration_s": r["integration_s"],
         "untimed": r["untimed"],
+        "objects": r["objects"],
     }
 
 

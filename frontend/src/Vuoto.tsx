@@ -42,10 +42,12 @@ export function Vuoto({
 
 /** Il vuoto di una **sezione** dentro una pagina che ha altro da dire (i progetti della
  *  Dashboard): la frase e i gesti, senza disegno ne' titolo. */
-export function VuotoDellaSezione({ testo, children }: { testo: Chiave; children?: ReactNode }) {
+export function VuotoDellaSezione({ testo, valori, children }: {
+  testo: Chiave; valori?: Record<string, string | number>; children?: ReactNode
+}) {
   return (
     <div className="as-vuoto as-vuoto--sezione">
-      <p className="as-vuoto__testo">{t(testo)}</p>
+      <p className="as-vuoto__testo">{t(testo, valori)}</p>
       {children}
     </div>
   )

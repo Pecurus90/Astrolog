@@ -49,7 +49,7 @@ export function notti(items: unknown[], fuori = 0) {
       stato: 200,
       corpo: {
         items, total: items.length, limit: 1, offset: 0, totals: { nights: items.length, frames: 0, integration_s: 0, untimed: 0 },
-        waiting: fuori ? [{ answer_at: "review", frames: fuori }] : [], waiting_frames: fuori, still_reading: 0, reading_done_pct: null,
+        waiting: fuori ? [{ answer_at: "site", frames: fuori }] : [], waiting_frames: fuori, still_reading: 0, reading_done_pct: null,
       },
     },
   }

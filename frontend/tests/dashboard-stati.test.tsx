@@ -118,6 +118,49 @@ describe("la Dashboard durante la prima scansione", () => {
     expect((await within(lavoro).findByRole("link", { name: /Sabato 19 settembre/ })).textContent).toContain("la notte pi\u00f9 recente trovata finora")
   })
 
+  it("il vuoto dei progetti dice quanti oggetti la lettura ha trovato finora, senza Crea un progetto", async () => {
+    const conOggetti = notti([NOTTE_ARCHIVIO])["/api/v1/nights"]
+    await montaDashboard({
+      altre: { ...prima(), "/api/v1/nights": { ...conOggetti, corpo: { ...conOggetti.corpo, totals: { ...conOggetti.corpo.totals, objects: 9 } } } },
+    })
+
+    const progetti = await screen.findByRole("region", { name: "progetti in corso" })
+    expect((await within(progetti).findByText(/^Nessun progetto ancora\./)).textContent).toBe(
+      "Nessun progetto ancora. Finora la lettura ha trovato 9 oggetti; un progetto si crea da Progetti anche adesso.",
+    )
+    expect(within(progetti).queryByRole("link", { name: "Crea un progetto" })).toBeNull()
+  })
+
+  it("finche' nessun oggetto e' riconosciuto, il vuoto dei progetti dice che la lettura li sta cercando", async () => {
+    await montaDashboard({ altre: prima() })
+
+    const progetti = await screen.findByRole("region", { name: "progetti in corso" })
+    expect((await within(progetti).findByText(/^Nessun progetto ancora\./)).textContent).toBe(
+      "Nessun progetto ancora. La lettura sta ancora cercando gli oggetti; un progetto si crea da Progetti anche adesso.",
+    )
+  })
+
+  it("finita la lettura dei file, la frase resta finche' ogni frame non ha la sua notte", async () => {
+    const conOggetti = notti([NOTTE_ARCHIVIO])["/api/v1/nights"]
+    await montaDashboard({
+      altre: {
+        ...prima({ state: "completed", last_event: null }),
+        "/api/v1/nights": { ...conOggetti, corpo: { ...conOggetti.corpo, still_reading: 90, reading_done_pct: 15, totals: { ...conOggetti.corpo.totals, objects: 1 } } },
+      },
+    })
+
+    const progetti = await screen.findByRole("region", { name: "progetti in corso" })
+    expect((await within(progetti).findByText(/^Nessun progetto ancora\./)).textContent).toContain("ha trovato 1 oggetto;")
+  })
+
+  it("i frame fuori dai conti tacciono finche' la prima scansione non finisce", async () => {
+    await montaDashboard({ altre: { ...prima(), ...notti([NOTTE_ARCHIVIO], 214) } })
+
+    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
+    await within(lavoro).findByText("si contano a scansione finita")
+    expect(lavoro.textContent).not.toContain("fuori dai conti")
+  })
+
   it("una scansione che non e' la prima non cambia la pagina", async () => {
     await montaDashboard({ altre: prima({ first: false }) })
 
