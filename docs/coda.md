@@ -241,9 +241,8 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   "jet stream" e non "corrente a getto" (Marco, glossario). Fatta anche la 3b-ii (7/10/2026): il cielo delle nubi con la
   scala di destra e il lettore; le carte portate a un'ora col tocco e con le frecce. Lo stato "il
   servizio tace ma la previsione vale" e' fatto (3b-i, 7/10/2026: l'ultimo tentativo della
-  previsione sta in `weather_fetches`). Resta per la veste del telefono: il cielo si stringe col
-  viewBox (1080 di largo) e le scritte rimpiccioliscono, mentre il disegno ne ha uno da 358 con
-  un'ora si' e una no. Da portare a Claude Design nella prossima consegna: le barre della pioggia
+  previsione sta in `weather_fetches`). La tela del telefono (358, un'ora si' e una no) e' fatta
+  col foglio v37 (`CieloDelleNubi.tsx`, `TELEFONO`). Da portare a Claude Design nella prossima consegna: le barre della pioggia
   nel cielo col colore del giudizio (oggi il foglio le riempie sempre di rosso); il giudizio lungo di
   una carta ("incerta dalle 21:00, niente dalle 22:00") esce dal bordo a larghezza desktop; nel
   generatore `meteo.js` la parola della prima ora sulla scala di destra non si scrive mai (il
