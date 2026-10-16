@@ -163,7 +163,16 @@ finestra e' una fascia sola. Chi la mostra la dipinge e basta.
 
 ## Cosa NON promettiamo
 
-- **I pianeti e la visibilita' di un oggetto** non ci sono. Il codice esiste in `old/`, e si
+- **I pianeti ci sono solo per la volta** della Dashboard: Saturno, Giove, Marte e Venere, la loro
+  altezza ogni `TRACK_STEP_MIN` sulla notte intera (`ephemeris/planets.py`, `/tonight.planets`),
+  senza sorgere e tramontare: nessuno li chiede. Costano circa 110 ms, quanto la Luna.
+  `test_jupiter_near_opposition_culminates_high_in_the_night`,
+  `test_venus_in_december_2024_is_an_evening_planet`. La finestra della volta (`/tonight.chart`)
+  va da mezz'ora prima dell'ora del tramonto a mezz'ora dopo l'ora piu' vicina all'alba, cosi'
+  l'alba delle 07:50 resta dentro (fine 08:30):
+  `test_the_chart_runs_from_half_an_hour_before_the_sunset_hour_to_half_after_the_sunrise_hour`,
+  `test_the_chart_ends_in_the_column_that_holds_the_sunrise`.
+- **La visibilita' di un oggetto** non c'e'. Il codice esiste in `old/`, e si
   porta quando nasce la schermata che lo chiede -- non prima: cio' che si porta senza una
   superficie che lo mostri e' codice che nessuno guida. **Del Sole c'e' quello che serve a dire
   dov'e' il buio** -- le cinque fasce del cielo -- e non un minuto di piu': niente sorgere e

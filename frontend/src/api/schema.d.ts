@@ -1063,7 +1063,8 @@ export interface paths {
          *     Moon (`night` and `moon` `null`): falling back to Greenwich would give another place's Moon
          *     without anyone noticing.
          *
-         *     **The computation is costly**, because it samples a night of sky twice, once per body. The
+         *     **The computation is costly**, because it samples a night of sky once per body: the Sun and
+         *     the Moon finely, the four planets of the chart at the curve's step. The
          *     reply carries the night it refers to, so whoever shows it knows when it has expired without
          *     asking again at every breath.
          */
@@ -1481,6 +1482,32 @@ export interface components {
              * @description The visible subfolders, sorted.
              */
             folders: components["schemas"]["FolderEntry"][];
+        };
+        /**
+         * ChartOut
+         * @description The span the night chart draws and the instants it marks.
+         */
+        ChartOut: {
+            /**
+             * Starts At
+             * @description Half an hour before the sunset's hour.
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * @description Half an hour after the hour nearest the sunrise.
+             */
+            ends_at: string;
+            /**
+             * Dark From
+             * @description Where astronomical dark starts; `None` without it.
+             */
+            dark_from: string | null;
+            /**
+             * Dark Until
+             * @description Where astronomical dark ends; `None` without it.
+             */
+            dark_until: string | null;
         };
         /**
          * CoordinatesEdit
@@ -2704,6 +2731,19 @@ export interface components {
             /** Longitude */
             longitude: number;
         };
+        /**
+         * PlanetOut
+         * @description A planet of the night chart and its altitude through the whole night window.
+         */
+        PlanetOut: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "saturn" | "jupiter" | "mars" | "venus";
+            /** Track */
+            track: components["schemas"]["SkyPointOut"][];
+        };
         /** ProbeOut */
         ProbeOut: {
             /** Root Path */
@@ -3492,6 +3532,14 @@ export interface components {
             dark_s?: number | null;
             /** @description The current night's weather from the chosen model, as the forecast wrote it; `None` until the forecast has arrived. */
             weather?: components["schemas"]["WeatherBriefOut"] | null;
+            /** @description `None` without a night. */
+            chart?: components["schemas"]["ChartOut"] | null;
+            /**
+             * Planets
+             * @description Empty without a night.
+             * @default []
+             */
+            planets: components["schemas"]["PlanetOut"][];
         };
         /**
          * TypelessFolder

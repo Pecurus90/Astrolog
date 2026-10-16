@@ -894,8 +894,11 @@ riga per voce.
      le ore di buio senza Luna, e le notti buone per la banda larga dalle **soglie nelle
      Impostazioni** (sopra). Backend nuovo: eta', distanze, culminazione, fasi, calendario (si
      scrive, non si calcola leggendo).
-  3. **La volta** (`as-volta`): Progetti / Sistema solare; senza progetti solo il sistema solare,
-     senza scelta. Backend: le posizioni di Saturno, Giove, Marte, Venere (astropy `get_body`).
+  3. ~~La volta~~: fatta il 16/10, sistema solare senza scelta. Restano: le curve dei progetti e la
+     scelta Progetti / Sistema solare (coi progetti); nel lettore la riga "quanto buio senza Luna
+     resta" (vuole il conto dal backend). Debito: "coperta" si decide nel `.tsx` (`usable_hours
+     === 0`), meglio dal backend; lettore e coltre ora per ora senza test; senza buio ne' Luna
+     l'`aria-label` finisce coi due punti; con la finestra intera (polo) le ore ai bordi si tagliano.
   4. **L'anno** (`as-dashboard__anno`): "il 2026, fino a oggi" con notti, ore, a notte in media, al
      mese, e il calendario colorato delle ore; durante la prima scansione "finora" e "a scansione
      finita". Backend: i totali dell'anno.

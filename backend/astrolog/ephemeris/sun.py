@@ -49,6 +49,38 @@ def night_bands(
     ]
 
 
+@dataclass(frozen=True, slots=True)
+class ChartWindow:
+    starts_at: dt.datetime
+    ends_at: dt.datetime
+    dark_from: dt.datetime | None
+    dark_until: dt.datetime | None
+
+
+_HALF_HOUR = dt.timedelta(minutes=30)
+
+
+def chart_window(bands: Sequence[SkyBand]) -> ChartWindow | None:
+    """From half before the sunset's hour to half after the sunrise's nearest hour: whole hours sit
+    mid-column (board v37), so both stay inside. Without a sunset or a sunrise, the whole window."""
+    if not bands:
+        return None
+
+    def hour(instant: dt.datetime) -> dt.datetime:
+        return instant.replace(minute=0, second=0, microsecond=0)
+
+    first, last = bands[0], bands[-1]
+    sets = first.kind == Sky.DAY and len(bands) > 1
+    rises = last.kind == Sky.DAY and len(bands) > 1
+    dark = [b for b in bands if b.kind == Sky.DARK]
+    return ChartWindow(
+        starts_at=hour(first.ends_at) - _HALF_HOUR if sets else first.starts_at,
+        ends_at=hour(last.starts_at + _HALF_HOUR) + _HALF_HOUR if rises else last.ends_at,
+        dark_from=dark[0].starts_at if dark else None,
+        dark_until=dark[-1].ends_at if dark else None,
+    )
+
+
 def sky_at(instants: Sequence[dt.datetime], latitude: float, longitude: float) -> list[Sky]:
     """The band of each instant, without paying for a sampled night."""
     return [_band_of(a) for a in altitudes(instants, latitude, longitude)]

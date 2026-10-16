@@ -95,6 +95,25 @@ class SkyBandOut(BaseModel):
     kind: SkyKind
 
 
+PlanetKey = Literal["saturn", "jupiter", "mars", "venus"]
+
+
+class PlanetOut(BaseModel):
+    """A planet of the night chart and its altitude through the whole night window."""
+
+    key: PlanetKey
+    track: list[SkyPointOut]
+
+
+class ChartOut(BaseModel):
+    """The span the night chart draws and the instants it marks."""
+
+    starts_at: str = Field(description="Half an hour before the sunset's hour.")
+    ends_at: str = Field(description="Half an hour after the hour nearest the sunrise.")
+    dark_from: str | None = Field(description="Where astronomical dark starts; `None` without it.")
+    dark_until: str | None = Field(description="Where astronomical dark ends; `None` without it.")
+
+
 class TonightOut(BaseModel):
     """The night it refers to (`YYYY-MM-DD` in the site's time zone), the site, the Moon and the
     sky."""
@@ -118,3 +137,5 @@ class TonightOut(BaseModel):
         description="The current night's weather from the chosen model, as the forecast wrote "
         "it; `None` until the forecast has arrived.",
     )
+    chart: ChartOut | None = Field(default=None, description="`None` without a night.")
+    planets: list[PlanetOut] = Field(default=[], description="Empty without a night.")

@@ -14,7 +14,15 @@ import pytest
 
 from astrolog.ephemeris import ASTRO_DEG, CIVIL_DEG, NAUTICAL_DEG, RISESET_DEG, bodies
 from astrolog.ephemeris.grid import night_grid
-from astrolog.ephemeris.sun import altitudes, night_bands, sky_at, sky_bands
+from astrolog.ephemeris.sun import (
+    Sky,
+    SkyBand,
+    altitudes,
+    chart_window,
+    night_bands,
+    sky_at,
+    sky_bands,
+)
 
 MEZZOGIORNO = dt.datetime(2026, 1, 15, 12, tzinfo=dt.timezone(dt.timedelta(hours=1)))
 
@@ -284,3 +292,20 @@ def test_the_sky_at_an_instant_is_the_band_that_holds_it():
     attese = [next(f.kind for f in fasce if f.starts_at <= o < f.ends_at) for o in ore]
     assert sky_at(ore, 45.87, 11.51) == attese
     assert {"day", "dark"} <= set(attese)
+
+
+@pytest.mark.parametrize(("alba", "fine"), [((7, 15), (7, 30)), ((7, 50), (8, 30))])
+def test_the_chart_ends_in_the_column_that_holds_the_sunrise(alba, fine):
+    """Le ore intere cadono a meta' colonna: l'alba delle 07:50 sta nella colonna delle 08, e la
+    volta finisce alle 08:30. Fermarla alle 07:30 lascerebbe l'alba fuori."""
+    giorno = dt.datetime(2026, 12, 21, tzinfo=MEZZOGIORNO.tzinfo)
+    sorge = giorno.replace(hour=alba[0], minute=alba[1])
+    fasce = [
+        SkyBand(MEZZOGIORNO, MEZZOGIORNO.replace(hour=16, minute=32), Sky.DAY),
+        SkyBand(MEZZOGIORNO.replace(hour=16, minute=32), sorge, Sky.DARK),
+        SkyBand(sorge, giorno.replace(hour=12), Sky.DAY),
+    ]
+    volta = chart_window(fasce)
+    assert volta is not None
+    assert volta.starts_at == MEZZOGIORNO.replace(hour=15, minute=30)
+    assert volta.ends_at == giorno.replace(hour=fine[0], minute=fine[1])

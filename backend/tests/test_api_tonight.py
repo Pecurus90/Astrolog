@@ -52,6 +52,8 @@ def test_without_a_home_site_there_is_no_moon_and_it_is_said(client_vuoto):
         "sky_bands": [],
         "dark_s": None,
         "weather": None,
+        "chart": None,
+        "planets": [],
     }
 
 
@@ -312,6 +314,43 @@ def test_the_route_sends_the_bands_of_the_sky_already_made(client_vuoto):
     quali = [f["kind"] for f in fasce]
     assert quali[0] == "day" and quali[-1] == "day"
     assert "dark" in quali
+
+
+def test_the_chart_runs_from_half_an_hour_before_the_sunset_hour_to_half_after_the_sunrise_hour(
+    client_vuoto,
+):
+    """La volta della Dashboard (tavola v37) va dalle 18:30 alle 07:30 con il tramonto alle 19:21 e
+    l'alba alle 07:15: mezz'ora prima dell'ora del tramonto, mezz'ora dopo l'ora piu' vicina
+    all'alba, cosi' le ore intere cadono a meta' delle colonne. Gli istanti del buio sono i bordi
+    delle fasce."""
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    detto = client_vuoto.get("/api/v1/tonight").json()
+    fasce, volta = detto["sky_bands"], detto["chart"]
+
+    tramonto = dt.datetime.fromisoformat(fasce[0]["ends_at"])
+    alba = dt.datetime.fromisoformat(fasce[-1]["starts_at"])
+    inizio = dt.datetime.fromisoformat(volta["starts_at"])
+    fine = dt.datetime.fromisoformat(volta["ends_at"])
+    assert inizio == tramonto.replace(minute=0, second=0, microsecond=0) - dt.timedelta(minutes=30)
+    mezzora = dt.timedelta(minutes=30)
+    assert fine == (alba + mezzora).replace(minute=0, second=0, microsecond=0) + mezzora
+    buio = [f for f in fasce if f["kind"] == "dark"]
+    assert volta["dark_from"] == buio[0]["starts_at"]
+    assert volta["dark_until"] == buio[-1]["ends_at"]
+
+
+def test_the_route_sends_the_four_planets_of_the_chart(client_vuoto):
+    """Saturno, Giove, Marte e Venere, ognuno con la sua curva sulla notte intera: la volta li
+    disegna col sistema solare. Il calcolo e' provato in `test_ephemeris_planets.py`."""
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    pianeti = client_vuoto.get("/api/v1/tonight").json()["planets"]
+
+    assert [p["key"] for p in pianeti] == ["saturn", "jupiter", "mars", "venus"]
+    for p in pianeti:
+        assert len(p["track"]) > 90
+        assert all(-90 <= q["altitude_deg"] <= 90 for q in p["track"])
 
 
 def test_the_route_sends_how_long_the_dark_lasts_without_the_weather(client_vuoto):

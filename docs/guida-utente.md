@@ -224,6 +224,13 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
 - **In testa**: il sito, quante **ore di buio sereno** ci sono stanotte e il semaforo con la sua
   parola (buona, incerta, non adatta). Accanto la **Luna**: la fase, quanto e' illuminata, quando
   sorge e quando tramonta.
+- **La volta**: la notte disegnata, da mezz'ora prima dell'ora del tramonto a mezz'ora dopo l'ora
+  piu' vicina all'alba, coi colori veri del crepuscolo. Sopra l'orizzonte salgono e scendono **Saturno, Giove,
+  Marte e Venere** e la **Luna**, ognuno col suo nome nel punto piu' alto; le righe a tratti dicono
+  quando comincia il buio, quando sorge la Luna e quando il buio finisce. Le **nuvole** velano ogni
+  ora quanto e' coperta, e se stanotte non c'e' nessuna ora serena una coltre copre tutto e le
+  curve si spengono. Passa col puntatore e leggi, per quell'ora, quanto e' alto ognuno. Sul
+  telefono i nomi stanno nella legenda sotto: toccane uno e la sua curva si accende.
 - **Il meteo della notte**: sei carte, sempre nello stesso ordine -- Nuvole, Seeing, Jet stream,
   Vento, Condensa, Aerosol -- come quelle del Meteo in piccolo: il valore della notte, cosa vuol
   dire, il giudizio con le sue ore, le barrette ora per ora e il picco. Tocca una carta e sotto si
@@ -832,8 +839,9 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
   Attrezzatura, Impostazioni -- funzionano come prima ma sono **spoglie** finche' non arriva il
   loro disegno; il Meteo e la Dashboard l'hanno gia'. Il tema chiaro c'e' nel foglio e **non si puo'
   ancora accendere**.
-- **Nella Dashboard mancano ancora** il dettaglio della Luna col calendario delle fasi, la volta
-  con le curve degli oggetti e l'anno col calendario colorato: arrivano uno alla volta.
+- **Nella Dashboard mancano ancora** il dettaglio della Luna col calendario delle fasi e l'anno
+  col calendario colorato: arrivano uno alla volta. Nella volta le curve dei progetti arrivano coi
+  progetti.
 - **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un
   tondo con la sua forma -- con una spunta se e' andata bene, un punto esclamativo se c'e' un
   problema, tratteggiato se aspetta -- perche' chi non distingue il verde dal rosso deve capire lo

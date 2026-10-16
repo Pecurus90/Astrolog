@@ -12,6 +12,7 @@ import { PrimaDellaPrevisione, senzaPrevisioneIn, silenzio, useAggiorna, usePrev
 import { OreSerene, oreDellaVoce, verdetto } from "./NotteDelMeteo"
 import { Semaforo } from "./Semaforo"
 import { ApriStanotte, Disco, useStanotte } from "./Stanotte"
+import { Volta } from "./Volta"
 import { AzioniDelVuoto, VuotoDellaSezione } from "./Vuoto"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
@@ -40,7 +41,7 @@ const conMaiuscola = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
  *   piccole, le prossime notti in una riga sempre aperta; niente rimandi ad altre pagine, ci va la
  *   barra in basso.
  * - I progetti ancora non esistono: lo dice la loro sezione, e il suo e' il primario della pagina.
- * - Mancano ancora il dettaglio della Luna, la volta e l'anno (`docs/coda.md`).
+ * - Mancano ancora il dettaglio della Luna e l'anno (`docs/coda.md`).
  */
 export function Dashboard() {
   const meteo = usePrevisione()
@@ -197,6 +198,11 @@ function Stanotte({ detto, sito, telefono, giu, progetti }: {
       </div>
       {/* sul telefono la cosa da fare adesso e' il primario della pagina: senza progetti, crearne uno */}
       {telefono && progetti && <VuotoDeiProgetti />}
+      {notte && (
+        <Volta stanotte={notte} telefono={telefono}
+          nubi={stanotte ? stanotte.hours.filter((o) => o.shown) : []}
+          coperta={stanotte !== undefined && stanotte.window !== null && stanotte.usable_hours === 0} />
+      )}
       {giu && <MeteoGiu giu={giu} />}
       {stanotte && stanotte.window !== null && stanotte.measures.length > 0 && <MeteoDellaNotte detto={detto} notte={stanotte} telefono={telefono} />}
       {!telefono && (

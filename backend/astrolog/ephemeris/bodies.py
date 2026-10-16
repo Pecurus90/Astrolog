@@ -18,7 +18,7 @@ from astropy.time import Time
 from . import GRID_STEP_MIN
 from .grid import night_grid, require_zone
 
-Body = Literal["sun", "moon"]
+Body = Literal["sun", "moon", "saturn", "jupiter", "mars", "venus"]
 
 
 def as_time(instant: dt.datetime) -> Time:
@@ -49,7 +49,7 @@ def body_altitudes(
     `RISESET_DEG`, a threshold, not in the altitude. One astropy call for the whole grid."""
     site = EarthLocation(lat=latitude, lon=longitude)
     times = as_times(instants)
-    # get_sun is the cheaper path and agrees with get_body("sun"); the Moon needs the site.
+    # get_sun is cheaper and agrees with get_body("sun"); the Moon and planets need the site.
     astro = get_sun(times) if body == "sun" else get_body(body, times, site)
     local = transformed(astro, AltAz(obstime=times, location=site))
     degrees = local.alt.deg  # pyright: ignore[reportOptionalMemberAccess]

@@ -8,14 +8,17 @@ from typing import Any, cast
 from fastapi import APIRouter, Depends
 
 from ..clock import midnight_of, night_date, night_window, now_iso
-from ..ephemeris import moon, sun
+from ..ephemeris import moon, planets, sun
 from ..spine.group_store import home_site
 from ..units import bortle_of
 from . import weather
 from .deps import get_db
 from .models_tonight import (
+    ChartOut,
     MoonOut,
     PhaseKey,
+    PlanetKey,
+    PlanetOut,
     SiteSkyOut,
     SkyBandOut,
     SkyKind,
@@ -65,7 +68,8 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
     Moon (`night` and `moon` `null`): falling back to Greenwich would give another place's Moon
     without anyone noticing.
 
-    **The computation is costly**, because it samples a night of sky twice, once per body. The
+    **The computation is costly**, because it samples a night of sky once per body: the Sun and
+    the Moon finely, the four planets of the chart at the curve's step. The
     reply carries the night it refers to, so whoever shows it knows when it has expired without
     asking again at every breath."""
     row = home_site(conn)
@@ -87,7 +91,23 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
         window_start, home["latitude"], home["longitude"], hours=window_hours
     )
     bands = sun.night_bands(window_start, home["latitude"], home["longitude"], hours=window_hours)
+    tracks = planets.night_tracks(
+        window_start, home["latitude"], home["longitude"], hours=window_hours
+    )
+    span = sun.chart_window(bands)
     return TonightOut(
+        chart=ChartOut(
+            starts_at=span.starts_at.isoformat(),
+            ends_at=span.ends_at.isoformat(),
+            dark_from=_iso(span.dark_from),
+            dark_until=_iso(span.dark_until),
+        )
+        if span
+        else None,
+        planets=[
+            PlanetOut(key=cast(PlanetKey, p.key.value), track=[_sky_point(q) for q in p.track])
+            for p in tracks
+        ],
         night=the_night,
         site=_site_sky(home),
         weather=weather.brief_of(conn, home["id"], the_night),
