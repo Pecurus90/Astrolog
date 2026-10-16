@@ -61,6 +61,13 @@ class SkyPointOut(BaseModel):
     altitude_deg: float
 
 
+class MoonPointOut(SkyPointOut):
+    moonless_dark_left_s: int = Field(
+        description="From this instant to the window's end, how long the sky stays astronomically "
+        "dark with the Moon down: the chart's reader writes it under the pointer."
+    )
+
+
 class MoonOut(BaseModel):
     phase_key: PhaseKey
     illumination_pct: IlluminationPct
@@ -94,7 +101,7 @@ class MoonOut(BaseModel):
         "and set times: a Moon that does not rise still climbs, below the horizon, and how "
         "little it climbs is the answer."
     )
-    track: list[SkyPointOut] = Field(
+    track: list[MoonPointOut] = Field(
         description="The altitude curve along the night, for whoever draws it. The first and "
         "last points are the two ends of the night: a chart that closed earlier would lose the "
         "last half hour."

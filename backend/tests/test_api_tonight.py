@@ -353,6 +353,21 @@ def test_the_route_sends_the_four_planets_of_the_chart(client_vuoto):
         assert all(-90 <= q["altitude_deg"] <= 90 for q in p["track"])
 
 
+def test_each_point_of_the_moon_curve_says_how_much_moonless_dark_is_left(client_vuoto):
+    """Il lettore della volta scrive "senza Luna ancora 1 h 50" sotto il puntatore: il conto esce
+    dalla rotta, punto per punto della curva della Luna. Non cresce mai andando avanti nella notte,
+    non supera il buio di stanotte e all'ultimo punto e' zero. Il conto e' provato in
+    `test_ephemeris_moon.py`."""
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    detto = client_vuoto.get("/api/v1/tonight").json()
+    resta = [p["moonless_dark_left_s"] for p in detto["moon"]["track"]]
+
+    assert all(a >= b for a, b in zip(resta, resta[1:], strict=False)), resta
+    assert resta[0] <= detto["dark_s"]
+    assert resta[-1] == 0
+
+
 def test_the_route_sends_how_long_the_dark_lasts_without_the_weather(client_vuoto):
     """Quanto dura il **buio astronomico** di stanotte esce scritto, in secondi: e' calcolo, non
     previsione, quindi c'e' anche quando il meteo non risponde (la Dashboard lo dice in testa,

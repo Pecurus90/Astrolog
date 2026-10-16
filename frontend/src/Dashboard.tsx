@@ -510,13 +510,14 @@ function DaRiprendere({ finora }: { finora: boolean }) {
   )
 }
 
-/** "4 h 12 min su M 31 e altri 2, 180 frame": il tempo e i frame della notte, l'oggetto con piu'
- *  tempo (il backend li manda in quell'ordine) e quanti altri. */
+/** "4 h 12 min su M 31 e altri 2, 180 frame": tempo, frame, l'oggetto con piu' tempo (ordine del
+ *  backend) e quanti altri. Mai "0 s": senza durata nei file lo si dice a parole. */
 function comeEAndata(n: NotteDellArchivio): string {
+  const frase = n.integration_s > 0 ? "dashboard.work.night" : "dashboard.work.untimed"
   const valori = { durata: durata(n.integration_s) ?? "", frame: numero(n.frames) }
   const primo = n.objects[0]?.name
-  if (!primo) return t("dashboard.work.night.bare", valori)
+  if (!primo) return t(`${frase}.bare`, valori)
   const altri = n.objects.length - 1
-  if (altri === 0) return t("dashboard.work.night", { ...valori, oggetto: primo })
-  return t("dashboard.work.night.more", { ...valori, oggetto: primo, n: numero(altri) })
+  if (altri === 0) return t(frase, { ...valori, oggetto: primo })
+  return t(`${frase}.more`, { ...valori, oggetto: primo, n: numero(altri) })
 }

@@ -146,6 +146,15 @@ describe("la Dashboard, da riprendere", () => {
     expect(ultima.textContent).toContain("4 h 12 min su M 31, 180 frame")
   })
 
+  it("una notte i cui file non dicono la durata non scrive un tempo", async () => {
+    await apriDashboard(notti([{ ...NOTTE_ARCHIVIO, integration_s: 0 }]))
+
+    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
+    const ultima = await within(lavoro).findByRole("link", { name: /Sabato 19 settembre/ })
+    expect(ultima.textContent).toContain("M 31 e altri 2, 180 frame senza durata")
+    expect(ultima.textContent).not.toContain("0 s")
+  })
+
   it("sotto i casi da confermare i frame che non stanno in nessuna notte (tavola dashboard-stati-coperta)", async () => {
     await apriDashboard(notti([NOTTE_ARCHIVIO], 214))
 

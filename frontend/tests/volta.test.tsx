@@ -4,7 +4,7 @@
  * del crepuscolo, la Luna, i quattro pianeti e la coltre delle nuvole. Le altezze, la finestra e gli
  * istanti arrivano da `/tonight`; le nuvole dalle ore del meteo. Qui si disegna e basta.
  */
-import { screen } from "@testing-library/react"
+import { fireEvent, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { pulisci } from "./banco"
@@ -126,11 +126,57 @@ describe("la volta della Dashboard", () => {
     expect(tela.getAttribute("aria-label")).toBe("Stanotte dal tramonto all'alba: coperto tutta la notte, buio dalle 20:48, Luna dalle 23:40")
   })
 
-  it("sul telefono un'ora ogni quattro, come la tavola: 19, 23, 03, 07", async () => {
+  it("sul telefono un'ora ogni quattro dalla prima ora piena dopo il tramonto: 19, 23, 03, 07", async () => {
     await montaDashboard({ altre: { "/api/v1/tonight": { stato: 200, corpo: VOLTA } }, larga: 390 })
 
     const tela = await screen.findByRole("img", { name: /^Stanotte dal tramonto all'alba/ })
     expect([...tela.querySelectorAll(".as-volta__ora")].map((o) => o.textContent)).toEqual(["19", "23", "03", "07"])
+  })
+
+  it("sul telefono le ore seguono il tramonto: con la volta dalle 17:30, 18, 22, 02, 06", async () => {
+    const chart = { ...VOLTA.chart, starts_at: alle(330), ends_at: alle(1110) }
+    await montaDashboard({ altre: { "/api/v1/tonight": { stato: 200, corpo: { ...VOLTA, chart } } }, larga: 390 })
+
+    const tela = await screen.findByRole("img", { name: /^Stanotte dal tramonto all'alba/ })
+    expect([...tela.querySelectorAll(".as-volta__ora")].map((o) => o.textContent)).toEqual(["18", "22", "02", "06"])
+  })
+
+  it("con la finestra intera, al polo, le ore sui bordi stanno dentro la tela", async () => {
+    const tela = await apriVolta({ chart: { ...VOLTA.chart, starts_at: alle(0), ends_at: alle(1440) } })
+
+    const ore = [...tela.querySelectorAll(".as-volta__ora")]
+    expect(ore[0]?.getAttribute("text-anchor")).toBe("start")
+    expect(ore.at(-1)?.getAttribute("text-anchor")).toBe("end")
+    expect(ore[1]?.getAttribute("text-anchor")).toBe("middle")
+  })
+
+  it("il lettore dice l'ora sotto il puntatore e l'altezza di ogni astro, dal piu' alto", async () => {
+    const tela = await apriVolta()
+    const posto = tela.closest(".as-volta__posto") as HTMLElement
+    vi.spyOn(posto, "getBoundingClientRect").mockReturnValue({ left: 0, width: 1300 } as DOMRect)
+
+    // a meta' della volta, dalle 18:30 alle 07:30: l'01:00
+    fireEvent.pointerMove(posto, { clientX: 650 })
+
+    const lettore = document.querySelector(".as-volta__lettore")
+    expect(lettore?.querySelector(".as-volta__lettore-ora")?.textContent).toBe("01:00")
+    expect([...(lettore?.querySelectorAll(".as-volta__lettore-riga") ?? [])].map((r) => r.textContent)).toEqual([
+      "Saturno30°", "Luna 62%7°", "Giovesotto l'orizzonte", "Martesotto l'orizzonte", "Veneresotto l'orizzonte",
+    ])
+  })
+
+  it("il lettore dice quanto buio senza Luna resta da li', come lo manda il backend; a zero tace", async () => {
+    const resta = (m: number) => (m < 13 * 60 ? 6600 : 0) // dall'01:00 in poi niente
+    const moon = { ...VOLTA.moon, track: VOLTA.moon.track.map((p, i) => ({ ...p, moonless_dark_left_s: resta(i * 15) })) }
+    const tela = await apriVolta({ moon })
+    const posto = tela.closest(".as-volta__posto") as HTMLElement
+    vi.spyOn(posto, "getBoundingClientRect").mockReturnValue({ left: 0, width: 1300 } as DOMRect)
+
+    fireEvent.pointerMove(posto, { clientX: 300 })
+    expect(document.querySelector(".as-volta__lettore-buio")?.textContent).toBe("Senza Luna ancora 1 h 50 min")
+
+    fireEvent.pointerMove(posto, { clientX: 900 })
+    expect(document.querySelector(".as-volta__lettore-buio")).toBeNull()
   })
 
   it("sul telefono la legenda al posto dei nomi, coi quattro pianeti e la Luna", async () => {

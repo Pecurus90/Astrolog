@@ -175,6 +175,13 @@ con la Luna sotto `RISESET_DEG`. "Notte buona per la banda larga" segue due impo
 (`moon_broadband_max_pct`, `moon_broadband_min_dark_h`): cambiarle riscrive il giudizio, non il
 cielo (`test_moon_calendar.py`).
 
+**Il buio senza Luna che resta, punto per punto.** Ogni punto della curva della Luna in
+`/tonight` porta `moonless_dark_left_s`: da quell'istante a fine finestra, il buio astronomico
+con la Luna sotto `RISESET_DEG`. Ogni passo della griglia (`GRID_STEP_MIN`) con la Luna sotto
+conta la sua sovrapposizione esatta con le fasce di buio: il conto non supera mai `dark_s`
+(`test_the_moonless_dark_left_never_exceeds_the_dark_itself`). Il lettore della volta lo scrive e
+basta (`test_from_each_point_of_the_curve_how_much_dark_without_the_moon_is_left`).
+
 ## Cosa NON promettiamo
 
 - **I pianeti ci sono solo per la volta** della Dashboard: Saturno, Giove, Marte e Venere, la loro

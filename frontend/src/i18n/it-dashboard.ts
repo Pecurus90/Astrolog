@@ -106,6 +106,7 @@ export const itDashboard = {
   "dashboard.chart.planet.venus": "Venere",
   "dashboard.chart.legend": "Le curve: tocca per evidenziarne una",
   "dashboard.chart.below": "sotto l'orizzonte",
+  "dashboard.chart.moonlessLeft": "Senza Luna ancora",
   "dashboard.work.outside.one": "1 frame fuori dai conti",
   "dashboard.work.night.sofar": "la notte pi\u00f9 recente trovata finora",
   "dashboard.moon.rise": "sorge alle {ora}",
@@ -130,4 +131,8 @@ export const itDashboard = {
   "dashboard.work.night.more": "{durata} su {oggetto} e altri {n}, {frame} frame",
   "dashboard.work.night.more.one": "{durata} su {oggetto} e un altro, {frame} frame",
   "dashboard.work.night.bare": "{durata}, {frame} frame",
+  "dashboard.work.untimed": "{oggetto}, {frame} frame senza durata",
+  "dashboard.work.untimed.more": "{oggetto} e altri {n}, {frame} frame senza durata",
+  "dashboard.work.untimed.more.one": "{oggetto} e un altro, {frame} frame senza durata",
+  "dashboard.work.untimed.bare": "{frame} frame senza durata",
 }

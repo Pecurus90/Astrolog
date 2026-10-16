@@ -893,10 +893,10 @@ riga per voce.
      Resta: dopo uno spostamento del sito il calendario resta il vecchio fino al giro dopo (circa
      un minuto).
   3. ~~La volta~~: fatta il 16/10, sistema solare senza scelta. Restano: le curve dei progetti e la
-     scelta Progetti / Sistema solare (coi progetti); nel lettore la riga "quanto buio senza Luna
-     resta" (vuole il conto dal backend). Debito: "coperta" si decide nel `.tsx` (`usable_hours
-     === 0`, un confronto in un posto solo: un campo nuovo in `/weather` costa piu' di lui); il
-     lettore senza test; con la finestra intera (polo) le ore ai bordi si tagliano.
+     scelta Progetti / Sistema solare (coi progetti). Il lettore dice "Senza Luna ancora" dal
+     conto di `/tonight` (`moonless_dark_left_s` su ogni punto della Luna). Debito: "coperta" si decide nel `.tsx` (`usable_hours
+     === 0`, un confronto in un posto solo: un campo nuovo in `/weather` costa piu' di lui). Le
+     ore del telefono seguono il tramonto, non sono fisse: il bordo sinistro ha sempre un'ora.
   4. ~~L'anno~~: fatto il 16/10 (`/api/v1/year`, `spine/year.py`). Le soglie dei quadretti sono
      quelle della legenda della tavola; una data con due siti e' un quadretto e una notte; "al
      mese" divide per almeno un mese intero (Marco, 16/10). Anno, progetti e da riprendere ci sono
@@ -922,9 +922,7 @@ riga per voce.
   Scheduler di N.I.N.A. I due parametri (distanza e larghezza, per banda larga e stretta) si
   decidono con Marco, a video, prima del codice.
 - **Telefono, dopo il 16/10**: in `astrolog.css` restano `.as-heat__mesi` e `.as-heat__mese`
-  senza componente (il foglio viene dal Design: si toglie la' alla prossima consegna); in *da
-  riprendere* una notte di zero ore dice "0 s" (`durata`), accanto all'anno che dice "0 h"; le ore della
-  volta sul telefono seguono il tramonto (17, 21, 01, 05), non le ore fisse della tavola.
+  senza componente (il foglio viene dal Design: si toglie la' alla prossima consegna).
 - **Mobile**: le frasi di posto ("qui accanto") si rileggono con la veste stretta.
 - **Errori**: se `/api/v1/settings` non risponde arriva una frase giusta anche senza corpo (il
   502 del proxy) e quando il fetch fallisce.

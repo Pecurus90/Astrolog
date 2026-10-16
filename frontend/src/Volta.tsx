@@ -1,10 +1,11 @@
 import { type PointerEvent, useState } from "react"
 
 import type { components } from "./api/schema"
-import { type Chiave, numero, oraDelSito, t } from "./i18n"
+import { type Chiave, durata, numero, oraDelSito, t } from "./i18n"
 
 type Stanotte = components["schemas"]["TonightOut"]
 type Punto = components["schemas"]["SkyPointOut"]
+type PuntoDellaLuna = components["schemas"]["MoonPointOut"]
 type Fascia = components["schemas"]["SkyBandOut"]
 type Ora = components["schemas"]["WeatherHourOut"]
 type Pianeta = components["schemas"]["PlanetOut"]["key"]
@@ -86,7 +87,8 @@ export function Volta({ stanotte: s, nubi, coperta, telefono }: {
     { chiave: "luna" as Astro, nome: t("dashboard.chart.moon", { pct: numero(luna.illumination_pct) }), punti: luna.track },
   ]
   const curve = astri.map((a) => ({ ...a, tratti: sopra(a.punti, x, y, largo) }))
-  // sul telefono un'ora ogni quattro dalla prima ora piena, come la tavola: tredici su 360 si toccano
+  // sul telefono un'ora ogni quattro dalla prima ora piena (tredici su 360 si toccano): ore che
+  // seguono il tramonto, non fisse, cosi' il bordo sinistro ha sempre un'ora
   const ore = luna.track.filter((p) => p.at.slice(14, 16) === "00" && dentro(p.at)).filter((_, i) => !telefono || i % 4 === 0)
   const frase = [
     coperta ? t("dashboard.chart.covered") : null,
@@ -152,7 +154,7 @@ export function Volta({ stanotte: s, nubi, coperta, telefono }: {
           <rect className="as-volta__terra" y={orizzonte} width={largo} height={alto - orizzonte} />
           <line className="as-volta__orizzonte" x1={0} x2={largo} y1={orizzonte} y2={orizzonte} />
           {ore.map((o) => (
-            <text key={o.at} className="as-volta__ora" x={x(o.at)} y={tela.ore} textAnchor="middle">{oraDelSito(o.at).slice(0, 2)}</text>
+            <text key={o.at} className="as-volta__ora" x={x(o.at)} y={tela.ore} textAnchor={ancora(x(o.at), largo)}>{oraDelSito(o.at).slice(0, 2)}</text>
           ))}
           {volta.dark_from && dentro(volta.dark_from) && <Istante x={x(volta.dark_from)} tela={tela} />}
           {sorge && <Istante x={x(sorge)} tela={tela} scritta={telefono ? null : t("dashboard.chart.moonAt", { ora: oraDelSito(sorge) })} />}
@@ -161,7 +163,7 @@ export function Volta({ stanotte: s, nubi, coperta, telefono }: {
           )}
         </svg>
         {istante && lettore !== null && (
-          <Lettore istante={istante.at} astri={astri} dove={lettore} />
+          <Lettore istante={istante} astri={astri} dove={lettore} />
         )}
       </div>
       {telefono && (
@@ -275,14 +277,20 @@ function Campione({ chiave }: { chiave: Astro }) {
   )
 }
 
-/** Il campione della curva piu' vicino a un istante. */
-function vicino(punti: Punto[], ms: number): Punto | null {
-  return punti.reduce<Punto | null>((a, p) => (!a || Math.abs(Date.parse(p.at) - ms) < Math.abs(Date.parse(a.at) - ms) ? p : a), null)
+/** Un'ora sul bordo della tela (la finestra intera, al polo) si appoggia dentro invece di tagliarsi. */
+function ancora(x: number, largo: number): "start" | "middle" | "end" {
+  return x < 1 ? "start" : x > largo - 1 ? "end" : "middle"
 }
 
-/** Sotto il puntatore: l'ora e l'altezza di ogni astro, dal piu' alto; chi e' sotto l'orizzonte in fondo. */
-function Lettore({ istante, astri, dove }: {
-  istante: string; astri: { chiave: Astro; nome: string; punti: Punto[] }[]; dove: number
+/** Il campione della curva piu' vicino a un istante. */
+function vicino<P extends Punto>(punti: P[], ms: number): P | null {
+  return punti.reduce<P | null>((a, p) => (!a || Math.abs(Date.parse(p.at) - ms) < Math.abs(Date.parse(a.at) - ms) ? p : a), null)
+}
+
+/** Sotto il puntatore: l'ora, il buio senza Luna che resta (se ne resta), l'altezza di ogni astro
+ *  dal piu' alto; chi e' sotto l'orizzonte in fondo. */
+function Lettore({ istante: { at: istante, moonless_dark_left_s: resta }, astri, dove }: {
+  istante: PuntoDellaLuna; astri: { chiave: Astro; nome: string; punti: Punto[] }[]; dove: number
 }) {
   const righe = astri
     .map((a) => ({ ...a, gradi: a.punti.find((p) => p.at === istante)?.altitude_deg ?? null }))
@@ -293,6 +301,7 @@ function Lettore({ istante, astri, dove }: {
       <div className="as-volta__lettore-filo" style={{ left: `${dove * 100}%` }} />
       <div className="as-volta__lettore" style={dove > 0.5 ? { right: `${(1 - dove) * 100 + 1}%` } : { left: `${dove * 100 + 1}%` }}>
         <span className="as-volta__lettore-ora">{oraDelSito(istante)}</span>
+        {resta > 0 && <span className="as-volta__lettore-buio">{t("dashboard.chart.moonlessLeft")} <b>{durata(resta)}</b></span>}
         {righe.map((r) => (
           <span key={r.chiave} className={(r.gradi ?? 0) < 0 ? "as-volta__lettore-riga as-volta__lettore-riga--sotto" : `as-volta__lettore-riga ${VOCE[r.chiave].riga}`}>
             <i />

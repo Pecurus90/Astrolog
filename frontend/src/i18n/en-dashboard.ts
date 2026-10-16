@@ -105,6 +105,7 @@ export const enDashboard = {
   "dashboard.chart.planet.venus": "Venus",
   "dashboard.chart.legend": "The curves: tap to highlight one",
   "dashboard.chart.below": "below the horizon",
+  "dashboard.chart.moonlessLeft": "Without the Moon for another",
   "dashboard.work.night.sofar": "the most recent night found so far",
   "dashboard.moon.rise": "rises at {ora}",
   "dashboard.moon.set": "sets at {ora}",
@@ -128,4 +129,8 @@ export const enDashboard = {
   "dashboard.work.night.more": "{durata} on {oggetto} and {n} others, {frame} frames",
   "dashboard.work.night.more.one": "{durata} on {oggetto} and one other, {frame} frames",
   "dashboard.work.night.bare": "{durata}, {frame} frames",
+  "dashboard.work.untimed": "{oggetto}, {frame} frames with no duration",
+  "dashboard.work.untimed.more": "{oggetto} and {n} others, {frame} frames with no duration",
+  "dashboard.work.untimed.more.one": "{oggetto} and one other, {frame} frames with no duration",
+  "dashboard.work.untimed.bare": "{frame} frames with no duration",
 }

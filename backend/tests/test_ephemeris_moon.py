@@ -432,6 +432,53 @@ def test_the_curve_step_is_a_multiple_of_the_sampling_step():
     assert TRACK_STEP_MIN > GRID_STEP_MIN
 
 
+def _notte_finta(quote: list[float]) -> moon.MoonNight:
+    """Una notte di campioni a passo di griglia dalle 20:00, con le altezze date; la curva e' la
+    griglia stessa, cosi' ogni punto si legge."""
+    inizio = dt.datetime(2027, 3, 14, 20, tzinfo=dt.UTC)
+    griglia = [
+        moon.TrackPoint(inizio + dt.timedelta(minutes=GRID_STEP_MIN * i), q)
+        for i, q in enumerate(quote)
+    ]
+    return moon.MoonNight(rise=None, set=None, highest=griglia[0], track=griglia, grid=griglia)
+
+
+def test_from_each_point_of_the_curve_how_much_dark_without_the_moon_is_left():
+    """Il lettore della volta dice "senza Luna ancora 1 h 50" (tavola v37): da ogni punto della
+    curva, quanto buio astronomico resta con la Luna sotto l'orizzonte fino a fine notte. Qui: venti
+    campioni sotto, poi la Luna sorge; il buio comincia al quinto. L'ultimo campione chiude la
+    finestra e non conta."""
+    notte = _notte_finta([-10.0] * 20 + [5.0] * 10)
+    passo = dt.timedelta(minutes=GRID_STEP_MIN)
+    buio = [(notte.grid[5].at, notte.grid[0].at + passo * 40)]
+
+    resta = moon.moonless_dark_left_s(notte, buio)
+
+    step_s = GRID_STEP_MIN * 60
+    assert resta[0] == 15 * step_s  # dal quinto al ventesimo
+    assert resta[5] == 15 * step_s
+    assert resta[10] == 10 * step_s
+    assert resta[20:] == [0] * 10  # Luna su fino alla fine
+
+
+def test_the_moonless_dark_left_never_exceeds_the_dark_itself():
+    """I bordi delle fasce sono istanti interpolati, non campioni: con la Luna sempre sotto, dal
+    primo punto resta tutto il buio, ne' un secondo di piu' ne' uno di meno. Contare un passo
+    intero per campione dava 33 minuti su 32 (visto in una notte vera, il 14/10/2026 a Vicenza)."""
+    notte = _notte_finta([-10.0] * 30)
+    zero = notte.grid[0].at
+    buio = [(zero + dt.timedelta(minutes=16.5), zero + dt.timedelta(minutes=48.5))]
+
+    assert moon.moonless_dark_left_s(notte, buio)[0] == 32 * 60
+
+
+def test_without_dark_no_moonless_dark_is_left():
+    """Senza buio astronomico (l'estate al nord) non resta buio senza Luna da nessun punto."""
+    notte = _notte_finta([-10.0] * 10)
+
+    assert moon.moonless_dark_left_s(notte, []) == [0] * 10
+
+
 def test_the_curve_carries_its_instants_in_the_asked_timezone():
     """Gli istanti della curva tornano nel fuso da cui la notte e' stata chiesta, come gli orari:
     chi disegna il grafico ci scrive sopra le ore, e un UTC non dichiarato sposterebbe tutta la

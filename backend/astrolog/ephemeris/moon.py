@@ -2,6 +2,7 @@
 the night's curve (topocentric), and how high it can ever climb from a site."""
 
 import datetime as dt
+import itertools
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -65,12 +66,14 @@ class TrackPoint:
 
 @dataclass(frozen=True, slots=True)
 class MoonNight:
-    """A None rise or set means "not in this window", not "never"; `highest` is always there."""
+    """A None rise or set means "not in this window", not "never"; `highest` is always there.
+    `grid` is every sample, unrounded; `track` picks from it."""
 
     rise: dt.datetime | None
     set: dt.datetime | None
     highest: TrackPoint
     track: list[TrackPoint]
+    grid: list[TrackPoint]
 
 
 def phase_name(offset_deg: float) -> MoonPhase:
@@ -169,7 +172,27 @@ def night_track(start: dt.datetime, latitude: float, longitude: float, hours: fl
         set=local(first_crossing(instants, alts, RISESET_DEG, "down")),
         highest=point(alts.index(max(alts))),
         track=[point(i) for i in picked],
+        grid=[
+            TrackPoint(at.astimezone(start.tzinfo), alt)
+            for at, alt in zip(instants, alts, strict=True)
+        ],
     )
+
+
+def moonless_dark_left_s(
+    night: MoonNight, dark: Sequence[tuple[dt.datetime, dt.datetime]]
+) -> list[int]:
+    """For each track point: dark with the Moon below the rise/set altitude from there to the end.
+    A step with the Moon down counts its exact overlap with the bands, never more than they last."""
+    total = 0.0
+    left = {night.grid[-1].at: 0}
+    for p, after in reversed(list(itertools.pairwise(night.grid))):
+        if p.altitude_deg < RISESET_DEG:
+            total += sum(
+                max(0.0, (min(after.at, b) - max(p.at, a)).total_seconds()) for a, b in dark
+            )
+        left[p.at] = round(total)
+    return [left[p.at] for p in night.track]
 
 
 _COMPASS = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",

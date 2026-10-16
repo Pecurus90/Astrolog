@@ -20,6 +20,7 @@ from .models_tonight import (
     MoonCalendarNightOut,
     MoonCalendarOut,
     MoonOut,
+    MoonPointOut,
     PhaseKey,
     PlanetKey,
     PlanetOut,
@@ -139,6 +140,8 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
         window_start, home["latitude"], home["longitude"], hours=window_hours
     )
     bands = sun.night_bands(window_start, home["latitude"], home["longitude"], hours=window_hours)
+    dark = [(b.starts_at, b.ends_at) for b in bands if b.kind == sun.Sky.DARK]
+    moonless_left = moon.moonless_dark_left_s(moon_night, dark)
     tracks = planets.night_tracks(
         window_start, home["latitude"], home["longitude"], hours=window_hours
     )
@@ -160,9 +163,7 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
         site=_site_sky(home),
         weather=weather.brief_of(conn, home["id"], the_night),
         sky_bands=[_sky_band(f) for f in bands],
-        dark_s=round(
-            sum((b.ends_at - b.starts_at).total_seconds() for b in bands if b.kind == sun.Sky.DARK)
-        ),
+        dark_s=round(sum((b - a).total_seconds() for a, b in dark)),
         moon=MoonOut(
             phase_key=cast(PhaseKey, moon_phase.phase_key),
             illumination_pct=moon_phase.illumination_pct,
@@ -181,7 +182,12 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
             next_new=_next(conn, home["id"], the_night, "new"),
             next_full=_next(conn, home["id"], the_night, "full"),
             highest=_sky_point(moon_night.highest),
-            track=[_sky_point(p) for p in moon_night.track],
+            track=[
+                MoonPointOut(
+                    at=p.at.isoformat(), altitude_deg=p.altitude_deg, moonless_dark_left_s=s
+                )
+                for p, s in zip(moon_night.track, moonless_left, strict=True)
+            ],
             ceiling_deg=moon.sky_ceiling(home["latitude"]),
             lit_side=moon.lit_side(moon_phase.phase_key, home["latitude"]),
         ),

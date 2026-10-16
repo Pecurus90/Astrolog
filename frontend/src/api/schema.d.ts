@@ -2442,12 +2442,24 @@ export interface components {
              * Track
              * @description The altitude curve along the night, for whoever draws it. The first and last points are the two ends of the night: a chart that closed earlier would lose the last half hour.
              */
-            track: components["schemas"]["SkyPointOut"][];
+            track: components["schemas"]["MoonPointOut"][];
             /**
              * Ceiling Deg
              * @description How high the Moon can get **from this site**, never more: it is the top edge of the chart. It depends on the latitude and not on the night, so the scale never changes at one place and two nights compare at a glance. It arrives already rounded up to a multiple of fifteen, because that is the number on the tick mark: rounding it up on screen would be a computation in the layout.
              */
             ceiling_deg: number;
+        };
+        /** MoonPointOut */
+        MoonPointOut: {
+            /** At */
+            at: string;
+            /** Altitude Deg */
+            altitude_deg: number;
+            /**
+             * Moonless Dark Left S
+             * @description From this instant to the window's end, how long the sky stays astronomically dark with the Moon down: the chart's reader writes it under the pointer.
+             */
+            moonless_dark_left_s: number;
         };
         /**
          * MoonThatNight

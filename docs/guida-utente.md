@@ -244,8 +244,9 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
   Marte e Venere** e la **Luna**, ognuno col suo nome nel punto piu' alto; le righe a tratti dicono
   quando comincia il buio, quando sorge la Luna e quando il buio finisce. Le **nuvole** velano ogni
   ora quanto e' coperta, e se stanotte non c'e' nessuna ora serena una coltre copre tutto e le
-  curve si spengono. Passa col puntatore e leggi, per quell'ora, quanto e' alto ognuno. Sul
-  telefono i nomi stanno nella legenda sotto: toccane uno e la sua curva si accende.
+  curve si spengono. Passa col puntatore e leggi, per quell'ora, quanto buio senza Luna resta da
+  li' a fine notte (*Senza Luna ancora 1 h 50 min*; se non ne resta, la riga non c'e') e quanto e'
+  alto ognuno. Sul telefono i nomi stanno nella legenda sotto: toccane uno e la sua curva si accende.
 - **Il meteo della notte**: sei carte, sempre nello stesso ordine -- Nuvole, Seeing, Jet stream,
   Vento, Condensa, Aerosol -- come quelle del Meteo in piccolo: il valore della notte, cosa vuol
   dire, il giudizio con le sue ore, le barrette ora per ora e il picco. Tocca una carta e sotto si
@@ -264,7 +265,9 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
   dichiarare, o una data che manca. Se da confermare non c'e' niente, la riga porta alle Notti, che
   dicono dove si risponde. Durante la prima scansione i frame fuori dai conti non si contano
   ancora. Poi l'ultima notte che hai ripreso -- quanto tempo, su quale oggetto (quello con piu'
-  tempo, e quanti altri) e quanti frame -- che si apre nelle Notti. Se non c'e' niente da riprendere, la sezione non c'e'.
+  tempo, e quanti altri) e quanti frame -- che si apre nelle Notti. Se i file di quella notte non
+  dicono la durata, invece del tempo leggi *frame senza durata*. Se non c'e' niente da riprendere,
+  la sezione non c'e'.
 - **L'anno**, in fondo: *il 2026, fino a oggi*, con quante **notti** hai ripreso, quante **ore**,
   quante ore **a notte in media** e quante **notti al mese**. Sotto, un **quadretto per giorno**
   da gennaio a dicembre, una colonna per settimana da lunedi': piu' e' chiaro, piu' ore hai ripreso
