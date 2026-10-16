@@ -145,7 +145,7 @@ export function Wizard({
       if (error) throw new Error(t("settings.failed"))
       const dati = {
         mostra,
-        nome: scritte.values["user_name"] ?? null,
+        nome: typeof scritte.values["user_name"] === "string" ? scritte.values["user_name"] : null,
         sito: mostra ? await sitoDiCasa() : undefined,
       }
       // **Finito il primo avvio, l'app si mette a leggere.** Chi ha appena installato non deve

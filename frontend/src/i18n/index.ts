@@ -270,6 +270,11 @@ export function giornoDelMese(data: string): string {
   return new Intl.DateTimeFormat(lingua, { day: "numeric", month: "long", timeZone: "UTC" }).format(mezzanotteUtc(data))
 }
 
+/** Un mese col suo anno, da `YYYY-MM`: *settembre 2026*. */
+export function meseEAnno(mese: string): string {
+  return new Intl.DateTimeFormat(lingua, { month: "long", year: "numeric", timeZone: "UTC" }).format(mezzanotteUtc(`${mese}-01`))
+}
+
 /** I dodici mesi in breve, senza punto: *gen*, *feb*. */
 export function mesiBrevi(): string[] {
   const breve = new Intl.DateTimeFormat(lingua, { month: "short", timeZone: "UTC" })

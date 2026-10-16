@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from ..clock import now_iso
 from ..db import config
 from ..db.transaction import transaction
+from ..spine import moon_calendar
 from ..spine.group import GroupReason
 from ..spine.solve import (
     NO_SOLVER,
@@ -78,6 +79,8 @@ def write_settings(body: SettingsPatch, conn: sqlite3.Connection = Depends(get_d
         with transaction(conn):
             for key, value in body.values.items():
                 config.write(conn, key, value)
+            if moon_calendar.THRESHOLDS & body.values.keys():
+                moon_calendar.rejudge(conn)
     except ValueError as err:
         raise HTTPException(status_code=422, detail={"code": "wrong_type"}) from err
     return _out(conn)

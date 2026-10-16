@@ -20,6 +20,33 @@ PhaseKey = Literal[
     "waning_crescent",
 ]
 SkyKind = Literal["day", "civil", "nautical", "astronomical", "dark"]
+Compass = Literal[
+    "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+    "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
+]  # fmt: skip
+
+
+class MoonCalendarNightOut(BaseModel):
+    date: str
+    phase_key: "PhaseKey"
+    illumination_pct: int
+    moonless_dark_s: int
+    event: Literal["new", "full"] | None
+    lit_side: Literal["left", "right"] = Field(
+        description="As `MoonOut.lit_side`, for the day's disc."
+    )
+    good: bool = Field(description="Good for broadband by the two thresholds in the settings.")
+
+
+class MoonCalendarOut(BaseModel):
+    """This month and the next as the background round wrote them: empty `nights` until it has."""
+
+    today: str | None
+    max_pct: int
+    min_dark_h: int
+    nights: list[MoonCalendarNightOut]
+
+
 IlluminationPct = Annotated[int, Field(ge=0, le=100)]
 
 
@@ -42,6 +69,19 @@ class MoonOut(BaseModel):
         "within the night, as above the polar circle, where a written time would be invented."
     )
     set: str | None = Field(description="ISO instant with its time zone; `None` as for `rise`.")
+    rise_compass: Compass | None = Field(
+        default=None, description="Where it rises, on sixteen points; `None` without a rise."
+    )
+    age_days: int = Field(default=0, description="Whole days since new Moon, at midnight.")
+    distance_km: int = Field(
+        default=0, description="Centre to centre at midnight, rounded to a hundred kilometres."
+    )
+    next_new: str | None = Field(
+        default=None,
+        description="The night (`YYYY-MM-DD`) of the next new Moon from tonight, from the written "
+        "calendar; `None` until the background round has written it.",
+    )
+    next_full: str | None = Field(default=None, description="As `next_new`, for the full Moon.")
     lit_side: Literal["left", "right"] = Field(
         description="Which side the lit limb is seen on **from this site**: it depends on the "
         "phase and on the hemisphere, since a crescent is lit on the right in the north and on "

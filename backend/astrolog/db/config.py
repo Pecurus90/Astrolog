@@ -10,7 +10,7 @@ from ..clock import now_iso
 
 class Key(NamedTuple):
     kind: type
-    factory: str | None
+    factory: str | int | None
     # where the factory value comes from: a public convention or a product choice
     source: str
 
@@ -43,6 +43,17 @@ KEYS: dict[str, Key] = {
         "best_match",
         "il modello della previsione: di fabbrica quello che Open-Meteo sceglie per il posto",
     ),
+    "moon_broadband_max_pct": Key(
+        int,
+        25,
+        "notte buona per la banda larga con la Luna sotto questa percentuale: scelta di prodotto"
+        " (Marco, 15/10/2026), nessuna soglia pubblica condivisa",
+    ),
+    "moon_broadband_min_dark_h": Key(
+        int,
+        4,
+        "oppure con almeno queste ore di buio senza Luna: scelta di prodotto (Marco, 15/10/2026)",
+    ),
 }
 
 
@@ -58,10 +69,14 @@ class Preferences:
     sky_service_key: str | None
     meteoblue_key: str | None
     weather_model: str
+    moon_broadband_max_pct: int
+    moon_broadband_min_dark_h: int
 
 
 # A weather model outside this list would give an empty page with no reason.
 CHOICES = {"weather_model": ("best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless")}
+# A number outside its range would make every night good, or none.
+RANGES = {"moon_broadband_max_pct": (0, 100), "moon_broadband_min_dark_h": (0, 12)}
 
 
 # Service keys leave the app only as a `hint`, never whole.
@@ -102,6 +117,8 @@ def write(conn: sqlite3.Connection, key: str, value: object) -> None:
         raise ValueError(f"{key} vuole {kind.__name__}, non {value!r}")
     if value is not None and key in CHOICES and value not in CHOICES[key]:
         raise ValueError(f"{key} vuole uno di {CHOICES[key]}, non {value!r}")
+    if isinstance(value, int) and key in RANGES and not RANGES[key][0] <= value <= RANGES[key][1]:
+        raise ValueError(f"{key} vuole un numero fra {RANGES[key][0]} e {RANGES[key][1]}")
     conn.execute(
         "INSERT INTO config(key, value, updated_at) VALUES(?, ?, ?)"
         " ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",

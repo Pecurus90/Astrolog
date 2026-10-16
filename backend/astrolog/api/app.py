@@ -1,6 +1,7 @@
 """Nothing runs in the background unless the launcher asks (`scan_every_s`, `weather_every_s`).
 No login still means a host guard and, on the desktop, a token."""
 
+import datetime as dt
 import logging
 import secrets
 import sqlite3
@@ -20,9 +21,10 @@ from starlette.datastructures import State
 
 from .. import __version__
 from ..catalog import load as catalog_load
+from ..clock import night_date, now_iso
 from ..db.connect import connect, ensure_database
 from ..db.paths import data_root as env_data_root
-from ..spine import gear_usage, object_candidates
+from ..spine import gear_usage, moon_calendar, object_candidates
 from ..spine.group_store import home_site
 from ..weather import climate, forecast, history, rounds
 from ..worker.worker import Worker
@@ -104,6 +106,12 @@ def _weather_scheduler(db_path: str, every_s: float, stop_event: threading.Event
                 climate.step(conn, site)  # before the forecast, which reads it
             except Exception:
                 log.exception("meteo: il giro della climatologia e' caduto")
+            try:
+                tonight = night_date(now_iso(), site["timezone"]) if site else None
+                if tonight and moon_calendar.step(conn, site, dt.date.fromisoformat(tonight)):
+                    conn.commit()
+            except Exception:
+                log.exception("luna: il giro del calendario e' caduto")
             if cadence.due(site, time.monotonic()):
                 cadence.done(site, rounds.refresh(conn, site), time.monotonic())
         except Exception:

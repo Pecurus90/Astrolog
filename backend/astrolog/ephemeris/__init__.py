@@ -27,6 +27,12 @@ GRID_STEP_MIN = 3
 # the stride is an integer division, so the points would drift off the step.
 TRACK_STEP_MIN = 15
 
+# The Moon calendar counts dark hours on samples: two months of nights in one call per body.
+CALENDAR_STEP_MIN = 5
+
+# Mean synodic month (Meeus, Astronomical Algorithms, 2nd ed., ch. 49): the age's scale.
+SYNODIC_MONTH_DAYS = 29.530588861
+
 # An upper bound, rounded up: at the major lunistice the Moon's declination exceeds the 28.58 sum
 # of the mean inclinations, and a bound too low clips the curve.
 MAX_DECLINATION_DEG = 28.8

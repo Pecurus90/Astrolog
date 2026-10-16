@@ -1037,6 +1037,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/moon/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Moon Calendar
+         * @description The home site's Moon calendar as the background round wrote it (`spine/moon_calendar.py`):
+         *     this month and the next, each night with its Moon, the dark hours without it and whether it is
+         *     good for broadband by the two thresholds in the settings, which travel along for the legend.
+         *     Nothing is computed here: before the round has run, `nights` is empty.
+         */
+        get: operations["moon_calendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tonight": {
         parameters: {
             query?: never;
@@ -2314,6 +2337,47 @@ export interface components {
             /** Hint */
             hint: string | null;
         };
+        /** MoonCalendarNightOut */
+        MoonCalendarNightOut: {
+            /** Date */
+            date: string;
+            /**
+             * Phase Key
+             * @enum {string}
+             */
+            phase_key: "new" | "waxing_crescent" | "first_quarter" | "waxing_gibbous" | "full" | "waning_gibbous" | "last_quarter" | "waning_crescent";
+            /** Illumination Pct */
+            illumination_pct: number;
+            /** Moonless Dark S */
+            moonless_dark_s: number;
+            /** Event */
+            event: ("new" | "full") | null;
+            /**
+             * Lit Side
+             * @description As `MoonOut.lit_side`, for the day's disc.
+             * @enum {string}
+             */
+            lit_side: "left" | "right";
+            /**
+             * Good
+             * @description Good for broadband by the two thresholds in the settings.
+             */
+            good: boolean;
+        };
+        /**
+         * MoonCalendarOut
+         * @description This month and the next as the background round wrote them: empty `nights` until it has.
+         */
+        MoonCalendarOut: {
+            /** Today */
+            today: string | null;
+            /** Max Pct */
+            max_pct: number;
+            /** Min Dark H */
+            min_dark_h: number;
+            /** Nights */
+            nights: components["schemas"]["MoonCalendarNightOut"][];
+        };
         /** MoonOut */
         MoonOut: {
             /**
@@ -2333,6 +2397,33 @@ export interface components {
              * @description ISO instant with its time zone; `None` as for `rise`.
              */
             set: string | null;
+            /**
+             * Rise Compass
+             * @description Where it rises, on sixteen points; `None` without a rise.
+             */
+            rise_compass?: ("N" | "NNE" | "NE" | "ENE" | "E" | "ESE" | "SE" | "SSE" | "S" | "SSW" | "SW" | "WSW" | "W" | "WNW" | "NW" | "NNW") | null;
+            /**
+             * Age Days
+             * @description Whole days since new Moon, at midnight.
+             * @default 0
+             */
+            age_days: number;
+            /**
+             * Distance Km
+             * @description Centre to centre at midnight, rounded to a hundred kilometres.
+             * @default 0
+             */
+            distance_km: number;
+            /**
+             * Next New
+             * @description The night (`YYYY-MM-DD`) of the next new Moon from tonight, from the written calendar; `None` until the background round has written it.
+             */
+            next_new?: string | null;
+            /**
+             * Next Full
+             * @description As `next_new`, for the full Moon.
+             */
+            next_full?: string | null;
             /**
              * Lit Side
              * @description Which side the lit limb is seen on **from this site**: it depends on the phase and on the hemisphere, since a crescent is lit on the right in the north and on the left in Australia. The backend says it because it knows both: deducing it while drawing would put a computation in the layout, and half the world would see the Moon mirrored.
@@ -3241,7 +3332,7 @@ export interface components {
         SettingsOut: {
             /** Values */
             values: {
-                [key: string]: string | null;
+                [key: string]: string | number | null;
             };
             /**
              * Wizard Done
@@ -5460,6 +5551,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettingsOut"];
+                };
+            };
+        };
+    };
+    moon_calendar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoonCalendarOut"];
                 };
             };
         };

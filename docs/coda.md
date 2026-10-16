@@ -888,12 +888,16 @@ riga per voce.
      carica, la riga verso Notti puo' sfarfallare (`DaRiprendere` legge `to_confirm ?? 0`); il
      silenzio durante la prima scansione non ha test; i frame fuori dai conti includono quelli
      da confermare (`answer_at=review`), come la tavola: da rileggere con Marco.
-  2. **Il dettaglio della Luna** (pannello `as-pannello--luna` dalla Luna in testa): illuminata,
-     eta' in giorni, sorge e tramonta con la direzione, culmina con l'altezza, distanza, prossima
-     Luna nuova e piena; il **calendario** di questo mese e del prossimo, ogni giorno con la Luna e
-     le ore di buio senza Luna, e le notti buone per la banda larga dalle **soglie nelle
-     Impostazioni** (sopra). Backend nuovo: eta', distanze, culminazione, fasi, calendario (si
-     scrive, non si calcola leggendo).
+  2. ~~Il dettaglio della Luna~~: fatto il 16/10. Calendario in `moon_nights` (DERIVATO, lo scrive
+     il giro del meteo, `spine/moon_calendar.py`); soglie nella sezione Impostazioni *Luna*
+     (scelta di Marco, 16/10). "culmina" e' il punto piu' alto della finestra, non la culminazione
+     vera. **Un DB creato prima del 16/10 non ha `moon_nights`: `/tonight` da' 500 finche' non si
+     ricrea da `schema.sql`.** Debito: "di domani" non scatta mai (gli orari stanno nella
+     finestra da mezzogiorno a mezzogiorno), e si decide nel `.tsx`; i limiti delle soglie sono
+     scritti due volte (`config.RANGES` e `ImpostazioniLuna.tsx`); `bodies.body_azimuths` copia
+     `body_altitudes`; Escape chiude il pannello solo col fuoco dentro; con la Luna che non sorge
+     "culmina" dice un'altezza negativa; una soglia fuori misura risponde `wrong_type`; dopo uno
+     spostamento del sito il calendario resta il vecchio fino al giro dopo (circa un minuto).
   3. ~~La volta~~: fatta il 16/10, sistema solare senza scelta. Restano: le curve dei progetti e la
      scelta Progetti / Sistema solare (coi progetti); nel lettore la riga "quanto buio senza Luna
      resta" (vuole il conto dal backend). Debito: "coperta" si decide nel `.tsx` (`usable_hours

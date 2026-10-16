@@ -156,6 +156,13 @@ Un sito che tiene delle notti **non si rimuove**: l'app te lo dice, e ti dice qu
 Aggiungerne uno lo cerchi per nome, oppure ne scrivi le coordinate a mano -- e la strada a mano e'
 sempre aperta, perche' dove si osserva la rete spesso non c'e'.
 
+Subito dopo c'e' **Luna**: le due soglie delle **notti buone per la banda larga**, quelle che il
+calendario della Luna nella Dashboard colora. Una notte e' buona se la Luna e' illuminata **meno
+del** numero che scrivi (di fabbrica 25%), **oppure** se ha almeno tante **ore di buio senza Luna**
+(di fabbrica 4). Sono una scelta, non una regola: una soglia pubblica condivisa non c'e'. Il numero
+si salva quando lasci il campo, e il calendario si ricolora subito; la percentuale va da 0 a 100,
+le ore da 0 a 12.
+
 La terza e' **ASTAP**: il programma che guarda le stelle inquadrate e dice dove
 punta ogni ripresa. Qui vedi se l'app lo trova, **dove**, e da cosa l'ha capito: perche' gliel'hai
 detto tu, perche' l'ha detto chi ha avviato l'app (sul NAS lo fa chi lo gestisce), perche' l'ha
@@ -223,7 +230,15 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
 
 - **In testa**: il sito, quante **ore di buio sereno** ci sono stanotte e il semaforo con la sua
   parola (buona, incerta, non adatta). Accanto la **Luna**: la fase, quanto e' illuminata, quando
-  sorge e quando tramonta.
+  sorge e quando tramonta. **Toccala** e sotto si apre il suo dettaglio: quanto e' illuminata,
+  quanti giorni ha, a che ora sorge e **da che parte** (a est-nord-est), quando culmina e quanto
+  alta, quando tramonta (*di domani* se e' dopo la fine della notte), quanto e' lontana, e in che
+  notte cadono la prossima **Luna nuova** e la prossima **piena**. Accanto, il **calendario** di
+  questo mese e del prossimo (le frecce passano dall'uno all'altro): ogni giorno col disco della
+  Luna, *nuova* e *piena* nel loro giorno, oggi contornato, e **colorate le notti buone per la
+  banda larga** secondo le due soglie delle Impostazioni, sezione *Luna*. Passa sopra un giorno e
+  leggi la Luna e le ore di buio senza Luna. Il calendario lo prepara l'app da sola in background
+  appena c'e' un sito di casa: nei primi secondi puo' non esserci ancora.
 - **La volta**: la notte disegnata, da mezz'ora prima dell'ora del tramonto a mezz'ora dopo l'ora
   piu' vicina all'alba, coi colori veri del crepuscolo. Sopra l'orizzonte salgono e scendono **Saturno, Giove,
   Marte e Venere** e la **Luna**, ognuno col suo nome nel punto piu' alto; le righe a tratti dicono
@@ -847,7 +862,7 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
   Attrezzatura, Impostazioni -- funzionano come prima ma sono **spoglie** finche' non arriva il
   loro disegno; il Meteo e la Dashboard l'hanno gia'. Il tema chiaro c'e' nel foglio e **non si puo'
   ancora accendere**.
-- **Nella Dashboard manca ancora** il dettaglio della Luna col calendario delle fasi. Nella volta le curve dei progetti arrivano coi
+- **Nella Dashboard**, nella volta le curve dei progetti arrivano coi
   progetti.
 - **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un
   tondo con la sua forma -- con una spunta se e' andata bene, un punto esclamativo se c'e' un

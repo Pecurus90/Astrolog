@@ -8,6 +8,7 @@ from typing import Any, cast
 from fastapi import APIRouter, Depends
 
 from ..clock import midnight_of, night_date, night_window, now_iso
+from ..db import config
 from ..ephemeris import moon, planets, sun
 from ..spine.group_store import home_site
 from ..units import bortle_of
@@ -15,6 +16,9 @@ from . import weather
 from .deps import get_db
 from .models_tonight import (
     ChartOut,
+    Compass,
+    MoonCalendarNightOut,
+    MoonCalendarOut,
     MoonOut,
     PhaseKey,
     PlanetKey,
@@ -47,6 +51,50 @@ def _sky_band(band: sun.SkyBand) -> SkyBandOut:
 
 def _sky_point(point: moon.TrackPoint) -> SkyPointOut:
     return SkyPointOut(at=point.at.isoformat(), altitude_deg=point.altitude_deg)
+
+
+def _next(conn: sqlite3.Connection, site_id: int, night: str, kind: str) -> str | None:
+    row = conn.execute(
+        "SELECT night_date FROM moon_nights WHERE site_id = ? AND night_date >= ? AND event = ?"
+        " ORDER BY night_date LIMIT 1",
+        (site_id, night, kind),
+    ).fetchone()
+    return row["night_date"] if row else None
+
+
+@router.get("/moon/calendar", response_model=MoonCalendarOut)
+def moon_calendar(conn: sqlite3.Connection = Depends(get_db)) -> MoonCalendarOut:
+    """The home site's Moon calendar as the background round wrote it (`spine/moon_calendar.py`):
+    this month and the next, each night with its Moon, the dark hours without it and whether it is
+    good for broadband by the two thresholds in the settings, which travel along for the legend.
+    Nothing is computed here: before the round has run, `nights` is empty."""
+    prefs = config.read(conn)
+    row = home_site(conn)
+    home = dict(row) if row else None
+    rows = (
+        conn.execute(
+            "SELECT * FROM moon_nights WHERE site_id = ? ORDER BY night_date", (home["id"],)
+        ).fetchall()
+        if home
+        else []
+    )
+    return MoonCalendarOut(
+        today=night_date(now_iso(), home["timezone"]) if home else None,
+        max_pct=prefs.moon_broadband_max_pct,
+        min_dark_h=prefs.moon_broadband_min_dark_h,
+        nights=[
+            MoonCalendarNightOut(
+                date=r["night_date"],
+                phase_key=r["phase_key"],
+                illumination_pct=r["illumination_pct"],
+                moonless_dark_s=r["moonless_dark_s"],
+                event=r["event"],
+                lit_side=moon.lit_side(r["phase_key"], home["latitude"]) if home else "right",
+                good=bool(r["broadband_good"]),
+            )
+            for r in rows
+        ],
+    )
 
 
 @router.get("/tonight", response_model=TonightOut)
@@ -120,6 +168,18 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
             illumination_pct=moon_phase.illumination_pct,
             rise=_iso(moon_night.rise),
             set=_iso(moon_night.set),
+            rise_compass=cast(
+                Compass,
+                moon.compass(
+                    moon.azimuth_deg(moon_night.rise, home["latitude"], home["longitude"])
+                ),
+            )
+            if moon_night.rise
+            else None,
+            age_days=round(moon.age_days(midnight)),
+            distance_km=int(round(moon.distance_km(midnight), -2)),
+            next_new=_next(conn, home["id"], the_night, "new"),
+            next_full=_next(conn, home["id"], the_night, "full"),
             highest=_sky_point(moon_night.highest),
             track=[_sky_point(p) for p in moon_night.track],
             ceiling_deg=moon.sky_ceiling(home["latitude"]),

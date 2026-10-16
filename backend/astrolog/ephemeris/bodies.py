@@ -56,6 +56,18 @@ def body_altitudes(
     return [float(a) for a in degrees]  # pyright: ignore[reportArgumentType, reportOptionalIterable]
 
 
+def body_azimuths(
+    body: Body, instants: Sequence[dt.datetime], latitude: float, longitude: float
+) -> list[float]:
+    """Degrees east of north, topocentric like the altitudes."""
+    site = EarthLocation(lat=latitude, lon=longitude)
+    times = as_times(instants)
+    astro = get_sun(times) if body == "sun" else get_body(body, times, site)
+    local = transformed(astro, AltAz(obstime=times, location=site))
+    degrees = local.az.deg  # pyright: ignore[reportOptionalMemberAccess]
+    return [float(a) for a in degrees]  # pyright: ignore[reportArgumentType, reportOptionalIterable]
+
+
 def sampled_night(
     body: Body, start: dt.datetime, latitude: float, longitude: float, hours: float
 ) -> tuple[list[dt.datetime], list[float]]:

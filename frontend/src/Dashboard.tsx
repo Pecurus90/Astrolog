@@ -13,7 +13,8 @@ import { PrimaDellaPrevisione, senzaPrevisioneIn, silenzio, useAggiorna, usePrev
 import { OreSerene, oreDellaVoce, verdetto } from "./NotteDelMeteo"
 import { MENTRE_LEGGE_MS } from "./Notti"
 import { Semaforo } from "./Semaforo"
-import { ApriStanotte, Disco, useStanotte } from "./Stanotte"
+import { LunaDettaglio, LunaInTesta } from "./LunaDettaglio"
+import { ApriStanotte, useStanotte } from "./Stanotte"
 import { Volta } from "./Volta"
 import { AzioniDelVuoto, VuotoDellaSezione } from "./Vuoto"
 import { api } from "./api/client"
@@ -24,7 +25,6 @@ import { useRevisione } from "./revisione"
 
 type Meteo = components["schemas"]["WeatherOut"]
 type Notte = Meteo["nights"][number]
-type Luna = components["schemas"]["MoonOut"]
 type NotteDellArchivio = components["schemas"]["Night"]
 
 /** Le sei carte del meteo, sempre al loro posto (Marco, 12/10/2026, `handoff/design-dashboard.md`). */
@@ -173,6 +173,11 @@ function Stanotte({ detto, sito, telefono, giu, progetti }: {
   const luna = notte?.moon ?? null
   const apriStanotte = useContext(ApriStanotte)
   const stanotte = giu ? undefined : detto.nights[0]
+  const [lunaAperta, setLunaAperta] = useState(false)
+  const chiudiLuna = () => {
+    setLunaAperta(false)
+    document.getElementById("dash-luna-apri")?.focus()
+  }
   return (
     <section className="as-dashboard__stanotte" aria-labelledby="dash-titolo">
       <div className="as-dashboard__testa">
@@ -203,10 +208,11 @@ function Stanotte({ detto, sito, telefono, giu, progetti }: {
             </div>
           )}
         </div>
-        {luna && <LunaInTesta luna={luna} />}
+        {luna && <LunaInTesta luna={luna} aperto={lunaAperta} apri={() => setLunaAperta(!lunaAperta)} />}
       </div>
       {/* sul telefono la cosa da fare adesso e' il primario della pagina: senza progetti, crearne uno */}
       {telefono && progetti && <VuotoDeiProgetti />}
+      {luna && notte?.night && lunaAperta && <LunaDettaglio luna={luna} notte={notte.night} chiudi={chiudiLuna} />}
       {notte && (
         <Volta stanotte={notte} telefono={telefono}
           nubi={stanotte ? stanotte.hours.filter((o) => o.shown) : []}
@@ -238,23 +244,6 @@ function MeteoGiu({ giu }: { giu: Giu }) {
         ? t("dashboard.weather.down.text", { giorno: giorno(giu.quando), ora: orario(giu.quando), fa: fa(giu.quando), minuti: ogni })
         : t("dashboard.weather.down.text.never", { minuti: ogni })}
     </Avviso>
-  )
-}
-
-/** La Luna accanto al verdetto: fase, luce, quando sorge e quando tramonta. */
-function LunaInTesta({ luna }: { luna: Luna }) {
-  const sorge = luna.rise === null ? t("tonight.rise.never") : t("dashboard.moon.rise", { ora: oraDelSito(luna.rise) })
-  const tramonta = luna.set === null ? t("tonight.set.never") : t("dashboard.moon.set", { ora: oraDelSito(luna.set) })
-  return (
-    <div className="as-dashboard__luna">
-      <div className="as-luna">
-        <Disco luna={luna} className="as-luna__faccia--testa" />
-        <span>
-          <b>{`${t(`moon.${luna.phase_key}`)}, ${t("tonight.illuminated", { pct: luna.illumination_pct })}`}</b>
-          {`${sorge} \u00b7 ${tramonta}`}
-        </span>
-      </div>
-    </div>
   )
 }
 

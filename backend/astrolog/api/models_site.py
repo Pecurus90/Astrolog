@@ -95,7 +95,7 @@ class PlaceList(BaseModel):
 
 
 class SettingsOut(BaseModel):
-    values: dict[str, str | None]
+    values: dict[str, str | int | None]
     wizard_done: bool = Field(
         description='The stamp is there: a written fact, not "it looks empty".'
     )

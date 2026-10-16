@@ -48,6 +48,8 @@ export function impostazioni(fatto: boolean, manca?: readonly string[]) {
       astap_path: null,
       meteoblue_key: null,
       weather_model: "best_match",
+      moon_broadband_max_pct: 25,
+      moon_broadband_min_dark_h: 4,
     },
     wizard_done: fatto,
     // Cosa manca si puo' dire, perche' e' la risposta che **una scrittura** restituisce: chi

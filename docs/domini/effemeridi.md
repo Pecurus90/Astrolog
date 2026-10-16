@@ -161,6 +161,20 @@ gli otto attraversamenti da ricomporre a schermo. Con quelli, chi disegna dovreb
 derivazione, che sta qui. Una lista di segmenti copre da se' anche il caso polare, dove la
 finestra e' una fascia sola. Chi la mostra la dipinge e basta.
 
+**La Luna del dettaglio.** L'eta' e' l'angolo di fase sul mese sinodico medio (Meeus, cap. 49):
+vale mezza giornata, e lo schermo dice giorni interi. La distanza e' fra i centri, come la
+pubblicano gli almanacchi. La direzione del sorgere e' l'azimut su sedici punti. Nuova e piena
+sono l'angolo di fase che passa 0 e 180 gradi, su una griglia oraria interpolata: entro venti
+minuti dagli istanti dell'USNO (`test_the_main_phases_fall_on_the_published_instants`,
+`test_the_distance_is_centre_to_centre_like_the_published_perigee`).
+
+**Il calendario della Luna si scrive.** Due mesi di notti costano circa 5 s (campioni ogni
+`CALENDAR_STEP_MIN`, una chiamata per corpo): li scrive il giro in background in `moon_nights`,
+e si rifanno quando manca una notte o il sito si sposta. Il buio senza Luna e' il buio astronomico
+con la Luna sotto `RISESET_DEG`. "Notte buona per la banda larga" segue due impostazioni
+(`moon_broadband_max_pct`, `moon_broadband_min_dark_h`): cambiarle riscrive il giudizio, non il
+cielo (`test_moon_calendar.py`).
+
 ## Cosa NON promettiamo
 
 - **I pianeti ci sono solo per la volta** della Dashboard: Saturno, Giove, Marte e Venere, la loro

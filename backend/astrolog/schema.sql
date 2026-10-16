@@ -646,6 +646,24 @@ CREATE TABLE weather_view (
   PRIMARY KEY (site_id, night_date, model)
 ) STRICT;
 
+-- Il calendario della Luna del sito di casa, questo mese e il prossimo (DERIVATO: lo riscrive
+-- `spine/moon_calendar.py` dal giro in background quando manca un mese o il sito si e' spostato;
+-- `broadband_good` lo riscrive anche il cambio delle due soglie). Chi legge non calcola.
+CREATE TABLE moon_nights (
+  site_id          INTEGER NOT NULL REFERENCES sites (id) ON DELETE CASCADE,
+  night_date       TEXT NOT NULL,                  -- YYYY-MM-DD nel fuso del sito
+  latitude         REAL NOT NULL,                  -- dove e' stato calcolato: un sito spostato si rifa'
+  longitude        REAL NOT NULL,
+  phase_key        TEXT NOT NULL,
+  illumination_pct INTEGER NOT NULL,
+  dark_s           INTEGER NOT NULL,               -- buio astronomico della notte
+  moonless_dark_s  INTEGER NOT NULL,               -- di quel buio, con la Luna sotto l'orizzonte
+  event            TEXT CHECK (event IN ('new', 'full')),
+  event_at         TEXT,                           -- l'istante della fase, nel fuso del sito
+  broadband_good   INTEGER NOT NULL CHECK (broadband_good IN (0, 1)),
+  PRIMARY KEY (site_id, night_date)
+) STRICT;
+
 -- Una notte: da mezzogiorno a mezzogiorno nel fuso del sito. Due siti, stessa data: due notti.
 -- Porta i dati irripetibili (meteo, Luna, ore di buio) nelle caselle che li aggiungono.
 CREATE TABLE nights (

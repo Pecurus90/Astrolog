@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router"
 import { ImpostazioniBackup } from "./Backup"
 import { Cartelle } from "./ImpostazioniCartelle"
 import { Letture } from "./ImpostazioniLetture"
+import { Luna } from "./ImpostazioniLuna"
 import { Riconoscitore } from "./ImpostazioniRiconoscitore"
 import { Servizi } from "./ImpostazioniServizi"
 import { Sito } from "./ImpostazioniSito"
@@ -20,6 +21,7 @@ import { type Sezione, sezioniAperte } from "./pagine"
 export const SEZIONI: readonly Sezione[] = [
   { a: "/impostazioni/cartelle", chiave: "settings.folders", elemento: <Cartelle /> },
   { a: "/impostazioni/sito", chiave: "settings.site", elemento: <Sito /> },
+  { a: "/impostazioni/luna", chiave: "settings.moon", elemento: <Luna /> },
   { a: "/impostazioni/riconoscitore", chiave: "settings.solver", elemento: <Riconoscitore /> },
   { a: "/impostazioni/servizi", chiave: "settings.services", elemento: <Servizi /> },
   { a: "/impostazioni/letture", chiave: "settings.readings", elemento: <Letture /> },

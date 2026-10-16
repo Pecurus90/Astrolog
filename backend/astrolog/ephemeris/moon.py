@@ -6,7 +6,7 @@ import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from astropy.coordinates import (
     BaseCoordinateFrame,
@@ -17,14 +17,17 @@ from astropy.coordinates import (
 )
 
 from . import (
+    ASTRO_DEG,
+    CALENDAR_STEP_MIN,
     CEILING_STEP_DEG,
     GRID_STEP_MIN,
     MAX_DECLINATION_DEG,
     RISESET_DEG,
+    SYNODIC_MONTH_DAYS,
     TRACK_STEP_MIN,
     bodies,
 )
-from .grid import first_crossing
+from .grid import first_crossing, night_grid
 
 
 class MoonPhase(StrEnum):
@@ -102,16 +105,21 @@ def phase(instant: dt.datetime) -> Phase:
     return phases([instant])[0]
 
 
-def phases(instants: Sequence[dt.datetime]) -> list[Phase]:
-    """All in one astropy call. Empty in, empty out: astropy rejects `Time([])`."""
-    if not instants:
-        return []
+def _offsets_and_elongations(instants: Sequence[dt.datetime]) -> tuple[Any, Any]:
     times = bodies.as_times(instants)
     sun = get_sun(times)
     moon = get_body("moon", times)
     ecliptic = GeocentricMeanEcliptic(obstime=times)
     offsets = _ecliptic_longitudes(moon, ecliptic) - _ecliptic_longitudes(sun, ecliptic)
     elongations: Any = sun.separation(moon).deg  # pyright: ignore[reportArgumentType]
+    return offsets, elongations
+
+
+def phases(instants: Sequence[dt.datetime]) -> list[Phase]:
+    """All in one astropy call. Empty in, empty out: astropy rejects `Time([])`."""
+    if not instants:
+        return []
+    offsets, elongations = _offsets_and_elongations(instants)
     # Illuminated fraction from the elongation: 0 with Moon and Sun together, 1 when opposite.
     return [
         Phase(
@@ -162,3 +170,95 @@ def night_track(start: dt.datetime, latitude: float, longitude: float, hours: fl
         highest=point(alts.index(max(alts))),
         track=[point(i) for i in picked],
     )
+
+
+_COMPASS = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+            "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW")  # fmt: skip
+
+
+def compass(azimuth_deg: float) -> str:
+    """The sixteen points, each 22.5 degrees wide and centred on its direction."""
+    return _COMPASS[int(((azimuth_deg + 11.25) % 360) // 22.5)]
+
+
+def azimuth_deg(instant: dt.datetime, latitude: float, longitude: float) -> float:
+    return bodies.body_azimuths("moon", [instant], latitude, longitude)[0]
+
+
+def age_days(instant: dt.datetime) -> float:
+    """Days since new Moon, from the phase angle on the mean synodic month: good to about half a
+    day, and the screen says whole days."""
+    offsets, _ = _offsets_and_elongations([instant])
+    return float(offsets[0]) % 360 / 360 * SYNODIC_MONTH_DAYS
+
+
+def distance_km(instant: dt.datetime) -> float:
+    """Between the centres (geocentric), the figure the almanacs publish."""
+    body = get_body("moon", bodies.as_time(instant))
+    return float(body.distance.km)  # pyright: ignore[reportOptionalMemberAccess, reportArgumentType]
+
+
+@dataclass(frozen=True, slots=True)
+class PhaseEvent:
+    kind: Literal["new", "full"]
+    at: dt.datetime
+
+
+def main_phases(start: dt.datetime, end: dt.datetime) -> list[PhaseEvent]:
+    """New and full Moon between two instants: the phase angle crossing 0 and 180, on an hourly
+    grid and interpolated. In UTC."""
+    hours = int((end - start).total_seconds() // 3600)
+    instants = [start.astimezone(dt.UTC) + dt.timedelta(hours=h) for h in range(hours + 1)]
+    offsets, _ = _offsets_and_elongations(instants)
+    angles = [float(o) % 360 for o in offsets]
+    events = []
+    for i in range(1, len(angles)):
+        before, after = angles[i - 1], angles[i]
+        if before > 270 and after < 90:
+            kind, gap = "new", (360 - before) / (360 - before + after)
+        elif before < 180 <= after:
+            kind, gap = "full", (180 - before) / (after - before)
+        else:
+            continue
+        at = instants[i - 1] + (instants[i] - instants[i - 1]) * gap
+        events.append(PhaseEvent(cast(Literal["new", "full"], kind), at))
+    return events
+
+
+@dataclass(frozen=True, slots=True)
+class CalendarNight:
+    night: str
+    phase_key: MoonPhase
+    illumination_pct: int
+    dark_s: int
+    moonless_dark_s: int
+
+
+def calendar_nights(
+    nights: Sequence[tuple[str, dt.datetime, float]], latitude: float, longitude: float
+) -> list[CalendarNight]:
+    """For each night (date, window start, hours): the Moon at mid-window, and how long the sky is
+    astronomically dark with the Moon below the rise/set altitude. One call per body for all."""
+    grids = [night_grid(start, hours=h, step_min=CALENDAR_STEP_MIN) for _, start, h in nights]
+    everything = [i for g in grids for i in g]
+    if not everything:
+        return []
+    suns = bodies.body_altitudes("sun", everything, latitude, longitude)
+    moons = bodies.body_altitudes("moon", everything, latitude, longitude)
+    middles = phases([start + dt.timedelta(hours=h / 2) for _, start, h in nights])
+    step_s = CALENDAR_STEP_MIN * 60
+    out, at = [], 0
+    for (date, _, _), grid, phase_now in zip(nights, grids, middles, strict=True):
+        span = range(at, at + len(grid) - 1)  # the last sample closes the window
+        dark = [k for k in span if suns[k] < ASTRO_DEG]
+        out.append(
+            CalendarNight(
+                night=date,
+                phase_key=phase_now.phase_key,
+                illumination_pct=phase_now.illumination_pct,
+                dark_s=len(dark) * step_s,
+                moonless_dark_s=sum(1 for k in dark if moons[k] < RISESET_DEG) * step_s,
+            )
+        )
+        at += len(grid)
+    return out
