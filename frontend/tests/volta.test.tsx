@@ -111,6 +111,13 @@ describe("la volta della Dashboard", () => {
     expect(tela.getAttribute("aria-label")).toBe("Stanotte dal tramonto all'alba: coperto tutta la notte, buio dalle 20:48, Luna dalle 23:40")
   })
 
+  it("sul telefono un'ora ogni quattro, come la tavola: 19, 23, 03, 07", async () => {
+    await montaDashboard({ altre: { "/api/v1/tonight": { stato: 200, corpo: VOLTA } }, larga: 390 })
+
+    const tela = await screen.findByRole("img", { name: /^Stanotte dal tramonto all'alba/ })
+    expect([...tela.querySelectorAll(".as-volta__ora")].map((o) => o.textContent)).toEqual(["19", "23", "03", "07"])
+  })
+
   it("sul telefono la legenda al posto dei nomi, coi quattro pianeti e la Luna", async () => {
     await montaDashboard({ altre: { "/api/v1/tonight": { stato: 200, corpo: VOLTA } }, larga: 390 })
 

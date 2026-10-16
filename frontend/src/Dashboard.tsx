@@ -20,7 +20,7 @@ import { AzioniDelVuoto, VuotoDellaSezione } from "./Vuoto"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { useColonnaStretta } from "./colonna"
-import { type Chiave, durata, fa, giorno, giornoEMese, giornoENumero, numero, oraDelSito, orario, t } from "./i18n"
+import { type Chiave, durata, fa, giorno, giornoBreve, giornoEMese, giornoENumero, numero, oraDelSito, orario, t } from "./i18n"
 import { useRevisione } from "./revisione"
 
 type Meteo = components["schemas"]["WeatherOut"]
@@ -82,8 +82,9 @@ export function Dashboard() {
             <DaRiprendere finora={lettura !== null} />
           </div>
         )}
-        {sito && !archivioVuoto && (
-          <AnnoDellaDashboard telefono={telefono} lettura={ancoraInLettura ? archivio?.reading_done_pct ?? 0 : null} />
+        {/* sul telefono l'anno non c'e': la tavola dice "nient'altro"; si guarda sul desktop */}
+        {sito && !archivioVuoto && !telefono && (
+          <AnnoDellaDashboard lettura={ancoraInLettura ? archivio?.reading_done_pct ?? 0 : null} />
         )}
       </div>
     </div>
@@ -252,7 +253,7 @@ function Aggiornato({ detto }: { detto: Meteo }) {
   if (detto.fetched_at === null) return null
   return (
     <span className="as-dashboard__aggiornato">
-      {t("weather.head.arrived", { giorno: giorno(detto.fetched_at), ora: orario(detto.fetched_at), fa: fa(detto.fetched_at) })}
+      {t("weather.head.arrived", { giorno: giornoBreve(detto.fetched_at), ora: orario(detto.fetched_at), fa: fa(detto.fetched_at) })}
     </span>
   )
 }

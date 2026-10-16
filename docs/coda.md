@@ -926,6 +926,10 @@ riga per voce.
   https://w.astro.berkeley.edu/bait/baitman/request.html), ripresa da ACP, Voyager e dal Target
   Scheduler di N.I.N.A. I due parametri (distanza e larghezza, per banda larga e stretta) si
   decidono con Marco, a video, prima del codice.
+- **Telefono, dopo il 16/10**: in `astrolog.css` restano `.as-heat__mesi` e `.as-heat__mese`
+  senza componente (il foglio viene dal Design: si toglie la' alla prossima consegna); l'`aria-label`
+  del cielo ("e umidita'") non ha test; le ore della volta sul telefono seguono il tramonto (17, 21,
+  01, 05), non le ore fisse della tavola.
 - **Mobile**: le frasi di posto ("qui accanto") si rileggono con la veste stretta.
 - **Errori**: se `/api/v1/settings` non risponde arriva una frase giusta anche senza corpo (il
   502 del proxy) e quando il fetch fallisce.

@@ -9,7 +9,7 @@ import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { useColonnaStretta } from "./colonna"
 import { giraIlFuoco, useRiquadro } from "./riquadro"
-import { type Chiave, fa, giorno, orario, t } from "./i18n"
+import { type Chiave, fa, giornoBreve, orario, t } from "./i18n"
 import { CapoDellaNotte, CapoDellaTendenza, NotaDellaTendenza, SchedaDellaNotte, TendenzaDellaNotte, VoceDellaNotte, idDellaCarta, nomeDellaNotte, quando } from "./NotteDelMeteo"
 import { Semaforo } from "./Semaforo"
 
@@ -241,8 +241,8 @@ function Arrivo({ detto }: { detto: Meteo }) {
   return (
     <p className="as-meteo__arrivo">
       {detto.fetched_at !== null && [
-        t("weather.head.arrived", { giorno: giorno(detto.fetched_at), ora: orario(detto.fetched_at), fa: fa(detto.fetched_at) }),
-        seeing ? t("weather.head.seeing", { giorno: giorno(seeing.fetched_at), ora: orario(seeing.fetched_at), fa: fa(seeing.fetched_at) }) : null,
+        t("weather.head.arrived", { giorno: giornoBreve(detto.fetched_at), ora: orario(detto.fetched_at), fa: fa(detto.fetched_at) }),
+        seeing ? t("weather.head.seeing", { giorno: giornoBreve(seeing.fetched_at), ora: orario(seeing.fetched_at), fa: fa(seeing.fetched_at) }) : null,
         t("weather.head.siteTime"),
       ]
         .filter(Boolean)

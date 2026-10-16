@@ -86,7 +86,8 @@ export function Volta({ stanotte: s, nubi, coperta, telefono }: {
     { chiave: "luna" as Astro, nome: t("dashboard.chart.moon", { pct: numero(luna.illumination_pct) }), punti: luna.track },
   ]
   const curve = astri.map((a) => ({ ...a, tratti: sopra(a.punti, x, y, largo) }))
-  const ore = luna.track.filter((p) => p.at.slice(14, 16) === "00" && dentro(p.at))
+  // sul telefono un'ora ogni quattro dalla prima ora piena, come la tavola: tredici su 360 si toccano
+  const ore = luna.track.filter((p) => p.at.slice(14, 16) === "00" && dentro(p.at)).filter((_, i) => !telefono || i % 4 === 0)
   const frase = [
     coperta ? t("dashboard.chart.covered") : null,
     volta.dark_from ? t("dashboard.chart.dark", { ora: oraDelSito(volta.dark_from) }) : null,

@@ -269,11 +269,12 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
   contornati. Passa sopra un quadretto e leggi il giorno e le ore. "Oggi" e' la notte in corso, da
   mezzogiorno a mezzogiorno. Durante la **prima scansione**, finche' ogni frame non ha la sua notte,
   accanto al titolo c'e' *in lettura* con la percentuale dei frame gia' messi nella loro notte,
-  notti e ore dicono *finora* e le medie aspettano *a scansione finita*. Sul telefono un mese per riga.
+  notti e ore dicono *finora* e le medie aspettano *a scansione finita*. Sul telefono l'anno non c'e': lo trovi sul desktop.
 
 Sul **telefono** la pagina e' piu' corta: in testa stanotte e la cosa da fare adesso (oggi *Crea un
-progetto*), poi le sei carte piccole, tre per riga, che toccate aprono sotto il loro grafico, e le
-prossime 3 notti. Alle altre pagine -- le Notti, Da confermare, il Meteo -- si va dalla barra in
+progetto*), la Luna che toccata apre il suo dettaglio, la volta piu' piccola con un'ora ogni
+quattro e i nomi nella legenda sotto, poi le sei carte piccole, tre per riga, che toccate aprono
+sotto il loro grafico, e le prossime 3 notti. Alle altre pagine -- le Notti, Da confermare, il Meteo -- si va dalla barra in
 basso.
 
 Quando manca qualcosa, in testa alla parte che manca una riga dice cosa e cosa fare, con un'azione

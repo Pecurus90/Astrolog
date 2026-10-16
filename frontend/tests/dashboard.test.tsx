@@ -37,7 +37,7 @@ describe("la Dashboard, stanotte", () => {
 
     const carte = await within(stanotte).findAllByRole("button", { expanded: false, name: /buio|Meteoblue|hPa|10 m|rugiada|ottico|Non disponibile/ })
     expect(carte.map((c) => c.querySelector(".as-parametro__nome")?.textContent)).toEqual(["Nuvole", "Seeing", "Jet stream", "Vento", "Condensa", "Aerosol"])
-    expect(stanotte.querySelector(".as-dashboard__aggiornato")?.textContent).toMatch(/^Previsione del /)
+    expect(stanotte.querySelector(".as-dashboard__aggiornato")?.textContent).toMatch(/^Previsione del 25 settembre, /)
   })
 
   it("la carta delle Nuvole non ha la riga del giudizio: la sua parola e' il verdetto in testa", async () => {

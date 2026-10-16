@@ -87,7 +87,6 @@ export const itDashboard = {
   "dashboard.year.perMonth": "al mese",
   "dashboard.year.perMonth.value": "{n} notti",
   "dashboard.year.img": "Il {anno}, un quadretto per giorno: {n} notti fino al {giorno}",
-  "dashboard.year.img.phone": "Il {anno}, un punto per giorno: {n} notti fino al {giorno}",
   "dashboard.year.legend.none": "0 h",
   "dashboard.year.legend.under2": "meno di 2 h",
   "dashboard.year.legend.2to4": "2-4 h",

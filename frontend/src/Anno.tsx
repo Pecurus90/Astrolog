@@ -40,11 +40,10 @@ function useAnno(leggendo: boolean) {
 
 /**
  * L'**anno** (`as-dashboard__anno`, tavola v37): notti, ore, la media a notte e al mese, e un
- * quadretto per giorno colorato per ore riprese. Sul desktop sette righe da lunedi', sul telefono un
- * mese per riga. Durante la prima scansione notti e ore sono *finora* e le medie aspettano.
+ * quadretto per giorno colorato per ore riprese, sette righe da lunedi'. Sul telefono non c'e'
+ * (la tavola del telefono non lo porta). Durante la prima scansione notti e ore sono *finora* e le medie aspettano.
  */
-export function AnnoDellaDashboard({ telefono, lettura }: {
-  telefono: boolean
+export function AnnoDellaDashboard({ lettura }: {
   /** La percentuale della prima scansione, o `null` quando non c'e'. */
   lettura: number | null
 }) {
@@ -88,22 +87,13 @@ export function AnnoDellaDashboard({ telefono, lettura }: {
         <div><dt>{t("dashboard.year.perMonth")}</dt>{media(anno.nights ? t("dashboard.year.perMonth.value", { n: numero(anno.per_month) }) : null)}</div>
       </dl>
       <div className="as-heat">
-        {telefono ? (
-          <div className="as-heat__mesi" role="img" aria-label={t("dashboard.year.img.phone", nome)}>
-            {mesi.map((m, i) => {
-              const delMese = anno.days.filter((g) => Number(g.date.slice(5, 7)) === i + 1)
-              return [<span key={m} className="as-heat__mese">{m}</span>, ...delMese.map(cella), ...vuote(31 - delMese.length, m)]
-            })}
+        <div>
+          <div className="as-heat__intestazione" aria-hidden="true">{mesi.map((m) => <span key={m}>{m}</span>)}</div>
+          <div className="as-heat__anno" role="img" aria-label={t("dashboard.year.img", nome)}>
+            {vuote(anno.lead_blank, "prima")}
+            {anno.days.map(cella)}
           </div>
-        ) : (
-          <div>
-            <div className="as-heat__intestazione" aria-hidden="true">{mesi.map((m) => <span key={m}>{m}</span>)}</div>
-            <div className="as-heat__anno" role="img" aria-label={t("dashboard.year.img", nome)}>
-              {vuote(anno.lead_blank, "prima")}
-              {anno.days.map(cella)}
-            </div>
-          </div>
-        )}
+        </div>
         <p className="as-heat__legenda">
           {LEGENDA.map(([livello, chiave]) => (
             <span key={livello}><i className={`as-heat__campione ${CELLA[livello]}`} />{t(chiave)}</span>

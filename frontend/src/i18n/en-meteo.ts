@@ -116,7 +116,7 @@ export const enMeteo = {
   "weather.sky.hint": "Hover over the chart to see the values for that hour.",
   "weather.sky.hint.touch": "Tap the chart or the bars of a card to see the values for that hour.",
   "weather.sky.label": "The sky hour by hour: the arrows take every card to that hour",
-  "weather.sky.img": "Low, middle and high clouds, from sunset to dawn",
+  "weather.sky.img": "Low, middle and high clouds and humidity, from sunset to dawn",
   "weather.sky.night": "the night",
   "weather.sky.at": "at {ora}: low clouds {b}%, middle {m}%, high {a}%, humidity {u}%",
   "weather.sky.left": "on the left, in %",

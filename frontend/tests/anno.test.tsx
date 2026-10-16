@@ -6,7 +6,7 @@
 import { screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { pulisci } from "./banco"
+import { chiamate, pulisci } from "./banco"
 import { montaDashboard } from "./dashboard-banco"
 
 afterEach(pulisci)
@@ -140,13 +140,12 @@ describe("l'anno della Dashboard", () => {
     expect(medie).toEqual(["41", "128 h 40 min", "3 h 8 min", "4,6 notti"])
   })
 
-  it("sul telefono un mese per riga, coi suoi giorni", async () => {
-    const sezione = await apriAnno(anno(), {}, 390)
+  it("sul telefono l'anno non c'e': la tavola del telefono dice nient'altro, e niente rimandi", async () => {
+    await montaDashboard({ altre: { "/api/v1/year": { stato: 200, corpo: anno() } }, larga: 390 })
 
-    const mesi = within(sezione).getByRole("img", { name: "Il 2026, un punto per giorno: 41 notti fino al 30 settembre" })
-    expect([...mesi.querySelectorAll(".as-heat__mese")].map((m) => m.textContent)).toEqual(
-      ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"],
-    )
-    expect(mesi.querySelectorAll(".as-heat__cella:not(.as-heat__cella--vuoto)")).toHaveLength(365)
+    await screen.findByText("meteo della notte")
+    // montato, chiederebbe l'anno insieme al resto della pagina: qui non lo chiede nessuno
+    expect(chiamate().some((u) => u.includes("/api/v1/year"))).toBe(false)
+    expect(screen.queryByRole("region", { name: "il 2026, fino a oggi" })).toBeNull()
   })
 })

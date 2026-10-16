@@ -202,6 +202,12 @@ export function giorno(istante: string): string {
   )
 }
 
+/** Il giorno di un istante col mese per esteso e senza anno, nel fuso di chi guarda come `giorno()`:
+ *  *30 settembre*. E' la forma della previsione nel Meteo e nella Dashboard. */
+export function giornoBreve(istante: string): string {
+  return new Intl.DateTimeFormat(lingua, { day: "numeric", month: "long" }).format(new Date(istante))
+}
+
 /** La data di una notte, come si legge a schermo.
  *
  * Arriva `YYYY-MM-DD` gia' nel fuso del sito: e' una **data**, non un istante. Letta con

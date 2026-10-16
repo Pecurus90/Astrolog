@@ -86,7 +86,6 @@ export const enDashboard = {
   "dashboard.year.perMonth": "per month",
   "dashboard.year.perMonth.value": "{n} nights",
   "dashboard.year.img": "{anno}, one square per day: {n} nights until {giorno}",
-  "dashboard.year.img.phone": "{anno}, one dot per day: {n} nights until {giorno}",
   "dashboard.year.legend.none": "0 h",
   "dashboard.year.legend.under2": "under 2 h",
   "dashboard.year.legend.2to4": "2-4 h",

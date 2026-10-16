@@ -127,7 +127,7 @@ export const itMeteo = {
   "weather.sky.hint": "Passa sul grafico per vedere i valori di quell'ora.",
   "weather.sky.hint.touch": "Tocca il grafico o le barrette di una carta per vedere i valori di quell'ora.",
   "weather.sky.label": "Il cielo ora per ora: le frecce portano tutte le carte a quell'ora",
-  "weather.sky.img": "Nubi basse, medie e alte, dal tramonto all'alba",
+  "weather.sky.img": "Nubi basse, medie e alte e umidit\u00e0, dal tramonto all'alba",
   "weather.sky.night": "la notte",
   "weather.sky.at": "alle {ora}: nubi basse {b}%, medie {m}%, alte {a}%, umidit\u00e0 {u}%",
   "weather.sky.left": "a sinistra, in %",
