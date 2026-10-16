@@ -238,7 +238,9 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
   Luna, *nuova* e *piena* nel loro giorno, oggi contornato, e **colorate le notti buone per la
   banda larga** secondo le due soglie delle Impostazioni, sezione *Luna*. Passa sopra un giorno e
   leggi la Luna e le ore di buio senza Luna. Il calendario lo prepara l'app da sola in background
-  appena c'e' un sito di casa: nei primi secondi puo' non esserci ancora.
+  appena c'e' un sito di casa: nei primi secondi puo' non esserci ancora. Lo stesso dopo che sposti
+  il sito di casa o ne scegli un altro: quello del posto di prima sparisce subito, e il nuovo
+  compare da solo entro un minuto circa (anche la prossima nuova e piena aspettano lui).
 - **La volta**: la notte disegnata, da mezz'ora prima dell'ora del tramonto a mezz'ora dopo l'ora
   piu' vicina all'alba, coi colori veri del crepuscolo. Sopra l'orizzonte salgono e scendono **Saturno, Giove,
   Marte e Venere** e la **Luna**, ognuno col suo nome nel punto piu' alto; le righe a tratti dicono

@@ -54,7 +54,9 @@ export function Sito() {
    *  sposta di una virgola cio' che il piede mostra. */
   const rileggi = (toccaCasa: boolean) => {
     void siti.refetch()
-    if (toccaCasa) void cache.invalidateQueries({ queryKey: ["tonight"] })
+    if (!toccaCasa) return
+    void cache.invalidateQueries({ queryKey: ["tonight"] })
+    void cache.invalidateQueries({ queryKey: ["moon-calendar"] })
   }
   /** Quando a salvare e' stata **una scheda**: si rilegge, e quella scheda si chiude. Chiuderle
    *  anche su un gesto dell'elenco butterebbe via cio' che si stava scrivendo nell'altra. */

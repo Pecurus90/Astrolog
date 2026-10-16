@@ -125,6 +125,19 @@ def test_the_routes_read_what_the_round_wrote(db_path, conn):
     assert luna["rise_compass"] is None or luna["rise_compass"] in {"NE", "ENE", "E", "ESE", "SE"}
 
 
+def test_a_moved_site_does_not_show_the_old_sky_until_the_round_rewrites_it(db_path, conn):
+    """Spostato il sito, il calendario del posto di prima non esce piu': fino al giro dopo e' vuoto,
+    come prima del primo giro. Cosi' la prossima nuova e piena."""
+    moon_calendar.step(conn, casa(conn), dt.date.today())
+    conn.execute("UPDATE sites SET latitude = latitude + 1")
+    conn.commit()
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        cal = c.get("/api/v1/moon/calendar").json()
+        luna = c.get("/api/v1/tonight").json()["moon"]
+    assert cal["nights"] == []
+    assert (luna["next_new"], luna["next_full"]) == (None, None)
+
+
 def test_before_the_round_the_calendar_is_empty_not_invented(db_path, conn):
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         assert c.get("/api/v1/moon/calendar").json()["nights"] == []

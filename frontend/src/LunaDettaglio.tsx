@@ -21,6 +21,8 @@ function useCalendario(aperto: boolean) {
     },
     enabled: aperto,
     staleTime: 60 * 60 * 1000,
+    // vuoto finche' il giro non lo scrive (primo giro, sito spostato): il giro passa ogni minuto
+    refetchInterval: (q) => (q.state.data?.nights.length === 0 ? 15_000 : false),
   })
 }
 

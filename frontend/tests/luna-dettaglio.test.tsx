@@ -7,7 +7,7 @@
 import { fireEvent, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { pulisci } from "./banco"
+import { chiamate, pulisci } from "./banco"
 import { STANOTTE_CON_LUNA, montaDashboard } from "./dashboard-banco"
 
 afterEach(pulisci)
@@ -87,6 +87,27 @@ describe("il dettaglio della Luna", () => {
     fireEvent.click(within(pannello).getByRole("button", { name: "Mese dopo" }))
     expect(within(pannello).getByText("ottobre 2026")).toBeTruthy()
     expect((within(pannello).getByRole("button", { name: "Mese dopo" }) as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it("col calendario non ancora scritto (primo giro, sito appena spostato) lo rilegge finche' arriva", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      await montaDashboard({
+        altre: {
+          "/api/v1/tonight": { stato: 200, corpo: { ...STANOTTE, moon: LUNA } },
+          "/api/v1/moon/calendar": { stato: 200, corpo: { ...calendario(), nights: [] } },
+        },
+      })
+      fireEvent.click(await screen.findByRole("button", { name: /Gibbosa calante, illuminata al 62%/ }))
+      await screen.findByRole("dialog", { name: "La Luna stanotte" })
+      const letture = () => chiamate().filter((u) => u.includes("/api/v1/moon/calendar")).length
+      const prima = letture()
+
+      await vi.advanceTimersByTimeAsync(16_000)
+      expect(letture()).toBeGreaterThan(prima)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("chiudi lo richiude e torna sulla Luna", async () => {

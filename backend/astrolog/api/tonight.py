@@ -54,11 +54,19 @@ def _sky_point(point: moon.TrackPoint) -> SkyPointOut:
     return SkyPointOut(at=point.at.isoformat(), altitude_deg=point.altitude_deg)
 
 
-def _next(conn: sqlite3.Connection, site_id: int, night: str, kind: str) -> str | None:
+# Only the rows written for where the site is now: a moved site has none until the round rewrites.
+_HERE = "site_id = ? AND latitude = ? AND longitude = ?"
+
+
+def _here(site: dict[str, Any]) -> tuple[int, float, float]:
+    return site["id"], site["latitude"], site["longitude"]
+
+
+def _next(conn: sqlite3.Connection, site: dict[str, Any], night: str, kind: str) -> str | None:
     row = conn.execute(
-        "SELECT night_date FROM moon_nights WHERE site_id = ? AND night_date >= ? AND event = ?"
+        f"SELECT night_date FROM moon_nights WHERE {_HERE} AND night_date >= ? AND event = ?"  # noqa: S608
         " ORDER BY night_date LIMIT 1",
-        (site_id, night, kind),
+        (*_here(site), night, kind),
     ).fetchone()
     return row["night_date"] if row else None
 
@@ -74,7 +82,8 @@ def moon_calendar(conn: sqlite3.Connection = Depends(get_db)) -> MoonCalendarOut
     home = dict(row) if row else None
     rows = (
         conn.execute(
-            "SELECT * FROM moon_nights WHERE site_id = ? ORDER BY night_date", (home["id"],)
+            f"SELECT * FROM moon_nights WHERE {_HERE} ORDER BY night_date",  # noqa: S608
+            _here(home),
         ).fetchall()
         if home
         else []
@@ -179,8 +188,8 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
             else None,
             age_days=round(moon.age_days(midnight)),
             distance_km=int(round(moon.distance_km(midnight), -2)),
-            next_new=_next(conn, home["id"], the_night, "new"),
-            next_full=_next(conn, home["id"], the_night, "full"),
+            next_new=_next(conn, home, the_night, "new"),
+            next_full=_next(conn, home, the_night, "full"),
             highest=_sky_point(moon_night.highest),
             track=[
                 MoonPointOut(

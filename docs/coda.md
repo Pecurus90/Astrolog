@@ -890,8 +890,8 @@ riga per voce.
      orari della notte come il contratto, niente "di domani" della tavola. Le misure delle soglie
      escono da `/settings` (`ranges`), fuori misura e' `out_of_range`. **Un DB creato prima del
      16/10 non ha `moon_nights`: `/tonight` da' 500 finche' non si ricrea da `schema.sql`.**
-     Resta: dopo uno spostamento del sito il calendario resta il vecchio fino al giro dopo (circa
-     un minuto).
+     Le letture prendono solo le righe scritte per le coordinate di oggi del sito: spostato, il
+     calendario e' vuoto fino al giro dopo, e il dettaglio aperto lo rilegge ogni 15 s.
   3. ~~La volta~~: fatta il 16/10, sistema solare senza scelta. Restano: le curve dei progetti e la
      scelta Progetti / Sistema solare (coi progetti). Il lettore dice "Senza Luna ancora" dal
      conto di `/tonight` (`moonless_dark_left_s` su ogni punto della Luna). Debito: "coperta" si decide nel `.tsx` (`usable_hours
@@ -924,8 +924,6 @@ riga per voce.
 - **Telefono, dopo il 16/10**: in `astrolog.css` restano `.as-heat__mesi` e `.as-heat__mese`
   senza componente (il foglio viene dal Design: si toglie la' alla prossima consegna).
 - **Mobile**: le frasi di posto ("qui accanto") si rileggono con la veste stretta.
-- **Errori**: se `/api/v1/settings` non risponde arriva una frase giusta anche senza corpo (il
-  502 del proxy) e quando il fetch fallisce.
 
 ## Parcheggio
 
