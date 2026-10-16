@@ -43,6 +43,7 @@ from . import (
     tonight,
     vocab,
     weather,
+    year,
 )
 from .deps import get_db
 from .models import Health
@@ -268,5 +269,6 @@ def create_app(  # noqa: PLR0913
     app.include_router(tonight.router)
     app.include_router(vocab.router)
     app.include_router(weather.router)
+    app.include_router(year.router)
     page.mount_fallback(app)  # last: `page.mount_fallback` says why
     return app

@@ -134,6 +134,7 @@ export function Scansiona() {
     void cache.invalidateQueries({ queryKey: ["review"] })
     void cache.invalidateQueries({ queryKey: ["scan-runs"] })
     void cache.invalidateQueries({ queryKey: ["nights"] })
+    void cache.invalidateQueries({ queryKey: ["year"] })
   }, [finita, cache])
 
   const azione = stato.data?.action ?? "start"

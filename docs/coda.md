@@ -899,9 +899,12 @@ riga per voce.
      resta" (vuole il conto dal backend). Debito: "coperta" si decide nel `.tsx` (`usable_hours
      === 0`), meglio dal backend; lettore e coltre ora per ora senza test; senza buio ne' Luna
      l'`aria-label` finisce coi due punti; con la finestra intera (polo) le ore ai bordi si tagliano.
-  4. **L'anno** (`as-dashboard__anno`): "il 2026, fino a oggi" con notti, ore, a notte in media, al
-     mese, e il calendario colorato delle ore; durante la prima scansione "finora" e "a scansione
-     finita". Backend: i totali dell'anno.
+  4. ~~L'anno~~: fatto il 16/10 (`/api/v1/year`, `spine/year.py`). Le soglie dei quadretti sono
+     quelle della legenda della tavola; una data con due siti e' un quadretto e una notte. Resta:
+     **"al mese" nei primi giorni di gennaio esplode** (una notte il primo gennaio = 31 al mese):
+     la regola si decide con Marco; "0 s" al posto di "0 h" per le ore vuote e nel title dei giorni
+     vuoti; "1 notti" senza singolare; `spine/year.py` riscrive a mano il join di `counts.Subject.NIGHT`;
+     senza sito (meteo giu') l'anno non si mostra; il rileggersi a 15 s non ha test.
   5. **Il vuoto dei progetti durante la scansione**: "Finora la lettura ha trovato N oggetti" vuole
      il conto degli oggetti trovati dall'API.
   Della tavola del Meteo non e' portato solo "· a Capo Nord" nel nome della notte (pare

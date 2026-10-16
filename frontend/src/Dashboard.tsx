@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Fragment, type ReactNode, useContext, useRef, useState } from "react"
 import { Link } from "react-router"
 
+import { AnnoDellaDashboard } from "./Anno"
 import { Avanza, Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
 import type { SegnoDellaMisura } from "./Icons"
@@ -10,6 +11,7 @@ import { type Destra, ScalaDellaMisura } from "./CieloDelleNubi"
 import { useStato } from "./Scansiona"
 import { PrimaDellaPrevisione, senzaPrevisioneIn, silenzio, useAggiorna, usePrevisione } from "./Meteo"
 import { OreSerene, oreDellaVoce, verdetto } from "./NotteDelMeteo"
+import { MENTRE_LEGGE_MS } from "./Notti"
 import { Semaforo } from "./Semaforo"
 import { ApriStanotte, Disco, useStanotte } from "./Stanotte"
 import { Volta } from "./Volta"
@@ -41,7 +43,7 @@ const conMaiuscola = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
  *   piccole, le prossime notti in una riga sempre aperta; niente rimandi ad altre pagine, ci va la
  *   barra in basso.
  * - I progetti ancora non esistono: lo dice la loro sezione, e il suo e' il primario della pagina.
- * - Mancano ancora il dettaglio della Luna e l'anno (`docs/coda.md`).
+ * - Manca ancora il dettaglio della Luna (`docs/coda.md`).
  */
 export function Dashboard() {
   const meteo = usePrevisione()
@@ -49,13 +51,15 @@ export function Dashboard() {
   const [telefono, misura] = useColonnaStretta()
   // senza una cartella e senza un frame non c'e' archivio: la prima azione e' scegliere la cartella.
   // Le cartelle tolte lasciano i loro frame, e un archivio con le sue notti non e' vuoto.
-  const cartelle = useQuanteCartelle().data
-  const archivio = useArchivio().data
-  const archivioVuoto = cartelle?.total === 0 && archivio?.totals.frames === 0
-  const sito = detto?.site ?? null
   // la prima scansione al lavoro: i conti crescono ancora, e la pagina lo dice
   const scan = useStato().data?.scan
   const lettura = scan?.first && scan.state === "running" && scan.last_event ? { ...scan.last_event, manca: scan.remaining_s ?? null } : null
+  const cartelle = useQuanteCartelle().data
+  const archivio = useArchivio(lettura !== null).data
+  // la prima lettura finisce quando `group` ha dato a ogni frame la sua notte, non con lo stadio scan
+  const ancoraInLettura = lettura !== null || (scan?.first === true && (archivio?.still_reading ?? 0) > 0)
+  const archivioVuoto = cartelle?.total === 0 && archivio?.totals.frames === 0
+  const sito = detto?.site ?? null
   // il meteo che non risponde senza una previsione che valga: la notte e le prossime non si dicono
   const giu = detto ? silenzio(detto) !== null && senzaPrevisioneIn(detto) : false
   return (
@@ -78,15 +82,20 @@ export function Dashboard() {
             <DaRiprendere finora={lettura !== null} />
           </div>
         )}
+        {sito && !archivioVuoto && (
+          <AnnoDellaDashboard telefono={telefono} lettura={ancoraInLettura ? archivio?.reading_done_pct ?? 0 : null} />
+        )}
       </div>
     </div>
   )
 }
 
-/** L'archivio in una riga: l'ultima notte e i totali (`limit=1`). */
-function useArchivio() {
+/** L'archivio in una riga: l'ultima notte e i totali (`limit=1`). Mentre la spina legge, o restano
+ *  frame senza notte, si rilegge da sola, o la percentuale della lettura resterebbe ferma. */
+function useArchivio(leggendo: boolean) {
   return useQuery({
     queryKey: ["nights", "ultima"],
+    refetchInterval: (q) => (leggendo || q.state.data?.still_reading ? MENTRE_LEGGE_MS : false),
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/nights", { params: { query: { limit: 1 } } })
       if (error) throw new Error(t("nights.failed"))
@@ -444,7 +453,7 @@ function Progetti() {
 function DaRiprendere({ finora }: { finora: boolean }) {
   const revisione = useRevisione()
   const daConfermare = revisione.data?.to_confirm ?? 0
-  const archivio = useArchivio().data
+  const archivio = useArchivio(finora).data
   const ultima = archivio?.items[0] ?? null
   // i frame che non stanno in nessuna notte (tavola dashboard-stati-coperta): durante la prima
   // scansione non sono ancora contati

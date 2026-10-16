@@ -247,6 +247,14 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
   sito, una data), la riga porta alle Notti, che dicono dove si risponde. Poi l'ultima notte
   che hai ripreso -- quanto tempo, su quale oggetto (quello con piu' tempo, e quanti altri) e
   quanti frame -- che si apre nelle Notti. Se non c'e' niente da riprendere, la sezione non c'e'.
+- **L'anno**, in fondo: *il 2026, fino a oggi*, con quante **notti** hai ripreso, quante **ore**,
+  quante ore **a notte in media** e quante **notti al mese**. Sotto, un **quadretto per giorno**
+  da gennaio a dicembre, una colonna per settimana da lunedi': piu' e' chiaro, piu' ore hai ripreso
+  quella notte (0 h, meno di 2, 2-4, 4-6, oltre 6); i giorni che devono ancora venire sono solo
+  contornati. Passa sopra un quadretto e leggi il giorno e le ore. "Oggi" e' la notte in corso, da
+  mezzogiorno a mezzogiorno. Durante la **prima scansione**, finche' ogni frame non ha la sua notte,
+  accanto al titolo c'e' *in lettura* con la percentuale dei frame gia' messi nella loro notte,
+  notti e ore dicono *finora* e le medie aspettano *a scansione finita*. Sul telefono un mese per riga.
 
 Sul **telefono** la pagina e' piu' corta: in testa stanotte e la cosa da fare adesso (oggi *Crea un
 progetto*), poi le sei carte piccole, tre per riga, che toccate aprono sotto il loro grafico, e le
@@ -839,8 +847,7 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
   Attrezzatura, Impostazioni -- funzionano come prima ma sono **spoglie** finche' non arriva il
   loro disegno; il Meteo e la Dashboard l'hanno gia'. Il tema chiaro c'e' nel foglio e **non si puo'
   ancora accendere**.
-- **Nella Dashboard mancano ancora** il dettaglio della Luna col calendario delle fasi e l'anno
-  col calendario colorato: arrivano uno alla volta. Nella volta le curve dei progetti arrivano coi
+- **Nella Dashboard manca ancora** il dettaglio della Luna col calendario delle fasi. Nella volta le curve dei progetti arrivano coi
   progetti.
 - **Gli avvisi dicono com'e' andata anche senza il colore**: ogni messaggio dell'app porta un
   tondo con la sua forma -- con una spunta se e' andata bene, un punto esclamativo se c'e' un

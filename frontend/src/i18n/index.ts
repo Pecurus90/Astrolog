@@ -265,6 +265,17 @@ export function giornoEMese(data: string): string {
   )
 }
 
+/** Il giorno col mese, senza il giorno della settimana: *4 gennaio*. */
+export function giornoDelMese(data: string): string {
+  return new Intl.DateTimeFormat(lingua, { day: "numeric", month: "long", timeZone: "UTC" }).format(mezzanotteUtc(data))
+}
+
+/** I dodici mesi in breve, senza punto: *gen*, *feb*. */
+export function mesiBrevi(): string[] {
+  const breve = new Intl.DateTimeFormat(lingua, { month: "short", timeZone: "UTC" })
+  return Array.from({ length: 12 }, (_, m) => breve.format(Date.UTC(2000, m, 1)).replace(".", ""))
+}
+
 /** Quanto tempo fa, come lo dice la lingua: *2 ore fa*, *ieri*. L'eta' di un istante la sa solo
  *  chi guarda, adesso: il backend non puo' mandarla scritta. */
 export function fa(istante: string, adesso: Date = new Date()): string {

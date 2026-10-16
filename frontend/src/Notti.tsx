@@ -23,7 +23,7 @@ const PER_VOLTA = 100
 
 // Mentre la lettura mette i frame nelle notti la pagina si rilegge, o la pista resterebbe ferma: non
 // al ritmo della scansione, perche' ogni pagina di notti chiede la Luna all'effemeride.
-const MENTRE_LEGGE_MS = 15000
+export const MENTRE_LEGGE_MS = 15000
 
 // Quanti oggetti per notte si mostrano: gli altri si contano ("e 2 altri"). Il backend li manda
 // gia' dal piu' ripreso.

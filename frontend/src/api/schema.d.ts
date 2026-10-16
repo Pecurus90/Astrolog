@@ -1177,6 +1177,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/year": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * This Year
+         * @description The current year up to tonight: the night date at home, noon to noon, so whoever looks at
+         *     two in the morning still counts last night. Without a home site, or with a zone that does not
+         *     resolve, today in UTC: the archive does not depend on the site.
+         */
+        get: operations["this_year"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4092,6 +4114,59 @@ export interface components {
             /** Error */
             error?: string | null;
         };
+        /** YearDayOut */
+        YearDayOut: {
+            /**
+             * Date
+             * @description `YYYY-MM-DD`, a night date.
+             */
+            date: string;
+            /**
+             * Level
+             * @description `future` after today; `none` without hours; then the board's legend: under 2 h, 2-4, 4-6, over 6.
+             * @enum {string}
+             */
+            level: "future" | "none" | "under2" | "2to4" | "4to6" | "over6";
+            /** Integration S */
+            integration_s: number;
+        };
+        /**
+         * YearOut
+         * @description The year so far: what the Dashboard's year section shows, already counted.
+         */
+        YearOut: {
+            /** Year */
+            year: number;
+            /**
+             * Until
+             * @description Today's night date, the last day counted.
+             */
+            until: string;
+            /** Nights */
+            nights: number;
+            /** Integration S */
+            integration_s: number;
+            /**
+             * Per Night S
+             * @description `None` without nights, never 0 in its place.
+             */
+            per_night_s: number | null;
+            /**
+             * Per Month
+             * @description Nights per elapsed month, to one decimal.
+             */
+            per_month: number;
+            /**
+             * Lead Blank
+             * @description Empty squares before January 1 in a Monday-first week grid (0-6).
+             */
+            lead_blank: number;
+            /**
+             * Days
+             * @description Every day of the year, January 1 first.
+             */
+            days: components["schemas"]["YearDayOut"][];
+        };
     };
     responses: never;
     parameters: never;
@@ -5498,6 +5573,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    this_year: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["YearOut"];
                 };
             };
         };
