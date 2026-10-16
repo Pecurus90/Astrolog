@@ -12,6 +12,7 @@ export const enDashboard = {
   "dashboard.start.archive.title": "archive",
   "dashboard.start.archive.text": "The folder of your frames. It is chosen after the site.",
   "dashboard.start.after": "Tonight, the weather, the projects and the year show up here once the site and the archive are there.",
+  "dashboard.start.after.phone": "Tonight, the weather and the projects show up here once the site and the archive are there.",
   "dashboard.archive.empty.title": "empty archive",
   "dashboard.archive.empty.text":
     "Choose the folder where you keep your frames. AstroLog reads it without moving anything and builds nights, projects and hours from it.",

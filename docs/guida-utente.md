@@ -292,7 +292,8 @@ sola in evidenza; il resto della pagina resta quello che si puo' calcolare:
   l'archivio, che resta spento finche' il sito non c'e'.
 - **Senza una cartella d'archivio** in testa c'e' *archivio vuoto* con *Scegli la cartella*;
   stanotte e il meteo ci sono gia', perche' dipendono solo dal sito, e progetti, notti e anno
-  compaiono dopo la prima scansione.
+  compaiono dopo la prima scansione. Sul telefono, dove l'anno non c'e', queste frasi non lo
+  promettono.
 - **Se il meteo non risponde** e non resta una previsione che valga, in testa leggi quanto dura il
   buio di stanotte (e' calcolo, non previsione) e *Non disponibile*; al posto delle carte e delle
   prossime notti un allarme dice da quando non arriva risposta e che l'app riprova da sola ogni 15

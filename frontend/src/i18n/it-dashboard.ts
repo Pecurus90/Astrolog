@@ -14,6 +14,8 @@ export const itDashboard = {
   "dashboard.start.archive.title": "archivio",
   "dashboard.start.archive.text": "La cartella dei tuoi frame. Si sceglie dopo il sito.",
   "dashboard.start.after": "Stanotte, il meteo, i progetti e l'anno compaiono qui quando il sito e l'archivio ci sono.",
+  // sul telefono l'anno non c'e'
+  "dashboard.start.after.phone": "Stanotte, il meteo e i progetti compaiono qui quando il sito e l'archivio ci sono.",
   "dashboard.archive.empty.title": "archivio vuoto",
   "dashboard.archive.empty.text":
     "Scegli la cartella dove tieni i frame. AstroLog la legge senza spostare niente e ne ricava notti, progetti e ore.",

@@ -72,7 +72,7 @@ export function Dashboard() {
     <div className="as-pagina" ref={misura}>
       <PrimaDellaPrevisione meteo={meteo} senzaSito={false} />
       <div className={telefono ? "as-dashboard as-tel-dash" : "as-dashboard"}>
-        {detto && sito === null && <PerCominciare archivioVuoto={archivioVuoto} />}
+        {detto && sito === null && <PerCominciare archivioVuoto={archivioVuoto} telefono={telefono} />}
         {sito && archivioVuoto && <ArchivioVuoto />}
         {detto && sito && (
           <Stanotte detto={detto} sito={sito} telefono={telefono}
@@ -81,7 +81,8 @@ export function Dashboard() {
         )}
         {detto && sito && !giu && <Prossime detto={detto} telefono={telefono} />}
         {lettura && <PrimaLettura lettura={lettura} />}
-        {sito && archivioVuoto && <Seguito />}
+        {/* sul telefono sotto non arriva niente: la frase prometterebbe progetti e anno */}
+        {sito && archivioVuoto && !telefono && <Seguito />}
         {conArchivio && (
           <div className="as-dashboard__coppia">
             <Progetti trovati={trovati} />
@@ -125,7 +126,7 @@ function useQuanteCartelle() {
 
 /** Senza sito non si calcola niente (tavola dashboard-stati v37): due passi in fila, il sito aperto
  *  e l'archivio dopo, spento finche' il primo non e' fatto. Con l'archivio gia' scelto, uno. */
-function PerCominciare({ archivioVuoto }: { archivioVuoto: boolean }) {
+function PerCominciare({ archivioVuoto, telefono }: { archivioVuoto: boolean; telefono: boolean }) {
   return (
     <section className="as-dashboard__inizio" aria-labelledby="dash-inizio">
       <p className="as-soprattitolo" id="dash-inizio">{t("dashboard.start.kicker")}</p>
@@ -141,7 +142,7 @@ function PerCominciare({ archivioVuoto }: { archivioVuoto: boolean }) {
           </Avviso>
         )}
       </div>
-      <p className="as-dashboard__dopo">{t("dashboard.start.after")}</p>
+      <p className="as-dashboard__dopo">{t(telefono ? "dashboard.start.after.phone" : "dashboard.start.after")}</p>
     </section>
   )
 }

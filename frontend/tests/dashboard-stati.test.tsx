@@ -72,6 +72,26 @@ describe("la Dashboard con l'archivio vuoto", () => {
     expect(screen.queryByRole("region", { name: "progetti in corso" })).toBeNull()
     expect(screen.queryByRole("region", { name: "da riprendere" })).toBeNull()
   })
+
+  it("sul telefono sotto non c'e' niente da promettere: la frase non c'e'", async () => {
+    await montaDashboard({ altre: cartelle(0), larga: 390 })
+
+    await avviso("archivio vuoto")
+    expect(await screen.findByRole("region", { name: /stanotte a Casa/i })).toBeTruthy()
+    expect(screen.queryByRole("region", { name: "progetti, notti, l'anno" })).toBeNull()
+  })
+})
+
+describe("la Dashboard del telefono senza sito", () => {
+  it("non promette l'anno, che sul telefono non c'e'", async () => {
+    await montaDashboard({ previsione: { site: null, nights: [], fetched_at: null }, altre: cartelle(0), larga: 390 })
+
+    const sito = await avviso("sito di ripresa")
+    const inizio = sito.nodo.closest(".as-dashboard__inizio") as HTMLElement
+    expect(inizio.querySelector(".as-dashboard__dopo")?.textContent).toBe(
+      "Stanotte, il meteo e i progetti compaiono qui quando il sito e l'archivio ci sono.",
+    )
+  })
 })
 
 /** La prima scansione al lavoro: 1240 file letti su 8310, ne mancano circa 20 minuti. */
