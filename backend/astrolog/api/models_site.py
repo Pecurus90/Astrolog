@@ -94,12 +94,21 @@ class PlaceList(BaseModel):
     items: list[PlaceOut]
 
 
+class Range(BaseModel):
+    min: int
+    max: int
+
+
 class SettingsOut(BaseModel):
     values: dict[str, str | int | None]
     wizard_done: bool = Field(
         description='The stamp is there: a written fact, not "it looks empty".'
     )
     missing: list[Missing]
+    ranges: dict[str, Range] = Field(
+        description="The numeric keys' allowed range, both ends included: a write outside is "
+        "`out_of_range`."
+    )
 
 
 class SolverOut(BaseModel):

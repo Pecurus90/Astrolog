@@ -21,7 +21,7 @@ from ..spine.solve import (
     solver_where,
 )
 from .deps import get_db
-from .models_site import Missing, SettingsOut, SettingsPatch, SolverOut, SolverSource
+from .models_site import Missing, Range, SettingsOut, SettingsPatch, SolverOut, SolverSource
 
 router = APIRouter(prefix="/api/v1", tags=["settings"])
 
@@ -49,6 +49,7 @@ def _out(conn: sqlite3.Connection) -> SettingsOut:
         values=values,
         wizard_done=values["onboarding_done_at"] is not None,
         missing=_missing(conn),
+        ranges={k: Range(min=lo, max=hi) for k, (lo, hi) in config.RANGES.items()},
     )
 
 
@@ -67,8 +68,9 @@ def write_settings(body: SettingsPatch, conn: sqlite3.Connection = Depends(get_d
     must not guess which ones went in.
 
     422 `unknown_setting` with the unknown `keys`; 422 `tried_elsewhere` with the `keys` that are
-    tried by their own route before being stored; 422 `wrong_type` if a value has the wrong type
-    or is not one of the key's allowed choices."""
+    tried by their own route before being stored; 422 `out_of_range` with the `keys` outside
+    their `ranges`; 422 `wrong_type` if a value has the wrong type or is not one of the key's
+    allowed choices."""
     unknown = sorted(k for k in body.values if k not in config.KEYS)
     if unknown:
         raise HTTPException(status_code=422, detail={"code": "unknown_setting", "keys": unknown})
@@ -77,8 +79,17 @@ def write_settings(body: SettingsPatch, conn: sqlite3.Connection = Depends(get_d
         raise HTTPException(status_code=422, detail={"code": "tried_elsewhere", "keys": tried})
     try:
         with transaction(conn):
+            outside: list[str] = []
             for key, value in body.values.items():
-                config.write(conn, key, value)
+                try:
+                    config.write(conn, key, value)
+                except config.OutOfRangeError:
+                    outside.append(key)
+            if outside:
+                # raised inside the transaction: the keys already written roll back
+                raise HTTPException(
+                    status_code=422, detail={"code": "out_of_range", "keys": sorted(outside)}
+                )
             if moon_calendar.THRESHOLDS & body.values.keys():
                 moon_calendar.rejudge(conn)
     except ValueError as err:

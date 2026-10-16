@@ -218,7 +218,7 @@ function Stanotte({ detto, sito, telefono, giu, progetti, trovati }: {
       </div>
       {/* sul telefono la cosa da fare adesso e' il primario della pagina: senza progetti, crearne uno */}
       {telefono && progetti && <VuotoDeiProgetti trovati={trovati} />}
-      {luna && notte?.night && lunaAperta && <LunaDettaglio luna={luna} notte={notte.night} chiudi={chiudiLuna} />}
+      {luna && lunaAperta && <LunaDettaglio luna={luna} chiudi={chiudiLuna} />}
       {notte && (
         <Volta stanotte={notte} telefono={telefono}
           nubi={stanotte ? stanotte.hours.filter((o) => o.shown) : []}

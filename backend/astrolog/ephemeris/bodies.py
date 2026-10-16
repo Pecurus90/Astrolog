@@ -42,29 +42,31 @@ def transformed(body: SkyCoord, frame: BaseCoordinateFrame) -> SkyCoord:
     return result
 
 
-def body_altitudes(
+def _local(
     body: Body, instants: Sequence[dt.datetime], latitude: float, longitude: float
-) -> list[float]:
-    """Topocentric (the Moon's parallax is nearly a degree) and geometric: refraction lives in
-    `RISESET_DEG`, a threshold, not in the altitude. One astropy call for the whole grid."""
+) -> SkyCoord:
+    """Topocentric (the Moon's parallax is nearly a degree) and geometric. One astropy call for
+    the whole grid."""
     site = EarthLocation(lat=latitude, lon=longitude)
     times = as_times(instants)
     # get_sun is cheaper and agrees with get_body("sun"); the Moon and planets need the site.
     astro = get_sun(times) if body == "sun" else get_body(body, times, site)
-    local = transformed(astro, AltAz(obstime=times, location=site))
-    degrees = local.alt.deg  # pyright: ignore[reportOptionalMemberAccess]
+    return transformed(astro, AltAz(obstime=times, location=site))
+
+
+def body_altitudes(
+    body: Body, instants: Sequence[dt.datetime], latitude: float, longitude: float
+) -> list[float]:
+    """Refraction lives in `RISESET_DEG`, a threshold, not in the altitude."""
+    degrees = _local(body, instants, latitude, longitude).alt.deg  # pyright: ignore[reportOptionalMemberAccess]
     return [float(a) for a in degrees]  # pyright: ignore[reportArgumentType, reportOptionalIterable]
 
 
 def body_azimuths(
     body: Body, instants: Sequence[dt.datetime], latitude: float, longitude: float
 ) -> list[float]:
-    """Degrees east of north, topocentric like the altitudes."""
-    site = EarthLocation(lat=latitude, lon=longitude)
-    times = as_times(instants)
-    astro = get_sun(times) if body == "sun" else get_body(body, times, site)
-    local = transformed(astro, AltAz(obstime=times, location=site))
-    degrees = local.az.deg  # pyright: ignore[reportOptionalMemberAccess]
+    """Degrees east of north."""
+    degrees = _local(body, instants, latitude, longitude).az.deg  # pyright: ignore[reportOptionalMemberAccess]
     return [float(a) for a in degrees]  # pyright: ignore[reportArgumentType, reportOptionalIterable]
 
 

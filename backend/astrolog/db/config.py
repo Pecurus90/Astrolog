@@ -79,6 +79,10 @@ CHOICES = {"weather_model": ("best_match", "ecmwf_ifs025", "icon_seamless", "gfs
 RANGES = {"moon_broadband_max_pct": (0, 100), "moon_broadband_min_dark_h": (0, 12)}
 
 
+class OutOfRangeError(ValueError):
+    """The right type, outside `RANGES`: the screen can say the range, not "wrong type"."""
+
+
 # Service keys leave the app only as a `hint`, never whole.
 SECRETS = frozenset({"sky_service_key", "meteoblue_key"})
 # Written only after a check against the account, by their own route, not by the generic write.
@@ -118,7 +122,7 @@ def write(conn: sqlite3.Connection, key: str, value: object) -> None:
     if value is not None and key in CHOICES and value not in CHOICES[key]:
         raise ValueError(f"{key} vuole uno di {CHOICES[key]}, non {value!r}")
     if isinstance(value, int) and key in RANGES and not RANGES[key][0] <= value <= RANGES[key][1]:
-        raise ValueError(f"{key} vuole un numero fra {RANGES[key][0]} e {RANGES[key][1]}")
+        raise OutOfRangeError(key)
     conn.execute(
         "INSERT INTO config(key, value, updated_at) VALUES(?, ?, ?)"
         " ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",

@@ -886,14 +886,12 @@ riga per voce.
      (`answer_at=review`, Marco, 16/10: la riga sopra li conta gia').
   2. ~~Il dettaglio della Luna~~: fatto il 16/10. Calendario in `moon_nights` (DERIVATO, lo scrive
      il giro del meteo, `spine/moon_calendar.py`); soglie nella sezione Impostazioni *Luna*
-     (scelta di Marco, 16/10). "culmina" e' il punto piu' alto della finestra, non la culminazione
-     vera. **Un DB creato prima del 16/10 non ha `moon_nights`: `/tonight` da' 500 finche' non si
-     ricrea da `schema.sql`.** Debito: "di domani" non scatta mai (gli orari stanno nella
-     finestra da mezzogiorno a mezzogiorno), e si decide nel `.tsx`; i limiti delle soglie sono
-     scritti due volte (`config.RANGES` e `ImpostazioniLuna.tsx`); `bodies.body_azimuths` copia
-     `body_altitudes`; Escape chiude il pannello solo col fuoco dentro; con la Luna che non sorge
-     "culmina" dice un'altezza negativa; una soglia fuori misura risponde `wrong_type`; dopo uno
-     spostamento del sito il calendario resta il vecchio fino al giro dopo (circa un minuto).
+     (scelta di Marco, 16/10). Decisi da Marco il 16/10: "sale fino a" e non "culmina" (glossario);
+     orari della notte come il contratto, niente "di domani" della tavola. Le misure delle soglie
+     escono da `/settings` (`ranges`), fuori misura e' `out_of_range`. **Un DB creato prima del
+     16/10 non ha `moon_nights`: `/tonight` da' 500 finche' non si ricrea da `schema.sql`.**
+     Resta: dopo uno spostamento del sito il calendario resta il vecchio fino al giro dopo (circa
+     un minuto).
   3. ~~La volta~~: fatta il 16/10, sistema solare senza scelta. Restano: le curve dei progetti e la
      scelta Progetti / Sistema solare (coi progetti); nel lettore la riga "quanto buio senza Luna
      resta" (vuole il conto dal backend). Debito: "coperta" si decide nel `.tsx` (`usable_hours

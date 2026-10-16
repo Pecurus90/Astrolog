@@ -962,8 +962,9 @@ export interface paths {
          *     must not guess which ones went in.
          *
          *     422 `unknown_setting` with the unknown `keys`; 422 `tried_elsewhere` with the `keys` that are
-         *     tried by their own route before being stored; 422 `wrong_type` if a value has the wrong type
-         *     or is not one of the key's allowed choices.
+         *     tried by their own route before being stored; 422 `out_of_range` with the `keys` outside
+         *     their `ranges`; 422 `wrong_type` if a value has the wrong type or is not one of the key's
+         *     allowed choices.
          */
         patch: operations["write_settings"];
         trace?: never;
@@ -2882,6 +2883,13 @@ export interface components {
             moved_from: components["schemas"]["MovedFrom"] | null;
             moved_check: components["schemas"]["MoveCheck"];
         };
+        /** Range */
+        Range: {
+            /** Min */
+            min: number;
+            /** Max */
+            max: number;
+        };
         /** RetireOut */
         RetireOut: {
             /** Folder Id */
@@ -3346,6 +3354,13 @@ export interface components {
             wizard_done: boolean;
             /** Missing */
             missing: ("no_active_site" | "no_solver" | "no_star_database")[];
+            /**
+             * Ranges
+             * @description The numeric keys' allowed range, both ends included: a write outside is `out_of_range`.
+             */
+            ranges: {
+                [key: string]: components["schemas"]["Range"];
+            };
         };
         /**
          * SettingsPatch

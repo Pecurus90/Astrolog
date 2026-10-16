@@ -231,8 +231,8 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
 - **In testa**: il sito, quante **ore di buio sereno** ci sono stanotte e il semaforo con la sua
   parola (buona, incerta, non adatta). Accanto la **Luna**: la fase, quanto e' illuminata, quando
   sorge e quando tramonta. **Toccala** e sotto si apre il suo dettaglio: quanto e' illuminata,
-  quanti giorni ha, a che ora sorge e **da che parte** (a est-nord-est), quando culmina e quanto
-  alta, quando tramonta (*di domani* se e' dopo la fine della notte), quanto e' lontana, e in che
+  quanti giorni ha, a che ora sorge e **da che parte** (a est-nord-est), fin dove **sale** stanotte
+  e a che ora (*sotto l'orizzonte* se stanotte non sorge), quando tramonta, quanto e' lontana, e in che
   notte cadono la prossima **Luna nuova** e la prossima **piena**. Accanto, il **calendario** di
   questo mese e del prossimo (le frecce passano dall'uno all'altro): ogni giorno col disco della
   Luna, *nuova* e *piena* nel loro giorno, oggi contornato, e **colorate le notti buone per la

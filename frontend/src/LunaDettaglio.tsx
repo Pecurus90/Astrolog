@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Bottone } from "./Bottone"
 import { Disco } from "./Stanotte"
@@ -48,26 +48,36 @@ export function LunaInTesta({ luna, aperto, apri }: { luna: Luna; aperto: boolea
  * calendario di questo mese e del prossimo, scritto dal giro in background, con le notti buone
  * per la banda larga dalle due soglie delle Impostazioni.
  */
-export function LunaDettaglio({ luna, notte, chiudi }: { luna: Luna; notte: string; chiudi: () => void }) {
+export function LunaDettaglio({ luna, chiudi }: { luna: Luna; chiudi: () => void }) {
   const calendario = useCalendario(true).data
-  // "di domani" oltre la fine della notte, il mezzogiorno dopo: le 07:30 sono ancora stanotte
-  const dopo = (iso: string) => iso.slice(0, 10) > notte && iso.slice(11, 13) >= "12"
-  const quando = (iso: string) => (dopo(iso) ? t("dashboard.moon.tomorrow", { ora: oraDelSito(iso) }) : oraDelSito(iso))
+  // Esc chiude anche col fuoco fuori dal pannello, ma non quello che chiude il cassetto o un altro dialogo
+  useEffect(() => {
+    const esc = (ev: KeyboardEvent) => {
+      const altrove = ev.target instanceof Element && ev.target.closest("#stanotte, [role=dialog]:not(#dash-luna-dettaglio)")
+      if (ev.key === "Escape" && !altrove) chiudi()
+    }
+    document.addEventListener("keydown", esc)
+    return () => document.removeEventListener("keydown", esc)
+  }, [chiudi])
+  // gli orari sono quelli della notte, da mezzogiorno a mezzogiorno (`docs/domini/effemeridi.md`)
+  // senza sorgere ne' tramonto stanotte la Luna e' sempre su o sempre giu': il segno dice quale
+  const sale = luna.rise === null && luna.set === null && luna.highest.altitude_deg < 0
+    ? t("dashboard.chart.below")
+    : `${oraDelSito(luna.highest.at)} \u00b7 ${numero(Math.round(luna.highest.altitude_deg))}\u00b0`
   const righe: [Chiave, string][] = [
     ["dashboard.moon.lit", t("dashboard.moon.lit.value", { pct: numero(luna.illumination_pct) })],
     ["dashboard.moon.age", t("dashboard.moon.age.value", { n: numero(luna.age_days) })],
     ["tonight.rise", luna.rise === null ? t("tonight.rise.never") : luna.rise_compass
-      ? `${quando(luna.rise)} \u00b7 ${t("dashboard.moon.from", { dove: t(`moon.compass.${luna.rise_compass}` as Chiave) })}`
-      : quando(luna.rise)],
-    ["dashboard.moon.culminates", `${quando(luna.highest.at)} \u00b7 ${numero(Math.round(luna.highest.altitude_deg))}\u00b0`],
-    ["tonight.set", luna.set === null ? t("tonight.set.never") : quando(luna.set)],
+      ? `${oraDelSito(luna.rise)} \u00b7 ${t("dashboard.moon.from", { dove: t(`moon.compass.${luna.rise_compass}` as Chiave) })}`
+      : oraDelSito(luna.rise)],
+    ["dashboard.moon.highest", sale],
+    ["tonight.set", luna.set === null ? t("tonight.set.never") : oraDelSito(luna.set)],
     ["dashboard.moon.distance", t("dashboard.moon.distance.value", { km: numero(luna.distance_km) })],
     ["moon.new", luna.next_new ? giornoEMese(luna.next_new) : "\u2014"],
     ["moon.full", luna.next_full ? giornoEMese(luna.next_full) : "\u2014"],
   ]
   return (
-    <div className="as-pannello as-pannello--luna" id="dash-luna-dettaglio" role="dialog" aria-label={t("dashboard.moon.panel")}
-      onKeyDown={(ev) => { if (ev.key === "Escape") chiudi() }}>
+    <div className="as-pannello as-pannello--luna" id="dash-luna-dettaglio" role="dialog" aria-label={t("dashboard.moon.panel")}>
       <div className="as-pannello__testa">
         <Disco luna={luna} className="as-luna__faccia--pannello" />
         <div>

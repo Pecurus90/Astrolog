@@ -55,6 +55,7 @@ export function impostazioni(fatto: boolean, manca?: readonly string[]) {
     // Cosa manca si puo' dire, perche' e' la risposta che **una scrittura** restituisce: chi
     // scrive il percorso del solver guarda li' per sapere se ha indovinato.
     missing: manca ?? (fatto ? [] : ["no_active_site"]),
+    ranges: { moon_broadband_max_pct: { min: 0, max: 100 }, moon_broadband_min_dark_h: { min: 0, max: 12 } },
   }
 }
 

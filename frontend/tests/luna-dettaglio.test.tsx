@@ -34,10 +34,10 @@ function calendario() {
   return { today: "2026-09-26", max_pct: 25, min_dark_h: 4, nights: notti }
 }
 
-async function apriLuna() {
+async function apriLuna(luna: Record<string, unknown> = LUNA) {
   await montaDashboard({
     altre: {
-      "/api/v1/tonight": { stato: 200, corpo: { ...STANOTTE, moon: LUNA } },
+      "/api/v1/tonight": { stato: 200, corpo: { ...STANOTTE, moon: luna } },
       "/api/v1/moon/calendar": { stato: 200, corpo: calendario() },
     },
   })
@@ -59,8 +59,10 @@ describe("il dettaglio della Luna", () => {
       ["illuminata", "al 62%"],
       ["età", "21 giorni"],
       ["sorge", "23:40 · a est-nord-est"],
-      ["culmina", "07:30 · 68°"],
-      ["tramonta", "15:17 di domani"],
+      // "sale fino a", non "culmina": e' il massimo dentro la notte (Marco, 16/10/2026)
+      ["sale fino a", "07:30 · 68°"],
+      // gli orari sono quelli della notte, da mezzogiorno a mezzogiorno: niente "di domani"
+      ["tramonta", "15:17"],
       ["distanza", "396.200 km"],
       ["Luna nuova", "giovedì 8 ottobre"],
       ["Luna piena", "venerdì 23 ottobre"],
@@ -93,5 +95,29 @@ describe("il dettaglio della Luna", () => {
     fireEvent.click(within(pannello).getByRole("button", { name: "chiudi" }))
     expect(screen.queryByRole("dialog", { name: "La Luna stanotte" })).toBeNull()
     expect(document.activeElement?.textContent).toContain("Gibbosa calante")
+  })
+
+  it("Esc lo chiude anche col fuoco fuori dal pannello", async () => {
+    await apriLuna()
+
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    fireEvent.keyDown(document.body, { key: "Escape" })
+    expect(screen.queryByRole("dialog", { name: "La Luna stanotte" })).toBeNull()
+  })
+
+  it("Esc dentro il cassetto di Stanotte chiude il cassetto, non il pannello della Luna", async () => {
+    await apriLuna()
+
+    fireEvent.keyDown(document.getElementById("stanotte") as HTMLElement, { key: "Escape" })
+    expect(screen.queryByRole("dialog", { name: "La Luna stanotte" })).not.toBeNull()
+  })
+
+  it("una Luna che stanotte non sorge non sale fino a un'altezza sotto zero", async () => {
+    const pannello = await apriLuna({
+      ...LUNA, rise: null, set: null, rise_compass: null, highest: { at: "2026-09-26T12:00:00+02:00", altitude_deg: -14.2 },
+    })
+
+    const riga = [...pannello.querySelectorAll(".as-pannello__dettagli div")].find((d) => d.querySelector("dt")?.textContent === "sale fino a")
+    expect(riga?.querySelector("dd")?.textContent).toBe("sotto l'orizzonte")
   })
 })

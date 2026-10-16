@@ -49,6 +49,27 @@ describe("Impostazioni, la Luna", () => {
     )
   })
 
+  it("la misura di ogni soglia la manda il backend", async () => {
+    const corpo = { ...impostazioni(true), ranges: { moon_broadband_max_pct: { min: 0, max: 100 }, moon_broadband_min_dark_h: { min: 0, max: 8 } } }
+    rispondi({
+      ...STANOTTE,
+      "/api/v1/settings": { stato: 200, corpo },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+      ...SPINA,
+    })
+    await disegna()
+    fireEvent.click(within(await screen.findByRole("navigation", { name: /pagine/i })).getByRole("link", { name: /impostazioni/i }))
+    fireEvent.click(await screen.findByRole("link", { name: "Luna" }))
+    const sezione = await screen.findByRole("region", { name: "Notti buone per la banda larga" })
+
+    const ore = within(sezione).getByLabelText("oppure almeno (ore di buio senza Luna)")
+    expect(ore.getAttribute("max")).toBe("8")
+    fireEvent.change(ore, { target: { value: "10" } })
+    fireEvent.blur(ore)
+    expect(await within(sezione).findByText("Un numero da 0 a 8.")).toBeTruthy()
+  })
+
   it("un numero fuori misura non parte e lo dice sotto il campo", async () => {
     const sezione = await vaiAllaLuna()
 

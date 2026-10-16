@@ -87,7 +87,22 @@ def test_changing_a_threshold_rejudges_the_nights_at_once(db_path, conn):
 def test_a_threshold_out_of_range_is_refused(db_path):
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         r = c.patch("/api/v1/settings", json={"values": {"moon_broadband_max_pct": 140}})
+        letto = c.get("/api/v1/settings").json()
+    # Un numero del tipo giusto ma fuori misura non e' un tipo sbagliato: lo schermo dice la misura.
     assert r.status_code == 422
+    assert r.json()["detail"] == {"code": "out_of_range", "keys": ["moon_broadband_max_pct"]}
+    # La misura la manda il backend, una volta: lo schermo non la riscrive.
+    assert letto["ranges"]["moon_broadband_max_pct"] == {"min": 0, "max": 100}
+    assert letto["ranges"]["moon_broadband_min_dark_h"] == {"min": 0, "max": 12}
+
+
+def test_every_threshold_out_of_range_is_named(db_path):
+    valori = {"moon_broadband_max_pct": 140, "moon_broadband_min_dark_h": 99}
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        r = c.patch("/api/v1/settings", json={"values": valori})
+    # Come unknown_setting e tried_elsewhere: tutte le chiavi, non la prima.
+    assert r.status_code == 422
+    assert r.json()["detail"] == {"code": "out_of_range", "keys": sorted(valori)}
 
 
 def test_the_routes_read_what_the_round_wrote(db_path, conn):
