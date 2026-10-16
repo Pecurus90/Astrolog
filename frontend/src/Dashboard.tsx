@@ -43,7 +43,6 @@ const conMaiuscola = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
  *   piccole, le prossime notti in una riga sempre aperta; niente rimandi ad altre pagine, ci va la
  *   barra in basso.
  * - I progetti ancora non esistono: lo dice la loro sezione, e il suo e' il primario della pagina.
- * - Manca ancora il dettaglio della Luna (`docs/coda.md`).
  */
 export function Dashboard() {
   const meteo = usePrevisione()
@@ -67,6 +66,8 @@ export function Dashboard() {
   const sito = detto?.site ?? null
   // il meteo che non risponde senza una previsione che valga: la notte e le prossime non si dicono
   const giu = detto ? silenzio(detto) !== null && senzaPrevisioneIn(detto) : false
+  // progetti, da riprendere e l'anno vengono dall'archivio: ci sono anche se il meteo non risponde
+  const conArchivio = (sito !== null || meteo.isError) && !archivioVuoto && !telefono
   return (
     <div className="as-pagina" ref={misura}>
       <PrimaDellaPrevisione meteo={meteo} senzaSito={false} />
@@ -81,14 +82,14 @@ export function Dashboard() {
         {detto && sito && !giu && <Prossime detto={detto} telefono={telefono} />}
         {lettura && <PrimaLettura lettura={lettura} />}
         {sito && archivioVuoto && <Seguito />}
-        {sito && !archivioVuoto && !telefono && (
+        {conArchivio && (
           <div className="as-dashboard__coppia">
             <Progetti trovati={trovati} />
             <DaRiprendere finora={lettura !== null} />
           </div>
         )}
         {/* sul telefono l'anno non c'e': la tavola dice "nient'altro"; si guarda sul desktop */}
-        {sito && !archivioVuoto && !telefono && (
+        {conArchivio && (
           <AnnoDellaDashboard lettura={ancoraInLettura ? archivio?.reading_done_pct ?? 0 : null} />
         )}
       </div>

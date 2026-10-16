@@ -61,6 +61,42 @@ describe("l'anno della Dashboard", () => {
     expect(within(sezione).getByText("meno di 2 h")).toBeTruthy()
   })
 
+  it("le ore vuote si dicono in ore, come la legenda, e una notte e' al singolare", async () => {
+    const sezione = await apriAnno({ ...anno({ "2026-01-03": ["none", 0] }), nights: 1, integration_s: 0, per_night_s: 0, per_month: 1 })
+
+    const medie = [...sezione.querySelectorAll(".as-dashboard__medie dd")].map((d) => d.textContent)
+    expect(medie).toEqual(["1", "0 h", "0 h", "1 notte"])
+    const griglia = within(sezione).getByRole("img", { name: "Il 2026, un quadretto per giorno: 1 notte fino al 30 settembre" })
+    expect(griglia.querySelectorAll(".as-heat__cella")[3 + 2]?.getAttribute("title")).toBe("3 gennaio: 0 h")
+  })
+
+  it("col meteo che non risponde l'anno e da riprendere ci sono lo stesso: non dipendono dal meteo", async () => {
+    await montaDashboard({ altre: { "/api/v1/year": { stato: 200, corpo: anno() }, "/api/v1/weather": { stato: 500, corpo: {} } } })
+
+    expect(await screen.findByRole("region", { name: "il 2026, fino a oggi" })).toBeTruthy()
+    expect(screen.getByRole("region", { name: "da riprendere" })).toBeTruthy()
+  })
+
+  it("durante la prima scansione l'anno si rilegge da solo", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      const evento = { current: 10, total: 100, file: "D:/Astro/a.fits", run_id: 1, folder_id: 1, found: 10, new: 10, unchanged: 0, duplicates: 0, missing: 0, skipped: 0, errors: 0, online_only: 0 }
+      const scansione = {
+        worker: { state: "running", stage: "scan", started_at: "2026-09-25T15:00:00Z", ended_at: null, stages: [] },
+        scan: { state: "running", folder_id: 1, run_id: 1, last_event: evento, receipt: null, remaining_s: null, first: true },
+        pending: {},
+        action: "stop",
+      }
+      await apriAnno(anno(), { "/api/v1/pipeline/status": { stato: 200, corpo: scansione } })
+      const prima = chiamate().filter((u) => u.includes("/api/v1/year")).length
+
+      await vi.advanceTimersByTimeAsync(16_000)
+      expect(chiamate().filter((u) => u.includes("/api/v1/year")).length).toBeGreaterThan(prima)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it("un anno senza notti non ha la media a notte: lo dice con un trattino, non con zero", async () => {
     const sezione = await apriAnno({ ...anno({}), nights: 0, integration_s: 0, per_night_s: null, per_month: 0 })
 

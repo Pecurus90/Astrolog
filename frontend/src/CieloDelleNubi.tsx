@@ -195,7 +195,7 @@ export function CieloDelleNubi({
         onPointerMove={(ev) => scegli(oraDa(ev))} onPointerDown={(ev) => scegli(oraDa(ev))}
         // col dito il filo resta dove si e' alzato: solo il mouse che esce torna alla notte
         onPointerLeave={(ev) => { if (ev.pointerType === "mouse") scegli(null) }} onKeyDown={tasto} onBlur={() => scegli(null)}>
-        <svg viewBox={`0 0 ${LARGO} ${ALTO}`} role="img" aria-label={t("weather.sky.img")} data-dx-acceso={destra ? "" : undefined}>
+        <svg viewBox={`0 0 ${LARGO} ${ALTO}`} role="img" aria-label={t(umidita ? "weather.sky.img.humidity" : "weather.sky.img")} data-dx-acceso={destra ? "" : undefined}>
           <Fondi id={`cielo-${n.night}`} ore={ore} />
           <rect width={LARGO} height={ALTO} fill={`url(#cielo-${n.night}-c)`} />
           {/* la terra prima di tutto: i valori bassi della scala di destra le stanno sopra (tavola v37) */}

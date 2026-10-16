@@ -105,7 +105,7 @@ export function Volta({ stanotte: s, nubi, coperta, telefono }: {
       <div className="as-volta__posto" onPointerMove={leggi} onPointerDown={leggi}
         onPointerLeave={(ev) => { if (ev.pointerType === "mouse") setLettore(null) }}>
         <svg className={coperta ? "as-volta__tela as-volta__tela--coperta" : "as-volta__tela"} viewBox={`0 0 ${largo} ${alto}`}
-          preserveAspectRatio="none" role="img" aria-label={`${t("dashboard.chart.label")}: ${frase}`}>
+          preserveAspectRatio="none" role="img" aria-label={frase ? `${t("dashboard.chart.label")}: ${frase}` : t("dashboard.chart.label")}>
           <defs>
             <linearGradient id={`${id}-cielo`} x1="0" x2="1" y1="0" y2="0">
               {tappe(s.sky_bands, x, largo).map((p, i) => <stop key={i} offset={`${p.dove}%`} className={`${TAPPE[p.kind]}`} />)}

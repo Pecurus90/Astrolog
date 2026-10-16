@@ -895,19 +895,18 @@ riga per voce.
   3. ~~La volta~~: fatta il 16/10, sistema solare senza scelta. Restano: le curve dei progetti e la
      scelta Progetti / Sistema solare (coi progetti); nel lettore la riga "quanto buio senza Luna
      resta" (vuole il conto dal backend). Debito: "coperta" si decide nel `.tsx` (`usable_hours
-     === 0`), meglio dal backend; lettore e coltre ora per ora senza test; senza buio ne' Luna
-     l'`aria-label` finisce coi due punti; con la finestra intera (polo) le ore ai bordi si tagliano.
+     === 0`, un confronto in un posto solo: un campo nuovo in `/weather` costa piu' di lui); il
+     lettore senza test; con la finestra intera (polo) le ore ai bordi si tagliano.
   4. ~~L'anno~~: fatto il 16/10 (`/api/v1/year`, `spine/year.py`). Le soglie dei quadretti sono
-     quelle della legenda della tavola; una data con due siti e' un quadretto e una notte. Resta:
-     "al mese" divide per almeno un mese intero (Marco, 16/10); "0 s" al posto di "0 h" per le ore vuote e nel title dei giorni
-     vuoti; "1 notti" senza singolare; `spine/year.py` riscrive a mano il join di `counts.Subject.NIGHT`;
-     senza sito (meteo giu') l'anno non si mostra; il rileggersi a 15 s non ha test.
+     quelle della legenda della tavola; una data con due siti e' un quadretto e una notte; "al
+     mese" divide per almeno un mese intero (Marco, 16/10). Anno, progetti e da riprendere ci sono
+     anche col meteo che non risponde.
   5. ~~Il vuoto dei progetti durante la scansione~~: fatto il 16/10 (`totals.objects` in
      `/api/v1/nights`, gli oggetti nominati, con la notte o senza). Per tutta la prima lettura;
      a zero dice "sta ancora cercando gli oggetti" (Marco, 16/10: gli oggetti nascono dopo la
      lettura dei file).
   Della tavola del Meteo non e' portato solo "· a Capo Nord" nel nome della notte (pare
-  un'etichetta della tavola). Commit da pubblicare: Marco li guarda e fa `git push origin main`.
+  un'etichetta della tavola).
 - **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,
   Voyager, Telescopius, SkyTools, TheAstroImagingPlanner). La disposizione non cambia: sono
   colonne. (1) **distanza dalla Luna** del progetto stanotte; (2) **ore utili stanotte** (buio,
@@ -923,9 +922,9 @@ riga per voce.
   Scheduler di N.I.N.A. I due parametri (distanza e larghezza, per banda larga e stretta) si
   decidono con Marco, a video, prima del codice.
 - **Telefono, dopo il 16/10**: in `astrolog.css` restano `.as-heat__mesi` e `.as-heat__mese`
-  senza componente (il foglio viene dal Design: si toglie la' alla prossima consegna); l'`aria-label`
-  del cielo ("e umidita'") non ha test; le ore della volta sul telefono seguono il tramonto (17, 21,
-  01, 05), non le ore fisse della tavola.
+  senza componente (il foglio viene dal Design: si toglie la' alla prossima consegna); in *da
+  riprendere* una notte di zero ore dice "0 s" (`durata`), accanto all'anno che dice "0 h"; le ore della
+  volta sul telefono seguono il tramonto (17, 21, 01, 05), non le ore fisse della tavola.
 - **Mobile**: le frasi di posto ("qui accanto") si rileggono con la veste stretta.
 - **Errori**: se `/api/v1/settings` non risponde arriva una frase giusta anche senza corpo (il
   502 del proxy) e quando il fetch fallisce.

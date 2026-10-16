@@ -104,6 +104,21 @@ describe("la volta della Dashboard", () => {
     expect(tela.querySelector("rect[fill$='-luna)']")?.getAttribute("x")).toBeNull()
   })
 
+  it("senza buio ne' Luna che sorge la frase finisce col suo nome, senza i due punti", async () => {
+    const tela = await apriVolta({ chart: { ...VOLTA.chart, dark_from: null, dark_until: null }, moon: { ...VOLTA.moon, rise: null } })
+
+    expect(tela.getAttribute("aria-label")).toBe("Stanotte dal tramonto all'alba")
+  })
+
+  it("ogni ora del meteo vela la sua colonna quanto e' coperta", async () => {
+    const nubi = (at: string, pct: number) => ({ ...NOTTE.hours[1], at, cloud_total_pct: pct })
+    const hours = [nubi("2026-09-26T20:00:00+02:00", 80), nubi("2026-09-26T21:00:00+02:00", 0), nubi("2026-09-26T22:00:00+02:00", 30)]
+    const tela = await apriVolta({}, { nights: [{ ...NOTTE, hours }] })
+
+    const veli = [...tela.querySelectorAll("ellipse")].map((e) => Number(e.getAttribute("opacity")))
+    expect(veli).toEqual([0.8, 0.3])
+  })
+
   it("la notte senza ore serene stende la coltre e lo dice", async () => {
     const tela = await apriVolta({}, { nights: [{ ...NOTTE, usable_hours: 0, verdict: "nogo", usable_since: null, usable_until: null }] })
 

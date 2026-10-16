@@ -241,6 +241,10 @@ describe("il Meteo sul telefono", () => {
     expect(cielo.querySelector("svg")?.getAttribute("viewBox")).toBe("0 0 358 220")
     expect([...cielo.querySelectorAll(".as-volta__ora")].map((o) => o.textContent)).toEqual(["19", "21", "23"])
     expect(cielo.querySelector(".as-cielo__legenda")?.textContent).toBe("bassemediealte")
+    // il nome dice cio' che la tela disegna: l'umidita' solo quando e' accesa
+    expect(cielo.querySelector("svg")?.getAttribute("aria-label")).toBe("Nubi basse, medie e alte, dal tramonto all'alba")
+    fireEvent.click(within(cielo).getByRole("menuitemcheckbox", { name: /umidit/, hidden: true }))
+    expect(cielo.querySelector("svg")?.getAttribute("aria-label")).toBe("Nubi basse, medie e alte e umidità, dal tramonto all'alba")
   })
 
   it("una notte in tendenza ha il verdetto in testa e nessun riquadro da aprire", async () => {

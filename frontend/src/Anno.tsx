@@ -52,9 +52,11 @@ export function AnnoDellaDashboard({ lettura }: {
   if (!anno) return null
   const titolo = t("dashboard.year.title", { anno: String(anno.year) })
   const nome = { anno: String(anno.year), n: numero(anno.nights), giorno: giornoDelMese(anno.until) }
+  // zero ore si dice "0 h", come la legenda, non "0 s"
+  const ore = (s: number) => (s === 0 ? t("dashboard.year.legend.none") : durata(s) ?? "")
   const cella = (g: Giorno) => (
     <span key={g.date} className={`as-heat__cella ${CELLA[g.level]}`}
-      title={g.level === "future" ? undefined : `${giornoDelMese(g.date)}: ${durata(g.integration_s) ?? ""}`} />
+      title={g.level === "future" ? undefined : `${giornoDelMese(g.date)}: ${ore(g.integration_s)}`} />
   )
   const vuote = (n: number, chiave: string) => Array.from({ length: n }, (_, i) => <span key={`${chiave}-${i}`} className="as-heat__cella as-heat__cella--vuoto" />)
   const media = (valore: string | null) => (finora || valore === null ? (
@@ -82,8 +84,8 @@ export function AnnoDellaDashboard({ lettura }: {
       </div>
       <dl className="as-dashboard__medie">
         <div><dt>{t("dashboard.year.nights")}</dt>{conto(numero(anno.nights))}</div>
-        <div><dt>{t("dashboard.year.hours")}</dt>{conto(durata(anno.integration_s) ?? "")}</div>
-        <div><dt>{t("dashboard.year.perNight")}</dt>{media(anno.per_night_s === null ? null : durata(anno.per_night_s) ?? null)}</div>
+        <div><dt>{t("dashboard.year.hours")}</dt>{conto(ore(anno.integration_s))}</div>
+        <div><dt>{t("dashboard.year.perNight")}</dt>{media(anno.per_night_s === null ? null : ore(anno.per_night_s))}</div>
         <div><dt>{t("dashboard.year.perMonth")}</dt>{media(anno.nights ? t("dashboard.year.perMonth.value", { n: numero(anno.per_month) }) : null)}</div>
       </dl>
       <div className="as-heat">

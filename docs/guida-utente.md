@@ -291,7 +291,8 @@ sola in evidenza; il resto della pagina resta quello che si puo' calcolare:
 - **Se il meteo non risponde** e non resta una previsione che valga, in testa leggi quanto dura il
   buio di stanotte (e' calcolo, non previsione) e *Non disponibile*; al posto delle carte e delle
   prossime notti un allarme dice da quando non arriva risposta e che l'app riprova da sola ogni 15
-  minuti, con *Riprova ora*.
+  minuti, con *Riprova ora*. Se a non rispondere e' l'app stessa sul meteo, la pagina lo dice in
+  cima; progetti, da riprendere e l'anno vengono dall'archivio e restano al loro posto.
 - **Durante la prima scansione** sotto le prossime notti una riga dice quanti file ha letto su
   quanti della cartella che sta leggendo e, dopo il primo minuto, quanto le manca al ritmo tenuto
   finora; i conti crescono man mano. Vale anche per una cartella nuova aggiunta a un archivio gia'

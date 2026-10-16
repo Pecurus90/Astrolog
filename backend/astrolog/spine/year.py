@@ -6,17 +6,19 @@ import sqlite3
 from dataclasses import dataclass
 from enum import StrEnum
 
+from . import counts
+
 # The board's legend: 0 h, under 2, 2-4, 4-6, over 6.
 _EDGES_H = ((2, "under2"), (4, "2to4"), (6, "4to6"))
 
 # Same frames as the Nights page: inside a night, copies left out. Two sites on one date make one
 # square, so the calendar counts dates, not night rows.
-_PER_DATE = """
+_PER_DATE = f"""
 SELECT n.night_date AS night_date, COALESCE(SUM(f.exposure_s), 0) AS integration_s
-FROM frames f JOIN nights n ON n.id = f.night_id
+FROM frames f JOIN nights n ON {counts.of(counts.Subject.NIGHT)}
 WHERE f.copy_of IS NULL AND n.night_date BETWEEN ? AND ?
 GROUP BY n.night_date
-"""
+"""  # noqa: S608 - our columns
 
 
 class Level(StrEnum):
