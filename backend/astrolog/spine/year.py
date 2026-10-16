@@ -72,7 +72,8 @@ def of(conn: sqlite3.Connection, today: dt.date) -> Year:
         key = day.isoformat()
         seconds = round(shot.get(key, 0))
         days.append(Day(key, Level.FUTURE if day > today else _level(seconds), seconds))
-    months = today.month - 1 + today.day / calendar.monthrange(today.year, today.month)[1]
+    # At least a whole month: one night on the first of January is one a month, not thirty-one.
+    months = max(1.0, today.month - 1 + today.day / calendar.monthrange(today.year, today.month)[1])
     return Year(
         year=today.year,
         until=today.isoformat(),

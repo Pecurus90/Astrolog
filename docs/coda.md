@@ -905,8 +905,7 @@ riga per voce.
      l'`aria-label` finisce coi due punti; con la finestra intera (polo) le ore ai bordi si tagliano.
   4. ~~L'anno~~: fatto il 16/10 (`/api/v1/year`, `spine/year.py`). Le soglie dei quadretti sono
      quelle della legenda della tavola; una data con due siti e' un quadretto e una notte. Resta:
-     **"al mese" nei primi giorni di gennaio esplode** (una notte il primo gennaio = 31 al mese):
-     la regola si decide con Marco; "0 s" al posto di "0 h" per le ore vuote e nel title dei giorni
+     "al mese" divide per almeno un mese intero (Marco, 16/10); "0 s" al posto di "0 h" per le ore vuote e nel title dei giorni
      vuoti; "1 notti" senza singolare; `spine/year.py` riscrive a mano il join di `counts.Subject.NIGHT`;
      senza sito (meteo giu') l'anno non si mostra; il rileggersi a 15 s non ha test.
   5. **Il vuoto dei progetti durante la scansione**: "Finora la lettura ha trovato N oggetti" vuole

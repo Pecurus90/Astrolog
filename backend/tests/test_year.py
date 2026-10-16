@@ -65,6 +65,13 @@ def test_the_grid_starts_on_monday(conn):
     assert year.of(conn, dt.date(2026, 3, 1)).lead_blank == 3
 
 
+def test_in_the_first_month_the_average_divides_by_a_whole_month(conn):
+    """Una notte il primo gennaio e' una notte al mese, non trentuno (Marco, 16/10/2026)."""
+    posa(conn, quando="2025-01-01T21:00:00Z", esposizione=3600.0, hash_="capodanno")
+    corri(conn)
+    assert year.of(conn, dt.date(2025, 1, 1)).per_month == 1.0
+
+
 def test_an_empty_year_has_no_average_per_night_instead_of_zero(conn):
     anno = year.of(conn, dt.date(2025, 2, 1))
     assert (anno.nights, anno.per_night_s, anno.per_month) == (0, None, 0)
