@@ -39,6 +39,8 @@ export const itDashboard = {
   "dashboard.scan.bar": "Lettura dell'archivio",
   "dashboard.work.toConfirm": "Casi da confermare",
   "dashboard.work.toConfirm.later": "si contano a scansione finita",
+  "dashboard.work.outside": "{n} frame fuori dai conti",
+  "dashboard.work.outside.one": "1 frame fuori dai conti",
   "dashboard.work.night.sofar": "la notte pi\u00f9 recente trovata finora",
   "dashboard.moon.rise": "sorge alle {ora}",
   "dashboard.moon.set": "tramonta alle {ora}",

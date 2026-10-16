@@ -146,6 +146,31 @@ describe("la Dashboard, da riprendere", () => {
     expect(ultima.textContent).toContain("4 h 12 min su M 31, 180 frame")
   })
 
+  it("sotto i casi da confermare i frame che non stanno in nessuna notte (tavola dashboard-stati-coperta)", async () => {
+    await apriDashboard(notti([NOTTE_ARCHIVIO], 214))
+
+    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
+    const riga = (await within(lavoro).findByText("32 da confermare")).closest(".as-riga")
+    expect(riga?.textContent).toContain("214 frame fuori dai conti")
+  })
+
+  it("con niente da confermare i frame fuori dai conti portano a Notti, che dice dove si risponde", async () => {
+    await apriDashboard({ ...notti([NOTTE_ARCHIVIO], 3), "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } } })
+
+    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
+    const fuori = await within(lavoro).findByRole("link", { name: /3 frame fuori dai conti/ })
+    expect(fuori.getAttribute("href")).toBe("/notti")
+    expect(within(lavoro).queryByRole("link", { name: "Rispondi" })).toBeNull()
+  })
+
+  it("senza frame fuori dai conti la riga non ne parla", async () => {
+    await apriDashboard()
+
+    const lavoro = await screen.findByRole("region", { name: "da riprendere" })
+    await within(lavoro).findByText("32 da confermare")
+    expect(lavoro.textContent).not.toContain("fuori dai conti")
+  })
+
   it("senza notti nell'archivio non c'e' l'ultima notte, e niente da confermare non e' una riga", async () => {
     await apriDashboard({ ...notti([]), "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } } })
 

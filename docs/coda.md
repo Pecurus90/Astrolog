@@ -882,10 +882,12 @@ riga per voce.
   pagina; i controlli completi una volta per fetta, prima del commit. Le tavole stanno nel progetto
   Design 653edb1c-d69e-44e5-8bde-37cdab558348 (`pagine/dashboard*.html`, `meteo*.html`). In
   ordine:
-  1. **La notte coperta** (`dashboard-stati-coperta.html`): in testa "Coperto tutta la notte" e
-     il semaforo niente; quando torna una notte buona e perche' stanotte no; nelle carte nuvolosita'
-     e pioggia al posto di seeing e aerosol. Il rimando a "214 frame fuori dai conti" (`waiting`)
-     nella riga dei casi da confermare.
+  1. ~~La notte coperta~~: fatta il 16/10. Testa, verdetto e prossime notti c'erano gia'; lo
+     scambio delle carte e' caduto il 12/10 (`handoff/design-dashboard.md`). Nuovo: "N frame
+     fuori dai conti" (`waiting_frames`) in *da riprendere*. Resta: mentre `/api/v1/review`
+     carica, la riga verso Notti puo' sfarfallare (`DaRiprendere` legge `to_confirm ?? 0`); il
+     silenzio durante la prima scansione non ha test; i frame fuori dai conti includono quelli
+     da confermare (`answer_at=review`), come la tavola: da rileggere con Marco.
   2. **Il dettaglio della Luna** (pannello `as-pannello--luna` dalla Luna in testa): illuminata,
      eta' in giorni, sorge e tramonta con la direzione, culmina con l'altezza, distanza, prossima
      Luna nuova e piena; il **calendario** di questo mese e del prossimo, ogni giorno con la Luna e

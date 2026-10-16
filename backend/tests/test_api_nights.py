@@ -185,6 +185,8 @@ def test_the_page_counts_the_poses_still_waiting_for_an_answer(archivio):
         {"answer_at": "never", "frames": 2},
         {"answer_at": "review", "frames": 1},
     ]
+    # La Dashboard ne dice il totale ("3 frame fuori dai conti"): arriva gia' sommato.
+    assert notti(archivio)["waiting_frames"] == 3
 
 
 def test_the_page_says_when_the_reading_is_not_over(archivio):

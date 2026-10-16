@@ -37,6 +37,8 @@ export const enDashboard = {
   "dashboard.scan.bar": "Reading the archive",
   "dashboard.work.toConfirm": "Cases to confirm",
   "dashboard.work.toConfirm.later": "counted when the scan ends",
+  "dashboard.work.outside": "{n} frames outside the nights",
+  "dashboard.work.outside.one": "1 frame outside the nights",
   "dashboard.work.night.sofar": "the most recent night found so far",
   "dashboard.moon.rise": "rises at {ora}",
   "dashboard.moon.set": "sets at {ora}",

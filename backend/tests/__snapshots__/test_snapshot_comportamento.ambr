@@ -232,6 +232,7 @@
     }),
     'waiting': list([
     ]),
+    'waiting_frames': 0,
   })
 # ---
 # name: test_the_pages_of_the_synthetic_archive[archive]

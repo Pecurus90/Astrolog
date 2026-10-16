@@ -234,7 +234,10 @@ La pagina principale ti dice **com'e' stanotte** e cosa resta da fare.
   terza e' gia' **tendenza**, come nel Meteo: dice le ore di buio, non quelle serene.
 - **I progetti in corso** non esistono ancora: la loro sezione lo dice, e *Crea un progetto* --
   la cosa da fare adesso -- porta alla pagina Progetti, che arrivera'.
-- **Da riprendere**, accanto: quante domande ci sono **da confermare**, con *Rispondi*, e l'ultima notte
+- **Da riprendere**, accanto: quante domande ci sono **da confermare**, con *Rispondi*, e sotto
+  quanti frame sono **fuori dai conti** -- quelli che non stanno ancora in nessuna notte, perche'
+  aspettano una risposta. Se da confermare non c'e' niente ma qualche frame aspetta lo stesso (il
+  sito, una data), la riga porta alle Notti, che dicono dove si risponde. Poi l'ultima notte
   che hai ripreso -- quanto tempo, su quale oggetto (quello con piu' tempo, e quanti altri) e
   quanti frame -- che si apre nelle Notti. Se non c'e' niente da riprendere, la sezione non c'e'.
 

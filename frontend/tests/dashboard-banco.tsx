@@ -43,11 +43,14 @@ export const NOTTE_ARCHIVIO = {
   filters: [], moon: null, weather: { verdict: null, cloud_total_pct: null, usable_hours: null, window: null, window_hours: null, state: "unknown", arrives_on: null },
 }
 
-export function notti(items: unknown[]) {
+export function notti(items: unknown[], fuori = 0) {
   return {
     "/api/v1/nights": {
       stato: 200,
-      corpo: { items, total: items.length, limit: 1, offset: 0, totals: { nights: items.length, frames: 0, integration_s: 0, untimed: 0 }, waiting: [], still_reading: 0, reading_done_pct: null },
+      corpo: {
+        items, total: items.length, limit: 1, offset: 0, totals: { nights: items.length, frames: 0, integration_s: 0, untimed: 0 },
+        waiting: fuori ? [{ answer_at: "review", frames: fuori }] : [], waiting_frames: fuori, still_reading: 0, reading_done_pct: null,
+      },
     },
   }
 }

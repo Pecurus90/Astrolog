@@ -2479,6 +2479,11 @@ export interface components {
             /** Waiting */
             waiting: components["schemas"]["WaitingPoses"][];
             /**
+             * Waiting Frames
+             * @description The frames of `waiting` together: the ones outside every night.
+             */
+            waiting_frames: number;
+            /**
              * Still Reading
              * @description How many frames the spine still has to work through: work, not a question.
              */

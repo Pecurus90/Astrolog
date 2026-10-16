@@ -113,6 +113,9 @@ class WaitingPoses(BaseModel):
 class NightList(Page[Night]):
     totals: ArchiveTotals
     waiting: list[WaitingPoses]
+    waiting_frames: int = Field(
+        description="The frames of `waiting` together: the ones outside every night."
+    )
     still_reading: int = Field(
         description="How many frames the spine still has to work through: work, not a question."
     )

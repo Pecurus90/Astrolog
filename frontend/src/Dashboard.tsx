@@ -438,8 +438,13 @@ function Progetti() {
 function DaRiprendere({ finora }: { finora: boolean }) {
   const revisione = useRevisione()
   const daConfermare = revisione.data?.to_confirm ?? 0
-  const ultima = useArchivio().data?.items[0] ?? null
-  if (!finora && daConfermare === 0 && !ultima && !revisione.error) return null
+  const archivio = useArchivio().data
+  const ultima = archivio?.items[0] ?? null
+  // i frame che non stanno in nessuna notte (tavola dashboard-stati-coperta): durante la prima
+  // scansione non sono ancora contati
+  const fuori = finora ? 0 : archivio?.waiting_frames ?? 0
+  const fuoriDaiConti = fuori > 0 ? t("dashboard.work.outside", { n: numero(fuori) }) : null
+  if (!finora && daConfermare === 0 && !fuori && !ultima && !revisione.error) return null
   return (
     <section className="as-dashboard__lavoro" aria-labelledby="dash-lavoro">
       <p className="as-soprattitolo" id="dash-lavoro">{t("dashboard.work.title")}</p>
@@ -460,10 +465,21 @@ function DaRiprendere({ finora }: { finora: boolean }) {
           <span className="as-riga__segno as-riga__segno--attesa" aria-hidden="true" />
           <span>
             <b>{t("frame.count", { n: numero(daConfermare) })}</b>
+            {fuoriDaiConti}
           </span>
           {/* il primario della pagina e' Crea un progetto: Rispondi scende a tenue */}
           <Bottone verso="tenue" piccolo a="/da-confermare">{t("dashboard.work.answer")}</Bottone>
         </div>
+      )}
+      {/* niente da confermare: si risponde altrove (sito, data), e Notti dice dove */}
+      {!finora && daConfermare === 0 && fuoriDaiConti && (
+        <Link className="as-riga" to="/notti">
+          <span className="as-riga__segno as-riga__segno--attesa" aria-hidden="true" />
+          <span>
+            <b>{fuoriDaiConti}</b>
+          </span>
+          <span className="as-riga__freccia" aria-hidden="true">{"\u2192"}</span>
+        </Link>
       )}
       {ultima && (
         <Link className="as-riga" to={`/notti?notte=${ultima.id}`}>
