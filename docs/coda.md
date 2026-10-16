@@ -866,15 +866,41 @@ riga per voce.
   fuori il vuoto dei progetti "finora la lettura ha trovato N oggetti": manca il conto degli
   oggetti trovati. Le prossime notti col cielo in parole (`sky_word` dalle okta, scritto da
   `weather/view.py`), il segno, la pioggia e le ore di buio senza Luna (`moonless_dark_hours`, ore
-  di buio con la Luna sotto l'orizzonte; 15/10/2026). Restano, in quest'ordine (Marco,
-  14/10/2026): la notte coperta (le carte di nuvolosita' e pioggia al posto di seeing e aerosol); il
-  dettaglio della Luna col
-  calendario; la volta coi pianeti; l'anno. Decisi da Marco il 15/10/2026: il tempo che manca alla
-  scansione si stima dal ritmo finora, detto "circa", e tace nel primo minuto; le prossime notti
-  portano le parole del cielo dalle okta WMO sulla copertura nel buio (0 sereno, 1-4 nubi sparse,
-  5-7 nuvoloso, 8 coperto; da verificare sulla fonte e citare) e le ore di buio senza Luna dal
-  backend; "frame fuori dai conti" sono i frame che non stanno in nessuna notte (`waiting`). Le
-  tavole intere si scaricano dal browser (`GetFile` del progetto): DesignSync le taglia a 256 KiB.
+  di buio con la Luna sotto l'orizzonte; okta verificate su WMO 2700; 15/10/2026). Decisi da
+  Marco il 15/10/2026: il tempo che manca alla scansione si stima dal ritmo finora della cartella in
+  lettura, detto "circa", e tace nel primo minuto; "prima scansione" = il gesto legge almeno una
+  cartella mai letta fino in fondo; "frame fuori dai conti" sono i frame che non stanno in nessuna
+  notte (`waiting`); **le soglie del calendario della Luna** ("notti buone per la banda larga")
+  sono **impostazioni dell'utente**, con i valori della tavola come partenza: Luna sotto il 25%, o
+  almeno 4 ore di buio senza Luna. Ricerca del 15/10/2026: nessuna soglia condivisa per la banda
+  larga; per la banda stretta la cifra piu' ricorrente e' 60 gradi dalla Luna piena (Ha, SII); la
+  lorentziana BAIT (ACP, NINA Target Scheduler, Voyager) resta il giudizio per bersaglio dei
+  progetti. Le tavole intere si scaricano dal browser (`GetFile` del progetto): DesignSync le taglia
+  a 256 KiB.
+- **Da dove si riparte: Meteo e Dashboard complete** (Marco, 15/10/2026). Sessione nuova, una fetta
+  alla volta col workflow `costruisci` (`/costruisci`). Durante il lavoro solo i test della
+  pagina; i controlli completi una volta per fetta, prima del commit. Le tavole stanno nel progetto
+  Design 653edb1c-d69e-44e5-8bde-37cdab558348 (`pagine/dashboard*.html`, `meteo*.html`). In
+  ordine:
+  1. **La notte coperta** (`dashboard-stati-coperta.html`): in testa "Coperto tutta la notte" e
+     il semaforo niente; quando torna una notte buona e perche' stanotte no; nelle carte nuvolosita'
+     e pioggia al posto di seeing e aerosol. Il rimando a "214 frame fuori dai conti" (`waiting`)
+     nella riga dei casi da confermare.
+  2. **Il dettaglio della Luna** (pannello `as-pannello--luna` dalla Luna in testa): illuminata,
+     eta' in giorni, sorge e tramonta con la direzione, culmina con l'altezza, distanza, prossima
+     Luna nuova e piena; il **calendario** di questo mese e del prossimo, ogni giorno con la Luna e
+     le ore di buio senza Luna, e le notti buone per la banda larga dalle **soglie nelle
+     Impostazioni** (sopra). Backend nuovo: eta', distanze, culminazione, fasi, calendario (si
+     scrive, non si calcola leggendo).
+  3. **La volta** (`as-volta`): Progetti / Sistema solare; senza progetti solo il sistema solare,
+     senza scelta. Backend: le posizioni di Saturno, Giove, Marte, Venere (astropy `get_body`).
+  4. **L'anno** (`as-dashboard__anno`): "il 2026, fino a oggi" con notti, ore, a notte in media, al
+     mese, e il calendario colorato delle ore; durante la prima scansione "finora" e "a scansione
+     finita". Backend: i totali dell'anno.
+  5. **Il vuoto dei progetti durante la scansione**: "Finora la lettura ha trovato N oggetti" vuole
+     il conto degli oggetti trovati dall'API.
+  Della tavola del Meteo non e' portato solo "· a Capo Nord" nel nome della notte (pare
+  un'etichetta della tavola). Commit da pubblicare: Marco li guarda e fa `git push origin main`.
 - **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,
   Voyager, Telescopius, SkyTools, TheAstroImagingPlanner). La disposizione non cambia: sono
   colonne. (1) **distanza dalla Luna** del progetto stanotte; (2) **ore utili stanotte** (buio,
