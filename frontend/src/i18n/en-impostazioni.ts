@@ -112,7 +112,7 @@ export const enImpostazioni = {
   "settings.site.cancel": "Cancel",
   "settings.site.save": "Save",
   "settings.site.keeps":
-    "The Bortle class is optional.",
+    "Bortle is optional.",
   "settings.site.failed": "Sites not available.",
   "settings.site.saveFailed": "Save failed.",
   "settings.site.homeFailed": "Default site change failed.",
@@ -121,7 +121,7 @@ export const enImpostazioni = {
   "settings.site.add.what": "Search by name or enter the coordinates.",
   "settings.site.fix.title": "Edit site",
   "settings.site.fix.what":
-    "Name, coordinates and Bortle class.",
+    "Name, coordinates and Bortle.",
   "settings.site.confirm": "Remove {nome}?",
   "settings.site.confirm.what":
     "Frames stay in the archive.",

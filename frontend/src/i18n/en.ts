@@ -249,8 +249,8 @@ export const en = {
   "settings.failed": "The service did not respond.",
   // I nomi delle nove classi sono i titoli **originali** della voce *Bortle scale* di Wikipedia,
   // non una ritraduzione dell'italiano: sono in minuscolo perche' finiscono dentro `sky.chosen`.
-  "sky.scale": "Bortle class, from 1 to 9",
-  "sky.label": "Sky quality (Bortle scale)",
+  "sky.scale": "Bortle, 1 to 9",
+  "sky.label": "Bortle",
   "sky.chosen": "Bortle {n} - {cielo}",
   "sky.optional": "Optional.",
   "sky.low": "1 - dark sky",

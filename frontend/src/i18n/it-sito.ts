@@ -15,7 +15,7 @@ export const itSito = {
   "site.searchFailedTitle": "Ricerca non riuscita",
   "site.range": "Valore fra -{tetto} e {tetto}",
   "site.notANumber": "Coordinata non valida. Esempio: 46,4843 N",
-  "site.searchLabel": "Localit\u00e0",
+  "site.searchLabel": "Cerca un posto",
   "site.name": "Nome del sito",
   "site.nameNeeded": "Nome obbligatorio",
   "site.searchFailed": "Il servizio non ha risposto.",

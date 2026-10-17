@@ -112,7 +112,7 @@ describe("il passo del riconoscitore, quando manca", () => {
     await disegna()
 
     await screen.findAllByRole("listitem")
-    expect(nomiDeiPassi()).toEqual(["Nome utente", "Sito di osservazione", "Percorso dei file", "Seeing (Meteoblue)"])
+    expect(nomiDeiPassi()).toEqual(["Nome utente", "Sito di osservazione", "Cartelle", "Seeing (Meteoblue)"])
   })
 
   it("se manca, il passo c e e dice cosa ci perdi", async () => {

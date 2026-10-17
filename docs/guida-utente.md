@@ -18,20 +18,20 @@ fondo i comandi: *Salta*, *Indietro*, *Avanti*. Sul telefono i passi diventano u
 alto e i comandi restano sempre in vista in fondo allo schermo.
 
 1. **Nome utente.** Per ora l'app lo conserva soltanto. Si puo' lasciare vuoto.
-2. **Sito di osservazione.** Cerchi il sito per nome e scegli fra quelli che compaiono -- ognuno ti
+2. **Sito di osservazione.** In *Cerca un posto* scrivi un nome e scegli fra quelli che compaiono -- ognuno ti
    mostra le sue coordinate, cosi' scegli sapendo su cosa: l'app le riempie da sola, e da quelle
    ricava **il fuso orario e l'altitudine** senza chiedertele. Se preferisci, o se sei senza
    rete, **scrivi tu nome e coordinate**: la strada manuale e' sempre aperta, e non e' un
    ripiego -- e' li' fin dall'inizio, perche' i siti bui dove si osserva spesso la rete non ce
    l'hanno. Le coordinate le puoi scrivere come le scrivi di solito -- `46,4843` o `46.4843`, e
    anche `46,4843 N` -- e se una e' fuori scala te lo dice **sotto il campo**, prima che tu prema.
-   Poi ti chiede la **Qualita' del cielo (scala di Bortle)**, fra le nove classi: non scegli un numero al buio,
+   Poi ti chiede il **Bortle**, da 1 a 9: non scegli un numero al buio,
    scegli guardando **cosa ci si vede** -- se la Via Lattea proietta ombre o se di notte si legge
    il giornale -- e la misura del cielo la ricava l'app da quella. Puoi **non rispondere**: il
    sito si salva lo stesso, e il cielo resta vuoto invece di prendersi un valore che non hai
    dato. Il sito si salva con **Salva sito**, in fondo insieme agli altri comandi, e poi si passa
    al passo dopo; **Avanti** va oltre senza salvare.
-3. **Percorso dei file.** Scrivi il percorso di una cartella e premi *Verifica*: l'app conta i
+3. **Cartelle.** Scrivi il percorso di una cartella e premi *Verifica*: l'app conta i
    FITS che ci sono **prima** di registrarla, cosi' ti accorgi subito se hai puntato la cartella
    sbagliata. Se la cartella non si raggiunge te lo dice, e non ti lascia aggiungerla. Sul NAS
    il percorso non lo scrivi: l'app gira dentro un container e i suoi percorsi non sono i tuoi,
@@ -111,7 +111,7 @@ che ti porta dove si sistema.
 
 La pastiglia dice **da dove osservi** e, col disco, che luna fa. Premila e si apre **Stanotte**:
 - il **sito**: se ne hai piu' di uno li trovi tutti e scegli quello di stanotte -- diventa il tuo
-  sito predefinito, e Luna e meteo si aggiornano. Sotto c'e' che cielo ha, con la classe di Bortle e
+  sito predefinito, e Luna e meteo si aggiornano. Sotto c'e' che cielo ha, con il Bortle e
   la sua misura, e *Gestisci i siti*. Se non hai ancora un sito, la pastiglia dice *Seleziona
   sito* e Stanotte ti porta dove lo dichiari;
 - la **Luna**: che fase e', quanto e' illuminata, a che ora sorge e tramonta. Gli orari sono

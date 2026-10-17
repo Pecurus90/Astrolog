@@ -282,7 +282,7 @@ describe("il primo avvio", () => {
     conTimbro(false)
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
-    expect(nomiDeiPassi()).toEqual(["Nome utente", "Sito di osservazione", "Percorso dei file", "Seeing (Meteoblue)"])
+    expect(nomiDeiPassi()).toEqual(["Nome utente", "Sito di osservazione", "Cartelle", "Seeing (Meteoblue)"])
     const corrente = () =>
       screen.getAllByRole("listitem").findIndex((li) => li.getAttribute("aria-current") === "step")
     expect(corrente()).toBe(0)
@@ -309,7 +309,7 @@ describe("il primo avvio", () => {
     expect(tappe()[0]?.textContent).toContain("sei qui")
     expect(tappe()[1]?.textContent).not.toContain("sei qui")
     // e quelle che vengono non dicono niente: dirlo sarebbe rumore su cio' che non e' successo
-    expect(tappe()[2]?.textContent?.trim()).toBe("3Percorso dei file")
+    expect(tappe()[2]?.textContent?.trim()).toBe("3Cartelle")
 
     vaiAlPasso(1)
     // la prima ora e' fatta, e lo dice in tutti e tre i modi: il segno, la forma, la parola.
@@ -353,7 +353,7 @@ describe("il primo avvio", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    expect(screen.getByLabelText(/localit\u00e0/i)).toBeDefined()
+    expect(screen.getByLabelText(/cerca un posto/i)).toBeDefined()
     fireEvent.click(screen.getByRole("button", { name: /indietro/i }))
     expect(screen.getByLabelText(/^nome$/i)).toBeDefined()
   })
@@ -459,7 +459,7 @@ describe("il primo avvio", () => {
     vaiAlPasso(2)
     fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
 
-    const carta = await screen.findByRole("region", { name: "Configurazione completata" })
+    const carta = await screen.findByRole("region", { name: "Primo avvio completato" })
     expect(carta.className).toBe("as-carta as-ritrovate")
     const conti = [...carta.querySelectorAll(".as-conti > .as-conti__voce")].map(
       (v) => `${v.querySelector(".as-conti__nome")?.textContent}=${v.querySelector(".as-conti__dato")?.textContent}`,
@@ -493,7 +493,7 @@ describe("il primo avvio", () => {
     vaiAlPasso(3)
     fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
 
-    const carta = await screen.findByRole("region", { name: "Configurazione completata" })
+    const carta = await screen.findByRole("region", { name: "Primo avvio completato" })
     const dati = [...carta.querySelectorAll(".as-conti__dato")].map((v) => v.textContent)
     expect(dati.slice(0, 2)).toEqual(["Marco", "Vicenza · Bortle 4"])
   })
@@ -506,7 +506,7 @@ describe("il primo avvio", () => {
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(3)
     fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
-    await screen.findByRole("region", { name: "Configurazione completata" })
+    await screen.findByRole("region", { name: "Primo avvio completato" })
 
     cambia({
       ...STANOTTE,
@@ -520,12 +520,12 @@ describe("il primo avvio", () => {
     await waitFor(() => expect(quante()).toBeGreaterThan(prima))
     // la risposta nuova deve arrivare ed essere disegnata, prima di guardare
     await new Promise((r) => setTimeout(r, 50))
-    expect(screen.getByRole("region", { name: "Configurazione completata" })).toBeDefined()
+    expect(screen.getByRole("region", { name: "Primo avvio completato" })).toBeDefined()
     expect(screen.queryByRole("navigation")).toBeNull()
 
     fireEvent.click(screen.getByRole("button", { name: "Apri AstroLog" }))
     await screen.findByRole("navigation")
-    expect(screen.queryByText("Configurazione completata")).toBeNull()
+    expect(screen.queryByText("Primo avvio completato")).toBeNull()
   })
 
   it("una rilettura delle impostazioni che fallisce non toglie la chiusura da sotto gli occhi", async () => {
@@ -536,7 +536,7 @@ describe("il primo avvio", () => {
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(3)
     fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
-    await screen.findByRole("region", { name: "Configurazione completata" })
+    await screen.findByRole("region", { name: "Primo avvio completato" })
 
     cambia({ ...STANOTTE, "/api/v1/settings": { stato: 500, corpo: {} }, ...DOPO })
     const quante = () => chiamate().filter((u) => u.endsWith("/api/v1/settings")).length
@@ -544,7 +544,7 @@ describe("il primo avvio", () => {
     window.dispatchEvent(new Event("visibilitychange"))
     await waitFor(() => expect(quante()).toBeGreaterThan(prima))
     await new Promise((r) => setTimeout(r, 50))
-    expect(screen.getByRole("region", { name: "Configurazione completata" })).toBeDefined()
+    expect(screen.getByRole("region", { name: "Primo avvio completato" })).toBeDefined()
   })
 
   it("cio' che non si e' saputo la chiusura lo tace: non dice Nessuna a chi le cartelle le ha", async () => {
@@ -562,7 +562,7 @@ describe("il primo avvio", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: /^fine$/i }))
 
-    const carta = await screen.findByRole("region", { name: "Configurazione completata" })
+    const carta = await screen.findByRole("region", { name: "Primo avvio completato" })
     const nomi = [...carta.querySelectorAll(".as-conti__nome")].map((v) => v.textContent)
     expect(nomi).toEqual(["Nome utente", "Seeing"])
   })
@@ -572,7 +572,7 @@ describe("il primo avvio", () => {
     await disegna()
     fireEvent.click(await screen.findByRole("button", { name: /salta/i }))
     await waitFor(() => expect(chiamate().some((u) => u.includes("/settings/wizard-done"))).toBe(true))
-    expect(screen.queryByText("Configurazione completata")).toBeNull()
+    expect(screen.queryByText("Primo avvio completato")).toBeNull()
   })
 
   it("si completa, e completare timbra come saltare", async () => {

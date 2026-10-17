@@ -115,7 +115,7 @@ export const itImpostazioni = {
   "settings.site.cancel": "Annulla",
   "settings.site.save": "Salva",
   "settings.site.keeps":
-    "La classe di Bortle \u00e8 facoltativa.",
+    "Il Bortle \u00e8 facoltativo.",
   "settings.site.failed": "Siti non disponibili.",
   "settings.site.saveFailed": "Salvataggio non riuscito.",
   "settings.site.homeFailed": "Modifica del sito predefinito non riuscita.",
@@ -124,7 +124,7 @@ export const itImpostazioni = {
   "settings.site.add.what": "Cerca per nome o inserisci le coordinate.",
   "settings.site.fix.title": "Modifica sito",
   "settings.site.fix.what":
-    "Nome, coordinate e classe di Bortle.",
+    "Nome, coordinate e Bortle.",
   "settings.site.confirm": "Rimuovere {nome}?",
   "settings.site.confirm.what":
     "I frame restano in archivio.",

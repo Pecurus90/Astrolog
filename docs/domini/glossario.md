@@ -39,12 +39,14 @@ che il `traduttore` legge per primo.
 | il fuso orario del sito, ricavato dalle sue coordinate | `timezone` | fuso | zona, orario |
 | l'ora che il file dice, UTC come vuole lo standard FITS: e' l'istante su cui la posa conta | `date_obs` | ora della posa | ora vera, ora corretta |
 | quanto e' scuro il cielo di un sito, in magnitudini per arcosecondo quadrato: e' la misura | `sky_sqm` | luminosita' del cielo | SQM, brillanza |
-| la classe di cielo da 1 a 9, ricavata dalla luminosita': si mostra col numero misurato accanto, **tranne in due posti** -- il primo avvio, dove si sceglie e non c'e' ancora niente da dichiarare, e il piede della barra, dove sono 227px e la classe e' un promemoria di dov'e' puntata l'app | `bortle` | Bortle | classe, qualita' del cielo |
+| la classe di cielo da 1 a 9, ricavata dalla luminosita': si mostra col numero misurato accanto, **tranne in due posti** -- il primo avvio, dove si sceglie e non c'e' ancora niente da dichiarare, e il piede della barra, dove sono 227px e la classe e' un promemoria di dov'e' puntata l'app. La scala dove si sceglie si intitola "Bortle" ("Bortle, da 1 a 9" per chi ascolta; Marco, 17/10/2026) | `bortle` | Bortle | classe, qualita' del cielo, scala di Bortle |
 | come si sa la luminosita' di un sito: misurata, chiesta al servizio, scelta sulla scala | `sky_source` | (una frase tradotta) | fonte, origine |
 | l'altezza del sito sul livello del mare; assente vuol dire "non fornita", mai zero | `elevation_m` | altitudine | quota, altezza |
 | come si sa l'altitudine di un sito: scritta da chi c'e' stato, o chiesta al servizio | `elevation_source` | (una frase tradotta) | fonte, origine |
 | il sito da cui si osserva di solito: e' lui a dare il fuso alle notti. Uno solo | `is_default` | sito predefinito | sito di casa, principale, attivo |
-| le domande del primo avvio (come mi chiamo, da dove osservo, dove stanno i file, la chiave Meteoblue facoltativa) | `wizard` | primo avvio | onboarding, configurazione iniziale, procedura guidata |
+| le domande del primo avvio (come mi chiamo, da dove osservo, dove stanno i file, la chiave Meteoblue facoltativa). Finito, dice "Primo avvio completato" (Marco, 17/10/2026) | `wizard` | primo avvio | onboarding, configurazione, configurazione iniziale, procedura guidata |
+| una delle domande del primo avvio, col suo nome: Nome utente, Sito di osservazione, Cartelle, Seeing (Meteoblue), ASTAP (Marco, 17/10/2026) | `step` | passo | passaggio, fase, tappa, percorso dei file (per il passo delle cartelle) |
+| un posto trovato per nome dal servizio di ricerca, da cui nasce un sito: il campo dice "Cerca un posto" (Marco, 17/10/2026) | `place` | posto | localita', luogo, location |
 | la data in cui il primo avvio e' stato fatto o saltato: e' un fatto scritto, e non si riscrive | `onboarding_done_at` | timbro del primo avvio | flag, completato |
 
 ## Cio' che si fotografa

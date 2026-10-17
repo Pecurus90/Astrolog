@@ -264,8 +264,8 @@ export const it = {
   // le ombre della Via Lattea, che le altre classi non hanno.
   // Ogni riga dice **cosa ci si vede**, non quanto e' buio: e' l'unica cosa su cui chi ha appena
   // installato puo' davvero rispondere.
-  "sky.scale": "Classe di Bortle, da 1 a 9",
-  "sky.label": "Qualit\u00e0 del cielo (scala di Bortle)",
+  "sky.scale": "Bortle, da 1 a 9",
+  "sky.label": "Bortle",
   "sky.chosen": "Bortle {n} - {cielo}",
   "sky.optional": "Facoltativo.",
   "sky.low": "1 - cielo buio",
