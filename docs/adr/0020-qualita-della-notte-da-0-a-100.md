@@ -21,29 +21,42 @@ decide Marco (CLAUDE.md, principio 1); le soglie dentro ogni fattore restano que
   alla sua soglia "buona", zero dalla "non adatta", in proporzione in mezzo. Le soglie sono
   quelle con fonte gia' nel backend (`weather/judge.py`).
 - **Bloccano**: pioggia, e nuvole "non adatta". L'ora vale 0.
-- **Una convenzione sola** per deep sky, Sole e pianeti: il seeing pesa per tutti (Marco).
-- **Pesi**:
+- **Una convenzione sola** per deep sky, Sole e pianeti: il seeing pesa per tutti (Marco). Il
+  giorno del Sole: il "Sole basso" usciva coi 15 punti della Luna; come si giudica si decide con
+  Marco quando si costruisce il Sole.
+- **Pesi** (Marco, 17/10/2026; la Luna esce dal punteggio, vedi sotto, e i suoi 15 punti si
+  ridistribuiscono in proporzione):
 
 | Fattore | Punti | Pieni | Zero |
 |---|---|---|---|
-| Nuvole (blocca) | 30 | okta <= 2 (fino al 25%) | dal 50% ("non adatta": l'ora vale 0) |
-| Seeing | 25 | <= 2″ | >= 4″ |
-| Luna di notte / Sole basso di giorno | 15 | nessuno schiarimento | 2 mag di schiarimento |
-| Trasparenza (aerosol) | 10 | AOD < 0,1 | AOD >= 1 |
-| Condensa | 8 | scarto > 3 °C | scarto <= 0 |
-| Vento | 8 | <= Beaufort 3 | >= Beaufort 5 |
-| Jet stream | 4 | < 25 m/s | >= 35 m/s |
+| Nuvole (blocca) | 35 | okta <= 2 (fino al 25%) | dal 50% ("non adatta": l'ora vale 0) |
+| Seeing | 30 | <= 2″ | >= 4″ |
+| Trasparenza (aerosol) | 12 | AOD < 0,1 | AOD >= 1 |
+| Condensa | 9 | scarto > 3 °C | scarto <= 0 |
+| Vento | 9 | <= Beaufort 3 | >= Beaufort 5 |
+| Jet stream | 5 | < 25 m/s | >= 35 m/s |
 | Pioggia (blocca) | -- | -- | qualunque |
 
   Il jet stream pesa poco perche' il seeing di Meteoblue lo contiene gia'.
-- **La Luna si giudica sul cielo del sito**: schiarimento in magnitudini fra il cielo del sito
-  (`sky_sqm`, dal Bortle dichiarato o misurato) e lo stesso cielo con la luce della Luna, dal
-  modello di Krisciunas e Schaefer (PASP 103:1033, 1991; incertezza ~0,25 mag): fase, altezza
-  della Luna, estinzione. Sotto l'orizzonte non schiarisce. Un cielo buio perde di piu' di un
-  cielo di citta'. Zero punti a 2 mag (un sito di campagna che diventa periferia; Marco). Sito
-  senza Bortle: si giudica come cielo buio, e la pagina lo dice.
-- **La notte**: media delle ore di buio; la curva ora per ora e' il suo andamento, e le notti
-  dopo cambiano da sole con la Luna che sorge piu' tardi.
+- **La Luna non pesa nel punteggio: decide la ripresa** (Marco, 17/10/2026). Prima pesava 15
+  punti su 100: una Luna piena alta lasciava "buona" una notte perfetta, e chi fa banda larga
+  non puo' uscire. Ora due risposte separate: il **meteo** (punteggio e verdetto) dice se si
+  esce, la **Luna** dice cosa si riprende.
+  - Ogni ora di buio e' **banda larga** o **solo banda stretta**. Solo banda stretta quando la
+    Luna e' illuminata dal **25 %** (schema ING: buio sotto 0,25, grigio fino a 0,65, chiaro
+    oltre; ING Technical Note 127,
+    https://www.ing.iac.es/Astronomy/observing/manuals/ps/tech_notes/tn127.pdf; gli stessi tagli in
+    astroplan, `MoonIlluminationConstraint`) **e** alta **da 10°** (Marco, a
+    gusto: nessuna convenzione sull'altezza; ESO e i pianificatori contano dall'orizzonte; una
+    Luna bassa spesso sta dietro monti o alberi).
+  - Le due soglie sono **una sola casa**, nelle Impostazioni (oggi la fase e' quella del
+    calendario della Luna, 25 %): calendario, Meteo, Dashboard e Notti usano la stessa
+    definizione di "ora senza Luna".
+  - A schermo: il verdetto del meteo, e sotto la ripresa coi suoi tratti ("Banda larga
+    21:10-00:40 · poi solo banda stretta"); il riquadro di lato dice le ore di ciascun tipo.
+  - Superato: la Luna giudicata col modello di Krisciunas e Schaefer sul cielo del sito (resta
+    un'idea per un giudizio per bersaglio, con la distanza dalla Luna).
+- **La notte**: media delle ore di buio; la curva ora per ora e' il suo andamento.
 - **Il verdetto viene dal punteggio della notte** (Marco, 17/10/2026): buona da 70, incerta da
   40, sotto non adatta. Non dalle ore utili: d'estate il buio dura 4 ore e nessuna notte sarebbe
   buona. Vale per le notti passate e per il giorno del Sole.
