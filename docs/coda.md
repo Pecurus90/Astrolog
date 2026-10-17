@@ -925,8 +925,17 @@ riga per voce.
   linguetta e del modulo "Aggiungi oggetto"; (2) comete, asteroidi e NEO dai FITS di oggi (orbite
   MPC nell'identificazione); (3) effemeridi di Sole e pianeti (tappa 6) e le metriche calcolate;
   (4) lettore SER per percorso; (5) log di FireCapture e SharpCap, con log veri; (6) foto finale <!-- software-ok: ADR 0019 -->
-  e campi a mano; (7) meteo storico e attivita' solare per data. Da verificare prima: se esiste un
-  seeing storico, e quali altri programmi planetari scrivono un log.
+  e campi a mano; (7) meteo storico e attivita' solare per data. Da verificare prima: quali altri
+  programmi planetari scrivono un log.
+- **Il seeing di una notte passata** (ricerca del 17/10/2026). Nessun servizio pubblico archivia il
+  seeing: Open-Meteo e la History API di Meteoblue danno ERA5 senza seeing, 7Timer solo previsione.
+  Le strade: (1) **deep sky: la FWHM dei frame** in arcosecondi (`measure` piu' la scala del cielo)
+  e' il seeing vero, meglio di qualunque modello; (2) **archiviare da oggi la previsione** di
+  seeing per notte (vedi *La previsione accanto al meteo vero*); (3) `history_days` 1-4 del
+  Package API di Meteoblue, se il pacchetto del seeing lo accetta (non verificato): copre le riprese
+  dei giorni appena passati; (4) **stimarlo da ERA5** col modello di Osborn e Sarazin (validato a
+  Paranal sul profilo mediano; debole sullo strato vicino al suolo, che per un amatore pesa di piu'):
+  solo come "stimato", e solo se Marco lo vuole.
 - **Telefono, dopo il 16/10**: in `astrolog.css` restano `.as-heat__mesi` e `.as-heat__mese`
   senza componente (il foglio viene dal Design: si toglie la' alla prossima consegna).
 
