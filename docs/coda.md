@@ -484,7 +484,11 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   accanto alle parti del corredo, i filtri del corredo in proporzione senza cifre. Si monta
   quando Design porta la forma nel foglio (v35). Testi da scrivere: la parola sotto il cielo del
   campo, l'avviso dell'unione, "scansione in corso" prima di salvare, l'esito, la frase della
-  tessera d'arrivo per chi ascolta; parole di tavola "da scegliere", "scelto".
+  tessera d'arrivo per chi ascolta; parole di tavola "da scegliere", "scelto". Decise (Marco,
+  17/10/2026; `handoff/design-risposta-attrezzatura.md`): parte scelta "(scelta a mano)", parte
+  taciuta "da indicare", "Scansione in corso: si salva al termine.", "Luna piena, per misura";
+  mie: unione "L'unione non è reversibile.", "{n} frame da rielaborare", "Riprova" sull'errore,
+  rapporto focale calcolato dal backend. Resta la frase della tessera d'arrivo.
 - **Le pagine a Claude Design, una alla volta** (Marco, 7/10/2026): Notti (fatta l'8/10, disegno arrivato il
   7/10, forma A, il registro), poi Archivio (v31-v32, montato l'8/10), il primo avvio (Marco, 8/10:
   "anche il wizard bisogna rifare"; brief in `handoff/design-primo-avvio.md`; montato il 9/10 sul v33), Da confermare
