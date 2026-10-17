@@ -46,7 +46,7 @@ describe("il posto da cui osservi", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    fireEvent.change(screen.getByLabelText(/cerca un posto/i), {
+    fireEvent.change(screen.getByLabelText(/cerca un luogo/i), {
       target: { value: "Verona" },
     })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
@@ -85,7 +85,7 @@ describe("il posto da cui osservi", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    fireEvent.change(screen.getByLabelText(/cerca un posto/i), {
+    fireEvent.change(screen.getByLabelText(/cerca un luogo/i), {
       target: { value: "Zzz" },
     })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
@@ -108,7 +108,7 @@ describe("il posto da cui osservi", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    fireEvent.change(screen.getByLabelText(/cerca un posto/i), {
+    fireEvent.change(screen.getByLabelText(/cerca un luogo/i), {
       target: { value: "Verona" },
     })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
@@ -122,7 +122,7 @@ describe("il posto da cui osservi", () => {
     fireEvent.click(screen.getByRole("button", { name: /salva sito/i }))
     expect(await screen.findByRole("alert")).toBeDefined()
     // E soprattutto: si resta qui, dove il problema si puo' ancora risolvere.
-    expect(screen.getByLabelText(/cerca un posto/i)).toBeDefined()
+    expect(screen.getByLabelText(/cerca un luogo/i)).toBeDefined()
   })
   it("una scrittura che non arriva al servizio lo dice, e Salva sito resta premibile", async () => {
     // Rete caduta: la richiesta **rigetta**, non torna un errore. Senza guardia `salvando` restava
@@ -173,7 +173,7 @@ describe("il posto da cui osservi", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    fireEvent.change(screen.getByLabelText(/cerca un posto/i), { target: { value: "Verona" } })
+    fireEvent.change(screen.getByLabelText(/cerca un luogo/i), { target: { value: "Verona" } })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
 
     const dentro = (await screen.findByRole("alert")).closest(".as-avviso") as HTMLElement
@@ -267,7 +267,7 @@ describe("il posto da cui osservi", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    fireEvent.change(screen.getByLabelText(/cerca un posto/i), { target: { value: "V" } })
+    fireEvent.change(screen.getByLabelText(/cerca un luogo/i), { target: { value: "V" } })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
 
     expect(await screen.findByRole("button", { name: /seleziona verona/i })).toBeDefined()
@@ -284,7 +284,7 @@ describe("il posto da cui osservi", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    fireEvent.change(screen.getByLabelText(/cerca un posto/i), { target: { value: "x" } })
+    fireEvent.change(screen.getByLabelText(/cerca un luogo/i), { target: { value: "x" } })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
     expect(await screen.findByRole("alert")).toBeDefined()
     expect(screen.queryByText(/nessun risultato/i)).toBeNull()
@@ -428,11 +428,11 @@ describe("il posto da cui osservi", () => {
     vaiAlPasso(1)
     expect(document.querySelectorAll(".as-passo__parti > .as-passo__parte")).toHaveLength(3)
     // il campo e il suo bottone in una riga, le due coordinate in coppia
-    expect(screen.getByLabelText(/cerca un posto/i).closest(".as-campo-riga")).not.toBeNull()
+    expect(screen.getByLabelText(/cerca un luogo/i).closest(".as-campo-riga")).not.toBeNull()
     expect(screen.getByLabelText(/latitudine/i).closest(".as-campo-coppia")).toBe(
       screen.getByLabelText(/longitudine/i).closest(".as-campo-coppia"),
     )
-    fireEvent.change(screen.getByLabelText(/cerca un posto/i), { target: { value: "Verona" } })
+    fireEvent.change(screen.getByLabelText(/cerca un luogo/i), { target: { value: "Verona" } })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
     const voce = (await screen.findByText("Verona")).closest("li") as HTMLElement
     expect(voce.className).toBe("as-posti__voce")
@@ -461,7 +461,7 @@ describe("il posto da cui osservi", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    fireEvent.change(screen.getByLabelText(/cerca un posto/i), { target: { value: "Verona" } })
+    fireEvent.change(screen.getByLabelText(/cerca un luogo/i), { target: { value: "Verona" } })
     fireEvent.click(screen.getByRole("button", { name: /^cerca$/i }))
 
     const righe = await screen.findAllByText("Verona")

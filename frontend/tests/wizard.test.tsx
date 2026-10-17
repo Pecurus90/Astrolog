@@ -353,7 +353,7 @@ describe("il primo avvio", () => {
     await disegna()
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
-    expect(screen.getByLabelText(/cerca un posto/i)).toBeDefined()
+    expect(screen.getByLabelText(/cerca un luogo/i)).toBeDefined()
     fireEvent.click(screen.getByRole("button", { name: /indietro/i }))
     expect(screen.getByLabelText(/^nome$/i)).toBeDefined()
   })

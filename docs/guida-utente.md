@@ -18,7 +18,7 @@ fondo i comandi: *Salta*, *Indietro*, *Avanti*. Sul telefono i passi diventano u
 alto e i comandi restano sempre in vista in fondo allo schermo.
 
 1. **Nome utente.** Per ora l'app lo conserva soltanto. Si puo' lasciare vuoto.
-2. **Sito di osservazione.** In *Cerca un posto* scrivi un nome e scegli fra quelli che compaiono -- ognuno ti
+2. **Sito di osservazione.** In *Cerca un luogo* scrivi un nome e scegli fra quelli che compaiono -- ognuno ti
    mostra le sue coordinate, cosi' scegli sapendo su cosa: l'app le riempie da sola, e da quelle
    ricava **il fuso orario e l'altitudine** senza chiedertele. Se preferisci, o se sei senza
    rete, **scrivi tu nome e coordinate**: la strada manuale e' sempre aperta, e non e' un

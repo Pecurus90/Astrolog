@@ -33,7 +33,7 @@ che il `traduttore` legge per primo.
 | una cartella di FITS indicata dall'utente (puo' averne piu' d'una) | `folder` | cartella | libreria, sorgente, radice |
 | da mezzogiorno a mezzogiorno nel fuso del sito, con un sito | `night` | notte | serata, sessione, uscita |
 | oggetto x notte x corredo | `session` | sessione | notte, serata, ripresa |
-| il posto da cui si osserva | `site` | sito | postazione, luogo, localita' |
+| il posto da cui si osserva | `site` | sito | postazione, luogo (e' il risultato di una ricerca, `place`), localita' |
 | le coordinate che l'header porta, arrotondate al chilometro: sono cio' su cui l'app chiede quando non tornano con nessuno dei siti dichiarati. Un **sito** lo dichiara l'utente, le **coordinate** le dice il file | `coordinates` | coordinate | sito, posto, postazione |
 | una montatura in campo in una notte (chi ne ha due riprende due cose) | `station` | postazione | sito |
 | il fuso orario del sito, ricavato dalle sue coordinate | `timezone` | fuso | zona, orario |
@@ -46,7 +46,7 @@ che il `traduttore` legge per primo.
 | il sito da cui si osserva di solito: e' lui a dare il fuso alle notti. Uno solo | `is_default` | sito predefinito | sito di casa, principale, attivo |
 | le domande del primo avvio (come mi chiamo, da dove osservo, dove stanno i file, la chiave Meteoblue facoltativa). Finito, dice "Primo avvio completato" (Marco, 17/10/2026) | `wizard` | primo avvio | onboarding, configurazione, configurazione iniziale, procedura guidata |
 | una delle domande del primo avvio, col suo nome: Nome utente, Sito di osservazione, Cartelle, Seeing (Meteoblue), ASTAP (Marco, 17/10/2026) | `step` | passo | passaggio, fase, tappa, percorso dei file (per il passo delle cartelle) |
-| un posto trovato per nome dal servizio di ricerca, da cui nasce un sito: il campo dice "Cerca un posto" (Marco, 17/10/2026) | `place` | posto | localita', luogo, location |
+| un luogo trovato per nome dal servizio di ricerca, da cui nasce un sito: il campo dice "Cerca un luogo" (Marco, 17/10/2026). Il sito si salva, il luogo si cerca | `place` | luogo | localita', posto, location |
 | la data in cui il primo avvio e' stato fatto o saltato: e' un fatto scritto, e non si riscrive | `onboarding_done_at` | timbro del primo avvio | flag, completato |
 
 ## Cio' che si fotografa
