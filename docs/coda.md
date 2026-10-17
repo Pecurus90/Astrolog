@@ -920,6 +920,13 @@ riga per voce.
   https://w.astro.berkeley.edu/bait/baitman/request.html), ripresa da ACP, Voyager e dal Target
   Scheduler di N.I.N.A. I due parametri (distanza e larghezza, per banda larga e stretta) si
   decidono con Marco, a video, prima del codice.
+- **Sole e Sistema solare in Archivio** (Marco, 17/10/2026; decisioni in
+  [ADR 0019](adr/0019-sole-e-sistema-solare-in-archivio.md)). In ordine: (1) disegno della
+  linguetta e del modulo "Aggiungi oggetto"; (2) comete, asteroidi e NEO dai FITS di oggi (orbite
+  MPC nell'identificazione); (3) effemeridi di Sole e pianeti (tappa 6) e le metriche calcolate;
+  (4) lettore SER per percorso; (5) log di FireCapture e SharpCap, con log veri; (6) foto finale <!-- software-ok: ADR 0019 -->
+  e campi a mano; (7) meteo storico e attivita' solare per data. Da verificare prima: se esiste un
+  seeing storico, e quali altri programmi planetari scrivono un log.
 - **Telefono, dopo il 16/10**: in `astrolog.css` restano `.as-heat__mesi` e `.as-heat__mese`
   senza componente (il foglio viene dal Design: si toglie la' alla prossima consegna).
 
