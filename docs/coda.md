@@ -779,6 +779,9 @@ riga per voce.
   cartelle; l'`error` di `POST /scan` non si legge; il `catch` vuoto prende solo le richieste
   che non arrivano. Il rimedio guarda `error` su tutte e due le chiamate, non solo il `catch`.
 - **Il nome dell'utente**, che il primo avvio chiede e salva, compare da qualche parte.
+- **Da confermare, "Frame senza sito" senza nessun sito dichiarato**: oggi una domanda senza
+  scelte, muta. Frase approvata (Marco, 17/10/2026): "Per rispondere serve almeno un sito: si
+  aggiunge nelle Impostazioni." con "Apri le Impostazioni". Si monta col porting della pagina.
 - **La lettura**: la catena intera delle fasi e la ricevuta dell'ultima corsa (`GET
   /pipeline/status` porta ogni stadio in `worker.stages`, `Scansiona.tsx` ne mostra uno); una
   frase per una corsa fermata da `no_star_database`; una lettura di una cartella ritirata dice che
