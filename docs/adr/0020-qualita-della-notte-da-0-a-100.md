@@ -26,7 +26,7 @@ decide Marco (CLAUDE.md, principio 1); le soglie dentro ogni fattore restano que
 
 | Fattore | Punti | Pieni | Zero |
 |---|---|---|---|
-| Nuvole (blocca) | 30 | okta <= 2 (fino al 25%) | coperto |
+| Nuvole (blocca) | 30 | okta <= 2 (fino al 25%) | dal 50% ("non adatta": l'ora vale 0) |
 | Seeing | 25 | <= 2″ | >= 4″ |
 | Luna di notte / Sole basso di giorno | 15 | nessuno schiarimento | 2 mag di schiarimento |
 | Trasparenza (aerosol) | 10 | AOD < 0,1 | AOD >= 1 |
