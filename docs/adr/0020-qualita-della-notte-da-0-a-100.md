@@ -44,14 +44,17 @@ decide Marco (CLAUDE.md, principio 1); le soglie dentro ogni fattore restano que
   senza Bortle: si giudica come cielo buio, e la pagina lo dice.
 - **La notte**: media delle ore di buio; la curva ora per ora e' il suo andamento, e le notti
   dopo cambiano da sole con la Luna che sorge piu' tardi.
+- **Il verdetto viene dal punteggio della notte** (Marco, 17/10/2026): buona da 70, incerta da
+  40, sotto non adatta. Non dalle ore utili: d'estate il buio dura 4 ore e nessuna notte sarebbe
+  buona. Vale per le notti passate e per il giorno del Sole.
+- **Ora utile**: qualita' da 60 (Marco, 17/10/2026). Le ore utili sono un numero da mostrare, non
+  decidono il verdetto.
 - **Calcola il backend** e scrive il risultato (una lettura non calcola); il frontend formatta.
 
 ## Conseguenze
 
 - `docs/domini/meteo.md` si riscrive quando si costruisce: oggi dice "nessun voto unico della
   notte" e "la Luna resta fuori dal verdetto".
-- La parola della notte (buona / incerta / non adatta) dal punteggio si decide con Marco: soglia
-  senza convenzione.
 - Profili per tipo di ripresa (banda stretta: la Luna pesa meno) restano un'idea; il giudizio per
   bersaglio (BAIT) arriva coi progetti.
 - `soglie.js` del disegno non decide piu' niente: punteggio, cosa limita e tratti arrivano
