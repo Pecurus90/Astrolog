@@ -22,8 +22,10 @@ Comuni a tutti gli strumenti, come oggi: Nome, Marca, Modello, Peso (kg), Note. 
 **C** = calcolato; tutto il resto si scrive a mano. Ogni campo si corregge, e il valore scritto
 vince su quello dei file (come oggi, strato del dichiarato).
 
-- **Ottica**: Apertura (mm), Focale nativa (mm), Cerchio d'immagine (mm), Backfocus richiesto
-  (mm). Rapporto focale C, sul corredo.
+- **Ottica**: Schema ottico (rifrattore, Newton, Schmidt-Cassegrain, Ritchey-Chrétien,
+  Maksutov, obiettivo fotografico, altro; Marco, 18/10/2026), Apertura (mm), Focale nativa (mm),
+  Cerchio d'immagine (mm), Backfocus richiesto (mm), Tolleranza del backfocus (mm). Rapporto
+  focale C, sul corredo.
 - **Camera**:
   - Sensore (il nome, es. IMX571);
   - Risoluzione (px, larghezza × altezza): F, la piu' frequente fra i frame, moltiplicata per il
@@ -42,8 +44,8 @@ vince su quello dei file (come oggi, strato del dichiarato).
   quella del corredo (PHD2, stessa pagina).
 - **Montatura**: Carico con contrappeso (kg), Carico senza contrappeso (kg). Il Peso e' quello
   della testa.
-- **Riduttore** (anche barlow: fattore sopra 1): Fattore, Backfocus richiesto (mm), Cerchio
-  d'immagine (mm). Sostituisce la colonna `backfocus_mm` scritta e mai chiesta.
+- **Riduttore** (anche barlow: fattore sopra 1): Fattore, Backfocus richiesto (mm), Tolleranza
+  del backfocus (mm), Cerchio d'immagine (mm). Sostituisce la colonna `backfocus_mm` scritta e mai chiesta.
 - **Ruota portafiltri**: Numero di posizioni, Misura dei filtri (1,25″, 31 mm, 36 mm, 2″,
   50 mm quadrato), Spessore (mm).
 - **Focheggiatore**: Passo (µm), Passi totali.
@@ -61,8 +63,8 @@ anche piu' d'uno. Si scelgono come le altre parti; i file non le dicono.
 I conti, ognuno solo quando ci sono tutti i suoi dati; se ne manca uno, il corredo dice quale:
 
 - **Rapporto focale** = focale effettiva / apertura dell'ottica.
-- **Scala prevista** ("/px) = 206,265 × pixel / focale effettiva (Astronomy Tools; ADR 0016),
-  accanto a quella misurata sul cielo.
+- **Campionamento** ("/px; nome scelto da Marco per la scala prevista) = 206,265 × pixel /
+  focale effettiva (Astronomy Tools; ADR 0016), accanto a quello misurato sul cielo.
 - **Campo previsto** = 2·atan(lato del sensore / (2 · focale effettiva)), per lato.
 - **Copertura**: la diagonale del sensore contro il cerchio d'immagine del riduttore, o
   dell'ottica senza riduttore. E' un confronto, non una soglia.
@@ -82,8 +84,9 @@ I conti, ognuno solo quando ci sono tutti i suoi dati; se ne manca uno, il corre
 - **Potere risolutore dell'ottica** ("): Dawes 116 / apertura in mm (Astronomy Tools,
   astronomy.tools/calculators/telescope_capabilities), sulla scheda dell'ottica.
 - **Backfocus del treno**: spessori di OAG, ruota, distanziali e camera, contro il backfocus
-  richiesto del riduttore (o dell'ottica senza). Si mostra la differenza in mm, senza tolleranza:
-  nessuna fonte la da'. Lo spessore del filtro non si conta (lo spostamento del fuoco non e'
+  richiesto del riduttore (o dell'ottica senza). Si mostra la differenza in mm. Il giudizio ("in
+  tolleranza", "corto di", "lungo di") c'e' solo se la scheda porta la tolleranza del produttore:
+  nessuna convenzione unica la fissa, dipende dall'ottica (Marco, 18/10/2026). Lo spessore del filtro non si conta (lo spostamento del fuoco non e'
   verificato).
 - **Carico**: peso di ottica, camera, riduttore, ruota, focheggiatore, guida, camera di guida e
   distanziali, contro il carico piu' alto dichiarato della montatura. **Solo la percentuale**,

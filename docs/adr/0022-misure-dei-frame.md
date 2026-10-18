@@ -48,7 +48,10 @@ senza fit; col fit e la lettura del file 0,4-0,9 s (confronto sotto). Si rimisur
 7. **Camere a colori**: si misura sul superpixel 2×2 del grezzo (un pixel per quadrato Bayer), e
    le misure tornano in pixel del sensore. Sul grezzo il motivo Bayer passa per rumore e scarta
    quasi tutte le stelle (prova sotto).
-8. **Poche stelle**: sotto un minimo di stelle tenute per zona si ripiega sul frame intero; sotto
+8. **Pixel caldi**: i light non sono calibrati, e in banda stretta la maggior parte dei
+   rilevamenti erano pixel caldi (HFD 0,9 px, prova su cinque frame Hα/OIII di Marco). Le stelle
+   si cercano su una copia filtrata con mediana 3×3; HFD e fit si misurano sul frame grezzo.
+9. **Poche stelle**: sotto un minimo di stelle tenute per zona si ripiega sul frame intero; sotto
    il minimo anche li', la misura tace e dice "troppo poche stelle". Il minimo si fissa alla
    costruzione con una prova, come le altre costanti.
 
