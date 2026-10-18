@@ -27,7 +27,9 @@ la pagina Progetti l'ultima. Un progetto = oggetto + corredo + inquadratura + or
 
 - Selettore: i corredi di Attrezzatura (nome come la produzione: ottica + camera).
 - **«Corredo di prova»**: focale (mm), apertura (mm), riduttore o barlow (fattore), sensore da una
-  lista con ricerca (nome del sensore, pixel, risoluzione, mono/colore; niente marche).
+  lista con ricerca (nome del sensore, pixel, risoluzione, mono/colore; niente marche; solo
+  sensori di camere astronomiche), oppure **«Sensore personalizzato»**: pixel (µm) e risoluzione
+  (px).
   - Mostra campo, campionamento e rapporto focale come la scheda del corredo (ADR 0021).
   - Fascia fissa: «Corredo di prova: solo per guardare. Per salvare un progetto, aggiungilo in
     Attrezzatura.» Il pulsante Salva e' spento e dice perche'.
@@ -35,8 +37,11 @@ la pagina Progetti l'ultima. Un progetto = oggetto + corredo + inquadratura + or
 
 ### 2.3 La carta (Aladin Lite v3)
 
-- Fondo fotografico. Selettore del fondo con le carte verificate dal vecchio progetto: DSS2 a
-  colori (partenza), DSS2 rosso, DSS2 blu, PanSTARRS a colori, Hα (VTSS), Hα (SHASSA), 2MASS.
+- La carta occupa **la maggior parte della pagina** (Marco); il resto le sta attorno.
+- Fondo fotografico, con un selettore della mappa sulla carta: **DSS2 colore** (partenza),
+  **PanSTARRS colore**, **Hα**, **OIII**, **SII**, **OIII · Hα · SII**, **Hα sud**. Hα, OIII e SII
+  coprono solo il cielo del nord (65 %): fuori, la carta lo dice («Mappa non disponibile in questa
+  zona del cielo») invece di restare nera. Elenco e crediti in ADR 0023.
 - Sopra, disegnati da noi: **rettangolo del campo**, **mirino** dell'oggetto (non un'ellisse),
   griglia dei pannelli, orizzonte del sito.
 - Trascinare la carta sposta l'inquadratura; il centro si legge in AR/Dec col punto («RA 10.68
@@ -47,11 +52,11 @@ la pagina Progetti l'ultima. Un progetto = oggetto + corredo + inquadratura + or
 - **Mosaico**: interruttore «Mosaico», poi **colonne** e **righe** (1-…), **sovrapposizione %**
   (partenza 20). Pannelli numerati riga per riga dall'alto a sinistra: «Pannello 1», «Pannello
   2»… Sotto: campo totale del mosaico.
-- In basso: logo Aladin (obbligatorio) e credito «CDS Aladin Sky Atlas, Unistra/CNRS · {nome del
-  fondo}».
-- **Senza rete**: stelle disegnate, «Cielo fotografico non disponibile senza rete» e «Scarica il
-  cielo (1,1 GB)» (ADR 0006). Durante il caricamento le tessere arrivano a pezzi: nessuno spinner
-  sulla carta intera.
+- In basso: logo Aladin (obbligatorio) e credito «CDS Aladin Sky Atlas, Unistra/CNRS · {nome della
+  mappa}»; con le mappe NSNS anche «Northern Sky Narrowband Survey, S. Ziegenbalg, CC BY-NC-SA».
+- **Senza rete**: dove la cache non arriva, stelle disegnate e «Cielo fotografico non disponibile
+  senza rete». Nessun pulsante per scaricare il cielo (Marco). Durante il caricamento le tessere
+  arrivano a pezzi: nessuno spinner sulla carta intera.
 
 ### 2.4 Stanotte e l'anno
 
@@ -74,6 +79,21 @@ Senza sito: «Sito mancante» e «Aggiungi sito», come nelle Notti.
 - **Esposizione del frame**, facoltativa, per filtro: serve solo a «mancano circa {n} frame».
 - **Salva**. Se esiste gia' un progetto con lo stesso oggetto e corredo: niente doppione, si
   mostra quello («Questo oggetto ha gia' un progetto con questo corredo.» · «Apri il progetto»).
+
+### 2.6 Pianeti, Luna e Sole: simulazione
+
+Dal Trova, scegliendo Mercurio, Venere, Marte, Giove, Saturno, Urano, Nettuno, Luna o Sole, al
+posto della carta del cielo compare la **simulazione**. Non si salva: nessun progetto.
+- Il **rettangolo del sensore** del corredo (vero o di prova) con dentro il **disco** in scala: fase
+  per Mercurio, Venere e Luna, anelli inclinati per Saturno. Disegnato, non fotografato.
+- **Data**: partenza stanotte; accanto «prossima opposizione {data}», che porta al disco piu' grande.
+- **Barlow / riduttore** (fattore) cambiano la scala subito.
+- Numeri accanto: diametro apparente e in pixel, scala, rapporto focale del corredo e **rapporto
+  focale critico** per il filtro scelto. Nessuna pillola buono/cattivo. Esempio coerente: C9.25
+  (2350 mm, 235 mm) con barlow 1,5× e pixel da 2.9 µm, Giove a 44.8″ → «44.8″ · 264 px»,
+  «0.17″/px», «f/15 · critico f/14.5 senza filtro (400 nm)»; con Hα «critico f/8.8 (656 nm)».
+- Luna e Sole: anche la griglia del mosaico, come sulla carta.
+- Sole: fascia fissa «Solo con un filtro solare a tutta apertura.»
 
 ## 3. Progetti
 
@@ -103,8 +123,8 @@ Il cerchio dei progetti in corso usa lo stesso numero e lo stesso disegno della 
 
 ## 5. Fuori
 
-- **Planetario e solare**: nessun piano e nessuna inquadratura (Marco). Restano le effemeridi del
-  Sistema solare in Dashboard.
+- **Planetario e solare**: nessun progetto (Marco). C'e' solo la simulazione (2.6) e le
+  effemeridi del Sistema solare in Dashboard.
 - Nessun punteggio d'insieme e nessuna classifica «i migliori stanotte».
 - La pagina delle sequenze e il piano della notte (ADR 0013) sono una brief a parte.
 

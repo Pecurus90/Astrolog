@@ -51,7 +51,7 @@ Le sei mosse gia' decise: **Trova → Scegli → Inquadra → Crea → Salva →
 - **Le fotografie del cielo** (DSS2 a colori) pesano circa 281 GB: non entrano nell'app.
   Restano le decisioni ADR 0005 e 0006:
   - le immagini passano dal nostro server, che le tiene in cache;
-  - un pulsante scarica il cielo a bassa risoluzione per usarlo senza rete (circa 1,1 GB);
+  - nessuno scaricamento per l'uso senza rete (Marco, dopo questa proposta: solo cache);
   - senza rete, un fondo di stelle disegnate da noi.
 - **Obblighi**: il logo di Aladin resta visibile; la riga di credito del CDS sta sotto la carta.
 - **Un rischio da provare subito**: il supporto ai telefoni di Aladin non e' finito (lo dice il

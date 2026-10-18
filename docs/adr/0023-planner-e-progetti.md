@@ -26,7 +26,26 @@ d3-celestial (solo vettoriale, fermo dal 2022), VirtualSky (non open source). Il
 resta visibile ("please leave the Aladin logo and link intact", README); credito "CDS Aladin Sky
 Atlas, Unistra/CNRS" con il nome del HiPS (cds.unistra.fr/aladin-org/licences_aladin.html). Il
 rettangolo ruotato si disegna come poligono coi vertici calcolati dal backend. Il supporto ai
-telefoni non e' finito (README): si prova su tablet e telefono prima del disegno definitivo.
+telefoni non e' finito (README): si prova su tablet e telefono prima del disegno definitivo. La
+beta 3.9.0 (1/6/2026) non lo aggiunge (CHANGELOG del repository): si resta sulla 3.8.1.
+
+**Mappe a scelta** (Marco), dal registro HiPS del CDS (MocServer, 18/10/2026), solo cache e
+nessuno scaricamento (0006):
+
+| mappa | ID HiPS | cielo | pixel | copyright |
+|---|---|---|---|---|
+| DSS2 colore (partenza) | CDS/P/DSS2/color | 100 % | ordine 9 | STScI/NASA, CDS |
+| PanSTARRS colore | CDS/P/PanSTARRS/DR1/color-i-r-g | 76 % | 1.6" | PS1 Science Consortium |
+| Hα | simg.de/P/NSNS/DR0_2/halpha8 | 65 % (nord) | 6.4" | Ziegenbalg, CC-BY-NC-SA 4.0 |
+| OIII | simg.de/P/NSNS/DR0_2/oiii8 | 65 % (nord) | 6.4" | idem |
+| SII | simg.de/P/NSNS/DR0_2/sii8 | 65 % (nord) | 6.4" | idem |
+| OIII · Hα · SII | simg.de/P/NSNS/DR0_2/ohs8 | 65 % (nord) | 6.4" | idem |
+| Hα sud | CDS/P/SHASSA/H | 100 % | 26" | Swarthmore College |
+
+- NSNS (Northern Sky Narrowband Survey) e' non commerciale: va bene per un'app gratuita; chi
+  vendesse l'app dovrebbe toglierla. Il credito va accanto alla carta.
+- Fuori: Mellinger ("All rights reserved", la cache sarebbe una copia). "DSS2 Hα" non esiste:
+  il DSS2 ha rosso, blu e vicino infrarosso.
 
 ### La rotazione
 
@@ -57,10 +76,14 @@ Dal Framing Assistant di N.I.N.A. (`FramingAssistantVM.cs`):
   sensore dalla lista. **Solo per guardare** (Marco): un progetto nasce solo su un corredo vero.
 - **Lista dei sensori nostra**: nessun elenco aperto e' riusabile (AstroBin e Telescopius <!-- software-ok -->
   proprietari, Stellarium Oculars 17 reflex). Una riga per geometria, senza marca: nome, pixel <!-- software-ok -->
-  (µm), risoluzione (px), URL del produttore; millimetri calcolati. Base: i 36 sensori di
-  `old/backend/astrolog/equipment/data/sensori.json`, ricontrollati sulle pagine dei produttori.
+  (µm), risoluzione (px), URL del produttore; millimetri calcolati. **Solo sensori montati in
+  camere astronomiche dedicate**, deep sky e planetario (ZWO, ToupTek, Player One, QHY...); reflex
+  e mirrorless fuori (Marco). Base: le righe adatte dei 36 sensori di
+  `old/backend/astrolog/equipment/data/sensori.json`, ricontrollate sulle pagine dei produttori.
   Dove i produttori danno risoluzioni diverse (pixel utili o totali) vale la regola dell'1 % del
   vecchio progetto: sotto, la stessa riga.
+- **Sensore personalizzato** nel corredo di prova (Marco): pixel (µm) e risoluzione (px), per chi
+  ha un sensore fuori lista.
 
 ### I filtri
 
@@ -93,15 +116,30 @@ risoluzione conta per nome, senza pannello. Dashboard e Progetti leggono lo stes
 
 ### Planetario e solare
 
-Nessun piano e nessuna inquadratura: niente da inquadrare ne' ore da accumulare. Effemeridi in
-Dashboard (ADR 0019). Transiti della Grande Macchia Rossa e meridiano centrale: idea per dopo,
-non decisa.
+- **Nessun progetto**: niente ore da accumulare. Effemeridi in Dashboard (ADR 0019).
+- **Simulazione, senza salvataggio** (Marco): Mercurio, Venere, Marte, Giove, Saturno, Urano,
+  Nettuno, Luna e Sole, col corredo vero o di prova (barlow e riduttore compresi).
+  - Diametro apparente = 2 · atan(raggio / distanza) nella data scelta; distanza da astropy
+    (`get_body`), raggi dal NASA Planetary Fact Sheet; partenza stanotte, accanto la prossima
+    opposizione. I numeri si leggono dalla fonte quando si scrive il codice.
+  - Disegno: disco nel rettangolo del sensore, fase per Mercurio, Venere e Luna, anelli inclinati
+    per Saturno (raggio dal NASA Saturnian Rings Fact Sheet, inclinazione da Meeus, Astronomical
+    Algorithms, cap. 45). Diametro in pixel accanto.
+  - Luna e Sole: anche il mosaico, come per il cielo profondo.
+  - **Campionamento planetario**: rapporto focale critico = 2 × pixel / lunghezza d'onda (Nyquist
+    sulla frequenza di taglio della diffrazione; vlaiv su Stargazers Lounge, astropix.com). La
+    lunghezza d'onda e' quella del filtro scelto; senza filtro o a colori, 400 nm (Marco). Si
+    mostra il rapporto del corredo accanto a quello critico. Le regole 5-7 × pixel dei forum non
+    entrano: non hanno fonte.
+  - Il Sole porta l'avvertenza del filtro solare.
+- Transiti della Grande Macchia Rossa e meridiano centrale: idea per dopo, non decisa.
 
 ## Conseguenze
 
 - Nuove tabelle: progetti, pannelli con inquadratura, obiettivi per filtro, oggetti aggiunti
   (ADR 0013). Lo schema si ricrea.
 - Dipendenza frontend nuova: `aladin-lite` 3.8.1.
+- ADR 0006 perde il pulsante "scarica il cielo": solo cache.
 - File nuovo dei sensori, con test che lo confronta coi frame veri.
 - `docs/domini/mosaico.md`: la frase "nessuno documenta un valore predefinito" era falsa per
   N.I.N.A.; il riconoscimento dei mosaici dai frame resta senza soglia minima.
