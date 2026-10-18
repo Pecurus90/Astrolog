@@ -64,14 +64,14 @@ Oggi l'app ha solo HFD e stelle: il resto arriva col backend, dopo il disegno.
 
 | misura | a schermo | nota |
 |---|---|---|
-| FWHM | ″ | senza scala del cielo in px, e non si confronta fra corredi |
+| FWHM | ″ | senza scala del cielo in px, e non si confronta fra corredi; sotto 2 px il segno **"sottocampionata"** (Nyquist) |
 | FWHM allo zenit | ″ | accanto alla FWHM |
 | HFD | ″ | anche allo zenit |
 | Stelle | numero | contate sul frame intero |
 | Stelle sature | numero | |
 | Eccentricità | da 0 a 1 | **"rotonde" fino a 0,45** (Marco); sopra, solo il numero |
-| Direzione dell'allungamento | "in AR" / "in Dec" | accanto all'eccentricità |
-| SNR | numero | |
+| Direzione dell'allungamento | "in AR" / "in Dec" | accanto all'eccentricità; **solo da 0,4 in su**, sotto tace |
+| SNR | numero | si confronta solo con la stessa camera |
 | Fondo cielo | ADU, col rumore | si confronta solo con la stessa camera, guadagno e posa: la tavola lo dice |
 | Gradiente del fondo | % e lato ("più chiaro verso est") | |
 | Tilt | % | angolo peggiore meno migliore, sulla HFD al centro |
