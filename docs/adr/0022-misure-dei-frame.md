@@ -157,6 +157,28 @@ parallelo meno, non misurato. Il filtro si accelera prima di costruire.
 - **11.000 frame** (miscuglio di Marco): 7,2 ore su un processo, 4,1 su due, 2,5 su quattro
   (misurato su 8 frame: ×1,75 con 2, ×2,92 con 4). Senza ASTAP e da SSD.
 
+### Ottimizzazione su 62 frame (18/10/2026)
+
+Sette corredi, anche due da ASIAIR (Newton ~1000 mm + ASI2600MC, rifrattore 335 mm + ASI294MC).
+
+- **Stelle per il fit**: 60 per casella della griglia 3×3, prese su tutta la classifica di
+  flusso, non le piu' luminose. Le stelle luminose sono piu' rotonde (anche in PixInsight: 0,49 <!-- software-ok -->
+  sopra SNR 160 contro 0,55 fra 40 e 80), e PixInsight fa la media su tutte le stelle rilevate <!-- software-ok -->
+  (verificato rifacendo le sue fit stella per stella). Stella per stella misuriamo come lui:
+  scarto mediano 0,000 su 22.900 stelle. Fit di Moffat a lotti in numpy (540 stelle in 0,4 s).
+- **Eccentricita'**: dal fit campionato al centro del pixel, media sulle stelle con SNR ≥ 20.
+  Contro PixInsight P90 0,020 (prima 0,074), peggiore 0,036; giudizio diverso a 0,45 in 1 frame <!-- software-ok -->
+  su 57 (prima 9), a 0,6 in 3 (prima 8); sulla mediana della notte nessuno. Sotto 1,6 px sia
+  PixInsight sia noi leggono 0,6 come 0,55. <!-- software-ok -->
+- **FWHM vera** (Marco): fit di Moffat integrato sul pixel, mediana. Contro la verita' iniettata
+  P90 1,4 % (PixInsight 19 %, il metodo di prima 20 %). Esce ~14 % sotto PixInsight, perche' <!-- software-ok -->
+  PixInsight legge le stelle sottocampionate piu' grandi del vero (+13 % sotto 2 px, +24 % a <!-- software-ok -->
+  1 px). Conseguenza dichiarata: le fasce dei forum vengono da programmi con quello stesso
+  errore, quindi sui corredi sottocampionati il giudizio dell'app e' un po' piu' generoso di
+  quello che darebbe chi misura con PixInsight. A schermo il numero non torna con PixInsight: <!-- software-ok -->
+  la guida lo spiega.
+- **Tempo**: mono 26 MP ~3,1 s a frame (P90 4,4), a colori 1,2 s, Canon 0,8 s.
+
 ### I giudizi (Marco, 18/10/2026)
 
 L'app giudica misura per misura, per frame, per notte (mediana) e per produzione (mediana).
