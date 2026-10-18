@@ -11,8 +11,13 @@ completi nel database, per confrontare notti, corredi e siti. Lo stack resta que
 
 ## Decisione
 
-**Ogni frame light risolto porta queste misure**, sul frame intero (il progetto vecchio guardava
-solo i 2048 px al centro, `old/backend/astrolog/quality/analyzer.py`, e gli angoli non li vedeva).
+**Ogni frame light risolto porta queste misure**, su cinque zone e non sul frame intero: il
+centro e i quattro angoli, 1024 px di lato ciascuna, piu' il fondo sul frame intero ridotto 4×4.
+Il progetto vecchio guardava solo i 2048 px al centro (`old/backend/astrolog/quality/analyzer.py`)
+e gli angoli non li vedeva. Misura del 18/10/2026 con `sep` 1.4 su un frame sintetico da
+6248×4176 px con 3000 stelle, sul portatile: frame intero 1,01 s, cinque zone 0,08 s, fondo
+ridotto 0,05 s. Le zone si leggono dal file senza caricarlo tutto (FITS non compresso). Stelle e
+HFD del frame intero restano quelle di ASTAP.
 Si scrivono una volta, quando `measure` passa, e nessuna lettura le ricalcola. Le prime sei sono
 quelle del progetto vecchio; tilt, curvatura, direzione, gradiente e stelle sature sono nuove
 (Marco, 18/10/2026):
