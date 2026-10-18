@@ -960,6 +960,13 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **Per la brief delle Statistiche, lo SQM dei frame** (Marco, 18/10/2026; ADR 0022): per sito,
+  per mese e per anno, dai frame L, senza filtro e a colori. Confronti onesti: Luna sotto
+  l'orizzonte separata da Luna su; per sito; anche la curva media per ora della notte. Niente
+  stima per i filtri stretti: la luce del cielo ha righe (sodio, mercurio, LED, ossigeno a 557 e
+  630 nm) che un filtro da pochi nm prende o manca, e senza lo spettro del posto il conto e'
+  inventato.
+
 - **Una chiave Meteoblue rifiutata cancella anche il seeing delle notti passate**:
   `weather/meteoblue.drop_seeing` toglie ogni riga Meteoblue di `weather_nights`. Marco
   (18/10/2026): il seeing delle notti passate resta, serve alle statistiche e al campionamento.
