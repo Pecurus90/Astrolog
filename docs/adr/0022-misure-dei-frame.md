@@ -203,6 +203,19 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
 - **SNR**: solo rispetto alla sessione (stessa notte, oggetto, filtro): "SNR basso per la notte"
   sotto mediana − 2 MAD, come i tutorial del SubframeSelector. Per notte e produzione solo il
   numero.
+- **Per l'oggetto** (tutti i frame dello stesso oggetto e filtro, di tutte le notti; minimo 10;
+  Marco): "SNR basso per l'oggetto" sotto mediana − 2 MAD; "HFD alta per l'oggetto" oltre
+  mediana + 2 MAD. Stessa regola del SubframeSelector, che si usa proprio sull'insieme dei frame
+  di un oggetto. Per la HFD non il +5 % di N.I.N.A.: quello vale dentro una sessione dopo
+  l'autofocus, fra notti la HFD cambia col seeing e "fuoco peggiore" sarebbe falso. Due giudizi
+  distinti, "per la notte" e "per l'oggetto", mai uno solo.
+- **HFD contro l'archivio dello stesso corredo e filtro**: solo il numero ("mediana del
+  corredo"), niente giudizio (Marco): e' lo schema relativo scartato per la FWHM.
+- **SNR fra oggetti diversi**: mai: la PSF SNR dipende da campo, stelle, filtro e posa.
+- **Massa d'aria**: "oggetto basso" sopra 2, cioe' sotto 30° (Marco): "observers should avoid
+  ... below 30° (airmass about 2)" e limite predefinito della rete AAVSONet (aavso.org/airmass-0).
+- **"Non giudicabile su questo corredo"** porta accanto il perche': "Limite del corredo 3.9″: due
+  pixel da 1.94″." (Marco).
 - **Gradiente**: solo il numero (Marco): nessuna fonte lo giudica, e la regola dei 2 MAD i
   tutorial la usano per FWHM e SNR.
 - **FWHM e HFD a schermo sempre in due unita'**: secondi d'arco e pixel, uno accanto all'altro
