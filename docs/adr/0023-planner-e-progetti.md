@@ -124,23 +124,45 @@ risoluzione conta per nome, senza pannello. Dashboard e Progetti leggono lo stes
 - **Simulazione, senza salvataggio** (Marco): Mercurio, Venere, Marte, Giove, Saturno, Urano,
   Nettuno, Luna e Sole, col corredo vero o di prova (barlow e riduttore compresi). Nel Planner e'
   un secondo modo, «Sistema solare», accanto a «Cielo profondo»: cambia la carta, il corredo resta.
-  - Immagine del corpo da fonti con licenza verificata, una per corpo, col credito visibile: NASA
-    ("generally are not subject to copyright", nasa.gov/multimedia/guidelines) o ESA/Hubble (CC BY
-    4.0, credito non staccabile dall'immagine). La licenza di ogni immagine si controlla sulla
-    sua pagina prima di usarla. Serve alla scala, non mostra l'aspetto di quella notte.
-  - Diametro apparente = 2 · atan(raggio / distanza) nella data scelta; distanza da astropy
-    (`get_body`), raggi dal NASA Planetary Fact Sheet; partenza stanotte, accanto la prossima
-    opposizione. I numeri si leggono dalla fonte quando si scrive il codice.
-  - Disegno: immagine in scala nel rettangolo del sensore, fase per Mercurio, Venere e Luna disegnata sopra, anelli inclinati
-    per Saturno (raggio dal NASA Saturnian Rings Fact Sheet, inclinazione da Meeus, Astronomical
-    Algorithms, cap. 45). Diametro in pixel accanto.
-  - Luna e Sole: anche il mosaico, come per il cielo profondo.
+  - **AstroLog simula, non segue**: i video planetari (SER, AVI) non entrano nell'archivio, che
+    legge FITS; e non guida montatura ne' camera (ADR 0013). La ripresa di un mosaico lunare o
+    solare la guidano programmi come SharpCap o Moon Panorama Maker (GPL-3.0, fermo dal 2019). <!-- software-ok -->
+    **Nessun file esportato** (Marco): non esiste un formato di tessere lunari che FireCapture, <!-- software-ok -->
+    SharpCap o N.I.N.A. importino, e le RA/Dec della Luna invecchiano in minuti (13,2°/giorno, <!-- software-ok -->
+    cseligman.com/text/sky/moonmotion.htm).
+  - **Immagini**, ognuna col suo credito visibile:
+    - Luna: HiPS `CDS/P/Moon/LROC-WAC-100m` in Aladin (100 m/px, pubblico dominio, LROC/ASU,
+      astrogeology.usgs.gov), zoomabile; al clic il nome IAU del cratere (servizio
+      planetary-features del CDS, Gazetteer USGS). A 0.2"/px un pixel e' circa 370 m sulla Luna:
+      la mappa e' piu' fine del telescopio.
+    - Sole: **l'immagine del giorno** (Marco) da Helioviewer, SDO HMI in luce bianca o GONG Hα a <!-- software-ok -->
+      scelta; SDO "not copyrighted unless explicitly noted", credito "Courtesy of NASA/SDO and the
+      AIA, EVE, and HMI science teams"; GONG col ringraziamento NSO. Rete e cache.
+    - Pianeti: una foto per corpo, in scala. Giove, Saturno, Urano, Nettuno dalle mappe Hubble
+      OPAL (CC BY 4.0, archive.stsci.edu/hlsp/opal); gli altri da NASA ("generally are not subject
+      to copyright", nasa.gov/multimedia/guidelines). Licenza di ogni immagine controllata sulla
+      sua pagina. Serve alla scala, non all'aspetto di quella notte.
+  - Diametro apparente = 2 · atan(raggio / distanza) nella data scelta; partenza stanotte, accanto
+    la prossima opposizione (Mercurio e Venere: massima elongazione). Raggi dal NASA Planetary
+    Fact Sheet.
+  - **Calcoli nostri, senza librerie nuove**: fase, terminatore, colongitudine, librazione e angolo
+    dell'asse della Luna (Meeus, Astronomical Algorithms, cap. 53), P, B0, L0 del Sole (cap. 29),
+    anelli di Saturno (cap. 45); i test confrontano con JPL Horizons (quantita' 10, 13, 14, 15, 17).
+  - Disegno: rettangolo del sensore nelle coordinate del corpo, non in RA/Dec; fase disegnata
+    sopra Mercurio, Venere e Luna; anelli di Saturno inclinati (raggio dal NASA Saturnian Rings Fact
+    Sheet). Diametro in pixel accanto.
+  - **Mosaico di Luna e Sole**: tessere fissate sul corpo, come Moon Panorama Maker <!-- software-ok -->
+    (`tile_constructor.py`); sulla Luna solo la parte illuminata. Sovrapposizione di partenza 20 %
+    come nel cielo profondo (MPM usa 5-21 % secondo la camera; nessuno standard). Mostra quante <!-- software-ok -->
+    tessere e l'ordine: prima il terminatore, che cambia in circa 30 minuti (Omegon, rivista di un
+    negozio). Rotazione della camera da tenere entro 10°, o restano buchi (forum SharpCap). <!-- software-ok -->
   - **Campionamento planetario**: rapporto focale critico = 2 × pixel / lunghezza d'onda (Nyquist
     sulla frequenza di taglio della diffrazione; vlaiv su Stargazers Lounge, astropix.com). La
     lunghezza d'onda e' quella del filtro scelto; senza filtro o a colori, 400 nm (Marco). Si
     mostra il rapporto del corredo accanto a quello critico. Le regole 5-7 × pixel dei forum non
     entrano: non hanno fonte.
-  - Il Sole porta l'avvertenza del filtro solare.
+  - Il Sole porta l'avvertenza del filtro solare: filtro sempre davanti all'ottica, mai filtri da
+    oculare, cercatore coperto (AAS, eclipse.aas.org/eye-safety/optics-filters).
 - Transiti della Grande Macchia Rossa e meridiano centrale: idea per dopo, non decisa.
 
 ## Conseguenze
@@ -152,4 +174,5 @@ risoluzione conta per nome, senza pannello. Dashboard e Progetti leggono lo stes
 - File nuovo dei sensori, con test che lo confronta coi frame veri.
 - `docs/domini/mosaico.md`: la frase "nessuno documenta un valore predefinito" era falsa per
   N.I.N.A.; il riconoscimento dei mosaici dai frame resta senza soglia minima.
-- Brief per Design: `handoff/design-planner-progetti.md`.
+- Brief per Design: `handoff/design-planner-progetti.md` (cielo profondo e Progetti) e
+  `handoff/design-planner-sistema-solare.md`.

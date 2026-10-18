@@ -88,8 +88,7 @@ Senza sito: «Sito mancante» e «Aggiungi sito», come nelle Notti.
 
 Il Planner ha **due modi** in testa (Marco): **«Cielo profondo»**, questa brief, e **«Sistema
 solare»** (pianeti, Luna, Sole: simulazione e mosaici di Luna e Sole). Disegnate solo il selettore
-dei due modi; il secondo arriva con una brief sua, dopo una ricerca in corso su come si
-pianificano davvero i mosaici lunari e solari.
+dei due modi; il secondo ha la sua brief: `handoff/design-planner-sistema-solare.md`.
 
 ## 3. Progetti
 
