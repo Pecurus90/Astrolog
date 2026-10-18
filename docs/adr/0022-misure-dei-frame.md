@@ -74,6 +74,39 @@ con la FWHM.
 HFD e FWHM si salvano tutte e due: il loro rapporto dipende dalla forma della stella (β) e
 nessuna delle due si ricava dall'altra.
 
+### Verifica contro PixInsight e contro stelle iniettate (18/10/2026) <!-- software-ok -->
+
+SubframeSelector di PixInsight 1.9.5 lanciato senza finestra (`PixInsight.exe --automation-mode <!-- software-ok -->
+-n --force-exit -r=<script>`) su sei frame veri di Marco (una L, quattro Hα, una OIII), piu' 200
+stelle di forma nota iniettate per configurazione su fondi veri (L, Hα con nebulosa, OIII, OSC):
+
+- **FWHM sul frame**: entro il 5 % da PixInsight (L +7 %); contro la verita' iniettata da −1 a <!-- software-ok -->
+  +8 %. Il +8 % sotto i 2 px viene dall'integrazione sul pixel e lo ha anche PixInsight. La <!-- software-ok -->
+  mediana delle sole cinque zone invece si scosta del +17-18 % sui campi non piatti (quattro zone
+  su cinque sono angoli): **il valore del frame si prende su stelle sparse in tutto il campo**
+  (una griglia 3×3, poche stelle per casella), le cinque zone restano per tilt e curvatura.
+- **FWHM sotto 2 px**: sottocampionata, +5-12 % sistematico (anche in PixInsight). A schermo il <!-- software-ok -->
+  segno "sottocampionata": 2 px per FWHM e' il criterio di Nyquist.
+- **Eccentricita'**: entro ±0,05 da PixInsight; 0,5 iniettata torna 0,48-0,51. Una stella rotonda <!-- software-ok -->
+  col rumore vero legge 0,16-0,30 (PixInsight 0,18-0,23): sotto ~0,3 il numero non distingue una <!-- software-ok -->
+  stella rotonda, e la soglia "rotonde" a 0,45 ci sta sopra.
+- **Angolo**: senza bias (≤2°), ma ha senso solo con eccentricita' da 0,4 in su: sotto, la
+  direzione tace.
+- **HFD**: +2-14 % su L e OSC, **+20-30 % con nebulosa diffusa** (lo fa anche ASTAP), perche' il
+  fondo a maglie di `sep` non segue la nebulosa. Con un fondo ad anello locale attorno a ogni
+  stella il bias sparisce (Hα +23 % → −1 %): **la HFD usa il fondo ad anello**.
+- **Rumore**: coincide con PixInsight entro l'1-2 %. <!-- software-ok -->
+- **Stelle**: il numero dipende dalla soglia (−7…+37 % contro PixInsight): si legge come <!-- software-ok -->
+  indicatore, non come assoluto.
+- **SNR**: nessun riferimento esterno (le definizioni di PixInsight sono altre, il guadagno non <!-- software-ok -->
+  era nell'header): non verificato. A schermo si confronta solo con la stessa camera.
+- **OSC**: valido solo sul superpixel 2×2; PixInsight sul grezzo non fa da riferimento. <!-- software-ok -->
+- **Progetto vecchio**: FWHM +22-30 % contro PixInsight, HFD per stella inaffidabile sulle stelle <!-- software-ok -->
+  deboli (sottrae una mediana globale e taglia sotto zero).
+
+Script e risultati nello scratchpad della sessione (`valida/`), non nel repository: la prova che
+resta e' quella che nasce coi test del backend, su frame sintetici a verita' nota.
+
 ### Le misure, e cosa si scrive
 
 Si scrivono una volta, quando `measure` passa; nessuna lettura le ricalcola.
