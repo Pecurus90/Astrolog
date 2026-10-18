@@ -1,0 +1,76 @@
+# Per Claude Design -- Riepilogo v2: backfocus, giudizi e misure aggiornate
+
+Da Claude Code, 18/10/2026. Risposta a "misure dei frame: backfocus e giudizi". Decisioni di
+Marco, verificate su 62 frame veri di 7 corredi contro PixInsight; dettaglio in <!-- software-ok -->
+`docs/adr/0022-misure-dei-frame.md`. Sostituisce la parte 2 di `design-attrezzatura-v2-e-misure.md`
+dove le due dicono cose diverse. Le parole dei giudizi sono proposte: Marco le approva sulla tavola.
+
+## 1. Backfocus dai frame: no
+
+Marco: non si disegna. Da un frame solo il verso (corto o lungo) non è affidabile: la direzione
+dell'allungamento si inverte passando il fuoco, le fonti si contraddicono, e gli strumenti seri lo
+misurano con curve di fuoco su più frame. Restano tilt e curvatura. Niente frecce per angolo.
+
+## 2. Giudizi: sì, misura per misura
+
+- Marco li accetta. Valgono per **frame, notte (mediana) e produzione (mediana)**.
+- **Nessun giudizio d'insieme** dell'oggetto o della notte: pesare misure diverse non ha fonte.
+- **Nessuno scarto**: il giudizio informa, non toglie frame.
+- Ogni soglia ha una fonte pubblica (o è una scelta di Marco, detta così). Dove manca il dato,
+  il giudizio tace e dice perché.
+
+| misura | giudizio | soglie | da dove |
+|---|---|---|---|
+| **FWHM** (in ″) | **eccellente / buono / nella media / scarso / pessimo** | sotto 2″ / 2-3″ / 3-4″ / 4-5″ / oltre 5″ | consenso dei forum (32 casi) |
+| | **al limite del corredo** | sotto F = il maggiore fra 2 × scala e la diffrazione; i bordi sotto F salgono a F | due pixel per stella |
+| | **non giudicabile su questo corredo** | quando F supera 3″ (es. 60/300 a 2,59″/px) | |
+| **Eccentricità** | **rotonde / — / allungate** | fino a 0,45 / 0,45-0,6 solo il numero / oltre 0,6 | 0,45 dai forum; 0,6 di Marco |
+| **Fuoco** (HFD) | **fuoco peggiore** | HFD oltre +15 % sulla migliore della stessa notte e filtro | esempio di SGP |
+| **Tilt** | **buono / incerto / non adatto** | fino al 10 % / 10-20 % / oltre 20 % | ASTAP |
+| **SNR** | **SNR basso per la notte** | sotto mediana − 2 MAD dei frame della stessa notte, oggetto e filtro | regola del SubframeSelector |
+| **Gradiente** | **gradiente alto per la notte** | oltre mediana + 2 MAD, stesso gruppo | stessa regola |
+| **Luminosità del cielo** | **come il Bortle del sito / più chiaro del Bortle del sito** | tabella SQM ↔ Bortle; solo L e senza filtro | Wikipedia |
+
+SNR e gradiente si giudicano solo sul frame (contro la sua notte). Per notte e produzione solo il
+numero.
+
+**Senza giudizio**: curvatura di campo (Marco), stelle, stelle sature, fondo, rumore, massa d'aria,
+direzione dell'allungamento.
+
+**Quando manca un dato**:
+- frame senza scala del cielo: niente FWHM in ″, niente giudizio della FWHM;
+- corredo senza apertura: F senza la diffrazione (solo 2 × scala);
+- notte con un frame solo: niente giudizi "per la notte";
+- luminosità del cielo senza Bortle del sito: niente giudizio.
+
+## 3. Misure aggiornate (cambiano rispetto alla brief di prima)
+
+- **FWHM e HFD sempre in due unità**, ″ e px, una accanto all'altra: "2.2″ · 1.6 px". Il
+  giudizio usa i ″, il campionamento i px.
+- **FWHM vera** (Marco): circa il 14 % sotto i numeri di PixInsight sulle stelle piccole, perché <!-- software-ok -->
+  PixInsight le legge più grandi del vero. Una riga di spiegazione accanto, la prima volta. <!-- software-ok -->
+- **Campionamento**, a parte e senza voto: sotto 1,5 px "sottocampionata (grave)", 1,5-2 px
+  "sottocampionata", 2-3 px "ideale", oltre 3 px "sovracampionata".
+- **SNR** è ora la PSF SNR di PixInsight: un numero grande (anche centinaia o migliaia). Si <!-- software-ok -->
+  confronta solo dentro la stessa notte, mai fra camere.
+- **Tilt** calcolato come ASTAP: (angolo peggiore − migliore) / HFD mediana, in %.
+- **Tilt e curvatura** tacciono sulle camere a colori con stelle sotto ~1,2 superpixel.
+- **Stelle**: il numero lo dà ASTAP sul frame intero.
+
+## 4. Già nel disegno: confermato
+
+- Direzione dell'allungamento solo da 0,40; "sottocampionata" sotto 2 px.
+- Grafico "Frame per frame": due misure, la prima piena e la seconda tratteggiata; "per valore"
+  ordina sulla prima.
+
+## 5. Esempio: Askar 103 + ATR2600M, 1,385″/px, OIII
+
+F = max(2 × 1,385; 1,13) = 2,77″.
+
+- FWHM 1.9″ · 1.4 px → **al limite del corredo**, sottocampionata
+- FWHM 2.9″ · 2.1 px → **buono**, ideale
+- FWHM 3.6″ · 2.6 px → **nella media**
+- eccentricità 0,52 → solo il numero; 0,63 → **allungate**, in AR
+- tilt 8 % → **buono**
+
+CHANGELOG e DECISIONI come al solito.
