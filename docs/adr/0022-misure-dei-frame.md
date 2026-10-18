@@ -197,8 +197,9 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
 - **Minimo per i giudizi "per la notte"** (fuoco, SNR): 10 frame della stessa notte, oggetto e
   filtro; sotto, tacciono (Marco). 10 e' il `SampleSize` predefinito dello stesso trigger di
   N.I.N.A.
-- **Luminosita' del cielo** contro il Bortle del sito: la tabella SQM ↔ Bortle di Wikipedia
-  (en.wikipedia.org/wiki/Bortle_scale, fonte secondaria). Solo per L e senza filtro.
+- **Luminosita' del cielo** contro il Bortle del sito: la tabella SQM ↔ Bortle di ASTAP
+  (`bortle()`, da ClearDarkSky: Bortle 5 = 19,50-20,49, 6 = 18,94-19,50), la stessa del
+  programma da cui viene il metodo (Marco). Solo per L, senza filtro e camere a colori.
 - **SNR**: solo rispetto alla sessione (stessa notte, oggetto, filtro): "SNR basso per la notte"
   sotto mediana − 2 MAD, come i tutorial del SubframeSelector. Per notte e produzione solo il
   numero.
@@ -285,20 +286,26 @@ Eccentricita' e SNR no: la prima misura inseguimento e ottiche, non l'aria.
 Misura del 18/10/2026: l'opzione `-sqm` c'e' solo nell'`astap.exe` grafico (non nel CLI che usa
 l'app, ne' sul NAS) e si blocca su un frame OSC. Quindi un metodo nostro:
 
-- SQM = ZP − 2,5·log10((fondo − bias) / scala²) + estinzione, con ZP il punto zero dalle stelle
-  del frame abbinate al catalogo e l'estinzione 0,2811·massa d'aria − 0,28 come ASTAP. Sulla
-  stessa L mono di Marco da' 19,15, come `astap.exe -sqm`.
-- **Catalogo**: i file di ASTAP sul disco, letti da noi (formato documentato su hnsky.org). D80
-  porta Gaia BP: vale per L, senza filtro e OSC (raw, mai debayerizzato).
-- **R, G, B ognuno nella sua banda** (Marco): stelle tarate nella banda del filtro col catalogo V50
-  (V e colore BP−RP) e le trasformazioni pubblicate da Gaia, da verificare e citare alla
-  costruzione. A schermo "R: 20,8 mag/arcsec²", non uno SQM. Senza V50 tace e dice perche'.
-  Non esiste un coefficiente fisso fra bande: dipende dal colore del cielo (cielo buio a La Palma:
-  B 22,7, V 21,9, R 21,0; Benn e Ellison 1998).
+- **Il metodo di ASTAP, portato** (sorgente MPL-2.0, github.com/han-k59/astap; MPL e' compatibile
+  con la GPL-3 di AstroLog, e va nei crediti): ZP = 21 + 2,5·log10 della media pesata per SNR di
+  flusso/10^((21 − BP)/2,5), con lo scarto a 1,5σ; flusso nel quadrato della stella col fondo
+  dall'anello; cielo = moda dell'istogramma; SQM = ZP − 2,5·log10((cielo − bias)/scala²) +
+  0,2811·X − 0,28, X di Pickering 2002 dall'altezza ricalcolata. Tutto per posa, in ADU.
+- **Verifica** (18/10/2026, 18 frame mono L di Marco, 7 notti, altezze 31-82°): contro
+  `astap.exe -sqm` scarto mediano 0,003 mag, massimo 0,007 (l'arrotondamento di ASTAP); stesso
+  punto zero e stesse stelle di calibrazione. Tempo 0,5-0,9 s a frame, da vettorializzare.
+- **Catalogo**: lettore nostro dei file .1476 di ASTAP (numpy, coi suoi test). D80 porta Gaia BP:
+  vale per L, senza filtro e camere a colori (superpixel 2×2, media dei quattro; i mono binnati
+  2×2 restano entro +0,035 da ASTAP).
+- **B e G** col catalogo V50 di ASTAP (1,0 GB, lo scarica l'utente come il D80: porta V e il
+  colore delle stelle), con le relazioni di Gaia DR3 (Riello et al. 2021, A&A 649, A3, tab. C.2).
+  A schermo "B: 20,8 mag/arcsec²", non uno SQM. Senza V50 tace e dice "manca il catalogo V50".
+- **R: dopo** (Marco): serve G, BP e RP di Gaia per ogni stella, che nessun catalogo di ASTAP
+  porta; resta fra le idee (VizieR con cache, o un estratto nostro).
 - Filtri stretti (Hα, OIII, SII): mai.
-- **Bias**: campo facoltativo "Bias (ADU)" della camera (si aggiunge ad ADR 0021). Senza, si stima
-  e la misura porta scritto "senza bias" (Marco).
-- Errore atteso ±0,1-0,2 mag: stima, non misura.
+- **Bias**: campo facoltativo "Bias (ADU)" della camera (ADR 0021). Senza, si mostra lo stesso con
+  "senza bias" (Marco), anche sulle camere a colori. Peso misurato: sulle mono 0,03-0,18 mag, su
+  una ASI2600MC fino a 0,9 mag. `OFFSET` non e' un ADU uguale per tutte le camere e non si usa.
 
 ### Il resto
 
