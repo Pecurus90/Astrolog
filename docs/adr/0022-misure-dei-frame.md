@@ -139,6 +139,51 @@ Il grosso e' il filtro mediano contro i pixel caldi (1,9 s sui 26 MP). Sul miscu
 dell'archivio di Marco circa 3,7 s a frame, 11 ore per 11.000 frame su un processo; in
 parallelo meno, non misurato. Il filtro si accelera prima di costruire.
 
+### SNR e velocita' (18/10/2026)
+
+- **SNR = PSF SNR della documentazione di PixInsight** (ImageWeighting, eq. 7, 18-19; solo la <!-- software-ok -->
+  documentazione, non il codice): c3·(Σ flussi)² / (c4·σ²), con c3 = 1,350e-7, c4 = 4,987e6, il
+  flusso di ogni stella rilevata dentro l'ellisse a un decimo del massimo della sua PSF, fondo
+  dall'anello locale, σ il nostro rumore. Sui 45 frame segue PixInsight: ρ 0,97, rapporto 1,04 <!-- software-ok -->
+  (P10-P90 0,98-1,13). Il vecchio SNR mediano per stella non lo seguiva (ρ −0,11). Dipende da
+  campo, scala, densita' stellare e da come si presenta il dato: si confronta solo dentro la
+  stessa sessione e produzione, mai fra camere.
+- **Filtro contro i pixel caldi**: mediana 3×3 esatta scritta in numpy (terne verticali
+  ordinate una volta, poi med3 di massimo dei minimi, mediana delle mediane, minimo dei massimi),
+  identica bit per bit a `scipy.ndimage.median_filter` su quattro frame e 24 volte piu' veloce
+  (1,87 → 0,08 s sui 26 MP). Mono 26 MP da 4,6 a 2,75 s a frame, a colori 1,78 s, Canon 1,07 s.
+  Le scorciatoie (maschera dei pixel caldi, rilevamento sul grezzo, binning) cambiavano il numero
+  di stelle del 9-67 % e sono scartate.
+- **11.000 frame** (miscuglio di Marco): 7,2 ore su un processo, 4,1 su due, 2,5 su quattro
+  (misurato su 8 frame: ×1,75 con 2, ×2,92 con 4). Senza ASTAP e da SSD.
+
+### I giudizi (Marco, 18/10/2026)
+
+L'app giudica misura per misura, per frame, per notte (mediana) e per produzione (mediana).
+Nessun voto d'insieme (pesare misure diverse fra loro non ha fonte) e nessun frame scartato: il
+giudizio informa. Dove manca il dato che serve, il giudizio tace.
+
+- **Tilt**: la formula di ASTAP, (angolo peggiore − migliore) / HFD mediana; fino al 10 % buono,
+  10-20 % incerto, oltre non adatto ("Any tilt equal or less than 10% of the range is a good
+  value", hnsky.org/astap.htm; Siril mette il limite al 10 %). <!-- software-ok -->
+- **Eccentricita'**: fino a 0,45 "rotonde", 0,45-0,6 incerto, oltre 0,6 "allungate" (Marco).
+  ESO FORS2 tiene solo frame con ellitticita' sotto 0,3, cioe' eccentricita' ~0,71
+  (eso.org/qc/FORS2/qc/imagequality/imagequality.html): 0,6 non e' largo.
+- **Fuoco**: un frame la cui HFD supera del 15 % la mediana dei migliori della stessa notte e
+  filtro e' "fuoco peggiore" (Marco; SGP usa 15 % come esempio per rifare l'autofocus,
+  N.I.N.A. 5 % come predefinito).
+- **Luminosita' del cielo** contro il Bortle del sito: la tabella SQM ↔ Bortle di Wikipedia
+  (en.wikipedia.org/wiki/Bortle_scale, fonte secondaria). Solo per L e senza filtro.
+- **Gradiente e SNR**: solo rispetto alla sessione (stessa notte, oggetto, filtro): segnato il
+  frame oltre mediana ± 2 MAD, come i tutorial del SubframeSelector. Per notte e produzione solo
+  il numero.
+- **FWHM**: secondo il corredo; formula in ricerca.
+- **Senza giudizio**: curvatura di campo (Marco), stelle, fondo, rumore, massa d'aria.
+- **Backfocus dai frame: no** (Marco). Da un frame solo il verso non e' affidabile: la direzione
+  dell'allungamento si inverte passando il fuoco (telescope-optics.net/astigmatism1.htm), le
+  fonti si contraddicono, e gli strumenti seri lo misurano con curve di fuoco su piu' frame
+  (Hocus Focus per N.I.N.A.).
+
 ### Le misure, e cosa si scrive
 
 Si scrivono una volta, quando `measure` passa; nessuna lettura le ricalcola.
@@ -201,7 +246,8 @@ l'app, ne' sul NAS) e si blocca su un frame OSC. Quindi un metodo nostro:
 
 ### Il resto
 
-**Nessun voto e nessuno scarto**: l'app misura e basta (Marco, confermato; ADR 0013). Medie e
+**Nessun voto d'insieme e nessuno scarto** (Marco, confermato; ADR 0013): i giudizi misura per
+misura sono sopra, e informano soltanto. Medie e
 mediane solo sui frame misurati.
 
 **Dove si vedono**: Notti, Archivio, Statistiche. La scheda dell'oggetto no, per ora (Marco).
