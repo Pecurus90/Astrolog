@@ -1,6 +1,7 @@
-# Per Claude Design -- Planner e Progetti
+# Per Claude Design -- Planner (cielo profondo) e Progetti
 
-Da Claude Code, 18/10/2026. Due pagine nuove e il cerchio dei progetti in Dashboard. Decisioni in
+Da Claude Code, 18/10/2026. Due pagine nuove e il cerchio dei progetti in Dashboard. Si parte dal
+**Planner**, la pagina piu' complessa (Marco): Progetti mostra cio' che il Planner crea. Decisioni in
 `docs/adr/0023-planner-e-progetti.md` (con 0005, 0006, 0013). Le parole fra «» sono proposte:
 Marco le approva sulla tavola. Desktop prima; il telefono si disegna alla fine come le altre
 pagine, ma la carta va provata presto su tablet.
@@ -83,25 +84,12 @@ Senza sito: «Sito mancante» e «Aggiungi sito», come nelle Notti.
 - **Salva**. Se esiste gia' un progetto con lo stesso oggetto e corredo: niente doppione, si
   mostra quello («Questo oggetto ha gia' un progetto con questo corredo.» · «Apri il progetto»).
 
-### 2.6 Pianeti, Luna e Sole: simulazione
+### 2.6 Il secondo modo: «Sistema solare» (non ancora)
 
-Il Planner ha **due modi** in testa (Marco): **«Cielo profondo»** e **«Sistema solare»**. Il
-corredo scelto resta; cambia la carta. In «Sistema solare» si sceglie Mercurio, Venere, Marte,
-Giove, Saturno, Urano, Nettuno, Luna o Sole e compare la **simulazione**. Non si salva: nessun
-progetto.
-- Il **rettangolo del sensore** del corredo (vero o di prova) con dentro il corpo **in scala**, con
-  una foto NASA o ESA/Hubble (una per corpo, credito visibile sotto, es. «NASA, ESA»). Fase per
-  Mercurio, Venere e Luna disegnata sopra; anelli di Saturno con l'inclinazione della data. Riga
-  sotto: «Foto per la scala: l'aspetto della notte cambia.»
-- Nel modo «Sistema solare» la lista dei sensori apre su Planetario (Solare col Sole).
-- **Data**: partenza stanotte; accanto «prossima opposizione {data}», che porta al disco piu' grande.
-- **Barlow / riduttore** (fattore) cambiano la scala subito.
-- Numeri accanto: diametro apparente e in pixel, scala, rapporto focale del corredo e **rapporto
-  focale critico** per il filtro scelto. Nessuna pillola buono/cattivo. Esempio coerente: C9.25
-  (2350 mm, 235 mm) con barlow 1,5× e pixel da 2.9 µm, Giove a 44.8″ → «44.8″ · 264 px»,
-  «0.17″/px», «f/15 · critico f/14.5 senza filtro (400 nm)»; con Hα «critico f/8.8 (656 nm)».
-- Luna e Sole: anche la griglia del mosaico, come sulla carta.
-- Sole: fascia fissa «Solo con un filtro solare a tutta apertura.»
+Il Planner ha **due modi** in testa (Marco): **«Cielo profondo»**, questa brief, e **«Sistema
+solare»** (pianeti, Luna, Sole: simulazione e mosaici di Luna e Sole). Disegnate solo il selettore
+dei due modi; il secondo arriva con una brief sua, dopo una ricerca in corso su come si
+pianificano davvero i mosaici lunari e solari.
 
 ## 3. Progetti
 
@@ -131,8 +119,8 @@ Il cerchio dei progetti in corso usa lo stesso numero e lo stesso disegno della 
 
 ## 5. Fuori
 
-- **Planetario e solare**: nessun progetto (Marco). C'e' solo la simulazione (2.6) e le
-  effemeridi del Sistema solare in Dashboard.
+- **Planetario e solare**: nessun progetto (Marco). Il modo «Sistema solare» (2.6) arriva con una
+  brief sua.
 - Nessun punteggio d'insieme e nessuna classifica «i migliori stanotte».
 - La pagina delle sequenze e il piano della notte (ADR 0013) sono una brief a parte.
 
