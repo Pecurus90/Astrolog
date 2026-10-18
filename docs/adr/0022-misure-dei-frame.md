@@ -323,6 +323,28 @@ l'app, ne' sul NAS) e si blocca su un frame OSC. Quindi un metodo nostro:
   senza, l'errore arrivava a 0,9 mag su una ASI2600MC. `OFFSET` non e' un ADU uguale per tutte le
   camere e non si usa.
 
+### Il Bortle del sito dalle misure
+
+Proposta di Marco (18/10/2026). L'app **propone**, l'utente sceglie; mai un cambio da sola.
+- **Frame che contano**: quelli che hanno lo SQM (sopra), **solo col bias** (scelta di metodo: lo
+  scarto "senza bias" arriva a 0,18 mag, e una classe di Bortle e' larga 0,5-1 mag); Sole sotto
+  -18° e Luna sotto -5° ("Sun below –18° and Moon below –5°", arxiv.org/abs/2104.10616); oggetto
+  sopra 30°, lo stesso confine di "oggetto basso". La massa d'aria e' gia' corretta nello SQM
+  (estinzione di ASTAP); il bagliore delle citta' no, per questo il confine dei 30°.
+- **Numero**: una mediana per notte, poi la mediana delle notti: una notte lunga non pesa piu'
+  delle altre. La media del picco di m_FWHM (stessa fonte) e' per misuratori fissi allo zenit,
+  non per frame che guardano oggetti diversi.
+- **Minimo**: notti in almeno **6 mesi diversi** negli ultimi 12 (Marco; nessuna fonte fissa un
+  minimo). Si contano solo gli ultimi 12 mesi: l'inquinamento cambia.
+- **Quando**: lo calcola la scansione. Si propone quando la classe misurata e' diversa da quella
+  del sito; dopo «Lascia», di nuovo solo se la classe misurata cambia.
+- **Parole** (Marco): «Le misure di {sito} dicono Bortle {b} (SQM {sqm}, {n} notti). Nel sito
+  c'e' Bortle {b0}.» · «Usa Bortle {b}» · «Lascia Bortle {b0}». Sotto il Bortle del sito:
+  «misurato su {n} notti» / «scritto a mano». Dati scarsi: «Servono notti in 6 mesi diversi:
+  finora {n} notti in {m} mesi.»
+- Il giudizio «come / piu' chiaro del Bortle del sito» resta: una classe e' larga, la mediana sta
+  dentro, e un frame che esce dal basso della classe ha Luna, foschia o luci.
+
 ### Il resto
 
 **Nessun voto d'insieme e nessuno scarto** (Marco, confermato; ADR 0013): i giudizi misura per
