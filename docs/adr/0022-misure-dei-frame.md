@@ -297,15 +297,16 @@ l'app, ne' sul NAS) e si blocca su un frame OSC. Quindi un metodo nostro:
 - **Catalogo**: lettore nostro dei file .1476 di ASTAP (numpy, coi suoi test). D80 porta Gaia BP:
   vale per L, senza filtro e camere a colori (superpixel 2×2, media dei quattro; i mono binnati
   2×2 restano entro +0,035 da ASTAP).
-- **B e G** col catalogo V50 di ASTAP (1,0 GB, lo scarica l'utente come il D80: porta V e il
-  colore delle stelle), con le relazioni di Gaia DR3 (Riello et al. 2021, A&A 649, A3, tab. C.2).
-  A schermo "B: 20,8 mag/arcsec²", non uno SQM. Senza V50 tace e dice "manca il catalogo V50".
-- **R: dopo** (Marco): serve G, BP e RP di Gaia per ogni stella, che nessun catalogo di ASTAP
-  porta; resta fra le idee (VizieR con cache, o un estratto nostro).
-- Filtri stretti (Hα, OIII, SII): mai.
-- **Bias**: campo facoltativo "Bias (ADU)" della camera (ADR 0021). Senza, si mostra lo stesso con
-  "senza bias" (Marco), anche sulle camere a colori. Peso misurato: sulle mono 0,03-0,18 mag, su
-  una ASI2600MC fino a 0,9 mag. `OFFSET` non e' un ADU uguale per tutte le camere e non si usa.
+- **Solo L, senza filtro e camere a colori** (Marco): uno SQM misura il cielo senza filtro, e
+  R, G, B sarebbero altre grandezze. Niente catalogo V50. Filtri colorati e stretti: mai.
+- **La curva della notte**: ogni frame L, senza filtro o a colori da' un punto; nelle Notti lo
+  SQM lungo la notte mostra Luna, luci, foschia. Due avvertenze a schermo: una notte senza quei
+  frame non ha curva; il valore dipende anche dalla direzione (l'estinzione e' corretta, il
+  bagliore delle citta' no), quindi cambiando oggetto la curva puo' saltare.
+- **Bias**: campo facoltativo "Bias (ADU)" della camera (ADR 0021). Mono senza bias: si mostra
+  con "senza bias" (peso misurato 0,03-0,18 mag). **Camere a colori: solo col bias** (Marco):
+  senza, l'errore arrivava a 0,9 mag su una ASI2600MC. `OFFSET` non e' un ADU uguale per tutte le
+  camere e non si usa.
 
 ### Il resto
 

@@ -55,12 +55,15 @@ rumore, massa d'aria, direzione dell'allungamento.
 - **Tilt** calcolato come ASTAP: (angolo peggiore − migliore) / HFD mediana, in %.
 - **Tilt e curvatura** tacciono sulle camere a colori con stelle sotto ~1,2 superpixel.
 - **Stelle**: il numero lo dà ASTAP sul frame intero.
-- **Luminosità del cielo**:
-  - **SQM** con L, senza filtro e camere a colori: identico ad ASTAP (scarto 0,003 mag);
-  - **B e G** nella loro banda ("B: 20.8 mag/arcsec²"), solo col catalogo V50; senza, "manca il
-    catalogo V50";
-  - **R per ora mai**; filtri stretti mai;
-  - senza bias della camera il numero si mostra con "senza bias", anche sulle camere a colori.
+- **Luminosità del cielo (SQM)**, identica ad ASTAP (scarto 0,003 mag):
+  - solo frame **L, senza filtro e camere a colori**; R, G, B e filtri stretti mai. Niente
+    catalogo V50: togliete "manca il catalogo V50" e la riga sul V50 nel passo di ASTAP;
+  - **curva della notte** nelle Notti: un punto per frame, lungo la notte, con l'altezza della
+    Luna sullo stesso asse del tempo. Due avvertenze: "nessun frame L o a colori in questa notte"
+    quando manca; "il valore cambia anche con la direzione del cielo" accanto alla curva;
+  - mono senza bias della camera: il numero con "senza bias"; **camere a colori senza bias:
+    niente SQM**, con "serve il bias della camera" e il rimando al campo "Bias (ADU)" in
+    Attrezzatura.
 
 ## 4. Già nel disegno: confermato
 
