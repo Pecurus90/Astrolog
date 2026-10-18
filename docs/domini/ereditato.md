@@ -106,7 +106,8 @@ non e' ancora nato.
 - **Un progetto finito resta**; alzare l'obiettivo lo riapre; la chiusura la propone l'app e la
   conferma l'utente -- `target.md:402-405`.
 - **Mosaico**: un progetto con N pannelli; griglia (righe, colonne, sovrapposizione) sul
-  progetto, pannelli derivati dal centro; **congelata a progetto iniziato**; obiettivo per
+  progetto, pannelli derivati dal centro; a progetto iniziato si cambia con l'avviso delle ore
+  che non conterebbero piu' (ADR 0023, supera "congelata"); obiettivo per
   pannello, il totale e' la somma solo se dichiarati tutti. *Debito del vecchio da non
   ripetere*: la chiave (progetto, oggetto) non regge due pannelli sullo stesso oggetto --
   `planner.md:80-97,652-656`.

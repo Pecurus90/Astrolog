@@ -40,7 +40,7 @@ Le sei mosse gia' decise: **Trova → Scegli → Inquadra → Crea → Salva →
 | | licenza | stato | giudizio |
 |---|---|---|---|
 | **Aladin Lite v3** (CDS, Strasburgo) | LGPL-3.0 | stabile 3.8.1 (5/3/2026), mantenuta | **scelta** |
-| Stellarium Web Engine | AGPL-3.0 | nessuna release, fermo dal 2025 | no: AGPL e abbandonato | <!-- software-ok -->
+| Stellarium Web Engine | AGPL-3.0 | nessuna release, codice fermo dal 2021 | no: AGPL e abbandonato | <!-- software-ok -->
 | d3-celestial | BSD | fermo dal 2022 | no: solo disegno, niente fotografie |
 | VirtualSky | non open source | fermo dal 2023 | no |
 

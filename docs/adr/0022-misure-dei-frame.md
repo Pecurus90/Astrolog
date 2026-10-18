@@ -213,7 +213,9 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
   corredo"), niente giudizio (Marco): e' lo schema relativo scartato per la FWHM.
 - **SNR fra oggetti diversi**: mai: la PSF SNR dipende da campo, stelle, filtro e posa.
 - **Massa d'aria**: "oggetto basso" sopra 2, cioe' sotto 30° (Marco): "observers should avoid
-  ... below 30° (airmass about 2)" e limite predefinito della rete AAVSONet (aavso.org/airmass-0).
+  ... below 30° (airmass about 2)" e limite predefinito della rete AAVSONet (aavso.org/airmass-0,
+  risposta nel forum AAVSO); il numero: "airmass 1.996 at an elevation of 30. degrees" (IRAF,
+  iraf.readthedocs.io/en/latest/tasks/noao/astutil/airmass.html).
 - **"Non giudicabile su questo corredo"** porta accanto il perche': "Limite del corredo 3.9″: due
   pixel da 1.94″." (Marco).
 - **Gradiente**: solo il numero (Marco): nessuna fonte lo giudica, e la regola dei 2 MAD i
