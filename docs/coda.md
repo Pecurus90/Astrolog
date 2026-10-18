@@ -960,6 +960,13 @@ riga per voce.
 
 ### Debito che aspetta il suo momento
 
+- **Una chiave Meteoblue rifiutata cancella anche il seeing delle notti passate**:
+  `weather/meteoblue.drop_seeing` toglie ogni riga Meteoblue di `weather_nights`. Marco
+  (18/10/2026): il seeing delle notti passate resta, serve alle statistiche e al campionamento.
+  Rimedio: togliere solo le notti da stanotte in poi. Le notti prima dell'app non hanno seeing e
+  non lo avranno (lo storico di Open-Meteo non lo porta; uno storico Meteoblue a pagamento non e'
+  verificato).
+
 - **"al 80%" invece di "all'80%"**: i testi con "al {pct}%" (`weather.weighs.moon.*`,
   `weather.cloud`, `weather.clear.trendWhen`, `tonight.illuminated`) non elidono davanti a 8, 11 e
   80-89. Serve una forma sola per tutta l'app, non una pezza per testo.
