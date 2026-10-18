@@ -177,6 +177,10 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
 - **Gradiente e SNR**: solo rispetto alla sessione (stessa notte, oggetto, filtro): segnato il
   frame oltre mediana ± 2 MAD, come i tutorial del SubframeSelector. Per notte e produzione solo
   il numero.
+- **FWHM e HFD a schermo sempre in due unita'**: secondi d'arco e pixel, uno accanto all'altro
+  (Marco, 18/10/2026). Il SubframeSelector di PixInsight mostra i pixel finche' non gli si da' <!-- software-ok -->
+  la scala: chi confronta i numeri deve ritrovare gli stessi. Il giudizio usa i secondi d'arco, il
+  campionamento i pixel. <!-- software-ok -->
 - **FWHM: giudizio assoluto in secondi d'arco** (Marco, 18/10/2026). Uno schema solo relativo
   (contro lo storico dello stesso corredo) e' scartato: chi ha sempre guida o fuoco cattivi
   risulterebbe "buono". Le fasce vengono dal consenso dei forum (32 casi verificati su Cloudy
