@@ -1,83 +1,88 @@
-# Per Claude Design -- i campi dell'attrezzatura: le risposte dall'app
+# Per Claude Design -- i campi dell'attrezzatura: la lista nuova
 
-Da Claude Code, 18/10/2026. Controllato sull'app vera: lo schema (`instruments`, `filters`,
-`filter_bands`, `rigs`), i campi che l'API accetta per tipo (`cards` in `GET /api/v1/gear`) e
-gli header che la scansione legge.
+Da Claude Code, 18/10/2026. Marco ha deciso di allargare i campi: ogni pezzo porta la scheda
+tecnica del produttore, tutta modificabile, e il corredo ci calcola sopra. La decisione e' in
+`docs/adr/0021-dati-completi-dell-attrezzatura.md`. Oggi l'app ha solo i campi del vostro v15:
+quelli nuovi arrivano col porting.
 
-**In breve: al modulo v15 non manca niente.** I campi che avete sono esattamente quelli che l'app
-chiede, tipo per tipo. La regola dell'app: un campo si chiede solo se l'app ci fa qualcosa
-(rapporto focale, scala, carico). Dimensioni e risoluzione del sensore, raffreddamento, diametro
-e focale della guida, tipo di montatura, misura dei filtri non esistono: non disegnateli.
+Le etichette dei campi nuovi sono **proposte**: Marco le approva sulla vostra tavola. Quelle che
+esistono gia' restano parola per parola (Nome, Marca, Modello, Peso (kg), Note, Apertura (mm),
+Focale nativa (mm), Tipo di sensore, Pixel (µm), Carico utile (kg), Fattore, Numero di
+posizioni, Larghezza (nm), Focale effettiva (mm)).
 
 ## 1. I campi, tipo per tipo
 
-Comuni a tutti gli strumenti: Nome, Marca, Modello, Peso (kg), Note.
+Comuni a tutti gli strumenti: Nome (obbligatorio), Marca, Modello, Peso (kg), Note. Tutti gli altri
+campi sono facoltativi. Accanto al campo: **dai file**, **calcolato** o **inserito**, come nel v15.
 
-| tipo | campi propri |
-|---|---|
-| ottica | Apertura (mm), Focale nativa (mm) |
-| camera | Tipo di sensore (mono / a colori), Pixel (µm) |
-| montatura | Carico utile (kg) |
-| riduttore | Fattore |
-| ruota portafiltri | Numero di posizioni |
-| ottica di guida, camera di guida, focheggiatore | nessuno |
+- **ottica**: Apertura (mm), Focale nativa (mm), Cerchio d'immagine (mm), Backfocus richiesto (mm).
+  Calcolato: potere risolutore (").
+- **camera**:
+  - Sensore (il nome, es. IMX571)
+  - Risoluzione (px), larghezza × altezza: dai file
+  - Pixel (µm): dai file
+  - Dimensione del sensore (mm): calcolata
+  - Tipo di sensore (mono / a colori): dai file
+  - Bit dell'ADC
+  - Raffreddata (sì / no) e, se sì, Raffreddamento (°C sotto l'ambiente)
+  - Spessore fino al sensore (mm)
+- **camera di guida**: come la camera, senza raffreddamento. Dai file arriva solo il nome.
+- **ottica di guida**: Apertura (mm), Focale (mm).
+- **guida fuori asse (OAG)**, tipo nuovo: Spessore (mm), Prisma (mm). Niente focale: guida con
+  quella del corredo.
+- **montatura**: Carico con contrappeso (kg), Carico senza contrappeso (kg). Il Peso e' quello
+  della testa.
+- **riduttore** (anche barlow: fattore sopra 1): Fattore, Backfocus richiesto (mm), Cerchio
+  d'immagine (mm).
+- **ruota portafiltri**: Numero di posizioni, Misura dei filtri (1,25″ / 31 mm / 36 mm / 2″ /
+  50 mm quadrato), Spessore (mm).
+- **focheggiatore**: Passo (µm), Passi totali.
+- **distanziale**, tipo nuovo: Spessore (mm).
+- **Filtro**: Nome e almeno una banda (obbligatori), Marca, Modello, le bande con Larghezza (nm),
+  Misura (come la ruota), Spessore (mm), Montato (sì / no), Per ottiche veloci (sì / no).
+- **Corredo**: Ottica, Camera, Focale effettiva (mm), obbligatori come oggi.
 
-- **Filtro**: Nome, Marca, Modello, le bande (una o piu', fra L, R, G, B, HA, HB, OIII, SII),
-  ognuna con Larghezza (nm) facoltativa. Niente Note e niente Peso: il filtro non li ha.
-- **Corredo**: Ottica, Camera, Focale effettiva (mm). Il nome si da' dopo, con Rinomina.
-- **In modifica**: "Unisci a", per strumenti e filtri.
-- **Programma di ripresa**: non e' un tipo e non si scrive. E' una parte del corredo che arriva
-  solo dai file. Nel modulo non c'e'.
+Il programma di ripresa resta una parte del corredo che arriva solo dai file: nessun modulo.
 
-**Backfocus: togliete la riga dalla scheda del riduttore.** Il campo esiste nel database, ma
-nessun modulo lo chiede e nessun header lo porta: la riga non comparirebbe mai.
+## 2. Il corredo: parti e conti
 
-## 2. Obbligatori
+Parti nuove, scelte come le altre: la **guida** (ottica di guida **oppure** OAG, più la camera di
+guida) e i **distanziali** (anche più d'uno).
 
-- Strumento: solo il Nome (il Tipo ha sempre un valore).
-- Filtro: Nome e almeno una banda.
-- Corredo: Ottica, Camera e Focale effettiva.
-- Ogni misura, se scritta, e' maggiore di zero.
+Una sezione di conti nella scheda del corredo. Ogni conto compare solo coi suoi dati; se ne manca
+uno, la riga dice quale (es. "manca il pixel della camera di guida"):
 
-## 3. Dai file, calcolati, scritti a mano
+- Rapporto focale (calcolato)
+- Scala prevista ("/px), accanto a quella misurata sul cielo
+- Campo previsto (° × °), accanto a quello misurato
+- Copertura: diagonale del sensore contro cerchio d'immagine (ci sta / non ci sta)
+- Scala di guida ("/px), con **avviso fuori da 0,5-4 "/px**
+- Rapporto guida/ripresa (es. "3,2×"), **senza giudizio**
+- Campionamento: "ottimo con seeing fra {a} e {b}""
+- Backfocus del treno: somma degli spessori contro il richiesto, con la differenza in mm (senza
+  giudizio)
+- Carico: "{p} % del carico della montatura", **avviso solo sopra il 100 %**
 
-**Dai file** ("dai file" accanto al campo):
+## 3. In Meteo
 
-- Camera, Tipo di sensore: dall'header `BAYERPAT`. C'e' vuol dire a colori; vince la maggioranza
-  dei frame.
-- Camera, Pixel: dall'header `XPIXSZ`, il valore piu' frequente.
-- Corredo, Focale effettiva: dall'header `FOCALLEN`.
-- Solo il nome del pezzo, senza nessun dato tecnico:
-  - ottica da `TELESCOP`;
-  - camera da `INSTRUME`;
-  - ruota da `FWHEEL`;
-  - focheggiatore da `FOCNAME`;
-  - camera di guida da `GUIDECAM`;
-  - filtro da `FILTER`;
-  - programma da `SWCREATE` o `CREATOR`.
+Nella notte, per ogni corredo, il campionamento col seeing previsto: ottimo, sottocampionato o
+sovracampionato. Senza chiave Meteoblue il seeing non c'è e la riga non compare.
 
-Montatura, riduttore e ottica di guida non arrivano mai dai file: le scrive solo l'utente.
+## 4. Dai file
 
-**Calcolati**:
+Solo: i nomi dei pezzi, il pixel, il tipo di sensore, la risoluzione della camera e la focale
+effettiva del corredo. Tutto il resto si scrive a mano. Il valore scritto vince su quello dei file.
 
-- Camera, Pixel quando file e utente tacciono: ricavato dalla scala misurata sul cielo e dalla
-  focale ("pixel (calcolato)", solo nella scheda, senza campo).
-- Corredo, Rapporto focale: Focale effettiva / Apertura dell'ottica, quando ci sono tutte e due.
-- Corredo, scala e campo: misurati sul cielo.
+## 5. Le tendine
 
-**Il resto si scrive solo a mano**: Apertura e Focale nativa dell'ottica, Peso, Carico utile,
-Fattore, Numero di posizioni, Marca, Modello, Note, le larghezze dei filtri. Un valore scritto
-dall'utente vince su quello dei file.
+- Liste fisse dell'app: i tipi, le bande, il tipo di sensore, le misure dei filtri.
+- Marche: testo libero. "altra…" / "Nuova marca" propone quelle già scritte dall'utente.
+- Parti del corredo: i pezzi dell'utente di quel tipo.
 
-## 4. Da dove vengono i valori delle tendine
+## 6. Cosa vi chiedo
 
-- **Tipi** (gli otto strumenti, Filtro, Corredo): lista fissa dell'app.
-- **Bande** (L, R, G, B, HA, HB, OIII, SII): lista fissa dell'app.
-- **Tipo di sensore** (mono, a colori): lista fissa dell'app.
-- **Marche degli strumenti**: testo libero. L'app non ha un elenco. "altra…" / "Nuova marca"
-  propone le marche gia' scritte dall'utente.
-- **Ottica e Camera del corredo**, e la tendina di una parte: i pezzi dell'utente di quel tipo.
-- **Unisci a**: solo i pezzi con cui l'app accetta l'unione.
-- **I modelli di filtro in commercio** sono un catalogo che l'app porta con se': marca, nome,
-  banda. Oggi si sceglie solo in Da confermare ("Modello da catalogo"), non nel modulo di
-  Attrezzatura.
+1. Il modulo con i blocchi per tipo e "{n} di {m} scritti", anche coi campi in più.
+2. La sezione dei conti del corredo, con i tre stati: valore, avviso, "manca …".
+3. La riga del campionamento in Meteo.
+
+CHANGELOG e DECISIONI come al solito.

@@ -1089,10 +1089,12 @@ riga per voce.
   tiene dei frame non si toglie senza decidere che fine fanno le sue ore (sparire, restare
   orfane, tornare in coda). Il progetto di prima rispondeva 409 dicendo chi lo tiene e quanti frame
   (`old/backend/astrolog/api/instruments.py`). Prima serve la scelta di prodotto.
-- **`backfocus_mm` esiste e non si puo' scrivere**: sta nello schema e nei modelli
-  (`api/models_gear.py`), ma nessuna scheda lo chiede (`api/instrument_answer.CARD`), nessuna
-  grafia d'header lo riempie, e mandarlo e' un 422. Da decidere a quali generi chiederlo (non alla
-  montatura).
+- **Dati completi dell'attrezzatura** (ADR 0021, Marco 18/10/2026): campi nuovi per tipo, OAG e
+  distanziale come tipi, guida e distanziali come parti del corredo, i conti del corredo
+  (scala e campo previsti, copertura, scala di guida, backfocus, carico, campionamento) e il
+  campionamento in Meteo. Sostituisce `backfocus_mm` scritto e mai chiesto: va al riduttore e
+  all'ottica come "backfocus richiesto". Brief: `handoff/design-risposta-campi-attrezzatura.md`.
+  Le etichette nuove le approva Marco sulla tavola.
 - **Riportare la riga "nessun filtro" a filtro vero non riconta l'uso** (`is_none` da 1 a 0 in
   `spine/gear.declare_filter`): nessuno stadio riparte. Oggi ci arriva solo chi chiama l'API a
   mano; rimedio: far ripartire i suoi frame o riscrivere l'uso.
