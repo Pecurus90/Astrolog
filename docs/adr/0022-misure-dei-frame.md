@@ -68,7 +68,7 @@ mono e una OSC Canon). Errore medio in valore assoluto:
 Con 40 stelle (nuvole) il vecchio dava una HFD sbagliata del 516 % invece di tacere. Su stelle
 rotonde l'eccentricita' non va a zero (questo metodo 0,10-0,17, il vecchio 0,25-0,31): vicino a 0
 amplifica il rumore (b/a 0,99 da' gia' 0,14). A schermo si mostra il numero; una soglia di
-"rotonde" non ha fonte e non si mette. Il tempo, con la lettura del file, e' 0,4-0,9 s e cresce
+"rotonde" senza fonte non si mette; quella che si mette e' sotto. Il tempo, con la lettura del file, e' 0,4-0,9 s e cresce
 con la FWHM.
 
 HFD e FWHM si salvano tutte e due: il loro rapporto dipende dalla forma della stella (β) e
@@ -80,10 +80,21 @@ Si scrivono una volta, quando `measure` passa; nessuna lettura le ricalcola.
 
 - **FWHM**, **HFD**: in pixel; a schermo in secondi d'arco (× scala misurata). Senza scala restano
   in pixel e non entrano nei confronti fra corredi.
-- **Stelle**: quante ne trova `sep` nelle cinque zone, e quante ne sono state tenute.
+- **Stelle**: quelle che ASTAP conta sul frame intero nella passata `-analyse` del solver (Marco):
+  le cinque zone sono il 20 % del sensore, e contare noi sul frame ridotto conta i pixel caldi.
 - **Eccentricita'**, **direzione dell'allungamento**: l'angolo mediano del fit (media circolare di
   2θ pesata per l'eccentricita'), girato con la rotazione della soluzione del cielo: "in AR" o "in
-  Dec", la piu' vicina.
+  Dec", la piu' vicina. A schermo "rotonde" fino a 0,45 (Marco): "0.45 must be about the threshold
+  where the human eye/brain can distinguish between a circle and an ellipse"
+  (stargazerslounge.com/topic/258551-how-round-are-round-stars, forum); le guide danno 0,42, asse
+  corto al 91 % (astrohobby.ca/2022/02/26/star-eccentricity-and-guiding-accuracy). Nessuno
+  scarto: sopra 0,45 resta il numero.
+
+**Perche' non ASTAP per tilt e forma** (Marco l'ha chiesto, 18/10/2026): `astap_cli` 2025.11 non
+ha il tilt (sta solo nella finestra grafica); `-extract` da' la HFD stella per stella ma scrive il
+CSV accanto al FITS anche con `-o` (provato su una copia), e su una cartella di rete in sola
+lettura fallisce; la sua HFD e' il raggio medio, alta del 6-19 % (confronto sopra); FWHM,
+eccentricita' e angolo non li da'. ASTAP resta per la soluzione e il numero di stelle.
 - **SNR**.
 - **Fondo cielo** (ADU) e **rumore**. Confrontabile solo con la stessa camera, guadagno e posa.
 - **Gradiente del fondo**: sul frame ridotto, (massimo − minimo) / mediana in %, e il lato piu'
@@ -134,8 +145,10 @@ mediane solo sui frame misurati.
 
 - `frame_metrics` si allarga (HFD per zona, direzione, gradiente, sature, massa d'aria, SQM e la
   sua banda, i segni "senza bias" e "fit non riuscito"); schema ricreato.
-- La HFD di ASTAP smette di finire in `frame_metrics`; la passata `-analyse` del solver si toglie
-  se nient'altro la usa (+0,3 s a frame risparmiati, `docs/domini/spina.md`).
+- La HFD di ASTAP smette di finire in `frame_metrics`; la passata `-analyse` resta per il numero
+  di stelle.
+- Le stelle misurate per zona hanno un tetto: in banda stretta, con molte stelle, il fit e la HFD
+  arrivavano a 3,1 s a frame.
 - `measure` legge i pixel dopo `solve`, in sola lettura: niente file accanto ai FITS.
 - Un lettore dei cataloghi di ASTAP (D80, V50), coi suoi test.
 - Il fondo in ADU non si confronta fra camere diverse: a schermo lo si dice.
