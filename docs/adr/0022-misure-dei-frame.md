@@ -22,7 +22,8 @@ Cinque zone da 1024 px (centro e quattro angoli), piu' il fondo sul frame intero
 zone si leggono dal file senza caricarlo tutto (FITS non compresso). Il progetto vecchio guardava
 solo i 2048 px al centro (`old/backend/astrolog/quality/analyzer.py`) e gli angoli non li vedeva.
 Misura sul portatile, frame sintetico 6248×4176 px: frame intero 1,01 s, cinque zone 0,08 s
-senza fit; con fit 0,15-0,25 s stimati (1,4 ms a stella misurati). Si rimisura su arm64 (ADR 0007).
+senza fit; col fit e la lettura del file 0,4-0,9 s (confronto sotto). Si rimisura su arm64
+(ADR 0007).
 
 ### Il metodo
 
@@ -44,6 +45,28 @@ senza fit; con fit 0,15-0,25 s stimati (1,4 ms a stella misurati). Si rimisura s
 5. **SNR**: per stella SNR = F / √(F/g + n·σ²), la formula CCD (Merline e Howell) che usano
    Siril e ASTAP; g dall'header (`EGAIN`), senza g in ADU. Per il frame, la mediana. <!-- software-ok -->
 6. **Aggregazione**: mediana per zona e per frame; dispersione 1,4826 × MAD.
+7. **Camere a colori**: si misura sul superpixel 2×2 del grezzo (un pixel per quadrato Bayer), e
+   le misure tornano in pixel del sensore. Sul grezzo il motivo Bayer passa per rumore e scarta
+   quasi tutte le stelle (prova sotto).
+8. **Poche stelle**: sotto un minimo di stelle tenute per zona si ripiega sul frame intero; sotto
+   il minimo anche li', la misura tace e dice "troppo poche stelle". Il minimo si fissa alla
+   costruzione con una prova, come le altre costanti.
+
+**Confronto misurato** (18/10/2026, 12 frame sintetici 6248×4176 a verita' nota: Moffat β 2,5 e
+4,5, gaussiane, FWHM 2,5/4/6 px, eccentricita' 0,5, tilt; piu' due frame veri di Marco, una L
+mono e una OSC Canon). Errore medio in valore assoluto:
+
+| metodo | FWHM | HFD | eccentricita' | tempo a frame |
+|---|---|---|---|---|
+| progetto vecchio (photutils, centro 2048 px) | 9,4 % (max 25) | 6,5 % (max 17) | 0,23 | 1,13 s |
+| questo metodo (5 zone, fit di Moffat) | 1,7 % (max 4,7) | 2,8 % (max 7) | 0,11 | 0,56 s (0,38-0,91) |
+| ASTAP `-analyse` | -- | 11,5 % (max 19) | -- | 0,3 s |
+
+Con 40 stelle (nuvole) il vecchio dava una HFD sbagliata del 516 % invece di tacere. Su stelle
+rotonde l'eccentricita' non va a zero (questo metodo 0,10-0,17, il vecchio 0,25-0,31): vicino a 0
+amplifica il rumore (b/a 0,99 da' gia' 0,14). A schermo si mostra il numero; una soglia di
+"rotonde" non ha fonte e non si mette. Il tempo, con la lettura del file, e' 0,4-0,9 s e cresce
+con la FWHM.
 
 HFD e FWHM si salvano tutte e due: il loro rapporto dipende dalla forma della stella (β) e
 nessuna delle due si ricava dall'altra.
