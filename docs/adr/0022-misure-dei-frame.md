@@ -107,6 +107,38 @@ stelle di forma nota iniettate per configurazione su fondi veri (L, Hα con nebu
 Script e risultati nello scratchpad della sessione (`valida/`), non nel repository: la prova che
 resta e' quella che nasce coi test del backend, su frame sintetici a verita' nota.
 
+### Verifica larga (18/10/2026, 45 light)
+
+45 light veri, mai master ne' stack: ATR2600M mono (L, R, G, B, Hα, OIII, SII), Poseidon-C Pro
+su tre telescopi, ASI2600MC Duo, ASI294MC Pro, Canon 700D; scale da 0,51 a 2,85 "/px; casi
+difficili (fuori fuoco, mosso, nuvole, cometa). Riferimento PixInsight SubframeSelector (sulle <!-- software-ok -->
+camere a colori sulla copia a superpixel), piu' 200 stelle iniettate su 13 frame veri e frame
+sintetici a PSF nota. Sui 40 frame normali:
+
+| misura | contro il riferimento: mediana / P90 | verdetto |
+|---|---|---|
+| FWHM | −1,9 % / 8,8 % (PixInsight); sui sintetici +1…8 %, PixInsight −7…+10 % | si pubblica | <!-- software-ok -->
+| eccentricita' | −0,02 / 0,07 | si pubblica; sotto ~0,3 sono stelle rotonde |
+| HFD | verita' +0…11 %; ASTAP +8…27 % | si pubblica, fondo ad anello come **media** a oggetti mascherati |
+| direzione | errore 5-10° a 1σ, senza bias | solo da eccentricita' 0,4 |
+| stelle | +8 % / 55 %, stessa classifica (ρ 0,98) | indicatore relativo |
+| stelle sature | giusto solo col tetto letto dall'istogramma | tetto da `DATAMAX`, o dall'istogramma (la Canon satura a 61212) |
+| fondo | 0,0 % / 0,3 % | si pubblica |
+| rumore | +1,1 % / 2,5 % a piena risoluzione; +8 % / 17 % sul frame ridotto | a piena risoluzione |
+| gradiente | 0,0 / 0,7 punti contro un piano indipendente; direzione 1,7° | si pubblica |
+| tilt, curvatura | mono e reflex ρ 0,99, P90 23 e 9 punti; camere a colori sottocampionate P90 49 | mono e reflex; a colori sotto ~1,2 superpixel tace |
+| SNR | nessuna correlazione con PixInsight (ρ −0,34 / 0,29) | **da ridefinire**: si prende la PSF SNR documentata da PixInsight e si riverifica | <!-- software-ok -->
+
+Correzioni portate nel metodo: media dell'anello (la mediana, coi pixel caldi, gonfiava la HFD
+del 15-24 % in banda stretta); tetto di saturazione dall'istogramma; rumore a piena risoluzione;
+fit con eccentricita' ≥ 0,99 o stelle a ciambella (fuori fuoco) = forma non misurabile, resta la
+HFD; camere a colori sotto ~1,2 superpixel di FWHM misurate sul canale verde a piena risoluzione.
+
+**Tempo** (portatile, un processo): mono 26 MP 4,5 s (P90 5,8), a colori 26 MP 2,1 s, Canon 1,4 s.
+Il grosso e' il filtro mediano contro i pixel caldi (1,9 s sui 26 MP). Sul miscuglio
+dell'archivio di Marco circa 3,7 s a frame, 11 ore per 11.000 frame su un processo; in
+parallelo meno, non misurato. Il filtro si accelera prima di costruire.
+
 ### Le misure, e cosa si scrive
 
 Si scrivono una volta, quando `measure` passa; nessuna lettura le ricalcola.
