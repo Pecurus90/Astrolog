@@ -177,7 +177,23 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
 - **Gradiente e SNR**: solo rispetto alla sessione (stessa notte, oggetto, filtro): segnato il
   frame oltre mediana ± 2 MAD, come i tutorial del SubframeSelector. Per notte e produzione solo
   il numero.
-- **FWHM**: secondo il corredo; formula in ricerca.
+- **FWHM**, rispetto allo stesso corredo (ottica, camera, focale) e filtro, due volte (Marco):
+  rispetto alla notte e rispetto allo storico. Nessuna convenzione amatoriale giudica la FWHM
+  contro il limite teorico del corredo (ricerca del 18/10/2026); i programmi che scelgono i frame
+  la confrontano con lo stesso corredo.
+  - **ottimo**: entro il +5 % dalla migliore del riferimento (il 10° percentile, non il record:
+    Marco). +5 % e' il predefinito di N.I.N.A. per rifare l'autofocus
+    (`AutofocusAfterHFRIncreaseTrigger.cs`, `Default = 5`).
+  - **scarso**: oltre mediana + 2 MAD del riferimento: "FWHMSigma < 2", la regola del
+    SubframeSelector di PixInsight piu' ripetuta (pixinsight.com/forum, threads/subframeselector-question.5939). <!-- software-ok -->
+  - **buono**: in mezzo.
+  - Quanti frame servono perche' il riferimento valga: nessuna fonte, da decidere con Marco.
+  - **Campionamento** a parte, senza voto sul frame: FWHM sotto 1,5 px sottocampionamento grave
+    (Howell et al. 1996, AJ 112, 1302; Stan Moore; manuale di CCDInspector), sotto 2 px
+    sottocampionata, 2-3 px ideale (AAVSO, Astronomy Tools; 2,5-3 "excellent match" per
+    Diffraction Limited, diffractionlimited.com/matching-camera-optics), sopra 3 px
+    sovracampionata. Come voto del frame non funziona: sull'Askar di Marco i frame migliori (sotto
+    3") stanno sotto 2,2 px.
 - **Senza giudizio**: curvatura di campo (Marco), stelle, fondo, rumore, massa d'aria.
 - **Backfocus dai frame: no** (Marco). Da un frame solo il verso non e' affidabile: la direzione
   dell'allungamento si inverte passando il fuoco (telescope-optics.net/astigmatism1.htm), le
