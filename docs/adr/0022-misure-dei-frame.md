@@ -177,10 +177,23 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
 - **Gradiente e SNR**: solo rispetto alla sessione (stessa notte, oggetto, filtro): segnato il
   frame oltre mediana ± 2 MAD, come i tutorial del SubframeSelector. Per notte e produzione solo
   il numero.
-- **FWHM: giudizio assoluto in secondi d'arco, in ricerca.** Uno schema solo relativo (contro la
-  notte o lo storico dello stesso corredo) e' stato scartato da Marco: chi ha sempre guida o fuoco
-  cattivi risulterebbe "buono". Si cerca la convenzione con cui gli astrofotografi dicono "3"
-  va bene, 4 no", adattata al corredo. Resta valido, come dato in piu', il confronto con la notte:
+- **FWHM: giudizio assoluto in secondi d'arco** (Marco, 18/10/2026). Uno schema solo relativo
+  (contro lo storico dello stesso corredo) e' scartato: chi ha sempre guida o fuoco cattivi
+  risulterebbe "buono". Le fasce vengono dal consenso dei forum (32 casi verificati su Cloudy
+  Nights, Stargazers Lounge, AstroBin, IceInSpace, webastro, AAVSO; ricerca del 18/10/2026):
+  - sotto 2" **eccellente** ("Below 2 is advanced imager in great skies", cloudynights.com/forums/topic/644278);
+  - 2-3" **buono** (il taglio a 3" e' il piu' comune);
+  - 3-4" **nella media** ("3.0 to 3.5 arcsec is normal", archive.aavso.org/fwhm-expectations-larger-aperture-instruments);
+  - 4-5" **scarso** ("4 arcsec is poor", stessa pagina AAVSO);
+  - oltre 5" **pessimo**.
+  - **Limite del corredo** F = max(2 × scala, 1,029·λ/D): sotto due pixel e sotto la
+    diffrazione il corredo non registra stelle ("the realistic minimum FWHM is 2 pixels",
+    AstroBin, topic 10757; lo ripetono altri). Una FWHM sotto F e' "al limite del corredo", non
+    "eccellente"; ogni bordo sotto F sale a F. Sull'Askar di Marco (1,385"/px) F = 2,77": buono
+    2,77-3", e il suo scarto oltre 3" e' "tengo buono ed eccellente". Se F supera i 3" (es. 60/300
+    a 2,59"/px, F = 5,2") la FWHM non distingue una notte buona da una media: "non giudicabile su
+    questo corredo". Usare F per alzare i bordi e' una scelta (Marco), non una convenzione.
+  - Resta, come dato in piu', il confronto con la notte:
   +5 % sul migliore e' il predefinito di N.I.N.A. per rifare l'autofocus
   (`AutofocusAfterHFRIncreaseTrigger.cs`, `Default = 5`); "FWHMSigma < 2" la regola del
   SubframeSelector di PixInsight piu' ripetuta (pixinsight.com/forum, threads/subframeselector-question.5939). <!-- software-ok -->
