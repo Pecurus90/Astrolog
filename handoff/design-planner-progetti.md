@@ -30,6 +30,9 @@ la pagina Progetti l'ultima. Un progetto = oggetto + corredo + inquadratura + or
   lista con ricerca (nome del sensore, pixel, risoluzione, mono/colore; niente marche; solo
   sensori di camere astronomiche), oppure **«Sensore personalizzato»**: pixel (µm) e risoluzione
   (px).
+- La lista dei sensori si divide per uso: **Deep sky**, **Planetario**, **Solare** (Marco). Un
+  sensore puo' stare in piu' gruppi (l'IMX585 e' sia deep sky sia planetario). L'uso viene dal
+  produttore; un sensore senza uso dichiarato sta in «Altri».
   - Mostra campo, campionamento e rapporto focale come la scheda del corredo (ADR 0021).
   - Fascia fissa: «Corredo di prova: solo per guardare. Per salvare un progetto, aggiungilo in
     Attrezzatura.» Il pulsante Salva e' spento e dice perche'.
@@ -82,10 +85,15 @@ Senza sito: «Sito mancante» e «Aggiungi sito», come nelle Notti.
 
 ### 2.6 Pianeti, Luna e Sole: simulazione
 
-Dal Trova, scegliendo Mercurio, Venere, Marte, Giove, Saturno, Urano, Nettuno, Luna o Sole, al
-posto della carta del cielo compare la **simulazione**. Non si salva: nessun progetto.
-- Il **rettangolo del sensore** del corredo (vero o di prova) con dentro il **disco** in scala: fase
-  per Mercurio, Venere e Luna, anelli inclinati per Saturno. Disegnato, non fotografato.
+Il Planner ha **due modi** in testa (Marco): **«Cielo profondo»** e **«Sistema solare»**. Il
+corredo scelto resta; cambia la carta. In «Sistema solare» si sceglie Mercurio, Venere, Marte,
+Giove, Saturno, Urano, Nettuno, Luna o Sole e compare la **simulazione**. Non si salva: nessun
+progetto.
+- Il **rettangolo del sensore** del corredo (vero o di prova) con dentro il corpo **in scala**, con
+  una foto NASA o ESA/Hubble (una per corpo, credito visibile sotto, es. «NASA, ESA»). Fase per
+  Mercurio, Venere e Luna disegnata sopra; anelli di Saturno con l'inclinazione della data. Riga
+  sotto: «Foto per la scala: l'aspetto della notte cambia.»
+- Nel modo «Sistema solare» la lista dei sensori apre su Planetario (Solare col Sole).
 - **Data**: partenza stanotte; accanto «prossima opposizione {data}», che porta al disco piu' grande.
 - **Barlow / riduttore** (fattore) cambiano la scala subito.
 - Numeri accanto: diametro apparente e in pixel, scala, rapporto focale del corredo e **rapporto

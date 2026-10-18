@@ -82,6 +82,10 @@ Dal Framing Assistant di N.I.N.A. (`FramingAssistantVM.cs`):
   `old/backend/astrolog/equipment/data/sensori.json`, ricontrollate sulle pagine dei produttori.
   Dove i produttori danno risoluzioni diverse (pixel utili o totali) vale la regola dell'1 % del
   vecchio progetto: sotto, la stessa riga.
+- **Uso del sensore** (Marco): deep sky, planetario, solare, anche piu' d'uno per riga. Viene
+  dall'uso che il produttore dichiara per le camere con quel sensore (es. ZWO presenta l'ASI174MM
+  e l'ASI432MM per il solare, zwoastro.com), con l'URL accanto; senza dichiarazione, nessuna
+  etichetta. Il selettore raggruppa per uso.
 - **Sensore personalizzato** nel corredo di prova (Marco): pixel (µm) e risoluzione (px), per chi
   ha un sensore fuori lista.
 
@@ -118,11 +122,16 @@ risoluzione conta per nome, senza pannello. Dashboard e Progetti leggono lo stes
 
 - **Nessun progetto**: niente ore da accumulare. Effemeridi in Dashboard (ADR 0019).
 - **Simulazione, senza salvataggio** (Marco): Mercurio, Venere, Marte, Giove, Saturno, Urano,
-  Nettuno, Luna e Sole, col corredo vero o di prova (barlow e riduttore compresi).
+  Nettuno, Luna e Sole, col corredo vero o di prova (barlow e riduttore compresi). Nel Planner e'
+  un secondo modo, «Sistema solare», accanto a «Cielo profondo»: cambia la carta, il corredo resta.
+  - Immagine del corpo da fonti con licenza verificata, una per corpo, col credito visibile: NASA
+    ("generally are not subject to copyright", nasa.gov/multimedia/guidelines) o ESA/Hubble (CC BY
+    4.0, credito non staccabile dall'immagine). La licenza di ogni immagine si controlla sulla
+    sua pagina prima di usarla. Serve alla scala, non mostra l'aspetto di quella notte.
   - Diametro apparente = 2 · atan(raggio / distanza) nella data scelta; distanza da astropy
     (`get_body`), raggi dal NASA Planetary Fact Sheet; partenza stanotte, accanto la prossima
     opposizione. I numeri si leggono dalla fonte quando si scrive il codice.
-  - Disegno: disco nel rettangolo del sensore, fase per Mercurio, Venere e Luna, anelli inclinati
+  - Disegno: immagine in scala nel rettangolo del sensore, fase per Mercurio, Venere e Luna disegnata sopra, anelli inclinati
     per Saturno (raggio dal NASA Saturnian Rings Fact Sheet, inclinazione da Meeus, Astronomical
     Algorithms, cap. 45). Diametro in pixel accanto.
   - Luna e Sole: anche il mosaico, come per il cielo profondo.
