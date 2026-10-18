@@ -92,6 +92,10 @@ I conti, ognuno solo quando ci sono tutti i suoi dati; se ne manca uno, il corre
   distanziali, contro il carico piu' alto dichiarato della montatura. **Solo la percentuale**,
   avviso solo sopra il 100 % (Marco): nessun produttore pubblica un margine, i negozi e i forum
   dicono dal 50 al 75 %.
+- **Le parole a schermo** (Marco, 18/10/2026, sulla tavola v16): accanto all'avviso anche la
+  parola buona, sugli stessi confini: "entro il carico" / "oltre il carico" (100 %),
+  "nell'intervallo" / "fuori intervallo" (0,5-4 "/px), "copre il sensore" / "non copre il
+  sensore". Nessuna soglia nuova.
 
 ### Dai file
 

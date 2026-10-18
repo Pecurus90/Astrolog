@@ -28,7 +28,7 @@ misurano con curve di fuoco su più frame. Restano tilt e curvatura. Niente frec
 | **Fuoco** (HFD) | **fuoco peggiore** | HFD oltre +5 % sulle migliori della stessa notte e filtro | N.I.N.A. |
 | **Tilt** | **buono / incerto / non adatto** | fino al 10 % / 10-20 % / oltre 20 % | ASTAP |
 | **SNR** | **SNR basso per la notte** | sotto mediana − 2 MAD dei frame della stessa notte, oggetto e filtro | regola del SubframeSelector |
-| **Luminosità del cielo** | **come il Bortle del sito / più chiaro del Bortle del sito** | tabella SQM ↔ Bortle; solo L e senza filtro | Wikipedia |
+| **Luminosità del cielo** | **come il Bortle del sito / più chiaro del Bortle del sito** | tabella SQM ↔ Bortle; L, senza filtro e a colori | ASTAP (ClearDarkSky) |
 
 SNR e fuoco si giudicano solo sul frame (contro la sua notte), e solo con almeno 10 frame della
 stessa notte, oggetto e filtro (N.I.N.A.); sotto, tacciono. Per notte e produzione solo il numero.

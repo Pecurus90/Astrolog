@@ -38,7 +38,8 @@ che il `traduttore` legge per primo.
 | una montatura in campo in una notte (chi ne ha due riprende due cose) | `station` | postazione | sito |
 | il fuso orario del sito, ricavato dalle sue coordinate | `timezone` | fuso | zona, orario |
 | l'ora che il file dice, UTC come vuole lo standard FITS: e' l'istante su cui la posa conta | `date_obs` | ora della posa | ora vera, ora corretta |
-| quanto e' scuro il cielo di un sito, in magnitudini per arcosecondo quadrato: e' la misura | `sky_sqm` | luminosita' del cielo | SQM, brillanza |
+| quanto e' scuro il cielo di un sito, in magnitudini per arcosecondo quadrato: e' la misura | `sky_sqm` | luminosita' del cielo | brillanza |
+| la luminosita' del cielo misurata su un frame L, senza filtro o a colori (ADR 0022): a schermo "SQM 19.2" (Marco, 18/10/2026) | `sqm` (su `frame_metrics`) | SQM | brillanza, fondo in magnitudini |
 | la classe di cielo da 1 a 9, ricavata dalla luminosita': si mostra col numero misurato accanto, **tranne in due posti** -- il primo avvio, dove si sceglie e non c'e' ancora niente da dichiarare, e il piede della barra, dove sono 227px e la classe e' un promemoria di dov'e' puntata l'app. La scala dove si sceglie si intitola "Bortle" ("Bortle, da 1 a 9" per chi ascolta; Marco, 17/10/2026) | `bortle` | Bortle | classe, qualita' del cielo, scala di Bortle |
 | come si sa la luminosita' di un sito: misurata, chiesta al servizio, scelta sulla scala | `sky_source` | (una frase tradotta) | fonte, origine |
 | l'altezza del sito sul livello del mare; assente vuol dire "non fornita", mai zero | `elevation_m` | altitudine | quota, altezza |
