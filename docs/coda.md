@@ -159,6 +159,11 @@ aspettano chiamanti tipati. Si chiude quando si tocca il codice dove sta:
 La spina onesta **su un archivio qualunque**, poi si alleggerisce, poi `measure`. Le tappe si
 nominano col loro nome, per non confonderle con le fasi del refactor.
 
+**Ordine da qui** (18/10/2026, Marco senza preferenza, presa la consigliata): porting del
+disegno nuovo (backend di ADR 0020 e 0021, poi foglio e componenti, poi le pagine); uso vero di
+Marco sul suo archivio, coi difetti riparati; `measure`; Planner e Progetti; statistiche (pagina
+da decidere con Marco); pacchetto; telefono.
+
 1. **La spina.** `scan`, `normalize`, `solve`, `identify` e `group` sono costruiti e misurati
    sull'archivio vero ([`domini/spina.md`](domini/spina.md)); il catalogo e' portato
    ([`domini/catalogo.md`](domini/catalogo.md)); il sito c'e' ([`domini/sito.md`](domini/sito.md));
