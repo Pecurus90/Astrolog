@@ -57,8 +57,9 @@ sezione "Planetario e solare". Le parole fra «» sono proposte: Marco le approv
 ## 3. I numeri accanto
 
 Diametro apparente e in pixel, scala, campo, rapporto focale del corredo e **rapporto focale
-critico** del filtro scelto (2 × pixel / lunghezza d'onda; senza filtro 400 nm). Nessuna pillola
-buono/cattivo. Per Luna e Sole anche «km per pixel» sulla Luna e il numero di tessere.
+critico** del filtro scelto (2 × pixel / lunghezza d'onda; senza filtro 400 nm). I giudizi per
+riga sono in `handoff/design-risposta-giudizi-planner.md`. Per Luna e Sole anche «km per pixel»
+sulla Luna e il numero di tessere.
 
 **Esempi coerenti** (calcolati):
 - Giove, C9.25 (2350 mm, 235 mm) con barlow 1,5×, pixel 2.9 µm, Giove a 44.8″: «44.8″ · 264 px»,

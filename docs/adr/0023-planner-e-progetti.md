@@ -165,6 +165,37 @@ risoluzione conta per nome, senza pannello. Dashboard e Progetti leggono lo stes
     oculare, cercatore coperto (AAS, eclipse.aas.org/eye-safety/optics-filters).
 - Transiti della Grande Macchia Rossa e meridiano centrale: idea per dopo, non decisa.
 
+### I giudizi (Marco, 18/10/2026)
+
+Marco chiede un giudizio per riga, come le misure (ADR 0022): parola, segno e colore. Nessun
+giudizio d'insieme. Supera la riga "nessuna pillola" della brief del sistema solare. Un giudizio
+solo dove una fonte fissa il confine o Marco lo sceglie; il resto resta un numero.
+
+- **Campionamento planetario**: sotto il rapporto focale critico «sottocampionato», da li' in su
+  «campionamento pieno». Nessun «sovracampionato»: il critico e' un minimo, e nessuna fonte fissa
+  un tetto (N. de Hilster, "Optimal focal ratio part 2", dehilster.info: "the factor 3.7 will
+  lead to oversampling"; le regole 5-7 × pixel sono dei forum). Stesso confine per mono e colore:
+  "the optimal focal ratio does not have to be adjusted to the type of camera, provided that
+  stacking is applied" (de Hilster, che ritira il ×2 della parte 1).
+- **Video al massimo**, solo il numero (Marco): Tmax = 3600 · P · s / (π · D), P periodo di
+  rotazione in ore (NASA Planetary Fact Sheet), s scala in "/px, D diametro apparente in ".
+  Sfocatura di un pixel al centro del disco: formula di P. Tanga, "Tmax [sec] = 1150xPxM/D"
+  (lista Saturn-ALPO, 2003, ripresa in CMO n. 286, kwasan.kyoto-u.ac.jp/~cmo/cmomn2/286EGf.htm).
+  Nessun campo per la durata voluta.
+- **Altezza dei pianeti** all'ora scelta: sotto 35° «serve il correttore di dispersione». "An
+  essential piece of equipment for high resolution imaging of planets when they fall below about
+  35° altitude" (M. Lewis, J. Br. Astron. Assoc. 131(5), 2021, britastro.org/?p=613619). Nessuna
+  soglia «troppo basso»: nessuna fonte.
+- **Seeing e pianeti**: nessun giudizio. Nessuna fonte lega il seeing previsto alla ripresa
+  fortunata; le classi CMC (cleardarksky.com) descrivono l'immagine, non dicono se vale la pena.
+- **Campionamento del cielo profondo**: quello di ADR 0021 (1/3-1/2 del seeing previsto), stesse
+  parole di Meteo; senza seeing tace. La FWHM in pixel (ADR 0022) resta sui frame, in Progetti.
+- **Campo**: «entra nel campo» / «non entra nel campo», asse maggiore dell'oggetto contro il lato
+  corto del campo, o del mosaico (Marco). Nessuna fascia «stretto»: nessuna convenzione, i
+  calcolatori di campo calcolano il campo e basta.
+- **Ore utili stanotte** contro le ore del progetto: numeri, senza giudizio.
+- **Meteo della notte**: solo in Notti, col rimando «Meteo di stanotte» (Marco).
+
 ## Conseguenze
 
 - Nuove tabelle: progetti, pannelli con inquadratura, obiettivi per filtro, oggetti aggiunti
