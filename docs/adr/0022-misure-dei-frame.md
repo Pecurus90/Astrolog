@@ -1,4 +1,4 @@
-# 0022 -- Le misure dei frame: tutte, nel database, senza voto
+# 0022 -- Le misure dei frame: tutte, attestate, nel database, senza voto
 
 **Stato:** accettata, 18/10/2026 (Marco).
 
@@ -6,66 +6,110 @@
 
 `measure` e' nel grafo degli stadi e non ha ancora un corpo. Oggi un frame porta solo HFD e
 stelle, che ASTAP da' mentre risolve (`frame_metrics`, `source = 'astap'`). Marco vuole i dati
-completi nel database, per confrontare notti, corredi e siti. Lo stack resta quello di ADR 0007:
-`sep` con numpy e scipy.
+completi nel database, per confrontare notti, corredi e siti, misurati "come PixInsight o <!-- software-ok -->
+Siril": veloci, ma corretti. Lo stack resta quello di ADR 0007: `sep` con numpy e scipy. <!-- software-ok -->
+
+Ricerca del 18/10/2026 sul codice di Siril (`f518f2cf`), N.I.N.A. (`4742afae`), ASTAP (mirror <!-- software-ok -->
+`CanardConfit/ASTAP@c2b4aa6a`) e sulla documentazione di PixInsight (ImageWeighting, <!-- software-ok -->
+pixinsight.com/doc/docs/ImageWeighting). Il codice di PCL (PixInsight) non si porta: la sua <!-- software-ok -->
+licenza lo vieta per la generazione automatica di codice. AstroLog e' GPL-3.
 
 ## Decisione
 
-**Ogni frame light risolto porta queste misure**, su cinque zone e non sul frame intero: il
-centro e i quattro angoli, 1024 px di lato ciascuna, piu' il fondo sul frame intero ridotto 4×4.
-Il progetto vecchio guardava solo i 2048 px al centro (`old/backend/astrolog/quality/analyzer.py`)
-e gli angoli non li vedeva. Misura del 18/10/2026 con `sep` 1.4 su un frame sintetico da
-6248×4176 px con 3000 stelle, sul portatile: frame intero 1,01 s, cinque zone 0,08 s, fondo
-ridotto 0,05 s. Le zone si leggono dal file senza caricarlo tutto (FITS non compresso). Stelle e
-HFD del frame intero restano quelle di ASTAP.
-Si scrivono una volta, quando `measure` passa, e nessuna lettura le ricalcola. Le prime sei sono
-quelle del progetto vecchio; tilt, curvatura, direzione, gradiente e stelle sature sono nuove
-(Marco, 18/10/2026):
+### Dove si misura
 
-- **FWHM**: in pixel nel database; a schermo in secondi d'arco (× scala misurata). Senza scala
-  resta in pixel e non entra nei confronti fra corredi.
-- **HFD**: da ASTAP, come oggi.
-- **Stelle**: da ASTAP, come oggi.
-- **Eccentricita'** = √(1 − (b/a)²), con a e b i semiassi che `sep` misura su ogni stella. Si
-  tiene la mediana delle stelle del frame. 0 vuol dire stelle rotonde.
-- **Fondo cielo** (ADU) e il suo rumore: il fondo di `sep`. Vale per confronti con la stessa
-  camera, guadagno e posa.
-- **SNR** = mediana del picco delle stelle / rumore del fondo (progetto vecchio: guadagno e
-  rumore di lettura non stanno in tutti gli header).
-- **Tilt**: la HFD delle stelle in ognuno dei quattro angoli e al centro, cinque numeri.
-  - A schermo, la differenza fra l'angolo peggiore e il migliore, in % della HFD al centro.
-  - Nessuna fonte pubblica un modo standard di misurarlo, ne' una soglia. ASTAP confronta gli
-    angoli col centro (dai forum, non dal manuale). Quindi solo numeri, senza giudizio.
-- **Curvatura di campo**: la HFD media dei quattro angoli contro quella del centro, in %. Stessi
-  cinque numeri del tilt.
-- **Direzione dell'allungamento**: l'angolo mediano dell'asse lungo delle stelle (`sep`, theta),
-  girato con la rotazione della soluzione del cielo: "in AR" o "in Dec", la piu' vicina. Si
-  scrive sempre; la pagina la mostra accanto all'eccentricita', senza soglia.
-- **Gradiente del fondo**: il fondo di `sep` su una griglia; (massimo − minimo) / mediana, in %, e
-  da che lato e' piu' chiaro.
-- **Stelle sature**: quante stelle hanno il picco al valore massimo del file (`DATAMAX` se c'e',
-  altrimenti il massimo del tipo di dato).
+Cinque zone da 1024 px (centro e quattro angoli), piu' il fondo sul frame intero ridotto 4×4. Le
+zone si leggono dal file senza caricarlo tutto (FITS non compresso). Il progetto vecchio guardava
+solo i 2048 px al centro (`old/backend/astrolog/quality/analyzer.py`) e gli angoli non li vedeva.
+Misura sul portatile, frame sintetico 6248×4176 px: frame intero 1,01 s, cinque zone 0,08 s
+senza fit; con fit 0,15-0,25 s stimati (1,4 ms a stella misurati). Si rimisura su arm64 (ADR 0007).
 
-**FWHM allo zenit**, accanto alla misurata: FWHM / massa d'aria^0,6. "The seeing varies with the
-airmass to the power of 3/5th" (ESO, astroclimatologia di La Silla,
-eso.org/gen-fac/pubs/astclim/lasilla/seeing). La massa d'aria e' quella dell'oggetto all'ora
-del frame, dalle effemeridi del sito. Senza sito o senza coordinate, niente FWHM allo zenit.
-Si riporta anche la HFD (come la HFR nel progetto vecchio, `old/docs/domini/statistiche.md`);
-eccentricita' e SNR no: la prima misura inseguimento e ottiche, non l'aria.
+### Il metodo
 
-**Luminosita' del cielo (mag/arcsec²)**: Marco la vuole; se ne misura prima fattibilita' e costo
-(l'ASTAP da riga di comando 2025.11 non ha l'opzione SQM). Si decide con quella misura.
+1. **Fondo e rumore**: `sep.Background` per zona. Rumore = 1,4826 × MAD dei pixel di fondo, la
+   regola di ASTAP, N.I.N.A. e del rumore N* di PixInsight (1,4826 = 1/Φ⁻¹(3/4), Rousseeuw e <!-- software-ok -->
+   Croux, JASA 88:1273, 1993). Il rumore MRS di PixInsight (Starck e Murtagh 1998) resta fuori. <!-- software-ok -->
+2. **Stelle**: `sep.extract` a 5σ, soglia predefinita di Siril. Si tengono solo: non fuse e non <!-- software-ok -->
+   tagliate dal bordo (`flag` 0), picco sotto il 90 % della saturazione, lontane dal bordo piu'
+   di 3 HFD, senza vicine entro 3 FWHM, b/a sopra 0,5 (rotondita' minima predefinita di Siril). <!-- software-ok -->
+3. **HFD**: diametro che contiene meta' del flusso, `sep.flux_radius` con frazione 0,5, su tutte
+   le stelle tenute. **Sostituisce la HFD di ASTAP**, che e' il raggio medio Σf·r/Σf e per una
+   stella gaussiana viene il 6,4 % piu' alta (conto: σ√(π/2) contro σ√(2 ln 2)).
+4. **FWHM, eccentricita', angolo**: fit di una PSF di Moffat ellittica (Levenberg-Marquardt,
+   `scipy.optimize.least_squares`) sulle 10-15 stelle migliori di ogni zona, come PixInsight e <!-- software-ok -->
+   Siril. FWHM = 2α√(2^(1/β) − 1), con α = √(αx·αy); eccentricita' = √(1 − (b/a)²), la <!-- software-ok -->
+   definizione di PixInsight. Prova su stelle di Moffat sintetiche di FWHM nota: errore 0 %; i <!-- software-ok -->
+   momenti di `sep` sbagliano dal +14 al +44 % e servono solo a contare e a orientare. Se il fit
+   non converge: momenti di `sep`, e la misura lo dice.
+5. **SNR**: per stella SNR = F / √(F/g + n·σ²), la formula CCD (Merline e Howell) che usano
+   Siril e ASTAP; g dall'header (`EGAIN`), senza g in ADU. Per il frame, la mediana. <!-- software-ok -->
+6. **Aggregazione**: mediana per zona e per frame; dispersione 1,4826 × MAD.
+
+HFD e FWHM si salvano tutte e due: il loro rapporto dipende dalla forma della stella (β) e
+nessuna delle due si ricava dall'altra.
+
+### Le misure, e cosa si scrive
+
+Si scrivono una volta, quando `measure` passa; nessuna lettura le ricalcola.
+
+- **FWHM**, **HFD**: in pixel; a schermo in secondi d'arco (× scala misurata). Senza scala restano
+  in pixel e non entrano nei confronti fra corredi.
+- **Stelle**: quante ne trova `sep` nelle cinque zone, e quante ne sono state tenute.
+- **Eccentricita'**, **direzione dell'allungamento**: l'angolo mediano del fit (media circolare di
+  2θ pesata per l'eccentricita'), girato con la rotazione della soluzione del cielo: "in AR" o "in
+  Dec", la piu' vicina.
+- **SNR**.
+- **Fondo cielo** (ADU) e **rumore**. Confrontabile solo con la stessa camera, guadagno e posa.
+- **Gradiente del fondo**: sul frame ridotto, (massimo − minimo) / mediana in %, e il lato piu'
+  chiaro in direzione del cielo.
+- **Tilt**: la HFD nei quattro angoli e al centro. A schermo, angolo peggiore meno migliore, in %
+  della HFD al centro. Nessuna fonte da' un metodo standard ne' una soglia: solo numeri.
+- **Curvatura di campo**: mediana degli angoli contro il centro, in %.
+- **Stelle sature**: picco sopra il 90 % della saturazione (`DATAMAX`, o il massimo del tipo di
+  dato).
+
+Nuove rispetto al progetto vecchio: tilt, curvatura, direzione, gradiente, stelle sature (Marco).
+
+### Allo zenit
+
+FWHM e HFD anche allo zenit: valore / massa d'aria^0,6. "The seeing varies with the airmass to
+the power of 3/5th" (ESO, eso.org/gen-fac/pubs/astclim/lasilla/seeing). Massa d'aria dell'oggetto
+all'ora del frame, dalle effemeridi del sito; senza sito o coordinate, niente valore allo zenit.
+Eccentricita' e SNR no: la prima misura inseguimento e ottiche, non l'aria.
+
+### Luminosita' del cielo (mag/arcsec²)
+
+Misura del 18/10/2026: l'opzione `-sqm` c'e' solo nell'`astap.exe` grafico (non nel CLI che usa
+l'app, ne' sul NAS) e si blocca su un frame OSC. Quindi un metodo nostro:
+
+- SQM = ZP − 2,5·log10((fondo − bias) / scala²) + estinzione, con ZP il punto zero dalle stelle
+  del frame abbinate al catalogo e l'estinzione 0,2811·massa d'aria − 0,28 come ASTAP. Sulla
+  stessa L mono di Marco da' 19,15, come `astap.exe -sqm`.
+- **Catalogo**: i file di ASTAP sul disco, letti da noi (formato documentato su hnsky.org). D80
+  porta Gaia BP: vale per L, senza filtro e OSC (raw, mai debayerizzato).
+- **R, G, B ognuno nella sua banda** (Marco): stelle tarate nella banda del filtro col catalogo V50
+  (V e colore BP−RP) e le trasformazioni pubblicate da Gaia, da verificare e citare alla
+  costruzione. A schermo "R: 20,8 mag/arcsec²", non uno SQM. Senza V50 tace e dice perche'.
+  Non esiste un coefficiente fisso fra bande: dipende dal colore del cielo (cielo buio a La Palma:
+  B 22,7, V 21,9, R 21,0; Benn e Ellison 1998).
+- Filtri stretti (Hα, OIII, SII): mai.
+- **Bias**: campo facoltativo "Bias (ADU)" della camera (si aggiunge ad ADR 0021). Senza, si stima
+  e la misura porta scritto "senza bias" (Marco).
+- Errore atteso ±0,1-0,2 mag: stima, non misura.
+
+### Il resto
 
 **Nessun voto e nessuno scarto**: l'app misura e basta (Marco, confermato; ADR 0013). Medie e
-mediane si fanno solo sui frame misurati.
+mediane solo sui frame misurati.
 
 **Dove si vedono**: Notti, Archivio, Statistiche. La scheda dell'oggetto no, per ora (Marco).
 
 ## Conseguenze
 
-- `frame_metrics` guadagna i cinque HFD del tilt, direzione, gradiente, stelle sature e la massa
-  d'aria; schema ricreato.
-- `measure` legge i pixel una seconda volta dopo `solve`, in sola lettura: niente file accanto ai
-  FITS.
-- Il tempo per frame si misura su arm64 prima di chiudere lo stack (ADR 0007).
-- Il fondo cielo in ADU non si confronta fra camere diverse: a schermo lo si dice.
+- `frame_metrics` si allarga (HFD per zona, direzione, gradiente, sature, massa d'aria, SQM e la
+  sua banda, i segni "senza bias" e "fit non riuscito"); schema ricreato.
+- La HFD di ASTAP smette di finire in `frame_metrics`; la passata `-analyse` del solver si toglie
+  se nient'altro la usa (+0,3 s a frame risparmiati, `docs/domini/spina.md`).
+- `measure` legge i pixel dopo `solve`, in sola lettura: niente file accanto ai FITS.
+- Un lettore dei cataloghi di ASTAP (D80, V50), coi suoi test.
+- Il fondo in ADU non si confronta fra camere diverse: a schermo lo si dice.
