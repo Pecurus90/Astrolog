@@ -188,17 +188,22 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
 - **Tilt**: la formula di ASTAP, (angolo peggiore − migliore) / HFD mediana; fino al 10 % buono,
   10-20 % incerto, oltre non adatto ("Any tilt equal or less than 10% of the range is a good
   value", hnsky.org/astap.htm; Siril mette il limite al 10 %). <!-- software-ok -->
-- **Eccentricita'**: fino a 0,45 "rotonde", 0,45-0,6 incerto, oltre 0,6 "allungate" (Marco).
-  ESO FORS2 tiene solo frame con ellitticita' sotto 0,3, cioe' eccentricita' ~0,71
-  (eso.org/qc/FORS2/qc/imagequality/imagequality.html): 0,6 non e' largo.
-- **Fuoco**: un frame la cui HFD supera del 15 % la mediana dei migliori della stessa notte e
-  filtro e' "fuoco peggiore" (Marco; SGP usa 15 % come esempio per rifare l'autofocus,
-  N.I.N.A. 5 % come predefinito).
+- **Eccentricita'**: fino a 0,45 "rotonde"; oltre 0,71 "allungate"; in mezzo solo il numero
+  (Marco). 0,71 e' il limite ESO: FORS2 tiene solo frame con ellitticita' sotto 0,3, cioe'
+  eccentricita' ~0,71 (eso.org/qc/FORS2/qc/imagequality/imagequality.html).
+- **Fuoco**: un frame la cui HFD supera del 5 % il 10° percentile della stessa notte e filtro e'
+  "fuoco peggiore" (Marco): 5 % e' il predefinito di N.I.N.A. per rifare l'autofocus
+  (`AutofocusAfterHFRIncreaseTrigger.cs`).
+- **Minimo per i giudizi "per la notte"** (fuoco, SNR): 10 frame della stessa notte, oggetto e
+  filtro; sotto, tacciono (Marco). 10 e' il `SampleSize` predefinito dello stesso trigger di
+  N.I.N.A.
 - **Luminosita' del cielo** contro il Bortle del sito: la tabella SQM ↔ Bortle di Wikipedia
   (en.wikipedia.org/wiki/Bortle_scale, fonte secondaria). Solo per L e senza filtro.
-- **Gradiente e SNR**: solo rispetto alla sessione (stessa notte, oggetto, filtro): segnato il
-  frame oltre mediana ± 2 MAD, come i tutorial del SubframeSelector. Per notte e produzione solo
-  il numero.
+- **SNR**: solo rispetto alla sessione (stessa notte, oggetto, filtro): "SNR basso per la notte"
+  sotto mediana − 2 MAD, come i tutorial del SubframeSelector. Per notte e produzione solo il
+  numero.
+- **Gradiente**: solo il numero (Marco): nessuna fonte lo giudica, e la regola dei 2 MAD i
+  tutorial la usano per FWHM e SNR.
 - **FWHM e HFD a schermo sempre in due unita'**: secondi d'arco e pixel, uno accanto all'altro
   (Marco, 18/10/2026). Il SubframeSelector di PixInsight mostra i pixel finche' non gli si da' <!-- software-ok -->
   la scala: chi confronta i numeri deve ritrovare gli stessi. Il giudizio usa i secondi d'arco, il

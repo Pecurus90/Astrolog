@@ -24,23 +24,22 @@ misurano con curve di fuoco su più frame. Restano tilt e curvatura. Niente frec
 | **FWHM** (in ″) | **eccellente / buono / nella media / scarso / pessimo** | sotto 2″ / 2-3″ / 3-4″ / 4-5″ / oltre 5″ | consenso dei forum (32 casi) |
 | | **al limite del corredo** | sotto F = il maggiore fra 2 × scala e la diffrazione; i bordi sotto F salgono a F | due pixel per stella |
 | | **non giudicabile su questo corredo** | quando F supera 3″ (es. 60/300 a 2,59″/px) | |
-| **Eccentricità** | **rotonde / — / allungate** | fino a 0,45 / 0,45-0,6 solo il numero / oltre 0,6 | 0,45 dai forum; 0,6 di Marco |
-| **Fuoco** (HFD) | **fuoco peggiore** | HFD oltre +15 % sulla migliore della stessa notte e filtro | esempio di SGP |
+| **Eccentricità** | **rotonde / — / allungate** | fino a 0,45 / 0,45-0,71 solo il numero / oltre 0,71 | 0,45 dai forum; 0,71 ESO |
+| **Fuoco** (HFD) | **fuoco peggiore** | HFD oltre +5 % sulle migliori della stessa notte e filtro | N.I.N.A. |
 | **Tilt** | **buono / incerto / non adatto** | fino al 10 % / 10-20 % / oltre 20 % | ASTAP |
 | **SNR** | **SNR basso per la notte** | sotto mediana − 2 MAD dei frame della stessa notte, oggetto e filtro | regola del SubframeSelector |
-| **Gradiente** | **gradiente alto per la notte** | oltre mediana + 2 MAD, stesso gruppo | stessa regola |
 | **Luminosità del cielo** | **come il Bortle del sito / più chiaro del Bortle del sito** | tabella SQM ↔ Bortle; solo L e senza filtro | Wikipedia |
 
-SNR e gradiente si giudicano solo sul frame (contro la sua notte). Per notte e produzione solo il
-numero.
+SNR e fuoco si giudicano solo sul frame (contro la sua notte), e solo con almeno 10 frame della
+stessa notte, oggetto e filtro (N.I.N.A.); sotto, tacciono. Per notte e produzione solo il numero.
 
-**Senza giudizio**: curvatura di campo (Marco), stelle, stelle sature, fondo, rumore, massa d'aria,
-direzione dell'allungamento.
+**Senza giudizio**: curvatura di campo, gradiente del fondo (Marco), stelle, stelle sature, fondo,
+rumore, massa d'aria, direzione dell'allungamento.
 
 **Quando manca un dato**:
 - frame senza scala del cielo: niente FWHM in ″, niente giudizio della FWHM;
 - corredo senza apertura: F senza la diffrazione (solo 2 × scala);
-- notte con un frame solo: niente giudizi "per la notte";
+- notte con meno di 10 frame dello stesso oggetto e filtro: niente giudizi "per la notte";
 - luminosità del cielo senza Bortle del sito: niente giudizio.
 
 ## 3. Misure aggiornate (cambiano rispetto alla brief di prima)
@@ -70,7 +69,7 @@ F = max(2 × 1,385; 1,13) = 2,77″.
 - FWHM 1.9″ · 1.4 px → **al limite del corredo**, sottocampionata
 - FWHM 2.9″ · 2.1 px → **buono**, ideale
 - FWHM 3.6″ · 2.6 px → **nella media**
-- eccentricità 0,52 → solo il numero; 0,63 → **allungate**, in AR
+- eccentricità 0,52 → solo il numero; 0,76 → **allungate**, in AR
 - tilt 8 % → **buono**
 
 CHANGELOG e DECISIONI come al solito.
