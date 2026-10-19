@@ -104,9 +104,10 @@ Dal Framing Assistant di N.I.N.A. (`FramingAssistantVM.cs`):
 
 - Nome: oggetto + ottica + camera, come la produzione.
 - Gruppi in corso / in attesa / fermi / finiti; finito proposto dall'app, confermato
-  dall'utente; eliminare non tocca i frame (ereditato.md A). La stagione e' quella del mese buono
-  (sotto, "I giudizi"): in corso = mese buono adesso; in attesa = fuori stagione, circumpolare
-  mai; fermo = una stagione intera passata senza frame (ereditato.md, "fermo da una stagione").
+  dall'utente; eliminare non tocca i frame (ereditato.md A). La stagione e' fatta dei mesi buoni
+  (sotto, "I giudizi"; a schermo «mesi buoni», mai «stagione», Marco 19/10/2026): in corso = mese
+  buono adesso; in attesa = fuori dai mesi buoni, circumpolare mai; fermo = mesi buoni passati
+  tutti senza frame (ereditato.md, "fermo da una stagione").
 - **Modifiche** (Marco): ore, filtri ed esposizioni sempre libere. Inquadratura, griglia o corredo
   su un progetto iniziato si cambiano **con un avviso numerico**: «{durata} gia' riprese non
   conterebbero piu'», contato sui frame veri. Supera "griglia congelata a progetto iniziato"
@@ -204,15 +205,15 @@ solo dove una fonte fissa il confine o Marco lo sceglie; il resto resta un numer
 - **Seeing e pianeti**: nessun giudizio. Nessuna fonte lega il seeing previsto alla ripresa
   fortunata; le classi CMC (cleardarksky.com) descrivono l'immagine, non dicono se vale la pena.
 - **Campionamento del cielo profondo**: quello di ADR 0021 (1/3-1/2 del seeing previsto), stesse
-  parole di Meteo; senza seeing tace. Seeing = mediana delle ore utili dell'oggetto stanotte. La
+  parole di Meteo; senza seeing tace. Seeing = mediana delle ore visibili dell'oggetto stanotte. La
   FWHM in pixel (ADR 0022) resta sui frame, in Progetti.
 - **Campo**: «entra nel campo» / «non entra nel campo» (Marco), per geometria: l'ellisse
   dell'oggetto (assi e angolo di posizione del catalogo) dentro il rettangolo ruotato del campo, o
   del mosaico. Senza angolo di posizione, asse maggiore contro il lato corto. Corregge la prima
   regola (sempre il lato corto), che bocciava M 31 nel mosaico 2 × 1 che la contiene. Nessuna
   fascia «stretto»: nessuna convenzione, i calcolatori di campo calcolano il campo e basta.
-- **Ore utili stanotte** contro le ore del progetto: numeri, senza giudizio.
-- **Mese buono** nel periodo migliore: ✓ se il 15 del mese l'oggetto ha almeno 3 ore utili.
+- **Ore visibili stanotte** contro le ore del progetto: numeri, senza giudizio.
+- **Mese buono** nel periodo migliore: ✓ se il 15 del mese l'oggetto ha almeno 3 ore visibili.
   Impostazione dell'utente, partenza 3 ore (Marco, 19/10/2026). Nessuna convenzione: N.I.N.A.
   (Sky Atlas, «visible for») e Telescopius lasciano scegliere; stessa strada del calendario delle
   notti buone (`docs/coda.md`).
@@ -231,7 +232,7 @@ Confronto con Telescopius, N.I.N.A. Sky Atlas, Deep-Sky Planner, SkySafari (rice
 - **«Entra nel campo»** come filtro: solo gli oggetti che stanno nel campo del corredo scelto, o
   del mosaico, con la regola dell'ellisse (sotto). Nessuna soglia nuova.
 - **Ordinamento**: nome (ordine del catalogo, partenza), dimensione, magnitudine, luminosita'
-  superficiale, ora del transito. Mai per ore utili: niente classifica «i migliori stanotte».
+  superficiale, ora del transito. Mai per ore visibili: niente classifica «i migliori stanotte».
 - Fuori: l'esportazione verso i programmi di ripresa va con la pagina delle sequenze (ADR 0013).
 
 ### I consigli (Marco, 19/10/2026)
@@ -271,7 +272,7 @@ di partenza e la sua fonte accanto; nel Planner si cambia per una ricerca senza 
 | Altezza minima, cielo profondo | 30° | massa d'aria 2 (AAVSO, IRAF) |
 | Durata minima sopra l'altezza | 1 h | Marco |
 | Distanza dalla Luna | 40° | Marco |
-| Mese buono | 3 h utili il 15 del mese | Marco |
+| Mese buono | 3 h visibili il 15 del mese | Marco |
 | Altezza minima di pianeti, Luna e Sole | 30° | massa d'aria 2 (AAVSO, IRAF) |
 | Correttore di dispersione sotto | 35° | BAA, Lewis 2021 |
 | Macchia Rossa: longitudine, data, deriva | 91° (Sistema II) al 1/6/2026, 1.75° al mese | Sky & Telescope, da JUPOS |
@@ -313,7 +314,7 @@ riga "idee per dopo" dei giudizi. Si disegna ora; si costruisce dopo il resto de
 - Si importa in Impostazioni, uno per sito. Formato di N.I.N.A.: testo, coppie azimut altezza, <!-- software-ok -->
   riga `#` d'intestazione, almeno due coppie, i vuoti interpolati (nighttime-imaging.eu, Options
   > General). Il file importato si mostra in un disegno a 360°.
-- Caricato, vale in tutta l'app dove conta l'altezza di un oggetto: ore utili, momento migliore,
+- Caricato, vale in tutta l'app dove conta l'altezza di un oggetto: ore visibili, momento migliore,
   mese buono, carta del cielo, Sistema solare, Eventi. Il minimo in ogni direzione e' il piu' alto
   fra l'orizzonte e l'altezza minima delle Impostazioni.
 - Non caricato: tutto come prima, solo l'altezza minima.
