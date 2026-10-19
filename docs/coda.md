@@ -706,6 +706,7 @@ colonna di destra lo dice (scaduta) invece di spostarsi in silenzio su una tappa
 | nella CI: il build dell'immagine per amd64 e arm64 (runner `ubuntu-24.04-arm` nativo) | il pacchetto |
 | pochi FITS **veri** con licenza compatibile e un database ASTAP piccolo (D05), per far girare in CI i test `lento` del solver (`tests/test_perf_solve.py` si salta senza `ASTROLOG_TEST_FITS`) | appena arriva un file vero |
 | **la misura del solver su un NAS arm64 vero** (1-2 GB di RAM): sul portatile sta in `backend/tests/perf_baseline.json` | il pacchetto |
+| la **regola della Luna in Impostazioni** (due gradini e altezza, [`domini/meteo.md`](domini/meteo.md)): oggi Meteo e Dashboard la tengono fissa nel codice | il porting del disegno |
 
 ## Per il disegno nuovo
 

@@ -90,6 +90,9 @@ andare da sola dal crepuscolo all'alba.
 - **Due eventi di ricerca sovrapposti** (Marco): vince quello che ci sta tutto coi margini; a
   pari merito il piu' alto. L'altro resta fra le proposte.
 - **Ricerca e' un elenco solo**; i tipi sono Criteri, non pagine.
+- **La regola della Luna e' un'impostazione** (Marco): i due gradini della banda larga (25% e 50%
+  di partenza) e l'altezza da cui la Luna conta (orizzonte di partenza). Vale in tutta l'app:
+  Meteo, Dashboard, Planner, Piano della notte ([`domini/meteo.md`](../domini/meteo.md)).
 - **Deep sky** prende i progetti dal Planner.
 - **Sistema solare**: pianeti e Luna come nel Planner, piu' le comete (Marco: si fotografano,
   non si misurano). Posizione da JPL Horizons, ricalcolata per ogni blocco.
