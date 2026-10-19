@@ -2,7 +2,7 @@ import { type KeyboardEvent, type PointerEvent, useRef, useState } from "react"
 
 import { oraDalTasto, parola, quota, tondo } from "./CartaDelParametro"
 import type { components } from "./api/schema"
-import { type Chiave, numero, oraDelSito, t } from "./i18n"
+import { type Chiave, numero, oraDelSito, t, valoreEUnita } from "./i18n"
 
 type Notte = components["schemas"]["WeatherNightOut"]
 type Misura = components["schemas"]["WeatherMeasureOut"]
@@ -514,7 +514,9 @@ function Lettore({ ora: o, umidita, destra, nomeDestra, sinistra, x }: { ora: Or
   if (destra) {
     const l = o.levels[destra]
     const v = o[DISEGNO[destra].campo]
-    const detto = v === null ? t("weather.card.unknown") : `${numero(tondo(destra, v))}${DISEGNO[destra].unita ? ` ${t(DISEGNO[destra].unita as Chiave)}` : ""}${l ? `, ${parola(destra, l)}` : ""}`
+    const unita = DISEGNO[destra].unita
+    const scritto = (n: number) => (unita ? valoreEUnita(numero(tondo(destra, n)), t(unita)) : numero(tondo(destra, n)))
+    const detto = v === null ? t("weather.card.unknown") : `${scritto(v)}${l ? `, ${parola(destra, l)}` : ""}`
     righe.push([RIGHE[l ?? "sotto"], nomeDestra, detto])
   }
   return (

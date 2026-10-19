@@ -153,7 +153,7 @@ describe("Da confermare -- l'ossatura della pagina", () => {
     // "Niente da confermare" a chi non ha ancora scelto le cartelle sarebbe vero e inutile.
     aperta({ ...VUOTA, empty: true })
     await apri()
-    const testo = await screen.findByText("Nessun frame in archivio. Le domande compaiono dopo la lettura delle cartelle.")
+    const testo = await screen.findByText("Nessun frame in archivio. Le domande compaiono dopo la scansione delle cartelle.")
     const vuoto = testo.closest(".as-vuoto") as HTMLElement
     expect(within(vuoto).getByRole("link", { name: "Aggiungi cartelle" }).getAttribute("href")).toBe("/impostazioni/cartelle")
     expect(screen.queryByText("Niente da confermare")).toBeNull()

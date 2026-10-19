@@ -244,3 +244,8 @@ un corredo dice tutte le parti che i suoi frame hanno usato, ognuna coi suoi fra
 un riduttore e una guida che nessun corredo porta lo dicono, ognuno col suo genere - glossario: corredo diventa setup (Marco, 19/10/2026); rinominato in "un riduttore e una guida che nessun setup porta lo dicono, ognuno col suo genere"
 una produzione senza corredo lo dice, invece di restare senza nome - glossario: corredo diventa setup (Marco, 19/10/2026); rinominato in "una produzione senza setup lo dice, invece di restare senza nome"
 una sezione senza pezzi non si vede, e nemmeno strumenti e corredi - glossario: corredo diventa setup (Marco, 19/10/2026); rinominato in "una sezione senza pezzi non si vede, e nemmeno strumenti e setup"
+quando un filtro non trova niente lo dice, e lascia il modo di toglierlo - glossario: le scelte di ricerca sono criteri (Marco, 19/10/2026); rinominato in "quando un criterio non trova niente lo dice, e lascia il modo di toglierlo"
+togliere i filtri non fa dire all'app che l'archivio e' vuoto - glossario: le scelte di ricerca sono criteri (Marco, 19/10/2026); rinominato in "togliere i criteri non fa dire all'app che l'archivio e' vuoto"
+Filtri apre e chiude le tendine, e dice quanti filtri sono scelti - glossario: le scelte di ricerca sono criteri (Marco, 19/10/2026); rinominato in "Criteri apre e chiude le tendine, e dice quanti criteri sono scelti"
+Rimuovi filtri nella barra li toglie tutti - glossario: le scelte di ricerca sono criteri (Marco, 19/10/2026); rinominato in "Togli i criteri nella barra li toglie tutti"
+rimuovi filtri toglie anche il periodo e il setup - glossario: le scelte di ricerca sono criteri (Marco, 19/10/2026); rinominato in "togli i criteri toglie anche il periodo e il setup"

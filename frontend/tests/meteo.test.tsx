@@ -28,7 +28,7 @@ describe("il Meteo, la notte", () => {
     expect(testo).toContain("3 ore di buio sereno")
     expect(testo).toContain("incerta")
     expect(testo).toContain("dalle 23:00 alle 02:00, 3 ore")
-    expect(testo).toContain("accordo dei modelli 3 su 4")
+    expect(testo).toContain("3 modelli d'accordo su 4")
   })
 
   it("accanto al semaforo pesa solo cio' che il backend dice incerto o niente, con la parola e le ore", async () => {
@@ -133,7 +133,7 @@ describe("il Meteo, la notte", () => {
     expect(tendenza.textContent).toMatch(/Notte di \S+ 29 \u00b7 tendenza/)
     expect(tendenza.textContent).toContain("8 ore di buio")
     expect(tendenza.textContent).toContain("nuvole al 40% nel buio")
-    expect(tendenza.textContent).toContain("accordo dei modelli 2 su 4")
+    expect(tendenza.textContent).toContain("2 modelli d'accordo su 4")
     expect(tendenza.textContent).toContain("Dalla quarta notte la previsione \u00e8 una tendenza")
     expect(within(tendenza).queryAllByRole("article")).toHaveLength(0)
   })
@@ -147,7 +147,7 @@ describe("il Meteo, la notte", () => {
     conNotti({ ...NOTTE, verdict: null, usable_hours: null, usable_since: null, usable_until: null, window: null, window_hours: 0 })
     await apriMeteo()
     const polo = await scheda()
-    expect(polo.textContent).toContain("Nessuna notte astronomica")
+    expect(polo.textContent).toContain("Nessun buio")
     expect(polo.querySelector(".as-semaforo--grande")).toBeNull()
     expect(within(polo).queryAllByRole("article")).toHaveLength(0)
   })
@@ -170,7 +170,7 @@ describe("il Meteo, le carte", () => {
     const nomi = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)
     expect(nomi).toEqual([
       "Nuvole", "Nuvole basse", "Pioggia", "Visibilit\u00e0", "Vento", "Seeing", "Aerosol",
-      "Temperatura e rugiada", "Polvere", "Vento a 700 hPa",
+      "Temperatura e punto di rugiada", "Polvere", "Vento a 700 hPa",
     ])
   })
 
@@ -297,7 +297,7 @@ describe("il Meteo, le carte", () => {
     await apriMeteo()
 
     await scheda()
-    expect(carta(/^Temperatura/).textContent).toContain("minima nel buio \u00b7 rugiada 4 \u00b0C")
+    expect(carta(/^Temperatura/).textContent).toContain("minima nel buio \u00b7 punto di rugiada 4 \u00b0C")
   })
 
   it.each([
@@ -325,7 +325,7 @@ describe("il Meteo, il seeing", () => {
     // come la tavola meteo-stati: un avviso d'attesa, la frase nel titolo, il bottone nelle azioni
     expect(seeing.classList.contains("as-parametro--avviso")).toBe(true)
     const avviso = seeing.querySelector(".as-avviso.as-avviso--attesa") as HTMLElement
-    expect(avviso.querySelector(".as-avviso__titolo")?.textContent).toBe("Il seeing richiede una chiave API Meteoblue (gratuita).")
+    expect(avviso.querySelector(".as-avviso__titolo")?.textContent).toBe("Il seeing richiede una chiave Meteoblue.")
     const porta = within(avviso).getByRole("link", { name: /apri le impostazioni/i })
     expect(porta.getAttribute("href")).toBe("/impostazioni/servizi")
     expect(porta.closest(".as-avviso__azioni")).not.toBeNull()
@@ -697,7 +697,7 @@ describe("il Meteo, il cielo", () => {
     const tela = cielo().querySelector(".as-cielo__tela") as HTMLElement
     fireEvent.keyDown(tela, { key: "ArrowRight" })
     expect(tela.getAttribute("aria-valuetext")).toContain("alle 19:00")
-    expect(cielo().querySelector(".as-volta__lettore")?.textContent).toContain("nubi basse")
+    expect(cielo().querySelector(".as-volta__lettore")?.textContent).toContain("nuvole basse")
     expect(screen.getByText("alle 19:00", { selector: ".as-soprattitolo" })).toBeDefined()
     expect(carta(/^Nuvole$/).textContent).toContain("alle 19:00")
     fireEvent.keyDown(tela, { key: "Escape" })
@@ -733,7 +733,7 @@ describe("il Meteo, una carta a un'ora", () => {
     await scheda()
     const temperatura = carta(/^Temperatura/)
     fireEvent.keyDown(within(temperatura).getByRole("slider"), { key: "Home" })
-    expect(temperatura.textContent).toContain("alle 19:00 \u00b7 rugiada 4 \u00b0C")
+    expect(temperatura.textContent).toContain("alle 19:00 \u00b7 punto di rugiada 4 \u00b0C")
     const vento = carta(/^Vento$/)
     fireEvent.keyDown(within(vento).getByRole("slider"), { key: "ArrowRight" })
     expect(vento.textContent).toContain("raffiche 10 km/h")

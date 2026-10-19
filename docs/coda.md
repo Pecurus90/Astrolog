@@ -802,7 +802,7 @@ riga per voce.
   la cartella non si segue piu' (il campo c'e': `folder_retired` di `GET /scan-runs`).
 - **Impostazioni**: tema chiaro e densita' (il foglio conosce `data-tema` e `data-densita`); un
   indice, o l'ultima sezione aperta, invece di atterrare su *Cartelle* e pagarne le chiamate.
-- **Archivio**: **un errore alla primissima risposta dell'Archivio lascia un filtro acceso senza
+- **Archivio**: **un errore alla primissima risposta dell'Archivio lascia un criterio acceso senza
   il modo di toglierlo** (`?q=zzz` col backend che si riavvia: la barra non c'e' finche' non
   arriva una risposta buona); la tabella stretta riconosce le celle di filtri ed etichette da
   qualcosa che non si traduce (oggi `td[data-etichetta="filtri"]` non aggancia mai); la modalita'

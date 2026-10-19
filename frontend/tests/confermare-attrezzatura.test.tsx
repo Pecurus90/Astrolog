@@ -146,7 +146,7 @@ describe("Da confermare -- l'attrezzatura da completare", () => {
     aperta()
     const scheda = riga(await sezione(), "EQ6-R")
     const filtro = within(scheda).getByRole("group", { name: "Filtro per EQ6-R" })
-    const colori = within(filtro).getByRole("radio", { name: /^A colori, senza filtro/ })
+    const colori = within(filtro).getByRole("radio", { name: /^A colori, nessun filtro/ })
     expect(colori).toHaveProperty("disabled", true)
     expect(within(filtro).getByText("Selezionabile dopo aver indicato la camera.")).toBeDefined()
 
@@ -157,7 +157,7 @@ describe("Da confermare -- l'attrezzatura da completare", () => {
     expect(parti(scheda)).toEqual(["Camera: senza risposta", "Filtro: da applicare"])
 
     fireEvent.click(within(scheda).getByRole("radio", { name: /Notte in quota/ }))
-    expect(within(filtro).getByRole("radio", { name: /^A colori, senza filtro/ })).toHaveProperty("disabled", false)
+    expect(within(filtro).getByRole("radio", { name: /^A colori, nessun filtro/ })).toHaveProperty("disabled", false)
     expect(await mandate()).toEqual([{ key: "firma-1", rig_id: 5, filter: "filter", filter_id: 1 }])
   })
 
@@ -165,7 +165,7 @@ describe("Da confermare -- l'attrezzatura da completare", () => {
     aperta()
     const scheda = riga(await sezione(), "EQ6-R")
     fireEvent.click(within(scheda).getByRole("radio", { name: /Notte in quota/ }))
-    fireEvent.click(within(scheda).getByRole("radio", { name: /^A colori, senza filtro/ }))
+    fireEvent.click(within(scheda).getByRole("radio", { name: /^A colori, nessun filtro/ }))
     expect(parti(scheda)).toEqual(["Camera: da applicare", "Filtro: da applicare"])
     // "Altra camera" col nome vuoto non e' una camera: il filtro a colori non ha dove scriversi
     fireEvent.click(within(scheda).getByRole("radio", { name: "Altra camera" }))

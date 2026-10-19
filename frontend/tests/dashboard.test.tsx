@@ -120,7 +120,7 @@ describe("la Dashboard, il cielo delle prossime notti", () => {
     expect(serate.map((s) => s.querySelector("p span:last-child")?.textContent)).toEqual([
       "Coperto, pioggia dalle 17",
       "Sereno · 3 h di buio senza Luna",
-      "Nubi sparse · 4 h di buio senza Luna",
+      "Nuvole sparse · 4 h di buio senza Luna",
     ])
     expect(serate.map((s) => s.querySelector("svg.as-icona-meteo use")?.getAttribute("href"))).toEqual(["#i-m-pioggia", "#i-m-sereno", "#i-m-velato"])
   })

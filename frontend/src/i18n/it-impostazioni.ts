@@ -161,7 +161,7 @@ export const itImpostazioni = {
   "backup.count.folders": "Cartelle",
   "backup.count.gear": "Strumenti e filtri",
   "backup.found.title": "Backup trovato",
-  "backup.found.question": "Ripristinare i dati salvati? Le cartelle verranno rilette.",
+  "backup.found.question": "Ripristinare i dati salvati? Le cartelle si rileggono.",
   "backup.found.restore": "Ripristina",
   "backup.found.decline": "Inizia da zero",
 }

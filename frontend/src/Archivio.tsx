@@ -364,7 +364,7 @@ function ordineChiesto(scritto: string | null): Ordine {
 /** Togliere tutto cio' che stringe, lasciando la vista e l'ordine dove sono: chi si e' perso in
  *  un filtro vuole tornare all'archivio intero, non alla pagina di partenza. **Si deriva**
  *  dall'elenco: scritto a mano sarebbe un secondo posto dove dire quali criteri stringono, e un
- *  quinto aggiunto solo di la' darebbe un bottone "togli i filtri" che non li toglie tutti. */
+ *  quinto aggiunto solo di la' darebbe un bottone "togli i criteri" che non li toglie tutti. */
 const NIENTE = Object.fromEntries(STRINGONO.map((c) => [c, ""] as const))
 
 /** L'indirizzo coi parametri cambiati e **tutto il resto com'era**: i controlli della barra sono

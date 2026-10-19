@@ -199,12 +199,12 @@ describe("l'Archivio per periodo e setup", () => {
     expect(screen.getByLabelText(/^al$/i)).toHaveProperty("value", "2025-02-28")
   })
 
-  it("rimuovi filtri toglie anche il periodo e il setup", async () => {
+  it("togli i criteri toglie anche il periodo e il setup", async () => {
     archivio([], { choices: CORREDO, found: { objects: 0, mosaics: 0 }, total: 0 })
     await apriArchivioSu("/archivio?period=date&since=2030-01-01&optics=5&camera=7&site=1")
 
     // due bottoni lo dicono, quello della barra e quello del vuoto: tolgono le stesse cose
-    const togli = await screen.findAllByRole("button", { name: /^rimuovi filtri$/i })
+    const togli = await screen.findAllByRole("button", { name: /^togli i criteri$/i })
     expect(togli).toHaveLength(2)
     fireEvent.click(togli[1] as HTMLElement)
 

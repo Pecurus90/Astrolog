@@ -30,12 +30,23 @@ const lingua: Lingua = LINGUA_SORGENTE
 export function t(chiave: Chiave, valori?: Record<string, string | number>): string {
   const testo = singolare(chiave, valori) ?? DIZIONARI[lingua][chiave] ?? it[chiave]
   if (!valori) return testo
-  return testo.replace(/\{(\w+)\}/g, (intero, nome: string) => {
-    const valore = valori[nome]
-    // Un segnaposto senza valore resta com'e': meglio un `{n}` visibile, che si nota e si
-    // ripara, di un vuoto che sembra un testo scritto male.
-    return valore === undefined ? intero : String(valore)
-  })
+  return elisione(
+    testo.replace(/\{(\w+)\}/g, (intero, nome: string) => {
+      const valore = valori[nome]
+      // Un segnaposto senza valore resta com'e': meglio un `{n}` visibile, che si nota e si
+      // ripara, di un vuoto che sembra un testo scritto male.
+      return valore === undefined ? intero : String(valore)
+    }),
+  )
+}
+
+// Articolo davanti a una percentuale che si legge con vocale (otto, undici, ottanta): 110 no.
+const ARTICOLO_ELISO = /\b(il|al|dal|del|nel|sul) (?=(?:8|11(?!\d))[\d.,]*%)/g
+
+/** "al 83%" -> "all'83%": il numero arriva dopo, e la chiave non sa quale sara'. */
+function elisione(testo: string): string {
+  if (lingua !== "it") return testo
+  return testo.replace(ARTICOLO_ELISO, (_, articolo: string) => (articolo === "il" ? "l'" : `${articolo}l'`))
 }
 
 /** La forma singolare, se il conto `n` e' 1 e la chiave ne ha una (`<chiave>.one`): la sceglie qui,
@@ -59,6 +70,12 @@ export function cielo(ra: number, dec: number): string {
 /** Un conteggio come lo scrive la lingua di adesso (le migliaia, soprattutto). */
 export function numero(n: number): string {
   return new Intl.NumberFormat(lingua).format(n)
+}
+
+/** Un valore gia' scritto con la sua unita': il percento attaccato ("40%", glossario), le altre
+ *  staccate ("12 km/h"). */
+export function valoreEUnita(valore: string, unita: string): string {
+  return unita === "%" ? `${valore}${unita}` : `${valore} ${unita}`
 }
 
 /** Le coordinate di un posto, come si leggono accanto al suo nome: `46,4843 N - 12,0561 E`.

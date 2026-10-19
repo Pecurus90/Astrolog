@@ -396,7 +396,7 @@ describe("il primo avvio", () => {
       /intestare le statistiche/i,
       /calcolare le notti/i,
       /indica una cartella/i,
-      /chiave API Meteoblue/i,
+      /chiave Meteoblue/i,
       /ASTAP non \u00e8 installato/i,
     ]
     for (const [i, atteso] of attesi.entries()) {

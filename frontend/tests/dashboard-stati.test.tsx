@@ -32,7 +32,7 @@ describe("la Dashboard senza sito", () => {
   it("per cominciare, due passi in fila: il sito aperto col primario, l'archivio dopo", async () => {
     await montaDashboard({ previsione: { site: null, nights: [], fetched_at: null }, altre: cartelle(0) })
 
-    const sito = await avviso("sito di ripresa")
+    const sito = await avviso("sito di osservazione")
     expect(sito.classi).toBe("as-avviso as-avviso--ora as-avviso--pagina")
     expect(sito.segno).toBe("1")
     expect(sito.azione?.textContent).toBe("Scegli il sito")
@@ -51,7 +51,7 @@ describe("la Dashboard senza sito", () => {
   it("con l'archivio gia' scelto il passo resta uno: il sito", async () => {
     await montaDashboard({ previsione: { site: null, nights: [], fetched_at: null } })
 
-    await avviso("sito di ripresa")
+    await avviso("sito di osservazione")
     expect(screen.queryByText("archivio", { selector: ".as-avviso__titolo" })).toBeNull()
   })
 })
@@ -86,7 +86,7 @@ describe("la Dashboard del telefono senza sito", () => {
   it("non promette l'anno, che sul telefono non c'e'", async () => {
     await montaDashboard({ previsione: { site: null, nights: [], fetched_at: null }, altre: cartelle(0), larga: 390 })
 
-    const sito = await avviso("sito di ripresa")
+    const sito = await avviso("sito di osservazione")
     const inizio = sito.nodo.closest(".as-dashboard__inizio") as HTMLElement
     expect(inizio.querySelector(".as-dashboard__dopo")?.textContent).toBe(
       "Stanotte, il meteo e i progetti compaiono qui quando il sito e l'archivio ci sono.",
@@ -225,7 +225,7 @@ describe("la Dashboard col meteo che non risponde", () => {
     })
 
     const stanotte = await screen.findByRole("region", { name: /stanotte a Casa/i })
-    expect(await within(stanotte).findByText("Nessuna notte astronomica")).toBeTruthy()
+    expect(await within(stanotte).findByText("Nessun buio")).toBeTruthy()
     expect(stanotte.querySelector(".as-dashboard__grande")).toBeNull()
   })
 

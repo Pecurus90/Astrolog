@@ -45,7 +45,7 @@ export const ORDINI: { chiave: Ordine; testo: Chiave }[] = [
   { chiave: "frames", testo: "archive.sort.frames" },
 ]
 
-// I criteri che stringono, e che "Filtri" conta sul telefono. L'ordine e la ricerca no: l'ordine
+// I criteri che stringono, e che "Criteri" conta sul telefono. L'ordine e la ricerca no: l'ordine
 // non toglie righe, e cio' che hai scritto si vede nel campo.
 const FILTRI = ["catalog", "constellation", "filter", "mosaic", "period", "site", "optics", "camera"] as const
 
@@ -54,7 +54,7 @@ const TENDINE = "archivio-tendine"
 /**
  * La barra dell'Archivio (disegno v31, `.as-restringi`): in alto la vista, il campo, l'ordine e
  * la conta; sotto le tendine, che offrono solo cio' che l'archivio ha. Sul telefono le tendine
- * stanno dietro "Filtri" e si aprono nel flusso.
+ * stanno dietro "Criteri" e si aprono nel flusso.
  *
  * - **Ogni scelta va nell'indirizzo** (`onCriteri`): la barra non tiene niente di suo, tranne chi
  *   ha chiesto per ultimo e se le tendine sono aperte.
@@ -93,7 +93,7 @@ export function BarraDellArchivio({
     onCriteri(cambio)
   }
   // Il segno e' suo finche' l'indirizzo e' quello che ha chiesto lui. Se la richiesta viene da
-  // fuori (il "togli i filtri" del vuoto, il tasto indietro, un collegamento) lo portano tutti:
+  // fuori (il "togli i criteri" del vuoto, il tasto indietro, un collegamento) lo portano tutti:
   // sotto possono esserci zero righe, e senza segno l'attesa non si vedrebbe.
   const suo = chiesto !== null && (Object.keys(criteri) as (keyof Criteri)[]).every((c) => criteri[c] === chiesto.criteri[c])
   const attende = (chi: keyof Criteri) => aspetta && (!suo || chiesto.chi === chi)
@@ -284,7 +284,7 @@ function Conta({ trovati }: { trovati: Trovati | null }) {
  * - `consegna` in un ref: il padre cambia funzione a ogni disegno, e metterla fra le dipendenze
  *   farebbe ripartire il ritardo a ogni risposta.
  * - `consegnato`: il campo si riallinea all'indirizzo solo quando cambia **da fuori** (indietro,
- *   "togli i filtri"). Senza, un tasto battuto mentre la consegna torna indietro sparirebbe.
+ *   "togli i criteri"). Senza, un tasto battuto mentre la consegna torna indietro sparirebbe.
  */
 function Cerca({
   scritto,

@@ -305,7 +305,7 @@ sola in evidenza; il resto della pagina resta quello che si puo' calcolare:
   letto: e' la sua prima lettura.
   In *da riprendere* i casi da confermare si contano a scansione finita, e l'ultima notte e' la
   piu' recente trovata finora.
-- **Le prossime 3 notti** dicono anche il cielo in parole, col suo segno -- *Sereno*, *Nubi sparse*,
+- **Le prossime 3 notti** dicono anche il cielo in parole, col suo segno -- *Sereno*, *Nuvole sparse*,
   *Nuvoloso*, *Coperto*, dalla copertura media nel buio contata in ottavi di cielo come fanno i
   bollettini meteo (okta) -- la pioggia da che ora, e le ore di buio senza Luna, quelle buone per
   la banda larga.
@@ -351,16 +351,16 @@ La pagina ha **due viste**, e si cambia col pulsante in alto a sinistra:
 
 In alto c'e' la **barra**: cerchi un oggetto scrivendo qualunque nome con cui lo conosci -- `m31`,
 `M 31`, `NGC 224` sono la stessa galassia -- e stringi l'elenco per **catalogo**, **costellazione**
-o **filtro usato**. Ogni filtro e' una **tendina**: una pillola che dice cosa stringe e il valore
+o **filtro usato**. Ogni criterio e' una **tendina**: una pillola che dice cosa stringe e il valore
 scelto (*Catalogo tutti*, *Costellazione Andromeda*); la tocchi, scegli dall'elenco, e si applica
 subito. Quando stringe qualcosa si colora e accanto compare una **×** che la toglie; oppure scegli
-la prima voce dell'elenco (*Tutti i cataloghi*). *Rimuovi filtri*, in coda alle tendine, li toglie
+la prima voce dell'elenco (*Tutti i cataloghi*). *Togli i criteri*, in coda alle tendine, li toglie
 tutti insieme. Le tendine ti offrono solo quello che hai davvero: se riprendi solo Messier,
 non ti fanno scorrere tutti quelli che il catalogo conosce, e quella che non avrebbe niente da
 offrire non compare. Se hai almeno un mosaico c'e' anche **Solo mosaici**, che si accende e si
 spegne.
 
-Sul **telefono** le tendine stanno dietro **Filtri**, che dice quanti ne hai scelti: lo tocchi e
+Sul **telefono** le tendine stanno dietro **Criteri**, che dice quanti ne hai scelti: lo tocchi e
 si aprono sotto la barra, una per riga.
 
 Puoi stringere anche **per periodo**, **sito**, **ottica** e **camera**. Il periodo e' un anno,
@@ -368,7 +368,7 @@ oppure "Intervallo di date": al posto della tendina compaiono le due date **dal*
 con la × che torna a *Tutto il periodo*. Cosi' una stagione invernale da novembre a febbraio sta in una
 scelta sola. Se "al" viene prima di "dal" l'app te lo dice sotto, invece di mostrarti un elenco
 vuoto senza un perche'. Il periodo guarda la **notte**, non l'orologio: una
-posa delle due del primo gennaio appartiene alla notte del 31 dicembre. Con questi filtri accesi
+posa delle due del primo gennaio appartiene alla notte del 31 dicembre. Con questi criteri accesi
 ogni oggetto dice **solo cio' che hai chiesto**: stringendo al 2025, M 31 porta le ore, i frame e
 i filtri del 2025, non quelli di sempre, e l'ordine per ore segue quelle. Lo stesso per il sito e
 per il setup: "con il Newton" sono le pose fatte col Newton. Un mosaico apre i soli pannelli
@@ -378,7 +378,7 @@ niente.
 
 A destra scegli l'**ordine** -- nome, ore o frame, anche lui una tendina -- e l'archivio si apre in
 ordine di nome, perche' e' un inventario: cosa hai ripreso di recente si guarda nelle **Notti**.
-Accanto all'ordine c'e' quanti ne ha **trovati**: con un filtro acceso e' quel numero, non quanti ne hai in tutto. Se la
+Accanto all'ordine c'e' quanti ne ha **trovati**: con un criterio acceso e' quel numero, non quanti ne hai in tutto. Se la
 richiesta non e' andata a buon fine dice "Conteggio non disponibile", che e' la verita': zero sarebbe l'unica
 risposta che sappiamo falsa.
 
@@ -386,15 +386,15 @@ Mentre l'app cerca, quello che avevi sotto resta a schermo -- finche' c'e' qualc
 se la ricerca di prima non aveva trovato niente, sotto la barra resta il vuoto -- e il segno
 dell'attesa compare **su cio' che hai appena toccato**: nel campo, con la parola *Ricerca…*, o sulla
 tendina che hai cambiato. Se la richiesta non parte dalla barra -- il bottone per togliere i
-filtri sotto, il tasto indietro, un collegamento -- il segno compare sul campo e su tutte le
+criteri sotto, il tasto indietro, un collegamento -- il segno compare sul campo e su tutte le
 tendine. Cosi' non perdi il punto in cui stavi scrivendo, e sai che quello che
 vedi e' ancora la risposta di prima.
 
 Se una ricerca non trova niente l'app te lo dice, e non usa le parole dell'archivio vuoto: e'
-questa ricerca che non pesca -- e trovi il bottone per togliere i filtri.
+questa ricerca che non pesca -- e trovi il bottone per togliere i criteri.
 
 Quando apri un oggetto dalla **ricerca in alto**, l'Archivio mostra lui solo e lo dice: "Risultato
-della ricerca: M 31". La barra dei filtri non c'e', perche' non c'e' niente da restringere;
+della ricerca: M 31". La barra dei criteri non c'e', perche' non c'e' niente da restringere;
 restano le due viste, e *Archivio completo* ti riporta all'elenco intero. Se quell'oggetto non c'e'
 piu' -- i suoi frame sono stati tolti -- l'app te lo dice, invece di mostrarti un archivio vuoto.
 
@@ -502,21 +502,21 @@ canadese per il seeing, la NASA per l'aerosol, meteoblue per il jet stream; per 
 diffusa del 25% per la banda larga.
 
 Sotto c'e' **il cielo della notte**, dall'ultima ora di giorno all'alba sullo sfondo del
-crepuscolo: le nubi basse, medie e alte, ognuna dal suo zero perche' si coprono e non si sommano,
-e in cima un tratto chiaro sulle ore di buio sereno. All'apertura ci sono solo le nubi. L'umidita'
+crepuscolo: le nuvole basse, medie e alte, ognuna dal suo zero perche' si coprono e non si sommano,
+e in cima un tratto chiaro sulle ore di buio sereno. All'apertura ci sono solo le nuvole. L'umidita'
 la accendi col suo interruttore, a tratteggio sulla stessa scala in percento. A destra scegli **una misura alla volta** -- pioggia, vento
 con le raffiche, condensa come aria e rugiada, seeing, jet stream, aerosol -- con la sua scala, le
 soglie tratteggiate e il colore del giudizio ora per ora (per la condensa, la cui soglia e' la
 distanza fra aria e rugiada, si colora la fascia fra le due dove si toccano); un'ora che il servizio
 non da' e' a tratteggio, mai uno zero. Sotto la linea c'e' il **valore di ogni ora** (sul telefono
 di un'ora si' e una no), e accanto all'ultima ora una parola dice quale linea sono le raffiche,
-quale l'aria e quale la rugiada. Il seeing senza chiave c'e' fra le misure ma non si sceglie, e il
+quale l'aria e quale il punto di rugiada. Il seeing senza chiave c'e' fra le misure ma non si sceglie, e il
 suo bottone dice perche'. La legenda sotto dice solo cio' che e' sul grafico.
 Passando sul cielo, toccandolo o con le frecce, un filo indica l'ora e un riquadro dice i valori;
 **tutte le carte vanno a quell'ora**.
 
 Sotto ci sono le **carte**, ognuna sempre allo stesso posto: nuvole, nuvole basse, condensa, pioggia,
-visibilita', vento, seeing, jet stream e aerosol, e in piccolo temperatura e rugiada,
+visibilita', vento, seeing, jet stream e aerosol, e in piccolo temperatura e punto di rugiada,
 polvere e il vento a 700 hPa. La **visibilita'** dice la minima nel buio in chilometri: sotto 1 km
 e' **nebbia** (la definizione dell'Organizzazione meteorologica mondiale), e la carta dice da che
 ora; non tutti i modelli la danno, e allora la carta dice *Non disponibile*. Le sue barrette
@@ -541,7 +541,7 @@ dice (*media fino alle 02:00*). Meteoblue si chiede al massimo due volte al gior
 chiave gratuita ha un tetto di chiamate l'anno.
 
 D'estate molto a nord, dove il buio astronomico non arriva, le ore serene si contano col Sole sotto
-l'orizzonte e la scheda lo dice; dove il Sole non tramonta legge *Nessuna notte astronomica* e, sotto,
+l'orizzonte e la scheda lo dice; dove il Sole non tramonta legge *Nessun buio* e, sotto,
 che non c'e' nessuna ora di buio, senza carte. Se il modello non da' le nuvole di tutte le ore la
 notte dice solo *Non disponibile*, senza ore serene, e sotto perche' non si puo' valutare.
 
@@ -740,7 +740,7 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
     camera. Il nome della montatura non conta: due montature con la stessa camera alla stessa
     focale sono una scheda sola. Due ottiche diverse usate alla stessa focale con la stessa camera
     ti arrivano come una domanda sola.
-  - *Il filtro.* Scegli cosa c'era davanti: *a colori, senza filtro* (si scrive sulla scheda della
+  - *Il filtro.* Scegli cosa c'era davanti: *a colori, nessun filtro* (si scrive sulla scheda della
     camera, quindi prima serve sapere qual e' la camera: se la togli, la scelta non parte), *nessun filtro* o *filtro esistente*,
     che scegli da una tendina fra i filtri che l'app conosce. Se cambiavi filtri senza che il file
     li scrivesse non c'e' una risposta giusta: quei frame restano senza filtro. Una camera che i

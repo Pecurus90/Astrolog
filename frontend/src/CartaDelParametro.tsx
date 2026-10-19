@@ -4,7 +4,7 @@ import { Avviso } from "./Avviso"
 import { Bottone } from "./Bottone"
 import type { SegnoDellaMisura } from "./Icons"
 import type { components } from "./api/schema"
-import { type Chiave, numero, oraDelSito, t } from "./i18n"
+import { type Chiave, numero, oraDelSito, t, valoreEUnita } from "./i18n"
 import { Semaforo } from "./Semaforo"
 
 type Notte = components["schemas"]["WeatherNightOut"]
@@ -69,9 +69,9 @@ export function parola(code: Codice, livello: NonNullable<Misura["level"]>): str
 }
 
 /** Un valore con la sua unita', o la parola che dice che il servizio non lo da'. */
-function conUnita(v: number | null, unita?: Chiave) {
+function conUnita(v: number | null, unita?: Chiave): string {
   if (v === null) return t("weather.card.unknown")
-  return unita ? `${numero(v)} ${t(unita)}` : numero(v)
+  return unita ? valoreEUnita(numero(v), t(unita)) : numero(v)
 }
 
 /**
@@ -240,8 +240,8 @@ function Carta({ misura: m, notte: n, ore, scala, forma, nome, oraDelCielo }: {
       <div className="as-parametro__grafico" data-meteo-carta-piano="" tabIndex={0} role="slider" aria-label={t("weather.card.hours", { nome })}
         aria-valuemin={0} aria-valuemax={ore.length - 1} aria-valuenow={ora ?? undefined}
         aria-valuetext={qui
-          ? t("weather.card.valueAt", { ora: oraDelSito(qui.at), v: valoreQui === null ? t("weather.card.unknown") : `${numero(tondo(m.code, valoreQui))} ${unita}` })
-          : t("weather.card.valueNight", { v: `${valoreNotte} ${unita}`, sotto: sottoNotte })}
+          ? t("weather.card.valueAt", { ora: oraDelSito(qui.at), v: valoreQui === null ? t("weather.card.unknown") : valoreEUnita(numero(tondo(m.code, valoreQui)), unita) })
+          : t("weather.card.valueNight", { v: valoreEUnita(valoreNotte, unita), sotto: sottoNotte })}
         onPointerDown={(ev) => {
           const i = oraDa(ev)
           setFissa(fissa === i ? null : i)

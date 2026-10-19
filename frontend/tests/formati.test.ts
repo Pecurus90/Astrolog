@@ -16,6 +16,7 @@ import {
   notte,
   orario,
   ore,
+  valoreEUnita,
 } from "../src/i18n"
 import { it as testiIt } from "../src/i18n/it"
 
@@ -210,5 +211,12 @@ describe("l'ora in cui e' successa una cosa", () => {
 
     expect(orario(ISTANTE)).toBe("12:30")
     expect(giorno(ISTANTE)).toContain("21")
+  })
+})
+
+describe("un valore con la sua unita'", () => {
+  it("il percento sta attaccato al numero, le altre unita' staccate", () => {
+    expect(valoreEUnita("40", "%")).toBe("40%")
+    expect(valoreEUnita("12", "km/h")).toBe("12 km/h")
   })
 })

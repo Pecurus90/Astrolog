@@ -34,7 +34,7 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Dalla ricerca nella barra apro un oggetto, e vedo lui solo (`?key=`), non anche quelli che ne contengono la sigla | `test_the_key_opens_the_archive_on_that_object_alone` (`backend/tests/test_search.py`); *con ?key= chiede quell'oggetto solo, dice che e' ristretto e come tornare*, *una chiave che non trova niente lo dice, e non sembra un archivio vuoto* (`ricerca.test.tsx`) |
 | Stringo per catalogo, costellazione o filtro usato, e le tendine offrono solo quello che ho | `test_you_can_narrow_down_to_one_catalogue`, `test_you_can_narrow_down_to_one_constellation`, `test_you_can_narrow_down_to_one_filter`, `test_the_choices_are_only_what_the_archive_has`; *le tendine offrono quello che hai, e quella vuota non compare* |
 | Ordino per nome, ore o frame, e l'archivio si apre in ordine di nome | `test_the_archive_is_sorted_by_name_and_a_name_is_catalogue_then_number`, `test_by_hours_and_by_frames_are_two_different_orders`; *l'ordine lo sceglie l'utente e lo fa il backend* |
-| Se un filtro non trova niente me lo dice, e mi lascia il modo di toglierlo | *quando un filtro non trova niente lo dice, e lascia il modo di toglierlo* |
+| Se un criterio non trova niente me lo dice, e mi lascia il modo di toglierlo | *quando un criterio non trova niente lo dice, e lascia il modo di toglierlo* |
 | Mando a qualcuno il collegamento di una ricerca e gli si apre la stessa | *scegliere un catalogo lo scrive nell'indirizzo, senza toccare la vista* |
 | Un tempo piccolo ma vero non mi viene scritto zero | *un tempo vero ma piccolo non diventa zero* (`frontend/tests/formati.test.ts`) |
 | Per gli oggetti di catalogo vedo in che costellazione sono e che cosa sono | `test_the_catalog_says_what_kind_of_thing_it_is` |
@@ -65,7 +65,7 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Per ore, con un periodo acceso, l'ordine segue le ore del periodo | `test_by_hours_reads_the_narrowed_hours` |
 | Un mosaico stretto a un periodo apre i soli pannelli ripresi allora | `test_a_mosaic_says_only_the_panels_and_hours_shot_in_the_period` |
 | Le tendine offrono gli anni delle mie notti, e sito, ottica e camera solo se ne ho almeno due | `test_the_choices_offer_the_years_sites_and_pieces_you_shot_with`, `test_one_site_or_one_camera_is_not_a_choice`; *con un sito solo, o una camera sola, la tendina non c'e'* |
-| "Rimuovi filtri" toglie anche periodo e setup | *rimuovi filtri toglie anche il periodo e il setup* |
+| "Togli i criteri" toglie anche periodo e setup | *togli i criteri toglie anche il periodo e il setup* |
 | La conta dice quanti oggetti e quanti mosaici ho trovato | `test_the_count_says_how_many_objects_and_how_many_mosaics`; *la conta dice quanti oggetti e quanti mosaici* |
 
 ## Le decisioni
@@ -164,17 +164,17 @@ pagina a ogni ricerca smonterebbe il campo e con lui il **fuoco**, a meta' parol
 c'era pero' vuol dire che per un attimo la conta, le righe -- o lo stato vuoto -- rispondono a una
 domanda vecchia. Il segno sta su **chi ha chiesto** -- il campo di ricerca, con la parola *cerco*, o la
 tendina appena cambiata -- e su campo e tendine insieme quando la richiesta non parte dalla barra
-(il tasto indietro, *Rimuovi filtri*); non sulle righe: le
+(il tasto indietro, *Togli i criteri*); non sulle righe: le
 righe possono essere zero, ed e' proprio li' che serve di piu'. E la barra lo **dichiara**
 (`aria-busy`), perche' chi ascolta non vede il movimento. **Niente si spegne**: cambiare idea a
 meta' attesa e' legittimo.
 
 **Dalla prima risposta in poi, la barra non dipende dalla risposta.** Le ultime scelte viste
-restano in mano, cosi' un errore di rete -- il backend che si riavvia mentre filtri -- lascia a
-schermo il modo di togliere il filtro. Senza, resterebbero un avviso e un filtro acceso che si
+restano in mano, cosi' un errore di rete -- il backend che si riavvia mentre cerchi -- lascia a
+schermo il modo di togliere il criterio. Senza, resterebbero un avviso e un criterio acceso che si
 toglie solo col tasto indietro del browser. Se a cadere e' la **prima** risposta le scelte non le
 abbiamo ancora viste, e li' quello scenario resta: sta in `coda.md` ("Un errore alla primissima
-risposta dell'Archivio lascia un filtro acceso senza il modo di toglierlo"), perche' il rimedio --
+risposta dell'Archivio lascia un criterio acceso senza il modo di toglierlo"), perche' il rimedio --
 una barra col campo e senza tendine -- e' un'altra decisione.
 
 **Ogni scelta lascia la sua traccia, tranne lo scrivere -- e una scelta che non cambia niente non
@@ -200,11 +200,11 @@ E' la stessa regola delle ore per genere -- per archivio, non per elenco fisso -
 senza niente da scegliere **non compare**, invece di promettere qualcosa e non farlo.
 
 **"Non ho trovato niente" non e' "non hai niente".** Il primo e' una risposta a cio' che hai
-chiesto e tiene la barra a schermo, col modo di togliere i filtri; il secondo e' lo stato di chi
+chiesto e tiene la barra a schermo, col modo di togliere i criteri; il secondo e' lo stato di chi
 ha appena installato l'app e porta al gesto che lo riempie. Dire le stesse parole manderebbe a
 cercare le cartelle chi le ha gia' indicate.
 
-**E la conta e' quella che hai trovato**, non quella che hai: con un filtro acceso "1.240 oggetti"
+**E la conta e' quella che hai trovato**, non quella che hai: con un criterio acceso "1 240 oggetti"
 sarebbe un numero che mente, ed e' anche il numero su cui la pagina decide se ce n'e' un'altra.
 
 **La costellazione si scrive col nome latino ufficiale, uguale in ogni lingua** (Marco,

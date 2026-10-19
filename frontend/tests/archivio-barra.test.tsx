@@ -38,10 +38,10 @@ afterEach(pulisci)
 /** La conta come si legge: i numeri stanno in un `<b>`, quindi il testo e' su piu' nodi. */
 const laConta = () => document.querySelector(".as-archivio__conta")?.textContent
 
-/** Il bottone "Rimuovi filtri" del vuoto: quando un filtro non trova niente ce n'e' anche uno nella
+/** Il bottone "Togli i criteri" del vuoto: quando un criterio non trova niente ce n'e' anche uno nella
  *  barra, e questo e' quello che sta dove l'utente guarda. */
 const togliDalVuoto = () =>
-  within(screen.getByRole("tabpanel")).getByRole("button", { name: /^rimuovi filtri$/i })
+  within(screen.getByRole("tabpanel")).getByRole("button", { name: /^togli i criteri$/i })
 
 describe("la barra dell'Archivio", () => {
   it("cercare stringe l'elenco nel backend, non a schermo", async () => {
@@ -331,12 +331,12 @@ describe("la barra dell'Archivio", () => {
     expect(screen.getByRole("button", { name: /ordina/i })).toBeDefined()
   })
 
-  it("quando un filtro non trova niente lo dice, e lascia il modo di toglierlo", async () => {
-    // Togliere la barra qui lascerebbe senza il modo di togliere il filtro: bloccati su una
+  it("quando un criterio non trova niente lo dice, e lascia il modo di toglierlo", async () => {
+    // Togliere la barra qui lascerebbe senza il modo di togliere il criterio: bloccati su una
     // pagina vuota, con l'unica strada il tasto indietro. E non sono le parole di chi ha appena
     // installato l'app: li' l'archivio e' vuoto davvero.
     // **Due** criteri accesi, non uno: il bottone deve toglierli tutti, e con uno solo un bottone
-    // che ne dimentica uno passerebbe. La vista invece resta dov'era -- toglie i filtri, non
+    // che ne dimentica uno passerebbe. La vista invece resta dov'era -- toglie i criteri, non
     // rimette la pagina a nuovo.
     archivio([])
     const reso = await apriArchivioSu("/archivio?q=zzz&catalog=M&vista=elenco")
@@ -362,8 +362,8 @@ describe("la barra dell'Archivio", () => {
     await waitFor(() => expect(laConta()).toBe("1 oggetto"))
   })
 
-  it("togliere i filtri non fa dire all'app che l'archivio e' vuoto", async () => {
-    // La strada: cerchi, non trovi niente, premi "Rimuovi filtri". La risposta senza criteri non
+  it("togliere i criteri non fa dire all'app che l'archivio e' vuoto", async () => {
+    // La strada: cerchi, non trovi niente, premi "Togli i criteri". La risposta senza criteri non
     // e' in cache, quindi per tutto il giro di rete restano a schermo **zero righe vecchie** e
     // nessun criterio -- che assomigliano a un primo avvio e non lo sono. Chi ha milleduecento
     // oggetti si vedrebbe dire di non averne nessuno, e perderebbe la barra col fuoco dentro.
@@ -375,7 +375,7 @@ describe("la barra dell'Archivio", () => {
     const reso = await disegna()
     await screen.findByText(/^nessun risultato$/i)
 
-    // e l'archivio, senza quel filtro, e' **pieno**
+    // e l'archivio, senza quel criterio, e' **pieno**
     let liberala = () => {}
     cambia(
       conArchivio({
@@ -484,28 +484,28 @@ describe("la barra dell'Archivio", () => {
     await waitFor(() => expect(consegne).toEqual(["m31", "m314"]))
   })
 
-  it("Filtri apre e chiude le tendine, e dice quanti filtri sono scelti", async () => {
+  it("Criteri apre e chiude le tendine, e dice quanti criteri sono scelti", async () => {
     // Sul telefono le tendine stanno dietro questo bottone: chi ascolta deve sentire se sono
-    // aperte, e chi guarda deve sapere che un filtro stringe anche a tendine chiuse.
+    // aperte, e chi guarda deve sapere che un criterio stringe anche a tendine chiuse.
     archivio([M31])
     await apriArchivio()
     const barra = await laBarra()
-    const filtri = screen.getByRole("button", { name: /^filtri/i })
-    expect(filtri.getAttribute("aria-expanded")).toBe("false")
+    const criteri = screen.getByRole("button", { name: /^criteri/i })
+    expect(criteri.getAttribute("aria-expanded")).toBe("false")
     expect(barra?.hasAttribute("data-aperta")).toBe(false)
-    expect(filtri.querySelector("b")).toBeNull()
+    expect(criteri.querySelector("b")).toBeNull()
 
-    fireEvent.click(filtri)
+    fireEvent.click(criteri)
     expect(barra?.hasAttribute("data-aperta")).toBe(true)
-    expect(filtri.getAttribute("aria-expanded")).toBe("true")
+    expect(criteri.getAttribute("aria-expanded")).toBe("true")
 
-    fireEvent.click(filtri)
+    fireEvent.click(criteri)
     expect(barra?.hasAttribute("data-aperta")).toBe(false)
-    expect(filtri.getAttribute("aria-expanded")).toBe("false")
+    expect(criteri.getAttribute("aria-expanded")).toBe("false")
 
     window.history.replaceState(null, "", "/archivio?catalog=M&constellation=And")
     fireEvent.popState(window)
-    await waitFor(() => expect(filtri.querySelector("b")?.textContent).toBe("2"))
+    await waitFor(() => expect(criteri.querySelector("b")?.textContent).toBe("2"))
   })
 
   it("una tendina che stringe lo mostra, e la prima voce la toglie", async () => {
@@ -567,13 +567,13 @@ describe("la barra dell'Archivio", () => {
     await waitFor(() => expect(document.activeElement).toBe(scelta))
   })
 
-  it("Rimuovi filtri nella barra li toglie tutti", async () => {
+  it("Togli i criteri nella barra li toglie tutti", async () => {
     // Con le righe a schermo il vuoto non c'e': questo e' il bottone in fondo alle tendine.
     archivio([M31])
     const reso = await apriArchivioSu("/archivio?catalog=M&constellation=And")
     const barra = (await laBarra()) as HTMLElement
 
-    fireEvent.click(await within(barra).findByRole("button", { name: /^rimuovi filtri$/i }))
+    fireEvent.click(await within(barra).findByRole("button", { name: /^togli i criteri$/i }))
 
     await waitFor(() => expect(window.location.search).not.toContain("catalog="))
     expect(window.location.search).not.toContain("constellation=")

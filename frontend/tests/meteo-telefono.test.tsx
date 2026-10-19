@@ -45,7 +45,7 @@ describe("il Meteo sul telefono", () => {
     expect(pagina.querySelector(".as-parametri")).toBeNull()
     expect(nomi(pagina)).toEqual([
       "Nuvole", "Nuvole basse", "Pioggia", "Visibilità", "Vento", "Seeing", "Aerosol",
-      "Temperatura e rugiada", "Polvere", "Vento a 700 hPa",
+      "Temperatura e punto di rugiada", "Polvere", "Vento a 700 hPa",
     ])
     const vento = piccola(pagina, "Vento")
     expect(vento.querySelector(".as-tel-carta__valore")?.textContent).toBe("20km/h")
@@ -242,9 +242,9 @@ describe("il Meteo sul telefono", () => {
     expect([...cielo.querySelectorAll(".as-volta__ora")].map((o) => o.textContent)).toEqual(["19", "21", "23"])
     expect(cielo.querySelector(".as-cielo__legenda")?.textContent).toBe("bassemediealte")
     // il nome dice cio' che la tela disegna: l'umidita' solo quando e' accesa
-    expect(cielo.querySelector("svg")?.getAttribute("aria-label")).toBe("Nubi basse, medie e alte, dal tramonto all'alba")
+    expect(cielo.querySelector("svg")?.getAttribute("aria-label")).toBe("Nuvole basse, medie e alte, dal tramonto all'alba")
     fireEvent.click(within(cielo).getByRole("menuitemcheckbox", { name: /umidit/, hidden: true }))
-    expect(cielo.querySelector("svg")?.getAttribute("aria-label")).toBe("Nubi basse, medie e alte e umidità, dal tramonto all'alba")
+    expect(cielo.querySelector("svg")?.getAttribute("aria-label")).toBe("Nuvole basse, medie e alte e umidità, dal tramonto all'alba")
   })
 
   it("una notte in tendenza ha il verdetto in testa e nessun riquadro da aprire", async () => {

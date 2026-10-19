@@ -46,11 +46,11 @@ export const itNotti = {
   // I quattro modi di non avere notti, che sono quattro risposte diverse: mandare l'utente a
   // sistemare la cosa sbagliata e' peggio che non dirgli niente.
   "nights.empty.noFrames": "Nessuna notte",
-  "nights.empty.noFrames.why": "Le notti vengono create dai frame delle cartelle aggiunte.",
+  "nights.empty.noFrames.why": "Le notti nascono dai frame delle tue cartelle.",
   "nights.empty.noFrames.how": "Aggiungi cartella",
   "nights.empty.noSite": "Sito mancante",
   "nights.empty.noSite.why":
-    "I frame sono stati letti, ma senza un sito non possono essere assegnati a una notte.",
+    "I frame sono stati letti, ma senza un sito non hanno una notte.",
   "nights.empty.noSite.how": "Aggiungi sito",
   "nights.empty.notYet": "Scansione in corso",
   "nights.empty.notYet.why":
@@ -59,7 +59,7 @@ export const itNotti = {
   "nights.empty.waiting.why": "I frame non sono assegnati a una notte finch\u00e9 non vengono confermati.",
   // Le intestazioni delle cinque colonne, in maiuscoletto dal foglio.
   "nights.col.when": "notte e sito",
-  "nights.col.done": "ore e frame",
+  "nights.col.done": "integrazione e frame",
   "nights.col.objects": "oggetti",
   "nights.col.filters": "filtri",
   "nights.col.sky": "luna e meteo",

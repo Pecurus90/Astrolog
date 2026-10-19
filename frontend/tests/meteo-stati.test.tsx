@@ -120,7 +120,7 @@ describe("il Meteo, gli stati della notte", () => {
     await apriMeteo()
 
     const notte = await scheda()
-    expect(notte.querySelector(".as-meteo__parola")?.textContent).toBe("Nessuna notte astronomica")
+    expect(notte.querySelector(".as-meteo__parola")?.textContent).toBe("Nessun buio")
     expect(notte.querySelector(".as-meteo__quando")?.textContent).toBe("Il Sole non tramonta: nessuna ora di buio.")
   })
 
@@ -167,6 +167,6 @@ describe("il Meteo, la scala di destra", () => {
     fireEvent.click(within(cielo()).getByRole("button", { name: "vento" }))
     expect(scritte()).toEqual(["raffiche"])
     fireEvent.click(within(cielo()).getByRole("button", { name: "condensa" }))
-    expect(scritte()).toEqual(["rugiada", "aria"])
+    expect(scritte()).toEqual(["punto di rugiada", "aria"])
   })
 })

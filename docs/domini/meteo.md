@@ -113,7 +113,7 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   "buona", a pari parola quella che comincia prima, poi i neutri. Vale per gli *Altri fattori*;
   **le carte stanno sempre allo stesso posto** (Marco, 13/10/2026, come la tavola v37): nuvole,
   nuvole basse, condensa, pioggia, visibilita', vento, seeing, jet stream, aerosol, e in piccolo
-  temperatura e rugiada, polvere, vento a 700 hPa (*stanno sempre allo stesso posto*,
+  temperatura e punto di rugiada, polvere, vento a 700 hPa (*stanno sempre allo stesso posto*,
   `frontend/tests/meteo.test.tsx`). **I valori della notte, i picchi e quelli di ogni ora sono
   interi**, come nelle tavole v37; pioggia, seeing e visibilita' tengono un decimale, l'aerosol
   due. Un numero scritto resta dal lato della soglia dove sta il valore vero: uno scarto di 2,6
