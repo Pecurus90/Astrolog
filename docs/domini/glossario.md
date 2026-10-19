@@ -163,6 +163,7 @@ che il `traduttore` legge per primo.
 | sotto i diciotto gradi: la luce del Sole e' meno di quella delle stelle, ed e' il buio di chi fotografa il cielo | `dark` (una fascia) | buio | notte (che e' la finestra da mezzogiorno a mezzogiorno), nero, **buio pieno** (che e' la classe 1 di Bortle, e si legge nello stesso piede) |
 | gli oggetti fuori dal Sistema solare, e il modo del Planner e di Meteo per loro (Marco, 19/10/2026, uso dei forum) | `deep_sky` | Deep sky | cielo profondo, DSO |
 | come si scrive una percentuale (Marco, 19/10/2026) | -- | 40% (attaccato) | 40 % |
+| come si scrivono decimali e migliaia (regola SI, BIPM; Marco, 19/10/2026) | -- | decimali col punto (1.8″), migliaia con lo spazio sottile da 10 000 in su (396 200 km, 1366 m) | 1,8″, 396.200 |
 | ore di buio con cielo sereno (sotto la soglia); per un progetto in Dashboard, le sue ore visibili con cielo sereno | `usable_hours` | ore utili | ore buone |
 | ore di buio con un oggetto sopra l'altezza minima e l'orizzonte del sito, nel Planner e in Progetti; non guarda il cielo (Marco, 19/10/2026) | `visible_hours` | ore visibili | ore utili (che sono del Meteo), ore in alto |
 | i mesi in cui il 15 l'oggetto ha almeno le ore visibili dell'impostazione (ADR 0023) | `good_months` | mesi buoni | stagione, periodo (Marco, 19/10/2026: «stagioni» sono delle Statistiche) |
