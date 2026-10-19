@@ -175,6 +175,25 @@ piano). Regole fisse, nessuna impostazione per sceglierle.
 - Restano fuori, abitudini senza fonte: ordine dei filtri per altezza, distanza dalla Luna per
   singolo filtro, ordine ovest-est come regola a se'.
 
+### Dalla documentazione di Target Scheduler (Marco, 19/10/2026)
+
+Letta tutta (tcpalmer.github.io/nina-scheduler) e confrontata. Si prende:
+- **Luna per bersaglio con la lorentziana**, due coppie (banda larga, banda stretta): separazione
+  richiesta = D / (1 + (giorni dalla Luna piena / W)^2), cioe' D a Luna piena e D/2 a W giorni.
+  Codice: `GetMoonAvoidanceLorentzianSeparation` in `AstrometryUtils.cs` del repo
+  tcpalmer/nina.plugin.targetscheduler (ciclo 29.53059 giorni). Partenze: stretta 60°/7 (Target
+  Scheduler), larga 120°/14 (ACP, "very conservative"). Supera "La *Lorentzian moon avoidance*
+  resta fuori" qui sopra e la distanza unica di 40°; la regola di fase 25/50% resta per il
+  verdetto della notte in Meteo e Dashboard. Il "relax" vicino all'orizzonte non si prende: la
+  sua formula non e' nel codice letto.
+- **Crepuscolo ammesso per banda** (larga, stretta): buio astronomico di partenza; la stretta
+  puo' cominciare dal nautico (Target Scheduler: Nighttime, Astronomical, Nautical, Civil).
+- **Altezza massima**, spenta di partenza.
+- Non si prende: priorita' a mano (Marco: bastano le regole), punteggi e pesi, grader e throttle,
+  ripianificare dopo ogni posa, Wait Plan, umidita', sincronizzazione: servono a chi decide
+  durante la notte. Per dopo: flat per sessione, cadenza dei filtri, bilanciamento dei pannelli,
+  blocco a cavallo del flip.
+
 ## Conseguenze
 
 - L'ordine: prima i DSO (progetti, inquadratura, piano, export); poi esopianeti, variabili,

@@ -273,7 +273,10 @@ di partenza e la sua fonte accanto; nel Planner si cambia per una ricerca senza 
 |---|---|---|
 | Altezza minima, cielo profondo | 30° | massa d'aria 2 (AAVSO, IRAF) |
 | Durata minima sopra l'altezza | 1 h | Marco |
-| Distanza dalla Luna | 40° | Marco |
+| ~~Distanza dalla Luna 40°~~ Luna, banda larga | 120° a Luna piena, meta' a 14 giorni | ACP, citato da Target Scheduler ("very conservative") |
+| Luna, banda stretta | 60° a Luna piena, meta' a 7 giorni | Target Scheduler, Exposure Templates |
+| Crepuscolo ammesso, banda larga e stretta | buio astronomico; per la stretta si puo' scegliere il nautico | Target Scheduler (partenza Nighttime) |
+| Altezza massima | spenta | Target Scheduler (partenza 0, spenta) |
 | Mese buono | 3 h visibili il 15 del mese | Marco |
 | Altezza minima di pianeti, Luna e Sole | 30° | massa d'aria 2 (AAVSO, IRAF) |
 | ADC (correttore di dispersione atmosferica) sotto | 35° | BAA, Lewis 2021 |

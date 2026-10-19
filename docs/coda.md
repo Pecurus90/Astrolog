@@ -937,7 +937,9 @@ riga per voce.
   formula e' la lorentziana del BAIT di Berkeley (`MOONDIST / (1 + (age / MOONWIDTH)^2)`,
   https://w.astro.berkeley.edu/bait/baitman/request.html), ripresa da ACP, Voyager e dal Target
   Scheduler di N.I.N.A. I due parametri (distanza e larghezza, per banda larga e stretta) si
-  decidono con Marco, a video, prima del codice.
+  decidono con Marco, a video, prima del codice. **Decisi il 19/10/2026**: larga 120°/14, stretta
+  60°/7 ([ADR 0013](adr/0013-progetti-e-piano-della-notte.md), "Dalla documentazione di Target
+  Scheduler").
 - **Sole e Sistema solare in Archivio** (Marco, 17/10/2026; decisioni in
   [ADR 0019](adr/0019-sole-e-sistema-solare-in-archivio.md)). In ordine: (1) disegno della
   linguetta e del modulo "Aggiungi oggetto"; (2) comete, asteroidi e NEO dai FITS di oggi (orbite

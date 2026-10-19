@@ -52,12 +52,41 @@ Sul blocco messo dal piano automatico, una riga piccola col motivo:
 - «Hα con la Luna, RGB dopo le 01:30».
 Un blocco spostato a mano perde la riga.
 
+## Impostazioni › Planner: quattro righe da Target Scheduler
+
+Marco ha voluto il confronto con la documentazione di Target Scheduler: queste quattro si
+prendono (ADR 0013, "Dalla documentazione di Target Scheduler").
+
+1. **Via «Distanza dalla Luna 40°»**. Al suo posto due righe, ognuna con due numeri:
+   - «Luna, banda larga»: «120° a Luna piena · meta' a 14 giorni», fonte «ACP, via Target
+     Scheduler»;
+   - «Luna, banda stretta»: «60° a Luna piena · meta' a 7 giorni», fonte «Target Scheduler».
+   Accanto, una curva piccola: la distanza richiesta lungo il mese lunare, col segno di stanotte
+   («stanotte servono 45°»). Riga d'aiuto: «Piu' la Luna e' piena, piu' il bersaglio deve stare
+   lontano.».
+2. **«Crepuscolo ammesso»**: banda larga «buio astronomico» (fissa); banda stretta a scelta
+   «buio astronomico» (partenza) o «crepuscolo nautico».
+3. **«Altezza massima»**: vuota = spenta. Riga: «Per montature altazimutali o setup che allo zenit
+   toccano.».
+4. La regola della Luna per fase (25% · 50%, sezione «Luna») **resta** per il verdetto della notte
+   in Meteo e Dashboard; nel Planner e nel Piano il giudizio sul bersaglio usa le due righe sopra.
+
+**Dove si vede**:
+- Planner e proposte: la pillola diventa «Luna a 74° · servono 45°» (giudizio per la banda del
+  filtro); con un filtro largo e uno stretto, due giudizi.
+- Piano: la banda larga sta solo nelle ore in cui la distanza basta; con «crepuscolo nautico»
+  scelto, i blocchi a banda stretta possono cominciare nella fascia nautica (la fascia resta
+  disegnata). Conflitto: «Luna a 38°: in banda larga servono 45°.».
+- Fuori dal buio permesso: «Hα dal crepuscolo nautico, 20:05».
+
 ## Tweaks
 
 - un piano Deep sky dopo «Completa il piano»: un oggetto che scende (subito), uno che sale
   (aspetta il transito), un blocco che divide banda stretta con la Luna e larga dopo;
 - un piano Sistema solare: Giove centrato sulla Macchia Rossa, Saturno sul seeing migliore,
   Luna a mosaico al punto piu' alto;
-- senza chiave Meteoblue: tutti al transito, riga «al transito».
+- senza chiave Meteoblue: tutti al transito, riga «al transito»;
+- Luna al primo quarto e Luna piena: la curva delle Impostazioni e i giudizi che cambiano;
+- banda stretta col crepuscolo nautico acceso.
 
 CHANGELOG e DECISIONI come al solito.
