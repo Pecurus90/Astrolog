@@ -63,7 +63,7 @@ describe("il dettaglio della Luna", () => {
       ["sale fino a", "07:30 · 68°"],
       // gli orari sono quelli della notte, da mezzogiorno a mezzogiorno: niente "di domani"
       ["tramonta", "15:17"],
-      ["distanza", "396.200 km"],
+      ["distanza", "396\u202F200 km"],
       ["Luna nuova", "giovedì 8 ottobre"],
       ["Luna piena", "venerdì 23 ottobre"],
     ])

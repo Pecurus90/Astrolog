@@ -38,7 +38,7 @@ describe("le traduzioni", () => {
   })
 
   prova("i conteggi si scrivono come li scrive la lingua", () => {
-    expect(numero(22080)).toBe("22.080")
+    expect(numero(22080)).toBe("22\u202F080")
   })
 
   prova("e la guardia morde davvero quando una chiave manca", () => {

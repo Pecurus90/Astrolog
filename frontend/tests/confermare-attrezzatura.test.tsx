@@ -91,7 +91,7 @@ describe("Da confermare -- l'attrezzatura da completare", () => {
     expect(prova(scheda)).toEqual([
       "Camera nel file=Non indicata",
       "Telescopio nel file=EQ6-R",
-      "Sensore=6248 \u00d7 4176 px \u00b7 3,76 \u00b5m",
+      "Sensore=6248 \u00d7 4176 px \u00b7 3.76 \u00b5m",
       "Ottica nei frame=Askar FRA400 \u00b7 400 mm",
       "Oggetti=NGC 7000 (120 frame)",
     ])
@@ -108,7 +108,7 @@ describe("Da confermare -- l'attrezzatura da completare", () => {
       ],
     })
     const dove = await sezione()
-    expect(riga(dove, "6248 \u00d7 4176 px \u00b7 3,76 \u00b5m")).toBeDefined()
+    expect(riga(dove, "6248 \u00d7 4176 px \u00b7 3.76 \u00b5m")).toBeDefined()
     expect(riga(dove, "Attrezzatura senza nome")).toBeDefined()
   })
 

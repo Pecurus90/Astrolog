@@ -41,7 +41,7 @@ describe("l'anno della Dashboard", () => {
       ["notti", "41"],
       ["ore", "128 h 40 min"],
       ["a notte, in media", "3 h 8 min"],
-      ["al mese", "4,6 notti"],
+      ["al mese", "4.6 notti"],
     ])
     expect(within(sezione).getByRole("link", { name: "Statistiche" }).getAttribute("href")).toBe("/statistiche")
   })
@@ -173,7 +173,7 @@ describe("l'anno della Dashboard", () => {
     // il battito dello stato mentre gira e' 1,5 s
     await within(sezione).findByText("3 h 8 min", {}, { timeout: 5000 })
     const medie = [...sezione.querySelectorAll(".as-dashboard__medie dd")].map((d) => d.textContent)
-    expect(medie).toEqual(["41", "128 h 40 min", "3 h 8 min", "4,6 notti"])
+    expect(medie).toEqual(["41", "128 h 40 min", "3 h 8 min", "4.6 notti"])
   })
 
   it("sul telefono l'anno non c'e': la tavola del telefono dice nient'altro, e niente rimandi", async () => {

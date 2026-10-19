@@ -171,8 +171,9 @@ describe("il primo avvio", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
     // Il numero si vede **prima** di registrare: e' cosi' che si capisce di aver puntato la
-    // cartella giusta invece di scoprirlo a scansione finita.
-    expect(await screen.findByText(/10\.957 file FITS/)).toBeDefined()
+    // cartella giusta invece di scoprirlo a scansione finita. `findByText` riduce lo spazio
+    // sottile delle migliaia a uno spazio normale.
+    expect(await screen.findByText(/10 957 file FITS/)).toBeDefined()
     fireEvent.click(screen.getByRole("button", { name: /aggiungi cartella/i }))
     await waitFor(() => {
       const scritta = scritture().find(

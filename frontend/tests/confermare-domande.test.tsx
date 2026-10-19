@@ -181,14 +181,14 @@ describe("Da confermare -- una domanda aperta alla volta", () => {
     })
     const domanda = aperte()[0] as HTMLElement
     // le coordinate come si scrivono, non la chiave
-    expect(domanda.querySelector(".as-domanda__nome")?.textContent).toBe("46,1000 N - 12,0000 E")
+    expect(domanda.querySelector(".as-domanda__nome")?.textContent).toBe("46.1000 N - 12.0000 E")
     const righe = [...domanda.querySelectorAll("dl.as-domanda-prova > div")].map(
       (r) => `${r.querySelector("dt")?.textContent}=${r.querySelector("dd")?.textContent}`,
     )
     expect(righe).toEqual([
       "Oggetti=M 31 (12 frame)",
       "Altri frame=8 frame senza oggetti identificati · 5 frame non risolti",
-      "Distanza=38,2 km dal sito predefinito",
+      "Distanza=38.2 km dal sito predefinito",
       "Notti · 3=lug 202531ago 202512, 13",
     ])
     // le notti a mesi: il mese una volta, poi i giorni

@@ -154,8 +154,8 @@ describe("il posto da cui osservi", () => {
     await screen.findByRole("button", { name: /salta/i })
     vaiAlPasso(1)
     fireEvent.change(screen.getByLabelText(/nome del sito/i), { target: { value: "Casa" } })
-    // **Con la virgola e con la lettera**, che e' come il segnaposto le propone a un italiano:
-    // scritte col punto, anche `Number` le leggerebbe, e la riparazione del parser resterebbe
+    // **Con la virgola e con la lettera**, come un italiano le scrive per abitudine: scritte
+    // col punto, anche `Number` le leggerebbe, e la riparazione del parser resterebbe
     // senza prova -- il tasto si accenderebbe e nel corpo finirebbe `null`.
     fireEvent.change(screen.getByLabelText(/latitudine/i), { target: { value: "45,8 N" } })
     fireEvent.change(screen.getByLabelText(/longitudine/i), { target: { value: "11,5 E" } })
@@ -347,8 +347,8 @@ describe("il posto da cui osservi", () => {
       true,
     )
 
-    // e una coordinata buona non lascia il campo segnato -- scritta **con la virgola**, che e'
-    // quella che il segnaposto italiano propone: con `Number` era NaN, il campo tornava pulito
+    // e una coordinata buona non lascia il campo segnato -- scritta **con la virgola**, come la
+    // scrive un italiano per abitudine: con `Number` era NaN, il campo tornava pulito
     // per la ragione sbagliata e il tetto poteva essere qualunque senza che niente cadesse
     fireEvent.change(lat, { target: { value: "45,44" } })
     expect(screen.getByLabelText(/latitudine/i).getAttribute("aria-invalid")).toBeNull()

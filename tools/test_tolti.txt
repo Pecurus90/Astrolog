@@ -249,3 +249,4 @@ togliere i filtri non fa dire all'app che l'archivio e' vuoto - glossario: le sc
 Filtri apre e chiude le tendine, e dice quanti filtri sono scelti - glossario: le scelte di ricerca sono criteri (Marco, 19/10/2026); rinominato in "Criteri apre e chiude le tendine, e dice quanti criteri sono scelti"
 Rimuovi filtri nella barra li toglie tutti - glossario: le scelte di ricerca sono criteri (Marco, 19/10/2026); rinominato in "Togli i criteri nella barra li toglie tutti"
 rimuovi filtri toglie anche il periodo e il setup - glossario: le scelte di ricerca sono criteri (Marco, 19/10/2026); rinominato in "togli i criteri toglie anche il periodo e il setup"
+accetta la virgola, che e' quella che l'app stessa suggerisce - glossario: decimali col punto (Marco, 19/10/2026), l'app non propone piu' la virgola; rinominato in "accetta la virgola come il punto, comunque l'utente scriva"

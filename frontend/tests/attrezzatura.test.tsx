@@ -87,10 +87,10 @@ describe("l Attrezzatura", () => {
 
     const camere = await screen.findByRole("list", { name: /camere/i })
     expect(within(camere).getByText(/ATR2600M/).closest("li")?.textContent).toMatch(
-      /pixel 3,8 \u00b5m \(calcolato\)/,
+      /pixel 3.8 \u00b5m \(calcolato\)/,
     )
     const detto = within(camere).getByText(/ASI2600MM/).closest("li")?.textContent
-    expect(detto).toMatch(/pixel 3,76 \u00b5m/)
+    expect(detto).toMatch(/pixel 3.76 \u00b5m/)
     expect(detto).not.toMatch(/calcolato/)
   })
 
@@ -99,8 +99,8 @@ describe("l Attrezzatura", () => {
     await apriAttrezzatura()
 
     const corredi = await screen.findByRole("list", { name: /setup/i })
-    expect(corredi.textContent).toContain("0,85")
-    expect(corredi.textContent).toMatch(/1,5/)
+    expect(corredi.textContent).toContain("0.85")
+    expect(corredi.textContent).toMatch(/1\.5/)
   })
 
   it("un setup di cui non si sa quanto inquadra non scrive una scala", async () => {

@@ -35,5 +35,5 @@ export const itSolver = {
   // 1.25 gbyte" (hnsky.org/astap.htm). Dove va lo dice la stessa pagina: "as long as all files
   // are in the same directory".
   "solver.databaseWhich":
-    "Catalogo consigliato: D80 (circa 1,25 GB), nella stessa cartella di ASTAP.",
+    "Catalogo consigliato: D80 (circa 1.25 GB), nella stessa cartella di ASTAP.",
 }

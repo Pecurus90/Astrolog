@@ -18,7 +18,7 @@ export function TempoDellePose({
   stacco?: string
 }) {
   // Lo spazio sta **fra** i due pezzi, non dopo: emesso sempre, lascia uno spazio in coda a chi
-  // scrive il tempo dentro un elenco, e a schermo diventa "0,1 h , R 2 h".
+  // scrive il tempo dentro un elenco, e a schermo diventa "0.1 h , R 2 h".
   return (
     <>
       {secondi > 0 && <span>{t("review.objects.hours", { h: ore(secondi) })}</span>}

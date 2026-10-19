@@ -83,19 +83,19 @@ describe("la ricerca nella barra", () => {
     await cerca("m31")
     const menu = await screen.findByRole("listbox", { name: /^risultati$/i })
     const oggetti = within(menu).getByRole("group", { name: /oggetti/i })
-    expect(within(oggetti).getByRole("option", { name: /M 31.*Andromeda Galaxy.*10\.200 frame.*17 h/ })).toBeTruthy()
+    expect(within(oggetti).getByRole("option", { name: /M 31.*Andromeda Galaxy.*10\u202F200 frame.*17 h/ })).toBeTruthy()
     // un mosaico dice i suoi pannelli
     expect(within(oggetti).getByRole("option", { name: /Velo intero.*mosaico, 4 pannelli/ })).toBeTruthy()
     // il gruppo dice quante sono in tutto quando ne mostra meno
     const notti = within(menu).getByRole("group", { name: /notti/i })
     expect(notti.textContent).toContain("2 di 7")
-    expect(within(notti).getByRole("option", { name: /4 ott 2026.*Cima Ekar.*141 frame.*2,4 h/ })).toBeTruthy()
+    expect(within(notti).getByRole("option", { name: /4 ott 2026.*Cima Ekar.*141 frame.*2\.4 h/ })).toBeTruthy()
     // mai "0 h": una notte senza durata dice "senza durata"
     const senzaTempo = within(notti).getByRole("option", { name: /14 ago 2026/ })
     expect(senzaTempo.textContent).toContain("120 frame senza durata")
     expect(senzaTempo.textContent).not.toMatch(/\b0 h/)
     const pezzi = within(menu).getByRole("group", { name: /attrezzatura/i })
-    expect(within(pezzi).getByRole("option", { name: /ZWO ASI2600MM Pro.*camera.*18\.420 frame.*210,5 h/ })).toBeTruthy()
+    expect(within(pezzi).getByRole("option", { name: /ZWO ASI2600MM Pro.*camera.*18\u202F420 frame.*210\.5 h/ })).toBeTruthy()
     // ore non contate o non dette: il perche', mai uno zero
     expect(within(pezzi).getByRole("option", { name: /ZWO ASI533MC Pro/ }).textContent).toMatch(/Conteggio in corso/)
     expect(within(pezzi).getByRole("option", { name: /ZWO Duo-Band.*filtro/ }).textContent).toMatch(/Non indicato nei file/)

@@ -259,7 +259,7 @@ describe("il Meteo, le carte", () => {
 
     const pagina = await scheda()
     const visibilita = carta(/^Visibilit/)
-    expect(visibilita.textContent).toContain("0,8km")
+    expect(visibilita.textContent).toContain("0.8km")
     expect(visibilita.textContent).toContain("non adatta dalle 22:00")
     expect(visibilita.textContent).toContain("nebbia dalle 22:00")
     expect(pagina.querySelector(".as-pesano")?.textContent).toContain("nebbia dalle 22:00 alle 23:00 \u00b7 1 ora")
@@ -752,7 +752,7 @@ describe("il Meteo, rifiniture del cielo e delle carte", () => {
     fireEvent.click(within(cielo()).getAllByRole("button", { name: "aerosol" })[0] as HTMLElement)
     fireEvent.keyDown(cielo().querySelector(".as-cielo__tela") as HTMLElement, { key: "Home" })
     const riga = [...cielo().querySelectorAll(".as-volta__lettore-riga")].at(-1)
-    expect(riga?.textContent).toBe("aerosol0,12")
+    expect(riga?.textContent).toBe("aerosol0.12")
   })
 
   it("col dito il filo resta dove l'hai lasciato, finche' non tocchi altrove", async () => {

@@ -107,7 +107,7 @@ describe("Da confermare -- gli oggetti", () => {
     aperta()
     const scheda = riga(await vaiASezione(/^oggetti$/i), "NGC 7000")
     expect(scheda.querySelector(".as-domanda__nome .as-nome-oggetto")?.textContent).toBe("NGC 7000")
-    expect(scheda.querySelector(".as-domanda__frame")?.textContent).toBe("64 frame \u00b7 5,3 h \u00b7 3 senza durata")
+    expect(scheda.querySelector(".as-domanda__frame")?.textContent).toBe("64 frame \u00b7 5.3 h \u00b7 3 senza durata")
     // un dubbio non ha ne' puntamento ne' ore: quelli sono dei frame senza nome
     expect(prova(scheda)).toEqual([])
     const voci = within(scheda).getAllByRole("radio").map((r) => r.closest("label")?.textContent)
@@ -152,10 +152,10 @@ describe("Da confermare -- gli oggetti", () => {
   it("i frame senza nome si chiamano con la loro notte, e dicono camera, puntamento e ore", async () => {
     aperta()
     const scheda = riga(await vaiASezione(/^oggetti$/i), "12 ago 2025")
-    expect(scheda.querySelector(".as-domanda__frame")?.textContent).toBe("18 frame \u00b7 0,6 h")
+    expect(scheda.querySelector(".as-domanda__frame")?.textContent).toBe("18 frame \u00b7 0.6 h")
     expect(prova(scheda)).toEqual([
       "Camera e telescopio=ASI294MC \u00b7 RedCat 51",
-      "Puntamento=RA 83,8 Dec -5,4",
+      "Puntamento=RA 83.8 Dec -5.4",
       "Primo e ultimo frame=23:50 - 00:20",
       "Oggetti nel campo=Nessuno",
     ])

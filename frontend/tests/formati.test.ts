@@ -14,6 +14,7 @@ import {
   giorno,
   giornoDellaSettimana,
   notte,
+  numero,
   orario,
   ore,
   valoreEUnita,
@@ -26,9 +27,31 @@ afterEach(() => {
   process.env.TZ = TZ_ORIGINALE
 })
 
+describe("decimali e migliaia (glossario, regola SI)", () => {
+  // Il decimale e' il punto in ogni lingua; le migliaia si staccano con lo spazio sottile solo da
+  // 10 000 in su, perche' 1366 si legge da solo e 1.366 sembrerebbe un decimale.
+  const SOTTILE = "\u202F"
+
+  it("i decimali si scrivono col punto, mai con la virgola", () => {
+    expect(numero(1.8)).toBe("1.8")
+    expect(ore(9720)).toBe("2.7")
+  })
+
+  it("sotto 10 000 le cifre restano attaccate", () => {
+    expect(numero(1366)).toBe("1366")
+    expect(numero(9999)).toBe("9999")
+  })
+
+  it("da 10 000 in su le migliaia si staccano con lo spazio sottile", () => {
+    expect(numero(10000)).toBe(`10${SOTTILE}000`)
+    expect(numero(396200)).toBe(`396${SOTTILE}200`)
+    expect(numero(-18430)).toBe(`-18${SOTTILE}430`)
+  })
+})
+
 describe("un punto del cielo", () => {
   it("si legge al decimo di grado, e l'ascensione retta non arriva mai a 360", () => {
-    expect(cielo(98.04, 4.93)).toBe("RA 98 Dec 4,9")
+    expect(cielo(98.04, 4.93)).toBe("RA 98 Dec 4.9")
     expect(cielo(359.99, 10)).toBe("RA 0 Dec 10")
     expect(cielo(98, -0.04)).toBe("RA 98 Dec 0")
   })
@@ -37,13 +60,13 @@ describe("un punto del cielo", () => {
 describe("le ore", () => {
   it("si scrivono con un decimale", () => {
     expect(ore(43200)).toBe("12")
-    expect(ore(9000)).toBe("2,5")
+    expect(ore(9000)).toBe("2.5")
   })
 
   it("un tempo vero ma piccolo non diventa zero", () => {
     // Arrotondato, un frame da un minuto sarebbe "0 h". Zero ore vuol dire "non c'e' tempo", e
     // li' il tempo c'e'.
-    expect(ore(60)).toBe("< 0,1")
+    expect(ore(60)).toBe("< 0.1")
   })
 
   it("zero vero resta zero", () => {
@@ -86,9 +109,9 @@ describe("quanto e' durata una lettura", () => {
 
 describe("le coordinate di un posto", () => {
   it("dicono il verso con la lettera, non col segno meno", () => {
-    // "-33,86" chiede a chi legge di sapere che il meno e' l'emisfero sud. La lettera lo dice.
-    expect(coordinate(-33.8688, 151.2093)).toBe("33,8688 S - 151,2093 E")
-    expect(coordinate(46.4843, -12.0561)).toBe("46,4843 N - 12,0561 O")
+    // "-33.86" chiede a chi legge di sapere che il meno e' l'emisfero sud. La lettera lo dice.
+    expect(coordinate(-33.8688, 151.2093)).toBe("33.8688 S - 151.2093 E")
+    expect(coordinate(46.4843, -12.0561)).toBe("46.4843 N - 12.0561 O")
   })
 
   it("le lettere passano dal dizionario, o l'inglese legge 'O' per ovest", () => {
@@ -99,7 +122,7 @@ describe("le coordinate di un posto", () => {
     const salva = DIZIONARI.it["coord.w"]!
     try {
       DIZIONARI.it["coord.w"] = "ZZ"
-      expect(coordinate(1, -1)).toBe("1,0000 N - 1,0000 ZZ")
+      expect(coordinate(1, -1)).toBe("1.0000 N - 1.0000 ZZ")
     } finally {
       DIZIONARI.it["coord.w"] = salva
     }
@@ -108,15 +131,15 @@ describe("le coordinate di un posto", () => {
 
   it("quattro decimali, ne' uno di piu' ne' uno di meno", () => {
     // Piu' fingono una precisione che il posto non ha; meno non distinguono due siti vicini.
-    expect(coordinate(46.5, 12)).toBe("46,5000 N - 12,0000 E")
-    expect(coordinate(46.48439999, 12)).toBe("46,4844 N - 12,0000 E")
+    expect(coordinate(46.5, 12)).toBe("46.5000 N - 12.0000 E")
+    expect(coordinate(46.48439999, 12)).toBe("46.4844 N - 12.0000 E")
   })
 })
 
 describe("una coordinata riscritta a mano", () => {
-  it("accetta la virgola, che e' quella che l'app stessa suggerisce", () => {
-    // Il segnaposto italiano porta la virgola: con `Number` chi copiava esattamente cio' che gli
-    // veniva proposto otteneva NaN, il tasto spento e nessun motivo.
+  it("accetta la virgola come il punto, comunque l'utente scriva", () => {
+    // L'app propone il punto, ma un italiano scrive 46,48 per abitudine: con `Number` otteneva
+    // NaN, il tasto spento e nessun motivo.
     expect(coordinataDa("46,4843", "lat")).toBe(46.4843)
     expect(coordinataDa("46.4843", "lat")).toBe(46.4843)
   })

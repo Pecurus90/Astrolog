@@ -83,7 +83,7 @@ numero con cui l'utente confrontera' il nostro, e un 21,8 chiamato "Bortle 3" qu
 si legge "Bortle 1" farebbe sembrare rotta l'app. I pavimenti sono quelli della voce *Bortle
 scale* di Wikipedia; la sua classe 4,5 (da 20,3 a 20,8) si legge 5, perche' il nostro numero non
 sia mai piu' generoso di quello con cui verra' confrontato. Sta in un posto solo con la sua avvertenza,
-e a schermo **compare accanto alla misura** -- "Bortle 4 (20,8)" -- tranne nei due posti dove
+e a schermo **compare accanto alla misura** -- "Bortle 4 (20.8)" -- tranne nei due posti dove
 la misura non c'e' o non ci sta: il primo avvio, dove si sceglie, e il piede della barra. Chi sceglie il cielo dalla
 scala fa il percorso inverso, e ritrova la stessa classe.
 

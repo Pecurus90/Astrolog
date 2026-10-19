@@ -20,10 +20,9 @@ type Posto = components["schemas"]["PlaceOut"]
  * - **La strada manuale e' sempre aperta**, non solo quando la ricerca fallisce: un sito buio
  *   puo' non avere rete, ed e' proprio dove si osserva. Per questo il **nome e' un campo suo**:
  *   prenderlo dalla casella di ricerca lascerebbe senza nome proprio chi non cerca.
- * - **Una coordinata scritta a mano la rilegge `coordinataDa`**, non `Number`: il segnaposto che
- *   l'app propone a un italiano porta la virgola, e `Number("46,4843")` e' `NaN`. Li' vive anche
- *   il campo vuoto, che non e' una coordinata: `Number("")` fa zero, e zero-zero e' un punto nel
- *   Golfo di Guinea.
+ * - **Una coordinata scritta a mano la rilegge `coordinataDa`**, non `Number`: un italiano scrive
+ *   la virgola per abitudine, e `Number("46,4843")` e' `NaN`. Li' vive anche il campo vuoto,
+ *   che non e' una coordinata: `Number("")` fa zero, e zero-zero e' un punto nel Golfo di Guinea.
  * - **Il motivo sta sotto il campo, e solo quando c'e' qualcosa da dire**: un campo ancora vuoto
  *   non e' sbagliato, e' solo vuoto. Spegnere il tasto e basta e' il difetto che questa schermata
  *   ha gia' pagato una volta.

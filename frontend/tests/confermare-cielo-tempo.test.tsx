@@ -136,13 +136,13 @@ describe("Da confermare -- da quale luogo", () => {
   it("un posto con quante pose, le sue notti e i luoghi dal piu' vicino, senza sceglierne uno", async () => {
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
-    const posto = riga(sezione, "45,8500 N - 11,5800 E")
+    const posto = riga(sezione, "45.8500 N - 11.5800 E")
     expect(posto.textContent).toMatch(/391 frame/)
-    expect(posto.textContent).toMatch(/Distanza\s*16,2 km dal sito predefinito/)
+    expect(posto.textContent).toMatch(/Distanza\s*16.2 km dal sito predefinito/)
     expect(posto.textContent).toMatch(/mag 2024\s*17.*giu 2024\s*1/)
     expect(scelte(posto)).toEqual([
-      ["Cima Ekar, a 0,4 km", false],
-      ["Casa, a 16,2 km", false],
+      ["Cima Ekar, a 0.4 km", false],
+      ["Casa, a 16.2 km", false],
     ])
     applicaSpento()
   })
@@ -155,7 +155,7 @@ describe("Da confermare -- da quale luogo", () => {
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
 
-    const posto = riga(sezione, "34,0000 N - 111,0000 O")
+    const posto = riga(sezione, "34.0000 N - 111.0000 O")
     expect(posto.textContent).toMatch(/Notti non calcolabili senza sito/)
     expect(posto.textContent).not.toMatch(/notti:\s*$/)
   })
@@ -163,16 +163,16 @@ describe("Da confermare -- da quale luogo", () => {
   it("la risposta porta le coordinate e il luogo scelto", async () => {
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
-    fireEvent.click(within(riga(sezione, "45,8500 N - 11,5800 E")).getByLabelText(/cima ekar/i))
+    fireEvent.click(within(riga(sezione, "45.8500 N - 11.5800 E")).getByLabelText(/cima ekar/i))
     expect((await mandato()).unclear).toEqual([{ key: "45.85,11.58", site_id: 3 }])
   })
 
   it("la risposta gia' data si legge, e ridarla uguale non manda niente", async () => {
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
-    const posto = riga(sezione, "46,1000 N - 12,0000 E")
+    const posto = riga(sezione, "46.1000 N - 12.0000 E")
     // il gruppo di scelte nomina il posto: con due posti aperti le scelte sono uguali
-    expect(within(sezione).getByRole("group", { name: /46,1000 N - 12,0000 E/ })).toBeDefined()
+    expect(within(sezione).getByRole("group", { name: /46.1000 N - 12.0000 E/ })).toBeDefined()
     expect(within(posto).getByLabelText(/^casa/i)).toHaveProperty("checked", true)
     fireEvent.click(within(posto).getByLabelText(/cima ekar/i))
     fireEvent.click(within(posto).getByLabelText(/^casa/i))
@@ -183,7 +183,7 @@ describe("Da confermare -- da quale luogo", () => {
     // `distance_km` nullo e' "non c'e' una casa", non "sei a casa": uno zero sarebbe falso.
     aperta()
     const sezione = await vaiASezione(/frame senza sito/i)
-    expect(riga(sezione, "46,1000 N - 12,0000 E").textContent).not.toMatch(/dal sito predefinito/)
+    expect(riga(sezione, "46.1000 N - 12.0000 E").textContent).not.toMatch(/dal sito predefinito/)
   })
 })
 
@@ -251,12 +251,12 @@ describe("Da confermare -- i mosaici proposti", () => {
     expect(tutte).toHaveLength(2)
     expect(gesti.length).toBeGreaterThan(0)
     const nomi: (string | null | undefined)[] = []
-    for (const quale of [/83,8/, /84,9/]) {
+    for (const quale of [/83\.8/, /84\.9/]) {
       const gesto = within(sezione).queryByRole("button", { name: quale })
       if (gesto) fireEvent.click(gesto)
       nomi.push(within(sezione).getByRole("group").querySelector("legend")?.textContent)
     }
-    expect(nomi[0]).toMatch(/M 42.*83,8/)
+    expect(nomi[0]).toMatch(/M 42.*83\.8/)
     expect(new Set(nomi).size).toBe(2)
   })
 

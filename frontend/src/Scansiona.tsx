@@ -16,7 +16,7 @@ import { type Chiave, giorno, numero, orario, t } from "./i18n"
  *   `resume`), l'unico a sapere se un lavoro gira o se ne resta uno a meta'.
  * - **Sta nel telaio e non in una pagina** perche' il lavoro sopravvive alla pagina: cambiando
  *   schermata deve restare fermabile.
- * - **Il ritmo lo dichiara il contratto della spina**: ogni 1,5 s mentre gira, ogni 60 s da
+ * - **Il ritmo lo dichiara il contratto della spina**: ogni 1.5 s mentre gira, ogni 60 s da
  *   fermo, niente a scheda nascosta.
  * - **Le cartelle che non si sono potute leggere si dicono**, in testa alla pagina (Marco,
  *   7/10/2026): tacerle farebbe sembrare completa una scansione che non lo e'.
