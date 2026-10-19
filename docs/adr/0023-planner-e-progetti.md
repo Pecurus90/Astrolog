@@ -217,6 +217,50 @@ solo dove una fonte fissa il confine o Marco lo sceglie; il resto resta un numer
   ora ne' esposizione suggerita: nessuna fonte.
 - **Fuori**: macchie solari, transiti della Macchia Rossa e meridiano centrale di Marte restano
   idee per dopo (sopra): non si disegnano.
+
+### I consigli (Marco, 19/10/2026)
+
+Sotto un giudizio, una riga che dice come arrivarci: un input, non una guida. Solo dove una fonte
+pubblica la pratica; i numeri escono dai conti gia' decisi, nessuna soglia nuova.
+
+- **Pianeti sottocampionati**: «per il critico: barlow {x}×» (critico / rapporto del corredo), e
+  «il fattore cresce allontanando il sensore dalla barlow» (M = 1 + x / f della barlow, ottica).
+- **Video al massimo**: «Con la derotazione il tempo in tutto arriva a 3-4 volte; il singolo video
+  no.» Sky at Night: "extend your imaging time by a factor of three or four", "doesn't lift the
+  restriction on the length of each video" (skyatnightmagazine.com, WinJUPOS). <!-- software-ok -->
+- **Ripresa planetaria**: «Pose sotto 30 ms, almeno 30 fotogrammi al secondo; area di ripresa
+  stretta attorno al disco.» Doc SharpCap: "exposures of less than 30ms have a chance to 'freeze' <!-- software-ok -->
+  the seeing", "A smaller Capture Area helps achieve higher frames per second"
+  (docs.sharpcap.co.uk, howtos/jupiter). <!-- software-ok -->
+- **Basso o seeing incerto** (sotto la soglia del correttore, o seeing da 2″): «Un filtro IR-pass
+  soffre meno il seeing.» Produttori (ZWO 850 nm, Astronomik 742): fonte debole, solo consiglio.
+- **Cielo profondo sovracampionato**: «Bin 2 × 2 (anche in elaborazione) o un riduttore: con bin
+  2 × 2 {s}″/px.» ZWO: "We don't really recommend you use BIN during DSO imaging unless your
+  image is oversampled" (zwoastro.com, 2022); astronomy.tools.
+- **Cielo profondo sottocampionato**: «Dithering e drizzle, con molti frame; oppure pixel fino a
+  {p} µm con questa focale.» Siril: "If your image is significantly undersampled, you may be able <!-- software-ok -->
+  to achieve an improvement in resolution using Drizzle" (siril.readthedocs.io); Fruchter e Hook <!-- software-ok -->
+  1998. {p} = seeing / 2 · focale / 206.265.
+- **Fuori**: regole 3.5 / 5 / 7 × pixel col seeing (Lodriguss, forum): restano fuori, il critico
+  Nyquist decide. Gain, istogramma, filtri UV e metano, etalon: consigli di nicchia o del
+  programma di ripresa, non del Planner.
+
+### Le soglie dell'utente (Marco, 19/10/2026)
+
+Ogni soglia del Planner che dipende da dove e come si riprende sta in **Impostazioni**, col valore
+di partenza e la sua fonte accanto; nel Planner si cambia per una ricerca senza salvarla.
+
+| Soglia | Partenza | Da dove |
+|---|---|---|
+| Altezza minima, cielo profondo | 30° | massa d'aria 2 (AAVSO, IRAF) |
+| Durata minima sopra l'altezza | 1 h | Marco |
+| Distanza dalla Luna | 40° | Marco |
+| Mese buono | 3 h utili il 15 del mese | Marco |
+| Altezza minima di pianeti, Luna e Sole | 30° | massa d'aria 2 (AAVSO, IRAF) |
+| Correttore di dispersione sotto | 35° | BAA, Lewis 2021 |
+
+Restano fisse le regole fisiche, che non dipendono dal sito: rapporto focale critico (Nyquist),
+campionamento fra 1/3 e 1/2 del seeing, video al massimo (un pixel), campo che entra.
 - **Meteo della notte**: solo in Notti, col rimando «Meteo di stanotte» (Marco).
 
 ## Conseguenze

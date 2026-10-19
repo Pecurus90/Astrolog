@@ -9,6 +9,47 @@ I conti tornano: campo, campionamento, mosaico (3.46° × 1.29°), luminosita' s
 dal Nord verso Est con l'Est a sinistra, pannelli numerati, scala e critico di Giove, video al
 massimo con un pixel (43 s). Fascia del Sole e crediti esatti. Restano queste.
 
+## Le soglie stanno in Impostazioni (Marco)
+
+Ogni soglia che dipende da dove e come si riprende si cambia in Impostazioni, col valore di
+partenza e la fonte accanto. Nel Planner si cambia per una ricerca, senza salvarla.
+
+- Altezza minima, cielo profondo: 30° (massa d'aria 2)
+- Durata minima sopra l'altezza: 1 h
+- Distanza dalla Luna: 40°
+- Mese buono: 3 h utili il 15 del mese
+- Altezza minima di pianeti, Luna e Sole: 30° (massa d'aria 2)
+- Correttore di dispersione sotto: 35° (BAA)
+
+Nelle Impostazioni una sezione «Planner» con queste sei righe. Dove il Planner usa una di queste
+soglie, la riga piccola sotto dice «da Impostazioni». Fisse, perche' fisica: rapporto critico,
+campionamento, video al massimo, campo che entra.
+
+**Momento migliore**: la pillola in verde (✓, conferma: «✓ migliore»), non gialla. Il seeing
+accanto col giudizio di Meteo (sotto 2″ buono, 2-4″ incerto, oltre non adatto): se anche l'ora
+migliore ha seeing cattivo, lo dice il seeing, non la pillola.
+
+## I consigli (Marco)
+
+Sotto un giudizio, una riga piccola che dice come arrivarci: un input, non una guida. Testi
+proposti; i numeri li manda l'app.
+
+- Pianeti, «! sottocampionato»: «Per il critico: barlow {x}×. Il fattore cresce allontanando il
+  sensore dalla barlow.»
+- Video al massimo: «Con la derotazione il tempo in tutto arriva a 3-4 volte; il singolo video
+  no.»
+- Pianeti, sempre (riga fissa sotto i numeri): «Pose sotto 30 ms, almeno 30 fotogrammi al
+  secondo; area di ripresa stretta attorno al disco.»
+- Pianeti bassi (sotto la soglia del correttore) o seeing da 2″: «Un filtro IR-pass soffre meno
+  il seeing.»
+- Cielo profondo, «! sovracampionato»: «Bin 2 × 2 (anche in elaborazione) o un riduttore: con bin
+  2 × 2, {s}″/px.»
+- Cielo profondo, «! sottocampionato»: «Dithering e drizzle, con molti frame; oppure pixel fino a
+  {p} µm con questa focale.»
+
+Il consiglio non ha pillola e non ha colore: testo tenue sotto il giudizio. Senza giudizio (manca
+il seeing) niente consiglio.
+
 ## Cielo profondo
 
 1. **«Entra nel campo» boccia l'esempio di apertura.** M 31 (190′ × 60′) nel mosaico 2 × 1
