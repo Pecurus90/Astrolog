@@ -12,7 +12,7 @@ andare da sola dal crepuscolo all'alba.
 ## Decisione
 
 - **Il Planner fa i progetti.** Un progetto e' un oggetto DSO, la sua inquadratura su Aladin Lite
-  ([ADR 0005](0005-carta-del-cielo-aladin-lite.md)), un setup (setup, camera, ruota e filtri
+  ([ADR 0005](0005-carta-del-cielo-aladin-lite.md)), un setup (ottica, camera, ruota e filtri
   dalla pagina Attrezzatura) e un obiettivo in ore per filtro (per esempio M31, 60 h: 20 in Ha,
   40 in LRGB). Si crea una volta e vale tutto l'anno.
 - **Un progetto, un setup.** Lo stesso oggetto con due telescopi fa due progetti, ognuno col suo
@@ -53,6 +53,28 @@ andare da sola dal crepuscolo all'alba.
   dalle cartelle dell'archivio. Chi li lascia dentro li paga col solver (circa 0,5 s a frame) e se
   li trova in Da confermare.
 - **L'app non comanda l'hardware:** cupola, tetto, parcheggio e sicurezza restano a N.I.N.A.
+
+### Il disegno (Marco, 19/10/2026)
+
+- **Nome**: «Piano della notte», pagina `/piano-della-notte`. «Piano» resta vietato per il
+  progetto.
+- **Prima solo i DSO**, come l'ordine sotto; in piu' gli eventi a orario fisso gia' calcolati nel
+  modo «Eventi» del Planner (transiti della ISS, eclissi, occultazioni lunari, ADR 0023).
+- **Un piano per postazione** (una montatura, un setup): due postazioni, due piani della stessa
+  notte.
+- **Proposte** nell'ordine gia' deciso (ereditato.md: si chiude stanotte -> ore utili -> ore
+  mancanti), coi numeri del Planner: ore visibili, distanza dalla Luna con la soglia delle
+  Impostazioni, ore mancanti per filtro. Banda larga o stretta con la regola della Luna di Meteo
+  e Dashboard (fase e altezza). La *Lorentzian moon avoidance* resta fuori: nessuna fonte
+  primaria trovata (19/10/2026), solo descrizioni di forum.
+- **Meteo**: una striscia sottile del verdetto ora per ora sotto la linea del tempo, col rimando
+  a Meteo (Marco). Supera, per questa pagina, "meteo solo in Notti" di ADR 0023.
+- **Tempi di cambio** (puntare, centrare, mettere a fuoco): li scrive l'utente in Impostazioni,
+  nessun valore di partenza (Marco): nessuna fonte vale per tutti.
+- **Conflitti in rosso**, solo regole gia' decise: blocchi sovrapposti, bersaglio sotto l'altezza
+  minima o l'orizzonte, banda larga con la Luna che la vieta, evento fisso spostato.
+- **Export**: un file per la notte intera, per il sequencer avanzato di N.I.N.A. Il formato si
+  legge da un file vero esportato da N.I.N.A. quando si costruisce: nessuno schema pubblico.
 
 ## Conseguenze
 

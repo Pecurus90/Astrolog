@@ -217,6 +217,7 @@ manda a qualcuno).
 | perche' l'app non parte o non funziona: il diario, il solver che non si avvia, lo stato del sistema | `/diagnostica` | Diagnostica | log, errori, problemi |
 | dove si decide una ripresa che non esiste ancora: si cerca, si inquadra, nasce un progetto | `/planner` | Planner | pianificatore, programma |
 | i progetti e a che punto sono, con quanto manca all'obiettivo | `/progetti` | Progetti | piani, campagne |
+| la serata composta: bersagli in fila sulla linea del tempo e il file per N.I.N.A. (Marco, 19/10/2026) | `/piano-della-notte` | Piano della notte | sequenze, scaletta, programma |
 | la carta su cui si naviga il cielo | `/carta-del-cielo` | Carta del cielo | mappa, sky map, atlante, cielo |
 | la notte ora per ora intorno al buio, col verdetto | `/meteo` | Meteo | previsioni, tempo |
 | cio' che l'app non deduce dai file, a sezioni: le cartelle, i siti, il nome, le chiavi dei servizi, le soglie | `/impostazioni` | Impostazioni | preferenze, configurazione, opzioni |
