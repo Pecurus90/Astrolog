@@ -218,6 +218,19 @@ solo dove una fonte fissa il confine o Marco lo sceglie; il resto resta un numer
 - **Fuori**: macchie solari, transiti della Macchia Rossa e meridiano centrale di Marte restano
   idee per dopo (sopra): non si disegnano.
 
+### Trova, in piu' (Marco, 19/10/2026)
+
+Confronto con Telescopius, N.I.N.A. Sky Atlas, Deep-Sky Planner, SkySafari (ricerca del 19/10).
+
+- **«Gia' ripreso»**: nella riga le ore gia' nell'archivio per quell'oggetto; filtro «mai
+  ripresi» / «gia' ripresi». Nessun pianificatore conosce l'archivio dell'utente.
+- **Dimensione da … fino a**, come Telescopius (`size` min e max).
+- **«Entra nel campo»** come filtro: solo gli oggetti che stanno nel campo del corredo scelto, o
+  del mosaico, con la regola dell'ellisse (sotto). Nessuna soglia nuova.
+- **Ordinamento**: nome (ordine del catalogo, partenza), dimensione, magnitudine, luminosita'
+  superficiale, ora del transito. Mai per ore utili: niente classifica «i migliori stanotte».
+- Fuori: l'esportazione verso i programmi di ripresa va con la pagina delle sequenze (ADR 0013).
+
 ### I consigli (Marco, 19/10/2026)
 
 Sotto un giudizio, una riga che dice come arrivarci: un input, non una guida. Solo dove una fonte
