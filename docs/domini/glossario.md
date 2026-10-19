@@ -147,7 +147,7 @@ che il `traduttore` legge per primo.
 | la notte **in corso**, nel fuso del sito: da mezzogiorno a mezzogiorno, quindi alle dieci del mattino e' ancora quella di ieri sera | `tonight` | stanotte | oggi, stasera |
 | che luna fa: il nome della fase e quanto e' illuminata | `moon` | la Luna | fase lunare |
 | quale delle otto fasi, come parola chiusa (`new`, `full`, `waxing_gibbous`...) | `phase_key` | nuova, piena, gibbosa crescente... | fase, numero della fase |
-| quanta della faccia visibile e' illuminata, in percento | `illumination_pct` | illuminata al {n}% | luminosita', luce |
+| quanta della faccia visibile e' illuminata, in percento | `illumination_pct` | illuminata al {n}% (all'8%, all'11%, all'80-89%) | luminosita', luce |
 | quando la Luna passa sopra l'orizzonte **stanotte**, o niente se non succede stanotte | `rise` | sorge | alba della Luna |
 | quando ci passa sotto **stanotte**, o niente se non succede stanotte | `set` | tramonta | tramonto lunare |
 | il punto **piu' alto della notte**: quando, e a quanti gradi. E' il massimo dentro la finestra, che ogni tanto non contiene una culminazione vera | `highest` | sale fino a | culmina, culminazione, transito (vietate **per la Luna**: un oggetto del Planner invece culmina davvero) |
@@ -161,6 +161,8 @@ che il `traduttore` legge per primo.
 | fra sei e dodici gradi sotto: in mare l'orizzonte si distingue ancora | `nautical` | crepuscolo nautico | -- |
 | fra dodici e diciotto: l'ultima luce del Sole se ne va | `astronomical` | crepuscolo astronomico | -- |
 | sotto i diciotto gradi: la luce del Sole e' meno di quella delle stelle, ed e' il buio di chi fotografa il cielo | `dark` (una fascia) | buio | notte (che e' la finestra da mezzogiorno a mezzogiorno), nero, **buio pieno** (che e' la classe 1 di Bortle, e si legge nello stesso piede) |
+| gli oggetti fuori dal Sistema solare, e il modo del Planner e di Meteo per loro (Marco, 19/10/2026, uso dei forum) | `deep_sky` | Deep sky | cielo profondo, DSO |
+| come si scrive una percentuale (Marco, 19/10/2026) | -- | 40% (attaccato) | 40 % |
 | ore di buio con cielo sereno (sotto la soglia); per un progetto in Dashboard, le sue ore visibili con cielo sereno | `usable_hours` | ore utili | ore buone |
 | ore di buio con un oggetto sopra l'altezza minima e l'orizzonte del sito, nel Planner e in Progetti; non guarda il cielo (Marco, 19/10/2026) | `visible_hours` | ore visibili | ore utili (che sono del Meteo), ore in alto |
 | i mesi in cui il 15 l'oggetto ha almeno le ore visibili dell'impostazione (ADR 0023) | `good_months` | mesi buoni | stagione, periodo (Marco, 19/10/2026: «stagioni» sono delle Statistiche) |
@@ -190,7 +192,7 @@ che il `traduttore` legge per primo.
 | la sezione delle Impostazioni con le chiavi dei servizi | `/impostazioni/servizi` | Servizi | account, integrazioni |
 | lo spessore ottico degli aerosol e le polveri, da CAMS | `aerosol_optical_depth`, `dust_ugm3` | aerosol, polveri | trasparenza, smog |
 | il seeing di Meteoblue in secondi d'arco, un valore per ora | `seeing_arcsec` | seeing | qualita' del cielo, fascia |
-| i modi di restringere una ricerca nel Planner | `criteria` | criteri | filtri (il filtro e' il vetro) |
+| i modi di restringere una ricerca, in Planner, Archivio e Notti: anche il pulsante che li apre (Marco, 19/10/2026) | `criteria` | Criteri | filtri (il filtro e' il vetro) |
 | la linea di alberi e case attorno a un sito | `horizon` | orizzonte | maschera, profilo |
 | altezza minima, distanza dalla Luna, ore minime: i tre numeri di fabbrica | `thresholds` | soglie | preferenze |
 

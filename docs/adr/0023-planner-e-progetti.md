@@ -126,7 +126,7 @@ risoluzione conta per nome, senza pannello. Dashboard e Progetti leggono lo stes
 - **Nessun progetto**: niente ore da accumulare. Effemeridi in Dashboard (ADR 0019).
 - **Simulazione, senza salvataggio** (Marco): Mercurio, Venere, Marte, Giove, Saturno, Urano,
   Nettuno, Luna e Sole, col setup vero o di prova (barlow e riduttore compresi). Nel Planner e'
-  un secondo modo, «Sistema solare», accanto a «Cielo profondo»: cambia la carta, il setup resta.
+  un secondo modo, «Sistema solare», accanto a «Deep sky»: cambia la carta, il setup resta.
   - **AstroLog simula, non segue**: i video planetari (SER, AVI) non entrano nell'archivio, che
     legge FITS; e non guida montatura ne' camera (ADR 0013). La ripresa di un mosaico lunare o
     solare la guidano programmi come SharpCap o Moon Panorama Maker (GPL-3.0, fermo dal 2019). <!-- software-ok -->
@@ -294,7 +294,7 @@ riga "idee per dopo" dei giudizi. Si disegna ora; si costruisce dopo il resto de
   il passaggio (Sky & Telescope). Il disco di Giove si disegna girato al meridiano dell'ora scelta.
 - **Meridiano centrale di Marte** (Meeus cap. 42): il numero e il disco girato a quel meridiano.
   Mappa pubblica di Marte, licenza da controllare sulla sua pagina come le altre.
-- **Terzo modo «Eventi»**, accanto a «Cielo profondo» e «Sistema solare», per il sito attivo:
+- **Terzo modo «Eventi»**, accanto a «Deep sky» e «Sistema solare», per il sito attivo:
   - **transiti della ISS su Sole e Luna**: ora al secondo, durata, diametro apparente della ISS,
     larghezza della striscia, distanza dalla linea centrale. Giudizio geometrico, nessuna soglia:
     «sei nella striscia» / «fuori di {d} km». Orbita da CelesTrak, calcolo SGP4 (come
