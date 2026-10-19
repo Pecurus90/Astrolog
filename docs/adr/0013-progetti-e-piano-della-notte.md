@@ -108,17 +108,31 @@ andare da sola dal crepuscolo all'alba.
 - **Luna, Sole e pianeti si salvano in Progetti**, senza ore da raggiungere: corpo, setup,
   mosaico (intero o zona) per Luna e Sole, sovrapposizione, ordine, filtro (Sole: luce bianca o
   Hα), posa e frame per pannello o per filtro.
-- **Si riprendono a video** (Marco). L'export usa due plugin di N.I.N.A.: Orbitals punta e
-  insegue il corpo e sposta su ogni pannello per distanza e angolo dal centro, calcolati all'ora
-  della ripresa; Lucky Imaging riprende la raffica (FITS, non SER). Letti dai simboli del plugin
-  installato e da AstronoMolly 2024 / AstroBin: **da provare su una postazione vera** prima di
-  costruire l'export.
+- **Si riprendono a video** (Marco). L'app calcola per ogni pannello distanza e angolo dal
+  centro del corpo; il programma li applica all'ora della ripresa. Candidati: N.I.N.A. con
+  Orbitals (punta e insegue, github.com/ghilios/NINA.Joko.Plugin.Orbitals) e Lucky Imaging
+  (raffica FITS); oppure SharpCap Pro (vedi sotto). **Da provare su una postazione vera** prima <!-- software-ok -->
+  di costruire l'export.
 - **Sul disco niente plate solving**: il puntamento e' quello della montatura; ai buchi
   risponde la sovrapposizione (20% di partenza, ADR 0023).
-- **Il Sole di giorno**: terzo modo «Giorno» nella stessa pagina, linea del tempo da alba a
-  tramonto. Tetto, filtro solare e sicurezza restano a N.I.N.A.
+- **Il Sole di giorno**: nella stessa pagina, linea del tempo da alba a tramonto (interruttore
+  Notte · Giorno della linguetta Sistema solare, sotto). Tetto, filtro solare e sicurezza restano
+  a N.I.N.A.
 - I frame di questi blocchi si tengono fuori dalle cartelle dell'archivio, come la ricerca.
 - Un tempo in piu' fra i tempi della notte: lo spostamento fra due pannelli.
+- **Il programma del video e' aperto** (19/10/2026): Lucky Imaging salva FITS e nessuna fonte
+  conferma 30-40 fps (una sola: 3 fps a sensore intero); SharpCap Pro fa SER, mosaici di Luna e <!-- software-ok -->
+  Sole e sequenze a comandi, ma e' un quinto programma. Decide Marco.
+
+### Le linguette e la postazione (Marco, 19/10/2026)
+
+- **Tre linguette per tecnica**, al posto di Fotografia / Ricerca / Giorno: **Deep sky** (DSO e
+  comete, pose lunghe), **Sistema solare** (Luna, pianeti, Sole: video; il Sole con
+  l'interruttore Notte · Giorno), **Ricerca** (esopianeti, NEO, variabili). Una linguetta per
+  notte e postazione, come "deep sky fa solo deep sky, ricerca fa solo ricerca".
+- **Automazione della postazione** (Marco): chi ha pannello per i flat o coperchio motorizzato
+  lo dice in Impostazioni; l'export apre all'inizio, chiude alla fine e fa i flat in N.I.N.A.
+  solo per i filtri usati nella notte. Senza, nessun passo.
 
 ## Conseguenze
 
