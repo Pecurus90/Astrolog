@@ -306,6 +306,17 @@ riga "idee per dopo" dei giudizi. Si disegna ora; si costruisce dopo il resto de
 - Altezza di Sole e Luna negli eventi giudicata con «Altezza minima di pianeti, Luna e Sole»; sul
   Sole l'avvertenza del filtro, come nel Sistema solare.
 
+### L'orizzonte del sito (Marco, 19/10/2026)
+
+- Si importa in Impostazioni, uno per sito. Formato di N.I.N.A.: testo, coppie azimut altezza, <!-- software-ok -->
+  riga `#` d'intestazione, almeno due coppie, i vuoti interpolati (nighttime-imaging.eu, Options
+  > General). Il file importato si mostra in un disegno a 360°.
+- Caricato, vale in tutta l'app dove conta l'altezza di un oggetto: ore utili, momento migliore,
+  mese buono, carta del cielo, Sistema solare, Eventi. Il minimo in ogni direzione e' il piu' alto
+  fra l'orizzonte e l'altezza minima delle Impostazioni.
+- Non caricato: tutto come prima, solo l'altezza minima.
+- Il cielo del Meteo non cambia: la Luna dietro un albero illumina lo stesso.
+
 ## Conseguenze
 
 - Nuove tabelle: progetti, pannelli con inquadratura, obiettivi per filtro, oggetti aggiunti
