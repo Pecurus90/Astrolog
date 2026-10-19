@@ -63,8 +63,9 @@ un posto.
 
 ## 3. Dashboard
 
-La carta «Progetti in corso» c'e' gia': il suo anello di avanzamento usa lo stesso numero e lo
-stesso disegno della scheda in Progetti. Toccando la carta si apre Progetti.
+La carta «Progetti in corso» c'e' gia' e resta com'e' (Marco): niente di nuovo da disegnare.
+Solo i collegamenti: il ↗ della carta apre Progetti; toccando la riga di un progetto si apre
+Progetti sulla sua scheda. L'anello legge lo stesso numero della scheda.
 
 ## Telefono
 
