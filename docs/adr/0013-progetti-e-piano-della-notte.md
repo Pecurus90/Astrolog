@@ -134,9 +134,22 @@ andare da sola dal crepuscolo all'alba.
   comete, pose lunghe), **Sistema solare** (Luna, pianeti, Sole: video; il Sole con
   l'interruttore Notte · Giorno), **Ricerca** (esopianeti, NEO, variabili). Una linguetta per
   notte e postazione, come "deep sky fa solo deep sky, ricerca fa solo ricerca".
-- **Automazione della postazione** (Marco): chi ha pannello per i flat o coperchio motorizzato
-  lo dice in Impostazioni; l'export apre all'inizio, chiude alla fine e fa i flat in N.I.N.A.
-  solo per i filtri usati nella notte. Senza, nessun passo.
+- **Automazione della postazione, solo Si'/No** (Marco): tetto o cupola motorizzati, sensore di
+  sicurezza, pannello per i flat. L'export scrive o no i passi di N.I.N.A. (Open/Close Dome
+  Shutter, Park Dome, Wait Until Safe, Open/Close Flat Panel Cover;
+  nighttime-imaging.eu/docs/master/site/sequencer/advanced/instructions/). Numero di flat,
+  dark-flat e simili: dopo, con le sequenze complete. La chiusura d'emergenza («Close on unsafe»)
+  e' un'opzione di N.I.N.A., non del file.
+- **La ruota portafiltri si legge dal setup** (Attrezzatura): con la ruota contano i cambi filtro,
+  senza no. Una OSC con ruota la mette nel setup.
+- **Tempi uguali per tutta l'app** (Marco: 10 min nel deep sky non contano), vuoti, scritti
+  dall'utente: avvio e chiusura (raffreddamento, unpark, apertura e chiusura del tetto, park,
+  riscaldamento), per bersaglio (puntamento e centratura, autofocus), durante le pose (cambio
+  filtro, dither col settle e ogni quante pose, scaricamento della posa, un autofocus ogni X ore
+  come stima, flip, spostamento fra pannelli). Nessuna fonte da' tempi standard (Target
+  Scheduler non li stima); i tempi misurati sui log di Marco (agosto-ottobre 2026) sono solo
+  esempi. La ricerca la protegge il suo margine prima dell'evento, piu' un conflitto quando il
+  tempo libero prima di un evento fisso e' meno dei cambi.
 
 ## Conseguenze
 
