@@ -151,6 +151,30 @@ andare da sola dal crepuscolo all'alba.
   esempi. La ricerca la protegge il suo margine prima dell'evento, piu' un conflitto quando il
   tempo libero prima di un evento fisso e' meno dei cambi.
 
+### Come sceglie il piano automatico (Marco, 19/10/2026)
+
+Pulsanti «Completa il piano» / «Rifai il piano» («sequenza» e' di N.I.N.A., vietata per il
+piano). Regole fisse, nessuna impostazione per sceglierle.
+
+- **Deep sky e Ricerca**: prima le ore fisse; poi, fra chi passa i filtri (altezza minima 30°,
+  massa d'aria 2: Telescope Live, LCO; almeno la durata minima sopra soglia nel buio, come
+  Telescopius; distanza dalla Luna), chi scende prima (Setting Soonest di Target Scheduler); a
+  pari merito l'ordine delle proposte (chi si chiude, ore utili, ore mancanti: Percent Complete).
+  Ogni blocco poi si sposta il piu' vicino possibile al suo transito, se c'e' spazio. Un blocco
+  non scende sotto la durata minima (meno cambi: Target Switch Penalty). Dentro il blocco la
+  banda larga nelle ore senza Luna, la stretta con la Luna (Brecher, S&T nov. 2017).
+- **Sistema solare**: ogni corpo nelle ore sopra l'altezza minima con la classe di seeing
+  migliore (le classi di Meteo), a pari merito la piu' vicina al transito; senza previsione, al
+  transito. La previsione del seeing non ha verifiche pubblicate: e' una preferenza, non un
+  conflitto. Giove: se la Macchia Rossa passa al meridiano centrale con Giove sopra soglia, il
+  blocco si centra su di lei (visibile ±50 min, S&T). Luna a mosaico: piu' alta possibile, dal
+  terminatore (Omegon, Sky at Night). L'altezza minima dei pianeti resta un'impostazione: le fonti
+  la legano a diametro e filtro (Pellier, citato), nessun numero unico.
+- **Meteo**: le ore «non adatte» si evitano finche' c'e' altro posto (Marco). Nessuno scheduler
+  documentato lo fa in anticipo (Target Scheduler reagisce durante la notte): scelta nostra.
+- Restano fuori, abitudini senza fonte: ordine dei filtri per altezza, distanza dalla Luna per
+  singolo filtro, ordine ovest-est come regola a se'.
+
 ## Conseguenze
 
 - L'ordine: prima i DSO (progetti, inquadratura, piano, export); poi esopianeti, variabili,
