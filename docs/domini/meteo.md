@@ -95,8 +95,9 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
     7/10/2026); pesa solo nelle ore in cui e' sopra l'orizzonte (-0,833 gradi, convenzione del
     Nautical Almanac). La riga dice le ore in cui e' su e cosa resta nelle altre (Marco,
     12/10/2026): "Luna al 55% dalle 23 · banda larga fino alle 23". I due gradini e l'altezza da
-    cui la Luna conta diventano Impostazioni, con 25%, 50% e l'orizzonte di partenza: un cielo
-    buio sente la Luna prima di uno di citta' (Marco, 19/10/2026). Su tutta la notte, solo il
+    cui la Luna conta diventano Impostazioni, con 25%, 50% e -5° di partenza: un cielo
+    buio sente la Luna prima di uno di citta' (Marco, 19/10/2026); -5° dalla rete TESS, cielo
+    costante con la Luna sotto -5° a ogni fase (arXiv 2105.01066), ADR 0013. Su tutta la notte, solo il
     dato; fra 25 e 50% le ore libere sono "senza Luna". Nessuna soglia al 75% per la banda
     stretta: e' un'abitudine riportata da una fonte sola (Telescope Live), non una convenzione.
   - visibilita': niente sotto 1 km, la nebbia dell'Atlante WMO ("reduce horizontal visibility

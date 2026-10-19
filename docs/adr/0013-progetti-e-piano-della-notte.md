@@ -137,8 +137,8 @@ andare da sola dal crepuscolo all'alba.
 - **Automazione della postazione, solo Si'/No** (Marco): tetto o cupola motorizzati, sensore di
   sicurezza, pannello per i flat. L'export scrive o no i passi di N.I.N.A. (Open/Close Dome
   Shutter, Park Dome, Wait Until Safe, Open/Close Flat Panel Cover;
-  nighttime-imaging.eu/docs/master/site/sequencer/advanced/instructions/). Numero di flat,
-  dark-flat e simili: dopo, con le sequenze complete. La chiusura d'emergenza («Close on unsafe»)
+  nighttime-imaging.eu/docs/master/site/sequencer/advanced/instructions/). Flat: sotto, "Le
+  cose rimandate, decise". La chiusura d'emergenza («Close on unsafe»)
   e' un'opzione di N.I.N.A., non del file.
 - **La ruota portafiltri si legge dal setup** (Attrezzatura): con la ruota contano i cambi filtro,
   senza no. Una OSC con ruota la mette nel setup.
@@ -198,6 +198,34 @@ Letta tutta (tcpalmer.github.io/nina-scheduler) e confrontata. Si prende:
   ripianificare dopo ogni posa, Wait Plan, umidita', sincronizzazione: servono a chi decide
   durante la notte. Per dopo: flat per sessione, cadenza dei filtri, bilanciamento dei pannelli,
   blocco a cavallo del flip.
+
+### Le cose rimandate, decise (Marco, 19/10/2026)
+
+- **La Luna conta sopra -5°** (partenza, in tutta l'app; prima l'orizzonte): rete di fotometri
+  TESS, cielo costante con la Luna sotto -5° a ogni fase (arXiv 2105.01066, §III.2.2); Schaaf per
+  la Luna piena (arXiv 2507.11343). Niente "relax" di Target Scheduler: -15/+5 e la scala non
+  hanno fonte, e Krisciunas & Schaefer 1991 da' alla Luna a 5° dal 38 all'83% del peso a 40°.
+- **Filtri a blocchi** (Marco): tutte le pose di un filtro, poi il successivo; l'ordine dei
+  blocchi lo da' la regola della Luna per banda. Nessun ordine per altezza.
+- **Mosaico deep sky**: tutti i pannelli ogni notte, partendo dal piu' indietro, e il primo
+  cambia ogni notte (forum; Mosaic Completion di Target Scheduler).
+- **Meridian flip**: un blocco puo' passare il meridiano e paga il tempo del flip. Con «pausa
+  prima del meridiano» scritta in Impostazioni (come in N.I.N.A.) il piano evita la zona da
+  transito - pausa a transito + minuti dopo il meridiano (formula di Target Scheduler).
+- **Flat** (solo col pannello, o di cielo se scelti): a fine notte, dopo il park, ogni notte,
+  solo i filtri usati; 25 per filtro di partenza, avviso sotto 20 (20: Sky at Night, forum;
+  30-50: High Point); dark-flat accesi di partenza (Marco), stesso numero; ogni notte di partenza,
+  oppure ogni N giorni o a fine progetto (Flats Handling di Target Scheduler). **Flat di cielo**
+  facoltativi per chi non ha il pannello: Sole fra -2° e -7° (Marco; numeri da una richiesta su
+  N.I.N.A. e da un diario d'osservatorio, nessuna convenzione), istruzione Sky Flat, senza
+  dark-flat (N.I.N.A. non li fa in quel modo).
+- **Ricerca**: entrano le **campagne AAVSO** (Target Tool API, chiave dell'utente: filtro,
+  cadenza, priorita', visibilita') e le **supernove brillanti da seguire** (Transient Name
+  Server, chiave bot dell'utente; soglia di partenza mag 17, quella della lista di Rochester).
+  Niente scoperta ne' segnalazione. **Occultazioni asteroidali: no** (tempo GPS, video, nessuna
+  API pubblica delle previsioni).
+- **Fonti**: variabili da VizieR (B/vsx, J/AcA/54/207 Kreiner), non dall'API VSX non ufficiale;
+  NEOCP del Minor Planet Center solo per uso personale, scaricato per l'utente e mai ripubblicato.
 
 ## Conseguenze
 
