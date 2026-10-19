@@ -76,6 +76,21 @@ andare da sola dal crepuscolo all'alba.
 - **Export**: un file per la notte intera, per il sequencer avanzato di N.I.N.A. Il formato si
   legge da un file vero esportato da N.I.N.A. quando si costruisce: nessuno schema pubblico.
 
+### Le categorie (Marco, 19/10/2026)
+
+- **Tre linguette nella stessa pagina**: Deep sky, Sistema solare, Ricerca. Una linea del tempo
+  e un export per la notte: le categorie si mischiano. Il disegno si fa tutto ora; la
+  costruzione segue l'ordine sotto.
+- **Deep sky** prende i progetti dal Planner; «Riempi la notte» li mette in fila da soli nei buchi.
+- **Sistema solare**: pianeti e Luna come nel Planner, piu' le comete (Marco: si fotografano,
+  non si misurano). Posizione da JPL Horizons, ricalcolata per ogni blocco.
+- **Ricerca**: esopianeti, variabili, NEO, aggiunti per nome o trascinati. Transito di un
+  esopianeta: blocco da 1 h prima dell'ingresso a 1 h dopo l'uscita, almeno 30 min
+  (D. Conti, *A Guide to TTV Target Observing*, BAA 2022; Swarthmore Transit Finder).
+- **Tempi in Impostazioni**, uno per passo, vuoti, scritti dall'utente: raffreddamento, unpark,
+  puntamento e centratura, autofocus, meridian flip, park, riscaldamento. Il margine sta dentro
+  il valore (Marco: "metto 15 invece di 10"). Sostituiscono il tempo di cambio unico.
+
 ## Conseguenze
 
 - L'ordine: prima i DSO (progetti, inquadratura, piano, export); poi esopianeti, variabili,
