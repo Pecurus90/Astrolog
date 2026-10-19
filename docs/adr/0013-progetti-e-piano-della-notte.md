@@ -103,6 +103,23 @@ andare da sola dal crepuscolo all'alba.
   puntamento e centratura, autofocus, meridian flip, park, riscaldamento. Il margine sta dentro
   il valore (Marco: "metto 15 invece di 10"). Sostituiscono il tempo di cambio unico.
 
+### Il Sistema solare nel piano (Marco, 19/10/2026)
+
+- **Luna, Sole e pianeti si salvano in Progetti**, senza ore da raggiungere: corpo, setup,
+  mosaico (intero o zona) per Luna e Sole, sovrapposizione, ordine, filtro (Sole: luce bianca o
+  Hα), posa e frame per pannello o per filtro.
+- **Si riprendono a video** (Marco). L'export usa due plugin di N.I.N.A.: Orbitals punta e
+  insegue il corpo e sposta su ogni pannello per distanza e angolo dal centro, calcolati all'ora
+  della ripresa; Lucky Imaging riprende la raffica (FITS, non SER). Letti dai simboli del plugin
+  installato e da AstronoMolly 2024 / AstroBin: **da provare su una postazione vera** prima di
+  costruire l'export.
+- **Sul disco niente plate solving**: il puntamento e' quello della montatura; ai buchi
+  risponde la sovrapposizione (20% di partenza, ADR 0023).
+- **Il Sole di giorno**: terzo modo «Giorno» nella stessa pagina, linea del tempo da alba a
+  tramonto. Tetto, filtro solare e sicurezza restano a N.I.N.A.
+- I frame di questi blocchi si tengono fuori dalle cartelle dell'archivio, come la ricerca.
+- Un tempo in piu' fra i tempi della notte: lo spostamento fra due pannelli.
+
 ## Conseguenze
 
 - L'ordine: prima i DSO (progetti, inquadratura, piano, export); poi esopianeti, variabili,

@@ -130,9 +130,12 @@ risoluzione conta per nome, senza pannello. Dashboard e Progetti leggono lo stes
   - **AstroLog simula, non segue**: i video planetari (SER, AVI) non entrano nell'archivio, che
     legge FITS; e non guida montatura ne' camera (ADR 0013). La ripresa di un mosaico lunare o
     solare la guidano programmi come SharpCap o Moon Panorama Maker (GPL-3.0, fermo dal 2019). <!-- software-ok -->
-    **Nessun file esportato** (Marco): non esiste un formato di pannelli lunari che FireCapture, <!-- software-ok -->
-    SharpCap o N.I.N.A. importino, e le RA/Dec della Luna invecchiano in minuti (13,2°/giorno, <!-- software-ok -->
-    cseligman.com/text/sky/moonmotion.htm).
+    ~~Nessun file esportato~~ **Superato (Marco, 19/10/2026)**: Luna, Sole e pianeti si salvano
+    in Progetti (senza ore da raggiungere) ed entrano nel Piano della notte, ADR 0013 "Il Sistema
+    solare nel piano". I plugin di N.I.N.A. Orbitals (punta e insegue il corpo, spostamento dal
+    centro per distanza e angolo, calcolato all'ora della ripresa) e Lucky Imaging (raffica di
+    FITS, non SER) tolgono i due ostacoli di allora: le RA/Dec che invecchiano (13,2°/giorno,
+    cseligman.com/text/sky/moonmotion.htm) e il video.
   - **Immagini**, ognuna col suo credito visibile:
     - Luna: HiPS `CDS/P/Moon/LROC-WAC-100m` in Aladin (100 m/px, pubblico dominio, LROC/ASU,
       astrogeology.usgs.gov), zoomabile; al clic il nome IAU del cratere (servizio
