@@ -181,19 +181,42 @@ solo dove una fonte fissa il confine o Marco lo sceglie; il resto resta un numer
   rotazione in ore (NASA Planetary Fact Sheet), s scala in "/px, D diametro apparente in ".
   Sfocatura di un pixel al centro del disco: formula di P. Tanga, "Tmax [sec] = 1150xPxM/D"
   (lista Saturn-ALPO, 2003, ripresa in CMO n. 286, kwasan.kyoto-u.ac.jp/~cmo/cmomn2/286EGf.htm).
-  Nessun campo per la durata voluta.
+  Nessun campo per la durata voluta. Arrotondato per difetto: e' un massimo.
 - **Altezza dei pianeti** all'ora scelta: sotto 35° «serve il correttore di dispersione». "An
   essential piece of equipment for high resolution imaging of planets when they fall below about
-  35° altitude" (M. Lewis, J. Br. Astron. Assoc. 131(5), 2021, britastro.org/?p=613619). Nessuna
-  soglia «troppo basso»: nessuna fonte.
+  35° altitude" (M. Lewis, J. Br. Astron. Assoc. 131(5), 2021, britastro.org/?p=613619).
+- **Altezza minima di pianeti, Luna e Sole**: 30°, massa d'aria 2, la stessa di «oggetto basso»
+  (ADR 0022, AAVSO e IRAF) (Marco, 19/10/2026). ALPO e BAA non fissano un minimo planetario.
+- **Mercurio e Venere di giorno**: inclusi nel momento migliore, con la riga fissa della distanza
+  dal Sole (Marco). Il minimo sicuro BAA (tan θ = D / L, "Guide to observing Mercury" v2.6, § 2.2)
+  chiede la lunghezza del paraluce, che non c'e': nessun giudizio, solo l'avvertenza ("NEVER USE
+  BINOCULARS TO LOOK FOR MERCURY IN DAYTIME", stessa guida).
+- **Momento migliore**: seeing previsto peggiorato con la massa d'aria, FWHM ∝ X^(3/5) (Roddier
+  1981, turbolenza di Kolmogorov). Se il seeing Meteoblue e' gia' riferito all'altezza, non si
+  corregge due volte: da verificare quando si costruisce.
+- **Barlow per il critico**: sotto il critico, accanto, il fattore che lo raggiunge (critico /
+  rapporto del corredo). Aritmetica sul confine gia' deciso, nessuna soglia nuova.
+- **Hα**: col filtro Hα una riga fissa sul telescopio o filtro dedicato (etalon e filtro di blocco,
+  Meade/Coronado; AAS per il filtro davanti all'ottica). Parole da Marco sulla tavola.
 - **Seeing e pianeti**: nessun giudizio. Nessuna fonte lega il seeing previsto alla ripresa
   fortunata; le classi CMC (cleardarksky.com) descrivono l'immagine, non dicono se vale la pena.
 - **Campionamento del cielo profondo**: quello di ADR 0021 (1/3-1/2 del seeing previsto), stesse
-  parole di Meteo; senza seeing tace. La FWHM in pixel (ADR 0022) resta sui frame, in Progetti.
-- **Campo**: «entra nel campo» / «non entra nel campo», asse maggiore dell'oggetto contro il lato
-  corto del campo, o del mosaico (Marco). Nessuna fascia «stretto»: nessuna convenzione, i
-  calcolatori di campo calcolano il campo e basta.
+  parole di Meteo; senza seeing tace. Seeing = mediana delle ore utili dell'oggetto stanotte. La
+  FWHM in pixel (ADR 0022) resta sui frame, in Progetti.
+- **Campo**: «entra nel campo» / «non entra nel campo» (Marco), per geometria: l'ellisse
+  dell'oggetto (assi e angolo di posizione del catalogo) dentro il rettangolo ruotato del campo, o
+  del mosaico. Senza angolo di posizione, asse maggiore contro il lato corto. Corregge la prima
+  regola (sempre il lato corto), che bocciava M 31 nel mosaico 2 × 1 che la contiene. Nessuna
+  fascia «stretto»: nessuna convenzione, i calcolatori di campo calcolano il campo e basta.
 - **Ore utili stanotte** contro le ore del progetto: numeri, senza giudizio.
+- **Mese buono** nel periodo migliore: ✓ se il 15 del mese l'oggetto ha almeno 3 ore utili.
+  Impostazione dell'utente, partenza 3 ore (Marco, 19/10/2026). Nessuna convenzione: N.I.N.A.
+  (Sky Atlas, «visible for») e Telescopius lasciano scegliere; stessa strada del calendario delle
+  notti buone (`docs/coda.md`).
+- **Crea parte vuota** (Marco): filtri dello schema in lista, ore a 0, esposizione vuota. Nessuna
+  ora ne' esposizione suggerita: nessuna fonte.
+- **Fuori**: macchie solari, transiti della Macchia Rossa e meridiano centrale di Marte restano
+  idee per dopo (sopra): non si disegnano.
 - **Meteo della notte**: solo in Notti, col rimando «Meteo di stanotte» (Marco).
 
 ## Conseguenze

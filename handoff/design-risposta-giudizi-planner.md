@@ -32,8 +32,9 @@ f/8.8) anche.
    va bene, sopra «sottocampionato», sotto «sovracampionato». Stesse parole di Meteo. Senza
    seeing (nessuna chiave Meteoblue) tace. Niente FWHM del sito qui: e' una misura dei frame, sta
    in Progetti.
-2. **Campo**: «entra nel campo» / «non entra nel campo», asse maggiore dell'oggetto contro il lato
-   corto del campo; col mosaico, del mosaico intero. Nessuno «stretto» (Marco).
+2. **Campo**: «entra nel campo» / «non entra nel campo»; col mosaico, del mosaico intero. Nessuno
+   «stretto» (Marco). La regola esatta e' in `handoff/design-planner-correzioni.md` (corretta il
+   19/10).
 3. **Ore utili stanotte** contro le ore del progetto: due numeri, nessun giudizio.
 4. **Banda larga / stretta** (v13): resta com'e', riga sua.
 
