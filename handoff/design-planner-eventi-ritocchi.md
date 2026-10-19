@@ -9,6 +9,12 @@ regressione. Restano due cose.
 2. **Periodo della lista** (30 / 90 / 365 / 1100 giorni): numeri provvisori. Nella tavola una nota
    «provvisorio: lo decide il backend», e in DECISIONI lo stesso.
 
+**Testi approvati da Marco** (19/10/2026), restano cosi': «transiti della ISS, eclissi e
+occultazioni visibili dal sito», «Macchia Rossa al meridiano: nessun passaggio in queste ore»,
+«Viking MDIM 2.1: NASA/USGS, pubblico dominio», «visibili da {sito}, dal più vicino», «serve un
+sito», «Sito mancante» · «Aggiungi sito», «Nessun evento di questo tipo da {sito} nei prossimi {n}
+giorni.», «Riprova», «Campo di», «Da {sito} passa accanto al disco», «ombra della Terra».
+
 Per il porting, non da rifare: Giove a disco piatto (nell'app la mappa OPAL girata), la mappa di
 Marte presa da USGS e proiettata sulla sfera, non da Wikimedia Commons.
 
