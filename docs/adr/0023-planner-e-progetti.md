@@ -163,7 +163,8 @@ risoluzione conta per nome, senza pannello. Dashboard e Progetti leggono lo stes
     entrano: non hanno fonte.
   - Il Sole porta l'avvertenza del filtro solare: filtro sempre davanti all'ottica, mai filtri da
     oculare, cercatore coperto (AAS, eclipse.aas.org/eye-safety/optics-filters).
-- Transiti della Grande Macchia Rossa e meridiano centrale: idea per dopo, non decisa.
+- Transiti della Grande Macchia Rossa e meridiano centrale: decisi (sotto, "Eventi e Macchia
+  Rossa").
 
 ### I giudizi (Marco, 18/10/2026)
 
@@ -215,8 +216,8 @@ solo dove una fonte fissa il confine o Marco lo sceglie; il resto resta un numer
   notti buone (`docs/coda.md`).
 - **Crea parte vuota** (Marco): filtri dello schema in lista, ore a 0, esposizione vuota. Nessuna
   ora ne' esposizione suggerita: nessuna fonte.
-- **Fuori**: macchie solari, transiti della Macchia Rossa e meridiano centrale di Marte restano
-  idee per dopo (sopra): non si disegnano.
+- **Fuori**: macchie solari, idea per dopo. Macchia Rossa e meridiano di Marte: sotto, "Eventi e
+  Macchia Rossa".
 
 ### Trova, in piu' (Marco, 19/10/2026)
 
@@ -271,10 +272,39 @@ di partenza e la sua fonte accanto; nel Planner si cambia per una ricerca senza 
 | Mese buono | 3 h utili il 15 del mese | Marco |
 | Altezza minima di pianeti, Luna e Sole | 30° | massa d'aria 2 (AAVSO, IRAF) |
 | Correttore di dispersione sotto | 35° | BAA, Lewis 2021 |
+| Macchia Rossa: longitudine, data, deriva | 91° (Sistema II) al 1/6/2026, 1.75° al mese | Sky & Telescope, da JUPOS |
 
 Restano fisse le regole fisiche, che non dipendono dal sito: rapporto focale critico (Nyquist),
 campionamento fra 1/3 e 1/2 del seeing, video al massimo (un pixel), campo che entra.
 - **Meteo della notte**: solo in Notti, col rimando «Meteo di stanotte» (Marco).
+
+### Eventi e Macchia Rossa (Marco, 19/10/2026)
+
+Marco: "fare anche macchia rossa e transiti, in modo da avere tutto il disegno fatto". Supera la
+riga "idee per dopo" dei giudizi. Si disegna ora; si costruisce dopo il resto del Planner.
+
+- **Macchia Rossa**, nella carta di Giove: le ore in cui passa al meridiano centrale nella notte.
+  Meridiano centrale nel Sistema II (Meeus, Astronomical Algorithms, cap. 43; Project Pluto,
+  grs_form.htm: "accurate to about a degree", circa un minuto). La longitudine della Macchia
+  deriva: e' un'impostazione con data e deriva, partenza 91° al 1/6/2026 e 1.75° al mese (Sky &
+  Telescope, calcolatore dei transiti, dall'andamento JUPOS). Ben visibile 50 minuti prima e dopo
+  il passaggio (Sky & Telescope). Il disco di Giove si disegna girato al meridiano dell'ora scelta.
+- **Meridiano centrale di Marte** (Meeus cap. 42): il numero e il disco girato a quel meridiano.
+  Mappa pubblica di Marte, licenza da controllare sulla sua pagina come le altre.
+- **Terzo modo «Eventi»**, accanto a «Cielo profondo» e «Sistema solare», per il sito attivo:
+  - **transiti della ISS su Sole e Luna**: ora al secondo, durata, diametro apparente della ISS,
+    larghezza della striscia, distanza dalla linea centrale. Giudizio geometrico, nessuna soglia:
+    «sei nella striscia» / «fuori di {d} km». Orbita da CelesTrak, calcolo SGP4 (come
+    transit-finder.com e issinfo.net): dipendenza nuova, si chiede a Marco quando si costruisce.
+    La previsione si rifa' a ogni orbita nuova; lontano nel tempo e' approssimata (transit-finder);
+  - **eclissi di Sole e di Luna** visibili dal sito: contatti, grandezza, altezza. Elementi di
+    Bessel di F. Espenak (NASA GSFC), col credito "Eclipse Predictions by Fred Espenak, NASA's
+    GSFC";
+  - **occultazioni lunari dei pianeti**: sparizione e ricomparsa, lembo chiaro o scuro, coi conti
+    della Luna che gia' ci sono. Le occultazioni di asteroidi (IOTA) restano fuori: campagne con
+    dati loro (ADR 0013, tappe).
+- Altezza di Sole e Luna negli eventi giudicata con «Altezza minima di pianeti, Luna e Sole»; sul
+  Sole l'avvertenza del filtro, come nel Sistema solare.
 
 ## Conseguenze
 

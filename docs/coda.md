@@ -1267,12 +1267,5 @@ riga per voce.
   `M 31`): in `old/` e' misurata, mai costruita. Serve al Planner e alla Carta del cielo.
 - **Il corredo simulato del Planner** ("e se avessi") e' l'unico caso in cui il campo si deriva
   invece di misurarsi.
-- **Eventi del Sistema solare nel Planner** (Marco, 19/10/2026: "mi piacciono, in coda"). Fonti
-  trovate, nulla deciso:
-  - transiti della ISS su Sole e Luna: orbite giornaliere (CelesTrak) e calcolo orbitale, cioe'
-    una dipendenza nuova; transit-finder.com (B. Wojczynski) lo fa gia';
-  - transiti della Macchia Rossa: longitudine nel Sistema II (Meeus cap. 43) piu' la longitudine
-    della Macchia, che deriva (JUPOS; calcolatore di Sky & Telescope, Project Pluto);
-  - meridiano centrale di Marte (Meeus cap. 42);
-  - eclissi di Sole e di Luna (mappe di X. Jubier);
-  - occultazioni lunari e asteroidali (Occult, OccultWatcher di IOTA). <!-- software-ok -->
+- **Occultazioni di asteroidi nel Planner**: campagne coi dati IOTA (Occult, OccultWatcher). Gli <!-- software-ok -->
+  altri eventi del Sistema solare sono decisi (ADR 0023, "Eventi e Macchia Rossa").
