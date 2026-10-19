@@ -78,10 +78,19 @@ andare da sola dal crepuscolo all'alba.
 
 ### Le categorie (Marco, 19/10/2026)
 
-- **Tre linguette nella stessa pagina**: Deep sky, Sistema solare, Ricerca. Una linea del tempo
-  e un export per la notte: le categorie si mischiano. Il disegno si fa tutto ora; la
-  costruzione segue l'ordine sotto.
-- **Deep sky** prende i progetti dal Planner; «Riempi la notte» li mette in fila da soli nei buchi.
+- **Due modi per notte e postazione, che non si mischiano** (Marco): fotografia (Deep sky e
+  Sistema solare, comete comprese) oppure ricerca (esopianeti, NEO, variabili, mischiati fra
+  loro). Una linea del tempo e un export per piano. Il disegno si fa tutto ora; la costruzione
+  segue l'ordine sotto.
+- **Proposte automatiche** dal sito e dall'orizzonte, in tutti e due i modi.
+- **Due pulsanti** (Marco): uno completa la notte tenendo i blocchi messi a mano, uno la rifa'
+  da capo. L'algoritmo: prima gli eventi a ora fissa, poi nei buchi gli oggetti liberi, prima chi
+  chiude prima la sua finestra; a pari merito l'ordine gia' deciso (si chiude stanotte -> ore
+  utili -> ore mancanti).
+- **Due eventi di ricerca sovrapposti** (Marco): vince quello che ci sta tutto coi margini; a
+  pari merito il piu' alto. L'altro resta fra le proposte.
+- **Ricerca e' un elenco solo**; i tipi sono Criteri, non pagine.
+- **Deep sky** prende i progetti dal Planner.
 - **Sistema solare**: pianeti e Luna come nel Planner, piu' le comete (Marco: si fotografano,
   non si misurano). Posizione da JPL Horizons, ricalcolata per ogni blocco.
 - **Ricerca**: esopianeti, variabili, NEO, aggiunti per nome o trascinati. Transito di un

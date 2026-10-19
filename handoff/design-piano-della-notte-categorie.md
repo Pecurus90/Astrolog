@@ -17,17 +17,46 @@ il ridisegno a categorie deciso con Marco (`docs/adr/0013-progetti-e-piano-della
    Restano come proposte; Marco li guarda sulla tavola. La riga degli eventi mischia singolare e
    plurale: «Dal modo Eventi del Planner: l'ora e' fissa.».
 
-## 1. Tre linguette nella colonna di sinistra
+## 1. Due modi, che non si mischiano
 
-**«Deep sky» · «Sistema solare» · «Ricerca»**. La linea del tempo, i totali e l'export restano
-**uno** per la notte: blocchi di categorie diverse stanno nella stessa traccia. Ogni blocco porta
-un segno piccolo della sua categoria. «Eventi di stanotte» resta sotto, uguale in tutte.
+In testa, accanto alla postazione, un selettore **«Fotografia» · «Ricerca»**: ogni postazione,
+ogni notte, fa l'uno o l'altro (Marco). Due postazioni possono fare modi diversi la stessa notte.
+
+- **Fotografia**: linguette **«Deep sky» · «Sistema solare»** nella colonna di sinistra; i blocchi
+  delle due stanno nella stessa traccia, ognuno col segno piccolo della sua categoria.
+- **Ricerca**: un **elenco solo**, coi Criteri a chip sopra («Esopianeti · NEO · Variabili»):
+  esopianeti, NEO e variabili si mischiano nella stessa notte.
+
+«Eventi di stanotte» (ISS, eclissi, occultazioni) resta sotto in tutti e due i modi.
+
+Cambiare modo con blocchi nel piano chiede: «Il piano di stanotte si svuota: cambio modo?» ·
+«Cambia» / «Annulla».
+
+## 1b. Proposte automatiche e i due pulsanti
+
+In tutti e due i modi le proposte sono **gia' calcolate** dal sito e dall'orizzonte importato: in
+Fotografia i progetti del Planner alti stanotte (piu' pianeti e comete); in Ricerca i transiti
+visibili stanotte coi margini, i minimi delle variabili, i NEO osservabili.
+
+Sopra la linea del tempo due pulsanti:
+- **«Completa la notte»**: tiene i blocchi messi a mano e riempie il resto;
+- **«Rifai la notte»**: ricomincia da capo.
+Dopo ognuno, «Annulla» per tornare al piano di prima.
+
+Come mette in fila (scrivetelo in una riga d'aiuto sotto i pulsanti): prima gli eventi a ora
+fissa; poi nei buchi gli oggetti liberi, **prima chi scende prima** (l'oggetto da 45° a 30° a
+cui manca un'ora va prima di quello da 30° a 70° tutta la notte); a pari merito l'ordine delle
+proposte. Proposta di riga: «Prima le ore fisse, poi chi scende prima.».
+
+Due eventi di ricerca sovrapposti: entra quello che ci sta tutto coi margini, a pari merito il
+piu' alto; l'altro resta fra le proposte con «Si sovrappone a {oggetto}: escluso.».
+
+Nei Tweaks: un piano Fotografia con due progetti (uno che scende, uno alto tutta la notte) e un
+piano Ricerca con esopianeta a inizio sera, NEO a mezzanotte e mezza, variabile dopo.
 
 ### Deep sky
 
-Le proposte di oggi (progetti dal Planner). In piu' un pulsante **«Riempi la notte»**: mette in
-fila le proposte nell'ordine gia' deciso nei buchi liberi, coi cambi in mezzo. Il piano resta
-modificabile a mano.
+Le proposte di oggi (progetti dal Planner).
 
 ### Sistema solare
 
@@ -38,8 +67,8 @@ modificabile a mano.
 
 ### Ricerca
 
-Elenco vuoto con **«Aggiungi oggetto»** (per nome) e trascinamento sulla linea del tempo. Tre
-tipi, ognuno col suo segno:
+Elenco unico delle proposte, piu' **«Aggiungi oggetto»** (per nome) e trascinamento sulla linea
+del tempo. Tre tipi, ognuno col suo segno:
 
 - **Esopianeta** (es. «WASP-12 b»): evento a ora fissa col lucchetto. Il blocco ha tre parti:
   base prima, transito, base dopo. Riga: «transito 22:41-01:12 · base 1 h prima e dopo».
@@ -49,7 +78,8 @@ tipi, ognuno col suo segno:
   («minimo 23:58»); le altre sono blocchi brevi e flessibili.
 - **NEO** (es. «2026 TX»): blocco flessibile, «posizione dal Minor Planet Center, serve la rete».
 
-Stato vuoto: «Nessun oggetto di ricerca. Aggiungine uno per nome.».
+Stato vuoto (nessuna proposta coi Criteri scelti): «Nessun oggetto di ricerca stanotte.
+Aggiungine uno per nome.».
 
 ## 2. I tempi sulla linea del tempo
 
@@ -78,7 +108,8 @@ nei Tweaks (non di partenza): 15, 1, 3, 3, 4, 1, 10.
 
 ## 4. Telefono
 
-Le tre linguette in cima al foglio delle proposte. Avvio, cambi e chiusura come fasce nella linea
+Il selettore dei modi in testa; linguette o Criteri in cima al foglio delle proposte; i due
+pulsanti sotto la linea verticale. Avvio, cambi e chiusura come fasce nella linea
 verticale, stesso tratteggio.
 
 ## Fuori
