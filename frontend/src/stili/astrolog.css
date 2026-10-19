@@ -490,7 +490,7 @@
   --campo-modulo-segno:       16px;   /* il «!» dell'errore */
   --campo-modulo-segno-stacco: 2px;   /* lo allinea alla prima riga della frase */
   --campo-riga-minimo:        14rem;  /* sotto, il bottone accanto al campo scende */
-  --campo-coordinata:         12rem;  /* un campo di coordinata: «46.4843 N» e l'errore sotto */
+  --campo-coordinata:         12rem;  /* un campo di coordinata: «46,4843 N» e l'errore sotto */
   /* v33 · il Bortle da scegliere (48) */
   --bortle-voce:              48px;   /* una classe in fila */
   --bortle-striscia:          var(--spazio-7); /* la striscia della tinta, in colonna */
@@ -1531,7 +1531,7 @@ button.as-parametro .as-parametro__sotto { display: block; }
    BORTLE — la classe del cielo, letta (.as-bortle-letta)
    Una riga sola: la fascia del colore, la parola «Bortle», la classe e la
    misura. Il colore non dice mai da solo che classe e': la cifra e' sempre
-   scritta, e la misura sta sempre accanto («Bortle 4 (20.8)»), perche' la
+   scritta, e la misura sta sempre accanto («Bortle 4 (20,8)»), perche' la
    scala non ha confini ufficiali in magnitudini. Pavimenti in mag/arcsec²:
    1 = 21,76 · 2 = 21,60 · 3 = 21,30 · 4 = 20,80 · 5 = 19,25 · 6 = 18,50 ·
    7 = 18,00 · 8 = 17,00 · 9 = sotto. (v24: la scala estesa e la scala
