@@ -120,9 +120,13 @@ andare da sola dal crepuscolo all'alba.
   a N.I.N.A.
 - I frame di questi blocchi si tengono fuori dalle cartelle dell'archivio, come la ricerca.
 - Un tempo in piu' fra i tempi della notte: lo spostamento fra due pannelli.
-- **Il programma del video e' aperto** (19/10/2026): Lucky Imaging salva FITS e nessuna fonte
-  conferma 30-40 fps (una sola: 3 fps a sensore intero); SharpCap Pro fa SER, mosaici di Luna e <!-- software-ok -->
-  Sole e sequenze a comandi, ma e' un quinto programma. Decide Marco.
+- **Il video lo esegue SharpCap Pro, solo per il Sistema solare** (Marco, 19/10/2026): <!-- software-ok -->
+  N.I.N.A. con Lucky Imaging salva FITS e nessuna fonte conferma 30-40 fps (una sola: 3 fps a
+  sensore intero, AstronoMolly 2024). L'app scrive un file `.scs` del Sequence Editor (vai al
+  corpo con spostamento, inseguimento, filtro, posa, frame); `SharpCap.exe /runsequence <file>` <!-- software-ok -->
+  lo esegue all'avvio (docs.sharpcap.co.uk/4.1/15_AdvancedTopics.htm). Il mosaico lo calcola <!-- software-ok -->
+  l'app: il pianificatore di SharpCap vuole un allineamento a mano. Il formato `.scs` si legge da <!-- software-ok -->
+  un file vero quando si costruisce. Deep sky e Ricerca restano a N.I.N.A.
 
 ### Le linguette e la postazione (Marco, 19/10/2026)
 

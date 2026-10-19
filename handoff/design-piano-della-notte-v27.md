@@ -44,10 +44,14 @@ il programma li applica all'ora della ripresa, inseguendo alla velocita' del cor
 centratura sul disco: il plate solving li' non funziona; l'errore della montatura lo copre la
 sovrapposizione.
 
-**Il programma che esegue il video e' ancora da scegliere** (Marco): N.I.N.A. coi plugin Orbitals
-e Lucky Imaging, oppure SharpCap Pro. Disegnate il pulsante dell'export di questa linguetta con <!-- software-ok -->
-un nome segnaposto «Esporta per {programma}» e la riga d'avviso vuota: i testi arrivano con la
-scelta.
+**Il video lo esegue SharpCap Pro** (Marco), solo in questa linguetta; Deep sky e Ricerca <!-- software-ok -->
+restano a N.I.N.A. Pulsante **«Esporta per SharpCap»**, riga sotto: «Un file di sequenza per <!-- software-ok -->
+SharpCap Pro: parte da solo all'avvio.». Avvisi sotto, solo in questa linguetta: <!-- software-ok -->
+- «Sul disco non c'e' plate solving: il puntamento e' quello della montatura. Se restano buchi
+  fra i pannelli, alza la sovrapposizione.»;
+- «Il video esce in SER: tienilo fuori dalle cartelle dell'archivio.».
+Cosa l'export non fa: non apre il tetto, non mette il filtro solare, non corregge la rotazione
+della camera (entro 10°, gia' nel Planner).
 
 ## 3. Automazione della postazione (Impostazioni)
 
