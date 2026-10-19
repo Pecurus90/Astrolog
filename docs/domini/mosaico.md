@@ -7,7 +7,7 @@ tipo di immagine che un archivio contiene, accanto al soggetto ripreso in un'inq
 
 La definizione, decisa con Marco e che non si riapre: **rettangoli risolti che si toccano o si
 sovrappongono in parte, attorno allo stesso soggetto o regione, anche in notti diverse, con lo
-stesso corredo**. Corredi diversi = due progetti. L'app lo propone, l'utente conferma una volta.
+stesso setup**. Setup diversi = due progetti. L'app lo propone, l'utente conferma una volta.
 Le parole stanno in [`glossario.md`](glossario.md):
 **mosaico** (`mosaic`) e **pannello** (`panel`), che non si dice *tessera* ne' *riquadro*.
 
@@ -23,14 +23,14 @@ Le parole stanno in [`glossario.md`](glossario.md):
 | Due riprese **dello stesso campo** non diventano un mosaico: sono la stessa foto rifatta | `test_one_framing_shot_many_times_is_not_a_mosaic` |
 | Pochi frame spostati -- un giro al meridiano non ricentrato -- non fanno un pannello: un pannello conta solo con almeno il 25% del tempo del piu' lungo, e le pose se il tempo non si sa; i frame che non contano restano col loro oggetto | `test_two_stray_poses_beside_a_panel_are_not_a_mosaic`, `test_a_panel_shot_less_than_the_others_still_counts`, `test_the_share_is_measured_on_the_time_of_the_poses`, `test_without_the_time_the_share_is_measured_on_the_poses`, `test_without_the_time_few_poses_still_do_not_count`, `test_a_pose_that_leaves_for_another_rig_reweighs_the_mosaic`, `test_poses_that_turn_out_to_be_calibration_reweigh_the_mosaic`, `test_a_confirmed_mosaic_does_not_take_poses_that_do_not_count`, `test_the_centre_of_the_mosaic_does_not_lean_towards_a_panel_that_does_not_count`, `test_without_the_catalog_the_name_comes_from_the_panels_that_count`, `test_a_confirmed_mosaic_whose_other_panel_stops_counting_is_not_one_anymore` (`backend/tests/test_mosaic_weight.py`) |
 | Un frame di cui non si sa quanto e' grande il campo non fa mosaici | `test_poses_without_the_size_of_their_field_make_no_mosaic` |
-| Con un **altro corredo** e' un altro progetto, non un altro pannello | `test_another_rig_is_another_production` |
+| Con un **altro setup** e' un altro progetto, non un altro pannello | `test_another_rig_is_another_production` |
 | Se di un frame non si sa come era orientato, l'app lo considera lo stesso invece di buttarlo via | `test_without_the_rotation_it_answers_on_the_circle_instead_of_giving_up` (`backend/tests/test_mosaic_geometry.py`), `test_panels_without_the_rotation_still_make_a_mosaic` |
 | Posso sciogliere un mosaico che ho confermato, e i pannelli tornano soggetti a se' | `test_dissolving_a_confirmed_mosaic_frees_its_panels` |
 | Quando dico di si' dico anche **di cosa** e' il mosaico, e il campo arriva gia' compilato con l'oggetto del catalogo al suo centro | `test_the_question_asks_what_the_mosaic_is_of_and_the_answer_names_it`, `test_the_proposal_is_the_catalog_object_at_the_centre` |
 | Le pose che ho ripreso dentro il mosaico stanno nel mosaico; quelle dello stesso oggetto riprese da sole no | `test_an_object_inside_and_outside_a_mosaic_keeps_its_own_poses`, `test_the_answer_is_written_on_the_poses_of_the_mosaic_only` |
 | Un pannello ripreso dopo entra nel mosaico da solo, anche se la corsa si ferma a meta' | `test_poses_that_arrive_later_join_the_mosaic_when_the_spine_groups_them`, `test_a_group_run_stopped_halfway_still_writes_the_mosaic` |
 | Rinominare la camera, unirla a un'altra, o dire con che camera ho ripreso, non mi fa perdere la risposta | `test_renaming_the_camera_keeps_the_mosaic`, `test_merging_the_camera_into_another_keeps_the_mosaic`, `test_saying_the_camera_of_the_poses_keeps_the_mosaic` |
-| Una volta scritto, il mosaico non si ricalcola: un frame nuovo si confronta solo coi pannelli del suo corredo nella sua fascia di cielo | `test_placing_again_does_not_redo_the_geometry`, `test_a_new_pose_is_compared_only_with_nearby_panels` |
+| Una volta scritto, il mosaico non si ricalcola: un frame nuovo si confronta solo coi pannelli del suo setup nella sua fascia di cielo | `test_placing_again_does_not_redo_the_geometry`, `test_a_new_pose_is_compared_only_with_nearby_panels` |
 
 ## Le decisioni
 
@@ -56,7 +56,7 @@ aggiunge quel suffisso al nome del target -- e `normalize` lo conserva apposta i
 ripreso senza rinominare i target non direbbe niente. La geometria e' il criterio, il nome e' il
 rinforzo.
 
-**Si raggruppa per corredo e regione, non per soggetto** (Marco, 12/9/2026). Ogni pannello
+**Si raggruppa per setup e regione, non per soggetto** (Marco, 12/9/2026). Ogni pannello
 inquadra una parte diversa del complesso, quindi l'app li identifica come oggetti **diversi**: sui
 quattro pannelli veri di IC 405 ne escono **quattro** (`ic-405`, `lbn-796`, `ldn-1516`,
 `sh2-230`), rimisurati il 14/9/2026 sui 337 frame dell'archivio intero -- erano tre il 12/9 su
@@ -69,18 +69,18 @@ stesso soggetto **o regione**"*.
 scritto nel database... se e' scritto che cazzo deve ricalcolare"*). Quando un frame arriva a
 `group` entra nel suo **pannello** -- l'inquadratura della posa che l'ha aperto -- o ne apre uno, e
 un pannello nuovo entra nel **mosaico** dei pannelli che tocca (`spine/mosaic.py`). Tutto si
-scrive e resta: un frame si confronta solo coi pannelli del suo corredo che potrebbero toccarlo,
+scrive e resta: un frame si confronta solo coi pannelli del suo setup che potrebbero toccarlo,
 mai con l'archivio, e un frame gia' piazzato non si confronta piu'. Un pannello che lega dei
 mosaici entra nel piu' vecchio con una risposta -- o nel piu' vecchio, se nessuno ne ha -- e
 quello si prende gli altri senza risposta: due mosaici con una risposta non si fondono mai.
 
 **La chiave del mosaico non porta la camera.** E' l'impronta di uno dei suoi frame, scelta quando
-nasce e poi ferma, e mai la chiave di un altro mosaico vivo: cosi' due corredi non si ritrovano
+nasce e poi ferma, e mai la chiave di un altro mosaico vivo: cosi' due setup non si ritrovano
 nello stesso (`test_a_mosaic_never_mixes_two_rigs`). Rinominare la camera, unirla a un'altra o
 dire con che camera erano i frame non la toccano.
-Un frame che cambia corredo resta nel suo pannello se il mosaico ha una risposta -- e il pannello
-prende il corredo nuovo quando tutti i suoi frame ce l'hanno; se non ce l'ha,
-si ripiazza fra i pannelli del corredo nuovo, e cosi' entra nel mosaico che quel corredo ha gia'
+Un frame che cambia setup resta nel suo pannello se il mosaico ha una risposta -- e il pannello
+prende il setup nuovo quando tutti i suoi frame ce l'hanno; se non ce l'ha,
+si ripiazza fra i pannelli del setup nuovo, e cosi' entra nel mosaico che quel setup ha gia'
 li' (`test_merging_two_spellings_of_a_camera_joins_the_confirmed_mosaic`,
 `test_a_pose_told_its_camera_later_joins_the_confirmed_mosaic`). Un frame che perde il cielo esce
 dal pannello e dal mosaico, e un pannello rimasto vuoto si toglie
@@ -139,4 +139,4 @@ con un clic; escludere il frame costa un pannello perso in silenzio.
 
 **Cosa il mosaico NON fa**: non unisce oggetti (quello e' il collasso di identita' di un doppione,
 un'altra cosa); non tocca i FITS; non decide da solo; non cambia le sessioni, che restano *oggetto
-x notte x corredo*.
+x notte x setup*.

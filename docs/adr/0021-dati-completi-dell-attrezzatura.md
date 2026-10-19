@@ -1,4 +1,4 @@
-# 0021 -- L'attrezzatura porta i dati delle schede tecniche, e il corredo ci calcola
+# 0021 -- L'attrezzatura porta i dati delle schede tecniche, e il setup ci calcola
 
 **Stato:** accettata, 18/10/2026 (Marco).
 
@@ -25,7 +25,7 @@ vince su quello dei file (come oggi, strato del dichiarato).
 - **Ottica**: Schema ottico (rifrattore, Newton, Schmidt-Cassegrain, Ritchey-Chrétien,
   Maksutov, obiettivo fotografico, altro; Marco, 18/10/2026), Apertura (mm), Focale nativa (mm),
   Cerchio d'immagine (mm), Backfocus richiesto (mm), Tolleranza del backfocus (mm). Rapporto
-  focale C, sul corredo.
+  focale C, sul setup.
 - **Camera**:
   - Sensore (il nome, es. IMX571);
   - Risoluzione (px, larghezza × altezza): F, la piu' frequente fra i frame, moltiplicata per il
@@ -41,7 +41,7 @@ vince su quello dei file (come oggi, strato del dichiarato).
 - **Ottica di guida** (il tubo guida): Apertura (mm), Focale (mm). PHD2 chiede la focale
   (openphdguiding.org/man/Basic_use.htm).
 - **Guida fuori asse (OAG)**, tipo nuovo: Spessore (mm), Prisma (mm). Non ha focale: guida con
-  quella del corredo (PHD2, stessa pagina).
+  quella del setup (PHD2, stessa pagina).
 - **Montatura**: Carico con contrappeso (kg), Carico senza contrappeso (kg). Il Peso e' quello
   della testa.
 - **Riduttore** (anche barlow: fattore sopra 1): Fattore, Backfocus richiesto (mm), Tolleranza
@@ -55,12 +55,12 @@ vince su quello dei file (come oggi, strato del dichiarato).
 
 Fuori, per scelta di Marco: full well, rumore di lettura, gamma dinamica.
 
-### Il corredo
+### Il setup
 
 Parti nuove: la guida (ottica di guida **oppure** OAG, piu' la camera di guida) e i distanziali,
 anche piu' d'uno. Si scelgono come le altre parti; i file non le dicono.
 
-I conti, ognuno solo quando ci sono tutti i suoi dati; se ne manca uno, il corredo dice quale:
+I conti, ognuno solo quando ci sono tutti i suoi dati; se ne manca uno, il setup dice quale:
 
 - **Rapporto focale** = focale effettiva / apertura dell'ottica.
 - **Campionamento** ("/px; nome scelto da Marco per la scala prevista) = 206,265 × pixel /
@@ -69,7 +69,7 @@ I conti, ognuno solo quando ci sono tutti i suoi dati; se ne manca uno, il corre
 - **Copertura**: la diagonale del sensore contro il cerchio d'immagine del riduttore, o
   dell'ottica senza riduttore. E' un confronto, non una soglia.
 - **Scala di guida** = 206,265 × pixel di guida / focale di guida; la focale e' quella dell'ottica
-  di guida, o la focale effettiva del corredo con l'OAG. **Avviso fuori da 0,5-4 "/px**: "The
+  di guida, o la focale effettiva del setup con l'OAG. **Avviso fuori da 0,5-4 "/px**: "The
   preferred range is roughly between 0.5 arc-sec/px and 4 arc-sec/px" (Bruce Waddington,
   sviluppatore di PHD2, groups.google.com/g/open-phd-guiding/c/TSP4CRpZP6E, 2022).
 - **Rapporto guida/ripresa** = scala di guida / scala prevista, **senza giudizio** (Marco): nessuna
@@ -77,8 +77,8 @@ I conti, ognuno solo quando ci sono tutti i suoi dati; se ne manca uno, il corre
   staff Diffraction Limited); Waddington stesso dice di ragionare sulla scala.
 - **Campionamento**: la scala giusta sta fra 1/3 e 1/2 del seeing (Nyquist, Astronomy Tools:
   "a resolution between 0.67” and 2” per pixel is the sweet spot" con seeing 2-4",
-  astronomy.tools/calculators/ccd_suitability). Sul corredo, rovesciata: "ottimo con seeing fra
-  {2s} e {3s}"", con s la scala. **In Meteo**, per la notte e per ogni corredo, col seeing previsto
+  astronomy.tools/calculators/ccd_suitability). Sul setup, rovesciata: "ottimo con seeing fra
+  {2s} e {3s}"", con s la scala. **In Meteo**, per la notte e per ogni setup, col seeing previsto
   (Marco): sottocampionato sopra 1/2, sovracampionato sotto 1/3. Senza chiave Meteoblue il seeing
   non c'e' (`docs/domini/meteo.md`), e il giudizio in Meteo tace.
 - **Potere risolutore dell'ottica** ("): Dawes 116 / apertura in mm (Astronomy Tools,
@@ -108,8 +108,8 @@ lo porta (`backend/tests/header/`): N.I.N.A. non lo scrive.
 - Il modulo di un pezzo si allunga: blocchi per tipo, campi tutti facoltativi salvo il nome.
 - Lo schema cambia (`instruments`, `filters`, `rig_parts`) e si ricrea, come ogni volta.
 - Il backup delle risposte (ADR 0017) porta i campi nuovi.
-- La scheda del corredo guadagna una sezione di conti; ognuno dice cosa gli manca.
-- Meteo guadagna il giudizio del campionamento per corredo (contratto `docs/domini/meteo.md`).
+- La scheda del setup guadagna una sezione di conti; ognuno dice cosa gli manca.
+- Meteo guadagna il giudizio del campionamento per setup (contratto `docs/domini/meteo.md`).
 - Fuori, per ora: la misura minima del filtro (Astronomy Tools non mostra la formula) e la
   distanza della polvere (serve un'immagine).
 - Due soglie restano solo numeri senza giudizio: rapporto di guida e margine del carico. Se un

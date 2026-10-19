@@ -1,4 +1,4 @@
-# 0023 -- Planner e Progetti: inquadratura, mosaico, corredo di prova, filtri, modifiche
+# 0023 -- Planner e Progetti: inquadratura, mosaico, setup di prova, filtri, modifiche
 
 **Stato:** accettata, 18/10/2026 (Marco).
 
@@ -15,7 +15,7 @@ Ricerca del 18/10/2026 sul codice di N.I.N.A. (MPL-2.0, branch develop), ASCOM, 
 
 ### Il percorso
 
-Trova, Scegli il corredo, Inquadra, Crea (filtri e ore), Salva, Segui. La pagina si chiama
+Trova, Scegli il setup, Inquadra, Crea (filtri e ore), Salva, Segui. La pagina si chiama
 **Progetti** (glossario: progetto, non piano).
 
 ### La carta
@@ -70,10 +70,10 @@ Dal Framing Assistant di N.I.N.A. (`FramingAssistantVM.cs`):
   (`Coordinates.cs`, `ShiftGnomonic`), riscritta in Python;
 - obiettivo per pannello; il totale e' la somma (ereditato.md A).
 
-### Il corredo
+### Il setup
 
-- Corredi veri di Attrezzatura, oppure **corredo di prova**: focale, apertura, riduttore o barlow,
-  sensore dalla lista. **Solo per guardare** (Marco): un progetto nasce solo su un corredo vero.
+- Setup veri di Attrezzatura, oppure **setup di prova**: focale, apertura, riduttore o barlow,
+  sensore dalla lista. **Solo per guardare** (Marco): un progetto nasce solo su un setup vero.
 - **Lista dei sensori nostra**: nessun elenco aperto e' riusabile (AstroBin e Telescopius <!-- software-ok -->
   proprietari, Stellarium Oculars 17 reflex). Una riga per geometria, senza marca: nome, pixel <!-- software-ok -->
   (µm), risoluzione (px), URL del produttore; millimetri calcolati. **Solo sensori montati in
@@ -86,12 +86,12 @@ Dal Framing Assistant di N.I.N.A. (`FramingAssistantVM.cs`):
   dall'uso che il produttore dichiara per le camere con quel sensore (es. ZWO presenta l'ASI174MM
   e l'ASI432MM per il solare, zwoastro.com), con l'URL accanto; senza dichiarazione, nessuna
   etichetta. Il selettore raggruppa per uso.
-- **Sensore personalizzato** nel corredo di prova (Marco): pixel (µm) e risoluzione (px), per chi
+- **Sensore personalizzato** nel setup di prova (Marco): pixel (µm) e risoluzione (px), per chi
   ha un sensore fuori lista.
 
 ### I filtri
 
-- I filtri proposti sono quelli di Attrezzatura usati o scelti per quel corredo.
+- I filtri proposti sono quelli di Attrezzatura usati o scelti per quel setup.
 - Camera a colori: nessun filtro, UV/IR, multibanda, anti-inquinamento. Camera mono: L, R, G, B
   e banda singola. Regola dal numero di bande del filtro; non e' una convenzione pubblicata ma il
   funzionamento della matrice di Bayer.
@@ -108,29 +108,29 @@ Dal Framing Assistant di N.I.N.A. (`FramingAssistantVM.cs`):
   (sotto, "I giudizi"; a schermo «mesi buoni», mai «stagione», Marco 19/10/2026): in corso = mese
   buono adesso; in attesa = fuori dai mesi buoni, circumpolare mai; fermo = mesi buoni passati
   tutti senza frame (ereditato.md, "fermo da una stagione").
-- **Modifiche** (Marco): ore, filtri ed esposizioni sempre libere. Inquadratura, griglia o corredo
+- **Modifiche** (Marco): ore, filtri ed esposizioni sempre libere. Inquadratura, griglia o setup
   su un progetto iniziato si cambiano **con un avviso numerico**: «{durata} gia' riprese non
   conterebbero piu'», contato sui frame veri. Supera "griglia congelata a progetto iniziato"
   (ereditato.md A).
-- «Apri nel Planner» riapre il progetto con inquadratura, griglia, corredo e ore com'erano: e' la
+- «Apri nel Planner» riapre il progetto con inquadratura, griglia, setup e ore com'erano: e' la
   via per rifare l'inquadratura e per dare l'obiettivo a un progetto gia' cominciato.
 
 ### L'avanzamento
 
 Lo scrive la scansione (anche quella automatica sul NAS), non la lettura. Un frame conta se ha
-stesso oggetto, stesso corredo e centro risolto dentro il campo del progetto o del pannello. Senza
+stesso oggetto, stesso setup e centro risolto dentro il campo del progetto o del pannello. Senza
 risoluzione conta per nome, senza pannello. Dashboard e Progetti leggono lo stesso numero.
 
 ### Planetario e solare
 
 - **Nessun progetto**: niente ore da accumulare. Effemeridi in Dashboard (ADR 0019).
 - **Simulazione, senza salvataggio** (Marco): Mercurio, Venere, Marte, Giove, Saturno, Urano,
-  Nettuno, Luna e Sole, col corredo vero o di prova (barlow e riduttore compresi). Nel Planner e'
-  un secondo modo, «Sistema solare», accanto a «Cielo profondo»: cambia la carta, il corredo resta.
+  Nettuno, Luna e Sole, col setup vero o di prova (barlow e riduttore compresi). Nel Planner e'
+  un secondo modo, «Sistema solare», accanto a «Cielo profondo»: cambia la carta, il setup resta.
   - **AstroLog simula, non segue**: i video planetari (SER, AVI) non entrano nell'archivio, che
     legge FITS; e non guida montatura ne' camera (ADR 0013). La ripresa di un mosaico lunare o
     solare la guidano programmi come SharpCap o Moon Panorama Maker (GPL-3.0, fermo dal 2019). <!-- software-ok -->
-    **Nessun file esportato** (Marco): non esiste un formato di tessere lunari che FireCapture, <!-- software-ok -->
+    **Nessun file esportato** (Marco): non esiste un formato di pannelli lunari che FireCapture, <!-- software-ok -->
     SharpCap o N.I.N.A. importino, e le RA/Dec della Luna invecchiano in minuti (13,2°/giorno, <!-- software-ok -->
     cseligman.com/text/sky/moonmotion.htm).
   - **Immagini**, ognuna col suo credito visibile:
@@ -154,15 +154,15 @@ risoluzione conta per nome, senza pannello. Dashboard e Progetti leggono lo stes
   - Disegno: rettangolo del sensore nelle coordinate del corpo, non in RA/Dec; fase disegnata
     sopra Mercurio, Venere e Luna; anelli di Saturno inclinati (raggio dal NASA Saturnian Rings Fact
     Sheet). Diametro in pixel accanto.
-  - **Mosaico di Luna e Sole**: tessere fissate sul corpo, come Moon Panorama Maker <!-- software-ok -->
+  - **Mosaico di Luna e Sole**: pannelli fissati sul corpo, come Moon Panorama Maker <!-- software-ok -->
     (`tile_constructor.py`); sulla Luna solo la parte illuminata. Sovrapposizione di partenza 20 %
     come nel cielo profondo (MPM usa 5-21 % secondo la camera; nessuno standard). Mostra quante <!-- software-ok -->
-    tessere e l'ordine: prima il terminatore, che cambia in circa 30 minuti (Omegon, rivista di un
+    pannelli e l'ordine: prima il terminatore, che cambia in circa 30 minuti (Omegon, rivista di un
     negozio). Rotazione della camera da tenere entro 10°, o restano buchi (forum SharpCap). <!-- software-ok -->
   - **Campionamento planetario**: rapporto focale critico = 2 × pixel / lunghezza d'onda (Nyquist
     sulla frequenza di taglio della diffrazione; vlaiv su Stargazers Lounge, astropix.com). La
     lunghezza d'onda e' quella del filtro scelto; senza filtro o a colori, 400 nm (Marco). Si
-    mostra il rapporto del corredo accanto a quello critico. Le regole 5-7 × pixel dei forum non
+    mostra il rapporto del setup accanto a quello critico. Le regole 5-7 × pixel dei forum non
     entrano: non hanno fonte.
   - Il Sole porta l'avvertenza del filtro solare: filtro sempre davanti all'ottica, mai filtri da
     oculare, cercatore coperto (AAS, eclipse.aas.org/eye-safety/optics-filters).
@@ -199,7 +199,7 @@ solo dove una fonte fissa il confine o Marco lo sceglie; il resto resta un numer
   1981, turbolenza di Kolmogorov). Se il seeing Meteoblue e' gia' riferito all'altezza, non si
   corregge due volte: da verificare quando si costruisce.
 - **Barlow per il critico**: sotto il critico, accanto, il fattore che lo raggiunge (critico /
-  rapporto del corredo). Aritmetica sul confine gia' deciso, nessuna soglia nuova.
+  rapporto del setup). Aritmetica sul confine gia' deciso, nessuna soglia nuova.
 - **Hα**: col filtro Hα una riga fissa sul telescopio o filtro dedicato (etalon e filtro di blocco,
   Meade/Coronado; AAS per il filtro davanti all'ottica). Parole da Marco sulla tavola.
 - **Seeing e pianeti**: nessun giudizio. Nessuna fonte lega il seeing previsto alla ripresa
@@ -229,7 +229,7 @@ Confronto con Telescopius, N.I.N.A. Sky Atlas, Deep-Sky Planner, SkySafari (rice
 - **«Gia' ripreso»**: nella riga le ore gia' nell'archivio per quell'oggetto; filtro «mai
   ripresi» / «gia' ripresi». Nessun pianificatore conosce l'archivio dell'utente.
 - **Dimensione da … fino a**, come Telescopius (`size` min e max).
-- **«Entra nel campo»** come filtro: solo gli oggetti che stanno nel campo del corredo scelto, o
+- **«Entra nel campo»** come filtro: solo gli oggetti che stanno nel campo del setup scelto, o
   del mosaico, con la regola dell'ellisse (sotto). Nessuna soglia nuova.
 - **Ordinamento**: nome (ordine del catalogo, partenza), dimensione, magnitudine, luminosita'
   superficiale, ora del transito. Mai per ore visibili: niente classifica «i migliori stanotte».
@@ -240,7 +240,7 @@ Confronto con Telescopius, N.I.N.A. Sky Atlas, Deep-Sky Planner, SkySafari (rice
 Sotto un giudizio, una riga che dice come arrivarci: un input, non una guida. Solo dove una fonte
 pubblica la pratica; i numeri escono dai conti gia' decisi, nessuna soglia nuova.
 
-- **Pianeti sottocampionati**: «per il critico: barlow {x}×» (critico / rapporto del corredo), e
+- **Pianeti sottocampionati**: «per il critico: barlow {x}×» (critico / rapporto del setup), e
   «il fattore cresce allontanando il sensore dalla barlow» (M = 1 + x / f della barlow, ottica).
 - **Video al massimo**: «Con la derotazione il tempo in tutto arriva a 3-4 volte; il singolo video
   no.» Sky at Night: "extend your imaging time by a factor of three or four", "doesn't lift the
@@ -274,7 +274,7 @@ di partenza e la sua fonte accanto; nel Planner si cambia per una ricerca senza 
 | Distanza dalla Luna | 40° | Marco |
 | Mese buono | 3 h visibili il 15 del mese | Marco |
 | Altezza minima di pianeti, Luna e Sole | 30° | massa d'aria 2 (AAVSO, IRAF) |
-| Correttore di dispersione sotto | 35° | BAA, Lewis 2021 |
+| ADC (correttore di dispersione atmosferica) sotto | 35° | BAA, Lewis 2021 |
 | Macchia Rossa: longitudine, data, deriva | 91° (Sistema II) al 1/6/2026, 1.75° al mese | Sky & Telescope, da JUPOS |
 
 Restano fisse le regole fisiche, che non dipendono dal sito: rapporto focale critico (Nyquist),

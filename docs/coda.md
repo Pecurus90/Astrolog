@@ -30,7 +30,7 @@ Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati
 | 7/10/2026 | costruisci | M5, backup delle risposte (ADR 0017) | ~0,49 M workflow (8 agenti), sessione principale non contata | 47 workflow | 2 bloccanti dal giro (DB ricreato prima dell'avvio non proposto; percorso di ASTAP nell'Esporta) + 5 piccoli chiusi da me |
 | 7/10/2026 | costruisci | M2, la cartella ora sta qui | ~0,46 M workflow (5 agenti), sessione principale non contata | 28 workflow | 0 bloccanti; 8 piccoli parcheggiati (3 dello schermo da riparare subito) |
 | 6/10/2026 | costruisci | Focale misurata dal cielo (ADR 0016) | ~0,31 M workflow (6 agenti) + esploratore 0,09, sessione principale non contata | 76 workflow | 1 bloccante dal giro (il frame rimandato aspettava il giro dopo) + 3 piccoli chiusi da me |
-| 6/10/2026 | ripara | Meno frame in coda dopo filtro e unione: provato e tolto | ~0,48 M agenti (sviluppatore, due revisori) | ~60 | 3 bloccanti dai revisori (corredi diversi via gruppi di focale); trovato un difetto vero, ora in coda |
+| 6/10/2026 | ripara | Meno frame in coda dopo filtro e unione: provato e tolto | ~0,48 M agenti (sviluppatore, due revisori) | ~60 | 3 bloccanti dai revisori (setup diversi via gruppi di focale); trovato un difetto vero, ora in coda |
 | 6/10/2026 | ripara | Risposte sul tipo: 100 in un Applica da 12,8 s a 0,29 s | sessione principale + un revisore (~0,1 M) | ~50 | 0 dal revisore (200 semi di prova a caso, 0 differenze) |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 6b: `api` resto, fase 2 chiusa | ~0,27 M agenti (uno sviluppatore), sessione principale non contata | 23 agente | 0 |
 | 6/10/2026 | rifattorizza | Fase 2, lotto 6a: `api` Da confermare e Attrezzatura | ~0,21 M agenti (uno sviluppatore), sessione principale non contata | 16 agente | 0 |
@@ -114,7 +114,7 @@ aspettano chiamanti tipati. Si chiude quando si tocca il codice dove sta:
   bande, fasi della Luna e fasce del cielo, meteo, `net.Failure`, stati del worker, motivi e
   canali di `astap`, fonti di `place`, esiti e motivi della scansione, marchio di riscrittura,
   nomi e stati degli stadi, soggetti del conto, motivi di `group`, risposte sul tipo, metodi,
-  fiducie, rami e motivi di `identify`; soggetti dell'uso, campi dei corredi, risposte sul filtro,
+  fiducie, rami e motivi di `identify`; soggetti dell'uso, campi dei setup, risposte sul filtro,
   tipi di camera, risposte sul mosaico, tipi di entita'; tipi del bersaglio di una risposta e
   vuoti del cielo, `object_answer.TargetKind` e `objects.SkyVoid`; `nights.AnswerAt` e
   `archive.Order`). In `weather` restano stringhe i generi di
@@ -321,7 +321,7 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   fuori); lo scorrimento che mostra il riepilogo non ha una prova automatica e lo lascia a filo
   del bordo; a due colonne il riepilogo sporge di 8 px oltre la carta, dentro il margine; sul
   telefono, scorrendo l'Archivio, la riga del sito spunta a meta' sotto la testata (c'era gia'). Da decidere con Marco quando si vedra' a schermo: come si
-  chiama la produzione dei frame senza corredo ("corredo: non si sa"). Dall'audit della 2a: manca
+  chiama la produzione dei frame senza setup ("setup: non si sa"). Dall'audit della 2a: manca
   una prova **di rotta** che `scope` e `alone` arrivino a `productions.of` (le prove della spina la
   chiamano diretta).
 - **Il linguaggio dell'app -- rivisto** (Marco, 8/10/2026: nomi veri e tono neutro; la regola sta
@@ -438,14 +438,14 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   `M 31`) parte come risposta nuova; "Altro nome" scelto e lasciato vuoto su una scheda salvata
   lascia la riga chiusa sulla risposta di prima. Fatta anche Attrezzatura da completare
   (9/10: `SezioneAttrezzatura.tsx`, una scheda per firma con cio' che i file scrivono nella
-  tabellina e una parte per cosa che manca in `.as-domanda-parti` -- camera da un corredo o a
+  tabellina e una parte per cosa che manca in `.as-domanda-parti` -- camera da un setup o a
   mano con focale e ottica, ottica fra le proprie o scritta, filtro con "A colori" spenta finche'
   la camera non e' data e non mandata se la camera torna a mancare; l'ottica ha la sua parte
   anche a camera salvata senza ottica; si manda solo la parte toccata, e la camera rimessa
   com'era salvata non e' toccata; testi `review.gear.*` e
   `review.proof.fileCamera/fileTelescope/sensor/frameOptics`, da far vedere a Marco). Di Attrezzatura resta:
-  con una camera diversa in mano l'ottica scelta nella sua parte non parte (corredo e ottica
-  scritta insieme sono un 422) e il suo radio resta acceso su "senza risposta": con un corredo
+  con una camera diversa in mano l'ottica scelta nella sua parte non parte (setup e ottica
+  scritta insieme sono un 422) e il suo radio resta acceso su "senza risposta": con un setup
   senza ottica servono due Applica; sulla scheda che chiede camera e ottica, "Altra camera" con
   l'ottica vuota e' una risposta valida (renderla obbligatoria e' di Marco). Fatto il telefono a due livelli (9/10:
   sotto i 900 di colonna -- misurati con `ResizeObserver` sulla `.as-pagina`, la soglia del
@@ -463,30 +463,30 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   scritti da me nel tono approvato, da far vedere a Marco riga per riga: l'elenco e' in
   `frontend/src/i18n/it.ts`, chiavi `review.count.word`, `review.inHand.word`, `review.index*`, `review.rule`, `review.questions`,
   `review.inHand.label`, `review.merge.warning*`, `review.applying`, `review.none.*`.
-- **Attrezzatura: i corredi completi in cima** (Marco, 11/10/2026; brief in
-  `handoff/design-attrezzatura.md`). Deciso: in cima i corredi, sotto i componenti per tipo; un
-  corredo mostra tutte le sue parti (montatura, ruota, focheggiatore, riduttore, guida, camera di
-  guida, programma di ripresa, filtri); di un corredo trovato dai file i pezzi si rinominano e
+- **Attrezzatura: i setup completi in cima** (Marco, 11/10/2026; brief in
+  `handoff/design-attrezzatura.md`). Deciso: in cima i setup, sotto i componenti per tipo; un
+  setup mostra tutte le sue parti (montatura, ruota, focheggiatore, riduttore, guida, camera di
+  guida, programma di ripresa, filtri); di un setup trovato dai file i pezzi si rinominano e
   non si sostituiscono; una parte che i file non dicono si sceglie da una tendina fra i propri
   pezzi, con "aggiungine uno"; piu' pezzi dello stesso tipo si elencano tutti, dal piu' usato,
   coi loro frame. L'impronta resta ottica + camera + focale. Fatto (11/10): `GET /gear` manda per
-  ogni corredo `parts` -- montatura, ruota, focheggiatore, camera di guida, programma, filtri,
+  ogni setup `parts` -- montatura, ruota, focheggiatore, camera di guida, programma, filtri,
   coi frame -- scritte dalla spina in `rig_parts`; la pagina di oggi le scrive in fila nella riga
-  del corredo (testi `gear.part*` miei). Fatta anche la scelta dell'utente (11/10): `PUT
+  del setup (testi `gear.part*` miei). Fatta anche la scelta dell'utente (11/10): `PUT
   /gear/rigs/{id}/parts/{kind}` per i sei generi che la posa porta, `chosen` su ogni parte,
   contratto in `docs/domini/attrezzatura.md`. La regola "per ruota, focheggiatore e camera di
   guida la scelta riempie solo il silenzio del file" l'ho dedotta io da "cio' che i file dicono
   si rinomina, non si sostituisce": confermata da Marco il 12/10/2026. La pagina di oggi
   offre il gesto solo per la montatura; gli altri generi aspettano il foglio v35. Resta:
-  rinominare un pezzo dalla scheda del corredo, che e' solo disegno (il gesto e' il "Modifica"
+  rinominare un pezzo dalla scheda del setup, che e' solo disegno (il gesto e' il "Modifica"
   del pezzo); la parola a schermo di una parte scelta oggi e' "tua scelta" (mia, provvisoria:
   il disegno dice "scelto", che in italiano vuole il genere). Fatto (Marco, 12/10/2026): un
-  riduttore o un'ottica di guida che nessun corredo porta dice "non associato / non associata a
-  un corredo", come la montatura (`rigs.NEEDS_A_RIG`). **Forma scelta** (Marco, 11/10/2026): la seconda
+  riduttore o un'ottica di guida che nessun setup porta dice "non associato / non associata a
+  un setup", come la montatura (`rigs.NEEDS_A_RIG`). **Forma scelta** (Marco, 11/10/2026): la seconda
   proposta di Design, "schede grafiche" (`pagine/attrezzatura.html` e `attrezzatura-stati.html`,
-  classi `pr-`). Marco ha fatto togliere, e non vanno rimessi: gli oggetti ripresi (corredo e
+  classi `pr-`). Marco ha fatto togliere, e non vanno rimessi: gli oggetti ripresi (setup e
   tessere) e, dell'uso, frame, notti e "N senza durata" -- resta l'ora sola; i frame restano
-  accanto alle parti del corredo, i filtri del corredo in proporzione senza cifre. Si monta
+  accanto alle parti del setup, i filtri del setup in proporzione senza cifre. Si monta
   quando Design porta la forma nel foglio (v35). Testi da scrivere: la parola sotto il cielo del
   campo, l'avviso dell'unione, "scansione in corso" prima di salvare, l'esito, la frase della
   tessera d'arrivo per chi ascolta; parole di tavola "da scegliere", "scelto". Decise (Marco,
@@ -494,7 +494,7 @@ Da una lettura critica del disegno (giudizi, non misure: si misurano prima di co
   taciuta "da indicare", "Scansione in corso: si salva al termine.", "Luna piena, per misura";
   mie: unione "L'unione non è reversibile.", "{n} frame da rielaborare", "Riprova" sull'errore,
   rapporto focale calcolato dal backend. **Superata dalla v15 di Design** (Marco, 17/10/2026):
-  forma nuova, indice dei corredi e dei componenti a sinistra, dettaglio a destra; niente campo
+  forma nuova, indice dei setup e dei componenti a sinistra, dettaglio a destra; niente campo
   disegnato ne' tessere ("Luna piena, per misura" non serve). Testi nuovi approvati: "{n} da
   indicare", "Parti", "Seleziona" su ogni parte, "Per salvare serve almeno una banda.", "Per
   salvare servono ottica, camera e focale effettiva.", "servono apertura e focale", "Larghezza
@@ -554,12 +554,12 @@ Niente di aperto.
   l'impronta ripiega sull'header (`fits/header_read.frame_fingerprint`). Provato su cinque
   troncati sintetici; con header veri, che differiscono almeno per `DATE-OBS`, e' improbabile ma
   nessuna prova lo esclude.
-- **Il corredo di un frame dipende da quando e' stato letto**: `normalize` sostituisce la focale
+- **Il setup di un frame dipende da quando e' stato letto**: `normalize` sostituisce la focale
   con la mediana del suo gruppo (`focal_buckets`), calcolato sui soli frame del giro, e
-  `rigs.find_rig` prende il primo corredo entro la tolleranza. Tre scansioni in tempi diversi
-  (CamK 1060, poi 1000, poi 1010) lasciano il frame a 1000 su un corredo suo; rifatti insieme
-  finiscono tutti sul corredo a 1060. Lo stesso archivio, letto in un altro ordine, conta le ore su
-  corredi diversi. Prova riprodotta il 6/10 (scratchpad `cx1`). Dalla focale misurata (ADR 0016)
+  `rigs.find_rig` prende il primo setup entro la tolleranza. Tre scansioni in tempi diversi
+  (CamK 1060, poi 1000, poi 1010) lasciano il frame a 1000 su un setup suo; rifatti insieme
+  finiscono tutti sul setup a 1060. Lo stesso archivio, letto in un altro ordine, conta le ore su
+  setup diversi. Prova riprodotta il 6/10 (scratchpad `cx1`). Dalla focale misurata (ADR 0016)
   vale solo per i frame senza cielo: le misure di un treno ottico stanno nello 0,3 %, e restano a
   cavallo del 5 % solo le focali scritte a mano. Rimedio se un utente lo incontra: gruppi su tutti
   i frame della stessa camera e ottica, non su quelli del giro.
@@ -636,7 +636,7 @@ Niente di aperto.
   la fase 2 costa 50-114 ms su 20.000 frame sintetici (3,3 s solo sull'archivio gonfiato a 5.000
   voci per famiglia): un conto a parte scriverebbe in due case il predicato di cosa e' una domanda
   aperta, e non vale. Si rimisura col disegno nuovo, che decide quando la barra chiede. Dei lettori di
-  Da confermare, la tendina dei corredi e l'elenco degli oggetti contano ancora ogni frame a ogni
+  Da confermare, la tendina dei setup e l'elenco degli oggetti contano ancora ogni frame a ogni
   apertura. Piu' piccoli: i frame per cartella in `GET /folders`; `stages.pending_by_stage` che
   conta `measure`, stadio che non gira mai (la sua chiave esce in `GET /pipeline/status`:
   toglierla cambia la risposta). Ogni ricalcolo tolto entra in un contratto, o in una prova che
@@ -659,7 +659,7 @@ Niente di aperto.
   necessario** (`api/review_write_folders._sensor`, `api/instrument_answer.merge`): su 2.000 frame
   1.750 invece di 500 e 2.000 invece di 250 (worker 1,15 s contro 0,57; 1,18 contro 0,23).
   Provato il 6/10 e tolto: con meno frame nel giro cambiano i gruppi di focale, e tre controesempi
-  danno corredi diversi. Aspetta *Il corredo di un frame dipende da quando e' stato letto*.
+  danno setup diversi. Aspetta *Il setup di un frame dipende da quando e' stato letto*.
 - **Cambiare il fuso di casa tiene il database dentro la richiesta**, e il tempo cresce coi frame
   che cambiano data (`spine/home_nights.py`): il grosso e' `unnamed.assign` frame per frame. Su un
   archivio grande senza coordinate una scrittura del worker puo' avvicinarsi al `busy_timeout`
@@ -782,7 +782,7 @@ riga per voce.
 ### Cosa devono saper fare le pagine
 
 - **Casa**, per ultima: una riga di stato (cose da confermare, l'ultima lettura), l'ultima notte
-  (data, quanti giorni fa, sito, ore, frame, corredo, oggetti coi filtri) e tutto l'archivio
+  (data, quanti giorni fa, sito, ore, frame, setup, oggetti coi filtri) e tutto l'archivio
   (notti, sessioni, oggetti, ore con la media a notte; notti e ore per mese, ore per filtro); sopra,
   quando nascono, barra della notte, *Stanotte, in cielo*, meteo, prossime tre notti e pianeti.
   Niente calendario a giorni ne' streak; un mese senza notti dice perche'; l'arco arriva a oggi o
@@ -825,7 +825,7 @@ riga per voce.
   manda gia' (`gear` in `/api/v1/review`, `gear` in Applica); oggi non si vede, e il conto la
   conta. Una scheda per firma: cio' che i file dicono (camera e telescopio come scritti, focale,
   sensore, pixel), cosa ci hai ripreso, e solo le parti chieste (`asks_camera`, `asks_optics`,
-  `asks_filter`): la camera da un corredo (`rig_choices`) o scritta con la focale (proposta
+  `asks_filter`): la camera da un setup (`rig_choices`) o scritta con la focale (proposta
   `focal_suggested`), l'ottica fra le tue (`optics_choices`, proposta `optics`) o scritta, il
   filtro fra *a colori*, *nessun filtro*, *uno dei miei* (`filter_choices`). Si risponde una
   parte alla volta; `complete` dice quando non conta piu'; un rifiuto `not_asked` dice una parte
@@ -841,7 +841,7 @@ riga per voce.
 - **Da confermare**: le sezioni si spengono finche' l'Applica non torna (oggi una risposta data
   nell'attesa si perde); la barra a sinistra di una riga dice una cosa sola (oggi *Quale filtro
   notte per notte* segna il salvato, le altre il da mandare); la tendina
-  dei corredi della scheda dell'attrezzatura si apre solo premendo; la scelta fra due o tre voci fisse
+  dei setup della scheda dell'attrezzatura si apre solo premendo; la scelta fra due o tre voci fisse
   e' un segmentato.
 - **Attrezzatura**: un filtro scritto a mano cerca nel catalogo dei modelli, cosi' si possono
   scrivere anche le bande delle camere a colori.
@@ -1100,16 +1100,16 @@ riga per voce.
 - **L'app non si accorge di girare su un database di uno schema vecchio**: la scansione si rompe
   con `no such column`. Lo schema non si migra, ma l'avvio deve dirlo confrontando `schema.sql`
   con `PRAGMA table_info` (`db/connect.py`).
-- **Un corredo scritto a mano con la focale sbagliata non si corregge e non si cancella**: la sua
+- **Un setup scritto a mano con la focale sbagliata non si corregge e non si cancella**: la sua
   impronta e' la sua identita', e un'unione lo fa risorgere dalla dichiarazione
   (`restore_declared` in `spine/rigs.py`). Resta con zero ore accanto a quello giusto. Rimedio: il
-  gesto che toglie un corredo tuo senza frame, riga e dichiarazione insieme.
+  gesto che toglie un setup tuo senza frame, riga e dichiarazione insieme.
 - **Cancellare un pezzo dell'attrezzatura non si puo', e la domanda non e' banale**: un pezzo che
   tiene dei frame non si toglie senza decidere che fine fanno le sue ore (sparire, restare
   orfane, tornare in coda). Il progetto di prima rispondeva 409 dicendo chi lo tiene e quanti frame
   (`old/backend/astrolog/api/instruments.py`). Prima serve la scelta di prodotto.
 - **Dati completi dell'attrezzatura** (ADR 0021, Marco 18/10/2026): campi nuovi per tipo, OAG e
-  distanziale come tipi, guida e distanziali come parti del corredo, i conti del corredo
+  distanziale come tipi, guida e distanziali come parti del setup, i conti del setup
   (scala e campo previsti, copertura, scala di guida, backfocus, carico, campionamento) e il
   campionamento in Meteo. Sostituisce `backfocus_mm` scritto e mai chiesto: va al riduttore e
   all'ottica come "backfocus richiesto". Brief: `handoff/design-risposta-campi-attrezzatura.md`.
@@ -1122,10 +1122,10 @@ riga per voce.
 - **Un campo della scheda di uno strumento non si svuota**: `InstrumentCorrection` scarta i campi
   nulli (`exclude_none` in `api/instrument_answer.py`). Costa un modo di dire "vuoto" distinto da
   "non toccato"; la guida lo dichiara.
-- **Due corredi possono avere lo stesso nome** (`rigs.declare_rig` lo accetta): serve un rifiuto
+- **Due setup possono avere lo stesso nome** (`rigs.declare_rig` lo accetta): serve un rifiuto
   come `name_taken` per strumenti e filtri.
-- **Due corredi con gli stessi pannelli danno due mosaici con la stessa etichetta**: la risposta
-  dell'API non porta un nome del corredo leggibile.
+- **Due setup con gli stessi pannelli danno due mosaici con la stessa etichetta**: la risposta
+  dell'API non porta un nome del setup leggibile.
 - **Accanto a un gruppo di frame senza nome, cosa il cielo ha trovato negli altri frame della
   stessa notte e dello stesso puntamento**: servirebbe un campo `subjects` sul gruppo.
 - **Tre elenchi ordinano nomi scritti dall'utente sui byte**: SQLite ordina `TEXT` sui byte (`vdB`
@@ -1189,7 +1189,7 @@ riga per voce.
   azzera il freno delle dodici ore e spende subito una chiamata, dentro la richiesta; nel primo
   avvio una chiave scritta e non provata si perde premendo Avanti, senza dirlo.
 - **Il seeing non e' ancora un fattore mostrato**, come deve essere (`docs/domini/ereditato.md`,
-  sezione G): la scala dipende dal corredo con cui si esce, e il Meteo non lo sa. Si decide quando
+  sezione G): la scala dipende dal setup con cui si esce, e il Meteo non lo sa. Si decide quando
   il Planner sapra' con cosa esci.
 - **La previsione del vecchio sito di casa resta nella tabella**: `weather.forecast.refresh`
   riscrive solo il sito nuovo. Nessuno la legge; si toglie quando il meteo guardera' piu' siti, o
@@ -1265,7 +1265,7 @@ riga per voce.
   script e 13 MB di sorgenti. Finche' non si porta, `old/` non si cancella.
 - **La relazione pezzo/adiacenza fra oggetti** (`NGC 2244` dentro la Rosetta, `M 110` accanto a
   `M 31`): in `old/` e' misurata, mai costruita. Serve al Planner e alla Carta del cielo.
-- **Il corredo simulato del Planner** ("e se avessi") e' l'unico caso in cui il campo si deriva
+- **Il setup simulato del Planner** ("e se avessi") e' l'unico caso in cui il campo si deriva
   invece di misurarsi.
 - **Occultazioni di asteroidi nel Planner**: campagne coi dati IOTA (Occult, OccultWatcher). Gli <!-- software-ok -->
   altri eventi del Sistema solare sono decisi (ADR 0023, "Eventi e Macchia Rossa").

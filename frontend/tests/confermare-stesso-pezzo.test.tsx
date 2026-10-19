@@ -104,13 +104,13 @@ describe("Da confermare -- strumenti duplicati", () => {
     expect((await screen.findByRole("alert")).textContent).toMatch(/dati non aggiornati/i)
   })
 
-  it("una sezione senza pezzi non si vede, e nemmeno strumenti e corredi", async () => {
+  it("una sezione senza pezzi non si vede, e nemmeno strumenti e setup", async () => {
     aperta({ ...PAGINA, lookalikes: [] })
     await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /da confermare/i }))
     await waitFor(() => expect(document.querySelector(".as-conferma__conta")?.textContent).toMatch(/^\d+ da confermare$/))
     expect(screen.queryByRole("region", { name: /strumenti duplicati/i })).toBeNull()
     expect(screen.queryByRole("region", { name: /strumenti/i })).toBeNull()
-    expect(screen.queryByRole("region", { name: /corredi/i })).toBeNull()
+    expect(screen.queryByRole("region", { name: /setup/i })).toBeNull()
   })
 })

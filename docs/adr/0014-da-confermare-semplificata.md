@@ -15,7 +15,7 @@ e completare la spina*) ha trovato che lo stesso risultato si ottiene con meno.
 
 - **S1 -- Una domanda sull'attrezzatura.** Senza camera, senza ottica e senza filtro diventano
   una domanda sola per **firma dell'header** (grafia di camera e telescopio, focale, dimensioni
-  del sensore), che risponde corredo e filtro insieme. Si accetta di perdere il caso raro della
+  del sensore), che risponde setup e filtro insieme. Si accetta di perdere il caso raro della
   stessa firma con attrezzature diverse in notti diverse.
 - **S2 -- Chiavi che non si spostano.** Le risposte non portano la notte nella chiave: si
   agganciano alla firma dell'header o ai frame fissati al momento della risposta. Sparisce il

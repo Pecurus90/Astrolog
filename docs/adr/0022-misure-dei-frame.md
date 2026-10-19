@@ -6,7 +6,7 @@
 
 `measure` e' nel grafo degli stadi e non ha ancora un corpo. Oggi un frame porta solo HFD e
 stelle, che ASTAP da' mentre risolve (`frame_metrics`, `source = 'astap'`). Marco vuole i dati
-completi nel database, per confrontare notti, corredi e siti, misurati "come PixInsight o <!-- software-ok -->
+completi nel database, per confrontare notti, setup e siti, misurati "come PixInsight o <!-- software-ok -->
 Siril": veloci, ma corretti. Lo stack resta quello di ADR 0007: `sep` con numpy e scipy. <!-- software-ok -->
 
 Ricerca del 18/10/2026 sul codice di Siril (`f518f2cf`), N.I.N.A. (`4742afae`), ASTAP (mirror <!-- software-ok -->
@@ -159,7 +159,7 @@ parallelo meno, non misurato. Il filtro si accelera prima di costruire.
 
 ### Ottimizzazione su 62 frame (18/10/2026)
 
-Sette corredi, anche due da ASIAIR (Newton ~1000 mm + ASI2600MC, rifrattore 335 mm + ASI294MC).
+Sette setup, anche due da ASIAIR (Newton ~1000 mm + ASI2600MC, rifrattore 335 mm + ASI294MC).
 
 - **Stelle per il fit**: 60 per casella della griglia 3×3, prese su tutta la classifica di
   flusso, non le piu' luminose. Le stelle luminose sono piu' rotonde (anche in PixInsight: 0,49 <!-- software-ok -->
@@ -174,7 +174,7 @@ Sette corredi, anche due da ASIAIR (Newton ~1000 mm + ASI2600MC, rifrattore 335 
   P90 1,4 % (PixInsight 19 %, il metodo di prima 20 %). Esce ~14 % sotto PixInsight, perche' <!-- software-ok -->
   PixInsight legge le stelle sottocampionate piu' grandi del vero (+13 % sotto 2 px, +24 % a <!-- software-ok -->
   1 px). Conseguenza dichiarata: le fasce dei forum vengono da programmi con quello stesso
-  errore, quindi sui corredi sottocampionati il giudizio dell'app e' un po' piu' generoso di
+  errore, quindi sui setup sottocampionati il giudizio dell'app e' un po' piu' generoso di
   quello che darebbe chi misura con PixInsight. A schermo il numero non torna con PixInsight: <!-- software-ok -->
   la guida lo spiega.
 - **Tempo**: mono 26 MP ~3,1 s a frame (P90 4,4), a colori 1,2 s, Canon 0,8 s.
@@ -209,14 +209,14 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
   di un oggetto. Per la HFD non il +5 % di N.I.N.A.: quello vale dentro una sessione dopo
   l'autofocus, fra notti la HFD cambia col seeing e "fuoco peggiore" sarebbe falso. Due giudizi
   distinti, "per la notte" e "per l'oggetto", mai uno solo.
-- **HFD contro l'archivio dello stesso corredo e filtro**: solo il numero ("mediana del
-  corredo"), niente giudizio (Marco): e' lo schema relativo scartato per la FWHM.
+- **HFD contro l'archivio dello stesso setup e filtro**: solo il numero ("mediana del
+  setup"), niente giudizio (Marco): e' lo schema relativo scartato per la FWHM.
 - **SNR fra oggetti diversi**: mai: la PSF SNR dipende da campo, stelle, filtro e posa.
 - **Massa d'aria**: "oggetto basso" sopra 2, cioe' sotto 30° (Marco): "observers should avoid
   ... below 30° (airmass about 2)" e limite predefinito della rete AAVSONet (aavso.org/airmass-0,
   risposta nel forum AAVSO); il numero: "airmass 1.996 at an elevation of 30. degrees" (IRAF,
   iraf.readthedocs.io/en/latest/tasks/noao/astutil/airmass.html).
-- **"Non giudicabile su questo corredo"** porta accanto il perche': "Limite del corredo 3.9″: due
+- **"Non giudicabile su questo setup"** porta accanto il perche': "Limite del setup 3.9″: due
   pixel da 1.94″." (Marco).
 - **Gradiente**: solo il numero (Marco): nessuna fonte lo giudica, e la regola dei 2 MAD i
   tutorial la usano per FWHM e SNR.
@@ -225,7 +225,7 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
   la scala: chi confronta i numeri deve ritrovare gli stessi. Il giudizio usa i secondi d'arco, il
   campionamento i pixel. <!-- software-ok -->
 - **FWHM: giudizio assoluto in secondi d'arco** (Marco, 18/10/2026). Uno schema solo relativo
-  (contro lo storico dello stesso corredo) e' scartato: chi ha sempre guida o fuoco cattivi
+  (contro lo storico dello stesso setup) e' scartato: chi ha sempre guida o fuoco cattivi
   risulterebbe "buono". Le fasce vengono dal consenso dei forum (32 casi verificati su Cloudy
   Nights, Stargazers Lounge, AstroBin, IceInSpace, webastro, AAVSO; ricerca del 18/10/2026):
   - sotto 2" **eccellente** ("Below 2 is advanced imager in great skies", cloudynights.com/forums/topic/644278);
@@ -233,13 +233,13 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
   - 3-4" **nella media** ("3.0 to 3.5 arcsec is normal", archive.aavso.org/fwhm-expectations-larger-aperture-instruments);
   - 4-5" **scarso** ("4 arcsec is poor", stessa pagina AAVSO);
   - oltre 5" **pessimo**.
-  - **Limite del corredo** F = max(2 × scala, 1,029·λ/D): sotto due pixel e sotto la
-    diffrazione il corredo non registra stelle ("the realistic minimum FWHM is 2 pixels",
-    AstroBin, topic 10757; lo ripetono altri). Una FWHM sotto F e' "al limite del corredo", non
+  - **Limite del setup** F = max(2 × scala, 1,029·λ/D): sotto due pixel e sotto la
+    diffrazione il setup non registra stelle ("the realistic minimum FWHM is 2 pixels",
+    AstroBin, topic 10757; lo ripetono altri). Una FWHM sotto F e' "al limite del setup", non
     "eccellente"; ogni bordo sotto F sale a F. Sull'Askar di Marco (1,385"/px) F = 2,77": buono
     2,77-3", e il suo scarto oltre 3" e' "tengo buono ed eccellente". Se F supera i 3" (es. 60/300
     a 2,59"/px, F = 5,2") la FWHM non distingue una notte buona da una media: "non giudicabile su
-    questo corredo". Usare F per alzare i bordi e' una scelta (Marco), non una convenzione.
+    questo setup". Usare F per alzare i bordi e' una scelta (Marco), non una convenzione.
   - Resta, come dato in piu', il confronto con la notte:
   +5 % sul migliore e' il predefinito di N.I.N.A. per rifare l'autofocus
   (`AutofocusAfterHFRIncreaseTrigger.cs`, `Default = 5`); "FWHMSigma < 2" la regola del
@@ -261,7 +261,7 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
 Si scrivono una volta, quando `measure` passa; nessuna lettura le ricalcola.
 
 - **FWHM**, **HFD**: in pixel; a schermo in secondi d'arco (× scala misurata). Senza scala restano
-  in pixel e non entrano nei confronti fra corredi.
+  in pixel e non entrano nei confronti fra setup.
 - **Stelle**: quelle che ASTAP conta sul frame intero nella passata `-analyse` del solver (Marco):
   le cinque zone sono il 20 % del sensore, e contare noi sul frame ridotto conta i pixel caldi.
 - **Eccentricita'**, **direzione dell'allungamento**: l'angolo mediano del fit (media circolare di

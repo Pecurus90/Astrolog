@@ -1,15 +1,15 @@
-# 0010 -- Un utente per istanza, con piu' siti e piu' corredi
+# 0010 -- Un utente per istanza, con piu' siti e piu' setup
 
 **Stato:** accettata
 
 ## Contesto
 
-Un astrofotografo riprende da piu' posti e con piu' corredi. Due persone sotto lo stesso tetto
+Un astrofotografo riprende da piu' posti e con piu' setup. Due persone sotto lo stesso tetto
 possono avere un NAS solo.
 
 ## Decisione
 
-- **Un'istanza dell'app e' di un utente**, che puo' avere piu' siti e piu' corredi.
+- **Un'istanza dell'app e' di un utente**, che puo' avere piu' siti e piu' setup.
 - **Due persone sullo stesso NAS = due istanze**, con due cartelle dati.
 
 ## Conseguenze

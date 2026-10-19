@@ -112,7 +112,7 @@ describe("Da confermare -- l'attrezzatura da completare", () => {
     expect(riga(dove, "Attrezzatura senza nome")).toBeDefined()
   })
 
-  it("la camera si da' scegliendo un corredo, e la risposta porta solo quello", async () => {
+  it("la camera si da' scegliendo un setup, e la risposta porta solo quello", async () => {
     aperta()
     const scheda = riga(await sezione(), "EQ6-R")
     const camera = within(scheda).getByRole("group", { name: "Camera per EQ6-R" })
@@ -220,7 +220,7 @@ describe("Da confermare -- l'attrezzatura da completare", () => {
     expect(await mandate()).toEqual([{ key: "firma-1", optics: "RedCat 51" }])
   })
 
-  it("due corredi con gli stessi pezzi e focale diversa non si confondono", async () => {
+  it("due setup con gli stessi pezzi e focale diversa non si confondono", async () => {
     aperta({
       ...PAGINA,
       rig_choices: [...PAGINA.rig_choices, { id: 8, name: "Col riduttore", optics: "Askar FRA400", camera: "ZWO ASI2600MM Pro", focal_mm: 280 }],

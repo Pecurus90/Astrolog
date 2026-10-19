@@ -4,7 +4,7 @@
 
 ## Contesto
 
-Planner e Carta del cielo devono disegnare il cielo con sopra il campo di un corredo, la griglia
+Planner e Carta del cielo devono disegnare il cielo con sopra il campo di un setup, la griglia
 di un mosaico e l'orizzonte del sito, anche offline e a mani vuote.
 
 ## Decisione

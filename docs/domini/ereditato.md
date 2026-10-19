@@ -26,7 +26,7 @@ o "posa", qui si legge progetto e frame.
 - **Origine a cinque valori**: `header / computed / catalog / external / user` -- `architettura.md:45`.
 - **Niente badge di provenienza nelle card**: il dato si mostra, il trattino se manca; la
   provenienza si legge nella scheda -- `prodotto.md:103,236`.
-- **Nomi di default mai inventati**: niente "Sito sconosciuto" o "Corredo sconosciuto" nel DB;
+- **Nomi di default mai inventati**: niente "Sito sconosciuto" o "Setup sconosciuto" nel DB;
   l'assenza si dice nella lingua dell'utente, a schermo -- `database.md:1618-1645`.
 
 ### Attrezzatura e filtri -- cio' che non ha ancora una casa
@@ -34,11 +34,11 @@ o "posa", qui si legge progetto e frame.
 Il resto e' stato assorbito in [`spina.md`](spina.md) col contratto di `normalize`. Qui
 restano tre decisioni i cui domini non sono ancora nati.
 
-- **Il corredo di una notte** ha una cascata a quattro gradini: dichiarato per (notte, corredo)
-  -> rilevato dai frame -> quello solito del corredo -> assente. Le correzioni si **propongono**
+- **Il setup di una notte** ha una cascata a quattro gradini: dichiarato per (notte, setup)
+  -> rilevato dai frame -> quello solito del setup -> assente. Le correzioni si **propongono**
   dove il valore vecchio coincide, non si eseguono a tappeto -- `architettura.md:152-170`.
   (casa: `group`)
-- **Colore del corredo**: dichiarato vince; con un corredo solo -> neutro; altrimenti dall'ordine
+- **Colore del setup**: dichiarato vince; con un setup solo -> neutro; altrimenti dall'ordine
   di creazione, otto tinte non spettrali (i colori spettrali sono dei filtri) -- `database.md:394-399`.
   (casa: la pagina Attrezzatura)
 - **Tri-banda e quad-banda sono due bande diverse**; nella ricetta un quad vale da solo solo se
@@ -80,17 +80,17 @@ non e' ancora nato.
 
 - **Notte = data-notte + sito**; porta i dati irripetibili (meteo, Luna, ore di buio); due siti
   nella stessa data sono due notti -- `database.md:264-303`.
-- **Sessione = notte x oggetto x corredo**, persistita; le metriche aggregate **non si
+- **Sessione = notte x oggetto x setup**, persistita; le metriche aggregate **non si
   memorizzano**; correggere uno dei tre attributi su un frame lo fa migrare di sessione --
   `database.md:869-895`.
-- **Il progetto non e' derivabile**: l'automatismo **propone** una coppia (oggetto, corredo)
+- **Il progetto non e' derivabile**: l'automatismo **propone** una coppia (oggetto, setup)
   scoperta all'import -- una per coppia, incrementale, mai spezzata nel tempo -- e l'utente
   decide. Ogni oggetto ha almeno un progetto -- `architettura.md:660-668,727-733`.
-- **Un frame sta in al piu' un progetto**; l'attribuzione e' derivata (oggetto, corredo, periodo),
+- **Un frame sta in al piu' un progetto**; l'attribuzione e' derivata (oggetto, setup, periodo),
   l'eccezione dichiarata per frame vince; i non assegnati restano sempre interrogabili --
   `architettura.md:670`.
 - **Chi cambia camera a meta' campagna trova due progetti; "Fondi" e' l'inverso** -- `architettura.md:732`.
-- **Il nome del progetto e' derivato** ("filtri . corredo . anno"), mai persistito, non ripete
+- **Il nome del progetto e' derivato** ("filtri . setup . anno"), mai persistito, non ripete
   l'oggetto; arriva in due pezzi e la frase la compone il frontend nella sua lingua --
   `architettura.md:674-680`.
 - **L'obiettivo si esprime in ore** (secondi nello schema); totale obbligatorio, per filtro
@@ -111,7 +111,7 @@ non e' ancora nato.
   pannello, il totale e' la somma solo se dichiarati tutti. *Debito del vecchio da non
   ripetere*: la chiave (progetto, oggetto) non regge due pannelli sullo stesso oggetto --
   `planner.md:80-97,652-656`.
-- *Chiuso da Marco*: **il progetto e' legato a soggetto e corredo, non al sito**: il sito e' della notte.
+- *Chiuso da Marco*: **il progetto e' legato a soggetto e setup, non al sito**: il sito e' della notte.
 
 ### Foto finali
 
@@ -159,7 +159,7 @@ non e' ancora nato.
 - **Serve solo alla miniatura** (Dashboard, mosaico, card notte), mai a giudicare -- `prodotto.md:172-183`.
 - **Resa**: mono -> autostretch deterministico; colore -> debayer col `BAYERPAT` **letto**, mai
   assunto -- `prodotto.md:193`.
-- **First light del corredo = la notte piu' vecchia**; "ultima notte" di un progetto mai ripreso
+- **First light del setup = la notte piu' vecchia**; "ultima notte" di un progetto mai ripreso
   e' `null`, non una data antica -- `target.md:481-482`.
 
 ---
@@ -196,7 +196,7 @@ non e' ancora nato.
   lettura non stanno in tutti gli header) -- `architettura.md:1706-1716`.
 - **Media FWHM pesata sui frame misurati**, mai sui frame totali -- `architettura.md:1695-1704`.
 - **Il fondo cielo si chiama `sky_background`** -- `architettura.md:1745`.
-- **Statistiche: unita' = notte x corredo**; qualita' come punto + banda dei quartili, volumi
+- **Statistiche: unita' = notte x setup**; qualita' come punto + banda dei quartili, volumi
   come barre e cumulato; asse = giorno dell'anno; **FWHM e HFR riportate allo zenit** con
   `valore / airmass^0.6` (Kolmogorov), eccentricita' e SNR no -- `domini/statistiche.md:13-114`.
 - **Resa del buio = ore integrate / ore di buio delle notti in cui si e' usciti** -- `statistiche.md:68-80`.
@@ -231,12 +231,12 @@ non e' ancora nato.
   sopravvivono senza rete; l'oggetto e' un mirino, non un'ellisse; trascinare la carta sposta
   l'inquadratura -- `planner.md:471-561`. Nel nuovo la carta e' Aladin Lite v3.
 - **L'inquadratura si salva come centro e angolo, mai larghezza e altezza** (derivate dal
-  corredo); N corredi = N rettangoli concentrici; angolo in `CROTA2` -- `planner.md:658-712`.
-- **Un progetto porta cinque cose alla nascita**: inquadratura, ricetta, corredo atteso
+  setup); N setup = N rettangoli concentrici; angolo in `CROTA2` -- `planner.md:658-712`.
+- **Un progetto porta cinque cose alla nascita**: inquadratura, ricetta, setup atteso
   (obbligatorio), esposizione per filtro (**dichiarata, mai calcolata**), griglia + sito +
   apertura della carta -- `planner.md:120-144`.
-- **Corredo di prova solo per simulare; un progetto non nasce su un corredo di prova** -- `planner.md:716-725`.
-- **Stessa coppia (soggetto, corredo) -> 409 e si mostra il progetto che c'e'** -- `planner.md:71-75`.
+- **Setup di prova solo per simulare; un progetto non nasce su un setup di prova** -- `planner.md:716-725`.
+- **Stessa coppia (soggetto, setup) -> 409 e si mostra il progetto che c'e'** -- `planner.md:71-75`.
 - **Schema suggerito dal tipo dell'oggetto** (emissione -> SHO; planetarie e resti -> HOO; il
   resto LRGB) e filtri per famiglia d'uso (ammassi mai con filtro anti-inquinamento) --
   `catalogs/kinds.py:110-122`, `prodotto.md:218-231`.
@@ -319,7 +319,7 @@ non e' ancora nato.
 Il vecchio le aveva decise e poi rovesciate; compaiono ancora nei suoi doc e possono sembrare
 vive. Non lo sono.
 
-- progetto = oggetto + un solo corredo (`database.md:961,1181`) -> M:N
+- progetto = oggetto + un solo setup (`database.md:961,1181`) -> M:N
 - serve la finestra temporale del progetto (`database.md:414`) -> facoltativa
 - catalogo a due livelli con voce canonica (`database.md:581-600`) -> una voce
 - seeing stimato dal vento in quota (`prodotto.md:49-58`) -> fonti di seeing
@@ -332,7 +332,7 @@ vive. Non lo sono.
 - "produzione" ritirata e poi reintrodotta (`backlog.md:1884`, `prodotto.md:354`) -> progetto
 - pagina "Sessioni" -> Notti; trasparenza -> visibilita'; `median` -> `sky_background`
 - survey di Aladin tolto e poi rinato nel Planner (`prodotto.md:258`)
-- chiave della sessione notte + oggetto senza corredo (`database.md:874-883`)
+- chiave della sessione notte + oggetto senza setup (`database.md:874-883`)
 - data della notte = `DATE-OBS` - 12 h senza fuso (`database.md:1150`) -> fuso del sito
 - plate solving fuori dalla v1 (`prodotto.md:388-390`) -> ASTAP per tutti
 - guscio Electron, cinque lingue, "niente riscrittura da zero"
@@ -365,7 +365,7 @@ frontend formatta; il rilevatore di duplicati e il revisore lo fanno rispettare.
 | nome da mostrare | copiato in due query prima di `resolve_display_name` |
 | media FWHM | pesata sui frame totali in tre punti del frontend |
 | schema (suggerito vs osservato) | `kinds.KIND_TO_SCHEME` e `schemeOf` nel frontend: due grandezze, una parola |
-| corredo di una notte | `_gear_from_frames` (prevalente + misto) e `setup_instruments` (unione storica) |
+| setup di una notte | `_gear_from_frames` (prevalente + misto) e `setup_instruments` (unione storica) |
 | giorni fra due date, disco lunare, colore Bortle, trend anno su anno | quattro conti nel frontend che appartengono all'API |
 | motivo dell'identita' | `identify.py` e una coda che lo ricavava **dalla prosa** |
 | ore di buio | colonna, calcolo al volo e funzione del Sole: una fonte, tre trasporti |

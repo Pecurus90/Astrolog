@@ -117,7 +117,7 @@ describe("l'Archivio", () => {
     await apriArchivio()
     // un parametro **vero** della barra: quando questa prova e' nata la barra non c'era ancora e
     // ne usava uno inventato, che non avrebbe protetto niente
-    await scegli(/ordina/i, "Ore")
+    await scegli(/ordina/i, "Integrazione")
     await waitFor(() => expect(window.location.search).toContain("sort=hours"))
 
     await vaiAll(/elenco/i)
@@ -439,7 +439,7 @@ describe("l'Archivio, le produzioni", () => {
     expect(una.textContent).not.toMatch(/produzion/)
   })
 
-  it("con piu' produzioni il nome apre il loro riepilogo: corredo, ore, frame e filtri di ognuna", async () => {
+  it("con piu' produzioni il nome apre il loro riepilogo: setup, ore, frame e filtri di ognuna", async () => {
     const m31 = {
       ...M31,
       productions: [
@@ -533,7 +533,7 @@ describe("l'Archivio, le produzioni", () => {
     utile.mockRestore()
   })
 
-  it("una produzione senza corredo lo dice, invece di restare senza nome", async () => {
+  it("una produzione senza setup lo dice, invece di restare senza nome", async () => {
     const m31 = { ...conProduzioni(1), productions: [...conProduzioni(1).productions, { ...M31.productions[0], optics: null, camera: null }] }
     archivio([m31])
     await apriArchivio()

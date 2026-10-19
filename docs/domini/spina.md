@@ -90,7 +90,7 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | Rispondo da Da confermare che quel gruppo e' un oggetto -- dal catalogo o scritto -- oppure che non e' un oggetto, una risposta sola; il gruppo resta in pagina con la mia risposta e la cambio, e l'oggetto che nomino non torna da confermare; finche' non rispondo il gruppo conta fra le cose da confermare | `test_answering_with_a_name_moves_the_poses_and_the_group_keeps_its_answer`, `test_an_open_group_counts_and_an_answered_one_does_not`, `test_the_object_named_by_the_answer_is_not_another_question`, `test_answering_with_a_catalog_entry`, `test_not_an_object_is_an_answer_too_and_i_can_change_my_mind`, `test_an_answer_that_says_two_things_or_none_is_refused` |
 | Un oggetto che l'app sa non me lo chiede: quello che il cielo riconosce con certezza, e una sigla del catalogo scritta nel file anche senza cielo (Marco, 6/10/2026); me lo chiede solo col dubbio. La pagina non mi blocca mai: i frame sono gia' in archivio | `test_an_object_the_sky_is_sure_of_is_not_asked`, `test_a_catalog_name_without_a_sky_is_not_asked`, `test_review_only_new_things` |
 | L'attrezzatura che i file non dicono -- la camera, l'ottica, il filtro -- me la chiede in **una scheda per firma dell'header** (grafia di camera e telescopio, focale entro il 5 %, sensore), non per notte ne' per cartella, e solo le parti che mancano; un `TELESCOP` che il programma dice montatura (l'ASIAIR) non entra nella firma (ADR 0014, S1) | `test_a_question_per_group_with_the_largest_first`, `test_the_signature_is_the_header_not_the_night_or_the_folder`, `test_each_value_of_the_key_makes_its_own_group_and_the_row_says_it`, `test_the_key_is_made_in_one_place_from_what_the_header_says`, `test_renaming_the_optics_does_not_move_the_key`, `test_only_the_poses_whose_header_does_not_say_the_camera_are_asked`, `test_a_part_the_files_say_is_not_asked`, `test_the_focal_is_shown_only_when_the_poses_agree`, `test_two_mount_names_of_one_asiair_are_one_card`, `test_poses_that_do_not_name_the_optics_are_asked_once_per_camera_and_focal`, `test_the_answer_is_for_that_camera_only` |
-| Rispondo alla camera scegliendo un corredo che l'app conosce o scrivendo camera e focale (e l'ottica se serve), all'ottica scegliendone una mia o scrivendone il nome: i pezzi scritti a mano diventano miei, i frame vanno nel corredo che quei pezzi hanno gia', e la risposta vale anche per i frame che arriveranno con la stessa firma, **in qualunque notte** | `test_answering_with_the_pieces_makes_the_rig_and_moves_the_poses`, `test_choosing_a_rig_from_the_list_writes_its_names`, `test_the_camera_written_by_hand_becomes_a_piece_and_the_filter_question_follows`, `test_the_answer_holds_for_the_poses_that_arrive_later_in_that_group`, `test_the_answer_gives_the_optics_and_the_poses_join_the_rig_that_has_it`, `test_an_optics_written_by_name_is_born_like_from_a_header`, `test_a_pose_that_arrives_later_takes_the_answer_by_itself`, `test_the_pose_reads_the_answer_of_its_own_group`, `test_a_focal_that_drifts_finds_the_same_answer`, `test_the_answer_is_read_back_with_its_pieces`, `test_the_key_is_never_split_to_find_the_pieces` |
+| Rispondo alla camera scegliendo un setup che l'app conosce o scrivendo camera e focale (e l'ottica se serve), all'ottica scegliendone una mia o scrivendone il nome: i pezzi scritti a mano diventano miei, i frame vanno nel setup che quei pezzi hanno gia', e la risposta vale anche per i frame che arriveranno con la stessa firma, **in qualunque notte** | `test_answering_with_the_pieces_makes_the_rig_and_moves_the_poses`, `test_choosing_a_rig_from_the_list_writes_its_names`, `test_the_camera_written_by_hand_becomes_a_piece_and_the_filter_question_follows`, `test_the_answer_holds_for_the_poses_that_arrive_later_in_that_group`, `test_the_answer_gives_the_optics_and_the_poses_join_the_rig_that_has_it`, `test_an_optics_written_by_name_is_born_like_from_a_header`, `test_a_pose_that_arrives_later_takes_the_answer_by_itself`, `test_the_pose_reads_the_answer_of_its_own_group`, `test_a_focal_that_drifts_finds_the_same_answer`, `test_the_answer_is_read_back_with_its_pieces`, `test_the_key_is_never_split_to_find_the_pieces` |
 | Una scheda conta fra le cose da confermare finche' ogni parte che chiede non ha la sua risposta; risposta, resta in pagina; una parte che non mando tiene la risposta di prima; una risposta illeggibile vale nessuna risposta | `test_an_unanswered_group_counts_among_the_things_to_confirm`, `test_the_camera_written_by_hand_becomes_a_piece_and_the_filter_question_follows`, `test_an_answer_that_cannot_be_read_is_no_answer`, `test_a_focal_that_is_not_a_focal_leaves_the_answer_standing`, `test_an_optics_that_is_not_a_name_is_no_optics`, `test_a_filter_word_that_is_not_an_answer_is_no_filter_answer` |
 | Se ho ripreso senza filtro (camera a colori) l'app non inventa un filtro, e se non riesce a saperlo me lo chiede nella scheda della firma | `test_normalize_bayer_decides_when_filter_is_none`, `test_a_question_per_camera_with_the_largest_first` |
 | Al filtro rispondo a colori, nessun filtro, o uno dei miei filtri scelto da una tendina, e la risposta vale anche per i frame che verranno; "a colori" si scrive sulla scheda della camera, anche quando la camera viene dalla notte, e il colore scritto li' e' la stessa risposta | `test_answering_colour_makes_those_poses_osc_and_the_next_ones_too`, `test_the_camera_of_the_night_takes_the_answer_about_the_sensor`, `test_answering_mono_with_no_filter_puts_them_on_no_filter`, `test_answering_one_of_my_filters_puts_them_on_it`, `test_writing_colour_on_the_card_answers_too`, `test_colour_without_a_camera_is_refused`, `test_one_of_my_filters_does_not_beat_colour`, `test_a_filter_named_like_an_answer_stays_a_filter`, `test_one_of_my_filters_is_one_of_the_choices`, `test_after_the_answer_the_filter_question_reaches_those_poses` |
@@ -100,21 +100,21 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | L'unica domanda che **non** lo mostra e' *che file sono* (per cartella): su quei frame il cielo non ha saputo dire -- un elenco vuoto sembrerebbe una risposta invece che un'attesa | `test_a_question_per_folder_about_which_files_they_are` |
 | Se rinomino o unisco il filtro, la camera o l'ottica che ho risposto, la risposta li segue, e il nome vecchio non fa rinascere il pezzo; rinominare o unire una camera dei file non sposta la risposta, che sta sulla grafia del file | `test_the_answer_follows_its_filter_when_it_is_renamed_or_merged`, `test_renaming_a_piece_carries_the_answers_that_name_it`, `test_renaming_the_optics_carries_the_answer`, `test_renaming_the_camera_carries_the_answer`, `test_merging_the_optics_into_another_carries_the_answer`, `test_renaming_a_camera_carries_the_answer_on_the_group`, `test_merging_the_optics_carries_the_answer_on_the_group`, `test_renaming_a_camera_carries_its_answer`, `test_merging_two_cameras_leaves_each_signature_its_answer`, `test_merging_into_a_colour_camera_keeps_the_answer_that_arrives`, `test_merging_into_a_colour_camera_carries_the_answer_even_there`, `test_the_unfiltered_answer_follows_the_camera_when_renamed` |
 | La mia risposta su una firma non decide per le altre, nemmeno se rinomino o unisco "nessun filtro" | `test_renaming_no_filter_does_not_answer_for_the_other_cameras`, `test_no_filter_is_not_merged_into_another_filter` |
-| Una risposta su una firma che non c'e' piu', su una parte che la scheda non chiede, con un corredo senza camera, o una riga "nessun filtro" che non si puo' creare, si dice invece di scrivere una risposta che non sposta niente | `test_a_group_that_is_not_there_is_refused`, `test_an_answer_to_a_question_that_is_not_there_is_refused`, `test_an_answer_about_a_camera_that_is_not_there_is_refused`, `test_the_answer_of_a_group_that_is_not_there_is_not_found`, `test_a_part_the_card_does_not_ask_is_refused`, `test_an_answer_that_says_two_things_or_none_is_refused`, `test_a_rig_without_a_camera_does_not_answer_this_question`, `test_a_no_filter_name_already_taken_is_said_not_crashed`, `test_a_filter_that_is_not_there_is_refused`, `test_a_filter_goes_with_one_of_my_filters_and_only_there` |
+| Una risposta su una firma che non c'e' piu', su una parte che la scheda non chiede, con un setup senza camera, o una riga "nessun filtro" che non si puo' creare, si dice invece di scrivere una risposta che non sposta niente | `test_a_group_that_is_not_there_is_refused`, `test_an_answer_to_a_question_that_is_not_there_is_refused`, `test_an_answer_about_a_camera_that_is_not_there_is_refused`, `test_the_answer_of_a_group_that_is_not_there_is_not_found`, `test_a_part_the_card_does_not_ask_is_refused`, `test_an_answer_that_says_two_things_or_none_is_refused`, `test_a_rig_without_a_camera_does_not_answer_this_question`, `test_a_no_filter_name_already_taken_is_said_not_crashed`, `test_a_filter_that_is_not_there_is_refused`, `test_a_filter_goes_with_one_of_my_filters_and_only_there` |
 | La notte di un frame va da mezzogiorno a mezzogiorno nel fuso del posto -- delle coordinate dell'header, o di casa -- e un frame senza data prende quella in cui il file e' stato scritto | `test_in_the_east_the_night_is_cut_at_local_noon`, `test_without_coordinates_the_home_site_gives_the_zone`, `test_without_coordinates_and_home_the_night_is_in_utc`, `test_a_pose_without_a_date_takes_the_date_of_its_file` (`backend/tests/test_local_night.py`) |
 | Quando cambia il fuso di casa i frame che non dicono dove sono stati ripresi passano al fuso nuovo, partendo dall'istante con cui sono entrati -- toccare il file dopo non sposta la notte --, quelli che lo dicono no; le risposte sull'oggetto stanno sui frame e li seguono: su ogni parte di un gruppo che si divide; su due gruppi che diventano uno vale la risposta che c'era, e con due diverse la domanda torna aperta; le risposte sull'attrezzatura restano dove sono, perche' la firma non ha notte; i frame delle notti toccate si rifanno | `test_the_first_home_moves_the_nights_of_the_poses_that_do_not_say_where`, `test_a_pose_without_date_obs_takes_the_night_of_its_file_in_the_home_timezone`, `test_a_file_touched_after_it_entered_keeps_the_instant_of_its_night`, `test_moving_home_to_another_timezone_moves_them_again`, `test_choosing_another_home_moves_them_to_its_timezone`, `test_without_a_home_they_go_back_to_utc`, `test_an_object_answer_follows_its_poses_into_the_new_night`, `test_two_object_answers_that_disagree_fall_when_their_groups_become_one`, `test_the_answer_follows_its_poses_into_another_group` (`backend/tests/test_unnamed.py`), `test_a_camera_answer_stays_put_when_home_moves`, `test_the_poses_of_the_nights_that_changed_are_worked_again` (`backend/tests/test_home_nights.py`) |
 | Un frame che non dice la camera prende quella degli altri frame della stessa notte, se e' una sola, anche se il frame che la dice arriva dopo, e la scheda non chiede la camera; se nella notte nessuno la dice o ne dicono piu' d'una me la chiede; due grafie che ho unito sono una camera; e la mia risposta vince sulla notte | `test_a_pose_without_camera_takes_the_one_of_its_night`, `test_in_one_scan_the_order_of_the_files_does_not_matter`, `test_two_cameras_in_the_night_leave_the_question`, `test_two_spellings_of_one_camera_are_one_camera_of_the_night`, `test_my_answer_on_the_group_wins_over_the_night`, `test_the_cards_ask_the_rig_only_of_the_nights_of_their_poses` |
 | Se il frame non dice l'ottica, prende quella della notte quando la notte ne dice una sola a una focale sola, con la focale se il frame non la dice (una focale zero non e' una focale), invece di far nascere un gemello senza ottica; una focale sua diversa non prende l'ottica della notte | `test_a_silent_pose_takes_the_rig_of_its_night`, `test_a_pose_with_its_own_focal_does_not_take_the_optics_of_another`, `test_a_night_with_two_optics_gives_only_the_camera`, `test_one_optics_at_two_focals_gives_only_the_camera`, `test_a_night_of_asiair_and_other_poses_gives_only_the_camera`, `test_an_asiair_night_gives_the_rig_without_optics_of_its_poses` (`backend/tests/test_night_rig.py`) |
-| La focale me la chiede con la camera, proponendo quella della mia ottica, cosi' non mi ritrovo due corredi gemelli con le ore spartite | `test_the_declared_focal_does_not_leave_two_twin_rigs`, `test_the_focal_of_the_optics_card_is_what_the_page_proposes`, `test_the_focal_of_the_optics_card_is_proposed_when_the_poses_do_not_say_it` |
-| Il nome e la montatura che avevo dato al corredo senza ottica passano al corredo che nasce dalla mia risposta, anche se cambio idea, e i frame tengono la montatura; un corredo che c'era gia' tiene la sua parola; nessuna scheda mi propone la montatura come ottica | `test_the_name_and_mount_of_the_rig_without_optics_go_with_its_poses`, `test_a_rig_that_was_already_there_keeps_its_own_word`, `test_the_camera_question_does_not_offer_the_mount_as_optics`, `test_a_mixed_group_does_not_offer_the_mount_as_optics_either`, `test_the_optics_shown_is_the_name_the_user_gave_it` |
-| Cambio idea rispondendo di nuovo: i frame lasciano il corredo di prima, e quelli che l'ottica la dicono restano col loro | `test_answering_again_moves_the_poses_to_the_new_rig`, `test_changing_the_answer_moves_the_poses` |
-| Un frame in due cartelle o una copia riscritta e' una posa sola; una cartella ritirata o un file sparito non chiedono niente; un corredo con le sole copie resta fra le scelte | `test_a_pose_that_lives_in_two_folders_counts_once`, `test_a_rewritten_copy_is_not_another_pose_but_comes_back_in_the_queue`, `test_a_retired_folder_and_a_file_that_is_gone_do_not_ask_anything`, `test_a_rig_whose_only_poses_are_copies_stays_in_the_page` |
+| La focale me la chiede con la camera, proponendo quella della mia ottica, cosi' non mi ritrovo due setup gemelli con le ore spartite | `test_the_declared_focal_does_not_leave_two_twin_rigs`, `test_the_focal_of_the_optics_card_is_what_the_page_proposes`, `test_the_focal_of_the_optics_card_is_proposed_when_the_poses_do_not_say_it` |
+| Il nome e la montatura che avevo dato al setup senza ottica passano al setup che nasce dalla mia risposta, anche se cambio idea, e i frame tengono la montatura; un setup che c'era gia' tiene la sua parola; nessuna scheda mi propone la montatura come ottica | `test_the_name_and_mount_of_the_rig_without_optics_go_with_its_poses`, `test_a_rig_that_was_already_there_keeps_its_own_word`, `test_the_camera_question_does_not_offer_the_mount_as_optics`, `test_a_mixed_group_does_not_offer_the_mount_as_optics_either`, `test_the_optics_shown_is_the_name_the_user_gave_it` |
+| Cambio idea rispondendo di nuovo: i frame lasciano il setup di prima, e quelli che l'ottica la dicono restano col loro | `test_answering_again_moves_the_poses_to_the_new_rig`, `test_changing_the_answer_moves_the_poses` |
+| Un frame in due cartelle o una copia riscritta e' una posa sola; una cartella ritirata o un file sparito non chiedono niente; un setup con le sole copie resta fra le scelte | `test_a_pose_that_lives_in_two_folders_counts_once`, `test_a_rewritten_copy_is_not_another_pose_but_comes_back_in_the_queue`, `test_a_retired_folder_and_a_file_that_is_gone_do_not_ask_anything`, `test_a_rig_whose_only_poses_are_copies_stays_in_the_page` |
 | La copia calibrata di un frame non raddoppia il conteggio delle ore | `test_normalize_calibrated_copy` |
 | Anche se riprendo con un programma che l'app non conosce, purche' la copia dica di essere stata calibrata | `test_normalize_finds_the_copy_of_an_unsupported_capture_program` |
 | E se chi elabora lascia nell'header il nome del mio programma accanto al suo, o me lo riscrive col suo | `test_normalize_calibrated_copy`, `test_normalize_the_copy_that_overwrites_the_capture_software` |
 | Ma se ho tenuto **solo** il file calibrato, quelle ore restano mie | `test_normalize_a_marked_frame_without_a_twin_still_counts` |
 | E se due file dicono di essere lo stesso scatto e niente dice quale sia l'originale, l'app non indovina: li conta tutti e due | `test_normalize_does_not_guess_between_two_twins_that_say_nothing`, `test_normalize_does_not_mark_a_capture_program_that_writes_only_its_own_key` |
-| Le notti vanno da mezzogiorno a mezzogiorno nel fuso del mio sito; una sessione e' oggetto x notte x corredo | `test_group_night_in_site_tz`, `test_group_session_key` |
+| Le notti vanno da mezzogiorno a mezzogiorno nel fuso del mio sito; una sessione e' oggetto x notte x setup | `test_group_night_in_site_tz`, `test_group_session_key` |
 | Se l'app non e' sicura da dove ho ripreso non inventa la notte: i frame restano in attesa col loro perche' | `test_group_asks_when_the_coordinates_say_elsewhere`, `test_group_invents_no_night_without_an_answer` |
 | E me lo chiede una volta per **posto**, non per notte e nemmeno per frame, proponendomi i miei siti col piu' vicino in cima | `test_the_nights_section_asks_about_the_places_that_do_not_add_up`, `test_the_places_are_proposed_with_my_sites_the_nearest_first` |
 | Rispondo una volta e quei frame vanno nella loro notte -- e le notti che riprendero' li' non me lo richiedono | `test_answering_where_i_was_puts_those_poses_in_their_night`, `test_the_answer_holds_for_the_nights_that_will_come` |
@@ -418,41 +418,41 @@ risposta. Rinominarla non insegna una regola, e non si unisce a un altro filtro 
 `none` risponderebbe per ogni camera -- e se non c'e' e il suo nome e' gia' di un altro filtro non
 si indovina: i frame restano da rivedere.
 
-**Strumenti e corredi si rilevano, e si confermano una volta.** Ottica e camera vengono da
+**Strumenti e setup si rilevano, e si confermano una volta.** Ottica e camera vengono da
 `TELESCOP` e `INSTRUME` risolti **via alias**, mai per stringa: cosi' due grafie dello stesso
 pezzo restano un pezzo solo. Dalla stessa porta, e con gli stessi alias, nascono i tre pezzi che
 il programma scrive **sulla singola posa** -- la ruota portafiltri (`FWHEEL`), il focheggiatore
 (`FOCNAME`) e la camera di guida (`GUIDECAM`) -- che pero' **non entrano nell'impronta del
-corredo**: cambiare ruota non fa un secondo corredo, e le loro ore le sa la posa, non il
-corredo (`domini/attrezzatura.md`). **L'app non tiene una lista di nomi di montatura** -- invecchia, e
+setup**: cambiare ruota non fa un secondo setup, e le loro ore le sa la posa, non il
+setup (`domini/attrezzatura.md`). **L'app non tiene una lista di nomi di montatura** -- invecchia, e
 il nome cambia da utente a utente (`EQMod Mount` e `ZWO AM3` sono tutti e due veri) -- ma sa
 **quale programma ha scritto il file**, e con l'ASIAIR `TELESCOP` e' la montatura, sempre: il
-pezzo nasce `mount` e il corredo di quei frame resta **senza ottica**, che l'ASIAIR non scrive
-da nessuna parte (misurato su 171 header di quattro utenti, 14/9/2026). Un corredo a cui manca
+pezzo nasce `mount` e il setup di quei frame resta **senza ottica**, che l'ASIAIR non scrive
+da nessuna parte (misurato su 171 header di quattro utenti, 14/9/2026). Un setup a cui manca
 un pezzo e' vero; uno con la montatura al posto dell'ottica e' falso. **Quale fosse l'ottica lo
 chiede Da confermare**, nella scheda della firma: la risposta da' l'ottica a ogni frame di quella
 firma che l'ottica non la nomina, anche a quelli che arriveranno. Limite dichiarato: due ottiche
-diverse alla stessa focale con la stessa camera sono una domanda sola. Corredo = (ottica, camera) a una focale, con le focali entro il **+-5 %** raggruppate
-prima di scrivere; il binning non cambia il corredo, un riduttore si' (cambia la focale). **La
+diverse alla stessa focale con la stessa camera sono una domanda sola. Setup = (ottica, camera) a una focale, con le focali entro il **+-5 %** raggruppate
+prima di scrivere; il binning non cambia il setup, un riduttore si' (cambia la focale). **La
 focale e' quella misurata dal cielo** dove c'e' (ADR 0016): dopo una soluzione, pixel (`XPIXSZ`, o
 quello della scheda per il binning, mai quello ricavato dal cielo) diviso la scala, al millimetro,
-in `frame_wcs.focal_mm`; senza, `FOCALLEN`. Il corredo nasce dall'header prima del cielo, e il
-solver rimanda a `normalize` il frame la cui misura non e' la focale del corredo, rifatto nello
+in `frame_wcs.focal_mm`; senza, `FOCALLEN`. Il setup nasce dall'header prima del cielo, e il
+solver rimanda a `normalize` il frame la cui misura non e' la focale del setup, rifatto nello
 stesso giro prima del `done` di `solve` (`run.queue`)
 (`test_a_reducer_the_header_does_not_say_moves_the_frames_to_the_true_focal`,
 `test_the_frames_the_sky_sends_back_are_redone_in_the_same_run`,
 `test_a_measure_within_the_tolerance_keeps_the_rig_and_redoes_nothing`,
 `test_without_a_pixel_the_header_focal_stays`, `test_a_frame_without_a_header_focal_takes_the_measured_one`).
 Firme dell'header e notte restano sulla focale dell'header: chiedono cio' che i file dicono. Le
-specifiche non si cercano su internet: le compila l'utente. Il legame frame -> corredo si
-congela dopo il cielo: la verita' storica sta nell'header e nella focale misurata. La chiave con cui un corredo e' stato rilevato
+specifiche non si cercano su internet: le compila l'utente. Il legame frame -> setup si
+congela dopo il cielo: la verita' storica sta nell'header e nella focale misurata. La chiave con cui un setup e' stato rilevato
 resta separata da cio' che l'utente cambia: rinominarlo o arricchirlo non crea un doppione.
 Uno strumento che l'app non conosce nasce provvisorio e **si segnala, mai si scarta**; nomi
-di ripiego non entrano nel DB (niente "Corredo sconosciuto": l'assenza si dice a schermo).
+di ripiego non entrano nel DB (niente "Setup sconosciuto": l'assenza si dice a schermo).
 
 **L'attrezzatura che i file non dicono** (Marco, 12/9/2026; ADR 0014, S1). Camera, ottica e
 filtro si chiedono in **una scheda per firma dell'header**: grafia di `INSTRUME` e di `TELESCOP`,
-focale con la regola dei corredi (+-5 %), dimensioni del sensore e pixel -- mai la notte o la
+focale con la regola dei setup (+-5 %), dimensioni del sensore e pixel -- mai la notte o la
 cartella (Marco, 23/9/2026: *"si lavora a frame non cartelle"*). Un `TELESCOP` che il programma
 dice montatura (l'ASIAIR) **non entra** nella firma: non dice niente dell'ottica, e due nomi di
 montatura della stessa camera farebbero due domande sulla stessa ottica; e nessuna scheda propone
@@ -465,18 +465,18 @@ chi non lo dice su una camera non a colori. Una parte che la scheda non chiede s
 confermare finche' ogni parte chiesta non ha la sua risposta; una parte non mandata tiene quella di
 prima. A video la riga dice quei valori, non un percorso ne' una notte. Un frame che vive in due
 cartelle si conta una volta, e una cartella ritirata o un file sparito non chiedono niente. Alla
-camera si risponde scegliendo un corredo fra quelli che l'app conosce **oppure** scrivendo camera e
+camera si risponde scegliendo un setup fra quelli che l'app conosce **oppure** scrivendo camera e
 focale, e l'ottica se serve: i pezzi nascono da quei nomi come da un header -- chi non ha mai
 nominato la sua camera in nessun file avrebbe un elenco vuoto da cui scegliere -- e l'ottica
 dichiarata **vince** su `TELESCOP`. La **focale** si chiede con la camera, proponendo quella nativa
-dell'ottica: un corredo a focale ignota non e' lo stesso corredo di uno a focale nota, quindi senza
+dell'ottica: un setup a focale ignota non e' lo stesso setup di uno a focale nota, quindi senza
 chiederla resterebbero due gemelli per sempre con le ore spartite. La risposta vale **anche per i
 frame che arriveranno con la stessa firma**, da qualunque cartella e in qualunque notte: si
 accetta di perdere il caso raro della stessa firma con attrezzature diverse in notti diverse, e
-cambiare il fuso di casa non la sposta. I corredi fra cui si sceglie li dice l'API, e la stessa
+cambiare il fuso di casa non la sposta. I setup fra cui si sceglie li dice l'API, e la stessa
 funzione rifiuta gli altri (`review_page.rig_choices`): uno **senza camera** non risponde --
 sceglierlo lascerebbe i frame dov'erano -- e uno rimasto a zero frame e' un residuo. Il nome e la
-montatura dati al corredo senza ottica passano al corredo che nasce dalla risposta.
+montatura dati al setup senza ottica passano al setup che nasce dalla risposta.
 **Prima della domanda, la notte** (Marco, 23/9/2026: *"camera mancante: quella degli altri frame
 della stessa notte, se e' una sola"*). Se gli header della stessa notte -- la notte della posa, da
 mezzogiorno a mezzogiorno nel fuso del posto -- dicono una camera sola, contate le grafie
@@ -538,7 +538,7 @@ e l'app li conta tutti e due.
 
 **Il campo si calcola, ed e' la leva della velocita'.** `-fov` e' l'altezza del campo
 in gradi, e si ricava da `naxis2`, `pixel_size_um` e `focal_mm_raw` -- tutti gia' nell'header.
-Misurato su frame veri da 26 megapixel di due corredi diversi: **0,2 s** col campo dato,
+Misurato su frame veri da 26 megapixel di due setup diversi: **0,2 s** col campo dato,
 **2,3 s** con `-fov 0`, **23 s** senza nemmeno il puntamento. La leva non e' il
 raggio di ricerca, e' il campo; dove l'header non dice focale o pixel si passa `0` e si
 paga la differenza. Il tetto di tempo e' 60 s, piu' del doppio del caso peggiore misurato.
@@ -595,10 +595,10 @@ darlo. Il **pixel fisico** della camera invece e' `XPIXSZ` diviso il binning
 (`units.physical_pixel_um`), e un binning che l'header non dice vale "non si sa", non 1.
 
 **L'indizio si eredita da un frame dello stesso OGGETTO**, non della stessa sessione: lo
-stesso oggetto e' lo stesso pezzo di cielo anche a un anno di distanza e con un altro corredo,
+stesso oggetto e' lo stesso pezzo di cielo anche a un anno di distanza e con un altro setup,
 e l'indizio serve solo a restringere la ricerca. La sessione non basterebbe: i pezzi mancanti
 valgono vuoto, quindi due frame senza `OBJECT`
-ripresi la stessa notte con lo stesso corredo la condividono pur guardando due punti diversi
+ripresi la stessa notte con lo stesso setup la condividono pur guardando due punti diversi
 -- ereditare li' manderebbe il solver nel posto sbagliato, e non risolverebbe mentre alla
 cieca ce l'avrebbe fatta.
 
@@ -640,7 +640,7 @@ sono gia' in archivio, rispondere migliora i nomi.
 
 **Due rotte, non venti.** `GET /review` porta tutta la pagina in una risposta: le grafie che
 sembrano un pezzo solo, i filtri che l'app non riconosce e quelli fra cui si sceglie la risposta, i
-corredi fra cui si sceglie, gli oggetti coi
+setup fra cui si sceglie, gli oggetti coi
 conteggi, **i gruppi di frame su cui l'app chiede** -- ognuno con la sua chiave stabile, quanti
 frame vale e la risposta gia' data, se c'e' --, quante domande aspettano una risposta, e se
 l'archivio e' ancora senza frame (`empty`: non c'e' niente da chiedere, che non e' "niente da
@@ -656,9 +656,9 @@ che il catalogo non conosce, e senza catalogo lo e' ogni nome. Un dubbio senza c
 risponde scrivendo il nome, quindi rispondendo a tutto il conto torna a **zero**. La risposta fa
 nascere l'oggetto `user`, che non si chiede piu'. Prima Applica confermava cio' che la pagina
 aveva mostrato (`seen`, una dichiarazione `confirmed`): spariti, e con loro l'avviso
-dell'oggetto nuovo. **Il nome che si da' a un corredo resta una dichiarazione**, con la chiave
+dell'oggetto nuovo. **Il nome che si da' a un setup resta una dichiarazione**, con la chiave
 (ottica, camera, focale): la riga di `rigs` e' rilevata e un'unione di due grafie la cancella, il
-nome invece deve tornare quando la spina ricostruisce lo stesso corredo.
+nome invece deve tornare quando la spina ricostruisce lo stesso setup.
 
 **Vedere non e' rispondere** (Marco, 14/9/2026): sul suo archivio un Applica a vuoto spegneva
 **58** voci, e **sette** erano domande aperte. Con S4 un Applica a vuoto non spegne niente.
@@ -1006,9 +1006,9 @@ lo porta dietro, e nell'unione di due camere vince la scheda di quella tenuta.
 nel fuso del sito**, mai in UTC: sull'archivio di collaudo le due strade danno lo stesso
 risultato (zero frame cambiano notte), quindi la regola non e' per Marco -- e' per chi riprende
 dove il fuso conta, ed e' la decisione che il vecchio aveva gia' rovesciato una volta. Una
-**sessione** e' oggetto x notte x corredo, coi filtri dentro: cambiare telescopio o camera a
+**sessione** e' oggetto x notte x setup, coi filtri dentro: cambiare telescopio o camera a
 meta' notte apre un'altra sessione. La chiave della sessione e' un indice **su un'espressione**
-perche' un corredo che non si e' potuto sapere e' vuoto, e in SQLite due vuoti non contendono.
+perche' un setup che non si e' potuto sapere e' vuoto, e in SQLite due vuoti non contendono.
 
 **Da dove hai ripreso si chiede, non si indovina.** Le coordinate dell'header sono un indizio:
 entro **1 km** da un sito dichiarato si tace -- casa, o il piu' vicino fra gli altri -- perche'
@@ -1058,7 +1058,7 @@ arriverebbe mai a zero e il pulsante Avvia partirebbe a vuoto a ogni clic.
 sessione vecchia si stacca all'inizio della corsa -- e rifarla non ri-chiave niente:
 una notte il cui sito hai dichiarato tu non si sposta **mai** da sola, e cambiare il sito di
 casa adotta le notti attribuite in automatico e nessun'altra. Unire due grafie di un pezzo in Da
-confermare rimette in coda anche `group`, o le sessioni resterebbero appese al corredo sparito.
+confermare rimette in coda anche `group`, o le sessioni resterebbero appese al setup sparito.
 
 **Cosa `group` NON fa**: non salva ore ne' medie -- si contano leggendo, e un numero derivabile
 non si congela in una colonna; non decide i mosaici (definiti, ma senza tabella: sono confinanti

@@ -47,11 +47,11 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Accanto a *Carica altri* leggo quanti ne vedo e quanti sono | *accanto a Carica altri dice quanti ne stai vedendo e quanti sono* |
 | Cio' che il catalogo o i file non dicono, la carta lo dice a parole | *un oggetto che il catalogo non conosce lo dice nella carta, tipo e costellazione*, *un oggetto senza filtri riconosciuti non mostra pastiglie finte*, *un tipo che la pagina non conosce non arriva a schermo come sigla: dice che non si sa* |
 | Il posto dell'anteprima c'e' gia', vuoto | *il posto dell'anteprima c'e', vuoto, e chi ascolta non lo sente* |
-| Ogni riga dice con quali corredi l'ho ripresa: una produzione per ottica e camera, e insieme fanno la riga | `test_an_object_shot_with_two_rigs_has_two_productions_most_time_first`, `test_the_productions_of_a_row_add_up_to_the_row`, `test_each_production_says_its_own_filters_in_the_order_of_the_row`, `test_a_rewritten_copy_is_not_a_frame_of_a_production`, `test_a_narrowed_row_tells_the_productions_of_what_was_asked`, `test_a_mosaic_has_its_productions_too_and_the_object_alone_keeps_its_own` (`backend/tests/test_spine_archive_productions.py`); `test_each_row_carries_its_productions_and_they_add_up_to_the_row` |
-| Un riduttore non fa un'altra produzione; i frame senza corredo lo dicono | `test_the_same_optics_and_camera_at_two_focal_lengths_are_one_production`, `test_frames_that_do_not_say_their_rig_are_a_production_that_says_so`, `test_a_rig_that_knows_only_its_camera_is_its_own_production` |
+| Ogni riga dice con quali setup l'ho ripresa: una produzione per ottica e camera, e insieme fanno la riga | `test_an_object_shot_with_two_rigs_has_two_productions_most_time_first`, `test_the_productions_of_a_row_add_up_to_the_row`, `test_each_production_says_its_own_filters_in_the_order_of_the_row`, `test_a_rewritten_copy_is_not_a_frame_of_a_production`, `test_a_narrowed_row_tells_the_productions_of_what_was_asked`, `test_a_mosaic_has_its_productions_too_and_the_object_alone_keeps_its_own` (`backend/tests/test_spine_archive_productions.py`); `test_each_row_carries_its_productions_and_they_add_up_to_the_row` |
+| Un riduttore non fa un'altra produzione; i frame senza setup lo dicono | `test_the_same_optics_and_camera_at_two_focal_lengths_are_one_production`, `test_frames_that_do_not_say_their_rig_are_a_production_that_says_so`, `test_a_rig_that_knows_only_its_camera_is_its_own_production` |
 | Le produzioni di una pagina costano due domande, non una per riga | `test_all_the_productions_of_a_page_come_in_two_questions` |
 | La carta ha un'anteprima per produzione e dice quante sono; l'elenco lo dice quando sono piu' d'una | *la carta ha un posto di anteprima per produzione, e dice quante sono*, *una produzione sola stringe la colonna delle anteprime, e lo dice al singolare*, *oltre quattro produzioni le anteprime vanno tre per riga, senza nasconderne*, *nell'elenco il segno delle produzioni c'e' solo quando sono piu' d'una* |
-| Con piu' produzioni la carta apre il loro riepilogo; una sola non apre niente | *con piu' produzioni il nome apre il loro riepilogo: corredo, ore, frame e filtri di ognuna*, *una produzione sola non apre niente: il nome non e' un comando*, *il riepilogo si chiude con Esc, ricliccando il nome e toccando fuori*, *una produzione senza corredo lo dice, invece di restare senza nome*, *sotto una carta dell'ultima colonna il riepilogo si allinea a destra, e non esce dalla pagina* |
+| Con piu' produzioni la carta apre il loro riepilogo; una sola non apre niente | *con piu' produzioni il nome apre il loro riepilogo: setup, ore, frame e filtri di ognuna*, *una produzione sola non apre niente: il nome non e' un comando*, *il riepilogo si chiude con Esc, ricliccando il nome e toccando fuori*, *una produzione senza setup lo dice, invece di restare senza nome*, *sotto una carta dell'ultima colonna il riepilogo si allinea a destra, e non esce dalla pagina* |
 | Un mosaico che ho confermato e' una riga sola, col nome che gli ho dato e le ore di tutti i pannelli | `test_a_confirmed_mosaic_is_one_row_with_the_hours_of_all_its_panels`, `test_after_the_yes_the_archive_shows_the_mosaic_as_one_row` (`backend/tests/test_review_mosaic.py`) |
 | Un oggetto ripreso dentro un mosaico e anche da solo ha la sua riga con le sole riprese sue, e niente si conta due volte | `test_an_object_shot_inside_and_outside_a_mosaic_keeps_its_own_poses`, `test_the_pills_of_a_row_are_the_filters_of_its_own_poses` |
 | Cercando o filtrando, un mosaico compare intero se uno dei suoi pannelli risponde | `test_a_filter_of_the_bar_lets_the_mosaic_through_if_one_of_its_poses_passes`, `test_the_filter_used_is_asked_of_the_poses_of_the_row`, `test_a_mosaic_named_with_a_free_name_is_found_by_that_name` |
@@ -65,7 +65,7 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Per ore, con un periodo acceso, l'ordine segue le ore del periodo | `test_by_hours_reads_the_narrowed_hours` |
 | Un mosaico stretto a un periodo apre i soli pannelli ripresi allora | `test_a_mosaic_says_only_the_panels_and_hours_shot_in_the_period` |
 | Le tendine offrono gli anni delle mie notti, e sito, ottica e camera solo se ne ho almeno due | `test_the_choices_offer_the_years_sites_and_pieces_you_shot_with`, `test_one_site_or_one_camera_is_not_a_choice`; *con un sito solo, o una camera sola, la tendina non c'e'* |
-| "Rimuovi filtri" toglie anche periodo e corredo | *rimuovi filtri toglie anche il periodo e il corredo* |
+| "Rimuovi filtri" toglie anche periodo e setup | *rimuovi filtri toglie anche il periodo e il setup* |
 | La conta dice quanti oggetti e quanti mosaici ho trovato | `test_the_count_says_how_many_objects_and_how_many_mosaics`; *la conta dice quanti oggetti e quanti mosaici* |
 
 ## Le decisioni
@@ -79,8 +79,8 @@ sara' un **progetto chiuso, non un oggetto**.
 **Due progetti sullo stesso oggetto si distinguono dal puntamento** (Marco, 22/9/2026): se le
 coordinate coincidono e' la stessa cosa -- riprese aggiunte allo stesso progetto, anche a un anno
 di distanza -- e se divergono sono **due progetti diversi sullo stesso oggetto**. Non e' l'anno e
-non e' il corredo a dividerli: e' dove hai puntato. E' la stessa parita' del mosaico
-(`mosaico.md`), che pure ragiona su dove il corredo guardava.
+non e' il setup a dividerli: e' dove hai puntato. E' la stessa parita' del mosaico
+(`mosaico.md`), che pure ragiona su dove il setup guardava.
 
 **Ma non e' cosi' oggi, e non e' un rinvio per pigrizia**: i progetti non esistono -- nessuna
 tabella, nessuna rotta, nessuna pagina -- e stanno **dopo** l'Archivio nel piano. Applicare la
@@ -120,7 +120,7 @@ mosaico: e' cio' che il mosaico e', non cio' che e' stato ripreso nel periodo.
 
 **Sito, ottica e camera si offrono solo da due in su.** Con uno solo, sceglierlo non stringe
 niente: e' la tendina con la sola voce "tutti" sotto un altro nome. Gli anni invece si offrono da
-uno, perche' la stessa tendina porta a "Intervallo di date". Ottica e camera si leggono dal corredo
+uno, perche' la stessa tendina porta a "Intervallo di date". Ottica e camera si leggono dal setup
 della posa (`rigs`), come le conta l'Attrezzatura.
 
 **E costa quanto le righe che mostra, non quanto le pose che contengono.** Le ore si contano solo
@@ -224,13 +224,13 @@ costellazione, ore e frame; sotto i filtri (la barra delle Notti) e, per un mosa
 8/10/2026), finche' non esistono i progetti; domani sara' un progetto concluso. La rotta le
 manda con ogni riga (`productions`, `spine/productions.py`): ottica, camera, frame, ore, frame
 senza tempo e i filtri di quei frame, da quella a cui e' andato piu' tempo. Insieme fanno la riga:
-niente si conta due volte. Decisioni (8/10/2026): due corredi con la stessa ottica e la stessa
-camera a focali diverse (un riduttore) sono **una** produzione; i frame che non dicono il corredo
-sono una produzione col corredo che non si sa, e meta' corredo (solo la camera) e' una produzione
+niente si conta due volte. Decisioni (8/10/2026): due setup con la stessa ottica e la stessa
+camera a focali diverse (un riduttore) sono **una** produzione; i frame che non dicono il setup
+sono una produzione col setup che non si sa, e meta' setup (solo la camera) e' una produzione
 sua; un mosaico ha le sue produzioni come ogni riga; stringendo la barra, le produzioni sono
 quelle dei frame chiesti. La carta ha un posto di anteprima **per produzione** e dice quante
 sono; l'elenco lo dice solo quando sono piu' d'una. Con piu' d'una, toccare la carta apre sotto
-di lei il **riepilogo** di ognuna (corredo, ore, frame, filtri); si chiude con Esc, ritoccando la
+di lei il **riepilogo** di ognuna (setup, ore, frame, filtri); si chiude con Esc, ritoccando la
 carta o toccando fuori. Sotto una carta dell'ultima colonna si allinea a destra per non uscire
 dalla pagina, e la pagina scorre quanto serve a mostrarlo. Le voci non portano da nessuna parte: e' una regione da leggere, non un
 menu, finche' il modale della produzione non c'e'. **Non ancora fatto**: il modale (rimandato:

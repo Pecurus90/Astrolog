@@ -24,7 +24,7 @@ describe("l Attrezzatura", () => {
     expect(within(telescopi).getByText(/TS 130 APO/)).toBeDefined()
     const montature = screen.getByRole("list", { name: /montature/i })
     expect(within(montature).getByText(/EQ6-R/)).toBeDefined()
-    expect(screen.getByRole("list", { name: /corredi/i })).toBeDefined()
+    expect(screen.getByRole("list", { name: /setup/i })).toBeDefined()
     expect(screen.getByRole("list", { name: /filtri/i })).toBeDefined()
   })
 
@@ -43,7 +43,7 @@ describe("l Attrezzatura", () => {
     attrezzatura()
     await apriAttrezzatura()
 
-    const corredi = await screen.findByRole("list", { name: /corredi/i })
+    const corredi = await screen.findByRole("list", { name: /setup/i })
     const riga = within(corredi).getByRole("listitem")
     expect(riga.textContent).toContain("M 31")
     expect(riga.textContent).toContain("120 frame")
@@ -94,16 +94,16 @@ describe("l Attrezzatura", () => {
     expect(detto).not.toMatch(/calcolato/)
   })
 
-  it("un corredo dice quanto cielo inquadra", async () => {
+  it("un setup dice quanto cielo inquadra", async () => {
     attrezzatura()
     await apriAttrezzatura()
 
-    const corredi = await screen.findByRole("list", { name: /corredi/i })
+    const corredi = await screen.findByRole("list", { name: /setup/i })
     expect(corredi.textContent).toContain("0,85")
     expect(corredi.textContent).toMatch(/1,5/)
   })
 
-  it("un corredo di cui non si sa quanto inquadra non scrive una scala", async () => {
+  it("un setup di cui non si sa quanto inquadra non scrive una scala", async () => {
     // La riga tace e dice perche': un numero preso dalla scheda sarebbe giusto sulla carta e
     // sbagliato nel cielo, e nessuno potrebbe accorgersene. Il caso non e' solo "non ha mai
     // ripreso": visto dal vivo, un corredo con otto pose **non ancora riconosciute** non ha una
@@ -124,18 +124,18 @@ describe("l Attrezzatura", () => {
     })
     await apriAttrezzatura()
 
-    const corredi = await screen.findByRole("list", { name: /corredi/i })
+    const corredi = await screen.findByRole("list", { name: /setup/i })
     expect(corredi.textContent).toMatch(/campo non ancora disponibile/i)
     expect(corredi.textContent).not.toMatch(/arcosecondi/i)
   })
 
-  it("scelgo la montatura di un corredo dalla sua scheda", async () => {
+  it("scelgo la montatura di un setup dalla sua scheda", async () => {
     attrezzatura(
       {},
       { "PUT /api/v1/gear/rigs/10/parts/mount": { stato: 200, corpo: { id: 10, requeued: 120, run_started: true } } },
     )
     await apriAttrezzatura()
-    const elenco = await screen.findByRole("list", { name: /corredi/i })
+    const elenco = await screen.findByRole("list", { name: /setup/i })
     fireEvent.click(within(elenco).getByRole("button", { name: /^seleziona montatura$/i }))
     // la tendina, non la regione: anche la scheda ora si chiama "Montatura di ..."
     fireEvent.change(screen.getByRole("combobox", { name: /^montatura/i }), { target: { value: "2" } })
@@ -145,7 +145,7 @@ describe("l Attrezzatura", () => {
     expect(scritture()[0]?.corpo).toEqual({ piece_id: 2 })
   })
 
-  it("un corredo dice tutte le parti che i suoi frame hanno usato, ognuna coi suoi frame", async () => {
+  it("un setup dice tutte le parti che i suoi frame hanno usato, ognuna coi suoi frame", async () => {
     attrezzatura({
       rigs: [
         {
@@ -162,7 +162,7 @@ describe("l Attrezzatura", () => {
       ],
     })
     await apriAttrezzatura()
-    const corredi = await screen.findByRole("list", { name: /corredi/i })
+    const corredi = await screen.findByRole("list", { name: /setup/i })
     const parti = [...corredi.querySelectorAll("[data-parte]")].map((p) => p.textContent?.trim())
     // tutte, nell'ordine dell'API: due ruote e due programmi restano due
     expect(parti).toEqual([
@@ -178,7 +178,7 @@ describe("l Attrezzatura", () => {
   it("la montatura che hai scelto non si ripete fra le parti", async () => {
     attrezzatura({ rigs: [{ ...CORREDO, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 120, chosen: true }] }] })
     await apriAttrezzatura()
-    const corredi = await screen.findByRole("list", { name: /corredi/i })
+    const corredi = await screen.findByRole("list", { name: /setup/i })
     expect(corredi.textContent).toContain("su EQ6-R")
     expect(corredi.querySelectorAll("[data-parte]")).toHaveLength(0)
   })
@@ -197,20 +197,20 @@ describe("l Attrezzatura", () => {
       ],
     })
     await apriAttrezzatura()
-    const corredi = await screen.findByRole("list", { name: /corredi/i })
+    const corredi = await screen.findByRole("list", { name: /setup/i })
     const parti = [...corredi.querySelectorAll("[data-parte]")].map((p) => p.textContent?.trim())
     expect(parti).toEqual(["montatura: EQ6-R (120 frame)", "riduttore: 0,8x (tua scelta)", "ottica di guida: 30 mm f/4 (tua scelta)"])
     // una montatura letta dai file non e' "la tua": la tendina parte vuota
     expect(corredi.textContent).not.toContain("su EQ6-R")
   })
 
-  it("un corredo dice su che montatura sta, e la voce vuota torna ai file", async () => {
+  it("un setup dice su che montatura sta, e la voce vuota torna ai file", async () => {
     attrezzatura(
       { rigs: [{ ...CORREDO, parts: [{ kind: "mount", id: 2, name: "EQ6-R", frames: 0, chosen: true }] }] },
       { "PUT /api/v1/gear/rigs/10/parts/mount": { stato: 200, corpo: { id: 10, requeued: 120, run_started: true } } },
     )
     await apriAttrezzatura()
-    const elenco = await screen.findByRole("list", { name: /corredi/i })
+    const elenco = await screen.findByRole("list", { name: /setup/i })
     expect(elenco.textContent).toContain("su EQ6-R")
     fireEvent.click(within(elenco).getByRole("button", { name: /^seleziona montatura$/i }))
     fireEvent.change(screen.getByRole("combobox", { name: /^montatura/i }), { target: { value: "" } })
@@ -219,10 +219,10 @@ describe("l Attrezzatura", () => {
     expect(scritture()[0]?.corpo).toEqual({ piece_id: null })
   })
 
-  it("senza montature da scegliere il corredo non offre il gesto", async () => {
+  it("senza montature da scegliere il setup non offre il gesto", async () => {
     attrezzatura({ instruments: [OTTICA] })
     await apriAttrezzatura()
-    const elenco = await screen.findByRole("list", { name: /corredi/i })
+    const elenco = await screen.findByRole("list", { name: /setup/i })
     expect(within(elenco).queryByRole("button", { name: /^seleziona montatura$/i })).toBeNull()
   })
 
@@ -232,7 +232,7 @@ describe("l Attrezzatura", () => {
     })
     await apriAttrezzatura()
     const montature = await screen.findByRole("list", { name: /montature/i })
-    expect(montature.textContent).not.toMatch(/non associata a un corredo/i)
+    expect(montature.textContent).not.toMatch(/non associata a un setup/i)
     expect(montature.textContent).toMatch(/10 h/)
   })
 
@@ -240,10 +240,10 @@ describe("l Attrezzatura", () => {
     attrezzatura({ instruments: [OTTICA, { ...MONTATURA, frames: 0, integration_s: 0, untimed: 0, nights: 0 }] })
     await apriAttrezzatura()
     const montature = await screen.findByRole("list", { name: /montature/i })
-    expect(montature.textContent).toMatch(/non associata a un corredo/i)
+    expect(montature.textContent).toMatch(/non associata a un setup/i)
   })
 
-  it("un riduttore e una guida che nessun corredo porta lo dicono, ognuno col suo genere", async () => {
+  it("un riduttore e una guida che nessun setup porta lo dicono, ognuno col suo genere", async () => {
     attrezzatura({
       instruments: [
         OTTICA,
@@ -253,8 +253,8 @@ describe("l Attrezzatura", () => {
     })
     await apriAttrezzatura()
     const riduttori = await screen.findByRole("list", { name: /riduttori/i })
-    expect(riduttori.textContent).toMatch(/non associato a un corredo/i)
-    expect(screen.getByRole("list", { name: /^guide$/i }).textContent).toMatch(/non associata a un corredo/i)
+    expect(riduttori.textContent).toMatch(/non associato a un setup/i)
+    expect(screen.getByRole("list", { name: /^guide$/i }).textContent).toMatch(/non associata a un setup/i)
   })
 
   it("la montatura dice perche' non ha ore", async () => {
@@ -262,7 +262,7 @@ describe("l Attrezzatura", () => {
     await apriAttrezzatura()
 
     const montature = await screen.findByRole("list", { name: /montature/i })
-    expect(montature.textContent).toMatch(/non associata a un corredo/i)
+    expect(montature.textContent).toMatch(/non associata a un setup/i)
     expect(montature.textContent).not.toMatch(/\b0 h\b/)
     expect(montature.textContent).toContain("20") // la scheda pero' si legge: carico 20 kg
   })
@@ -395,13 +395,13 @@ describe("i gesti sull attrezzatura", () => {
     expect(screen.queryByLabelText(/^unisci a/i)).toBeNull()
   })
 
-  it("do un nome a un corredo", async () => {
+  it("do un nome a un setup", async () => {
     attrezzatura(
       {},
       { "PATCH /api/v1/gear/rigs/10": { stato: 200, corpo: { id: 10, requeued: 0, run_started: false } } },
     )
     await apriAttrezzatura()
-    const elenco = await screen.findByRole("list", { name: /corredi/i })
+    const elenco = await screen.findByRole("list", { name: /setup/i })
     fireEvent.click(within(elenco).getByRole("button", { name: /^rinomina$/i }))
     // la casella, non la regione: anche la scheda ora si chiama "Nome di ..."
     fireEvent.change(screen.getByRole("textbox", { name: /^nome/i }), { target: { value: "Il piccolo" } })

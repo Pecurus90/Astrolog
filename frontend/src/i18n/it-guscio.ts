@@ -59,7 +59,7 @@ export const itGuscio = {
   "search.mosaic.one": "mosaico, 1 pannello",
   "search.notCounted": "Conteggio in corso",
   "search.filesSilent": "Non indicato nei file",
-  "search.noRig": "Non associato a un corredo",
+  "search.noRig": "Non associato a un setup",
   "search.site.nights": "{n} notti",
   "search.site.nights.one": "1 notte",
   "search.nothing": "Nessun risultato per \u00ab{q}\u00bb.",

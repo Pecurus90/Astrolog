@@ -23,11 +23,11 @@ sono gia' agganciate a chiavi stabili (impronta del frame, grafia dell'header, n
   (cosi' il ripristino non chiede niente alla rete; il fuso si ricalcola dalle coordinate); `folders` per percorso, con nome, ritiro e un campione di riconoscimento (fino a 5
   coppie percorso relativo -> impronta); `instruments` scritti dall'utente (`detected = 0`) per
   (genere, nome); `filters` e bande per nome; `header_aliases`; tutte le `declarations`. Niente di
-  derivato: frame, corredi, oggetti, notti, meteo, catalogo si rifanno dai file.
+  derivato: frame, setup, oggetti, notti, meteo, catalogo si rifanno dai file.
 - **Ripristino proposto, mai automatico**: un database senza risposte (nuovo, o ricreato da
   `tools/reset_db.py` prima dell'avvio), con il file accanto, fa chiedere "Ho trovato le tue risposte del <data>: le rimetto?". Si rimette in quest'ordine:
   `config`, `sites`, `folders`, `instruments`, `filters`, `header_aliases`, `declarations`, poi i
-  corredi dichiarati (`rigs.restore_declared`). La scansione rifa' il resto.
+  setup dichiarati (`rigs.restore_declared`). La scansione rifa' il resto.
 - **Cartelle su un'altra macchina**: la riga torna anche se il percorso non c'e', col suo campione
   (`folders.sample_json`); lo spostamento di M2 riconosce la cartella dal campione quando non ha
   ancora frame, cosi' "aggiungi la cartella nel posto nuovo" porta le risposte.

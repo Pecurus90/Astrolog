@@ -52,7 +52,7 @@ describe("aggiungo alla mia attrezzatura", () => {
     expect(scritture()[0]?.corpo).toEqual({ name: "Antlia 3nm", bands: [{ band: "HA" }], brand: "Antlia" })
   })
 
-  it("il nome scritto per uno strumento non parte dopo un giro su filtro o corredo", async () => {
+  it("il nome scritto per uno strumento non parte dopo un giro su filtro o setup", async () => {
     attrezzatura()
     await apriAttrezzatura()
 
@@ -67,7 +67,7 @@ describe("aggiungo alla mia attrezzatura", () => {
     expect((screen.getByRole("button", { name: /salva/i }) as HTMLButtonElement).disabled).toBe(true)
   })
 
-  it("scrivo a mano un corredo, con ottica e camera fra i miei pezzi e la focale", async () => {
+  it("scrivo a mano un setup, con ottica e camera fra i miei pezzi e la focale", async () => {
     const camera = { ...OTTICA, id: 5, kind: "camera", name: "ASI533MC" }
     attrezzatura(
       { instruments: [OTTICA, camera, MONTATURA] },
@@ -90,7 +90,7 @@ describe("aggiungo alla mia attrezzatura", () => {
     expect(scritture()[0]?.corpo).toEqual({ optics_id: 1, camera_id: 5, focal_mm: 910 })
   })
 
-  it("un corredo che ho gia' si rifiuta, e me lo dice", async () => {
+  it("un setup che ho gia' si rifiuta, e me lo dice", async () => {
     const camera = { ...OTTICA, id: 5, kind: "camera", name: "ASI2600MM" }
     attrezzatura(
       { instruments: [OTTICA, camera] },
@@ -105,7 +105,7 @@ describe("aggiungo alla mia attrezzatura", () => {
     fireEvent.change(screen.getByLabelText(/^focale/i), { target: { value: "920" } })
     fireEvent.click(screen.getByRole("button", { name: /salva/i }))
 
-    expect(await screen.findByText(/corredo gi\u00e0 presente/i)).toBeDefined()
+    expect(await screen.findByText(/setup gi\u00e0 presente/i)).toBeDefined()
   })
 
   it("cambiando genere non porto con me i campi del genere di prima", async () => {

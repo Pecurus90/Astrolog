@@ -16,8 +16,8 @@ che il `traduttore` legge per primo.
 |---|---|---|---|
 | un file di ripresa letto dalle cartelle: un light, o un file che non dice che tipo e' finche' non lo dici tu | `frame` | frame | posa, scatto, sub, immagine, esposizione |
 | cio' che identifica un frame per sempre: sha256 di dimensioni e 64 KB di pixel dal centro. Sopravvive a uno spostamento, a una rinomina e a un header riscritto | `frame_hash` | impronta | hash, checksum, firma |
-| il tempo di un frame, in secondi | `exposure_s` | esposizione | posa, durata |
-| la somma del tempo dei frame -- di un oggetto, di un mosaico -- in secondi. Le copie riscritte non contano, e un frame che non dice il tempo **non vale zero**: resta fuori dalla somma e si conta in `untimed`. Se **nessun** frame lo dice, a schermo le ore non compaiono affatto: restano i frame senza durata | `integration_s` | ore | integrazione, tempo totale, somma, esposizione, 0 h (per un tempo che non si sa) |
+| il tempo di un frame, in secondi: «posa 300 s» (Marco, 19/10/2026, uso dei forum italiani) | `exposure_s` | posa | esposizione, durata |
+| la somma del tempo dei frame -- di un oggetto, di un mosaico -- in secondi. Le copie riscritte non contano, e un frame che non dice il tempo **non vale zero**: resta fuori dalla somma e si conta in `untimed`. Se **nessun** frame lo dice, a schermo le ore non compaiono affatto: restano i frame senza durata | `integration_s` | Integrazione nei titoli, ore nel numero («12 h») (Marco, 19/10/2026, uso dei forum italiani) | tempo totale, somma, esposizione, 0 h (per un tempo che non si sa) |
 | quanti frame, fra quelli contati, non dicono il loro tempo: viaggia accanto alle ore perche' "non lo sappiamo" e "zero ore" non sono la stessa cosa. Zero secondi invece e' una misura, e non si conta qui | `untimed` | senza durata | senza tempo, a zero, mancante, nullo, vuoto |
 | un dark, flat, bias o dark-flat: riconosciuto e contato, non catalogato | `calibration_frame` | file di calibrazione | calibrazioni, master |
 | una volta che l'app ha letto una cartella, con cosa e' entrato, cosa e' rimasto fuori e quanto e' durata: resta, e si rilegge dopo | `scan_run` | scansione | lettura, corsa, passata, sessione |
@@ -32,7 +32,7 @@ che il `traduttore` legge per primo.
 | l'insieme di tutto cio' che l'app sa; anche la pagina degli oggetti | `archive` | archivio / Archivio | libreria, catalogo, raccolta |
 | una cartella di FITS indicata dall'utente (puo' averne piu' d'una) | `folder` | cartella | libreria, sorgente, radice |
 | da mezzogiorno a mezzogiorno nel fuso del sito, con un sito | `night` | notte | serata, sessione, uscita |
-| oggetto x notte x corredo | `session` | sessione | notte, serata, ripresa |
+| oggetto x notte x setup | `session` | sessione | notte, serata, ripresa |
 | il posto da cui si osserva | `site` | sito | postazione, luogo (e' il risultato di una ricerca, `place`), localita' |
 | le coordinate che l'header porta, arrotondate al chilometro: sono cio' su cui l'app chiede quando non tornano con nessuno dei siti dichiarati. Un **sito** lo dichiara l'utente, le **coordinate** le dice il file | `coordinates` | coordinate | sito, posto, postazione |
 | una montatura in campo in una notte (chi ne ha due riprende due cose) | `station` | postazione | sito |
@@ -58,8 +58,8 @@ che il `traduttore` legge per primo.
 | in un campo con piu' oggetti, quello scelto come principale | `subject` | soggetto | oggetto principale, target |
 | gli oggetti che il cielo ha trovato nei frame di un gruppo di Da confermare, il piu' ripreso in cima, coi frame dove non ha trovato niente (`not_found`) e quelli che non ha ancora guardato (`not_yet`): si leggono accanto alla domanda e non la cambiano. La domanda *che file sono* non li porta: li' il cielo non ha guardato niente | `subjects` | Oggetti (coi frame "senza oggetti identificati" e "non ancora risolti") | ripreso, soggetti, contenuto, target |
 | una voce del catalogo astronomico | `catalog_entry` | voce di catalogo | oggetto |
-| lo stesso soggetto seguito nel tempo con un corredo, fino alla foto finale; puo' avere un obiettivo | `project` | progetto | piano, lavoro, campagna |
-| una riga dell'Archivio ripresa con la stessa ottica e la stessa camera, finche' non esistono i progetti (Marco, 8/10/2026; `docs/domini/archivio.md`) | `production` | produzione | corredo, sessione, progetto |
+| lo stesso soggetto seguito nel tempo con un setup, fino alla foto finale; puo' avere un obiettivo | `project` | progetto | piano, lavoro, campagna |
+| una riga dell'Archivio ripresa con la stessa ottica e la stessa camera, finche' non esistono i progetti (Marco, 8/10/2026; `docs/domini/archivio.md`) | `production` | produzione | setup, sessione, progetto |
 | le ore che si vogliono raggiungere su un progetto | `goal_hours` (`goal_seconds` in schema) | obiettivo | traguardo, target, meta |
 | le ore per filtro dentro l'obiettivo | `recipe` | ricetta | piano filtri |
 | progetto con pannelli affiancati sullo stesso soggetto | `mosaic` | mosaico | -- |
@@ -91,18 +91,18 @@ che il `traduttore` legge per primo.
 | cosa e' | nel codice | a schermo (it) | non si dice |
 |---|---|---|---|
 | un pezzo: ottica, camera, filtro, montatura, riduttore, ruota, guida, focheggiatore | `instrument` | strumento | pezzo, componente, dispositivo, device |
-| la montatura di una posa: quella che hai scelto sul corredo, o dove taci quella che il file nomina | `mount_id` (su `frames`), `mount` (dichiarazione del corredo), `chosen` (sulla parte) | su {montatura}, Seleziona montatura | sulla {montatura}, Scegli la montatura, setup, postazione (la postazione e' un'altra cosa) |
+| la montatura di una posa: quella che hai scelto sul setup, o dove taci quella che il file nomina | `mount_id` (su `frames`), `mount` (dichiarazione del setup), `chosen` (sulla parte) | su {montatura}, Seleziona montatura | sulla {montatura}, Scegli la montatura, setup (che e' ottica + camera), postazione (la postazione e' un'altra cosa) |
 | i generi che una posa porta in una colonna sua: ruota, focheggiatore, camera di guida, montatura, e i due che ci stanno solo per scelta (riduttore, ottica di guida: `CHOSEN_ONLY`) | `CARRIED` (`spine/counts.py`) | -- | -- |
-| perche' un pezzo contato non ha ore: i file non nominano quel genere, o nessun corredo porta quella montatura, quel riduttore, quell'ottica di guida (`rigs.NEEDS_A_RIG`) | `no_hours` (`files_silent`, `no_rig`) | non indicato nei file, non associata / non associato a un corredo | i tuoi file non dicono..., nessun corredo la porta ancora |
+| perche' un pezzo contato non ha ore: i file non nominano quel genere, o nessun setup porta quella montatura, quel riduttore, quell'ottica di guida (`rigs.NEEDS_A_RIG`) | `no_hours` (`files_silent`, `no_rig`) | non indicato nei file, non associata / non associato a un setup | i tuoi file non dicono..., nessun setup la porta ancora |
 | la pagina che li elenca | -- | Attrezzatura | equipaggiamento |
-| ottica + camera (+ riduttore) visti insieme, a una focale | `rig` | corredo | setup, configurazione, attrezzatura, impronta |
-| un corredo simulato nel Planner, mai salvato | `trial_rig` | corredo di prova | -- |
+| ottica + camera (+ riduttore) visti insieme, a una focale (Marco, 19/10/2026: la parola di Coelum e dei forum) | `rig` | setup | corredo, configurazione, attrezzatura, impronta |
+| un setup simulato nel Planner, mai salvato | `trial_rig` | setup di prova | -- |
 | la dimensione di un pixel del sensore, senza binning: e' quella della scheda della camera | `instruments.pixel_size_um` | dimensione del pixel | pitch |
 | la stessa grandezza come l'header la scrive (`XPIXSZ`), col binning gia' dentro: sta sul frame | `frames.pixel_size_um` | -- | pixel fisico |
-| quanto e' servito ogni pezzo, corredo e filtro -- frame, ore, notti, oggetti, e per i corredi il cielo misurato -- scritto a fine giro di ogni stadio e letto dall'Attrezzatura | `gear_usage` | quanto ti e' servito | statistiche, contatori |
+| quanto e' servito ogni pezzo, setup e filtro -- frame, ore, notti, oggetti, e per i setup il cielo misurato -- scritto a fine giro di ogni stadio e letto dall'Attrezzatura | `gear_usage` | quanto ti e' servito | statistiche, contatori |
 | i candidati del cielo di una scheda dell'oggetto in dubbio, o di frame detti "non e' un oggetto", dal piu' probabile: li scrive `spine/object_candidates.py` e li legge Da confermare | `object_candidates` | candidati | proposte, suggerimenti |
 | se chi conta ha gia' contato un pezzo: falso per uno nato a meta' giro, che la pagina dice "si sta contando" e non "non si sa" | `counted` | conteggio in corso | si sta contando, in attesa, pending |
-| il pixel di una camera ricavato dalla scala misurata sulle sue pose, la focale del corredo e il binning, quando i file non lo dicono | `instruments.pixel_from_sky_um` | pixel (calcolato) | pixel ricavato dal cielo, pixel stimato |
+| il pixel di una camera ricavato dalla scala misurata sulle sue pose, la focale del setup e il binning, quando i file non lo dicono | `instruments.pixel_from_sky_um` | pixel (calcolato) | pixel ricavato dal cielo, pixel stimato |
 | il filtro davanti al sensore, come strumento | `filter` | filtro | vetro |
 | la categoria di un filtro (L, R, G, B, Ha, OIII, SII, duo, OSC...) | `passband` | banda | tipo, canale, categoria |
 | il filtro esplicito di chi non ha un vetro davanti: una riga sola, non un vuoto | `is_none` | nessun filtro | vuoto, senza filtro |
@@ -110,19 +110,19 @@ che il `traduttore` legge per primo.
 | la scheda di Da confermare su una firma: chiede solo cio' che i frame lasciano fuori -- la camera, l'ottica, il filtro (su una camera non a colori, senza i frame con la matrice) -- e conta finche' ogni parte chiesta non ha risposta | `gear`, `GearSignature` | attrezzatura da completare | frame senza camera, frame senza ottica, frame senza filtro |
 | la risposta su una firma: i NOMI di camera e ottica con la focale, e cosa c'era davanti -- nessun filtro (`no_filter`) o uno dei tuoi (`filter`, col nome del filtro in un campo suo). "A colori" (`color`) si scrive sulla scheda della camera | `GearEdit`, `signature.Answer` | risposta sull'attrezzatura | correzione, filtro dichiarato |
 | i filtri fra cui si sceglie una risposta: quelli con la banda nota, tranne la riga "nessun filtro" | `filter_choices` | i tuoi filtri | candidati, proposte |
-| i corredi fra cui si sceglie con che camera sono stati ripresi dei frame: quelli con una camera e almeno un frame | `rig_choices` | i tuoi corredi | candidati, proposte |
+| i setup fra cui si sceglie con che camera sono stati ripresi dei frame: quelli con una camera e almeno un frame | `rig_choices` | i tuoi setup | candidati, proposte |
 | i frame che non dicono **che file sono** -- l'header non porta `IMAGETYP` e nessuno l'ha ancora detto -- raggruppati per la cartella che li contiene; ci sono solo quelli su cui il cielo non sa dire (risolto e' una foto, senza stelle una calibrazione). Restano fermi prima dell'oggetto, quindi non diventano ore e non compaiono fra i frame senza nome | `typeless` | frame senza tipo | tipo mancante, tipo sconosciuto, non classificati |
 | la risposta su una cartella di frame senza tipo: un light (`light`) o una calibrazione (`calibration`) | `TypelessAnswer` | Light / Calibrazione | foto del cielo, tipo della cartella, classe, categoria |
 | il frame aspetta una risposta sul tipo: la regola sta in `spine/stages.py`, e l'esito lo scrive sulla posa chi cambia un suo ingresso -- il cielo, la posizione del file, la risposta della cartella; chi legge legge questo | `asks_type` | aspetta una risposta | bloccato, sospeso |
 | le cartelle della domanda sul tipo coi frame che contano, scritte a fine scansione, a fine cielo e a fine normalizzazione e quando togli o rimetti una cartella, e lette da Da confermare; la risposta si legge dalla sua casa | `typeless_folders` | frame senza tipo | cache, conteggi |
 | la notte di un frame, da mezzogiorno a mezzogiorno nel fuso delle coordinate dell'header o di casa (UTC se non si sa), o del giorno in cui il file e' stato scritto se manca `DATE-OBS`: la scrive `scan` quando il frame entra, e si riscrive se il fuso non viene dalle coordinate dell'header e casa cambia fuso | `local_night`, `local_tz`, `night_instant` (l'istante da cui viene) | notte della posa | notte UTC, data della posa |
-| la camera che gli header di una notte (la notte della posa) dicono, quando e' una sola, con l'ottica e la focale se anche quelle sono una sola: il frame che non le dice prende cio' che il suo file tace | `night_rigs` | corredo della notte | camera della notte, camera dedotta, camera indovinata |
+| la camera che gli header di una notte (la notte della posa) dicono, quando e' una sola, con l'ottica e la focale se anche quelle sono una sola: il frame che non le dice prende cio' che il suo file tace | `night_rigs` | setup della notte | camera della notte, camera dedotta, camera indovinata |
 | la cartella che contiene il file di un frame, non la radice registrata: una sola per frame, ed e' quella con cui si chiede che file sono i frame senza tipo | `frame_folder` | cartella dei frame | sottocartella, radice, sorgente |
 | i frame che non dicono l'oggetto e di cui il cielo non dice niente, raggruppati per notte, camera, telescopio e dove puntava la montatura (entro un campo inquadrato da chi ha aperto il gruppo, scelto quando il frame arriva e riscelto solo se casa cambia fuso e con lei la notte del frame), non per cartella | `unnamed` | frame senza nome | orfane, sconosciute, non identificate |
 | la scheda di Da confermare che chiede l'oggetto di un gruppo di frame: quelli che l'app ha messo su un oggetto, o un gruppo di frame senza nome; coi candidati del cielo, anche zero | `ObjectCard` | scheda dell'oggetto | sezione Oggetti, sezione Senza nome |
 | la risposta su una scheda dell'oggetto: un oggetto di catalogo, un nome scritto, oppure "non e' un oggetto" | `ObjectAnswer` | oggetto del gruppo | oggetto dichiarato, etichetta, risposta sulla cartella |
 | cio' che `identify` aveva trovato per un frame detto "non e' un oggetto": la chiave della sua scheda, che resta per cambiare idea | `found_key` | -- | oggetto originale, vecchio oggetto |
-| la risposta su quel gruppo: i nomi di ottica e camera con la focale, e da quei nomi i pezzi nascono | `GroupRig` | risposta sul gruppo | corredo dichiarato, assegnazione |
+| la risposta su quel gruppo: i nomi di ottica e camera con la focale, e da quei nomi i pezzi nascono | `GroupRig` | risposta sul gruppo | setup dichiarato, assegnazione |
 | la combinazione di bande di un progetto (LRGB, SHO, HOO) | `scheme` | schema | palette |
 
 ## Da dove viene un valore
@@ -190,7 +190,7 @@ che il `traduttore` legge per primo.
 | la sezione delle Impostazioni con le chiavi dei servizi | `/impostazioni/servizi` | Servizi | account, integrazioni |
 | lo spessore ottico degli aerosol e le polveri, da CAMS | `aerosol_optical_depth`, `dust_ugm3` | aerosol, polveri | trasparenza, smog |
 | il seeing di Meteoblue in secondi d'arco, un valore per ora | `seeing_arcsec` | seeing | qualita' del cielo, fascia |
-| i modi di restringere una ricerca nel Planner | `criteria` | criteri | filtri |
+| i modi di restringere una ricerca nel Planner | `criteria` | criteri | filtri (il filtro e' il vetro) |
 | la linea di alberi e case attorno a un sito | `horizon` | orizzonte | maschera, profilo |
 | altezza minima, distanza dalla Luna, ore minime: i tre numeri di fabbrica | `thresholds` | soglie | preferenze |
 
@@ -206,8 +206,8 @@ manda a qualcuno).
 | la pagina di apertura: cosa e' successo e cosa c'e' da fare | `/` | Casa | dashboard, home, cruscotto |
 | la pagina degli oggetti: cosa hai ripreso, con le sue ore | `/archivio` | Archivio | libreria, catalogo, raccolta |
 | le notti, una per una, con cosa e' stato ripreso | `/notti` | Notti | sessioni, serate, uscite |
-| gli strumenti, i corredi e i filtri che possiedi | `/attrezzatura` | Attrezzatura | equipaggiamento, setup |
-| i confronti nel tempo: stagioni, corredi, filtri, qualita' | `/statistiche` | Statistiche | analitica, report, grafici |
+| gli strumenti, i setup e i filtri che possiedi | `/attrezzatura` | Attrezzatura | equipaggiamento |
+| i confronti nel tempo: stagioni, setup, filtri, qualita' | `/statistiche` | Statistiche | analitica, report, grafici |
 | le cartelle di FITS che hai indicato, e cosa e' successo l'ultima volta che l'app le ha lette: **una sezione di Impostazioni**, non una pagina in barra | `/impostazioni/cartelle` | Cartelle | importa, sorgenti, libreria, scansione |
 | le domande dell'app (la voce e' in *Da dove viene un valore*) | `/da-confermare` | Da confermare | revisione, dati mancanti |
 | le scansioni passate: cosa e' entrato, cosa e' rimasto fuori e perche', **coi file non leggibili** | `/impostazioni/letture` | Scansioni | Le letture, corse, passate, storico |

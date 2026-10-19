@@ -106,9 +106,9 @@ describe("la barra dell'Archivio", () => {
     // Gli ordini sono tre. Il tipo che viene dall'OpenAPI impedisce di **scriverne uno storto**,
     // non di **dimenticarne uno**: togliere una riga dall'elenco compila, e l'utente perde un
     // ordine senza che niente cada. Lato backend la coppia rotta-spina ce l'ha gia' un test suo.
-    expect(await vociDi(/ordina/i)).toEqual(["Nome", "Ore", "Frame"])
+    expect(await vociDi(/ordina/i)).toEqual(["Nome", "Integrazione", "Frame"])
 
-    fireEvent.click(screen.getByRole("menuitemradio", { name: "Ore" }))
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Integrazione" }))
 
     await waitFor(() =>
       expect(chiamate().some((u) => u.includes("/archive") && u.includes("sort=hours"))).toBe(true),
@@ -325,7 +325,7 @@ describe("la barra dell'Archivio", () => {
     await apriArchivio()
     cambia(conArchivio({ stato: 500, corpo: { detail: "boom" } }))
 
-    await scegli(/ordina/i, "Ore")
+    await scegli(/ordina/i, "Integrazione")
 
     expect(await screen.findByRole("alert")).toBeDefined()
     expect(screen.getByRole("button", { name: /ordina/i })).toBeDefined()

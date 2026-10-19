@@ -12,7 +12,7 @@ andare da sola dal crepuscolo all'alba.
 ## Decisione
 
 - **Il Planner fa i progetti.** Un progetto e' un oggetto DSO, la sua inquadratura su Aladin Lite
-  ([ADR 0005](0005-carta-del-cielo-aladin-lite.md)), un setup (corredo, camera, ruota e filtri
+  ([ADR 0005](0005-carta-del-cielo-aladin-lite.md)), un setup (setup, camera, ruota e filtri
   dalla pagina Attrezzatura) e un obiettivo in ore per filtro (per esempio M31, 60 h: 20 in Ha,
   40 in LRGB). Si crea una volta e vale tutto l'anno.
 - **Un progetto, un setup.** Lo stesso oggetto con due telescopi fa due progetti, ognuno col suo
@@ -20,7 +20,7 @@ andare da sola dal crepuscolo all'alba.
 - **Stati del progetto:** in attesa (creato, non iniziato), in corso, finito. Stanno nella pagina
   dei progetti.
 - **L'avanzamento si conta dall'archivio**, mai a mano: i frame attribuiti all'oggetto e al
-  corredo. E' certo perche' la sequenza la generiamo noi e scrive in `OBJECT` il nome che l'app
+  setup. E' certo perche' la sequenza la generiamo noi e scrive in `OBJECT` il nome che l'app
   riconosce.
 - **La serata si compone nella pagina delle sequenze**, non dall'inquadratura. Il wizard chiede
   cosa si fa stasera: propone i progetti in corso e in attesa che stanotte sono alti, con cio' che

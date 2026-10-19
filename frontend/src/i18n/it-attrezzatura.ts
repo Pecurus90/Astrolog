@@ -21,7 +21,7 @@ export const itAttrezzatura = {
   "gear.part.chosen": "{parte}: {nome} (tua scelta)",
   "gear.part.software": "programma di ripresa",
   "gear.part.filter": "filtro",
-  "gear.rigs": "Corredi",
+  "gear.rigs": "Setup",
   "gear.filters": "Filtri",
   // La riga di un pezzo: quanto e' servito, e cosa ci hai ripreso.
   "gear.frames": "{n} frame",
@@ -31,11 +31,11 @@ export const itAttrezzatura = {
   // Dove le ore non esistono. Non e' uno zero: e' un legame che i file non portano, e finche'
   // non sei tu a dirlo l'app non lo sa.
   "gear.noHours": "non indicato nei file",
-  "gear.noHours.mount": "non associata a un corredo",
-  "gear.noHours.reducer": "non associato a un corredo",
-  "gear.noHours.guide_scope": "non associata a un corredo",
+  "gear.noHours.mount": "non associata a un setup",
+  "gear.noHours.reducer": "non associato a un setup",
+  "gear.noHours.guide_scope": "non associata a un setup",
   "gear.counting": "conteggio in corso",
-  // Il corredo: com'e' fatto e quanto cielo inquadra davvero.
+  // Il setup: com'e' fatto e quanto cielo inquadra davvero.
   "gear.rig": "{ottica} + {camera}",
   "gear.rig.noOptics": "ottica non indicata",
   "gear.rig.noCamera": "camera non indicata",
@@ -73,7 +73,7 @@ export const itAttrezzatura = {
   "gear.write.edit.title": "{nome}",
   "gear.write.kind": "Tipo",
   "gear.write.kind.filter": "Filtro",
-  "gear.write.kind.rig": "Corredo",
+  "gear.write.kind.rig": "Setup",
   "gear.write.optics": "Ottica",
   "gear.write.camera": "Camera",
   // la focale che dicono i file: col riduttore e' quella col riduttore
@@ -91,7 +91,7 @@ export const itAttrezzatura = {
   "gear.write.mount.field": "Montatura (vuoto: dai file)",
   "gear.write.mergeRefused": "Unione non possibile. Nessuna modifica salvata.",
   "gear.write.notFound": "Dati non aggiornati: ricarica la pagina. Nessuna modifica salvata.",
-  "gear.write.rigExists": "Corredo gi\u00e0 presente (stessa ottica, stessa camera, focale entro il 5%).",
+  "gear.write.rigExists": "Setup gi\u00e0 presente (stessa ottica, stessa camera, focale entro il 5%).",
   "gear.write.spellingTaken": "Nome gi\u00e0 usato da un altro filtro.",
   "gear.write.wrongKind": "Ottica e camera vanno selezionate fra gli strumenti del tipo corrispondente.",
   // Il rifiuto dice cosa fare, non cosa e' andato storto: possiedi gia' quel nome, quindi il

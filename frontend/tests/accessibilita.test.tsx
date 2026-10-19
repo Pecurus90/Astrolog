@@ -561,7 +561,7 @@ describe("l accessibilita della prima pagina", () => {
     })
     const { container } = await disegna()
     fireEvent.click(await screen.findByRole("link", { name: /attrezzatura/i }))
-    await screen.findByRole("list", { name: /corredi/i })
+    await screen.findByRole("list", { name: /setup/i })
     // Anche **i due gesti aperti**: una scheda che si corregge e una che nasce sono campi con le
     // loro etichette, ed e' li' che un modulo senza nomi farebbe danno a chi ascolta.
     fireEvent.click(screen.getAllByRole("button", { name: /^modifica$/i })[0] as HTMLElement)

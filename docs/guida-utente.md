@@ -342,7 +342,7 @@ La pagina ha **due viste**, e si cambia col pulsante in alto a sinistra:
   **produzione**, cioe' per ogni coppia di ottica e camera con cui hai ripreso quell'oggetto, e
   sotto i dati leggi quante sono (*2 produzioni*). I riquadri sono vuoti: sono il posto delle
   immagini, che l'app non mostra ancora. Un riduttore non fa un'altra produzione; i frame che non
-  dicono con che corredo sono stati ripresi ne fanno una a parte. Se le produzioni sono piu'
+  dicono con che setup sono stati ripresi ne fanno una a parte. Se le produzioni sono piu'
   d'una, un clic sulla carta apre sotto di lei il loro riepilogo: per ognuna l'ottica e la
   camera, le ore, i frame e i filtri. Si chiude con Esc, con un altro clic sulla carta o con un
   clic fuori;
@@ -371,7 +371,7 @@ vuoto senza un perche'. Il periodo guarda la **notte**, non l'orologio: una
 posa delle due del primo gennaio appartiene alla notte del 31 dicembre. Con questi filtri accesi
 ogni oggetto dice **solo cio' che hai chiesto**: stringendo al 2025, M 31 porta le ore, i frame e
 i filtri del 2025, non quelli di sempre, e l'ordine per ore segue quelle. Lo stesso per il sito e
-per il corredo: "con il Newton" sono le pose fatte col Newton. Un mosaico apre i soli pannelli
+per il setup: "con il Newton" sono le pose fatte col Newton. Un mosaico apre i soli pannelli
 ripresi li', ma il numero di pannelli resta quello del mosaico. Le tendine del sito, dell'ottica e
 della camera compaiono solo se ne hai usati almeno due: con uno solo, sceglierlo non cambierebbe
 niente.
@@ -573,7 +573,7 @@ fondo.
 ## Attrezzatura
 
 **Con cosa hai ripreso, e quanto.** I tuoi strumenti raccolti per tipo -- telescopi, camere,
-montature, e quello che ci sta intorno -- piu' i **corredi** (l'ottica con la sua camera e la
+montature, e quello che ci sta intorno -- piu' i **setup** (l'ottica con la sua camera e la
 focale) e i **filtri**. Di ognuno leggi quante **ore**, quanti **frame** e in quante **notti** ti
 e' servito, e cosa ci hai ripreso. I numeri li conta l'app mentre legge i tuoi file, non quando
 apri la pagina, cosi' la pagina si apre subito anche con un archivio grande: uno strumento appena
@@ -603,53 +603,53 @@ header e' quello nuovo, cosi' la scansione dopo non ricrea lo strumento com'era.
 vince sui file: resta anche quando l'archivio viene riletto. Se due righe sono lo stesso strumento
 scritto in due modi, nella scheda scegli *Unisci a*: la tendina offre solo quelli dello
 stesso tipo. Lo stesso vale per i filtri, con *Modifica* accanto al filtro (nome, marca, modello,
-o *Unisci a*), e un corredo lo chiami come vuoi con *Rinomina*.
+o *Unisci a*), e un setup lo chiami come vuoi con *Rinomina*.
 
 Se i file di una camera non dicono quanto e' grande il pixel, l'app lo **ricava dal cielo**: dalla
-scala che ha misurato sulle foto risolte e dalla focale del corredo. Serve che i file dicano almeno
+scala che ha misurato sulle foto risolte e dalla focale del setup. Serve che i file dicano almeno
 il binning: senza, la scala misurata non dice quanti pixel erano uniti, e l'app non tira a indovinare. Lo leggi con scritto
 *(calcolato)*, perche' non e' la stessa certezza -- un riduttore che il file non dice lo sposta --; se
 il pixel lo scrivi tu nella scheda, vale il tuo.
 
-Di un corredo leggi anche **quanto cielo inquadra davvero**: la scala in arcosecondi per pixel e
+Di un setup leggi anche **quanto cielo inquadra davvero**: la scala in arcosecondi per pixel e
 il rettangolo in gradi, **misurati** sulle pose che l'app ha risolto -- non calcolati da focale e
 pixel. Cosi' un riduttore e' gia' dentro il numero, invece di essere una correzione da fare a
-mente. Se di un corredo l'app non ha ancora riconosciuto nessuna posa -- perche' non hai ancora
+mente. Se di un setup l'app non ha ancora riconosciuto nessuna posa -- perche' non hai ancora
 ripreso, o perche' ASTAP non ci e' ancora arrivato -- la scala non c'e', e te lo dice.
 
-Di ogni corredo leggi anche **tutte le parti che i suoi frame dicono di aver usato**: la
+Di ogni setup leggi anche **tutte le parti che i suoi frame dicono di aver usato**: la
 montatura, la ruota portafiltri, il focheggiatore, la camera di guida, il programma di ripresa, i
 filtri. Accanto a ognuna, quanti frame. Se negli anni hai cambiato ruota, o sei passato da un
 programma a un altro, le trovi tutte, dalla piu' usata. Una parte che i file non scrivono non
 compare, a meno che tu non l'abbia scelta: allora accanto al nome leggi *tua scelta* al posto dei
 frame. Oggi dalla pagina si sceglie la montatura (qui sotto); riduttore, ottica di guida e le
 altre parti si potranno scegliere allo stesso modo con la pagina nuova. Un riduttore o un'ottica
-di guida che nessun corredo porta lo dice nella sua riga (*non associato a un corredo*), come la
-montatura: i file non li scrivono mai, quindi le loro ore arrivano solo da un corredo.
+di guida che nessun setup porta lo dice nella sua riga (*non associato a un setup*), come la
+montatura: i file non li scrivono mai, quindi le loro ore arrivano solo da un setup.
 
 **La montatura ha le sue ore.** Se il tuo programma di ripresa la scrive nei file, l'app la lega
-da sola a ogni posa: fra i programmi che l'app conosce, oggi lo fa l'ASIAIR. Se no, apri un corredo, premi *Seleziona montatura* e
+da sola a ogni posa: fra i programmi che l'app conosce, oggi lo fa l'ASIAIR. Se no, apri un setup, premi *Seleziona montatura* e
 scegli fra quelle che possiedi (una montatura che non trovi la scrivi con *Aggiungi strumento*):
-da li' la montatura conta le ore, le notti e cosa ci hai ripreso con quel corredo, e la riga del
-corredo dice su quale sta. Quello che scegli tu vale anche dove i file dicono altro; lasciando la
-scelta vuota tornano i file. Finche' nessun corredo la porta, la riga della montatura te lo dice
+da li' la montatura conta le ore, le notti e cosa ci hai ripreso con quel setup, e la riga del
+setup dice su quale sta. Quello che scegli tu vale anche dove i file dicono altro; lasciando la
+scelta vuota tornano i file. Finche' nessun setup la porta, la riga della montatura te lo dice
 invece di scrivere zero.
 
-**Anche un filtro o un corredo li puoi scrivere tu**, dallo stesso *Aggiungi strumento*, prima di
+**Anche un filtro o un setup li puoi scrivere tu**, dallo stesso *Aggiungi strumento*, prima di
 averci ripreso. Un **filtro** vuole il nome e la **banda** che lascia passare -- e' cio' che l'app
-guarda per capire cosa hai ripreso -- e se vuoi marca e modello. Un **corredo** vuole l'ottica e la
+guarda per capire cosa hai ripreso -- e se vuoi marca e modello. Un **setup** vuole l'ottica e la
 camera, scelte fra i tuoi strumenti, e la **focale** vera, col riduttore se lo usi. La focale dei tuoi
 file l'app la **misura dal cielo** quando riconosce una foto e conosce il pixel della camera:
 anche se il tuo programma scrive la focale del telescopio senza il riduttore, dopo il
-riconoscimento le pose passano al corredo della focale vera. Dove il cielo non c'e' (dark, flat,
+riconoscimento le pose passano al setup della focale vera. Dove il cielo non c'e' (dark, flat,
 foto non riconosciute) vale la focale che scrive il programma. Il giorno che i tuoi file li
 portano, sono gli stessi: un filtro scritto col
 nome che il tuo programma mette nei file (`L`, per esempio) prende le pose che lo dicono -- quelle
-di una camera a colori restano *OSC* -- e un corredo con la stessa ottica, la stessa camera e una
+di una camera a colori restano *OSC* -- e un setup con la stessa ottica, la stessa camera e una
 focale entro il 5% e' quello. Per la stessa ragione, se quel filtro ce l'hai gia' (le tue pose `L`
-stanno gia' su *Lum*) o se hai gia' un corredo uguale, te lo dice invece di fartene un secondo: il
+stanno gia' su *Lum*) o se hai gia' un setup uguale, te lo dice invece di fartene un secondo: il
 filtro si rinomina con *Modifica*. Con l'ASIAIR i file non dicono l'ottica: le sue pose vanno in un
-corredo senza ottica, finche' non dici quale era in *Da confermare* (*Attrezzatura da
+setup senza ottica, finche' non dici quale era in *Da confermare* (*Attrezzatura da
 completare*).
 
 ## Da confermare
@@ -729,14 +729,14 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
   - *La camera.* Se un frame non la dice, prende quella degli altri frame della stessa notte, se
     dicono tutti la stessa, e non te la chiede; e se non dice l'ottica, prende quella della notte
     quando la notte ne dice una sola a una focale sola. Te la chiede quando nessun frame di quella
-    notte dice la camera, o quando ne dicono piu' d'una. Scegli uno dei tuoi corredi, oppure
+    notte dice la camera, o quando ne dicono piu' d'una. Scegli uno dei tuoi setup, oppure
     scrivi la camera e la focale, e l'ottica se serve: l'app ti propone l'ottica che i frame
     dicono e la focale nativa. La tua risposta vale anche se poi la notte direbbe un'altra camera.
-    Se la scheda chiede anche l'ottica e il corredo scelto non ne ha una, o non la scrivi, dopo
+    Se la scheda chiede anche l'ottica e il setup scelto non ne ha una, o non la scrivi, dopo
     *Applica* la scheda te la chiede da sola, sotto la camera.
   - *L'ottica.* Con l'ASIAIR il file scrive la montatura al posto dell'ottica, e altri programmi
     il telescopio non lo scrivono: scegli una delle tue ottiche o ne scrivi il nome, e se non ce
-    l'hai nasce in Attrezzatura. I frame vanno nel corredo che quell'ottica ha gia' con quella
+    l'hai nasce in Attrezzatura. I frame vanno nel setup che quell'ottica ha gia' con quella
     camera. Il nome della montatura non conta: due montature con la stessa camera alla stessa
     focale sono una scheda sola. Due ottiche diverse usate alla stessa focale con la stessa camera
     ti arrivano come una domanda sola.
@@ -895,7 +895,7 @@ Li' dentro ci sono il database, la cache e i log. I tuoi FITS restano dove sono.
 Accanto al database c'e' anche **`risposte.json`, il backup di tutto quello che hai detto
 all'app**: le preferenze, i siti, le cartelle, gli strumenti e i filtri che hai scritto tu, i nomi che
 le hai insegnato e ogni risposta di *Da confermare*. Si riscrive da solo dopo ogni tua risposta.
-Le foto non ci sono, e nemmeno cio' che l'app ricava leggendole: frame, corredi, notti si rifanno
+Le foto non ci sono, e nemmeno cio' che l'app ricava leggendole: frame, setup, notti si rifanno
 rileggendo le cartelle.
 
 - **Se il database si perde** (reinstallazione, database ricreato, passaggio al NAS con la stessa

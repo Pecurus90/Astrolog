@@ -43,7 +43,7 @@ const allaRotta = (pezzo: string) =>
     expect(chiamate().some((u) => u.includes("/archive") && u.includes(pezzo))).toBe(true),
   )
 
-describe("l'Archivio per periodo e corredo", () => {
+describe("l'Archivio per periodo e setup", () => {
   it("un anno chiede le notti dal primo gennaio al trentuno dicembre", async () => {
     archivio([M31])
     await apriArchivio()
@@ -199,7 +199,7 @@ describe("l'Archivio per periodo e corredo", () => {
     expect(screen.getByLabelText(/^al$/i)).toHaveProperty("value", "2025-02-28")
   })
 
-  it("rimuovi filtri toglie anche il periodo e il corredo", async () => {
+  it("rimuovi filtri toglie anche il periodo e il setup", async () => {
     archivio([], { choices: CORREDO, found: { objects: 0, mosaics: 0 }, total: 0 })
     await apriArchivioSu("/archivio?period=date&since=2030-01-01&optics=5&camera=7&site=1")
 

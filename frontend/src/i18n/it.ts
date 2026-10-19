@@ -156,7 +156,7 @@ export const it = {
   "review.unclear.site": "{luogo}, a {km} km",
   "review.mosaics": "Mosaici proposti",
   "review.mosaics.why":
-    "Pannelli adiacenti ripresi con lo stesso corredo. Vengono uniti solo dopo conferma.",
+    "Pannelli adiacenti ripresi con lo stesso setup. Vengono uniti solo dopo conferma.",
   "review.mosaics.panels": "{n} pannelli",
   "review.mosaics.panels.one": "1 pannello",
   "review.mosaics.question": "{soggetti}, {dove}: mosaico?",
