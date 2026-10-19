@@ -161,7 +161,7 @@ che il `traduttore` legge per primo.
 | fra sei e dodici gradi sotto: in mare l'orizzonte si distingue ancora | `nautical` | crepuscolo nautico | -- |
 | fra dodici e diciotto: l'ultima luce del Sole se ne va | `astronomical` | crepuscolo astronomico | -- |
 | sotto i diciotto gradi: la luce del Sole e' meno di quella delle stelle, ed e' il buio di chi fotografa il cielo | `dark` (una fascia) | buio | notte (che e' la finestra da mezzogiorno a mezzogiorno), nero, **buio pieno** (che e' la classe 1 di Bortle, e si legge nello stesso piede) |
-| ore di buio con cielo sereno (sotto la soglia) | `usable_hours` | ore utili | ore buone |
+| ore di buio con cielo sereno (sotto la soglia); per un progetto in Dashboard, le sue ore visibili con cielo sereno | `usable_hours` | ore utili | ore buone |
 | ore di buio con un oggetto sopra l'altezza minima e l'orizzonte del sito, nel Planner e in Progetti; non guarda il cielo (Marco, 19/10/2026) | `visible_hours` | ore visibili | ore utili (che sono del Meteo), ore in alto |
 | i mesi in cui il 15 l'oggetto ha almeno le ore visibili dell'impostazione (ADR 0023) | `good_months` | mesi buoni | stagione, periodo (Marco, 19/10/2026: «stagioni» sono delle Statistiche) |
 | la parola del meteo sulla notte: Notte buona. / Notte incerta. / Notte non adatta. | `verdict` (`go`, `marginal`, `nogo`) | verdetto | voto, punteggio, "Si fa", "No" |

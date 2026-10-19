@@ -925,8 +925,8 @@ riga per voce.
   un'etichetta della tavola).
 - **Dashboard, la tabella dei progetti** (Marco, 12/10/2026, dal confronto con Target Scheduler,
   Voyager, Telescopius, SkyTools, TheAstroImagingPlanner). La disposizione non cambia: sono
-  colonne. (1) **distanza dalla Luna** del progetto stanotte; (2) **ore visibili stanotte** (buio,
-  altezza, Luna) al posto di *sopra 30 gradi*; (3) **transito** e *finestra che si chiude* (per
+  colonne. (1) **distanza dalla Luna** del progetto stanotte; (2) **ore utili stanotte** (buio,
+  altezza, Luna e cielo sereno: le ore visibili che il meteo lascia) al posto di *sopra 30 gradi*; (3) **transito** e *finestra che si chiude* (per
   quante settimane l'oggetto resta riprendibile); con le tre l'ordine *meglio stanotte*; (4)
   **ore per filtro e per pannello** dentro il progetto, dagli header; (5) **qualita' dell'ultima
   notte** (FWHM, stelle), che aspetta `measure`. Vogliono le effemeridi dell'oggetto (tappa 6) e i
