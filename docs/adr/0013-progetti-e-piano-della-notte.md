@@ -178,14 +178,19 @@ piano). Regole fisse, nessuna impostazione per sceglierle.
 ### Dalla documentazione di Target Scheduler (Marco, 19/10/2026)
 
 Letta tutta (tcpalmer.github.io/nina-scheduler) e confrontata. Si prende:
-- **Luna per bersaglio con la lorentziana**, due coppie (banda larga, banda stretta): separazione
-  richiesta = D / (1 + (giorni dalla Luna piena / W)^2), cioe' D a Luna piena e D/2 a W giorni.
-  Codice: `GetMoonAvoidanceLorentzianSeparation` in `AstrometryUtils.cs` del repo
-  tcpalmer/nina.plugin.targetscheduler (ciclo 29.53059 giorni). Partenze: stretta 60°/7 (Target
-  Scheduler), larga 120°/14 (ACP, "very conservative"). Supera "La *Lorentzian moon avoidance*
-  resta fuori" qui sopra e la distanza unica di 40°; la regola di fase 25/50% resta per il
-  verdetto della notte in Meteo e Dashboard. Il "relax" vicino all'orizzonte non si prende: la
-  sua formula non e' nel codice letto.
+- **Luna per bersaglio con la lorentziana**, tre coppie: separazione richiesta = D / (1 +
+  (giorni dalla Luna piena / W)^2), cioe' D a Luna piena e D/2 a W giorni. Codice:
+  `GetMoonAvoidanceLorentzianSeparation` in `AstrometryUtils.cs` del repo
+  tcpalmer/nina.plugin.targetscheduler (ciclo 29.53059 giorni). Partenze (Marco):
+  - banda larga (L, RGB, colore) **120°/10**: 120 a Luna piena da ACP, forum e Telescopius; W
+    tagliato da 14 perche' 120/14 chiede 57° anche a Luna nuova (un bersaglio a 45° non passa
+    mai); 10 ricavato dai numeri attribuiti a Telescopius (README di astro-recommender);
+  - **OIII 90°/10**: piu' sensibile alla Luna (forum), 90 attribuito a Telescopius;
+  - **Hα, SII, dual band 60°/7**: default nel codice di Target Scheduler e nella sua doc.
+  Conta solo con la Luna sopra l'altezza scelta in Impostazioni (orizzonte di partenza): niente
+  "relax" di Target Scheduler (`MoonAvoidanceExpert.cs`), la sua scala non ha fonte (Marco).
+  Supera "La *Lorentzian moon avoidance* resta fuori" qui sopra e la distanza unica di 40°; la
+  regola di fase 25/50% resta per il verdetto della notte in Meteo e Dashboard.
 - **Crepuscolo ammesso per banda** (larga, stretta): buio astronomico di partenza; la stretta
   puo' cominciare dal nautico (Target Scheduler: Nighttime, Astronomical, Nautical, Civil).
 - **Altezza massima**, spenta di partenza.
