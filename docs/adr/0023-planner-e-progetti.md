@@ -104,7 +104,9 @@ Dal Framing Assistant di N.I.N.A. (`FramingAssistantVM.cs`):
 
 - Nome: oggetto + ottica + camera, come la produzione.
 - Gruppi in corso / in attesa / fermi / finiti; finito proposto dall'app, confermato
-  dall'utente; eliminare non tocca i frame (ereditato.md A).
+  dall'utente; eliminare non tocca i frame (ereditato.md A). La stagione e' quella del mese buono
+  (sotto, "I giudizi"): in corso = mese buono adesso; in attesa = fuori stagione, circumpolare
+  mai; fermo = una stagione intera passata senza frame (ereditato.md, "fermo da una stagione").
 - **Modifiche** (Marco): ore, filtri ed esposizioni sempre libere. Inquadratura, griglia o corredo
   su un progetto iniziato si cambiano **con un avviso numerico**: «{durata} gia' riprese non
   conterebbero piu'», contato sui frame veri. Supera "griglia congelata a progetto iniziato"
