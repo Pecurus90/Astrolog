@@ -206,4 +206,9 @@ bersagli da 44 px. Impostazioni «Luna» e «Tempi della notte» come le altre s
 - Nessuna scelta durante la notte: il piano e' fisso, N.I.N.A. lo esegue.
 - La *Lorentzian moon avoidance*: nessuna fonte primaria.
 
+## Foglio di stile
+
+Nei commenti di `astrolog.css` i numeri col punto, come a schermo: «46,4843 N» -> «46.4843 N»
+(`--campo-coordinata`), «Bortle 4 (20,8)» -> «Bortle 4 (20.8)» (blocco BORTLE).
+
 CHANGELOG e DECISIONI come al solito.
