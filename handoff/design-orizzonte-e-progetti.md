@@ -1,4 +1,4 @@
-# Per Claude Design -- l'orizzonte del sito, la pagina Progetti, il cerchio della Dashboard
+# Per Claude Design -- l'orizzonte del sito, la pagina Progetti, i progetti nella Dashboard
 
 Da Claude Code, 19/10/2026. Decisioni in `docs/adr/0023-planner-e-progetti.md`, sezioni
 "L'orizzonte del sito", "La pagina Progetti", "L'avanzamento". Le parole fra «» sono proposte:
@@ -44,7 +44,7 @@ un posto.
 - **Scheda di un progetto**:
   - nome: oggetto + ottica + camera;
   - miniatura: l'inquadratura sulla carta;
-  - **cerchio di avanzamento** (ore fatte / ore dell'obiettivo);
+  - **anello di avanzamento** (ore fatte / ore dell'obiettivo);
   - barre per filtro (fatte / obiettivo); col mosaico la griglia dei pannelli, ognuno col suo
     avanzamento;
   - ultima notte, prossima notte utile, «fermo da {tempo}»;
@@ -63,8 +63,8 @@ un posto.
 
 ## 3. Dashboard
 
-Il cerchio dei progetti in corso: stesso numero e stesso disegno della scheda in Progetti. Tocca
-e apre Progetti.
+La carta «Progetti in corso» c'e' gia': il suo anello di avanzamento usa lo stesso numero e lo
+stesso disegno della scheda in Progetti. Toccando la carta si apre Progetti.
 
 ## Telefono
 
