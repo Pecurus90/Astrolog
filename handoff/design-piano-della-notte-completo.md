@@ -1,4 +1,4 @@
-# Per Claude Design -- Piano della notte, brief completa (v30)
+# Per Claude Design -- Piano della notte, brief completa (v30.1)
 
 Da Claude Code, 20/10/2026 (prima stesura 19/10). **La v29/v29.1 ha fatto il Meteo ma non questa
 brief: il Piano e' fermo alla v28.4.** Va eseguita tutta, sez. 0-13, piu' la sez. 0bis
@@ -12,6 +12,27 @@ parole fra «» sono proposte: Marco le approva sulla tavola. I numeri li manda 
 
 Il Planner crea i progetti; il Piano della notte decide **cosa si fa una notte** (o un giorno,
 per il Sole), in che ordine, e lo esporta in un file per il programma che riprende.
+
+## 0ter. Correzioni alla v30 consegnata (20/10/2026)
+
+La v30 e' buona: si correggono solo questi punti.
+
+1. **Crepuscolo nautico = dentro il nautico.** «Puo' cominciare dal nautico» vuol dire dalla fine
+   del civile, **Sole sotto -6°**, come l'opzione di Target Scheduler (ADR 0013). Non da -12°.
+   Risponde alla vostra domanda in DECISIONI v30.
+2. **Scelte di Marco:** la postazione resta in **tendina** (v26.1), il telefono resta
+   l'**elenco** della v28.4. La linguetta per montatura (sez. 1) e la linea verticale (sez. 12)
+   escono; il Tweak della linea verticale si toglie.
+3. **Testi, sul lessico dell'app** (glossario e testi gia' in uso):
+   - «Nessun buio stanotte: nessuna ora utile.» -> **«Nessun buio stanotte.»** («ore utili» e'
+     del Meteo; come `weather.verdict.noNight`).
+   - «piu' alta possibile: 59° alle 05:36» -> **«sale fino a 59° alle 05:36»** (come
+     `dashboard.moon.highest`; «piu' alta possibile» resta solo nella riga d'aiuto della regola).
+   - «Nessun pianeta sopra {n}° stanotte.» -> **«Nessun pianeta alto piu' di {n} gradi
+     stanotte.»** (l'altezza si dice «alto {n} gradi»).
+   - «Scrivi un numero.» / «Scrivi un numero da 0 a 10» -> **«Un numero da {min} a {max}.»**,
+     senza limiti **«Un numero.»** (come `settings.moon.range`).
+   Gli altri testi nuovi della v30 sono approvati.
 
 ## 0bis. Meteo v29.1: risposte e correzioni
 

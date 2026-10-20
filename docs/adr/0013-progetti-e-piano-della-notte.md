@@ -192,7 +192,8 @@ Letta tutta (tcpalmer.github.io/nina-scheduler) e confrontata. Si prende:
   Supera "La *Lorentzian moon avoidance* resta fuori" qui sopra e la distanza unica di 40°; la
   regola di fase 25/50% resta per il verdetto della notte in Meteo e Dashboard.
 - **Crepuscolo ammesso per banda** (larga, stretta): buio astronomico di partenza; la stretta
-  puo' cominciare dal nautico (Target Scheduler: Nighttime, Astronomical, Nautical, Civil).
+  puo' cominciare dal nautico, cioe' col Sole sotto -6° (Target Scheduler: Nighttime,
+  Astronomical, Nautical, Civil).
 - **Altezza massima**, spenta di partenza.
 - Non si prende: priorita' a mano (Marco: bastano le regole), punteggi e pesi, grader e throttle,
   ripianificare dopo ogni posa, Wait Plan, umidita', sincronizzazione: servono a chi decide
