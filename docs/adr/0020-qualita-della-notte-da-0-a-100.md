@@ -58,6 +58,9 @@ decide Marco (CLAUDE.md, principio 1); le soglie dentro ogni fattore restano que
     21:10-00:40 · poi solo banda stretta"); il riquadro di lato dice le ore di ciascun tipo.
   - Superato: la Luna giudicata col modello di Krisciunas e Schaefer sul cielo del sito (resta
     un'idea per un giudizio per bersaglio, con la distanza dalla Luna).
+- **Un fattore che manca** (Marco, 20/10/2026; ADR 0024): i suoi punti vanno agli altri in
+  proporzione, come quelli della Luna, e accanto si dice quale manca («senza seeing»). Vale per
+  il Meteo senza chiave Meteoblue e per lo storico ERA5, che il seeing non l'ha.
 - **La notte**: media delle ore di buio; la curva ora per ora e' il suo andamento.
 - **Il verdetto viene dal punteggio della notte** (Marco, 17/10/2026): buona da 70, incerta da
   40, sotto non adatta. Non dalle ore utili: d'estate il buio dura 4 ore e nessuna notte sarebbe

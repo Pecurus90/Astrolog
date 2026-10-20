@@ -79,7 +79,9 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   la linea ora per ora sale e scende con la qualita', in Meteo e in Dashboard (Marco, 20/10/2026;
   100 = un'ora senza limiti). Il **verdetto** viene dal punteggio: buona da 70, incerta da 40, sotto non adatta. Le
   **ore utili** sono le ore di buio con qualita' da 60, dette come intervallo e conto ("dalle 23
-  alle 04, 4 ore"), mai in minuti: i dati sono orari. Il codice di oggi giudica ancora dalle sole
+  alle 04, 4 ore"), mai in minuti: i dati sono orari. Un fattore che manca (seeing senza chiave
+  Meteoblue, o nello storico) cede i suoi punti agli altri in proporzione, e la pagina dice
+  quale manca (Marco, 20/10/2026). Il codice di oggi giudica ancora dalle sole
   nuvole: cambia quando si costruisce l'ADR 0020.
 - **Ogni misura ha anche la sua parola.** Ogni misura con soglia ha la sua parola
   ora per ora (buona, incerta, niente) e per la notte quella dell'ora peggiore, con l'intervallo e
