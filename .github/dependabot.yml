@@ -4,6 +4,8 @@
 #
 # Vincolo non ovvio: le proposte si raggruppano in una sola per ecosistema. Dieci richieste
 # separate al mese non si guardano; una sola, con dentro tutto, si guarda davvero.
+# Nel gruppo solo minori e patch: una maggiore rompe da sola (typescript 7 nel gruppo di
+# ottobre teneva rossa l'intera proposta) e arriva in una proposta sua.
 version: 2
 updates:
   - package-ecosystem: uv
@@ -13,6 +15,7 @@ updates:
     groups:
       backend:
         patterns: ["*"]
+        update-types: [minor, patch]
     open-pull-requests-limit: 3
 
   - package-ecosystem: npm
@@ -22,6 +25,11 @@ updates:
     groups:
       frontend:
         patterns: ["*"]
+        update-types: [minor, patch]
+    ignore:
+      # openapi-typescript 7.13 vuole typescript ^5: si toglie quando lo accetta.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 3
 
   - package-ecosystem: github-actions
@@ -31,4 +39,5 @@ updates:
     groups:
       azioni:
         patterns: ["*"]
+        update-types: [minor, patch]
     open-pull-requests-limit: 3
