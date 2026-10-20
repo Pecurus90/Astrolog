@@ -448,6 +448,34 @@ def test_a_frame_whose_disc_is_unplugged_waits_for_it(db_path, archivio_letto, t
     conn.close()
 
 
+# Cio' che ASTAP CLI-2025.11.19 scrive sia per un file che non c'e' sia per uno che non sa leggere
+# (Rice, MEF): la frase non dice quale dei due.
+ILLEGGIBILE = "\nPLTSOLVD=F\nERROR=Error reading image file.\n"
+
+
+def test_a_disc_unplugged_after_the_scan_waits_for_it(db_path, archivio_letto, tmp_path):
+    """Il disco si stacca dopo la lettura: le posizioni dicono ancora `present`. Chi dice che il
+    file manca e' il disco, non la frase di ASTAP."""
+    archivio_letto.rename(tmp_path / "staccato")
+    conn = connect(db_path)
+    run = solver(esiti=dict.fromkeys(range(5), ILLEGGIBILE))
+    ricevuta = corri(conn, run, cache=tmp_path / "cache")
+
+    assert ricevuta["waiting"] == 5 and run.calls == []
+    assert set(stato(conn).values()) == {"pending"}
+    conn.close()
+
+
+def test_a_file_astap_cannot_read_is_a_failure_not_a_wait(db_path, archivio_letto, tmp_path):
+    """Un file che c'e' ma che ASTAP non sa leggere non torna a ogni giro: ha il suo perche'."""
+    conn = connect(db_path)
+    ricevuta = corri(conn, solver(esiti=dict.fromkeys(range(5), ILLEGGIBILE)), cache=tmp_path / "c")
+
+    assert ricevuta["unsolved"] == 5 and ricevuta["waiting"] == 0
+    assert set(stato(conn).values()) == {"failed"}
+    conn.close()
+
+
 # --- le regole su cui la fetta e' costruita ------------------------------------------------
 
 

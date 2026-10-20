@@ -17,8 +17,8 @@ Ordine (Marco, 20/10/2026), prima del porting:
 1. **Difetti riprodotti** (`/ripara`, uno per uno):
    - Importa in Impostazioni (`Backup.tsx:122`) dice "non e' un file di risposte" per ogni 422,
      anche per una cartella rifiutata (`path_outside_data_root`): testo da concordare, col disegno;
-   - disco staccato: `astap.py:66` cerca "file not found", ASTAP scrive "Error reading image
-     file." -- i frame restano `failed/no_solution` per sempre (il test usa un testo inventato);
+   - disco staccato dopo la scansione, cielo gia' in cache e misure perse: `solve.py:159` lancia
+     `astap.analyse` su un file che non c'e' (il commento sopra promette il contrario);
    - `_scheduler` (`api/app.py:72-89`) muore al primo `database is locked`;
    - `api/pipeline.py:91-100`: `?1` con una tupla, errore da Python 3.14;
    - `meteoblue.drop_seeing` cancella anche le notti passate (sotto, nel Parcheggio);

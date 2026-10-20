@@ -213,7 +213,8 @@ def _solution_for(
     if saved.ok:
         return saved, True
     path = _path_of(frame)
-    if path is None:
+    # Asked of the disc, not of ASTAP: it writes the same sentence for a file it cannot read.
+    if path is None or not os.path.exists(path):
         return astap.Solution(ok=False, reason=astap.Reason.FILE_MISSING), False
     if solver.exe:
         solution = _launch(conn, frame, path, out_base, solver)
