@@ -259,6 +259,30 @@ def test_scan_schedule_nas(db_path, tmp_path):
         assert c.get("/api/v1/scan-runs").json()["items"][0]["new"] == 1
 
 
+def test_a_locked_database_skips_one_round_of_the_schedule_not_all(db_path, tmp_path):
+    """Sul NAS un'altra scrittura tiene il database per un attimo: quel giro salta, la cadenza
+    resta viva e il giro dopo legge la cartella."""
+    import sqlite3
+
+    import astrolog.api.scan as scan_api
+
+    root = tmp_path / "lib"
+    write_light(root / "a.fits")
+    vero = scan_api.active_folder_ids
+    giri = itertools.count()
+
+    def bloccato_al_primo(conn):
+        if next(giri) == 0:
+            raise sqlite3.OperationalError("database is locked")
+        return vero(conn)
+
+    with mock.patch.object(scan_api, "active_folder_ids", bloccato_al_primo):
+        app = create_app(db_path, scan_every_s=0.2)
+        with TestClient(app, base_url="http://localhost") as c:
+            c.post("/api/v1/folders", json={"root_path": str(root)})
+            assert wait_until(lambda: c.get("/api/v1/scan-runs").json()["items"] != [])
+
+
 def test_unknown_hosts_are_refused_and_declared_ones_admitted(db_path):
     with TestClient(create_app(db_path, hosts=["nas.local"]), base_url="http://localhost") as c:
         assert c.get("/api/health", headers={"host": "localhost"}).status_code == 200

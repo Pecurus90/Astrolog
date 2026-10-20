@@ -329,3 +329,33 @@ def test_a_trend_night_does_not_carry_the_wind_aloft(letto):
     tendenza = [n for n in letto.get("/api/v1/weather").json()["nights"] if n["trend"]][0]
     assert tendenza["wind_700hpa_kmh"] is None
     assert tendenza["wind_700hpa_tenths"] is None
+
+
+def test_a_locked_database_skips_one_weather_round_not_all(db_path, monkeypatch):
+    """Il database tenuto da un'altra scrittura al primo giro: il giro salta, il meteo resta vivo
+    e il giro dopo lavora."""
+    import sqlite3
+
+    import astrolog.api.app as app_mod
+
+    vera = app_mod.connect
+    aperture = []
+
+    def bloccata_alla_prima(path):
+        aperture.append(path)
+        if len(aperture) == 1:
+            raise sqlite3.OperationalError("database is locked")
+        return vera(path)
+
+    giri = []
+    monkeypatch.setattr(app_mod, "connect", bloccata_alla_prima)
+    monkeypatch.setattr(app_mod, "_WEATHER_TICK_S", 0.05)
+    monkeypatch.setattr(app_mod.history, "step", lambda conn: giri.append(conn))
+    stop = threading.Event()
+    filo = threading.Thread(target=app_mod._weather_scheduler, args=(str(db_path), 3600, stop))
+    filo.start()
+    try:
+        assert wait_until(lambda: giri != [])
+    finally:
+        stop.set()
+        filo.join(timeout=5)

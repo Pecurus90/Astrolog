@@ -71,22 +71,30 @@ def _readable_id(route: APIRoute) -> str:
 
 def _scheduler(state: State, every_s: float, stop_event: threading.Event) -> None:
     while not stop_event.wait(every_s):
-        conn = connect(state.db_path)
+        # A round that falls (a database held by another write) is logged; the next one comes.
         try:
-            for folder_id in scan.active_folder_ids(conn):
-                if state.worker.is_running():
-                    break
-                # A folder that cannot start is logged and skipped; the round goes on.
-                try:
-                    scan.start_scan(state, conn, folder_id)
-                except Exception as err:  # noqa: BLE001
-                    log.warning(
-                        "cadenza: scansione non avviata",
-                        extra={"folder_id": folder_id, "error": str(err)},
-                    )
-                state.worker.join()
-        finally:
-            conn.close()
+            _scan_round(state)
+        except Exception:
+            log.exception("cadenza: il giro delle scansioni e' caduto")
+
+
+def _scan_round(state: State) -> None:
+    conn = connect(state.db_path)
+    try:
+        for folder_id in scan.active_folder_ids(conn):
+            if state.worker.is_running():
+                break
+            # A folder that cannot start is logged and skipped; the round goes on.
+            try:
+                scan.start_scan(state, conn, folder_id)
+            except Exception as err:  # noqa: BLE001
+                log.warning(
+                    "cadenza: scansione non avviata",
+                    extra={"folder_id": folder_id, "error": str(err)},
+                )
+            state.worker.join()
+    finally:
+        conn.close()
 
 
 # A site declared now gets its forecast at once, not at the next three-hour round.
@@ -98,33 +106,41 @@ def _weather_scheduler(db_path: str, every_s: float, stop_event: threading.Event
     so a fallen one is logged and what was there stays."""
     cadence = forecast.Cadence(every_s)
     while True:
-        conn = connect(db_path)
+        # A round whose database cannot be opened (held by another write) waits for the next one.
         try:
-            row = home_site(conn)
-            site = None if row is None else dict(row)
-            try:
-                climate.step(conn, site)  # before the forecast, which reads it
-            except Exception:
-                log.exception("meteo: il giro della climatologia e' caduto")
-            try:
-                tonight = night_date(now_iso(), site["timezone"]) if site else None
-                if tonight and moon_calendar.step(conn, site, dt.date.fromisoformat(tonight)):
-                    conn.commit()
-            except Exception:
-                log.exception("luna: il giro del calendario e' caduto")
-            if cadence.due(site, time.monotonic()):
-                cadence.done(site, rounds.refresh(conn, site), time.monotonic())
+            _weather_round(db_path, cadence)
         except Exception:
-            log.exception("meteo: il giro della previsione e' caduto")
-        try:
-            # also without a home site, and apart, so a fallen forecast does not stop it
-            history.step(conn)
-        except Exception:
-            log.exception("meteo: il giro dello storico e' caduto")
-        finally:
-            conn.close()
+            log.exception("meteo: il giro non e' partito")
         if stop_event.wait(_WEATHER_TICK_S):
             return
+
+
+def _weather_round(db_path: str, cadence: forecast.Cadence) -> None:
+    conn = connect(db_path)
+    try:
+        row = home_site(conn)
+        site = None if row is None else dict(row)
+        try:
+            climate.step(conn, site)  # before the forecast, which reads it
+        except Exception:
+            log.exception("meteo: il giro della climatologia e' caduto")
+        try:
+            tonight = night_date(now_iso(), site["timezone"]) if site else None
+            if tonight and moon_calendar.step(conn, site, dt.date.fromisoformat(tonight)):
+                conn.commit()
+        except Exception:
+            log.exception("luna: il giro del calendario e' caduto")
+        if cadence.due(site, time.monotonic()):
+            cadence.done(site, rounds.refresh(conn, site), time.monotonic())
+    except Exception:
+        log.exception("meteo: il giro della previsione e' caduto")
+    try:
+        # also without a home site, and apart, so a fallen forecast does not stop it
+        history.step(conn)
+    except Exception:
+        log.exception("meteo: il giro dello storico e' caduto")
+    finally:
+        conn.close()
 
 
 def _load_catalog(db_path: str | Path) -> None:
