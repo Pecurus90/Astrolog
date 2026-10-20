@@ -48,7 +48,8 @@ del 20/10/2026 su app e forum:
     su) e seeing storico (solo da quando l'app archivia la previsione);
   - le altre misure dei frame (Marco, 20/10/2026): HFD allo zenit, eccentricita', numero di
     stelle, fondo cielo; e la qualita' media della notte dal meteo (ADR 0020). Mediana del mese.
-    Stelle e fondo dipendono da posa, filtro e setup: si leggono con un setup scelto.
+    Il setup lo sceglie l'utente: uno, oppure «Tutti» = tutti insieme (Marco, 20/10/2026), e la
+    pagina avverte che FWHM, stelle e fondo cambiano da un setup all'altro.
 - **Capacita'**: FWHM e HFD allo zenit (ADR 0022, le due unita'), eccentricita' (senza
   correzione). **SNR fuori**: "SNR fra oggetti diversi: mai" (ADR 0022), e notti diverse sono
   oggetti diversi. Scelta di metodo.

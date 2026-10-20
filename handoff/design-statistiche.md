@@ -1,4 +1,14 @@
-# Per Claude Design -- Statistiche, brief completa (v1.1)
+# Per Claude Design -- Statistiche, brief completa (v1.2)
+
+## 0bis. Correzione alla v31.1 (20/10/2026)
+
+La v31.1 e' a posto. Una sola cosa cambia, scelta di Marco: **niente "setup con piu' ore" al
+posto di «Tutti»**. Il setup lo sceglie l'utente dalla tendina in testa (sez. 1), e la griglia
+segue: un setup, oppure **«Tutti» = tutti i setup insieme** (mediana su tutte le notti uscite),
+per FWHM, HFD, stelle e fondo come per le altre misure. Sotto la griglia, con «Tutti» e piu' di
+un setup: «Tutti i setup insieme: FWHM, stelle e fondo cambiano da un setup all'altro.» (testo
+da approvare). Esce «il setup con piu' ore negli ultimi 12 mesi». Approvati gli altri testi
+della v31.1 («nessuna uscita con {setup}», la riga della regola del Bortle).
 
 ## 0. Correzioni alla prima consegna (20/10/2026)
 
