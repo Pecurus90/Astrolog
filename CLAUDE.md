@@ -18,6 +18,10 @@ Lo stato si legge dal codice e da [`docs/coda.md`](docs/coda.md); le decisioni s
    layout non porta logica. **Le soglie vengono da convenzioni pubbliche** (okta WMO, Nyquist,
    Beaufort), verificate su una fonte vera e citate accanto al numero, mai scritte a memoria. Dove una
    convenzione non c'e', la soglia o la formula si decide con Marco, a video: mai inventata.
+   **In ogni lavoro, di default** (Marco, 20/10/2026): ogni numero, soglia e formula toccati, anche
+   gia' in codice, si confronta con la convenzione; se diverge, ci si ferma e si mostra a Marco
+   cosa cambia. Cio' che riprende un software esterno (campi, opzioni, formati di N.I.N.A. e degli
+   altri) si confronta con la sua documentazione: completo, o parziale con l'elenco che manca.
 2. **Marco non e' un programmatore: decide il prodotto, non il codice.** Si chiede solo cio' che
    dipende da lui (gusto, dati suoi, rischio che accetta). Quando serve: **a video, a scelta
    multipla, con la consigliata in cima e il perche' in una riga**. **La consigliata e' la piu'
