@@ -1,8 +1,10 @@
 # 0020 -- La qualita' della notte e' un punteggio da 0 a 100, coi pesi decisi con Marco
 
-**Stato:** accettata, 17/10/2026 (Marco). I pesi della tabella sono la proposta v2: si toccano
-solo con Marco. Sostituisce, quando si costruisce, "il semaforo lo decidono solo le nuvole" di
-`docs/domini/meteo.md`.
+**Stato:** accettata, 17/10/2026 (Marco); ribadita il 20/10/2026: non si torna al semaforo dalle
+sole nuvole, ne' in un contratto ne' in una brief. I pesi della tabella sono la proposta v2: si
+toccano solo con Marco.
+
+**Supera** in `docs/domini/meteo.md`: "lo decidono solo le nuvole"; "Nessun voto unico della notte"; "la Luna resta fuori dal verdetto"
 
 ## Contesto
 
@@ -46,9 +48,9 @@ decide Marco (CLAUDE.md, principio 1); le soglie dentro ogni fattore restano que
     Luna e' illuminata dal **25 %** (schema ING: buio sotto 0,25, grigio fino a 0,65, chiaro
     oltre; ING Technical Note 127,
     https://www.ing.iac.es/Astronomy/observing/manuals/ps/tech_notes/tn127.pdf; gli stessi tagli in
-    astroplan, `MoonIlluminationConstraint`) **e** alta **da 10°** (Marco, a
-    gusto: nessuna convenzione sull'altezza; ESO e i pianificatori contano dall'orizzonte; una
-    Luna bassa spesso sta dietro monti o alberi).
+    astroplan, `MoonIlluminationConstraint`) **e** sopra **-5°** (Marco, 19/10/2026: rete TESS,
+    cielo costante con la Luna sotto -5° a ogni fase, arXiv 2105.01066; ADR 0013. Prima 10°, a
+    gusto).
   - Le due soglie sono **una sola casa**, nelle Impostazioni (oggi la fase e' quella del
     calendario della Luna, 25 %): calendario, Meteo, Dashboard e Notti usano la stessa
     definizione di "ora senza Luna".
@@ -66,8 +68,8 @@ decide Marco (CLAUDE.md, principio 1); le soglie dentro ogni fattore restano que
 
 ## Conseguenze
 
-- `docs/domini/meteo.md` si riscrive quando si costruisce: oggi dice "nessun voto unico della
-  notte" e "la Luna resta fuori dal verdetto".
+- `docs/domini/meteo.md` dice gia' il punteggio (20/10/2026). Le frasi superate stanno nella
+  riga **Supera** in testa: `tools/test_adr_superati.py` fallisce se tornano nel contratto.
 - Profili per tipo di ripresa (banda stretta: la Luna pesa meno) restano un'idea; il giudizio per
   bersaglio (BAIT) arriva coi progetti.
 - `soglie.js` del disegno non decide piu' niente: punteggio, cosa limita e tratti arrivano

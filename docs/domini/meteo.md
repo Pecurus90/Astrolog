@@ -72,12 +72,16 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 - **Piu' modelli con uno switch**: di fabbrica il modello che Open-Meteo sceglie per il posto
   (`best_match`). Il riassunto -- verdetto, misure, ore utili -- si scrive per ogni modello quando
   arriva la previsione, e lo switch legge soltanto.
-- **Il semaforo lo decidono solo le nuvole** (DECISIONI del disegno, 3/10/2026): la copertura
-  media nel buio in okta (WMO 2700, classi dei METAR): **si fa** fino a 2 okta (FEW), **incerta**
-  fino a 4 (SCT), **no** da BKN in su, contando in ottavi (2/8 = 25%, 4/8 = 50%). Le **ore utili**
-  sono le ore di buio che il verdetto direbbe serene, cosi' non si contraddicono, dette come
-  intervallo e conto ("dalle 23 alle 04, 4 ore"), mai in minuti: i dati sono orari.
-- **Le altre misure pesano accanto, senza cambiarlo.** Ogni misura con soglia ha la sua parola
+- **La qualita' della notte e' un punteggio da 0 a 100** (ADR 0020; Marco, 17/10/2026, ribadito
+  il 20/10/2026: non si torna indietro). Ogni ora somma i punti dei fattori coi pesi di Marco:
+  nuvole 35, seeing 30, trasparenza 12, condensa 9, vento 9, jet stream 5. Pioggia e nuvole "non
+  adatta" (dal 50%, okta WMO 2700) bloccano: l'ora vale 0. La notte e' la media delle ore di buio;
+  la linea ora per ora sale e scende con la qualita', in Meteo e in Dashboard (Marco, 20/10/2026;
+  100 = un'ora senza limiti). Il **verdetto** viene dal punteggio: buona da 70, incerta da 40, sotto non adatta. Le
+  **ore utili** sono le ore di buio con qualita' da 60, dette come intervallo e conto ("dalle 23
+  alle 04, 4 ore"), mai in minuti: i dati sono orari. Il codice di oggi giudica ancora dalle sole
+  nuvole: cambia quando si costruisce l'ADR 0020.
+- **Ogni misura ha anche la sua parola.** Ogni misura con soglia ha la sua parola
   ora per ora (buona, incerta, niente) e per la notte quella dell'ora peggiore, con l'intervallo e
   il conto delle ore che la portano. Le soglie stanno in `backend/astrolog/weather/judge.py`, con
   la fonte accanto al numero (verificate il 7/10/2026), e la rotta le manda alla pagina (`scales`):
@@ -137,8 +141,8 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   chiede una volta l'anno (`weather_climate`) e sotto un terzo dell'anno di notti non si scrive, e il confronto tace.
 - **Quanti modelli sono d'accordo** si dice accanto al verdetto (Marco, 26/9/2026): e' cio' che fa
   capire quanto fidarsi di una notte senza cambiare modello a mano.
-- **Nessun voto unico della notte, e la Luna resta fuori dal verdetto**: per la planetaria e la
-  Luna il plenilunio non e' un difetto. Il totale delle nuvole e' quello del modello, mai
+- **La Luna non pesa nel punteggio, decide la ripresa** (ADR 0020): banda larga o solo banda
+  stretta, ora per ora. Per la planetaria e la Luna il plenilunio non e' un difetto. Il totale delle nuvole e' quello del modello, mai
   ricalcolato dagli strati.
 
 **Quando si scarica.** La previsione appena c'e' un sito di casa (o cambia), poi ogni tre ore in
