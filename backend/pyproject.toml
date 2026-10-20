@@ -87,6 +87,8 @@ markers = [
   "sorgente: legge il codice o i documenti del repo come testo; fuori dalla mutazione, che li riscrive",
 ]
 addopts = "--strict-markers -q"
+# what our code does that a newer Python will refuse fails now, not after the upgrade
+filterwarnings = ["error::DeprecationWarning:astrolog"]
 
 [tool.mutmut]
 # Nightly only (.github/workflows/nightly.yml): mutmut runs on Linux and macOS, not Windows.

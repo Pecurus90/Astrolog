@@ -88,16 +88,16 @@ def remaining_s(current: int, total: int, elapsed_s: float) -> int | None:
 # A folder of the gesture never read to the end outside it: a reading stopped or broken does not
 # count as one, so Stop then Resume is still the first reading of what was not read.
 _NEVER_READ = (
-    "SELECT 1 FROM scan_runs AS cur WHERE cur.id IN (SELECT value FROM json_each(?1))"
+    "SELECT 1 FROM scan_runs AS cur WHERE cur.id IN (SELECT value FROM json_each(:runs))"
     " AND NOT EXISTS (SELECT 1 FROM scan_runs AS prev WHERE prev.folder_id = cur.folder_id"
-    " AND prev.status = 'ok' AND prev.id NOT IN (SELECT value FROM json_each(?1))) LIMIT 1"
+    " AND prev.status = 'ok' AND prev.id NOT IN (SELECT value FROM json_each(:runs))) LIMIT 1"
 )
 
 
 def is_first_scan(conn: sqlite3.Connection, run_ids: Iterable[int]) -> bool:
     """The gesture reads at least one folder for the first time: its counts are still growing. A
     folder added to a read archive is a first reading too, of that folder."""
-    return conn.execute(_NEVER_READ, (json.dumps(list(run_ids)),)).fetchone() is not None
+    return conn.execute(_NEVER_READ, {"runs": json.dumps(list(run_ids))}).fetchone() is not None
 
 
 def _remaining(last: Mapping[str, Any] | None) -> int | None:

@@ -17,7 +17,6 @@ Ordine (Marco, 20/10/2026), prima del porting:
 1. **Difetti riprodotti** (`/ripara`, uno per uno):
    - Importa in Impostazioni (`Backup.tsx:122`) dice "non e' un file di risposte" per ogni 422,
      anche per una cartella rifiutata (`path_outside_data_root`): testo da concordare, col disegno;
-   - `api/pipeline.py:91-100`: `?1` con una tupla, errore da Python 3.14;
    - `meteoblue.drop_seeing` cancella anche le notti passate (sotto, nel Parcheggio);
    - `DATE-OBS=9999-12-31` da' `OverflowError` in `clock._in_zone`;
    - `<p>` dentro `<p>` in `Avviso.tsx:91` (da `riconoscitore.tsx:190`).
