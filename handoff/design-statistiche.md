@@ -80,7 +80,7 @@ mai «analitica», «report», «grafici».
   da 70, la stessa del Meteo). Sotto in piccolo l'anno di confronto: «l'anno scorso 14 su 27».
   Riga d'aiuto: «Notti con qualita' da 70 al sito, e in quante sei uscito.»
 - Accanto quattro celle col delta sull'anno di confronto: **notti uscite**, **ore integrate**,
-  **pose**, **resa del buio** («62 %»; aiuto: «Ore integrate sulle ore di buio delle notti in cui
+  **frame**, **resa del buio** («62 %»; aiuto: «Ore integrate sulle ore di buio delle notti in cui
   sei uscito.»).
 - Le notti prima dell'app non hanno il seeing: la qualita' si calcola senza, e una riga lo dice:
   «Notti prima del {data}: qualita' senza seeing.»
@@ -115,7 +115,7 @@ confronta).
 - Due anni sovrapposti sul giorno dell'anno: il progresso si legge come **banda che si
   stringe**.
 - Riga sotto: «Allo zenit: valore diviso per la massa d'aria alla 0,6 (ESO).» e, se ce ne sono,
-  «{n} pose senza massa d'aria escluse.»
+  «{n} frame senza massa d'aria esclusi.»
 - Prima che l'app misuri i frame: «Le misure dei frame non ci sono ancora.»
 
 ## 6. Stagioni: mesi x anni
@@ -134,12 +134,12 @@ archiviato prima del {data}»). Si legge «ottobre e' sempre il mio mese miglior
 ## 7. Per filtro
 
 Ore integrate per filtro nell'anno, **barre impilate per mese**; il filtro con piu' ore in basso,
-il totale scritto sopra ogni barra. Accanto la tabellina: filtro, ore, pose, notti. Filtri dai
+il totale scritto sopra ogni barra. Accanto la tabellina: filtro, ore, frame, notti. Filtri dai
 nomi dell'utente (L, R, G, B, Hα, OIII, SII, dual band…); colori del foglio per banda.
 
 ## 8. Per setup
 
-Una riga per setup: **ore**, **pose**, **oggetti**, **FWHM mediana allo zenit** a parita' di
+Una riga per setup: **ore**, **frame**, **oggetti**, **FWHM mediana allo zenit** a parita' di
 altezza, e su che tipo di oggetti ha lavorato di piu' (nebulose, galassie, ammassi). Niente
 classifica: ordine per ore.
 
@@ -167,7 +167,7 @@ tutta larghezza, il valore al tocco. Bersagli da 44 px.
 
 ## Fuori
 
-- Scarto delle pose, classifiche fra oggetti, voto d'insieme.
+- Scarto dei frame, classifiche fra oggetti, voto d'insieme.
 - Correlazione fra qualita' dei frame e meteo.
 - SNR nel tempo.
 - Stima dello SQM per i filtri stretti.
