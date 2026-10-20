@@ -42,11 +42,18 @@ def night_date(instant_iso: object, tz_name: str | None = None) -> str | None:
     """Noon to noon in the given zone, because the same instant falls on two nights in Rome and in
     Arizona. Without a zone it is read in UTC, the only zone the file knows."""
     moment = _in_zone(instant_iso, tz_name)
-    return None if moment is None else night_of(moment)
+    if moment is None:
+        return None
+    try:
+        night = night_of(moment)
+    except OverflowError:  # the noon before 1 January of year 1
+        return None
+    # the last day of the calendar has no next noon: its night has no window, no midnight
+    return None if night == date.max.isoformat() else night
 
 
 def night_of(moment: datetime) -> str:
-    """`night_date` of an instant already in the site's zone, which cannot fail."""
+    """`night_date` of an instant already in the site's zone."""
     # Subtracting on an aware instant works on the wall clock, which is what is needed: local
     # noon, not UTC noon shifted.
     return (moment - timedelta(hours=12)).date().isoformat()
@@ -75,7 +82,8 @@ def _in_zone(instant_iso: object, tz_name: str | None) -> datetime | None:
         return moment
     try:
         return moment.astimezone(zoneinfo.ZoneInfo(tz_name))
-    except (zoneinfo.ZoneInfoNotFoundError, ValueError):
+    # OverflowError: a written-wrong year 9999 pushed past the calendar by the zone
+    except (zoneinfo.ZoneInfoNotFoundError, ValueError, OverflowError):
         return None
 
 

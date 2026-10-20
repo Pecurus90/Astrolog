@@ -85,3 +85,12 @@ def test_a_night_without_a_usable_timezone_has_no_midnight():
     assert midnight_of("2024-05-18", "Nowhere/Nohow") is None
     assert midnight_of("2024-05-18", None) is None
     assert midnight_of("non una data", "Europe/Rome") is None
+
+
+def test_a_date_at_the_edge_of_the_calendar_is_no_night_not_a_crash():
+    """Un header scritto male (`DATE-OBS = 9999-12-31`) non ferma la lettura dell'archivio: il
+    fuso lo porterebbe oltre l'anno 9999, e la notte prima dell'anno 1 non esiste."""
+    assert night_date("9999-12-31T23:30:00", "Pacific/Kiritimati") is None
+    assert night_date("0001-01-01T05:00:00", "Europe/Rome") is None
+    # in un fuso che non lo porta oltre, il 31/12/9999 sarebbe una notte senza domani
+    assert night_date("9999-12-31T13:00:00", "Europe/Rome") is None
