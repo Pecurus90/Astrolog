@@ -20,6 +20,10 @@ Dependabot aperte dal 30/9 e dal 14/10 senza che nessuno le guardi; il frontend 
   prestazioni, dipendenze, documenti, accessibilita'); `/smista` a inizio sessione (Issue,
   Dependabot, avvisi, CI rossa); `/porta-tavola` (ADR 0025); `/rilascia` scritta, ferma fino al
   primo rilascio. Il revisore segnala solo errori di correttezza o di requisito.
+- **`/porta-tavola`, le convenzioni** (Marco 20/10): ogni numero, soglia e formula della pagina,
+  anche gia' in codice, si verifica su una convenzione pubblica con fonte citata. Coincide: resta.
+  Diverge: ci si ferma e si mostra a Marco cosa fa il codice, cosa dice la convenzione e quanto
+  cambia su un esempio; decide lui. Nessuna convenzione: il numero lo sceglie Marco.
 - **Audit automatico su GitHub** (Claude Code GitHub Action, Marco 20/10): ogni settimana; se dal
   giro prima il codice non e' cambiato si ferma senza chiamare Claude; se e' cambiato, un settore a
   rotazione sui soli file cambiati. Ogni rilievo con prova apre una Issue `difetto`, che `/smista`
