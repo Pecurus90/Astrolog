@@ -13,7 +13,7 @@ dependencies = [
   "uvicorn>=0.54.0",           # BSD   - il server
   "pydantic>=2.14.1",           # MIT   - la forma delle risposte
   "astropy>=8.0.2",            # BSD   - lettura header FITS (ruote per tutte e cinque)
-  "platformdirs>=4.13.3",       # MIT   - dove sta il DB su Windows, Mac e Linux
+  "platformdirs>=4.13.4",       # MIT   - dove sta il DB su Windows, Mac e Linux
   "tzfpy>=2.1.1",              # MIT   - il fuso dalle coordinate, offline e coi confini veri
                              #         (ruote per tutte e cinque le architetture, 4 MB,
                              #         nessuna dipendenza a sua volta)
