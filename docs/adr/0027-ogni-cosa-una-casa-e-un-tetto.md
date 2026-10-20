@@ -31,7 +31,7 @@ porting.
 
 ## Conseguenze
 
-- `docs/coda.md` sparisce; fino ad allora non cresce (`tools/coda_non_cresce.py`).
+- `docs/coda.md` sparisce; fino ad allora non cresce (`tools/tetti.py`).
 - La spina (`docs/domini/spina.md`, 1.072 righe) si divide per stadio; gli ADR sopra 100 righe si
   riducono alla decisione, il dettaglio va nel contratto.
 - CLAUDE.md, ricette e skill si aggiornano alle case nuove nello stesso lavoro.

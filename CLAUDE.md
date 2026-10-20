@@ -31,7 +31,7 @@ Lo stato si legge dal codice e da [`docs/coda.md`](docs/coda.md); le decisioni s
    una riga. **Un difetto
    non e' una domanda**: si ripara e si dice. **Un difetto trovato si ripara, mai in coda**
    (Marco, 20/10/2026): ognuno col suo `/ripara`, prima di passare oltre; in coda solo idee, e
-   `docs/coda.md` non cresce mai in un commit (`tools/coda_non_cresce.py`). Ogni resoconto apre con *cosa funziona ora e prima
+   `docs/coda.md` non cresce mai in un commit (`tools/tetti.py`, che tiene anche i tetti di ADR 0027). Ogni resoconto apre con *cosa funziona ora e prima
    no*.
 3. **Il database non conta finche' non si rilascia.** Si ricrea da `backend/astrolog/schema.sql`
    quante volte serve: niente migrazioni, niente backfill.

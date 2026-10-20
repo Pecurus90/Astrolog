@@ -250,3 +250,6 @@ Filtri apre e chiude le tendine, e dice quanti filtri sono scelti - glossario: l
 Rimuovi filtri nella barra li toglie tutti - glossario: le scelte di ricerca sono criteri (Marco, 19/10/2026); rinominato in "Togli i criteri nella barra li toglie tutti"
 rimuovi filtri toglie anche il periodo e il setup - glossario: le scelte di ricerca sono criteri (Marco, 19/10/2026); rinominato in "togli i criteri toglie anche il periodo e il setup"
 accetta la virgola, che e' quella che l'app stessa suggerisce - glossario: decimali col punto (Marco, 19/10/2026), l'app non propone piu' la virgola; rinominato in "accetta la virgola come il punto, comunque l'utente scriva"
+test_a_longer_queue_is_refused - tools/tetti.py replaces coda_non_cresce.py (ADR 0027): test_the_queue_never_grows
+test_an_idea_that_pays_its_lines_passes - tools/tetti.py replaces coda_non_cresce.py (ADR 0027): test_a_change_that_pays_its_lines_passes_over_the_ceiling
+test_a_shorter_queue_passes - tools/tetti.py replaces coda_non_cresce.py (ADR 0027): test_the_queue_never_grows

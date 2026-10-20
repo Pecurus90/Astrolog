@@ -91,13 +91,12 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
-      # A defect found is repaired, not parked: the queue never grows.
-      - id: queue-does-not-grow
-        name: docs/coda.md does not grow
+      # Working documents under a ceiling (ADR 0027); the queue never grows.
+      - id: document-ceilings
+        name: documents under their line ceiling
         language: system
-        entry: python tools/coda_non_cresce.py
-        pass_filenames: false
-        files: ^docs/coda\.md$
+        entry: python tools/tetti.py
+        files: ^(CLAUDE\.md|docs/(coda|piano|idee)\.md|docs/(adr|domini)/[^/]+\.md)$
         stages: [pre-commit]
       # `/* .x-* */` closes the comment at `*/` and silently drops the next rule.
       - id: css-glob-comment
