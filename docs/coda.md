@@ -7,42 +7,44 @@ stanno qui: quelle di un dominio nel suo contratto (`domini/`), le altre in un A
 
 ## Il piano
 
-### Misura del metodo (fino al 19/10/2026)
+### Dal check di salute (20/10/2026)
 
-ADR 0015: per ogni lavoro una riga, poi il confronto col giro vecchio (2-6 M token per lotto).
-Token dai risultati di Workflow e agenti; difetti = rilievi bloccanti confermati.
+Sei audit in sola lettura (pipeline, backend, frontend, controlli, metodo, intelligenza della
+pipeline); tutto verde (backend 2398 test, frontend 787, pipeline 716, 28 controlli). Decisioni
+in [ADR 0025](adr/0025-uno-studio-per-ruoli.md) e [ADR 0026](adr/0026-la-pipeline-usa-cio-che-ha.md).
+Ordine (Marco, 20/10/2026), prima del porting:
 
-| Data | Tipo | Lavoro | Token | Minuti | Difetti |
-|---|---|---|---|---|---|
-| 8/10/2026 | costruisci | Ricerca nella barra, fetta 3 (foglio v31) | ~0,53 M workflow (8 agenti) + ~0,10 M esploratore, sessione principale non contata | 25 workflow | 1 bloccante dall'audit (il menu apriva le voci della ricerca di prima), chiuso dal correttore + 1 dal revisore (la striscia "Solo ..." col nome sbagliato nell'attesa) |
-| 8/10/2026 | costruisci | Un colore per banda (foglio v30) | ~0,20 M workflow (4 agenti), sessione principale non contata | 12 workflow | 0 |
-| 8/10/2026 | costruisci | Notti nel disegno v29 | ~0,35 M workflow (6 agenti), sessione principale non contata | 18 workflow | 1 bloccante dall'audit (le righe dei filtri dell'Archivio diventate fasce di colore col v29), chiuso dal correttore + 2 piccoli chiusi da me ("1 ore", pista ferma) |
-| 8/10/2026 | costruisci | Notti, i tre dati del disegno (backend) | ~0,10 M workflow (3 agenti), sessione principale non contata | 26 workflow | 0 |
-| 7/10/2026 | costruisci | I filtri in un ordine solo | ~0,11 M workflow (3 agenti), sessione principale non contata | 26 workflow | 0 bloccanti; 3 frasi rimaste sull'ordine vecchio chiuse da me |
-| 7/10/2026 | costruisci | Ricerca, fetta 2: la rotta | workflow (3 agenti), token non annotati | 7 workflow | 0 bloccanti; 1 chiuso da me (la chiave di riga in tre posti) |
-| 6/10/2026 | costruisci | S1, una scheda per firma | ~0,5 M agenti (workflow 0,41 + sviluppatore 0,09), sessione principale non contata | 78 workflow | 2 bloccanti dal giro (ottica persa rispondendo la camera; "a colori" con la camera della notte) + 1 mio dopo (falso avviso nel log) |
-| 6/10/2026 | costruisci | S3, una scheda per gruppo di frame | ~0,68 M agenti (workflow 0,50 + due sviluppatore 0,18), sessione principale non contata | 67 workflow | 2 bloccanti dal giro (il "non e' un oggetto" di un gruppo scavalcava un cielo arrivato dopo; cambiare idea non riportava i frame legati dal gruppo) + import-linter rosso |
-| 6/10/2026 | costruisci | S4, Applica scrive solo le risposte | ~0,34 M agenti (workflow, 7 agenti), sessione principale non contata | 36 workflow | 1 bloccante dall'audit (rispondere "e' giusto" a un dubbio non lo chiudeva) + 1 della guida (paragrafo sugli oggetti visti) + registro dei test tolti |
-| 6/10/2026 | costruisci | S2, risposta senza nome sui frame | ~0,26 M agenti (workflow, 7 agenti), sessione principale non contata | 58 workflow | 2 bloccanti dal giro (risposta vecchia su un frame mancante; test di fondazione rosso) |
-| 6/10/2026 | rifattorizza | S5, il segno lo tiene SQLite | sessione principale sola, nessun agente | ~40 | 0 dalla revisione (nessuna: la prova copre); 1 mio (import-linter vieta `db` -> `spine`, strada cambiata da trigger TEMP a schema) |
-| 7/10/2026 | costruisci | Telaio v28 (ADR 0018) | ~0,86 M agenti (workflow 0,55 + due sviluppatore 0,31), sessione principale non contata | 17 workflow | 1 bloccante dall'audit (bloccata senza modo di ripartire) + 5 piccoli chiusi da me + 3 colori del foglio corretti da Design (v28) |
-| 7/10/2026 | costruisci | M4, Archivio per periodo, sito, ottica, camera | ~0,35 M workflow (6 agenti), sessione principale non contata | 39 workflow | 2 bloccanti dall'audit (date non battibili da tastiera; docstring oltre 2 righe) + 1 mio dopo (valore storto nell'indirizzo = 422) |
-| 7/10/2026 | costruisci | M5, backup delle risposte (ADR 0017) | ~0,49 M workflow (8 agenti), sessione principale non contata | 47 workflow | 2 bloccanti dal giro (DB ricreato prima dell'avvio non proposto; percorso di ASTAP nell'Esporta) + 5 piccoli chiusi da me |
-| 7/10/2026 | costruisci | M2, la cartella ora sta qui | ~0,46 M workflow (5 agenti), sessione principale non contata | 28 workflow | 0 bloccanti; 8 piccoli parcheggiati (3 dello schermo da riparare subito) |
-| 6/10/2026 | costruisci | Focale misurata dal cielo (ADR 0016) | ~0,31 M workflow (6 agenti) + esploratore 0,09, sessione principale non contata | 76 workflow | 1 bloccante dal giro (il frame rimandato aspettava il giro dopo) + 3 piccoli chiusi da me |
-| 6/10/2026 | ripara | Meno frame in coda dopo filtro e unione: provato e tolto | ~0,48 M agenti (sviluppatore, due revisori) | ~60 | 3 bloccanti dai revisori (setup diversi via gruppi di focale); trovato un difetto vero, ora in coda |
-| 6/10/2026 | ripara | Risposte sul tipo: 100 in un Applica da 12,8 s a 0,29 s | sessione principale + un revisore (~0,1 M) | ~50 | 0 dal revisore (200 semi di prova a caso, 0 differenze) |
-| 6/10/2026 | rifattorizza | Fase 2, lotto 6b: `api` resto, fase 2 chiusa | ~0,27 M agenti (uno sviluppatore), sessione principale non contata | 23 agente | 0 |
-| 6/10/2026 | rifattorizza | Fase 2, lotto 6a: `api` Da confermare e Attrezzatura | ~0,21 M agenti (uno sviluppatore), sessione principale non contata | 16 agente | 0 |
-| 6/10/2026 | rifattorizza | Fase 2, lotto 5e: `spine` Notti e Archivio, indice, Da confermare | ~0,24 M agenti (uno sviluppatore), sessione principale non contata | 23 agente | 0 |
-| 6/10/2026 | rifattorizza | Fase 2, lotto 5d: `spine` oggetti e mosaici, Applica una lettura | ~0,32 M agenti (uno sviluppatore), sessione principale non contata | 38 agente | 0 |
-| 6/10/2026 | rifattorizza | Fase 2, lotto 5c: `spine` attrezzatura | ~0,35 M agenti (uno sviluppatore), sessione principale non contata | 27 agente | 0 |
-| 6/10/2026 | rifattorizza | Fase 2, lotto 5b: `spine` solve, identify, group | ~0,29 M agenti (uno sviluppatore), sessione principale non contata | 22 agente | 0 |
-| 6/10/2026 | rifattorizza | Fase 2, lotto 5a: `spine` scansione, normalizzazione, stadi | ~0,29 M agenti (uno sviluppatore), sessione principale non contata | 25 agente | 0 |
-| 6/10/2026 | rifattorizza | Fase 2, lotto 4: file sciolti e `worker` | ~0,19 M agenti (uno sviluppatore), sessione principale non contata | 15 agente | 1 mio sul resoconto (un fuso non valido cambiava esito: rimesso com'era) |
-| 6/10/2026 | rifattorizza | Fase 2, lotto 3: `weather` | ~0,21 M agenti (uno sviluppatore), sessione principale non contata | 17 agente | 0 (la prova copre; confronto byte per byte delle tabelle del meteo) |
-| 6/10/2026 | rifattorizza | Fase 2, lotto 2: `ephemeris` | sessione principale sola | ~35 | 0 |
-| 6/10/2026 | rifattorizza | Fase 2, lotto 1: macchina dei nomi, `db`/`fits`/`catalog`/`vocab` | ~0,18 M agenti (uno sviluppatore), sessione principale non contata | ~70 | 0 (nessun revisore: la prova copre); 1 regola dei commenti presa dal commit |
+1. **Difetti riprodotti** (`/ripara`, uno per uno):
+   - `POST /backup/import` scrive le impostazioni senza `RANGES`/`TRIED_ELSEWHERE`
+     (`spine/backup.py:167`) e le cartelle senza `validate_root` (`spine/backup.py:231-240`): una
+     cartella fuori dalla radice NAS entra e si scansiona;
+   - disco staccato: `astap.py:66` cerca "file not found", ASTAP scrive "Error reading image
+     file." -- i frame restano `failed/no_solution` per sempre (il test usa un testo inventato);
+   - `_scheduler` (`api/app.py:72-89`) muore al primo `database is locked`;
+   - `api/pipeline.py:91-100`: `?1` con una tupla, errore da Python 3.14;
+   - `meteoblue.drop_seeing` cancella anche le notti passate (sotto, nel Parcheggio);
+   - `DATE-OBS=9999-12-31` da' `OverflowError` in `clock._in_zone`;
+   - `<p>` dentro `<p>` in `Avviso.tsx:91` (da `riconoscitore.tsx:190`).
+2. **La squadra** (ADR 0025): agenti `collaudatore` e `verificatore-disegno`, modo `pagina`,
+   comando per portare una tavola, `tools/glossario.py`, `tools/contratti.py`, **Supera**
+   obbligatoria, la coda senza voci "fatto".
+3. **Mutazione solo sui file cambiati** dall'ultimo verde: oggi 25 notti su 25 rosse, shard
+   tagliati a 280 min.
+4. **Scansione di una copia parziale** dell'archivio di Marco (notti N.I.N.A. e ASIAIR, nello
+   scratch): Da confermare per motivo, numeri per ADR 0026.
+5. **Pulizia prima del porting**: soglie di nuvole e Luna in una casa (`verdict.py:15-16`,
+   `judge.py:90,158`) e `Site` dataclass nel meteo (21 `Mapping[str, Any]`); un `StrEnum` per i
+   tipi di strumento (sei case) prima di ADR 0021; controlli del foglio sul prefisso `al-`
+   (`tools/controlli_veste.py:165,274,305`); domande all'API in `frontend/src/api/` (doppioni
+   `Confermare.tsx:99` / `revisione.ts:7`, `["sites"]` in due case); `solve._in_order` `set` nel
+   ciclo; test della Luna calcolati una volta (66 s del push); job `lento` che cade per rumore;
+   CI Windows 30 min contro 8; Node 22/24 in CI; 6 chiavi i18n morte; potare questa coda e
+   archiviare le brief risposte di `handoff/`.
+6. **Pipeline piu' intelligente** (ADR 0026): nome del file, sito dalla notte, posizione
+   dell'header come partenza del solve, pianeti e Luna nel campo, comete e asteroidi da MPC,
+   Sesame, montature.
+
+Da chiedere a Marco: un ruleset GitHub su `main` (niente force push, oggi non protetto).
 
 ### Prima delle funzioni nuove
 
@@ -159,13 +161,8 @@ aspettano chiamanti tipati. Si chiude quando si tocca il codice dove sta:
 La spina onesta **su un archivio qualunque**, poi si alleggerisce, poi `measure`. Le tappe si
 nominano col loro nome, per non confonderle con le fasi del refactor.
 
-**Prima del porting** (Marco, 20/10/2026), quando Design chiude le Statistiche: (1) un giro
-profondo mio su tutto il disegno -- lessico (italiano tecnico, glossario), decisioni degli ADR e
-dei contratti, diciture e convenzioni con fonte; (2) una brief a Design per riordinare il suo
-progetto prima dell'import: codice morto via, componenti gia' esistenti riusati (pillole, carte,
-tabelle) invece di doppioni, nuovi solo se mancano, un elenco dei componenti.
-
-**Ordine da qui** (18/10/2026, Marco senza preferenza, presa la consigliata): porting del
+**Ordine da qui** (18/10/2026, Marco senza preferenza, presa la consigliata; il backend di ADR
+0020 aspetta il riordino v32 di Design, Marco 20/10/2026), dopo *Dal check di salute*: porting del
 disegno nuovo (backend di ADR 0020 e 0021, poi foglio e componenti, poi le pagine); uso vero di
 Marco sul suo archivio, coi difetti riparati; `measure`; Planner e Progetti; statistiche (pagina
 da decidere con Marco); pacchetto; telefono.

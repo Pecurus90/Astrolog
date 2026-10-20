@@ -40,14 +40,21 @@ va nel riassunto. Una regola controllabile da una macchina sta in una macchina, 
 
 | Ruolo | Chi | Modello |
 |---|---|---|
-| Prodotto, risposte, collaudo a schermo | Marco | -- |
-| Piano, logica di dominio, coordinamento | sessione principale | Opus |
+| Prodotto, risposte, sguardo finale a schermo | Marco | -- |
+| Tavole e componenti | Claude Design | -- |
+| Piano, logica di dominio, backend, coordinamento | sessione principale | Opus |
+| Consegna di Design contro una lista fissa | `verificatore-disegno` | Sonnet |
 | Ricognizione in sola lettura | `esploratore` | Sonnet |
 | Potare, tipizzare (serve giudizio) | `sviluppatore` | Opus |
+| Una tavola in pagina, coi componenti comuni | `sviluppatore`, modo `pagina` | Opus |
 | Spostare file, rinominare, aggiornare import | `sviluppatore`, modo `spostamento` | Sonnet |
 | Revisione del diff, un giro | `revisore` | Opus |
 | Audit che esegue e misura | `auditore` | Opus |
+| Pagina contro la tavola, prima di Marco | `collaudatore` | Opus |
 | Traduzione di una pagina finita | `traduttore` | Sonnet |
+
+Il giro di una fetta di porting e i ruoli nuovi: [ADR 0025](docs/adr/0025-uno-studio-per-ruoli.md)
+(i due agenti nuovi e il modo `pagina` nascono col primo punto di *Dal check di salute*).
 
 ## Il codice
 
