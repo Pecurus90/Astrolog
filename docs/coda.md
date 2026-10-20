@@ -17,7 +17,6 @@ Ordine (Marco, 20/10/2026), prima del porting:
 1. **Difetti riprodotti** (`/ripara`, uno per uno):
    - Importa in Impostazioni (`Backup.tsx:122`) dice "non e' un file di risposte" per ogni 422,
      anche per una cartella rifiutata (`path_outside_data_root`): testo da concordare, col disegno;
-   - `meteoblue.drop_seeing` cancella anche le notti passate (sotto, nel Parcheggio);
    - `DATE-OBS=9999-12-31` da' `OverflowError` in `clock._in_zone`;
    - `<p>` dentro `<p>` in `Avviso.tsx:91` (da `riconoscitore.tsx:190`).
 2. **La squadra** (ADR 0025): agenti `collaudatore` e `verificatore-disegno`, modo `pagina`,
@@ -971,13 +970,6 @@ riga per voce.
   stima per i filtri stretti: la luce del cielo ha righe (sodio, mercurio, LED, ossigeno a 557 e
   630 nm) che un filtro da pochi nm prende o manca, e senza lo spettro del posto il conto e'
   inventato.
-
-- **Una chiave Meteoblue rifiutata cancella anche il seeing delle notti passate**:
-  `weather/meteoblue.drop_seeing` toglie ogni riga Meteoblue di `weather_nights`. Marco
-  (18/10/2026): il seeing delle notti passate resta, serve alle statistiche e al campionamento.
-  Rimedio: togliere solo le notti da stanotte in poi. Le notti prima dell'app non hanno seeing e
-  non lo avranno (lo storico di Open-Meteo non lo porta; uno storico Meteoblue a pagamento non e'
-  verificato).
 
 - **"al 80%" invece di "all'80%"**: i testi con "al {pct}%" (`weather.weighs.moon.*`,
   `weather.cloud`, `weather.clear.trendWhen`, `tonight.illuminated`) non elidono davanti a 8, 11 e

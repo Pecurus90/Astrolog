@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
 from .. import net
+from ..clock import night_date
 from . import fetches
 from .fetches import Source
 from .forecast import Outcome, Status
@@ -85,13 +86,17 @@ def record(conn: sqlite3.Connection, site_id: int, status: Status, now: datetime
     fetches.record(conn, site_id, Source.METEOBLUE, status, now)
 
 
-def forget(conn: sqlite3.Connection) -> None:
-    """Key removed or changed: the previous seeing and the last attempt no longer hold."""
+def forget(conn: sqlite3.Connection, *, now: datetime) -> None:
+    """Key removed or changed: the coming seeing and the last attempt no longer hold."""
     conn.execute("DELETE FROM weather_fetches WHERE source = ?", (Source.METEOBLUE,))
-    drop_seeing(conn)
+    drop_seeing(conn, now)
 
 
-def drop_seeing(conn: sqlite3.Connection) -> None:
-    """The seeing of a key that no longer holds must not pose as the current one: the night stays
-    without seeing."""
-    conn.execute("DELETE FROM weather_nights WHERE source = ?", (Source.METEOBLUE,))
+def drop_seeing(conn: sqlite3.Connection, now: datetime) -> None:
+    """The seeing of a key that no longer holds must not pose as tonight's; a night gone by keeps
+    the seeing it had, for the statistics."""
+    for site in conn.execute("SELECT id, timezone FROM sites"):
+        conn.execute(
+            "DELETE FROM weather_nights WHERE source = ? AND site_id = ? AND night_date >= ?",
+            (Source.METEOBLUE, site["id"], night_date(now.isoformat(), site["timezone"])),
+        )

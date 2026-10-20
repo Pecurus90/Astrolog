@@ -189,7 +189,7 @@ La quarta e' **Servizi**: le chiavi personali dei servizi che l'app interroga. O
 **Meteoblue**: la scrivi, premi *Verifica e salva*, e l'app la prova sul tuo conto prima di tenerla --
 se il conto non la riconosce te lo dice e non la salva. Una chiave salvata non la rivedi mai
 intera: l'app ti mostra come finisce, che basta a sapere se e' quella giusta. Con *Rimuovi chiave*
-il seeing sparisce dal Meteo.
+il seeing sparisce dal Meteo da stanotte in poi; quello delle notti passate resta, per le statistiche.
 
 La quinta e' **Scansioni**: una per ogni volta che l'app ha letto le tue cartelle. Di
 ognuna trovi quale cartella, quando, quanto e' durata, com'e' andata -- e i conti: quanti file ha

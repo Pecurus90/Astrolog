@@ -4,6 +4,7 @@ joined, every measure judged and the models' agreement counted."""
 import json
 import sqlite3
 from dataclasses import asdict
+from datetime import UTC, datetime
 from typing import Final, cast
 
 from fastapi import APIRouter, Depends
@@ -193,7 +194,7 @@ def put_meteoblue_key(
     if not trimmed:
         with transaction(conn):
             config.write(conn, "meteoblue_key", None)
-            meteoblue.forget(conn)
+            meteoblue.forget(conn, now=datetime.now(UTC))
             home = home_site(conn)
             if home is not None:
                 view.rebuild(conn, dict(home))
@@ -205,7 +206,7 @@ def put_meteoblue_key(
         )
     with transaction(conn):
         config.write(conn, "meteoblue_key", trimmed)
-        meteoblue.forget(conn)
+        meteoblue.forget(conn, now=datetime.now(UTC))
     home = home_site(conn)
     if home is not None:
         rounds.refresh(conn, dict(home))

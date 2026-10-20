@@ -112,9 +112,21 @@ def test_a_key_the_service_refuses_drops_its_seeing_and_says_why(db):  # noqa: F
     con_la_chiave(db)
     sky.refresh(db, SITO, fetch=servizi(), now=ADESSO)
     rifiutata = servizi(**{"packages/seeing-1h": rifiuto("https://x?apikey=" + CHIAVE)})
-    sky.refresh(db, SITO, fetch=rifiutata, now=ADESSO + timedelta(hours=12))
-    assert "meteoblue" not in {r["source"] for r in righe(db)}
+    sky.refresh(db, SITO, fetch=rifiutata, now=ADESSO + timedelta(days=3))
+    restano = {r["night_date"] for r in righe(db) if r["source"] == "meteoblue"}
+    assert restano and all(notte < "2026-09-28" for notte in restano)
     assert meteoblue.last_attempt(db, SITO["id"])["status"] == "refused"
+
+
+def test_a_refused_key_keeps_the_seeing_of_the_nights_gone_by(db):  # noqa: F811
+    """Il seeing di una notte passata e' successo davvero: serve alle statistiche. Marco,
+    18/10/2026: va via solo da stanotte in poi."""
+    con_la_chiave(db)
+    sky.refresh(db, SITO, fetch=servizi(), now=ADESSO)
+    passate = [tuple(r) for r in righe(db) if r["source"] == "meteoblue" and r[0] < "2026-09-28"]
+    meteoblue.forget(db, now=ADESSO + timedelta(days=3))
+    dopo = [tuple(r) for r in righe(db) if r["source"] == "meteoblue"]
+    assert passate and dopo == passate
 
 
 def test_a_silent_service_keeps_the_seeing_it_gave_last_time(db):  # noqa: F811

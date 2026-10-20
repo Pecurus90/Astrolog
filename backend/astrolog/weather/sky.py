@@ -94,7 +94,7 @@ def _meteoblue(
     )
     # only a refusal speaks of the key; a silence keeps the seeing it gave last time
     if outcome == net.Failure.REFUSED:
-        meteoblue.drop_seeing(conn)
+        meteoblue.drop_seeing(conn, now)
     meteoblue.record(conn, site["id"], outcome, now)
     return outcome
 
