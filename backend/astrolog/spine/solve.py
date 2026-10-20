@@ -157,7 +157,7 @@ def _one_frame(
     path = _path_of(frame)
     # The cache answers with the disk detached too: without the path check one process per frame
     # would be launched on a missing file.
-    if solution.ok and path and not store.has_metrics(conn, frame["id"]):
+    if solution.ok and path and os.path.exists(path) and not store.has_metrics(conn, frame["id"]):
         # Asked even for a cached sky: after a database reset the solution comes back from the
         # cache, but HFD and stars would be lost for good.
         hfd, stars = astap.analyse(path, exe=solver.exe, run=solver.run)

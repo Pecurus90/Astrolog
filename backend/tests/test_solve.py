@@ -466,6 +466,24 @@ def test_a_disc_unplugged_after_the_scan_waits_for_it(db_path, archivio_letto, t
     conn.close()
 
 
+def test_a_cached_sky_on_a_disc_unplugged_after_the_scan_launches_nothing(
+    db_path, archivio_letto, tmp_path
+):
+    """Come sopra, ma le posizioni dicono ancora `present`: il disco si e' staccato dopo."""
+    cache = tmp_path / "cache"
+    conn = connect(db_path)
+    corri(conn, solver(), cache=cache)
+    stages.invalidate(conn, [r[0] for r in conn.execute("SELECT id FROM frames")], "solve")
+    conn.execute("DELETE FROM frame_metrics")
+    archivio_letto.rename(tmp_path / "staccato")
+
+    run = solver()
+    ricevuta = corri(conn, run, cache=cache)
+    assert ricevuta["cached"] == 5 and ricevuta["measured"] == 0
+    assert run.calls == []
+    conn.close()
+
+
 def test_a_file_astap_cannot_read_is_a_failure_not_a_wait(db_path, archivio_letto, tmp_path):
     """Un file che c'e' ma che ASTAP non sa leggere non torna a ogni giro: ha il suo perche'."""
     conn = connect(db_path)

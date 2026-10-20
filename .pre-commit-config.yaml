@@ -91,6 +91,14 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
+      # A defect found is repaired, not parked: the queue never grows.
+      - id: queue-does-not-grow
+        name: docs/coda.md does not grow
+        language: system
+        entry: python tools/coda_non_cresce.py
+        pass_filenames: false
+        files: ^docs/coda\.md$
+        stages: [pre-commit]
       # `/* .x-* */` closes the comment at `*/` and silently drops the next rule.
       - id: css-glob-comment
         name: CSS comment closed by a glob

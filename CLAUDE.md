@@ -25,7 +25,9 @@ Lo stato si legge dal codice e da [`docs/coda.md`](docs/coda.md); le decisioni s
    dice quanto costa. Se la risposta non dipende da lui e una consigliata c'e', non si chiede: si
    prende quella. Cio' che dipende dal codice, da una misura o dal metodo lo decido io e lo dico in
    una riga. **Un difetto
-   non e' una domanda**: si ripara e si dice. Ogni resoconto apre con *cosa funziona ora e prima
+   non e' una domanda**: si ripara e si dice. **Un difetto trovato si ripara, mai in coda**
+   (Marco, 20/10/2026): ognuno col suo `/ripara`, prima di passare oltre; in coda solo idee, e
+   `docs/coda.md` non cresce mai in un commit (`tools/coda_non_cresce.py`). Ogni resoconto apre con *cosa funziona ora e prima
    no*.
 3. **Il database non conta finche' non si rilascia.** Si ricrea da `backend/astrolog/schema.sql`
    quante volte serve: niente migrazioni, niente backfill.
@@ -128,5 +130,5 @@ Il giro di una fetta di porting e i ruoli nuovi: [ADR 0025](docs/adr/0025-uno-st
 | toccare un dominio | `docs/domini/<dominio>.md` |
 | prendere una decisione che resta | `docs/adr/NNNN-titolo.md` |
 | cambiare cio' che l'utente vede | `docs/guida-utente.md`, nello stesso intervento |
-| parcheggiare un'idea o un debito | `docs/coda.md` |
+| parcheggiare un'idea (un difetto no: si ripara) | `docs/coda.md` |
 | toccare lo schema | `backend/astrolog/schema.sql` |
