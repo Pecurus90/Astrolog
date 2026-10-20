@@ -1,6 +1,7 @@
 """The answers' backup (ADR 0017): the file is rewritten after every write of the user's, and a
 database with no answer is offered the one it finds beside it."""
 
+import os
 import re
 import sqlite3
 from pathlib import Path
@@ -13,6 +14,7 @@ from ..db.connect import connect
 from ..spine import backup
 from .deps import get_db
 from .models_site import BackupCounts, BackupStatus
+from .paths import validate_root
 
 router = APIRouter(prefix="/api/v1", tags=["settings"])
 
@@ -109,17 +111,34 @@ def import_backup(
     """Puts back the answers of a file exported elsewhere, sent as its JSON content: adds and
     updates, deletes nothing, so it is safe on a database already in use.
 
-    422 `not_a_backup` when the content is not an answers' file of this version."""
+    422 `not_a_backup` when the content is not an answers' file of this version; 422 with the
+    reason as its code, as when adding it, for a folder that is on this machine and is refused."""
     try:
         data = backup.checked(content)
     except backup.BackupError as e:
         raise HTTPException(status_code=422, detail={"code": "not_a_backup"}) from e
     try:
-        backup.restore(conn, data)
+        data = {**data, "folders": _folders_here(data, request.app.state.data_root)}
+        backup.restore(conn, data, this_machine=False)
     except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
         raise HTTPException(status_code=422, detail={"code": "not_a_backup"}) from e
     request.app.state.backup_offer = False
     return _status(request)
+
+
+def _folders_here(data: dict[str, Any], data_root: str | None) -> list[dict[str, Any]]:
+    """Each path as adding it would store it. One refused but not here comes back anyway: a path
+    of the other machine, kept for the move (ADR 0017)."""
+    folders = []
+    for folder in data.get("folders", []):
+        try:
+            root = validate_root(folder["root_path"], data_root)
+        except HTTPException:
+            if os.path.exists(folder["root_path"]):
+                raise
+            root = folder["root_path"]
+        folders.append({**folder, "root_path": root})
+    return folders
 
 
 def offered_on_start(db_path: str | Path) -> bool:

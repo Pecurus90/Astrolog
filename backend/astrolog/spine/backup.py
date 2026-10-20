@@ -157,20 +157,17 @@ def summary(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def restore(conn: sqlite3.Connection, data: dict[str, Any]) -> None:
-    """Adds and updates, never deletes; ids re-linked by name. Rigs are not in the file: the scan
-    rebuilds them and the declared ones come back by name at the end."""
+def restore(conn: sqlite3.Connection, data: dict[str, Any], *, this_machine: bool = True) -> None:
+    """Adds and updates, never deletes; ids re-linked by name; rigs come back by name at the end.
+    `this_machine=False` for an import: what the export leaves out does not come in (ADR 0017)."""
     now = now_iso()
     with transaction(conn):
         for key, value in data.get("config", {}).items():
+            if key not in config.KEYS or (not this_machine and key in _STAYS_HERE):
+                continue
             # a solver path of another machine (a Windows path inside Docker) would stop the search
-            if key in config.KEYS and (key != "astap_path" or (value and os.path.exists(value))):
-                conn.execute(
-                    "INSERT INTO config(key, value, updated_at) VALUES(?, ?, ?)"
-                    " ON CONFLICT(key) DO UPDATE SET value = excluded.value,"
-                    " updated_at = excluded.updated_at",
-                    (key, value, now),
-                )
+            if key != "astap_path" or (value and os.path.exists(value)):
+                config.write(conn, key, None if value is None else config.KEYS[key].kind(value))
         for site in data.get("sites", []):
             _restore_site(conn, site, now)
         for folder in data.get("folders", []):

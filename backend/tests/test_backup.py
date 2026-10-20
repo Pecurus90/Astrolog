@@ -3,6 +3,7 @@ dell'utente, proposto a un database nuovo. Dentro solo cio' che l'utente ha dett
 sopravvivono a un database ricreato: nomi, percorsi, impronte; mai un id."""
 
 import json
+import os
 
 from fastapi.testclient import TestClient
 
@@ -241,3 +242,67 @@ def test_a_solver_path_that_is_not_on_this_machine_is_not_restored(conn, tmp_pat
     vero.write_bytes(b"")
     backup.restore(conn, {"version": backup.VERSION, "config": {"astap_path": str(vero)}})
     assert config.read(conn).astap_path == str(vero)
+
+
+def test_an_import_obeys_the_rules_of_the_settings_page(client_vuoto):
+    """Un file scritto a mano non vale piu' della pagina: un numero fuori scala renderebbe buone
+    tutte le notti, o nessuna."""
+    fuori = {"version": backup.VERSION, "config": {"moon_broadband_max_pct": "500"}}
+    r = client_vuoto.post("/api/v1/backup/import", json=fuori)
+    assert (r.status_code, r.json()["detail"]["code"]) == (422, "not_a_backup")
+    impostazioni = client_vuoto.get("/api/v1/settings").json()
+    assert "500" not in json.dumps(impostazioni)
+
+
+def test_an_import_brings_no_key_and_no_solver_path(client_vuoto, tmp_path):
+    """Cio' che l'export non porta non entra dall'import: la chiave Meteoblue si scrive solo dopo
+    la prova sull'account, e un solver dichiarato da un file scelto da altri si eseguirebbe."""
+    eseguibile = tmp_path / "qualcosa.exe"
+    eseguibile.write_bytes(b"")
+    portato = {
+        "meteoblue_key": "mai-provata",
+        "sky_service_key": "x",
+        "astap_path": str(eseguibile),
+    }
+    r = client_vuoto.post(
+        "/api/v1/backup/import", json={"version": backup.VERSION, "config": portato}
+    )
+    assert r.status_code == 200
+    conn = connect(client_vuoto.app.state.db_path)
+    try:
+        letto = config.read(conn)
+    finally:
+        conn.close()
+    assert (letto.meteoblue_key, letto.sky_service_key, letto.astap_path) == (None, None, None)
+
+
+def test_an_import_on_the_nas_keeps_folders_inside_the_data_root(tmp_path, db_path):
+    """Una cartella che c'e' qui ma fuori dalla radice dei dati non entra; una che qui non c'e'
+    torna per lo spostamento (ADR 0017); una dentro entra nella forma che l'aggiunta scriverebbe."""
+    radice = tmp_path / "library"
+    (radice / "M31").mkdir(parents=True)
+    fuori = tmp_path / "privata"
+    fuori.mkdir()
+    altrove = tmp_path / "altro-computer" / "foto"
+    cartella = lambda p: {"root_path": str(p), "name": p.name, "retired_at": None, "sample": []}  # noqa: E731
+    app = create_app(db_path, data_root=os.path.realpath(radice))
+    with TestClient(app, base_url="http://localhost") as c:
+        r = c.post(
+            "/api/v1/backup/import",
+            json={
+                "version": backup.VERSION,
+                "folders": [cartella(radice / "M31"), cartella(fuori)],
+            },
+        )
+        assert (r.status_code, r.json()["detail"]["code"]) == (422, "path_outside_data_root")
+        assert c.get("/api/v1/folders").json()["total"] == 0
+        r = c.post(
+            "/api/v1/backup/import",
+            json={
+                "version": backup.VERSION,
+                "folders": [cartella(radice / "M31"), cartella(altrove)],
+            },
+        )
+        assert r.status_code == 200, r.text
+        percorsi = sorted(f["root_path"] for f in c.get("/api/v1/folders").json()["items"])
+    assert percorsi == sorted([os.path.realpath(radice / "M31"), str(altrove)])

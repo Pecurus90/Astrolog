@@ -166,7 +166,8 @@ export interface paths {
          * @description Puts back the answers of a file exported elsewhere, sent as its JSON content: adds and
          *     updates, deletes nothing, so it is safe on a database already in use.
          *
-         *     422 `not_a_backup` when the content is not an answers' file of this version.
+         *     422 `not_a_backup` when the content is not an answers' file of this version; 422 with the
+         *     reason as its code, as when adding it, for a folder that is on this machine and is refused.
          */
         post: operations["import_backup"];
         delete?: never;

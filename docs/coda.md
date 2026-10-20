@@ -15,9 +15,8 @@ in [ADR 0025](adr/0025-uno-studio-per-ruoli.md) e [ADR 0026](adr/0026-la-pipelin
 Ordine (Marco, 20/10/2026), prima del porting:
 
 1. **Difetti riprodotti** (`/ripara`, uno per uno):
-   - `POST /backup/import` scrive le impostazioni senza `RANGES`/`TRIED_ELSEWHERE`
-     (`spine/backup.py:167`) e le cartelle senza `validate_root` (`spine/backup.py:231-240`): una
-     cartella fuori dalla radice NAS entra e si scansiona;
+   - Importa in Impostazioni (`Backup.tsx:122`) dice "non e' un file di risposte" per ogni 422,
+     anche per una cartella rifiutata (`path_outside_data_root`): testo da concordare, col disegno;
    - disco staccato: `astap.py:66` cerca "file not found", ASTAP scrive "Error reading image
      file." -- i frame restano `failed/no_solution` per sempre (il test usa un testo inventato);
    - `_scheduler` (`api/app.py:72-89`) muore al primo `database is locked`;
