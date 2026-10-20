@@ -1,6 +1,8 @@
-# Per Claude Design -- Piano della notte, brief completa (v28)
+# Per Claude Design -- Piano della notte, brief completa (v30)
 
-Da Claude Code, 19/10/2026. **Questa brief sostituisce tutte le precedenti sul Piano della
+Da Claude Code, 20/10/2026 (prima stesura 19/10). **La v29/v29.1 ha fatto il Meteo ma non questa
+brief: il Piano e' fermo alla v28.4.** Va eseguita tutta, sez. 0-13, piu' la sez. 0bis
+(correzioni alla v29.1 e risposte alle vostre domande). **Questa brief sostituisce tutte le precedenti sul Piano della
 notte** (`design-piano-della-notte.md`, `-v26.md`, `-v27.md`) e risponde alle vostre due domande
 («Luna e Sole a pannelli nel piano», «come sceglie il piano automatico»). E' la pagina intera,
 piu' le regole che toccano tutta l'app. Decisioni in
@@ -10,6 +12,34 @@ parole fra «» sono proposte: Marco le approva sulla tavola. I numeri li manda 
 
 Il Planner crea i progetti; il Piano della notte decide **cosa si fa una notte** (o un giorno,
 per il Sole), in che ordine, e lo esporta in un file per il programma che riprende.
+
+## 0bis. Meteo v29.1: risposte e correzioni
+
+**La qualita' della notte da 0 a 100 e' giusta e resta** (Marco, 20/10/2026; ADR 0020). Pesi
+35/30/12/9/9/5, pioggia e nuvole dal 50% bloccano, verdetto da 70 e 40, ore utili da 60, Luna
+fuori dal punteggio e sopra -5°. Il nostro `docs/domini/meteo.md` ora dice lo stesso: il vecchio
+"semaforo dalle sole nuvole" e' superato ovunque.
+
+Risposte a `docs/per-claude-code-meteo-verdetto.md`:
+1. **Pesi della v13: si tengono.** Sono quelli dell'ADR 0020.
+2. **«Cosa limita» anche in Dashboard** (Marco): accanto alla qualita' di stanotte, la stessa
+   riga del racconto («limita il seeing · qualita' fino a 62»; «nessun limite» da 85).
+
+Approvati da Marco: i testi del racconto («Diventa buona · qualita' da 85, il primo limite e' il
+seeing», «nessun limite», «limita … · qualita' fino a N») e la pillola **«banda stretta» in
+giallo**, non rosso: la Luna cambia cosa si riprende, non rovina la notte.
+
+Da correggere:
+1. **Ore serene -> ore utili** dove resta la parola vecchia: stato senza buio di `Meteo.dc.html`
+   («Ore serene», «ore serene col Sole…») e stato 15 di `Meteo stati.dc.html`. Le ore utili sono
+   quelle di buio con qualita' da 60.
+2. **`Meteo stati.dc.html` e' rotto**: contiene il documento due volte (il primo chiude con
+   `</html` senza `>` e subito riparte `<html>`). Uno solo.
+3. **Nuvole al 25% esatto**: in `soglie.js` il giudizio delle nuvole e' `x < 25 ? 0`, quindi
+   un'ora al 25% risulta incerta. 25% = 2 okta = buona: `x <= 25`. Il punteggio gia' lo tratta
+   giusto; la parola deve dire lo stesso.
+4. **Impostazioni**: `planner.lun: 40°` va tolto, al suo posto le tre righe della Luna per filtro
+   (sez. 9); e tutto il resto della sez. 10.
 
 ## 0. Cosa cambia rispetto alla v26.1 consegnata
 
@@ -296,8 +326,13 @@ bersagli da 44 px.
 
 ## 13. Foglio di stile
 
-Nei commenti di `astrolog.css` i numeri col punto: «46,4843 N» -> «46.4843 N»
-(`--campo-coordinata`), «Bortle 4 (20,8)» -> «Bortle 4 (20.8)» (blocco BORTLE).
+In `old/astrolog.css` (il foglio che il codice copia, oggi v38) i numeri dei commenti col punto:
+- r.493 `--campo-coordinata`: «46,4843 N» -> «46.4843 N»;
+- r.1578 blocco BORTLE: «Bortle 4 (20,8)» -> «Bortle 4 (20.8)»;
+- r.1580 stessa nota: «21,76 · 21,60 · 21,30 · 20,80 · 19,25 · 18,50 …» -> col punto.
+
+Nel Piano: «Completa la sequenza» e «Rifai la sequenza» (5 volte) diventano **«Completa il
+piano»** e **«Rifai il piano»** (sez. 3).
 
 ## Fuori
 
@@ -305,7 +340,8 @@ Nei commenti di `astrolog.css` i numeri col punto: «46,4843 N» -> «46.4843 N�
 - Scoperta e segnalazione di supernove; fotometria e invio dati AAVSO (si fanno con altri
   strumenti).
 - Attenuazione della Luna vicino all'orizzonte (il «relax» di Target Scheduler): basta -5°.
-- Priorita' a mano, punteggi, scarto automatico delle pose.
+- Priorita' a mano, punteggi dei bersagli, scarto automatico delle pose. (La qualita' della notte
+  0-100 del Meteo resta: e' un'altra cosa, sez. 0bis.)
 - Ordine dei filtri per altezza.
 - Nessun comando diretto all'hardware: tutto passa dal file esportato.
 
