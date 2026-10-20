@@ -20,6 +20,10 @@ Dependabot aperte dal 30/9 e dal 14/10 senza che nessuno le guardi; il frontend 
   prestazioni, dipendenze, documenti, accessibilita'); `/smista` a inizio sessione (Issue,
   Dependabot, avvisi, CI rossa); `/porta-tavola` (ADR 0025); `/rilascia` scritta, ferma fino al
   primo rilascio. Il revisore segnala solo errori di correttezza o di requisito.
+- **Audit automatico su GitHub** (Claude Code GitHub Action, Marco 20/10): ogni settimana; se dal
+  giro prima il codice non e' cambiato si ferma senza chiamare Claude; se e' cambiato, un settore a
+  rotazione sui soli file cambiati. Ogni rilievo con prova apre una Issue `difetto`, che `/smista`
+  ripara alla sessione dopo. Si installa con `/install-github-app` (Marco).
 - **Dependabot**: una proposta con la CI verde la unisco io, come un commit; rossa diventa un
   `/ripara`. Frequenza mensile, frontend compreso.
 - **GitHub**: ruleset su `main` (niente force push, niente cancellazione, nessun obbligo di PR);
