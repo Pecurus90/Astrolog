@@ -197,4 +197,4 @@ sarebbe peggio -- i frame non si perdono comunque.
 Non crea siti da solo. Non inventa un'altitudine, un fuso o un cielo. Non mostra un Bortle
 senza la misura accanto. Non chiede la chiave del servizio per far partire l'app. Non scarica, non installa e non
 lancia programmi di sua iniziativa: dice dove si prendono. L'orizzonte
-non e' di questa casella: nasce col Planner, che e' l'unico che lo legge.
+non e' di questa casella: si importa in Impostazioni, uno per sito (ADR 0023).

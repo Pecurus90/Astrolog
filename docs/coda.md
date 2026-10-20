@@ -201,10 +201,10 @@ da decidere con Marco); pacchetto; telefono.
    (disegno v30.1 di Design, verificato il 20/10/2026 sulla brief
    `handoff/design-piano-della-notte-completo.md`), l'export per N.I.N.A. Prima i DSO, poi
    esopianeti, variabili e campagne AAVSO, poi supernove, per ultimi comete e NEO; le
-   occultazioni sono fuori. Nel portarlo, due testi sul lessico: «Nessun progetto sopra {n}°
-   stanotte.» diventa «Nessun progetto alto piu' di {n} gradi stanotte.»; nelle proposte «{n}
-   utili» e «nessuna ora utile» diventano ore del bersaglio nel buio («{n} ore»), perche' «ore
-   utili» e' del Meteo. Poi la **Carta del cielo**.
+   occultazioni sono fuori. «Nessun progetto sopra {n}° stanotte.» diventa «Nessun progetto
+   alto piu' di {n} gradi stanotte.» (va nella brief di pulizia). Le «ore utili» delle proposte
+   restano: per un oggetto sono le sue ore visibili con qualita' da 60 (glossario). Poi la
+   **Carta del cielo**.
 8. **Il pacchetto**: immagine Docker con ASTAP dentro, multi-arch su runner arm64 nativi; su
    Windows e Mac l'app desktop con installer e updater firmati
    ([ADR 0003](adr/0003-astap-per-tutti.md), [ADR 0004](adr/0004-pacchetto-desktop-tauri.md)).

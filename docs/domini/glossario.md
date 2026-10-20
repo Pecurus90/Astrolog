@@ -105,7 +105,7 @@ che il `traduttore` legge per primo.
 | il pixel di una camera ricavato dalla scala misurata sulle sue pose, la focale del setup e il binning, quando i file non lo dicono | `instruments.pixel_from_sky_um` | pixel (calcolato) | pixel ricavato dal cielo, pixel stimato |
 | il filtro davanti al sensore, come strumento | `filter` | filtro | vetro |
 | la categoria di un filtro (L, R, G, B, Ha, OIII, SII, duo, OSC...) | `passband` | banda | tipo, canale, categoria |
-| il filtro esplicito di chi non ha un vetro davanti: una riga sola, non un vuoto | `is_none` | nessun filtro | vuoto, senza filtro |
+| il filtro esplicito di chi non ha un vetro davanti: una riga sola, non un vuoto | `is_none` | nessun filtro | vuoto, senza filtro (come etichetta; nella prosa dello SQM «frame L, senza filtro o a colori» resta, ADR 0022) |
 | cio' che l'header dice dell'attrezzatura, e la chiave della domanda su di essa: grafia di camera e telescopio (non quella che il programma dice montatura), focale entro il 5 %, sensore e pixel; mai la notte o la cartella | `signature` (`spine/signature.py`) | firma | impronta, gruppo |
 | la scheda di Da confermare su una firma: chiede solo cio' che i frame lasciano fuori -- la camera, l'ottica, il filtro (su una camera non a colori, senza i frame con la matrice) -- e conta finche' ogni parte chiesta non ha risposta | `gear`, `GearSignature` | attrezzatura da completare | frame senza camera, frame senza ottica, frame senza filtro |
 | la risposta su una firma: i NOMI di camera e ottica con la focale, e cosa c'era davanti -- nessun filtro (`no_filter`) o uno dei tuoi (`filter`, col nome del filtro in un campo suo). "A colori" (`color`) si scrive sulla scheda della camera | `GearEdit`, `signature.Answer` | risposta sull'attrezzatura | correzione, filtro dichiarato |
@@ -129,8 +129,8 @@ che il `traduttore` legge per primo.
 
 | cosa e' | nel codice | a schermo (it) | non si dice |
 |---|---|---|---|
-| ricavato dall'app: header, solver, misura, catalogo | `detected` | rilevato | dedotto, calcolato, automatico, letto |
-| impostato dall'utente; vince sul rilevato, sopravvive ai reset, si esporta | `declared` | inserito manualmente | impostato, override |
+| ricavato dall'app: header, solver, misura, catalogo | `detected` | dai file (dall'header); calcolato (da altri valori, come il pixel dalla scala); misurato su {n} notti (il Bortle) -- testi del disegno approvati da Marco (Attrezzatura v16.1, ADR 0022) | dedotto, automatico, letto |
+| impostato dall'utente; vince sul rilevato, sopravvive ai reset, si esporta | `declared` | inserito; scritto a mano (il Bortle, ADR 0022) | impostato, override |
 | il perche' un valore manca, come codice chiuso | `reason` | (una frase tradotta) | muto, null, n/d |
 | la pagina delle domande dell'app su cio' che la scansione ha trovato -- filtri, grafie che sembrano un pezzo solo, gruppi di frame, siti, mosaici, oggetti -- perche' l'utente risponda a cio' che l'app non puo' sapere | `review` | Da confermare | dati mancanti, revisione, Da completare |
 | una risposta data in Da confermare e non ancora mandata: si accumulano, il piede della pagina dice quante sono e partono insieme con *Applica* | `accumulo` (frontend, `review.inHand`) | modifica da applicare | risposta in mano, risposte in mano |
@@ -164,12 +164,14 @@ che il `traduttore` legge per primo.
 | gli oggetti fuori dal Sistema solare, e il modo del Planner e di Meteo per loro (Marco, 19/10/2026, uso dei forum) | `deep_sky` | Deep sky | cielo profondo, DSO |
 | come si scrive una percentuale (Marco, 19/10/2026) | -- | 40% (attaccato) | 40 % |
 | come si scrivono decimali e migliaia (regola SI, BIPM; Marco, 19/10/2026) | -- | decimali col punto (1.8″), migliaia con lo spazio sottile da 10 000 in su (396 200 km, 1366 m) | 1,8″, 396.200 |
-| ore di buio con cielo sereno (sotto la soglia); per un progetto in Dashboard, le sue ore visibili con cielo sereno | `usable_hours` | ore utili | ore buone |
+| ore di buio con qualita' della notte da 60 (ADR 0020); per un progetto o un oggetto del Piano, le sue ore visibili con quella qualita' | `usable_hours` | ore utili | ore buone, ore serene |
+| quanto e' buona un'ora o una notte, da 0 a 100: somma dei punti dei fattori coi pesi di Marco; la notte e' la media delle ore di buio (ADR 0020) | `quality` | qualita' della notte («87/100») | punteggio, voto, indice |
+| il fattore che toglie piu' punti alla qualita' | `limit` | limita {fattore} («limita il seeing · qualita' fino a 62»), nessun limite (da 85) | pesa, colpa |
 | ore di buio con un oggetto sopra l'altezza minima e l'orizzonte del sito, nel Planner e in Progetti; non guarda il cielo (Marco, 19/10/2026) | `visible_hours` | ore visibili | ore utili (che sono del Meteo), ore in alto |
 | i mesi in cui il 15 l'oggetto ha almeno le ore visibili dell'impostazione (ADR 0023) | `good_months` | mesi buoni | stagione, periodo (Marco, 19/10/2026: «stagioni» sono delle Statistiche) |
 | la parola del meteo sulla notte: Notte buona. / Notte incerta. / Notte non adatta. | `verdict` (`go`, `marginal`, `nogo`) | verdetto | voto, punteggio, "Si fa", "No" |
 | una grandezza della notte, col suo valore, il picco e (se ha soglia) la sua parola | `measure`, `measures` | misura | parametro, indicatore |
-| una misura che nella notte diventa incerta o non adatta: sta accanto al verdetto e non lo cambia | `weighs` | altri fattori | pesa, cosa pesa, allarme |
+| le misure incerte o non adatte oltre le due piu' gravi: abbassano la qualita', e con lei il verdetto (ADR 0020) | `weighs` | altri fattori | pesa, cosa pesa, allarme |
 | la parola di una misura in un'ora o nella notte: buona, incerta, non adatta (aerosol: limpido, molto fosco; Luna: banda larga al limite, consigliata banda stretta) | `level`, `levels` (`go`, `marginal`, `nogo`) | giudizio | voto, punteggio, semaforo (che e' il verdetto) |
 | le misure con soglia | `cloud`, `cloud_low`, `rain`, `gust`, `wind`, `condensation`, `jet`, `seeing`, `aerosol`, `moon`, `visibility` | nuvole, nuvole basse, pioggia, raffiche, vento, condensa, jet stream, seeing, aerosol, Luna, visibilita' | umidita' (che e' neutra) |
 | le soglie di ogni misura, dalla peggiore, come le usa il giudizio | `scales`, `steps` | soglie | limiti |
@@ -191,7 +193,8 @@ che il `traduttore` legge per primo.
 | l'ultimo tentativo di una fonte che non deve ripetersi troppo spesso (Meteoblue, lo storico), e com'e' andato | `weather_fetches`, `status` (`ok`, `refused`, `unreachable`, `bad_answer`) | ultimo tentativo | log, cronologia |
 | se il seeing c'e': viene solo da Meteoblue, con la chiave dell'utente | `seeing.source` (`meteoblue` o vuoto) | seeing attivo | il seeing viene da Meteoblue, fonte del seeing |
 | la sezione delle Impostazioni con le chiavi dei servizi | `/impostazioni/servizi` | Servizi | account, integrazioni |
-| lo spessore ottico degli aerosol e le polveri, da CAMS | `aerosol_optical_depth`, `dust_ugm3` | aerosol, polveri | trasparenza, smog |
+| quanto il cielo e' limpido, come fattore della qualita': lo spessore ottico degli aerosol (Marco, 20/10/2026) | `transparency` | trasparenza («limita la trasparenza») | limpidezza, smog |
+| il dato della trasparenza e le polveri, da CAMS, nelle loro carte | `aerosol_optical_depth`, `dust_ugm3` | aerosol, polveri | smog |
 | il seeing di Meteoblue in secondi d'arco, un valore per ora | `seeing_arcsec` | seeing | qualita' del cielo, fascia |
 | i modi di restringere una ricerca, in Planner, Archivio e Notti: anche il pulsante che li apre (Marco, 19/10/2026) | `criteria` | Criteri | filtri (il filtro e' il vetro) |
 | la linea di alberi e case attorno a un sito | `horizon` | orizzonte | maschera, profilo |
@@ -206,7 +209,7 @@ manda a qualcuno).
 
 | cosa e' | indirizzo | a schermo (it) | non si dice |
 |---|---|---|---|
-| la pagina di apertura: cosa e' successo e cosa c'e' da fare | `/` | Casa | dashboard, home, cruscotto |
+| la pagina di apertura: cosa e' successo e cosa c'e' da fare (Marco, 20/10/2026: il nome del disegno approvato) | `/` | Dashboard | Casa, home, cruscotto |
 | la pagina degli oggetti: cosa hai ripreso, con le sue ore | `/archivio` | Archivio | libreria, catalogo, raccolta |
 | le notti, una per una, con cosa e' stato ripreso | `/notti` | Notti | sessioni, serate, uscite |
 | gli strumenti, i setup e i filtri che possiedi | `/attrezzatura` | Attrezzatura | equipaggiamento |
@@ -217,7 +220,7 @@ manda a qualcuno).
 | perche' l'app non parte o non funziona: il diario, il solver che non si avvia, lo stato del sistema | `/diagnostica` | Diagnostica | log, errori, problemi |
 | dove si decide una ripresa che non esiste ancora: si cerca, si inquadra, nasce un progetto | `/planner` | Planner | pianificatore, programma |
 | i progetti e a che punto sono, con quanto manca all'obiettivo | `/progetti` | Progetti | piani, campagne |
-| la serata composta: bersagli in fila sulla linea del tempo e il file per N.I.N.A. (Marco, 19/10/2026) | `/piano-della-notte` | Piano della notte | sequenze, scaletta, programma |
+| la serata composta: oggetti in fila sulla linea del tempo e il file per N.I.N.A. (Marco, 19/10/2026) | `/piano-della-notte` | Piano della notte | sequenze, scaletta, programma |
 | la carta su cui si naviga il cielo | `/carta-del-cielo` | Carta del cielo | mappa, sky map, atlante, cielo |
 | la notte ora per ora intorno al buio, col verdetto | `/meteo` | Meteo | previsioni, tempo |
 | cio' che l'app non deduce dai file, a sezioni: le cartelle, i siti, il nome, le chiavi dei servizi, le soglie | `/impostazioni` | Impostazioni | preferenze, configurazione, opzioni |

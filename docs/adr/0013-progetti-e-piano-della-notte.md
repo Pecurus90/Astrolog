@@ -28,11 +28,11 @@ andare da sola dal crepuscolo all'alba.
   stretta); un DSO nuovo passa dal Planner; le altre categorie si scelgono da un elenco.
 - **Le categorie della serata:** DSO dei progetti, stelle variabili, esopianeti, comete, NEO,
   occultazioni asteroidali, supernove e transienti, campagne AAVSO.
-- **Il piano della notte ha quattro pezzi:** il bersaglio; la sua finestra utile, calcolata per
+- **Il piano della notte ha quattro pezzi:** l'oggetto; la sua finestra utile, calcolata per
   categoria; i blocchi in fila su una linea del tempo grafica (crepuscoli, buio, Luna), coi
   margini prima e dopo ogni blocco, i tempi di cambio (puntare, centrare, mettere a fuoco) e i
   conflitti in rosso; l'export, **un solo file N.I.N.A. per la notte intera**. Gli eventi a orario
-  fisso (transiti, minimi, occultazioni) si mettono per primi, i bersagli flessibili riempiono i
+  fisso (transiti, minimi, occultazioni) si mettono per primi, gli oggetti flessibili riempiono i
   buchi per priorita'.
 - **Il piano interno non dipende dal programma di ripresa:** N.I.N.A. e' la prima traduzione, le
   altre si aggiungono senza rifare il piano.
@@ -71,7 +71,7 @@ andare da sola dal crepuscolo all'alba.
   a Meteo (Marco). Supera, per questa pagina, "meteo solo in Notti" di ADR 0023.
 - **Tempi di cambio** (puntare, centrare, mettere a fuoco): li scrive l'utente in Impostazioni,
   nessun valore di partenza (Marco): nessuna fonte vale per tutti.
-- **Conflitti in rosso**, solo regole gia' decise: blocchi sovrapposti, bersaglio sotto l'altezza
+- **Conflitti in rosso**, solo regole gia' decise: blocchi sovrapposti, oggetto sotto l'altezza
   minima o l'orizzonte, banda larga con la Luna che la vieta, evento fisso spostato.
 - **Export**: un file per la notte intera, per il sequencer avanzato di N.I.N.A. Il formato si
   legge da un file vero esportato da N.I.N.A. quando si costruisce: nessuno schema pubblico.
@@ -91,7 +91,7 @@ andare da sola dal crepuscolo all'alba.
   pari merito il piu' alto. L'altro resta fra le proposte.
 - **Ricerca e' un elenco solo**; i tipi sono Criteri, non pagine.
 - **La regola della Luna e' un'impostazione** (Marco): i due gradini della banda larga (25% e 50%
-  di partenza) e l'altezza da cui la Luna conta (orizzonte di partenza). Vale in tutta l'app:
+  di partenza) e l'altezza da cui la Luna conta (-5° di partenza, sotto "Le cose rimandate, decise"). Vale in tutta l'app:
   Meteo, Dashboard, Planner, Piano della notte ([`domini/meteo.md`](../domini/meteo.md)).
 - **Deep sky** prende i progetti dal Planner.
 - **Sistema solare**: pianeti e Luna come nel Planner, piu' le comete (Marco: si fotografano,
@@ -144,7 +144,7 @@ andare da sola dal crepuscolo all'alba.
   senza no. Una OSC con ruota la mette nel setup.
 - **Tempi uguali per tutta l'app** (Marco: 10 min nel deep sky non contano), vuoti, scritti
   dall'utente: avvio e chiusura (raffreddamento, unpark, apertura e chiusura del tetto, park,
-  riscaldamento), per bersaglio (puntamento e centratura, autofocus), durante le pose (cambio
+  riscaldamento), per oggetto (puntamento e centratura, autofocus), durante le pose (cambio
   filtro, dither col settle e ogni quante pose, scaricamento della posa, un autofocus ogni X ore
   come stima, flip, spostamento fra pannelli). Nessuna fonte da' tempi standard (Target
   Scheduler non li stima); i tempi misurati sui log di Marco (agosto-ottobre 2026) sono solo
@@ -178,16 +178,16 @@ piano). Regole fisse, nessuna impostazione per sceglierle.
 ### Dalla documentazione di Target Scheduler (Marco, 19/10/2026)
 
 Letta tutta (tcpalmer.github.io/nina-scheduler) e confrontata. Si prende:
-- **Luna per bersaglio con la lorentziana**, tre coppie: separazione richiesta = D / (1 +
+- **Luna per oggetto con la lorentziana**, tre coppie: separazione richiesta = D / (1 +
   (giorni dalla Luna piena / W)^2), cioe' D a Luna piena e D/2 a W giorni. Codice:
   `GetMoonAvoidanceLorentzianSeparation` in `AstrometryUtils.cs` del repo
   tcpalmer/nina.plugin.targetscheduler (ciclo 29.53059 giorni). Partenze (Marco):
   - banda larga (L, RGB, colore) **120°/10**: 120 a Luna piena da ACP, forum e Telescopius; W
-    tagliato da 14 perche' 120/14 chiede 57° anche a Luna nuova (un bersaglio a 45° non passa
+    tagliato da 14 perche' 120/14 chiede 57° anche a Luna nuova (un oggetto a 45° non passa
     mai); 10 ricavato dai numeri attribuiti a Telescopius (README di astro-recommender);
   - **OIII 90°/10**: piu' sensibile alla Luna (forum), 90 attribuito a Telescopius;
   - **Hα, SII, dual band 60°/7**: default nel codice di Target Scheduler e nella sua doc.
-  Conta solo con la Luna sopra l'altezza scelta in Impostazioni (orizzonte di partenza): niente
+  Conta solo con la Luna sopra l'altezza scelta in Impostazioni (-5° di partenza): niente
   "relax" di Target Scheduler (`MoonAvoidanceExpert.cs`), la sua scala non ha fonte (Marco).
   Supera "La *Lorentzian moon avoidance* resta fuori" qui sopra e la distanza unica di 40°; la
   regola di fase 25/50% resta per il verdetto della notte in Meteo e Dashboard.

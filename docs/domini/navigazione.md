@@ -40,6 +40,10 @@ Le prove del frontend si chiamano col loro titolo; stanno in `frontend/tests/sch
 
 ## Le decisioni
 
+**Vince il telaio del disegno approvato** (Marco, 20/10/2026): barra, menu «Altro» (con il Piano
+della notte) e Cerca coi suoi sette gruppi come nel Telaio di Design v31.8. Questo contratto si
+riscrive quando si porta il telaio; fino ad allora dove lo contraddice vale il disegno.
+
 **Il binario, nell'ordine del disegno** (Marco in Claude Design, v15-v26): Dashboard, Notti,
 Archivio, Progetti, Statistiche, Attrezzatura; uno stacco; Planner, Carta del cielo, Meteo. In
 fondo, staccate, Da confermare e Impostazioni. Niente gruppi con titolo: lo stacco basta a

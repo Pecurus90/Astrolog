@@ -22,7 +22,8 @@ decide Marco (CLAUDE.md, principio 1); le soglie dentro ogni fattore restano que
 - **Ogni ora vale da 0 a 100**: somma dei punti dei fattori. Un fattore prende i punti pieni fino
   alla sua soglia "buona", zero dalla "non adatta", in proporzione in mezzo. Le soglie sono
   quelle con fonte gia' nel backend (`weather/judge.py`).
-- **Bloccano**: pioggia, e nuvole "non adatta". L'ora vale 0.
+- **Bloccano**: pioggia, nuvole "non adatta" e **nebbia** (visibilita' sotto 1 km, Atlante WMO;
+  Marco, 20/10/2026). L'ora vale 0. La trasparenza resta solo l'aerosol.
 - **Una convenzione sola** per deep sky, Sole e pianeti: il seeing pesa per tutti (Marco). Il
   giorno del Sole: il "Sole basso" usciva coi 15 punti della Luna; come si giudica si decide con
   Marco quando si costruisce il Sole.
@@ -44,8 +45,9 @@ decide Marco (CLAUDE.md, principio 1); le soglie dentro ogni fattore restano que
   punti su 100: una Luna piena alta lasciava "buona" una notte perfetta, e chi fa banda larga
   non puo' uscire. Ora due risposte separate: il **meteo** (punteggio e verdetto) dice se si
   esce, la **Luna** dice cosa si riprende.
-  - Ogni ora di buio e' **banda larga** o **solo banda stretta**. Solo banda stretta quando la
-    Luna e' illuminata dal **25 %** (schema ING: buio sotto 0,25, grigio fino a 0,65, chiaro
+  - Ogni ora di buio e' **banda larga**, **banda larga al limite** o **consigliata banda
+    stretta**: buona fino al 25% illuminata, al limite fino al 50% (Marco, 7/10/2026), oltre
+    banda stretta, come in `docs/domini/meteo.md`. Il primo gradino, dal **25 %** (schema ING: buio sotto 0,25, grigio fino a 0,65, chiaro
     oltre; ING Technical Note 127,
     https://www.ing.iac.es/Astronomy/observing/manuals/ps/tech_notes/tn127.pdf; gli stessi tagli in
     astroplan, `MoonIlluminationConstraint`) **e** sopra **-5°** (Marco, 19/10/2026: rete TESS,

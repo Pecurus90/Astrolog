@@ -25,7 +25,7 @@ del 20/10/2026 su app e forum:
   si legge come banda che si stringe. Buchi come buchi, col perche'; nessuna interpolazione.
   Cambi di setup marcati sulla serie.
 - **In testa all'anno: notti buone sfruttate** (Marco): delle notti con qualita' da 70 (ADR
-  0020) al sito, in quante sei uscito: «18 su 31». Accanto notti, ore integrate, pose, coi delta
+  0020) al sito, in quante sei uscito: «18 su 31». Accanto notti, ore integrate, frame, coi delta
   sull'anno di confronto (di partenza il precedente), e la **resa del buio** (ore integrate / ore
   di buio delle notti in cui sei uscito, contratto vecchio).
   - Serve il meteo storico di **ogni** notte al sito, non solo di quelle con frame: oggi
@@ -46,10 +46,12 @@ del 20/10/2026 su app e forum:
   - FWHM mediana allo zenit, in arcsec (ADR 0022), coi quartili;
   - cielo: SQM dai frame L, senza filtro e a colori (ADR 0022; Luna sotto -5° separata da Luna
     su) e seeing storico (solo da quando l'app archivia la previsione);
-  - le altre misure dei frame (Marco, 20/10/2026): HFD allo zenit, eccentricita', numero di
-    stelle, fondo cielo; e la qualita' media della notte dal meteo (ADR 0020). Mediana del mese.
+  - le altre misure dei frame (Marco, 20/10/2026): HFD allo zenit, eccentricita'; e la qualita'
+    della notte dal meteo (ADR 0020). Mediana del mese. Stelle e fondo cielo, prima in elenco,
+    escono (Marco sulla tavola, v31.3): dipendono da posa, filtro e oggetto. Scelta a vista:
+    griglia o una linea per anno.
     Il setup lo sceglie l'utente: uno, oppure «Tutti» = tutti insieme (Marco, 20/10/2026), e la
-    pagina avverte che FWHM, stelle e fondo cambiano da un setup all'altro.
+    pagina avverte che in px FWHM e HFD cambiano da un setup all'altro.
 - **Capacita'**: FWHM e HFD allo zenit (ADR 0022, le due unita'), eccentricita' (senza
   correzione). **SNR fuori**: "SNR fra oggetti diversi: mai" (ADR 0022), e notti diverse sono
   oggetti diversi. Scelta di metodo.
@@ -60,14 +62,14 @@ del 20/10/2026 su app e forum:
 - **Per filtro**: ore per filtro nell'anno, barre impilate, il filtro con piu' ore in basso e il
   totale scritto (le barre impilate si confrontano solo sulla base: Cleveland & McGill 1984,
   service-manual.ons.gov.uk/data-visualisation/chart-types/stacked-bar-charts).
-- **Per setup**: ore, pose, oggetti e FWHM mediana allo zenit di ogni setup, a parita' di
-  altezza (contratto vecchio).
+- **Per setup**: ore, frame, oggetti e FWHM mediana allo zenit di ogni setup, a parita' di
+  altezza (contratto vecchio). Il tipo di oggetti prevalente esce (Marco sulla tavola, v31.3).
 - **Cielo del sito**: SQM per sito, mese e anno; Luna sotto -5° separata da Luna su; curva media
   per ora della notte (Marco, 18/10/2026; `docs/coda.md`). Niente stima per i filtri stretti.
 - **Calendario delle notti** (Marco): un quadretto per notte, pieno piu' scuro con piu' ore
   integrate, gradini a 2, 4 e 6 ore (Marco, 20/10/2026: nessuna convenzione); un contorno sulle **notti buone in cui non sei uscito**. Il colore non e' l'unico
   segno (WCAG 1.4.1): numero e parola al passaggio o al tocco.
-- **Non si fa** (contratto vecchio): nessuno scarto di pose, nessuna classifica fra oggetti,
+- **Non si fa** (contratto vecchio): nessuno scarto di frame, nessuna classifica fra oggetti,
   nessun grafico senza una domanda, nessun voto d'insieme, nessuna correlazione fra qualita' dei
   frame e meteo.
 
