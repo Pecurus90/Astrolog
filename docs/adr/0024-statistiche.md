@@ -53,6 +53,10 @@ del 20/10/2026 su app e forum:
 - **Capacita'**: FWHM e HFD allo zenit (ADR 0022, le due unita'), eccentricita' (senza
   correzione). **SNR fuori**: "SNR fra oggetti diversi: mai" (ADR 0022), e notti diverse sono
   oggetti diversi. Scelta di metodo.
+- **Confronta setup** (Marco, 20/10/2026): due setup scelti, sovrapposti sul giorno dell'anno,
+  FWHM in ″ (in px dipende dalla scala; `frame_wcs.scale_arcsec_px`).
+- **Seeing e qualita' su tutte le notti** col meteo (il cielo del sito); misure dei frame solo
+  sulle notti uscite. Scelta di metodo.
 - **Per filtro**: ore per filtro nell'anno, barre impilate, il filtro con piu' ore in basso e il
   totale scritto (le barre impilate si confrontano solo sulla base: Cleveland & McGill 1984,
   service-manual.ons.gov.uk/data-visualisation/chart-types/stacked-bar-charts).

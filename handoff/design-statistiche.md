@@ -1,4 +1,26 @@
-# Per Claude Design -- Statistiche, brief completa (v1.2)
+# Per Claude Design -- Statistiche, brief completa (v1.3)
+
+## 0ter. Risposte alle domande della v31.6 (20/10/2026)
+
+1. **«Confronta setup»: si'** (Marco), ma **in ″**, non in px. La FWHM in ″ e' il cielo piu'
+   l'ottica, e si confronta fra setup diversi; in px dipende dalla scala di ciascuno. L'app ha
+   la scala di ogni frame risolto (`frame_wcs.scale_arcsec_px`). Due setup scelti, sovrapposti sul
+   giorno dell'anno, con le loro bande; il px resta nel valore al passaggio.
+2. **Calendario in «Tutto»: un anno alla volta**, come avete fatto (Marco).
+3. **Seeing nella griglia: tutte le notti col meteo**, come avete fatto: e' il cielo del sito,
+   non delle tue uscite. Le misure dei frame restano sulle notti uscite. Scelta di metodo.
+4. **Confronto allo stesso giorno**: si', come avete fatto (contratto: il cumulato letto alla
+   stessa data). Con «Tutto» o un anno finito, l'anno intero.
+5. Testi:
+   - «Tutti i setup insieme: FWHM e HFD cambiano da un setup all'altro.» -> va bene, ma in ″ si
+     confrontano: **«Tutti i setup insieme: in px FWHM e HFD cambiano da un setup all'altro.»**
+   - «In px si confronta fra setup diversi; in ″ no» e' **al rovescio**. Diventa: **«FWHM
+     mediana allo zenit. In ″ si confronta fra setup diversi; in px dipende dalla scala.»**
+   - **Bortle**: sotto il numero solo «misurato su {n} notti» (come in Impostazioni); la regola
+     intera al passaggio o al tocco della ⓘ (Marco).
+6. **Dati**: oggi l'app **non ne manda nessuno** per le Statistiche: la pagina si costruisce
+   dopo, e FWHM, HFD, eccentricita' e SQM arrivano con lo stadio `measure` (ADR 0022). L'elenco
+   va bene cosi' com'e': lo prendiamo come contratto della rotta. Continuate coi dati di prova.
 
 ## 0bis. Correzione alla v31.1 (20/10/2026)
 
