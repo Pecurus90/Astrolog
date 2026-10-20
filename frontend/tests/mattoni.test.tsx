@@ -71,6 +71,17 @@ describe("Avviso", () => {
     expect(screen.getByRole("alert").textContent).toBe("rotto")
   })
 
+  it("il testo puo' portare paragrafi: un paragrafo dentro un paragrafo il browser lo spezza", () => {
+    const { container } = render(
+      <Avviso esito="attesa">
+        perche'
+        <p>un passo</p>
+      </Avviso>,
+    )
+    expect(container.querySelector("p p")).toBeNull()
+    expect(screen.getByRole("status").textContent).toBe("perche'un passo")
+  })
+
   it("puo' avere un titolo, e senza titolo non lascia un posto vuoto", () => {
     const { container, rerender } = render(<Avviso esito="buono">il testo</Avviso>)
     expect(container.querySelector(".as-avviso__titolo")).toBeNull()

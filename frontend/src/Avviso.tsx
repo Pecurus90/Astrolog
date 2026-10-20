@@ -88,9 +88,10 @@ export function Avviso({
       <div className="as-avviso__corpo">
         {titolo && <p className="as-avviso__titolo">{titolo}</p>}
         {children !== undefined && (
-          <p className="as-avviso__testo" role={ruolo ?? (esito === "allarme" ? "alert" : "status")}>
+          // a div: the text may carry its own paragraphs, and a p inside a p is split by the browser
+          <div className="as-avviso__testo" role={ruolo ?? (esito === "allarme" ? "alert" : "status")}>
             {children}
-          </p>
+          </div>
         )}
         {sotto}
       </div>
