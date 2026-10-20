@@ -1,0 +1,43 @@
+name: Segnala un problema / Report a problem
+description: Qualcosa in AstroLog non funziona come dovrebbe. / Something in AstroLog does not work as it should.
+labels: [difetto]
+body:
+  - type: textarea
+    id: cosa
+    attributes:
+      label: Cosa e' successo / What happened
+      description: Cosa hai fatto, cosa ti aspettavi, cosa hai visto. / What you did, what you expected, what you saw.
+    validations:
+      required: true
+  - type: dropdown
+    id: dove
+    attributes:
+      label: Dove gira AstroLog / Where AstroLog runs
+      options:
+        - Windows
+        - Mac
+        - NAS (Docker)
+    validations:
+      required: true
+  - type: dropdown
+    id: software
+    attributes:
+      label: Software di acquisizione / Capture software
+      description: Quello che ha scritto i FITS. / The one that wrote the FITS files.
+      multiple: true
+      options:
+        - N.I.N.A.
+        - ASIAIR
+        - Voyager
+        - SGP
+        - Altro / Other
+  - type: input
+    id: versione
+    attributes:
+      label: Versione di AstroLog / AstroLog version
+      description: Se la conosci; altrimenti quando l'hai installata. / If you know it; otherwise when you installed it.
+  - type: textarea
+    id: allegati
+    attributes:
+      label: Schermate o diagnostica / Screenshots or diagnostics
+      description: Facoltativo. Non allegare i tuoi FITS se non vuoi renderli pubblici. / Optional. Do not attach your FITS files unless you want them public.

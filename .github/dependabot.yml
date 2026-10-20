@@ -1,24 +1,33 @@
 # Chi sorveglia le dipendenze. Senza questo file una libreria puo' restare ferma per anni,
-# falle comprese, e nessuno se ne accorge: qui ogni settimana arriva una proposta di
-# aggiornamento, che passa dalla CI come qualunque altro cambiamento.
+# falle comprese, e nessuno se ne accorge: qui ogni mese arriva una proposta di aggiornamento,
+# che passa dalla CI; verde, la unisce l'agente (`/smista`, ADR 0028).
 #
 # Vincolo non ovvio: le proposte si raggruppano in una sola per ecosistema. Dieci richieste
-# separate a settimana non si guardano; una sola, con dentro tutto, si guarda davvero.
+# separate al mese non si guardano; una sola, con dentro tutto, si guarda davvero.
 version: 2
 updates:
   - package-ecosystem: uv
     directory: /backend
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       backend:
+        patterns: ["*"]
+    open-pull-requests-limit: 3
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: monthly
+    groups:
+      frontend:
         patterns: ["*"]
     open-pull-requests-limit: 3
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
     groups:
       azioni:
         patterns: ["*"]

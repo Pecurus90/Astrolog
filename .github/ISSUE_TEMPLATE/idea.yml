@@ -1,0 +1,11 @@
+name: Proponi un'idea / Suggest an idea
+description: Qualcosa che AstroLog potrebbe fare. / Something AstroLog could do.
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: L'idea / The idea
+      description: Cosa vorresti poter fare, e perche' ti serve. / What you would like to do, and why you need it.
+    validations:
+      required: true
