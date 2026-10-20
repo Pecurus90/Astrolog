@@ -45,7 +45,10 @@ del 20/10/2026 su app e forum:
   - ore integrate;
   - FWHM mediana allo zenit, in arcsec (ADR 0022), coi quartili;
   - cielo: SQM dai frame L, senza filtro e a colori (ADR 0022; Luna sotto -5° separata da Luna
-    su) e seeing storico (solo da quando l'app archivia la previsione).
+    su) e seeing storico (solo da quando l'app archivia la previsione);
+  - le altre misure dei frame (Marco, 20/10/2026): HFD allo zenit, eccentricita', numero di
+    stelle, fondo cielo; e la qualita' media della notte dal meteo (ADR 0020). Mediana del mese.
+    Stelle e fondo dipendono da posa, filtro e setup: si leggono con un setup scelto.
 - **Capacita'**: FWHM e HFD allo zenit (ADR 0022, le due unita'), eccentricita' (senza
   correzione). **SNR fuori**: "SNR fra oggetti diversi: mai" (ADR 0022), e notti diverse sono
   oggetti diversi. Scelta di metodo.
@@ -57,7 +60,7 @@ del 20/10/2026 su app e forum:
 - **Cielo del sito**: SQM per sito, mese e anno; Luna sotto -5° separata da Luna su; curva media
   per ora della notte (Marco, 18/10/2026; `docs/coda.md`). Niente stima per i filtri stretti.
 - **Calendario delle notti** (Marco): un quadretto per notte, pieno piu' scuro con piu' ore
-  integrate; un contorno sulle **notti buone in cui non sei uscito**. Il colore non e' l'unico
+  integrate, gradini a 2, 4 e 6 ore (Marco, 20/10/2026: nessuna convenzione); un contorno sulle **notti buone in cui non sei uscito**. Il colore non e' l'unico
   segno (WCAG 1.4.1): numero e parola al passaggio o al tocco.
 - **Non si fa** (contratto vecchio): nessuno scarto di pose, nessuna classifica fra oggetti,
   nessun grafico senza una domanda, nessun voto d'insieme, nessuna correlazione fra qualita' dei

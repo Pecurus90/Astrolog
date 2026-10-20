@@ -1,4 +1,27 @@
-# Per Claude Design -- Statistiche, brief completa (v1)
+# Per Claude Design -- Statistiche, brief completa (v1.1)
+
+## 0. Correzioni alla prima consegna (20/10/2026)
+
+La pagina e' piaciuta molto a Marco. Si corregge e si aggiunge solo questo:
+
+1. **Piu' misure nella griglia mesi x anni** (Marco). Il selettore della sez. 6 porta:
+   - dal meteo: **Notti buone e uscite**, **Qualita' media della notte** (0-100), **Seeing**;
+   - dai frame: **FWHM allo zenit**, **HFD allo zenit** (″ e px), **Eccentricita'**, **Stelle**
+     (numero per posa), **Fondo cielo** (ADU), **SQM**;
+   - **Ore integrate**.
+   Mediana del mese. FWHM, HFD, stelle e fondo dipendono dal setup: con «Tutti» si mostra il
+   setup con piu' ore, come avete gia' fatto per la FWHM (approvato), e la riga lo dice.
+   Raggruppate il selettore in tre: «Cielo», «Frame», «Volumi».
+2. **Bortle in sez. 9**: «misurato su {n} notti» segue la regola dell'ADR 0022, non la mediana di
+   tutte le notti: ultimi 12 mesi, notti in almeno 6 mesi diversi, solo frame col bias, Sole sotto
+   -18°, Luna sotto -5°, oggetto sopra 30°. Una mediana per notte, poi la mediana delle notti.
+   Dati scarsi: «Servono notti in 6 mesi diversi: finora {n} notti in {m} mesi.»
+3. **Approvati da Marco**: gradini del calendario a 2, 4 e 6 ore; FWHM del setup con piu' ore;
+   «Cielo» diviso in SQM e Seeing; i vostri testi nuovi, con una correzione: «Scansiona ora» ->
+   **«Scansiona»**, come nel resto dell'app.
+4. Registrate le Statistiche nel CHANGELOG e una sezione nelle DECISIONI.
+
+---
 
 Da Claude Code, 20/10/2026. L'ultima pagina che manca: **Statistiche** (`/statistiche`), voce del
 gruppo «Guarda» accanto ad Archivio, Notti, Progetti e Attrezzatura. Decisioni in
