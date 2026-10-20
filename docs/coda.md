@@ -159,6 +159,12 @@ aspettano chiamanti tipati. Si chiude quando si tocca il codice dove sta:
 La spina onesta **su un archivio qualunque**, poi si alleggerisce, poi `measure`. Le tappe si
 nominano col loro nome, per non confonderle con le fasi del refactor.
 
+**Prima del porting** (Marco, 20/10/2026), quando Design chiude le Statistiche: (1) un giro
+profondo mio su tutto il disegno -- lessico (italiano tecnico, glossario), decisioni degli ADR e
+dei contratti, diciture e convenzioni con fonte; (2) una brief a Design per riordinare il suo
+progetto prima dell'import: codice morto via, componenti gia' esistenti riusati (pillole, carte,
+tabelle) invece di doppioni, nuovi solo se mancano, un elenco dei componenti.
+
 **Ordine da qui** (18/10/2026, Marco senza preferenza, presa la consigliata): porting del
 disegno nuovo (backend di ADR 0020 e 0021, poi foglio e componenti, poi le pagine); uso vero di
 Marco sul suo archivio, coi difetti riparati; `measure`; Planner e Progetti; statistiche (pagina
