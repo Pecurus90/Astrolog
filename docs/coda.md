@@ -191,10 +191,14 @@ da decidere con Marco); pacchetto; telefono.
    (`old/backend/astrolog/ephemeris/`), col Planner.
 7. **Il Planner, i progetti e il piano della notte**
    ([ADR 0013](adr/0013-progetti-e-piano-della-notte.md)): i progetti con l'inquadratura su
-   Aladin Lite v3 ([ADR 0005](adr/0005-carta-del-cielo-aladin-lite.md)), la pagina delle
-   sequenze col wizard della serata e la linea del tempo, l'export per N.I.N.A. Prima i DSO, poi
-   esopianeti, variabili, occultazioni e campagne AAVSO, poi supernove e transienti, per ultimi
-   comete e NEO. Poi la **Carta del cielo**.
+   Aladin Lite v3 ([ADR 0005](adr/0005-carta-del-cielo-aladin-lite.md)), il Piano della notte
+   (disegno v30.1 di Design, verificato il 20/10/2026 sulla brief
+   `handoff/design-piano-della-notte-completo.md`), l'export per N.I.N.A. Prima i DSO, poi
+   esopianeti, variabili e campagne AAVSO, poi supernove, per ultimi comete e NEO; le
+   occultazioni sono fuori. Nel portarlo, due testi sul lessico: «Nessun progetto sopra {n}°
+   stanotte.» diventa «Nessun progetto alto piu' di {n} gradi stanotte.»; nelle proposte «{n}
+   utili» e «nessuna ora utile» diventano ore del bersaglio nel buio («{n} ore»), perche' «ore
+   utili» e' del Meteo. Poi la **Carta del cielo**.
 8. **Il pacchetto**: immagine Docker con ASTAP dentro, multi-arch su runner arm64 nativi; su
    Windows e Mac l'app desktop con installer e updater firmati
    ([ADR 0003](adr/0003-astap-per-tutti.md), [ADR 0004](adr/0004-pacchetto-desktop-tauri.md)).
