@@ -119,7 +119,13 @@ export function ImpostazioniBackup() {
         throw new Error(t("backup.notABackup"))
       }
       const { error, response } = await api.POST("/api/v1/backup/import", { body: contenuto })
-      if (response.status === 422) throw new Error(t("backup.notABackup"))
+      if (response.status === 422) {
+        // a folder refused on this machine comes back with its path; the file itself is sound
+        const percorso = (error as { detail?: { path?: unknown } } | undefined)?.detail?.path
+        throw new Error(
+          typeof percorso === "string" ? t("backup.folderRefused", { percorso }) : t("backup.notABackup"),
+        )
+      }
       if (error) throw new Error(t("backup.importFailed"))
       await api.POST("/api/v1/scan")
     },

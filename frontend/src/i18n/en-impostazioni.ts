@@ -149,6 +149,7 @@ export const enImpostazioni = {
   "backup.import": "Import backup",
   "backup.imported": "Backup imported. Scan started.",
   "backup.notABackup": "Invalid backup file.",
+  "backup.folderRefused": "The file has a folder that cannot be used here: {percorso}. Nothing was imported.",
   "backup.exportFailed": "Export failed.",
   "backup.importFailed": "Import failed.",
   "backup.failed": "Backup status not available.",

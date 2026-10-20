@@ -907,4 +907,7 @@ rileggendo le cartelle.
   sull'altro computer *Importa backup*. Il file esportato **non contiene le chiavi dei
   servizi** (Meteoblue), che riscrivi a mano, ne' dove sta ASTAP: sull'altro computer l'app lo
   cerca da sola. L'importazione aggiunge e aggiorna, non cancella niente. Se sull'altro computer le foto stanno in un altro posto, aggiungi la cartella nel posto
-  nuovo: l'app la riconosce dai file e le risposte la seguono.
+  nuovo: l'app la riconosce dai file e le risposte la seguono. Se nel file c'e' una cartella che
+  sull'altro computer esiste ma non si puo' usare (per esempio una cartella di sistema, o sul NAS
+  una cartella fuori da quella dei dati), l'app
+  la nomina e non importa niente.

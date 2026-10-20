@@ -152,6 +152,7 @@ export const itImpostazioni = {
   "backup.import": "Importa backup",
   "backup.imported": "Backup importato. Scansione avviata.",
   "backup.notABackup": "File di backup non valido.",
+  "backup.folderRefused": "Nel file c'\u00e8 una cartella che qui non si pu\u00f2 usare: {percorso}. Non ho importato niente.",
   "backup.exportFailed": "Esportazione non riuscita.",
   "backup.importFailed": "Importazione non riuscita.",
   "backup.failed": "Stato del backup non disponibile.",

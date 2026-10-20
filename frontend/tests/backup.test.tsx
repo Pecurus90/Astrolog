@@ -109,6 +109,33 @@ describe("Il backup", () => {
     expect(riga?.textContent).not.toContain("--")
   })
 
+  it("una cartella del file che qui non si puo' usare si nomina: il file non e' guasto", async () => {
+    window.history.pushState({}, "", "/impostazioni/backup")
+    rispondi({
+      ...STANOTTE,
+      ...SPINA,
+      "POST /api/v1/backup/import": {
+        stato: 422,
+        corpo: { detail: { code: "path_outside_data_root", path: "/home/marco/privata" } },
+      },
+      "/api/v1/backup": { stato: 200, corpo: { offer: "none", last: CONTI, unreadable: false, path: "x" } },
+      "/api/v1/settings": { stato: 200, corpo: impostazioni(true) },
+      "/api/v1/review": { stato: 200, corpo: { to_confirm: 0 } },
+      "/api/health": { stato: 200, corpo: SALUTE },
+    })
+    const { container } = await disegna()
+    await screen.findByRole("heading", { name: /^backup$/i })
+    const scelta = container.querySelector<HTMLInputElement>('input[type="file"]')!
+    const file = new File(['{"version": 1}'], "risposte.json", { type: "application/json" })
+    fireEvent.change(scelta, { target: { files: [file] } })
+    expect(
+      await screen.findByText(
+        "Nel file c'è una cartella che qui non si può usare: /home/marco/privata. Non ho importato niente.",
+      ),
+    ).toBeDefined()
+    expect(screen.queryByText(/file di backup non valido/i)).toBeNull()
+  })
+
   it("se il backup non dice quando e' stato scritto, la domanda non comincia con un punto", async () => {
     rispondi({
       ...STANOTTE,

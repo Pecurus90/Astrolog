@@ -15,8 +15,6 @@ in [ADR 0025](adr/0025-uno-studio-per-ruoli.md) e [ADR 0026](adr/0026-la-pipelin
 Ordine (Marco, 20/10/2026), prima del porting:
 
 1. **Difetti riprodotti** (`/ripara`, uno per uno):
-   - Importa in Impostazioni (`Backup.tsx:122`) dice "non e' un file di risposte" per ogni 422,
-     anche per una cartella rifiutata (`path_outside_data_root`): testo da concordare, col disegno;
 2. **La squadra** (ADR 0025): agenti `collaudatore` e `verificatore-disegno`, modo `pagina`,
    comando per portare una tavola, `tools/glossario.py`, `tools/contratti.py`, **Supera**
    obbligatoria, la coda senza voci "fatto".
