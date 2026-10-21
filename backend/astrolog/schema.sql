@@ -862,3 +862,39 @@ CREATE TABLE catalog_version (
   entries   INTEGER NOT NULL,
   loaded_at TEXT NOT NULL
 ) STRICT;
+
+-- ============================================================ PIPELINE NUOVA (ADR 0030)
+-- Accanto alla vecchia finche' non la sostituisce: tabelle sue, prefisso `pipeline_`.
+
+-- DICHIARATO. Una cartella che l'utente ha scelto: la radice dei percorsi dei suoi file.
+CREATE TABLE pipeline_roots (
+  id         INTEGER PRIMARY KEY,
+  path       TEXT NOT NULL UNIQUE,  -- com'e' stata scelta, sul sistema dove gira l'app
+  created_at TEXT NOT NULL
+) STRICT;
+
+-- RILEVATO. La ricevuta di ogni scansione di una cartella.
+CREATE TABLE pipeline_scans (
+  id         INTEGER PRIMARY KEY,
+  root_id    INTEGER NOT NULL REFERENCES pipeline_roots (id),
+  scanned_at TEXT NOT NULL,
+  -- 0: la cartella non ha risposto (disco staccato, NAS spento): nessun file e' stato giudicato
+  reachable  INTEGER NOT NULL CHECK (reachable IN (0, 1)),
+  new        INTEGER NOT NULL,
+  changed    INTEGER NOT NULL,
+  unchanged  INTEGER NOT NULL,
+  gone       INTEGER NOT NULL
+) STRICT;
+
+-- RILEVATO. Un file visto dentro una cartella scelta, com'era all'ultima scansione che l'ha
+-- potuto guardare. Il file, non il frame: lo stesso frame in due file e' una cosa del mattone 3.
+CREATE TABLE pipeline_files (
+  id           INTEGER PRIMARY KEY,
+  root_id      INTEGER NOT NULL REFERENCES pipeline_roots (id),
+  rel_path     TEXT NOT NULL,     -- relativo alla radice, con `/`: regge il cambio di sistema
+  size         INTEGER NOT NULL,
+  mtime_ns     INTEGER NOT NULL,  -- confrontata esatta: una data diversa costa una rilettura
+  state        TEXT NOT NULL CHECK (state IN ('present', 'gone')),
+  seen_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),  -- l'ultima che l'ha giudicato
+  UNIQUE (root_id, rel_path)
+) STRICT;
