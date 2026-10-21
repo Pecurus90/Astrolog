@@ -241,6 +241,13 @@ forbidden_modules = ["astrolog.weather.verdict", "astrolog.weather.position", "a
 allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
+name = "decidere, pesare e misurare un oggetto sono puri: niente db, niente catalogo vivo, niente stadio"
+type = "forbidden"
+# I tre si importano fra loro: i contratti di fits, vocab ed effemeridi, che vietano la spina, no.
+source_modules = ["astrolog.spine.identify_decide", "astrolog.spine.identify_score", "astrolog.spine.identify_geometry"]
+forbidden_modules = ["sqlite3", "astrolog.db", "astrolog.catalog.lookup", "astrolog.catalog.load", "astrolog.api", "astrolog.worker", "astrolog.spine.identify", "astrolog.spine.identify_store", "astrolog.spine.identify_link", "astrolog.spine.stages"]
+
+[[tool.importlinter.contracts]]
 name = "le effemeridi sono pure: niente db, niente spina, niente api, niente rete"
 type = "forbidden"
 source_modules = ["astrolog.ephemeris"]
