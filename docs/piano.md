@@ -10,9 +10,9 @@ fuori nelle Issue con l'etichetta `bloccato`.
 **La pipeline riprogettata da zero** (Marco, 22/10/2026): scansione, lettura, attribuzione e
 normalizzazione si riscrivono in una casa nuova da una mappa concettuale decisa prima del codice,
 uno strato alla volta, affiancate alla vecchia finche' non la sostituiscono. Verificati N.I.N.A. e
-ASIAIR, piu' la convenzione SBIG (ADR 0029). Prossimo passo: le 9 decisioni della mappa parte 1,
-poi il censimento delle chiavi sull'archivio di Marco. Le Issue #14-#24 aspettano: molte le chiude
-la pipeline nuova.
+ASIAIR, piu' la convenzione SBIG (ADR 0029). Fatto il primo strato: `backend/astrolog/pipeline/scanner.py` trova i FITS e
+estrae solo le chiavi che scrivono N.I.N.A. e ASIAIR (Marco: nient'altro). Il passo dopo lo
+sceglie Marco, uno alla volta. Le Issue #14-#24 aspettano: molte le chiude la pipeline nuova.
 
 ## Dopo
 
