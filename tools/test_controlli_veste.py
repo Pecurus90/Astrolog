@@ -63,6 +63,43 @@ def test_a_class_written_in_the_page_is_caught(tmp_path):
     assert controlli_veste.classi_inventate(str(tmp_path)) == ["as-applicazione"]
 
 
+def test_a_class_only_named_in_a_comment_of_the_sheet_is_not_in_the_sheet(tmp_path):
+    """Un commento del foglio che nomina `.as-elenco` non la veste: chi la scrive resta nudo."""
+    stili = tmp_path / "frontend" / "src" / "stili"
+    stili.mkdir(parents=True)
+    (stili / controlli_veste.FOGLIO).write_text(
+        """/* .as-elenco e' superata */
+.as-app { margin: 0; }
+""",
+        encoding="utf-8",
+    )
+    (tmp_path / "frontend" / "index.html").write_text(
+        """<html><body class="as-app as-elenco"></body></html>
+""",
+        encoding="utf-8",
+    )
+    assert controlli_veste.classi_inventate(str(tmp_path)) == ["as-elenco"]
+
+
+def test_a_block_whose_elements_the_sheet_dresses_is_in_the_sheet(tmp_path):
+    """`as-conferma-sezione` non ha una regola sua (la carta la da' `as-carta`), ma il foglio veste
+    i suoi elementi: e' un blocco che esiste, non una classe inventata."""
+    stili = tmp_path / "frontend" / "src" / "stili"
+    stili.mkdir(parents=True)
+    (stili / controlli_veste.FOGLIO).write_text(
+        """.as-app { margin: 0; }
+.as-sezione__testa { display: flex; }
+""",
+        encoding="utf-8",
+    )
+    (tmp_path / "frontend" / "index.html").write_text(
+        """<html><body class="as-app as-sezione"></body></html>
+""",
+        encoding="utf-8",
+    )
+    assert controlli_veste.classi_inventate(str(tmp_path)) == []
+
+
 def test_a_class_built_in_pieces_is_said_not_skipped(tmp_path):
     """Una classe composta a pezzi non si puo' leggere: allora si **dice**. La fetta dopo e' *Da
     confermare*, dove le righe hanno stati (`--errore`, `--caricamento`): li' i `className={...}`

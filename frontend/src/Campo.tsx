@@ -103,10 +103,3 @@ export function Campo({
   )
 }
 
-/** L'etichetta di un **gruppo** di controlli -- "Ordina", sopra tre bottoni -- che non e' il
- *  nome di un campo: non c'e' nessun `for` da legare, perche' non c'e' un controllo solo. La
- *  forma pero' e' la stessa, e la sua classe vive qui col resto del mattone: scritta a mano
- *  altrove, il giorno che il design la rinomina non la segnalerebbe niente. */
-export function EtichettaDiGruppo({ children }: { children: ReactNode }) {
-  return <span className="as-campo-modulo__etichetta">{children}</span>
-}

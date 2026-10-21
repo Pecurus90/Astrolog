@@ -324,7 +324,7 @@ export function riga(sezione: HTMLElement, nome: string) {
  * quelle classi, non sarebbe fra i trovati, e la prova tornerebbe verde sulla regressione che
  * deve impedire.
  *
- * - **Un controllo senza la sua classe** (`.as-campo-modulo__input`, `.as-campo__area`,
+ * - **Un controllo senza la sua classe** (`.as-campo-modulo__input`,
  *   `.as-bottone`) non ha ne' l'altezza dei mattoni ne' gli stati: si vede subito a schermo, ma
  *   nessuna prova cadrebbe.
  * - **Un campo senza `.as-campo-modulo`** non e' una griglia: l'etichetta e il controllo diventano due
@@ -350,7 +350,6 @@ export function fuoriDaiMattoni() {
       !daScelta(e) &&
       ![
         "as-campo-modulo__input",
-        "as-campo__area",
         "as-bottone",
         "as-campo-modulo__etichetta",
         // Le nove voci della scala del cielo: sono bottoni, ma non sono bottoni dell'app -- hanno
@@ -380,15 +379,7 @@ export function fuoriDaiMattoni() {
       e.closest("label.as-dal-al__campo") === null,
   )
   const pezzi = document.querySelectorAll(".as-campo-modulo__etichetta, .as-campo-modulo__input")
-  // Fuori da `as-campo-modulo` c'e' una forma voluta: l'etichetta di un **gruppo** di controlli
-  // (`EtichettaDiGruppo`), che nomina tre bottoni e non un campo -- un `as-campo-modulo` intorno le
-  // darebbe la spaziatura di un campo che non c'e'. Dichiarata qui perche' questa guardia gira
-  // **anche sull'Archivio**, dove quella forma vive.
-  const orfani = [...pezzi].filter(
-    (e) =>
-      e.closest(".as-campo-modulo") === null &&
-      !(e.classList.contains("as-campo-modulo__etichetta") && e.closest(".as-barra__gruppo")),
-  )
+  const orfani = [...pezzi].filter((e) => e.closest(".as-campo-modulo") === null)
   return [...nudi, ...orfani].map((e) => e.getAttribute("id") ?? e.textContent)
 }
 

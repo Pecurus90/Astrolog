@@ -22,7 +22,8 @@ il porting, un Mac, un NAS o file veri.
 3. **La squadra** (ADR 0025): agenti `collaudatore` e `verificatore-disegno`, modo `pagina` dello
    `sviluppatore`, `tools/glossario.py`, `tools/contratti.py`, **Supera** obbligatoria.
 4. **Mutazione solo sui file cambiati** dall'ultimo verde: oggi le notti sono tutte rosse, shard
-   tagliati a 280 minuti.
+   tagliati a 280 minuti. Oggi guarda solo `backend/astrolog`: `tools` dopo; il frontend vuole
+   uno strumento nuovo (una dipendenza, la decide Marco).
 5. **Scansione di una copia parziale** dell'archivio di Marco (notti N.I.N.A. e ASIAIR, nello
    scratch): Da confermare per motivo, i numeri per ADR 0026.
 6. **Pulizia prima del porting**: soglie di nuvole e Luna in una casa (`weather/verdict.py`,

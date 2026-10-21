@@ -38,6 +38,7 @@ as-dialogo__azioni
 as-dialogo__perdi
 as-dialogo__testo
 as-dialogo__titolo
+as-elenco
 as-impostazioni
 as-impostazioni__corpo
 as-impostazioni__lato

@@ -302,7 +302,10 @@ def classi_inventate(root: str) -> list[str]:
     testo = leggi_foglio(root)
     if isinstance(testo, list):
         return testo
-    nel_foglio = set(re.findall(r"\.(as-[a-z0-9_-]+)", testo))
+    # a class a comment of the sheet names is not dressed by it
+    nel_foglio = set(re.findall(r"\.(as-[a-z0-9_-]+)", re.sub(r"/\*.*?\*/", "", testo, flags=re.S)))
+    # a BEM block whose elements the sheet dresses exists, even with no rule of its own
+    nel_foglio |= {c.split("__")[0] for c in nel_foglio if "__" in c}
     usate, illeggibili = classi_usate(root)
     attesa = classi_in_attesa(root)
     elenco = "/".join(ATTESA)
