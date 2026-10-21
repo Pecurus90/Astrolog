@@ -37,3 +37,15 @@ def test_the_check_is_red_when_the_file_is_missing(tmp_path, monkeypatch):
     piu' semplice di far tacere il controllo."""
     monkeypatch.setattr(tipi, "OUT", tmp_path / "mai-scritto.d.ts")
     assert tipi.main(["--check"]) == 1
+
+
+def test_without_the_frontend_dependencies_it_says_what_is_missing(tmp_path, monkeypatch):
+    """Senza `frontend/node_modules` non e' il generatore a cadere: manca, e lo dice con il
+    comando che lo installa, invece di "il generatore e' fallito"."""
+    monkeypatch.setattr(tipi, "FRONTEND", tmp_path)
+    try:
+        tipi.genera()
+    except SystemExit as uscita:
+        assert "npm ci" in str(uscita)
+    else:
+        raise AssertionError("senza dipendenze il generatore non puo' girare")

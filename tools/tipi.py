@@ -32,6 +32,8 @@ NPX = "npx.cmd" if sys.platform == "win32" else "npx"
 
 def genera():
     """Il contenuto di `schema.d.ts` come uscirebbe adesso dallo schema del backend."""
+    if not (FRONTEND / "node_modules" / "openapi-typescript").is_dir():
+        raise SystemExit("manca il generatore dei tipi: lancia `npm ci` in frontend/")
     with tempfile.TemporaryDirectory() as tmp:
         schema = Path(tmp) / "openapi.json"
         schema.write_text(json.dumps(openapi.schema()), encoding="utf-8")
