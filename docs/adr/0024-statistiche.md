@@ -65,7 +65,8 @@ del 20/10/2026 su app e forum:
 - **Per setup**: ore, frame, oggetti e FWHM mediana allo zenit di ogni setup, a parita' di
   altezza (contratto vecchio). Il tipo di oggetti prevalente esce (Marco sulla tavola, v31.3).
 - **Cielo del sito**: SQM per sito, mese e anno; Luna sotto -5° separata da Luna su; curva media
-  per ora della notte (Marco, 18/10/2026; `docs/coda.md`). Niente stima per i filtri stretti.
+  per ora della notte (Marco, 18/10/2026). Niente stima per i filtri stretti: la luce del cielo ha righe (sodio,
+  mercurio, LED, ossigeno a 557 e 630 nm) che un filtro da pochi nm prende o manca.
 - **Calendario delle notti** (Marco): un quadretto per notte, pieno piu' scuro con piu' ore
   integrate, gradini a 2, 4 e 6 ore (Marco, 20/10/2026: nessuna convenzione); un contorno sulle **notti buone in cui non sei uscito**. Il colore non e' l'unico
   segno (WCAG 1.4.1): numero e parola al passaggio o al tocco.

@@ -172,7 +172,7 @@ ignore_imports = [
 [[tool.importlinter.contracts]]
 # Una lettura non calcola mai (Marco, 22/9/2026): calcola chi scrive, e scrive il risultato. La
 # macchina copre la geometria del cielo nell'Archivio e nelle proposte dei mosaici; gli altri
-# ricalcoli in lettura sono in `docs/coda.md`, e ognuno, quando si toglie, entra qui o in una prova
+# ricalcoli in lettura sono nella Issue #16, e ognuno, quando si toglie, entra qui o in una prova
 # che confronta cio' che e' scritto con cio' che le regole direbbero (`tests/test_header_asks.py`).
 name = "Chi legge legge cio' che e' scritto: niente geometria in lettura"
 type = "forbidden"

@@ -1,6 +1,9 @@
 # 0019 -- Sole e Sistema solare entrano in Archivio a mano, il deep sky resta automatico
 
-**Stato:** accettata, 17/10/2026 (Marco). Nessun codice ancora: ordine dei pezzi in `docs/coda.md`.
+**Stato:** accettata, 17/10/2026 (Marco). Nessun codice ancora. Ordine dei pezzi: disegno della linguetta e di "Aggiungi oggetto"; comete,
+asteroidi e NEO dai FITS di oggi (orbite MPC); effemeridi di Sole e pianeti e le metriche; lettore
+SER per percorso; log di FireCapture e SharpCap, con log veri; foto finale e campi a mano; meteo <!-- software-ok: ADR 0019 -->
+storico e attivita' solare per data. Prima: quali altri programmi planetari scrivono un log.
 
 ## Contesto
 

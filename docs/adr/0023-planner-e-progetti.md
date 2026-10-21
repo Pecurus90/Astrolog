@@ -218,7 +218,7 @@ solo dove una fonte fissa il confine o Marco lo sceglie; il resto resta un numer
 - **Mese buono** nel periodo migliore: ✓ se il 15 del mese l'oggetto ha almeno 3 ore visibili.
   Impostazione dell'utente, partenza 3 ore (Marco, 19/10/2026). Nessuna convenzione: N.I.N.A.
   (Sky Atlas, «visible for») e Telescopius lasciano scegliere; stessa strada del calendario delle
-  notti buone (`docs/coda.md`).
+  notti buone (`docs/domini/effemeridi.md`).
 - **Crea parte vuota** (Marco): filtri dello schema in lista, ore a 0, esposizione vuota. Nessuna
   ora ne' esposizione suggerita: nessuna fonte.
 - **Fuori**: macchie solari, idea per dopo. Macchia Rossa e meridiano di Marte: sotto, "Eventi e

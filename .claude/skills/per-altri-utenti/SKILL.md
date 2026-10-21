@@ -16,7 +16,7 @@ diversi.
 **Come si pensa.** Per ogni chiave o nome che stai per leggere, chiediti:
 
 - **chi altro la scrive, e come?** I software di acquisizione non sono uno (l'elenco di
-  quelli nel corpus sta in `docs/coda.md`, ed e' l'unico): scrivono chiavi diverse per la
+  quelli nel corpus e' `backend/tests/header/`): scrivono chiavi diverse per la
   stessa cosa, la stessa chiave con significati diversi, e alcune non le scrivono affatto;
 - **da dove viene questa soglia?** Una soglia nuova cita la **convenzione pubblica** da
   cui viene (okta WMO, Nyquist, Beaufort, la scala di Bortle). Se viene "dall'archivio di

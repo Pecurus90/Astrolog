@@ -2,8 +2,8 @@
 
 Due regole, e ognuna ha qui la sua prova:
 
-- **i campi di una scheda si chiedono solo se l'app ci fa qualcosa** (`docs/coda.md`, 7/9/2026),
-  e quali siano per ogni tipo lo decide il backend: la pagina li mostra e basta;
+- **i campi di una scheda si chiedono solo se l'app ci fa qualcosa** (`docs/domini/spina.md`,
+  *Le schede*), e quali siano per ogni tipo lo decide il backend: la pagina li mostra e basta;
 - **si unisce solo dentro lo stesso tipo**, e solo dove un tipo ha grafie da unire.
 
 La domanda "sono lo stesso pezzo?" di Da confermare ha il suo file: `test_review_lookalike.py`.

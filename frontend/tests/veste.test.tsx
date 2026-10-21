@@ -109,7 +109,7 @@ describe("una riga di Da confermare", () => {
     // passato per due giri di revisione.
     // **Due sezioni, non tutte**: una pagina piena esiste gia' in `accessibilita.test.tsx`, e
     // ricopiarne qui la fixture sarebbe il doppione che questa fetta e' nata per togliere. Il
-    // giorno che quella fixture vive nel banco, questa prova le passa davanti tutte (`docs/coda.md`).
+    // giorno che quella fixture vive nel banco, questa prova le passa davanti tutte (Issue #13).
     // Senza `.as-campo-modulo` (griglia) l'etichetta e il controllo diventano due elementi affiancati
     // dentro `.as-riga__risposte`, che e' un flex allineato a destra: lo stesso campo si dispone
     // in due modi nella stessa pagina.

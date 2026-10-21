@@ -335,7 +335,7 @@ export function riga(sezione: HTMLElement, nome: string) {
 export function fuoriDaiMattoni() {
   // Un gruppo di scelte e' ancora `input[type=radio]` dentro un `fieldset`, e nel foglio **non
   // esiste** una classe per un radio: il design lo vuole segmentato, che e' un cambio di
-  // controllo e ha la sua fetta in coda. Finche' e' cosi', un radio e la parola che lo
+  // controllo e arriva col porting della pagina. Finche' e' cosi', un radio e la parola che lo
   // accompagna non sono qualcosa che qualcuno ha dimenticato di vestire.
   const spunta = (e: Element | null) =>
     e instanceof HTMLInputElement && (e.type === "radio" || e.type === "checkbox")

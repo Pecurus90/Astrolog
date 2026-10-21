@@ -73,6 +73,8 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 - **Piu' modelli con uno switch**: di fabbrica il modello che Open-Meteo sceglie per il posto
   (`best_match`). Il riassunto -- verdetto, misure, ore utili -- si scrive per ogni modello quando
   arriva la previsione, e lo switch legge soltanto.
+- **Il cielo di una notte in parole** (`sky_word`, `weather/verdict.py`): la copertura media nel buio
+  in okta (WMO 2700, classi METAR): 0 sereno, 1-4 sparso (FEW, SCT), 5-7 molto (BKN), 8 coperto.
 - **La qualita' della notte e' un punteggio da 0 a 100** (ADR 0020; Marco, 17/10/2026, ribadito
   il 20/10/2026: non si torna indietro). Ogni ora somma i punti dei fattori coi pesi di Marco:
   nuvole 35, seeing 30, trasparenza 12, condensa 9, vento 9, jet stream 5. Pioggia e nuvole "non

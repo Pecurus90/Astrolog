@@ -6,7 +6,7 @@ una cronologia osservativa. Backend Python (FastAPI, SQLite), frontend React/Typ
 login. Il progetto di prima e' in `old/`, come cava: solo in locale e nel repository privato
 `Astrolog-archivio`, non in quello pubblico (porta dati personali).
 
-Lo stato si legge dal codice e da [`docs/coda.md`](docs/coda.md); le decisioni stanno in
+Lo stato si legge dal codice e da [`docs/piano.md`](docs/piano.md); le decisioni stanno in
 [`docs/adr/`](docs/adr/). Questo file dice solo come si lavora.
 
 ## Tre principi
@@ -30,8 +30,9 @@ Lo stato si legge dal codice e da [`docs/coda.md`](docs/coda.md); le decisioni s
    prende quella. Cio' che dipende dal codice, da una misura o dal metodo lo decido io e lo dico in
    una riga. **Un difetto
    non e' una domanda**: si ripara e si dice. **Un difetto trovato si ripara, mai in coda**
-   (Marco, 20/10/2026): ognuno col suo `/ripara`, prima di passare oltre; in coda solo idee, e
-   `docs/coda.md` non cresce mai in un commit (`tools/tetti.py`, che tiene anche i tetti di ADR 0027). Ogni resoconto apre con *cosa funziona ora e prima
+   (Marco, 20/10/2026): ognuno col suo `/ripara`, prima di passare oltre; bloccato da fuori, una
+   Issue `bloccato` col motivo (ADR 0027). Le idee in `docs/idee.md`; i tetti dei documenti li tiene
+   `tools/tetti.py`. Ogni resoconto apre con *cosa funziona ora e prima
    no*.
 3. **Il database non conta finche' non si rilascia.** Si ricrea da `backend/astrolog/schema.sql`
    quante volte serve: niente migrazioni, niente backfill.
@@ -60,7 +61,7 @@ va nel riassunto. Una regola controllabile da una macchina sta in una macchina, 
 | Traduzione di una pagina finita | `traduttore` | Sonnet |
 
 Il giro di una fetta di porting e i ruoli nuovi: [ADR 0025](docs/adr/0025-uno-studio-per-ruoli.md)
-(i due agenti nuovi e il modo `pagina` nascono col primo punto di *Dal check di salute*).
+(i due agenti nuovi e il modo `pagina` nascono con *La squadra*, in `docs/piano.md`).
 
 ## Il codice
 
@@ -71,7 +72,7 @@ Il giro di una fetta di porting e i ruoli nuovi: [ADR 0025](docs/adr/0025-uno-st
 - **Nomi e commenti in inglese; italiano** nei documenti, nei testi dell'app e in chat.
 - **Tipi:** una funzione che si tocca esce annotata; `StrEnum` per un insieme chiuso di stringhe,
   `dataclass` per una riga che viaggia fra funzioni invece di un `dict`.
-- **Prosa compressa** nei commenti e nei documenti di lavoro (coda, ADR, contratti, comandi,
+- **Prosa compressa** nei commenti e nei documenti di lavoro (piano, idee, ADR, contratti, comandi,
   agenti): frasi corte, niente riempitivi, solo il perche' che il codice non mostra. Tetto e
   divieti dei commenti li controlla `tools/commenti.py`. `docs/guida-utente.md` resta italiano pieno.
 - **Un fatto, una casa.** Le derivazioni vivono in Python; il backend manda cio' che lo schermo
@@ -105,7 +106,7 @@ Il giro di una fetta di porting e i ruoli nuovi: [ADR 0025](docs/adr/0025-uno-st
 - **Quando Marco mi corregge su un modo di sbagliare**, nello stesso turno: prima uno strumento
   (test, hook, controllo di pre-commit), solo se non si puo' una riga qui.
 - **Una fetta arriva a schermo**: parte da cio' che l'utente vedra' e ci arriva in un commit.
-- **La memoria non e' una casa**: cio' che vale si scrive nel repo (qui, `docs/coda.md`, un ADR);
+- **La memoria non e' una casa**: cio' che vale si scrive nel repo (qui, `docs/piano.md`, un ADR);
   la memoria tiene solo il rimando, e ogni voce dichiara la sua casa (`casa:`).
 
 ## Regole ferme
@@ -134,5 +135,7 @@ Il giro di una fetta di porting e i ruoli nuovi: [ADR 0025](docs/adr/0025-uno-st
 | toccare un dominio | `docs/domini/<dominio>.md` |
 | prendere una decisione che resta | `docs/adr/NNNN-titolo.md` |
 | cambiare cio' che l'utente vede | `docs/guida-utente.md`, nello stesso intervento |
-| parcheggiare un'idea (un difetto no: si ripara) | `docs/coda.md` |
+| cambiare cosa si fa ora e dopo | `docs/piano.md` |
+| parcheggiare un'idea (un difetto no: si ripara) | `docs/idee.md` |
+| un difetto bloccato da fuori | Issue di GitHub, etichetta `bloccato` |
 | toccare lo schema | `backend/astrolog/schema.sql` |

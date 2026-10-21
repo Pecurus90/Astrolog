@@ -60,7 +60,9 @@ pagina avra' i suoi controlli, ed e' la stessa riga scritta li'.
 dei filtri**, uno in tutta l'app (Marco, 7/10/2026): L, R, G, B, Ha, OIII, SII, poi a colori, poi
 le altre bande riconosciute, gli sconosciuti per nome, "senza filtro" ultimo; a pari banda per
 nome (`vocab/filters.DISPLAY_ORDER`). La stessa pastiglia sta sempre allo stesso posto, e la
-barra proporzionale ha gia' i suoi numeri.
+barra proporzionale ha gia' i suoi numeri. **Un colore per banda** (Marco, 8/10/2026): una classe
+del foglio per ognuna delle 17 bande; le doppie e le multiple sono strisce delle loro righe
+(`FiltriUsati.VARIANTE`).
 
 **Il sito si vede anche nell'elenco.** Nel progetto di prima la vista a colonne lo toglieva
 apposta -- li' una notte era **una data**, e il sito era una curiosita'. Qui una notte e' data

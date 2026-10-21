@@ -42,6 +42,11 @@ finita ha tutte le sue chiavi in tutte le lingue attive: e' la guardia i18n a di
 pagina per pagina. L'elenco delle lingue attive vive in un posto solo nel frontend, e la
 guardia lo legge da li'.
 
+**Ogni conto si chiama `n`**: `t()` sceglie il singolare solo per quel segnaposto. Le parole
+vietate del glossario le controlla una macchina che lega ognuna alla sua voce ("sessione" e'
+vietata per `night`, giusta per `session`). Quando l'utente potra' scegliere la lingua, i
+dizionari si caricano a richiesta.
+
 ## Le tre nature del dato
 
 1. **Identita' universale** (designazioni: `M 31`, `NGC 7000`): una forma sola, non si

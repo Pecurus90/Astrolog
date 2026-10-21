@@ -106,7 +106,7 @@ def test_one_program_alone_is_not_a_mark():
 
 def test_two_names_that_nobody_recognizes_are_not_a_mark():
     """Due nomi fuori dai quattro possono essere due programmi o due grafie dello stesso: non
-    lo sa nessuno, e non si indovina. E' il caso dichiarato aperto in coda."""
+    lo sa nessuno, e non si indovina. E' il caso aperto nella Issue #23."""
     assert rewrite_mark({"SWCREATE": "Elab 1.9", "PROGRAM": "Altro 2"}) is None
 
 

@@ -4,7 +4,7 @@ dominio, mai la copia dell'archivio di Marco.
 
 Vincolo non ovvio: i profili N.I.N.A. e ASIAIR ricalcano header veri (`tests/header/`); i
 profili Voyager e SGP ricalcano la forma nota, perche' in casa non c'e' un loro header vero
-(la coda lo dice: quando arrivera' entra prima della correzione che lo fa passare). Nessuna
+(Issue #23: quando arrivera' entra prima della correzione che lo fa passare). Nessuna
 chiave inventata: solo grafie diverse di chiavi che i quattro scrivono davvero.
 """
 

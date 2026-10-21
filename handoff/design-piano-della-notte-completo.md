@@ -322,7 +322,7 @@ di Rochester»).
 
 - senza sito: «Serve un sito: il piano dipende da dove sei.»;
 - nessun progetto: «Nessun progetto ancora.» · «Apri il Planner»;
-- nessun progetto alto: «Nessun progetto sopra 30° stanotte.»;
+- nessun progetto alto: «Nessun progetto alto piu' di 30 gradi stanotte.» (Marco);
 - Ricerca vuota coi Criteri scelti; chiave mancante per AAVSO o TNS;
 - notte senza buio: «Nessun buio» e le fasce che ci sono;
 - piano vuoto: «Trascina qui un progetto.»;

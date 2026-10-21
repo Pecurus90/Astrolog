@@ -73,7 +73,7 @@ def _state_of(rows: Iterable[Row]) -> WorkerState:
     return next(s for s in _SEVERITY if s in states)
 
 
-# The pace of the first files is not the real one yet (decision in docs/coda.md).
+# The pace of the first files is not the real one yet (docs/domini/navigazione.md, Dashboard).
 ETA_AFTER_S = 60
 
 

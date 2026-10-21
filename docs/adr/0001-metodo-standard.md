@@ -54,8 +54,8 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
 - **Senza macchina** -- li tengono le ricette di ADR 0015:
   - l'audit: `auditore`;
   - le prove promesse nei contratti di `docs/domini/`: l'audit *promesse*;
-  - rimandi fra documenti, percorsi citati, voci della coda citate col numero, un file in `docs/`
-    fuori da `coda.md`, `guida-utente.md`, `domini/` e `adr/`: il revisore;
+  - rimandi fra documenti, percorsi citati, un file in `docs/`
+    fuori da `piano.md`, `idee.md`, `guida-utente.md`, `domini/` e `adr/`: il revisore;
   - i percorsi di Windows con una barra mangiata in TS/JS e l'`except` muto dentro un `try`
     lungo (ruff prende `pass` e `continue`, `S110`/`S112`): il revisore.
 - **Senza nessuno, e si accetta:**

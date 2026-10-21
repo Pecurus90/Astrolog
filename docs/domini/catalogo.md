@@ -170,4 +170,5 @@ Non si aggiorna da solo e non scarica niente all'avvio. Non inventa un valore ma
 sovrascrive un dato curato. Non tiene numeri che nessuna schermata legge. E **non sa ancora
 che `NGC 2244` sta dentro la Rosetta**: la relazione pezzo/adiacenza e' misurata in `old/`
 (87 ancore, 314 relazioni: 61 pezzi, 96 adiacenze, 157 da scartare) e mai costruita -- serve al Planner e alla Carta del cielo, non a
-contare le ore, ed e' in coda.
+contare le ore, ed e' fra le [idee](../idee.md). **Non sa rifarsi da solo**: il generatore resta in
+`old/`, con 13 MB di sorgenti; finche' non si porta, `old/` non si cancella.

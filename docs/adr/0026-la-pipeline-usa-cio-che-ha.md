@@ -1,7 +1,7 @@
 # 0026 -- La pipeline usa cio' che ha gia': nome del file, posizione nell'header, effemeridi, notte
 
 **Stato:** accettata, 20/10/2026 (Marco, dal check di salute). Nessun codice ancora: ordine in
-`docs/coda.md`.
+`docs/piano.md`.
 
 ## Contesto
 

@@ -65,7 +65,7 @@ disegno ha un pezzo che l'app non ha ancora, il pezzo resta e la parola e' qui s
 - Tipi, al singolare: "ottica", "camera", "montatura", "riduttore", "ruota portafiltri",
   "ottica di guida", "camera di guida", "focheggiatore", "Filtro", "Corredo".
 - Campi per tipo (l'unita' nell'etichetta): comuni a tutti Marca, Modello, Peso (kg), Note;
-  ottica Apertura (mm), Focale nativa (mm); camera Tipo di sensore (mono, a colori), Pixel (um);
+  ottica Apertura (mm), Focale nativa (mm); camera Tipo di sensore (mono, a colori), Pixel (µm);
   montatura Carico utile (kg); riduttore Fattore; ruota Numero di posizioni. Filtro: Nome,
   Banda (L, R, G, B, HA, HB, OIII, SII), Marca, Modello. Corredo: "Ottica", "Camera", "Focale
   effettiva (mm)", scelte fra i propri pezzi di quel tipo. Le misure sono maggiori di zero.

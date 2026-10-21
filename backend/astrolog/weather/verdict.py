@@ -18,7 +18,7 @@ CLOUD_MARGINAL_MAX_PCT = 50.0
 
 class SkyWord(StrEnum):
     """The night's sky in words, from the mean cover in the dark in okta (WMO 2700, METAR classes;
-    choice in docs/coda.md): 0 clear, 1-4 scattered (FEW and SCT), 5-7 broken, 8 overcast."""
+    docs/domini/meteo.md): 0 clear, 1-4 scattered (FEW and SCT), 5-7 broken, 8 overcast."""
 
     CLEAR = "clear"
     SCATTERED = "scattered"

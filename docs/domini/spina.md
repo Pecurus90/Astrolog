@@ -41,7 +41,7 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | Una sottocartella nascosta resta fuori, ma la ricevuta la nomina | `test_scan_names_the_hidden_folders_it_leaves_out` |
 | La cartella del NAS la registro come `\\NAS\Foto` o come disco collegato `Z:`, e la ritrovo con la lettera o il percorso di rete che ho scelto | `test_the_folder_is_saved_in_the_form_the_user_finds_again`, `test_a_network_folder_is_accepted` |
 | Aprire le cartelle di rete non apre le zone di sistema, comunque siano scritte, e su qualunque sistema: anche su Mac, dove `/etc` e `/var` sono collegamenti | `test_the_checks_look_at_where_the_path_leads`, `test_a_system_zone_that_leads_elsewhere_is_refused_too`, `test_the_forms_that_would_bypass_the_checks_are_refused`, `test_a_path_that_resolves_to_no_absolute_path_is_refused`, `test_a_folder_that_does_not_answer_is_checked_and_kept_as_written` |
-| Sul NAS in Docker scelgo la cartella da un elenco, invece di indovinarne il percorso (rotte e worker; il primo avvio e le Impostazioni le usano) | `test_the_nas_folder_is_chosen_from_a_list`, `test_the_folders_to_choose_from_are_the_ones_the_walk_walks`, *nell elenco del NAS si entra, e si registra la cartella dove sei* (`frontend/tests/wizard-cartelle.test.tsx`); le Impostazioni senza prova (*Per il disegno nuovo*, in `docs/coda.md`) |
+| Sul NAS in Docker scelgo la cartella da un elenco, invece di indovinarne il percorso (rotte e worker; il primo avvio e le Impostazioni le usano) | `test_the_nas_folder_is_chosen_from_a_list`, `test_the_folders_to_choose_from_are_the_ones_the_walk_walks`, *nell elenco del NAS si entra, e si registra la cartella dove sei* (`frontend/tests/wizard-cartelle.test.tsx`); le Impostazioni senza prova (Issue #13) |
 | Una cartella raggiunta da un collegamento non fa girare la scansione a vuoto, e la ricevuta la nomina | `test_a_junction_is_not_followed_and_is_named`, `test_a_link_to_a_file_is_not_named_as_a_folder`, `test_the_linked_folders_are_named_in_order`, `test_scan_names_the_linked_folders_it_does_not_follow` |
 | Un file che non si riesce a leggere, per qualunque motivo, non ferma la scansione: la ricevuta lo nomina col suo motivo, e resta scritta | `test_scan_bad_header_counted`, `test_a_file_that_breaks_the_reading_is_named_and_the_scan_goes_on`, `test_a_name_the_archive_cannot_write_is_named_and_the_scan_goes_on`, `test_a_pose_that_can_no_longer_be_read_is_not_missing`, `test_scan_stop_leaves_a_coherent_prefix` |
 | Se il database non risponde (disco pieno, occupato) la scansione si ferma col suo motivo, invece di contare file sani come non letti | `test_a_database_fault_stops_the_scan_and_the_receipt_says_so` |
@@ -527,7 +527,7 @@ ore filtra `copy_of IS NULL`.
 Perche' due criteri e non uno: chi elabora **non cancella** sempre la chiave di chi ha
 acquisito, e chi riprende con un programma fuori dai quattro non e' riconosciuto nemmeno sul
 grezzo -- in tutti e due i casi il software da solo non distingue i gemelli. **Il caso che resta
-scoperto**, ed e' in coda: la copia che non dice di essere calibrata e nel cui header il
+scoperto** (Issue #23): la copia che non dice di essere calibrata e nel cui header il
 vocabolario non riconosce **nessuno** dei nomi -- cioe' chi riprende con un programma fuori dai
 quattro ed elabora con un altro che l'app non conosce. Li' i due gemelli si somigliano davvero,
 e l'app li conta tutti e due.
@@ -613,8 +613,7 @@ lo stesso: pretenderli tutti butterebbe via un cielo misurato davvero.
 
 **Il primo avvio**: un wizard con quattro passi -- nome, sito principale, cartelle, la chiave
 Meteoblue facoltativa -- saltabile
-e riapribile; alla fine, se c'e' almeno una cartella, la prima scansione parte da sola (oggi, se non parte, non lo dice: [in coda](../coda.md), *Per il
-disegno nuovo*, *Primo avvio*). L'attrezzatura non si dichiara qui: al buio l'utente dovrebbe elencare cio'
+e riapribile; alla fine, se c'e' almeno una cartella, la prima scansione parte da sola (se non parte, lo deve dire: Issue #18). L'attrezzatura non si dichiara qui: al buio l'utente dovrebbe elencare cio'
 che possiede prima di aver visto cosa ha ripreso. Si vede e si corregge nell'Attrezzatura, dove
 ogni pezzo trovato e' davanti agli occhi con quanti frame vale.
 
@@ -631,8 +630,7 @@ gruppi che toccano piu' frame (`api/review.py`, `api/review_page.py`; prove
 `test_the_most_used_filters_come_first`, `test_a_question_per_group_with_the_largest_first`,
 `test_a_question_per_camera_with_the_largest_first`; degli oggetti
 `test_the_ones_to_decide_come_first` prova solo che quelli in dubbio stanno in cima; per l'ordine
-per frame degli oggetti e per i siti la prova manca, vedi [`coda.md`](../coda.md) *Macchine che
-non guardano*). Le decisioni si
+per frame degli oggetti e per i siti la prova manca, vedi la Issue #13). Le decisioni si
 prendono cliccando e **"Applica" le scrive in un colpo solo**: diventano dichiarazioni e
 regole (`header_aliases`) valide per tutto l'archivio, non per la sola scansione. **Applica
 scrive solo le risposte** (ADR 0014, S4): niente si conferma guardandolo. Non blocca: i frame
@@ -952,7 +950,7 @@ non ha nessuno da restituire, quindi la decisione ricade sul nome dell'header. L
 cerca e conta le ore lo stesso -- ma gli oggetti che nascono cosi' sono fuori catalogo, e
 quando il catalogo arriva **non si rifanno da soli**: `load_catalog` non chiama `invalidate`,
 e quegli oggetti restano fuori catalogo finche' qualcosa non rimette in coda i loro frame -- una
-dichiarazione in Da confermare, o una scansione che li tocca. Chiuderlo e' in coda.
+dichiarazione in Da confermare, o una scansione che li tocca. Chiuderlo e' la Issue #14.
 
 **Come si chiama un oggetto** -- tre invarianti che questa casella fissa, e che chi mostra un
 oggetto deve conoscere prima di fare il join:
@@ -985,7 +983,7 @@ l'indice e' la rete sotto, non la strada.
 
 **Cosa `identify` NON fa**: non sa che `NGC 2244` sta **dentro** la Rosetta. La relazione
 pezzo/adiacenza e' misurata in `old/` e mai costruita; serve al Planner e alla Carta del cielo, non a
-contare le ore, ed e' in coda. E non tocca i FITS, mai.
+contare le ore, ed e' fra le [idee](../idee.md). E non tocca i FITS, mai.
 
 **Le schede: un campo si chiede solo se l'app ci fa qualcosa.** Ottica: marca, modello,
 apertura, focale nativa. Camera: marca, modello, mono o colori, dimensione del pixel.

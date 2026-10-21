@@ -35,7 +35,7 @@ def test_protected_files_are_denied(path):
     assert guard.reason(edit(path), ROOT) is not None
 
 
-@pytest.mark.parametrize("path", ["backend/astrolog/units.py", "docs/coda.md", "oldies/x.py"])
+@pytest.mark.parametrize("path", ["backend/astrolog/units.py", "docs/piano.md", "oldies/x.py"])
 def test_ordinary_files_pass(path):
     assert guard.reason(edit(path), ROOT) is None
 
@@ -119,7 +119,7 @@ def test_a_dependency_command_asks_marco_instead_of_refusing():
 
 
 def test_the_hook_stays_silent_when_nothing_is_wrong():
-    payload = json.dumps(edit("docs/coda.md"))
+    payload = json.dumps(edit("docs/piano.md"))
     out = subprocess.run(
         [sys.executable, os.path.join(ROOT, ".claude", "hooks", "guard.py")],
         input=payload,

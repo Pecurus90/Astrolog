@@ -69,7 +69,8 @@ pagina non ripete il suo titolo (disegno v18).
 - **Cio' che la scansione non ha potuto fare** -- un rifiuto, una cartella caduta mentre la
   leggeva, le cartelle saltate -- e' una **riga di stato in testa al corpo**, con *Dettagli* che porta
   dove si ripara (Marco, 7/10/2026). Tacerlo farebbe sembrare completa una scansione che non lo e'.
-- **La ricerca** ("Cerca oggetto, notte, sito") entra quando cerca davvero, con la sua rotta
+- **La ricerca** ("Cerca oggetto, notte, sito") trova cio' che sta nell'archivio, non le pagine
+  dell'app, che il binario ha gia'; entra quando cerca davvero, con la sua rotta
   (Marco, 7/10/2026): un campo che non cerca e' una promessa che l'app non mantiene. La rotta
   c'e' (`GET /api/v1/search`): quattro gruppi, pochi per gruppo col totale. Gli oggetti col
   frammento dell'Archivio (tutti i nomi, senza spazi e maiuscole), le notti per data nelle forme
@@ -96,6 +97,13 @@ L'app ricorda in questo browser se l'avevi lasciato aperto.
 **Cio' che si apre si chiude come tutto il resto**: Esc chiude (prima il foglio Altro, poi
 Stanotte), toccare il velo chiude, e il fuoco torna a chi l'aveva aperto.
 
+**La Dashboard** (Marco, 15-16/10/2026): il tempo che manca alla scansione si stima dal ritmo
+finora della cartella in lettura, si dice "circa" e tace nel primo minuto; "prima scansione"
+vuol dire che il gesto legge almeno una cartella mai letta fino in fondo; "frame fuori dai conti"
+sono i frame che non stanno in nessuna notte (`waiting`), senza quelli da confermare. L'anno: una
+data con due siti e' un quadretto e una notte; "al mese" divide per almeno un mese intero.
+Niente calendario a giorni ne' streak; fuori la FWHM media (senza `measure`) e la miniatura.
+
 **Sul telefono** il binario scende in basso con cinque schede -- Dashboard, Notti, Archivio,
 Progetti, Altro -- e "Altro" e' un foglio che sale con la scansione e le altre pagine; Da
 confermare porta il suo conteggio anche sulla scheda Altro. La barra in alto va su due righe, e la
@@ -107,4 +115,6 @@ seconda si ritira scorrendo in giu'. **Le misure si leggono dal contenitore**
 Non decide come le pagine sono fatte dentro: ogni pagina ha il suo contratto. Non calcola niente:
 cio' che il telaio mostra -- quante cose da confermare, la fase del lavoro, il sito, la Luna --
 arriva pronto dall'API. Non ha ancora la lingua e il tema al volo, ne' il tuo nome: il disegno
-non li ha messi in barra, e tornano con Impostazioni.
+non li ha messi in barra, e tornano con Impostazioni, che porteranno anche tema chiaro e densita'
+(il foglio conosce `data-tema` e `data-densita`) e un indice, o l'ultima sezione aperta, invece di
+atterrare su *Cartelle*.

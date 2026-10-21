@@ -60,7 +60,7 @@ repos:
         language: system
         files: ^frontend/.*\.(ts|tsx|js)$
         stages: [pre-commit, manual]
-      # Domain rule: only N.I.N.A., ASIAIR, Voyager and SGP are supported (docs/coda.md).
+      # Domain rule: only N.I.N.A., ASIAIR, Voyager and SGP are supported (CLAUDE.md, "Software supportati").
       - id: foreign-software
         name: software outside the four supported (mark software-ok if intended)
         language: pygrep
@@ -96,7 +96,7 @@ repos:
         name: documents under their line ceiling
         language: system
         entry: python tools/tetti.py
-        files: ^(CLAUDE\.md|docs/(coda|piano|idee)\.md|docs/(adr|domini)/[^/]+\.md)$
+        files: ^(CLAUDE\.md|docs/(piano|idee)\.md|docs/(adr|domini)/[^/]+\.md)$
         stages: [pre-commit]
       # `/* .x-* */` closes the comment at `*/` and silently drops the next rule.
       - id: css-glob-comment

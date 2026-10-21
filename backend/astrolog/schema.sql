@@ -260,7 +260,7 @@ CREATE TABLE frames (
   -- Tre giudizi sul grezzo, scritti dalla scansione (`spine/header_asks.py`): il file non dice la
   -- camera, non dice il filtro, nomina l'ottica. Dipendono solo da cio' che il file dice e dal
   -- vocabolario, che oggi cambia solo col codice: nessuno li riscrive (dopo il rilascio si', vedi
-  -- il Parcheggio di `docs/coda.md`). Da confermare li filtra invece di rileggere l'archivio. Il
+  -- `docs/piano.md`, *Piu' avanti*). Da confermare li filtra invece di rileggere l'archivio. Il
   -- ripiego e' il giudizio di un header che non dice niente, come il ripiego vuoto delle colonne
   -- grezze.
   asks_camera    INTEGER NOT NULL DEFAULT 1 CHECK (asks_camera IN (0, 1)),

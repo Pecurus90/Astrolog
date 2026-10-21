@@ -65,6 +65,15 @@ dove guardare -- misurando il valore calcolato, non leggendo il sorgente.
 elemento azionabile e' raggiungibile da tastiera e ha un nome: la guardia di
 accessibilita' lo pretende.
 
+**Cio' che il CSS non fa lo fa il codice**: il bottone che apre un campo ci porta il fuoco; il
+dialogo trattiene il fuoco (anello provato col tabulatore) e Esc lo chiude; le frecce fra le
+schede con il `tabindex` che segue l'attiva; `aria-expanded` e `aria-selected` che si ribaltano;
+il suggerimento che si apre col dito (su iOS toccare un `button` non da' il fuoco); l'avviso
+breve sparisce da solo, quello d'allarme mai; il `viewBox` di un grafico dalla larghezza della
+colonna. Un punto di riferimento contiene cio' che dice (il piede non sta nel `<nav>`), un elenco
+si annuncia come elenco. Dopo una scrittura si usa la risposta: la si scrive nella cache invece di
+rileggere, e cio' che il server decide (`is_default`) si legge da li', non si indovina.
+
 ```tsx
 // NO - un conto e una soglia nel componente
 const mean = frames.reduce((a, f) => a + f.fwhm, 0) / frames.length

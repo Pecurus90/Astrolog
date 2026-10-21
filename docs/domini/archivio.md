@@ -173,8 +173,8 @@ meta' attesa e' legittimo.
 restano in mano, cosi' un errore di rete -- il backend che si riavvia mentre cerchi -- lascia a
 schermo il modo di togliere il criterio. Senza, resterebbero un avviso e un criterio acceso che si
 toglie solo col tasto indietro del browser. Se a cadere e' la **prima** risposta le scelte non le
-abbiamo ancora viste, e li' quello scenario resta: sta in `coda.md` ("Un errore alla primissima
-risposta dell'Archivio lascia un criterio acceso senza il modo di toglierlo"), perche' il rimedio --
+abbiamo ancora viste, e li' quello scenario resta: sta nella Issue #18 ("Un errore alla primissima
+risposta lascia un criterio acceso senza il modo di toglierlo"), perche' il rimedio --
 una barra col campo e senza tendine -- e' un'altra decisione.
 
 **Ogni scelta lascia la sua traccia, tranne lo scrivere -- e una scelta che non cambia niente non

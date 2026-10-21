@@ -179,7 +179,7 @@ export function Archivio() {
 
   // La barra c'e' quando sappiamo **cosa offrono le tendine** e c'e' **qualcosa da governare**:
   // dalla prima risposta buona in poi resta in attesa e in errore, e se ne va solo dove non c'e'
-  // niente da cercare. Se a cadere e' la **prima** risposta la barra non c'e' ancora: sta in coda,
+  // niente da cercare. Se a cadere e' la **prima** risposta la barra non c'e' ancora: Issue #18,
   // "Un errore alla primissima risposta dell'Archivio lascia un filtro acceso senza il modo di
   // toglierlo".
   //

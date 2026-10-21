@@ -164,6 +164,7 @@ che il `traduttore` legge per primo.
 | gli oggetti fuori dal Sistema solare, e il modo del Planner e di Meteo per loro (Marco, 19/10/2026, uso dei forum) | `deep_sky` | Deep sky | cielo profondo, DSO |
 | come si scrive una percentuale (Marco, 19/10/2026) | -- | 40% (attaccato) | 40 % |
 | come si scrivono decimali e migliaia (regola SI, BIPM; Marco, 19/10/2026) | -- | decimali col punto (1.8″), migliaia con lo spazio sottile da 10 000 in su (396 200 km, 1366 m) | 1,8″, 396.200 |
+| come si scrive il micrometro, in tutta l'app (Marco, 17/10/2026) | -- | µm (Pixel (µm)) | um |
 | ore di buio con qualita' della notte da 60 (ADR 0020); per un progetto o un oggetto del Piano, le sue ore visibili con quella qualita' | `usable_hours` | ore utili | ore buone, ore serene |
 | quanto e' buona un'ora o una notte, da 0 a 100: somma dei punti dei fattori coi pesi di Marco; la notte e' la media delle ore di buio (ADR 0020) | `quality` | qualita' della notte («87/100») | punteggio, voto, indice |
 | il fattore che toglie piu' punti alla qualita' | `limit` | limita {fattore} («limita il seeing · qualita' fino a 62»), nessun limite (da 85) | pesa, colpa |

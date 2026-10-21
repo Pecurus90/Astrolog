@@ -186,7 +186,7 @@ def test_a_header_without_end_is_still_read(tmp_path):
 
 def test_the_header_of_the_pixel_page_joins_without_its_notes(tmp_path):
     """L'header di una pagina con pixel si unisce a quello della primaria senza le sue note
-    (`HISTORY`, `COMMENT`): e' il comportamento di oggi, e ha un costo che la coda tiene aperto
+    (`HISTORY`, `COMMENT`): e' il comportamento di oggi, e ha un costo che la Issue #24 tiene aperto
     ("La spia dei file sommati non si vede su un FITS compresso"). Chi chiude quella voce ribalta
     questo test."""
     path = tmp_path / "notes.fits"

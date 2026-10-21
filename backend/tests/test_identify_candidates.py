@@ -164,8 +164,9 @@ def test_pointing_at_a_real_target_proposes_that_target_back(catalogo):
 
     Il pavimento e' la rete contro lo spostamento di un peso: oggi si sta sopra il 97%, e
     **nessuno dei mancati e' un errore vero**. Dodici sono la relazione pezzo/tutto, che il
-    criterio geometrico da solo non distingue e che sta in coda: `B 33` (Testa di Cavallo)
-    propone `IC 434`, la nebulosa contro cui e' controluce, e `M 43` propone `M 42`. Tre sono
+    criterio geometrico da solo non distingue e che sta fra le idee (`docs/idee.md`):
+    `B 33` (Testa di Cavallo) propone `IC 434`, la nebulosa contro cui e' controluce, e `M 43`
+    propone `M 42`. Tre sono
     voci doppie che portano lo stesso nome comune (`HCG 92` e `NGC 7318` sono tutti e due
     "Stephan's Quintet"; la terza differisce per un apostrofo). Gli altri due sono adiacenze --
     ma pezzo e adiacenza si distinguono a giudizio, non con un conto."""

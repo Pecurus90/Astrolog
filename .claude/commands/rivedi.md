@@ -14,4 +14,4 @@ Regole comuni in ADR 0015. Passi:
 3. **Un verificatore** separato (`auditore`) prova i bloccanti eseguendo. Cio' che non riproduce
    cade.
 4. **Nessuna correzione qui.** I bloccanti confermati vanno a Marco in una lista: quali si
-   riparano subito (ognuno con `/ripara`) e quali vanno in `docs/coda.md`.
+   riparano subito (ognuno con `/ripara`) e quali, bloccati da fuori, in una Issue `bloccato`.

@@ -129,7 +129,7 @@ export const it = {
   "review.card.brand": "Marca",
   "review.card.model": "Modello",
   "review.card.camera_type": "Tipo di sensore",
-  "review.card.pixel_size_um": "Pixel (um)",
+  "review.card.pixel_size_um": "Pixel (\u00b5m)",
   "review.card.aperture_mm": "Apertura (mm)",
   "review.card.focal_mm": "Focale nativa (mm)",
   "review.card.reducer_factor": "Fattore",

@@ -363,7 +363,7 @@ def test_a_doubt_on_a_locked_object_is_not_counted(archivio):
     pagina guarda `objects.identity_confidence`, e li' c'e' `user` -- quindi contarlo darebbe
     "1 da rivedere" con lo schermo che ne mostra zero, e nella spina i conti della ricevuta
     sono l'unica diagnostica che c'e'. Che quella posa non abbia oggi un modo di farsi notare
-    e' un'altra cosa, ed e' in coda."""
+    e' un'altra cosa, ed e' fra le idee (`docs/idee.md`)."""
     posa(archivio, obj="M 31", cielo=M31, hash_="a")
     corri(archivio)
     risposta.correct_object(archivio, "m-31", slug="m-45")

@@ -27,7 +27,7 @@ andare da sola dal crepuscolo all'alba.
   conviene (finestra utile, Luna, ore che mancano per filtro: con la Luna alta, la banda
   stretta); un DSO nuovo passa dal Planner; le altre categorie si scelgono da un elenco.
 - **Le categorie della serata:** DSO dei progetti, stelle variabili, esopianeti, comete, NEO,
-  occultazioni asteroidali, supernove e transienti, campagne AAVSO.
+  supernove e transienti, campagne AAVSO.
 - **Il piano della notte ha quattro pezzi:** l'oggetto; la sua finestra utile, calcolata per
   categoria; i blocchi in fila su una linea del tempo grafica (crepuscoli, buio, Luna), coi
   margini prima e dopo ogni blocco, i tempi di cambio (puntare, centrare, mettere a fuoco) e i
@@ -42,13 +42,13 @@ andare da sola dal crepuscolo all'alba.
 - **Le fonti online** si chiamano a richiesta, in cache, e mai dalla spina
   ([`domini/catalogo.md`](../domini/catalogo.md)): Sesame del CDS per i DSO che il nostro catalogo
   non ha, VSX dell'AAVSO per le variabili, NASA Exoplanet Archive per gli esopianeti, JPL Horizons
-  e il Minor Planet Center per comete e NEO. Le fonti di occultazioni, transienti e campagne AAVSO
+  e il Minor Planet Center per comete e NEO. Le fonti di transienti e campagne AAVSO
   si scelgono quando si costruiscono.
 - **Nell'archivio come oggetti solo DSO e comete.** Un DSO trovato online si salva, con fonte e
   citazione, in una tabella di oggetti aggiunti, non nelle tabelle del catalogo (che si rifanno da
   capo a ogni versione); da li' anche la spina lo riconosce dal cielo. Una cometa si tiene per
-  sigla e si riconosce dal nome che la nostra sequenza scrive. Variabili, esopianeti, NEO,
-  occultazioni e transienti producono solo sequenze.
+  sigla e si riconosce dal nome che la nostra sequenza scrive. Variabili, esopianeti, NEO e
+  transienti producono solo sequenze.
 - **I frame di ricerca non hanno un trattamento speciale nella scansione:** si tengono fuori
   dalle cartelle dell'archivio. Chi li lascia dentro li paga col solver (circa 0,5 s a frame) e se
   li trova in Da confermare.
@@ -230,8 +230,8 @@ Letta tutta (tcpalmer.github.io/nina-scheduler) e confrontata. Si prende:
 
 ## Conseguenze
 
-- L'ordine: prima i DSO (progetti, inquadratura, piano, export); poi esopianeti, variabili,
-  occultazioni e campagne AAVSO, che hanno coordinate fisse e si calcolano in locale; poi
+- L'ordine: prima i DSO (progetti, inquadratura, piano, export); poi esopianeti, variabili
+  e campagne AAVSO, che hanno coordinate fisse e si calcolano in locale; poi
   supernove e transienti; per ultimi comete e NEO, che chiedono la rete a ogni notte.
 - Le curve di luce (fotometria) restano fuori: si fanno con AstroImageJ o col software
   dell'AAVSO. Restano fuori anche gli allarmi in tempo reale (lampi gamma, onde gravitazionali).

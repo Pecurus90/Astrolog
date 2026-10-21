@@ -7,8 +7,7 @@
 La focale veniva solo da `FOCALLEN`, cio' che l'utente ha scritto nel programma di ripresa: con
 un riduttore spesso resta la focale nativa, e il setup nasce sbagliato. Le focali entro il 5 %
 si raggruppano sui soli frame di un giro (`units.focal_buckets` in `normalize`), quindi lo stesso
-archivio letto in un altro ordine puo' dare setup diversi (*Il setup di un frame dipende da
-quando e' stato letto*, `docs/coda.md`).
+archivio letto in un altro ordine puo' dare setup diversi (Issue #12).
 
 Misura sull'archivio di Marco, dalla cache di ASTAP (10.898 frame risolti su 10.909): la focale
 misurata oscilla al massimo dello 0,23 % (5-95 percentile) dentro un treno ottico; l'header, dove

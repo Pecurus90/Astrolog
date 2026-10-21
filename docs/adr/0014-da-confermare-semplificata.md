@@ -8,8 +8,7 @@ Da confermare ha dieci famiglie di domande (`ReviewOut`, `api/models_review.py`)
 suo modo di raggruppare i frame e un suo codice di scrittura. Tre chiedono l'attrezzatura
 (senza camera, senza ottica, senza filtro), due l'oggetto (Oggetti, Senza nome); le risposte di
 senza camera e senza nome hanno la notte nella chiave, e cambiare il fuso di casa le divide e le
-riunisce (`spine/home_nights.py`). Una lettura critica del disegno (`docs/coda.md`, *Semplificare
-e completare la spina*) ha trovato che lo stesso risultato si ottiene con meno.
+riunisce (`spine/home_nights.py`). Una lettura critica del disegno ha trovato che lo stesso risultato si ottiene con meno.
 
 ## Decisione
 

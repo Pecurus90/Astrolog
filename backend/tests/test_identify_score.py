@@ -303,7 +303,8 @@ def test_containment_far_from_the_frame_is_not_containment():
     """Il contenimento geometrico da solo dichiarerebbe "lo stesso soggetto" cose che stanno a
     gradi di distanza: nel catalogo vero **44 coppie**, e fra queste NGC 1977 (il Running Man)
     contro M 42, che sono due bersagli distinti che nessuno confonde. Un oggetto grande contiene
-    tutto cio' che gli cade dentro, e "gli appartiene" e' un'altra domanda -- quella sta in coda.
+    tutto cio' che gli cade dentro, e "gli appartiene" e' un'altra
+    domanda -- quella sta fra le idee (`docs/idee.md`).
 
     Percio' il contenimento vale solo se i due sono vicini **rispetto all'inquadratura**, e il
     metro viene dalla foto invece che da una soglia: NGC 1977 dista 0,5454 gradi da M 42 e la

@@ -132,7 +132,7 @@ export const en = {
   "review.card.brand": "Brand",
   "review.card.model": "Model",
   "review.card.camera_type": "Sensor type",
-  "review.card.pixel_size_um": "Pixel (um)",
+  "review.card.pixel_size_um": "Pixel (\u00b5m)",
   "review.card.aperture_mm": "Aperture (mm)",
   "review.card.focal_mm": "Native focal length (mm)",
   "review.card.reducer_factor": "Factor",

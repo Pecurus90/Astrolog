@@ -1,6 +1,6 @@
 """Every working document has a line ceiling (ADR 0027); one already over it can only shrink.
 
-The queue has ceiling zero: it never grows, a defect is repaired, not parked (Marco).
+The queue is gone; ceiling zero keeps it from coming back: a defect is repaired, not parked (Marco).
 Compares each staged file with HEAD.
 """
 

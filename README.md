@@ -13,7 +13,7 @@ portano i pezzi che valgono (vocabolari, catalogo, qualita', effemeridi, pagine)
 dipendenza.
 
 - Il metodo di lavoro: [`CLAUDE.md`](CLAUDE.md)
-- Cosa viene dopo: [`docs/coda.md`](docs/coda.md)
+- Cosa viene dopo: [`docs/piano.md`](docs/piano.md); le idee in [`docs/idee.md`](docs/idee.md)
 - Per contribuire: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 Licenza: [GPL-3.0](LICENSE). Il solver astrometrico e' [ASTAP](https://www.hnsky.org/astap.htm)

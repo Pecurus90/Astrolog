@@ -12,7 +12,7 @@ import { type ReactNode, useEffect, useId, useRef } from "react"
  *   pagina;
  * - **la pagina dietro e' DICHIARATA intoccabile**: `aria-modal` lo dice a chi ascolta e il
  *   fondale a chi vede -- ma il fuoco **non e' trattenuto**, e col tabulatore si esce. E'
- *   dichiarato in `docs/coda.md`, e si chiude con un anello sul primo e sull'ultimo elemento.
+ *   la Issue #20, e si chiude con un anello sul primo e sull'ultimo elemento.
  *
  * Quello che il dialogo **non** fa e' decidere: chi lo apre passa le azioni, e la parola sul
  * bottone dice il gesto -- *Smetti di leggerla*, non *Conferma*.

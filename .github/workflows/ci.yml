@@ -144,7 +144,7 @@ jobs:
         if: hashFiles('backend/pyproject.toml') != ''
       # Nessuna deselezione: la voce che ne giustificava una si e' chiusa il 16/9/2026 (la
       # conferma di Da confermare ordina per numero di riga, non per orario) e con lei la riga.
-      # Una deselezione nuova entra solo con la sua voce in `docs/coda.md`, citata per frase.
+      # Una deselezione nuova entra solo con la sua Issue, citata col numero.
       - name: cinque giri della suite veloce
         if: hashFiles('backend/pyproject.toml') != ''
         # Nessun bytecode scritto: 24 processi che scrivono negli stessi `__pycache__` sono

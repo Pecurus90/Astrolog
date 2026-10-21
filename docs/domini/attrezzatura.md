@@ -200,6 +200,15 @@ l'altra, o dopo una correzione continuerebbe a mostrare cio' che dicono i file.
 
 ## Cosa non fa ancora, e con cosa arrivera'
 
+**La pagina della v15 di Design** (Marco, 17/10/2026), al porting: a sinistra l'indice dei setup
+e dei componenti, a destra il dettaglio; niente campo disegnato ne' tessere. Supera la forma
+dell'11/10 (setup in cima, componenti sotto). Testi approvati: "{n} da indicare", "Parti",
+"Seleziona" su ogni parte, "Per salvare serve almeno una banda.", "Per salvare servono ottica,
+camera e focale effettiva.", "servono apertura e focale", "Larghezza (nm)", "Pixel (µm)", "Apri
+{nome} fra i componenti"; gli altri in `handoff/design-risposta-attrezzatura.md`. Un filtro
+scritto a mano cerca nel catalogo dei modelli, cosi' si scrivono anche le bande delle camere a
+colori.
+
 **Un filtro e un setup scritti a mano** (Marco, 21/9/2026) nascono dallo stesso *Aggiungi un
 pezzo*: il filtro col nome e la banda, il setup con ottica, camera e focale obbligatoria -- senza,
 i file che la dicono farebbero un secondo setup. Se il vocabolario darebbe al filtro un altro nome
@@ -215,7 +224,7 @@ vocabolario da' alla grafia dell'header (`L` diventa `Lum`), e vale dopo il colo
 camera a colori `L` resta OSC.
 
 **Cancellare un pezzo non si fa**, e non per dimenticanza: un pezzo che tiene delle pose non si
-toglie senza decidere che fine fanno le sue ore. Sta in [`coda.md`](../coda.md).
+toglie senza decidere che fine fanno le sue ore: la scelta e' di Marco (Issue #25).
 
 Restano fuori per scelta: il **valore** dei pezzi e il **registro di manutenzione** (provati e
 scartati nel progetto di prima, e la ragione vale ancora: questa pagina dice come hai ripreso,
