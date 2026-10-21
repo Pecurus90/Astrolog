@@ -22,10 +22,11 @@ CASE = (
 
 
 def test_every_house_names_the_same_header():
-    """Ogni casa nomina **esattamente** l'intestazione che il backend pretende."""
+    """Ogni casa nomina **esattamente** l'intestazione che il backend pretende; una casa che
+    sparisce o cambia nome manca anche lei, o la prova resterebbe verde guardando il vuoto."""
     mancanti = [
         os.path.relpath(f, RADICE)
         for f in CASE
-        if f.is_file() and TOKEN_HEADER not in f.read_text(encoding="utf-8")
+        if not f.is_file() or TOKEN_HEADER not in f.read_text(encoding="utf-8")
     ]
     assert not mancanti, f"non nominano {TOKEN_HEADER}: {mancanti}"
