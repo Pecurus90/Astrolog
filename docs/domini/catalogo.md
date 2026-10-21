@@ -10,12 +10,12 @@ punto. Le parole stanno in [`glossario.md`](glossario.md).
 
 | richiesta | prova |
 |---|---|
-| Quando l'app mi dice cos'ho fotografato, voglio leggere "Rosette Nebula", non "NGC 2237" | `test_il_nome_arriva_da_una_qualunque_delle_sigle` |
-| Le mie ore su un oggetto non si sparpagliano perche' il mio software lo chiama in un altro modo | `test_le_sigle_restano_intere_e_in_ordine` |
-| L'app non mi mostra numeri che nessuno ha controllato | `test_i_quattro_campi_tolti_non_passano` |
-| Se un dato non c'e', resta vuoto: non me lo invento e non mi mette zero | `test_i_campi_vuoti_non_si_scrivono`, `test_i_valori_assenti_restano_vuoti_mai_zero` |
-| Il catalogo si puo' ricompletare quando voglio, e dopo funziona anche senza rete | `test_le_sigle_da_chiedere_sono_solo_quelle_che_servono` |
-| Un errore trovato una volta non torna al giro dopo | `test_una_correzione_curata_ha_l_ultima_parola` |
+| Quando l'app mi dice cos'ho fotografato, voglio leggere "Rosette Nebula", non "NGC 2237" | `test_the_name_comes_from_any_of_the_designations` |
+| Le mie ore su un oggetto non si sparpagliano perche' il mio software lo chiama in un altro modo | `test_designations_stay_whole_and_in_order` |
+| L'app non mi mostra numeri che nessuno ha controllato | `test_the_four_removed_fields_do_not_pass` |
+| Se un dato non c'e', resta vuoto: non me lo invento e non mi mette zero | `test_empty_fields_are_not_written`, `test_absent_values_stay_empty_never_zero` |
+| Il catalogo si puo' ricompletare quando voglio, e dopo funziona anche senza rete | `test_designations_to_ask_are_only_those_needed` |
+| Un errore trovato una volta non torna al giro dopo | `test_a_curated_correction_has_the_last_word` |
 | Scrivo il nome come mi viene -- `M31`, `messier 31`, `Sh2-155` -- e l'app capisce lo stesso | `test_every_designation_in_the_catalogue_reads_back` |
 | Chiedo cosa c'e' in un pezzo di cielo e mi dice anche quanto e' lontano ognuno | `test_the_cone_says_how_far_each_one_is` |
 | Se il catalogo non c'e', l'app parte lo stesso e me lo dice | `test_health_says_whether_the_catalogue_is_there` |

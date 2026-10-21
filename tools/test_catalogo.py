@@ -25,7 +25,7 @@ def voce(**extra):
     return {**base, **extra}
 
 
-def test_i_campi_che_restano_sono_diciannove_e_si_chiamano_cosi():
+def test_nineteen_fields_remain_with_these_names():
     """L'elenco e' chiuso: un campo nuovo che arrivasse da una fonte non entra di nascosto."""
     assert len(catalogo.CAMPI) == len(set(catalogo.CAMPI))
     assert set(catalogo.CAMPI) >= {
@@ -36,7 +36,7 @@ def test_i_campi_che_restano_sono_diciannove_e_si_chiamano_cosi():
     }  # fmt: skip
 
 
-def test_i_quattro_campi_tolti_non_passano():
+def test_the_four_removed_fields_do_not_pass():
     """`redshift` porta rumore (245 ammassi aperti ne hanno uno che dovrebbe essere zero),
     `hubble_type` e' da specialista, `object_type` ripete il tipo nostro, e l'`id` si
     rinumera a ogni ricostruzione: l'identita' e' lo slug."""
@@ -48,7 +48,7 @@ def test_i_quattro_campi_tolti_non_passano():
     assert snella["slug"] == "m-31"
 
 
-def test_la_magnitudine_diventa_un_campo_solo_con_la_sua_banda():
+def test_magnitude_becomes_a_field_only_with_its_band():
     """Due colonne costringevano chi legge a rifare la cascata "prima V poi B" e a sbagliarla.
     Un campo con la banda accanto dice la verita' una volta: e copre il 69% invece del 28%."""
     tutte_e_due = catalogo.snellisci([voce(magnitude_v=3.4, magnitude_b=4.3)])[0]
@@ -67,21 +67,21 @@ def test_la_magnitudine_diventa_un_campo_solo_con_la_sua_banda():
         assert "magnitude_v" not in s and "magnitude_b" not in s
 
 
-def test_una_magnitudine_senza_banda_non_esiste():
+def test_a_magnitude_without_a_band_does_not_exist():
     """Il numero da solo non si sa cosa valga: una V e una B della stessa voce differiscono
     anche di un paio di magnitudini su una nebulosa rossa."""
     for s in catalogo.snellisci([voce(magnitude_v=3.4), voce(magnitude_b=4.3), voce()]):
         assert ("magnitude" in s) == ("magnitude_band" in s)
 
 
-def test_i_campi_vuoti_non_si_scrivono():
+def test_empty_fields_are_not_written():
     """Assenza dichiarata, non chiave con dentro `null`: e' cosi' che il file resta piccolo e
     che "non lo so" si distingue da "zero"."""
     snella = catalogo.snellisci([voce(size_major_arcmin=None, common_name=None)])[0]
     assert "size_major_arcmin" not in snella and "common_name" not in snella
 
 
-def test_la_provenienza_segue_i_campi_che_restano():
+def test_provenance_follows_the_remaining_fields():
     """`src` dice da dove viene ogni valore: quando un campo esce, esce anche la sua riga di
     provenienza, o resterebbe a parlare di un dato che non c'e' piu'."""
     snella = catalogo.snellisci(
@@ -97,14 +97,14 @@ def test_la_provenienza_segue_i_campi_che_restano():
     assert snella["src"]["magnitude"] == "stellarium_dso"  # segue il valore, non il vecchio nome
 
 
-def test_le_sigle_restano_intere_e_in_ordine():
+def test_designations_stay_whole_and_in_order():
     """La prima sigla e' la principale, ed e' la stessa per sempre: e' l'ancora fra due
     ricostruzioni del catalogo, dove gli id invece si rinumerano."""
     snella = catalogo.snellisci([voce()])[0]
     assert snella["n"] == [["M", "31"], ["NGC", "224"]]
 
 
-def test_snellire_due_volte_da_lo_stesso_risultato():
+def test_slimming_twice_gives_the_same_result():
     """Lo strumento gira anche su un catalogo gia' snellito (dopo un arricchimento): non deve
     perdere la magnitudine gia' fusa ne' rifondere niente."""
     una = catalogo.snellisci([voce(magnitude_v=3.4, magnitude_b=4.3)])
@@ -112,7 +112,7 @@ def test_snellire_due_volte_da_lo_stesso_risultato():
     assert una == due
 
 
-def test_una_voce_senza_coordinate_non_e_una_voce():
+def test_an_entry_without_coordinates_is_not_an_entry():
     """Senza cielo non si puo' ne' riconoscere ne' disegnare: si scarta, e si dice quante."""
     tenute, scartate = catalogo.snellisci_con_scarti([voce(), voce(slug="x", ra=None)])
     assert len(tenute) == 1 and scartate == ["x"]
@@ -121,7 +121,7 @@ def test_una_voce_senza_coordinate_non_e_una_voce():
 # --- l'arricchimento ------------------------------------------------------------------------
 
 
-def test_l_arricchimento_riempie_i_buchi_e_non_sovrascrive_mai():
+def test_enrichment_fills_gaps_and_never_overwrites():
     """La regola del vecchio, pagata: le sorgenti si SOMMANO, non si sostituiscono. Un valore
     che abbiamo gia' e' stato scelto da una cascata di precedenze fra fonti curate; lasciarlo
     riscrivere da un servizio esterno vorrebbe dire buttare via quella scelta in silenzio."""
@@ -139,7 +139,7 @@ def test_l_arricchimento_riempie_i_buchi_e_non_sovrascrive_mai():
     assert conto["magnitude"] == 1 and conto["size_major_arcmin"] == 2
 
 
-def test_un_valore_arrivato_da_simbad_lo_dichiara():
+def test_a_value_from_simbad_declares_it():
     """Chi legge deve poter sapere che quel numero non viene da OpenNGC ma da un servizio
     interrogato una volta: e' la stessa provenienza per campo che il catalogo usa gia'."""
     fuori, _ = catalogo.arricchisci(
@@ -149,7 +149,7 @@ def test_un_valore_arrivato_da_simbad_lo_dichiara():
     assert fuori[0]["src"]["_"] == "openngc"  # la prevalente non cambia
 
 
-def test_il_nome_arriva_da_una_qualunque_delle_sigle():
+def test_the_name_comes_from_any_of_the_designations():
     """Una voce ha piu' sigle e SIMBAD conosce il nome sotto una sola: cercarlo solo sulla
     principale perderebbe i nomi di meta' catalogo."""
     fuori, conto = catalogo.arricchisci([voce()], nomi={"NGC 224": "Andromeda Galaxy"}, misure={})
@@ -157,7 +157,7 @@ def test_il_nome_arriva_da_una_qualunque_delle_sigle():
     assert conto["common_name"] == 1
 
 
-def test_un_nome_che_abbiamo_gia_non_si_tocca():
+def test_a_name_we_already_have_is_left_alone():
     """Vale anche qui: le correzioni curate hanno l'ultima parola, e una di esse e' proprio un
     nome sbagliato dalle fonti."""
     fuori, conto = catalogo.arricchisci(
@@ -166,7 +166,7 @@ def test_un_nome_che_abbiamo_gia_non_si_tocca():
     assert fuori[0]["common_name"] == "Andromeda" and conto["common_name"] == 0
 
 
-def test_le_sigle_da_chiedere_sono_solo_quelle_che_servono():
+def test_designations_to_ask_are_only_those_needed():
     """Non si chiede a un servizio pubblico cio' che gia' si sa: si chiedono solo le voci a cui
     manca almeno uno dei due campi che l'arricchimento riempie."""
     voci = [
@@ -176,20 +176,20 @@ def test_le_sigle_da_chiedere_sono_solo_quelle_che_servono():
     assert catalogo.da_chiedere(voci) == ["NGC 2237"]
 
 
-def test_le_voci_che_simbad_non_conosce_non_si_richiedono():
+def test_entries_simbad_does_not_know_are_not_asked_again():
     """Una voce interrogata e non trovata si ricorda. Un guasto di rete no: quello si ritenta."""
     voci = [voce(slug="ldn-9999", n=[["LDN", "9999"]])]
     assert catalogo.da_chiedere(voci, assenti={"LDN 9999"}) == []
 
 
-def test_una_magnitudine_presa_da_simbad_dichiara_la_sua_banda():
+def test_a_magnitude_taken_from_simbad_declares_its_band():
     """La query chiede la banda V: se il valore entrasse senza dirlo, resterebbe un numero
     muto in mezzo ad altri che la banda ce l'hanno."""
     fuori, _ = catalogo.arricchisci([voce()], nomi={}, misure={"M 31": {"magnitude": 3.44}})
     assert fuori[0]["magnitude"] == 3.44 and fuori[0]["magnitude_band"] == "V"
 
 
-def test_la_spaziatura_di_simbad_non_fa_perdere_l_aggancio():
+def test_simbad_spacing_does_not_lose_the_match():
     """SIMBAD scrive le sigle con DUE spazi (`NGC  4490`), noi con uno. Agganciare sulla
     stringa cruda faceva fallire tutto in silenzio: nessun errore, solo nomi che non
     arrivavano. La si normalizza su tutti e due i lati."""
@@ -201,7 +201,7 @@ def test_la_spaziatura_di_simbad_non_fa_perdere_l_aggancio():
     assert fuori[0]["common_name"] == "Cocoon Galaxy" and conto["common_name"] == 1
 
 
-def test_una_sigla_travestita_da_nome_non_diventa_un_nome():
+def test_a_designation_disguised_as_a_name_does_not_become_a_name():
     """SIMBAD tiene sotto `NAME ...` anche designazioni di altri cataloghi: `VV 543E`,
     `Her 36`, `IRAS F13373+0105 SE`. Scritte nella scheda sarebbero peggio della sigla che
     sostituiscono, perche' sembrerebbero un nome vero."""
@@ -211,7 +211,7 @@ def test_una_sigla_travestita_da_nome_non_diventa_un_nome():
         assert catalogo.e_un_nome(vera), vera
 
 
-def test_le_sigle_travestite_non_entrano_nel_catalogo():
+def test_disguised_designations_do_not_enter_the_catalog():
     fuori, conto = catalogo.arricchisci([voce()], nomi={"M 31": "VV 543E"}, misure={})
     assert "common_name" not in fuori[0] and conto["common_name"] == 0
 
@@ -227,7 +227,7 @@ CORREZIONI = [
 ]  # fmt: skip
 
 
-def test_una_correzione_curata_ha_l_ultima_parola():
+def test_a_curated_correction_has_the_last_word():
     """Sono valori che una fonte AFFERMA e che sappiamo falsi. SIMBAD dice che `IC 434` e' la
     Flame Nebula: non lo e', e' NGC 2024. Senza le correzioni l'arricchimento reintroduce un
     errore che qualcuno aveva gia' trovato e chiuso a mano."""
@@ -236,13 +236,13 @@ def test_una_correzione_curata_ha_l_ultima_parola():
     assert "common_name" not in fuori[0] and tolte == 1
 
 
-def test_una_correzione_puo_anche_sostituire():
+def test_a_correction_can_also_replace():
     voci = [voce(slug="m-11", n=[["M", "11"]], common_name="Amas de l'Ecu de Sobieski")]
     fuori, _ = catalogo.correggi(voci, CORREZIONI)
     assert fuori[0]["common_name"] == "Wild Duck Cluster"
 
 
-def test_una_correzione_scaduta_si_fa_sentire():
+def test_an_expired_correction_makes_itself_heard():
     """Il campo `da` dice quale valore sbagliato ci si aspetta. Se la fonte nel frattempo si e'
     corretta, la pezza non serve piu' e va tolta: continuare ad applicarla alla cieca
     sovrascriverebbe un dato ormai giusto."""
@@ -251,14 +251,14 @@ def test_una_correzione_scaduta_si_fa_sentire():
         catalogo.correggi(voci, CORREZIONI, severa=True)
 
 
-def test_una_correzione_su_una_voce_che_non_c_e_non_e_un_errore_silenzioso():
+def test_a_correction_on_a_missing_entry_is_not_a_silent_error():
     """Il catalogo cambia: una correzione che non trova piu' la sua voce va detta, non
     ignorata."""
     fuori, tolte = catalogo.correggi([voce()], CORREZIONI)
     assert tolte == 0 and len(fuori) == 1
 
 
-def test_quando_una_correzione_cancella_un_valore_cancella_anche_la_sua_provenienza():
+def test_a_correction_deleting_a_value_also_deletes_its_provenance():
     """`src` dice da dove viene ogni valore. Una riga che sopravvivesse al valore cancellato
     resterebbe a raccontare la fonte di un dato che non c'e' piu'."""
     voci = [
@@ -277,7 +277,7 @@ def test_quando_una_correzione_cancella_un_valore_cancella_anche_la_sua_provenie
 # --- le voci che il servizio non conosce ------------------------------------------------------
 
 
-def test_le_voci_trovate_non_finiscono_fra_le_sconosciute():
+def test_found_entries_do_not_end_up_among_the_unknown():
     """E' il difetto peggiore che questa fetta ha avuto: le voci che SIMBAD aveva riconosciuto
     finivano in lista nera perche' il confronto non passava dalla normalizzazione, e da li' in
     poi non venivano piu' chieste -- in silenzio, per sempre. 1.368 voci su 2.024."""
@@ -285,12 +285,12 @@ def test_le_voci_trovate_non_finiscono_fra_le_sconosciute():
     assert ignote == ["LDN 9999"]
 
 
-def test_chi_era_gia_sconosciuto_resta_sconosciuto():
+def test_whoever_was_already_unknown_stays_unknown():
     ignote = catalogo.sconosciute(["M 11"], {"M  11": {}}, gia_note={"LDN 9999"})
     assert ignote == ["LDN 9999"]
 
 
-def test_una_correzione_gia_applicata_non_e_una_scadenza():
+def test_an_already_applied_correction_is_not_an_expiry():
     """Il valore che si trova E' quello che la correzione voleva mettere: e' il suo effetto,
     non un segno che la fonte si e' corretta. Gridare qui bloccherebbe ogni ricostruzione."""
     voci = [voce(slug="m-11", n=[["M", "11"]], common_name="Wild Duck Cluster")]
@@ -298,7 +298,7 @@ def test_una_correzione_gia_applicata_non_e_una_scadenza():
     assert fuori[0]["common_name"] == "Wild Duck Cluster" and fatte == 0
 
 
-def test_lo_snellimento_ha_un_chiamante_e_rifa_l_artefatto(tmp_path, monkeypatch):
+def test_slimming_has_a_caller_and_rebuilds_the_artifact(tmp_path, monkeypatch):
     """E' il passo che produce il file che spediamo: senza un comando che lo faccia,
     l'artefatto non sarebbe rifacibile da niente nel repo, e nessuno saprebbe piu' da dove
     viene."""
@@ -338,7 +338,7 @@ def test_lo_snellimento_ha_un_chiamante_e_rifa_l_artefatto(tmp_path, monkeypatch
     assert [p.name for p in dest.glob("catalogo-*.json")] == [secondo.name]
 
 
-def test_la_lista_delle_sconosciute_scade_quando_cambiano_le_regole(tmp_path, monkeypatch):
+def test_the_unknown_list_expires_when_the_rules_change(tmp_path, monkeypatch):
     """Le voci "che SIMBAD non conosce" lo sono **con le regole con cui si e' chiesto**. Il
     giorno che si scopre che un catalogo ha un altro nome, quelle voci non erano sconosciute:
     erano chieste male. Senza questa scadenza resterebbero fuori per sempre, in silenzio --
