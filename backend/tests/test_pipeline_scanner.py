@@ -20,7 +20,7 @@ def _fits(path: Path, lines: list[str], end: bool = True) -> Path:
     raw = "".join(cards)
     raw += " " * (-len(raw) % 2880)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(raw.encode("ascii"))
+    path.write_bytes(raw.encode("latin-1"))
     return path
 
 
@@ -120,6 +120,47 @@ def test_a_broken_card_keeps_its_text_and_an_empty_one_stays(tmp_path):
     assert got.values["GAIN"] == "abc"
     assert got.values["EXPOSURE"] == "1.2.3"
     assert got.values["FILTER"] == ""
+
+
+_NINA_HEAD = [
+    "SIMPLE  =                    T",
+    "BITPIX  =                   16",
+    "NAXIS   =                    0",
+    "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'",
+]
+
+
+def test_a_control_character_in_a_value_does_not_stop_the_scan(tmp_path):
+    _fits(tmp_path / "a_bad.fits", [*_NINA_HEAD, "OBJECT  = 'M 31\tAndromeda'"])
+    _fits(tmp_path / "b_good.fits", _corpus("nina.txt"))
+    results = list(scan(tmp_path))
+    assert [r.path.name for r in results] == ["a_bad.fits", "b_good.fits"]
+    assert all(isinstance(r, Extracted) for r in results)
+
+
+def test_a_value_with_a_colon_stays_under_its_own_key(tmp_path):
+    got = scan_file(_fits(tmp_path / "sh2.fits", [*_NINA_HEAD, "OBJECT  = 'Sh2: 155'"]))
+    assert isinstance(got, Extracted)
+    assert got.values["OBJECT"] == "Sh2: 155"
+
+
+def test_commentary_with_an_equal_sign_is_not_a_key(tmp_path):
+    got = scan_file(_fits(tmp_path / "c.fits", [*_NINA_HEAD, "COMMENT = 'x'", "HISTORY = 'y'"]))
+    assert isinstance(got, Extracted)
+    assert not {"COMMENT", "HISTORY"} & set(got.values)
+
+
+def test_a_hierarch_key_is_kept_and_reported(tmp_path):
+    got = scan_file(_fits(tmp_path / "h.fits", [*_NINA_HEAD, "HIERARCH ESO DET = 5"]))
+    assert isinstance(got, Extracted)
+    assert got.values["ESO DET"] == 5
+    assert "ESO DET" in got.unknown
+
+
+def test_accented_letters_written_by_nina_are_kept(tmp_path):
+    got = scan_file(_fits(tmp_path / "neb.fits", [*_NINA_HEAD, "OBJECT  = 'Nébuleuse'"]))
+    assert isinstance(got, Extracted)
+    assert got.values["OBJECT"] == "Nébuleuse"
 
 
 def test_a_long_value_split_over_continue_cards_is_read_whole(tmp_path):

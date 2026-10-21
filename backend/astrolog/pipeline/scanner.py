@@ -2,17 +2,17 @@
 
 import os
 import re
-import warnings
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, cast
-
-from astropy.io import fits
+from typing import BinaryIO
 
 FITS_SUFFIXES = frozenset({".fits", ".fit", ".fts"})
-_COMMENTARY = frozenset({"COMMENT", "HISTORY"})
+BLOCK = 2880
+CARD = 80
+MAX_HEADER_BLOCKS = 1000
+_COMMENTARY = frozenset({"COMMENT", "HISTORY"})  # free text after column 9 (FITS 4.0 4.4.2.4)
 Value = str | int | float | bool
 
 _STRUCTURE = ("SIMPLE", "BITPIX", "NAXIS", "NAXIS1", "NAXIS2", "BZERO", "EXTEND")
@@ -103,34 +103,81 @@ def find_fits(root: Path) -> Iterator[Path]:
 
 
 def read_cards(path: Path) -> dict[str, Value] | None:
-    """Keyword -> value of the primary header, first occurrence wins; None if not readable FITS.
-    astropy parses the cards, as `fits/header_read.py` does: CONTINUE, HIERARCH, quotes."""
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")  # astropy's notes on odd cards are not reasons to skip
-        try:
-            with fits.open(path, output_verify="silently") as hdul:
-                header = cast("Any", hdul[0]).header
-        except Exception:  # noqa: BLE001 - any failure is the reason UNREADABLE
-            return None
-        cards: dict[str, Value] = {}
-        for card in header.cards:
-            key = card.keyword
-            if key and key not in _COMMENTARY:
-                cards.setdefault(key, _value(card))
+    """Keyword -> value of the primary header, first occurrence wins; None without END or on a
+    read error. Latin-1: N.I.N.A. writes the header in ISO-8859-1. CONTINUE joins strings."""
+    try:
+        with path.open("rb") as fh:
+            images = _card_images(fh)
+    except OSError:
+        return None
+    if images is None:
+        return None
+    cards: dict[str, Value] = {}
+    last: str | None = None
+    for image in images:
+        key = image[:8].rstrip()
+        if key == "CONTINUE" and last is not None and _continues(cards[last]):
+            cards[last] = str(cards[last])[:-1] + _string(image[8:])
+            continue
+        last = None
+        key, field = _key_and_field(image)
+        if key is None or key in cards:
+            continue
+        cards[key] = _value(field)
+        last = key if isinstance(cards[key], str) else None
     return cards
 
 
-def _value(card: Any) -> Value:
-    """The parsed value; a card astropy cannot parse keeps its written text, an empty one is ""."""
-    try:
-        value = card.value
-    except Exception:  # noqa: BLE001 - astropy parses lazily: VerifyError, ValueError
-        return card.image[10:].split("/", 1)[0].strip().strip("'").strip()
-    if isinstance(value, str):
-        return value.rstrip()
-    if isinstance(value, bool | int | float):
-        return value
-    return ""
+def _key_and_field(image: str) -> tuple[str | None, str]:
+    """Keyword and value field of a card; None for commentary and cards without a value."""
+    key = image[:8].rstrip()
+    if key == "HIERARCH" and "=" in image:
+        name, field = image[9:].split("=", 1)
+        return name.strip(), field
+    if key in _COMMENTARY or image[8:10] != "= ":
+        return None, ""
+    return key, image[10:]
+
+
+def _card_images(fh: BinaryIO) -> list[str] | None:
+    images: list[str] = []
+    for _ in range(MAX_HEADER_BLOCKS):
+        block = fh.read(BLOCK)
+        if len(block) < BLOCK:
+            return None
+        for start in range(0, BLOCK, CARD):
+            image = block[start : start + CARD].decode("latin-1")
+            if image[:8].rstrip() == "END":
+                return images
+            images.append(image)
+    return None
+
+
+def _continues(value: Value) -> bool:
+    return isinstance(value, str) and value.endswith("&")
+
+
+def _string(field: str) -> str:
+    """A quoted FITS string: '' is a quote, trailing blanks do not count; unquoted, its text."""
+    match = re.match(r"\s*'((?:[^']|'')*)'", field)
+    if match is None:
+        return field.split("/", 1)[0].strip().strip("'").strip()
+    return match.group(1).replace("''", "'").rstrip()
+
+
+def _value(field: str) -> Value:
+    """String, logical, integer or real as FITS writes them; anything else keeps its text."""
+    if field.lstrip().startswith("'"):
+        return _string(field)
+    text = field.split("/", 1)[0].strip()
+    if text in ("T", "F"):
+        return text == "T"
+    for parse in (int, float):
+        try:
+            return parse(text.replace("D", "E"))
+        except ValueError:
+            pass
+    return text
 
 
 def program_of(cards: dict[str, Value]) -> Program | None:
