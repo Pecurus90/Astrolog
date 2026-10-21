@@ -70,7 +70,7 @@ repos:
         stages: [pre-commit, manual]
       # Domain rule: only N.I.N.A., ASIAIR, Voyager and SGP are supported (CLAUDE.md, "Software supportati").
       - id: foreign-software
-        name: software outside the four supported (mark software-ok if intended)
+        name: software outside the verified ones, ADR 0029 (mark software-ok if intended)
         language: pygrep
         entry: '(?i)\b(pixinsight|maxim|thesky ?x|sharpcap|asi ?studio|ekos|kstars|seestar|siril|backyard ?eos|nebulosity|astroart|astro photography tool)\b(?!.*software-ok)'
         types: [text]

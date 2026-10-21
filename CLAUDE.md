@@ -82,7 +82,8 @@ Il giro di una fetta di porting e i ruoli nuovi: [ADR 0025](docs/adr/0025-uno-st
 - **Test prima del codice, visti rossi:** una regola, un test che si rompe se la regola si rompe.
 - **Una lettura non calcola:** calcola chi scrive, e scrive il risultato.
 - **Le date portano il fuso:** la notte va da mezzogiorno a mezzogiorno nel fuso del sito.
-- **Software supportati: quattro** (N.I.N.A., ASIAIR, Voyager, SGP); in piu' SharpCap Pro solo per <!-- software-ok -->
+- **Programmi verificati: N.I.N.A. e ASIAIR**, piu' la convenzione SBIG come lettura comune; nessun
+  alias ne' regola per altri programmi (ADR 0029). SharpCap Pro solo per <!-- software-ok -->
   l'export del Sistema solare (ADR 0013). Una decisione gia' in
   un contratto di `docs/domini/` o in un ADR vale: se sembra sbagliata si porta a Marco, non si aggira.
 - **`old/` si porta, non si importa:** un pezzo si sposta coi suoi test; un vocabolario voce per
