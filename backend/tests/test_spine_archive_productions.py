@@ -3,7 +3,11 @@ la stessa camera (Marco, 8/10/2026), finche' non esistono i progetti. Ognuna dic
 i suoi frame, le sue ore e i suoi filtri; insieme fanno la riga, senza contare niente due volte.
 """
 
+from fastapi.testclient import TestClient
+
+from astrolog.api.app import create_app
 from astrolog.clock import now_iso
+from astrolog.db.connect import connect
 from astrolog.spine import filters_used, productions
 from astrolog.spine.counts import Scope, Subject
 from group_bench import attrezzo
@@ -157,3 +161,33 @@ def test_all_the_productions_of_a_page_come_in_two_questions(archivio):
     archivio.set_trace_callback(None)
 
     assert len([d for d in domande if d.lstrip().startswith("SELECT")]) == 2
+
+
+def test_the_route_hands_the_row_scope_and_the_object_alone_to_the_productions(
+    db_path_col_catalogo,
+):
+    """Dalla rotta, non solo dalla spina: stringendo al 2025 le produzioni di M 31 sono quelle
+    del 2025 (`scope`), e un oggetto ripreso anche in un mosaico porta le pose fuori (`alone`)."""
+    conn = connect(db_path_col_catalogo)
+    try:
+        b = banco(conn)
+        a, ha = corredo(conn, b["newton"], b["asi2600"]), nasce_filtro(conn, "OIII", "oiii")
+        ic = oggetto(conn, "IC 405", "ic-405")
+        nel_mosaico = riprese(conn, ic, 3, notte_id=None, corredo_id=a, filtro=ha, secondi=300.0)
+        riprese(conn, ic, 1, notte_id=None, corredo_id=a, filtro=ha, secondi=100.0)
+        mosaico(conn, nel_mosaico)
+        conn.commit()
+    finally:
+        conn.close()
+    with TestClient(create_app(db_path_col_catalogo), base_url="http://localhost") as client:
+        nel_2025 = client.get("/api/v1/archive", params={"since": "2025-01-01"}).json()["items"]
+        tutte = client.get("/api/v1/archive").json()["items"]
+
+    m31 = next(r for r in nel_2025 if r["name"] == "M 31")
+    assert [(p["optics"], p["frames"]) for p in m31["productions"]] == [
+        ("Rifrattore", 4),
+        ("Newton", 1),
+    ]
+    # la riga dell'oggetto, non quella del mosaico che porta lo stesso nome
+    ic405 = next(r for r in tutte if r["key"] == "ic-405")
+    assert [(p["optics"], p["frames"]) for p in ic405["productions"]] == [("Newton", 1)]
