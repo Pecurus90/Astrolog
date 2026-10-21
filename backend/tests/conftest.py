@@ -229,6 +229,14 @@ def frame_by_file(conn, name):
     ).fetchone()
 
 
+def best_of(times, run):
+    """Seconds of the best of `times` runs of `run`; skipped among other processes, where a
+    timing measures the load and not the code."""
+    if os.environ.get("PYTEST_XDIST_WORKER"):
+        pytest.skip("una misura di tempo gira da sola, non sotto -n")
+    return min(run() for _ in range(times))
+
+
 def scan(conn, root):
     return list(scan_folder(conn, add_folder(conn, root)))[-1]
 
