@@ -1,15 +1,18 @@
-"""Iterative, sorted (repeatable scans), links and junctions not followed (no cycles). What stays
-out is reported to the caller instead of vanishing; extensions are a product decision."""
+"""Iterative and sorted (repeatable scans); linked folders followed, each real folder walked once
+(no cycles). What stays out is reported to the caller instead of vanishing."""
 
-# A faithful port of fits/walk.py (ADR 0030): the copy lives until the old pipeline is deleted.
+# Ported from fits/walk.py (ADR 0030): the shared parts live twice until the old pipeline goes.
 # jscpd:ignore-start  # noqa: ERA001
 import os
 import re
 import stat
 import sys
+from collections.abc import Iterable
+from dataclasses import dataclass, field
 from enum import StrEnum
 
-FITS_EXTENSION_RE = re.compile(r"\.(fits|fit)$", re.IGNORECASE | re.ASCII)
+# .fits, .fit, .fts (SBIG convention extensions) and their tile-compressed form `.fz` (fpack)
+FITS_EXTENSION_RE = re.compile(r"\.(fits|fit|fts)(\.fz)?$", re.IGNORECASE | re.ASCII)
 
 # One constant, so tests can set it and exercise every branch on any machine.
 PLATFORM = sys.platform
@@ -21,7 +24,9 @@ FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS = 0x00400000
 SF_DATALESS = 0x40000000  # Mac, *TN3150* (Apple): in `st_flags`, per `bsd/sys/stat.h` in xnu
 # Before macOS Sonoma iCloud left a hidden `.Name.fits.icloud` stub instead of a flag (The Eclectic
 # Light Company, *How iCloud Drive works in macOS Sonoma*): recognised by name on any system.
-ICLOUD_STUB_RE = re.compile(r"^\.(.+\.(?:fits|fit))\.icloud$", re.IGNORECASE | re.ASCII)
+ICLOUD_STUB_RE = re.compile(
+    r"^\.(.+\.(?:fits|fit|fts)(?:\.fz)?)\.icloud$", re.IGNORECASE | re.ASCII
+)
 
 # Per system: the stat field, and the bits that mean "not on disk". Linux has no such flag.
 _NOT_ON_DISK = {
@@ -87,19 +92,16 @@ def _online_only(entry: os.DirEntry[str]) -> bool:
 class EntryKind(StrEnum):
     """What the walk does with a listing entry."""
 
-    LINKED = "linked"
     HIDDEN = "hidden"
     WALKED = "walked"
     FILE = "file"
 
 
 def _kind(entry: os.DirEntry[str]) -> EntryKind:
-    """A link or a Windows junction is not followed: for Python a junction is a plain folder, and
-    only `is_junction` tells it apart. An entry that does not answer is looked at as a file."""
+    """A linked folder (symlink, Windows junction) is walked like any folder: `is_dir` follows it.
+    An entry that does not answer is looked at as a file."""
     try:
-        if entry.is_junction() or (entry.is_symlink() and entry.is_dir()):
-            return EntryKind.LINKED
-        is_dir = entry.is_dir()  # not a link here: following it or not is the same
+        is_dir = entry.is_dir()
     except OSError:
         return EntryKind.FILE
     if not is_dir:
@@ -107,54 +109,78 @@ def _kind(entry: os.DirEntry[str]) -> EntryKind:
     return EntryKind.HIDDEN if _hidden(entry) else EntryKind.WALKED
 
 
-def walk_dir(  # noqa: PLR0913 - ported as is; the next step returns one result instead
-    root: str,
-    found: list[str] | None = None,
-    unreadable: list[str] | None = None,
-    hidden: list[str] | None = None,
-    online_only: list[str] | None = None,
-    linked: list[str] | None = None,
-) -> list[str]:
-    """A missing root gives an empty list: telling a vanished folder from an unplugged disk is the
-    caller's check."""
-    found, unreadable, hidden, online_only, linked = (
-        [] if items is None else items for items in (found, unreadable, hidden, online_only, linked)
+def _dangling(entry: os.DirEntry[str], full: str) -> bool:
+    """A symlink whose target is gone (an unplugged disk): `is_dir` says False for it (Python,
+    `os.DirEntry.is_dir`), while a junction still says True and fails at `scandir`."""
+    try:
+        return entry.is_symlink() and not os.path.exists(long_path(full))
+    except OSError:
+        return False
+
+
+@dataclass
+class Walk:
+    """What a walk saw: FITS files on disk, and what it left out, each list sorted. `unreadable`
+    holds folders that do not open and links whose target is gone (file or folder, unknowable)."""
+
+    found: list[str] = field(default_factory=list)
+    unreadable: list[str] = field(default_factory=list)
+    hidden: list[str] = field(default_factory=list)
+    online_only: list[str] = field(default_factory=list)
+
+
+def _real(path: str) -> str:
+    return os.path.normcase(os.path.realpath(long_path(path)))
+
+
+def _list_folder(current: str, scan: Iterable[os.DirEntry[str]], result: Walk) -> list[str]:
+    """Sorts one folder's entries into `result`; returns the subfolders to walk."""
+    subdirs, fits_here, stubs = [], set(), []
+    folders_by_kind = {EntryKind.HIDDEN: result.hidden, EntryKind.WALKED: subdirs}
+    for entry in scan:
+        full = os.path.join(current, entry.name)
+        kind = _kind(entry)
+        if kind != EntryKind.FILE:
+            folders_by_kind[kind].append(full)
+        elif _apple_double(entry.name):
+            continue  # a placeholder's twin too: it is not one more file
+        elif FITS_EXTENSION_RE.search(entry.name):
+            fits_here.add(entry.name.casefold())
+            (result.online_only if _online_only(entry) else result.found).append(full)
+        elif stub := ICLOUD_STUB_RE.match(entry.name):
+            stubs.append(stub.group(1))
+        elif _dangling(entry, full):
+            result.unreadable.append(full)
+    # a placeholder beside its real file is not a second file: that one is on disk
+    result.online_only.extend(
+        os.path.join(current, name) for name in stubs if name.casefold() not in fits_here
     )
+    return subdirs
+
+
+def walk_dir(root: str) -> Walk:
+    """A missing root gives nothing found: telling a vanished folder from an unplugged disk is the
+    caller's check. A folder reached again through a link is not walked twice."""
+    result = Walk()
+    seen: set[str] = set()
     stack = [root]
     while stack:
         current = stack.pop()
         try:
             scan = os.scandir(long_path(current))
         except OSError:
-            unreadable.append(current)
+            result.unreadable.append(current)
             continue
-        subdirs, fits_here, stubs = [], set(), []
-        folders_by_kind = {
-            EntryKind.LINKED: linked,
-            EntryKind.HIDDEN: hidden,
-            EntryKind.WALKED: subdirs,
-        }
+        real = _real(current)
+        if real in seen:
+            scan.close()
+            continue
+        seen.add(real)
         with scan:
-            for entry in scan:
-                full = os.path.join(current, entry.name)
-                kind = _kind(entry)
-                if kind != EntryKind.FILE:
-                    folders_by_kind[kind].append(full)
-                elif _apple_double(entry.name):
-                    continue  # a placeholder's twin too: it is not one more file
-                elif FITS_EXTENSION_RE.search(entry.name):
-                    fits_here.add(entry.name.casefold())
-                    (online_only if _online_only(entry) else found).append(full)
-                elif stub := ICLOUD_STUB_RE.match(entry.name):
-                    stubs.append(stub.group(1))
-        # a placeholder beside its real file is not a second file: that one is on disk
-        online_only.extend(
-            os.path.join(current, name) for name in stubs if name.casefold() not in fits_here
-        )
-        stack.extend(subdirs)
-    for items in (found, hidden, online_only, linked):
+            stack.extend(_list_folder(current, scan, result))
+    for items in (result.found, result.unreadable, result.hidden, result.online_only):
         items.sort()
-    return found
+    return result
 
 
 # jscpd:ignore-end  # noqa: ERA001

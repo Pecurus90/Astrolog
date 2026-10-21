@@ -300,3 +300,9 @@ test_una_correzione_gia_applicata_non_e_una_scadenza - rinominato in inglese: te
 test_lo_snellimento_ha_un_chiamante_e_rifa_l_artefatto - rinominato in inglese: test_slimming_has_a_caller_and_rebuilds_the_artifact
 test_la_lista_delle_sconosciute_scade_quando_cambiano_le_regole - rinominato in inglese: test_the_unknown_list_expires_when_the_rules_change
 test_keys_the_program_does_not_write_are_not_extracted - regola cambiata (Marco): tutte le chiavi si tengono, sostituito da test_keys_outside_the_known_list_are_kept_and_reported
+test_collects_fits_and_fit_recursively_and_ignores_the_rest - pipeline/walk (Marco): entrano .fts e .fz, sostituito da test_collects_every_fits_extension_and_its_compressed_form_and_ignores_the_rest
+test_a_folder_symlink_is_not_followed_so_the_walk_cannot_loop - pipeline/walk (Marco): i collegamenti si seguono, sostituito da test_a_link_back_to_an_ancestor_does_not_loop
+test_a_junction_is_not_followed_and_is_named - pipeline/walk (Marco): i collegamenti si seguono, sostituito da test_a_linked_folder_is_walked
+test_the_linked_folders_are_named_in_order - pipeline/walk: le cartelle collegate si percorrono, non c'e' piu' un elenco da ordinare
+test_a_link_to_a_file_is_not_named_as_a_folder - pipeline/walk: niente elenco dei collegamenti, sostituito da test_a_link_to_a_file_is_collected_as_a_file
+test_an_entry_that_cannot_be_asked_is_not_taken_for_a_link - pipeline/walk: niente domanda sul collegamento, sostituito da test_an_entry_that_cannot_be_asked_is_looked_at_as_a_file
