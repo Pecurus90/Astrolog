@@ -1,5 +1,5 @@
-"""Mattone 2 della pipeline nuova: cosa e' cambiato dall'ultima scansione, senza aprire i file.
-Percorso, dimensione e data; una cartella che non risponde non fa sparire i suoi file."""
+"""Mattone 2: cosa e' cambiato, senza aprire file (percorso, dimensione, data).
+Radice muta: niente sparisce."""
 
 import os
 import sys
@@ -18,7 +18,7 @@ def _file(path: Path, size: int = 2880) -> Path:
 
 
 def _link(target: Path, link: Path) -> None:
-    """A folder link on disk: a junction on Windows (no privilege needed), a symlink elsewhere."""
+    """Folder link: junction on Windows (no privilege needed), symlink elsewhere."""
     if sys.platform == "win32":
         import _winapi
 
@@ -67,7 +67,7 @@ def test_a_deleted_file_is_gone_and_remembered(conn, tmp_path):
     assert sync(conn, root, LATER).gone == ["a.fits"]
     row = conn.execute("SELECT state FROM pipeline_files WHERE rel_path = 'a.fits'").fetchone()
     assert row["state"] == "gone"
-    assert sync(conn, root, LATER).gone == []  # gone once, not at every scan
+    assert sync(conn, root, LATER).gone == []  # gone once, not every scan
 
 
 def test_a_file_that_comes_back_is_read_again(conn, tmp_path):
@@ -87,7 +87,7 @@ def test_an_unreachable_root_makes_nothing_gone(conn, tmp_path):
     _file(archive / "a.fits")
     root = add_root(conn, archive, NOW)
     sync(conn, root, NOW)
-    archive.rename(tmp_path / "spento")  # the NAS is off
+    archive.rename(tmp_path / "spento")  # NAS off
     changes = sync(conn, root, LATER)
     assert changes.reachable is False
     assert changes.gone == []
@@ -96,8 +96,8 @@ def test_an_unreachable_root_makes_nothing_gone(conn, tmp_path):
 
 
 def test_an_unplugged_linked_disk_makes_nothing_gone(conn, tmp_path):
-    """La cartella principale e' un collegamento a un altro disco: staccato il disco, i suoi file
-    non sono spariti, e quelli delle altre cartelle si giudicano lo stesso."""
+    """Sottocartella collegata ad altro disco: disco staccato, suoi file non spariti; altre
+    cartelle giudicate lo stesso."""
     disk = tmp_path / "disco_esterno"
     _file(disk / "posa.fits")
     archive = tmp_path / "archivio"
@@ -115,8 +115,8 @@ def test_an_unplugged_linked_disk_makes_nothing_gone(conn, tmp_path):
 
 
 def test_an_online_only_file_is_not_gone(conn, tmp_path, monkeypatch):
-    """OneDrive o iCloud tolgono il file dal disco e lasciano il segnaposto: non e' sparito, e
-    quando torna uguale non si rilegge."""
+    """OneDrive o iCloud tolgono file dal disco, lasciano segnaposto: non sparito; tornato uguale,
+    non si rilegge."""
     from astrolog.pipeline import walk
 
     _file(tmp_path / "a.fits")
@@ -131,8 +131,8 @@ def test_an_online_only_file_is_not_gone(conn, tmp_path, monkeypatch):
 
 
 def test_a_file_whose_date_cannot_be_read_is_not_gone(conn, tmp_path, monkeypatch):
-    """Un errore passeggero di un NAS sul singolo file: il file c'e', solo non si e' potuto
-    guardare. Non si giudica, come una cartella che non risponde."""
+    """Errore passeggero NAS sul singolo file: file c'e', solo non guardato. Non si giudica, come
+    cartella che non risponde."""
     _file(tmp_path / "a.fits")
     root = add_root(conn, tmp_path, NOW)
     sync(conn, root, NOW)

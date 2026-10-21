@@ -1,4 +1,4 @@
-"""Finds FITS files and extracts the header of those N.I.N.A. and ASIAIR wrote (ADR 0029)."""
+"""Finds FITS files, extracts header of those N.I.N.A. and ASIAIR wrote (ADR 0029)."""
 
 import math
 import re
@@ -12,13 +12,13 @@ from .fingerprint import BLOCK, CARD, frame_identity
 from .walk import long_path, walk_dir
 
 MAX_HEADER_BLOCKS = 1000
-_COMMENTARY = frozenset({"COMMENT", "HISTORY"})  # free text after column 9 (FITS 4.0 4.4.2.4)
+_COMMENTARY = frozenset({"COMMENT", "HISTORY"})  # FITS 4.0 4.4.2.4 free text; format notes, dropped
 Value = str | int | float | bool
 
 _STRUCTURE = ("SIMPLE", "BITPIX", "NAXIS", "NAXIS1", "NAXIS2", "BZERO", "EXTEND")
 
-# Complete for uncompressed files: writers FITS/FITSHeader.cs and FITS/CFitsioFITS.cs (BSCALE and
-# checksums via cfitsio); user-defined keys are not N.I.N.A.'s own.
+# Complete for uncompressed: writers FITS/FITSHeader.cs, FITS/CFitsioFITS.cs (BSCALE, checksums
+# via cfitsio); user-defined keys not N.I.N.A.'s own.
 NINA_KEYS = frozenset({
     *_STRUCTURE,
     "IMAGETYP", "EXPOSURE", "EXPTIME", "DATE-LOC", "DATE-OBS", "MJD-OBS", "DATE-AVG", "MJD-AVG",
@@ -34,7 +34,7 @@ NINA_KEYS = frozenset({
     "ROWORDER", "EQUINOX", "SWCREATE", "BSCALE", "CHECKSUM", "DATASUM",
 })  # fmt: skip
 
-# Partial: ZWO publishes no list; these are the keys of 696 real ASIAIR files.
+# Partial: ZWO publishes no list; keys of 696 real ASIAIR files.
 ASIAIR_KEYS = frozenset({
     *_STRUCTURE, "BSCALE",
     "CREATOR", "IMAGETYP", "EXPOSURE", "EXPTIME", "DATE-OBS",
@@ -45,14 +45,14 @@ ASIAIR_KEYS = frozenset({
     "IMAGEW", "IMAGEH",
 })  # fmt: skip
 
-# FITS 4.0 sec. 4.2.3-4.2.4: Python also takes NaN, inf and 1_000, which FITS does not.
+# FITS 4.0 sec. 4.2.3-4.2.4: Python also takes NaN, inf, 1_000; FITS does not.
 _INTEGER = re.compile(r"[+-]?\d+")
 _REAL = re.compile(r"[+-]?(\d+\.?\d*|\.\d+)([EeD][+-]?\d+)?")  # lower e: Python read it already
-# SIP distortion terms of the ASIAIR plate solve: A_ORDER, A_0_2, AP_1_0, ...
+# SIP distortion terms of ASIAIR plate solve: A_ORDER, A_0_2, AP_1_0, ...
 _SIP = re.compile(r"^(A|B|AP|BP)_(ORDER|\d_\d)$")
-# Keys neither program writes, left by a processing program that rewrote the file.
+# Keys neither program writes, left by processing program that rewrote file.
 _REWRITE_MARKS = frozenset({"PROGRAM", "STACKCNT"})
-# The page of a tile-compressed image (FITS 4.0 sec. 10): its Z keys and its table columns.
+# Tile-compressed image page (FITS 4.0 sec. 10): its Z keys and table columns.
 _COMPRESSION_KEYS = frozenset({"XTENSION", "EXTNAME", "PCOUNT", "GCOUNT", "TFIELDS", "THEAP"})
 _TABLE_GEOMETRY = frozenset({"BITPIX", "NAXIS", "NAXIS1", "NAXIS2"})
 _COMPRESSION = re.compile(
@@ -71,21 +71,21 @@ class Skip(StrEnum):
     NOT_SUPPORTED = "not_supported"
     REWRITTEN = "rewritten"
     UNREADABLE = "unreadable"
-    UNREACHABLE = "unreachable"  # a folder that does not open, or a link whose target is gone
-    HIDDEN = "hidden"  # a hidden folder: trash bins and service folders
-    ONLINE_ONLY = "online_only"  # a cloud placeholder: opening it would download it
-    INCOMPLETE = "incomplete"  # shorter than its header says: a copy still running or broken
+    UNREACHABLE = "unreachable"  # folder not opening, or link with target gone
+    HIDDEN = "hidden"  # trash bins, service folders
+    ONLINE_ONLY = "online_only"  # cloud placeholder: opening downloads it
+    INCOMPLETE = "incomplete"  # shorter than header says: copy still running or broken
 
 
 @dataclass(frozen=True)
 class Extracted:
-    """Every key of the file; `unknown` are those outside the program's known list."""
+    """Every key of file; `unknown`: those outside program's known list."""
 
     path: Path
     program: Program
     values: dict[str, Value]
     unknown: frozenset[str]
-    fingerprint: str  # the frame's identity (pipeline/fingerprint.py)
+    fingerprint: str  # frame identity (pipeline/fingerprint.py)
 
 
 @dataclass(frozen=True)
@@ -95,8 +95,8 @@ class Skipped:
 
 
 def read_cards(path: Path) -> dict[str, Value] | None:
-    """Keyword -> value of the frame's header (primary, plus the image page of a compressed file);
-    None without END or on a read error. Latin-1, as N.I.N.A. writes; CONTINUE joins strings."""
+    """Keyword -> value of frame header (primary, plus image page if compressed); None without END
+    or on read error. Latin-1, as N.I.N.A. writes; CONTINUE joins strings."""
     try:
         with open(long_path(path), "rb") as fh:  # noqa: PTH123 - the `\\?\` form is a str
             primary = _card_images(fh)
@@ -104,11 +104,11 @@ def read_cards(path: Path) -> dict[str, Value] | None:
                 return None
             cards = _parse(primary)
             if cards.get("NAXIS") == 0 and program_of(cards) is None:
-                # tile-compressed (FITS 4.0 sec. 10): an empty primary, the frame's keys in page 2
+                # tile-compressed (FITS 4.0 sec. 10): empty primary, frame's keys in page 2
                 page = _card_images(fh)
                 image = _parse(page) if page is not None else {}
                 if image.get("ZIMAGE") is True:
-                    # the page's NAXISn, BITPIX describe the table; the frame's are ZNAXISn, ZBITPIX
+                    # page's NAXISn, BITPIX describe table; frame's are ZNAXISn, ZBITPIX
                     page_keys = {k: v for k, v in image.items() if k not in _TABLE_GEOMETRY}
                     cards = {**page_keys, **cards}
     except OSError:
@@ -134,7 +134,7 @@ def _parse(images: list[str]) -> dict[str, Value]:
 
 
 def _key_and_field(image: str) -> tuple[str | None, str]:
-    """Keyword and value field of a card; None for commentary and cards without a value."""
+    """Keyword and value field of card; None for commentary and valueless cards."""
     key = image[:8].rstrip()
     if key == "HIERARCH" and "=" in image:
         name, field = image[9:].split("=", 1)
@@ -163,7 +163,7 @@ def _continues(value: Value) -> bool:
 
 
 def _string(field: str) -> str:
-    """A quoted FITS string: '' is a quote, trailing blanks do not count; unquoted, its text."""
+    """Quoted FITS string: '' is a quote, trailing blanks don't count; unquoted: its text."""
     match = re.match(r"\s*'((?:[^']|'')*)'", field)
     if match is None:
         return field.split("/", 1)[0].strip().strip("'").strip()
@@ -171,7 +171,7 @@ def _string(field: str) -> str:
 
 
 def _value(field: str) -> Value:
-    """String, logical, integer or real as FITS writes them; anything else keeps its text."""
+    """String, logical, integer or real as FITS writes them; else keeps its text."""
     if field.lstrip().startswith("'"):
         return _string(field)
     text = field.split("/", 1)[0].strip()
@@ -223,7 +223,7 @@ def scan_file(path: Path) -> Extracted | Skipped:
 
 
 def scan(root: Path) -> Iterator[Extracted | Skipped]:
-    """Every FITS the walk finds, read; and what the walk left out, each with its reason."""
+    """Every FITS walk finds, read; plus what walk left out, each with its reason."""
     walk = walk_dir(str(root))
     for paths, reason in (
         (walk.unreadable, Skip.UNREACHABLE),

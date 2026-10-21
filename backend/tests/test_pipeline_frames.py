@@ -1,6 +1,5 @@
-"""Mattone 3 della pipeline nuova, seconda meta': il frame e i suoi file. Un frame per impronta;
-due file con la stessa impronta sono un doppione, non due pose; un file spostato resta lo stesso
-frame. Mattone 3b: l'header di ogni file letto come posa, salvato accanto al suo frame."""
+"""Mattoni 3 e 3b: frame per impronta (stessa impronta = doppione, spostato = stesso frame),
+header di ogni file letto accanto al frame."""
 
 import json
 import os
@@ -19,8 +18,8 @@ CORPUS = Path(__file__).with_name("header")
 
 
 def _nina(path: Path, seed: int, extra: tuple[str, ...] = ()) -> Path:
-    """A small N.I.N.A. light with its own pixels: `seed` makes it a different frame, `extra`
-    cards a different header on the same frame."""
+    """Small N.I.N.A. light with own pixels: `seed` makes different frame, `extra` cards
+    different header on same frame."""
     lines = [
         "SIMPLE  =                    T",
         "BITPIX  =                   16",
@@ -59,7 +58,7 @@ def test_each_file_read_points_to_its_frame(conn, tmp_path):
 
 
 def test_a_copy_in_another_folder_is_one_frame(conn, tmp_path):
-    """La stessa posa in due cartelle: un frame, con i suoi due file, e la ricevuta lo dice."""
+    """Stessa posa in due cartelle: un frame, due file, e la ricevuta lo dice."""
     _nina(tmp_path / "2024-11-03" / "m33.fits", 7)
     shutil.copy(tmp_path / "2024-11-03" / "m33.fits", tmp_path / "2024-11-04_m33.fits")
     result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
@@ -99,7 +98,7 @@ def test_a_file_not_read_has_no_frame(conn, tmp_path):
 
 
 def test_an_interrupted_scan_reads_its_files_next_time(conn, tmp_path, monkeypatch):
-    """Una scansione fermata a meta' non salva nulla: la prossima rilegge, nessuna posa persa."""
+    """Scansione fermata a meta' non salva nulla: la prossima rilegge, nessuna posa persa."""
     _nina(tmp_path / "a.fits", 1)
     _nina(tmp_path / "b.fits", 2)
     root = add_root(conn, tmp_path, NOW)
@@ -136,8 +135,8 @@ def test_an_unchanged_archive_is_not_read_again(conn, tmp_path, monkeypatch):
 
 
 def _headers(conn) -> dict[str, tuple[str, dict]]:
-    """rel_path -> (program, header) of every file with a stored header, present or gone. Checks
-    the invariant on the way: a file has a frame if and only if it has a header."""
+    """rel_path -> (program, header) of every file with stored header, present or gone. Checks
+    invariant on the way: file has frame iff it has header."""
     rows = conn.execute(
         "SELECT f.rel_path, f.frame_id, h.program, h.header FROM pipeline_files AS f"
         " LEFT JOIN pipeline_headers AS h ON h.file_id = f.id"
@@ -214,8 +213,7 @@ def test_a_gone_file_keeps_its_header(conn, tmp_path):
 
 
 def test_a_file_rewritten_by_another_program_loses_frame_and_header(conn, tmp_path):
-    """Riscritto da un editor sopra l'originale: oggi non e' una posa, il suo header vecchio non
-    resta attaccato."""
+    """Riscritto da un editor sopra l'originale: oggi non e' posa, header vecchio non resta."""
     _nina(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)

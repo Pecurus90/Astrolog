@@ -60,3 +60,32 @@ def test_a_date_inside_code_is_not_a_comment():
 def test_the_backend_follows_the_rule_today():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     assert commenti.check_tree(os.path.join(root, "backend", "astrolog"), root) == []
+
+
+SCHEMA = """-- old table: long prose
+-- stays as it is
+-- until it goes
+CREATE TABLE old (id INTEGER);
+-- ===== PIPELINE NUOVA (ADR 0030)
+CREATE TABLE pipeline_x (
+  id INTEGER,  -- a trailing comment is not a block
+  -- one
+  -- two
+  -- three
+  path TEXT  -- Marco, 21/10/2026
+);
+"""
+
+
+def test_the_schema_is_checked_only_from_the_new_pipeline_on():
+    assert [line for line, _ in commenti.sql_problems(SCHEMA)] == [8, 11]
+
+
+def test_the_new_pipeline_follows_the_rule_today():
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    tests = os.path.join(root, "backend", "tests")
+    paths = [os.path.join(root, "backend", "astrolog", "schema.sql")]
+    paths += [
+        os.path.join(tests, n) for n in sorted(os.listdir(tests)) if n.startswith("test_pipeline_")
+    ]
+    assert [line for path in paths for line in commenti.check_file(path, root)] == []

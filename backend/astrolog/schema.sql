@@ -864,61 +864,51 @@ CREATE TABLE catalog_version (
 ) STRICT;
 
 -- ============================================================ PIPELINE NUOVA (ADR 0030)
--- Accanto alla vecchia finche' non la sostituisce: tabelle sue, prefisso `pipeline_`.
+-- Accanto alla vecchia finche' la sostituisce. Commenti: regola di tools/commenti.py.
 
--- DICHIARATO. Una cartella che l'utente ha scelto: la radice dei percorsi dei suoi file.
+-- DICHIARATO. Cartella scelta dall'utente: radice dei percorsi.
 CREATE TABLE pipeline_roots (
   id         INTEGER PRIMARY KEY,
-  path       TEXT NOT NULL UNIQUE,  -- com'e' stata scelta, sul sistema dove gira l'app
+  path       TEXT NOT NULL UNIQUE,  -- come scelta, sul sistema dell'app
   created_at TEXT NOT NULL
 ) STRICT;
 
--- RILEVATO. La ricevuta di ogni scansione di una cartella.
+-- RILEVATO. Ricevuta di ogni scansione.
 CREATE TABLE pipeline_scans (
   id         INTEGER PRIMARY KEY,
   root_id    INTEGER NOT NULL REFERENCES pipeline_roots (id),
   scanned_at TEXT NOT NULL,
-  -- 0: la cartella non ha risposto (disco staccato, NAS spento): nessun file e' stato giudicato
-  reachable  INTEGER NOT NULL CHECK (reachable IN (0, 1)),
+  reachable  INTEGER NOT NULL CHECK (reachable IN (0, 1)),  -- 0: radice muta, nessun giudizio
   new        INTEGER NOT NULL,
   changed    INTEGER NOT NULL,
   unchanged  INTEGER NOT NULL,
   gone       INTEGER NOT NULL
 ) STRICT;
 
--- RILEVATO. Una posa, riconosciuta dalla sua impronta (pipeline/fingerprint.py): resta la stessa
--- se il file si sposta o se un programma ne riscrive l'header. Un frame rimasto senza file non si
--- cancella. Le risposte dell'utente (DICHIARATO, nessuno le ricrea) si agganciano alla chiave di
--- cio' su cui rispondono: il nome scritto, la produzione, il frame per impronta. Mai a un id di
--- riga, che non sopravvive alla ricreazione del rilevato. Nascono col mattone dei filtri.
+-- RILEVATO. Posa per impronta: regge spostamento e header riscritto; senza file resta. Risposte
+-- utente: alla chiave di cio' che rispondono (nome scritto, produzione, impronta), mai a un id.
 CREATE TABLE pipeline_frames (
   id          INTEGER PRIMARY KEY,
   fingerprint TEXT NOT NULL UNIQUE,
   created_at  TEXT NOT NULL
 ) STRICT;
 
--- RILEVATO. Un file visto dentro una cartella scelta, com'era all'ultima scansione che l'ha
--- potuto guardare. Il file, non il frame: due file con lo stesso frame sono un doppione.
+-- RILEVATO. File com'era all'ultima scansione che l'ha guardato. Due file, stesso frame: doppione.
 CREATE TABLE pipeline_files (
   id           INTEGER PRIMARY KEY,
   root_id      INTEGER NOT NULL REFERENCES pipeline_roots (id),
-  rel_path     TEXT NOT NULL,     -- relativo alla radice, con `/`: regge il cambio di sistema
+  rel_path     TEXT NOT NULL,     -- con `/`: regge cambio di sistema
   size         INTEGER NOT NULL,
-  mtime_ns     INTEGER NOT NULL,  -- confrontata esatta: una data diversa costa una rilettura
+  mtime_ns     INTEGER NOT NULL,  -- esatta: data diversa, rilettura
   state        TEXT NOT NULL CHECK (state IN ('present', 'gone')),
-  seen_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),  -- l'ultima che l'ha giudicato
-  -- NULL: non letto come posa (non supportato, riscritto, incompleto, illeggibile). Un file
-  -- sparito lo tiene: e' cosi' che uno nuovo con la stessa impronta si riconosce spostato.
+  seen_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),  -- ultima che l'ha giudicato
+  -- NULL: non letto come posa. Sparito lo tiene: cosi' si riconosce lo spostato.
   frame_id     INTEGER REFERENCES pipeline_frames (id),
   UNIQUE (root_id, rel_path)
 ) STRICT;
 
--- RILEVATO. L'header di un file letto come posa, cosi' com'e': ogni chiave col suo tipo (testo,
--- intero, reale, logico) in un oggetto JSON. "Com'e'" per come lo legge pipeline/scanner.py: la
--- pagina immagine di un compresso unita alla primaria, la prima di due chiavi uguali, CONTINUE
--- unite, HIERARCH col suo nome; COMMENT e HISTORY scartati (Marco, 21/10/2026: solo note di
--- formato). Sta sul file, non sul frame: due copie possono dire cose diverse. C'e' se e solo se
--- il file ha un frame; un file sparito lo tiene. Tabella sua: la scansione rilegge tutti i file.
+-- RILEVATO. Header come lo legge pipeline/scanner.py, chiave -> valore tipizzato. Per file: copie
+-- possono differire. Presente sse il file ha frame. Tabella a parte: scansione legge ogni file.
 CREATE TABLE pipeline_headers (
   file_id INTEGER PRIMARY KEY REFERENCES pipeline_files (id),
   program TEXT NOT NULL CHECK (program IN ('N.I.N.A.', 'ASIAIR')),

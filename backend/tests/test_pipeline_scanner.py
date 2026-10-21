@@ -1,5 +1,5 @@
-"""Lo scanner della pipeline nuova: trova i FITS, legge l'header e ne estrae le chiavi che
-scrivono N.I.N.A. e ASIAIR, e nient'altro. Gli header sono quelli veri di `tests/header/`."""
+"""Scanner: trova i FITS, estrae chiavi di N.I.N.A. e ASIAIR, nient'altro. Header veri da
+`tests/header/`."""
 
 import math
 import os
@@ -15,8 +15,8 @@ CORPUS = Path(__file__).with_name("header")
 
 
 def _fits(path: Path, lines: list[str], end: bool = True) -> Path:
-    """A FITS file from `KEY = value / comment` lines, with the zero pixels its header announces
-    (a file shorter than that is incomplete)."""
+    """FITS from `KEY = value / comment` lines, with zero pixels its header announces (shorter:
+    incomplete)."""
     cards = [line.ljust(80)[:80] for line in lines]
     if end:
         cards.append("END".ljust(80))
@@ -40,7 +40,7 @@ def _span(lines: list[str]) -> int:
 
 
 def _link(target: Path, link: Path) -> None:
-    """A folder link: a junction on Windows (no privilege needed), a symlink elsewhere."""
+    """Folder link: junction on Windows (no privilege needed), symlink elsewhere."""
     if sys.platform == "win32":
         import _winapi
 
@@ -50,7 +50,7 @@ def _link(target: Path, link: Path) -> None:
 
 
 def _corpus(name: str) -> list[str]:
-    """A real header, with the image shrunk to 16x16 so the test file stays small."""
+    """Real header, image shrunk to 16x16 so test file stays small."""
     return [
         re.sub(r"^(NAXIS[12]  =)\s*\d+", lambda m: m.group(1) + "16".rjust(21), line)
         for line in (CORPUS / name).read_text(encoding="utf-8").splitlines()
@@ -179,8 +179,8 @@ def test_a_value_with_a_colon_stays_under_its_own_key(tmp_path):
 
 
 def test_words_python_reads_as_numbers_but_fits_does_not_stay_text(tmp_path):
-    """NaN, inf e il trattino basso non sono numeri FITS (4.0 sec. 4.2.3-4.2.4): restano testo,
-    e un header resta JSON valido."""
+    """NaN, inf, trattino basso: non numeri FITS (4.0 sec. 4.2.3-4.2.4). Restano testo, header
+    resta JSON valido."""
     lines = [*_NINA_HEAD, "CCD-TEMP= NaN", "SET-TEMP= inf", "AIRMASS = Infinity", "GAIN    = 1_000"]
     got = scan_file(_fits(tmp_path / "w.fits", lines))
     assert isinstance(got, Extracted)
@@ -193,7 +193,7 @@ def test_words_python_reads_as_numbers_but_fits_does_not_stay_text(tmp_path):
 
 
 def test_real_beyond_a_double_stays_text(tmp_path):
-    """1E999 e' un reale FITS ma non sta in un double: resta testo, l'header resta JSON."""
+    """1E999: reale FITS, non sta in un double. Resta testo, header resta JSON."""
     lines = [*_NINA_HEAD, "CCD-TEMP= 1E999", "SET-TEMP= -1D999"]
     got = scan_file(_fits(tmp_path / "o.fits", lines))
     assert isinstance(got, Extracted)
@@ -214,7 +214,7 @@ def test_fits_numbers_keep_their_type(tmp_path):
 
 
 def test_a_lower_case_d_exponent_stays_text(tmp_path):
-    """FITS: esponente E o D maiuscola. La e minuscola si leggeva gia', la d no."""
+    """FITS: esponente E o D maiuscola. e minuscola si leggeva gia', d no."""
     lines = [*_NINA_HEAD, "FOCRATIO= 1.5d3", "CCD-TEMP= 1e3"]
     got = scan_file(_fits(tmp_path / "d.fits", lines))
     assert isinstance(got, Extracted)
@@ -253,7 +253,7 @@ def test_the_checksums_of_the_cfitsio_writer_are_nina_keys(tmp_path):
 
 
 def _compressed(path: Path) -> Path:
-    """A tile-compressed N.I.N.A. file as cfitsio writes it: empty primary, keys in page 2."""
+    """Tile-compressed N.I.N.A. file as cfitsio writes it: empty primary, keys in page 2."""
     import numpy as np
     from astropy.io import fits
 

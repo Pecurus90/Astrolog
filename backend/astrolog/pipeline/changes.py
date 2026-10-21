@@ -1,5 +1,5 @@
-"""What changed in a chosen folder since its last scan, without opening a file: path, size, date.
-A folder that does not answer gives no verdict on its files (ADR 0030, brick 2)."""
+"""What changed in chosen folder since last scan, no file opened: path, size, date.
+Folder not answering: no verdict on its files (ADR 0030, brick 2)."""
 
 import os
 import sqlite3
@@ -12,16 +12,16 @@ from .walk import long_path, walk_dir
 
 @dataclass
 class Changes:
-    """Paths relative to the root, with `/`, each list sorted."""
+    """Paths relative to root, with `/`, each list sorted."""
 
     reachable: bool
-    scan_id: int = 0  # the receipt this scan wrote
+    scan_id: int = 0  # receipt this scan wrote
     new: list[str] = field(default_factory=list)
     changed: list[str] = field(default_factory=list)
     unchanged: list[str] = field(default_factory=list)
     gone: list[str] = field(default_factory=list)
-    unreachable: list[str] = field(default_factory=list)  # subfolders that did not answer
-    unlooked: list[str] = field(default_factory=list)  # files whose size and date did not read
+    unreachable: list[str] = field(default_factory=list)  # subfolders not answering
+    unlooked: list[str] = field(default_factory=list)  # size and date unreadable
 
     @property
     def to_read(self) -> list[str]:
@@ -47,8 +47,8 @@ def _under(rel: str, folders: list[str]) -> bool:
 
 
 def _on_disk(found: list[str], root: str) -> tuple[dict[str, tuple[int, int]], set[str]]:
-    """rel path -> (size, mtime_ns), and the files the stat could not look at (a passing NAS
-    error, rights, gone since the walk): those are not judged."""
+    """rel path -> (size, mtime_ns), plus files stat could not see (passing NAS error, rights,
+    gone since walk): not judged."""
     seen: dict[str, tuple[int, int]] = {}
     unlooked: set[str] = set()
     for path in found:
@@ -62,13 +62,13 @@ def _on_disk(found: list[str], root: str) -> tuple[dict[str, tuple[int, int]], s
 
 
 def sync(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
-    """Compares the folder with what the last scans saw, writes the result and its receipt."""
+    """Compares folder with what last scans saw; writes result and its receipt."""
     with transaction(conn):
         return record_changes(conn, root_id, now)
 
 
 def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
-    """`sync` inside the caller's transaction: what it reads of the files commits with it."""
+    """`sync` inside caller's transaction: what it reads of files commits with it."""
     root = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (root_id,)).fetchone()[
         "path"
     ]
@@ -140,8 +140,8 @@ def _judge(
 def _mark_gone(
     conn: sqlite3.Connection, root_id: int, scan_id: int, not_judged: set[str], changes: Changes
 ) -> None:
-    """Present before, not seen now. A file left only in the cloud (OneDrive, iCloud) or that
-    could not be looked at stays as it was."""
+    """Present before, not seen now. File only in cloud (OneDrive, iCloud) or not looked at:
+    stays as was."""
     missing = conn.execute(
         "SELECT rel_path FROM pipeline_files WHERE root_id = ? AND state = 'present'"
         " AND seen_scan_id != ?",

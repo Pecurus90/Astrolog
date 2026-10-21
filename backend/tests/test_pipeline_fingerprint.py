@@ -1,6 +1,5 @@
-"""L'impronta del frame nella pipeline nuova, portata da `fits/header_read.py`: dove cominciano i
-pixel, quanto e' lungo il blocco dati, e l'impronta stessa, uguale a quella di oggi. Piu' il file
-incompleto, che oggi entra come un frame a se'."""
+"""Impronta frame, portata da `fits/header_read.py`: inizio e lunghezza pixel, impronta uguale
+alla vecchia. In piu': file incompleto (la vecchia lo prende come frame)."""
 
 import numpy as np
 import pytest
@@ -15,7 +14,7 @@ pytestmark = pytest.mark.filterwarnings("ignore::astropy.utils.exceptions.Astrop
 
 
 def _astropy(path):
-    """L'oracolo: cio' che dice astropy leggendo tutto il file."""
+    """Oracolo: cio' che dice astropy leggendo tutto il file."""
     with fits.open(
         path, output_verify="silently", ignore_missing_end=True, memmap=False, lazy_load_hdus=False
     ) as hdul:
@@ -31,7 +30,7 @@ def _image(path, shape, dtype, cards=0, **keys):
     header["SWCREATE"] = "N.I.N.A. 3.2.0.9001 (x64)"
     for key, value in keys.items():
         header[key] = value
-    for i in range(cards):  # un header lungo, oltre il primo blocco da 2880 byte
+    for i in range(cards):  # header lungo, oltre il primo blocco da 2880 byte
         header[f"NOTA{i:04d}"] = "x" * 40
     data = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
     fits.PrimaryHDU(data=data, header=header).writeto(path)
@@ -47,7 +46,7 @@ def _compressed(path, shape=(40, 60)):
 
 
 def _bench(tmp_path):
-    """Le forme che N.I.N.A. e ASIAIR scrivono: una pagina con pixel, oppure compressa."""
+    """Forme che N.I.N.A. e ASIAIR scrivono: pagina con pixel, o compressa."""
     return {
         "int16": _image(tmp_path / "a.fits", (3, 4), np.int16),
         "uint16_large": _image(tmp_path / "b.fits", (300, 300), np.uint16),
@@ -65,8 +64,8 @@ def test_the_data_block_is_the_one_astropy_finds(tmp_path):
 
 
 def test_a_plain_file_does_not_need_astropy(tmp_path, monkeypatch):
-    """Il caso comune si legge dai blocchi: senza la strada veloce la scansione pagherebbe astropy
-    su ogni file nuovo."""
+    """Caso comune letto dai blocchi: senza strada veloce, scansione paga astropy su ogni file
+    nuovo."""
     bench = _bench(tmp_path)
     expected = {n: _astropy(str(p)) for n, p in bench.items() if n != "compressed"}
 
@@ -79,7 +78,7 @@ def test_a_plain_file_does_not_need_astropy(tmp_path, monkeypatch):
 
 
 def test_the_identity_is_today_s_fingerprint(tmp_path):
-    """Porto fedele: su ogni forma, l'impronta nuova e' quella che calcola il codice di oggi."""
+    """Porto fedele: su ogni forma, impronta nuova = quella del codice di oggi."""
     for name, path in _bench(tmp_path).items():
         header, block = read_frame(str(path))
         cards = read_cards(path)
@@ -90,7 +89,7 @@ def test_the_identity_is_today_s_fingerprint(tmp_path):
 
 
 def test_two_shapes_with_the_same_bytes_are_two_frames(tmp_path):
-    """Le dimensioni entrano nell'impronta: 40x60 e 60x40 tutti a zero hanno gli stessi byte."""
+    """Dimensioni nell'impronta: 40x60 e 60x40 tutti a zero hanno stessi byte."""
     seen = set()
     for rows, cols in ((40, 60), (60, 40)):
         path = tmp_path / f"z{rows}x{cols}.fits"
@@ -102,7 +101,7 @@ def test_two_shapes_with_the_same_bytes_are_two_frames(tmp_path):
 
 
 def test_a_file_without_pixels_is_told_apart_by_its_cards(tmp_path):
-    """Senza blocco dati l'impronta di oggi prende le schede: due header diversi, due frame."""
+    """Senza blocco dati, impronta di oggi prende le schede: due header diversi, due frame."""
     seen = set()
     for name in ("M31", "M42"):
         path = tmp_path / f"{name}.fits"
@@ -118,8 +117,8 @@ def test_a_file_without_pixels_is_told_apart_by_its_cards(tmp_path):
 
 
 def test_a_file_shorter_than_its_header_says_is_incomplete(tmp_path):
-    """Una copia interrotta: l'header c'e', i pixel no. Si salta; finita la copia, il file cambia
-    dimensione e la scansione dopo lo rilegge."""
+    """Copia interrotta: header si', pixel no. Saltato; finita la copia, file cambia dimensione e
+    scansione dopo lo rilegge."""
     path = _image(tmp_path / "copia.fits", (300, 300), np.uint16)
     path.write_bytes(path.read_bytes()[:10000])
     assert scan_file(path) == Skipped(path, Skip.INCOMPLETE)

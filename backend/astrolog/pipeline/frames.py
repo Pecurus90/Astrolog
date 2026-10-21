@@ -1,5 +1,5 @@
-"""A chosen folder scanned: changed files read, each tied to its frame with its header stored.
-One frame per fingerprint: a copy is a duplicate, a moved file stays its frame."""
+"""Chosen folder scanned: changed files read, each tied to its frame, header stored.
+One frame per fingerprint: copy is duplicate, moved file stays its frame."""
 
 import json
 import sqlite3
@@ -14,7 +14,7 @@ from .scanner import Extracted, Skipped, scan_file
 @dataclass
 class ScanResult:
     changes: Changes
-    frames: int = 0  # frames with at least one file present in the folder
+    frames: int = 0  # frames with at least one file present in folder
     duplicates: dict[int, list[str]] = field(default_factory=dict)  # frame -> its files
     moved: list[tuple[str, str]] = field(default_factory=list)  # (was, is now)
     skipped: list[Skipped] = field(default_factory=list)  # read, but not a frame
@@ -22,7 +22,7 @@ class ScanResult:
 
 def scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
     root = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (root_id,)).fetchone()
-    with transaction(conn):  # one with the sync: an interrupted read leaves no file unread
+    with transaction(conn):  # one with sync: interrupted read leaves no file unread
         changes = record_changes(conn, root_id, now)
         result = ScanResult(changes)
         for rel in changes.to_read:
@@ -43,7 +43,7 @@ def scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
 def _store(
     conn: sqlite3.Connection, root_id: int, rel: str, got: Extracted | Skipped, now: str
 ) -> None:
-    """The file's frame and header, together: a skipped file loses both, even if read before."""
+    """File's frame and header together: skipped file loses both, even if read before."""
     file_id = conn.execute(
         "SELECT id FROM pipeline_files WHERE root_id = ? AND rel_path = ?", (root_id, rel)
     ).fetchone()["id"]
@@ -72,8 +72,8 @@ def _frame_of(conn: sqlite3.Connection, got: Extracted, now: str) -> int:
 
 
 def _moved(conn: sqlite3.Connection, root_id: int, changes: Changes) -> list[tuple[str, str]]:
-    """A file new in this scan whose frame lost a file in this same scan, paired one to one: a
-    further new file of the same frame is a copy, a duplicate, not a second move."""
+    """File new this scan whose frame lost a file this same scan, paired one to one; further new
+    file of same frame is copy (duplicate), not second move."""
     new = set(changes.new)
     rows = conn.execute(
         "SELECT was.rel_path AS was, now.rel_path AS now FROM pipeline_files AS now"

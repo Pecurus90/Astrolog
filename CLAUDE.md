@@ -75,8 +75,10 @@ Il giro di una fetta di porting e i ruoli nuovi: [ADR 0025](docs/adr/0025-uno-st
 - **Tipi:** una funzione che si tocca esce annotata; `StrEnum` per un insieme chiuso di stringhe,
   `dataclass` per una riga che viaggia fra funzioni invece di un `dict`.
 - **Prosa compressa** nei commenti e nei documenti di lavoro (piano, idee, ADR, contratti, comandi,
-  agenti): frasi corte, niente riempitivi, solo il perche' che il codice non mostra. Tetto e
-  divieti dei commenti li controlla `tools/commenti.py`. `docs/guida-utente.md` resta italiano pieno.
+  agenti): frasi corte, niente riempitivi, solo il perche' che il codice non mostra. **Commenti
+  e docstring in stile caveman** (skill `caveman`): frammenti, niente articoli, al massimo 2 righe.
+  Lo controlla `tools/commenti.py` (codice, test della pipeline, schema dalla pipeline nuova in
+  giu'). `docs/guida-utente.md` resta italiano pieno.
 - **Un fatto, una casa.** Le derivazioni vivono in Python; il backend manda cio' che lo schermo
   mostra e il frontend formatta e basta; i tipi TS si generano dall'OpenAPI. Prima di scrivere
   una funzione si cerca se esiste. Un'astrazione o un file nuovo alla seconda occorrenza, mai

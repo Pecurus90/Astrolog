@@ -81,7 +81,7 @@ repos:
         name: comments at most 2 lines, no dates or names
         language: system
         entry: python tools/commenti.py
-        files: ^backend/astrolog/.*\.py$
+        files: ^backend/astrolog/(.*\.py|schema\.sql)$|^backend/tests/test_pipeline_.*\.py$
         stages: [pre-commit, manual]
       # CLAUDE.md's naming rule: internal names in English; the list of old ones only shrinks.
       - id: english-names

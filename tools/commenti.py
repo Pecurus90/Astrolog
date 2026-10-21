@@ -1,7 +1,5 @@
-"""The comment rule of CLAUDE.md, checked by a machine: at most two lines, no dates, no names.
-
-Route docstrings and model docstrings are exempt: they are the OpenAPI contract.
-Usage: python tools/commenti.py [files...]   no files means the whole backend package.
+"""Comment rule of CLAUDE.md by machine: caveman style, max two lines, no dates, no names.
+Exempt: route and model docstrings (OpenAPI contract). Files given, or the backend package.
 """
 
 import ast
@@ -16,6 +14,7 @@ DIRECTIVE = re.compile(r"#\s*(noqa|type:|pyright:|fmt:|jscpd:|segnaposto-ok|soft
 HISTORY = re.compile(r"\b(19|20)\d\d-\d\d-\d\d\b|\b\d{1,2}/\d{1,2}/(19|20)\d\d\b|\bMarco\b")
 ROUTE_VERBS = {"get", "post", "put", "patch", "delete"}
 CONTRACT_BASES = {"BaseModel", "Page"}
+SQL_FROM = "PIPELINE NUOVA"
 
 type Problem = tuple[int, str]
 
@@ -105,6 +104,22 @@ def problems(source: str, path: str) -> list[Problem]:
     return sorted(_comment_problems(source) + _docstring_problems(tree, path))
 
 
+def sql_problems(source: str) -> list[Problem]:
+    """Schema only from the new pipeline on: old tables go with the old pipeline."""
+    found: list[Problem] = []
+    lines = source.splitlines()
+    start = next((i for i, text in enumerate(lines) if SQL_FROM in text), len(lines))
+    block = 0
+    for number, text in enumerate(lines[start:], start + 1):
+        comment = text.split("--", 1)[1] if "--" in text else ""
+        if HISTORY.search(comment):
+            found.append((number, "a date or a name in a comment: history belongs to git"))
+        block = block + 1 if text.lstrip().startswith("--") else 0
+        if block == MAX_LINES + 1:
+            found.append((number - MAX_LINES, f"a comment block longer than {MAX_LINES} lines"))
+    return found
+
+
 def check_tree(folder: str, root: str) -> list[str]:
     report: list[str] = []
     for current, _, files in os.walk(folder):
@@ -118,7 +133,8 @@ def check_file(path: str, root: str) -> list[str]:
     with open(path, encoding="utf-8") as handle:
         source = handle.read()
     rel = os.path.relpath(path, root).replace("\\", "/")
-    return [f"{rel}:{line}: {why}" for line, why in problems(source, rel)]
+    found = sql_problems(source) if rel.endswith(".sql") else problems(source, rel)
+    return [f"{rel}:{line}: {why}" for line, why in found]
 
 
 def main(argv: list[str]) -> int:

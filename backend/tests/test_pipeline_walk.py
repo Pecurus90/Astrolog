@@ -1,5 +1,5 @@
-"""Il walk della pipeline nuova, portato da `fits/walk.py` coi suoi test. Cambia per decisione di
-Marco: le cartelle collegate si seguono (una volta sola), ed entrano `.fts` e i compressi `.fz`."""
+"""Walk pipeline nuova, portato da `fits/walk.py` coi test. In piu': cartelle collegate seguite
+una volta, `.fts`, compressi `.fz`."""
 
 import os
 import stat
@@ -22,7 +22,7 @@ def _touch(root, *parts):
 
 
 def _link(target, link):
-    """A folder link on disk: a junction on Windows (no privilege needed), a symlink elsewhere."""
+    """Folder link: junction on Windows (no privilege needed), symlink elsewhere."""
     if sys.platform == "win32":
         import _winapi
 
@@ -50,8 +50,7 @@ def test_collects_every_fits_extension_and_its_compressed_form_and_ignores_the_r
 
 
 def test_a_linked_folder_is_walked(tmp_path):
-    """Un archivio puo' stare dietro un collegamento (una cartella che porta a un altro disco):
-    saltarlo perderebbe tutte le pose che ci sono dentro."""
+    """Archivio dietro collegamento (cartella verso altro disco): saltarlo perde tutte le pose."""
     _touch(str(tmp_path), "altro_disco", "posa.fits")
     root = tmp_path / "archivio"
     root.mkdir()
@@ -60,8 +59,8 @@ def test_a_linked_folder_is_walked(tmp_path):
 
 
 def test_a_link_back_to_an_ancestor_does_not_loop(tmp_path):
-    """Un collegamento che torna indietro non fa girare il walk in tondo: una cartella si
-    percorre una volta sola, comunque la si raggiunga."""
+    """Collegamento all'indietro: walk non gira in tondo, cartella percorsa una volta comunque
+    raggiunta."""
     _touch(str(tmp_path), "sub", "deep.fits")
     _link(tmp_path, tmp_path / "sub" / "indietro")
     assert names(found(tmp_path)) == {"deep.fits"}
@@ -78,8 +77,7 @@ def test_a_folder_reached_by_two_links_is_walked_once(tmp_path):
 
 
 def test_a_link_to_a_missing_folder_is_unreadable(tmp_path):
-    """Un collegamento verso un disco staccato non sparisce in silenzio: e' una cartella che non
-    si apre."""
+    """Collegamento verso disco staccato: non sparisce in silenzio, e' cartella che non si apre."""
     target = tmp_path / "staccato"
     target.mkdir()
     root = tmp_path / "archivio"
@@ -92,8 +90,8 @@ def test_a_link_to_a_missing_folder_is_unreadable(tmp_path):
 
 
 def test_a_symlink_to_a_missing_folder_is_unreadable(tmp_path, monkeypatch):
-    """Il symlink di Mac, NAS e Windows su un bersaglio sparito non si dice cartella (`is_dir`
-    falso, come lo documenta Python): si finge, perche' qui crearlo chiede un privilegio."""
+    """Symlink (Mac, NAS, Windows) su bersaglio sparito: `is_dir` falso, come documenta Python.
+    Finto: qui crearlo chiede un privilegio."""
     root = str(tmp_path)
     _touch(root, "segnaposto")
 
@@ -110,9 +108,8 @@ def test_a_symlink_to_a_missing_folder_is_unreadable(tmp_path, monkeypatch):
 
 
 def test_the_mac_twin_files_are_not_collected(tmp_path):
-    """macOS scrive un gemello `._nome.fits` accanto a ogni file su una chiavetta o un NAS:
-    sono i metadati del Finder, pochi KB che non sono un FITS. Senza questa riga, un archivio
-    passato da un Mac dice all'utente "1.200 file non letti" su 1.200 pose sane."""
+    """Gemello Mac `._nome.fits` su chiavetta o NAS: metadati Finder, non FITS. Senza,
+    "1.200 file non letti" su 1.200 pose sane."""
     root = str(tmp_path)
     _touch(root, "M42.fits")
     _touch(root, "._M42.fits")
@@ -122,18 +119,8 @@ def test_the_mac_twin_files_are_not_collected(tmp_path):
 
 
 def test_hidden_folders_are_not_walked_so_the_bin_stays_out(tmp_path, monkeypatch):
-    """Nel cestino ci sono le pose che l'utente ha **cancellato**: percorrerlo le farebbe
-    rientrare in archivio. Il cestino e le cartelle di servizio sono nascoste su tutti e tre i
-    sistemi -- `.Trashes` su Mac, `$RECYCLE.BIN` e `System Volume Information` su Windows con
-    l'attributo nascosto, il cestino di un NAS via SMB -- e si guarda la **proprieta'**, non
-    una lista di nomi: un nome scritto a memoria copre il NAS che conosciamo e nessun altro.
-
-    Le due meta' si provano insieme: la cartella col punto e' vera sul disco, quella con
-    l'attributo di Windows si finge, perche' l'attributo non esiste su Mac e Linux e un test
-    che si salta e' verde quanto uno che passa. Si finge anche il sistema, o fuori da Windows
-    l'attributo non verrebbe nemmeno guardato.
-
-    Le cartelle lasciate fuori non spariscono in silenzio: il walk le nomina."""
+    """Cestino = pose cancellate. Nascosto per proprieta' (punto, attributo Windows), non per nome;
+    attributo finto: su Mac e Linux non esiste. Cartelle saltate si nominano."""
     monkeypatch.setattr(walk, "PLATFORM", "win32")
     root = str(tmp_path)
     _touch(root, "buona.fits")
@@ -142,7 +129,7 @@ def test_hidden_folders_are_not_walked_so_the_bin_stays_out(tmp_path, monkeypatc
     real = os.scandir
 
     class _Nascosta(VoceFinta):
-        """La cartella con l'attributo nascosto, come la vede `os.scandir` su Windows."""
+        """Cartella con attributo nascosto, come la vede `os.scandir` su Windows."""
 
         name = "$RECYCLE.BIN"
 
@@ -150,7 +137,7 @@ def test_hidden_folders_are_not_walked_so_the_bin_stays_out(tmp_path, monkeypatc
             return True
 
         def stat(self, follow_symlinks=True):
-            # non `os.stat_result`: su Mac e Linux quel tipo non ha il campo, e lo scarterebbe
+            # non `os.stat_result`: su Mac e Linux non ha il campo, lo scarterebbe
             return SimpleNamespace(st_file_attributes=stat.FILE_ATTRIBUTE_HIDDEN)
 
     def fake(p):
@@ -163,15 +150,12 @@ def test_hidden_folders_are_not_walked_so_the_bin_stays_out(tmp_path, monkeypatc
     result = walk_dir(root)
     assert names(result.found) == {"buona.fits"}
     assert names(result.hidden) == {".Trashes", "$RECYCLE.BIN"}
-    # e l'altra meta' della regola: il filtro vale sulle SOTTOcartelle, non sulla radice. Chi
-    # tiene l'archivio in una cartella nascosta (`D:\.astro`) deve trovarlo: se il filtro
-    # valesse anche sulla radice, vedrebbe "0 file" sulla cartella che ha appena scelto.
+    # filtro solo su sottocartelle: radice nascosta scelta (`D:\.astro`) si legge
     nascosta = os.path.join(root, ".Trashes")
     assert names(found(nascosta)) == {"cancellata.fits"}
 
 
-# (nome, sistema, attributi di Windows, flag del Mac, il file si raccoglie?). Le costanti e le
-# loro fonti stanno in `pipeline/walk.py`.
+# (nome, sistema, attributi Windows, flag Mac, raccolto?). Costanti e fonti in `pipeline/walk.py`.
 SEGNI = [
     ("Windows, dati non sul disco", "win32", walk.FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS, 0, False),
     ("Windows, segnaposto nell'elenco", "win32", walk.FILE_ATTRIBUTE_RECALL_ON_OPEN, 0, False),
@@ -190,9 +174,8 @@ SEGNI = [
 def test_a_file_that_is_not_on_the_disk_is_not_collected(
     tmp_path, monkeypatch, sistema, attributi, flag, raccolto
 ):
-    """Un file solo online (OneDrive, Dropbox, iCloud) ha sul disco il segnaposto, e aprirlo lo
-    scarica: non si raccoglie, si nomina. Il segno arriva con l'elenco della cartella, e dove
-    il sistema non ce l'ha non si chiede nemmeno."""
+    """Solo online (OneDrive, Dropbox, iCloud): aprirlo scarica, quindi nominato, non raccolto.
+    Segno dall'elenco cartella; sistema senza segno: non si chiede."""
     root = str(tmp_path)
     _touch(root, "sul_disco.fits")
     _touch(root, "posa.fits")
@@ -211,13 +194,13 @@ def test_a_file_that_is_not_on_the_disk_is_not_collected(
     assert "sul_disco.fits" in names(result.found)
     assert ("posa.fits" in names(result.found)) is raccolto
     assert names(result.online_only) == (set() if raccolto else {"posa.fits"})
-    # il segno si legge sulla voce, senza seguire un collegamento; dove non esiste, non si chiede
+    # segno letto sulla voce, senza seguire collegamenti; dove non esiste, non si chiede
     assert chiesti == ([] if sistema == "linux" else [False])
 
 
 def test_a_file_whose_sign_cannot_be_read_is_taken_as_on_the_disk(tmp_path, monkeypatch):
-    """Se il segno non si legge il file si raccoglie, come prima che il segno si guardasse: se
-    davvero non si apre, la scansione lo conta fra gli errori invece di perderlo in silenzio."""
+    """Segno illeggibile: file raccolto, come prima del segno. Se davvero non si apre, scansione lo
+    conta fra gli errori invece di perderlo in silenzio."""
     root = str(tmp_path)
     _touch(root, "posa.fits")
     monkeypatch.setattr(walk, "PLATFORM", "win32")
@@ -235,11 +218,8 @@ def test_a_file_whose_sign_cannot_be_read_is_taken_as_on_the_disk(tmp_path, monk
 
 
 def test_an_old_icloud_placeholder_counts_as_online_only(tmp_path):
-    """Prima di macOS Sonoma iCloud lasciava al posto del file un segnaposto nascosto
-    `.Nome.fits.icloud`: vale come solo online, col nome del file vero. Non contano: un
-    segnaposto che non e' di un FITS, il gemello `._` che il Mac gli scrive accanto su una
-    chiavetta o un NAS, e un segnaposto rimasto accanto al suo file vero -- quello e' sul disco,
-    e contarlo due volte direbbe "solo online" di una posa che c'e'."""
+    """`.Nome.fits.icloud` (iCloud prima di Sonoma): solo online, col nome vero. No: non FITS,
+    gemello `._`, segnaposto accanto al file vero (posa c'e')."""
     root = str(tmp_path)
     _touch(root, ".M42.FITS.icloud")
     _touch(root, ".M44.fits.fz.icloud")
@@ -253,7 +233,6 @@ def test_an_old_icloud_placeholder_counts_as_online_only(tmp_path):
 
 
 def test_a_link_to_a_file_is_collected_as_a_file(tmp_path, monkeypatch):
-    """Un collegamento a un FITS e' un file: si raccoglie come gli altri."""
     root = str(tmp_path)
     _touch(root, "a.fits")
     monkeypatch.setattr(walk, "PLATFORM", "linux")  # qui si prova il collegamento, non il segno
@@ -269,9 +248,7 @@ def test_a_link_to_a_file_is_collected_as_a_file(tmp_path, monkeypatch):
 
 
 def test_an_entry_that_cannot_be_asked_is_looked_at_as_a_file(tmp_path, monkeypatch):
-    """Chiedere a una voce se e' una cartella puo' fallire (Python lo documenta per
-    `is_symlink`): allora si tratta come un file -- un FITS si raccoglie --, invece di fermare il
-    walk su quella cartella."""
+    """`is_dir` che fallisce (documentato da Python): voce trattata come file, walk continua."""
     root = str(tmp_path)
     _touch(root, "posa.fits")
     monkeypatch.setattr(walk, "PLATFORM", "linux")  # qui si prova la voce muta, non il segno
@@ -315,7 +292,7 @@ def test_deep_tree_does_not_recurse(tmp_path):
 
 
 def test_paths_beyond_260_characters(tmp_path):
-    """Una cartella di archivio profonda supera i 260 caratteri di Windows: si trova lo stesso."""
+    """Archivio profondo oltre i 260 caratteri di Windows: si trova lo stesso."""
     deep = str(tmp_path)
     while len(deep) < 300:
         deep = os.path.join(deep, "Nebulosa della Testa di Cavallo - IC 434 - sessione lunga")
@@ -328,19 +305,14 @@ def test_paths_beyond_260_characters(tmp_path):
 
 @pytest.mark.skipif(os.name != "nt", reason="la forma dei percorsi lunghi esiste solo su Windows")
 def test_a_long_network_path_gets_the_unc_form():
-    """Una cartella di rete profonda vuole la sua forma: `\\\\?\\UNC\\server\\share\\...`.
-    Col prefisso semplice (`\\\\?\\\\\\server\\...`) Windows non la apre, e l'utente legge
-    "la cartella non risponde" su una cartella che c'e'. La forma e la regola sulle barre in
-    avanti stanno nella documentazione di Windows (*Maximum Path Length Limitation*).
-
-    Gira solo su Windows -- e' l'unico sistema che ha questo limite -- ma **gira**: il cancello
-    passa su Windows in locale e su tutti e tre i sistemi in CI."""
+    """Rete profonda: forma `\\\\?\\UNC\\server\\share`, col prefisso semplice Windows non apre
+    (*Maximum Path Length Limitation*). Solo Windows: unico col limite."""
     lungo = "x" * 250
     assert long_path(rf"\\nas\astro\{lungo}").startswith(r"\\?\UNC\nas\astro")
     assert long_path(rf"C:\astro\{lungo}").startswith(r"\\?\C:\astro")
-    # col prefisso le barre in avanti non valgono come separatore: si normalizzano prima
+    # col prefisso barre in avanti non sono separatori: normalizzate prima
     assert "/" not in long_path(f"C:/astro/{lungo}")
-    assert long_path(r"C:\corto") == r"C:\corto"  # sotto la soglia resta leggibile
+    assert long_path(r"C:\corto") == r"C:\corto"  # sotto soglia resta leggibile
 
 
 def test_names_with_spaces_and_accents(tmp_path):

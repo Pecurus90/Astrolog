@@ -1,5 +1,5 @@
-"""The frame's identity: dimensions plus 64 KB from the centre of the data block, stable across
-header rewrites and moves. Ported from fits/header_read.py (ADR 0030), same result on every file."""
+"""Frame identity: dimensions plus 64 KB from data block centre; stable across header rewrites
+and moves. Ported from fits/header_read.py (ADR 0030), same result on every file."""
 
 # jscpd:ignore-start  # noqa: ERA001
 import hashlib
@@ -14,7 +14,7 @@ from astropy.io import fits
 from .walk import long_path
 
 FINGERPRINT_BYTES = 65536
-BLOCK = 2880  # the FITS block: header and data fill a whole number of them
+BLOCK = 2880  # header and data fill whole blocks
 CARD = 80
 _CLEAN_END = b"END" + b" " * (CARD - 3)
 _KEY_CHARS = frozenset(b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-")
@@ -25,29 +25,29 @@ _STRUCTURAL = frozenset({b"SIMPLE", b"BITPIX", b"GROUPS", b"PCOUNT", b"GCOUNT"})
 @dataclass(frozen=True)
 class FrameIdentity:
     fingerprint: str
-    complete: bool  # the file holds every byte its header announces
+    complete: bool  # file holds every byte its header announces
 
 
 def data_block(path: str | os.PathLike[str]) -> tuple[int, int]:
-    """(start, length) of the pixels. The fast path reads the primary's blocks; a compressed file
-    (an empty primary) and any other shape go to astropy, which reads every page."""
+    """(start, length) of pixels. Fast path reads primary's blocks; compressed (empty primary) or
+    other shape: astropy, which reads every page."""
     fast = _primary_data_block(path)
     return fast if fast is not None else _data_block_astropy(path)
 
 
 def _primary_data_block(path: str | os.PathLike[str]) -> tuple[int, int] | None:
-    """The common case (primary page with pixels, no groups, clean END) without astropy. None
-    otherwise: it withdraws rather than guess."""
+    """Common case (primary with pixels, no groups, clean END) without astropy. Else None:
+    withdraws, never guesses."""
     values, start = {}, 0
     with open(long_path(path), "rb") as f:
         while True:
             block = f.read(BLOCK)
             if len(block) < BLOCK:
-                return None  # a header without END: astropy decides
+                return None  # header without END: astropy decides
             start += BLOCK
             for i in range(0, BLOCK, CARD):
                 card = block[i : i + CARD]
-                # END alone, not the start of a key like ENDTIME
+                # END alone, not start of key like ENDTIME
                 if card[:3] == b"END" and card[3] not in _KEY_CHARS:
                     return _span(values, start) if card == _CLEAN_END else None
                 key = card[:8].rstrip()
@@ -60,7 +60,7 @@ def _span(values: dict[bytes, bytes], start: int) -> tuple[int, int] | None:
         if values.get(b"SIMPLE") != b"T" or b"GROUPS" in values:
             return None
         if int(values.get(b"PCOUNT", 0)) != 0 or int(values.get(b"GCOUNT", 1)) != 1:
-            return None  # astropy adds them to the length: the rare case, it decides
+            return None  # astropy adds them to length: rare case, it decides
         pixel = _BYTES_PER_PIXEL.get(int(values[b"BITPIX"]))
         axes = int(values[b"NAXIS"])
         if pixel is None or axes <= 0:
@@ -77,7 +77,7 @@ def _has_pixels(hdu: Any) -> bool:
 
 def _data_block_astropy(path: str | os.PathLike[str]) -> tuple[int, int]:
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore")  # notes on odd cards: the block is what matters here
+        warnings.simplefilter("ignore")  # notes on odd cards: only block matters here
         return _astropy_block(path)
 
 
@@ -97,19 +97,19 @@ def _astropy_block(path: str | os.PathLike[str]) -> tuple[int, int]:
 
 
 def _primary_cards(path: str | os.PathLike[str]) -> bytes:
-    """No pixels to read: the primary's cards as astropy writes them, as today."""
+    """No pixels: primary's cards as astropy writes them, as today."""
     with (
         warnings.catch_warnings(),
         fits.open(long_path(path), output_verify="silently", ignore_missing_end=True) as hdul,
     ):
         warnings.simplefilter("ignore")
-        primary: Any = hdul[0]  # astropy's stubs type an int index as a slice: HDUList
+        primary: Any = hdul[0]  # astropy stubs type int index as slice: HDUList
         return primary.header.tostring().encode("ascii", "replace")
 
 
 def frame_identity(path: str | os.PathLike[str], cards: dict[str, Any]) -> FrameIdentity:
-    """sha256 of the dimensions and FINGERPRINT_BYTES from the centre of the data block, away
-    from registration borders and overscan; no pixels, the cards. Compressed: size in ZNAXISn."""
+    """sha256 of dimensions and FINGERPRINT_BYTES from data block centre, away from registration
+    borders and overscan; no pixels: cards. Compressed: size in ZNAXISn."""
     start, span = data_block(path)
     chunk = b""
     if span:
