@@ -1,16 +1,19 @@
-"""Finds FITS files and extracts only the header keys N.I.N.A. and ASIAIR write (ADR 0029)."""
+"""Finds FITS files and extracts the header of those N.I.N.A. and ASIAIR wrote (ADR 0029)."""
 
 import os
 import re
+import warnings
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+from typing import Any, cast
+
+from astropy.io import fits
 
 FITS_SUFFIXES = frozenset({".fits", ".fit", ".fts"})
-BLOCK = 2880
-CARD = 80
-MAX_HEADER_BLOCKS = 200
+_COMMENTARY = frozenset({"COMMENT", "HISTORY"})
+Value = str | int | float | bool
 
 _STRUCTURE = ("SIMPLE", "BITPIX", "NAXIS", "NAXIS1", "NAXIS2", "BZERO", "EXTEND")
 
@@ -61,9 +64,12 @@ class Skip(StrEnum):
 
 @dataclass(frozen=True)
 class Extracted:
+    """Every key of the file; `unknown` are those outside the program's known list."""
+
     path: Path
     program: Program
-    values: dict[str, str]
+    values: dict[str, Value]
+    unknown: frozenset[str]
 
 
 @dataclass(frozen=True)
@@ -96,38 +102,41 @@ def find_fits(root: Path) -> Iterator[Path]:
     return (item for item in _walk(root) if isinstance(item, Path))
 
 
-def read_cards(path: Path) -> dict[str, str] | None:
-    """Keyword -> raw value text of the primary header, first occurrence wins; None without END."""
-    cards: dict[str, str] = {}
-    with path.open("rb") as fh:
-        for _ in range(MAX_HEADER_BLOCKS):
-            block = fh.read(BLOCK)
-            if len(block) < BLOCK:
-                return None
-            for start in range(0, BLOCK, CARD):
-                card = block[start : start + CARD].decode("ascii", "replace")
-                key = card[:8].rstrip()
-                if key == "END":
-                    return cards
-                if card[8:10] == "= ":
-                    cards.setdefault(key, _value(card[10:]))
-    return None
+def read_cards(path: Path) -> dict[str, Value] | None:
+    """Keyword -> value of the primary header, first occurrence wins; None if not readable FITS.
+    astropy parses the cards, as `fits/header_read.py` does: CONTINUE, HIERARCH, quotes."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # astropy's notes on odd cards are not reasons to skip
+        try:
+            with fits.open(path, output_verify="silently") as hdul:
+                header = cast("Any", hdul[0]).header
+        except Exception:  # noqa: BLE001 - any failure is the reason UNREADABLE
+            return None
+        cards: dict[str, Value] = {}
+        for card in header.cards:
+            key = card.keyword
+            if key and key not in _COMMENTARY:
+                cards.setdefault(key, _value(card))
+    return cards
 
 
-def _value(field: str) -> str:
-    """The value of a card: a quoted string without quotes and padding, else the text before '/'."""
-    text = field.lstrip()
-    if text.startswith("'"):
-        match = re.match(r"'((?:[^']|'')*)'", text)
-        if match:
-            return match.group(1).replace("''", "'").rstrip()
-    return text.split("/", 1)[0].strip()
+def _value(card: Any) -> Value:
+    """The parsed value; a card astropy cannot parse keeps its written text, an empty one is ""."""
+    try:
+        value = card.value
+    except Exception:  # noqa: BLE001 - astropy parses lazily: VerifyError, ValueError
+        return card.image[10:].split("/", 1)[0].strip().strip("'").strip()
+    if isinstance(value, str):
+        return value.rstrip()
+    if isinstance(value, bool | int | float):
+        return value
+    return ""
 
 
-def program_of(cards: dict[str, str]) -> Program | None:
-    if cards.get("SWCREATE", "").startswith("N.I.N.A."):
+def program_of(cards: dict[str, Value]) -> Program | None:
+    if str(cards.get("SWCREATE", "")).startswith("N.I.N.A."):
         return Program.NINA
-    if cards.get("CREATOR", "").startswith("ZWO ASIAIR"):
+    if str(cards.get("CREATOR", "")).startswith("ZWO ASIAIR"):
         return Program.ASIAIR
     return None
 
@@ -150,7 +159,8 @@ def scan_file(path: Path) -> Extracted | Skipped:
         return Skipped(path, Skip.NOT_SUPPORTED)
     if _REWRITE_MARKS & cards.keys():
         return Skipped(path, Skip.REWRITTEN)
-    return Extracted(path, program, {k: v for k, v in cards.items() if _writes(program, k)})
+    unknown = frozenset(k for k in cards if not _writes(program, k))
+    return Extracted(path, program, cards, unknown)
 
 
 def scan(root: Path) -> Iterator[Extracted | Skipped]:

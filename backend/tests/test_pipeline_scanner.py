@@ -88,11 +88,53 @@ def test_string_values_lose_quotes_and_padding(tmp_path):
     assert got.values["CREATOR"] == "ZWO ASIAIR Plus"
 
 
-def test_keys_the_program_does_not_write_are_not_extracted(tmp_path):
+def test_keys_outside_the_known_list_are_kept_and_reported(tmp_path):
     lines = [*_corpus("nina.txt"), "STRKEYWD= 'Example'", "HISTORY  some step", "ISO     = 800"]
     got = scan_file(_fits(tmp_path / "n.fits", lines))
     assert isinstance(got, Extracted)
-    assert not {"STRKEYWD", "HISTORY", "ISO"} & set(got.values)
+    assert got.values["STRKEYWD"] == "Example"
+    assert got.values["ISO"] == 800
+    assert got.unknown == frozenset({"STRKEYWD", "ISO"})
+    assert "HISTORY" not in got.values
+
+
+@pytest.mark.parametrize("name", ["nina.txt", "asiair.txt", "asiair_am3.txt", "asiair_asi2600.txt"])
+def test_the_real_headers_have_no_unknown_key(tmp_path, name):
+    got = scan_file(_fits(tmp_path / "f.fits", _corpus(name)))
+    assert isinstance(got, Extracted)
+    assert got.unknown == frozenset()
+
+
+def test_a_broken_card_keeps_its_text_and_an_empty_one_stays(tmp_path):
+    lines = [
+        "SIMPLE  =                    T",
+        "BITPIX  =                   16",
+        "NAXIS   =                    0",
+        "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'",
+        "GAIN    = abc / x",
+        "EXPOSURE= 1.2.3",
+        "FILTER  =",
+    ]
+    got = scan_file(_fits(tmp_path / "odd.fits", lines))
+    assert isinstance(got, Extracted)
+    assert got.values["GAIN"] == "abc"
+    assert got.values["EXPOSURE"] == "1.2.3"
+    assert got.values["FILTER"] == ""
+
+
+def test_a_long_value_split_over_continue_cards_is_read_whole(tmp_path):
+    long_name = "A very long target name that does not fit in one card at all"
+    lines = [
+        "SIMPLE  =                    T",
+        "BITPIX  =                   16",
+        "NAXIS   =                    0",
+        "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'",
+        "OBJECT  = 'A very long target name that does not fit in one card&'",
+        "CONTINUE  ' at all'",
+    ]
+    got = scan_file(_fits(tmp_path / "long.fits", lines))
+    assert isinstance(got, Extracted)
+    assert got.values["OBJECT"] == long_name
 
 
 def test_a_file_from_another_program_is_skipped_with_its_reason(tmp_path):
