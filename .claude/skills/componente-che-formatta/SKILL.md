@@ -61,6 +61,10 @@ nasce dalla glob), e la regola dopo viene scartata in silenzio. Pre-commit lo pr
 (`css-glob-comment`); se un selettore "non funziona" senza motivo, e' il primo posto
 dove guardare -- misurando il valore calcolato, non leggendo il sorgente.
 
+**Il formato lo da' Prettier** (`frontend/.prettierrc.json`, controllato al commit): un file nuovo o
+rifatto dal porting e' formattato; uno ancora in `frontend/.prettierignore` si toglie da li' quando
+lo si rifa', e l'elenco non cresce.
+
 **Ogni testo passa da `t()`** e ogni pagina finita si traduce (`testi-per-pagina`). Ogni
 elemento azionabile e' raggiungibile da tastiera e ha un nome: la guardia di
 accessibilita' lo pretende.

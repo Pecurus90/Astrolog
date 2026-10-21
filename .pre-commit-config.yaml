@@ -60,6 +60,14 @@ repos:
         language: system
         files: ^frontend/.*\.(ts|tsx|js)$
         stages: [pre-commit, manual]
+      # Frontend format: every new file; the pre-porting ones wait in frontend/.prettierignore.
+      - id: prettier
+        name: prettier
+        entry: node frontend/node_modules/prettier/bin/prettier.cjs --check --ignore-path frontend/.prettierignore
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|json)$
+        exclude: ^frontend/package(-lock)?\.json$
+        stages: [pre-commit, manual]
       # Domain rule: only N.I.N.A., ASIAIR, Voyager and SGP are supported (CLAUDE.md, "Software supportati").
       - id: foreign-software
         name: software outside the four supported (mark software-ok if intended)
@@ -96,7 +104,7 @@ repos:
         name: documents under their line ceiling
         language: system
         entry: python tools/tetti.py
-        files: ^(CLAUDE\.md|docs/(piano|idee)\.md|docs/(adr|domini)/[^/]+\.md)$
+        files: ^(CLAUDE\.md|docs/(piano|idee)\.md|docs/(adr|domini)/[^/]+\.md|frontend/\.prettierignore)$
         stages: [pre-commit]
       # `/* .x-* */` closes the comment at `*/` and silently drops the next rule.
       - id: css-glob-comment

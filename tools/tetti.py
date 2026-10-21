@@ -16,6 +16,9 @@ CEILINGS = {
     "docs/domini/*.md": 400,
     "CLAUDE.md": 200,
 }
+# Lists born full that only shrink: the pre-porting files waiting outside Prettier, where a ported
+# page leaves and none comes in. No ceiling: the list is as long as it is born.
+NEVER_GROW = ("frontend/.prettierignore",)
 
 
 def ceiling_of(path: str) -> int | None:
@@ -39,11 +42,17 @@ def _git_show(ref: str, path: str) -> str:
 def main(paths: list[str]) -> int:
     failed = 0
     for path in paths:
-        ceiling = ceiling_of(path.replace("\\", "/"))
-        if ceiling is None:
+        normal = path.replace("\\", "/")
+        ceiling = ceiling_of(normal)
+        if ceiling is None and normal not in NEVER_GROW:
             continue
         before, after = lines(_git_show("HEAD", path)), lines(_git_show("", path))
-        if after > ceiling and after > before:
+        if normal in NEVER_GROW:
+            if before and after > before:
+                print(f"{path}: {before} -> {after} righe. Questo elenco solo si accorcia.")
+                failed = 1
+            continue
+        if ceiling is not None and after > ceiling and after > before:
             print(
                 f"{path}: {before} -> {after} righe, tetto {ceiling}. Sopra il tetto si scende"
                 " soltanto: si toglie altrettanto, o il dettaglio va nella sua casa."

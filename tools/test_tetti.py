@@ -54,3 +54,11 @@ def test_a_file_without_ceiling_passes(monkeypatch):
 
 def test_a_deleted_document_passes(monkeypatch):
     assert _check(monkeypatch, "docs/coda.md", 10, 0) == 0
+
+
+def test_a_list_that_never_grows_is_born_once_then_only_shrinks(monkeypatch):
+    """L'elenco dei file fuori da Prettier nasce col suo contenuto, poi non cresce mai."""
+    elenco = "frontend/.prettierignore"
+    assert _check(monkeypatch, elenco, 0, 149) == 0
+    assert _check(monkeypatch, elenco, 149, 150) == 1
+    assert _check(monkeypatch, elenco, 149, 120) == 0
