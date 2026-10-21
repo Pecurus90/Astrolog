@@ -362,7 +362,7 @@ tendina, ma si puo' scrivere qualunque nome con la sua banda; le bande sono 16 p
 si riconosce dal marchio che il file porta, non dal nome del programma. Le chiavi dell'header sono
 lo standard FITS piu' cio' che i quattro scrivono, salvo le due che dicono che il file e' stato
 riscritto (`CALSTAT`, `CALIBRAT`), da una convenzione pubblica. Le misure scritte nell'header
-(FWHM, SNR, stelle) non si leggono: si misurano.
+(FWHM, SNR, stelle) non si leggono: si misurano (`test_the_measurements_a_header_writes_are_not_read`).
 
 **Prima l'alias, poi il vocabolario, poi la domanda.** Per ogni grezzo l'ordine e':
 `header_aliases` (cio' che l'utente ha gia' risposto) -> il vocabolario -> altrimenti il

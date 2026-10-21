@@ -11,6 +11,7 @@ from astropy.coordinates import FK4, FK5, SkyCoord
 from astropy.io import fits
 from astropy.time import Time
 
+from astrolog.fits import header_keys
 from astrolog.fits.frame_type import says_calibrated
 from astrolog.fits.header_fields import extract_fields
 from astrolog.fits.header_keys import text
@@ -574,3 +575,10 @@ def test_the_site_out_of_range_is_dropped_never_corrected():
     esiste, e una longitudine di 400 nemmeno. L'altezza resta: e' plausibile."""
     m = extract_fields({"SITELAT": 95.0, "SITELONG": 400.0, "SITEELEV": 120.0}, "x")
     assert (m.site_lat, m.site_lon, m.site_elev_m) == (None, None, 120.0)
+
+
+def test_the_measurements_a_header_writes_are_not_read():
+    """FWHM, HFR, HFD, SNR e le stelle che un programma scrive nell'header non si leggono: si
+    misurano (`docs/domini/spina.md`). Una chiave di misura fra quelle lette rompe questa prova."""
+    letti = {key for keys in header_keys.KEYS.values() for key in keys}
+    assert not letti & {"FWHM", "HFR", "HFD", "SNR", "STARCOUNT", "STARS"}
