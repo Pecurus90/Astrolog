@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..db.transaction import transaction
+from .card import frame_type
 from .changes import Changes, record_changes
 from .scanner import Extracted, Skipped, scan_file
 
@@ -48,6 +49,7 @@ def _store(
         "SELECT id FROM pipeline_files WHERE root_id = ? AND rel_path = ?", (root_id, rel)
     ).fetchone()["id"]
     if isinstance(got, Skipped):
+        conn.execute("DELETE FROM pipeline_cards WHERE file_id = ?", (file_id,))
         conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
         conn.execute("UPDATE pipeline_files SET frame_id = NULL WHERE id = ?", (file_id,))
         return
@@ -57,6 +59,10 @@ def _store(
     conn.execute(
         "INSERT OR REPLACE INTO pipeline_headers (file_id, program, header) VALUES (?, ?, ?)",
         (file_id, got.program, json.dumps(got.values, allow_nan=False)),
+    )
+    conn.execute(
+        "INSERT OR REPLACE INTO pipeline_cards (file_id, frame_type) VALUES (?, ?)",
+        (file_id, frame_type(got.program, got.values)),
     )
 
 

@@ -240,6 +240,47 @@ def test_a_skipped_file_has_no_header(conn, tmp_path):
     assert _headers(conn) == {}
 
 
+def _cards(conn) -> dict[str, str]:
+    """rel_path -> frame type; checks a file has a card if and only if it has a header."""
+    rows = conn.execute(
+        "SELECT f.rel_path, h.file_id AS h, c.frame_type FROM pipeline_files AS f"
+        " LEFT JOIN pipeline_headers AS h ON h.file_id = f.id"
+        " LEFT JOIN pipeline_cards AS c ON c.file_id = f.id"
+    ).fetchall()
+    for row in rows:
+        assert (row["h"] is None) == (row["frame_type"] is None), row["rel_path"]
+    return {r["rel_path"]: r["frame_type"] for r in rows if r["frame_type"] is not None}
+
+
+def test_each_file_read_gets_its_card(conn, tmp_path):
+    _nina(tmp_path / "a.fits", 1)
+    _nina(tmp_path / "b.fits", 2, ("OBJECT  = 'Snapshot'",))
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    assert _cards(conn) == {"a.fits": "light", "b.fits": "snapshot"}
+
+
+def test_a_file_read_again_gets_a_new_card_and_a_skipped_one_none(conn, tmp_path):
+    _nina(tmp_path / "a.fits", 1)
+    _nina(tmp_path / "b.fits", 2)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    _nina(tmp_path / "a.fits", 1, ("OBJECT  = 'darkflat'",))
+    _nina(tmp_path / "b.fits", 2, ("PROGRAM = 'Editor 1.9.3'",))
+    _touch_later(tmp_path / "a.fits")
+    _touch_later(tmp_path / "b.fits")
+    scan_root(conn, root, LATER)
+    assert _cards(conn) == {"a.fits": "unknown"}
+
+
+def test_a_gone_file_keeps_its_card(conn, tmp_path):
+    _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    (tmp_path / "a.fits").unlink()
+    scan_root(conn, root, LATER)
+    assert _cards(conn) == {"a.fits": "light"}
+
+
 def test_the_schema_refuses_a_header_that_is_not_a_json_object(conn, tmp_path):
     _nina(tmp_path / "a.fits", 1)
     scan_root(conn, add_root(conn, tmp_path, NOW), NOW)

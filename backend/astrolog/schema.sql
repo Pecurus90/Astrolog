@@ -914,3 +914,10 @@ CREATE TABLE pipeline_headers (
   program TEXT NOT NULL CHECK (program IN ('N.I.N.A.', 'ASIAIR')),
   header  TEXT NOT NULL CHECK (json_valid(header) AND json_type(header) = 'object')
 ) STRICT;
+
+-- RILEVATO. Scheda del file: fatti dal solo header (pipeline/card.py). Presente sse header.
+CREATE TABLE pipeline_cards (
+  file_id    INTEGER PRIMARY KEY REFERENCES pipeline_headers (file_id),
+  frame_type TEXT NOT NULL
+    CHECK (frame_type IN ('light', 'dark', 'flat', 'bias', 'snapshot', 'unknown'))
+) STRICT;
