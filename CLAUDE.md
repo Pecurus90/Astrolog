@@ -40,7 +40,9 @@ Lo stato si legge dal codice e da [`docs/piano.md`](docs/piano.md); le decisioni
 ## Il giro di lavoro
 
 Una ricetta per tipo di lavoro (ADR 0015): `/costruisci`, `/ripara`, `/rifattorizza`,
-`/riordina`, `/rivedi`; `/esegui` o le parole scelgono. Per tutte: un giro di revisione e al
+`/riordina`, `/rivedi`; `/esegui` o le parole scelgono. **Ogni modifica al codice passa da una
+ricetta invocata come skill**, anche la correzione di un rilievo dopo una revisione: mai a mano
+(Marco, 22/10/2026). Per tutte: un giro di revisione e al
 massimo una verifica delle correzioni; blocca solo un rilievo con prova; il correttore puo'
 rifiutare e non aggiunge dipendenze, file o meccanismi; cio' che resta aperto ferma il lavoro e
 va nel riassunto. Una regola controllabile da una macchina sta in una macchina, non in un prompt.
