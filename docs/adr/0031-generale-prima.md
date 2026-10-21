@@ -15,14 +15,14 @@ e un errore che non si vede.
 - **Si riconosce solo il certo.** Per ogni parte dell'attrezzatura (filtri, ottiche, e le altre
   quando arriva il loro mattone) c'e' una lista standard nostra, corta e con le fonti: per i filtri
   L, R, G, B, Hα, OIII, SII, Hβ, i duali, "nessun filtro".
-- **L'utente dichiara la sua attrezzatura**, nel wizard di avvio (si puo' saltare) o in
-  Attrezzatura.
+- **L'attrezzatura dell'utente nasce dalle sue risposte**: niente dichiarazione all'avvio (Marco);
+  in Attrezzatura si aggiunge o si corregge.
 - **Abbinamento esatto**: il nome scritto nel file, senza maiuscole ne' spazi in piu', si confronta
   con la lista standard, l'attrezzatura dell'utente e i nomi gia' abbinati. Niente somiglianze,
   niente vocabolari per lingua, niente cataloghi di modelli.
-- **Cio' che non combacia si chiede una volta** per nome scritto («ci sono riprese col filtro
-  scritto "R": a quale dei tuoi filtri corrisponde?»), e la risposta vale per sempre, anche per le
-  scansioni future. Un dato non scritto (filtro sull'ASIAIR senza filtro impostato) si chiede per
+- **Cio' che non combacia si chiede una volta** per nome scritto («"Ha 7nm" e' uno di questi, o un
+  filtro nuovo?»); la risposta vale per sempre, anche per le scansioni future, e un filtro nuovo
+  entra nell'attrezzatura dell'utente. Un dato non scritto (filtro sull'ASIAIR senza filtro impostato) si chiede per
   produzione.
 - **Una regola nuova solo con casi veri**: niente regola per un caso che nei file non c'e'.
 - I file XISF si ignorano del tutto (Marco).
@@ -32,4 +32,4 @@ e un errore che non si vede.
 - Escono le parole in altre lingue (decisione 6 della mappa) e il catalogo dei modelli di filtri.
 - Al primo avvio un utente risponde a qualche domanda in piu'; in cambio niente abbinamenti
   sbagliati in silenzio, e il codice dei vocabolari si riduce a una lista.
-- Il wizard e Attrezzatura avranno la dichiarazione dei filtri: tavole da Claude Design.
+- La domanda sul nome e la lista dei filtri in Attrezzatura: tavole da Claude Design.
