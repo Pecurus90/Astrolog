@@ -10,9 +10,9 @@ fuori nelle Issue con l'etichetta `bloccato`.
 **La pipeline riprogettata da zero** (Marco, 22/10/2026): scansione, lettura, attribuzione e
 normalizzazione si riscrivono in una casa nuova da una mappa concettuale decisa prima del codice,
 uno strato alla volta, affiancate alla vecchia finche' non la sostituiscono. Verificati N.I.N.A. e
-ASIAIR (ADR 0029). Mattoni col metodo di ADR 0030, stato nella mappa grafica. Fatti: `pipeline/`
-walk, scanner, changes, fingerprint, frames (i gemelli in `fits/` si tolgono con la vecchia). Prossimo:
-l'header e le risposte nel database (3b). Le Issue #14-#24 aspettano: molte le chiude la pipeline nuova.
+ASIAIR (ADR 0029). Metodo ADR 0030, stato nella mappa grafica. Fatti 1-3b in `pipeline/` (gemelli
+in `fits/` via con la vecchia). Prossimo: mattone 4; risposte coi filtri. Chiusa la parte 1: audit
+profondo di `pipeline/` (doppioni, logica, semplificazione). Issue #14-#24: molte le chiude la nuova.
 
 ## Dopo
 

@@ -178,6 +178,49 @@ def test_a_value_with_a_colon_stays_under_its_own_key(tmp_path):
     assert got.values["OBJECT"] == "Sh2: 155"
 
 
+def test_words_python_reads_as_numbers_but_fits_does_not_stay_text(tmp_path):
+    """NaN, inf e il trattino basso non sono numeri FITS (4.0 sec. 4.2.3-4.2.4): restano testo,
+    e un header resta JSON valido."""
+    lines = [*_NINA_HEAD, "CCD-TEMP= NaN", "SET-TEMP= inf", "AIRMASS = Infinity", "GAIN    = 1_000"]
+    got = scan_file(_fits(tmp_path / "w.fits", lines))
+    assert isinstance(got, Extracted)
+    assert [got.values[k] for k in ("CCD-TEMP", "SET-TEMP", "AIRMASS", "GAIN")] == [
+        "NaN",
+        "inf",
+        "Infinity",
+        "1_000",
+    ]
+
+
+def test_real_beyond_a_double_stays_text(tmp_path):
+    """1E999 e' un reale FITS ma non sta in un double: resta testo, l'header resta JSON."""
+    lines = [*_NINA_HEAD, "CCD-TEMP= 1E999", "SET-TEMP= -1D999"]
+    got = scan_file(_fits(tmp_path / "o.fits", lines))
+    assert isinstance(got, Extracted)
+    assert [got.values["CCD-TEMP"], got.values["SET-TEMP"]] == ["1E999", "-1D999"]
+
+
+def test_fits_numbers_keep_their_type(tmp_path):
+    lines = [*_NINA_HEAD, "GAIN    = 100", "EXPOSURE= 300.", "FOCRATIO= 1.5D1", "CCD-TEMP= -1E-1"]
+    got = scan_file(_fits(tmp_path / "n.fits", lines))
+    assert isinstance(got, Extracted)
+    assert [got.values[k] for k in ("GAIN", "EXPOSURE", "FOCRATIO", "CCD-TEMP")] == [
+        100,
+        300.0,
+        15.0,
+        -0.1,
+    ]
+    assert isinstance(got.values["EXPOSURE"], float)
+
+
+def test_a_lower_case_d_exponent_stays_text(tmp_path):
+    """FITS: esponente E o D maiuscola. La e minuscola si leggeva gia', la d no."""
+    lines = [*_NINA_HEAD, "FOCRATIO= 1.5d3", "CCD-TEMP= 1e3"]
+    got = scan_file(_fits(tmp_path / "d.fits", lines))
+    assert isinstance(got, Extracted)
+    assert [got.values["FOCRATIO"], got.values["CCD-TEMP"]] == ["1.5d3", 1000.0]
+
+
 def test_commentary_with_an_equal_sign_is_not_a_key(tmp_path):
     got = scan_file(_fits(tmp_path / "c.fits", [*_NINA_HEAD, "COMMENT = 'x'", "HISTORY = 'y'"]))
     assert isinstance(got, Extracted)

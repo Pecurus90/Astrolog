@@ -1,6 +1,7 @@
-"""A chosen folder scanned end to end: what changed, the new or changed files read, each tied to
-its frame. One frame per fingerprint: a copy is a duplicate, a moved file stays its frame."""
+"""A chosen folder scanned: changed files read, each tied to its frame with its header stored.
+One frame per fingerprint: a copy is a duplicate, a moved file stays its frame."""
 
+import json
 import sqlite3
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -26,13 +27,9 @@ def scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
         result = ScanResult(changes)
         for rel in changes.to_read:
             got = scan_file(Path(root["path"], rel))
-            frame_id = _frame_of(conn, got, now) if isinstance(got, Extracted) else None
             if isinstance(got, Skipped):
                 result.skipped.append(got)
-            conn.execute(
-                "UPDATE pipeline_files SET frame_id = ? WHERE root_id = ? AND rel_path = ?",
-                (frame_id, root_id, rel),
-            )
+            _store(conn, root_id, rel, got, now)
         result.moved = _moved(conn, root_id, changes)
     result.duplicates = _duplicates(conn, root_id)
     result.frames = conn.execute(
@@ -41,6 +38,26 @@ def scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
         (root_id,),
     ).fetchone()[0]
     return result
+
+
+def _store(
+    conn: sqlite3.Connection, root_id: int, rel: str, got: Extracted | Skipped, now: str
+) -> None:
+    """The file's frame and header, together: a skipped file loses both, even if read before."""
+    file_id = conn.execute(
+        "SELECT id FROM pipeline_files WHERE root_id = ? AND rel_path = ?", (root_id, rel)
+    ).fetchone()["id"]
+    if isinstance(got, Skipped):
+        conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
+        conn.execute("UPDATE pipeline_files SET frame_id = NULL WHERE id = ?", (file_id,))
+        return
+    conn.execute(
+        "UPDATE pipeline_files SET frame_id = ? WHERE id = ?", (_frame_of(conn, got, now), file_id)
+    )
+    conn.execute(
+        "INSERT OR REPLACE INTO pipeline_headers (file_id, program, header) VALUES (?, ?, ?)",
+        (file_id, got.program, json.dumps(got.values, allow_nan=False)),
+    )
 
 
 def _frame_of(conn: sqlite3.Connection, got: Extracted, now: str) -> int:

@@ -1,5 +1,6 @@
 """Finds FITS files and extracts the header of those N.I.N.A. and ASIAIR wrote (ADR 0029)."""
 
+import math
 import re
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -44,6 +45,9 @@ ASIAIR_KEYS = frozenset({
     "IMAGEW", "IMAGEH",
 })  # fmt: skip
 
+# FITS 4.0 sec. 4.2.3-4.2.4: Python also takes NaN, inf and 1_000, which FITS does not.
+_INTEGER = re.compile(r"[+-]?\d+")
+_REAL = re.compile(r"[+-]?(\d+\.?\d*|\.\d+)([EeD][+-]?\d+)?")  # lower e: Python read it already
 # SIP distortion terms of the ASIAIR plate solve: A_ORDER, A_0_2, AP_1_0, ...
 _SIP = re.compile(r"^(A|B|AP|BP)_(ORDER|\d_\d)$")
 # Keys neither program writes, left by a processing program that rewrote the file.
@@ -173,11 +177,12 @@ def _value(field: str) -> Value:
     text = field.split("/", 1)[0].strip()
     if text in ("T", "F"):
         return text == "T"
-    for parse in (int, float):
-        try:
-            return parse(text.replace("D", "E"))
-        except ValueError:
-            pass
+    if _INTEGER.fullmatch(text):
+        return int(text)
+    if _REAL.fullmatch(text):
+        real = float(text.replace("D", "E"))
+        if math.isfinite(real):  # beyond a double: JSON has no inf
+            return real
     return text
 
 

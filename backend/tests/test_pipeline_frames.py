@@ -1,8 +1,11 @@
 """Mattone 3 della pipeline nuova, seconda meta': il frame e i suoi file. Un frame per impronta;
 due file con la stessa impronta sono un doppione, non due pose; un file spostato resta lo stesso
-frame."""
+frame. Mattone 3b: l'header di ogni file letto come posa, salvato accanto al suo frame."""
 
+import json
+import os
 import shutil
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -15,8 +18,9 @@ LATER = "2026-10-23T20:00:00+00:00"
 CORPUS = Path(__file__).with_name("header")
 
 
-def _nina(path: Path, seed: int) -> Path:
-    """A small N.I.N.A. light with its own pixels: `seed` makes it a different frame."""
+def _nina(path: Path, seed: int, extra: tuple[str, ...] = ()) -> Path:
+    """A small N.I.N.A. light with its own pixels: `seed` makes it a different frame, `extra`
+    cards a different header on the same frame."""
     lines = [
         "SIMPLE  =                    T",
         "BITPIX  =                   16",
@@ -25,6 +29,7 @@ def _nina(path: Path, seed: int) -> Path:
         "NAXIS2  =                   16",
         "IMAGETYP= 'LIGHT'",
         "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'",
+        *extra,
         "END",
     ]
     head = "".join(line.ljust(80) for line in lines)
@@ -128,3 +133,118 @@ def test_an_unchanged_archive_is_not_read_again(conn, tmp_path, monkeypatch):
     monkeypatch.setattr(frames, "scan_file", forbidden)
     result = scan_root(conn, root, LATER)
     assert result.frames == 1
+
+
+def _headers(conn) -> dict[str, tuple[str, dict]]:
+    """rel_path -> (program, header) of every file with a stored header, present or gone. Checks
+    the invariant on the way: a file has a frame if and only if it has a header."""
+    rows = conn.execute(
+        "SELECT f.rel_path, f.frame_id, h.program, h.header FROM pipeline_files AS f"
+        " LEFT JOIN pipeline_headers AS h ON h.file_id = f.id"
+    ).fetchall()
+    for row in rows:
+        assert (row["frame_id"] is None) == (row["header"] is None), row["rel_path"]
+    return {
+        row["rel_path"]: (row["program"], json.loads(row["header"]))
+        for row in rows
+        if row["header"] is not None
+    }
+
+
+def _touch_later(path: Path) -> None:
+    stat = path.stat()
+    os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns + 10**9))
+
+
+def test_the_header_is_stored_as_written_with_its_types(conn, tmp_path):
+    _nina(
+        tmp_path / "a.fits",
+        1,
+        ("GAIN    =                  100", "EXPOSURE=                300.0"),
+    )
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    program, header = _headers(conn)["a.fits"]
+    assert program == "N.I.N.A."
+    assert header["SIMPLE"] is True
+    assert header["GAIN"] == 100 and isinstance(header["GAIN"], int)
+    assert header["EXPOSURE"] == 300.0 and isinstance(header["EXPOSURE"], float)
+    assert header["IMAGETYP"] == "LIGHT"
+
+
+def test_two_copies_of_a_frame_keep_each_its_own_header(conn, tmp_path):
+    """Stessa posa, header riscritto in una copia: un frame, due header, nessuno perso."""
+    _nina(tmp_path / "a.fits", 5)
+    _nina(tmp_path / "b.fits", 5, ("OBJECT  = 'M 33'",))
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    files, headers = _files(conn), _headers(conn)
+    assert files["a.fits"] == files["b.fits"]
+    assert "OBJECT" not in headers["a.fits"][1]
+    assert headers["b.fits"][1]["OBJECT"] == "M 33"
+
+
+def test_a_file_read_again_replaces_its_header(conn, tmp_path):
+    _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    _nina(tmp_path / "a.fits", 1, ("OBJECT  = 'M 42'",))
+    _touch_later(tmp_path / "a.fits")
+    scan_root(conn, root, LATER)
+    assert _headers(conn)["a.fits"][1]["OBJECT"] == "M 42"
+
+
+def test_a_file_with_new_pixels_has_a_new_frame_and_header(conn, tmp_path):
+    _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    before = _files(conn)["a.fits"]
+    _nina(tmp_path / "a.fits", 2, ("OBJECT  = 'M 42'",))
+    _touch_later(tmp_path / "a.fits")
+    scan_root(conn, root, LATER)
+    assert _files(conn)["a.fits"] != before
+    assert _headers(conn)["a.fits"][1]["OBJECT"] == "M 42"
+
+
+def test_a_gone_file_keeps_its_header(conn, tmp_path):
+    _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    (tmp_path / "a.fits").unlink()
+    scan_root(conn, root, LATER)
+    assert _headers(conn)["a.fits"][1]["IMAGETYP"] == "LIGHT"
+
+
+def test_a_file_rewritten_by_another_program_loses_frame_and_header(conn, tmp_path):
+    """Riscritto da un editor sopra l'originale: oggi non e' una posa, il suo header vecchio non
+    resta attaccato."""
+    _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    _nina(tmp_path / "a.fits", 1, ("PROGRAM = 'Editor 1.9.3'",))
+    _touch_later(tmp_path / "a.fits")
+    scan_root(conn, root, LATER)
+    assert _files(conn) == {"a.fits": None}
+    assert _headers(conn) == {}
+
+
+def test_an_unreachable_folder_leaves_every_header(conn, tmp_path):
+    archive = tmp_path / "nas"
+    _nina(archive / "a.fits", 1)
+    root = add_root(conn, archive, NOW)
+    scan_root(conn, root, NOW)
+    archive.rename(tmp_path / "spento")
+    scan_root(conn, root, LATER)
+    assert _headers(conn)["a.fits"][1]["IMAGETYP"] == "LIGHT"
+
+
+def test_a_skipped_file_has_no_header(conn, tmp_path):
+    (tmp_path / "altro.fits").write_bytes(b"SIMPLE  =                    T".ljust(2880))
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    assert _headers(conn) == {}
+
+
+def test_the_schema_refuses_a_header_that_is_not_a_json_object(conn, tmp_path):
+    _nina(tmp_path / "a.fits", 1)
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    for bad in ("[1, 2]", '{"CCD-TEMP": NaN}'):
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute("UPDATE pipeline_headers SET header = ?", (bad,))

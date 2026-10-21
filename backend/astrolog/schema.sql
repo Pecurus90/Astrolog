@@ -887,8 +887,10 @@ CREATE TABLE pipeline_scans (
 ) STRICT;
 
 -- RILEVATO. Una posa, riconosciuta dalla sua impronta (pipeline/fingerprint.py): resta la stessa
--- se il file si sposta o se un programma ne riscrive l'header. Le risposte dell'utente si
--- agganciano qui, non al file. Un frame rimasto senza file non si cancella.
+-- se il file si sposta o se un programma ne riscrive l'header. Un frame rimasto senza file non si
+-- cancella. Le risposte dell'utente (DICHIARATO, nessuno le ricrea) si agganciano alla chiave di
+-- cio' su cui rispondono: il nome scritto, la produzione, il frame per impronta. Mai a un id di
+-- riga, che non sopravvive alla ricreazione del rilevato. Nascono col mattone dei filtri.
 CREATE TABLE pipeline_frames (
   id          INTEGER PRIMARY KEY,
   fingerprint TEXT NOT NULL UNIQUE,
@@ -909,4 +911,16 @@ CREATE TABLE pipeline_files (
   -- sparito lo tiene: e' cosi' che uno nuovo con la stessa impronta si riconosce spostato.
   frame_id     INTEGER REFERENCES pipeline_frames (id),
   UNIQUE (root_id, rel_path)
+) STRICT;
+
+-- RILEVATO. L'header di un file letto come posa, cosi' com'e': ogni chiave col suo tipo (testo,
+-- intero, reale, logico) in un oggetto JSON. "Com'e'" per come lo legge pipeline/scanner.py: la
+-- pagina immagine di un compresso unita alla primaria, la prima di due chiavi uguali, CONTINUE
+-- unite, HIERARCH col suo nome; COMMENT e HISTORY scartati (Marco, 21/10/2026: solo note di
+-- formato). Sta sul file, non sul frame: due copie possono dire cose diverse. C'e' se e solo se
+-- il file ha un frame; un file sparito lo tiene. Tabella sua: la scansione rilegge tutti i file.
+CREATE TABLE pipeline_headers (
+  file_id INTEGER PRIMARY KEY REFERENCES pipeline_files (id),
+  program TEXT NOT NULL CHECK (program IN ('N.I.N.A.', 'ASIAIR')),
+  header  TEXT NOT NULL CHECK (json_valid(header) AND json_type(header) = 'object')
 ) STRICT;
