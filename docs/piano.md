@@ -7,9 +7,12 @@ fuori nelle Issue con l'etichetta `bloccato`.
 
 ## Ora
 
-**I difetti venuti dalla coda** (ADR 0027), un `/ripara` per casella: le Issue `difetto` #12-#18,
-dalla #12 (il setup che dipende dall'ordine di lettura). Le `bloccato` (#19-#24) aspettano Design,
-il porting, un Mac, un NAS o file veri.
+**La pipeline riprogettata da zero** (Marco, 22/10/2026): scansione, lettura, attribuzione e
+normalizzazione si riscrivono in una casa nuova da una mappa concettuale decisa prima del codice,
+uno strato alla volta, affiancate alla vecchia finche' non la sostituiscono. Verificati N.I.N.A. e
+ASIAIR, piu' la convenzione SBIG (ADR 0029). Prossimo passo: le 9 decisioni della mappa parte 1,
+poi il censimento delle chiavi sull'archivio di Marco. Le Issue #14-#24 aspettano: molte le chiude
+la pipeline nuova.
 
 ## Dopo
 
