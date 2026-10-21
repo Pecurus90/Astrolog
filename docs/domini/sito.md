@@ -112,8 +112,9 @@ servizio vero e' un test che fallisce il giorno che il servizio cambia.
 
 **Il primo avvio e' un timbro, non un'euristica.** "L'ho gia' visto" e' una data scritta in
 Impostazioni: l'euristica "sembra vuoto" tornerebbe vera mesi dopo, dopo un azzeramento.
-Completare e saltare scrivono lo stesso timbro; riaprire il wizard dalle Impostazioni non lo
-riscrive. **Completare passa dalla chiusura** (Marco, 9/10/2026): timbrato, l'app mostra cosa e'
+Completare e saltare scrivono lo stesso timbro. **Il primo avvio non si riapre** (Marco,
+21/10/2026): ognuna delle sue cose -- nome, sito, cartelle, chiave, ASTAP -- si cambia nelle
+Impostazioni; il nome non c'e' ancora (Issue #19). **Completare passa dalla chiusura** (Marco, 9/10/2026): timbrato, l'app mostra cosa e'
 stato dato, letto dal database e non dalla memoria della pagina -- nome, sito, cartelle e se la
 scansione e' partita, chiave del seeing -- e si entra
 con "Apri AstroLog"; saltare entra subito. Una riga di cui la lettura e' fallita (sito, cartelle)

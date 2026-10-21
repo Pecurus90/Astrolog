@@ -223,8 +223,9 @@ confermare*. Un filtro rinominato o unito non rinasce: la regola imparata vale a
 vocabolario da' alla grafia dell'header (`L` diventa `Lum`), e vale dopo il colore, quindi su una
 camera a colori `L` resta OSC.
 
-**Cancellare un pezzo non si fa**, e non per dimenticanza: un pezzo che tiene delle pose non si
-toglie senza decidere che fine fanno le sue ore: la scelta e' di Marco (Issue #25).
+**Cancellare un pezzo** (Marco, 21/10/2026): si cancella solo un pezzo senza frame. Uno che ne
+tiene si rifiuta, e l'app dice chi lo usa e quanti frame (come `old/backend/astrolog/api/
+instruments.py`): nessuna ora si perde. Oggi il gesto non c'e'; arriva con la pagina della v15.
 
 Restano fuori per scelta: il **valore** dei pezzi e il **registro di manutenzione** (provati e
 scartati nel progetto di prima, e la ragione vale ancora: questa pagina dice come hai ripreso,

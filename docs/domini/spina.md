@@ -612,8 +612,8 @@ lo stesso: pretenderli tutti butterebbe via un cielo misurato davvero.
 `log/`. Il DB non va mai su una condivisione di rete; le cartelle dei FITS si'.
 
 **Il primo avvio**: un wizard con quattro passi -- nome, sito principale, cartelle, la chiave
-Meteoblue facoltativa -- saltabile
-e riapribile; alla fine, se c'e' almeno una cartella, la prima scansione parte da sola (se non parte, lo deve dire: Issue #18). L'attrezzatura non si dichiara qui: al buio l'utente dovrebbe elencare cio'
+Meteoblue facoltativa -- saltabile,
+e non si riapre (`sito.md`); alla fine, se c'e' almeno una cartella, la prima scansione parte da sola (se non parte, lo deve dire: Issue #18). L'attrezzatura non si dichiara qui: al buio l'utente dovrebbe elencare cio'
 che possiede prima di aver visto cosa ha ripreso. Si vede e si corregge nell'Attrezzatura, dove
 ogni pezzo trovato e' davanti agli occhi con quanti frame vale.
 

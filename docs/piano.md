@@ -9,7 +9,7 @@ fuori nelle Issue con l'etichetta `bloccato`.
 
 **I difetti venuti dalla coda** (ADR 0027), un `/ripara` per casella: le Issue `difetto` #12-#18,
 dalla #12 (il setup che dipende dall'ordine di lettura). Le `bloccato` (#19-#24) aspettano Design,
-il porting, un Mac, un NAS o file veri; la #25 e' una domanda a Marco.
+il porting, un Mac, un NAS o file veri.
 
 ## Dopo
 
