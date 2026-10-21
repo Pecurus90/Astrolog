@@ -189,6 +189,14 @@ def test_a_file_rewritten_by_another_program_is_skipped(tmp_path):
     assert got == Skipped(tmp_path / "stack.fit", Skip.REWRITTEN)
 
 
+def test_a_rewrite_that_dropped_the_capture_program_is_rewritten(tmp_path):
+    lines = [line for line in _corpus("nina.txt") if not line.startswith("SWCREATE")] + [
+        "PROGRAM = 'Editor 1.9.3'"
+    ]
+    got = scan_file(_fits(tmp_path / "saved.fits", lines))
+    assert got == Skipped(tmp_path / "saved.fits", Skip.REWRITTEN)
+
+
 def test_a_header_without_end_is_unreadable(tmp_path):
     got = scan_file(_fits(tmp_path / "t.fits", _corpus("nina.txt"), end=False))
     assert got == Skipped(tmp_path / "t.fits", Skip.UNREADABLE)

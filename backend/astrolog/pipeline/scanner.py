@@ -201,11 +201,11 @@ def scan_file(path: Path) -> Extracted | Skipped:
         cards = None
     if cards is None:
         return Skipped(path, Skip.UNREADABLE)
+    if _REWRITE_MARKS & cards.keys():
+        return Skipped(path, Skip.REWRITTEN)
     program = program_of(cards)
     if program is None:
         return Skipped(path, Skip.NOT_SUPPORTED)
-    if _REWRITE_MARKS & cards.keys():
-        return Skipped(path, Skip.REWRITTEN)
     unknown = frozenset(k for k in cards if not _writes(program, k))
     return Extracted(path, program, cards, unknown)
 
