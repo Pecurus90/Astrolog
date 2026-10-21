@@ -2,11 +2,12 @@
 Archivio di prova: N.I.N.A. LIGHT/FLAT/DARK/BIAS, ASIAIR Light/Dark/Flat/Bias."""
 
 import re
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from astrolog.pipeline.card import FrameType, frame_type
+from astrolog.pipeline.card import FrameType, frame_type, read_card
 from astrolog.pipeline.scanner import Program, read_cards
 
 CORPUS = Path(__file__).with_name("header")
@@ -78,6 +79,55 @@ def test_a_real_object_with_a_calibration_word_stays_light():
 def test_flat_wizard_darks_stay_darks():
     """Archivio: 610 DARK con OBJECT 'FlatWizard'."""
     assert frame_type(NINA, {"IMAGETYP": "DARK", "OBJECT": "FlatWizard"}) is FrameType.DARK
+
+
+@pytest.mark.parametrize(
+    ("written", "start"),
+    [
+        ("2025-06-29T21:11:33.412", datetime(2025, 6, 29, 21, 11, 33, 412000, UTC)),  # N.I.N.A.
+        ("2025-06-29T21:11:33.4123456", datetime(2025, 6, 29, 21, 11, 33, 412345, UTC)),  # 3.2
+        ("2024-05-17T19:55:39.147017", datetime(2024, 5, 17, 19, 55, 39, 147017, UTC)),  # ASIAIR
+        ("2024-05-17T19:55:39", datetime(2024, 5, 17, 19, 55, 39, tzinfo=UTC)),
+    ],
+)
+def test_the_start_is_date_obs_in_utc(written, start):
+    """DATE-OBS = inizio posa, UTC (FITS 4.0; ASIAIR: nome file = fine posa locale)."""
+    assert read_card(NINA, {"DATE-OBS": written}).start_utc == start
+
+
+@pytest.mark.parametrize(
+    "written",
+    [
+        "2025-06-29",  # no time: never midnight
+        "2025-06-29T21",
+        "2025-W26-1T10:00:00",
+        "20250629T210304",
+        "2025-06-29 21:03:04",
+        "2025-06-29T21:03:04Z",
+        "2025-06-29T21:03:04+02:00",
+        "2025-02-30T21:03:04",
+        "",
+        59760.5,
+    ],
+)
+def test_a_start_not_written_as_both_programs_do_is_unknown(written):
+    assert read_card(NINA, {"DATE-OBS": written}).start_utc is None
+
+
+def test_no_date_obs_is_unknown_even_with_mjd_or_date_avg():
+    """Nessun file ha MJD-OBS o DATE-AVG senza DATE-OBS: niente riserve (ADR 0031)."""
+    values = {"MJD-OBS": 60855.88, "DATE-AVG": "2025-06-29T21:12:34.298"}
+    assert read_card(NINA, values).start_utc is None
+
+
+@pytest.mark.parametrize(
+    ("written", "seconds"),
+    [(300.0, 300.0), (300, 300.0), (0.006, 0.006), (0, 0.0), (-1.0, None), (True, None),
+     ("300", None), (None, None)],
+)  # fmt: skip
+def test_the_exposure_is_exptime_in_seconds(written, seconds):
+    values = {} if written is None else {"EXPTIME": written}
+    assert read_card(NINA, {**values, "EXPOSURE": 120.0}).exposure_s == seconds
 
 
 def test_the_schema_check_lists_every_frame_type():

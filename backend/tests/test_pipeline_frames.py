@@ -272,6 +272,30 @@ def test_a_file_read_again_gets_a_new_card_and_a_skipped_one_none(conn, tmp_path
     assert _cards(conn) == {"a.fits": "unknown"}
 
 
+def test_the_card_stores_start_and_exposure_in_one_form(conn, tmp_path):
+    _nina(tmp_path / "a.fits", 1, ("DATE-OBS= '2025-06-29T21:11:33.412'", "EXPTIME =  120.0"))
+    _nina(tmp_path / "b.fits", 2)
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    rows = {
+        r["rel_path"]: (r["start_utc"], r["exposure_s"])
+        for r in conn.execute(
+            "SELECT f.rel_path, c.start_utc, c.exposure_s FROM pipeline_cards AS c"
+            " JOIN pipeline_files AS f ON f.id = c.file_id"
+        )
+    }
+    assert rows == {"a.fits": ("2025-06-29T21:11:33.412000+00:00", 120.0), "b.fits": (None, None)}
+
+
+def test_the_schema_refuses_a_start_in_another_form(conn, tmp_path):
+    _nina(tmp_path / "a.fits", 1)
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    for bad in ("2025-06-29T21:11:33.412+00:00", "2025-06-29T21:11:33.412000"):
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute("UPDATE pipeline_cards SET start_utc = ?", (bad,))
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("UPDATE pipeline_cards SET exposure_s = -1.0")
+
+
 def test_a_gone_file_keeps_its_card(conn, tmp_path):
     _nina(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)

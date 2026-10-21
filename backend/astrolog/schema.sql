@@ -919,5 +919,9 @@ CREATE TABLE pipeline_headers (
 CREATE TABLE pipeline_cards (
   file_id    INTEGER PRIMARY KEY REFERENCES pipeline_headers (file_id),
   frame_type TEXT NOT NULL
-    CHECK (frame_type IN ('light', 'dark', 'flat', 'bias', 'snapshot', 'unknown'))
+    CHECK (frame_type IN ('light', 'dark', 'flat', 'bias', 'snapshot', 'unknown')),
+  -- inizio posa UTC, una forma sola: ordine e uguaglianza sul testo. NULL: non so
+  start_utc  TEXT CHECK (start_utc GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:'
+    || '[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]+00:00'),
+  exposure_s REAL CHECK (exposure_s >= 0)
 ) STRICT;

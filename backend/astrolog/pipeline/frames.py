@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..db.transaction import transaction
-from .card import frame_type
+from .card import read_card
 from .changes import Changes, record_changes
 from .scanner import Extracted, Skipped, scan_file
 
@@ -60,9 +60,12 @@ def _store(
         "INSERT OR REPLACE INTO pipeline_headers (file_id, program, header) VALUES (?, ?, ?)",
         (file_id, got.program, json.dumps(got.values, allow_nan=False)),
     )
+    card = read_card(got.program, got.values)
+    start = card.start_utc.isoformat(timespec="microseconds") if card.start_utc else None
     conn.execute(
-        "INSERT OR REPLACE INTO pipeline_cards (file_id, frame_type) VALUES (?, ?)",
-        (file_id, frame_type(got.program, got.values)),
+        "INSERT OR REPLACE INTO pipeline_cards (file_id, frame_type, start_utc, exposure_s)"
+        " VALUES (?, ?, ?, ?)",
+        (file_id, card.frame_type, start, card.exposure_s),
     )
 
 

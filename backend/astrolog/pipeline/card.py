@@ -1,8 +1,15 @@
 """File card: facts read from one header alone, pure (mappa, passo 4). One function per fact."""
 
+import re
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from enum import StrEnum
 
 from .scanner import Program, Value
+
+# DATE-OBS as both programs write it: start of exposure, UTC, no zone (FITS 4.0 sec. 9.1.1).
+# fromisoformat alone takes date only (midnight), week dates, compact forms.
+_DATE_OBS = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?")
 
 
 class FrameType(StrEnum):
@@ -39,3 +46,33 @@ def frame_type(program: Program, values: dict[str, Value]) -> FrameType:
         return FrameType.SNAPSHOT
     calibration = _WRITTEN.get(name or "", FrameType.LIGHT) is not FrameType.LIGHT
     return FrameType.UNKNOWN if calibration else kind
+
+
+def start_utc(values: dict[str, Value]) -> datetime | None:
+    """No fallback (MJD-OBS, DATE-AVG, file time): no file lacks DATE-OBS. Past 6 decimals cut."""
+    written = values.get("DATE-OBS")
+    if not isinstance(written, str) or not _DATE_OBS.fullmatch(written):
+        return None
+    try:
+        return datetime.fromisoformat(written).replace(tzinfo=UTC)
+    except ValueError:  # impossible date or time
+        return None
+
+
+def exposure_s(values: dict[str, Value]) -> float | None:
+    """EXPTIME only: EXPOSURE always equal. bool is an int to Python: `T` is not 1 s."""
+    written = values.get("EXPTIME")
+    if isinstance(written, bool) or not isinstance(written, int | float) or written < 0:
+        return None
+    return float(written)
+
+
+@dataclass(frozen=True, slots=True)
+class Card:
+    frame_type: FrameType
+    start_utc: datetime | None  # None: not known
+    exposure_s: float | None
+
+
+def read_card(program: Program, values: dict[str, Value]) -> Card:
+    return Card(frame_type(program, values), start_utc(values), exposure_s(values))
