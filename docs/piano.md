@@ -11,8 +11,8 @@ fuori nelle Issue con l'etichetta `bloccato`.
 normalizzazione si riscrivono in una casa nuova da una mappa concettuale decisa prima del codice,
 uno strato alla volta, affiancate alla vecchia finche' non la sostituiscono. Verificati N.I.N.A. e
 ASIAIR (ADR 0029). Mattoni col metodo di ADR 0030, stato nella mappa grafica. Fatti: `pipeline/`
-walk, scanner, changes, fingerprint (i gemelli in `fits/` si tolgono con la vecchia). Prossimo:
-frame, doppioni, spostati. Le Issue #14-#24 aspettano: molte le chiude la pipeline nuova.
+walk, scanner, changes, fingerprint, frames (i gemelli in `fits/` si tolgono con la vecchia). Prossimo:
+l'header e le risposte nel database (3b). Le Issue #14-#24 aspettano: molte le chiude la pipeline nuova.
 
 ## Dopo
 

@@ -886,8 +886,17 @@ CREATE TABLE pipeline_scans (
   gone       INTEGER NOT NULL
 ) STRICT;
 
+-- RILEVATO. Una posa, riconosciuta dalla sua impronta (pipeline/fingerprint.py): resta la stessa
+-- se il file si sposta o se un programma ne riscrive l'header. Le risposte dell'utente si
+-- agganciano qui, non al file. Un frame rimasto senza file non si cancella.
+CREATE TABLE pipeline_frames (
+  id          INTEGER PRIMARY KEY,
+  fingerprint TEXT NOT NULL UNIQUE,
+  created_at  TEXT NOT NULL
+) STRICT;
+
 -- RILEVATO. Un file visto dentro una cartella scelta, com'era all'ultima scansione che l'ha
--- potuto guardare. Il file, non il frame: lo stesso frame in due file e' una cosa del mattone 3.
+-- potuto guardare. Il file, non il frame: due file con lo stesso frame sono un doppione.
 CREATE TABLE pipeline_files (
   id           INTEGER PRIMARY KEY,
   root_id      INTEGER NOT NULL REFERENCES pipeline_roots (id),
@@ -896,5 +905,8 @@ CREATE TABLE pipeline_files (
   mtime_ns     INTEGER NOT NULL,  -- confrontata esatta: una data diversa costa una rilettura
   state        TEXT NOT NULL CHECK (state IN ('present', 'gone')),
   seen_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),  -- l'ultima che l'ha giudicato
+  -- NULL: non letto come posa (non supportato, riscritto, incompleto, illeggibile). Un file
+  -- sparito lo tiene: e' cosi' che uno nuovo con la stessa impronta si riconosce spostato.
+  frame_id     INTEGER REFERENCES pipeline_frames (id),
   UNIQUE (root_id, rel_path)
 ) STRICT;

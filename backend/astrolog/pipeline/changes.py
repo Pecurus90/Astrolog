@@ -15,6 +15,7 @@ class Changes:
     """Paths relative to the root, with `/`, each list sorted."""
 
     reachable: bool
+    scan_id: int = 0  # the receipt this scan wrote
     new: list[str] = field(default_factory=list)
     changed: list[str] = field(default_factory=list)
     unchanged: list[str] = field(default_factory=list)
@@ -62,6 +63,12 @@ def _on_disk(found: list[str], root: str) -> tuple[dict[str, tuple[int, int]], s
 
 def sync(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
     """Compares the folder with what the last scans saw, writes the result and its receipt."""
+    with transaction(conn):
+        return record_changes(conn, root_id, now)
+
+
+def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
+    """`sync` inside the caller's transaction: what it reads of the files commits with it."""
     root = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (root_id,)).fetchone()[
         "path"
     ]
@@ -74,25 +81,25 @@ def sync(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
         changes.unreachable = sorted(_rel(u, root) for u in walk.unreadable)
         disk, unlooked = _on_disk(walk.found, root)
         changes.unlooked = sorted(unlooked)
-    with transaction(conn):
-        scan_id = inserted_id(
-            conn.execute(
-                "INSERT INTO pipeline_scans"
-                " (root_id, scanned_at, reachable, new, changed, unchanged, gone)"
-                " VALUES (?, ?, ?, 0, 0, 0, 0)",
-                (root_id, now, int(changes.reachable)),
-            )
+    scan_id = inserted_id(
+        conn.execute(
+            "INSERT INTO pipeline_scans"
+            " (root_id, scanned_at, reachable, new, changed, unchanged, gone)"
+            " VALUES (?, ?, ?, 0, 0, 0, 0)",
+            (root_id, now, int(changes.reachable)),
         )
-        if changes.reachable:
-            _judge(conn, root_id, scan_id, disk, changes)
-            not_judged = unlooked | {_rel(p, root) for p in walk.online_only}
-            _mark_gone(conn, root_id, scan_id, not_judged, changes)
-            conn.execute(
-                "UPDATE pipeline_scans SET new = ?, changed = ?, unchanged = ?, gone = ?"
-                " WHERE id = ?",
-                (len(changes.new), len(changes.changed), len(changes.unchanged),
-                 len(changes.gone), scan_id),
-            )  # fmt: skip
+    )
+    if changes.reachable:
+        _judge(conn, root_id, scan_id, disk, changes)
+        not_judged = unlooked | {_rel(p, root) for p in walk.online_only}
+        _mark_gone(conn, root_id, scan_id, not_judged, changes)
+        conn.execute(
+            "UPDATE pipeline_scans SET new = ?, changed = ?, unchanged = ?, gone = ?"
+            " WHERE id = ?",
+            (len(changes.new), len(changes.changed), len(changes.unchanged),
+             len(changes.gone), scan_id),
+        )  # fmt: skip
+    changes.scan_id = scan_id
     for items in (changes.new, changes.changed, changes.unchanged, changes.gone):
         items.sort()
     return changes
