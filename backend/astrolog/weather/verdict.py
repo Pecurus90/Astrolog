@@ -27,15 +27,15 @@ class SkyWord(StrEnum):
 
 
 def sky_word(cloud_pct: float | None) -> SkyWord | None:
-    """The nearest eighth of the sky, then its class."""
+    """The nearest eighth of the sky, then its class; 0 and 8 only for a bare or full sky (WMO)."""
     if cloud_pct is None:
         return None
-    eighths = math.floor(cloud_pct / 12.5 + 0.5)
-    if eighths == 0:
+    if cloud_pct <= 0:
         return SkyWord.CLEAR
-    if eighths <= 4:
-        return SkyWord.SCATTERED
-    return SkyWord.BROKEN if eighths <= 7 else SkyWord.OVERCAST
+    if cloud_pct >= 100:
+        return SkyWord.OVERCAST
+    eighths = math.floor(cloud_pct / 12.5 + 0.5)
+    return SkyWord.SCATTERED if eighths <= 4 else SkyWord.BROKEN
 
 
 class Verdict(StrEnum):

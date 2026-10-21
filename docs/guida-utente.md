@@ -307,7 +307,7 @@ sola in evidenza; il resto della pagina resta quello che si puo' calcolare:
   piu' recente trovata finora.
 - **Le prossime 3 notti** dicono anche il cielo in parole, col suo segno -- *Sereno*, *Nuvole sparse*,
   *Nuvoloso*, *Coperto*, dalla copertura media nel buio contata in ottavi di cielo come fanno i
-  bollettini meteo (okta) -- la pioggia da che ora, e le ore di buio senza Luna, quelle buone per
+  bollettini meteo (okta): *Sereno* solo senza nuvole, *Coperto* solo a cielo tutto chiuso -- la pioggia da che ora, e le ore di buio senza Luna, quelle buone per
   la banda larga.
 
 Se

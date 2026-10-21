@@ -189,6 +189,14 @@ def test_each_night_says_its_sky_in_okta_classes(db):  # noqa: F811
         assert riassunto(notte_di(db, "2026-09-25"))["sky_word"] == parola, pct
 
 
+def test_only_a_bare_sky_is_clear_and_only_a_full_one_overcast(db):  # noqa: F811
+    """WMO 2700: 1 okta e' "1/8 o meno, ma non zero", 7 e' "7/8 o piu', ma non 8/8" (Marco,
+    21/10/2026): un velo del 5% non e' sereno, un 95% non e' coperto."""
+    for pct, parola in ((5.0, "scattered"), (95.0, "broken")):
+        scritta(db, Finto(risposta(cloud_total_pct=pct)))
+        assert riassunto(notte_di(db, "2026-09-25"))["sky_word"] == parola, pct
+
+
 def test_a_night_without_its_clouds_has_no_sky_word(db):  # noqa: F811
     scritta(db, Finto(risposta(cloud_total_pct=None)))
     assert riassunto(notte_di(db, "2026-09-25"))["sky_word"] is None
