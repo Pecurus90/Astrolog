@@ -431,9 +431,9 @@ pezzo nasce `mount` e il setup di quei frame resta **senza ottica**, che l'ASIAI
 da nessuna parte (misurato su 171 header di quattro utenti, 14/9/2026). Un setup a cui manca
 un pezzo e' vero; uno con la montatura al posto dell'ottica e' falso. **Quale fosse l'ottica lo
 chiede Da confermare**, nella scheda della firma: la risposta da' l'ottica a ogni frame di quella
-firma che l'ottica non la nomina, anche a quelli che arriveranno. Limite dichiarato: due ottiche
-diverse alla stessa focale con la stessa camera sono una domanda sola. Setup = (ottica, camera) a una focale, con le focali entro il **+-5 %** raggruppate
-prima di scrivere; il binning non cambia il setup, un riduttore si' (cambia la focale). **La
+firma che non la nomina, anche ai prossimi (Issue #23). Setup = (ottica, camera) a una focale:
+focali entro il **+-5 %** raggruppate per camera su tutto l'archivio, un setup per gruppo, e un
+frame fuori posto torna nel giro (ogni ordine, stessi setup); il binning no, un riduttore si'. **La
 focale e' quella misurata dal cielo** dove c'e' (ADR 0016): dopo una soluzione, pixel (`XPIXSZ`, o
 quello della scheda per il binning, mai quello ricavato dal cielo) diviso la scala, al millimetro,
 in `frame_wcs.focal_mm`; senza, `FOCALLEN`. Il setup nasce dall'header prima del cielo, e il

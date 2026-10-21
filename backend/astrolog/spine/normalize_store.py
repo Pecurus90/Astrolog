@@ -81,14 +81,53 @@ def broods(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> Iterator[sqlit
         yield from conn.execute(_BROODS.format(listed=listed))
 
 
-def pending_focals(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> list[float | None]:
-    with idlist.holding(conn, frame_ids) as listed:
-        return [
-            r[0]
-            for r in conn.execute(
-                f"SELECT DISTINCT {_FOCAL} FROM frames f WHERE f.id IN {listed}"  # noqa: S608
-            )
-        ]
+# The focal groups of one camera: another camera's focals must not move its anchors.
+CameraBuckets = Mapping[str | None, Mapping[float, float]]
+
+_WRITTEN_FOCALS = f"""
+SELECT c.name AS camera, {_FOCAL} AS focal FROM frames f JOIN rigs r ON r.id = f.rig_id
+LEFT JOIN instruments c ON c.id = r.camera_id
+UNION ALL
+SELECT c.name, r.focal_mm FROM rigs r LEFT JOIN instruments c ON c.id = r.camera_id
+"""  # noqa: S608 - constant
+
+
+def written_focals(conn: sqlite3.Connection) -> dict[str | None, list[float | None]]:
+    """Per camera, the focals of the frames on its rigs and of the rigs: groups made on one round
+    alone would change with the order the archive is read in."""
+    focals: dict[str | None, list[float | None]] = {}
+    for r in conn.execute(_WRITTEN_FOCALS):
+        focals.setdefault(r["camera"], []).append(r["focal"])
+    return focals
+
+
+def off_their_group(conn: sqlite3.Connection, buckets: CameraBuckets) -> list[int]:
+    """Frames not on the rig their group picks: the first by id of their optics, camera and focal
+    group (as `rigs.find_rig`). Groups move with new focals, and two rigs can end in one."""
+    rigs = conn.execute(
+        "SELECT r.id, r.optics_id, r.camera_id, r.focal_mm, c.name AS camera FROM rigs r"
+        " LEFT JOIN instruments c ON c.id = r.camera_id ORDER BY r.id"
+    ).fetchall()
+    picked: dict[tuple[int | None, int | None, float | None], int] = {}
+    group_of: dict[int, tuple[int | None, int | None, float | None]] = {}
+    for r in rigs:
+        key = (r["optics_id"], r["camera_id"], buckets.get(r["camera"], {}).get(r["focal_mm"]))
+        group_of[r["id"]] = key
+        picked.setdefault(key, r["id"])
+    sql = (
+        f"SELECT f.id, f.rig_id, {_FOCAL} AS focal, c.name AS camera FROM frames f"  # noqa: S608
+        " JOIN rigs r ON r.id = f.rig_id LEFT JOIN instruments c ON c.id = r.camera_id"
+    )
+    moved = []
+    for f in conn.execute(sql):
+        groups = buckets.get(f["camera"], {})
+        if f["focal"] not in groups:
+            continue
+        optics, camera, rig_group = group_of[f["rig_id"]]
+        mine = (optics, camera, groups[f["focal"]])
+        if rig_group != mine[2] or picked[mine] != f["rig_id"]:
+            moved.append(f["id"])
+    return moved
 
 
 @dataclass(frozen=True, slots=True)

@@ -20,7 +20,7 @@ import pytest
 
 from astrolog.clock import night_date
 from astrolog.db import idlist
-from astrolog.spine import gear, group_store, identify_store, normalize_store, solve_store
+from astrolog.spine import gear, group_store, identify_store, solve_store
 
 # Il tetto imposto, e abbastanza id da passarlo due volte.
 TETTO = 999
@@ -61,13 +61,12 @@ def test_past_the_ceiling_sqlite_refuses_the_query(conn):
         pytest.param(lambda c: group_store.detach(c, TANTI), id="group.detach"),
         pytest.param(lambda c: solve_store.first_per_order_key(c, TANTI), id="solve.primo"),
         pytest.param(lambda c: solve_store.newest_first(c, TANTI), id="solve.piu_recenti"),
-        pytest.param(lambda c: normalize_store.pending_focals(c, TANTI), id="normalize.focali"),
         pytest.param(lambda c: gear._detach_rigs(c, TANTI), id="gear.corredi"),
     ],
 )
 def test_ids_past_the_ceiling_do_not_break_the_query(conn, chiamata):
-    """Le sei query che portavano un segnaposto per riga. Col doppio del tetto devono passare:
-    con un segnaposto per id, tutte e sei direbbero `too many SQL variables`."""
+    """Le query che portavano un segnaposto per riga. Col doppio del tetto devono passare:
+    con un segnaposto per id, tutte direbbero `too many SQL variables`."""
     chiamata(conn)
 
 

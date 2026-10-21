@@ -3,6 +3,7 @@ can delete the row, so name and parts live among the declarations, on a key that
 
 import json
 import sqlite3
+from collections.abc import Mapping
 from enum import StrEnum
 
 from ..clock import now_iso
@@ -57,10 +58,11 @@ def rig_for(  # noqa: PLR0913
     now: str,
     *,
     detected: bool = True,
+    buckets: Mapping[float, float] | None = None,
 ) -> tuple[int, bool]:
     """(id, created?). `rigs.focal_mm` is fixed at creation: nearby focals join without moving it,
     which would rewrite a value the user has already seen."""
-    found = find_rig(conn, optics_id, camera_id, focal_mm)
+    found = find_rig(conn, optics_id, camera_id, focal_mm, buckets)
     if found is not None:
         return found, False
     rig_id = inserted_id(
@@ -74,14 +76,23 @@ def rig_for(  # noqa: PLR0913
 
 
 def find_rig(
-    conn: sqlite3.Connection, optics_id: int | None, camera_id: int | None, focal_mm: float | None
+    conn: sqlite3.Connection,
+    optics_id: int | None,
+    camera_id: int | None,
+    focal_mm: float | None,
+    buckets: Mapping[float, float] | None = None,
 ) -> int | None:
-    """The unique index is on exact equality: the focal grouping (`units.same_focal`) lives here."""
+    """The unique index is on exact equality: the focal grouping lives here. With the archive's
+    focal groups a rig joins only its own group: the first within tolerance chains 1000 to 1060."""
+    grouped = buckets is not None and focal_mm in buckets.values()
     for row in conn.execute(
-        "SELECT id, focal_mm FROM rigs WHERE optics_id IS ? AND camera_id IS ?",
+        "SELECT id, focal_mm FROM rigs WHERE optics_id IS ? AND camera_id IS ? ORDER BY id",
         (optics_id, camera_id),
     ).fetchall():
-        if same_focal(row["focal_mm"], focal_mm):
+        if grouped and buckets is not None:
+            if buckets.get(row["focal_mm"], row["focal_mm"]) == focal_mm:
+                return row["id"]
+        elif same_focal(row["focal_mm"], focal_mm):
             return row["id"]
     return None
 

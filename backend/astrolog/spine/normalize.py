@@ -73,7 +73,7 @@ def normalize_frames(conn: sqlite3.Connection) -> Iterator[Event]:
 class _Round(NamedTuple):
     """Decided once before writing, so no frame is redone at the end because another moved it."""
 
-    buckets: dict[float, float]
+    buckets: store.CameraBuckets
     cameras: dict[int, Given]
     copy_of: dict[int, int | None]
     marks: dict[int, rewrite.RewriteMark | None]
@@ -97,22 +97,33 @@ def _before_the_round(conn: sqlite3.Connection) -> tuple[list[int], _Round]:
     nights = cache(lambda: night_rig.night_rigs(conn))
     answers = signature.answers(conn)
     cameras: dict[int, Given] = {}
+    focals = store.written_focals(conn)
     voting: list[tuple[str, bool]] = []
     for i in frame_ids:
-        # one row at a time: only the camera and its vote stay, not the header
+        # one row at a time: only the camera, its focal and its vote stay, not the header
         frame = store.frame(conn, i)
         cameras[i] = _camera_of(conn, frame, nights, answers)
         camera = cameras[i].camera
+        focals.setdefault(camera, []).append(frame["focal_mm"])
         if camera and copy_of.get(i, frame["copy_of"]) is None:
             voting.append((camera, frame["bayer_pattern"] is not None))
     colours = camera_specs.ahead(conn, frame_ids, voting)
     # frames without a matrix of a camera that changed colour: only their filter changes
     for i in ready(conn, StageName.NORMALIZE):
         if i not in cameras:
+            frame = store.frame(conn, i)
+            cameras[i] = _camera_of(conn, frame, nights, answers)
+            focals.setdefault(cameras[i].camera, []).append(frame["focal_mm"])
+            frame_ids.append(i)
+    # each camera's groups over the whole archive, so 559, 560 and 561 give one rig in any order of
+    # reading; a frame whose group moved joins the round, and its focal is already counted
+    buckets = {camera: focal_buckets(values) for camera, values in focals.items()}
+    moved = set(store.off_their_group(conn, buckets)) - set(frame_ids)
+    if moved:
+        invalidate(conn, moved, StageName.NORMALIZE)
+        for i in sorted(moved):
             cameras[i] = _camera_of(conn, store.frame(conn, i), nights, answers)
             frame_ids.append(i)
-    # all focals bucketed before writing, so 559, 560 and 561 give one rig in any file order
-    buckets = focal_buckets(store.pending_focals(conn, frame_ids))
     return frame_ids, _Round(buckets, cameras, copy_of, marks, colours)
 
 

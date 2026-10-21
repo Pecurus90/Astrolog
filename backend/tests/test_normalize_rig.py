@@ -11,12 +11,16 @@ test-tolto: test_normalize_groups_focal_lengths_within_five_percent
 test-tolto: test_normalize_links_every_frame_to_its_rig
 """
 
+import random
+
 import pytest
 
+from astrolog.db.connect import connect, create_database
 from astrolog.spine import gear, gear_create
 from astrolog.spine import rigs as corredi
+from astrolog.spine.scan import scan_folder
 from astrolog.vocab.software import Software
-from conftest import frame_by_file, one, rows, run_normalize
+from conftest import add_folder, frame_by_file, one, rows, run_normalize, write_light
 
 
 def test_normalize_makes_instruments_and_rigs(conn, archive):
@@ -415,3 +419,65 @@ def test_a_frame_that_reaches_the_mount_two_ways_counts_once(conn, archive):
     )
     assert pose == 3
     assert contate == pose
+
+
+def _rigs_read_in(tmp_path, rounds, camera="CamK", optics="Ottica K"):
+    """Each round writes its frames and reads the folder again; returns the focals per rig.
+    A round of (focal, optics, camera) pairs mixes setups."""
+    create_database(tmp_path / "a.db")
+    conn = connect(tmp_path / "a.db")
+    folder = add_folder(conn, tmp_path / "lib")
+    for i, focals in enumerate(rounds):
+        for j, shot in enumerate(focals):
+            setup = shot if isinstance(shot, tuple) else (shot, optics, camera)
+            focal, telescope, instrument = setup
+            write_light(
+                tmp_path / "lib" / f"r{i}_{j}.fits",
+                date=f"2024-05-1{i}T2{j}:00:00",
+                TELESCOP=telescope,
+                INSTRUME=instrument,
+                FOCALLEN=float(focal),
+            )
+        list(scan_folder(conn, folder))
+        run_normalize(conn)
+    by_rig: dict[int, set[float]] = {}
+    for r in rows(conn, "SELECT rig_id, focal_mm_raw FROM frames"):
+        by_rig.setdefault(r["rig_id"], set()).add(r["focal_mm_raw"])
+    conn.close()
+    return sorted(sorted(v) for v in by_rig.values())
+
+
+@pytest.mark.parametrize(
+    "rounds",
+    [[[1060], [1000], [1010]], [[1000], [1060], [1010]], [[1010], [1060], [1000]]],
+    ids=["1060-1000-1010", "1000-1060-1010", "1010-1060-1000"],
+)
+def test_the_rig_of_a_frame_does_not_depend_on_the_order_it_was_read(tmp_path, rounds):
+    """Lo stesso archivio letto in tre volte, in un ordine qualunque, mette le ore sugli stessi
+    setup di quando lo si legge tutto insieme: 1000 e 1010 stanno nel 5%, 1060 no da 1000."""
+    insieme = _rigs_read_in(tmp_path / "insieme", [[1060, 1000, 1010]])
+    assert insieme == [[1000.0, 1010.0], [1060.0]]
+    assert _rigs_read_in(tmp_path / "a-pezzi", rounds) == insieme
+
+
+def test_another_setup_does_not_split_a_rig_it_has_nothing_to_do_with(tmp_path):
+    """I gruppi di focale sono della camera: un frame di un'altra camera a 960 non sposta
+    l'ancora dei 1000 e 1040 di CamK, che restano un setup solo."""
+    assert _rigs_read_in(tmp_path, [[1000, 1040], [(960, "Ottica Z", "CamZ")]]) == [
+        [960.0],
+        [1000.0, 1040.0],
+    ]
+
+
+@pytest.mark.parametrize("seed", range(4, 10))
+def test_one_group_of_focals_ends_on_one_rig_in_any_order_of_reading(tmp_path, seed):
+    """Sei focali di una camera, lette in tre volte a caso: quando i gruppi si spostano due setup
+    possono finire nello stesso gruppo, e i frame vanno sul primo. L'ultima lettura (un'altra
+    camera) fa ripassare chi e' rimasto fuori posto. Il caso del revisore e' il seme 9."""
+    rnd = random.Random(seed)
+    focals = rnd.sample([950, 980, 1000, 1010, 1030, 1045, 1060, 1090, 1120], 6)
+    a, b = sorted(rnd.sample(range(1, 6), 2))
+    insieme = _rigs_read_in(tmp_path / "insieme", [focals])
+    rounds = [focals[:a], focals[a:b], focals[b:], [(500, "Ottica Z", "CamZ")]]
+    a_pezzi = [rig for rig in _rigs_read_in(tmp_path / "a-pezzi", rounds) if rig != [500.0]]
+    assert a_pezzi == insieme, (focals, a, b)

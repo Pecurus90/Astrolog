@@ -27,7 +27,7 @@ class Writing:
 
     counts: dict[str, int]
     now: str
-    buckets: Mapping[float, float]
+    buckets: Mapping[str | None, Mapping[float, float]]
 
 
 def instrument_named(
@@ -112,7 +112,8 @@ def rig_for_frame(
     else:
         optics_id = instrument_for(conn, "optics", frame["telescope_raw"], counts, now)
     camera_id = instrument_named(conn, "camera", given.camera, counts, now)
-    focal = known_focal(writing.buckets.get(frame["focal_mm"], frame["focal_mm"]))
+    groups = writing.buckets.get(given.camera, {})
+    focal = known_focal(groups.get(frame["focal_mm"], frame["focal_mm"]))
     declared = answer is not None and answer.optics is not None
     if answer is not None:
         optics_id = instrument_named(conn, "optics", answer.optics, counts, now) or optics_id
@@ -127,7 +128,7 @@ def rig_for_frame(
         focal = night_rig.focal_mm if focal is None else focal
     if optics_id is None and camera_id is None:
         return None
-    rig_id, created = rigs.rig_for(conn, optics_id, camera_id, focal, now)
+    rig_id, created = rigs.rig_for(conn, optics_id, camera_id, focal, now, buckets=groups)
     counts["rigs"] += 1 if created else 0
     # a rig born from an answer takes the name and mount given to the optics-less one; an existing
     # rig keeps its own word
