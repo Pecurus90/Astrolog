@@ -4,8 +4,6 @@ Idee di Marco e proposte non ancora decise, una per voce, con la data in cui son
 Un'idea non diventa lavoro finche' Marco non dice di farla: allora va nel [piano](piano.md). A
 ogni tappa del piano si rilegge: si fa, resta o si cancella; ferma da tre tappe si cancella.
 
-- **Altri formati di file** (6/10/2026): oggi `.fits` e `.fit`; poi `.fts` e `.fz`, poi XISF, che
-  N.I.N.A. sa salvare. Quando un utente salva in un altro formato.
 - **La previsione accanto al meteo vero** (1/10/2026): tenere la previsione di una notte passata
   per misurare quanto ci azzeccava su quel sito, e il seeing previsto per notte (oggi si butta).
 - **Dividere i frame di una notte dal fondo cielo** (1/10/2026): il fondo separa bande larghe e

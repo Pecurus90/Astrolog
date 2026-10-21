@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import BinaryIO
 
 FITS_SUFFIXES = frozenset({".fits", ".fit", ".fts"})
+COMPRESSED_SUFFIX = ".fz"
 BLOCK = 2880
 CARD = 80
 MAX_HEADER_BLOCKS = 1000
@@ -49,6 +50,14 @@ ASIAIR_KEYS = frozenset({
 _SIP = re.compile(r"^(A|B|AP|BP)_(ORDER|\d_\d)$")
 # Keys neither program writes, left by a processing program that rewrote the file.
 _REWRITE_MARKS = frozenset({"PROGRAM", "STACKCNT"})
+# The page of a tile-compressed image (FITS 4.0 sec. 10): its Z keys and its table columns.
+_COMPRESSION_KEYS = frozenset({"XTENSION", "EXTNAME", "PCOUNT", "GCOUNT", "TFIELDS", "THEAP"})
+_TABLE_GEOMETRY = frozenset({"BITPIX", "NAXIS", "NAXIS1", "NAXIS2"})
+_COMPRESSION = re.compile(
+    r"^(ZIMAGE|ZCMPTYPE|ZBITPIX|ZNAXIS\d*|ZTILE\d+|ZNAME\d+|ZVAL\d+|ZMASKCMP|ZQUANTIZ|ZDITHER0"
+    r"|ZSIMPLE|ZEXTEND|ZBLOCKED|ZTENSION|ZPCOUNT|ZGCOUNT|ZHECKSUM|ZDATASUM|ZBLANK|ZSCALE|ZZERO"
+    r"|T(TYPE|FORM|UNIT)\d+)$"
+)
 
 
 class Program(StrEnum):
@@ -92,9 +101,17 @@ def _walk(root: Path) -> Iterator[Path | Skipped]:
         seen.add(real)
         dirs.sort()
         for name in sorted(files):
-            if Path(name).suffix.lower() in FITS_SUFFIXES:
+            if _is_fits(name):
                 yield Path(folder, name)
     yield from _drain(failed)  # a folder failing after the last one walked, or the root itself
+
+
+def _is_fits(name: str) -> bool:
+    """`.fits`, `.fit`, `.fts`, also compressed as `<one of them>.fz`; any letter case."""
+    stem = Path(name.lower())
+    if stem.suffix == COMPRESSED_SUFFIX:
+        stem = stem.with_suffix("")
+    return stem.suffix in FITS_SUFFIXES
 
 
 def _drain(failed: list[OSError]) -> Iterator[Skipped]:
@@ -108,15 +125,28 @@ def find_fits(root: Path) -> Iterator[Path]:
 
 
 def read_cards(path: Path) -> dict[str, Value] | None:
-    """Keyword -> value of the primary header, first occurrence wins; None without END or on a
-    read error. Latin-1: N.I.N.A. writes the header in ISO-8859-1. CONTINUE joins strings."""
+    """Keyword -> value of the frame's header (primary, plus the image page of a compressed file);
+    None without END or on a read error. Latin-1, as N.I.N.A. writes; CONTINUE joins strings."""
     try:
         with path.open("rb") as fh:
-            images = _card_images(fh)
+            primary = _card_images(fh)
+            if primary is None:
+                return None
+            cards = _parse(primary)
+            if cards.get("NAXIS") == 0 and program_of(cards) is None:
+                # tile-compressed (FITS 4.0 sec. 10): an empty primary, the frame's keys in page 2
+                page = _card_images(fh)
+                image = _parse(page) if page is not None else {}
+                if image.get("ZIMAGE") is True:
+                    # the page's NAXISn, BITPIX describe the table; the frame's are ZNAXISn, ZBITPIX
+                    page_keys = {k: v for k, v in image.items() if k not in _TABLE_GEOMETRY}
+                    cards = {**page_keys, **cards}
     except OSError:
         return None
-    if images is None:
-        return None
+    return cards
+
+
+def _parse(images: list[str]) -> dict[str, Value]:
     cards: dict[str, Value] = {}
     last: str | None = None
     for image in images:
@@ -193,7 +223,9 @@ def program_of(cards: dict[str, Value]) -> Program | None:
     return None
 
 
-def _writes(program: Program, key: str) -> bool:
+def _writes(program: Program, key: str, compressed: bool) -> bool:
+    if compressed and (key in _COMPRESSION_KEYS or _COMPRESSION.match(key)):
+        return True
     if program is Program.NINA:
         return key in NINA_KEYS
     return key in ASIAIR_KEYS or bool(_SIP.match(key))
@@ -208,7 +240,8 @@ def scan_file(path: Path) -> Extracted | Skipped:
     program = program_of(cards)
     if program is None:
         return Skipped(path, Skip.NOT_SUPPORTED)
-    unknown = frozenset(k for k in cards if not _writes(program, k))
+    compressed = cards.get("ZIMAGE") is True
+    unknown = frozenset(k for k in cards if not _writes(program, k, compressed))
     return Extracted(path, program, cards, unknown)
 
 

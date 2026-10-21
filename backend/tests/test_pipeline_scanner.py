@@ -175,6 +175,69 @@ def test_the_checksums_of_the_cfitsio_writer_are_nina_keys(tmp_path):
     assert got.unknown == frozenset()
 
 
+def _compressed(path: Path) -> Path:
+    """A tile-compressed N.I.N.A. file as cfitsio writes it: empty primary, keys in page 2."""
+    import numpy as np
+    from astropy.io import fits
+
+    header = fits.Header()
+    for line in _corpus("nina.txt"):
+        key = line[:8].strip()
+        if line[8:10] == "= " and key not in {
+            "SIMPLE",
+            "BITPIX",
+            "NAXIS",
+            "NAXIS1",
+            "NAXIS2",
+            "EXTEND",
+            "BZERO",
+            "BSCALE",
+        }:
+            header.append(fits.Card.fromstring(line.ljust(80)))
+    data = np.zeros((8, 8), dtype=np.uint16)
+    fits.HDUList([fits.PrimaryHDU(), fits.CompImageHDU(data, header)]).writeto(path)
+    return path
+
+
+def test_finds_compressed_fits(tmp_path):
+    for name in ("a.fits.fz", "b.FITS.FZ", "c.fz", "d.txt.fz"):
+        _fits(tmp_path / name, ["SIMPLE  = T"])
+    assert sorted(p.name for p in find_fits(tmp_path)) == ["a.fits.fz", "b.FITS.FZ"]
+
+
+@pytest.mark.parametrize("name", ["light.fits.fz", "light.fits"])
+def test_a_compressed_nina_file_gives_its_keys_from_the_image_page(tmp_path, name):
+    got = scan_file(_compressed(tmp_path / name))
+    assert isinstance(got, Extracted)
+    assert got.program is Program.NINA
+    assert got.values["IMAGETYP"] == "LIGHT"
+    assert got.unknown == frozenset()
+
+
+def test_the_table_geometry_of_a_compressed_file_is_not_the_frame(tmp_path):
+    got = scan_file(_compressed(tmp_path / "light.fits.fz"))
+    assert isinstance(got, Extracted)
+    assert "NAXIS1" not in got.values and "NAXIS2" not in got.values
+    assert (got.values["ZNAXIS1"], got.values["ZNAXIS2"]) == (8, 8)
+
+
+def test_a_user_z_key_in_a_compressed_file_is_unknown(tmp_path):
+    from astropy.io import fits
+
+    path = _compressed(tmp_path / "light.fits.fz")
+    with fits.open(path, mode="update", disable_image_compression=True) as hdul:
+        hdul[1].header["ZOOM"] = 2
+    got = scan_file(path)
+    assert isinstance(got, Extracted)
+    assert got.unknown == frozenset({"ZOOM"})
+
+
+def test_a_z_key_in_an_uncompressed_file_is_unknown(tmp_path):
+    got = scan_file(_fits(tmp_path / "z.fits", [*_corpus("nina.txt"), "ZOOM    = 2"]))
+    assert isinstance(got, Extracted)
+    assert got.unknown == frozenset({"ZOOM"})
+
+
 def test_a_long_value_split_over_continue_cards_is_read_whole(tmp_path):
     long_name = "A very long target name that does not fit in one card at all"
     lines = [
