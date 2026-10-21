@@ -7,6 +7,7 @@ import sqlite3
 
 import pytest
 
+from astrolog.api.instrument_answer import CARD
 from astrolog.spine import camera_specs, gear, normalize, signature, unfiltered
 from astrolog.spine import declarations as decl
 from astrolog.spine import signature_page as cards
@@ -335,6 +336,25 @@ def test_what_i_write_on_the_card_is_never_recomputed(conn, tmp_path):
     pose(conn, tmp_path / "due", BIN1, BIN1)
     assert gear.camera_specs(conn)[camera_id(conn)] == {"camera_type": "mono", "pixel_size_um": 3.8}
     assert colonna(conn, "pixel_size_um") == 3.76
+
+
+def test_every_field_i_write_on_the_card_survives_a_new_reading(conn, tmp_path):
+    """Non solo pixel e colore: ogni campo della scheda scritto a mano resta com'e' quando altri
+    file della stessa camera arrivano e la spina riscrive cio' che e' suo."""
+    pose(conn, tmp_path / "uno", BIN1)
+    # i campi della scheda di una camera (quelli che l'API accetta) fuori da pixel e colore: un
+    # campo nuovo della scheda entra qui da solo, o la prova cade finche' non gli si da' un valore
+    valori = {"brand": "ZWO", "model": "ASI2600MM", "weight_kg": 0.7, "notes": "la mia"}
+    campi = [c for c in CARD["camera"] if c not in decl.CAMERA_SPECS]
+    assert set(campi) == set(valori), campi
+    scritti = {c: valori[c] for c in campi}
+    gear.declare_instrument(conn, camera_id(conn), scritti)
+    # file che dicono un altro pixel: la spina riscrive la sua colonna, e solo quella
+    altro = {"XPIXSZ": 4.63, "XBINNING": 1}
+    pose(conn, tmp_path / "due", altro, altro)
+    assert colonna(conn, "pixel_size_um") == 4.63
+    riga = conn.execute("SELECT * FROM instruments WHERE id = ?", (camera_id(conn),)).fetchone()
+    assert {c: riga[c] for c in scritti} == scritti
 
 
 def test_what_i_write_wins_field_by_field(conn, tmp_path):
