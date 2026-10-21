@@ -11,8 +11,8 @@ fuori nelle Issue con l'etichetta `bloccato`.
 normalizzazione si riscrivono in una casa nuova da una mappa concettuale decisa prima del codice,
 uno strato alla volta, affiancate alla vecchia finche' non la sostituiscono. Verificati N.I.N.A. e
 ASIAIR, piu' SBIG (ADR 0029). Mattoni col metodo di ADR 0030, stato nella mappa grafica. Fatto:
-`pipeline/scanner.py` trova i FITS e ne estrae le chiavi. In corso: `pipeline/walk.py` (protezioni
-di oggi), poi lo scanner lo usa. Dopo: impronta e file completo, poi il database. Le Issue #14-#24 aspettano: molte le chiude la pipeline nuova.
+il mattone 1, `pipeline/walk.py` (cartelle, protezioni di oggi) e `pipeline/scanner.py` (header,
+chiavi di N.I.N.A. e ASIAIR). Prossimo: impronta e file completo; poi il database. Le Issue #14-#24 aspettano: molte le chiude la pipeline nuova.
 
 ## Dopo
 

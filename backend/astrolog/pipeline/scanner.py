@@ -1,6 +1,5 @@
 """Finds FITS files and extracts the header of those N.I.N.A. and ASIAIR wrote (ADR 0029)."""
 
-import os
 import re
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -8,8 +7,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import BinaryIO
 
-FITS_SUFFIXES = frozenset({".fits", ".fit", ".fts"})
-COMPRESSED_SUFFIX = ".fz"
+from .walk import long_path, walk_dir
+
 BLOCK = 2880
 CARD = 80
 MAX_HEADER_BLOCKS = 1000
@@ -69,7 +68,9 @@ class Skip(StrEnum):
     NOT_SUPPORTED = "not_supported"
     REWRITTEN = "rewritten"
     UNREADABLE = "unreadable"
-    FOLDER_UNREADABLE = "folder_unreadable"
+    UNREACHABLE = "unreachable"  # a folder that does not open, or a link whose target is gone
+    HIDDEN = "hidden"  # a hidden folder: trash bins and service folders
+    ONLINE_ONLY = "online_only"  # a cloud placeholder: opening it would download it
 
 
 @dataclass(frozen=True)
@@ -88,47 +89,11 @@ class Skipped:
     reason: Skip
 
 
-def _walk(root: Path) -> Iterator[Path | Skipped]:
-    """FITS files under `root`, and the folders that could not be opened (NAS unplugged, rights)."""
-    seen: set[str] = set()
-    failed: list[OSError] = []
-    for folder, dirs, files in os.walk(root, onerror=failed.append, followlinks=True):
-        yield from _drain(failed)
-        real = os.path.realpath(folder)
-        if real in seen:
-            dirs.clear()
-            continue
-        seen.add(real)
-        dirs.sort()
-        for name in sorted(files):
-            if _is_fits(name):
-                yield Path(folder, name)
-    yield from _drain(failed)  # a folder failing after the last one walked, or the root itself
-
-
-def _is_fits(name: str) -> bool:
-    """`.fits`, `.fit`, `.fts`, also compressed as `<one of them>.fz`; any letter case."""
-    stem = Path(name.lower())
-    if stem.suffix == COMPRESSED_SUFFIX:
-        stem = stem.with_suffix("")
-    return stem.suffix in FITS_SUFFIXES
-
-
-def _drain(failed: list[OSError]) -> Iterator[Skipped]:
-    yield from (Skipped(Path(e.filename), Skip.FOLDER_UNREADABLE) for e in failed)
-    failed.clear()
-
-
-def find_fits(root: Path) -> Iterator[Path]:
-    """FITS files under `root`, following linked folders; a folder reached twice is walked once."""
-    return (item for item in _walk(root) if isinstance(item, Path))
-
-
 def read_cards(path: Path) -> dict[str, Value] | None:
     """Keyword -> value of the frame's header (primary, plus the image page of a compressed file);
     None without END or on a read error. Latin-1, as N.I.N.A. writes; CONTINUE joins strings."""
     try:
-        with path.open("rb") as fh:
+        with open(long_path(path), "rb") as fh:  # noqa: PTH123 - the `\\?\` form is a str
             primary = _card_images(fh)
             if primary is None:
                 return None
@@ -246,5 +211,13 @@ def scan_file(path: Path) -> Extracted | Skipped:
 
 
 def scan(root: Path) -> Iterator[Extracted | Skipped]:
-    for item in _walk(root):
-        yield scan_file(item) if isinstance(item, Path) else item
+    """Every FITS the walk finds, read; and what the walk left out, each with its reason."""
+    walk = walk_dir(str(root))
+    for paths, reason in (
+        (walk.unreadable, Skip.UNREACHABLE),
+        (walk.hidden, Skip.HIDDEN),
+        (walk.online_only, Skip.ONLINE_ONLY),
+    ):
+        yield from (Skipped(Path(p), reason) for p in paths)
+    for path in walk.found:
+        yield scan_file(Path(path))

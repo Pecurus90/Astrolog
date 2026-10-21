@@ -306,3 +306,6 @@ test_a_junction_is_not_followed_and_is_named - pipeline/walk (Marco): i collegam
 test_the_linked_folders_are_named_in_order - pipeline/walk: le cartelle collegate si percorrono, non c'e' piu' un elenco da ordinare
 test_a_link_to_a_file_is_not_named_as_a_folder - pipeline/walk: niente elenco dei collegamenti, sostituito da test_a_link_to_a_file_is_collected_as_a_file
 test_an_entry_that_cannot_be_asked_is_not_taken_for_a_link - pipeline/walk: niente domanda sul collegamento, sostituito da test_an_entry_that_cannot_be_asked_is_looked_at_as_a_file
+test_finds_every_fits_extension_in_any_case_and_nothing_else - lo scanner usa pipeline/walk: le estensioni le prova test_collects_every_fits_extension_and_its_compressed_form_and_ignores_the_rest
+test_follows_a_linked_folder_and_sees_each_folder_once - sostituito da test_the_scan_reads_through_a_linked_folder_once (scanner su pipeline/walk)
+test_finds_compressed_fits - lo scanner usa pipeline/walk: lo prova test_collects_every_fits_extension_and_its_compressed_form_and_ignores_the_rest
