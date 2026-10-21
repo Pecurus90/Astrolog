@@ -7,10 +7,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import BinaryIO
 
+from .fingerprint import BLOCK, CARD, frame_identity
 from .walk import long_path, walk_dir
 
-BLOCK = 2880
-CARD = 80
 MAX_HEADER_BLOCKS = 1000
 _COMMENTARY = frozenset({"COMMENT", "HISTORY"})  # free text after column 9 (FITS 4.0 4.4.2.4)
 Value = str | int | float | bool
@@ -71,6 +70,7 @@ class Skip(StrEnum):
     UNREACHABLE = "unreachable"  # a folder that does not open, or a link whose target is gone
     HIDDEN = "hidden"  # a hidden folder: trash bins and service folders
     ONLINE_ONLY = "online_only"  # a cloud placeholder: opening it would download it
+    INCOMPLETE = "incomplete"  # shorter than its header says: a copy still running or broken
 
 
 @dataclass(frozen=True)
@@ -81,6 +81,7 @@ class Extracted:
     program: Program
     values: dict[str, Value]
     unknown: frozenset[str]
+    fingerprint: str  # the frame's identity (pipeline/fingerprint.py)
 
 
 @dataclass(frozen=True)
@@ -205,9 +206,15 @@ def scan_file(path: Path) -> Extracted | Skipped:
     program = program_of(cards)
     if program is None:
         return Skipped(path, Skip.NOT_SUPPORTED)
+    try:
+        identity = frame_identity(path, cards)
+    except Exception:  # noqa: BLE001 - astropy refuses the shape: the file cannot be read
+        return Skipped(path, Skip.UNREADABLE)
+    if not identity.complete:
+        return Skipped(path, Skip.INCOMPLETE)
     compressed = cards.get("ZIMAGE") is True
     unknown = frozenset(k for k in cards if not _writes(program, k, compressed))
-    return Extracted(path, program, cards, unknown)
+    return Extracted(path, program, cards, unknown, identity.fingerprint)
 
 
 def scan(root: Path) -> Iterator[Extracted | Skipped]:

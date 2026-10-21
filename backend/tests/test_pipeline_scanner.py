@@ -1,7 +1,9 @@
 """Lo scanner della pipeline nuova: trova i FITS, legge l'header e ne estrae le chiavi che
 scrivono N.I.N.A. e ASIAIR, e nient'altro. Gli header sono quelli veri di `tests/header/`."""
 
+import math
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -13,15 +15,28 @@ CORPUS = Path(__file__).with_name("header")
 
 
 def _fits(path: Path, lines: list[str], end: bool = True) -> Path:
-    """A header-only FITS file from `KEY = value / comment` lines."""
+    """A FITS file from `KEY = value / comment` lines, with the zero pixels its header announces
+    (a file shorter than that is incomplete)."""
     cards = [line.ljust(80)[:80] for line in lines]
     if end:
         cards.append("END".ljust(80))
     raw = "".join(cards)
     raw += " " * (-len(raw) % 2880)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(raw.encode("latin-1"))
+    path.write_bytes(raw.encode("latin-1") + b"\0" * _span(lines))
     return path
+
+
+def _span(lines: list[str]) -> int:
+    keys = {
+        line[:8].strip(): line[10:].split("/")[0].strip() for line in lines if line[8:10] == "= "
+    }
+    try:
+        axes = [int(keys[f"NAXIS{n}"]) for n in range(1, int(keys["NAXIS"]) + 1)]
+        size = abs(int(keys["BITPIX"])) // 8 * math.prod(axes) if axes else 0
+    except (KeyError, ValueError):
+        return 0
+    return size + (-size % 2880)
 
 
 def _link(target: Path, link: Path) -> None:
@@ -35,8 +50,9 @@ def _link(target: Path, link: Path) -> None:
 
 
 def _corpus(name: str) -> list[str]:
+    """A real header, with the image shrunk to 16x16 so the test file stays small."""
     return [
-        line
+        re.sub(r"^(NAXIS[12]  =)\s*\d+", lambda m: m.group(1) + "16".rjust(21), line)
         for line in (CORPUS / name).read_text(encoding="utf-8").splitlines()
         if line.strip() and not line.startswith("#")
     ]
@@ -60,9 +76,10 @@ def test_a_file_beyond_260_characters_is_read(tmp_path):
     while len(deep) < 300:
         deep = os.path.join(deep, "Nebulosa della Testa di Cavallo - IC 434 - sessione lunga")
     os.makedirs(long_path(deep), exist_ok=True)
-    cards = "".join(line.ljust(80)[:80] for line in _corpus("nina.txt")) + "END".ljust(80)
+    lines = _corpus("nina.txt")
+    cards = "".join(line.ljust(80)[:80] for line in lines) + "END".ljust(80)
     with open(long_path(os.path.join(deep, "frame.fits")), "wb") as fh:
-        fh.write((cards + " " * (-len(cards) % 2880)).encode("latin-1"))
+        fh.write((cards + " " * (-len(cards) % 2880)).encode("latin-1") + b"\0" * _span(lines))
     results = list(scan(tmp_path))
     assert [type(r).__name__ for r in results] == ["Extracted"]
 
@@ -140,7 +157,9 @@ def test_a_broken_card_keeps_its_text_and_an_empty_one_stays(tmp_path):
 _NINA_HEAD = [
     "SIMPLE  =                    T",
     "BITPIX  =                   16",
-    "NAXIS   =                    0",
+    "NAXIS   =                    2",
+    "NAXIS1  =                    4",
+    "NAXIS2  =                    4",
     "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'",
 ]
 

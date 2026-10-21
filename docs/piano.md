@@ -10,9 +10,9 @@ fuori nelle Issue con l'etichetta `bloccato`.
 **La pipeline riprogettata da zero** (Marco, 22/10/2026): scansione, lettura, attribuzione e
 normalizzazione si riscrivono in una casa nuova da una mappa concettuale decisa prima del codice,
 uno strato alla volta, affiancate alla vecchia finche' non la sostituiscono. Verificati N.I.N.A. e
-ASIAIR, piu' SBIG (ADR 0029). Mattoni col metodo di ADR 0030, stato nella mappa grafica. Fatto:
-mattoni 1 (`pipeline/walk.py`, `pipeline/scanner.py`) e 2 (`pipeline/changes.py`, cosa e'
-cambiato, tabelle `pipeline_`). Prossimo: il frame e i suoi file (impronta); poi il database. Le Issue #14-#24 aspettano: molte le chiude la pipeline nuova.
+ASIAIR (ADR 0029). Mattoni col metodo di ADR 0030, stato nella mappa grafica. Fatti: `pipeline/`
+walk, scanner, changes, fingerprint (i gemelli in `fits/` si tolgono con la vecchia). Prossimo:
+frame, doppioni, spostati. Le Issue #14-#24 aspettano: molte le chiude la pipeline nuova.
 
 ## Dopo
 
