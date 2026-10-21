@@ -12,7 +12,7 @@ normalizzazione si riscrivono in una casa nuova da una mappa concettuale decisa 
 uno strato alla volta, affiancate alla vecchia finche' non la sostituiscono. Verificati N.I.N.A. e
 ASIAIR, piu' la convenzione SBIG (ADR 0029). Fatto il primo strato: `backend/astrolog/pipeline/scanner.py` trova i FITS e
 estrae solo le chiavi che scrivono N.I.N.A. e ASIAIR (Marco: nient'altro). Il passo dopo lo
-sceglie Marco, uno alla volta. Le Issue #14-#24 aspettano: molte le chiude la pipeline nuova.
+sceglie Marco, uno alla volta, col metodo di ADR 0030. Le Issue #14-#24 aspettano: molte le chiude la pipeline nuova.
 
 ## Dopo
 
