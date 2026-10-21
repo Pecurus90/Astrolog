@@ -89,7 +89,8 @@ Il giro di una fetta di porting e i ruoli nuovi: [ADR 0025](docs/adr/0025-uno-st
   l'export del Sistema solare (ADR 0013). Una decisione gia' in
   un contratto di `docs/domini/` o in un ADR vale: se sembra sbagliata si porta a Marco, non si aggira.
 - **`old/` si porta, non si importa:** un pezzo si sposta coi suoi test; un vocabolario voce per
-  voce, con Marco. `old/docs/intervista-requisiti.md` si legge e non si tocca.
+  voce, con Marco. **Si porta solo cio' che si usa, e cio' che resta senza uso si toglie** (Marco,
+  22/10/2026): niente codice o test portati "per dopo", niente doppioni lasciati in piedi. `old/docs/intervista-requisiti.md` si legge e non si tocca.
 
 ## Come mi comporto
 

@@ -12,7 +12,7 @@ oggi fa gia' bene, e di lasciare Marco senza niente da guardare.
 
 ## Decisione
 
-Ogni passo della pipeline nuova segue sei tappe, in ordine:
+Ogni passo della pipeline nuova segue sette tappe, in ordine:
 
 1. **Una mappa piccola del passo**, verificata sui file veri (corpus e archivio di Marco, sola
    lettura). La mappa generale resta direzione, non contratto.
@@ -25,7 +25,9 @@ Ogni passo della pipeline nuova segue sei tappe, in ordine:
    progettano prima senza vedere il codice, uno lo attacca), sei quesiti: copre tutti i casi? e'
    snello? decisioni giuste? logica giusta? codice giusto e snello? tutte le variabili? Per un
    passo piccolo un revisore; quale dei due si chiede a Marco.
-6. **Mappa aggiornata e commit** nello stesso giro: la mappa dice cio' che il codice fa.
+6. **Mappa aggiornata e commit** nello stesso giro: la mappa dice cio' che il codice fa, e la
+   mappa grafica mostra a Marco lo stato di ogni mattone (fatto, in corso, da fare).
+7. **Si porta solo cio' che si usa**; cio' che resta senza uso, o doppio, si toglie.
 
 Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
 
