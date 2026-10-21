@@ -43,6 +43,25 @@ export default tseslint.config(
     },
   },
   {
+    // Ogni testo per l'utente passa da `t()` (skill `testi-per-pagina`): un testo nudo nel JSX,
+    // o in un attributo che si legge o si sente, non si traduce mai. Il nome dell'app resta.
+    files: ["src/**/*.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXText[value=/[A-Za-z]/]:not([value=/^\\s*AstroLog\\s*$/])",
+          message: "Un testo per l'utente passa da t().",
+        },
+        {
+          selector:
+            "JSXAttribute[name.name=/^(aria-label|placeholder|title|alt)$/] > Literal[value=/[A-Za-z]/]",
+          message: "Un attributo che si legge o si sente passa da t().",
+        },
+      ],
+    },
+  },
+  {
     // `tsx` compreso: la prova di un componente e' un `.tsx`, e senza questa forma cadrebbe
     // fuori da tutti e due i blocchi -- cioe' senza nessuna regola, in silenzio.
     files: ["tests/**/*.{ts,tsx}", "vite.config.ts", "eslint.config.js"],
