@@ -1,4 +1,4 @@
-# Per Claude Design -- Riordino prima del porting (brief v1)
+# Per Claude Design -- Riordino prima del porting (brief v1.1)
 
 Da Claude Code, 20/10/2026. **Il disegno di AstroLog e' finito**: Marco ha approvato tutte le
 pagine, fino alle Statistiche v31.8. Da qui il progetto di Design diventa **la fonte da cui
@@ -216,6 +216,27 @@ delle classi nel primo avvio. Un SQM di 21.4 sarebbe classe 3 per il sito e 4 pe
 17. **Statistiche**: la nota sotto Confronta setup («Punto pieno {setup 1}, punto vuoto e linea
     tratteggiata {setup 2}; … In ″ si confronta fra setup diversi; i px al passaggio.») e'
     approvata.
+
+## 8. Aggiunte del 21/10/2026
+
+Cose trovate dopo la v1, da fare nello stesso giro:
+
+1. **Impostazioni: il nome dell'utente si cambia anche li'.** Il primo avvio non si riapre
+   (Marco, 21/10/2026): ogni sua cosa -- nome, sito, cartelle, chiave, ASTAP -- deve stare nelle
+   Impostazioni, e oggi il nome manca. Parola proposta: «Il tuo nome», con l'aiuto del primo avvio.
+2. **Meteo, le barre della pioggia** nel cielo delle nubi col colore del giudizio: oggi sono
+   sempre rosse.
+3. **Meteo, il giudizio lungo di una carta** («incerta dalle 21:00, niente dalle 22:00») esce
+   dal bordo a larghezza desktop: va a capo o si accorcia, senza cambiare le parole.
+4. **Meteo, la scala di destra**: in `meteo.js` la parola della prima ora non si scrive mai (il
+   controllo delle sovrapposizioni parte da G+4, la prima parola sta a G+3).
+5. **Notti, un filtro i cui frame non dicono la durata** pesa zero nella barra e resta solo lo
+   stacco minimo: basta, o serve un segno? Domanda in DECISIONI.
+6. **Contrasto dell'inchiostro spento**: dove porta testo vivo (il conteggio di un gruppo, il
+   segnaposto di un campo) arriva a 2,75:1 e 2,47:1, sotto il 4,5:1 di WCAG 1.4.3. Il token si
+   corregge alla fonte, con il contrasto misurato accanto.
+7. **I bottoni dei comandi delle carte** (aprire le produzioni dell'Archivio) hanno la veste solo
+   su un collegamento: serve anche su `button`, e una variante del riepilogo allineata a destra.
 
 ## 7. Ordine e consegna
 
