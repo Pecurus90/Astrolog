@@ -88,3 +88,24 @@ diff --git a/frontend/tests/a.test.tsx b/frontend/tests/a.test.tsx
 def test_lines_outside_test_files_are_ignored():
     diff = DIFF_REMOVED.replace("backend/tests/test_x.py", "backend/astrolog/x.py")
     assert guardia_test.undeclared(diff) == []
+
+
+DIFF_EACH_AND_WRAPPED = """\
+diff --git a/frontend/tests/meteo.test.tsx b/frontend/tests/meteo.test.tsx
+--- a/frontend/tests/meteo.test.tsx
++++ b/frontend/tests/meteo.test.tsx
+@@ -45,4 +45,0 @@
+-  it.each([
+-    [5, "Altri 3 fattori"],
+-  ])("con %i fattori la carta dice %s", (n, testo) => {
+-  it(
+-    "un titolo che va a capo resta un titolo",
+"""
+
+
+def test_a_removed_each_or_wrapped_title_is_reported():
+    """`it.each([...])("titolo")` e un titolo a capo dopo `it(` sono test come gli altri."""
+    assert guardia_test.undeclared(DIFF_EACH_AND_WRAPPED) == [
+        "con %i fattori la carta dice %s",
+        "un titolo che va a capo resta un titolo",
+    ]
