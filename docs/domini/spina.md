@@ -948,9 +948,9 @@ puo' dire una cosa e la corsa farne un'altra.
 **Senza catalogo caricato vale la colonna "niente cielo"**, anche su un frame risolto: il cono
 non ha nessuno da restituire, quindi la decisione ricade sul nome dell'header. L'app cataloga,
 cerca e conta le ore lo stesso -- ma gli oggetti che nascono cosi' sono fuori catalogo, e
-quando il catalogo arriva **non si rifanno da soli**: `load_catalog` non chiama `invalidate`,
-e quegli oggetti restano fuori catalogo finche' qualcosa non rimette in coda i loro frame -- una
-dichiarazione in Da confermare, o una scansione che li tocca. Chiuderlo e' la Issue #14.
+quando un catalogo nuovo arriva **tutti i frame gia' passati da `identify`** (fatti o saltati) tornano in coda
+(`api/app._load_catalog`), o resterebbero fuori catalogo per sempre; lo stesso catalogo di prima
+non rimette in coda niente (`test_a_new_catalog_sends_the_identified_frames_back_to_identify`).
 
 **Come si chiama un oggetto** -- tre invarianti che questa casella fissa, e che chi mostra un
 oggetto deve conoscere prima di fare il join:

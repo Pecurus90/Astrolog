@@ -24,8 +24,10 @@ from ..catalog import load as catalog_load
 from ..clock import night_date, now_iso
 from ..db.connect import connect, ensure_database
 from ..db.paths import data_root as env_data_root
-from ..spine import gear_usage, moon_calendar, object_candidates
+from ..db.transaction import transaction
+from ..spine import gear_usage, moon_calendar, object_candidates, stages
 from ..spine.group_store import home_site
+from ..spine.stages import StageName
 from ..weather import climate, forecast, history, rounds
 from ..worker.worker import Worker
 from . import (
@@ -148,12 +150,23 @@ def _load_catalog(db_path: str | Path) -> None:
     (what is left in place is the contract of GET /api/health)."""
     conn = connect(db_path)
     try:
-        if catalog_load.load_catalog(conn):
+        try:
+            loaded = catalog_load.load_catalog(conn)
+        except Exception:
+            log.exception("catalogo: non si e' potuto caricare, l'app parte lo stesso")
+            return
+        if loaded:
+            # objects born before this catalog would stay out of it for good: identify again
+            with transaction(conn):
+                stages.invalidate(
+                    conn, stages.passed_by(conn, StageName.IDENTIFY), StageName.IDENTIFY
+                )
             # object names in gear usage and the candidates of the questions come from the catalog
-            gear_usage.write(conn)
-            object_candidates.write(conn)
-    except Exception:
-        log.exception("catalogo: non si e' potuto caricare, l'app parte lo stesso")
+            try:
+                gear_usage.write(conn)
+                object_candidates.write(conn)
+            except Exception:
+                log.exception("catalogo caricato, ma l'uso e i candidati che ne vengono no")
     finally:
         conn.close()
 

@@ -259,3 +259,20 @@ def test_gear_usage_counts_rigs_and_filters_from_the_index_alone(conn, query, in
     di ogni posa."""
     piano = " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + query))
     assert re.search(rf"COVERING INDEX {indice}\b", piano), piano
+
+
+def test_a_derived_table_that_fails_does_not_say_the_catalog_failed(db_path, monkeypatch, caplog):
+    """Il catalogo entrato e una tabella che ne deriva caduta sono due fatti: il diario dice quale,
+    o chi cerca il guasto lo cerca nel catalogo, che e' a posto."""
+    from astrolog.api import app
+    from astrolog.catalog import load as catalog_load
+
+    def rotta(conn):
+        raise RuntimeError("uso")
+
+    monkeypatch.setattr(catalog_load, "load_catalog", lambda conn: 22080)
+    monkeypatch.setattr(gear_usage, "write", rotta)
+    with caplog.at_level("ERROR"):
+        app._load_catalog(db_path)
+    assert "catalogo: non si e' potuto caricare" not in caplog.text
+    assert "catalogo caricato, ma l'uso e i candidati" in caplog.text

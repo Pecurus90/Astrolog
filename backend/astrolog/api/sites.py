@@ -3,6 +3,7 @@ yield (zone, elevation, sky) is derived on write and saved, so an opening page n
 
 import sqlite3
 from dataclasses import asdict
+from typing import NoReturn
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -97,6 +98,13 @@ def list_sites(
     return SiteList(items=[_out(r) for r in rows], total=total, limit=limit, offset=offset)
 
 
+def _name_taken_or_raise(err: sqlite3.IntegrityError) -> NoReturn:
+    """Only the name index is the user's 409; any other broken rule is a fault, and stays one."""
+    if "sites.name" in str(err):
+        raise HTTPException(status_code=409, detail={"code": "site_name_taken"}) from err
+    raise err
+
+
 @router.post("/sites", response_model=SiteOut, status_code=201)
 def create_site(body: SiteCreate, conn: sqlite3.Connection = Depends(get_db)) -> SiteOut:
     """A new site, enriched by what its coordinates can tell, returned as it is now saved.
@@ -142,7 +150,7 @@ def create_site(body: SiteCreate, conn: sqlite3.Connection = Depends(get_db)) ->
             )
             home_nights.follow_home(conn)
     except sqlite3.IntegrityError as err:
-        raise HTTPException(status_code=409, detail={"code": "site_name_taken"}) from err
+        _name_taken_or_raise(err)
     return _out(_row(conn, site_id))
 
 
@@ -219,7 +227,7 @@ def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(g
             )
             home_nights.follow_home(conn)
     except sqlite3.IntegrityError as err:
-        raise HTTPException(status_code=409, detail={"code": "site_name_taken"}) from err
+        _name_taken_or_raise(err)
     return _out(_row(conn, site_id))
 
 

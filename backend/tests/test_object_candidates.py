@@ -18,6 +18,7 @@ from astrolog.spine import (
 )
 from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.identify import identify_frames
+from astrolog.spine.stages import StageName, StageStatus
 from conftest import add_folder, apply, db, review
 from test_typeless import _frame
 
@@ -132,3 +133,28 @@ def test_an_identify_that_breaks_before_its_first_pose_still_rewrites(client_ban
         with pytest.raises(RuntimeError):
             list(identify_frames(conn))
     assert chiamate == [1]
+
+
+@pytest.mark.parametrize(("voci", "in_coda"), [(22080, True), (0, False)])
+def test_a_new_catalog_sends_the_identified_frames_back_to_identify(
+    conn, archive, db_path, monkeypatch, voci, in_coda
+):
+    """Il catalogo arriva dopo i frame (il primo avvio di tutti, o un catalogo nuovo): gli oggetti
+    nati senza di lui restano fuori catalogo per sempre, se nessuno rifa' l'identificazione. Un
+    catalogo nuovo la rimette in coda; lo stesso di prima no."""
+    from astrolog.api import app
+    from astrolog.catalog import load as catalog_load
+
+    # identificati, e saltati perche' senza nome e senza candidati: col catalogo possono averne
+    for i, (frame_id,) in enumerate(conn.execute("SELECT id FROM frames").fetchall()):
+        stato = StageStatus.DONE if i % 2 else StageStatus.SKIPPED
+        stages.set_status(conn, frame_id, StageName.IDENTIFY, stato)
+    fatti = (
+        "SELECT COUNT(*) FROM frame_stages WHERE stage = 'identify'"
+        " AND status IN ('done', 'skipped')"
+    )
+    assert conn.execute(fatti).fetchone()[0] > 0
+    monkeypatch.setattr(catalog_load, "load_catalog", lambda conn: voci)
+    monkeypatch.setattr(object_candidates, "write", lambda conn: None)
+    app._load_catalog(db_path)
+    assert (conn.execute(fatti).fetchone()[0] == 0) is in_coda

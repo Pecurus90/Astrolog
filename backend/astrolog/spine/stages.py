@@ -177,6 +177,13 @@ def _waiting_by_stage(conn: sqlite3.Connection) -> dict[str, int]:
     return {r[0]: r[1] for r in conn.execute(_WAITING_BY_STAGE)}
 
 
+def passed_by(conn: sqlite3.Connection, stage: StageName) -> list[int]:
+    """The frames the stage has already been through, done or skipped: what a change upstream of
+    it sends back (a frame skipped for lack of a name may have one now)."""
+    sql = "SELECT frame_id FROM frame_stages WHERE stage = ? AND status IN ('done', 'skipped')"
+    return [r[0] for r in conn.execute(sql, (stage,))]
+
+
 def count_pending(conn: sqlite3.Connection, stage: StageName) -> int:
     return pending_by_stage(conn, (stage,))[stage]
 

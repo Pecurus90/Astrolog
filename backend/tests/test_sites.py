@@ -5,6 +5,8 @@ Vincolo di questi test: **non toccano internet**. Il recinto della suite (`conft
 l'unica funzione di `place` che tocca la rete; chi vuole un servizio lo finge da se' (`answers`).
 """
 
+import sqlite3
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -95,6 +97,25 @@ def test_two_sites_cannot_share_a_name(client_vuoto, offline):
     create(client_vuoto)
     r = client_vuoto.post("/api/v1/sites", json=ASIAGO)
     assert r.status_code == 409 and r.json()["detail"]["code"] == "site_name_taken"
+
+
+def test_another_broken_rule_is_not_called_a_taken_name(client_vuoto, offline, monkeypatch):
+    """Solo il nome gia' usato e' un 409 `site_name_taken`: un altro vincolo violato dentro la
+    stessa scrittura e' un guasto, e non si traveste da nome doppio."""
+    from astrolog.spine import home_nights
+
+    def rotto(conn):
+        raise sqlite3.IntegrityError("FOREIGN KEY constraint failed")
+
+    with monkeypatch.context() as m:
+        m.setattr(home_nights, "follow_home", rotto)
+        with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY"):
+            client_vuoto.post("/api/v1/sites", json=ASIAGO)
+    sito = create(client_vuoto)
+    with monkeypatch.context() as m:
+        m.setattr(home_nights, "follow_home", rotto)
+        with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY"):
+            client_vuoto.patch(f"/api/v1/sites/{sito['id']}", json={"name": "Altro"})
 
 
 def test_site_elevation_arrives_from_the_coordinates(client_vuoto, monkeypatch):
