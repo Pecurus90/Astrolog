@@ -101,6 +101,27 @@ def test_no_real_site_coordinates_in_the_corpus(path):
         assert header.get(key) in (None, "", "Osservatore", "ZWO"), key
 
 
+# Un luogo si riconosce dal nome della chiave, non da un elenco: GEOLAT, SITE, OBSERVAT, una
+# grafia che nessun programma ha ancora scritto. ALT/AZ: altezza e azimut del puntamento; LAT non
+# dopo F o P, che e' la correzione del flat (FLATCOR) o la scala di lastra (PLATESCL).
+PLACE_KEY = re.compile(
+    r"(?<![FP])LAT|LONG|LON$|ELEV|GEO|SITE|OBSERVAT|LOCAT|^ALT|ALT(ITUDE)?$|AZ(IMUTH)?$"
+)
+PERSON_KEY = re.compile(r"OBSERVER|OWNER|AUTHOR|USER")
+PLACEHOLDERS = (None, "", "Osservatore", "ZWO")
+
+
+@pytest.mark.parametrize("path", FILES, ids=[p.stem for p in FILES])
+def test_no_place_or_person_in_the_corpus_whatever_the_key_is_called(path):
+    """Ogni chiave che per nome dice un luogo porta al massimo il grado, o un testo di comodo; ogni
+    chiave che dice una persona, un nome di comodo. `DATE-LOC` resta: dice il fuso, non il posto."""
+    for key, value in load(path).items():
+        if PLACE_KEY.search(key) and isinstance(value, int | float) and not isinstance(value, bool):
+            assert float(value) == int(float(value)), f"{key} non anonimizzata"
+        elif PLACE_KEY.search(key) or PERSON_KEY.search(key):
+            assert value in PLACEHOLDERS, f"{key} = {value!r} puo' dire un posto o una persona"
+
+
 def test_specific_lessons_from_the_corpus():
     """Le cose che il corpus insegna e che un lettore scritto su un software solo perde."""
     nina = extract_fields(load(CORPUS / "nina.txt"), "x")
