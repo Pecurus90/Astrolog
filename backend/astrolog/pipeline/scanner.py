@@ -84,8 +84,7 @@ def _walk(root: Path) -> Iterator[Path | Skipped]:
     seen: set[str] = set()
     failed: list[OSError] = []
     for folder, dirs, files in os.walk(root, onerror=failed.append, followlinks=True):
-        yield from (Skipped(Path(e.filename), Skip.FOLDER_UNREADABLE) for e in failed)
-        failed.clear()
+        yield from _drain(failed)
         real = os.path.realpath(folder)
         if real in seen:
             dirs.clear()
@@ -95,7 +94,12 @@ def _walk(root: Path) -> Iterator[Path | Skipped]:
         for name in sorted(files):
             if Path(name).suffix.lower() in FITS_SUFFIXES:
                 yield Path(folder, name)
+    yield from _drain(failed)  # a folder failing after the last one walked, or the root itself
+
+
+def _drain(failed: list[OSError]) -> Iterator[Skipped]:
     yield from (Skipped(Path(e.filename), Skip.FOLDER_UNREADABLE) for e in failed)
+    failed.clear()
 
 
 def find_fits(root: Path) -> Iterator[Path]:
@@ -196,10 +200,7 @@ def _writes(program: Program, key: str) -> bool:
 
 
 def scan_file(path: Path) -> Extracted | Skipped:
-    try:
-        cards = read_cards(path)
-    except OSError:
-        cards = None
+    cards = read_cards(path)
     if cards is None:
         return Skipped(path, Skip.UNREADABLE)
     if _REWRITE_MARKS & cards.keys():
