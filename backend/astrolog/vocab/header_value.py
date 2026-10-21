@@ -4,7 +4,7 @@ function normalises what an alias stores and what a frame reads, or they would n
 import re
 
 _WS_RE = re.compile(r"\s+")
-_TRAILING_INDEX_RE = re.compile(r"\s*\(\d+\)\s*$")
+_TRAILING_INDEX_RE = re.compile(r"(\s*\(\d+\))+\s*$")
 
 
 def normalize_header_value(value: object) -> str:
@@ -12,8 +12,6 @@ def normalize_header_value(value: object) -> str:
     None -> "". A value that normalises to "" is not an alias: the writer rejects it."""
     if value is None:
         return ""
-    x = str(value).lower()
-    x = _TRAILING_INDEX_RE.sub("", x)
-    x = x.replace(".", " ")
-    x = _WS_RE.sub(" ", x)
-    return x.strip()
+    # dots and spaces first, then every ASCOM index at the end: what is left has none to strip
+    x = _WS_RE.sub(" ", str(value).lower().replace(".", " ")).strip()
+    return _TRAILING_INDEX_RE.sub("", x).strip()

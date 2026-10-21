@@ -74,6 +74,8 @@ def test_software(raw, expected):
         ("  Caméra Ñoño  100  ", "caméra ñoño 100"),
         ("ASCOM.ToupTek.AAF", "ascom touptek aaf"),
         ("ZWO Focuser (1)", "zwo focuser"),
+        ("ZWO EFW (1) (2)", "zwo efw"),
+        ("Ruota (1).", "ruota"),
         ("Cam (2) X", "cam (2) x"),
         ("ATR2600M(USB2.0)", "atr2600m(usb2 0)"),
         ("Askar 103Apo", "askar 103apo"),
@@ -84,8 +86,9 @@ def test_header_value(raw, expected):
 
 
 def test_header_value_is_idempotent_and_keeps_distinct_things_distinct():
-    v = normalize_header_value("ASCOM ToupTek FilterWheel")
-    assert normalize_header_value(v) == v
+    for grezzo in ("ASCOM ToupTek FilterWheel", "ZWO Focuser (1) (2)", "Ruota (1).", "EFW (3) "):
+        v = normalize_header_value(grezzo)
+        assert normalize_header_value(v) == v, grezzo
     assert (
         len(
             {
