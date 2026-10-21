@@ -163,6 +163,18 @@ def test_accented_letters_written_by_nina_are_kept(tmp_path):
     assert got.values["OBJECT"] == "Nébuleuse"
 
 
+def test_the_checksums_of_the_cfitsio_writer_are_nina_keys(tmp_path):
+    lines = [
+        *_corpus("nina.txt"),
+        "BSCALE  =                  1.0",
+        "CHECKSUM= 'ZaFbZYDbZaDbZYDb'",
+        "DATASUM = '2384729374'",
+    ]
+    got = scan_file(_fits(tmp_path / "c.fits", lines))
+    assert isinstance(got, Extracted)
+    assert got.unknown == frozenset()
+
+
 def test_a_long_value_split_over_continue_cards_is_read_whole(tmp_path):
     long_name = "A very long target name that does not fit in one card at all"
     lines = [

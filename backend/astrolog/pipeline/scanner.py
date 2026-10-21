@@ -17,7 +17,8 @@ Value = str | int | float | bool
 
 _STRUCTURE = ("SIMPLE", "BITPIX", "NAXIS", "NAXIS1", "NAXIS2", "BZERO", "EXTEND")
 
-# Complete: the writer NINA.Image/FileFormat/FITS/FITSHeader.cs; user-defined keys are not its own.
+# Complete for uncompressed files: writers FITS/FITSHeader.cs and FITS/CFitsioFITS.cs (BSCALE and
+# checksums via cfitsio); user-defined keys are not N.I.N.A.'s own.
 NINA_KEYS = frozenset({
     *_STRUCTURE,
     "IMAGETYP", "EXPOSURE", "EXPTIME", "DATE-LOC", "DATE-OBS", "MJD-OBS", "DATE-AVG", "MJD-AVG",
@@ -30,7 +31,7 @@ NINA_KEYS = frozenset({
     "ROTNAME", "ROTATOR", "ROTATANG", "ROTSTPSZ",
     "CLOUDCVR", "DEWPOINT", "HUMIDITY", "PRESSURE", "SKYBRGHT", "MPSAS", "SKYTEMP", "STARFWHM",
     "AMBTEMP", "WINDDIR", "WINDGUST", "WINDSPD",
-    "ROWORDER", "EQUINOX", "SWCREATE",
+    "ROWORDER", "EQUINOX", "SWCREATE", "BSCALE", "CHECKSUM", "DATASUM",
 })  # fmt: skip
 
 # Partial: ZWO publishes no list; these are the keys of 696 real ASIAIR files.
