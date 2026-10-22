@@ -485,6 +485,32 @@ def test_a_file_rewritten_by_another_program_loses_frame_and_header(conn, tmp_pa
     assert _headers(conn) == {}
 
 
+@pytest.mark.parametrize(
+    ("pixels", "extra"), [(2, ()), (1, ("PROGRAM = 'Editor 1.9.3'",))], ids=["pixels", "rewritten"]
+)
+def test_a_frame_no_file_points_to_any_more_is_gone(conn, tmp_path, pixels, extra):
+    """Posa lasciata da ogni file, presente o sparito: non resta come fantasma. Copia e
+    sparito tengono la loro."""
+    nina_light(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "copy" / "a.fits", 3)
+    nina_light(tmp_path / "b.fits", 3)
+    nina_light(tmp_path / "gone.fits", 4)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    (tmp_path / "gone.fits").unlink()
+    nina_light(tmp_path / "a.fits", pixels, extra)
+    nina_light(tmp_path / "b.fits", 5)
+    _touch_later(tmp_path / "a.fits")
+    _touch_later(tmp_path / "b.fits")
+    scan_root(conn, root, LATER)
+    frames = {row["id"] for row in conn.execute("SELECT id FROM pipeline_frames")}
+    used = conn.execute("SELECT frame_id FROM pipeline_files WHERE frame_id IS NOT NULL")
+    assert frames == {row["frame_id"] for row in used}
+    assert len(frames) == (4 if pixels == 2 else 3)
+    gone = conn.execute("SELECT frame_id FROM pipeline_files WHERE rel_path = 'gone.fits'")
+    assert gone.fetchone()["frame_id"] in frames
+
+
 def test_an_unreachable_folder_leaves_every_header(conn, tmp_path):
     archive = tmp_path / "nas"
     nina_light(archive / "a.fits", 1)

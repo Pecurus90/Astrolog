@@ -110,6 +110,10 @@ def _store(
     """File's size and date written with its read, frame and header together: skipped file
     loses both, even if read before."""
     size, mtime_ns = changes.stat[rel]
+    was = conn.execute(
+        "SELECT frame_id FROM pipeline_files WHERE root_id = ? AND rel_path = ?",
+        (changes.root_id, rel),
+    ).fetchone()
     file_id = conn.execute(
         "INSERT INTO pipeline_files"
         " (root_id, rel_path, size, mtime_ns, state, seen_scan_id, arrived_scan_id)"
@@ -120,17 +124,17 @@ def _store(
         " ELSE arrived_scan_id END, state = 'present' RETURNING id",
         (changes.root_id, rel, size, mtime_ns, changes.scan_id, changes.scan_id),
     ).fetchone()["id"]
-    if isinstance(got, Skipped):
-        conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
-        conn.execute(
-            "UPDATE pipeline_files SET frame_id = NULL, skip_reason = ? WHERE id = ?",
-            (got.reason, file_id),
-        )
-        return
+    skipped = isinstance(got, Skipped)
+    frame_id = None if skipped else _frame_of(conn, got, now)
     conn.execute(
-        "UPDATE pipeline_files SET frame_id = ?, skip_reason = NULL WHERE id = ?",
-        (_frame_of(conn, got, now), file_id),
+        "UPDATE pipeline_files SET frame_id = ?, skip_reason = ? WHERE id = ?",
+        (frame_id, got.reason if skipped else None, file_id),
     )
+    if was is not None and was["frame_id"] not in (None, frame_id):
+        _drop_if_unused(conn, was["frame_id"])
+    if skipped:
+        conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
+        return
     conn.execute(
         "INSERT OR REPLACE INTO pipeline_headers (file_id, program, header) VALUES (?, ?, ?)",
         (file_id, got.program, json.dumps(got.values, allow_nan=False)),
@@ -157,6 +161,15 @@ def _insert(conn: sqlite3.Connection, table: str, file_id: int, row: Card | Cond
 def _column(value: object) -> object:
     """Start as fixed-form text: order and equality on text (schema)."""
     return value.isoformat(timespec="microseconds") if isinstance(value, datetime) else value
+
+
+def _drop_if_unused(conn: sqlite3.Connection, frame_id: int) -> None:
+    """Frame left by every file, present or gone: phantom shot. Gone file keeps its own."""
+    conn.execute(
+        "DELETE FROM pipeline_frames WHERE id = ?"
+        " AND NOT EXISTS (SELECT 1 FROM pipeline_files WHERE frame_id = ?)",
+        (frame_id, frame_id),
+    )
 
 
 def _frame_of(conn: sqlite3.Connection, got: Extracted, now: str) -> int:
