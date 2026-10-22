@@ -137,7 +137,8 @@ def focuser_temp_c(values: dict[str, Value]) -> float | None:
 
 
 def focal_mm(values: dict[str, Value]) -> float | None:
-    """Hint on both: N.I.N.A. from profile, ASIAIR from its solve (varies by 1-3 mm)."""
+    """Hint on both: N.I.N.A. from profile; ASIAIR whole mm, on darks too, so not frame's own
+    solve (700 real files: up to 1 mm apart in one folder, 4 in one night)."""
     return as_positive(values.get("FOCALLEN"))
 
 

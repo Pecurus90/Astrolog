@@ -101,7 +101,7 @@ def test_a_file_not_read_has_no_frame(conn, tmp_path):
 
 
 def test_an_interrupted_scan_reads_its_files_next_time(conn, tmp_path, monkeypatch):
-    """Scansione fermata a meta' non salva nulla: la prossima rilegge, nessuna posa persa."""
+    """Scansione fermata a meta': la prossima legge cio' che manca, nessuna posa persa."""
     _nina(tmp_path / "a.fits", 1)
     _nina(tmp_path / "b.fits", 2)
     root = add_root(conn, tmp_path, NOW)
