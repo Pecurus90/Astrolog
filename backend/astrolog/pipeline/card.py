@@ -169,6 +169,7 @@ class Card:
     set_temp_c: float | None
     optics: str | None
     focal_mm: float | None
+    filter: str | None  # as written; what it is: filters.resolve
 
 
 def read_card(program: Program, values: dict[str, Value]) -> Card:
@@ -191,4 +192,5 @@ def read_card(program: Program, values: dict[str, Value]) -> Card:
         set_temp_c=_number(values.get("SET-TEMP")),
         optics=optics(program, values),
         focal_mm=focal_mm(values),
+        filter=_name(values.get("FILTER")),
     )

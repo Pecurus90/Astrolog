@@ -33,3 +33,9 @@ e un errore che non si vede.
 - Al primo avvio un utente risponde a qualche domanda in piu'; in cambio niente abbinamenti
   sbagliati in silenzio, e il codice dei vocabolari si riduce a una lista.
 - La domanda sul nome e la lista dei filtri in Attrezzatura: tavole da Claude Design.
+- **Forme della lista** (Marco, 22/10/2026): il simbolo e le abbreviazioni d'uso, ognuna con la
+  sua fonte (nomi di prodotto Chroma, Baader, Astronomik) o decisa da Marco (H, O, S; "none",
+  "no filter"); senza fonte (O3, S2, Hb, Lum) si chiede. Solo ASCII: un header FITS non ha α.
+  Codice in `pipeline/filters.py`.
+- **Camere** (Marco, 22/10/2026): `CAMERAID` non distingue niente, e' la porta USB (6 valori per
+  una camera sola nell'archivio di prova). L'unione si propone a sensore identico e si conferma.

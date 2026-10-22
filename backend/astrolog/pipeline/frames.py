@@ -10,6 +10,7 @@ from pathlib import Path
 from ..db.transaction import transaction
 from .card import Card, read_card
 from .changes import Changes, record_changes
+from .filters import resolve
 from .scanner import Extracted, Skipped, scan_file
 
 _CARD_COLUMNS = tuple(f.name for f in fields(Card))  # columns named as fields (test)
@@ -70,6 +71,8 @@ def _store(
         f" VALUES (?{', ?' * len(_CARD_COLUMNS)})",
         (file_id, *row),
     )
+    if card.filter is not None:
+        resolve(conn, card.filter)
 
 
 def _column(value: object) -> object:

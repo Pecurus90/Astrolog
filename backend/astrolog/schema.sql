@@ -939,5 +939,45 @@ CREATE TABLE pipeline_cards (
   set_temp_c REAL,
   -- ottica come scritta; focale indizio, varia di mm: mai confronto esatto
   optics     TEXT CHECK (optics <> ''),
-  focal_mm   REAL CHECK (focal_mm > 0)
+  focal_mm   REAL CHECK (focal_mm > 0),
+  -- filtro come scritto; cosa sia: pipeline_filter_spellings. NULL: non scritto, non so
+  filter     TEXT CHECK (filter <> '')
 ) STRICT;
+
+-- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave: nome (filters.filter_key).
+CREATE TABLE pipeline_filters (
+  name TEXT PRIMARY KEY CHECK (name <> '' AND name = trim(name)),
+  key  TEXT NOT NULL UNIQUE
+) STRICT;
+
+-- DICHIARATO. Bande del filtro; Ha 3 nm e 7 nm: due filtri. width_nm NULL: non detta.
+CREATE TABLE pipeline_filter_bands (
+  filter_name TEXT NOT NULL
+    REFERENCES pipeline_filters (name) ON UPDATE CASCADE ON DELETE CASCADE,
+  band        TEXT NOT NULL
+    CHECK (band IN ('l', 'r', 'g', 'b', 'ha', 'hb', 'oiii', 'sii', 'uvir')),
+  width_nm    REAL CHECK (width_nm > 0),
+  PRIMARY KEY (filter_name, band)
+) STRICT;
+
+-- DICHIARATO. Risposta per nome scritto (chiave normalizzata): vale per sempre.
+CREATE TABLE pipeline_filter_answers (
+  written_key TEXT PRIMARY KEY,
+  standard    TEXT CHECK (standard IN ('l', 'r', 'g', 'b', 'ha', 'oiii', 'sii', 'hb', 'ha_oiii',
+    'sii_oiii', 'uvir', 'none')),
+  filter_name TEXT
+    REFERENCES pipeline_filters (name) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CHECK ((standard IS NULL) <> (filter_name IS NULL))
+) STRICT;
+
+-- DERIVATO da filters.resolve. Nome scritto -> filtro; entrambi NULL: da chiedere.
+CREATE TABLE pipeline_filter_spellings (
+  written     TEXT PRIMARY KEY,  -- uguale a pipeline_cards.filter: join senza calcolo
+  key         TEXT NOT NULL,
+  standard    TEXT CHECK (standard IN ('l', 'r', 'g', 'b', 'ha', 'oiii', 'sii', 'hb', 'ha_oiii',
+    'sii_oiii', 'uvir', 'none')),
+  filter_name TEXT
+    REFERENCES pipeline_filters (name) ON UPDATE CASCADE ON DELETE SET NULL,
+  CHECK (standard IS NULL OR filter_name IS NULL)
+) STRICT;
+CREATE INDEX pipeline_filter_spellings_key ON pipeline_filter_spellings (key);
