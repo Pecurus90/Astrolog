@@ -19,9 +19,7 @@ CARRIED = (*ON_THE_FRAME, "mount", *CHOSEN_ONLY)
 def _piece(through_rigs: str) -> str:
     """A frame reaches a piece through its rig, which depends on the caller's `FROM`, or through
     the columns it carries, which never change."""
-    return (  # noqa: S608 - kinds from our list, never user values
-        "(" + through_rigs + "".join(f" OR f.{k}_id = i.id" for k in CARRIED) + ")"
-    )
+    return "(" + through_rigs + "".join(f" OR f.{k}_id = i.id" for k in CARRIED) + ")"
 
 
 # For callers with `rigs g` already joined: the same link, without a correlated sub-select per pair.

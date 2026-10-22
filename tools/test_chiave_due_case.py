@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
 
-from astrolog.api.app import TOKEN_HEADER  # noqa: E402
+from astrolog.api.app import TOKEN_HEADER
 
 RADICE = Path(__file__).resolve().parent.parent
 CASE = (

@@ -101,7 +101,7 @@ def _chiedi(posta, query, timeout_s):
         return _righe((posta or _posta)(TAP_URL, query, timeout_s))
     except SimbadNonRispondeError:
         raise
-    except Exception as err:  # noqa: BLE001 - qualunque guasto del trasporto e' "non risponde"
+    except Exception as err:
         raise SimbadNonRispondeError(f"{type(err).__name__}: {err}") from err
 
 

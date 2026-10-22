@@ -22,7 +22,7 @@ def replace_rows(  # noqa: PLR0913
     try:
         conn.execute(f"DELETE FROM {table} WHERE {where}", args)  # noqa: S608 - caller's constants
         conn.executemany(
-            f"INSERT INTO {table}({column_list}) VALUES({marks})",  # noqa: S608 - constants
+            f"INSERT INTO {table}({column_list}) VALUES({marks})",
             rows,
         )
     except Exception:

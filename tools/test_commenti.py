@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import commenti  # noqa: E402
+import commenti
 
 
 def lines(source, path="backend/astrolog/x.py"):

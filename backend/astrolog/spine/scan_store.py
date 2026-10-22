@@ -238,7 +238,7 @@ def insert_frame(conn: sqlite3.Connection, frame: NewFrame, now: str) -> int:
     marks = ", ".join("?" for _ in FRAME_COLUMNS)  # segnaposto-ok: the columns, not the rows
     # S608: fixed columns.
     sql = (
-        "INSERT INTO frames(frame_hash, header_json, created_at,"  # noqa: S608
+        "INSERT INTO frames(frame_hash, header_json, created_at,"
         f" local_night, local_tz, night_instant, {cols}) VALUES(?, ?, ?, ?, ?, ?, {marks})"
     )
     row = [frame.frame_hash, frame.header_json, now, *frame.night, *values]

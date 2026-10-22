@@ -10,8 +10,8 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from mutation_shards import FIXED, REST, main, modules, probes, shards  # noqa: E402
-from mutation_shards import matches as matched  # noqa: E402
+from mutation_shards import FIXED, REST, main, modules, probes, shards
+from mutation_shards import matches as matched
 
 
 def owners(name, table):

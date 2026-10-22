@@ -69,7 +69,7 @@ def _ask(fetch: net.Fetch | None, url: str) -> Any:
 def valid_timezone(name: str | None) -> bool:
     """Looked up in the list, not opened: "Europe" (a folder of the zone database) and a made-up
     name fail with different exceptions, and a guard chasing them gets them wrong."""
-    global _ZONES  # noqa: PLW0603 - the list is a file on disk, read once
+    global _ZONES
     if _ZONES is None:
         _ZONES = zoneinfo.available_timezones()
     return bool(name) and name in _ZONES
@@ -206,7 +206,7 @@ type Sleep = Callable[[float], object]
 
 def _wait_turn(now: Clock, sleep: Sleep) -> None:
     """Clock and wait come from outside: a test must not stop a second to prove a rule."""
-    global _last_search  # noqa: PLW0603 - the last call's instant is one per process
+    global _last_search
     with _search_lock:
         since = now() - _last_search
         if _last_search and since < SEARCH_MIN_INTERVAL_S:

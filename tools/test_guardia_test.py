@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import guardia_test  # noqa: E402
+import guardia_test
 
 DIFF_REMOVED = """\
 diff --git a/backend/tests/test_x.py b/backend/tests/test_x.py

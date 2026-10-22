@@ -7,7 +7,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import tetti  # noqa: E402
+import tetti
 
 
 def _check(monkeypatch, path: str, before: int, after: int) -> int:

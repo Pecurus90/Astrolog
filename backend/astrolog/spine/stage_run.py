@@ -27,7 +27,7 @@ def frame_safely[T](  # noqa: PLR0913
     """None if the frame broke: it is then marked `failed` with its reason and counted."""
     try:
         return work()
-    except Exception as err:  # noqa: BLE001 - the fault is the frame's, not the run's
+    except Exception as err:
         set_status(conn, frame_id, stage, StageStatus.FAILED, reason="internal_error")
         log.exception("%s: posa non lavorata", stage, extra={"frame_id": frame_id})
         counts["errors"] += 1

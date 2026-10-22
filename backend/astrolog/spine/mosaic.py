@@ -29,8 +29,7 @@ ORDER BY id
 """  # noqa: S608 - constant fragments
 
 _NEW_PANEL = (
-    f"INSERT INTO panels(rig_id, {', '.join(_SKY)}, radius_deg)"  # noqa: S608 - constant fragments
-    " VALUES(?, ?, ?, ?, ?, ?, ?)"
+    f"INSERT INTO panels(rig_id, {', '.join(_SKY)}, radius_deg) VALUES(?, ?, ?, ?, ?, ?, ?)"
 )
 
 

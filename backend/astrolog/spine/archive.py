@@ -93,7 +93,7 @@ _FROM_PANELS = (
 )  # fmt: skip
 _OF_CATALOG = (
     "(r.catalog = ? OR ("
-    + _FROM_PANELS.format(  # noqa: S608 - constants
+    + _FROM_PANELS.format(
         table="catalog_names c2",
         link="c2.slug = o2.catalog_slug AND c2.is_primary = 1",
         column="c2.catalog",
@@ -102,7 +102,7 @@ _OF_CATALOG = (
 )
 _IN_CONSTELLATION = (
     "(r.constellation = ? OR ("
-    + _FROM_PANELS.format(  # noqa: S608
+    + _FROM_PANELS.format(
         table="catalog_entries e2", link="e2.slug = o2.catalog_slug", column="e2.constellation"
     )
     + "))"

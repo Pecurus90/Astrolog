@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import openapi  # noqa: E402
+import openapi
 
 
 def test_the_schema_names_its_operations_readably():

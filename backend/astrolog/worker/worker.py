@@ -148,7 +148,7 @@ class Worker:
         with self._lock:
             if self._thread is not None and self._thread.is_alive():
                 raise RuntimeError("reset con un lavoro in corso")
-            self.__init__()  # noqa: PLC2801 - back to a fresh state, lock included
+            self.__init__()
             return self._snapshot_locked()
 
     def snapshot(self) -> Snapshot:

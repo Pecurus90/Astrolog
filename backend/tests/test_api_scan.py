@@ -291,7 +291,7 @@ def test_unknown_hosts_are_refused_and_declared_ones_admitted(db_path):
 
 
 def test_desktop_token_is_required_when_set(db_path):
-    # noqa qui e non nella configurazione: la presa sui segreti resta accesa sui test, e
+    # Esenzione qui e non nella configurazione: la presa sui segreti resta accesa sui test, e
     # questo e' l'unico posto dove un token finto e' il soggetto della prova.
     with TestClient(create_app(db_path, token="gettone-1"), base_url="http://localhost") as c:  # noqa: S106
         assert c.get("/api/health").status_code == 401

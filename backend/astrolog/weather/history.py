@@ -43,7 +43,7 @@ ORDER BY n.site_id, n.night_date
 
 # The history is final: a night already written is never touched.
 _INSERT = (
-    f"INSERT INTO weather_nights({', '.join(COLUMNS)})"  # noqa: S608 - the columns are constants
+    f"INSERT INTO weather_nights({', '.join(COLUMNS)})"
     f" VALUES({', '.join('?' * len(COLUMNS))}) ON CONFLICT DO NOTHING"  # segnaposto-ok: columns
 )
 

@@ -248,7 +248,7 @@ def _axes_are_counts(cards: dict[str, Value]) -> bool:
 def scan_file(path: Path, size: int | None = None) -> Extracted | Skipped:
     """One open per file. `size`: from walk's stat (no extra access); else asked to open file."""
     try:
-        with open(long_path(path), "rb") as fh:  # noqa: PTH123 - the `\\?\` form is a str
+        with open(long_path(path), "rb") as fh:
             return _extract(path, fh, size)
     except OSError:  # this file, never whole scan
         return Skipped(path, Skip.UNREADABLE)

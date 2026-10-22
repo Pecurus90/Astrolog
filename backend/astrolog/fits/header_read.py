@@ -62,7 +62,7 @@ def read_frame(path: str | Path) -> tuple[fits.Header, tuple[int, int] | None]:
                     block = (info["datLoc"], info["datSpan"]) if info else None
                     return _with_data_page(primary, hdu.header), block
             return primary, None  # `_data_block` decides the block, fast path first
-    except Exception as e:  # noqa: BLE001 - any failure is a typed domain error
+    except Exception as e:
         raise HeaderReadError(path, e) from e
 
 
@@ -147,7 +147,7 @@ def frame_fingerprint(
         # The FILE says where the pixels are, never the header in hand: a reread header may differ
         # in length from the one on disk (astropy adds a missing END).
         start, span = _data_block(path, block)
-    except Exception as e:  # noqa: BLE001 - same umbrella as read_frame: counted per file
+    except Exception as e:
         raise HeaderReadError(path, e) from e
     chunk = b""
     if span:

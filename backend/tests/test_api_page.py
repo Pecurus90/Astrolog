@@ -12,11 +12,11 @@ from fastapi.testclient import TestClient
 from astrolog.api import page
 from astrolog.api.app import TOKEN_HEADER, create_app
 
-CHIAVE = "gettone-di-prova"  # noqa: S105 - e' il soggetto della prova, non un segreto vero
+CHIAVE = "gettone-di-prova"
 # La seconda chiave sta in una costante e non nella riga che la assegna: cosi' quella riga non
 # contiene nessuna stringa, e la presa del cancello sui segreti resta **accesa** invece di essere
 # disarmata con `segreto-ok`. Una presa di sicurezza si spegne una riga comoda per volta.
-ALTRA_CHIAVE = "gettone-numero-due"  # noqa: S105 - come sopra
+ALTRA_CHIAVE = "gettone-numero-due"
 # La chiave **storta**: una virgoletta e un tag, cioe' cio' che chiuderebbe l'attributo a meta'.
 # Quella vera non li produce (`secrets.token_urlsafe`), ed e' esattamente il punto -- una
 # sicurezza che dipende di nascosto da come un'altra funzione genera i suoi caratteri non e' una
@@ -129,7 +129,7 @@ def test_a_key_with_a_quote_in_it_does_not_escape_the_attribute(db_path, costrui
     i suoi caratteri: nessun test collegava le due cose, e togliere lo sfuggimento non faceva
     cadere niente (provato: il sabotaggio sopravviveva). Qui la chiave porta una virgoletta, e
     l'attributo deve restare un attributo invece di chiudersi a meta'."""
-    with _client(db_path, costruita, token=STORTA) as c:  # noqa: S106 - l'esca della prova
+    with _client(db_path, costruita, token=STORTA) as c:
         servita = c.get("/", headers={TOKEN_HEADER: STORTA}).text
     assert "<script>y" not in servita  # la virgoletta non ha chiuso l'attributo
     assert "&quot;&gt;&lt;script&gt;y" in servita

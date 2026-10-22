@@ -59,7 +59,7 @@ def attrezzo(conn, kind, nome, **campi):
     scheda si passano per nome: sono colonne di questo banco, mai valori dell'utente."""
     colonne = "".join(f", {c}" for c in campi)
     segni = ", ?" * len(campi)
-    sql = (  # noqa: S608 - nomi di colonna di questo banco, mai valori dell'utente
+    sql = (
         f"INSERT INTO instruments(kind, name, detected, created_at{colonne})"
         f" VALUES(?, ?, 1, ?{segni})"
     )

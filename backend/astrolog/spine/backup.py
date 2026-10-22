@@ -203,7 +203,7 @@ def _upsert(conn: sqlite3.Connection, t: _Table, row: dict[str, Any], now: str) 
     cols = [c for c in t.columns if c in row]
     sets = ", ".join(f"{c} = excluded.{c}" for c in cols if c not in key)
     conn.execute(
-        f"INSERT INTO {table}({', '.join(cols)}, created_at)"  # noqa: S608 - constant tables
+        f"INSERT INTO {table}({', '.join(cols)}, created_at)"
         f" VALUES({', '.join('?' * len(cols))}, ?)"  # segnaposto-ok: the columns, not the rows
         f" ON CONFLICT({', '.join(key)}) DO UPDATE SET {sets}",
         (*(row[c] for c in cols), now),

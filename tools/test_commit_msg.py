@@ -7,7 +7,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from commit_msg import SCISSORS, problems  # noqa: E402
+from commit_msg import SCISSORS, problems
 
 EDITOR_TEMPLATE = (
     "\n# Bitte geben Sie eine Commit-Beschreibung f\u00fcr Ihre \u00c4nderungen ein.\n"

@@ -13,7 +13,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import controlli_contrasto  # noqa: E402
+import controlli_contrasto
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FOGLIO = os.path.join(ROOT, *controlli_contrasto.STILI, controlli_contrasto.FOGLIO)

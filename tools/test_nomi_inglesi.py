@@ -5,7 +5,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import nomi_inglesi  # noqa: E402
+import nomi_inglesi
 
 
 def test_an_italian_word_in_a_name_is_found():

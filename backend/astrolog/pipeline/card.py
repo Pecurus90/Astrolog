@@ -84,7 +84,7 @@ def clock_offset_min(values: dict[str, Value]) -> int | None:
     if local is None or utc is None:
         return None
     seconds = (local - utc).total_seconds()
-    if seconds % 900 or not -720 <= seconds / 60 <= 840:  # noqa: PLR2004
+    if seconds % 900 or not -720 <= seconds / 60 <= 840:
         return None
     return int(seconds // 60)
 
@@ -93,9 +93,9 @@ def site(values: dict[str, Value]) -> tuple[float, float] | None:
     """SITELAT/SITELONG degrees, East positive (archive). 0/0: N.I.N.A. factory profile
     (AstrometrySettings.cs), only sea there. Longitude 180 is -180."""
     lat, lon = as_number(values.get("SITELAT")), as_number(values.get("SITELONG"))
-    if lat is None or lon is None or abs(lat) > 90 or abs(lon) > 180 or lat == lon == 0:  # noqa: PLR2004
+    if lat is None or lon is None or abs(lat) > 90 or abs(lon) > 180 or lat == lon == 0:
         return None
-    return lat, -180.0 if lon == 180 else lon  # noqa: PLR2004
+    return lat, -180.0 if lon == 180 else lon
 
 
 def exposure_s(values: dict[str, Value]) -> float | None:
@@ -222,7 +222,7 @@ class Conditions:
 
 def _wind_direction(written: Value | None) -> float | None:
     number = as_number(written, at_least=0)
-    if number is None or number > 360:  # noqa: PLR2004
+    if number is None or number > 360:
         return None
     return number % 360
 

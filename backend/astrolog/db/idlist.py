@@ -28,7 +28,7 @@ def holding(conn: sqlite3.Connection, ids: Iterable[int | str | None]) -> Iterat
         )
         # Emptied on entry, not on exit: on exit a cursor still open would lose rows silently.
         conn.execute(f"DELETE FROM {TABLE}")  # noqa: S608 - TABLE is a constant of this file
-        conn.executemany(f"INSERT INTO {TABLE}(id) VALUES(?)", [(i,) for i in ids])  # noqa: S608
+        conn.executemany(f"INSERT INTO {TABLE}(id) VALUES(?)", [(i,) for i in ids])
         yield IN_LIST
     finally:
         _in_use.discard(conn)

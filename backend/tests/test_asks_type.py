@@ -52,7 +52,7 @@ REGOLA = f"""
 f.image_type = '{FrameType.UNKNOWN}' AND CASE {FOLDER_SAYS}
   WHEN '{decl.TypeAnswer.LIGHT}' THEN 0 WHEN '{decl.TypeAnswer.CALIBRATION}' THEN 1
   ELSE NOT {_CIELO_RISOLTO} END
-"""  # noqa: S608 - costanti
+"""
 
 
 def _scritto(conn, frame_id):

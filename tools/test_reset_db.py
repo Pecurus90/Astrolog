@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import reset_db  # noqa: E402
+import reset_db
 
 
 def test_an_empty_database_is_recreated(tmp_path):

@@ -382,7 +382,7 @@ def test_the_solver_keeps_two_rigs_of_the_same_night_apart(conn, tmp_path):
     write_light(tmp_path / "c.fits", TELESCOP="RC 8", INSTRUME="ATR2600M", **stesso)  # altra ottica
     write_light(
         tmp_path / "d.fits", TELESCOP="Askar 103Apo", INSTRUME="ASI533MC", **stesso
-    )  # altra camera  # noqa: E501
+    )  # altra camera
     run(conn, add_folder(conn, tmp_path))
     tutte = [r[0] for r in conn.execute("SELECT id FROM frames")]
     assert len(solve_store.first_per_order_key(conn, tutte)) == 3, (

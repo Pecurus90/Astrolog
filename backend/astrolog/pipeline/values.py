@@ -67,7 +67,7 @@ def as_positive(written: Value | None) -> float | None:
 def as_percent(written: Value | None) -> float | None:
     """ASCOM ObservingConditions: 0.0 - 100.0."""
     number = as_number(written, at_least=0)
-    return number if number is not None and number <= 100 else None  # noqa: PLR2004
+    return number if number is not None and number <= 100 else None
 
 
 COLDEST_C = -273.15  # SI: below it a temperature is a broken value

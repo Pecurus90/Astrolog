@@ -9,10 +9,11 @@ src = ["backend", "backend/tests", "tools"]
 
 [lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "DTZ", "S", "BLE", "T20", "SIM",
-          "C901", "PLR0912", "PLR0913", "PLR0915", "PLE25", "ERA001",
+          "C901", "PLR0912", "PLR0913", "PLR0915", "PLE25", "ERA001", "RUF100",
           "ANN001", "ANN002", "ANN003", "ANN201", "ANN202", "ANN204", "ANN205", "ANN206"]
 # C901/PLR: limits on functions, not files. Existing breaches carry a `noqa`: that is the debt.
 # PLE25: control characters (backspace, NUL, ESC...) pasted into strings.
+# RUF100: a `noqa` for a rule not on or not broken is a false promise: it goes.
 # DTZ: le date portano il fuso (CLAUDE.md). BLE: niente `except Exception` muti. T20: niente
 # print. S: le prese di sicurezza, S608 (SQL composto con stringhe) e S105 (segreti scritti
 # nel codice) comprese. N: nomi in inglese, PEP 8.

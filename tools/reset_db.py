@@ -16,9 +16,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
 
-from astrolog.catalog.load import load_catalog  # noqa: E402
-from astrolog.db.connect import connect, create_database  # noqa: E402
-from astrolog.db.paths import db_path  # noqa: E402
+from astrolog.catalog.load import load_catalog
+from astrolog.db.connect import connect, create_database
+from astrolog.db.paths import db_path
 
 ANCHE_SE_PIENO = "--anche-se-pieno"
 COPIA = "{}.prima-del-reset-{}"  # il DB, e un numero: un reset dopo l'altro non si sovrascrivono

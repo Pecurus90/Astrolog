@@ -24,7 +24,7 @@ class PointingSource(StrEnum):
 def _sky(ra: Value | None, dec: Value | None) -> tuple[float, float] | None:
     """Degrees J2000 in range; RA 360 is 0."""
     ra_deg, dec_deg = as_number(ra), as_number(dec)
-    if ra_deg is None or dec_deg is None or not 0 <= ra_deg <= 360 or abs(dec_deg) > 90:  # noqa: PLR2004
+    if ra_deg is None or dec_deg is None or not 0 <= ra_deg <= 360 or abs(dec_deg) > 90:
         return None
     return ra_deg % 360, dec_deg
 
@@ -46,7 +46,7 @@ def _solve_centre(values: dict[str, Value]) -> tuple[float, float] | None:
     if not math.isfinite(det) or det == 0:
         return None
     # owner's rule, no WCS convention: reference inside solved image (archive: 583 of 583)
-    if not (0.5 <= px <= width + 0.5 and 0.5 <= py <= height + 0.5):  # noqa: PLR2004
+    if not (0.5 <= px <= width + 0.5 and 0.5 <= py <= height + 0.5):
         return None
     dx, dy = (width + 1) / 2 - px, (height + 1) / 2 - py  # FITS pixels count from 1
     east, north = math.radians(cd11 * dx + cd12 * dy), math.radians(cd21 * dx + cd22 * dy)
@@ -99,7 +99,7 @@ def _sexagesimal(written: Value | None) -> float | None:
     if found is None:
         return None
     sign, whole, minutes, seconds = found.groups()
-    if int(minutes) >= 60 or float(seconds) >= 60:  # noqa: PLR2004 - malformed: not a place
+    if int(minutes) >= 60 or float(seconds) >= 60:
         return None
     value = int(whole) + int(minutes) / 60 + float(seconds) / 3600
     return -value if sign == "-" else value

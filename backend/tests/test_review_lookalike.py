@@ -25,7 +25,7 @@ def _pezzo(client, kind, name, **colonne):
     campi = {"kind": kind, "name": name, "detected": 1, "created_at": now_iso(), **colonne}
     with connect(client.app.state.db_path) as conn:
         conn.execute(
-            f"INSERT INTO instruments({', '.join(campi)}) VALUES({', '.join('?' * len(campi))})",  # noqa: S608 - colonne scritte qui
+            f"INSERT INTO instruments({', '.join(campi)}) VALUES({', '.join('?' * len(campi))})",
             list(campi.values()),
         )
 
