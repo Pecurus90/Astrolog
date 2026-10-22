@@ -13,6 +13,8 @@ FINGERPRINT_BYTES = 65536
 BLOCK = 2880  # header and data fill whole blocks
 CARD = 80
 _BYTES = {8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}  # FITS 4.0 table 8: BITPIX
+_MAX_AXES = 999  # FITS 4.0 sec. 4.4.1.1
+_MAX_BYTES = 2**62  # past any file system; keeps seek offsets in a signed 64-bit integer
 
 
 @dataclass(frozen=True)
@@ -34,7 +36,9 @@ def data_length(raw: dict[str, Any]) -> int | None:
     naxis = raw.get("NAXIS", 0)
     if naxis == 0:
         return 0
-    written = [raw.get(f"NAXIS{n}") for n in range(1, naxis + 1)] if isinstance(naxis, int) else []
+    if not _count(naxis) or naxis > _MAX_AXES:  # bound before any list: never huge allocation
+        return None
+    written = [raw.get(f"NAXIS{n}") for n in range(1, naxis + 1)]
     counts = [raw.get("PCOUNT", 0), raw.get("GCOUNT", 1), *written]
     if raw.get("BITPIX") not in _BYTES or not written or not all(_count(v) for v in counts):
         return None
@@ -42,6 +46,8 @@ def data_length(raw: dict[str, Any]) -> int | None:
     if raw.get("GROUPS") is True and axes[0] == 0:  # random groups: NAXIS1 = 0 is no axis
         axes = axes[1:]
     size = _BYTES[raw["BITPIX"]] * raw.get("GCOUNT", 1) * (raw.get("PCOUNT", 0) + math.prod(axes))
+    if size > _MAX_BYTES:  # beyond any file: seek would overflow
+        return None
     return size + (-size % BLOCK)
 
 

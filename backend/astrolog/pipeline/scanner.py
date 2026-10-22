@@ -237,7 +237,7 @@ def scan_file(path: Path, size: int | None = None) -> Extracted | Skipped:
     try:
         with open(long_path(path), "rb") as fh:  # noqa: PTH123 - the `\\?\` form is a str
             return _extract(path, fh, size)
-    except OSError:
+    except (OSError, ValueError, OverflowError):  # broken file: this file, never whole scan
         return Skipped(path, Skip.UNREADABLE)
 
 

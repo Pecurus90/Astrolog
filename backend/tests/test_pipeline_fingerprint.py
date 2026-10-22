@@ -9,6 +9,7 @@ import pytest
 from astropy.io import fits
 
 from astrolog.fits.header_read import frame_fingerprint, read_frame
+from astrolog.pipeline.fingerprint import data_length
 from astrolog.pipeline.scanner import Extracted, Skip, Skipped, read_header, scan_file
 
 pytestmark = pytest.mark.filterwarnings("ignore::astropy.utils.exceptions.AstropyUserWarning")
@@ -169,6 +170,26 @@ def test_a_file_without_pixels_is_told_apart_by_its_header(tmp_path):
         fits.PrimaryHDU(header=header).writeto(path)
         seen.add(_fingerprint(path))
     assert len(seen) == 2
+
+
+def test_more_axes_than_fits_allows_is_no_data_length():
+    """FITS 4.0 sez. 4.4.1.1: NAXIS 0..999. Oltre: niente, e mai una lista enorme."""
+    axes = {f"NAXIS{n}": 1 for n in range(1, 1001)}
+    assert data_length({"BITPIX": 16, "NAXIS": 1000, **axes}) is None
+    assert data_length({"BITPIX": 16, "NAXIS": 10**12}) is None
+
+
+def test_an_absurd_data_length_makes_the_file_unreadable_not_the_scan_fail(tmp_path):
+    """Assi enormi (2**40 x 2**40): lunghezza oltre ogni file, mai un errore che ferma tutto."""
+    lines = [
+        "SIMPLE  =                    T", "BITPIX  =                   16",
+        "NAXIS   =                    2", f"NAXIS1  = {2**40:>20}", f"NAXIS2  = {2**40:>20}",
+        "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'", "END",
+    ]  # fmt: skip
+    head = "".join(line.ljust(80) for line in lines)
+    path = tmp_path / "huge.fits"
+    path.write_bytes((head + " " * (-len(head) % 2880)).encode("ascii"))
+    assert scan_file(path) == Skipped(path, Skip.UNREADABLE)
 
 
 def test_a_file_shorter_than_its_header_says_is_incomplete(tmp_path):
