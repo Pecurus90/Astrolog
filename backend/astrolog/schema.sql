@@ -941,7 +941,13 @@ CREATE TABLE pipeline_cards (
   optics     TEXT CHECK (optics <> ''),
   focal_mm   REAL CHECK (focal_mm > 0),
   -- filtro come scritto; cosa sia: pipeline_filter_spellings. NULL: non scritto, non so
-  filter     TEXT CHECK (filter <> '')
+  filter     TEXT CHECK (filter <> ''),
+  -- dove guarda, J2000 gradi: indizio per solve e gruppi; ogni tipo, chi usa filtra
+  pointing_ra_deg  REAL CHECK (pointing_ra_deg >= 0 AND pointing_ra_deg < 360),
+  pointing_dec_deg REAL CHECK (pointing_dec_deg BETWEEN -90 AND 90),
+  pointing_source  TEXT CHECK (pointing_source IN ('solve', 'mount', 'target')),
+  CHECK ((pointing_ra_deg IS NULL) = (pointing_dec_deg IS NULL)
+    AND (pointing_ra_deg IS NULL) = (pointing_source IS NULL))
 ) STRICT;
 
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave: nome (filters.filter_key).

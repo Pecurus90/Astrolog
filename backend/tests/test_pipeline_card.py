@@ -3,13 +3,18 @@ Archivio di prova: N.I.N.A. LIGHT/FLAT/DARK/BIAS, ASIAIR Light/Dark/Flat/Bias.""
 
 import math
 import re
+import warnings
 from dataclasses import fields
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import pytest
+from astropy.coordinates import SkyCoord
+from astropy.io import fits
+from astropy.wcs import WCS
 
-from astrolog.pipeline.card import Card, FrameType, frame_type, read_card
+from astrolog.pipeline.card import Card, FrameType, PointingSource, frame_type, read_card
 from astrolog.pipeline.scanner import Program, read_cards
 
 CORPUS = Path(__file__).with_name("header")
@@ -146,7 +151,7 @@ def test_the_schema_check_lists_every_frame_type():
 
 def test_the_table_columns_are_the_card_fields():
     """INSERT nasce dai campi di Card: stessi nomi, stesso ordine."""
-    columns = re.findall(r"^  (\w+) ", _cards_table(), re.MULTILINE)
+    columns = re.findall(r"^  ([a-z_\d]+) ", _cards_table(), re.MULTILINE)
     assert columns == ["file_id", *(f.name for f in fields(Card))]
 
 
@@ -275,6 +280,108 @@ def test_a_focal_not_a_positive_number_is_unknown(bad):
 
 def test_a_float32_focal_loses_its_tail():
     assert read_card(NINA, {"FOCALLEN": 335.299987792969}).focal_mm == 335.3
+
+
+def _sky(ra: object, dec: object) -> Any:  # astropy stubs: units, arrays
+    return SkyCoord(ra, dec, unit="deg")
+
+
+@pytest.mark.parametrize("name", ["asiair.txt", "asiair_asi2600.txt", "asiair_am3.txt"])
+def test_an_asiair_solve_gives_the_centre_of_its_image(name, tmp_path):
+    """Centro = pixel centrale dell'immagine risolta (IMAGEW/H), non CRPIX: astropy con SIP
+    come riferimento."""
+    values = _values(name, tmp_path)
+    card = read_card(ASIAIR, values)
+    header = fits.Header()
+    for key, value in values.items():
+        if key.startswith(("CTYPE", "CRVAL", "CRPIX", "CD", "A_", "B_", "AP_", "BP_")):
+            header[key] = value
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        ra, dec = WCS(header).all_pix2world(
+            (values["IMAGEW"] - 1) / 2, (values["IMAGEH"] - 1) / 2, 0
+        )
+    assert card.pointing_source is PointingSource.SOLVE
+    centre = _sky(card.pointing_ra_deg, card.pointing_dec_deg)
+    assert float(centre.separation(_sky(float(ra), float(dec))).arcsec) < 30  # SIP left out: a hint
+
+
+@pytest.mark.parametrize("name", ["asiair.txt", "asiair_asi2600.txt", "asiair_am3.txt"])
+def test_the_asiair_mount_is_of_date_and_lands_on_its_solve_once_precessed(name, tmp_path):
+    """RA/DEC ASIAIR in JNow: archivio, 1,2' dal solve precessato contro 17,7' letto J2000."""
+    values = _values(name, tmp_path)
+    solved = read_card(ASIAIR, values)
+    no_solve = {k: v for k, v in values.items() if not k.startswith("CTYPE")}
+    mount = read_card(ASIAIR, no_solve)
+    assert mount.pointing_source is PointingSource.MOUNT
+    centre = _sky(solved.pointing_ra_deg, solved.pointing_dec_deg)
+    landed = float(centre.separation(_sky(mount.pointing_ra_deg, mount.pointing_dec_deg)).arcmin)
+    as_written = float(centre.separation(_sky(values["RA"], values["DEC"])).arcmin)
+    assert landed < as_written
+    assert landed < 5
+
+
+def test_an_asiair_mount_without_date_is_unknown():
+    card = read_card(ASIAIR, {"RA": 210.0, "DEC": 54.0})
+    assert card.pointing_source is None
+
+
+def test_a_nina_mount_is_j2000_as_written(tmp_path):
+    values = _values("nina.txt", tmp_path)
+    card = read_card(NINA, values)
+    assert card.pointing_source is PointingSource.MOUNT
+    assert (card.pointing_ra_deg, card.pointing_dec_deg) == (values["RA"], values["DEC"])
+
+
+@pytest.mark.parametrize(
+    ("ra", "dec", "expected"),
+    [
+        ("16 05 00", "+17 43 24", (241.25, 17.723333)),
+        ("05 35 17.3", "-05 23 28", (83.822083, -5.391111)),
+        ("00 10 00", "-00 30 00", (2.5, -0.5)),  # sign of -00
+    ],
+)
+def test_without_mount_the_nina_target_is_read(ra, dec, expected):
+    card = read_card(NINA, {"OBJCTRA": ra, "OBJCTDEC": dec})
+    assert card.pointing_source is PointingSource.TARGET
+    assert (card.pointing_ra_deg, card.pointing_dec_deg) == pytest.approx(expected, abs=1e-6)
+
+
+def test_the_target_placeholder_is_unknown():
+    for dec in ("00 00 00", "+00 00 00"):
+        assert read_card(NINA, {"OBJCTRA": "00 00 00", "OBJCTDEC": dec}).pointing_source is None
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        {"RA": 400.0, "DEC": 10.0},
+        {"RA": 10.0, "DEC": 95.0},
+        {"RA": True, "DEC": 10.0},
+        {"RA": 10.0},
+    ],
+)
+def test_a_mount_out_of_range_falls_to_the_target(values):
+    card = read_card(NINA, {**values, "OBJCTRA": "16 05 00", "OBJCTDEC": "+17 43 24"})
+    assert card.pointing_source is PointingSource.TARGET
+
+
+def test_a_mount_at_360_is_0():
+    assert read_card(NINA, {"RA": 360.0, "DEC": 10.0}).pointing_ra_deg == 0.0
+
+
+@pytest.mark.parametrize(
+    "broken",
+    [{"CD1_1": 0.0, "CD1_2": 0.0}, {"CTYPE1": "RA---SIN"}, {"IMAGEW": 0}, {"CRVAL2": "x"}],
+)
+def test_a_broken_solve_falls_to_the_mount(broken, tmp_path):
+    values = {**_values("asiair_asi2600.txt", tmp_path), **broken}
+    assert read_card(ASIAIR, values).pointing_source is PointingSource.MOUNT
+
+
+def test_calibration_frames_keep_where_the_mount_was():
+    card = read_card(NINA, {"IMAGETYP": "DARK", "RA": 10.0, "DEC": 20.0})
+    assert card.pointing_source is PointingSource.MOUNT
 
 
 def test_iso_written_as_number_or_digits_is_read():

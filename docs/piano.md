@@ -10,7 +10,7 @@ fuori nelle Issue con l'etichetta `bloccato`.
 **Pipeline riprogettata da zero** (Marco, 22/10/2026): scansione, lettura, attribuzione,
 normalizzazione riscritte da una mappa decisa prima del codice, uno strato alla volta, accanto alla
 vecchia finche' la sostituiscono. N.I.N.A. e ASIAIR (ADR 0029), metodo ADR 0030, mappa grafica.
-Fatti 1-3b (gemelli in `fits/` via con la vecchia). Prossimo: 4; risposte coi filtri; #14-#24 qui.
+Fatti 1-3b; del 4 Tipo, Tempo, Camera, Ottica, Filtro, Puntamento, poi il resto. #14-#24 qui.
 Chiusa la parte 1: audit COMPLETO di pipeline, schema e test, ogni area: regge? logica, doppioni,
 semplificare, manca, in piu', igiene, sicurezza, prestazioni, casi limite; tre revisori dentro.
 
@@ -41,9 +41,9 @@ semplificare, manca, in piu', igiene, sicurezza, prestazioni, casi limite; tre r
    20/10/2026) e di ADR 0021, poi foglio e componenti, poi le pagine, una tavola alla volta (ADR
    0025). Delle pagine restano le misure dei frame nelle Notti, il modale dell'oggetto (lo stesso
    per notte, oggetto e libreria), l'etichetta dei progetti nell'Archivio, la Casa per ultima.
-9. **Pipeline piu' intelligente** (ADR 0026): nome del file, sito dalla notte, posizione
-   dell'header come partenza del solve, pianeti e Luna nel campo, comete e asteroidi da MPC,
-   Sesame, montature.
+9. **Pipeline piu' intelligente** (ADR 0026): nome del file, sito dalla notte, header come partenza
+   del solve, pianeti e Luna nel campo, comete e asteroidi da MPC dal cielo (nessun header le
+   nomina: 12P senza OBJECT, Lemmon 'Target'), pannelli di mosaico dal cielo, Sesame, montature.
 10. **L'uso vero di Marco** sul suo archivio, coi difetti riparati.
 11. **`measure`** (ADR 0007): contratto e posto nei contratti dei moduli, poi eccentricita', fondo
     cielo, tilt. Dopo una spina che dice il vero: su difetti muti misurerebbe dati che mentono.
