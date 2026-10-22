@@ -146,17 +146,20 @@ def _frame_of(conn: sqlite3.Connection, got: Extracted, now: str) -> int:
     return int(row["id"])
 
 
+MOVED = (  # by frame inside root: index pipeline_files_frame, else quadratic on big moves
+    "SELECT was.rel_path AS was, now.rel_path AS now FROM pipeline_files AS now"
+    " JOIN pipeline_files AS was ON was.frame_id = now.frame_id AND was.root_id = now.root_id"
+    " WHERE now.root_id = ? AND now.state = 'present' AND was.state = 'gone'"
+    " AND was.gone_scan_id = ? AND now.arrived_scan_id > was.seen_scan_id"
+)  # no ORDER BY: it would steer planner to path index; few rows, sorted in Python
+
+
 def _moved(conn: sqlite3.Connection, root_id: int, changes: Changes) -> list[tuple[str, str]]:
     """Gone this scan, paired one to one with file of same frame arrived after gone one was last
     seen: holds across stopped scans and silent roots. Further arrival: copy (duplicate)."""
-    rows = conn.execute(
-        "SELECT was.rel_path AS was, now.rel_path AS now FROM pipeline_files AS now"
-        " JOIN pipeline_files AS was ON was.frame_id = now.frame_id AND was.root_id = now.root_id"
-        " WHERE now.root_id = ? AND now.state = 'present' AND was.state = 'gone'"
-        " AND was.gone_scan_id = ? AND now.arrived_scan_id > was.seen_scan_id"
-        " ORDER BY was.rel_path, now.rel_path",
-        (root_id, changes.scan_id),
-    ).fetchall()
+    rows = sorted(
+        conn.execute(MOVED, (root_id, changes.scan_id)), key=lambda r: (r["was"], r["now"])
+    )
     pairs: list[tuple[str, str]] = []
     paired: set[str] = set()
     for row in rows:

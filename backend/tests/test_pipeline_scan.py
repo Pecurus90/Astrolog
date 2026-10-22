@@ -314,6 +314,14 @@ def test_two_roots_scan_side_by_side(conn, db_path, tmp_path, monkeypatch):
     assert inner == [1]
 
 
+def test_pairing_moves_finds_files_by_frame_through_an_index(conn):
+    """Cartella alta rinominata = archivio intero spostato: senza indice 8.000 file 8 s."""
+    plan = " ".join(
+        row["detail"] for row in conn.execute(f"EXPLAIN QUERY PLAN {scan.MOVED}", (1, 1))
+    )
+    assert "pipeline_files_frame" in plan
+
+
 def test_an_unchanged_archive_is_not_read_again(conn, tmp_path, monkeypatch):
     _nina(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)

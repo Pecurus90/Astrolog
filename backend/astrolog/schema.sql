@@ -922,6 +922,7 @@ CREATE TABLE pipeline_files (
   CHECK (frame_id IS NULL OR skip_reason IS NULL),
   UNIQUE (root_id, rel_path)
 ) STRICT;
+CREATE INDEX pipeline_files_frame ON pipeline_files (root_id, frame_id);  -- spostati e doppioni
 
 -- RILEVATO. Header come lo legge pipeline/scanner.py, chiave -> valore tipizzato. Per file: copie
 -- possono differire. Presente sse il file ha frame. Tabella a parte: scansione legge ogni file.
