@@ -470,6 +470,42 @@ def test_no_utc_start_no_clock_offset():
     assert read_card(NINA, {"DATE-LOC": "2025-06-29T23:11:33.412"}).clock_offset_min is None
 
 
+def test_the_parts_are_named_as_written(tmp_path):
+    nina = read_card(NINA, {"FWHEEL": " ASCOM ToupTek FilterWheel ", "FOCNAME": "ZWO Focuser (1)"})
+    assert (nina.filter_wheel, nina.focuser) == ("ASCOM ToupTek FilterWheel", "ZWO Focuser (1)")
+    asiair = read_card(ASIAIR, _values("asiair_asi2600.txt", tmp_path))
+    assert asiair.mount == "EQMod Mount"  # ASIAIR TELESCOP: the mount
+    assert asiair.guide_camera is not None
+
+
+def test_only_asiair_writes_the_mount_in_telescop():
+    assert read_card(NINA, {"TELESCOP": "Askar 103Apo"}).mount is None
+    assert read_card(ASIAIR, {"TELESCOP": "ZWO AM3 "}).mount == "ZWO AM3"
+
+
+@pytest.mark.parametrize(
+    ("values", "position", "temp"),
+    [
+        ({"FOCPOS": 238, "FOCUSPOS": 238, "FOCTEMP": 23.6399993896484}, 238, 23.64),  # N.I.N.A.
+        ({"FOCUSPOS": 8457}, 8457, None),  # ASIAIR EAF
+        ({"FOCUSTEM": -2.5}, None, -2.5),
+        ({"FOCPOS": 0}, 0, None),
+        ({"FOCPOS": -1, "FOCTEMP": True}, None, None),
+        ({"FOCPOS": 238.5, "FOCTEMP": "20"}, None, None),
+    ],
+)
+def test_the_focuser_position_and_temperature_are_kept(values, position, temp):
+    """Per la metrica fuoco/temperatura con measure (idee.md). [step], [degC]: CFitsioFITS.cs."""
+    card = read_card(NINA, values)
+    assert (card.focuser_position, card.focuser_temp_c) == (position, temp)
+
+
+@pytest.mark.parametrize("key", ["FWHEEL", "FOCNAME", "GUIDECAM"])
+def test_an_empty_part_name_is_unknown(key):
+    card = read_card(ASIAIR, {key: "  "})
+    assert (card.filter_wheel, card.focuser, card.guide_camera) == (None, None, None)
+
+
 def test_iso_written_as_number_or_digits_is_read():
     assert read_card(ASIAIR, {"ISO": " 1600 "}).iso == 1600
     assert read_card(ASIAIR, {"ISO": 800}).iso == 800

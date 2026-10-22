@@ -160,6 +160,21 @@ def object_name(program: Program, values: dict[str, Value]) -> str | None:
     return name
 
 
+def mount(program: Program, values: dict[str, Value]) -> str | None:
+    """ASIAIR writes mount in TELESCOP; N.I.N.A. never names it."""
+    return _name(values.get("TELESCOP")) if program is Program.ASIAIR else None
+
+
+def focuser_position(values: dict[str, Value]) -> int | None:
+    """[step]; N.I.N.A. writes FOCPOS and FOCUSPOS equal, ASIAIR FOCUSPOS only."""
+    position = values.get("FOCPOS", values.get("FOCUSPOS"))
+    return _count(position, 0)
+
+
+def focuser_temp_c(values: dict[str, Value]) -> float | None:
+    return _number(values.get("FOCTEMP", values.get("FOCUSTEM")))
+
+
 def focal_mm(values: dict[str, Value]) -> float | None:
     """Hint on both: N.I.N.A. from profile, ASIAIR from its solve (varies by 1-3 mm)."""
     return _positive(values.get("FOCALLEN"))
@@ -308,6 +323,12 @@ class Card:
     site_lat_deg: float | None
     site_lon_deg: float | None
     clock_offset_min: int | None
+    filter_wheel: str | None
+    focuser: str | None
+    guide_camera: str | None
+    mount: str | None
+    focuser_position: int | None  # with focuser_temp_c: focus metric with measure
+    focuser_temp_c: float | None
 
 
 def read_card(program: Program, values: dict[str, Value]) -> Card:
@@ -340,4 +361,10 @@ def read_card(program: Program, values: dict[str, Value]) -> Card:
         site_lat_deg=lat,
         site_lon_deg=lon,
         clock_offset_min=clock_offset_min(values),
+        filter_wheel=_name(values.get("FWHEEL")),
+        focuser=_name(values.get("FOCNAME")),
+        guide_camera=_name(values.get("GUIDECAM")),
+        mount=mount(program, values),
+        focuser_position=focuser_position(values),
+        focuser_temp_c=focuser_temp_c(values),
     )

@@ -954,6 +954,14 @@ CREATE TABLE pipeline_cards (
   -- ora del PC meno UTC: fuso del PC, non del sito; quarti d'ora da -12 h a +14 h
   clock_offset_min INTEGER
     CHECK (clock_offset_min BETWEEN -720 AND 840 AND clock_offset_min % 15 = 0),
+  -- altre parti come scritte; unione delle grafie in Attrezzatura
+  filter_wheel TEXT CHECK (filter_wheel <> ''),
+  focuser      TEXT CHECK (focuser <> ''),
+  guide_camera TEXT CHECK (guide_camera <> ''),
+  mount        TEXT CHECK (mount <> ''),
+  -- fuoco e temperatura: metrica con measure
+  focuser_position INTEGER CHECK (focuser_position >= 0),
+  focuser_temp_c   REAL,
   CHECK ((pointing_ra_deg IS NULL) = (pointing_dec_deg IS NULL)
     AND (pointing_ra_deg IS NULL) = (pointing_source IS NULL)),
   CHECK ((site_lat_deg IS NULL) = (site_lon_deg IS NULL)),

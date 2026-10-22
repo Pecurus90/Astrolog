@@ -35,3 +35,7 @@ ogni tappa del piano si rilegge: si fa, resta o si cancella; ferma da tre tappe 
   la FWHM dei frame in arcosecondi (`measure`), il seeing vero; archiviare da oggi la previsione;
   `history_days` 1-4 del Package API di Meteoblue, se il pacchetto del seeing lo accetta (non
   verificato); stimarlo da ERA5 con Osborn e Sarazin, solo come "stimato" e solo se Marco lo vuole.
+- **Il fuoco e la temperatura** (Marco, 22/10/2026, con `measure`): dalla posizione e dalla
+  temperatura del focheggiatore (gia' nella scheda del file) lo spostamento in step per grado, per
+  notte e setup, come il coefficiente di N.I.N.A.; con la nitidezza delle stelle, le pose sfocate
+  e se il fuoco ha seguito la temperatura.
