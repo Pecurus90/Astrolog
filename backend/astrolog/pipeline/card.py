@@ -8,7 +8,7 @@ from enum import StrEnum
 from .fingerprint import frame_size
 from .scanner import Program, Value
 from .sky import PointingSource, pointing
-from .values import as_count, as_name, as_number, as_percent, as_positive
+from .values import as_celsius, as_count, as_name, as_number, as_percent, as_positive
 
 # DATE-OBS as both programs write it: start of exposure, UTC, no zone (FITS 4.0 sec. 9.1.1).
 # fromisoformat alone takes date only (midnight), week dates, compact forms.
@@ -125,7 +125,7 @@ def focuser_position(values: dict[str, Value]) -> int | None:
 
 
 def focuser_temp_c(values: dict[str, Value]) -> float | None:
-    return as_number(values.get("FOCTEMP", values.get("FOCUSTEM")))
+    return as_celsius(values.get("FOCTEMP", values.get("FOCUSTEM")))
 
 
 def focal_mm(values: dict[str, Value]) -> float | None:
@@ -221,16 +221,16 @@ def _wind_direction(written: Value | None) -> float | None:
 def read_conditions(values: dict[str, Value]) -> Conditions | None:
     """None when header writes none: most files."""
     conditions = Conditions(
-        ambient_temp_c=as_number(values.get("AMBTEMP")),
+        ambient_temp_c=as_celsius(values.get("AMBTEMP")),
         humidity_pct=as_percent(values.get("HUMIDITY")),
-        dew_point_c=as_number(values.get("DEWPOINT")),
+        dew_point_c=as_celsius(values.get("DEWPOINT")),
         pressure_hpa=as_positive(values.get("PRESSURE")),
         cloud_cover_pct=as_percent(values.get("CLOUDCVR")),
         wind_kmh=as_number(values.get("WINDSPD"), at_least=0),
         wind_gust_kmh=as_number(values.get("WINDGUST"), at_least=0),
         wind_dir_deg=_wind_direction(values.get("WINDDIR")),
         sky_quality_mpsas=as_number(values.get("MPSAS")),
-        sky_temp_c=as_number(values.get("SKYTEMP")),
+        sky_temp_c=as_celsius(values.get("SKYTEMP")),
         sky_brightness_lux=as_number(values.get("SKYBRGHT"), at_least=0),
         star_fwhm_arcsec=as_positive(values.get("STARFWHM")),
     )
@@ -256,8 +256,8 @@ def read_card(program: Program, values: dict[str, Value]) -> Card:
         gain=as_count(values.get("GAIN"), 0),
         iso=iso(values),
         offset=as_count(values.get("OFFSET"), 0),
-        ccd_temp_c=as_number(values.get("CCD-TEMP")),
-        set_temp_c=as_number(values.get("SET-TEMP")),
+        ccd_temp_c=as_celsius(values.get("CCD-TEMP")),
+        set_temp_c=as_celsius(values.get("SET-TEMP")),
         optics=optics(program, values),
         focal_mm=focal_mm(values),
         filter=as_name(values.get("FILTER")),

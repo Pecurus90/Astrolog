@@ -588,6 +588,29 @@ def test_a_name_with_a_control_character_is_unknown(key):
     assert "Ha\xa07nm" in (no_break.filter, no_break.object_name, no_break.camera, no_break.optics)
 
 
+@pytest.mark.parametrize(
+    ("key", "field"),
+    [("CCD-TEMP", "ccd_temp_c"), ("SET-TEMP", "set_temp_c"), ("FOCTEMP", "focuser_temp_c")],
+)
+def test_a_temperature_below_absolute_zero_is_unknown(key, field):
+    """Zero assoluto -273,15 C (SI): sotto e' un valore rotto, non un fatto."""
+    assert getattr(read_card(Program.NINA, {key: -999.0}), field) is None
+    assert getattr(read_card(Program.NINA, {key: -273.15}), field) == -273.15
+
+
+@pytest.mark.parametrize(
+    ("key", "field"),
+    [("AMBTEMP", "ambient_temp_c"), ("DEWPOINT", "dew_point_c"), ("SKYTEMP", "sky_temp_c")],
+)
+def test_a_weather_temperature_below_absolute_zero_is_unknown(key, field):
+    conditions = read_conditions({key: -1e30, "HUMIDITY": 40.0})
+    assert conditions is not None
+    assert getattr(conditions, field) is None
+    limit = read_conditions({key: -273.15})
+    assert limit is not None
+    assert getattr(limit, field) == -273.15
+
+
 def test_iso_written_as_number_or_digits_is_read():
     assert read_card(ASIAIR, {"ISO": " 1600 "}).iso == 1600
     assert read_card(ASIAIR, {"ISO": 800}).iso == 800

@@ -960,8 +960,8 @@ CREATE TABLE pipeline_cards (
   gain       INTEGER CHECK (gain >= 0),
   iso        INTEGER CHECK (iso > 0),
   offset     INTEGER CHECK (offset >= 0),
-  ccd_temp_c REAL,
-  set_temp_c REAL,
+  ccd_temp_c REAL CHECK (ccd_temp_c >= -273.15),  -- zero assoluto
+  set_temp_c REAL CHECK (set_temp_c >= -273.15),
   -- ottica come scritta; focale indizio, varia di mm: mai confronto esatto
   optics     TEXT CHECK (optics <> ''),
   focal_mm   REAL CHECK (focal_mm > 0),
@@ -986,7 +986,7 @@ CREATE TABLE pipeline_cards (
   mount        TEXT CHECK (mount <> ''),
   -- fuoco e temperatura: metrica con measure
   focuser_position INTEGER CHECK (focuser_position >= 0),
-  focuser_temp_c   REAL,
+  focuser_temp_c   REAL CHECK (focuser_temp_c >= -273.15),
   CHECK ((pointing_ra_deg IS NULL) = (pointing_dec_deg IS NULL)
     AND (pointing_ra_deg IS NULL) = (pointing_source IS NULL)),
   CHECK ((site_lat_deg IS NULL) = (site_lon_deg IS NULL)),
@@ -997,16 +997,16 @@ CREATE TABLE pipeline_cards (
 -- Unita' CFitsioFITS.cs; intervalli ASCOM ObservingConditions, il resto limiti fisici.
 CREATE TABLE pipeline_conditions (
   file_id            INTEGER PRIMARY KEY REFERENCES pipeline_headers (file_id) ON DELETE CASCADE,
-  ambient_temp_c     REAL,
+  ambient_temp_c     REAL CHECK (ambient_temp_c >= -273.15),  -- zero assoluto
   humidity_pct       REAL CHECK (humidity_pct BETWEEN 0 AND 100),
-  dew_point_c        REAL,
+  dew_point_c        REAL CHECK (dew_point_c >= -273.15),
   pressure_hpa       REAL CHECK (pressure_hpa > 0),
   cloud_cover_pct    REAL CHECK (cloud_cover_pct BETWEEN 0 AND 100),
   wind_kmh           REAL CHECK (wind_kmh >= 0),
   wind_gust_kmh      REAL CHECK (wind_gust_kmh >= 0),
   wind_dir_deg       REAL CHECK (wind_dir_deg >= 0 AND wind_dir_deg < 360),
   sky_quality_mpsas  REAL,
-  sky_temp_c         REAL,
+  sky_temp_c         REAL CHECK (sky_temp_c >= -273.15),
   sky_brightness_lux REAL CHECK (sky_brightness_lux >= 0),
   star_fwhm_arcsec   REAL CHECK (star_fwhm_arcsec > 0),
   CHECK (COALESCE(ambient_temp_c, humidity_pct, dew_point_c, pressure_hpa, cloud_cover_pct,
