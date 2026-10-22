@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
-from .walk import long_path, walk_dir
+from .walk import long_path, real_key, walk_dir
 
 # Skip reasons that pass (file locked, copy running): read again every scan.
 _PASSING = frozenset({"unreadable", "incomplete"})
@@ -38,14 +38,56 @@ class Changes:
         return sorted(self.new + self.changed + self.reread)
 
 
+class RootOverlapError(ValueError):
+    """Folder inside (`inside`) or around a root already added: files would count twice."""
+
+    def __init__(self, other: str, *, inside: bool) -> None:
+        super().__init__(f"{'inside' if inside else 'around'} {other}")
+        self.other = other
+        self.inside = inside
+
+
+def _ignores_case(path: str) -> bool:
+    """Asks the disk: same folder under swapped case (macOS APFS default, Windows)."""
+    swapped = path.swapcase()
+    try:
+        return swapped != path and os.path.samefile(path, swapped)
+    except OSError:
+        return False
+
+
+def _keys(path: str) -> tuple[str, str]:
+    """(as written, real) comparison keys; computed once, on this path only."""
+    written, real = os.path.normcase(path), real_key(path)
+    if _ignores_case(path):
+        written, real = written.casefold(), real.casefold()
+    return written, real
+
+
+def _inside(child: str, parent: str) -> bool:
+    """On key text: network share without end bar too; another drive never."""
+    return child.startswith(parent if parent.endswith(os.sep) else parent + os.sep)
+
+
 def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -> int:
-    with transaction(conn):
-        conn.execute(
-            "INSERT OR IGNORE INTO pipeline_roots (path, created_at) VALUES (?, ?)",
-            (str(path), now),
+    """Same folder written another way: same root. Inside or around one (as written or
+    real): RootOverlapError. Other roots' disks never touched: their keys are stored."""
+    absolute = os.path.normpath(os.path.abspath(path))
+    written, real = _keys(absolute)
+    with transaction(conn, immediate=True):
+        for row in conn.execute("SELECT id, path, written_key, real_key FROM pipeline_roots"):
+            if written == row["written_key"] or real == row["real_key"]:
+                return int(row["id"])
+            for mine, theirs in ((written, row["written_key"]), (real, row["real_key"])):
+                if _inside(mine, theirs) or _inside(theirs, mine):
+                    raise RootOverlapError(row["path"], inside=_inside(mine, theirs))
+        return inserted_id(
+            conn.execute(
+                "INSERT INTO pipeline_roots (path, written_key, real_key, created_at)"
+                " VALUES (?, ?, ?, ?)",
+                (absolute, written, real, now),
+            )
         )
-        row = conn.execute("SELECT id FROM pipeline_roots WHERE path = ?", (str(path),)).fetchone()
-    return int(row["id"])
 
 
 def _rel(path: str, root: str) -> str:

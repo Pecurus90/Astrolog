@@ -869,8 +869,11 @@ CREATE TABLE catalog_version (
 -- DICHIARATO. Cartella scelta dall'utente: radice dei percorsi.
 CREATE TABLE pipeline_roots (
   id         INTEGER PRIMARY KEY,
-  path       TEXT NOT NULL UNIQUE,  -- come scelta, sul sistema dell'app
-  created_at TEXT NOT NULL
+  path        TEXT NOT NULL UNIQUE,  -- assoluta e normalizzata, sul sistema dell'app
+  -- chiavi di confronto, scritte all'aggiunta: dentro/intorno senza toccare dischi altrui
+  written_key TEXT NOT NULL UNIQUE,  -- percorso come scritto
+  real_key    TEXT NOT NULL UNIQUE,  -- collegamenti risolti
+  created_at  TEXT NOT NULL
 ) STRICT;
 
 -- RILEVATO. Ricevuta di ogni scansione.

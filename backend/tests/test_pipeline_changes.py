@@ -5,7 +5,9 @@ import os
 import sys
 from pathlib import Path
 
-from astrolog.pipeline.changes import add_root
+import pytest
+
+from astrolog.pipeline.changes import RootOverlapError, add_root
 from astrolog.pipeline.frames import scan_root
 
 NOW = "2026-10-22T20:00:00+00:00"
@@ -167,3 +169,76 @@ def test_each_scan_leaves_its_receipt(conn, tmp_path):
 
 def test_the_same_root_is_added_once(conn, tmp_path):
     assert add_root(conn, tmp_path, NOW) == add_root(conn, tmp_path, LATER)
+
+
+def test_the_same_folder_written_another_way_is_the_same_root(conn, tmp_path):
+    """Barra finale, barre, maiuscole (Windows): una cartella, una radice."""
+    (tmp_path / "Archive").mkdir()
+    first = add_root(conn, tmp_path / "Archive", NOW)
+    spellings = [str(tmp_path / "Archive") + os.sep, str(tmp_path / "Archive").replace("\\", "/")]
+    if sys.platform == "win32":
+        spellings.append(str(tmp_path / "ARCHIVE"))
+    for spelling in spellings:
+        assert add_root(conn, spelling, LATER) == first
+    assert conn.execute("SELECT COUNT(*) FROM pipeline_roots").fetchone()[0] == 1
+
+
+def test_a_folder_inside_or_around_a_root_is_refused_saying_which(conn, tmp_path):
+    """Dentro o intorno a una gia' aggiunta: rifiutata col perche', mai contata due volte."""
+    (tmp_path / "archive" / "night").mkdir(parents=True)
+    add_root(conn, tmp_path / "archive", NOW)
+    with pytest.raises(RootOverlapError) as inside:
+        add_root(conn, tmp_path / "archive" / "night", NOW)
+    assert inside.value.inside is True
+    assert Path(inside.value.other) == tmp_path / "archive"
+    with pytest.raises(RootOverlapError) as around:
+        add_root(conn, tmp_path, NOW)
+    assert around.value.inside is False
+    assert conn.execute("SELECT COUNT(*) FROM pipeline_roots").fetchone()[0] == 1
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="drive letters: Windows only")
+def test_roots_on_two_drives_are_both_added(conn, tmp_path):
+    other_drive = "Z:\\" if not str(tmp_path).upper().startswith("Z") else "Y:\\"
+    first = add_root(conn, tmp_path, NOW)
+    assert add_root(conn, other_drive + "Astro", NOW) != first
+
+
+def test_a_linked_folder_written_inside_a_root_is_inside(conn, tmp_path):
+    """Collegamento dentro la radice: la radice lo legge gia', non e' una seconda radice."""
+    (tmp_path / "elsewhere" / "night").mkdir(parents=True)
+    (tmp_path / "archive").mkdir()
+    _link(tmp_path / "elsewhere" / "night", tmp_path / "archive" / "linked")
+    add_root(conn, tmp_path / "archive", NOW)
+    with pytest.raises(RootOverlapError) as inside:
+        add_root(conn, tmp_path / "archive" / "linked", NOW)
+    assert inside.value.inside is True
+
+
+def test_adding_a_root_never_touches_the_other_roots_disks(conn, tmp_path, monkeypatch):
+    """NAS spento fra le radici salvate: confronto sulle chiavi salvate, nessun accesso."""
+    (tmp_path / "nas").mkdir()
+    (tmp_path / "local").mkdir()
+    add_root(conn, tmp_path / "nas", NOW)
+    real = os.path.realpath
+
+    def nas_off(path, *args, **kwargs):
+        if "nas" in str(path):
+            raise AssertionError("touched the other root")
+        return real(path, *args, **kwargs)
+
+    monkeypatch.setattr(os.path, "realpath", nas_off)
+    assert add_root(conn, tmp_path / "local", NOW) == 2
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="network shares: Windows")
+def test_a_folder_inside_a_network_share_root_is_inside(conn):
+    add_root(conn, r"\\localhost\C$", NOW)
+    with pytest.raises(RootOverlapError):
+        add_root(conn, r"\\localhost\C$\Windows", NOW)
+
+
+def test_a_sibling_with_a_common_prefix_is_not_inside(conn, tmp_path):
+    (tmp_path / "archive").mkdir()
+    (tmp_path / "archive2").mkdir()
+    assert add_root(conn, tmp_path / "archive", NOW) != add_root(conn, tmp_path / "archive2", NOW)

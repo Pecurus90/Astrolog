@@ -128,7 +128,7 @@ class Walk:
     online_only: list[str] = field(default_factory=list)
 
 
-def _real(path: str) -> str:
+def real_key(path: str) -> str:
     return os.path.normcase(os.path.realpath(long_path(path)))
 
 
@@ -170,7 +170,7 @@ def walk_dir(root: str) -> Walk:
         except OSError:
             result.unreadable.append(current)
             continue
-        real = _real(current)
+        real = real_key(current)
         if real in seen:
             scan.close()
             continue
