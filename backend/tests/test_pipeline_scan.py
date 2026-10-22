@@ -473,6 +473,21 @@ def test_a_gone_file_keeps_its_header(conn, tmp_path):
     assert _headers(conn)["a.fits"][1]["IMAGETYP"] == "LIGHT"
 
 
+def test_a_file_back_is_no_longer_gone(conn, tmp_path):
+    """Tornato: non dice piu' quando era sparito; lo schema rifiuta la riga che lo dice."""
+    nina_light(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    (tmp_path / "a.fits").rename(tmp_path / "away.fit")
+    scan_root(conn, root, LATER)
+    (tmp_path / "away.fit").rename(tmp_path / "a.fits")
+    scan_root(conn, root, LATER)
+    row = conn.execute("SELECT state, gone_scan_id FROM pipeline_files WHERE rel_path = 'a.fits'")
+    assert tuple(row.fetchone()) == ("present", None)
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("UPDATE pipeline_files SET gone_scan_id = seen_scan_id")
+
+
 def test_a_file_rewritten_by_another_program_loses_frame_and_header(conn, tmp_path):
     """Riscritto da un editor sopra l'originale: oggi non e' posa, header vecchio non resta."""
     nina_light(tmp_path / "a.fits", 1)

@@ -121,7 +121,7 @@ def _store(
         " ON CONFLICT (root_id, rel_path) DO UPDATE SET size = excluded.size,"
         " mtime_ns = excluded.mtime_ns, seen_scan_id = excluded.seen_scan_id,"
         " arrived_scan_id = CASE WHEN state = 'gone' THEN excluded.arrived_scan_id"
-        " ELSE arrived_scan_id END, state = 'present' RETURNING id",
+        " ELSE arrived_scan_id END, state = 'present', gone_scan_id = NULL RETURNING id",
         (changes.root_id, rel, size, mtime_ns, changes.scan_id, changes.scan_id),
     ).fetchone()["id"]
     skipped = isinstance(got, Skipped)

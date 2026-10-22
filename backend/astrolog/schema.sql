@@ -932,7 +932,7 @@ CREATE TABLE pipeline_files (
   arrived_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),
   gone_scan_id    INTEGER REFERENCES pipeline_scans (id),  -- quella che l'ha visto sparire
   CHECK (frame_id IS NULL OR skip_reason IS NULL),
-  CHECK (state = 'present' OR gone_scan_id IS NOT NULL),
+  CHECK ((state = 'gone') = (gone_scan_id IS NOT NULL)),
   UNIQUE (root_id, rel_path)
 ) STRICT;
 CREATE INDEX pipeline_files_frame ON pipeline_files (root_id, frame_id);  -- spostati e doppioni
