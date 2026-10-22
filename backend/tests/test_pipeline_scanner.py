@@ -240,6 +240,15 @@ def test_accented_letters_written_by_nina_are_kept(tmp_path):
     assert got.values["OBJECT"] == "Nébuleuse"
 
 
+def test_accented_letters_written_in_utf8_are_read_as_written(tmp_path):
+    """ASIAIR su Linux: byte UTF-8. Letti latin-1 erano 'NÃ©buleuse'."""
+    utf8_bytes_as_latin1 = "Nébuleuse".encode().decode("latin-1")
+    lines = [*_corpus("asiair.txt"), f"OBJECT  = '{utf8_bytes_as_latin1}'"]
+    got = scan_file(_fits(tmp_path / "a.fit", lines))
+    assert isinstance(got, Extracted)
+    assert got.values["OBJECT"] == "Nébuleuse"
+
+
 def test_the_checksums_of_the_cfitsio_writer_are_nina_keys(tmp_path):
     lines = [
         *_corpus("nina.txt"),

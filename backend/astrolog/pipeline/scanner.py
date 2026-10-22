@@ -96,7 +96,7 @@ class Skipped:
 
 def read_cards(path: Path) -> dict[str, Value] | None:
     """Keyword -> value of frame header (primary, plus image page if compressed); None without END
-    or on read error. Latin-1, as N.I.N.A. writes; CONTINUE joins strings."""
+    or on read error. Latin-1 or UTF-8 text; CONTINUE joins strings."""
     try:
         with open(long_path(path), "rb") as fh:  # noqa: PTH123 - the `\\?\` form is a str
             primary = _card_images(fh)
@@ -113,7 +113,18 @@ def read_cards(path: Path) -> dict[str, Value] | None:
                     cards = {**page_keys, **cards}
     except OSError:
         return None
-    return cards
+    return {key: _utf8(value) for key, value in cards.items()}
+
+
+def _utf8(value: Value) -> Value:
+    """Text read latin-1 whose bytes are valid UTF-8 (ASIAIR on Linux): read as UTF-8. Else
+    latin-1 stays (N.I.N.A. on Windows). FITS 4.0 wants ASCII: nothing lost either way."""
+    if not isinstance(value, str) or value.isascii():
+        return value
+    try:
+        return value.encode("latin-1").decode("utf-8")
+    except UnicodeError:
+        return value
 
 
 def _parse(images: list[str]) -> dict[str, Value]:
