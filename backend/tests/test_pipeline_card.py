@@ -329,6 +329,18 @@ def test_the_asiair_mount_is_of_date_and_lands_on_its_solve_once_precessed(name,
     assert landed < 5
 
 
+def test_a_solved_asiair_frame_never_pays_the_mount_precession(tmp_path, monkeypatch):
+    """Vince la soluzione: la precessione (0,67 ms a file) non si calcola per buttarla."""
+    from astrolog.pipeline import card as card_module
+
+    def forbidden(_values):
+        raise AssertionError("mount precessed though the solve wins")
+
+    values = _values("asiair_asi2600.txt", tmp_path)
+    monkeypatch.setattr(card_module, "_asiair_mount", forbidden)
+    assert read_card(ASIAIR, values).pointing_source is PointingSource.SOLVE
+
+
 def test_an_asiair_mount_without_date_is_unknown():
     card = read_card(ASIAIR, {"RA": 210.0, "DEC": 54.0})
     assert card.pointing_source is None

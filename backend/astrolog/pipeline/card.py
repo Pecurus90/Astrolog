@@ -3,6 +3,7 @@
 import math
 import re
 import struct
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -278,17 +279,18 @@ def _sexagesimal(written: Value | None) -> float | None:
 def pointing(
     program: Program, values: dict[str, Value]
 ) -> tuple[float, float, PointingSource] | None:
-    """Where frame looks, J2000: solve, then mount, then target; each out of range falls to next."""
-    mount = (
-        _asiair_mount(values)
-        if program is Program.ASIAIR
-        else _sky(values.get("RA"), values.get("DEC"))
-    )  # N.I.N.A.: J2000, EQUINOX 2000 in every file
-    for source, sky in (
-        (PointingSource.SOLVE, _solve_centre(values) if program is Program.ASIAIR else None),
-        (PointingSource.MOUNT, mount),
-        (PointingSource.TARGET, _target(values) if program is Program.NINA else None),
-    ):
+    """Where frame looks, J2000: solve, then mount, then target; each out of range falls to next.
+    Computed in order, first found wins: mount precession never paid for nothing."""
+    asiair = program is Program.ASIAIR
+    sources: tuple[tuple[PointingSource, Callable[[], tuple[float, float] | None]], ...] = (
+        (PointingSource.SOLVE, lambda: _solve_centre(values) if asiair else None),
+        # N.I.N.A.: J2000, EQUINOX 2000 in every file
+        (PointingSource.MOUNT,
+         lambda: _asiair_mount(values) if asiair else _sky(values.get("RA"), values.get("DEC"))),
+        (PointingSource.TARGET, lambda: _target(values) if program is Program.NINA else None),
+    )  # fmt: skip
+    for source, compute in sources:
+        sky = compute()
         if sky is not None:
             return (*sky, source)
     return None
