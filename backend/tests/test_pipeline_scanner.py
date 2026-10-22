@@ -304,7 +304,7 @@ def test_the_checksums_of_the_cfitsio_writer_are_nina_keys(tmp_path):
     assert got.unknown == frozenset()
 
 
-def _compressed(path: Path) -> Path:
+def _compressed(path: Path, dtype: str = "uint16") -> Path:
     """Tile-compressed N.I.N.A. file as cfitsio writes it: empty primary, keys in page 2."""
     import numpy as np
     from astropy.io import fits
@@ -323,9 +323,15 @@ def _compressed(path: Path) -> Path:
             "BSCALE",
         }:
             header.append(fits.Card.fromstring(line.ljust(80)))
-    data = np.zeros((8, 8), dtype=np.uint16)
+    data = np.zeros((8, 8), dtype=dtype)
     fits.HDUList([fits.PrimaryHDU(), fits.CompImageHDU(data, header)]).writeto(path)
     return path
+
+
+def test_a_compressed_floating_point_file_is_rewritten(tmp_path):
+    """Compresso: il tipo dei pixel del frame e' ZBITPIX (FITS 4.0 sez. 10), non BITPIX."""
+    path = _compressed(tmp_path / "cal.fits.fz", "float32")
+    assert scan_file(path) == Skipped(path, Skip.REWRITTEN)
 
 
 @pytest.mark.parametrize(
@@ -439,6 +445,16 @@ def test_a_rewrite_that_dropped_the_capture_program_is_rewritten(tmp_path):
     ]
     got = scan_file(_fits(tmp_path / "saved.fits", lines))
     assert got == Skipped(tmp_path / "saved.fits", Skip.REWRITTEN)
+
+
+@pytest.mark.parametrize("bitpix", [-32, -64])
+def test_a_floating_point_file_is_rewritten_even_with_the_capture_header(tmp_path, bitpix):
+    """N.I.N.A. salva interi (BaseImageData.SaveFits), ASIAIR 16 bit (archivio: tutti i grezzi):
+    a virgola mobile e' elaborato altrove. Prima: stessa posa del grezzo."""
+    lines = [line.replace("16", str(bitpix)) if line.startswith("BITPIX") else line
+             for line in _NINA_HEAD]  # fmt: skip
+    path = _fits(tmp_path / "cal.fits", lines)
+    assert scan_file(path) == Skipped(path, Skip.REWRITTEN)
 
 
 def test_a_header_without_end_is_broken(tmp_path):

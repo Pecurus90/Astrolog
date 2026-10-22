@@ -228,6 +228,13 @@ def _writes(program: Program, key: str, compressed: bool) -> bool:
     return key in ASIAIR_KEYS or bool(_SIP.match(key))
 
 
+def _floating(cards: dict[str, Value]) -> bool:
+    """Floating-point pixels: N.I.N.A. saves integers (BaseImageData.SaveFits), ASIAIR 16 bit;
+    so calibrated or registered elsewhere, header kept. Compressed: frame's is ZBITPIX."""
+    bitpix = cards.get("ZBITPIX") if cards.get("ZIMAGE") is True else cards.get("BITPIX")
+    return bitpix in (-32, -64)
+
+
 def _axes_are_counts(cards: dict[str, Value]) -> bool:
     """FITS 4.0 sec. 4.4.1.1: NAXIS, NAXISn written are non-negative integers; else no image.
     Compressed frame: same for ZNAXIS, ZNAXISn (sec. 10)."""
@@ -255,7 +262,7 @@ def _extract(path: Path, fh: BinaryIO, size: int | None) -> Extracted | Skipped:
     if header is None:
         return Skipped(path, Skip.BROKEN)
     cards = header.cards
-    if _REWRITE_MARKS & cards.keys():
+    if _REWRITE_MARKS & cards.keys() or _floating(cards):
         return Skipped(path, Skip.REWRITTEN)
     program = program_of(cards)
     if program is None:
