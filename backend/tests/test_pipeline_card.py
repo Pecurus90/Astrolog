@@ -339,12 +339,20 @@ def test_a_nina_mount_is_j2000_as_written(tmp_path):
         ("16 05 00", "+17 43 24", (241.25, 17.723333)),
         ("05 35 17.3", "-05 23 28", (83.822083, -5.391111)),
         ("00 10 00", "-00 30 00", (2.5, -0.5)),  # sign of -00
+        ("05 59 59.99", "+89 59 59", (89.999958, 89.999722)),  # 59: still valid
     ],
 )
 def test_without_mount_the_nina_target_is_read(ra, dec, expected):
     card = read_card(NINA, {"OBJCTRA": ra, "OBJCTDEC": dec})
     assert card.pointing_source is PointingSource.TARGET
     assert (card.pointing_ra_deg, card.pointing_dec_deg) == pytest.approx(expected, abs=1e-6)
+
+
+@pytest.mark.parametrize(
+    ("ra", "dec"), [("05 75 00", "+10 00 00"), ("05 00 60", "+10 00 00"), ("05 00 00", "+10 60 00")]
+)
+def test_a_target_with_minutes_or_seconds_past_59_is_unknown(ra, dec):
+    assert read_card(NINA, {"OBJCTRA": ra, "OBJCTDEC": dec}).pointing_source is None
 
 
 def test_the_target_placeholder_is_unknown():

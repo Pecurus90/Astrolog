@@ -218,6 +218,8 @@ def _sexagesimal(written: Value | None) -> float | None:
     if found is None:
         return None
     sign, whole, minutes, seconds = found.groups()
+    if int(minutes) >= 60 or float(seconds) >= 60:  # noqa: PLR2004 - malformed: not a place
+        return None
     value = int(whole) + int(minutes) / 60 + float(seconds) / 3600
     return -value if sign == "-" else value
 
