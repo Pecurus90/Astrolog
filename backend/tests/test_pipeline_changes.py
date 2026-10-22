@@ -490,6 +490,36 @@ def test_a_volume_number_past_signed_64_bits_is_stored(conn, tmp_path, monkeypat
     assert scan_root(conn, root, NOW).changes.new == ["a.fits"]
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="admin shares: Windows")
+@pytest.mark.parametrize("plain_first", [True, False])
+def test_a_folder_inside_or_around_written_as_share_is_refused(conn, tmp_path, plain_first):
+    """Z:\\Astro poi \\\\nas\\astro\\notte: prima accettate tutte e due, file contati due volte."""
+    (tmp_path / "archive" / "night").mkdir(parents=True)
+    drive, rest = os.path.splitdrive(str(tmp_path))
+    share = f"\\\\localhost\\{drive[0]}$" + rest
+    parent, child = str(tmp_path / "archive"), share + "\\archive\\night"
+    first, second = (parent, child) if plain_first else (child, share + "\\archive")
+    if not plain_first:
+        first = str(tmp_path / "archive" / "night")
+    add_root(conn, first, NOW)
+    with pytest.raises(RootOverlapError) as overlap:
+        add_root(conn, second, NOW)
+    assert overlap.value.inside is plain_first
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="admin shares: Windows")
+def test_a_letter_mapped_below_a_share_still_sees_what_holds_it(conn, tmp_path):
+    """Z: = \\\\nas\\dati\\astro (lettera sotto la condivisione), poi \\\\nas\\dati: la contiene.
+    Junction al posto della lettera: risalendo il testo non si vede chi sta sopra."""
+    (tmp_path / "s" / "m" / "archive").mkdir(parents=True)
+    folder_link(tmp_path / "s" / "m", tmp_path / "J")
+    drive, rest = os.path.splitdrive(str(tmp_path))
+    add_root(conn, tmp_path / "J" / "archive", NOW)
+    with pytest.raises(RootOverlapError) as overlap:
+        add_root(conn, f"\\\\localhost\\{drive[0]}$" + rest + "\\s", NOW)
+    assert overlap.value.inside is False
+
+
 def test_a_renamed_root_folder_added_again_is_a_new_root(conn, tmp_path):
     """Rinominata, tiene il suo id sul disco: non e' piu' la radice salvata, che ora manca."""
     (tmp_path / "Astro").mkdir()

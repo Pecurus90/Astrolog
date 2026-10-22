@@ -877,6 +877,9 @@ CREATE TABLE pipeline_roots (
   -- Non unici: rinominata, la cartella tiene l'id; vale la riga il cui percorso e' ancora lei
   device      TEXT,  -- in cifre: il seriale Windows e' a 64 bit senza segno, oltre INTEGER
   inode       TEXT,
+  -- "device:inode" delle cartelle che la contengono, prese all'aggiunta: dentro/intorno anche
+  -- fra share e lettera, senza toccare i dischi delle altre radici
+  ancestors   TEXT NOT NULL CHECK (json_valid(ancestors) AND json_type(ancestors) = 'array'),
   created_at  TEXT NOT NULL
 ) STRICT;
 

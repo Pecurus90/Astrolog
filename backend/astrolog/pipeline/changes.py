@@ -109,33 +109,57 @@ def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -
         raise NotADirectoryError(absolute)
     written, real = _keys(absolute)
     identity = _identity(absolute)
+    # letter mapped below a share (or link): what holds it shows only on the real path
+    ancestors = _ancestors(absolute) | _ancestors(_plain(os.path.realpath(long_path(absolute))))
     with transaction(conn, immediate=True):
-        same = _same_root(conn, written, real, identity)
+        same = _same_root(conn, written, real, identity, ancestors)
         if same is not None:
             return same
         return inserted_id(
             conn.execute(
                 "INSERT INTO pipeline_roots"
-                " (path, written_key, real_key, device, inode, created_at)"
-                " VALUES (?, ?, ?, ?, ?, ?)",
-                (absolute, written, real, *(identity or (None, None)), now),
+                " (path, written_key, real_key, device, inode, ancestors, created_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (absolute, written, real, *(identity or (None, None)), json.dumps(list(ancestors)),
+                 now),
             )
-        )
+        )  # fmt: skip
+
+
+def _ancestors(path: str) -> dict[str, str]:
+    """'device:inode' -> folder, for every folder holding path: share and letter agree there."""
+    found: dict[str, str] = {}
+    current = path
+    while (parent := os.path.dirname(current)) != current:
+        current = parent
+        if (identity := _identity(current)) is not None:
+            found[":".join(identity)] = current
+    return found
 
 
 def _same_root(
-    conn: sqlite3.Connection, written: str, real: str, identity: tuple[str, str] | None
+    conn: sqlite3.Connection,
+    written: str,
+    real: str,
+    identity: tuple[str, str] | None,
+    ancestors: dict[str, str],
 ) -> int | None:
-    """Id of root that is this folder; one inside or around it: RootOverlapError."""
+    """Id of root that is this folder; one inside or around it (text or disk): RootOverlapError.
+    Same id after rename: confirm stored path still is this folder."""
+    mine_id = ":".join(identity) if identity is not None else None
     for row in conn.execute("SELECT * FROM pipeline_roots"):
         if written == row["written_key"] or real == row["real_key"]:
             return int(row["id"])
-        # renamed or moved folder keeps its id: confirm stored path is still it
-        if identity == (row["device"], row["inode"]) and _still(row["path"], written):
+        theirs_id = f"{row['device']}:{row['inode']}" if row["device"] is not None else None
+        if mine_id is not None and mine_id == theirs_id and _still(row["path"], written):
             return int(row["id"])
         for mine, theirs in ((written, row["written_key"]), (real, row["real_key"])):
             if _inside(mine, theirs) or _inside(theirs, mine):
                 raise RootOverlapError(row["path"], inside=_inside(mine, theirs))
+        if theirs_id in ancestors and _still(row["path"], ancestors[theirs_id]):
+            raise RootOverlapError(row["path"], inside=True)
+        if mine_id is not None and mine_id in json.loads(row["ancestors"]):
+            raise RootOverlapError(row["path"], inside=False)
     return None
 
 
