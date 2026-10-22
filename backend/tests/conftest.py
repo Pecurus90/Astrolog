@@ -492,13 +492,13 @@ class VoceFinta:
 
     name = ""
 
-    def is_dir(self, follow_symlinks=True):
+    def is_dir(self, follow_symlinks=True) -> bool:
         return False
 
-    def is_symlink(self):
+    def is_symlink(self) -> bool:
         return False
 
-    def is_junction(self):
+    def is_junction(self) -> bool:
         return False
 
 

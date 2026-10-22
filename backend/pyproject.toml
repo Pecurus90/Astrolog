@@ -77,7 +77,7 @@ version = {attr = "astrolog.__version__"}
 [tool.pyright]
 pythonVersion = "3.12"
 typeCheckingMode = "standard"
-include = ["astrolog"]
+include = ["astrolog", "tests/test_pipeline_*.py"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

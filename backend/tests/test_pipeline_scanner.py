@@ -7,6 +7,7 @@ import re
 import sys
 import warnings
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -99,7 +100,9 @@ def test_nina_file_gives_every_nina_key_it_carries(tmp_path):
     assert isinstance(got, Extracted)
     assert got.program is Program.NINA
     assert got.values["IMAGETYP"] == "LIGHT"
-    assert got.values["SWCREATE"].startswith("N.I.N.A.")
+    writer = got.values["SWCREATE"]
+    assert isinstance(writer, str)
+    assert writer.startswith("N.I.N.A.")
     carried = {line[:8].strip() for line in lines if line[8:10] == "= "}
     assert set(got.values) == carried
 
@@ -367,7 +370,8 @@ def test_a_user_z_key_in_a_compressed_file_is_unknown(tmp_path):
 
     path = _compressed(tmp_path / "light.fits.fz")
     with fits.open(path, mode="update", disable_image_compression=True) as hdul:
-        hdul[1].header["ZOOM"] = 2
+        page: Any = hdul[1]  # astropy stubs type int index as slice: HDUList
+        page.header["ZOOM"] = 2
     got = scan_file(path)
     assert isinstance(got, Extracted)
     assert got.unknown == frozenset({"ZOOM"})

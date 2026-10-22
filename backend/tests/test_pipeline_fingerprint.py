@@ -37,6 +37,12 @@ def _image(path, shape, dtype, cards=0, **keys):
     return path
 
 
+def _cards(path):
+    cards = read_cards(path)
+    assert cards is not None
+    return cards
+
+
 def _compressed(path, shape=(40, 60)):
     header = fits.Header()
     header["SWCREATE"] = "N.I.N.A. 3.2.0.9001 (x64)"
@@ -96,7 +102,7 @@ def test_two_shapes_with_the_same_bytes_are_two_frames(tmp_path):
         header = fits.Header()
         header["SWCREATE"] = "N.I.N.A. 3.2.0.9001 (x64)"
         fits.PrimaryHDU(data=np.zeros((rows, cols), np.int16), header=header).writeto(path)
-        seen.add(frame_identity(path, read_cards(path)).fingerprint)
+        seen.add(frame_identity(path, _cards(path)).fingerprint)
     assert len(seen) == 2
 
 
@@ -106,8 +112,9 @@ def test_two_exposures_with_the_same_pixels_are_two_frames(tmp_path):
     seen = []
     for name, start in (("a", "2025-06-29T21:11:33.412"), ("b", "2025-06-29T21:16:40.105"),
                         ("copy", "2025-06-29T21:11:33.412")):  # fmt: skip
-        path = _image(tmp_path / f"{name}.fits", (300, 300), np.uint16, **{"DATE-OBS": start})
-        seen.append(frame_identity(path, read_cards(path)).fingerprint)
+        path = _image(tmp_path / f"{name}.fits", (300, 300), np.uint16)
+        fits.setval(path, "DATE-OBS", value=start)
+        seen.append(frame_identity(path, _cards(path)).fingerprint)
     assert seen[0] != seen[1]
     assert seen[0] == seen[2]
 
@@ -122,7 +129,7 @@ def test_a_file_without_pixels_is_told_apart_by_its_cards(tmp_path):
         header["OBJECT"] = name
         fits.PrimaryHDU(header=header).writeto(path)
         today, block = read_frame(str(path))
-        got = frame_identity(path, read_cards(path)).fingerprint
+        got = frame_identity(path, _cards(path)).fingerprint
         assert got == frame_fingerprint(str(path), today, block), name
         seen.add(got)
     assert len(seen) == 2
