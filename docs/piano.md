@@ -10,9 +10,8 @@ fuori nelle Issue con l'etichetta `bloccato`.
 **Pipeline riprogettata da zero** (Marco, 22/10/2026): scansione, lettura, attribuzione,
 normalizzazione riscritte da una mappa decisa prima del codice, uno strato alla volta, accanto alla
 vecchia finche' la sostituiscono. N.I.N.A. e ASIAIR (ADR 0029), metodo ADR 0030, mappa grafica.
-Fatti 1-3b; del 4 Tipo, Tempo, Camera, Ottica, Filtro, Puntamento, poi il resto. #14-#24 qui.
-Chiusa la parte 1: audit COMPLETO di pipeline, schema e test, ogni area: regge? logica, doppioni,
-semplificare, manca, in piu', igiene, sicurezza, prestazioni, casi limite; tre revisori dentro.
+Parte 1 fatta (mattoni 1-4) e auditata quattro volte. Poi (Marco): ASTAP, measure, confronto coi
+dati delle pagine di Design, app attorno alle pagine; dentro, la parte 2. #14-#24 qui.
 
 ## Dopo
 
