@@ -12,7 +12,7 @@ from .fingerprint import BLOCK, CARD, Header, data_length, frame_identity
 from .values import Program, Value, as_count
 from .walk import long_path
 
-MAX_HEADER_BLOCKS = 1000
+MAX_HEADER_BLOCKS = 100  # owner's cap, no convention: 288 KB; real files use 2-4
 _COMMENTARY = frozenset({"COMMENT", "HISTORY"})  # FITS 4.0 4.4.2.4 free text; format notes, dropped
 
 _STRUCTURE = ("SIMPLE", "BITPIX", "NAXIS", "NAXIS1", "NAXIS2", "BZERO", "EXTEND")

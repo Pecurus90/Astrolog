@@ -338,16 +338,16 @@ def test_continue_joins_quoted_strings_only(tmp_path, lines, key, value):
 
 
 def test_a_long_continue_chain_is_read_in_linear_time(tmp_path):
-    """35.000 CONTINUE (quasi il tetto di blocchi): prima 9,7 s a file, ogni pezzo riattaccato."""
+    """3.500 CONTINUE (quasi il tetto di 100 blocchi): ogni pezzo una volta, valore esatto."""
     piece = "abcdefghij" * 6
-    links = [f"CONTINUE  '{piece}&'"] * 35_000
+    links = [f"CONTINUE  '{piece}&'"] * 3_500
     lines = [*_corpus("nina.txt"), "NOTE    = 'start&'", *links, "CONTINUE  'end'"]
     path = _fits(tmp_path / "a.fits", lines)
     started = time.perf_counter()
     got = scan_file(path)
     assert time.perf_counter() - started < 2  # linear: well under 1 s
     assert isinstance(got, Extracted)
-    assert got.values["NOTE"] == "start" + piece * 35_000 + "end"
+    assert got.values["NOTE"] == "start" + piece * 3_500 + "end"
 
 
 def test_continue_is_never_a_key(tmp_path):
@@ -442,6 +442,15 @@ def test_a_floating_point_file_is_rewritten_even_with_the_capture_header(tmp_pat
              for line in _NINA_HEAD]  # fmt: skip
     path = _fits(tmp_path / "cal.fits", lines)
     assert scan_file(path) == Skipped(path, Skip.REWRITTEN)
+
+
+@pytest.mark.parametrize(("blocks", "broken"), [(100, False), (101, True)])
+def test_a_header_past_100_blocks_is_broken(tmp_path, blocks, broken):
+    """Tetto deciso col proprietario: 100 blocchi (288 KB); i file veri ne usano 2-4.
+    Prima 1000: un header ostile pesava 2,9 MB nel database."""
+    filler = ["HISTORY x"] * (blocks * 36 - 1 - len(_NINA_HEAD))
+    path = _fits(tmp_path / "long.fits", [*_NINA_HEAD, *filler])
+    assert (scan_file(path) == Skipped(path, Skip.BROKEN)) is broken
 
 
 def test_a_header_without_end_is_broken(tmp_path):
