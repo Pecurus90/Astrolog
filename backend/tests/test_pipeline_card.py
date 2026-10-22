@@ -386,6 +386,13 @@ def test_a_mount_out_of_range_falls_to_the_target(values):
     assert card.pointing_source is PointingSource.TARGET
 
 
+@pytest.mark.parametrize("program", [NINA, ASIAIR])
+def test_ra_and_dec_both_zero_are_unknown_like_target_and_site(program):
+    """0/0: nessuna posa vera li' (archivio: mai). Prima: ASIAIR precessato in un punto vero."""
+    card = read_card(program, {"RA": 0.0, "DEC": 0.0, "DATE-OBS": "2026-06-01T22:00:00.000"})
+    assert card.pointing_source is None
+
+
 def test_a_mount_at_360_is_0():
     assert read_card(NINA, {"RA": 360.0, "DEC": 10.0}).pointing_ra_deg == 0.0
 

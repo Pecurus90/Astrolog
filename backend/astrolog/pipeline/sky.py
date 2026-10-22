@@ -62,7 +62,7 @@ def _solve_centre(values: dict[str, Value]) -> tuple[float, float] | None:
 def _asiair_target(values: dict[str, Value], start: datetime | None) -> tuple[float, float] | None:
     """ASIAIR RA/DEC: 'Object Right Ascension', of date (JNow): 1.2' from its solve once
     precessed, 17.7' not. No date, no precession: not known."""
-    sky = _sky(values.get("RA"), values.get("DEC"))
+    sky = _written(values)
     if sky is None or start is None:
         return None
     seconds = start.second + start.microsecond / 1e6
@@ -74,6 +74,12 @@ def _asiair_target(values: dict[str, Value], start: datetime | None) -> tuple[fl
     of_date_to_j2000 = _J2000_PRECESSION @ erfa.bp06(*tt)[1].swapaxes(-2, -1)
     ra, dec = erfa.c2s(of_date_to_j2000 @ erfa.s2c(math.radians(sky[0]), math.radians(sky[1])))
     return _sky(math.degrees(erfa.anp(ra)), math.degrees(dec))
+
+
+def _written(values: dict[str, Value]) -> tuple[float, float] | None:
+    """RA/DEC as written; both zero: placeholder, as for target and site (archive: never)."""
+    sky = _sky(values.get("RA"), values.get("DEC"))
+    return None if sky == (0, 0) else sky
 
 
 def _target(values: dict[str, Value]) -> tuple[float, float] | None:
@@ -105,11 +111,10 @@ def pointing(
     """Where frame looks, J2000: solve, then mount, then target; each out of range falls to next.
     Computed in order, first found wins: target precession never paid for nothing."""
     asiair = program is Program.ASIAIR
-    ra, dec = values.get("RA"), values.get("DEC")
     sources: tuple[tuple[PointingSource, Callable[[], tuple[float, float] | None]], ...] = (
         (PointingSource.SOLVE, lambda: _solve_centre(values) if asiair else None),
         # N.I.N.A.: J2000, EQUINOX 2000 in every file
-        (PointingSource.MOUNT, lambda: None if asiair else _sky(ra, dec)),
+        (PointingSource.MOUNT, lambda: None if asiair else _written(values)),
         (PointingSource.TARGET,
          lambda: _asiair_target(values, start) if asiair else _target(values)),
     )  # fmt: skip
