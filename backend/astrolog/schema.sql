@@ -875,8 +875,8 @@ CREATE TABLE pipeline_roots (
   real_key    TEXT NOT NULL UNIQUE,  -- collegamenti risolti
   -- volume e cartella dal disco (os.stat): stessa cartella scritta in ogni forma. NULL: non dati.
   -- Non unici: rinominata, la cartella tiene l'id; vale la riga il cui percorso e' ancora lei
-  device      INTEGER,
-  inode       INTEGER,
+  device      TEXT,  -- in cifre: il seriale Windows e' a 64 bit senza segno, oltre INTEGER
+  inode       TEXT,
   created_at  TEXT NOT NULL
 ) STRICT;
 

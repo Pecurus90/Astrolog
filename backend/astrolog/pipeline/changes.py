@@ -83,10 +83,11 @@ def _plain(path: str) -> str:
     return path.removeprefix(_LONG)
 
 
-def _identity(path: str) -> tuple[int, int] | None:
-    """Volume and folder id from disk: same in every spelling (letter, share, `\\\\?\\`)."""
+def _identity(path: str) -> tuple[str, str] | None:
+    """Volume and folder id from disk: same in every spelling (letter, share, `\\\\?\\`).
+    As digits: Windows volume serial is unsigned 64 bit, past SQLite INTEGER."""
     st = os.stat(long_path(path))
-    return (st.st_dev, st.st_ino) if st.st_ino else None
+    return (str(st.st_dev), str(st.st_ino)) if st.st_ino else None
 
 
 def _still(stored: str, path: str) -> bool:
@@ -120,7 +121,7 @@ def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -
 
 
 def _same_root(
-    conn: sqlite3.Connection, written: str, real: str, identity: tuple[int, int] | None
+    conn: sqlite3.Connection, written: str, real: str, identity: tuple[str, str] | None
 ) -> int | None:
     """Id of root that is this folder; one inside or around it: RootOverlapError."""
     for row in conn.execute("SELECT * FROM pipeline_roots"):
@@ -237,9 +238,9 @@ def _write_counts(conn: sqlite3.Connection, changes: Changes) -> None:
     )  # fmt: skip
 
 
-def _volume(root: str) -> int | None:
+def _volume(root: str) -> str | None:
     try:
-        return os.stat(long_path(root)).st_dev
+        return str(os.stat(long_path(root)).st_dev)
     except OSError:
         return None
 

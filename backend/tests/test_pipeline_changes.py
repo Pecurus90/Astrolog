@@ -447,6 +447,27 @@ def test_the_same_folder_written_as_long_path_or_share_is_the_same_root(conn, tm
         add_root(conn, "\\\\?\\" + plain + "\\night", NOW)
 
 
+def test_a_volume_number_past_signed_64_bits_is_stored(conn, tmp_path, monkeypatch):
+    """Seriale di volume Windows a 64 bit senza segno (disco vero: 17585015167195144138): prima
+    OverflowError, nessuna radice."""
+    from astrolog.pipeline import changes
+
+    real = os.stat
+
+    def big(path, *args, **kwargs):
+        st = real(path, *args, **kwargs)
+        if not stat.S_ISDIR(st.st_mode):
+            return st
+        hidden = {k: getattr(st, k) for k in dir(st) if k.startswith("st_") and k != "st_dev"}
+        return os.stat_result((*st[:2], 17585015167195144138, *st[3:10]), hidden)
+
+    monkeypatch.setattr(changes.os, "stat", big)
+    (tmp_path / "nas").mkdir()
+    _file(tmp_path / "nas" / "a.fits")
+    root = add_root(conn, tmp_path / "nas", NOW)
+    assert scan_root(conn, root, NOW).changes.new == ["a.fits"]
+
+
 def test_a_renamed_root_folder_added_again_is_a_new_root(conn, tmp_path):
     """Rinominata, tiene il suo id sul disco: non e' piu' la radice salvata, che ora manca."""
     (tmp_path / "Astro").mkdir()
