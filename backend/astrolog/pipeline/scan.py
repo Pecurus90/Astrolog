@@ -2,6 +2,7 @@
 One frame per fingerprint: copy is duplicate, moved file stays its frame."""
 
 import json
+import os
 import sqlite3
 import threading
 from dataclasses import dataclass, field, fields
@@ -12,7 +13,8 @@ from ..db.transaction import transaction
 from .card import Card, Conditions, read_card, read_conditions
 from .changes import Changes, finish_scan, record_changes
 from .filters import resolve
-from .scanner import Extracted, Skipped, scan_file
+from .scanner import Extracted, Skip, Skipped, scan_file
+from .walk import long_path
 
 _ROOTS_GUARD = threading.Lock()
 _RUNNING: dict[int, threading.Lock] = {}  # app is one process: a lock per root
@@ -51,10 +53,11 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
     result = ScanResult(changes)
     to_read = changes.to_read
     for start in range(0, len(to_read), BATCH):
-        batch = [
+        read = [
             (rel, scan_file(Path(changes.root, rel), changes.stat[rel][0]))  # size from walk
             for rel in to_read[start : start + BATCH]
         ]
+        batch = [(rel, got) for rel, got in read if not _vanished(got)]
         skipped = [got for _, got in batch if isinstance(got, Skipped)]
         with transaction(conn, immediate=True):
             for rel, got in batch:
@@ -74,6 +77,16 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
         (root_id,),
     ).fetchone()[0]
     return result
+
+
+def _vanished(got: Extracted | Skipped) -> bool:
+    """Gone between walk and read (folder renamed meanwhile): nothing stored, row keeps its
+    frame, next scan finds it gone and pairs the move."""
+    return (
+        isinstance(got, Skipped)
+        and got.reason is Skip.UNREADABLE
+        and not os.path.lexists(long_path(got.path))
+    )
 
 
 def _store(

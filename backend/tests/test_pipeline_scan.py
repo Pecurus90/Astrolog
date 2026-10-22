@@ -83,6 +83,26 @@ def test_a_moved_file_is_the_same_frame(conn, tmp_path):
     assert _files(conn) == {"M42/posa.fits": frame}
 
 
+def test_a_folder_renamed_while_its_files_are_read_is_still_a_move(conn, tmp_path, monkeypatch):
+    """Sparito fra elenco e lettura: non illeggibile, altrove. Prima: perdeva il frame."""
+    path = _nina(tmp_path / "night" / "a.fits", 3)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    _touch_later(path)
+    real = scan.scan_file
+
+    def renamed_first(p, size=None):
+        if (tmp_path / "night").exists():
+            (tmp_path / "night").rename(tmp_path / "night2")
+        return real(p, size)
+
+    monkeypatch.setattr(scan, "scan_file", renamed_first)
+    scan_root(conn, root, LATER)
+    monkeypatch.setattr(scan, "scan_file", real)
+    later = scan_root(conn, root, "2026-10-24T20:00:00+00:00")
+    assert later.moved == [("night/a.fits", "night2/a.fits")]
+
+
 def test_a_move_plus_a_copy_is_one_move_and_one_duplicate(conn, tmp_path):
     _nina(tmp_path / "a.fits", 4)
     root = add_root(conn, tmp_path, NOW)
