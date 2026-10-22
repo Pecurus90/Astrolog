@@ -86,20 +86,17 @@ def filter_key(written: str) -> str:
 
 
 def resolve(conn: sqlite3.Connection, written: str) -> None:
-    """Writes what written name is: standard, then answer, then user filter; none: to ask."""
+    """Writes what written name is: standard, then user filter's own name, then answer; none:
+    to ask. Name of your filter always means that filter, whatever came first."""
     key = filter_key(written)
     standard, name = FORMS.get(key), None
     if standard is None:
-        row = (
-            conn.execute(
-                "SELECT standard, filter_name FROM pipeline_filter_answers WHERE written_key = ?",
-                (key,),
-            ).fetchone()
-            or conn.execute(
-                "SELECT NULL AS standard, name AS filter_name FROM pipeline_filters WHERE key = ?",
-                (key,),
-            ).fetchone()
-        )
+        name = _filter_named(conn, key)
+    if standard is None and name is None:
+        row = conn.execute(
+            "SELECT standard, filter_name FROM pipeline_filter_answers WHERE written_key = ?",
+            (key,),
+        ).fetchone()
         if row is not None:
             standard, name = row["standard"], row["filter_name"]
     conn.execute(
@@ -120,6 +117,9 @@ def answer(
     key = filter_key(written)
     if not key or key in FORMS:
         raise ValueError(f"{written!r}: standard spelling or empty, never answered")
+    own = _filter_named(conn, key)
+    if own is not None and (isinstance(target, StandardFilter) or target.strip() != own):
+        raise ValueError(f"{written!r}: name of your filter {own!r}, it means that filter")
     with transaction(conn):
         name_key = key  # new filter: spellings of its own name follow too
         if isinstance(target, StandardFilter):
@@ -153,11 +153,19 @@ def _user_filter(
     key = filter_key(name)
     if not key or key in FORMS or not bands:
         raise ValueError(f"{name!r}: new filter needs own name and its bands")
-    if conn.execute("SELECT 1 FROM pipeline_filters WHERE key = ?", (key,)).fetchone():
+    if _filter_named(conn, key) is not None:
         raise ValueError(f"{name!r}: another filter has this name")
-    conn.execute("INSERT INTO pipeline_filters (name, key) VALUES (?, ?)", (name, key))
+    conn.execute("INSERT INTO pipeline_filters (name) VALUES (?)", (name,))
     conn.executemany(
         "INSERT INTO pipeline_filter_bands (filter_name, band, width_nm) VALUES (?, ?, ?)",
         [(name, band, width) for band, width in bands.items()],
     )
     return name
+
+
+def _filter_named(conn: sqlite3.Connection, key: str) -> str | None:
+    """User filter whose name has this key. Key from name every time: rename never stale."""
+    for row in conn.execute("SELECT name FROM pipeline_filters"):
+        if filter_key(row["name"]) == key:
+            return str(row["name"])
+    return None

@@ -1005,10 +1005,10 @@ CREATE TABLE pipeline_conditions (
     star_fwhm_arcsec) IS NOT NULL)
 ) STRICT;
 
--- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave: nome (filters.filter_key).
+-- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave calcolata dal nome, mai salvata:
+-- una rinomina non la lascia indietro. Due nomi con la stessa chiave: rifiutati in filters.py.
 CREATE TABLE pipeline_filters (
-  name TEXT PRIMARY KEY CHECK (name <> '' AND name = trim(name)),
-  key  TEXT NOT NULL UNIQUE
+  name TEXT PRIMARY KEY CHECK (name <> '' AND name = trim(name))
 ) STRICT;
 
 -- DICHIARATO. Bande del filtro; Ha 3 nm e 7 nm: due filtri. width_nm NULL: non detta.

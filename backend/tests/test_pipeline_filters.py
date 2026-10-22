@@ -154,6 +154,34 @@ def test_a_renamed_filter_carries_its_answers_and_spellings(conn):
     assert _spelling(conn, "Ha 3nm") == (None, "Antlia Ha 3nm")
 
 
+def test_after_a_rename_the_new_name_matches_and_the_old_does_not(conn):
+    """Chiave dal nome, una casa: il nome vecchio non indica piu' il filtro."""
+    answer(conn, "Ha 3nm", "Antlia 3nm", {Band.HA: 3.0})
+    conn.execute("UPDATE pipeline_filters SET name = 'Antlia Ha 3nm' WHERE name = 'Antlia 3nm'")
+    resolve(conn, "ANTLIA HA 3NM")
+    resolve(conn, "Antlia 3nm")
+    assert _spelling(conn, "ANTLIA HA 3NM") == (None, "Antlia Ha 3nm")
+    assert _spelling(conn, "Antlia 3nm") == (None, None)
+
+
+def test_a_filter_born_with_an_answered_name_takes_that_name(conn):
+    """Nome gia' risposto, poi filtro con quel nome: il nome indica il filtro."""
+    resolve(conn, "Antlia 3nm")
+    answer(conn, "Antlia 3nm", StandardFilter.OIII)
+    answer(conn, "Ha 3nm", " Antlia 3nm ", {Band.HA: 3.0})
+    assert _spelling(conn, "Antlia 3nm") == (None, "Antlia 3nm")
+    answer(conn, "antlia 3NM", " Antlia 3nm ")  # blanks at ends: same filter
+
+
+def test_the_name_of_a_user_filter_is_never_answered_as_something_else(conn):
+    """Il nome di un tuo filtro indica quel filtro: una risposta non lo scavalca."""
+    answer(conn, "Ha 3nm", "Antlia 3nm", {Band.HA: 3.0})
+    with pytest.raises(ValueError):
+        answer(conn, "antlia  3NM", StandardFilter.OIII)
+    resolve(conn, "Antlia 3nm")
+    assert _spelling(conn, "Antlia 3nm") == (None, "Antlia 3nm")
+
+
 def test_a_filter_with_answers_cannot_be_deleted(conn):
     answer(conn, "Ha 3nm", "Antlia 3nm", {Band.HA: 3.0})
     with pytest.raises(sqlite3.IntegrityError):
