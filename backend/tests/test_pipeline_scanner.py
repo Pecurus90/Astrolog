@@ -5,6 +5,7 @@ import math
 import os
 import re
 import sys
+import time
 import warnings
 from pathlib import Path
 from typing import Any
@@ -341,6 +342,19 @@ def test_continue_joins_quoted_strings_only(tmp_path, lines, key, value):
     got = scan_file(_fits(tmp_path / "a.fits", [*_corpus("nina.txt"), *lines]))
     assert isinstance(got, Extracted)
     assert got.values[key] == value
+
+
+def test_a_long_continue_chain_is_read_in_linear_time(tmp_path):
+    """35.000 CONTINUE (quasi il tetto di blocchi): prima 9,7 s a file, ogni pezzo riattaccato."""
+    piece = "abcdefghij" * 6
+    links = [f"CONTINUE  '{piece}&'"] * 35_000
+    lines = [*_corpus("nina.txt"), "NOTE    = 'start&'", *links, "CONTINUE  'end'"]
+    path = _fits(tmp_path / "a.fits", lines)
+    started = time.perf_counter()
+    got = scan_file(path)
+    assert time.perf_counter() - started < 2  # linear: well under 1 s
+    assert isinstance(got, Extracted)
+    assert got.values["NOTE"] == "start" + piece * 35_000 + "end"
 
 
 def test_continue_is_never_a_key(tmp_path):

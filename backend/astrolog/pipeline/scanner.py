@@ -123,23 +123,34 @@ def _utf8(value: Value) -> Value:
 
 
 def _parse(images: list[str]) -> dict[str, Value]:
+    """CONTINUE pieces gathered, joined once at chain end: linear, not quadratic."""
     cards: dict[str, Value] = {}
     last: str | None = None
+    pieces: list[str] = []
     for image in images:
         key = image[:8].rstrip()
         if key == "CONTINUE":  # reserved word, never a key; joins quoted strings only
-            if last is not None and _continues(cards[last]) and _quoted(image[8:]):
-                cards[last] = str(cards[last])[:-1] + _string(image[8:])
+            if last is not None and _continues(pieces[-1]) and _quoted(image[8:]):
+                pieces[-1] = pieces[-1][:-1]
+                pieces.append(_string(image[8:]))
             else:
-                last = None  # unquoted or stray: chain ends here
+                last = _close(cards, last, pieces)  # unquoted or stray: chain ends here
             continue
-        last = None
+        last = _close(cards, last, pieces)
         key, field = _key_and_field(image)
         if key is None or key in cards:
             continue
         cards[key] = _value(field)
-        last = key if isinstance(cards[key], str) and _quoted(field) else None
+        if isinstance(cards[key], str) and _quoted(field):
+            last, pieces = key, [str(cards[key])]
+    _close(cards, last, pieces)
     return cards
+
+
+def _close(cards: dict[str, Value], last: str | None, pieces: list[str]) -> None:
+    """Chain ends: its string is the joined pieces."""
+    if last is not None:
+        cards[last] = "".join(pieces)
 
 
 def _key_and_field(image: str) -> tuple[str | None, str]:
