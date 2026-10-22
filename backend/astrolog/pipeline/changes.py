@@ -25,6 +25,8 @@ class Changes:
     gone: list[str] = field(default_factory=list)
     unreachable: list[str] = field(default_factory=list)  # subfolders not answering
     unlooked: list[str] = field(default_factory=list)  # size and date unreadable
+    hidden: list[str] = field(default_factory=list)  # trash, service folders: left out, said
+    online_only: list[str] = field(default_factory=list)  # cloud placeholders: never downloaded
 
     @property
     def to_read(self) -> list[str]:
@@ -84,6 +86,8 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
         changes.unreachable = sorted(_rel(u, root) for u in walk.unreadable)
         disk, unlooked = _on_disk(walk.found, root)
         changes.unlooked = sorted(unlooked)
+        changes.hidden = sorted(_rel(p, root) for p in walk.hidden)
+        changes.online_only = sorted(_rel(p, root) for p in walk.online_only)
     scan_id = inserted_id(
         conn.execute(
             "INSERT INTO pipeline_scans"

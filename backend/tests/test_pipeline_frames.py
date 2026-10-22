@@ -291,6 +291,17 @@ def test_a_file_that_failed_to_read_is_read_again_next_scan(conn, tmp_path, monk
     assert _cards(conn) == {"a.fits": "light"}
 
 
+def test_a_scan_says_what_the_walk_left_out(conn, tmp_path):
+    """Cestini e file solo nel cloud: fuori, ma detti, mai persi in silenzio."""
+    _nina(tmp_path / "a.fits", 1)
+    _nina(tmp_path / ".Trashes" / "deleted.fits", 2)
+    (tmp_path / "night").mkdir()
+    (tmp_path / "night" / ".M42.fits.icloud").write_bytes(b"SIMPLE  = T")
+    result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    assert result.changes.hidden == [".Trashes"]
+    assert result.changes.online_only == ["night/M42.fits"]
+
+
 def test_a_file_skipped_for_its_content_is_not_read_again(conn, tmp_path):
     _nina(tmp_path / "a.fits", 1, ("PROGRAM = 'Editor 1.9.3'",))
     root = add_root(conn, tmp_path, NOW)
