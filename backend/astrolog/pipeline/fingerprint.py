@@ -1,5 +1,5 @@
-"""Frame identity: dimensions plus 64 KB from data block centre; stable across header rewrites
-and moves. Ported from fits/header_read.py (ADR 0030), same result on every file."""
+"""Frame identity: dimensions, exposure start, 64 KB from data block centre; stable across
+header rewrites and moves. Without DATE-OBS, same as fits/header_read.py (ADR 0030)."""
 
 # jscpd:ignore-start  # noqa: ERA001
 import hashlib
@@ -113,8 +113,8 @@ def frame_size(cards: dict[str, Any]) -> tuple[Any, Any]:
 
 
 def frame_identity(path: str | os.PathLike[str], cards: dict[str, Any]) -> FrameIdentity:
-    """sha256 of dimensions and FINGERPRINT_BYTES from data block centre, away from registration
-    borders and overscan; no pixels: cards."""
+    """sha256 of dimensions, DATE-OBS if written, FINGERPRINT_BYTES from data block centre, away
+    from registration borders and overscan; no pixels: cards."""
     start, span = data_block(path)
     chunk = b""
     if span:
@@ -122,7 +122,11 @@ def frame_identity(path: str | os.PathLike[str], cards: dict[str, Any]) -> Frame
             f.seek(start + max(0, (span - FINGERPRINT_BYTES) // 2))
             chunk = f.read(FINGERPRINT_BYTES)
     width, height = frame_size(cards)
-    digest = hashlib.sha256(f"{width}x{height}:{cards.get('BITPIX')}".encode())
+    shape = f"{width}x{height}:{cards.get('BITPIX')}"
+    exposure_start = cards.get("DATE-OBS")  # same pixels, other instant: other frame
+    digest = hashlib.sha256(
+        f"{shape}:{exposure_start}".encode() if isinstance(exposure_start, str) else shape.encode()
+    )
     digest.update(chunk or _primary_cards(path))
     complete = os.path.getsize(long_path(path)) >= start + span
     return FrameIdentity(digest.hexdigest(), complete)

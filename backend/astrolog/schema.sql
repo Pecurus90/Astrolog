@@ -893,7 +893,7 @@ CREATE TABLE pipeline_scans (
   finished   INTEGER NOT NULL CHECK (finished IN (0, 1))  -- 0: fermata, il giro dopo rifa'
 ) STRICT;
 
--- RILEVATO. Posa per impronta: regge spostamento e header riscritto; senza file resta. Risposte
+-- RILEVATO. Posa per impronta (pixel, dimensioni, inizio): regge spostamento e header riscritto; senza file resta. Risposte
 -- utente: alla chiave di cio' che rispondono (nome scritto, produzione, impronta), mai a un id.
 CREATE TABLE pipeline_frames (
   id          INTEGER PRIMARY KEY,

@@ -100,6 +100,18 @@ def test_two_shapes_with_the_same_bytes_are_two_frames(tmp_path):
     assert len(seen) == 2
 
 
+def test_two_exposures_with_the_same_pixels_are_two_frames(tmp_path):
+    """Cappuccio chiuso o centro saturo: pixel uguali, inizio diverso, due pose. La copia, stesso
+    inizio, resta una posa sola."""
+    seen = []
+    for name, start in (("a", "2025-06-29T21:11:33.412"), ("b", "2025-06-29T21:16:40.105"),
+                        ("copy", "2025-06-29T21:11:33.412")):  # fmt: skip
+        path = _image(tmp_path / f"{name}.fits", (300, 300), np.uint16, **{"DATE-OBS": start})
+        seen.append(frame_identity(path, read_cards(path)).fingerprint)
+    assert seen[0] != seen[1]
+    assert seen[0] == seen[2]
+
+
 def test_a_file_without_pixels_is_told_apart_by_its_cards(tmp_path):
     """Senza blocco dati, impronta di oggi prende le schede: due header diversi, due frame."""
     seen = set()
