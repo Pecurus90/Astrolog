@@ -4,7 +4,6 @@
 import math
 import os
 import re
-import sys
 import time
 import warnings
 from pathlib import Path
@@ -16,9 +15,7 @@ from astrolog.pipeline.changes import add_root
 from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.scanner import Extracted, Skip, Skipped, scan_file
 from astrolog.pipeline.values import Program
-from test_pipeline_scan import NOW
-
-CORPUS = Path(__file__).with_name("header")
+from conftest import HEADER_CORPUS, NOW, folder_link
 
 
 def _fits(path: Path, lines: list[str], end: bool = True) -> Path:
@@ -46,21 +43,11 @@ def _span(lines: list[str]) -> int:
     return size + (-size % 2880)
 
 
-def _link(target: Path, link: Path) -> None:
-    """Folder link: junction on Windows (no privilege needed), symlink elsewhere."""
-    if sys.platform == "win32":
-        import _winapi
-
-        _winapi.CreateJunction(str(target), str(link))
-    else:
-        link.symlink_to(target, target_is_directory=True)
-
-
 def _corpus(name: str) -> list[str]:
     """Real header, image shrunk to 16x16 so test file stays small."""
     return [
         re.sub(r"^(NAXIS[12]  =)\s*\d+", lambda m: m.group(1) + "16".rjust(21), line)
-        for line in (CORPUS / name).read_text(encoding="utf-8").splitlines()
+        for line in (HEADER_CORPUS / name).read_text(encoding="utf-8").splitlines()
         if line.strip() and not line.startswith("#")
     ]
 
@@ -70,8 +57,8 @@ def test_the_scan_reads_through_a_linked_folder_once(conn, tmp_path):
     _fits(real / "a.fits", _corpus("nina.txt"))
     root = tmp_path / "root"
     root.mkdir()
-    _link(real, root / "acquisitions")
-    _link(root, real / "loop")
+    folder_link(real, root / "acquisitions")
+    folder_link(root, real / "loop")
     result = scan_root(conn, add_root(conn, root, NOW), NOW)
     assert result.changes.new == ["acquisitions/a.fits"]
     assert (result.frames, result.skipped) == (1, [])

@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import sqlite3
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -13,33 +14,23 @@ from astrolog.db.connect import connect
 from astrolog.pipeline import scan
 from astrolog.pipeline.changes import add_root
 from astrolog.pipeline.scan import ScanRunningError, scan_root
-from astrolog.pipeline.scanner import Skip, Skipped
+from astrolog.pipeline.scanner import Extracted, Skip, Skipped
+from conftest import LATER, NOW, nina_light
 
-NOW = "2026-10-22T20:00:00+00:00"
-LATER = "2026-10-23T20:00:00+00:00"
-CORPUS = Path(__file__).with_name("header")
+ScanFile = Callable[[Path, int | None], Extracted | Skipped]
 
 
-def _nina(path: Path, seed: int, extra: tuple[str, ...] = ()) -> Path:
-    """Small N.I.N.A. light with own pixels: `seed` makes different frame, `extra` cards
-    different header on same frame."""
-    lines = [
-        "SIMPLE  =                    T",
-        "BITPIX  =                   16",
-        "NAXIS   =                    2",
-        "NAXIS1  =                   16",
-        "NAXIS2  =                   16",
-        "IMAGETYP= 'LIGHT'",
-        "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'",
-        *extra,
-        "END",
-    ]
-    head = "".join(line.ljust(80) for line in lines)
-    head += " " * (-len(head) % 2880)
-    data = bytes((seed + i) % 256 for i in range(512))
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(head.encode("ascii") + data + b"\0" * (2880 - 512))
-    return path
+def _stopping_scan(real: ScanFile, at: int = 1) -> ScanFile:
+    """Fake `scan_file`: stops scan with KeyboardInterrupt at call number `at`."""
+    calls: list[Path] = []
+
+    def stops(path: Path, size: int | None = None) -> Extracted | Skipped:
+        calls.append(path)
+        if len(calls) == at:
+            raise KeyboardInterrupt
+        return real(path, size)
+
+    return stops
 
 
 def _files(conn):
@@ -52,8 +43,8 @@ def _files(conn):
 
 
 def test_each_file_read_points_to_its_frame(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1)
-    _nina(tmp_path / "b.fits", 2)
+    nina_light(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "b.fits", 2)
     result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
     files = _files(conn)
     assert files["a.fits"] != files["b.fits"]
@@ -62,7 +53,7 @@ def test_each_file_read_points_to_its_frame(conn, tmp_path):
 
 def test_a_copy_in_another_folder_is_one_frame(conn, tmp_path):
     """Stessa posa in due cartelle: un frame, due file, e la ricevuta lo dice."""
-    _nina(tmp_path / "2024-11-03" / "m33.fits", 7)
+    nina_light(tmp_path / "2024-11-03" / "m33.fits", 7)
     shutil.copy(tmp_path / "2024-11-03" / "m33.fits", tmp_path / "2024-11-04_m33.fits")
     result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
     files = _files(conn)
@@ -72,7 +63,7 @@ def test_a_copy_in_another_folder_is_one_frame(conn, tmp_path):
 
 
 def test_a_moved_file_is_the_same_frame(conn, tmp_path):
-    _nina(tmp_path / "da_ordinare" / "posa.fits", 3)
+    nina_light(tmp_path / "da_ordinare" / "posa.fits", 3)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     frame = _files(conn)["da_ordinare/posa.fits"]
@@ -85,7 +76,7 @@ def test_a_moved_file_is_the_same_frame(conn, tmp_path):
 
 def test_a_folder_renamed_while_its_files_are_read_is_still_a_move(conn, tmp_path, monkeypatch):
     """Sparito fra elenco e lettura: non illeggibile, altrove. Prima: perdeva il frame."""
-    path = _nina(tmp_path / "night" / "a.fits", 3)
+    path = nina_light(tmp_path / "night" / "a.fits", 3)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     _touch_later(path)
@@ -108,15 +99,15 @@ def test_a_folder_ending_with_a_dot_is_read_as_itself(conn, tmp_path):
     """'night.' fatta da Mac o Linux su NTFS/exFAT: Win32 la apriva come 'night'."""
     dotted = "\\\\?\\" + str(tmp_path / "night.")
     os.makedirs(dotted)
-    _nina(Path(dotted + "\\a.fits"), 1)
-    _nina(tmp_path / "night" / "b.fits", 2)
+    nina_light(Path(dotted + "\\a.fits"), 1)
+    nina_light(tmp_path / "night" / "b.fits", 2)
     result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
     assert result.changes.new == ["night./a.fits", "night/b.fits"]
     assert result.frames == 2
 
 
 def test_a_move_plus_a_copy_is_one_move_and_one_duplicate(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 4)
+    nina_light(tmp_path / "a.fits", 4)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     shutil.copy(tmp_path / "a.fits", tmp_path / "c.fits")
@@ -128,7 +119,7 @@ def test_a_move_plus_a_copy_is_one_move_and_one_duplicate(conn, tmp_path):
 
 def test_the_move_is_the_file_that_kept_size_and_date_not_the_first_by_name(conn, tmp_path):
     """Spostato in z/, copiato in b.fits: lo spostato tiene la data. Prima: scelto per nome."""
-    _nina(tmp_path / "a.fits", 4)
+    nina_light(tmp_path / "a.fits", 4)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     shutil.copy(tmp_path / "a.fits", tmp_path / "b.fits")
@@ -140,7 +131,7 @@ def test_the_move_is_the_file_that_kept_size_and_date_not_the_first_by_name(conn
 
 def test_a_kept_move_wins_even_when_an_earlier_name_has_none(conn, tmp_path):
     """a e b doppioni; a cancellato, b spostato in c, c copiato in d: b -> c, non b -> d."""
-    _nina(tmp_path / "a.fits", 4)
+    nina_light(tmp_path / "a.fits", 4)
     shutil.copy(tmp_path / "a.fits", tmp_path / "b.fits")
     _touch_later(tmp_path / "b.fits")
     root = add_root(conn, tmp_path, NOW)
@@ -161,21 +152,11 @@ def test_a_file_not_read_has_no_frame(conn, tmp_path):
 
 def test_an_interrupted_scan_reads_its_files_next_time(conn, tmp_path, monkeypatch):
     """Scansione fermata a meta': la prossima legge cio' che manca, nessuna posa persa."""
-    _nina(tmp_path / "a.fits", 1)
-    _nina(tmp_path / "b.fits", 2)
+    nina_light(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "b.fits", 2)
     root = add_root(conn, tmp_path, NOW)
-    import astrolog.pipeline.scan as scan
-
     real = scan.scan_file
-    calls: list[Path] = []
-
-    def stops_at_second(path, size=None):
-        calls.append(path)
-        if len(calls) == 2:
-            raise KeyboardInterrupt
-        return real(path, size)
-
-    monkeypatch.setattr(scan, "scan_file", stops_at_second)
+    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real, at=2))
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, NOW)
     monkeypatch.setattr(scan, "scan_file", real)
@@ -184,17 +165,13 @@ def test_an_interrupted_scan_reads_its_files_next_time(conn, tmp_path, monkeypat
 
 def test_a_file_changed_then_a_stopped_scan_is_read_next_time(conn, tmp_path, monkeypatch):
     """Cambiato, poi scansione fermata prima di leggerlo: la prossima lo vede ancora cambiato."""
-    a = _nina(tmp_path / "a.fits", 1)
+    a = nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
-    _nina(a, 1, ("OBJECT  = 'M 42'",))
+    nina_light(a, 1, ("OBJECT  = 'M 42'",))
     _touch_later(a)
     real = scan.scan_file
-
-    def stops(path, size=None):
-        raise KeyboardInterrupt
-
-    monkeypatch.setattr(scan, "scan_file", stops)
+    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real))
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, LATER)
     monkeypatch.setattr(scan, "scan_file", real)
@@ -205,8 +182,8 @@ def test_a_file_changed_then_a_stopped_scan_is_read_next_time(conn, tmp_path, mo
 
 def test_another_connection_writes_while_files_are_read(conn, db_path, tmp_path, monkeypatch):
     """Lettura lenta (NAS) fuori transazione: risposta a un filtro non aspetta la scansione."""
-    _nina(tmp_path / "a.fits", 1)
-    _nina(tmp_path / "b.fits", 2)
+    nina_light(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "b.fits", 2)
     root = add_root(conn, tmp_path, NOW)
     real = scan.scan_file
     wrote: list[bool] = []
@@ -230,19 +207,11 @@ def test_another_connection_writes_while_files_are_read(conn, db_path, tmp_path,
 def test_an_interrupted_scan_keeps_what_it_read(conn, tmp_path, monkeypatch):
     """Lotti salvati restano; il prossimo giro legge solo cio' che mancava."""
     for seed in range(3):
-        _nina(tmp_path / f"{seed}.fits", seed)
+        nina_light(tmp_path / f"{seed}.fits", seed)
     root = add_root(conn, tmp_path, NOW)
     monkeypatch.setattr(scan, "BATCH", 1)
     real = scan.scan_file
-    calls: list[str] = []
-
-    def stops_at_second(path, size=None):
-        calls.append(path.name)
-        if len(calls) == 2:
-            raise KeyboardInterrupt
-        return real(path, size)
-
-    monkeypatch.setattr(scan, "scan_file", stops_at_second)
+    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real, at=2))
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, NOW)
     assert _cards(conn) == {"0.fits": "light"}
@@ -254,16 +223,12 @@ def test_an_interrupted_scan_keeps_what_it_read(conn, tmp_path, monkeypatch):
 
 def test_a_move_interrupted_mid_scan_is_still_found_next_time(conn, tmp_path, monkeypatch):
     """Sparito si scrive a fine scansione: interrotta, il giro dopo rivede lo spostamento."""
-    _nina(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     (tmp_path / "a.fits").rename(tmp_path / "b.fits")
-
-    def stops(path, size=None):
-        raise KeyboardInterrupt
-
     real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", stops)
+    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real))
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, LATER)
     monkeypatch.setattr(scan, "scan_file", real)
@@ -274,22 +239,14 @@ def test_a_move_interrupted_mid_scan_is_still_found_next_time(conn, tmp_path, mo
 
 def test_a_move_already_saved_when_the_scan_stopped_is_found_next_time(conn, tmp_path, monkeypatch):
     """Lotto con lo spostato salvato, fermata dopo: il giro dopo abbina ancora."""
-    _nina(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     (tmp_path / "a.fits").rename(tmp_path / "b.fits")
-    _nina(tmp_path / "c.fits", 2)
+    nina_light(tmp_path / "c.fits", 2)
     monkeypatch.setattr(scan, "BATCH", 1)
     real = scan.scan_file
-    calls: list[str] = []
-
-    def stops_at_second(path, size=None):
-        calls.append(path.name)
-        if len(calls) == 2:
-            raise KeyboardInterrupt
-        return real(path, size)
-
-    monkeypatch.setattr(scan, "scan_file", stops_at_second)
+    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real, at=2))
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, LATER)
     monkeypatch.setattr(scan, "scan_file", real)
@@ -299,22 +256,14 @@ def test_a_move_already_saved_when_the_scan_stopped_is_found_next_time(conn, tmp
 def test_a_move_survives_a_stopped_scan_then_a_silent_root(conn, tmp_path, monkeypatch):
     """Fermata, poi NAS spento (scansione finita senza giudizio): lo spostamento si trova."""
     nas = tmp_path / "nas"
-    _nina(nas / "a.fits", 1)
+    nina_light(nas / "a.fits", 1)
     root = add_root(conn, nas, NOW)
     scan_root(conn, root, NOW)
     (nas / "a.fits").rename(nas / "b.fits")
-    _nina(nas / "c.fits", 2)
+    nina_light(nas / "c.fits", 2)
     monkeypatch.setattr(scan, "BATCH", 1)
     real = scan.scan_file
-    calls: list[str] = []
-
-    def stops_at_second(path, size=None):
-        calls.append(path.name)
-        if len(calls) == 2:
-            raise KeyboardInterrupt
-        return real(path, size)
-
-    monkeypatch.setattr(scan, "scan_file", stops_at_second)
+    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real, at=2))
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, LATER)
     monkeypatch.setattr(scan, "scan_file", real)
@@ -326,12 +275,12 @@ def test_a_move_survives_a_stopped_scan_then_a_silent_root(conn, tmp_path, monke
 
 def test_a_file_changed_in_place_is_not_a_move(conn, tmp_path):
     """Riletto allo stesso posto: nessuno spostamento, anche se un'altra copia sparisce."""
-    _nina(tmp_path / "a.fits", 1)
-    _nina(tmp_path / "b.fits", 1)  # copy of same frame
+    nina_light(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "b.fits", 1)  # copy of same frame
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     (tmp_path / "a.fits").unlink()
-    _nina(tmp_path / "b.fits", 1, ("OBJECT  = 'M 42'",))
+    nina_light(tmp_path / "b.fits", 1, ("OBJECT  = 'M 42'",))
     _touch_later(tmp_path / "b.fits")
     assert scan_root(conn, root, LATER).moved == []
 
@@ -341,7 +290,7 @@ def test_a_second_scan_of_the_same_root_is_refused_and_loses_nothing(
 ):
     """Seconda scansione della stessa radice mentre la prima gira: rifiutata, niente sparito."""
     for seed in range(3):
-        _nina(tmp_path / f"{seed}.fits", seed)
+        nina_light(tmp_path / f"{seed}.fits", seed)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     _touch_later(tmp_path / "0.fits")
@@ -373,8 +322,8 @@ def test_a_second_scan_of_the_same_root_is_refused_and_loses_nothing(
 
 
 def test_two_roots_scan_side_by_side(conn, db_path, tmp_path, monkeypatch):
-    _nina(tmp_path / "a" / "1.fits", 1)
-    _nina(tmp_path / "b" / "2.fits", 2)
+    nina_light(tmp_path / "a" / "1.fits", 1)
+    nina_light(tmp_path / "b" / "2.fits", 2)
     first, second = add_root(conn, tmp_path / "a", NOW), add_root(conn, tmp_path / "b", NOW)
     other = connect(db_path)
     real = scan.scan_file
@@ -396,7 +345,7 @@ def test_two_roots_scan_side_by_side(conn, db_path, tmp_path, monkeypatch):
 
 def test_moves_are_written_with_the_scan_that_found_them(conn, tmp_path):
     """Spostati scritti, non solo in memoria: la schermata li legge, mai li ricalcola."""
-    _nina(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     (tmp_path / "night").mkdir()
@@ -409,7 +358,7 @@ def test_moves_are_written_with_the_scan_that_found_them(conn, tmp_path):
 
 def test_a_move_is_never_lost_if_the_process_dies_closing_the_scan(conn, tmp_path, monkeypatch):
     """Morto fra 'sparito' e 'spostato': stessa transazione, il giro dopo rifa' tutto."""
-    _nina(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     (tmp_path / "a.fits").rename(tmp_path / "b.fits")
@@ -434,10 +383,9 @@ def test_pairing_moves_finds_files_by_frame_through_an_index(conn):
 
 
 def test_an_unchanged_archive_is_not_read_again(conn, tmp_path, monkeypatch):
-    _nina(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
-    import astrolog.pipeline.scan as scan
 
     def forbidden(_path):
         raise AssertionError("a file was opened")
@@ -469,7 +417,7 @@ def _touch_later(path: Path) -> None:
 
 
 def test_the_header_is_stored_as_written_with_its_types(conn, tmp_path):
-    _nina(
+    nina_light(
         tmp_path / "a.fits",
         1,
         ("GAIN    =                  100", "EXPOSURE=                300.0"),
@@ -485,8 +433,8 @@ def test_the_header_is_stored_as_written_with_its_types(conn, tmp_path):
 
 def test_two_copies_of_a_frame_keep_each_its_own_header(conn, tmp_path):
     """Stessa posa, header riscritto in una copia: un frame, due header, nessuno perso."""
-    _nina(tmp_path / "a.fits", 5)
-    _nina(tmp_path / "b.fits", 5, ("OBJECT  = 'M 33'",))
+    nina_light(tmp_path / "a.fits", 5)
+    nina_light(tmp_path / "b.fits", 5, ("OBJECT  = 'M 33'",))
     scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
     files, headers = _files(conn), _headers(conn)
     assert files["a.fits"] == files["b.fits"]
@@ -495,21 +443,21 @@ def test_two_copies_of_a_frame_keep_each_its_own_header(conn, tmp_path):
 
 
 def test_a_file_read_again_replaces_its_header(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
-    _nina(tmp_path / "a.fits", 1, ("OBJECT  = 'M 42'",))
+    nina_light(tmp_path / "a.fits", 1, ("OBJECT  = 'M 42'",))
     _touch_later(tmp_path / "a.fits")
     scan_root(conn, root, LATER)
     assert _headers(conn)["a.fits"][1]["OBJECT"] == "M 42"
 
 
 def test_a_file_with_new_pixels_has_a_new_frame_and_header(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     before = _files(conn)["a.fits"]
-    _nina(tmp_path / "a.fits", 2, ("OBJECT  = 'M 42'",))
+    nina_light(tmp_path / "a.fits", 2, ("OBJECT  = 'M 42'",))
     _touch_later(tmp_path / "a.fits")
     scan_root(conn, root, LATER)
     assert _files(conn)["a.fits"] != before
@@ -517,7 +465,7 @@ def test_a_file_with_new_pixels_has_a_new_frame_and_header(conn, tmp_path):
 
 
 def test_a_gone_file_keeps_its_header(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     (tmp_path / "a.fits").unlink()
@@ -527,10 +475,10 @@ def test_a_gone_file_keeps_its_header(conn, tmp_path):
 
 def test_a_file_rewritten_by_another_program_loses_frame_and_header(conn, tmp_path):
     """Riscritto da un editor sopra l'originale: oggi non e' posa, header vecchio non resta."""
-    _nina(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
-    _nina(tmp_path / "a.fits", 1, ("PROGRAM = 'Editor 1.9.3'",))
+    nina_light(tmp_path / "a.fits", 1, ("PROGRAM = 'Editor 1.9.3'",))
     _touch_later(tmp_path / "a.fits")
     scan_root(conn, root, LATER)
     assert _files(conn) == {"a.fits": None}
@@ -539,7 +487,7 @@ def test_a_file_rewritten_by_another_program_loses_frame_and_header(conn, tmp_pa
 
 def test_an_unreachable_folder_leaves_every_header(conn, tmp_path):
     archive = tmp_path / "nas"
-    _nina(archive / "a.fits", 1)
+    nina_light(archive / "a.fits", 1)
     root = add_root(conn, archive, NOW)
     scan_root(conn, root, NOW)
     archive.rename(tmp_path / "spento")
@@ -566,19 +514,19 @@ def _cards(conn) -> dict[str, str]:
 
 
 def test_each_file_read_gets_its_card(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1)
-    _nina(tmp_path / "b.fits", 2, ("OBJECT  = 'Snapshot'",))
+    nina_light(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "b.fits", 2, ("OBJECT  = 'Snapshot'",))
     scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
     assert _cards(conn) == {"a.fits": "light", "b.fits": "snapshot"}
 
 
 def test_a_file_read_again_gets_a_new_card_and_a_skipped_one_none(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1)
-    _nina(tmp_path / "b.fits", 2)
+    nina_light(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "b.fits", 2)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
-    _nina(tmp_path / "a.fits", 1, ("OBJECT  = 'darkflat'",))
-    _nina(tmp_path / "b.fits", 2, ("PROGRAM = 'Editor 1.9.3'",))
+    nina_light(tmp_path / "a.fits", 1, ("OBJECT  = 'darkflat'",))
+    nina_light(tmp_path / "b.fits", 2, ("PROGRAM = 'Editor 1.9.3'",))
     _touch_later(tmp_path / "a.fits")
     _touch_later(tmp_path / "b.fits")
     scan_root(conn, root, LATER)
@@ -588,7 +536,7 @@ def test_a_file_read_again_gets_a_new_card_and_a_skipped_one_none(conn, tmp_path
 @pytest.mark.parametrize("reason", [Skip.UNREADABLE, Skip.INCOMPLETE])
 def test_a_file_that_failed_to_read_is_read_again_next_scan(conn, tmp_path, monkeypatch, reason):
     """Bloccato dal NAS o copia in corso: motivo passeggero, mai perso per sempre."""
-    path = _nina(tmp_path / "a.fits", 1)
+    path = nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     _touch_later(path)
@@ -604,7 +552,7 @@ def test_a_file_that_failed_to_read_is_read_again_next_scan(conn, tmp_path, monk
 
 def test_a_broken_header_is_not_opened_again_until_the_file_changes(conn, tmp_path):
     """BITPIX 17: header finito e sbagliato, rotto per sempre. Prima riaperto a ogni scansione."""
-    path = _nina(tmp_path / "a.fits", 1, ("BITPIX  =                   17",))
+    path = nina_light(tmp_path / "a.fits", 1, ("BITPIX  =                   17",))
     raw = path.read_bytes().replace(b"BITPIX  =                   16", b"COMMENT".ljust(30), 1)
     path.write_bytes(raw)
     root = add_root(conn, tmp_path, NOW)
@@ -615,8 +563,8 @@ def test_a_broken_header_is_not_opened_again_until_the_file_changes(conn, tmp_pa
 
 def test_a_scan_says_what_the_walk_left_out(conn, tmp_path):
     """Cestini e file solo nel cloud: fuori, ma detti, mai persi in silenzio."""
-    _nina(tmp_path / "a.fits", 1)
-    _nina(tmp_path / ".Trashes" / "deleted.fits", 2)
+    nina_light(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / ".Trashes" / "deleted.fits", 2)
     (tmp_path / "night").mkdir()
     (tmp_path / "night" / ".M42.fits.icloud").write_bytes(b"SIMPLE  = T")
     result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
@@ -626,9 +574,9 @@ def test_a_scan_says_what_the_walk_left_out(conn, tmp_path):
 
 def test_the_receipt_keeps_rereads_skips_and_what_was_left_out(conn, tmp_path, monkeypatch):
     """Ricevuta: riletti a parte dai cambiati, saltati contati, fuori coi percorsi."""
-    path = _nina(tmp_path / "a.fits", 1)
-    _nina(tmp_path / "b.fits", 2, ("PROGRAM = 'Editor 1.9.3'",))
-    _nina(tmp_path / ".Trashes" / "deleted.fits", 3)
+    path = nina_light(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "b.fits", 2, ("PROGRAM = 'Editor 1.9.3'",))
+    nina_light(tmp_path / ".Trashes" / "deleted.fits", 3)
     root = add_root(conn, tmp_path, NOW)
     real = scan.scan_file
     monkeypatch.setattr(
@@ -655,14 +603,14 @@ def test_the_receipt_keeps_rereads_skips_and_what_was_left_out(conn, tmp_path, m
 
 def test_a_copy_still_running_is_incomplete_by_its_size_not_its_date(conn, tmp_path):
     """Dimensione, non la data: una copia a meta' resta incompleta e si rilegge."""
-    path = _nina(tmp_path / "a.fits", 1)
+    path = nina_light(tmp_path / "a.fits", 1)
     path.write_bytes(path.read_bytes()[:3000])  # header whole, pixels cut
     result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
     assert [s.reason for s in result.skipped] == ["incomplete"]
 
 
 def test_the_receipt_counts_the_gone(conn, tmp_path):
-    a = _nina(tmp_path / "a.fits", 1)
+    a = nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     a.unlink()
@@ -673,15 +621,15 @@ def test_the_receipt_counts_the_gone(conn, tmp_path):
 
 def test_the_receipt_counts_the_keys_no_program_list_knows(conn, tmp_path):
     """Chiave che N.I.N.A. non scrive (dell'utente, o nuova): si dice, quanti file la portano."""
-    _nina(tmp_path / "a.fits", 1, ("MYNOTE  = 'x'",))
-    _nina(tmp_path / "b.fits", 2, ("MYNOTE  = 'y'",))
+    nina_light(tmp_path / "a.fits", 1, ("MYNOTE  = 'x'",))
+    nina_light(tmp_path / "b.fits", 2, ("MYNOTE  = 'y'",))
     scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
     row = conn.execute("SELECT unknown_keys FROM pipeline_scans").fetchone()
     assert json.loads(row["unknown_keys"]) == {"MYNOTE": 2}
 
 
 def test_a_file_skipped_for_its_content_is_not_read_again(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1, ("PROGRAM = 'Editor 1.9.3'",))
+    nina_light(tmp_path / "a.fits", 1, ("PROGRAM = 'Editor 1.9.3'",))
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     assert scan_root(conn, root, LATER).changes.to_read == []
@@ -696,14 +644,16 @@ def _conditions(conn) -> dict[str, float]:
 
 
 def test_conditions_live_only_where_written_and_follow_the_file(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1, ("HUMIDITY=                 39.0",))
-    _nina(tmp_path / "b.fits", 2, ("HUMIDITY=                 45.0",))
-    _nina(tmp_path / "c.fits", 3)
+    nina_light(tmp_path / "a.fits", 1, ("HUMIDITY=                 39.0",))
+    nina_light(tmp_path / "b.fits", 2, ("HUMIDITY=                 45.0",))
+    nina_light(tmp_path / "c.fits", 3)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     assert _conditions(conn) == {"a.fits": 39.0, "b.fits": 45.0}
-    _nina(tmp_path / "a.fits", 1)  # read again without weather
-    _nina(tmp_path / "b.fits", 2, ("HUMIDITY=                 45.0", "PROGRAM = 'Editor 1.9.3'"))
+    nina_light(tmp_path / "a.fits", 1)  # read again without weather
+    nina_light(
+        tmp_path / "b.fits", 2, ("HUMIDITY=                 45.0", "PROGRAM = 'Editor 1.9.3'")
+    )
     _touch_later(tmp_path / "a.fits")
     _touch_later(tmp_path / "b.fits")
     scan_root(conn, root, LATER)
@@ -711,8 +661,8 @@ def test_conditions_live_only_where_written_and_follow_the_file(conn, tmp_path):
 
 
 def test_the_card_stores_start_and_exposure_in_one_form(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1, ("DATE-OBS= '2025-06-29T21:11:33.412'", "EXPTIME =  120.0"))
-    _nina(tmp_path / "b.fits", 2)
+    nina_light(tmp_path / "a.fits", 1, ("DATE-OBS= '2025-06-29T21:11:33.412'", "EXPTIME =  120.0"))
+    nina_light(tmp_path / "b.fits", 2)
     scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
     rows = {
         r["rel_path"]: (r["start_utc"], r["exposure_s"])
@@ -724,28 +674,10 @@ def test_the_card_stores_start_and_exposure_in_one_form(conn, tmp_path):
     assert rows == {"a.fits": ("2025-06-29T21:11:33.412000+00:00", 120.0), "b.fits": (None, None)}
 
 
-def test_the_schema_refuses_a_start_in_another_form(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1)
-    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
-    for bad in ("2025-06-29T21:11:33.412+00:00", "2025-06-29T21:11:33.412000"):
-        with pytest.raises(sqlite3.IntegrityError):
-            conn.execute("UPDATE pipeline_cards SET start_utc = ?", (bad,))
-    with pytest.raises(sqlite3.IntegrityError):
-        conn.execute("UPDATE pipeline_cards SET exposure_s = -1.0")
-
-
 def test_a_gone_file_keeps_its_card(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1)
+    nina_light(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     (tmp_path / "a.fits").unlink()
     scan_root(conn, root, LATER)
     assert _cards(conn) == {"a.fits": "light"}
-
-
-def test_the_schema_refuses_a_header_that_is_not_a_json_object(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1)
-    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
-    for bad in ("[1, 2]", '{"CCD-TEMP": NaN}'):
-        with pytest.raises(sqlite3.IntegrityError):
-            conn.execute("UPDATE pipeline_headers SET header = ?", (bad,))

@@ -13,9 +13,7 @@ import pytest
 
 from astrolog.pipeline.changes import RootOverlapError, add_root
 from astrolog.pipeline.scan import scan_root
-
-NOW = "2026-10-22T20:00:00+00:00"
-LATER = "2026-10-23T20:00:00+00:00"
+from conftest import LATER, NOW, folder_link
 
 
 def _file(path: Path, size: int = 2880) -> Path:
@@ -24,16 +22,6 @@ def _file(path: Path, size: int = 2880) -> Path:
     head = ("SIMPLE  =                    T".ljust(80) + "END".ljust(80)).encode("ascii")
     path.write_bytes(head + b" " * (size - len(head)))
     return path
-
-
-def _link(target: Path, link: Path) -> None:
-    """Folder link: junction on Windows (no privilege needed), symlink elsewhere."""
-    if sys.platform == "win32":
-        import _winapi
-
-        _winapi.CreateJunction(str(target), str(link))
-    else:
-        link.symlink_to(target, target_is_directory=True)
 
 
 def test_the_first_scan_finds_every_file_new(conn, tmp_path):
@@ -111,7 +99,7 @@ def test_an_unplugged_linked_disk_makes_nothing_gone(conn, tmp_path):
     _file(disk / "posa.fits")
     archive = tmp_path / "archivio"
     _file(archive / "qui.fits")
-    _link(disk, archive / "acquisizioni")
+    folder_link(disk, archive / "acquisizioni")
     root = add_root(conn, archive, NOW)
     assert scan_root(conn, root, NOW).changes.new == ["acquisizioni/posa.fits", "qui.fits"]
     (disk / "posa.fits").unlink()
@@ -397,7 +385,7 @@ def test_a_linked_folder_written_inside_a_root_is_inside(conn, tmp_path):
     """Collegamento dentro la radice: la radice lo legge gia', non e' una seconda radice."""
     (tmp_path / "elsewhere" / "night").mkdir(parents=True)
     (tmp_path / "archive").mkdir()
-    _link(tmp_path / "elsewhere" / "night", tmp_path / "archive" / "linked")
+    folder_link(tmp_path / "elsewhere" / "night", tmp_path / "archive" / "linked")
     add_root(conn, tmp_path / "archive", NOW)
     with pytest.raises(RootOverlapError) as inside:
         add_root(conn, tmp_path / "archive" / "linked", NOW)
@@ -441,7 +429,7 @@ def test_a_folder_on_a_drive_root_added_is_inside_it(conn, tmp_path, drive_first
 def test_the_same_folder_through_a_link_is_the_same_root(conn, tmp_path):
     """Junction o symlink verso una cartella gia' aggiunta: stessa radice, file mai due volte."""
     (tmp_path / "archive").mkdir()
-    _link(tmp_path / "archive", tmp_path / "shortcut")
+    folder_link(tmp_path / "archive", tmp_path / "shortcut")
     assert add_root(conn, tmp_path / "shortcut", NOW) == add_root(conn, tmp_path / "archive", NOW)
 
 

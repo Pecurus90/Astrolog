@@ -8,6 +8,7 @@ import hashlib
 import os
 import shutil
 import socket
+import sys
 import time
 from pathlib import Path
 from types import SimpleNamespace
@@ -601,3 +602,41 @@ def make_fits(tmp_path):
         return write_fits(tmp_path / name, header, **kw)
 
     return _make
+
+
+# New pipeline tests: scan times, real headers, folder links, a N.I.N.A. light.
+NOW = "2026-10-22T20:00:00+00:00"
+LATER = "2026-10-23T20:00:00+00:00"
+HEADER_CORPUS = Path(__file__).with_name("header")
+
+
+def folder_link(target: str | os.PathLike[str], link: str | os.PathLike[str]) -> None:
+    """Folder link: junction on Windows (no privilege needed), symlink elsewhere."""
+    if sys.platform == "win32":
+        import _winapi
+
+        _winapi.CreateJunction(str(target), str(link))
+    else:
+        os.symlink(target, link, target_is_directory=True)
+
+
+def nina_light(path: Path, seed: int, extra: tuple[str, ...] = ()) -> Path:
+    """Small N.I.N.A. light with own pixels: `seed` makes different frame, `extra` cards
+    different header on same frame."""
+    lines = [
+        "SIMPLE  =                    T",
+        "BITPIX  =                   16",
+        "NAXIS   =                    2",
+        "NAXIS1  =                   16",
+        "NAXIS2  =                   16",
+        "IMAGETYP= 'LIGHT'",
+        "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'",
+        *extra,
+        "END",
+    ]
+    head = "".join(line.ljust(80) for line in lines)
+    head += " " * (-len(head) % 2880)
+    data = bytes((seed + i) % 256 for i in range(512))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(head.encode("ascii") + data + b"\0" * (2880 - 512))
+    return path

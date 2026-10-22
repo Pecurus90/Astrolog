@@ -3,14 +3,20 @@ una volta, `.fts`, compressi `.fz`."""
 
 import os
 import stat
-import sys
 from types import SimpleNamespace
 
 import pytest
 
 from astrolog.pipeline import walk
 from astrolog.pipeline.walk import long_path, walk_dir
-from conftest import ScanFinta, VoceFinta, breaking_dir, fake_entries, unreadable_dir
+from conftest import (
+    ScanFinta,
+    VoceFinta,
+    breaking_dir,
+    fake_entries,
+    folder_link,
+    unreadable_dir,
+)
 
 
 def _touch(root, *parts):
@@ -19,16 +25,6 @@ def _touch(root, *parts):
     with open(path, "wb"):
         pass
     return path
-
-
-def _link(target, link):
-    """Folder link: junction on Windows (no privilege needed), symlink elsewhere."""
-    if sys.platform == "win32":
-        import _winapi
-
-        _winapi.CreateJunction(str(target), str(link))
-    else:
-        os.symlink(target, link, target_is_directory=True)
 
 
 def names(paths):
@@ -54,7 +50,7 @@ def test_a_linked_folder_is_walked(tmp_path):
     _touch(str(tmp_path), "altro_disco", "posa.fits")
     root = tmp_path / "archivio"
     root.mkdir()
-    _link(tmp_path / "altro_disco", root / "acquisizioni")
+    folder_link(tmp_path / "altro_disco", root / "acquisizioni")
     assert names(found(root)) == {"posa.fits"}
 
 
@@ -62,7 +58,7 @@ def test_a_link_back_to_an_ancestor_does_not_loop(tmp_path):
     """Collegamento all'indietro: walk non gira in tondo, cartella percorsa una volta comunque
     raggiunta."""
     _touch(str(tmp_path), "sub", "deep.fits")
-    _link(tmp_path, tmp_path / "sub" / "indietro")
+    folder_link(tmp_path, tmp_path / "sub" / "indietro")
     assert names(found(tmp_path)) == {"deep.fits"}
     assert len(found(tmp_path)) == 1
 
@@ -71,8 +67,8 @@ def test_a_folder_reached_by_two_links_is_walked_once(tmp_path):
     _touch(str(tmp_path), "vera", "posa.fits")
     root = tmp_path / "archivio"
     root.mkdir()
-    _link(tmp_path / "vera", root / "uno")
-    _link(tmp_path / "vera", root / "due")
+    folder_link(tmp_path / "vera", root / "uno")
+    folder_link(tmp_path / "vera", root / "due")
     assert len(found(root)) == 1
 
 
@@ -82,7 +78,7 @@ def test_a_link_to_a_missing_folder_is_unreadable(tmp_path):
     target.mkdir()
     root = tmp_path / "archivio"
     root.mkdir()
-    _link(target, root / "disco")
+    folder_link(target, root / "disco")
     target.rmdir()
     result = walk_dir(str(root))
     assert result.found == []

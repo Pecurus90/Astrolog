@@ -1,6 +1,7 @@
 """Schema of new pipeline against its code: labels, CHECK lists, columns as dataclass fields."""
 
 import re
+import sqlite3
 from dataclasses import fields
 from enum import StrEnum
 from pathlib import Path
@@ -8,10 +9,13 @@ from pathlib import Path
 import pytest
 
 from astrolog.pipeline.card import Card, Conditions, FrameType
+from astrolog.pipeline.changes import add_root
 from astrolog.pipeline.filters import Band, StandardFilter
+from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.scanner import Skip
 from astrolog.pipeline.sky import PointingSource
 from astrolog.pipeline.values import Program
+from conftest import NOW, nina_light
 
 _ALL = Path(__file__).parents[1].joinpath("astrolog", "schema.sql").read_text("utf-8")
 SCHEMA = _ALL[_ALL.index("PIPELINE NUOVA") :]
@@ -60,3 +64,21 @@ def test_every_filter_check_lists_every_member(column: str, enum: type[StrEnum])
     for listed in re.findall(rf"{column}\s+TEXT[^,]*?IN \(([^)]*)\)", SCHEMA):
         assert set(re.findall(r"'([^']+)'", listed)) == {m.value for m in enum}
     assert re.search(rf"{column}\s+TEXT[^,]*?IN \(", SCHEMA)
+
+
+def test_the_schema_refuses_a_start_in_another_form(conn, tmp_path):
+    nina_light(tmp_path / "a.fits", 1)
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    for bad in ("2025-06-29T21:11:33.412+00:00", "2025-06-29T21:11:33.412000"):
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute("UPDATE pipeline_cards SET start_utc = ?", (bad,))
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("UPDATE pipeline_cards SET exposure_s = -1.0")
+
+
+def test_the_schema_refuses_a_header_that_is_not_a_json_object(conn, tmp_path):
+    nina_light(tmp_path / "a.fits", 1)
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    for bad in ("[1, 2]", '{"CCD-TEMP": NaN}'):
+        with pytest.raises(sqlite3.IntegrityError):
+            conn.execute("UPDATE pipeline_headers SET header = ?", (bad,))

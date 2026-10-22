@@ -22,14 +22,14 @@ from astrolog.pipeline.card import (
 from astrolog.pipeline.scanner import read_header
 from astrolog.pipeline.sky import PointingSource
 from astrolog.pipeline.values import Program
+from conftest import HEADER_CORPUS
 
-CORPUS = Path(__file__).with_name("header")
 NINA, ASIAIR = Program.NINA, Program.ASIAIR
 
 
 def _values(name: str, tmp_path: Path) -> dict:
     """Real header as a file: only the header is read, so no pixels."""
-    lines = (CORPUS / name).read_text(encoding="utf-8").splitlines()
+    lines = (HEADER_CORPUS / name).read_text(encoding="utf-8").splitlines()
     head = "".join(line.ljust(80)[:80] for line in lines if line.strip() and line[0] != "#")
     head += "END".ljust(80)
     path = tmp_path / "h.fits"

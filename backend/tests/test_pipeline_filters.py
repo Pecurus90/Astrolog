@@ -19,7 +19,7 @@ from astrolog.pipeline.filters import (
 )
 from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.values import Program
-from test_pipeline_scan import NOW, _nina
+from conftest import NOW, nina_light
 
 
 def _spelling(conn, written: str) -> tuple[str | None, str | None]:
@@ -81,7 +81,7 @@ def test_an_answer_to_a_standard_holds_for_every_spelling_of_its_key(conn):
 
 def test_an_answer_holds_for_a_file_scanned_later(conn, tmp_path):
     answer(conn, "Ha 7nm", StandardFilter.HA)
-    _nina(tmp_path / "a.fits", 1, ("FILTER  = 'Ha 7nm'",))
+    nina_light(tmp_path / "a.fits", 1, ("FILTER  = 'Ha 7nm'",))
     scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
     assert _spelling(conn, "Ha 7nm") == (StandardFilter.HA, None)
 
@@ -219,9 +219,9 @@ def test_the_card_keeps_the_filter_as_written():
 
 
 def test_a_scan_resolves_each_written_filter(conn, tmp_path):
-    _nina(tmp_path / "a.fits", 1, ("FILTER  = 'H'",))
-    _nina(tmp_path / "b.fits", 2, ("FILTER  = 'Ha 7nm'",))
-    _nina(tmp_path / "c.fits", 3)
+    nina_light(tmp_path / "a.fits", 1, ("FILTER  = 'H'",))
+    nina_light(tmp_path / "b.fits", 2, ("FILTER  = 'Ha 7nm'",))
+    nina_light(tmp_path / "c.fits", 3)
     scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
     assert _spelling(conn, "H") == (StandardFilter.HA, None)
     assert _spelling(conn, "Ha 7nm") == (None, None)
