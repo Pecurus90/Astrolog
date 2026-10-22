@@ -543,6 +543,17 @@ def test_a_file_that_failed_to_read_is_read_again_next_scan(conn, tmp_path, monk
     assert _cards(conn) == {"a.fits": "light"}
 
 
+def test_a_broken_header_is_not_opened_again_until_the_file_changes(conn, tmp_path):
+    """BITPIX 17: header finito e sbagliato, rotto per sempre. Prima riaperto a ogni scansione."""
+    path = _nina(tmp_path / "a.fits", 1, ("BITPIX  =                   17",))
+    raw = path.read_bytes().replace(b"BITPIX  =                   16", b"COMMENT".ljust(30), 1)
+    path.write_bytes(raw)
+    root = add_root(conn, tmp_path, NOW)
+    first = scan_root(conn, root, NOW)
+    assert [s.reason for s in first.skipped] == ["broken"]
+    assert scan_root(conn, root, LATER).changes.to_read == []
+
+
 def test_a_scan_says_what_the_walk_left_out(conn, tmp_path):
     """Cestini e file solo nel cloud: fuori, ma detti, mai persi in silenzio."""
     _nina(tmp_path / "a.fits", 1)

@@ -326,3 +326,7 @@ test_the_schema_check_lists_every_frame_type - test dello schema in una casa: te
 test_the_table_columns_are_the_card_fields - test dello schema in una casa: test_the_columns_are_the_dataclass_fields in test_pipeline_schema.py
 test_the_conditions_columns_are_the_conditions_fields - test dello schema in una casa: test_the_columns_are_the_dataclass_fields in test_pipeline_schema.py
 test_the_schema_checks_list_every_member - test dello schema in una casa: test_every_filter_check_lists_every_member in test_pipeline_schema.py
+test_an_absurd_data_length_makes_the_file_unreadable_not_the_scan_fail - header rotto per sempre = broken, non unreadable (T3): rinominato ..._broken_not_the_scan_fail
+test_axes_that_are_not_counts_make_the_file_unreadable - header rotto per sempre = broken (T3): rinominato test_axes_that_are_not_counts_make_the_file_broken
+test_a_compressed_frame_with_a_negative_axis_is_unreadable - header rotto per sempre = broken (T3): rinominato ..._is_broken
+test_a_header_without_end_is_unreadable - header rotto per sempre = broken (T3): rinominato test_a_header_without_end_is_broken

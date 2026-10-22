@@ -179,7 +179,7 @@ def test_more_axes_than_fits_allows_is_no_data_length():
     assert data_length({"BITPIX": 16, "NAXIS": 10**12}) is None
 
 
-def test_an_absurd_data_length_makes_the_file_unreadable_not_the_scan_fail(tmp_path):
+def test_an_absurd_data_length_makes_the_file_broken_not_the_scan_fail(tmp_path):
     """Assi enormi (2**40 x 2**40): lunghezza oltre ogni file, mai un errore che ferma tutto."""
     lines = [
         "SIMPLE  =                    T", "BITPIX  =                   16",
@@ -189,7 +189,7 @@ def test_an_absurd_data_length_makes_the_file_unreadable_not_the_scan_fail(tmp_p
     head = "".join(line.ljust(80) for line in lines)
     path = tmp_path / "huge.fits"
     path.write_bytes((head + " " * (-len(head) % 2880)).encode("ascii"))
-    assert scan_file(path) == Skipped(path, Skip.UNREADABLE)
+    assert scan_file(path) == Skipped(path, Skip.BROKEN)
 
 
 def test_a_file_shorter_than_its_header_says_is_incomplete(tmp_path):

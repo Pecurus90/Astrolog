@@ -913,9 +913,9 @@ CREATE TABLE pipeline_files (
   seen_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),  -- ultima che l'ha visto presente
   -- NULL: non letto come posa. Sparito lo tiene: cosi' si riconosce lo spostato.
   frame_id     INTEGER REFERENCES pipeline_frames (id),
-  -- letto e saltato, col motivo; unreadable e incomplete passeggeri: si rilegge
+  -- letto e saltato, col motivo; unreadable e incomplete passeggeri: si rilegge; broken no
   skip_reason  TEXT
-    CHECK (skip_reason IN ('not_supported', 'rewritten', 'unreadable', 'incomplete')),
+    CHECK (skip_reason IN ('not_supported', 'rewritten', 'unreadable', 'incomplete', 'broken')),
   -- arrivato dopo l'ultima volta che lo sparito era presente: spostato, anche dopo fermate
   arrived_scan_id INTEGER REFERENCES pipeline_scans (id),
   gone_scan_id    INTEGER REFERENCES pipeline_scans (id),  -- quella che l'ha visto sparire

@@ -69,8 +69,9 @@ _COMPRESSION = re.compile(
 class Skip(StrEnum):
     NOT_SUPPORTED = "not_supported"
     REWRITTEN = "rewritten"
-    UNREADABLE = "unreadable"
+    UNREADABLE = "unreadable"  # disk error (locked, NAS hiccup): passing, read again
     INCOMPLETE = "incomplete"  # shorter than header says: copy still running or broken
+    BROKEN = "broken"  # header wrong for good (no END, bad axes): read again only once changed
 
 
 @dataclass(frozen=True)
@@ -231,14 +232,17 @@ def scan_file(path: Path, size: int | None = None) -> Extracted | Skipped:
     try:
         with open(long_path(path), "rb") as fh:  # noqa: PTH123 - the `\\?\` form is a str
             return _extract(path, fh, size)
-    except (OSError, ValueError, OverflowError):  # broken file: this file, never whole scan
+    except OSError:  # this file, never whole scan
         return Skipped(path, Skip.UNREADABLE)
+    except (ValueError, OverflowError):
+        return Skipped(path, Skip.BROKEN)
 
 
 def _extract(path: Path, fh: BinaryIO, size: int | None) -> Extracted | Skipped:
+    """No END: copy cut in header changes size or date once done, read then."""
     header = read_header(fh)
     if header is None:
-        return Skipped(path, Skip.UNREADABLE)
+        return Skipped(path, Skip.BROKEN)
     cards = header.cards
     if _REWRITE_MARKS & cards.keys():
         return Skipped(path, Skip.REWRITTEN)
@@ -246,7 +250,7 @@ def _extract(path: Path, fh: BinaryIO, size: int | None) -> Extracted | Skipped:
     if program is None:
         return Skipped(path, Skip.NOT_SUPPORTED)
     if not _axes_are_counts(cards) or header.data_length is None:
-        return Skipped(path, Skip.UNREADABLE)
+        return Skipped(path, Skip.BROKEN)
     known = size if size is not None else os.fstat(fh.fileno()).st_size
     identity = frame_identity(header, known, fh)
     if not identity.complete:

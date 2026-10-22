@@ -272,11 +272,11 @@ _BAD_AXES = [
 
 
 @pytest.mark.parametrize("axes", _BAD_AXES)
-def test_axes_that_are_not_counts_make_the_file_unreadable(tmp_path, axes):
+def test_axes_that_are_not_counts_make_the_file_broken(tmp_path, axes):
     """FITS 4.0 sez. 4.4.1.1: NAXISn intero non negativo; altro non e' un'immagine."""
     lines = [*_BARE, "NAXIS   =                    2", *axes, _NINA_WRITER]
     path = _fits(tmp_path / "a.fits", lines)
-    assert scan_file(path) == Skipped(path, Skip.UNREADABLE)
+    assert scan_file(path) == Skipped(path, Skip.BROKEN)
 
 
 def test_reading_a_file_says_nothing_on_the_console(tmp_path):
@@ -349,14 +349,14 @@ def test_continue_is_never_a_key(tmp_path):
     assert "CONTINUE" not in got.values
 
 
-def test_a_compressed_frame_with_a_negative_axis_is_unreadable(tmp_path):
+def test_a_compressed_frame_with_a_negative_axis_is_broken(tmp_path):
     """Compresso: dimensioni del frame in ZNAXISn (FITS 4.0 sez. 10), stessa regola."""
     path = _compressed(tmp_path / "light.fits.fz")
     raw = path.read_bytes()
     good = b"ZNAXIS1 =                    8"
     assert good in raw
     path.write_bytes(raw.replace(good, b"ZNAXIS1 =                   -8", 1))
-    assert scan_file(path) == Skipped(path, Skip.UNREADABLE)
+    assert scan_file(path) == Skipped(path, Skip.BROKEN)
 
 
 @pytest.mark.parametrize("name", ["light.fits.fz", "light.fits"])
@@ -427,9 +427,9 @@ def test_a_rewrite_that_dropped_the_capture_program_is_rewritten(tmp_path):
     assert got == Skipped(tmp_path / "saved.fits", Skip.REWRITTEN)
 
 
-def test_a_header_without_end_is_unreadable(tmp_path):
+def test_a_header_without_end_is_broken(tmp_path):
     got = scan_file(_fits(tmp_path / "t.fits", _corpus("nina.txt"), end=False))
-    assert got == Skipped(tmp_path / "t.fits", Skip.UNREADABLE)
+    assert got == Skipped(tmp_path / "t.fits", Skip.BROKEN)
 
 
 def test_a_file_that_cannot_be_opened_is_unreadable(tmp_path):
