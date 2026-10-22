@@ -203,6 +203,25 @@ def test_a_name_that_is_not_text_is_left_out_and_the_scan_goes_on(conn, tmp_path
     assert bad in json.loads(receipt["left_out"])["unlooked"]
 
 
+def test_a_file_not_looked_at_does_not_stop_the_others_being_judged(conn, tmp_path, monkeypatch):
+    """Il primo non si guarda: i seguenti si giudicano lo stesso, nessuno sparito per errore."""
+    _file(tmp_path / "a.fits")
+    _file(tmp_path / "b.fits")
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    real = os.stat
+
+    def flaky(path, *args, **kwargs):
+        if str(path).endswith("a.fits"):
+            raise PermissionError("errore passeggero (mock)")
+        return real(path, *args, **kwargs)
+
+    monkeypatch.setattr(os, "stat", flaky)
+    changes = scan_root(conn, root, LATER).changes
+    monkeypatch.setattr(os, "stat", real)
+    assert (changes.unlooked, changes.unchanged, changes.gone) == (["a.fits"], ["b.fits"], [])
+
+
 def test_each_scan_leaves_its_receipt(conn, tmp_path):
     _file(tmp_path / "a.fits")
     root = add_root(conn, tmp_path, NOW)
@@ -355,6 +374,7 @@ def test_a_folder_inside_or_around_a_root_is_refused_saying_which(conn, tmp_path
         add_root(conn, tmp_path / "archive" / "night", NOW)
     assert inside.value.inside is True
     assert Path(inside.value.other) == tmp_path / "archive"
+    assert str(inside.value) == f"inside {tmp_path / 'archive'}"
     with pytest.raises(RootOverlapError) as around:
         add_root(conn, tmp_path, NOW)
     assert around.value.inside is False

@@ -653,6 +653,24 @@ def test_the_receipt_keeps_rereads_skips_and_what_was_left_out(conn, tmp_path, m
     assert [json.loads(r["left_out"]) for r in rows] == [left_out, left_out]
 
 
+def test_a_copy_still_running_is_incomplete_by_its_size_not_its_date(conn, tmp_path):
+    """Dimensione, non la data: una copia a meta' resta incompleta e si rilegge."""
+    path = _nina(tmp_path / "a.fits", 1)
+    path.write_bytes(path.read_bytes()[:3000])  # header whole, pixels cut
+    result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    assert [s.reason for s in result.skipped] == ["incomplete"]
+
+
+def test_the_receipt_counts_the_gone(conn, tmp_path):
+    a = _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    a.unlink()
+    scan_root(conn, root, LATER)
+    gone = conn.execute("SELECT gone FROM pipeline_scans ORDER BY id DESC").fetchone()[0]
+    assert gone == 1
+
+
 def test_the_receipt_counts_the_keys_no_program_list_knows(conn, tmp_path):
     """Chiave che N.I.N.A. non scrive (dell'utente, o nuova): si dice, quanti file la portano."""
     _nina(tmp_path / "a.fits", 1, ("MYNOTE  = 'x'",))

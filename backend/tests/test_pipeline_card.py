@@ -458,6 +458,8 @@ def test_a_calibration_keeps_its_object():
         (0.0, 11.5, (0.0, 11.5)),  # equator: real
         (45.0, 0.0, (45.0, 0.0)),  # Greenwich: real
         (45.0, 180.0, (45.0, -180.0)),  # same meridian as -180
+        (90.0, 11.0, (90.0, 11.0)),  # poles: real
+        (-90.0, -180.0, (-90.0, -180.0)),
         (0.0, 0.0, (None, None)),  # N.I.N.A. factory profile (AstrometrySettings.cs)
         (90.1, 11.0, (None, None)),
         (45.0, 181.0, (None, None)),
@@ -481,7 +483,10 @@ def test_the_site_is_where_the_program_says_east_positive(lat, lon, site):
         ("2025-06-29T22:11:33.412", 60),  # archive: winter
         ("2025-06-30T02:56:33.412", 345),  # Nepal +5:45
         ("2025-06-29T21:11:33.412", 0),
-        ("2025-06-29T09:11:33.412", -720),
+        ("2025-06-29T09:11:33.412", -720),  # first zone (IANA: -12:00)
+        ("2025-06-30T11:11:33.412", 840),  # last zone (IANA: +14:00, Kiribati)
+        ("2025-06-29T08:56:33.412", None),  # -12:15
+        ("2025-06-30T11:26:33.412", None),  # +14:15
         ("2025-06-29T22:12:33.412", None),  # not a zone: not the same instant
         ("2025-06-30T12:11:33.412", None),  # +15 h: no zone
         ("2025-06-29T08:11:33.412", None),  # -13 h
@@ -493,6 +498,16 @@ def test_the_clock_offset_is_local_minus_utc(local, minutes):
     """DATE-LOC = ora del PC (CFitsioFITS.cs ToLocalTime): fuso del PC, non del sito."""
     values = {"DATE-OBS": "2025-06-29T21:11:33.412", "DATE-LOC": local}
     assert read_card(NINA, values).clock_offset_min == minutes
+
+
+def test_zero_is_a_value_for_gain_offset_and_wind_never_unknown():
+    """Gain 0, offset 0, vento calmo da nord: valori veri, non 'non so'."""
+    values = {"GAIN": 0, "OFFSET": 0, "WINDDIR": 0.0, "WINDGUST": 0.0, "WINDSPD": 0.0}
+    card = read_card(NINA, values)
+    assert (card.gain, card.offset) == (0, 0)
+    conditions = read_conditions(values)
+    assert conditions is not None
+    assert (conditions.wind_kmh, conditions.wind_dir_deg, conditions.wind_gust_kmh) == (0, 0, 0)
 
 
 def test_no_utc_start_no_clock_offset():
