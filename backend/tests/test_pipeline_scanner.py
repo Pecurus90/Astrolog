@@ -499,6 +499,19 @@ def test_a_header_past_100_blocks_is_broken(tmp_path, blocks, broken):
     assert (scan_file(path) == Skipped(path, Skip.BROKEN)) is broken
 
 
+@pytest.mark.parametrize("error", [ValueError, OverflowError])
+def test_a_value_the_reader_cannot_hold_breaks_the_file_not_the_scan(tmp_path, monkeypatch, error):
+    """Rete: i tetti oggi lo evitano, un caso nuovo resta un file rotto e la scansione va."""
+    from astrolog.pipeline import scanner
+
+    def overflow(*_args):
+        raise error
+
+    monkeypatch.setattr(scanner, "frame_identity", overflow)
+    path = _fits(tmp_path / "a.fits", _NINA_HEAD)
+    assert scan_file(path) == Skipped(path, Skip.BROKEN)
+
+
 def test_a_header_without_end_is_broken(tmp_path):
     got = scan_file(_fits(tmp_path / "t.fits", _corpus("nina.txt"), end=False))
     assert got == Skipped(tmp_path / "t.fits", Skip.BROKEN)
