@@ -44,12 +44,28 @@ def long_path(path: str | os.PathLike[str]) -> str:
     """A network folder needs `\\\\?\\UNC\\server\\share\\...`, not `\\\\?\\\\\\server\\share`; with
     the prefix, forward slashes are not separators (Windows, *Maximum Path Length Limitation*)."""
     p = str(path)
-    if os.name != "nt" or len(p) <= LONG_PATH_THRESHOLD or p.startswith("\\\\?\\"):
+    if os.name != "nt" or p.startswith("\\\\?\\"):
         return p
-    absolute = os.path.abspath(p)  # on Windows it also normalises forward slashes
-    if absolute.startswith("\\\\"):  # \\server\share -> \\?\UNC\server\share
-        return "\\\\?\\UNC" + absolute[1:]
-    return "\\\\?\\" + absolute
+    if len(p) <= LONG_PATH_THRESHOLD and not trailing_dot_or_space(p):
+        return p
+    full = absolute(p)
+    if full.startswith("\\\\"):  # \\server\share -> \\?\UNC\server\share
+        return "\\\\?\\UNC" + full[1:]
+    return "\\\\?\\" + full
+
+
+def absolute(path: str) -> str:
+    """abspath (GetFullPathName) strips trailing dots and spaces: there normpath keeps them."""
+    if trailing_dot_or_space(path):
+        return os.path.normpath(os.path.join(os.getcwd(), path))
+    return os.path.abspath(path)
+
+
+def trailing_dot_or_space(path: str) -> bool:
+    """'night.' made on Mac or Linux: Win32 strips the dot and opens 'night' (Naming Files)."""
+    return any(
+        part.endswith((".", " ")) and part not in (".", "..") for part in re.split(r"[\\/]", path)
+    )
 
 
 def _apple_double(name: str) -> bool:

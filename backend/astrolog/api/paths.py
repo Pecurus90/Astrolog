@@ -8,6 +8,8 @@ from typing import NoReturn
 
 from fastapi import HTTPException
 
+from ..fits.walk import absolute, long_path, trailing_dot_or_space
+
 BLOCKLIST_POSIX = ("/", "/etc", "/sys", "/proc", "/dev", "/var", "/boot", "/root")
 
 # Device paths `\\?\` and `\\.\` (Microsoft, *File path formats on Windows systems*): the first
@@ -76,6 +78,17 @@ def _refuse(code: str, path: str, **more: str) -> NoReturn:
     raise HTTPException(status_code=422, detail={"code": code, "path": path, **more})
 
 
+def _resolved(written: str) -> str:
+    """realpath; a trailing-dot path goes through `\\\\?\\` (else Win32 opens 'night' for 'night.')
+    and comes back plain."""
+    if not trailing_dot_or_space(written):
+        return os.path.realpath(written)
+    real = os.path.realpath(long_path(written))
+    if real.startswith("\\\\?\\UNC\\"):
+        return "\\" + real[7:]
+    return real.removeprefix("\\\\?\\")
+
+
 def validate_root(raw: str, data_root: str | None) -> str:  # noqa: C901
     """The path to store, or HTTPException 422 with the reason as a code. Network folders are
     accepted: why, and their risk, are in the domain contract."""
@@ -83,13 +96,13 @@ def validate_root(raw: str, data_root: str | None) -> str:  # noqa: C901
         _refuse("path_not_absolute", raw)
     if "\x00" in raw:  # NUL is in no name on any system
         _refuse("path_invalid", raw)
-    written = os.path.abspath(raw)
-    if DEVICE_PATH_RE.match(raw) or DEVICE_PATH_RE.match(written):
+    if DEVICE_PATH_RE.match(raw) or DEVICE_PATH_RE.match(os.path.abspath(raw)):
         _refuse("path_device", raw)  # also `C:\folder\NUL`, which abspath turns into `\\.\NUL`
     if os.name == "nt" and RESERVED_NT_RE.search(raw):
         _refuse("path_invalid", raw)
+    written = absolute(raw)  # keeps 'night.' (Mac or Linux name), which abspath would strip
     try:
-        canonical = os.path.realpath(written)
+        canonical = _resolved(written)
     except OSError:
         # An unreachable share is checked as written and accepted like an unplugged disk.
         canonical = written

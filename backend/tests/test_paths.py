@@ -150,6 +150,14 @@ def test_a_system_share_is_refused_where_the_path_leads(monkeypatch):
 
 
 @windows
+def test_a_folder_ending_with_a_dot_is_kept_as_itself(tmp_path):
+    """'notte.' fatta da Mac o Linux: Win32 toglie il punto e registrava 'notte' (o la sorella)."""
+    os.makedirs("\\\\?\\" + str(tmp_path / "notte."))
+    (tmp_path / "notte").mkdir()
+    assert validate_root(str(tmp_path / "notte."), None).endswith("notte.")
+
+
+@windows
 @pytest.mark.parametrize(
     "scritto",
     ["\\\\localhost\\C$.\\Windows", "\\\\localhost\\C$ \\Windows"],

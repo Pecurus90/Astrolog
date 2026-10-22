@@ -10,6 +10,7 @@ from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from .scanner import Skip
 from .walk import Walk, long_path, real_key, walk_dir
+from .walk import absolute as walk_absolute
 
 # Skip reasons that pass (file locked, copy running): read again every scan.
 _PASSING = frozenset({Skip.UNREADABLE, Skip.INCOMPLETE})
@@ -99,7 +100,7 @@ def _still(stored: str, path: str) -> bool:
 def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -> int:
     """Existing folder only. Same folder written another way: same root; inside or around one
     (written or real key): RootOverlapError. Other roots' disks touched only when ids match."""
-    absolute = os.path.normpath(os.path.abspath(_plain(os.fspath(path))))
+    absolute = os.path.normpath(walk_absolute(_plain(os.fspath(path))))
     if not os.path.isdir(long_path(absolute)):
         raise NotADirectoryError(absolute)
     written, real = _keys(absolute)
@@ -135,7 +136,8 @@ def _same_root(
 
 
 def _rel(path: str, root: str) -> str:
-    return os.path.relpath(path, root).replace(os.sep, "/")
+    """Walk builds every path from root: cut it. relpath (abspath) strips a trailing dot."""
+    return path[len(root) :].lstrip(os.sep).replace(os.sep, "/")
 
 
 def _under(rel: str, folders: list[str]) -> bool:

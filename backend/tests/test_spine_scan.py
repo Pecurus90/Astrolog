@@ -3,8 +3,10 @@ Tutto su FITS veri fabbricati con astropy e su un DB nato da schema.sql."""
 
 import json
 import os
+from pathlib import Path
 
 import numpy as np
+import pytest
 from astropy.io import fits
 
 import astrolog.fits.walk as walk_mod
@@ -396,6 +398,17 @@ def test_scan_unreadable_subfolder_does_not_mark_its_frames_missing(conn, tmp_pa
     done = run(conn, fid)
     assert done["missing"] == 0 and len(done["unreadable_dirs"]) == 1
     assert count(conn, "SELECT COUNT(*) FROM positions WHERE status = 'present'") == 2
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Win32 strips a trailing dot: Windows only")
+def test_scan_reads_a_folder_ending_with_a_dot_as_itself(conn, tmp_path):
+    """'notte.' fatta da Mac o Linux su NTFS: prima letta come 'notte', i suoi frame persi."""
+    dotted = "\\\\?\\" + str(tmp_path / "notte.")
+    os.makedirs(dotted)
+    write_light(Path(dotted) / "a.fits")
+    write_light(tmp_path / "notte" / "b.fits", obj="M 2")
+    done = run(conn, add_folder(conn, tmp_path))
+    assert done["new"] == 2 and done["errors"] == 0
 
 
 def test_scan_unreadable_dirs(conn, tmp_path, monkeypatch):

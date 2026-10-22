@@ -103,6 +103,18 @@ def test_a_folder_renamed_while_its_files_are_read_is_still_a_move(conn, tmp_pat
     assert later.moved == [("night/a.fits", "night2/a.fits")]
 
 
+@pytest.mark.skipif(os.name != "nt", reason="Win32 strips a trailing dot: Windows only")
+def test_a_folder_ending_with_a_dot_is_read_as_itself(conn, tmp_path):
+    """'night.' fatta da Mac o Linux su NTFS/exFAT: Win32 la apriva come 'night'."""
+    dotted = "\\\\?\\" + str(tmp_path / "night.")
+    os.makedirs(dotted)
+    _nina(Path(dotted + "\\a.fits"), 1)
+    _nina(tmp_path / "night" / "b.fits", 2)
+    result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    assert result.changes.new == ["night./a.fits", "night/b.fits"]
+    assert result.frames == 2
+
+
 def test_a_move_plus_a_copy_is_one_move_and_one_duplicate(conn, tmp_path):
     _nina(tmp_path / "a.fits", 4)
     root = add_root(conn, tmp_path, NOW)

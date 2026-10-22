@@ -447,6 +447,15 @@ def test_a_renamed_root_folder_added_again_is_a_new_root(conn, tmp_path):
     assert add_root(conn, tmp_path / "Astro2026", NOW) != first
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="Win32 strips a trailing dot: Windows only")
+def test_a_root_ending_with_a_dot_is_kept_as_itself(conn, tmp_path):
+    """Radice 'night.': prima cercata come 'night', rifiutata o confusa con la sorella."""
+    os.makedirs("\\\\?\\" + str(tmp_path / "night."))
+    root = add_root(conn, str(tmp_path / "night."), NOW)
+    path = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (root,)).fetchone()[0]
+    assert path.endswith("night.")
+
+
 def test_a_sibling_with_a_common_prefix_is_not_inside(conn, tmp_path):
     (tmp_path / "archive").mkdir()
     (tmp_path / "archive2").mkdir()

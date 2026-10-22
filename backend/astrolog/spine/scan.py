@@ -43,8 +43,9 @@ def root_readable(root: str) -> bool:
 
 
 def rel_path(abs_path: str, root: str) -> str:
-    """With `/` on every system: it is the key of `positions`."""
-    return os.path.relpath(abs_path, root).replace(os.sep, "/")
+    """With `/` on every system: it is the key of `positions`. Walk builds every path from root:
+    cut it (relpath strips a trailing dot)."""
+    return abs_path[len(root) :].lstrip(os.sep).replace(os.sep, "/")
 
 
 # a NAS remounted with another precision truncates mtime to the millisecond: not a modification
