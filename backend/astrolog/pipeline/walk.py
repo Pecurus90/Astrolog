@@ -175,8 +175,11 @@ def walk_dir(root: str) -> Walk:
             scan.close()
             continue
         seen.add(real)
-        with scan:
-            stack.extend(_list_folder(current, scan, result))
+        try:  # listing can break midway (NAS gone): folder not answering, files under it not judged
+            with scan:
+                stack.extend(_list_folder(current, scan, result))
+        except OSError:
+            result.unreadable.append(current)
     for items in (result.found, result.unreadable, result.hidden, result.online_only):
         items.sort()
     return result

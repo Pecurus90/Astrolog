@@ -286,6 +286,34 @@ def test_unreadable_subfolder_is_reported_not_swallowed(tmp_path, monkeypatch):
     assert len(result.unreadable) == 1 and os.path.normpath(result.unreadable[0]).endswith("sub")
 
 
+def test_a_folder_that_breaks_while_listed_is_unreadable_and_the_walk_goes_on(
+    tmp_path, monkeypatch
+):
+    """NAS che cade a meta' elenco (Windows: errore 64). Prima: tutta la scansione ferma."""
+    root = str(tmp_path)
+    _touch(root, "a.fits")
+    _touch(root, "sub", "one.fits")
+    _touch(root, "sub", "two.fits")
+    sub = os.path.join(root, "sub")
+    real = os.scandir
+
+    class Breaks(ScanFinta):
+        def __iter__(self):
+            yield self[0]
+            raise OSError(64, "The specified network name is no longer available")
+
+    def fake(p):
+        with real(p) as entries:
+            listed = list(entries)
+        breaking = os.path.normpath(str(p)) == os.path.normpath(sub)
+        return Breaks(listed) if breaking else ScanFinta(listed)
+
+    monkeypatch.setattr(walk.os, "scandir", fake)
+    result = walk_dir(root)
+    assert "a.fits" in names(result.found)
+    assert [os.path.normpath(u) for u in result.unreadable] == [os.path.normpath(sub)]
+
+
 def test_deep_tree_does_not_recurse(tmp_path):
     _touch(str(tmp_path), *(["d"] * 40), "bottom.fits")
     assert "bottom.fits" in names(found(tmp_path))
