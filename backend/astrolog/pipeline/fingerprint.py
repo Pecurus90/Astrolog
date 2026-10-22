@@ -98,11 +98,13 @@ def _astropy_block(path: str | os.PathLike[str]) -> tuple[int, int]:
 
 def _primary_cards(path: str | os.PathLike[str]) -> bytes:
     """No pixels: primary's cards as astropy writes them, as today."""
-    with (
-        warnings.catch_warnings(),
-        fits.open(long_path(path), output_verify="silently", ignore_missing_end=True) as hdul,
-    ):
-        warnings.simplefilter("ignore")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # before open: astropy warns while opening too
+        return _astropy_primary_cards(path)
+
+
+def _astropy_primary_cards(path: str | os.PathLike[str]) -> bytes:
+    with fits.open(long_path(path), output_verify="silently", ignore_missing_end=True) as hdul:
         primary: Any = hdul[0]  # astropy stubs type int index as slice: HDUList
         return primary.header.tostring().encode("ascii", "replace")
 

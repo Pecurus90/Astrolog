@@ -5,6 +5,7 @@ import math
 import os
 import re
 import sys
+import warnings
 from pathlib import Path
 
 import pytest
@@ -249,6 +250,34 @@ def test_accented_letters_written_in_utf8_are_read_as_written(tmp_path):
     assert got.values["OBJECT"] == "Nébuleuse"
 
 
+_BARE = ["SIMPLE  =                    T", "BITPIX  =                   16"]
+_NINA_WRITER = "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'"
+_BAD_AXES = [
+    ["NAXIS1  =                  -16", "NAXIS2  =                   16"],
+    ["NAXIS1  =                 16.5", "NAXIS2  =                   16"],
+]
+
+
+@pytest.mark.parametrize("axes", _BAD_AXES)
+def test_axes_that_are_not_counts_make_the_file_unreadable(tmp_path, axes):
+    """FITS 4.0 sez. 4.4.1.1: NAXISn intero non negativo; altro non e' un'immagine."""
+    lines = [*_BARE, "NAXIS   =                    2", *axes, _NINA_WRITER]
+    path = _fits(tmp_path / "a.fits", lines)
+    assert scan_file(path) == Skipped(path, Skip.UNREADABLE)
+
+
+def test_reading_a_file_says_nothing_on_the_console(tmp_path):
+    """Avvisi di astropy su card storte: mai fuori dalla lettura."""
+    lines = [*_BARE, "NAXIS   =                    0", _NINA_WRITER, "BADCARD = 'unterminated",
+             "DATE-OBS= 2025-06-29T21:11:33"]  # fmt: skip
+    path = _fits(tmp_path / "a.fits", lines)
+    path.write_bytes(path.read_bytes() + bytes(2880))  # padding astropy warns about
+    with warnings.catch_warnings(record=True) as said:
+        warnings.simplefilter("always")
+        scan_file(path)
+    assert said == []
+
+
 def test_the_checksums_of_the_cfitsio_writer_are_nina_keys(tmp_path):
     lines = [
         *_corpus("nina.txt"),
@@ -283,6 +312,16 @@ def _compressed(path: Path) -> Path:
     data = np.zeros((8, 8), dtype=np.uint16)
     fits.HDUList([fits.PrimaryHDU(), fits.CompImageHDU(data, header)]).writeto(path)
     return path
+
+
+def test_a_compressed_frame_with_a_negative_axis_is_unreadable(tmp_path):
+    """Compresso: dimensioni del frame in ZNAXISn (FITS 4.0 sez. 10), stessa regola."""
+    path = _compressed(tmp_path / "light.fits.fz")
+    raw = path.read_bytes()
+    good = b"ZNAXIS1 =                    8"
+    assert good in raw
+    path.write_bytes(raw.replace(good, b"ZNAXIS1 =                   -8", 1))
+    assert scan_file(path) == Skipped(path, Skip.UNREADABLE)
 
 
 @pytest.mark.parametrize("name", ["light.fits.fz", "light.fits"])

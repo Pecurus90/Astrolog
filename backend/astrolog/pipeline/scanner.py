@@ -50,6 +50,7 @@ _INTEGER = re.compile(r"[+-]?\d+")
 _REAL = re.compile(r"[+-]?(\d+\.?\d*|\.\d+)([EeD][+-]?\d+)?")  # lower e: Python read it already
 # SIP distortion terms of ASIAIR plate solve: A_ORDER, A_0_2, AP_1_0, ...
 _SIP = re.compile(r"^(A|B|AP|BP)_(ORDER|\d_\d)$")
+_AXIS = re.compile(r"Z?NAXIS\d*")  # frame axes, plain or tile-compressed
 # Keys neither program writes, left by processing program that rewrote file.
 _REWRITE_MARKS = frozenset({"PROGRAM", "STACKCNT"})
 # Tile-compressed image page (FITS 4.0 sec. 10): its Z keys and table columns.
@@ -213,6 +214,16 @@ def _writes(program: Program, key: str, compressed: bool) -> bool:
     return key in ASIAIR_KEYS or bool(_SIP.match(key))
 
 
+def _axes_are_counts(cards: dict[str, Value]) -> bool:
+    """FITS 4.0 sec. 4.4.1.1: NAXIS, NAXISn written are non-negative integers; else no image.
+    Compressed frame: same for ZNAXIS, ZNAXISn (sec. 10)."""
+    return all(
+        isinstance(value, int) and not isinstance(value, bool) and value >= 0
+        for key, value in cards.items()
+        if _AXIS.fullmatch(key)
+    )
+
+
 def scan_file(path: Path) -> Extracted | Skipped:
     cards = read_cards(path)
     if cards is None:
@@ -222,6 +233,8 @@ def scan_file(path: Path) -> Extracted | Skipped:
     program = program_of(cards)
     if program is None:
         return Skipped(path, Skip.NOT_SUPPORTED)
+    if not _axes_are_counts(cards):
+        return Skipped(path, Skip.UNREADABLE)
     try:
         identity = frame_identity(path, cards)
     except Exception:  # noqa: BLE001 - astropy refuses the shape: the file cannot be read
