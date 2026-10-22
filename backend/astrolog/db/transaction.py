@@ -7,8 +7,11 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def transaction(conn: sqlite3.Connection) -> Iterator[sqlite3.Connection]:
-    conn.execute("BEGIN")
+def transaction(
+    conn: sqlite3.Connection, *, immediate: bool = False
+) -> Iterator[sqlite3.Connection]:
+    """`immediate`: writer takes lock at start, so busy_timeout waits instead of failing."""
+    conn.execute("BEGIN IMMEDIATE" if immediate else "BEGIN")
     try:
         yield conn
         conn.execute("COMMIT")

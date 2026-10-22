@@ -20,6 +20,7 @@ class Changes:
 
     reachable: bool
     scan_id: int = 0  # receipt this scan wrote
+    root_id: int = 0
     new: list[str] = field(default_factory=list)
     changed: list[str] = field(default_factory=list)
     reread: list[str] = field(default_factory=list)  # same on disk, last read failed
@@ -29,6 +30,8 @@ class Changes:
     unlooked: list[str] = field(default_factory=list)  # size and date unreadable
     hidden: list[str] = field(default_factory=list)  # trash, service folders: left out, said
     online_only: list[str] = field(default_factory=list)  # cloud placeholders: never downloaded
+    # files to read -> (size, mtime_ns) seen now; written only with their read
+    stat: dict[str, tuple[int, int]] = field(default_factory=dict)
 
     @property
     def to_read(self) -> list[str]:
@@ -68,20 +71,15 @@ def _on_disk(found: list[str], root: str) -> tuple[dict[str, tuple[int, int]], s
     return seen, unlooked
 
 
-def sync(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
-    """Compares folder with what last scans saw; writes result and its receipt."""
-    with transaction(conn):
-        return record_changes(conn, root_id, now)
-
-
 def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
-    """`sync` inside caller's transaction: what it reads of files commits with it."""
+    """Compares folder with last reads; writes verdicts and receipt. Walk outside transaction:
+    slow disk never holds lock."""
     root = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (root_id,)).fetchone()[
         "path"
     ]
     walk = walk_dir(root)
     root_failed = any(os.path.normcase(u) == os.path.normcase(root) for u in walk.unreadable)
-    changes = Changes(reachable=not root_failed)
+    changes = Changes(reachable=not root_failed, root_id=root_id)
     disk: dict[str, tuple[int, int]] = {}
     unlooked: set[str] = set()
     if changes.reachable:
@@ -90,28 +88,40 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
         changes.unlooked = sorted(unlooked)
         changes.hidden = sorted(_rel(p, root) for p in walk.hidden)
         changes.online_only = sorted(_rel(p, root) for p in walk.online_only)
-    scan_id = inserted_id(
-        conn.execute(
-            "INSERT INTO pipeline_scans"
-            " (root_id, scanned_at, reachable, new, changed, reread, unchanged, gone, skipped)"
-            " VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0)",
-            (root_id, now, int(changes.reachable)),
+    with transaction(conn, immediate=True):
+        changes.scan_id = inserted_id(
+            conn.execute(
+                "INSERT INTO pipeline_scans"
+                " (root_id, scanned_at, reachable, new, changed, reread, unchanged, gone, skipped,"
+                " finished) VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0, 0)",
+                (root_id, now, int(changes.reachable)),
+            )
         )
-    )
-    if changes.reachable:
-        _judge(conn, root_id, scan_id, disk, changes)
-        not_judged = unlooked | {_rel(p, root) for p in walk.online_only}
-        _mark_gone(conn, root_id, scan_id, not_judged, changes)
-        conn.execute(
-            "UPDATE pipeline_scans SET new = ?, changed = ?, reread = ?, unchanged = ?, gone = ?,"
-            " left_out = ? WHERE id = ?",
-            (len(changes.new), len(changes.changed), len(changes.reread),
-             len(changes.unchanged), len(changes.gone), _left_out(changes), scan_id),
-        )  # fmt: skip
-    changes.scan_id = scan_id
+        if changes.reachable:
+            _judge(conn, root_id, disk, changes)
+            _write_counts(conn, changes)
     for items in (changes.new, changes.changed, changes.reread, changes.unchanged, changes.gone):
         items.sort()
     return changes
+
+
+def finish_scan(conn: sqlite3.Connection, changes: Changes) -> None:
+    """After last read, caller's transaction: gone marked only now, so a stopped scan
+    leaves gone and new for next one to pair (moved)."""
+    if changes.reachable:
+        _mark_gone(conn, changes.root_id, set(changes.unlooked) | set(changes.online_only), changes)
+        changes.gone.sort()
+        _write_counts(conn, changes)
+    conn.execute("UPDATE pipeline_scans SET finished = 1 WHERE id = ?", (changes.scan_id,))
+
+
+def _write_counts(conn: sqlite3.Connection, changes: Changes) -> None:
+    conn.execute(
+        "UPDATE pipeline_scans SET new = ?, changed = ?, reread = ?, unchanged = ?, gone = ?,"
+        " left_out = ? WHERE id = ?",
+        (len(changes.new), len(changes.changed), len(changes.reread),
+         len(changes.unchanged), len(changes.gone), _left_out(changes), changes.scan_id),
+    )  # fmt: skip
 
 
 def _left_out(changes: Changes) -> str:
@@ -128,7 +138,6 @@ def _left_out(changes: Changes) -> str:
 def _judge(
     conn: sqlite3.Connection,
     root_id: int,
-    scan_id: int,
     disk: dict[str, tuple[int, int]],
     changes: Changes,
 ) -> None:
@@ -140,42 +149,42 @@ def _judge(
             (root_id,),
         )
     }
-    for rel, (size, mtime_ns) in disk.items():
+    for rel, stat in disk.items():
         before = known.get(rel)
         if before is None or before["state"] == "gone":
             changes.new.append(rel)
-        elif (before["size"], before["mtime_ns"]) != (size, mtime_ns):
+            changes.stat[rel] = stat  # row written with its read
+            continue
+        if (before["size"], before["mtime_ns"]) != stat:
             changes.changed.append(rel)
+            changes.stat[rel] = stat
         elif before["skip_reason"] in _PASSING:  # read failed last time: never lost
             changes.reread.append(rel)
+            changes.stat[rel] = stat
         else:
             changes.unchanged.append(rel)
-        conn.execute(
-            "INSERT INTO pipeline_files (root_id, rel_path, size, mtime_ns, state, seen_scan_id)"
-            " VALUES (?, ?, ?, ?, 'present', ?)"
-            " ON CONFLICT (root_id, rel_path) DO UPDATE SET size = excluded.size,"
-            " mtime_ns = excluded.mtime_ns, state = 'present',"
-            " seen_scan_id = excluded.seen_scan_id",
-            (root_id, rel, size, mtime_ns, scan_id),
+        conn.execute(  # old size and date stay until read: interrupted, read again
+            "UPDATE pipeline_files SET seen_scan_id = ? WHERE root_id = ? AND rel_path = ?",
+            (changes.scan_id, root_id, rel),
         )
 
 
 def _mark_gone(
-    conn: sqlite3.Connection, root_id: int, scan_id: int, not_judged: set[str], changes: Changes
+    conn: sqlite3.Connection, root_id: int, not_judged: set[str], changes: Changes
 ) -> None:
     """Present before, not seen now. File only in cloud (OneDrive, iCloud) or not looked at:
     stays as was."""
     missing = conn.execute(
         "SELECT rel_path FROM pipeline_files WHERE root_id = ? AND state = 'present'"
         " AND seen_scan_id != ?",
-        (root_id, scan_id),
+        (root_id, changes.scan_id),
     ).fetchall()
     for (rel,) in missing:
         if rel in not_judged or _under(rel, changes.unreachable):
             continue
         changes.gone.append(rel)
         conn.execute(
-            "UPDATE pipeline_files SET state = 'gone', seen_scan_id = ?"
+            "UPDATE pipeline_files SET state = 'gone', gone_scan_id = ?"
             " WHERE root_id = ? AND rel_path = ?",
-            (scan_id, root_id, rel),
+            (changes.scan_id, root_id, rel),
         )

@@ -886,7 +886,8 @@ CREATE TABLE pipeline_scans (
   gone       INTEGER NOT NULL,
   skipped    INTEGER NOT NULL,  -- letti e saltati: il motivo sta in pipeline_files
   -- fuori, coi percorsi: {hidden, online_only, unreachable, unlooked}; NULL radice muta
-  left_out   TEXT CHECK (json_valid(left_out) AND json_type(left_out) = 'object')
+  left_out   TEXT CHECK (json_valid(left_out) AND json_type(left_out) = 'object'),
+  finished   INTEGER NOT NULL CHECK (finished IN (0, 1))  -- 0: fermata, il giro dopo rifa'
 ) STRICT;
 
 -- RILEVATO. Posa per impronta: regge spostamento e header riscritto; senza file resta. Risposte
@@ -897,7 +898,8 @@ CREATE TABLE pipeline_frames (
   created_at  TEXT NOT NULL
 ) STRICT;
 
--- RILEVATO. File com'era all'ultima scansione che l'ha guardato. Due file, stesso frame: doppione.
+-- RILEVATO. File: size e data dell'ultima lettura (fermata: si rilegge). Due file, stesso frame:
+-- doppione.
 CREATE TABLE pipeline_files (
   id           INTEGER PRIMARY KEY,
   root_id      INTEGER NOT NULL REFERENCES pipeline_roots (id),
@@ -905,12 +907,15 @@ CREATE TABLE pipeline_files (
   size         INTEGER NOT NULL,
   mtime_ns     INTEGER NOT NULL,  -- esatta: data diversa, rilettura
   state        TEXT NOT NULL CHECK (state IN ('present', 'gone')),
-  seen_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),  -- ultima che l'ha giudicato
+  seen_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),  -- ultima che l'ha visto presente
   -- NULL: non letto come posa. Sparito lo tiene: cosi' si riconosce lo spostato.
   frame_id     INTEGER REFERENCES pipeline_frames (id),
   -- letto e saltato, col motivo; unreadable e incomplete passeggeri: si rilegge
   skip_reason  TEXT
     CHECK (skip_reason IN ('not_supported', 'rewritten', 'unreadable', 'incomplete')),
+  -- arrivato dopo l'ultima volta che lo sparito era presente: spostato, anche dopo fermate
+  arrived_scan_id INTEGER REFERENCES pipeline_scans (id),
+  gone_scan_id    INTEGER REFERENCES pipeline_scans (id),  -- quella che l'ha visto sparire
   CHECK (frame_id IS NULL OR skip_reason IS NULL),
   UNIQUE (root_id, rel_path)
 ) STRICT;

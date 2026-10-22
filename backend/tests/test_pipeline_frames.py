@@ -122,6 +122,139 @@ def test_an_interrupted_scan_reads_its_files_next_time(conn, tmp_path, monkeypat
     assert scan_root(conn, root, LATER).frames == 2
 
 
+def test_another_connection_writes_while_files_are_read(conn, db_path, tmp_path, monkeypatch):
+    """Lettura lenta (NAS) fuori transazione: risposta a un filtro non aspetta la scansione."""
+    _nina(tmp_path / "a.fits", 1)
+    _nina(tmp_path / "b.fits", 2)
+    root = add_root(conn, tmp_path, NOW)
+    real = frames.scan_file
+    wrote: list[bool] = []
+
+    def other_writes(path):
+        other = sqlite3.connect(db_path, timeout=0)
+        other.execute(
+            "INSERT INTO pipeline_filter_answers (written_key, standard) VALUES (?, 'ha')",
+            (path.name,),
+        )
+        other.commit()
+        other.close()
+        wrote.append(True)
+        return real(path)
+
+    monkeypatch.setattr(frames, "scan_file", other_writes)
+    scan_root(conn, root, NOW)
+    assert wrote == [True, True]
+
+
+def test_an_interrupted_scan_keeps_what_it_read(conn, tmp_path, monkeypatch):
+    """Lotti salvati restano; il prossimo giro legge solo cio' che mancava."""
+    for seed in range(3):
+        _nina(tmp_path / f"{seed}.fits", seed)
+    root = add_root(conn, tmp_path, NOW)
+    monkeypatch.setattr(frames, "BATCH", 1)
+    real = frames.scan_file
+    calls: list[str] = []
+
+    def stops_at_second(path):
+        calls.append(path.name)
+        if len(calls) == 2:
+            raise KeyboardInterrupt
+        return real(path)
+
+    monkeypatch.setattr(frames, "scan_file", stops_at_second)
+    with pytest.raises(KeyboardInterrupt):
+        scan_root(conn, root, NOW)
+    assert _cards(conn) == {"0.fits": "light"}
+    monkeypatch.setattr(frames, "scan_file", real)
+    again = scan_root(conn, root, LATER)
+    assert again.changes.to_read == ["1.fits", "2.fits"]
+    assert again.frames == 3
+
+
+def test_a_move_interrupted_mid_scan_is_still_found_next_time(conn, tmp_path, monkeypatch):
+    """Sparito si scrive a fine scansione: interrotta, il giro dopo rivede lo spostamento."""
+    _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    (tmp_path / "a.fits").rename(tmp_path / "b.fits")
+
+    def stops(path):
+        raise KeyboardInterrupt
+
+    real = frames.scan_file
+    monkeypatch.setattr(frames, "scan_file", stops)
+    with pytest.raises(KeyboardInterrupt):
+        scan_root(conn, root, LATER)
+    monkeypatch.setattr(frames, "scan_file", real)
+    assert scan_root(conn, root, "2026-10-24T20:00:00+00:00").moved == [("a.fits", "b.fits")]
+    finished = conn.execute("SELECT finished FROM pipeline_scans ORDER BY id").fetchall()
+    assert [r["finished"] for r in finished] == [1, 0, 1]
+
+
+def test_a_move_already_saved_when_the_scan_stopped_is_found_next_time(conn, tmp_path, monkeypatch):
+    """Lotto con lo spostato salvato, fermata dopo: il giro dopo abbina ancora."""
+    _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    (tmp_path / "a.fits").rename(tmp_path / "b.fits")
+    _nina(tmp_path / "c.fits", 2)
+    monkeypatch.setattr(frames, "BATCH", 1)
+    real = frames.scan_file
+    calls: list[str] = []
+
+    def stops_at_second(path):
+        calls.append(path.name)
+        if len(calls) == 2:
+            raise KeyboardInterrupt
+        return real(path)
+
+    monkeypatch.setattr(frames, "scan_file", stops_at_second)
+    with pytest.raises(KeyboardInterrupt):
+        scan_root(conn, root, LATER)
+    monkeypatch.setattr(frames, "scan_file", real)
+    assert scan_root(conn, root, "2026-10-24T20:00:00+00:00").moved == [("a.fits", "b.fits")]
+
+
+def test_a_move_survives_a_stopped_scan_then_a_silent_root(conn, tmp_path, monkeypatch):
+    """Fermata, poi NAS spento (scansione finita senza giudizio): lo spostamento si trova."""
+    nas = tmp_path / "nas"
+    _nina(nas / "a.fits", 1)
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    (nas / "a.fits").rename(nas / "b.fits")
+    _nina(nas / "c.fits", 2)
+    monkeypatch.setattr(frames, "BATCH", 1)
+    real = frames.scan_file
+    calls: list[str] = []
+
+    def stops_at_second(path):
+        calls.append(path.name)
+        if len(calls) == 2:
+            raise KeyboardInterrupt
+        return real(path)
+
+    monkeypatch.setattr(frames, "scan_file", stops_at_second)
+    with pytest.raises(KeyboardInterrupt):
+        scan_root(conn, root, LATER)
+    monkeypatch.setattr(frames, "scan_file", real)
+    nas.rename(tmp_path / "off")
+    assert not scan_root(conn, root, "2026-10-24T20:00:00+00:00").changes.reachable
+    (tmp_path / "off").rename(nas)
+    assert scan_root(conn, root, "2026-10-25T20:00:00+00:00").moved == [("a.fits", "b.fits")]
+
+
+def test_a_file_changed_in_place_is_not_a_move(conn, tmp_path):
+    """Riletto allo stesso posto: nessuno spostamento, anche se un'altra copia sparisce."""
+    _nina(tmp_path / "a.fits", 1)
+    _nina(tmp_path / "b.fits", 1)  # copy of same frame
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    (tmp_path / "a.fits").unlink()
+    _nina(tmp_path / "b.fits", 1, ("OBJECT  = 'M 42'",))
+    _touch_later(tmp_path / "b.fits")
+    assert scan_root(conn, root, LATER).moved == []
+
+
 def test_an_unchanged_archive_is_not_read_again(conn, tmp_path, monkeypatch):
     _nina(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)

@@ -9,9 +9,11 @@ from pathlib import Path
 
 from ..db.transaction import transaction
 from .card import Card, Conditions, read_card, read_conditions
-from .changes import Changes, record_changes
+from .changes import Changes, finish_scan, record_changes
 from .filters import resolve
 from .scanner import Extracted, Skipped, scan_file
+
+BATCH = 100  # files saved per transaction: short lock, small loss if stopped
 
 
 @dataclass
@@ -24,20 +26,28 @@ class ScanResult:
 
 
 def scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
+    """Files opened outside any transaction, saved per batch: lock held only to write; stopped
+    scan keeps saved batches, unread files keep old size and date, so read next time."""
     root = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (root_id,)).fetchone()
-    with transaction(conn):  # one with sync: interrupted read leaves no file unread
-        changes = record_changes(conn, root_id, now)
-        result = ScanResult(changes)
-        for rel in changes.to_read:
-            got = scan_file(Path(root["path"], rel))
-            if isinstance(got, Skipped):
-                result.skipped.append(got)
-            _store(conn, root_id, rel, got, now)
-        conn.execute(
-            "UPDATE pipeline_scans SET skipped = ? WHERE id = ?",
-            (len(result.skipped), changes.scan_id),
-        )
-        result.moved = _moved(conn, root_id, changes)
+    changes = record_changes(conn, root_id, now)
+    result = ScanResult(changes)
+    to_read = changes.to_read
+    for start in range(0, len(to_read), BATCH):
+        batch = [
+            (rel, scan_file(Path(root["path"], rel))) for rel in to_read[start : start + BATCH]
+        ]
+        skipped = [got for _, got in batch if isinstance(got, Skipped)]
+        with transaction(conn, immediate=True):
+            for rel, got in batch:
+                _store(conn, changes, rel, got, now)
+            conn.execute(
+                "UPDATE pipeline_scans SET skipped = skipped + ? WHERE id = ?",
+                (len(skipped), changes.scan_id),
+            )
+        result.skipped.extend(skipped)
+    with transaction(conn, immediate=True):
+        finish_scan(conn, changes)
+    result.moved = _moved(conn, root_id, changes)
     result.duplicates = _duplicates(conn, root_id)
     result.frames = conn.execute(
         "SELECT COUNT(DISTINCT frame_id) FROM pipeline_files"
@@ -48,11 +58,23 @@ def scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
 
 
 def _store(
-    conn: sqlite3.Connection, root_id: int, rel: str, got: Extracted | Skipped, now: str
+    conn: sqlite3.Connection, changes: Changes, rel: str, got: Extracted | Skipped, now: str
 ) -> None:
-    """File's frame and header together: skipped file loses both, even if read before."""
+    """File's size and date written with its read, frame and header together: skipped file
+    loses both, even if read before."""
+    size, mtime_ns = changes.stat[rel]
+    conn.execute(
+        "INSERT INTO pipeline_files"
+        " (root_id, rel_path, size, mtime_ns, state, seen_scan_id, arrived_scan_id)"
+        " VALUES (?, ?, ?, ?, 'present', ?, ?)"
+        " ON CONFLICT (root_id, rel_path) DO UPDATE SET size = excluded.size,"
+        " mtime_ns = excluded.mtime_ns, seen_scan_id = excluded.seen_scan_id,"
+        " arrived_scan_id = CASE WHEN state = 'gone' THEN excluded.arrived_scan_id"
+        " ELSE arrived_scan_id END, state = 'present'",
+        (changes.root_id, rel, size, mtime_ns, changes.scan_id, changes.scan_id),
+    )
     file_id = conn.execute(
-        "SELECT id FROM pipeline_files WHERE root_id = ? AND rel_path = ?", (root_id, rel)
+        "SELECT id FROM pipeline_files WHERE root_id = ? AND rel_path = ?", (changes.root_id, rel)
     ).fetchone()["id"]
     conn.execute("DELETE FROM pipeline_conditions WHERE file_id = ?", (file_id,))
     if isinstance(got, Skipped):
@@ -107,20 +129,20 @@ def _frame_of(conn: sqlite3.Connection, got: Extracted, now: str) -> int:
 
 
 def _moved(conn: sqlite3.Connection, root_id: int, changes: Changes) -> list[tuple[str, str]]:
-    """File new this scan whose frame lost a file this same scan, paired one to one; further new
-    file of same frame is copy (duplicate), not second move."""
-    new = set(changes.new)
+    """Gone this scan, paired one to one with file of same frame arrived after gone one was last
+    seen: holds across stopped scans and silent roots. Further arrival: copy (duplicate)."""
     rows = conn.execute(
         "SELECT was.rel_path AS was, now.rel_path AS now FROM pipeline_files AS now"
         " JOIN pipeline_files AS was ON was.frame_id = now.frame_id AND was.root_id = now.root_id"
         " WHERE now.root_id = ? AND now.state = 'present' AND was.state = 'gone'"
-        " AND was.seen_scan_id = ? ORDER BY was.rel_path, now.rel_path",
+        " AND was.gone_scan_id = ? AND now.arrived_scan_id > was.seen_scan_id"
+        " ORDER BY was.rel_path, now.rel_path",
         (root_id, changes.scan_id),
     ).fetchall()
     pairs: list[tuple[str, str]] = []
     paired: set[str] = set()
     for row in rows:
-        if row["now"] in new and row["was"] not in paired and row["now"] not in paired:
+        if row["was"] not in paired and row["now"] not in paired:
             pairs.append((row["was"], row["now"]))
             paired.update((row["was"], row["now"]))
     return pairs
