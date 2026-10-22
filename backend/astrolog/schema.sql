@@ -902,7 +902,8 @@ CREATE TABLE pipeline_scans (
   unknown_keys TEXT NOT NULL CHECK (json_valid(unknown_keys) AND json_type(unknown_keys) = 'object'),
   -- fuori, coi percorsi: {hidden, online_only, unreachable, unlooked}; NULL radice muta
   left_out   TEXT CHECK (json_valid(left_out) AND json_type(left_out) = 'object'),
-  finished   INTEGER NOT NULL CHECK (finished IN (0, 1))  -- 0: fermata, il giro dopo rifa'
+  finished   INTEGER NOT NULL CHECK (finished IN (0, 1)),  -- 0: fermata, il giro dopo rifa'
+  CHECK ((reachable = 1) = (left_out IS NOT NULL))
 ) STRICT;
 
 -- RILEVATO. Posa per identita' (camera, inizio, dimensioni, durata: ADR 0030); senza file si

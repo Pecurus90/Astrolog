@@ -232,9 +232,15 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
             conn.execute(
                 "INSERT INTO pipeline_scans"
                 " (root_id, scanned_at, reachable, volume_changed, new, changed, reread, unchanged,"
-                " gone, skipped, unknown_keys, finished)"
-                " VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0, '{}', '{}', 0)",
-                (root_id, now, int(changes.reachable), int(changes.reachable and other_volume)),
+                " gone, skipped, unknown_keys, left_out, finished)"
+                " VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0, '{}', '{}', ?, 0)",
+                (
+                    root_id,
+                    now,
+                    int(changes.reachable),
+                    int(changes.reachable and other_volume),
+                    _left_out(changes) if changes.reachable else None,
+                ),
             )
         )
         if changes.reachable:

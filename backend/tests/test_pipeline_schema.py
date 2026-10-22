@@ -76,6 +76,16 @@ def test_the_schema_refuses_a_start_in_another_form(conn, tmp_path):
         conn.execute("UPDATE pipeline_cards SET exposure_s = -1.0")
 
 
+def test_the_schema_refuses_a_receipt_that_contradicts_itself(conn, tmp_path):
+    """Fuori elencato sse radice raggiunta: muta non giudica niente."""
+    nina_light(tmp_path / "a.fits", 1)
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("UPDATE pipeline_scans SET left_out = NULL")
+    with pytest.raises(sqlite3.IntegrityError):
+        conn.execute("UPDATE pipeline_scans SET reachable = 0")
+
+
 def test_the_schema_refuses_a_header_that_is_not_a_json_object(conn, tmp_path):
     nina_light(tmp_path / "a.fits", 1)
     scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
