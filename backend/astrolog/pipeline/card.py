@@ -1,4 +1,4 @@
-"""File card: facts read from one header alone, pure (mappa, passo 4). One function per fact."""
+"""File card: facts read from one header alone, pure (mappa, passo 4). Missing: None."""
 
 import re
 from dataclasses import dataclass
@@ -79,7 +79,7 @@ def _strict_time(written: Value | None) -> datetime | None:
 
 def clock_offset_min(values: dict[str, Value]) -> int | None:
     """DATE-LOC minus DATE-OBS: PC clock zone (CFitsioFITS.cs ToLocalTime), not site's.
-    Zones are whole quarters, -12 h to +14 h: else not same instant."""
+    Zones (IANA tz database) are whole quarters, -12 h to +14 h: else not same instant."""
     local, utc = _strict_time(values.get("DATE-LOC")), _strict_time(values.get("DATE-OBS"))
     if local is None or utc is None:
         return None

@@ -1,1 +1,1 @@
-"""New pipeline, one layer at a time (docs/piano.md). Layer 1: scanner."""
+"""New pipeline, one brick at a time (ADR 0030): walk, read, changes, frame, card."""

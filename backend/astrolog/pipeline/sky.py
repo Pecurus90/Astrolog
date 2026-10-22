@@ -45,7 +45,7 @@ def _solve_centre(values: dict[str, Value]) -> tuple[float, float] | None:
     det = cd11 * cd22 - cd12 * cd21
     if not math.isfinite(det) or det == 0:
         return None
-    # reference pixel inside solved image (archive: 583 of 583); outside: degenerate solve
+    # owner's rule, no WCS convention: reference inside solved image (archive: 583 of 583)
     if not (0.5 <= px <= width + 0.5 and 0.5 <= py <= height + 0.5):  # noqa: PLR2004
         return None
     dx, dy = (width + 1) / 2 - px, (height + 1) / 2 - py  # FITS pixels count from 1
