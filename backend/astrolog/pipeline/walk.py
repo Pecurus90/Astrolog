@@ -77,10 +77,22 @@ def _apple_double(name: str) -> bool:
     return name.startswith("._")
 
 
+# Bins and snapshots that carry no dot nor attribute (NAS over Docker, Windows disk on Linux):
+# by documented name, owner's exception to ADR 0031. Bin holds deleted frames, snapshot copies.
+SERVICE_FOLDERS = frozenset({
+    "#recycle",  # Synology KB, How do I recover files deleted from Synology NAS
+    "#snapshot",  # Synology KB, Snapshot Replication: '#snapshot folders of the shared folder'
+    "@recycle",  # QNAP QTS docs, Network Recycle Bin
+    "@recently-snapshot",  # QNAP FAQ, How to Hide the @Recently-Snapshot Folder
+    "lost+found",  # e2fsprogs mklost+found(8): root of each ext2/3/4 file system
+    "$recycle.bin",  # Microsoft Learn, Recycle Bin is corrupted: root of each drive
+})  # fmt: skip
+
+
 def _hidden(entry: os.DirEntry[str]) -> bool:
     """Trash and service folders hidden on all three systems; trash holds frames user DELETED.
-    Property, not name list; root user picks never passes here."""
-    if entry.name.startswith("."):
+    Property first; NAS ones by documented name. Root user picks never passes here."""
+    if entry.name.startswith(".") or entry.name.casefold() in SERVICE_FOLDERS:
         return True
     if PLATFORM != "win32":  # attribute exists only there; elsewhere it costs an lstat per folder
         return False

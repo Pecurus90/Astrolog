@@ -118,6 +118,22 @@ def test_the_mac_twin_files_are_not_collected(tmp_path):
     assert names(found(root)) == {"M42.fits", "deep.fit"}
 
 
+@pytest.mark.parametrize(
+    "service",
+    ["#recycle", "#snapshot", "@Recycle", "@Recently-Snapshot", "lost+found", "$RECYCLE.BIN"],
+)
+def test_nas_bins_and_snapshots_stay_out_on_every_system(tmp_path, monkeypatch, service):
+    """Cestini e istantanee dei NAS, visti da Docker/Linux: niente punto ne' attributo.
+    Prima: pose cancellate vive, istantanee contate come copie (eccezione ADR 0031)."""
+    monkeypatch.setattr(walk, "PLATFORM", "linux")
+    root = str(tmp_path)
+    _touch(root, "notte", "buona.fits")
+    _touch(root, service, "notte", "cancellata.fits")
+    result = walk_dir(root)
+    assert names(result.found) == {"buona.fits"}
+    assert names(result.hidden) == {service}
+
+
 def test_hidden_folders_are_not_walked_so_the_bin_stays_out(tmp_path, monkeypatch):
     """Cestino = pose cancellate. Nascosto per proprieta' (punto, attributo Windows), non per nome;
     attributo finto: su Mac e Linux non esiste. Cartelle saltate si nominano."""

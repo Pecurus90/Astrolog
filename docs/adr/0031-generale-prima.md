@@ -39,3 +39,10 @@ e un errore che non si vede.
   Codice in `pipeline/filters.py`.
 - **Camere** (Marco, 22/10/2026): `CAMERAID` non distingue niente, e' la porta USB (6 valori per
   una camera sola nell'archivio di prova). L'unione si propone a sensore identico e si conferma.
+- **Eccezione: cartelle di servizio dei NAS** (Marco, 22/10/2026, terzo audit): cestini e
+  istantanee senza punto ne' attributo (`#recycle`, `#snapshot`, `@Recycle`, `@Recently-Snapshot`,
+  `lost+found`, `$Recycle.Bin`) si riconoscono per nome, ognuno con la fonte del produttore
+  (`pipeline/walk.py`). Senza, su un NAS una posa cancellata resterebbe viva.
+- **Filtro con nome standard e larghezza** (Marco, 22/10/2026): 'Ha' scritto nel file e' H-alfa
+  subito, senza domanda; in Attrezzatura si potra' dargli dopo banda e larghezza (3 nm, 7 nm). Due
+  H-alfa scritti entrambi 'Ha': il nome non li distingue, si chiede per produzione (parte 2).
