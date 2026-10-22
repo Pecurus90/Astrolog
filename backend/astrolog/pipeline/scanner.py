@@ -45,6 +45,9 @@ ASIAIR_KEYS = frozenset({
     "IMAGEW", "IMAGEH",
 })  # fmt: skip
 
+# FITS 4.0 sec. 4.1.2.1 keyword; HIERARCH name: same words, blank-separated.
+_KEY = re.compile(r"[A-Z0-9_-]{1,8}")
+_HIERARCH_NAME = re.compile(r"[A-Z0-9_-]+( +[A-Z0-9_-]+)*")
 # FITS 4.0 sec. 4.2.3-4.2.4: Python also takes NaN, inf, 1_000; FITS does not.
 _INTEGER = re.compile(r"[+-]?\d+")
 _REAL = re.compile(r"[+-]?(\d+\.?\d*|\.\d+)([EeD][+-]?\d+)?")  # lower e: Python read it already
@@ -149,12 +152,13 @@ def _parse(images: list[str]) -> dict[str, Value]:
 
 
 def _key_and_field(image: str) -> tuple[str | None, str]:
-    """Keyword and value field of card; None for commentary and valueless cards."""
+    """Keyword and value field of card; None for commentary, valueless or malformed key."""
     key = image[:8].rstrip()
     if key == "HIERARCH" and "=" in image:
         name, field = image[9:].split("=", 1)
-        return name.strip(), field
-    if key in _COMMENTARY or image[8:10] != "= ":
+        name = name.strip()
+        return (name, field) if _HIERARCH_NAME.fullmatch(name) else (None, "")
+    if key in _COMMENTARY or image[8:10] != "= " or not _KEY.fullmatch(key):
         return None, ""
     return key, image[10:]
 

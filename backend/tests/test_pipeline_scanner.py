@@ -235,6 +235,18 @@ def test_a_hierarch_key_is_kept_and_reported(tmp_path):
     assert "ESO DET" in got.unknown
 
 
+@pytest.mark.parametrize(
+    "card",
+    ["        = 5", "OB\x01ECT  = 'x'", "ob ject = 'x'", "HIERARCH  = 5", "HIERARCH E\x7fSO = 5"],
+)
+def test_a_key_outside_the_fits_grammar_is_not_a_key(card, tmp_path):
+    """FITS 4.0 sez. 4.1.2.1: A-Z, 0-9, '-', '_', niente spazi dentro. Archivio vero: 16.136 file,
+    nessuna chiave fuori."""
+    got = scan_file(_fits(tmp_path / "k.fits", [*_NINA_HEAD, card]))
+    assert isinstance(got, Extracted)
+    assert set(got.values) == {line[:8].strip() for line in _NINA_HEAD}
+
+
 def test_accented_letters_written_by_nina_are_kept(tmp_path):
     got = scan_file(_fits(tmp_path / "neb.fits", [*_NINA_HEAD, "OBJECT  = 'Nébuleuse'"]))
     assert isinstance(got, Extracted)
