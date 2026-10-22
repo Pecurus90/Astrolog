@@ -10,7 +10,7 @@ import pytest
 
 from astrolog.pipeline import walk
 from astrolog.pipeline.walk import long_path, walk_dir
-from conftest import ScanFinta, VoceFinta, fake_entries, unreadable_dir
+from conftest import ScanFinta, VoceFinta, breaking_dir, fake_entries, unreadable_dir
 
 
 def _touch(root, *parts):
@@ -295,20 +295,7 @@ def test_a_folder_that_breaks_while_listed_is_unreadable_and_the_walk_goes_on(
     _touch(root, "sub", "one.fits")
     _touch(root, "sub", "two.fits")
     sub = os.path.join(root, "sub")
-    real = os.scandir
-
-    class Breaks(ScanFinta):
-        def __iter__(self):
-            yield self[0]
-            raise OSError(64, "The specified network name is no longer available")
-
-    def fake(p):
-        with real(p) as entries:
-            listed = list(entries)
-        breaking = os.path.normpath(str(p)) == os.path.normpath(sub)
-        return Breaks(listed) if breaking else ScanFinta(listed)
-
-    monkeypatch.setattr(walk.os, "scandir", fake)
+    breaking_dir(monkeypatch, walk, sub)
     result = walk_dir(root)
     assert "a.fits" in names(result.found)
     assert [os.path.normpath(u) for u in result.unreadable] == [os.path.normpath(sub)]

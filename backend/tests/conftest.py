@@ -471,6 +471,24 @@ def unreadable_dir(monkeypatch, module, folder):
     monkeypatch.setattr(module.os, "scandir", fake)
 
 
+def breaking_dir(monkeypatch, module, folder):
+    """`folder` si apre, da' la prima voce e poi cade (NAS perso, Windows errore 64)."""
+    real = os.scandir
+
+    class Breaks(ScanFinta):
+        def __iter__(self):
+            yield self[0]
+            raise OSError(64, "The specified network name is no longer available")
+
+    def fake(p):
+        with real(p) as entries:
+            listed = list(entries)
+        breaking = os.path.normpath(str(p)) == os.path.normpath(str(folder))
+        return Breaks(listed) if breaking else ScanFinta(listed)
+
+    monkeypatch.setattr(module.os, "scandir", fake)
+
+
 class ScanFinta(list):
     """Cio' che `os.scandir` restituisce: un iteratore che si CHIUDE, come gestore di contesto e
     con `close()`. Serve ai test che fingono una voce -- un collegamento, una cartella nascosta,

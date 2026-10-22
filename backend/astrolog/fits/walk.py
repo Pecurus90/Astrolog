@@ -7,6 +7,7 @@ import re
 import stat
 import sys
 import time
+from collections.abc import Iterable
 from enum import StrEnum
 
 FITS_EXTENSION_RE = re.compile(r"\.(fits|fit)$", re.IGNORECASE | re.ASCII)
@@ -113,6 +114,34 @@ def subfolders(path: str) -> list[str]:
         return sorted(e.name for e in scan if _kind(e) == EntryKind.WALKED)
 
 
+def _list_folder(
+    current: str,
+    scan: Iterable[os.DirEntry[str]],
+    folders_by_kind: dict[EntryKind, list[str]],
+    found: list[str],
+    online_only: list[str],
+) -> None:
+    """Sorts one folder's entries into the lists."""
+    fits_here: set[str] = set()
+    stubs: list[str] = []
+    for entry in scan:
+        full = os.path.join(current, entry.name)
+        kind = _kind(entry)
+        if kind != EntryKind.FILE:
+            folders_by_kind[kind].append(full)
+        elif _apple_double(entry.name):
+            continue  # a placeholder's twin too: it is not one more file
+        elif FITS_EXTENSION_RE.search(entry.name):
+            fits_here.add(entry.name.casefold())
+            (online_only if _online_only(entry) else found).append(full)
+        elif stub := ICLOUD_STUB_RE.match(entry.name):
+            stubs.append(stub.group(1))
+    # a placeholder beside its real file is not a second file: that one is on disk
+    online_only.extend(
+        os.path.join(current, name) for name in stubs if name.casefold() not in fits_here
+    )
+
+
 def walk_dir(  # noqa: PLR0913
     root: str,
     found: list[str] | None = None,
@@ -140,29 +169,18 @@ def walk_dir(  # noqa: PLR0913
         except OSError:
             unreadable.append(current)
             continue
-        subdirs, fits_here, stubs = [], set(), []
+        subdirs: list[str] = []
         folders_by_kind = {
             EntryKind.LINKED: linked,
             EntryKind.HIDDEN: hidden,
             EntryKind.WALKED: subdirs,
         }
-        with scan:
-            for entry in scan:
-                full = os.path.join(current, entry.name)
-                kind = _kind(entry)
-                if kind != EntryKind.FILE:
-                    folders_by_kind[kind].append(full)
-                elif _apple_double(entry.name):
-                    continue  # a placeholder's twin too: it is not one more file
-                elif FITS_EXTENSION_RE.search(entry.name):
-                    fits_here.add(entry.name.casefold())
-                    (online_only if _online_only(entry) else found).append(full)
-                elif stub := ICLOUD_STUB_RE.match(entry.name):
-                    stubs.append(stub.group(1))
-        # a placeholder beside its real file is not a second file: that one is on disk
-        online_only.extend(
-            os.path.join(current, name) for name in stubs if name.casefold() not in fits_here
-        )
+        try:  # listing can break midway (NAS gone): folder not answering, its frames not missing
+            with scan:
+                _list_folder(current, scan, folders_by_kind, found, online_only)
+        except OSError:
+            unreadable.append(current)
+            continue
         stack.extend(subdirs)
     for items in (found, hidden, online_only, linked):
         items.sort()

@@ -15,6 +15,7 @@ from conftest import (
     ScanFinta,
     VoceAvvolta,
     VoceFinta,
+    breaking_dir,
     fake_entries,
     unreadable_dir,
 )
@@ -350,6 +351,21 @@ def test_unreadable_subfolder_is_reported_not_swallowed(tmp_path, monkeypatch):
     assert "a.fits" in names(found) and "deep.fits" not in names(found)
     assert len(unreadable) == 1 and os.path.normpath(unreadable[0]).endswith("sub")
     assert "a.fits" in names(walk_dir(root))  # senza lista: tollerata, non un crash
+
+
+def test_a_folder_that_breaks_while_listed_is_unreadable_and_the_walk_goes_on(
+    tmp_path, monkeypatch
+):
+    """NAS che cade a meta' elenco: prima la scansione falliva tutta."""
+    root = str(tmp_path)
+    _touch(root, "a.fits")
+    _touch(root, "sub", "one.fits")
+    _touch(root, "sub", "two.fits")
+    sub = os.path.join(root, "sub")
+    breaking_dir(monkeypatch, walk, sub)
+    unreadable = []
+    assert "a.fits" in names(walk_dir(root, unreadable=unreadable))
+    assert [os.path.normpath(u) for u in unreadable] == [os.path.normpath(sub)]
 
 
 def test_deep_tree_does_not_recurse(tmp_path):
