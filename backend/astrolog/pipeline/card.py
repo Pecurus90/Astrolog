@@ -100,16 +100,34 @@ def exposure_s(values: dict[str, Value]) -> float | None:
     return _number(values.get("EXPTIME"), at_least=0)
 
 
+def _name(written: Value | None) -> str | None:
+    return written.strip() or None if isinstance(written, str) else None
+
+
+def _positive(written: Value | None) -> float | None:
+    """-0.0 and 0 too: unknown."""
+    number = _number(written, at_least=0)
+    return number if number else None
+
+
 def camera(values: dict[str, Value]) -> str | None:
     """INSTRUME as written. CAMERAID no: USB path, changes with port."""
-    written = values.get("INSTRUME")
-    return written.strip() or None if isinstance(written, str) else None
+    return _name(values.get("INSTRUME"))
+
+
+def optics(program: Program, values: dict[str, Value]) -> str | None:
+    """TELESCOP as written (SBIG). ASIAIR writes mount there: not known."""
+    return None if program is Program.ASIAIR else _name(values.get("TELESCOP"))
+
+
+def focal_mm(values: dict[str, Value]) -> float | None:
+    """Hint on both: N.I.N.A. from profile, ASIAIR from its solve (varies by 1-3 mm)."""
+    return _positive(values.get("FOCALLEN"))
 
 
 def pixel_um(values: dict[str, Value]) -> float | None:
     """XPIXSZ as written, binning included: physical pixel is XPIXSZ / XBINNING."""
-    written = _number(values.get("XPIXSZ"), at_least=0)
-    return written if written else None
+    return _positive(values.get("XPIXSZ"))
 
 
 def bayer(program: Program, values: dict[str, Value]) -> bool | None:
@@ -149,6 +167,8 @@ class Card:
     offset: int | None
     ccd_temp_c: float | None
     set_temp_c: float | None
+    optics: str | None
+    focal_mm: float | None
 
 
 def read_card(program: Program, values: dict[str, Value]) -> Card:
@@ -169,4 +189,6 @@ def read_card(program: Program, values: dict[str, Value]) -> Card:
         offset=_count(values.get("OFFSET"), 0),
         ccd_temp_c=_number(values.get("CCD-TEMP")),
         set_temp_c=_number(values.get("SET-TEMP")),
+        optics=optics(program, values),
+        focal_mm=focal_mm(values),
     )

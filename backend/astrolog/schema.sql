@@ -936,5 +936,8 @@ CREATE TABLE pipeline_cards (
   iso        INTEGER CHECK (iso > 0),
   offset     INTEGER CHECK (offset >= 0),
   ccd_temp_c REAL,
-  set_temp_c REAL
+  set_temp_c REAL,
+  -- ottica come scritta; focale indizio, varia di mm: mai confronto esatto
+  optics     TEXT CHECK (optics <> ''),
+  focal_mm   REAL CHECK (focal_mm > 0)
 ) STRICT;

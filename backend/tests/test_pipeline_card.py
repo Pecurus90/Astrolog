@@ -229,6 +229,8 @@ def test_the_mosaic_is_known_only_where_the_program_says(program, values, bayer)
         ("CCD-TEMP", "ccd_temp_c", [True, "-10"]),
         ("SET-TEMP", "set_temp_c", [False, "-10"]),
         ("INSTRUME", "camera", ["", "   ", 3]),
+        ("TELESCOP", "optics", ["", "   ", 3]),
+        ("XPIXSZ", "pixel_um", [-0.0]),
     ],
 )
 def test_a_value_not_written_as_its_kind_is_unknown(key, field, bad):
@@ -244,6 +246,35 @@ def test_an_integer_past_sqlite_is_unknown_not_a_failed_scan(key):
 
 
 _FIELD = {"GAIN": "gain", "OFFSET": "offset", "ISO": "iso", "NAXIS1": "width", "XBINNING": "bin_x"}
+
+
+@pytest.mark.parametrize(
+    ("name", "program", "optics", "focal"),
+    [
+        ("nina.txt", NINA, "Askar 103Apo", 560.0),
+        ("asiair.txt", ASIAIR, None, 560.0),  # ASIAIR TELESCOP: the mount
+        ("asiair_asi2600.txt", ASIAIR, None, 1004.0),
+        ("asiair_am3.txt", ASIAIR, None, 335.0),
+    ],
+)
+def test_the_real_optics_are_read(name, program, optics, focal, tmp_path):
+    card = read_card(program, _values(name, tmp_path))
+    assert (card.optics, card.focal_mm) == (optics, focal)
+
+
+def test_asiair_telescop_is_the_mount_never_the_optics():
+    for mount in ("EQMod Mount", "ZWO AM3 ", "Askar 103Apo"):
+        assert read_card(ASIAIR, {"TELESCOP": mount}).optics is None
+    assert read_card(NINA, {"TELESCOP": " Askar 103Apo "}).optics == "Askar 103Apo"
+
+
+@pytest.mark.parametrize("bad", [0, -0.0, -560.0, True, "560", math.inf])
+def test_a_focal_not_a_positive_number_is_unknown(bad):
+    assert read_card(NINA, {"FOCALLEN": bad}).focal_mm is None
+
+
+def test_a_float32_focal_loses_its_tail():
+    assert read_card(NINA, {"FOCALLEN": 335.299987792969}).focal_mm == 335.3
 
 
 def test_iso_written_as_number_or_digits_is_read():
