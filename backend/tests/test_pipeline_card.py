@@ -392,6 +392,34 @@ def test_calibration_frames_keep_where_the_mount_was():
     assert card.pointing_source is PointingSource.MOUNT
 
 
+@pytest.mark.parametrize(
+    ("written", "name"),
+    [
+        (" vdB 152 ", "vdB 152"),
+        ("IC 405 Pannello 2", "IC 405 Pannello 2"),  # mosaic panel: grouped by sky, part 2
+        ("Targets", "Targets"),  # near a placeholder: exact match only
+        ("", None),
+        ("   ", None),
+        (3, None),
+    ],
+)
+def test_the_object_is_the_name_as_written(written, name):
+    assert read_card(NINA, {"OBJECT": written}).object_name == name
+
+
+@pytest.mark.parametrize("placeholder", ["Target", "target ", "FlatWizard", "Snapshot"])
+def test_a_nina_placeholder_is_no_object(placeholder):
+    """SimpleSequenceVM.cs 'Target', FlatWizardVM.cs, AnchorableSnapshotVM.cs: nomi di N.I.N.A."""
+    assert read_card(NINA, {"OBJECT": placeholder}).object_name is None
+    assert read_card(ASIAIR, {"OBJECT": placeholder}).object_name == placeholder.strip()
+
+
+def test_a_calibration_keeps_its_object():
+    """Flat di sequenza porta nome del bersaglio: serve ad abbinarlo."""
+    assert read_card(NINA, {"IMAGETYP": "FLAT", "OBJECT": "IC 405"}).object_name == "IC 405"
+    assert read_card(NINA, {"IMAGETYP": "FLAT", "OBJECT": "FlatWizard"}).object_name is None
+
+
 def test_iso_written_as_number_or_digits_is_read():
     assert read_card(ASIAIR, {"ISO": " 1600 "}).iso == 1600
     assert read_card(ASIAIR, {"ISO": 800}).iso == 800

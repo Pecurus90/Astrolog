@@ -946,6 +946,8 @@ CREATE TABLE pipeline_cards (
   pointing_ra_deg  REAL CHECK (pointing_ra_deg >= 0 AND pointing_ra_deg < 360),
   pointing_dec_deg REAL CHECK (pointing_dec_deg BETWEEN -90 AND 90),
   pointing_source  TEXT CHECK (pointing_source IN ('solve', 'mount', 'target')),
+  -- oggetto come scritto, indizio; NULL: non scritto o segnaposto di N.I.N.A.
+  object_name TEXT CHECK (object_name <> ''),
   CHECK ((pointing_ra_deg IS NULL) = (pointing_dec_deg IS NULL)
     AND (pointing_ra_deg IS NULL) = (pointing_source IS NULL))
 ) STRICT;

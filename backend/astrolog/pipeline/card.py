@@ -38,6 +38,8 @@ _WRITTEN = {
     "darkflat": FrameType.DARK,
 }
 _SNAPSHOT_NAME = "snapshot"  # N.I.N.A. default target of a snapshot (AnchorableSnapshotVM.cs)
+# N.I.N.A. default names, fixed not translated: SimpleSequenceVM.cs, FlatWizardVM.cs. No object.
+_PLACEHOLDERS = frozenset({_SNAPSHOT_NAME, "target", "flatwizard"})
 
 
 def _word(value: Value | None) -> str | None:
@@ -122,6 +124,14 @@ def camera(values: dict[str, Value]) -> str | None:
 def optics(program: Program, values: dict[str, Value]) -> str | None:
     """TELESCOP as written (SBIG). ASIAIR writes mount there: not known."""
     return None if program is Program.ASIAIR else _name(values.get("TELESCOP"))
+
+
+def object_name(program: Program, values: dict[str, Value]) -> str | None:
+    """OBJECT as written, every frame type. Mosaic panel kept whole: grouped by sky later."""
+    name = _name(values.get("OBJECT"))
+    if program is Program.NINA and _word(name) in _PLACEHOLDERS:
+        return None
+    return name
 
 
 def focal_mm(values: dict[str, Value]) -> float | None:
@@ -268,6 +278,7 @@ class Card:
     pointing_ra_deg: float | None  # J2000, every frame type: user filters by type
     pointing_dec_deg: float | None
     pointing_source: PointingSource | None
+    object_name: str | None  # hint: sky and catalogue confirm
 
 
 def read_card(program: Program, values: dict[str, Value]) -> Card:
@@ -295,4 +306,5 @@ def read_card(program: Program, values: dict[str, Value]) -> Card:
         pointing_ra_deg=ra,
         pointing_dec_deg=dec,
         pointing_source=source,
+        object_name=object_name(program, values),
     )
