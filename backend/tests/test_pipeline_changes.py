@@ -369,6 +369,28 @@ def test_the_same_folder_through_a_link_is_the_same_root(conn, tmp_path):
     assert add_root(conn, tmp_path / "shortcut", NOW) == add_root(conn, tmp_path / "archive", NOW)
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="\\\\?\\ and admin shares: Windows")
+def test_the_same_folder_written_as_long_path_or_share_is_the_same_root(conn, tmp_path):
+    """Prima: forma lunga, condivisione, UNC lunga = radici nuove, file contati 4 volte."""
+    (tmp_path / "archive" / "night").mkdir(parents=True)
+    plain = str(tmp_path / "archive")
+    drive, rest = os.path.splitdrive(plain)
+    share = f"\\\\localhost\\{drive[0]}$" + rest
+    first = add_root(conn, plain, NOW)
+    for spelling in ("\\\\?\\" + plain, share, "\\\\?\\UNC" + share[1:]):
+        assert add_root(conn, spelling, NOW) == first, spelling
+    with pytest.raises(RootOverlapError):
+        add_root(conn, "\\\\?\\" + plain + "\\night", NOW)
+
+
+def test_a_renamed_root_folder_added_again_is_a_new_root(conn, tmp_path):
+    """Rinominata, tiene il suo id sul disco: non e' piu' la radice salvata, che ora manca."""
+    (tmp_path / "Astro").mkdir()
+    first = add_root(conn, tmp_path / "Astro", NOW)
+    (tmp_path / "Astro").rename(tmp_path / "Astro2026")
+    assert add_root(conn, tmp_path / "Astro2026", NOW) != first
+
+
 def test_a_sibling_with_a_common_prefix_is_not_inside(conn, tmp_path):
     (tmp_path / "archive").mkdir()
     (tmp_path / "archive2").mkdir()

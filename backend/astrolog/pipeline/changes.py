@@ -72,27 +72,66 @@ def _inside(child: str, parent: str) -> bool:
     return child.startswith(parent if parent.endswith(os.sep) else parent + os.sep)
 
 
+_LONG = "\\\\?\\"
+
+
+def _plain(path: str) -> str:
+    """Windows `\\\\?\\` form is same path: `\\\\?\\UNC\\srv` is `\\\\srv` (Maximum Path Length)."""
+    if path.startswith(_LONG + "UNC\\"):
+        return "\\" + path[len(_LONG) + 3 :]
+    return path.removeprefix(_LONG)
+
+
+def _identity(path: str) -> tuple[int, int] | None:
+    """Volume and folder id from disk: same in every spelling (letter, share, `\\\\?\\`)."""
+    st = os.stat(long_path(path))
+    return (st.st_dev, st.st_ino) if st.st_ino else None
+
+
+def _still(stored: str, path: str) -> bool:
+    """Stored root path is still this folder; only asked when ids match. Not answering: no."""
+    try:
+        return os.path.samefile(long_path(stored), long_path(path))
+    except OSError:
+        return False
+
+
 def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -> int:
     """Existing folder only. Same folder written another way: same root; inside or around one
-    (written or real key): RootOverlapError. Other roots' disks never touched: keys stored."""
-    absolute = os.path.normpath(os.path.abspath(path))
+    (written or real key): RootOverlapError. Other roots' disks touched only when ids match."""
+    absolute = os.path.normpath(os.path.abspath(_plain(os.fspath(path))))
     if not os.path.isdir(long_path(absolute)):
         raise NotADirectoryError(absolute)
     written, real = _keys(absolute)
+    identity = _identity(absolute)
     with transaction(conn, immediate=True):
-        for row in conn.execute("SELECT id, path, written_key, real_key FROM pipeline_roots"):
-            if written == row["written_key"] or real == row["real_key"]:
-                return int(row["id"])
-            for mine, theirs in ((written, row["written_key"]), (real, row["real_key"])):
-                if _inside(mine, theirs) or _inside(theirs, mine):
-                    raise RootOverlapError(row["path"], inside=_inside(mine, theirs))
+        same = _same_root(conn, written, real, identity)
+        if same is not None:
+            return same
         return inserted_id(
             conn.execute(
-                "INSERT INTO pipeline_roots (path, written_key, real_key, created_at)"
-                " VALUES (?, ?, ?, ?)",
-                (absolute, written, real, now),
+                "INSERT INTO pipeline_roots"
+                " (path, written_key, real_key, device, inode, created_at)"
+                " VALUES (?, ?, ?, ?, ?, ?)",
+                (absolute, written, real, *(identity or (None, None)), now),
             )
         )
+
+
+def _same_root(
+    conn: sqlite3.Connection, written: str, real: str, identity: tuple[int, int] | None
+) -> int | None:
+    """Id of root that is this folder; one inside or around it: RootOverlapError."""
+    for row in conn.execute("SELECT * FROM pipeline_roots"):
+        if written == row["written_key"] or real == row["real_key"]:
+            return int(row["id"])
+        # renamed or moved folder keeps its id: confirm stored path is still it
+        if identity == (row["device"], row["inode"]) and _still(row["path"], written):
+            return int(row["id"])
+        for mine, theirs in ((written, row["written_key"]), (real, row["real_key"])):
+            if _inside(mine, theirs) or _inside(theirs, mine):
+                raise RootOverlapError(row["path"], inside=_inside(mine, theirs))
+    return None
 
 
 def _rel(path: str, root: str) -> str:

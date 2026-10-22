@@ -873,6 +873,10 @@ CREATE TABLE pipeline_roots (
   -- chiavi di confronto, scritte all'aggiunta: dentro/intorno senza toccare dischi altrui
   written_key TEXT NOT NULL UNIQUE,  -- percorso come scritto
   real_key    TEXT NOT NULL UNIQUE,  -- collegamenti risolti
+  -- volume e cartella dal disco (os.stat): stessa cartella scritta in ogni forma. NULL: non dati.
+  -- Non unici: rinominata, la cartella tiene l'id; vale la riga il cui percorso e' ancora lei
+  device      INTEGER,
+  inode       INTEGER,
   created_at  TEXT NOT NULL
 ) STRICT;
 
