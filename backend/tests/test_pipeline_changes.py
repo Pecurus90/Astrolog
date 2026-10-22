@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from astrolog.pipeline.changes import RootOverlapError, add_root
-from astrolog.pipeline.frames import scan_root
+from astrolog.pipeline.scan import scan_root
 
 NOW = "2026-10-22T20:00:00+00:00"
 LATER = "2026-10-23T20:00:00+00:00"

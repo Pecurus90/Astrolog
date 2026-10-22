@@ -2,14 +2,13 @@
 
 import math
 import re
-from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import BinaryIO
 
 from .fingerprint import BLOCK, CARD, frame_identity
-from .walk import long_path, walk_dir
+from .walk import long_path
 
 MAX_HEADER_BLOCKS = 1000
 _COMMENTARY = frozenset({"COMMENT", "HISTORY"})  # FITS 4.0 4.4.2.4 free text; format notes, dropped
@@ -72,9 +71,6 @@ class Skip(StrEnum):
     NOT_SUPPORTED = "not_supported"
     REWRITTEN = "rewritten"
     UNREADABLE = "unreadable"
-    UNREACHABLE = "unreachable"  # folder not opening, or link with target gone
-    HIDDEN = "hidden"  # trash bins, service folders
-    ONLINE_ONLY = "online_only"  # cloud placeholder: opening downloads it
     INCOMPLETE = "incomplete"  # shorter than header says: copy still running or broken
 
 
@@ -252,16 +248,3 @@ def scan_file(path: Path) -> Extracted | Skipped:
     compressed = cards.get("ZIMAGE") is True
     unknown = frozenset(k for k in cards if not _writes(program, k, compressed))
     return Extracted(path, program, cards, unknown, identity.fingerprint)
-
-
-def scan(root: Path) -> Iterator[Extracted | Skipped]:
-    """Every FITS walk finds, read; plus what walk left out, each with its reason."""
-    walk = walk_dir(str(root))
-    for paths, reason in (
-        (walk.unreadable, Skip.UNREACHABLE),
-        (walk.hidden, Skip.HIDDEN),
-        (walk.online_only, Skip.ONLINE_ONLY),
-    ):
-        yield from (Skipped(Path(p), reason) for p in paths)
-    for path in walk.found:
-        yield scan_file(Path(path))

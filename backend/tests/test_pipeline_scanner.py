@@ -11,7 +11,10 @@ from typing import Any
 
 import pytest
 
-from astrolog.pipeline.scanner import Extracted, Program, Skip, Skipped, scan, scan_file
+from astrolog.pipeline.changes import add_root
+from astrolog.pipeline.scan import scan_root
+from astrolog.pipeline.scanner import Extracted, Program, Skip, Skipped, scan_file
+from test_pipeline_scan import NOW
 
 CORPUS = Path(__file__).with_name("header")
 
@@ -60,18 +63,19 @@ def _corpus(name: str) -> list[str]:
     ]
 
 
-def test_the_scan_reads_through_a_linked_folder_once(tmp_path):
+def test_the_scan_reads_through_a_linked_folder_once(conn, tmp_path):
     real = tmp_path / "real"
     _fits(real / "a.fits", _corpus("nina.txt"))
     root = tmp_path / "root"
     root.mkdir()
     _link(real, root / "acquisitions")
     _link(root, real / "loop")
-    results = list(scan(root))
-    assert [(r.path.name, type(r).__name__) for r in results] == [("a.fits", "Extracted")]
+    result = scan_root(conn, add_root(conn, root, NOW), NOW)
+    assert result.changes.new == ["acquisitions/a.fits"]
+    assert (result.frames, result.skipped) == (1, [])
 
 
-def test_a_file_beyond_260_characters_is_read(tmp_path):
+def test_a_file_beyond_260_characters_is_read(conn, tmp_path):
     from astrolog.pipeline.walk import long_path
 
     deep = str(tmp_path)
@@ -82,16 +86,9 @@ def test_a_file_beyond_260_characters_is_read(tmp_path):
     cards = "".join(line.ljust(80)[:80] for line in lines) + "END".ljust(80)
     with open(long_path(os.path.join(deep, "frame.fits")), "wb") as fh:
         fh.write((cards + " " * (-len(cards) % 2880)).encode("latin-1") + b"\0" * _span(lines))
-    results = list(scan(tmp_path))
-    assert [type(r).__name__ for r in results] == ["Extracted"]
-
-
-def test_what_the_walk_leaves_out_is_skipped_with_its_reason(tmp_path):
-    _fits(tmp_path / "ok.fits", _corpus("nina.txt"))
-    _fits(tmp_path / ".Trashes" / "deleted.fits", _corpus("nina.txt"))
-    _fits(tmp_path / ".M42.fits.icloud", ["SIMPLE  = T"])
-    skipped = {(r.path.name, r.reason) for r in scan(tmp_path) if isinstance(r, Skipped)}
-    assert skipped == {(".Trashes", Skip.HIDDEN), ("M42.fits", Skip.ONLINE_ONLY)}
+    result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    assert len(result.changes.new) == 1
+    assert (result.frames, result.skipped) == (1, [])
 
 
 def test_nina_file_gives_every_nina_key_it_carries(tmp_path):
@@ -168,12 +165,12 @@ _NINA_HEAD = [
 ]
 
 
-def test_a_control_character_in_a_value_does_not_stop_the_scan(tmp_path):
+def test_a_control_character_in_a_value_does_not_stop_the_scan(conn, tmp_path):
     _fits(tmp_path / "a_bad.fits", [*_NINA_HEAD, "OBJECT  = 'M 31\tAndromeda'"])
     _fits(tmp_path / "b_good.fits", _corpus("nina.txt"))
-    results = list(scan(tmp_path))
-    assert [r.path.name for r in results] == ["a_bad.fits", "b_good.fits"]
-    assert all(isinstance(r, Extracted) for r in results)
+    result = scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    assert result.changes.new == ["a_bad.fits", "b_good.fits"]
+    assert (result.frames, result.skipped) == (2, [])
 
 
 def test_a_value_with_a_colon_stays_under_its_own_key(tmp_path):
@@ -427,15 +424,6 @@ def test_a_file_that_cannot_be_opened_is_unreadable(tmp_path):
     assert scan_file(missing) == Skipped(missing, Skip.UNREADABLE)
 
 
-def test_a_folder_that_cannot_be_opened_is_reported(tmp_path):
+def test_a_folder_that_cannot_be_opened_is_reported(conn, tmp_path):
     gone = tmp_path / "unplugged"
-    assert list(scan(gone)) == [Skipped(gone, Skip.UNREACHABLE)]
-
-
-def test_scan_walks_and_reads_everything(tmp_path):
-    _fits(tmp_path / "n.fits", _corpus("nina.txt"))
-    _fits(tmp_path / "sub/a.FIT", _corpus("asiair.txt"))
-    _fits(tmp_path / "x.fits", ["SIMPLE  = T"])
-    results = sorted(scan(tmp_path), key=lambda r: r.path.name)
-    assert [type(r).__name__ for r in results] == ["Extracted", "Extracted", "Skipped"]
-    assert os.fspath(results[0].path).endswith("a.FIT")
+    assert not scan_root(conn, add_root(conn, gone, NOW), NOW).changes.reachable

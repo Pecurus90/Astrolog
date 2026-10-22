@@ -933,7 +933,7 @@ CREATE TABLE pipeline_headers (
 
 -- RILEVATO. Scheda del file: fatti dal solo header (pipeline/card.py). Presente sse header.
 CREATE TABLE pipeline_cards (
-  file_id    INTEGER PRIMARY KEY REFERENCES pipeline_headers (file_id),
+  file_id    INTEGER PRIMARY KEY REFERENCES pipeline_headers (file_id) ON DELETE CASCADE,
   frame_type TEXT NOT NULL
     CHECK (frame_type IN ('light', 'dark', 'flat', 'bias', 'snapshot', 'unknown')),
   -- inizio posa UTC, una forma sola: ordine e uguaglianza sul testo. NULL: non so
@@ -984,10 +984,10 @@ CREATE TABLE pipeline_cards (
   CHECK (NOT (site_lat_deg = 0 AND site_lon_deg = 0))
 ) STRICT;
 
--- DERIVATO. Meteo scritto da N.I.N.A. con una fonte collegata; riga solo se c'e' un valore.
+-- RILEVATO. Meteo scritto da N.I.N.A. con una fonte collegata; riga solo se c'e' un valore.
 -- Unita' CFitsioFITS.cs; intervalli ASCOM ObservingConditions, il resto limiti fisici.
 CREATE TABLE pipeline_conditions (
-  file_id            INTEGER PRIMARY KEY REFERENCES pipeline_headers (file_id),
+  file_id            INTEGER PRIMARY KEY REFERENCES pipeline_headers (file_id) ON DELETE CASCADE,
   ambient_temp_c     REAL,
   humidity_pct       REAL CHECK (humidity_pct BETWEEN 0 AND 100),
   dew_point_c        REAL,
@@ -1031,7 +1031,7 @@ CREATE TABLE pipeline_filter_answers (
   CHECK ((standard IS NULL) <> (filter_name IS NULL))
 ) STRICT;
 
--- DERIVATO da filters.resolve. Nome scritto -> filtro; entrambi NULL: da chiedere.
+-- RILEVATO da filters.resolve. Nome scritto -> filtro; entrambi NULL: da chiedere.
 CREATE TABLE pipeline_filter_spellings (
   written     TEXT PRIMARY KEY,  -- uguale a pipeline_cards.filter: join senza calcolo
   key         TEXT NOT NULL,

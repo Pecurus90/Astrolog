@@ -17,9 +17,9 @@ from astrolog.pipeline.filters import (
     filter_key,
     resolve,
 )
-from astrolog.pipeline.frames import scan_root
+from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.scanner import Program
-from test_pipeline_frames import NOW, _nina
+from test_pipeline_scan import NOW, _nina
 
 _ALL = Path(__file__).parents[1].joinpath("astrolog", "schema.sql").read_text("utf-8")
 SCHEMA = _ALL[_ALL.index("PIPELINE NUOVA") :]

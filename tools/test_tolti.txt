@@ -309,3 +309,5 @@ test_an_entry_that_cannot_be_asked_is_not_taken_for_a_link - pipeline/walk: nien
 test_finds_every_fits_extension_in_any_case_and_nothing_else - lo scanner usa pipeline/walk: le estensioni le prova test_collects_every_fits_extension_and_its_compressed_form_and_ignores_the_rest
 test_follows_a_linked_folder_and_sees_each_folder_once - sostituito da test_the_scan_reads_through_a_linked_folder_once (scanner su pipeline/walk)
 test_finds_compressed_fits - lo scanner usa pipeline/walk: lo prova test_collects_every_fits_extension_and_its_compressed_form_and_ignores_the_rest
+test_what_the_walk_leaves_out_is_skipped_with_its_reason - scanner.scan() tolta (solo test): cio' che il walk lascia fuori lo prova test_a_scan_says_what_the_walk_left_out su scan_root
+test_scan_walks_and_reads_everything - scanner.scan() tolta (solo test): scan_root legge cio' che il walk trova, lo provano i test di test_pipeline_scan.py

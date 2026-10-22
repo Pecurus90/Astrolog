@@ -1,25 +1,18 @@
 """File card: facts read from one header alone, pure (mappa, passo 4). One function per fact."""
 
-import math
 import re
-import struct
-import unicodedata
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any
-
-from astropy.coordinates import FK5, SkyCoord
-from astropy.time import Time
 
 from .fingerprint import frame_size
 from .scanner import Program, Value
+from .sky import PointingSource, pointing
+from .values import as_count, as_name, as_number, as_percent, as_positive
 
 # DATE-OBS as both programs write it: start of exposure, UTC, no zone (FITS 4.0 sec. 9.1.1).
 # fromisoformat alone takes date only (midnight), week dates, compact forms.
 _DATE_OBS = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?")
-_SQLITE_MAX = 2**63 - 1  # largest INTEGER (sqlite.org/datatype3.html)
 
 
 class FrameType(StrEnum):
@@ -91,78 +84,30 @@ def clock_offset_min(values: dict[str, Value]) -> int | None:
 def site(values: dict[str, Value]) -> tuple[float, float] | None:
     """SITELAT/SITELONG degrees, East positive (archive). 0/0: N.I.N.A. factory profile
     (AstrometrySettings.cs), only sea there. Longitude 180 is -180."""
-    lat, lon = _number(values.get("SITELAT")), _number(values.get("SITELONG"))
+    lat, lon = as_number(values.get("SITELAT")), as_number(values.get("SITELONG"))
     if lat is None or lon is None or abs(lat) > 90 or abs(lon) > 180 or lat == lon == 0:  # noqa: PLR2004
         return None
     return lat, -180.0 if lon == 180 else lon  # noqa: PLR2004
 
 
-def _number(written: Value | None, at_least: float = -math.inf) -> float | None:
-    """bool is an int to Python: `T` is not 1. float32 tail cut (_without_float32_tail)."""
-    if isinstance(written, bool) or not isinstance(written, int | float):
-        return None
-    if not math.isfinite(written) or written < at_least:
-        return None
-    return _without_float32_tail(float(written))
-
-
-def _count(written: Value | None, at_least: int) -> int | None:
-    """Past SQLite INTEGER (64 bit): unknown, else whole scan fails."""
-    if isinstance(written, bool) or not isinstance(written, int):
-        return None
-    return written if at_least <= written <= _SQLITE_MAX else None
-
-
-def _without_float32_tail(number: float) -> float:
-    """Driver float32 printed at 15 digits (DBL_DIG): 3.75999999046326 is 3.76.
-    Only when number is that float32; true double untouched."""
-    try:
-        single = struct.unpack("f", struct.pack("f", number))[0]
-    except OverflowError:
-        return number
-    if f"{single:.15g}" != f"{number:.15g}":
-        return number
-    for digits in range(1, 10):  # 9 digits round-trip any float32 (IEEE 754 binary32)
-        short = float(f"{single:.{digits}g}")
-        if struct.unpack("f", struct.pack("f", short))[0] == single:
-            return short
-    return number
-
-
 def exposure_s(values: dict[str, Value]) -> float | None:
     """EXPTIME only: EXPOSURE always equal."""
-    return _number(values.get("EXPTIME"), at_least=0)
-
-
-def _name(written: Value | None) -> str | None:
-    """Stripped, non-empty, no control character (Unicode Cc: NUL, tab): else broken value."""
-    if not isinstance(written, str):
-        return None
-    name = written.strip()
-    if any(unicodedata.category(ch) == "Cc" for ch in name):
-        return None
-    return name or None
-
-
-def _positive(written: Value | None) -> float | None:
-    """-0.0 and 0 too: unknown."""
-    number = _number(written, at_least=0)
-    return number if number else None
+    return as_number(values.get("EXPTIME"), at_least=0)
 
 
 def camera(values: dict[str, Value]) -> str | None:
     """INSTRUME as written. CAMERAID no: USB path, changes with port."""
-    return _name(values.get("INSTRUME"))
+    return as_name(values.get("INSTRUME"))
 
 
 def optics(program: Program, values: dict[str, Value]) -> str | None:
     """TELESCOP as written (SBIG). ASIAIR writes mount there: not known."""
-    return None if program is Program.ASIAIR else _name(values.get("TELESCOP"))
+    return None if program is Program.ASIAIR else as_name(values.get("TELESCOP"))
 
 
 def object_name(program: Program, values: dict[str, Value]) -> str | None:
     """OBJECT as written, every frame type. Mosaic panel kept whole: grouped by sky later."""
-    name = _name(values.get("OBJECT"))
+    name = as_name(values.get("OBJECT"))
     if program is Program.NINA and _word(name) in _PLACEHOLDERS:
         return None
     return name
@@ -170,27 +115,27 @@ def object_name(program: Program, values: dict[str, Value]) -> str | None:
 
 def mount(program: Program, values: dict[str, Value]) -> str | None:
     """ASIAIR writes mount in TELESCOP; N.I.N.A. never names it."""
-    return _name(values.get("TELESCOP")) if program is Program.ASIAIR else None
+    return as_name(values.get("TELESCOP")) if program is Program.ASIAIR else None
 
 
 def focuser_position(values: dict[str, Value]) -> int | None:
     """[step]; N.I.N.A. writes FOCPOS and FOCUSPOS equal, ASIAIR FOCUSPOS only."""
     position = values.get("FOCPOS", values.get("FOCUSPOS"))
-    return _count(position, 0)
+    return as_count(position, 0)
 
 
 def focuser_temp_c(values: dict[str, Value]) -> float | None:
-    return _number(values.get("FOCTEMP", values.get("FOCUSTEM")))
+    return as_number(values.get("FOCTEMP", values.get("FOCUSTEM")))
 
 
 def focal_mm(values: dict[str, Value]) -> float | None:
     """Hint on both: N.I.N.A. from profile, ASIAIR from its solve (varies by 1-3 mm)."""
-    return _positive(values.get("FOCALLEN"))
+    return as_positive(values.get("FOCALLEN"))
 
 
 def pixel_um(values: dict[str, Value]) -> float | None:
     """XPIXSZ as written, binning included: physical pixel is XPIXSZ / XBINNING."""
-    return _positive(values.get("XPIXSZ"))
+    return as_positive(values.get("XPIXSZ"))
 
 
 def bayer(program: Program, values: dict[str, Value]) -> bool | None:
@@ -208,105 +153,7 @@ def iso(values: dict[str, Value]) -> int | None:
     if isinstance(written, str):
         digits = written.strip()
         written = int(digits) if digits.isascii() and digits.isdigit() else None
-    return _count(written, 1)
-
-
-class PointingSource(StrEnum):
-    SOLVE = "solve"  # ASIAIR plate solve, image centre
-    MOUNT = "mount"
-    TARGET = "target"  # N.I.N.A. planned target: may not be where mount went
-
-
-def _sky(ra: Value | None, dec: Value | None) -> tuple[float, float] | None:
-    """Degrees J2000 in range; RA 360 is 0."""
-    ra_deg, dec_deg = _number(ra), _number(dec)
-    if ra_deg is None or dec_deg is None or not 0 <= ra_deg <= 360 or abs(dec_deg) > 90:  # noqa: PLR2004
-        return None
-    return ra_deg % 360, dec_deg
-
-
-def _solve_centre(values: dict[str, Value]) -> tuple[float, float] | None:
-    """Linear TAN at centre of solved image (Calabretta & Greisen 2002, sec. 5.1.3).
-    SIP left out: few pixels, hint only. Solved image may be smaller than saved one."""
-    if not (str(values.get("CTYPE1", "")).startswith("RA---TAN")):
-        return None
-    if not (str(values.get("CTYPE2", "")).startswith("DEC--TAN")):
-        return None
-    keys = ("CRVAL1", "CRVAL2", "CRPIX1", "CRPIX2", "CD1_1", "CD1_2", "CD2_1", "CD2_2")
-    numbers = [n for n in (_number(values.get(k)) for k in keys) if n is not None]
-    width, height = _count(values.get("IMAGEW"), 1), _count(values.get("IMAGEH"), 1)
-    if len(numbers) < len(keys) or width is None or height is None:
-        return None
-    ra0, dec0, px, py, cd11, cd12, cd21, cd22 = numbers
-    det = cd11 * cd22 - cd12 * cd21
-    if not math.isfinite(det) or det == 0:
-        return None
-    # reference pixel inside solved image (archive: 583 of 583); outside: degenerate solve
-    if not (0.5 <= px <= width + 0.5 and 0.5 <= py <= height + 0.5):  # noqa: PLR2004
-        return None
-    dx, dy = (width + 1) / 2 - px, (height + 1) / 2 - py  # FITS pixels count from 1
-    east, north = math.radians(cd11 * dx + cd12 * dy), math.radians(cd21 * dx + cd22 * dy)
-    if not (math.isfinite(east) and math.isfinite(north)):  # overflow: atan2 would fake a place
-        return None
-    ra0, dec0 = math.radians(ra0), math.radians(dec0)
-    across = math.cos(dec0) - north * math.sin(dec0)
-    ra = ra0 + math.atan2(east, across)
-    dec = math.atan2(math.sin(dec0) + north * math.cos(dec0), math.hypot(east, across))
-    return _sky(math.degrees(ra) % 360, math.degrees(dec))
-
-
-def _asiair_mount(values: dict[str, Value]) -> tuple[float, float] | None:
-    """ASIAIR mount is of date (JNow): archive, 1.2' from its solve once precessed, 17.7' not.
-    No date, no precession: not known."""
-    sky, start = _sky(values.get("RA"), values.get("DEC")), start_utc(values)
-    if sky is None or start is None:
-        return None
-    of_date = SkyCoord(*sky, unit="deg", frame=FK5(equinox=Time(start)))
-    j2000: Any = of_date.transform_to(FK5(equinox="J2000"))  # astropy stubs: Any
-    return _sky(float(j2000.ra.deg), float(j2000.dec.deg))
-
-
-def _target(values: dict[str, Value]) -> tuple[float, float] | None:
-    """OBJCTRA 'HH MM SS', OBJCTDEC '+DD MM SS'; both zero: N.I.N.A. placeholder."""
-    ra, dec = _sexagesimal(values.get("OBJCTRA")), _sexagesimal(values.get("OBJCTDEC"))
-    if ra is None or dec is None or ra == dec == 0:
-        return None
-    return _sky(ra * 15, dec)
-
-
-_SEXAGESIMAL = re.compile(r"([+-]?)(\d{1,3}) (\d{1,2}) (\d{1,2}(?:\.\d+)?)")
-
-
-def _sexagesimal(written: Value | None) -> float | None:
-    """Sign on whole value: '-00 30 00' is -0.5."""
-    found = _SEXAGESIMAL.fullmatch(written.strip()) if isinstance(written, str) else None
-    if found is None:
-        return None
-    sign, whole, minutes, seconds = found.groups()
-    if int(minutes) >= 60 or float(seconds) >= 60:  # noqa: PLR2004 - malformed: not a place
-        return None
-    value = int(whole) + int(minutes) / 60 + float(seconds) / 3600
-    return -value if sign == "-" else value
-
-
-def pointing(
-    program: Program, values: dict[str, Value]
-) -> tuple[float, float, PointingSource] | None:
-    """Where frame looks, J2000: solve, then mount, then target; each out of range falls to next.
-    Computed in order, first found wins: mount precession never paid for nothing."""
-    asiair = program is Program.ASIAIR
-    sources: tuple[tuple[PointingSource, Callable[[], tuple[float, float] | None]], ...] = (
-        (PointingSource.SOLVE, lambda: _solve_centre(values) if asiair else None),
-        # N.I.N.A.: J2000, EQUINOX 2000 in every file
-        (PointingSource.MOUNT,
-         lambda: _asiair_mount(values) if asiair else _sky(values.get("RA"), values.get("DEC"))),
-        (PointingSource.TARGET, lambda: _target(values) if program is Program.NINA else None),
-    )  # fmt: skip
-    for source, compute in sources:
-        sky = compute()
-        if sky is not None:
-            return (*sky, source)
-    return None
+    return as_count(written, 1)
 
 
 @dataclass(frozen=True, slots=True)
@@ -364,14 +211,8 @@ class Conditions:
     star_fwhm_arcsec: float | None
 
 
-def _percent(written: Value | None) -> float | None:
-    """ASCOM ObservingConditions: 0.0 - 100.0."""
-    number = _number(written, at_least=0)
-    return number if number is not None and number <= 100 else None  # noqa: PLR2004
-
-
 def _wind_direction(written: Value | None) -> float | None:
-    number = _number(written, at_least=0)
+    number = as_number(written, at_least=0)
     if number is None or number > 360:  # noqa: PLR2004
         return None
     return number % 360
@@ -380,45 +221,46 @@ def _wind_direction(written: Value | None) -> float | None:
 def read_conditions(values: dict[str, Value]) -> Conditions | None:
     """None when header writes none: most files."""
     conditions = Conditions(
-        ambient_temp_c=_number(values.get("AMBTEMP")),
-        humidity_pct=_percent(values.get("HUMIDITY")),
-        dew_point_c=_number(values.get("DEWPOINT")),
-        pressure_hpa=_positive(values.get("PRESSURE")),
-        cloud_cover_pct=_percent(values.get("CLOUDCVR")),
-        wind_kmh=_number(values.get("WINDSPD"), at_least=0),
-        wind_gust_kmh=_number(values.get("WINDGUST"), at_least=0),
+        ambient_temp_c=as_number(values.get("AMBTEMP")),
+        humidity_pct=as_percent(values.get("HUMIDITY")),
+        dew_point_c=as_number(values.get("DEWPOINT")),
+        pressure_hpa=as_positive(values.get("PRESSURE")),
+        cloud_cover_pct=as_percent(values.get("CLOUDCVR")),
+        wind_kmh=as_number(values.get("WINDSPD"), at_least=0),
+        wind_gust_kmh=as_number(values.get("WINDGUST"), at_least=0),
         wind_dir_deg=_wind_direction(values.get("WINDDIR")),
-        sky_quality_mpsas=_number(values.get("MPSAS")),
-        sky_temp_c=_number(values.get("SKYTEMP")),
-        sky_brightness_lux=_number(values.get("SKYBRGHT"), at_least=0),
-        star_fwhm_arcsec=_positive(values.get("STARFWHM")),
+        sky_quality_mpsas=as_number(values.get("MPSAS")),
+        sky_temp_c=as_number(values.get("SKYTEMP")),
+        sky_brightness_lux=as_number(values.get("SKYBRGHT"), at_least=0),
+        star_fwhm_arcsec=as_positive(values.get("STARFWHM")),
     )
     return None if all(getattr(conditions, f) is None for f in conditions.__slots__) else conditions
 
 
 def read_card(program: Program, values: dict[str, Value]) -> Card:
     width, height = frame_size(values)
-    ra, dec, source = pointing(program, values) or (None, None, None)
+    start = start_utc(values)
+    ra, dec, source = pointing(program, values, start) or (None, None, None)
     lat, lon = site(values) or (None, None)
     return Card(
         frame_type=frame_type(program, values),
-        start_utc=start_utc(values),
+        start_utc=start,
         exposure_s=exposure_s(values),
         camera=camera(values),
-        width=_count(width, 1),
-        height=_count(height, 1),
-        bin_x=_count(values.get("XBINNING"), 1),
-        bin_y=_count(values.get("YBINNING"), 1),
+        width=as_count(width, 1),
+        height=as_count(height, 1),
+        bin_x=as_count(values.get("XBINNING"), 1),
+        bin_y=as_count(values.get("YBINNING"), 1),
         pixel_um=pixel_um(values),
         bayer=bayer(program, values),
-        gain=_count(values.get("GAIN"), 0),
+        gain=as_count(values.get("GAIN"), 0),
         iso=iso(values),
-        offset=_count(values.get("OFFSET"), 0),
-        ccd_temp_c=_number(values.get("CCD-TEMP")),
-        set_temp_c=_number(values.get("SET-TEMP")),
+        offset=as_count(values.get("OFFSET"), 0),
+        ccd_temp_c=as_number(values.get("CCD-TEMP")),
+        set_temp_c=as_number(values.get("SET-TEMP")),
         optics=optics(program, values),
         focal_mm=focal_mm(values),
-        filter=_name(values.get("FILTER")),
+        filter=as_name(values.get("FILTER")),
         pointing_ra_deg=ra,
         pointing_dec_deg=dec,
         pointing_source=source,
@@ -426,9 +268,9 @@ def read_card(program: Program, values: dict[str, Value]) -> Card:
         site_lat_deg=lat,
         site_lon_deg=lon,
         clock_offset_min=clock_offset_min(values),
-        filter_wheel=_name(values.get("FWHEEL")),
-        focuser=_name(values.get("FOCNAME")),
-        guide_camera=_name(values.get("GUIDECAM")),
+        filter_wheel=as_name(values.get("FWHEEL")),
+        focuser=as_name(values.get("FOCNAME")),
+        guide_camera=as_name(values.get("GUIDECAM")),
         mount=mount(program, values),
         focuser_position=focuser_position(values),
         focuser_temp_c=focuser_temp_c(values),

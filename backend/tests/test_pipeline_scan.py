@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from astrolog.pipeline import frames
+from astrolog.pipeline import scan
 from astrolog.pipeline.changes import add_root
-from astrolog.pipeline.frames import scan_root
+from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.scanner import Skip, Skipped
 
 NOW = "2026-10-22T20:00:00+00:00"
@@ -104,9 +104,9 @@ def test_an_interrupted_scan_reads_its_files_next_time(conn, tmp_path, monkeypat
     _nina(tmp_path / "a.fits", 1)
     _nina(tmp_path / "b.fits", 2)
     root = add_root(conn, tmp_path, NOW)
-    import astrolog.pipeline.frames as frames
+    import astrolog.pipeline.scan as scan
 
-    real = frames.scan_file
+    real = scan.scan_file
     calls: list[Path] = []
 
     def stops_at_second(path):
@@ -115,10 +115,10 @@ def test_an_interrupted_scan_reads_its_files_next_time(conn, tmp_path, monkeypat
             raise KeyboardInterrupt
         return real(path)
 
-    monkeypatch.setattr(frames, "scan_file", stops_at_second)
+    monkeypatch.setattr(scan, "scan_file", stops_at_second)
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, NOW)
-    monkeypatch.setattr(frames, "scan_file", real)
+    monkeypatch.setattr(scan, "scan_file", real)
     assert scan_root(conn, root, LATER).frames == 2
 
 
@@ -127,7 +127,7 @@ def test_another_connection_writes_while_files_are_read(conn, db_path, tmp_path,
     _nina(tmp_path / "a.fits", 1)
     _nina(tmp_path / "b.fits", 2)
     root = add_root(conn, tmp_path, NOW)
-    real = frames.scan_file
+    real = scan.scan_file
     wrote: list[bool] = []
 
     def other_writes(path):
@@ -141,7 +141,7 @@ def test_another_connection_writes_while_files_are_read(conn, db_path, tmp_path,
         wrote.append(True)
         return real(path)
 
-    monkeypatch.setattr(frames, "scan_file", other_writes)
+    monkeypatch.setattr(scan, "scan_file", other_writes)
     scan_root(conn, root, NOW)
     assert wrote == [True, True]
 
@@ -151,8 +151,8 @@ def test_an_interrupted_scan_keeps_what_it_read(conn, tmp_path, monkeypatch):
     for seed in range(3):
         _nina(tmp_path / f"{seed}.fits", seed)
     root = add_root(conn, tmp_path, NOW)
-    monkeypatch.setattr(frames, "BATCH", 1)
-    real = frames.scan_file
+    monkeypatch.setattr(scan, "BATCH", 1)
+    real = scan.scan_file
     calls: list[str] = []
 
     def stops_at_second(path):
@@ -161,11 +161,11 @@ def test_an_interrupted_scan_keeps_what_it_read(conn, tmp_path, monkeypatch):
             raise KeyboardInterrupt
         return real(path)
 
-    monkeypatch.setattr(frames, "scan_file", stops_at_second)
+    monkeypatch.setattr(scan, "scan_file", stops_at_second)
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, NOW)
     assert _cards(conn) == {"0.fits": "light"}
-    monkeypatch.setattr(frames, "scan_file", real)
+    monkeypatch.setattr(scan, "scan_file", real)
     again = scan_root(conn, root, LATER)
     assert again.changes.to_read == ["1.fits", "2.fits"]
     assert again.frames == 3
@@ -181,11 +181,11 @@ def test_a_move_interrupted_mid_scan_is_still_found_next_time(conn, tmp_path, mo
     def stops(path):
         raise KeyboardInterrupt
 
-    real = frames.scan_file
-    monkeypatch.setattr(frames, "scan_file", stops)
+    real = scan.scan_file
+    monkeypatch.setattr(scan, "scan_file", stops)
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, LATER)
-    monkeypatch.setattr(frames, "scan_file", real)
+    monkeypatch.setattr(scan, "scan_file", real)
     assert scan_root(conn, root, "2026-10-24T20:00:00+00:00").moved == [("a.fits", "b.fits")]
     finished = conn.execute("SELECT finished FROM pipeline_scans ORDER BY id").fetchall()
     assert [r["finished"] for r in finished] == [1, 0, 1]
@@ -198,8 +198,8 @@ def test_a_move_already_saved_when_the_scan_stopped_is_found_next_time(conn, tmp
     scan_root(conn, root, NOW)
     (tmp_path / "a.fits").rename(tmp_path / "b.fits")
     _nina(tmp_path / "c.fits", 2)
-    monkeypatch.setattr(frames, "BATCH", 1)
-    real = frames.scan_file
+    monkeypatch.setattr(scan, "BATCH", 1)
+    real = scan.scan_file
     calls: list[str] = []
 
     def stops_at_second(path):
@@ -208,10 +208,10 @@ def test_a_move_already_saved_when_the_scan_stopped_is_found_next_time(conn, tmp
             raise KeyboardInterrupt
         return real(path)
 
-    monkeypatch.setattr(frames, "scan_file", stops_at_second)
+    monkeypatch.setattr(scan, "scan_file", stops_at_second)
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, LATER)
-    monkeypatch.setattr(frames, "scan_file", real)
+    monkeypatch.setattr(scan, "scan_file", real)
     assert scan_root(conn, root, "2026-10-24T20:00:00+00:00").moved == [("a.fits", "b.fits")]
 
 
@@ -223,8 +223,8 @@ def test_a_move_survives_a_stopped_scan_then_a_silent_root(conn, tmp_path, monke
     scan_root(conn, root, NOW)
     (nas / "a.fits").rename(nas / "b.fits")
     _nina(nas / "c.fits", 2)
-    monkeypatch.setattr(frames, "BATCH", 1)
-    real = frames.scan_file
+    monkeypatch.setattr(scan, "BATCH", 1)
+    real = scan.scan_file
     calls: list[str] = []
 
     def stops_at_second(path):
@@ -233,10 +233,10 @@ def test_a_move_survives_a_stopped_scan_then_a_silent_root(conn, tmp_path, monke
             raise KeyboardInterrupt
         return real(path)
 
-    monkeypatch.setattr(frames, "scan_file", stops_at_second)
+    monkeypatch.setattr(scan, "scan_file", stops_at_second)
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, LATER)
-    monkeypatch.setattr(frames, "scan_file", real)
+    monkeypatch.setattr(scan, "scan_file", real)
     nas.rename(tmp_path / "off")
     assert not scan_root(conn, root, "2026-10-24T20:00:00+00:00").changes.reachable
     (tmp_path / "off").rename(nas)
@@ -259,12 +259,12 @@ def test_an_unchanged_archive_is_not_read_again(conn, tmp_path, monkeypatch):
     _nina(tmp_path / "a.fits", 1)
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
-    import astrolog.pipeline.frames as frames
+    import astrolog.pipeline.scan as scan
 
     def forbidden(_path):
         raise AssertionError("a file was opened")
 
-    monkeypatch.setattr(frames, "scan_file", forbidden)
+    monkeypatch.setattr(scan, "scan_file", forbidden)
     result = scan_root(conn, root, LATER)
     assert result.frames == 1
 
@@ -414,11 +414,11 @@ def test_a_file_that_failed_to_read_is_read_again_next_scan(conn, tmp_path, monk
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     _touch_later(path)
-    real = frames.scan_file
-    monkeypatch.setattr(frames, "scan_file", lambda p: Skipped(p, reason))
+    real = scan.scan_file
+    monkeypatch.setattr(scan, "scan_file", lambda p: Skipped(p, reason))
     scan_root(conn, root, LATER)
     assert _cards(conn) == {}
-    monkeypatch.setattr(frames, "scan_file", real)
+    monkeypatch.setattr(scan, "scan_file", real)
     again = scan_root(conn, root, "2026-10-24T20:00:00+00:00")
     assert again.changes.to_read == ["a.fits"]
     assert _cards(conn) == {"a.fits": "light"}
@@ -441,12 +441,12 @@ def test_the_receipt_keeps_rereads_skips_and_what_was_left_out(conn, tmp_path, m
     _nina(tmp_path / "b.fits", 2, ("PROGRAM = 'Editor 1.9.3'",))
     _nina(tmp_path / ".Trashes" / "deleted.fits", 3)
     root = add_root(conn, tmp_path, NOW)
-    real = frames.scan_file
+    real = scan.scan_file
     monkeypatch.setattr(
-        frames, "scan_file", lambda p: Skipped(p, Skip.UNREADABLE) if p == path else real(p)
+        scan, "scan_file", lambda p: Skipped(p, Skip.UNREADABLE) if p == path else real(p)
     )
     first = scan_root(conn, root, NOW)
-    monkeypatch.setattr(frames, "scan_file", real)
+    monkeypatch.setattr(scan, "scan_file", real)
     second = scan_root(conn, root, LATER)
     assert (first.changes.new, second.changes.reread, second.changes.changed) == (
         ["a.fits", "b.fits"],

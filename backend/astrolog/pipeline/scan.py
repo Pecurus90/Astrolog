@@ -78,7 +78,6 @@ def _store(
     ).fetchone()["id"]
     conn.execute("DELETE FROM pipeline_conditions WHERE file_id = ?", (file_id,))
     if isinstance(got, Skipped):
-        conn.execute("DELETE FROM pipeline_cards WHERE file_id = ?", (file_id,))
         conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
         conn.execute(
             "UPDATE pipeline_files SET frame_id = NULL, skip_reason = ? WHERE id = ?",

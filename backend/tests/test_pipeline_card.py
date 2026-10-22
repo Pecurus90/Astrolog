@@ -18,12 +18,12 @@ from astrolog.pipeline.card import (
     Card,
     Conditions,
     FrameType,
-    PointingSource,
     frame_type,
     read_card,
     read_conditions,
 )
 from astrolog.pipeline.scanner import Program, read_cards
+from astrolog.pipeline.sky import PointingSource
 
 CORPUS = Path(__file__).with_name("header")
 NINA, ASIAIR = Program.NINA, Program.ASIAIR
@@ -331,13 +331,13 @@ def test_the_asiair_mount_is_of_date_and_lands_on_its_solve_once_precessed(name,
 
 def test_a_solved_asiair_frame_never_pays_the_mount_precession(tmp_path, monkeypatch):
     """Vince la soluzione: la precessione (0,67 ms a file) non si calcola per buttarla."""
-    from astrolog.pipeline import card as card_module
+    from astrolog.pipeline import sky
 
-    def forbidden(_values):
+    def forbidden(_values, _start):
         raise AssertionError("mount precessed though the solve wins")
 
     values = _values("asiair_asi2600.txt", tmp_path)
-    monkeypatch.setattr(card_module, "_asiair_mount", forbidden)
+    monkeypatch.setattr(sky, "_asiair_mount", forbidden)
     assert read_card(ASIAIR, values).pointing_source is PointingSource.SOLVE
 
 
