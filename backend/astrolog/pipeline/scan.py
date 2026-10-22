@@ -3,6 +3,7 @@ One frame per fingerprint: copy is duplicate, moved file stays its frame."""
 
 import json
 import sqlite3
+import threading
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from pathlib import Path
@@ -13,7 +14,13 @@ from .changes import Changes, finish_scan, record_changes
 from .filters import resolve
 from .scanner import Extracted, Skipped, scan_file
 
+_ROOTS_GUARD = threading.Lock()
+_RUNNING: dict[int, threading.Lock] = {}  # app is one process: a lock per root
 BATCH = 100  # files saved per transaction: short lock, small loss if stopped
+
+
+class ScanRunningError(RuntimeError):
+    """Same root already scanning in this process: second would mark first's files gone."""
 
 
 @dataclass
@@ -26,6 +33,18 @@ class ScanResult:
 
 
 def scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
+    """One scan per root at a time (ScanRunningError); other roots run side by side."""
+    with _ROOTS_GUARD:
+        running = _RUNNING.setdefault(root_id, threading.Lock())
+    if not running.acquire(blocking=False):
+        raise ScanRunningError(root_id)
+    try:
+        return _scan_root(conn, root_id, now)
+    finally:
+        running.release()
+
+
+def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
     """Files opened outside any transaction, saved per batch: lock held only to write; stopped
     scan keeps saved batches, unread files keep old size and date, so read next time."""
     root = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (root_id,)).fetchone()

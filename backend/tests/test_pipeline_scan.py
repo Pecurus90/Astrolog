@@ -9,9 +9,10 @@ from pathlib import Path
 
 import pytest
 
+from astrolog.db.connect import connect
 from astrolog.pipeline import scan
 from astrolog.pipeline.changes import add_root
-from astrolog.pipeline.scan import scan_root
+from astrolog.pipeline.scan import ScanRunningError, scan_root
 from astrolog.pipeline.scanner import Skip, Skipped
 
 NOW = "2026-10-22T20:00:00+00:00"
@@ -253,6 +254,64 @@ def test_a_file_changed_in_place_is_not_a_move(conn, tmp_path):
     _nina(tmp_path / "b.fits", 1, ("OBJECT  = 'M 42'",))
     _touch_later(tmp_path / "b.fits")
     assert scan_root(conn, root, LATER).moved == []
+
+
+def test_a_second_scan_of_the_same_root_is_refused_and_loses_nothing(
+    conn, db_path, tmp_path, monkeypatch
+):
+    """Seconda scansione della stessa radice mentre la prima gira: rifiutata, niente sparito."""
+    for seed in range(3):
+        _nina(tmp_path / f"{seed}.fits", seed)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    _touch_later(tmp_path / "0.fits")
+    other = connect(db_path)
+    refused: list[bool] = []
+    tried: list[bool] = []
+    real = scan.scan_file
+
+    def second_scan_meanwhile(path):
+        if not tried:
+            tried.append(True)
+            try:
+                scan_root(other, root, "2026-10-23T21:00:00+00:00")
+            except ScanRunningError:
+                refused.append(True)
+        return real(path)
+
+    monkeypatch.setattr(scan, "scan_file", second_scan_meanwhile)
+    try:
+        result = scan_root(conn, root, LATER)
+    finally:
+        other.close()
+    assert refused == [True]
+    assert conn.execute("SELECT COUNT(*) FROM pipeline_scans").fetchone()[0] == 2  # none for it
+    assert result.changes.gone == []
+    assert (
+        conn.execute("SELECT COUNT(*) FROM pipeline_files WHERE state = 'gone'").fetchone()[0] == 0
+    )
+
+
+def test_two_roots_scan_side_by_side(conn, db_path, tmp_path, monkeypatch):
+    _nina(tmp_path / "a" / "1.fits", 1)
+    _nina(tmp_path / "b" / "2.fits", 2)
+    first, second = add_root(conn, tmp_path / "a", NOW), add_root(conn, tmp_path / "b", NOW)
+    other = connect(db_path)
+    real = scan.scan_file
+    inner: list[int] = []
+
+    def other_root_meanwhile(path):
+        if not inner:
+            inner.append(0)
+            inner[0] = scan_root(other, second, NOW).frames
+        return real(path)
+
+    monkeypatch.setattr(scan, "scan_file", other_root_meanwhile)
+    try:
+        assert scan_root(conn, first, NOW).frames == 1
+    finally:
+        other.close()
+    assert inner == [1]
 
 
 def test_an_unchanged_archive_is_not_read_again(conn, tmp_path, monkeypatch):
