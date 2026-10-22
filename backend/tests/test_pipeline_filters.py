@@ -1,9 +1,7 @@
 """Mattone 4, scheda Filtro: nome scritto abbinato esatto a lista standard, risposte, filtri
 dell'utente (ADR 0031). Risposta vale per nome scritto, per sempre."""
 
-import re
 import sqlite3
-from pathlib import Path
 
 import pytest
 
@@ -20,11 +18,8 @@ from astrolog.pipeline.filters import (
     resolve,
 )
 from astrolog.pipeline.scan import scan_root
-from astrolog.pipeline.scanner import Program
+from astrolog.pipeline.values import Program
 from test_pipeline_scan import NOW, _nina
-
-_ALL = Path(__file__).parents[1].joinpath("astrolog", "schema.sql").read_text("utf-8")
-SCHEMA = _ALL[_ALL.index("PIPELINE NUOVA") :]
 
 
 def _spelling(conn, written: str) -> tuple[str | None, str | None]:
@@ -71,13 +66,6 @@ def test_every_standard_but_none_has_bands():
     for standard in StandardFilter:
         assert bool(standard.bands) is (standard is not StandardFilter.NONE)
     assert StandardFilter.HA_OIII.bands == (Band.HA, Band.OIII)
-
-
-@pytest.mark.parametrize(("column", "enum"), [("standard", StandardFilter), ("band", Band)])
-def test_the_schema_checks_list_every_member(column, enum):
-    for listed in re.findall(rf"{column}\s+TEXT[^,]*?IN \(([^)]*)\)", SCHEMA):
-        assert set(re.findall(r"'([^']+)'", listed)) == {m.value for m in enum}
-    assert re.search(rf"{column}\s+TEXT[^,]*?IN \(", SCHEMA)
 
 
 def test_an_answer_to_a_standard_holds_for_every_spelling_of_its_key(conn):

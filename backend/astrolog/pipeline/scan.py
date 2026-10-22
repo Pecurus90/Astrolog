@@ -47,13 +47,12 @@ def scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
 def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
     """Files opened outside any transaction, saved per batch: lock held only to write; stopped
     scan keeps saved batches, unread files keep old size and date, so read next time."""
-    root = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (root_id,)).fetchone()
     changes = record_changes(conn, root_id, now)
     result = ScanResult(changes)
     to_read = changes.to_read
     for start in range(0, len(to_read), BATCH):
         batch = [
-            (rel, scan_file(Path(root["path"], rel), changes.stat[rel][0]))  # size from walk
+            (rel, scan_file(Path(changes.root, rel), changes.stat[rel][0]))  # size from walk
             for rel in to_read[start : start + BATCH]
         ]
         skipped = [got for _, got in batch if isinstance(got, Skipped)]
@@ -83,18 +82,15 @@ def _store(
     """File's size and date written with its read, frame and header together: skipped file
     loses both, even if read before."""
     size, mtime_ns = changes.stat[rel]
-    conn.execute(
+    file_id = conn.execute(
         "INSERT INTO pipeline_files"
         " (root_id, rel_path, size, mtime_ns, state, seen_scan_id, arrived_scan_id)"
         " VALUES (?, ?, ?, ?, 'present', ?, ?)"
         " ON CONFLICT (root_id, rel_path) DO UPDATE SET size = excluded.size,"
         " mtime_ns = excluded.mtime_ns, seen_scan_id = excluded.seen_scan_id,"
         " arrived_scan_id = CASE WHEN state = 'gone' THEN excluded.arrived_scan_id"
-        " ELSE arrived_scan_id END, state = 'present'",
+        " ELSE arrived_scan_id END, state = 'present' RETURNING id",
         (changes.root_id, rel, size, mtime_ns, changes.scan_id, changes.scan_id),
-    )
-    file_id = conn.execute(
-        "SELECT id FROM pipeline_files WHERE root_id = ? AND rel_path = ?", (changes.root_id, rel)
     ).fetchone()["id"]
     conn.execute("DELETE FROM pipeline_conditions WHERE file_id = ?", (file_id,))
     if isinstance(got, Skipped):

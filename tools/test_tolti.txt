@@ -322,3 +322,7 @@ test_a_solved_asiair_frame_never_pays_the_mount_precession - RA/DEC ASIAIR = ber
 test_an_asiair_mount_without_date_is_unknown - RA/DEC ASIAIR = bersaglio (Marco, R14): rinominato test_an_asiair_target_without_date_is_unknown
 test_an_asiair_mount_out_of_the_leap_second_table_precesses_without_warning - RA/DEC ASIAIR = bersaglio (Marco, R14): rinominato test_an_asiair_target_out_of_the_leap_second_table_precesses_without_warning
 test_a_broken_solve_falls_to_the_mount - RA/DEC ASIAIR = bersaglio (Marco, R14): rinominato test_a_broken_solve_falls_to_the_target
+test_the_schema_check_lists_every_frame_type - test dello schema in una casa: test_a_check_lists_every_member_of_its_enum in test_pipeline_schema.py
+test_the_table_columns_are_the_card_fields - test dello schema in una casa: test_the_columns_are_the_dataclass_fields in test_pipeline_schema.py
+test_the_conditions_columns_are_the_conditions_fields - test dello schema in una casa: test_the_columns_are_the_dataclass_fields in test_pipeline_schema.py
+test_the_schema_checks_list_every_member - test dello schema in una casa: test_every_filter_check_lists_every_member in test_pipeline_schema.py

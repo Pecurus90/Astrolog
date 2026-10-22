@@ -13,7 +13,8 @@ import pytest
 
 from astrolog.pipeline.changes import add_root
 from astrolog.pipeline.scan import scan_root
-from astrolog.pipeline.scanner import Extracted, Program, Skip, Skipped, scan_file
+from astrolog.pipeline.scanner import Extracted, Skip, Skipped, scan_file
+from astrolog.pipeline.values import Program
 from test_pipeline_scan import NOW
 
 CORPUS = Path(__file__).with_name("header")

@@ -8,10 +8,11 @@ from dataclasses import dataclass, field
 
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
+from .scanner import Skip
 from .walk import Walk, long_path, real_key, walk_dir
 
 # Skip reasons that pass (file locked, copy running): read again every scan.
-_PASSING = frozenset({"unreadable", "incomplete"})
+_PASSING = frozenset({Skip.UNREADABLE, Skip.INCOMPLETE})
 
 
 @dataclass
@@ -21,6 +22,7 @@ class Changes:
     reachable: bool
     scan_id: int = 0  # receipt this scan wrote
     root_id: int = 0
+    root: str = ""  # its path, as stored
     new: list[str] = field(default_factory=list)
     changed: list[str] = field(default_factory=list)
     reread: list[str] = field(default_factory=list)  # same on disk, last read failed
@@ -107,7 +109,7 @@ def _on_disk(found: list[str], root: str) -> tuple[dict[str, tuple[int, int]], s
     seen: dict[str, tuple[int, int]] = {}
     unlooked: set[str] = set()
     for path in found:
-        try:
+        try:  # not DirEntry.stat: NTFS listing stays stale when file changed via another hard link
             st = os.stat(long_path(path))
         except OSError:
             unlooked.add(_rel(path, root))
@@ -125,7 +127,9 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
     walk = walk_dir(root)
     root_failed = any(os.path.normcase(u) == os.path.normcase(root) for u in walk.unreadable)
     changes = Changes(
-        reachable=not (root_failed or _emptied(conn, root_id, root, walk)), root_id=root_id
+        reachable=not (root_failed or _emptied(conn, root_id, root, walk)),
+        root_id=root_id,
+        root=root,
     )
     disk: dict[str, tuple[int, int]] = {}
     unlooked: set[str] = set()

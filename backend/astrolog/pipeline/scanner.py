@@ -90,16 +90,6 @@ class Skipped:
     reason: Skip
 
 
-def read_cards(path: Path) -> dict[str, Value] | None:
-    """Keyword -> value of frame header; None without END or on read error."""
-    try:
-        with open(long_path(path), "rb") as fh:  # noqa: PTH123 - the `\\?\` form is a str
-            header = read_header(fh)
-    except OSError:
-        return None
-    return header.cards if header is not None else None
-
-
 def read_header(fh: BinaryIO) -> Header | None:
     """Frame header (primary, plus image page if compressed) and where its data lies, from one
     open file. Latin-1 or UTF-8 text; CONTINUE joins strings. None without END."""

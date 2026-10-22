@@ -2,9 +2,7 @@
 Archivio di prova: N.I.N.A. LIGHT/FLAT/DARK/BIAS, ASIAIR Light/Dark/Flat/Bias."""
 
 import math
-import re
 import warnings
-from dataclasses import fields
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -15,15 +13,15 @@ from astropy.io import fits
 from astropy.wcs import WCS
 
 from astrolog.pipeline.card import (
-    Card,
     Conditions,
     FrameType,
     frame_type,
     read_card,
     read_conditions,
 )
-from astrolog.pipeline.scanner import Program, read_cards
+from astrolog.pipeline.scanner import read_header
 from astrolog.pipeline.sky import PointingSource
+from astrolog.pipeline.values import Program
 
 CORPUS = Path(__file__).with_name("header")
 NINA, ASIAIR = Program.NINA, Program.ASIAIR
@@ -36,9 +34,10 @@ def _values(name: str, tmp_path: Path) -> dict:
     head += "END".ljust(80)
     path = tmp_path / "h.fits"
     path.write_bytes((head + " " * (-len(head) % 2880)).encode("latin-1"))
-    values = read_cards(path)
-    assert values is not None
-    return values
+    with path.open("rb") as fh:
+        header = read_header(fh)
+    assert header is not None
+    return header.cards
 
 
 @pytest.mark.parametrize(
@@ -143,24 +142,6 @@ def test_no_date_obs_is_unknown_even_with_mjd_or_date_avg():
 def test_the_exposure_is_exptime_in_seconds(written, seconds):
     values = {} if written is None else {"EXPTIME": written}
     assert read_card(NINA, {**values, "EXPOSURE": 120.0}).exposure_s == seconds
-
-
-def _cards_table() -> str:
-    schema = Path(__file__).parents[1].joinpath("astrolog", "schema.sql").read_text("utf-8")
-    table = schema[schema.index("CREATE TABLE pipeline_cards") :]
-    return table[: table.index(") STRICT;")]
-
-
-def test_the_schema_check_lists_every_frame_type():
-    listed = re.search(r"frame_type IN \(([^)]*)\)", _cards_table())
-    assert listed is not None
-    assert set(re.findall(r"'(\w+)'", listed.group(1))) == {t.value for t in FrameType}
-
-
-def test_the_table_columns_are_the_card_fields():
-    """INSERT nasce dai campi di Card: stessi nomi, stesso ordine."""
-    columns = re.findall(r"^  ([a-z_\d]+) ", _cards_table(), re.MULTILINE)
-    assert columns == ["file_id", *(f.name for f in fields(Card))]
 
 
 @pytest.mark.parametrize(
