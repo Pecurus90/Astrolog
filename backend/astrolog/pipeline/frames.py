@@ -54,10 +54,14 @@ def _store(
     if isinstance(got, Skipped):
         conn.execute("DELETE FROM pipeline_cards WHERE file_id = ?", (file_id,))
         conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
-        conn.execute("UPDATE pipeline_files SET frame_id = NULL WHERE id = ?", (file_id,))
+        conn.execute(
+            "UPDATE pipeline_files SET frame_id = NULL, skip_reason = ? WHERE id = ?",
+            (got.reason, file_id),
+        )
         return
     conn.execute(
-        "UPDATE pipeline_files SET frame_id = ? WHERE id = ?", (_frame_of(conn, got, now), file_id)
+        "UPDATE pipeline_files SET frame_id = ?, skip_reason = NULL WHERE id = ?",
+        (_frame_of(conn, got, now), file_id),
     )
     conn.execute(
         "INSERT OR REPLACE INTO pipeline_headers (file_id, program, header) VALUES (?, ?, ?)",

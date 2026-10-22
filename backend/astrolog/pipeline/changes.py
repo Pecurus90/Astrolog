@@ -9,6 +9,9 @@ from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from .walk import long_path, walk_dir
 
+# Skip reasons that pass (file locked, copy running): read again every scan.
+_PASSING = frozenset({"unreadable", "incomplete"})
+
 
 @dataclass
 class Changes:
@@ -115,7 +118,8 @@ def _judge(
     known = {
         row["rel_path"]: row
         for row in conn.execute(
-            "SELECT rel_path, size, mtime_ns, state FROM pipeline_files WHERE root_id = ?",
+            "SELECT rel_path, size, mtime_ns, state, skip_reason FROM pipeline_files"
+            " WHERE root_id = ?",
             (root_id,),
         )
     }
@@ -123,7 +127,9 @@ def _judge(
         before = known.get(rel)
         if before is None or before["state"] == "gone":
             changes.new.append(rel)
-        elif (before["size"], before["mtime_ns"]) != (size, mtime_ns):
+        elif (before["size"], before["mtime_ns"]) != (size, mtime_ns) or (
+            before["skip_reason"] in _PASSING  # read failed last time: never lost
+        ):
             changes.changed.append(rel)
         else:
             changes.unchanged.append(rel)

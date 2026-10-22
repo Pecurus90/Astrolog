@@ -904,6 +904,10 @@ CREATE TABLE pipeline_files (
   seen_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),  -- ultima che l'ha giudicato
   -- NULL: non letto come posa. Sparito lo tiene: cosi' si riconosce lo spostato.
   frame_id     INTEGER REFERENCES pipeline_frames (id),
+  -- letto e saltato, col motivo; unreadable e incomplete passeggeri: si rilegge
+  skip_reason  TEXT
+    CHECK (skip_reason IN ('not_supported', 'rewritten', 'unreadable', 'incomplete')),
+  CHECK (frame_id IS NULL OR skip_reason IS NULL),
   UNIQUE (root_id, rel_path)
 ) STRICT;
 

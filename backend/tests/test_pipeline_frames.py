@@ -9,8 +9,10 @@ from pathlib import Path
 
 import pytest
 
+from astrolog.pipeline import frames
 from astrolog.pipeline.changes import add_root
 from astrolog.pipeline.frames import scan_root
+from astrolog.pipeline.scanner import Skip, Skipped
 
 NOW = "2026-10-22T20:00:00+00:00"
 LATER = "2026-10-23T20:00:00+00:00"
@@ -270,6 +272,30 @@ def test_a_file_read_again_gets_a_new_card_and_a_skipped_one_none(conn, tmp_path
     _touch_later(tmp_path / "b.fits")
     scan_root(conn, root, LATER)
     assert _cards(conn) == {"a.fits": "unknown"}
+
+
+@pytest.mark.parametrize("reason", [Skip.UNREADABLE, Skip.INCOMPLETE])
+def test_a_file_that_failed_to_read_is_read_again_next_scan(conn, tmp_path, monkeypatch, reason):
+    """Bloccato dal NAS o copia in corso: motivo passeggero, mai perso per sempre."""
+    path = _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    _touch_later(path)
+    real = frames.scan_file
+    monkeypatch.setattr(frames, "scan_file", lambda p: Skipped(p, reason))
+    scan_root(conn, root, LATER)
+    assert _cards(conn) == {}
+    monkeypatch.setattr(frames, "scan_file", real)
+    again = scan_root(conn, root, "2026-10-24T20:00:00+00:00")
+    assert again.changes.to_read == ["a.fits"]
+    assert _cards(conn) == {"a.fits": "light"}
+
+
+def test_a_file_skipped_for_its_content_is_not_read_again(conn, tmp_path):
+    _nina(tmp_path / "a.fits", 1, ("PROGRAM = 'Editor 1.9.3'",))
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    assert scan_root(conn, root, LATER).changes.to_read == []
 
 
 def _conditions(conn) -> dict[str, float]:
