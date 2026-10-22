@@ -314,6 +314,37 @@ def test_two_roots_scan_side_by_side(conn, db_path, tmp_path, monkeypatch):
     assert inner == [1]
 
 
+def test_moves_are_written_with_the_scan_that_found_them(conn, tmp_path):
+    """Spostati scritti, non solo in memoria: la schermata li legge, mai li ricalcola."""
+    _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    (tmp_path / "night").mkdir()
+    (tmp_path / "a.fits").rename(tmp_path / "night" / "a.fits")
+    result = scan_root(conn, root, LATER)
+    rows = conn.execute("SELECT scan_id, was_path, now_path FROM pipeline_moves").fetchall()
+    assert [tuple(r) for r in rows] == [(result.changes.scan_id, "a.fits", "night/a.fits")]
+    assert result.moved == [("a.fits", "night/a.fits")]
+
+
+def test_a_move_is_never_lost_if_the_process_dies_closing_the_scan(conn, tmp_path, monkeypatch):
+    """Morto fra 'sparito' e 'spostato': stessa transazione, il giro dopo rifa' tutto."""
+    _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    (tmp_path / "a.fits").rename(tmp_path / "b.fits")
+    real = scan._moved
+
+    def dies(*_args):
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(scan, "_moved", dies)
+    with pytest.raises(KeyboardInterrupt):
+        scan_root(conn, root, LATER)
+    monkeypatch.setattr(scan, "_moved", real)
+    assert scan_root(conn, root, "2026-10-24T20:00:00+00:00").moved == [("a.fits", "b.fits")]
+
+
 def test_pairing_moves_finds_files_by_frame_through_an_index(conn):
     """Cartella alta rinominata = archivio intero spostato: senza indice 8.000 file 8 s."""
     plan = " ".join(

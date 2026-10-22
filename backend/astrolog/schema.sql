@@ -924,6 +924,14 @@ CREATE TABLE pipeline_files (
 ) STRICT;
 CREATE INDEX pipeline_files_frame ON pipeline_files (root_id, frame_id);  -- spostati e doppioni
 
+-- RILEVATO. Spostati trovati da una scansione, scritti con lei: lo schermo legge, mai ricalcola.
+CREATE TABLE pipeline_moves (
+  scan_id  INTEGER NOT NULL REFERENCES pipeline_scans (id),
+  was_path TEXT NOT NULL,
+  now_path TEXT NOT NULL,
+  PRIMARY KEY (scan_id, was_path)
+) STRICT;
+
 -- RILEVATO. Header come lo legge pipeline/scanner.py, chiave -> valore tipizzato. Per file: copie
 -- possono differire. Presente sse il file ha frame. Tabella a parte: scansione legge ogni file.
 CREATE TABLE pipeline_headers (

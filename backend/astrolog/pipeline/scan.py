@@ -64,9 +64,9 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
                 (len(skipped), changes.scan_id),
             )
         result.skipped.extend(skipped)
-    with transaction(conn, immediate=True):
+    with transaction(conn, immediate=True):  # gone and moves together: a crash loses neither
         finish_scan(conn, changes)
-    result.moved = _moved(conn, root_id, changes)
+        result.moved = _moved(conn, root_id, changes)
     result.duplicates = _duplicates(conn, root_id)
     result.frames = conn.execute(
         "SELECT COUNT(DISTINCT frame_id) FROM pipeline_files"
@@ -166,6 +166,10 @@ def _moved(conn: sqlite3.Connection, root_id: int, changes: Changes) -> list[tup
         if row["was"] not in paired and row["now"] not in paired:
             pairs.append((row["was"], row["now"]))
             paired.update((row["was"], row["now"]))
+    conn.executemany(
+        "INSERT INTO pipeline_moves (scan_id, was_path, now_path) VALUES (?, ?, ?)",
+        [(changes.scan_id, was, now) for was, now in pairs],
+    )
     return pairs
 
 
