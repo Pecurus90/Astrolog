@@ -107,17 +107,21 @@ def _primary_cards(path: str | os.PathLike[str]) -> bytes:
         return primary.header.tostring().encode("ascii", "replace")
 
 
+def frame_size(cards: dict[str, Any]) -> tuple[Any, Any]:
+    """(width, height) as written. Compressed: ZNAXISn (FITS 4.0 sec. 10)."""
+    return cards.get("NAXIS1", cards.get("ZNAXIS1")), cards.get("NAXIS2", cards.get("ZNAXIS2"))
+
+
 def frame_identity(path: str | os.PathLike[str], cards: dict[str, Any]) -> FrameIdentity:
     """sha256 of dimensions and FINGERPRINT_BYTES from data block centre, away from registration
-    borders and overscan; no pixels: cards. Compressed: size in ZNAXISn."""
+    borders and overscan; no pixels: cards."""
     start, span = data_block(path)
     chunk = b""
     if span:
         with open(long_path(path), "rb") as f:
             f.seek(start + max(0, (span - FINGERPRINT_BYTES) // 2))
             chunk = f.read(FINGERPRINT_BYTES)
-    width = cards.get("NAXIS1", cards.get("ZNAXIS1"))
-    height = cards.get("NAXIS2", cards.get("ZNAXIS2"))
+    width, height = frame_size(cards)
     digest = hashlib.sha256(f"{width}x{height}:{cards.get('BITPIX')}".encode())
     digest.update(chunk or _primary_cards(path))
     complete = os.path.getsize(long_path(path)) >= start + span

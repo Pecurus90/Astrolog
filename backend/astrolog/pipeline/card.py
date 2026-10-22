@@ -1,10 +1,13 @@
 """File card: facts read from one header alone, pure (mappa, passo 4). One function per fact."""
 
+import math
 import re
+import struct
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 
+from .fingerprint import frame_size
 from .scanner import Program, Value
 
 # DATE-OBS as both programs write it: start of exposure, UTC, no zone (FITS 4.0 sec. 9.1.1).
@@ -59,20 +62,109 @@ def start_utc(values: dict[str, Value]) -> datetime | None:
         return None
 
 
-def exposure_s(values: dict[str, Value]) -> float | None:
-    """EXPTIME only: EXPOSURE always equal. bool is an int to Python: `T` is not 1 s."""
-    written = values.get("EXPTIME")
-    if isinstance(written, bool) or not isinstance(written, int | float) or written < 0:
+def _number(written: Value | None, at_least: float = -math.inf) -> float | None:
+    """bool is an int to Python: `T` is not 1. float32 tail cut (_without_float32_tail)."""
+    if isinstance(written, bool) or not isinstance(written, int | float):
         return None
-    return float(written)
+    if not math.isfinite(written) or written < at_least:
+        return None
+    return _without_float32_tail(float(written))
+
+
+def _count(written: Value | None, at_least: int) -> int | None:
+    if isinstance(written, bool) or not isinstance(written, int) or written < at_least:
+        return None
+    return written
+
+
+def _without_float32_tail(number: float) -> float:
+    """Driver float32 printed at 15 digits (DBL_DIG): 3.75999999046326 is 3.76.
+    Only when number is that float32; true double untouched."""
+    try:
+        single = struct.unpack("f", struct.pack("f", number))[0]
+    except OverflowError:
+        return number
+    if f"{single:.15g}" != f"{number:.15g}":
+        return number
+    for digits in range(1, 10):  # 9 digits round-trip any float32 (IEEE 754 binary32)
+        short = float(f"{single:.{digits}g}")
+        if struct.unpack("f", struct.pack("f", short))[0] == single:
+            return short
+    return number
+
+
+def exposure_s(values: dict[str, Value]) -> float | None:
+    """EXPTIME only: EXPOSURE always equal."""
+    return _number(values.get("EXPTIME"), at_least=0)
+
+
+def camera(values: dict[str, Value]) -> str | None:
+    """INSTRUME as written. CAMERAID no: USB path, changes with port."""
+    written = values.get("INSTRUME")
+    return written.strip() or None if isinstance(written, str) else None
+
+
+def pixel_um(values: dict[str, Value]) -> float | None:
+    """XPIXSZ as written, binning included: physical pixel is XPIXSZ / XBINNING."""
+    written = _number(values.get("XPIXSZ"), at_least=0)
+    return written if written else None
+
+
+def bayer(program: Program, values: dict[str, Value]) -> bool | None:
+    """Raw frame is Bayer mosaic. N.I.N.A. omits BAYERPAT only for mono or pattern None
+    (CFitsioFITS.cs); ASIAIR without it: no case, not known."""
+    if "BAYERPAT" not in values:
+        return False if program is Program.NINA else None
+    written = values["BAYERPAT"]
+    return True if isinstance(written, str) and written.strip() else None
+
+
+def iso(values: dict[str, Value]) -> int | None:
+    """ASIAIR with DSLR writes ISO as string: '800'."""
+    written = values.get("ISO")
+    if isinstance(written, str):
+        digits = written.strip()
+        written = int(digits) if digits.isascii() and digits.isdigit() else None
+    return _count(written, 1)
 
 
 @dataclass(frozen=True, slots=True)
 class Card:
+    """Fields named and ordered as pipeline_cards columns. None: not known."""
+
     frame_type: FrameType
-    start_utc: datetime | None  # None: not known
+    start_utc: datetime | None
     exposure_s: float | None
+    camera: str | None
+    width: int | None  # frame, after binning and crop
+    height: int | None
+    bin_x: int | None
+    bin_y: int | None
+    pixel_um: float | None  # with binning (SBIG; CFitsioFITS.cs; ASIAIR "with binning")
+    bayer: bool | None
+    gain: int | None
+    iso: int | None
+    offset: int | None
+    ccd_temp_c: float | None
+    set_temp_c: float | None
 
 
 def read_card(program: Program, values: dict[str, Value]) -> Card:
-    return Card(frame_type(program, values), start_utc(values), exposure_s(values))
+    width, height = frame_size(values)
+    return Card(
+        frame_type=frame_type(program, values),
+        start_utc=start_utc(values),
+        exposure_s=exposure_s(values),
+        camera=camera(values),
+        width=_count(width, 1),
+        height=_count(height, 1),
+        bin_x=_count(values.get("XBINNING"), 1),
+        bin_y=_count(values.get("YBINNING"), 1),
+        pixel_um=pixel_um(values),
+        bayer=bayer(program, values),
+        gain=_count(values.get("GAIN"), 0),
+        iso=iso(values),
+        offset=_count(values.get("OFFSET"), 0),
+        ccd_temp_c=_number(values.get("CCD-TEMP")),
+        set_temp_c=_number(values.get("SET-TEMP")),
+    )

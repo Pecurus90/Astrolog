@@ -923,5 +923,18 @@ CREATE TABLE pipeline_cards (
   -- inizio posa UTC, una forma sola: ordine e uguaglianza sul testo. NULL: non so
   start_utc  TEXT CHECK (start_utc GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:'
     || '[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]+00:00'),
-  exposure_s REAL CHECK (exposure_s >= 0)
+  exposure_s REAL CHECK (exposure_s >= 0),
+  -- camera come scritta; si abbina per nome, mai per numeri
+  camera     TEXT CHECK (camera <> ''),
+  width      INTEGER CHECK (width > 0),
+  height     INTEGER CHECK (height > 0),
+  bin_x      INTEGER CHECK (bin_x >= 1),
+  bin_y      INTEGER CHECK (bin_y >= 1),
+  pixel_um   REAL CHECK (pixel_um > 0),
+  bayer      INTEGER CHECK (bayer IN (0, 1)),
+  gain       INTEGER CHECK (gain >= 0),
+  iso        INTEGER CHECK (iso > 0),
+  offset     INTEGER CHECK (offset >= 0),
+  ccd_temp_c REAL,
+  set_temp_c REAL
 ) STRICT;

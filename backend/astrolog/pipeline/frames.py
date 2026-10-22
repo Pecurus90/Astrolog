@@ -3,13 +3,16 @@ One frame per fingerprint: copy is duplicate, moved file stays its frame."""
 
 import json
 import sqlite3
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
+from datetime import datetime
 from pathlib import Path
 
 from ..db.transaction import transaction
-from .card import read_card
+from .card import Card, read_card
 from .changes import Changes, record_changes
 from .scanner import Extracted, Skipped, scan_file
+
+_CARD_COLUMNS = tuple(f.name for f in fields(Card))  # columns named as fields (test)
 
 
 @dataclass
@@ -61,12 +64,17 @@ def _store(
         (file_id, got.program, json.dumps(got.values, allow_nan=False)),
     )
     card = read_card(got.program, got.values)
-    start = card.start_utc.isoformat(timespec="microseconds") if card.start_utc else None
+    row = [_column(getattr(card, name)) for name in _CARD_COLUMNS]
     conn.execute(
-        "INSERT OR REPLACE INTO pipeline_cards (file_id, frame_type, start_utc, exposure_s)"
-        " VALUES (?, ?, ?, ?)",
-        (file_id, card.frame_type, start, card.exposure_s),
+        f"INSERT OR REPLACE INTO pipeline_cards (file_id, {', '.join(_CARD_COLUMNS)})"  # noqa: S608
+        f" VALUES (?{', ?' * len(_CARD_COLUMNS)})",
+        (file_id, *row),
     )
+
+
+def _column(value: object) -> object:
+    """Start as fixed-form text: order and equality on text (schema)."""
+    return value.isoformat(timespec="microseconds") if isinstance(value, datetime) else value
 
 
 def _frame_of(conn: sqlite3.Connection, got: Extracted, now: str) -> int:
