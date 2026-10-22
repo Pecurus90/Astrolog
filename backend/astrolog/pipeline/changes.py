@@ -103,12 +103,24 @@ def _under(rel: str, folders: list[str]) -> bool:
     return any(rel == f or rel.startswith(f + "/") for f in folders)
 
 
+def _is_text(path: str) -> bool:
+    """Linux name in another encoding comes as lone surrogates (Python, PEP 383)."""
+    try:
+        path.encode("utf-8")
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
 def _on_disk(found: list[str], root: str) -> tuple[dict[str, tuple[int, int]], set[str]]:
-    """rel path -> (size, mtime_ns), plus files stat could not see (passing NAS error, rights,
-    gone since walk): not judged."""
+    """rel path -> (size, mtime_ns), plus files not looked at (passing NAS error, rights, gone
+    since walk, name not text: DB stores UTF-8): not judged, and said."""
     seen: dict[str, tuple[int, int]] = {}
     unlooked: set[str] = set()
     for path in found:
+        if not _is_text(path):
+            unlooked.add(_rel(path, root))
+            continue
         try:  # not DirEntry.stat: NTFS listing stays stale when file changed via another hard link
             st = os.stat(long_path(path))
         except OSError:

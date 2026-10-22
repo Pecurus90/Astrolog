@@ -1,6 +1,7 @@
 """Mattone 2: cosa e' cambiato, senza aprire file (percorso, dimensione, data).
 Radice muta: niente sparisce."""
 
+import json
 import os
 import shutil
 import stat
@@ -185,6 +186,21 @@ def test_a_file_whose_date_cannot_be_read_is_not_gone(conn, tmp_path, monkeypatc
     assert changes.unlooked == ["a.fits"]  # left out, and said
     monkeypatch.setattr(os, "stat", real)
     assert scan_root(conn, root, LATER).changes.unchanged == ["a.fits"]
+
+
+@pytest.mark.skipif(sys.platform == "darwin", reason="APFS accepts only valid UTF-8 names")
+@pytest.mark.parametrize("bad", ["n\udce9b.fits", "nuit\udce9/a.fits"])
+def test_a_name_that_is_not_text_is_left_out_and_the_scan_goes_on(conn, tmp_path, bad):
+    """Nome latin-1 su NAS Linux (Python: surrogato): non scrivibile nel DB. Prima fermava tutto."""
+    nas = tmp_path / "nas"
+    _file(nas / "good.fits")
+    _file(nas / bad)
+    result = scan_root(conn, add_root(conn, nas, NOW), NOW)
+    assert result.changes.new == ["good.fits"]
+    assert result.changes.unlooked == [bad]
+    receipt = conn.execute("SELECT finished, left_out FROM pipeline_scans").fetchone()
+    assert receipt["finished"] == 1
+    assert bad in json.loads(receipt["left_out"])["unlooked"]
 
 
 def test_each_scan_leaves_its_receipt(conn, tmp_path):
