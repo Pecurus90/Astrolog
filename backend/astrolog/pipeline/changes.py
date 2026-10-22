@@ -85,8 +85,11 @@ def _plain(path: str) -> str:
 
 def _identity(path: str) -> tuple[str, str] | None:
     """Volume and folder id from disk: same in every spelling (letter, share, `\\\\?\\`).
-    As digits: Windows volume serial is unsigned 64 bit, past SQLite INTEGER."""
-    st = os.stat(long_path(path))
+    Digits: Windows volume serial is unsigned 64 bit, past SQLite INTEGER. Silent disk: None."""
+    try:
+        st = os.stat(long_path(path))
+    except OSError:
+        return None
     return (str(st.st_dev), str(st.st_ino)) if st.st_ino else None
 
 
@@ -181,13 +184,16 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
     root = row["path"]
     walk = walk_dir(root)
     root_failed = any(os.path.normcase(u) == os.path.normcase(root) for u in walk.unreadable)
-    silent = root_failed or _emptied(conn, root_id, root, walk)
-    volume = _volume(root)
-    other_volume = None not in (volume, row["device"]) and volume != row["device"]
     changes = Changes(
-        reachable=not (silent or (other_volume and _stranger(conn, root_id, root, walk))),
+        reachable=not (root_failed or _emptied(conn, root_id, root, walk)),
         root_id=root_id,
         root=root,
+    )
+    # other disk under root (same letter, remount): judged anyway, said in receipt; owner's
+    # choice: wrong disk shows frames gone, back with right disk, never silent for good
+    identity = _identity(root)
+    other_volume = (
+        identity is not None and row["device"] is not None and identity[0] != row["device"]
     )
     disk: dict[str, tuple[int, int]] = {}
     unlooked: set[str] = set()
@@ -201,16 +207,17 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
         changes.scan_id = inserted_id(
             conn.execute(
                 "INSERT INTO pipeline_scans"
-                " (root_id, scanned_at, reachable, new, changed, reread, unchanged, gone, skipped,"
-                " unknown_keys, finished) VALUES (?, ?, ?, 0, 0, 0, 0, 0, '{}', '{}', 0)",
-                (root_id, now, int(changes.reachable)),
+                " (root_id, scanned_at, reachable, volume_changed, new, changed, reread, unchanged,"
+                " gone, skipped, unknown_keys, finished)"
+                " VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0, '{}', '{}', 0)",
+                (root_id, now, int(changes.reachable), int(changes.reachable and other_volume)),
             )
         )
         if changes.reachable:
-            if other_volume:  # its frames are here: archive now lives on this volume
+            if other_volume and identity is not None:  # root now lives on this volume
                 conn.execute(
                     "UPDATE pipeline_roots SET device = ?, inode = ? WHERE id = ?",
-                    (*(_identity(root) or (None, None)), root_id),
+                    (*identity, root_id),
                 )
             _judge(conn, root_id, disk, changes)
             _write_counts(conn, changes)
@@ -236,27 +243,6 @@ def _write_counts(conn: sqlite3.Connection, changes: Changes) -> None:
         (len(changes.new), len(changes.changed), len(changes.reread),
          len(changes.unchanged), len(changes.gone), _left_out(changes), changes.scan_id),
     )  # fmt: skip
-
-
-def _volume(root: str) -> str | None:
-    try:
-        return str(os.stat(long_path(root)).st_dev)
-    except OSError:
-        return None
-
-
-def _stranger(conn: sqlite3.Connection, root_id: int, root: str, walk: Walk) -> bool:
-    """Other volume under root (other disk, same letter or mount) holding none of its frames:
-    silent, never every file gone. No frames known: nothing to guard, judged."""
-    here = {_rel(path, root) for path in walk.found}
-    present = [
-        row["rel_path"]
-        for row in conn.execute(
-            "SELECT rel_path FROM pipeline_files WHERE root_id = ? AND state = 'present'",
-            (root_id,),
-        )
-    ]
-    return bool(present) and not any(rel in here for rel in present)
 
 
 def _emptied(conn: sqlite3.Connection, root_id: int, root: str, walk: Walk) -> bool:

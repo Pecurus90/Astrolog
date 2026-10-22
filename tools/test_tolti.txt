@@ -330,3 +330,4 @@ test_an_absurd_data_length_makes_the_file_unreadable_not_the_scan_fail - header 
 test_axes_that_are_not_counts_make_the_file_unreadable - header rotto per sempre = broken (T3): rinominato test_axes_that_are_not_counts_make_the_file_broken
 test_a_compressed_frame_with_a_negative_axis_is_unreadable - header rotto per sempre = broken (T3): rinominato ..._is_broken
 test_a_header_without_end_is_unreadable - header rotto per sempre = broken (T3): rinominato test_a_header_without_end_is_broken
+test_another_disk_under_the_same_letter_makes_nothing_gone - Marco (audit 4): altro disco si giudica sempre e si dice; rinominato test_another_disk_under_the_same_letter_is_judged_and_said

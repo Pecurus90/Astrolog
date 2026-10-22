@@ -46,3 +46,6 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
 - **Cartella nascosta dopo** (Marco, 22/10/2026, secondo audit): non si cammina e le sue pose non
   si giudicano, come una cartella che non risponde; la vecchia le dava "non trovate". Il cestino
   resta "sparito": un file cestinato cambia percorso.
+- **Altro disco sotto la radice** (Marco, 22/10/2026, audit 4): stessa lettera o rimontaggio con
+  un altro volume: si giudica sempre e la ricevuta lo segna (`volume_changed`). Il disco sbagliato
+  mostra le pose sparite, che tornano col disco giusto; mai una radice muta per sempre.

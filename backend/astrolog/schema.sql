@@ -886,6 +886,8 @@ CREATE TABLE pipeline_scans (
   root_id    INTEGER NOT NULL REFERENCES pipeline_roots (id),
   scanned_at TEXT NOT NULL,
   reachable  INTEGER NOT NULL CHECK (reachable IN (0, 1)),  -- 0: radice muta, nessun giudizio
+  -- 1: sotto la radice un altro disco (stessa lettera, rimontaggio): giudicato lo stesso, si dice
+  volume_changed INTEGER NOT NULL CHECK (volume_changed IN (0, 1)),
   new        INTEGER NOT NULL CHECK (new >= 0),
   changed    INTEGER NOT NULL CHECK (changed >= 0),
   reread     INTEGER NOT NULL CHECK (reread >= 0),  -- uguali, lettura fallita l'ultima volta

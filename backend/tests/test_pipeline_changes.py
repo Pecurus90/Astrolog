@@ -13,7 +13,7 @@ import pytest
 
 from astrolog.pipeline.changes import RootOverlapError, add_root
 from astrolog.pipeline.scan import scan_root
-from conftest import LATER, NOW, folder_link
+from conftest import LATER, NOW, folder_link, nina_light
 
 
 def _file(path: Path, size: int = 2880) -> Path:
@@ -248,12 +248,13 @@ def test_a_new_empty_root_is_reachable(conn, tmp_path):
 
 def _other_volume(conn, root):
     """Root's stored volume differs from disk's: another disk under same letter or mount."""
-    conn.execute("UPDATE pipeline_roots SET device = device + 1 WHERE id = ?", (root,))
+    conn.execute("UPDATE pipeline_roots SET device = device || '-other' WHERE id = ?", (root,))
     conn.commit()
 
 
-def test_another_disk_under_the_same_letter_makes_nothing_gone(conn, tmp_path):
-    """Chiavetta diversa sulla stessa lettera, nessuna posa nota: prima tutte sparite."""
+def test_another_disk_under_the_same_letter_is_judged_and_said(conn, tmp_path):
+    """Si giudica sempre (pose sparite, tornano col disco giusto) e la ricevuta lo dice.
+    Prima: radice muta, che restava muta per sempre se l'archivio era davvero cambiato."""
     nas = tmp_path / "nas"
     a = _file(nas / "night" / "a.fits")
     root = add_root(conn, nas, NOW)
@@ -262,7 +263,28 @@ def test_another_disk_under_the_same_letter_makes_nothing_gone(conn, tmp_path):
     _file(nas / "other" / "b.fits")
     _other_volume(conn, root)
     changes = scan_root(conn, root, LATER).changes
-    assert (changes.reachable, changes.gone) == (False, [])
+    assert (changes.reachable, changes.gone) == (True, ["night/a.fits"])
+    assert changes.new == ["other/b.fits"]
+    said = conn.execute("SELECT volume_changed FROM pipeline_scans ORDER BY id").fetchall()
+    assert [r[0] for r in said] == [0, 1]
+    assert scan_root(conn, root, LATER).changes.unchanged == ["other/b.fits"]  # adopted, no repeat
+
+
+def test_the_right_disk_back_brings_its_frames_back(conn, tmp_path):
+    """Altro disco: pose sparite; disco giusto di nuovo: stesse pose, stesso frame (le risposte)."""
+    nas = tmp_path / "nas"
+    shot = nina_light(nas / "night" / "a.fits", 1).read_bytes()
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    frame = conn.execute("SELECT frame_id FROM pipeline_files").fetchone()[0]
+    (nas / "night" / "a.fits").unlink()
+    _other_volume(conn, root)
+    assert scan_root(conn, root, LATER).changes.gone == ["night/a.fits"]
+    (nas / "night" / "a.fits").write_bytes(shot)
+    _other_volume(conn, root)
+    assert scan_root(conn, root, LATER).changes.new == ["night/a.fits"]
+    row = conn.execute("SELECT state, frame_id FROM pipeline_files").fetchone()
+    assert tuple(row) == ("present", frame)
 
 
 def test_the_archive_copied_to_a_new_disk_is_judged(conn, tmp_path):
