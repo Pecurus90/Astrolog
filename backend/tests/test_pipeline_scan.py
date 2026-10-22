@@ -123,6 +123,27 @@ def test_an_interrupted_scan_reads_its_files_next_time(conn, tmp_path, monkeypat
     assert scan_root(conn, root, LATER).frames == 2
 
 
+def test_a_file_changed_then_a_stopped_scan_is_read_next_time(conn, tmp_path, monkeypatch):
+    """Cambiato, poi scansione fermata prima di leggerlo: la prossima lo vede ancora cambiato."""
+    a = _nina(tmp_path / "a.fits", 1)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    _nina(a, 1, ("OBJECT  = 'M 42'",))
+    _touch_later(a)
+    real = scan.scan_file
+
+    def stops(path, size=None):
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(scan, "scan_file", stops)
+    with pytest.raises(KeyboardInterrupt):
+        scan_root(conn, root, LATER)
+    monkeypatch.setattr(scan, "scan_file", real)
+    assert scan_root(conn, root, LATER).changes.changed == ["a.fits"]
+    header = conn.execute("SELECT header FROM pipeline_headers").fetchone()["header"]
+    assert json.loads(header)["OBJECT"] == "M 42"
+
+
 def test_another_connection_writes_while_files_are_read(conn, db_path, tmp_path, monkeypatch):
     """Lettura lenta (NAS) fuori transazione: risposta a un filtro non aspetta la scansione."""
     _nina(tmp_path / "a.fits", 1)

@@ -335,6 +335,24 @@ def test_a_folder_inside_a_network_share_root_is_inside(conn):
         add_root(conn, r"\\localhost\C$\Windows", NOW)
 
 
+@pytest.mark.parametrize("drive_first", [True, False])
+def test_a_folder_on_a_drive_root_added_is_inside_it(conn, tmp_path, drive_first):
+    """Radice di un disco ('C:\\' o '/'): finisce gia' con la barra, il dentro si vede lo stesso."""
+    drive = Path(tmp_path.anchor)
+    first, second = (drive, tmp_path) if drive_first else (tmp_path, drive)
+    add_root(conn, first, NOW)
+    with pytest.raises(RootOverlapError) as overlap:
+        add_root(conn, second, NOW)
+    assert overlap.value.inside is drive_first
+
+
+def test_the_same_folder_through_a_link_is_the_same_root(conn, tmp_path):
+    """Junction o symlink verso una cartella gia' aggiunta: stessa radice, file mai due volte."""
+    (tmp_path / "archive").mkdir()
+    _link(tmp_path / "archive", tmp_path / "shortcut")
+    assert add_root(conn, tmp_path / "shortcut", NOW) == add_root(conn, tmp_path / "archive", NOW)
+
+
 def test_a_sibling_with_a_common_prefix_is_not_inside(conn, tmp_path):
     (tmp_path / "archive").mkdir()
     (tmp_path / "archive2").mkdir()

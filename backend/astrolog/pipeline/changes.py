@@ -65,7 +65,8 @@ def _keys(path: str) -> tuple[str, str]:
 
 
 def _inside(child: str, parent: str) -> bool:
-    """On key text: network share without end bar too; another drive never."""
+    """On key text. Parent ending in bar (drive root, share written with one): no bar added.
+    Another drive never inside."""
     return child.startswith(parent if parent.endswith(os.sep) else parent + os.sep)
 
 
