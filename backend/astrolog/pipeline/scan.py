@@ -5,6 +5,7 @@ import json
 import os
 import sqlite3
 import threading
+from collections import Counter
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from pathlib import Path
@@ -52,21 +53,28 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
     changes = record_changes(conn, root_id, now)
     result = ScanResult(changes)
     to_read = changes.to_read
+    reasons: Counter[str] = Counter()
+    unknown: Counter[str] = Counter()
+    vanished: set[str] = set()
     for start in range(0, len(to_read), BATCH):
         read = [
             (rel, scan_file(Path(changes.root, rel), changes.stat[rel][0]))  # size from walk
             for rel in to_read[start : start + BATCH]
         ]
         batch = [(rel, got) for rel, got in read if not _vanished(got)]
+        vanished.update(rel for rel, got in read if _vanished(got))
         skipped = [got for _, got in batch if isinstance(got, Skipped)]
+        reasons.update(got.reason for got in skipped)
+        unknown.update(k for _, got in batch if isinstance(got, Extracted) for k in got.unknown)
         with transaction(conn, immediate=True):
             for rel, got in batch:
                 _store(conn, changes, rel, got, now)
-            conn.execute(
-                "UPDATE pipeline_scans SET skipped = skipped + ? WHERE id = ?",
-                (len(skipped), changes.scan_id),
+            conn.execute(  # running totals: a stopped scan keeps what its saved batches saw
+                "UPDATE pipeline_scans SET skipped = ?, unknown_keys = ? WHERE id = ?",
+                (json.dumps(reasons), json.dumps(unknown), changes.scan_id),
             )
         result.skipped.extend(skipped)
+    _left_unread(changes, vanished)
     with transaction(conn, immediate=True):  # gone and moves together: a crash loses neither
         finish_scan(conn, changes)
         result.moved = _moved(conn, root_id, changes)
@@ -77,6 +85,13 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
         (root_id,),
     ).fetchone()[0]
     return result
+
+
+def _left_unread(changes: Changes, vanished: set[str]) -> None:
+    """Gone before read: not looked at, said once in receipt, not also new or changed."""
+    for listed in (changes.new, changes.changed, changes.reread):
+        listed[:] = [rel for rel in listed if rel not in vanished]
+    changes.unlooked = sorted(set(changes.unlooked) | vanished)
 
 
 def _vanished(got: Extracted | Skipped) -> bool:

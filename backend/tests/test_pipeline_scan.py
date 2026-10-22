@@ -97,7 +97,7 @@ def test_a_folder_renamed_while_its_files_are_read_is_still_a_move(conn, tmp_pat
         return real(p, size)
 
     monkeypatch.setattr(scan, "scan_file", renamed_first)
-    scan_root(conn, root, LATER)
+    assert scan_root(conn, root, LATER).changes.unlooked == ["night/a.fits"]  # said
     monkeypatch.setattr(scan, "scan_file", real)
     later = scan_root(conn, root, "2026-10-24T20:00:00+00:00")
     assert later.moved == [("night/a.fits", "night2/a.fits")]
@@ -648,8 +648,18 @@ def test_the_receipt_keeps_rereads_skips_and_what_was_left_out(conn, tmp_path, m
         "SELECT new, changed, reread, unchanged, skipped, left_out FROM pipeline_scans ORDER BY id"
     ).fetchall()
     left_out = {"hidden": [".Trashes"], "online_only": [], "unreachable": [], "unlooked": []}
-    assert [tuple(r)[:5] for r in rows] == [(2, 0, 0, 0, 2), (0, 0, 1, 1, 0)]
+    assert [tuple(r)[:4] for r in rows] == [(2, 0, 0, 0), (0, 0, 1, 1)]
+    assert [json.loads(r["skipped"]) for r in rows] == [{"unreadable": 1, "rewritten": 1}, {}]
     assert [json.loads(r["left_out"]) for r in rows] == [left_out, left_out]
+
+
+def test_the_receipt_counts_the_keys_no_program_list_knows(conn, tmp_path):
+    """Chiave che N.I.N.A. non scrive (dell'utente, o nuova): si dice, quanti file la portano."""
+    _nina(tmp_path / "a.fits", 1, ("MYNOTE  = 'x'",))
+    _nina(tmp_path / "b.fits", 2, ("MYNOTE  = 'y'",))
+    scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
+    row = conn.execute("SELECT unknown_keys FROM pipeline_scans").fetchone()
+    assert json.loads(row["unknown_keys"]) == {"MYNOTE": 2}
 
 
 def test_a_file_skipped_for_its_content_is_not_read_again(conn, tmp_path):

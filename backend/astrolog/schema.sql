@@ -891,7 +891,10 @@ CREATE TABLE pipeline_scans (
   reread     INTEGER NOT NULL,  -- uguali su disco, lettura fallita l'ultima volta
   unchanged  INTEGER NOT NULL,
   gone       INTEGER NOT NULL,
-  skipped    INTEGER NOT NULL,  -- letti e saltati: il motivo sta in pipeline_files
+  -- letti e saltati, per motivo: {"rewritten": 3, ...}; il totale si somma
+  skipped    TEXT NOT NULL CHECK (json_valid(skipped) AND json_type(skipped) = 'object'),
+  -- chiavi che nessun programma verificato scrive (dell'utente, o nuove): {"MYNOTE": 2, ...}
+  unknown_keys TEXT NOT NULL CHECK (json_valid(unknown_keys) AND json_type(unknown_keys) = 'object'),
   -- fuori, coi percorsi: {hidden, online_only, unreachable, unlooked}; NULL radice muta
   left_out   TEXT CHECK (json_valid(left_out) AND json_type(left_out) = 'object'),
   finished   INTEGER NOT NULL CHECK (finished IN (0, 1))  -- 0: fermata, il giro dopo rifa'
