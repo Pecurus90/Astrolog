@@ -4,7 +4,6 @@ import math
 import struct
 import unicodedata
 from enum import StrEnum
-from typing import Any
 
 Value = str | int | float | bool
 
@@ -78,6 +77,6 @@ def as_celsius(written: Value | None) -> float | None:
     return as_number(written, at_least=COLDEST_C)
 
 
-def frame_size(cards: dict[str, Any]) -> tuple[Any, Any]:
+def frame_size(cards: dict[str, Value]) -> tuple[Value | None, Value | None]:
     """(width, height) as written. Compressed: ZNAXISn (FITS 4.0 sec. 10)."""
     return cards.get("NAXIS1", cards.get("ZNAXIS1")), cards.get("NAXIS2", cards.get("ZNAXIS2"))

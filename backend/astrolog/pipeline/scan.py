@@ -120,7 +120,6 @@ def _store(
         " ELSE arrived_scan_id END, state = 'present' RETURNING id",
         (changes.root_id, rel, size, mtime_ns, changes.scan_id, changes.scan_id),
     ).fetchone()["id"]
-    conn.execute("DELETE FROM pipeline_conditions WHERE file_id = ?", (file_id,))
     if isinstance(got, Skipped):
         conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
         conn.execute(

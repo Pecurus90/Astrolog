@@ -886,11 +886,11 @@ CREATE TABLE pipeline_scans (
   root_id    INTEGER NOT NULL REFERENCES pipeline_roots (id),
   scanned_at TEXT NOT NULL,
   reachable  INTEGER NOT NULL CHECK (reachable IN (0, 1)),  -- 0: radice muta, nessun giudizio
-  new        INTEGER NOT NULL,
-  changed    INTEGER NOT NULL,
-  reread     INTEGER NOT NULL,  -- uguali su disco, lettura fallita l'ultima volta
-  unchanged  INTEGER NOT NULL,
-  gone       INTEGER NOT NULL,
+  new        INTEGER NOT NULL CHECK (new >= 0),
+  changed    INTEGER NOT NULL CHECK (changed >= 0),
+  reread     INTEGER NOT NULL CHECK (reread >= 0),  -- uguali, lettura fallita l'ultima volta
+  unchanged  INTEGER NOT NULL CHECK (unchanged >= 0),
+  gone       INTEGER NOT NULL CHECK (gone >= 0),
   -- letti e saltati, per motivo: {"rewritten": 3, ...}; il totale si somma
   skipped    TEXT NOT NULL CHECK (json_valid(skipped) AND json_type(skipped) = 'object'),
   -- chiavi che nessun programma verificato scrive (dell'utente, o nuove): {"MYNOTE": 2, ...}
@@ -914,7 +914,7 @@ CREATE TABLE pipeline_files (
   id           INTEGER PRIMARY KEY,
   root_id      INTEGER NOT NULL REFERENCES pipeline_roots (id),
   rel_path     TEXT NOT NULL,     -- con `/`: regge cambio di sistema
-  size         INTEGER NOT NULL,
+  size         INTEGER NOT NULL CHECK (size >= 0),
   mtime_ns     INTEGER NOT NULL,  -- esatta: data diversa, rilettura
   state        TEXT NOT NULL CHECK (state IN ('present', 'gone')),
   seen_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),  -- ultima che l'ha visto presente
@@ -924,9 +924,10 @@ CREATE TABLE pipeline_files (
   skip_reason  TEXT
     CHECK (skip_reason IN ('not_supported', 'rewritten', 'unreadable', 'incomplete', 'broken')),
   -- arrivato dopo l'ultima volta che lo sparito era presente: spostato, anche dopo fermate
-  arrived_scan_id INTEGER REFERENCES pipeline_scans (id),
+  arrived_scan_id INTEGER NOT NULL REFERENCES pipeline_scans (id),
   gone_scan_id    INTEGER REFERENCES pipeline_scans (id),  -- quella che l'ha visto sparire
   CHECK (frame_id IS NULL OR skip_reason IS NULL),
+  CHECK (state = 'present' OR gone_scan_id IS NOT NULL),
   UNIQUE (root_id, rel_path)
 ) STRICT;
 CREATE INDEX pipeline_files_frame ON pipeline_files (root_id, frame_id);  -- spostati e doppioni

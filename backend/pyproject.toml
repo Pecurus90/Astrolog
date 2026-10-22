@@ -268,3 +268,23 @@ type = "forbidden"
 source_modules = ["astrolog.api", "astrolog.worker"]
 forbidden_modules = ["astrolog.fits.header_read", "astrolog.fits.header_fields", "astropy", "astrolog.astap", "subprocess"]
 allow_indirect_imports = true  # attraverso la spina si', in proprio mai (il walk delle cartelle e' ammesso)
+
+[[tool.importlinter.contracts]]
+# ADR 0030: la nuova cresce accanto alla vecchia e la sostituisce, mai un import incrociato.
+name = "pipeline nuova e vecchia non si conoscono"
+type = "forbidden"
+source_modules = ["astrolog.pipeline"]
+forbidden_modules = ["astrolog.fits", "astrolog.vocab", "astrolog.spine", "astrolog.worker", "astrolog.api", "astropy"]
+
+[[tool.importlinter.contracts]]
+name = "la vecchia non importa la nuova"
+type = "forbidden"
+source_modules = ["astrolog.fits", "astrolog.vocab", "astrolog.spine", "astrolog.worker", "astrolog.api", "astrolog.db"]
+forbidden_modules = ["astrolog.pipeline"]
+
+[[tool.importlinter.contracts]]
+# Mappa, passo 4: la scheda e' una funzione pura, si rifa' su tutti gli header senza database.
+name = "leggere un file e farne la scheda e' puro: niente database"
+type = "forbidden"
+source_modules = ["astrolog.pipeline.card", "astrolog.pipeline.sky", "astrolog.pipeline.values", "astrolog.pipeline.scanner", "astrolog.pipeline.fingerprint", "astrolog.pipeline.walk"]
+forbidden_modules = ["sqlite3", "astrolog.db"]

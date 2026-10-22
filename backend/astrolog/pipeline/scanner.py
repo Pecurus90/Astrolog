@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import BinaryIO
 
 from .fingerprint import BLOCK, CARD, Header, data_length, frame_identity
-from .values import Program, Value
+from .values import Program, Value, as_count
 from .walk import long_path
 
 MAX_HEADER_BLOCKS = 1000
@@ -239,9 +239,7 @@ def _axes_are_counts(cards: dict[str, Value]) -> bool:
     """FITS 4.0 sec. 4.4.1.1: NAXIS, NAXISn written are non-negative integers; else no image.
     Compressed frame: same for ZNAXIS, ZNAXISn (sec. 10)."""
     return all(
-        isinstance(value, int) and not isinstance(value, bool) and value >= 0
-        for key, value in cards.items()
-        if _AXIS.fullmatch(key)
+        as_count(value, 0) is not None for key, value in cards.items() if _AXIS.fullmatch(key)
     )
 
 
