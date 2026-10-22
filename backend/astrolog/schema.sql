@@ -968,6 +968,27 @@ CREATE TABLE pipeline_cards (
   CHECK (NOT (site_lat_deg = 0 AND site_lon_deg = 0))
 ) STRICT;
 
+-- DERIVATO. Meteo scritto da N.I.N.A. con una fonte collegata; riga solo se c'e' un valore.
+-- Unita' CFitsioFITS.cs; intervalli ASCOM ObservingConditions, il resto limiti fisici.
+CREATE TABLE pipeline_conditions (
+  file_id            INTEGER PRIMARY KEY REFERENCES pipeline_headers (file_id),
+  ambient_temp_c     REAL,
+  humidity_pct       REAL CHECK (humidity_pct BETWEEN 0 AND 100),
+  dew_point_c        REAL,
+  pressure_hpa       REAL CHECK (pressure_hpa > 0),
+  cloud_cover_pct    REAL CHECK (cloud_cover_pct BETWEEN 0 AND 100),
+  wind_kmh           REAL CHECK (wind_kmh >= 0),
+  wind_gust_kmh      REAL CHECK (wind_gust_kmh >= 0),
+  wind_dir_deg       REAL CHECK (wind_dir_deg >= 0 AND wind_dir_deg < 360),
+  sky_quality_mpsas  REAL,
+  sky_temp_c         REAL,
+  sky_brightness_lux REAL CHECK (sky_brightness_lux >= 0),
+  star_fwhm_arcsec   REAL CHECK (star_fwhm_arcsec > 0),
+  CHECK (COALESCE(ambient_temp_c, humidity_pct, dew_point_c, pressure_hpa, cloud_cover_pct,
+    wind_kmh, wind_gust_kmh, wind_dir_deg, sky_quality_mpsas, sky_temp_c, sky_brightness_lux,
+    star_fwhm_arcsec) IS NOT NULL)
+) STRICT;
+
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave: nome (filters.filter_key).
 CREATE TABLE pipeline_filters (
   name TEXT PRIMARY KEY CHECK (name <> '' AND name = trim(name)),

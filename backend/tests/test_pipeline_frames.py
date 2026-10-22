@@ -272,6 +272,29 @@ def test_a_file_read_again_gets_a_new_card_and_a_skipped_one_none(conn, tmp_path
     assert _cards(conn) == {"a.fits": "unknown"}
 
 
+def _conditions(conn) -> dict[str, float]:
+    rows = conn.execute(
+        "SELECT f.rel_path, c.humidity_pct FROM pipeline_conditions AS c"
+        " JOIN pipeline_files AS f ON f.id = c.file_id"
+    ).fetchall()
+    return {r["rel_path"]: r["humidity_pct"] for r in rows}
+
+
+def test_conditions_live_only_where_written_and_follow_the_file(conn, tmp_path):
+    _nina(tmp_path / "a.fits", 1, ("HUMIDITY=                 39.0",))
+    _nina(tmp_path / "b.fits", 2, ("HUMIDITY=                 45.0",))
+    _nina(tmp_path / "c.fits", 3)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    assert _conditions(conn) == {"a.fits": 39.0, "b.fits": 45.0}
+    _nina(tmp_path / "a.fits", 1)  # read again without weather
+    _nina(tmp_path / "b.fits", 2, ("HUMIDITY=                 45.0", "PROGRAM = 'Editor 1.9.3'"))
+    _touch_later(tmp_path / "a.fits")
+    _touch_later(tmp_path / "b.fits")
+    scan_root(conn, root, LATER)
+    assert _conditions(conn) == {}
+
+
 def test_the_card_stores_start_and_exposure_in_one_form(conn, tmp_path):
     _nina(tmp_path / "a.fits", 1, ("DATE-OBS= '2025-06-29T21:11:33.412'", "EXPTIME =  120.0"))
     _nina(tmp_path / "b.fits", 2)

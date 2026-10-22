@@ -8,12 +8,10 @@ from datetime import datetime
 from pathlib import Path
 
 from ..db.transaction import transaction
-from .card import Card, read_card
+from .card import Card, Conditions, read_card, read_conditions
 from .changes import Changes, record_changes
 from .filters import resolve
 from .scanner import Extracted, Skipped, scan_file
-
-_CARD_COLUMNS = tuple(f.name for f in fields(Card))  # columns named as fields (test)
 
 
 @dataclass
@@ -52,6 +50,7 @@ def _store(
     file_id = conn.execute(
         "SELECT id FROM pipeline_files WHERE root_id = ? AND rel_path = ?", (root_id, rel)
     ).fetchone()["id"]
+    conn.execute("DELETE FROM pipeline_conditions WHERE file_id = ?", (file_id,))
     if isinstance(got, Skipped):
         conn.execute("DELETE FROM pipeline_cards WHERE file_id = ?", (file_id,))
         conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
@@ -65,14 +64,22 @@ def _store(
         (file_id, got.program, json.dumps(got.values, allow_nan=False)),
     )
     card = read_card(got.program, got.values)
-    row = [_column(getattr(card, name)) for name in _CARD_COLUMNS]
-    conn.execute(
-        f"INSERT OR REPLACE INTO pipeline_cards (file_id, {', '.join(_CARD_COLUMNS)})"  # noqa: S608
-        f" VALUES (?{', ?' * len(_CARD_COLUMNS)})",
-        (file_id, *row),
-    )
+    _insert(conn, "pipeline_cards", file_id, card)
+    conditions = read_conditions(got.values)
+    if conditions is not None:
+        _insert(conn, "pipeline_conditions", file_id, conditions)
     if card.filter is not None:
         resolve(conn, card.filter)
+
+
+def _insert(conn: sqlite3.Connection, table: str, file_id: int, row: Card | Conditions) -> None:
+    """Columns named as dataclass fields (tests)."""
+    names = [f.name for f in fields(row)]
+    conn.execute(
+        f"INSERT OR REPLACE INTO {table} (file_id, {', '.join(names)})"  # noqa: S608
+        f" VALUES (?{', ?' * len(names)})",
+        (file_id, *(_column(getattr(row, name)) for name in names)),
+    )
 
 
 def _column(value: object) -> object:

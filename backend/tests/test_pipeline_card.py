@@ -14,7 +14,15 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.wcs import WCS
 
-from astrolog.pipeline.card import Card, FrameType, PointingSource, frame_type, read_card
+from astrolog.pipeline.card import (
+    Card,
+    Conditions,
+    FrameType,
+    PointingSource,
+    frame_type,
+    read_card,
+    read_conditions,
+)
 from astrolog.pipeline.scanner import Program, read_cards
 
 CORPUS = Path(__file__).with_name("header")
@@ -504,6 +512,48 @@ def test_the_focuser_position_and_temperature_are_kept(values, position, temp):
 def test_an_empty_part_name_is_unknown(key):
     card = read_card(ASIAIR, {key: "  "})
     assert (card.filter_wheel, card.focuser, card.guide_camera) == (None, None, None)
+
+
+def test_the_written_conditions_are_read_with_their_units():
+    """Unita' da CFitsioFITS.cs; archivio: AMBTEMP, HUMIDITY, DEWPOINT in 302 file."""
+    values: dict = {
+        "AMBTEMP": 4.4, "HUMIDITY": 39.0, "DEWPOINT": -8.3, "PRESSURE": 1013.2,
+        "CLOUDCVR": 0.0, "WINDSPD": 0.0, "WINDGUST": 12.6, "WINDDIR": 270.0,
+        "MPSAS": 20.8, "SKYTEMP": -18.5, "SKYBRGHT": 0.0, "STARFWHM": 2.4,
+    }  # fmt: skip
+    assert read_conditions(values) == Conditions(
+        ambient_temp_c=4.4, humidity_pct=39.0, dew_point_c=-8.3, pressure_hpa=1013.2,
+        cloud_cover_pct=0.0, wind_kmh=0.0, wind_gust_kmh=12.6, wind_dir_deg=270.0,
+        sky_quality_mpsas=20.8, sky_temp_c=-18.5, sky_brightness_lux=0.0, star_fwhm_arcsec=2.4,
+    )  # fmt: skip
+
+
+def test_no_weather_key_no_conditions():
+    assert read_conditions({"EXPTIME": 300.0}) is None
+    assert read_conditions({"HUMIDITY": True}) is None
+
+
+@pytest.mark.parametrize(
+    ("key", "field", "written", "read"),
+    [
+        ("HUMIDITY", "humidity_pct", 100.0, 100.0),  # ASCOM: 0.0 - 100.0
+        ("HUMIDITY", "humidity_pct", 100.5, None),
+        ("HUMIDITY", "humidity_pct", -1.0, None),
+        ("CLOUDCVR", "cloud_cover_pct", 101.0, None),
+        ("WINDDIR", "wind_dir_deg", 360.0, 0.0),  # North both ways
+        ("WINDDIR", "wind_dir_deg", 361.0, None),
+        ("WINDSPD", "wind_kmh", -0.1, None),
+        ("PRESSURE", "pressure_hpa", 0.0, None),
+        ("STARFWHM", "star_fwhm_arcsec", 0.0, None),
+        ("SKYBRGHT", "sky_brightness_lux", -1.0, None),
+        ("AMBTEMP", "ambient_temp_c", 23.6399993896484, 23.64),  # float32 tail
+        ("AMBTEMP", "ambient_temp_c", math.inf, None),
+    ],
+)
+def test_a_condition_out_of_its_range_is_unknown(key, field, written, read):
+    conditions = read_conditions({key: written, "DEWPOINT": 1.0})
+    assert conditions is not None
+    assert getattr(conditions, field) == read
 
 
 def test_iso_written_as_number_or_digits_is_read():

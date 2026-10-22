@@ -62,8 +62,7 @@ semplificare, manca, in piu', igiene, sicurezza, prestazioni, casi limite; tre r
 
 ## Piu' avanti
 
-Cose nominate dal metodo che non esistono ancora, con la tappa che le porta. Passata la tappa
-senza di loro, la riga lo dice (scaduta).
+Cose nominate dal metodo che non esistono ancora, con la loro tappa; passata, la riga e' scaduta.
 
 | cosa | con |
 |---|---|
@@ -78,3 +77,4 @@ senza di loro, la riga lo dice (scaduta).
 | pochi FITS veri con licenza e un database ASTAP piccolo (D05), per i test `lento` del solver in CI | un file vero |
 | rifare cio' che si ricava dal vocabolario quando cambia (`spine/header_asks.py`, il software normalizzato), e dirlo all'avvio | il primo rilascio |
 | la regola della Luna nelle Impostazioni (due gradini e altezza, `domini/meteo.md`) | il porting |
+| OBSERVER, OBSERVAT, SITENAME e coordinate del sito mai fuori dall'app, con un test | esportazioni e segnalazioni |

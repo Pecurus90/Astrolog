@@ -331,6 +331,56 @@ class Card:
     focuser_temp_c: float | None
 
 
+@dataclass(frozen=True, slots=True)
+class Conditions:
+    """N.I.N.A. weather source at capture; units CFitsioFITS.cs. Named as pipeline_conditions."""
+
+    ambient_temp_c: float | None
+    humidity_pct: float | None
+    dew_point_c: float | None
+    pressure_hpa: float | None
+    cloud_cover_pct: float | None
+    wind_kmh: float | None  # N.I.N.A. writes m/s * 3.6
+    wind_gust_kmh: float | None
+    wind_dir_deg: float | None  # from North, clockwise; 0 also when no wind (ASCOM)
+    sky_quality_mpsas: float | None
+    sky_temp_c: float | None
+    sky_brightness_lux: float | None
+    star_fwhm_arcsec: float | None
+
+
+def _percent(written: Value | None) -> float | None:
+    """ASCOM ObservingConditions: 0.0 - 100.0."""
+    number = _number(written, at_least=0)
+    return number if number is not None and number <= 100 else None  # noqa: PLR2004
+
+
+def _wind_direction(written: Value | None) -> float | None:
+    number = _number(written, at_least=0)
+    if number is None or number > 360:  # noqa: PLR2004
+        return None
+    return number % 360
+
+
+def read_conditions(values: dict[str, Value]) -> Conditions | None:
+    """None when header writes none: most files."""
+    conditions = Conditions(
+        ambient_temp_c=_number(values.get("AMBTEMP")),
+        humidity_pct=_percent(values.get("HUMIDITY")),
+        dew_point_c=_number(values.get("DEWPOINT")),
+        pressure_hpa=_positive(values.get("PRESSURE")),
+        cloud_cover_pct=_percent(values.get("CLOUDCVR")),
+        wind_kmh=_number(values.get("WINDSPD"), at_least=0),
+        wind_gust_kmh=_number(values.get("WINDGUST"), at_least=0),
+        wind_dir_deg=_wind_direction(values.get("WINDDIR")),
+        sky_quality_mpsas=_number(values.get("MPSAS")),
+        sky_temp_c=_number(values.get("SKYTEMP")),
+        sky_brightness_lux=_number(values.get("SKYBRGHT"), at_least=0),
+        star_fwhm_arcsec=_positive(values.get("STARFWHM")),
+    )
+    return None if all(getattr(conditions, f) is None for f in conditions.__slots__) else conditions
+
+
 def read_card(program: Program, values: dict[str, Value]) -> Card:
     width, height = frame_size(values)
     ra, dec, source = pointing(program, values) or (None, None, None)
