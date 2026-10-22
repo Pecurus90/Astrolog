@@ -3,6 +3,7 @@ Radice muta: niente sparisce."""
 
 import os
 import shutil
+import stat
 import string
 import sys
 from pathlib import Path
@@ -119,6 +120,34 @@ def test_an_unplugged_linked_disk_makes_nothing_gone(conn, tmp_path):
     assert changes.reachable is True
     assert changes.unreachable == ["acquisizioni"]
     assert changes.gone == ["qui.fits"]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="hidden attribute: Windows")
+def test_a_folder_made_hidden_after_a_scan_is_not_judged(conn, tmp_path):
+    """Nascosta dall'utente (attributo): non letta, le sue pose restano com'erano."""
+    import ctypes
+
+    nas = tmp_path / "nas"
+    _file(nas / "notte" / "a.fits")
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    assert ctypes.windll.kernel32.SetFileAttributesW(str(nas / "notte"), stat.FILE_ATTRIBUTE_HIDDEN)
+    changes = scan_root(conn, root, LATER).changes
+    assert (changes.hidden, changes.gone) == (["notte"], [])
+    row = conn.execute("SELECT state FROM pipeline_files").fetchone()
+    assert row["state"] == "present"
+
+
+def test_a_file_moved_to_the_bin_is_gone(conn, tmp_path):
+    """Cestino: la posa cancellata dall'utente sparisce, anche se il cestino sta nella radice."""
+    nas = tmp_path / "nas"
+    a = _file(nas / "notte" / "a.fits")
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    (nas / ".Trashes").mkdir()
+    a.rename(nas / ".Trashes" / "a.fits")
+    changes = scan_root(conn, root, LATER).changes
+    assert (changes.hidden, changes.gone) == ([".Trashes"], ["notte/a.fits"])
 
 
 def test_an_online_only_file_is_not_gone(conn, tmp_path, monkeypatch):

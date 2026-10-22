@@ -235,15 +235,15 @@ def _judge(
 def _mark_gone(
     conn: sqlite3.Connection, root_id: int, not_judged: set[str], changes: Changes
 ) -> None:
-    """Present before, not seen now. File only in cloud (OneDrive, iCloud) or not looked at:
-    stays as was."""
+    """Present before, not seen now. Only in cloud, not looked at, under folder not answering or
+    hidden since: stays as was. Bin holds files under new path: those gone."""
     missing = conn.execute(
         "SELECT rel_path FROM pipeline_files WHERE root_id = ? AND state = 'present'"
         " AND seen_scan_id != ?",
         (root_id, changes.scan_id),
     ).fetchall()
     for (rel,) in missing:
-        if rel in not_judged or _under(rel, changes.unreachable):
+        if rel in not_judged or _under(rel, changes.unreachable + changes.hidden):
             continue
         changes.gone.append(rel)
         conn.execute(
