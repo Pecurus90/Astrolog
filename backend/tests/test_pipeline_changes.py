@@ -3,6 +3,7 @@ Radice muta: niente sparisce."""
 
 import os
 import shutil
+import string
 import sys
 from pathlib import Path
 
@@ -224,6 +225,15 @@ def test_the_same_root_is_added_once(conn, tmp_path):
     assert add_root(conn, tmp_path, NOW) == add_root(conn, tmp_path, LATER)
 
 
+@pytest.mark.parametrize("name", ["a.fits", "missing"])
+def test_only_a_folder_that_exists_is_added(conn, tmp_path, name):
+    """Un file o un percorso che non c'e': nessuna radice."""
+    (tmp_path / "a.fits").write_bytes(b"")
+    with pytest.raises(NotADirectoryError):
+        add_root(conn, tmp_path / name, NOW)
+    assert conn.execute("SELECT COUNT(*) FROM pipeline_roots").fetchone()[0] == 0
+
+
 def test_the_same_folder_written_another_way_is_the_same_root(conn, tmp_path):
     """Barra finale, barre, maiuscole (Windows): una cartella, una radice."""
     (tmp_path / "Archive").mkdir()
@@ -252,9 +262,14 @@ def test_a_folder_inside_or_around_a_root_is_refused_saying_which(conn, tmp_path
 
 @pytest.mark.skipif(sys.platform != "win32", reason="drive letters: Windows only")
 def test_roots_on_two_drives_are_both_added(conn, tmp_path):
-    other_drive = "Z:\\" if not str(tmp_path).upper().startswith("Z") else "Y:\\"
+    mine = os.path.splitdrive(tmp_path)[0].upper()
+    others = [
+        f"{d}:\\" for d in string.ascii_uppercase if f"{d}:" != mine and Path(f"{d}:\\").is_dir()
+    ]
+    if not others:
+        pytest.skip("one drive only")
     first = add_root(conn, tmp_path, NOW)
-    assert add_root(conn, other_drive + "Astro", NOW) != first
+    assert add_root(conn, others[0], NOW) != first
 
 
 def test_a_linked_folder_written_inside_a_root_is_inside(conn, tmp_path):

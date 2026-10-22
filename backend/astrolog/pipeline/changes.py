@@ -70,9 +70,11 @@ def _inside(child: str, parent: str) -> bool:
 
 
 def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -> int:
-    """Same folder written another way: same root. Inside or around one (as written or
-    real): RootOverlapError. Other roots' disks never touched: their keys are stored."""
+    """Existing folder only. Same folder written another way: same root; inside or around one
+    (written or real key): RootOverlapError. Other roots' disks never touched: keys stored."""
     absolute = os.path.normpath(os.path.abspath(path))
+    if not os.path.isdir(long_path(absolute)):
+        raise NotADirectoryError(absolute)
     written, real = _keys(absolute)
     with transaction(conn, immediate=True):
         for row in conn.execute("SELECT id, path, written_key, real_key FROM pipeline_roots"):

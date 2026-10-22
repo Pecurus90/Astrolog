@@ -438,4 +438,7 @@ def test_a_file_that_cannot_be_opened_is_unreadable(tmp_path):
 
 def test_a_folder_that_cannot_be_opened_is_reported(conn, tmp_path):
     gone = tmp_path / "unplugged"
-    assert not scan_root(conn, add_root(conn, gone, NOW), NOW).changes.reachable
+    gone.mkdir()
+    root_id = add_root(conn, gone, NOW)
+    gone.rmdir()
+    assert not scan_root(conn, root_id, NOW).changes.reachable
