@@ -948,8 +948,16 @@ CREATE TABLE pipeline_cards (
   pointing_source  TEXT CHECK (pointing_source IN ('solve', 'mount', 'target')),
   -- oggetto come scritto, indizio; NULL: non scritto o segnaposto di N.I.N.A.
   object_name TEXT CHECK (object_name <> ''),
+  -- sito come scritto, Est positivo; 0/0 profilo di fabbrica N.I.N.A.: mai salvato
+  site_lat_deg REAL CHECK (site_lat_deg BETWEEN -90 AND 90),
+  site_lon_deg REAL CHECK (site_lon_deg >= -180 AND site_lon_deg < 180),
+  -- ora del PC meno UTC: fuso del PC, non del sito; quarti d'ora da -12 h a +14 h
+  clock_offset_min INTEGER
+    CHECK (clock_offset_min BETWEEN -720 AND 840 AND clock_offset_min % 15 = 0),
   CHECK ((pointing_ra_deg IS NULL) = (pointing_dec_deg IS NULL)
-    AND (pointing_ra_deg IS NULL) = (pointing_source IS NULL))
+    AND (pointing_ra_deg IS NULL) = (pointing_source IS NULL)),
+  CHECK ((site_lat_deg IS NULL) = (site_lon_deg IS NULL)),
+  CHECK (NOT (site_lat_deg = 0 AND site_lon_deg = 0))
 ) STRICT;
 
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave: nome (filters.filter_key).

@@ -420,6 +420,56 @@ def test_a_calibration_keeps_its_object():
     assert read_card(NINA, {"IMAGETYP": "FLAT", "OBJECT": "FlatWizard"}).object_name is None
 
 
+@pytest.mark.parametrize(
+    ("lat", "lon", "site"),
+    [
+        (45.494, 11.5218, (45.494, 11.5218)),  # archive, N.I.N.A.
+        (45.6, 11.6666666666667, (45.6, 11.6666666666667)),  # true double: kept
+        (46.0497, 11.3165, (46.0497, 11.3165)),  # archive, ASIAIR
+        (0.0, 11.5, (0.0, 11.5)),  # equator: real
+        (45.0, 0.0, (45.0, 0.0)),  # Greenwich: real
+        (45.0, 180.0, (45.0, -180.0)),  # same meridian as -180
+        (0.0, 0.0, (None, None)),  # N.I.N.A. factory profile (AstrometrySettings.cs)
+        (90.1, 11.0, (None, None)),
+        (45.0, 181.0, (None, None)),
+        (45.0, 359.0, (None, None)),
+        ("45.494", 11.5, (None, None)),
+        (True, 11.5, (None, None)),
+        (45.0, None, (None, None)),
+    ],
+)
+def test_the_site_is_where_the_program_says_east_positive(lat, lon, site):
+    values = {k: v for k, v in (("SITELAT", lat), ("SITELONG", lon)) if v is not None}
+    for program in (NINA, ASIAIR):
+        card = read_card(program, values)
+        assert (card.site_lat_deg, card.site_lon_deg) == site
+
+
+@pytest.mark.parametrize(
+    ("local", "minutes"),
+    [
+        ("2025-06-29T23:11:33.412", 120),  # archive: summer
+        ("2025-06-29T22:11:33.412", 60),  # archive: winter
+        ("2025-06-30T02:56:33.412", 345),  # Nepal +5:45
+        ("2025-06-29T21:11:33.412", 0),
+        ("2025-06-29T09:11:33.412", -720),
+        ("2025-06-29T22:12:33.412", None),  # not a zone: not the same instant
+        ("2025-06-30T12:11:33.412", None),  # +15 h: no zone
+        ("2025-06-29T08:11:33.412", None),  # -13 h
+        ("2025-06-29", None),
+        ("2025-06-29T23:11:33+02:00", None),
+    ],
+)
+def test_the_clock_offset_is_local_minus_utc(local, minutes):
+    """DATE-LOC = ora del PC (CFitsioFITS.cs ToLocalTime): fuso del PC, non del sito."""
+    values = {"DATE-OBS": "2025-06-29T21:11:33.412", "DATE-LOC": local}
+    assert read_card(NINA, values).clock_offset_min == minutes
+
+
+def test_no_utc_start_no_clock_offset():
+    assert read_card(NINA, {"DATE-LOC": "2025-06-29T23:11:33.412"}).clock_offset_min is None
+
+
 def test_iso_written_as_number_or_digits_is_read():
     assert read_card(ASIAIR, {"ISO": " 1600 "}).iso == 1600
     assert read_card(ASIAIR, {"ISO": 800}).iso == 800

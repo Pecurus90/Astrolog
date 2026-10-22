@@ -60,13 +60,39 @@ def frame_type(program: Program, values: dict[str, Value]) -> FrameType:
 
 def start_utc(values: dict[str, Value]) -> datetime | None:
     """No fallback (MJD-OBS, DATE-AVG, file time): no file lacks DATE-OBS. Past 6 decimals cut."""
-    written = values.get("DATE-OBS")
+    written = _strict_time(values.get("DATE-OBS"))
+    return written.replace(tzinfo=UTC) if written else None
+
+
+def _strict_time(written: Value | None) -> datetime | None:
+    """Both programs' form, no zone; else None."""
     if not isinstance(written, str) or not _DATE_OBS.fullmatch(written):
         return None
     try:
-        return datetime.fromisoformat(written).replace(tzinfo=UTC)
+        return datetime.fromisoformat(written)
     except ValueError:  # impossible date or time
         return None
+
+
+def clock_offset_min(values: dict[str, Value]) -> int | None:
+    """DATE-LOC minus DATE-OBS: PC clock zone (CFitsioFITS.cs ToLocalTime), not site's.
+    Zones are whole quarters, -12 h to +14 h: else not same instant."""
+    local, utc = _strict_time(values.get("DATE-LOC")), _strict_time(values.get("DATE-OBS"))
+    if local is None or utc is None:
+        return None
+    seconds = (local - utc).total_seconds()
+    if seconds % 900 or not -720 <= seconds / 60 <= 840:  # noqa: PLR2004
+        return None
+    return int(seconds // 60)
+
+
+def site(values: dict[str, Value]) -> tuple[float, float] | None:
+    """SITELAT/SITELONG degrees, East positive (archive). 0/0: N.I.N.A. factory profile
+    (AstrometrySettings.cs), only sea there. Longitude 180 is -180."""
+    lat, lon = _number(values.get("SITELAT")), _number(values.get("SITELONG"))
+    if lat is None or lon is None or abs(lat) > 90 or abs(lon) > 180 or lat == lon == 0:  # noqa: PLR2004
+        return None
+    return lat, -180.0 if lon == 180 else lon  # noqa: PLR2004
 
 
 def _number(written: Value | None, at_least: float = -math.inf) -> float | None:
@@ -279,11 +305,15 @@ class Card:
     pointing_dec_deg: float | None
     pointing_source: PointingSource | None
     object_name: str | None  # hint: sky and catalogue confirm
+    site_lat_deg: float | None
+    site_lon_deg: float | None
+    clock_offset_min: int | None
 
 
 def read_card(program: Program, values: dict[str, Value]) -> Card:
     width, height = frame_size(values)
     ra, dec, source = pointing(program, values) or (None, None, None)
+    lat, lon = site(values) or (None, None)
     return Card(
         frame_type=frame_type(program, values),
         start_utc=start_utc(values),
@@ -307,4 +337,7 @@ def read_card(program: Program, values: dict[str, Value]) -> Card:
         pointing_dec_deg=dec,
         pointing_source=source,
         object_name=object_name(program, values),
+        site_lat_deg=lat,
+        site_lon_deg=lon,
+        clock_offset_min=clock_offset_min(values),
     )
