@@ -382,6 +382,29 @@ def test_a_compressed_frame_with_a_negative_axis_is_broken(tmp_path):
     assert scan_file(path) == Skipped(path, Skip.BROKEN)
 
 
+@pytest.mark.parametrize("cut", ["no_end", "short"])
+def test_a_compressed_page_without_its_end_is_broken(tmp_path, cut):
+    """Pagina dell'immagine senza END (o copia tagliata li'): rotto come la primaria, non
+    di altro programma."""
+    path = _compressed(tmp_path / "light.fits.fz")
+    raw = path.read_bytes()
+    end = b"END" + b" " * 77
+    page = raw.index(end) + len(end)
+    page += -page % 2880
+    if cut == "no_end":
+        path.write_bytes(raw[:page] + raw[page:].replace(end, b" " * 80, 1))
+    else:
+        path.write_bytes(raw[: page + 2880])
+    assert scan_file(path) == Skipped(path, Skip.BROKEN)
+
+
+def test_an_empty_primary_alone_is_not_supported(tmp_path):
+    """Sola primaria vuota, nessuna pagina dopo: file di nessun programma, non rotto."""
+    path = _fits(tmp_path / "empty.fits", ["SIMPLE  =                    T", "BITPIX  =  8",
+                                           "NAXIS   =                    0"])  # fmt: skip
+    assert scan_file(path) == Skipped(path, Skip.NOT_SUPPORTED)
+
+
 @pytest.mark.parametrize("name", ["light.fits.fz", "light.fits"])
 def test_a_compressed_nina_file_gives_its_keys_from_the_image_page(tmp_path, name):
     got = scan_file(_compressed(tmp_path / name))

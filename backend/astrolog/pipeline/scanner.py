@@ -102,6 +102,8 @@ def read_header(fh: BinaryIO) -> Header | None:
     if cards.get("NAXIS") == 0 and program_of(cards) is None:
         # tile-compressed (FITS 4.0 sec. 10): empty primary, frame's keys and data in page 2
         page = _card_images(fh)
+        if page is None and fh.tell() > start:  # page begun, no END: broken as primary would be
+            return None
         image = _parse(page) if page is not None else {}
         if image.get("ZIMAGE") is True:
             # page's NAXISn, BITPIX describe table; frame's are ZNAXISn, ZBITPIX
