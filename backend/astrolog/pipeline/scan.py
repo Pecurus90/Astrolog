@@ -58,7 +58,7 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
     vanished: set[str] = set()
     for start in range(0, len(to_read), BATCH):
         read = [
-            (rel, scan_file(Path(changes.root, rel), changes.stat[rel][0]))  # size from walk
+            (rel, scan_file(Path(changes.root, rel), changes.stat[rel][0]))  # size already stat-ed
             for rel in to_read[start : start + BATCH]
         ]
         batch = [(rel, got) for rel, got in read if not _vanished(got)]
@@ -195,7 +195,7 @@ MOVED = (  # by frame inside root: index pipeline_files_frame, else quadratic on
 def _moved(conn: sqlite3.Connection, root_id: int, changes: Changes) -> list[tuple[str, str]]:
     """Gone this scan, paired one to one with file of same frame arrived after gone one was last
     seen: holds across stopped scans and silent roots. Further arrival: copy (duplicate)."""
-    rows = sorted(  # a move keeps size and date, a copy usually not: every kept pair first
+    rows = sorted(  # a move keeps size and date, a copy may too: every kept pair first
         conn.execute(MOVED, (root_id, changes.scan_id)),
         key=lambda r: (not r["kept"], r["was"], r["now"]),
     )

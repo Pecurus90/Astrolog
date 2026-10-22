@@ -30,7 +30,7 @@ class Changes:
     unchanged: list[str] = field(default_factory=list)
     gone: list[str] = field(default_factory=list)
     unreachable: list[str] = field(default_factory=list)  # subfolders not answering
-    unlooked: list[str] = field(default_factory=list)  # size and date unreadable
+    unlooked: list[str] = field(default_factory=list)  # no stat, name not text, gone before read
     hidden: list[str] = field(default_factory=list)  # trash, service folders: left out, said
     online_only: list[str] = field(default_factory=list)  # cloud placeholders: never downloaded
     # files to read -> (size, mtime_ns) seen now; written only with their read
@@ -145,7 +145,7 @@ def _same_root(
     ancestors: dict[str, str],
 ) -> int | None:
     """Id of root that is this folder; one inside or around it (text or disk): RootOverlapError.
-    Same id after rename: confirm stored path still is this folder."""
+    Disk id survives rename: match only while stored path still is this folder."""
     mine_id = ":".join(identity) if identity is not None else None
     for row in conn.execute("SELECT * FROM pipeline_roots"):
         if written == row["written_key"] or real == row["real_key"]:

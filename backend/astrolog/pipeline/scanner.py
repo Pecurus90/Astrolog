@@ -1,4 +1,4 @@
-"""Finds FITS files, extracts header of those N.I.N.A. and ASIAIR wrote (ADR 0029)."""
+"""Reads header of one FITS file; keeps those N.I.N.A. and ASIAIR wrote (ADR 0029)."""
 
 import math
 import os

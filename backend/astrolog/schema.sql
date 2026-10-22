@@ -873,8 +873,8 @@ CREATE TABLE pipeline_roots (
   -- chiavi di confronto, scritte all'aggiunta: dentro/intorno senza toccare dischi altrui
   written_key TEXT NOT NULL UNIQUE,  -- percorso come scritto
   real_key    TEXT NOT NULL UNIQUE,  -- collegamenti risolti
-  -- volume e cartella dal disco (os.stat): stessa cartella scritta in ogni forma. NULL: non dati.
-  -- Non unici: rinominata, la cartella tiene l'id; vale la riga il cui percorso e' ancora lei
+  -- volume e cartella dal disco (os.stat), NULL non dati. Non unici: rinominata, tiene l'id del
+  -- disco ma e' radice nuova; vale la riga il cui percorso e' ancora lei
   device      TEXT,  -- in cifre: il seriale Windows e' a 64 bit senza segno, oltre INTEGER
   inode       TEXT,
   -- "device:inode" delle cartelle che la contengono, prese all'aggiunta: dentro/intorno anche
@@ -898,7 +898,7 @@ CREATE TABLE pipeline_scans (
   gone       INTEGER NOT NULL CHECK (gone >= 0),
   -- letti e saltati, per motivo: {"rewritten": 3, ...}; il totale si somma
   skipped    TEXT NOT NULL CHECK (json_valid(skipped) AND json_type(skipped) = 'object'),
-  -- chiavi che nessun programma verificato scrive (dell'utente, o nuove): {"MYNOTE": 2, ...}
+  -- chiavi che il programma del file non scrive (dell'utente, o nuove): {"MYNOTE": 2, ...}
   unknown_keys TEXT NOT NULL CHECK (json_valid(unknown_keys) AND json_type(unknown_keys) = 'object'),
   -- fuori, coi percorsi: {hidden, online_only, unreachable, unlooked}; NULL radice muta
   left_out   TEXT CHECK (json_valid(left_out) AND json_type(left_out) = 'object'),
@@ -906,8 +906,8 @@ CREATE TABLE pipeline_scans (
   CHECK ((reachable = 1) = (left_out IS NOT NULL))
 ) STRICT;
 
--- RILEVATO. Posa per identita' (camera, inizio, dimensioni, durata: ADR 0030); senza file si
--- toglie, sparito tiene la sua. Risposte alla chiave (nome, produzione, impronta), mai a un id.
+-- RILEVATO. Posa (camera, inizio con frazione di secondo, dimensioni, durata: ADR 0030); senza
+-- file si toglie, sparito tiene la sua. Risposte alla chiave (nome, impronta...), mai a un id.
 CREATE TABLE pipeline_frames (
   id          INTEGER PRIMARY KEY,
   fingerprint TEXT NOT NULL UNIQUE,

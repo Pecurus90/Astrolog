@@ -1,4 +1,4 @@
-"""Frame identity from header: camera, exposure start, size, exposure time (ADR 0030).
+"""Frame identity from header: camera, start to fraction of second, size, exposure (ADR 0030).
 Pixels only without them; same file handle, never reopened, no astropy."""
 
 import hashlib
