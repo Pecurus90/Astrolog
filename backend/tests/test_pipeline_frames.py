@@ -302,6 +302,32 @@ def test_a_scan_says_what_the_walk_left_out(conn, tmp_path):
     assert result.changes.online_only == ["night/M42.fits"]
 
 
+def test_the_receipt_keeps_rereads_skips_and_what_was_left_out(conn, tmp_path, monkeypatch):
+    """Ricevuta: riletti a parte dai cambiati, saltati contati, fuori coi percorsi."""
+    path = _nina(tmp_path / "a.fits", 1)
+    _nina(tmp_path / "b.fits", 2, ("PROGRAM = 'Editor 1.9.3'",))
+    _nina(tmp_path / ".Trashes" / "deleted.fits", 3)
+    root = add_root(conn, tmp_path, NOW)
+    real = frames.scan_file
+    monkeypatch.setattr(
+        frames, "scan_file", lambda p: Skipped(p, Skip.UNREADABLE) if p == path else real(p)
+    )
+    first = scan_root(conn, root, NOW)
+    monkeypatch.setattr(frames, "scan_file", real)
+    second = scan_root(conn, root, LATER)
+    assert (first.changes.new, second.changes.reread, second.changes.changed) == (
+        ["a.fits", "b.fits"],
+        ["a.fits"],
+        [],
+    )
+    rows = conn.execute(
+        "SELECT new, changed, reread, unchanged, skipped, left_out FROM pipeline_scans ORDER BY id"
+    ).fetchall()
+    left_out = {"hidden": [".Trashes"], "online_only": [], "unreachable": [], "unlooked": []}
+    assert [tuple(r)[:5] for r in rows] == [(2, 0, 0, 0, 2), (0, 0, 1, 1, 0)]
+    assert [json.loads(r["left_out"]) for r in rows] == [left_out, left_out]
+
+
 def test_a_file_skipped_for_its_content_is_not_read_again(conn, tmp_path):
     _nina(tmp_path / "a.fits", 1, ("PROGRAM = 'Editor 1.9.3'",))
     root = add_root(conn, tmp_path, NOW)

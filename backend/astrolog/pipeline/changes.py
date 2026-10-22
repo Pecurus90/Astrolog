@@ -1,6 +1,7 @@
 """What changed in chosen folder since last scan, no file opened: path, size, date.
 Folder not answering: no verdict on its files (ADR 0030, brick 2)."""
 
+import json
 import os
 import sqlite3
 from dataclasses import dataclass, field
@@ -21,6 +22,7 @@ class Changes:
     scan_id: int = 0  # receipt this scan wrote
     new: list[str] = field(default_factory=list)
     changed: list[str] = field(default_factory=list)
+    reread: list[str] = field(default_factory=list)  # same on disk, last read failed
     unchanged: list[str] = field(default_factory=list)
     gone: list[str] = field(default_factory=list)
     unreachable: list[str] = field(default_factory=list)  # subfolders not answering
@@ -30,7 +32,7 @@ class Changes:
 
     @property
     def to_read(self) -> list[str]:
-        return sorted(self.new + self.changed)
+        return sorted(self.new + self.changed + self.reread)
 
 
 def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -> int:
@@ -91,8 +93,8 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
     scan_id = inserted_id(
         conn.execute(
             "INSERT INTO pipeline_scans"
-            " (root_id, scanned_at, reachable, new, changed, unchanged, gone)"
-            " VALUES (?, ?, ?, 0, 0, 0, 0)",
+            " (root_id, scanned_at, reachable, new, changed, reread, unchanged, gone, skipped)"
+            " VALUES (?, ?, ?, 0, 0, 0, 0, 0, 0)",
             (root_id, now, int(changes.reachable)),
         )
     )
@@ -101,15 +103,26 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
         not_judged = unlooked | {_rel(p, root) for p in walk.online_only}
         _mark_gone(conn, root_id, scan_id, not_judged, changes)
         conn.execute(
-            "UPDATE pipeline_scans SET new = ?, changed = ?, unchanged = ?, gone = ?"
-            " WHERE id = ?",
-            (len(changes.new), len(changes.changed), len(changes.unchanged),
-             len(changes.gone), scan_id),
+            "UPDATE pipeline_scans SET new = ?, changed = ?, reread = ?, unchanged = ?, gone = ?,"
+            " left_out = ? WHERE id = ?",
+            (len(changes.new), len(changes.changed), len(changes.reread),
+             len(changes.unchanged), len(changes.gone), _left_out(changes), scan_id),
         )  # fmt: skip
     changes.scan_id = scan_id
-    for items in (changes.new, changes.changed, changes.unchanged, changes.gone):
+    for items in (changes.new, changes.changed, changes.reread, changes.unchanged, changes.gone):
         items.sort()
     return changes
+
+
+def _left_out(changes: Changes) -> str:
+    return json.dumps(
+        {
+            "hidden": changes.hidden,
+            "online_only": changes.online_only,
+            "unreachable": changes.unreachable,
+            "unlooked": changes.unlooked,
+        }
+    )
 
 
 def _judge(
@@ -131,10 +144,10 @@ def _judge(
         before = known.get(rel)
         if before is None or before["state"] == "gone":
             changes.new.append(rel)
-        elif (before["size"], before["mtime_ns"]) != (size, mtime_ns) or (
-            before["skip_reason"] in _PASSING  # read failed last time: never lost
-        ):
+        elif (before["size"], before["mtime_ns"]) != (size, mtime_ns):
             changes.changed.append(rel)
+        elif before["skip_reason"] in _PASSING:  # read failed last time: never lost
+            changes.reread.append(rel)
         else:
             changes.unchanged.append(rel)
         conn.execute(

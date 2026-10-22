@@ -881,8 +881,12 @@ CREATE TABLE pipeline_scans (
   reachable  INTEGER NOT NULL CHECK (reachable IN (0, 1)),  -- 0: radice muta, nessun giudizio
   new        INTEGER NOT NULL,
   changed    INTEGER NOT NULL,
+  reread     INTEGER NOT NULL,  -- uguali su disco, lettura fallita l'ultima volta
   unchanged  INTEGER NOT NULL,
-  gone       INTEGER NOT NULL
+  gone       INTEGER NOT NULL,
+  skipped    INTEGER NOT NULL,  -- letti e saltati: il motivo sta in pipeline_files
+  -- fuori, coi percorsi: {hidden, online_only, unreachable, unlooked}; NULL radice muta
+  left_out   TEXT CHECK (json_valid(left_out) AND json_type(left_out) = 'object')
 ) STRICT;
 
 -- RILEVATO. Posa per impronta: regge spostamento e header riscritto; senza file resta. Risposte

@@ -33,6 +33,10 @@ def scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
             if isinstance(got, Skipped):
                 result.skipped.append(got)
             _store(conn, root_id, rel, got, now)
+        conn.execute(
+            "UPDATE pipeline_scans SET skipped = ? WHERE id = ?",
+            (len(result.skipped), changes.scan_id),
+        )
         result.moved = _moved(conn, root_id, changes)
     result.duplicates = _duplicates(conn, root_id)
     result.frames = conn.execute(
