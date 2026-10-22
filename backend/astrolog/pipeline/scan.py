@@ -157,7 +157,8 @@ def _frame_of(conn: sqlite3.Connection, got: Extracted, now: str) -> int:
 
 
 MOVED = (  # by frame inside root: index pipeline_files_frame, else quadratic on big moves
-    "SELECT was.rel_path AS was, now.rel_path AS now FROM pipeline_files AS now"
+    "SELECT was.rel_path AS was, now.rel_path AS now,"
+    " now.size = was.size AND now.mtime_ns = was.mtime_ns AS kept FROM pipeline_files AS now"
     " JOIN pipeline_files AS was ON was.frame_id = now.frame_id AND was.root_id = now.root_id"
     " WHERE now.root_id = ? AND now.state = 'present' AND was.state = 'gone'"
     " AND was.gone_scan_id = ? AND now.arrived_scan_id > was.seen_scan_id"
@@ -167,8 +168,9 @@ MOVED = (  # by frame inside root: index pipeline_files_frame, else quadratic on
 def _moved(conn: sqlite3.Connection, root_id: int, changes: Changes) -> list[tuple[str, str]]:
     """Gone this scan, paired one to one with file of same frame arrived after gone one was last
     seen: holds across stopped scans and silent roots. Further arrival: copy (duplicate)."""
-    rows = sorted(
-        conn.execute(MOVED, (root_id, changes.scan_id)), key=lambda r: (r["was"], r["now"])
+    rows = sorted(  # a move keeps size and date, a copy usually not: every kept pair first
+        conn.execute(MOVED, (root_id, changes.scan_id)),
+        key=lambda r: (not r["kept"], r["was"], r["now"]),
     )
     pairs: list[tuple[str, str]] = []
     paired: set[str] = set()
@@ -176,6 +178,7 @@ def _moved(conn: sqlite3.Connection, root_id: int, changes: Changes) -> list[tup
         if row["was"] not in paired and row["now"] not in paired:
             pairs.append((row["was"], row["now"]))
             paired.update((row["was"], row["now"]))
+    pairs.sort()
     conn.executemany(
         "INSERT INTO pipeline_moves (scan_id, was_path, now_path) VALUES (?, ?, ?)",
         [(changes.scan_id, was, now) for was, now in pairs],

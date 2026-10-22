@@ -126,6 +126,33 @@ def test_a_move_plus_a_copy_is_one_move_and_one_duplicate(conn, tmp_path):
     assert list(result.duplicates.values()) == [["b.fits", "c.fits"]]
 
 
+def test_the_move_is_the_file_that_kept_size_and_date_not_the_first_by_name(conn, tmp_path):
+    """Spostato in z/, copiato in b.fits: lo spostato tiene la data. Prima: scelto per nome."""
+    _nina(tmp_path / "a.fits", 4)
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    shutil.copy(tmp_path / "a.fits", tmp_path / "b.fits")
+    _touch_later(tmp_path / "b.fits")
+    (tmp_path / "z").mkdir()
+    (tmp_path / "a.fits").rename(tmp_path / "z" / "a.fits")
+    assert scan_root(conn, root, LATER).moved == [("a.fits", "z/a.fits")]
+
+
+def test_a_kept_move_wins_even_when_an_earlier_name_has_none(conn, tmp_path):
+    """a e b doppioni; a cancellato, b spostato in c, c copiato in d: b -> c, non b -> d."""
+    _nina(tmp_path / "a.fits", 4)
+    shutil.copy(tmp_path / "a.fits", tmp_path / "b.fits")
+    _touch_later(tmp_path / "b.fits")
+    root = add_root(conn, tmp_path, NOW)
+    scan_root(conn, root, NOW)
+    (tmp_path / "a.fits").unlink()
+    (tmp_path / "b.fits").rename(tmp_path / "c.fits")
+    shutil.copy(tmp_path / "c.fits", tmp_path / "d.fits")
+    _touch_later(tmp_path / "d.fits")
+    _touch_later(tmp_path / "d.fits")
+    assert scan_root(conn, root, LATER).moved == [("a.fits", "d.fits"), ("b.fits", "c.fits")]
+
+
 def test_a_file_not_read_has_no_frame(conn, tmp_path):
     (tmp_path / "altro.fits").write_bytes(b"SIMPLE  =                    T".ljust(2880))
     scan_root(conn, add_root(conn, tmp_path, NOW), NOW)
