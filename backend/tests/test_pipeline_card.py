@@ -346,6 +346,16 @@ def test_an_asiair_mount_without_date_is_unknown():
     assert card.pointing_source is None
 
 
+@pytest.mark.parametrize("year", ["1950", "2200"])
+def test_an_asiair_mount_out_of_the_leap_second_table_precesses_without_warning(year):
+    """Anno fuori dalla tabella dei secondi intercalari: ERFA scriveva 'dubious year' a console."""
+    values = {"RA": 210.0, "DEC": 54.0, "DATE-OBS": f"{year}-06-01T22:00:00"}
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        card = read_card(ASIAIR, values)
+    assert card.pointing_source is PointingSource.MOUNT
+
+
 def test_a_nina_mount_is_j2000_as_written(tmp_path):
     values = _values("nina.txt", tmp_path)
     card = read_card(NINA, values)

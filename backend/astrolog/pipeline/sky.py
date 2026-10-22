@@ -2,6 +2,7 @@
 
 import math
 import re
+import warnings
 from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
@@ -9,6 +10,7 @@ from typing import Any
 
 from astropy.coordinates import FK5, SkyCoord
 from astropy.time import Time
+from erfa import ErfaWarning
 
 from .values import Program, Value, as_count, as_number
 
@@ -63,8 +65,10 @@ def _asiair_mount(values: dict[str, Value], start: datetime | None) -> tuple[flo
     sky = _sky(values.get("RA"), values.get("DEC"))
     if sky is None or start is None:
         return None
-    of_date = SkyCoord(*sky, unit="deg", frame=FK5(equinox=Time(start)))
-    j2000: Any = of_date.transform_to(FK5(equinox="J2000"))  # astropy stubs: Any
+    with warnings.catch_warnings():  # year past leap-second table: 'dubious year', precession fine
+        warnings.simplefilter("ignore", ErfaWarning)
+        of_date = SkyCoord(*sky, unit="deg", frame=FK5(equinox=Time(start)))
+        j2000: Any = of_date.transform_to(FK5(equinox="J2000"))  # astropy stubs: Any
     return _sky(float(j2000.ra.deg), float(j2000.dec.deg))
 
 
