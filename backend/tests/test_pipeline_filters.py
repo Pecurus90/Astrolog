@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from astrolog.db.connect import connect
+from astrolog.pipeline import filters
 from astrolog.pipeline.card import read_card
 from astrolog.pipeline.changes import add_root
 from astrolog.pipeline.filters import (
@@ -193,6 +195,30 @@ def test_a_failed_answer_leaves_nothing(conn):
     with pytest.raises(ValueError):
         answer(conn, "y", "antlia 3nm", {Band.HA: 3.0})
     assert conn.execute("SELECT COUNT(*) FROM pipeline_filter_answers").fetchone()[0] == 1
+
+
+def test_an_answer_never_fails_because_a_scan_batch_saved_meanwhile(db_path, monkeypatch):
+    """Lotto della scansione salvato fra lettura e scrittura della risposta: la risposta regge,
+    il lotto aspetta il suo turno (busy_timeout)."""
+    ui, scan = connect(db_path), sqlite3.connect(db_path, timeout=0)
+    real = filters._user_filter
+
+    def batch_saved_meanwhile(conn, name, bands):
+        conn.execute("SELECT 1 FROM pipeline_filters").fetchall()
+        try:
+            scan.execute("INSERT INTO pipeline_filter_spellings (written, key) VALUES ('x', 'x')")
+            scan.commit()
+        except sqlite3.OperationalError:
+            scan.rollback()  # answer holds the lock: batch waits, in app by busy_timeout
+        return real(conn, name, bands)
+
+    monkeypatch.setattr(filters, "_user_filter", batch_saved_meanwhile)
+    try:
+        answer(ui, "Ha 7nm", "Antlia Ha", {Band.HA: 7.0})
+        assert ui.execute("SELECT name FROM pipeline_filters").fetchall()[0]["name"] == "Antlia Ha"
+    finally:
+        ui.close()
+        scan.close()
 
 
 def test_the_card_keeps_the_filter_as_written():
