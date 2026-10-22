@@ -12,7 +12,8 @@ from astrolog.api import folders as folders_api
 from astrolog.api import paths
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
-from conftest import online_only, write_light
+from astrolog.fits import walk
+from conftest import online_only, unreadable_dir, write_light
 
 
 def add(client_vuoto, path):
@@ -143,6 +144,18 @@ def test_probe_stops_at_its_time_limit_and_says_so(client_vuoto, tmp_path, monke
     monkeypatch.setattr(folders_api, "PROBE_SECONDS", -1)  # scaduto prima di cominciare
     p = client_vuoto.post("/api/v1/folders/probe", json={"root_path": str(root)}).json()
     assert (p["reachable"], p["complete"]) == (True, False)
+
+
+def test_a_subfolder_that_does_not_answer_makes_the_count_partial(
+    client_vuoto, tmp_path, monkeypatch
+):
+    """Sottocartella del NAS che non si apre: prima saltata in silenzio, conteggio 'completo'."""
+    root = tmp_path / "nas"
+    write_light(root / "a.fits")
+    write_light(root / "night" / "b.fits", obj="M 2")
+    unreadable_dir(monkeypatch, walk, root / "night")
+    p = client_vuoto.post("/api/v1/folders/probe", json={"root_path": str(root)}).json()
+    assert (p["reachable"], p["fits_count"], p["complete"]) == (True, 1, False)
 
 
 def test_a_network_folder_is_accepted(client_vuoto, monkeypatch):

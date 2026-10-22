@@ -2889,7 +2889,7 @@ export interface components {
             fits_count: number | null;
             /**
              * Complete
-             * @description False = the count stopped at the time limit: there are "more than" fits_count.
+             * @description False = the count stopped at the time limit, or a subfolder did not answer: there are "more than" fits_count.
              */
             complete: boolean | null;
             /** @description The registered folder these same files belonged to; set when moved_check is `found`. */

@@ -105,13 +105,20 @@ def probe(
     deadline = time.monotonic() + PROBE_SECONDS
     online: list[str] = []
     unvisited: list[str] = []
-    found = walk_dir(canonical, online_only=online, deadline=deadline, unvisited=unvisited)
+    unreadable: list[str] = []
+    found = walk_dir(
+        canonical,
+        online_only=online,
+        deadline=deadline,
+        unvisited=unvisited,
+        unreadable=unreadable,
+    )
     moved_from, check = _moved_here(conn, canonical, found, deadline)
     return ProbeOut(
         root_path=canonical,
         reachable=True,
         fits_count=len(found) + len(online),
-        complete=not unvisited,
+        complete=not (unvisited or unreadable),
         moved_from=moved_from,
         moved_check=check,
     )
