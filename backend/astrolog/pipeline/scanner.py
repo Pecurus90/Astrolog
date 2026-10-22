@@ -1,18 +1,19 @@
 """Finds FITS files, extracts header of those N.I.N.A. and ASIAIR wrote (ADR 0029)."""
 
 import math
+import os
 import re
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import BinaryIO
 
-from .fingerprint import BLOCK, CARD, frame_identity
+from .fingerprint import BLOCK, CARD, Header, data_length, frame_identity
+from .values import Program, Value
 from .walk import long_path
 
 MAX_HEADER_BLOCKS = 1000
 _COMMENTARY = frozenset({"COMMENT", "HISTORY"})  # FITS 4.0 4.4.2.4 free text; format notes, dropped
-Value = str | int | float | bool
 
 _STRUCTURE = ("SIMPLE", "BITPIX", "NAXIS", "NAXIS1", "NAXIS2", "BZERO", "EXTEND")
 
@@ -62,11 +63,6 @@ _COMPRESSION = re.compile(
 )
 
 
-class Program(StrEnum):
-    NINA = "N.I.N.A."
-    ASIAIR = "ASIAIR"
-
-
 class Skip(StrEnum):
     NOT_SUPPORTED = "not_supported"
     REWRITTEN = "rewritten"
@@ -92,25 +88,33 @@ class Skipped:
 
 
 def read_cards(path: Path) -> dict[str, Value] | None:
-    """Keyword -> value of frame header (primary, plus image page if compressed); None without END
-    or on read error. Latin-1 or UTF-8 text; CONTINUE joins strings."""
+    """Keyword -> value of frame header; None without END or on read error."""
     try:
         with open(long_path(path), "rb") as fh:  # noqa: PTH123 - the `\\?\` form is a str
-            primary = _card_images(fh)
-            if primary is None:
-                return None
-            cards = _parse(primary)
-            if cards.get("NAXIS") == 0 and program_of(cards) is None:
-                # tile-compressed (FITS 4.0 sec. 10): empty primary, frame's keys in page 2
-                page = _card_images(fh)
-                image = _parse(page) if page is not None else {}
-                if image.get("ZIMAGE") is True:
-                    # page's NAXISn, BITPIX describe table; frame's are ZNAXISn, ZBITPIX
-                    page_keys = {k: v for k, v in image.items() if k not in _TABLE_GEOMETRY}
-                    cards = {**page_keys, **cards}
+            header = read_header(fh)
     except OSError:
         return None
-    return {key: _utf8(value) for key, value in cards.items()}
+    return header.cards if header is not None else None
+
+
+def read_header(fh: BinaryIO) -> Header | None:
+    """Frame header (primary, plus image page if compressed) and where its data lies, from one
+    open file. Latin-1 or UTF-8 text; CONTINUE joins strings. None without END."""
+    primary = _card_images(fh)
+    if primary is None:
+        return None
+    cards = _parse(primary)
+    start, length = fh.tell(), data_length(cards)
+    if cards.get("NAXIS") == 0 and program_of(cards) is None:
+        # tile-compressed (FITS 4.0 sec. 10): empty primary, frame's keys and data in page 2
+        page = _card_images(fh)
+        image = _parse(page) if page is not None else {}
+        if image.get("ZIMAGE") is True:
+            # page's NAXISn, BITPIX describe table; frame's are ZNAXISn, ZBITPIX
+            page_keys = {k: v for k, v in image.items() if k not in _TABLE_GEOMETRY}
+            cards = {**page_keys, **cards}
+            start, length = fh.tell(), data_length(image)
+    return Header({key: _utf8(value) for key, value in cards.items()}, start, length)
 
 
 def _utf8(value: Value) -> Value:
@@ -228,21 +232,29 @@ def _axes_are_counts(cards: dict[str, Value]) -> bool:
     )
 
 
-def scan_file(path: Path) -> Extracted | Skipped:
-    cards = read_cards(path)
-    if cards is None:
+def scan_file(path: Path, size: int | None = None) -> Extracted | Skipped:
+    """One open per file. `size`: from walk's stat (no extra access); else asked to open file."""
+    try:
+        with open(long_path(path), "rb") as fh:  # noqa: PTH123 - the `\\?\` form is a str
+            return _extract(path, fh, size)
+    except OSError:
         return Skipped(path, Skip.UNREADABLE)
+
+
+def _extract(path: Path, fh: BinaryIO, size: int | None) -> Extracted | Skipped:
+    header = read_header(fh)
+    if header is None:
+        return Skipped(path, Skip.UNREADABLE)
+    cards = header.cards
     if _REWRITE_MARKS & cards.keys():
         return Skipped(path, Skip.REWRITTEN)
     program = program_of(cards)
     if program is None:
         return Skipped(path, Skip.NOT_SUPPORTED)
-    if not _axes_are_counts(cards):
+    if not _axes_are_counts(cards) or header.data_length is None:
         return Skipped(path, Skip.UNREADABLE)
-    try:
-        identity = frame_identity(path, cards)
-    except Exception:  # noqa: BLE001 - astropy refuses the shape: the file cannot be read
-        return Skipped(path, Skip.UNREADABLE)
+    known = size if size is not None else os.fstat(fh.fileno()).st_size
+    identity = frame_identity(header, known, fh)
     if not identity.complete:
         return Skipped(path, Skip.INCOMPLETE)
     compressed = cards.get("ZIMAGE") is True

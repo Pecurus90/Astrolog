@@ -5,10 +5,18 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 
-from .fingerprint import frame_size
-from .scanner import Program, Value
 from .sky import PointingSource, pointing
-from .values import as_celsius, as_count, as_name, as_number, as_percent, as_positive
+from .values import (
+    Program,
+    Value,
+    as_celsius,
+    as_count,
+    as_name,
+    as_number,
+    as_percent,
+    as_positive,
+    frame_size,
+)
 
 # DATE-OBS as both programs write it: start of exposure, UTC, no zone (FITS 4.0 sec. 9.1.1).
 # fromisoformat alone takes date only (midnight), week dates, compact forms.

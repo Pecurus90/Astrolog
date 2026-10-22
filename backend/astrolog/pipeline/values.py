@@ -3,8 +3,16 @@
 import math
 import struct
 import unicodedata
+from enum import StrEnum
+from typing import Any
 
-from .scanner import Value
+Value = str | int | float | bool
+
+
+class Program(StrEnum):
+    NINA = "N.I.N.A."
+    ASIAIR = "ASIAIR"
+
 
 _SQLITE_MAX = 2**63 - 1  # largest INTEGER (sqlite.org/datatype3.html)
 
@@ -68,3 +76,8 @@ COLDEST_C = -273.15  # SI: below it a temperature is a broken value
 
 def as_celsius(written: Value | None) -> float | None:
     return as_number(written, at_least=COLDEST_C)
+
+
+def frame_size(cards: dict[str, Any]) -> tuple[Any, Any]:
+    """(width, height) as written. Compressed: ZNAXISn (FITS 4.0 sec. 10)."""
+    return cards.get("NAXIS1", cards.get("ZNAXIS1")), cards.get("NAXIS2", cards.get("ZNAXIS2"))

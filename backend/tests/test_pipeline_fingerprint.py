@@ -1,16 +1,19 @@
-"""Impronta frame, portata da `fits/header_read.py`: inizio e lunghezza pixel, impronta uguale
-alla vecchia. In piu': file incompleto (la vecchia lo prende come frame)."""
+"""Impronta della posa: dall'header (camera, inizio, dimensioni, posa), pixel solo come ripiego.
+Una sola apertura per file, niente astropy; ripiego uguale alla vecchia."""
+
+import builtins
+import os
 
 import numpy as np
 import pytest
 from astropy.io import fits
 
 from astrolog.fits.header_read import frame_fingerprint, read_frame
-from astrolog.pipeline import fingerprint
-from astrolog.pipeline.fingerprint import data_block, frame_identity
-from astrolog.pipeline.scanner import Extracted, Skip, Skipped, read_cards, scan_file
+from astrolog.pipeline.scanner import Extracted, Skip, Skipped, read_header, scan_file
 
 pytestmark = pytest.mark.filterwarnings("ignore::astropy.utils.exceptions.AstropyUserWarning")
+
+_SHOT = {"INSTRUME": "ATR2600M", "DATE-OBS": "2025-06-29T21:11:33.412", "EXPTIME": 300.0}
 
 
 def _astropy(path):
@@ -25,28 +28,26 @@ def _astropy(path):
     return 0, 0
 
 
-def _image(path, shape, dtype, cards=0, **keys):
+def _image(path, shape, dtype, cards=0, keys=None, data=None):
     header = fits.Header()
     header["SWCREATE"] = "N.I.N.A. 3.2.0.9001 (x64)"
-    for key, value in keys.items():
+    for key, value in (keys or {}).items():
         header[key] = value
-    for i in range(cards):  # header lungo, oltre il primo blocco da 2880 byte
+    for i in range(cards):  # long header, past first 2880-byte block
         header[f"NOTA{i:04d}"] = "x" * 40
-    data = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
+    if data is None:
+        data = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
     fits.PrimaryHDU(data=data, header=header).writeto(path)
     return path
 
 
-def _cards(path):
-    cards = read_cards(path)
-    assert cards is not None
-    return cards
-
-
-def _compressed(path, shape=(40, 60)):
+def _compressed(path, shape=(40, 60), keys=None, data=None):
     header = fits.Header()
     header["SWCREATE"] = "N.I.N.A. 3.2.0.9001 (x64)"
-    data = (np.arange(int(np.prod(shape))) % 997).astype(np.uint16).reshape(shape)
+    for key, value in (keys or {}).items():
+        header[key] = value
+    if data is None:
+        data = (np.arange(int(np.prod(shape))) % 997).astype(np.uint16).reshape(shape)
     fits.HDUList([fits.PrimaryHDU(), fits.CompImageHDU(data, header)]).writeto(path)
     return path
 
@@ -57,70 +58,108 @@ def _bench(tmp_path):
         "int16": _image(tmp_path / "a.fits", (3, 4), np.int16),
         "uint16_large": _image(tmp_path / "b.fits", (300, 300), np.uint16),
         "float32": _image(tmp_path / "c.fits", (8, 8), np.float32),
+        "float64": _image(tmp_path / "h.fits", (5, 9), np.float64),
         "odd": _image(tmp_path / "d.fits", (7, 13), np.uint8),
         "long_header": _image(tmp_path / "e.fits", (3, 4), np.int16, cards=80),
-        "short_keys": _image(tmp_path / "f.fits", (3, 4), np.int16, RA=10.5, ENDTIME="21:00"),
+        "short_keys": _image(tmp_path / "f.fits", (3, 4), np.int16, keys={"ENDTIME": "21:00"}),
         "compressed": _compressed(tmp_path / "g.fits.fz"),
+        "compressed_odd": _compressed(tmp_path / "i.fits.fz", (37, 101)),
     }
 
 
+def _fingerprint(path, size=None):
+    got = scan_file(path, size)
+    assert isinstance(got, Extracted), got
+    return got.fingerprint
+
+
 def test_the_data_block_is_the_one_astropy_finds(tmp_path):
+    """FITS 4.0: |BITPIX|/8 * GCOUNT * (PCOUNT + prod NAXISn), a blocchi da 2880."""
     for name, path in _bench(tmp_path).items():
-        assert data_block(path) == _astropy(str(path)), name
+        with open(path, "rb") as fh:
+            got = read_header(fh)
+        assert got is not None, name
+        assert (got.data_start, got.data_length) == _astropy(str(path)), name
 
 
-def test_a_plain_file_does_not_need_astropy(tmp_path, monkeypatch):
-    """Caso comune letto dai blocchi: senza strada veloce, scansione paga astropy su ogni file
-    nuovo."""
+def test_no_file_needs_astropy_and_each_is_opened_once(tmp_path, monkeypatch):
+    """NAS: ogni apertura e' un giro di rete. Una per file, compressi compresi."""
     bench = _bench(tmp_path)
-    expected = {n: _astropy(str(p)) for n, p in bench.items() if n != "compressed"}
+    opened: list[str] = []
+    real_open = builtins.open
+
+    def counted(file, *args, **kwargs):
+        opened.append(os.fspath(file))
+        return real_open(file, *args, **kwargs)
 
     def forbidden(*_args, **_kwargs):
-        raise AssertionError("fits.open chiamato su un file semplice")
+        raise AssertionError("astropy or getsize used to read a frame")
 
-    monkeypatch.setattr(fingerprint.fits, "open", forbidden)
-    for name, block in expected.items():
-        assert data_block(bench[name]) == block, name
+    monkeypatch.setattr(fits, "open", forbidden)
+    monkeypatch.setattr(os.path, "getsize", forbidden)
+    monkeypatch.setattr(builtins, "open", counted)
+    for name, path in bench.items():
+        opened.clear()
+        assert isinstance(scan_file(path), Extracted), name
+        assert len(opened) == 1, name
 
 
-def test_the_identity_is_today_s_fingerprint(tmp_path):
-    """Porto fedele: su ogni forma, impronta nuova = quella del codice di oggi."""
+def test_a_plain_file_and_its_fpack_copy_are_one_frame(tmp_path):
+    """Stessa posa, compressa con fpack: le risposte legate alla posa restano."""
+    data = (np.arange(64 * 48) % 4093).astype(np.uint16).reshape(48, 64)
+    plain = _image(tmp_path / "a.fits", (48, 64), np.uint16, keys=_SHOT, data=data)
+    packed = _compressed(tmp_path / "a.fits.fz", keys=_SHOT, data=data)
+    assert _fingerprint(plain) == _fingerprint(packed)
+
+
+@pytest.mark.parametrize(
+    ("first", "second"),
+    [
+        ({"DATE-OBS": "2025-06-29T21:11:33"}, {"DATE-OBS": "2025-06-29T21:11:33.000"}),
+        ({"EXPTIME": 300}, {"EXPTIME": 300.0}),
+        ({"INSTRUME": "ATR2600M"}, {"INSTRUME": " ATR2600M "}),
+    ],
+)
+def test_the_same_shot_written_two_ways_is_one_frame(tmp_path, first, second):
+    a = _image(tmp_path / "a.fits", (3, 4), np.int16, keys={**_SHOT, **first})
+    b = _image(tmp_path / "b.fits", (3, 4), np.int16, keys={**_SHOT, **second}, data=np.zeros(
+        (3, 4), np.int16))  # fmt: skip
+    assert _fingerprint(a) == _fingerprint(b)
+
+
+@pytest.mark.parametrize(
+    "other",
+    [
+        {"DATE-OBS": "2025-06-29T21:11:33.413"},
+        {"EXPTIME": 300.5},
+        {"INSTRUME": "Poseidon-C PRO"},
+    ],
+)
+def test_another_shot_is_another_frame_even_with_the_same_pixels(tmp_path, other):
+    """Cappuccio chiuso o centro saturo: pixel uguali, posa diversa."""
+    a = _image(tmp_path / "a.fits", (3, 4), np.int16, keys=_SHOT)
+    b = _image(tmp_path / "b.fits", (3, 4), np.int16, keys={**_SHOT, **other})
+    assert _fingerprint(a) != _fingerprint(b)
+
+
+def test_without_a_start_the_pixel_fallback_is_today_s_fingerprint(tmp_path):
+    """Ripiego (manca l'inizio): impronta = quella del codice vecchio, su ogni forma."""
     for name, path in _bench(tmp_path).items():
         header, block = read_frame(str(path))
-        cards = read_cards(path)
-        assert cards is not None, name
-        assert frame_identity(path, cards).fingerprint == frame_fingerprint(
-            str(path), header, block
-        ), name
+        assert _fingerprint(path) == frame_fingerprint(str(path), header, block), name
 
 
 def test_two_shapes_with_the_same_bytes_are_two_frames(tmp_path):
     """Dimensioni nell'impronta: 40x60 e 60x40 tutti a zero hanno stessi byte."""
     seen = set()
     for rows, cols in ((40, 60), (60, 40)):
-        path = tmp_path / f"z{rows}x{cols}.fits"
-        header = fits.Header()
-        header["SWCREATE"] = "N.I.N.A. 3.2.0.9001 (x64)"
-        fits.PrimaryHDU(data=np.zeros((rows, cols), np.int16), header=header).writeto(path)
-        seen.add(frame_identity(path, _cards(path)).fingerprint)
+        zeros = np.zeros((rows, cols), np.int16)
+        seen.add(_fingerprint(_image(tmp_path / f"z{rows}x{cols}.fits", (rows, cols), np.int16,
+                                     data=zeros)))  # fmt: skip
     assert len(seen) == 2
 
 
-def test_two_exposures_with_the_same_pixels_are_two_frames(tmp_path):
-    """Cappuccio chiuso o centro saturo: pixel uguali, inizio diverso, due pose. La copia, stesso
-    inizio, resta una posa sola."""
-    seen = []
-    for name, start in (("a", "2025-06-29T21:11:33.412"), ("b", "2025-06-29T21:16:40.105"),
-                        ("copy", "2025-06-29T21:11:33.412")):  # fmt: skip
-        path = _image(tmp_path / f"{name}.fits", (300, 300), np.uint16)
-        fits.setval(path, "DATE-OBS", value=start)
-        seen.append(frame_identity(path, _cards(path)).fingerprint)
-    assert seen[0] != seen[1]
-    assert seen[0] == seen[2]
-
-
-def test_a_file_without_pixels_is_told_apart_by_its_cards(tmp_path):
-    """Senza blocco dati, impronta di oggi prende le schede: due header diversi, due frame."""
+def test_a_file_without_pixels_is_told_apart_by_its_header(tmp_path):
     seen = set()
     for name in ("M31", "M42"):
         path = tmp_path / f"{name}.fits"
@@ -128,10 +167,7 @@ def test_a_file_without_pixels_is_told_apart_by_its_cards(tmp_path):
         header["SWCREATE"] = "N.I.N.A. 3.2.0.9001 (x64)"
         header["OBJECT"] = name
         fits.PrimaryHDU(header=header).writeto(path)
-        today, block = read_frame(str(path))
-        got = frame_identity(path, _cards(path)).fingerprint
-        assert got == frame_fingerprint(str(path), today, block), name
-        seen.add(got)
+        seen.add(_fingerprint(path))
     assert len(seen) == 2
 
 
@@ -143,17 +179,9 @@ def test_a_file_shorter_than_its_header_says_is_incomplete(tmp_path):
     assert scan_file(path) == Skipped(path, Skip.INCOMPLETE)
 
 
-def test_a_whole_file_carries_its_fingerprint(tmp_path):
-    path = _image(tmp_path / "intera.fits", (300, 300), np.uint16)
-    got = scan_file(path)
-    assert isinstance(got, Extracted)
-    header, block = read_frame(str(path))
-    assert got.fingerprint == frame_fingerprint(str(path), header, block)
-
-
-def test_a_compressed_file_is_complete_and_has_its_fingerprint(tmp_path):
-    path = _compressed(tmp_path / "light.fits.fz", (100, 100))
-    got = scan_file(path)
-    assert isinstance(got, Extracted)
-    header, block = read_frame(str(path))
-    assert got.fingerprint == frame_fingerprint(str(path), header, block)
+def test_the_size_seen_by_the_walk_decides_completeness(tmp_path):
+    """Dimensione dal walk, nessun accesso in piu': piu' corta dell'annunciata, incompleto."""
+    path = _image(tmp_path / "a.fits", (300, 300), np.uint16, keys=_SHOT)
+    whole = path.stat().st_size
+    assert isinstance(scan_file(path, whole), Extracted)
+    assert scan_file(path, whole - 1) == Skipped(path, Skip.INCOMPLETE)

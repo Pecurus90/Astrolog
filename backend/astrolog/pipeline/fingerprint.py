@@ -1,25 +1,25 @@
-"""Frame identity: dimensions, exposure start, 64 KB from data block centre; stable across
-header rewrites and moves. Without DATE-OBS, same as fits/header_read.py (ADR 0030)."""
+"""Frame identity from header: camera, exposure start, size, exposure time (ADR 0030).
+Pixels only without them; same file handle, never reopened, no astropy."""
 
-# jscpd:ignore-start  # noqa: ERA001
 import hashlib
 import math
-import os
-import warnings
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, BinaryIO
 
-from astropy.io import fits
-
-from .walk import long_path
+from .card import exposure_s, start_utc
+from .values import as_name, frame_size
 
 FINGERPRINT_BYTES = 65536
 BLOCK = 2880  # header and data fill whole blocks
 CARD = 80
-_CLEAN_END = b"END" + b" " * (CARD - 3)
-_KEY_CHARS = frozenset(b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-")
-_BYTES_PER_PIXEL = {8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}
-_STRUCTURAL = frozenset({b"SIMPLE", b"BITPIX", b"GROUPS", b"PCOUNT", b"GCOUNT"})  # and NAXISn
+_BYTES = {8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}  # FITS 4.0 table 8: BITPIX
+
+
+@dataclass(frozen=True)
+class Header:
+    cards: dict[str, Any]
+    data_start: int  # first byte of frame's data block (page 2 when compressed)
+    data_length: int | None  # padded to BLOCK; None: header does not say
 
 
 @dataclass(frozen=True)
@@ -28,110 +28,58 @@ class FrameIdentity:
     complete: bool  # file holds every byte its header announces
 
 
-def data_block(path: str | os.PathLike[str]) -> tuple[int, int]:
-    """(start, length) of pixels. Fast path reads primary's blocks; compressed (empty primary) or
-    other shape: astropy, which reads every page."""
-    fast = _primary_data_block(path)
-    return fast if fast is not None else _data_block_astropy(path)
-
-
-def _primary_data_block(path: str | os.PathLike[str]) -> tuple[int, int] | None:
-    """Common case (primary with pixels, no groups, clean END) without astropy. Else None:
-    withdraws, never guesses."""
-    values, start = {}, 0
-    with open(long_path(path), "rb") as f:
-        while True:
-            block = f.read(BLOCK)
-            if len(block) < BLOCK:
-                return None  # header without END: astropy decides
-            start += BLOCK
-            for i in range(0, BLOCK, CARD):
-                card = block[i : i + CARD]
-                # END alone, not start of key like ENDTIME
-                if card[:3] == b"END" and card[3] not in _KEY_CHARS:
-                    return _span(values, start) if card == _CLEAN_END else None
-                key = card[:8].rstrip()
-                if (key in _STRUCTURAL or key.startswith(b"NAXIS")) and card[8:10] == b"= ":
-                    values[key] = card[10:].split(b"/")[0].strip()
-
-
-def _span(values: dict[bytes, bytes], start: int) -> tuple[int, int] | None:
-    try:
-        if values.get(b"SIMPLE") != b"T" or b"GROUPS" in values:
-            return None
-        if int(values.get(b"PCOUNT", 0)) != 0 or int(values.get(b"GCOUNT", 1)) != 1:
-            return None  # astropy adds them to length: rare case, it decides
-        pixel = _BYTES_PER_PIXEL.get(int(values[b"BITPIX"]))
-        axes = int(values[b"NAXIS"])
-        if pixel is None or axes <= 0:
-            return None
-        size = pixel * math.prod(int(values[b"NAXIS%d" % n]) for n in range(1, axes + 1))
-    except (KeyError, ValueError):
+def data_length(raw: dict[str, Any]) -> int | None:
+    """FITS 4.0 sec. 4.4.1.1: |BITPIX|/8 * GCOUNT * (PCOUNT + prod NAXISn), whole blocks; also
+    tile-compressed table (heap in PCOUNT). No NAXIS: no data. Broken: None."""
+    naxis = raw.get("NAXIS", 0)
+    if naxis == 0:
+        return 0
+    written = [raw.get(f"NAXIS{n}") for n in range(1, naxis + 1)] if isinstance(naxis, int) else []
+    counts = [raw.get("PCOUNT", 0), raw.get("GCOUNT", 1), *written]
+    if raw.get("BITPIX") not in _BYTES or not written or not all(_count(v) for v in counts):
         return None
-    return start, size + (-size % BLOCK)
+    axes = [int(axis) for axis in written if axis is not None]
+    if raw.get("GROUPS") is True and axes[0] == 0:  # random groups: NAXIS1 = 0 is no axis
+        axes = axes[1:]
+    size = _BYTES[raw["BITPIX"]] * raw.get("GCOUNT", 1) * (raw.get("PCOUNT", 0) + math.prod(axes))
+    return size + (-size % BLOCK)
 
 
-def _has_pixels(hdu: Any) -> bool:
-    return isinstance(hdu, fits.CompImageHDU) or bool(hdu.header.get("NAXIS", 0))
+def _count(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
 
 
-def _data_block_astropy(path: str | os.PathLike[str]) -> tuple[int, int]:
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")  # notes on odd cards: only block matters here
-        return _astropy_block(path)
+def frame_identity(header: Header, size: int, fh: BinaryIO) -> FrameIdentity:
+    """Same shot is same frame: .fits and fpack copy, ':00' and ':00.000'. Shot incomplete:
+    size, BITPIX, start and FINGERPRINT_BYTES from data centre (as before); no data: header."""
+    length = header.data_length or 0
+    shot = _shot(header.cards)
+    if shot is not None:
+        digest = hashlib.sha256(shot.encode())
+    else:
+        digest = hashlib.sha256(_shape(header.cards).encode())
+        if length:
+            fh.seek(header.data_start + max(0, (length - FINGERPRINT_BYTES) // 2))
+            digest.update(fh.read(FINGERPRINT_BYTES))
+        else:
+            fh.seek(0)
+            digest.update(fh.read(header.data_start))
+    return FrameIdentity(digest.hexdigest(), size >= header.data_start + length)
 
 
-def _astropy_block(path: str | os.PathLike[str]) -> tuple[int, int]:
-    with fits.open(
-        long_path(path),
-        output_verify="silently",
-        ignore_missing_end=True,
-        memmap=False,
-        lazy_load_hdus=False,
-    ) as hdul:
-        for i, hdu in enumerate(hdul):
-            info = hdul.fileinfo(i)
-            if info and _has_pixels(hdu):
-                return info["datLoc"], info["datSpan"]
-    return 0, 0
+def _shot(cards: dict[str, Any]) -> str | None:
+    camera, start, exposure = as_name(cards.get("INSTRUME")), start_utc(cards), exposure_s(cards)
+    width, height = frame_size(cards)
+    if camera is None or start is None or exposure is None or not _count(width):
+        return None
+    if not _count(height):
+        return None
+    when = start.isoformat(timespec="microseconds")
+    return f"v2|{camera}|{when}|{width}x{height}|{exposure!r}"
 
 
-def _primary_cards(path: str | os.PathLike[str]) -> bytes:
-    """No pixels: primary's cards as astropy writes them, as today."""
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")  # before open: astropy warns while opening too
-        return _astropy_primary_cards(path)
-
-
-def _astropy_primary_cards(path: str | os.PathLike[str]) -> bytes:
-    with fits.open(long_path(path), output_verify="silently", ignore_missing_end=True) as hdul:
-        primary: Any = hdul[0]  # astropy stubs type int index as slice: HDUList
-        return primary.header.tostring().encode("ascii", "replace")
-
-
-def frame_size(cards: dict[str, Any]) -> tuple[Any, Any]:
-    """(width, height) as written. Compressed: ZNAXISn (FITS 4.0 sec. 10)."""
-    return cards.get("NAXIS1", cards.get("ZNAXIS1")), cards.get("NAXIS2", cards.get("ZNAXIS2"))
-
-
-def frame_identity(path: str | os.PathLike[str], cards: dict[str, Any]) -> FrameIdentity:
-    """sha256 of dimensions, DATE-OBS if written, FINGERPRINT_BYTES from data block centre, away
-    from registration borders and overscan; no pixels: cards."""
-    start, span = data_block(path)
-    chunk = b""
-    if span:
-        with open(long_path(path), "rb") as f:
-            f.seek(start + max(0, (span - FINGERPRINT_BYTES) // 2))
-            chunk = f.read(FINGERPRINT_BYTES)
+def _shape(cards: dict[str, Any]) -> str:
     width, height = frame_size(cards)
     shape = f"{width}x{height}:{cards.get('BITPIX')}"
-    exposure_start = cards.get("DATE-OBS")  # same pixels, other instant: other frame
-    digest = hashlib.sha256(
-        f"{shape}:{exposure_start}".encode() if isinstance(exposure_start, str) else shape.encode()
-    )
-    digest.update(chunk or _primary_cards(path))
-    complete = os.path.getsize(long_path(path)) >= start + span
-    return FrameIdentity(digest.hexdigest(), complete)
-
-
-# jscpd:ignore-end  # noqa: ERA001
+    start = cards.get("DATE-OBS")
+    return f"{shape}:{start}" if isinstance(start, str) else shape

@@ -110,11 +110,11 @@ def test_an_interrupted_scan_reads_its_files_next_time(conn, tmp_path, monkeypat
     real = scan.scan_file
     calls: list[Path] = []
 
-    def stops_at_second(path):
+    def stops_at_second(path, size=None):
         calls.append(path)
         if len(calls) == 2:
             raise KeyboardInterrupt
-        return real(path)
+        return real(path, size)
 
     monkeypatch.setattr(scan, "scan_file", stops_at_second)
     with pytest.raises(KeyboardInterrupt):
@@ -131,7 +131,7 @@ def test_another_connection_writes_while_files_are_read(conn, db_path, tmp_path,
     real = scan.scan_file
     wrote: list[bool] = []
 
-    def other_writes(path):
+    def other_writes(path, size=None):
         other = sqlite3.connect(db_path, timeout=0)
         other.execute(
             "INSERT INTO pipeline_filter_answers (written_key, standard) VALUES (?, 'ha')",
@@ -140,7 +140,7 @@ def test_another_connection_writes_while_files_are_read(conn, db_path, tmp_path,
         other.commit()
         other.close()
         wrote.append(True)
-        return real(path)
+        return real(path, size)
 
     monkeypatch.setattr(scan, "scan_file", other_writes)
     scan_root(conn, root, NOW)
@@ -156,11 +156,11 @@ def test_an_interrupted_scan_keeps_what_it_read(conn, tmp_path, monkeypatch):
     real = scan.scan_file
     calls: list[str] = []
 
-    def stops_at_second(path):
+    def stops_at_second(path, size=None):
         calls.append(path.name)
         if len(calls) == 2:
             raise KeyboardInterrupt
-        return real(path)
+        return real(path, size)
 
     monkeypatch.setattr(scan, "scan_file", stops_at_second)
     with pytest.raises(KeyboardInterrupt):
@@ -179,7 +179,7 @@ def test_a_move_interrupted_mid_scan_is_still_found_next_time(conn, tmp_path, mo
     scan_root(conn, root, NOW)
     (tmp_path / "a.fits").rename(tmp_path / "b.fits")
 
-    def stops(path):
+    def stops(path, size=None):
         raise KeyboardInterrupt
 
     real = scan.scan_file
@@ -203,11 +203,11 @@ def test_a_move_already_saved_when_the_scan_stopped_is_found_next_time(conn, tmp
     real = scan.scan_file
     calls: list[str] = []
 
-    def stops_at_second(path):
+    def stops_at_second(path, size=None):
         calls.append(path.name)
         if len(calls) == 2:
             raise KeyboardInterrupt
-        return real(path)
+        return real(path, size)
 
     monkeypatch.setattr(scan, "scan_file", stops_at_second)
     with pytest.raises(KeyboardInterrupt):
@@ -228,11 +228,11 @@ def test_a_move_survives_a_stopped_scan_then_a_silent_root(conn, tmp_path, monke
     real = scan.scan_file
     calls: list[str] = []
 
-    def stops_at_second(path):
+    def stops_at_second(path, size=None):
         calls.append(path.name)
         if len(calls) == 2:
             raise KeyboardInterrupt
-        return real(path)
+        return real(path, size)
 
     monkeypatch.setattr(scan, "scan_file", stops_at_second)
     with pytest.raises(KeyboardInterrupt):
@@ -270,14 +270,14 @@ def test_a_second_scan_of_the_same_root_is_refused_and_loses_nothing(
     tried: list[bool] = []
     real = scan.scan_file
 
-    def second_scan_meanwhile(path):
+    def second_scan_meanwhile(path, size=None):
         if not tried:
             tried.append(True)
             try:
                 scan_root(other, root, "2026-10-23T21:00:00+00:00")
             except ScanRunningError:
                 refused.append(True)
-        return real(path)
+        return real(path, size)
 
     monkeypatch.setattr(scan, "scan_file", second_scan_meanwhile)
     try:
@@ -300,11 +300,11 @@ def test_two_roots_scan_side_by_side(conn, db_path, tmp_path, monkeypatch):
     real = scan.scan_file
     inner: list[int] = []
 
-    def other_root_meanwhile(path):
+    def other_root_meanwhile(path, size=None):
         if not inner:
             inner.append(0)
             inner[0] = scan_root(other, second, NOW).frames
-        return real(path)
+        return real(path, size)
 
     monkeypatch.setattr(scan, "scan_file", other_root_meanwhile)
     try:
@@ -513,7 +513,7 @@ def test_a_file_that_failed_to_read_is_read_again_next_scan(conn, tmp_path, monk
     scan_root(conn, root, NOW)
     _touch_later(path)
     real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", lambda p: Skipped(p, reason))
+    monkeypatch.setattr(scan, "scan_file", lambda p, size=None: Skipped(p, reason))
     scan_root(conn, root, LATER)
     assert _cards(conn) == {}
     monkeypatch.setattr(scan, "scan_file", real)
@@ -541,7 +541,9 @@ def test_the_receipt_keeps_rereads_skips_and_what_was_left_out(conn, tmp_path, m
     root = add_root(conn, tmp_path, NOW)
     real = scan.scan_file
     monkeypatch.setattr(
-        scan, "scan_file", lambda p: Skipped(p, Skip.UNREADABLE) if p == path else real(p)
+        scan,
+        "scan_file",
+        lambda p, size=None: Skipped(p, Skip.UNREADABLE) if p == path else real(p, size),
     )
     first = scan_root(conn, root, NOW)
     monkeypatch.setattr(scan, "scan_file", real)

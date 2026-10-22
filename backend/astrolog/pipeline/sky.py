@@ -10,8 +10,7 @@ from typing import Any
 from astropy.coordinates import FK5, SkyCoord
 from astropy.time import Time
 
-from .scanner import Program, Value
-from .values import as_count, as_number
+from .values import Program, Value, as_count, as_number
 
 
 class PointingSource(StrEnum):

@@ -311,3 +311,9 @@ test_follows_a_linked_folder_and_sees_each_folder_once - sostituito da test_the_
 test_finds_compressed_fits - lo scanner usa pipeline/walk: lo prova test_collects_every_fits_extension_and_its_compressed_form_and_ignores_the_rest
 test_what_the_walk_leaves_out_is_skipped_with_its_reason - scanner.scan() tolta (solo test): cio' che il walk lascia fuori lo prova test_a_scan_says_what_the_walk_left_out su scan_root
 test_scan_walks_and_reads_everything - scanner.scan() tolta (solo test): scan_root legge cio' che il walk trova, lo provano i test di test_pipeline_scan.py
+test_a_compressed_file_is_complete_and_has_its_fingerprint - impronta nuova dall'header: il ripiego uguale alla vecchia e' in test_without_a_start_the_pixel_fallback_is_today_s_fingerprint (compressi compresi)
+test_a_file_without_pixels_is_told_apart_by_its_cards - sostituito da test_a_file_without_pixels_is_told_apart_by_its_header (byte grezzi dell'header, non piu' astropy)
+test_a_plain_file_does_not_need_astropy - sostituito da test_no_file_needs_astropy_and_each_is_opened_once (anche i compressi, una apertura)
+test_a_whole_file_carries_its_fingerprint - coperto da test_without_a_start_the_pixel_fallback_is_today_s_fingerprint e test_the_size_seen_by_the_walk_decides_completeness
+test_the_identity_is_today_s_fingerprint - sostituito da test_without_a_start_the_pixel_fallback_is_today_s_fingerprint: l'identita' ora viene dall'header (ADR 0030)
+test_two_exposures_with_the_same_pixels_are_two_frames - sostituito da test_another_shot_is_another_frame_even_with_the_same_pixels

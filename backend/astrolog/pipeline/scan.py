@@ -53,7 +53,8 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
     to_read = changes.to_read
     for start in range(0, len(to_read), BATCH):
         batch = [
-            (rel, scan_file(Path(root["path"], rel))) for rel in to_read[start : start + BATCH]
+            (rel, scan_file(Path(root["path"], rel), changes.stat[rel][0]))  # size from walk
+            for rel in to_read[start : start + BATCH]
         ]
         skipped = [got for _, got in batch if isinstance(got, Skipped)]
         with transaction(conn, immediate=True):

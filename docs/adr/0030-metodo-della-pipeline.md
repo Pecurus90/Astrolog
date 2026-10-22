@@ -37,3 +37,7 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
 - La pipeline vecchia si cancella solo quando il confronto dell'ultimo strato non ha differenze
   senza perche'.
 - Costo: tre revisioni per passo del cuore (ordine di ore, non giorni).
+- **Identita' della posa** (Marco, 22/10/2026, secondo audit): camera, inizio UTC normalizzato,
+  dimensioni e durata dall'header (`pipeline/fingerprint.py`); i pixel solo se ne manca uno. Un
+  `.fits` e la sua copia fpack sono la stessa posa; ogni file si apre una volta. Rischio accettato:
+  due camere gemelle sincronizzate al millisecondo. Sull'archivio di prova: stesse 15.226 pose.
