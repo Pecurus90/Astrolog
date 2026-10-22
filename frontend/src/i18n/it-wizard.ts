@@ -77,7 +77,7 @@ export const itWizard = {
   "wizard.folders.add": "Aggiungi cartella",
   "wizard.folders.found": "{n} file FITS",
   "wizard.folders.found.one": "1 file FITS",
-  "wizard.folders.atLeast": "Conteggio interrotto a {n}: i file sono di pi\u00f9.",
+  "wizard.folders.atLeast": "Conteggio interrotto a {n}: potrebbero essercene altri.",
   "wizard.folders.lookFailed": "Verifica non riuscita",
   "wizard.folders.failed": "Cartella non aggiunta",
 }

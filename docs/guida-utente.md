@@ -35,7 +35,7 @@ alto e i comandi restano sempre in vista in fondo allo schermo.
    FITS che ci sono **prima** di registrarla, cosi' ti accorgi subito se hai puntato la cartella
    sbagliata. Se la cartella non si raggiunge te lo dice, e non ti lascia aggiungerla. Se il
    conteggio non arriva in fondo -- un archivio enorme, o una sottocartella che non risponde --
-   dice *Conteggio parziale*: i file sono di piu'. Sul NAS
+   dice *Conteggio parziale*: potrebbero essercene altri. Sul NAS
    il percorso non lo scrivi: l'app gira dentro un container e i suoi percorsi non sono i tuoi,
    quindi ti fa **sfogliare** le cartelle e ti mostra in alto dove sei arrivato.
 4. **Seeing (Meteoblue).** Se hai una **chiave Meteoblue** la scrivi qui: l'app la prova

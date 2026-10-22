@@ -54,7 +54,7 @@ class ProbeOut(BaseModel):
     )
     complete: bool | None = Field(
         description="False = the count stopped at the time limit, or a subfolder did not answer:"
-        ' there are "more than" fits_count.'
+        " there may be more than fits_count."
     )
     moved_from: MovedFrom | None = Field(
         description="The registered folder these same files belonged to; set when moved_check is"

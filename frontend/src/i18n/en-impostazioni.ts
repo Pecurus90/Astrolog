@@ -61,7 +61,7 @@ export const enImpostazioni = {
   "settings.folders.found": "{n} FITS files",
   "settings.folders.found.one": "1 FITS file",
   "settings.folders.atLeastTitle": "Partial count",
-  "settings.folders.atLeast": "Count stopped at {n}: there are more files.",
+  "settings.folders.atLeast": "Count stopped at {n}: there may be more.",
   "settings.folders.unreachableTitle": "Folder not reachable",
   "settings.folders.unreachableHelp":
     "Check the path or connect the drive, then try again.",

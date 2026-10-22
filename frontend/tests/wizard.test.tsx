@@ -204,6 +204,8 @@ describe("il primo avvio", () => {
     fireEvent.click(screen.getByRole("button", { name: /^verifica$/i }))
     expect(await screen.findByText(/conteggio interrotto a/i)).toBeDefined()
     expect(screen.getByText(/957/)).toBeDefined()
+    // la parte non contata puo' essere vuota: "di piu'" non si sa
+    expect(screen.getByText(/potrebbero essercene altri/i)).toBeDefined()
   })
 
   it("una cartella che non si registra non fa timbrare il primo avvio", async () => {

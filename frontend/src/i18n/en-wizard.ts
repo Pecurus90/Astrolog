@@ -72,7 +72,7 @@ export const enWizard = {
   "wizard.folders.add": "Add folder",
   "wizard.folders.found": "{n} FITS files",
   "wizard.folders.found.one": "1 FITS file",
-  "wizard.folders.atLeast": "Count stopped at {n}: there are more files.",
+  "wizard.folders.atLeast": "Count stopped at {n}: there may be more.",
   "wizard.folders.lookFailed": "Check failed",
   "wizard.folders.failed": "Folder not added",
 }

@@ -63,7 +63,7 @@ export const itImpostazioni = {
   "settings.folders.found.one": "1 file FITS",
   // Il conteggio si e' fermato al suo tetto di tempo: e' un pavimento, non un totale.
   "settings.folders.atLeastTitle": "Conteggio parziale",
-  "settings.folders.atLeast": "Conteggio interrotto a {n}: i file sono di pi\u00f9.",
+  "settings.folders.atLeast": "Conteggio interrotto a {n}: potrebbero essercene altri.",
   "settings.folders.unreachableTitle": "Cartella non raggiungibile",
   "settings.folders.unreachableHelp":
     "Controlla il percorso o collega il disco, poi riprova.",
