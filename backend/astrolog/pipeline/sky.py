@@ -17,8 +17,8 @@ from .values import Program, Value, as_count, as_number
 
 class PointingSource(StrEnum):
     SOLVE = "solve"  # ASIAIR plate solve, image centre
-    MOUNT = "mount"
-    TARGET = "target"  # N.I.N.A. planned target: may not be where mount went
+    MOUNT = "mount"  # N.I.N.A. only
+    TARGET = "target"  # planned, N.I.N.A. or ASIAIR: may not be where mount went
 
 
 def _sky(ra: Value | None, dec: Value | None) -> tuple[float, float] | None:
@@ -59,9 +59,9 @@ def _solve_centre(values: dict[str, Value]) -> tuple[float, float] | None:
     return _sky(math.degrees(ra) % 360, math.degrees(dec))
 
 
-def _asiair_mount(values: dict[str, Value], start: datetime | None) -> tuple[float, float] | None:
-    """ASIAIR mount is of date (JNow): archive, 1.2' from its solve once precessed, 17.7' not.
-    No date, no precession: not known."""
+def _asiair_target(values: dict[str, Value], start: datetime | None) -> tuple[float, float] | None:
+    """ASIAIR RA/DEC: 'Object Right Ascension', of date (JNow): 1.2' from its solve once
+    precessed, 17.7' not. No date, no precession: not known."""
     sky = _sky(values.get("RA"), values.get("DEC"))
     if sky is None or start is None:
         return None
@@ -99,14 +99,15 @@ def pointing(
     program: Program, values: dict[str, Value], start: datetime | None
 ) -> tuple[float, float, PointingSource] | None:
     """Where frame looks, J2000: solve, then mount, then target; each out of range falls to next.
-    Computed in order, first found wins: mount precession never paid for nothing."""
+    Computed in order, first found wins: target precession never paid for nothing."""
     asiair = program is Program.ASIAIR
     ra, dec = values.get("RA"), values.get("DEC")
     sources: tuple[tuple[PointingSource, Callable[[], tuple[float, float] | None]], ...] = (
         (PointingSource.SOLVE, lambda: _solve_centre(values) if asiair else None),
         # N.I.N.A.: J2000, EQUINOX 2000 in every file
-        (PointingSource.MOUNT, lambda: _asiair_mount(values, start) if asiair else _sky(ra, dec)),
-        (PointingSource.TARGET, lambda: _target(values) if program is Program.NINA else None),
+        (PointingSource.MOUNT, lambda: None if asiair else _sky(ra, dec)),
+        (PointingSource.TARGET,
+         lambda: _asiair_target(values, start) if asiair else _target(values)),
     )  # fmt: skip
     for source, compute in sources:
         sky = compute()

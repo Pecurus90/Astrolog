@@ -315,13 +315,14 @@ def test_an_asiair_solve_gives_the_centre_of_its_image(name, tmp_path):
 
 
 @pytest.mark.parametrize("name", ["asiair.txt", "asiair_asi2600.txt", "asiair_am3.txt"])
-def test_the_asiair_mount_is_of_date_and_lands_on_its_solve_once_precessed(name, tmp_path):
-    """RA/DEC ASIAIR in JNow: archivio, 1,2' dal solve precessato contro 17,7' letto J2000."""
+def test_the_asiair_target_is_of_date_and_lands_on_its_solve_once_precessed(name, tmp_path):
+    """RA/DEC ASIAIR: bersaglio ('Object Right Ascension'), JNow: 1,2' dal solve se precessato,
+    17,7' no."""
     values = _values(name, tmp_path)
     solved = read_card(ASIAIR, values)
     no_solve = {k: v for k, v in values.items() if not k.startswith("CTYPE")}
     mount = read_card(ASIAIR, no_solve)
-    assert mount.pointing_source is PointingSource.MOUNT
+    assert mount.pointing_source is PointingSource.TARGET
     centre = _sky(solved.pointing_ra_deg, solved.pointing_dec_deg)
     landed = float(centre.separation(_sky(mount.pointing_ra_deg, mount.pointing_dec_deg)).arcmin)
     as_written = float(centre.separation(_sky(values["RA"], values["DEC"])).arcmin)
@@ -329,31 +330,31 @@ def test_the_asiair_mount_is_of_date_and_lands_on_its_solve_once_precessed(name,
     assert landed < 5
 
 
-def test_a_solved_asiair_frame_never_pays_the_mount_precession(tmp_path, monkeypatch):
+def test_a_solved_asiair_frame_never_pays_the_target_precession(tmp_path, monkeypatch):
     """Vince la soluzione: la precessione (0,67 ms a file) non si calcola per buttarla."""
     from astrolog.pipeline import sky
 
     def forbidden(_values, _start):
-        raise AssertionError("mount precessed though the solve wins")
+        raise AssertionError("target precessed though the solve wins")
 
     values = _values("asiair_asi2600.txt", tmp_path)
-    monkeypatch.setattr(sky, "_asiair_mount", forbidden)
+    monkeypatch.setattr(sky, "_asiair_target", forbidden)
     assert read_card(ASIAIR, values).pointing_source is PointingSource.SOLVE
 
 
-def test_an_asiair_mount_without_date_is_unknown():
+def test_an_asiair_target_without_date_is_unknown():
     card = read_card(ASIAIR, {"RA": 210.0, "DEC": 54.0})
     assert card.pointing_source is None
 
 
 @pytest.mark.parametrize("year", ["1950", "2200"])
-def test_an_asiair_mount_out_of_the_leap_second_table_precesses_without_warning(year):
+def test_an_asiair_target_out_of_the_leap_second_table_precesses_without_warning(year):
     """Anno fuori dalla tabella dei secondi intercalari: ERFA scriveva 'dubious year' a console."""
     values = {"RA": 210.0, "DEC": 54.0, "DATE-OBS": f"{year}-06-01T22:00:00"}
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         card = read_card(ASIAIR, values)
-    assert card.pointing_source is PointingSource.MOUNT
+    assert card.pointing_source is PointingSource.TARGET
 
 
 def test_a_nina_mount_is_j2000_as_written(tmp_path):
@@ -422,9 +423,9 @@ def test_a_mount_at_360_is_0():
     ],  # overflow: once a fake 270/0 'solve'
     # fmt: skip
 )
-def test_a_broken_solve_falls_to_the_mount(broken, tmp_path):
+def test_a_broken_solve_falls_to_the_target(broken, tmp_path):
     values = {**_values("asiair_asi2600.txt", tmp_path), **broken}
-    assert read_card(ASIAIR, values).pointing_source is PointingSource.MOUNT
+    assert read_card(ASIAIR, values).pointing_source is PointingSource.TARGET
 
 
 def test_calibration_frames_keep_where_the_mount_was():
