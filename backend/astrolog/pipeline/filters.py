@@ -75,6 +75,7 @@ FORMS = {
     "o": StandardFilter.OIII,
     "s": StandardFilter.SII,
     "uv/ir-cut": StandardFilter.UVIR,  # Baader UV/IR-Cut
+    "uv/ir cut": StandardFilter.UVIR,  # Optolong UV/IR Cut (optolong.com product page)
     "none": StandardFilter.NONE,  # chosen by the owner with the list
     "no filter": StandardFilter.NONE,
 }

@@ -38,7 +38,8 @@ def _spelling(conn, written: str) -> tuple[str | None, str | None]:
         ("Ha", StandardFilter.HA), ("H-alpha", StandardFilter.HA), ("OIII", StandardFilter.OIII),
         ("O III", StandardFilter.OIII), ("SII", StandardFilter.SII), ("S II", StandardFilter.SII),
         ("H-beta", StandardFilter.HB), ("Luminance", StandardFilter.L), ("Red", StandardFilter.R),
-        ("UV/IR-Cut", StandardFilter.UVIR), ("None", StandardFilter.NONE),
+        ("UV/IR-Cut", StandardFilter.UVIR), ("UV/IR Cut", StandardFilter.UVIR),
+        ("None", StandardFilter.NONE),
         ("No filter", StandardFilter.NONE),
         (" ha ", StandardFilter.HA), ("O  III", StandardFilter.OIII), ("HA", StandardFilter.HA),
     ],
@@ -48,7 +49,9 @@ def test_a_standard_spelling_matches_without_case_or_extra_blanks(conn, written,
     assert _spelling(conn, written) == (standard, None)
 
 
-@pytest.mark.parametrize("written", ["Ha7nm", "Ha 7nm", "H-a", "O3", "S2", "Hb", "Lum", "Rosso"])
+@pytest.mark.parametrize(
+    "written", ["Ha7nm", "Ha 7nm", "H-a", "O3", "S2", "Hb", "Lum", "Rosso", "IR-cut"]
+)  # IR-cut: ZWO's label, but a plain IR cut may pass UV
 def test_anything_else_is_asked_never_guessed(conn, written):
     resolve(conn, written)
     assert _spelling(conn, written) == (None, None)
