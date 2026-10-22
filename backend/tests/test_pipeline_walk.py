@@ -72,6 +72,37 @@ def test_a_folder_reached_by_two_links_is_walked_once(tmp_path):
     assert len(found(root)) == 1
 
 
+def test_a_folder_seen_again_does_not_stop_the_walk(tmp_path):
+    """Collegamento a cartella gia' vista, con altre ancora da visitare: quelle si visitano."""
+    root = tmp_path / "radice"
+    for top in ("a", "b"):
+        _touch(str(root), top, f"{top}.fits")
+        # link in each: whichever top is walked first, its link pops before the other top
+        folder_link(root, root / top / "indietro")
+    assert names(found(root)) == {"a.fits", "b.fits"}
+
+
+def test_a_folder_that_does_not_open_does_not_stop_the_walk(tmp_path, monkeypatch):
+    """Cartella che non si apre, con altre ancora da visitare: quelle si visitano."""
+    root = str(tmp_path)
+    for top in ("a", "b"):
+        _touch(root, top, f"{top}.fits")
+        os.makedirs(os.path.join(root, top, "chiusa"))
+    # closed child in each top: whichever top is walked first, its child pops before the other
+    closed = {os.path.normpath(os.path.join(root, top, "chiusa")) for top in ("a", "b")}
+    real = os.scandir
+
+    def fake(p):
+        if os.path.normpath(str(p)) in closed:
+            raise OSError("permessi negati (mock)")
+        return real(p)
+
+    monkeypatch.setattr(walk.os, "scandir", fake)
+    result = walk_dir(root)
+    assert names(result.found) == {"a.fits", "b.fits"}
+    assert {os.path.normpath(u) for u in result.unreadable} == closed
+
+
 def test_a_link_to_a_missing_folder_is_unreadable(tmp_path):
     """Collegamento verso disco staccato: non sparisce in silenzio, e' cartella che non si apre."""
     target = tmp_path / "staccato"

@@ -168,6 +168,22 @@ def test_a_value_with_a_colon_stays_under_its_own_key(tmp_path):
     assert got.values["OBJECT"] == "Sh2: 155"
 
 
+def test_a_doubled_quote_in_a_string_is_one_quote(tmp_path):
+    """FITS 4.0 sez. 4.2.1.1: '' dentro la stringa e' un apice."""
+    got = scan_file(_fits(tmp_path / "q.fits", [*_NINA_HEAD, "OBSERVER= 'O''Brien'"]))
+    assert isinstance(got, Extracted)
+    assert got.values["OBSERVER"] == "O'Brien"
+
+
+def test_logicals_are_true_and_false_never_their_letter(tmp_path):
+    """FITS 4.0 sez. 4.2.2: T e F logici."""
+    lines = [*_NINA_HEAD, "FLIPPED =                    F", "ROTATED =                    T"]
+    got = scan_file(_fits(tmp_path / "l.fits", lines))
+    assert isinstance(got, Extracted)
+    assert (got.values["FLIPPED"], got.values["ROTATED"]) == (False, True)
+    assert got.values["FLIPPED"] is False
+
+
 def test_words_python_reads_as_numbers_but_fits_does_not_stay_text(tmp_path):
     """NaN, inf, trattino basso: non numeri FITS (4.0 sec. 4.2.3-4.2.4). Restano testo, header
     resta JSON valido."""
@@ -424,6 +440,13 @@ def test_a_file_rewritten_by_another_program_is_skipped(tmp_path):
     lines = [*_corpus("asiair_asi2600.txt"), "PROGRAM = 'Stacker 1.0'", "STACKCNT= 30"]
     got = scan_file(_fits(tmp_path / "stack.fit", lines))
     assert got == Skipped(tmp_path / "stack.fit", Skip.REWRITTEN)
+
+
+def test_a_stack_count_alone_is_rewritten(tmp_path):
+    """STACKCNT senza PROGRAM: lo scrive chi impila, mai N.I.N.A. ne' ASIAIR."""
+    lines = [*_corpus("nina.txt"), "STACKCNT= 30"]
+    got = scan_file(_fits(tmp_path / "stack.fits", lines))
+    assert got == Skipped(tmp_path / "stack.fits", Skip.REWRITTEN)
 
 
 def test_a_rewrite_that_dropped_the_capture_program_is_rewritten(tmp_path):

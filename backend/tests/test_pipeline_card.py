@@ -510,6 +510,13 @@ def test_zero_is_a_value_for_gain_offset_and_wind_never_unknown():
     assert (conditions.wind_kmh, conditions.wind_dir_deg, conditions.wind_gust_kmh) == (0, 0, 0)
 
 
+@pytest.mark.parametrize(("key", "field"), [("XBINNING", "bin_x"), ("YBINNING", "bin_y")])
+def test_a_binning_of_one_stays_one(key, field):
+    """Binning 1 scritto: si legge 1, mai sconosciuto. Zero non e' un binning."""
+    assert getattr(read_card(NINA, {key: 1}), field) == 1
+    assert getattr(read_card(NINA, {key: 0}), field) is None
+
+
 def test_no_utc_start_no_clock_offset():
     assert read_card(NINA, {"DATE-LOC": "2025-06-29T23:11:33.412"}).clock_offset_min is None
 

@@ -11,8 +11,9 @@ from pathlib import Path
 
 import pytest
 
-from astrolog.pipeline.changes import RootOverlapError, add_root
+from astrolog.pipeline.changes import RootOverlapError, _emptied, _plain, add_root
 from astrolog.pipeline.scan import scan_root
+from astrolog.pipeline.walk import Walk
 from conftest import LATER, NOW, folder_link, nina_light
 
 
@@ -177,7 +178,10 @@ def test_a_file_whose_date_cannot_be_read_is_not_gone(conn, tmp_path, monkeypatc
 
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="APFS accepts only valid UTF-8 names")
-@pytest.mark.parametrize("bad", ["n\udce9b.fits", "nuit\udce9/a.fits"])
+@pytest.mark.parametrize(
+    "bad",
+    ["n\udce9b.fits", "nuit\udce9/a.fits", "a\udce9.fits"],  # last sorts before good.fits
+)
 def test_a_name_that_is_not_text_is_left_out_and_the_scan_goes_on(conn, tmp_path, bad):
     """Nome latin-1 su NAS Linux (Python: surrogato): non scrivibile nel DB. Prima fermava tutto."""
     nas = tmp_path / "nas"
@@ -236,6 +240,20 @@ def test_an_emptied_root_that_had_files_counts_as_silent(conn, tmp_path):
     _file(nas / "b.fits")
     back = scan_root(conn, root, "2026-10-24T20:00:00+00:00").changes
     assert (back.new, back.gone) == ([], [])  # never gone, so never new
+
+
+def test_a_root_that_stops_opening_after_an_empty_walk_is_silent(conn, tmp_path, monkeypatch):
+    """Walk vuoto, poi radice che non si apre (NAS caduto): muta, mai file spariti."""
+    nas = tmp_path / "nas"
+    _file(nas / "a.fits")
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+
+    def closed(path):
+        raise OSError("mount caduto (mock)")
+
+    monkeypatch.setattr(os, "scandir", closed)
+    assert _emptied(conn, root, str(nas), Walk()) is True
 
 
 def test_a_new_empty_root_is_reachable(conn, tmp_path):
@@ -435,6 +453,12 @@ def test_a_folder_inside_a_network_share_root_is_inside(conn):
     add_root(conn, r"\\localhost\C$", NOW)
     with pytest.raises(RootOverlapError):
         add_root(conn, r"\\localhost\C$\Windows", NOW)
+
+
+def test_the_long_form_of_a_share_is_the_share():
+    """Forma lunga di condivisione: barre doppie davanti, mai 'UNC' come cartella."""
+    assert _plain(r"\\?\UNC\srv\share\x") == r"\\srv\share\x"
+    assert _plain(r"\\?\C:\x") == r"C:\x"
 
 
 @pytest.mark.parametrize("drive_first", [True, False])

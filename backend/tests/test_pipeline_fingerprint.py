@@ -2,6 +2,7 @@
 Una sola apertura per file, niente astropy; ripiego uguale alla vecchia."""
 
 import builtins
+import io
 import os
 
 import numpy as np
@@ -9,7 +10,7 @@ import pytest
 from astropy.io import fits
 
 from astrolog.fits.header_read import frame_fingerprint, read_frame
-from astrolog.pipeline.fingerprint import data_length
+from astrolog.pipeline.fingerprint import BLOCK, Header, data_length, frame_identity
 from astrolog.pipeline.scanner import Extracted, Skip, Skipped, read_header, scan_file
 
 pytestmark = pytest.mark.filterwarnings("ignore::astropy.utils.exceptions.AstropyUserWarning")
@@ -187,6 +188,27 @@ def test_a_file_without_pixels_is_told_apart_by_its_header(tmp_path):
         fits.PrimaryHDU(header=header).writeto(path)
         seen.add(_fingerprint(path))
     assert len(seen) == 2
+
+
+@pytest.mark.parametrize(
+    ("bitpix", "width"), [(8, 1), (16, 2), (32, 4), (64, 8), (-32, 4), (-64, 8)]
+)
+def test_each_bitpix_has_its_bytes_per_pixel(bitpix, width):
+    """FITS 4.0 tab. 8: |BITPIX|/8 byte per pixel. Riga di 2880 pixel: blocchi interi."""
+    assert data_length({"BITPIX": bitpix, "NAXIS": 2, "NAXIS1": BLOCK, "NAXIS2": 1}) == (
+        width * BLOCK
+    )
+
+
+@pytest.mark.parametrize("missing", ["INSTRUME", "EXPTIME", "NAXIS1"])
+def test_a_shot_missing_one_part_falls_back_to_its_pixels(missing):
+    """Senza camera, durata o larghezza l'inizio non basta: stesso inizio, pixel diversi, due
+    pose."""
+    shot = {**_SHOT, "BITPIX": 16, "NAXIS": 2, "NAXIS1": BLOCK // 2, "NAXIS2": 1}
+    header = Header({k: v for k, v in shot.items() if k != missing}, 0, BLOCK)
+    one = frame_identity(header, BLOCK, io.BytesIO(b"\1" * BLOCK))
+    two = frame_identity(header, BLOCK, io.BytesIO(bytes(BLOCK)))
+    assert one.fingerprint != two.fingerprint
 
 
 def test_more_axes_than_fits_allows_is_no_data_length():
