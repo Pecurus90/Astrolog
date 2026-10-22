@@ -3,10 +3,35 @@ data folder comes from the caller, so a test can give an empty one."""
 
 import os
 import secrets
+import sys
 from pathlib import Path
+from typing import IO
 
 LOCAL_HOSTS = ("127.0.0.1", "localhost")
 OWNER_ONLY = 0o600
+
+
+class AlreadyRunningError(RuntimeError):
+    """Another copy holds the data folder: two would scan over each other."""
+
+
+def single_instance(data_dir: Path) -> IO[bytes]:
+    """OS lock on a file in the data folder, held while the returned file stays open; a dead
+    process frees it. Taken: AlreadyRunningError."""
+    holder = (data_dir / "astrolog.lock").open("a+b")
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+
+            msvcrt.locking(holder.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(holder.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError as taken:
+        holder.close()
+        raise AlreadyRunningError from taken
+    return holder
 
 
 def token_for(host: str, data_dir: Path) -> str | None:

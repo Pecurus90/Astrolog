@@ -9,6 +9,10 @@ manda a nessuno. Li **legge soltanto**: non li sposta, non li rinomina, non li t
 Questa guida racconta **cio' che l'app fa adesso**. Quello che ancora non fa e' detto in fondo,
 apertamente, invece di essere lasciato indovinare.
 
+AstroLog gira in **una copia sola** per volta sugli stessi dati: se la apri una seconda volta (o
+se sul NAS parte un secondo container sulla stessa cartella dei dati), la seconda non si avvia e
+dice *AstroLog e' gia' aperto*. Due copie insieme farebbero sparire le pose a vicenda.
+
 ## Il primo avvio
 
 La prima volta l'app ti fa **quattro domande**, e poi si toglie di mezzo.

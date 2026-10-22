@@ -2,18 +2,23 @@
 `ASTROLOG_SCAN_EVERY_MIN=60`; no token (docs/adr/0002-rete-di-casa-e-chiave-di-avvio.md)."""
 
 import os
+import sys
 
 import uvicorn
 
 from .api.app import create_app
 from .db.paths import data_dir, db_path, log_dir
 from .log import setup_logging
-from .startup import token_for
+from .startup import AlreadyRunningError, single_instance, token_for
 from .weather.forecast import REFRESH_EVERY_S
 
 
 def main() -> None:
     setup_logging(log_dir())
+    try:
+        _held = single_instance(data_dir())  # kept open: the lock lives with it
+    except AlreadyRunningError:
+        sys.exit("AstroLog e' gia' aperto.")
     host = os.environ.get("ASTROLOG_HOST", "127.0.0.1")
     every_min = os.environ.get("ASTROLOG_SCAN_EVERY_MIN")
     hosts = [h.strip() for h in os.environ.get("ASTROLOG_HOSTS", "").split(",") if h.strip()]

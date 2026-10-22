@@ -13,7 +13,7 @@ import sys
 import pytest
 
 import astrolog.__main__ as avvio
-from astrolog.startup import token_for
+from astrolog.startup import AlreadyRunningError, single_instance, token_for
 
 
 def test_the_key_is_born_only_for_who_listens_at_home(tmp_path):
@@ -52,11 +52,34 @@ def test_the_nas_scan_cadence_reaches_the_app(monkeypatch, minuti, secondi):
     monkeypatch.setattr(avvio, "setup_logging", lambda *a: None)
     monkeypatch.setattr(avvio, "create_app", lambda *a, **k: chiesto.update(k))
     monkeypatch.setattr(avvio.uvicorn, "run", lambda *a, **k: None)
+    monkeypatch.setattr(avvio, "single_instance", lambda *a: None)  # not the real data folder
     monkeypatch.delenv("ASTROLOG_SCAN_EVERY_MIN", raising=False)
     if minuti is not None:
         monkeypatch.setenv("ASTROLOG_SCAN_EVERY_MIN", minuti)
     avvio.main()
     assert chiesto["scan_every_s"] == secondi
+
+
+def test_a_second_copy_of_the_app_on_the_same_data_does_not_start(tmp_path):
+    """Due copie sugli stessi dati: le scansioni si accavallano e le pose risultano sparite.
+    Il lucchetto e' del sistema: un processo morto lo lascia libero."""
+    first = single_instance(tmp_path)
+    with pytest.raises(AlreadyRunningError):
+        single_instance(tmp_path)
+    first.close()
+    single_instance(tmp_path).close()
+
+
+def test_the_second_copy_says_astrolog_is_already_open(monkeypatch):
+    monkeypatch.setattr(avvio, "setup_logging", lambda *a: None)
+
+    def taken(_folder):
+        raise AlreadyRunningError
+
+    monkeypatch.setattr(avvio, "single_instance", taken)
+    with pytest.raises(SystemExit) as stopped:
+        avvio.main()
+    assert stopped.value.code == "AstroLog e' gia' aperto."
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="i permessi POSIX su Windows non significano")
