@@ -2,6 +2,7 @@
 Radice muta: niente sparisce."""
 
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -165,6 +166,58 @@ def test_each_scan_leaves_its_receipt(conn, tmp_path):
         "SELECT reachable, new, changed, unchanged, gone FROM pipeline_scans ORDER BY id"
     ).fetchall()
     assert [tuple(r) for r in rows] == [(1, 1, 0, 0, 0), (1, 0, 0, 1, 0)]
+
+
+def test_an_emptied_root_that_had_files_counts_as_silent(conn, tmp_path):
+    """NAS smontato in Docker: cartella di mount vuota ma aperta. Muta, nessuno sparito."""
+    nas = tmp_path / "nas"  # tmp_path holds the DB: never empty
+    _file(nas / "night" / "a.fits")
+    _file(nas / "b.fits")
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    shutil.rmtree(nas / "night")
+    (nas / "b.fits").unlink()
+    changes = scan_root(conn, root, LATER).changes
+    assert (changes.reachable, changes.gone) == (False, [])
+    _file(nas / "night" / "a.fits")
+    _file(nas / "b.fits")
+    back = scan_root(conn, root, "2026-10-24T20:00:00+00:00").changes
+    assert (back.new, back.gone) == ([], [])  # never gone, so never new
+
+
+def test_a_new_empty_root_is_reachable(conn, tmp_path):
+    """Mai visti file: niente da proteggere, la cartella vuota e' solo vuota."""
+    nas = tmp_path / "nas"
+    nas.mkdir()
+    changes = scan_root(conn, add_root(conn, nas, NOW), NOW).changes
+    assert changes.reachable is True
+
+
+def test_a_root_emptied_of_fits_but_with_left_out_entries_still_judges(conn, tmp_path):
+    """Resta un cestino: la cartella risponde davvero, i file tolti sono spariti."""
+    nas = tmp_path / "nas"
+    _file(nas / "a.fits")
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    (nas / "a.fits").unlink()
+    _file(nas / ".Trashes" / "a.fits")
+    assert scan_root(conn, root, LATER).changes.gone == ["a.fits"]
+
+
+@pytest.mark.parametrize("left", ["notes.txt", "night/", "a.xisf"])
+def test_a_root_emptied_of_fits_but_not_empty_still_judges(conn, tmp_path, left):
+    """Restano note, cartelle di notte o altri file: montata, i FITS tolti sono spariti."""
+    nas = tmp_path / "nas"
+    _file(nas / "a.fits")
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    (nas / "a.fits").unlink()
+    if left.endswith("/"):
+        (nas / left).mkdir()
+    else:
+        (nas / left).write_bytes(b"x")
+    changes = scan_root(conn, root, LATER).changes
+    assert (changes.reachable, changes.gone) == (True, ["a.fits"])
 
 
 def test_the_same_root_is_added_once(conn, tmp_path):

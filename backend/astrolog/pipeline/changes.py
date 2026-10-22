@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
-from .walk import long_path, real_key, walk_dir
+from .walk import Walk, long_path, real_key, walk_dir
 
 # Skip reasons that pass (file locked, copy running): read again every scan.
 _PASSING = frozenset({"unreadable", "incomplete"})
@@ -121,7 +121,9 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
     ]
     walk = walk_dir(root)
     root_failed = any(os.path.normcase(u) == os.path.normcase(root) for u in walk.unreadable)
-    changes = Changes(reachable=not root_failed, root_id=root_id)
+    changes = Changes(
+        reachable=not (root_failed or _emptied(conn, root_id, root, walk)), root_id=root_id
+    )
     disk: dict[str, tuple[int, int]] = {}
     unlooked: set[str] = set()
     if changes.reachable:
@@ -164,6 +166,23 @@ def _write_counts(conn: sqlite3.Connection, changes: Changes) -> None:
         (len(changes.new), len(changes.changed), len(changes.reread),
          len(changes.unchanged), len(changes.gone), _left_out(changes), changes.scan_id),
     )  # fmt: skip
+
+
+def _emptied(conn: sqlite3.Connection, root_id: int, root: str, walk: Walk) -> bool:
+    """Opens with no entry at all, though files were there: unmounted NAS (Docker mount point
+    stays, empty). Counts as silent root, never as every file gone."""
+    if walk.found or walk.online_only or walk.hidden or walk.unreadable:
+        return False
+    had = conn.execute(
+        "SELECT 1 FROM pipeline_files WHERE root_id = ? AND state = 'present' LIMIT 1", (root_id,)
+    ).fetchone()
+    if had is None:
+        return False
+    try:  # notes, night folders, other files: mounted, only FITS removed
+        with os.scandir(long_path(root)) as entries:
+            return next(entries, None) is None
+    except OSError:
+        return True
 
 
 def _left_out(changes: Changes) -> str:
