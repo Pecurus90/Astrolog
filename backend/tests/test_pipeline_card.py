@@ -400,7 +400,17 @@ def test_a_mount_at_360_is_0():
 
 @pytest.mark.parametrize(
     "broken",
-    [{"CD1_1": 0.0, "CD1_2": 0.0}, {"CTYPE1": "RA---SIN"}, {"IMAGEW": 0}, {"CRVAL2": "x"}],
+    [
+        {"CD1_1": 0.0, "CD1_2": 0.0},
+        {"CTYPE1": "RA---SIN"},
+        {"IMAGEW": 0},
+        {"CRVAL2": "x"},
+        {"CRPIX1": 1e300, "CD1_1": 1e300},
+        {"CRPIX1": 1e300},  # reference far outside the solved image: fake place
+        {"CRPIX2": -5.0},
+        {"CD1_1": 1e200, "CD1_2": 1e200, "CD2_1": 1e200, "CD2_2": 1e200},  # det inf - inf
+    ],  # overflow: once a fake 270/0 'solve'
+    # fmt: skip
 )
 def test_a_broken_solve_falls_to_the_mount(broken, tmp_path):
     values = {**_values("asiair_asi2600.txt", tmp_path), **broken}

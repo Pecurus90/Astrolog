@@ -238,10 +238,16 @@ def _solve_centre(values: dict[str, Value]) -> tuple[float, float] | None:
     if len(numbers) < len(keys) or width is None or height is None:
         return None
     ra0, dec0, px, py, cd11, cd12, cd21, cd22 = numbers
-    if cd11 * cd22 - cd12 * cd21 == 0:
+    det = cd11 * cd22 - cd12 * cd21
+    if not math.isfinite(det) or det == 0:
+        return None
+    # reference pixel inside solved image (archive: 583 of 583); outside: degenerate solve
+    if not (0.5 <= px <= width + 0.5 and 0.5 <= py <= height + 0.5):  # noqa: PLR2004
         return None
     dx, dy = (width + 1) / 2 - px, (height + 1) / 2 - py  # FITS pixels count from 1
     east, north = math.radians(cd11 * dx + cd12 * dy), math.radians(cd21 * dx + cd22 * dy)
+    if not (math.isfinite(east) and math.isfinite(north)):  # overflow: atan2 would fake a place
+        return None
     ra0, dec0 = math.radians(ra0), math.radians(dec0)
     across = math.cos(dec0) - north * math.sin(dec0)
     ra = ra0 + math.atan2(east, across)
