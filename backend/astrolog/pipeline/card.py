@@ -13,6 +13,7 @@ from .scanner import Program, Value
 # DATE-OBS as both programs write it: start of exposure, UTC, no zone (FITS 4.0 sec. 9.1.1).
 # fromisoformat alone takes date only (midnight), week dates, compact forms.
 _DATE_OBS = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?")
+_SQLITE_MAX = 2**63 - 1  # largest INTEGER (sqlite.org/datatype3.html)
 
 
 class FrameType(StrEnum):
@@ -72,9 +73,10 @@ def _number(written: Value | None, at_least: float = -math.inf) -> float | None:
 
 
 def _count(written: Value | None, at_least: int) -> int | None:
-    if isinstance(written, bool) or not isinstance(written, int) or written < at_least:
+    """Past SQLite INTEGER (64 bit): unknown, else whole scan fails."""
+    if isinstance(written, bool) or not isinstance(written, int):
         return None
-    return written
+    return written if at_least <= written <= _SQLITE_MAX else None
 
 
 def _without_float32_tail(number: float) -> float:

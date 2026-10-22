@@ -236,6 +236,16 @@ def test_a_value_not_written_as_its_kind_is_unknown(key, field, bad):
         assert getattr(read_card(NINA, {key: value}), field) is None, value
 
 
+@pytest.mark.parametrize("key", ["GAIN", "OFFSET", "ISO", "NAXIS1", "XBINNING"])
+def test_an_integer_past_sqlite_is_unknown_not_a_failed_scan(key):
+    """SQLite INTEGER: 64 bit. Oltre, OverflowError e scansione intera annullata."""
+    assert getattr(read_card(NINA, {key: 2**63}), _FIELD[key]) is None
+    assert getattr(read_card(NINA, {key: 2**63 - 1}), _FIELD[key]) == 2**63 - 1
+
+
+_FIELD = {"GAIN": "gain", "OFFSET": "offset", "ISO": "iso", "NAXIS1": "width", "XBINNING": "bin_x"}
+
+
 def test_iso_written_as_number_or_digits_is_read():
     assert read_card(ASIAIR, {"ISO": " 1600 "}).iso == 1600
     assert read_card(ASIAIR, {"ISO": 800}).iso == 800
