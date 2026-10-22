@@ -172,13 +172,17 @@ def _on_disk(found: list[str], root: str) -> tuple[dict[str, tuple[int, int]], s
 def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
     """Compares folder with last reads; writes verdicts and receipt. Walk outside transaction:
     slow disk never holds lock."""
-    root = conn.execute("SELECT path FROM pipeline_roots WHERE id = ?", (root_id,)).fetchone()[
-        "path"
-    ]
+    row = conn.execute(
+        "SELECT path, device FROM pipeline_roots WHERE id = ?", (root_id,)
+    ).fetchone()
+    root = row["path"]
     walk = walk_dir(root)
     root_failed = any(os.path.normcase(u) == os.path.normcase(root) for u in walk.unreadable)
+    silent = root_failed or _emptied(conn, root_id, root, walk)
+    volume = _volume(root)
+    other_volume = None not in (volume, row["device"]) and volume != row["device"]
     changes = Changes(
-        reachable=not (root_failed or _emptied(conn, root_id, root, walk)),
+        reachable=not (silent or (other_volume and _stranger(conn, root_id, root, walk))),
         root_id=root_id,
         root=root,
     )
@@ -200,6 +204,11 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
             )
         )
         if changes.reachable:
+            if other_volume:  # its frames are here: archive now lives on this volume
+                conn.execute(
+                    "UPDATE pipeline_roots SET device = ?, inode = ? WHERE id = ?",
+                    (*(_identity(root) or (None, None)), root_id),
+                )
             _judge(conn, root_id, disk, changes)
             _write_counts(conn, changes)
     for items in (changes.new, changes.changed, changes.reread, changes.unchanged, changes.gone):
@@ -224,6 +233,27 @@ def _write_counts(conn: sqlite3.Connection, changes: Changes) -> None:
         (len(changes.new), len(changes.changed), len(changes.reread),
          len(changes.unchanged), len(changes.gone), _left_out(changes), changes.scan_id),
     )  # fmt: skip
+
+
+def _volume(root: str) -> int | None:
+    try:
+        return os.stat(long_path(root)).st_dev
+    except OSError:
+        return None
+
+
+def _stranger(conn: sqlite3.Connection, root_id: int, root: str, walk: Walk) -> bool:
+    """Other volume under root (other disk, same letter or mount) holding none of its frames:
+    silent, never every file gone. No frames known: nothing to guard, judged."""
+    here = {_rel(path, root) for path in walk.found}
+    present = [
+        row["rel_path"]
+        for row in conn.execute(
+            "SELECT rel_path FROM pipeline_files WHERE root_id = ? AND state = 'present'",
+            (root_id,),
+        )
+    ]
+    return bool(present) and not any(rel in here for rel in present)
 
 
 def _emptied(conn: sqlite3.Connection, root_id: int, root: str, walk: Walk) -> bool:

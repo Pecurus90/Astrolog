@@ -239,6 +239,62 @@ def test_a_new_empty_root_is_reachable(conn, tmp_path):
     assert changes.reachable is True
 
 
+def _other_volume(conn, root):
+    """Root's stored volume differs from disk's: another disk under same letter or mount."""
+    conn.execute("UPDATE pipeline_roots SET device = device + 1 WHERE id = ?", (root,))
+    conn.commit()
+
+
+def test_another_disk_under_the_same_letter_makes_nothing_gone(conn, tmp_path):
+    """Chiavetta diversa sulla stessa lettera, nessuna posa nota: prima tutte sparite."""
+    nas = tmp_path / "nas"
+    a = _file(nas / "night" / "a.fits")
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    a.unlink()
+    _file(nas / "other" / "b.fits")
+    _other_volume(conn, root)
+    changes = scan_root(conn, root, LATER).changes
+    assert (changes.reachable, changes.gone) == (False, [])
+
+
+def test_the_archive_copied_to_a_new_disk_is_judged(conn, tmp_path):
+    """Stesso archivio su un disco nuovo: le pose ci sono, si giudica come sempre."""
+    nas = tmp_path / "nas"
+    _file(nas / "a.fits")
+    b = _file(nas / "b.fits")
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    b.unlink()
+    _other_volume(conn, root)
+    changes = scan_root(conn, root, LATER).changes
+    assert (changes.reachable, changes.unchanged, changes.gone) == (True, ["a.fits"], ["b.fits"])
+
+
+def test_a_root_with_no_frames_on_a_new_volume_takes_its_new_frames(conn, tmp_path):
+    """Aggiunta vuota, poi il volume cambia: nessuna posa da proteggere, si legge."""
+    nas = tmp_path / "nas"
+    nas.mkdir()
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    _other_volume(conn, root)
+    _file(nas / "night" / "a.fits")
+    assert scan_root(conn, root, LATER).changes.new == ["night/a.fits"]
+
+
+def test_a_copied_archive_reordered_later_is_still_judged(conn, tmp_path):
+    """Dopo la copia il volume nuovo diventa il suo: riordinare non la rende muta."""
+    nas = tmp_path / "nas"
+    _file(nas / "night" / "a.fits")
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    _other_volume(conn, root)
+    assert scan_root(conn, root, LATER).changes.unchanged == ["night/a.fits"]
+    (nas / "night").rename(nas / "2026-10-22")
+    changes = scan_root(conn, root, LATER).changes
+    assert (changes.reachable, changes.gone) == (True, ["night/a.fits"])
+
+
 def test_a_root_emptied_of_fits_but_with_left_out_entries_still_judges(conn, tmp_path):
     """Resta un cestino: la cartella risponde davvero, i file tolti sono spariti."""
     nas = tmp_path / "nas"
