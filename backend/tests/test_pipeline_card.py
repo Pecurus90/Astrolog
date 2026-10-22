@@ -568,6 +568,16 @@ def test_a_condition_out_of_its_range_is_unknown(key, field, written, read):
     assert getattr(conditions, field) == read
 
 
+@pytest.mark.parametrize("key", ["FILTER", "OBJECT", "INSTRUME", "TELESCOP"])
+def test_a_name_with_a_control_character_is_unknown(key):
+    """NUL o tab dentro un nome: valore rotto, non so (header conserva il grezzo)."""
+    for broken in ("Ha\x007nm", "Ha\t7nm"):
+        card = read_card(Program.NINA, {key: broken})
+        assert (card.filter, card.object_name, card.camera, card.optics) == (None,) * 4
+    no_break = read_card(Program.NINA, {key: "Ha\xa07nm"})  # Mac Option+space: still a name
+    assert "Ha\xa07nm" in (no_break.filter, no_break.object_name, no_break.camera, no_break.optics)
+
+
 def test_iso_written_as_number_or_digits_is_read():
     assert read_card(ASIAIR, {"ISO": " 1600 "}).iso == 1600
     assert read_card(ASIAIR, {"ISO": 800}).iso == 800

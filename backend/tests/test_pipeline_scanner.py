@@ -314,6 +314,28 @@ def _compressed(path: Path) -> Path:
     return path
 
 
+@pytest.mark.parametrize(
+    ("lines", "key", "value"),
+    [
+        (["MYGAIN  = 12&", "CONTINUE  'z'"], "MYGAIN", "12&"),  # unquoted value: no long string
+        (["OBSERVER= 'M&'", "CONTINUE  z"], "OBSERVER", "M&"),  # unquoted CONTINUE: not a part
+        (["OBSERVER= 'M&'", "CONTINUE  '42'"], "OBSERVER", "M42"),  # the convention itself
+        (["OBSERVER= 'M&'", "CONTINUE  z", "CONTINUE  '42'"], "OBSERVER", "M&"),  # chain ended
+    ],
+)
+def test_continue_joins_quoted_strings_only(tmp_path, lines, key, value):
+    """FITS 4.0 sez. 4.2.1.2: stringhe lunghe solo tra apici."""
+    got = scan_file(_fits(tmp_path / "a.fits", [*_corpus("nina.txt"), *lines]))
+    assert isinstance(got, Extracted)
+    assert got.values[key] == value
+
+
+def test_continue_is_never_a_key(tmp_path):
+    got = scan_file(_fits(tmp_path / "a.fits", [*_corpus("nina.txt"), "CONTINUE= 'x'"]))
+    assert isinstance(got, Extracted)
+    assert "CONTINUE" not in got.values
+
+
 def test_a_compressed_frame_with_a_negative_axis_is_unreadable(tmp_path):
     """Compresso: dimensioni del frame in ZNAXISn (FITS 4.0 sez. 10), stessa regola."""
     path = _compressed(tmp_path / "light.fits.fz")

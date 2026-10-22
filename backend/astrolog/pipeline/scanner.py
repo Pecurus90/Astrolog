@@ -133,15 +133,18 @@ def _parse(images: list[str]) -> dict[str, Value]:
     last: str | None = None
     for image in images:
         key = image[:8].rstrip()
-        if key == "CONTINUE" and last is not None and _continues(cards[last]):
-            cards[last] = str(cards[last])[:-1] + _string(image[8:])
+        if key == "CONTINUE":  # reserved word, never a key; joins quoted strings only
+            if last is not None and _continues(cards[last]) and _quoted(image[8:]):
+                cards[last] = str(cards[last])[:-1] + _string(image[8:])
+            else:
+                last = None  # unquoted or stray: chain ends here
             continue
         last = None
         key, field = _key_and_field(image)
         if key is None or key in cards:
             continue
         cards[key] = _value(field)
-        last = key if isinstance(cards[key], str) else None
+        last = key if isinstance(cards[key], str) and _quoted(field) else None
     return cards
 
 
@@ -170,6 +173,11 @@ def _card_images(fh: BinaryIO) -> list[str] | None:
     return None
 
 
+def _quoted(field: str) -> bool:
+    """Long string convention (FITS 4.0 sec. 4.2.1.2): quoted text only."""
+    return field.lstrip().startswith("'")
+
+
 def _continues(value: Value) -> bool:
     return isinstance(value, str) and value.endswith("&")
 
@@ -184,7 +192,7 @@ def _string(field: str) -> str:
 
 def _value(field: str) -> Value:
     """String, logical, integer or real as FITS writes them; else keeps its text."""
-    if field.lstrip().startswith("'"):
+    if _quoted(field):
         return _string(field)
     text = field.split("/", 1)[0].strip()
     if text in ("T", "F"):

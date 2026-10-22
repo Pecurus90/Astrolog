@@ -3,6 +3,7 @@
 import math
 import re
 import struct
+import unicodedata
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -134,7 +135,13 @@ def exposure_s(values: dict[str, Value]) -> float | None:
 
 
 def _name(written: Value | None) -> str | None:
-    return written.strip() or None if isinstance(written, str) else None
+    """Stripped, non-empty, no control character (Unicode Cc: NUL, tab): else broken value."""
+    if not isinstance(written, str):
+        return None
+    name = written.strip()
+    if any(unicodedata.category(ch) == "Cc" for ch in name):
+        return None
+    return name or None
 
 
 def _positive(written: Value | None) -> float | None:
