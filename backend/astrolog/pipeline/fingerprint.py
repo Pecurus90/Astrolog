@@ -56,7 +56,7 @@ def _count(value: Any) -> bool:
 
 
 def frame_identity(header: Header, size: int, fh: BinaryIO) -> FrameIdentity:
-    """Same shot is same frame: .fits and fpack copy, ':00' and ':00.000'. Shot incomplete:
+    """Same shot is same frame: .fits and fpack copy, ':00.4' and ':00.400'. Shot incomplete:
     size, BITPIX, start and FINGERPRINT_BYTES from data centre (as before); no data: header."""
     length = header.data_length or 0
     shot = _shot(header.cards)
@@ -74,6 +74,9 @@ def frame_identity(header: Header, size: int, fh: BinaryIO) -> FrameIdentity:
 
 
 def _shot(cards: dict[str, Any]) -> str | None:
+    """Start without fraction of second: short shots share it, pixels decide (archive: none)."""
+    if "." not in str(cards.get("DATE-OBS", "")):
+        return None
     camera, start, exposure = as_name(cards.get("INSTRUME")), start_utc(cards), exposure_s(cards)
     width, height = frame_size(cards)
     if camera is None or start is None or exposure is None or not _count(width):

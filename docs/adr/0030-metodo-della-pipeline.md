@@ -38,9 +38,11 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
   senza perche'.
 - Costo: tre revisioni per passo del cuore (ordine di ore, non giorni).
 - **Identita' della posa** (Marco, 22/10/2026, secondo audit): camera, inizio UTC normalizzato,
-  dimensioni e durata dall'header (`pipeline/fingerprint.py`); i pixel solo se ne manca uno. Un
-  `.fits` e la sua copia fpack sono la stessa posa; ogni file si apre una volta. Rischio accettato:
-  due camere gemelle sincronizzate al millisecondo. Sull'archivio di prova: stesse 15.226 pose.
+  dimensioni e durata dall'header (`pipeline/fingerprint.py`); i pixel solo se ne manca uno, o se
+  l'inizio non ha la frazione di secondo (pose brevi nello stesso secondo; archivio: mai). Un
+  `.fits` e la sua copia fpack sono la stessa posa (con la frazione); ogni file si apre una volta.
+  Rischi accettati: due camere gemelle sincronizzate al millisecondo; senza frazione, la copia
+  fpack conta come seconda posa. Sull'archivio di prova: stesse 15.226 pose.
 - **Cartella nascosta dopo** (Marco, 22/10/2026, secondo audit): non si cammina e le sue pose non
   si giudicano, come una cartella che non risponde; la vecchia le dava "non trovate". Il cestino
   resta "sparito": un file cestinato cambia percorso.

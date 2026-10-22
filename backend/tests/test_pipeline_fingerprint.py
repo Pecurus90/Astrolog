@@ -116,7 +116,7 @@ def test_a_plain_file_and_its_fpack_copy_are_one_frame(tmp_path):
 @pytest.mark.parametrize(
     ("first", "second"),
     [
-        ({"DATE-OBS": "2025-06-29T21:11:33"}, {"DATE-OBS": "2025-06-29T21:11:33.000"}),
+        ({"DATE-OBS": "2025-06-29T21:11:33.4"}, {"DATE-OBS": "2025-06-29T21:11:33.400"}),
         ({"EXPTIME": 300}, {"EXPTIME": 300.0}),
         ({"INSTRUME": "ATR2600M"}, {"INSTRUME": " ATR2600M "}),
     ],
@@ -141,6 +141,16 @@ def test_another_shot_is_another_frame_even_with_the_same_pixels(tmp_path, other
     a = _image(tmp_path / "a.fits", (3, 4), np.int16, keys=_SHOT)
     b = _image(tmp_path / "b.fits", (3, 4), np.int16, keys={**_SHOT, **other})
     assert _fingerprint(a) != _fingerprint(b)
+
+
+def test_shots_in_the_same_whole_second_are_told_apart_by_their_pixels(tmp_path):
+    """Inizio senza frazione: bias e flat brevi cadono nello stesso secondo. Prima: una posa."""
+    keys = {**_SHOT, "DATE-OBS": "2025-06-29T21:11:33", "EXPTIME": 0.001}
+    a = _image(tmp_path / "a.fits", (3, 4), np.int16, keys=keys)
+    b = _image(tmp_path / "b.fits", (3, 4), np.int16, keys=keys, data=np.zeros((3, 4), np.int16))
+    c = _image(tmp_path / "c.fits", (3, 4), np.int16, keys=keys)  # copy of a
+    assert _fingerprint(a) != _fingerprint(b)
+    assert _fingerprint(a) == _fingerprint(c)
 
 
 def test_without_a_start_the_pixel_fallback_is_today_s_fingerprint(tmp_path):
