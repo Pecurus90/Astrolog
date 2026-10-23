@@ -269,6 +269,11 @@ def solve(
     return from_ini(read_ini(f"{out_base}.ini"))
 
 
+def half_written(ini: dict[str, str]) -> bool:
+    """`PLTSOLVD=T` without the centre: cut mid-write, not a sky that fails."""
+    return solved(ini) and not {"CRVAL1", "CRVAL2"} <= ini.keys()
+
+
 def from_ini(ini: dict[str, str]) -> Solution:
     """Also the cache's path. A half-written result can say `PLTSOLVD=T` without the numbers: it
     counts as no solution, so the cache reader drops it and solves again."""

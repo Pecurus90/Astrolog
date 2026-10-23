@@ -9,7 +9,6 @@ from pathlib import Path
 
 from .. import astap, units
 from ..db.transaction import transaction
-from ..fits.header_wcs import solved
 from .walk import long_path
 
 # The whole pass would fail the same way: stop at the first.
@@ -85,9 +84,8 @@ def _launch(path: Path, card: sqlite3.Row, solver: astap.Solver, work: Path) -> 
             pointing=None if ra is None else (ra, dec),
         )
         written = astap.read_ini(base.with_suffix(".ini"))
-        # no .ini (crash) or PLTSOLVD=T without centre (half written): not a sky that fails
-        half = solved(written) and not {"CRVAL1", "CRVAL2"} <= written.keys()
-        if not found.ok and (not written or half):
+        # no .ini (crash) or half written: not a sky that fails
+        if not found.ok and (not written or astap.half_written(written)):
             return astap.Solution(ok=False, reason=astap.Reason.INTERNAL_ERROR)
         return found
 

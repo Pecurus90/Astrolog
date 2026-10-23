@@ -275,6 +275,8 @@ name = "pipeline nuova e vecchia non si conoscono"
 type = "forbidden"
 source_modules = ["astrolog.pipeline"]
 forbidden_modules = ["astrolog.fits", "astrolog.vocab", "astrolog.spine", "astrolog.worker", "astrolog.api", "astropy"]
+# astap.py e' di tutte e due: legge il .ini di ASTAP col lettore WCS di fits. La nuova lo usa, mai fits.
+ignore_imports = ["astrolog.astap -> astrolog.fits.header_wcs", "astrolog.astap -> astrolog.fits.header_keys"]
 
 [[tool.importlinter.contracts]]
 name = "la vecchia non importa la nuova"
