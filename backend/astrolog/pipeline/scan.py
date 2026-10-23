@@ -20,6 +20,7 @@ from .walk import long_path
 _ROOTS_GUARD = threading.Lock()
 _RUNNING: dict[int, threading.Lock] = {}  # app is one process: a lock per root
 BATCH = 100  # files saved per transaction: short lock, small loss if stopped
+UNKNOWN_KEPT = 100  # no convention, product choice: receipt stays small, readable on screen
 
 
 class ScanRunningError(RuntimeError):
@@ -70,8 +71,14 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
             for rel, got in batch:
                 _store(conn, changes, rel, got, now)
             conn.execute(  # running totals: a stopped scan keeps what its saved batches saw
-                "UPDATE pipeline_scans SET skipped = ?, unknown_keys = ? WHERE id = ?",
-                (json.dumps(reasons), json.dumps(unknown), changes.scan_id),
+                "UPDATE pipeline_scans SET skipped = ?, unknown_keys = ?, unknown_more = ?"
+                " WHERE id = ?",
+                (
+                    json.dumps(reasons),
+                    json.dumps(dict(unknown.most_common(UNKNOWN_KEPT))),
+                    max(0, len(unknown) - UNKNOWN_KEPT),
+                    changes.scan_id,
+                ),
             )
         result.skipped.extend(skipped)
     _left_unread(changes, vanished)
