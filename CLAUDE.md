@@ -46,6 +46,9 @@ ricetta invocata come skill**, anche la correzione di un rilievo dopo una revisi
 massimo una verifica delle correzioni; blocca solo un rilievo con prova; il correttore puo'
 rifiutare e non aggiunge dipendenze, file o meccanismi; cio' che resta aperto ferma il lavoro e
 va nel riassunto. Una regola controllabile da una macchina sta in una macchina, non in un prompt.
+**Una funzionalita' nuova** (Marco, 23/10/2026): ricognizione larga, domande, piano scritto,
+verifica del piano da agenti indipendenti a contesto fresco (logica, fattibilita', attacco, con
+convenzioni e metodi standard online), piano riscritto, poi il codice. Passi in `/costruisci`.
 
 | Ruolo | Chi | Modello |
 |---|---|---|
