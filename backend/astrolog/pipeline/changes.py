@@ -326,13 +326,13 @@ def _judge(
         row["rel_path"]: row
         for row in conn.execute(
             "SELECT rel_path, size, mtime_ns, state, skip_reason FROM pipeline_files"
-            " WHERE root_id = ?",
+            " WHERE root_id = ? AND state = 'present'",  # gone only: path new again
             (root_id,),
         )
     }
     for rel, stat in disk.items():
         before = known.get(rel)
-        if before is None or before["state"] == "gone":
+        if before is None:
             changes.new.append(rel)
             changes.stat[rel] = stat  # row written with its read
             continue
@@ -345,7 +345,8 @@ def _judge(
         else:
             changes.unchanged.append(rel)
         conn.execute(  # old size and date stay until read: interrupted, read again
-            "UPDATE pipeline_files SET seen_scan_id = ? WHERE root_id = ? AND rel_path = ?",
+            "UPDATE pipeline_files SET seen_scan_id = ?"
+            " WHERE root_id = ? AND rel_path = ? AND state = 'present'",
             (changes.scan_id, root_id, rel),
         )
 
@@ -366,6 +367,6 @@ def _mark_gone(
         changes.gone.append(rel)
         conn.execute(
             "UPDATE pipeline_files SET state = 'gone', gone_scan_id = ?"
-            " WHERE root_id = ? AND rel_path = ?",
+            " WHERE root_id = ? AND rel_path = ? AND state = 'present'",
             (changes.scan_id, root_id, rel),
         )

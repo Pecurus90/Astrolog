@@ -940,9 +940,12 @@ CREATE TABLE pipeline_files (
   gone_scan_id    INTEGER REFERENCES pipeline_scans (id),  -- quella che l'ha visto sparire
   -- unreadable e incomplete passeggeri tengono la posa letta prima, finche' si rilegge
   CHECK (frame_id IS NULL OR skip_reason IS NULL OR skip_reason IN ('unreadable', 'incomplete')),
-  CHECK ((state = 'gone') = (gone_scan_id IS NOT NULL)),
-  UNIQUE (root_id, rel_path)
+  CHECK ((state = 'gone') = (gone_scan_id IS NOT NULL))
 ) STRICT;
+-- un presente per percorso; sparito resta accanto a un file nuovo con lo stesso nome (storia)
+CREATE UNIQUE INDEX pipeline_files_present ON pipeline_files (root_id, rel_path)
+  WHERE state = 'present';
+CREATE INDEX pipeline_files_path ON pipeline_files (root_id, rel_path);
 CREATE INDEX pipeline_files_frame ON pipeline_files (root_id, frame_id);  -- spostati e doppioni
 
 -- RILEVATO. Spostati trovati da una scansione, scritti con lei: lo schermo legge, mai ricalcola.

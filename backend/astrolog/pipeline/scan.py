@@ -10,6 +10,7 @@ from dataclasses import dataclass, field, fields
 from datetime import datetime
 from pathlib import Path
 
+from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from .card import Card, Conditions, read_card, read_conditions
 from .changes import PASSING, Changes, finish_scan, record_changes
@@ -134,29 +135,13 @@ def _store(
 ) -> None:
     """File's size and date written with its read, frame and header together: skipped file
     loses both, unless passing skip (locked) of file read before."""
-    size, mtime_ns = changes.stat[rel]
-    was = conn.execute(
-        "SELECT frame_id FROM pipeline_files WHERE root_id = ? AND rel_path = ?",
-        (changes.root_id, rel),
-    ).fetchone()
-    file_id = conn.execute(
-        "INSERT INTO pipeline_files"
-        " (root_id, rel_path, size, mtime_ns, state, seen_scan_id, arrived_scan_id)"
-        " VALUES (?, ?, ?, ?, 'present', ?, ?)"
-        " ON CONFLICT (root_id, rel_path) DO UPDATE SET size = excluded.size,"
-        " mtime_ns = excluded.mtime_ns, seen_scan_id = excluded.seen_scan_id,"
-        " arrived_scan_id = CASE WHEN state = 'gone' THEN excluded.arrived_scan_id"
-        " ELSE arrived_scan_id END, state = 'present', gone_scan_id = NULL RETURNING id",
-        (changes.root_id, rel, size, mtime_ns, changes.scan_id, changes.scan_id),
-    ).fetchone()["id"]
     skipped = isinstance(got, Skipped)
+    shot = None if skipped else _frame_of(conn, got, now)
+    was = _row_for(conn, changes.root_id, rel, shot)
     before = was["frame_id"] if was is not None else None
     held = skipped and got.reason in PASSING and before is not None  # locked: keeps its shot
-    frame_id = (before if held else None) if skipped else _frame_of(conn, got, now)
-    conn.execute(
-        "UPDATE pipeline_files SET frame_id = ?, skip_reason = ? WHERE id = ?",
-        (frame_id, got.reason if skipped else None, file_id),
-    )
+    frame_id = (before if held else None) if skipped else shot
+    file_id = _write_file(conn, changes, rel, was, (frame_id, got.reason if skipped else None))
     if before not in (None, frame_id):
         _drop_if_unused(conn, before)
     if skipped:
@@ -174,6 +159,60 @@ def _store(
         _insert(conn, "pipeline_conditions", file_id, conditions)
     if card.filter is not None:
         resolve(conn, card.filter)
+
+
+def _row_for(
+    conn: sqlite3.Connection, root_id: int, rel: str, shot: int | None
+) -> sqlite3.Row | None:
+    """Present row of path; else gone one of same shot (back; shotless row of still-copying
+    file gives way). Gone with another shot: history, new file gets own row."""
+    rows = conn.execute(
+        "SELECT id, frame_id, state, arrived_scan_id FROM pipeline_files"
+        " WHERE root_id = ? AND rel_path = ?",
+        (root_id, rel),
+    ).fetchall()
+    present = [row for row in rows if row["state"] == "present"]
+    back = [row for row in rows if shot is not None and row["frame_id"] == shot]
+    if back and present and present[0]["frame_id"] is None:
+        unread = present[0]
+        conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (unread["id"],))
+        conn.execute("DELETE FROM pipeline_files WHERE id = ?", (unread["id"],))
+        conn.execute(  # arrived when copy began, not now: no false move
+            "UPDATE pipeline_files SET state = 'present', gone_scan_id = NULL,"
+            " arrived_scan_id = ? WHERE id = ?",
+            (unread["arrived_scan_id"], back[0]["id"]),
+        )
+        return back[0]
+    return (present or back or [None])[0]
+
+
+def _write_file(
+    conn: sqlite3.Connection,
+    changes: Changes,
+    rel: str,
+    was: sqlite3.Row | None,
+    read: tuple[int | None, str | None],
+) -> int:
+    """`read`: frame, skip reason. Back from gone: arrived now, so move pairing sees it."""
+    size, mtime_ns = changes.stat[rel]
+    frame_id, skip_reason = read
+    if was is None:
+        return inserted_id(
+            conn.execute(
+                "INSERT INTO pipeline_files (root_id, rel_path, size, mtime_ns, state,"
+                " seen_scan_id, arrived_scan_id, frame_id, skip_reason)"
+                " VALUES (?, ?, ?, ?, 'present', ?, ?, ?, ?)",
+                (changes.root_id, rel, size, mtime_ns, changes.scan_id, changes.scan_id,
+                 frame_id, skip_reason),
+            )
+        )  # fmt: skip
+    conn.execute(
+        "UPDATE pipeline_files SET size = ?, mtime_ns = ?, seen_scan_id = ?,"
+        " arrived_scan_id = CASE WHEN state = 'gone' THEN ? ELSE arrived_scan_id END,"
+        " state = 'present', gone_scan_id = NULL, frame_id = ?, skip_reason = ? WHERE id = ?",
+        (size, mtime_ns, changes.scan_id, changes.scan_id, frame_id, skip_reason, was["id"]),
+    )
+    return int(was["id"])
 
 
 def _insert(conn: sqlite3.Connection, table: str, file_id: int, row: Card | Conditions) -> None:

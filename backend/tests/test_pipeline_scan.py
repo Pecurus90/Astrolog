@@ -480,6 +480,69 @@ def test_a_file_back_is_no_longer_gone(conn, tmp_path):
         conn.execute("UPDATE pipeline_files SET gone_scan_id = seen_scan_id")
 
 
+def test_a_new_shot_on_a_gone_file_s_path_leaves_the_old_shot_gone(conn, tmp_path):
+    """N.I.N.A. riscrive M31/Light_000 dopo che la sessione e' stata portata via: due pose, la
+    vecchia sparita con la sua storia. Prima: la riga si riusava e la posa vecchia spariva."""
+    nas = tmp_path / "nas"
+    path = nina_light(nas / "M31" / "Light_000.fits", 1)
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    path.unlink()
+    scan_root(conn, root, LATER)
+    nina_light(path, 2)
+    scan_root(conn, root, THEN)
+    rows = conn.execute(
+        "SELECT state, frame_id FROM pipeline_files WHERE rel_path = 'M31/Light_000.fits'"
+        " ORDER BY id"
+    ).fetchall()
+    assert [r["state"] for r in rows] == ["gone", "present"]
+    assert rows[0]["frame_id"] != rows[1]["frame_id"]
+    assert conn.execute("SELECT COUNT(*) FROM pipeline_frames").fetchone()[0] == 2
+
+
+def test_a_shot_back_while_still_copying_takes_its_gone_row_again(conn, tmp_path, monkeypatch):
+    """Sessione ricopiata: alla prima scansione la copia e' in corso, alla seconda e' letta.
+    La posa riprende la sua riga sparita: una riga sola, non una sparita e una presente."""
+    nas = tmp_path / "nas"
+    path = nina_light(nas / "M31" / "L.fits", 1)
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    shot = path.read_bytes()
+    path.unlink()
+    scan_root(conn, root, LATER)
+    path.write_bytes(shot)
+    real = scan.scan_file
+    monkeypatch.setattr(scan, "scan_file", lambda p, size=None: Skipped(p, Skip.INCOMPLETE))
+    scan_root(conn, root, THEN)
+    monkeypatch.setattr(scan, "scan_file", real)
+    _touch_later(path)
+    scan_root(conn, root, "2026-10-25T20:00:00+00:00")
+    rows = conn.execute("SELECT state, frame_id FROM pipeline_files").fetchall()
+    assert [(r["state"], r["frame_id"]) for r in rows] == [("present", 1)]
+
+
+def test_a_shot_back_while_copying_keeps_when_it_arrived(conn, tmp_path, monkeypatch):
+    """Tornata durante la copia, letta il giro dopo: arrivo vero, quello della copia. Un'altra
+    copia cancellata nello stesso giro e' cancellata, non spostata."""
+    nas = tmp_path / "nas"
+    path = nina_light(nas / "a" / "L.fits", 1)
+    shot = path.read_bytes()
+    (nas / "b").mkdir()
+    (nas / "b" / "Q.fits").write_bytes(shot)
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    path.unlink()
+    scan_root(conn, root, LATER)
+    path.write_bytes(shot)
+    real = scan.scan_file
+    monkeypatch.setattr(scan, "scan_file", lambda p, size=None: Skipped(p, Skip.INCOMPLETE))
+    scan_root(conn, root, THEN)
+    monkeypatch.setattr(scan, "scan_file", real)
+    (nas / "b" / "Q.fits").unlink()
+    _touch_later(path)
+    assert scan_root(conn, root, "2026-10-25T20:00:00+00:00").moved == []
+
+
 def test_a_file_rewritten_by_another_program_loses_frame_and_header(conn, tmp_path):
     """Riscritto da un editor sopra l'originale: oggi non e' posa, header vecchio non resta."""
     nina_light(tmp_path / "a.fits", 1)
