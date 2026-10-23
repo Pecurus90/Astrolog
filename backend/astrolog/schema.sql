@@ -1039,13 +1039,22 @@ CREATE TABLE pipeline_conditions (
     star_fwhm_arcsec) IS NOT NULL)
 ) STRICT;
 
--- RILEVATO. Cielo della posa da ASTAP (pipeline/solve.py): riga per posa provata, scritta da chi
--- risolve. Nessuna riga: da provare (anche dopo timeout). Rotazione: CROTA2 dalla CD.
+-- RILEVATO. Cielo della posa da ASTAP (pipeline/solve.py), riga per posa provata; nessuna: da
+-- provare. Definitivi solved, no_solution, no_stars; gli altri si riprovano (solve.PENDING).
 CREATE TABLE pipeline_solutions (
   frame_id        INTEGER PRIMARY KEY REFERENCES pipeline_frames (id) ON DELETE CASCADE,
-  outcome         TEXT NOT NULL CHECK (outcome IN ('solved', 'no_solution', 'no_stars')),
-  -- ultimo gradino lanciato (solve.Step): quello che ha risolto, o dove la scala si e' fermata
-  step            TEXT NOT NULL CHECK (step IN ('first', 'full_res', 'any_field', 'blind')),
+  outcome         TEXT NOT NULL CHECK (outcome IN ('solved', 'no_solution', 'no_stars',
+                    'timeout', 'crashed', 'unreadable', 'fz_unsupported')),
+  -- ultimo gradino lanciato (solve.Step): quello che ha risolto, o dove la scala si e' fermata;
+  -- NULL: nessun lancio (fz_unsupported, copia fallita)
+  step            TEXT CHECK (step IN ('first', 'full_res', 'any_field', 'blind')),
+  -- file provato: un esito in attesa (timeout, unreadable...) ferma solo lui, non le copie
+  file_id         INTEGER REFERENCES pipeline_files (id) ON DELETE SET NULL,
+  attempts        INTEGER NOT NULL DEFAULT 1 CHECK (attempts >= 1),  -- passate che l'hanno provata
+  astap_version   TEXT,  -- data della release da `-h`; NULL se non letta
+  catalogue       TEXT,  -- quello che ASTAP dice di aver usato
+  installed       TEXT,  -- cataloghi installati alla prova: cambiano, si riprova
+  duration_s      REAL CHECK (duration_s >= 0),  -- tutta la scala
   ra_deg          REAL CHECK (ra_deg >= 0 AND ra_deg < 360),  -- J2000, centro immagine
   dec_deg         REAL CHECK (dec_deg BETWEEN -90 AND 90),
   scale_arcsec_px REAL CHECK (scale_arcsec_px > 0),

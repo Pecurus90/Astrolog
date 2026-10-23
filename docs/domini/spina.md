@@ -572,7 +572,7 @@ due specie, e confonderle e' un vicolo cieco:
   giorno dopo, o riattacca il disco, o scarica il catalogo, non risolverebbe mai piu' niente:
   nessuno lo rimetterebbe in coda, e il pulsante direbbe "niente da fare";
 - **e' andata cosi'**: `no_stars`, `no_solution`, `timeout`, `internal_error`, `unreadable` (ASTAP
-  non apre il file). `failed`, si riprova se qualcuno lo chiede. Pipeline nuova: `unreadable` si riprova.
+  non apre il file). `failed`, si riprova se qualcuno lo chiede. Pipeline nuova: ogni esito scritto, con versione di ASTAP, catalogo e durata; `timeout`, `crashed`, `unreadable` una volta alla passata dopo, poi fermi finche' cambia ASTAP o il catalogo installato; `fz_unsupported` finche' cambia ASTAP.
 
 **E il catalogo mancante ferma la corsa**, invece di ripetersi frame per frame. Il catalogo di
 ASTAP e' un **download separato**, ed e' l'errore di installazione piu' comune: senza, *ogni*

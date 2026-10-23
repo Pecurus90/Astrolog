@@ -169,6 +169,21 @@ def test_without_astap_there_is_no_crash_only_a_reason(tmp_path):
     assert esito.ok is False and esito.reason == "astap_missing"
 
 
+@pytest.mark.parametrize(
+    "uscita, atteso",
+    [
+        ("Using star database D80\r\nCreating grayscale x 2 binning image\r\n", "d80"),
+        ("Using star database W08\n", "w08"),
+        ("No solution found!  :(\r\n", None),
+    ],
+)
+def test_the_catalogue_used_is_read_from_what_astap_prints(tmp_path, uscita, atteso):
+    """ASTAP sceglie il catalogo per campo e lo stampa (CLI-2025.11.19): si salva quello usato."""
+    run = fake_run(stdout=uscita, scrive={tmp_path / "e.ini": INI_RISOLTO})
+    esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run))
+    assert esito.catalogue == atteso
+
+
 def test_the_downsample_asked_is_the_one_given(tmp_path):
     """-z 0 lascia scegliere ASTAP; -z 1 a piena risoluzione, il gradino che salva gli OSC."""
     run = fake_run()

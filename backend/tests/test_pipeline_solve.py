@@ -5,6 +5,7 @@ import math
 import os
 import shutil
 import stat
+import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
@@ -62,7 +63,7 @@ class FakeAstap:
                 shutil.copy(INI / answer, ini)
         if self.then is not None:
             self.then()
-        return (0 if answer == "solved.ini" else 1), ""
+        return (0 if answer == "solved.ini" else 1), "Using star database D80\r\n"
 
 
 def _option(cmd: list[str], flag: str) -> str:
@@ -82,6 +83,10 @@ def _scanned(conn, nas: Path) -> int:
 
 def _solutions(conn) -> list[dict]:
     return [dict(row) for row in conn.execute("SELECT * FROM pipeline_solutions ORDER BY frame_id")]
+
+
+def _outcomes(conn) -> list[str]:
+    return [row["outcome"] for row in _solutions(conn)]
 
 
 def _nina_pixels(seed: int) -> tuple[np.ndarray, fits.Header]:
@@ -159,7 +164,7 @@ def test_a_crash_never_reads_an_earlier_result_as_its_own(conn, tmp_path):
     nina_light(nas / "b.fits", 2, _SKY)
     root = _scanned(conn, nas)
     _solve(conn, root, FakeAstap("solved.ini", None), tmp_path)
-    assert [row["outcome"] for row in _solutions(conn)] == ["solved"]
+    assert _outcomes(conn) == ["solved", "crashed"]
 
 
 @pytest.mark.parametrize(
@@ -253,16 +258,183 @@ def test_without_astap_nothing_is_launched_and_nothing_written(conn, tmp_path):
     assert result.stopped is astap.Reason.ASTAP_MISSING
 
 
-def test_a_timeout_writes_nothing_so_the_next_pass_tries_again(conn, tmp_path):
+@pytest.mark.parametrize(
+    ("answer", "outcome"),
+    [("timeout", "timeout"), (None, "crashed"), ("PLTSOLVD=T\n", "crashed"),
+     ("unreadable.ini", "unreadable")],
+)  # fmt: skip
+def test_a_shot_that_did_not_end_is_tried_once_more_then_waits(conn, tmp_path, answer, outcome):
+    """Decisione D5: una volta alla scansione dopo, poi ferma. Detto il perche', con i tentativi."""
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
     root = _scanned(conn, nas)
+    launched = []
+    for _ in range(3):
+        run = FakeAstap(answer)
+        _solve(conn, root, run, tmp_path)
+        launched.append(len(run.commands))
+    [row] = _solutions(conn)
+    assert launched == [1, 1, 0]
+    assert (row["outcome"], row["attempts"], row["step"]) == (outcome, 2, "first")
 
-    def hangs(cmd: Sequence[str], timeout_s: float) -> tuple[int, str]:
-        raise TimeoutError
 
-    _solve(conn, root, hangs, tmp_path)
-    assert _solutions(conn) == []
+def test_a_new_astap_tries_a_waiting_shot_again(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    for _ in range(2):
+        _solve(conn, root, FakeAstap("timeout"), tmp_path)
+    run = FakeAstap("solved.ini", version="CLI-2026.07.16")
+    _solve(conn, root, run, tmp_path)
+    [row] = _solutions(conn)
+    assert len(run.commands) == 1 and row["outcome"] == "solved"
+    assert row["astap_version"] == "2026.07.16" and row["attempts"] == 3
+
+
+def test_a_new_catalogue_tries_a_waiting_shot_again(conn, tmp_path, monkeypatch):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    monkeypatch.setattr(astap, "catalogues_in", lambda folder: ("d80",))
+    for _ in range(2):
+        _solve(conn, root, FakeAstap("timeout"), tmp_path)
+    monkeypatch.setattr(astap, "catalogues_in", lambda folder: ("d50", "d80"))
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert len(run.commands) == 1 and _outcomes(conn) == ["solved"]
+    assert _solutions(conn)[0]["installed"] == "d50,d80"
+
+
+def test_the_row_says_which_astap_and_catalogue_and_how_long(conn, tmp_path):
+    """Versione da -h, catalogo che ASTAP dice di aver usato, durata di tutta la scala."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
+    [row] = _solutions(conn)
+    assert (row["astap_version"], row["catalogue"]) == ("2025.11.19", "d80")
+    assert row["duration_s"] >= 0 and row["attempts"] == 1
+
+
+@pytest.mark.parametrize("plain_root", ["same", "other"])
+def test_a_compressed_file_waiting_never_holds_back_its_plain_copy(conn, tmp_path, plain_root):
+    """.fz illeggibile da questo ASTAP: fatto del file, non della posa. Il .fits della stessa
+    posa, arrivato dopo o in un'altra radice, si lancia."""
+    _nina_fz(tmp_path / "nas" / "a.fits.fz", 0)
+    root = _scanned(conn, tmp_path / "nas")
+    _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
+    data, header = _nina_pixels(0)
+    plain = tmp_path / ("nas" if plain_root == "same" else "usb")
+    plain.mkdir(exist_ok=True)
+    fits.PrimaryHDU(data=data, header=header).writeto(plain / "b.fits")
+    other = root if plain_root == "same" else _scanned(conn, plain)
+    scan_root(conn, other, LATER)
+    run = FakeAstap("solved.ini")
+    _solve(conn, other, run, tmp_path)
+    assert [Path(_option(c, "-f")).name for c in run.commands] == ["b.fits"]
+    assert _outcomes(conn) == ["solved"]
+
+
+def test_a_file_waiting_never_holds_back_a_good_copy_elsewhere(conn, tmp_path):
+    nina_light(tmp_path / "nas" / "a.fits", 1, _SKY)
+    nas = _scanned(conn, tmp_path / "nas")
+    for _ in range(2):
+        _solve(conn, nas, FakeAstap("unreadable.ini"), tmp_path)
+    nina_light(tmp_path / "usb" / "a.fits", 1, _SKY)
+    usb = _scanned(conn, tmp_path / "usb")
+    run = FakeAstap("solved.ini")
+    _solve(conn, usb, run, tmp_path)
+    assert len(run.commands) == 1 and _outcomes(conn) == ["solved"]
+
+
+def test_an_unread_version_counts_as_unchanged(conn, tmp_path):
+    """-h che fallisce non e' un ASTAP nuovo: la posa in attesa resta ferma."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    _nina_fz(nas / "b.fits.fz", 2)
+    root = _scanned(conn, nas)
+    for _ in range(2):
+        _solve(conn, root, FakeAstap("timeout"), tmp_path)
+    run = FakeAstap("solved.ini", version=None)
+    _solve(conn, root, run, tmp_path)
+    assert run.commands == []
+
+
+def test_the_installed_catalogues_are_read_where_astap_reads_them(conn, tmp_path):
+    """Cartella -d detta: i cataloghi si guardano li', non accanto al programma."""
+    (tmp_path / "db").mkdir()
+    (tmp_path / "db" / "d50_0101.1476").write_bytes(b"")
+    nina_light(tmp_path / "nas" / "a.fits", 1, _SKY)
+    root = _scanned(conn, tmp_path / "nas")
+    _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
+    assert _solutions(conn)[0]["installed"] == "d50"
+
+
+def test_a_new_astap_reading_fpack_still_launches_once_per_shot(conn, tmp_path):
+    nas = tmp_path / "nas"
+    _nina_fz(nas / "a.fits.fz", 0)
+    data, header = _nina_pixels(0)
+    fits.PrimaryHDU(data=data, header=header).writeto(nas / "b.fits")
+    root = _scanned(conn, nas)
+    run = FakeAstap("no_solution.ini", version="CLI-2026.07.16")
+    _solve(conn, root, run, tmp_path)
+    assert {Path(_option(c, "-f")).name for c in run.commands} == {"b.fits"}
+
+
+def test_the_duration_is_the_time_the_ladder_took(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    _solve(conn, root, FakeAstap("solved.ini", then=lambda: time.sleep(0.05)), tmp_path)
+    assert _solutions(conn)[0]["duration_s"] >= 0.03  # Windows clock: 15 ms steps
+
+
+def test_settled_failures_are_never_launched_again(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    nina_light(nas / "b.fits", 2, _SKY)
+    root = _scanned(conn, nas)
+    _solve(conn, root, FakeAstap("no_stars.ini", "no_solution.ini"), tmp_path)
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert run.commands == [] and sorted(_outcomes(conn)) == ["no_solution", "no_stars"]
+
+
+def test_the_wait_follows_the_file_last_tried(conn, tmp_path):
+    """.fz in attesa, poi la copia .fits va in timeout due volte: aspetta lei, non si rilancia."""
+    _nina_fz(tmp_path / "nas" / "a.fits.fz", 0)
+    nas = _scanned(conn, tmp_path / "nas")
+    _solve(conn, nas, FakeAstap("solved.ini"), tmp_path)
+    data, header = _nina_pixels(0)
+    (tmp_path / "usb").mkdir()
+    fits.PrimaryHDU(data=data, header=header).writeto(tmp_path / "usb" / "b.fits")
+    usb = _scanned(conn, tmp_path / "usb")
+    for _ in range(2):
+        _solve(conn, usb, FakeAstap("timeout"), tmp_path)
+    run = FakeAstap("solved.ini")
+    _solve(conn, usb, run, tmp_path)
+    assert run.commands == [] and _outcomes(conn) == ["timeout"]
+
+
+def test_a_settled_outcome_is_never_overwritten(conn, tmp_path, db_path):
+    """Un'altra passata ha gia' scritto un esito definitivo: il nostro timeout non lo cambia."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    other = connect(db_path)
+
+    def other_pass() -> None:
+        with other:
+            other.execute(
+                "INSERT INTO pipeline_solutions (frame_id, outcome, step, attempts, tried_at)"
+                " SELECT id, 'no_stars', 'first', 1, ? FROM pipeline_frames",
+                (LATER,),
+            )
+
+    result = _solve(conn, root, FakeAstap(None, then=other_pass), tmp_path)
+    other.close()
+    assert _outcomes(conn) == ["no_stars"]
+    assert result.untried == {} and result.failed == {}  # counts only what it wrote
 
 
 def test_a_gone_file_is_not_launched(conn, tmp_path):
@@ -374,7 +546,7 @@ def test_a_half_written_result_is_tried_again(conn, tmp_path):
     nina_light(nas / "a.fits", 1, _SKY)
     root = _scanned(conn, nas)
     _solve(conn, root, FakeAstap("PLTSOLVD=T\n"), tmp_path)
-    assert _solutions(conn) == []
+    assert _outcomes(conn) == ["crashed"]
 
 
 def test_a_shot_solved_meanwhile_by_another_pass_is_no_crash(conn, tmp_path, db_path):
@@ -399,12 +571,12 @@ def test_a_shot_solved_meanwhile_by_another_pass_is_no_crash(conn, tmp_path, db_
 
 def test_a_file_astap_cannot_read_is_tried_again(conn, tmp_path):
     """ASTAP dice "Error reading image file" (file sparito, compresso, nome che non legge): non e'
-    un cielo che non si risolve. Nessuna riga, si riprova alla passata dopo."""
+    un cielo che non si risolve. Detto, e si riprova alla passata dopo."""
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
     root = _scanned(conn, nas)
     result = _solve(conn, root, FakeAstap("unreadable.ini"), tmp_path)
-    assert _solutions(conn) == [] and result.untried == {"unreadable": 1}
+    assert _outcomes(conn) == ["unreadable"] and result.untried == {"unreadable": 1}
 
 
 def test_a_compressed_only_shot_waits_for_an_astap_that_reads_it(conn, tmp_path):
@@ -416,8 +588,18 @@ def test_a_compressed_only_shot_waits_for_an_astap_that_reads_it(conn, tmp_path)
     root = _scanned(conn, nas)
     run = FakeAstap("solved.ini", version="CLI-2025.11.19")
     result = _solve(conn, root, run, tmp_path)
-    assert run.commands == [] and run.asked == 1 and _solutions(conn) == []
+    assert run.commands == [] and run.asked == 1
     assert result.untried == {"fz_unsupported": 2}
+    rows = _solutions(conn)
+    assert [(r["outcome"], r["step"], r["astap_version"]) for r in rows] == [
+        ("fz_unsupported", None, "2025.11.19")
+    ] * 2
+    run = FakeAstap("solved.ini", version="CLI-2025.11.19")
+    _solve(conn, root, run, tmp_path)  # same ASTAP: waits, however many passes
+    assert [r["attempts"] for r in _solutions(conn)] == [1, 1]
+    run = FakeAstap("solved.ini", version="CLI-2026.07.16")
+    _solve(conn, root, run, tmp_path)
+    assert len(run.commands) == 2 and _outcomes(conn) == ["solved", "solved"]
 
 
 @pytest.mark.parametrize("version", ["CLI-2026.07.16", "CLI-2027.1.2"])
@@ -438,6 +620,7 @@ def test_an_astap_that_does_not_say_its_version_gets_the_try(conn, tmp_path):
     run = FakeAstap("unreadable.ini", version=None)
     result = _solve(conn, root, run, tmp_path)
     assert len(run.commands) == 1 and result.untried == {"unreadable": 1}
+    assert _solutions(conn)[0]["astap_version"] is None
 
 
 _CJK = "星雲"  # 2 CJK letters: outside every Western ANSI code page
@@ -517,7 +700,7 @@ def test_a_compressed_file_never_goes_by_its_short_name(conn, tmp_path, monkeypa
 
 @windows
 def test_a_copy_that_fails_is_tried_again(conn, tmp_path, monkeypatch):
-    """Disco pieno: niente lancio, nessuna riga, si riprova."""
+    """Disco pieno: niente lancio, detto (nessun gradino), si riprova."""
     _no_short_names(monkeypatch)
 
     def full(*args: object, **kwargs: object) -> None:
@@ -529,6 +712,7 @@ def test_a_copy_that_fails_is_tried_again(conn, tmp_path, monkeypatch):
     run = FakeAstap("solved.ini")
     result = _solve(conn, root, run, tmp_path)
     assert run.commands == [] and result.untried == {"unreadable": 1}
+    assert [(r["outcome"], r["step"]) for r in _solutions(conn)] == [("unreadable", None)]
 
 
 @windows
@@ -667,21 +851,21 @@ def test_a_timeout_after_no_solution_ends_as_no_solution(conn, tmp_path):
     assert result.failed == {"no_solution": 1}
 
 
-def test_a_timeout_at_the_first_launch_writes_nothing(conn, tmp_path):
-    """Nessuna risposta di ASTAP ancora: si riprova alla passata dopo."""
+def test_a_timeout_at_the_first_launch_waits_for_the_next_pass(conn, tmp_path):
+    """Nessuna risposta di ASTAP ancora: scritto timeout, si riprova alla passata dopo."""
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
     root = _scanned(conn, nas)
     run = FakeAstap("timeout", "solved.ini")
     result = _solve(conn, root, run, tmp_path)
-    assert len(run.commands) == 1 and _solutions(conn) == []
+    assert len(run.commands) == 1 and _outcomes(conn) == ["timeout"]
     assert result.untried == {"timeout": 1}
 
 
-def test_a_crash_mid_ladder_writes_nothing(conn, tmp_path):
+def test_a_crash_mid_ladder_is_said_at_its_step(conn, tmp_path):
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
     root = _scanned(conn, nas)
     run = FakeAstap("no_solution.ini", None, "solved.ini")
     _solve(conn, root, run, tmp_path)
-    assert len(run.commands) == 2 and _solutions(conn) == []
+    assert len(run.commands) == 2 and _step(conn) == [("crashed", "full_res")]

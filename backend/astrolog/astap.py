@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
 
@@ -64,6 +64,9 @@ class Reason(StrEnum):
     PATH_UNSUPPORTED = "path_unsupported"
 
 
+# Printed first on every launch (CLI-2025.11.19); the .ini does not say it.
+_CATALOGUE = re.compile(r"Using star database (\w+)", re.IGNORECASE)
+
 # Lines of words, not numbers, in ASTAP's result file.
 _TEXT = frozenset({"ERROR", "WARNING", "CMDLINE"})
 _POLE_DEG = 90.0
@@ -87,6 +90,7 @@ class Solution:
     dec_deg: float | None = None
     scale_arcsec_px: float | None = None
     rotation_deg: float | None = None
+    catalogue: str | None = None  # the one ASTAP says it used, lowercase code
 
 
 # Codes, not sentences: they are shown on screen, and a new word would arrive untranslated.
@@ -152,8 +156,15 @@ def star_databases(exe: str | Path | None) -> tuple[str, ...]:
     program's catalogue. Looked at, not asked: asking ASTAP means running it."""
     if exe is None:
         return ()
+    with contextlib.suppress(OSError):
+        return catalogues_in(Path(exe).resolve().parent)
+    return ()
+
+
+def catalogues_in(folder: str | Path) -> tuple[str, ...]:
+    """Catalogue codes found in folder, sorted; none readable: empty."""
     with contextlib.suppress(OSError):  # folder gone, disk unplugged, permission denied
-        matches = (DB_NAME.match(f.name) for f in Path(exe).resolve().parent.iterdir())
+        matches = (DB_NAME.match(f.name) for f in Path(folder).iterdir())
         return tuple(sorted({m.group(1).lower() for m in matches if m}))
     return ()
 
@@ -263,15 +274,16 @@ def solve(
         return Solution(ok=False, reason=Reason.ASTAP_MISSING)
     cmd = command(fits_path, out_base, solver, search)
     try:
-        (solver.run or _run)(cmd, solver.timeout_s)
+        _code, out = (solver.run or _run)(cmd, solver.timeout_s)
     except (subprocess.TimeoutExpired, TimeoutError):
         log.info("astap: tempo scaduto", extra={"file": str(fits_path)})
         return Solution(ok=False, reason=Reason.TIMEOUT)
     except OSError as err:
         log.warning("astap: non si e' potuto lanciare", extra={"error": str(err)})
         return Solution(ok=False, reason=Reason.ASTAP_MISSING)
-
-    return from_ini(read_ini(f"{out_base}.ini"))
+    used = _CATALOGUE.search(out or "")
+    found = from_ini(read_ini(f"{out_base}.ini"))
+    return replace(found, catalogue=used[1].lower() if used else None)
 
 
 def half_written(ini: dict[str, str]) -> bool:
