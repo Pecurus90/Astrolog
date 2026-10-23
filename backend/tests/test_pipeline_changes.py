@@ -324,6 +324,16 @@ def test_a_path_pasted_with_its_quotes_is_the_folder(conn, tmp_path):
     assert add_root(conn, f'"{nas}"', NOW) == add_root(conn, nas, NOW)
 
 
+@pytest.mark.parametrize("written", ["", '""', ".", "nas"])
+def test_an_empty_or_relative_path_is_never_a_root(conn, tmp_path, monkeypatch, written):
+    """Percorso vuoto o relativo: mai la cartella da cui gira l'app. Prima: la sua cartella di
+    lavoro diventava radice."""
+    (tmp_path / "nas").mkdir()
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(NotADirectoryError):
+        add_root(conn, written, NOW)
+
+
 def test_folders_without_a_folder_id_are_never_one_root(conn, tmp_path, monkeypatch):
     """Disco che non da' id alle cartelle (st_ino 0: FAT, alcuni NAS): due cartelle diverse
     restano due radici. Senza la guardia avrebbero lo stesso id e sarebbero una."""

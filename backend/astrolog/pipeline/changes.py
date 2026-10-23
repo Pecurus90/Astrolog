@@ -94,7 +94,10 @@ def _still(stored: str, path: str) -> bool:
 def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -> int:
     """Existing folder only. Same folder written another way: same root; inside or around one
     (written or real key): RootOverlapError. Other roots' disks touched only when ids match."""
-    absolute = os.path.normpath(walk_absolute(plain(_unquoted(os.fspath(path)))))
+    written_path = plain(_unquoted(os.fspath(path)))
+    if not os.path.isabs(written_path):  # empty or relative: would be app's working folder
+        raise NotADirectoryError(written_path)
+    absolute = os.path.normpath(walk_absolute(written_path))
     if not os.path.isdir(long_path(absolute)):
         raise NotADirectoryError(absolute)
     written, real = _keys(absolute)
