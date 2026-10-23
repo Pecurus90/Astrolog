@@ -44,7 +44,7 @@ il guadagno solo con una keyword (guida WBPP di B. Landmann, tabella 1).
   | Stelle | accesa, < mediana − 2,5 MAD |
   | SNR | accesa, < mediana − 2,5 MAD |
   | Fondo cielo | spenta, > mediana + 2,5 MAD |
-  | Eccentricita' | spenta: nessuna soglia ufficiale (forum 0,5-0,6; lo 0,71 ESO e' un giudizio) |
+  | Eccentricita' | spenta; accesa parte a valore > 0,6 (Marco: nessuna soglia ufficiale, forum 0,5-0,6; lo 0,71 ESO e' un giudizio) |
   | Altezza | spenta, < 30° ("oggetto basso", ADR 0022) |
 
 - **Minimo 10 frame** nel gruppo (Marco: nessuna fonte fissa un minimo; e' il numero dei giudizi
