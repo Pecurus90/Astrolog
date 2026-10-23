@@ -395,6 +395,19 @@ def _touch_later(path: Path) -> None:
     os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns + 10**9))
 
 
+def test_a_filter_name_no_file_carries_any_more_is_not_asked(conn, tmp_path):
+    """Header corretto ('Hh' diventa 'Ha'): 'Hh' non resta fra i nomi da chiedere. Prima:
+    restava per sempre, senza nessun file."""
+    a = nina_light(tmp_path / "nas" / "a.fits", 1, ("FILTER  = 'Hh'",))
+    root = add_root(conn, tmp_path / "nas", NOW)
+    scan_root(conn, root, NOW)
+    nina_light(a, 1, ("FILTER  = 'Ha'",))
+    _touch_later(a)
+    scan_root(conn, root, LATER)
+    written = conn.execute("SELECT written FROM pipeline_filter_spellings").fetchall()
+    assert [r[0] for r in written] == ["Ha"]
+
+
 def test_the_header_is_stored_as_written_with_its_types(conn, tmp_path):
     nina_light(
         tmp_path / "a.fits",

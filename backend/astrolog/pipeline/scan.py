@@ -86,6 +86,10 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
     with transaction(conn, immediate=True):  # gone and moves together: a crash loses neither
         finish_scan(conn, changes)
         result.moved = _moved(conn, root_id, changes)
+        conn.execute(  # name no card carries any more: nothing left to ask
+            "DELETE FROM pipeline_filter_spellings WHERE written NOT IN"
+            " (SELECT filter FROM pipeline_cards WHERE filter IS NOT NULL)"
+        )
     result.duplicates = _duplicates(conn, root_id)
     result.frames = conn.execute(
         "SELECT COUNT(DISTINCT frame_id) FROM pipeline_files"
