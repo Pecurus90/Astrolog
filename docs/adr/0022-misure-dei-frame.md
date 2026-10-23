@@ -190,23 +190,23 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
   value", hnsky.org/astap.htm; Siril mette il limite al 10 %). <!-- software-ok -->
 - **Eccentricita'**: fino a 0,45 "rotonde"; oltre 0,71 "allungate"; in mezzo solo il numero
   (Marco). 0,71 e' il limite ESO: FORS2 tiene solo frame con ellitticita' sotto 0,3, cioe'
-  eccentricita' ~0,71 (eso.org/qc/FORS2/qc/imagequality/imagequality.html).
+  eccentricita' ~0,71 (eso.org/qc/FORS2/qc/imagequality/imagequality.html), ma per scegliere
+  i campi da mediare: giudizio, mai soglia di scarto (ADR 0032).
 - **Fuoco**: un frame la cui HFD supera del 5 % il 10° percentile della stessa notte e filtro e'
   "fuoco peggiore" (Marco): 5 % e' il predefinito di N.I.N.A. per rifare l'autofocus
   (`AutofocusAfterHFRIncreaseTrigger.cs`).
 - **Minimo per i giudizi "per la notte"** (fuoco, SNR): 10 frame della stessa notte, oggetto e
-  filtro; sotto, tacciono (Marco). 10 e' il `SampleSize` predefinito dello stesso trigger di
-  N.I.N.A.
+  filtro; sotto, tacciono (Marco; il `SampleSize` 10 di N.I.N.A. e' una finestra, non un minimo).
 - **Luminosita' del cielo** contro il Bortle del sito: la tabella SQM ↔ Bortle di ASTAP
   (`bortle()`, da ClearDarkSky: Bortle 5 = 19,50-20,49, 6 = 18,94-19,50), la stessa del
   programma da cui viene il metodo (Marco). Solo per L, senza filtro e camere a colori.
+- **Soglia relativa** (Marco, 23/10/2026): mediana ± 2,5 MAD scalato, Leys et al. 2013; fonte e
+  perche' non il 2 del SubframeSelector in ADR 0032.
 - **SNR**: solo rispetto alla sessione (stessa notte, oggetto, filtro): "SNR basso per la notte"
-  sotto mediana − 2 MAD, come i tutorial del SubframeSelector. Per notte e produzione solo il
-  numero.
+  sotto la soglia relativa. Per notte e produzione solo il numero.
 - **Per l'oggetto** (tutti i frame dello stesso oggetto e filtro, di tutte le notti; minimo 10;
-  Marco): "SNR basso per l'oggetto" sotto mediana − 2 MAD; "HFD alta per l'oggetto" oltre
-  mediana + 2 MAD. Stessa regola del SubframeSelector, che si usa proprio sull'insieme dei frame
-  di un oggetto. Per la HFD non il +5 % di N.I.N.A.: quello vale dentro una sessione dopo
+  Marco): "SNR basso per l'oggetto" sotto mediana − 2,5 MAD; "HFD alta per l'oggetto" oltre
+  mediana + 2,5 MAD. Per la HFD non il +5 % di N.I.N.A.: quello vale dentro una sessione dopo
   l'autofocus, fra notti la HFD cambia col seeing e "fuoco peggiore" sarebbe falso. Due giudizi
   distinti, "per la notte" e "per l'oggetto", mai uno solo.
 - **HFD contro l'archivio dello stesso setup e filtro**: solo il numero ("mediana del
@@ -215,11 +215,11 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
 - **Massa d'aria**: "oggetto basso" sopra 2, cioe' sotto 30° (Marco): "observers should avoid
   ... below 30° (airmass about 2)" e limite predefinito della rete AAVSONet (aavso.org/airmass-0,
   risposta nel forum AAVSO); il numero: "airmass 1.996 at an elevation of 30. degrees" (IRAF,
-  iraf.readthedocs.io/en/latest/tasks/noao/astutil/airmass.html).
+  iraf.readthedocs.io/en/latest/tasks/noao/astutil/airmass.html). La fonte e' un post del forum,
+  non un documento AAVSO, ed e' per la fotometria delle variabili: il 30° resta scelta di Marco.
 - **"Non giudicabile su questo setup"** porta accanto il perche': "Limite del setup 3.9″: due
   pixel da 1.94″." (Marco).
-- **Gradiente**: solo il numero (Marco): nessuna fonte lo giudica, e la regola dei 2 MAD i
-  tutorial la usano per FWHM e SNR.
+- **Gradiente**: solo il numero (Marco): nessuna fonte lo giudica.
 - **FWHM e HFD a schermo sempre in due unita'**: secondi d'arco e pixel, uno accanto all'altro
   (Marco, 18/10/2026). Il SubframeSelector di PixInsight mostra i pixel finche' non gli si da' <!-- software-ok -->
   la scala: chi confronta i numeri deve ritrovare gli stessi. Il giudizio usa i secondi d'arco, il
@@ -242,8 +242,8 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
     questo setup". Usare F per alzare i bordi e' una scelta (Marco), non una convenzione.
   - Resta, come dato in piu', il confronto con la notte:
   +5 % sul migliore e' il predefinito di N.I.N.A. per rifare l'autofocus
-  (`AutofocusAfterHFRIncreaseTrigger.cs`, `Default = 5`); "FWHMSigma < 2" la regola del
-  SubframeSelector di PixInsight piu' ripetuta (pixinsight.com/forum, threads/subframeselector-question.5939). <!-- software-ok -->
+  (`AutofocusAfterHFRIncreaseTrigger.cs`, `Default = 5`); "FWHMSigma < 2" del SubframeSelector
+  e' uso dei forum (pixinsight.com/forum, threads/subframeselector-question.5939). <!-- software-ok -->
   - **Campionamento** a parte, senza voto sul frame: FWHM sotto 1,5 px sottocampionamento grave
     (Howell et al. 1996, AJ 112, 1302; Stan Moore; manuale di CCDInspector), sotto 2 px
     sottocampionata, 2-3 px ideale (AAVSO, Astronomy Tools; 2,5-3 "excellent match" per
@@ -348,7 +348,7 @@ Proposta di Marco (18/10/2026). L'app **propone**, l'utente sceglie; mai un camb
 ### Il resto
 
 **Nessun voto d'insieme e nessuno scarto** (Marco, confermato; ADR 0013): i giudizi misura per
-misura sono sopra, e informano soltanto. Medie e
+misura sono sopra, e informano soltanto. Lo scarto lo sceglie l'utente nella selezione (ADR 0032). Medie e
 mediane solo sui frame misurati.
 
 **Dove si vedono**: Notti, Archivio, Statistiche. La scheda dell'oggetto no, per ora (Marco).
