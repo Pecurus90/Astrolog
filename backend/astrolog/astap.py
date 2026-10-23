@@ -60,6 +60,10 @@ class Reason(StrEnum):
     INTERNAL_ERROR = "internal_error"
 
 
+# Lines of words, not numbers, in ASTAP's result file.
+_TEXT = frozenset({"ERROR", "WARNING", "CMDLINE"})
+_POLE_DEG = 90.0
+
 # Compared lowercase and by containment: the exact text changes, the key words do not.
 _ERROR_WORDS = (
     ("not enough stars", Reason.NO_STARS),
@@ -194,30 +198,41 @@ def _reason_of(ini: Mapping[str, str]) -> Reason:
     return Reason.NO_SOLUTION
 
 
+@dataclass(frozen=True)
+class Solver:
+    """Which ASTAP and how it runs: one value for every launch."""
+
+    exe: str | None
+    run: Run | None = None  # tests inject it: the suite never launches ASTAP
+    timeout_s: float = TIMEOUT_S
+    databases: str | Path | None = None  # catalogue folder; ASTAP picks one for the field
+
+
 def command(
     fits_path: str | Path,
     out_base: str | Path,
+    solver: Solver,
     *,
-    exe: str,
     field_deg: float | None = None,
     pointing: tuple[float, float] | None = None,
 ) -> list[str]:
     """Built without running it, so a test proves the forbidden flags are absent and the units
-    are the ones ASTAP wants."""
+    are the ones ASTAP wants. No `-wcs`: nobody reads the .wcs, ASTAP writes one anyway."""
     cmd = [
-        exe,
+        str(solver.exe),
         "-f",
         str(fits_path),
         "-o",
         str(out_base),
         # The field is the speed lever: where the header lacks focal or pixel size, the blind
-        # field search pays for it.
+        # field search pays for it. Always said: left out, ASTAP takes its last solve's.
         "-fov",
         f"{field_deg:.3f}" if field_deg else "0",
         "-z",
         "0",
-        "-wcs",
     ]
+    if solver.databases is not None:  # folder only, never `-D`: NINA and StellarSolver alike
+        cmd += ["-d", str(solver.databases)]
     if pointing is not None:
         ra_deg, dec_deg = pointing
         # ASTAP wants HOURS of right ascension and the distance from the SOUTH pole: getting them
@@ -229,25 +244,21 @@ def command(
     return cmd
 
 
-def solve(  # noqa: PLR0913
+def solve(
     fits_path: str | Path,
     out_base: str | Path,
+    solver: Solver,
     *,
     field_deg: float | None = None,
-    ra_deg: float | None = None,
-    dec_deg: float | None = None,
-    exe: str | None = None,
-    run: Run | None = None,
-    timeout_s: float = TIMEOUT_S,
+    pointing: tuple[float, float] | None = None,
 ) -> Solution:
     """Writes `<out_base>.ini` and `.wcs` where we say, never beside the user's FITS. Never raises
     for the solver's fault: a missing or hung ASTAP is a frame without sky and its reason."""
-    if not exe:
+    if not solver.exe:
         return Solution(ok=False, reason=Reason.ASTAP_MISSING)
-    pointing = (ra_deg, dec_deg) if ra_deg is not None and dec_deg is not None else None
-    cmd = command(fits_path, out_base, exe=exe, field_deg=field_deg, pointing=pointing)
+    cmd = command(fits_path, out_base, solver, field_deg=field_deg, pointing=pointing)
     try:
-        (run or _run)(cmd, timeout_s)
+        (solver.run or _run)(cmd, solver.timeout_s)
     except (subprocess.TimeoutExpired, TimeoutError):
         log.info("astap: tempo scaduto", extra={"file": str(fits_path)})
         return Solution(ok=False, reason=Reason.TIMEOUT)
@@ -263,31 +274,29 @@ def from_ini(ini: dict[str, str]) -> Solution:
     counts as no solution, so the cache reader drops it and solves again."""
     if not solved(ini):
         return Solution(ok=False, reason=_reason_of(ini))
-    found = Solution(
-        ok=True,
-        ra_deg=as_float(ini.get("CRVAL1")),
-        dec_deg=as_float(ini.get("CRVAL2")),
-        scale_arcsec_px=wcs_scale(ini),
-        rotation_deg=wcs_rotation_deg(ini),
-    )
-    if None in (found.ra_deg, found.dec_deg, found.scale_arcsec_px):
+    # numbers only: the machine's decimal comma counts as a point
+    wcs = {key: value.replace(",", ".") for key, value in ini.items() if key not in _TEXT}
+    ra, dec, scale = as_float(wcs.get("CRVAL1")), as_float(wcs.get("CRVAL2")), wcs_scale(wcs)
+    # a sky that cannot be (|dec| > 90, no scale) is no solution; RA is an angle, wraps
+    if ra is None or dec is None or scale is None or abs(dec) > _POLE_DEG or scale <= 0:
         return Solution(ok=False, reason=Reason.NO_SOLUTION)
-    return found
+    return Solution(
+        ok=True,
+        ra_deg=ra % 360.0,
+        dec_deg=dec,
+        scale_arcsec_px=scale,
+        rotation_deg=wcs_rotation_deg(wcs),
+    )
 
 
-def analyse(
-    fits_path: str | Path,
-    *,
-    exe: str | None = None,
-    run: Run | None = None,
-    timeout_s: float = TIMEOUT_S,
-) -> tuple[float | None, int | None]:
+def analyse(fits_path: str | Path, solver: Solver) -> tuple[float | None, int | None]:
     """`(median HFD, stars)` from a second ASTAP pass: the only way to these two numbers that
     leaves no file in the user's folder."""
-    if not exe:
+    if not solver.exe:
         return None, None
+    cmd = [solver.exe, "-f", str(fits_path), "-analyse", "30"]
     try:
-        _code, out = (run or _run)([exe, "-f", str(fits_path), "-analyse", "30"], timeout_s)
+        _code, out = (solver.run or _run)(cmd, solver.timeout_s)
     except (subprocess.TimeoutExpired, TimeoutError, OSError):
         return None, None
     values = read_ini_text(out)

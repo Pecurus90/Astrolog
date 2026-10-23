@@ -532,7 +532,7 @@ vocabolario non riconosce **nessuno** dei nomi -- cioe' chi riprende con un prog
 quattro ed elabora con un altro che l'app non conosce. Li' i due gemelli si somigliano davvero,
 e l'app li conta tutti e due.
 
-**ASTAP**: `astap_cli -f <file> -o <cache>/<frame_hash> -fov <campo> -z 0 -wcs`, con
+**ASTAP**: `astap_cli -f <file> -o <cache>/<frame_hash> -fov <campo> -z 0`, con
 `-ra/-spd` e raggio 30 gradi se c'e' un indizio di puntamento, altrimenti cieco; mai
 `-update`, mai `-extract`.
 

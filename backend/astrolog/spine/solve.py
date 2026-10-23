@@ -160,7 +160,7 @@ def _one_frame(
     if solution.ok and path and os.path.exists(path) and not store.has_metrics(conn, frame["id"]):
         # Asked even for a cached sky: after a database reset the solution comes back from the
         # cache, but HFD and stars would be lost for good.
-        hfd, stars = astap.analyse(path, exe=solver.exe, run=solver.run)
+        hfd, stars = astap.analyse(path, astap.Solver(solver.exe, solver.run))
 
     with transaction(conn):
         if not solution.ok:
@@ -235,11 +235,9 @@ def _launch(
     solution = astap.solve(
         path,
         out_base,
+        astap.Solver(solver.exe, solver.run),
         field_deg=_field_hint(frame),
-        ra_deg=ra,
-        dec_deg=dec,
-        exe=solver.exe,
-        run=solver.run,
+        pointing=(ra, dec) if ra is not None and dec is not None else None,
     )
     if not solution.ok:
         # Not cached: tomorrow ASTAP may have a denser catalogue, or the frame a sister's hint.

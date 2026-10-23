@@ -1,0 +1,371 @@
+"""Mattone solve: una soluzione di ASTAP per posa, dal file e dalla scheda della posa. ASTAP finto
+che risponde coi suoi .ini veri (`tests/astap/`): la suite non lancia mai il solver."""
+
+import math
+import os
+import shutil
+from collections.abc import Callable, Sequence
+from pathlib import Path
+
+import numpy as np
+import pytest
+from astropy.io import fits
+
+from astrolog import astap
+from astrolog.db.connect import connect
+from astrolog.pipeline import scan
+from astrolog.pipeline.changes import add_root
+from astrolog.pipeline.scan import scan_root
+from astrolog.pipeline.scanner import Skip, Skipped
+from astrolog.pipeline.solve import solve_root
+from conftest import LATER, NOW, nina_light
+
+INI = Path(__file__).with_name("astap")
+
+# Card of a N.I.N.A. light with what the solve uses: focal, pixel, mount pointing.
+_SKY = ("FOCALLEN=                560.0", "XPIXSZ  =                 3.76",
+        "RA      =     241.254763508206", "DEC     =     17.7165957446809")  # fmt: skip
+
+
+class FakeAstap:
+    """Answers each launch with a real .ini (or .ini text), written where `-o` says; keeps the
+    commands. `then`: runs after, as a second worker would."""
+
+    def __init__(self, *answers: str | None, then: Callable[[], None] | None = None) -> None:
+        self.answers = list(answers)
+        self.commands: list[list[str]] = []
+        self.then = then
+
+    def __call__(self, cmd: Sequence[str], timeout_s: float) -> tuple[int, str]:
+        self.commands.append(list(cmd))
+        answer = self.answers[min(len(self.commands), len(self.answers)) - 1]
+        if answer is not None:
+            ini = Path(f"{cmd[cmd.index('-o') + 1]}.ini")
+            if "=" in answer:
+                ini.write_text(answer)
+            else:
+                shutil.copy(INI / answer, ini)
+        if self.then is not None:
+            self.then()
+        return (0 if answer == "solved.ini" else 1), ""
+
+
+def _option(cmd: list[str], flag: str) -> str:
+    return cmd[cmd.index(flag) + 1]
+
+
+def _solve(conn, root: int, run: astap.Run, tmp_path: Path, exe: str | None = "astap_cli"):
+    solver = astap.Solver(exe, run, databases=tmp_path / "db")
+    return solve_root(conn, root, LATER, solver, tmp_path / "work")
+
+
+def _scanned(conn, nas: Path) -> int:
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    return root
+
+
+def _solutions(conn) -> list[dict]:
+    return [dict(row) for row in conn.execute("SELECT * FROM pipeline_solutions ORDER BY frame_id")]
+
+
+def test_a_light_gets_the_sky_astap_found(conn, tmp_path):
+    """Il .ini vero di un light: centro, scala e rotazione salvati per la posa."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "m13.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    result = _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
+    [row] = _solutions(conn)
+    assert row["outcome"] == "solved" and result.solved == 1
+    assert row["ra_deg"] == pytest.approx(241.25198643662179)
+    assert row["dec_deg"] == pytest.approx(17.726894038989336)
+    cd11, cd21 = -2.6277393210341225e-004, -2.7944266362463124e-004
+    assert row["scale_arcsec_px"] == pytest.approx(math.hypot(cd11, cd21) * 3600)
+    assert row["rotation_deg"] is not None
+
+
+def test_the_command_carries_the_card_hint_and_the_catalogue_folder(conn, tmp_path):
+    """Indizio dalla scheda (ore e distanza dal polo sud), campo sempre detto, cartella del
+    catalogo detta, niente -wcs ne' -D: ASTAP sceglie il catalogo per campo."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "m13.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    [cmd] = run.commands
+    assert float(_option(cmd, "-ra")) == pytest.approx(241.254763508206 / 15, abs=1e-5)
+    assert float(_option(cmd, "-spd")) == pytest.approx(17.7165957446809 + 90, abs=1e-4)
+    assert _option(cmd, "-r") == "30"
+    field = 16 * 3.76 / 560.0 * 206.264806 / 3600
+    assert float(_option(cmd, "-fov")) == pytest.approx(field, abs=1e-3)
+    assert Path(_option(cmd, "-d")) == tmp_path / "db"
+    assert "-wcs" not in cmd and "-D" not in cmd
+
+
+def test_the_result_lands_in_a_fresh_folder_never_beside_the_frame(conn, tmp_path):
+    """Base nuova per ogni lancio, fuori dalla cartella dell'utente e senza punto nel nome (ASTAP
+    tronca al punto); la cartella di lavoro si svuota dopo."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    nina_light(nas / "b.fits", 2, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    bases = [Path(_option(cmd, "-o")) for cmd in run.commands]
+    assert len(set(bases)) == 2
+    assert all(work_dir in base.parents for base in bases for work_dir in [tmp_path / "work"])
+    assert all("." not in base.name for base in bases)
+    assert sorted(p.name for p in nas.iterdir()) == ["a.fits", "b.fits"]
+    assert not any((tmp_path / "work").iterdir())
+
+
+def test_a_crash_never_reads_an_earlier_result_as_its_own(conn, tmp_path):
+    """Misurato: ASTAP che cade esce 0 e non scrive il .ini; quello vecchio restava e diceva
+    PLTSOLVD=T. Il secondo frame non e' risolto."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    nina_light(nas / "b.fits", 2, _SKY)
+    root = _scanned(conn, nas)
+    _solve(conn, root, FakeAstap("solved.ini", None), tmp_path)
+    assert [row["outcome"] for row in _solutions(conn)] == ["solved"]
+
+
+@pytest.mark.parametrize(
+    ("answer", "outcome"), [("no_stars.ini", "no_stars"), ("no_solution.ini", "no_solution")]
+)
+def test_a_failure_is_saved_with_its_reason(conn, tmp_path, answer, outcome):
+    """Poche stelle e nessuna soluzione: il frame e' stato provato, si dice perche'."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    _solve(conn, root, FakeAstap(answer), tmp_path)
+    [row] = _solutions(conn)
+    assert row["outcome"] == outcome and row["ra_deg"] is None
+
+
+def test_a_solved_shot_is_not_launched_again(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert run.commands == []
+
+
+def test_calibrations_are_never_launched_typeless_get_their_try(conn, tmp_path):
+    """Dark, flat, bias: niente stelle, mai ad ASTAP. Senza tipo: un tentativo."""
+    nas = tmp_path / "nas"
+    for i, kind in enumerate(("DARK", "FLAT", "BIAS")):
+        nina_light(nas / f"{kind}.fits", i, _SKY, imagetyp=kind)
+    nina_light(nas / "typeless.fits", 9, _SKY, imagetyp="WHATEVER")
+    root = _scanned(conn, nas)
+    run = FakeAstap("no_stars.ini")
+    _solve(conn, root, run, tmp_path)
+    assert [Path(_option(cmd, "-f")).name for cmd in run.commands] == ["typeless.fits"]
+
+
+def test_one_launch_per_shot_and_the_plain_copy_is_the_one(conn, tmp_path):
+    """Un .fits e la sua copia fpack sono la stessa posa: un lancio, sul non compresso (ASTAP
+    2025 non legge i .fz)."""
+    nas = tmp_path / "nas"
+    nas.mkdir()
+    data = (np.arange(48 * 64) % 4093).astype(np.uint16).reshape(48, 64)
+    header = fits.Header()
+    for key, value in {"SWCREATE": "N.I.N.A. 3.2.0.9001 (x64)", "IMAGETYP": "LIGHT",
+                       "INSTRUME": "ATR2600M", "DATE-OBS": "2025-06-29T21:11:33.412",
+                       "EXPTIME": 300.0, "FOCALLEN": 560.0, "XPIXSZ": 3.76}.items():  # fmt: skip
+        header[key] = value
+    fits.HDUList([fits.PrimaryHDU(), fits.CompImageHDU(data, header)]).writeto(nas / "a.fits.fz")
+    fits.PrimaryHDU(data=data, header=header).writeto(nas / "b.fits")
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert [Path(_option(cmd, "-f")).name for cmd in run.commands] == ["b.fits"]
+    assert len(_solutions(conn)) == 1
+
+
+def test_without_a_pointing_the_search_is_blind(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY[:2])
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    [cmd] = run.commands
+    assert "-ra" not in cmd and _option(cmd, "-r") == "180"
+
+
+def test_without_focal_the_field_is_left_to_astap_but_still_said(conn, tmp_path):
+    """Senza -fov ASTAP usa il campo dell'ultimo solve: stato fuori da noi. Senza scala, 0."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY[2:])
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert _option(run.commands[0], "-fov") == "0"
+
+
+def test_no_catalogue_stops_the_pass_and_writes_nothing(conn, tmp_path):
+    """Senza catalogo ogni frame fallirebbe uguale: ci si ferma al primo, nessuna riga."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    nina_light(nas / "b.fits", 2, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("no_database.ini")
+    result = _solve(conn, root, run, tmp_path)
+    assert len(run.commands) == 1 and _solutions(conn) == []
+    assert result.stopped is astap.Reason.NO_STAR_DATABASE
+
+
+def test_without_astap_nothing_is_launched_and_nothing_written(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini")
+    result = _solve(conn, root, run, tmp_path, exe=None)
+    assert run.commands == [] and _solutions(conn) == []
+    assert result.stopped is astap.Reason.ASTAP_MISSING
+
+
+def test_a_timeout_writes_nothing_so_the_next_pass_tries_again(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+
+    def hangs(cmd: Sequence[str], timeout_s: float) -> tuple[int, str]:
+        raise TimeoutError
+
+    _solve(conn, root, hangs, tmp_path)
+    assert _solutions(conn) == []
+
+
+def test_a_gone_file_is_not_launched(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    (nas / "a.fits").unlink()
+    (nas / "keep.txt").write_text("x")  # root not silent: the file is gone, not unreachable
+    scan_root(conn, root, LATER)
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert run.commands == []
+
+
+def test_the_solution_goes_with_the_shot(conn, tmp_path):
+    """Legata alla posa: il file spostato la tiene, nessun nuovo lancio."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
+    (nas / "moved").mkdir()
+    (nas / "a.fits").rename(nas / "moved" / "a.fits")
+    scan_root(conn, root, LATER)
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert run.commands == [] and len(_solutions(conn)) == 1
+
+
+def test_a_shot_solved_from_another_root_is_not_launched_again(conn, tmp_path):
+    nina_light(tmp_path / "nas" / "a.fits", 1, _SKY)
+    nina_light(tmp_path / "usb" / "a.fits", 1, _SKY)
+    first, second = _scanned(conn, tmp_path / "nas"), _scanned(conn, tmp_path / "usb")
+    _solve(conn, first, FakeAstap("solved.ini"), tmp_path)
+    run = FakeAstap("solved.ini")
+    _solve(conn, second, run, tmp_path)
+    assert run.commands == []
+
+
+def test_a_file_held_while_locked_is_not_launched(conn, tmp_path, monkeypatch):
+    """Bloccato da un altro programma: tiene posa e scheda, ma ad ASTAP non va (puo' essere a meta'
+    scrittura)."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    os.utime(nas / "a.fits", (2_000_000_000, 2_000_000_000))
+    monkeypatch.setattr(scan, "scan_file", lambda p, size: Skipped(p, Skip.UNREADABLE))
+    scan_root(conn, root, LATER)
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert run.commands == []
+
+
+def test_a_shot_that_leaves_takes_its_solution_with_it(conn, tmp_path):
+    """Posa senza piu' file (riscritto): via il frame, via la soluzione (chiavi esterne accese)."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
+    nina_light(nas / "a.fits", 2, _SKY)
+    os.utime(nas / "a.fits", (2_000_000_000, 2_000_000_000))
+    scan_root(conn, root, LATER)
+    assert _solutions(conn) == []
+
+
+def test_without_a_catalogue_folder_astap_looks_in_its_own(conn, tmp_path):
+    """Mac e Linux: ASTAP cerca il catalogo in una sua cartella, non accanto al programma. Non
+    detta, non si passa."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini")
+    solve_root(conn, root, LATER, astap.Solver("/usr/bin/astap_cli", run), tmp_path / "work")
+    assert "-d" not in run.commands[0]
+
+
+@pytest.mark.parametrize(
+    "crval", [("360.0", "17.7"), ("-0.001", "17.7"), ("400", "17.7"), ("241.2", "90.5")]
+)
+def test_a_sky_out_of_range_never_stops_the_pass(conn, tmp_path, crval):
+    """Un .ini che dice risolto con un cielo impossibile: il passo va avanti sulla posa dopo."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    nina_light(nas / "b.fits", 2, _SKY)
+    root = _scanned(conn, nas)
+    solved = (INI / "solved.ini").read_text()
+    odd = solved.replace("CRVAL1= 2.4125198643662179E+002", f"CRVAL1={crval[0]}").replace(
+        "CRVAL2= 1.7726894038989336E+001", f"CRVAL2={crval[1]}"
+    )
+    _solve(conn, root, FakeAstap(odd, "solved.ini"), tmp_path)
+    rows = _solutions(conn)
+    assert len(rows) == 2 and rows[1]["outcome"] == "solved"
+    assert rows[0]["ra_deg"] is None or 0 <= rows[0]["ra_deg"] < 360
+
+
+def test_a_result_with_decimal_commas_is_read(conn, tmp_path):
+    """La virgola decimale della macchina vale come punto, anche nel centro."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    comma = "PLTSOLVD=T\nCRVAL1=100,5\nCRVAL2=20,25\nCD1_1=-2,6E-004\nCD2_1=-2,7E-004\n"
+    _solve(conn, root, FakeAstap(comma), tmp_path)
+    [row] = _solutions(conn)
+    assert row["outcome"] == "solved" and row["ra_deg"] == pytest.approx(100.5)
+
+
+def test_a_half_written_result_is_tried_again(conn, tmp_path):
+    """PLTSOLVD=T senza numeri: un .ini a meta', non un cielo che non si risolve."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    _solve(conn, root, FakeAstap("PLTSOLVD=T\n"), tmp_path)
+    assert _solutions(conn) == []
+
+
+def test_a_shot_solved_meanwhile_by_another_pass_is_no_crash(conn, tmp_path, db_path):
+    """Due passate insieme sulla stessa radice: chi arriva secondo non esplode."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    other = connect(db_path)
+
+    def other_pass() -> None:
+        with other:
+            other.execute(
+                "INSERT INTO pipeline_solutions (frame_id, outcome, tried_at)"
+                " SELECT id, 'no_solution', ? FROM pipeline_frames",
+                (LATER,),
+            )
+
+    _solve(conn, root, FakeAstap("solved.ini", then=other_pass), tmp_path)
+    other.close()
+    assert len(_solutions(conn)) == 1

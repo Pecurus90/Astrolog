@@ -1039,6 +1039,21 @@ CREATE TABLE pipeline_conditions (
     star_fwhm_arcsec) IS NOT NULL)
 ) STRICT;
 
+-- RILEVATO. Cielo della posa da ASTAP (pipeline/solve.py): riga per posa provata, scritta da chi
+-- risolve. Nessuna riga: da provare (anche dopo timeout). Rotazione: CROTA2 dalla CD.
+CREATE TABLE pipeline_solutions (
+  frame_id        INTEGER PRIMARY KEY REFERENCES pipeline_frames (id) ON DELETE CASCADE,
+  outcome         TEXT NOT NULL CHECK (outcome IN ('solved', 'no_solution', 'no_stars')),
+  ra_deg          REAL CHECK (ra_deg >= 0 AND ra_deg < 360),  -- J2000, centro immagine
+  dec_deg         REAL CHECK (dec_deg BETWEEN -90 AND 90),
+  scale_arcsec_px REAL CHECK (scale_arcsec_px > 0),
+  rotation_deg    REAL,
+  tried_at        TEXT NOT NULL,  -- ora della passata, non del lancio
+  CHECK ((outcome = 'solved') = (ra_deg IS NOT NULL)
+    AND (ra_deg IS NULL) = (dec_deg IS NULL) AND (ra_deg IS NULL) = (scale_arcsec_px IS NULL)),
+  CHECK (outcome = 'solved' OR rotation_deg IS NULL)
+) STRICT;
+
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave calcolata dal nome, mai salvata:
 -- una rinomina non la lascia indietro. Due nomi con la stessa chiave: rifiutati in filters.py.
 CREATE TABLE pipeline_filters (

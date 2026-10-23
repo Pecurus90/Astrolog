@@ -640,16 +640,16 @@ def folder_link(target: str | os.PathLike[str], link: str | os.PathLike[str]) ->
         os.symlink(target, link, target_is_directory=True)
 
 
-def nina_light(path: Path, seed: int, extra: tuple[str, ...] = ()) -> Path:
+def nina_light(path: Path, seed: int, extra: tuple[str, ...] = (), imagetyp: str = "LIGHT") -> Path:
     """Small N.I.N.A. light with own pixels: `seed` makes different frame, `extra` cards
-    different header on same frame."""
+    different header on same frame. First card wins: other type via `imagetyp`."""
     lines = [
         "SIMPLE  =                    T",
         "BITPIX  =                   16",
         "NAXIS   =                    2",
         "NAXIS1  =                   16",
         "NAXIS2  =                   16",
-        "IMAGETYP= 'LIGHT'",
+        f"IMAGETYP= '{imagetyp}'",
         "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'",
         *extra,
     ]

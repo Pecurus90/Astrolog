@@ -76,7 +76,7 @@ def test_the_command_never_carries_the_two_forbidden_flags(tmp_path):
     ignorando sia `-o` sia la cartella di lavoro. Sono le due regole assolute, e si provano
     sul comando perche' li' si possono provare senza lanciare niente."""
     run = fake_run(scrive={tmp_path / "e.ini": INI_RISOLTO})
-    astap.solve(tmp_path / "x.fits", tmp_path / "e", exe="astap", run=run)
+    astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run))
     cmd = comando(run)
     assert "-update" not in cmd
     assert not any(c.startswith("-extract") for c in cmd)
@@ -86,12 +86,12 @@ def test_solve_field_from_the_header(tmp_path):
     """Il campo inquadrato e' la leva della velocita': misurato, `-fov` col campo giusto vale
     0,2 s contro 2,3 s con `-fov 0`. Si ricava da altezza, pixel, binning e focale."""
     run = fake_run(scrive={tmp_path / "e.ini": INI_RISOLTO})
-    astap.solve(tmp_path / "x.fits", tmp_path / "e", field_deg=0.59, exe="astap", run=run)
+    astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run), field_deg=0.59)
     assert valore(comando(run), "-fov") == "0.590"
 
     # senza focale o pixel nell'header il campo non si sa: si passa 0 e ASTAP lo cerca da se'
     run = fake_run(scrive={tmp_path / "e.ini": INI_RISOLTO})
-    astap.solve(tmp_path / "x.fits", tmp_path / "e", field_deg=None, exe="astap", run=run)
+    astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run), field_deg=None)
     assert valore(comando(run), "-fov") == "0"
 
 
@@ -100,7 +100,7 @@ def test_the_pointing_hint_is_given_in_the_units_astap_wants(tmp_path):
     declinazione: sbagliarle non da' errore, da' il cielo di un altro punto del mondo."""
     run = fake_run(scrive={tmp_path / "e.ini": INI_RISOLTO})
     astap.solve(
-        tmp_path / "x.fits", tmp_path / "e", ra_deg=210.945, dec_deg=54.35, exe="astap", run=run
+        tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run), pointing=(210.945, 54.35)
     )
     cmd = comando(run)
     assert float(valore(cmd, "-ra")) == pytest.approx(14.063, abs=0.001)
@@ -112,7 +112,7 @@ def test_without_a_pointing_hint_the_search_is_blind(tmp_path):
     """Senza indizio non si inventa un puntamento: si cerca in tutto il cielo. Costa cento
     volte di piu', ed e' il motivo per cui una posa eredita l'indizio dalla sorella."""
     run = fake_run(scrive={tmp_path / "e.ini": INI_RISOLTO})
-    astap.solve(tmp_path / "x.fits", tmp_path / "e", exe="astap", run=run)
+    astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run))
     cmd = comando(run)
     assert "-ra" not in cmd and "-spd" not in cmd
     assert valore(cmd, "-r") == str(astap.BLIND_RADIUS_DEG)
@@ -125,7 +125,7 @@ def test_a_solution_comes_back_with_the_sky_it_found(tmp_path):
     """L'esito buono si legge dal `.ini`, e le sue chiavi sono le stesse dell'header di un
     FITS: il lettore del WCS che gia' esiste lo legge senza modifiche."""
     run = fake_run(scrive={tmp_path / "e.ini": INI_RISOLTO})
-    esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", exe="astap", run=run)
+    esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run))
     assert esito.ok is True and esito.reason is None
     assert esito.ra_deg == pytest.approx(210.8014, abs=0.001)
     assert esito.dec_deg == pytest.approx(54.3491, abs=0.001)
@@ -147,7 +147,7 @@ def test_a_failure_becomes_a_closed_reason(tmp_path, codice, ini, atteso):
     versione all'altra e finirebbero a schermo in inglese."""
     scrive = {tmp_path / "e.ini": ini} if ini is not None else None
     run = fake_run(codice=codice, scrive=scrive)
-    esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", exe="astap", run=run)
+    esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run))
     assert esito.ok is False and esito.reason == atteso
     assert esito.reason in set(astap.Reason)
 
@@ -155,14 +155,14 @@ def test_a_failure_becomes_a_closed_reason(tmp_path, codice, ini, atteso):
 def test_a_solver_that_never_comes_back_is_a_reason(tmp_path):
     """Un solver che si pianta non deve piantare l'archivio: scade e diventa un motivo."""
     run = fake_run(esplode=TimeoutError("scaduto"))
-    esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", exe="astap", run=run)
+    esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run))
     assert esito.ok is False and esito.reason == "timeout"
 
 
 def test_without_astap_there_is_no_crash_only_a_reason(tmp_path):
     """Al primo avvio ASTAP puo' non esserci ancora: l'archivio funziona lo stesso e le pose
     restano da risolvere, con scritto perche'."""
-    esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", exe=None, run=fake_run())
+    esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver(None, fake_run()))
     assert esito.ok is False and esito.reason == "astap_missing"
 
 
@@ -170,7 +170,7 @@ def test_a_file_that_is_not_there_is_a_reason(tmp_path):
     """Il disco esterno staccato non e' un errore di sistema: e' una posa che non si e'
     potuta leggere adesso."""
     run = fake_run(codice=1, scrive={tmp_path / "e.ini": "PLTSOLVD=F\nERROR=File not found.\n"})
-    esito = astap.solve(tmp_path / "manca.fits", tmp_path / "e", exe="astap", run=run)
+    esito = astap.solve(tmp_path / "manca.fits", tmp_path / "e", astap.Solver("astap", run))
     assert esito.ok is False and esito.reason == "file_missing"
 
 
@@ -181,28 +181,26 @@ def test_the_quality_numbers_are_read_with_their_decimal_comma(tmp_path):
     """ASTAP stampa i numeri nel formato della macchina: su un computer italiano `9,1`. Letti
     col punto diventerebbero 91 o zero, in silenzio."""
     run = fake_run(stdout="HFD_MEDIAN=9,1\nSTARS=61\n")
-    hfd, stelle = astap.analyse(tmp_path / "x.fits", exe="astap", run=run)
+    hfd, stelle = astap.analyse(tmp_path / "x.fits", astap.Solver("astap", run))
     assert hfd == pytest.approx(9.1) and stelle == 61
 
     run = fake_run(stdout="HFD_MEDIAN=3.42\nSTARS=1204\n")
-    hfd, stelle = astap.analyse(tmp_path / "x.fits", exe="astap", run=run)
+    hfd, stelle = astap.analyse(tmp_path / "x.fits", astap.Solver("astap", run))
     assert hfd == pytest.approx(3.42) and stelle == 1204
 
 
 def test_quality_numbers_that_do_not_arrive_stay_empty(tmp_path):
     """Nessun numero inventato: se ASTAP non li stampa, restano vuoti."""
     for uscita in ("", "roba a caso", "HFD_MEDIAN=\nSTARS=\n", "HFD_MEDIAN=boh\n"):
-        assert astap.analyse(tmp_path / "x.fits", exe="astap", run=fake_run(stdout=uscita)) == (
-            None,
-            None,
-        ), uscita
+        solver = astap.Solver("astap", fake_run(stdout=uscita))
+        assert astap.analyse(tmp_path / "x.fits", solver) == (None, None), uscita
 
 
 def test_the_analyse_pass_writes_nothing_next_to_the_frame(tmp_path):
     """`-analyse` e' l'unica strada per HFD e stelle che non lasci file nella cartella
     dell'utente: `-extract` ci scriverebbe un CSV accanto, ignorando `-o`."""
     run = fake_run(stdout="HFD_MEDIAN=4,0\nSTARS=100\n")
-    astap.analyse(tmp_path / "x.fits", exe="astap", run=run)
+    astap.analyse(tmp_path / "x.fits", astap.Solver("astap", run))
     cmd = comando(run)
     assert "-analyse" in cmd and not any(c.startswith("-extract") for c in cmd)
     assert "-o" not in cmd  # non scrive niente, quindi non ha dove scrivere

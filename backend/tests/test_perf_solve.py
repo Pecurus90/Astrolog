@@ -52,6 +52,7 @@ def test_solve_seconds_per_frame_does_not_regress(tmp_path):
     scala = scale_arcsec_px(header.get("XPIXSZ"), header.get("FOCALLEN"))
     campo = field_deg(header.get("NAXIS2"), scala)
     assert campo, "il FITS di prova deve dire focale e dimensione dei pixel"
+    coord = (header.get("RA"), header.get("DEC"))
 
     tempi = []
     for giro in range(GIRI):
@@ -59,11 +60,9 @@ def test_solve_seconds_per_frame_does_not_regress(tmp_path):
         esito = astap.solve(
             percorso,
             tmp_path / f"g{giro}",
+            astap.Solver(exe, run_vero),
             field_deg=campo,
-            ra_deg=header.get("RA"),
-            dec_deg=header.get("DEC"),
-            exe=exe,
-            run=run_vero,
+            pointing=coord if None not in coord else None,
         )
         tempi.append(time.perf_counter() - t0)
         assert esito.ok, f"il FITS di prova non si risolve: {esito.reason}"
@@ -85,13 +84,15 @@ def test_giving_the_field_is_what_makes_it_fast(tmp_path):
     # senza moltiplicare per il binning: e' la stessa regola dello stadio (XPIXSZ lo include
     # gia', e moltiplicare raddoppierebbe il campo)
     scala = scale_arcsec_px(header.get("XPIXSZ"), header.get("FOCALLEN"))
-    coord = {"ra_deg": header.get("RA"), "dec_deg": header.get("DEC")}
+    coord = (header.get("RA"), header.get("DEC"))
+    puntamento = coord if None not in coord else None
 
     def quanto(campo, dove):
         t0 = time.perf_counter()
         esito = astap.solve(
-            percorso, tmp_path / dove, field_deg=campo, exe=exe, run=run_vero, **coord
-        )
+            percorso, tmp_path / dove, astap.Solver(exe, run_vero), field_deg=campo,
+            pointing=puntamento,
+        )  # fmt: skip
         assert esito.ok
         return time.perf_counter() - t0
 
