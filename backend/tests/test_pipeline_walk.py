@@ -72,6 +72,15 @@ def test_a_folder_reached_by_two_links_is_walked_once(tmp_path):
     assert len(found(root)) == 1
 
 
+def test_a_link_to_a_folder_of_the_root_never_takes_its_files(tmp_path):
+    """Collegamento di comodo M42/notte1 verso la cartella della notte: file sul percorso vero.
+    Prima: visitato per primo, spostamento falso e originali 'spariti'."""
+    _touch(str(tmp_path), "2024-01-01", "x.fits")
+    (tmp_path / "M42").mkdir()
+    folder_link(tmp_path / "2024-01-01", tmp_path / "M42" / "notte1")
+    assert found(tmp_path) == [os.path.join(str(tmp_path), "2024-01-01", "x.fits")]
+
+
 def test_a_folder_seen_again_does_not_stop_the_walk(tmp_path):
     """Collegamento a cartella gia' vista, con altre ancora da visitare: quelle si visitano."""
     root = tmp_path / "radice"

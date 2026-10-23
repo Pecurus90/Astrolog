@@ -127,19 +127,26 @@ class EntryKind(StrEnum):
 
     HIDDEN = "hidden"
     WALKED = "walked"
+    LINKED = "linked"
     FILE = "file"
 
 
 def _kind(entry: os.DirEntry[str]) -> EntryKind:
-    """Linked folder (symlink, Windows junction) walked like any folder: `is_dir` follows it.
-    Entry not answering: looked at as file."""
+    """Linked folder (symlink, Windows junction) walked too, after real ones: `is_dir` follows
+    it. Entry not answering: looked at as file."""
     try:
         is_dir = entry.is_dir()
     except OSError:
         return EntryKind.FILE
     if not is_dir:
         return EntryKind.FILE
-    return EntryKind.HIDDEN if _hidden(entry) else EntryKind.WALKED
+    if _hidden(entry):
+        return EntryKind.HIDDEN
+    try:
+        linked = entry.is_symlink() or entry.is_junction()
+    except OSError:
+        linked = False
+    return EntryKind.LINKED if linked else EntryKind.WALKED
 
 
 def _dangling(entry: os.DirEntry[str], full: str) -> bool:
@@ -166,10 +173,19 @@ def real_key(path: str) -> str:
     return os.path.normcase(os.path.realpath(long_path(path)))
 
 
-def _list_folder(current: str, scan: Iterable[os.DirEntry[str]], result: Walk) -> list[str]:
-    """Sorts one folder's entries into `result`; returns the subfolders to walk."""
-    subdirs, fits_here, stubs = [], set(), []
-    folders_by_kind = {EntryKind.HIDDEN: result.hidden, EntryKind.WALKED: subdirs}
+def _list_folder(
+    current: str, scan: Iterable[os.DirEntry[str]], result: Walk
+) -> tuple[list[str], list[str]]:
+    """Sorts one folder's entries into `result`; returns subfolders and linked ones to walk."""
+    subdirs: list[str] = []
+    links: list[str] = []
+    fits_here: set[str] = set()
+    stubs: list[str] = []
+    folders_by_kind = {
+        EntryKind.HIDDEN: result.hidden,
+        EntryKind.WALKED: subdirs,
+        EntryKind.LINKED: links,
+    }
     for entry in scan:
         full = os.path.join(current, entry.name)
         kind = _kind(entry)
@@ -188,17 +204,18 @@ def _list_folder(current: str, scan: Iterable[os.DirEntry[str]], result: Walk) -
     result.online_only.extend(
         os.path.join(current, name) for name in stubs if name.casefold() not in fits_here
     )
-    return subdirs
+    return subdirs, links
 
 
 def walk_dir(root: str) -> Walk:
-    """Missing root: nothing found; vanished vs unplugged is caller's check.
-    Folder reached again via link: walked once."""
+    """Missing root: nothing found; vanished vs unplugged is caller's check. Folder reached
+    again via link: walked once, by real path first; links by name, same on every system."""
     result = Walk()
     seen: set[str] = set()
     stack = [root]
-    while stack:
-        current = stack.pop()
+    links: list[str] = []
+    while stack or links:
+        current = stack.pop() if stack else links.pop()
         try:
             scan = os.scandir(long_path(current))
         except OSError:
@@ -211,7 +228,10 @@ def walk_dir(root: str) -> Walk:
         seen.add(real)
         try:  # listing can break midway (NAS gone): folder not answering, files under it not judged
             with scan:
-                stack.extend(_list_folder(current, scan, result))
+                subdirs, linked = _list_folder(current, scan, result)
+            stack.extend(subdirs)
+            links.extend(linked)
+            links.sort(reverse=True)  # whole pile: listing order never picks the winner
         except OSError:
             result.unreadable.append(current)
     for items in (result.found, result.unreadable, result.hidden, result.online_only):
