@@ -302,6 +302,20 @@ def test_another_disk_is_said_once_then_adopted(conn, tmp_path):
     assert [r[0] for r in said] == [0, 1, 0]
 
 
+def test_another_disk_brings_its_own_folders_above_the_root(conn, tmp_path):
+    """Disco cambiato: anche le cartelle sopra la radice sono del disco nuovo. Prima restavano
+    quelle del vecchio: rimontato altrove, rifiutato come "intorno" alla radice."""
+    nas = tmp_path / "nas"
+    _file(nas / "a.fits")
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    now_above = conn.execute("SELECT ancestors FROM pipeline_roots").fetchone()[0]
+    conn.execute("UPDATE pipeline_roots SET ancestors = '[\"old-disk:7\"]' WHERE id = ?", (root,))
+    _other_volume(conn, root)
+    scan_root(conn, root, LATER)
+    assert conn.execute("SELECT ancestors FROM pipeline_roots").fetchone()[0] == now_above
+
+
 def test_folders_without_a_folder_id_are_never_one_root(conn, tmp_path, monkeypatch):
     """Disco che non da' id alle cartelle (st_ino 0: FAT, alcuni NAS): due cartelle diverse
     restano due radici. Senza la guardia avrebbero lo stesso id e sarebbero una."""

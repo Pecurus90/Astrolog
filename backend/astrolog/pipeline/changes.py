@@ -99,8 +99,7 @@ def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -
         raise NotADirectoryError(absolute)
     written, real = _keys(absolute)
     identity = _identity(absolute)
-    # letter mapped below a share (or link): what holds it shows only on the real path
-    ancestors = _ancestors(absolute) | _ancestors(plain(os.path.realpath(long_path(absolute))))
+    ancestors = _above(absolute)
     with transaction(conn, immediate=True):
         same = _same_root(conn, written, real, identity, ancestors)
         if same is not None:
@@ -114,6 +113,11 @@ def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -
                  now),
             )
         )  # fmt: skip
+
+
+def _above(absolute: str) -> dict[str, str]:
+    """Letter mapped below a share (or link): what holds it shows only on the real path."""
+    return _ancestors(absolute) | _ancestors(plain(os.path.realpath(long_path(absolute))))
 
 
 def _ancestors(path: str) -> dict[str, str]:
@@ -214,6 +218,7 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
     other_volume = (
         identity is not None and row["device"] is not None and identity[0] != row["device"]
     )
+    above = _above(root) if other_volume else {}  # folders above belong to new disk too
     disk: dict[str, tuple[int, int]] = {}
     unlooked: set[str] = set()
     if changes.reachable:
@@ -241,8 +246,8 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
         if changes.reachable:
             if other_volume and identity is not None:  # root now lives on this volume
                 conn.execute(
-                    "UPDATE pipeline_roots SET device = ?, inode = ? WHERE id = ?",
-                    (*identity, root_id),
+                    "UPDATE pipeline_roots SET device = ?, inode = ?, ancestors = ? WHERE id = ?",
+                    (*identity, json.dumps(list(above)), root_id),
                 )
             _judge(conn, root_id, disk, changes)
             _write_counts(conn, changes)
