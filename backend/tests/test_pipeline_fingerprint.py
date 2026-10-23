@@ -211,6 +211,16 @@ def test_a_shot_missing_one_part_falls_back_to_its_pixels(missing):
     assert one.fingerprint != two.fingerprint
 
 
+@pytest.mark.parametrize("axis", ["NAXIS1", "NAXIS2"])
+def test_a_side_of_zero_is_unknown_for_the_shot_too(axis):
+    """Lato 0: la scheda dice "non so", l'identita' non lo prende per vero e ricade sui byte."""
+    shot = {**_SHOT, "BITPIX": 16, "NAXIS": 2, "NAXIS1": 4, "NAXIS2": 3, axis: 0}
+    header = Header(shot, BLOCK, 0)
+    one = frame_identity(header, BLOCK, io.BytesIO(b"\1" * BLOCK))
+    two = frame_identity(header, BLOCK, io.BytesIO(bytes(BLOCK)))
+    assert one.fingerprint != two.fingerprint
+
+
 def test_more_axes_than_fits_allows_is_no_data_length():
     """FITS 4.0 sez. 4.4.1.1: NAXIS 0..999. Oltre: niente, e mai una lista enorme."""
     axes = {f"NAXIS{n}": 1 for n in range(1, 1001)}

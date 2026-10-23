@@ -53,8 +53,9 @@ def data_length(raw: dict[str, Value]) -> int | None:
     return size + (-size % BLOCK)
 
 
-def _count(value: Value | None) -> bool:
-    return as_count(value, 0) is not None
+def _side(value: Value | None) -> bool:
+    """Side 0 unknown, as on card."""
+    return as_count(value, 1) is not None
 
 
 def frame_identity(header: Header, size: int, fh: BinaryIO) -> FrameIdentity:
@@ -81,9 +82,9 @@ def _shot(cards: dict[str, Value]) -> str | None:
         return None
     name, start, exposure = camera(cards), start_utc(cards), exposure_s(cards)
     width, height = frame_size(cards)
-    if name is None or start is None or exposure is None or not _count(width):
+    if name is None or start is None or exposure is None or not _side(width):
         return None
-    if not _count(height):
+    if not _side(height):
         return None
     when = start.isoformat(timespec="microseconds")
     return f"v2|{name}|{when}|{width}x{height}|{exposure!r}"
