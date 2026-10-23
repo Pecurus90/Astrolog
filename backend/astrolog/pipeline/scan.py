@@ -12,7 +12,7 @@ from pathlib import Path
 
 from ..db.transaction import transaction
 from .card import Card, Conditions, read_card, read_conditions
-from .changes import Changes, finish_scan, record_changes
+from .changes import PASSING, Changes, finish_scan, record_changes
 from .filters import resolve
 from .scanner import Extracted, Skip, Skipped, scan_file
 from .walk import long_path
@@ -133,7 +133,7 @@ def _store(
     conn: sqlite3.Connection, changes: Changes, rel: str, got: Extracted | Skipped, now: str
 ) -> None:
     """File's size and date written with its read, frame and header together: skipped file
-    loses both, even if read before."""
+    loses both, unless passing skip (locked) of file read before."""
     size, mtime_ns = changes.stat[rel]
     was = conn.execute(
         "SELECT frame_id FROM pipeline_files WHERE root_id = ? AND rel_path = ?",
@@ -150,15 +150,18 @@ def _store(
         (changes.root_id, rel, size, mtime_ns, changes.scan_id, changes.scan_id),
     ).fetchone()["id"]
     skipped = isinstance(got, Skipped)
-    frame_id = None if skipped else _frame_of(conn, got, now)
+    before = was["frame_id"] if was is not None else None
+    held = skipped and got.reason in PASSING and before is not None  # locked: keeps its shot
+    frame_id = (before if held else None) if skipped else _frame_of(conn, got, now)
     conn.execute(
         "UPDATE pipeline_files SET frame_id = ?, skip_reason = ? WHERE id = ?",
         (frame_id, got.reason if skipped else None, file_id),
     )
-    if was is not None and was["frame_id"] not in (None, frame_id):
-        _drop_if_unused(conn, was["frame_id"])
+    if before not in (None, frame_id):
+        _drop_if_unused(conn, before)
     if skipped:
-        conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
+        if not held:
+            conn.execute("DELETE FROM pipeline_headers WHERE file_id = ?", (file_id,))
         return
     conn.execute(
         "INSERT OR REPLACE INTO pipeline_headers (file_id, program, header) VALUES (?, ?, ?)",

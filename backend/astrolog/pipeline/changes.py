@@ -13,7 +13,7 @@ from .walk import Walk, long_path, plain, real_key, walk_dir
 from .walk import absolute as walk_absolute
 
 # Skip reasons that pass (file locked, copy running): read again every scan.
-_PASSING = frozenset({Skip.UNREADABLE, Skip.INCOMPLETE})
+PASSING = frozenset({Skip.UNREADABLE, Skip.INCOMPLETE})
 LEFT_OUT_KEPT = 100  # no convention, product choice: paths per list in each receipt
 
 
@@ -339,7 +339,7 @@ def _judge(
         if (before["size"], before["mtime_ns"]) != stat:
             changes.changed.append(rel)
             changes.stat[rel] = stat
-        elif before["skip_reason"] in _PASSING:  # read failed last time: never lost
+        elif before["skip_reason"] in PASSING:  # read failed last time: never lost
             changes.reread.append(rel)
             changes.stat[rel] = stat
         else:

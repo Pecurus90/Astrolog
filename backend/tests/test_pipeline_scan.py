@@ -576,11 +576,28 @@ def test_a_file_that_failed_to_read_is_read_again_next_scan(conn, tmp_path, monk
     real = scan.scan_file
     monkeypatch.setattr(scan, "scan_file", lambda p, size=None: Skipped(p, reason))
     scan_root(conn, root, LATER)
-    assert _cards(conn) == {}
     monkeypatch.setattr(scan, "scan_file", real)
     again = scan_root(conn, root, THEN)
     assert again.changes.to_read == ["a.fits"]
     assert _cards(conn) == {"a.fits": "light"}
+
+
+@pytest.mark.parametrize("reason", [Skip.UNREADABLE, Skip.INCOMPLETE])
+def test_a_locked_file_keeps_its_shot_until_read_again(conn, tmp_path, monkeypatch, reason):
+    """Bloccato (N.I.N.A., antivirus, sync): posa, scheda e header restano, da rileggere.
+    Prima: la posa spariva e tornava con un altro numero."""
+    path = nina_light(tmp_path / "nas" / "a.fits", 1)
+    root = add_root(conn, tmp_path / "nas", NOW)
+    scan_root(conn, root, NOW)
+    frame = _files(conn)["a.fits"]
+    _touch_later(path)
+    real = scan.scan_file
+    monkeypatch.setattr(scan, "scan_file", lambda p, size=None: Skipped(p, reason))
+    assert scan_root(conn, root, LATER).frames == 1
+    assert (_files(conn)["a.fits"], _cards(conn)) == (frame, {"a.fits": "light"})
+    monkeypatch.setattr(scan, "scan_file", real)
+    scan_root(conn, root, THEN)
+    assert _files(conn)["a.fits"] == frame
 
 
 def test_a_broken_header_is_not_opened_again_until_the_file_changes(conn, tmp_path):
