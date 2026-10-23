@@ -1,6 +1,6 @@
 # 0022 -- Le misure dei frame: tutte, attestate, nel database, senza voto
 
-**Stato:** accettata, 18/10/2026 (Marco).
+**Stato:** accettata, 18/10/2026 (Marco). Superata in parte da ADR 0033: stelle, tilt.
 
 ## Contesto
 

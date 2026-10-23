@@ -2,6 +2,8 @@
 
 **Stato:** accettata, 20/10/2026 (Marco, dal check di salute). Nessun codice ancora: ordine in
 `docs/piano.md`.
+Superato in parte da ADR 0033: XISF si ignorano (ADR 0031); Voyager e SGP fuori finche' Marco non li
+aggiunge con un file vero (ADR 0029).
 
 ## Contesto
 

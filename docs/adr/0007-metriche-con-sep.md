@@ -1,6 +1,7 @@
 # 0007 -- Le metriche dei frame con `sep` e numpy/scipy, non `photutils`
 
 **Stato:** accettata
+Superato in parte da ADR 0033: HFD e stelle le misura `measure`, non ASTAP.
 
 ## Contesto
 

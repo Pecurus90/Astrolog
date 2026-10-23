@@ -78,8 +78,8 @@ sara' un **progetto chiuso, non un oggetto**.
 
 **Due progetti sullo stesso oggetto si distinguono dal puntamento** (Marco, 22/9/2026): se le
 coordinate coincidono e' la stessa cosa -- riprese aggiunte allo stesso progetto, anche a un anno
-di distanza -- e se divergono sono **due progetti diversi sullo stesso oggetto**. Non e' l'anno e
-non e' il setup a dividerli: e' dove hai puntato. E' la stessa parita' del mosaico
+di distanza -- e se divergono sono **due progetti diversi sullo stesso oggetto**. Non e' l'anno a
+dividerli: e' dove hai puntato, e il setup (un progetto, un setup: ADR 0013, 0033). E' la stessa parita' del mosaico
 (`mosaico.md`), che pure ragiona su dove il setup guardava.
 
 **Ma non e' cosi' oggi, e non e' un rinvio per pigrizia**: i progetti non esistono -- nessuna

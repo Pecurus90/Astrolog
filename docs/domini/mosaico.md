@@ -38,11 +38,11 @@ Le parole stanno in [`glossario.md`](glossario.md):
 rettangoli si sovrappongono o si toccano **e nessuno contiene l'altro**. Il contenimento e' il
 discriminante: due inquadrature diverse si sfiorano, mentre la stessa ripresa rifatta -- e il
 dithering -- si contengono a vicenda. **Non esiste una sovrapposizione minima**, ed e' una scelta
-con una fonte: nei quattro programmi supportati la sovrapposizione e' un parametro che **sceglie
+con una fonte: nei programmi verificati (ADR 0029) la sovrapposizione e' un parametro che **sceglie
 l'utente** -- N.I.N.A. (`Horizontal Panels`, `Vertical Panels` e l'overlap, partenza 20 % nel
 codice, `FramingAssistantVM.cs`; <https://nighttime-imaging.eu/docs/master/site/advanced/framingassistant/>),
-ASIAIR (numero di pannelli e percentuale di sovrapposizione regolabili), SGP (la percentuale sta
-nella procedura guidata, che ricorda l'ultima usata). Il 20 % di N.I.N.A. e' un punto di partenza
+ASIAIR (numero di pannelli e percentuale di sovrapposizione regolabili).
+Il 20 % di N.I.N.A. e' un punto di partenza
 del Planner (ADR 0023), non un minimo. I valori che circolano fra chi fotografa vanno dal 10% al
 40%: una soglia fissa non sarebbe una convenzione, sarebbe **un'ipotesi**, e
 taglierebbe fuori chi riprende piu' stretto o senza margine (Marco, 12/9/2026). La conseguenza

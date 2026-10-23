@@ -96,7 +96,7 @@ la frase parla di "da dove osservavi" e il gesto e' lo stesso -- si apre la sche
 distinguerli vorrebbe dire una quinta frase per un caso che nasce solo da coordinate storte.
 
 **Le misure sono quelle che l'app ha preso davvero.** Oggi sono **HFD e stelle**, che il
-riconoscitore misura mentre risolve la posa; FWHM, SNR, eccentricita' e fondo cielo sono colonne
+riconoscitore da' ancora mentre risolve il frame, poi le misura `measure` (ADR 0022, 0033); FWHM, SNR, eccentricita' e fondo cielo sono colonne
 che aspettano la casella che le misura, e una pagina non scrive un numero che nessuno ha misurato.
 Dove la scala del cielo e' nota, l'HFD si legge in **arcosecondi**, o due notti con due telescopi
 non si potrebbero confrontare.

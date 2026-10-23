@@ -186,7 +186,7 @@ l'elenco non c'e' ancora (`scan_run_open`).
 
 **Un worker, un thread, unico scrittore.** Vive nel processo del backend (uno solo da
 impacchettare su tre bersagli); esegue gli stadi in sequenza; ASTAP gira come sottoprocesso
-e restituisce file nella cache, mai scritture nel DB. Stop cooperativo fra un frame e
+(nella pipeline nuova piu' d'uno insieme: meta' dei core fisici, mai oltre un quarto della RAM, ADR 0033) e restituisce file nella cache, mai scritture nel DB. Stop cooperativo fra un frame e
 l'altro, a transazione chiusa: "fermare ferma, non trasforma". Un solo processo `uvicorn`,
 niente `workers`. Il lock per cartella si prende dopo i pre-controlli e lo rilascia il
 worker a fine corsa (non a fine stadio: la normalizzazione lavora ancora su quei frame),
@@ -298,8 +298,8 @@ nessun account, nessuna rete, nessun collegamento a OneDrive, Dropbox o iCloud; 
 guarda solo il segno o il segnaposto che il sistema scrive, una forma fissa e mai una lista di
 nomi.
 
-**Cosa entra**: `.fits` e `.fit`, tipo `light` o `unknown`; gli altri formati (`.fts`, `.fz`,
-XISF) quando un utente li chiede. Dark, flat, bias, dark-flat e
+**Cosa entra**: `.fits` e `.fit`, tipo `light` o `unknown`; la pipeline nuova anche `.fts` e `.fz`
+(`pipeline/walk.py`), XISF mai (ADR 0031, 0033). Dark, flat, bias, dark-flat e
 `stack` (`STACKCNT`, `NCOMBINE`, `NIMAGES` quando contano **piu' di un** frame -- a 1 e' un
 frame --, o *master / integration / stack / stacked* nel
 tipo o nell'oggetto: anche lo stack dal vivo di un Seestar) <!-- software-ok --> si
@@ -310,9 +310,9 @@ su `IMAGETYP`, perche' una libreria di calibrazione puo' dichiararsi `LIGHT` -- 
 file, 28 frame distinti. Per intero e mai per pezzi: *Dark Nebula* e' un oggetto vero. **E la parola si riconosce in qualunque grafia**:
 minuscole o maiuscole, con lo spazio, il trattino o l'underscore, al singolare o al plurale
 -- `Dark Frame`, `DARK-FRAME`, `dark_frame`, `darkframe` e `darks` sono lo stesso dark. Il
-vocabolario e' scritto una volta sola, senza separatori, in `fits/frame_type.py`: dei quattro
-software supportati abbiamo l'header vero solo di N.I.N.A. e ASIAIR, e la grafia di Voyager e
-SGP non deve decidere se una calibrazione entra. Calibrazioni e stack si saltano, e la ricevuta
+vocabolario e' scritto una volta sola, senza separatori, in `fits/frame_type.py`: i programmi
+verificati sono N.I.N.A. e ASIAIR (ADR 0029), e la grafia di un programma senza un suo file
+vero non deve decidere se una calibrazione entra. Calibrazioni e stack si saltano, e la ricevuta
 conta i saltati **per motivo**, calibrazioni comprese (`skipped_by_reason`: `calibration`,
 `stack`, `still_writing`; Marco, 2026-09-11): un NAS con l'orologio avanti, che fa saltare gli
 stessi frame a ogni scansione come "ancora in scrittura", si vede. **Vale anche per chi non conta i
@@ -340,13 +340,13 @@ non ha dati, e non conta nelle ore. La domanda si fa per **cartella** (`spine/ty
 conta tutti i frame senza tipo della cartella, perche' la risposta li sposta tutti, anche quelli
 che il cielo aveva gia' deciso: detto "Light" quei frame ripartono, detto "Calibrazione"
 restano fermi anche se il cielo li aveva risolti, e i file che arrivano dopo in
-quella cartella, se l'archivio non li ha gia', non entrano nemmeno. Il software di
-ripresa supportato e' N.I.N.A., ASIAIR, Voyager e SGP; il corpus (`backend/tests/header/`) ha
-per ora i primi due -- Voyager e SGP mancano, e stanno in coda finche' non arriva un file
-vero. Dell'ASIAIR ce ne sono **tre, di tre utenti diversi**, e non e' abbondanza: in `TELESCOP`
+quella cartella, se l'archivio non li ha gia', non entrano nemmeno. I programmi di
+ripresa verificati sono N.I.N.A. e ASIAIR (ADR 0029); il corpus (`backend/tests/header/`) ha i
+loro header; un altro programma entra solo con un suo file vero e una decisione di Marco (Issue
+#23). Dell'ASIAIR ce ne sono **tre, di tre utenti diversi**, e non e' abbondanza: in `TELESCOP`
 quel programma scrive la **montatura**, e il nome cambia da utente a utente (`EQMod Mount`
 contro `ZWO AM3`), quindi un header solo farebbe sembrare una lista di nomi la risposta
-giusta. Un header di un programma che non e' fra i quattro non entra nel corpus.
+giusta. Un header di un programma non verificato non entra nel corpus.
 
 **`normalize` traduce, non interpreta.** Applica i vocabolari ai grezzi dell'header e scrive
 `frames.software`, `filter_id`, `rig_id` e i tre pezzi che la posa nomina addosso a se'
@@ -355,12 +355,12 @@ giusta. Un header di un programma che non e' fra i quattro non entra nel corpus.
 suffisso di mosaico (*Pannello 2*) resta nel nome, perche' toglierlo e' interpretare.
 Non dipende da nessuno stadio: gira anche prima del solver.
 
-**I vocabolari dicono solo cio' che i quattro software scrivono**.
-Nei filtri restano le grafie dei quattro; il catalogo dei modelli resta come
-tendina, ma si puo' scrivere qualunque nome con la sua banda; le bande sono 16 piu' `UNKNOWN`
-(`vocab/filters.json`). Il software riconosciuto e' solo quello dei quattro, e la copia calibrata
+**I vocabolari dicono solo cio' che scrivono i programmi verificati** (ADR 0029). I filtri:
+lista standard, abbinamento esatto, cio' che non combacia si chiede (ADR 0031, 0033); nella
+pipeline vecchia restano le bande di `vocab/filters.json` (16 piu' `UNKNOWN`). Il software
+riconosciuto e' solo quello verificato, e la copia calibrata
 si riconosce dal marchio che il file porta, non dal nome del programma. Le chiavi dell'header sono
-lo standard FITS piu' cio' che i quattro scrivono, salvo le due che dicono che il file e' stato
+lo standard FITS piu' cio' che i verificati scrivono, salvo le due che dicono che il file e' stato
 riscritto (`CALSTAT`, `CALIBRAT`), da una convenzione pubblica. Le misure scritte nell'header
 (FWHM, SNR, stelle) non si leggono: si misurano (`test_the_measurements_a_header_writes_are_not_read`).
 
@@ -507,29 +507,29 @@ di un frame gia' in archivio: e' lo stesso scatto, non un'altra ora di cielo. Fr
 vince il piu' **originale**, e un frame e' una copia solo se un gemello e' piu' originale di
 lui: prima il **marchio di riscrittura** (`CALSTAT`/`CALIBRAT`, lo stato di calibrazione; o
 **due programmi diversi nominati insieme**, uno in una chiave di chi ha **scritto** il file --
-`PROGRAM`, `SWMODIFY`), poi il software fra i quattro di ripresa. **I due marchi non pesano
+`PROGRAM`, `SWMODIFY`), poi il software di ripresa riconosciuto. **I due marchi non pesano
 uguale**: le calibrazioni applicate dicono che sono cambiati i **pixel**, due programmi nominati
 insieme dicono solo che qualcuno ha toccato l'**header** -- e l'header di un grezzo lo riscrive
 anche chi non lo calibra (un solutore, un correttore di metadati). Fra un grezzo cosi' e la sua
 copia calibrata vince il grezzo. Che due grafie siano due
-programmi lo dice **il vocabolario dei quattro**, mai la somiglianza fra le stringhe: `SGPro 4.4`
+programmi lo dice **il vocabolario dei programmi**, mai la somiglianza fra le stringhe: `SGPro 4.4`
 e `Sequence Generator Pro v4.4` sono lo stesso programma. Ed e' la ragione per cui la regola sta
 nella spina (`spine/rewrite.py`) e non nel lettore dell'header, che il vocabolario non puo'
 consultarlo. Un nome
-solo non e' un marchio: e' la grafia con cui due dei quattro si presentano, e prenderla per un
+solo non e' un marchio: e' la grafia con cui due programmi si presentano, e prenderla per un
 marchio marchierebbe i loro grezzi. A pari indizi si contano tutte e due:
 indovinare fonderebbe due frame veri ripresi nello stesso istante, e far sparire cielo vero e'
 peggio che contarlo due volte. Il marchio guarda le **chiavi**, mai il nome che ci sta dentro
-(i software supportati restano quattro), e da solo non toglie niente a nessuno: senza un
+(i programmi verificati restano due, ADR 0029), e da solo non toglie niente a nessuno: senza un
 gemello, un file calibrato e' semplicemente il frame -- c'e' chi tiene solo quello. Il grezzo
 vince, la copia porta `frames.copy_of` e resta in archivio con le sue posizioni; chi conta le
 ore filtra `copy_of IS NULL`.
 Perche' due criteri e non uno: chi elabora **non cancella** sempre la chiave di chi ha
-acquisito, e chi riprende con un programma fuori dai quattro non e' riconosciuto nemmeno sul
+acquisito, e chi riprende con un programma non verificato non e' riconosciuto nemmeno sul
 grezzo -- in tutti e due i casi il software da solo non distingue i gemelli. **Il caso che resta
 scoperto** (Issue #23): la copia che non dice di essere calibrata e nel cui header il
-vocabolario non riconosce **nessuno** dei nomi -- cioe' chi riprende con un programma fuori dai
-quattro ed elabora con un altro che l'app non conosce. Li' i due gemelli si somigliano davvero,
+vocabolario non riconosce **nessuno** dei nomi -- cioe' chi riprende con un programma non
+verificato ed elabora con un altro che l'app non conosce. Li' i due gemelli si somigliano davvero,
 e l'app li conta tutti e due.
 
 **ASTAP**: `astap_cli -f <file> -o <cache>/<frame_hash> -fov <campo> -z 0`, `-ra/-spd` e raggio
@@ -549,9 +549,9 @@ stesso oggetto** (la regola esatta e' piu' sotto): e' cio' che lo salva dai 23 s
 cache `cache/solve/<frame_hash>.ini` e `.wcs` e' immutabile: un reset la rilegge invece di
 ri-risolvere.
 
-**HFD e stelle costano una seconda passata** (`-analyse`, +0,3 s a frame) e si prendono lo
-stesso: rileggere l'archivio un'altra volta costerebbe di piu'. Vanno in `frame_metrics` con
-`source = 'astap'`. **Il tilt no**: servirebbe `-extract`, che scrive un CSV **accanto al
+**HFD e stelle le misura `measure`**, le stelle sul frame intero senza pixel caldi (ADR 0022,
+0033); la pipeline vecchia le prende ancora da `-analyse` (+0,3 s a frame), in `frame_metrics`
+con `source = 'astap'`, e la nuova toglie quella passata. **Il tilt no**: servirebbe `-extract`, che scrive un CSV **accanto al
 FITS dell'utente** ignorando `-o` e la cartella di lavoro (verificato) -- e su una
 condivisione in sola lettura fallirebbe. Tilt, eccentricita' e fondo cielo nascono con
 `measure`, dove i pixel li leggiamo noi e non si scrive niente. La rotazione e' quella
@@ -1064,7 +1064,7 @@ coi Progetti); non tocca i FITS.
 
 ## Cosa NON fa
 
-Non modifica, sposta, rinomina o cancella un FITS: togliere un frame dall'archivio dell'app,
-quando si potra', sara' un'esclusione **dichiarata**, con conferma, che sopravvive alle
-scansioni, e nomi e correzioni non si perdono. Non cataloga i file di calibrazione.
+Non modifica, rinomina o cancella un FITS da sola: escludere un frame, spostarlo in `scartate/`
+ed eliminarlo e' un gesto dell'utente nella zona di selezione, con conferma, che sopravvive alle
+scansioni (ADR 0032, 0033). Non cataloga i file di calibrazione.
 Non sorveglia le cartelle in continuo. Non riparte da solo all'apertura. Non vota (ADR 0032).

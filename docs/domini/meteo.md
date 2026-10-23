@@ -12,7 +12,7 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 | richiesta | prova |
 |---|---|
 | Apro Meteo e vedo le prossime notti del mio sito, ognuna col verdetto, le ore utili e cosa lo decide | `test_each_model_writes_its_nights_from_the_current_one`, `test_the_summary_is_written_with_the_forecast`, *in testa le ore serene col semaforo, da che ora a che ora e l'accordo, con l'ora del posto*, *accanto al semaforo pesa solo cio' che il backend dice incerto o niente, con la parola e le ore* |
-| Il semaforo lo fanno le nuvole; ogni altra misura con soglia dice la sua parola ora per ora e per la notte, con l'intervallo e il conto, e pesa accanto senza cambiarlo | `test_each_measure_judges_an_hour_at_the_edges_of_its_source`, `test_condensation_comes_under_three_degrees_between_air_and_dew_point`, `test_a_measure_takes_the_worst_hour_of_the_night_and_says_its_hours`, `test_the_clouds_are_the_verdict_and_never_weigh`, `test_good_and_neutral_measures_do_not_weigh`, `test_every_hour_carries_the_judgement_of_each_judged_measure`, `test_the_round_writes_the_nights_with_the_sky_sources_joined_and_judged` |
+| Oggi il semaforo viene dalle nuvole, finche' non si costruisce il punteggio di ADR 0020; ogni altra misura con soglia dice la sua parola ora per ora e per la notte, con l'intervallo e il conto, e pesa accanto senza cambiarlo | `test_each_measure_judges_an_hour_at_the_edges_of_its_source`, `test_condensation_comes_under_three_degrees_between_air_and_dew_point`, `test_a_measure_takes_the_worst_hour_of_the_night_and_says_its_hours`, `test_the_clouds_are_the_verdict_and_never_weigh`, `test_good_and_neutral_measures_do_not_weigh`, `test_every_hour_carries_the_judgement_of_each_judged_measure`, `test_the_round_writes_the_nights_with_the_sky_sources_joined_and_judged` |
 | Le misure arrivano in ordine d'importanza, con la media delle ore vere, il picco, e la parte di notte che coprono; le soglie arrivano dal backend | `test_the_order_is_clouds_then_nogo_then_marginal_then_go_earliest_first_then_neutral`, `test_the_night_value_is_the_mean_of_the_true_numbers_and_rain_is_a_total`, `test_the_peak_is_the_worst_hour_and_says_when`, `test_a_measure_known_only_in_part_of_the_night_says_which_part`, `test_every_scale_is_sent_with_its_steps`, `test_the_page_gets_the_thresholds_the_judgement_used` |
 | La Luna pesa per la banda larga solo quando e' sopra l'orizzonte col buio | `test_the_moon_up_brings_its_lit_part_and_down_brings_nothing`, `test_the_moon_is_left_out_when_it_is_never_up_in_the_dark` |
 | Quando la Luna pesa leggo cosa riprendere e in che ore: la banda consigliata, quanto e' illuminata, da che ora a che ora e' su, e cosa resta nelle ore senza | `test_a_measure_says_whether_its_known_hours_reach_the_ends_of_the_night`, *la Luna (...) consiglia la banda e dice le ore senza Luna* |
@@ -102,8 +102,8 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
     parola, che per la notte e' peggio di *limpido* (un'ora limpida non fa limpida la notte);
   - Luna, per la banda larga: buona fino al 25% illuminata (la regola diffusa fra chi riprende),
     *banda larga al limite* fino al 50%, oltre *consigliata banda stretta* (il 50 e' di Marco,
-    7/10/2026); pesa solo nelle ore in cui e' sopra l'orizzonte (-0,833 gradi, convenzione del
-    Nautical Almanac). La riga dice le ore in cui e' su e cosa resta nelle altre (Marco,
+    7/10/2026); conta sopra -5° (ADR 0020, 0033; il codice di oggi usa ancora l'orizzonte,
+    -0,833 gradi del Nautical Almanac). La riga dice le ore in cui e' su e cosa resta nelle altre (Marco,
     12/10/2026): "Luna al 55% dalle 23 · banda larga fino alle 23". I due gradini e l'altezza da
     cui la Luna conta diventano Impostazioni, con 25%, 50% e -5° di partenza: un cielo
     buio sente la Luna prima di uno di citta' (Marco, 19/10/2026); -5° dalla rete TESS, cielo

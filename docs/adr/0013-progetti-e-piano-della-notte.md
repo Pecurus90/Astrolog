@@ -1,6 +1,6 @@
 # 0013 -- Progetti e piano della notte: il Planner fa i progetti, la serata si compone a parte
 
-**Stato:** accettata, 4/10/2026
+**Stato:** accettata, 4/10/2026. ADR 0033: lo scarto dei frame lo sceglie l'utente (ADR 0032).
 
 ## Contesto
 

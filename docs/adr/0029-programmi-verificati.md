@@ -1,6 +1,7 @@
 # 0029 -- Due programmi verificati e una convenzione: N.I.N.A., ASIAIR, SBIG
 
 **Stato:** accettata, 22/10/2026 (Marco). Supera "Software supportati: quattro" di CLAUDE.md.
+Superato in parte da ADR 0033: la lettura comune SBIG resta solo nella pipeline vecchia.
 
 ## Contesto
 

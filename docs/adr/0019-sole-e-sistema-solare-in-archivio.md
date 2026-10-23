@@ -4,6 +4,7 @@
 asteroidi e NEO dai FITS di oggi (orbite MPC); effemeridi di Sole e pianeti e le metriche; lettore
 SER per percorso; log di FireCapture e SharpCap, con log veri; foto finale e campi a mano; meteo <!-- software-ok: ADR 0019 -->
 storico e attivita' solare per data. Prima: quali altri programmi planetari scrivono un log.
+Superato in parte da ADR 0033: i programmi verificati sono due, N.I.N.A. e ASIAIR (ADR 0029).
 
 ## Contesto
 

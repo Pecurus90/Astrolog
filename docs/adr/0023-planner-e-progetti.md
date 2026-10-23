@@ -1,6 +1,6 @@
 # 0023 -- Planner e Progetti: inquadratura, mosaico, setup di prova, filtri, modifiche
 
-**Stato:** accettata, 18/10/2026 (Marco).
+**Stato:** accettata, 18/10/2026 (Marco). ADR 0033: nel piano della notte il meteo e' una striscia (ADR 0013).
 
 ## Contesto
 

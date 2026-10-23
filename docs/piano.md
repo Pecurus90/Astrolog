@@ -71,7 +71,6 @@ Cose nominate dal metodo che non esistono ancora, con la loro tappa; passata, la
 | build dell'immagine amd64 e arm64 in CI (runner `ubuntu-24.04-arm`) | il pacchetto |
 | la misura del solver su un NAS arm64 vero (1-2 GB di RAM) | il pacchetto |
 | lo stack delle metriche misurato su arm64 (ADR 0007), con `old/backend/astrolog/misura.py` e i suoi 8 test | `measure` |
-| header veri di Voyager e SGP in `backend/tests/header/`, anonimizzati, prima della correzione che li fa passare | un file vero |
 | pochi FITS veri con licenza e un database ASTAP piccolo (D05), per i test `lento` del solver in CI | un file vero |
 | rifare cio' che si ricava dal vocabolario quando cambia (`spine/header_asks.py`, il software normalizzato), e dirlo all'avvio | il primo rilascio |
 | la regola della Luna nelle Impostazioni (due gradini e altezza, `domini/meteo.md`) | il porting |

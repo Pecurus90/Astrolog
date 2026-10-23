@@ -64,8 +64,8 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi str
 ## Le decisioni
 
 **Si mostra solo cio' che l'app possiede davvero.** Ogni numero di questa pagina viene dai tuoi
-file o da una tua risposta; niente si prende da internet (lo dice gia' lo schema), niente si
-stima. Dove un numero non c'e', la pagina **dice perche'** invece di scrivere uno zero: uno zero
+file o da una tua risposta; niente si prende da internet (lo dice gia' lo schema); i conti del
+setup partono solo da dati che hai, e lo dicono (ADR 0021, 0033). Dove un numero non c'e', la pagina **dice perche'** invece di scrivere uno zero: uno zero
 e' un dato, e qui sarebbe falso.
 
 **Le ore si contano in una casa sola** (`spine/counts.py`): lo stesso frammento dell'Archivio e
@@ -83,7 +83,7 @@ giorno della prima ripresa ti ritroveresti l'elenco doppio.
 setup vivono nello strato del dichiarato: la spina riempie cio' che i file dicono, la tua parola
 resta.
 
-**Quanto cielo inquadra un setup si MISURA, non si calcola** (scelta di Marco, 21/9/2026). La
+**Quanto cielo inquadra un setup si misura**, e la scala prevista dalla scheda sta accanto (ADR 0021, 0033). La
 scala in arcosecondi per pixel e il campo inquadrato escono dalle pose che il riconoscitore ha
 gia' risolto (`frame_wcs`), prese come **mediana** -- non media: una posa risolta storta, che su
 un campo povero di stelle capita, sposterebbe la media e lascia ferma la mediana -- e' cio' che quel setup ha inquadrato
@@ -206,8 +206,8 @@ dell'11/10 (setup in cima, componenti sotto). Testi approvati: "{n} da indicare"
 "Seleziona" su ogni parte, "Per salvare serve almeno una banda.", "Per salvare servono ottica,
 camera e focale effettiva.", "servono apertura e focale", "Larghezza (nm)", "Pixel (µm)", "Apri
 {nome} fra i componenti"; gli altri in `handoff/design-risposta-attrezzatura.md`. Un filtro
-scritto a mano cerca nel catalogo dei modelli, cosi' si scrivono anche le bande delle camere a
-colori.
+scritto a mano si abbina alla lista standard, senza catalogo dei modelli (ADR 0031, 0033); le
+bande si scrivono, anche quelle delle camere a colori.
 
 **Un filtro e un setup scritti a mano** (Marco, 21/9/2026) nascono dallo stesso *Aggiungi un
 pezzo*: il filtro col nome e la banda, il setup con ottica, camera e focale obbligatoria -- senza,
@@ -229,7 +229,7 @@ instruments.py`): nessuna ora si perde. Oggi il gesto non c'e'; arriva con la pa
 
 Restano fuori per scelta: il **valore** dei pezzi e il **registro di manutenzione** (provati e
 scartati nel progetto di prima, e la ragione vale ancora: questa pagina dice come hai ripreso,
-non quanto hai speso); lo **slot** di un filtro nella ruota e il **peso del setup contro la
-portata della montatura**, che chiedono dati che oggi nessuno ha; e il **colore del setup**, che
+non quanto hai speso); lo **slot** di un filtro nella ruota, che chiede un dato che oggi nessuno
+ha (il carico del setup invece entra, ADR 0021, 0033); e il **colore del setup**, che
 e' gia' deciso ([`ereditato.md`](ereditato.md)) e nascera' quando servira' a un grafico, non
 prima.

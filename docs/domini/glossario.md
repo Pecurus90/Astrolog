@@ -73,7 +73,7 @@ che il `traduttore` legge per primo.
 | il gruppo di un frame senza nome e senza cielo: la notte, la camera, il telescopio e il puntamento di chi ha aperto il gruppo. Lo scrive `identify` quando il frame arriva, e si risceglie solo se casa cambia fuso e la notte del frame con lei | `unnamed_key` | -- | cella, id del gruppo |
 | un frame risolto nel cui campo il catalogo non ha nessun candidato: il cielo c'e', ma non dice cosa hai ripreso. Lo scrive `identify`, e resta quando il frame torna in coda | `empty_cone` | senza oggetti identificati | il cielo non ha trovato niente, vuoto, senza oggetto |
 | un frame che il solver non ha risolto | `unsolved` | non risolto | senza cielo, da risolvere, fallito |
-| quanto sono larghe le stelle in un frame, in pixel: e' la misura del fuoco. La da' il solver nella sua passata di analisi | `hfd_px` | HFD | fuoco, nitidezza, FWHM |
+| quanto sono larghe le stelle in un frame, in pixel: e' la misura del fuoco. La misura `measure` (ADR 0022, 0033); oggi viene ancora dal solver | `hfd_px` | HFD | fuoco, nitidezza, FWHM |
 | l'identita' di una voce di catalogo, stabile fra due ricostruzioni (gli id invece si rinumerano) | `slug` | sigla-chiave | id, codice, chiave |
 | il numero che un oggetto porta dentro un catalogo (`224`); il catalogo sta accanto, in `catalog` | `designation` | designazione | numero, sigla |
 | catalogo e designazione insieme, come si scrivono (`NGC 224`) | `catalog` + `designation` | sigla | nome, designazione |

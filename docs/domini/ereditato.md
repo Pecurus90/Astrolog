@@ -186,14 +186,14 @@ non e' ancora nato.
 
 ## E. Le metriche di qualita'
 
-- **L'app misura, non marca e non scarta**: niente keep/reject, niente percentuale di tenuta --
-  `prodotto.md:166`. *Confermato da Marco*: nessun voto ai frame, nessuna soglia impostabile.
+- **L'app misura e non vota il frame**: lo scarto lo sceglie l'utente nella zona di selezione,
+  con soglie sue, reversibile (ADR 0032, 0033); `measure` non scarta -- `prodotto.md:166`.
 - **Metriche a doppia fonte, sdoppiate per origine** (header e calcolata); si mostra la calcolata
   se c'e' -- `database.md:838-851`.
 - **FWHM e HFR nascono in pixel; la FWHM esce in arcosecondi (x scala), l'HFR resta in pixel**;
   senza scala -> `None`, e il frame non entra nelle medie -- `architettura.md:1689-1693`.
-- **SNR = mediana robusta di picco / rumore del cielo** (non di flusso: guadagno e rumore di
-  lettura non stanno in tutti gli header) -- `architettura.md:1706-1716`.
+- **SNR: la PSF SNR della documentazione di PixInsight** (ADR 0022, 0033); il vecchio, di <!-- software-ok -->
+  picco sul rumore del cielo, non la seguiva -- `architettura.md:1706-1716`.
 - **Media FWHM pesata sui frame misurati**, mai sui frame totali -- `architettura.md:1695-1704`.
 - **Il fondo cielo si chiama `sky_background`** -- `architettura.md:1745`.
 - **Statistiche: unita' = notte x setup**; qualita' come punto + banda dei quartili, volumi
@@ -203,8 +203,8 @@ non e' ancora nato.
 - **Non si correla qualita' e meteo** (si misurerebbe il filtro) -- `lezioni.md:206`.
 - **L'analisi parte da sola a fine import, un thread, l'import ha precedenza, non riparte al
   boot** (riprendere e' una scelta dell'utente) -- `architettura.md:1441-1458`.
-- **Una soglia dell'aria ferma, non tre**: quella derivata dal campionamento (Nyquist, 2 x
-  scala fra 1,5" e 3"); le altre due del vecchio (2,5/4,5 e 4,0) non si portano -- `backlog.md:1524-1537`.
+- **FWHM: fasce assolute in secondi d'arco, col limite del setup** F = max(2 × scala,
+  1,029·λ/D) (Nyquist; ADR 0022, 0033); le soglie del vecchio non si portano -- `backlog.md:1524-1537`.
 
 ---
 
@@ -222,8 +222,8 @@ non e' ancora nato.
   piu' buio disponibile e lo si dichiara) -- `planner.md:427-436`, `architettura.md:392`.
 - **Il numero che decide e' `usable_hours`** (ore di buio sereno sopra l'orizzonte) --
   `planning/tonight.py:6-11`.
-- *Chiuso da Marco*: **altezza minima 30 gradi, distanza dalla Luna 40 gradi, ore minime 1 h
-  sono valori di fabbrica in Impostazioni**, con la fonte accanto, modificabili una volta e
+- *Chiuso da Marco*: **altezza minima 30 gradi, distanza dalla Luna per banda (ADR 0023, 0033),
+  ore minime 1 h sono valori di fabbrica in Impostazioni**, con la fonte accanto, modificabili una volta e
   usati ovunque; nel Planner si cambiano per una singola ricerca senza salvarli.
 - **Periodo migliore = 12 notti (il 15 di ogni mese), ore utili, Luna esclusa, run ciclico
   all'80 % del massimo**; distinto dalla **stagione lavorabile** -- `architettura.md:398-423`.
@@ -258,9 +258,9 @@ non e' ancora nato.
 
 - **Un fattore da portare con la sua fetta**: seeing (soglia dal campionamento). Il vento in quota
   (60esimo percentile della climatologia a 700 hPa del sito) e' arrivato come **confronto**, non
-  come fattore: la soglia veniva dall'archivio di Marco (casa: `docs/domini/meteo.md`). Esclusi: jet stream come fattore, umidita' da sola, igrometrico, visibilita' --
+  come fattore: la soglia veniva dall'archivio di Marco (casa: `docs/domini/meteo.md`). Esclusi: umidita' da sola, igrometrico, visibilita' --
   `verdict.py:52-133`, `climatology.py:43-51`.
-- *Confermato da Marco*: **il seeing non cambia la parola del verdetto**; e' un fattore mostrato.
+- **Seeing e jet stream pesano nel punteggio della notte**, coi pesi di ADR 0020 (ADR 0033).
 - **Visibilita' a cinque tacche** -- `architettura.md:584`.
 - **La griglia del modello non si inventa**: "previsione di zona", senza numero -- `architettura.md:602`.
 
@@ -300,7 +300,7 @@ non e' ancora nato.
 - **Il primo avvio e' un timbro, non un'euristica**; wizard corto, senza rosso, saltabile. Il
   vecchio diceva "tre domande e mai una quarta": la quarta, facoltativa, e' la chiave Meteoblue
   (Marco, 25/9/2026) -- `database.md:1593-1615`, `prodotto.md:113-138`.
-- **Lingua e tema nella barra in alto, non in Impostazioni** -- `schermate.md:682`.
+- **Lingua e tema tornano con Impostazioni**: il disegno nuovo non li mette in barra (`navigazione.md`, ADR 0033).
 - **Reset: ricrea il file, conserva cartelle, siti e impostazioni; FITS mai toccati** -- `architettura.md:1643-1672`.
 - **"Stanotte" la decide il server sul fuso del sito** -- `architettura.md:378`.
 - **Le modali di oggetto e notte sono l'una la trasposta dell'altra** -- `schermate.md:425,601`.
