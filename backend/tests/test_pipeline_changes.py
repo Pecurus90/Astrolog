@@ -288,6 +288,39 @@ def test_another_disk_under_the_same_letter_is_judged_and_said(conn, tmp_path):
     assert scan_root(conn, root, LATER).changes.unchanged == ["other/b.fits"]  # adopted, no repeat
 
 
+def test_another_disk_is_said_once_then_adopted(conn, tmp_path):
+    """Disco cambiato: lo dice una ricevuta sola, poi e' il disco della radice. Senza aggiornare
+    il volume, ogni scansione direbbe "disco cambiato" per sempre."""
+    nas = tmp_path / "nas"
+    _file(nas / "a.fits")
+    root = add_root(conn, nas, NOW)
+    scan_root(conn, root, NOW)
+    _other_volume(conn, root)
+    scan_root(conn, root, LATER)
+    scan_root(conn, root, THEN)
+    said = conn.execute("SELECT volume_changed FROM pipeline_scans ORDER BY id").fetchall()
+    assert [r[0] for r in said] == [0, 1, 0]
+
+
+def test_folders_without_a_folder_id_are_never_one_root(conn, tmp_path, monkeypatch):
+    """Disco che non da' id alle cartelle (st_ino 0: FAT, alcuni NAS): due cartelle diverse
+    restano due radici. Senza la guardia avrebbero lo stesso id e sarebbero una."""
+    from astrolog.pipeline import changes
+
+    real = os.stat
+
+    def no_folder_id(path, *args, **kwargs):
+        st = real(path, *args, **kwargs)
+        if not stat.S_ISDIR(st.st_mode):
+            return st
+        return os.stat_result((*st[:1], 0, *st[2:10]))
+
+    monkeypatch.setattr(changes.os, "stat", no_folder_id)
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    assert add_root(conn, tmp_path / "a", NOW) != add_root(conn, tmp_path / "b", NOW)
+
+
 def test_the_right_disk_back_brings_its_frames_back(conn, tmp_path):
     """Altro disco: pose sparite; disco giusto di nuovo: stesse pose, stesso frame (le risposte)."""
     nas = tmp_path / "nas"
