@@ -316,6 +316,14 @@ def test_another_disk_brings_its_own_folders_above_the_root(conn, tmp_path):
     assert conn.execute("SELECT ancestors FROM pipeline_roots").fetchone()[0] == now_above
 
 
+def test_a_path_pasted_with_its_quotes_is_the_folder(conn, tmp_path):
+    """'Copia come percorso' di Windows mette le virgolette: e' la stessa cartella. Prima
+    rifiutata come inesistente."""
+    nas = tmp_path / "nas"
+    nas.mkdir()
+    assert add_root(conn, f'"{nas}"', NOW) == add_root(conn, nas, NOW)
+
+
 def test_folders_without_a_folder_id_are_never_one_root(conn, tmp_path, monkeypatch):
     """Disco che non da' id alle cartelle (st_ino 0: FAT, alcuni NAS): due cartelle diverse
     restano due radici. Senza la guardia avrebbero lo stesso id e sarebbero una."""

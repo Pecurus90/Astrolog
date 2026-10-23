@@ -94,7 +94,7 @@ def _still(stored: str, path: str) -> bool:
 def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -> int:
     """Existing folder only. Same folder written another way: same root; inside or around one
     (written or real key): RootOverlapError. Other roots' disks touched only when ids match."""
-    absolute = os.path.normpath(walk_absolute(plain(os.fspath(path))))
+    absolute = os.path.normpath(walk_absolute(plain(_unquoted(os.fspath(path)))))
     if not os.path.isdir(long_path(absolute)):
         raise NotADirectoryError(absolute)
     written, real = _keys(absolute)
@@ -113,6 +113,13 @@ def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -
                  now),
             )
         )  # fmt: skip
+
+
+def _unquoted(path: str) -> str:
+    """Windows 'Copy as path' wraps it in quotes: one pair off, only when path as written
+    is not there (Linux name may hold quotes)."""
+    quoted = len(path) > 1 and path[0] == path[-1] == '"'
+    return path[1:-1] if quoted and not os.path.exists(long_path(path)) else path
 
 
 def _above(absolute: str) -> dict[str, str]:
