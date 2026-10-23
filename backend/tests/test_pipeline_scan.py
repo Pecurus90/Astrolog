@@ -605,6 +605,23 @@ def test_a_scan_says_what_the_walk_left_out(conn, tmp_path):
     assert result.changes.online_only == ["night/M42.fits"]
 
 
+def test_the_receipt_keeps_the_first_100_paths_left_out_and_counts_the_rest(conn, tmp_path):
+    """20.000 file solo nel cloud non gonfiano ogni ricevuta: primi 100 per lista, e quanti
+    altri. Prima: tutti i percorsi a ogni scansione, il database cresceva senza fine."""
+    nas = tmp_path / "nas"
+    for i in range(150):
+        (nas / f".h{i:03d}").mkdir(parents=True)
+    scan_root(conn, add_root(conn, nas, NOW), NOW)
+    row = conn.execute("SELECT left_out, left_out_more FROM pipeline_scans").fetchone()
+    assert json.loads(row["left_out"])["hidden"] == [f".h{i:03d}" for i in range(100)]
+    assert json.loads(row["left_out_more"]) == {
+        "hidden": 50,
+        "online_only": 0,
+        "unreachable": 0,
+        "unlooked": 0,
+    }
+
+
 def test_the_receipt_keeps_rereads_skips_and_what_was_left_out(conn, tmp_path, monkeypatch):
     """Ricevuta: riletti a parte dai cambiati, saltati contati, fuori coi percorsi."""
     path = nina_light(tmp_path / "a.fits", 1)

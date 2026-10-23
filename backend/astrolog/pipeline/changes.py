@@ -14,6 +14,7 @@ from .walk import absolute as walk_absolute
 
 # Skip reasons that pass (file locked, copy running): read again every scan.
 _PASSING = frozenset({Skip.UNREADABLE, Skip.INCOMPLETE})
+LEFT_OUT_KEPT = 100  # no convention, product choice: paths per list in each receipt
 
 
 @dataclass
@@ -242,14 +243,14 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
             conn.execute(
                 "INSERT INTO pipeline_scans"
                 " (root_id, scanned_at, reachable, volume_changed, new, changed, reread, unchanged,"
-                " gone, skipped, unknown_keys, unknown_more, left_out, finished)"
-                " VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0, '{}', '{}', 0, ?, 0)",
+                " gone, skipped, unknown_keys, unknown_more, left_out, left_out_more, finished)"
+                " VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0, '{}', '{}', 0, ?, ?, 0)",
                 (
                     root_id,
                     now,
                     int(changes.reachable),
                     int(changes.reachable and other_volume),
-                    _left_out(changes) if changes.reachable else None,
+                    *(_left_out(changes) if changes.reachable else (None, None)),
                 ),
             )
         )
@@ -279,9 +280,9 @@ def finish_scan(conn: sqlite3.Connection, changes: Changes) -> None:
 def _write_counts(conn: sqlite3.Connection, changes: Changes) -> None:
     conn.execute(
         "UPDATE pipeline_scans SET new = ?, changed = ?, reread = ?, unchanged = ?, gone = ?,"
-        " left_out = ? WHERE id = ?",
+        " left_out = ?, left_out_more = ? WHERE id = ?",
         (len(changes.new), len(changes.changed), len(changes.reread),
-         len(changes.unchanged), len(changes.gone), _left_out(changes), changes.scan_id),
+         len(changes.unchanged), len(changes.gone), *_left_out(changes), changes.scan_id),
     )  # fmt: skip
 
 
@@ -302,15 +303,17 @@ def _emptied(conn: sqlite3.Connection, root_id: int, root: str, walk: Walk) -> b
         return True
 
 
-def _left_out(changes: Changes) -> str:
-    return json.dumps(
-        {
-            "hidden": changes.hidden,
-            "online_only": changes.online_only,
-            "unreachable": changes.unreachable,
-            "unlooked": changes.unlooked,
-        }
-    )
+def _left_out(changes: Changes) -> tuple[str, str]:
+    """First LEFT_OUT_KEPT paths per list, and how many more: receipt stays small."""
+    lists = {
+        "hidden": changes.hidden,
+        "online_only": changes.online_only,
+        "unreachable": changes.unreachable,
+        "unlooked": changes.unlooked,
+    }
+    kept = {name: paths[:LEFT_OUT_KEPT] for name, paths in lists.items()}
+    more = {name: max(0, len(paths) - LEFT_OUT_KEPT) for name, paths in lists.items()}
+    return json.dumps(kept), json.dumps(more)
 
 
 def _judge(

@@ -903,10 +903,13 @@ CREATE TABLE pipeline_scans (
   unknown_keys TEXT NOT NULL CHECK (json_valid(unknown_keys) AND json_type(unknown_keys) = 'object'),
   -- oltre il tetto in memoria (scan.UNKNOWN_TRACKED): chiavi fra le prime contate, "almeno"
   unknown_more INTEGER NOT NULL CHECK (unknown_more >= 0),
-  -- fuori, coi percorsi: {hidden, online_only, unreachable, unlooked}; NULL radice muta
+  -- fuori, primi percorsi (changes.LEFT_OUT_KEPT): {hidden, online_only, unreachable,
+  -- unlooked}; quanti altri per lista in left_out_more; NULL radice muta
   left_out   TEXT CHECK (json_valid(left_out) AND json_type(left_out) = 'object'),
+  left_out_more TEXT CHECK (json_valid(left_out_more) AND json_type(left_out_more) = 'object'),
   finished   INTEGER NOT NULL CHECK (finished IN (0, 1)),  -- 0: fermata, il giro dopo rifa'
-  CHECK ((reachable = 1) = (left_out IS NOT NULL))
+  CHECK ((reachable = 1) = (left_out IS NOT NULL)),
+  CHECK ((left_out IS NULL) = (left_out_more IS NULL))
 ) STRICT;
 
 -- RILEVATO. Posa (camera, inizio con frazione di secondo, dimensioni, durata: ADR 0030); senza
