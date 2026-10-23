@@ -334,3 +334,4 @@ test_every_standard_but_none_has_bands - StandardFilter.bands tolto: usato solo 
 test_another_disk_under_the_same_letter_makes_nothing_gone - Marco (audit 4): altro disco si giudica sempre e si dice; rinominato test_another_disk_under_the_same_letter_is_judged_and_said
 test_the_size_seen_by_the_walk_decides_completeness - la dimensione viene dallo stat della scansione (changes._on_disk), non dal walk: rinominato test_the_size_seen_by_the_scan_decides_completeness
 test_a_file_not_looked_at_does_not_stop_the_others_being_judged - stessa preparazione di test_a_file_whose_date_cannot_be_read_is_not_gone: fuso in quello, che tiene entrambe le asserzioni
+test_a_file_that_is_not_there_is_a_reason - ASTAP non scrive mai "File not found" (misurato): rinominato test_a_file_astap_cannot_read_is_a_reason, sul testo vero

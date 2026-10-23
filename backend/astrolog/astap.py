@@ -2,11 +2,13 @@
 a CSV beside the file, ignoring `-o`); ASTAP prints numbers with the machine's decimal separator."""
 
 import contextlib
+import ctypes
 import logging
 import os
 import re
 import shutil
 import subprocess
+import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -58,6 +60,9 @@ class Reason(StrEnum):
     FILE_MISSING = "file_missing"
     NO_STAR_DATABASE = "no_star_database"
     INTERNAL_ERROR = "internal_error"
+    UNREADABLE = "unreadable"  # file gone, .fz to an older ASTAP, name outside the code page
+    FZ_UNSUPPORTED = "fz_unsupported"
+    PATH_UNSUPPORTED = "path_unsupported"
 
 
 # Lines of words, not numbers, in ASTAP's result file.
@@ -67,7 +72,8 @@ _POLE_DEG = 90.0
 # Compared lowercase and by containment: the exact text changes, the key words do not.
 _ERROR_WORDS = (
     ("not enough stars", Reason.NO_STARS),
-    ("file not found", Reason.FILE_MISSING),
+    # same sentence for a missing file, a .fz and a CJK name (CLI-2025.11.19, measured)
+    ("error reading image file", Reason.UNREADABLE),
     # Both `No star database found.` (missing) and `Error reading star database.` (truncated
     # download), as ASTAP CLI-2025.11.19 prints them: a half download is as common as none.
     ("star database", Reason.NO_STAR_DATABASE),
@@ -307,3 +313,45 @@ def analyse(fits_path: str | Path, solver: Solver) -> tuple[float | None, int | 
     values = read_ini_text(out)
     stars = _number(values.get("STARS"))
     return _number(values.get("HFD_MEDIAN")), None if stars is None else int(stars)
+
+
+# hnsky.org/astap.htm: "From version 2026.07.16, ASTAP natively supports fits rice compressed files"
+FZ_SINCE = (2026, 7, 16)
+_VERSION = re.compile(r"version\s+(?:CLI-)?(\d{4})\.(\d{1,2})\.(\d{1,2})", re.IGNORECASE)
+
+
+def version(solver: Solver) -> tuple[int, int, int] | None:
+    """Release date from `-h` help (`version CLI-2025.11.19`). Unread: None."""
+    if not solver.exe:
+        return None
+    try:
+        _code, out = (solver.run or _run)([solver.exe, "-h"], solver.timeout_s)
+    except (subprocess.TimeoutExpired, TimeoutError, OSError):
+        return None
+    found = _VERSION.search(out or "")
+    return None if found is None else (int(found[1]), int(found[2]), int(found[3]))
+
+
+def code_page_path(path: str) -> str | None:
+    """ASTAP on Windows gets its command line in the ANSI code page: other letters turn `?`
+    (measured, CJK). Then the 8.3 short name; None if volume keeps none."""
+    if os.name != "nt" or _in_code_page(path):
+        return path
+    short = _short_name(path)
+    return short if short and _in_code_page(short) else None
+
+
+def _in_code_page(text: str) -> bool:
+    try:
+        text.encode("mbcs")  # strict: no best-fit `a` for `a-macron`
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
+def _short_name(path: str) -> str | None:
+    if sys.platform != "win32":
+        return None
+    buffer = ctypes.create_unicode_buffer(32768)  # longest Windows path
+    size = ctypes.windll.kernel32.GetShortPathNameW(path, buffer, len(buffer))
+    return buffer.value if 0 < size < len(buffer) else None

@@ -532,9 +532,9 @@ vocabolario non riconosce **nessuno** dei nomi -- cioe' chi riprende con un prog
 quattro ed elabora con un altro che l'app non conosce. Li' i due gemelli si somigliano davvero,
 e l'app li conta tutti e due.
 
-**ASTAP**: `astap_cli -f <file> -o <cache>/<frame_hash> -fov <campo> -z 0`, con
-`-ra/-spd` e raggio 30 gradi se c'e' un indizio di puntamento, altrimenti cieco; mai
-`-update`, mai `-extract`.
+**ASTAP**: `astap_cli -f <file> -o <cache>/<frame_hash> -fov <campo> -z 0`, `-ra/-spd` e raggio
+30 gradi con un indizio, altrimenti cieco; mai `-update` ne' `-extract`. Nome fuori dalla code page
+ANSI: 8.3 o copia; cartella di lavoro illeggibile: `path_unsupported`, ferma; `.fz` < 2026.07.16: `fz_unsupported`.
 
 **Il campo si calcola, ed e' la leva della velocita'.** `-fov` e' l'altezza del campo
 in gradi, e si ricava da `naxis2`, `pixel_size_um` e `focal_mm_raw` -- tutti gia' nell'header.
@@ -571,8 +571,8 @@ due specie, e confonderle e' un vicolo cieco:
   resta **da fare**, non fallito. Segnarlo fallito vorrebbe dire che chi installa ASTAP il
   giorno dopo, o riattacca il disco, o scarica il catalogo, non risolverebbe mai piu' niente:
   nessuno lo rimetterebbe in coda, e il pulsante direbbe "niente da fare";
-- **e' andata cosi'**: `no_stars`, `no_solution`, `timeout`, `internal_error`. Il frame e'
-  `failed` col suo motivo, e si riprova solo se qualcuno lo chiede.
+- **e' andata cosi'**: `no_stars`, `no_solution`, `timeout`, `internal_error`, `unreadable` (ASTAP
+  non apre il file). `failed`, si riprova se qualcuno lo chiede. Pipeline nuova: `unreadable` si riprova.
 
 **E il catalogo mancante ferma la corsa**, invece di ripetersi frame per frame. Il catalogo di
 ASTAP e' un **download separato**, ed e' l'errore di installazione piu' comune: senza, *ogni*

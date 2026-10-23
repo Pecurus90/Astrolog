@@ -4,6 +4,7 @@ che risponde coi suoi .ini veri (`tests/astap/`): la suite non lancia mai il sol
 import math
 import os
 import shutil
+import stat
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
@@ -29,15 +30,27 @@ _SKY = ("FOCALLEN=                560.0", "XPIXSZ  =                 3.76",
 
 class FakeAstap:
     """Answers each launch with a real .ini (or .ini text), written where `-o` says; keeps the
-    commands. `then`: runs after, as a second worker would."""
+    commands. `then`: runs after, as a second worker would. `-h`: help with `version`."""
 
-    def __init__(self, *answers: str | None, then: Callable[[], None] | None = None) -> None:
+    def __init__(
+        self,
+        *answers: str | None,
+        then: Callable[[], None] | None = None,
+        version: str | None = "CLI-2025.11.19",
+    ) -> None:
         self.answers = list(answers)
         self.commands: list[list[str]] = []
         self.then = then
+        self.version = version
+        self.asked = 0  # -h launches
+        self.there: list[bool] = []  # input file present at launch
 
     def __call__(self, cmd: Sequence[str], timeout_s: float) -> tuple[int, str]:
+        if "-h" in cmd:
+            self.asked += 1
+            return 0, f"ASTAP astrometric solver version {self.version}\n" if self.version else ""
         self.commands.append(list(cmd))
+        self.there.append(Path(cmd[cmd.index("-f") + 1]).is_file())
         answer = self.answers[min(len(self.commands), len(self.answers)) - 1]
         if answer is not None:
             ini = Path(f"{cmd[cmd.index('-o') + 1]}.ini")
@@ -67,6 +80,23 @@ def _scanned(conn, nas: Path) -> int:
 
 def _solutions(conn) -> list[dict]:
     return [dict(row) for row in conn.execute("SELECT * FROM pipeline_solutions ORDER BY frame_id")]
+
+
+def _nina_pixels(seed: int) -> tuple[np.ndarray, fits.Header]:
+    data = ((np.arange(48 * 64) + seed) % 4093).astype(np.uint16).reshape(48, 64)
+    header = fits.Header()
+    for key, value in {"SWCREATE": "N.I.N.A. 3.2.0.9001 (x64)", "IMAGETYP": "LIGHT",
+                       "INSTRUME": "ATR2600M", "DATE-OBS": f"2025-06-29T21:{seed:02d}:33.412",
+                       "EXPTIME": 300.0, "FOCALLEN": 560.0, "XPIXSZ": 3.76}.items():  # fmt: skip
+        header[key] = value
+    return data, header
+
+
+def _nina_fz(path: Path, seed: int) -> None:
+    """N.I.N.A. light compressed by fpack (Rice)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    data, header = _nina_pixels(seed)
+    fits.HDUList([fits.PrimaryHDU(), fits.CompImageHDU(data, header)]).writeto(path)
 
 
 def test_a_light_gets_the_sky_astap_found(conn, tmp_path):
@@ -169,14 +199,8 @@ def test_one_launch_per_shot_and_the_plain_copy_is_the_one(conn, tmp_path):
     """Un .fits e la sua copia fpack sono la stessa posa: un lancio, sul non compresso (ASTAP
     2025 non legge i .fz)."""
     nas = tmp_path / "nas"
-    nas.mkdir()
-    data = (np.arange(48 * 64) % 4093).astype(np.uint16).reshape(48, 64)
-    header = fits.Header()
-    for key, value in {"SWCREATE": "N.I.N.A. 3.2.0.9001 (x64)", "IMAGETYP": "LIGHT",
-                       "INSTRUME": "ATR2600M", "DATE-OBS": "2025-06-29T21:11:33.412",
-                       "EXPTIME": 300.0, "FOCALLEN": 560.0, "XPIXSZ": 3.76}.items():  # fmt: skip
-        header[key] = value
-    fits.HDUList([fits.PrimaryHDU(), fits.CompImageHDU(data, header)]).writeto(nas / "a.fits.fz")
+    _nina_fz(nas / "a.fits.fz", 0)
+    data, header = _nina_pixels(0)
     fits.PrimaryHDU(data=data, header=header).writeto(nas / "b.fits")
     root = _scanned(conn, nas)
     run = FakeAstap("solved.ini")
@@ -369,3 +393,165 @@ def test_a_shot_solved_meanwhile_by_another_pass_is_no_crash(conn, tmp_path, db_
     _solve(conn, root, FakeAstap("solved.ini", then=other_pass), tmp_path)
     other.close()
     assert len(_solutions(conn)) == 1
+
+
+def test_a_file_astap_cannot_read_is_tried_again(conn, tmp_path):
+    """ASTAP dice "Error reading image file" (file sparito, compresso, nome che non legge): non e'
+    un cielo che non si risolve. Nessuna riga, si riprova alla passata dopo."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    result = _solve(conn, root, FakeAstap("unreadable.ini"), tmp_path)
+    assert _solutions(conn) == [] and result.untried == {"unreadable": 1}
+
+
+def test_a_compressed_only_shot_waits_for_an_astap_that_reads_it(conn, tmp_path):
+    """ASTAP legge i .fz dalla 2026.07.16 (hnsky.org): prima non si lancia, si dice perche'.
+    Versione chiesta una volta per passata."""
+    nas = tmp_path / "nas"
+    _nina_fz(nas / "a.fits.fz", 1)
+    _nina_fz(nas / "b.fits.fz", 2)
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini", version="CLI-2025.11.19")
+    result = _solve(conn, root, run, tmp_path)
+    assert run.commands == [] and run.asked == 1 and _solutions(conn) == []
+    assert result.untried == {"fz_unsupported": 2}
+
+
+@pytest.mark.parametrize("version", ["CLI-2026.07.16", "CLI-2027.1.2"])
+def test_an_astap_that_reads_fpack_gets_the_compressed_file(conn, tmp_path, version):
+    nas = tmp_path / "nas"
+    _nina_fz(nas / "a.fits.fz", 1)
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini", version=version)
+    _solve(conn, root, run, tmp_path)
+    assert [Path(_option(cmd, "-f")).name for cmd in run.commands] == ["a.fits.fz"]
+
+
+def test_an_astap_that_does_not_say_its_version_gets_the_try(conn, tmp_path):
+    """Versione non letta: si prova, e se non legge il file si riprova dopo."""
+    nas = tmp_path / "nas"
+    _nina_fz(nas / "a.fits.fz", 1)
+    root = _scanned(conn, nas)
+    run = FakeAstap("unreadable.ini", version=None)
+    result = _solve(conn, root, run, tmp_path)
+    assert len(run.commands) == 1 and result.untried == {"unreadable": 1}
+
+
+_CJK = "星雲"  # 2 CJK letters: outside every Western ANSI code page
+windows = pytest.mark.skipif(os.name != "nt", reason="ANSI code page: Windows only")
+
+
+def _in_code_page(text: str) -> bool:
+    try:
+        text.encode("mbcs")
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
+def _short_or_skip(path: Path) -> str:
+    short = astap._short_name(str(path))
+    if not short or not _in_code_page(short):
+        pytest.skip("volume without 8.3 names")
+    return short
+
+
+def _no_short_names(monkeypatch) -> None:
+    """Such a volume: GetShortPathNameW succeeds, gives the long name back (Microsoft Learn)."""
+    monkeypatch.setattr(astap, "_short_name", lambda path: path)
+
+
+@windows
+def test_a_name_outside_the_code_page_goes_by_its_short_name(conn, tmp_path):
+    """Misurato: ASTAP riceve la riga di comando nella code page ANSI, i CJK diventano "?". Col
+    nome 8.3 lo legge: il file dell'utente, nessuna copia."""
+    nas = tmp_path / "nas" / _CJK
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, tmp_path / "nas")
+    short = _short_or_skip(nas / "a.fits")
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert _option(run.commands[0], "-f") == short and run.there == [True]
+    assert [row["outcome"] for row in _solutions(conn)] == ["solved"]
+
+
+@windows
+@pytest.mark.parametrize("name", ["a.fits", "a.fits.fz"])
+def test_without_short_names_astap_gets_a_copy_and_the_original_stays_read_only(
+    conn, tmp_path, monkeypatch, name
+):
+    """Volume senza 8.3: copia nella cartella del lancio (come N.I.N.A.), estensione che ASTAP
+    riconosce. Mai link: condivide la sola lettura, la pulizia la toglieva all'originale."""
+    _no_short_names(monkeypatch)
+    nas = tmp_path / "nas" / _CJK
+    if name.endswith(".fz"):
+        _nina_fz(nas / name, 1)
+    else:
+        nina_light(nas / name, 1, _SKY)
+    root = _scanned(conn, tmp_path / "nas")
+    (nas / name).chmod(stat.S_IREAD)
+    run = FakeAstap("solved.ini", version="CLI-2026.07.16")
+    _solve(conn, root, run, tmp_path)
+    given = Path(_option(run.commands[0], "-f"))
+    assert (tmp_path / "work") in given.parents and run.there == [True]
+    assert given.name == ("frame.fits.fz" if name.endswith(".fz") else "frame.fits")
+    assert not os.access(nas / name, os.W_OK)
+    assert [p.name for p in nas.iterdir()] == [name]
+    assert not any((tmp_path / "work").iterdir())
+    (nas / name).chmod(stat.S_IREAD | stat.S_IWRITE)
+
+
+@windows
+def test_a_compressed_file_never_goes_by_its_short_name(conn, tmp_path, monkeypatch):
+    """L'8.3 di un .fz finisce in .FZ, ASTAP vuole .fits.fz (hnsky.org): copia."""
+    monkeypatch.setattr(astap, "_short_name", lambda path: "C:\\NAS\\AFITS~1.FZ")
+    _nina_fz(tmp_path / "nas" / _CJK / "a.fits.fz", 1)
+    root = _scanned(conn, tmp_path / "nas")
+    run = FakeAstap("solved.ini", version="CLI-2026.07.16")
+    _solve(conn, root, run, tmp_path)
+    assert Path(_option(run.commands[0], "-f")).name == "frame.fits.fz"
+
+
+@windows
+def test_a_copy_that_fails_is_tried_again(conn, tmp_path, monkeypatch):
+    """Disco pieno: niente lancio, nessuna riga, si riprova."""
+    _no_short_names(monkeypatch)
+
+    def full(*args: object, **kwargs: object) -> None:
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr(shutil, "copyfile", full)
+    nina_light(tmp_path / "nas" / _CJK / "a.fits", 1, _SKY)
+    root = _scanned(conn, tmp_path / "nas")
+    run = FakeAstap("solved.ini")
+    result = _solve(conn, root, run, tmp_path)
+    assert run.commands == [] and result.untried == {"unreadable": 1}
+
+
+@windows
+def test_a_work_folder_outside_the_code_page_goes_by_its_short_name(conn, tmp_path):
+    """Misurato: -o in una cartella CJK, nessun .ini. Anche il risultato passa dall'8.3."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    work = tmp_path / _CJK / "work"
+    work.mkdir(parents=True)
+    _short_or_skip(work)
+    run = FakeAstap("solved.ini")
+    solve_root(conn, root, LATER, astap.Solver("astap_cli", run), work)
+    assert _in_code_page(_option(run.commands[0], "-o"))
+    assert [row["outcome"] for row in _solutions(conn)] == ["solved"]
+
+
+@windows
+def test_a_work_folder_astap_cannot_name_stops_the_pass(conn, tmp_path, monkeypatch):
+    """Cartella di lavoro senza nome ANSI ne' 8.3: ogni lancio fallirebbe, ci si ferma."""
+    _no_short_names(monkeypatch)
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini")
+    solver = astap.Solver("astap_cli", run)
+    result = solve_root(conn, root, LATER, solver, tmp_path / _CJK / "work")
+    assert run.commands == [] and result.stopped is astap.Reason.PATH_UNSUPPORTED

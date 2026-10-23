@@ -166,12 +166,41 @@ def test_without_astap_there_is_no_crash_only_a_reason(tmp_path):
     assert esito.ok is False and esito.reason == "astap_missing"
 
 
-def test_a_file_that_is_not_there_is_a_reason(tmp_path):
-    """Il disco esterno staccato non e' un errore di sistema: e' una posa che non si e'
-    potuta leggere adesso."""
-    run = fake_run(codice=1, scrive={tmp_path / "e.ini": "PLTSOLVD=F\nERROR=File not found.\n"})
+def test_a_file_astap_cannot_read_is_a_reason(tmp_path):
+    """Il disco staccato, un .fz per ASTAP 2025, un nome CJK: ASTAP scrive la stessa frase
+    (misurato). E' un file non letto adesso, non un cielo che non si risolve."""
+    ini = "PLTSOLVD=F\nERROR=Error reading image file.\n"
+    run = fake_run(codice=1, scrive={tmp_path / "e.ini": ini})
     esito = astap.solve(tmp_path / "manca.fits", tmp_path / "e", astap.Solver("astap", run))
-    assert esito.ok is False and esito.reason == "file_missing"
+    assert esito.ok is False and esito.reason == "unreadable"
+
+
+@pytest.mark.parametrize(
+    "uscita, attesa",
+    [
+        ("ASTAP astrometric solver version CLI-2025.11.19\n(C) 2018", (2025, 11, 19)),
+        ("ASTAP astrometric solver version CLI-2026.7.16\n", (2026, 7, 16)),
+        ("Usage:\n-f filename\n", None),
+        ("", None),
+    ],
+)
+def test_the_version_is_read_from_the_help(uscita, attesa):
+    """La data della versione, dall'aiuto di `-h` (testo di CLI-2025.11.19); illeggibile, None."""
+    run = fake_run(stdout=uscita)
+    assert astap.version(astap.Solver("astap", run)) == attesa
+    assert run.calls == [["astap", "-h"]]
+
+
+def test_a_version_that_never_comes_is_none():
+    assert astap.version(astap.Solver("astap", fake_run(esplode=TimeoutError()))) is None
+    assert astap.version(astap.Solver("astap", fake_run(esplode=OSError()))) is None
+    assert astap.version(astap.Solver(None, fake_run())) is None
+
+
+def test_a_name_in_the_code_page_is_given_as_it_is(tmp_path):
+    """Accenti si' (misurato): il nome passa uguale, nessun giro."""
+    nome = str(tmp_path / "Città e Nebulosa" / "a.fits")
+    assert astap.code_page_path(nome) == nome
 
 
 # --- HFD e stelle -------------------------------------------------------------------------
