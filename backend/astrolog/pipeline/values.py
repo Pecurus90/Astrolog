@@ -49,13 +49,17 @@ def _without_float32_tail(number: float) -> float:
 
 
 def as_name(written: Value | None) -> str | None:
-    """Stripped, non-empty, no control character (Unicode Cc: NUL, tab): else broken value."""
+    """Stripped, no control character (Unicode Cc: NUL, tab), one visible at least (not format
+    Cf, not separator Z*: zero-width space, BOM): else broken value."""
     if not isinstance(written, str):
         return None
     name = written.strip()
     if any(unicodedata.category(ch) == "Cc" for ch in name):
         return None
-    return name or None
+    seen = any(
+        unicodedata.category(ch)[0] != "Z" and unicodedata.category(ch) != "Cf" for ch in name
+    )
+    return name if seen else None
 
 
 def as_positive(written: Value | None) -> float | None:

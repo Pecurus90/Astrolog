@@ -609,6 +609,15 @@ def test_a_name_with_a_control_character_is_unknown(key):
     assert "Ha\xa07nm" in (no_break.filter, no_break.object_name, no_break.camera, no_break.optics)
 
 
+@pytest.mark.parametrize("key", ["FILTER", "OBJECT", "INSTRUME", "TELESCOP"])
+@pytest.mark.parametrize("unseen", ["\u200b", "\ufeff", "\u200e\u00ad", "\xa0\u200b"])
+def test_a_name_with_nothing_to_see_is_unknown(key, unseen):
+    """Solo caratteri invisibili (spazio a larghezza zero, BOM, trattino morbido): non so.
+    Prima: un nome "vuoto a schermo"."""
+    card = read_card(Program.NINA, {key: unseen})
+    assert (card.filter, card.object_name, card.camera, card.optics) == (None,) * 4
+
+
 @pytest.mark.parametrize(
     ("key", "field"),
     [("CCD-TEMP", "ccd_temp_c"), ("SET-TEMP", "set_temp_c"), ("FOCTEMP", "focuser_temp_c")],
