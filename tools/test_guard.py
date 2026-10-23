@@ -160,6 +160,55 @@ def test_closing_a_process_by_its_pid_passes(call):
     assert guard.reason(call, ROOT) is None
 
 
+@pytest.mark.parametrize(
+    "call",
+    [
+        bash("cat >> backend/tests/x.py <<'EOF'\n\ndef f():\n    pass\nEOF"),
+        bash("cat > docs/x.md <<EOF\ntesto\nEOF"),
+        bash("tee notes.txt <<'EOF'\nriga\nEOF"),
+        bash(
+            "backend/.venv/Scripts/python.exe - <<'EOF'\nfrom pathlib import Path\n"
+            "p = Path('tests/x.py')\np.write_text(p.read_text().replace('a', 'b'))\nEOF"
+        ),
+        bash("python - <<'EOF'\nopen('x.txt', 'w').write('a')\nEOF"),
+        bash("python - <<'EOF'\nfrom pathlib import Path\nopen(Path('x.py'), 'w')\nEOF"),
+        bash("cat <<EOF &>x.py\nx = 1\nEOF"),
+        powershell("python - <<'EOF'\nimport pathlib; pathlib.Path('x').write_bytes(b'')\nEOF"),
+    ],
+)
+def test_a_heredoc_that_writes_a_file_is_refused(call):
+    """Testo nei file solo con Edit/Write (CLAUDE.md): in uno script le barre rovesciate e i
+    backtick cambiano. Sbagliato due volte in una sessione: ora lo ferma la guardia."""
+    assert guard.reason(call, ROOT) == guard.HEREDOC_WHY
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        bash("git commit -m \"$(cat <<'EOF'\nfix: x\nEOF\n)\""),
+        bash("git commit -m \"$(cat <<'EOF'\nfix: refuse .write_text( and open(p, 'w')\nEOF\n)\""),
+        bash("python - <<'EOF'\nprint(open('a').read())\nEOF"),
+        bash("python - <<'EOF'\nimport sqlite3\nprint(sqlite3.connect('a.db').execute('x'))\nEOF"),
+        bash("python - <<'EOF'\nprint(1)\nEOF\n2>&1 | tail -3"),
+        bash("pytest -q 2>&1 > /dev/null"),
+    ],
+)
+def test_a_heredoc_that_only_reads_passes(call):
+    assert guard.reason(call, ROOT) is None
+
+
+def test_a_heredoc_write_is_denied_not_asked():
+    payload = json.dumps(bash("cat >> x.py <<'EOF'\nx = 1\nEOF"))
+    out = subprocess.run(
+        [sys.executable, os.path.join(ROOT, ".claude", "hooks", "guard.py")],
+        input=payload,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert json.loads(out.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
 def test_closing_by_name_is_denied_not_asked():
     payload = json.dumps(bash("taskkill /F /IM chrome.exe"))
     out = subprocess.run(

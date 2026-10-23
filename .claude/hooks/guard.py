@@ -41,6 +41,19 @@ KILL_BY_NAME = (
 )
 KILL_BY_NAME_WHY = "never close a program by name: stop what you started by its PID"
 
+# Text into files only by Edit/Write (CLAUDE.md): in a script backslashes and backticks change.
+HEREDOC = re.compile(r"<<-?\s*['\"]?[A-Za-z_]\w*")
+HEREDOC_WRITES = (
+    re.compile(r"(?<![<>&\d])&?>{1,2}(?!&)\s*(?!/dev/null)[^\s|&;<>()]"),  # redirect, 1st line
+    re.compile(r"\btee\b"),
+)
+# Script body checked only when heredoc feeds an interpreter: a commit message may name these.
+TO_INTERPRETER = re.compile(r"\b(python3?|py)(\.exe)?\s+(-\w+\s+)*-\s*<<")
+SCRIPT_WRITES = re.compile(
+    r"\.write_(text|bytes)\(|\bopen\(.*?,\s*(mode\s*=\s*)?['\"][wax]b?\+?['\"]"
+)
+HEREDOC_WHY = "text goes into files only by Edit/Write, never a heredoc or a script"
+
 NPM_CHANGES = {"uninstall", "un", "remove", "rm", "r", "update", "up", "upgrade"}
 NPM_INSTALLS = {"install", "i", "add"}
 NPM_VALUE_OPTIONS = {"--prefix", "-C", "--cache", "--registry", "--workspace", "-w"}
@@ -70,6 +83,15 @@ def _npm_names_a_package(command: str) -> bool:
     return False
 
 
+def _heredoc_writes(raw: str) -> bool:
+    if not HEREDOC.search(raw):
+        return False
+    first = raw.split("\n", 1)[0]
+    if any(rule.search(_quoted_out(first)) for rule in HEREDOC_WRITES):
+        return True
+    return bool(TO_INTERPRETER.search(first) and SCRIPT_WRITES.search(raw))
+
+
 def _relative(path: str, root: str) -> str:
     try:
         rel = os.path.relpath(os.path.abspath(path), os.path.abspath(root))
@@ -91,6 +113,8 @@ def reason(payload: dict, root: str) -> str | None:
         rel = _relative(data.get("file_path") or data.get("notebook_path") or "", root)
         return next((why for rule, why in PROTECTED if rule.search(rel)), None)
     if tool in ("Bash", "PowerShell"):
+        if _heredoc_writes(data.get("command") or ""):
+            return HEREDOC_WHY
         command = _quoted_out(data.get("command") or "")
         if any(rule.search(command) for rule in KILL_BY_NAME):
             return KILL_BY_NAME_WHY
@@ -106,7 +130,7 @@ def main() -> int:
     why = reason(payload, root)
     if why is not None:
         # a hand edit of these files is never right; a command that changes them is Marco's click
-        asks = payload.get("tool_name") == "Bash" and why != KILL_BY_NAME_WHY
+        asks = payload.get("tool_name") == "Bash" and why not in (KILL_BY_NAME_WHY, HEREDOC_WHY)
         verdict = "ask" if asks else "deny"
         decision = {"hookEventName": "PreToolUse", "permissionDecision": verdict}
         decision["permissionDecisionReason"] = why
