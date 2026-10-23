@@ -34,6 +34,8 @@ il guadagno solo con una keyword (guida WBPP di B. Landmann, tabella 1).
   `*Sigma` del SubframeSelector dividono per la deviazione media dalla mediana, non scalata
   (PCL, `SubframeSelectorMeasureData.h`). Una soglia assoluta pubblica non esiste per nessuna
   misura.
+- **Dalla mediana o a valore**: ogni riga lo sceglie l'utente (Marco); le partenze sono dalla
+  mediana dove una soglia a valore non ha fonte.
 - **Partenze, uguali per ogni setup** (un numero dei setup di Marco a un altro utente non serve):
 
   | misura | partenza |
