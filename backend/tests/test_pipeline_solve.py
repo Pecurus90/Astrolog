@@ -1,6 +1,7 @@
 """Mattone solve: una soluzione di ASTAP per posa, dal file e dalla scheda della posa. ASTAP finto
 che risponde coi suoi .ini veri (`tests/astap/`): la suite non lancia mai il solver."""
 
+import json
 import math
 import os
 import shutil
@@ -106,6 +107,11 @@ def _nina_fz(path: Path, seed: int) -> None:
     fits.HDUList([fits.PrimaryHDU(), fits.CompImageHDU(data, header)]).writeto(path)
 
 
+# CD1_1, CD1_2, CD2_1, CD2_2 of tests/astap/solved.ini
+_CD = (-2.6277393210341225e-004, 2.7944155214576776e-004,
+       -2.7944266362463124e-004, -2.6285912858408056e-004)  # fmt: skip
+
+
 def test_a_light_gets_the_sky_astap_found(conn, tmp_path):
     """Il .ini vero di un light: centro, scala e rotazione salvati per la posa."""
     nas = tmp_path / "nas"
@@ -116,8 +122,8 @@ def test_a_light_gets_the_sky_astap_found(conn, tmp_path):
     assert row["outcome"] == "solved" and result.solved == 1
     assert row["ra_deg"] == pytest.approx(241.25198643662179)
     assert row["dec_deg"] == pytest.approx(17.726894038989336)
-    cd11, cd21 = -2.6277393210341225e-004, -2.7944266362463124e-004
-    assert row["scale_arcsec_px"] == pytest.approx(math.hypot(cd11, cd21) * 3600)
+    det = _CD[0] * _CD[3] - _CD[1] * _CD[2]
+    assert row["scale_arcsec_px"] == pytest.approx(math.sqrt(abs(det)) * 3600)
     assert row["rotation_deg"] is not None
 
 
@@ -869,3 +875,53 @@ def test_a_crash_mid_ladder_is_said_at_its_step(conn, tmp_path):
     run = FakeAstap("no_solution.ini", None, "solved.ini")
     _solve(conn, root, run, tmp_path)
     assert len(run.commands) == 2 and _step(conn) == [("crashed", "full_res")]
+
+
+def _solved_row(conn, tmp_path, extra: tuple[str, ...] = ()) -> dict:
+    nina_light(tmp_path / "nas" / "a.fits", 1, (*_SKY, *extra))
+    root = _scanned(conn, tmp_path / "nas")
+    _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
+    [row] = _solutions(conn)
+    return row
+
+
+def test_the_footprint_is_written_with_the_solution(conn, tmp_path):
+    """Calcola chi scrive: specchio, skew, campo dalla scheda (20x10), angoli; formule in
+    test_pipeline_footprint."""
+    nina_light(tmp_path / "nas" / "a.fits", 1, _SKY)
+    root = _scanned(conn, tmp_path / "nas")
+    conn.execute("UPDATE pipeline_cards SET width = 20, height = 10")
+    _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
+    [row] = _solutions(conn)
+    assert (row["mirrored"], row["skew_deg"] > 0) == (0, True)
+    assert row["width_deg"] == pytest.approx(20 * row["scale_arcsec_px"] / 3600)
+    assert row["height_deg"] == pytest.approx(10 * row["scale_arcsec_px"] / 3600)
+    assert len(json.loads(row["corners"])) == 4
+
+
+def test_a_shot_solved_on_its_retry_gets_its_footprint(conn, tmp_path):
+    nina_light(tmp_path / "nas" / "a.fits", 1, _SKY)
+    root = _scanned(conn, tmp_path / "nas")
+    _solve(conn, root, FakeAstap("timeout"), tmp_path)
+    _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
+    [row] = _solutions(conn)
+    assert row["outcome"] == "solved" and len(json.loads(row["corners"])) == 4
+
+
+@pytest.mark.parametrize(
+    ("written", "mirrored"), [("BOTTOM-UP", 1), ("BOT", 1), ("bottom-up", 0), ("TOP-DOWN", 0)]
+)
+def test_rows_from_the_bottom_reverse_the_mirror(conn, tmp_path, written, mirrored):
+    """ROWORDER letto come ASTAP lo legge per il Bayer: 'BOT' contenuto, maiuscole contano."""
+    assert _solved_row(conn, tmp_path, (f"ROWORDER= '{written}'",))["mirrored"] == mirrored
+
+
+def test_without_the_frame_size_there_is_no_field_nor_corners(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    conn.execute("UPDATE pipeline_cards SET width = NULL, height = NULL")
+    _solve(conn, root, FakeAstap("solved.ini"), tmp_path)
+    [row] = _solutions(conn)
+    assert (row["width_deg"], row["height_deg"], row["corners"]) == (None, None, None)
+    assert row["mirrored"] == 0

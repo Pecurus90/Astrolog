@@ -1,6 +1,7 @@
 """Shots of a root solved by ASTAP: one solution per shot, from one present file and its card.
 Calibrations never launched: no stars, the run only fails."""
 
+import json
 import shutil
 import sqlite3
 import tempfile
@@ -12,6 +13,7 @@ from pathlib import Path
 
 from .. import astap, units
 from ..db.transaction import transaction
+from .footprint import footprint
 from .walk import long_path
 
 # The whole pass would fail the same way: stop at the first.
@@ -30,9 +32,11 @@ WAITING = ("timeout", "crashed", "unreadable")
 PASSES = 2
 
 PENDING = (  # plain file before its fpack copy: ASTAP before 2026.07.16 reads no .fz
-    "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.frame_type, c.height, c.pixel_um,"
-    " c.focal_mm, c.pointing_ra_deg, c.pointing_dec_deg"
+    "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.frame_type, c.width, c.height,"
+    " c.pixel_um, c.focal_mm, c.pointing_ra_deg, c.pointing_dec_deg,"
+    " h.header ->> '$.ROWORDER' AS row_order"
     " FROM pipeline_files AS f JOIN pipeline_cards AS c ON c.file_id = f.id"
+    " JOIN pipeline_headers AS h ON h.file_id = f.id"
     " WHERE f.root_id = :root AND f.state = 'present' AND f.skip_reason IS NULL"
     # typeless too: a light written wrong finds its sky, a calibration fails fast
     " AND c.frame_type IN ('light', 'unknown')"
@@ -47,14 +51,17 @@ PENDING = (  # plain file before its fpack copy: ASTAP before 2026.07.16 reads n
 
 UPSERT = (
     "INSERT INTO pipeline_solutions (frame_id, outcome, step, file_id, astap_version, catalogue,"
-    " installed, duration_s, ra_deg, dec_deg, scale_arcsec_px, rotation_deg, tried_at)"
-    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    " ON CONFLICT (frame_id) DO UPDATE SET outcome = excluded.outcome, step = excluded.step,"
-    " file_id = excluded.file_id, attempts = attempts + 1, astap_version = excluded.astap_version,"
+    " installed, duration_s, ra_deg, dec_deg, scale_arcsec_px, rotation_deg, mirrored, skew_deg,"
+    " width_deg, height_deg, corners, tried_at) VALUES (:frame_id, :outcome, :step, :file_id,"
+    " :astap_version, :catalogue, :installed, :duration_s, :ra_deg, :dec_deg, :scale_arcsec_px,"
+    " :rotation_deg, :mirrored, :skew_deg, :width_deg, :height_deg, :corners, :tried_at)"
+    " ON CONFLICT (frame_id) DO UPDATE SET attempts = attempts + 1, outcome = excluded.outcome,"
+    " step = excluded.step, file_id = excluded.file_id, astap_version = excluded.astap_version,"
     " catalogue = excluded.catalogue, installed = excluded.installed,"
     " duration_s = excluded.duration_s, ra_deg = excluded.ra_deg, dec_deg = excluded.dec_deg,"
     " scale_arcsec_px = excluded.scale_arcsec_px, rotation_deg = excluded.rotation_deg,"
-    " tried_at = excluded.tried_at"
+    " mirrored = excluded.mirrored, skew_deg = excluded.skew_deg, width_deg = excluded.width_deg,"
+    " height_deg = excluded.height_deg, corners = excluded.corners, tried_at = excluded.tried_at"
     # settled by another pass meanwhile: stays
     " WHERE pipeline_solutions.outcome NOT IN ('solved', 'no_solution', 'no_stars')"
 )
@@ -237,12 +244,35 @@ def _write(conn: sqlite3.Connection, row: sqlite3.Row, tried: _Tried, this: _Pas
     """Outcome written; None: another pass settled it meanwhile."""
     found = tried.found
     outcome = "solved" if found.ok else OUTCOMES[found.reason]  # type: ignore[index]
+    values = {
+        "frame_id": row["frame_id"], "outcome": outcome, "step": tried.step,
+        "file_id": row["file_id"], "astap_version": this.version, "catalogue": found.catalogue,
+        "installed": this.installed, "duration_s": tried.duration_s, "ra_deg": found.ra_deg,
+        "dec_deg": found.dec_deg, "scale_arcsec_px": found.scale_arcsec_px,
+        "rotation_deg": found.rotation_deg, "tried_at": this.now,
+    } | _measured(found, row)  # fmt: skip
     with transaction(conn, immediate=True):
-        written = conn.execute(
-            UPSERT,
-            (row["frame_id"], outcome, tried.step, row["file_id"], this.version, found.catalogue,
-             this.installed,
-             tried.duration_s, found.ra_deg, found.dec_deg, found.scale_arcsec_px,
-             found.rotation_deg, this.now),
-        ).rowcount  # fmt: skip
+        written = conn.execute(UPSERT, values).rowcount
     return outcome if written else None
+
+
+def _measured(found: astap.Solution, row: sqlite3.Row) -> dict[str, object]:
+    """Footprint of a solution: the sky's rectangle, written once, never redone by a reader."""
+    if not (found.ok and found.cd and found.crpix):
+        return {key: None for key in ("mirrored", "skew_deg", "width_deg", "height_deg", "corners")}
+    sky = footprint(
+        found.cd,
+        found.crpix,
+        (found.ra_deg, found.dec_deg),  # type: ignore[arg-type]
+        (row["width"], row["height"]),
+        # read as ASTAP reads it (for Bayer): pos('BOT', roworder), case counts
+        bottom_up="BOT" in str(row["row_order"] or ""),
+    )
+    return {
+        "scale_arcsec_px": sky.scale_arcsec_px,
+        "mirrored": int(sky.mirrored),
+        "skew_deg": sky.skew_deg,
+        "width_deg": sky.width_deg,
+        "height_deg": sky.height_deg,
+        "corners": None if sky.corners is None else json.dumps(sky.corners),
+    }

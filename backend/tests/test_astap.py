@@ -136,6 +136,20 @@ def test_a_solution_comes_back_with_the_sky_it_found(tmp_path):
     assert esito.rotation_deg == pytest.approx(84.35, abs=0.05)
 
 
+def test_a_centre_a_hair_west_of_zero_hours_is_zero():
+    """-1e-17 % 360 da' 360.0 in virgola mobile: lo schema vuole [0, 360)."""
+    ini = INI_RISOLTO.replace("CRVAL1= 2.1080144893504479E+002", "CRVAL1=-1E-17")
+    esito = astap.from_ini(astap.read_ini_text(ini))
+    assert esito.ok and esito.ra_deg is not None and 0 <= esito.ra_deg < 360
+
+
+def test_a_degenerate_matrix_is_no_solution():
+    """Righe uguali (det 0): nessun cielo, non una scala zero che il database rifiuta."""
+    ini = INI_RISOLTO.replace("CD2_1= 1.4379401908293604E-004", "CD2_1= 1.4256340084600304E-005")
+    ini = ini.replace("CD2_2= 1.4226001018695530E-005", "CD2_2=-1.4392447113033648E-004")
+    assert astap.from_ini(astap.read_ini_text(ini)).reason == "no_solution"
+
+
 @pytest.mark.parametrize(
     "codice, ini, atteso",
     [

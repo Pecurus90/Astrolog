@@ -288,5 +288,5 @@ forbidden_modules = ["astrolog.pipeline"]
 # Mappa, passo 4: la scheda e' una funzione pura, si rifa' su tutti gli header senza database.
 name = "leggere un file e farne la scheda e' puro: niente database"
 type = "forbidden"
-source_modules = ["astrolog.pipeline.card", "astrolog.pipeline.sky", "astrolog.pipeline.values", "astrolog.pipeline.scanner", "astrolog.pipeline.fingerprint", "astrolog.pipeline.walk"]
+source_modules = ["astrolog.pipeline.card", "astrolog.pipeline.sky", "astrolog.pipeline.values", "astrolog.pipeline.scanner", "astrolog.pipeline.fingerprint", "astrolog.pipeline.walk", "astrolog.pipeline.footprint"]
 forbidden_modules = ["sqlite3", "astrolog.db"]

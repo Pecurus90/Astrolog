@@ -1059,10 +1059,17 @@ CREATE TABLE pipeline_solutions (
   dec_deg         REAL CHECK (dec_deg BETWEEN -90 AND 90),
   scale_arcsec_px REAL CHECK (scale_arcsec_px > 0),
   rotation_deg    REAL,
+  -- dal WCS (pipeline/footprint.py); specchiato: segno di det CD contro ROWORDER, misurato
+  mirrored        INTEGER CHECK (mirrored IN (0, 1)),
+  skew_deg        REAL CHECK (skew_deg >= 0),
+  width_deg       REAL CHECK (width_deg > 0),
+  height_deg      REAL CHECK (height_deg > 0),
+  corners         TEXT CHECK (json_valid(corners)),  -- [[ra, dec] x4] spigoli dei pixel
   tried_at        TEXT NOT NULL,  -- ora della passata, non del lancio
   CHECK ((outcome = 'solved') = (ra_deg IS NOT NULL)
     AND (ra_deg IS NULL) = (dec_deg IS NULL) AND (ra_deg IS NULL) = (scale_arcsec_px IS NULL)),
-  CHECK (outcome = 'solved' OR rotation_deg IS NULL)
+  CHECK (outcome = 'solved' OR coalesce(rotation_deg, mirrored, skew_deg, width_deg, height_deg,
+    corners) IS NULL)
 ) STRICT;
 
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave calcolata dal nome, mai salvata:

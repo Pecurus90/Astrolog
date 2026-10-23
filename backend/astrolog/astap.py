@@ -91,6 +91,8 @@ class Solution:
     scale_arcsec_px: float | None = None
     rotation_deg: float | None = None
     catalogue: str | None = None  # the one ASTAP says it used, lowercase code
+    cd: tuple[float, float, float, float] | None = None  # CD1_1, CD1_2, CD2_1, CD2_2 degrees
+    crpix: tuple[float, float] | None = None
 
 
 # Codes, not sentences: they are shown on screen, and a new word would arrive untranslated.
@@ -302,12 +304,19 @@ def from_ini(ini: dict[str, str]) -> Solution:
     # a sky that cannot be (|dec| > 90, no scale) is no solution; RA is an angle, wraps
     if ra is None or dec is None or scale is None or abs(dec) > _POLE_DEG or scale <= 0:
         return Solution(ok=False, reason=Reason.NO_SOLUTION)
+    cd = tuple(as_float(wcs.get(k)) for k in ("CD1_1", "CD1_2", "CD2_1", "CD2_2"))
+    crpix = (as_float(wcs.get("CRPIX1")), as_float(wcs.get("CRPIX2")))
+    if None not in cd and cd[0] * cd[3] - cd[1] * cd[2] == 0:  # type: ignore[operator]
+        return Solution(ok=False, reason=Reason.NO_SOLUTION)  # degenerate: no pixel area
+    ra %= 360.0
     return Solution(
         ok=True,
-        ra_deg=ra % 360.0,
+        ra_deg=0.0 if ra == 360.0 else ra,  # -1e-17 % 360 is 360.0
         dec_deg=dec,
         scale_arcsec_px=scale,
         rotation_deg=wcs_rotation_deg(wcs),
+        cd=cd if None not in cd else None,  # type: ignore[arg-type]
+        crpix=crpix if None not in crpix else None,  # type: ignore[arg-type]
     )
 
 

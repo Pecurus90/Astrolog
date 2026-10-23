@@ -52,11 +52,17 @@ def _solve_centre(values: dict[str, Value]) -> tuple[float, float] | None:
     east, north = math.radians(cd11 * dx + cd12 * dy), math.radians(cd21 * dx + cd22 * dy)
     if not (math.isfinite(east) and math.isfinite(north)):  # overflow: atan2 would fake a place
         return None
-    ra0, dec0 = math.radians(ra0), math.radians(dec0)
+    return _sky(*deproject((ra0, dec0), east, north))
+
+
+def deproject(centre: tuple[float, float], east: float, north: float) -> tuple[float, float]:
+    """Gnomonic (TAN) inverse, Calabretta & Greisen 2002 sec. 5.1.3: radians off centre to
+    RA, Dec degrees, RA in [0, 360)."""
+    ra0, dec0 = math.radians(centre[0]), math.radians(centre[1])
     across = math.cos(dec0) - north * math.sin(dec0)
-    ra = ra0 + math.atan2(east, across)
+    ra = math.degrees(ra0 + math.atan2(east, across)) % 360.0
     dec = math.atan2(math.sin(dec0) + north * math.cos(dec0), math.hypot(east, across))
-    return _sky(math.degrees(ra) % 360, math.degrees(dec))
+    return (0.0 if ra == 360.0 else ra), math.degrees(dec)  # -1e-17 % 360 is 360.0
 
 
 def _asiair_target(values: dict[str, Value], start: datetime | None) -> tuple[float, float] | None:
