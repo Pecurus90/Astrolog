@@ -195,7 +195,7 @@ def _string(field: str) -> str:
     match = re.match(r"\s*'((?:[^']|'')*)'", field)
     if match is None:
         return field.split("/", 1)[0].strip().strip("'").strip()
-    return match.group(1).replace("''", "'").rstrip()
+    return match.group(1).replace("''", "'").rstrip(" ")  # 0xA0 can end a UTF-8 letter
 
 
 def _value(field: str) -> Value:

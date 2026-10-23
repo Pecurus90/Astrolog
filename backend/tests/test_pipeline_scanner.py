@@ -267,6 +267,16 @@ def test_accented_letters_written_in_utf8_are_read_as_written(tmp_path):
     assert got.values["OBJECT"] == "Nébuleuse"
 
 
+@pytest.mark.parametrize("name", ["Città", "ПР", "Orion 🌠"])
+def test_a_name_whose_last_utf8_byte_looks_like_a_space_is_read_whole(tmp_path, name):
+    """Ultimo byte UTF-8 0xA0 (a', P cirillica, emoji): latin-1 lo vede come spazio. Prima
+    tagliato: 'CittÃ', o nome perso."""
+    lines = [*_corpus("asiair.txt"), f"OBJECT  = '{name.encode().decode('latin-1')}'"]
+    got = scan_file(_fits(tmp_path / "a.fit", lines))
+    assert isinstance(got, Extracted)
+    assert got.values["OBJECT"] == name
+
+
 _BARE = ["SIMPLE  =                    T", "BITPIX  =                   16"]
 _NINA_WRITER = "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'"
 _BAD_AXES = [
