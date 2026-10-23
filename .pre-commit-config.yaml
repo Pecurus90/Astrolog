@@ -179,7 +179,11 @@ repos:
         stages: [pre-push, manual]
       - id: jscpd
         name: duplicated code
-        entry: npx --yes jscpd@4 --min-tokens 60 --threshold 0.001 --reporters console backend/astrolog frontend/src
+        # backend/tests: only test_pipeline_*.py (jscpd takes no glob as path; ignore keeps the rest out)
+        entry: >-
+          npx --yes jscpd@4 --min-tokens 60 --threshold 0.001 --reporters console
+          --ignore "**/backend/tests/[!t]*,**/backend/tests/*/**,**/backend/tests/test_[!p]*,**/backend/tests/test_p[!i]*"
+          backend/astrolog frontend/src backend/tests
         language: system
         pass_filenames: false
         always_run: true

@@ -30,7 +30,7 @@ class Changes:
     reread: list[str] = field(default_factory=list)  # same on disk, last read failed
     unchanged: list[str] = field(default_factory=list)
     gone: list[str] = field(default_factory=list)
-    unreachable: list[str] = field(default_factory=list)  # subfolders not answering
+    unreachable: list[str] = field(default_factory=list)  # subfolders not answering, dangling links
     unlooked: list[str] = field(default_factory=list)  # no stat, name not text, gone before read
     hidden: list[str] = field(default_factory=list)  # trash, service, hidden files: out, said
     online_only: list[str] = field(default_factory=list)  # cloud placeholders: never downloaded

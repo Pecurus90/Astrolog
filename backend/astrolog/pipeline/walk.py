@@ -38,7 +38,8 @@ _NOT_ON_DISK = {
     "darwin": ("st_flags", SF_DATALESS),
 }
 
-# Windows limit: 260 chars. Past margin: `\\?\` form; shorter stays plain, readable in logs.
+# Windows MAX_PATH: 260 chars; 20 below it leaves room for file names under folder. Past margin:
+# `\\?\` form; shorter stays plain, readable in logs.
 LONG_PATH_THRESHOLD = 240
 
 

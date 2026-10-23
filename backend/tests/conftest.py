@@ -22,6 +22,7 @@ from astrolog import astap, place
 from astrolog.api.app import create_app
 from astrolog.catalog import bundle, load
 from astrolog.db.connect import connect, create_database
+from astrolog.pipeline.scanner import Extracted, Skipped, scan_file
 from astrolog.spine import solve_store, stages, typeless_folders
 from astrolog.spine.identify import identify_frames
 from astrolog.spine.normalize import normalize_frames
@@ -610,6 +611,25 @@ THEN = "2026-10-24T20:00:00+00:00"
 HEADER_CORPUS = Path(__file__).with_name("header")
 
 
+def corpus_lines(name: str) -> list[str]:
+    """Card lines of real header in `tests/header/`, no blanks nor `#` notes."""
+    lines = (HEADER_CORPUS / name).read_text(encoding="utf-8").splitlines()
+    return [line for line in lines if line.strip() and not line.startswith("#")]
+
+
+def fits_bytes(lines: list[str], end: bool = True) -> bytes:
+    """Lines to 80-char cards, END, blanks to whole 2880 block; no pixels."""
+    head = "".join(line.ljust(80)[:80] for line in lines)
+    if end:
+        head += "END".ljust(80)
+    return (head + " " * (-len(head) % 2880)).encode("latin-1")
+
+
+def scan_whole(path: Path) -> Extracted | Skipped:
+    """scan_file with file's size as scan stats it."""
+    return scan_file(path, path.stat().st_size)
+
+
 def folder_link(target: str | os.PathLike[str], link: str | os.PathLike[str]) -> None:
     """Folder link: junction on Windows (no privilege needed), symlink elsewhere."""
     if sys.platform == "win32":
@@ -632,11 +652,8 @@ def nina_light(path: Path, seed: int, extra: tuple[str, ...] = ()) -> Path:
         "IMAGETYP= 'LIGHT'",
         "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'",
         *extra,
-        "END",
     ]
-    head = "".join(line.ljust(80) for line in lines)
-    head += " " * (-len(head) % 2880)
     data = bytes((seed + i) % 256 for i in range(512))
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(head.encode("ascii") + data + b"\0" * (2880 - 512))
+    path.write_bytes(fits_bytes(lines) + data + b"\0" * (2880 - 512))
     return path

@@ -172,16 +172,17 @@ def test_an_online_only_file_is_not_gone(conn, tmp_path, monkeypatch):
 
 def test_a_file_whose_date_cannot_be_read_is_not_gone(conn, tmp_path, monkeypatch):
     """Errore passeggero NAS sul singolo file: file c'e', solo non guardato. Non si giudica, come
-    cartella che non risponde."""
+    cartella che non risponde; i seguenti si giudicano lo stesso."""
     _file(tmp_path / "a.fits")
+    _file(tmp_path / "b.fits")
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     real = _date_unreadable(monkeypatch, "a.fits")
     changes = scan_root(conn, root, LATER).changes
-    assert changes.gone == []
-    assert changes.unlooked == ["a.fits"]  # left out, and said
     monkeypatch.setattr(os, "stat", real)
-    assert scan_root(conn, root, LATER).changes.unchanged == ["a.fits"]
+    # left out, and said; b after it still judged
+    assert (changes.unlooked, changes.unchanged, changes.gone) == (["a.fits"], ["b.fits"], [])
+    assert scan_root(conn, root, LATER).changes.unchanged == ["a.fits", "b.fits"]
 
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="APFS accepts only valid UTF-8 names")
@@ -200,18 +201,6 @@ def test_a_name_that_is_not_text_is_left_out_and_the_scan_goes_on(conn, tmp_path
     receipt = conn.execute("SELECT finished, left_out FROM pipeline_scans").fetchone()
     assert receipt["finished"] == 1
     assert bad in json.loads(receipt["left_out"])["unlooked"]
-
-
-def test_a_file_not_looked_at_does_not_stop_the_others_being_judged(conn, tmp_path, monkeypatch):
-    """Il primo non si guarda: i seguenti si giudicano lo stesso, nessuno sparito per errore."""
-    _file(tmp_path / "a.fits")
-    _file(tmp_path / "b.fits")
-    root = add_root(conn, tmp_path, NOW)
-    scan_root(conn, root, NOW)
-    real = _date_unreadable(monkeypatch, "a.fits")
-    changes = scan_root(conn, root, LATER).changes
-    monkeypatch.setattr(os, "stat", real)
-    assert (changes.unlooked, changes.unchanged, changes.gone) == (["a.fits"], ["b.fits"], [])
 
 
 def test_each_scan_leaves_its_receipt(conn, tmp_path):

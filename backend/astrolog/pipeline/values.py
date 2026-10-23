@@ -41,11 +41,11 @@ def _without_float32_tail(number: float) -> float:
         return number
     if f"{single:.15g}" != f"{number:.15g}":
         return number
-    for digits in range(1, 10):  # 9 digits round-trip any float32 (IEEE 754 binary32)
+    for digits in range(1, 9):
         short = float(f"{single:.{digits}g}")
         if struct.unpack("f", struct.pack("f", short))[0] == single:
             return short
-    return number
+    return float(f"{single:.9g}")  # 9 digits round-trip any float32 (IEEE 754 binary32)
 
 
 def as_name(written: Value | None) -> str | None:

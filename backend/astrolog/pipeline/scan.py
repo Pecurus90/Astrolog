@@ -20,7 +20,7 @@ from .walk import long_path
 
 _ROOTS_GUARD = threading.Lock()
 _RUNNING: dict[int, threading.Lock] = {}  # app is one process: a lock per root
-BATCH = 100  # files saved per transaction: short lock, small loss if stopped
+BATCH = 100  # no convention, method choice: write lock short, a stop loses one batch at most
 UNKNOWN_KEPT = 100  # no convention, product choice: receipt stays small, readable on screen
 UNKNOWN_TRACKED = 10_000  # memory bound on distinct keys counted; past it unknown_more = at least
 

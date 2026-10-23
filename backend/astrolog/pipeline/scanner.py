@@ -1,7 +1,6 @@
 """Reads header of one FITS file; keeps those N.I.N.A. and ASIAIR wrote (ADR 0029)."""
 
 import math
-import os
 import re
 from dataclasses import dataclass
 from enum import StrEnum
@@ -245,8 +244,8 @@ def _axes_are_counts(cards: dict[str, Value]) -> bool:
     )
 
 
-def scan_file(path: Path, size: int | None = None) -> Extracted | Skipped:
-    """One open per file. `size`: from walk's stat (no extra access); else asked to open file."""
+def scan_file(path: Path, size: int) -> Extracted | Skipped:
+    """One open per file. `size`: from scan's stat (changes._on_disk), no extra access."""
     try:
         with open(long_path(path), "rb") as fh:
             return _extract(path, fh, size)
@@ -256,7 +255,7 @@ def scan_file(path: Path, size: int | None = None) -> Extracted | Skipped:
         return Skipped(path, Skip.BROKEN)
 
 
-def _extract(path: Path, fh: BinaryIO, size: int | None) -> Extracted | Skipped:
+def _extract(path: Path, fh: BinaryIO, size: int) -> Extracted | Skipped:
     """No END: copy cut in header changes size or date once done, read then."""
     header = read_header(fh)
     if header is None:
@@ -269,8 +268,7 @@ def _extract(path: Path, fh: BinaryIO, size: int | None) -> Extracted | Skipped:
         return Skipped(path, Skip.NOT_SUPPORTED)
     if not _axes_are_counts(cards) or header.data_length is None:
         return Skipped(path, Skip.BROKEN)
-    known = size if size is not None else os.fstat(fh.fileno()).st_size
-    identity = frame_identity(header, known, fh)
+    identity = frame_identity(header, size, fh)
     if not identity.complete:
         return Skipped(path, Skip.INCOMPLETE)
     compressed = cards.get("ZIMAGE") is True

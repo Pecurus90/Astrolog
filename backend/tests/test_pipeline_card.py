@@ -22,18 +22,15 @@ from astrolog.pipeline.card import (
 from astrolog.pipeline.scanner import read_header
 from astrolog.pipeline.sky import PointingSource
 from astrolog.pipeline.values import Program
-from conftest import HEADER_CORPUS
+from conftest import corpus_lines, fits_bytes
 
 NINA, ASIAIR = Program.NINA, Program.ASIAIR
 
 
 def _values(name: str, tmp_path: Path) -> dict:
     """Real header as a file: only the header is read, so no pixels."""
-    lines = (HEADER_CORPUS / name).read_text(encoding="utf-8").splitlines()
-    head = "".join(line.ljust(80)[:80] for line in lines if line.strip() and line[0] != "#")
-    head += "END".ljust(80)
     path = tmp_path / "h.fits"
-    path.write_bytes((head + " " * (-len(head) % 2880)).encode("latin-1"))
+    path.write_bytes(fits_bytes(corpus_lines(name)))
     with path.open("rb") as fh:
         header = read_header(fh)
     assert header is not None
@@ -177,6 +174,7 @@ def test_the_real_cameras_are_read(name, program, expected, tmp_path):
         (3.76, 3.76),  # true double: untouched
         (-4.9, -4.9),
         (3.7612345678, 3.7612345678),  # not a float32: untouched
+        (10.0000104904175, 10.0000105),  # float32 needing all 9 digits
     ],
 )
 def test_float32_tail_is_cut_only_when_the_number_is_a_float32(written, clean):
@@ -269,6 +267,11 @@ def test_a_focal_not_a_positive_number_is_unknown(bad):
 
 def test_a_float32_focal_loses_its_tail():
     assert read_card(NINA, {"FOCALLEN": 335.299987792969}).focal_mm == 335.3
+
+
+def test_a_number_beyond_a_float32_is_kept_as_written():
+    """1e39 oltre il float32 piu' grande: non e' un float32, il numero resta com'e'."""
+    assert read_card(NINA, {"FOCALLEN": 1e39}).focal_mm == 1e39
 
 
 def _sky(ra: object, dec: object) -> Any:  # astropy stubs: units, arrays
@@ -402,12 +405,15 @@ def test_a_mount_at_360_is_0():
     [
         {"CD1_1": 0.0, "CD1_2": 0.0},
         {"CTYPE1": "RA---SIN"},
+        {"CTYPE2": "DEC--SIN"},  # RA in TAN alone is no TAN solve
         {"IMAGEW": 0},
         {"CRVAL2": "x"},
         {"CRPIX1": 1e300, "CD1_1": 1e300},
         {"CRPIX1": 1e300},  # reference far outside the solved image: fake place
         {"CRPIX2": -5.0},
         {"CD1_1": 1e200, "CD1_2": 1e200, "CD2_1": 1e200, "CD2_2": 1e200},  # det inf - inf
+        # det 1 and reference inside, but offset east overflows: inf
+        {"CRPIX1": 1.0, "CD1_1": 1e306, "CD1_2": 0.0, "CD2_1": 0.0, "CD2_2": 1e-306},
     ],  # overflow: once a fake 270/0 'solve'
     # fmt: skip
 )

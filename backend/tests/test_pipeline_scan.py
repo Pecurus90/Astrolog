@@ -24,7 +24,7 @@ def _stopped_scan(
     real = scan.scan_file
     calls: list[Path] = []
 
-    def stops(path: Path, size: int | None = None) -> Extracted | Skipped:
+    def stops(path: Path, size: int) -> Extracted | Skipped:
         calls.append(path)
         if len(calls) == at:
             raise KeyboardInterrupt
@@ -85,7 +85,7 @@ def test_a_folder_renamed_while_its_files_are_read_is_still_a_move(conn, tmp_pat
     _touch_later(path)
     real = scan.scan_file
 
-    def renamed_first(p, size=None):
+    def renamed_first(p, size):
         if (tmp_path / "night").exists():
             (tmp_path / "night").rename(tmp_path / "night2")
         return real(p, size)
@@ -183,7 +183,7 @@ def test_another_connection_writes_while_files_are_read(conn, db_path, tmp_path,
     real = scan.scan_file
     wrote: list[bool] = []
 
-    def other_writes(path, size=None):
+    def other_writes(path, size):
         other = sqlite3.connect(db_path, timeout=0)
         other.execute(
             "INSERT INTO pipeline_filter_answers (written_key, standard) VALUES (?, 'ha')",
@@ -278,7 +278,7 @@ def test_a_second_scan_of_the_same_root_is_refused_and_loses_nothing(
     tried: list[bool] = []
     real = scan.scan_file
 
-    def second_scan_meanwhile(path, size=None):
+    def second_scan_meanwhile(path, size):
         if not tried:
             tried.append(True)
             try:
@@ -308,7 +308,7 @@ def test_two_roots_scan_side_by_side(conn, db_path, tmp_path, monkeypatch):
     real = scan.scan_file
     inner: list[int] = []
 
-    def other_root_meanwhile(path, size=None):
+    def other_root_meanwhile(path, size):
         if not inner:
             inner.append(0)
             inner[0] = scan_root(other, second, NOW).frames
@@ -366,7 +366,7 @@ def test_an_unchanged_archive_is_not_read_again(conn, tmp_path, monkeypatch):
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
 
-    def forbidden(_path):
+    def forbidden(_path, _size):
         raise AssertionError("a file was opened")
 
     monkeypatch.setattr(scan, "scan_file", forbidden)
@@ -500,6 +500,20 @@ def test_a_new_shot_on_a_gone_file_s_path_leaves_the_old_shot_gone(conn, tmp_pat
     assert conn.execute("SELECT COUNT(*) FROM pipeline_frames").fetchone()[0] == 2
 
 
+def _back_while_copying(
+    conn: sqlite3.Connection, root: int, path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`path` gone at LATER, back at THEN still copying: read incomplete."""
+    shot = path.read_bytes()
+    path.unlink()
+    scan_root(conn, root, LATER)
+    path.write_bytes(shot)
+    real = scan.scan_file
+    monkeypatch.setattr(scan, "scan_file", lambda p, size: Skipped(p, Skip.INCOMPLETE))
+    scan_root(conn, root, THEN)
+    monkeypatch.setattr(scan, "scan_file", real)
+
+
 def test_a_shot_back_while_still_copying_takes_its_gone_row_again(conn, tmp_path, monkeypatch):
     """Sessione ricopiata: alla prima scansione la copia e' in corso, alla seconda e' letta.
     La posa riprende la sua riga sparita: una riga sola, non una sparita e una presente."""
@@ -507,14 +521,7 @@ def test_a_shot_back_while_still_copying_takes_its_gone_row_again(conn, tmp_path
     path = nina_light(nas / "M31" / "L.fits", 1)
     root = add_root(conn, nas, NOW)
     scan_root(conn, root, NOW)
-    shot = path.read_bytes()
-    path.unlink()
-    scan_root(conn, root, LATER)
-    path.write_bytes(shot)
-    real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", lambda p, size=None: Skipped(p, Skip.INCOMPLETE))
-    scan_root(conn, root, THEN)
-    monkeypatch.setattr(scan, "scan_file", real)
+    _back_while_copying(conn, root, path, monkeypatch)
     _touch_later(path)
     scan_root(conn, root, "2026-10-25T20:00:00+00:00")
     rows = conn.execute("SELECT state, frame_id FROM pipeline_files").fetchall()
@@ -531,13 +538,7 @@ def test_a_shot_back_while_copying_keeps_when_it_arrived(conn, tmp_path, monkeyp
     (nas / "b" / "Q.fits").write_bytes(shot)
     root = add_root(conn, nas, NOW)
     scan_root(conn, root, NOW)
-    path.unlink()
-    scan_root(conn, root, LATER)
-    path.write_bytes(shot)
-    real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", lambda p, size=None: Skipped(p, Skip.INCOMPLETE))
-    scan_root(conn, root, THEN)
-    monkeypatch.setattr(scan, "scan_file", real)
+    _back_while_copying(conn, root, path, monkeypatch)
     (nas / "b" / "Q.fits").unlink()
     _touch_later(path)
     assert scan_root(conn, root, "2026-10-25T20:00:00+00:00").moved == []
@@ -637,7 +638,7 @@ def test_a_file_that_failed_to_read_is_read_again_next_scan(conn, tmp_path, monk
     scan_root(conn, root, NOW)
     _touch_later(path)
     real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", lambda p, size=None: Skipped(p, reason))
+    monkeypatch.setattr(scan, "scan_file", lambda p, size: Skipped(p, reason))
     scan_root(conn, root, LATER)
     monkeypatch.setattr(scan, "scan_file", real)
     again = scan_root(conn, root, THEN)
@@ -655,7 +656,7 @@ def test_a_locked_file_keeps_its_shot_until_read_again(conn, tmp_path, monkeypat
     frame = _files(conn)["a.fits"]
     _touch_later(path)
     real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", lambda p, size=None: Skipped(p, reason))
+    monkeypatch.setattr(scan, "scan_file", lambda p, size: Skipped(p, reason))
     assert scan_root(conn, root, LATER).frames == 1
     assert (_files(conn)["a.fits"], _cards(conn)) == (frame, {"a.fits": "light"})
     monkeypatch.setattr(scan, "scan_file", real)
@@ -712,7 +713,7 @@ def test_the_receipt_keeps_rereads_skips_and_what_was_left_out(conn, tmp_path, m
     monkeypatch.setattr(
         scan,
         "scan_file",
-        lambda p, size=None: Skipped(p, Skip.UNREADABLE) if p == path else real(p, size),
+        lambda p, size: Skipped(p, Skip.UNREADABLE) if p == path else real(p, size),
     )
     first = scan_root(conn, root, NOW)
     monkeypatch.setattr(scan, "scan_file", real)

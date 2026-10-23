@@ -12,6 +12,7 @@ from astropy.io import fits
 from astrolog.fits.header_read import frame_fingerprint, read_frame
 from astrolog.pipeline.fingerprint import BLOCK, Header, data_length, frame_identity
 from astrolog.pipeline.scanner import Extracted, Skip, Skipped, read_header, scan_file
+from conftest import fits_bytes, scan_whole
 
 pytestmark = pytest.mark.filterwarnings("ignore::astropy.utils.exceptions.AstropyUserWarning")
 
@@ -72,8 +73,8 @@ def _bench(tmp_path):
     }
 
 
-def _fingerprint(path, size=None):
-    got = scan_file(path, size)
+def _fingerprint(path):
+    got = scan_whole(path)
     assert isinstance(got, Extracted), got
     return got.fingerprint
 
@@ -107,7 +108,7 @@ def test_no_file_needs_astropy_and_each_is_opened_once(tmp_path, monkeypatch):
         if name in _FLOAT:
             continue
         opened.clear()
-        assert isinstance(scan_file(path), Extracted), name
+        assert isinstance(scan_whole(path), Extracted), name
         assert len(opened) == 1, name
 
 
@@ -221,6 +222,12 @@ def test_a_side_of_zero_is_unknown_for_the_shot_too(axis):
     assert one.fingerprint != two.fingerprint
 
 
+def test_random_groups_skip_their_first_axis():
+    """FITS 4.0 sez. 6: gruppi casuali, NAXIS1 = 0 non e' un asse. Contato, i dati sarebbero 0."""
+    groups = {"BITPIX": 8, "NAXIS": 2, "NAXIS1": 0, "NAXIS2": BLOCK, "GROUPS": True}
+    assert data_length(groups) == BLOCK
+
+
 def test_more_axes_than_fits_allows_is_no_data_length():
     """FITS 4.0 sez. 4.4.1.1: NAXIS 0..999. Oltre: niente, e mai una lista enorme."""
     axes = {f"NAXIS{n}": 1 for n in range(1, 1001)}
@@ -233,12 +240,11 @@ def test_an_absurd_data_length_makes_the_file_broken_not_the_scan_fail(tmp_path)
     lines = [
         "SIMPLE  =                    T", "BITPIX  =                   16",
         "NAXIS   =                    2", f"NAXIS1  = {2**40:>20}", f"NAXIS2  = {2**40:>20}",
-        "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'", "END",
+        "SWCREATE= 'N.I.N.A. 3.2.0.9001 (x64)'",
     ]  # fmt: skip
-    head = "".join(line.ljust(80) for line in lines)
     path = tmp_path / "huge.fits"
-    path.write_bytes((head + " " * (-len(head) % 2880)).encode("ascii"))
-    assert scan_file(path) == Skipped(path, Skip.BROKEN)
+    path.write_bytes(fits_bytes(lines))
+    assert scan_whole(path) == Skipped(path, Skip.BROKEN)
 
 
 def test_a_file_shorter_than_its_header_says_is_incomplete(tmp_path):
@@ -246,11 +252,12 @@ def test_a_file_shorter_than_its_header_says_is_incomplete(tmp_path):
     scansione dopo lo rilegge."""
     path = _image(tmp_path / "copia.fits", (300, 300), np.uint16)
     path.write_bytes(path.read_bytes()[:10000])
-    assert scan_file(path) == Skipped(path, Skip.INCOMPLETE)
+    assert scan_whole(path) == Skipped(path, Skip.INCOMPLETE)
 
 
-def test_the_size_seen_by_the_walk_decides_completeness(tmp_path):
-    """Dimensione dal walk, nessun accesso in piu': piu' corta dell'annunciata, incompleto."""
+def test_the_size_seen_by_the_scan_decides_completeness(tmp_path):
+    """Dimensione dallo stat della scansione, nessun accesso in piu': piu' corta
+    dell'annunciata, incompleto."""
     path = _image(tmp_path / "a.fits", (300, 300), np.uint16, keys=_SHOT)
     whole = path.stat().st_size
     assert isinstance(scan_file(path, whole), Extracted)

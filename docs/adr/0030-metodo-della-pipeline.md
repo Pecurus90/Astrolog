@@ -50,3 +50,6 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
 - **Altro disco sotto la radice** (Marco, 22/10/2026, audit 4): stessa lettera o rimontaggio con
   un altro volume: si giudica sempre e la ricevuta lo segna (`volume_changed`). Il disco sbagliato
   mostra le pose sparite, che tornano col disco giusto; mai una radice muta per sempre.
+- **Coda del float32**: la pipeline nuova la toglie solo se il numero e' un float32
+  (`pipeline/values.py`, `_without_float32_tail`); la vecchia arrotonda a 7 cifre
+  (`units.py`, `strip_float32_noise`). Differenza voluta: un double vero resta com'e'.

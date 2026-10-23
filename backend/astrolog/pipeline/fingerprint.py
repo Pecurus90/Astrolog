@@ -9,7 +9,7 @@ from typing import BinaryIO
 from .card import camera, exposure_s, start_utc  # same reading as card: one fact, one home
 from .values import Value, as_count, frame_size
 
-FINGERPRINT_BYTES = 65536
+FINGERPRINT_BYTES = 65536  # method choice, as old code: image centre, away from borders
 BLOCK = 2880  # header and data fill whole blocks
 CARD = 80
 _BYTES = {8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}  # FITS 4.0 table 8: BITPIX
@@ -92,6 +92,7 @@ def _shot(cards: dict[str, Value]) -> str | None:
 
 def _shape(cards: dict[str, Value]) -> str:
     width, height = frame_size(cards)
+    # compressed: primary's BITPIX, not ZBITPIX, as old code: fallback fingerprint unchanged
     shape = f"{width}x{height}:{cards.get('BITPIX')}"
     start = cards.get("DATE-OBS")
     return f"{shape}:{start}" if isinstance(start, str) else shape
