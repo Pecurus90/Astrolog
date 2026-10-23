@@ -1044,6 +1044,8 @@ CREATE TABLE pipeline_conditions (
 CREATE TABLE pipeline_solutions (
   frame_id        INTEGER PRIMARY KEY REFERENCES pipeline_frames (id) ON DELETE CASCADE,
   outcome         TEXT NOT NULL CHECK (outcome IN ('solved', 'no_solution', 'no_stars')),
+  -- ultimo gradino lanciato (solve.Step): quello che ha risolto, o dove la scala si e' fermata
+  step            TEXT NOT NULL CHECK (step IN ('first', 'full_res', 'any_field', 'blind')),
   ra_deg          REAL CHECK (ra_deg >= 0 AND ra_deg < 360),  -- J2000, centro immagine
   dec_deg         REAL CHECK (dec_deg BETWEEN -90 AND 90),
   scale_arcsec_px REAL CHECK (scale_arcsec_px > 0),

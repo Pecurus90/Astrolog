@@ -236,8 +236,7 @@ def _launch(
         path,
         out_base,
         astap.Solver(solver.exe, solver.run),
-        field_deg=_field_hint(frame),
-        pointing=(ra, dec) if ra is not None and dec is not None else None,
+        astap.Search(_field_hint(frame), (ra, dec) if ra is not None and dec is not None else None),
     )
     if not solution.ok:
         # Not cached: tomorrow ASTAP may have a denser catalogue, or the frame a sister's hint.

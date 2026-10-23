@@ -41,11 +41,10 @@ DB_KINDS = ("d05", "d20", "d50", "d80", "v05", "v50", "g05", "w08",
 # any `x99_1.zip` would be a false "you have it". A new catalogue reads missing until listed.
 DB_NAME = re.compile(r"(" + "|".join(DB_KINDS) + r")_[0-9]+\.", re.IGNORECASE)
 
-# More than twice the slowest blind solve on a large sensor (docs/domini/spina.md): beyond it,
-# ASTAP has hung.
+# Over twice slowest blind solve that succeeds (docs/domini/spina.md); a free-field blind search
+# that finds nothing runs past it (285 s measured).
 TIMEOUT_S = 60
-# A few degrees would do with the header's pointing; 30 absorbs an off-centre mount at no cost,
-# since speed depends on the field, not the radius.
+# N.I.N.A. default (PlateSolveSettings.cs searchRadius); speed depends on field, not radius.
 SEARCH_RADIUS_DEG = 30
 BLIND_RADIUS_DEG = 180
 
@@ -214,16 +213,21 @@ class Solver:
     databases: str | Path | None = None  # catalogue folder; ASTAP picks one for the field
 
 
+@dataclass(frozen=True)
+class Search:
+    """Where and how ASTAP looks: header's hints, its own downsampling."""
+
+    field_deg: float | None = None
+    pointing: tuple[float, float] | None = None  # ra, dec degrees
+    downsample: int = 0  # 0: ASTAP picks (N.I.N.A. default too)
+
+
 def command(
-    fits_path: str | Path,
-    out_base: str | Path,
-    solver: Solver,
-    *,
-    field_deg: float | None = None,
-    pointing: tuple[float, float] | None = None,
+    fits_path: str | Path, out_base: str | Path, solver: Solver, search: Search = Search()
 ) -> list[str]:
     """Built without running it, so a test proves the forbidden flags are absent and the units
     are the ones ASTAP wants. No `-wcs`: nobody reads the .wcs, ASTAP writes one anyway."""
+    field_deg, pointing = search.field_deg, search.pointing
     cmd = [
         str(solver.exe),
         "-f",
@@ -235,7 +239,7 @@ def command(
         "-fov",
         f"{field_deg:.3f}" if field_deg else "0",
         "-z",
-        "0",
+        str(search.downsample),
     ]
     if solver.databases is not None:  # folder only, never `-D`: NINA and StellarSolver alike
         cmd += ["-d", str(solver.databases)]
@@ -251,18 +255,13 @@ def command(
 
 
 def solve(
-    fits_path: str | Path,
-    out_base: str | Path,
-    solver: Solver,
-    *,
-    field_deg: float | None = None,
-    pointing: tuple[float, float] | None = None,
+    fits_path: str | Path, out_base: str | Path, solver: Solver, search: Search = Search()
 ) -> Solution:
     """Writes `<out_base>.ini` and `.wcs` where we say, never beside the user's FITS. Never raises
     for the solver's fault: a missing or hung ASTAP is a frame without sky and its reason."""
     if not solver.exe:
         return Solution(ok=False, reason=Reason.ASTAP_MISSING)
-    cmd = command(fits_path, out_base, solver, field_deg=field_deg, pointing=pointing)
+    cmd = command(fits_path, out_base, solver, search)
     try:
         (solver.run or _run)(cmd, solver.timeout_s)
     except (subprocess.TimeoutExpired, TimeoutError):

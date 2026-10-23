@@ -52,6 +52,8 @@ class FakeAstap:
         self.commands.append(list(cmd))
         self.there.append(Path(cmd[cmd.index("-f") + 1]).is_file())
         answer = self.answers[min(len(self.commands), len(self.answers)) - 1]
+        if answer == "timeout":
+            raise TimeoutError
         if answer is not None:
             ini = Path(f"{cmd[cmd.index('-o') + 1]}.ini")
             if "=" in answer:
@@ -385,8 +387,8 @@ def test_a_shot_solved_meanwhile_by_another_pass_is_no_crash(conn, tmp_path, db_
     def other_pass() -> None:
         with other:
             other.execute(
-                "INSERT INTO pipeline_solutions (frame_id, outcome, tried_at)"
-                " SELECT id, 'no_solution', ? FROM pipeline_frames",
+                "INSERT INTO pipeline_solutions (frame_id, outcome, step, tried_at)"
+                " SELECT id, 'no_solution', 'first', ? FROM pipeline_frames",
                 (LATER,),
             )
 
@@ -555,3 +557,131 @@ def test_a_work_folder_astap_cannot_name_stops_the_pass(conn, tmp_path, monkeypa
     solver = astap.Solver("astap_cli", run)
     result = solve_root(conn, root, LATER, solver, tmp_path / _CJK / "work")
     assert run.commands == [] and result.stopped is astap.Reason.PATH_UNSUPPORTED
+
+
+def _steps(run: FakeAstap) -> list[tuple[str, bool, bool, str]]:
+    """(-z, field said, pointing said, -r) of each launch."""
+    return [
+        (_option(c, "-z"), _option(c, "-fov") != "0", "-ra" in c, _option(c, "-r"))
+        for c in run.commands
+    ]
+
+
+def _step(conn) -> list[tuple[str, str]]:
+    return [(row["outcome"], row["step"]) for row in _solutions(conn)]
+
+
+# Hinted ladder: N.I.N.A. failover drops only the pointing (ImageSolver.cs); z1, fov0 measured.
+_HINTED = [
+    ("0", True, True, "30"),
+    ("1", True, True, "30"),
+    ("0", False, True, "30"),
+    ("0", True, False, "180"),
+]
+
+
+def test_no_solution_climbs_the_ladder_until_one_step_solves(conn, tmp_path):
+    """Nessuna soluzione: -z 1, poi campo libero. Si salva il gradino che ha risolto."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("no_solution.ini", "no_solution.ini", "solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert _steps(run) == _HINTED[:3]
+    assert _step(conn) == [("solved", "any_field")]
+
+
+def test_a_shot_never_solved_tries_every_step_then_says_so(conn, tmp_path):
+    """Con indizio: in coda la cieca col campo (failover di N.I.N.A.). Mai cieca a campo libero:
+    su un frame che non si risolve corre 285 s (misura)."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("no_solution.ini")
+    _solve(conn, root, run, tmp_path)
+    assert _steps(run) == _HINTED
+    assert _step(conn) == [("no_solution", "blind")]
+
+
+def test_a_shot_solved_at_once_says_first(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert len(run.commands) == 1 and _step(conn) == [("solved", "first")]
+
+
+def test_without_a_pointing_the_ladder_is_blind_from_the_start(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY[:2])
+    root = _scanned(conn, nas)
+    run = FakeAstap("no_solution.ini")
+    _solve(conn, root, run, tmp_path)
+    assert _steps(run) == [("0", True, False, "180"), ("1", True, False, "180"),
+                           ("0", False, False, "180")]  # fmt: skip
+    assert _step(conn) == [("no_solution", "any_field")]
+
+
+def test_without_a_field_the_same_launch_is_never_repeated(conn, tmp_path):
+    """Campo ignoto: "campo libero" e' gia' il primo gradino, non si rilancia uguale."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY[2:])
+    root = _scanned(conn, nas)
+    run = FakeAstap("no_solution.ini")
+    _solve(conn, root, run, tmp_path)
+    assert _steps(run) == [("0", False, True, "30"), ("1", False, True, "30"),
+                           ("0", False, False, "180")]  # fmt: skip
+    assert len({tuple(c) for c in run.commands}) == len(run.commands)
+
+
+def test_not_enough_stars_never_climbs(conn, tmp_path):
+    """Nuvole o dark senza tipo: 0,2 s invece di 8 (misura), nessun gradino in piu'."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("no_stars.ini", "solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert len(run.commands) == 1 and _step(conn) == [("no_stars", "first")]
+
+
+def test_a_typeless_shot_gets_one_try(conn, tmp_path):
+    """Senza tipo: un tentativo (D6 del piano), poi si dice com'e' andata."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY, imagetyp="WHATEVER")
+    root = _scanned(conn, nas)
+    run = FakeAstap("no_solution.ini", "solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert len(run.commands) == 1 and _step(conn) == [("no_solution", "first")]
+
+
+def test_a_timeout_after_no_solution_ends_as_no_solution(conn, tmp_path):
+    """ASTAP ha gia' detto che non trova: il gradino oltre 60 s chiude la scala, scritto. Senza,
+    un frame irrisolvibile costava 70-86 s a ogni passata, per sempre (misura)."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("no_solution.ini", "timeout", "solved.ini")
+    result = _solve(conn, root, run, tmp_path)
+    assert len(run.commands) == 2 and _step(conn) == [("no_solution", "full_res")]
+    assert result.failed == {"no_solution": 1}
+
+
+def test_a_timeout_at_the_first_launch_writes_nothing(conn, tmp_path):
+    """Nessuna risposta di ASTAP ancora: si riprova alla passata dopo."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("timeout", "solved.ini")
+    result = _solve(conn, root, run, tmp_path)
+    assert len(run.commands) == 1 and _solutions(conn) == []
+    assert result.untried == {"timeout": 1}
+
+
+def test_a_crash_mid_ladder_writes_nothing(conn, tmp_path):
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    root = _scanned(conn, nas)
+    run = FakeAstap("no_solution.ini", None, "solved.ini")
+    _solve(conn, root, run, tmp_path)
+    assert len(run.commands) == 2 and _solutions(conn) == []

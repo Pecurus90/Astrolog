@@ -533,7 +533,7 @@ quattro ed elabora con un altro che l'app non conosce. Li' i due gemelli si somi
 e l'app li conta tutti e due.
 
 **ASTAP**: `astap_cli -f <file> -o <cache>/<frame_hash> -fov <campo> -z 0`, `-ra/-spd` e raggio
-30 gradi con un indizio, altrimenti cieco; mai `-update` ne' `-extract`. Nome fuori dalla code page
+30 gradi con un indizio, altrimenti cieco; mai `-update` ne' `-extract`. Pipeline nuova, solo dopo nessuna soluzione: `-z 1`, `-fov 0`, poi cieca col campo (failover di N.I.N.A.); senza tipo un tentativo; timeout ferma (dopo un no: `no_solution`). Nome fuori dalla code page
 ANSI: 8.3 o copia; cartella di lavoro illeggibile: `path_unsupported`, ferma; `.fz` < 2026.07.16: `fz_unsupported`.
 
 **Il campo si calcola, ed e' la leva della velocita'.** `-fov` e' l'altezza del campo

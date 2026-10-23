@@ -7,6 +7,7 @@ import tempfile
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from enum import StrEnum
 from pathlib import Path
 
 from .. import astap, units
@@ -21,14 +22,47 @@ OUTCOMES = {
 }
 
 PENDING = (  # plain file before its fpack copy: ASTAP before 2026.07.16 reads no .fz
-    "SELECT f.frame_id, f.rel_path, c.height, c.pixel_um, c.focal_mm, c.pointing_ra_deg,"
-    " c.pointing_dec_deg FROM pipeline_files AS f JOIN pipeline_cards AS c ON c.file_id = f.id"
+    "SELECT f.frame_id, f.rel_path, c.frame_type, c.height, c.pixel_um, c.focal_mm,"
+    " c.pointing_ra_deg, c.pointing_dec_deg"
+    " FROM pipeline_files AS f JOIN pipeline_cards AS c ON c.file_id = f.id"
     " WHERE f.root_id = ? AND f.state = 'present' AND f.skip_reason IS NULL"
     # typeless too: a light written wrong finds its sky, a calibration fails fast
     " AND c.frame_type IN ('light', 'unknown')"
     " AND NOT EXISTS (SELECT 1 FROM pipeline_solutions AS s WHERE s.frame_id = f.frame_id)"
     " ORDER BY f.frame_id, lower(f.rel_path) LIKE '%.fz', f.rel_path"
 )
+
+
+class Step(StrEnum):
+    """Ladder climbed only on no solution. Blind last: N.I.N.A. failover (ImageSolver.cs), same
+    parameters without pointing. z1 and fov0: measured."""
+
+    FIRST = "first"
+    FULL_RES = "full_res"  # -z 1: OSC frame failing at z0 solved
+    ANY_FIELD = "any_field"  # -fov 0: header field x2 or x0.5 solved
+    BLIND = "blind"  # pointing 60 degrees off solved only so
+
+
+def _ladder(
+    pointing: tuple[float, float] | None, field_deg: float | None, typeless: bool
+) -> list[tuple[Step, astap.Search]]:
+    """Same launch twice never: unknown field, `any_field` repeats `first`, skipped."""
+    tries = [
+        (Step.FIRST, astap.Search(field_deg, pointing)),
+        (Step.FULL_RES, astap.Search(field_deg, pointing, downsample=1)),
+        (Step.ANY_FIELD, astap.Search(None, pointing)),
+    ]
+    if pointing is not None:  # no blind with free field: unsolvable frame ran 285 s (measured)
+        tries.append((Step.BLIND, astap.Search(field_deg)))
+    if typeless:  # one try (D6): mostly calibrations
+        tries = tries[:1]
+    seen: set[astap.Search] = set()
+    ladder = []
+    for step, search in tries:
+        if search not in seen:
+            seen.add(search)
+            ladder.append((step, search))
+    return ladder
 
 
 @dataclass
@@ -63,7 +97,7 @@ def solve_root(
         if not takes(row["rel_path"]):
             result.untried[astap.Reason.FZ_UNSUPPORTED] += 1
             continue
-        found = _launch(Path(root["path"], row["rel_path"]), row, solver, Path(named))
+        found, step = _climb(Path(root["path"], row["rel_path"]), row, solver, Path(named))
         if found.reason in STOPS:
             result.stopped = found.reason
             return result
@@ -71,7 +105,7 @@ def solve_root(
         if outcome is None:
             result.untried[str(found.reason)] += 1
             continue
-        _write(conn, row["frame_id"], outcome, found, now)
+        _write(conn, row["frame_id"], (outcome, step), found, now)
         if found.ok:
             result.solved += 1
         else:
@@ -98,28 +132,41 @@ def _takes(solver: astap.Solver) -> Callable[[str], bool]:
     return takes
 
 
-def _launch(path: Path, card: sqlite3.Row, solver: astap.Solver, work: Path) -> astap.Solution:
-    """Fresh folder per launch: a crash writes no .ini, an earlier one would read as solved
-    (measured). Base without a dot: ASTAP cuts the name at it. No .ini: crash, not tried."""
+def _climb(
+    path: Path, card: sqlite3.Row, solver: astap.Solver, work: Path
+) -> tuple[astap.Solution, Step]:
+    """Up the ladder while no solution; other ends stop it. Timeout after no solution: no
+    solution. Fresh base per launch: crash writes no .ini, old one read as solved."""
     scale = units.scale_arcsec_px(card["pixel_um"], card["focal_mm"])  # pixel_um has binning
+    ra, dec = card["pointing_ra_deg"], card["pointing_dec_deg"]  # both or neither (schema)
+    ladder = _ladder(
+        None if ra is None else (ra, dec),
+        units.field_deg(card["height"], scale) or None,
+        typeless=card["frame_type"] == "unknown",
+    )
     with tempfile.TemporaryDirectory(dir=work) as fresh:
         given = _readable_name(long_path(path), Path(fresh))
         if given is None:
-            return astap.Solution(ok=False, reason=astap.Reason.UNREADABLE)
-        base = Path(fresh) / "solve"
-        ra, dec = card["pointing_ra_deg"], card["pointing_dec_deg"]  # both or neither (schema)
-        found = astap.solve(
-            given,
-            base,
-            solver,
-            field_deg=units.field_deg(card["height"], scale),
-            pointing=None if ra is None else (ra, dec),
-        )
-        written = astap.read_ini(base.with_suffix(".ini"))
-        # no .ini (crash) or half written: not a sky that fails
-        if not found.ok and (not written or astap.half_written(written)):
-            return astap.Solution(ok=False, reason=astap.Reason.INTERNAL_ERROR)
-        return found
+            return astap.Solution(ok=False, reason=astap.Reason.UNREADABLE), Step.FIRST
+        ended = (astap.Solution(ok=False, reason=astap.Reason.NO_SOLUTION), Step.FIRST)
+        for number, (step, search) in enumerate(ladder):
+            found = _launch(given, Path(fresh) / f"solve{number}", solver, search)
+            if number and found.reason == astap.Reason.TIMEOUT:  # ASTAP already said no
+                return ended[0], step
+            ended = (found, step)
+            if found.reason != astap.Reason.NO_SOLUTION:
+                break
+        return ended
+
+
+def _launch(given: str, base: Path, solver: astap.Solver, search: astap.Search) -> astap.Solution:
+    """Base without a dot: ASTAP cuts the name at it. No .ini or half written: crash."""
+    found = astap.solve(given, base, solver, search)
+    written = astap.read_ini(base.with_suffix(".ini"))
+    # read as no solution; timeout keeps its own reason
+    if found.reason == astap.Reason.NO_SOLUTION and (not written or astap.half_written(written)):
+        return astap.Solution(ok=False, reason=astap.Reason.INTERNAL_ERROR)
+    return found
 
 
 def _readable_name(path: str, fresh: Path) -> str | None:
@@ -139,13 +186,17 @@ def _readable_name(path: str, fresh: Path) -> str | None:
 
 
 def _write(
-    conn: sqlite3.Connection, frame_id: int, outcome: str, found: astap.Solution, now: str
+    conn: sqlite3.Connection,
+    frame_id: int,
+    ended: tuple[str, Step],  # outcome, last step launched
+    found: astap.Solution,
+    now: str,
 ) -> None:
     with transaction(conn, immediate=True):
         conn.execute(
             # OR IGNORE: another pass wrote it meanwhile, first one stays
-            "INSERT OR IGNORE INTO pipeline_solutions (frame_id, outcome, ra_deg, dec_deg,"
-            " scale_arcsec_px, rotation_deg, tried_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (frame_id, outcome, found.ra_deg, found.dec_deg, found.scale_arcsec_px,
+            "INSERT OR IGNORE INTO pipeline_solutions (frame_id, outcome, step, ra_deg, dec_deg,"
+            " scale_arcsec_px, rotation_deg, tried_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (frame_id, *ended, found.ra_deg, found.dec_deg, found.scale_arcsec_px,
              found.rotation_deg, now),
         )  # fmt: skip

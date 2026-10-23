@@ -61,8 +61,7 @@ def test_solve_seconds_per_frame_does_not_regress(tmp_path):
             percorso,
             tmp_path / f"g{giro}",
             astap.Solver(exe, run_vero),
-            field_deg=campo,
-            pointing=coord if None not in coord else None,
+            astap.Search(campo, coord if None not in coord else None),
         )
         tempi.append(time.perf_counter() - t0)
         assert esito.ok, f"il FITS di prova non si risolve: {esito.reason}"
@@ -90,8 +89,8 @@ def test_giving_the_field_is_what_makes_it_fast(tmp_path):
     def quanto(campo, dove):
         t0 = time.perf_counter()
         esito = astap.solve(
-            percorso, tmp_path / dove, astap.Solver(exe, run_vero), field_deg=campo,
-            pointing=puntamento,
+            percorso, tmp_path / dove, astap.Solver(exe, run_vero),
+            astap.Search(campo, puntamento),
         )  # fmt: skip
         assert esito.ok
         return time.perf_counter() - t0

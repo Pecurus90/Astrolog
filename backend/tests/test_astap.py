@@ -86,12 +86,12 @@ def test_solve_field_from_the_header(tmp_path):
     """Il campo inquadrato e' la leva della velocita': misurato, `-fov` col campo giusto vale
     0,2 s contro 2,3 s con `-fov 0`. Si ricava da altezza, pixel, binning e focale."""
     run = fake_run(scrive={tmp_path / "e.ini": INI_RISOLTO})
-    astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run), field_deg=0.59)
+    astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run), astap.Search(0.59))
     assert valore(comando(run), "-fov") == "0.590"
 
     # senza focale o pixel nell'header il campo non si sa: si passa 0 e ASTAP lo cerca da se'
     run = fake_run(scrive={tmp_path / "e.ini": INI_RISOLTO})
-    astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run), field_deg=None)
+    astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run), astap.Search(None))
     assert valore(comando(run), "-fov") == "0"
 
 
@@ -100,7 +100,10 @@ def test_the_pointing_hint_is_given_in_the_units_astap_wants(tmp_path):
     declinazione: sbagliarle non da' errore, da' il cielo di un altro punto del mondo."""
     run = fake_run(scrive={tmp_path / "e.ini": INI_RISOLTO})
     astap.solve(
-        tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run), pointing=(210.945, 54.35)
+        tmp_path / "x.fits",
+        tmp_path / "e",
+        astap.Solver("astap", run),
+        astap.Search(pointing=(210.945, 54.35)),
     )
     cmd = comando(run)
     assert float(valore(cmd, "-ra")) == pytest.approx(14.063, abs=0.001)
@@ -164,6 +167,15 @@ def test_without_astap_there_is_no_crash_only_a_reason(tmp_path):
     restano da risolvere, con scritto perche'."""
     esito = astap.solve(tmp_path / "x.fits", tmp_path / "e", astap.Solver(None, fake_run()))
     assert esito.ok is False and esito.reason == "astap_missing"
+
+
+def test_the_downsample_asked_is_the_one_given(tmp_path):
+    """-z 0 lascia scegliere ASTAP; -z 1 a piena risoluzione, il gradino che salva gli OSC."""
+    run = fake_run()
+    astap.solve(
+        tmp_path / "x.fits", tmp_path / "e", astap.Solver("astap", run), astap.Search(downsample=1)
+    )
+    assert run.calls[0][run.calls[0].index("-z") + 1] == "1"
 
 
 def test_a_file_astap_cannot_read_is_a_reason(tmp_path):
