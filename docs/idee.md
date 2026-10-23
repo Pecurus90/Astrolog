@@ -39,3 +39,7 @@ ogni tappa del piano si rilegge: si fa, resta o si cancella; ferma da tre tappe 
   temperatura del focheggiatore (gia' nella scheda del file) lo spostamento in step per grado, per
   notte e setup, come il coefficiente di N.I.N.A.; con la nitidezza delle stelle, le pose sfocate
   e se il fuoco ha seguito la temperatura.
+- **La scheda di un NEO o di una cometa in Ricerca** (Marco, 23/10/2026): toccato l'oggetto, una
+  finestra coi dati scaricati (Marco dice "NPC": MPC o JPL, da scegliere): grandezza, periodo,
+  velocita' e velocita' angolare, distanza dalla Terra; accanto il Sistema solare in scala con
+  l'orbita dell'oggetto, dove sta adesso e dove andra', rispetto alla Terra.
