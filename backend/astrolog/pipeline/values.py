@@ -13,7 +13,7 @@ class Program(StrEnum):
     ASIAIR = "ASIAIR"
 
 
-_SQLITE_MAX = 2**63 - 1  # largest INTEGER (sqlite.org/datatype3.html)
+SQLITE_MIN, SQLITE_MAX = -(2**63), 2**63 - 1  # INTEGER range (sqlite.org/datatype3.html)
 
 
 def as_number(written: Value | None, at_least: float = -math.inf) -> float | None:
@@ -29,7 +29,7 @@ def as_count(written: Value | None, at_least: int) -> int | None:
     """Past SQLite INTEGER (64 bit): unknown, else whole scan fails."""
     if isinstance(written, bool) or not isinstance(written, int):
         return None
-    return written if at_least <= written <= _SQLITE_MAX else None
+    return written if at_least <= written <= SQLITE_MAX else None
 
 
 def _without_float32_tail(number: float) -> float:

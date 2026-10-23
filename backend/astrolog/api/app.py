@@ -28,6 +28,7 @@ from ..db.transaction import transaction
 from ..spine import gear_usage, moon_calendar, object_candidates, stages
 from ..spine.group_store import home_site
 from ..spine.stages import StageName
+from ..startup import LOCAL_HOSTS
 from ..weather import climate, forecast, history, rounds
 from ..worker.worker import Worker
 from . import (
@@ -54,7 +55,6 @@ from .models import Health
 
 log = logging.getLogger(__name__)
 
-LOCAL_HOSTS = ("localhost", "127.0.0.1")
 TOKEN_HEADER = "X-AstroLog-Token"  # noqa: S105 - the header's name, not the secret
 OPEN_PATHS = ("/docs", "/redoc", "/openapi.json")
 

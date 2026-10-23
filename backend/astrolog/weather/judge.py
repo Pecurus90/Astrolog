@@ -7,7 +7,15 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from .verdict import Hour, Summary, Verdict, when, window
+from .verdict import (
+    CLOUD_GO_MAX_PCT,
+    CLOUD_MARGINAL_MAX_PCT,
+    Hour,
+    Summary,
+    Verdict,
+    when,
+    window,
+)
 
 
 class Measure(StrEnum):
@@ -85,9 +93,10 @@ def spread(h: Hour) -> float | None:
 
 NOGO, MARGINAL, GO = Verdict.NOGO, Verdict.MARGINAL, Verdict.GO
 
-# Okta (WMO Code Table 2700) as METAR classes (ICAO Annex 3): go to FEW 2/8, marginal to SCT 4/8.
-# https://www.nodc.noaa.gov/archive/arc0021/0000907/1.1/data/0-data/HTML/WMO-CODE/WMO2700.HTM
-_EIGHTHS = [Step(NOGO, 50.0, strict=True), Step(MARGINAL, 25.0, strict=True)]
+_EIGHTHS = [  # okta bounds, source beside them in verdict
+    Step(NOGO, CLOUD_MARGINAL_MAX_PCT, strict=True),
+    Step(MARGINAL, CLOUD_GO_MAX_PCT, strict=True),
+]
 
 SCALES: dict[Measure, Scale] = {
     s.code: s

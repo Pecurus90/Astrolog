@@ -52,11 +52,15 @@ def night_date(instant_iso: object, tz_name: str | None = None) -> str | None:
     return None if night == date.max.isoformat() else night
 
 
+# A night is looked at from noon of its day, in the site's zone.
+_START_HOUR = 12
+
+
 def night_of(moment: datetime) -> str:
     """`night_date` of an instant already in the site's zone."""
     # Subtracting on an aware instant works on the wall clock, which is what is needed: local
     # noon, not UTC noon shifted.
-    return (moment - timedelta(hours=12)).date().isoformat()
+    return (moment - timedelta(hours=_START_HOUR)).date().isoformat()
 
 
 def night_instant(date_obs: str | None, mtime: float) -> str:
@@ -105,10 +109,6 @@ def midnight_of(night_date_str: str, tz_name: str | None) -> datetime | None:
 def _day_of(night_date_str: str) -> date:
     # DTZ007: a date, not an instant.
     return datetime.strptime(night_date_str, "%Y-%m-%d").date()  # noqa: DTZ007
-
-
-# A night is looked at from noon of its day, in the site's zone.
-_START_HOUR = 12
 
 
 def night_window(night_date_str: str, tz_name: str | None) -> tuple[datetime, float]:

@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from .scanner import Skip
+from .values import SQLITE_MAX, SQLITE_MIN
 from .walk import Walk, long_path, plain, real_key, walk_dir
 from .walk import absolute as walk_absolute
 
@@ -206,7 +207,7 @@ def _on_disk(found: list[str], root: str) -> tuple[dict[str, tuple[int, int]], s
 
 def _held(mtime_ns: int) -> int:
     """Date past SQLite INTEGER (NTFS 1601, year 2300): pinned to edge; file still read."""
-    return max(-(2**63), min(mtime_ns, 2**63 - 1))
+    return max(SQLITE_MIN, min(mtime_ns, SQLITE_MAX))
 
 
 def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
