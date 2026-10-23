@@ -21,6 +21,7 @@ _ROOTS_GUARD = threading.Lock()
 _RUNNING: dict[int, threading.Lock] = {}  # app is one process: a lock per root
 BATCH = 100  # files saved per transaction: short lock, small loss if stopped
 UNKNOWN_KEPT = 100  # no convention, product choice: receipt stays small, readable on screen
+UNKNOWN_TRACKED = 10_000  # memory bound on distinct keys counted; past it unknown_more = at least
 
 
 class ScanRunningError(RuntimeError):
@@ -66,7 +67,7 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
         vanished.update(rel for rel, got in read if _vanished(got))
         skipped = [got for _, got in batch if isinstance(got, Skipped)]
         reasons.update(got.reason for got in skipped)
-        unknown.update(k for _, got in batch if isinstance(got, Extracted) for k in got.unknown)
+        _count_unknown(unknown, [got for _, got in batch if isinstance(got, Extracted)])
         with transaction(conn, immediate=True):
             for rel, got in batch:
                 _store(conn, changes, rel, got, now)
@@ -75,7 +76,7 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
                 " WHERE id = ?",
                 (
                     json.dumps(reasons),
-                    json.dumps(dict(unknown.most_common(UNKNOWN_KEPT))),
+                    json.dumps(dict(sorted(unknown.items(), key=_by_count)[:UNKNOWN_KEPT])),
                     max(0, len(unknown) - UNKNOWN_KEPT),
                     changes.scan_id,
                 ),
@@ -99,6 +100,19 @@ def _left_unread(changes: Changes, vanished: set[str]) -> None:
     for listed in (changes.new, changes.changed, changes.reread):
         listed[:] = [rel for rel in listed if rel not in vanished]
     changes.unlooked = sorted(set(changes.unlooked) | vanished)
+
+
+def _count_unknown(unknown: Counter[str], read: list[Extracted]) -> None:
+    """Keys by name: same keys tracked every run. New key past UNKNOWN_TRACKED not counted."""
+    for got in read:
+        for key in sorted(got.unknown):
+            if key in unknown or len(unknown) < UNKNOWN_TRACKED:
+                unknown[key] += 1
+
+
+def _by_count(item: tuple[str, int]) -> tuple[int, str]:
+    """Most files first; same count: by name, never by hash order."""
+    return -item[1], item[0]
 
 
 def _vanished(got: Extracted | Skipped) -> bool:

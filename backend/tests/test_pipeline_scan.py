@@ -662,6 +662,27 @@ def test_the_receipt_keeps_the_100_most_common_unknown_keys_and_counts_the_rest(
     assert row["unknown_more"] == 50
 
 
+def test_unknown_keys_with_the_same_count_are_kept_by_name(conn, tmp_path):
+    """A pari conteggio vince il nome: stessa ricevuta a ogni avvio. Prima: ordine di hash."""
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, tuple(f"K{i:03d}    = 'x'" for i in reversed(range(150))))
+    scan_root(conn, add_root(conn, nas, NOW), NOW)
+    row = conn.execute("SELECT unknown_keys FROM pipeline_scans").fetchone()
+    assert sorted(json.loads(row["unknown_keys"])) == [f"K{i:03d}" for i in range(100)]
+
+
+def test_unknown_keys_counted_in_memory_have_a_ceiling(conn, tmp_path, monkeypatch):
+    """Migliaia di chiavi inventate per file: in memoria al massimo il tetto, poi "almeno".
+    Prima: tutte, fino a esaurire la memoria di un NAS."""
+    monkeypatch.setattr(scan, "UNKNOWN_KEPT", 2)
+    monkeypatch.setattr(scan, "UNKNOWN_TRACKED", 4)
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, tuple(f"K{i:03d}    = 'x'" for i in range(10)))
+    scan_root(conn, add_root(conn, nas, NOW), NOW)
+    row = conn.execute("SELECT unknown_keys, unknown_more FROM pipeline_scans").fetchone()
+    assert (len(json.loads(row["unknown_keys"])), row["unknown_more"]) == (2, 2)
+
+
 def test_a_file_skipped_for_its_content_is_not_read_again(conn, tmp_path):
     nina_light(tmp_path / "a.fits", 1, ("PROGRAM = 'Editor 1.9.3'",))
     root = add_root(conn, tmp_path, NOW)

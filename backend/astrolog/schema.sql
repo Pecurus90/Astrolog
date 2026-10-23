@@ -899,8 +899,9 @@ CREATE TABLE pipeline_scans (
   -- letti e saltati, per motivo: {"rewritten": 3, ...}; il totale si somma
   skipped    TEXT NOT NULL CHECK (json_valid(skipped) AND json_type(skipped) = 'object'),
   -- chiavi che il programma del file non scrive (dell'utente, o nuove): {"MYNOTE": 2, ...}
-  -- solo le 100 piu' frequenti; quante altre restano fuori in unknown_more
+  -- solo le piu' frequenti (scan.UNKNOWN_KEPT); quante altre in unknown_more
   unknown_keys TEXT NOT NULL CHECK (json_valid(unknown_keys) AND json_type(unknown_keys) = 'object'),
+  -- oltre il tetto in memoria (scan.UNKNOWN_TRACKED): chiavi fra le prime contate, "almeno"
   unknown_more INTEGER NOT NULL CHECK (unknown_more >= 0),
   -- fuori, coi percorsi: {hidden, online_only, unreachable, unlooked}; NULL radice muta
   left_out   TEXT CHECK (json_valid(left_out) AND json_type(left_out) = 'object'),
