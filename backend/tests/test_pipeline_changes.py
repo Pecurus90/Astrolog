@@ -559,3 +559,25 @@ def test_a_sibling_with_a_common_prefix_is_not_inside(conn, tmp_path):
     (tmp_path / "archive").mkdir()
     (tmp_path / "archive2").mkdir()
     assert add_root(conn, tmp_path / "archive", NOW) != add_root(conn, tmp_path / "archive2", NOW)
+
+
+@pytest.mark.parametrize(
+    "year_ns", [10413792000 * 10**9, -11644473600 * 10**9], ids=["2300", "1601"]
+)
+def test_a_date_past_what_the_database_holds_does_not_stop_the_scan(conn, tmp_path, year_ns):
+    """Data oltre 64 bit in ns (NTFS 1601..30828, ext4 fino al 2446): prima OverflowError a ogni
+    scansione, radice ferma per sempre."""
+    nas = tmp_path / "nas"
+    odd = nina_light(nas / "odd.fits", 1)
+    nina_light(nas / "ok.fits", 2)
+    try:
+        os.utime(odd, ns=(year_ns, year_ns))
+    except (OSError, OverflowError, ValueError):
+        pytest.skip("this file system cannot hold that date")
+    result = scan_root(conn, add_root(conn, nas, NOW), NOW)
+    assert result.changes.new == ["odd.fits", "ok.fits"]
+    assert result.frames == 2
+    assert scan_root(conn, add_root(conn, nas, NOW), LATER).changes.unchanged == [
+        "odd.fits",
+        "ok.fits",
+    ]

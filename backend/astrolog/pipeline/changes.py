@@ -185,8 +185,13 @@ def _on_disk(found: list[str], root: str) -> tuple[dict[str, tuple[int, int]], s
         except OSError:
             unlooked.add(_rel(path, root))
             continue
-        seen[_rel(path, root)] = (st.st_size, st.st_mtime_ns)
+        seen[_rel(path, root)] = (st.st_size, _held(st.st_mtime_ns))
     return seen, unlooked
+
+
+def _held(mtime_ns: int) -> int:
+    """Date past SQLite INTEGER (NTFS 1601, year 2300): pinned to edge; file still read."""
+    return max(-(2**63), min(mtime_ns, 2**63 - 1))
 
 
 def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
