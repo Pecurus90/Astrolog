@@ -7,11 +7,10 @@ fuori nelle Issue con l'etichetta `bloccato`.
 
 ## Ora
 
-**Pipeline riprogettata da zero** (Marco, 22/10/2026): scansione, lettura, attribuzione,
-normalizzazione riscritte da una mappa decisa prima del codice, uno strato alla volta, accanto alla
-vecchia finche' la sostituiscono. N.I.N.A. e ASIAIR (ADR 0029), metodo ADR 0030, mappa grafica.
-Parte 1 fatta (mattoni 1-4) e auditata quattro volte. Poi (Marco): ASTAP, measure, confronto coi
-dati delle pagine di Design, app attorno alle pagine; dentro, la parte 2. #14-#24 qui.
+**Pipeline riprogettata da zero** (Marco, 22/10/2026): uno strato alla volta da una mappa decisa
+prima del codice, accanto alla vecchia finche' la sostituisce. ADR 0029, 0030, mappa grafica.
+Parte 1 (mattoni 1-4) fatta, cinque audit. Poi (Marco): ASTAP, measure, pagine di Design, app
+attorno alle pagine; dentro, la parte 2 e la zona di selezione dei frame (ADR 0032). #14-#24 qui.
 
 ## Dopo
 

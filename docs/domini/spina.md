@@ -1067,4 +1067,4 @@ coi Progetti); non tocca i FITS.
 Non modifica, sposta, rinomina o cancella un FITS: togliere un frame dall'archivio dell'app,
 quando si potra', sara' un'esclusione **dichiarata**, con conferma, che sopravvive alle
 scansioni, e nomi e correzioni non si perdono. Non cataloga i file di calibrazione.
-Non sorveglia le cartelle in continuo. Non riparte da solo all'apertura. Non vota i frame.
+Non sorveglia le cartelle in continuo. Non riparte da solo all'apertura. Non vota (ADR 0032).
