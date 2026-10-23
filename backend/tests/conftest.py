@@ -584,16 +584,15 @@ def online_only(monkeypatch, *paths):
 
 def fake_entries(monkeypatch, change):
     """Ogni voce che il walk elenca passa da `change(cartella, voce)`, che la restituisce com'e'
-    o finta: il modo di fingere cio' che il sistema dice di un file senza toccare il disco."""
-    from astrolog.fits import walk
-
+    o finta: il modo di fingere cio' che il sistema dice di un file senza toccare il disco. Vale
+    per ogni walk, vecchio e nuovo: si finge `os.scandir` stesso."""
     real = os.scandir
 
     def fake(p):
         with real(p) as vere:
             return ScanFinta(change(str(p), v) for v in vere)
 
-    monkeypatch.setattr(walk.os, "scandir", fake)
+    monkeypatch.setattr(os, "scandir", fake)
 
 
 @pytest.fixture
@@ -607,6 +606,7 @@ def make_fits(tmp_path):
 # New pipeline tests: scan times, real headers, folder links, a N.I.N.A. light.
 NOW = "2026-10-22T20:00:00+00:00"
 LATER = "2026-10-23T20:00:00+00:00"
+THEN = "2026-10-24T20:00:00+00:00"
 HEADER_CORPUS = Path(__file__).with_name("header")
 
 

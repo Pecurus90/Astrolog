@@ -7,14 +7,15 @@ import shutil
 import stat
 import string
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 
-from astrolog.pipeline.changes import RootOverlapError, _emptied, _plain, add_root
+from astrolog.pipeline.changes import RootOverlapError, _emptied, add_root
 from astrolog.pipeline.scan import scan_root
 from astrolog.pipeline.walk import Walk
-from conftest import LATER, NOW, folder_link, nina_light
+from conftest import LATER, NOW, THEN, folder_link, nina_light
 
 
 def _file(path: Path, size: int = 2880) -> Path:
@@ -23,6 +24,19 @@ def _file(path: Path, size: int = 2880) -> Path:
     head = ("SIMPLE  =                    T".ljust(80) + "END".ljust(80)).encode("ascii")
     path.write_bytes(head + b" " * (size - len(head)))
     return path
+
+
+def _date_unreadable(monkeypatch: pytest.MonkeyPatch, name: str) -> Callable[..., os.stat_result]:
+    """os.stat fails on `name` only: passing NAS error on one file. Gives real os.stat back."""
+    real = os.stat
+
+    def flaky(path, *args, **kwargs):
+        if str(path).endswith(name):
+            raise PermissionError("errore passeggero (mock)")
+        return real(path, *args, **kwargs)
+
+    monkeypatch.setattr(os, "stat", flaky)
+    return real
 
 
 def test_the_first_scan_finds_every_file_new(conn, tmp_path):
@@ -162,14 +176,7 @@ def test_a_file_whose_date_cannot_be_read_is_not_gone(conn, tmp_path, monkeypatc
     _file(tmp_path / "a.fits")
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
-    real = os.stat
-
-    def flaky(path, *args, **kwargs):
-        if str(path).endswith("a.fits"):
-            raise PermissionError("errore passeggero (mock)")
-        return real(path, *args, **kwargs)
-
-    monkeypatch.setattr(os, "stat", flaky)
+    real = _date_unreadable(monkeypatch, "a.fits")
     changes = scan_root(conn, root, LATER).changes
     assert changes.gone == []
     assert changes.unlooked == ["a.fits"]  # left out, and said
@@ -201,14 +208,7 @@ def test_a_file_not_looked_at_does_not_stop_the_others_being_judged(conn, tmp_pa
     _file(tmp_path / "b.fits")
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
-    real = os.stat
-
-    def flaky(path, *args, **kwargs):
-        if str(path).endswith("a.fits"):
-            raise PermissionError("errore passeggero (mock)")
-        return real(path, *args, **kwargs)
-
-    monkeypatch.setattr(os, "stat", flaky)
+    real = _date_unreadable(monkeypatch, "a.fits")
     changes = scan_root(conn, root, LATER).changes
     monkeypatch.setattr(os, "stat", real)
     assert (changes.unlooked, changes.unchanged, changes.gone) == (["a.fits"], ["b.fits"], [])
@@ -238,7 +238,7 @@ def test_an_emptied_root_that_had_files_counts_as_silent(conn, tmp_path):
     assert (changes.reachable, changes.gone) == (False, [])
     _file(nas / "night" / "a.fits")
     _file(nas / "b.fits")
-    back = scan_root(conn, root, "2026-10-24T20:00:00+00:00").changes
+    back = scan_root(conn, root, THEN).changes
     assert (back.new, back.gone) == ([], [])  # never gone, so never new
 
 
@@ -453,12 +453,6 @@ def test_a_folder_inside_a_network_share_root_is_inside(conn):
     add_root(conn, r"\\localhost\C$", NOW)
     with pytest.raises(RootOverlapError):
         add_root(conn, r"\\localhost\C$\Windows", NOW)
-
-
-def test_the_long_form_of_a_share_is_the_share():
-    """Forma lunga di condivisione: barre doppie davanti, mai 'UNC' come cartella."""
-    assert _plain(r"\\?\UNC\srv\share\x") == r"\\srv\share\x"
-    assert _plain(r"\\?\C:\x") == r"C:\x"
 
 
 @pytest.mark.parametrize("drive_first", [True, False])

@@ -33,25 +33,6 @@ class StandardFilter(StrEnum):
     UVIR = "uvir"  # luminance on mono, colour with UV/IR on colour camera: read later by camera
     NONE = "none"
 
-    @property
-    def bands(self) -> tuple[Band, ...]:
-        return _BANDS[self]
-
-
-_BANDS = {
-    StandardFilter.L: (Band.L,),
-    StandardFilter.R: (Band.R,),
-    StandardFilter.G: (Band.G,),
-    StandardFilter.B: (Band.B,),
-    StandardFilter.HA: (Band.HA,),
-    StandardFilter.OIII: (Band.OIII,),
-    StandardFilter.SII: (Band.SII,),
-    StandardFilter.HB: (Band.HB,),
-    StandardFilter.HA_OIII: (Band.HA, Band.OIII),
-    StandardFilter.SII_OIII: (Band.SII, Band.OIII),
-    StandardFilter.UVIR: (Band.UVIR,),
-    StandardFilter.NONE: (),
-}
 
 # Written forms, normalized (filter_key). ASCII only: FITS header has no Greek alpha, beta.
 # Duals: no common form, reached by answer only. Others asked (O3, S2, Hb, Lum: no source).

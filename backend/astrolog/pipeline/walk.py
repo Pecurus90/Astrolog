@@ -1,8 +1,7 @@
 """Iterative, sorted: repeatable scans. Links followed, each real folder walked once: no cycles.
 What stays out is reported, not dropped."""
 
-# Ported from fits/walk.py (ADR 0030): shared parts live twice until old pipeline goes.
-# jscpd:ignore-start  # noqa: ERA001
+# Ported from fits/walk.py (ADR 0030): old copy goes with old pipeline.
 import os
 import re
 import stat
@@ -55,6 +54,13 @@ def long_path(path: str | os.PathLike[str]) -> str:
     if full.startswith("\\\\"):  # \\server\share -> \\?\UNC\server\share
         return "\\\\?\\UNC" + full[1:]
     return "\\\\?\\" + full
+
+
+def plain(path: str) -> str:
+    """Undoes long_path: `\\\\?\\UNC\\srv` is `\\\\srv` (Maximum Path Length)."""
+    if path.startswith("\\\\?\\UNC\\"):
+        return "\\" + path[len("\\\\?\\UNC") :]
+    return path.removeprefix("\\\\?\\")
 
 
 def absolute(path: str) -> str:
@@ -211,6 +217,3 @@ def walk_dir(root: str) -> Walk:
     for items in (result.found, result.unreadable, result.hidden, result.online_only):
         items.sort()
     return result
-
-
-# jscpd:ignore-end  # noqa: ERA001

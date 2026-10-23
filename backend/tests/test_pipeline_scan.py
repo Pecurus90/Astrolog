@@ -5,7 +5,6 @@ import json
 import os
 import shutil
 import sqlite3
-from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -15,13 +14,14 @@ from astrolog.pipeline import scan
 from astrolog.pipeline.changes import add_root
 from astrolog.pipeline.scan import ScanRunningError, scan_root
 from astrolog.pipeline.scanner import Extracted, Skip, Skipped
-from conftest import LATER, NOW, nina_light
-
-ScanFile = Callable[[Path, int | None], Extracted | Skipped]
+from conftest import LATER, NOW, THEN, nina_light
 
 
-def _stopping_scan(real: ScanFile, at: int = 1) -> ScanFile:
-    """Fake `scan_file`: stops scan with KeyboardInterrupt at call number `at`."""
+def _stopped_scan(
+    conn: sqlite3.Connection, root: int, now: str, monkeypatch: pytest.MonkeyPatch, at: int = 1
+) -> None:
+    """Scan stopped by KeyboardInterrupt at read number `at`; next scan reads for real."""
+    real = scan.scan_file
     calls: list[Path] = []
 
     def stops(path: Path, size: int | None = None) -> Extracted | Skipped:
@@ -30,7 +30,10 @@ def _stopping_scan(real: ScanFile, at: int = 1) -> ScanFile:
             raise KeyboardInterrupt
         return real(path, size)
 
-    return stops
+    monkeypatch.setattr(scan, "scan_file", stops)
+    with pytest.raises(KeyboardInterrupt):
+        scan_root(conn, root, now)
+    monkeypatch.setattr(scan, "scan_file", real)
 
 
 def _files(conn):
@@ -90,7 +93,7 @@ def test_a_folder_renamed_while_its_files_are_read_is_still_a_move(conn, tmp_pat
     monkeypatch.setattr(scan, "scan_file", renamed_first)
     assert scan_root(conn, root, LATER).changes.unlooked == ["night/a.fits"]  # said
     monkeypatch.setattr(scan, "scan_file", real)
-    later = scan_root(conn, root, "2026-10-24T20:00:00+00:00")
+    later = scan_root(conn, root, THEN)
     assert later.moved == [("night/a.fits", "night2/a.fits")]
 
 
@@ -155,11 +158,7 @@ def test_an_interrupted_scan_reads_its_files_next_time(conn, tmp_path, monkeypat
     nina_light(tmp_path / "a.fits", 1)
     nina_light(tmp_path / "b.fits", 2)
     root = add_root(conn, tmp_path, NOW)
-    real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real, at=2))
-    with pytest.raises(KeyboardInterrupt):
-        scan_root(conn, root, NOW)
-    monkeypatch.setattr(scan, "scan_file", real)
+    _stopped_scan(conn, root, NOW, monkeypatch, at=2)
     assert scan_root(conn, root, LATER).frames == 2
 
 
@@ -170,11 +169,7 @@ def test_a_file_changed_then_a_stopped_scan_is_read_next_time(conn, tmp_path, mo
     scan_root(conn, root, NOW)
     nina_light(a, 1, ("OBJECT  = 'M 42'",))
     _touch_later(a)
-    real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real))
-    with pytest.raises(KeyboardInterrupt):
-        scan_root(conn, root, LATER)
-    monkeypatch.setattr(scan, "scan_file", real)
+    _stopped_scan(conn, root, LATER, monkeypatch)
     assert scan_root(conn, root, LATER).changes.changed == ["a.fits"]
     header = conn.execute("SELECT header FROM pipeline_headers").fetchone()["header"]
     assert json.loads(header)["OBJECT"] == "M 42"
@@ -210,12 +205,8 @@ def test_an_interrupted_scan_keeps_what_it_read(conn, tmp_path, monkeypatch):
         nina_light(tmp_path / f"{seed}.fits", seed)
     root = add_root(conn, tmp_path, NOW)
     monkeypatch.setattr(scan, "BATCH", 1)
-    real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real, at=2))
-    with pytest.raises(KeyboardInterrupt):
-        scan_root(conn, root, NOW)
+    _stopped_scan(conn, root, NOW, monkeypatch, at=2)
     assert _cards(conn) == {"0.fits": "light"}
-    monkeypatch.setattr(scan, "scan_file", real)
     again = scan_root(conn, root, LATER)
     assert again.changes.to_read == ["1.fits", "2.fits"]
     assert again.frames == 3
@@ -227,12 +218,8 @@ def test_a_move_interrupted_mid_scan_is_still_found_next_time(conn, tmp_path, mo
     root = add_root(conn, tmp_path, NOW)
     scan_root(conn, root, NOW)
     (tmp_path / "a.fits").rename(tmp_path / "b.fits")
-    real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real))
-    with pytest.raises(KeyboardInterrupt):
-        scan_root(conn, root, LATER)
-    monkeypatch.setattr(scan, "scan_file", real)
-    assert scan_root(conn, root, "2026-10-24T20:00:00+00:00").moved == [("a.fits", "b.fits")]
+    _stopped_scan(conn, root, LATER, monkeypatch)
+    assert scan_root(conn, root, THEN).moved == [("a.fits", "b.fits")]
     finished = conn.execute("SELECT finished FROM pipeline_scans ORDER BY id").fetchall()
     assert [r["finished"] for r in finished] == [1, 0, 1]
 
@@ -245,12 +232,8 @@ def test_a_move_already_saved_when_the_scan_stopped_is_found_next_time(conn, tmp
     (tmp_path / "a.fits").rename(tmp_path / "b.fits")
     nina_light(tmp_path / "c.fits", 2)
     monkeypatch.setattr(scan, "BATCH", 1)
-    real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real, at=2))
-    with pytest.raises(KeyboardInterrupt):
-        scan_root(conn, root, LATER)
-    monkeypatch.setattr(scan, "scan_file", real)
-    assert scan_root(conn, root, "2026-10-24T20:00:00+00:00").moved == [("a.fits", "b.fits")]
+    _stopped_scan(conn, root, LATER, monkeypatch, at=2)
+    assert scan_root(conn, root, THEN).moved == [("a.fits", "b.fits")]
 
 
 def test_a_move_survives_a_stopped_scan_then_a_silent_root(conn, tmp_path, monkeypatch):
@@ -262,13 +245,9 @@ def test_a_move_survives_a_stopped_scan_then_a_silent_root(conn, tmp_path, monke
     (nas / "a.fits").rename(nas / "b.fits")
     nina_light(nas / "c.fits", 2)
     monkeypatch.setattr(scan, "BATCH", 1)
-    real = scan.scan_file
-    monkeypatch.setattr(scan, "scan_file", _stopping_scan(real, at=2))
-    with pytest.raises(KeyboardInterrupt):
-        scan_root(conn, root, LATER)
-    monkeypatch.setattr(scan, "scan_file", real)
+    _stopped_scan(conn, root, LATER, monkeypatch, at=2)
     nas.rename(tmp_path / "off")
-    assert not scan_root(conn, root, "2026-10-24T20:00:00+00:00").changes.reachable
+    assert not scan_root(conn, root, THEN).changes.reachable
     (tmp_path / "off").rename(nas)
     assert scan_root(conn, root, "2026-10-25T20:00:00+00:00").moved == [("a.fits", "b.fits")]
 
@@ -371,7 +350,7 @@ def test_a_move_is_never_lost_if_the_process_dies_closing_the_scan(conn, tmp_pat
     with pytest.raises(KeyboardInterrupt):
         scan_root(conn, root, LATER)
     monkeypatch.setattr(scan, "_moved", real)
-    assert scan_root(conn, root, "2026-10-24T20:00:00+00:00").moved == [("a.fits", "b.fits")]
+    assert scan_root(conn, root, THEN).moved == [("a.fits", "b.fits")]
 
 
 def test_pairing_moves_finds_files_by_frame_through_an_index(conn):
@@ -586,7 +565,7 @@ def test_a_file_that_failed_to_read_is_read_again_next_scan(conn, tmp_path, monk
     scan_root(conn, root, LATER)
     assert _cards(conn) == {}
     monkeypatch.setattr(scan, "scan_file", real)
-    again = scan_root(conn, root, "2026-10-24T20:00:00+00:00")
+    again = scan_root(conn, root, THEN)
     assert again.changes.to_read == ["a.fits"]
     assert _cards(conn) == {"a.fits": "light"}
 

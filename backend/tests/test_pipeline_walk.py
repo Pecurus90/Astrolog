@@ -8,7 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 from astrolog.pipeline import walk
-from astrolog.pipeline.walk import long_path, walk_dir
+from astrolog.pipeline.walk import long_path, plain, walk_dir
 from conftest import (
     ScanFinta,
     VoceFinta,
@@ -376,3 +376,9 @@ def test_a_long_network_path_gets_the_unc_form():
 def test_names_with_spaces_and_accents(tmp_path):
     _touch(str(tmp_path), "IC 405 - Nebulosa Stella Fiammeggiante", "posa n° 1 à.fits")
     assert len(found(tmp_path)) == 1
+
+
+def test_the_long_form_of_a_share_is_the_share():
+    """Forma lunga di condivisione: barre doppie davanti, mai 'UNC' come cartella."""
+    assert plain(r"\\?\UNC\srv\share\x") == r"\\srv\share\x"
+    assert plain(r"\\?\C:\x") == r"C:\x"

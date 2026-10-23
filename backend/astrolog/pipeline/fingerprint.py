@@ -6,7 +6,7 @@ import math
 from dataclasses import dataclass
 from typing import BinaryIO
 
-from .card import camera, exposure_s, start_utc
+from .card import camera, exposure_s, start_utc  # same reading as card: one fact, one home
 from .values import Value, as_count, frame_size
 
 FINGERPRINT_BYTES = 65536

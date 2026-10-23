@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
 from .scanner import Skip
-from .walk import Walk, long_path, real_key, walk_dir
+from .walk import Walk, long_path, plain, real_key, walk_dir
 from .walk import absolute as walk_absolute
 
 # Skip reasons that pass (file locked, copy running): read again every scan.
@@ -73,16 +73,6 @@ def _inside(child: str, parent: str) -> bool:
     return child.startswith(parent if parent.endswith(os.sep) else parent + os.sep)
 
 
-_LONG = "\\\\?\\"
-
-
-def _plain(path: str) -> str:
-    """Windows `\\\\?\\` form is same path: `\\\\?\\UNC\\srv` is `\\\\srv` (Maximum Path Length)."""
-    if path.startswith(_LONG + "UNC\\"):
-        return "\\" + path[len(_LONG) + 3 :]
-    return path.removeprefix(_LONG)
-
-
 def _identity(path: str) -> tuple[str, str] | None:
     """Volume and folder id from disk: same in every spelling (letter, share, `\\\\?\\`).
     Digits: Windows volume serial is unsigned 64 bit, past SQLite INTEGER. Silent disk: None."""
@@ -104,13 +94,13 @@ def _still(stored: str, path: str) -> bool:
 def add_root(conn: sqlite3.Connection, path: str | os.PathLike[str], now: str) -> int:
     """Existing folder only. Same folder written another way: same root; inside or around one
     (written or real key): RootOverlapError. Other roots' disks touched only when ids match."""
-    absolute = os.path.normpath(walk_absolute(_plain(os.fspath(path))))
+    absolute = os.path.normpath(walk_absolute(plain(os.fspath(path))))
     if not os.path.isdir(long_path(absolute)):
         raise NotADirectoryError(absolute)
     written, real = _keys(absolute)
     identity = _identity(absolute)
     # letter mapped below a share (or link): what holds it shows only on the real path
-    ancestors = _ancestors(absolute) | _ancestors(_plain(os.path.realpath(long_path(absolute))))
+    ancestors = _ancestors(absolute) | _ancestors(plain(os.path.realpath(long_path(absolute))))
     with transaction(conn, immediate=True):
         same = _same_root(conn, written, real, identity, ancestors)
         if same is not None:

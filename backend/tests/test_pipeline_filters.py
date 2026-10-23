@@ -65,12 +65,6 @@ def test_forms_are_ascii_normalized_and_unique():
     assert len(FORMS) == len(set(FORMS))
 
 
-def test_every_standard_but_none_has_bands():
-    for standard in StandardFilter:
-        assert bool(standard.bands) is (standard is not StandardFilter.NONE)
-    assert StandardFilter.HA_OIII.bands == (Band.HA, Band.OIII)
-
-
 def test_an_answer_to_a_standard_holds_for_every_spelling_of_its_key(conn):
     resolve(conn, "Ha 7nm")
     resolve(conn, "HA  7NM")
