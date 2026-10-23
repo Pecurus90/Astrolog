@@ -32,7 +32,7 @@ class Changes:
     gone: list[str] = field(default_factory=list)
     unreachable: list[str] = field(default_factory=list)  # subfolders not answering
     unlooked: list[str] = field(default_factory=list)  # no stat, name not text, gone before read
-    hidden: list[str] = field(default_factory=list)  # trash, service folders: left out, said
+    hidden: list[str] = field(default_factory=list)  # trash, service, hidden files: out, said
     online_only: list[str] = field(default_factory=list)  # cloud placeholders: never downloaded
     # files to read -> (size, mtime_ns) seen now; written only with their read
     stat: dict[str, tuple[int, int]] = field(default_factory=dict)

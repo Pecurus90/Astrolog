@@ -11,6 +11,7 @@ from astrolog.pipeline import walk
 from astrolog.pipeline.walk import long_path, plain, walk_dir
 from conftest import (
     ScanFinta,
+    VoceAvvolta,
     VoceFinta,
     breaking_dir,
     fake_entries,
@@ -207,6 +208,24 @@ def test_hidden_folders_are_not_walked_so_the_bin_stays_out(tmp_path, monkeypatc
     assert names(found(nascosta)) == {"cancellata.fits"}
 
 
+def test_hidden_files_stay_out_and_are_named_like_hidden_folders(tmp_path, monkeypatch):
+    """File nascosto (punto, attributo Windows): fuori come le cartelle nascoste, nominato.
+    Prima: letto, mentre la cartella nascosta no."""
+    monkeypatch.setattr(walk, "PLATFORM", "win32")
+    root = str(tmp_path)
+    for name in ("buona.fits", ".punto.fits", "attributo.fits"):
+        _touch(root, name)
+
+    class _Nascosto(VoceAvvolta):
+        def stat(self, follow_symlinks=True):
+            return SimpleNamespace(st_file_attributes=stat.FILE_ATTRIBUTE_HIDDEN)
+
+    fake_entries(monkeypatch, lambda _c, v: _Nascosto(v) if v.name == "attributo.fits" else v)
+    result = walk_dir(root)
+    assert names(result.found) == {"buona.fits"}
+    assert names(result.hidden) == {".punto.fits", "attributo.fits"}
+
+
 # (nome, sistema, attributi Windows, flag Mac, raccolto?). Costanti e fonti in `pipeline/walk.py`.
 SEGNI = [
     ("Windows, dati non sul disco", "win32", walk.FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS, 0, False),
@@ -246,8 +265,9 @@ def test_a_file_that_is_not_on_the_disk_is_not_collected(
     assert "sul_disco.fits" in names(result.found)
     assert ("posa.fits" in names(result.found)) is raccolto
     assert names(result.online_only) == (set() if raccolto else {"posa.fits"})
-    # segno letto sulla voce, senza seguire collegamenti; dove non esiste, non si chiede
-    assert chiesti == ([] if sistema == "linux" else [False])
+    # segno letto sulla voce, senza seguire collegamenti; dove non esiste, non si chiede.
+    # Windows chiede anche "nascosto": DirEntry.stat vero tiene la risposta (il finto no)
+    assert chiesti == {"linux": [], "darwin": [False], "win32": [False, False]}[sistema]
 
 
 def test_a_file_whose_sign_cannot_be_read_is_taken_as_on_the_disk(tmp_path, monkeypatch):

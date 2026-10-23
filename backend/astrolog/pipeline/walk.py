@@ -96,8 +96,8 @@ SERVICE_FOLDERS = frozenset({
 
 
 def _hidden(entry: os.DirEntry[str]) -> bool:
-    """Trash and service folders hidden on all three systems; trash holds frames user DELETED.
-    Property first; NAS ones by documented name. Root user picks never passes here."""
+    """Trash, service folders, hidden files: out on all three systems; trash holds frames user
+    DELETED. Property first; NAS ones by documented name. Root user picks never passes here."""
     if entry.name.startswith(".") or entry.name.casefold() in SERVICE_FOLDERS:
         return True
     if PLATFORM != "win32":  # attribute exists only there; elsewhere it costs an lstat per folder
@@ -195,7 +195,10 @@ def _list_folder(
             continue  # placeholder's twin too: not one more file
         elif FITS_EXTENSION_RE.search(entry.name):
             fits_here.add(entry.name.casefold())
-            (result.online_only if _online_only(entry) else result.found).append(full)
+            if _hidden(entry):  # same rule as folders: user hid it
+                result.hidden.append(full)
+            else:
+                (result.online_only if _online_only(entry) else result.found).append(full)
         elif stub := ICLOUD_STUB_RE.match(entry.name):
             stubs.append(stub.group(1))
         elif _dangling(entry, full):

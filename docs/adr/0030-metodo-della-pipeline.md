@@ -45,7 +45,8 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
   fpack conta come seconda posa. Sull'archivio di prova: stesse 15.226 pose.
 - **Cartella nascosta dopo** (Marco, 22/10/2026, secondo audit): non si cammina e le sue pose non
   si giudicano, come una cartella che non risponde; la vecchia le dava "non trovate". Il cestino
-  resta "sparito": un file cestinato cambia percorso.
+  resta "sparito": un file cestinato cambia percorso. Un FITS nascosto (punto, attributo) resta
+  fuori come le cartelle, detto nella ricevuta (Marco, 23/10/2026, quinto audit).
 - **Altro disco sotto la radice** (Marco, 22/10/2026, audit 4): stessa lettera o rimontaggio con
   un altro volume: si giudica sempre e la ricevuta lo segna (`volume_changed`). Il disco sbagliato
   mostra le pose sparite, che tornano col disco giusto; mai una radice muta per sempre.
