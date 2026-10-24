@@ -63,3 +63,20 @@ def test_rule_catches_and_lets_through(hook_id):
     hits, misses = CASES[hook_id]
     assert [t for t in hits if not _catches(hook, t)] == []
     assert [t for t in misses if _catches(hook, t)] == []
+
+
+def test_every_extension_prettier_checks_is_checked_out_with_lf():
+    """Prettier wants LF; Windows CI checks out with CRLF unless `.gitattributes` pins it."""
+    with open(os.path.join(ROOT, ".pre-commit-config.yaml"), encoding="utf-8") as h:
+        config = yaml.safe_load(h)
+    prettier = next(k for r in config["repos"] for k in r["hooks"] if k["id"] == "prettier")
+    extensions = re.search(r"\\\.\(([^)]*)\)\$", prettier["files"])
+    assert extensions, prettier["files"]
+    checked = extensions.group(1).split("|")
+    with open(os.path.join(ROOT, ".gitattributes"), encoding="utf-8") as h:
+        pinned = {
+            parts[0].removeprefix("*.")
+            for line in h
+            if (parts := line.split()) and "eol=lf" in parts and parts[0].startswith("*.")
+        }
+    assert sorted(set(checked) - pinned) == []

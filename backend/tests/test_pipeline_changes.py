@@ -131,6 +131,8 @@ def test_a_folder_made_hidden_after_a_scan_is_not_judged(conn, tmp_path):
     """Nascosta dall'utente (attributo): non letta, le sue pose restano com'erano."""
     import ctypes
 
+    assert sys.platform == "win32"  # pyright on Linux and Mac: windll exists only here
+
     nas = tmp_path / "nas"
     _file(nas / "notte" / "a.fits")
     root = add_root(conn, nas, NOW)

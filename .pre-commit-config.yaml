@@ -178,6 +178,14 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-push, manual]
+      # The local push runs on Windows only; CI also types the code as Linux and Mac.
+      - id: pyright-linux
+        name: pyright as Linux
+        entry: python -m pyright -p backend --pythonplatform Linux
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push, manual]
       - id: import-linter
         name: import-linter
         entry: lint-imports --config backend/pyproject.toml
