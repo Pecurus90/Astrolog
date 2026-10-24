@@ -38,3 +38,20 @@ jobs:
         run: |
           mutmut results --all true > results.txt
           python ../tools/mutation_shards.py ${{ matrix.shard }} --filter < results.txt
+
+  # GitHub tells only who wrote the cron: a red night becomes an Issue, a green one closes it.
+  signal:
+    needs: mutation
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Issue nightly-rosso
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python tools/nightly_issue.py "${{ needs.mutation.result }}"
+          "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
