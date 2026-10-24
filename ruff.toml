@@ -30,3 +30,5 @@ ignore = ["S101", "B008"]
 # Gli strumenti sono programmi da riga di comando: stampare e' come parlano, e lanciare
 # processi (ruff, pytest, git) e' cio' per cui esistono.
 "tools/**" = ["T20", "S603", "S607"]
+# Gli hook di Claude Code sono anch'essi programmi da riga di comando (parlano stampando, chiedono a gh).
+".claude/hooks/**" = ["T20", "S603", "S607"]
