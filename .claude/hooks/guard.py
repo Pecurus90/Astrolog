@@ -54,6 +54,14 @@ SCRIPT_WRITES = re.compile(
 )
 HEREDOC_WHY = "text goes into files only by Edit/Write, never a heredoc or a script"
 
+# Nothing to stash, and the pop brings back an old stash of Marco's into the work.
+_GIT_STASH = r"\bgit\s+(?:-\S+(?:\s+[^-\s]\S*)?\s+)*stash\b"  # global options allowed (-C dir)
+STASH_THEN_POP = re.compile(
+    _GIT_STASH + r"(?!\s+(list|show|pop|apply|drop)\b).*" + _GIT_STASH + r"\s+(pop|apply)\b",
+    re.DOTALL,
+)
+STASH_WHY = "never stash and pop in one command: compare with git worktree or git show"
+
 NPM_CHANGES = {"uninstall", "un", "remove", "rm", "r", "update", "up", "upgrade"}
 NPM_INSTALLS = {"install", "i", "add"}
 NPM_VALUE_OPTIONS = {"--prefix", "-C", "--cache", "--registry", "--workspace", "-w"}
@@ -118,6 +126,8 @@ def reason(payload: dict, root: str) -> str | None:
         command = _quoted_out(data.get("command") or "")
         if any(rule.search(command) for rule in KILL_BY_NAME):
             return KILL_BY_NAME_WHY
+        if STASH_THEN_POP.search(command):
+            return STASH_WHY
         if _npm_names_a_package(command):
             return "dependencies change only with Marco's approval"
         return next((why for rule, why in COMMANDS if rule.search(command)), None)
@@ -130,7 +140,8 @@ def main() -> int:
     why = reason(payload, root)
     if why is not None:
         # a hand edit of these files is never right; a command that changes them is Marco's click
-        asks = payload.get("tool_name") == "Bash" and why not in (KILL_BY_NAME_WHY, HEREDOC_WHY)
+        denied = (KILL_BY_NAME_WHY, HEREDOC_WHY, STASH_WHY)
+        asks = payload.get("tool_name") == "Bash" and why not in denied
         verdict = "ask" if asks else "deny"
         decision = {"hookEventName": "PreToolUse", "permissionDecision": verdict}
         decision["permissionDecisionReason"] = why

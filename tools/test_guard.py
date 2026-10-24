@@ -209,6 +209,29 @@ def test_a_heredoc_write_is_denied_not_asked():
     assert json.loads(out.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        "git stash -q; pytest x; git stash pop -q",
+        "git stash && make test && git stash apply",
+        "git stash push -m tmp; ls; git stash pop",
+        "git -C backend stash; pytest; git -C backend stash pop",
+        "git stash\npytest\ngit stash pop",
+    ],
+)
+def test_stash_then_pop_in_one_command_is_denied(command):
+    """Con niente da mettere da parte, il pop riprende una stash vecchia: si confronta con un
+    worktree o con git show."""
+    assert guard.reason(bash(command), ROOT) == guard.STASH_WHY
+
+
+@pytest.mark.parametrize(
+    "command", ["git stash list", "git stash show stash@{0}", "git show HEAD:x"]
+)
+def test_reading_stashes_passes(command):
+    assert guard.reason(bash(command), ROOT) is None
+
+
 def test_closing_by_name_is_denied_not_asked():
     payload = json.dumps(bash("taskkill /F /IM chrome.exe"))
     out = subprocess.run(
