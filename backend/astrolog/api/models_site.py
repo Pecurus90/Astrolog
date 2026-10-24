@@ -50,14 +50,14 @@ class SiteList(Page[SiteOut]):
 
 class SiteCreate(BaseModel):
     name: str = Field(min_length=1)
-    latitude: float = Field(ge=-90, le=90)
-    longitude: float = Field(ge=-180, le=180)
+    latitude: float = Field(ge=-90, le=90)  # [C geographic latitude]
+    longitude: float = Field(ge=-180, le=180)  # [C geographic longitude]
     elevation_m: float | None = Field(
         default=None,
         description="If you don't give it, the app asks the service; if you do, yours wins.",
     )
     sky_sqm: float | None = Field(None, ge=SQM_MIN, le=SQM_MAX)
-    bortle: int | None = Field(None, ge=1, le=9)
+    bortle: int | None = Field(None, ge=1, le=9)  # [C Bortle 2001: nine classes]
     is_default: bool = False
 
 
@@ -66,11 +66,11 @@ class SiteEdit(BaseModel):
     zone, because an old time zone on new coordinates is a silent error."""
 
     name: str | None = Field(None, min_length=1)
-    latitude: float | None = Field(None, ge=-90, le=90)
-    longitude: float | None = Field(None, ge=-180, le=180)
+    latitude: float | None = Field(None, ge=-90, le=90)  # [C geographic latitude]
+    longitude: float | None = Field(None, ge=-180, le=180)  # [C geographic longitude]
     elevation_m: float | None = None
     sky_sqm: float | None = Field(None, ge=SQM_MIN, le=SQM_MAX)
-    bortle: int | None = Field(None, ge=1, le=9)
+    bortle: int | None = Field(None, ge=1, le=9)  # [C Bortle 2001: nine classes]
 
 
 class SiteDeleted(BaseModel):

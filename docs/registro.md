@@ -4,7 +4,7 @@ Generato da `tools/registro.py --scrivi`: non si scrive a mano. La casa di ogni 
 e' il codice, con la fonte accanto: C convenzione citata, M misura nostra, P decisione
 di Marco, T tecnico (non una regola).
 
-Valori: 133; senza fonte: 115.
+Valori: 133; senza fonte: 87.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -45,19 +45,19 @@ Valori: 133; senza fonte: 115.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| SiteCreate.latitude | `Field(ge=-90, le=90)` | **senza fonte** |
-| SiteCreate.longitude | `Field(ge=-180, le=180)` | **senza fonte** |
-| SiteCreate.bortle | `Field(None, ge=1, le=9)` | **senza fonte** |
-| SiteEdit.latitude | `Field(None, ge=-90, le=90)` | **senza fonte** |
-| SiteEdit.longitude | `Field(None, ge=-180, le=180)` | **senza fonte** |
-| SiteEdit.bortle | `Field(None, ge=1, le=9)` | **senza fonte** |
+| SiteCreate.latitude | `Field(ge=-90, le=90)` | C geographic latitude |
+| SiteCreate.longitude | `Field(ge=-180, le=180)` | C geographic longitude |
+| SiteCreate.bortle | `Field(None, ge=1, le=9)` | C Bortle 2001: nine classes |
+| SiteEdit.latitude | `Field(None, ge=-90, le=90)` | C geographic latitude |
+| SiteEdit.longitude | `Field(None, ge=-180, le=180)` | C geographic longitude |
+| SiteEdit.bortle | `Field(None, ge=1, le=9)` | C Bortle 2001: nine classes |
 
 ### api/models_tonight.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| IlluminationPct | `Annotated[int, Field(ge=0, le=100)]` | **senza fonte** |
-| MoonOut.ceiling_deg | `le=90,` | **senza fonte** |
+| IlluminationPct | `Annotated[int, Field(ge=0, le=100)]` | T |
+| MoonOut.ceiling_deg | `le=90,` | T |
 
 ### api/nights.py
 
@@ -133,30 +133,30 @@ Valori: 133; senza fonte: 115.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _START_HOUR | `12` | **senza fonte** |
+| _START_HOUR | `12` | P docs/domini/effemeridi.md |
 
 ### db/config.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| KEYS | `25,` | **senza fonte** |
-| KEYS | `4,` | **senza fonte** |
-| RANGES | `{"moon_broadband_max_pct": (0, 100), "moon_broadband_min_dark_h": (...` | **senza fonte** |
+| KEYS | `25,` | C ING dark time: lit fraction under 0.25 |
+| KEYS | `4,` | P docs/domini/effemeridi.md |
+| RANGES | `{"moon_broadband_max_pct": (0, 100), "moon_broadband_min_dark_h": (...` | T |
 
 ### ephemeris/__init__.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| RISESET_DEG | `-0.833` | **senza fonte** |
-| CIVIL_DEG | `-6.0` | **senza fonte** |
+| RISESET_DEG | `-0.833` | C USNO RST_defs: Sun's centre at zenith distance 90.8333 |
+| CIVIL_DEG | `-6.0` | C USNO https://aa.usno.navy.mil/faq/RST_defs: 6, 12, 18 degrees below the horizon |
 | NAUTICAL_DEG | `-12.0` | **senza fonte** |
 | ASTRO_DEG | `-18.0` | **senza fonte** |
-| GRID_STEP_MIN | `3` | **senza fonte** |
-| TRACK_STEP_MIN | `15` | **senza fonte** |
-| CALENDAR_STEP_MIN | `5` | **senza fonte** |
-| SYNODIC_MONTH_DAYS | `29.530588861` | **senza fonte** |
-| MAX_DECLINATION_DEG | `28.8` | **senza fonte** |
-| CEILING_STEP_DEG | `15` | **senza fonte** |
+| GRID_STEP_MIN | `3` | T |
+| TRACK_STEP_MIN | `15` | T |
+| CALENDAR_STEP_MIN | `5` | T |
+| SYNODIC_MONTH_DAYS | `29.530588861` | C Meeus, Astronomical Algorithms, 2nd ed., ch. 49 |
+| MAX_DECLINATION_DEG | `28.8` | C lunar standstill: declination up to 28.725 degrees, Wikipedia "Lunar standstill" |
+| CEILING_STEP_DEG | `15` | T |
 
 ### ephemeris/moon.py
 
@@ -168,8 +168,8 @@ Valori: 133; senza fonte: 115.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _HALF_HOUR | `dt.timedelta(minutes=30)` | **senza fonte** |
-| _HAIR | `1e-9` | **senza fonte** |
+| _HALF_HOUR | `dt.timedelta(minutes=30)` | T |
+| _HAIR | `1e-9` | T |
 
 ### fits/header_read.py
 
@@ -232,7 +232,7 @@ Valori: 133; senza fonte: 115.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _J2000_PRECESSION | `erfa.bp06(2451545.0, 0.0)[1]` | **senza fonte** |
+| _J2000_PRECESSION | `erfa.bp06(2451545.0, 0.0)[1]` | C IAU 2006 precession at J2000.0 TT |
 
 ### pipeline/solve.py
 
@@ -260,7 +260,7 @@ Valori: 133; senza fonte: 115.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _KM_PER_DEGREE | `111.2` | **senza fonte** |
+| _KM_PER_DEGREE | `111.2` | C IUGG mean radius R1 6371.0088 km: 2*pi*R1/360 = 111.195 |
 | search(limit=) | `5` | **senza fonte** |
 
 ### spine/folder_move.py
@@ -319,7 +319,7 @@ Valori: 133; senza fonte: 115.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _SLIVER_PCT | `2` | **senza fonte** |
+| _SLIVER_PCT | `2` | T |
 
 ### spine/rewrite.py
 
@@ -344,7 +344,7 @@ Valori: 133; senza fonte: 115.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _EDGES_H | `((2, "under2"), (4, "2to4"), (6, "4to6"))` | **senza fonte** |
+| _EDGES_H | `((2, "under2"), (4, "2to4"), (6, "4to6"))` | T |
 
 ### startup.py
 
@@ -356,9 +356,9 @@ Valori: 133; senza fonte: 115.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| F32_SIGNIFICANT_DIGITS | `7` | **senza fonte** |
-| ARCSEC_PER_RAD_PER_1000 | `206.265` | **senza fonte** |
-| FOCAL_TOLERANCE | `0.05` | **senza fonte** |
+| F32_SIGNIFICANT_DIGITS | `7` | T |
+| ARCSEC_PER_RAD_PER_1000 | `206.265` | C 648000/pi |
+| FOCAL_TOLERANCE | `0.05` | P ADR 0016 |
 | NATURAL_SKY_CD_M2 | `174e-6` | **senza fonte** |
 | CD_M2_PER_MAG0 | `1.08e5` | **senza fonte** |
 | BORTLE_FLOORS | `BORTLE_FLOORS = ((1, 21.76), (2, 21.60), (3, 21.30), (4, 20.80), (5...` | **senza fonte** |

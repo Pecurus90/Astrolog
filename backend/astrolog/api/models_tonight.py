@@ -47,7 +47,7 @@ class MoonCalendarOut(BaseModel):
     nights: list[MoonCalendarNightOut]
 
 
-IlluminationPct = Annotated[int, Field(ge=0, le=100)]
+IlluminationPct = Annotated[int, Field(ge=0, le=100)]  # [T] percent
 
 
 class SkyPointOut(BaseModel):
@@ -108,7 +108,7 @@ class MoonOut(BaseModel):
     )
     ceiling_deg: int = Field(
         gt=0,
-        le=90,
+        le=90,  # [T] zenith
         description="How high the Moon can get **from this site**, never more: it is the top "
         "edge of the chart. It depends on the latitude and not on the night, so the scale never "
         "changes at one place and two nights compare at a glance. It arrives already rounded up "

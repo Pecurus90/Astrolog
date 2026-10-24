@@ -8,7 +8,7 @@ from enum import StrEnum
 
 from . import counts
 
-# The board's legend: 0 h, under 2, 2-4, 4-6, over 6.
+# The board's legend: 0 h, under 2, 2-4, 4-6, over 6. [T] Design board
 _EDGES_H = ((2, "under2"), (4, "2to4"), (6, "4to6"))
 
 # Same frames as the Nights page: inside a night, copies left out. Two sites on one date make one

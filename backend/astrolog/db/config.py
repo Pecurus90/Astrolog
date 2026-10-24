@@ -45,13 +45,13 @@ KEYS: dict[str, Key] = {
     ),
     "moon_broadband_max_pct": Key(
         int,
-        25,
+        25,  # [C ING dark time: lit fraction under 0.25]
         "notte buona per la banda larga con la Luna sotto questa percentuale: scelta di prodotto"
         " (Marco, 15/10/2026), nessuna soglia pubblica condivisa",
     ),
     "moon_broadband_min_dark_h": Key(
         int,
-        4,
+        4,  # [P docs/domini/effemeridi.md]
         "oppure con almeno queste ore di buio senza Luna: scelta di prodotto (Marco, 15/10/2026)",
     ),
 }
@@ -75,7 +75,7 @@ class Preferences:
 
 # A weather model outside this list would give an empty page with no reason.
 CHOICES = {"weather_model": ("best_match", "ecmwf_ifs025", "icon_seamless", "gfs_seamless")}
-# A number outside its range would make every night good, or none.
+# A number outside its range would make every night good, or none. [T] percent, half a day
 RANGES = {"moon_broadband_max_pct": (0, 100), "moon_broadband_min_dark_h": (0, 12)}
 
 

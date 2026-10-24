@@ -52,7 +52,7 @@ def night_date(instant_iso: object, tz_name: str | None = None) -> str | None:
     return None if night == date.max.isoformat() else night
 
 
-# A night is looked at from noon of its day, in the site's zone.
+# A night is looked at from noon of its day, in the site's zone. [P docs/domini/effemeridi.md]
 _START_HOUR = 12
 
 

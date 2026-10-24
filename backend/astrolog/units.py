@@ -7,10 +7,10 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 # The digits a float32 can really assert: `4.29` read back in double precision becomes
-# `4.28999996185303`, and that tail is format, not measure.
+# `4.28999996185303`, and that tail is format, not measure. [T]
 F32_SIGNIFICANT_DIGITS = 7
 
-# Arcseconds in a radian, divided by a thousand: the micron -> millimetre conversion is inside.
+# Arcseconds in a radian, divided by a thousand: micron -> millimetre inside. [C 648000/pi]
 ARCSEC_PER_RAD_PER_1000 = 206.265
 
 
@@ -84,7 +84,7 @@ def scale_arcsec_px(pixel_um: float | None, focal_mm: float | None) -> float | N
 
 
 # A focal group spreads <= 5 % (max/min <= 1.05): it absorbs header jitter without chaining
-# different optical setups.
+# different optical setups. [P ADR 0016]
 FOCAL_TOLERANCE = 0.05
 
 
@@ -122,8 +122,8 @@ def focal_buckets(focals: Iterable[Any], tol: float = FOCAL_TOLERANCE) -> dict[f
     return mapping
 
 
-# The natural night-sky background, 174 microcandela per square metre: without adding it a
-# perfect site would have infinite brightness.
+# Natural night-sky background, else a perfect site has infinite brightness. [C Falchi 2016:
+# "22.0 mag/arcsec2, corresponding to 174 ucd/m2"]
 NATURAL_SKY_CD_M2 = 174e-6
 # The constant linking candela per square metre and magnitudes per square arcsecond.
 CD_M2_PER_MAG0 = 1.08e5

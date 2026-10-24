@@ -92,7 +92,7 @@ def _moons(rows: Sequence[sqlite3.Row]) -> dict[int, dict[str, Any]]:
     }
 
 
-# Under this a bar would vanish and read as "no time"; the floor is for time, never for none.
+# Under this a bar would vanish and read as "no time"; the floor is for time, never for none. [T]
 _SLIVER_PCT = 2
 
 

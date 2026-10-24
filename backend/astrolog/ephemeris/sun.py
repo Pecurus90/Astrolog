@@ -57,7 +57,7 @@ class ChartWindow:
     dark_until: dt.datetime | None
 
 
-_HALF_HOUR = dt.timedelta(minutes=30)
+_HALF_HOUR = dt.timedelta(minutes=30)  # [T] chart margin, Design board v37
 
 
 def chart_window(bands: Sequence[SkyBand]) -> ChartWindow | None:
@@ -123,4 +123,4 @@ def _crossings(
 
 # A threshold is the floor of the band above and `_band_of` compares with `>`: rising, the band
 # above is asked for by stepping just over the threshold.
-_HAIR = 1e-9
+_HAIR = 1e-9  # [T]

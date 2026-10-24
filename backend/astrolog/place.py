@@ -17,8 +17,8 @@ from . import net
 from .db.row import Row
 from .units import believable_sqm, sqm_from_brightness, sqm_of_bortle
 
-# A degree of arc on the mean-radius Earth (2*pi*6371 km / 360): a constant, not a measure of
-# the place.
+# A degree of arc on the mean-radius Earth, not a measure of the place.
+# [C IUGG mean radius R1 6371.0088 km: 2*pi*R1/360 = 111.195]
 _KM_PER_DEGREE = 111.2
 
 # Elevation: Copernicus 90 m terrain model, free, no key, to be credited. Sky: World Atlas

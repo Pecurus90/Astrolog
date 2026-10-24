@@ -12,7 +12,7 @@ from erfa import ErfaWarning
 
 from .values import Program, Value, as_count, as_number
 
-_J2000_PRECESSION = erfa.bp06(2451545.0, 0.0)[1]  # IAU 2006 precession at J2000.0 TT
+_J2000_PRECESSION = erfa.bp06(2451545.0, 0.0)[1]  # [C IAU 2006 precession at J2000.0 TT]
 
 
 class PointingSource(StrEnum):
