@@ -1,0 +1,27 @@
+# Dependabot's patch and minor updates merge by themselves once CI is green (ADR 0040): the ruleset
+# of main requires the checks, so --auto waits for them. Majors and security alerts stay open.
+name: Dependabot auto-merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  automerge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@v2
+      - if: >-
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          TITLE: ${{ github.event.pull_request.title }}
+        # one ASCII line, the commit-message rule of the repo
+        run: gh pr merge --auto --squash --subject "$TITLE" --body "" "$PR_URL"

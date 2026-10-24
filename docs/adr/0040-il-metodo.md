@@ -36,8 +36,8 @@ consigliata e' la piu' corretta": nessuna macchina li vede.
 - **Revisione**: un giro, piu' al massimo una verifica (ADR 0015). Un revisore, due su diff grandi
   con domande diverse; vale anche per il passo del cuore della pipeline (supera ADR 0030, tappa 5).
 - **Aggiornare una dipendenza gia' presente non e' una dipendenza nuova**: niente domanda a Marco.
-  Dependabot fonde da solo patch e minor a controlli obbligatori verdi; maggiori e avvisi di
-  sicurezza restano difetti. Una dipendenza nuova resta rischio di Marco.
+  Dependabot fonde da solo patch e minor a controlli obbligatori verdi, correzioni di sicurezza
+  comprese (Marco, 24/10); le maggiori restano difetti. Una dipendenza nuova resta rischio di Marco.
 - **Mutazione**: la Nightly fallisce solo se il punteggio peggiora rispetto a un riferimento
   salvato; notte rossa = Issue `nightly-rosso` (supera ADR 0001, "rapporto, non blocco").
 - **Rito**: all'avvio lavoro non committato = si chiede; rosso = il lavoro e' quello; altrimenti

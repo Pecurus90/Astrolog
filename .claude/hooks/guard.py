@@ -10,10 +10,13 @@ import sys
 
 PROTECTED = (
     (re.compile(r"^old/"), "old/ is a quarry: read it, never edit it"),
-    (re.compile(r"(^|/)uv\.lock$"), "uv.lock changes only with a dependency Marco approved"),
+    (
+        re.compile(r"(^|/)uv\.lock$"),
+        "uv.lock changes only by Dependabot or with a dependency Marco approved",
+    ),
     (
         re.compile(r"(^|/)package-lock\.json$"),
-        "package-lock.json changes only with a dependency Marco approved",
+        "package-lock.json changes only by Dependabot or with a dependency Marco approved",
     ),
     (
         re.compile(r"^frontend/src/api/schema\.d\.ts$"),

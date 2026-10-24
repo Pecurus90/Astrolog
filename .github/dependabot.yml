@@ -1,15 +1,18 @@
 # Chi sorveglia le dipendenze. Senza questo file una libreria puo' restare ferma per anni,
 # falle comprese, e nessuno se ne accorge: qui ogni mese arriva una proposta di aggiornamento,
-# che passa dalla CI; patch e minori si uniranno da soli col passo 0.9 del piano (ADR 0040).
+# che passa dalla CI; patch e minori si uniscono da soli a CI verde (automerge.yml, ADR 0040).
 #
 # Vincolo non ovvio: le proposte si raggruppano in una sola per ecosistema. Dieci richieste
 # separate al mese non si guardano; una sola, con dentro tutto, si guarda davvero.
 # Nel gruppo solo minori e patch: una maggiore rompe da sola (typescript 7 nel gruppo di
 # ottobre teneva rossa l'intera proposta) e arriva in una proposta sua.
+# Attesa sulle versioni appena uscite: i giorni dell'esempio di GitHub (docs, "Optimizing the
+# creation of pull requests for Dependabot version updates", cooldown).
 version: 2
 updates:
   - package-ecosystem: uv
     directory: /backend
+    cooldown: {default-days: 5, semver-major-days: 30, semver-minor-days: 7, semver-patch-days: 3}
     schedule:
       interval: monthly
     groups:
@@ -20,6 +23,7 @@ updates:
 
   - package-ecosystem: npm
     directory: /frontend
+    cooldown: {default-days: 5, semver-major-days: 30, semver-minor-days: 7, semver-patch-days: 3}
     schedule:
       interval: monthly
     groups:
@@ -34,6 +38,7 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    cooldown: {default-days: 5, semver-major-days: 30, semver-minor-days: 7, semver-patch-days: 3}
     schedule:
       interval: monthly
     groups:
