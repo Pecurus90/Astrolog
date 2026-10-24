@@ -9,8 +9,9 @@ fuori nelle Issue con l'etichetta `bloccato`.
 
 **Pipeline riprogettata da zero** (Marco, 22/10/2026): uno strato alla volta da una mappa decisa
 prima del codice, accanto alla vecchia finche' la sostituisce. ADR 0029, 0030, mappa grafica.
-Parte 1 (mattoni 1-4) fatta, cinque audit. Poi (Marco): ASTAP, poi i suoi audit come la parte 1 (doppioni, refactor, ottimizzare) e i tempi di ASTAP contro old/; measure, pagine di Design, app
-attorno alle pagine; dentro, la parte 2 e la zona di selezione dei frame (ADR 0032). #14-#24 qui.
+Parte 1 fatta, cinque audit; ASTAP punti 1-6. Registro delle regole (ADR 0033): fasi 1-3 fatte
+(ADR 0034-0039, `registro.md`); ora la fase 4, applicare i cambi al backend; poi ASTAP 7-10, i
+suoi audit e tempi contro old/; measure, pagine di Design, parte 2, zona di selezione (ADR 0032).
 
 ## Dopo
 
