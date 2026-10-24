@@ -16,8 +16,11 @@ Lo stato si legge dal codice e da [`docs/piano.md`](docs/piano.md); le decisioni
    vuote (primo avvio, zero frame). Tre bersagli: Windows, Mac, NAS (Docker) anche da tablet e
    telefono -- desktop prima, mobile alla fine, quindi i dati escono dall'API gia' fatti e il
    layout non porta logica. **Le soglie vengono da convenzioni pubbliche** (okta WMO, Nyquist,
-   Beaufort), verificate su una fonte vera e citate accanto al numero, mai scritte a memoria. Dove una
-   convenzione non c'e', la soglia o la formula si decide con Marco, a video: mai inventata.
+   Beaufort), verificate su una fonte vera e citate accanto al numero, mai scritte a memoria.
+   **Una soglia tecnica la scelgo io** (Marco, 24/10/2026): fra convenzioni e usi trovati (norme,
+   software, osservatori, forum) la piu' usata e corretta; a Marco porto la scelta e cio' che
+   cambia a schermo, mai una domanda tecnica. A lui solo cio' che e' suo: gusto, parole, rischio,
+   un prodotto senza alcun uso a cui appoggiarsi. Mai inventata.
    **In ogni lavoro, di default** (Marco, 20/10/2026): ogni numero, soglia e formula toccati, anche
    gia' in codice, si confronta con la convenzione; se diverge, ci si ferma e si mostra a Marco
    cosa cambia. Cio' che riprende un software esterno (campi, opzioni, formati di N.I.N.A. e degli
