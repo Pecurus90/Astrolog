@@ -6,9 +6,10 @@ Uso: python tools/registro.py            esce 1 se manca una fonte o il registro
 A number is a numeric literal other than 0 and 1 in a module's top-level statement (constants,
 tables); numbers inside functions are not covered. Its source is a tag in a comment on its line,
 in the comment block just above that line, or in the block before the statement:
-[C ...] public convention, [M ...] our measure, [P Marco dd/mm/yyyy] Marco's decision,
-[T] technical, not a rule. Statements still without one sit in `tools/registro_senza_fonte.txt`:
-the list only shrinks. `docs/registro.md` is generated from code and ADRs, never written by hand.
+[C ...] public convention, [M ...] our measure, [P ADR nnnn] Marco's decision by its home
+(an ADR or docs/domini/<domain>.md), [T] technical, not a rule. Statements still without one
+sit in `tools/registro_senza_fonte.txt`: the list only shrinks.
+`docs/registro.md` is generated from code and ADRs, never written by hand.
 """
 
 import ast
@@ -26,6 +27,8 @@ PAGE = ROOT / "docs" / "registro.md"
 BASELINE = Path(__file__).resolve().parent / "registro_senza_fonte.txt"
 
 TAG = re.compile(r"\[([CMPT])\b([^\]]*)\]")
+# P names the decision's home (ADR, domain contract): date and author live there, not in code.
+TAGS = ("[C ...]", "[M ...]", "[P ADR nnnn]", "[T]")
 SUPERA = re.compile(r"^\*\*Supera\*\* in `(?:docs/)?([^`]+)`", re.MULTILINE)
 VALUE_WIDTH = 70
 
@@ -242,7 +245,7 @@ def main(
     listed = set(missing) if first_run else read_baseline(baseline)
     new, done = sorted(set(missing) - listed), sorted(listed - set(missing))
     for ident in new:
-        print(f"senza fonte: {ident} (tag [C ...], [M ...], [P Marco gg/mm/aaaa] o [T])")
+        print(f"senza fonte: {ident} (tag {', '.join(TAGS)})")
     fresh = page(package, adr)
     if "--scrivi" in argv:
         if new:

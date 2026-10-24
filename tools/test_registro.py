@@ -38,7 +38,7 @@ def test_a_tag_beside_above_or_before_the_statement_is_a_source(tmp_path):
             "B = 30\n"
             "C = {\n"
             "    'x': 25.0,  # [C WMO 2700]\n"
-            "    # [P Marco 23/10/2026]\n"
+            "    # [P ADR 0020]\n"
             "    'y': 50.0,\n"
             "}\n"
             "D = 2880  # [T]\n"
@@ -144,6 +144,14 @@ def test_the_decisions_are_indexed_from_the_adr(tmp_path):
     assert "| 0033 | Riconciliazione delle regole | accettata, 23/10/2026. | domini/meteo.md |" in (
         text
     )
+
+
+def test_every_tag_the_tool_asks_for_passes_the_comment_rule():
+    """Il tag che lo strumento chiede si deve poter scrivere: niente date ne' nomi nel codice."""
+    import commenti
+
+    for tag in registro.TAGS:
+        assert commenti.problems(f"A = 60  # {tag}\n", "units.py") == [], tag
 
 
 def test_the_real_repository_is_in_order():
