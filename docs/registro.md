@@ -4,7 +4,7 @@ Generato da `tools/registro.py --scrivi`: non si scrive a mano. La casa di ogni 
 e' il codice, con la fonte accanto: C convenzione citata, M misura nostra, P decisione
 di Marco, T tecnico (non una regola).
 
-Valori: 133; senza fonte: 86.
+Valori: 133; senza fonte: 82.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -123,10 +123,10 @@ Valori: 133; senza fonte: 86.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| TIMEOUT_S | `60` | **senza fonte** |
-| SEARCH_RADIUS_DEG | `30` | **senza fonte** |
-| BLIND_RADIUS_DEG | `180` | **senza fonte** |
-| _POLE_DEG | `90.0` | **senza fonte** |
+| TIMEOUT_S | `60` | M over twice the slowest blind solve that succeeds, 23 s, docs/domini/spina.md |
+| SEARCH_RADIUS_DEG | `30` | C N.I.N.A. PlateSolveSettings.cs searchRadius = 30 |
+| BLIND_RADIUS_DEG | `180` | C ASTAP default radius_search1; N.I.N.A. forces 180 without coordinates |
+| _POLE_DEG | `90.0` | T |
 | FZ_SINCE | `(2026, 7, 17)` | C ASTAP source: RICE_1 in astap_cli from 2026.07.17 |
 
 ### clock.py
@@ -441,7 +441,7 @@ Valori: 133; senza fonte: 86.
 |---|---|---|---|
 | 0001 | Il metodo passa a strumenti standard | accettata, 30/9/2026 |  |
 | 0002 | Nessun login: la rete di casa e' fidata, e ogni avvio ha la sua chiave | accettata, 13/9/2026 |  |
-| 0003 | ASTAP e' impacchettato per tutti, e il suo database si scarica al primo avvio | accettata, 9/9/2026 |  |
+| 0003 | ASTAP e' impacchettato per tutti, e il suo database si scarica al primo avvio | accettata, 9/9/2026; il catalogo che si scarica e' il D50 (ADR 0036, 24/10/2026). |  |
 | 0004 | Su Windows e Mac l'app e' un'app vera: Tauri 2 col backend come sidecar | accettata, 4/9/2026; la scelta fra Tauri ed Electron la chiude il prototipo |  |
 | 0005 | Il motore della carta del cielo e' Aladin Lite v3 | accettata |  |
 | 0006 | Il cielo fotografico (DSS2) non sta mai nel pacchetto | accettata |  |
@@ -474,3 +474,4 @@ Valori: 133; senza fonte: 86.
 | 0033 | Riconciliazione delle regole: ogni regola una casa | accettata, 23/10/2026 (Marco: R1-R4). Nessun valore cambia: i documenti si allineano | domini/spina.md, domini/notti.md, domini/glossario.md, domini/ereditato.md, domini/meteo.md, domini/archivio.md, domini/attrezzatura.md, domini/mosaico.md, piano.md, CLAUDE.md |
 | 0034 | Le regole del meteo con le fonti verificate, e il punteggio della notte v4 | accettata, 24/10/2026 (Marco: raffiche, condensa, Luna, nomi, soglie dal suo archivio). | domini/meteo.md |
 | 0035 | Le regole del cielo con le fonti verificate | accettata, 24/10/2026. Soglie tecniche scelte dalla sessione sulle convenzioni |  |
+| 0036 | Le regole di ASTAP con le fonti verificate, e il catalogo stellare D50 | accettata, 24/10/2026. Raccoglie le decisioni del piano di ASTAP (D2-D8) che stavano |  |

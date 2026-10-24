@@ -1,6 +1,6 @@
 # 0003 -- ASTAP e' impacchettato per tutti, e il suo database si scarica al primo avvio
 
-**Stato:** accettata, 9/9/2026
+**Stato:** accettata, 9/9/2026; il catalogo che si scarica e' il D50 (ADR 0036, 24/10/2026).
 
 ## Contesto
 

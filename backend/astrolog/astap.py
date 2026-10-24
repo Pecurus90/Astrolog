@@ -41,12 +41,12 @@ DB_KINDS = ("d05", "d20", "d50", "d80", "v05", "v50", "g05", "w08",
 # any `x99_1.zip` would be a false "you have it". A new catalogue reads missing until listed.
 DB_NAME = re.compile(r"(" + "|".join(DB_KINDS) + r")_[0-9]+\.", re.IGNORECASE)
 
-# Over twice slowest blind solve that succeeds (docs/domini/spina.md); a free-field blind search
-# that finds nothing runs past it (285 s measured).
+# [M over twice the slowest blind solve that succeeds, 23 s, docs/domini/spina.md]; a free-field
+# blind search that finds nothing runs past it (285 s measured).
 TIMEOUT_S = 60
-# N.I.N.A. default (PlateSolveSettings.cs searchRadius); speed depends on field, not radius.
+# [C N.I.N.A. PlateSolveSettings.cs searchRadius = 30]; speed depends on field, not radius.
 SEARCH_RADIUS_DEG = 30
-BLIND_RADIUS_DEG = 180
+BLIND_RADIUS_DEG = 180  # [C ASTAP default radius_search1; N.I.N.A. forces 180 without coordinates]
 
 
 # Closed list of codes, never ASTAP's sentence: sentences change between versions and would
@@ -69,7 +69,7 @@ _CATALOGUE = re.compile(r"Using star database (\w+)", re.IGNORECASE)
 
 # Lines of words, not numbers, in ASTAP's result file.
 _TEXT = frozenset({"ERROR", "WARNING", "CMDLINE"})
-_POLE_DEG = 90.0
+_POLE_DEG = 90.0  # [T]
 
 # Compared lowercase and by containment: the exact text changes, the key words do not.
 _ERROR_WORDS = (

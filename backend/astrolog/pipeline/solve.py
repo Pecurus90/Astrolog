@@ -27,7 +27,7 @@ OUTCOMES = {
     astap.Reason.FZ_UNSUPPORTED: "fz_unsupported",
 }
 SETTLED = ("solved", "no_solution", "no_stars")
-# D5 (ASTAP plan): tried at next pass once more, then wait for another ASTAP or catalogue
+# tried at next pass once more, then wait for another ASTAP or catalogue [P ADR 0036, D5]
 WAITING = ("timeout", "crashed", "unreadable")
 PASSES = 2
 
@@ -86,7 +86,7 @@ def _ladder(
         (Step.FULL_RES, astap.Search(field_deg, pointing, downsample=1)),
         (Step.ANY_FIELD, astap.Search(None, pointing)),
     ]
-    if pointing is not None:  # no blind with free field: unsolvable frame ran 285 s (measured)
+    if pointing is not None:  # blind, with field; the free-field blind already ran as any_field
         tries.append((Step.BLIND, astap.Search(field_deg)))
     if typeless:  # one try (D6): mostly calibrations
         tries = tries[:1]
