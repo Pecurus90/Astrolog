@@ -4,7 +4,7 @@ Generato da `tools/registro.py --scrivi`: non si scrive a mano. La casa di ogni 
 e' il codice, con la fonte accanto: C convenzione citata, M misura nostra, P decisione
 di Marco, T tecnico (non una regola).
 
-Valori: 133; senza fonte: 87.
+Valori: 133; senza fonte: 86.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -127,7 +127,7 @@ Valori: 133; senza fonte: 87.
 | SEARCH_RADIUS_DEG | `30` | **senza fonte** |
 | BLIND_RADIUS_DEG | `180` | **senza fonte** |
 | _POLE_DEG | `90.0` | **senza fonte** |
-| FZ_SINCE | `(2026, 7, 16)` | **senza fonte** |
+| FZ_SINCE | `(2026, 7, 17)` | C ASTAP source: RICE_1 in astap_cli from 2026.07.17 |
 
 ### clock.py
 

@@ -24,7 +24,6 @@ api/search.py:search_archive(q=)
 api/sites.py:create_site@router.post
 api/sites.py:list_sites(limit=)
 astap.py:BLIND_RADIUS_DEG
-astap.py:FZ_SINCE
 astap.py:SEARCH_RADIUS_DEG
 astap.py:TIMEOUT_S
 astap.py:_POLE_DEG

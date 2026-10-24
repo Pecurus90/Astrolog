@@ -31,7 +31,7 @@ SETTLED = ("solved", "no_solution", "no_stars")
 WAITING = ("timeout", "crashed", "unreadable")
 PASSES = 2
 
-PENDING = (  # plain file before its fpack copy: ASTAP before 2026.07.16 reads no .fz
+PENDING = (  # plain file before its fpack copy: ASTAP before astap.FZ_SINCE reads no .fz
     "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.frame_type, c.width, c.height,"
     " c.pixel_um, c.focal_mm, c.pointing_ra_deg, c.pointing_dec_deg,"
     " h.header ->> '$.ROWORDER' AS row_order"

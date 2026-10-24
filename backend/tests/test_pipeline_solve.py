@@ -382,7 +382,7 @@ def test_a_new_astap_reading_fpack_still_launches_once_per_shot(conn, tmp_path):
     data, header = _nina_pixels(0)
     fits.PrimaryHDU(data=data, header=header).writeto(nas / "b.fits")
     root = _scanned(conn, nas)
-    run = FakeAstap("no_solution.ini", version="CLI-2026.07.16")
+    run = FakeAstap("no_solution.ini", version="CLI-2026.07.17")
     _solve(conn, root, run, tmp_path)
     assert {Path(_option(c, "-f")).name for c in run.commands} == {"b.fits"}
 
@@ -586,7 +586,7 @@ def test_a_file_astap_cannot_read_is_tried_again(conn, tmp_path):
 
 
 def test_a_compressed_only_shot_waits_for_an_astap_that_reads_it(conn, tmp_path):
-    """ASTAP legge i .fz dalla 2026.07.16 (hnsky.org): prima non si lancia, si dice perche'.
+    """astap_cli legge i .fz dalla 2026.07.17: prima non si lancia, si dice perche'.
     Versione chiesta una volta per passata."""
     nas = tmp_path / "nas"
     _nina_fz(nas / "a.fits.fz", 1)
@@ -603,12 +603,22 @@ def test_a_compressed_only_shot_waits_for_an_astap_that_reads_it(conn, tmp_path)
     run = FakeAstap("solved.ini", version="CLI-2025.11.19")
     _solve(conn, root, run, tmp_path)  # same ASTAP: waits, however many passes
     assert [r["attempts"] for r in _solutions(conn)] == [1, 1]
-    run = FakeAstap("solved.ini", version="CLI-2026.07.16")
+    run = FakeAstap("solved.ini", version="CLI-2026.07.17")
     _solve(conn, root, run, tmp_path)
     assert len(run.commands) == 2 and _outcomes(conn) == ["solved", "solved"]
 
 
-@pytest.mark.parametrize("version", ["CLI-2026.07.16", "CLI-2027.1.2"])
+def test_the_command_line_astap_of_the_sixteenth_does_not_read_fpack_yet(conn, tmp_path):
+    """La 2026.07.16 legge i .fz solo nella GUI; astap_cli dalla 2026.07.17 (sorgente, RICE_1)."""
+    nas = tmp_path / "nas"
+    _nina_fz(nas / "a.fits.fz", 1)
+    root = _scanned(conn, nas)
+    run = FakeAstap("solved.ini", version="CLI-2026.07.16")
+    result = _solve(conn, root, run, tmp_path)
+    assert run.commands == [] and result.untried == {"fz_unsupported": 1}
+
+
+@pytest.mark.parametrize("version", ["CLI-2026.07.17", "CLI-2027.1.2"])
 def test_an_astap_that_reads_fpack_gets_the_compressed_file(conn, tmp_path, version):
     nas = tmp_path / "nas"
     _nina_fz(nas / "a.fits.fz", 1)
@@ -682,7 +692,7 @@ def test_without_short_names_astap_gets_a_copy_and_the_original_stays_read_only(
         nina_light(nas / name, 1, _SKY)
     root = _scanned(conn, tmp_path / "nas")
     (nas / name).chmod(stat.S_IREAD)
-    run = FakeAstap("solved.ini", version="CLI-2026.07.16")
+    run = FakeAstap("solved.ini", version="CLI-2026.07.17")
     _solve(conn, root, run, tmp_path)
     given = Path(_option(run.commands[0], "-f"))
     assert (tmp_path / "work") in given.parents and run.there == [True]
@@ -699,7 +709,7 @@ def test_a_compressed_file_never_goes_by_its_short_name(conn, tmp_path, monkeypa
     monkeypatch.setattr(astap, "_short_name", lambda path: "C:\\NAS\\AFITS~1.FZ")
     _nina_fz(tmp_path / "nas" / _CJK / "a.fits.fz", 1)
     root = _scanned(conn, tmp_path / "nas")
-    run = FakeAstap("solved.ini", version="CLI-2026.07.16")
+    run = FakeAstap("solved.ini", version="CLI-2026.07.17")
     _solve(conn, root, run, tmp_path)
     assert Path(_option(run.commands[0], "-f")).name == "frame.fits.fz"
 

@@ -534,7 +534,7 @@ e l'app li conta tutti e due.
 
 **ASTAP**: `astap_cli -f <file> -o <cache>/<frame_hash> -fov <campo> -z 0`, `-ra/-spd` e raggio
 30 gradi con un indizio, altrimenti cieco; mai `-update` ne' `-extract`. Pipeline nuova, solo dopo nessuna soluzione: `-z 1`, `-fov 0`, poi cieca col campo (failover di N.I.N.A.); senza tipo un tentativo; timeout ferma (dopo un no: `no_solution`). Dal WCS (`pipeline/footprint.py`, Paper II): scala sqrt|det CD|, specchiato se det<0 con righe dall'alto (N.I.N.A., ASIAIR; misurato su copie specchiate; ROWORDER con 'BOT' rovescia, letto come ASTAP lo legge per il Bayer), skew, campo, 4 angoli TAN. Nome fuori dalla code page
-ANSI: 8.3 o copia; cartella di lavoro illeggibile: `path_unsupported`, ferma; `.fz` < 2026.07.16: `fz_unsupported`.
+ANSI: 8.3 o copia; cartella di lavoro illeggibile: `path_unsupported`, ferma; `.fz` con `astap_cli` < 2026.07.17 (la GUI dal 16): `fz_unsupported`.
 
 **Il campo si calcola, ed e' la leva della velocita'.** `-fov` e' l'altezza del campo
 in gradi, e si ricava da `naxis2`, `pixel_size_um` e `focal_mm_raw` -- tutti gia' nell'header.

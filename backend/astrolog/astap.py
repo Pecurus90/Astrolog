@@ -335,8 +335,8 @@ def analyse(fits_path: str | Path, solver: Solver) -> tuple[float | None, int | 
     return _number(values.get("HFD_MEDIAN")), None if stars is None else int(stars)
 
 
-# hnsky.org/astap.htm: "From version 2026.07.16, ASTAP natively supports fits rice compressed files"
-FZ_SINCE = (2026, 7, 16)
+# [C ASTAP source: RICE_1 in astap_cli from 2026.07.17] hnsky.org says 2026.07.16: GUI only.
+FZ_SINCE = (2026, 7, 17)
 _VERSION = re.compile(r"version\s+(?:CLI-)?(\d{4})\.(\d{1,2})\.(\d{1,2})", re.IGNORECASE)
 
 
