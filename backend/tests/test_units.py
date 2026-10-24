@@ -12,6 +12,7 @@ from astrolog.units import (
     bortle_of,
     field_deg,
     focal_buckets,
+    same_focal,
     scale_arcsec_px,
     sqm_from_brightness,
     sqm_of_bortle,
@@ -56,6 +57,14 @@ def test_focal_buckets_do_not_depend_on_the_order():
     assert focal_buckets([561.0, 300.0, 559.0, 560.0]) == focal_buckets(
         [300.0, 559.0, 560.0, 561.0]
     )
+
+
+def test_same_focal_is_one_rule_both_ways():
+    """Stessa regola dei gruppi (max/min fino a 1,05), qualunque dei due sia il noto."""
+    assert same_focal(100.0, 95.0) == same_focal(95.0, 100.0)
+    for low, high in [(100.0, 104.9), (100.0, 105.1), (560.0, 588.0), (560.0, 589.0)]:
+        grouped = focal_buckets([low, high])[low] == focal_buckets([low, high])[high]
+        assert same_focal(low, high) == same_focal(high, low) == grouped, (low, high)
 
 
 def test_focal_boundary_of_five_percent():

@@ -287,11 +287,10 @@ def test_a_focal_that_drifts_finds_the_same_answer(conn):
 
 
 def test_who_reads_an_answer_is_requeued_when_it_is_given(conn):
-    """Rispondere rimette in coda ogni posa che leggera' la risposta. La tolleranza si misura su
-    una parte sola: la chiave a 1052 mm risponde alla posa a 1000 (52 <= 52,6), e misurata dalla
-    posa (52 > 50) quella posa restava con la risposta vecchia fino a un altro giro."""
+    """Rispondere rimette in coda ogni posa che leggera' la risposta: la chiave a 1040 mm risponde
+    alla posa a 1000, e la posa e' fra quelle rimesse in coda (la regola vale nei due versi)."""
     radice = add_folder(conn, "/vol/astro")
-    chiave = _posa(conn, radice, "a.fits", instrument=CAM, focal=1052.0)
+    chiave = _posa(conn, radice, "a.fits", instrument=CAM, focal=1040.0)
     posa = _posa(conn, radice, "b.fits", instrument=CAM, focal=1000.0)
     signature.declare(conn, _chiave(conn, chiave), signature.Answer(optics=OTT))
 

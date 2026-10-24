@@ -100,7 +100,8 @@ def same_focal(known: float | None, focal_mm: float | None) -> bool:
     """Unknown on one side only is not the same; unknown on both, it is."""
     if known is None or focal_mm is None:
         return known is None and focal_mm is None
-    return abs(known - focal_mm) <= FOCAL_TOLERANCE * abs(known)
+    low, high = sorted((abs(known), abs(focal_mm)))
+    return high <= low * (1 + FOCAL_TOLERANCE)  # the groups' rule: max/min, either way round
 
 
 def focal_buckets(focals: Iterable[Any], tol: float = FOCAL_TOLERANCE) -> dict[float, float]:

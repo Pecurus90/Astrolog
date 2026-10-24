@@ -158,7 +158,7 @@ def declare(conn: sqlite3.Connection, key: str, given: Answer, now: str | None =
 
 def frames_of(conn: sqlite3.Connection, key: str) -> list[int]:
     """Copies and frames an earlier answer settled included: that is how one changes one's mind.
-    The key on the left, as in `answer_for`: the focal tolerance is measured on the key."""
+    Same focal rule as `answer_for`, both ways round: who reads the answer is requeued."""
     sought = parts_of_key(key)
     if sought is None:
         return []
