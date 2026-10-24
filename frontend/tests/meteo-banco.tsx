@@ -132,7 +132,7 @@ export function meteo(corpo: Record<string, unknown>, altre: Record<string, Voce
         sources: [{ source: "cams", fetched_at: "2026-09-25T15:00:00.000Z" }],
         scales: [
           { code: "wind", steps: [{ level: "nogo", bound: 29, strict: false }, { level: "marginal", bound: 20, strict: false }], lower_is_worse: false },
-          { code: "condensation", steps: [{ level: "nogo", bound: 3, strict: true }], lower_is_worse: true },
+          { code: "condensation", steps: [{ level: "marginal", bound: 3, strict: true }], lower_is_worse: true },
         ],
         nights: [],
         ...corpo,

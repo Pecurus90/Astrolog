@@ -265,6 +265,19 @@ describe("il Meteo, le carte", () => {
     expect(pagina.querySelector(".as-pesano")?.textContent).toContain("nebbia dalle 22:00 alle 23:00 \u00b7 1 ora")
   })
 
+  it("la condensa incerta dice da che ora l'aria tocca la rugiada: la parola la decide il backend", async () => {
+    const umida = misura("condensation", {
+      level: "marginal", weighs: true, value: 2, peak: 2, hours: 1,
+      since: "2026-09-26T22:00:00+02:00", until: "2026-09-26T23:00:00+02:00",
+      spans: [{ level: "marginal", since: "2026-09-26T22:00:00+02:00", until: "2026-09-26T23:00:00+02:00", hours: 1 }],
+    })
+    conNotti({ ...NOTTE, measures: [...NOTTE.measures.filter((m) => m.code !== "condensation"), umida] })
+    await apriMeteo()
+
+    await scheda()
+    expect(carta(/^Condensa/).textContent).toContain("sotto 3 \u00b0C dalle 22:00")
+  })
+
   it("la carta della visibilit\u00e0 cresce con la radice: la soglia di 1 km si stacca dal fondo e 41 km non escono dalla tela", async () => {
     const limpida = misura("visibility", { level: "go", value: 41, peak: 41, axis_max: 20, axis_curve: "sqrt" })
     meteo({

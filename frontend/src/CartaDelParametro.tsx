@@ -343,7 +343,7 @@ function picco(m: Misura, n: Notte, forma: Forma, scala: Scala | undefined): str
   }
   if (m.code === "condensation") {
     const soglia = numero(scala?.steps[0]?.bound ?? 0)
-    const sotto = m.spans.find((s) => s.level === "nogo")
+    const sotto = m.spans[0]
     return sotto ? t("weather.card.dewSince", { s: soglia, da: oraDelSito(sotto.since) }) : t("weather.card.dewNever", { s: soglia })
   }
   if (m.code === "rain" && !m.peak) return t("weather.card.noRain")
@@ -429,7 +429,7 @@ function Linee({ misura: m, ore, campo, passo, y }: Disegno) {
     <>
       {m.code === "temperature" &&
         ore.map((o, i) =>
-          o.levels.condensation === "nogo" ? <rect key={`c-${o.at}`} className="as-parametro__tocca" x={i * passo} y={0} width={passo + 0.3} height={ALTO} /> : null,
+          o.levels.condensation && o.levels.condensation !== "go" ? <rect key={`c-${o.at}`} className="as-parametro__tocca" x={i * passo} y={0} width={passo + 0.3} height={ALTO} /> : null,
         )}
       {serie.flatMap((c, k) =>
         tratti(ore, c).map((tratto) => (

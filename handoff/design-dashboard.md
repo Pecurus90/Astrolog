@@ -137,7 +137,7 @@ I testi dell'app che la Dashboard usa, alla lettera. `{…}` e' un dato.
 | Luna nuova · Crescente · Primo quarto · Gibbosa crescente · Luna piena · Gibbosa calante · Ultimo quarto · Calante | le fasi |
 | illuminata al {pct}% | accanto alla fase |
 | sorge · tramonta · non sorge · non tramonta | gli orari |
-| consigliata banda stretta · banda larga al limite | quando la Luna pesa (oltre il 50%, fra 25 e 50%) |
+| consigliata banda stretta · banda larga al limite | quando la Luna pesa (da 65%, da 25 a 65%; ADR 0034, era 50) |
 
 ### La barra e Stanotte
 

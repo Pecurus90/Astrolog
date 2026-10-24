@@ -377,7 +377,7 @@ function ScalaDiDestra({ destra, ore, misura: m, scala, x, passo, id, tela }: {
         <>
           {destra === "condensation" &&
             ore.map((o, i) =>
-              o.levels.condensation === "nogo" && o.temperature_c !== null && o.dew_point_c !== null ? (
+              o.levels.condensation && o.levels.condensation !== "go" && o.temperature_c !== null && o.dew_point_c !== null ? (
                 <rect key={`c-${o.at}`} className="as-scala__tocca" x={SINISTRA + i * passo} y={y(o.temperature_c)}
                   width={passo + 0.3} height={Math.max(2, y(o.dew_point_c) - y(o.temperature_c))} />
               ) : null,

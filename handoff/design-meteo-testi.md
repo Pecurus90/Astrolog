@@ -37,23 +37,23 @@ stessa disposizione.
 2. **Jet stream: nessun gradino «incerta».** Buona sotto 126 km/h, non adatta da 126 in su. Va
    tolta la linea di soglia a 108 e la parola «incerta dalle 03» di domenica.
 
-3. **Le raffiche hanno un giudizio loro**: non adatta da 29 km/h (Beaufort 5). Quando pesano hanno
+3. **Le raffiche hanno un giudizio loro**: non adatta oltre 25 km/h (iTelescope; ADR 0034, era 29). Quando pesano hanno
    una riga loro fra gli altri fattori («Raffiche dalle … alle … · N ore»), separata dal vento
    medio. Domenica, con raffiche fino a 44 km/h, la riga ci deve essere. La carta resta una sola,
    «Vento», con le raffiche disegnate sopra le barrette come oggi.
 
 4. **La riga della Luna fra gli altri fattori e' nuova** (Marco, 12 ottobre). Davanti la parola:
-   «consigliata banda stretta» oltre il 50% illuminata, «banda larga al limite» fra 25 e 50%.
+   «consigliata banda stretta» da 65% illuminata, «banda larga al limite» da 25 a 65% (ADR 0034, era 50).
    Fino al 25%, o se non e' sopra l'orizzonte col buio, la Luna non compare. Poi il dato e le ore
    in cui e' su, poi cosa resta nelle altre. Le forme, tutte da disegnare:
 
    | caso | riga |
    |---|---|
-   | sorge, oltre 50% | consigliata banda stretta · **Luna** al 55% dalle 23:00 · banda larga fino alle 23:00 |
-   | sorge, fra 25 e 50% | banda larga al limite · **Luna** al 45% dalle 00:00 · senza Luna fino alle 00:00 |
+   | sorge, da 65% | consigliata banda stretta · **Luna** al 70% dalle 23:00 · banda larga fino alle 23:00 |
+   | sorge, fra 25 e 65% | banda larga al limite · **Luna** al 45% dalle 00:00 · senza Luna fino alle 00:00 |
    | su tutta la notte | consigliata banda stretta · **Luna** al 80% tutta la notte |
-   | tramonta, oltre 50% | consigliata banda stretta · **Luna** al 60% fino alle 02:00 · banda larga dalle 02:00 |
-   | tramonta, fra 25 e 50% | banda larga al limite · **Luna** al 45% fino alle 02:00 · senza Luna dalle 02:00 |
+   | tramonta, da 65% | consigliata banda stretta · **Luna** al 75% fino alle 02:00 · banda larga dalle 02:00 |
+   | tramonta, fra 25 e 65% | banda larga al limite · **Luna** al 45% fino alle 02:00 · senza Luna dalle 02:00 |
    | su solo a meta' notte | consigliata banda stretta · **Luna** al 55% dalle 23:00 alle 02:00 · banda larga prima e dopo |
 
    E' la riga piu' lunga fra gli altri fattori: sul telefono va a capo, non si taglia. Sulla

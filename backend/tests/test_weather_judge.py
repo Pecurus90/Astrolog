@@ -31,8 +31,8 @@ def misure(ore):
         ),
         # qualunque pioggia
         ("rain", "precip_mm", [(0.0, "go"), (0.1, "nogo")]),
-        # Beaufort 5, 29 km/h
-        ("gust", "wind_gust_kmh", [(28.9, "go"), (29.0, "nogo")]),
+        # iTelescope chiude con raffiche oltre 25 km/h
+        ("gust", "wind_gust_kmh", [(25.0, "go"), (25.1, "nogo")]),
         # Beaufort 4 da 20 km/h, 5 da 29
         (
             "wind",
@@ -53,11 +53,12 @@ def misure(ore):
             "aerosol_optical_depth",
             [(0.09, "go"), (0.1, None), (0.99, None), (1.0, "nogo")],
         ),
-        # banda larga fino al 25 %; 25-50 al limite; oltre banda stretta (il 50 e' di Marco)
+        # ING: buio sotto 0,25 illuminata, grigio fino a 0,65, poi chiaro; il calendario conta
+        # buona la notte sotto il 25 %, la stessa scala
         (
             "moon",
             "moon_pct",
-            [(25.0, "go"), (25.1, "marginal"), (50.0, "marginal"), (50.1, "nogo")],
+            [(24.9, "go"), (25.0, "marginal"), (64.9, "marginal"), (65.0, "nogo")],
         ),
         # WMO: nebbia sotto 1 km di visibilita', foschia da 1 km in su
         ("visibility", "visibility_km", [(1.0, "go"), (0.9, "nogo")]),
@@ -69,9 +70,11 @@ def test_each_measure_judges_an_hour_at_the_edges_of_its_source(misura, campo, v
 
 
 def test_condensation_comes_under_three_degrees_between_air_and_dew_point():
-    """Regola FAA dei 5 gradi Fahrenheit: sotto i 3 gradi fra aria e rugiada, nebbia."""
+    """Prassi degli astrofili: sotto i 3 gradi fra aria e rugiada serve la fascia; incerta, mai
+    niente: la nebbia la dice la visibilita'."""
     assert livello("condensation", temperature_c=10.0, dew_point_c=7.0) == "go"
-    assert livello("condensation", temperature_c=10.0, dew_point_c=7.1) == "nogo"
+    assert livello("condensation", temperature_c=10.0, dew_point_c=7.1) == "marginal"
+    assert livello("condensation", temperature_c=10.0, dew_point_c=10.0) == "marginal"
     assert livello("condensation", temperature_c=10.0, dew_point_c=None) is None
 
 
@@ -128,7 +131,7 @@ def test_a_cold_at_its_lowest_is_cut_down_and_never_rounded_up_to_its_threshold(
     )
     detto = misure(notte(fredda, tiepida))
     assert detto["condensation"].value == 2.0
-    assert detto["condensation"].level == "nogo"
+    assert detto["condensation"].level == "marginal"
     # the temperature has no threshold: it rounds as a number does
     assert detto["temperature"].value == 7.0
 
@@ -137,12 +140,13 @@ def test_a_shown_number_never_crosses_the_threshold_its_word_did_not_cross():
     """Un jet a 125,6 e' "buona" (non adatta da 126): scritto "126" starebbe sulla soglia tracciata.
     Vale in salita e in discesa, per il valore e per il picco, con la soglia stretta e non."""
     ore = notte(
-        {"cloud_low_pct": 50.4, "wind_kmh": 19.6, "wind_gust_kmh": 28.7, "wind_250hpa_kmh": 125.6},
-        {"cloud_low_pct": 50.4, "wind_kmh": 19.6, "wind_gust_kmh": 28.7, "wind_250hpa_kmh": 125.6},
+        {"cloud_low_pct": 50.4, "wind_kmh": 19.6, "wind_gust_kmh": 25.4, "wind_250hpa_kmh": 125.6},
+        {"cloud_low_pct": 50.4, "wind_kmh": 19.6, "wind_gust_kmh": 25.4, "wind_250hpa_kmh": 125.6},
     )
     detto = misure(ore)
     assert (detto["jet"].level, detto["jet"].value, detto["jet"].peak) == ("go", 125.0, 125.0)
-    assert (detto["gust"].level, detto["gust"].peak) == ("go", 28.0)
+    # over 25 the gust is no-go: 25.4 written "25" would deny it, the number goes up
+    assert (detto["gust"].level, detto["gust"].peak) == ("nogo", 26.0)
     assert (detto["wind"].level, detto["wind"].value) == ("go", 19.0)
     # over 50 the low clouds are no-go, and 50 itself is not: the number goes up
     assert (detto["cloud_low"].level, detto["cloud_low"].value) == ("nogo", 51.0)

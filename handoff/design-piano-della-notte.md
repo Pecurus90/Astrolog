@@ -24,7 +24,7 @@ mancanti**. Nessun punteggio.
 
 Ogni proposta: nome del progetto (oggetto · ottica · camera), «5 h visibili · 4 h utili», distanza
 dalla Luna col giudizio della soglia delle Impostazioni (40°), ore mancanti per filtro («Hα 3 h ·
-OIII 4 h»). Con la Luna che vieta la banda larga (regola di Meteo: oltre il 50% e sopra
+OIII 4 h»). Con la Luna che vieta la banda larga (regola di Meteo: da 65% e sopra
 l'orizzonte), i filtri a banda larga sono spenti in quelle ore e la riga lo dice («dalle 23 solo
 banda stretta»).
 

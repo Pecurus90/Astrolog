@@ -94,17 +94,17 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   pagina (`scales`):
   - nuvole e nuvole basse: classi FEW e SCT (WMO/ICAO); pioggia: qualunque e' niente (ASCOM);
     vento medio: incerta da Beaufort 4 (20 km/h), niente da 5 (29 km/h, RMetS); raffiche: niente
-    oltre 25 km/h (iTelescope; il codice di oggi usa ancora i 29 di Beaufort);
+    oltre 25 km/h (iTelescope: Beaufort e' una scala del vento medio);
   - condensa: sotto i 3 gradi fra aria e rugiada *serve la fascia*, incerta e mai niente (prassi
-    degli astrofili; il codice di oggi dice ancora niente);
+    degli astrofili; la nebbia la dice la visibilita');
   - jet stream (250 hPa): niente da 126 km/h, i 35 m/s che meteoblue dice "seeing
     cattivo"; nessuna fonte per un gradino incerto, quindi non c'e';
   - seeing: buona fino a 2", incerta fino a 4", niente oltre (Astronomy Tools: Good, OK, Poor);
   - aerosol: sotto 0,1 *limpido*, da 1 *molto fosco* (NASA Earth Observatory); in mezzo nessuna
     parola, che per la notte e' peggio di *limpido* (un'ora limpida non fa limpida la notte);
   - Luna, per la banda larga: buona sotto il 25% illuminata, *banda larga al limite* fino al 65%,
-    da li' *consigliata banda stretta*: buio, grigio e chiaro dell'osservatorio ING (ADR 0034; il
-    codice di oggi usa ancora 25 e 50). Conta da quando sorge (-0,833 gradi del Nautical Almanac),
+    da li' *consigliata banda stretta*: buio, grigio e chiaro dell'osservatorio ING (ADR 0034); il
+    25% esatto e' gia' grigio, come nel calendario. Conta da quando sorge (-0,833 gradi del Nautical Almanac),
     come ESO, astroplan e lo scheduler di N.I.N.A. La riga dice le ore in cui e' su e cosa resta
     nelle altre (Marco, 12/10/2026): "Luna al 55% dalle 23 · banda larga fino alle 23". Il
     calendario della Luna usa la stessa scala. Su tutta la notte, solo il dato. Nessuna soglia al

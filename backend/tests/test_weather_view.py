@@ -108,7 +108,7 @@ def test_every_hour_carries_the_judgement_of_each_judged_measure(db):  # noqa: F
     assert {o["levels"]["wind"] for o in ore} == {"marginal"}
     # la condensa si giudica sulla distanza fra aria e rugiada: l'ora la porta scritta
     assert {o["dew_spread_c"] for o in ore} == {2.0}
-    assert {o["levels"]["condensation"] for o in ore} == {"nogo"}
+    assert {o["levels"]["condensation"] for o in ore} == {"marginal"}
     assert {o["levels"]["cloud"] for o in ore} == {"go"}
 
 

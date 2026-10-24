@@ -114,18 +114,18 @@ SCALES: dict[Measure, Scale] = {
             axis_top=1.5,  # [T] chart axis
             digits=1,
         ),
-        # [C RMetS Beaufort: force 5 "29-38", force 4 "20-28" km/h, 10 min mean at 10 m]
-        # https://www.rmets.org/metmatters/beaufort-wind-scale
+        # Beaufort is a mean-wind scale: gusts take an observatory's closing rule.
         Scale(
             Measure.GUST,
             _field("wind_gust_kmh"),
-            [Step(NOGO, 29.0, strict=False)],  # [C RMetS Beaufort 5, a mean-wind scale]
+            [Step(NOGO, 25.0, strict=True)],  # [U iTelescope: closes "with gusts over 25 km/h"]
             axis_top=45.0,  # [T] chart axis
         ),
         Scale(
             Measure.WIND,
             _field("wind_kmh"),
-            # [C RMetS Beaufort 5 and 4]
+            # [C RMetS Beaufort: force 5 "29-38", force 4 "20-28" km/h, 10 min mean at 10 m]
+            # https://www.rmets.org/metmatters/beaufort-wind-scale
             [Step(NOGO, 29.0, strict=False), Step(MARGINAL, 20.0, strict=False)],
             axis_top=45.0,  # [T] chart axis
             second=_field("wind_gust_kmh"),
@@ -135,7 +135,8 @@ SCALES: dict[Measure, Scale] = {
         Scale(
             Measure.CONDENSATION,
             spread,
-            [Step(NOGO, 3.0, strict=True)],  # [U imagers' usage, AstroBin above]
+            # heater answers it, never nogo; fog is visibility's word. [U AstroBin above]
+            [Step(MARGINAL, 3.0, strict=True)],
             lower_is_worse=True,
             night=NightValue.MIN,
             axis_top=10.0,  # [T] chart axis
@@ -167,13 +168,12 @@ SCALES: dict[Measure, Scale] = {
             digits=2,  # [T] shown digits
             axis_top=0.2,  # [T] chart axis
         ),
-        # [C ING dark time: lit fraction under 0.25] [P docs/domini/meteo.md: 50 %]
-        # Only the hours with the Moon up carry a value.
+        # Only hours with Moon up carry a value; dark is under 25, as the Moon calendar counts.
         Scale(
             Measure.MOON,
             _field("moon_pct"),
-            # [C ING dark time under 25 %] [P docs/domini/meteo.md: 50 %]
-            [Step(NOGO, 50.0, strict=True), Step(MARGINAL, 25.0, strict=True)],
+            # [C ING: dark time lit fraction under 0.25, grey to 0.65, then bright]
+            [Step(NOGO, 65.0, strict=False), Step(MARGINAL, 25.0, strict=False)],
             digits=0,
             axis_top=100.0,  # [T] chart axis, percent
         ),

@@ -7,7 +7,7 @@ un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura n
 P decisione di Marco, T tecnico (non una regola).
 
 Valori: 133; senza fonte: 1.
-Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 23; T tecnico: 44.
+Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T tecnico: 44.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -398,11 +398,11 @@ Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 23; T t
 | SCALES | `Scale(Measure.CLOUD, _field("cloud_total_pct"), _EIGHTHS, axis_top=...` | T |
 | SCALES | `Scale(Measure.CLOUD_LOW, _field("cloud_low_pct"), _EIGHTHS, axis_to...` | T |
 | SCALES | `axis_top=1.5,` | T |
-| SCALES | `[Step(NOGO, 29.0, strict=False)],` | C RMetS Beaufort 5, a mean-wind scale |
+| SCALES | `[Step(NOGO, 25.0, strict=True)],` | U iTelescope: closes "with gusts over 25 km/h" |
 | SCALES | `axis_top=45.0,` | T |
-| SCALES | `[Step(NOGO, 29.0, strict=False), Step(MARGINAL, 20.0, strict=False)],` | C RMetS Beaufort 5 and 4 |
+| SCALES | `[Step(NOGO, 29.0, strict=False), Step(MARGINAL, 20.0, strict=False)],` | C RMetS Beaufort: force 5 "29-38", force 4 "20-28" km/h, 10 min mean at 10 m |
 | SCALES | `axis_top=45.0,` | T |
-| SCALES | `[Step(NOGO, 3.0, strict=True)],` | U imagers' usage, AstroBin above |
+| SCALES | `[Step(MARGINAL, 3.0, strict=True)],` | U AstroBin above |
 | SCALES | `axis_top=10.0,` | T |
 | SCALES | `[Step(NOGO, 126.0, strict=False)],` | C meteoblue, 35 m/s |
 | SCALES | `axis_top=160.0,` | T |
@@ -411,7 +411,7 @@ Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 23; T t
 | SCALES | `[Step(NOGO, 1.0, strict=False), Step(None, 0.1, strict=False)],` | C NASA |
 | SCALES | `digits=2,` | T |
 | SCALES | `axis_top=0.2,` | T |
-| SCALES | `[Step(NOGO, 50.0, strict=True), Step(MARGINAL, 25.0, strict=True)],` | C ING dark time under 25 %; P docs/domini/meteo.md: 50 % |
+| SCALES | `[Step(NOGO, 65.0, strict=False), Step(MARGINAL, 25.0, strict=False)],` | C ING: dark time lit fraction under 0.25, grey to 0.65, then bright |
 | SCALES | `axis_top=100.0,` | T |
 | SCALES | `axis_top=20.0,` | T |
 | NEUTRAL | `Scale(Measure.CLOUD_MID, _field("cloud_mid_pct"), [], axis_top=100.0),` | T |

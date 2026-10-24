@@ -503,9 +503,11 @@ se e' sopra l'orizzonte col buio). Ognuna dice la sua parola e quando. La Luna d
 illuminata, in che ore e' su e cosa resta nelle altre: "Luna al 55% dalle 23:00 · banda larga fino
 alle 23:00". In vista ci sono i primi due, i piu' gravi; se ce ne sono altri, **Altri N fattori**
 li apre sotto. Le soglie
-vengono da convenzioni pubbliche: la scala Beaufort per il vento, le classi del servizio meteo
-canadese per il seeing, la NASA per l'aerosol, meteoblue per il jet stream; per la Luna, la regola
-diffusa del 25% per la banda larga.
+vengono da convenzioni pubbliche: la scala Beaufort per il vento medio, la regola di chiusura
+dell'osservatorio iTelescope per le raffiche (oltre 25 km/h), le classi di Astronomy Tools per il
+seeing, la NASA per l'aerosol, meteoblue per il jet stream; per la Luna, il buio, il grigio e il
+chiaro dell'osservatorio ING (sotto il 25%, fino al 65%, oltre). La condensa, sotto i 3 gradi fra
+aria e rugiada, e' incerta e mai *non adatta*: la scaccia una fascia anticondensa.
 
 Sotto c'e' **il cielo della notte**, dall'ultima ora di giorno all'alba sullo sfondo del
 crepuscolo: le nuvole basse, medie e alte, ognuna dal suo zero perche' si coprono e non si sommano,
