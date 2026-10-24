@@ -4,7 +4,7 @@ Generato da `tools/registro.py --scrivi`: non si scrive a mano. La casa di ogni 
 e' il codice, con la fonte accanto: C convenzione citata, M misura nostra, P decisione
 di Marco, T tecnico (non una regola).
 
-Valori: 133; senza fonte: 133.
+Valori: 133; senza fonte: 115.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -12,7 +12,7 @@ Valori: 133; senza fonte: 133.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _WEATHER_TICK_S | `60` | **senza fonte** |
+| _WEATHER_TICK_S | `60` | T |
 
 ### api/archive.py
 
@@ -116,8 +116,8 @@ Valori: 133; senza fonte: 133.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| FULL_NIGHTS | `3` | **senza fonte** |
-| MAX_NIGHTS | `7` | **senza fonte** |
+| FULL_NIGHTS | `3` | P docs/domini/meteo.md: three full nights |
+| MAX_NIGHTS | `7` | P docs/domini/meteo.md |
 
 ### astap.py
 
@@ -370,69 +370,70 @@ Valori: 133; senza fonte: 133.
 
 | simbolo | valore | fonte |
 |---|---|---|
-| YEAR_DAYS | `365` | **senza fonte** |
-| MIN_NIGHTS | `120` | **senza fonte** |
+| YEAR_DAYS | `365` | T |
+| MIN_NIGHTS | `120` | P docs/domini/meteo.md: a third of a year |
 
 ### weather/forecast.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| REFRESH_EVERY_S | `3 * 3600` | **senza fonte** |
-| RETRY_S | `15 * 60` | **senza fonte** |
+| REFRESH_EVERY_S | `3 * 3600` | T |
+| RETRY_S | `15 * 60` | T |
 
 ### weather/history.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| DELAY_DAYS | `5` | **senza fonte** |
-| MAX_DAYS | `366` | **senza fonte** |
+| DELAY_DAYS | `5` | C Open-Meteo: ERA5 joins five days later, final only then |
+| MAX_DAYS | `366` | T |
 
 ### weather/judge.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| SCALES | `Scale(Measure.CLOUD, _field("cloud_total_pct"), _EIGHTHS, axis_top=...` | **senza fonte** |
-| SCALES | `Scale(Measure.CLOUD_LOW, _field("cloud_low_pct"), _EIGHTHS, axis_to...` | **senza fonte** |
-| SCALES | `axis_top=1.5,` | **senza fonte** |
-| SCALES | `Measure.GUST, _field("wind_gust_kmh"), [Step(NOGO, 29.0, strict=Fal...` | **senza fonte** |
-| SCALES | `[Step(NOGO, 29.0, strict=False), Step(MARGINAL, 20.0, strict=False)],` | **senza fonte** |
-| SCALES | `axis_top=45.0,` | **senza fonte** |
-| SCALES | `[Step(NOGO, 3.0, strict=True)],` | **senza fonte** |
-| SCALES | `axis_top=10.0,` | **senza fonte** |
-| SCALES | `[Step(NOGO, 126.0, strict=False)],` | **senza fonte** |
-| SCALES | `axis_top=160.0,` | **senza fonte** |
-| SCALES | `[Step(NOGO, 4.0, strict=True), Step(MARGINAL, 2.0, strict=True)],` | **senza fonte** |
-| SCALES | `axis_top=5.0,` | **senza fonte** |
-| SCALES | `[Step(NOGO, 1.0, strict=False), Step(None, 0.1, strict=False)],` | **senza fonte** |
-| SCALES | `digits=2,` | **senza fonte** |
-| SCALES | `axis_top=0.2,` | **senza fonte** |
-| SCALES | `[Step(NOGO, 50.0, strict=True), Step(MARGINAL, 25.0, strict=True)],` | **senza fonte** |
-| SCALES | `axis_top=100.0,` | **senza fonte** |
-| SCALES | `axis_top=20.0,` | **senza fonte** |
-| NEUTRAL | `Scale(Measure.CLOUD_MID, _field("cloud_mid_pct"), [], axis_top=100.0),` | **senza fonte** |
-| NEUTRAL | `Scale(Measure.CLOUD_HIGH, _field("cloud_high_pct"), [], axis_top=10...` | **senza fonte** |
-| _RANK | `{NOGO: 0, MARGINAL: 1, None: 2, GO: 3}` | **senza fonte** |
+| SCALES | `Scale(Measure.CLOUD, _field("cloud_total_pct"), _EIGHTHS, axis_top=...` | T |
+| SCALES | `Scale(Measure.CLOUD_LOW, _field("cloud_low_pct"), _EIGHTHS, axis_to...` | T |
+| SCALES | `axis_top=1.5,` | T |
+| SCALES | `[Step(NOGO, 29.0, strict=False)],` | C RMetS Beaufort 5, a mean-wind scale |
+| SCALES | `axis_top=45.0,` | T |
+| SCALES | `[Step(NOGO, 29.0, strict=False), Step(MARGINAL, 20.0, strict=False)],` | C RMetS Beaufort 5 and 4 |
+| SCALES | `axis_top=45.0,` | T |
+| SCALES | `[Step(NOGO, 3.0, strict=True)],` | C imagers' usage, AstroBin above |
+| SCALES | `axis_top=10.0,` | T |
+| SCALES | `[Step(NOGO, 126.0, strict=False)],` | C meteoblue, 35 m/s |
+| SCALES | `axis_top=160.0,` | T |
+| SCALES | `[Step(NOGO, 4.0, strict=True), Step(MARGINAL, 2.0, strict=True)],` | C Astronomy Tools |
+| SCALES | `axis_top=5.0,` | T |
+| SCALES | `[Step(NOGO, 1.0, strict=False), Step(None, 0.1, strict=False)],` | C NASA |
+| SCALES | `digits=2,` | T |
+| SCALES | `axis_top=0.2,` | T |
+| SCALES | `[Step(NOGO, 50.0, strict=True), Step(MARGINAL, 25.0, strict=True)],` | C ING dark time under 25 %; P docs/domini/meteo.md: 50 % |
+| SCALES | `axis_top=100.0,` | T |
+| SCALES | `axis_top=20.0,` | T |
+| NEUTRAL | `Scale(Measure.CLOUD_MID, _field("cloud_mid_pct"), [], axis_top=100.0),` | T |
+| NEUTRAL | `Scale(Measure.CLOUD_HIGH, _field("cloud_high_pct"), [], axis_top=10...` | T |
+| _RANK | `{NOGO: 0, MARGINAL: 1, None: 2, GO: 3}` | T |
 
 ### weather/meteoblue.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| FREE_YEAR_CREDITS | `10_000_000` | **senza fonte** |
-| CREDITS_PER_CALL | `8_000` | **senza fonte** |
-| MIN_GAP_H | `max(12, math.ceil(24 * 365 / CALLS_PER_YEAR))` | **senza fonte** |
+| FREE_YEAR_CREDITS | `10_000_000` | C meteoblue free API: "10 million credits", "for one year" |
+| CREDITS_PER_CALL | `8_000` | M cost of one call, as the account's usage page reports it |
+| MIN_GAP_H | `max(12, math.ceil(24 * 365 / CALLS_PER_YEAR))` | T |
 
 ### weather/openmeteo.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| FORECAST_DAYS | `8` | **senza fonte** |
+| FORECAST_DAYS | `8` | T |
 
 ### weather/verdict.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| CLOUD_GO_MAX_PCT | `25.0` | **senza fonte** |
-| CLOUD_MARGINAL_MAX_PCT | `50.0` | **senza fonte** |
+| CLOUD_GO_MAX_PCT | `25.0` | C WMO/ICAO code D-8: FEW 1-2 oktas, SCT 3-4 |
+| CLOUD_MARGINAL_MAX_PCT | `50.0` | C WMO/ICAO code D-8: SCT up to 4 oktas |
 
 ## Decisioni (ADR)
 

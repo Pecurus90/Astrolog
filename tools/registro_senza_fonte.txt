@@ -1,5 +1,4 @@
 # Valori ancora senza fonte (tools/registro.py). Solo si accorcia.
-api/app.py:_WEATHER_TICK_S
 api/archive.py:archive_page(catalog=)
 api/archive.py:archive_page(constellation=)
 api/archive.py:archive_page(filter_name=)
@@ -32,8 +31,6 @@ api/search.py:search_archive(limit=)
 api/search.py:search_archive(q=)
 api/sites.py:create_site@router.post
 api/sites.py:list_sites(limit=)
-api/weather.py:FULL_NIGHTS
-api/weather.py:MAX_NIGHTS
 astap.py:BLIND_RADIUS_DEG
 astap.py:FZ_SINCE
 astap.py:SEARCH_RADIUS_DEG
@@ -117,18 +114,3 @@ units.py:CD_M2_PER_MAG0
 units.py:F32_SIGNIFICANT_DIGITS
 units.py:FOCAL_TOLERANCE
 units.py:NATURAL_SKY_CD_M2
-weather/climate.py:MIN_NIGHTS
-weather/climate.py:YEAR_DAYS
-weather/forecast.py:REFRESH_EVERY_S
-weather/forecast.py:RETRY_S
-weather/history.py:DELAY_DAYS
-weather/history.py:MAX_DAYS
-weather/judge.py:NEUTRAL
-weather/judge.py:SCALES
-weather/judge.py:_RANK
-weather/meteoblue.py:CREDITS_PER_CALL
-weather/meteoblue.py:FREE_YEAR_CREDITS
-weather/meteoblue.py:MIN_GAP_H
-weather/openmeteo.py:FORECAST_DAYS
-weather/verdict.py:CLOUD_GO_MAX_PCT
-weather/verdict.py:CLOUD_MARGINAL_MAX_PCT

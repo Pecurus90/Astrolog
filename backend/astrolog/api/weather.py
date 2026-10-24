@@ -48,10 +48,10 @@ _ARRIVED = (
     " GROUP BY source ORDER BY source"
 )
 
-# A product choice, not a threshold: no source found says from which day an hourly forecast stops
-# being worth reading.
+# [P docs/domini/meteo.md: three full nights] no source says from which day an hourly forecast
+# stops being worth reading.
 FULL_NIGHTS = 3
-# the current night and the six after: the service sometimes brings one more, which is not shown
+# [P docs/domini/meteo.md] the current night and the six after; one more sometimes comes, not shown
 MAX_NIGHTS = 7
 
 SCALES = [

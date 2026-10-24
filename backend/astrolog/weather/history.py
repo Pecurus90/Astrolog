@@ -20,10 +20,10 @@ log = logging.getLogger(__name__)
 
 URL = "https://archive-api.open-meteo.com/v1/archive"
 KIND = "observed"
-# The archive joins ECMWF at once with the ERA5 reanalysis five days later, and is final only then
-# (https://open-meteo.com/en/docs/historical-weather-api).
+# [C Open-Meteo: ERA5 joins five days later, final only then]
+# https://open-meteo.com/en/docs/historical-weather-api
 DELAY_DAYS = 5
-MAX_DAYS = 366
+MAX_DAYS = 366  # [T] one call, at most a year
 
 # The forecast's quantities without the upper wind and the visibility: the archive has neither.
 VARIABLES = {k: v for k, v in openmeteo.VARIABLES.items() if "hPa" not in k and k != "visibility"}

@@ -99,7 +99,7 @@ def _scan_round(state: State) -> None:
         conn.close()
 
 
-# A site declared now gets its forecast at once, not at the next three-hour round.
+# [T] a site declared now gets its forecast at once, not at the next three-hour round.
 _WEATHER_TICK_S = 60
 
 

@@ -17,12 +17,12 @@ from .openmeteo import BadAnswerError, Series
 URL = "https://my.meteoblue.com/packages/seeing-1h"
 USAGE_URL = "https://my.meteoblue.com/account/usage"
 
-# The free key's yearly cap (https://business.meteoblue.com/products/weather-apis/free-weather-api);
-# the cost of one call of this package, as the account's usage page reports it.
+# [C meteoblue free API: "10 million credits", "for one year"]
+# https://docs.meteoblue.com/en/weather-apis/free-weather-api/overview
 FREE_YEAR_CREDITS = 10_000_000
-CREDITS_PER_CALL = 8_000
+CREDITS_PER_CALL = 8_000  # [M cost of one call, as the account's usage page reports it]
 CALLS_PER_YEAR = FREE_YEAR_CREDITS // CREDITS_PER_CALL
-# Twice a day at most, since one answer already brings seven nights; never more than the cap.
+# [T] twice a day at most, since one answer already brings seven nights; never more than the cap.
 MIN_GAP_H = max(12, math.ceil(24 * 365 / CALLS_PER_YEAR))
 
 type KeyOutcome = Literal[Outcome.OK, Outcome.BAD_ANSWER] | net.Failure

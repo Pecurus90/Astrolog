@@ -34,10 +34,10 @@ VARIABLES = {
     "wind_speed_700hPa": "wind_700hpa_kmh",
 }
 
-# One day back because before noon the night under way began yesterday; eight ahead for it and
-# the six or seven after.
+# [T] one day back: before noon the night under way began yesterday; eight ahead for it and the
+# six or seven after.
 PAST_DAYS = 1
-FORECAST_DAYS = 8
+FORECAST_DAYS = 8  # [T] the night under way and seven more
 
 # A single-series reading: the instants, and each quantity's values by our name.
 type Series = tuple[list[datetime], dict[str, list[Any]]]

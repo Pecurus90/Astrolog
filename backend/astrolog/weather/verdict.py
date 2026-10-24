@@ -10,10 +10,10 @@ from typing import Any
 
 from ..ephemeris.sun import Sky
 
-# Okta (WMO Code Table 2700) as METAR classes (ICAO Annex 3): go to FEW 2/8, marginal to SCT 4/8.
-# https://www.nodc.noaa.gov/archive/arc0021/0000907/1.1/data/0-data/HTML/WMO-CODE/WMO2700.HTM
+# [C WMO/ICAO code D-8: FEW 1-2 oktas, SCT 3-4] go to FEW 2/8, marginal to SCT 4/8.
+# https://codes.wmo.int/49-2/CloudAmountReportedAtAerodrome
 CLOUD_GO_MAX_PCT = 25.0
-CLOUD_MARGINAL_MAX_PCT = 50.0
+CLOUD_MARGINAL_MAX_PCT = 50.0  # [C WMO/ICAO code D-8: SCT up to 4 oktas]
 
 
 class SkyWord(StrEnum):

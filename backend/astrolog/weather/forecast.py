@@ -17,9 +17,9 @@ from . import nights, openmeteo
 
 log = logging.getLogger(__name__)
 
-# Global models run every six hours; every three catches each run within a few hours of release.
+# [T] global models run every six hours; every three catches each run a few hours after release.
 REFRESH_EVERY_S = 3 * 3600
-# Sooner after a failed round, but not every minute: a NAS without network would hammer the
+# [T] sooner after a failed round, but not every minute: a NAS without network would hammer the
 # service for nothing.
 RETRY_S = 15 * 60
 

@@ -1,5 +1,5 @@
-"""Aerosol and dust from Open-Meteo Air Quality (CAMS data), shown as they arrive: no sourced scale
-for clear or hazy air was found, so none is invented; a `null` hour stays unknown."""
+"""Aerosol (550 nm) and dust from Open-Meteo Air Quality (CAMS data); `judge` reads aerosol on
+NASA's scale, dust stays unjudged; a `null` hour stays unknown."""
 
 from typing import Any
 

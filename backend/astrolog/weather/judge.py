@@ -101,82 +101,90 @@ _EIGHTHS = [  # okta bounds, source beside them in verdict
 SCALES: dict[Measure, Scale] = {
     s.code: s
     for s in (
+        # [T] chart axis, percent
         Scale(Measure.CLOUD, _field("cloud_total_pct"), _EIGHTHS, axis_top=100.0),
+        # [T] chart axis, percent
         Scale(Measure.CLOUD_LOW, _field("cloud_low_pct"), _EIGHTHS, axis_top=100.0),
-        # any rain in the dark ends the session
+        # any rain in the dark ends the session; [C ASCOM ObservingConditions.RainRate: >0 is wet]
         Scale(
             Measure.RAIN,
             _field("precip_mm"),
             [Step(NOGO, 0.0, strict=True)],
             night=NightValue.TOTAL,
-            axis_top=1.5,
+            axis_top=1.5,  # [T] chart axis
             digits=1,
         ),
-        # Beaufort 5 "fresh breeze" from 29 km/h, 4 "moderate breeze" from 20 km/h.
-        # https://en.wikipedia.org/wiki/Beaufort_scale
+        # [C RMetS Beaufort: force 5 "29-38", force 4 "20-28" km/h, 10 min mean at 10 m]
+        # https://www.rmets.org/metmatters/beaufort-wind-scale
         Scale(
-            Measure.GUST, _field("wind_gust_kmh"), [Step(NOGO, 29.0, strict=False)], axis_top=45.0
+            Measure.GUST,
+            _field("wind_gust_kmh"),
+            [Step(NOGO, 29.0, strict=False)],  # [C RMetS Beaufort 5, a mean-wind scale]
+            axis_top=45.0,  # [T] chart axis
         ),
         Scale(
             Measure.WIND,
             _field("wind_kmh"),
+            # [C RMetS Beaufort 5 and 4]
             [Step(NOGO, 29.0, strict=False), Step(MARGINAL, 20.0, strict=False)],
-            axis_top=45.0,
+            axis_top=45.0,  # [T] chart axis
             second=_field("wind_gust_kmh"),
         ),
-        # Under 5 F (3 C) between air and dew point, expect fog: FAA-H-8083-28.
+        # [C imagers' usage: "worry about dew when the temperature-dewpoint spread is less than
+        # about 3C"] https://app.astrobin.com/forum/topic/18055/dew-heater/dew-dos-snicker-and-donts
         Scale(
             Measure.CONDENSATION,
             spread,
-            [Step(NOGO, 3.0, strict=True)],
+            [Step(NOGO, 3.0, strict=True)],  # [C imagers' usage, AstroBin above]
             lower_is_worse=True,
             night=NightValue.MIN,
-            axis_top=10.0,
+            axis_top=10.0,  # [T] chart axis
         ),
-        # meteoblue: "(>35m/s) usually correspond to bad seeing", nogo from 126 km/h; no marginal.
+        # [C meteoblue: "(>35m/s) usually correspond to bad seeing"] 126 km/h; no marginal.
         # https://content.meteoblue.com/en/private-customers/website-help/outdoor-and-sports/astronomy-seeing
         Scale(
             Measure.JET,
             _field("wind_250hpa_kmh"),
-            [Step(NOGO, 126.0, strict=False)],
-            axis_top=160.0,
+            [Step(NOGO, 126.0, strict=False)],  # [C meteoblue, 35 m/s]
+            axis_top=160.0,  # [T] chart axis
         ),
-        # Canadian Meteorological Centre seeing classes: 1-2" fair, 2-4" moderate, >4" poor.
-        # https://www.cleardarksky.com/csk/faq/seeing_catagories.html
+        # [C Astronomy Tools CCD suitability: good 1-2", OK 2-4", poor 4-5"]; >4" also CMC class I.
+        # https://astronomy.tools/calculators/ccd_suitability
         Scale(
             Measure.SEEING,
             _field("seeing_arcsec"),
-            [Step(NOGO, 4.0, strict=True), Step(MARGINAL, 2.0, strict=True)],
-            axis_top=5.0,
+            [Step(NOGO, 4.0, strict=True), Step(MARGINAL, 2.0, strict=True)],  # [C Astronomy Tools]
+            axis_top=5.0,  # [T] chart axis
             digits=1,
         ),
-        # "less than 0.1 ... a crystal clear sky", "a value of 1 ... very hazy"; between, no word.
+        # [C NASA: "less than 0.1 ... crystal clear sky", "1 ... very hazy"]; between, no word.
         # https://science.nasa.gov/earth/earth-observatory/global-maps/aerosol-optical-depth
         Scale(
             Measure.AEROSOL,
             _field("aerosol_optical_depth"),
-            [Step(NOGO, 1.0, strict=False), Step(None, 0.1, strict=False)],
-            digits=2,
-            axis_top=0.2,
+            [Step(NOGO, 1.0, strict=False), Step(None, 0.1, strict=False)],  # [C NASA]
+            digits=2,  # [T] shown digits
+            axis_top=0.2,  # [T] chart axis
         ),
-        # Broadband up to 25 % lit, the imagers' rule; the 50 % step is a product choice
-        # (docs/domini/meteo.md). Only the hours with the Moon up carry a value.
+        # [C ING dark time: lit fraction under 0.25] [P docs/domini/meteo.md: 50 %]
+        # Only the hours with the Moon up carry a value.
         Scale(
             Measure.MOON,
             _field("moon_pct"),
+            # [C ING dark time under 25 %] [P docs/domini/meteo.md: 50 %]
             [Step(NOGO, 50.0, strict=True), Step(MARGINAL, 25.0, strict=True)],
             digits=0,
-            axis_top=100.0,
+            axis_top=100.0,  # [T] chart axis, percent
         ),
-        # WMO: fog when droplets "reduce horizontal visibility ... to less than 1 km", else mist.
-        # https://cloudatlas.wmo.int/en/fog-compared-with-mist.html
+        # [C FAA-H-8083-28 18.1.1: fog "reduces horizontal visibility to less than 5/8 sm (1 km)";
+        # METAR FG under 1000 m]
         Scale(
             Measure.VISIBILITY,
             _field("visibility_km"),
             [Step(NOGO, 1.0, strict=True)],
             lower_is_worse=True,
             night=NightValue.MIN,
-            # Design's sheet v36: up to 20 km on a square root, or the 1 km line sits on the floor.
+            # [T] Design sheet v36: up to 20 km on a square root, else the 1 km line sits on floor
             axis_top=20.0,
             axis_fixed=True,
             digits=1,
@@ -202,12 +210,14 @@ NEUTRAL: dict[Measure, Scale] = {
         ),
         Scale(Measure.DUST, _field("dust_ugm3"), []),
         Scale(Measure.WIND_700, _field("wind_700hpa_kmh"), []),
+        # [T] chart axis, percent
         Scale(Measure.CLOUD_MID, _field("cloud_mid_pct"), [], axis_top=100.0),
+        # [T] chart axis, percent
         Scale(Measure.CLOUD_HIGH, _field("cloud_high_pct"), [], axis_top=100.0),
     )
 }
 
-# No word sits between: on the aerosol scale it is the hazy middle, worse than clear.
+# No word sits between: on the aerosol scale it is the hazy middle, worse than clear. [T] order
 _RANK = {NOGO: 0, MARGINAL: 1, None: 2, GO: 3}
 
 
