@@ -17,7 +17,7 @@ from .scan import rel_path
 
 # Enough to tell a copy of the archive from another one with the same names; each costs a header
 # read, which on a NAS is the slow part.
-SAMPLE_FILES: Final = 5
+SAMPLE_FILES: Final = 5  # [P ADR 0017]
 
 _KNOWN = (
     "SELECT f.frame_hash FROM positions p JOIN frames f ON f.id = p.frame_id"

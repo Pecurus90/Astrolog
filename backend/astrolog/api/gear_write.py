@@ -27,6 +27,7 @@ from .models_review_apply import FilterCorrection
 router = APIRouter(prefix="/api/v1", tags=["gear"])
 
 
+# [C RFC 9110 15.3.2: 201 Created]
 @router.post("/gear/instruments", response_model=GearWritten, status_code=201)
 def add_instrument(
     body: InstrumentNew, request: Request, conn: sqlite3.Connection = Depends(get_db)
@@ -91,6 +92,7 @@ def name_rig(
     return GearWritten(id=rig_id, requeued=0, run_started=False)
 
 
+# [C RFC 9110 15.3.2: 201 Created]
 @router.post("/gear/filters", response_model=GearWritten, status_code=201)
 def add_filter(
     body: FilterNew, request: Request, conn: sqlite3.Connection = Depends(get_db)
@@ -110,6 +112,7 @@ def add_filter(
     return GearWritten(id=new_id, requeued=0, run_started=False)
 
 
+# [C RFC 9110 15.3.2: 201 Created]
 @router.post("/gear/rigs", response_model=GearWritten, status_code=201)
 def add_rig(
     body: RigNew, request: Request, conn: sqlite3.Connection = Depends(get_db)

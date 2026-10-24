@@ -71,14 +71,14 @@ def read_header(path: str | Path) -> fits.Header:
     return read_frame(path)[0]
 
 
-FINGERPRINT_BYTES = 65536
+FINGERPRINT_BYTES = 65536  # [P docs/domini/spina.md]
 
 
-BLOCK = 2880  # the FITS block: header and data fill a whole number of them
-_CARD = 80
-_CLEAN_END = b"END" + b" " * (_CARD - 3)
+BLOCK = 2880  # [C FITS 4.0 3.1: 2880-byte blocks]
+_CARD = 80  # [C FITS 4.0 4.1.1: 80-character records]
+_CLEAN_END = b"END" + b" " * (_CARD - 3)  # [C FITS 4.0 4.4.1.1: END then spaces]
 _KEY_CHARS = frozenset(b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-")
-_BYTES_PER_PIXEL = {8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}
+_BYTES_PER_PIXEL = {8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}  # [C FITS 4.0 table 8: BITPIX]
 _STRUCTURAL = frozenset({b"SIMPLE", b"BITPIX", b"GROUPS", b"PCOUNT", b"GCOUNT"})  # and NAXISn
 
 

@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 133; senza fonte: 82.
-Fonti: C norma: 22; U usanza: 1; D metodo: 0; M misura: 2; P decisione: 7; T tecnico: 23.
+Valori: 133; senza fonte: 5.
+Fonti: C norma: 52; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 23; T tecnico: 44.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -21,28 +21,28 @@ Fonti: C norma: 22; U usanza: 1; D metodo: 0; M misura: 2; P decisione: 7; T tec
 
 | simbolo | valore | fonte |
 |---|---|---|
-| archive_page(limit=) | `Query(100, ge=1, le=500)` | **senza fonte** |
-| archive_page(q=) | `Query(None, max_length=200)` | **senza fonte** |
-| archive_page(key=) | `Query(None, max_length=200)` | **senza fonte** |
-| archive_page(catalog=) | `Query(None, max_length=40)` | **senza fonte** |
-| archive_page(constellation=) | `Query(None, max_length=8)` | **senza fonte** |
-| archive_page(filter_name=) | `Query(None, alias="filter", max_length=120)` | **senza fonte** |
+| archive_page(limit=) | `Query(100, ge=1, le=500)` | P docs/domini/archivio.md |
+| archive_page(q=) | `Query(None, max_length=200)` | T |
+| archive_page(key=) | `Query(None, max_length=200)` | T |
+| archive_page(catalog=) | `Query(None, max_length=40)` | T |
+| archive_page(constellation=) | `Query(None, max_length=8)` | T |
+| archive_page(filter_name=) | `Query(None, alias="filter", max_length=120)` | T |
 
 ### api/folders.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| PROBE_SECONDS | `10` | **senza fonte** |
-| list_folders(limit=) | `Query(100, ge=1, le=1000)` | **senza fonte** |
-| create_folder@router.post | `router.post("/folders", response_model=FolderOut, status_code=201)` | **senza fonte** |
+| PROBE_SECONDS | `10` | C Nielsen 1993: 10 s attention limit |
+| list_folders(limit=) | `Query(100, ge=1, le=1000)` | T |
+| create_folder@router.post | `router.post("/folders", response_model=FolderOut, status_code=201)` | C RFC 9110 15.3.2: 201 Created |
 
 ### api/gear_write.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| add_instrument@router.post | `router.post("/gear/instruments", response_model=GearWritten, status...` | **senza fonte** |
-| add_filter@router.post | `router.post("/gear/filters", response_model=GearWritten, status_cod...` | **senza fonte** |
-| add_rig@router.post | `router.post("/gear/rigs", response_model=GearWritten, status_code=201)` | **senza fonte** |
+| add_instrument@router.post | `router.post("/gear/instruments", response_model=GearWritten, status...` | C RFC 9110 15.3.2: 201 Created |
+| add_filter@router.post | `router.post("/gear/filters", response_model=GearWritten, status_cod...` | C RFC 9110 15.3.2: 201 Created |
+| add_rig@router.post | `router.post("/gear/rigs", response_model=GearWritten, status_code=201)` | C RFC 9110 15.3.2: 201 Created |
 
 ### api/models_site.py
 
@@ -66,54 +66,54 @@ Fonti: C norma: 22; U usanza: 1; D metodo: 0; M misura: 2; P decisione: 7; T tec
 
 | simbolo | valore | fonte |
 |---|---|---|
-| night_list(limit=) | `Query(100, ge=1, le=500)` | **senza fonte** |
+| night_list(limit=) | `Query(100, ge=1, le=500)` | T |
 
 ### api/pipeline.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| ETA_AFTER_S | `60` | **senza fonte** |
+| ETA_AFTER_S | `60` | P docs/domini/navigazione.md |
 
 ### api/review.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| settled_objects(limit=) | `Query(50, ge=1, le=500)` | **senza fonte** |
+| settled_objects(limit=) | `Query(50, ge=1, le=500)` | T |
 
 ### api/review_write.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _REFUSALS | `(gear.MergeRefusedError, 422, "merge_refused"),` | **senza fonte** |
-| _REFUSALS | `(folders.NotAskedError, 422, "not_asked"),` | **senza fonte** |
-| _REFUSALS | `(decl.UnknownTargetError, 422, "unknown_target"),` | **senza fonte** |
-| _REFUSALS | `(rigs.NotOfKindError, 422, "not_of_kind"),` | **senza fonte** |
-| _REFUSALS | `(rigs.WrongKindError, 422, "wrong_kind"),` | **senza fonte** |
-| _REFUSALS | `(gear_create.SpellingTakenError, 409, "spelling_taken"),` | **senza fonte** |
-| _REFUSALS | `(rigs.RigExistsError, 409, "rig_exists"),` | **senza fonte** |
+| _REFUSALS | `(gear.MergeRefusedError, 422, "merge_refused"),` | C RFC 9110 15.5.21: 422 |
+| _REFUSALS | `(folders.NotAskedError, 422, "not_asked"),` | C RFC 9110 15.5.21: 422 |
+| _REFUSALS | `(decl.UnknownTargetError, 422, "unknown_target"),` | C RFC 9110 15.5.21: 422 |
+| _REFUSALS | `(rigs.NotOfKindError, 422, "not_of_kind"),` | C RFC 9110 15.5.21: 422 |
+| _REFUSALS | `(rigs.WrongKindError, 422, "wrong_kind"),` | C RFC 9110 15.5.21: 422 |
+| _REFUSALS | `(gear_create.SpellingTakenError, 409, "spelling_taken"),` | C RFC 9110 15.5.10: 409 |
+| _REFUSALS | `(rigs.RigExistsError, 409, "rig_exists"),` | C RFC 9110 15.5.10: 409 |
 
 ### api/scan.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| scan_all@router.post | `router.post("/scan", response_model=ScanAllStarted, status_code=202)` | **senza fonte** |
-| scan@router.post | `router.post("/folders/{folder_id}/scan", response_model=ScanStarted...` | **senza fonte** |
-| scan_runs(limit=) | `Query(20, ge=1, le=500)` | **senza fonte** |
-| scan_run_errors(limit=) | `Query(100, ge=1, le=1000)` | **senza fonte** |
+| scan_all@router.post | `router.post("/scan", response_model=ScanAllStarted, status_code=202)` | C RFC 9110 15.3.3: 202 Accepted |
+| scan@router.post | `router.post("/folders/{folder_id}/scan", response_model=ScanStarted...` | C RFC 9110 15.3.3: 202 Accepted |
+| scan_runs(limit=) | `Query(20, ge=1, le=500)` | T |
+| scan_run_errors(limit=) | `Query(100, ge=1, le=1000)` | T |
 
 ### api/search.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| search_archive(q=) | `Query("", max_length=200)` | **senza fonte** |
-| search_archive(limit=) | `Query(5, ge=1, le=20)` | **senza fonte** |
+| search_archive(q=) | `Query("", max_length=200)` | T |
+| search_archive(limit=) | `Query(5, ge=1, le=20)` | T |
 
 ### api/sites.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| list_sites(limit=) | `Query(100, ge=1, le=1000)` | **senza fonte** |
-| create_site@router.post | `router.post("/sites", response_model=SiteOut, status_code=201)` | **senza fonte** |
+| list_sites(limit=) | `Query(100, ge=1, le=1000)` | T |
+| create_site@router.post | `router.post("/sites", response_model=SiteOut, status_code=201)` | C RFC 9110 15.3.2: 201 Created |
 
 ### api/weather.py
 
@@ -152,8 +152,8 @@ Fonti: C norma: 22; U usanza: 1; D metodo: 0; M misura: 2; P decisione: 7; T tec
 |---|---|---|
 | RISESET_DEG | `-0.833` | C USNO RST_defs: Sun's centre at zenith distance 90.8333 |
 | CIVIL_DEG | `-6.0` | C USNO https://aa.usno.navy.mil/faq/RST_defs: 6, 12, 18 degrees below the horizon |
-| NAUTICAL_DEG | `-12.0` | **senza fonte** |
-| ASTRO_DEG | `-18.0` | **senza fonte** |
+| NAUTICAL_DEG | `-12.0` | C USNO |
+| ASTRO_DEG | `-18.0` | C USNO |
 | GRID_STEP_MIN | `3` | T |
 | TRACK_STEP_MIN | `15` | T |
 | CALENDAR_STEP_MIN | `5` | T |
@@ -178,58 +178,58 @@ Fonti: C norma: 22; U usanza: 1; D metodo: 0; M misura: 2; P decisione: 7; T tec
 
 | simbolo | valore | fonte |
 |---|---|---|
-| FINGERPRINT_BYTES | `65536` | **senza fonte** |
-| BLOCK | `2880` | **senza fonte** |
-| _CARD | `80` | **senza fonte** |
-| _CLEAN_END | `b"END" + b" " * (_CARD - 3)` | **senza fonte** |
-| _BYTES_PER_PIXEL | `{8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}` | **senza fonte** |
+| FINGERPRINT_BYTES | `65536` | P docs/domini/spina.md |
+| BLOCK | `2880` | C FITS 4.0 3.1: 2880-byte blocks |
+| _CARD | `80` | C FITS 4.0 4.1.1: 80-character records |
+| _CLEAN_END | `b"END" + b" " * (_CARD - 3)` | C FITS 4.0 4.4.1.1: END then spaces |
+| _BYTES_PER_PIXEL | `{8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}` | C FITS 4.0 table 8: BITPIX |
 
 ### fits/walk.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| FILE_ATTRIBUTE_RECALL_ON_OPEN | `0x00040000` | **senza fonte** |
-| FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | `0x00400000` | **senza fonte** |
-| SF_DATALESS | `0x40000000` | **senza fonte** |
-| LONG_PATH_THRESHOLD | `240` | **senza fonte** |
+| FILE_ATTRIBUTE_RECALL_ON_OPEN | `0x00040000` | C Microsoft File Attribute Constants |
+| FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | `0x00400000` | C Microsoft File Attribute Constants |
+| SF_DATALESS | `0x40000000` | C Apple TN3150; xnu sys/stat.h |
+| LONG_PATH_THRESHOLD | `240` | T |
 
 ### net.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| TIMEOUT_S | `15` | **senza fonte** |
-| _REFUSALS | `frozenset({400, 401, 403, 429})` | **senza fonte** |
+| TIMEOUT_S | `15` | P ADR 0038 |
+| _REFUSALS | `frozenset({400, 401, 403, 429})` | C RFC 9110 15.5.1-15.5.4; RFC 6585 4 |
 
 ### pipeline/changes.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| LEFT_OUT_KEPT | `100` | **senza fonte** |
+| LEFT_OUT_KEPT | `100` | P ADR 0038 |
 
 ### pipeline/fingerprint.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| FINGERPRINT_BYTES | `65536` | **senza fonte** |
-| BLOCK | `2880` | **senza fonte** |
-| CARD | `80` | **senza fonte** |
-| _BYTES | `{8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}` | **senza fonte** |
-| _MAX_AXES | `999` | **senza fonte** |
-| _MAX_BYTES | `2**62` | **senza fonte** |
+| FINGERPRINT_BYTES | `65536` | P docs/domini/spina.md |
+| BLOCK | `2880` | C FITS 4.0 3.1: 2880-byte blocks |
+| CARD | `80` | C FITS 4.0 4.1.1: 80-character records |
+| _BYTES | `{8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}` | C FITS 4.0 table 8: BITPIX |
+| _MAX_AXES | `999` | C FITS 4.0 4.4.1.1: NAXIS at most 999 |
+| _MAX_BYTES | `2**62` | T |
 
 ### pipeline/scan.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| BATCH | `100` | **senza fonte** |
-| UNKNOWN_KEPT | `100` | **senza fonte** |
-| UNKNOWN_TRACKED | `10_000` | **senza fonte** |
+| BATCH | `100` | T |
+| UNKNOWN_KEPT | `100` | P ADR 0038 |
+| UNKNOWN_TRACKED | `10_000` | T |
 
 ### pipeline/scanner.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| MAX_HEADER_BLOCKS | `100` | **senza fonte** |
+| MAX_HEADER_BLOCKS | `100` | T |
 
 ### pipeline/sky.py
 
@@ -241,82 +241,82 @@ Fonti: C norma: 22; U usanza: 1; D metodo: 0; M misura: 2; P decisione: 7; T tec
 
 | simbolo | valore | fonte |
 |---|---|---|
-| PASSES | `2` | **senza fonte** |
+| PASSES | `2` | P ADR 0036, D5 |
 
 ### pipeline/values.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| (SQLITE_MIN, SQLITE_MAX) | `-(2**63), 2**63 - 1` | **senza fonte** |
-| COLDEST_C | `-273.15` | **senza fonte** |
+| (SQLITE_MIN, SQLITE_MAX) | `-(2**63), 2**63 - 1` | C SQLite: 64-bit signed integers |
+| COLDEST_C | `-273.15` | C NIST SP 811 4.2.1.1: T0 = 273.15 K |
 
 ### pipeline/walk.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| FILE_ATTRIBUTE_RECALL_ON_OPEN | `0x00040000` | **senza fonte** |
-| FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | `0x00400000` | **senza fonte** |
-| SF_DATALESS | `0x40000000` | **senza fonte** |
-| LONG_PATH_THRESHOLD | `240` | **senza fonte** |
+| FILE_ATTRIBUTE_RECALL_ON_OPEN | `0x00040000` | C Microsoft File Attribute Constants |
+| FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | `0x00400000` | C Microsoft File Attribute Constants |
+| SF_DATALESS | `0x40000000` | C Apple TN3150; xnu sys/stat.h |
+| LONG_PATH_THRESHOLD | `240` | T |
 
 ### place.py
 
 | simbolo | valore | fonte |
 |---|---|---|
 | _KM_PER_DEGREE | `111.2` | C IUGG mean radius R1 6371.0088 km: 2*pi*R1/360 = 111.195 |
-| search(limit=) | `5` | **senza fonte** |
+| search(limit=) | `5` | T |
 
 ### spine/folder_move.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| SAMPLE_FILES | `5` | **senza fonte** |
+| SAMPLE_FILES | `5` | P ADR 0017 |
 
 ### spine/identify.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| CANDIDATES_LIMIT | `6` | **senza fonte** |
+| CANDIDATES_LIMIT | `6` | P docs/domini/spina.md |
 
 ### spine/identify_decide.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _RANK | `IdentityConfidence.LOW: 2,` | **senza fonte** |
+| _RANK | `IdentityConfidence.LOW: 2,` | P docs/domini/spina.md |
 
 ### spine/identify_geometry.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| MIN_SEARCH_RADIUS_DEG | `3.0` | **senza fonte** |
+| MIN_SEARCH_RADIUS_DEG | `3.0` | P docs/domini/spina.md |
 
 ### spine/identify_score.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| W_MAGNITUDE | `1.4` | **senza fonte** |
-| W_SIZE | `0.6` | **senza fonte** |
-| W_CENTERING | `1.2` | **senza fonte** |
-| SEP_FLOOR_DEG | `0.05` | **senza fonte** |
-| SCALE_CAP_DEG | `3.0` | **senza fonte** |
-| CATALOG_PRIORITY | `"M": 1.0, "C": 0.9, "NGC": 0.7, "IC": 0.55,` | **senza fonte** |
-| CATALOG_PRIORITY | `"Sh2": 0.4, "LBN": 0.3, "LDN": 0.3, "vdB": 0.3, "Ced": 0.3,` | **senza fonte** |
-| CATALOG_PRIORITY | `"B": 0.3, "Abell": 0.3, "RCW": 0.3,` | **senza fonte** |
-| CATALOG_PRIORITY_DEFAULT | `0.2` | **senza fonte** |
-| AMBIGUOUS_SCORE_RATIO | `0.6` | **senza fonte** |
-| AMBIGUOUS_SEPARATION_DEG | `0.4` | **senza fonte** |
+| W_MAGNITUDE | `1.4` | M ADR 0038: archive, held out by object |
+| W_SIZE | `0.6` | M ADR 0038: archive, held out by object |
+| W_CENTERING | `1.2` | M ADR 0038: archive, held out by object |
+| SEP_FLOOR_DEG | `0.05` | M ADR 0038: archive, held out by object |
+| SCALE_CAP_DEG | `3.0` | M ADR 0038: archive, held out by object |
+| CATALOG_PRIORITY | `"M": 1.0, "C": 0.9, "NGC": 0.7, "IC": 0.55,` | M ADR 0038: archive, held out by object |
+| CATALOG_PRIORITY | `"Sh2": 0.4, "LBN": 0.3, "LDN": 0.3, "vdB": 0.3, "Ced": 0.3,` | M ADR 0038: archive, held out by object |
+| CATALOG_PRIORITY | `"B": 0.3, "Abell": 0.3, "RCW": 0.3,` | M ADR 0038: archive, held out by object |
+| CATALOG_PRIORITY_DEFAULT | `0.2` | M ADR 0038: archive, held out by object |
+| AMBIGUOUS_SCORE_RATIO | `0.6` | M ADR 0038: archive, held out by object |
+| AMBIGUOUS_SEPARATION_DEG | `0.4` | M ADR 0038: archive, held out by object |
 
 ### spine/mosaic_geometry.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| SAME_POINTING_FRACTION | `0.25` | **senza fonte** |
+| SAME_POINTING_FRACTION | `0.25` | M ADR 0038: declared panels 54/54 |
 
 ### spine/mosaic_weight.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| MIN_SHARE | `0.25` | **senza fonte** |
+| MIN_SHARE | `0.25` | P docs/domini/mosaico.md |
 
 ### spine/nights.py
 
@@ -328,20 +328,20 @@ Fonti: C norma: 22; U usanza: 1; D metodo: 0; M misura: 2; P decisione: 7; T tec
 
 | simbolo | valore | fonte |
 |---|---|---|
-| MARK_WEIGHT | `{None: 0, RewriteMark.REWRITTEN: 1, RewriteMark.CALIBRATED: 2}` | **senza fonte** |
+| MARK_WEIGHT | `{None: 0, RewriteMark.REWRITTEN: 1, RewriteMark.CALIBRATED: 2}` | P docs/domini/glossario.md |
 
 ### spine/scan.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| DEFAULT_MIN_AGE_S | `30` | **senza fonte** |
-| MTIME_TOLERANCE_S | `0.001` | **senza fonte** |
+| DEFAULT_MIN_AGE_S | `30` | P docs/domini/spina.md |
+| MTIME_TOLERANCE_S | `0.001` | P docs/domini/spina.md |
 
 ### spine/search.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _ANY_YEAR | `2000` | **senza fonte** |
+| _ANY_YEAR | `2000` | T |
 
 ### spine/year.py
 
@@ -353,7 +353,7 @@ Fonti: C norma: 22; U usanza: 1; D metodo: 0; M misura: 2; P decisione: 7; T tec
 
 | simbolo | valore | fonte |
 |---|---|---|
-| OWNER_ONLY | `0o600` | **senza fonte** |
+| OWNER_ONLY | `0o600` | C POSIX sys/stat.h: S_IRUSR \| S_IWUSR |
 
 ### units.py
 
@@ -362,7 +362,7 @@ Fonti: C norma: 22; U usanza: 1; D metodo: 0; M misura: 2; P decisione: 7; T tec
 | F32_SIGNIFICANT_DIGITS | `7` | T |
 | ARCSEC_PER_RAD_PER_1000 | `206.265` | C 648000/pi |
 | FOCAL_TOLERANCE | `0.05` | P ADR 0016 |
-| NATURAL_SKY_CD_M2 | `174e-6` | **senza fonte** |
+| NATURAL_SKY_CD_M2 | `174e-6` | C Falchi 2016: "22.0 mag/arcsec2, corresponding to 174 ucd/m2" |
 | CD_M2_PER_MAG0 | `1.08e5` | **senza fonte** |
 | BORTLE_FLOORS | `BORTLE_FLOORS = ((1, 21.76), (2, 21.60), (3, 21.30), (4, 20.80), (5...` | **senza fonte** |
 | BORTLE_FLOORS | `(7, 18.00), (8, 17.00))` | **senza fonte** |
@@ -479,3 +479,4 @@ Fonti: C norma: 22; U usanza: 1; D metodo: 0; M misura: 2; P decisione: 7; T tec
 | 0035 | Le regole del cielo con le fonti verificate | accettata, 24/10/2026. Soglie tecniche scelte dalla sessione sulle convenzioni |  |
 | 0036 | Le regole di ASTAP con le fonti verificate, e il catalogo stellare D50 | accettata, 24/10/2026. Raccoglie le decisioni del piano di ASTAP (D2-D8) che stavano |  |
 | 0037 | Le regole delle misure dei frame con le fonti verificate | accettata, 24/10/2026. Soglie tecniche scelte dalla sessione sulle convenzioni |  |
+| 0038 | Le regole di file, oggetti e API con le fonti, e l'oggetto annidato che si chiede | accettata, 24/10/2026 (Marco: l'oggetto annidato si chiede). Ultimi tre gruppi della |  |

@@ -218,7 +218,7 @@ def search(
     name: str | None,
     *,
     fetch: net.Fetch | None = None,
-    limit: int = 5,
+    limit: int = 5,  # [T]
     now: Clock = time.monotonic,
     sleep: Sleep = time.sleep,
 ) -> list[Place]:

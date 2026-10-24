@@ -104,13 +104,13 @@ def writing(conn: sqlite3.Connection) -> Iterator[None]:
 
 # The refusals of the rules, as (status, code): words a page can show.
 _REFUSALS: tuple[tuple[type[Exception], int, str], ...] = (
-    (gear.MergeRefusedError, 422, "merge_refused"),
-    (folders.NotAskedError, 422, "not_asked"),
-    (decl.UnknownTargetError, 422, "unknown_target"),
-    (rigs.NotOfKindError, 422, "not_of_kind"),
-    (rigs.WrongKindError, 422, "wrong_kind"),
-    (gear_create.SpellingTakenError, 409, "spelling_taken"),
-    (rigs.RigExistsError, 409, "rig_exists"),
+    (gear.MergeRefusedError, 422, "merge_refused"),  # [C RFC 9110 15.5.21: 422]
+    (folders.NotAskedError, 422, "not_asked"),  # [C RFC 9110 15.5.21: 422]
+    (decl.UnknownTargetError, 422, "unknown_target"),  # [C RFC 9110 15.5.21: 422]
+    (rigs.NotOfKindError, 422, "not_of_kind"),  # [C RFC 9110 15.5.21: 422]
+    (rigs.WrongKindError, 422, "wrong_kind"),  # [C RFC 9110 15.5.21: 422]
+    (gear_create.SpellingTakenError, 409, "spelling_taken"),  # [C RFC 9110 15.5.10: 409]
+    (rigs.RigExistsError, 409, "rig_exists"),  # [C RFC 9110 15.5.10: 409]
 )
 
 

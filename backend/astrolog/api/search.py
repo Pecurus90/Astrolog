@@ -13,8 +13,8 @@ router = APIRouter(prefix="/api/v1", tags=["search"])
 
 @router.get("/search", response_model=SearchResult)
 def search_archive(
-    q: str = Query("", max_length=200),
-    limit: int = Query(5, ge=1, le=20),
+    q: str = Query("", max_length=200),  # [T]
+    limit: int = Query(5, ge=1, le=20),  # [T]
     conn: sqlite3.Connection = Depends(get_db),
 ) -> SearchResult:
     """Objects, nights, gear and sites of the archive matching `q`, at most `limit` per kind, each

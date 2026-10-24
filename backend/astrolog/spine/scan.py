@@ -25,7 +25,7 @@ from .stage_run import Event, receipt
 
 log = logging.getLogger(__name__)
 
-DEFAULT_MIN_AGE_S = 30  # a file written more recently is still being written: seen next time
+DEFAULT_MIN_AGE_S = 30  # [P docs/domini/spina.md] younger file still being written: next time
 
 
 class _RootLostError(Exception):
@@ -49,7 +49,7 @@ def rel_path(abs_path: str, root: str) -> str:
 
 
 # a NAS remounted with another precision truncates mtime to the millisecond: not a modification
-MTIME_TOLERANCE_S = 0.001
+MTIME_TOLERANCE_S = 0.001  # [P docs/domini/spina.md]
 
 
 def is_unchanged(known: sqlite3.Row | None, size: int, mtime: float) -> TypeGuard[sqlite3.Row]:

@@ -17,9 +17,9 @@ PLATFORM = sys.platform
 
 # An online-only placeholder downloads when opened. Windows, *File Attribute Constants* (Microsoft):
 # RECALL_ON_OPEN shows only in a listing, so the flag is read from it, not from a separate stat.
-FILE_ATTRIBUTE_RECALL_ON_OPEN = 0x00040000
-FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS = 0x00400000
-SF_DATALESS = 0x40000000  # Mac, *TN3150* (Apple): in `st_flags`, per `bsd/sys/stat.h` in xnu
+FILE_ATTRIBUTE_RECALL_ON_OPEN = 0x00040000  # [C Microsoft File Attribute Constants]
+FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS = 0x00400000  # [C Microsoft File Attribute Constants]
+SF_DATALESS = 0x40000000  # [C Apple TN3150; xnu sys/stat.h] Mac, in `st_flags`
 # Before macOS Sonoma iCloud left a hidden `.Name.fits.icloud` stub instead of a flag (The Eclectic
 # Light Company, *How iCloud Drive works in macOS Sonoma*): recognised by name on any system.
 ICLOUD_STUB_RE = re.compile(r"^\.(.+\.(?:fits|fit))\.icloud$", re.IGNORECASE | re.ASCII)
@@ -37,7 +37,7 @@ _NOT_ON_DISK = {
 
 # Windows' limit is 260 characters; past this margin the unlimited `\\?\` form is used, while
 # shorter paths keep the plain form, readable in messages and logs.
-LONG_PATH_THRESHOLD = 240
+LONG_PATH_THRESHOLD = 240  # [T] under MAX_PATH 260 (Microsoft)
 
 
 def long_path(path: str | os.PathLike[str]) -> str:

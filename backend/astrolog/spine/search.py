@@ -25,8 +25,8 @@ _DAY_MONTH = re.compile(r"(\d{1,2}) ([a-z]+)(?: (\d{4}))?")
 _MONTH_DAY = re.compile(r"([a-z]+) (\d{1,2}),?(?: (\d{4}))?")
 _MONTH = re.compile(r"([a-z]+)(?: (\d{4}))?")
 
-# A year that does not count, for a day asked without one: leap, so 29/2 exists.
-_ANY_YEAR = 2000
+# A year that does not count, for a day asked without one.
+_ANY_YEAR = 2000  # [T] leap year, so 29 Feb exists
 
 
 def _year(written: str | None) -> int | None:

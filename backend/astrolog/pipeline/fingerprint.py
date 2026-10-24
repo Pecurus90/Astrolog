@@ -9,12 +9,12 @@ from typing import BinaryIO
 from .card import camera, exposure_s, start_utc  # same reading as card: one fact, one home
 from .values import Value, as_count, frame_size
 
-FINGERPRINT_BYTES = 65536  # method choice, as old code: image centre, away from borders
-BLOCK = 2880  # header and data fill whole blocks
-CARD = 80
-_BYTES = {8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}  # FITS 4.0 table 8: BITPIX
-_MAX_AXES = 999  # FITS 4.0 sec. 4.4.1.1
-_MAX_BYTES = 2**62  # past any file system; keeps seek offsets in a signed 64-bit integer
+FINGERPRINT_BYTES = 65536  # [P docs/domini/spina.md] image centre, away from borders
+BLOCK = 2880  # [C FITS 4.0 3.1: 2880-byte blocks]
+CARD = 80  # [C FITS 4.0 4.1.1: 80-character records]
+_BYTES = {8: 1, 16: 2, 32: 4, 64: 8, -32: 4, -64: 8}  # [C FITS 4.0 table 8: BITPIX]
+_MAX_AXES = 999  # [C FITS 4.0 4.4.1.1: NAXIS at most 999]
+_MAX_BYTES = 2**62  # [T] past any file system; seek offsets stay in a signed 64-bit integer
 
 
 @dataclass(frozen=True)

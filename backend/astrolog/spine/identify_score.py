@@ -10,28 +10,29 @@ from .identify_geometry import reach_deg
 
 # Magnitude weighs slightly more than containment: it flips the faint clutter nearby.
 W_CONTAINMENT = 1.0
-W_MAGNITUDE = 1.4
-W_SIZE = 0.6
+W_MAGNITUDE = 1.4  # [M ADR 0038: archive, held out by object]
+W_SIZE = 0.6  # [M ADR 0038: archive, held out by object]
 W_CATALOG = 1.0
-W_CENTERING = 1.2
+W_CENTERING = 1.2  # [M ADR 0038: archive, held out by object]
 
 # Floor: the solver's error, below which two candidates can't be told apart.
 # Ceiling: a huge object need not "contain" half a constellation.
-SEP_FLOOR_DEG = 0.05
-SCALE_CAP_DEG = 3.0
+SEP_FLOOR_DEG = 0.05  # [M ADR 0038: archive, held out by object]
+SCALE_CAP_DEG = 3.0  # [M ADR 0038: archive, held out by object]
 
 # Curated, well-known catalogs beat obscure ones.
+# [M ADR 0038: archive, held out by object]
 CATALOG_PRIORITY = {
     "M": 1.0, "C": 0.9, "NGC": 0.7, "IC": 0.55,
     "Sh2": 0.4, "LBN": 0.3, "LDN": 0.3, "vdB": 0.3, "Ced": 0.3,
     "B": 0.3, "Abell": 0.3, "RCW": 0.3,
 }  # fmt: skip
-CATALOG_PRIORITY_DEFAULT = 0.2
+CATALOG_PRIORITY_DEFAULT = 0.2  # [M ADR 0038: archive, held out by object]
 
 # Ambiguity needs both: a competitive score AND an object distinct from the best.
-AMBIGUOUS_SCORE_RATIO = 0.6
+AMBIGUOUS_SCORE_RATIO = 0.6  # [M ADR 0038: archive, held out by object]
 # Fallback, only when neither candidate carries a size.
-AMBIGUOUS_SEPARATION_DEG = 0.4
+AMBIGUOUS_SEPARATION_DEG = 0.4  # [M ADR 0038: archive, held out by object]
 
 
 @dataclass(frozen=True, slots=True)

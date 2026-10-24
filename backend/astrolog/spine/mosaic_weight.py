@@ -7,7 +7,7 @@ from collections.abc import Iterable
 
 # Equal time per panel or seams show (Astrophotography Magazine, Mosaic Images; Smart Scope Tonight,
 # Mosaic Mode Explained; Chaotic Nebula). No number given: 25% of the longest panel doubles noise.
-MIN_SHARE = 0.25
+MIN_SHARE = 0.25  # [P docs/domini/mosaico.md]
 
 _WORK = """
 SELECT p.id, p.mosaic_id, COUNT(f.id) AS frames, COALESCE(SUM(f.exposure_s), 0) AS seconds,

@@ -13,7 +13,7 @@ class Program(StrEnum):
     ASIAIR = "ASIAIR"
 
 
-SQLITE_MIN, SQLITE_MAX = -(2**63), 2**63 - 1  # INTEGER range (sqlite.org/datatype3.html)
+SQLITE_MIN, SQLITE_MAX = -(2**63), 2**63 - 1  # [C SQLite: 64-bit signed integers]
 
 
 def as_number(written: Value | None, at_least: float = -math.inf) -> float | None:
@@ -74,7 +74,7 @@ def as_percent(written: Value | None) -> float | None:
     return number if number is not None and number <= 100 else None
 
 
-COLDEST_C = -273.15  # SI: below it a temperature is a broken value
+COLDEST_C = -273.15  # [C NIST SP 811 4.2.1.1: T0 = 273.15 K] below it: broken value
 
 
 def as_celsius(written: Value | None) -> float | None:

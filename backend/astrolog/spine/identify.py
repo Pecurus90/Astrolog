@@ -30,7 +30,7 @@ from .stages import StageName, StageStatus, ready, set_status
 log = logging.getLogger(__name__)
 
 COUNTS = ("linked", "new_objects", "review", "waiting", "name_taken", "swept", "errors")
-CANDIDATES_LIMIT = 6
+CANDIDATES_LIMIT = 6  # [P docs/domini/spina.md]
 
 
 def candidates(

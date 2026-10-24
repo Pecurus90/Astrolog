@@ -27,13 +27,13 @@ Sort = Literal["name", "hours", "frames"]
 
 @router.get("/archive", response_model=ArchiveList)
 def archive_page(  # noqa: PLR0913
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(100, ge=1, le=500),  # [P docs/domini/archivio.md]
     offset: int = Query(0, ge=0),
-    q: str | None = Query(None, max_length=200),
-    key: str | None = Query(None, max_length=200),
-    catalog: str | None = Query(None, max_length=40),
-    constellation: str | None = Query(None, max_length=8),
-    filter_name: str | None = Query(None, alias="filter", max_length=120),
+    q: str | None = Query(None, max_length=200),  # [T]
+    key: str | None = Query(None, max_length=200),  # [T]
+    catalog: str | None = Query(None, max_length=40),  # [T]
+    constellation: str | None = Query(None, max_length=8),  # [T]
+    filter_name: str | None = Query(None, alias="filter", max_length=120),  # [T]
     mosaic: bool = False,
     since: date | None = None,
     until: date | None = None,

@@ -46,8 +46,8 @@ KEYS: dict[str, Key] = {
     "moon_broadband_max_pct": Key(
         int,
         25,  # [C ING dark time: lit fraction under 0.25]
-        "notte buona per la banda larga con la Luna sotto questa percentuale: scelta di prodotto"
-        " (Marco, 15/10/2026), nessuna soglia pubblica condivisa",
+        "notte buona per la banda larga con la Luna sotto questa percentuale, come il buio"
+        " dell'osservatorio ING (illuminata sotto lo 0,25)",
     ),
     "moon_broadband_min_dark_h": Key(
         int,

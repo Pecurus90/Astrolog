@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import IO
 
 LOCAL_HOSTS = ("127.0.0.1", "localhost")
-OWNER_ONLY = 0o600
+OWNER_ONLY = 0o600  # [C POSIX sys/stat.h: S_IRUSR | S_IWUSR]
 
 
 class AlreadyRunningError(RuntimeError):

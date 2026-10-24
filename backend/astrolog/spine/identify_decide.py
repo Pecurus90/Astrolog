@@ -58,6 +58,7 @@ class Decision:
 
 
 # Confidence ranking, from the best; `user` is absent, it never competes.
+# [P docs/domini/spina.md] only the order counts
 _RANK: dict[str | None, int] = {
     IdentityConfidence.CERTAIN: 0,
     IdentityConfidence.HIGH: 1,

@@ -7,7 +7,7 @@ from ..units import radius_deg
 
 # At least `identify_score.SCALE_CAP_DEG`: an entry whose ranking scale reaches the pointing must
 # be in the cone.
-MIN_SEARCH_RADIUS_DEG = 3.0
+MIN_SEARCH_RADIUS_DEG = 3.0  # [P docs/domini/spina.md]
 
 
 def search_radius_deg(frame_radius_deg: float | None) -> float:

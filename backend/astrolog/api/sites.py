@@ -85,7 +85,7 @@ def search_places(q: str = Query(min_length=1)) -> PlaceList:
 
 @router.get("/sites", response_model=SiteList)
 def list_sites(
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=1000),  # [T]
     offset: int = Query(0, ge=0),
     conn: sqlite3.Connection = Depends(get_db),
 ) -> SiteList:
@@ -105,6 +105,7 @@ def _name_taken_or_raise(err: sqlite3.IntegrityError) -> NoReturn:
     raise err
 
 
+# [C RFC 9110 15.3.2: 201 Created]
 @router.post("/sites", response_model=SiteOut, status_code=201)
 def create_site(body: SiteCreate, conn: sqlite3.Connection = Depends(get_db)) -> SiteOut:
     """A new site, enriched by what its coordinates can tell, returned as it is now saved.

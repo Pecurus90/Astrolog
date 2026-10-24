@@ -217,6 +217,7 @@ def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
         raise
 
 
+# [C RFC 9110 15.3.3: 202 Accepted]
 @router.post("/scan", response_model=ScanAllStarted, status_code=202)
 def scan_all(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> ScanAllStarted:
     """Reads all the registered folders that are not retired, in one run, and replies at once;
@@ -227,6 +228,7 @@ def scan_all(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> Sc
     return start_scan_all(request.app.state, conn)
 
 
+# [C RFC 9110 15.3.3: 202 Accepted]
 @router.post("/folders/{folder_id}/scan", response_model=ScanStarted, status_code=202)
 def scan(
     folder_id: int, request: Request, conn: sqlite3.Connection = Depends(get_db)
@@ -242,7 +244,7 @@ def scan(
 @router.get("/scan-runs", response_model=ScanRunList)
 def scan_runs(
     folder_id: int | None = None,
-    limit: int = Query(20, ge=1, le=500),
+    limit: int = Query(20, ge=1, le=500),  # [T]
     offset: int = Query(0, ge=0),
     conn: sqlite3.Connection = Depends(get_db),
 ) -> ScanRunList:
@@ -266,7 +268,7 @@ def scan_runs(
 @router.get("/scan-runs/{run_id}/errors", response_model=ScanErrorList)
 def scan_run_errors(
     run_id: int,
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=1000),  # [T]
     offset: int = Query(0, ge=0),
     conn: sqlite3.Connection = Depends(get_db),
 ) -> ScanErrorList:

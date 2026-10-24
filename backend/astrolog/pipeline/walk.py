@@ -18,9 +18,9 @@ PLATFORM = sys.platform
 
 # Online-only placeholder downloads when opened. Windows, *File Attribute Constants* (Microsoft):
 # RECALL_ON_OPEN shows only in listing: flag read from it, not from separate stat.
-FILE_ATTRIBUTE_RECALL_ON_OPEN = 0x00040000
-FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS = 0x00400000
-SF_DATALESS = 0x40000000  # Mac, *TN3150* (Apple): in `st_flags`, per `bsd/sys/stat.h` in xnu
+FILE_ATTRIBUTE_RECALL_ON_OPEN = 0x00040000  # [C Microsoft File Attribute Constants]
+FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS = 0x00400000  # [C Microsoft File Attribute Constants]
+SF_DATALESS = 0x40000000  # [C Apple TN3150; xnu sys/stat.h] Mac, in `st_flags`
 # Before macOS Sonoma iCloud left hidden `.Name.fits.icloud` stub, no flag (The Eclectic Light
 # Company, *How iCloud Drive works in macOS Sonoma*): matched by name on any system.
 ICLOUD_STUB_RE = re.compile(
@@ -40,7 +40,7 @@ _NOT_ON_DISK = {
 
 # Windows MAX_PATH: 260 chars; 20 below it leaves room for file names under folder. Past margin:
 # `\\?\` form; shorter stays plain, readable in logs.
-LONG_PATH_THRESHOLD = 240
+LONG_PATH_THRESHOLD = 240  # [T] under MAX_PATH 260 (Microsoft)
 
 
 def long_path(path: str | os.PathLike[str]) -> str:

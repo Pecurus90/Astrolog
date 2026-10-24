@@ -17,8 +17,8 @@ RISESET_DEG = -0.833
 # Geometric altitude of the Sun's centre at the end of each twilight.
 # [C USNO https://aa.usno.navy.mil/faq/RST_defs: 6, 12, 18 degrees below the horizon]
 CIVIL_DEG = -6.0
-NAUTICAL_DEG = -12.0
-ASTRO_DEG = -18.0
+NAUTICAL_DEG = -12.0  # [C USNO]
+ASTRO_DEG = -18.0  # [C USNO]
 
 # Crossings are interpolated, so the step sets how dense the search is, not the error. [T]
 GRID_STEP_MIN = 3

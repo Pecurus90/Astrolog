@@ -15,7 +15,7 @@ from .walk import absolute as walk_absolute
 
 # Skip reasons that pass (file locked, copy running): read again every scan.
 PASSING = frozenset({Skip.UNREADABLE, Skip.INCOMPLETE})
-LEFT_OUT_KEPT = 100  # no convention, product choice: paths per list in each receipt
+LEFT_OUT_KEPT = 100  # [P ADR 0038] paths per list in each receipt
 
 
 @dataclass

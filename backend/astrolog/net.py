@@ -16,7 +16,7 @@ type Fetch = Callable[[str], Any]
 
 # The services' policy demands that the caller name itself, and blocks it otherwise.
 USER_AGENT = "AstroLog/0.1 (https://github.com/Pecurus90/Astrolog)"
-TIMEOUT_S = 15
+TIMEOUT_S = 15  # [P ADR 0038]
 
 
 class Failure(StrEnum):
@@ -26,7 +26,7 @@ class Failure(StrEnum):
 
 # What a service answers when the request is not valid: the key, or the credits run out. The rest
 # (a 500, a 503) is the service down, and says nothing about the key.
-_REFUSALS = frozenset({400, 401, 403, 429})
+_REFUSALS = frozenset({400, 401, 403, 429})  # [C RFC 9110 15.5.1-15.5.4; RFC 6585 4]
 
 
 def service_of(url: str) -> str:

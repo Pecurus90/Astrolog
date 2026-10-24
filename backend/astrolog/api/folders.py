@@ -39,7 +39,7 @@ router = APIRouter(prefix="/api/v1", tags=["folders"])
 
 # "10 seconds is about the limit for keeping the user's attention focused on the dialogue"
 # (Nielsen, *Response Times: The 3 Important Limits*, 1993); checked between folders.
-PROBE_SECONDS: Final = 10
+PROBE_SECONDS: Final = 10  # [C Nielsen 1993: 10 s attention limit]
 
 _SELECT = (
     "SELECT f.id, f.name, f.root_path, f.created_at,"
@@ -180,7 +180,7 @@ def browse(request: Request, path: str | None = None) -> BrowseOut:
 
 @router.get("/folders", response_model=FolderList)
 def list_folders(
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=1000),  # [T]
     offset: int = Query(0, ge=0),
     conn: sqlite3.Connection = Depends(get_db),
 ) -> FolderList:
@@ -196,6 +196,7 @@ def list_folders(
     return FolderList(items=items, total=total, limit=limit, offset=offset)
 
 
+# [C RFC 9110 15.3.2: 201 Created]
 @router.post("/folders", response_model=FolderOut, status_code=201)
 def create_folder(
     body: FolderCreate, request: Request, conn: sqlite3.Connection = Depends(get_db)

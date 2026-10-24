@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/v1", tags=["nights"])
 
 @router.get("/nights", response_model=NightList)
 def night_list(
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(100, ge=1, le=500),  # [T]
     offset: int = Query(0, ge=0),
     night: int | None = Query(None, ge=1),
     conn: sqlite3.Connection = Depends(get_db),

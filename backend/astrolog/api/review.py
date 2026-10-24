@@ -103,7 +103,7 @@ def review(conn: sqlite3.Connection = Depends(get_db)) -> ReviewOut:
 
 @router.get("/review/objects/settled", response_model=SettledObjects)
 def settled_objects(
-    limit: int = Query(50, ge=1, le=500),
+    limit: int = Query(50, ge=1, le=500),  # [T]
     offset: int = Query(0, ge=0),
     conn: sqlite3.Connection = Depends(get_db),
 ) -> SettledObjects:

@@ -33,8 +33,8 @@ def mark_of(row: sqlite3.Row) -> RewriteMark | None:
     return rewrite_mark(header_from_json(row["header_json"]))
 
 
-# Calibrations applied mean the pixels changed; two programs only that the header was touched,
-# which a solver or metadata fixer also does to a raw. Between the two, the calibrated is worked.
+# Calibrations applied: pixels changed. Two programs: header touched only, as solvers or
+# metadata fixers do to a raw. Calibrated wins. [P docs/domini/glossario.md] order only
 MARK_WEIGHT = {None: 0, RewriteMark.REWRITTEN: 1, RewriteMark.CALIBRATED: 2}
 
 

@@ -29,7 +29,7 @@ OUTCOMES = {
 SETTLED = ("solved", "no_solution", "no_stars")
 # tried at next pass once more, then wait for another ASTAP or catalogue [P ADR 0036, D5]
 WAITING = ("timeout", "crashed", "unreadable")
-PASSES = 2
+PASSES = 2  # [P ADR 0036, D5]
 
 PENDING = (  # plain file before its fpack copy: ASTAP before astap.FZ_SINCE reads no .fz
     "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.frame_type, c.width, c.height,"

@@ -16,7 +16,7 @@ class Relation(StrEnum):
 
 # Half-diagonal fraction: degrees would fit one focal length. N.I.N.A.'s dithering example is 1.2%,
 # the narrowest panel step (half a field) 83%: a quarter leaves 20x margin one side, 3x the other.
-SAME_POINTING_FRACTION = 0.25
+SAME_POINTING_FRACTION = 0.25  # [M ADR 0038: declared panels 54/54]
 
 
 def overlap(a: dict[str, Any], b: dict[str, Any]) -> Relation | None:

@@ -123,8 +123,8 @@ def focal_buckets(focals: Iterable[Any], tol: float = FOCAL_TOLERANCE) -> dict[f
     return mapping
 
 
-# Natural night-sky background, else a perfect site has infinite brightness. [C Falchi 2016:
-# "22.0 mag/arcsec2, corresponding to 174 ucd/m2"]
+# Natural night-sky background, else a perfect site has infinite brightness.
+# [C Falchi 2016: "22.0 mag/arcsec2, corresponding to 174 ucd/m2"]
 NATURAL_SKY_CD_M2 = 174e-6
 # The constant linking candela per square metre and magnitudes per square arcsecond.
 CD_M2_PER_MAG0 = 1.08e5
