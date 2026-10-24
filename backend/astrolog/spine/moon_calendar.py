@@ -56,7 +56,9 @@ def rebuild(conn: sqlite3.Connection, site: dict[str, Any], wanted: list[str]) -
     tz = site["timezone"]
     windows = [(d, *night_window(d, tz)) for d in wanted]
     nights = moon.calendar_nights(windows, site["latitude"], site["longitude"])
-    start, end = windows[0][1], windows[-1][1] + dt.timedelta(hours=windows[-1][2])
+    # true hours on from the start: added in UTC, else the clock-change night gains an hour
+    start = windows[0][1]
+    end = windows[-1][1].astimezone(dt.UTC) + dt.timedelta(hours=windows[-1][2])
     events = {}
     for e in moon.main_phases(start, end):
         when = e.at.astimezone(start.tzinfo)

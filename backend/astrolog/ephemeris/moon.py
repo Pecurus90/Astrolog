@@ -17,6 +17,7 @@ from astropy.coordinates import (
     get_sun,
 )
 
+from ..clock import seconds_between
 from . import (
     ASTRO_DEG,
     CALENDAR_STEP_MIN,
@@ -184,15 +185,16 @@ def moonless_dark_left_s(
 ) -> list[int]:
     """For each track point: dark with the Moon below the rise/set altitude from there to the end.
     A step with the Moon down counts its exact overlap with the bands, never more than they last."""
+    # in UTC: the hour the clocks repeat has two instants with one wall-clock key
+    utc = [(a.astimezone(dt.UTC), b.astimezone(dt.UTC)) for a, b in dark]
     total = 0.0
-    left = {night.grid[-1].at: 0}
+    left = {night.grid[-1].at.astimezone(dt.UTC): 0}
     for p, after in reversed(list(itertools.pairwise(night.grid))):
+        start, end = p.at.astimezone(dt.UTC), after.at.astimezone(dt.UTC)
         if p.altitude_deg < RISESET_DEG:
-            total += sum(
-                max(0.0, (min(after.at, b) - max(p.at, a)).total_seconds()) for a, b in dark
-            )
-        left[p.at] = round(total)
-    return [left[p.at] for p in night.track]
+            total += sum(max(0.0, seconds_between(max(start, a), min(end, b))) for a, b in utc)
+        left[start] = round(total)
+    return [left[p.at.astimezone(dt.UTC)] for p in night.track]
 
 
 _COMPASS = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
@@ -230,7 +232,7 @@ class PhaseEvent:
 def main_phases(start: dt.datetime, end: dt.datetime) -> list[PhaseEvent]:
     """New and full Moon between two instants: the phase angle crossing 0 and 180, on an hourly
     grid and interpolated. In UTC."""
-    hours = int((end - start).total_seconds() // 3600)
+    hours = int(seconds_between(start, end) // 3600)
     instants = [start.astimezone(dt.UTC) + dt.timedelta(hours=h) for h in range(hours + 1)]
     offsets, _ = _offsets_and_elongations(instants)
     angles = [float(o) % 360 for o in offsets]
@@ -268,7 +270,9 @@ def calendar_nights(
         return []
     suns = bodies.body_altitudes("sun", everything, latitude, longitude)
     moons = bodies.body_altitudes("moon", everything, latitude, longitude)
-    middles = phases([start + dt.timedelta(hours=h / 2) for _, start, h in nights])
+    middles = phases(
+        [start.astimezone(dt.UTC) + dt.timedelta(hours=h / 2) for _, start, h in nights]
+    )
     step_s = CALENDAR_STEP_MIN * 60
     out, at = [], 0
     for (date, _, _), grid, phase_now in zip(nights, grids, middles, strict=True):

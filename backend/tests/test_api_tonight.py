@@ -7,6 +7,7 @@ casa non c'e'.
 
 import dataclasses
 import datetime as dt
+import itertools
 import typing
 import zoneinfo
 
@@ -385,6 +386,42 @@ def test_the_route_sends_how_long_the_dark_lasts_without_the_weather(client_vuot
     )
     assert detto["dark_s"] == round(somma)
     assert detto["dark_s"] > 0
+
+
+def test_the_night_the_clocks_change_counts_its_true_dark(client_vuoto, monkeypatch):
+    """La notte del cambio d'ora il buio non perde un'ora: il conto si fa in UTC, non sull'orologio
+    da parete del fuso (effemeridi.md). Fasce e durata dicono lo stesso tempo, e sono piu' di 10 h
+    a fine ottobre a Vicenza."""
+    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2026-10-24T16:00:00.000Z")
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    detto = client_vuoto.get("/api/v1/tonight").json()
+
+    in_utc = [
+        (
+            dt.datetime.fromisoformat(f["ends_at"]) - dt.datetime.fromisoformat(f["starts_at"])
+        ).total_seconds()
+        for f in detto["sky_bands"]
+        if f["kind"] == "dark"
+    ]
+    assert detto["dark_s"] == round(sum(in_utc)) > 10 * 3600
+    lasciato = [p["moonless_dark_left_s"] for p in detto["moon"]["track"]]
+    assert max(lasciato) <= detto["dark_s"]
+
+
+def test_the_moonless_dark_left_never_grows_in_the_repeated_hour(client_vuoto, monkeypatch):
+    """Il buio senza Luna che resta scende lungo la notte, anche nell'ora che l'orologio ripete
+    (25-26/10/2025, Luna giu' alle due): due istanti con la stessa ora da parete restano due."""
+    monkeypatch.setattr("astrolog.api.tonight.now_iso", lambda: "2025-10-25T16:00:00.000Z")
+    crea_sito(client_vuoto, "Vicenza", 45.5455, 11.5354)
+
+    lasciato = [
+        p["moonless_dark_left_s"]
+        for p in client_vuoto.get("/api/v1/tonight").json()["moon"]["track"]
+    ]
+
+    assert all(a >= b for a, b in itertools.pairwise(lasciato)), lasciato
+    assert max(lasciato) > 0
 
 
 def test_without_a_night_there_is_no_dark_to_count(client_vuoto, monkeypatch):

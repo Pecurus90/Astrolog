@@ -14,6 +14,12 @@ def now_iso() -> str:
     return iso_z(datetime.now(UTC))
 
 
+def seconds_between(start: datetime, end: datetime) -> float:
+    """In UTC: two instants in one zone subtract by the wall clock, an hour off the night it
+    changes."""
+    return (end.astimezone(UTC) - start.astimezone(UTC)).total_seconds()
+
+
 def parse_iso(instant_iso: object) -> datetime | None:
     if not instant_iso:
         return None
@@ -112,11 +118,9 @@ def _day_of(night_date_str: str) -> date:
 
 
 def night_window(night_date_str: str, tz_name: str | None) -> tuple[datetime, float]:
-    """(start, true hours): a clock-change night lasts 23 or 25. The difference is taken in UTC,
-    since subtracting two aware instants in a real zone gives wall-clock hours."""
+    """(start, true hours): a clock-change night lasts 23 or 25 (`seconds_between`)."""
     zone = zoneinfo.ZoneInfo(tz_name) if tz_name else UTC
     day = _day_of(night_date_str)
     starts = datetime.combine(day, time(_START_HOUR), tzinfo=zone)
     ends = datetime.combine(day + timedelta(days=1), time(_START_HOUR), tzinfo=zone)
-    hours = (ends.astimezone(UTC) - starts.astimezone(UTC)).total_seconds() / 3600
-    return starts, hours
+    return starts, seconds_between(starts, ends) / 3600

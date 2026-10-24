@@ -7,7 +7,7 @@ from typing import Any, cast
 
 from fastapi import APIRouter, Depends
 
-from ..clock import midnight_of, night_date, night_window, now_iso
+from ..clock import midnight_of, night_date, night_window, now_iso, seconds_between
 from ..db import config
 from ..ephemeris import moon, planets, sun
 from ..spine.group_store import home_site
@@ -172,7 +172,7 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
         site=_site_sky(home),
         weather=weather.brief_of(conn, home["id"], the_night),
         sky_bands=[_sky_band(f) for f in bands],
-        dark_s=round(sum((b - a).total_seconds() for a, b in dark)),
+        dark_s=round(sum(seconds_between(a, b) for a, b in dark)),
         moon=MoonOut(
             phase_key=cast(PhaseKey, moon_phase.phase_key),
             illumination_pct=moon_phase.illumination_pct,
