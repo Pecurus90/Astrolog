@@ -17,7 +17,7 @@ from astropy.coordinates import (
     get_sun,
 )
 
-from ..clock import seconds_between
+from ..clock import night_span, seconds_between
 from . import (
     ASTRO_DEG,
     CALENDAR_STEP_MIN,
@@ -48,9 +48,10 @@ class MoonPhase(StrEnum):
 PHASES = tuple(MoonPhase)
 _WAXING = frozenset({MoonPhase.WAXING_CRESCENT, MoonPhase.FIRST_QUARTER, MoonPhase.WAXING_GIBBOUS})
 
-# Half-width of new, quarters and full: "full moon" is a word, not an instant, so each of the
-# four covers twelve degrees and the other four share what is left.
-_HALF_WIDTH_DEG = 6.0
+# Main phases are instants: the night holding one takes its name, between them half lit splits.
+# [C USNO https://aa.usno.navy.mil/faq/moon_phases: phase angle 0, 90, 180, 270; crescent < half]
+_MAIN_PHASES = ((0, MoonPhase.NEW), (90, MoonPhase.FIRST_QUARTER), (180, MoonPhase.FULL),
+                (270, MoonPhase.LAST_QUARTER))  # fmt: skip
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,26 +78,17 @@ class MoonNight:
     grid: list[TrackPoint]
 
 
-def phase_name(offset_deg: float) -> MoonPhase:
-    """From the Moon-Sun ecliptic longitude difference: 0 new, 90 first quarter, 180 full, 270 last
-    quarter. Public so the rule is tested directly, not by sampling a real month."""
-    d = offset_deg % 360
-    if d < _HALF_WIDTH_DEG or d > 360 - _HALF_WIDTH_DEG:
-        return MoonPhase.NEW
-    for center, name in (
-        (90, MoonPhase.FIRST_QUARTER),
-        (180, MoonPhase.FULL),
-        (270, MoonPhase.LAST_QUARTER),
-    ):
-        if abs(d - center) < _HALF_WIDTH_DEG:
+def phase_name(start_deg: float, end_deg: float, lit_fraction: float) -> MoonPhase:
+    """Moon-Sun longitude difference at night's start and end (end excluded), lit at the instant.
+    Public so rule is tested directly."""
+    start = start_deg % 360
+    span = (end_deg - start_deg) % 360
+    for centre, name in _MAIN_PHASES:
+        if (centre - start) % 360 < span:
             return name
-    if d < 90:
-        return MoonPhase.WAXING_CRESCENT
-    if d < 180:
-        return MoonPhase.WAXING_GIBBOUS
-    if d < 270:
-        return MoonPhase.WANING_GIBBOUS
-    return MoonPhase.WANING_CRESCENT
+    if start < 180:
+        return MoonPhase.WAXING_CRESCENT if lit_fraction < 0.5 else MoonPhase.WAXING_GIBBOUS
+    return MoonPhase.WANING_CRESCENT if lit_fraction < 0.5 else MoonPhase.WANING_GIBBOUS
 
 
 def _ecliptic_longitudes(body: SkyCoord, ecliptic: BaseCoordinateFrame) -> Any:
@@ -120,18 +112,22 @@ def _offsets_and_elongations(instants: Sequence[dt.datetime]) -> tuple[Any, Any]
 
 
 def phases(instants: Sequence[dt.datetime]) -> list[Phase]:
-    """All in one astropy call. Empty in, empty out: astropy rejects `Time([])`."""
+    """All in one astropy call, with each instant's night ends. Empty in, empty out: astropy
+    rejects `Time([])`."""
     if not instants:
         return []
-    offsets, elongations = _offsets_and_elongations(instants)
-    # Illuminated fraction from the elongation: 0 with Moon and Sun together, 1 when opposite.
-    return [
-        Phase(
-            phase_name(float(offset)),
-            round((1 - math.cos(math.radians(float(elongation)))) / 2 * 100),
-        )
-        for offset, elongation in zip(offsets, elongations, strict=True)
-    ]
+    spans = [night_span(i) for i in instants]
+    n = len(instants)
+    offsets, elongations = _offsets_and_elongations(
+        [*instants, *(s for s, _ in spans), *(e for _, e in spans)]
+    )
+    out = []
+    for start, end, elongation in zip(offsets[n : 2 * n], offsets[2 * n :], elongations[:n],
+                                      strict=True):  # fmt: skip
+        # Illuminated fraction from elongation: 0 with Moon and Sun together, 1 when opposite.
+        lit = (1 - math.cos(math.radians(float(elongation)))) / 2
+        out.append(Phase(phase_name(float(start), float(end), lit), round(lit * 100)))
+    return out
 
 
 def altitudes(instants: Sequence[dt.datetime], latitude: float, longitude: float) -> list[float]:
@@ -270,8 +266,12 @@ def calendar_nights(
         return []
     suns = bodies.body_altitudes("sun", everything, latitude, longitude)
     moons = bodies.body_altitudes("moon", everything, latitude, longitude)
+    # Middle found in UTC, asked in site zone: the phase name takes the site's noon-to-noon night.
     middles = phases(
-        [start.astimezone(dt.UTC) + dt.timedelta(hours=h / 2) for _, start, h in nights]
+        [
+            (start.astimezone(dt.UTC) + dt.timedelta(hours=h / 2)).astimezone(start.tzinfo)
+            for _, start, h in nights
+        ]
     )
     step_s = CALENDAR_STEP_MIN * 60
     out, at = [], 0

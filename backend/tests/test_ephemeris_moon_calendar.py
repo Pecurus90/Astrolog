@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from astrolog.clock import night_window
+from astrolog.clock import night_date, night_window
 from astrolog.ephemeris import moon
 
 ROME = ZoneInfo("Europe/Rome")
@@ -70,6 +70,22 @@ def test_the_moon_rises_in_the_east_and_the_direction_is_told():
 def _window(date: str) -> tuple[dt.datetime, float]:
     start, hours = night_window(date, "Europe/Rome")
     return start, hours
+
+
+@pytest.mark.parametrize(
+    ("zone", "place"), [("Asia/Tokyo", (35.68, 139.69)), ("America/Los_Angeles", (34.05, -118.24))]
+)
+def test_the_calendar_names_the_night_of_the_site_not_of_utc(zone, place):
+    """Il nome principale va alla notte del sito che contiene l'istante: lontano da UTC una notte
+    misurata da mezzogiorno UTC sposta la piena o la nuova di un giorno."""
+    dates = [(dt.date(2026, 1, 1) + dt.timedelta(days=g)).isoformat() for g in range(59)]
+    nights = moon.calendar_nights([(d, *night_window(d, zone)) for d in dates], *place)
+    start, _ = night_window(dates[0], zone)
+    end, _ = night_window(dates[-1], zone)
+    events = moon.main_phases(start, end + dt.timedelta(days=1))
+    for kind in ("new", "full"):
+        expected = {night_date(e.at.isoformat(), zone) for e in events if e.kind == kind}
+        assert {n.night for n in nights if n.phase_key == kind} == expected, kind
 
 
 def test_without_the_moon_the_whole_dark_is_moonless_and_with_the_full_moon_none():

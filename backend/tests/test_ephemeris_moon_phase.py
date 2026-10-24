@@ -23,9 +23,11 @@ offline, proverebbe a scaricare i dati di orientamento della Terra.
 
 import datetime as dt
 import inspect
+import math
 
 import pytest
 
+from astrolog.clock import midnight_of, night_date, night_window
 from astrolog.ephemeris import moon
 
 pytestmark = pytest.mark.filterwarnings("ignore:Tried to get polar motions:")
@@ -103,20 +105,51 @@ def test_asking_the_phases_together_is_worth_it():
     assert una_per_una > insieme * 5, f"insieme {insieme:.3f}s, una per una {una_per_una:.3f}s"
 
 
-# Quanta luce puo' avere una fase, dedotto dalla banda di sei gradi che le da' il nome: la
-# frazione illuminata e' `(1 - cos(elongazione)) / 2`, quindi al bordo della banda della luna
-# nuova (6 gradi) vale lo 0,3%, e al bordo di quella piena (174 gradi) il 99,7%. Non sono numeri
-# scelti: sono quelli, e se la banda cambia questi si ricavano di nuovo.
+# Quanta luce puo' avere una fase. Un nome principale sta a mezza notte al piu' dall'istante:
+# 12 ore, e la Luna si sposta sul Sole al massimo di circa 15,4 gradi al giorno, quindi 7,7 gradi
+# dal centro. La frazione e' `(1 - cos(elongazione)) / 2`: al bordo della nuova lo 0,5%, della
+# piena il 99,5%, dei quarti 50 +- 6,7%. Falce e gibbosa si dividono al 50%.
 LUCE_DELLA_FASE = {
     "new": (0, 1),
-    "waxing_crescent": (0, 45),
-    "first_quarter": (44, 56),
-    "waxing_gibbous": (55, 100),
+    "waxing_crescent": (0, 50),
+    "first_quarter": (43, 57),
+    "waxing_gibbous": (50, 100),
     "full": (99, 100),
-    "waning_gibbous": (55, 100),
-    "last_quarter": (44, 56),
-    "waning_crescent": (0, 45),
+    "waning_gibbous": (50, 100),
+    "last_quarter": (43, 57),
+    "waning_crescent": (0, 50),
 }
+
+
+def test_a_main_phase_names_the_one_night_that_holds_it():
+    """USNO: la luna piena e' un istante, e il nome va alla notte (da mezzogiorno a mezzogiorno)
+    che lo contiene, una e una sola. Con una fascia fissa di gradi una piena caduta a meta' fra
+    due mezzanotti non toccava nessuna notte: gennaio 2026 restava senza luna piena."""
+    notti = [(dt.date(2026, 1, 1) + dt.timedelta(days=g)).isoformat() for g in range(59)]
+    mezzanotti = [midnight_of(n, "Europe/Rome") for n in notti]
+    nomi = moon.phases([m for m in mezzanotti if m is not None])
+    assert len(nomi) == len(notti)
+    inizio, _ = night_window(notti[0], "Europe/Rome")
+    fine, _ = night_window(notti[-1], "Europe/Rome")
+    eventi = moon.main_phases(inizio, fine + dt.timedelta(days=1))
+
+    for tipo in ("new", "full"):
+        attese = {night_date(e.at.isoformat(), "Europe/Rome") for e in eventi if e.kind == tipo}
+        dette = {n for n, p in zip(notti, nomi, strict=True) if p.phase_key == tipo}
+        assert dette == attese, tipo
+    assert "2026-01-02" in {n for n, p in zip(notti, nomi, strict=True) if p.phase_key == "full"}
+
+
+def test_between_main_phases_crescent_and_gibbous_split_at_half_lit():
+    """USNO: falce sotto la meta' illuminata, gibbosa sopra. La notte si dice dall'angolo di fase
+    a inizio e fine notte; l'istante di fine e' escluso, cosi' due notti non si dividono un nome."""
+    assert moon.phase_name(30, 42, 0.2) == "waxing_crescent"
+    assert moon.phase_name(70, 82, 0.51) == "waxing_gibbous"
+    assert moon.phase_name(84, 96, 0.5) == "first_quarter"
+    assert moon.phase_name(78, 90, 0.45) == "waxing_crescent"  # 90 e' della notte dopo
+    assert moon.phase_name(90, 102, 0.55) == "first_quarter"
+    assert moon.phase_name(200, 212, 0.4) == "waning_crescent"
+    assert moon.phase_name(355, 367, 0.0) == "new"
 
 
 def test_the_phase_and_the_light_say_the_same_thing():
@@ -163,7 +196,7 @@ def test_every_one_of_the_eight_phases_is_reachable():
     finestre scorrevoli), e quando ne salta una ne salta una sola.
 
     Si gira il cerchio intero, grado per grado, sulla **regola** invece che sul cielo."""
-    incontrate = [moon.phase_name(g) for g in range(360)]
+    incontrate = [moon.phase_name(g, g + 12, _luce(g + 6)) for g in range(360)]
 
     assert set(incontrate) == set(moon.PHASES), sorted(set(moon.PHASES) - set(incontrate))
     # e l'ordine e' quello del mese: nuova, crescente, primo quarto... senza salti
@@ -175,8 +208,15 @@ def test_the_phase_does_not_care_where_the_angle_started():
     """Un angolo si puo' presentare negativo o oltre il giro: la differenza di due longitudini lo
     fa spesso. Chi non lo riportasse nel cerchio direbbe la fase sbagliata di mezzo mese."""
     for grado in range(360):
-        assert moon.phase_name(grado) == moon.phase_name(grado - 360)
-        assert moon.phase_name(grado) == moon.phase_name(grado + 720)
+        luce = _luce(grado + 6)
+        detta = moon.phase_name(grado, grado + 12, luce)
+        assert detta == moon.phase_name(grado - 360, grado - 348, luce)
+        assert detta == moon.phase_name(grado + 720, grado + 732, luce)
+
+
+def _luce(gradi):
+    """Frazione illuminata di un angolo di fase, la stessa formula del modulo."""
+    return (1 - math.cos(math.radians(gradi))) / 2
 
 
 def test_the_illuminated_fraction_does_not_depend_on_where_you_are():

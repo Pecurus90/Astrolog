@@ -69,6 +69,16 @@ def night_of(moment: datetime) -> str:
     return (moment - timedelta(hours=_START_HOUR)).date().isoformat()
 
 
+def night_span(moment: datetime) -> tuple[datetime, datetime]:
+    """Noon to noon around an aware instant, in its own zone; end excluded."""
+    day = (moment - timedelta(hours=_START_HOUR)).date()
+    noon = time(_START_HOUR)
+    return (
+        datetime.combine(day, noon, tzinfo=moment.tzinfo),
+        datetime.combine(day + timedelta(days=1), noon, tzinfo=moment.tzinfo),
+    )
+
+
 def night_instant(date_obs: str | None, mtime: float) -> str:
     """Without `DATE-OBS`, the instant the file was written."""
     return date_obs or datetime.fromtimestamp(mtime, UTC).isoformat()

@@ -44,13 +44,12 @@ uguale da tutta la Terra: calcolarla dal sito la farebbe ballare di pochissimo e
 due persone che guardano la stessa luna leggerebbero due numeri diversi. L'ora in cui sorge invece
 dipende da dove sei, ed e' tutto il punto.
 
-**Otto fasi, e non sono fette uguali.** I quattro nomi "esatti" -- nuova, primo quarto, piena,
-ultimo quarto -- coprono **dodici gradi** ciascuno, sei per lato del centro; i quattro nomi
-intermedi si prendono quel che resta, **settantotto** a testa. "Luna piena" e' una parola, non un
-istante: chiamarla piena solo all'istante esatto vorrebbe dire non dirlo mai. La semi-ampiezza e'
-scritta in un posto solo (`ephemeris/moon.py`), e da li' si ricava anche quanta luce puo' avere
-ogni fase -- e' cosi' che la prova verifica che il nome e la luce non si contraddicano, senza
-fidarsi di una data ricordata.
+**Otto fasi, come l'USNO.** Nuova, primo quarto, piena e ultimo quarto sono **istanti**: il nome
+va alla notte, da mezzogiorno a mezzogiorno, che contiene l'istante, una e una sola (ADR 0035).
+Fra due fasi principali: **falce** sotto la meta' illuminata, **gibbosa** sopra. Una fascia fissa
+di gradi sbagliava 21 notti su 1460 (misurato, 2026-2029): a gennaio 2026 nessuna notte era
+"piena". Da qui si ricava anche quanta luce puo' avere ogni fase -- e' cosi' che la prova
+verifica che il nome e la luce non si contraddicano, senza fidarsi di una data ricordata.
 
 **La fase si chiede alla mezzanotte di quella notte**, non all'inizio della finestra. La Luna
 cambia circa il sei per cento al giorno: chiesta a mezzogiorno, chi guarda la barra alle undici di

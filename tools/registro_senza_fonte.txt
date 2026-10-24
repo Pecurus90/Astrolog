@@ -1,3 +1,2 @@
 # Valori ancora senza fonte (tools/registro.py). Solo si accorcia.
-ephemeris/moon.py:_HALF_WIDTH_DEG
 units.py:BORTLE_FLOORS

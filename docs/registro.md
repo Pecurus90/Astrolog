@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 133; senza fonte: 2.
-Fonti: C norma: 55; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 23; T tecnico: 44.
+Valori: 133; senza fonte: 1.
+Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 23; T tecnico: 44.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -165,7 +165,8 @@ Fonti: C norma: 55; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 23; T t
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _HALF_WIDTH_DEG | `6.0` | **senza fonte** |
+| _MAIN_PHASES | `_MAIN_PHASES = ((0, MoonPhase.NEW), (90, MoonPhase.FIRST_QUARTER), ...` | C USNO https://aa.usno.navy.mil/faq/moon_phases: phase angle 0, 90, 180, 270; crescent < half |
+| _MAIN_PHASES | `(270, MoonPhase.LAST_QUARTER))` | C USNO https://aa.usno.navy.mil/faq/moon_phases: phase angle 0, 90, 180, 270; crescent < half |
 
 ### ephemeris/sun.py
 
