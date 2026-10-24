@@ -31,6 +31,18 @@
     ]
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/tools/stato.py\"",
+            "timeout": 90
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
