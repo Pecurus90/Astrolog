@@ -12,7 +12,7 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 | richiesta | prova |
 |---|---|
 | Apro Meteo e vedo le prossime notti del mio sito, ognuna col verdetto, le ore utili e cosa lo decide | `test_each_model_writes_its_nights_from_the_current_one`, `test_the_summary_is_written_with_the_forecast`, *in testa le ore serene col semaforo, da che ora a che ora e l'accordo, con l'ora del posto*, *accanto al semaforo pesa solo cio' che il backend dice incerto o niente, con la parola e le ore* |
-| Oggi il semaforo viene dalle nuvole, finche' non si costruisce il punteggio di ADR 0020; ogni altra misura con soglia dice la sua parola ora per ora e per la notte, con l'intervallo e il conto, e pesa accanto senza cambiarlo | `test_each_measure_judges_an_hour_at_the_edges_of_its_source`, `test_condensation_comes_under_three_degrees_between_air_and_dew_point`, `test_a_measure_takes_the_worst_hour_of_the_night_and_says_its_hours`, `test_the_clouds_are_the_verdict_and_never_weigh`, `test_good_and_neutral_measures_do_not_weigh`, `test_every_hour_carries_the_judgement_of_each_judged_measure`, `test_the_round_writes_the_nights_with_the_sky_sources_joined_and_judged` |
+| Oggi il semaforo viene dalle nuvole, finche' non si costruisce il punteggio di ADR 0034; ogni altra misura con soglia dice la sua parola ora per ora e per la notte, con l'intervallo e il conto, e pesa accanto senza cambiarlo | `test_each_measure_judges_an_hour_at_the_edges_of_its_source`, `test_condensation_comes_under_three_degrees_between_air_and_dew_point`, `test_a_measure_takes_the_worst_hour_of_the_night_and_says_its_hours`, `test_the_clouds_are_the_verdict_and_never_weigh`, `test_good_and_neutral_measures_do_not_weigh`, `test_every_hour_carries_the_judgement_of_each_judged_measure`, `test_the_round_writes_the_nights_with_the_sky_sources_joined_and_judged` |
 | Le misure arrivano in ordine d'importanza, con la media delle ore vere, il picco, e la parte di notte che coprono; le soglie arrivano dal backend | `test_the_order_is_clouds_then_nogo_then_marginal_then_go_earliest_first_then_neutral`, `test_the_night_value_is_the_mean_of_the_true_numbers_and_rain_is_a_total`, `test_the_peak_is_the_worst_hour_and_says_when`, `test_a_measure_known_only_in_part_of_the_night_says_which_part`, `test_every_scale_is_sent_with_its_steps`, `test_the_page_gets_the_thresholds_the_judgement_used` |
 | La Luna pesa per la banda larga solo quando e' sopra l'orizzonte col buio | `test_the_moon_up_brings_its_lit_part_and_down_brings_nothing`, `test_the_moon_is_left_out_when_it_is_never_up_in_the_dark` |
 | Quando la Luna pesa leggo cosa riprendere e in che ore: la banda consigliata, quanto e' illuminata, da che ora a che ora e' su, e cosa resta nelle ore senza | `test_a_measure_says_whether_its_known_hours_reach_the_ends_of_the_night`, *la Luna (...) consiglia la banda e dice le ore senza Luna* |
@@ -49,7 +49,7 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 
 | compito | fonte | perche' |
 |---|---|---|
-| previsione, fino a 16 giorni | Open-Meteo, piu' modelli dalla stessa chiamata | gratis, senza chiave, nuvole su tre strati, CC BY 4.0 |
+| previsione: stanotte e le sette dopo | Open-Meteo, piu' modelli dalla stessa chiamata | gratis, senza chiave, nuvole su tre strati, CC BY 4.0 |
 | seeing e jet stream | vento a 700 e 250 hPa da Open-Meteo; seeing Meteoblue `seeing-1h` con la chiave dell'utente | il vento gratis per chiunque; il seeing ora per ora c'e' solo da Meteoblue |
 | limpidezza: aerosol e polveri | Open-Meteo Air Quality (dati CAMS) | gratis e mondiale |
 | storico di una notte passata | Open-Meteo Archive (ERA5), definitivo dopo 5 giorni | gratis dal 1940 |
@@ -76,42 +76,42 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 - **Il cielo di una notte in parole** (`sky_word`, `weather/verdict.py`): la copertura media nel buio
   in okta (WMO 2700, classi METAR): 0 sereno, 1-4 sparso (FEW, SCT), 5-7 molto (BKN), 8 coperto; 0 e 8 solo a cielo del
   tutto sgombro o coperto (Marco, 21/10/2026).
-- **La qualita' della notte e' un punteggio da 0 a 100** (ADR 0020; Marco, 17/10/2026, ribadito
-  il 20/10/2026: non si torna indietro). Ogni ora somma i punti dei fattori coi pesi di Marco:
-  nuvole 35, seeing 30, trasparenza 12, condensa 9, vento 9, jet stream 5. Pioggia e nuvole "non
-  adatta" (dal 50%, okta WMO 2700) bloccano: l'ora vale 0. La notte e' la media delle ore di buio;
-  la linea ora per ora sale e scende con la qualita', in Meteo e in Dashboard (Marco, 20/10/2026;
-  100 = un'ora senza limiti). Il **verdetto** viene dal punteggio: buona da 70, incerta da 40, sotto non adatta. Le
-  **ore utili** sono le ore di buio con qualita' da 60, dette come intervallo e conto ("dalle 23
-  alle 04, 4 ore"), mai in minuti: i dati sono orari. Un fattore che manca (seeing senza chiave
-  Meteoblue, o nello storico) cede i suoi punti agli altri in proporzione, e la pagina dice
-  quale manca (Marco, 20/10/2026). Il codice di oggi giudica ancora dalle sole
-  nuvole: cambia quando si costruisce l'ADR 0020.
+- **La qualita' della notte: Trasparenza, Ore di posa, Seeing** (ADR 0034, che rivede ADR 0020).
+  La **Trasparenza** di un'ora = 100 x (1 - nuvole) x la luce che passa l'aerosol (contata da AOD
+  0,1, allo zenit); vale 0 con un "no": pioggia, nebbia, nuvole oltre il 50%, vento da 29 km/h,
+  raffica oltre 25. La notte e' la media delle ore di buio, ogni ora per i suoi minuti di buio; la
+  linea ora per ora sale e scende con lei, in Meteo e in Dashboard (100 = un'ora senza limiti). Il
+  **verdetto** viene da li': buona da 70, incerta da 40, sotto non adatta (misurato sull'archivio
+  di Marco, ADR 0034). Le **Ore di posa** sono le ore di buio contate per quanto rendono, divise
+  per banda della Luna ("4,6 ore di posa: 3,1 in banda larga"). Il **Seeing** ha la sua parola,
+  fuori dal voto; senza chiave Meteoblue viene dal jet stream, detto. Un dato che manca (aerosol)
+  esce dal conto e la pagina dice quale. Condensa e vento incerto sono avvisi accanto. Il codice di
+  oggi giudica ancora dalle sole nuvole: cambia quando si costruisce l'ADR 0034.
 - **Ogni misura ha anche la sua parola.** Ogni misura con soglia ha la sua parola
   ora per ora (buona, incerta, niente) e per la notte quella dell'ora peggiore, con l'intervallo e
   il conto delle ore che la portano. Le soglie stanno in `backend/astrolog/weather/judge.py`, con
-  la fonte accanto al numero (verificate il 7/10/2026), e la rotta le manda alla pagina (`scales`):
-  - nuvole basse come il totale (okta); pioggia: qualunque e' niente; raffiche: niente da Beaufort 5
-    (29 km/h); vento medio: incerta da Beaufort 4 (20 km/h), niente da 5;
-  - condensa: niente sotto i 3 gradi fra aria e rugiada (regola FAA dei 5 gradi Fahrenheit);
+  la fonte accanto al numero (riverificate il 24/10/2026, ADR 0034), e la rotta le manda alla
+  pagina (`scales`):
+  - nuvole e nuvole basse: classi FEW e SCT (WMO/ICAO); pioggia: qualunque e' niente (ASCOM);
+    vento medio: incerta da Beaufort 4 (20 km/h), niente da 5 (29 km/h, RMetS); raffiche: niente
+    oltre 25 km/h (iTelescope; il codice di oggi usa ancora i 29 di Beaufort);
+  - condensa: sotto i 3 gradi fra aria e rugiada *serve la fascia*, incerta e mai niente (prassi
+    degli astrofili; il codice di oggi dice ancora niente);
   - jet stream (250 hPa): niente da 126 km/h, i 35 m/s che meteoblue dice "seeing
     cattivo"; nessuna fonte per un gradino incerto, quindi non c'e';
-  - seeing: buona fino a 2", incerta fino a 4", niente oltre (classi del Canadian Meteorological
-    Centre, quelle di Clear Sky Chart);
+  - seeing: buona fino a 2", incerta fino a 4", niente oltre (Astronomy Tools: Good, OK, Poor);
   - aerosol: sotto 0,1 *limpido*, da 1 *molto fosco* (NASA Earth Observatory); in mezzo nessuna
     parola, che per la notte e' peggio di *limpido* (un'ora limpida non fa limpida la notte);
-  - Luna, per la banda larga: buona fino al 25% illuminata (la regola diffusa fra chi riprende),
-    *banda larga al limite* fino al 50%, oltre *consigliata banda stretta* (il 50 e' di Marco,
-    7/10/2026); conta sopra -5° (ADR 0020, 0033; il codice di oggi usa ancora l'orizzonte,
-    -0,833 gradi del Nautical Almanac). La riga dice le ore in cui e' su e cosa resta nelle altre (Marco,
-    12/10/2026): "Luna al 55% dalle 23 · banda larga fino alle 23". I due gradini e l'altezza da
-    cui la Luna conta diventano Impostazioni, con 25%, 50% e -5° di partenza: un cielo
-    buio sente la Luna prima di uno di citta' (Marco, 19/10/2026); -5° dalla rete TESS, cielo
-    costante con la Luna sotto -5° a ogni fase (arXiv 2105.01066), ADR 0013. Su tutta la notte, solo il
-    dato; fra 25 e 50% le ore libere sono "senza Luna". Nessuna soglia al 75% per la banda
-    stretta: e' un'abitudine riportata da una fonte sola (Telescope Live), non una convenzione.
-  - visibilita': niente sotto 1 km, la nebbia dell'Atlante WMO ("reduce horizontal visibility
-    ... to less than 1 km", https://cloudatlas.wmo.int/en/fog-compared-with-mist.html); da 1 km
+  - Luna, per la banda larga: buona sotto il 25% illuminata, *banda larga al limite* fino al 65%,
+    da li' *consigliata banda stretta*: buio, grigio e chiaro dell'osservatorio ING (ADR 0034; il
+    codice di oggi usa ancora 25 e 50). Conta da quando sorge (-0,833 gradi del Nautical Almanac),
+    come ESO, astroplan e lo scheduler di N.I.N.A. La riga dice le ore in cui e' su e cosa resta
+    nelle altre (Marco, 12/10/2026): "Luna al 55% dalle 23 · banda larga fino alle 23". Il
+    calendario della Luna usa la stessa scala. Su tutta la notte, solo il dato. Nessuna soglia al
+    75% per la banda stretta: e' un'abitudine riportata da una fonte sola (Telescope Live), non una
+    convenzione.
+  - visibilita': niente sotto 1 km, la nebbia (FAA-H-8083-28, 18.1.1: "less than 5/8 sm (1 km)";
+    METAR FG sotto 1000 m); da 1 km
     in su e' foschia e non ha parola sua. Arriva in metri da Open-Meteo e si scrive in km;
     ECMWF non la da' (misurato il 12/10/2026: `null` a ogni ora) e la carta dice *Non
     disponibile*: un modello non prende il valore di un altro. Il suo grafico va da 0 a 20 km

@@ -458,7 +458,7 @@ Valori: 133; senza fonte: 115.
 | 0017 | Il backup delle risposte: un file accanto al database, riscritto a ogni risposta | accettata, 7/10/2026 (Marco). |  |
 | 0018 | Si passa tutto al telaio e al foglio v26, senza convivenza | accettata, 7/10/2026 |  |
 | 0019 | Sole e Sistema solare entrano in Archivio a mano, il deep sky resta automatico | accettata, 17/10/2026 (Marco). Nessun codice ancora. Ordine dei pezzi: disegno della linguetta e di "Aggiungi oggetto"; comete, |  |
-| 0020 | La qualita' della notte e' un punteggio da 0 a 100, coi pesi decisi con Marco | accettata, 17/10/2026 (Marco); ribadita il 20/10/2026: non si torna al semaforo dalle | domini/meteo.md |
+| 0020 | La qualita' della notte e' un punteggio da 0 a 100, coi pesi decisi con Marco | accettata, 17/10/2026 (Marco); superata in parte da ADR 0034 (24/10/2026: pesi, ora | domini/meteo.md |
 | 0021 | L'attrezzatura porta i dati delle schede tecniche, e il setup ci calcola | accettata, 18/10/2026 (Marco). ADR 0033: i programmi verificati sono due (ADR 0029). |  |
 | 0022 | Le misure dei frame: tutte, attestate, nel database, senza voto | accettata, 18/10/2026 (Marco). Superata in parte da ADR 0033: stelle, tilt. |  |
 | 0023 | Planner e Progetti: inquadratura, mosaico, setup di prova, filtri, modifiche | accettata, 18/10/2026 (Marco). ADR 0033: nel piano della notte il meteo e' una striscia (ADR 0013). |  |
@@ -472,3 +472,4 @@ Valori: 133; senza fonte: 115.
 | 0031 | Generale prima: una lista standard, l'attrezzatura dell'utente, un abbinamento | accettata, 22/10/2026 (Marco). Vale per la pipeline nuova (ADR 0030). |  |
 | 0032 | La zona di selezione dei frame | accettata, 23/10/2026 (Marco); soglie e file rivisti lo stesso giorno sulla tavola di |  |
 | 0033 | Riconciliazione delle regole: ogni regola una casa | accettata, 23/10/2026 (Marco: R1-R4). Nessun valore cambia: i documenti si allineano | domini/spina.md, domini/notti.md, domini/glossario.md, domini/ereditato.md, domini/meteo.md, domini/archivio.md, domini/attrezzatura.md, domini/mosaico.md, piano.md, CLAUDE.md |
+| 0034 | Le regole del meteo con le fonti verificate, e il punteggio della notte v4 | accettata, 24/10/2026 (Marco: raffiche, condensa, Luna, nomi, soglie dal suo archivio). | domini/meteo.md |

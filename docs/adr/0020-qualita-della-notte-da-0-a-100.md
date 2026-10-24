@@ -1,6 +1,7 @@
 # 0020 -- La qualita' della notte e' un punteggio da 0 a 100, coi pesi decisi con Marco
 
-**Stato:** accettata, 17/10/2026 (Marco); ribadita il 20/10/2026: non si torna al semaforo dalle
+**Stato:** accettata, 17/10/2026 (Marco); superata in parte da ADR 0034 (24/10/2026: pesi, ora
+utile da 60, seeing nel voto, Luna). Ribadita il 20/10/2026: non si torna al semaforo dalle
 sole nuvole, ne' in un contratto ne' in una brief. I pesi della tabella sono la proposta v2: si
 toccano solo con Marco.
 
