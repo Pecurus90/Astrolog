@@ -460,7 +460,7 @@ Valori: 133; senza fonte: 82.
 | 0019 | Sole e Sistema solare entrano in Archivio a mano, il deep sky resta automatico | accettata, 17/10/2026 (Marco). Nessun codice ancora. Ordine dei pezzi: disegno della linguetta e di "Aggiungi oggetto"; comete, |  |
 | 0020 | La qualita' della notte e' un punteggio da 0 a 100, coi pesi decisi con Marco | accettata, 17/10/2026 (Marco); superata in parte da ADR 0034 (24/10/2026: pesi, ora | domini/meteo.md |
 | 0021 | L'attrezzatura porta i dati delle schede tecniche, e il setup ci calcola | accettata, 18/10/2026 (Marco). ADR 0033: i programmi verificati sono due (ADR 0029). |  |
-| 0022 | Le misure dei frame: tutte, attestate, nel database, senza voto | accettata, 18/10/2026 (Marco). Superata in parte da ADR 0033: stelle, tilt. |  |
+| 0022 | Le misure dei frame: tutte, attestate, nel database, senza voto | accettata, 18/10/2026 (Marco). Superata in parte da ADR 0033 e 0037 (SNR, zone, tilt). |  |
 | 0023 | Planner e Progetti: inquadratura, mosaico, setup di prova, filtri, modifiche | accettata, 18/10/2026 (Marco). ADR 0033: nel piano della notte il meteo e' una striscia (ADR 0013). |  |
 | 0024 | Statistiche: i confronti nel tempo | accettata, 20/10/2026 (Marco). Riprende il contratto vecchio |  |
 | 0025 | Uno studio per ruoli: la pagina si collauda contro la tavola prima di Marco | accettata, 20/10/2026 (Marco, dal check di salute). Allarga ADR 0015: ricette, un giro |  |
@@ -475,3 +475,4 @@ Valori: 133; senza fonte: 82.
 | 0034 | Le regole del meteo con le fonti verificate, e il punteggio della notte v4 | accettata, 24/10/2026 (Marco: raffiche, condensa, Luna, nomi, soglie dal suo archivio). | domini/meteo.md |
 | 0035 | Le regole del cielo con le fonti verificate | accettata, 24/10/2026. Soglie tecniche scelte dalla sessione sulle convenzioni |  |
 | 0036 | Le regole di ASTAP con le fonti verificate, e il catalogo stellare D50 | accettata, 24/10/2026. Raccoglie le decisioni del piano di ASTAP (D2-D8) che stavano |  |
+| 0037 | Le regole delle misure dei frame con le fonti verificate | accettata, 24/10/2026. Soglie tecniche scelte dalla sessione sulle convenzioni |  |
