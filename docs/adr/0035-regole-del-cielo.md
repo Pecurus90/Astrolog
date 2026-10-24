@@ -23,22 +23,24 @@ regola del Sole.
 | SQM credibile | 10-23 | 7-23 | Unihedron FAQ SQM-LU: "about 7 (brightest) to 23 (darkest)" |
 | Sole sorge/tramonta | -0,833 | resta | USNO: distanza zenitale 90,8333 |
 | crepuscoli | -6 / -12 / -18 | restano | USNO |
-| Luna sorge/tramonta | -0,833 | **+0,125** | Meeus cap. 15, altezza media della Luna; USNO con la parallasse |
+| Luna sorge/tramonta | -0,833 | resta (corretto 24/10: era +0,125) | Meeus cap. 15: +0,125 e' per l'altezza geocentrica; la nostra e' topocentrica, parallasse gia' dentro: -0,833 coincide entro 1-2 min |
 | nomi delle fasi | finestre di 12 gradi | fase principale nella notte che contiene l'istante; fra le due, falce sotto il 50%, gibbosa sopra | USNO, Phases of the Moon |
 | mese sinodico | 29,530588861 | resta | Meeus cap. 49 |
 | declinazione massima Luna | 28,8 | resta, tetto per eccesso | lunistizio: 28,725 |
 | km per grado | 111,2 | resta | IUGG, raggio medio 6371,0088 km |
 | senza buio astronomico | Sole sotto l'orizzonte | buio nautico (-12), detto | ADR 0034; USNO |
 
-- La Luna "dall'orizzonte" di ADR 0034 vuol dire +0,125 per la Luna, non -0,833.
+- La Luna "dall'orizzonte" di ADR 0034 vuol dire -0,833 sull'altezza topocentrica. Misurato
+  (24/10, Vicenza, 4 date): geocentrica a +0,125 e topocentrica a -0,833 sorgono entro 2 minuti;
+  topocentrica a +0,125 sorgerebbe 6-8 minuti tardi.
 - Il filtro dello SQM misurato e delle Statistiche (ADR 0022, 0024) tiene la Luna sotto -5°: e'
   una misura del cielo naturale, e la rete TESS lo vede costante solo da li' (arXiv 2105.01066).
 - Tecnici, senza regola: passi di calcolo, cifre del float32, margini e legende delle tavole.
 
 ## Conseguenze
 
-- Fase 4: `units.py` (tabella, Garstang, classe 1, 7-23), CHECK di `schema.sql`, altezza della
-  Luna, nomi delle fasi, finestra senza buio, test e fixture del frontend (20,8 diventa 5, 21,3
+- Fase 4: `units.py` (tabella, Garstang, classe 1, 7-23), CHECK di `schema.sql`, nomi delle
+  fasi, finestra senza buio, test e fixture del frontend (20,8 diventa 5, 21,3
   diventa 4), contratti `sito.md`, `effemeridi.md`, `glossario.md`, guida-utente.
 - Il foglio di Design (`astrolog.css`) tiene i pavimenti vecchi in un commento: la guardia
   `pavimenti_del_cielo` diventa rossa finche' Design non consegna il foglio nuovo.
