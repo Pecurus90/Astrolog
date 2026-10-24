@@ -16,4 +16,5 @@ Regole comuni in ADR 0015. Passi:
    bloccanti con prova. Un bloccante: una correzione, una verifica; ancora aperto, ci si ferma.
 6. Se il difetto si vedeva a schermo: collaudo (skill `collaudo-dal-vivo`), poi Marco guarda.
 7. **Riassunto** in tre righe (cosa funziona ora e prima no, la causa, il test), poi commit e
-   push automatici: `git commit -m "fix: <una riga ASCII>"`, `git push origin main`.
+   push automatici: `git commit -m "fix: <una riga ASCII>"`, `git push origin main`. Fatto quando
+   la CI su GitHub e' verde (`gh run watch`).

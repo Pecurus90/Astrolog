@@ -1,157 +1,99 @@
 # AstroLog -- come si lavora
 
-App **open source** per catalogare, analizzare e pianificare sessioni di astrofotografia: si
-punta alle cartelle dei FITS, l'app legge gli header, risolve ogni frame sul cielo e ricostruisce
-una cronologia osservativa. Backend Python (FastAPI, SQLite), frontend React/TypeScript, nessun
-login. Il progetto di prima e' in `old/`, come cava: solo in locale e nel repository privato
-`Astrolog-archivio`, non in quello pubblico (porta dati personali).
+App **open source** per catalogare, analizzare e pianificare sessioni di astrofotografia: legge gli
+header dei FITS, risolve ogni frame sul cielo, ricostruisce la cronologia. Backend Python (FastAPI,
+SQLite), frontend React/TypeScript, nessun login. Il progetto di prima e' in `old/`, come cava:
+solo in locale e nel repository privato `Astrolog-archivio` (porta dati personali).
 
-Lo stato si legge dal codice e da [`docs/piano.md`](docs/piano.md); le decisioni stanno in
-[`docs/adr/`](docs/adr/). Questo file dice solo come si lavora.
+Cosa fare: **una lista sola**, `docs/piano.md`, dal primo passo aperto in giu' (ADR 0040).
+Decisioni nei contratti `docs/domini/` e negli ADR `docs/adr/`. Il metodo e' **ADR 0040**, fermo
+fino al 21/11/2026: un'idea di metodo va in una Issue `metodo`, non qui.
 
 ## Tre principi
 
-1. **Si progetta per chi la usera', non per Marco.** Altri utenti avranno attrezzature, software,
-   nomi e cartelle diversi: l'archivio di Marco e' un caso di prova, mai il metro. Si regge a mani
-   vuote (primo avvio, zero frame). Tre bersagli: Windows, Mac, NAS (Docker) anche da tablet e
-   telefono -- desktop prima, mobile alla fine, quindi i dati escono dall'API gia' fatti e il
-   layout non porta logica. **Le soglie vengono da convenzioni pubbliche** (okta WMO, Nyquist,
-   Beaufort), verificate su una fonte vera e citate accanto al numero, mai scritte a memoria.
-   **Una soglia tecnica la scelgo io** (Marco, 24/10/2026): fra convenzioni e usi trovati (norme,
-   software, osservatori, forum) la piu' usata e corretta; a Marco porto la scelta e cio' che
-   cambia a schermo, mai una domanda tecnica. A lui solo cio' che e' suo: gusto, parole, rischio,
-   un prodotto senza alcun uso a cui appoggiarsi. Mai inventata. **L'archivio di Marco verifica,
-   non decide** (Marco, 24/10/2026): un numero tarato su un archivio solo non e' la regola; vale
-   se si tara da se' sui dati di ogni utente, se lo regge un argomento indipendente, o se diventa
-   Impostazione; ogni taratura si prova su dati che non ha visto.
-   **In ogni lavoro, di default** (Marco, 20/10/2026): ogni numero, soglia e formula toccati, anche
-   gia' in codice, si confronta con la convenzione; se diverge, ci si ferma e si mostra a Marco
-   cosa cambia. Cio' che riprende un software esterno (campi, opzioni, formati di N.I.N.A. e degli
-   altri) si confronta con la sua documentazione: completo, o parziale con l'elenco che manca.
-2. **Marco non e' un programmatore: decide il prodotto, non il codice.** Si chiede solo cio' che
-   dipende da lui (gusto, dati suoi, rischio che accetta). Quando serve: **a video, a scelta
-   multipla, con la consigliata in cima e il perche' in una riga**. **La consigliata e' la piu'
-   corretta, non la piu' corta**: se la strada giusta costa piu' lavoro, si consiglia quella e si
-   dice quanto costa. Se la risposta non dipende da lui e una consigliata c'e', non si chiede: si
-   prende quella. Cio' che dipende dal codice, da una misura o dal metodo lo decido io e lo dico in
-   una riga. **Un difetto
-   non e' una domanda**: si ripara e si dice. **Un difetto trovato si ripara, mai in coda**
-   (Marco, 20/10/2026): ognuno col suo `/ripara`, prima di passare oltre; bloccato da fuori, una
-   Issue `bloccato` col motivo (ADR 0027). Le idee in `docs/idee.md`; i tetti dei documenti li tiene
-   `tools/tetti.py`. Ogni resoconto apre con *cosa funziona ora e prima
-   no*.
-3. **Il database non conta finche' non si rilascia.** Si ricrea da `backend/astrolog/schema.sql`
-   quante volte serve: niente migrazioni, niente backfill.
+1. **Si progetta per chi la usera', non per Marco.** Attrezzature, software, nomi e cartelle
+   diversi; l'archivio di Marco verifica, non decide: un numero tarato su un archivio solo vale se
+   si tara sui dati di ogni utente, se lo regge un argomento indipendente, o se diventa
+   Impostazione; ogni taratura si prova su dati che non ha visto. Si regge a mani vuote. Bersagli: Windows, Mac, NAS (Docker), mobile per ultimo,
+   quindi i dati escono dall'API gia' fatti e il layout non porta logica. **Soglie e formule da
+   convenzioni pubbliche**, verificate su una fonte vera e citate accanto al numero (lo controlla
+   `tools/registro.py`); se il codice diverge, vale la convenzione e si dice a Marco cosa cambia a
+   schermo. Un software esterno ripreso si confronta con la sua documentazione.
+2. **Marco decide il prodotto, non il codice.** A lui solo gusto, parole, rischio, dati suoi,
+   schermate: a scelta multipla (che passi da una domanda a scelta lo controlla
+   `.claude/hooks/ask.py`), la consigliata in cima col perche' in una riga, la piu' corretta e non
+   la piu' corta, col suo costo. Soglie tecniche, metodo, ordine interno di un passo: li decido io
+   e lo dico in una riga. Una decisione scritta in un contratto o in un ADR vale: se sembra
+   sbagliata si porta a Marco, non si aggira; un numero tecnico smentito da una misura lo correggo
+   io e lo dico. **Un difetto non e'
+   una domanda**: si ripara subito con `/ripara`, o diventa Issue `bloccato` col motivo.
+   Ogni resoconto apre con *cosa funziona ora e prima no*.
+3. **Il database non conta finche' non si rilascia.** Si ricrea da `backend/astrolog/schema.sql`:
+   niente migrazioni, niente backfill.
 
 ## Il giro di lavoro
 
-Una ricetta per tipo di lavoro (ADR 0015): `/costruisci`, `/ripara`, `/rifattorizza`,
-`/riordina`, `/rivedi`; `/esegui` o le parole scelgono. **Ogni modifica al codice passa da una
-ricetta invocata come skill**, anche la correzione di un rilievo dopo una revisione: mai a mano
-(Marco, 22/10/2026). Per tutte: un giro di revisione e al
-massimo una verifica delle correzioni; blocca solo un rilievo con prova; il correttore puo'
-rifiutare e non aggiunge dipendenze, file o meccanismi; cio' che resta aperto ferma il lavoro e
-va nel riassunto. Una regola controllabile da una macchina sta in una macchina, non in un prompt.
-**Una funzionalita' nuova** (Marco, 23/10/2026): ricognizione larga, domande, piano scritto,
-verifica del piano da agenti indipendenti a contesto fresco (logica, fattibilita', attacco, con
-convenzioni e metodi standard online), piano riscritto, poi il codice. Passi in `/costruisci`.
+- **Prima il rosso**: CI, Nightly, Issue `difetto`, avvisi di sicurezza vengono prima del passo
+  del piano. **Fatto vuol dire verde su GitHub**, non in locale: dopo il push si guarda la CI.
+- **Ogni modifica al codice passa da una ricetta** invocata col suo nome: `/costruisci`,
+  `/ripara`, `/rifattorizza`, `/riordina`, `/rivedi`. Un giro di revisione, al massimo una
+  verifica; blocca solo un rilievo con prova; cio' che resta aperto ferma il lavoro.
+- **Uno scrive, gli altri leggono**: in parallelo solo `esploratore` (ricognizione) e `revisore`.
+  Due agenti non scrivono mai insieme sugli stessi file, e nessuno lancia pre-commit mentre un
+  altro scrive (mette da parte le modifiche non salvate).
+- **Un lavoro alla volta**; `/clear` fra un passo e l'altro.
 
-| Ruolo | Chi | Modello |
-|---|---|---|
-| Prodotto, risposte, sguardo finale a schermo | Marco | -- |
-| Tavole e componenti | Claude Design | -- |
-| Piano, logica di dominio, backend, coordinamento | sessione principale | Opus |
-| Consegna di Design contro una lista fissa | `verificatore-disegno` | Sonnet |
-| Ricognizione in sola lettura | `esploratore` | Sonnet |
-| Potare, tipizzare (serve giudizio) | `sviluppatore` | Opus |
-| Una tavola in pagina, coi componenti comuni | `sviluppatore`, modo `pagina` | Opus |
-| Spostare file, rinominare, aggiornare import | `sviluppatore`, modo `spostamento` | Sonnet |
-| Revisione del diff, un giro | `revisore` | Opus |
-| Audit che esegue e misura | `auditore` | Opus |
-| Pagina contro la tavola, prima di Marco | `collaudatore` | Opus |
-| Traduzione di una pagina finita | `traduttore` | Sonnet |
-
-Il giro di una fetta di porting e i ruoli nuovi: [ADR 0025](docs/adr/0025-uno-studio-per-ruoli.md)
-(i due agenti nuovi e il modo `pagina` nascono con *La squadra*, in `docs/piano.md`).
+| Ruolo | Chi |
+|---|---|
+| Prodotto, risposte, sguardo finale a schermo | Marco |
+| Tavole e componenti | Claude Design |
+| Piano, logica di dominio, backend, coordinamento | sessione principale |
+| Ricognizione in sola lettura | `esploratore` |
+| Lavoro meccanico gia' deciso | `sviluppatore` |
+| Revisione del diff | `revisore` |
+| Audit che esegue e misura | `auditore` |
+| Traduzione di una pagina finita | `traduttore` |
 
 ## Il codice
 
-- **Controlli:** `.pre-commit-config.yaml` -- veloci al commit, completi al push e in CI
-  (`python -m pre_commit run --all-files --hook-stage manual`). La mutazione gira di notte.
-- **Limiti sulle funzioni, non sui file** (ruff `C901`, `PLR0912/0913/0915`; file sotto 1000
-  righe). Un `noqa` su quelle regole e' debito: si toglie quando si tocca la funzione.
-- **Nomi e commenti in inglese; italiano** nei documenti, nei testi dell'app e in chat.
-- **Tipi:** una funzione che si tocca esce annotata; `StrEnum` per un insieme chiuso di stringhe,
-  `dataclass` per una riga che viaggia fra funzioni invece di un `dict`.
-- **Prosa compressa** nei commenti e nei documenti di lavoro (piano, idee, ADR, contratti, comandi,
-  agenti): frasi corte, niente riempitivi, solo il perche' che il codice non mostra. **Commenti
-  e docstring in stile caveman** (skill `caveman`): frammenti, niente articoli, al massimo 2 righe.
-  Lo controlla `tools/commenti.py` (codice, test della pipeline, schema dalla pipeline nuova in
-  giu'). `docs/guida-utente.md` resta italiano pieno.
-- **Un fatto, una casa.** Le derivazioni vivono in Python; il backend manda cio' che lo schermo
-  mostra e il frontend formatta e basta; i tipi TS si generano dall'OpenAPI. Prima di scrivere
-  una funzione si cerca se esiste. Un'astrazione o un file nuovo alla seconda occorrenza, mai
-  alla prima.
-- **Test prima del codice, visti rossi:** una regola, un test che si rompe se la regola si rompe.
-- **Una lettura non calcola:** calcola chi scrive, e scrive il risultato.
-- **Le date portano il fuso:** la notte va da mezzogiorno a mezzogiorno nel fuso del sito.
-- **Programmi verificati: N.I.N.A. e ASIAIR**: la pipeline nuova salta gli altri file, senza
-  lettura SBIG; nessun alias ne' regola per altri programmi (ADR 0029, 0033). SharpCap Pro solo per <!-- software-ok -->
-  l'export del Sistema solare (ADR 0013). Una decisione gia' in
-  un contratto di `docs/domini/` o in un ADR vale: se sembra sbagliata si porta a Marco, non si aggira;
-  se e' un numero tecnico e una misura lo smentisce, lo correggo io nell'ADR e lo dico (Marco, 24/10/2026).
-- **`old/` si porta, non si importa:** un pezzo si sposta coi suoi test; un vocabolario voce per
-  voce, con Marco. **Si porta solo cio' che si usa, e cio' che resta senza uso si toglie** (Marco,
-  22/10/2026): niente codice o test portati "per dopo", niente doppioni lasciati in piedi. `old/docs/intervista-requisiti.md` si legge e non si tocca.
+- **Controlli** in `.pre-commit-config.yaml`: veloci al commit, completi al push e in CI.
+- **Limiti sulle funzioni** (ruff `C901`, `PLR0912/0913/0915`), file sotto 1000 righe.
+- **Nomi e commenti in inglese** (i nomi del backend: `tools/nomi_inglesi.py`); italiano in
+  documenti, testi dell'app e chat. Commenti caveman, al massimo 2 righe (`tools/commenti.py`). Prosa
+  compressa nei documenti di lavoro; `docs/guida-utente.md` in italiano pieno.
+- **Tipi**: funzione toccata esce annotata; `StrEnum` per insiemi chiusi, `dataclass` per righe.
+- **Un fatto, una casa.** Derivazioni in Python; il frontend formatta e basta; tipi TS
+  dall'OpenAPI. Si cerca prima se esiste. Un'astrazione alla seconda occorrenza.
+- **Test prima, visti rossi.** **Una lettura non calcola.** **Le date portano il fuso**: la notte
+  va da mezzogiorno a mezzogiorno nel fuso del sito.
+- **Programmi verificati: N.I.N.A. e ASIAIR** (ADR 0029, 0033); SharpCap Pro solo per l'export <!-- software-ok -->
+  del Sistema solare.
+- **`old/` si porta, non si importa** (lo controlla un hook): un pezzo coi suoi test; si porta
+  solo cio' che si usa. `old/docs/intervista-requisiti.md` si legge e non si tocca.
 
 ## Come mi comporto
 
-- **Verifico sul reale prima di asserire**: codice, DB, app che gira -- non i documenti. Una
-  riparazione si prova facendo fare al programma la cosa che prima non faceva. Dopo una modifica
-  al backend lo si riavvia prima di collaudare.
-- **Un numero o un "sempre/nessuno" in prosa si conta** (grep, misura) prima di scriverlo, o non
-  si scrive. Un fatto corretto si corregge in tutte le sue case, cercate col grep anche con le
-  parole che legge l'utente.
-- **Una superficie si collauda nel browser**, guardando il contenuto (skill `collaudo-dal-vivo`).
-- **Un'idea di Marco "per dopo" resta un'idea**: non diventa una richiesta al disegno ne' una
-  decisione nel contratto finche' non dice di farla.
-- **Prima la risposta, poi il lavoro.** Una domanda di Marco si risponde subito, anche se arriva
-  dentro una scelta. Un testo, una frase o una soglia nuovi si concordano prima del codice: la mia
-  proposta, le convenzioni trovate, poi si scrive. Se Marco aspetta qualcosa da dare ad altri
-  (Design), quello viene prima di tutto.
-- **Quando Marco mi corregge su un modo di sbagliare**, nello stesso turno: prima uno strumento
-  (test, hook, controllo di pre-commit), solo se non si puo' una riga qui.
-- **Una fetta arriva a schermo**: parte da cio' che l'utente vedra' e ci arriva in un commit.
-- **La memoria non e' una casa**: cio' che vale si scrive nel repo (qui, `docs/piano.md`, un ADR);
-  la memoria tiene solo il rimando, e ogni voce dichiara la sua casa (`casa:`).
+- **Verifico sul reale prima di asserire**; una riparazione si prova facendo fare al programma la
+  cosa che prima non faceva; dopo una modifica al backend lo si riavvia.
+- **Un numero o un "sempre/nessuno" si conta** prima di scriverlo; un fatto corretto si corregge
+  in tutte le sue case.
+- **Una superficie si collauda nel browser** (skill `collaudo-dal-vivo`).
+- **Prima la risposta, poi il lavoro.** Un testo o una frase nuovi si concordano prima del codice.
+  Un'idea di Marco "per dopo" resta in `docs/idee.md` finche' non dice di farla. Se Marco aspetta
+  qualcosa da dare ad altri (Design), quello viene prima.
+- **La memoria non e' una casa**: cio' che vale sta nel repo; la memoria tiene il rimando.
+- Quando compatti, conserva il passo del piano, i file toccati e i comandi di test.
 
 ## Regole ferme
 
-- **Commit e push automatici** (Marco, 5/10/2026): un lavoro chiuso coi controlli verdi e la
-  sua revisione fatta si committa e si pubblica senza chiedere, col suo riassunto, e si passa
-  al successivo. Si ferma e chiede solo per cio' che e' di Marco: prodotto, cio' che
-  l'utente vede da collaudare, una dipendenza nuova, un controllo rosso che non si ripara.
-  Messaggio Conventional Commits, una riga ASCII
-  (`fix: ...`), niente `Co-Authored-By`. Mai force push, mai riscrivere la storia: si torna
-  indietro con `git revert --no-commit <sha>` e poi `git commit -m "revert: ..."` (il messaggio
-  che `git revert` scrive da solo non passa i controlli del messaggio).
-- **Windows + Git Bash:** percorsi assoluti, mai `cd` in un comando composto, mai heredoc che
-  scrive un file. Il testo si scrive con Edit/Write: negli script le barre rovesciate diventano
-  caratteri di controllo o a capo veri, e i backtick li esegue la shell.
-- **Uno script di sostituzioni afferma di aver trovato ogni stringa**, raccoglie i mancati e li
-  stampa alla fine; dopo un generatore si guarda `git status`, non il suo output.
-- **Un lavoro alla volta:** se all'apertura c'e' lavoro in volo, si chiede.
-- **Regole o plugin cambiati: sessione nuova.** Gli agenti ricevono il CLAUDE.md letto all'avvio,
-  e un plugin installato a sessione aperta non carica i suoi agenti.
-
-## Dove va cosa
-
-| se sto per... | casa |
-|---|---|
-| toccare un dominio | `docs/domini/<dominio>.md` |
-| prendere una decisione che resta | `docs/adr/NNNN-titolo.md` |
-| cambiare cio' che l'utente vede | `docs/guida-utente.md`, nello stesso intervento |
-| cambiare cosa si fa ora e dopo | `docs/piano.md` |
-| parcheggiare un'idea (un difetto no: si ripara) | `docs/idee.md` |
-| un difetto bloccato da fuori | Issue di GitHub, etichetta `bloccato` |
-| toccare lo schema | `backend/astrolog/schema.sql` |
+- **Commit e push automatici** di un lavoro chiuso, verde e rivisto; si ferma solo per cio' che e'
+  di Marco. Conventional Commits, una riga ASCII, niente `Co-Authored-By` (lo controllano i hook
+  del messaggio in `.pre-commit-config.yaml`). Mai force push ne' storia riscritta: `git revert --no-commit <sha>`, poi
+  `git commit -m "revert: ..."`.
+- **Windows + Git Bash**: percorsi assoluti, mai `cd` in un comando composto, mai heredoc o script
+  che scrivono file (lo blocca `.claude/hooks/guard.py`): si scrive con Edit/Write.
+- **Uno script di sostituzioni** stampa le stringhe non trovate; dopo un generatore si guarda
+  `git status`.
+- **Regole o plugin cambiati: sessione nuova.**
+- **Ogni documento nella sua casa** (lo controlla `tools/tetti.py`): domini, ADR, guida, idee,
+  piano, registro generato, brief aperti in `handoff/`; lo schema in `schema.sql`.

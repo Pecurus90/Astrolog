@@ -23,7 +23,7 @@ def _check(monkeypatch, path: str, before: int, after: int) -> int:
         ("docs/idee.md", 60),
         ("docs/adr/0030-x.md", 100),
         ("docs/domini/sito.md", 400),
-        ("CLAUDE.md", 200),
+        ("CLAUDE.md", 100),
     ],
 )
 def test_a_document_stops_above_its_ceiling(monkeypatch, path, ceiling):

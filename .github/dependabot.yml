@@ -1,6 +1,6 @@
 # Chi sorveglia le dipendenze. Senza questo file una libreria puo' restare ferma per anni,
 # falle comprese, e nessuno se ne accorge: qui ogni mese arriva una proposta di aggiornamento,
-# che passa dalla CI; verde, la unisce l'agente (`/smista`, ADR 0028).
+# che passa dalla CI; patch e minori si uniranno da soli col passo 0.9 del piano (ADR 0040).
 #
 # Vincolo non ovvio: le proposte si raggruppano in una sola per ecosistema. Dieci richieste
 # separate al mese non si guardano; una sola, con dentro tutto, si guarda davvero.

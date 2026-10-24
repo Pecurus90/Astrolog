@@ -13,5 +13,6 @@ Regole comuni in ADR 0015. Passi:
    controesempio preciso.
 3. **Un verificatore** separato (`auditore`) prova i bloccanti eseguendo. Cio' che non riproduce
    cade.
-4. **Nessuna correzione qui.** I bloccanti confermati vanno a Marco in una lista: quali si
-   riparano subito (ognuno con `/ripara`) e quali, bloccati da fuori, in una Issue `bloccato`.
+4. **Nessuna correzione qui.** Ogni bloccante confermato ha uno di tre esiti, deciso qui (sono
+   difetti, non domande): `/ripara` subito; Issue `bloccato` se bloccato da fuori; "no" col motivo
+   scritto.

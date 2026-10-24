@@ -14,7 +14,7 @@ CEILINGS = {
     "docs/idee.md": 60,
     "docs/adr/*.md": 100,
     "docs/domini/*.md": 400,
-    "CLAUDE.md": 200,
+    "CLAUDE.md": 100,
 }
 # Every document has one house: a markdown file elsewhere is a new place saying what to do.
 HOUSES = (

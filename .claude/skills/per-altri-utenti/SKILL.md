@@ -23,8 +23,9 @@ diversi.
   Marco" non e' una soglia, e' una coincidenza: reggerebbe a un trasloco in Arizona?
 - **cosa succede se manca?** Un header senza `RA`, senza `FILTER`, senza `OBJECT` e' un
   caso normale, non un errore: il frame entra lo stesso e la superficie dice cosa non sa;
-- **e se e' scritto in un altro modo?** `Hα`, `Ha`, `H-alpha`, `HA 7nm`, `Halpha`: lo
-  stesso filtro. Il vocabolario si allarga, non si assume;
+- **e se e' scritto in un altro modo?** `Hα`, `Ha`, `H-alpha`, `HA 7nm`, `Halpha`: si
+  riconosce solo cio' che una lista standard nomina esattamente (ADR 0031); il resto si chiede
+  una volta all'utente, mai indovinato. Solo N.I.N.A. e ASIAIR (ADR 0029);
 - **e su un altro sistema?** Percorsi con spazi, accenti e caratteri non latini, percorsi
   **oltre i 260 caratteri** su Windows (una cartella di archivio profonda li supera: si
   usa la forma lunga), maiuscole indifferenti su Windows e no su Linux, un NAS montato in
@@ -58,6 +59,6 @@ corpus nessuna coordinata di sito reale.
 # NO - vale solo per chi ha questa camera e questo software
 if header["INSTRUME"] == "ATR2600M":
 
-# SI - la regola vive nel vocabolario, il codice chiede
-corpo = vocabolario.camera(header.get("INSTRUME"))   # None se non lo conosce, e lo dice
+# SI - il nome scritto dal file resta il nome; cio' che non e' certo si chiede una volta
+camera = header.get("INSTRUME")   # None se manca: la superficie dice cosa non sa
 ```
