@@ -39,6 +39,40 @@ def test_a_document_over_its_ceiling_may_not_grow(monkeypatch):
     assert _check(monkeypatch, "docs/domini/spina.md", 1072, 1073) == 1
 
 
+@pytest.mark.parametrize(
+    "path",
+    [
+        "docs/coda.md",
+        "docs/stato.md",
+        "appunti.md",
+        "backend/NOTE.md",
+        "handoff/x/y.md",
+        "docs/adr/sub/x.md",
+        "docs/adr/stato.md",
+        "docs/domini/x/stato.md",
+        "docs/NOTE.MD",
+    ],
+)
+def test_a_document_outside_its_house_is_refused(monkeypatch, path):
+    assert _check(monkeypatch, path, 0, 1) == 1
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "CLAUDE.md",
+        "docs/adr/0040-il-metodo.md",
+        "docs/domini/meteo.md",
+        "docs/guida-utente.md",
+        "handoff/design-selezione.md",
+        ".claude/skills/rotta-api/SKILL.md",
+        ".claude/agents/revisore.md",
+    ],
+)
+def test_a_document_in_its_house_passes(monkeypatch, path):
+    assert _check(monkeypatch, path, 0, 1) == 0
+
+
 def test_a_change_that_pays_its_lines_passes_over_the_ceiling(monkeypatch):
     assert _check(monkeypatch, "docs/coda.md", 10, 10) == 0
 

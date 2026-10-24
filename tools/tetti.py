@@ -16,6 +16,23 @@ CEILINGS = {
     "docs/domini/*.md": 400,
     "CLAUDE.md": 200,
 }
+# Every document has one house: a markdown file elsewhere is a new place saying what to do.
+HOUSES = (
+    "CLAUDE.md",
+    "README.md",
+    "CONTRIBUTING.md",
+    "frontend/README.md",
+    "docs/guida-utente.md",
+    "docs/idee.md",
+    "docs/piano.md",
+    "docs/registro.md",
+    "docs/adr/[0-9][0-9][0-9][0-9]-*.md",
+    "docs/domini/*.md",
+    "handoff/*.md",
+    ".claude/agents/*.md",
+    ".claude/commands/*.md",
+    ".claude/skills/*/SKILL.md",
+)
 # Lists born full that only shrink: the pre-porting files waiting outside Prettier, where a ported
 # page leaves and none comes in. No ceiling: the list is as long as it is born.
 NEVER_GROW = ("frontend/.prettierignore",)
@@ -26,6 +43,11 @@ def ceiling_of(path: str) -> int | None:
         if fnmatch.fnmatch(path, pattern):
             return ceiling
     return None
+
+
+def _housed(path: str) -> bool:
+    # fnmatch's * crosses /, so a nested path is refused by its depth first
+    return any(fnmatch.fnmatchcase(path, h) and path.count("/") == h.count("/") for h in HOUSES)
 
 
 def lines(text: str) -> int:
@@ -43,6 +65,11 @@ def main(paths: list[str]) -> int:
     failed = 0
     for path in paths:
         normal = path.replace("\\", "/")
+        # the queue keeps its exact name: it may only shrink to nothing, under its ceiling 0
+        if normal.lower().endswith(".md") and not _housed(normal) and normal not in CEILINGS:
+            print(f"{path}: un documento fuori dalle sue case (tools/tetti.py, HOUSES).")
+            failed = 1
+            continue
         ceiling = ceiling_of(normal)
         if ceiling is None and normal not in NEVER_GROW:
             continue
