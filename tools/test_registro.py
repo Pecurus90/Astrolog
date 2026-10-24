@@ -146,6 +146,15 @@ def test_the_decisions_are_indexed_from_the_adr(tmp_path):
     )
 
 
+def test_a_community_usage_is_a_source_of_its_own_kind(tmp_path):
+    """Un'usanza di forum non passa per norma: la pagina la dice U e conta i tipi a parte."""
+    package = _package(tmp_path, units="A = 3  # [U AstroBin forum]\nB = 29  # [C RMetS]\n")
+    assert _missing(package) == set()
+    text = registro.page(package, tmp_path / "adr")
+    assert "| A | `3` | U AstroBin forum |" in text
+    assert "C norma: 1;" in text and "U usanza: 1;" in text and "D metodo: 0;" in text
+
+
 def test_every_tag_the_tool_asks_for_passes_the_comment_rule():
     """Il tag che lo strumento chiede si deve poter scrivere: niente date ne' nomi nel codice."""
     import commenti

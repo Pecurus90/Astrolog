@@ -130,12 +130,12 @@ SCALES: dict[Measure, Scale] = {
             axis_top=45.0,  # [T] chart axis
             second=_field("wind_gust_kmh"),
         ),
-        # [C imagers' usage: "worry about dew when the temperature-dewpoint spread is less than
+        # [U imagers' usage: "worry about dew when the temperature-dewpoint spread is less than
         # about 3C"] https://app.astrobin.com/forum/topic/18055/dew-heater/dew-dos-snicker-and-donts
         Scale(
             Measure.CONDENSATION,
             spread,
-            [Step(NOGO, 3.0, strict=True)],  # [C imagers' usage, AstroBin above]
+            [Step(NOGO, 3.0, strict=True)],  # [U imagers' usage, AstroBin above]
             lower_is_worse=True,
             night=NightValue.MIN,
             axis_top=10.0,  # [T] chart axis
@@ -148,12 +148,13 @@ SCALES: dict[Measure, Scale] = {
             [Step(NOGO, 126.0, strict=False)],  # [C meteoblue, 35 m/s]
             axis_top=160.0,  # [T] chart axis
         ),
-        # [C Astronomy Tools CCD suitability: good 1-2", OK 2-4", poor 4-5"]; >4" also CMC class I.
+        # [U Astronomy Tools CCD suitability: good 1-2", OK 2-4", poor 4-5"] [C CMC class I: >4"]
         # https://astronomy.tools/calculators/ccd_suitability
         Scale(
             Measure.SEEING,
             _field("seeing_arcsec"),
-            [Step(NOGO, 4.0, strict=True), Step(MARGINAL, 2.0, strict=True)],  # [C Astronomy Tools]
+            # [C CMC class I: >4"] [U Astronomy Tools: OK 2-4"]
+            [Step(NOGO, 4.0, strict=True), Step(MARGINAL, 2.0, strict=True)],
             axis_top=5.0,  # [T] chart axis
             digits=1,
         ),

@@ -1,10 +1,13 @@
 # Registro delle regole
 
 Generato da `tools/registro.py --scrivi`: non si scrive a mano. La casa di ogni valore
-e' il codice, con la fonte accanto: C convenzione citata, M misura nostra, P decisione
-di Marco, T tecnico (non una regola).
+e' il codice, con la fonte accanto: C norma (ente, documentazione o codice ufficiale),
+U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metodo di
+un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
+P decisione di Marco, T tecnico (non una regola).
 
 Valori: 133; senza fonte: 82.
+Fonti: C norma: 22; U usanza: 1; D metodo: 0; M misura: 2; P decisione: 7; T tecnico: 23.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -398,11 +401,11 @@ Valori: 133; senza fonte: 82.
 | SCALES | `axis_top=45.0,` | T |
 | SCALES | `[Step(NOGO, 29.0, strict=False), Step(MARGINAL, 20.0, strict=False)],` | C RMetS Beaufort 5 and 4 |
 | SCALES | `axis_top=45.0,` | T |
-| SCALES | `[Step(NOGO, 3.0, strict=True)],` | C imagers' usage, AstroBin above |
+| SCALES | `[Step(NOGO, 3.0, strict=True)],` | U imagers' usage, AstroBin above |
 | SCALES | `axis_top=10.0,` | T |
 | SCALES | `[Step(NOGO, 126.0, strict=False)],` | C meteoblue, 35 m/s |
 | SCALES | `axis_top=160.0,` | T |
-| SCALES | `[Step(NOGO, 4.0, strict=True), Step(MARGINAL, 2.0, strict=True)],` | C Astronomy Tools |
+| SCALES | `[Step(NOGO, 4.0, strict=True), Step(MARGINAL, 2.0, strict=True)],` | C CMC class I: >4"; U Astronomy Tools: OK 2-4" |
 | SCALES | `axis_top=5.0,` | T |
 | SCALES | `[Step(NOGO, 1.0, strict=False), Step(None, 0.1, strict=False)],` | C NASA |
 | SCALES | `digits=2,` | T |

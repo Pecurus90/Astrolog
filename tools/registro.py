@@ -6,9 +6,10 @@ Uso: python tools/registro.py            esce 1 se manca una fonte o il registro
 A number is a numeric literal other than 0 and 1 in a module's top-level statement (constants,
 tables); numbers inside functions are not covered. Its source is a tag in a comment on its line,
 in the comment block just above that line, or in the block before the statement:
-[C ...] public convention, [M ...] our measure, [P ADR nnnn] Marco's decision by its home
-(an ADR or docs/domini/<domain>.md), [T] technical, not a rule. Statements still without one
-sit in `tools/registro_senza_fonte.txt`: the list only shrinks.
+[C ...] norm, body, official docs or code, [U ...] community usage (forum, blog, third-party site,
+one operator), [D ...] a method of another discipline applied to our data, [M ...] our measure,
+[P ADR nnnn] Marco's decision by its home (an ADR or docs/domini/<domain>.md), [T] technical.
+Statements still without one sit in `tools/registro_senza_fonte.txt`: the list only shrinks.
 `docs/registro.md` is generated from code and ADRs, never written by hand.
 """
 
@@ -26,9 +27,17 @@ ADR = ROOT / "docs" / "adr"
 PAGE = ROOT / "docs" / "registro.md"
 BASELINE = Path(__file__).resolve().parent / "registro_senza_fonte.txt"
 
-TAG = re.compile(r"\[([CMPT])\b([^\]]*)\]")
+TAG = re.compile(r"\[([CUDMPT])\b([^\]]*)\]")
 # P names the decision's home (ADR, domain contract): date and author live there, not in code.
-TAGS = ("[C ...]", "[M ...]", "[P ADR nnnn]", "[T]")
+TAGS = ("[C ...]", "[U ...]", "[D ...]", "[M ...]", "[P ADR nnnn]", "[T]")
+KINDS = {
+    "C": "norma",
+    "U": "usanza",
+    "D": "metodo",
+    "M": "misura",
+    "P": "decisione",
+    "T": "tecnico",
+}
 SUPERA = re.compile(r"^\*\*Supera\*\* in `(?:docs/)?([^`]+)`", re.MULTILINE)
 VALUE_WIDTH = 70
 
@@ -166,6 +175,11 @@ def entries(package: Path = PACKAGE) -> list[Entry]:
     return out
 
 
+def _count(found: list[Entry], kind: str) -> int:
+    """Values citing a source of this kind at least once."""
+    return sum(any(s.startswith(kind) for _, sources in e.parts for s in sources) for e in found)
+
+
 def _cell(text: str) -> str:
     return text.replace("|", "\\|")
 
@@ -192,10 +206,13 @@ def page(package: Path = PACKAGE, adr: Path = ADR) -> str:
         "# Registro delle regole",
         "",
         "Generato da `tools/registro.py --scrivi`: non si scrive a mano. La casa di ogni valore",
-        "e' il codice, con la fonte accanto: C convenzione citata, M misura nostra, P decisione",
-        "di Marco, T tecnico (non una regola).",
+        "e' il codice, con la fonte accanto: C norma (ente, documentazione o codice ufficiale),",
+        "U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metodo di",
+        "un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,",
+        "P decisione di Marco, T tecnico (non una regola).",
         "",
         f"Valori: {len(found)}; senza fonte: {sum(not e.sourced for e in found)}.",
+        "Fonti: " + "; ".join(f"{k} {n}: {_count(found, k)}" for k, n in KINDS.items()) + ".",
         "",
         "## Valori e tabelle nel codice (`backend/astrolog`)",
     ]
