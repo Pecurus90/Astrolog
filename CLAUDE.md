@@ -20,7 +20,10 @@ Lo stato si legge dal codice e da [`docs/piano.md`](docs/piano.md); le decisioni
    **Una soglia tecnica la scelgo io** (Marco, 24/10/2026): fra convenzioni e usi trovati (norme,
    software, osservatori, forum) la piu' usata e corretta; a Marco porto la scelta e cio' che
    cambia a schermo, mai una domanda tecnica. A lui solo cio' che e' suo: gusto, parole, rischio,
-   un prodotto senza alcun uso a cui appoggiarsi. Mai inventata.
+   un prodotto senza alcun uso a cui appoggiarsi. Mai inventata. **L'archivio di Marco verifica,
+   non decide** (Marco, 24/10/2026): un numero tarato su un archivio solo non e' la regola; vale
+   se si tara da se' sui dati di ogni utente, se lo regge un argomento indipendente, o se diventa
+   Impostazione; ogni taratura si prova su dati che non ha visto.
    **In ogni lavoro, di default** (Marco, 20/10/2026): ogni numero, soglia e formula toccati, anche
    gia' in codice, si confronta con la convenzione; se diverge, ci si ferma e si mostra a Marco
    cosa cambia. Cio' che riprende un software esterno (campi, opzioni, formati di N.I.N.A. e degli
