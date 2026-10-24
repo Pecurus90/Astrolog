@@ -13,6 +13,9 @@ AstroLog gira in **una copia sola** per volta sugli stessi dati: se la apri una 
 se sul NAS parte un secondo container sulla stessa cartella dei dati), la seconda non si avvia e
 dice *AstroLog e' gia' aperto*. Due copie insieme farebbero sparire le pose a vicenda.
 
+**Sul NAS l'app va tenuta solo nella rete di casa**, mai raggiungibile da Internet: non chiede
+una password, quindi chiunque la raggiunga puo' usarla. Non aprire la sua porta sul router.
+
 ## Il primo avvio
 
 La prima volta l'app ti fa **quattro domande**, e poi si toglie di mezzo.
@@ -165,7 +168,8 @@ sempre aperta, perche' dove si osserva la rete spesso non c'e'.
 Subito dopo c'e' **Luna**: le due soglie delle **notti buone per la banda larga**, quelle che il
 calendario della Luna nella Dashboard colora. Una notte e' buona se la Luna e' illuminata **meno
 del** numero che scrivi (di fabbrica 25%), **oppure** se ha almeno tante **ore di buio senza Luna**
-(di fabbrica 4). Sono una scelta, non una regola: una soglia pubblica condivisa non c'e'. Il numero
+(di fabbrica 4). Il 25% e' il "buio" dell'osservatorio ING, la stessa soglia del Meteo; le 4 ore
+invece sono una scelta, perche' una regola pubblica per quelle non c'e'. Il numero
 si salva quando lasci il campo, e il calendario si ricolora subito; la percentuale va da 0 a 100,
 le ore da 0 a 12.
 
@@ -526,7 +530,8 @@ Passando sul cielo, toccandolo o con le frecce, un filo indica l'ora e un riquad
 Sotto ci sono le **carte**, ognuna sempre allo stesso posto: nuvole, nuvole basse, condensa, pioggia,
 visibilita', vento, seeing, jet stream e aerosol, e in piccolo temperatura e punto di rugiada,
 polvere e il vento a 700 hPa. La **visibilita'** dice la minima nel buio in chilometri: sotto 1 km
-e' **nebbia** (la definizione dell'Organizzazione meteorologica mondiale), e la carta dice da che
+e' **nebbia** (la definizione dei manuali meteo per i piloti della FAA americana e dei bollettini
+METAR), e la carta dice da che
 ora; non tutti i modelli la danno, e allora la carta dice *Non disponibile*. Le sue barrette
 arrivano a 20 km e si schiacciano in alto, cosi' la soglia della nebbia si legge anche in una notte
 limpida. Ogni carta dice il **valore della notte** e cosa vuol dire (*media nel

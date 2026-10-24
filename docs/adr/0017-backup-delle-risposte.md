@@ -1,6 +1,7 @@
 # 0017 -- Il backup delle risposte: un file accanto al database, riscritto a ogni risposta
 
-**Stato:** accettata, 7/10/2026 (Marco).
+**Stato:** accettata, 7/10/2026 (Marco). Costruita (`spine/backup.py`; prove in
+`docs/domini/spina.md`). Casa unica della decisione: qui.
 
 ## Contesto
 

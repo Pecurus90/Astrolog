@@ -1,6 +1,7 @@
 # 0015 -- Una ricetta per tipo di lavoro, una revisione sola
 
-**Stato:** accettata, 5/10/2026. Sostituisce il giro di revisione di ADR 0001.
+**Stato:** accettata, 5/10/2026. Sostituisce il giro di revisione di ADR 0001. Superata in parte
+da ADR 0040: misura di due settimane (una sola il 21/11); lavoro sul metodo congelato fino al 21/11.
 
 ## Contesto
 
@@ -42,7 +43,7 @@ schermo, se cambia), il rischio (una dipendenza o un meccanismo nuovo), il riass
 push restano automatici.
 
 Il lavoro sul metodo (Workflow, comandi, agenti) non passa per il proprio giro: si scrive corto,
-si prova su un compito vero, si misura.
+si prova su un compito vero, si misura (superata: vedi 0040).
 
 ## Conseguenze
 
@@ -50,5 +51,5 @@ si prova su un compito vero, si misura.
   `tools/test_tolti.txt`). I revisori di `pr-review-toolkit` escono dal giro; il plugin resta
   installato per chi lo chiama a mano.
 - Per due settimane si registrano token, minuti e difetti per tipo di lavoro, da confrontare coi
-  numeri del giro vecchio. Se una ricetta lascia passare difetti, si aggiunge una macchina, non
-  un revisore.
+  numeri del giro vecchio (superata: vedi 0040). Se una ricetta lascia passare difetti, si
+  aggiunge una macchina, non un revisore.

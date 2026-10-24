@@ -1,8 +1,8 @@
 # 0037 -- Le regole delle misure dei frame con le fonti verificate
 
-**Stato:** accettata, 24/10/2026. Soglie tecniche scelte dalla sessione sulle convenzioni
-(CLAUDE.md, principio 1). Supera in parte ADR 0022 (dieci contraddizioni interne) e conferma ADR
-0032. Nessun codice: le misure nascono con `measure`.
+**Stato:** accettata, 24/10/2026; superata in parte da ADR 0039 (2,5 MAD -> Qn, eccentricita' 0,45/0,71/0,6, oggetto basso 30°, Bortle su 6 mesi). Nessun codice: le misure nascono con `measure`.
+Soglie tecniche scelte dalla sessione sulle convenzioni (CLAUDE.md, principio 1). Supera in parte
+ADR 0022 (dieci contraddizioni interne) e conferma ADR 0032.
 
 ## Contesto
 
@@ -33,8 +33,8 @@ un frame nessun programma usa la stessa statistica.
   definizione della HFR nel 2026 (media dei momenti contro curva di crescita).
 - La guida non si giudica: l'app non legge i log; l'unica cifra con fonte e' "circa 1 secondo
   d'arco RMS come punto di partenza" (PHD2, Best Practices).
-- Restano scelte di Marco senza convenzione: minimo 10 frame per un giudizio relativo; 6 mesi su
-  12 per il Bortle del sito.
+- Resta scelta di Marco senza convenzione il minimo di 10 frame per un giudizio relativo; il
+  minimo per il Bortle del sito lo ricava ADR 0039.
 
 ## Conseguenze
 

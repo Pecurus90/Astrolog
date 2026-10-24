@@ -1,6 +1,6 @@
 # 0012 -- Il disegno delle pagine viene da Claude Design e si porta alla lettera
 
-**Stato:** accettata, 29/9/2026
+**Stato:** accettata, 29/9/2026; in vigore.
 
 ## Contesto
 

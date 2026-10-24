@@ -19,7 +19,7 @@ sono state assorbite qui e tolte da [`ereditato.md`](ereditato.md).
 | Ho piu' siti: li aggiungo tutti e dico qual e' quello di casa | `test_sites_many_and_one_default` |
 | Un sito che ha gia' delle notti non lo perdo per sbaglio: l'app si rifiuta e mi dice quante | `test_site_with_nights_is_not_deleted` |
 | Se cambio il sito di casa, le notti che l'app aveva attribuito da sola vengono con me; quelle che ho dichiarato io restano dove le ho messe | `test_moving_home_takes_along_the_nights_the_app_assigned`, `test_a_night_that_would_collide_stays_where_it_is` |
-| Il primo avvio mi chiede quattro cose -- l'ultima, la chiave Meteoblue, e' facoltativa -- e poi si toglie di mezzo; se lo salto l'app funziona lo stesso, e non me lo richiede piu' | `test_wizard_steps_and_the_stamp`; a schermo *col timbro l app mostra se stessa e non richiede niente*, *ogni campo e ogni bottone dei quattro passi passa dal suo mattone*, *saltare TIMBRA: domani l app non rifa le stesse domande*, *si completa, e completare timbra come saltare*, *e dopo il timbro il primo avvio si toglie davvero di mezzo* |
+| Il primo avvio mi chiede Nome, Sito, Tema, Cartelle e Seeing (Meteoblue), tutti facoltativi, e poi si toglie di mezzo; un passo saltato resta segnato «saltato», e la chiusura dice se la scansione non e' partita; se lo salto l'app funziona lo stesso, e non me lo richiede piu' (Tema dal 24/10/2026, Marco: Tema e «saltato» da costruire) | `test_wizard_steps_and_the_stamp`; a schermo *col timbro l app mostra se stessa e non richiede niente*, *ogni campo e ogni bottone dei quattro passi passa dal suo mattone*, *saltare TIMBRA: domani l app non rifa le stesse domande*, *si completa, e completare timbra come saltare*, *e dopo il timbro il primo avvio si toglie davvero di mezzo* |
 | Se il riconoscitore del cielo non ce l'ho, me lo dice **prima** di farmi aspettare una lettura che non riconoscera' niente -- e se ce l'ho non me ne parla nemmeno | `test_the_app_says_when_the_solver_is_missing`; a schermo *se manca, il passo c e e dice cosa ci perdi*, *con tutto a posto i passi restano quattro* |
 | Dico io dove sta il mio ASTAP e l'app usa quello, anche se ne troverebbe un altro per conto suo; se scrivo un percorso sbagliato me lo dice subito | `test_the_declared_path_wins_over_the_automatic_search`, `test_the_run_launches_the_path_written_in_settings`, `test_writing_the_path_turns_the_warning_off` |
 | Vedo **dove** l'app prende ASTAP e da cosa l'ha dedotto, cosi' posso dire "no, non quello"; e se voglio glielo faccio cercare, e usa cio' che ha trovato solo se glielo dico | `test_the_route_says_where_the_solver_is_and_from_which_channel`, `test_looking_for_it_proposes_without_writing`, `test_looking_for_it_ignores_what_is_declared`; a schermo *dice dove sta, e da cosa l app l ha dedotto*, *Cerca ASTAP propone, e non scrive niente finche' non si adotta* |
@@ -72,18 +72,22 @@ ricompilato dal servizio -- lo stesso gesto deve voler dire la stessa cosa su og
 **Del cielo si salva la LUMINOSITA'**, in magnitudini per arcosecondo quadrato, con accanto
 **come la si sa**: misurata con lo strumento, chiesta al servizio, o scelta sulla scala.
 La misura vince sulla stima, e la stima su una scelta a occhio. Tre strade, un numero solo:
-cosi' due siti si confrontano davvero.
+cosi' due siti si confrontano davvero. Un numero e' credibile da 7 a 23 (Unihedron, SQM-LU:
+"about 7 (brightest) to 23 (darkest)"); la luminanza del servizio diventa magnitudini con
+Garstang, V = 12,603 - 2,5 log10 L, cosi' i 174 ucd/m2 del cielo naturale di Falchi tornano 22,00
+(ADR 0035).
 
 **La classe di Bortle si DERIVA, non si memorizza.** E' una scala descrittiva, nata per
 l'occhio umano, e non ha confini ufficiali in luminosita': Bortle non ne diede mai. In giro
 circolano **due famiglie** di conversioni che su uno stesso cielo differiscono fino a due
-classi. L'app usa quella dei **siti di astrofotografia** (Wikipedia, AstroBackyard, Telescope
-Live), non quella piu' severa del mondo degli strumenti SQM, per una ragione sola: e' il
-numero con cui l'utente confrontera' il nostro, e un 21,8 chiamato "Bortle 3" quando ovunque
-si legge "Bortle 1" farebbe sembrare rotta l'app. I pavimenti sono quelli della voce *Bortle
-scale* di Wikipedia; la sua classe 4,5 (da 20,3 a 20,8) si legge 5, perche' il nostro numero non
-sia mai piu' generoso di quello con cui verra' confrontato. Sta in un posto solo con la sua avvertenza,
-e a schermo **compare accanto alla misura** -- "Bortle 4 (20.8)" -- tranne nei due posti dove
+classi. L'app usa **una sola tabella, quella di ASTAP** (`bortle()` in `unit_sqm.pas`, da
+ClearDarkSky; Marco, 23/10/2026; ADR 0033 R2, 0035), perche' lo SQM dei frame si misura col metodo
+di ASTAP: una classe vale da sopra il suo pavimento, 1 = 21,99 · 2 = 21,89 · 3 = 21,69 · 4 = 21,25
+· 5 = 19,50 · 6 = 18,94 · 7 = 18,38 · 8 = 17,80 · 9 sotto; la 4,5 di ASTAP (sopra 20,49) si
+legge 5, perche' il nostro numero non sia mai piu' generoso della fonte. La classe 1 si rappresenta
+con 22,00, il cielo naturale (Falchi 2016). Il codice usa ancora la tabella vecchia finche' il
+foglio di Design non porta i pavimenti nuovi (Issue #28). Sta in un posto solo con la sua avvertenza,
+e a schermo **compare accanto alla misura** -- "Bortle 4 (21.4)" -- tranne nei due posti dove
 la misura non c'e' o non ci sta: il primo avvio, dove si sceglie, e il piede della barra. Chi sceglie il cielo dalla
 scala fa il percorso inverso, e ritrova la stessa classe.
 
@@ -113,7 +117,7 @@ servizio vero e' un test che fallisce il giorno che il servizio cambia.
 **Il primo avvio e' un timbro, non un'euristica.** "L'ho gia' visto" e' una data scritta in
 Impostazioni: l'euristica "sembra vuoto" tornerebbe vera mesi dopo, dopo un azzeramento.
 Completare e saltare scrivono lo stesso timbro. **Il primo avvio non si riapre** (Marco,
-21/10/2026): ognuna delle sue cose -- nome, sito, cartelle, chiave, ASTAP -- si cambia nelle
+21/10/2026): ognuna delle sue cose -- nome, sito, tema, cartelle, chiave, ASTAP -- si cambia nelle
 Impostazioni; il nome non c'e' ancora (Issue #19). **Completare passa dalla chiusura** (Marco, 9/10/2026): timbrato, l'app mostra cosa e'
 stato dato, letto dal database e non dalla memoria della pagina -- nome, sito, cartelle e se la
 scansione e' partita, chiave del seeing -- e si entra
@@ -127,7 +131,7 @@ si possa atterrare. Il router c'e' (nato con Da confermare), ma il primo avvio r
 rotte: senza il timbro l'app non monta nessuna pagina. Sta qui e non nel brief
 perche' un brief si sostituisce a ogni fetta, e questa decisione deve sopravvivergli.
 
-**Il passo del riconoscitore compare solo a chi serve, e l'app non scarica niente.** Senza ASTAP
+**Il passo del riconoscitore compare solo a chi serve, e l'app non scarica programmi.** Senza ASTAP
 l'archivio si costruisce lo stesso -- i file entrano, i nomi si ordinano, le ore si contano --
 ma **non si sa cosa hai ripreso**, e scoprirlo a scansione finita e' mezz'ora buttata: per
 questo `GET /settings` dichiara `no_solver` e il primo avvio aggiunge un passo. Chi il solver
@@ -193,9 +197,27 @@ dato
 il database non ne ammette due uguali, e far fallire il trasloco per un'attribuzione dubbia
 sarebbe peggio -- i frame non si perdono comunque.
 
+**Il Bortle del sito dalle misure** (Marco, 18/10/2026; ADR 0022, 0039; nasce con `measure`, oggi
+nessun codice). L'app **propone**, l'utente sceglie; mai un cambio da sola.
+- **Frame che contano**: quelli con lo SQM dai pixel (L, senza filtro, a colori) **e col bias
+  della camera** (senza, lo scarto arriva a 0,18 mag, e una classe e' larga 0,5-1 mag); Sole
+  sotto -18° e Luna sotto -5° ("Sun below –18° and Moon below –5°", arXiv 2104.10616); oggetto
+  sopra 30°, contro il bagliore delle citta' che lo SQM non corregge.
+- **Numero**: una mediana per notte, poi la mediana delle notti: una notte lunga non pesa di piu'.
+- **Minimo** (ADR 0039): notti in almeno 4 mesi degli ultimi 12, nessun buco oltre 3 mesi;
+  livello annuo da un fit armonico (il cielo ha stagioni, Posch et al. 2018).
+- **Quando**: lo calcola la scansione. Si propone quando la classe misurata e' diversa da quella
+  del sito; dopo «Lascia», di nuovo solo se la classe misurata cambia.
+- **Parole** (Marco): «Le misure di {sito} dicono Bortle {b} (SQM {sqm}, {n} notti). Nel sito
+  c'e' Bortle {b0}.» · «Usa Bortle {b}» · «Lascia Bortle {b0}». Sotto il Bortle del sito:
+  «misurato su {n} notti» / «scritto a mano». Dati scarsi: «Servono notti in almeno 4 mesi, senza
+  buchi di oltre 3: finora {n} notti in {m} mesi.» (Marco, 24/10/2026).
+- Il giudizio di un frame «come / piu' chiaro del Bortle del sito» resta: una classe e' larga, e
+  un frame che esce dal basso ha Luna, foschia o luci.
+
 ## Cosa NON fa
 
 Non crea siti da solo. Non inventa un'altitudine, un fuso o un cielo. Non mostra un Bortle
 senza la misura accanto. Non chiede la chiave del servizio per far partire l'app. Non scarica, non installa e non
 lancia programmi di sua iniziativa: dice dove si prendono. L'orizzonte
-non e' di questa casella: si importa in Impostazioni, uno per sito (ADR 0023).
+non e' di questa casella: si importa in Impostazioni, uno per sito (`planner.md`, *L'orizzonte del sito*).

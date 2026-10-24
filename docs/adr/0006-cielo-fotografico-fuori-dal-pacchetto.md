@@ -1,6 +1,6 @@
 # 0006 -- Il cielo fotografico (DSS2) non sta mai nel pacchetto
 
-**Stato:** accettata
+**Stato:** accettata; in vigore; esteso da ADR 0023 alle altre mappe.
 
 ## Contesto
 

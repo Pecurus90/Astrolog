@@ -1,6 +1,7 @@
 # 0004 -- Su Windows e Mac l'app e' un'app vera: Tauri 2 col backend come sidecar
 
-**Stato:** accettata, 4/9/2026; la scelta fra Tauri ed Electron la chiude il prototipo
+**Stato:** accettata, 4/9/2026; in vigore, aperto: la scelta fra Tauri ed Electron la chiude il
+prototipo. Updater precisato da Marco il 24/10/2026. Nessun file Tauri ne' Dockerfile ancora.
 
 ## Contesto
 
@@ -11,7 +12,8 @@ firmato.
 ## Decisione
 
 - **Tauri 2, con il backend Python come sidecar** (PyInstaller), installer firmati e updater
-  firmato. Se il prototipo non passa la notarizzazione su macOS, **Electron** (+80 MB).
+  firmato. L'updater controlla gli aggiornamenti solo se l'utente lo accende (Marco, 24/10/2026;
+  ADR 0003). Se il prototipo non passa la notarizzazione su macOS, **Electron** (+80 MB).
 - Il sidecar PyInstaller e' **onedir, mai onefile**. Il bundler di Tauri 2 firma da solo i
   sidecar; l'issue aperta e' la #11992 ("signature of the binary is invalid" con `externalBin`),
   e si diagnostica con `xcrun notarytool log`. Gli entitlements stanno in un `entitlements.plist`

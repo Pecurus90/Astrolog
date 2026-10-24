@@ -32,16 +32,17 @@ non puo' garantire da solo; un vincolo che il codice gia' garantisce e' rumore.
 una chiave che non cambia quando il derivato si ricalcola: altrimenti il reimport delle
 dichiarazioni non ritrova a cosa agganciarsi.
 
-**SQLite ha quattro condizioni, e sono nel contratto della spina**: `STRICT` sulle tabelle;
-WAL; **un solo scrittore** (il worker: chi risolve o misura in un altro processo restituisce
-i risultati al worker, non li scrive); e il file **mai su una condivisione di rete** (SMB,
-NFS): il locking li' corrompe. Sul NAS il DB sta sul volume locale del container, i FITS
-sulla condivisione.
+**SQLite ha quattro condizioni**: `STRICT` sulle tabelle e WAL, in testa a `schema.sql`;
+**un solo scrittore** (il worker: chi risolve o misura in un altro processo restituisce i
+risultati al worker, non li scrive) e il file **mai su una condivisione di rete** (SMB,
+NFS: il locking li' corrompe), in `docs/domini/spina.md`. Sul NAS il DB sta sul volume
+locale del container, i FITS sulla condivisione.
 
-**La geometria sul cielo ha un indice deciso una volta**: R\*Tree a tre dimensioni sul
-vettore unitario (x, y, z) del centro -- niente salto a RA 0/360, niente problema ai poli;
-la ricerca a cono e' un box piu' un prodotto scalare. Il footprint di un frame sono i suoi
-quattro angoli, nello stesso indice.
+**Il cielo si cerca col versore.** Le voci di catalogo portano (x, y, z) del centro, con
+indice su `x`: la ricerca a cono e' un riquadro sui tre assi piu' un prodotto scalare, niente
+salto a RA 0/360, niente problema ai poli. I pannelli si confrontano in una fascia di
+declinazione (`panels_rig_dec`); gli angoli di un frame stanno in JSON, fuori indice. Un
+indice nuovo sul cielo (R\*Tree) nasce solo con la misura che lo chiede.
 
 **I test creano il DB da `schema.sql`**, in un file temporaneo, via la fixture comune
 (`test-sulla-logica`). Se un test ha bisogno di uno schema diverso, il problema e' lo

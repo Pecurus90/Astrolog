@@ -1,6 +1,6 @@
 # 0005 -- Il motore della carta del cielo e' Aladin Lite v3
 
-**Stato:** accettata
+**Stato:** accettata; in vigore, non costruito; versione (3.8.1) e mappe precisate da ADR 0023.
 
 ## Contesto
 

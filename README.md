@@ -8,8 +8,8 @@ nessun login.
 
 **Stato: ricostruzione dalla radice (settembre 2026).** La spina dell'app --
 scansiona, normalizza, risolvi, identifica, raggruppa, misura -- si rifa' partendo da un
-disegno. Il progetto precedente e' intero in [`old/`](old/): e' la **cava** da cui si
-portano i pezzi che valgono (vocabolari, catalogo, qualita', effemeridi, pagine), mai una
+disegno. Il progetto precedente, `old/`, e' tenuto solo in locale (non e' in questo
+repository): e' la **cava** da cui si portano i pezzi che valgono (vocabolari, catalogo, qualita', effemeridi, pagine), mai una
 dipendenza.
 
 - Il metodo di lavoro: [`CLAUDE.md`](CLAUDE.md)

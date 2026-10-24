@@ -1,7 +1,8 @@
 # 0038 -- Le regole di file, oggetti e API con le fonti, e l'oggetto annidato che si chiede
 
 **Stato:** accettata, 24/10/2026 (Marco: l'oggetto annidato si chiede). Ultimi tre gruppi della
-fase 2 del registro (ADR 0033). Nessun valore cambia ora, salvo dove scritto "fase 4".
+fase 2 del registro (ADR 0033). Nessun valore cambia ora, salvo dove scritto "fase 4". In vigore;
+da costruire le due voci "fase 4" (oggetto annidato, ricerca del luogo a 10 s).
 
 ## Contesto
 

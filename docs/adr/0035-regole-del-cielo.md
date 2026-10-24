@@ -1,8 +1,10 @@
 # 0035 -- Le regole del cielo con le fonti verificate
 
-**Stato:** accettata, 24/10/2026. Soglie tecniche scelte dalla sessione sulle convenzioni
-(CLAUDE.md, principio 1); conferma la tabella Bortle di ADR 0033 R2 e ne verifica la fonte.
-Nessun codice ancora: i cambi di valore si fanno nella fase 4 del registro.
+**Stato:** accettata, 24/10/2026; costruiti classe 1 a 22,00, Garstang, SQM 7-23, Luna a -0,833 topocentrica, nomi delle fasi (commit 26656192, 9046559a, 1f464d3d); non costruiti tabella Bortle di ASTAP (Issue #28, aspetta il foglio di Design) e buio nautico.
+Soglie tecniche scelte dalla sessione sulle convenzioni (CLAUDE.md, principio 1); conferma la
+tabella Bortle di ADR 0033 R2 e ne verifica la fonte.
+
+**Supera** in `docs/domini/sito.md`: "quella dei **siti di astrofotografia** (Wikipedia"; "da 20,3 a 20,8"
 
 ## Contesto
 

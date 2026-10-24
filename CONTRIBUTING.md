@@ -4,8 +4,8 @@ Il metodo di lavoro sta in [`CLAUDE.md`](CLAUDE.md): vale per chiunque, umano o 
 
 **Ambiente.** Python 3.12 e Node 20.19 o piu' recente. Una volta:
 `python -m pip install -e "backend[dev]"` e `npm install` in `frontend/` (su Windows e Mac
-`npm install`, non `npm ci`: il lock e' risolto per Linux, l'immagine Docker, e i binari nativi
-differiscono).
+`npm install`, non `npm ci`: il lock e' risolto per Linux, dove gira la CI e girera' l'immagine
+Docker, e i binari nativi differiscono).
 
 **Avviare l'app**: `python tools/dev.py` avvia backend e pagina e apre il browser (`--reset`
 ricrea il DB da `schema.sql`; se dentro c'e' qualcosa rifiuta, e `tools/reset_db.py

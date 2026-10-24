@@ -1,6 +1,6 @@
 # 0018 -- Si passa tutto al telaio e al foglio v26, senza convivenza
 
-**Stato:** accettata, 7/10/2026
+**Stato:** accettata, 7/10/2026; in vigore.
 
 ## Contesto
 
@@ -17,7 +17,7 @@ toglie l'aspetto a quasi tutte le pagine che il disegno non ha ancora rifatto.
 - Le pagine che il disegno non ha rifatto restano **funzionanti ma spoglie** finche' non tocca a
   loro; non si rivestono a mano nel frattempo (ADR 0012: il disegno viene da Claude Design).
 - **Il Meteo e' la prima pagina rifatta**: il suo disegno e' chiuso, coi suoi stati. La Dashboard
-  aspetta i progetti e le domande aperte di `docs/per-claude-code.md` del progetto di disegno.
+  aspetta i progetti. (superata: la Dashboard e' costruita)
 - **Il carattere Atkinson Hyperlegible (Next e Mono) si include nell'app**, file woff2 con
   licenza SIL OFL, mai scaricato da una rete esterna.
 

@@ -1,6 +1,6 @@
 # 0008 -- Una pagina Diagnostica, nessuna telemetria
 
-**Stato:** accettata
+**Stato:** accettata; in vigore; log costruito, pagina Diagnostica no.
 
 ## Contesto
 

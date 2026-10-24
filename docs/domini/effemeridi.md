@@ -170,9 +170,21 @@ minuti dagli istanti dell'USNO (`test_the_main_phases_fall_on_the_published_inst
 **Il calendario della Luna si scrive.** Due mesi di notti costano circa 5 s (campioni ogni
 `CALENDAR_STEP_MIN`, una chiamata per corpo): li scrive il giro in background in `moon_nights`,
 e si rifanno quando manca una notte o il sito si sposta. Il buio senza Luna e' il buio astronomico
-con la Luna sotto `RISESET_DEG`. "Notte buona per la banda larga" segue due impostazioni
-(`moon_broadband_max_pct`, `moon_broadband_min_dark_h`): cambiarle riscrive il giudizio, non il
-cielo (`test_moon_calendar.py`).
+con la Luna sotto `RISESET_DEG`. Cambiare le soglie riscrive il giudizio, non il cielo
+(`test_moon_calendar.py`).
+
+**La notte del calendario ha i tre gradini del Meteo** (decisione del 24/10/2026, su richiesta di
+Marco delle convenzioni): buia sotto il 25% illuminata, grigia fino al 65%, chiara oltre (ING
+Technical Note 127, come il Meteo; ADR 0034), con le **ore di buio senza
+Luna scritte accanto**. Le soglie sono una casa sola con il Meteo (`meteo.md`), di fabbrica 25 e 65
+dall'orizzonte, e si cambiano nelle Impostazioni (Marco, 24/10/2026). Oggi il codice segna ancora
+"buona per la banda larga" sotto il 25% **o** con almeno 4 ore di buio senza Luna
+(`moon_broadband_max_pct`, `moon_broadband_min_dark_h`): la regola delle 4 ore esce con i tre
+gradini.
+
+**Orizzonte e crepuscoli sono quelli dell'USNO** (ADR 0035): Sole e Luna sorgono e tramontano a
+-0,833° (rifrazione 34' piu' raggio 16'), sull'altezza topocentrica, che porta gia' la parallasse
+della Luna; i crepuscoli finiscono a -6, -12 e -18° (`ephemeris/__init__.py`).
 
 **Il buio senza Luna che resta, punto per punto.** Ogni punto della curva della Luna in
 `/tonight` porta `moonless_dark_left_s`: da quell'istante a fine finestra, il buio astronomico
@@ -195,13 +207,10 @@ basta (`test_from_each_point_of_the_curve_how_much_dark_without_the_moon_is_left
 - **La visibilita' di un oggetto** non c'e'. Il codice esiste in `old/`, e si
   porta quando nasce la schermata che lo chiede -- non prima: cio' che si porta senza una
   superficie che lo mostri e' codice che nessuno guida. **Del Sole c'e' quello che serve a dire
-  dov'e' il buio** -- le cinque fasce del cielo -- e non un minuto di piu': niente sorgere e
-  tramontare del Sole come orari a se', niente ore di buio come numero. Arrivano con le Notti, che
-  e' la schermata che li chiede.
-- **Niente meteo.** Non e' un'effemeride e non e' nostro: dipende da un servizio, e quel dominio
-  non esiste ancora.
-- **Nessuna previsione di quanto sara' buono il cielo.** L'app dice cosa fa la Luna; se la notte
-  valga la pena lo decide chi osserva.
+  dov'e' il buio** -- le cinque fasce del cielo, le ore di buio e di buio senza Luna -- ma niente
+  sorgere e tramontare del Sole come orari a se'.
+- **Il meteo non e' un'effemeride**: dipende da un servizio, e sta in [`meteo.md`](meteo.md), col
+  verdetto della notte.
 
 ## Dove vive
 

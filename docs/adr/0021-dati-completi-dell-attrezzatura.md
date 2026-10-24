@@ -1,6 +1,7 @@
 # 0021 -- L'attrezzatura porta i dati delle schede tecniche, e il setup ci calcola
 
 **Stato:** accettata, 18/10/2026 (Marco). ADR 0033: i programmi verificati sono due (ADR 0029).
+Non costruita: lo schema non ha OAG, distanziale, tolleranza, cerchio d'immagine, bias (`docs/piano.md`).
 
 ## Contesto
 
@@ -35,7 +36,7 @@ vince su quello dei file (come oggi, strato del dichiarato).
   - Tipo di sensore: F, come oggi (`BAYERPAT`);
   - Bit dell'ADC (`BITPIX` dice il formato del file, non l'ADC: si scrive a mano);
   - Raffreddata (si'/no) e Raffreddamento (ΔT, °C);
-  - Spessore fino al sensore (mm).
+  - Spessore fino al sensore (mm); Bias (ADU), per la luminosita' del cielo (ADR 0022; Marco, 18/10).
 - **Camera di guida**: come la camera, senza raffreddamento. I frame di guida non entrano
   nell'archivio: dai file arriva solo il nome (`GUIDECAM`).
 - **Ottica di guida** (il tubo guida): Apertura (mm), Focale (mm). PHD2 chiede la focale
@@ -52,8 +53,7 @@ vince su quello dei file (come oggi, strato del dichiarato).
 - **Distanziale**, tipo nuovo: Spessore (mm). Serve solo al backfocus.
 - **Filtro**: come oggi le bande con Larghezza (nm); in piu' Misura (le stesse della ruota),
   Spessore (mm), Montato (si'/no), Per ottiche veloci (si'/no).
-
-Fuori, per scelta di Marco: full well, rumore di lettura, gamma dinamica.
+- Fuori, per scelta di Marco: full well, rumore di lettura, gamma dinamica.
 
 ### Il setup
 
@@ -100,13 +100,13 @@ I conti, ognuno solo quando ci sono tutti i suoi dati; se ne manca uno, il setup
 ### Dai file
 
 Solo cio' che sta gia' negli header letti: nomi dei pezzi, pixel, tipo di sensore, risoluzione,
-focale effettiva. `APTDIA` (SBFITSEXT) entra solo se un header vero di uno dei quattro programmi
+focale effettiva. `APTDIA` (SBFITSEXT) entra solo se un header vero di un programma verificato
 lo porta (`backend/tests/header/`): N.I.N.A. non lo scrive.
 
 ## Conseguenze
 
-- Il modulo di un pezzo si allunga: blocchi per tipo, campi tutti facoltativi salvo il nome.
-- Lo schema cambia (`instruments`, `filters`, `rig_parts`) e si ricrea, come ogni volta.
+- Il modulo di un pezzo si allunga: blocchi per tipo, campi tutti facoltativi salvo il nome. Lo
+  schema cambia (`instruments`, `filters`, `rig_parts`) e si ricrea, come ogni volta.
 - Il backup delle risposte (ADR 0017) porta i campi nuovi.
 - La scheda del setup guadagna una sezione di conti; ognuno dice cosa gli manca.
 - Meteo guadagna il giudizio del campionamento per setup (contratto `docs/domini/meteo.md`).

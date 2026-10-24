@@ -1,6 +1,6 @@
 # 0022 -- Le misure dei frame: tutte, attestate, nel database, senza voto
 
-**Stato:** accettata, 18/10/2026 (Marco). Superata in parte da ADR 0033 e 0037 (SNR, zone, tilt).
+**Stato:** accettata, 18/10/2026 (Marco); superata in parte da ADR 0033 (stelle da `measure`), 0037 (SNR, zone, tilt) e 0039 (Qn, eccentricita', oggetto basso, Bortle del sito). Nessun codice.
 
 ## Contesto
 
@@ -42,8 +42,7 @@ senza fit; col fit e la lettura del file 0,4-0,9 s (confronto sotto). Si rimisur
    definizione di PixInsight. Prova su stelle di Moffat sintetiche di FWHM nota: errore 0 %; i <!-- software-ok -->
    momenti di `sep` sbagliano dal +14 al +44 % e servono solo a contare e a orientare. Se il fit
    non converge: momenti di `sep`, e la misura lo dice.
-5. **SNR**: per stella SNR = F / √(F/g + n·σ²), la formula CCD (Merline e Howell) che usano
-   Siril e ASTAP; g dall'header (`EGAIN`), senza g in ADU. Per il frame, la mediana. <!-- software-ok -->
+5. **SNR**: la PSF SNR (sotto, "SNR e velocita'"; ADR 0037); la formula CCD per stella esce.
 6. **Aggregazione**: mediana per zona e per frame; dispersione 1,4826 × MAD.
 7. **Camere a colori**: si misura sul superpixel 2×2 del grezzo (un pixel per quadrato Bayer), e
    le misure tornano in pixel del sensore. Sul grezzo il motivo Bayer passa per rumore e scarta
@@ -68,7 +67,7 @@ mono e una OSC Canon). Errore medio in valore assoluto:
 Con 40 stelle (nuvole) il vecchio dava una HFD sbagliata del 516 % invece di tacere. Su stelle
 rotonde l'eccentricita' non va a zero (questo metodo 0,10-0,17, il vecchio 0,25-0,31): vicino a 0
 amplifica il rumore (b/a 0,99 da' gia' 0,14). A schermo si mostra il numero; una soglia di
-"rotonde" senza fonte non si mette; quella che si mette e' sotto. Il tempo, con la lettura del file, e' 0,4-0,9 s e cresce
+"rotonde" senza fonte non si mette (il giudizio e' relativo al setup, ADR 0039). Il tempo, con la lettura del file, e' 0,4-0,9 s e cresce
 con la FWHM.
 
 HFD e FWHM si salvano tutte e due: il loro rapporto dipende dalla forma della stella (β) e
@@ -89,7 +88,7 @@ stelle di forma nota iniettate per configurazione su fondi veri (L, Hα con nebu
   segno "sottocampionata": 2 px per FWHM e' il criterio di Nyquist.
 - **Eccentricita'**: entro ±0,05 da PixInsight; 0,5 iniettata torna 0,48-0,51. Una stella rotonda <!-- software-ok -->
   col rumore vero legge 0,16-0,30 (PixInsight 0,18-0,23): sotto ~0,3 il numero non distingue una <!-- software-ok -->
-  stella rotonda, e la soglia "rotonde" a 0,45 ci sta sopra.
+  stella rotonda.
 - **Angolo**: senza bias (≤2°), ma ha senso solo con eccentricita' da 0,4 in su: sotto, la
   direzione tace.
 - **HFD**: +2-14 % su L e OSC, **+20-30 % con nebulosa diffusa** (lo fa anche ASTAP), perche' il
@@ -188,35 +187,27 @@ giudizio informa. Dove manca il dato che serve, il giudizio tace.
 - **Tilt**: la formula di ASTAP, (angolo peggiore − migliore) / HFD mediana; fino al 10 % buono,
   10-20 % incerto, oltre non adatto ("Any tilt equal or less than 10% of the range is a good
   value", hnsky.org/astap.htm; Siril mette il limite al 10 %). <!-- software-ok -->
-- **Eccentricita'**: fino a 0,45 "rotonde"; oltre 0,71 "allungate"; in mezzo solo il numero
-  (Marco). 0,71 e' il limite ESO: FORS2 tiene solo frame con ellitticita' sotto 0,3, cioe'
-  eccentricita' ~0,71 (eso.org/qc/FORS2/qc/imagequality/imagequality.html), ma per scegliere
-  i campi da mediare: giudizio, mai soglia di scarto (ADR 0032).
+- **Eccentricita'**: relativa al setup, con l'avviso "stelle allungate" (ADR 0039; le soglie
+  fisse 0,45/0,71 escono).
 - **Fuoco**: un frame la cui HFD supera del 5 % il 10° percentile della stessa notte e filtro e'
   "fuoco peggiore" (Marco): 5 % e' il predefinito di N.I.N.A. per rifare l'autofocus
   (`AutofocusAfterHFRIncreaseTrigger.cs`).
 - **Minimo per i giudizi "per la notte"** (fuoco, SNR): 10 frame della stessa notte, oggetto e
   filtro; sotto, tacciono (Marco; il `SampleSize` 10 di N.I.N.A. e' una finestra, non un minimo).
-- **Luminosita' del cielo** contro il Bortle del sito: la tabella SQM ↔ Bortle di ASTAP
-  (`bortle()`, da ClearDarkSky: Bortle 5 = 19,50-20,49, 6 = 18,94-19,50), la stessa del
-  programma da cui viene il metodo (Marco). Solo per L, senza filtro e camere a colori.
-- **Soglia relativa** (Marco, 23/10/2026): mediana ± 2,5 MAD scalato, Leys et al. 2013; fonte e
-  perche' non il 2 del SubframeSelector in ADR 0032.
+- **Luminosita' del cielo** contro il Bortle del sito: la tabella di ASTAP (`domini/sito.md`, ADR
+  0035). Solo per L, senza filtro e camere a colori.
+- **Soglia relativa**: mediana ± 2,5 Qn, minimo 10 frame (ADR 0039, al posto della MAD).
 - **SNR**: solo rispetto alla sessione (stessa notte, oggetto, filtro): "SNR basso per la notte"
   sotto la soglia relativa. Per notte e produzione solo il numero.
 - **Per l'oggetto** (tutti i frame dello stesso oggetto e filtro, di tutte le notti; minimo 10;
-  Marco): "SNR basso per l'oggetto" sotto mediana − 2,5 MAD; "HFD alta per l'oggetto" oltre
-  mediana + 2,5 MAD. Per la HFD non il +5 % di N.I.N.A.: quello vale dentro una sessione dopo
+  Marco): "SNR basso per l'oggetto" e "HFD alta per l'oggetto" oltre la soglia relativa. Per la HFD non il +5 % di N.I.N.A.: quello vale dentro una sessione dopo
   l'autofocus, fra notti la HFD cambia col seeing e "fuoco peggiore" sarebbe falso. Due giudizi
   distinti, "per la notte" e "per l'oggetto", mai uno solo.
 - **HFD contro l'archivio dello stesso setup e filtro**: solo il numero ("mediana del
   setup"), niente giudizio (Marco): e' lo schema relativo scartato per la FWHM.
 - **SNR fra oggetti diversi**: mai: la PSF SNR dipende da campo, stelle, filtro e posa.
-- **Massa d'aria**: "oggetto basso" sopra 2, cioe' sotto 30° (Marco): "observers should avoid
-  ... below 30° (airmass about 2)" e limite predefinito della rete AAVSONet (aavso.org/airmass-0,
-  risposta nel forum AAVSO); il numero: "airmass 1.996 at an elevation of 30. degrees" (IRAF,
-  iraf.readthedocs.io/en/latest/tasks/noao/astutil/airmass.html). La fonte e' un post del forum,
-  non un documento AAVSO, ed e' per la fotometria delle variabili: il 30° resta scelta di Marco.
+- **Massa d'aria**: "oggetto basso" sotto 30° per un oggetto esteso, sotto 45° per le stelle
+  (ADR 0039, dove il tempo di posa raddoppia).
 - **"Non giudicabile su questo setup"** porta accanto il perche': "Limite del setup 3.9″: due
   pixel da 1.94″." (Marco).
 - **Gradiente**: solo il numero (Marco): nessuna fonte lo giudica.
@@ -262,27 +253,21 @@ Si scrivono una volta, quando `measure` passa; nessuna lettura le ricalcola.
 
 - **FWHM**, **HFD**: in pixel; a schermo in secondi d'arco (× scala misurata). Senza scala restano
   in pixel e non entrano nei confronti fra setup.
-- **Stelle**: quelle che ASTAP conta sul frame intero nella passata `-analyse` del solver (Marco):
-  le cinque zone sono il 20 % del sensore, e contare noi sul frame ridotto conta i pixel caldi.
+- **Stelle**: le conta `measure` sul frame intero; la passata `-analyse` esce (ADR 0033, D1).
 - **Eccentricita'**, **direzione dell'allungamento**: l'angolo mediano del fit (media circolare di
   2θ pesata per l'eccentricita'), girato con la rotazione della soluzione del cielo: "in AR" o "in
-  Dec", la piu' vicina. A schermo "rotonde" fino a 0,45 (Marco): "0.45 must be about the threshold
-  where the human eye/brain can distinguish between a circle and an ellipse"
-  (stargazerslounge.com/topic/258551-how-round-are-round-stars, forum); le guide danno 0,42, asse
-  corto al 91 % (astrohobby.ca/2022/02/26/star-eccentricity-and-guiding-accuracy). Nessuno
-  scarto: sopra 0,45 resta il numero.
+  Dec", la piu' vicina. Il giudizio e' relativo al setup (ADR 0039).
 
 **Perche' non ASTAP per tilt e forma** (Marco l'ha chiesto, 18/10/2026): `astap_cli` 2025.11 non
 ha il tilt (sta solo nella finestra grafica); `-extract` da' la HFD stella per stella ma scrive il
 CSV accanto al FITS anche con `-o` (provato su una copia), e su una cartella di rete in sola
 lettura fallisce; la sua HFD e' il raggio medio, alta del 6-19 % (confronto sopra); FWHM,
-eccentricita' e angolo non li da'. ASTAP resta per la soluzione e il numero di stelle.
+eccentricita' e angolo non li da'. ASTAP resta per la soluzione.
 - **SNR**.
 - **Fondo cielo** (ADU) e **rumore**. Confrontabile solo con la stessa camera, guadagno e posa.
 - **Gradiente del fondo**: sul frame ridotto, (massimo − minimo) / mediana in %, e il lato piu'
   chiaro in direzione del cielo.
-- **Tilt**: la HFD nei quattro angoli e al centro. A schermo, angolo peggiore meno migliore, in %
-  della HFD al centro. Nessuna fonte da' un metodo standard ne' una soglia: solo numeri.
+- **Tilt**: la HFD nei quattro angoli e al centro; a schermo la formula di ASTAP dei giudizi sopra.
 - **Curvatura di campo**: mediana degli angoli contro il centro, in %.
 - **Stelle sature**: picco sopra il 90 % della saturazione (`DATAMAX`, o il massimo del tipo di
   dato).
@@ -325,25 +310,8 @@ l'app, ne' sul NAS) e si blocca su un frame OSC. Quindi un metodo nostro:
 
 ### Il Bortle del sito dalle misure
 
-Proposta di Marco (18/10/2026). L'app **propone**, l'utente sceglie; mai un cambio da sola.
-- **Frame che contano**: quelli che hanno lo SQM (sopra), **solo col bias** (scelta di metodo: lo
-  scarto "senza bias" arriva a 0,18 mag, e una classe di Bortle e' larga 0,5-1 mag); Sole sotto
-  -18° e Luna sotto -5° ("Sun below –18° and Moon below –5°", arxiv.org/abs/2104.10616); oggetto
-  sopra 30°, lo stesso confine di "oggetto basso". La massa d'aria e' gia' corretta nello SQM
-  (estinzione di ASTAP); il bagliore delle citta' no, per questo il confine dei 30°.
-- **Numero**: una mediana per notte, poi la mediana delle notti: una notte lunga non pesa piu'
-  delle altre. La media del picco di m_FWHM (stessa fonte) e' per misuratori fissi allo zenit,
-  non per frame che guardano oggetti diversi.
-- **Minimo**: notti in almeno **6 mesi diversi** negli ultimi 12 (Marco; nessuna fonte fissa un
-  minimo). Si contano solo gli ultimi 12 mesi: l'inquinamento cambia.
-- **Quando**: lo calcola la scansione. Si propone quando la classe misurata e' diversa da quella
-  del sito; dopo «Lascia», di nuovo solo se la classe misurata cambia.
-- **Parole** (Marco): «Le misure di {sito} dicono Bortle {b} (SQM {sqm}, {n} notti). Nel sito
-  c'e' Bortle {b0}.» · «Usa Bortle {b}» · «Lascia Bortle {b0}». Sotto il Bortle del sito:
-  «misurato su {n} notti» / «scritto a mano». Dati scarsi: «Servono notti in 6 mesi diversi:
-  finora {n} notti in {m} mesi.»
-- Il giudizio «come / piu' chiaro del Bortle del sito» resta: una classe e' larga, la mediana sta
-  dentro, e un frame che esce dal basso della classe ha Luna, foschia o luci.
+Proposta di Marco (18/10/2026): l'app **propone**, l'utente sceglie. Regola, minimo (ADR 0039) e
+parole stanno nel contratto `domini/sito.md`, sezione *Il Bortle del sito dalle misure*.
 
 ### Il resto
 
@@ -357,8 +325,7 @@ mediane solo sui frame misurati.
 
 - `frame_metrics` si allarga (HFD per zona, direzione, gradiente, sature, massa d'aria, SQM e la
   sua banda, i segni "senza bias" e "fit non riuscito"); schema ricreato.
-- La HFD di ASTAP smette di finire in `frame_metrics`; la passata `-analyse` resta per il numero
-  di stelle.
+- La HFD di ASTAP smette di finire in `frame_metrics`; anche la passata `-analyse` esce (ADR 0033).
 - Le stelle misurate per zona hanno un tetto: in banda stretta, con molte stelle, il fit e la HFD
   arrivavano a 3,1 s a frame.
 - `measure` legge i pixel dopo `solve`, in sola lettura: niente file accanto ai FITS.

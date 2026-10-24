@@ -1,6 +1,8 @@
 # 0001 -- Il metodo passa a strumenti standard
 
-**Stato:** accettata, 30/9/2026
+**Stato:** accettata, 30/9/2026. Superata in parte da ADR 0015 (giro di revisione) e da ADR 0040:
+mutazione bloccante se il punteggio peggiora, notte rossa = Issue; fatto = verde su GitHub; case dei
+documenti controllate da `tools/tetti.py`; segnali d'apertura dalla SessionStart.
 
 ## Contesto
 
@@ -13,7 +15,7 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
 
 - I controlli sono **pre-commit** (veloci al commit, completi al push) e la **CI** su tre sistemi,
   con gli stessi comandi. La mutazione gira **di notte** (`mutmut`) ed e' un rapporto, non un
-  blocco: su tutto il backend i mutanti sopravvissuti ci sono sempre, e un job sempre rosso non
+  blocco (superata: vedi 0040): su tutto il backend i mutanti sopravvissuti ci sono sempre, e un job sempre rosso non
   dice niente. mutmut non gira su Windows, quindi gira solo in CI. Tutto il backend in un job
   solo sfora il limite di 5 ore: si divide in quattro job paralleli (`api`, `spine` in due, il
   resto), e il resto si calcola da `tools/mutation_shards.py`, cosi' un modulo nuovo non resta
@@ -27,7 +29,8 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
   un tetto largo a 1000 righe (pylint). Chi supera oggi porta un `noqa`: e' il debito da togliere.
 - **Commenti**: al massimo due righe, in inglese, solo il perche' che il codice non mostra. La docstring di una rotta API fa eccezione: e' il contratto OpenAPI (skill `rotta-api`).
 - Il giro di lavoro e la revisione: ADR 0015 (una ricetta per tipo, una revisione sola). Marco
-  decide il prodotto; commit e push sono automatici a controlli verdi (Marco, 5/10/2026).
+  decide il prodotto; commit e push sono automatici a controlli verdi (Marco, 5/10/2026); fatto
+  = verde su GitHub (ADR 0040).
 - Plugin del progetto (`.claude/settings.json`): `pr-review-toolkit`, fuori dal giro e a mano,
   `security-guidance` che avvisa su una modifica che apre un buco di sicurezza.
 - Le decisioni stanno qui, una per file.
@@ -54,8 +57,8 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
 - **Senza macchina** -- li tengono le ricette di ADR 0015:
   - l'audit: `auditore`;
   - le prove promesse nei contratti di `docs/domini/`: l'audit *promesse*;
-  - rimandi fra documenti, percorsi citati, un file in `docs/`
-    fuori da `piano.md`, `idee.md`, `guida-utente.md`, `domini/` e `adr/`: il revisore;
+  - rimandi fra documenti, percorsi citati: il revisore; un file in `docs/` fuori dalle sue
+    case: `tools/tetti.py` (superata: vedi 0040);
   - i percorsi di Windows con una barra mangiata in TS/JS e l'`except` muto dentro un `try`
     lungo (ruff prende `pass` e `continue`, `S110`/`S112`): il revisore.
 - **Senza nessuno, e si accetta:**
@@ -63,5 +66,6 @@ file stavano fra 280 e 300 righe, le revisioni bocciavano frasi dei documenti in
   - i percorsi da non mettere mai in staging (DB, immagini dell'utente, `settings.local.json`):
     resta `.gitignore`, che `git add -f` scavalca;
   - l'avviso quando si tocca `old/docs/intervista-requisiti.md`, e i segnali d'apertura (lavoro
-    in volo, voci di memoria senza casa): restano le regole in `CLAUDE.md`;
+    in volo, voci di memoria senza casa): restano le regole in `CLAUDE.md` (lavoro in volo:
+    SessionStart, ADR 0040);
   - la chat in italiano: resta la regola in `CLAUDE.md`.

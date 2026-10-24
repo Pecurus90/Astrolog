@@ -2,7 +2,7 @@
 
 Una correzione piccola al foglio, nel commento di `foglio/48-bortle.css` (`.as-bortle-letta`).
 
-**Cosa cambia.** L'app usa ora **una sola** conversione da luminosita' del cielo (SQM, mag/arcsec²)
+**Cosa cambia.** L'app usera' **una sola** conversione (la cambia insieme al vostro foglio, Issue #28) da luminosita' del cielo (SQM, mag/arcsec²)
 a classe di Bortle: quella di ASTAP (`bortle()` in `unit_sqm.pas`, da ClearDarkSky), perche' lo
 SQM lo misuriamo col metodo di ASTAP. Decisione di Marco, 23/10/2026. La tabella che vi avevamo
 mandato (Wikipedia, siti di astrofotografia) esce.

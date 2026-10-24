@@ -7,7 +7,7 @@ Vincoli non ovvi:
 
 * **L'impronta e' un gesto, non una prova**: chi cambia il foglio puo' cambiare anche l'impronta.
   Serve a questo: renderlo un gesto **visibile nel diff**, perche' il CSS si porta alla lettera e
-  una correzione fatta qui la cancellerebbe la consegna dopo (`handoff/design-brief.md`).
+  una correzione fatta qui la cancellerebbe la consegna dopo (ADR 0012).
 * **Una classe sbagliata non rompe niente**: non si applica, e la pagina resta nuda in quel punto
   senza che nessun test cada. Per questo la si cerca a mano di macchina.
 * **Dove un mattone c'e', la sua classe si scrive li' dentro e basta.** Non e' teoria:

@@ -1,7 +1,7 @@
 # 0007 -- Le metriche dei frame con `sep` e numpy/scipy, non `photutils`
 
-**Stato:** accettata
-Superato in parte da ADR 0033: HFD e stelle le misura `measure`, non ASTAP.
+**Stato:** accettata; superata in parte da ADR 0033 (D1: HFD e stelle da `measure`, non da ASTAP). Nessun codice: nasce con `measure`.
+Resta: lo stack `sep` + numpy/scipy e la riapertura per arm64.
 
 ## Contesto
 
@@ -11,8 +11,7 @@ NAS Linux arm64, e `photutils` non pubblica la ruota per quell'architettura.
 ## Decisione
 
 - Le metriche si fanno con **`sep` + numpy/scipy**.
-- Prima HFD, stelle e SNR da ASTAP, che li da' gia' (`frame_metrics`, `source = 'astap'`); poi
-  `sep`.
+- HFD, stelle e SNR li misura `measure`, non ASTAP (ADR 0033, D1; SNR: la PSF SNR, ADR 0037).
 
 ## Conseguenze
 

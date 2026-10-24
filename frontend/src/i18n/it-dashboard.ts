@@ -1,5 +1,5 @@
 /**
- * I testi della **Dashboard**, dalla tavola v37 e dal vocabolario di `handoff/design-dashboard.md`.
+ * I testi della **Dashboard**, dalla tavola v37 e dal vocabolario di `docs/domini/meteo.md`.
  */
 export const itDashboard = {
   "dashboard.tonight": "stanotte a {sito}",

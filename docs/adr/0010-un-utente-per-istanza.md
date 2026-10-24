@@ -1,6 +1,6 @@
 # 0010 -- Un utente per istanza, con piu' siti e piu' setup
 
-**Stato:** accettata
+**Stato:** accettata; in vigore.
 
 ## Contesto
 

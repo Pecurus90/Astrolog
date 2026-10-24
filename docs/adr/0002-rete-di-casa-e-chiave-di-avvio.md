@@ -1,6 +1,7 @@
 # 0002 -- Nessun login: la rete di casa e' fidata, e ogni avvio ha la sua chiave
 
-**Stato:** accettata, 13/9/2026
+**Stato:** accettata, 13/9/2026; in vigore, costruito (host ammessi, chiave di avvio, pagina con la
+chiave). Nome: "chiave di avvio", mai "token" in prosa (riconciliazione 24/10/2026).
 
 ## Contesto
 
@@ -14,10 +15,11 @@ macchina.
 - **Nessun login in v1.** Sul NAS l'app ascolta solo in rete locale, mai su Internet, e la guida
   lo dice chiaro; risponde solo agli host ammessi (`ASTROLOG_HOSTS`). Un login vero, se servira',
   arriva dopo senza rifare nulla.
-- **Sul desktop il backend ascolta solo su `127.0.0.1`, con una chiave per avvio** che la finestra
+- **Sul desktop il backend ascolta solo su `127.0.0.1`, con una chiave di avvio** che la finestra
   dell'app conosce e le altre applicazioni della macchina no. La chiave e' obbligatoria su ogni
   rotta dell'API (`X-AstroLog-Token`); la pagina, i suoi file e la documentazione si servono senza.
-  Sul NAS non c'e' chiave.
+  Sul NAS non c'e' chiave. Una copia sta nel file `token` della cartella dati, permessi 0600
+  (solo il proprietario, ADR 0038).
 - **L'app si apre e basta**: e' il backend a servire la pagina, e le consegna la chiave mentre
   gliela manda. La chiave non finisce in un link, in una cronologia o in un messaggio. In sviluppo
   la pagina la serve Vite: la chiave la decide `tools/dev.py` e la passa ai due processi con

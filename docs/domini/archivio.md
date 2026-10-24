@@ -70,16 +70,16 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 
 ## Le decisioni
 
-**L'Archivio e' la vetrina del lavoro finito** (Marco, 22/9/2026). Un progetto nasce nei
-**Progetti**, insieme al Planner: si sceglie un oggetto e ci si da' un obiettivo -- tante ore,
-tanti frame, quel che sara'. Finche' e' aperto si guarda li' e nelle Notti; **quando e' concluso
+**L'Archivio e' la vetrina del lavoro finito** (Marco, 22/9/2026). Un progetto nasce **solo nel
+Planner**, e l'Archivio non lo propone (Marco, 24/10/2026): si sceglie un oggetto e ci si da' un
+obiettivo -- tante ore, tanti frame, quel che sara'. Finche' e' aperto si guarda nei Progetti e nelle Notti; **quando e' concluso
 passa in Archivio**, e la riga e' il **riepilogo di quel progetto**. Quindi la riga dell'Archivio
 sara' un **progetto chiuso, non un oggetto**.
 
 **Due progetti sullo stesso oggetto si distinguono dal puntamento** (Marco, 22/9/2026): se le
 coordinate coincidono e' la stessa cosa -- riprese aggiunte allo stesso progetto, anche a un anno
 di distanza -- e se divergono sono **due progetti diversi sullo stesso oggetto**. Non e' l'anno a
-dividerli: e' dove hai puntato, e il setup (un progetto, un setup: ADR 0013, 0033). E' la stessa parita' del mosaico
+dividerli: e' dove hai puntato, e il setup (un progetto, un setup: ADR 0013, 0033 R1). E' la stessa parita' del mosaico
 (`mosaico.md`), che pure ragiona su dove il setup guardava.
 
 **Ma non e' cosi' oggi, e non e' un rinvio per pigrizia**: i progetti non esistono -- nessuna
@@ -231,7 +231,8 @@ sua; un mosaico ha le sue produzioni come ogni riga; stringendo la barra, le pro
 quelle dei frame chiesti. La carta ha un posto di anteprima **per produzione** e dice quante
 sono; l'elenco lo dice solo quando sono piu' d'una. Con piu' d'una, toccare la carta apre sotto
 di lei il **riepilogo** di ognuna (setup, ore, frame, filtri); si chiude con Esc, ritoccando la
-carta o toccando fuori. Sotto una carta dell'ultima colonna si allinea a destra per non uscire
+carta o toccando fuori. Nel riepilogo gli strumenti del setup si aprono e si chiudono con «Tutti
+gli strumenti» / «Meno strumenti» (Marco, 18/10/2026). Sotto una carta dell'ultima colonna si allinea a destra per non uscire
 dalla pagina, e la pagina scorre quanto serve a mostrarlo. Le voci non portano da nessuna parte: e' una regione da leggere, non un
 menu, finche' il modale della produzione non c'e'. **Non ancora fatto**: il modale (rimandato:
 una carta con una produzione sola non apre niente), il foglio dal basso sul telefono, il

@@ -1,7 +1,9 @@
 # 0025 -- Uno studio per ruoli: la pagina si collauda contro la tavola prima di Marco
 
 **Stato:** accettata, 20/10/2026 (Marco, dal check di salute). Allarga ADR 0015: ricette, un giro
-di revisione e le macchine al posto dei prompt restano.
+di revisione e le macchine al posto dei prompt restano. Superata in gran parte da ADR 0040: tolti
+`verificatore-disegno`, modo `pagina`, `tools/contratti.py`, **Supera** obbligatoria, misura `fix:`
+per fetta; `collaudatore` al passo 29 del piano. Resta il giro della fetta, base di `/porta-tavola`.
 
 ## Contesto
 
@@ -43,15 +45,16 @@ codice: lotti da 0,1-0,9 M token, nessun revert in 300 commit. Non ha retto atto
 8. Traduzione, guida, commit e push; sessione nuova per la fetta dopo.
 
 **La misura del metodo**: per fetta, quanti `fix:` arrivano dopo lo sguardo di Marco. Sostituisce
-la tabella per lavoro di ADR 0015.
+la tabella per lavoro di ADR 0015 (superata: vedi 0040).
 
 ## Conseguenze
 
 - Nascono `.claude/agents/verificatore-disegno.md`, `.claude/agents/collaudatore.md`, il modo
   `pagina` dello `sviluppatore` e un comando per portare una tavola; la parte "pagine" di
-  `porting-fedele` esce.
+  `porting-fedele` esce (superata in parte: vedi 0040).
 - Nascono `tools/glossario.py` (la colonna «non si dice» contro testi, brief e documenti, con
   `<!-- glossario-ok -->` per le citazioni) e `tools/contratti.py` (ogni test citato in un
   contratto esiste). La riga **Supera** diventa obbligatoria in un ADR che cambia un contratto.
+  (superata: vedi 0040; `tools/glossario.py` al passo 26 del piano.)
 - Il confronto automatico delle catture (Playwright) sarebbe una dipendenza di sviluppo: si
   chiede a Marco quando serve.

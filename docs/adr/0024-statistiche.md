@@ -1,8 +1,10 @@
 # 0024 -- Statistiche: i confronti nel tempo
 
-**Stato:** accettata, 20/10/2026 (Marco). Riprende il contratto vecchio
-(`old/docs/domini/statistiche.md`, regole misurate sull'archivio di Marco) e lo allarga a
-stagioni, filtri, cielo del sito e calendario.
+**Stato:** accettata, 20/10/2026 (Marco); superata in parte da ADR 0034 (qualita' della notte -> Trasparenza, seeing fuori, niente punti ripartiti). Nessun codice; la pagina e' ancora in lavorazione con Marco (24/10/2026).
+Riprende il contratto vecchio (`old/docs/domini/statistiche.md`, regole misurate sull'archivio di
+Marco) e lo allarga a stagioni, filtri, cielo del sito e calendario. Dove sotto si legge
+"qualita' della notte (ADR 0020)" vale la Trasparenza di ADR 0034; "senza seeing" cade, perche' il
+seeing non entra nel voto (resta "senza aerosol", ADR 0034).
 
 ## Contesto
 

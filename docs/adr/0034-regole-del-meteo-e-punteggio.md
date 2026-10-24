@@ -1,8 +1,8 @@
 # 0034 -- Le regole del meteo con le fonti verificate, e il punteggio della notte v4
 
-**Stato:** accettata, 24/10/2026 (Marco: raffiche, condensa, Luna, nomi, soglie dal suo archivio).
+**Stato:** accettata, 24/10/2026 (Marco); costruite le soglie (`weather/judge.py`, commit 07077958); non costruiti punteggio v4, Ore di posa, seeing dal jet, buio nautico, calendario a tre gradini.
 Supera in parte ADR 0020 (pesi, ora utile da 60, seeing nel voto) e ADR 0013 (Luna da -5°).
-Nessun codice ancora: i cambi di valore e il punteggio si fanno nella fase 4 del registro.
+Superata in parte da ADR 0039: condensa (Beysens), seeing (rispetto al setup), raffiche (per setup).
 
 **Supera** in `docs/domini/meteo.md`: "nuvole 35, seeing 30, trasparenza 12, condensa 9, vento 9, jet stream 5"; "sono le ore di buio con qualita' da 60"; "cede i suoi punti agli altri in proporzione"; "regola FAA dei 5 gradi Fahrenheit"; "classi del Canadian Meteorological"; "la regola diffusa fra chi riprende"; "il 50 e' di Marco"; "con 25%, 50% e -5° di partenza"; "previsione, fino a 16 giorni"; "cloudatlas.wmo.int/en/fog-compared-with-mist.html"
 
@@ -22,18 +22,20 @@ la soglia dei 3 °C; la scala canadese del seeing ha un buco fra 2" e 3".
 | nuvole | buona fino al 25%, incerta fino al 50%, no oltre | WMO/ICAO code D-8: FEW 1-2 ottavi, SCT 3-4 |
 | pioggia | qualunque goccia nel buio = no | ASCOM ObservingConditions.RainRate: >0 bagnato |
 | vento medio | incerto da 20 km/h, no da 29 | RMetS, Beaufort 4 "20-28", 5 "29-38" km/h |
-| raffiche | **no oltre 25 km/h** (oggi 29) | iTelescope: chiude "con raffiche oltre 25 km/h" |
-| condensa | **sotto 3 °C incerta, "serve la fascia"; mai no** (oggi no) | AstroBin: "worry ... less than about 3C"; la nebbia la dice la visibilita' |
+| raffiche | **no oltre 25 km/h** (era 29) | iTelescope: chiude "con raffiche oltre 25 km/h" |
+| condensa | **sotto 3 °C incerta, "serve la fascia"; mai no** (era no) | AstroBin: "worry ... less than about 3C"; la nebbia la dice la visibilita' |
 | jet stream | no da 126 km/h (35 m/s) | meteoblue astronomy-seeing |
 | seeing | incerto oltre 2", no oltre 4" | Astronomy Tools: Good 1-2", OK 2-4", Poor 4-5"; 4" anche CMC classe I |
 | aerosol | limpido sotto 0,1, molto fosco da 1 | NASA Earth Observatory; Open-Meteo a 550 nm |
 | visibilita' | nebbia sotto 1 km = no | FAA-H-8083-28 18.1.1; METAR FG |
-| Luna | **buona sotto 25%, incerta 25-65%, no da 65%** (oggi 25/50) | ING: buio < 0,25, grigio fino a 0,65 |
+| Luna | **buona sotto 25%, incerta 25-65%, no da 65%** (era 25/50) | ING: buio < 0,25, grigio fino a 0,65 |
 | Luna, altezza | **dall'orizzonte** (-0,833°), come il codice | ESO: FLI 0 sotto l'orizzonte; astroplan; Target Scheduler |
 
 Non giudicate: umidita' relativa (la dice il punto di rugiada), nubi medie e alte (il totale le
 contiene), jet debole sotto 5 m/s (una pagina meteoblue sola, un'altra dice altro). Il calendario
-della Luna usa la stessa scala della pagina Meteo. Le soglie tecniche le sceglie la sessione
+della Luna usa gli stessi tre gradini, con le ore di buio senza Luna accanto (24/10/2026, al
+posto di "25% o 4 ore"); 25 e 65 sono di fabbrica e si cambiano nelle Impostazioni, una casa per
+Meteo e calendario (Marco, 24/10/2026). Le soglie tecniche le sceglie la sessione
 dalle convenzioni (CLAUDE.md, principio 1, 24/10/2026).
 
 ## Decisione: il punteggio della notte v4

@@ -247,7 +247,7 @@ export function CieloDelleNubi({
 }
 
 /** Una misura sola dal tramonto all'alba, sul cielo coi suoi colori: lo stesso disegno della scala
- *  di destra (la Dashboard lo apre sotto la sua carta, `handoff/design-dashboard.md`). */
+ *  di destra (la Dashboard lo apre sotto la sua carta, `docs/domini/meteo.md`). */
 export function ScalaDellaMisura({ notte: n, ore, scale, codice, telefono = false }: {
   notte: Notte; ore: Ora[]; scale: Scala[]; codice: Destra
   /** Sul telefono la tela e' la sua, piu' piccola, con un'ora si' e una no. */

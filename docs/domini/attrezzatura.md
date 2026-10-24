@@ -3,7 +3,7 @@
 **Con cosa hai ripreso**, e quanto. L'Archivio racconta gli oggetti, le Notti le serate; qui ci
 sono i **pezzi**: telescopi, camere, montature, filtri, e i **setup** con cui li hai messi
 insieme. E' il consuntivo di cosa ti e' servito davvero, non un magazzino di cose possedute. Le
-parole vengono da [`glossario.md`](glossario.md) -- *strumento*, *setup*, mai "setup" ne'
+parole vengono da [`glossario.md`](glossario.md) -- *strumento*, *setup*, mai "corredo" ne'
 "equipaggiamento"; come le ore si contano e perche' le copie non valgono sta in
 [`archivio.md`](archivio.md), che ne e' la casa; dove sta la voce nella barra, in
 [`navigazione.md`](navigazione.md).
@@ -18,9 +18,8 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi str
 | richiesta | prova |
 |---|---|
 | Apro Attrezzatura e vedo i pezzi che possiedo, raccolti per genere | `test_the_page_lists_the_gear_you_own`; *elenca i pezzi che possiedi, raccolti per genere* |
-| Di ogni pezzo vedo quante ore e quanti frame ci ho fatto, e in quante notti | `test_a_piece_says_how_much_you_shot_with_it`, `test_the_hours_of_a_piece_come_from_its_rigs` |
+| Di ogni setup, parte e filtro vedo **solo le ore** (Marco, 11/10 e 24/10/2026); frame, notti e oggetti che la pagina vecchia mostra ancora vanno via al porting | `test_a_piece_says_how_much_you_shot_with_it`, `test_the_hours_of_a_piece_come_from_its_rigs` |
 | Uno stesso pezzo montato su due setup non mi raddoppia le ore | `test_a_piece_on_two_rigs_does_not_count_its_hours_twice` |
-| E vedo cosa ci ho ripreso, dal piu' ripreso | `test_a_piece_says_what_you_shot_with_it`, `test_what_a_piece_shot_comes_most_shot_first`; *un pezzo dice cosa ci hai ripreso* |
 | Un setup mi dice ottica, camera e focale, e **quanto cielo inquadra davvero** | `test_a_rig_says_the_sky_it_really_frames`, `test_the_sky_of_a_rig_is_the_middle_value_not_the_average`, `test_a_frame_that_did_not_say_its_field_does_not_drag_the_others`; *un setup dice quanto cielo inquadra* |
 | Una camera i cui file non dicono il pixel me lo mostra ricavato dal cielo, e dice che e' ricavato; se i file o io lo diciamo, vince quello | `test_the_pixel_is_the_median_of_what_the_sky_measured`, `test_the_gear_page_reads_the_pixel_from_the_sky`, `test_what_the_user_writes_wins_on_the_page`, `test_a_camera_that_loses_every_solved_pose_forgets_its_pixel`, `test_calibration_answered_takes_back_the_pixel_its_sky_gave`, `test_normalize_writes_it_at_the_end_of_its_round`, `test_the_solver_writes_it_at_the_end_of_its_round`; *il pixel ricavato dal cielo si dice ricavato, e quello dei file vince* |
 | La pagina si apre senza rifare i conti, anche su un archivio grande: quanto e' servito ogni pezzo lo scrive la spina quando lavora le pose, e un pezzo che scrivo io ha i suoi numeri subito | `test_the_page_reads_what_was_written_not_the_frames`, `test_every_stage_that_moves_poses_writes_the_usage_at_the_end`, `test_the_page_counts_nothing_and_the_writer_asks_per_page`, `test_a_piece_written_by_hand_says_its_hours_at_once`, `test_a_piece_not_yet_counted_says_so_and_not_that_the_files_are_silent`, `test_the_rewrite_is_all_or_nothing`, `test_a_stopped_round_writes_what_it_did`, `test_a_round_that_breaks_writes_what_it_did`, `test_a_stage_with_nothing_to_do_does_not_count_again`, `test_a_new_catalog_rewrites_the_names_it_gives`, `test_calibration_answered_takes_its_night_object_and_sky_off_the_gear`; *un pezzo non ancora contato dice che si sta contando, non che i file tacciono* |
@@ -166,7 +165,7 @@ negli stessi header e **oggi non si leggono affatto**: sono misure di una posa, 
 uno strumento, e il posto dove andranno nascera' con le metriche dei frame.
 
 **La montatura arriva alle pose per due strade, e la tua parola vince** (Marco, 26/9/2026). Dove
-il programma la scrive -- l'ASIAIR, in `TELESCOP`, e lo dice il software, mai una lista di nomi --
+il programma la scrive -- l'ASIAIR, in `TELESCOP`, e lo dice il software, mai una lista di nomi (Marco, 24/10/2026) --
 la posa la porta addosso come la ruota, e le ore si sanno senza chiedere niente. Dove i file
 tacciono, la scegli dalla **scheda del setup**, fra le montature che possiedi: vale per tutte le
 sue pose, anche su quelle che il file nomina, e togliendola tornano i file. Sta fra le
@@ -176,7 +175,7 @@ possiedi una sola, non si da' per scontata. Una montatura che nessuna posa porta
 setup la porta ancora, invece di scrivere zero.
 
 **Niente "da quando ce l'hai"** (Marco, 21/9/2026): non si chiede una data d'acquisto e non si
-mostra la prima notte. Contano le ore, cosa ci hai ripreso e com'e' fatto il pezzo.
+mostra la prima notte. Contano le ore e com'e' fatto il pezzo.
 
 **Tutti i pezzi insieme, senza sceglierne uno.** Si guarda l'attrezzatura per confrontarla: un
 selettore costringerebbe a ricordare cosa aveva l'altro. E' la stessa forma delle pagine sorelle,
@@ -202,12 +201,48 @@ l'altra, o dopo una correzione continuerebbe a mostrare cio' che dicono i file.
 
 **La pagina della v15 di Design** (Marco, 17/10/2026), al porting: a sinistra l'indice dei setup
 e dei componenti, a destra il dettaglio; niente campo disegnato ne' tessere. Supera la forma
-dell'11/10 (setup in cima, componenti sotto). Testi approvati: "{n} da indicare", "Parti",
-"Seleziona" su ogni parte, "Per salvare serve almeno una banda.", "Per salvare servono ottica,
-camera e focale effettiva.", "servono apertura e focale", "Larghezza (nm)", "Pixel (µm)", "Apri
-{nome} fra i componenti"; gli altri in `handoff/design-risposta-attrezzatura.md`. Un filtro
+dell'11/10 (setup in cima, componenti sotto). Un gruppo senza righe non compare. Un filtro
 scritto a mano si abbina alla lista standard, senza catalogo dei modelli (ADR 0031, 0033); le
 bande si scrivono, anche quelle delle camere a colori.
+
+**La scheda tecnica e i conti del setup** (Marco, 18/10/2026): campi per tipo, formule, soglie e
+parole dei conti stanno in [ADR 0021](../adr/0021-dati-completi-dell-attrezzatura.md), che ne e'
+la casa; ogni conto compare solo coi suoi dati, e se ne manca uno lo dice ("manca il pixel della
+camera di guida"). L'ordine del treno ottico e' solo disegno: i conti non ne dipendono. "(vuoto:
+dai file)" solo sulle parti che i file possono dire (non i distanziali). Il programma di ripresa
+e' una parte del setup coi suoi frame, senza ore e senza modulo. Le marche sono testo libero:
+"altra…" propone quelle gia' scritte.
+
+**Testi approvati** (Marco, 11/10, 17/10 e 18/10/2026; parola per parola, *setup* al posto di
+"corredo", decimali col punto come in [`glossario.md`](glossario.md)):
+
+- uso: solo le ore (sopra); i frame restano accanto alle parti del setup, i filtri del setup in
+  proporzione, senza cifre;
+- parti: "{parte}: {nome}" coi frame se dai file, "{parte}: {nome} (scelta a mano)", "da
+  indicare" se i file tacciono, "{n} da indicare", "Parti", "Seleziona" su ogni parte; il gesto
+  di scelta vale per tutte le parti; "aggiungine uno" apre *Aggiungi strumento* col tipo gia'
+  scelto; rapporto focale "(calcolato)";
+- dettaglio del setup: "Dati del setup", "Dalle schede tecniche degli strumenti.", "Treno
+  ottico", "Schema non in scala. Seleziona uno strumento per aprirlo.", "Campionamento", "Schema
+  ottico", "Guide fuori asse", "Distanziali", "Apri {nome} fra i componenti"; sotto la Luna del
+  campo disegnato "Luna piena, per misura";
+- backfocus con la tolleranza: "esatto", "+0.5 mm, in tolleranza", "corto di …", "lungo di …";
+  senza tolleranza solo la differenza ("+0.5 mm"), senza pillola;
+- modulo: "Tipo: … Cambia", i blocchi "chi è" e "dati tecnici" con "{n} di {m} scritti",
+  "altra…" / "Nuova marca", "calcolato" / "dai file" / "inserito" accanto al campo, "Quante
+  bande", "Larghezza (nm)", "Pixel (µm)", "servono apertura e focale"; campi nuovi "Schema
+  ottico", "Tolleranza del backfocus (mm)" (ottica e riduttore), "Bias (ADU)" (camera);
+- rifiuti prima di salvare: "Per salvare serve il nome.", "Per salvare serve almeno una banda.",
+  "Per salvare servono ottica, camera e focale effettiva."; unione: "L'unione non è reversibile.";
+  mono / a colori cambiato su una camera usata: "{n} frame da rielaborare", anche dopo il
+  salvataggio, che altrimenti chiude il modulo senza messaggio;
+- scansione in corso: Salva spento con "Scansione in corso: si salva al termine." (non
+  "potrai"); oggi c'e' solo il rifiuto dopo ("riprova al termine");
+- non si legge: "Attrezzatura non disponibile" e "Riprova".
+
+Restano senza testo approvato le etichette proposte il 18/10 per i campi nuovi (Raffreddamento,
+Risoluzione, Prisma, Passo, Passi totali, Montato, Per ottiche veloci): Marco le approva sulla
+tavola.
 
 **Un filtro e un setup scritti a mano** (Marco, 21/9/2026) nascono dallo stesso *Aggiungi un
 pezzo*: il filtro col nome e la banda, il setup con ottica, camera e focale obbligatoria -- senza,

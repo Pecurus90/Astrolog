@@ -42,8 +42,8 @@ di GB di video scartati. Le Notti non c'entrano: il Sole si riprende di giorno.
 
 ## Conseguenze
 
-- I software supportati oggi sono quattro (CLAUDE.md): un lettore di log planetari li allarga, e
-  ognuno entra solo con log veri di quel programma.
+- I programmi verificati oggi sono due, N.I.N.A. e ASIAIR (ADR 0029, 0033): un lettore di log
+  planetari li allarga, e ognuno entra solo con log veri di quel programma.
 - Servono le effemeridi di pianeti, Sole e comete (tappa 6), il catalogo delle orbite MPC e le
   fonti dell'attivita' solare; ogni soglia o formula nuova (es. il tempo massimo prima che la
   rotazione sfochi) si prende da una fonte pubblica o si decide con Marco.

@@ -414,7 +414,7 @@ describe("il Meteo, la testa", () => {
     await scheda()
     const testa = document.querySelector(".as-meteo__testa") as HTMLElement
     expect(testa.textContent).toContain("meteo a Casa")
-    // il giorno col mese per esteso e senza anno, come nel vocabolario (handoff/design-dashboard.md)
+    // il giorno col mese per esteso e senza anno, come nel vocabolario (docs/domini/meteo.md)
     expect(testa.textContent).toMatch(/Previsione del \d+ [a-z]+, \d\d:\d\d/)
     expect(testa.textContent).toContain("ora locale del sito")
   })

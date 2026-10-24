@@ -1,6 +1,6 @@
 # 0009 -- Tutto automatico, manuale per eccezione; v1 e' un'app completa
 
-**Stato:** accettata
+**Stato:** accettata; in vigore.
 Superato in parte da ADR 0033: lo scarto dei frame lo sceglie l'utente (ADR 0032); un'impostazione
 nasce dove una soglia non ha una convenzione unica (ADR 0013, 0020, 0023, 0032).
 

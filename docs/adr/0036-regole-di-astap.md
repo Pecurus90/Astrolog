@@ -3,6 +3,8 @@
 **Stato:** accettata, 24/10/2026. Raccoglie le decisioni del piano di ASTAP (D2-D8) che stavano
 solo nel materiale di lavoro; D1 e D7 sono in ADR 0033. Chiude la domanda aperta di ADR 0003
 (quale catalogo). Soglie tecniche scelte dalla sessione sulle convenzioni (CLAUDE.md, principio 1).
+Costruita in parte (`pipeline/solve.py`); punti 7-10 da fare. **Superata in parte da ADR 0039**: il
+tempo per lancio diventa un limite di previsione, minimo 30 s; 60 s finche' non e' costruito.
 
 ## Contesto
 

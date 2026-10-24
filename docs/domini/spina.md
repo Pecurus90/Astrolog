@@ -61,7 +61,7 @@ dominio sono state assorbite qui e tolte da `ereditato.md` man mano.
 | Un frame risolto una volta non si ri-risolve dopo un reset: la cache per hash lo ricorda | `test_solve_cache_by_hash` |
 | Un frame che ASTAP non risolve e' "non risolto" con il suo perche', e l'archivio va avanti | `test_solve_failure_is_a_reason` |
 | I nomi dei filtri, degli strumenti e degli oggetti scritti in mille modi diventano i miei filtri, i miei strumenti, i miei oggetti; quando l'app non sa, me lo chiede una volta per gruppo e poi si ricorda | `test_normalize_vocab_corpus`, `test_normalize_alias_learned` |
-| Un filtro che l'app non riconosce (`H`, `Filter 3`) me lo chiede una volta -- e' uno dei miei, un modello in commercio, o nome e banda -- e la risposta vale per sempre; uno che riconosce non me lo chiede | `test_only_the_filters_the_app_does_not_know_are_asked`, `test_review_merges_two_filters`, `test_review_declares_a_filter_with_its_bands` |
+| Un filtro che l'app non riconosce (`H`, `Filter 3`) me lo chiede una volta -- e' uno dei miei, un modello in commercio (solo pipeline vecchia, ADR 0031), o nome e banda -- e la risposta vale per sempre; uno che riconosce non me lo chiede | `test_only_the_filters_the_app_does_not_know_are_asked`, `test_review_merges_two_filters`, `test_review_declares_a_filter_with_its_bands` |
 | Lo stesso pezzo scritto in due modi (`ATR2600M` e `ATR2600M(USB2.0)`) e' un pezzo solo: me lo chiede una volta e non ci torna piu' | `test_normalize_alias_learned` |
 | Un pezzo scritto in due modi lo unisco una volta, e da li' in poi l'app riconosce da sola la grafia vecchia | `test_merging_two_spellings_moves_the_poses_and_learns_the_rule` |
 | Cambio idea quante volte voglio: rinomino un pezzo gia' rinominato o gia' unito, e tutte le grafie di prima continuano a portare a lui -- anche per un filtro | `test_a_second_rename_carries_the_spelling_learned_by_the_first`, `test_renaming_a_piece_carries_the_spellings_it_absorbed`, `test_renaming_a_filter_carries_the_spelling_it_absorbed` |
@@ -182,7 +182,8 @@ che ci sono. Lo tiene **l'ultima scansione di ogni cartella, e se non e' arrivat
 fondo anche l'ultima che ci e' arrivata** (Marco, 2026-09-11): quei file si riprovano a ogni
 scansione arrivata in fondo, e le altre ricevute tengono i numeri (`errors_not_kept`). Cosi' il
 database non cresce nemmeno se la condivisione cade a ogni giro. Di una corsa ancora aperta
-l'elenco non c'e' ancora (`scan_run_open`).
+l'elenco non c'e' ancora (`scan_run_open`). La ricevuta porta i primi 100 percorsi e le 100
+chiavi sconosciute piu' frequenti (ADR 0038).
 
 **Un worker, un thread, unico scrittore.** Vive nel processo del backend (uno solo da
 impacchettare su tre bersagli); esegue gli stadi in sequenza; ASTAP gira come sottoprocesso
@@ -210,8 +211,11 @@ scriva il software (SGP a sette decimali, ASIAIR senza millisecondi, un fuso esp
 grezzo resta nell'header salvato.
 
 **Il NAS senza login non e' senza guardia**: l'app risponde solo agli host ammessi
-(`localhost`, e sul NAS quelli dichiarati), e sul desktop la finestra porta un token per
-avvio che le altre applicazioni della macchina non hanno.
+(`localhost`, e sul NAS quelli dichiarati), e sul desktop la finestra porta una chiave di avvio
+che le altre applicazioni della macchina non hanno: obbligatoria su ogni rotta dell'API
+(`X-AstroLog-Token`), non sui file della pagina, assente sul NAS; copia nel file `token` della
+cartella dati, 0600 (ADR 0002, 0038). Una copia sola dell'app sugli stessi dati (lucchetto
+all'avvio, ADR 0010).
 
 **La radice si salva come l'utente la ritrova**, confinata sotto la radice dei dati quando e'
 impostata (Docker): la forma risolta, salvo un disco di rete collegato a una lettera, che Python
@@ -219,7 +223,7 @@ dalla 3.8 risolverebbe nella sua condivisione (bpo-37993) -- chi ha scelto `Z:` 
 **Le cartelle di rete si accettano** (`\\server\cartella`; Marco, 2026-09-11). Aprirne una fa
 autenticare Windows verso quel server con le credenziali dell'utente (n00py, *Understanding UNC
 paths, SMB, and WebDAV*): il rischio resta confinato perche' il servizio ascolta sulla macchina e
-chiede il token, e sul NAS in Docker quei percorsi non esistono. Non entrano le forme che
+chiede la chiave di avvio, e sul NAS in Docker quei percorsi non esistono. Non entrano le forme che
 scavalcherebbero le zone di sistema -- i percorsi di dispositivo (`\\?\`, `\\.\`: codice
 `path_device`), i nomi coi caratteri che Windows non ammette in un nome (`?`, `*`, il carattere
 nullo: `path_invalid`, e con loro `\??\C:\Windows`), ogni forma che risolta non e' un percorso
@@ -382,7 +386,7 @@ che il vocabolario riconosce non e' una domanda: non si elenca, non si conta, no
 lettera sola (`H`, `O`, `S`, `G`: lo fanno N.I.N.A. e ASIAIR) normalize non la indovina, ed e'
 una domanda. Si risponde in tre modi: **e' uno dei miei**, scelto fra i filtri con la banda nota
 (e' l'unione: la grafia dell'header diventa per sempre quel filtro); un **modello in commercio**
-dalla tendina (che porta marca, nome ufficiale e banda); o **nome e banda** scritti -- per un duo o
+dalla tendina (solo pipeline vecchia: muore col porting, ADR 0031); o **nome e banda** scritti -- per un duo o
 tri-banda le bande che passa, e l'app ne ricava la banda canonica. Non nel wizard: al primo avvio
 l'utente dovrebbe elencare cio' che possiede prima di aver visto cosa ha ripreso. `FILTER = none / no filter / open`, o un `FILTER` che non dice niente, **si chiede** (Marco,
 2026-09-11): senza `BAYERPAT` una mono e una camera a colori non si distinguono. Si chiede nella
@@ -541,7 +545,7 @@ in gradi, e si ricava da `naxis2`, `pixel_size_um` e `focal_mm_raw` -- tutti gia
 Misurato su frame veri da 26 megapixel di due setup diversi: **0,2 s** col campo dato,
 **2,3 s** con `-fov 0`, **23 s** senza nemmeno il puntamento. La leva non e' il
 raggio di ricerca, e' il campo; dove l'header non dice focale o pixel si passa `0` e si
-paga la differenza. Il tetto di tempo e' 60 s, piu' del doppio del caso peggiore misurato.
+paga la differenza. Tetto di tempo 60 s finche' non c'e' il limite di previsione (ADR 0036, 0039).
 
 **Ordine: prima un frame per sessione**, poi tutti gli altri dai piu' recenti -- e un frame
 il cui header non porta il puntamento **eredita l'indizio da un frame gia' risolto dello
@@ -611,11 +615,8 @@ lo stesso: pretenderli tutti butterebbe via un cielo misurato davvero.
 `~/Library/Application Support/AstroLog`, Docker `/data`. Dentro: `astrolog.db`, `cache/`,
 `log/`. Il DB non va mai su una condivisione di rete; le cartelle dei FITS si'.
 
-**Il primo avvio**: un wizard con quattro passi -- nome, sito principale, cartelle, la chiave
-Meteoblue facoltativa -- saltabile,
-e non si riapre (`sito.md`); alla fine, se c'e' almeno una cartella, la prima scansione parte da sola (se non parte, lo deve dire: Issue #18). L'attrezzatura non si dichiara qui: al buio l'utente dovrebbe elencare cio'
-che possiede prima di aver visto cosa ha ripreso. Si vede e si corregge nell'Attrezzatura, dove
-ogni pezzo trovato e' davanti agli occhi con quanti frame vale.
+**Il primo avvio** ha la sua casa in `sito.md`; alla fine, con almeno una cartella, la prima
+scansione parte da sola (Issue #18). L'attrezzatura non si dichiara li': si vede nell'Attrezzatura.
 
 **Da confermare: solo cio' che l'app non puo' sapere** (Marco, 25/9/2026: un pezzo nuovo non e'
 una domanda, si vede nell'Attrezzatura). Dell'attrezzatura restano due domande: i filtri che l'app
@@ -625,7 +626,10 @@ in cima quelle che chiedono una risposta; quelle che l'app sa, su cui non c'e' n
 scegliere, stanno chiuse, e si aprono a pagine (Marco, 27/9/2026). E le domande sui **gruppi
 di frame**, una per ogni cosa che l'app non puo' sapere:
 il sito, e l'attrezzatura che i file non dicono. Quante sezioni siano lo dice `ReviewOut`, non questa riga: un numero scritto qui
-direbbe il falso alla prossima domanda che nasce. Dentro l'ordine fisso delle sezioni, prima i
+direbbe il falso alla prossima domanda che nasce. L'ordine fisso delle sezioni lo tiene la pagina:
+prima gli strumenti, poi come si montano, poi il dove e il quando, poi il cielo. Senza nessun sito,
+*Frame senza sito* dira' «Per rispondere serve almeno un sito: si aggiunge nelle Impostazioni.» con
+«Apri le Impostazioni» (Marco, 17/10/2026; oggi manca). Dentro ogni sezione, prima i
 gruppi che toccano piu' frame (`api/review.py`, `api/review_page.py`; prove
 `test_the_most_used_filters_come_first`, `test_a_question_per_group_with_the_largest_first`,
 `test_a_question_per_camera_with_the_largest_first`; degli oggetti
@@ -935,10 +939,7 @@ disco staccato.
 
 *E percio' l'app deve accorgersene e dirlo prima, non dopo* (Marco, 2026-09-09): nel pacchetto
 ASTAP c'e' dentro e nessuno ci pensa, ma chi installa da sorgente vedrebbe un archivio muto
-senza sapere perche'. Il wizard resta di **quattro passi per tutti**, e ne aggiunge un **quinto
-solo quando il solver non si trova**: dice cosa si perde senza (i frame entrano, ma restano senza
-cielo e senza oggetto), lascia indicare dove sta, ed e' saltabile. E' la regola di sempre --
-tutto automatico, manuale per eccezione -- e il momento giusto e' **prima della prima
+senza sapere perche': lo dice il passo ASTAP del primo avvio (`sito.md`), **prima della prima
 scansione**. Dove sta il solver lo dice l'utente con la preferenza `astap_path`, che viene
 **prima** della ricerca automatica e della variabile d'ambiente `ASTROLOG_ASTAP` (quella la
 mette chi lancia l'app, non chi la usa). La ricerca ha una casa sola, `solve.solver_path`: la
@@ -981,19 +982,13 @@ L'unicita' sul nome e' **globale, non per oggetto**: due oggetti che si chiamano
 `M 31` sono il difetto stesso. Chi scrive non fa `INSERT` e prega -- cerca e poi crea, e
 l'indice e' la rete sotto, non la strada.
 
-**Cosa `identify` NON fa**: non sa che `NGC 2244` sta **dentro** la Rosetta. La relazione
-pezzo/adiacenza e' misurata in `old/` e mai costruita; serve al Planner e alla Carta del cielo, non a
-contare le ore, ed e' fra le [idee](../idee.md). E non tocca i FITS, mai.
+**Cosa `identify` NON fa**: la relazione pezzo/adiacenza (`NGC 2244` dentro la Rosetta,
+`catalogo.md`). E non tocca i FITS, mai.
 
-**Le schede: un campo si chiede solo se l'app ci fa qualcosa.** Ottica: marca, modello,
-apertura, focale nativa. Camera: marca, modello, mono o colori, dimensione del pixel.
-Filtro: marca, modello, tipo (la banda, dalla tendina) e la larghezza in nanometri **per
-ogni banda** che lascia passare -- un Ha a 3 nm ha una riga, un duo Ha/OIII ne ha due; la
-larghezza e' facoltativa. Riduttore: il fattore. Montatura: quanto regge. Ruota: quanti
-filtri ci stanno. Su ogni pezzo: peso e una nota. Rapporto focale, lato del sensore in
-millimetri e scala in arcosecondi per pixel **si derivano**, e non si chiedono mai: un
-numero calcolabile scritto a mano e' lo stesso fatto in due case. Dimensione del pixel,
-focale e "camera a colori" arrivano gia' compilate dall'header quando c'e'. Per la camera
+**Le schede**: oggi i campi di `instrument_answer.CARD` (un filtro ha la larghezza **per banda**,
+facoltativa); la scheda tecnica completa e i conti sono di ADR 0021 (Marco, 18/10/2026), al
+porting (`attrezzatura.md`). I conti si derivano e non si chiedono mai. Pixel, focale e "camera a
+colori" arrivano dall'header quando c'e'. Per la camera
 **decidono i file, non il primo che capita**: il pixel fisico e la matrice di Bayer piu'
 frequenti fra i frame che la usano, ricalcolati a ogni giro di `normalize`, e a pari file
 nessuno (scelta di Marco, 2026-09-11). Cio' che l'utente scrive su quei due campi sta fra le
@@ -1059,8 +1054,7 @@ casa adotta le notti attribuite in automatico e nessun'altra. Unire due grafie d
 confermare rimette in coda anche `group`, o le sessioni resterebbero appese al setup sparito.
 
 **Cosa `group` NON fa**: non salva ore ne' medie -- si contano leggendo, e un numero derivabile
-non si congela in una colonna; non decide i mosaici (definiti, ma senza tabella: sono confinanti
-coi Progetti); non tocca i FITS.
+non si congela in una colonna; i mosaici li scrive, ma la loro casa e' `mosaico.md`; non tocca i FITS.
 
 ## Cosa NON fa
 
@@ -1068,3 +1062,5 @@ Non modifica, rinomina o cancella un FITS da sola: escludere un frame, spostarlo
 ed eliminarlo e' un gesto dell'utente nella zona di selezione, con conferma, che sopravvive alle
 scansioni (ADR 0032, 0033). Non cataloga i file di calibrazione.
 Non sorveglia le cartelle in continuo. Non riparte da solo all'apertura. Non vota (ADR 0032).
+Da confermare non risponde a un file solo, non annulla un'unione, non tiene la cronologia delle
+risposte e non chiede quale dei due file e' l'originale.

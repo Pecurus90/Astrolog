@@ -1,6 +1,6 @@
 # 0031 -- Generale prima: una lista standard, l'attrezzatura dell'utente, un abbinamento
 
-**Stato:** accettata, 22/10/2026 (Marco). Vale per la pipeline nuova (ADR 0030).
+**Stato:** accettata, 22/10/2026 (Marco); in vigore. Vale per la pipeline nuova (ADR 0030).
 
 ## Contesto
 

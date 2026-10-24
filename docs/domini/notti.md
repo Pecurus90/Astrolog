@@ -136,6 +136,21 @@ La pagina e' il **riepilogo delle notti passate**, e ci arriva per pezzi: l'elen
 sono, e il meteo di ogni notte anche; restano le misure dei frame. Ogni riga *nasce con* qui sopra dice quale pezzo la
 porta; finche' non c'e', la pagina **tace invece di ripiegare** su un numero inventato.
 
+**Le misure dei frame, a schermo** (regole in ADR 0022, 0037, 0039; qui finche' non nasce il
+contratto di `measure`). Stati approvati (Marco, 18/10/2026): "misura in corso" (non ancora
+misurato); "troppo poche stelle" (non misurabile, il numero tace); forma stimata, quando il fit
+non riesce, detta sulla riga; senza scala del cielo FWHM e HFD in px e niente zenit; senza sito
+o coordinate dell'oggetto niente zenit; le mediane solo sui frame misurati, con quanti ("su 112
+di 120 frame"). Per notte e filtro la mediana di ogni misura, e un grafico della FWHM frame per
+frame con l'altezza dell'oggetto sullo stesso asse del tempo. La curva dello SQM lungo la notte
+porta l'altezza della Luna sullo stesso asse, con "il valore cambia anche con la direzione del
+cielo" accanto, e "nessun frame L o a colori in questa notte" quando manca; una camera a colori
+senza bias non ha SQM e dice "serve il bias della camera", col rimando a "Bias (ADU)" in
+Attrezzatura. Parole del campionamento ancora proposte, da approvare sulla tavola:
+"sottocampionata (grave)", "sottocampionata", "ideale", "sovracampionata".
+
+**Se torna una seconda vista**, in partenza si apre l'elenco (Marco, 21/9/2026).
+
 **Il modale di una notte arriva per ultimo, con gli altri due.** Aprire una notte, aprire un
 oggetto e aprire una voce della libreria mostrano in fondo le stesse cose -- i grafici, le misure,
 le statistiche -- quindi e' **un** modale, e si fa quando ci sono i dati che deve mostrare

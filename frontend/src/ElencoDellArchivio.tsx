@@ -8,7 +8,7 @@ type Riga = components["schemas"]["ArchiveObject"]
  * L'Archivio **a colonne** (disegno v31): il caso "confronto". Chi ha piu' ore, chi ha piu' frame.
  *
  * - **Le celle che non sanno lo dicono** con una parola e col tondo tratteggiato dell'ignoto, mai
- *   con un trattino (`handoff/design-archivio.md`).
+ *   con un trattino (`docs/domini/archivio.md`).
  * - **Sotto i 720 px il foglio impila ogni riga**: le classi `as-archivio__col-*` dicono al foglio
  *   quale cella e' quale, e senza di loro sul telefono resterebbe una colonna di numeri.
  * - **I numeri stanno in `as-tabella__num`**, incolonnati a destra: due righe si confrontano a

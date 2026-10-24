@@ -21,19 +21,27 @@ server su **ogni** endpoint (Pydantic sugli input). Nessuna risorsa da CDN: il f
 serve da se'.
 
 **Rete.** In v1 non c'e' login: la rete di casa e' fidata (`docs/adr/0002-rete-di-casa-e-chiave-di-avvio.md`). Ne segue che il
-servizio **ascolta solo dove deve** -- `127.0.0.1` in locale, l'interfaccia del container
-sul NAS, mai `0.0.0.0` su una macchina esposta -- e che nessun endpoint puo' fare danni
+servizio **ascolta solo dove deve** -- `127.0.0.1` in locale con la chiave di avvio su ogni
+rotta API, l'interfaccia del container sul NAS con gli host ammessi, mai `0.0.0.0` su una
+macchina esposta -- e che nessun endpoint puo' fare danni
 irreversibili senza conferma: i FITS non si toccano, e cancellare e' sempre un gesto
 esplicito.
 
 **Percorsi.** Tutto cio' che l'utente indica (cartelle, file) si risolve e si confina
 dentro le radici che ha dichiarato: un `..` in una richiesta non esce mai dall'archivio.
 
-**L'app non parla con nessuno, per costruzione.** Nessuna telemetria, nessun invio di
-errori, nessuna chiamata in rete che l'utente non abbia chiesto (l'arricchimento online e
-il meteo sono richieste sue). L'unica eccezione e' **il database stellare al primo
-avvio**: si scarica da un indirizzo fisso, con checksum verificato prima dell'uso, e lo si
-dice a schermo -- mai in silenzio, mai da un indirizzo letto da un dato. Una segnalazione la fa lui, a mano, con la pagina
+**L'app non parla con nessuno da sola, per costruzione.** Nessuna telemetria, nessun invio
+di errori. **Scarica da sola solo cio' che l'utente ha attivato** (Marco, 24/10/2026; ADR
+0003): il meteo del sito di casa e il suo storico, il catalogo stellare al primo avvio,
+l'arricchimento online quando lo chiede; il controllo degli aggiornamenti solo se acceso.
+Sempre da un indirizzo fisso, mai letto da un dato; il catalogo con checksum verificato
+prima dell'uso e dichiarato a schermo, mai in silenzio.
+
+**Licenze dei dati.** Un dato non commerciale **mai nel pacchetto**: ammesso solo scaricato
+in cache, col credito accanto (Marco, 24/10/2026; ADR 0003). "Tutti i diritti riservati"
+nemmeno in cache (la cache e' una copia, ADR 0023).
+
+**Diagnostica.** Una segnalazione la fa l'utente, a mano, con la pagina
 Diagnostica -- il cui testo **non porta percorsi dell'utente ne' coordinate di sito**: si
 copia e si incolla in pubblico.
 

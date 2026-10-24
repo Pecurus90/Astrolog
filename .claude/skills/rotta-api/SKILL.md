@@ -32,9 +32,13 @@ che e' esattamente quello che deve succedere.
 un `async def` blocca l'event loop di tutti mentre il worker scrive. FastAPI manda i
 `def` su un thread e il resto respira.
 
-**Ogni elenco e' paginato**, e i nomi dei campi vengono dal glossario
-(`docs/domini/glossario.md`): un archivio puo' avere cinquantamila frame in una cartella, e
-un campo chiamato in due modi in due rotte e' due tipi TypeScript per la stessa cosa.
+**Versione e pagine (ADR 0011).** Ogni rotta sta sotto `/api/v1`; cio' che rompe un client e'
+un `v2`; fuori versione solo `/api/health`. **Pagina ogni elenco che cresce con l'archivio**:
+cinquantamila frame in una cartella succedono. Un elenco che non cresce non pagina, lo dice
+nella docstring ed entra nell'elenco delle eccezioni di ADR 0011.
+
+**I nomi dei campi vengono dal glossario** (`docs/domini/glossario.md`): un campo chiamato in
+due modi in due rotte e' due tipi TypeScript per la stessa cosa.
 
 **Una rotta non calcola.** Legge, mette in fila, risponde. I conti stanno nel modulo del
 disegno che li possiede; una formula dentro una rotta e' la seconda casa di quella formula.

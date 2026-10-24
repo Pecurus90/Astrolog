@@ -1,9 +1,10 @@
 # 0020 -- La qualita' della notte e' un punteggio da 0 a 100, coi pesi decisi con Marco
 
-**Stato:** accettata, 17/10/2026 (Marco); superata in parte da ADR 0034 (24/10/2026: pesi, ora
-utile da 60, seeing nel voto, Luna). Ribadita il 20/10/2026: non si torna al semaforo dalle
-sole nuvole, ne' in un contratto ne' in una brief. I pesi della tabella sono la proposta v2: si
-toccano solo con Marco.
+**Stato:** accettata, 17/10/2026 (Marco); superata in gran parte da ADR 0034 (somma a punti, pesi, seeing nel voto, ora utile da 60, Luna 25/50 e -5°, fattore mancante ripartito, nebbia dall'Atlante WMO).
+Restano: pioggia, nuvole oltre il 50% e nebbia azzerano l'ora; la Luna fuori dal voto decide la
+ripresa; notte = media delle ore di buio; verdetto 70/40; calcola il backend; il Sole da decidere.
+Non costruiti: una casa per la regola della Luna nelle Impostazioni, i tratti della ripresa a
+schermo. Ribadita il 20/10/2026: non si torna al semaforo dalle sole nuvole.
 
 **Supera** in `docs/domini/meteo.md`: "lo decidono solo le nuvole"; "Nessun voto unico della notte"; "la Luna resta fuori dal verdetto"
 

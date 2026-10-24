@@ -1,6 +1,7 @@
 # 0014 -- Da confermare semplificata: meno famiglie di domande, chiavi che non si spostano
 
-**Stato:** accettata, 5/10/2026
+**Stato:** accettata, 5/10/2026. Costruita nella spina vecchia (`docs/domini/spina.md`). La "fase 2
+del refactor" sotto e' superata dalla pipeline nuova (`backend/astrolog/pipeline/`).
 
 ## Contesto
 

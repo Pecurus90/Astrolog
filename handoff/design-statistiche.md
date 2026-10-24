@@ -1,5 +1,19 @@
 # Per Claude Design -- Statistiche, brief completa (v1.3)
 
+## 0quater. Allineamento alle regole del 24/10/2026
+
+La pagina e' ancora in lavorazione con Marco: questa brief resta finche' non c'e' un contratto.
+Valgono sopra cio' che segue:
+- **Bortle del sito** (ADR 0039, regola intera in `docs/domini/sito.md`): notti in almeno 4 mesi
+  degli ultimi 12, nessun buco oltre 3 mesi, livello annuo da un fit armonico. Dati scarsi:
+  **«Servono notti in almeno 4 mesi, senza buchi di oltre 3: finora {n} notti in {m} mesi.»**
+  (Marco). Esce «Servono notti in 6 mesi diversi».
+- **"Qualita' della notte" (0-100) diventa la Trasparenza** (ADR 0034): nuvole per aerosol, il
+  seeing fuori dal voto. Le notti buone restano quelle da 70. La riga «qualita' senza seeing»
+  cade; al suo posto, quando manca l'aerosol, una riga «senza aerosol» (testo da far approvare a
+  Marco). Nel selettore, «Qualita' media della notte» diventa «Trasparenza media della notte»
+  (da approvare).
+
 ## 0ter. Risposte alle domande della v31.6 (20/10/2026)
 
 1. **«Confronta setup»: si'** (Marco), ma **in ″**, non in px. La FWHM in ″ e' il cielo piu'
@@ -45,9 +59,7 @@ La pagina e' piaciuta molto a Marco. Si corregge e si aggiunge solo questo:
    setup con piu' ore, come avete gia' fatto per la FWHM (approvato), e la riga lo dice.
    Raggruppate il selettore in tre: «Cielo», «Frame», «Volumi».
 2. **Bortle in sez. 9**: «misurato su {n} notti» segue la regola dell'ADR 0022, non la mediana di
-   tutte le notti: ultimi 12 mesi, notti in almeno 6 mesi diversi, solo frame col bias, Sole sotto
-   -18°, Luna sotto -5°, oggetto sopra 30°. Una mediana per notte, poi la mediana delle notti.
-   Dati scarsi: «Servono notti in 6 mesi diversi: finora {n} notti in {m} mesi.»
+   tutte le notti: la regola e la frase dei dati scarsi in 0quater.
 3. **Approvati da Marco**: gradini del calendario a 2, 4 e 6 ore; FWHM del setup con piu' ore;
    «Cielo» diviso in SQM e Seeing; i vostri testi nuovi, con una correzione: «Scansiona ora» ->
    **«Scansiona»**, come nel resto dell'app.

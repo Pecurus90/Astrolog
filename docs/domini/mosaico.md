@@ -47,7 +47,8 @@ del Planner (ADR 0023), non un minimo. I valori che circolano fra chi fotografa 
 40%: una soglia fissa non sarebbe una convenzione, sarebbe **un'ipotesi**, e
 taglierebbe fuori chi riprende piu' stretto o senza margine (Marco, 12/9/2026). La conseguenza
 e' voluta: due riprese lunghe dello stesso soggetto ricentrate fra due notti oltre la soglia della stessa
-inquadratura (`SAME_POINTING_FRACTION`) arrivano come **proposta**, che si rifiuta una volta;
+inquadratura (centri entro 1/4 della mezza diagonale piu' corta, `SAME_POINTING_FRACTION`,
+ADR 0038) arrivano come **proposta**, che si rifiuta una volta;
 alzarla unirebbe in silenzio i pannelli di chi riprende con molta sovrapposizione.
 
 **Il nome rafforza, non decide.** Un header che dice `Panel 2` e' un indizio forte -- N.I.N.A.

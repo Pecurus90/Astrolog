@@ -443,42 +443,43 @@ Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T t
 
 | ADR | titolo | stato | supera in |
 |---|---|---|---|
-| 0001 | Il metodo passa a strumenti standard | accettata, 30/9/2026 |  |
-| 0002 | Nessun login: la rete di casa e' fidata, e ogni avvio ha la sua chiave | accettata, 13/9/2026 |  |
-| 0003 | ASTAP e' impacchettato per tutti, e il suo database si scarica al primo avvio | accettata, 9/9/2026; il catalogo che si scarica e' il D50 (ADR 0036, 24/10/2026). |  |
-| 0004 | Su Windows e Mac l'app e' un'app vera: Tauri 2 col backend come sidecar | accettata, 4/9/2026; la scelta fra Tauri ed Electron la chiude il prototipo |  |
-| 0005 | Il motore della carta del cielo e' Aladin Lite v3 | accettata |  |
-| 0006 | Il cielo fotografico (DSS2) non sta mai nel pacchetto | accettata |  |
-| 0007 | Le metriche dei frame con `sep` e numpy/scipy, non `photutils` | accettata |  |
-| 0008 | Una pagina Diagnostica, nessuna telemetria | accettata |  |
-| 0009 | Tutto automatico, manuale per eccezione; v1 e' un'app completa | accettata |  |
-| 0010 | Un utente per istanza, con piu' siti e piu' setup | accettata |  |
-| 0011 | L'API e' versionata, e pagina ogni elenco che cresce con l'archivio | accettata |  |
-| 0012 | Il disegno delle pagine viene da Claude Design e si porta alla lettera | accettata, 29/9/2026 |  |
-| 0013 | Progetti e piano della notte: il Planner fa i progetti, la serata si compone a parte | accettata, 4/10/2026. ADR 0033: lo scarto dei frame lo sceglie l'utente (ADR 0032). |  |
-| 0014 | Da confermare semplificata: meno famiglie di domande, chiavi che non si spostano | accettata, 5/10/2026 |  |
-| 0015 | Una ricetta per tipo di lavoro, una revisione sola | accettata, 5/10/2026. Sostituisce il giro di revisione di ADR 0001. |  |
-| 0016 | La focale di un frame si misura dal cielo, l'header e' il ripiego | accettata, 6/10/2026 (Marco). |  |
-| 0017 | Il backup delle risposte: un file accanto al database, riscritto a ogni risposta | accettata, 7/10/2026 (Marco). |  |
-| 0018 | Si passa tutto al telaio e al foglio v26, senza convivenza | accettata, 7/10/2026 |  |
+| 0001 | Il metodo passa a strumenti standard | accettata, 30/9/2026. Superata in parte da ADR 0015 (giro di revisione) e da ADR 0040: |  |
+| 0002 | Nessun login: la rete di casa e' fidata, e ogni avvio ha la sua chiave | accettata, 13/9/2026; in vigore, costruito (host ammessi, chiave di avvio, pagina con la |  |
+| 0003 | ASTAP e' impacchettato per tutti, e il suo database si scarica al primo avvio | accettata, 9/9/2026; in vigore; il catalogo che si scarica e' il D50 (ADR 0036, |  |
+| 0004 | Su Windows e Mac l'app e' un'app vera: Tauri 2 col backend come sidecar | accettata, 4/9/2026; in vigore, aperto: la scelta fra Tauri ed Electron la chiude il |  |
+| 0005 | Il motore della carta del cielo e' Aladin Lite v3 | accettata; in vigore, non costruito; versione (3.8.1) e mappe precisate da ADR 0023. |  |
+| 0006 | Il cielo fotografico (DSS2) non sta mai nel pacchetto | accettata; in vigore; esteso da ADR 0023 alle altre mappe. |  |
+| 0007 | Le metriche dei frame con `sep` e numpy/scipy, non `photutils` | accettata; superata in parte da ADR 0033 (D1: HFD e stelle da `measure`, non da ASTAP). Nessun codice: nasce con `measure`. |  |
+| 0008 | Una pagina Diagnostica, nessuna telemetria | accettata; in vigore; log costruito, pagina Diagnostica no. |  |
+| 0009 | Tutto automatico, manuale per eccezione; v1 e' un'app completa | accettata; in vigore. |  |
+| 0010 | Un utente per istanza, con piu' siti e piu' setup | accettata; in vigore. |  |
+| 0011 | L'API e' versionata, e pagina ogni elenco che cresce con l'archivio | accettata; in vigore; `/search` e `/api/health` aggiunti come eccezioni dichiarate |  |
+| 0012 | Il disegno delle pagine viene da Claude Design e si porta alla lettera | accettata, 29/9/2026; in vigore. |  |
+| 0013 | Progetti e piano della notte: il Planner fa i progetti, la serata si compone a parte | accettata, 4/10/2026. ADR 0033: lo scarto dei frame lo sceglie l'utente (ADR 0032). ADR 0034 supera la Luna da -5° e i gradini 25/50%: di fabbrica ING 25/65% dall'orizzonte, modificabile in Impostazioni (Marco, 24/10/2026). La spec sta in `docs/domini/piano-della-notte.md` e `docs/domini/planner.md` (24/10/2026). |  |
+| 0014 | Da confermare semplificata: meno famiglie di domande, chiavi che non si spostano | accettata, 5/10/2026. Costruita nella spina vecchia (`docs/domini/spina.md`). La "fase 2 |  |
+| 0015 | Una ricetta per tipo di lavoro, una revisione sola | accettata, 5/10/2026. Sostituisce il giro di revisione di ADR 0001. Superata in parte |  |
+| 0016 | La focale di un frame si misura dal cielo, l'header e' il ripiego | accettata, 6/10/2026 (Marco). Costruita nella spina vecchia; nella pipeline nuova da |  |
+| 0017 | Il backup delle risposte: un file accanto al database, riscritto a ogni risposta | accettata, 7/10/2026 (Marco). Costruita (`spine/backup.py`; prove in |  |
+| 0018 | Si passa tutto al telaio e al foglio v26, senza convivenza | accettata, 7/10/2026; in vigore. |  |
 | 0019 | Sole e Sistema solare entrano in Archivio a mano, il deep sky resta automatico | accettata, 17/10/2026 (Marco). Nessun codice ancora. Ordine dei pezzi: disegno della linguetta e di "Aggiungi oggetto"; comete, |  |
-| 0020 | La qualita' della notte e' un punteggio da 0 a 100, coi pesi decisi con Marco | accettata, 17/10/2026 (Marco); superata in parte da ADR 0034 (24/10/2026: pesi, ora | domini/meteo.md |
+| 0020 | La qualita' della notte e' un punteggio da 0 a 100, coi pesi decisi con Marco | accettata, 17/10/2026 (Marco); superata in gran parte da ADR 0034 (somma a punti, pesi, seeing nel voto, ora utile da 60, Luna 25/50 e -5°, fattore mancante ripartito, nebbia dall'Atlante WMO). | domini/meteo.md |
 | 0021 | L'attrezzatura porta i dati delle schede tecniche, e il setup ci calcola | accettata, 18/10/2026 (Marco). ADR 0033: i programmi verificati sono due (ADR 0029). |  |
-| 0022 | Le misure dei frame: tutte, attestate, nel database, senza voto | accettata, 18/10/2026 (Marco). Superata in parte da ADR 0033 e 0037 (SNR, zone, tilt). |  |
-| 0023 | Planner e Progetti: inquadratura, mosaico, setup di prova, filtri, modifiche | accettata, 18/10/2026 (Marco). ADR 0033: nel piano della notte il meteo e' una striscia (ADR 0013). |  |
-| 0024 | Statistiche: i confronti nel tempo | accettata, 20/10/2026 (Marco). Riprende il contratto vecchio |  |
+| 0022 | Le misure dei frame: tutte, attestate, nel database, senza voto | accettata, 18/10/2026 (Marco); superata in parte da ADR 0033 (stelle da `measure`), 0037 (SNR, zone, tilt) e 0039 (Qn, eccentricita', oggetto basso, Bortle del sito). Nessun codice. |  |
+| 0023 | Planner e Progetti: inquadratura, mosaico, setup di prova, filtri, modifiche | accettata, 18/10/2026 (Marco). ADR 0033: nel piano della notte il meteo e' una striscia (ADR 0013). Superata la riga "Planetario e solare: nessun progetto" (Marco, 19/10/2026: si salvano in Progetti senza ore). I progetti nascono solo nel Planner (Marco, 24/10/2026). La spec sta in `docs/domini/planner.md` (24/10/2026). |  |
+| 0024 | Statistiche: i confronti nel tempo | accettata, 20/10/2026 (Marco); superata in parte da ADR 0034 (qualita' della notte -> Trasparenza, seeing fuori, niente punti ripartiti). Nessun codice; la pagina e' ancora in lavorazione con Marco (24/10/2026). |  |
 | 0025 | Uno studio per ruoli: la pagina si collauda contro la tavola prima di Marco | accettata, 20/10/2026 (Marco, dal check di salute). Allarga ADR 0015: ricette, un giro |  |
-| 0026 | La pipeline usa cio' che ha gia': nome del file, posizione nell'header, effemeridi, notte | accettata, 20/10/2026 (Marco, dal check di salute). Nessun codice ancora: ordine in |  |
+| 0026 | La pipeline usa cio' che ha gia': nome del file, posizione nell'header, effemeridi, notte | accettata, 20/10/2026 (Marco, dal check di salute). Costruito solo il centro WCS come |  |
 | 0027 | Ogni cosa una casa e un tetto: piano, idee, Issue; niente coda | accettata, 20/10/2026 (Marco). Proposta completa e fonti: |  |
 | 0028 | Le ricette, gli audit e GitHub | accettata, 20/10/2026 (Marco). Proposta completa e fonti: |  |
 | 0029 | Due programmi verificati e una convenzione: N.I.N.A., ASIAIR, SBIG | accettata, 22/10/2026 (Marco). Supera "Software supportati: quattro" di CLAUDE.md. |  |
 | 0030 | Il metodo della pipeline: un passo alla volta, provato sul vero | accettata, 22/10/2026 (Marco). Vale per la pipeline rifatta da zero (`docs/piano.md`). |  |
-| 0031 | Generale prima: una lista standard, l'attrezzatura dell'utente, un abbinamento | accettata, 22/10/2026 (Marco). Vale per la pipeline nuova (ADR 0030). |  |
+| 0031 | Generale prima: una lista standard, l'attrezzatura dell'utente, un abbinamento | accettata, 22/10/2026 (Marco); in vigore. Vale per la pipeline nuova (ADR 0030). |  |
 | 0032 | La zona di selezione dei frame | accettata, 23/10/2026 (Marco); soglie e file rivisti lo stesso giorno sulla tavola di |  |
 | 0033 | Riconciliazione delle regole: ogni regola una casa | accettata, 23/10/2026 (Marco: R1-R4). Nessun valore cambia: i documenti si allineano | domini/spina.md, domini/notti.md, domini/glossario.md, domini/ereditato.md, domini/meteo.md, domini/archivio.md, domini/attrezzatura.md, domini/mosaico.md, piano.md, CLAUDE.md |
-| 0034 | Le regole del meteo con le fonti verificate, e il punteggio della notte v4 | accettata, 24/10/2026 (Marco: raffiche, condensa, Luna, nomi, soglie dal suo archivio). | domini/meteo.md |
-| 0035 | Le regole del cielo con le fonti verificate | accettata, 24/10/2026. Soglie tecniche scelte dalla sessione sulle convenzioni |  |
+| 0034 | Le regole del meteo con le fonti verificate, e il punteggio della notte v4 | accettata, 24/10/2026 (Marco); costruite le soglie (`weather/judge.py`, commit 07077958); non costruiti punteggio v4, Ore di posa, seeing dal jet, buio nautico, calendario a tre gradini. | domini/meteo.md |
+| 0035 | Le regole del cielo con le fonti verificate | accettata, 24/10/2026; costruiti classe 1 a 22,00, Garstang, SQM 7-23, Luna a -0,833 topocentrica, nomi delle fasi (commit 26656192, 9046559a, 1f464d3d); non costruiti tabella Bortle di ASTAP (Issue #28, aspetta il foglio di Design) e buio nautico. | domini/sito.md |
 | 0036 | Le regole di ASTAP con le fonti verificate, e il catalogo stellare D50 | accettata, 24/10/2026. Raccoglie le decisioni del piano di ASTAP (D2-D8) che stavano |  |
-| 0037 | Le regole delle misure dei frame con le fonti verificate | accettata, 24/10/2026. Soglie tecniche scelte dalla sessione sulle convenzioni |  |
+| 0037 | Le regole delle misure dei frame con le fonti verificate | accettata, 24/10/2026; superata in parte da ADR 0039 (2,5 MAD -> Qn, eccentricita' 0,45/0,71/0,6, oggetto basso 30°, Bortle su 6 mesi). Nessun codice: le misure nascono con `measure`. |  |
 | 0038 | Le regole di file, oggetti e API con le fonti, e l'oggetto annidato che si chiede | accettata, 24/10/2026 (Marco: l'oggetto annidato si chiede). Ultimi tre gruppi della |  |
-| 0039 | Le soglie deboli ricavate da fisica e statistica, o tarate su ogni utente | accettata, 24/10/2026. Fase 2b del registro (Marco: "portare dentro la nostra |  |
+| 0039 | Le soglie deboli ricavate da fisica e statistica, o tarate su ogni utente | accettata, 24/10/2026; supera in parte ADR 0022, 0034, 0036, 0037. Nessun codice: tutto nella fase 4 (le raffiche a 25 km/h di ADR 0034 sono gia' costruite). |  |
+| 0040 | Il metodo: sette regole tenute da macchine, congelato fino al 21/11/2026 | accettata, 24/10/2026 (Marco). Supera in parte ADR 0001, 0015, 0025, 0027, 0028, 0030, |  |

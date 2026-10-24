@@ -56,21 +56,31 @@ che sta arrivando. Supera "una voce nasce con la sua pagina": il binario e' gia'
 chi lo impara non lo reimpara. I **rimandi dentro le pagine** invece restano: un *Apri la notte*
 non si mostra finche' la pagina che aprirebbe non esiste.
 
-**Impostazioni e' una pagina con dentro le sue sezioni** (Marco, 16/9/2026): Cartelle, Siti,
-ASTAP, Scansioni, Backup, e le altre quando nascono. Ogni sezione ha il suo indirizzo
-(`/impostazioni/cartelle`): il tasto indietro funziona e il collegamento si manda.
+**Impostazioni e' una pagina con dentro le sue sezioni** (Marco, 16/9/2026). Oggi in codice:
+Cartelle, Sito, Luna, ASTAP, Servizi, Scansioni, Backup (`Impostazioni.tsx`); col porting Planner
+(soglie, tempi della notte, automazione per postazione: `planner.md`, `piano-della-notte.md`) e
+Diagnostica (`/diagnostica`, ADR 0008). Ogni sezione ha il suo indirizzo, in parole che l'utente
+legge: `/impostazioni/cartelle`, `/impostazioni/astap`, `/impostazioni/scansioni` (Marco,
+24/10/2026: non «riconoscitore» ne' «letture»; da costruire, il codice usa ancora i due nomi vecchi). Il tasto indietro funziona e il collegamento si
+manda. **Tutto cio' che il primo avvio chiede sta anche in Impostazioni**, nome e tema compresi
+(Marco, 21/10/2026): il primo avvio non si riapre. **Servizi** tiene le chiavi in un posto solo
+(Meteoblue, AAVSO, TNS), ognuna con l'ultimo tentativo. **Luna**: la regola della Luna di tutta
+l'app, di fabbrica ING 25/65% dall'orizzonte, modificabile (Marco, 24/10/2026; `meteo.md`).
 
 **La barra in alto dice il titolo della pagina, la scansione e la pastiglia di Stanotte.** La
 pagina non ripete il suo titolo (disegno v18).
 - **La scansione** ha quattro stati: inattiva ("Ultima scansione: ...", *Scansiona*), in corso
-  (fase, pista, numeri, *Interrompi*), interrotta (*Riprendi*), bloccata (il motivo, *Dettagli* e il verbo per ripartire). Il verbo lo
+  (fase, pista, numeri, *Interrompi*), interrotta («Interrotta a mano: …», Marco 20/10/2026, da
+  costruire: oggi «interrotta dall'utente»; *Riprendi*), bloccata (il motivo, *Dettagli* e il verbo per ripartire). Il verbo lo
   decide il backend. Sta nel telaio perche' **il lavoro sopravvive alla pagina**: cambiando
   schermata deve restare fermabile. *Riprendi* dopo uno Stop torna a leggere le cartelle rimaste.
 - **Cio' che la scansione non ha potuto fare** -- un rifiuto, una cartella caduta mentre la
   leggeva, le cartelle saltate -- e' una **riga di stato in testa al corpo**, con *Dettagli* che porta
   dove si ripara (Marco, 7/10/2026). Tacerlo farebbe sembrare completa una scansione che non lo e'.
-- **La ricerca** ("Cerca oggetto, notte, sito") trova cio' che sta nell'archivio, non le pagine
-  dell'app, che il binario ha gia'; entra quando cerca davvero, con la sua rotta
+- **La ricerca** («Cerca oggetto, notte, attrezzatura, sito o pagina») trova cio' che sta
+  nell'archivio **e le pagine dell'app** (Marco, 24/10/2026), nei sette gruppi del Telaio v31.8;
+  oggi in codice quattro gruppi, senza le pagine, col segnaposto vecchio. Entra quando cerca
+  davvero, con la sua rotta
   (Marco, 7/10/2026): un campo che non cerca e' una promessa che l'app non mantiene. La rotta
   c'e' (`GET /api/v1/search`): quattro gruppi, pochi per gruppo col totale. Gli oggetti col
   frammento dell'Archivio (tutti i nomi, senza spazi e maiuscole), le notti per data nelle forme
@@ -93,6 +103,13 @@ se sono piu' di uno; la classe del cielo letta con la sua misura; *Gestisci i si
 accordo, vento in quota, e il rimando al Meteo). Stanno insieme perche' dipendono tutti dal sito
 acceso. Scegliere un sito cambia il sito di casa: si rileggono stanotte, il meteo e l'elenco.
 L'app ricorda in questo browser se l'avevi lasciato aperto.
+
+**Il tema** (Marco, 17/10/2026; passo del primo avvio dal 24/10/2026): **modo** Chiaro, Scuro,
+Automatico (scuro dal tramonto all'alba del sito: senza sito e' spento, e una riga dice perche') e
+**accento** (originale, ambra · blu notte, turchese · petrolio, corallo · terracotta, ghiaccio ·
+indaco), ognuno riconoscibile dal campione dei suoi colori. Di partenza scuro, ambra · blu notte.
+Si vede subito, senza «Salva». Un componente solo, nel primo avvio e in Impostazioni; nella barra
+al piu' il modo. La chiusura del primo avvio lo dice («Scuro · ambra · blu notte»).
 
 **Cio' che si apre si chiude come tutto il resto**: Esc chiude (prima il foglio Altro, poi
 Stanotte), toccare il velo chiude, e il fuoco torna a chi l'aveva aperto.
@@ -117,4 +134,5 @@ cio' che il telaio mostra -- quante cose da confermare, la fase del lavoro, il s
 arriva pronto dall'API. Non ha ancora la lingua e il tema al volo, ne' il tuo nome: il disegno
 non li ha messi in barra, e tornano con Impostazioni, che porteranno anche tema chiaro e densita'
 (il foglio conosce `data-tema` e `data-densita`) e un indice, o l'ultima sezione aperta, invece di
-atterrare su *Cartelle*.
+atterrare su *Cartelle*. Il tema (modo e accento) si sceglie anche nel primo avvio, passo Tema
+dopo il sito (Marco, 24/10/2026): lo stesso selettore in tutti e due i posti.

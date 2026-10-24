@@ -27,7 +27,7 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
 | Senza sito di casa la pagina mi manda a dichiararlo, e non chiede niente a nessuno | `test_without_a_home_site_the_page_says_so_and_asks_nothing`, *senza sito di casa manda a dichiararlo* |
 | Un sito di casa senza fuso orario lo dice, invece di aspettare una previsione che non arrivera' | `test_a_home_site_without_a_timezone_is_said`, *un sito di casa senza fuso orario lo dice, e porta a sistemarlo* |
 | Una risposta senza notti intere non cancella la previsione di prima, e una nuova non tocca gli altri siti ne' il meteo osservato | `test_an_answer_that_brings_no_whole_night_leaves_the_last_forecast_alone`, `test_a_new_forecast_leaves_other_sites_and_the_observed_weather_alone` |
-| D'estate al nord, dove il buio non arriva, il verdetto guarda le ore col Sole sotto l'orizzonte e lo dice; dove il Sole non tramonta non c'e' verdetto | `test_without_dark_the_night_is_the_hours_with_the_sun_down`, `test_where_the_sun_never_sets_there_is_no_verdict` |
+| D'estate al nord, dove il buio non arriva, il verdetto guarda le ore col Sole sotto l'orizzonte e lo dice (deciso il buio nautico, Sole sotto -12°: ADR 0035, non ancora nel codice); dove il Sole non tramonta non c'e' verdetto | `test_without_dark_the_night_is_the_hours_with_the_sun_down`, `test_where_the_sun_never_sets_there_is_no_verdict` |
 | Le prime tre notti hanno le ore; dalla quarta alla settima vedo solo la tendenza, detta meno affidabile | `test_three_nights_are_full_and_the_following_are_a_trend`, *dalla quarta notte mostra la tendenza, senza ore* |
 | Accanto al verdetto leggo quanti modelli sono d'accordo | `test_each_night_says_how_many_models_agree`, *in testa le ore serene col semaforo, da che ora a che ora e l'accordo, con l'ora del posto* |
 | Per la planetaria vedo il jet stream, l'aerosol e, con la chiave Meteoblue, il seeing; nessun dato a fasce o ogni tre ore | `test_the_sky_aloft_joins_the_wind_of_the_model_and_the_seeing_of_its_hour`, `test_without_a_key_the_sky_is_asked_only_to_cams`, *un seeing che copre solo parte della notte lo dice nella media e nel picco* |
@@ -75,11 +75,14 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   arriva la previsione, e lo switch legge soltanto.
 - **Il cielo di una notte in parole** (`sky_word`, `weather/verdict.py`): la copertura media nel buio
   in okta (WMO 2700, classi METAR): 0 sereno, 1-4 sparso (FEW, SCT), 5-7 molto (BKN), 8 coperto; 0 e 8 solo a cielo del
-  tutto sgombro o coperto (Marco, 21/10/2026).
+  tutto sgombro o coperto (Marco, 21/10/2026). Le stesse classi dicono il cielo delle notti
+  passate, anche nelle Notti, al posto di poco, parzialmente e molto nuvoloso (Marco, 24/10/2026;
+  le Notti oggi dicono ancora le tre parole vecchie).
 - **La qualita' della notte: Trasparenza, Ore di posa, Seeing** (ADR 0034, che rivede ADR 0020).
   La **Trasparenza** di un'ora = 100 x (1 - nuvole) x la luce che passa l'aerosol (contata da AOD
   0,1, allo zenit); vale 0 con un "no": pioggia, nebbia, nuvole oltre il 50%, vento da 29 km/h,
-  raffica oltre 25. La notte e' la media delle ore di buio, ogni ora per i suoi minuti di buio; la
+  raffica oltre 25. La notte e' la media delle ore di buio, ogni ora per i suoi minuti di buio
+  (senza buio astronomico il buio nautico, detto); la
   linea ora per ora sale e scende con lei, in Meteo e in Dashboard (100 = un'ora senza limiti). Il
   **verdetto** viene da li': buona da 70, incerta da 40, sotto non adatta (misurato sull'archivio
   di Marco, ADR 0034). Le **Ore di posa** sono le ore di buio contate per quanto rendono, divise
@@ -91,7 +94,8 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   ora per ora (buona, incerta, niente) e per la notte quella dell'ora peggiore, con l'intervallo e
   il conto delle ore che la portano. Le soglie stanno in `backend/astrolog/weather/judge.py`, con
   la fonte accanto al numero (riverificate il 24/10/2026, ADR 0034), e la rotta le manda alla
-  pagina (`scales`):
+  pagina (`scales`). ADR 0039 sostituira' la condensa (Beysens), il seeing (rispetto al setup) e,
+  quando i frame bastano, le raffiche (per setup); oggi valgono queste:
   - nuvole e nuvole basse: classi FEW e SCT (WMO/ICAO); pioggia: qualunque e' niente (ASCOM);
     vento medio: incerta da Beaufort 4 (20 km/h), niente da 5 (29 km/h, RMetS); raffiche: niente
     oltre 25 km/h (iTelescope: Beaufort e' una scala del vento medio);
@@ -100,14 +104,20 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   - jet stream (250 hPa): niente da 126 km/h, i 35 m/s che meteoblue dice "seeing
     cattivo"; nessuna fonte per un gradino incerto, quindi non c'e';
   - seeing: buona fino a 2", incerta fino a 4", niente oltre (Astronomy Tools: Good, OK, Poor);
+    accanto, per la notte e per ogni setup, il **campionamento** col seeing previsto:
+    sottocampionato se la scala supera 1/2 del seeing, sovracampionato sotto 1/3; senza seeing
+    tace (ADR 0021, Nyquist). Da costruire; incontra il pavimento F del setup di ADR 0039;
   - aerosol: sotto 0,1 *limpido*, da 1 *molto fosco* (NASA Earth Observatory); in mezzo nessuna
     parola, che per la notte e' peggio di *limpido* (un'ora limpida non fa limpida la notte);
   - Luna, per la banda larga: buona sotto il 25% illuminata, *banda larga al limite* fino al 65%,
     da li' *consigliata banda stretta*: buio, grigio e chiaro dell'osservatorio ING (ADR 0034); il
-    25% esatto e' gia' grigio, come nel calendario. Conta da quando sorge (-0,833 gradi del Nautical Almanac),
-    come ESO, astroplan e lo scheduler di N.I.N.A. La riga dice le ore in cui e' su e cosa resta
-    nelle altre (Marco, 12/10/2026): "Luna al 55% dalle 23 · banda larga fino alle 23". Il
-    calendario della Luna usa la stessa scala. Su tutta la notte, solo il dato. Nessuna soglia al
+    25% esatto e' gia' grigio, come nel calendario. Conta da quando sorge (-0,833 gradi
+    sull'altezza topocentrica, USNO; ADR 0035), come ESO, astroplan e lo scheduler di N.I.N.A. La
+    riga dice le ore in cui e' su e cosa resta nelle altre (Marco, 12/10/2026): "Luna al 55% dalle
+    23 · banda larga fino alle 23". Il calendario della Luna usa gli stessi tre gradini
+    (`effemeridi.md`). Di fabbrica 25 e 65, dall'orizzonte; i due gradini si cambiano nelle
+    Impostazioni, una casa sola per Meteo e calendario (Marco, 24/10/2026; oggi il Meteo li ha
+    fissi in `judge.py`). Su tutta la notte, solo il dato. Nessuna soglia al
     75% per la banda stretta: e' un'abitudine riportata da una fonte sola (Telescope Live), non una
     convenzione.
   - visibilita': niente sotto 1 km, la nebbia (FAA-H-8083-28, 18.1.1: "less than 5/8 sm (1 km)";
@@ -135,6 +145,11 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   (`judge.shown_values`). Il valore della notte e' la media
   delle ore che hanno un numero (la pioggia, il totale); il picco e' l'ora peggiore; se una misura
   copre solo parte della notte lo dice, cosi' una media parziale non passa per intera.
+- **In Dashboard sei carte del meteo, sempre le stesse e allo stesso posto** (Marco, 12/10/2026):
+  nuvole, seeing, jet stream, vento, condensa, aerosol. Sono le carte del Meteo in piccolo, stesso
+  mattone; quella delle nuvole non ha la riga del giudizio, perche' la sua parola e' il verdetto in
+  testa. La trasparenza come carta non c'e'; temperatura, umidita', pioggia e nuvole basse si
+  leggono nel Meteo. I testi stanno in `frontend/src/i18n/it-dashboard.ts`.
 - **Tre notti piene, poi tendenza fino alla settima** (Marco, 26/9/2026): le ore e le misure delle
   prime tre notti, dalla quarta il verdetto, le nuvole, le ore di buio e l'accordo, detti meno
   affidabili. Nessuna fonte trovata
@@ -144,7 +159,8 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   lo faceva pesare oltre il 60esimo percentile, un numero scelto sul suo archivio: nessuna
   convenzione pubblica dice quando il vento a 700 hPa rovina una notte. La notte dice quante notti
   su dieci dell'ultimo anno, **da quel sito**, avevano meno vento nelle ore su cui si giudica la notte; la distribuzione si
-  chiede una volta l'anno (`weather_climate`) e sotto un terzo dell'anno di notti non si scrive, e il confronto tace.
+  chiede una volta l'anno (`weather_climate`) e sotto 120 notti non si scrive, e il confronto tace
+  (ADR 0039 porta il minimo a 250: quantili senza ipotesi su notti autocorrelate; non ancora nel codice).
 - **Quanti modelli sono d'accordo** si dice accanto al verdetto (Marco, 26/9/2026): e' cio' che fa
   capire quanto fidarsi di una notte senza cambiare modello a mano.
 - **La Luna non pesa nel punteggio, decide la ripresa** (ADR 0020): banda larga o solo banda

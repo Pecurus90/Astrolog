@@ -27,7 +27,7 @@ type Meteo = components["schemas"]["WeatherOut"]
 type Notte = Meteo["nights"][number]
 type NotteDellArchivio = components["schemas"]["Night"]
 
-/** Le sei carte del meteo, sempre al loro posto (Marco, 12/10/2026, `handoff/design-dashboard.md`). */
+/** Le sei carte del meteo, sempre al loro posto (Marco, 12/10/2026, `docs/domini/meteo.md`). */
 const SEI: readonly Destra[] = ["cloud", "seeing", "jet", "wind", "condensation", "aerosol"]
 
 const conMaiuscola = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)

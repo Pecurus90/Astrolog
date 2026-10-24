@@ -1,6 +1,7 @@
 # 0030 -- Il metodo della pipeline: un passo alla volta, provato sul vero
 
 **Stato:** accettata, 22/10/2026 (Marco). Vale per la pipeline rifatta da zero (`docs/piano.md`).
+Superata in parte da ADR 0040: tappa 5, un revisore, due su diff grandi, scelti dall'agente.
 
 ## Contesto
 
@@ -16,7 +17,7 @@ Ogni passo della pipeline nuova segue sette tappe, in ordine:
 
 1. **Una mappa piccola del passo**, verificata sui file veri (corpus e archivio di Marco, sola
    lettura). La mappa generale resta direzione, non contratto.
-2. **Le decisioni di Marco**, solo quelle del passo, a scelta multipla.
+2. **Le decisioni di Marco**, solo quelle del passo e solo di prodotto (ADR 0040), a scelta multipla.
 3. **Test sugli header veri, visti rossi, poi il codice**, in `backend/astrolog/pipeline/`.
 4. **Confronto con la pipeline di oggi** sullo stesso archivio: ogni differenza ha un perche' (il
    vecchio sbagliava, o si ripara il nuovo prima del commit). La lista delle differenze e' cio'
@@ -24,7 +25,7 @@ Ogni passo della pipeline nuova segue sette tappe, in ordine:
 5. **Revisione a contesto fresco**: per un passo del cuore, tre agenti con modelli diversi (due
    progettano prima senza vedere il codice, uno lo attacca), sei quesiti: copre tutti i casi? e'
    snello? decisioni giuste? logica giusta? codice giusto e snello? tutte le variabili? Per un
-   passo piccolo un revisore; quale dei due si chiede a Marco.
+   passo piccolo un revisore; quale dei due si chiede a Marco. (superata: vedi 0040)
 6. **Mappa aggiornata e commit** nello stesso giro: la mappa dice cio' che il codice fa, e la
    mappa grafica mostra a Marco lo stato di ogni mattone (fatto, in corso, da fare).
 7. **Si porta solo cio' che si usa**; cio' che resta senza uso, o doppio, si toglie.
@@ -36,7 +37,7 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
 - Un errore si vede nel passo che lo crea, non a pipeline finita.
 - La pipeline vecchia si cancella solo quando il confronto dell'ultimo strato non ha differenze
   senza perche'.
-- Costo: tre revisioni per passo del cuore (ordine di ore, non giorni).
+- Costo: tre revisioni per passo del cuore (ordine di ore, non giorni). (superata: vedi 0040)
 - **Identita' della posa** (Marco, 22/10/2026, secondo audit): camera, inizio UTC normalizzato,
   dimensioni e durata dall'header (`pipeline/fingerprint.py`); i pixel solo se ne manca uno, o se
   l'inizio non ha la frazione di secondo (pose brevi nello stesso secondo; archivio: mai). Un

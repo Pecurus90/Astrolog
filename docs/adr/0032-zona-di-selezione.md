@@ -2,7 +2,9 @@
 
 **Stato:** accettata, 23/10/2026 (Marco); soglie e file rivisti lo stesso giorno sulla tavola di
 Claude Design, con le fonti sotto. Si costruisce dopo measure (ADR 0022) e la parte 2 della
-pipeline nuova (notti, setup, oggetti).
+pipeline nuova (notti, setup, oggetti); non costruita. **Superata in parte da ADR 0039**: le soglie
+relative sono mediana ± 2,5 **Qn**, non MAD (anche "al limite": 1 Qn); eccentricita' scarto
+relativo al setup con avviso b/a 0,8; altezza: esteso sotto 30°, stella sotto 45°.
 
 ## Contesto
 
@@ -34,8 +36,8 @@ il guadagno solo con una keyword (guida WBPP di B. Landmann, tabella 1).
   `*Sigma` del SubframeSelector dividono per la deviazione media dalla mediana, non scalata
   (PCL, `SubframeSelectorMeasureData.h`). Una soglia assoluta pubblica non esiste per nessuna
   misura.
-- **Dalla mediana o a valore**: ogni riga lo sceglie l'utente (Marco); le partenze sono dalla
-  mediana dove una soglia a valore non ha fonte.
+- **Dalla mediana o a valore**: ogni riga lo sceglie l'utente (Marco); a schermo «Dalla mediana» ·
+  «A valore» (Marco, 24/10/2026). Le partenze sono dalla mediana dove una a valore non ha fonte.
 - **Partenze, uguali per ogni setup** (un numero dei setup di Marco a un altro utente non serve):
 
   | misura | partenza |

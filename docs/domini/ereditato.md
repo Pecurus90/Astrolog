@@ -8,8 +8,8 @@ superato (il nuovo non li deve riesumare). Ogni riga cita il posto in `old/` da 
 Quando un dominio riceve il suo contratto in `docs/domini/`, le righe che lo riguardano
 **si spostano li'** e spariscono da qui: questo file si svuota man mano che la spina cresce.
 
-Le parole sono quelle del glossario (`glossario.md`): dove il vecchio diceva "produzione"
-o "posa", qui si legge progetto e frame.
+Le parole sono quelle del glossario (`glossario.md`): dove il vecchio diceva "posa" per il
+file, qui si legge frame; "produzione" nel nuovo e' la riga per ottica e camera (`archivio.md`).
 
 ---
 
@@ -62,8 +62,6 @@ restano tre decisioni i cui domini non sono ancora nati.
 - **Rivedi identita' e' una superficie con due code** (conferma per coordinate; "stesso
   soggetto?"); confermare o correggere porta il metodo a *utente* ed esce dalla coda --
   `schermate.md:469-475`. Nel nuovo e' la sezione Oggetti di *Da confermare*.
-- **Mosaico o doppione non si decide da soli**: coordinate contigue sono un suggerimento, decide
-  l'utente; i pannelli si raccolgono, i doppioni si fondono -- `prodotto.md:382-386`.
 - **`OBJECT` non ASCII in latin-1 resta storpiato** e riapribile: degrado onesto -- `backlog.md:1578-1580`.
 
 ### Siti -- cio' che non ha ancora una casa
@@ -78,21 +76,14 @@ non e' ancora nato.
 
 ### Notti, sessioni, progetti
 
-- **Notte = data-notte + sito**; porta i dati irripetibili (meteo, Luna, ore di buio); due siti
-  nella stessa data sono due notti -- `database.md:264-303`.
-- **Sessione = notte x oggetto x setup**, persistita; le metriche aggregate **non si
-  memorizzano**; correggere uno dei tre attributi su un frame lo fa migrare di sessione --
-  `database.md:869-895`.
-- **Il progetto non e' derivabile**: l'automatismo **propone** una coppia (oggetto, setup)
-  scoperta all'import -- una per coppia, incrementale, mai spezzata nel tempo -- e l'utente
-  decide. Ogni oggetto ha almeno un progetto -- `architettura.md:660-668,727-733`.
+- **Il progetto non e' derivabile**: nasce solo nel Planner, e l'archivio non lo propone (Marco,
+  24/10/2026; `archivio.md`) -- il vecchio lo proponeva all'import, `architettura.md:660-668`.
 - **Un frame sta in al piu' un progetto**; l'attribuzione e' derivata (oggetto, setup, periodo),
   l'eccezione dichiarata per frame vince; i non assegnati restano sempre interrogabili --
   `architettura.md:670`.
 - **Chi cambia camera a meta' campagna trova due progetti; "Fondi" e' l'inverso** -- `architettura.md:732`.
-- **Il nome del progetto e' derivato** ("filtri . setup . anno"), mai persistito, non ripete
-  l'oggetto; arriva in due pezzi e la frase la compone il frontend nella sua lingua --
-  `architettura.md:674-680`.
+- **Il nome del progetto e' derivato**, mai persistito; il vecchio "filtri . setup . anno" e'
+  superato da «oggetto · ottica · camera» (`planner.md`) -- `architettura.md:674-680`.
 - **L'obiettivo si esprime in ore** (secondi nello schema); totale obbligatorio, per filtro
   facoltativo, sbilanciamento libero; la ricetta non fa mai il totale; i frame mancanti si
   contano con l'esposizione dichiarata, non con la media -- `architettura.md:765-814`, `target.md:471-475`.
@@ -127,25 +118,17 @@ non e' ancora nato.
 
 ## B. I frame -- cosa entra, cosa si conta
 
-- **Tipo del frame normalizzato** in {light, dark, flat, bias, dark_flat, unknown} da
-  `IMAGETYP`/`FRAME`/`FRAMETYPE` con i sinonimi (`offset`, `zero` -> bias; `science`, `object`
-  -> light); **assente -> unknown, mai "assumiamo light"** -- `fits/header_read.py:88-104`.
-- **I file di calibrazione e gli unknown si riconoscono e si contano, non si catalogano**; la
-  libreria di calibrazione e' fuori scope -- `backlog.md:1315-1317`, `importer.py:396-401`.
-- **Anti-stack**: un file con `STACKCNT`/`NCOMBINE`/`NIMAGES`, o con *master / integration / stack*
-  nel tipo o nell'oggetto, e' unknown -- mai per confronto di esposizione con la mediana --
-  `header_read.py:106-118`.
+- Tipo del frame, calibrazioni e anti-stack: in `spina.md` (*Cosa entra*).
 - **Un frame senza oggetto o senza data entra lo stesso**, con stato "non assegnato" e segnalato --
   `database.md:1395-1401`.
 - **`solved` = vera presenza di un WCS** (`WCSAXES`, matrice `CD`, `PLTSOLVD`), non un `CRVAL1` nudo --
   `architettura.md:1333-1335`. Nel nuovo il WCS lo misura ASTAP: quello dell'header e' un indizio.
-- **Rotazione in convenzione `CROTA2`** da `atan2(-CD1_2, CD2_2)`; NULL dove manca, mai derivata
-  da `OBJCTROT` -- `database.md:227-253` e la calibrazione del 2026-09 (segno opposto, 55 % a zero).
 - **Scala a tre livelli**: `SCALE`/`PIXSCALE` dell'header -> matrice `CD` -> pixel/focale x 206,265;
   mai ricalcolata a valle -- `database.md:235-239`. Nel nuovo, il solver ha la precedenza.
 - **Altezza, azimut e massa d'aria: header prima (94 % dei casi), effemeride come ripiego**;
   valori implausibili si scartano, non si correggono -- `database.md:202-225`.
-- **Il rumore float32 si taglia a sette cifre dove il dato entra** -- `database.md:191-200`.
+- **Il rumore float32 si toglie dove il dato entra** -- `database.md:191-200`; la pipeline nuova
+  solo sui float32 veri (ADR 0030).
 
 ---
 
@@ -159,8 +142,8 @@ non e' ancora nato.
 - **Serve solo alla miniatura** (Dashboard, mosaico, card notte), mai a giudicare -- `prodotto.md:172-183`.
 - **Resa**: mono -> autostretch deterministico; colore -> debayer col `BAYERPAT` **letto**, mai
   assunto -- `prodotto.md:193`.
-- **First light del setup = la notte piu' vecchia**; "ultima notte" di un progetto mai ripreso
-  e' `null`, non una data antica -- `target.md:481-482`.
+- **"Ultima notte" di un progetto mai ripreso e' `null`**, non una data antica --
+  `target.md:481-482`. (La prima notte del setup no: `attrezzatura.md`, Marco 21/9/2026.)
 
 ---
 
@@ -186,12 +169,10 @@ non e' ancora nato.
 
 ## E. Le metriche di qualita'
 
-- **L'app misura e non vota il frame**: lo scarto lo sceglie l'utente nella zona di selezione,
-  con soglie sue, reversibile (ADR 0032, 0033); `measure` non scarta -- `prodotto.md:166`.
 - **Metriche a doppia fonte, sdoppiate per origine** (header e calcolata); si mostra la calcolata
   se c'e' -- `database.md:838-851`.
-- **FWHM e HFR nascono in pixel; la FWHM esce in arcosecondi (x scala), l'HFR resta in pixel**;
-  senza scala -> `None`, e il frame non entra nelle medie -- `architettura.md:1689-1693`.
+- **FWHM e HFD nascono in pixel; a schermo in due unita', ″ e px** (ADR 0022); senza scala solo
+  px, e il frame non entra nelle medie in ″ -- `architettura.md:1689-1693`.
 - **SNR: la PSF SNR della documentazione di PixInsight** (ADR 0022, 0033); il vecchio, di <!-- software-ok -->
   picco sul rumore del cielo, non la seguiva -- `architettura.md:1706-1716`.
 - **Media FWHM pesata sui frame misurati**, mai sui frame totali -- `architettura.md:1695-1704`.
@@ -210,7 +191,8 @@ non e' ancora nato.
 
 ## F. Planner e progetti stanotte
 
-- **Sei mosse**: Trova -> Seleziona -> Inquadra -> Crea -> Salva -> Traccia -- `planner.md:17-28`.
+- **Sei mosse**: Trova -> Scegli il setup -> Inquadra -> Crea -> Salva -> Segui (nomi nuovi,
+  `planner.md`) -- vecchio `planner.md:17-28`.
 - **I modi di restringere si chiamano criteri, mai filtri** -- `planner.md:206-211`.
 - **Criteri divisi per costo**: sette di catalogo (tipo, dimensione, costellazione, catalogo,
   magnitudine, AR, Dec -- AR circolare, estremi vuoti non stringono, "senza dato" nato acceso)
@@ -220,13 +202,13 @@ non e' ancora nato.
 - **Comanda il buio**: ore, culmine, massa d'aria, distanza dalla Luna si misurano dentro il
   buio; **il buio lo decide il sito, non una manopola** (alle alte latitudini si scende al bordo
   piu' buio disponibile e lo si dichiara) -- `planner.md:427-436`, `architettura.md:392`.
-- **Il numero che decide e' `usable_hours`** (ore di buio sereno sopra l'orizzonte) --
-  `planning/tonight.py:6-11`.
+- **Il numero che decide**: nel Planner le **ore visibili** (non le ore utili del vecchio
+  `usable_hours`, `planner.md`) -- `planning/tonight.py:6-11`.
 - *Chiuso da Marco*: **altezza minima 30 gradi, distanza dalla Luna per banda (ADR 0023, 0033),
   ore minime 1 h sono valori di fabbrica in Impostazioni**, con la fonte accanto, modificabili una volta e
   usati ovunque; nel Planner si cambiano per una singola ricerca senza salvarli.
-- **Periodo migliore = 12 notti (il 15 di ogni mese), ore utili, Luna esclusa, run ciclico
-  all'80 % del massimo**; distinto dalla **stagione lavorabile** -- `architettura.md:398-423`.
+- **Periodo migliore = 12 notti (il 15 di ogni mese), ore visibili, Luna esclusa; mese buono
+  da 3 ore visibili il 15 del mese** (`planner.md`; il vecchio run ciclico all'80 % e' superato); distinto dalla **stagione lavorabile** -- `architettura.md:398-423`.
 - **La carta disegna, la geometria e' nostra**: rettangolo, rotazione, pannelli, mirino, scala
   sopravvivono senza rete; l'oggetto e' un mirino, non un'ellisse; trascinare la carta sposta
   l'inquadratura -- `planner.md:471-561`. Nel nuovo la carta e' Aladin Lite v3.
@@ -243,7 +225,8 @@ non e' ancora nato.
 - **Fattibile stanotte = tre condizioni** (ore di buio >= ore minime, Luna non troppo vicina,
   meteo non "no"); **ordine a tre chiavi** (si chiude stanotte -> ore utili -> ore mancanti);
   nessun punteggio composito; **l'assenza di previsione non e' un no** -- `target.md:127-163`.
-- **La postazione = la montatura, si rileva, non si configura**; nessuno scheduler -- `target.md:165-194`.
+- **La postazione = la montatura**; oggi si sceglie in tendina, col suo piano della notte
+  (`piano-della-notte.md`) -- `target.md:165-194`.
 - **Quattro bande**: in corso / in attesa / fermi / finiti; confine = stagione di ripresa;
   circumpolare mai "in attesa" -- `target.md:317-372`.
 - **Nessuna classifica assoluta del catalogo ("i migliori stanotte")** -- `target.md:512-513`.
@@ -268,8 +251,6 @@ non e' ancora nato.
 
 ## H. Vocabolari e cataloghi
 
-- **Sensori (35 geometrie) e corpi camera**: solo geometria, i millimetri si derivano; chip fuori
-  catalogo -> `None`, mai preso in prestito -- `equipment/sensori.py`, `camere.py`.
 - **Ottiche: nessuna tassonomia curata**; testo libero + tendina auto-popolata -- `prodotto.md:209`.
 - **Tipo dell'oggetto (21 codici) derivato in Python; il frontend traduce**; famiglie d'uso (9)
   separate dal tipo; `Dup` e `NonEx` esclusi -- `catalogs/kinds.py:35-128`.
@@ -305,10 +286,8 @@ non e' ancora nato.
 - **"Stanotte" la decide il server sul fuso del sito** -- `architettura.md:378`.
 - **Le modali di oggetto e notte sono l'una la trasposta dell'altra** -- `schermate.md:425,601`.
 - **Sei superfici con anteprima, nessuna mostra due immagini** -- `prodotto.md:170-180`.
-- **Nessun voto per notte, nessuna nota manuale sulle sessioni** -- `schermate.md:591-595`.
 - **Affordance a tre livelli** (naviga / apre / niente); il rosso solo per chi perde dati; ambra
   = invito -- `schermate.md:256,645`.
-- **Niente registro di manutenzione in Attrezzatura** -- `schermate.md:890`.
 - **Parita' di funzioni fra desktop e mobile, solo layout diverso; soglie sulla colonna, non
   sulla finestra** -- `architettura.md:63-67`.
 
@@ -319,7 +298,6 @@ non e' ancora nato.
 Il vecchio le aveva decise e poi rovesciate; compaiono ancora nei suoi doc e possono sembrare
 vive. Non lo sono.
 
-- progetto = oggetto + un solo setup (`database.md:961,1181`) -> M:N
 - serve la finestra temporale del progetto (`database.md:414`) -> facoltativa
 - catalogo a due livelli con voce canonica (`database.md:581-600`) -> una voce
 - seeing stimato dal vento in quota (`prodotto.md:49-58`) -> fonti di seeing
@@ -329,13 +307,14 @@ vive. Non lo sono.
 - crepuscolo, altezza minima, distanza Luna come preferenze libere -> valori di fabbrica dichiarati
 - card dell'archivio con l'anteprima (`backlog.md:792`) -> solo foto finale o segnaposto
 - faccetta "Stato" e badge Completato in Library (`backlog.md:1883`) -> l'archivio e' del finito
-- "produzione" ritirata e poi reintrodotta (`backlog.md:1884`, `prodotto.md:354`) -> progetto
+- "produzione" ritirata e poi reintrodotta (`backlog.md:1884`, `prodotto.md:354`) -> nel nuovo la
+  riga per ottica e camera, finche' non ci sono i progetti (`archivio.md`)
 - pagina "Sessioni" -> Notti; trasparenza -> visibilita'; `median` -> `sky_background`
 - survey di Aladin tolto e poi rinato nel Planner (`prodotto.md:258`)
 - chiave della sessione notte + oggetto senza setup (`database.md:874-883`)
 - data della notte = `DATE-OBS` - 12 h senza fuso (`database.md:1150`) -> fuso del sito
 - plate solving fuori dalla v1 (`prodotto.md:388-390`) -> ASTAP per tutti
-- guscio Electron, cinque lingue, "niente riscrittura da zero"
+- guscio Electron (resta ripiego in ADR 0004), cinque lingue, "niente riscrittura da zero"
 - "Sito sconosciuto", `defaultRigId`, le manopole senza lettori (`api/config.py:28-34`)
 
 ---

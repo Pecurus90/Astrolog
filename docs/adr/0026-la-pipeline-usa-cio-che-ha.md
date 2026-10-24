@@ -1,9 +1,9 @@
 # 0026 -- La pipeline usa cio' che ha gia': nome del file, posizione nell'header, effemeridi, notte
 
-**Stato:** accettata, 20/10/2026 (Marco, dal check di salute). Nessun codice ancora: ordine in
-`docs/piano.md`.
+**Stato:** accettata, 20/10/2026 (Marco, dal check di salute). Costruito solo il centro WCS come
+indizio (`pipeline/sky.py`, `pipeline/solve.py`); il resto in `docs/piano.md`.
 Superato in parte da ADR 0033: XISF si ignorano (ADR 0031); Voyager e SGP fuori finche' Marco non li
-aggiunge con un file vero (ADR 0029).
+aggiunge con un file vero (ADR 0029). Montature: regola rifatta da Marco il 24/10/2026 (sotto).
 
 ## Contesto
 
@@ -39,16 +39,16 @@ cache, `urllib`, niente `astroquery` (`docs/domini/catalogo.md`).
   senza dipendenze nuove (ADR 0019).
 - **Sesame (CDS)** per un OBJECT fuori catalogo e senza cielo: propone le coordinate in Da
   confermare. A richiesta, in cache, fuori dalla spina.
-- **Montature**: un vocabolario di montature (EQMod, HEQ5...) vale per ogni software, non solo
-  per l'ASIAIR. Solo con nomi veri.
+- **Montature** (Marco, 24/10/2026; supera "un vocabolario di montature per ogni software"):
+  nessuna lista di nomi. Si legge l'header (ASIAIR: `TELESCOP` e' la montatura), il resto si chiede una volta.
 - **Prima, i numeri veri**: una scansione con la pipeline nuova su una copia parziale
   dell'archivio di Marco (alcune notti N.I.N.A. e ASIAIR, nello scratch), per contare Da
   confermare per motivo.
 
 **Scartati**: astrometry.net come secondo solver (GPL, indici da GB, contro ADR 0003); tipo di
 frame dalle statistiche dell'immagine (le calibrazioni non entrano in archivio, nessuna
-convenzione per le soglie). **Da decidere con Marco**: XISF (dipendenza), il testo per i file di
-altri formati trovati e per i FITS compressi che ASTAP non apre.
+convenzione per le soglie). XISF: deciso, si ignora (ADR 0031). **Da decidere con Marco**: il testo
+per i file di altri formati trovati e per i FITS compressi che ASTAP non apre.
 
 ## Conseguenze
 

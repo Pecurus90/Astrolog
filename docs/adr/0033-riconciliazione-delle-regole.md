@@ -1,7 +1,8 @@
 # 0033 -- Riconciliazione delle regole: ogni regola una casa
 
 **Stato:** accettata, 23/10/2026 (Marco: R1-R4). Nessun valore cambia: i documenti si allineano
-all'ultima decisione gia' presa.
+all'ultima decisione gia' presa. Superata in parte da ADR 0040: revisione a tre agenti (L);
+`tools/glossario.py` e riduzioni dei documenti al passo 26 del piano.
 
 **Supera** in `docs/domini/spina.md`: "HFD e stelle costano una seconda passata"; "quando si potra', sara' un'esclusione"; "supportato e' N.I.N.A., ASIAIR, Voyager e SGP"; "i software supportati restano quattro"; "I vocabolari dicono solo cio' che i quattro software scrivono"; "il catalogo dei modelli resta come"; "XISF) quando un utente li chiede"
 **Supera** in `docs/domini/notti.md`: "misura mentre risolve la posa"
@@ -70,7 +71,7 @@ riscrive, porta in testa "superato in parte da ADR 0033".
 - Impostazioni: nascono dove una soglia non ha una convenzione unica (ADR 0013, 0020, 0023,
   0032); "impostazioni minime" di ADR 0009 e' superata (marcato).
 - Revisione: un giro (ADR 0015); per un passo del cuore della pipeline quel giro ha tre agenti
-  (ADR 0030). Nessun conflitto.
+  (ADR 0030). Nessun conflitto. (superata: vedi 0040)
 - SNR: la PSF SNR di ADR 0022; FWHM: fasce e limite del setup di ADR 0022 (Nyquist). In
   `ereditato.md`.
 - Lingua e tema: tornano con Impostazioni (`navigazione.md`); `ereditato.md` allineato.
@@ -82,10 +83,10 @@ riscrive, porta in testa "superato in parte da ADR 0033".
 ## Conseguenze
 
 - `tools/test_adr_superati.py` tiene fuori dai contratti le frasi superate qui sopra.
-- Restano aperti: il database stellare di ASTAP (ADR 0003 non lo nomina; D05 nei test, D80 e V50
+- Restano aperti: il database stellare di ASTAP (ADR 0003 non lo nomina, chiuso da ADR 0036; D05 nei test, D80 e V50
   in ADR 0022), da decidere col pacchetto; "posa" usata per frame in `spina.md`, ADR 0016 e 0030,
   che `tools/glossario.py` (ADR 0025) trovera'; il vocabolario della pipeline vecchia porta
   ancora Voyager e SGP finche' esce (ADR 0029).
 - La guida segue il codice: `guida-utente.md` (scarto, filtri, meteo) cambia quando si
   costruiscono ADR 0020, 0031 e 0032; `sito.md` e la guida con R2.
-- ADR sopra 100 righe e `spina.md` sopra 400: si riducono in `piano.md`, Dopo 2.
+- ADR sopra 100 righe e `spina.md` sopra 400: si riducono al passo 26 del piano (ADR 0040).
