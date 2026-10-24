@@ -472,7 +472,7 @@ Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T t
 | 0027 | Ogni cosa una casa e un tetto: piano, idee, Issue; niente coda | accettata, 20/10/2026 (Marco). Proposta completa e fonti: |  |
 | 0028 | Le ricette, gli audit e GitHub | accettata, 20/10/2026 (Marco). Proposta completa e fonti: |  |
 | 0029 | Due programmi verificati e una convenzione: N.I.N.A., ASIAIR, SBIG | accettata, 22/10/2026 (Marco). Supera "Software supportati: quattro" di CLAUDE.md. |  |
-| 0030 | Il metodo della pipeline: un passo alla volta, provato sul vero | accettata, 22/10/2026 (Marco). Vale per la pipeline rifatta da zero (`docs/piano.md`). |  |
+| 0030 | Il metodo della pipeline: un passo alla volta, provato sul vero | accettata, 22/10/2026 (Marco). Vale per la pipeline rifatta da zero (`docs/piano.json`). |  |
 | 0031 | Generale prima: una lista standard, l'attrezzatura dell'utente, un abbinamento | accettata, 22/10/2026 (Marco); in vigore. Vale per la pipeline nuova (ADR 0030). |  |
 | 0032 | La zona di selezione dei frame | accettata, 23/10/2026 (Marco); soglie e file rivisti lo stesso giorno sulla tavola di |  |
 | 0033 | Riconciliazione delle regole: ogni regola una casa | accettata, 23/10/2026 (Marco: R1-R4). Nessun valore cambia: i documenti si allineano | domini/spina.md, domini/notti.md, domini/glossario.md, domini/ereditato.md, domini/meteo.md, domini/archivio.md, domini/attrezzatura.md, domini/mosaico.md, piano.md, CLAUDE.md |

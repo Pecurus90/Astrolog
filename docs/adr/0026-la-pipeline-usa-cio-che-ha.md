@@ -1,7 +1,7 @@
 # 0026 -- La pipeline usa cio' che ha gia': nome del file, posizione nell'header, effemeridi, notte
 
 **Stato:** accettata, 20/10/2026 (Marco, dal check di salute). Costruito solo il centro WCS come
-indizio (`pipeline/sky.py`, `pipeline/solve.py`); il resto in `docs/piano.md`.
+indizio (`pipeline/sky.py`, `pipeline/solve.py`); il resto in `docs/piano.json`.
 Superato in parte da ADR 0033: XISF si ignorano (ADR 0031); Voyager e SGP fuori finche' Marco non li
 aggiunge con un file vero (ADR 0029). Montature: regola rifatta da Marco il 24/10/2026 (sotto).
 

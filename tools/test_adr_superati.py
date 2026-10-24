@@ -29,6 +29,8 @@ def test_a_superseded_sentence_is_gone_from_its_contract():
     tornate = [
         f"{adr}: {contratto} dice ancora {frase!r}"
         for adr, contratto, frase in superate()
-        if frase.lower() in (RADICE / contratto).read_text(encoding="utf-8").lower()
+        # a removed document holds no sentence any more
+        if (RADICE / contratto).exists()
+        and frase.lower() in (RADICE / contratto).read_text(encoding="utf-8").lower()
     ]
     assert not tornate, tornate

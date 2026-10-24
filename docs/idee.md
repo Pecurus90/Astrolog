@@ -1,7 +1,7 @@
 # Le idee
 
 Idee di Marco e proposte non ancora decise, una per voce, con la data in cui sono nate (ADR 0027).
-Un'idea non diventa lavoro finche' Marco non dice di farla: allora va nel [piano](piano.md). A
+Un'idea non diventa lavoro finche' Marco non dice di farla: allora va nel [piano](piano.json). A
 ogni tappa del piano si rilegge: si fa, resta o si cancella; ferma da tre tappe si cancella.
 
 - **La previsione accanto al meteo vero** (1/10/2026): tenere la previsione di una notte passata

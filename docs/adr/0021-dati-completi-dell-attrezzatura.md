@@ -1,7 +1,7 @@
 # 0021 -- L'attrezzatura porta i dati delle schede tecniche, e il setup ci calcola
 
 **Stato:** accettata, 18/10/2026 (Marco). ADR 0033: i programmi verificati sono due (ADR 0029).
-Non costruita: lo schema non ha OAG, distanziale, tolleranza, cerchio d'immagine, bias (`docs/piano.md`).
+Non costruita: lo schema non ha OAG, distanziale, tolleranza, cerchio d'immagine, bias (`docs/piano.json`).
 
 ## Contesto
 

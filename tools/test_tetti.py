@@ -19,7 +19,7 @@ def _check(monkeypatch, path: str, before: int, after: int) -> int:
 @pytest.mark.parametrize(
     ("path", "ceiling"),
     [
-        ("docs/piano.md", 80),
+        ("docs/piano.md", 0),
         ("docs/idee.md", 60),
         ("docs/adr/0030-x.md", 100),
         ("docs/domini/sito.md", 400),

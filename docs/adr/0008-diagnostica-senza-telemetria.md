@@ -18,4 +18,4 @@ l'app mandi niente da sola.
 
 - La Diagnostica raccoglie anche i frame che uno stadio ha segnato `failed`, che oggi restano nel
   residuo (`backend/astrolog/spine/group.py`).
-- La pagina nasce col pacchetto (`docs/piano.md`, *Piu' avanti*).
+- La pagina nasce col pacchetto (`docs/piano.json`).

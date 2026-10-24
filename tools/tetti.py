@@ -10,7 +10,7 @@ import sys
 
 CEILINGS = {
     "docs/coda.md": 0,
-    "docs/piano.md": 80,
+    "docs/piano.md": 0,
     "docs/idee.md": 60,
     "docs/adr/*.md": 100,
     "docs/domini/*.md": 400,
@@ -24,7 +24,6 @@ HOUSES = (
     "frontend/README.md",
     "docs/guida-utente.md",
     "docs/idee.md",
-    "docs/piano.md",
     "docs/registro.md",
     "docs/adr/[0-9][0-9][0-9][0-9]-*.md",
     "docs/domini/*.md",

@@ -5,7 +5,7 @@ header dei FITS, risolve ogni frame sul cielo, ricostruisce la cronologia. Backe
 SQLite), frontend React/TypeScript, nessun login. Il progetto di prima e' in `old/`, come cava:
 solo in locale e nel repository privato `Astrolog-archivio` (porta dati personali).
 
-Cosa fare: **una lista sola**, `docs/piano.md`, dal primo passo aperto in giu' (ADR 0040).
+Cosa fare: **una lista sola**, `docs/piano.json` (`python tools/piano.py`), dal primo passo aperto in giu' (ADR 0040).
 Decisioni nei contratti `docs/domini/` e negli ADR `docs/adr/`. Il metodo e' **ADR 0040**, fermo
 fino al 21/11/2026: un'idea di metodo va in una Issue `metodo`, non qui.
 

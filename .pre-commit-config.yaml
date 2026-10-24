@@ -31,6 +31,13 @@ repos:
         entry: python tools/commit_msg.py
         language: system
         stages: [commit-msg]
+      # The one list (ADR 0040): the agent may only tick a step; any other change says docs(piano):.
+      - id: plan-only-ticks
+        name: plan changes beyond a tick say docs(piano)
+        entry: python tools/piano.py --messaggio
+        language: system
+        always_run: true
+        stages: [commit-msg]
 
   - repo: https://github.com/pylint-dev/pylint
     rev: v4.1.1
@@ -107,6 +114,14 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [pre-commit]
+      # The one list is well formed: every step says when it is done, done is a commit.
+      - id: plan-format
+        name: plan steps well formed
+        entry: python tools/piano.py --controlla
+        language: system
+        pass_filenames: false
+        files: ^docs/piano\.json$
+        stages: [pre-commit, manual]
       # Working documents under a ceiling (ADR 0027); the queue never grows.
       - id: document-ceilings
         name: documents in their houses, under their line ceiling

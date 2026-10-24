@@ -15,7 +15,7 @@ misure). CLAUDE.md e' contesto, un hook e' deterministico (guida di Claude Code,
 
 | # | Regola | Macchina |
 |---|---|---|
-| 1 | **Una lista sola**: si lavora sul primo passo aperto di `docs/piano.json`; l'agente lo spunta e basta | `tools/piano.py` lo stampa all'avvio; al commit rifiuta ogni modifica che non sia una spunta senza messaggio `plan:` |
+| 1 | **Una lista sola**: si lavora sul primo passo aperto di `docs/piano.json`; l'agente lo spunta e basta | `tools/piano.py` lo stampa all'avvio; al commit rifiuta ogni modifica che non sia una spunta senza messaggio `docs(piano):` (`plan:` non e' un tipo Conventional Commits) |
 | 2 | **Prima il rosso**: CI, Nightly, Issue `difetto`/`sicurezza`, avviso di sicurezza vengono prima di ogni passo | SessionStart `tools/stato.py`; Stop hook; controllo in sottofondo dopo il push; Issue `nightly-rosso` aperta dalla Nightly |
 | 3 | **Fatto = provato**: un passo e' fatto quando il commit che lo spunta e' verde su GitHub, non in locale | SessionStart guarda la CI del commit della spunta; rossa, il passo torna in testa |
 | 4 | **Uno scrive, gli altri leggono**: in parallelo solo `esploratore` (2-4, con obiettivo, formato e confini) e `revisore` (uno, due su diff grandi) | Strumenti dei sotto-agenti: `esploratore` e `revisore` non scrivono |
@@ -88,5 +88,5 @@ Gia' fatto: CI verde di nuovo dal commit `ca6b2f61`; case dei documenti controll
 - ADR 0001, 0015, 0025, 0027, 0028, 0030, 0033 portano in testa "superata in parte da ADR 0040"
   con le parti; il corpo non si riscrive.
 - `tools/tetti.py`: CLAUDE.md 100, `docs/piano.md` 0 quando nasce `piano.json`.
-- Rischi accettati: lo Stop scatta a ogni risposta (voluto, si misura); un `plan:` si puo'
+- Rischi accettati: lo Stop scatta a ogni risposta (voluto, si misura); un `docs(piano):` si puo'
   inventare (il controllo lo rende visibile); GitHub puo' saltare una Nightly (oltre 36 ore = rosso).

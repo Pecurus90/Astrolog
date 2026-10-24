@@ -1,6 +1,6 @@
 # 0030 -- Il metodo della pipeline: un passo alla volta, provato sul vero
 
-**Stato:** accettata, 22/10/2026 (Marco). Vale per la pipeline rifatta da zero (`docs/piano.md`).
+**Stato:** accettata, 22/10/2026 (Marco). Vale per la pipeline rifatta da zero (`docs/piano.json`).
 Superata in parte da ADR 0040: tappa 5, un revisore, due su diff grandi, scelti dall'agente.
 
 ## Contesto
