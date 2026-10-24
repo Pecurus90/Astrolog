@@ -51,7 +51,7 @@ CREATE TABLE sites (
   elevation_source TEXT CHECK (elevation_source IN ('declared', 'service')),
   timezone     TEXT,                                 -- IANA; NULL quando non si riconosce un
                                                      -- fuso (in mare aperto vale il nautico)
-  sky_sqm      REAL CHECK (sky_sqm BETWEEN 10 AND 23),  -- gli stessi estremi di
+  sky_sqm      REAL CHECK (sky_sqm BETWEEN 7 AND 23),   -- gli stessi estremi di
                                                        -- units.SQM_MIN/SQM_MAX: questa
                                                        -- e' la guardia del database
   sky_source   TEXT CHECK (sky_source IN ('measured', 'service', 'scale')),

@@ -170,7 +170,7 @@ def test_the_bortle_is_derived_and_never_stored(client_vuoto, offline):
 
 
 def test_a_sky_brightness_outside_the_scale_is_refused(client_vuoto, offline):
-    for bad in ({"sky_sqm": 9.0}, {"sky_sqm": 24.0}, {"bortle": 0}, {"bortle": 10}):
+    for bad in ({"sky_sqm": 6.9}, {"sky_sqm": 24.0}, {"bortle": 0}, {"bortle": 10}):
         r = client_vuoto.post("/api/v1/sites", json={**ASIAGO, **bad})
         assert r.status_code == 422, (bad, r.text)
 
@@ -311,7 +311,7 @@ def test_a_full_site_has_nothing_unknown(client_vuoto, monkeypatch):
 def test_an_impossible_sky_from_the_service_is_not_a_sky(client_vuoto, monkeypatch):
     """Un servizio che risponde una luminosita' assurda ha risposto un guasto: non si salva,
     e non diventa un errore in faccia a chi sta creando il luogo."""
-    answers(monkeypatch, {"lightpollutionmap": "50000", "elevation": {"elevation": [120.0]}})
+    answers(monkeypatch, {"lightpollutionmap": "1000000", "elevation": {"elevation": [120.0]}})
     client_vuoto.patch("/api/v1/settings", json={"values": {"sky_service_key": "k"}})
     site = create(client_vuoto)
     assert site["sky_sqm"] is None and site["sky_source"] is None

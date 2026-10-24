@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 133; senza fonte: 5.
-Fonti: C norma: 52; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 23; T tecnico: 44.
+Valori: 133; senza fonte: 2.
+Fonti: C norma: 55; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 23; T tecnico: 44.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -363,11 +363,11 @@ Fonti: C norma: 52; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 23; T t
 | ARCSEC_PER_RAD_PER_1000 | `206.265` | C 648000/pi |
 | FOCAL_TOLERANCE | `0.05` | P ADR 0016 |
 | NATURAL_SKY_CD_M2 | `174e-6` | C Falchi 2016: "22.0 mag/arcsec2, corresponding to 174 ucd/m2" |
-| CD_M2_PER_MAG0 | `1.08e5` | **senza fonte** |
+| GARSTANG_OFFSET_MAG | `12.603` | C Garstang 1986 via Cinzano 2005: "V = 12.603 - 2.5 log10 L" |
 | BORTLE_FLOORS | `BORTLE_FLOORS = ((1, 21.76), (2, 21.60), (3, 21.30), (4, 20.80), (5...` | **senza fonte** |
 | BORTLE_FLOORS | `(7, 18.00), (8, 17.00))` | **senza fonte** |
-| (BORTLE_TOP, BORTLE_BOTTOM) | `22.00, 16.00` | **senza fonte** |
-| (SQM_MIN, SQM_MAX) | `10.0, 23.0` | **senza fonte** |
+| (BORTLE_TOP, BORTLE_BOTTOM) | `22.00, 16.00` | C Falchi 2016: "22.0 mag/arcsec2" |
+| (SQM_MIN, SQM_MAX) | `7.0, 23.0` | C Unihedron SQM-LU FAQ: "about 7 (brightest) to 23 (darkest)" |
 
 ### weather/climate.py
 

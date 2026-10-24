@@ -126,14 +126,16 @@ def focal_buckets(focals: Iterable[Any], tol: float = FOCAL_TOLERANCE) -> dict[f
 # Natural night-sky background, else a perfect site has infinite brightness.
 # [C Falchi 2016: "22.0 mag/arcsec2, corresponding to 174 ucd/m2"]
 NATURAL_SKY_CD_M2 = 174e-6
-# The constant linking candela per square metre and magnitudes per square arcsecond.
-CD_M2_PER_MAG0 = 1.08e5
+# Luminance to sky brightness, V = offset - 2.5 log10(cd/m2); gives Falchi's 174 back as 22.00.
+# [C Garstang 1986 via Cinzano 2005: "V = 12.603 - 2.5 log10 L"]
+GARSTANG_OFFSET_MAG = 12.603
 
 # Bortle gave no numeric bounds: the floors of Wikipedia's *Bortle scale* (docs/domini/sito.md),
 # its 4.5 read as 5; it merges 8 and 9 below 18.00, split at 17.00 for the inner city.
 BORTLE_FLOORS = ((1, 21.76), (2, 21.60), (3, 21.30), (4, 20.80), (5, 19.25), (6, 18.50),
                  (7, 18.00), (8, 17.00))  # fmt: skip
-# Class 1 is open above and 9 below: two convenience ends for the reverse direction.
+# Class 1 is natural sky, 9 open below: the ends of the reverse direction.
+# [C Falchi 2016: "22.0 mag/arcsec2"]
 BORTLE_TOP, BORTLE_BOTTOM = 22.00, 16.00
 
 
@@ -143,12 +145,12 @@ def sqm_from_brightness(artificial_mcd_m2: float | None) -> float | None:
     if artificial_mcd_m2 is None or artificial_mcd_m2 < 0:
         return None
     total = artificial_mcd_m2 / 1000.0 + NATURAL_SKY_CD_M2
-    return hundredths(-2.5 * math.log10(total / CD_M2_PER_MAG0))
+    return hundredths(GARSTANG_OFFSET_MAG - 2.5 * math.log10(total))
 
 
-# Below is a lit car park, above is no place on Earth: an answer outside is a fault, not a sky.
-# `schema.sql` repeats the numbers in a CHECK, the guard for whoever writes without passing here.
-SQM_MIN, SQM_MAX = 10.0, 23.0
+# Outside the meters' own range an answer is a fault, not a sky. `schema.sql` repeats it in a CHECK.
+# [C Unihedron SQM-LU FAQ: "about 7 (brightest) to 23 (darkest)"]
+SQM_MIN, SQM_MAX = 7.0, 23.0
 
 
 def believable_sqm(sqm: float | None) -> float | None:
@@ -168,7 +170,9 @@ def bortle_of(sqm: float | None) -> int | None:
 
 
 def sqm_of_bortle(bortle: int) -> float | None:
-    """The centre of the class, so reading it back gives the same class."""
+    """Centre of class, so reading back gives same class. Class 1: natural sky, open above."""
+    if bortle == 1:
+        return BORTLE_TOP
     floors = dict(BORTLE_FLOORS)
     low = floors.get(bortle, BORTLE_BOTTOM)
     high = floors.get(bortle - 1, BORTLE_TOP)

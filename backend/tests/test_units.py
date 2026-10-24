@@ -99,12 +99,14 @@ def test_the_field_in_degrees_comes_from_the_pixels_and_the_scale():
 
 
 def test_a_sky_outside_the_scale_is_not_a_sky():
-    """Sotto la soglia c'e' un piazzale illuminato, sopra non esiste un posto sulla Terra: un
-    servizio che risponde fuori da li' ha risposto un guasto, e un guasto non si salva."""
+    """La scala degli strumenti SQM (Unihedron: da circa 7, il piu' chiaro, a 23, il piu'
+    scuro): fuori da li' un servizio ha risposto un guasto, e un guasto non si salva."""
+    assert (SQM_MIN, SQM_MAX) == (7.0, 23.0)
     assert believable_sqm(21.3) == 21.3
+    assert believable_sqm(8.34) == 8.34  # centro di una grande citta': un cielo vero
     assert believable_sqm(SQM_MIN) == SQM_MIN
     assert believable_sqm(SQM_MAX) == SQM_MAX
-    for assurdo in (8.34, 9.99, 23.01, 40.0, -3.0):
+    for assurdo in (6.99, 23.01, 40.0, -3.0):
         assert believable_sqm(assurdo) is None, assurdo
     assert believable_sqm(None) is None
 
@@ -134,14 +136,17 @@ def test_the_sky_scale_goes_both_ways():
     for classe in range(1, 10):
         assert bortle_of(sqm_of_bortle(classe)) == classe
     assert sqm_of_bortle(1) > sqm_of_bortle(9)  # la classe 1 e' il cielo piu' scuro
+    # La classe 1 e' il cielo naturale (Falchi 2016: 22,0), non il centro di una fascia aperta.
+    assert sqm_of_bortle(1) == 22.00
 
 
 def test_sky_brightness_becomes_a_measurable_number():
     """Il servizio da' la luce ARTIFICIALE in millicandele per metro quadro: il cielo vero e'
-    quella piu' il fondo naturale, e si legge in magnitudini per arcosecondo quadrato."""
-    assert sqm_from_brightness(0.0) == pytest.approx(21.98, abs=0.01)  # solo il cielo naturale
-    assert sqm_from_brightness(1.0) == pytest.approx(19.91, abs=0.01)
-    assert sqm_from_brightness(100.0) == pytest.approx(15.08, abs=0.01)
+    quella piu' il fondo naturale, e si legge in magnitudini per arcosecondo quadrato con la
+    relazione di Garstang (V = 12,603 - 2,5 log10 L): il fondo naturale di Falchi torna 22,00."""
+    assert sqm_from_brightness(0.0) == 22.00  # solo il cielo naturale
+    assert sqm_from_brightness(1.0) == 19.93
+    assert sqm_from_brightness(100.0) == 15.10
     assert sqm_from_brightness(None) is None
     assert sqm_from_brightness(-1.0) is None  # una luminosita' negativa non e' un dato
     # due decimali, come il cielo scelto dalla scala: un terzo non e' una misura, e si leggerebbe

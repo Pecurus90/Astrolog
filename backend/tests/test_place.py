@@ -134,9 +134,9 @@ def test_the_sky_service_needs_a_key_and_never_invents():
 
     # il servizio da' la luce artificiale in millicandele: qui diventa una misura del cielo
     misura = place.sky_sqm_of(45.87, 11.51, key="k", fetch=fake("1.0"))
-    assert misura == pytest.approx(19.91, abs=0.01)
+    assert misura == pytest.approx(19.93, abs=0.01)
     assert place.sky_sqm_of(45.87, 11.51, key="k", fetch=fake("0")) == pytest.approx(
-        21.98, abs=0.01
+        22.00, abs=0.01
     )
 
     for risposta in ("", "non un numero", None, {"boh": 1}, "-3"):

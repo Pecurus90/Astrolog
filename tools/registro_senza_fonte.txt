@@ -1,6 +1,3 @@
 # Valori ancora senza fonte (tools/registro.py). Solo si accorcia.
 ephemeris/moon.py:_HALF_WIDTH_DEG
-units.py:(BORTLE_TOP, BORTLE_BOTTOM)
-units.py:(SQM_MIN, SQM_MAX)
 units.py:BORTLE_FLOORS
-units.py:CD_M2_PER_MAG0
