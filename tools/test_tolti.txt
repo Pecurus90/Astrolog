@@ -339,3 +339,5 @@ test_a_timeout_writes_nothing_so_the_next_pass_tries_again - punto 5: timeout sc
 test_a_timeout_at_the_first_launch_writes_nothing - punto 5: ora scritto timeout; rinominato test_a_timeout_at_the_first_launch_waits_for_the_next_pass
 test_a_crash_mid_ladder_writes_nothing - punto 5: ora scritto crashed col gradino; rinominato test_a_crash_mid_ladder_is_said_at_its_step
 test_a_file_that_is_not_there_is_a_reason - ASTAP non scrive mai "File not found" (misurato): rinominato test_a_file_astap_cannot_read_is_a_reason, sul testo vero
+test_the_frontend_score_reads_the_stryker_report - frontend mutation in ten parts; replaced by test_the_frontend_score_adds_up_the_stryker_report_of_every_shard
+test_the_frontend_report_read_is_the_one_written_on_a_cut_run_too - one incremental file per part; replaced by test_the_workflow_runs_every_frontend_shard_and_scores_them_together

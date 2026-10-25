@@ -56,8 +56,13 @@ jobs:
           mutmut results --all true > results.txt
           python ../tools/mutation_shards.py ${{ matrix.shard }} --filter < results.txt
 
-  # The frontend with StrykerJS; incremental, so a night retests only what changed.
+  # The frontend with StrykerJS, in parts (tools/mutation_shards.py); incremental, so a night
+  # retests only what changed. Stopped, Stryker saves a partial report, the next night resumes.
   mutation-frontend:
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     runs-on: ubuntu-latest
     timeout-minutes: 300
     defaults:
@@ -74,22 +79,45 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - uses: actions/cache/restore@v6
         with:
-          path: frontend/reports/stryker-incremental.json
-          key: stryker-${{ github.run_id }}
-          restore-keys: stryker-
+          path: frontend/reports/stryker-${{ matrix.part }}.json
+          key: stryker-${{ matrix.part }}-${{ github.run_id }}
+          restore-keys: stryker-${{ matrix.part }}-
       # In place: a test reads ../backend, which Stryker's sandbox copy does not hold.
-      - name: Mutants of the frontend
+      - name: Mutants of frontend part ${{ matrix.part }}
         timeout-minutes: 270
-        run: npx stryker run --inPlace
+        run: >-
+          timeout -k 5m -s INT 160m npx stryker run --inPlace
+          --mutate "$(python ../tools/mutation_shards.py frontend ${{ matrix.part }})"
+          --incrementalFile reports/stryker-${{ matrix.part }}.json
+          || [ $? -eq 124 ]
       - uses: actions/cache/save@v6
         if: always()
         with:
-          path: frontend/reports/stryker-incremental.json
-          key: stryker-${{ github.run_id }}
-      - name: Frontend score against the reference
+          path: frontend/reports/stryker-${{ matrix.part }}.json
+          key: stryker-${{ matrix.part }}-${{ github.run_id }}
+      - uses: actions/upload-artifact@v4
         if: always()
-        # the incremental file, not mutation.json: Stryker writes it on a cut run too
-        run: python ../tools/mutation_shards.py frontend --filter < reports/stryker-incremental.json
+        with:
+          name: stryker-${{ matrix.part }}
+          path: frontend/reports/stryker-${{ matrix.part }}.json
+
+  # Every part together against one reference: a file moving between parts never moves it.
+  mutation-frontend-score:
+    needs: mutation-frontend
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: stryker-*
+          path: reports
+          merge-multiple: true
+      - name: Frontend score against the reference
+        run: python tools/mutation_shards.py frontend --filter reports/stryker-*.json
 
   # The full CI, Windows included: a push skips the Windows runner.
   ci:
@@ -97,7 +125,7 @@ jobs:
 
   # GitHub tells only who wrote the cron: a red night becomes an Issue, a green one closes it.
   signal:
-    needs: [mutation, mutation-frontend, ci]
+    needs: [mutation, mutation-frontend, mutation-frontend-score, ci]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -109,5 +137,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
-          python tools/nightly_issue.py "${{ needs.mutation.result == 'success' && needs.mutation-frontend.result == 'success' && needs.ci.result == 'success' && 'success' || 'failure' }}"
+          python tools/nightly_issue.py "${{ needs.mutation.result == 'success' && needs.mutation-frontend.result == 'success' && needs.mutation-frontend-score.result == 'success' && needs.ci.result == 'success' && 'success' || 'failure' }}"
           "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

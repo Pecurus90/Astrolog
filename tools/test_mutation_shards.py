@@ -11,7 +11,19 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from mutation_shards import FIXED, FRONTEND, REFERENCE, REST, main, modules, probes, shards
+from mutation_shards import (
+    FIXED,
+    FRONTEND,
+    FRONTEND_DIR,
+    FRONTEND_SHARDS,
+    REFERENCE,
+    REST,
+    frontend_shards,
+    main,
+    modules,
+    probes,
+    shards,
+)
 from mutation_shards import matches as matched
 
 
@@ -205,32 +217,82 @@ def test_a_better_score_asks_for_the_reference_to_rise(tmp_path, capsys):
     assert "raise the reference to 0.5000" in capsys.readouterr().err
 
 
-def test_the_frontend_score_reads_the_stryker_report(tmp_path, capsys):
-    report = {
-        "files": {
-            "src/a.ts": {"mutants": [{"status": "Killed"}, {"status": "Survived"}]},
-            "src/b.ts": {
-                "mutants": [{"status": "Timeout"}, {"status": "NoCoverage"}, {"status": "Ignored"}]
-            },
-        }
-    }
-    path = write_reference(tmp_path, frontend=0.5)
-    stdin = io.StringIO(json.dumps(report))
-    assert main(["mutation_shards.py", "frontend", "--filter"], stdin, path) == 0
-    assert "shard frontend: score 0.5000 (2 of 4 detected, 1 not run)" in capsys.readouterr().err
+def write_reports(tmp_path, *files):
+    """One Stryker report per frontend shard; the files past those given hold one Killed each."""
+    paths = []
+    for k in range(FRONTEND_SHARDS):
+        mutants = files[k] if k < len(files) else {f"src/k{k}.ts": [{"status": "Killed"}]}
+        report = {"files": {name: {"mutants": m} for name, m in mutants.items()}}
+        path = tmp_path / f"stryker-{k}.json"
+        path.write_text(json.dumps(report), encoding="utf-8")
+        paths.append(str(path))
+    return paths
+
+
+def test_the_frontend_score_adds_up_the_stryker_report_of_every_shard(tmp_path, capsys):
+    first = {"src/a.ts": [{"status": "Killed"}, {"status": "Survived"}]}
+    second = {"src/b.ts": [{"status": "Timeout"}, {"status": "NoCoverage"}, {"status": "Ignored"}]}
+    paths = write_reports(tmp_path, first, second)
+    detected = 2 + FRONTEND_SHARDS - 2
+    checked = 4 + FRONTEND_SHARDS - 2
+    reference = write_reference(tmp_path, frontend=round(detected / checked, 4))
+    assert main(["mutation_shards.py", "frontend", "--filter", *paths], reference=reference) == 0
+    expected = f"shard frontend: score {detected / checked:.4f} ({detected} of {checked} detected"
+    assert expected in capsys.readouterr().err
+
+
+def test_a_frontend_shard_without_its_report_fails_the_night(tmp_path, capsys):
+    """A part lost with its runner leaves no report: never a score of the parts left."""
+    paths = write_reports(tmp_path)[:-1]
+    assert main(["mutation_shards.py", "frontend", "--filter", *paths]) == 1
+    assert f"{FRONTEND_SHARDS - 1} of {FRONTEND_SHARDS} shard reports" in capsys.readouterr().err
 
 
 def test_a_frontend_report_without_mutants_is_refused(tmp_path, capsys):
-    stdin = io.StringIO(json.dumps({"files": {"src/a.ts": {"mutants": []}}}))
-    path = write_reference(tmp_path)
-    assert main(["mutation_shards.py", "frontend", "--filter"], stdin, path) == 1
-    assert "the report holds no mutant" in capsys.readouterr().err
+    paths = write_reports(tmp_path, *[{"src/a.ts": []}] * FRONTEND_SHARDS)
+    reference = write_reference(tmp_path)
+    assert main(["mutation_shards.py", "frontend", "--filter", *paths], reference=reference) == 1
+    assert "the reports hold no mutant" in capsys.readouterr().err
 
 
-def test_the_frontend_report_read_is_the_one_written_on_a_cut_run_too():
+def test_every_frontend_source_is_mutated_in_exactly_one_shard_translations_left_out():
+    """The translation tables are text, not logic: a mutant per string no test can kill. The
+    i18n code (`t`, number and coordinate formats) stays in."""
+    table = frontend_shards()
+    assert len(table) == FRONTEND_SHARDS and all(table)
+    files = [f for shard in table for f in shard]
+    assert len(files) == len(set(files))
+    assert "src/i18n/index.ts" in files and "src/i18n/lingue.ts" in files
+    src = FRONTEND_DIR / "src"
+    every = {
+        p.relative_to(FRONTEND_DIR).as_posix()
+        for p in src.rglob("*.ts*")
+        if p.suffix in (".ts", ".tsx") and not p.name.endswith(".d.ts")
+    }
+    tables = [*(src / "i18n").glob("it*.ts"), *(src / "i18n").glob("en*.ts")]
+    dictionaries = {f"src/i18n/{p.name}" for p in tables}
+    assert set(files) == every - dictionaries
+
+
+def test_the_frontend_shards_are_split_by_size_so_none_runs_too_long():
+    sizes = [sum((FRONTEND_DIR / f).stat().st_size for f in s) for s in frontend_shards()]
+    assert max(sizes) < 2 * sum(sizes) / len(sizes)
+
+
+def test_a_frontend_shard_prints_its_files_for_stryker(capsys):
+    assert main(["mutation_shards.py", "frontend", "0"]) == 0
+    assert capsys.readouterr().out.strip().split(",") == frontend_shards()[0]
+    assert main(["mutation_shards.py", "frontend", str(FRONTEND_SHARDS)]) == 2
+
+
+def test_the_workflow_runs_every_frontend_shard_and_scores_them_together():
     root = Path(__file__).resolve().parent.parent
     workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
-    assert "frontend --filter < reports/stryker-incremental.json" in workflow
+    found = re.findall(r"^\s*part:\s*\[(.*)\]\s*$", workflow, re.MULTILINE)
+    assert [s.strip() for s in found[0].split(",")] == [str(k) for k in range(FRONTEND_SHARDS)]
+    assert "mutation_shards.py frontend ${{ matrix.part }}" in workflow
+    assert "--incrementalFile reports/stryker-${{ matrix.part }}.json" in workflow
+    assert "frontend --filter reports/stryker-*.json" in workflow
 
 
 def test_the_saved_reference_names_only_real_shards():

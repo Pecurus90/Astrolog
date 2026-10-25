@@ -14,6 +14,10 @@ PACKAGE = Path(__file__).resolve().parent.parent / "backend" / "astrolog"
 # Score per shard of a complete night; the night fails only below it.
 REFERENCE = Path(__file__).resolve().parent / "mutation_reference.json"
 FRONTEND = "frontend"
+FRONTEND_DIR = PACKAGE.parent.parent / "frontend"
+# ~13 mutants a minute on the runner: 10 parts end well under the 160-minute stop.
+FRONTEND_SHARDS = 10
+DICTIONARY = re.compile(r"[a-z]{2}(-[a-z]+)?\.ts")  # i18n/it-meteo.ts; not index.ts, the logic
 
 # Statuses of mutmut 3 and of the Stryker JSON report; any other one was not run.
 DETECTED = {"killed", "timeout", "segfault", "caught by type check", "Killed", "Timeout"}
@@ -112,10 +116,56 @@ def filter_results(
     return (1 if failed else 0), report.statuses
 
 
-def stryker_statuses(stdin: TextIO) -> Counter[str]:
-    """Statuses of every mutant in a Stryker JSON report (mutation-testing-report-schema)."""
-    files = json.load(stdin)["files"].values()
-    return Counter(m["status"] for f in files for m in f["mutants"])
+def frontend_shards(frontend: Path = FRONTEND_DIR) -> list[list[str]]:
+    """Sources by path, cut in runs of near equal size; translation tables left out: text, a
+    mutant per string no test kills. Refuses an empty part: Stryker would run nothing."""
+    files = sorted(
+        p.relative_to(frontend).as_posix()
+        for p in (frontend / "src").rglob("*")
+        if p.suffix in (".ts", ".tsx")
+        and not p.name.endswith(".d.ts")
+        and not (p.parent.name == "i18n" and DICTIONARY.fullmatch(p.name))
+    )
+    sizes = [(frontend / f).stat().st_size for f in files]
+    table: list[list[str]] = [[] for _ in range(FRONTEND_SHARDS)]
+    done = 0
+    for name, size in zip(files, sizes, strict=True):
+        part = min(done * FRONTEND_SHARDS // sum(sizes), FRONTEND_SHARDS - 1)
+        table[part].append(name)
+        done += size
+    if not all(table):
+        raise ValueError("a frontend part holds no file")
+    return table
+
+
+def stryker_statuses(paths: list[str]) -> Counter[str]:
+    """Statuses of every mutant in Stryker JSON reports (mutation-testing-report-schema)."""
+    statuses: Counter[str] = Counter()
+    for path in paths:
+        files = json.loads(Path(path).read_text(encoding="utf-8"))["files"].values()
+        statuses.update(m["status"] for f in files for m in f["mutants"])
+    return statuses
+
+
+def frontend(argv: list[str], reference: Path) -> int:
+    """`frontend <part>` prints its files for `--mutate`; `frontend --filter <report>...` scores
+    every part together, so a file moving between parts never moves the score."""
+    if argv[:1] == [FILTER]:
+        paths = argv[1:]
+        if len(paths) != FRONTEND_SHARDS:
+            sys.stderr.write(f"shard {FRONTEND}: {len(paths)} of {FRONTEND_SHARDS} shard reports\n")
+            return 1
+        statuses = stryker_statuses(paths)
+        if not statuses.total():
+            sys.stderr.write(f"shard {FRONTEND}: the reports hold no mutant\n")
+            return 1
+        return 1 if below_reference(FRONTEND, statuses, reference) else 0
+    parts = [str(k) for k in range(FRONTEND_SHARDS)]
+    if len(argv) != 1 or argv[0] not in parts:
+        sys.stderr.write(f"usage: mutation_shards.py {FRONTEND} {{0..{FRONTEND_SHARDS - 1}}}\n")
+        return 2
+    sys.stdout.write(",".join(frontend_shards()[int(argv[0])]) + "\n")
+    return 0
 
 
 def below_reference(shard: str, statuses: Counter[str], reference: Path) -> bool:
@@ -137,18 +187,12 @@ def below_reference(shard: str, statuses: Counter[str], reference: Path) -> bool
 
 
 def main(argv: list[str], stdin: TextIO = sys.stdin, reference: Path = REFERENCE) -> int:
-    names = [*FIXED, REST, FRONTEND]
+    if argv[1:2] == [FRONTEND]:
+        return frontend(argv[2:], reference)
+    names = [*FIXED, REST]
     if len(argv) not in (2, 3) or argv[1] not in names or argv[2:] not in ([], [FILTER]):
         sys.stderr.write(f"usage: mutation_shards.py {{{','.join(names)}}} [{FILTER}]\n")
         return 2
-    if argv[1] == FRONTEND:
-        if not argv[2:]:
-            return 2
-        statuses = stryker_statuses(stdin)
-        if not statuses.total():
-            sys.stderr.write(f"shard {FRONTEND}: the report holds no mutant\n")
-            return 1
-        return 1 if below_reference(FRONTEND, statuses, reference) else 0
     table = shards()
     if argv[2:]:
         code, statuses = filter_results(argv[1], table, stdin)
