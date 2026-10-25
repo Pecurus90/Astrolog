@@ -81,28 +81,21 @@ def test_asking_for_no_phases_asks_astropy_nothing():
     assert moon.phases([]) == []
 
 
-@pytest.mark.lento
-def test_asking_the_phases_together_is_worth_it():
-    """Il conto in blocco esiste per il costo, quindi il costo si **misura** invece di scriverlo
-    in un commento: cento istanti in una chiamata contro cento chiamate.
+def test_asking_the_phases_together_is_worth_it(monkeypatch):
+    """Il conto in blocco esiste per il costo: cento istanti, **una** chiamata ad astropy. Si
+    contano le chiamate e non i secondi: un rapporto di tempi dipende dalla macchina (7 volte in
+    locale, 3 su un runner di GitHub) e una soglia scelta su una cade sull'altra."""
+    vera = moon._offsets_and_elongations
+    chiamate = []
 
-    La soglia e' larga (cinque volte) perche' la prova non deve cadere su una macchina lenta o
-    carica: il guadagno vero, misurato qui, e' molto piu' grande -- ma e' il rapporto a dover
-    restare vero, non il numero."""
-    import time
+    def contata(instants):
+        chiamate.append(len(instants))
+        return vera(instants)
 
+    monkeypatch.setattr(moon, "_offsets_and_elongations", contata)
     giorni = [QUANDO + dt.timedelta(days=g) for g in range(100)]
-
-    t0 = time.perf_counter()
-    moon.phases(giorni)
-    insieme = time.perf_counter() - t0
-
-    t0 = time.perf_counter()
-    for g in giorni:
-        moon.phase(g)
-    una_per_una = time.perf_counter() - t0
-
-    assert una_per_una > insieme * 5, f"insieme {insieme:.3f}s, una per una {una_per_una:.3f}s"
+    assert len(moon.phases(giorni)) == 100
+    assert chiamate == [300]  # ogni istante con l'inizio e la fine della sua notte
 
 
 # Quanta luce puo' avere una fase. Un nome principale sta a mezza notte al piu' dall'istante:
