@@ -12,7 +12,7 @@ from ..clock import now_iso
 from ..db import config
 from ..db.inserted import inserted_id
 from ..db.transaction import transaction
-from ..spine import home_nights, site_requeue
+from ..spine import declarations, home_nights, site_requeue
 from ..units import bortle_of
 from .deps import get_db
 from .models_site import (
@@ -222,6 +222,8 @@ def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(g
             if moved:
                 site_requeue.requeue_nights_of(conn, site_id)
             new_name = fields.get("name", old["name"])
+            if new_name != old["name"]:
+                declarations.follow_site_rename(conn, old["name"], new_name)
             site_requeue.requeue_waiting(
                 conn,
                 near=[(old["latitude"], old["longitude"]), (latitude, longitude)] if moved else [],

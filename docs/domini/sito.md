@@ -186,7 +186,10 @@ anche la prima casa, e anche casa tolta -- riscrive la notte che i frame senza c
 quando sono entrati, e le risposte sui frame senza nome che la portano nella chiave (`spine/home_nights.py`,
 il contratto in `domini/spina.md`). Un cambio dei siti rimette in coda i frame fermi perche' il posto non si sapeva, ma solo quelli che quel cambio puo'
 sbloccare: entro 1 km da un sito nuovo, spostato o diventato casa; con una risposta che nomina un
-sito rinominato; fermi perche' casa non c'era, quando nasce; e sempre quelli fermi per un sito
+sito rinominato; fermi perche' casa non c'era. **Rinominare non richiede:** le risposte che nominano
+il sito seguono il nome nuovo, perche' e' un'altra parola e non un altro posto (Marco, 25/10/2026;
+`test_renaming_a_site_keeps_the_answers_that_name_it`); a richiedere e' solo lo spostamento. Ancora:
+fermi perche' casa non c'era, quando nasce; e sempre quelli fermi per un sito
 senza fuso, che sono pochi e che uno spostamento o una cancellazione possono sbloccare anche senza
 coordinate. Gli altri tornerebbero uguali. Spostare un sito rifa' anche le notti che l'app gli aveva
 dato

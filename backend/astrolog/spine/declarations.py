@@ -242,10 +242,18 @@ COORDINATES_SITE = "site"
 def declare_coordinates(
     conn: sqlite3.Connection, coordinates_key: str, site_name: str, now: str | None = None
 ) -> None:
-    """The site's name, not its id: a renamed site no longer matches and the app asks again, the
-    safe way."""
+    """The site's name, not its id: it reads as the user wrote it. A rename carries it along
+    (`follow_site_rename`); only a move asks again."""
     write_declaration(
         conn, EntityType.COORDINATES, coordinates_key, COORDINATES_SITE, site_name, now
+    )
+
+
+def follow_site_rename(conn: sqlite3.Connection, old_name: str, new_name: str) -> None:
+    """A rename is another word, not another place (`domini/sito.md`)."""
+    conn.execute(
+        "UPDATE declarations SET value = ? WHERE entity_type = ? AND field = ? AND value = ?",
+        (new_name, EntityType.COORDINATES, COORDINATES_SITE, old_name),
     )
 
 

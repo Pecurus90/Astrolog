@@ -71,6 +71,20 @@ def test_renaming_a_site_to_the_name_an_answer_says_puts_those_frames_back(clien
     )
 
 
+def test_renaming_a_site_keeps_the_answers_that_name_it(client_vuoto, offline):
+    """Rinominare e' cambiare parola, non posto: le coordinate dette "di Cima" restano sue col
+    nome nuovo, e la domanda non torna (Marco, 25/10/2026)."""
+    create(client_vuoto)
+    cima = create(client_vuoto, name="Cima", latitude=46.05, longitude=11.316)
+    chiave = place.coordinates_key(45.6, 11.667)
+    with connect(client_vuoto.app.state.db_path) as conn:
+        decl.declare_coordinates(conn, chiave, "Cima")
+    r = client_vuoto.patch(f"/api/v1/sites/{cima['id']}", json={"name": "Cima Grappa"})
+    assert r.status_code == 200, r.text
+    with connect(client_vuoto.app.state.db_path) as conn:
+        assert decl.site_for_coordinates(conn, chiave) == "Cima Grappa"
+
+
 def test_fixing_a_site_without_a_timezone_frees_the_frames_waiting_for_it(
     client_vuoto, monkeypatch, offline
 ):
