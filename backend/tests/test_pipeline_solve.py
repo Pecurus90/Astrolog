@@ -208,29 +208,18 @@ def test_calibrations_are_never_launched_typeless_get_their_try(conn, tmp_path):
     assert [Path(_option(cmd, "-f")).name for cmd in run.commands] == ["typeless.fits"]
 
 
-def test_one_launch_per_shot_and_the_plain_copy_is_the_one(conn, tmp_path):
-    """Un .fits e la sua copia fpack sono la stessa posa: un lancio, sul non compresso (ASTAP
-    2025 non legge i .fz)."""
-    nas = tmp_path / "nas"
-    _nina_fz(nas / "a.fits.fz", 0)
-    data, header = _nina_pixels(0)
-    fits.PrimaryHDU(data=data, header=header).writeto(nas / "b.fits")
-    root = _scanned(conn, nas)
-    run = FakeAstap("solved.ini")
-    _solve(conn, root, run, tmp_path)
-    assert [Path(_option(cmd, "-f")).name for cmd in run.commands] == ["b.fits"]
-    assert len(_solutions(conn)) == 1
-
-
-def test_the_plain_copy_stays_first_even_when_only_the_compressed_one_has_a_hint(conn, tmp_path):
-    """L'ordine "prima chi ha indizio e campo" vale per posa: copie con header diversi non
-    mettono il .fz davanti, che questo ASTAP non legge (la posa salterebbe la passata)."""
+@pytest.mark.parametrize("fz_hinted", [False, True], ids=["same header", "hint on the fz only"])
+def test_one_launch_per_shot_and_the_plain_copy_is_the_one(conn, tmp_path, fz_hinted):
+    """Copia fpack e .fits sono una posa: un lancio, sul non compresso (ASTAP 2025 non legge i
+    .fz), anche se l'indizio sta solo sul .fz: "prima chi ha indizio e campo" vale per posa."""
     nas = tmp_path / "nas"
     nas.mkdir()
     data, header = _nina_pixels(0)
-    header["RA"], header["DEC"] = 241.254763508206, 17.7165957446809
+    if fz_hinted:
+        header["RA"], header["DEC"] = 241.254763508206, 17.7165957446809
     fits.HDUList([fits.PrimaryHDU(), fits.CompImageHDU(data, header)]).writeto(nas / "a.fits.fz")
-    del header["FOCALLEN"], header["RA"], header["DEC"]
+    if fz_hinted:
+        del header["FOCALLEN"], header["RA"], header["DEC"]
     fits.PrimaryHDU(data=data, header=header).writeto(nas / "b.fits")
     root = _scanned(conn, nas)
     run = FakeAstap("solved.ini")
