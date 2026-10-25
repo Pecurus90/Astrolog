@@ -188,6 +188,18 @@ def test_a_command_that_only_reads_the_method_passes(command):
     assert guard.reason(bash(command), ROOT) is None
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        "rm .claude/x; taskkill /F /IM chrome.exe",
+        "git stash; rm CLAUDE.md; git stash pop",
+        "cat >> CLAUDE.md <<'EOF'\nx\nEOF",
+    ],
+)
+def test_a_refusal_wins_over_the_frozen_ask(command):
+    assert guard.reason(bash(command), ROOT) != guard.FROZEN_WHY
+
+
 def test_the_hook_stays_silent_when_nothing_is_wrong():
     payload = json.dumps(edit("docs/piano.md"))
     out = subprocess.run(

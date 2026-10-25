@@ -156,8 +156,6 @@ def reason(payload: dict, root: str) -> str | None:
     if tool in ("Bash", "PowerShell"):
         if _heredoc_writes(data.get("command") or ""):
             return HEREDOC_WHY
-        if _writes_frozen(data.get("command") or "", root):
-            return FROZEN_WHY
         command = _quoted_out(data.get("command") or "")
         if any(rule.search(command) for rule in KILL_BY_NAME):
             return KILL_BY_NAME_WHY
@@ -165,7 +163,11 @@ def reason(payload: dict, root: str) -> str | None:
             return STASH_WHY
         if _npm_names_a_package(command):
             return "dependencies change only with Marco's approval"
-        return next((why for rule, why in COMMANDS if rule.search(command)), None)
+        why = next((why for rule, why in COMMANDS if rule.search(command)), None)
+        # last: an ask must not hide a refusal in the same command
+        if why is None and _writes_frozen(data.get("command") or "", root):
+            return FROZEN_WHY
+        return why
     return None
 
 
