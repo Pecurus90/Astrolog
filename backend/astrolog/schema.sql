@@ -1059,6 +1059,10 @@ CREATE TABLE pipeline_solutions (
   catalogue       TEXT,  -- quello che ASTAP dice di aver usato
   installed       TEXT,  -- cataloghi installati alla prova: cambiano, si riprova
   duration_s      REAL CHECK (duration_s >= 0),  -- tutta la scala
+  -- da dove vengono indizio e campo (ADR 0026): la scheda, o una sorella risolta (stesso
+  -- oggetto per l'indizio, stesso setup per il campo); NULL: nessuno, ricerca libera
+  hint_from       TEXT CHECK (hint_from IN ('card', 'sister')),
+  field_from      TEXT CHECK (field_from IN ('card', 'sister')),
   ra_deg          REAL CHECK (ra_deg >= 0 AND ra_deg < 360),  -- J2000, centro immagine
   dec_deg         REAL CHECK (dec_deg BETWEEN -90 AND 90),
   scale_arcsec_px REAL CHECK (scale_arcsec_px > 0),

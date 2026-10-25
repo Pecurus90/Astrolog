@@ -33,7 +33,8 @@ PASSES = 2  # [P ADR 0036, D5]
 
 PENDING = (  # plain file before its fpack copy: ASTAP before astap.FZ_SINCE reads no .fz
     "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.frame_type, c.width, c.height,"
-    " c.pixel_um, c.focal_mm, c.pointing_ra_deg, c.pointing_dec_deg,"
+    " c.pixel_um, c.focal_mm, c.pointing_ra_deg, c.pointing_dec_deg, c.object_name, c.camera,"
+    " c.bin_x, c.bin_y, c.optics,"
     " h.header ->> '$.ROWORDER' AS row_order"
     " FROM pipeline_files AS f JOIN pipeline_cards AS c ON c.file_id = f.id"
     " JOIN pipeline_headers AS h ON h.file_id = f.id"
@@ -46,19 +47,39 @@ PENDING = (  # plain file before its fpack copy: ASTAP before astap.FZ_SINCE rea
     "   OR (s.file_id = f.id AND s.astap_version IS coalesce(:version, s.astap_version) AND ("
     "     s.outcome = 'fz_unsupported' OR (s.outcome IN ('timeout', 'crashed', 'unreadable')"
     "       AND s.attempts >= :passes AND s.installed IS :installed)))))"
-    " ORDER BY f.frame_id, lower(f.rel_path) LIKE '%.fz', f.rel_path"
+    # shots with their own hint and field first: solved, they lend them to their sisters; per
+    # shot, not per file, or a hinted .fz copy would pass its plain one
+    " ORDER BY min(c.pointing_ra_deg IS NULL OR c.focal_mm IS NULL OR c.pixel_um IS NULL)"
+    " OVER (PARTITION BY f.frame_id), f.frame_id, lower(f.rel_path) LIKE '%.fz', f.rel_path"
+)
+
+# Measured centre of a solved shot of the same object, never of a session: two shots without
+# OBJECT are not sisters (docs/domini/spina.md, "indizio").
+SISTER_POINTING = (
+    "SELECT s.ra_deg, s.dec_deg FROM pipeline_solutions AS s"
+    " JOIN pipeline_cards AS c ON c.file_id = s.file_id"
+    " WHERE s.outcome = 'solved' AND c.object_name = :object_name ORDER BY s.frame_id LIMIT 1"
+)
+# Measured scale of a solved shot of the same setup: same camera, binning and optics.
+SISTER_SCALE = (
+    "SELECT s.scale_arcsec_px FROM pipeline_solutions AS s"
+    " JOIN pipeline_cards AS c ON c.file_id = s.file_id"
+    " WHERE s.outcome = 'solved' AND c.camera = :camera AND c.bin_x IS :bin_x"
+    " AND c.bin_y IS :bin_y AND c.optics IS :optics ORDER BY s.frame_id LIMIT 1"
 )
 
 UPSERT = (
     "INSERT INTO pipeline_solutions (frame_id, outcome, step, file_id, astap_version, catalogue,"
-    " installed, duration_s, ra_deg, dec_deg, scale_arcsec_px, rotation_deg, mirrored, skew_deg,"
-    " width_deg, height_deg, corners, tried_at) VALUES (:frame_id, :outcome, :step, :file_id,"
-    " :astap_version, :catalogue, :installed, :duration_s, :ra_deg, :dec_deg, :scale_arcsec_px,"
-    " :rotation_deg, :mirrored, :skew_deg, :width_deg, :height_deg, :corners, :tried_at)"
+    " installed, duration_s, hint_from, field_from, ra_deg, dec_deg, scale_arcsec_px,"
+    " rotation_deg, mirrored, skew_deg, width_deg, height_deg, corners, tried_at) VALUES"
+    " (:frame_id, :outcome, :step, :file_id, :astap_version, :catalogue, :installed, :duration_s,"
+    " :hint_from, :field_from, :ra_deg, :dec_deg, :scale_arcsec_px, :rotation_deg, :mirrored,"
+    " :skew_deg, :width_deg, :height_deg, :corners, :tried_at)"
     " ON CONFLICT (frame_id) DO UPDATE SET attempts = attempts + 1, outcome = excluded.outcome,"
     " step = excluded.step, file_id = excluded.file_id, astap_version = excluded.astap_version,"
     " catalogue = excluded.catalogue, installed = excluded.installed,"
-    " duration_s = excluded.duration_s, ra_deg = excluded.ra_deg, dec_deg = excluded.dec_deg,"
+    " duration_s = excluded.duration_s, hint_from = excluded.hint_from,"
+    " field_from = excluded.field_from, ra_deg = excluded.ra_deg, dec_deg = excluded.dec_deg,"
     " scale_arcsec_px = excluded.scale_arcsec_px, rotation_deg = excluded.rotation_deg,"
     " mirrored = excluded.mirrored, skew_deg = excluded.skew_deg, width_deg = excluded.width_deg,"
     " height_deg = excluded.height_deg, corners = excluded.corners, tried_at = excluded.tried_at"
@@ -121,10 +142,42 @@ class _Pass:
 
 
 @dataclass(frozen=True)
+class _Hint:
+    """Where the search starts, and where each half came from (ADR 0026): `card` or `sister`."""
+
+    pointing: tuple[float, float] | None = None
+    field_deg: float | None = None
+    hint_from: str | None = None
+    field_from: str | None = None
+
+
+@dataclass(frozen=True)
 class _Tried:
     found: astap.Solution
     step: Step | None  # None: never launched
     duration_s: float = 0.0
+    hint: _Hint = _Hint()
+
+
+def _hint(conn: sqlite3.Connection, card: sqlite3.Row) -> _Hint:
+    """The card's own first; what it lacks, from a shot solved earlier in this pass or before."""
+    pointing, hint_from = None, None
+    if card["pointing_ra_deg"] is not None:  # both or neither (schema)
+        pointing, hint_from = (card["pointing_ra_deg"], card["pointing_dec_deg"]), "card"
+    elif card["object_name"] is not None:
+        sister = conn.execute(SISTER_POINTING, {"object_name": card["object_name"]}).fetchone()
+        if sister is not None:
+            pointing, hint_from = (sister["ra_deg"], sister["dec_deg"]), "sister"
+    scale = units.scale_arcsec_px(card["pixel_um"], card["focal_mm"])  # pixel_um has binning
+    field_deg = units.field_deg(card["height"], scale)
+    field_from = None if field_deg is None else "card"
+    if field_deg is None and card["camera"] is not None:
+        setup = {key: card[key] for key in ("camera", "bin_x", "bin_y", "optics")}
+        sister = conn.execute(SISTER_SCALE, setup).fetchone()
+        if sister is not None:
+            field_deg = units.field_deg(card["height"], sister["scale_arcsec_px"])
+            field_from = None if field_deg is None else "sister"
+    return _Hint(pointing, field_deg, hint_from, field_from)
 
 
 def solve_root(
@@ -150,7 +203,8 @@ def solve_root(
         if row["frame_id"] in done:
             continue
         done.add(row["frame_id"])
-        tried = _try(Path(root["path"], row["rel_path"]), row, solver, (Path(named), this))
+        hint = _hint(conn, row)  # read now: a sister solved a moment ago counts
+        tried = _try(Path(root["path"], row["rel_path"]), (row, hint), solver, (Path(named), this))
         if tried.found.reason in STOPS:
             result.stopped = tried.found.reason
             return result
@@ -177,28 +231,25 @@ def _is_fz(rel_path: str) -> bool:
     return rel_path.lower().endswith(".fz")
 
 
-def _try(path: Path, card: sqlite3.Row, solver: astap.Solver, where: tuple[Path, _Pass]) -> _Tried:
+def _try(
+    path: Path, shot: tuple[sqlite3.Row, _Hint], solver: astap.Solver, where: tuple[Path, _Pass]
+) -> _Tried:
     work, this = where
+    card, hint = shot
     # unread version: try
     if _is_fz(path.name) and this.release is not None and this.release < astap.FZ_SINCE:
         return _Tried(astap.Solution(ok=False, reason=astap.Reason.FZ_UNSUPPORTED), None)
     start = time.monotonic()
-    found, step = _climb(path, card, solver, work)
-    return _Tried(found, step, time.monotonic() - start)
+    ladder = _ladder(hint.pointing, hint.field_deg, typeless=card["frame_type"] == "unknown")
+    found, step = _climb(path, ladder, solver, work)
+    return _Tried(found, step, time.monotonic() - start, hint)
 
 
 def _climb(
-    path: Path, card: sqlite3.Row, solver: astap.Solver, work: Path
+    path: Path, ladder: list[tuple[Step, astap.Search]], solver: astap.Solver, work: Path
 ) -> tuple[astap.Solution, Step | None]:
     """Up the ladder while no solution; other ends stop it. Timeout after no solution: no
     solution. Fresh base per launch: crash writes no .ini, old one read as solved."""
-    scale = units.scale_arcsec_px(card["pixel_um"], card["focal_mm"])  # pixel_um has binning
-    ra, dec = card["pointing_ra_deg"], card["pointing_dec_deg"]  # both or neither (schema)
-    ladder = _ladder(
-        None if ra is None else (ra, dec),
-        units.field_deg(card["height"], scale) or None,
-        typeless=card["frame_type"] == "unknown",
-    )
     with tempfile.TemporaryDirectory(dir=work) as fresh:
         given = _readable_name(long_path(path), Path(fresh))
         if given is None:
@@ -250,6 +301,7 @@ def _write(conn: sqlite3.Connection, row: sqlite3.Row, tried: _Tried, this: _Pas
         "installed": this.installed, "duration_s": tried.duration_s, "ra_deg": found.ra_deg,
         "dec_deg": found.dec_deg, "scale_arcsec_px": found.scale_arcsec_px,
         "rotation_deg": found.rotation_deg, "tried_at": this.now,
+        "hint_from": tried.hint.hint_from, "field_from": tried.hint.field_from,
     } | _measured(found, row)  # fmt: skip
     with transaction(conn, immediate=True):
         written = conn.execute(UPSERT, values).rowcount

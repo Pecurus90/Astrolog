@@ -3,7 +3,7 @@
 **Stato:** accettata, 24/10/2026. Raccoglie le decisioni del piano di ASTAP (D2-D8) che stavano
 solo nel materiale di lavoro; D1 e D7 sono in ADR 0033. Chiude la domanda aperta di ADR 0003
 (quale catalogo). Soglie tecniche scelte dalla sessione sulle convenzioni (CLAUDE.md, principio 1).
-Costruita in parte (`pipeline/solve.py`); punti 7-10 da fare. **Superata in parte da ADR 0039**: il
+Costruita in parte (`pipeline/solve.py`); punto 7 fatto, 8-10 da fare. **Superata in parte da ADR 0039**: il
 tempo per lancio diventa un limite di previsione, minimo 30 s; 60 s finche' non e' costruito.
 
 ## Contesto
@@ -21,6 +21,8 @@ trovati e riparati: `astap_cli` legge i `.fz` dal 2026.07.17, non dal 16 (la dat
 | raggio cieco | 180° | default di ASTAP (`radius_search1 '180'`); N.I.N.A. forza 180 senza coordinate |
 | sottocampionamento | `-z 0` (ASTAP sceglie), poi `-z 1` | ASTAP `report_binning_astrometric`; N.I.N.A. 0; misura: `-z 1` 19/19 |
 | campo | l'altezza calcolata; `-fov 0` solo a campo ignoto | N.I.N.A. passa l'altezza; ASTAP con `-fov 0` prova 0,3-11,9° |
+| indizio ereditato | centro misurato di una sorella risolta con lo stesso OBJECT | `spine/solve.py` di prima; mai per sessione: due pose senza OBJECT non sono sorelle |
+| campo ereditato | scala misurata di una posa risolta con camera, binning e ottica uguali (ottica non scritta in tutte e due: uguale, l'ASIAIR non la scrive mai) | misura: 9 frame veri (D80, indizio, `-z 0`) risolti tutti col campo da x0,7 a x1,25, quasi tutti da x0,6 a x1,5, nessuno da x2; un campo sbagliato fallisce in 13 s al piu', poi `-fov 0` |
 | stelle, tolleranza, dimensione | default di ASTAP: 500, 0,007, 1,5" | help di `astap_cli` |
 | tempo per lancio | 60 s | misura: oltre il doppio del cieco riuscito piu' lento (23 s); NAS da misurare |
 | ritentativi | primo, piena risoluzione, campo libero, cieco col campo | N.I.N.A. fa solo il cieco (`ImageSolver.cs`); gli altri due gradini misurati |
@@ -42,5 +44,7 @@ Decisioni di Marco dal piano di ASTAP, qui con la loro casa:
   ~10° (obiettivi fotografici) ASTAP chiede G05 o W08: un'idea, finche' un utente non la chiede.
 - La scelta dell'oggetto principale e i mosaici non hanno una convenzione pubblicata (nessun
   software sceglie un soggetto): si decidono nel gruppo "oggetti", misurati sull'archivio.
-- Punti 7-10 del piano di ASTAP (indizio ereditato, controllo della scala, parallelo, focale
+- Punto 7 (indizio e campo ereditati) costruito: ogni soluzione dice da dove vengono
+  (`pipeline_solutions.hint_from`, `field_from`: `card` o `sister`, ADR 0026), e le pose con indizio
+  e campo propri si risolvono per prime. Punti 8-10 (controllo della scala, parallelo, focale
   misurata) restano da costruire.
