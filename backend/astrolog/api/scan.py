@@ -189,9 +189,14 @@ def start_scan_all(state: State, conn: sqlite3.Connection) -> ScanAllStarted:
             state.folder_locks.add(folder_id)
         taken.append(folder_id)
     if not taken:
+        # a folder being read is not unreachable: a double click says busy
+        busy = any(s.reason == "scan_running" for s in skips)
         raise HTTPException(
             status_code=409,
-            detail={"code": "no_readable_folders", "skipped": [s.model_dump() for s in skips]},
+            detail={
+                "code": "worker_busy" if busy else "no_readable_folders",
+                "skipped": [s.model_dump() for s in skips],
+            },
         )
     previous = (state.last_scan, state.scan_runs)
     try:
@@ -224,7 +229,8 @@ def scan_all(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> Sc
     the progress is in `GET /pipeline/status`.
 
     409 `no_folders` when there is none; 409 `no_readable_folders` with the `skipped` folders
-    when none can be started; 409 `worker_busy`."""
+    when none can be started; 409 `worker_busy` when a job runs, also with the `skipped` folders
+    when some are already being read."""
     return start_scan_all(request.app.state, conn)
 
 

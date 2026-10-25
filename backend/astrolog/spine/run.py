@@ -98,9 +98,18 @@ def queue(
 def _scan_one(
     conn: sqlite3.Connection, folder_id: int, run_id: int, on_folder: OnFolder | None
 ) -> Iterator[Event]:
-    if on_folder is not None:
-        on_folder(folder_id, run_id)
-    yield from scan_folder(conn, folder_id, run_id=run_id)
+    # begun at the first event: before it the receipt is not closed, and the run end discards it
+    events = scan_folder(conn, folder_id, run_id=run_id)
+    try:
+        first = next(events, None)
+        if first is None:
+            return
+        if on_folder is not None:
+            on_folder(folder_id, run_id)
+        yield first
+        yield from events
+    finally:
+        events.close()
 
 
 def queue_folders(

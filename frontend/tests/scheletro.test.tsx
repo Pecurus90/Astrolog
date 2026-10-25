@@ -109,10 +109,10 @@ describe("lo scheletro", () => {
   it("bloccata, la scansione dice perche' e si fa ripartire dalla barra", async () => {
     // Dopo un errore il backend chiede `start`: senza il verbo in barra, sul desktop non resta
     // nessun punto da cui far ripartire il lavoro.
-    app({ ...FERMO, action: "start", worker: { ...FERMO.worker, state: "error", error: "solver assente" } })
+    app({ ...FERMO, action: "start", worker: { ...FERMO.worker, state: "error" } })
     await disegna()
     const alto = await screen.findByRole("banner")
-    expect(await within(alto).findByText("solver assente")).toBeDefined()
+    expect(await within(alto).findByText("Scansione interrotta da un errore")).toBeDefined()
     expect(within(alto).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/letture")
     fireEvent.click(within(alto).getByRole("button", { name: "Scansiona" }))
     await waitFor(() => expect(scritture().some((s) => s.url.endsWith("/api/v1/scan"))).toBe(true))
@@ -370,11 +370,11 @@ describe("il foglio Altro", () => {
   it("bloccata, la scansione nel foglio dice perche' e porta dove si guarda", async () => {
     // Sul telefono la barra non porta la scansione: il foglio e' l'unico posto. Senza, una
     // scansione bloccata si leggeva "ferma", senza motivo e senza Vedi.
-    app({ ...FERMO, action: "start", worker: { ...FERMO.worker, state: "error", error: "solver assente" } })
+    app({ ...FERMO, action: "start", worker: { ...FERMO.worker, state: "error" } })
     await disegna()
     fireEvent.click(await screen.findByRole("button", { name: /^altro/i }))
     const foglio = await screen.findByRole("dialog", { name: "Altro" })
-    expect(await within(foglio).findByText("solver assente")).toBeDefined()
+    expect(await within(foglio).findByText("Scansione interrotta da un errore")).toBeDefined()
     expect(within(foglio).getByText("Bloccata")).toBeDefined()
     expect(within(foglio).getByRole("link", { name: "Dettagli" }).getAttribute("href")).toBe("/impostazioni/letture")
   })

@@ -6,6 +6,7 @@ una corsa sola, una ricevuta per cartella, e cio' che non si e' potuto leggere d
 che taciuto.
 """
 
+import sqlite3
 import threading
 from unittest import mock
 
@@ -14,7 +15,7 @@ from fastapi.testclient import TestClient
 
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
-from astrolog.spine import run
+from astrolog.spine import run, scan_store
 from astrolog.spine.scan_store import COUNTS, start_run
 from astrolog.spine.stages import mark_pending
 from astrolog.worker.worker import Stage, WorkerBusyError
@@ -210,6 +211,8 @@ def test_a_reading_that_falls_before_the_first_folder_still_answers(app):
     r = client.get("/api/v1/pipeline/status")
     assert r.status_code == 200, r.text
     assert r.json()["scan"]["state"] == "error"
+    # the exception's words are the log's, not the page's: they are English and technical
+    assert "disco staccato" not in r.text
 
 
 def test_while_the_reading_is_being_settled_the_state_is_still_the_workers(app):
@@ -310,6 +313,28 @@ def test_resume_after_a_stop_reads_the_files_that_were_left(app):
     assert per_cartella == {uno: 3, due: 2}, "Riprendi ha detto fatto senza leggere i file rimasti"
 
 
+def test_resume_that_reads_again_says_the_folders_it_skipped(app, tmp_path):
+    """Riprendi rilegge le cartelle come il gesto della barra, e come lui dice quelle saltate:
+    un disco staccato fra lo Stop e Riprendi non deve sparire dalla risposta."""
+    client, uno, due = app
+    sparita = tmp_path / "sparita"
+    sparita.mkdir()
+    write_light(sparita / "c0.fits", obj="M 42")
+    terza = client.post("/api/v1/folders", json={"root_path": str(sparita)}).json()["id"]
+    with _stops_while_reading(client, uno):
+        scan_all(client)
+        client.app.state.worker.join(30.0)
+    (sparita / "c0.fits").unlink()
+    sparita.rmdir()
+
+    r = client.post("/api/v1/pipeline/run")
+    client.app.state.worker.join(30.0)
+    assert r.status_code == 200, r.text
+    assert [(c["folder_id"], c["reason"]) for c in r.json()["skipped"]] == [
+        (terza, "root_unreachable")
+    ]
+
+
 def _stops_while_reading(client, folder_id):
     """`run.scan_folder` che preme Stop appena ha letto un file di `folder_id`: da dentro la
     lettura, perche' chiesto da fuori lo Stop puo' arrivare a lettura gia' finita."""
@@ -382,7 +407,7 @@ def test_every_folder_stays_locked_until_the_whole_run_ends(app):
         assert wait_until(lambda: visto != [])
         assert client.app.state.folder_locks == {uno, due}, "lock lasciati a fine lettura"
         r = client.post("/api/v1/scan")
-        assert r.status_code == 409 and r.json()["detail"]["code"] == "no_readable_folders"
+        assert r.status_code == 409 and r.json()["detail"]["code"] == "worker_busy"
         porta.set()
         client.app.state.worker.join(30.0)
     assert client.app.state.folder_locks == set(), "lock mai rilasciati"
@@ -518,6 +543,40 @@ def test_when_no_folder_can_be_read_it_says_which_ones(app, tmp_path):
     assert {s["folder_id"] for s in detail["skipped"]} == {uno, due}
     with connect(client.app.state.db_path) as conn:
         assert conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0] == 0
+
+
+def test_a_reading_that_breaks_before_it_begins_leaves_no_open_receipt(app):
+    """La ricevuta conta come cominciata solo quando la lettura e' partita davvero: se cade prima
+    (la cartella non si trova), resta aperta per sempre e racconta una corsa che non c'e'."""
+    client, uno, due = app
+    vero = scan_store.folder_root
+
+    def cade_sulla_prima(conn, folder_id):
+        if folder_id == uno:
+            raise sqlite3.OperationalError("disk I/O error")
+        return vero(conn, folder_id)
+
+    with mock.patch.object(scan_store, "folder_root", cade_sulla_prima):
+        scan_all(client)
+        client.app.state.worker.join(30.0)
+    with connect(client.app.state.db_path) as conn:
+        aperte = conn.execute("SELECT folder_id FROM scan_runs WHERE ended_at IS NULL").fetchall()
+    assert [r[0] for r in aperte] == []
+
+
+def test_a_second_press_while_every_folder_is_being_read_says_busy(app):
+    """Un doppio clic su Scansiona: le cartelle si stanno leggendo, non sono irraggiungibili."""
+    client, uno, due = app
+    with client.app.state.folder_locks_mutex:
+        client.app.state.folder_locks.update({uno, due})
+    try:
+        r = client.post("/api/v1/scan")
+    finally:
+        with client.app.state.folder_locks_mutex:
+            client.app.state.folder_locks.clear()
+    assert r.status_code == 409
+    assert r.json()["detail"]["code"] == "worker_busy"
+    assert {s["reason"] for s in r.json()["detail"]["skipped"]} == {"scan_running"}
 
 
 def test_a_busy_worker_leaves_no_folder_locked(app):

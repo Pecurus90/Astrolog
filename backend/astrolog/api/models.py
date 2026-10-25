@@ -221,8 +221,8 @@ class WorkerSnapshot(BaseModel):
         description="None until it has ever started: never an invented instant."
     )
     ended_at: str | None
+    # no `error`: the exception's words go to the log; the page says `state: error` in its own
     stages: list[StageRecord]
-    error: str | None = None
 
 
 class ScanEvent(BaseModel):
@@ -280,3 +280,7 @@ class PipelineStatus(BaseModel):
 
 class WorkerOut(BaseModel):
     worker: WorkerSnapshot
+    skipped: list[FolderSkipped] = Field(
+        default_factory=list,
+        description="When Resume reads the folders again, the ones it could not read.",
+    )

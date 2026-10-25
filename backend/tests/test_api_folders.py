@@ -2,6 +2,7 @@
 raccontano quanti frame hanno dato senza far aspettare, e "Verifica ora" e' un gesto."""
 
 import os
+import threading
 import time
 from pathlib import Path
 
@@ -49,6 +50,31 @@ def test_a_share_that_does_not_answer_does_not_hold_the_list(client_vuoto, tmp_p
     # one wait for all, not one per folder (four would be 2 s)
     assert time.monotonic() - start < 1.5
     assert rows == {**dict.fromkeys(ids, False), f["id"]: True}
+
+
+def test_a_silent_share_is_asked_once_and_logged(client_vuoto, tmp_path, monkeypatch, caplog):
+    """Asking again a share still silent from the last call would pile up one thread per call:
+    the one already asking is enough. Time running out is said in the log."""
+    slow = tmp_path / "slow"
+    slow.mkdir()
+    add(client_vuoto, slow)
+    real, asked, gate = folders_api.root_readable, [], threading.Event()
+
+    def hangs(root):
+        asked.append(root)
+        gate.wait(10.0)
+        return real(root)
+
+    monkeypatch.setattr(folders_api, "root_readable", hangs)
+    monkeypatch.setattr(folders_api, "PROBE_SECONDS", 0.2)
+    try:
+        with caplog.at_level("WARNING"):
+            for _ in range(3):
+                folders(client_vuoto)
+    finally:
+        gate.set()
+    assert len(asked) == 1
+    assert "did not answer" in caplog.text and str(slow.name) in caplog.text
 
 
 def test_create_list_and_reachability(client_vuoto, tmp_path):

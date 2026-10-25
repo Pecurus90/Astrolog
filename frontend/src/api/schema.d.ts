@@ -566,7 +566,8 @@ export interface paths {
          *     the progress is in `GET /pipeline/status`.
          *
          *     409 `no_folders` when there is none; 409 `no_readable_folders` with the `skipped` folders
-         *     when none can be started; 409 `worker_busy`.
+         *     when none can be started; 409 `worker_busy` when a job runs, also with the `skipped` folders
+         *     when some are already being read.
          */
         post: operations["scan_all"];
         delete?: never;
@@ -4216,6 +4217,11 @@ export interface components {
         /** WorkerOut */
         WorkerOut: {
             worker: components["schemas"]["WorkerSnapshot"];
+            /**
+             * Skipped
+             * @description When Resume reads the folders again, the ones it could not read.
+             */
+            skipped?: components["schemas"]["FolderSkipped"][];
         };
         /** WorkerSnapshot */
         WorkerSnapshot: {
@@ -4235,8 +4241,6 @@ export interface components {
             ended_at: string | null;
             /** Stages */
             stages: components["schemas"]["StageRecord"][];
-            /** Error */
-            error?: string | null;
         };
         /** YearDayOut */
         YearDayOut: {

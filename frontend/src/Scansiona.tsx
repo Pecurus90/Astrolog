@@ -149,7 +149,7 @@ export function Scansiona() {
     return (
       <div className="as-telaio__lavoro">
         <span className="as-stato as-stato--allarme">{t("scan.blocked")}</span>
-        <span className="as-telaio__motivo">{stato.data.worker.error ?? t("scan.blocked.why")}</span>
+        <span className="as-telaio__motivo">{t("scan.blocked.why")}</span>
         <Bottone verso="tenue" piccolo a="/impostazioni/letture">
           {t("scan.blocked.see")}
         </Bottone>
@@ -220,7 +220,7 @@ export function ScansioneNelFoglio() {
       <div className="as-foglio__lavoro-riga">
         <span>
           {bloccata
-            ? (stato.data?.worker.error ?? t("scan.blocked.why"))
+            ? t("scan.blocked.why")
             : // lo stato lo dice la stessa parola della barra: al lavoro senza fase e' "In corso",
               // interrotta lo dice anche quando una fase c'e', perche' accanto c'e' Riprendi
               [
@@ -244,7 +244,7 @@ export function ScansioneNelFoglio() {
   )
 }
 
-function isAvvio(dati: unknown): dati is components["schemas"]["ScanAllStarted"] {
+function conSaltate(dati: unknown): dati is { skipped: components["schemas"]["FolderSkipped"][] } {
   return typeof dati === "object" && dati !== null && "skipped" in dati
 }
 
@@ -257,9 +257,9 @@ export function AvvisiDellaScansione() {
     select: (m) => ({ errore: m.state.error, dati: m.state.data }),
   })
   const ultimo = gesti.at(-1)
-  // Solo "avvia tutte" risponde con le saltate; fermare e riprendere no.
+  // "avvia tutte" e Riprendi che rilegge rispondono con le saltate; fermare con una lista vuota
   const dati = ultimo?.dati
-  const saltate = isAvvio(dati) ? dati.skipped : []
+  const saltate = conSaltate(dati) ? dati.skipped : []
   const errore = ultimo?.errore
   const vedi = (a: string) => (
     <Bottone verso="tenue" piccolo a={a}>

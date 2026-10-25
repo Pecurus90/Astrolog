@@ -192,12 +192,13 @@ def run(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> WorkerO
     NAS cadence does not skip a round.
 
     409 `worker_busy` if there is work to start while a job is already running. When Resume
-    reads the folders again, also 409 `no_folders` if no active folder is left, and 409
-    `no_readable_folders` with the `skipped` folders when none can be started."""
+    reads the folders again it answers with the `skipped` ones, like `POST /scan`, and with its
+    409s: `no_folders` if no active folder is left, `no_readable_folders` (or `worker_busy` when
+    some are already being read) with the `skipped` folders when none can be started."""
     state = request.app.state
     if _reading_cut_short(conn, state):
-        start_scan_all(state, conn)
-        return WorkerOut(worker=_shown(state.worker.snapshot()))
+        started = start_scan_all(state, conn)
+        return WorkerOut(worker=_shown(state.worker.snapshot()), skipped=started.skipped)
     # Only what has a remainder: the order and who pulls whom is `queue`'s.
     steps = queue(
         state.db_path,

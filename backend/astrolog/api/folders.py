@@ -1,6 +1,7 @@
 """Registering is permissive: a folder may not answer now (a NAS switched off). `frames` comes
 from the database, never the disk: counting on disk is the wizard's explicit `probe`."""
 
+import logging
 import os
 import sqlite3
 import threading
@@ -36,6 +37,7 @@ from .models import (
 from .paths import same_folder, validate_root
 
 router = APIRouter(prefix="/api/v1", tags=["folders"])
+log = logging.getLogger(__name__)
 
 # "10 seconds is about the limit for keeping the user's attention focused on the dialogue"
 # (Nielsen, *Response Times: The 3 Important Limits*, 1993); checked between folders.
@@ -48,22 +50,40 @@ _SELECT = (
 )
 
 
+class _Probe(threading.Thread):
+    """One question to one root; the answer stays on the thread that got it."""
+
+    def __init__(self, root: str) -> None:
+        super().__init__(daemon=True)
+        self.root = root
+        self.answer: bool | None = None
+
+    def run(self) -> None:
+        self.answer = root_readable(self.root)
+
+
+# One probe per root still asking from an earlier call: a silent share is not asked again.
+_asking: dict[str, _Probe] = {}
+_asking_lock = threading.Lock()
+
+
 def _reachable(roots: list[str], deadline: float | None = None) -> dict[str, bool | None]:
     """Every folder asked at once under one deadline: one that has not answered when time is up is
-    `None`, and its thread is left behind instead of holding the answer."""
-    answers: dict[str, bool] = {}
-
-    def ask(root: str) -> None:
-        answers[root] = root_readable(root)
-
-    threads = [threading.Thread(target=ask, args=(r,), daemon=True) for r in set(roots)]
-    for thread in threads:
-        thread.start()
+    `None`, and its thread is left behind instead of holding the answer; the next call joins it."""
+    threads: dict[str, _Probe] = {}
+    with _asking_lock:
+        for root in set(roots):
+            if (old := _asking.get(root)) is None or not old.is_alive():
+                _asking[root] = _Probe(root)
+                _asking[root].start()
+            threads[root] = _asking[root]
     if deadline is None:
         deadline = time.monotonic() + PROBE_SECONDS
-    for thread in threads:
+    for root, thread in threads.items():
         thread.join(max(0.0, deadline - time.monotonic()))
-    return {root: answers.get(root) for root in roots}
+        if thread.is_alive():
+            log.warning("folder %s did not answer within the deadline", root)
+    return {root: None if threads[root].is_alive() else threads[root].answer for root in roots}
 
 
 def _out(row: sqlite3.Row, *, reactivated: bool = False) -> FolderOut:
