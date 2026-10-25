@@ -21,6 +21,10 @@ def bash(command):
     return {"tool_name": "Bash", "tool_input": {"command": command}}
 
 
+def powershell(command):
+    return {"tool_name": "PowerShell", "tool_input": {"command": command}}
+
+
 @pytest.mark.parametrize(
     "path",
     [
@@ -133,6 +137,57 @@ def test_the_frozen_method_asks_marco_before_an_edit(path):
     assert "21/11" in answer["permissionDecisionReason"]
 
 
+def test_the_frozen_method_ignores_case_windows_and_mac_do_too():
+    assert guard.reason(edit("claude.md"), ROOT) == guard.FROZEN_WHY
+    assert guard.reason(edit(".Claude/hooks/ci.py"), ROOT) == guard.FROZEN_WHY
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        bash("sed -i 's/a/b/' CLAUDE.md"),
+        bash("echo x >> CLAUDE.md"),
+        bash("echo '{}' > .claude/settings.json"),
+        bash("cd backend && rm -f ../.claude/hooks/ci.py"),
+        bash("mv x.py .claude/hooks/guard.py"),
+        bash("cat notes | tee -a claude.md"),
+        bash("git checkout -- .claude/hooks/guard.py"),
+        bash(f"cp x {ROOT.replace(os.sep, '/')}/CLAUDE.md"),
+        powershell("Set-Content -Path .claude\\settings.json -Value x"),
+        powershell("Remove-Item .claude/hooks/ask.py"),
+        bash("rm -rf .claude"),
+        bash("mv .claude old"),
+        bash("git rm -r .claude"),
+        powershell("Remove-Item -Recurse .claude"),
+        bash("rm -rf ./.Claude"),
+        bash(f"git -C {ROOT.replace(os.sep, '/')} checkout -- .claude/hooks/guard.py"),
+        bash("git -c x=y restore CLAUDE.md"),
+    ],
+)
+def test_a_command_that_writes_the_method_asks_marco_too(call):
+    """ADR 0040: the freeze covers Bash and PowerShell, not only Edit and Write."""
+    assert guard.reason(call, ROOT) == guard.FROZEN_WHY
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "cat CLAUDE.md",
+        "python .claude/hooks/ci.py push",
+        "git add .claude/hooks/guard.py tools/test_guard.py",
+        "git diff -- .claude/ > /tmp/x.diff",
+        "cat .claude/settings.json 2>&1 | head",
+        'git commit -m "fix: guard; rm nothing in .claude/"',
+        "rm -f ~/.claude/projects/x/memory/old.md",
+        "grep -rn mv .claude/hooks",
+        "rm -f .claude.json.bak",
+        "git -C backend add .claude/hooks/guard.py",
+    ],
+)
+def test_a_command_that_only_reads_the_method_passes(command):
+    assert guard.reason(bash(command), ROOT) is None
+
+
 def test_the_hook_stays_silent_when_nothing_is_wrong():
     payload = json.dumps(edit("docs/piano.md"))
     out = subprocess.run(
@@ -143,10 +198,6 @@ def test_the_hook_stays_silent_when_nothing_is_wrong():
         check=True,
     )
     assert out.stdout == ""
-
-
-def powershell(command):
-    return {"tool_name": "PowerShell", "tool_input": {"command": command}}
 
 
 @pytest.mark.parametrize(

@@ -26,8 +26,18 @@ PROTECTED = (
 )
 
 # The method is frozen (ADR 0040): an edit to its files is Marco's click, not a refusal.
-FROZEN = re.compile(r"^(CLAUDE\.md$|\.claude/)")
+FROZEN = re.compile(r"^(CLAUDE\.md$|\.claude/)", re.IGNORECASE)
 FROZEN_WHY = "metodo congelato fino al 21/11/2026 (ADR 0040): la modifica la conferma Marco"
+# Bash too: a writing command that names the method's files. A script writing by its own code
+# is not seen (ADR 0040, rule 7).
+_GIT = r"\bgit\s+(?:-\S+(?:\s+[^-\s]\S*)?\s+)*"  # global options allowed (-C dir, -c k=v)
+FROZEN_WRITERS = re.compile(
+    r"^((sed|perl)\s+(-\w+\s+)*-i|(tee|mv|cp|rm|touch|truncate|ln)\b"
+    rf"|{_GIT}(checkout|restore|rm|mv|apply)\b|(Set|Add|Clear)-Content\b|Out-File\b"
+    r"|(Remove|Move|Copy|New|Rename)-Item\b)",
+    re.IGNORECASE,
+)
+SPACED_QUOTE = re.compile(r"\"[^\"]*\s[^\"]*\"|'[^']*\s[^']*'")  # a message, not a path
 
 COMMANDS = (
     (re.compile(r"\buv\s+(lock|add|remove)\b"), "dependencies change only with Marco's approval"),
@@ -62,7 +72,7 @@ SCRIPT_WRITES = re.compile(
 HEREDOC_WHY = "text goes into files only by Edit/Write, never a heredoc or a script"
 
 # Nothing to stash, and the pop brings back an old stash of Marco's into the work.
-_GIT_STASH = r"\bgit\s+(?:-\S+(?:\s+[^-\s]\S*)?\s+)*stash\b"  # global options allowed (-C dir)
+_GIT_STASH = _GIT + r"stash\b"
 STASH_THEN_POP = re.compile(
     _GIT_STASH + r"(?!\s+(list|show|pop|apply|drop)\b).*" + _GIT_STASH + r"\s+(pop|apply)\b",
     re.DOTALL,
@@ -107,6 +117,20 @@ def _heredoc_writes(raw: str) -> bool:
     return bool(TO_INTERPRETER.search(first) and SCRIPT_WRITES.search(raw))
 
 
+def _writes_frozen(command: str, root: str) -> bool:
+    """CLAUDE.md, .claude/ or .claude itself, bare, from ./ or ../ or under its absolute path;
+    ~/.claude/ is Claude Code's own and stays free."""
+    base = re.escape(os.path.basename(os.path.abspath(root)))
+    target = rf"(\.\.?[/\\])*(\S*{base}[/\\])?(CLAUDE\.md\b|\.claude([/\\]|(?=[\s'\"]|$)))"
+    named = re.compile(rf"(^|(?<=[\s'\"=])){target}", re.IGNORECASE)
+    redirect = re.compile(rf">\s*['\"]?{target}", re.IGNORECASE)
+    for segment in re.split(r"[;&|\n]+", SPACED_QUOTE.sub("", command)):
+        segment = segment.strip()
+        if redirect.search(segment) or (FROZEN_WRITERS.search(segment) and named.search(segment)):
+            return True
+    return False
+
+
 def _relative(path: str, root: str) -> str:
     try:
         rel = os.path.relpath(os.path.abspath(path), os.path.abspath(root))
@@ -132,6 +156,8 @@ def reason(payload: dict, root: str) -> str | None:
     if tool in ("Bash", "PowerShell"):
         if _heredoc_writes(data.get("command") or ""):
             return HEREDOC_WHY
+        if _writes_frozen(data.get("command") or "", root):
+            return FROZEN_WHY
         command = _quoted_out(data.get("command") or "")
         if any(rule.search(command) for rule in KILL_BY_NAME):
             return KILL_BY_NAME_WHY

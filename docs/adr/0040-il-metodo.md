@@ -19,9 +19,9 @@ misure). CLAUDE.md e' contesto, un hook e' deterministico (guida di Claude Code,
 | 2 | **Prima il rosso**: CI, Nightly, Issue `difetto`/`sicurezza`, avviso di sicurezza vengono prima di ogni passo | SessionStart `tools/stato.py`; Stop hook; controllo in sottofondo dopo il push; Issue `nightly-rosso` aperta dalla Nightly |
 | 3 | **Fatto = provato**: un passo e' fatto quando il commit che lo spunta e' verde su GitHub, non in locale | SessionStart guarda la CI del commit della spunta; rossa, il passo torna in testa |
 | 4 | **Uno scrive, gli altri leggono**: in parallelo solo `esploratore` (2-4, con obiettivo, formato e confini) e `revisore` (uno, due su diff grandi) | Strumenti dei sotto-agenti: `esploratore` e `revisore` non scrivono |
-| 5 | **A Marco solo il prodotto** (gusto, parole, rischio, schermate), a scelta multipla, consigliata in cima | `ask.py`; registro delle domande, contato il 21/11 |
+| 5 | **A Marco solo il prodotto** (gusto, parole, rischio, schermate), a scelta multipla, consigliata in cima | `ask.py` vuole la scelta multipla; `tools/registro_domande.py` registra ogni domanda, contata il 21/11 |
 | 6 | **Un difetto si ripara subito** con `/ripara`, o Issue `bloccato` col motivo | SessionStart conta le Issue e la loro eta'; con CI rossa lo Stop lascia chiudere solo se una Issue `bloccato` nomina il run |
-| 7 | **Metodo congelato fino al 21/11/2026**; le proposte vanno in Issue `metodo` | `guard.py` chiede la conferma di Marco prima di ogni modifica a `CLAUDE.md` e `.claude/` |
+| 7 | **Metodo congelato fino al 21/11/2026**; le proposte vanno in Issue `metodo` | `guard.py` chiede la conferma di Marco prima di ogni modifica a `CLAUDE.md` e `.claude/` (maiuscole o no): da Edit e Write, e dai comandi che scrivono (`sed -i`, `mv`, `rm`, redirezioni, cmdlet di PowerShell); uno script che scrive col suo codice non si vede |
 
 La 5 resta in parte giudizio (domanda tecnica o di prodotto), come "test visto rosso" e "la
 consigliata e' la piu' corretta": nessuna macchina li vede.
@@ -69,7 +69,7 @@ script, e si decide cosa togliere (non aggiungere):
 1. ore di CI rossa su `main` per settimana: nessun rosso oltre un push o 2 ore (`gh run list`);
 2. notti verdi di fila; eta' delle Issue `difetto`/`sicurezza`: nessuna oltre 2 giorni (Linear);
 3. passi chiusi per settimana col commit verde: in salita, nessuno spuntato e riaperto;
-4. domande tecniche a Marco: zero (registro di `ask.py`);
+4. domande tecniche a Marco: zero (registro di `tools/registro_domande.py`);
 5. commit su CLAUDE.md e `.claude/` dopo la fase 0: zero; commit solo documenti sotto il 25%.
 
 ## Ordine
