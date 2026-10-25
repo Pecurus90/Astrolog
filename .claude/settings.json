@@ -70,6 +70,16 @@
             "timeout": 3600
           }
         ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/tools/registro_domande.py\"",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PreToolUse": [

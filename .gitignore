@@ -74,3 +74,6 @@ backend/astrolog/web/
 # sporcherebbero l'albero a ogni giro.
 frontend/tsconfig.tsbuildinfo
 frontend/coverage/
+
+# Register of the questions asked to the owner (tools/registro_domande.py): local, never committed.
+reports/domande.jsonl

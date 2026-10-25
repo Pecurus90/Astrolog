@@ -25,6 +25,10 @@ PROTECTED = (
     (re.compile(r"(^|/)__snapshots__/"), "snapshots change only on purpose, never by hand"),
 )
 
+# The method is frozen (ADR 0040): an edit to its files is Marco's click, not a refusal.
+FROZEN = re.compile(r"^(CLAUDE\.md$|\.claude/)")
+FROZEN_WHY = "metodo congelato fino al 21/11/2026 (ADR 0040): la modifica la conferma Marco"
+
 COMMANDS = (
     (re.compile(r"\buv\s+(lock|add|remove)\b"), "dependencies change only with Marco's approval"),
     (
@@ -122,6 +126,8 @@ def reason(payload: dict, root: str) -> str | None:
     data = payload.get("tool_input") or {}
     if tool in ("Edit", "Write", "NotebookEdit"):
         rel = _relative(data.get("file_path") or data.get("notebook_path") or "", root)
+        if FROZEN.search(rel):
+            return FROZEN_WHY
         return next((why for rule, why in PROTECTED if rule.search(rel)), None)
     if tool in ("Bash", "PowerShell"):
         if _heredoc_writes(data.get("command") or ""):
@@ -144,7 +150,7 @@ def main() -> int:
     if why is not None:
         # a hand edit of these files is never right; a command that changes them is Marco's click
         denied = (KILL_BY_NAME_WHY, HEREDOC_WHY, STASH_WHY)
-        asks = payload.get("tool_name") == "Bash" and why not in denied
+        asks = why == FROZEN_WHY or (payload.get("tool_name") == "Bash" and why not in denied)
         verdict = "ask" if asks else "deny"
         decision = {"hookEventName": "PreToolUse", "permissionDecision": verdict}
         decision["permissionDecisionReason"] = why

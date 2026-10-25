@@ -118,6 +118,21 @@ def test_a_dependency_command_asks_marco_instead_of_refusing():
     assert json.loads(out.stdout)["hookSpecificOutput"]["permissionDecision"] == "ask"
 
 
+@pytest.mark.parametrize("path", ["CLAUDE.md", ".claude/commands/ripara.md", ".claude/hooks/ci.py"])
+def test_the_frozen_method_asks_marco_before_an_edit(path):
+    """ADR 0040: method frozen until 21/11; an edit to CLAUDE.md or .claude/ is Marco's click."""
+    out = subprocess.run(
+        [sys.executable, os.path.join(ROOT, ".claude", "hooks", "guard.py")],
+        input=json.dumps(edit(path)),
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    answer = json.loads(out.stdout)["hookSpecificOutput"]
+    assert answer["permissionDecision"] == "ask"
+    assert "21/11" in answer["permissionDecisionReason"]
+
+
 def test_the_hook_stays_silent_when_nothing_is_wrong():
     payload = json.dumps(edit("docs/piano.md"))
     out = subprocess.run(
