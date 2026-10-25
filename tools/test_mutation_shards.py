@@ -165,6 +165,9 @@ def test_the_workflow_runs_every_shard_and_filters_each_report_to_its_own():
     # Each night resumes the last one, and saves even when cut short.
     assert workflow.count("actions/cache/save@") == 2
     assert workflow.count("actions/cache/restore@") == 2
+    # mutmut refreshes the .py of a resumed mutants/, never the data: schema.sql must follow.
+    assert "rsync -a --exclude='*.py' astrolog/ mutants/astrolog/" in workflow
+    assert "rm -rf mutants/tests" in workflow and 'rm -f "$f" "$f.meta"' in workflow
 
 
 def test_a_mutant_no_shard_owns_fails_the_rest_report_alone(capsys):

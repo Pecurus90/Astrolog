@@ -40,6 +40,15 @@ jobs:
         timeout-minutes: 270
         run: |
           patterns="$(python ../tools/mutation_shards.py ${{ matrix.shard }})"
+          # a resumed mutants/ gets new .py from mutmut, never new data (schema.sql), and keeps
+          # what the repo deleted: tests copied again, modules gone dropped with their verdicts
+          if [ -d mutants/astrolog ]; then
+            rsync -a --exclude='*.py' astrolog/ mutants/astrolog/
+            rm -rf mutants/tests
+            find mutants/astrolog -name '*.py' | while read -r f; do
+              [ -f "${f#mutants/}" ] || rm -f "$f" "$f.meta"
+            done
+          fi
           set -f
           # A runner lost at 3 h saves nothing: stopped earlier, mutmut keeps each verdict it has.
           timeout -k 5m -s INT 160m mutmut run --max-children 4 $patterns || [ $? -eq 124 ]
