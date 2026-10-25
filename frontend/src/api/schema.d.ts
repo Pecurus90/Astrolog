@@ -4,5745 +4,5864 @@
  */
 
 export interface paths {
-    "/api/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Health
-         * @description The service is up and the database answers. Returns the API version, how many of the
-         *     app's own tables exist (SQLite's internal ones, such as `sqlite_sequence`, are left out so
-         *     the number matches `schema.sql`), the confined data root (`null` when there is none), and
-         *     the catalog's entries and version. A missing catalog shows as zero entries; a newer
-         *     catalog that fails to load leaves the previous entries and `catalog_version` in place,
-         *     and the failure is only logged.
-         */
-        get: operations["health"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/archive": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Archive Page
-         * @description The archive rows -- confirmed objects and mosaics -- with each one's filters, in the order
-         *     `sort` chooses, narrowed by the search parameters.
-         *
-         *     `since`/`until` (night dates, both included), `site`, `optics` and `camera` narrow the
-         *     **frames**: a row passes with one of its frames in them, and its hours, filters, productions
-         *     and panels are those frames' only -- narrowed to 2025, a row tells 2025.
-         *
-         *     `key` narrows to the one row with that key (`items[].key`): the search opens an object so,
-         *     where `q` would also find `M 10` and `M 101` for `M 1`.
-         *
-         *     The factory cap is high (100) because this list is an **inventory**, not a feed to scroll:
-         *     whoever has a hundred thousand frames still has a handful of objects, and asking for twenty at
-         *     a time would be five rounds to see what fits in one.
-         */
-        get: operations["archive_page"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/backup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Backup Status
-         * @description The answers' file next to the database: when it was last written and what it carries.
-         *
-         *     `offer` is `found` when the database holds no answer (new, or recreated) and the file is
-         *     there: the page asks whether to put the answers back. It stays
-         *     `found` until `POST /backup/restore` or `POST /backup/decline`.
-         */
-        get: operations["backup_status"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/backup/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Restore Backup
-         * @description Puts back the answers of the file beside the database: settings, sites, folders, the
-         *     pieces and filters written by hand, the names learnt and every answer of Da confermare.
-         *     Nothing derived is in the file: the next scan rebuilds frames, rigs and nights.
-         *
-         *     409 `no_backup_offered` unless the database held no answer at start and the file is there.
-         */
-        post: operations["restore_backup"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/backup/decline": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Decline Backup
-         * @description Starts from scratch: the offer is not made again while the app runs, and the first answer
-         *     rewrites the file, after which a database with answers is never offered one.
-         */
-        post: operations["decline_backup"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/backup/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Export Backup
-         * @description The answers as a file to take to another computer, **without the service keys**: whoever
-         *     has the file does not get them; nor the solver path, wrong on another computer. Import it
-         *     there with `POST /backup/import`.
-         */
-        get: operations["export_backup"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/backup/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Import Backup
-         * @description Puts back the answers of a file exported elsewhere, sent as its JSON content: adds and
-         *     updates, deletes nothing, so it is safe on a database already in use.
-         *
-         *     422 `not_a_backup` when the content is not an answers' file of this version; 422 with the
-         *     reason as its code, as when adding it, for a folder that is on this machine and is refused.
-         */
-        post: operations["import_backup"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/gear": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Gear List
-         * @description The pieces you own, by kind, with the rigs and the filters.
-         *
-         *     No pagination, and not by oversight: anyone's gear fits in one screen -- whoever has a hundred
-         *     thousand frames still has a handful of telescopes -- and paging it would mean one more round to
-         *     see what fits in one.
-         */
-        get: operations["gear_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/gear/instruments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Add Instrument
-         * @description A piece your files do not name: a guide scope, a reducer, a mount.
-         *
-         *     It is born **declared**. A name you already own in that kind does not make a second piece: it
-         *     is a refusal, and what you write by hand is exactly what the scan will recognise.
-         *
-         *     409 `worker_busy`; 409 `name_taken`; 422 `field_not_of_kind` with the `fields` that kind's card
-         *     does not ask for.
-         */
-        post: operations["add_instrument"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/gear/instruments/{instrument_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Edit Instrument
-         * @description A piece's card, corrected from the page where it is read.
-         *
-         *     Renaming learns the old spelling -- otherwise the next scan recreates the piece as it was --
-         *     and changing a camera's colour requeues the frames that do not name their filter: it is the
-         *     same answer as *Da confermare*, written by the same hand.
-         *
-         *     409 `worker_busy`; 404 `not_found`; 409 `name_taken` if the new name is already another piece
-         *     of that kind; 422 `field_not_of_kind` with the `fields` that kind's card does not ask for; 422
-         *     `merge_refused`.
-         */
-        patch: operations["edit_instrument"];
-        trace?: never;
-    };
-    "/api/v1/gear/rigs/{rig_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Name Rig
-         * @description A rig's name. It is kept among the declarations, not in the row: it comes back when the
-         *     spine rebuilds the same rig.
-         *
-         *     409 `worker_busy`; 404 `not_found`.
-         */
-        patch: operations["name_rig"];
-        trace?: never;
-    };
-    "/api/v1/gear/filters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Add Filter
-         * @description A filter you have not used yet, or that your files call in a way the app does not
-         *     understand. A name you already own is a refusal, not a second filter.
-         *
-         *     409 `worker_busy`; 409 `name_taken`, or `spelling_taken` if the name is already a spelling of
-         *     another filter of yours.
-         */
-        post: operations["add_filter"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/gear/rigs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Add Rig
-         * @description A rig that has not imaged yet: its fingerprint, hence what the scan will find. One you
-         *     already have, focal length within 5 %, is a refusal.
-         *
-         *     409 `worker_busy`; 409 `rig_exists`; 422 `wrong_kind` if the optics or the camera is not a
-         *     piece of that kind.
-         */
-        post: operations["add_rig"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/gear/rigs/{rig_id}/parts/{kind}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Choose Rig Part
-         * @description A part of a rig, chosen from its card. It is kept among the declarations like the name, and
-         *     the rig's frames go back to `normalize`, which writes it on each: the mount on all of them,
-         *     any other kind where the file names none.
-         *
-         *     409 `worker_busy`; 404 `not_found`; 422 `not_of_kind`.
-         */
-        put: operations["choose_rig_part"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/gear/filters/{filter_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Edit Filter
-         * @description The same functions as *Da confermare*.
-         *
-         *     409 `worker_busy`; 404 `not_found`; 409 `name_taken` if the new name is already another
-         *     filter's; 422 `merge_refused`.
-         */
-        patch: operations["edit_filter"];
-        trace?: never;
-    };
-    "/api/v1/nights": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Night List
-         * @description The archive's nights, newest first. Beside them travel the two things that explain a short
-         *     list: how many frames wait for an answer (`waiting`) and how many the spine has still to read
-         *     (`still_reading`).
-         *
-         *     The factory cap is the same as the Archive's (100): there are many more rows -- one per night,
-         *     not one per object -- but they are looked at the same way, scrolling back in time, and asking
-         *     for twenty at a time would be five rounds to see a year.
-         *
-         *     `night` asks a single night by id, wherever it falls in the list: the search opens it there.
-         *     An id that is not there gives no rows, not an error -- an old address, not a broken request.
-         */
-        get: operations["night_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/folders/path-info": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Path Info
-         * @description How paths are shaped on THIS machine, and whether there is a confined data root.
-         */
-        get: operations["path_info"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/folders/probe": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Probe
-         * @description Looks at a path without registering it. It also counts the online-only FITS: they are
-         *     there, even if not on the disk, and whoever keeps the archive under OneDrive must not read "0"
-         *     on the folder they have just chosen.
-         *
-         *     `moved_from` is the registered folder these files belonged to, when the place is one moved here
-         *     (`moved_check` says why it is missing). Count and recognition share `PROBE_SECONDS`.
-         *
-         *     422 when the path is refused, with the reason as its code.
-         */
-        post: operations["probe"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/folders/browse": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Browse
-         * @description The subfolders to choose from inside the data root: on a NAS in Docker the user does not
-         *     know which path the folder has inside the container, and picks it instead of typing it.
-         *     Without a root (the desktop) nothing is listed: 409 `no_data_root`. No pages: these are the
-         *     subfolders of a single folder, not the archive.
-         *
-         *     409 `root_unreachable` with the `path` when it cannot be listed; 422 when the path is refused,
-         *     with the reason as its code.
-         */
-        get: operations["browse"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/folders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Folders
-         * @description The active folders (the retired ones do not appear). All are asked at once whether they
-         *     answer, under one deadline of `PROBE_SECONDS`: one that has not answered by then is
-         *     `reachable: false`, so a dead network share cannot hold the list.
-         */
-        get: operations["list_folders"];
-        put?: never;
-        /**
-         * Create Folder
-         * @description Registers a folder; registering a retired one again reactivates it.
-         *
-         *     409 `folder_exists` with its `folder_id` if it is already active; 422 when the path is
-         *     refused, with the reason as its code.
-         */
-        post: operations["create_folder"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/folders/{folder_id}/move": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Move Folder
-         * @description The folder's files are now at `root_path`: same folder, so frames, scans and the answers
-         *     on its folders follow it. Only to a place with the same files (`folder_move.same_files`); a
-         *     retired folder comes back (`reactivated`).
-         *
-         *     404 `folder_not_found`; 409 `folder_exists` with its `folder_id` if the path is registered,
-         *     active or retired; 409 `root_unreachable` with the `path`; 409 `not_the_same_folder`; 422 when
-         *     the path is refused, with the reason as its code.
-         */
-        post: operations["move_folder"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/folders/{folder_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Retire Folder
-         * @description Retires: the app stops looking there. The frames stay. Idempotent.
-         *
-         *     404 `folder_not_found` if it is unknown.
-         */
-        delete: operations["retire_folder"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/scan": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Scan All
-         * @description Reads all the registered folders that are not retired, in one run, and replies at once;
-         *     the progress is in `GET /pipeline/status`.
-         *
-         *     409 `no_folders` when there is none; 409 `no_readable_folders` with the `skipped` folders
-         *     when none can be started; 409 `worker_busy` when a job runs, also with the `skipped` folders
-         *     when some are already being read.
-         */
-        post: operations["scan_all"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/folders/{folder_id}/scan": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Scan
-         * @description Starts the scan and replies at once; the progress is in `GET /pipeline/status`.
-         *
-         *     404 `folder_not_found`; 409 `folder_retired`, `root_unreachable` with the `path`,
-         *     `scan_running` with the `folder_id`, or `worker_busy`.
-         */
-        post: operations["scan"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/scan-runs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Scan Runs
-         * @description The receipts, newest first.
-         */
-        get: operations["scan_runs"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/scan-runs/{run_id}/errors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Scan Run Errors
-         * @description The files the scan did not read, each with its reason, in pages. The list is kept by the
-         *     last scan of each folder and, if that one did not reach the end, also by the last one that did
-         *     (`spine/scan_store.finish_run`): of the others only the numbers remain, and an open one has no
-         *     list yet; the reply says so with its code instead of an empty list.
-         *
-         *     404 `scan_run_not_found`; 409 `scan_run_open`; 410 `errors_not_kept`.
-         */
-        get: operations["scan_run_errors"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Search Archive
-         * @description Objects, nights, gear and sites of the archive matching `q`, at most `limit` per kind, each
-         *     kind with its `total`.
-         *
-         *     - **Objects** by any name: their own, the catalog's designations, the common name; ordered as
-         *       the Archive by hours.
-         *     - **Nights** by date in the common forms (ISO; day/month with or without the year, read
-         *       both ways when both fit; day and month name; month name and year; Italian or English
-         *       months) or by an object shot in them; newest first.
-         *     - **Gear** and **sites** by name.
-         *
-         *     A blank `q` finds nothing, not everything. Not paged: it is a menu of a few per kind, and
-         *     `total` says how many more the page that shows them holds.
-         */
-        get: operations["search_archive"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/pipeline/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Status
-         * @description The worker snapshot, the progress of the last scan started (`null` until one has started),
-         *     how many frames each stage still lacks, and what the button does (`action`).
-         *
-         *     Once the scan has finished, however it finished (a Stop included), `state` combines the
-         *     receipts of every folder of the gesture (worst first); while it runs, it is the worker's.
-         *     `receipt`, like `folder_id` and `run_id`, is the last started folder's, present once the scan
-         *     has finished. If it stopped or fell before the first folder, no receipt is left: `receipt` is
-         *     `null` and the state is the worker's (`not_run` when the worker has no record of the scan).
-         */
-        get: operations["status"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/pipeline/stop": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Stop
-         * @description Asks for the Stop and returns the worker snapshot. Cooperative: the worker stops within the
-         *     item in progress, with the transaction closed. Always 200, even with nothing running.
-         */
-        post: operations["stop"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/pipeline/run": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Run
-         * @description Starts the waiting work: the normalisation of frames left behind, the sky of frames still
-         *     to solve, the object of those without one, and the nights of those waiting for a session.
-         *     Returns the worker snapshot.
-         *
-         *     It is the page's "Start"/"Resume" button: without this route the work requeued by an answer
-         *     in To confirm would wait for the next scan, and frames waiting for ASTAP would never start.
-         *
-         *     **If the last read did not reach the end, Resume reads the folders again.** Stages are asked
-         *     for by remainder here, and `scan` is not a frame stage: a file never read leaves nothing in the
-         *     queue, so otherwise Resume would bring the worker to `completed` without reading anything.
-         *
-         *     With nothing to do it starts nothing and returns the snapshot as it is, even mid-run, so the
-         *     NAS cadence does not skip a round.
-         *
-         *     409 `worker_busy` if there is work to start while a job is already running. When Resume
-         *     reads the folders again, also 409 `no_folders` if no active folder is left, and 409
-         *     `no_readable_folders` with the `skipped` folders when none can be started.
-         */
-        post: operations["run"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Review
-         * @description The open questions about what the scan found, and the objects.
-         */
-        get: operations["review"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/review/objects/settled": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Settled Objects
-         * @description The objects the app knows, with nothing to choose, in pages, in the page's order.
-         */
-        get: operations["settled_objects"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/review/apply": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Apply
-         * @description The answers become rules, and the work restarts on the frames they concern. All of them are
-         *     written together or none is.
-         *
-         *     409 `worker_busy`; 404 `not_found` if what an answer points to no longer exists or is no
-         *     longer asked (an old page); 422 `unknown_target` for a catalog slug that does not exist or a
-         *     rig the page does not offer; 422 `merge_refused`; 409 `name_taken` or `none_filter_exists` if
-         *     a filter answer collides with another filter.
-         */
-        post: operations["apply"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/places": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Search Places
-         * @description The places bearing that name, to fill in the coordinates without typing them by hand.
-         *     It does not touch the database: searching creates nothing, and without network it returns an
-         *     empty list -- the manual way always stays open. No pages: the cap is `place.search`'s.
-         */
-        get: operations["search_places"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/sites": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Sites
-         * @description The sites, the home one first and then by name, each with its number of nights and the
-         *     codes of what is not known about it (`unknown`).
-         */
-        get: operations["list_sites"];
-        put?: never;
-        /**
-         * Create Site
-         * @description A new site, enriched by what its coordinates can tell, returned as it is now saved.
-         *
-         *     The very first site becomes the home one by itself: empty-handed there is nothing to choose,
-         *     and asking would be a question with a single answer.
-         *
-         *     409 `site_name_taken` if another site already has that name.
-         */
-        post: operations["create_site"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/sites/{site_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete Site
-         * @description A site that has nights is not lost by mistake: the app refuses and says how many. If it was
-         *     the home one, the app does not elect another by itself: it asks.
-         *
-         *     404 `site_not_found`; 409 `site_has_nights` with the number of `nights`.
-         */
-        delete: operations["delete_site"];
-        options?: never;
-        head?: never;
-        /**
-         * Edit Site
-         * @description What is sent wins, even when empty: sending a field empty means deleting it, and a field
-         *     not sent stays as it was. Returns the site as it now is.
-         *
-         *     Moving the coordinates always redoes the time zone, and redoes **what came from the
-         *     coordinates**: the elevation and brightness asked of the service are asked again for the new
-         *     place, and if the service is silent they stay empty with their reason. What the user wrote --
-         *     a declared elevation, a measured or chosen sky -- stays their word and nobody touches it. That
-         *     is why the source of each is recorded: a number left attached to new coordinates would be
-         *     indistinguishable from a measurement.
-         *
-         *     404 `site_not_found`; 422 `field_required` with the `fields` among `name`, `latitude` and
-         *     `longitude` sent empty; 409 `site_name_taken` if another site already has the new name.
-         */
-        patch: operations["edit_site"];
-        trace?: never;
-    };
-    "/api/v1/sites/{site_id}/default": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Set Default
-         * @description "This is my home site": it decides the time zone of the nights. Returns the site as it now
-         *     is.
-         *
-         *     404 `site_not_found`.
-         */
-        post: operations["set_default"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/settings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Settings
-         * @description The preferences as saved, each secret shown only by its hint (`config.hint`), never whole;
-         *     whether the first start is over (`wizard_done`); and the codes of what the app still lacks
-         *     (`missing`): no home site, no solver, or a solver without its star database. Always 200.
-         */
-        get: operations["read_settings"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Write Settings
-         * @description Writes the given keys and returns the settings as they now are. Either all pass or nothing
-         *     does: half the preferences written would be worse than none, and whoever got one key wrong
-         *     must not guess which ones went in.
-         *
-         *     422 `unknown_setting` with the unknown `keys`; 422 `tried_elsewhere` with the `keys` that are
-         *     tried by their own route before being stored; 422 `out_of_range` with the `keys` outside
-         *     their `ranges`; 422 `wrong_type` if a value has the wrong type or is not one of the key's
-         *     allowed choices.
-         */
-        patch: operations["write_settings"];
-        trace?: never;
-    };
-    "/api/v1/solver": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Solver
-         * @description Where the app takes the solver from, and through which channel.
-         *
-         *     The **declared** path always comes out, even when it leads nowhere: it is the only thing that
-         *     can be corrected, and hiding it would leave a section saying "not found" without saying why.
-         */
-        get: operations["read_solver"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/solver/search": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Search Solver
-         * @description *Find it for me*: what the app would find **ignoring the preference**.
-         *
-         *     A POST because it looks at the machine's disk and PATH, not because it writes: **it writes
-         *     nothing**. Adopting the proposal is the user's gesture -- silently overwriting a hand-written
-         *     path would remove the only way out when this search picks the wrong program.
-         */
-        post: operations["search_solver"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/settings/wizard-done": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Stamp Wizard
-         * @description The first start is over: completing or skipping the wizard is the same stamp. Reopening the
-         *     wizard from Settings does not rewrite it: the stamp keeps the first time.
-         *     Returns the settings.
-         */
-        post: operations["stamp_wizard"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/moon/calendar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Moon Calendar
-         * @description The home site's Moon calendar as the background round wrote it (`spine/moon_calendar.py`):
-         *     this month and the next, each night with its Moon, the dark hours without it and whether it is
-         *     good for broadband by the two thresholds in the settings, which travel along for the legend.
-         *     Nothing is computed here: before the round has run, `nights` is empty.
-         */
-        get: operations["moon_calendar"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tonight": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Tonight
-         * @description Tonight's Moon from the home site, with the night's sky bands and its forecast summary.
-         *
-         *     **The night is the app's**, noon to noon in the site's time zone (`clock.night_date`), not a
-         *     calendar day: whoever looks at two in the morning is still in last night, and wants last
-         *     night's Moon. The window is measured **between the two true noons**, not at a fixed
-         *     twenty-four hours: the clock-change night lasts 23 or 25. **The phase is asked at midnight**,
-         *     not at noon: asked at the window's start, whoever looks at the bar at eleven in the evening
-         *     would read the number of twelve hours earlier.
-         *
-         *     **Without a home site there is nothing to say**, and it says so: `night`, `site` and `moon`
-         *     are `null`. A Moon computed on an invented place would be a number that looks true. The site,
-         *     when there is one, **travels with its sky**: the bar's footer writes the place and its class in
-         *     one line, and asking two routes for them would leave a moment when the page is half done. A
-         *     site whose time zone is missing or no longer known still comes out, without its night and its
-         *     Moon (`night` and `moon` `null`): falling back to Greenwich would give another place's Moon
-         *     without anyone noticing.
-         *
-         *     **The computation is costly**, because it samples a night of sky once per body: the Sun and
-         *     the Moon finely, the four planets of the chart at the curve's step. The
-         *     reply carries the night it refers to, so whoever shows it knows when it has expired without
-         *     asking again at every breath.
-         */
-        get: operations["tonight"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/vocab/filter-models": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Filter Models
-         * @description The commercial filters a new filter is declared from: brand, name and passband, in the
-         *     vocabulary's order. Not paginated: the vocabulary ships with the program
-         *     and does not grow with the archive.
-         */
-        get: operations["filter_models"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/weather": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Weather
-         * @description The coming nights of the home site, from the model chosen in the preferences, as the
-         *     forecast wrote them: changing model is reading another row.
-         *
-         *     Without a home site `site` is `null` and there are no nights; with a site whose time zone is
-         *     missing or unknown, `missing` is `no_timezone`.
-         *
-         *     **Three full nights, then a trend**: from the fourth (`trend`) only the verdict, the clouds,
-         *     the dark hours and the agreement, without usable hours, measures, hours or upper wind. Seeing
-         *     comes only from Meteoblue: an hour it does not cover stays empty. `scales` are the thresholds
-         *     the judgement used, for the page to draw.
-         */
-        get: operations["weather"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/weather/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Refresh
-         * @description Asks for the forecast now. If the service is silent the previous one stays, and the reply
-         *     says why.
-         */
-        post: operations["refresh"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/weather/meteoblue-key": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Put Meteoblue Key
-         * @description Tries the key on the account and saves it, or removes it when it is sent empty. A pasted key
-         *     carries spaces and line breaks along: an invisible character at the end would give a refusal
-         *     nobody can explain, so they are trimmed.
-         *
-         *     **A key the account does not recognise is not saved**, and the hint stays the previous key's:
-         *     saving it would mean finding out only at the next round, with seeing that does not arrive and
-         *     no idea why. **A new key is used at once**: the previous seeing and the last attempt are
-         *     forgotten, and the weather round starts now instead of after Meteoblue's minimum gap
-         *     (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key.
-         */
-        put: operations["put_meteoblue_key"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/year": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * This Year
-         * @description The current year up to tonight: the night date at home, noon to noon, so whoever looks at
-         *     two in the morning still counts last night. Without a home site, or with a zone that does not
-         *     resolve, today in UTC: the archive does not depend on the site.
-         */
-        get: operations["this_year"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  "/api/health": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Health
+     * @description The service is up and the database answers. Returns the API version, how many of the
+     *     app's own tables exist (SQLite's internal ones, such as `sqlite_sequence`, are left out so
+     *     the number matches `schema.sql`), the confined data root (`null` when there is none), and
+     *     the catalog's entries and version. A missing catalog shows as zero entries; a newer
+     *     catalog that fails to load leaves the previous entries and `catalog_version` in place,
+     *     and the failure is only logged.
+     */
+    get: operations["health"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/archive": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Archive Page
+     * @description The archive rows -- confirmed objects and mosaics -- with each one's filters, in the order
+     *     `sort` chooses, narrowed by the search parameters.
+     *
+     *     `since`/`until` (night dates, both included), `site`, `optics` and `camera` narrow the
+     *     **frames**: a row passes with one of its frames in them, and its hours, filters, productions
+     *     and panels are those frames' only -- narrowed to 2025, a row tells 2025.
+     *
+     *     `key` narrows to the one row with that key (`items[].key`): the search opens an object so,
+     *     where `q` would also find `M 10` and `M 101` for `M 1`.
+     *
+     *     The factory cap is high (100) because this list is an **inventory**, not a feed to scroll:
+     *     whoever has a hundred thousand frames still has a handful of objects, and asking for twenty at
+     *     a time would be five rounds to see what fits in one.
+     */
+    get: operations["archive_page"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/backup": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Backup Status
+     * @description The answers' file next to the database: when it was last written and what it carries.
+     *
+     *     `offer` is `found` when the database holds no answer (new, or recreated) and the file is
+     *     there: the page asks whether to put the answers back. It stays
+     *     `found` until `POST /backup/restore` or `POST /backup/decline`.
+     */
+    get: operations["backup_status"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/backup/restore": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Restore Backup
+     * @description Puts back the answers of the file beside the database: settings, sites, folders, the
+     *     pieces and filters written by hand, the names learnt and every answer of Da confermare.
+     *     Nothing derived is in the file: the next scan rebuilds frames, rigs and nights.
+     *
+     *     409 `no_backup_offered` unless the database held no answer at start and the file is there.
+     */
+    post: operations["restore_backup"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/backup/decline": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Decline Backup
+     * @description Starts from scratch: the offer is not made again while the app runs, and the first answer
+     *     rewrites the file, after which a database with answers is never offered one.
+     */
+    post: operations["decline_backup"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/backup/export": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Export Backup
+     * @description The answers as a file to take to another computer, **without the service keys**: whoever
+     *     has the file does not get them; nor the solver path, wrong on another computer. Import it
+     *     there with `POST /backup/import`.
+     */
+    get: operations["export_backup"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/backup/import": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Import Backup
+     * @description Puts back the answers of a file exported elsewhere, sent as its JSON content: adds and
+     *     updates, deletes nothing, so it is safe on a database already in use.
+     *
+     *     422 `not_a_backup` when the content is not an answers' file of this version; 422 with the
+     *     reason as its code, as when adding it, for a folder that is on this machine and is refused.
+     */
+    post: operations["import_backup"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/gear": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Gear List
+     * @description The pieces you own, by kind, with the rigs and the filters.
+     *
+     *     No pagination, and not by oversight: anyone's gear fits in one screen -- whoever has a hundred
+     *     thousand frames still has a handful of telescopes -- and paging it would mean one more round to
+     *     see what fits in one.
+     */
+    get: operations["gear_list"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/gear/instruments": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Add Instrument
+     * @description A piece your files do not name: a guide scope, a reducer, a mount.
+     *
+     *     It is born **declared**. A name you already own in that kind does not make a second piece: it
+     *     is a refusal, and what you write by hand is exactly what the scan will recognise.
+     *
+     *     409 `worker_busy`; 409 `name_taken`; 422 `field_not_of_kind` with the `fields` that kind's card
+     *     does not ask for.
+     */
+    post: operations["add_instrument"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/gear/instruments/{instrument_id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * Edit Instrument
+     * @description A piece's card, corrected from the page where it is read.
+     *
+     *     Renaming learns the old spelling -- otherwise the next scan recreates the piece as it was --
+     *     and changing a camera's colour requeues the frames that do not name their filter: it is the
+     *     same answer as *Da confermare*, written by the same hand.
+     *
+     *     409 `worker_busy`; 404 `not_found`; 409 `name_taken` if the new name is already another piece
+     *     of that kind; 422 `field_not_of_kind` with the `fields` that kind's card does not ask for; 422
+     *     `merge_refused`.
+     */
+    patch: operations["edit_instrument"]
+    trace?: never
+  }
+  "/api/v1/gear/rigs/{rig_id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * Name Rig
+     * @description A rig's name. It is kept among the declarations, not in the row: it comes back when the
+     *     spine rebuilds the same rig.
+     *
+     *     409 `worker_busy`; 404 `not_found`.
+     */
+    patch: operations["name_rig"]
+    trace?: never
+  }
+  "/api/v1/gear/filters": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Add Filter
+     * @description A filter you have not used yet, or that your files call in a way the app does not
+     *     understand. A name you already own is a refusal, not a second filter.
+     *
+     *     409 `worker_busy`; 409 `name_taken`, or `spelling_taken` if the name is already a spelling of
+     *     another filter of yours.
+     */
+    post: operations["add_filter"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/gear/rigs": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Add Rig
+     * @description A rig that has not imaged yet: its fingerprint, hence what the scan will find. One you
+     *     already have, focal length within 5 %, is a refusal.
+     *
+     *     409 `worker_busy`; 409 `rig_exists`; 422 `wrong_kind` if the optics or the camera is not a
+     *     piece of that kind.
+     */
+    post: operations["add_rig"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/gear/rigs/{rig_id}/parts/{kind}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Choose Rig Part
+     * @description A part of a rig, chosen from its card. It is kept among the declarations like the name, and
+     *     the rig's frames go back to `normalize`, which writes it on each: the mount on all of them,
+     *     any other kind where the file names none.
+     *
+     *     409 `worker_busy`; 404 `not_found`; 422 `not_of_kind`.
+     */
+    put: operations["choose_rig_part"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/gear/filters/{filter_id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * Edit Filter
+     * @description The same functions as *Da confermare*.
+     *
+     *     409 `worker_busy`; 404 `not_found`; 409 `name_taken` if the new name is already another
+     *     filter's; 422 `merge_refused`.
+     */
+    patch: operations["edit_filter"]
+    trace?: never
+  }
+  "/api/v1/nights": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Night List
+     * @description The archive's nights, newest first. Beside them travel the two things that explain a short
+     *     list: how many frames wait for an answer (`waiting`) and how many the spine has still to read
+     *     (`still_reading`).
+     *
+     *     The factory cap is the same as the Archive's (100): there are many more rows -- one per night,
+     *     not one per object -- but they are looked at the same way, scrolling back in time, and asking
+     *     for twenty at a time would be five rounds to see a year.
+     *
+     *     `night` asks a single night by id, wherever it falls in the list: the search opens it there.
+     *     An id that is not there gives no rows, not an error -- an old address, not a broken request.
+     */
+    get: operations["night_list"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/folders/path-info": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Path Info
+     * @description How paths are shaped on THIS machine, and whether there is a confined data root.
+     */
+    get: operations["path_info"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/folders/probe": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Probe
+     * @description Looks at a path without registering it. It also counts the online-only FITS: they are
+     *     there, even if not on the disk, and whoever keeps the archive under OneDrive must not read "0"
+     *     on the folder they have just chosen.
+     *
+     *     `moved_from` is the registered folder these files belonged to, when the place is one moved here
+     *     (`moved_check` says why it is missing). Count and recognition share `PROBE_SECONDS`.
+     *
+     *     422 when the path is refused, with the reason as its code.
+     */
+    post: operations["probe"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/folders/browse": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Browse
+     * @description The subfolders to choose from inside the data root: on a NAS in Docker the user does not
+     *     know which path the folder has inside the container, and picks it instead of typing it.
+     *     Without a root (the desktop) nothing is listed: 409 `no_data_root`. No pages: these are the
+     *     subfolders of a single folder, not the archive.
+     *
+     *     409 `root_unreachable` with the `path` when it cannot be listed; 422 when the path is refused,
+     *     with the reason as its code.
+     */
+    get: operations["browse"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/folders": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Folders
+     * @description The active folders (the retired ones do not appear). All are asked at once whether they
+     *     answer, under one deadline of `PROBE_SECONDS`: one that has not answered by then is
+     *     `reachable: false`, so a dead network share cannot hold the list.
+     */
+    get: operations["list_folders"]
+    put?: never
+    /**
+     * Create Folder
+     * @description Registers a folder; registering a retired one again reactivates it.
+     *
+     *     409 `folder_exists` with its `folder_id` if it is already active; 422 when the path is
+     *     refused, with the reason as its code.
+     */
+    post: operations["create_folder"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/folders/{folder_id}/move": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Move Folder
+     * @description The folder's files are now at `root_path`: same folder, so frames, scans and the answers
+     *     on its folders follow it. Only to a place with the same files (`folder_move.same_files`); a
+     *     retired folder comes back (`reactivated`).
+     *
+     *     404 `folder_not_found`; 409 `folder_exists` with its `folder_id` if the path is registered,
+     *     active or retired; 409 `root_unreachable` with the `path`; 409 `not_the_same_folder`; 422 when
+     *     the path is refused, with the reason as its code.
+     */
+    post: operations["move_folder"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/folders/{folder_id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * Retire Folder
+     * @description Retires: the app stops looking there. The frames stay. Idempotent.
+     *
+     *     404 `folder_not_found` if it is unknown.
+     */
+    delete: operations["retire_folder"]
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/scan": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Scan All
+     * @description Reads all the registered folders that are not retired, in one run, and replies at once;
+     *     the progress is in `GET /pipeline/status`.
+     *
+     *     409 `no_folders` when there is none; 409 `no_readable_folders` with the `skipped` folders
+     *     when none can be started; 409 `worker_busy` when a job runs, also with the `skipped` folders
+     *     when some are already being read.
+     */
+    post: operations["scan_all"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/folders/{folder_id}/scan": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Scan
+     * @description Starts the scan and replies at once; the progress is in `GET /pipeline/status`.
+     *
+     *     404 `folder_not_found`; 409 `folder_retired`, `root_unreachable` with the `path`,
+     *     `scan_running` with the `folder_id`, or `worker_busy`.
+     */
+    post: operations["scan"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/scan-runs": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Scan Runs
+     * @description The receipts, newest first.
+     */
+    get: operations["scan_runs"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/scan-runs/{run_id}/errors": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Scan Run Errors
+     * @description The files the scan did not read, each with its reason, in pages. The list is kept by the
+     *     last scan of each folder and, if that one did not reach the end, also by the last one that did
+     *     (`spine/scan_store.finish_run`): of the others only the numbers remain, and an open one has no
+     *     list yet; the reply says so with its code instead of an empty list.
+     *
+     *     404 `scan_run_not_found`; 409 `scan_run_open`; 410 `errors_not_kept`.
+     */
+    get: operations["scan_run_errors"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/search": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Search Archive
+     * @description Objects, nights, gear and sites of the archive matching `q`, at most `limit` per kind, each
+     *     kind with its `total`.
+     *
+     *     - **Objects** by any name: their own, the catalog's designations, the common name; ordered as
+     *       the Archive by hours.
+     *     - **Nights** by date in the common forms (ISO; day/month with or without the year, read
+     *       both ways when both fit; day and month name; month name and year; Italian or English
+     *       months) or by an object shot in them; newest first.
+     *     - **Gear** and **sites** by name.
+     *
+     *     A blank `q` finds nothing, not everything. Not paged: it is a menu of a few per kind, and
+     *     `total` says how many more the page that shows them holds.
+     */
+    get: operations["search_archive"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/pipeline/status": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Status
+     * @description The worker snapshot, the progress of the last scan started (`null` until one has started),
+     *     how many frames each stage still lacks, and what the button does (`action`).
+     *
+     *     Once the scan has finished, however it finished (a Stop included), `state` combines the
+     *     receipts of every folder of the gesture (worst first); while it runs, it is the worker's.
+     *     `receipt`, like `folder_id` and `run_id`, is the last started folder's, present once the scan
+     *     has finished. If it stopped or fell before the first folder, no receipt is left: `receipt` is
+     *     `null` and the state is the worker's (`not_run` when the worker has no record of the scan).
+     */
+    get: operations["status"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/pipeline/stop": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Stop
+     * @description Asks for the Stop and returns the worker snapshot. Cooperative: the worker stops within the
+     *     item in progress, with the transaction closed. Always 200, even with nothing running.
+     */
+    post: operations["stop"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/pipeline/run": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Run
+     * @description Starts the waiting work: the normalisation of frames left behind, the sky of frames still
+     *     to solve, the object of those without one, and the nights of those waiting for a session.
+     *     Returns the worker snapshot.
+     *
+     *     It is the page's "Start"/"Resume" button: without this route the work requeued by an answer
+     *     in To confirm would wait for the next scan, and frames waiting for ASTAP would never start.
+     *
+     *     **If the last read did not reach the end, Resume reads the folders again.** Stages are asked
+     *     for by remainder here, and `scan` is not a frame stage: a file never read leaves nothing in the
+     *     queue, so otherwise Resume would bring the worker to `completed` without reading anything.
+     *
+     *     With nothing to do it starts nothing and returns the snapshot as it is, even mid-run, so the
+     *     NAS cadence does not skip a round.
+     *
+     *     409 `worker_busy` if there is work to start while a job is already running. When Resume
+     *     reads the folders again it answers with the `skipped` ones, like `POST /scan`, and with its
+     *     409s: `no_folders` if no active folder is left, `no_readable_folders` (or `worker_busy` when
+     *     some are already being read) with the `skipped` folders when none can be started.
+     */
+    post: operations["run"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/review": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Review
+     * @description The open questions about what the scan found, and the objects.
+     */
+    get: operations["review"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/review/objects/settled": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Settled Objects
+     * @description The objects the app knows, with nothing to choose, in pages, in the page's order.
+     */
+    get: operations["settled_objects"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/review/apply": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Apply
+     * @description The answers become rules, and the work restarts on the frames they concern. All of them are
+     *     written together or none is.
+     *
+     *     409 `worker_busy`; 404 `not_found` if what an answer points to no longer exists or is no
+     *     longer asked (an old page); 422 `unknown_target` for a catalog slug that does not exist or a
+     *     rig the page does not offer; 422 `merge_refused`; 409 `name_taken` or `none_filter_exists` if
+     *     a filter answer collides with another filter.
+     */
+    post: operations["apply"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/places": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Search Places
+     * @description The places bearing that name, to fill in the coordinates without typing them by hand.
+     *     It does not touch the database: searching creates nothing, and without network it returns an
+     *     empty list -- the manual way always stays open. No pages: the cap is `place.search`'s.
+     */
+    get: operations["search_places"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/sites": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Sites
+     * @description The sites, the home one first and then by name, each with its number of nights and the
+     *     codes of what is not known about it (`unknown`).
+     */
+    get: operations["list_sites"]
+    put?: never
+    /**
+     * Create Site
+     * @description A new site, enriched by what its coordinates can tell, returned as it is now saved.
+     *
+     *     The very first site becomes the home one by itself: empty-handed there is nothing to choose,
+     *     and asking would be a question with a single answer.
+     *
+     *     409 `site_name_taken` if another site already has that name.
+     */
+    post: operations["create_site"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/sites/{site_id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * Delete Site
+     * @description A site that has nights is not lost by mistake: the app refuses and says how many. If it was
+     *     the home one, the app does not elect another by itself: it asks.
+     *
+     *     404 `site_not_found`; 409 `site_has_nights` with the number of `nights`.
+     */
+    delete: operations["delete_site"]
+    options?: never
+    head?: never
+    /**
+     * Edit Site
+     * @description What is sent wins, even when empty: sending a field empty means deleting it, and a field
+     *     not sent stays as it was. Returns the site as it now is.
+     *
+     *     Moving the coordinates always redoes the time zone, and redoes **what came from the
+     *     coordinates**: the elevation and brightness asked of the service are asked again for the new
+     *     place, and if the service is silent they stay empty with their reason. What the user wrote --
+     *     a declared elevation, a measured or chosen sky -- stays their word and nobody touches it. That
+     *     is why the source of each is recorded: a number left attached to new coordinates would be
+     *     indistinguishable from a measurement.
+     *
+     *     404 `site_not_found`; 422 `field_required` with the `fields` among `name`, `latitude` and
+     *     `longitude` sent empty; 409 `site_name_taken` if another site already has the new name.
+     */
+    patch: operations["edit_site"]
+    trace?: never
+  }
+  "/api/v1/sites/{site_id}/default": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Set Default
+     * @description "This is my home site": it decides the time zone of the nights. Returns the site as it now
+     *     is.
+     *
+     *     404 `site_not_found`.
+     */
+    post: operations["set_default"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/settings": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Read Settings
+     * @description The preferences as saved, each secret shown only by its hint (`config.hint`), never whole;
+     *     whether the first start is over (`wizard_done`); and the codes of what the app still lacks
+     *     (`missing`): no home site, no solver, or a solver without its star database. Always 200.
+     */
+    get: operations["read_settings"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * Write Settings
+     * @description Writes the given keys and returns the settings as they now are. Either all pass or nothing
+     *     does: half the preferences written would be worse than none, and whoever got one key wrong
+     *     must not guess which ones went in.
+     *
+     *     422 `unknown_setting` with the unknown `keys`; 422 `tried_elsewhere` with the `keys` that are
+     *     tried by their own route before being stored; 422 `out_of_range` with the `keys` outside
+     *     their `ranges`; 422 `wrong_type` if a value has the wrong type or is not one of the key's
+     *     allowed choices.
+     */
+    patch: operations["write_settings"]
+    trace?: never
+  }
+  "/api/v1/solver": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Read Solver
+     * @description Where the app takes the solver from, and through which channel.
+     *
+     *     The **declared** path always comes out, even when it leads nowhere: it is the only thing that
+     *     can be corrected, and hiding it would leave a section saying "not found" without saying why.
+     */
+    get: operations["read_solver"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/solver/search": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Search Solver
+     * @description *Find it for me*: what the app would find **ignoring the preference**.
+     *
+     *     A POST because it looks at the machine's disk and PATH, not because it writes: **it writes
+     *     nothing**. Adopting the proposal is the user's gesture -- silently overwriting a hand-written
+     *     path would remove the only way out when this search picks the wrong program.
+     */
+    post: operations["search_solver"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/settings/wizard-done": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Stamp Wizard
+     * @description The first start is over: completing or skipping the wizard is the same stamp. Reopening the
+     *     wizard from Settings does not rewrite it: the stamp keeps the first time.
+     *     Returns the settings.
+     */
+    post: operations["stamp_wizard"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/moon/calendar": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Moon Calendar
+     * @description The home site's Moon calendar as the background round wrote it (`spine/moon_calendar.py`):
+     *     this month and the next, each night with its Moon, the dark hours without it and whether it is
+     *     good for broadband by the two thresholds in the settings, which travel along for the legend.
+     *     Nothing is computed here: before the round has run, `nights` is empty.
+     */
+    get: operations["moon_calendar"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/tonight": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Tonight
+     * @description Tonight's Moon from the home site, with the night's sky bands and its forecast summary.
+     *
+     *     **The night is the app's**, noon to noon in the site's time zone (`clock.night_date`), not a
+     *     calendar day: whoever looks at two in the morning is still in last night, and wants last
+     *     night's Moon. The window is measured **between the two true noons**, not at a fixed
+     *     twenty-four hours: the clock-change night lasts 23 or 25. **The phase is asked at midnight**,
+     *     not at noon: asked at the window's start, whoever looks at the bar at eleven in the evening
+     *     would read the number of twelve hours earlier.
+     *
+     *     **Without a home site there is nothing to say**, and it says so: `night`, `site` and `moon`
+     *     are `null`. A Moon computed on an invented place would be a number that looks true. The site,
+     *     when there is one, **travels with its sky**: the bar's footer writes the place and its class in
+     *     one line, and asking two routes for them would leave a moment when the page is half done. A
+     *     site whose time zone is missing or no longer known still comes out, without its night and its
+     *     Moon (`night` and `moon` `null`): falling back to Greenwich would give another place's Moon
+     *     without anyone noticing.
+     *
+     *     **The computation is costly**, because it samples a night of sky once per body: the Sun and
+     *     the Moon finely, the four planets of the chart at the curve's step. The
+     *     reply carries the night it refers to, so whoever shows it knows when it has expired without
+     *     asking again at every breath.
+     */
+    get: operations["tonight"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/vocab/filter-models": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Filter Models
+     * @description The commercial filters a new filter is declared from: brand, name and passband, in the
+     *     vocabulary's order. Not paginated: the vocabulary ships with the program
+     *     and does not grow with the archive.
+     */
+    get: operations["filter_models"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/weather": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Weather
+     * @description The coming nights of the home site, from the model chosen in the preferences, as the
+     *     forecast wrote them: changing model is reading another row.
+     *
+     *     Without a home site `site` is `null` and there are no nights; with a site whose time zone is
+     *     missing or unknown, `missing` is `no_timezone`.
+     *
+     *     **Three full nights, then a trend**: from the fourth (`trend`) only the verdict, the clouds,
+     *     the dark hours and the agreement, without usable hours, measures, hours or upper wind. Seeing
+     *     comes only from Meteoblue: an hour it does not cover stays empty. `scales` are the thresholds
+     *     the judgement used, for the page to draw.
+     */
+    get: operations["weather"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/weather/refresh": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Refresh
+     * @description Asks for the forecast now. If the service is silent the previous one stays, and the reply
+     *     says why.
+     */
+    post: operations["refresh"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/weather/meteoblue-key": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Put Meteoblue Key
+     * @description Tries the key on the account and saves it, or removes it when it is sent empty. A pasted key
+     *     carries spaces and line breaks along: an invisible character at the end would give a refusal
+     *     nobody can explain, so they are trimmed.
+     *
+     *     **A key the account does not recognise is not saved**, and the hint stays the previous key's:
+     *     saving it would mean finding out only at the next round, with seeing that does not arrive and
+     *     no idea why. **A new key is used at once**: the previous seeing and the last attempt are
+     *     forgotten, and the weather round starts now instead of after Meteoblue's minimum gap
+     *     (`meteoblue.MIN_GAP_H`). Only the hint (`config.hint`) comes out, never the key.
+     */
+    put: operations["put_meteoblue_key"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/v1/year": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * This Year
+     * @description The current year up to tonight: the night date at home, noon to noon, so whoever looks at
+     *     two in the morning still counts last night. Without a home site, or with a zone that does not
+     *     resolve, today in UTC: the archive does not depend on the site.
+     */
+    get: operations["this_year"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
-export type webhooks = Record<string, never>;
+export type webhooks = Record<string, never>
 export interface components {
-    schemas: {
-        /**
-         * ArchiveChoices
-         * @description What the toolbar dropdowns offer: **what is in the archive**, not what the catalog knows:
-         *     someone who uses two catalogs must not scroll through every one the catalog carries.
-         */
-        ArchiveChoices: {
-            /**
-             * Catalogs
-             * @description The prefixes of the catalogs your objects belong to (`M`, `NGC`...).
-             */
-            catalogs: string[];
-            /**
-             * Constellations
-             * @description The three-letter IAU codes, in order.
-             */
-            constellations: string[];
-            /**
-             * Filters
-             * @description The names of the filters you shot at least one object with.
-             */
-            filters: string[];
-            /**
-             * Years
-             * @description The years of your nights, latest first: the period dropdown offers them.
-             */
-            years: string[];
-            /**
-             * Sites
-             * @description The sites you shot from; empty if only one, which would narrow nothing.
-             */
-            sites: components["schemas"]["ArchivePick"][];
-            /**
-             * Optics
-             * @description The optics you shot with; empty if only one.
-             */
-            optics: components["schemas"]["ArchivePick"][];
-            /**
-             * Cameras
-             * @description The cameras you shot with; empty if only one.
-             */
-            cameras: components["schemas"]["ArchivePick"][];
-            /**
-             * Mosaics
-             * @description Whether you have at least one confirmed mosaic: without one, "mosaics only" is not offered.
-             */
-            mosaics: boolean;
-        };
-        /**
-         * ArchiveFound
-         * @description How many of the rows found are objects and how many mosaics: the count on screen does not
-         *     call a mosaic an "object".
-         */
-        ArchiveFound: {
-            /** Objects */
-            objects: number;
-            /** Mosaics */
-            mosaics: number;
-        };
-        /**
-         * ArchiveList
-         * @description `total` counts the rows that pass the filter, not every row in the archive.
-         */
-        ArchiveList: {
-            /** Items */
-            items: components["schemas"]["ArchiveObject"][];
-            /** Total */
-            total: number;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-            /** @description The same rows, split between objects and mosaics. */
-            found: components["schemas"]["ArchiveFound"];
-            choices: components["schemas"]["ArchiveChoices"];
-        };
-        /**
-         * ArchiveObject
-         * @description A row of the Archive: a group of frames -- an object, or a confirmed mosaic -- and what you
-         *     put into it. An object's row carries only the frames no mosaic has taken.
-         */
-        ArchiveObject: {
-            /**
-             * Key
-             * @description Stable: the slug or the primary name of an object, the key of a mosaic.
-             */
-            key: string;
-            /**
-             * Name
-             * @description Already resolved by the backend; null only on a row that should not exist.
-             */
-            name: string | null;
-            /**
-             * Slug
-             * @description The catalog slug of the object, or of the mosaic's target.
-             */
-            slug: string | null;
-            /**
-             * Frames
-             * @description How many frames, rewritten copies excluded.
-             */
-            frames: number;
-            /**
-             * Integration S
-             * @description The sum of the frames' time, in seconds; on screen it reads in hours.
-             */
-            integration_s: number;
-            /**
-             * Untimed
-             * @description How many of those frames do not say how long they lasted: they do not count as zero.
-             */
-            untimed: number;
-            /**
-             * Constellation
-             * @description Three-letter IAU code, from the catalog.
-             */
-            constellation: string | null;
-            /**
-             * Type Code
-             * @description What it is (GALAXY, DARK_NEBULA...), from the catalog.
-             */
-            type_code: string | null;
-            /**
-             * Filters
-             * @description Which filters you shot it with, in the one filter order; empty if unknown.
-             */
-            filters: components["schemas"]["FilterUsed"][];
-            /**
-             * Productions
-             * @description One per optics and camera, most time first: together they are the row. Frames that do not say their rig are one production with null optics and camera.
-             */
-            productions: components["schemas"]["ArchiveProduction"][];
-            /**
-             * Panels
-             * @description How many panels, for a mosaic; null for an object.
-             */
-            panels: number | null;
-            /**
-             * Panel List
-             * @description The panels, most shot first; empty for an object.
-             */
-            panel_list: components["schemas"]["ArchivePanel"][];
-        };
-        /**
-         * ArchivePanel
-         * @description A panel of a mosaic: the framing, what you shot in it and how much.
-         */
-        ArchivePanel: {
-            /**
-             * Object
-             * @description The object (or objects) of its frames; null if the sky knows of none.
-             */
-            object: string | null;
-            /**
-             * Ra Deg
-             * @description The centre: it tells WHICH panel, when two have the same object.
-             */
-            ra_deg: number;
-            /** Dec Deg */
-            dec_deg: number;
-            /** Frames */
-            frames: number;
-            /** Integration S */
-            integration_s: number;
-            /** Untimed */
-            untimed: number;
-        };
-        /**
-         * ArchivePick
-         * @description A site or a piece of gear to narrow by: its id goes back to the route, its name on screen.
-         */
-        ArchivePick: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-        };
-        /**
-         * ArchiveProduction
-         * @description The row shot with one optics and one camera: a production, until projects exist.
-         */
-        ArchiveProduction: {
-            /**
-             * Optics
-             * @description The optics' name; null if the frames do not say it.
-             */
-            optics: string | null;
-            /**
-             * Camera
-             * @description The camera's name; null if the frames do not say it.
-             */
-            camera: string | null;
-            /**
-             * Frames
-             * @description Its frames, rewritten copies excluded.
-             */
-            frames: number;
-            /**
-             * Integration S
-             * @description The sum of its frames' time, in seconds.
-             */
-            integration_s: number;
-            /**
-             * Untimed
-             * @description How many of its frames do not say how long they lasted.
-             */
-            untimed: number;
-            /**
-             * Filters
-             * @description The filters of these frames, in the one filter order; empty if unknown.
-             */
-            filters: components["schemas"]["FilterUsed"][];
-        };
-        /**
-         * ArchiveTotals
-         * @description What the whole archive holds: it does not depend on how many rows are being looked at.
-         */
-        ArchiveTotals: {
-            /** Nights */
-            nights: number;
-            /** Frames */
-            frames: number;
-            /** Integration S */
-            integration_s: number;
-            /** Untimed */
-            untimed: number;
-            /**
-             * Objects
-             * @description The objects named so far, in a night or still waiting for one.
-             */
-            objects: number;
-        };
-        /**
-         * BackupCounts
-         * @description How many of each thing the file carries, as the offer says them.
-         */
-        BackupCounts: {
-            /** Written At */
-            written_at: string | null;
-            /** Sites */
-            sites: number;
-            /** Folders */
-            folders: number;
-            /** Instruments */
-            instruments: number;
-            /** Filters */
-            filters: number;
-            /** Answers */
-            answers: number;
-        };
-        /**
-         * BackupStatus
-         * @description The backup next to the database (ADR 0017) and whether to offer it.
-         *
-         *     `offer` is `found` only on a database just created with a file beside it, until it is
-         *     restored or declined; `none` otherwise. `last` is the file as it is now, `null` without one;
-         *     `unreadable` is true when a file is there but is not a backup this app reads.
-         */
-        BackupStatus: {
-            /**
-             * Offer
-             * @enum {string}
-             */
-            offer: "found" | "none";
-            last: components["schemas"]["BackupCounts"] | null;
-            /** Unreadable */
-            unreadable: boolean;
-            /** Path */
-            path: string;
-        };
-        /** BandIn */
-        BandIn: {
-            /**
-             * Band
-             * @enum {string}
-             */
-            band: "L" | "R" | "G" | "B" | "HA" | "HB" | "OIII" | "SII";
-            /** Width Nm */
-            width_nm?: number | null;
-        };
-        /** BandOut */
-        BandOut: {
-            /**
-             * Band
-             * @enum {string}
-             */
-            band: "L" | "R" | "G" | "B" | "HA" | "HB" | "OIII" | "SII";
-            /**
-             * Width Nm
-             * @description Optional: a light-pollution filter does not declare it.
-             */
-            width_nm: number | null;
-        };
-        /** BrowseOut */
-        BrowseOut: {
-            /** Path */
-            path: string;
-            /**
-             * Parent
-             * @description None at the data root: there is no going higher.
-             */
-            parent: string | null;
-            /**
-             * Folders
-             * @description The visible subfolders, sorted.
-             */
-            folders: components["schemas"]["FolderEntry"][];
-        };
-        /**
-         * ChartOut
-         * @description The span the night chart draws and the instants it marks.
-         */
-        ChartOut: {
-            /**
-             * Starts At
-             * @description Half an hour before the sunset's hour.
-             */
-            starts_at: string;
-            /**
-             * Ends At
-             * @description Half an hour after the hour nearest the sunrise.
-             */
-            ends_at: string;
-            /**
-             * Dark From
-             * @description Where astronomical dark starts; `None` without it.
-             */
-            dark_from: string | null;
-            /**
-             * Dark Until
-             * @description Where astronomical dark ends; `None` without it.
-             */
-            dark_until: string | null;
-        };
-        /**
-         * CoordinatesEdit
-         * @description The answer about a place: "the frames taken at these coordinates are of this site".
-         *
-         *     The site id is sent because it is what the page holds after a click; what gets written is the
-         *     **name**, which is the key that survives.
-         */
-        CoordinatesEdit: {
-            /**
-             * Key
-             * @description The coordinates read from the page, never a row number.
-             */
-            key: string;
-            /** Site Id */
-            site_id: number;
-        };
-        /** FileNotRead */
-        FileNotRead: {
-            /**
-             * File
-             * @description Relative to the root; a name that is not UTF-8 carries `?` in place of the bad bytes.
-             */
-            file: string;
-            /**
-             * Reason
-             * @enum {string}
-             */
-            reason: "file_unreadable" | "header_unreadable" | "name_not_utf8" | "internal_error";
-        };
-        /**
-         * FilterCandidate
-         * @description One of your filters, among which an answer is chosen: one with a known band.
-         */
-        FilterCandidate: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Passband */
-            passband: string;
-        };
-        /**
-         * FilterCorrection
-         * @description The card of a filter, or "it is the same filter as" (`merge_into`).
-         */
-        FilterCorrection: {
-            /** Name */
-            name?: string | null;
-            /** Brand */
-            brand?: string | null;
-            /** Model */
-            model?: string | null;
-            /** Catalog Id */
-            catalog_id?: string | null;
-            /** Bands */
-            bands?: components["schemas"]["BandIn"][] | null;
-            /** Merge Into */
-            merge_into?: number | null;
-        };
-        /** FilterEdit */
-        FilterEdit: {
-            /** Name */
-            name?: string | null;
-            /** Brand */
-            brand?: string | null;
-            /** Model */
-            model?: string | null;
-            /** Catalog Id */
-            catalog_id?: string | null;
-            /** Bands */
-            bands?: components["schemas"]["BandIn"][] | null;
-            /** Merge Into */
-            merge_into?: number | null;
-            /** Id */
-            id: number;
-            /** Is None */
-            is_none?: boolean | null;
-        };
-        /** FilterModelList */
-        FilterModelList: {
-            /** Items */
-            items: components["schemas"]["FilterModelOut"][];
-        };
-        /**
-         * FilterModelOut
-         * @description A filter ON THE MARKET, as it reads in the drop-down when a new filter is declared.
-         *
-         *     It is not a filter of the archive: it is an entry of the vocabulary the app carries inside. The
-         *     **aliases** stay out -- they serve to recognise a spelling in the header, and on screen they
-         *     would be noise. When one is picked from here, `catalog_id` remembers which entry it was.
-         */
-        FilterModelOut: {
-            /** Id */
-            id: string;
-            /** Brand */
-            brand: string;
-            /** Name */
-            name: string;
-            /** Passband */
-            passband: string;
-        };
-        /**
-         * FilterNew
-         * @description A filter you write: the name, and the band it lets through -- it is what unblocks the
-         *     frames. Brand and model if you want.
-         */
-        FilterNew: {
-            /** Name */
-            name: string;
-            /** Bands */
-            bands: components["schemas"]["BandIn"][];
-            /** Brand */
-            brand?: string | null;
-            /** Model */
-            model?: string | null;
-        };
-        /**
-         * FilterOnPage
-         * @description An owned filter, with the band it lets through.
-         */
-        FilterOnPage: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Brand */
-            brand: string | null;
-            /** Model */
-            model: string | null;
-            /** Bands */
-            bands: components["schemas"]["BandOut"][];
-            /**
-             * Frames
-             * @description Null until it is counted (`counted`). The same holds for `integration_s`, `untimed` and `nights`.
-             */
-            frames: number | null;
-            /** Integration S */
-            integration_s: number | null;
-            /** Untimed */
-            untimed: number | null;
-            /** Nights */
-            nights: number | null;
-            /** Objects */
-            objects: components["schemas"]["GearObject"][];
-            /** Counted */
-            counted: boolean;
-            /**
-             * Mergeable Into
-             * @description The filters it can be merged into: only those the spine accepts.
-             */
-            mergeable_into: number[];
-        };
-        /** FilterOut */
-        FilterOut: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Brand */
-            brand: string | null;
-            /** Model */
-            model: string | null;
-            /** Catalog Id */
-            catalog_id: string | null;
-            /** Passband */
-            passband: string;
-            /** Is None */
-            is_none: boolean;
-            /** Bands */
-            bands: components["schemas"]["BandOut"][];
-            /** Frames */
-            frames: number;
-        };
-        /**
-         * FilterUsed
-         * @description A filter you shot something with, with the time given to it.
-         *
-         *     Born here, where the Nights asked for it first, and reused by the Archive: the place that
-         *     counts them is a single one, and two shapes would state the same fact twice.
-         */
-        FilterUsed: {
-            /**
-             * Name
-             * @description The name you gave it, or the one the files carried.
-             */
-            name: string;
-            /**
-             * Passband
-             * @description The canonical passband (`vocab/filters`): it is what gives the colour.
-             */
-            passband: string;
-            /** Frames */
-            frames: number;
-            /** Integration S */
-            integration_s: number;
-        };
-        /** FolderCreate */
-        FolderCreate: {
-            /** Root Path */
-            root_path: string;
-            /** Name */
-            name?: string | null;
-        };
-        /** FolderEntry */
-        FolderEntry: {
-            /** Name */
-            name: string;
-            /**
-             * Path
-             * @description The path to register, as it is.
-             */
-            path: string;
-        };
-        /** FolderList */
-        FolderList: {
-            /** Items */
-            items: components["schemas"]["FolderOut"][];
-            /** Total */
-            total: number;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-        };
-        /** FolderMove */
-        FolderMove: {
-            /** Root Path */
-            root_path: string;
-        };
-        /** FolderOut */
-        FolderOut: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string | null;
-            /** Root Path */
-            root_path: string;
-            /** Created At */
-            created_at: string;
-            /** Reachable */
-            reachable: boolean;
-            /**
-             * Frames
-             * @description Positions present: comes from the database, so it holds with the disk detached too.
-             */
-            frames: number;
-            /**
-             * Reactivated
-             * @default false
-             */
-            reactivated: boolean;
-        };
-        /**
-         * FolderSkipped
-         * @description A folder the toolbar action did not read, with its reason: `root_unreachable` (the
-         *     detached disk, the NAS switched off) or `scan_running` (another run is already reading it).
-         *
-         *     It carries the **path** and not just the row id: that is what the user recognises, and the
-         *     scan route already holds it for its pre-check. Without it the page would have to fetch the
-         *     folder list and stitch two answers together right at the moment of the failure -- and for a
-         *     user with more than a hundred folders they would not even match up.
-         */
-        FolderSkipped: {
-            /** Folder Id */
-            folder_id: number;
-            /** Root Path */
-            root_path: string;
-            /**
-             * Reason
-             * @enum {string}
-             */
-            reason: "root_unreachable" | "scan_running";
-        };
-        /**
-         * FoundNight
-         * @description A night, found by date or by an object shot in it; its counts are the whole night's.
-         */
-        FoundNight: {
-            /** Id */
-            id: number;
-            /** Night Date */
-            night_date: string;
-            /** Site */
-            site: string;
-            /** Frames */
-            frames: number;
-            /** Integration S */
-            integration_s: number;
-            /** Untimed */
-            untimed: number;
-        };
-        /**
-         * FoundObject
-         * @description An Archive row: an object, or a confirmed mosaic (`panels`).
-         */
-        FoundObject: {
-            /**
-             * Key
-             * @description The Archive row's key: `/archive?key=` narrows to it alone.
-             */
-            key: string;
-            /**
-             * Name
-             * @description As the Archive names it.
-             */
-            name: string | null;
-            /**
-             * Common Name
-             * @description The catalog's common name, when it is not already the name.
-             */
-            common_name: string | null;
-            /** Frames */
-            frames: number;
-            /** Integration S */
-            integration_s: number;
-            /** Untimed */
-            untimed: number;
-            /**
-             * Panels
-             * @description A mosaic's panels; null for an object.
-             */
-            panels: number | null;
-        };
-        /**
-         * FoundPiece
-         * @description A piece or a filter you own. Hours not counted yet (`counted` false) or that the files do
-         *     not tell (`no_hours`) arrive null, never zero.
-         */
-        FoundPiece: {
-            /** Id */
-            id: number;
-            /** Kind */
-            kind: ("optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser") | "filter";
-            /** Name */
-            name: string;
-            /** Counted */
-            counted: boolean;
-            /** Frames */
-            frames: number | null;
-            /** Integration S */
-            integration_s: number | null;
-            /** Untimed */
-            untimed: number | null;
-            /** No Hours */
-            no_hours: ("files_silent" | "no_rig") | null;
-        };
-        /** FoundSite */
-        FoundSite: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Nights */
-            nights: number;
-        };
-        /** Found[FoundNight] */
-        Found_FoundNight_: {
-            /** Items */
-            items: components["schemas"]["FoundNight"][];
-            /**
-             * Total
-             * @description How many in all: `items` are the first few.
-             */
-            total: number;
-        };
-        /** Found[FoundObject] */
-        Found_FoundObject_: {
-            /** Items */
-            items: components["schemas"]["FoundObject"][];
-            /**
-             * Total
-             * @description How many in all: `items` are the first few.
-             */
-            total: number;
-        };
-        /** Found[FoundPiece] */
-        Found_FoundPiece_: {
-            /** Items */
-            items: components["schemas"]["FoundPiece"][];
-            /**
-             * Total
-             * @description How many in all: `items` are the first few.
-             */
-            total: number;
-        };
-        /** Found[FoundSite] */
-        Found_FoundSite_: {
-            /** Items */
-            items: components["schemas"]["FoundSite"][];
-            /**
-             * Total
-             * @description How many in all: `items` are the first few.
-             */
-            total: number;
-        };
-        /**
-         * GearAnswer
-         * @description What the user said about a signature: the **names** of the pieces, never row numbers. An
-         *     empty field is a part not answered, not a part that was not there.
-         */
-        GearAnswer: {
-            /** Camera */
-            camera: string | null;
-            /** Optics */
-            optics: string | null;
-            /** Focal Mm */
-            focal_mm: number | null;
-            /**
-             * Filter
-             * @description Colour is written on the camera's card, not here.
-             */
-            filter: ("no_filter" | "filter") | null;
-            /**
-             * Filter Id
-             * @description With "one of yours", which; empty if that filter is no longer there.
-             */
-            filter_id: number | null;
-        };
-        /**
-         * GearEdit
-         * @description The answer about a signature, the parts it asks: the camera -- a rig among those the app
-         *     knows (`rig_id`, what the page holds after a click) **or** the written camera with its focal
-         *     length, plus the optics if needed --, the optics alone, and what sat in front (`filter`, with
-         *     `filter_id` for "one of yours"). What is written is always **names**: the pieces come into
-         *     being from them as from a header. A part not sent keeps its earlier answer.
-         */
-        GearEdit: {
-            /**
-             * Key
-             * @description The signature read from the page.
-             */
-            key: string;
-            /** Rig Id */
-            rig_id?: number | null;
-            /**
-             * Camera
-             * @description A name of only spaces is not a name.
-             */
-            camera?: string | null;
-            /** Optics */
-            optics?: string | null;
-            /**
-             * Focal Mm
-             * @description Unknown focal length, never invented: no zeros.
-             */
-            focal_mm?: number | null;
-            /** Filter */
-            filter?: ("color" | "no_filter" | "filter") | null;
-            /** Filter Id */
-            filter_id?: number | null;
-        };
-        /** GearList */
-        GearList: {
-            /** Instruments */
-            instruments: components["schemas"]["InstrumentOnPage"][];
-            /** Rigs */
-            rigs: components["schemas"]["RigOnPage"][];
-            /** Filters */
-            filters: components["schemas"]["FilterOnPage"][];
-            /**
-             * Cards
-             * @description Which fields the card of each kind asks for, in reading order. It comes **per kind and not per piece** because it also serves to write one of a kind you do not own yet: there, there is no piece to copy them from. The backend decides them, and the page keeps no second list.
-             */
-            cards: {
-                [key: string]: ("brand" | "model" | "camera_type" | "pixel_size_um" | "aperture_mm" | "focal_mm" | "reducer_factor" | "weight_kg" | "payload_kg" | "slots" | "notes")[];
-            };
-        };
-        /**
-         * GearObject
-         * @description An object taken with that piece, and how much it weighed in.
-         */
-        GearObject: {
-            /** Key */
-            key: string;
-            /** Name */
-            name: string | null;
-            /** Frames */
-            frames: number;
-            /** Integration S */
-            integration_s: number;
-        };
-        /**
-         * GearSignature
-         * @description The frames whose files leave out camera, optics or filter, one card per **header
-         *     signature**: the spelling of camera and telescope, the focal, the sensor -- never the night or
-         *     the folder. `asks_*` say which parts the card asks: what the night or the camera's colour
-         *     settles is not asked. `optics` and `focal_mm` are what the frames already say, when they say a
-         *     single thing; `focal_suggested` the native focal of that optics, where the frames carry none.
-         *     An answered card stays on the page because one must be able to change one's mind.
-         */
-        GearSignature: {
-            /**
-             * Key
-             * @description The signature: one answers with it, and it does not move.
-             */
-            key: string;
-            /**
-             * Camera
-             * @description `INSTRUME` as written in the file.
-             */
-            camera: string | null;
-            /**
-             * Telescope
-             * @description `TELESCOP` as written in the file.
-             */
-            telescope: string | null;
-            /** Width Px */
-            width_px: number | null;
-            /** Height Px */
-            height_px: number | null;
-            /** Pixel Um */
-            pixel_um: number | null;
-            /** Frames */
-            frames: number;
-            /** Asks Camera */
-            asks_camera: boolean;
-            /** Asks Optics */
-            asks_optics: boolean;
-            /** Asks Filter */
-            asks_filter: boolean;
-            /** Optics */
-            optics: string | null;
-            /** Focal Mm */
-            focal_mm: number | null;
-            /** Focal Suggested */
-            focal_suggested: number | null;
-            answer: components["schemas"]["GearAnswer"] | null;
-            /**
-             * Complete
-             * @description Every part asked has its answer: it no longer counts.
-             */
-            complete: boolean;
-            subjects: components["schemas"]["Subjects"];
-        };
-        /**
-         * GearWritten
-         * @description What happened while writing. `requeued` is not zero when the answer changes the meaning of
-         *     some frame -- the colour of a camera does -- and then the work restarts by itself.
-         */
-        GearWritten: {
-            /** Id */
-            id: number;
-            /** Requeued */
-            requeued: number;
-            /** Run Started */
-            run_started: boolean;
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /** Health */
-        Health: {
-            /**
-             * Status
-             * @constant
-             */
-            status: "ok";
-            /** Api Version */
-            api_version: string;
-            /** Schema Tables */
-            schema_tables: number;
-            /** Data Root */
-            data_root: string | null;
-            /** Catalog Entries */
-            catalog_entries: number;
-            /** Catalog Version */
-            catalog_version: string | null;
-        };
-        /**
-         * InstrumentCorrection
-         * @description The card of a piece that already exists, or the merge with another (`merge_into`, "it is the
-         *     same piece as", and then the rest does not count). Sending the name is renaming; not sending it
-         *     leaves the one there is. Which piece it is, the address says.
-         */
-        InstrumentCorrection: {
-            /** Brand */
-            brand?: string | null;
-            /** Model */
-            model?: string | null;
-            /** Camera Type */
-            camera_type?: ("mono" | "color") | null;
-            /** Pixel Size Um */
-            pixel_size_um?: number | null;
-            /** Aperture Mm */
-            aperture_mm?: number | null;
-            /** Focal Mm */
-            focal_mm?: number | null;
-            /** Reducer Factor */
-            reducer_factor?: number | null;
-            /** Weight Kg */
-            weight_kg?: number | null;
-            /** Payload Kg */
-            payload_kg?: number | null;
-            /**
-             * Slots
-             * @description A count: zero is not "I don't know", it is no wheel.
-             */
-            slots?: number | null;
-            /** Backfocus Mm */
-            backfocus_mm?: number | null;
-            /** Notes */
-            notes?: string | null;
-            /** Name */
-            name?: string | null;
-            /** Merge Into */
-            merge_into?: number | null;
-        };
-        /**
-         * InstrumentNew
-         * @description A piece you write. Kind and name are what make it exist -- a piece is its name within its
-         *     kind -- and the card comes with it: creating and then correcting would be two actions for a
-         *     single thing, and between the two the piece would half exist.
-         */
-        InstrumentNew: {
-            /** Brand */
-            brand?: string | null;
-            /** Model */
-            model?: string | null;
-            /** Camera Type */
-            camera_type?: ("mono" | "color") | null;
-            /** Pixel Size Um */
-            pixel_size_um?: number | null;
-            /** Aperture Mm */
-            aperture_mm?: number | null;
-            /** Focal Mm */
-            focal_mm?: number | null;
-            /** Reducer Factor */
-            reducer_factor?: number | null;
-            /** Weight Kg */
-            weight_kg?: number | null;
-            /** Payload Kg */
-            payload_kg?: number | null;
-            /**
-             * Slots
-             * @description A count: zero is not "I don't know", it is no wheel.
-             */
-            slots?: number | null;
-            /** Backfocus Mm */
-            backfocus_mm?: number | null;
-            /** Notes */
-            notes?: string | null;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser";
-            /**
-             * Name
-             * @description Required here: without a name the piece is nobody.
-             */
-            name: string;
-        };
-        /**
-         * InstrumentOnPage
-         * @description A piece of the gear: its card -- the empty fields are those the header cannot tell and the
-         *     user fills in -- plus how much it served and what you took with it.
-         */
-        InstrumentOnPage: {
-            /** Id */
-            id: number;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser";
-            /** Name */
-            name: string;
-            /** Brand */
-            brand: string | null;
-            /** Model */
-            model: string | null;
-            /** Camera Type */
-            camera_type: ("mono" | "color") | null;
-            /** Pixel Size Um */
-            pixel_size_um: number | null;
-            /**
-             * Pixel From Sky Um
-             * @description Derived from the sky when the files do not say it: in a field of its own, so that whoever shows it says it is derived and does not confuse it with the one from the files or the user.
-             */
-            pixel_from_sky_um: number | null;
-            /** Aperture Mm */
-            aperture_mm: number | null;
-            /** Focal Mm */
-            focal_mm: number | null;
-            /** Reducer Factor */
-            reducer_factor: number | null;
-            /** Weight Kg */
-            weight_kg: number | null;
-            /** Payload Kg */
-            payload_kg: number | null;
-            /** Slots */
-            slots: number | null;
-            /** Backfocus Mm */
-            backfocus_mm: number | null;
-            /** Notes */
-            notes: string | null;
-            /**
-             * Detected
-             * @description Detected from the files, or declared by you.
-             */
-            detected: boolean;
-            /**
-             * Mergeable Into
-             * @description The pieces it can be merged into: only those the spine accepts.
-             */
-            mergeable_into: number[];
-            /**
-             * Frames
-             * @description Null where the link with the frames does not exist: a kind that no frame in **this archive** names does not have zero hours, it has hours the app does not know -- and whoever shows the row says so. The spine decides it, not this shape. The same holds for `integration_s`, `untimed` and `nights`.
-             */
-            frames: number | null;
-            /** Integration S */
-            integration_s: number | null;
-            /** Untimed */
-            untimed: number | null;
-            /** Nights */
-            nights: number | null;
-            /** Objects */
-            objects: components["schemas"]["GearObject"][];
-            /**
-             * Counted
-             * @description False for a piece born mid-run, which the counter has not counted yet: "not counted yet" is not "cannot be known", and the page tells them apart.
-             */
-            counted: boolean;
-            /**
-             * No Hours
-             * @description Why a counted piece has no hours to show: the files do not name that kind, or it is a mount, reducer or guide scope no rig carries yet. `None` when the hours are there.
-             */
-            no_hours: ("files_silent" | "no_rig") | null;
-        };
-        /**
-         * LookalikeEdit
-         * @description The answer to "are they the same piece?": yes merges `id` into `into_id`, no says they are
-         *     two pieces and the proposal does not come back.
-         */
-        LookalikeEdit: {
-            /** Id */
-            id: number;
-            /** Into Id */
-            into_id: number;
-            /** Same */
-            same: boolean;
-        };
-        /**
-         * LookalikeOut
-         * @description Two spellings that look very much like the same camera: "are they the same piece?". Yes
-         *     merges `id` into `into_id`, no stops proposing it.
-         */
-        LookalikeOut: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Frames */
-            frames: number;
-            /** Into Id */
-            into_id: number;
-            /** Into Name */
-            into_name: string;
-            /** Into Frames */
-            into_frames: number;
-        };
-        /** MeteoblueKeyIn */
-        MeteoblueKeyIn: {
-            /** Key */
-            key: string | null;
-        };
-        /**
-         * MeteoblueKeyOut
-         * @description How it went: saved (`ok`), removed (`removed`), or why not; and the hint of the key that is
-         *     there now.
-         */
-        MeteoblueKeyOut: {
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "ok" | "removed" | "refused" | "unreachable" | "bad_answer";
-            /** Hint */
-            hint: string | null;
-        };
-        /** MoonCalendarNightOut */
-        MoonCalendarNightOut: {
-            /** Date */
-            date: string;
-            /**
-             * Phase Key
-             * @enum {string}
-             */
-            phase_key: "new" | "waxing_crescent" | "first_quarter" | "waxing_gibbous" | "full" | "waning_gibbous" | "last_quarter" | "waning_crescent";
-            /** Illumination Pct */
-            illumination_pct: number;
-            /** Moonless Dark S */
-            moonless_dark_s: number;
-            /** Event */
-            event: ("new" | "full") | null;
-            /**
-             * Lit Side
-             * @description As `MoonOut.lit_side`, for the day's disc.
-             * @enum {string}
-             */
-            lit_side: "left" | "right";
-            /**
-             * Good
-             * @description Good for broadband by the two thresholds in the settings.
-             */
-            good: boolean;
-        };
-        /**
-         * MoonCalendarOut
-         * @description This month and the next as the background round wrote them: empty `nights` until it has.
-         */
-        MoonCalendarOut: {
-            /** Today */
-            today: string | null;
-            /** Max Pct */
-            max_pct: number;
-            /** Min Dark H */
-            min_dark_h: number;
-            /** Nights */
-            nights: components["schemas"]["MoonCalendarNightOut"][];
-        };
-        /** MoonOut */
-        MoonOut: {
-            /**
-             * Phase Key
-             * @enum {string}
-             */
-            phase_key: "new" | "waxing_crescent" | "first_quarter" | "waxing_gibbous" | "full" | "waning_gibbous" | "last_quarter" | "waning_crescent";
-            /** Illumination Pct */
-            illumination_pct: number;
-            /**
-             * Rise
-             * @description ISO instant with its time zone. `None` when the crossing does not happen within the night, as above the polar circle, where a written time would be invented.
-             */
-            rise: string | null;
-            /**
-             * Set
-             * @description ISO instant with its time zone; `None` as for `rise`.
-             */
-            set: string | null;
-            /**
-             * Rise Compass
-             * @description Where it rises, on sixteen points; `None` without a rise.
-             */
-            rise_compass?: ("N" | "NNE" | "NE" | "ENE" | "E" | "ESE" | "SE" | "SSE" | "S" | "SSW" | "SW" | "WSW" | "W" | "WNW" | "NW" | "NNW") | null;
-            /**
-             * Age Days
-             * @description Whole days since new Moon, at midnight.
-             * @default 0
-             */
-            age_days: number;
-            /**
-             * Distance Km
-             * @description Centre to centre at midnight, rounded to a hundred kilometres.
-             * @default 0
-             */
-            distance_km: number;
-            /**
-             * Next New
-             * @description The night (`YYYY-MM-DD`) of the next new Moon from tonight, from the written calendar; `None` until the background round has written it.
-             */
-            next_new?: string | null;
-            /**
-             * Next Full
-             * @description As `next_new`, for the full Moon.
-             */
-            next_full?: string | null;
-            /**
-             * Lit Side
-             * @description Which side the lit limb is seen on **from this site**: it depends on the phase and on the hemisphere, since a crescent is lit on the right in the north and on the left in Australia. The backend says it because it knows both: deducing it while drawing would put a computation in the layout, and half the world would see the Moon mirrored.
-             * @enum {string}
-             */
-            lit_side: "left" | "right";
-            /** @description The highest point of the night. **Never absent**, not even without rise and set times: a Moon that does not rise still climbs, below the horizon, and how little it climbs is the answer. */
-            highest: components["schemas"]["SkyPointOut"];
-            /**
-             * Track
-             * @description The altitude curve along the night, for whoever draws it. The first and last points are the two ends of the night: a chart that closed earlier would lose the last half hour.
-             */
-            track: components["schemas"]["MoonPointOut"][];
-            /**
-             * Ceiling Deg
-             * @description How high the Moon can get **from this site**, never more: it is the top edge of the chart. It depends on the latitude and not on the night, so the scale never changes at one place and two nights compare at a glance. It arrives already rounded up to a multiple of fifteen, because that is the number on the tick mark: rounding it up on screen would be a computation in the layout.
-             */
-            ceiling_deg: number;
-        };
-        /** MoonPointOut */
-        MoonPointOut: {
-            /** At */
-            at: string;
-            /** Altitude Deg */
-            altitude_deg: number;
-            /**
-             * Moonless Dark Left S
-             * @description From this instant to the window's end, how long the sky stays astronomically dark with the Moon down: the chart's reader writes it under the pointer.
-             */
-            moonless_dark_left_s: number;
-        };
-        /**
-         * MoonThatNight
-         * @description Which moon there was: the phase and how lit it was. **Computed**, not stored.
-         */
-        MoonThatNight: {
-            /**
-             * Phase Key
-             * @enum {string}
-             */
-            phase_key: "new" | "waxing_crescent" | "first_quarter" | "waxing_gibbous" | "full" | "waning_gibbous" | "last_quarter" | "waning_crescent";
-            /** Illumination Pct */
-            illumination_pct: number;
-            /**
-             * Lit Side
-             * @description Which side of the disc is lit, from the phase and the site's hemisphere.
-             * @enum {string}
-             */
-            lit_side: "left" | "right";
-        };
-        /**
-         * MosaicCandidate
-         * @description A region taken in **side-by-side panels**, as the page proposes it: how many panels, how many
-         *     frames and which subjects it touches -- often more than one, because each panel frames a
-         *     different part of the complex and the app identifies them as different objects.
-         *
-         *     One answers with the **key** of the mosaic, which does not change when the camera changes. An
-         *     answered group stays on the page: one must be able to change one's mind.
-         */
-        MosaicCandidate: {
-            /**
-             * Key
-             * @description What one answers with.
-             */
-            key: string;
-            /**
-             * Ra Deg
-             * @description The centre of the mosaic: on screen it tells which, if two have the same name.
-             */
-            ra_deg: number;
-            /** Dec Deg */
-            dec_deg: number;
-            /**
-             * Object
-             * @description The subjects it touches, with their names, in alphabetical order.
-             */
-            object: string;
-            /** Panels */
-            panels: number;
-            /** Frames */
-            frames: number;
-            /**
-             * Integration S
-             * @description The sum of the panels' time; on screen it reads in hours.
-             */
-            integration_s: number;
-            /**
-             * Untimed
-             * @description How many of those frames do not tell their time: they are not worth zero, they are counted here.
-             */
-            untimed: number;
-            /** Answer */
-            answer: ("yes" | "no") | null;
-            /**
-             * Answer Name
-             * @description What the mosaic is of, as the user said it; only with yes.
-             */
-            answer_name: string | null;
-            /**
-             * Names
-             * @description The subjects of `object`, one per entry, and the proposal: the suggestions.
-             */
-            names: string[];
-            /**
-             * Proposed
-             * @description The catalog entry at the centre: the field arrives filled in with it.
-             */
-            proposed: string;
-        };
-        /**
-         * MosaicEdit
-         * @description The answer about a proposed mosaic: yes, those panels are a mosaic (`yes`), or no.
-         *
-         *     The **key** of the mosaic read from the page is sent.
-         */
-        MosaicEdit: {
-            /** Key */
-            key: string;
-            /**
-             * Answer
-             * @enum {string}
-             */
-            answer: "yes" | "no";
-            /**
-             * Name
-             * @description What the mosaic is of: with yes it is always there, with no never.
-             */
-            name?: string | null;
-        };
-        /**
-         * MoveCheck
-         * @description Whether the probed place is a registered folder moved there.
-         * @enum {string}
-         */
-        MoveCheck: "found" | "none" | "place_unreachable" | "out_of_time";
-        /** MovedFrom */
-        MovedFrom: {
-            /** Id */
-            id: number;
-            /** Root Path */
-            root_path: string;
-        };
-        /**
-         * Night
-         * @description A row: **one night**, with what you did in it.
-         */
-        Night: {
-            /**
-             * Id
-             * @description The night's stable id.
-             */
-            id: number;
-            /**
-             * Night Date
-             * @description The date of the night, in the site's time zone; on screen it reads as a date.
-             */
-            night_date: string;
-            /**
-             * Site
-             * @description From where: two sites on the same date are two nights, and the row must say so.
-             */
-            site: string;
-            /**
-             * Site Source
-             * @description `declared` if you said it, `detected` if the app derived it.
-             */
-            site_source: string;
-            /**
-             * Frames
-             * @description How many frames, rewritten copies excluded.
-             */
-            frames: number;
-            /**
-             * Integration S
-             * @description The sum of the frames' time, in seconds.
-             */
-            integration_s: number;
-            /**
-             * Untimed
-             * @description How many do not say how long they lasted: they do not count as zero.
-             */
-            untimed: number;
-            /** Objects */
-            objects: components["schemas"]["NightObject"][];
-            /**
-             * Filters
-             * @description In the one filter order of the app: the order the page shows them in.
-             */
-            filters: components["schemas"]["FilterUsed"][];
-            /** @description Null when the site's time zone is not recognised: without a time zone there is no midnight, and the row stays silent instead of describing the sky of another place. */
-            moon: components["schemas"]["MoonThatNight"] | null;
-            weather: components["schemas"]["NightWeather"];
-        };
-        /** NightList */
-        NightList: {
-            /** Items */
-            items: components["schemas"]["Night"][];
-            /** Total */
-            total: number;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-            totals: components["schemas"]["ArchiveTotals"];
-            /** Waiting */
-            waiting: components["schemas"]["WaitingPoses"][];
-            /**
-             * Waiting Frames
-             * @description The frames of `waiting` together, except those of `review`: To confirm counts them already.
-             */
-            waiting_frames: number;
-            /**
-             * Still Reading
-             * @description How many frames the spine still has to work through: work, not a question.
-             */
-            still_reading: number;
-            /**
-             * Reading Done Pct
-             * @description How far that work has gone, 0-99, rounded down; null when nothing is left.
-             */
-            reading_done_pct: number | null;
-        };
-        /**
-         * NightObject
-         * @description An object shot during that night.
-         */
-        NightObject: {
-            /**
-             * Key
-             * @description The stable key, the same as the Archive's.
-             */
-            key: string;
-            /** Name */
-            name: string | null;
-            /** Frames */
-            frames: number;
-            /** Integration S */
-            integration_s: number;
-            /**
-             * Untimed
-             * @description Its frames that do not say how long: they are not zero.
-             */
-            untimed: number;
-            /**
-             * Bar Pct
-             * @description Its hours as a share of the night's longest object, 0-100; at least 2 when it has any time, so a bar never vanishes; 0 without time.
-             */
-            bar_pct: number;
-        };
-        /**
-         * NightWeather
-         * @description The actual weather of that night, from the archive: `ok` with its sky; `waiting` until it
-         *     has arrived (a young night waits for the reanalysis); `unknown` if the site's time zone is not
-         *     recognised.
-         */
-        NightWeather: {
-            /** Verdict */
-            verdict: ("go" | "marginal" | "nogo") | null;
-            /** Cloud Total Pct */
-            cloud_total_pct: number | null;
-            /** Usable Hours */
-            usable_hours: number | null;
-            /** Window */
-            window: ("dark" | "sun_down") | null;
-            /** Window Hours */
-            window_hours: number | null;
-            /**
-             * State
-             * @enum {string}
-             */
-            state: "ok" | "waiting" | "unknown";
-            /**
-             * Arrives On
-             * @description `waiting` on a young night: the date (site zone) the reanalysis is asked. Null otherwise, also when it is due and only the service's answer is missing.
-             */
-            arrives_on: string | null;
-        };
-        /**
-         * ObjectAnswer
-         * @description What the user said on a card: a catalog object (`value` is the slug), a written name, or "it
-         *     is not an object" (`value` empty). `name` is how the object shows: the entry's, or the written
-         *     one.
-         */
-        ObjectAnswer: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "catalog" | "name" | "none";
-            /** Value */
-            value: string | null;
-            /** Name */
-            name: string | null;
-        };
-        /**
-         * ObjectCandidate
-         * @description An entry the sky found in the field of this object: it is what one clicks to answer. The
-         *     identification writes it, and the page reads it.
-         */
-        ObjectCandidate: {
-            /** Slug */
-            slug: string;
-            /** Name */
-            name: string;
-            /** Common Name */
-            common_name: string | null;
-            /**
-             * In Frame
-             * @description None when the sky carries no sides or rotation: it was called a circle.
-             */
-            in_frame: boolean | null;
-        };
-        /**
-         * ObjectCard
-         * @description One card per group of frames, asking what object they are (ADR 0014, S3): the frames
-         *     `identify` put on one object, or -- `group` -- frames the header does not name and the sky says
-         *     nothing about. Same answer for both. `name`, `slug`, `method`, `confidence` are what the app
-         *     found: empty on a `group`, and `method`/`confidence` also on frames put out as "not an object",
-         *     which no longer have an object. Asked: a group or a doubt (`low`), until answered (S4).
-         */
-        ObjectCard: {
-            /**
-             * Key
-             * @description What one answers with: `object:` and the found object's stable key, or `frames:` and the group's key.
-             */
-            key: string;
-            /** Name */
-            name: string | null;
-            /** Slug */
-            slug: string | null;
-            /** Method */
-            method: ("coord_confirmed" | "coord_review" | "exact_name" | "historic_name" | "user") | null;
-            /** Confidence */
-            confidence: ("certain" | "high" | "low" | "user") | null;
-            /** @description Where and when, for frames with no name and no sky; empty otherwise. */
-            group: components["schemas"]["UnnamedGroup"] | null;
-            /** Frames */
-            frames: number;
-            /**
-             * Integration S
-             * @description The sum of the frames' time; on screen it reads in hours.
-             */
-            integration_s: number;
-            /**
-             * Untimed
-             * @description How many of those frames do not tell their time: they are not worth zero, they are counted here.
-             */
-            untimed: number;
-            /**
-             * Candidates
-             * @description What the sky found, to click: on doubts and on frames put out; zero is a card too.
-             */
-            candidates: components["schemas"]["ObjectCandidate"][];
-            /** @description An answered card stays on the page, so one can change one's mind. */
-            answer: components["schemas"]["ObjectAnswer"] | null;
-        };
-        /**
-         * ObjectEdit
-         * @description The answer on an object card: a catalog slug (usually a clicked candidate), a hand-written
-         *     name, or "it is not an object".
-         */
-        ObjectEdit: {
-            /**
-             * Key
-             * @description The card's key read from the page.
-             */
-            key: string;
-            /** Slug */
-            slug?: string | null;
-            /** Name */
-            name?: string | null;
-            /**
-             * Not An Object
-             * @default false
-             */
-            not_an_object: boolean;
-        };
-        /** PathInfo */
-        PathInfo: {
-            /**
-             * Family
-             * @enum {string}
-             */
-            family: "windows" | "posix";
-            /** Data Root */
-            data_root: string | null;
-        };
-        /** PathProbe */
-        PathProbe: {
-            /** Root Path */
-            root_path: string;
-        };
-        /** PipelineStatus */
-        PipelineStatus: {
-            worker: components["schemas"]["WorkerSnapshot"];
-            scan: components["schemas"]["ScanProgress"] | null;
-            /**
-             * Pending
-             * @description Per stage: how many frames are still missing.
-             */
-            pending: {
-                [key: string]: number;
-            };
-            /**
-             * Action
-             * @description The button's verb, decided here and not in the page: start / stop / resume.
-             * @enum {string}
-             */
-            action: "start" | "stop" | "resume";
-        };
-        /**
-         * PlaceList
-         * @description The search is an ACTION, not a list from the archive: no pages, at most a handful of
-         *     candidates the service proposed.
-         */
-        PlaceList: {
-            /** Items */
-            items: components["schemas"]["PlaceOut"][];
-        };
-        /**
-         * PlaceOut
-         * @description A place found by name. It is not a site of the archive: it is a candidate, and becomes a
-         *     site only when the user creates it.
-         */
-        PlaceOut: {
-            /** Name */
-            name: string;
-            /** Latitude */
-            latitude: number;
-            /** Longitude */
-            longitude: number;
-        };
-        /**
-         * PlanetOut
-         * @description A planet of the night chart and its altitude through the whole night window.
-         */
-        PlanetOut: {
-            /**
-             * Key
-             * @enum {string}
-             */
-            key: "saturn" | "jupiter" | "mars" | "venus";
-            /** Track */
-            track: components["schemas"]["SkyPointOut"][];
-        };
-        /** ProbeOut */
-        ProbeOut: {
-            /** Root Path */
-            root_path: string;
-            /** Reachable */
-            reachable: boolean;
-            /**
-             * Fits Count
-             * @description None = not looked at (the folder is unreachable); never reported as 0.
-             */
-            fits_count: number | null;
-            /**
-             * Complete
-             * @description False = the count stopped at the time limit, or a subfolder did not answer: there may be more than fits_count.
-             */
-            complete: boolean | null;
-            /** @description The registered folder these same files belonged to; set when moved_check is `found`. */
-            moved_from: components["schemas"]["MovedFrom"] | null;
-            moved_check: components["schemas"]["MoveCheck"];
-        };
-        /** Range */
-        Range: {
-            /** Min */
-            min: number;
-            /** Max */
-            max: number;
-        };
-        /** RetireOut */
-        RetireOut: {
-            /** Folder Id */
-            folder_id: number;
-            /** Retired */
-            retired: boolean;
-            /** Kept Frames */
-            kept_frames: number;
-        };
-        /** ReviewApplied */
-        ReviewApplied: {
-            /**
-             * Changed
-             * @description Answers written.
-             */
-            changed: number;
-            /**
-             * Requeued
-             * @description Frames put back in the queue because the answer concerns them.
-             */
-            requeued: number;
-            /**
-             * Run Started
-             * @description False if the worker was busy: the work stays in the queue.
-             */
-            run_started: boolean;
-        };
-        /**
-         * ReviewApply
-         * @description All the answers together, written in a single transaction; only what is answered is
-         *     written (ADR 0014, S4).
-         *
-         *     **A field that does not exist is an error, not a slip to ignore** (`extra="forbid"`): a page
-         *     opened before a server update would send the old name, and Pydantic would discard it silently.
-         *     On the NAS it is the ordinary scenario -- a tab left open on the tablet. Better a 422 that
-         *     shows.
-         */
-        ReviewApply: {
-            /**
-             * Lookalikes
-             * @default []
-             */
-            lookalikes: components["schemas"]["LookalikeEdit"][];
-            /**
-             * Filters
-             * @default []
-             */
-            filters: components["schemas"]["FilterEdit"][];
-            /**
-             * Objects
-             * @default []
-             */
-            objects: components["schemas"]["ObjectEdit"][];
-            /**
-             * Unclear
-             * @default []
-             */
-            unclear: components["schemas"]["CoordinatesEdit"][];
-            /**
-             * Gear
-             * @default []
-             */
-            gear: components["schemas"]["GearEdit"][];
-            /**
-             * Typeless
-             * @default []
-             */
-            typeless: components["schemas"]["TypelessFolderEdit"][];
-            /**
-             * Mosaics
-             * @default []
-             */
-            mosaics: components["schemas"]["MosaicEdit"][];
-        };
-        /**
-         * ReviewOut
-         * @description The whole page in one response: it is not a paged list, it is the open questions.
-         */
-        ReviewOut: {
-            /**
-             * Lookalikes
-             * @description Two spellings that look like the same camera.
-             */
-            lookalikes: components["schemas"]["LookalikeOut"][];
-            /** Filters */
-            filters: components["schemas"]["FilterOut"][];
-            /**
-             * Rig Choices
-             * @description The rigs among which one answers a card that asks the camera.
-             */
-            rig_choices: components["schemas"]["RigChoice"][];
-            /**
-             * Objects
-             * @description The object cards to decide and the answered ones; open questions on top.
-             */
-            objects: components["schemas"]["ObjectCard"][];
-            /**
-             * Settled Objects
-             * @description How many the others are, which the app knows: they are read in pages.
-             */
-            settled_objects: number;
-            /**
-             * Unclear
-             * @description The places the app asks about: empty when it does not ask.
-             */
-            unclear: components["schemas"]["UnclearCoordinates"][];
-            /**
-             * Gear
-             * @description The header signatures whose frames leave out camera, optics or filter.
-             */
-            gear: components["schemas"]["GearSignature"][];
-            /**
-             * Filter Choices
-             * @description The filters with a known band, among which one answers.
-             */
-            filter_choices: components["schemas"]["FilterCandidate"][];
-            /**
-             * Optics Choices
-             * @description The optics you own, among which one answers a card that asks the optics.
-             */
-            optics_choices: string[];
-            /**
-             * Typeless
-             * @description The folders whose frames do not tell what file they are.
-             */
-            typeless: components["schemas"]["TypelessFolder"][];
-            /**
-             * Mosaics
-             * @description The regions taken in side-by-side panels.
-             */
-            mosaics: components["schemas"]["MosaicCandidate"][];
-            /**
-             * Empty
-             * @description The archive holds no frame yet: there is nothing to ask, not nothing left.
-             */
-            empty: boolean;
-            /** To Confirm */
-            to_confirm: number;
-        };
-        /**
-         * RigChoice
-         * @description One of your rigs, among which one chooses which camera took some frames: only those with a
-         *     camera, because one without does not answer that part.
-         */
-        RigChoice: {
-            /** Id */
-            id: number;
-            /**
-             * Name
-             * @description The one you gave it; without it, the page shows the two pieces.
-             */
-            name: string | null;
-            /** Optics */
-            optics: string | null;
-            /** Camera */
-            camera: string;
-            /** Focal Mm */
-            focal_mm: number | null;
-        };
-        /**
-         * RigNaming
-         * @description The name you give a rig: it is how it is declared.
-         */
-        RigNaming: {
-            /** Name */
-            name: string;
-        };
-        /**
-         * RigNew
-         * @description A rig you write: optics and camera among your pieces, and the focal length -- without it, the
-         *     files that tell it would make a second rig come into being.
-         */
-        RigNew: {
-            /** Optics Id */
-            optics_id: number;
-            /** Camera Id */
-            camera_id: number;
-            /** Focal Mm */
-            focal_mm: number;
-        };
-        /**
-         * RigOnPage
-         * @description A rig: how it is made, how much it served, and **how much sky it really frames**.
-         */
-        RigOnPage: {
-            /** Id */
-            id: number;
-            /**
-             * Name
-             * @description The name you gave it, if you gave it one.
-             */
-            name: string | null;
-            /** Optics */
-            optics: string | null;
-            /** Camera */
-            camera: string | null;
-            /** Focal Mm */
-            focal_mm: number | null;
-            /**
-             * Frames
-             * @description Null until it is counted (`counted`): a rig born mid-run. The same holds for `integration_s`, `untimed` and `nights`.
-             */
-            frames: number | null;
-            /** Integration S */
-            integration_s: number | null;
-            /** Untimed */
-            untimed: number | null;
-            /** Nights */
-            nights: number | null;
-            /** Objects */
-            objects: components["schemas"]["GearObject"][];
-            /** Counted */
-            counted: boolean;
-            /**
-             * Scale Arcsec Px
-             * @description Measured on the solved frames, median: null until the solver has solved one. Named as in the schema (`frame_wcs`), which is where they come from. The same holds for `width_deg` and `height_deg`.
-             */
-            scale_arcsec_px: number | null;
-            /** Width Deg */
-            width_deg: number | null;
-            /** Height Deg */
-            height_deg: number | null;
-            /**
-             * Parts
-             * @description What its frames used and what you chose for it, kind by kind in the card's order (mount, wheel, focuser, guide camera, reducer, guide scope, capture software, filters), each from the most used. A kind no frame names and you did not choose is not listed.
-             */
-            parts: components["schemas"]["RigPart"][];
-        };
-        /**
-         * RigPart
-         * @description One thing a rig's frames used besides optics and camera.
-         */
-        RigPart: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "mount" | "filter_wheel" | "focuser" | "guide_camera" | "reducer" | "guide_scope" | "software" | "filter";
-            /**
-             * Id
-             * @description The instrument, or the filter for `filter`; null for `software`, which is not a piece.
-             */
-            id: number | null;
-            /** Name */
-            name: string;
-            /**
-             * Frames
-             * @description How many of the rig's frames used it, rewritten copies out.
-             */
-            frames: number;
-            /**
-             * Chosen
-             * @description You gave it to the rig, instead of the files naming it. A mount you choose goes on every frame; any other kind only where the file names none.
-             */
-            chosen: boolean;
-        };
-        /**
-         * RigPartChoice
-         * @description The piece you use a rig with, among those you own of that kind; `None` goes back to what
-         *     the files say.
-         */
-        RigPartChoice: {
-            /** Piece Id */
-            piece_id: number | null;
-        };
-        /**
-         * ScanAllStarted
-         * @description What the "read them all" action did: the folders started, each with its receipt, and the
-         *     ones skipped with their reason. Skipped folders are reported instead of vanishing: a
-         *     detached disk is exactly what the user must know, and hiding it would make an incomplete
-         *     scan look complete.
-         */
-        ScanAllStarted: {
-            /** Started */
-            started: components["schemas"]["ScanStarted"][];
-            /** Skipped */
-            skipped: components["schemas"]["FolderSkipped"][];
-        };
-        /**
-         * ScanErrorList
-         * @description The files a scan did not read, paginated: they can be thousands.
-         */
-        ScanErrorList: {
-            /** Items */
-            items: components["schemas"]["FileNotRead"][];
-            /** Total */
-            total: number;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-        };
-        /**
-         * ScanEvent
-         * @description A scan progress event: the file being read and the counts so far.
-         */
-        ScanEvent: {
-            /** Current */
-            current: number;
-            /** Total */
-            total: number;
-            /** File */
-            file: string;
-            /** Run Id */
-            run_id: number;
-            /** Folder Id */
-            folder_id: number;
-            /**
-             * Since
-             * @description When this folder's reading began: the pace starts here.
-             */
-            since?: string | null;
-            /** Found */
-            found: number;
-            /** New */
-            new: number;
-            /** Unchanged */
-            unchanged: number;
-            /** Duplicates */
-            duplicates: number;
-            /** Missing */
-            missing: number;
-            /** Skipped */
-            skipped: number;
-            /** Errors */
-            errors: number;
-            /** Online Only */
-            online_only: number;
-        };
-        /**
-         * ScanProgress
-         * @description The scan of the current run: what the page shows while it runs and when it ends.
-         */
-        ScanProgress: {
-            /**
-             * State
-             * @enum {string}
-             */
-            state: "not_run" | "running" | "stopped" | "completed" | "completed_with_errors" | "error";
-            /** Folder Id */
-            folder_id: number;
-            /** Run Id */
-            run_id: number;
-            last_event: components["schemas"]["ScanEvent"] | null;
-            receipt: components["schemas"]["ScanRunOut"] | null;
-            /**
-             * Remaining S
-             * @description Seconds left for the folder being read, at the pace so far; `None` in the first minute, before any file and once the reading is over.
-             */
-            remaining_s?: number | null;
-            /**
-             * First
-             * @description No folder had ever ended a reading before this gesture: the archive is being read for the first time, and its counts are still growing.
-             * @default false
-             */
-            first: boolean;
-        };
-        /** ScanRunList */
-        ScanRunList: {
-            /** Items */
-            items: components["schemas"]["ScanRunOut"][];
-            /** Total */
-            total: number;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-        };
-        /** ScanRunOut */
-        ScanRunOut: {
-            /** Id */
-            id: number;
-            /** Folder Id */
-            folder_id: number;
-            /**
-             * Folder Path
-             * @description The folder's path, which is what the user recognises: with `folder_id` alone the page would have to read the folders and pair them up itself. Never empty: removing a folder **retires** it, and the foreign key of `scan_runs` keeps its row.
-             */
-            folder_path: string;
-            /**
-             * Folder Retired
-             * @description The folder was removed (retired) since: its path no longer updates.
-             */
-            folder_retired: boolean;
-            /** Started At */
-            started_at: string;
-            /** Ended At */
-            ended_at: string | null;
-            /**
-             * Duration S
-             * @description None = unknown: the run is open, or the two instants do not add up.
-             */
-            duration_s: number | null;
-            /**
-             * Status
-             * @description None = the run is open.
-             */
-            status: ("ok" | "stopped" | "aborted" | "error") | null;
-            /** Reason */
-            reason: ("root_unreachable" | "stop_requested" | "internal_error" | "database_error") | null;
-            /** Found */
-            found: number;
-            /** New */
-            new: number;
-            /** Unchanged */
-            unchanged: number;
-            /** Duplicates */
-            duplicates: number;
-            /** Missing */
-            missing: number;
-            /** Skipped */
-            skipped: number;
-            /** Errors */
-            errors: number;
-            /**
-             * Online Only
-             * @description Online-only FITS: not opened, so as not to download them; they are revisited later.
-             */
-            online_only: number;
-            /** Unreadable Dirs */
-            unreadable_dirs: string[];
-            /**
-             * Hidden Dirs
-             * @description Hidden subfolders left out (the recycle bin, for instance).
-             */
-            hidden_dirs: string[];
-            /**
-             * Linked Dirs
-             * @description Reached through a link or a junction: not followed.
-             */
-            linked_dirs: string[];
-            /**
-             * Skipped By Reason
-             * @description How many were skipped per reason, calibration frames included.
-             */
-            skipped_by_reason: components["schemas"]["SkippedCount"][];
-        };
-        /** ScanStarted */
-        ScanStarted: {
-            /** Run Id */
-            run_id: number;
-            /** Folder Id */
-            folder_id: number;
-        };
-        /** SearchResult */
-        SearchResult: {
-            objects: components["schemas"]["Found_FoundObject_"];
-            nights: components["schemas"]["Found_FoundNight_"];
-            gear: components["schemas"]["Found_FoundPiece_"];
-            sites: components["schemas"]["Found_FoundSite_"];
-        };
-        /** SettingsOut */
-        SettingsOut: {
-            /** Values */
-            values: {
-                [key: string]: string | number | null;
-            };
-            /**
-             * Wizard Done
-             * @description The stamp is there: a written fact, not "it looks empty".
-             */
-            wizard_done: boolean;
-            /** Missing */
-            missing: ("no_active_site" | "no_solver" | "no_star_database")[];
-            /**
-             * Ranges
-             * @description The numeric keys' allowed range, both ends included: a write outside is `out_of_range`.
-             */
-            ranges: {
-                [key: string]: components["schemas"]["Range"];
-            };
-        };
-        /**
-         * SettingsPatch
-         * @description A write either passes whole or does not pass: half the preferences written would be worse.
-         *
-         *     The values go in as they are: the type of each key is judged where the closed list of keys
-         *     lives, and declaring it here as well would mean writing it twice.
-         */
-        SettingsPatch: {
-            /** Values */
-            values: {
-                [key: string]: unknown;
-            };
-        };
-        /**
-         * SettledObjects
-         * @description The objects the app knows, with nothing to choose, in pages: they are not questions, and
-         *     they grow with the archive. They open from the Objects section, and are corrected from there.
-         */
-        SettledObjects: {
-            /** Items */
-            items: components["schemas"]["ObjectCard"][];
-            /** Total */
-            total: number;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-        };
-        /**
-         * SiteCandidate
-         * @description A site already declared, with how far it is from those coordinates: it is what one clicks to
-         *     answer. Recomputed on reading, not saved.
-         */
-        SiteCandidate: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Distance Km */
-            distance_km: number;
-        };
-        /** SiteCreate */
-        SiteCreate: {
-            /** Name */
-            name: string;
-            /** Latitude */
-            latitude: number;
-            /** Longitude */
-            longitude: number;
-            /**
-             * Elevation M
-             * @description If you don't give it, the app asks the service; if you do, yours wins.
-             */
-            elevation_m?: number | null;
-            /** Sky Sqm */
-            sky_sqm?: number | null;
-            /** Bortle */
-            bortle?: number | null;
-            /**
-             * Is Default
-             * @default false
-             */
-            is_default: boolean;
-        };
-        /** SiteDeleted */
-        SiteDeleted: {
-            /** Site Id */
-            site_id: number;
-            /** Deleted */
-            deleted: boolean;
-        };
-        /**
-         * SiteEdit
-         * @description What changes in a site. An absent field stays as it is; changed coordinates redo the time
-         *     zone, because an old time zone on new coordinates is a silent error.
-         */
-        SiteEdit: {
-            /** Name */
-            name?: string | null;
-            /** Latitude */
-            latitude?: number | null;
-            /** Longitude */
-            longitude?: number | null;
-            /** Elevation M */
-            elevation_m?: number | null;
-            /** Sky Sqm */
-            sky_sqm?: number | null;
-            /** Bortle */
-            bortle?: number | null;
-        };
-        /** SiteList */
-        SiteList: {
-            /** Items */
-            items: components["schemas"]["SiteOut"][];
-            /** Total */
-            total: number;
-            /** Limit */
-            limit: number;
-            /** Offset */
-            offset: number;
-        };
-        /** SiteOut */
-        SiteOut: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Latitude */
-            latitude: number;
-            /** Longitude */
-            longitude: number;
-            /**
-             * Elevation M
-             * @description None = not provided: zero is sea level, and it is a true value.
-             */
-            elevation_m: number | null;
-            /** Elevation Source */
-            elevation_source: ("declared" | "service") | null;
-            /**
-             * Timezone
-             * @description None where no time zone is recognised for the coordinates; in open sea it is the nautical zone (Etc/GMT...).
-             */
-            timezone: string | null;
-            /** Sky Sqm */
-            sky_sqm: number | null;
-            /** Sky Source */
-            sky_source: ("measured" | "service" | "scale") | null;
-            /**
-             * Bortle
-             * @description DERIVED: not a column, and it never appears without the measurement.
-             */
-            bortle: number | null;
-            /** Is Default */
-            is_default: boolean;
-            /**
-             * Nights
-             * @description How many nights hold it: whoever deletes it knows before trying.
-             */
-            nights: number;
-            /**
-             * Unknown
-             * @description The empty fields, with their reason.
-             */
-            unknown: ("site_no_timezone" | "site_no_elevation" | "site_no_sky")[];
-        };
-        /**
-         * SiteSkyOut
-         * @description Where one observes from, and what sky it has: the toolbar footer writes it on one line.
-         *
-         *     **The two sky fields go together, and together they can be missing.** The class is not a
-         *     database column: it derives from the brightness, so without the measurement there is no
-         *     class -- and that is the state of someone who skipped that question at first launch, not a
-         *     fault. Whoever shows it writes "class not declared", not a zero.
-         */
-        SiteSkyOut: {
-            /** Name */
-            name: string;
-            /** Sky Sqm */
-            sky_sqm: number | null;
-            /** Bortle */
-            bortle: number | null;
-        };
-        /** SkippedCount */
-        SkippedCount: {
-            /**
-             * Reason
-             * @enum {string}
-             */
-            reason: "calibration" | "stack" | "still_writing";
-            /** Count */
-            count: number;
-        };
-        /**
-         * SkyBandOut
-         * @description A stretch of night in which the sky is always the same thing: from when to when, and which.
-         *
-         *     Why they come out **already split** instead of as eight times is told in
-         *     `docs/domini/effemeridi.md`, entry *"Le fasce arrivano gia' divise"*.
-         */
-        SkyBandOut: {
-            /** Starts At */
-            starts_at: string;
-            /** Ends At */
-            ends_at: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "day" | "civil" | "nautical" | "astronomical" | "dark";
-        };
-        /**
-         * SkyPointOut
-         * @description An instant of the night and how high the Moon was, in degrees above the horizon.
-         *
-         *     The altitude is **negative below the horizon**, and is not clipped to zero: that is what lets
-         *     the chart draw where the Moon comes in and goes out instead of a curve resting on the edge.
-         */
-        SkyPointOut: {
-            /** At */
-            at: string;
-            /** Altitude Deg */
-            altitude_deg: number;
-        };
-        /**
-         * SolverOut
-         * @description Where the app takes the solver from, and **what** it deduced that from.
-         *
-         *     The channel always comes with the path because "found" alone cannot be disproved: automatic
-         *     search goes wrong exactly when it finds something -- an old ASTAP left in the PATH, or another
-         *     user's in a known place -- and whoever looks must be able to say "no, not that one" without
-         *     guessing which of the four channels answered.
-         */
-        SolverOut: {
-            /**
-             * Path
-             * @description None = not found: the channel is None together with it, never alone.
-             */
-            path: string | null;
-            /** Source */
-            source: ("declared" | "env" | "path" | "known_place") | null;
-            /**
-             * Declared
-             * @description What the user wrote, **even when it leads nowhere**: without it, a wrong path would vanish from the screen and there would be nothing to correct.
-             */
-            declared: string | null;
-            /**
-             * Databases
-             * @description The star databases found next to the program, by name (`d80`, `v50`). Empty **with** a path means ASTAP starts and recognises nothing; empty **without** a path only means ASTAP is not there.
-             */
-            databases: string[];
-        };
-        /** StageRecord */
-        StageRecord: {
-            /** Name */
-            name: string;
-            /**
-             * State
-             * @enum {string}
-             */
-            state: "not_run" | "running" | "stopped" | "completed" | "completed_with_errors" | "error";
-            /** Current */
-            current: number | null;
-            /** Total */
-            total: number | null;
-            /** Tally */
-            tally: {
-                [key: string]: unknown;
-            };
-            /**
-             * Reason
-             * @description Why the stage stopped, when it stopped on its own: a code, never a sentence.
-             */
-            reason?: string | null;
-        };
-        /**
-         * Subject
-         * @description An object the sky found in the frames of a group, and in how many.
-         */
-        Subject: {
-            /** Name */
-            name: string;
-            /** Frames */
-            frames: number;
-        };
-        /**
-         * Subjects
-         * @description What you took in that group, to remember it without going by memory: the objects, the most
-         *     taken on top, and the frames of the two blanks -- which are not the same: `not_yet` is the sky
-         *     that has not looked yet (or did not manage to), `not_found` the sky that looked without finding
-         *     anything. It reads next to the question and does not change it: the group key stays the
-         *     same.
-         */
-        Subjects: {
-            /** Found */
-            found: components["schemas"]["Subject"][];
-            /** Not Found */
-            not_found: number;
-            /** Not Yet */
-            not_yet: number;
-        };
-        /**
-         * TonightOut
-         * @description The night it refers to (`YYYY-MM-DD` in the site's time zone), the site, the Moon and the
-         *     sky.
-         */
-        TonightOut: {
-            /** Night */
-            night: string | null;
-            site: components["schemas"]["SiteSkyOut"] | null;
-            moon: components["schemas"]["MoonOut"] | null;
-            /**
-             * Sky Bands
-             * @description Empty when there is no night to split -- no site, or a time zone that does not resolve -- for the same reason the Moon is `None` there.
-             * @default []
-             */
-            sky_bands: components["schemas"]["SkyBandOut"][];
-            /**
-             * Dark S
-             * @description How long tonight's astronomical dark lasts, in seconds: the sum of the `dark` bands. Computed, not forecast, so it is there when the weather is not; `None` without a night, never 0 in its place.
-             */
-            dark_s?: number | null;
-            /** @description The current night's weather from the chosen model, as the forecast wrote it; `None` until the forecast has arrived. */
-            weather?: components["schemas"]["WeatherBriefOut"] | null;
-            /** @description `None` without a night. */
-            chart?: components["schemas"]["ChartOut"] | null;
-            /**
-             * Planets
-             * @description Empty without a night.
-             * @default []
-             */
-            planets: components["schemas"]["PlanetOut"][];
-        };
-        /**
-         * TypelessFolder
-         * @description The frames that do not tell what file they are, grouped by **folder**: whoever shoots keeps
-         *     darks and flats in folders of their own, so one answer closes a whole folder. Only the folders
-         *     where the sky cannot tell are here -- solved is a picture, no stars a calibration --, and until
-         *     answered those frames stay still before the object: they do not become hours, and they do not
-         *     appear among the unnamed frames -- there the question is "what did you take", and answering
-         *     with an object would turn a calibration into hours. An answered group stays on the page because
-         *     one must be able to change one's mind. What the sky found here is absent, and it is not an
-         *     oversight: on those frames the sky could not tell, and showing "no object" would look like an
-         *     answer.
-         */
-        TypelessFolder: {
-            /**
-             * Key
-             * @description The folder path: it is the key one answers with.
-             */
-            key: string;
-            /** Frames */
-            frames: number;
-            /** Answer */
-            answer: ("light" | "calibration") | null;
-        };
-        /**
-         * TypelessFolderEdit
-         * @description The answer about a folder of frames that do not tell what file they are: a sky picture
-         *     (`light`) or a calibration file (`calibration`). The words are two and live in the model, so a
-         *     third one is a 422 declared in the OpenAPI and not an answer to interpret.
-         */
-        TypelessFolderEdit: {
-            /**
-             * Key
-             * @description The folder path read from the page.
-             */
-            key: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "light" | "calibration";
-        };
-        /**
-         * UnclearCoordinates
-         * @description The frames the app stopped because the header coordinates say another place, grouped by
-         *     **coordinates**: one asks per group, never per frame. The nights are those involved, computed
-         *     in the time zone of those coordinates. `site` is the answer already given, if there is one: an
-         *     answered group stays on the page because a wrong click must be changeable.
-         */
-        UnclearCoordinates: {
-            /**
-             * Key
-             * @description The rounded coordinates: it is the key one answers with.
-             */
-            key: string;
-            /** Latitude */
-            latitude: number;
-            /** Longitude */
-            longitude: number;
-            /**
-             * Distance Km
-             * @description From home; None without a home site (never a fake zero).
-             */
-            distance_km: number | null;
-            /** Frames */
-            frames: number;
-            /** Nights */
-            nights: string[];
-            /** Site */
-            site: string | null;
-            /** Candidates */
-            candidates: components["schemas"]["SiteCandidate"][];
-            subjects: components["schemas"]["Subjects"];
-        };
-        /**
-         * UnnamedGroup
-         * @description Where and when of frames the header does not name and the sky says nothing about, grouped
-         *     by **night, camera, telescope and pointing**, never by file or folder; the pointing is that of
-         *     the frame that opened the group.
-         */
-        UnnamedGroup: {
-            /**
-             * Night
-             * @description The night, YYYY-MM-DD; empty for those that do not say when.
-             */
-            night: string | null;
-            /**
-             * Camera
-             * @description `INSTRUME` as written in the file.
-             */
-            camera: string | null;
-            /**
-             * Telescope
-             * @description `TELESCOP` as written in the file.
-             */
-            telescope: string | null;
-            /**
-             * Ra Deg
-             * @description Where the mount pointed, from the header.
-             */
-            ra_deg: number | null;
-            /** Dec Deg */
-            dec_deg: number | null;
-            /**
-             * First Frame
-             * @description The first and the last frame, ISO in the night's time zone: two objects without pointing in the same night are a single group, and the hours tell whoever answers whether they are two. Frames with `DATE-OBS` count: null if none says it.
-             */
-            first_frame: string | null;
-            /** Last Frame */
-            last_frame: string | null;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-            /** Input */
-            input?: unknown;
-            /** Context */
-            ctx?: Record<string, never>;
-        };
-        /**
-         * WaitingPoses
-         * @description Frames no night has gathered, grouped by **where the answer is given**: a question in
-         *     *To confirm* (`review`), the site to declare (`site`), or nowhere (`never`) -- the case of a
-         *     frame without a date, which no answer can fix.
-         */
-        WaitingPoses: {
-            /**
-             * Answer At
-             * @enum {string}
-             */
-            answer_at: "review" | "site" | "never";
-            /** Frames */
-            frames: number;
-        };
-        /**
-         * WeatherAgreementOut
-         * @description How many models say go, marginal, no-go, or do not know, for that night, and out of how
-         *     many.
-         */
-        WeatherAgreementOut: {
-            /** Go */
-            go: number;
-            /** Marginal */
-            marginal: number;
-            /** Nogo */
-            nogo: number;
-            /** Unknown */
-            unknown: number;
-            /** Total */
-            total: number;
-        };
-        /**
-         * WeatherBriefOut
-         * @description A forecast night in brief: its sky, the models' agreement, and the night's mean upper-air
-         *     wind with its rank among the site's nights of the last year -- how many in ten had less
-         *     (`None` until the site's climatology exists). It is what Tonight says.
-         */
-        WeatherBriefOut: {
-            /** Verdict */
-            verdict: ("go" | "marginal" | "nogo") | null;
-            /** Cloud Total Pct */
-            cloud_total_pct: number | null;
-            /** Usable Hours */
-            usable_hours: number | null;
-            /** Window */
-            window: ("dark" | "sun_down") | null;
-            /** Window Hours */
-            window_hours: number | null;
-            agreement: components["schemas"]["WeatherAgreementOut"];
-            /** Usable Since */
-            usable_since: string | null;
-            /** Usable Until */
-            usable_until: string | null;
-            /** Wind 700Hpa Kmh */
-            wind_700hpa_kmh: number | null;
-            /** Wind 700Hpa Tenths */
-            wind_700hpa_tenths: number | null;
-            /**
-             * Sky Word
-             * @description The sky in words from the mean cover in the dark, in okta classes (WMO 2700): 0 clear, 1-4 scattered, 5-7 broken, 8 overcast; 0 and 8 only for a bare or full sky. `None` without the clouds.
-             */
-            sky_word?: ("clear" | "scattered" | "broken" | "overcast") | null;
-            /**
-             * Moonless Dark Hours
-             * @description Hours of dark with the Moon below the horizon.
-             */
-            moonless_dark_hours?: number | null;
-        };
-        /**
-         * WeatherHourOut
-         * @description An hour of the night, in the site's time zone, with the sky band it has, every source's
-         *     value joined (the model's; Meteoblue's seeing in arcseconds, only with the key; CAMS aerosol
-         *     and dust; the Moon's lit percentage while it is up) and each judged measure's word.
-         */
-        WeatherHourOut: {
-            /** At */
-            at: string;
-            /**
-             * Sky
-             * @enum {string}
-             */
-            sky: "day" | "civil" | "nautical" | "astronomical" | "dark";
-            /** Cloud Total Pct */
-            cloud_total_pct: number | null;
-            /** Cloud Low Pct */
-            cloud_low_pct: number | null;
-            /** Cloud Mid Pct */
-            cloud_mid_pct: number | null;
-            /** Cloud High Pct */
-            cloud_high_pct: number | null;
-            /** Temperature C */
-            temperature_c: number | null;
-            /** Humidity Pct */
-            humidity_pct: number | null;
-            /** Dew Point C */
-            dew_point_c: number | null;
-            /** Wind Kmh */
-            wind_kmh: number | null;
-            /** Wind Gust Kmh */
-            wind_gust_kmh: number | null;
-            /** Precip Mm */
-            precip_mm: number | null;
-            /** Visibility Km */
-            visibility_km: number | null;
-            /** Wind 700Hpa Kmh */
-            wind_700hpa_kmh: number | null;
-            /** Wind 250Hpa Kmh */
-            wind_250hpa_kmh: number | null;
-            /** Seeing Arcsec */
-            seeing_arcsec: number | null;
-            /** Aerosol Optical Depth */
-            aerosol_optical_depth: number | null;
-            /** Dust Ugm3 */
-            dust_ugm3: number | null;
-            /** Moon Pct */
-            moon_pct: number | null;
-            /**
-             * Dew Spread C
-             * @description Air minus dew point, the quantity condensation is judged on.
-             */
-            dew_spread_c: number | null;
-            levels: components["schemas"]["WeatherLevelsOut"];
-            /**
-             * Shown
-             * @description Whether the page draws this hour (`shown_from`-`shown_until`).
-             */
-            shown: boolean;
-            /**
-             * Clear
-             * @description One of the night's clear hours, the ones `usable_hours` counts.
-             */
-            clear: boolean;
-        };
-        /**
-         * WeatherLevelsOut
-         * @description Each judged measure's word for the hour; `None` where the value is missing (the Moon: where
-         *     it is below the horizon; the aerosol: also between clear and very hazy).
-         */
-        WeatherLevelsOut: {
-            /** Cloud */
-            cloud: ("go" | "marginal" | "nogo") | null;
-            /** Cloud Low */
-            cloud_low: ("go" | "marginal" | "nogo") | null;
-            /** Rain */
-            rain: ("go" | "marginal" | "nogo") | null;
-            /** Gust */
-            gust: ("go" | "marginal" | "nogo") | null;
-            /** Wind */
-            wind: ("go" | "marginal" | "nogo") | null;
-            /** Condensation */
-            condensation: ("go" | "marginal" | "nogo") | null;
-            /** Jet */
-            jet: ("go" | "marginal" | "nogo") | null;
-            /** Seeing */
-            seeing: ("go" | "marginal" | "nogo") | null;
-            /** Aerosol */
-            aerosol: ("go" | "marginal" | "nogo") | null;
-            /** Moon */
-            moon: ("go" | "marginal" | "nogo") | null;
-            /** Visibility */
-            visibility: ("go" | "marginal" | "nogo") | null;
-        };
-        /**
-         * WeatherMeasureOut
-         * @description A measure over the night's window. `level` is its worst hour's word (for `cloud`, the
-         *     verdict) and `since`/`until`/`hours` the hours with that word; `weighs` when it is marginal or
-         *     no-go and is not the clouds, which make the verdict. `value` is the mean of the known hours
-         *     (for `rain`, the total), `peak` the worst hour's value and when; `known_*` say which hours were
-         *     known, so a mean over part of the night is said as such; `known_from_start`/`known_to_end`
-         *     say whether they reach the window's first/last hour. Neutral measures have no `level`.
-         *     `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours
-         *     (`axis_curve` `sqrt`: the chart grows with the square root of the value).
-         *     `value` is the cold at its lowest (temperature, condensation), and so the visibility.
-         */
-        WeatherMeasureOut: {
-            /**
-             * Code
-             * @enum {string}
-             */
-            code: "cloud" | "cloud_low" | "rain" | "gust" | "wind" | "condensation" | "jet" | "seeing" | "aerosol" | "moon" | "visibility" | "cloud_mid" | "cloud_high" | "temperature" | "dew_point" | "wind_700" | "dust";
-            /** Level */
-            level: ("go" | "marginal" | "nogo") | null;
-            /** Weighs */
-            weighs: boolean;
-            /** Value */
-            value: number | null;
-            /** Peak */
-            peak: number | null;
-            /** Peak At */
-            peak_at: string | null;
-            /** Peak Until */
-            peak_until: string | null;
-            /** Spans */
-            spans: components["schemas"]["WeatherSpanOut"][];
-            /** Axis Min */
-            axis_min: number | null;
-            /** Axis Max */
-            axis_max: number | null;
-            /**
-             * Axis Curve
-             * @enum {string}
-             */
-            axis_curve: "linear" | "sqrt";
-            /** Since */
-            since: string | null;
-            /** Until */
-            until: string | null;
-            /** Hours */
-            hours: number;
-            /** Known Hours */
-            known_hours: number;
-            /** Known Since */
-            known_since: string | null;
-            /** Known Until */
-            known_until: string | null;
-            /** Known From Start */
-            known_from_start: boolean;
-            /** Known To End */
-            known_to_end: boolean;
-        };
-        /**
-         * WeatherNightOut
-         * @description A forecast night: the summary, its measures in order of importance (the clouds, then the
-         *     worst word earliest first, then the neutral ones), and its hours from noon to noon. `shown_*`
-         *     is the stretch the page draws, from the last hour of day before twilight to the first after
-         *     dawn. A `trend` night carries the summary without usable hours, measures or hours.
-         */
-        WeatherNightOut: {
-            /** Verdict */
-            verdict: ("go" | "marginal" | "nogo") | null;
-            /** Cloud Total Pct */
-            cloud_total_pct: number | null;
-            /** Usable Hours */
-            usable_hours: number | null;
-            /** Window */
-            window: ("dark" | "sun_down") | null;
-            /** Window Hours */
-            window_hours: number | null;
-            agreement: components["schemas"]["WeatherAgreementOut"];
-            /** Usable Since */
-            usable_since: string | null;
-            /** Usable Until */
-            usable_until: string | null;
-            /** Wind 700Hpa Kmh */
-            wind_700hpa_kmh: number | null;
-            /** Wind 700Hpa Tenths */
-            wind_700hpa_tenths: number | null;
-            /**
-             * Sky Word
-             * @description The sky in words from the mean cover in the dark, in okta classes (WMO 2700): 0 clear, 1-4 scattered, 5-7 broken, 8 overcast; 0 and 8 only for a bare or full sky. `None` without the clouds.
-             */
-            sky_word?: ("clear" | "scattered" | "broken" | "overcast") | null;
-            /**
-             * Moonless Dark Hours
-             * @description Hours of dark with the Moon below the horizon.
-             */
-            moonless_dark_hours?: number | null;
-            /** Night */
-            night: string;
-            /** Trend */
-            trend: boolean;
-            /** Shown From */
-            shown_from: string | null;
-            /** Shown Until */
-            shown_until: string | null;
-            /** Measures */
-            measures: components["schemas"]["WeatherMeasureOut"][];
-            /** Hours */
-            hours: components["schemas"]["WeatherHourOut"][];
-        };
-        /**
-         * WeatherOut
-         * @description The next nights of the home site for the chosen model. `fetched_at` is when the site's
-         *     latest forecast arrived, for all models together: `None` until the first one arrives. `missing`
-         *     tells what prevents having one.
-         */
-        WeatherOut: {
-            /** Site */
-            site: string | null;
-            /** Missing */
-            missing: "no_timezone" | null;
-            /** Model */
-            model: string;
-            /** Models */
-            models: string[];
-            /** Fetched At */
-            fetched_at: string | null;
-            last_request: components["schemas"]["WeatherRequestOut"] | null;
-            /** Full Nights */
-            full_nights: number;
-            /**
-             * Retry S
-             * @description How often a silent service is asked again, in seconds.
-             */
-            retry_s: number;
-            seeing: components["schemas"]["WeatherSeeingOut"];
-            /** Sources */
-            sources: components["schemas"]["WeatherSourceOut"][];
-            /** Scales */
-            scales: components["schemas"]["WeatherScaleOut"][];
-            /** Nights */
-            nights: components["schemas"]["WeatherNightOut"][];
-        };
-        /**
-         * WeatherRefreshOut
-         * @description How the request went: arrived, or why not.
-         */
-        WeatherRefreshOut: {
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "ok" | "no_site" | "no_timezone" | "unreachable" | "bad_answer";
-        };
-        /**
-         * WeatherRequestOut
-         * @description The last request for the forecast and how it went: a silent service keeps the forecast that
-         *     was there, and the page says since when no answer came.
-         */
-        WeatherRequestOut: {
-            /** At */
-            at: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "ok" | "unreachable" | "bad_answer";
-        };
-        /**
-         * WeatherScaleOut
-         * @description A judged measure's thresholds, worst first, the same the judgement uses: an hour that
-         *     crosses none is `go`. `lower_is_worse`: the steps count downwards (condensation).
-         */
-        WeatherScaleOut: {
-            /**
-             * Code
-             * @enum {string}
-             */
-            code: "cloud" | "cloud_low" | "rain" | "gust" | "wind" | "condensation" | "jet" | "seeing" | "aerosol" | "moon" | "visibility";
-            /** Steps */
-            steps: components["schemas"]["WeatherStepOut"][];
-            /** Lower Is Worse */
-            lower_is_worse: boolean;
-        };
-        /**
-         * WeatherSeeingOut
-         * @description Whether the user has a Meteoblue key, whether seeing is there (`meteoblue`, its only
-         *     source, or `None`) and, with the key, how its last attempt went: `ok`, `refused`,
-         *     `unreachable`, `bad_answer`, or `None` if it has not been asked yet for this site. `key` tells
-         *     "no key" from "not asked yet", which `meteoblue` alone cannot.
-         */
-        WeatherSeeingOut: {
-            /** Key */
-            key: boolean;
-            /** Source */
-            source: "meteoblue" | null;
-            /** Meteoblue */
-            meteoblue: ("ok" | "refused" | "unreachable" | "bad_answer") | null;
-        };
-        /**
-         * WeatherSourceOut
-         * @description An upper-air source that wrote something, and when: the page cites it only if present, and
-         *     the CAMS licence wants the year of the data.
-         */
-        WeatherSourceOut: {
-            /**
-             * Source
-             * @description A name from `weather.sky.ALL_SOURCES`; not listed here, so the names have one home.
-             */
-            source: string;
-            /** Fetched At */
-            fetched_at: string;
-        };
-        /**
-         * WeatherSpanOut
-         * @description The hours with one word: from the first to the end of the last, and how many.
-         */
-        WeatherSpanOut: {
-            /**
-             * Level
-             * @enum {string}
-             */
-            level: "go" | "marginal" | "nogo";
-            /** Since */
-            since: string;
-            /** Until */
-            until: string;
-            /** Hours */
-            hours: number;
-        };
-        /**
-         * WeatherStepOut
-         * @description From `bound` on (beyond it when `strict`) an hour has `level`; `None`: no word.
-         */
-        WeatherStepOut: {
-            /** Level */
-            level: ("go" | "marginal" | "nogo") | null;
-            /** Bound */
-            bound: number;
-            /** Strict */
-            strict: boolean;
-        };
-        /** WorkerOut */
-        WorkerOut: {
-            worker: components["schemas"]["WorkerSnapshot"];
-            /**
-             * Skipped
-             * @description When Resume reads the folders again, the ones it could not read.
-             */
-            skipped?: components["schemas"]["FolderSkipped"][];
-        };
-        /** WorkerSnapshot */
-        WorkerSnapshot: {
-            /**
-             * State
-             * @enum {string}
-             */
-            state: "idle" | "running" | "stopped" | "completed" | "completed_with_errors" | "error";
-            /** Stage */
-            stage: string | null;
-            /**
-             * Started At
-             * @description None until it has ever started: never an invented instant.
-             */
-            started_at: string | null;
-            /** Ended At */
-            ended_at: string | null;
-            /** Stages */
-            stages: components["schemas"]["StageRecord"][];
-        };
-        /** YearDayOut */
-        YearDayOut: {
-            /**
-             * Date
-             * @description `YYYY-MM-DD`, a night date.
-             */
-            date: string;
-            /**
-             * Level
-             * @description `future` after today; `none` without hours; then the board's legend: under 2 h, 2-4, 4-6, over 6.
-             * @enum {string}
-             */
-            level: "future" | "none" | "under2" | "2to4" | "4to6" | "over6";
-            /** Integration S */
-            integration_s: number;
-        };
-        /**
-         * YearOut
-         * @description The year so far: what the Dashboard's year section shows, already counted.
-         */
-        YearOut: {
-            /** Year */
-            year: number;
-            /**
-             * Until
-             * @description Today's night date, the last day counted.
-             */
-            until: string;
-            /** Nights */
-            nights: number;
-            /** Integration S */
-            integration_s: number;
-            /**
-             * Per Night S
-             * @description `None` without nights, never 0 in its place.
-             */
-            per_night_s: number | null;
-            /**
-             * Per Month
-             * @description Nights per elapsed month, to one decimal.
-             */
-            per_month: number;
-            /**
-             * Lead Blank
-             * @description Empty squares before January 1 in a Monday-first week grid (0-6).
-             */
-            lead_blank: number;
-            /**
-             * Days
-             * @description Every day of the year, January 1 first.
-             */
-            days: components["schemas"]["YearDayOut"][];
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+  schemas: {
+    /**
+     * ArchiveChoices
+     * @description What the toolbar dropdowns offer: **what is in the archive**, not what the catalog knows:
+     *     someone who uses two catalogs must not scroll through every one the catalog carries.
+     */
+    ArchiveChoices: {
+      /**
+       * Catalogs
+       * @description The prefixes of the catalogs your objects belong to (`M`, `NGC`...).
+       */
+      catalogs: string[]
+      /**
+       * Constellations
+       * @description The three-letter IAU codes, in order.
+       */
+      constellations: string[]
+      /**
+       * Filters
+       * @description The names of the filters you shot at least one object with.
+       */
+      filters: string[]
+      /**
+       * Years
+       * @description The years of your nights, latest first: the period dropdown offers them.
+       */
+      years: string[]
+      /**
+       * Sites
+       * @description The sites you shot from; empty if only one, which would narrow nothing.
+       */
+      sites: components["schemas"]["ArchivePick"][]
+      /**
+       * Optics
+       * @description The optics you shot with; empty if only one.
+       */
+      optics: components["schemas"]["ArchivePick"][]
+      /**
+       * Cameras
+       * @description The cameras you shot with; empty if only one.
+       */
+      cameras: components["schemas"]["ArchivePick"][]
+      /**
+       * Mosaics
+       * @description Whether you have at least one confirmed mosaic: without one, "mosaics only" is not offered.
+       */
+      mosaics: boolean
+    }
+    /**
+     * ArchiveFound
+     * @description How many of the rows found are objects and how many mosaics: the count on screen does not
+     *     call a mosaic an "object".
+     */
+    ArchiveFound: {
+      /** Objects */
+      objects: number
+      /** Mosaics */
+      mosaics: number
+    }
+    /**
+     * ArchiveList
+     * @description `total` counts the rows that pass the filter, not every row in the archive.
+     */
+    ArchiveList: {
+      /** Items */
+      items: components["schemas"]["ArchiveObject"][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+      /** @description The same rows, split between objects and mosaics. */
+      found: components["schemas"]["ArchiveFound"]
+      choices: components["schemas"]["ArchiveChoices"]
+    }
+    /**
+     * ArchiveObject
+     * @description A row of the Archive: a group of frames -- an object, or a confirmed mosaic -- and what you
+     *     put into it. An object's row carries only the frames no mosaic has taken.
+     */
+    ArchiveObject: {
+      /**
+       * Key
+       * @description Stable: the slug or the primary name of an object, the key of a mosaic.
+       */
+      key: string
+      /**
+       * Name
+       * @description Already resolved by the backend; null only on a row that should not exist.
+       */
+      name: string | null
+      /**
+       * Slug
+       * @description The catalog slug of the object, or of the mosaic's target.
+       */
+      slug: string | null
+      /**
+       * Frames
+       * @description How many frames, rewritten copies excluded.
+       */
+      frames: number
+      /**
+       * Integration S
+       * @description The sum of the frames' time, in seconds; on screen it reads in hours.
+       */
+      integration_s: number
+      /**
+       * Untimed
+       * @description How many of those frames do not say how long they lasted: they do not count as zero.
+       */
+      untimed: number
+      /**
+       * Constellation
+       * @description Three-letter IAU code, from the catalog.
+       */
+      constellation: string | null
+      /**
+       * Type Code
+       * @description What it is (GALAXY, DARK_NEBULA...), from the catalog.
+       */
+      type_code: string | null
+      /**
+       * Filters
+       * @description Which filters you shot it with, in the one filter order; empty if unknown.
+       */
+      filters: components["schemas"]["FilterUsed"][]
+      /**
+       * Productions
+       * @description One per optics and camera, most time first: together they are the row. Frames that do not say their rig are one production with null optics and camera.
+       */
+      productions: components["schemas"]["ArchiveProduction"][]
+      /**
+       * Panels
+       * @description How many panels, for a mosaic; null for an object.
+       */
+      panels: number | null
+      /**
+       * Panel List
+       * @description The panels, most shot first; empty for an object.
+       */
+      panel_list: components["schemas"]["ArchivePanel"][]
+    }
+    /**
+     * ArchivePanel
+     * @description A panel of a mosaic: the framing, what you shot in it and how much.
+     */
+    ArchivePanel: {
+      /**
+       * Object
+       * @description The object (or objects) of its frames; null if the sky knows of none.
+       */
+      object: string | null
+      /**
+       * Ra Deg
+       * @description The centre: it tells WHICH panel, when two have the same object.
+       */
+      ra_deg: number
+      /** Dec Deg */
+      dec_deg: number
+      /** Frames */
+      frames: number
+      /** Integration S */
+      integration_s: number
+      /** Untimed */
+      untimed: number
+    }
+    /**
+     * ArchivePick
+     * @description A site or a piece of gear to narrow by: its id goes back to the route, its name on screen.
+     */
+    ArchivePick: {
+      /** Id */
+      id: number
+      /** Name */
+      name: string
+    }
+    /**
+     * ArchiveProduction
+     * @description The row shot with one optics and one camera: a production, until projects exist.
+     */
+    ArchiveProduction: {
+      /**
+       * Optics
+       * @description The optics' name; null if the frames do not say it.
+       */
+      optics: string | null
+      /**
+       * Camera
+       * @description The camera's name; null if the frames do not say it.
+       */
+      camera: string | null
+      /**
+       * Frames
+       * @description Its frames, rewritten copies excluded.
+       */
+      frames: number
+      /**
+       * Integration S
+       * @description The sum of its frames' time, in seconds.
+       */
+      integration_s: number
+      /**
+       * Untimed
+       * @description How many of its frames do not say how long they lasted.
+       */
+      untimed: number
+      /**
+       * Filters
+       * @description The filters of these frames, in the one filter order; empty if unknown.
+       */
+      filters: components["schemas"]["FilterUsed"][]
+    }
+    /**
+     * ArchiveTotals
+     * @description What the whole archive holds: it does not depend on how many rows are being looked at.
+     */
+    ArchiveTotals: {
+      /** Nights */
+      nights: number
+      /** Frames */
+      frames: number
+      /** Integration S */
+      integration_s: number
+      /** Untimed */
+      untimed: number
+      /**
+       * Objects
+       * @description The objects named so far, in a night or still waiting for one.
+       */
+      objects: number
+    }
+    /**
+     * BackupCounts
+     * @description How many of each thing the file carries, as the offer says them.
+     */
+    BackupCounts: {
+      /** Written At */
+      written_at: string | null
+      /** Sites */
+      sites: number
+      /** Folders */
+      folders: number
+      /** Instruments */
+      instruments: number
+      /** Filters */
+      filters: number
+      /** Answers */
+      answers: number
+    }
+    /**
+     * BackupStatus
+     * @description The backup next to the database (ADR 0017) and whether to offer it.
+     *
+     *     `offer` is `found` only on a database just created with a file beside it, until it is
+     *     restored or declined; `none` otherwise. `last` is the file as it is now, `null` without one;
+     *     `unreadable` is true when a file is there but is not a backup this app reads.
+     */
+    BackupStatus: {
+      /**
+       * Offer
+       * @enum {string}
+       */
+      offer: "found" | "none"
+      last: components["schemas"]["BackupCounts"] | null
+      /** Unreadable */
+      unreadable: boolean
+      /** Path */
+      path: string
+    }
+    /** BandIn */
+    BandIn: {
+      /**
+       * Band
+       * @enum {string}
+       */
+      band: "L" | "R" | "G" | "B" | "HA" | "HB" | "OIII" | "SII"
+      /** Width Nm */
+      width_nm?: number | null
+    }
+    /** BandOut */
+    BandOut: {
+      /**
+       * Band
+       * @enum {string}
+       */
+      band: "L" | "R" | "G" | "B" | "HA" | "HB" | "OIII" | "SII"
+      /**
+       * Width Nm
+       * @description Optional: a light-pollution filter does not declare it.
+       */
+      width_nm: number | null
+    }
+    /** BrowseOut */
+    BrowseOut: {
+      /** Path */
+      path: string
+      /**
+       * Parent
+       * @description None at the data root: there is no going higher.
+       */
+      parent: string | null
+      /**
+       * Folders
+       * @description The visible subfolders, sorted.
+       */
+      folders: components["schemas"]["FolderEntry"][]
+    }
+    /**
+     * ChartOut
+     * @description The span the night chart draws and the instants it marks.
+     */
+    ChartOut: {
+      /**
+       * Starts At
+       * @description Half an hour before the sunset's hour.
+       */
+      starts_at: string
+      /**
+       * Ends At
+       * @description Half an hour after the hour nearest the sunrise.
+       */
+      ends_at: string
+      /**
+       * Dark From
+       * @description Where astronomical dark starts; `None` without it.
+       */
+      dark_from: string | null
+      /**
+       * Dark Until
+       * @description Where astronomical dark ends; `None` without it.
+       */
+      dark_until: string | null
+    }
+    /**
+     * CoordinatesEdit
+     * @description The answer about a place: "the frames taken at these coordinates are of this site".
+     *
+     *     The site id is sent because it is what the page holds after a click; what gets written is the
+     *     **name**, which is the key that survives.
+     */
+    CoordinatesEdit: {
+      /**
+       * Key
+       * @description The coordinates read from the page, never a row number.
+       */
+      key: string
+      /** Site Id */
+      site_id: number
+    }
+    /** FileNotRead */
+    FileNotRead: {
+      /**
+       * File
+       * @description Relative to the root; a name that is not UTF-8 carries `?` in place of the bad bytes.
+       */
+      file: string
+      /**
+       * Reason
+       * @enum {string}
+       */
+      reason: "file_unreadable" | "header_unreadable" | "name_not_utf8" | "internal_error"
+    }
+    /**
+     * FilterCandidate
+     * @description One of your filters, among which an answer is chosen: one with a known band.
+     */
+    FilterCandidate: {
+      /** Id */
+      id: number
+      /** Name */
+      name: string
+      /** Passband */
+      passband: string
+    }
+    /**
+     * FilterCorrection
+     * @description The card of a filter, or "it is the same filter as" (`merge_into`).
+     */
+    FilterCorrection: {
+      /** Name */
+      name?: string | null
+      /** Brand */
+      brand?: string | null
+      /** Model */
+      model?: string | null
+      /** Catalog Id */
+      catalog_id?: string | null
+      /** Bands */
+      bands?: components["schemas"]["BandIn"][] | null
+      /** Merge Into */
+      merge_into?: number | null
+    }
+    /** FilterEdit */
+    FilterEdit: {
+      /** Name */
+      name?: string | null
+      /** Brand */
+      brand?: string | null
+      /** Model */
+      model?: string | null
+      /** Catalog Id */
+      catalog_id?: string | null
+      /** Bands */
+      bands?: components["schemas"]["BandIn"][] | null
+      /** Merge Into */
+      merge_into?: number | null
+      /** Id */
+      id: number
+      /** Is None */
+      is_none?: boolean | null
+    }
+    /** FilterModelList */
+    FilterModelList: {
+      /** Items */
+      items: components["schemas"]["FilterModelOut"][]
+    }
+    /**
+     * FilterModelOut
+     * @description A filter ON THE MARKET, as it reads in the drop-down when a new filter is declared.
+     *
+     *     It is not a filter of the archive: it is an entry of the vocabulary the app carries inside. The
+     *     **aliases** stay out -- they serve to recognise a spelling in the header, and on screen they
+     *     would be noise. When one is picked from here, `catalog_id` remembers which entry it was.
+     */
+    FilterModelOut: {
+      /** Id */
+      id: string
+      /** Brand */
+      brand: string
+      /** Name */
+      name: string
+      /** Passband */
+      passband: string
+    }
+    /**
+     * FilterNew
+     * @description A filter you write: the name, and the band it lets through -- it is what unblocks the
+     *     frames. Brand and model if you want.
+     */
+    FilterNew: {
+      /** Name */
+      name: string
+      /** Bands */
+      bands: components["schemas"]["BandIn"][]
+      /** Brand */
+      brand?: string | null
+      /** Model */
+      model?: string | null
+    }
+    /**
+     * FilterOnPage
+     * @description An owned filter, with the band it lets through.
+     */
+    FilterOnPage: {
+      /** Id */
+      id: number
+      /** Name */
+      name: string
+      /** Brand */
+      brand: string | null
+      /** Model */
+      model: string | null
+      /** Bands */
+      bands: components["schemas"]["BandOut"][]
+      /**
+       * Frames
+       * @description Null until it is counted (`counted`). The same holds for `integration_s`, `untimed` and `nights`.
+       */
+      frames: number | null
+      /** Integration S */
+      integration_s: number | null
+      /** Untimed */
+      untimed: number | null
+      /** Nights */
+      nights: number | null
+      /** Objects */
+      objects: components["schemas"]["GearObject"][]
+      /** Counted */
+      counted: boolean
+      /**
+       * Mergeable Into
+       * @description The filters it can be merged into: only those the spine accepts.
+       */
+      mergeable_into: number[]
+    }
+    /** FilterOut */
+    FilterOut: {
+      /** Id */
+      id: number
+      /** Name */
+      name: string
+      /** Brand */
+      brand: string | null
+      /** Model */
+      model: string | null
+      /** Catalog Id */
+      catalog_id: string | null
+      /** Passband */
+      passband: string
+      /** Is None */
+      is_none: boolean
+      /** Bands */
+      bands: components["schemas"]["BandOut"][]
+      /** Frames */
+      frames: number
+    }
+    /**
+     * FilterUsed
+     * @description A filter you shot something with, with the time given to it.
+     *
+     *     Born here, where the Nights asked for it first, and reused by the Archive: the place that
+     *     counts them is a single one, and two shapes would state the same fact twice.
+     */
+    FilterUsed: {
+      /**
+       * Name
+       * @description The name you gave it, or the one the files carried.
+       */
+      name: string
+      /**
+       * Passband
+       * @description The canonical passband (`vocab/filters`): it is what gives the colour.
+       */
+      passband: string
+      /** Frames */
+      frames: number
+      /** Integration S */
+      integration_s: number
+    }
+    /** FolderCreate */
+    FolderCreate: {
+      /** Root Path */
+      root_path: string
+      /** Name */
+      name?: string | null
+    }
+    /** FolderEntry */
+    FolderEntry: {
+      /** Name */
+      name: string
+      /**
+       * Path
+       * @description The path to register, as it is.
+       */
+      path: string
+    }
+    /** FolderList */
+    FolderList: {
+      /** Items */
+      items: components["schemas"]["FolderOut"][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+    }
+    /** FolderMove */
+    FolderMove: {
+      /** Root Path */
+      root_path: string
+    }
+    /** FolderOut */
+    FolderOut: {
+      /** Id */
+      id: number
+      /** Name */
+      name: string | null
+      /** Root Path */
+      root_path: string
+      /** Created At */
+      created_at: string
+      /** Reachable */
+      reachable: boolean
+      /**
+       * Frames
+       * @description Positions present: comes from the database, so it holds with the disk detached too.
+       */
+      frames: number
+      /**
+       * Reactivated
+       * @default false
+       */
+      reactivated: boolean
+    }
+    /**
+     * FolderSkipped
+     * @description A folder the toolbar action did not read, with its reason: `root_unreachable` (the
+     *     detached disk, the NAS switched off) or `scan_running` (another run is already reading it).
+     *
+     *     It carries the **path** and not just the row id: that is what the user recognises, and the
+     *     scan route already holds it for its pre-check. Without it the page would have to fetch the
+     *     folder list and stitch two answers together right at the moment of the failure -- and for a
+     *     user with more than a hundred folders they would not even match up.
+     */
+    FolderSkipped: {
+      /** Folder Id */
+      folder_id: number
+      /** Root Path */
+      root_path: string
+      /**
+       * Reason
+       * @enum {string}
+       */
+      reason: "root_unreachable" | "scan_running"
+    }
+    /**
+     * FoundNight
+     * @description A night, found by date or by an object shot in it; its counts are the whole night's.
+     */
+    FoundNight: {
+      /** Id */
+      id: number
+      /** Night Date */
+      night_date: string
+      /** Site */
+      site: string
+      /** Frames */
+      frames: number
+      /** Integration S */
+      integration_s: number
+      /** Untimed */
+      untimed: number
+    }
+    /**
+     * FoundObject
+     * @description An Archive row: an object, or a confirmed mosaic (`panels`).
+     */
+    FoundObject: {
+      /**
+       * Key
+       * @description The Archive row's key: `/archive?key=` narrows to it alone.
+       */
+      key: string
+      /**
+       * Name
+       * @description As the Archive names it.
+       */
+      name: string | null
+      /**
+       * Common Name
+       * @description The catalog's common name, when it is not already the name.
+       */
+      common_name: string | null
+      /** Frames */
+      frames: number
+      /** Integration S */
+      integration_s: number
+      /** Untimed */
+      untimed: number
+      /**
+       * Panels
+       * @description A mosaic's panels; null for an object.
+       */
+      panels: number | null
+    }
+    /**
+     * FoundPiece
+     * @description A piece or a filter you own. Hours not counted yet (`counted` false) or that the files do
+     *     not tell (`no_hours`) arrive null, never zero.
+     */
+    FoundPiece: {
+      /** Id */
+      id: number
+      /** Kind */
+      kind:
+        | (
+            | "optics"
+            | "camera"
+            | "mount"
+            | "reducer"
+            | "filter_wheel"
+            | "guide_scope"
+            | "guide_camera"
+            | "focuser"
+          )
+        | "filter"
+      /** Name */
+      name: string
+      /** Counted */
+      counted: boolean
+      /** Frames */
+      frames: number | null
+      /** Integration S */
+      integration_s: number | null
+      /** Untimed */
+      untimed: number | null
+      /** No Hours */
+      no_hours: ("files_silent" | "no_rig") | null
+    }
+    /** FoundSite */
+    FoundSite: {
+      /** Id */
+      id: number
+      /** Name */
+      name: string
+      /** Nights */
+      nights: number
+    }
+    /** Found[FoundNight] */
+    Found_FoundNight_: {
+      /** Items */
+      items: components["schemas"]["FoundNight"][]
+      /**
+       * Total
+       * @description How many in all: `items` are the first few.
+       */
+      total: number
+    }
+    /** Found[FoundObject] */
+    Found_FoundObject_: {
+      /** Items */
+      items: components["schemas"]["FoundObject"][]
+      /**
+       * Total
+       * @description How many in all: `items` are the first few.
+       */
+      total: number
+    }
+    /** Found[FoundPiece] */
+    Found_FoundPiece_: {
+      /** Items */
+      items: components["schemas"]["FoundPiece"][]
+      /**
+       * Total
+       * @description How many in all: `items` are the first few.
+       */
+      total: number
+    }
+    /** Found[FoundSite] */
+    Found_FoundSite_: {
+      /** Items */
+      items: components["schemas"]["FoundSite"][]
+      /**
+       * Total
+       * @description How many in all: `items` are the first few.
+       */
+      total: number
+    }
+    /**
+     * GearAnswer
+     * @description What the user said about a signature: the **names** of the pieces, never row numbers. An
+     *     empty field is a part not answered, not a part that was not there.
+     */
+    GearAnswer: {
+      /** Camera */
+      camera: string | null
+      /** Optics */
+      optics: string | null
+      /** Focal Mm */
+      focal_mm: number | null
+      /**
+       * Filter
+       * @description Colour is written on the camera's card, not here.
+       */
+      filter: ("no_filter" | "filter") | null
+      /**
+       * Filter Id
+       * @description With "one of yours", which; empty if that filter is no longer there.
+       */
+      filter_id: number | null
+    }
+    /**
+     * GearEdit
+     * @description The answer about a signature, the parts it asks: the camera -- a rig among those the app
+     *     knows (`rig_id`, what the page holds after a click) **or** the written camera with its focal
+     *     length, plus the optics if needed --, the optics alone, and what sat in front (`filter`, with
+     *     `filter_id` for "one of yours"). What is written is always **names**: the pieces come into
+     *     being from them as from a header. A part not sent keeps its earlier answer.
+     */
+    GearEdit: {
+      /**
+       * Key
+       * @description The signature read from the page.
+       */
+      key: string
+      /** Rig Id */
+      rig_id?: number | null
+      /**
+       * Camera
+       * @description A name of only spaces is not a name.
+       */
+      camera?: string | null
+      /** Optics */
+      optics?: string | null
+      /**
+       * Focal Mm
+       * @description Unknown focal length, never invented: no zeros.
+       */
+      focal_mm?: number | null
+      /** Filter */
+      filter?: ("color" | "no_filter" | "filter") | null
+      /** Filter Id */
+      filter_id?: number | null
+    }
+    /** GearList */
+    GearList: {
+      /** Instruments */
+      instruments: components["schemas"]["InstrumentOnPage"][]
+      /** Rigs */
+      rigs: components["schemas"]["RigOnPage"][]
+      /** Filters */
+      filters: components["schemas"]["FilterOnPage"][]
+      /**
+       * Cards
+       * @description Which fields the card of each kind asks for, in reading order. It comes **per kind and not per piece** because it also serves to write one of a kind you do not own yet: there, there is no piece to copy them from. The backend decides them, and the page keeps no second list.
+       */
+      cards: {
+        [key: string]: (
+          | "brand"
+          | "model"
+          | "camera_type"
+          | "pixel_size_um"
+          | "aperture_mm"
+          | "focal_mm"
+          | "reducer_factor"
+          | "weight_kg"
+          | "payload_kg"
+          | "slots"
+          | "notes"
+        )[]
+      }
+    }
+    /**
+     * GearObject
+     * @description An object taken with that piece, and how much it weighed in.
+     */
+    GearObject: {
+      /** Key */
+      key: string
+      /** Name */
+      name: string | null
+      /** Frames */
+      frames: number
+      /** Integration S */
+      integration_s: number
+    }
+    /**
+     * GearSignature
+     * @description The frames whose files leave out camera, optics or filter, one card per **header
+     *     signature**: the spelling of camera and telescope, the focal, the sensor -- never the night or
+     *     the folder. `asks_*` say which parts the card asks: what the night or the camera's colour
+     *     settles is not asked. `optics` and `focal_mm` are what the frames already say, when they say a
+     *     single thing; `focal_suggested` the native focal of that optics, where the frames carry none.
+     *     An answered card stays on the page because one must be able to change one's mind.
+     */
+    GearSignature: {
+      /**
+       * Key
+       * @description The signature: one answers with it, and it does not move.
+       */
+      key: string
+      /**
+       * Camera
+       * @description `INSTRUME` as written in the file.
+       */
+      camera: string | null
+      /**
+       * Telescope
+       * @description `TELESCOP` as written in the file.
+       */
+      telescope: string | null
+      /** Width Px */
+      width_px: number | null
+      /** Height Px */
+      height_px: number | null
+      /** Pixel Um */
+      pixel_um: number | null
+      /** Frames */
+      frames: number
+      /** Asks Camera */
+      asks_camera: boolean
+      /** Asks Optics */
+      asks_optics: boolean
+      /** Asks Filter */
+      asks_filter: boolean
+      /** Optics */
+      optics: string | null
+      /** Focal Mm */
+      focal_mm: number | null
+      /** Focal Suggested */
+      focal_suggested: number | null
+      answer: components["schemas"]["GearAnswer"] | null
+      /**
+       * Complete
+       * @description Every part asked has its answer: it no longer counts.
+       */
+      complete: boolean
+      subjects: components["schemas"]["Subjects"]
+    }
+    /**
+     * GearWritten
+     * @description What happened while writing. `requeued` is not zero when the answer changes the meaning of
+     *     some frame -- the colour of a camera does -- and then the work restarts by itself.
+     */
+    GearWritten: {
+      /** Id */
+      id: number
+      /** Requeued */
+      requeued: number
+      /** Run Started */
+      run_started: boolean
+    }
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components["schemas"]["ValidationError"][]
+    }
+    /** Health */
+    Health: {
+      /**
+       * Status
+       * @constant
+       */
+      status: "ok"
+      /** Api Version */
+      api_version: string
+      /** Schema Tables */
+      schema_tables: number
+      /** Data Root */
+      data_root: string | null
+      /** Catalog Entries */
+      catalog_entries: number
+      /** Catalog Version */
+      catalog_version: string | null
+    }
+    /**
+     * InstrumentCorrection
+     * @description The card of a piece that already exists, or the merge with another (`merge_into`, "it is the
+     *     same piece as", and then the rest does not count). Sending the name is renaming; not sending it
+     *     leaves the one there is. Which piece it is, the address says.
+     */
+    InstrumentCorrection: {
+      /** Brand */
+      brand?: string | null
+      /** Model */
+      model?: string | null
+      /** Camera Type */
+      camera_type?: ("mono" | "color") | null
+      /** Pixel Size Um */
+      pixel_size_um?: number | null
+      /** Aperture Mm */
+      aperture_mm?: number | null
+      /** Focal Mm */
+      focal_mm?: number | null
+      /** Reducer Factor */
+      reducer_factor?: number | null
+      /** Weight Kg */
+      weight_kg?: number | null
+      /** Payload Kg */
+      payload_kg?: number | null
+      /**
+       * Slots
+       * @description A count: zero is not "I don't know", it is no wheel.
+       */
+      slots?: number | null
+      /** Backfocus Mm */
+      backfocus_mm?: number | null
+      /** Notes */
+      notes?: string | null
+      /** Name */
+      name?: string | null
+      /** Merge Into */
+      merge_into?: number | null
+    }
+    /**
+     * InstrumentNew
+     * @description A piece you write. Kind and name are what make it exist -- a piece is its name within its
+     *     kind -- and the card comes with it: creating and then correcting would be two actions for a
+     *     single thing, and between the two the piece would half exist.
+     */
+    InstrumentNew: {
+      /** Brand */
+      brand?: string | null
+      /** Model */
+      model?: string | null
+      /** Camera Type */
+      camera_type?: ("mono" | "color") | null
+      /** Pixel Size Um */
+      pixel_size_um?: number | null
+      /** Aperture Mm */
+      aperture_mm?: number | null
+      /** Focal Mm */
+      focal_mm?: number | null
+      /** Reducer Factor */
+      reducer_factor?: number | null
+      /** Weight Kg */
+      weight_kg?: number | null
+      /** Payload Kg */
+      payload_kg?: number | null
+      /**
+       * Slots
+       * @description A count: zero is not "I don't know", it is no wheel.
+       */
+      slots?: number | null
+      /** Backfocus Mm */
+      backfocus_mm?: number | null
+      /** Notes */
+      notes?: string | null
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind:
+        | "optics"
+        | "camera"
+        | "mount"
+        | "reducer"
+        | "filter_wheel"
+        | "guide_scope"
+        | "guide_camera"
+        | "focuser"
+      /**
+       * Name
+       * @description Required here: without a name the piece is nobody.
+       */
+      name: string
+    }
+    /**
+     * InstrumentOnPage
+     * @description A piece of the gear: its card -- the empty fields are those the header cannot tell and the
+     *     user fills in -- plus how much it served and what you took with it.
+     */
+    InstrumentOnPage: {
+      /** Id */
+      id: number
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind:
+        | "optics"
+        | "camera"
+        | "mount"
+        | "reducer"
+        | "filter_wheel"
+        | "guide_scope"
+        | "guide_camera"
+        | "focuser"
+      /** Name */
+      name: string
+      /** Brand */
+      brand: string | null
+      /** Model */
+      model: string | null
+      /** Camera Type */
+      camera_type: ("mono" | "color") | null
+      /** Pixel Size Um */
+      pixel_size_um: number | null
+      /**
+       * Pixel From Sky Um
+       * @description Derived from the sky when the files do not say it: in a field of its own, so that whoever shows it says it is derived and does not confuse it with the one from the files or the user.
+       */
+      pixel_from_sky_um: number | null
+      /** Aperture Mm */
+      aperture_mm: number | null
+      /** Focal Mm */
+      focal_mm: number | null
+      /** Reducer Factor */
+      reducer_factor: number | null
+      /** Weight Kg */
+      weight_kg: number | null
+      /** Payload Kg */
+      payload_kg: number | null
+      /** Slots */
+      slots: number | null
+      /** Backfocus Mm */
+      backfocus_mm: number | null
+      /** Notes */
+      notes: string | null
+      /**
+       * Detected
+       * @description Detected from the files, or declared by you.
+       */
+      detected: boolean
+      /**
+       * Mergeable Into
+       * @description The pieces it can be merged into: only those the spine accepts.
+       */
+      mergeable_into: number[]
+      /**
+       * Frames
+       * @description Null where the link with the frames does not exist: a kind that no frame in **this archive** names does not have zero hours, it has hours the app does not know -- and whoever shows the row says so. The spine decides it, not this shape. The same holds for `integration_s`, `untimed` and `nights`.
+       */
+      frames: number | null
+      /** Integration S */
+      integration_s: number | null
+      /** Untimed */
+      untimed: number | null
+      /** Nights */
+      nights: number | null
+      /** Objects */
+      objects: components["schemas"]["GearObject"][]
+      /**
+       * Counted
+       * @description False for a piece born mid-run, which the counter has not counted yet: "not counted yet" is not "cannot be known", and the page tells them apart.
+       */
+      counted: boolean
+      /**
+       * No Hours
+       * @description Why a counted piece has no hours to show: the files do not name that kind, or it is a mount, reducer or guide scope no rig carries yet. `None` when the hours are there.
+       */
+      no_hours: ("files_silent" | "no_rig") | null
+    }
+    /**
+     * LookalikeEdit
+     * @description The answer to "are they the same piece?": yes merges `id` into `into_id`, no says they are
+     *     two pieces and the proposal does not come back.
+     */
+    LookalikeEdit: {
+      /** Id */
+      id: number
+      /** Into Id */
+      into_id: number
+      /** Same */
+      same: boolean
+    }
+    /**
+     * LookalikeOut
+     * @description Two spellings that look very much like the same camera: "are they the same piece?". Yes
+     *     merges `id` into `into_id`, no stops proposing it.
+     */
+    LookalikeOut: {
+      /** Id */
+      id: number
+      /** Name */
+      name: string
+      /** Frames */
+      frames: number
+      /** Into Id */
+      into_id: number
+      /** Into Name */
+      into_name: string
+      /** Into Frames */
+      into_frames: number
+    }
+    /** MeteoblueKeyIn */
+    MeteoblueKeyIn: {
+      /** Key */
+      key: string | null
+    }
+    /**
+     * MeteoblueKeyOut
+     * @description How it went: saved (`ok`), removed (`removed`), or why not; and the hint of the key that is
+     *     there now.
+     */
+    MeteoblueKeyOut: {
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "ok" | "removed" | "refused" | "unreachable" | "bad_answer"
+      /** Hint */
+      hint: string | null
+    }
+    /** MoonCalendarNightOut */
+    MoonCalendarNightOut: {
+      /** Date */
+      date: string
+      /**
+       * Phase Key
+       * @enum {string}
+       */
+      phase_key:
+        | "new"
+        | "waxing_crescent"
+        | "first_quarter"
+        | "waxing_gibbous"
+        | "full"
+        | "waning_gibbous"
+        | "last_quarter"
+        | "waning_crescent"
+      /** Illumination Pct */
+      illumination_pct: number
+      /** Moonless Dark S */
+      moonless_dark_s: number
+      /** Event */
+      event: ("new" | "full") | null
+      /**
+       * Lit Side
+       * @description As `MoonOut.lit_side`, for the day's disc.
+       * @enum {string}
+       */
+      lit_side: "left" | "right"
+      /**
+       * Good
+       * @description Good for broadband by the two thresholds in the settings.
+       */
+      good: boolean
+    }
+    /**
+     * MoonCalendarOut
+     * @description This month and the next as the background round wrote them: empty `nights` until it has.
+     */
+    MoonCalendarOut: {
+      /** Today */
+      today: string | null
+      /** Max Pct */
+      max_pct: number
+      /** Min Dark H */
+      min_dark_h: number
+      /** Nights */
+      nights: components["schemas"]["MoonCalendarNightOut"][]
+    }
+    /** MoonOut */
+    MoonOut: {
+      /**
+       * Phase Key
+       * @enum {string}
+       */
+      phase_key:
+        | "new"
+        | "waxing_crescent"
+        | "first_quarter"
+        | "waxing_gibbous"
+        | "full"
+        | "waning_gibbous"
+        | "last_quarter"
+        | "waning_crescent"
+      /** Illumination Pct */
+      illumination_pct: number
+      /**
+       * Rise
+       * @description ISO instant with its time zone. `None` when the crossing does not happen within the night, as above the polar circle, where a written time would be invented.
+       */
+      rise: string | null
+      /**
+       * Set
+       * @description ISO instant with its time zone; `None` as for `rise`.
+       */
+      set: string | null
+      /**
+       * Rise Compass
+       * @description Where it rises, on sixteen points; `None` without a rise.
+       */
+      rise_compass?:
+        | (
+            | "N"
+            | "NNE"
+            | "NE"
+            | "ENE"
+            | "E"
+            | "ESE"
+            | "SE"
+            | "SSE"
+            | "S"
+            | "SSW"
+            | "SW"
+            | "WSW"
+            | "W"
+            | "WNW"
+            | "NW"
+            | "NNW"
+          )
+        | null
+      /**
+       * Age Days
+       * @description Whole days since new Moon, at midnight.
+       * @default 0
+       */
+      age_days: number
+      /**
+       * Distance Km
+       * @description Centre to centre at midnight, rounded to a hundred kilometres.
+       * @default 0
+       */
+      distance_km: number
+      /**
+       * Next New
+       * @description The night (`YYYY-MM-DD`) of the next new Moon from tonight, from the written calendar; `None` until the background round has written it.
+       */
+      next_new?: string | null
+      /**
+       * Next Full
+       * @description As `next_new`, for the full Moon.
+       */
+      next_full?: string | null
+      /**
+       * Lit Side
+       * @description Which side the lit limb is seen on **from this site**: it depends on the phase and on the hemisphere, since a crescent is lit on the right in the north and on the left in Australia. The backend says it because it knows both: deducing it while drawing would put a computation in the layout, and half the world would see the Moon mirrored.
+       * @enum {string}
+       */
+      lit_side: "left" | "right"
+      /** @description The highest point of the night. **Never absent**, not even without rise and set times: a Moon that does not rise still climbs, below the horizon, and how little it climbs is the answer. */
+      highest: components["schemas"]["SkyPointOut"]
+      /**
+       * Track
+       * @description The altitude curve along the night, for whoever draws it. The first and last points are the two ends of the night: a chart that closed earlier would lose the last half hour.
+       */
+      track: components["schemas"]["MoonPointOut"][]
+      /**
+       * Ceiling Deg
+       * @description How high the Moon can get **from this site**, never more: it is the top edge of the chart. It depends on the latitude and not on the night, so the scale never changes at one place and two nights compare at a glance. It arrives already rounded up to a multiple of fifteen, because that is the number on the tick mark: rounding it up on screen would be a computation in the layout.
+       */
+      ceiling_deg: number
+    }
+    /** MoonPointOut */
+    MoonPointOut: {
+      /** At */
+      at: string
+      /** Altitude Deg */
+      altitude_deg: number
+      /**
+       * Moonless Dark Left S
+       * @description From this instant to the window's end, how long the sky stays astronomically dark with the Moon down: the chart's reader writes it under the pointer.
+       */
+      moonless_dark_left_s: number
+    }
+    /**
+     * MoonThatNight
+     * @description Which moon there was: the phase and how lit it was. **Computed**, not stored.
+     */
+    MoonThatNight: {
+      /**
+       * Phase Key
+       * @enum {string}
+       */
+      phase_key:
+        | "new"
+        | "waxing_crescent"
+        | "first_quarter"
+        | "waxing_gibbous"
+        | "full"
+        | "waning_gibbous"
+        | "last_quarter"
+        | "waning_crescent"
+      /** Illumination Pct */
+      illumination_pct: number
+      /**
+       * Lit Side
+       * @description Which side of the disc is lit, from the phase and the site's hemisphere.
+       * @enum {string}
+       */
+      lit_side: "left" | "right"
+    }
+    /**
+     * MosaicCandidate
+     * @description A region taken in **side-by-side panels**, as the page proposes it: how many panels, how many
+     *     frames and which subjects it touches -- often more than one, because each panel frames a
+     *     different part of the complex and the app identifies them as different objects.
+     *
+     *     One answers with the **key** of the mosaic, which does not change when the camera changes. An
+     *     answered group stays on the page: one must be able to change one's mind.
+     */
+    MosaicCandidate: {
+      /**
+       * Key
+       * @description What one answers with.
+       */
+      key: string
+      /**
+       * Ra Deg
+       * @description The centre of the mosaic: on screen it tells which, if two have the same name.
+       */
+      ra_deg: number
+      /** Dec Deg */
+      dec_deg: number
+      /**
+       * Object
+       * @description The subjects it touches, with their names, in alphabetical order.
+       */
+      object: string
+      /** Panels */
+      panels: number
+      /** Frames */
+      frames: number
+      /**
+       * Integration S
+       * @description The sum of the panels' time; on screen it reads in hours.
+       */
+      integration_s: number
+      /**
+       * Untimed
+       * @description How many of those frames do not tell their time: they are not worth zero, they are counted here.
+       */
+      untimed: number
+      /** Answer */
+      answer: ("yes" | "no") | null
+      /**
+       * Answer Name
+       * @description What the mosaic is of, as the user said it; only with yes.
+       */
+      answer_name: string | null
+      /**
+       * Names
+       * @description The subjects of `object`, one per entry, and the proposal: the suggestions.
+       */
+      names: string[]
+      /**
+       * Proposed
+       * @description The catalog entry at the centre: the field arrives filled in with it.
+       */
+      proposed: string
+    }
+    /**
+     * MosaicEdit
+     * @description The answer about a proposed mosaic: yes, those panels are a mosaic (`yes`), or no.
+     *
+     *     The **key** of the mosaic read from the page is sent.
+     */
+    MosaicEdit: {
+      /** Key */
+      key: string
+      /**
+       * Answer
+       * @enum {string}
+       */
+      answer: "yes" | "no"
+      /**
+       * Name
+       * @description What the mosaic is of: with yes it is always there, with no never.
+       */
+      name?: string | null
+    }
+    /**
+     * MoveCheck
+     * @description Whether the probed place is a registered folder moved there.
+     * @enum {string}
+     */
+    MoveCheck: "found" | "none" | "place_unreachable" | "out_of_time"
+    /** MovedFrom */
+    MovedFrom: {
+      /** Id */
+      id: number
+      /** Root Path */
+      root_path: string
+    }
+    /**
+     * Night
+     * @description A row: **one night**, with what you did in it.
+     */
+    Night: {
+      /**
+       * Id
+       * @description The night's stable id.
+       */
+      id: number
+      /**
+       * Night Date
+       * @description The date of the night, in the site's time zone; on screen it reads as a date.
+       */
+      night_date: string
+      /**
+       * Site
+       * @description From where: two sites on the same date are two nights, and the row must say so.
+       */
+      site: string
+      /**
+       * Site Source
+       * @description `declared` if you said it, `detected` if the app derived it.
+       */
+      site_source: string
+      /**
+       * Frames
+       * @description How many frames, rewritten copies excluded.
+       */
+      frames: number
+      /**
+       * Integration S
+       * @description The sum of the frames' time, in seconds.
+       */
+      integration_s: number
+      /**
+       * Untimed
+       * @description How many do not say how long they lasted: they do not count as zero.
+       */
+      untimed: number
+      /** Objects */
+      objects: components["schemas"]["NightObject"][]
+      /**
+       * Filters
+       * @description In the one filter order of the app: the order the page shows them in.
+       */
+      filters: components["schemas"]["FilterUsed"][]
+      /** @description Null when the site's time zone is not recognised: without a time zone there is no midnight, and the row stays silent instead of describing the sky of another place. */
+      moon: components["schemas"]["MoonThatNight"] | null
+      weather: components["schemas"]["NightWeather"]
+    }
+    /** NightList */
+    NightList: {
+      /** Items */
+      items: components["schemas"]["Night"][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+      totals: components["schemas"]["ArchiveTotals"]
+      /** Waiting */
+      waiting: components["schemas"]["WaitingPoses"][]
+      /**
+       * Waiting Frames
+       * @description The frames of `waiting` together, except those of `review`: To confirm counts them already.
+       */
+      waiting_frames: number
+      /**
+       * Still Reading
+       * @description How many frames the spine still has to work through: work, not a question.
+       */
+      still_reading: number
+      /**
+       * Reading Done Pct
+       * @description How far that work has gone, 0-99, rounded down; null when nothing is left.
+       */
+      reading_done_pct: number | null
+    }
+    /**
+     * NightObject
+     * @description An object shot during that night.
+     */
+    NightObject: {
+      /**
+       * Key
+       * @description The stable key, the same as the Archive's.
+       */
+      key: string
+      /** Name */
+      name: string | null
+      /** Frames */
+      frames: number
+      /** Integration S */
+      integration_s: number
+      /**
+       * Untimed
+       * @description Its frames that do not say how long: they are not zero.
+       */
+      untimed: number
+      /**
+       * Bar Pct
+       * @description Its hours as a share of the night's longest object, 0-100; at least 2 when it has any time, so a bar never vanishes; 0 without time.
+       */
+      bar_pct: number
+    }
+    /**
+     * NightWeather
+     * @description The actual weather of that night, from the archive: `ok` with its sky; `waiting` until it
+     *     has arrived (a young night waits for the reanalysis); `unknown` if the site's time zone is not
+     *     recognised.
+     */
+    NightWeather: {
+      /** Verdict */
+      verdict: ("go" | "marginal" | "nogo") | null
+      /** Cloud Total Pct */
+      cloud_total_pct: number | null
+      /** Usable Hours */
+      usable_hours: number | null
+      /** Window */
+      window: ("dark" | "sun_down") | null
+      /** Window Hours */
+      window_hours: number | null
+      /**
+       * State
+       * @enum {string}
+       */
+      state: "ok" | "waiting" | "unknown"
+      /**
+       * Arrives On
+       * @description `waiting` on a young night: the date (site zone) the reanalysis is asked. Null otherwise, also when it is due and only the service's answer is missing.
+       */
+      arrives_on: string | null
+    }
+    /**
+     * ObjectAnswer
+     * @description What the user said on a card: a catalog object (`value` is the slug), a written name, or "it
+     *     is not an object" (`value` empty). `name` is how the object shows: the entry's, or the written
+     *     one.
+     */
+    ObjectAnswer: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "catalog" | "name" | "none"
+      /** Value */
+      value: string | null
+      /** Name */
+      name: string | null
+    }
+    /**
+     * ObjectCandidate
+     * @description An entry the sky found in the field of this object: it is what one clicks to answer. The
+     *     identification writes it, and the page reads it.
+     */
+    ObjectCandidate: {
+      /** Slug */
+      slug: string
+      /** Name */
+      name: string
+      /** Common Name */
+      common_name: string | null
+      /**
+       * In Frame
+       * @description None when the sky carries no sides or rotation: it was called a circle.
+       */
+      in_frame: boolean | null
+    }
+    /**
+     * ObjectCard
+     * @description One card per group of frames, asking what object they are (ADR 0014, S3): the frames
+     *     `identify` put on one object, or -- `group` -- frames the header does not name and the sky says
+     *     nothing about. Same answer for both. `name`, `slug`, `method`, `confidence` are what the app
+     *     found: empty on a `group`, and `method`/`confidence` also on frames put out as "not an object",
+     *     which no longer have an object. Asked: a group or a doubt (`low`), until answered (S4).
+     */
+    ObjectCard: {
+      /**
+       * Key
+       * @description What one answers with: `object:` and the found object's stable key, or `frames:` and the group's key.
+       */
+      key: string
+      /** Name */
+      name: string | null
+      /** Slug */
+      slug: string | null
+      /** Method */
+      method: ("coord_confirmed" | "coord_review" | "exact_name" | "historic_name" | "user") | null
+      /** Confidence */
+      confidence: ("certain" | "high" | "low" | "user") | null
+      /** @description Where and when, for frames with no name and no sky; empty otherwise. */
+      group: components["schemas"]["UnnamedGroup"] | null
+      /** Frames */
+      frames: number
+      /**
+       * Integration S
+       * @description The sum of the frames' time; on screen it reads in hours.
+       */
+      integration_s: number
+      /**
+       * Untimed
+       * @description How many of those frames do not tell their time: they are not worth zero, they are counted here.
+       */
+      untimed: number
+      /**
+       * Candidates
+       * @description What the sky found, to click: on doubts and on frames put out; zero is a card too.
+       */
+      candidates: components["schemas"]["ObjectCandidate"][]
+      /** @description An answered card stays on the page, so one can change one's mind. */
+      answer: components["schemas"]["ObjectAnswer"] | null
+    }
+    /**
+     * ObjectEdit
+     * @description The answer on an object card: a catalog slug (usually a clicked candidate), a hand-written
+     *     name, or "it is not an object".
+     */
+    ObjectEdit: {
+      /**
+       * Key
+       * @description The card's key read from the page.
+       */
+      key: string
+      /** Slug */
+      slug?: string | null
+      /** Name */
+      name?: string | null
+      /**
+       * Not An Object
+       * @default false
+       */
+      not_an_object: boolean
+    }
+    /** PathInfo */
+    PathInfo: {
+      /**
+       * Family
+       * @enum {string}
+       */
+      family: "windows" | "posix"
+      /** Data Root */
+      data_root: string | null
+    }
+    /** PathProbe */
+    PathProbe: {
+      /** Root Path */
+      root_path: string
+    }
+    /** PipelineStatus */
+    PipelineStatus: {
+      worker: components["schemas"]["WorkerSnapshot"]
+      scan: components["schemas"]["ScanProgress"] | null
+      /**
+       * Pending
+       * @description Per stage: how many frames are still missing.
+       */
+      pending: {
+        [key: string]: number
+      }
+      /**
+       * Action
+       * @description The button's verb, decided here and not in the page: start / stop / resume.
+       * @enum {string}
+       */
+      action: "start" | "stop" | "resume"
+    }
+    /**
+     * PlaceList
+     * @description The search is an ACTION, not a list from the archive: no pages, at most a handful of
+     *     candidates the service proposed.
+     */
+    PlaceList: {
+      /** Items */
+      items: components["schemas"]["PlaceOut"][]
+    }
+    /**
+     * PlaceOut
+     * @description A place found by name. It is not a site of the archive: it is a candidate, and becomes a
+     *     site only when the user creates it.
+     */
+    PlaceOut: {
+      /** Name */
+      name: string
+      /** Latitude */
+      latitude: number
+      /** Longitude */
+      longitude: number
+    }
+    /**
+     * PlanetOut
+     * @description A planet of the night chart and its altitude through the whole night window.
+     */
+    PlanetOut: {
+      /**
+       * Key
+       * @enum {string}
+       */
+      key: "saturn" | "jupiter" | "mars" | "venus"
+      /** Track */
+      track: components["schemas"]["SkyPointOut"][]
+    }
+    /** ProbeOut */
+    ProbeOut: {
+      /** Root Path */
+      root_path: string
+      /** Reachable */
+      reachable: boolean
+      /**
+       * Fits Count
+       * @description None = not looked at (the folder is unreachable); never reported as 0.
+       */
+      fits_count: number | null
+      /**
+       * Complete
+       * @description False = the count stopped at the time limit, or a subfolder did not answer: there may be more than fits_count.
+       */
+      complete: boolean | null
+      /** @description The registered folder these same files belonged to; set when moved_check is `found`. */
+      moved_from: components["schemas"]["MovedFrom"] | null
+      moved_check: components["schemas"]["MoveCheck"]
+    }
+    /** Range */
+    Range: {
+      /** Min */
+      min: number
+      /** Max */
+      max: number
+    }
+    /** RetireOut */
+    RetireOut: {
+      /** Folder Id */
+      folder_id: number
+      /** Retired */
+      retired: boolean
+      /** Kept Frames */
+      kept_frames: number
+    }
+    /** ReviewApplied */
+    ReviewApplied: {
+      /**
+       * Changed
+       * @description Answers written.
+       */
+      changed: number
+      /**
+       * Requeued
+       * @description Frames put back in the queue because the answer concerns them.
+       */
+      requeued: number
+      /**
+       * Run Started
+       * @description False if the worker was busy: the work stays in the queue.
+       */
+      run_started: boolean
+    }
+    /**
+     * ReviewApply
+     * @description All the answers together, written in a single transaction; only what is answered is
+     *     written (ADR 0014, S4).
+     *
+     *     **A field that does not exist is an error, not a slip to ignore** (`extra="forbid"`): a page
+     *     opened before a server update would send the old name, and Pydantic would discard it silently.
+     *     On the NAS it is the ordinary scenario -- a tab left open on the tablet. Better a 422 that
+     *     shows.
+     */
+    ReviewApply: {
+      /**
+       * Lookalikes
+       * @default []
+       */
+      lookalikes: components["schemas"]["LookalikeEdit"][]
+      /**
+       * Filters
+       * @default []
+       */
+      filters: components["schemas"]["FilterEdit"][]
+      /**
+       * Objects
+       * @default []
+       */
+      objects: components["schemas"]["ObjectEdit"][]
+      /**
+       * Unclear
+       * @default []
+       */
+      unclear: components["schemas"]["CoordinatesEdit"][]
+      /**
+       * Gear
+       * @default []
+       */
+      gear: components["schemas"]["GearEdit"][]
+      /**
+       * Typeless
+       * @default []
+       */
+      typeless: components["schemas"]["TypelessFolderEdit"][]
+      /**
+       * Mosaics
+       * @default []
+       */
+      mosaics: components["schemas"]["MosaicEdit"][]
+    }
+    /**
+     * ReviewOut
+     * @description The whole page in one response: it is not a paged list, it is the open questions.
+     */
+    ReviewOut: {
+      /**
+       * Lookalikes
+       * @description Two spellings that look like the same camera.
+       */
+      lookalikes: components["schemas"]["LookalikeOut"][]
+      /** Filters */
+      filters: components["schemas"]["FilterOut"][]
+      /**
+       * Rig Choices
+       * @description The rigs among which one answers a card that asks the camera.
+       */
+      rig_choices: components["schemas"]["RigChoice"][]
+      /**
+       * Objects
+       * @description The object cards to decide and the answered ones; open questions on top.
+       */
+      objects: components["schemas"]["ObjectCard"][]
+      /**
+       * Settled Objects
+       * @description How many the others are, which the app knows: they are read in pages.
+       */
+      settled_objects: number
+      /**
+       * Unclear
+       * @description The places the app asks about: empty when it does not ask.
+       */
+      unclear: components["schemas"]["UnclearCoordinates"][]
+      /**
+       * Gear
+       * @description The header signatures whose frames leave out camera, optics or filter.
+       */
+      gear: components["schemas"]["GearSignature"][]
+      /**
+       * Filter Choices
+       * @description The filters with a known band, among which one answers.
+       */
+      filter_choices: components["schemas"]["FilterCandidate"][]
+      /**
+       * Optics Choices
+       * @description The optics you own, among which one answers a card that asks the optics.
+       */
+      optics_choices: string[]
+      /**
+       * Typeless
+       * @description The folders whose frames do not tell what file they are.
+       */
+      typeless: components["schemas"]["TypelessFolder"][]
+      /**
+       * Mosaics
+       * @description The regions taken in side-by-side panels.
+       */
+      mosaics: components["schemas"]["MosaicCandidate"][]
+      /**
+       * Empty
+       * @description The archive holds no frame yet: there is nothing to ask, not nothing left.
+       */
+      empty: boolean
+      /** To Confirm */
+      to_confirm: number
+    }
+    /**
+     * RigChoice
+     * @description One of your rigs, among which one chooses which camera took some frames: only those with a
+     *     camera, because one without does not answer that part.
+     */
+    RigChoice: {
+      /** Id */
+      id: number
+      /**
+       * Name
+       * @description The one you gave it; without it, the page shows the two pieces.
+       */
+      name: string | null
+      /** Optics */
+      optics: string | null
+      /** Camera */
+      camera: string
+      /** Focal Mm */
+      focal_mm: number | null
+    }
+    /**
+     * RigNaming
+     * @description The name you give a rig: it is how it is declared.
+     */
+    RigNaming: {
+      /** Name */
+      name: string
+    }
+    /**
+     * RigNew
+     * @description A rig you write: optics and camera among your pieces, and the focal length -- without it, the
+     *     files that tell it would make a second rig come into being.
+     */
+    RigNew: {
+      /** Optics Id */
+      optics_id: number
+      /** Camera Id */
+      camera_id: number
+      /** Focal Mm */
+      focal_mm: number
+    }
+    /**
+     * RigOnPage
+     * @description A rig: how it is made, how much it served, and **how much sky it really frames**.
+     */
+    RigOnPage: {
+      /** Id */
+      id: number
+      /**
+       * Name
+       * @description The name you gave it, if you gave it one.
+       */
+      name: string | null
+      /** Optics */
+      optics: string | null
+      /** Camera */
+      camera: string | null
+      /** Focal Mm */
+      focal_mm: number | null
+      /**
+       * Frames
+       * @description Null until it is counted (`counted`): a rig born mid-run. The same holds for `integration_s`, `untimed` and `nights`.
+       */
+      frames: number | null
+      /** Integration S */
+      integration_s: number | null
+      /** Untimed */
+      untimed: number | null
+      /** Nights */
+      nights: number | null
+      /** Objects */
+      objects: components["schemas"]["GearObject"][]
+      /** Counted */
+      counted: boolean
+      /**
+       * Scale Arcsec Px
+       * @description Measured on the solved frames, median: null until the solver has solved one. Named as in the schema (`frame_wcs`), which is where they come from. The same holds for `width_deg` and `height_deg`.
+       */
+      scale_arcsec_px: number | null
+      /** Width Deg */
+      width_deg: number | null
+      /** Height Deg */
+      height_deg: number | null
+      /**
+       * Parts
+       * @description What its frames used and what you chose for it, kind by kind in the card's order (mount, wheel, focuser, guide camera, reducer, guide scope, capture software, filters), each from the most used. A kind no frame names and you did not choose is not listed.
+       */
+      parts: components["schemas"]["RigPart"][]
+    }
+    /**
+     * RigPart
+     * @description One thing a rig's frames used besides optics and camera.
+     */
+    RigPart: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind:
+        | "mount"
+        | "filter_wheel"
+        | "focuser"
+        | "guide_camera"
+        | "reducer"
+        | "guide_scope"
+        | "software"
+        | "filter"
+      /**
+       * Id
+       * @description The instrument, or the filter for `filter`; null for `software`, which is not a piece.
+       */
+      id: number | null
+      /** Name */
+      name: string
+      /**
+       * Frames
+       * @description How many of the rig's frames used it, rewritten copies out.
+       */
+      frames: number
+      /**
+       * Chosen
+       * @description You gave it to the rig, instead of the files naming it. A mount you choose goes on every frame; any other kind only where the file names none.
+       */
+      chosen: boolean
+    }
+    /**
+     * RigPartChoice
+     * @description The piece you use a rig with, among those you own of that kind; `None` goes back to what
+     *     the files say.
+     */
+    RigPartChoice: {
+      /** Piece Id */
+      piece_id: number | null
+    }
+    /**
+     * ScanAllStarted
+     * @description What the "read them all" action did: the folders started, each with its receipt, and the
+     *     ones skipped with their reason. Skipped folders are reported instead of vanishing: a
+     *     detached disk is exactly what the user must know, and hiding it would make an incomplete
+     *     scan look complete.
+     */
+    ScanAllStarted: {
+      /** Started */
+      started: components["schemas"]["ScanStarted"][]
+      /** Skipped */
+      skipped: components["schemas"]["FolderSkipped"][]
+    }
+    /**
+     * ScanErrorList
+     * @description The files a scan did not read, paginated: they can be thousands.
+     */
+    ScanErrorList: {
+      /** Items */
+      items: components["schemas"]["FileNotRead"][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+    }
+    /**
+     * ScanEvent
+     * @description A scan progress event: the file being read and the counts so far.
+     */
+    ScanEvent: {
+      /** Current */
+      current: number
+      /** Total */
+      total: number
+      /** File */
+      file: string
+      /** Run Id */
+      run_id: number
+      /** Folder Id */
+      folder_id: number
+      /**
+       * Since
+       * @description When this folder's reading began: the pace starts here.
+       */
+      since?: string | null
+      /** Found */
+      found: number
+      /** New */
+      new: number
+      /** Unchanged */
+      unchanged: number
+      /** Duplicates */
+      duplicates: number
+      /** Missing */
+      missing: number
+      /** Skipped */
+      skipped: number
+      /** Errors */
+      errors: number
+      /** Online Only */
+      online_only: number
+    }
+    /**
+     * ScanProgress
+     * @description The scan of the current run: what the page shows while it runs and when it ends.
+     */
+    ScanProgress: {
+      /**
+       * State
+       * @enum {string}
+       */
+      state: "not_run" | "running" | "stopped" | "completed" | "completed_with_errors" | "error"
+      /** Folder Id */
+      folder_id: number
+      /** Run Id */
+      run_id: number
+      last_event: components["schemas"]["ScanEvent"] | null
+      receipt: components["schemas"]["ScanRunOut"] | null
+      /**
+       * Remaining S
+       * @description Seconds left for the folder being read, at the pace so far; `None` in the first minute, before any file and once the reading is over.
+       */
+      remaining_s?: number | null
+      /**
+       * First
+       * @description No folder had ever ended a reading before this gesture: the archive is being read for the first time, and its counts are still growing.
+       * @default false
+       */
+      first: boolean
+    }
+    /** ScanRunList */
+    ScanRunList: {
+      /** Items */
+      items: components["schemas"]["ScanRunOut"][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+    }
+    /** ScanRunOut */
+    ScanRunOut: {
+      /** Id */
+      id: number
+      /** Folder Id */
+      folder_id: number
+      /**
+       * Folder Path
+       * @description The folder's path, which is what the user recognises: with `folder_id` alone the page would have to read the folders and pair them up itself. Never empty: removing a folder **retires** it, and the foreign key of `scan_runs` keeps its row.
+       */
+      folder_path: string
+      /**
+       * Folder Retired
+       * @description The folder was removed (retired) since: its path no longer updates.
+       */
+      folder_retired: boolean
+      /** Started At */
+      started_at: string
+      /** Ended At */
+      ended_at: string | null
+      /**
+       * Duration S
+       * @description None = unknown: the run is open, or the two instants do not add up.
+       */
+      duration_s: number | null
+      /**
+       * Status
+       * @description None = the run is open.
+       */
+      status: ("ok" | "stopped" | "aborted" | "error") | null
+      /** Reason */
+      reason: ("root_unreachable" | "stop_requested" | "internal_error" | "database_error") | null
+      /** Found */
+      found: number
+      /** New */
+      new: number
+      /** Unchanged */
+      unchanged: number
+      /** Duplicates */
+      duplicates: number
+      /** Missing */
+      missing: number
+      /** Skipped */
+      skipped: number
+      /** Errors */
+      errors: number
+      /**
+       * Online Only
+       * @description Online-only FITS: not opened, so as not to download them; they are revisited later.
+       */
+      online_only: number
+      /** Unreadable Dirs */
+      unreadable_dirs: string[]
+      /**
+       * Hidden Dirs
+       * @description Hidden subfolders left out (the recycle bin, for instance).
+       */
+      hidden_dirs: string[]
+      /**
+       * Linked Dirs
+       * @description Reached through a link or a junction: not followed.
+       */
+      linked_dirs: string[]
+      /**
+       * Skipped By Reason
+       * @description How many were skipped per reason, calibration frames included.
+       */
+      skipped_by_reason: components["schemas"]["SkippedCount"][]
+    }
+    /** ScanStarted */
+    ScanStarted: {
+      /** Run Id */
+      run_id: number
+      /** Folder Id */
+      folder_id: number
+    }
+    /** SearchResult */
+    SearchResult: {
+      objects: components["schemas"]["Found_FoundObject_"]
+      nights: components["schemas"]["Found_FoundNight_"]
+      gear: components["schemas"]["Found_FoundPiece_"]
+      sites: components["schemas"]["Found_FoundSite_"]
+    }
+    /** SettingsOut */
+    SettingsOut: {
+      /** Values */
+      values: {
+        [key: string]: string | number | null
+      }
+      /**
+       * Wizard Done
+       * @description The stamp is there: a written fact, not "it looks empty".
+       */
+      wizard_done: boolean
+      /** Missing */
+      missing: ("no_active_site" | "no_solver" | "no_star_database")[]
+      /**
+       * Ranges
+       * @description The numeric keys' allowed range, both ends included: a write outside is `out_of_range`.
+       */
+      ranges: {
+        [key: string]: components["schemas"]["Range"]
+      }
+    }
+    /**
+     * SettingsPatch
+     * @description A write either passes whole or does not pass: half the preferences written would be worse.
+     *
+     *     The values go in as they are: the type of each key is judged where the closed list of keys
+     *     lives, and declaring it here as well would mean writing it twice.
+     */
+    SettingsPatch: {
+      /** Values */
+      values: {
+        [key: string]: unknown
+      }
+    }
+    /**
+     * SettledObjects
+     * @description The objects the app knows, with nothing to choose, in pages: they are not questions, and
+     *     they grow with the archive. They open from the Objects section, and are corrected from there.
+     */
+    SettledObjects: {
+      /** Items */
+      items: components["schemas"]["ObjectCard"][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+    }
+    /**
+     * SiteCandidate
+     * @description A site already declared, with how far it is from those coordinates: it is what one clicks to
+     *     answer. Recomputed on reading, not saved.
+     */
+    SiteCandidate: {
+      /** Id */
+      id: number
+      /** Name */
+      name: string
+      /** Distance Km */
+      distance_km: number
+    }
+    /** SiteCreate */
+    SiteCreate: {
+      /** Name */
+      name: string
+      /** Latitude */
+      latitude: number
+      /** Longitude */
+      longitude: number
+      /**
+       * Elevation M
+       * @description If you don't give it, the app asks the service; if you do, yours wins.
+       */
+      elevation_m?: number | null
+      /** Sky Sqm */
+      sky_sqm?: number | null
+      /** Bortle */
+      bortle?: number | null
+      /**
+       * Is Default
+       * @default false
+       */
+      is_default: boolean
+    }
+    /** SiteDeleted */
+    SiteDeleted: {
+      /** Site Id */
+      site_id: number
+      /** Deleted */
+      deleted: boolean
+    }
+    /**
+     * SiteEdit
+     * @description What changes in a site. An absent field stays as it is; changed coordinates redo the time
+     *     zone, because an old time zone on new coordinates is a silent error.
+     */
+    SiteEdit: {
+      /** Name */
+      name?: string | null
+      /** Latitude */
+      latitude?: number | null
+      /** Longitude */
+      longitude?: number | null
+      /** Elevation M */
+      elevation_m?: number | null
+      /** Sky Sqm */
+      sky_sqm?: number | null
+      /** Bortle */
+      bortle?: number | null
+    }
+    /** SiteList */
+    SiteList: {
+      /** Items */
+      items: components["schemas"]["SiteOut"][]
+      /** Total */
+      total: number
+      /** Limit */
+      limit: number
+      /** Offset */
+      offset: number
+    }
+    /** SiteOut */
+    SiteOut: {
+      /** Id */
+      id: number
+      /** Name */
+      name: string
+      /** Latitude */
+      latitude: number
+      /** Longitude */
+      longitude: number
+      /**
+       * Elevation M
+       * @description None = not provided: zero is sea level, and it is a true value.
+       */
+      elevation_m: number | null
+      /** Elevation Source */
+      elevation_source: ("declared" | "service") | null
+      /**
+       * Timezone
+       * @description None where no time zone is recognised for the coordinates; in open sea it is the nautical zone (Etc/GMT...).
+       */
+      timezone: string | null
+      /** Sky Sqm */
+      sky_sqm: number | null
+      /** Sky Source */
+      sky_source: ("measured" | "service" | "scale") | null
+      /**
+       * Bortle
+       * @description DERIVED: not a column, and it never appears without the measurement.
+       */
+      bortle: number | null
+      /** Is Default */
+      is_default: boolean
+      /**
+       * Nights
+       * @description How many nights hold it: whoever deletes it knows before trying.
+       */
+      nights: number
+      /**
+       * Unknown
+       * @description The empty fields, with their reason.
+       */
+      unknown: ("site_no_timezone" | "site_no_elevation" | "site_no_sky")[]
+    }
+    /**
+     * SiteSkyOut
+     * @description Where one observes from, and what sky it has: the toolbar footer writes it on one line.
+     *
+     *     **The two sky fields go together, and together they can be missing.** The class is not a
+     *     database column: it derives from the brightness, so without the measurement there is no
+     *     class -- and that is the state of someone who skipped that question at first launch, not a
+     *     fault. Whoever shows it writes "class not declared", not a zero.
+     */
+    SiteSkyOut: {
+      /** Name */
+      name: string
+      /** Sky Sqm */
+      sky_sqm: number | null
+      /** Bortle */
+      bortle: number | null
+    }
+    /** SkippedCount */
+    SkippedCount: {
+      /**
+       * Reason
+       * @enum {string}
+       */
+      reason: "calibration" | "stack" | "still_writing"
+      /** Count */
+      count: number
+    }
+    /**
+     * SkyBandOut
+     * @description A stretch of night in which the sky is always the same thing: from when to when, and which.
+     *
+     *     Why they come out **already split** instead of as eight times is told in
+     *     `docs/domini/effemeridi.md`, entry *"Le fasce arrivano gia' divise"*.
+     */
+    SkyBandOut: {
+      /** Starts At */
+      starts_at: string
+      /** Ends At */
+      ends_at: string
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "day" | "civil" | "nautical" | "astronomical" | "dark"
+    }
+    /**
+     * SkyPointOut
+     * @description An instant of the night and how high the Moon was, in degrees above the horizon.
+     *
+     *     The altitude is **negative below the horizon**, and is not clipped to zero: that is what lets
+     *     the chart draw where the Moon comes in and goes out instead of a curve resting on the edge.
+     */
+    SkyPointOut: {
+      /** At */
+      at: string
+      /** Altitude Deg */
+      altitude_deg: number
+    }
+    /**
+     * SolverOut
+     * @description Where the app takes the solver from, and **what** it deduced that from.
+     *
+     *     The channel always comes with the path because "found" alone cannot be disproved: automatic
+     *     search goes wrong exactly when it finds something -- an old ASTAP left in the PATH, or another
+     *     user's in a known place -- and whoever looks must be able to say "no, not that one" without
+     *     guessing which of the four channels answered.
+     */
+    SolverOut: {
+      /**
+       * Path
+       * @description None = not found: the channel is None together with it, never alone.
+       */
+      path: string | null
+      /** Source */
+      source: ("declared" | "env" | "path" | "known_place") | null
+      /**
+       * Declared
+       * @description What the user wrote, **even when it leads nowhere**: without it, a wrong path would vanish from the screen and there would be nothing to correct.
+       */
+      declared: string | null
+      /**
+       * Databases
+       * @description The star databases found next to the program, by name (`d80`, `v50`). Empty **with** a path means ASTAP starts and recognises nothing; empty **without** a path only means ASTAP is not there.
+       */
+      databases: string[]
+    }
+    /** StageRecord */
+    StageRecord: {
+      /** Name */
+      name: string
+      /**
+       * State
+       * @enum {string}
+       */
+      state: "not_run" | "running" | "stopped" | "completed" | "completed_with_errors" | "error"
+      /** Current */
+      current: number | null
+      /** Total */
+      total: number | null
+      /** Tally */
+      tally: {
+        [key: string]: unknown
+      }
+      /**
+       * Reason
+       * @description Why the stage stopped, when it stopped on its own: a code, never a sentence.
+       */
+      reason?: string | null
+    }
+    /**
+     * Subject
+     * @description An object the sky found in the frames of a group, and in how many.
+     */
+    Subject: {
+      /** Name */
+      name: string
+      /** Frames */
+      frames: number
+    }
+    /**
+     * Subjects
+     * @description What you took in that group, to remember it without going by memory: the objects, the most
+     *     taken on top, and the frames of the two blanks -- which are not the same: `not_yet` is the sky
+     *     that has not looked yet (or did not manage to), `not_found` the sky that looked without finding
+     *     anything. It reads next to the question and does not change it: the group key stays the
+     *     same.
+     */
+    Subjects: {
+      /** Found */
+      found: components["schemas"]["Subject"][]
+      /** Not Found */
+      not_found: number
+      /** Not Yet */
+      not_yet: number
+    }
+    /**
+     * TonightOut
+     * @description The night it refers to (`YYYY-MM-DD` in the site's time zone), the site, the Moon and the
+     *     sky.
+     */
+    TonightOut: {
+      /** Night */
+      night: string | null
+      site: components["schemas"]["SiteSkyOut"] | null
+      moon: components["schemas"]["MoonOut"] | null
+      /**
+       * Sky Bands
+       * @description Empty when there is no night to split -- no site, or a time zone that does not resolve -- for the same reason the Moon is `None` there.
+       * @default []
+       */
+      sky_bands: components["schemas"]["SkyBandOut"][]
+      /**
+       * Dark S
+       * @description How long tonight's astronomical dark lasts, in seconds: the sum of the `dark` bands. Computed, not forecast, so it is there when the weather is not; `None` without a night, never 0 in its place.
+       */
+      dark_s?: number | null
+      /** @description The current night's weather from the chosen model, as the forecast wrote it; `None` until the forecast has arrived. */
+      weather?: components["schemas"]["WeatherBriefOut"] | null
+      /** @description `None` without a night. */
+      chart?: components["schemas"]["ChartOut"] | null
+      /**
+       * Planets
+       * @description Empty without a night.
+       * @default []
+       */
+      planets: components["schemas"]["PlanetOut"][]
+    }
+    /**
+     * TypelessFolder
+     * @description The frames that do not tell what file they are, grouped by **folder**: whoever shoots keeps
+     *     darks and flats in folders of their own, so one answer closes a whole folder. Only the folders
+     *     where the sky cannot tell are here -- solved is a picture, no stars a calibration --, and until
+     *     answered those frames stay still before the object: they do not become hours, and they do not
+     *     appear among the unnamed frames -- there the question is "what did you take", and answering
+     *     with an object would turn a calibration into hours. An answered group stays on the page because
+     *     one must be able to change one's mind. What the sky found here is absent, and it is not an
+     *     oversight: on those frames the sky could not tell, and showing "no object" would look like an
+     *     answer.
+     */
+    TypelessFolder: {
+      /**
+       * Key
+       * @description The folder path: it is the key one answers with.
+       */
+      key: string
+      /** Frames */
+      frames: number
+      /** Answer */
+      answer: ("light" | "calibration") | null
+    }
+    /**
+     * TypelessFolderEdit
+     * @description The answer about a folder of frames that do not tell what file they are: a sky picture
+     *     (`light`) or a calibration file (`calibration`). The words are two and live in the model, so a
+     *     third one is a 422 declared in the OpenAPI and not an answer to interpret.
+     */
+    TypelessFolderEdit: {
+      /**
+       * Key
+       * @description The folder path read from the page.
+       */
+      key: string
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "light" | "calibration"
+    }
+    /**
+     * UnclearCoordinates
+     * @description The frames the app stopped because the header coordinates say another place, grouped by
+     *     **coordinates**: one asks per group, never per frame. The nights are those involved, computed
+     *     in the time zone of those coordinates. `site` is the answer already given, if there is one: an
+     *     answered group stays on the page because a wrong click must be changeable.
+     */
+    UnclearCoordinates: {
+      /**
+       * Key
+       * @description The rounded coordinates: it is the key one answers with.
+       */
+      key: string
+      /** Latitude */
+      latitude: number
+      /** Longitude */
+      longitude: number
+      /**
+       * Distance Km
+       * @description From home; None without a home site (never a fake zero).
+       */
+      distance_km: number | null
+      /** Frames */
+      frames: number
+      /** Nights */
+      nights: string[]
+      /** Site */
+      site: string | null
+      /** Candidates */
+      candidates: components["schemas"]["SiteCandidate"][]
+      subjects: components["schemas"]["Subjects"]
+    }
+    /**
+     * UnnamedGroup
+     * @description Where and when of frames the header does not name and the sky says nothing about, grouped
+     *     by **night, camera, telescope and pointing**, never by file or folder; the pointing is that of
+     *     the frame that opened the group.
+     */
+    UnnamedGroup: {
+      /**
+       * Night
+       * @description The night, YYYY-MM-DD; empty for those that do not say when.
+       */
+      night: string | null
+      /**
+       * Camera
+       * @description `INSTRUME` as written in the file.
+       */
+      camera: string | null
+      /**
+       * Telescope
+       * @description `TELESCOP` as written in the file.
+       */
+      telescope: string | null
+      /**
+       * Ra Deg
+       * @description Where the mount pointed, from the header.
+       */
+      ra_deg: number | null
+      /** Dec Deg */
+      dec_deg: number | null
+      /**
+       * First Frame
+       * @description The first and the last frame, ISO in the night's time zone: two objects without pointing in the same night are a single group, and the hours tell whoever answers whether they are two. Frames with `DATE-OBS` count: null if none says it.
+       */
+      first_frame: string | null
+      /** Last Frame */
+      last_frame: string | null
+    }
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[]
+      /** Message */
+      msg: string
+      /** Error Type */
+      type: string
+      /** Input */
+      input?: unknown
+      /** Context */
+      ctx?: Record<string, never>
+    }
+    /**
+     * WaitingPoses
+     * @description Frames no night has gathered, grouped by **where the answer is given**: a question in
+     *     *To confirm* (`review`), the site to declare (`site`), or nowhere (`never`) -- the case of a
+     *     frame without a date, which no answer can fix.
+     */
+    WaitingPoses: {
+      /**
+       * Answer At
+       * @enum {string}
+       */
+      answer_at: "review" | "site" | "never"
+      /** Frames */
+      frames: number
+    }
+    /**
+     * WeatherAgreementOut
+     * @description How many models say go, marginal, no-go, or do not know, for that night, and out of how
+     *     many.
+     */
+    WeatherAgreementOut: {
+      /** Go */
+      go: number
+      /** Marginal */
+      marginal: number
+      /** Nogo */
+      nogo: number
+      /** Unknown */
+      unknown: number
+      /** Total */
+      total: number
+    }
+    /**
+     * WeatherBriefOut
+     * @description A forecast night in brief: its sky, the models' agreement, and the night's mean upper-air
+     *     wind with its rank among the site's nights of the last year -- how many in ten had less
+     *     (`None` until the site's climatology exists). It is what Tonight says.
+     */
+    WeatherBriefOut: {
+      /** Verdict */
+      verdict: ("go" | "marginal" | "nogo") | null
+      /** Cloud Total Pct */
+      cloud_total_pct: number | null
+      /** Usable Hours */
+      usable_hours: number | null
+      /** Window */
+      window: ("dark" | "sun_down") | null
+      /** Window Hours */
+      window_hours: number | null
+      agreement: components["schemas"]["WeatherAgreementOut"]
+      /** Usable Since */
+      usable_since: string | null
+      /** Usable Until */
+      usable_until: string | null
+      /** Wind 700Hpa Kmh */
+      wind_700hpa_kmh: number | null
+      /** Wind 700Hpa Tenths */
+      wind_700hpa_tenths: number | null
+      /**
+       * Sky Word
+       * @description The sky in words from the mean cover in the dark, in okta classes (WMO 2700): 0 clear, 1-4 scattered, 5-7 broken, 8 overcast; 0 and 8 only for a bare or full sky. `None` without the clouds.
+       */
+      sky_word?: ("clear" | "scattered" | "broken" | "overcast") | null
+      /**
+       * Moonless Dark Hours
+       * @description Hours of dark with the Moon below the horizon.
+       */
+      moonless_dark_hours?: number | null
+    }
+    /**
+     * WeatherHourOut
+     * @description An hour of the night, in the site's time zone, with the sky band it has, every source's
+     *     value joined (the model's; Meteoblue's seeing in arcseconds, only with the key; CAMS aerosol
+     *     and dust; the Moon's lit percentage while it is up) and each judged measure's word.
+     */
+    WeatherHourOut: {
+      /** At */
+      at: string
+      /**
+       * Sky
+       * @enum {string}
+       */
+      sky: "day" | "civil" | "nautical" | "astronomical" | "dark"
+      /** Cloud Total Pct */
+      cloud_total_pct: number | null
+      /** Cloud Low Pct */
+      cloud_low_pct: number | null
+      /** Cloud Mid Pct */
+      cloud_mid_pct: number | null
+      /** Cloud High Pct */
+      cloud_high_pct: number | null
+      /** Temperature C */
+      temperature_c: number | null
+      /** Humidity Pct */
+      humidity_pct: number | null
+      /** Dew Point C */
+      dew_point_c: number | null
+      /** Wind Kmh */
+      wind_kmh: number | null
+      /** Wind Gust Kmh */
+      wind_gust_kmh: number | null
+      /** Precip Mm */
+      precip_mm: number | null
+      /** Visibility Km */
+      visibility_km: number | null
+      /** Wind 700Hpa Kmh */
+      wind_700hpa_kmh: number | null
+      /** Wind 250Hpa Kmh */
+      wind_250hpa_kmh: number | null
+      /** Seeing Arcsec */
+      seeing_arcsec: number | null
+      /** Aerosol Optical Depth */
+      aerosol_optical_depth: number | null
+      /** Dust Ugm3 */
+      dust_ugm3: number | null
+      /** Moon Pct */
+      moon_pct: number | null
+      /**
+       * Dew Spread C
+       * @description Air minus dew point, the quantity condensation is judged on.
+       */
+      dew_spread_c: number | null
+      levels: components["schemas"]["WeatherLevelsOut"]
+      /**
+       * Shown
+       * @description Whether the page draws this hour (`shown_from`-`shown_until`).
+       */
+      shown: boolean
+      /**
+       * Clear
+       * @description One of the night's clear hours, the ones `usable_hours` counts.
+       */
+      clear: boolean
+    }
+    /**
+     * WeatherLevelsOut
+     * @description Each judged measure's word for the hour; `None` where the value is missing (the Moon: where
+     *     it is below the horizon; the aerosol: also between clear and very hazy).
+     */
+    WeatherLevelsOut: {
+      /** Cloud */
+      cloud: ("go" | "marginal" | "nogo") | null
+      /** Cloud Low */
+      cloud_low: ("go" | "marginal" | "nogo") | null
+      /** Rain */
+      rain: ("go" | "marginal" | "nogo") | null
+      /** Gust */
+      gust: ("go" | "marginal" | "nogo") | null
+      /** Wind */
+      wind: ("go" | "marginal" | "nogo") | null
+      /** Condensation */
+      condensation: ("go" | "marginal" | "nogo") | null
+      /** Jet */
+      jet: ("go" | "marginal" | "nogo") | null
+      /** Seeing */
+      seeing: ("go" | "marginal" | "nogo") | null
+      /** Aerosol */
+      aerosol: ("go" | "marginal" | "nogo") | null
+      /** Moon */
+      moon: ("go" | "marginal" | "nogo") | null
+      /** Visibility */
+      visibility: ("go" | "marginal" | "nogo") | null
+    }
+    /**
+     * WeatherMeasureOut
+     * @description A measure over the night's window. `level` is its worst hour's word (for `cloud`, the
+     *     verdict) and `since`/`until`/`hours` the hours with that word; `weighs` when it is marginal or
+     *     no-go and is not the clouds, which make the verdict. `value` is the mean of the known hours
+     *     (for `rain`, the total), `peak` the worst hour's value and when; `known_*` say which hours were
+     *     known, so a mean over part of the night is said as such; `known_from_start`/`known_to_end`
+     *     say whether they reach the window's first/last hour. Neutral measures have no `level`.
+     *     `spans` gives each bad word its hours; `axis_*` is the chart's scale over the shown hours
+     *     (`axis_curve` `sqrt`: the chart grows with the square root of the value).
+     *     `value` is the cold at its lowest (temperature, condensation), and so the visibility.
+     */
+    WeatherMeasureOut: {
+      /**
+       * Code
+       * @enum {string}
+       */
+      code:
+        | "cloud"
+        | "cloud_low"
+        | "rain"
+        | "gust"
+        | "wind"
+        | "condensation"
+        | "jet"
+        | "seeing"
+        | "aerosol"
+        | "moon"
+        | "visibility"
+        | "cloud_mid"
+        | "cloud_high"
+        | "temperature"
+        | "dew_point"
+        | "wind_700"
+        | "dust"
+      /** Level */
+      level: ("go" | "marginal" | "nogo") | null
+      /** Weighs */
+      weighs: boolean
+      /** Value */
+      value: number | null
+      /** Peak */
+      peak: number | null
+      /** Peak At */
+      peak_at: string | null
+      /** Peak Until */
+      peak_until: string | null
+      /** Spans */
+      spans: components["schemas"]["WeatherSpanOut"][]
+      /** Axis Min */
+      axis_min: number | null
+      /** Axis Max */
+      axis_max: number | null
+      /**
+       * Axis Curve
+       * @enum {string}
+       */
+      axis_curve: "linear" | "sqrt"
+      /** Since */
+      since: string | null
+      /** Until */
+      until: string | null
+      /** Hours */
+      hours: number
+      /** Known Hours */
+      known_hours: number
+      /** Known Since */
+      known_since: string | null
+      /** Known Until */
+      known_until: string | null
+      /** Known From Start */
+      known_from_start: boolean
+      /** Known To End */
+      known_to_end: boolean
+    }
+    /**
+     * WeatherNightOut
+     * @description A forecast night: the summary, its measures in order of importance (the clouds, then the
+     *     worst word earliest first, then the neutral ones), and its hours from noon to noon. `shown_*`
+     *     is the stretch the page draws, from the last hour of day before twilight to the first after
+     *     dawn. A `trend` night carries the summary without usable hours, measures or hours.
+     */
+    WeatherNightOut: {
+      /** Verdict */
+      verdict: ("go" | "marginal" | "nogo") | null
+      /** Cloud Total Pct */
+      cloud_total_pct: number | null
+      /** Usable Hours */
+      usable_hours: number | null
+      /** Window */
+      window: ("dark" | "sun_down") | null
+      /** Window Hours */
+      window_hours: number | null
+      agreement: components["schemas"]["WeatherAgreementOut"]
+      /** Usable Since */
+      usable_since: string | null
+      /** Usable Until */
+      usable_until: string | null
+      /** Wind 700Hpa Kmh */
+      wind_700hpa_kmh: number | null
+      /** Wind 700Hpa Tenths */
+      wind_700hpa_tenths: number | null
+      /**
+       * Sky Word
+       * @description The sky in words from the mean cover in the dark, in okta classes (WMO 2700): 0 clear, 1-4 scattered, 5-7 broken, 8 overcast; 0 and 8 only for a bare or full sky. `None` without the clouds.
+       */
+      sky_word?: ("clear" | "scattered" | "broken" | "overcast") | null
+      /**
+       * Moonless Dark Hours
+       * @description Hours of dark with the Moon below the horizon.
+       */
+      moonless_dark_hours?: number | null
+      /** Night */
+      night: string
+      /** Trend */
+      trend: boolean
+      /** Shown From */
+      shown_from: string | null
+      /** Shown Until */
+      shown_until: string | null
+      /** Measures */
+      measures: components["schemas"]["WeatherMeasureOut"][]
+      /** Hours */
+      hours: components["schemas"]["WeatherHourOut"][]
+    }
+    /**
+     * WeatherOut
+     * @description The next nights of the home site for the chosen model. `fetched_at` is when the site's
+     *     latest forecast arrived, for all models together: `None` until the first one arrives. `missing`
+     *     tells what prevents having one.
+     */
+    WeatherOut: {
+      /** Site */
+      site: string | null
+      /** Missing */
+      missing: "no_timezone" | null
+      /** Model */
+      model: string
+      /** Models */
+      models: string[]
+      /** Fetched At */
+      fetched_at: string | null
+      last_request: components["schemas"]["WeatherRequestOut"] | null
+      /** Full Nights */
+      full_nights: number
+      /**
+       * Retry S
+       * @description How often a silent service is asked again, in seconds.
+       */
+      retry_s: number
+      seeing: components["schemas"]["WeatherSeeingOut"]
+      /** Sources */
+      sources: components["schemas"]["WeatherSourceOut"][]
+      /** Scales */
+      scales: components["schemas"]["WeatherScaleOut"][]
+      /** Nights */
+      nights: components["schemas"]["WeatherNightOut"][]
+    }
+    /**
+     * WeatherRefreshOut
+     * @description How the request went: arrived, or why not.
+     */
+    WeatherRefreshOut: {
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "ok" | "no_site" | "no_timezone" | "unreachable" | "bad_answer"
+    }
+    /**
+     * WeatherRequestOut
+     * @description The last request for the forecast and how it went: a silent service keeps the forecast that
+     *     was there, and the page says since when no answer came.
+     */
+    WeatherRequestOut: {
+      /** At */
+      at: string
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "ok" | "unreachable" | "bad_answer"
+    }
+    /**
+     * WeatherScaleOut
+     * @description A judged measure's thresholds, worst first, the same the judgement uses: an hour that
+     *     crosses none is `go`. `lower_is_worse`: the steps count downwards (condensation).
+     */
+    WeatherScaleOut: {
+      /**
+       * Code
+       * @enum {string}
+       */
+      code:
+        | "cloud"
+        | "cloud_low"
+        | "rain"
+        | "gust"
+        | "wind"
+        | "condensation"
+        | "jet"
+        | "seeing"
+        | "aerosol"
+        | "moon"
+        | "visibility"
+      /** Steps */
+      steps: components["schemas"]["WeatherStepOut"][]
+      /** Lower Is Worse */
+      lower_is_worse: boolean
+    }
+    /**
+     * WeatherSeeingOut
+     * @description Whether the user has a Meteoblue key, whether seeing is there (`meteoblue`, its only
+     *     source, or `None`) and, with the key, how its last attempt went: `ok`, `refused`,
+     *     `unreachable`, `bad_answer`, or `None` if it has not been asked yet for this site. `key` tells
+     *     "no key" from "not asked yet", which `meteoblue` alone cannot.
+     */
+    WeatherSeeingOut: {
+      /** Key */
+      key: boolean
+      /** Source */
+      source: "meteoblue" | null
+      /** Meteoblue */
+      meteoblue: ("ok" | "refused" | "unreachable" | "bad_answer") | null
+    }
+    /**
+     * WeatherSourceOut
+     * @description An upper-air source that wrote something, and when: the page cites it only if present, and
+     *     the CAMS licence wants the year of the data.
+     */
+    WeatherSourceOut: {
+      /**
+       * Source
+       * @description A name from `weather.sky.ALL_SOURCES`; not listed here, so the names have one home.
+       */
+      source: string
+      /** Fetched At */
+      fetched_at: string
+    }
+    /**
+     * WeatherSpanOut
+     * @description The hours with one word: from the first to the end of the last, and how many.
+     */
+    WeatherSpanOut: {
+      /**
+       * Level
+       * @enum {string}
+       */
+      level: "go" | "marginal" | "nogo"
+      /** Since */
+      since: string
+      /** Until */
+      until: string
+      /** Hours */
+      hours: number
+    }
+    /**
+     * WeatherStepOut
+     * @description From `bound` on (beyond it when `strict`) an hour has `level`; `None`: no word.
+     */
+    WeatherStepOut: {
+      /** Level */
+      level: ("go" | "marginal" | "nogo") | null
+      /** Bound */
+      bound: number
+      /** Strict */
+      strict: boolean
+    }
+    /** WorkerOut */
+    WorkerOut: {
+      worker: components["schemas"]["WorkerSnapshot"]
+      /**
+       * Skipped
+       * @description When Resume reads the folders again, the ones it could not read.
+       */
+      skipped?: components["schemas"]["FolderSkipped"][]
+    }
+    /** WorkerSnapshot */
+    WorkerSnapshot: {
+      /**
+       * State
+       * @enum {string}
+       */
+      state: "idle" | "running" | "stopped" | "completed" | "completed_with_errors" | "error"
+      /** Stage */
+      stage: string | null
+      /**
+       * Started At
+       * @description None until it has ever started: never an invented instant.
+       */
+      started_at: string | null
+      /** Ended At */
+      ended_at: string | null
+      /** Stages */
+      stages: components["schemas"]["StageRecord"][]
+    }
+    /** YearDayOut */
+    YearDayOut: {
+      /**
+       * Date
+       * @description `YYYY-MM-DD`, a night date.
+       */
+      date: string
+      /**
+       * Level
+       * @description `future` after today; `none` without hours; then the board's legend: under 2 h, 2-4, 4-6, over 6.
+       * @enum {string}
+       */
+      level: "future" | "none" | "under2" | "2to4" | "4to6" | "over6"
+      /** Integration S */
+      integration_s: number
+    }
+    /**
+     * YearOut
+     * @description The year so far: what the Dashboard's year section shows, already counted.
+     */
+    YearOut: {
+      /** Year */
+      year: number
+      /**
+       * Until
+       * @description Today's night date, the last day counted.
+       */
+      until: string
+      /** Nights */
+      nights: number
+      /** Integration S */
+      integration_s: number
+      /**
+       * Per Night S
+       * @description `None` without nights, never 0 in its place.
+       */
+      per_night_s: number | null
+      /**
+       * Per Month
+       * @description Nights per elapsed month, to one decimal.
+       */
+      per_month: number
+      /**
+       * Lead Blank
+       * @description Empty squares before January 1 in a Monday-first week grid (0-6).
+       */
+      lead_blank: number
+      /**
+       * Days
+       * @description Every day of the year, January 1 first.
+       */
+      days: components["schemas"]["YearDayOut"][]
+    }
+  }
+  responses: never
+  parameters: never
+  requestBodies: never
+  headers: never
+  pathItems: never
 }
-export type $defs = Record<string, never>;
+export type $defs = Record<string, never>
 export interface operations {
-    health: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Health"];
-                };
-            };
-        };
-    };
-    archive_page: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-                q?: string | null;
-                key?: string | null;
-                catalog?: string | null;
-                constellation?: string | null;
-                filter?: string | null;
-                mosaic?: boolean;
-                since?: string | null;
-                until?: string | null;
-                site?: number | null;
-                optics?: number | null;
-                camera?: number | null;
-                sort?: "name" | "hours" | "frames";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ArchiveList"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    backup_status: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BackupStatus"];
-                };
-            };
-        };
-    };
-    restore_backup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BackupStatus"];
-                };
-            };
-        };
-    };
-    decline_backup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BackupStatus"];
-                };
-            };
-        };
-    };
-    export_backup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    import_backup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BackupStatus"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    gear_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GearList"];
-                };
-            };
-        };
-    };
-    add_instrument: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InstrumentNew"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GearWritten"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    edit_instrument: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                instrument_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InstrumentCorrection"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GearWritten"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    name_rig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                rig_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RigNaming"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GearWritten"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_filter: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FilterNew"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GearWritten"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    add_rig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RigNew"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GearWritten"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    choose_rig_part: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                rig_id: number;
-                kind: "filter_wheel" | "focuser" | "guide_camera" | "mount" | "reducer" | "guide_scope";
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RigPartChoice"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GearWritten"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    edit_filter: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                filter_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FilterCorrection"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GearWritten"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    night_list: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-                night?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NightList"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    path_info: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PathInfo"];
-                };
-            };
-        };
-    };
-    probe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PathProbe"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProbeOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    browse: {
-        parameters: {
-            query?: {
-                path?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BrowseOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_folders: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FolderList"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_folder: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FolderCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FolderOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    move_folder: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                folder_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FolderMove"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FolderOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    retire_folder: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                folder_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RetireOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    scan_all: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScanAllStarted"];
-                };
-            };
-        };
-    };
-    scan: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                folder_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScanStarted"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    scan_runs: {
-        parameters: {
-            query?: {
-                folder_id?: number | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScanRunList"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    scan_run_errors: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path: {
-                run_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ScanErrorList"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    search_archive: {
-        parameters: {
-            query?: {
-                q?: string;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SearchResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    status: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PipelineStatus"];
-                };
-            };
-        };
-    };
-    stop: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkerOut"];
-                };
-            };
-        };
-    };
-    run: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkerOut"];
-                };
-            };
-        };
-    };
-    review: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReviewOut"];
-                };
-            };
-        };
-    };
-    settled_objects: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettledObjects"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    apply: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReviewApply"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReviewApplied"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    search_places: {
-        parameters: {
-            query: {
-                q: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PlaceList"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_sites: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SiteList"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_site: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SiteCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SiteOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_site: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SiteDeleted"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    edit_site: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SiteEdit"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SiteOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_default: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                site_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SiteOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_settings: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsOut"];
-                };
-            };
-        };
-    };
-    write_settings: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SettingsPatch"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_solver: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SolverOut"];
-                };
-            };
-        };
-    };
-    search_solver: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SolverOut"];
-                };
-            };
-        };
-    };
-    stamp_wizard: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SettingsOut"];
-                };
-            };
-        };
-    };
-    moon_calendar: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MoonCalendarOut"];
-                };
-            };
-        };
-    };
-    tonight: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TonightOut"];
-                };
-            };
-        };
-    };
-    filter_models: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FilterModelList"];
-                };
-            };
-        };
-    };
-    weather: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WeatherOut"];
-                };
-            };
-        };
-    };
-    refresh: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WeatherRefreshOut"];
-                };
-            };
-        };
-    };
-    put_meteoblue_key: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MeteoblueKeyIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MeteoblueKeyOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    this_year: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["YearOut"];
-                };
-            };
-        };
-    };
+  health: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["Health"]
+        }
+      }
+    }
+  }
+  archive_page: {
+    parameters: {
+      query?: {
+        limit?: number
+        offset?: number
+        q?: string | null
+        key?: string | null
+        catalog?: string | null
+        constellation?: string | null
+        filter?: string | null
+        mosaic?: boolean
+        since?: string | null
+        until?: string | null
+        site?: number | null
+        optics?: number | null
+        camera?: number | null
+        sort?: "name" | "hours" | "frames"
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ArchiveList"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  backup_status: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["BackupStatus"]
+        }
+      }
+    }
+  }
+  restore_backup: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["BackupStatus"]
+        }
+      }
+    }
+  }
+  decline_backup: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["BackupStatus"]
+        }
+      }
+    }
+  }
+  export_backup: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": unknown
+        }
+      }
+    }
+  }
+  import_backup: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["BackupStatus"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  gear_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["GearList"]
+        }
+      }
+    }
+  }
+  add_instrument: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InstrumentNew"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["GearWritten"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  edit_instrument: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        instrument_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InstrumentCorrection"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["GearWritten"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  name_rig: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        rig_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RigNaming"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["GearWritten"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  add_filter: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FilterNew"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["GearWritten"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  add_rig: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RigNew"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["GearWritten"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  choose_rig_part: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        rig_id: number
+        kind: "filter_wheel" | "focuser" | "guide_camera" | "mount" | "reducer" | "guide_scope"
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RigPartChoice"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["GearWritten"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  edit_filter: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        filter_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FilterCorrection"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["GearWritten"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  night_list: {
+    parameters: {
+      query?: {
+        limit?: number
+        offset?: number
+        night?: number | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["NightList"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  path_info: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PathInfo"]
+        }
+      }
+    }
+  }
+  probe: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PathProbe"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ProbeOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  browse: {
+    parameters: {
+      query?: {
+        path?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["BrowseOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  list_folders: {
+    parameters: {
+      query?: {
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["FolderList"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  create_folder: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FolderCreate"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["FolderOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  move_folder: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        folder_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FolderMove"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["FolderOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  retire_folder: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        folder_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["RetireOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  scan_all: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ScanAllStarted"]
+        }
+      }
+    }
+  }
+  scan: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        folder_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ScanStarted"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  scan_runs: {
+    parameters: {
+      query?: {
+        folder_id?: number | null
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ScanRunList"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  scan_run_errors: {
+    parameters: {
+      query?: {
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path: {
+        run_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ScanErrorList"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  search_archive: {
+    parameters: {
+      query?: {
+        q?: string
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SearchResult"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  status: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PipelineStatus"]
+        }
+      }
+    }
+  }
+  stop: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["WorkerOut"]
+        }
+      }
+    }
+  }
+  run: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["WorkerOut"]
+        }
+      }
+    }
+  }
+  review: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ReviewOut"]
+        }
+      }
+    }
+  }
+  settled_objects: {
+    parameters: {
+      query?: {
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SettledObjects"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  apply: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReviewApply"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["ReviewApplied"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  search_places: {
+    parameters: {
+      query: {
+        q: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PlaceList"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  list_sites: {
+    parameters: {
+      query?: {
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SiteList"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  create_site: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SiteCreate"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SiteOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  delete_site: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        site_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SiteDeleted"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  edit_site: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        site_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SiteEdit"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SiteOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  set_default: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        site_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SiteOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  read_settings: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SettingsOut"]
+        }
+      }
+    }
+  }
+  write_settings: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SettingsPatch"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SettingsOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  read_solver: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SolverOut"]
+        }
+      }
+    }
+  }
+  search_solver: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SolverOut"]
+        }
+      }
+    }
+  }
+  stamp_wizard: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SettingsOut"]
+        }
+      }
+    }
+  }
+  moon_calendar: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["MoonCalendarOut"]
+        }
+      }
+    }
+  }
+  tonight: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["TonightOut"]
+        }
+      }
+    }
+  }
+  filter_models: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["FilterModelList"]
+        }
+      }
+    }
+  }
+  weather: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["WeatherOut"]
+        }
+      }
+    }
+  }
+  refresh: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["WeatherRefreshOut"]
+        }
+      }
+    }
+  }
+  put_meteoblue_key: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MeteoblueKeyIn"]
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["MeteoblueKeyOut"]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"]
+        }
+      }
+    }
+  }
+  this_year: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["YearOut"]
+        }
+      }
+    }
+  }
 }
