@@ -13,6 +13,12 @@ PAGE_PATH = "/"
 ASSETS_PATH = "/assets"  # the files the build emits next to the page, with their hashed names
 TOKEN_META = '<meta name="astrolog-token" content="{key}">'  # noqa: S105 - template, not a key
 API_PATH = "/api/"
+# The page carries the key: only the backend's own files load and run, nothing inline (MDN, CSP).
+CSP = (
+    "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self';"
+    " font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none';"
+    " form-action 'self'; frame-ancestors 'none'"
+)
 
 
 def is_page(path: str) -> bool:
@@ -66,5 +72,5 @@ def _served(app: FastAPI) -> HTMLResponse:
     return HTMLResponse(
         with_key(index.read_text(encoding="utf-8"), app.state.token),
         # The page carries the key: kept out of the browser's disk cache.
-        headers={"Cache-Control": "no-store"},
+        headers={"Cache-Control": "no-store", "Content-Security-Policy": CSP},
     )

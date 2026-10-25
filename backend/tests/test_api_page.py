@@ -110,6 +110,23 @@ def test_the_page_does_not_stay_in_the_browser_cache(db_path, costruita):
         assert c.get("/").headers["cache-control"] == "no-store"
 
 
+def test_the_page_loads_only_from_its_own_origin(db_path, costruita):
+    """La pagina porta la chiave: uno script iniettato la leggerebbe. La CSP dice al browser di
+    caricare ed eseguire solo i file del backend, niente in linea, nessun altro sito."""
+    with _client(db_path, costruita) as c:
+        regole = dict(
+            r.strip().split(" ", 1)
+            for r in c.get("/da-confermare").headers["content-security-policy"].split(";")
+        )
+    assert regole["default-src"] == "'self'"
+    assert regole["script-src"] == "'self'"
+    assert regole["connect-src"] == "'self'"
+    assert regole["object-src"] == "'none'"
+    assert regole["frame-ancestors"] == "'none'"
+    assert regole["base-uri"] == "'none'"
+    assert not any("unsafe" in v or "*" in v for v in regole.values())
+
+
 def test_the_key_is_injected_at_every_request(db_path, costruita):
     """La chiave si mette dentro **a ogni richiesta**, non una volta all'avvio: nasce con
     l'avvio, il file costruito non cambia mai, e una pagina tenuta da parte porterebbe per
