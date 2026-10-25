@@ -51,7 +51,7 @@ def archive_page(  # noqa: PLR0913
     and panels are those frames' only -- narrowed to 2025, a row tells 2025.
 
     `key` narrows to the one row with that key (`items[].key`): the search opens an object so,
-    where `q` would also find `M 10` and `M 101` for `M 1`.
+    where `q` would also find `M 10` and `M 101` for `M 1`. With `key`, `q` is not applied.
 
     The factory cap is high (100) because this list is an **inventory**, not a feed to scroll:
     whoever has a hundred thousand frames still has a handful of objects, and asking for twenty at
@@ -64,7 +64,8 @@ def archive_page(  # noqa: PLR0913
         camera=camera,
     )
     criteria = {
-        "q": q,
+        # the row the search opens: words left in the bar must not hide it
+        "q": None if key else q,
         "key": key,
         "catalog": catalog,
         "constellation": constellation,

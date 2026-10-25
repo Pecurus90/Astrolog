@@ -20,6 +20,7 @@ _MONTHS = {
 }
 
 _ISO = re.compile(r"(\d{4})-(\d{1,2})-(\d{1,2})")
+_MONTH_YEAR = re.compile(r"(\d{1,2})[/.-](\d{4})")
 _NUMERIC = re.compile(r"(\d{1,2})[/.-](\d{1,2})(?:[/.-](\d{2}|\d{4}))?")
 _DAY_MONTH = re.compile(r"(\d{1,2}) ([a-z]+)(?: (\d{4}))?")
 _MONTH_DAY = re.compile(r"([a-z]+) (\d{1,2}),?(?: (\d{4}))?")
@@ -51,6 +52,8 @@ def _readings(typed: str) -> list[tuple[int | None, int, int | None]]:
     search does not know where the user learned to write dates."""
     if m := _ISO.fullmatch(typed):
         return [(int(m[1]), int(m[2]), int(m[3]))]
+    if m := _MONTH_YEAR.fullmatch(typed):
+        return [(int(m[2]), int(m[1]), None)]
     if m := _NUMERIC.fullmatch(typed):
         a, b, year = int(m[1]), int(m[2]), _year(m[3])
         return list(dict.fromkeys([(year, b, a), (year, a, b)]))
@@ -99,11 +102,27 @@ def _objects(conn: sqlite3.Connection, q: str, limit: int) -> tuple[list[dict[st
     return items, total
 
 
-# Dates, or a frame of an object so named: `{dates}` are `OR`ed patterns, then `NAMED`'s two.
+# A name holding the typed text; ending in a figure, not followed by one: "M 3" is not M 31, and
+# "NGC" still finds NGC 7000. Each `?` is the typed text folded, without `%`.
+_WHOLE = (
+    "(instr({f}, ?) > 0 AND (? NOT GLOB '*[0-9]'"
+    " OR substr({f}, instr({f}, ?) + length(?), 1) NOT GLOB '[0-9]'))"
+)
+_WHOLE_ARGS = 4  # [T] the `?` in `_WHOLE`
+
+
+def _whole(column: str) -> str:
+    return _WHOLE.format(f=f"REPLACE(LOWER({column}), ' ', '')")
+
+
+# Dates, or a frame of an object so named: `{dates}` are `OR`ed patterns, then the two names'.
 _NIGHTS_WHERE = (
     "({dates} n.id IN (SELECT f.night_id FROM frames f JOIN objects o ON o.id = f.object_id"  # noqa: S608
-    " WHERE f.copy_of IS NULL AND f.night_id IS NOT NULL AND " + archive.NAMED.format(o="o") + "))"
-)
+    " WHERE f.copy_of IS NULL AND f.night_id IS NOT NULL AND"
+    " (EXISTS (SELECT 1 FROM object_names m WHERE m.object_id = o.id AND " + _whole("m.name") + ")"
+    " OR EXISTS (SELECT 1 FROM catalog_names k WHERE k.slug = o.catalog_slug AND "
+    + _whole("k.catalog || k.designation") + "))))"
+)  # fmt: skip
 _NIGHTS = f"""
 SELECT n.id, n.night_date, s.name AS site, {counts.counts_on(counts.Subject.NIGHT)}
 FROM nights n JOIN sites s ON s.id = n.site_id
@@ -113,12 +132,11 @@ LIMIT ?
 """  # noqa: S608 - constant fragments; `where` holds placeholders
 
 
-def _nights(
-    conn: sqlite3.Connection, q: str, pattern: str, limit: int
-) -> tuple[list[dict[str, Any]], int]:
+def _nights(conn: sqlite3.Connection, q: str, limit: int) -> tuple[list[dict[str, Any]], int]:
     dates = night_dates(q)
     where = _NIGHTS_WHERE.format(dates="".join("n.night_date LIKE ? OR " for _ in dates))
-    values = [*dates, pattern, pattern]
+    typed = archive.plain(q)
+    values = [*dates, *([typed] * (2 * _WHOLE_ARGS))]
     rows = conn.execute(_NIGHTS.format(where=where), (*values, limit)).fetchall()
     total = conn.execute(
         f"SELECT COUNT(*) FROM nights n WHERE {where}",  # noqa: S608 - placeholders
@@ -185,7 +203,7 @@ def find(conn: sqlite3.Connection, q: str, limit: int) -> dict[str, dict[str, An
         return {kind: {"items": [], "total": 0} for kind in ("objects", "nights", "gear", "sites")}
     found = {
         "objects": _objects(conn, q, limit),
-        "nights": _nights(conn, q, pattern, limit),
+        "nights": _nights(conn, q, limit),
         "gear": _gear(conn, pattern, limit),
         "sites": _sites(conn, pattern, limit),
     }

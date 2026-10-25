@@ -143,6 +143,23 @@ def test_a_night_is_found_by_the_object_shot_in_it(banco):
     assert (notte["frames"], notte["integration_s"]) == (2, 900.0)
 
 
+def test_a_designation_does_not_find_the_nights_of_a_longer_one(banco):
+    """ "M 3" non e' M 31: le notti si cercano per la sigla intera, non per un pezzo di numero.
+    Un nome comune si cerca ancora per il suo inizio."""
+    assert date_trovate(search.find(banco, "M 3", limit=5)) == []
+    assert date_trovate(search.find(banco, "Andromeda", limit=5)) == ["2024-05-18", "2024-05-17"]
+    # una sigla senza numero trova ancora tutte le notti di quel catalogo
+    assert date_trovate(search.find(banco, "M", limit=5)) == [
+        "2024-06-05",
+        "2024-05-18",
+        "2024-05-17",
+    ]
+
+
+def test_a_month_and_a_year_in_figures_are_a_date(banco):
+    assert date_trovate(search.find(banco, "05/2024", limit=5)) == ["2024-05-18", "2024-05-17"]
+
+
 def test_each_group_says_how_many_beyond_the_few_it_shows(banco):
     trovato = search.find(banco, "maggio 2024", limit=1)
 

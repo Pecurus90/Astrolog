@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 133; senza fonte: 1.
-Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T tecnico: 44.
+Valori: 134; senza fonte: 1.
+Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T tecnico: 45.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -344,6 +344,7 @@ Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T t
 | simbolo | valore | fonte |
 |---|---|---|
 | _ANY_YEAR | `2000` | T |
+| _WHOLE_ARGS | `4` | T |
 
 ### spine/year.py
 

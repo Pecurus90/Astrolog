@@ -130,10 +130,15 @@ _SEARCHED = (
 _KEY = "COALESCE(r.mosaic_key, r.catalog_slug, r.primary_name, r.catalog_name)"
 
 
+def plain(q: str | None) -> str:
+    """The typed text as `FOLDED` folds a column: ASCII lower case, no spaces."""
+    return (q or "").strip().translate(_ASCII_LOWER).replace(" ", "")
+
+
 def folded(q: str | None) -> str | None:
     """The `LIKE` pattern for `FOLDED`; `None` for blanks, or `LIKE '%   %'` would find nothing.
     `%` and `_` are escaped: who types them is looking for those signs."""
-    typed = (q or "").strip().translate(_ASCII_LOWER).replace(" ", "")
+    typed = plain(q)
     if not typed:
         return None
     escaped = typed.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")

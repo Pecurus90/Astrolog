@@ -133,6 +133,14 @@ def test_the_bar_narrows_the_page_and_the_count_follows(client):
     assert stretto["total"] == 1 < intero["total"]
 
 
+def test_the_row_a_search_opens_is_there_whatever_the_bar_says(client):
+    """`key` e' la riga che la ricerca apre: una parola rimasta nella barra non la nasconde, o la
+    pagina direbbe "questo oggetto non c'e'" di un oggetto che c'e'."""
+    uno = next(o for o in archivio(client)["items"] if o["name"])
+    aperto = archivio(client, key=uno["key"], q="zzz")
+    assert [o["key"] for o in aperto["items"]] == [uno["key"]]
+
+
 def test_an_order_that_does_not_exist_is_refused_by_the_route(client):
     """I tre ordini sono un elenco chiuso e la rotta li rifiuta **prima** della spina: cio' che
     arriva da fuori non deve nemmeno avvicinarsi a un `ORDER BY`."""
