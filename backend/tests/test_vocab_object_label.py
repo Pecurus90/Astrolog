@@ -1,6 +1,8 @@
 """I vocabolari dei nomi: la pulizia del nome dell'oggetto (le sigle le sa il catalogo),
 il software di ripresa (i quattro supportati e basta), i valori dell'header per gli alias."""
 
+import time
+
 import pytest
 
 from astrolog.vocab.header_value import normalize_header_value
@@ -83,6 +85,15 @@ def test_software(raw, expected):
 )
 def test_header_value(raw, expected):
     assert normalize_header_value(raw) == expected
+
+
+def test_header_value_is_linear_on_many_indexes():
+    # CodeQL py/polynomial-redos: the old regex took 4.5 s here, a linear strip takes ms
+    raw = "(" + "9)(" * 16000
+    start = time.perf_counter()
+    assert normalize_header_value(raw) == raw
+    assert normalize_header_value("x" + " (9)" * 16000) == "x"
+    assert time.perf_counter() - start < 1.0
 
 
 def test_header_value_is_idempotent_and_keeps_distinct_things_distinct():

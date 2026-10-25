@@ -7,6 +7,10 @@ on:
   pull_request:
   workflow_call:
 
+# Read only: no job writes to the repo, and a token that can write is a token to steal.
+permissions:
+  contents: read
+
 jobs:
   checks:
     name: checks (${{ matrix.os }})

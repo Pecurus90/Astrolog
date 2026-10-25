@@ -6,6 +6,10 @@ on:
     - cron: "0 2 * * *"
   workflow_dispatch:
 
+# Read only; the signal job alone also writes Issues.
+permissions:
+  contents: read
+
 jobs:
   mutation:
     # The whole backend in one job overruns the job limit; see docs/adr/0001-metodo-standard.md.
