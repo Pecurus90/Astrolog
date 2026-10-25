@@ -6,6 +6,7 @@ import os
 import re
 import stat
 import sys
+from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -82,6 +83,14 @@ def _apple_double(name: str) -> bool:
     """`._M42.fits` twin macOS writes beside each file on stick or NAS: Finder metadata, not FITS.
     Without this, every frame passed through a Mac counts unread."""
     return name.startswith("._")
+
+
+_PACKED = frozenset({".gz", ".bz2", ".xz", ".zip", ".7z"})  # `.fits.gz` names its content too
+
+
+def _extension(name: str) -> str:
+    stem, last = os.path.splitext(name.casefold())
+    return os.path.splitext(stem)[1] + last if last in _PACKED else last
 
 
 # Bins and snapshots that carry no dot nor attribute (NAS over Docker, Windows disk on Linux):
@@ -168,6 +177,7 @@ class Walk:
     unreachable: list[str] = field(default_factory=list)
     hidden: list[str] = field(default_factory=list)
     online_only: list[str] = field(default_factory=list)
+    not_fits: Counter[str] = field(default_factory=Counter)  # by extension, "" for none
 
 
 def real_key(path: str) -> str:
@@ -204,6 +214,8 @@ def _list_folder(
             stubs.append(stub.group(1))
         elif _dangling(entry, full):
             result.unreachable.append(full)
+        elif not _hidden(entry):
+            result.not_fits[_extension(entry.name)] += 1
     # placeholder beside its real file: not second file, that one is on disk
     result.online_only.extend(
         os.path.join(current, name) for name in stubs if name.casefold() not in fits_here

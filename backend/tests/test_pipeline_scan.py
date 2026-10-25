@@ -686,6 +686,28 @@ def test_a_scan_says_what_the_walk_left_out(conn, tmp_path):
     assert result.changes.online_only == ["night/M42.fits"]
 
 
+def test_the_receipt_counts_the_files_that_are_not_fits_by_extension(conn, tmp_path):
+    """Solo CR2 di una reflex: prima la ricevuta era quella di una cartella vuota, senza perche'.
+    Nascosti e gemelli del Mac restano fuori anche qui."""
+    reflex = tmp_path / "reflex"
+    nina_light(reflex / "e.fits", 1)
+    for name in ("a.CR2", "b.cr2", "c.xisf", "d.fits.gz", "note", ".DS_Store", "._a.CR2"):
+        (reflex / name).write_bytes(b"x")
+    scan_root(conn, add_root(conn, reflex, NOW), NOW)
+    row = conn.execute("SELECT not_fits FROM pipeline_scans").fetchone()
+    assert json.loads(row["not_fits"]) == {".cr2": 2, ".xisf": 1, ".fits.gz": 1, "": 1}
+
+
+def test_a_silent_root_counts_no_other_file(conn, tmp_path):
+    """NAS spento: nessun giudizio, nemmeno sui file che non sono FITS."""
+    nas = tmp_path / "nas"
+    nas.mkdir()
+    root = add_root(conn, nas, NOW)
+    nas.rename(tmp_path / "off")
+    scan_root(conn, root, NOW)
+    assert conn.execute("SELECT not_fits FROM pipeline_scans").fetchone()["not_fits"] is None
+
+
 def test_the_receipt_keeps_the_first_100_paths_left_out_and_counts_the_rest(conn, tmp_path):
     """20.000 file solo nel cloud non gonfiano ogni ricevuta: primi 100 per lista, e quanti
     altri. Prima: tutti i percorsi a ogni scansione, il database cresceva senza fine."""

@@ -35,6 +35,7 @@ class Changes:
     unlooked: list[str] = field(default_factory=list)  # no stat, name not text, gone before read
     hidden: list[str] = field(default_factory=list)  # trash, service, hidden files: out, said
     online_only: list[str] = field(default_factory=list)  # cloud placeholders: never downloaded
+    not_fits: dict[str, int] = field(default_factory=dict)  # other files, by extension
     # files to read -> (size, mtime_ns) seen now; written only with their read
     stat: dict[str, tuple[int, int]] = field(default_factory=dict)
 
@@ -239,19 +240,21 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
         changes.unlooked = sorted(unlooked)
         changes.hidden = sorted(_rel(p, root) for p in walk.hidden)
         changes.online_only = sorted(_rel(p, root) for p in walk.online_only)
+        changes.not_fits = dict(walk.not_fits.most_common(LEFT_OUT_KEPT))
     with transaction(conn, immediate=True):
         changes.scan_id = inserted_id(
             conn.execute(
                 "INSERT INTO pipeline_scans"
                 " (root_id, scanned_at, reachable, volume_changed, new, changed, reread, unchanged,"
-                " gone, skipped, unknown_keys, unknown_more, left_out, left_out_more, finished)"
-                " VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0, '{}', '{}', 0, ?, ?, 0)",
+                " gone, skipped, unknown_keys, unknown_more, left_out, left_out_more, not_fits,"
+                " finished) VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0, '{}', '{}', 0, ?, ?, ?, 0)",
                 (
                     root_id,
                     now,
                     int(changes.reachable),
                     int(changes.reachable and other_volume),
                     *(_left_out(changes) if changes.reachable else (None, None)),
+                    json.dumps(changes.not_fits) if changes.reachable else None,
                 ),
             )
         )

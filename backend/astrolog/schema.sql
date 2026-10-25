@@ -908,9 +908,13 @@ CREATE TABLE pipeline_scans (
   -- unlooked}; quanti altri per lista in left_out_more; NULL radice muta
   left_out   TEXT CHECK (json_valid(left_out) AND json_type(left_out) = 'object'),
   left_out_more TEXT CHECK (json_valid(left_out_more) AND json_type(left_out_more) = 'object'),
+  -- file che non sono FITS, per estensione: {".cr2": 240, ...}; perche' una cartella di soli
+  -- RAW non sembri vuota; le piu' frequenti (changes.LEFT_OUT_KEPT); NULL radice muta
+  not_fits   TEXT CHECK (json_valid(not_fits) AND json_type(not_fits) = 'object'),
   finished   INTEGER NOT NULL CHECK (finished IN (0, 1)),  -- 0: fermata, il giro dopo rifa'
   CHECK ((reachable = 1) = (left_out IS NOT NULL)),
-  CHECK ((left_out IS NULL) = (left_out_more IS NULL))
+  CHECK ((left_out IS NULL) = (left_out_more IS NULL)),
+  CHECK ((left_out IS NULL) = (not_fits IS NULL))
 ) STRICT;
 
 -- RILEVATO. Posa (camera, inizio con frazione di secondo, dimensioni, durata: ADR 0030); senza
