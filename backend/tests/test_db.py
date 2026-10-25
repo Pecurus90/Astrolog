@@ -2,7 +2,7 @@
 
 import pytest
 
-from astrolog.db.connect import connect, create_database, ensure_database
+from astrolog.db.connect import StaleSchemaError, connect, create_database, ensure_database
 from conftest import add_folder
 
 
@@ -27,6 +27,26 @@ def test_create_refuses_to_overwrite_and_ensure_is_idempotent(tmp_path):
     c.close()
     with pytest.raises(FileExistsError):
         create_database(p)
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "ALTER TABLE scan_runs ADD COLUMN gone_since INTEGER",
+        "DROP VIEW position_folders",
+        "CREATE TABLE left_over (x INTEGER)",
+    ],
+)
+def test_a_database_of_an_older_schema_is_refused_at_start(tmp_path, change):
+    """Un DB nato da uno schema.sql di prima non si apre: senza, l'app parte e cade dopo con
+    `no such column` a meta' scansione, o un 500 su /tonight. Si ricrea (tools/reset_db.py)."""
+    p = tmp_path / "a.db"
+    ensure_database(p)
+    c = connect(p)
+    c.execute(change)
+    c.close()
+    with pytest.raises(StaleSchemaError, match="reset_db"):
+        ensure_database(p)
 
 
 def test_connection_pragmas(tmp_path):

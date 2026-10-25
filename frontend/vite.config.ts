@@ -43,7 +43,8 @@ export default defineConfig({
     strictPort: true,
     // In sviluppo la pagina la serve Vite, le chiamate `/api` le gira al backend: una sola
     // origine per il browser, quindi nessun permesso fra origini diverse da configurare.
-    proxy: { "/api": "http://127.0.0.1:8765" },
+    // La porta e' quella dove `tools/dev.py` ha acceso il backend, come in `astrolog/__main__.py`.
+    proxy: { "/api": `http://127.0.0.1:${process.env["ASTROLOG_PORT"] || "8765"}` },
   },
   test: {
     // Tests live in `tests/`, not next to the component.

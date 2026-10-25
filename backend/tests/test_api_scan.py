@@ -104,14 +104,18 @@ def test_a_start_that_breaks_unexpectedly_leaves_nothing_behind(app):
     and puts back the previous run, as the scan of every folder does."""
     client, fid, _ = app
     state = client.app.state
+    # a run before, so "put back" and "reset" give different states
+    assert client.post(f"/api/v1/folders/{fid}/scan").status_code == 202
+    state.worker.join(30.0)
     previous = (state.last_scan, state.scan_runs)
+    assert previous[0] is not None
     with (
         mock.patch.object(state.worker, "start", side_effect=RuntimeError("boom")),
         pytest.raises(RuntimeError),
     ):
         client.post(f"/api/v1/folders/{fid}/scan")
     with connect(state.db_path) as conn:
-        assert conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0] == 1
     assert fid not in state.folder_locks
     assert (state.last_scan, state.scan_runs) == previous
 
