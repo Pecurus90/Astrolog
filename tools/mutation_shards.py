@@ -2,13 +2,22 @@
 runner's limit. The last shard is computed, so a new module is never left out of the mutation."""
 
 import fnmatch
+import json
 import re
 import sys
-from dataclasses import dataclass
+from collections import Counter
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TextIO
 
 PACKAGE = Path(__file__).resolve().parent.parent / "backend" / "astrolog"
+# Score per shard of a complete night; the night fails only below it.
+REFERENCE = Path(__file__).resolve().parent / "mutation_reference.json"
+FRONTEND = "frontend"
+
+# Statuses of mutmut 3 and of the Stryker JSON report; any other one was not run.
+DETECTED = {"killed", "timeout", "segfault", "caught by type check", "Killed", "Timeout"}
+MISSED = {"survived", "no tests", "suspicious", "Survived", "NoCoverage"}
 
 # Split by package; anything these miss falls into the computed rest shard.
 FIXED = {
@@ -64,6 +73,7 @@ class Report:
     owned: int
     total: int
     orphans: list[str]
+    statuses: Counter[str] = field(default_factory=Counter)
 
 
 def own_results(lines: TextIO, shard: str, table: dict[str, list[str]]) -> Report:
@@ -80,12 +90,15 @@ def own_results(lines: TextIO, shard: str, table: dict[str, list[str]]) -> Repor
             if not matches(name, table[shard]):
                 continue
             report.owned += 1
+            report.statuses[status] += 1
         if not mutant or status != "killed":
             report.lines.append(line.rstrip("\n"))
     return report
 
 
-def filter_results(shard: str, table: dict[str, list[str]], stdin: TextIO) -> int:
+def filter_results(
+    shard: str, table: dict[str, list[str]], stdin: TextIO
+) -> tuple[int, Counter[str]]:
     """Refuses a report where the shard owns no mutant (mutmut's names no longer match the
     patterns) and, in the rest shard alone, one with mutants no shard ever runs."""
     report = own_results(stdin, shard, table)
@@ -96,17 +109,50 @@ def filter_results(shard: str, table: dict[str, list[str]], stdin: TextIO) -> in
         sys.stdout.writelines(f"{line}\n" for line in report.orphans)
         sys.stderr.write(f"shard {shard}: {len(report.orphans)} mutants belong to no shard\n")
         failed = True
-    return 1 if failed else 0
+    return (1 if failed else 0), report.statuses
 
 
-def main(argv: list[str], stdin: TextIO = sys.stdin) -> int:
-    names = [*FIXED, REST]
+def stryker_statuses(stdin: TextIO) -> Counter[str]:
+    """Statuses of every mutant in a Stryker JSON report (mutation-testing-report-schema)."""
+    files = json.load(stdin)["files"].values()
+    return Counter(m["status"] for f in files for m in f["mutants"])
+
+
+def below_reference(shard: str, statuses: Counter[str], reference: Path) -> bool:
+    """Fails only a score under the saved one: a night cut short counts what it ran."""
+    detected = sum(n for s, n in statuses.items() if s in DETECTED)
+    checked = detected + sum(n for s, n in statuses.items() if s in MISSED)
+    score = detected / checked if checked else 0.0
+    not_run = statuses.total() - checked
+    sys.stderr.write(
+        f"shard {shard}: score {score:.4f} ({detected} of {checked} detected, {not_run} not run)\n"
+    )
+    saved = json.loads(reference.read_text(encoding="utf-8")).get(shard)
+    if saved is None:
+        sys.stderr.write(f"shard {shard}: no reference yet\n")
+        return False
+    if round(score, 4) > saved:
+        sys.stderr.write(f"shard {shard}: raise the reference to {score:.4f}\n")
+    return round(score, 4) < saved
+
+
+def main(argv: list[str], stdin: TextIO = sys.stdin, reference: Path = REFERENCE) -> int:
+    names = [*FIXED, REST, FRONTEND]
     if len(argv) not in (2, 3) or argv[1] not in names or argv[2:] not in ([], [FILTER]):
         sys.stderr.write(f"usage: mutation_shards.py {{{','.join(names)}}} [{FILTER}]\n")
         return 2
+    if argv[1] == FRONTEND:
+        if not argv[2:]:
+            return 2
+        statuses = stryker_statuses(stdin)
+        if not statuses.total():
+            sys.stderr.write(f"shard {FRONTEND}: the report holds no mutant\n")
+            return 1
+        return 1 if below_reference(FRONTEND, statuses, reference) else 0
     table = shards()
     if argv[2:]:
-        return filter_results(argv[1], table, stdin)
+        code, statuses = filter_results(argv[1], table, stdin)
+        return 1 if below_reference(argv[1], statuses, reference) else code
     sys.stdout.write(" ".join(table[argv[1]]) + "\n")
     return 0
 

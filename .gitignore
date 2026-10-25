@@ -74,6 +74,9 @@ backend/astrolog/web/
 # sporcherebbero l'albero a ogni giro.
 frontend/tsconfig.tsbuildinfo
 frontend/coverage/
+# Stryker's sandbox and reports (nightly frontend mutation)
+frontend/.stryker-tmp/
+frontend/reports/
 
 # Register of the questions asked to the owner (tools/registro_domande.py): local, never committed.
 reports/domande.jsonl

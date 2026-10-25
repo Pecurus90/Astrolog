@@ -3,6 +3,8 @@
  * i formattatori che le pagine di lettura usano su ogni riga, e che per questo non possono
  * sbagliare in silenzio.
  */
+import { isMainThread } from "node:worker_threads"
+
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
@@ -225,16 +227,21 @@ describe("l'ora in cui e' successa una cosa", () => {
   // diceva un'altra ora, e a schermo va quella.
   const ISTANTE = "2026-09-20T22:30:00.000Z"
 
-  it("si legge sull'orologio di chi guarda, insieme al giorno che le sta accanto", () => {
-    // Kiritimati e' UTC+14: li' quelle 22:30 di Greenwich sono le 12:30 del giorno dopo. Le due
-    // cose si provano insieme perche' insieme si leggono: nella riga di una lettura, se una e'
-    // locale e l'altra in UTC, una scansione di mezzanotte porta il giorno prima accanto all'ora
-    // dopo -- ed e' il difetto che c'era.
-    process.env.TZ = "Pacific/Kiritimati"
+  // in un worker thread (Stryker) TZ non si cambia a test avviato: la prova lo darebbe per rotto
+  it(
+    "si legge sull'orologio di chi guarda, insieme al giorno che le sta accanto",
+    { skip: !isMainThread },
+    () => {
+      // Kiritimati e' UTC+14: li' quelle 22:30 di Greenwich sono le 12:30 del giorno dopo. Le due
+      // cose si provano insieme perche' insieme si leggono: nella riga di una lettura, se una e'
+      // locale e l'altra in UTC, una scansione di mezzanotte porta il giorno prima accanto all'ora
+      // dopo -- ed e' il difetto che c'era.
+      process.env.TZ = "Pacific/Kiritimati"
 
-    expect(orario(ISTANTE)).toBe("12:30")
-    expect(giorno(ISTANTE)).toContain("21")
-  })
+      expect(orario(ISTANTE)).toBe("12:30")
+      expect(giorno(ISTANTE)).toContain("21")
+    },
+  )
 })
 
 describe("un valore con la sua unita'", () => {

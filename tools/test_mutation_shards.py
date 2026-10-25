@@ -1,6 +1,7 @@
 """The nightly mutation shards: every mutant of the backend runs in exactly one of them."""
 
 import io
+import json
 import os
 import re
 import sys
@@ -10,7 +11,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from mutation_shards import FIXED, REST, main, modules, probes, shards
+from mutation_shards import FIXED, FRONTEND, REFERENCE, REST, main, modules, probes, shards
 from mutation_shards import matches as matched
 
 
@@ -147,8 +148,11 @@ def test_the_workflow_runs_every_shard_and_filters_each_report_to_its_own():
     assert "mutation_shards.py ${{ matrix.shard }} --filter" in workflow
     # A shard cut short still reports: the report always runs, and the run stops before the job.
     assert "if: always()" in workflow
-    job, step = (int(v) for v in re.findall(r"^\s*timeout-minutes:\s*(\d+)", workflow, re.M))
-    assert step < job
+    limits = [int(v) for v in re.findall(r"^\s*timeout-minutes:\s*(\d+)", workflow, re.M)]
+    assert limits[1] < limits[0] and limits[3] < limits[2]  # mutation, then mutation-frontend
+    # Each night resumes the last one, and saves even when cut short.
+    assert workflow.count("actions/cache/save@") == 2
+    assert workflow.count("actions/cache/restore@") == 2
 
 
 def test_a_mutant_no_shard_owns_fails_the_rest_report_alone(capsys):
@@ -163,6 +167,76 @@ def test_a_mutant_no_shard_owns_fails_the_rest_report_alone(capsys):
     assert "shard rest: 1 mutants belong to no shard" in captured.err
     assert main(["mutation_shards.py", "api", "--filter"], io.StringIO(lines)) == 0
     assert "belong to no shard" not in capsys.readouterr().err
+
+
+API_RESULTS = (
+    "    astrolog.api.app.x_health__mutmut_1: killed\n"
+    "    astrolog.api.app.x_health__mutmut_2: timeout\n"
+    "    astrolog.api.app.x_health__mutmut_3: survived\n"
+    "    astrolog.api.app.x_health__mutmut_4: no tests\n"
+    "    astrolog.api.app.x_health__mutmut_5: not checked\n"
+    "    astrolog.api.app.x_health__mutmut_6: skipped\n"
+)
+
+
+def write_reference(tmp_path, **scores):
+    path = tmp_path / "reference.json"
+    path.write_text(json.dumps(scores), encoding="utf-8")
+    return path
+
+
+@pytest.mark.parametrize(("reference", "code"), [(0.5, 0), (0.4, 0), (0.51, 1)])
+def test_the_score_fails_only_below_the_reference(tmp_path, capsys, reference, code):
+    # 2 detected of 4 checked: not checked and skipped count neither way
+    path = write_reference(tmp_path, api=reference)
+    assert main(["mutation_shards.py", "api", "--filter"], io.StringIO(API_RESULTS), path) == code
+    assert "shard api: score 0.5000 (2 of 4 detected, 2 not run)" in capsys.readouterr().err
+
+
+def test_a_shard_without_reference_passes_and_says_so(tmp_path, capsys):
+    path = write_reference(tmp_path)
+    assert main(["mutation_shards.py", "api", "--filter"], io.StringIO(API_RESULTS), path) == 0
+    assert "shard api: no reference yet" in capsys.readouterr().err
+
+
+def test_a_better_score_asks_for_the_reference_to_rise(tmp_path, capsys):
+    path = write_reference(tmp_path, api=0.25)
+    assert main(["mutation_shards.py", "api", "--filter"], io.StringIO(API_RESULTS), path) == 0
+    assert "raise the reference to 0.5000" in capsys.readouterr().err
+
+
+def test_the_frontend_score_reads_the_stryker_report(tmp_path, capsys):
+    report = {
+        "files": {
+            "src/a.ts": {"mutants": [{"status": "Killed"}, {"status": "Survived"}]},
+            "src/b.ts": {
+                "mutants": [{"status": "Timeout"}, {"status": "NoCoverage"}, {"status": "Ignored"}]
+            },
+        }
+    }
+    path = write_reference(tmp_path, frontend=0.5)
+    stdin = io.StringIO(json.dumps(report))
+    assert main(["mutation_shards.py", "frontend", "--filter"], stdin, path) == 0
+    assert "shard frontend: score 0.5000 (2 of 4 detected, 1 not run)" in capsys.readouterr().err
+
+
+def test_a_frontend_report_without_mutants_is_refused(tmp_path, capsys):
+    stdin = io.StringIO(json.dumps({"files": {"src/a.ts": {"mutants": []}}}))
+    path = write_reference(tmp_path)
+    assert main(["mutation_shards.py", "frontend", "--filter"], stdin, path) == 1
+    assert "the report holds no mutant" in capsys.readouterr().err
+
+
+def test_the_frontend_report_read_is_the_one_written_on_a_cut_run_too():
+    root = Path(__file__).resolve().parent.parent
+    workflow = (root / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
+    assert "frontend --filter < reports/stryker-incremental.json" in workflow
+
+
+def test_the_saved_reference_names_only_real_shards():
+    reference = json.loads(REFERENCE.read_text(encoding="utf-8"))
+    assert set(reference) <= {*FIXED, REST, FRONTEND}
+    assert all(0 <= score <= 1 for score in reference.values())
 
 
 def test_a_report_where_the_shard_owns_no_mutant_is_refused(capsys):
