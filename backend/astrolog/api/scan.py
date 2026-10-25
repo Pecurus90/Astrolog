@@ -11,6 +11,7 @@ from starlette.datastructures import State
 
 from ..clock import elapsed_s, now_iso
 from ..db.connect import connect
+from ..spine import backup
 from ..spine.run import ORDER, queue, queue_folders
 from ..spine.scan import root_readable
 from ..spine.scan_store import (
@@ -129,12 +130,23 @@ def _stages_with_cleanup(
         for folder_id in locked:
             _release(state, folder_id)
         _discard_never_begun(state.db_path, started, begun)
+        _backup_new_samples(state.db_path)
 
     last = len(steps) - 1
     return [
         Stage(name, factory, on_finish=at_end if i == last else None)
         for i, (name, factory) in enumerate(steps)
     ]
+
+
+def _backup_new_samples(db_path: str | Path) -> None:
+    """The folders' samples into the backup when a scan changed one (`spine/backup.py`). Its own
+    connection: this runs in the worker's thread."""
+    conn = connect(db_path)
+    try:
+        backup.write_if_new_sample(conn, db_path)
+    finally:
+        conn.close()
 
 
 def _forget_start(

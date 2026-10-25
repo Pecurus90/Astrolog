@@ -4,6 +4,7 @@ sopravvivono a un database ricreato: nomi, percorsi, impronte; mai un id."""
 
 import json
 import os
+import threading
 
 from fastapi.testclient import TestClient
 
@@ -104,15 +105,70 @@ def test_declining_starts_from_scratch(tmp_path, offline):
     assert _dichiarato(db)["sites"] == []
 
 
-def test_the_stages_never_write_the_file(db_path, tmp_path):
-    """Scansione e spina sono l'app che lavora, non l'utente che dice: il file non si muove."""
+def test_a_scan_writes_the_file_only_for_a_new_sample(db_path, tmp_path):
+    """Il file e' cio' che hai detto, piu' i file-campione che riconoscono le cartelle su un'altra
+    macchina: la prima scansione ce li mette (Marco, 25/10/2026). Una scansione che non cambia il
+    campione non lo tocca."""
     write_light(tmp_path / "lib" / "a.fits")
     with _app(db_path) as c:
         folder = c.post("/api/v1/folders", json={"root_path": str(tmp_path / "lib")}).json()
+        c.post(f"/api/v1/folders/{folder['id']}/scan")
+        c.app.state.worker.join(10.0)
+        dentro = backup.read(_file(db_path))
+        assert dentro is not None and [f["sample"] for f in dentro["folders"]] != [[]]
         scritto = _file(db_path).stat().st_mtime_ns
         c.post(f"/api/v1/folders/{folder['id']}/scan")
         c.app.state.worker.join(10.0)
     assert _file(db_path).stat().st_mtime_ns == scritto
+
+
+def test_a_scan_reading_before_an_answer_cannot_write_after_it(db_path, monkeypatch):
+    """La scansione legge il database, l'utente risponde e scrive il file, poi la scansione
+    scrive: senza un solo scrittore alla volta il file perdeva quella risposta."""
+    conn = connect(db_path, check_same_thread=False)
+    cartella = add_folder(conn, "D:/Astro")
+    backup.write(conn, db_path)
+    vera, letto, via = backup.collect, threading.Event(), threading.Event()
+
+    def lenta(c, **k):
+        dati = vera(c, **k)
+        letto.set()
+        via.wait(10.0)
+        return dati
+
+    def risponde():
+        c = connect(db_path)
+        c.execute(
+            "INSERT INTO header_aliases(kind, header_value, target_key, created_at)"
+            " VALUES('camera', 'atr', 'ATR2600M', 'ora')"
+        )
+        backup.write(c, db_path)
+        c.close()
+
+    monkeypatch.setattr(backup, "collect", lenta)
+    scansione = threading.Thread(target=backup.write_if_new_sample, args=(conn, db_path))
+    # un file letto dopo l'ultimo backup: il campione e' nuovo, e la scansione scrive
+    frame = conn.execute(
+        "INSERT INTO frames(frame_hash, image_type, header_json, created_at)"
+        " VALUES('h1', 'light', '[]', 'ora')"
+    ).lastrowid
+    conn.execute(
+        "INSERT INTO positions(frame_id, folder_id, rel_path, filesize, mtime, seen_at)"
+        " VALUES(?, ?, 'a.fits', 1, 1.0, 'ora')",
+        (frame, cartella),
+    )
+    scansione.start()
+    assert letto.wait(10.0)
+    monkeypatch.setattr(backup, "collect", vera)
+    utente = threading.Thread(target=risponde)
+    utente.start()
+    # senza un solo scrittore la risposta finisce qui; con, aspetta la scansione
+    utente.join(1.0)
+    via.set()
+    scansione.join(10.0)
+    utente.join(10.0)
+    dati = backup.read(backup.path_for(db_path))
+    assert dati is not None and len(dati["header_aliases"]) == 1
 
 
 def test_the_export_carries_no_service_key_and_no_solver_path(tmp_path, offline):

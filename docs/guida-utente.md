@@ -907,7 +907,9 @@ Li' dentro ci sono il database, la cache e i log. I tuoi FITS restano dove sono.
 
 Accanto al database c'e' anche **`risposte.json`, il backup di tutto quello che hai detto
 all'app**: le preferenze, i siti, le cartelle, gli strumenti e i filtri che hai scritto tu, i nomi che
-le hai insegnato e ogni risposta di *Da confermare*. Si riscrive da solo dopo ogni tua risposta.
+le hai insegnato e ogni risposta di *Da confermare*. Si riscrive da solo dopo ogni tua risposta,
+e dopo una scansione che legge una cartella per la prima volta, perche' porti con se' i file che
+servono a riconoscerla.
 Le foto non ci sono, e nemmeno cio' che l'app ricava leggendole: frame, setup, notti si rifanno
 rileggendo le cartelle.
 

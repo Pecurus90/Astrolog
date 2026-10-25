@@ -17,7 +17,9 @@ sono gia' agganciate a chiavi stabili (impronta del frame, grafia dell'header, n
   temporaneo, poi rinomina) dopo ogni scrittura dell'utente andata a buon fine: Applica,
   attrezzatura, impostazioni, chiave Meteoblue, siti, cartelle e spostamento di cartella. Una
   regola sola sugli indirizzi (`api/backup.is_user_write`, in un middleware), non una chiamata per
-  rotta; mai dagli stadi della spina.
+  rotta. Dagli stadi della spina una sola volta: **a fine scansione, se il campione di una cartella
+  non e' quello del file** (Marco, 25/10/2026), perche' una cartella letta e mai risposta torni
+  riconoscibile su un'altra macchina. Uno scrittore alla volta, lettura compresa.
 - **Import senza dipendenze nuove**: la pagina legge il file e ne manda il contenuto JSON.
 - **Cosa contiene**, ognuno per la sua chiave stabile: `config` (le chiavi segrete si', perche' il
   database accanto le ha gia' in chiaro); `sites` per nome, con quota e cielo e la loro provenienza

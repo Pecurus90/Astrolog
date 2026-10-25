@@ -1,10 +1,11 @@
 """Everything the user said, in one file next to the database (ADR 0017): rewritten after every
-write of theirs, offered back on a new database. Ids are never in it: names, paths, fingerprints."""
+write of theirs and after a scan that changed a folder's sample, offered back on a new database."""
 
 import json
 import logging
 import os
 import sqlite3
+import threading
 from pathlib import Path
 from typing import Any, Final, NamedTuple
 
@@ -18,6 +19,8 @@ from .folder_move import SAMPLE_FILES
 log = logging.getLogger(__name__)
 
 FILE_NAME: Final = "risposte.json"
+# The user's requests and the end of a scan both write the file, from different threads.
+_WRITING = threading.Lock()
 VERSION: Final = 1
 
 _INSTRUMENT = (
@@ -96,11 +99,13 @@ def _filter(conn: sqlite3.Connection, row: sqlite3.Row) -> dict[str, Any]:
 
 
 def write(conn: sqlite3.Connection, db_path: str | Path) -> None:
-    """Whole and atomic: a crash mid-write leaves the previous file, never half of one."""
+    """Whole and atomic: a crash mid-write leaves the previous file, never half of one. One writer
+    at a time, read included: a scan's older read cannot land after the user's answer."""
     target = path_for(db_path)
     tmp = target.with_suffix(".tmp")
-    tmp.write_text(json_text(collect(conn, this_machine=True)), encoding="utf-8")
-    os.replace(tmp, target)
+    with _WRITING:
+        tmp.write_text(json_text(collect(conn, this_machine=True)), encoding="utf-8")
+        os.replace(tmp, target)
 
 
 def write_quietly(conn: sqlite3.Connection, db_path: str | Path) -> None:
@@ -110,6 +115,23 @@ def write_quietly(conn: sqlite3.Connection, db_path: str | Path) -> None:
         write(conn, db_path)
     except (OSError, sqlite3.Error):
         log.exception("backup delle risposte: il file non si e' potuto scrivere")
+
+
+def write_if_new_sample(conn: sqlite3.Connection, db_path: str | Path) -> bool:
+    """After a scan: rewritten only when a folder's sample is not the file's, so another machine
+    recognises a folder read but never answered on. No file, or not a backup: left alone."""
+    try:
+        old = read(path_for(db_path))
+    except BackupError:
+        return False
+    if old is None:
+        return False
+    saved = {f["root_path"]: f["sample"] for f in old.get("folders", [])}
+    rows = conn.execute("SELECT * FROM folders ORDER BY id").fetchall()
+    if all(saved.get(r["root_path"]) == _folder(conn, r)["sample"] for r in rows):
+        return False
+    write_quietly(conn, db_path)
+    return True
 
 
 def json_text(data: dict[str, Any]) -> str:
