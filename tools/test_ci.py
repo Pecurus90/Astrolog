@@ -61,6 +61,18 @@ def test_a_run_that_never_appears_is_none():
     assert ci.find_run(lambda _a: "[]", "f" * 40, sleep=lambda _s: None) is None
 
 
+def test_the_outcome_comes_from_the_run_not_from_the_watch_exit():
+    """gh run watch can fail by itself (API limit, HTTP 403): only a run that failed is red."""
+    assert ci.outcome("success", "abc1234", "https://x/9") == (0, None)
+    for unknown in (None, ""):  # gh silent, or the run not finished yet
+        code, message = ci.outcome(unknown, "abc1234", "https://x/9")
+        assert code == 0 and "non so" in message
+    code, message = ci.outcome("cancelled", "abc1234", "https://x/9")
+    assert code == 0 and "cancelled" in message  # not a fault, but not green either
+    code, message = ci.outcome("failure", "abc1234", "https://x/9")
+    assert code == 2 and "ROSSA" in message
+
+
 def test_a_failed_watch_says_the_work_is_not_closed():
     message = ci.watch_message("abc1234", "https://x/9", failed=True)
     assert "abc1234" in message and "https://x/9" in message and "non e' chiuso" in message

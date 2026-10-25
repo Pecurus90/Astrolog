@@ -37,6 +37,17 @@ def watch_message(sha: str, url: str, failed: bool) -> str:
     return f"La CI del push {sha} e' verde: {url}."
 
 
+def outcome(conclusion: str | None, sha: str, url: str) -> tuple[int, str | None]:
+    """From the run's own conclusion: watch can fail by itself (API limit), a run cannot lie."""
+    if conclusion in RED:
+        return 2, watch_message(sha, url, failed=True)
+    if not conclusion:  # gh silent, or the run not finished
+        return 0, f"La CI del push {sha}: non so se e' finita ({url}). Da guardare a mano."
+    if conclusion != "success":
+        return 0, f"La CI del push {sha} e' finita '{conclusion}', non verde: {url}."
+    return 0, None
+
+
 def _gh(args: list[str], timeout: float = 30) -> str:
     done = subprocess.run(
         ["gh", *args], capture_output=True, encoding="utf-8", timeout=timeout, check=True
@@ -80,16 +91,23 @@ def _push(payload: dict) -> int:
         run = find_run(_gh, sha)
         if run is None:
             return 0
-        watched = subprocess.run(
-            ["gh", "run", "watch", str(run["databaseId"]), "--exit-status", "--compact"],
+        # one poll a minute: the default 3 s burns the API limit shared by every gh call
+        subprocess.run(
+            ["gh", "run", "watch", str(run["databaseId"]), "--interval", "60", "--compact"],
             capture_output=True, encoding="utf-8", check=False,
         )  # fmt: skip
     except (OSError, subprocess.SubprocessError, ValueError):
         return 0
-    if watched.returncode == 0:
-        return 0
-    print(watch_message(sha[:8], run["url"], failed=True), file=sys.stderr)
-    return 2
+    try:
+        conclusion = json.loads(
+            _gh(["run", "view", str(run["databaseId"]), "--json", "conclusion"])
+        )["conclusion"]
+    except (OSError, subprocess.SubprocessError, ValueError, KeyError):
+        conclusion = None
+    code, message = outcome(conclusion, sha[:8], run["url"])
+    if message:
+        print(message, file=sys.stderr)
+    return code
 
 
 def main(argv: list[str]) -> int:
