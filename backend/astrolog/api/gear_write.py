@@ -4,7 +4,7 @@ the other would be two truths about one piece. Nothing is written while the work
 import sqlite3
 from collections.abc import Collection
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..clock import now_iso
 from ..spine import gear, gear_create, gear_usage, rigs
@@ -85,10 +85,13 @@ def name_rig(
     """A rig's name. It is kept among the declarations, not in the row: it comes back when the
     spine rebuilds the same rig.
 
-    409 `worker_busy`; 404 `not_found`."""
+    409 `worker_busy`; 404 `not_found`; 409 `name_taken` if another rig has it, in any case."""
     work.busy(request.app.state)
-    with write.writing(conn):
-        rigs.declare_rig(conn, rig_id, body.name, now_iso())
+    try:
+        with write.writing(conn):
+            rigs.declare_rig(conn, rig_id, body.name, now_iso())
+    except rigs.RigNameTakenError as err:
+        raise HTTPException(status_code=409, detail={"code": "name_taken"}) from err
     return GearWritten(id=rig_id, requeued=0, run_started=False)
 
 
@@ -162,7 +165,8 @@ def edit_filter(
     """The same functions as *Da confermare*.
 
     409 `worker_busy`; 404 `not_found`; 409 `name_taken` if the new name is already another
-    filter's; 422 `merge_refused`."""
+    filter's; 422 `merge_refused`; 422 `model_contradicts_bands` for a model with bands not
+    its own."""
     work.busy(request.app.state)
     now = now_iso()
     with write.writing(conn):

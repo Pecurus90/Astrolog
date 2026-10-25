@@ -272,7 +272,7 @@ export interface paths {
          * @description A rig's name. It is kept among the declarations, not in the row: it comes back when the
          *     spine rebuilds the same rig.
          *
-         *     409 `worker_busy`; 404 `not_found`.
+         *     409 `worker_busy`; 404 `not_found`; 409 `name_taken` if another rig has it, in any case.
          */
         patch: operations["name_rig"];
         trace?: never;
@@ -367,7 +367,8 @@ export interface paths {
          * @description The same functions as *Da confermare*.
          *
          *     409 `worker_busy`; 404 `not_found`; 409 `name_taken` if the new name is already another
-         *     filter's; 422 `merge_refused`.
+         *     filter's; 422 `merge_refused`; 422 `model_contradicts_bands` for a model with bands not
+         *     its own.
          */
         patch: operations["edit_filter"];
         trace?: never;
@@ -816,7 +817,8 @@ export interface paths {
          *
          *     409 `worker_busy`; 404 `not_found` if what an answer points to no longer exists or is no
          *     longer asked (an old page); 422 `unknown_target` for a catalog slug that does not exist or a
-         *     rig the page does not offer; 422 `merge_refused`; 409 `name_taken` or `none_filter_exists` if
+         *     rig the page does not offer; 422 `merge_refused`; 422 `model_contradicts_bands` for a filter
+         *     model with bands not its own; 409 `name_taken` or `none_filter_exists` if
          *     a filter answer collides with another filter.
          */
         post: operations["apply"];

@@ -128,6 +128,67 @@ def test_two_pieces_are_merged_from_the_gear_page_too(client):
     assert "ATR2600M" not in [p["name"] for p in _gear(client)["instruments"]]
 
 
+def test_a_model_and_bands_that_contradict_it_are_refused(client):
+    """Un modello porta la sua banda: scriverlo insieme a bande diverse dava un filtro che dice
+    "Antlia ALP-T" e conta come Ha. Le due risposte d'accordo invece passano."""
+    h = _filtro(client, "H")
+
+    def applica(**risposta):
+        return client.post("/api/v1/review/apply", json={"filters": [{"id": h["id"], **risposta}]})
+
+    r = applica(catalog_id="antlia-alp-t-3nm", bands=[{"band": "HA"}])
+    assert r.status_code == 422 and r.json()["detail"]["code"] == "model_contradicts_bands"
+    r = applica(catalog_id="antlia-alp-t-3nm", bands=[{"band": "HA"}, {"band": "OIII"}])
+    assert r.status_code == 200, r.text
+
+
+@pytest.mark.parametrize(
+    ("prima", "banda_attesa"),
+    [({"bands": [{"band": "HA"}]}, "HA"), ({"catalog_id": "antlia-alp-t-3nm"}, "DUO_HAOIII")],
+)
+def test_taking_back_no_filter_finds_again_the_band_it_had(client, prima, banda_attesa):
+    """Le bande e il modello restano salvati sotto "nessun filtro": ritirato, il filtro torna a
+    dire la banda che dicevano, non "sconosciuta"."""
+    h = _filtro(client, "H")
+    for risposta in (prima, {"is_none": True}, {"is_none": False}):
+        r = client.post("/api/v1/review/apply", json={"filters": [{"id": h["id"], **risposta}]})
+        assert r.status_code == 200, r.text
+        client.app.state.worker.join(30.0)
+    with db(client) as conn:
+        sql = "SELECT passband FROM filters WHERE id = ?"
+        assert conn.execute(sql, (h["id"],)).fetchone()[0] == banda_attesa
+
+
+def test_taking_back_no_filter_redoes_its_frames(client):
+    """Detto per sbaglio "nessun filtro" e poi ritirato: i frame tornavano a contare sotto la banda
+    "nessun filtro", perche' la banda restava quella e niente ripartiva."""
+    h = _filtro(client, "H")
+
+    def risponde(is_none):
+        r = client.post(
+            "/api/v1/review/apply", json={"filters": [{"id": h["id"], "is_none": is_none}]}
+        )
+        assert r.status_code == 200, r.text
+        client.app.state.worker.join(30.0)
+
+    def banda():
+        with db(client) as conn:
+            sql = "SELECT passband FROM filters WHERE id = ?"
+            return conn.execute(sql, (h["id"],)).fetchone()[0]
+
+    risponde(True)
+    assert banda() == "NONE"
+    risponde(False)
+    assert banda() != "NONE"
+    with db(client) as conn:
+        rifatti = conn.execute(
+            "SELECT COUNT(*) FROM frame_stages s JOIN frames f ON f.id = s.frame_id"
+            " WHERE f.filter_id = ? AND s.stage = 'normalize' AND s.status = 'done'",
+            (h["id"],),
+        ).fetchone()[0]
+    assert rifatti > 0
+
+
 def test_a_merge_the_spine_refuses_is_said(client):
     askar = by_name(_gear(client)["instruments"], "Askar 103Apo")
     r = client.patch(f"/api/v1/gear/instruments/{askar['id']}", json={"merge_into": askar["id"]})

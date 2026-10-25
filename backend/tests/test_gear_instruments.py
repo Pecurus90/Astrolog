@@ -375,6 +375,16 @@ def test_the_name_of_a_rig_survives_a_merge(client):
         assert riga["value"] == "Il piccolo"  # il nome non e' sparito col corredo
 
 
+def test_two_rigs_cannot_share_a_name(client):
+    """Come due pezzi o due filtri: due corredi con lo stesso nome non si distinguono piu' in
+    nessun elenco. Rinominare un corredo col suo stesso nome invece va."""
+    primo, secondo = gear(client)["rigs"][:2]
+    _nomina(client, primo["id"], "Il piccolo")
+    _nomina(client, primo["id"], "Il piccolo")
+    r = client.patch(f"/api/v1/gear/rigs/{secondo['id']}", json={"name": "il PICCOLO"})
+    assert r.status_code == 409 and r.json()["detail"]["code"] == "name_taken", r.text
+
+
 def _nomina(client, rig_id, nome):
     r = client.patch(f"/api/v1/gear/rigs/{rig_id}", json={"name": nome})
     assert r.status_code == 200, r.text

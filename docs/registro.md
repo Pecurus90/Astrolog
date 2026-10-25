@@ -85,6 +85,7 @@ Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T t
 | simbolo | valore | fonte |
 |---|---|---|
 | _REFUSALS | `(gear.MergeRefusedError, 422, "merge_refused"),` | C RFC 9110 15.5.21: 422 |
+| _REFUSALS | `(gear.ModelContradictsBandsError, 422, "model_contradicts_bands"),` | C RFC 9110 15.5.21: 422 |
 | _REFUSALS | `(folders.NotAskedError, 422, "not_asked"),` | C RFC 9110 15.5.21: 422 |
 | _REFUSALS | `(decl.UnknownTargetError, 422, "unknown_target"),` | C RFC 9110 15.5.21: 422 |
 | _REFUSALS | `(rigs.NotOfKindError, 422, "not_of_kind"),` | C RFC 9110 15.5.21: 422 |

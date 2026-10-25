@@ -267,13 +267,20 @@ def rig_names(conn: sqlite3.Connection) -> dict[str, str]:
     return dict(values_of(conn, EntityType.RIG, RigField.NAME))
 
 
+class RigNameTakenError(ValueError):
+    """Another rig already has that name, in any case: like two pieces or two filters."""
+
+
 def declare_rig(conn: sqlite3.Connection, rig_id: int, name: str, now: str | None = None) -> bool:
     """Among the declarations, not in the row a merge can delete: the name comes back by itself
     when `normalize` rebuilds the same rig."""
     row = _rig(conn, rig_id)
     if not name:
         return False
-    write_declaration(conn, EntityType.RIG, decl_key(row), RigField.NAME, name, now)
+    key = decl_key(row)
+    if any(k != key and v.casefold() == name.casefold() for k, v in rig_names(conn).items()):
+        raise RigNameTakenError(name)
+    write_declaration(conn, EntityType.RIG, key, RigField.NAME, name, now)
     return True
 
 

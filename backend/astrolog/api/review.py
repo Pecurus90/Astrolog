@@ -121,7 +121,8 @@ def apply(
 
     409 `worker_busy`; 404 `not_found` if what an answer points to no longer exists or is no
     longer asked (an old page); 422 `unknown_target` for a catalog slug that does not exist or a
-    rig the page does not offer; 422 `merge_refused`; 409 `name_taken` or `none_filter_exists` if
+    rig the page does not offer; 422 `merge_refused`; 422 `model_contradicts_bands` for a filter
+    model with bands not its own; 409 `name_taken` or `none_filter_exists` if
     a filter answer collides with another filter."""
     state = request.app.state
     work.busy(state)

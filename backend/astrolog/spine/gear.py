@@ -134,8 +134,7 @@ def declare_filter(  # noqa: PLR0913
     ).fetchone()
     if row is None:
         raise LookupError(f"filtro {filter_id}")
-    if fields.get("catalog_id") and model_by_id(fields["catalog_id"]) is None:
-        raise LookupError(f"modello {fields['catalog_id']}")  # before writing
+    _check_model(fields.get("catalog_id"), bands)  # before writing
     new_name = fields.get("name")
     if new_name and new_name != row["name"] and not row["is_none"]:
         # The "no filter" row's name comes from the vocabulary: a rule on "none" would decide for
@@ -145,11 +144,15 @@ def declare_filter(  # noqa: PLR0913
     _set_fields(conn, "filters", filter_id, fields, FILTER_FIELDS)
     if is_none is not None:
         # "no filter" IS a band of the closed domain: the switch alone would leave the old band,
-        # two homes for one fact
+        # two homes for one fact; taken back, the band is the saved bands' or model's again
+        band = row["passband"]
+        if is_none:
+            band = Passband.NO_FILTER
+        elif row["is_none"]:
+            band = _saved_band(conn, filter_id)
         conn.execute(
-            "UPDATE filters SET is_none = ?, passband = CASE WHEN ? THEN ? ELSE passband END"
-            " WHERE id = ?",
-            (int(is_none), int(is_none), Passband.NO_FILTER, filter_id),
+            "UPDATE filters SET is_none = ?, passband = ? WHERE id = ?",
+            (int(is_none), band, filter_id),
         )
     if bands is not None:
         conn.execute("DELETE FROM filter_bands WHERE filter_id = ?", (filter_id,))
@@ -185,6 +188,31 @@ def _rigs_using(conn: sqlite3.Connection, instrument_id: int) -> list[int]:
             (instrument_id, instrument_id),
         )
     ]
+
+
+class ModelContradictsBandsError(ValueError):
+    """A filter model written with bands that are not its own: one of the two answers is wrong."""
+
+
+def _saved_band(conn: sqlite3.Connection, filter_id: int) -> Passband:
+    """What the filter's saved bands say, else its model, else unknown."""
+    saved = [r[0] for r in conn.execute("SELECT band FROM filter_bands WHERE filter_id = ?",
+                                         (filter_id,))]  # fmt: skip
+    if saved:
+        return passband_from_bands(saved)
+    row = conn.execute("SELECT catalog_id FROM filters WHERE id = ?", (filter_id,)).fetchone()
+    model = model_by_id(row["catalog_id"]) if row["catalog_id"] else None
+    return model.passband if model else Passband.UNKNOWN
+
+
+def _check_model(catalog_id: str | None, bands: Sequence[Mapping[str, Any]] | None) -> None:
+    if not catalog_id:
+        return
+    model = model_by_id(catalog_id)
+    if model is None:
+        raise LookupError(f"modello {catalog_id}")
+    if bands is not None and passband_from_bands([b["band"] for b in bands]) != model.passband:
+        raise ModelContradictsBandsError(catalog_id)
 
 
 class MergeRefusedError(ValueError):

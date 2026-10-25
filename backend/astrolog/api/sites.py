@@ -93,7 +93,8 @@ def list_sites(
     codes of what is not known about it (`unknown`)."""
     total = conn.execute("SELECT COUNT(*) FROM sites").fetchone()[0]
     rows = conn.execute(
-        _SELECT + " ORDER BY s.is_default DESC, s.name LIMIT ? OFFSET ?", (limit, offset)
+        _SELECT + " ORDER BY s.is_default DESC, s.name COLLATE NOCASE, s.id LIMIT ? OFFSET ?",
+        (limit, offset),
     ).fetchall()
     return SiteList(items=[_out(r) for r in rows], total=total, limit=limit, offset=offset)
 

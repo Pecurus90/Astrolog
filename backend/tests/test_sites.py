@@ -196,6 +196,14 @@ def test_sites_many_and_one_default(client_vuoto, offline):
     assert create(client_vuoto, name="Terzo", latitude=0.0, longitude=0.0)["is_default"] is False
 
 
+def test_sites_are_listed_by_name_whatever_the_case(client_vuoto, offline):
+    """Per nome come lo legge una persona: "vdB" prima di "WR", non dopo come sui byte."""
+    for i, nome in enumerate(["Casa", "WR prato", "vdB colle", "Alpe"]):
+        create(client_vuoto, name=nome, latitude=45.0 + i, longitude=11.0)
+    nomi = [s["name"] for s in sites(client_vuoto)["items"]]
+    assert nomi == ["Casa", "Alpe", "vdB colle", "WR prato"]
+
+
 def test_the_very_first_site_becomes_the_home_one_by_itself(db_path, offline):
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         assert create(c)["is_default"] is True

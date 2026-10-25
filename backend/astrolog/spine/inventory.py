@@ -15,7 +15,7 @@ _INSTRUMENTS = f"""
 SELECT i.*, {_USAGE}
 FROM instruments i
 LEFT JOIN gear_usage u ON u.subject = 'instrument' AND u.subject_id = i.id
-ORDER BY i.kind, i.name
+ORDER BY i.kind, i.name COLLATE NOCASE, i.id
 """  # noqa: S608 - constant fragment of this file
 
 # The order the counter wrote (`position`, most used first); a row not yet counted goes last.
