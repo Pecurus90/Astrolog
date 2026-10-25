@@ -135,8 +135,13 @@ jobs:
 
   # Five parallel runs of the fast suite: flaky tests show up under load.
   instabilita:
-    name: instabilita (5 giri)
+    name: instabilita (giro ${{ matrix.giro }})
     runs-on: ubuntu-latest
+    # Five runners at once, not five rounds in a row: same rounds, a third of the wait.
+    strategy:
+      fail-fast: false
+      matrix:
+        giro: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -148,15 +153,11 @@ jobs:
       # Nessuna deselezione: la voce che ne giustificava una si e' chiusa il 16/9/2026 (la
       # conferma di Da confermare ordina per numero di riga, non per orario) e con lei la riga.
       # Una deselezione nuova entra solo con la sua Issue, citata col numero.
-      - name: cinque giri della suite veloce
+      - name: un giro della suite veloce
         if: hashFiles('backend/pyproject.toml') != ''
         # Nessun bytecode scritto: 24 processi che scrivono negli stessi `__pycache__` sono
         # il sospettato di rossi con asserzioni impossibili, e non scriverlo non costa niente.
         env:
           PYTHONDONTWRITEBYTECODE: "1"
-        run: |
-          for giro in 1 2 3 4 5; do
-            echo "--- giro $giro"
-            python -m pytest -q --strict-markers -m "not lento" -n auto tests || exit 1
-          done
+        run: python -m pytest -q --strict-markers -m "not lento" -n auto tests
         working-directory: backend
