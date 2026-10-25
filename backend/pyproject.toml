@@ -9,11 +9,11 @@ license = "GPL-3.0-or-later"
 dependencies = [
   # ognuna entra col difetto che risolve, la licenza, e una ruota per le cinque
   # architetture (Windows x64, Mac Intel e Apple Silicon, Linux amd64 e arm64) o Python puro
-  "fastapi>=0.143.3",          # MIT   - le rotte e l'OpenAPI da cui si generano i tipi TS
+  "fastapi>=0.159.1",          # MIT   - le rotte e l'OpenAPI da cui si generano i tipi TS
   "uvicorn>=0.54.0",           # BSD   - il server
   "pydantic>=2.14.1",           # MIT   - la forma delle risposte
   "astropy>=8.0.2",            # BSD   - lettura header FITS (ruote per tutte e cinque)
-  "platformdirs>=4.13.4",       # MIT   - dove sta il DB su Windows, Mac e Linux
+  "platformdirs>=4.13.5",       # MIT   - dove sta il DB su Windows, Mac e Linux
   "tzfpy>=2.1.1",              # MIT   - il fuso dalle coordinate, offline e coi confini veri
                              #         (ruote per tutte e cinque le architetture, 4 MB,
                              #         nessuna dipendenza a sua volta)
@@ -41,7 +41,7 @@ dev = [
   # TestClient", PyPI), e senza la suite non parte nemmeno. In locale non si vedeva perche' un
   # `httpx` vecchio c'era per caso, mai dichiarato; su una macchina pulita -- la CI -- ogni test
   # che apre l'app cadeva all'import del conftest.
-  "httpx2>=2.0",
+  "httpx2>=2.16.0",
   "pre-commit>=4.7.0",  # MIT - runs the checks in .pre-commit-config.yaml
 ]
 # il rilevatore di duplicati (jscpd) gira da npm, nel frontend: una installazione per tutti e due
