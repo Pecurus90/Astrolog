@@ -1070,6 +1070,10 @@ CREATE TABLE pipeline_solutions (
   -- solve.SCALE_TOLERANCE dalla risolta: avviso, la soluzione resta (D8, ADR 0036)
   expected_scale_arcsec_px REAL CHECK (expected_scale_arcsec_px > 0),
   scale_disagrees INTEGER CHECK (scale_disagrees IN (0, 1)),
+  -- 206,265 x pixel della scheda / scala risolta, al mm (ADR 0016); NULL: pixel non scritto
+  measured_focal_mm INTEGER CHECK (measured_focal_mm > 0),
+  -- l'avviso di ASTAP accanto alla soluzione, com'e' scritto ("... FL=561mm")
+  astap_warning   TEXT CHECK (astap_warning <> ''),
   rotation_deg    REAL,
   -- dal WCS (pipeline/footprint.py); specchiato: segno di det CD contro ROWORDER, misurato
   mirrored        INTEGER CHECK (mirrored IN (0, 1)),
@@ -1081,7 +1085,7 @@ CREATE TABLE pipeline_solutions (
   CHECK ((outcome = 'solved') = (ra_deg IS NOT NULL)
     AND (ra_deg IS NULL) = (dec_deg IS NULL) AND (ra_deg IS NULL) = (scale_arcsec_px IS NULL)),
   CHECK (outcome = 'solved' OR coalesce(rotation_deg, mirrored, skew_deg, width_deg, height_deg,
-    corners, expected_scale_arcsec_px) IS NULL),
+    corners, expected_scale_arcsec_px, measured_focal_mm, astap_warning) IS NULL),
   CHECK ((expected_scale_arcsec_px IS NULL) = (scale_disagrees IS NULL))
 ) STRICT;
 

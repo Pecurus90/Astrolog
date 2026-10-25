@@ -461,7 +461,7 @@ Fonti: C norma: 57; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T t
 | 0013 | Progetti e piano della notte: il Planner fa i progetti, la serata si compone a parte | accettata, 4/10/2026. ADR 0033: lo scarto dei frame lo sceglie l'utente (ADR 0032). ADR 0034 supera la Luna da -5° e i gradini 25/50%: di fabbrica ING 25/65% dall'orizzonte, modificabile in Impostazioni (Marco, 24/10/2026). La spec sta in `docs/domini/piano-della-notte.md` e `docs/domini/planner.md` (24/10/2026). |  |
 | 0014 | Da confermare semplificata: meno famiglie di domande, chiavi che non si spostano | accettata, 5/10/2026. Costruita nella spina vecchia (`docs/domini/spina.md`). La "fase 2 |  |
 | 0015 | Una ricetta per tipo di lavoro, una revisione sola | accettata, 5/10/2026. Sostituisce il giro di revisione di ADR 0001. Superata in parte |  |
-| 0016 | La focale di un frame si misura dal cielo, l'header e' il ripiego | accettata, 6/10/2026 (Marco). Costruita nella spina vecchia; nella pipeline nuova da |  |
+| 0016 | La focale di un frame si misura dal cielo, l'header e' il ripiego | accettata, 6/10/2026 (Marco). Costruita nella spina vecchia; nella pipeline nuova la |  |
 | 0017 | Il backup delle risposte: un file accanto al database, riscritto a ogni risposta | accettata, 7/10/2026 (Marco). Costruita (`spine/backup.py`; prove in |  |
 | 0018 | Si passa tutto al telaio e al foglio v26, senza convivenza | accettata, 7/10/2026; in vigore. |  |
 | 0019 | Sole e Sistema solare entrano in Archivio a mano, il deep sky resta automatico | accettata, 17/10/2026 (Marco). Nessun codice ancora. Ordine dei pezzi: disegno della linguetta e di "Aggiungi oggetto"; comete, |  |

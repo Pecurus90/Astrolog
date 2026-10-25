@@ -1,7 +1,8 @@
 # 0016 -- La focale di un frame si misura dal cielo, l'header e' il ripiego
 
-**Stato:** accettata, 6/10/2026 (Marco). Costruita nella spina vecchia; nella pipeline nuova da
-fare (`docs/piano.json`).
+**Stato:** accettata, 6/10/2026 (Marco). Costruita nella spina vecchia; nella pipeline nuova la
+focale misurata si salva con la soluzione (`pipeline_solutions.measured_focal_mm`), il setup che
+la usa nasce al passo 40 (`docs/piano.json`).
 
 ## Contesto
 

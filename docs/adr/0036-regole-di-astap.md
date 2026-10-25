@@ -3,7 +3,7 @@
 **Stato:** accettata, 24/10/2026. Raccoglie le decisioni del piano di ASTAP (D2-D8) che stavano
 solo nel materiale di lavoro; D1 e D7 sono in ADR 0033. Chiude la domanda aperta di ADR 0003
 (quale catalogo). Soglie tecniche scelte dalla sessione sulle convenzioni (CLAUDE.md, principio 1).
-Costruita in parte (`pipeline/solve.py`); punti 7-8 fatti, 9-10 da fare. **Superata in parte da ADR 0039**: il
+Costruita in parte (`pipeline/solve.py`); punti 7, 8 e 10 fatti, 9 da fare. **Superata in parte da ADR 0039**: il
 tempo per lancio diventa un limite di previsione, minimo 30 s; 60 s finche' non e' costruito.
 
 ## Contesto
@@ -49,5 +49,7 @@ Decisioni di Marco dal piano di ASTAP, qui con la loro casa:
   e campo propri si risolvono per prime. Punto 8 costruito: scala attesa dalla scheda contro la
   risolta, nei due versi (`solve.SCALE_TOLERANCE`), scritta con la soluzione
   (`expected_scale_arcsec_px`, `scale_disagrees`); `solve.forget` dimentica una soluzione a
-  richiesta e la posa si rifa' alla passata dopo. Punti 9-10 (parallelo, focale misurata) restano
-  da costruire.
+  richiesta e la posa si rifa' alla passata dopo. Punto 10 costruito: focale misurata dal pixel
+  della scheda e dalla scala risolta (ADR 0016, `measured_focal_mm`), e l'avviso di ASTAP
+  (`WARNING=... FL=561mm`, con la virgola del sistema) tenuto com'e' in `astap_warning`. Punto 9
+  (parallelo) resta da costruire.

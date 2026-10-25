@@ -73,12 +73,12 @@ SISTER_SCALE = (
 UPSERT = (
     "INSERT INTO pipeline_solutions (frame_id, outcome, step, file_id, astap_version, catalogue,"
     " installed, duration_s, hint_from, field_from, ra_deg, dec_deg, scale_arcsec_px,"
-    " expected_scale_arcsec_px, scale_disagrees, rotation_deg, mirrored, skew_deg, width_deg,"
-    " height_deg, corners, tried_at) VALUES"
+    " expected_scale_arcsec_px, scale_disagrees, measured_focal_mm, astap_warning, rotation_deg,"
+    " mirrored, skew_deg, width_deg, height_deg, corners, tried_at) VALUES"
     " (:frame_id, :outcome, :step, :file_id, :astap_version, :catalogue, :installed, :duration_s,"
     " :hint_from, :field_from, :ra_deg, :dec_deg, :scale_arcsec_px, :expected_scale_arcsec_px,"
-    " :scale_disagrees, :rotation_deg, :mirrored, :skew_deg, :width_deg, :height_deg, :corners,"
-    " :tried_at)"
+    " :scale_disagrees, :measured_focal_mm, :astap_warning, :rotation_deg, :mirrored, :skew_deg,"
+    " :width_deg, :height_deg, :corners, :tried_at)"
     " ON CONFLICT (frame_id) DO UPDATE SET attempts = attempts + 1, outcome = excluded.outcome,"
     " step = excluded.step, file_id = excluded.file_id, astap_version = excluded.astap_version,"
     " catalogue = excluded.catalogue, installed = excluded.installed,"
@@ -86,7 +86,8 @@ UPSERT = (
     " field_from = excluded.field_from, ra_deg = excluded.ra_deg, dec_deg = excluded.dec_deg,"
     " scale_arcsec_px = excluded.scale_arcsec_px,"
     " expected_scale_arcsec_px = excluded.expected_scale_arcsec_px,"
-    " scale_disagrees = excluded.scale_disagrees, rotation_deg = excluded.rotation_deg,"
+    " scale_disagrees = excluded.scale_disagrees, measured_focal_mm = excluded.measured_focal_mm,"
+    " astap_warning = excluded.astap_warning, rotation_deg = excluded.rotation_deg,"
     " mirrored = excluded.mirrored, skew_deg = excluded.skew_deg, width_deg = excluded.width_deg,"
     " height_deg = excluded.height_deg, corners = excluded.corners, tried_at = excluded.tried_at"
     # settled by another pass meanwhile: stays
@@ -306,7 +307,7 @@ def _write(conn: sqlite3.Connection, row: sqlite3.Row, tried: _Tried, this: _Pas
         "file_id": row["file_id"], "astap_version": this.version, "catalogue": found.catalogue,
         "installed": this.installed, "duration_s": tried.duration_s, "ra_deg": found.ra_deg,
         "dec_deg": found.dec_deg, "scale_arcsec_px": found.scale_arcsec_px,
-        "rotation_deg": found.rotation_deg, "tried_at": this.now,
+        "rotation_deg": found.rotation_deg, "tried_at": this.now, "astap_warning": found.warning,
         "hint_from": tried.hint.hint_from, "field_from": tried.hint.field_from,
     } | _measured(found, row)  # fmt: skip
     values |= _scale_check(values["scale_arcsec_px"], row)  # type: ignore[arg-type]
@@ -318,13 +319,16 @@ def _write(conn: sqlite3.Connection, row: sqlite3.Row, tried: _Tried, this: _Pas
 def _scale_check(solved: float | None, row: sqlite3.Row) -> dict[str, object]:
     """The card's pixel and focal against the sky: far off is said, the solution stays (D8)."""
     expected = units.scale_arcsec_px(row["pixel_um"], row["focal_mm"])
+    # ADR 0016: the card's pixel has the binning, as the solved scale does
+    measured = units.focal_from_scale(row["pixel_um"], solved)
+    focal: dict[str, object] = {"measured_focal_mm": measured}
     if solved is None or expected is None:
-        return {"expected_scale_arcsec_px": None, "scale_disagrees": None}
+        return {"expected_scale_arcsec_px": None, "scale_disagrees": None} | focal
     low, high = sorted((solved, expected))
     return {
         "expected_scale_arcsec_px": expected,
         "scale_disagrees": int(high > low * (1 + SCALE_TOLERANCE)),
-    }
+    } | focal
 
 
 def forget(conn: sqlite3.Connection, frame_id: int) -> bool:

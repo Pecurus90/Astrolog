@@ -93,6 +93,8 @@ class Solution:
     catalogue: str | None = None  # the one ASTAP says it used, lowercase code
     cd: tuple[float, float, float, float] | None = None  # CD1_1, CD1_2, CD2_1, CD2_2 degrees
     crpix: tuple[float, float] | None = None
+    # ASTAP's own words beside a solution ("scale was inaccurate! ... FL=561mm"), as written
+    warning: str | None = None
 
 
 # Codes, not sentences: they are shown on screen, and a new word would arrive untranslated.
@@ -317,6 +319,7 @@ def from_ini(ini: dict[str, str]) -> Solution:
         rotation_deg=wcs_rotation_deg(wcs),
         cd=cd if None not in cd else None,  # type: ignore[arg-type]
         crpix=crpix if None not in crpix else None,  # type: ignore[arg-type]
+        warning=ini.get("WARNING", "").strip() or None,
     )
 
 

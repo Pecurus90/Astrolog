@@ -3,9 +3,10 @@ resta (D8, ADR 0036); una soluzione si dimentica a richiesta e la posa si rifa'.
 
 import pytest
 
+from astrolog import units
 from astrolog.pipeline.solve import forget
 from conftest import nina_light
-from test_pipeline_solve import _SKY, FakeAstap, _scanned, _solutions, _solve
+from test_pipeline_solve import _SKY, INI, FakeAstap, _scanned, _solutions, _solve
 
 _POINTING = _SKY[2:]
 
@@ -53,3 +54,30 @@ def test_a_forgotten_solution_is_tried_again_at_the_next_pass(conn, tmp_path):
 
 def test_forgetting_a_shot_never_solved_says_so(conn):
     assert forget(conn, 404) is False
+
+
+def test_the_measured_focal_comes_from_the_card_pixel_and_the_solved_scale(conn, tmp_path):
+    """ADR 0016: 206,265 x pixel / scala, al millimetro; la focale scritta non entra."""
+    row = _solved(conn, tmp_path, ("FOCALLEN=               1120.0", _SKY[1], *_POINTING))
+    assert row["measured_focal_mm"] == units.focal_from_scale(3.76, row["scale_arcsec_px"])
+    assert 555 <= row["measured_focal_mm"] <= 565  # the sky says 560, the header 1120
+
+
+def test_without_a_pixel_there_is_no_measured_focal(conn, tmp_path):
+    row = _solved(conn, tmp_path, (_SKY[0], *_POINTING))
+    assert row["outcome"] == "solved" and row["measured_focal_mm"] is None
+
+
+def test_astap_s_own_warning_is_kept_as_written(conn, tmp_path):
+    """L'avviso di ASTAP sul campo dato (la virgola e' quella del sistema), parola per parola."""
+    said = 'Warning scale was inaccurate! Set FOV=1,60d, scale=1,4", FL=561mm'
+    nas = tmp_path / "nas"
+    nina_light(nas / "a.fits", 1, _SKY)
+    ini = (INI / "solved.ini").read_text() + f"WARNING={said}\n"
+    _solve(conn, _scanned(conn, nas), FakeAstap(ini), tmp_path)
+    [row] = _solutions(conn)
+    assert row["astap_warning"] == said and row["outcome"] == "solved"
+
+
+def test_a_solution_without_warning_keeps_none(conn, tmp_path):
+    assert _solved(conn, tmp_path, _SKY)["astap_warning"] is None
