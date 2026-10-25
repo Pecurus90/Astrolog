@@ -28,7 +28,10 @@ def main(argv: list[str]) -> int:
     number = found[0]["number"] if found else None
     todo = action(result, number)
     if todo == "open":
-        body = f"La mutazione notturna e' fallita: {url}. Si chiude da sola alla prima notte verde."
+        body = (
+            f"La Nightly (mutazione o CI completa con Windows) e' fallita: {url}. "
+            "Si chiude da sola alla prima notte verde."
+        )
         _gh("issue", "create", "--label", LABEL, "--title", "Nightly rossa", "--body", body)
     elif todo == "comment":
         _gh("issue", "comment", str(number), "--body", f"Ancora rossa: {url}")

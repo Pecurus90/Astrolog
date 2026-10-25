@@ -5,6 +5,7 @@ name: AstroLog
 on:
   push:
   pull_request:
+  workflow_call:
 
 jobs:
   checks:
@@ -13,7 +14,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # Windows runner: 27 min vs 7 (astropy/erfa math, measured). A push gets it from the
+        # pre-push hook on a Windows PC; pull requests (ruleset) and the nightly run it here.
+        os: ${{ fromJSON(github.event_name == 'push' && '["ubuntu-latest", "macos-latest"]' || '["ubuntu-latest", "windows-latest", "macos-latest"]') }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7

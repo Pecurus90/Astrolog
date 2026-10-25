@@ -1,4 +1,4 @@
-# Slow checks that do not belong on every commit: mutation testing.
+# Slow checks that do not belong on every commit: mutation testing and the CI on Windows.
 name: Nightly
 
 on:
@@ -39,9 +39,13 @@ jobs:
           mutmut results --all true > results.txt
           python ../tools/mutation_shards.py ${{ matrix.shard }} --filter < results.txt
 
+  # The full CI, Windows included: a push skips the Windows runner.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   # GitHub tells only who wrote the cron: a red night becomes an Issue, a green one closes it.
   signal:
-    needs: mutation
+    needs: [mutation, ci]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -53,5 +57,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
-          python tools/nightly_issue.py "${{ needs.mutation.result }}"
+          python tools/nightly_issue.py "${{ needs.mutation.result == 'success' && needs.ci.result == 'success' && 'success' || 'failure' }}"
           "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
