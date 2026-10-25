@@ -60,9 +60,9 @@ export function Dashboard() {
   const archivio = useArchivio(primaInCorso).data
   // la prima lettura finisce quando `group` ha dato a ogni frame la sua notte, non con lo stadio scan
   const ancoraInLettura = lettura !== null || (scan?.first === true && (archivio ? archivio.still_reading > 0 : primaInCorso))
-  const archivioVuoto = cartelle?.total === 0 && archivio?.totals.frames === 0
+  const archivioVuoto = cartelle?.total === 0 && archivio?.totals?.frames === 0
   // per tutta la prima lettura; finche' le notti non rispondono, zero: "sta ancora cercando"
-  const trovati = ancoraInLettura ? archivio?.totals.objects ?? 0 : null
+  const trovati = ancoraInLettura ? archivio?.totals?.objects ?? 0 : null
   const sito = detto?.site ?? null
   // il meteo che non risponde senza una previsione che valga: la notte e le prossime non si dicono
   const giu = detto ? silenzio(detto) !== null && senzaPrevisioneIn(detto) : false

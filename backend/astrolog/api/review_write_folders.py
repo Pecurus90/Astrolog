@@ -30,7 +30,8 @@ def answer_gear(
         raise LookupError(f"firma {edit.key}")
     _only_what_is_asked(row, edit)
     rig_choices, filter_choices = choices
-    data = signature.answer(conn, edit.key) or signature.Answer()
+    before = signature.answer(conn, edit.key)
+    data = before or signature.Answer()
     if edit.rig_id is not None or edit.camera is not None:
         optics, camera, focal = rig_parts(edit, rig_choices)
         optics = data.optics if optics is None else optics  # a part not sent keeps the earlier one
@@ -55,7 +56,8 @@ def answer_gear(
                 data, filter=signature.FilterAnswer(edit.filter), filter_name=filter_name
             )
     signature.declare(conn, edit.key, data, now)
-    return requeued + signature.requeue(conn, edit.key)
+    # the same answer again moves nothing
+    return requeued + ([] if data == before else signature.requeue(conn, edit.key))
 
 
 def _only_what_is_asked(card: Mapping[str, Any], edit: GearEdit) -> None:
@@ -77,9 +79,13 @@ def _sensor(conn: sqlite3.Connection, camera: str | None, colour: bool, now: str
         if colour:
             raise NotAskedError("color")  # no camera to write it on: answer the camera first
         return []
+    before = unfiltered.is_colour(conn, camera)
     unfiltered.declare_sensor(conn, camera, colour, now)
     camera_id = decl.instrument_id(conn, "camera", camera)
-    return [] if camera_id is None else unfiltered.requeue(conn, camera_id)
+    # the same colour moves nothing: only a change redoes the frames
+    if camera_id is None or unfiltered.is_colour(conn, camera) == before:
+        return []
+    return unfiltered.requeue(conn, camera_id)
 
 
 def rig_parts(

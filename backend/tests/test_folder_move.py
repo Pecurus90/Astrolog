@@ -127,6 +127,35 @@ def test_moving_to_the_same_files_keeps_everything_and_a_scan_adds_nothing(
     assert _count(db_path, "SELECT COUNT(*) FROM positions WHERE status <> 'present'") == 0
 
 
+def test_one_file_in_common_is_not_a_move(client_vuoto, tmp_path):
+    """Una cartella di cinque file e un posto che ne ha uno solo di quelli: non e' lei spostata,
+    e' un file copiato altrove. Il campione chiede tutti i file che puo' chiedere."""
+    old, other = tmp_path / "F", tmp_path / "G"
+    for i in range(5):
+        write_light(old / f"a{i}.fits", obj=f"M {i + 1}")
+    f = _client_folder(client_vuoto, old)
+    _scanned(client_vuoto, f["id"])
+    other.mkdir()
+    shutil.copy2(old / "a0.fits", other / "a0.fits")
+    r = client_vuoto.post(f"/api/v1/folders/{f['id']}/move", json={"root_path": str(other)})
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"]["code"] == "not_the_same_folder"
+
+
+def test_a_small_folder_with_a_deleted_file_is_still_recognised(client_vuoto, tmp_path):
+    """Tolta una posa brutta, poi spostato tutto: il file che non c'e' piu' non si chiede."""
+    old, new = tmp_path / "H", tmp_path / "I"
+    for i in range(3):
+        write_light(old / f"a{i}.fits", obj=f"M {i + 1}")
+    f = _client_folder(client_vuoto, old)
+    _scanned(client_vuoto, f["id"])
+    (old / "a2.fits").unlink()
+    _scanned(client_vuoto, f["id"])
+    shutil.copytree(old, new)
+    r = client_vuoto.post(f"/api/v1/folders/{f['id']}/move", json={"root_path": str(new)})
+    assert r.status_code == 200, r.text
+
+
 def test_a_place_with_other_files_is_refused_and_nothing_changes(client_vuoto, tmp_path, db_path):
     """Stessi nomi, pixel diversi: non e' la stessa cartella. E nemmeno un posto vuoto."""
     old, other, empty = tmp_path / "D", tmp_path / "E", tmp_path / "vuota"

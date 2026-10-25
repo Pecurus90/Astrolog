@@ -545,6 +545,15 @@ def test_when_no_folder_can_be_read_it_says_which_ones(app, tmp_path):
         assert conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0] == 0
 
 
+def test_the_work_left_names_only_the_stages_that_run(app):
+    """`measure` sta nel grafo ma non gira ancora: contato nel residuo, resterebbe "da fare"
+    per sempre e la pagina direbbe lavoro che nessuno fara'."""
+    client, _, _ = app
+    scan_all(client)
+    client.app.state.worker.join(30.0)
+    assert "measure" not in status(client)["pending"]
+
+
 def test_a_reading_that_breaks_before_it_begins_leaves_no_open_receipt(app):
     """La ricevuta conta come cominciata solo quando la lettura e' partita davvero: se cade prima
     (la cartella non si trova), resta aperta per sempre e racconta una corsa che non c'e'."""

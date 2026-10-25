@@ -33,7 +33,7 @@ def same_files(
     deadline: float | None = None,
 ) -> bool | None:
     """The first `SAMPLE_FILES` under `root` the folder has a position for, fingerprinted as the
-    scan does; zero, or one different: not it. `None`: `deadline` passed first, unknown."""
+    scan does; fewer than it can ask, or one different: not it. `None`: `deadline` passed first."""
     sampled = 0
     restored = _restored_sample(conn, folder_id)
     for rel, path in sorted((rel_path(p, root), p) for p in found):
@@ -53,7 +53,12 @@ def same_files(
         sampled += 1
         if sampled == SAMPLE_FILES:
             break
-    return sampled > 0
+    # every file it can ask: one copied elsewhere is not the folder moved
+    known = conn.execute(
+        "SELECT COUNT(DISTINCT rel_path) FROM positions WHERE folder_id = ? AND status = 'present'",
+        (folder_id,),
+    ).fetchone()[0]
+    return sampled > 0 and sampled >= min(SAMPLE_FILES, known or len(restored))
 
 
 def _restored_sample(conn: sqlite3.Connection, folder_id: int) -> dict[str, str]:

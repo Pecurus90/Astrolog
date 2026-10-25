@@ -46,7 +46,8 @@ def night_list(
             "total": nights.how_many(conn, night),
             "limit": limit,
             "offset": offset,
-            "totals": nights.archive_totals(conn),
+            # once: the pages after the first come by scrolling and would count it again
+            "totals": nights.archive_totals(conn) if offset == 0 else None,
             "waiting": waiting,
             "waiting_frames": sum(
                 w["frames"] for w in waiting if w["answer_at"] != nights.AnswerAt.REVIEW

@@ -97,6 +97,12 @@ def test_a_night_says_which_filters_and_how_long_each_one_ran(archivio):
     ]
 
 
+def test_the_archive_totals_travel_with_the_first_page_only(archivio):
+    """Il totale dell'archivio si conta una volta: le pagine dopo, a scorrimento, non lo rifanno."""
+    assert notti(archivio, limit=1)["totals"] is not None
+    assert notti(archivio, limit=1, offset=1)["totals"] is None
+
+
 def test_the_page_opens_with_what_the_whole_archive_holds(archivio):
     """In cima, l'archivio intero: e' la domanda che ci si fa aprendo la pagina, e non dipende da
     quante righe si stanno guardando."""

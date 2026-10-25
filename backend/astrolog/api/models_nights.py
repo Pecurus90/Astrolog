@@ -114,7 +114,9 @@ class WaitingPoses(BaseModel):
 
 
 class NightList(Page[Night]):
-    totals: ArchiveTotals
+    totals: ArchiveTotals | None = Field(
+        description="The whole archive's, on the first page only (`offset` 0)."
+    )
     waiting: list[WaitingPoses]
     waiting_frames: int = Field(
         description="The frames of `waiting` together, except those of `review`: To confirm counts "

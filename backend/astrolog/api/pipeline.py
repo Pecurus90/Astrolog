@@ -154,7 +154,8 @@ def status(request: Request, conn: sqlite3.Connection = Depends(get_db)) -> Pipe
     return PipelineStatus(
         worker=_shown(snapshot),
         scan=scan_progress(state, conn),
-        pending=pending_by_stage(conn),
+        # the stages that run: one in the graph without work would stay "to do" for ever
+        pending=pending_by_stage(conn, [s for s in ORDER if s != StageName.SCAN]),
         action=action_for(snapshot),
     )
 

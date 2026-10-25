@@ -33,6 +33,16 @@ def test_the_colour_on_the_card_redoes_the_poses_only_when_it_changes_something(
     assert correct(client, mono["id"], camera_type="color").json()["requeued"] > 0
 
 
+def test_saying_no_filter_twice_redoes_nothing_the_second_time(client):
+    """La seconda volta la camera e' gia' mono: niente cambia, niente riparte."""
+    pezzi = {i["name"]: i for i in gear(client)["instruments"]}
+    chiedono = [g for g in review(client)["gear"] if g["asks_filter"] and g["camera"] in pezzi]
+    scheda = next(g for g in chiedono if pezzi[g["camera"]]["camera_type"] is None)
+    apply(client, gear=[{"key": scheda["key"], "filter": "no_filter"}])
+    secondo = apply(client, gear=[{"key": scheda["key"], "filter": "no_filter"}])
+    assert secondo["requeued"] == 0, secondo
+
+
 def test_answering_no_filter_writes_mono_on_the_card(client):
     """ "Nessun filtro" su una camera di cui i file non dicono il colore scrive mono sulla scheda
     (`unfiltered.declare_sensor`): e' la stessa risposta, e la scheda la mostra."""
@@ -297,6 +307,16 @@ def test_a_filter_wheel_with_no_slots_is_refused(client):
     so", e' una ruota che non esiste."""
     pezzo = by_name(gear(client)["instruments"], "ASCOM ToupTek FilterWheel")
     assert correct(client, pezzo["id"], slots=0).status_code == 422
+
+
+def test_a_merge_that_leaves_the_colour_as_it_was_redoes_only_the_moved_frames(client):
+    """Unire due grafie di camere mono: il colore della camera tenuta non cambia, quindi i suoi
+    sette frame restano come sono; riparte solo quello che e' passato da una grafia all'altra."""
+    pezzi = gear(client)["instruments"]
+    tenuta = by_name(pezzi, "ATR2600M(USB2.0)")
+    assorbita = by_name(pezzi, "ATR2600M")
+    out = correct(client, assorbita["id"], merge_into=tenuta["id"]).json()
+    assert out["requeued"] == assorbita["frames"] == 1
 
 
 def test_merging_two_spellings_moves_the_poses_and_learns_the_rule(client):

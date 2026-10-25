@@ -78,9 +78,11 @@ def answer(
 
 def merge(conn: sqlite3.Connection, instrument_id: int, into_id: int, now: str) -> set[int]:
     """The merge of two spellings. Returns the frames to requeue."""
+    colour_before = _colour(conn, into_id)
     requeued = set(gear.merge_instrument(conn, instrument_id, into_id, now))
-    # the absorbed camera's answer passes to the kept one: its frames must feel it
-    requeued.update(unfiltered_reader.requeue(conn, into_id))
+    # the absorbed camera's answer passes to the kept one: its frames feel it if it changes
+    if _colour(conn, into_id) != colour_before:
+        requeued.update(unfiltered_reader.requeue(conn, into_id))
     return requeued
 
 

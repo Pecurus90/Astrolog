@@ -106,7 +106,7 @@ export function Notti() {
         )}
         {(storta || (una !== null && ultima && righe.length === 0)) && <Sparita />}
 
-        {scritto === null && ultima && <Testa pagina={ultima} />}
+        {scritto === null && ultima && pagine[0]?.totals && <Testa pagina={ultima} tot={pagine[0].totals} />}
         {scritto === null && ultima && righe.length === 0 && <Niente pagina={ultima} />}
 
         {righe.length > 0 && (
@@ -159,8 +159,8 @@ function Sparita() {
 }
 
 /** Cosa tiene l'archivio intero, e una riga per ogni cosa che spiega un elenco piu' corto. */
-function Testa({ pagina }: { pagina: Elenco }) {
-  const tot = pagina.totals
+function Testa({ pagina, tot }: { pagina: Elenco; tot: NonNullable<Elenco["totals"]> }) {
+  // il totale arriva con la prima pagina sola: le altre non lo rifanno
   return (
     <>
       <header className="as-registro__testa">

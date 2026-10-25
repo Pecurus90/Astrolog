@@ -2638,7 +2638,8 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
-            totals: components["schemas"]["ArchiveTotals"];
+            /** @description The whole archive's, on the first page only (`offset` 0). */
+            totals: components["schemas"]["ArchiveTotals"] | null;
             /** Waiting */
             waiting: components["schemas"]["WaitingPoses"][];
             /**
