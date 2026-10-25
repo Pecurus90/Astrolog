@@ -164,17 +164,42 @@ def invalidate(
     )
 
 
-# The same predicate as `WAITING_SQL`, or `ready` and this count would disagree. `CROSS JOIN`
-# starts from the marked frames, not from every queued stage row.
-_WAITING_BY_STAGE = f"""
-SELECT s.stage, COUNT(*) FROM frames f CROSS JOIN frame_stages s ON s.frame_id = f.id
-WHERE {WAITING_SQL} AND s.status = 'pending' GROUP BY s.stage
-"""  # noqa: S608 - the same constant fragment
-_PENDING = "SELECT COUNT(*) FROM frame_stages WHERE stage = ? AND status = 'pending'"
+_PENDING = "SELECT COUNT(*) FROM frame_stages s WHERE s.stage = ? AND s.status = 'pending'"
+_WAITING = (
+    "SELECT COUNT(*) FROM frames f CROSS JOIN frame_stages s ON s.frame_id = f.id"  # noqa: S608
+    f" WHERE {WAITING_SQL} AND s.stage = ? AND s.status = 'pending'"
+)
 
 
-def _waiting_by_stage(conn: sqlite3.Connection) -> dict[str, int]:
-    return {r[0]: r[1] for r in conn.execute(_WAITING_BY_STAGE)}
+def _blocking(stage: StageName) -> frozenset[StageName]:
+    """The upstream stages whose failure holds `stage` for ever, the whole chain up."""
+    out: set[StageName] = set()
+    for dep in DEPENDS[stage]:
+        if StageStatus.FAILED not in SETTLED.get((stage, dep), (StageStatus.DONE,)):
+            out.add(dep)
+        out |= _blocking(dep)
+    return frozenset(out)
+
+
+def _not_held(stage: StageName) -> str:
+    """Without the frames a failed upstream stage holds: no run would ever take them."""
+    if not (held := _blocking(stage)):
+        return ""
+    marks = ",".join(f"'{s}'" for s in sorted(held))  # stage names, a closed set of ours
+    return (
+        " AND NOT EXISTS (SELECT 1 FROM frame_stages b WHERE b.frame_id = s.frame_id"  # noqa: S608
+        f" AND b.stage IN ({marks}) AND b.status = 'failed')"
+    )
+
+
+def _pending_sql(stage: StageName) -> str:
+    return _PENDING + _not_held(stage)
+
+
+def waiting_sql(stage: StageName) -> str:
+    """The same predicate as `WAITING_SQL`, or `ready` and this count would disagree. `CROSS JOIN`
+    starts from the marked frames, not from every queued stage row."""
+    return _WAITING + _not_held(stage)
 
 
 def passed_by(conn: sqlite3.Connection, stage: StageName) -> list[int]:
@@ -193,7 +218,10 @@ def pending_by_stage(
 ) -> dict[str, int]:
     """Frames waiting for an answer are not work: counted, the residue would never reach zero and
     every run would restart for nothing."""
+
     # one count per stage on the `frame_stages_pending` index, not one GROUP BY sweep
-    totals = {s: conn.execute(_PENDING, (s,)).fetchone()[0] for s in stages}
-    waiting = _waiting_by_stage(conn) if WAITING_STAGES.intersection(totals) else {}
-    return {s: n - (waiting.get(s, 0) if s in WAITING_STAGES else 0) for s, n in totals.items()}
+    def left(s: StageName) -> int:
+        n = conn.execute(_pending_sql(s), (s,)).fetchone()[0]
+        return n - (conn.execute(waiting_sql(s), (s,)).fetchone()[0] if s in WAITING_STAGES else 0)
+
+    return {s: left(s) for s in stages}

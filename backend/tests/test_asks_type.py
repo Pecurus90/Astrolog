@@ -20,11 +20,12 @@ from astrolog.spine.normalize import normalize_frames
 from astrolog.spine.scan import scan_folder
 from astrolog.spine.solve import solve_frames
 from astrolog.spine.stages import (
-    _WAITING_BY_STAGE,
     FOLDER_SAYS,
+    WAITING_STAGES,
     invalidate,
     mark_pending,
     set_status,
+    waiting_sql,
 )
 from conftest import add_folder, sky_solved, write_fits
 from test_solve import solver
@@ -216,16 +217,17 @@ def test_the_end_of_the_sky_writes_the_folders_it_cannot_tell(conn, tmp_path):
     assert [g["frames"] for g in typeless.by_folder(conn)] == [2]
 
 
-def _piano(conn, query):
-    return " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + query))
+def _piano(conn, query, args=()):
+    return " ".join(r[3] for r in conn.execute("EXPLAIN QUERY PLAN " + query, args))
 
 
 def test_the_readers_start_from_the_frames_that_wait(conn):
     """Il residuo e lo stacco partono dalle pose segnate: un archivio che scrive il tipo non ne ha
     nessuna, e chi non lo scrive paga solo quelle che aspettano davvero -- non tutte quelle senza
     tipo, e non lo stadio `measure`, che ha in fila ogni posa."""
-    for query in (_WAITING_BY_STAGE, typeless_answer._WAITING_AND_ATTACHED):
-        piano = _piano(conn, query)
+    queries = [(waiting_sql(s), (s,)) for s in WAITING_STAGES]
+    for query, args in [*queries, (typeless_answer._WAITING_AND_ATTACHED, ())]:
+        piano = _piano(conn, query, args)
         assert re.match(r"(SCAN|SEARCH) f USING (COVERING )?INDEX frames_asks_type\b", piano), piano
         assert "frame_stages_pending" not in piano, piano
 

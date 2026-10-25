@@ -60,9 +60,26 @@ def test_stages_status_and_pending(conn):
     assert count_pending(conn, "solve") == 0 and ready(conn, "solve", limit=5) == []
     row = conn.execute("SELECT status, reason FROM frame_stages WHERE stage = 'solve'").fetchone()
     assert (row["status"], row["reason"]) == ("failed", "no_stars")
-    assert all(count_pending(conn, s) == 1 for s in STAGES if s != "solve")
+    # `measure` needs a solved sky: held for ever by the failure, it is not work left
+    assert all(count_pending(conn, s) == 1 for s in STAGES if s not in ("solve", "measure"))
+    assert count_pending(conn, "measure") == 0
     with pytest.raises(ValueError):
         set_status(conn, 1, "solve", "boh")
+
+
+def test_a_frame_held_by_a_failed_stage_is_not_work_left(conn):
+    """Normalizzazione fallita: `identify` e `group` non lo prenderanno mai. Contato come lavoro
+    da fare, Avvia partirebbe a vuoto a ogni giro."""
+    conn.execute(
+        "INSERT INTO frames(frame_hash, image_type, header_json, created_at)"
+        " VALUES('h9', 'light', '[]', 'now')"
+    )
+    mark_pending(conn, 1)
+    set_status(conn, 1, "solve", "done")
+    set_status(conn, 1, "normalize", "failed", reason="boom")
+    assert ready(conn, "identify") == []
+    assert count_pending(conn, "identify") == 0
+    assert count_pending(conn, "group") == 0
 
 
 def _una_posa(conn):
