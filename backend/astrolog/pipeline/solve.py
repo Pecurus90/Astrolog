@@ -30,6 +30,8 @@ SETTLED = ("solved", "no_solution", "no_stars")
 # tried at next pass once more, then wait for another ASTAP or catalogue [P ADR 0036, D5]
 WAITING = ("timeout", "crashed", "unreadable")
 PASSES = 2  # [P ADR 0036, D5]
+# solved scale against the card's, either way round [C ASTAP manual, "preferably 5% accuracy"]
+SCALE_TOLERANCE = 0.05
 
 PENDING = (  # plain file before its fpack copy: ASTAP before astap.FZ_SINCE reads no .fz
     "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.frame_type, c.width, c.height,"
@@ -71,16 +73,20 @@ SISTER_SCALE = (
 UPSERT = (
     "INSERT INTO pipeline_solutions (frame_id, outcome, step, file_id, astap_version, catalogue,"
     " installed, duration_s, hint_from, field_from, ra_deg, dec_deg, scale_arcsec_px,"
-    " rotation_deg, mirrored, skew_deg, width_deg, height_deg, corners, tried_at) VALUES"
+    " expected_scale_arcsec_px, scale_disagrees, rotation_deg, mirrored, skew_deg, width_deg,"
+    " height_deg, corners, tried_at) VALUES"
     " (:frame_id, :outcome, :step, :file_id, :astap_version, :catalogue, :installed, :duration_s,"
-    " :hint_from, :field_from, :ra_deg, :dec_deg, :scale_arcsec_px, :rotation_deg, :mirrored,"
-    " :skew_deg, :width_deg, :height_deg, :corners, :tried_at)"
+    " :hint_from, :field_from, :ra_deg, :dec_deg, :scale_arcsec_px, :expected_scale_arcsec_px,"
+    " :scale_disagrees, :rotation_deg, :mirrored, :skew_deg, :width_deg, :height_deg, :corners,"
+    " :tried_at)"
     " ON CONFLICT (frame_id) DO UPDATE SET attempts = attempts + 1, outcome = excluded.outcome,"
     " step = excluded.step, file_id = excluded.file_id, astap_version = excluded.astap_version,"
     " catalogue = excluded.catalogue, installed = excluded.installed,"
     " duration_s = excluded.duration_s, hint_from = excluded.hint_from,"
     " field_from = excluded.field_from, ra_deg = excluded.ra_deg, dec_deg = excluded.dec_deg,"
-    " scale_arcsec_px = excluded.scale_arcsec_px, rotation_deg = excluded.rotation_deg,"
+    " scale_arcsec_px = excluded.scale_arcsec_px,"
+    " expected_scale_arcsec_px = excluded.expected_scale_arcsec_px,"
+    " scale_disagrees = excluded.scale_disagrees, rotation_deg = excluded.rotation_deg,"
     " mirrored = excluded.mirrored, skew_deg = excluded.skew_deg, width_deg = excluded.width_deg,"
     " height_deg = excluded.height_deg, corners = excluded.corners, tried_at = excluded.tried_at"
     # settled by another pass meanwhile: stays
@@ -303,9 +309,30 @@ def _write(conn: sqlite3.Connection, row: sqlite3.Row, tried: _Tried, this: _Pas
         "rotation_deg": found.rotation_deg, "tried_at": this.now,
         "hint_from": tried.hint.hint_from, "field_from": tried.hint.field_from,
     } | _measured(found, row)  # fmt: skip
+    values |= _scale_check(values["scale_arcsec_px"], row)  # type: ignore[arg-type]
     with transaction(conn, immediate=True):
         written = conn.execute(UPSERT, values).rowcount
     return outcome if written else None
+
+
+def _scale_check(solved: float | None, row: sqlite3.Row) -> dict[str, object]:
+    """The card's pixel and focal against the sky: far off is said, the solution stays (D8)."""
+    expected = units.scale_arcsec_px(row["pixel_um"], row["focal_mm"])
+    if solved is None or expected is None:
+        return {"expected_scale_arcsec_px": None, "scale_disagrees": None}
+    low, high = sorted((solved, expected))
+    return {
+        "expected_scale_arcsec_px": expected,
+        "scale_disagrees": int(high > low * (1 + SCALE_TOLERANCE)),
+    }
+
+
+def forget(conn: sqlite3.Connection, frame_id: int) -> bool:
+    """On request (header fixed, new catalogue): the shot is solved again at the next pass.
+    False: nothing to forget."""
+    with transaction(conn, immediate=True):
+        gone = conn.execute("DELETE FROM pipeline_solutions WHERE frame_id = ?", (frame_id,))
+    return gone.rowcount > 0
 
 
 def _measured(found: astap.Solution, row: sqlite3.Row) -> dict[str, object]:

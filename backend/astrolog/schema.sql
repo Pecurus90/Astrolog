@@ -1066,6 +1066,10 @@ CREATE TABLE pipeline_solutions (
   ra_deg          REAL CHECK (ra_deg >= 0 AND ra_deg < 360),  -- J2000, centro immagine
   dec_deg         REAL CHECK (dec_deg BETWEEN -90 AND 90),
   scale_arcsec_px REAL CHECK (scale_arcsec_px > 0),
+  -- scala attesa da pixel e focale della scheda; NULL: la scheda non la dice. Lontana oltre
+  -- solve.SCALE_TOLERANCE dalla risolta: avviso, la soluzione resta (D8, ADR 0036)
+  expected_scale_arcsec_px REAL CHECK (expected_scale_arcsec_px > 0),
+  scale_disagrees INTEGER CHECK (scale_disagrees IN (0, 1)),
   rotation_deg    REAL,
   -- dal WCS (pipeline/footprint.py); specchiato: segno di det CD contro ROWORDER, misurato
   mirrored        INTEGER CHECK (mirrored IN (0, 1)),
@@ -1077,7 +1081,8 @@ CREATE TABLE pipeline_solutions (
   CHECK ((outcome = 'solved') = (ra_deg IS NOT NULL)
     AND (ra_deg IS NULL) = (dec_deg IS NULL) AND (ra_deg IS NULL) = (scale_arcsec_px IS NULL)),
   CHECK (outcome = 'solved' OR coalesce(rotation_deg, mirrored, skew_deg, width_deg, height_deg,
-    corners) IS NULL)
+    corners, expected_scale_arcsec_px) IS NULL),
+  CHECK ((expected_scale_arcsec_px IS NULL) = (scale_disagrees IS NULL))
 ) STRICT;
 
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave calcolata dal nome, mai salvata:

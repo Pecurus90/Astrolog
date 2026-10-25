@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 134; senza fonte: 1.
-Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T tecnico: 45.
+Valori: 135; senza fonte: 1.
+Fonti: C norma: 57; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T tecnico: 45.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -244,6 +244,7 @@ Fonti: C norma: 56; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T t
 | simbolo | valore | fonte |
 |---|---|---|
 | PASSES | `2` | P ADR 0036, D5 |
+| SCALE_TOLERANCE | `0.05` | C ASTAP manual, "preferably 5% accuracy" |
 
 ### pipeline/values.py
 
