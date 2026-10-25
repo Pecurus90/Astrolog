@@ -6,6 +6,7 @@ una corsa sola, una ricevuta per cartella, e cio' che non si e' potuto leggere d
 che taciuto.
 """
 
+import shutil
 import sqlite3
 import threading
 from unittest import mock
@@ -600,6 +601,130 @@ def test_a_busy_worker_leaves_no_folder_locked(app):
         assert client.app.state.folder_locks == set(), "cartelle chiuse a chiave per sempre"
     with connect(client.app.state.db_path) as conn:
         assert conn.execute("SELECT COUNT(*) FROM scan_runs").fetchone()[0] == 0
+
+
+def _stopped_while_reading(client, folder_id):
+    """Una lettura fermata a meta': e' il solo caso in cui Riprendi rilegge le cartelle."""
+    with _stops_while_reading(client, folder_id):
+        scan_all(client)
+        client.app.state.worker.join(30.0)
+    assert status(client)["action"] == "resume"
+
+
+def test_resume_with_no_active_folder_left_says_no_folders(app):
+    """Fermata la lettura e ritirate tutte le cartelle, Riprendi non ha niente da rileggere."""
+    client, uno, _ = app
+    _stopped_while_reading(client, uno)
+    # a mano: il DELETE puo' avviare il lavoro a valle e togliere lo stato fermo
+    with connect(client.app.state.db_path) as conn:
+        conn.execute("UPDATE folders SET retired_at = 'ora'")
+    r = client.post("/api/v1/pipeline/run")
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"]["code"] == "no_folders"
+
+
+def test_resume_with_no_readable_folder_says_which_ones(app, tmp_path):
+    """Fermata la lettura e staccati i dischi, Riprendi dice quali cartelle non ha letto."""
+    client, uno, due = app
+    _stopped_while_reading(client, uno)
+    for nome in ("prima", "seconda"):
+        shutil.rmtree(tmp_path / nome)
+    r = client.post("/api/v1/pipeline/run")
+    assert r.status_code == 409, r.text
+    detail = r.json()["detail"]
+    assert detail["code"] == "no_readable_folders"
+    assert {(s["folder_id"], s["reason"]) for s in detail["skipped"]} == {
+        (uno, "root_unreachable"),
+        (due, "root_unreachable"),
+    }
+
+
+def test_resume_while_every_folder_is_being_read_says_busy(app):
+    """Riprendi su cartelle che un'altra corsa sta gia' leggendo: occupato, non irraggiungibile."""
+    client, uno, due = app
+    _stopped_while_reading(client, uno)
+    with client.app.state.folder_locks_mutex:
+        client.app.state.folder_locks.update({uno, due})
+    try:
+        r = client.post("/api/v1/pipeline/run")
+    finally:
+        with client.app.state.folder_locks_mutex:
+            client.app.state.folder_locks.clear()
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"]["code"] == "worker_busy"
+    assert {s["reason"] for s in r.json()["detail"]["skipped"]} == {"scan_running"}
+
+
+def _held_job(worker):
+    """Un lavoro qualsiasi che tiene il worker occupato finche' non si apre la porta."""
+    porta = threading.Event()
+
+    def aspetta():
+        porta.wait(10.0)
+        yield {"done": True, "total": 0}
+
+    worker.start([Stage("normalize", aspetta)])
+    return porta
+
+
+def test_run_with_work_waiting_while_a_job_runs_says_busy(db_path):
+    """C'e' lavoro da avviare ma il worker sta gia' facendo altro: 409, non un secondo avvio."""
+    with TestClient(create_app(db_path), base_url="http://localhost") as client:
+        with connect(db_path) as conn:
+            frame_id = conn.execute(
+                "INSERT INTO frames(frame_hash, image_type, header_json, created_at)"
+                " VALUES('a-mano', 'light', '[]', '2026-09-16T00:00:00Z')"
+            ).lastrowid
+            mark_pending(conn, frame_id, "2026-09-16T00:00:00Z")
+        porta = _held_job(client.app.state.worker)
+        try:
+            r = client.post("/api/v1/pipeline/run")
+        finally:
+            porta.set()
+            client.app.state.worker.join(10.0)
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"]["code"] == "worker_busy"
+
+
+@pytest.mark.parametrize("a_meta_corsa", [False, True], ids=["fermo", "a meta' corsa"])
+def test_run_with_nothing_to_do_returns_the_snapshot_and_starts_nothing(db_path, a_meta_corsa):
+    """Niente da fare: 200 con lo stato com'e', anche a meta' corsa (la cadenza del NAS non salta
+    un giro), e nessun lavoro avviato."""
+    with TestClient(create_app(db_path), base_url="http://localhost") as client:
+        worker = client.app.state.worker
+        porta = _held_job(worker) if a_meta_corsa else None
+        try:
+            prima = worker.snapshot()
+            r = client.post("/api/v1/pipeline/run")
+            dopo = worker.snapshot()
+        finally:
+            if porta is not None:
+                porta.set()
+            worker.join(10.0)
+    assert r.status_code == 200, r.text
+    assert r.json()["worker"]["state"] == ("running" if a_meta_corsa else "idle")
+    assert [s.name for s in dopo.stages] == [s.name for s in prima.stages]
+    assert r.json()["skipped"] == []
+
+
+def test_status_after_a_stop_before_the_first_folder_has_no_receipt(app):
+    """Fermata prima della prima cartella non resta ricevuta: `receipt` e' `null` e lo stato e'
+    quello del worker."""
+    client, _, _ = app
+    worker = client.app.state.worker
+    worker._stop_requested = lambda: True
+    try:
+        scan_all(client)
+        worker.join(30.0)
+    finally:
+        del worker._stop_requested
+    r = client.get("/api/v1/pipeline/status")
+    assert r.status_code == 200, r.text
+    scan = r.json()["scan"]
+    lettura = next(s for s in r.json()["worker"]["stages"] if s["name"] == "scan")
+    assert (scan["receipt"], scan["state"]) == (None, lettura["state"])
+    # lo stadio non e' mai partito: il worker e' fermo, la sua riga di lettura no
+    assert (scan["state"], r.json()["worker"]["state"]) == ("not_run", "stopped")
 
 
 def test_a_retired_folder_is_not_read(app):

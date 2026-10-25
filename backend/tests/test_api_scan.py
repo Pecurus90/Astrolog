@@ -151,6 +151,20 @@ def test_the_files_not_read_are_listed_a_page_at_a_time(app, db_path):
     assert risposta.status_code == 409 and risposta.json()["detail"]["code"] == "scan_run_open"
 
 
+def test_the_errors_of_an_unknown_reading_are_a_404_with_its_code(client_vuoto):
+    """Una ricevuta che non c'e' si dice col suo codice, non con una lista vuota."""
+    r = client_vuoto.get("/api/v1/scan-runs/99999/errors")
+    assert r.status_code == 404, r.text
+    assert r.json()["detail"]["code"] == "scan_run_not_found"
+
+
+def test_stop_with_nothing_running_still_answers(client_vuoto):
+    """Stop a worker fermo: 200 con lo stato com'e', non un errore."""
+    r = client_vuoto.post("/api/v1/pipeline/stop")
+    assert r.status_code == 200, r.text
+    assert r.json()["worker"]["state"] == "idle"
+
+
 def test_scan_answers_at_once_and_the_receipt_arrives_in_status(app):
     client, fid, root = app
     r = client.post(f"/api/v1/folders/{fid}/scan")

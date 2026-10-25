@@ -138,6 +138,45 @@ def test_duplicate_is_409_and_retire_reactivate_keep_data(client_vuoto, tmp_path
     assert client_vuoto.delete(f"/api/v1/folders/{f['id']}").json()["retired"] is False
 
 
+def test_the_first_registration_is_not_a_reactivation(client_vuoto, tmp_path):
+    root = tmp_path / "astro"
+    root.mkdir()
+    assert add(client_vuoto, root)["reactivated"] is False
+
+
+def test_a_folder_already_registered_is_409_with_its_id(client_vuoto, tmp_path):
+    """Il 409 porta l'id della cartella gia' registrata: la pagina ci porta li'."""
+    root = tmp_path / "astro"
+    root.mkdir()
+    f = add(client_vuoto, root)
+    r = client_vuoto.post("/api/v1/folders", json={"root_path": str(root)})
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"] == {"code": "folder_exists", "folder_id": f["id"]}
+
+
+def test_an_unknown_folder_is_404_with_its_code(client_vuoto, tmp_path):
+    """Ritiro, spostamento e lettura di una cartella che non c'e'."""
+    altrove = tmp_path / "altrove"
+    altrove.mkdir()
+    for r in (
+        client_vuoto.delete("/api/v1/folders/99999"),
+        client_vuoto.post("/api/v1/folders/99999/move", json={"root_path": str(altrove)}),
+        client_vuoto.post("/api/v1/folders/99999/scan"),
+    ):
+        assert r.status_code == 404, r.text
+        assert r.json()["detail"]["code"] == "folder_not_found"
+
+
+def test_reading_a_retired_folder_is_409_with_its_code(client_vuoto, tmp_path):
+    root = tmp_path / "astro"
+    root.mkdir()
+    f = add(client_vuoto, root)
+    client_vuoto.delete(f"/api/v1/folders/{f['id']}")
+    r = client_vuoto.post(f"/api/v1/folders/{f['id']}/scan")
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"]["code"] == "folder_retired"
+
+
 def test_probe(client_vuoto, tmp_path):
     root = tmp_path / "astro"
     write_light(root / "a.fits")
@@ -221,6 +260,18 @@ def test_without_a_data_root_there_is_no_list(client_vuoto):
     elenca le cartelle della macchina a chi glielo chiede."""
     r = client_vuoto.get("/api/v1/folders/browse")
     assert r.status_code == 409 and r.json()["detail"]["code"] == "no_data_root"
+
+
+def test_a_subfolder_that_cannot_be_listed_says_root_unreachable(tmp_path, db_path):
+    """Una sottocartella sparita nella radice dei dati: 409 col percorso, non una lista vuota."""
+    radice = tmp_path / "library"
+    radice.mkdir()
+    confinata = os.path.realpath(radice)
+    sparita = os.path.join(confinata, "sparita")
+    with TestClient(create_app(db_path, data_root=confinata), base_url="http://localhost") as c:
+        r = c.get("/api/v1/folders/browse", params={"path": sparita})
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"] == {"code": "root_unreachable", "path": sparita}
 
 
 def test_path_info_and_health(client_vuoto):

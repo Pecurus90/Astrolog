@@ -374,6 +374,28 @@ def test_a_broken_catalogue_does_not_stop_the_app(db_path, tmp_path, monkeypatch
     assert app is not None
 
 
+def test_a_catalogue_that_raises_leaves_the_previous_one_and_is_logged(
+    db_path, tmp_path, monkeypatch, caplog
+):
+    """Un catalogo nuovo che solleva a meta' caricamento: l'app parte, `GET /api/health` mostra
+    ancora voci e versione di prima, e il guasto sta solo nel log."""
+    from fastapi.testclient import TestClient
+
+    from astrolog.api.app import create_app
+
+    monkeypatch.setattr(bundle, "path", lambda: scrivi(tmp_path / "c1.json", "prova-1", VOCI))
+    create_app(db_path)
+    doppio = [dict(VOCI[0]), dict(VOCI[0])]  # lo stesso slug due volte: la chiave si oppone
+    monkeypatch.setattr(bundle, "path", lambda: scrivi(tmp_path / "c2.json", "prova-2", doppio))
+    with (
+        caplog.at_level("ERROR"),
+        TestClient(create_app(db_path), base_url="http://localhost") as c,
+    ):
+        salute = c.get("/api/health").json()
+    assert (salute["catalog_entries"], salute["catalog_version"]) == (len(VOCI), "prova-1")
+    assert "catalogo: non si e' potuto caricare" in caplog.text
+
+
 def test_health_says_whether_the_catalogue_is_there(db_path, tmp_path, monkeypatch):
     """Senza catalogo l'app funziona, ma non sa dire cosa hai fotografato: si vede da qui,
     invece di scoprirlo quando `identify` non riconosce niente."""
