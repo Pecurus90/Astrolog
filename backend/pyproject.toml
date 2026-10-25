@@ -47,7 +47,7 @@ dev = [
 # il rilevatore di duplicati (jscpd) gira da npm, nel frontend: una installazione per tutti e due
 
 [build-system]
-requires = ["setuptools>=84.0.0"]
+requires = ["setuptools>=84.2.1"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
