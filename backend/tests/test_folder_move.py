@@ -72,6 +72,33 @@ def test_the_root_and_every_subfolder_move_and_a_neighbour_does_not(conn):
     assert keys == ["//NAS/Foto", "//NAS/Foto/a/b", "//NAS/Foto/dark", "D:/Astro2/dark"]
 
 
+def test_a_folder_registered_inside_the_moved_one_keeps_its_answers(conn):
+    """D:/Astro/sub e' una cartella registrata a parte: spostando D:/Astro, le risposte di
+    sub restano sue, perche' lei non si e' mossa."""
+    folder_id = add_folder(conn, "D:/Astro")
+    add_folder(conn, "D:/Astro/sub")
+    for key in ("D:/Astro/x", "D:/Astro/sub/dark"):
+        typeless.declare(conn, key, TypeAnswer.LIGHT)
+
+    folder_move.move(conn, folder_id, "//NAS/Foto")
+
+    keys = sorted(r[0] for r in conn.execute("SELECT entity_key FROM declarations"))
+    assert keys == ["//NAS/Foto/x", "D:/Astro/sub/dark"]
+
+
+def test_a_retired_folder_inside_the_moved_one_holds_back_nothing(conn):
+    """Ritirata, la cartella dentro non possiede piu' niente: le risposte seguono la madre."""
+    folder_id = add_folder(conn, "D:/Astro")
+    sub = add_folder(conn, "D:/Astro/sub")
+    conn.execute("UPDATE folders SET retired_at = 'ora' WHERE id = ?", (sub,))
+    typeless.declare(conn, "D:/Astro/sub/dark", TypeAnswer.CALIBRATION)
+
+    folder_move.move(conn, folder_id, "//NAS/Foto")
+
+    keys = [r[0] for r in conn.execute("SELECT entity_key FROM declarations")]
+    assert keys == ["//NAS/Foto/sub/dark"]
+
+
 def _client_folder(client, root):
     r = client.post("/api/v1/folders", json={"root_path": str(root)})
     assert r.status_code == 201, r.text

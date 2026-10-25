@@ -365,6 +365,19 @@ def test_a_folder_answered_stays_on_the_page_with_its_frames(conn):
     ]
 
 
+def test_a_folder_answered_stays_on_the_page_after_its_frames_left(conn):
+    """Detta "di calibrazione", la scansione dopo non ne tiene i frame: senza la riga in pagina la
+    risposta non si potrebbe piu' contraddire."""
+    radice = add_folder(conn, "D:/Astro")
+    frame_id = _frame(conn, radice, "dark/a.fits")
+    typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
+    conn.execute("UPDATE positions SET status = 'missing' WHERE frame_id = ?", (frame_id,))
+    righe = _cartelle(conn)
+    assert [(g["key"], g["frames"], g["answer"]) for g in righe] == [
+        ("D:/Astro/dark", 0, TypeAnswer.CALIBRATION)
+    ]
+
+
 @pytest.mark.parametrize("stadio", ["identify", "group"])
 def test_a_frame_that_goes_back_to_waiting_during_a_run_is_skipped(conn, monkeypatch, stadio):
     """Uno stadio sceglie i frame all'inizio. Se nel frattempo la cartella di uno di loro cambia --

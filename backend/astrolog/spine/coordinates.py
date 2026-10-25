@@ -56,8 +56,8 @@ def unclear_coordinates(conn: sqlite3.Connection, reason: str) -> list[dict[str,
 
 
 def _answered(conn: sqlite3.Connection, key: str) -> str | None:
-    """Only if that site still exists, found the way the stage finds it: renamed or deleted, the
-    answer no longer hooks, and the stage, the page and the counter ask again."""
+    """Only if that site still exists, found the way the stage finds it: deleted, the answer no
+    longer hooks, and the stage, the page and the counter ask again. A rename carries it."""
     site_name = decl.site_for_coordinates(conn, key)
     return site_name if site_name and store.site_by_name(conn, site_name) else None
 

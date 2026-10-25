@@ -78,9 +78,15 @@ def move(conn: sqlite3.Connection, folder_id: int, new_root: str) -> None:
         # Root first: the answer triggers match the new key against `root_key`.
         conn.execute("UPDATE folders SET root_path = ? WHERE id = ?", (new_root, folder_id))
         # OR REPLACE: a stale answer of another folder on the new key yields to this folder's.
+        # A folder registered inside this one did not move: its answers stay.
         conn.execute(
             "UPDATE OR REPLACE declarations SET entity_key = ? || substr(entity_key, ?)"
-            " WHERE entity_type = ? AND (entity_key = ? OR substr(entity_key, 1, ?) = ?)",
-            (new_key, after, EntityType.FOLDER, old_key, after, old_key + "/"),
-        )
+            " WHERE entity_type = ? AND (entity_key = ? OR substr(entity_key, 1, ?) = ?)"
+            " AND NOT EXISTS (SELECT 1 FROM folders o WHERE o.id <> ? AND o.retired_at IS NULL"
+            "  AND substr(o.root_key, 1, ?) = ?"
+            "  AND (entity_key = o.root_key OR substr(entity_key, 1, length(o.root_key) + 1)"
+            "       = o.root_key || '/'))",
+            (new_key, after, EntityType.FOLDER, old_key, after, old_key + "/",
+             folder_id, after, old_key + "/"),
+        )  # fmt: skip
         typeless_folders.write(conn)

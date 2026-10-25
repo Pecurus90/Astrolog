@@ -1022,8 +1022,8 @@ sparse in **due domande**: 391 frame a 16 km da casa e 41 a 64 km.
 La risposta vive in `declarations` sulle coordinate arrotondate al chilometro, quindi sopravvive
 a un azzeramento del rilevato, e porta il **nome** del sito e non il suo numero di riga: gli id
 si riusano, e una risposta scritta su un id finirebbe addosso a un altro sito in silenzio. Se
-quel sito sparisce o cambia nome, la risposta non aggancia piu' e l'app torna a chiedere -- che
-e' la direzione sicura. La notte che ne nasce e' **`declared`** -- anche quando la risposta e'
+quel sito cambia nome la risposta lo segue (`domini/sito.md`); se sparisce, la risposta non
+aggancia piu' e l'app torna a chiedere -- che e' la direzione sicura. La notte che ne nasce e' **`declared`** -- anche quando la risposta e'
 "ero a casa", perche' cio' che conta e' che l'abbia detto l'utente -- e da li' in poi non la
 sposta piu' nessuno: ne' il trasloco di casa, ne' la spazzata.
 

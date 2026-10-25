@@ -242,8 +242,8 @@ COORDINATES_SITE = "site"
 def declare_coordinates(
     conn: sqlite3.Connection, coordinates_key: str, site_name: str, now: str | None = None
 ) -> None:
-    """The site's name, not its id: it reads as the user wrote it. A rename carries it along
-    (`follow_site_rename`); only a move asks again."""
+    """The site's name, not its id: ids are reused. A rename carries it along
+    (`follow_site_rename`); a deleted site leaves it hooking nothing, and the app asks again."""
     write_declaration(
         conn, EntityType.COORDINATES, coordinates_key, COORDINATES_SITE, site_name, now
     )

@@ -125,7 +125,7 @@ def _where(conn: sqlite3.Connection, frame: sqlite3.Row, known: Sites) -> _Place
     if said_site:
         site = store.site_by_name(conn, said_site)
         if site is None:
-            # The declared site was deleted or renamed: ask again rather than fall back on home.
+            # The declared site was deleted (a rename carries the answer): ask again, not home.
             return GroupReason.SITE_UNCLEAR
         return _with_timezone(site, frame, answered=True)
     near = [s for km, s in by_distance(lat, lon, all_sites) if km <= SAME_PLACE_KM]
