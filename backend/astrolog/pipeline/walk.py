@@ -161,11 +161,11 @@ def _dangling(entry: os.DirEntry[str], full: str) -> bool:
 
 @dataclass
 class Walk:
-    """What walk saw: FITS on disk and what it left out, each sorted. `unreadable`: folders not
+    """What walk saw: FITS on disk and what it left out, each sorted. `unreachable`: folders not
     opening, links with target gone (file or folder: unknowable)."""
 
     found: list[str] = field(default_factory=list)
-    unreadable: list[str] = field(default_factory=list)
+    unreachable: list[str] = field(default_factory=list)
     hidden: list[str] = field(default_factory=list)
     online_only: list[str] = field(default_factory=list)
 
@@ -203,7 +203,7 @@ def _list_folder(
         elif stub := ICLOUD_STUB_RE.match(entry.name):
             stubs.append(stub.group(1))
         elif _dangling(entry, full):
-            result.unreadable.append(full)
+            result.unreachable.append(full)
     # placeholder beside its real file: not second file, that one is on disk
     result.online_only.extend(
         os.path.join(current, name) for name in stubs if name.casefold() not in fits_here
@@ -223,7 +223,7 @@ def walk_dir(root: str) -> Walk:
         try:
             scan = os.scandir(long_path(current))
         except OSError:
-            result.unreadable.append(current)
+            result.unreachable.append(current)
             continue
         real = real_key(current)
         if real in seen:
@@ -237,7 +237,7 @@ def walk_dir(root: str) -> Walk:
             links.extend(linked)
             links.sort(reverse=True)  # whole pile: listing order never picks the winner
         except OSError:
-            result.unreadable.append(current)
-    for items in (result.found, result.unreadable, result.hidden, result.online_only):
+            result.unreachable.append(current)
+    for items in (result.found, result.unreachable, result.hidden, result.online_only):
         items.sort()
     return result

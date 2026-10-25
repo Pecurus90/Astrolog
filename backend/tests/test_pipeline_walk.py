@@ -110,7 +110,7 @@ def test_a_folder_that_does_not_open_does_not_stop_the_walk(tmp_path, monkeypatc
     monkeypatch.setattr(walk.os, "scandir", fake)
     result = walk_dir(root)
     assert names(result.found) == {"a.fits", "b.fits"}
-    assert {os.path.normpath(u) for u in result.unreadable} == closed
+    assert {os.path.normpath(u) for u in result.unreachable} == closed
 
 
 def test_a_link_to_a_missing_folder_is_unreadable(tmp_path):
@@ -123,7 +123,7 @@ def test_a_link_to_a_missing_folder_is_unreadable(tmp_path):
     target.rmdir()
     result = walk_dir(str(root))
     assert result.found == []
-    assert names(result.unreadable) == {"disco"}
+    assert names(result.unreachable) == {"disco"}
 
 
 def test_a_symlink_to_a_missing_folder_is_unreadable(tmp_path, monkeypatch):
@@ -141,7 +141,7 @@ def test_a_symlink_to_a_missing_folder_is_unreadable(tmp_path, monkeypatch):
     fake_entries(monkeypatch, lambda _c, v: _Rotto() if v.name == "segnaposto" else v)
     result = walk_dir(root)
     assert result.found == []
-    assert names(result.unreadable) == {"disco"}
+    assert names(result.unreachable) == {"disco"}
 
 
 def test_the_mac_twin_files_are_not_collected(tmp_path):
@@ -355,7 +355,7 @@ def test_unreadable_subfolder_is_reported_not_swallowed(tmp_path, monkeypatch):
     unreadable_dir(monkeypatch, walk, sub)
     result = walk_dir(root)
     assert "a.fits" in names(result.found) and "deep.fits" not in names(result.found)
-    assert len(result.unreadable) == 1 and os.path.normpath(result.unreadable[0]).endswith("sub")
+    assert len(result.unreachable) == 1 and os.path.normpath(result.unreachable[0]).endswith("sub")
 
 
 def test_a_folder_that_breaks_while_listed_is_unreadable_and_the_walk_goes_on(
@@ -370,7 +370,7 @@ def test_a_folder_that_breaks_while_listed_is_unreadable_and_the_walk_goes_on(
     breaking_dir(monkeypatch, walk, sub)
     result = walk_dir(root)
     assert "a.fits" in names(result.found)
-    assert [os.path.normpath(u) for u in result.unreadable] == [os.path.normpath(sub)]
+    assert [os.path.normpath(u) for u in result.unreachable] == [os.path.normpath(sub)]
 
 
 def test_deep_tree_does_not_recurse(tmp_path):

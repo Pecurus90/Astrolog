@@ -218,7 +218,7 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
     ).fetchone()
     root = row["path"]
     walk = walk_dir(root)
-    root_failed = any(os.path.normcase(u) == os.path.normcase(root) for u in walk.unreadable)
+    root_failed = any(os.path.normcase(u) == os.path.normcase(root) for u in walk.unreachable)
     changes = Changes(
         reachable=not (root_failed or _emptied(conn, root_id, root, walk)),
         root_id=root_id,
@@ -234,7 +234,7 @@ def record_changes(conn: sqlite3.Connection, root_id: int, now: str) -> Changes:
     disk: dict[str, tuple[int, int]] = {}
     unlooked: set[str] = set()
     if changes.reachable:
-        changes.unreachable = sorted(_rel(u, root) for u in walk.unreadable)
+        changes.unreachable = sorted(_rel(u, root) for u in walk.unreachable)
         disk, unlooked = _on_disk(walk.found, root)
         changes.unlooked = sorted(unlooked)
         changes.hidden = sorted(_rel(p, root) for p in walk.hidden)
@@ -290,7 +290,7 @@ def _write_counts(conn: sqlite3.Connection, changes: Changes) -> None:
 def _emptied(conn: sqlite3.Connection, root_id: int, root: str, walk: Walk) -> bool:
     """Opens with no entry at all, though files were there: unmounted NAS (Docker mount point
     stays, empty). Counts as silent root, never as every file gone."""
-    if walk.found or walk.online_only or walk.hidden or walk.unreadable:
+    if walk.found or walk.online_only or walk.hidden or walk.unreachable:
         return False
     had = conn.execute(
         "SELECT 1 FROM pipeline_files WHERE root_id = ? AND state = 'present' LIMIT 1", (root_id,)
