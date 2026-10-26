@@ -9,6 +9,7 @@ che taciuto.
 import shutil
 import sqlite3
 import threading
+import time
 from unittest import mock
 
 import pytest
@@ -734,3 +735,21 @@ def test_a_retired_folder_is_not_read(app):
     client.delete(f"/api/v1/folders/{due}")
     r = scan_all(client)
     assert {c["folder_id"] for c in r.json()["started"]} == {uno}
+
+
+def test_closing_the_app_stops_its_job_before_it_ends(db_path):
+    """Un lavoro vivo dopo la chiusura gira senza il recinto dei test e trova l'ASTAP vero
+    (Issue #14): l'app chiusa lo ferma al prossimo passo e lo aspetta."""
+    passi = threading.Event()
+
+    def senza_fine():
+        while True:
+            passi.set()
+            time.sleep(0.01)
+            yield {"current": 0, "total": 1}
+
+    with TestClient(create_app(db_path), base_url="http://localhost") as client:
+        worker = client.app.state.worker
+        worker.start([Stage("solve", senza_fine)])
+        assert passi.wait(10.0)
+    assert not worker.is_running()

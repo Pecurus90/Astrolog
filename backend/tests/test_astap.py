@@ -228,13 +228,24 @@ def test_a_file_astap_cannot_read_is_a_reason(tmp_path):
 def test_the_version_is_read_from_the_help(uscita, attesa):
     """La data della versione, dall'aiuto di `-h` (testo di CLI-2025.11.19); illeggibile, None."""
     run = fake_run(stdout=uscita)
-    assert astap.version(astap.Solver("astap", run)) == attesa
-    assert run.calls == [["astap", "-h"]]
+    assert astap.version(astap.Solver("astap_cli", run)) == attesa
+    assert run.calls == [["astap_cli", "-h"]]
+
+
+@pytest.mark.parametrize(
+    "exe", [r"C:\Program Files\astap\astap.exe", "/Applications/ASTAP.app/Contents/MacOS/astap"]
+)
+def test_the_astap_with_a_window_is_never_asked_its_help(exe):
+    """`astap.exe -h` apre la finestra e non esce (misurato: 3 su 3 oltre 90 s): niente versione,
+    e la passata non aspetta il tempo massimo."""
+    run = fake_run(stdout="ASTAP astrometric solver version CLI-2026.07.17\n")
+    assert astap.version(astap.Solver(exe, run)) is None
+    assert run.calls == []
 
 
 def test_a_version_that_never_comes_is_none():
-    assert astap.version(astap.Solver("astap", fake_run(esplode=TimeoutError()))) is None
-    assert astap.version(astap.Solver("astap", fake_run(esplode=OSError()))) is None
+    assert astap.version(astap.Solver("astap_cli", fake_run(esplode=TimeoutError()))) is None
+    assert astap.version(astap.Solver("astap_cli", fake_run(esplode=OSError()))) is None
     assert astap.version(astap.Solver(None, fake_run())) is None
 
 

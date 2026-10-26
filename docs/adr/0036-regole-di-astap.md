@@ -53,3 +53,7 @@ Decisioni di Marco dal piano di ASTAP, qui con la loro casa:
   della scheda e dalla scala risolta (ADR 0016, `measured_focal_mm`), e l'avviso di ASTAP
   (`WARNING=... FL=561mm`, con la virgola del sistema) tenuto com'e' in `astap_warning`. Punto 9
   (parallelo) resta da costruire.
+- Avvio misurato (CLI 2025.11.19, Windows): `astap_cli -h` risponde subito; `astap.exe -h` apre
+  la finestra e non esce (3 su 3 oltre 90 s), quindi la versione si chiede solo alla CLI. Un file
+  che ASTAP non legge (`.fz` in GZIP_1, immagine in un'estensione) fallisce subito con "Error
+  reading image file": due passate, poi aspetta (D5).

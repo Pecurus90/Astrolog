@@ -301,6 +301,80 @@ def test_a_locked_database_skips_one_round_of_the_schedule_not_all(db_path, tmp_
             assert wait_until(lambda: c.get("/api/v1/scan-runs").json()["items"] != [])
 
 
+def test_a_closed_app_starts_no_folder_of_its_round(db_path, tmp_path):
+    """La cadenza aspetta la cartella in corso: chiusa l'app, non passa alla dopo (Issue #14)."""
+    import time
+
+    import astrolog.api.scan as scan_api
+    from astrolog.worker.worker import Stage
+
+    partite = []
+
+    def senza_fine(state, folder_id, run_id):
+        partite.append(folder_id)
+
+        def passi():
+            while True:
+                time.sleep(0.01)
+                yield {"current": 0, "total": 1}
+
+        return [Stage("scan", passi)]
+
+    for nome in ("a", "b"):
+        write_light(tmp_path / nome / "a.fits")
+    with mock.patch.object(scan_api, "_one_folder_stages", senza_fine):
+        with TestClient(create_app(db_path), base_url="http://localhost") as c:
+            for nome in ("a", "b"):
+                c.post("/api/v1/folders", json={"root_path": str(tmp_path / nome)})
+        app = create_app(db_path, scan_every_s=0.05)
+        with TestClient(app, base_url="http://localhost"):
+            assert wait_until(lambda: partite != [])
+        time.sleep(0.5)
+    assert len(partite) == 1 and not app.state.worker.is_running()
+
+
+def test_a_folder_starting_while_the_app_closes_is_stopped_too(db_path, tmp_path):
+    """La chiusura arriva fra il controllo della cadenza e l'avvio: l'avvio cancellerebbe lo stop,
+    e la chiusura aspetterebbe la cartella intera."""
+    import time
+
+    import astrolog.api.scan as scan_api
+    from astrolog.worker.worker import Stage
+
+    def senza_fine(state, folder_id, run_id):
+        def passi():
+            while True:
+                time.sleep(0.01)
+                yield {"current": 0, "total": 1}
+
+        return [Stage("scan", passi)]
+
+    vero, entrata, chiusa = scan_api.start_scan, threading.Event(), threading.Event()
+
+    def in_ritardo(state, conn, folder_id):
+        entrata.set()
+        time.sleep(0.5)
+        return vero(state, conn, folder_id)
+
+    write_light(tmp_path / "a" / "a.fits")
+    with mock.patch.object(scan_api, "_one_folder_stages", senza_fine):
+        with TestClient(create_app(db_path), base_url="http://localhost") as c:
+            c.post("/api/v1/folders", json={"root_path": str(tmp_path / "a")})
+        app = create_app(db_path, scan_every_s=0.05)
+
+        def apri_e_chiudi():
+            with TestClient(app, base_url="http://localhost"):
+                entrata.wait(10.0)
+            chiusa.set()
+
+        with mock.patch.object(scan_api, "start_scan", in_ritardo):
+            threading.Thread(target=apri_e_chiudi, daemon=True).start()
+            chiusa_in_tempo = chiusa.wait(10.0)
+            app.state.worker.stop()  # red: free the stuck closing before the patches go
+            chiusa.wait(10.0)
+    assert chiusa_in_tempo and not app.state.worker.is_running()
+
+
 def test_unknown_hosts_are_refused_and_declared_ones_admitted(db_path):
     with TestClient(create_app(db_path, hosts=["nas.local"]), base_url="http://localhost") as c:
         assert c.get("/api/health", headers={"host": "localhost"}).status_code == 200

@@ -75,16 +75,16 @@ def _scheduler(state: State, every_s: float, stop_event: threading.Event) -> Non
     while not stop_event.wait(every_s):
         # A round that falls (a database held by another write) is logged; the next one comes.
         try:
-            _scan_round(state)
+            _scan_round(state, stop_event)
         except Exception:
             log.exception("cadenza: il giro delle scansioni e' caduto")
 
 
-def _scan_round(state: State) -> None:
+def _scan_round(state: State, stop_event: threading.Event) -> None:
     conn = connect(state.db_path)
     try:
         for folder_id in scan.active_folder_ids(conn):
-            if state.worker.is_running():
+            if stop_event.is_set() or state.worker.is_running():
                 break
             # A folder that cannot start is logged and skipped; the round goes on.
             try:
@@ -94,6 +94,8 @@ def _scan_round(state: State) -> None:
                     "cadenza: scansione non avviata",
                     extra={"folder_id": folder_id, "error": str(err)},
                 )
+            if stop_event.is_set():  # closed while starting: the start cleared the app's stop
+                state.worker.stop()
             state.worker.join()
     finally:
         conn.close()
@@ -180,13 +182,14 @@ def _lifespan(
         # Windows can stretch it past the busy timeout of whoever opens meanwhile.
         keepalive = connect(app.state.db_path, check_same_thread=False)
         stop_event = threading.Event()
+        scheduler = threading.Thread(
+            target=_scheduler,
+            args=(app.state, scan_every_s, stop_event),
+            name="astrolog-scheduler",
+            daemon=True,
+        )
         if scan_every_s:
-            threading.Thread(
-                target=_scheduler,
-                args=(app.state, scan_every_s, stop_event),
-                name="astrolog-scheduler",
-                daemon=True,
-            ).start()
+            scheduler.start()
         if weather_every_s:
             threading.Thread(
                 target=_weather_scheduler,
@@ -198,6 +201,12 @@ def _lifespan(
             yield
         finally:
             stop_event.set()
+            # a job outliving the app writes to a closed state: stopped at its next item, awaited;
+            # the schedule first, or it starts the next folder
+            app.state.worker.stop()
+            if scheduler.is_alive():
+                scheduler.join()
+            app.state.worker.join()
             keepalive.close()
 
     return lifespan

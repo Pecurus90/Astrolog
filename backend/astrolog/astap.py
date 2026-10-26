@@ -12,7 +12,7 @@ import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from enum import StrEnum
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from .fits.header_keys import as_float
 from .fits.header_wcs import solved, wcs_rotation_deg, wcs_scale
@@ -345,7 +345,8 @@ _VERSION = re.compile(r"version\s+(?:CLI-)?(\d{4})\.(\d{1,2})\.(\d{1,2})", re.IG
 
 def version(solver: Solver) -> tuple[int, int, int] | None:
     """Release date from `-h` help (`version CLI-2025.11.19`). Unread: None."""
-    if not solver.exe:
+    # the one with a window opens it on -h and never exits (measured): not asked
+    if not solver.exe or PureWindowsPath(solver.exe).stem.lower() == "astap":
         return None
     try:
         _code, out = (solver.run or _run)([solver.exe, "-h"], solver.timeout_s)
