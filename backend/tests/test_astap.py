@@ -277,6 +277,16 @@ def test_quality_numbers_that_do_not_arrive_stay_empty(tmp_path):
         assert astap.analyse(tmp_path / "x.fits", solver) == (None, None), uscita
 
 
+@pytest.mark.parametrize("esplode", [TimeoutError(), OSError("manca")])
+def test_an_analyse_that_never_comes_is_said_in_the_log(tmp_path, caplog, esplode):
+    """Come `solve`: niente stelle per un tempo scaduto o un lancio fallito, ma detto."""
+    solver = astap.Solver("astap_cli", fake_run(esplode=esplode))
+    with caplog.at_level("INFO", logger="astrolog.astap"):
+        assert astap.analyse(tmp_path / "x.fits", solver) == (None, None)
+    [said] = caplog.records
+    assert "analyse" in said.getMessage() and said.file == str(tmp_path / "x.fits")
+
+
 def test_the_analyse_pass_writes_nothing_next_to_the_frame(tmp_path):
     """`-analyse` e' l'unica strada per HFD e stelle che non lasci file nella cartella
     dell'utente: `-extract` ci scriverebbe un CSV accanto, ignorando `-o`."""

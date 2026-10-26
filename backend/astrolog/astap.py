@@ -375,7 +375,8 @@ def analyse(fits_path: str | Path, solver: Solver) -> tuple[float | None, int | 
     cmd = [solver.exe, "-f", str(fits_path), "-analyse", "30"]
     try:
         _code, out = (solver.run or _run)(cmd, solver.timeout_s)
-    except (subprocess.TimeoutExpired, TimeoutError, OSError):
+    except (subprocess.TimeoutExpired, TimeoutError, OSError) as err:
+        log.info("astap: analyse senza esito", extra={"file": str(fits_path), "error": repr(err)})
         return None, None
     values = read_ini_text(out)
     stars = _number(values.get("STARS"))
