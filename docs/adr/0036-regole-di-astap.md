@@ -3,7 +3,7 @@
 **Stato:** accettata, 24/10/2026. Raccoglie le decisioni del piano di ASTAP (D2-D8) che stavano
 solo nel materiale di lavoro; D1 e D7 sono in ADR 0033. Chiude la domanda aperta di ADR 0003
 (quale catalogo). Soglie tecniche scelte dalla sessione sulle convenzioni (CLAUDE.md, principio 1).
-Costruita in parte (`pipeline/solve.py`); punti 7, 8 e 10 fatti, 9 da fare. **Superata in parte da ADR 0039**: il
+Costruita (`pipeline/solve.py`); punti 7, 8, 9 e 10 fatti. **Superata in parte da ADR 0039**: il
 tempo per lancio e' un limite di previsione, minimo 30 s (`pipeline/timeouts.py`); 60 s finche'
 la macchina non ha 20 lanci riusciti in quel modo.
 
@@ -53,7 +53,10 @@ Decisioni di Marco dal piano di ASTAP, qui con la loro casa:
   richiesta e la posa si rifa' alla passata dopo. Punto 10 costruito: focale misurata dal pixel
   della scheda e dalla scala risolta (ADR 0016, `measured_focal_mm`), e l'avviso di ASTAP
   (`WARNING=... FL=561mm`, con la virgola del sistema) tenuto com'e' in `astap_warning`. Punto 9
-  (parallelo) resta da costruire.
+  (parallelo, D7) costruito: `pipeline/capacity.py` conta core fisici e RAM (anche i limiti di
+  Docker), il primo lancio va da solo, una posa che aspetta una sorella aspetta i lanci in volo,
+  scrive solo la passata, lo stop uccide i figli; una passata per radice (`scan.busy`). Misura
+  su 9 copie vere: 7 pose in 1,3 s con un lancio, 0,4 s con otto.
 - Avvio misurato (CLI 2025.11.19, Windows): `astap_cli -h` risponde subito; `astap.exe -h` apre
   la finestra e non esce (3 su 3 oltre 90 s), quindi la versione si chiede solo alla CLI. Un file
   che ASTAP non legge (`.fz` in GZIP_1, immagine in un'estensione) fallisce subito con "Error

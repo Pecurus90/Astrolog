@@ -66,6 +66,7 @@ def dentro_il_recinto(monkeypatch, tmp_path):
         raise AssertionError(f"la suite ha lanciato ASTAP davvero: {cmd}")
 
     monkeypatch.setattr(astap, "_run", boom)
+    monkeypatch.setattr(astap, "_spawn", lambda cmd: boom(cmd, None))  # astap.Launcher
 
     # **E nemmeno la rete.** L'app gira su un NAS in una casa senza collegamento e su un portatile
     # in montagna: cio' che scarica non e' lento, e' rotto. Le effemeridi in particolare vivono

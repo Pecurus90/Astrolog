@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from enum import StrEnum
@@ -182,6 +183,49 @@ def _run(cmd: Sequence[str], timeout_s: float) -> tuple[int, str]:
         cmd, capture_output=True, text=True, timeout=timeout_s, check=False
     )
     return done.returncode, done.stdout
+
+
+def _spawn(cmd: Sequence[str]) -> subprocess.Popen[str]:
+    return subprocess.Popen(  # noqa: S603 - our own arguments, no shell
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
+
+
+class Launcher:
+    """The launches of one pass, each child known: a stop kills them all, and none starts after.
+    A `Run`, as `_run` is."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._children: set[subprocess.Popen[str]] = set()
+        self._killed = False
+
+    def __call__(self, cmd: Sequence[str], timeout_s: float) -> tuple[int, str]:
+        with self._lock:
+            if self._killed:
+                return -1, ""
+            child = _spawn(cmd)
+            self._children.add(child)
+        try:
+            out, _err = child.communicate(timeout=timeout_s)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.communicate()
+            raise
+        finally:
+            with self._lock:
+                self._children.discard(child)
+        return child.returncode, out
+
+    def running(self) -> int:
+        with self._lock:
+            return len(self._children)
+
+    def kill(self) -> None:
+        with self._lock:
+            self._killed = True
+            for child in self._children:
+                child.kill()
 
 
 def _number(text: object) -> float | None:

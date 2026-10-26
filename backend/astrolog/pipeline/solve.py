@@ -6,16 +6,20 @@ import platform
 import shutil
 import sqlite3
 import tempfile
+import threading
 import time
 from collections import Counter
+from collections.abc import Iterator
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from pathlib import Path
 
 from .. import astap, units
 from ..db.transaction import transaction
-from . import timeouts
+from . import capacity, timeouts
 from .footprint import footprint
+from .scan import busy
 from .walk import long_path
 
 # The whole pass would fail the same way: stop at the first.
@@ -194,11 +198,29 @@ def _hint(conn: sqlite3.Connection, card: sqlite3.Row) -> _Hint:
     return _Hint(pointing, field_deg, hint_from, field_from)
 
 
-def solve_root(
-    conn: sqlite3.Connection, root_id: int, now: str, solver: astap.Solver, work: Path
+def solve_root(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    root_id: int,
+    now: str,
+    solver: astap.Solver,
+    work: Path,
+    *,
+    workers: int | None = None,
+    stop: threading.Event | None = None,
 ) -> SolveResult:
-    """Shots of root without a settled row, or waiting ones whose turn came. Catalogue folder
-    not said: none passed, ASTAP looks in its own (beside it on Windows, elsewhere on Mac)."""
+    """Shots without a settled row, or waiting ones whose turn came; no catalogue folder: ASTAP
+    looks in its own. One pass per root (`scan.busy`), launches side by side (capacity.py)."""
+    with busy(root_id):
+        return _solve_root(conn, (root_id, now, work), solver, (workers, stop))
+
+
+def _solve_root(
+    conn: sqlite3.Connection,
+    asked_for: tuple[int, str, Path],
+    solver: astap.Solver,
+    pace: tuple[int | None, threading.Event | None],
+) -> SolveResult:
+    root_id, now, work = asked_for
     result = SolveResult()
     if not solver.exe:
         result.stopped = astap.Reason.ASTAP_MISSING
@@ -209,31 +231,116 @@ def solve_root(
     if named is None:
         result.stopped = astap.Reason.PATH_UNSUPPORTED
         return result
+    launcher = astap.Launcher() if solver.run is None else None  # its children die at a stop
+    if launcher is not None:
+        solver = replace(solver, run=launcher)
     machine = platform.node() or None  # '' when unknown: nothing learnt, nothing written
     limits = timeouts.limits(conn, machine, solver.timeout_s)
     this = _Pass(now, astap.version(solver), ",".join(_installed(solver)), machine, limits)
     asked = {"root": root_id, "passes": PASSES, "version": this.version,
              "installed": this.installed}  # fmt: skip
-    done: set[int] = set()
-    for row in conn.execute(PENDING, asked).fetchall():
-        if row["frame_id"] in done:
-            continue
-        done.add(row["frame_id"])
-        hint = _hint(conn, row)  # read now: a sister solved a moment ago counts
-        tried = _try(Path(root["path"], row["rel_path"]), (row, hint), solver, (Path(named), this))
+    rows = _first_per_shot(conn.execute(PENDING, asked).fetchall())
+    workers, stop = pace
+    flock = _Flock(conn, (Path(root["path"]), Path(named)), solver, this)
+    flock.fly(rows, workers or capacity.capacity(), stop or threading.Event(), launcher)
+    return flock.result
+
+
+def _borrows(card: sqlite3.Row) -> bool:
+    """Lacks pointing or field, and a sister could lend it (same OBJECT, same camera)."""
+    no_pointing = card["pointing_ra_deg"] is None and card["object_name"] is not None
+    no_field = None in (card["focal_mm"], card["pixel_um"]) and card["camera"] is not None
+    return no_pointing or no_field
+
+
+def _first_per_shot(rows: list[sqlite3.Row]) -> list[sqlite3.Row]:
+    """PENDING's order kept: a shot's plain file before its copies."""
+    seen: set[int] = set()
+    first = []
+    for row in rows:
+        if row["frame_id"] not in seen:
+            seen.add(row["frame_id"])
+            first.append(row)
+    return first
+
+
+@dataclass
+class _Flock:
+    """Launches side by side; the caller's thread alone reads hints and writes (one writer)."""
+
+    conn: sqlite3.Connection
+    where: tuple[Path, Path]  # the root, the launch folder
+    solver: astap.Solver
+    this: _Pass
+    result: SolveResult = field(default_factory=SolveResult)
+    landed: int = 0
+    held: sqlite3.Row | None = None  # waits for the launches in flight: it needs a sister
+
+    def fly(
+        self,
+        rows: list[sqlite3.Row],
+        workers: int,
+        stop: threading.Event,
+        launcher: astap.Launcher | None,
+    ) -> None:
+        queue = iter(rows)
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            flying: dict[Future[_Tried], sqlite3.Row] = {}
+            try:
+                self._fill(pool, flying, queue, workers, stop)
+                while flying:
+                    landed, _ = wait(flying, timeout=0.2, return_when=FIRST_COMPLETED)
+                    if stop.is_set() and launcher is not None:
+                        launcher.kill()
+                    for future in landed:
+                        row = flying.pop(future)
+                        if not stop.is_set():  # a killed launch is no outcome
+                            self._land(row, future.result())
+                    self._fill(pool, flying, queue, workers, stop)
+            except BaseException:
+                if launcher is not None:  # the pool waits for its launches: none left alive
+                    launcher.kill()
+                raise
+
+    def _fill(
+        self,
+        pool: ThreadPoolExecutor,
+        flying: dict[Future[_Tried], sqlite3.Row],
+        queue: Iterator[sqlite3.Row],
+        workers: int,
+        stop: threading.Event,
+    ) -> None:
+        while not stop.is_set() and self.result.stopped is None:
+            # the first alone: a missing catalogue fails every launch, it stops the pass at one
+            if len(flying) >= (workers if self.landed else 1):
+                return
+            row = self.held or next(queue, None)
+            self.held = None
+            if row is None:
+                return
+            if flying and _borrows(row):  # its sisters land first, then it reads them
+                self.held = row
+                return
+            hint = _hint(self.conn, row)  # read now: a sister solved a moment ago counts
+            root, named = self.where
+            shot = (row, hint)
+            path = Path(root, row["rel_path"])
+            flying[pool.submit(_try, path, shot, self.solver, (named, self.this))] = row
+
+    def _land(self, row: sqlite3.Row, tried: _Tried) -> None:
+        self.landed += 1
         if tried.found.reason in STOPS:
-            result.stopped = tried.found.reason
-            return result
-        outcome = _write(conn, row, tried, this)
+            self.result.stopped = tried.found.reason
+            return
+        outcome = _write(self.conn, row, tried, self.this)
         if outcome is None:
-            continue
+            return
         if outcome == "solved":
-            result.solved += 1
+            self.result.solved += 1
         elif outcome in SETTLED:
-            result.failed[outcome] += 1
+            self.result.failed[outcome] += 1
         else:
-            result.untried[outcome] += 1
-    return result
+            self.result.untried[outcome] += 1
 
 
 def _installed(solver: astap.Solver) -> tuple[str, ...]:

@@ -6,6 +6,8 @@ import os
 import sqlite3
 import threading
 from collections import Counter
+from collections.abc import Generator
+from contextlib import contextmanager
 from dataclasses import dataclass, field, fields
 from datetime import datetime
 from pathlib import Path
@@ -26,7 +28,21 @@ UNKNOWN_TRACKED = 10_000  # [T] memory bound on distinct keys; past it unknown_m
 
 
 class ScanRunningError(RuntimeError):
-    """Same root already scanning in this process: second would mark first's files gone."""
+    """Same root already scanning or solving in this process: a second scan would mark the
+    first's files gone, a second solve pass would launch ASTAP twice on each shot."""
+
+
+@contextmanager
+def busy(root_id: int) -> Generator[None]:
+    """One scan or solve pass per root at a time; other roots run side by side."""
+    with _ROOTS_GUARD:
+        running = _RUNNING.setdefault(root_id, threading.Lock())
+    if not running.acquire(blocking=False):
+        raise ScanRunningError(root_id)
+    try:
+        yield
+    finally:
+        running.release()
 
 
 @dataclass
@@ -39,15 +55,9 @@ class ScanResult:
 
 
 def scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
-    """One scan per root at a time (ScanRunningError); other roots run side by side."""
-    with _ROOTS_GUARD:
-        running = _RUNNING.setdefault(root_id, threading.Lock())
-    if not running.acquire(blocking=False):
-        raise ScanRunningError(root_id)
-    try:
+    """One scan per root at a time (ScanRunningError, `busy`)."""
+    with busy(root_id):
         return _scan_root(conn, root_id, now)
-    finally:
-        running.release()
 
 
 def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:

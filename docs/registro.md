@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 139; senza fonte: 1.
-Fonti: C norma: 57; U usanza: 1; D metodo: 3; M misura: 12; P decisione: 22; T tecnico: 46.
+Valori: 143; senza fonte: 1.
+Fonti: C norma: 57; U usanza: 1; D metodo: 3; M misura: 12; P decisione: 25; T tecnico: 47.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -201,6 +201,15 @@ Fonti: C norma: 57; U usanza: 1; D metodo: 3; M misura: 12; P decisione: 22; T t
 |---|---|---|
 | TIMEOUT_S | `15` | P ADR 0038 |
 | _REFUSALS | `frozenset({400, 401, 403, 429})` | C RFC 9110 15.5.1-15.5.4; RFC 6585 4 |
+
+### pipeline/capacity.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| ASTAP_RAM_BYTES | `160 * 2**20` | P ADR 0033, D7: measured per process on 26 MP |
+| RAM_SHARE | `4` | P ADR 0033, D7 |
+| CORE_SHARE | `2` | P ADR 0033, D7 |
+| THREADS_PER_CORE | `2` | T |
 
 ### pipeline/changes.py
 

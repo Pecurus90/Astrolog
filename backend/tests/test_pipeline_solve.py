@@ -435,7 +435,7 @@ def test_a_settled_outcome_is_never_overwritten(conn, tmp_path, db_path):
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
     root = _scanned(conn, nas)
-    other = connect(db_path)
+    other = connect(db_path, check_same_thread=False)  # called from the launch's thread
 
     def other_pass() -> None:
         with other:
@@ -568,7 +568,7 @@ def test_a_shot_solved_meanwhile_by_another_pass_is_no_crash(conn, tmp_path, db_
     nas = tmp_path / "nas"
     nina_light(nas / "a.fits", 1, _SKY)
     root = _scanned(conn, nas)
-    other = connect(db_path)
+    other = connect(db_path, check_same_thread=False)  # called from the launch's thread
 
     def other_pass() -> None:
         with other:
