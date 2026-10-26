@@ -3,7 +3,7 @@ No program runs here: their launch is faked with the output measured on a real f
 
 import os
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import pytest
 
@@ -57,8 +57,8 @@ def test_a_script_error_is_said_not_swallowed():
 
 def test_the_script_names_every_frame_with_forward_slashes(tmp_path):
     """The script engine reads a backslash as an escape: C:\\new would hold a newline."""
-    frames = [Path(r"C:\copie\new.fits"), Path(r"C:\copie\b.fits")]
-    script = subframe_script(frames, Path(r"C:\out\ss.csv"))
+    frames = [PureWindowsPath(r"C:\copie\new.fits"), PureWindowsPath(r"C:\copie\b.fits")]
+    script = subframe_script(frames, PureWindowsPath(r"C:\out\ss.csv"))
     assert '"C:/copie/new.fits"' in script and '"C:/copie/b.fits"' in script
     assert '"C:/out/ss.csv"' in script
     assert "\\" not in script.split("var lines")[0]

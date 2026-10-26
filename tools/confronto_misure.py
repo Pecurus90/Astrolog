@@ -21,7 +21,7 @@ import sys
 import tempfile
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
 
@@ -111,7 +111,7 @@ def astap_from_code(code: int) -> Astap | None:
     return Astap(hfd_px=(code // 1_000_000) / 100, stars=code % 1_000_000)
 
 
-def subframe_script(frames: Iterable[Path], out: Path) -> str:
+def subframe_script(frames: Iterable[PurePath], out: PurePath) -> str:
     """Paths as JSON strings with forward slashes: the script reads a backslash as an escape."""
     paths = [p.as_posix() for p in frames]
     return _SCRIPT % (json.dumps(paths), json.dumps(out.as_posix()))
