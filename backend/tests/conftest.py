@@ -19,6 +19,7 @@ from astropy.io import fits
 from fastapi.testclient import TestClient
 
 from astrolog import astap, place
+from astrolog.api import scan as api_scan
 from astrolog.api.app import create_app
 from astrolog.catalog import bundle, load
 from astrolog.db.connect import connect, create_database
@@ -67,6 +68,9 @@ def dentro_il_recinto(monkeypatch, tmp_path):
 
     monkeypatch.setattr(astap, "_run", boom)
     monkeypatch.setattr(astap, "_spawn", lambda cmd: boom(cmd, None))  # astap.Launcher
+    # Ne' la pipeline nuova dietro le scansioni: un thread suo che un client senza `with` non
+    # ferma mai, e scrive mentre il test legge. Chi la prova cattura la funzione vera all'import.
+    monkeypatch.setattr(api_scan, "_feed_behind", lambda state, folder_ids: None)
 
     # **E nemmeno la rete.** L'app gira su un NAS in una casa senza collegamento e su un portatile
     # in montagna: cio' che scarica non e' lento, e' rotto. Le effemeridi in particolare vivono

@@ -10,11 +10,14 @@ from unittest import mock
 import pytest
 from fastapi.testclient import TestClient
 
+from astrolog.api import scan as scan_api
 from astrolog.api.app import TOKEN_HEADER, create_app
 from astrolog.db.connect import connect
 from astrolog.spine.scan_store import run_outcomes, start_run
 from astrolog.worker.worker import State
 from conftest import blocking_reader, settle, wait_until, write_light
+
+_FEED_BEHIND = scan_api._feed_behind  # the real one, before the suite's fence turns it off
 
 
 @pytest.fixture
@@ -63,6 +66,7 @@ def test_a_scan_feeds_the_new_pipeline_behind_the_scenes(app, db_path, monkeypat
     libera (Avvia, una seconda scansione accettata), e senza ASTAP (il recinto) non rompe niente."""
     import astrolog.pipeline.run as run_module
 
+    monkeypatch.setattr(scan_api, "_feed_behind", _FEED_BEHIND)
     client, fid, _ = app
     gate, real = threading.Event(), run_module.run_roots
 
