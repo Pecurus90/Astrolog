@@ -5,7 +5,9 @@ import threading
 
 from astrolog import astap
 from astrolog.pipeline import run as run_module
+from astrolog.pipeline.changes import add_root
 from astrolog.pipeline.run import Behind, run_roots
+from astrolog.pipeline.scan import busy
 from conftest import NOW, nina_light
 from test_pipeline_solve import _SKY, FakeAstap, _solutions
 
@@ -61,6 +63,39 @@ def test_a_stopped_behind_starts_again_at_the_next_kick(conn, db_path, tmp_path)
     behind.stop()
     behind.kick([str(tmp_path / "a")])
     behind.join(10.0)
+    assert conn.execute("SELECT count(*) FROM pipeline_files").fetchone()[0] == 1
+
+
+def test_a_kick_while_a_stopped_round_is_still_ending_starts_a_new_one(
+    conn, db_path, tmp_path, monkeypatch
+):
+    """Stop a meta' di un lotto e subito una scansione, anche della stessa cartella: riparte dopo il
+    giro fermato, sullo stesso thread, non aspetta un kick che magari non viene."""
+    import time
+
+    entered, seen = threading.Event(), []
+    real = run_module.run_roots
+
+    def until_stopped(conn_, paths, now, solver, where):
+        seen.append(list(paths))
+        if len(seen) == 1:  # holds its root as a batch does, a little past the stop
+            with busy(add_root(conn_, paths[0], now)):
+                entered.set()
+                while not where[1].is_set():
+                    time.sleep(0.01)
+                time.sleep(0.3)
+        yield from real(conn_, paths, now, solver, where)
+
+    monkeypatch.setattr(run_module, "run_roots", until_stopped)
+    nina_light(tmp_path / "a" / "x.fits", 1)
+    behind = _behind(db_path, tmp_path)
+    behind.kick([str(tmp_path / "a")])
+    assert entered.wait(10.0)
+    behind.stop()
+    behind.kick([str(tmp_path / "a")])
+    time.sleep(2.0)
+    behind.join(10.0)
+    assert seen == [[str(tmp_path / "a")], [str(tmp_path / "a")]]
     assert conn.execute("SELECT count(*) FROM pipeline_files").fetchone()[0] == 1
 
 

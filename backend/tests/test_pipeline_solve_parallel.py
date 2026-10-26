@@ -180,6 +180,21 @@ def test_a_stop_kills_the_running_children(monkeypatch):
     assert done and done[0][0] != 0 and time.monotonic() - start < 10
 
 
+def test_astap_children_do_not_hear_the_console_s_ctrl_c(monkeypatch):
+    """Ctrl+C nella console li uccideva prima dello stop dell'app: scritti `crashed`, un tentativo
+    perso (audit del passo 24). Gruppo o sessione loro: li uccide solo l'app."""
+    import subprocess
+
+    asked = {}
+    monkeypatch.setattr(subprocess, "Popen", lambda cmd, **kwargs: asked.update(kwargs))
+    _SPAWN(["astap_cli", "-h"])
+    if sys.platform == "win32":  # the group stops Ctrl+C, no console stops Ctrl+Break too
+        wanted = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+        assert asked["creationflags"] & wanted == wanted
+    else:
+        assert asked["start_new_session"] is True
+
+
 def test_one_pass_per_root_shares_the_scan_lock(conn, tmp_path):
     root = _many(conn, tmp_path, 1)
     with busy(root), pytest.raises(ScanRunningError):

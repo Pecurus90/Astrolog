@@ -186,8 +186,15 @@ def _run(cmd: Sequence[str], timeout_s: float) -> tuple[int, str]:
 
 
 def _spawn(cmd: Sequence[str]) -> subprocess.Popen[str]:
+    """Own process group or session: the console's Ctrl+C would kill it before the app's stop,
+    and a launch killed so is written `crashed`. Only the app kills it."""
+    if sys.platform == "win32":  # the group stops Ctrl+C, no console Ctrl+Break (measured)
+        return subprocess.Popen(  # noqa: S603 - our own arguments, no shell
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW,
+        )  # fmt: skip
     return subprocess.Popen(  # noqa: S603 - our own arguments, no shell
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True
     )
 
 

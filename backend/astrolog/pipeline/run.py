@@ -46,8 +46,8 @@ type Exe = Callable[[sqlite3.Connection], str | None]
 
 
 class Behind:
-    """The new pipeline's own thread, never the user's worker: nothing on screen waits on it.
-    Folders kicked while it runs wait their turn; a stop kills its ASTAP, a kick starts it again."""
+    """The new pipeline's own thread, one only, never the user's worker: nothing on screen waits
+    on it. Folders kicked while it runs wait their turn; a stop kills its ASTAP, a kick goes on."""
 
     def __init__(self, db_path: str | Path, work: Path, exe: Exe) -> None:
         self._db_path, self._work, self._exe = db_path, work, exe
@@ -59,11 +59,12 @@ class Behind:
     def kick(self, paths: Iterable[str]) -> None:
         with self._lock:
             self._pending += [p for p in paths if p not in self._pending]
+            if self._stop.is_set():  # a new go: the round being stopped ends, then the queue runs
+                self._stop = threading.Event()
             if self._thread is not None:
                 return
-            self._stop = threading.Event()
             self._thread = threading.Thread(
-                target=self._loop, args=(self._stop,), name="astrolog-pipeline", daemon=True
+                target=self._loop, name="astrolog-pipeline", daemon=True
             )
             self._thread.start()
 
@@ -78,14 +79,15 @@ class Behind:
         if thread is not None:
             thread.join(timeout)
 
-    def _loop(self, stop: threading.Event) -> None:
+    def _loop(self) -> None:
         try:
-            while not stop.is_set():
-                with self._lock:  # empty and gone in one step: a kick never finds a dying thread
-                    paths, self._pending = self._pending, []
-                    if not paths:
+            while True:
+                with self._lock:  # stopped or empty, gone in one step: a kick never finds it dying
+                    stop = self._stop
+                    if stop.is_set() or not self._pending:
                         self._thread = None
                         return
+                    paths, self._pending = self._pending, []
                 self._run(paths, stop)
         except Exception:
             log.exception("pipeline nuova: il giro e' caduto")
