@@ -2,17 +2,19 @@
 Calibrations never launched: no stars, the run only fails."""
 
 import json
+import platform
 import shutil
 import sqlite3
 import tempfile
 import time
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from pathlib import Path
 
 from .. import astap, units
 from ..db.transaction import transaction
+from . import timeouts
 from .footprint import footprint
 from .walk import long_path
 
@@ -72,17 +74,19 @@ SISTER_SCALE = (
 
 UPSERT = (
     "INSERT INTO pipeline_solutions (frame_id, outcome, step, file_id, astap_version, catalogue,"
-    " installed, duration_s, hint_from, field_from, ra_deg, dec_deg, scale_arcsec_px,"
-    " expected_scale_arcsec_px, scale_disagrees, measured_focal_mm, astap_warning, rotation_deg,"
-    " mirrored, skew_deg, width_deg, height_deg, corners, tried_at) VALUES"
-    " (:frame_id, :outcome, :step, :file_id, :astap_version, :catalogue, :installed, :duration_s,"
-    " :hint_from, :field_from, :ra_deg, :dec_deg, :scale_arcsec_px, :expected_scale_arcsec_px,"
-    " :scale_disagrees, :measured_focal_mm, :astap_warning, :rotation_deg, :mirrored, :skew_deg,"
+    " installed, duration_s, launch_s, machine, hint_from, field_from, ra_deg, dec_deg,"
+    " scale_arcsec_px, expected_scale_arcsec_px, scale_disagrees, measured_focal_mm,"
+    " astap_warning, rotation_deg, mirrored, skew_deg, width_deg, height_deg, corners, tried_at)"
+    " VALUES (:frame_id, :outcome, :step, :file_id, :astap_version, :catalogue, :installed,"
+    " :duration_s, :launch_s, :machine, :hint_from, :field_from, :ra_deg, :dec_deg,"
+    " :scale_arcsec_px, :expected_scale_arcsec_px, :scale_disagrees, :measured_focal_mm,"
+    " :astap_warning, :rotation_deg, :mirrored, :skew_deg,"
     " :width_deg, :height_deg, :corners, :tried_at)"
     " ON CONFLICT (frame_id) DO UPDATE SET attempts = attempts + 1, outcome = excluded.outcome,"
     " step = excluded.step, file_id = excluded.file_id, astap_version = excluded.astap_version,"
     " catalogue = excluded.catalogue, installed = excluded.installed,"
-    " duration_s = excluded.duration_s, hint_from = excluded.hint_from,"
+    " duration_s = excluded.duration_s, launch_s = excluded.launch_s,"
+    " machine = excluded.machine, hint_from = excluded.hint_from,"
     " field_from = excluded.field_from, ra_deg = excluded.ra_deg, dec_deg = excluded.dec_deg,"
     " scale_arcsec_px = excluded.scale_arcsec_px,"
     " expected_scale_arcsec_px = excluded.expected_scale_arcsec_px,"
@@ -142,6 +146,8 @@ class _Pass:
     now: str
     release: tuple[int, int, int] | None
     installed: str  # catalogue codes, comma separated
+    machine: str | None
+    limits: dict[timeouts.Mode, float]  # time per launch by mode, learnt here (ADR 0039)
 
     @property
     def version(self) -> str | None:
@@ -164,6 +170,7 @@ class _Tried:
     step: Step | None  # None: never launched
     duration_s: float = 0.0
     hint: _Hint = _Hint()
+    launch_s: float | None = None  # the last launch; None: never launched
 
 
 def _hint(conn: sqlite3.Connection, card: sqlite3.Row) -> _Hint:
@@ -202,7 +209,9 @@ def solve_root(
     if named is None:
         result.stopped = astap.Reason.PATH_UNSUPPORTED
         return result
-    this = _Pass(now, astap.version(solver), ",".join(_installed(solver)))
+    machine = platform.node() or None  # '' when unknown: nothing learnt, nothing written
+    limits = timeouts.limits(conn, machine, solver.timeout_s)
+    this = _Pass(now, astap.version(solver), ",".join(_installed(solver)), machine, limits)
     asked = {"root": root_id, "passes": PASSES, "version": this.version,
              "installed": this.installed}  # fmt: skip
     done: set[int] = set()
@@ -248,25 +257,35 @@ def _try(
         return _Tried(astap.Solution(ok=False, reason=astap.Reason.FZ_UNSUPPORTED), None)
     start = time.monotonic()
     ladder = _ladder(hint.pointing, hint.field_deg, typeless=card["frame_type"] == "unknown")
-    found, step = _climb(path, ladder, solver, work)
-    return _Tried(found, step, time.monotonic() - start, hint)
+    found, step, launch_s = _climb(path, ladder, solver, (work, this.limits))
+    return _Tried(found, step, time.monotonic() - start, hint, launch_s)
 
 
 def _climb(
-    path: Path, ladder: list[tuple[Step, astap.Search]], solver: astap.Solver, work: Path
-) -> tuple[astap.Solution, Step | None]:
+    path: Path,
+    ladder: list[tuple[Step, astap.Search]],
+    solver: astap.Solver,
+    where: tuple[Path, dict[timeouts.Mode, float]],
+) -> tuple[astap.Solution, Step | None, float | None]:
     """Up the ladder while no solution; other ends stop it. Timeout after no solution: no
     solution. Fresh base per launch: crash writes no .ini, old one read as solved."""
+    work, limits = where
     with tempfile.TemporaryDirectory(dir=work) as fresh:
         given = _readable_name(long_path(path), Path(fresh))
         if given is None:
-            return astap.Solution(ok=False, reason=astap.Reason.UNREADABLE), None
-        ended = (astap.Solution(ok=False, reason=astap.Reason.NO_SOLUTION), Step.FIRST)
+            return astap.Solution(ok=False, reason=astap.Reason.UNREADABLE), None, None
+        ended = (astap.Solution(ok=False, reason=astap.Reason.NO_SOLUTION), Step.FIRST, None)
         for number, (step, search) in enumerate(ladder):
-            found = _launch(given, Path(fresh) / f"solve{number}", solver, search)
-            if number and found.reason == astap.Reason.TIMEOUT:  # ASTAP already said no
-                return ended[0], step
-            ended = (found, step)
+            mode = timeouts.Mode.BLIND if search.pointing is None else timeouts.Mode.HINTED
+            timed = replace(solver, timeout_s=limits[mode])
+            start = time.perf_counter()  # monotonic ticks 15 ms on Windows
+            found = _launch(given, Path(fresh) / f"solve{number}", timed, search)
+            # cut, not measured: as a failed blind it would cap the limit at itself (ADR 0039)
+            cut = found.reason == astap.Reason.TIMEOUT
+            took = None if cut else time.perf_counter() - start
+            if number and cut:  # ASTAP already said no
+                return ended[0], step, took
+            ended = (found, step, took)
             if found.reason != astap.Reason.NO_SOLUTION:
                 break
         return ended
@@ -305,7 +324,8 @@ def _write(conn: sqlite3.Connection, row: sqlite3.Row, tried: _Tried, this: _Pas
     values = {
         "frame_id": row["frame_id"], "outcome": outcome, "step": tried.step,
         "file_id": row["file_id"], "astap_version": this.version, "catalogue": found.catalogue,
-        "installed": this.installed, "duration_s": tried.duration_s, "ra_deg": found.ra_deg,
+        "installed": this.installed, "duration_s": tried.duration_s, "launch_s": tried.launch_s,
+        "machine": None if tried.launch_s is None else this.machine, "ra_deg": found.ra_deg,
         "dec_deg": found.dec_deg, "scale_arcsec_px": found.scale_arcsec_px,
         "rotation_deg": found.rotation_deg, "tried_at": this.now, "astap_warning": found.warning,
         "hint_from": tried.hint.hint_from, "field_from": tried.hint.field_from,

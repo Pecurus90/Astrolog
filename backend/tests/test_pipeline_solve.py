@@ -46,12 +46,14 @@ class FakeAstap:
         self.version = version
         self.asked = 0  # -h launches
         self.there: list[bool] = []  # input file present at launch
+        self.timeouts: list[float] = []  # time given to each launch
 
     def __call__(self, cmd: Sequence[str], timeout_s: float) -> tuple[int, str]:
         if "-h" in cmd:
             self.asked += 1
             return 0, f"ASTAP astrometric solver version {self.version}\n" if self.version else ""
         self.commands.append(list(cmd))
+        self.timeouts.append(timeout_s)
         self.there.append(Path(cmd[cmd.index("-f") + 1]).is_file())
         answer = self.answers[min(len(self.commands), len(self.answers)) - 1]
         if answer == "timeout":

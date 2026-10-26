@@ -1059,6 +1059,10 @@ CREATE TABLE pipeline_solutions (
   catalogue       TEXT,  -- quello che ASTAP dice di aver usato
   installed       TEXT,  -- cataloghi installati alla prova: cambiano, si riprova
   duration_s      REAL CHECK (duration_s >= 0),  -- tutta la scala
+  -- l'ultimo lancio, quello che decide, e la macchina: da qui il tempo per lancio (ADR 0039,
+  -- pipeline/timeouts.py); NULL: nessun lancio
+  launch_s        REAL CHECK (launch_s >= 0),
+  machine         TEXT CHECK (machine <> ''),
   -- da dove vengono indizio e campo (ADR 0026): la scheda, o una sorella risolta (stesso
   -- oggetto per l'indizio, stesso setup per il campo); NULL: nessuno, ricerca libera
   hint_from       TEXT CHECK (hint_from IN ('card', 'sister')),

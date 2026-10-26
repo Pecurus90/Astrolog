@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 135; senza fonte: 1.
-Fonti: C norma: 57; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T tecnico: 45.
+Valori: 139; senza fonte: 1.
+Fonti: C norma: 57; U usanza: 1; D metodo: 3; M misura: 12; P decisione: 22; T tecnico: 46.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -245,6 +245,15 @@ Fonti: C norma: 57; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T t
 |---|---|---|
 | PASSES | `2` | P ADR 0036, D5 |
 | SCALE_TOLERANCE | `0.05` | C ASTAP manual, "preferably 5% accuracy" |
+
+### pipeline/timeouts.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| LEVEL | `0.999` | D ADR 0039, one success in a thousand cut |
+| MIN_SOLVED | `20` | D ADR 0039 |
+| FLOOR_S | `30` | D ADR 0039 |
+| RECENT | `500` | T |
 
 ### pipeline/values.py
 
@@ -484,5 +493,5 @@ Fonti: C norma: 57; U usanza: 1; D metodo: 0; M misura: 12; P decisione: 22; T t
 | 0036 | Le regole di ASTAP con le fonti verificate, e il catalogo stellare D50 | accettata, 24/10/2026. Raccoglie le decisioni del piano di ASTAP (D2-D8) che stavano |  |
 | 0037 | Le regole delle misure dei frame con le fonti verificate | accettata, 24/10/2026; superata in parte da ADR 0039 (2,5 MAD -> Qn, eccentricita' 0,45/0,71/0,6, oggetto basso 30°, Bortle su 6 mesi). Nessun codice: le misure nascono con `measure`. |  |
 | 0038 | Le regole di file, oggetti e API con le fonti, e l'oggetto annidato che si chiede | accettata, 24/10/2026 (Marco: l'oggetto annidato si chiede). Ultimi tre gruppi della |  |
-| 0039 | Le soglie deboli ricavate da fisica e statistica, o tarate su ogni utente | accettata, 24/10/2026; supera in parte ADR 0022, 0034, 0036, 0037. Nessun codice: tutto nella fase 4 (le raffiche a 25 km/h di ADR 0034 sono gia' costruite). |  |
+| 0039 | Le soglie deboli ricavate da fisica e statistica, o tarate su ogni utente | accettata, 24/10/2026; supera in parte ADR 0022, 0034, 0036, 0037. Il resto nella fase 4; gia' costruiti: le raffiche a 25 km/h di ADR 0034, il tempo di ASTAP (`pipeline/timeouts.py`). |  |
 | 0040 | Il metodo: sette regole tenute da macchine, congelato fino al 21/11/2026 | accettata, 24/10/2026 (Marco). Supera in parte ADR 0001, 0015, 0025, 0027, 0028, 0030, |  |

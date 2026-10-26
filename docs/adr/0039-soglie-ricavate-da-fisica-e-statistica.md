@@ -1,6 +1,6 @@
 # 0039 -- Le soglie deboli ricavate da fisica e statistica, o tarate su ogni utente
 
-**Stato:** accettata, 24/10/2026; supera in parte ADR 0022, 0034, 0036, 0037. Nessun codice: tutto nella fase 4 (le raffiche a 25 km/h di ADR 0034 sono gia' costruite).
+**Stato:** accettata, 24/10/2026; supera in parte ADR 0022, 0034, 0036, 0037. Il resto nella fase 4; gia' costruiti: le raffiche a 25 km/h di ADR 0034, il tempo di ASTAP (`pipeline/timeouts.py`).
 Fase 2b del registro (Marco: "portare dentro la nostra esperienza matematica, fisica, statistica";
 "i miei dati sono solo miei").
 
@@ -30,7 +30,9 @@ di posa.
 - La rugiada si giudica per vetro esposto (lente, lastra): e' il caso peggiore; uno specchio
   alluminato resta piu' caldo (Chadwick 2013).
 - Restano da verificare sulle fonti primarie: fattori di piccolo campione di Qn, Beysens
-  originale (un termine in H^2 di pvdeg), Hahn & Meeker.
+  originale (un termine in H^2 di pvdeg). Hahn & Meeker verificato tramite NIST Dataplot
+  (PREDICTION LIMITS, cita Hahn & Meeker 1991 pp. 61-62); t di Student da Abramowitz & Stegun
+  26.7.3-4, provata sulla loro tavola. Il modo e' quello dell'ultimo lancio (indizio o cieco).
 
 ## Conseguenze
 
