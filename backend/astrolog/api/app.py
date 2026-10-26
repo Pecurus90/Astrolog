@@ -204,9 +204,12 @@ def _lifespan(
             # a job outliving the app writes to a closed state: stopped at its next item, awaited;
             # the schedule first, or it starts the next folder
             app.state.worker.stop()
+            app.state.behind.stop()  # its ASTAP killed: the close does not wait for a folder
             if scheduler.is_alive():
                 scheduler.join()
             app.state.worker.join()
+            app.state.behind.stop()  # again: the worker's last stage may have kicked it meanwhile
+            app.state.behind.join()
             keepalive.close()
 
     return lifespan
@@ -241,6 +244,7 @@ def create_app(  # noqa: PLR0913
     app.state.db_path = str(db_path)
     app.state.data_root = data_root if data_root is not None else env_data_root()
     app.state.worker = Worker()
+    app.state.behind = scan.behind(db_path)
     app.state.folder_locks = set()
     app.state.folder_locks_mutex = threading.Lock()
     app.state.token = token

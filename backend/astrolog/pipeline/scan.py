@@ -54,13 +54,17 @@ class ScanResult:
     skipped: list[Skipped] = field(default_factory=list)  # read, but not a frame
 
 
-def scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
-    """One scan per root at a time (ScanRunningError, `busy`)."""
+def scan_root(
+    conn: sqlite3.Connection, root_id: int, now: str, *, stop: threading.Event | None = None
+) -> ScanResult:
+    """One scan per root at a time (ScanRunningError, `busy`); a stop ends it between batches."""
     with busy(root_id):
-        return _scan_root(conn, root_id, now)
+        return _scan_root(conn, root_id, now, stop or threading.Event())
 
 
-def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
+def _scan_root(
+    conn: sqlite3.Connection, root_id: int, now: str, stop: threading.Event
+) -> ScanResult:
     """Files opened outside any transaction, saved per batch: lock held only to write; stopped
     scan keeps saved batches, unread files keep old size and date, so read next time."""
     changes = record_changes(conn, root_id, now)
@@ -70,6 +74,8 @@ def _scan_root(conn: sqlite3.Connection, root_id: int, now: str) -> ScanResult:
     unknown: Counter[str] = Counter()
     vanished: set[str] = set()
     for start in range(0, len(to_read), BATCH):
+        if stop.is_set():  # as interrupted: not finished, nothing judged gone
+            return result
         read = [
             (rel, scan_file(Path(changes.root, rel), changes.stat[rel][0]))  # size already stat-ed
             for rel in to_read[start : start + BATCH]

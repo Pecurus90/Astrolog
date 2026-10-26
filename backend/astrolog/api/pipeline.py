@@ -172,8 +172,11 @@ def _reading_cut_short(conn: sqlite3.Connection, state: State) -> bool:
 @router.post("/pipeline/stop", response_model=WorkerOut)
 def stop(request: Request) -> WorkerOut:
     """Asks for the Stop and returns the worker snapshot. Cooperative: the worker stops within the
-    item in progress, with the transaction closed. Always 200, even with nothing running."""
-    return WorkerOut(worker=_shown(request.app.state.worker.stop()))
+    item in progress, with the transaction closed. Always 200, even with nothing running. The new
+    pipeline behind the scenes stops too: its ASTAP killed."""
+    snapshot = request.app.state.worker.stop()  # first: a scan ending now kicks nothing after
+    request.app.state.behind.stop()
+    return WorkerOut(worker=_shown(snapshot))
 
 
 @router.post("/pipeline/run", response_model=WorkerOut)

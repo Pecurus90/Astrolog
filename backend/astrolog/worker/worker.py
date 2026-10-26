@@ -199,6 +199,10 @@ class Worker:
         with self._lock:
             return self._stop_flag
 
+    def stop_requested(self) -> bool:
+        """For a stage's `on_finish`: a run the user stopped starts nothing after it."""
+        return self._stop_requested()
+
     def _apply_progress(self, name: str, event: Mapping[str, Any]) -> None:
         with self._lock:
             self._update(

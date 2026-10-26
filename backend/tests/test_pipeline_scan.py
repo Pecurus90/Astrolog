@@ -869,3 +869,29 @@ def test_a_gone_file_keeps_its_card(conn, tmp_path):
     (tmp_path / "a.fits").unlink()
     scan_root(conn, root, LATER)
     assert _cards(conn) == {"a.fits": "light"}
+
+
+def test_a_stop_ends_the_scan_between_two_batches_as_an_interrupted_one(
+    conn, tmp_path, monkeypatch
+):
+    """Lo Stop dell'app non aspetta la cartella intera: il lotto letto resta, gli altri file si
+    leggono alla prossima, e la corsa resta non finita (nessuno sparito giudicato)."""
+    import threading
+
+    for k in range(4):
+        nina_light(tmp_path / f"a{k}.fits", k + 1)
+    root = add_root(conn, tmp_path, NOW)
+    stop, real = threading.Event(), scan.scan_file
+    monkeypatch.setattr(scan, "BATCH", 2)
+
+    def then_stop(path, size):
+        stop.set()
+        return real(path, size)
+
+    monkeypatch.setattr(scan, "scan_file", then_stop)
+    scan_root(conn, root, NOW, stop=stop)
+    assert len(_files(conn)) == 2
+    assert conn.execute("SELECT finished FROM pipeline_scans").fetchone()[0] == 0
+    monkeypatch.setattr(scan, "scan_file", real)
+    scan_root(conn, root, LATER)
+    assert len(_files(conn)) == 4

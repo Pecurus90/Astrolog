@@ -58,6 +58,32 @@ def test_the_new_run_is_visible_before_the_worker_starts(app):
     assert wait_until(lambda: finished(client))
 
 
+def test_a_scan_feeds_the_new_pipeline_behind_the_scenes(app, db_path, monkeypatch):
+    """Dopo la lettura la pipeline nuova legge la stessa cartella sul suo thread: intanto l'app e'
+    libera (Avvia, una seconda scansione accettata), e senza ASTAP (il recinto) non rompe niente."""
+    import astrolog.pipeline.run as run_module
+
+    client, fid, _ = app
+    gate, real = threading.Event(), run_module.run_roots
+
+    def held(*args):
+        gate.wait(10.0)
+        yield from real(*args)
+
+    monkeypatch.setattr(run_module, "run_roots", held)
+    client.post(f"/api/v1/folders/{fid}/scan")
+    client.app.state.worker.join(20.0)
+    during = status(client)
+    again = client.post(f"/api/v1/folders/{fid}/scan")
+    client.app.state.worker.join(20.0)
+    gate.set()
+    client.app.state.behind.join(20.0)
+    with connect(db_path) as conn:
+        files = conn.execute("SELECT count(*) FROM pipeline_files").fetchone()[0]
+    assert during["action"] == "start" and again.status_code == 202, again.text
+    assert files == 5
+
+
 def test_the_outcome_of_a_reading_does_not_carry_the_files_not_read(conn):
     """Lo stato chiede com'e' finita ogni cartella a ogni interrogazione: la riga porta l'esito e
     basta, non l'elenco dei file non letti, che si legge a pagine quando serve."""

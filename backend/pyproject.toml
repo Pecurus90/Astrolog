@@ -283,6 +283,8 @@ name = "la vecchia non importa la nuova"
 type = "forbidden"
 source_modules = ["astrolog.fits", "astrolog.vocab", "astrolog.spine", "astrolog.worker", "astrolog.api", "astrolog.db"]
 forbidden_modules = ["astrolog.pipeline"]
+# Una porta sola: la nuova dietro le scansioni dell'app, mai a schermo (Marco 26/10/2026, passo 24).
+ignore_imports = ["astrolog.api.scan -> astrolog.pipeline.run"]
 
 [[tool.importlinter.contracts]]
 # Mappa, passo 4: la scheda e' una funzione pura, si rifa' su tutti gli header senza database.

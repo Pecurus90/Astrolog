@@ -11,6 +11,8 @@ from starlette.datastructures import State
 
 from ..clock import elapsed_s, now_iso
 from ..db.connect import connect
+from ..db.paths import cache_dir
+from ..pipeline.run import Behind
 from ..spine import backup
 from ..spine.run import ORDER, queue, queue_folders
 from ..spine.scan import root_readable
@@ -23,6 +25,7 @@ from ..spine.scan_store import (
     run_row,
     start_run,
 )
+from ..spine.solve import solver_path
 from ..spine.stage_run import Factory
 from ..worker.worker import Stage, WorkerBusyError
 from .deps import get_db
@@ -131,12 +134,30 @@ def _stages_with_cleanup(
             _release(state, folder_id)
         _discard_never_begun(state.db_path, started, begun)
         _backup_new_samples(state.db_path)
+        if not state.worker.stop_requested():
+            _feed_behind(state, locked)
 
     last = len(steps) - 1
     return [
         Stage(name, factory, on_finish=at_end if i == last else None)
         for i, (name, factory) in enumerate(steps)
     ]
+
+
+def behind(db_path: str | Path) -> Behind:
+    """The new pipeline behind the app's scans, on its own thread, never shown: it learns on the
+    real archive until the pages are ported (ADR 0030); the app's Stop kills its ASTAP."""
+    return Behind(db_path, cache_dir() / "astap", solver_path)
+
+
+def _feed_behind(state: State, folder_ids: Iterable[int]) -> None:
+    """Its own connection: this runs in the worker's thread."""
+    conn = connect(state.db_path)
+    try:
+        paths = [folder_root(conn, folder_id)[0] for folder_id in folder_ids]
+    finally:
+        conn.close()
+    state.behind.kick(paths)
 
 
 def _backup_new_samples(db_path: str | Path) -> None:
