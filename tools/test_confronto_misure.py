@@ -1,0 +1,133 @@
+"""The measure comparison reads the reference programs right and says the gaps as ratios.
+No program runs here: their launch is faked with the output measured on a real frame."""
+
+import os
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from confronto_misure import (
+    Astap,
+    Ours,
+    Row,
+    Subframe,
+    astap_from_code,
+    main,
+    ratios,
+    read_subframes,
+    subframe_script,
+)
+
+# One real frame (ATR2600M, 26/10/2026): what each program answered.
+SUBFRAME_CSV = (
+    "path,fwhm_px,median,noise,stars\n"
+    "C:/copie/08.fits,2.1918546436391044,0.003784237429499626,0.0003233111870382953,5023\n"
+)
+ASTAP_CODE = 332000523  # HFD_MEDIAN=3,3 and STARS=523 on stdout, two decimals in the code
+
+
+def test_the_astap_exit_code_carries_hfd_and_stars():
+    """Stdout prints the decimal comma of the locale and one decimal: the code has two."""
+    assert astap_from_code(ASTAP_CODE) == Astap(hfd_px=3.32, stars=523)
+    assert astap_from_code(407000069) == Astap(hfd_px=4.07, stars=69)
+
+
+@pytest.mark.parametrize("code", [0, 1, -1])
+def test_an_astap_failure_is_no_measure(code):
+    assert astap_from_code(code) is None
+
+
+def test_the_subframe_values_come_back_in_adu():
+    """The table holds median and noise on [0,1] of a 16-bit range: 0.00378 is 248 ADU."""
+    found = read_subframes(SUBFRAME_CSV)
+    sub = found["08.fits"]
+    assert sub.fwhm_px == pytest.approx(2.1919, abs=1e-4)
+    assert sub.median_adu == pytest.approx(248.0, abs=0.01)
+    assert sub.noise_adu == pytest.approx(21.19, abs=0.01)
+    assert sub.stars == 5023
+
+
+def test_a_script_error_is_said_not_swallowed():
+    with pytest.raises(ValueError, match="routine"):
+        read_subframes("path,fwhm_px,median,noise,stars\nerror,Error: routine(): invalid\n")
+
+
+def test_the_script_names_every_frame_with_forward_slashes(tmp_path):
+    """The script engine reads a backslash as an escape: C:\\new would hold a newline."""
+    frames = [Path(r"C:\copie\new.fits"), Path(r"C:\copie\b.fits")]
+    script = subframe_script(frames, Path(r"C:\out\ss.csv"))
+    assert '"C:/copie/new.fits"' in script and '"C:/copie/b.fits"' in script
+    assert '"C:/out/ss.csv"' in script
+    assert "\\" not in script.split("var lines")[0]
+
+
+def _row(name, color, ours, astap, sub):
+    return Row(name, color, ours, astap, sub)
+
+
+def test_ratios_split_mono_and_color():
+    rows = [
+        _row("a", False, Ours(1000, 2.0, 100, 10), Astap(2.5, 100), Subframe(1.5, 110, 9, 2000)),
+        _row("b", False, Ours(3000, 3.0, 200, 30), Astap(3.0, 300), Subframe(2.0, 190, 30, 3000)),
+        _row("c", True, Ours(500, 4.0, 50, 5), Astap(5.0, 50), Subframe(3.0, 50, 10, 400)),
+    ]
+    table = ratios(rows)
+    stars = table["stelle / ASTAP"]
+    assert stars["mono"] == (10.0, 10.0, 10.0)
+    assert stars["colori"] == (10.0, 10.0, 10.0)
+    hfd = table["HFD / ASTAP HFD"]["mono"]
+    assert hfd == pytest.approx((0.8, 0.9, 1.0))
+    noise = table["rumore / SubframeSelector"]["colori"]
+    assert noise == pytest.approx((0.5, 0.5, 0.5))
+
+
+def test_a_missing_program_leaves_its_ratios_out():
+    rows = [_row("a", False, Ours(1000, 2.0, 100.0, 10.0), None, None)]
+    table = ratios(rows)
+    assert table["HFD / ASTAP HFD"] == {}
+    assert table["fondo / SubframeSelector"] == {}
+
+
+def test_main_measures_every_frame_and_prints_the_table(tmp_path, capsys):
+    folder = tmp_path / "copie"
+    folder.mkdir()
+    for name in ("08.fits", "09.fit"):
+        (folder / name).write_bytes(b"")
+    (folder / "nota.txt").write_text("non un frame")
+    launched = []
+
+    def run(cmd, timeout_s):
+        launched.append(cmd)
+        if "-analyse" in cmd:
+            return ASTAP_CODE, "HFD_MEDIAN=3,3\nSTARS=523\n"
+        out = next(a for a in cmd if a.startswith("-r="))[3:]
+        csv = Path(out).with_suffix(".csv")
+        csv.write_text(
+            "path,fwhm_px,median,noise,stars\n"
+            f"{(folder / '08.fits').as_posix()},2.0,0.0038,0.0003,5000\n"
+            f"{(folder / '09.fit').as_posix()},2.5,0.0040,0.0004,4000\n"
+        )
+        return 0, ""
+
+    def measure(path):
+        return Ours(3000, 2.9, 244.0, 22.9), False
+
+    code = main(
+        [str(folder), "--astap", "astap_cli", "--subframe", "PixInsight"],  # software-ok
+        run=run,
+        measure=measure,
+    )
+    assert code == 0
+    printed = capsys.readouterr().out
+    assert "08.fits" in printed and "09.fit" in printed and "nota.txt" not in printed
+    assert sum("-analyse" in c for c in launched) == 2, "ASTAP once a frame"
+    assert sum(any(a.startswith("-r=") for a in c) for c in launched) == 1, "one batch"
+    assert "stelle / ASTAP" in printed
+
+
+def test_main_without_frames_says_so(tmp_path, capsys):
+    assert main([str(tmp_path)], run=lambda c, t: (0, ""), measure=lambda p: None) == 1
+    assert "nessun frame" in capsys.readouterr().out

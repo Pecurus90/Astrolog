@@ -68,10 +68,22 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
 
 - **Stelle iniettate** di forma nota sui fondi veri (Rosetta, M31, Ha, L): mediana dell'HFD
   entro l'1% dalla verita', P90 da +7 a +23%.
-- **Contro ASTAP `-analyse`**: sulla mono ASTAP e' piu' alto del 6-39% (mediana +20%); ADR
-  0022 misurava ASTAP +8…27% sopra la verita' e spiegava perche' (il raggio medio). Sulle camere
-  a colori (4 frame) ASTAP sta dal 3% al 42% sotto: misura un'altra immagine (il grezzo), e i 24 frame
-  non bastano a dire chi ha ragione sul Rosetta; le iniettate dicono la nostra.
+- **Contro i programmi di riferimento**: `python tools/confronto_misure.py CARTELLA` misura le
+  copie con measure, con `astap_cli -analyse 30` e col SubframeSelector di PixInsight senza <!-- software-ok -->
+  finestra, e stampa il nostro diviso il loro (minimo / mediana / massimo), mono e colori a
+  parte. Si rilancia a ogni sottopasso di measure. Siril no (Marco, 26/10/2026). Sui 24 frame: <!-- software-ok -->
+
+  | Misura | Mono (20) | Colori (4) | Perche' lo scarto |
+  |---|---|---|---|
+  | Fondo / mediana SubframeSelector | 0,99 / 1,00 / 1,00 | 0,95 / 0,97 / 1,00 | La mediana dell'immagine porta le stelle e la nebulosa, `sep` le toglie |
+  | Rumore / rumore SubframeSelector | 1,00 / 1,02 / 1,05 | 0,11 / 0,13 / 0,39 | Mono: MAD contro wavelet MRS, stessa cosa. Colori: il SubframeSelector misura il mosaico grezzo, dove la differenza fra i canali conta come rumore; il nostro e' del superpixel |
+  | HFD / FWHM SubframeSelector | 1,15 / 1,36 / 1,46 | 1,58 / 1,77 / 4,20 | Grandezze diverse: sulla Moffat HFD/FWHM e' 1,36 a beta 2,5 e 1,17 a beta 4 (dalla formula del flusso racchiuso); la gaussiana da' 1. A colori la FWHM e' del mosaico grezzo |
+  | HFD / HFD ASTAP | 0,71 / 0,83 / 0,94 | 1,02 / 1,11 / 1,75 | Mono: ASTAP sta il 6-41% sopra; ADR 0022 lo misurava +8…27% sopra la verita' (il raggio medio). Colori: ASTAP misura il grezzo; i 24 frame non dicono chi ha ragione sul Rosetta, le iniettate dicono la nostra |
+  | Stelle / stelle ASTAP | 1,06 / 2,96 / 18,97 | 2,12 / 2,87 / 10,30 | ASTAP conta da SNR 30, noi da 5 sigma |
+  | Stelle / stelle SubframeSelector | 0,36 / 0,47 / 1,12 | 0,31 / 0,90 / 2,94 | Il SubframeSelector rileva sui livelli delle wavelet e arriva piu' in basso; un indicatore relativo, non un conteggio |
+
+  La FWHM confrontata a quella del SubframeSelector arriva col passo 25.1; ASTAP non da' fondo
+  ne' rumore.
 - **Tempo**: da 1,2 a 4,0 s a frame da 26 MP mono, 0,5-0,9 s a colori, un processo, su copia
   locale. Senza il tetto di 60 per casella un campo denso arrivava a 7,9 s.
 
