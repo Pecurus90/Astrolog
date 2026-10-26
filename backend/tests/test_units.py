@@ -1,6 +1,8 @@
 """Le unita' e i numeri: la scala dal corredo, il raggio di un oggetto, il rumore della float32
 tolto dove il dato entra. Portati da old/ (numeri dell'archivio reale)."""
 
+from pathlib import Path
+
 import pytest
 
 from astrolog import units
@@ -197,3 +199,21 @@ def test_the_pixel_from_the_sky_needs_every_piece():
     assert pixel_um_from_scale(1.385, None, 1) is None
     assert pixel_um_from_scale(1.385, 560.0, None) is None
     assert pixel_um_from_scale(None, 560.0, 1) is None
+
+
+def test_the_mad_becomes_a_sigma():
+    """Portato da old/ (test_misura.py): consistenza MAD-sigma della normale, non una taratura."""
+    assert units.sigma_from_mad(2.0) == pytest.approx(2.9652)
+    assert units.sigma_from_mad(0.0) == 0.0
+    assert pytest.approx(1.4826) == units.MAD_TO_SIGMA
+
+
+def test_the_mad_factor_has_one_home():
+    """Portato da old/: 1.4826 viveva in tre moduli con tre nomi; tre copie divergono."""
+    package = Path(units.__file__).parent
+    elsewhere = [
+        p.name
+        for p in package.rglob("*.py")
+        if "1.4826" in p.read_text(encoding="utf-8") and p != Path(units.__file__)
+    ]
+    assert elsewhere == []

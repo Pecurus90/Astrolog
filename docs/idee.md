@@ -8,7 +8,7 @@ ogni tappa del piano si rilegge: si fa, resta o si cancella; ferma da tre tappe 
   per misurare quanto ci azzeccava su quel sito, e il seeing previsto per notte (oggi si butta).
 - **Dividere i frame di una notte dal fondo cielo** (1/10/2026): il fondo separa bande larghe e
   strette di ordini di grandezza; si cercano gli scalini, non le soglie, campione i frame che il
-  filtro lo scrivono. Prima la provenienza di `frame_metrics`; la divisione a mano resta.
+  filtro lo scrivono. Il fondo lo misura `measure` (`pipeline_measures`); la divisione a mano resta.
 - **Il cielo dentro l'app senza chiave** (1/10/2026): il dato di luminosita' a 30" pesa 2,9 GB,
   ridotto la casella diventa di 9 km. Si riapre se qualcuno pubblica un dato piu' compatto.
 - **Il dubbio sull'oggetto, non sul frame** (1/10/2026): un frame sbagliato dentro un oggetto

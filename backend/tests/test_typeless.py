@@ -13,7 +13,7 @@ import importlib
 import pytest
 
 from astrolog.spine import declarations as decl
-from astrolog.spine import frame_folder, solve_store, typeless, typeless_answer, typeless_folders
+from astrolog.spine import frame_folder, typeless, typeless_answer, typeless_folders
 from astrolog.spine.declarations import TypeAnswer
 from astrolog.spine.stages import STAGES, count_pending, invalidate, mark_pending, ready, set_status
 from conftest import add_folder, sky_solved
@@ -305,7 +305,6 @@ def test_changing_idea_to_calibration_takes_back_what_the_sky_had_written(conn):
         " VALUES(?, 1.0, 2.0, 1.0, 'ora')",
         (frame_id,),
     )
-    solve_store.save_metrics(conn, frame_id, hfd_px=3.1, stars=800, now="ora")
     typeless.declare(conn, "D:/Astro/dark", TypeAnswer.CALIBRATION)
     assert typeless_answer.apply_answer(conn, _riga(conn, "D:/Astro/dark")) == [frame_id]
     riga = conn.execute("SELECT object_id, night_id, session_id FROM frames").fetchone()
@@ -313,9 +312,6 @@ def test_changing_idea_to_calibration_takes_back_what_the_sky_had_written(conn):
     # anche il cielo misurato: il solver cerca un cielo gia' trovato per lo stesso `OBJECT`
     # (`solve_store.sister_solution`), e un file di calibrazione non deve suggerire dove puntare
     assert conn.execute("SELECT COUNT(*) FROM frame_wcs").fetchone()[0] == 0
-    # e le stelle contate quando lo si credeva un light: le ha scritte una passata che quel frame
-    # non rifara' piu', e resterebbero li' a dire la qualita' di un dark
-    assert conn.execute("SELECT COUNT(*) FROM frame_metrics").fetchone()[0] == 0
 
 
 def test_changing_idea_back_to_sky_gives_the_frames_their_sky_again(conn):

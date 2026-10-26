@@ -57,6 +57,15 @@ def median(values: Iterable[float | None]) -> float | None:
     return (ordered[half - 1] + ordered[half]) / 2
 
 
+# MAD to sigma on a normal law: 1/Phi^-1(3/4). [C Rousseeuw & Croux, JASA 88:1273, 1993]
+MAD_TO_SIGMA = 1.4826
+
+
+def sigma_from_mad(mad: float) -> float:
+    """Robust sigma from a MAD already taken: one multiplication, one home (old/misura.py)."""
+    return MAD_TO_SIGMA * mad
+
+
 def pixel_um_from_scale(
     scale_arcsec_px: float | None, focal_mm: float | None, binning: int | None
 ) -> float | None:

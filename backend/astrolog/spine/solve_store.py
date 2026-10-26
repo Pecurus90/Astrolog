@@ -73,10 +73,6 @@ def sister_solution(conn: sqlite3.Connection, frame: sqlite3.Row) -> sqlite3.Row
     ).fetchone()
 
 
-def has_metrics(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row | None:
-    return conn.execute("SELECT 1 FROM frame_metrics WHERE frame_id = ?", (frame_id,)).fetchone()
-
-
 def save_wcs(  # noqa: PLR0913
     conn: sqlite3.Connection,
     frame_id: int,
@@ -103,12 +99,11 @@ def save_wcs(  # noqa: PLR0913
 
 
 def detach(conn: sqlite3.Connection, frame_ids: Collection[int]) -> None:
-    """The sky found and the stars counted: the result of a pass that no longer holds."""
+    """The sky found: the result of a pass that no longer holds."""
     if not frame_ids:
         return
     with idlist.holding(conn, frame_ids) as listed:
         conn.execute(f"DELETE FROM frame_wcs WHERE frame_id IN {listed}")  # noqa: S608 - an id list
-        conn.execute(f"DELETE FROM frame_metrics WHERE frame_id IN {listed}")  # noqa: S608
 
 
 # The `+` before `stage` turns off the queued-stages index: without it the search would start from
@@ -125,16 +120,3 @@ def lost_sky(conn: sqlite3.Connection, frame_ids: Iterable[int]) -> list[int]:
     """Solved but detached (`detach`): only the solver puts the sky back."""
     with idlist.holding(conn, frame_ids):
         return [r[0] for r in conn.execute(LOST_SKY)]
-
-
-def save_metrics(
-    conn: sqlite3.Connection, frame_id: int, *, hfd_px: float | None, stars: int | None, now: str
-) -> None:
-    """The other columns belong to `measure`: a number nobody measured is not written."""
-    conn.execute(
-        "INSERT INTO frame_metrics(frame_id, hfd_px, stars, source, measured_at)"
-        " VALUES(?, ?, ?, 'astap', ?)"
-        " ON CONFLICT(frame_id) DO UPDATE SET hfd_px = excluded.hfd_px,"
-        " stars = excluded.stars, source = excluded.source, measured_at = excluded.measured_at",
-        (frame_id, hfd_px, stars, now),
-    )

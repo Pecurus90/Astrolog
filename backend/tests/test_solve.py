@@ -32,7 +32,7 @@ CD2_2= 1.4226001018695530E-005
 """
 
 
-def solver(esiti=None, stdout="HFD_MEDIAN=3,4\nSTARS=250\n"):
+def solver(esiti=None):
     """Un ASTAP finto. `esiti` dice, per numero di chiamata di solve, cosa scrivere: un testo
     lo si scrive nel `.ini`, `None` vuol dire "nessun file" (fallimento), un'eccezione la si
     solleva. Di suo risolve sempre."""
@@ -48,9 +48,7 @@ def solver(esiti=None, stdout="HFD_MEDIAN=3,4\nSTARS=250\n"):
             sorgente.with_suffix(".csv").write_text("x,y,hfd\n", encoding="utf-8")
         if "-update" in cmd:
             sorgente.write_bytes(sorgente.read_bytes() + b" ")
-        if "-analyse" in cmd:
-            return 0, stdout
-        quale = len([c for c in chiamate if "-analyse" not in c]) - 1
+        quale = len(chiamate) - 1
         esito = (esiti or {}).get(quale, INI)
         if isinstance(esito, Exception):
             raise esito
@@ -60,7 +58,7 @@ def solver(esiti=None, stdout="HFD_MEDIAN=3,4\nSTARS=250\n"):
         return (0 if esito else 1), ""
 
     run.calls = chiamate
-    run.solves = lambda: [c for c in chiamate if "-analyse" not in c]
+    run.solves = lambda: list(chiamate)
     return run
 
 
@@ -209,41 +207,32 @@ def test_solve_cache_by_hash(db_path, archivio_letto, tmp_path):
     conn.close()
 
 
-def test_a_cached_sky_still_gets_its_quality_back(db_path, archivio_letto, tmp_path):
-    """Dopo un azzeramento del database la cache ridà il cielo, ma HFD e stelle sono nel DB e
-    se ne sono andati: si richiedono, o si perderebbero per sempre senza che nessuno lo dica.
-    Costa una passata di analisi, non un solve."""
+def test_a_cached_sky_launches_nothing_at_all(db_path, archivio_letto, tmp_path):
+    """Dopo un azzeramento la cache ridà il cielo senza un solo lancio: HFD e stelle li misura
+    `measure` dai pixel (ADR 0033, D1), la seconda passata `-analyse` non c'e' piu'."""
     cache = tmp_path / "cache"
     conn = connect(db_path)
     corri(conn, solver(), cache=cache)
-
-    # l'azzeramento: gli stadi tornano da fare e le misure spariscono, la cache resta
     stages.invalidate(conn, [r[0] for r in conn.execute("SELECT id FROM frames")], "solve")
-    conn.execute("DELETE FROM frame_metrics")
 
-    run = solver(stdout="HFD_MEDIAN=5,5\nSTARS=99\n")
+    run = solver()
     ricevuta = corri(conn, run, cache=cache)
-    assert ricevuta["cached"] == 5 and ricevuta["solved"] == 0  # il cielo non si ricalcola
-    assert ricevuta["measured"] == 5  # la qualita' si'
-    assert all("-analyse" in c for c in run.calls)  # e non si e' lanciato un solo solve
-    riga = conn.execute("SELECT hfd_px, stars FROM frame_metrics LIMIT 1").fetchone()
-    assert riga["hfd_px"] == pytest.approx(5.5) and riga["stars"] == 99
+    assert ricevuta["cached"] == 5 and ricevuta["solved"] == 0
+    assert run.calls == []
     conn.close()
 
 
 def test_a_cached_sky_on_an_unplugged_disc_launches_nothing(db_path, archivio_letto, tmp_path):
-    """La cache risponde anche a disco staccato, ma l'analisi vuole il file: senza il controllo
-    sul percorso partirebbe un processo per posa su un file che non c'e'."""
+    """La cache risponde anche a disco staccato, e non lancia niente su un file che non c'e'."""
     cache = tmp_path / "cache"
     conn = connect(db_path)
     corri(conn, solver(), cache=cache)
     stages.invalidate(conn, [r[0] for r in conn.execute("SELECT id FROM frames")], "solve")
-    conn.execute("DELETE FROM frame_metrics")
     conn.execute("UPDATE positions SET status = 'missing'")
 
     run = solver()
     ricevuta = corri(conn, run, cache=cache)
-    assert ricevuta["cached"] == 5 and ricevuta["measured"] == 0
+    assert ricevuta["cached"] == 5
     assert run.calls == []
     conn.close()
 
@@ -263,19 +252,6 @@ def test_the_measured_sky_is_what_gets_saved(db_path, archivio_letto, tmp_path):
     assert riga["rotation_deg"] == pytest.approx(84.35, abs=0.05)
     assert riga["width_deg"] > 0 and riga["height_deg"] > 0
     assert riga["solved_at"]
-    conn.close()
-
-
-def test_hfd_and_stars_come_from_the_second_pass(db_path, archivio_letto, tmp_path):
-    """HFD e stelle costano una passata in piu' e si prendono lo stesso: rileggere l'archivio
-    un'altra volta costerebbe di piu' del tempo risparmiato adesso."""
-    conn = connect(db_path)
-    ricevuta = corri(conn, solver(), cache=tmp_path / "cache")
-    riga = conn.execute("SELECT * FROM frame_metrics LIMIT 1").fetchone()
-    assert riga["hfd_px"] == pytest.approx(3.4) and riga["stars"] == 250
-    assert riga["source"] == "astap"
-    assert riga["eccentricity"] is None  # e' di `measure`, non si inventa qui
-    assert ricevuta["measured"] == 5
     conn.close()
 
 
@@ -474,12 +450,11 @@ def test_a_cached_sky_on_a_disc_unplugged_after_the_scan_launches_nothing(
     conn = connect(db_path)
     corri(conn, solver(), cache=cache)
     stages.invalidate(conn, [r[0] for r in conn.execute("SELECT id FROM frames")], "solve")
-    conn.execute("DELETE FROM frame_metrics")
     archivio_letto.rename(tmp_path / "staccato")
 
     run = solver()
     ricevuta = corri(conn, run, cache=cache)
-    assert ricevuta["cached"] == 5 and ricevuta["measured"] == 0
+    assert ricevuta["cached"] == 5
     assert run.calls == []
     conn.close()
 
@@ -559,12 +534,10 @@ def test_the_cache_key_is_the_fingerprint_not_the_row_number(db_path, tmp_path):
     assert ids != {1, 2}, "gli id non sono cambiati: il test non proverebbe niente"
 
     def solo_la_nuova(cmd, timeout_s):
-        if "-analyse" in cmd:  # la qualita' si richiede: sta nel DB, e il DB e' nuovo
-            return 0, "HFD_MEDIAN=3,4\nSTARS=250\n"
         assert "x.fits" in " ".join(cmd), f"ha ri-risolto una posa che era gia' in cache: {cmd}"
         base = cmd[cmd.index("-o") + 1]
         pathlib.Path(f"{base}.ini").write_text(INI, encoding="utf-8")
-        return 0, "HFD_MEDIAN=3,4\nSTARS=250\n"
+        return 0, ""
 
     ricevuta = corri(conn, solo_la_nuova, cache=cache)
     assert ricevuta["cached"] == 2 and ricevuta["solved"] == 1

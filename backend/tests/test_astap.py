@@ -255,48 +255,6 @@ def test_a_name_in_the_code_page_is_given_as_it_is(tmp_path):
     assert astap.code_page_path(nome) == nome
 
 
-# --- HFD e stelle -------------------------------------------------------------------------
-
-
-def test_the_quality_numbers_are_read_with_their_decimal_comma(tmp_path):
-    """ASTAP stampa i numeri nel formato della macchina: su un computer italiano `9,1`. Letti
-    col punto diventerebbero 91 o zero, in silenzio."""
-    run = fake_run(stdout="HFD_MEDIAN=9,1\nSTARS=61\n")
-    hfd, stelle = astap.analyse(tmp_path / "x.fits", astap.Solver("astap", run))
-    assert hfd == pytest.approx(9.1) and stelle == 61
-
-    run = fake_run(stdout="HFD_MEDIAN=3.42\nSTARS=1204\n")
-    hfd, stelle = astap.analyse(tmp_path / "x.fits", astap.Solver("astap", run))
-    assert hfd == pytest.approx(3.42) and stelle == 1204
-
-
-def test_quality_numbers_that_do_not_arrive_stay_empty(tmp_path):
-    """Nessun numero inventato: se ASTAP non li stampa, restano vuoti."""
-    for uscita in ("", "roba a caso", "HFD_MEDIAN=\nSTARS=\n", "HFD_MEDIAN=boh\n"):
-        solver = astap.Solver("astap", fake_run(stdout=uscita))
-        assert astap.analyse(tmp_path / "x.fits", solver) == (None, None), uscita
-
-
-@pytest.mark.parametrize("esplode", [TimeoutError(), OSError("manca")])
-def test_an_analyse_that_never_comes_is_said_in_the_log(tmp_path, caplog, esplode):
-    """Come `solve`: niente stelle per un tempo scaduto o un lancio fallito, ma detto."""
-    solver = astap.Solver("astap_cli", fake_run(esplode=esplode))
-    with caplog.at_level("INFO", logger="astrolog.astap"):
-        assert astap.analyse(tmp_path / "x.fits", solver) == (None, None)
-    [said] = caplog.records
-    assert "analyse" in said.getMessage() and said.file == str(tmp_path / "x.fits")
-
-
-def test_the_analyse_pass_writes_nothing_next_to_the_frame(tmp_path):
-    """`-analyse` e' l'unica strada per HFD e stelle che non lasci file nella cartella
-    dell'utente: `-extract` ci scriverebbe un CSV accanto, ignorando `-o`."""
-    run = fake_run(stdout="HFD_MEDIAN=4,0\nSTARS=100\n")
-    astap.analyse(tmp_path / "x.fits", astap.Solver("astap", run))
-    cmd = comando(run)
-    assert "-analyse" in cmd and not any(c.startswith("-extract") for c in cmd)
-    assert "-o" not in cmd  # non scrive niente, quindi non ha dove scrivere
-
-
 # --- trovare l'eseguibile -------------------------------------------------------------------
 
 

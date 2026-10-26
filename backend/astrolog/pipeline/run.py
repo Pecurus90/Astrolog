@@ -1,5 +1,5 @@
 """The new pipeline behind the app's scans, the one door from the old (ADR 0030): each folder
-scanned and solved, nothing shown; a folder that cannot start is logged and skipped."""
+scanned, solved and measured, nothing shown; a folder that cannot start is logged and skipped."""
 
 import logging
 import sqlite3
@@ -12,6 +12,7 @@ from .. import astap
 from ..clock import now_iso
 from ..db.connect import connect
 from .changes import add_root
+from .measure import measure_root
 from .scan import scan_root
 from .solve import solve_root
 
@@ -36,6 +37,7 @@ def run_roots(
             root = add_root(conn, path, now)
             scan_root(conn, root, now, stop=stop)
             solve_root(conn, root, now, solver, work, stop=stop)
+            measure_root(conn, root, now, stop=stop)
         except Exception:  # behind the scenes: the user's scan never breaks here
             log.warning("pipeline nuova: cartella saltata %s", path, exc_info=True)
         yield {"current": number, "total": len(paths)}

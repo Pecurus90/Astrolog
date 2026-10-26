@@ -26,7 +26,7 @@ from .stages import StageName, StageStatus, invalidate, ready, set_status
 
 log = logging.getLogger(__name__)
 
-COUNTS = ("solved", "cached", "unsolved", "waiting", "measured", "errors")
+COUNTS = ("solved", "cached", "unsolved", "waiting", "errors")
 
 # ASTAP without its star catalogue starts and recognises nothing. One word for a frame's reason,
 # for what stops the run, and for the `missing` line that warns before a whole scan.
@@ -152,16 +152,6 @@ def _one_frame(
     frame = store.frame(conn, frame_id)
     now = now_iso()
     solution, cached = _solution_for(conn, frame, solver)
-    hfd: float | None = None
-    stars: int | None = None
-    path = _path_of(frame)
-    # The cache answers with the disk detached too: without the path check one process per frame
-    # would be launched on a missing file.
-    if solution.ok and path and os.path.exists(path) and not store.has_metrics(conn, frame["id"]):
-        # Asked even for a cached sky: after a database reset the solution comes back from the
-        # cache, but HFD and stars would be lost for good.
-        hfd, stars = astap.analyse(path, astap.Solver(solver.exe, solver.run))
-
     with transaction(conn):
         if not solution.ok:
             if solution.reason in RETRIABLE:
@@ -195,9 +185,6 @@ def _one_frame(
             moved = focal is not None and not same_focal(frame["rig_focal_mm"], focal)
             if moved and frame["rig_id"] is not None:
                 invalidate(conn, [frame["id"]], StageName.NORMALIZE, now)
-            if hfd is not None or stars is not None:
-                store.save_metrics(conn, frame["id"], hfd_px=hfd, stars=stars, now=now)
-                counts["measured"] += 1
             set_status(conn, frame["id"], StageName.SOLVE, StageStatus.DONE, now=now)
             counts["cached" if cached else "solved"] += 1
     return solution.reason if solution.reason in ABORTS_THE_RUN else None

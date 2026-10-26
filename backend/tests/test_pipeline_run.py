@@ -24,6 +24,9 @@ def test_each_folder_is_scanned_and_solved_and_a_missing_one_is_skipped(conn, tm
     assert events[-1] == {"done": True, "total": 2}
     assert [e["current"] for e in events[:-1]] == [1, 2]
     assert [r["outcome"] for r in _solutions(conn)] == ["solved"]
+    # measured after its sky: 16 x 16 pixels are too few, and the row says so
+    measured = conn.execute("SELECT outcome FROM pipeline_measures").fetchall()
+    assert [r["outcome"] for r in measured] == ["not_supported"]
     assert "gone" in caplog.text
 
 

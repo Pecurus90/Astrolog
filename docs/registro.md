@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 143; senza fonte: 1.
-Fonti: C norma: 57; U usanza: 1; D metodo: 3; M misura: 12; P decisione: 25; T tecnico: 47.
+Valori: 160; senza fonte: 1.
+Fonti: C norma: 63; U usanza: 1; D metodo: 6; M misura: 12; P decisione: 29; T tecnico: 51.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -228,6 +228,13 @@ Fonti: C norma: 57; U usanza: 1; D metodo: 3; M misura: 12; P decisione: 25; T t
 | _MAX_AXES | `999` | C FITS 4.0 4.4.1.1: NAXIS at most 999 |
 | _MAX_BYTES | `2**62` | T |
 
+### pipeline/pixels.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| MIN_IMAGE_SIDE_PX | `20` | T |
+| _TYPES | `{8: ">u1", 16: ">i2", 32: ">i4"}` | C FITS 4.0 table 8: BITPIX |
+
 ### pipeline/scan.py
 
 | simbolo | valore | fonte |
@@ -254,6 +261,25 @@ Fonti: C norma: 57; U usanza: 1; D metodo: 3; M misura: 12; P decisione: 25; T t
 |---|---|---|
 | PASSES | `2` | P ADR 0036, D5 |
 | SCALE_TOLERANCE | `0.05` | C ASTAP manual, "preferably 5% accuracy" |
+
+### pipeline/stars.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| THRESHOLD_SIGMA | `5.0` | C Siril find_star default: 5 sigma over sky, software-ok |
+| SATURATED_SHARE | `0.9` | P ADR 0022: peak under 90% of saturation |
+| MIN_AXIS_RATIO | `0.5` | C Siril find_star default roundness, software-ok |
+| ROOM_HFD | `3.0` | P ADR 0022: away from the edge and from neighbours more than 3 HFD |
+| APERTURE_HFD | `3.0` | D Moffat 1969, enclosed flux 1-(1+r^2/a^2)^(1-b) |
+| RING_OUTER | `1.5` | T |
+| RADII | `96` | T |
+| SUBPIX | `5` | C sep docs: sum_circle default subpixel sampling |
+| MIN_STARS | `5` | T |
+| GRID | `3` | P ADR 0022 |
+| PER_CELL | `60` | P ADR 0022 |
+| SIGMA_TO_HFD | `2.3548` | D Gaussian profile |
+| BAYER | `2` | C Bayer pattern: one colour quad is 2x2 sensor pixels |
+| NOISE_FLOOR_ADU | `0.2887` | D uniform quantization noise, step/sqrt(12) |
 
 ### pipeline/timeouts.py
 
@@ -383,6 +409,7 @@ Fonti: C norma: 57; U usanza: 1; D metodo: 3; M misura: 12; P decisione: 25; T t
 |---|---|---|
 | F32_SIGNIFICANT_DIGITS | `7` | T |
 | ARCSEC_PER_RAD_PER_1000 | `206.265` | C 648000/pi |
+| MAD_TO_SIGMA | `1.4826` | C Rousseeuw & Croux, JASA 88:1273, 1993 |
 | FOCAL_TOLERANCE | `0.05` | P ADR 0016 |
 | NATURAL_SKY_CD_M2 | `174e-6` | C Falchi 2016: "22.0 mag/arcsec2, corresponding to 174 ucd/m2" |
 | GARSTANG_OFFSET_MAG | `12.603` | C Garstang 1986 via Cinzano 2005: "V = 12.603 - 2.5 log10 L" |
@@ -470,7 +497,7 @@ Fonti: C norma: 57; U usanza: 1; D metodo: 3; M misura: 12; P decisione: 25; T t
 | 0004 | Su Windows e Mac l'app e' un'app vera: Tauri 2 col backend come sidecar | accettata, 4/9/2026; in vigore, aperto: la scelta fra Tauri ed Electron la chiude il |  |
 | 0005 | Il motore della carta del cielo e' Aladin Lite v3 | accettata; in vigore, non costruito; versione (3.8.1) e mappe precisate da ADR 0023. |  |
 | 0006 | Il cielo fotografico (DSS2) non sta mai nel pacchetto | accettata; in vigore; esteso da ADR 0023 alle altre mappe. |  |
-| 0007 | Le metriche dei frame con `sep` e numpy/scipy, non `photutils` | accettata; superata in parte da ADR 0033 (D1: HFD e stelle da `measure`, non da ASTAP). Nessun codice: nasce con `measure`. |  |
+| 0007 | Le metriche dei frame con `sep` e numpy/scipy, non `photutils` | accettata; superata in parte da ADR 0033 (D1: HFD e stelle da `measure`, non da ASTAP). Codice dal passo 25 (`pipeline/stars.py`). |  |
 | 0008 | Una pagina Diagnostica, nessuna telemetria | accettata; in vigore; log costruito, pagina Diagnostica no. |  |
 | 0009 | Tutto automatico, manuale per eccezione; v1 e' un'app completa | accettata; in vigore. |  |
 | 0010 | Un utente per istanza, con piu' siti e piu' setup | accettata; in vigore. |  |
@@ -485,7 +512,7 @@ Fonti: C norma: 57; U usanza: 1; D metodo: 3; M misura: 12; P decisione: 25; T t
 | 0019 | Sole e Sistema solare entrano in Archivio a mano, il deep sky resta automatico | accettata, 17/10/2026 (Marco). Nessun codice ancora. Ordine dei pezzi: disegno della linguetta e di "Aggiungi oggetto"; comete, |  |
 | 0020 | La qualita' della notte e' un punteggio da 0 a 100, coi pesi decisi con Marco | accettata, 17/10/2026 (Marco); superata in gran parte da ADR 0034 (somma a punti, pesi, seeing nel voto, ora utile da 60, Luna 25/50 e -5°, fattore mancante ripartito, nebbia dall'Atlante WMO). | domini/meteo.md |
 | 0021 | L'attrezzatura porta i dati delle schede tecniche, e il setup ci calcola | accettata, 18/10/2026 (Marco). ADR 0033: i programmi verificati sono due (ADR 0029). |  |
-| 0022 | Le misure dei frame: tutte, attestate, nel database, senza voto | accettata, 18/10/2026 (Marco); superata in parte da ADR 0033 (stelle da `measure`), 0037 (SNR, zone, tilt) e 0039 (Qn, eccentricita', oggetto basso, Bortle del sito). Nessun codice. |  |
+| 0022 | Le misure dei frame: tutte, attestate, nel database, senza voto | accettata, 18/10/2026 (Marco); superata in parte da ADR 0033 (stelle da `measure`), 0037 (SNR, zone, tilt) e 0039 (Qn, eccentricita', oggetto basso, Bortle del sito). Ridotta il 26/10/2026: il metodo costruito, le misure sul vero e i testi stanno in `docs/domini/misure.md`. |  |
 | 0023 | Planner e Progetti: inquadratura, mosaico, setup di prova, filtri, modifiche | accettata, 18/10/2026 (Marco). ADR 0033: nel piano della notte il meteo e' una striscia (ADR 0013). Superata la riga "Planetario e solare: nessun progetto" (Marco, 19/10/2026: si salvano in Progetti senza ore). I progetti nascono solo nel Planner (Marco, 24/10/2026). La spec sta in `docs/domini/planner.md` (24/10/2026). |  |
 | 0024 | Statistiche: i confronti nel tempo | accettata, 20/10/2026 (Marco); superata in parte da ADR 0034 (qualita' della notte -> Trasparenza, seeing fuori, niente punti ripartiti). Nessun codice; la pagina e' ancora in lavorazione con Marco (24/10/2026). |  |
 | 0025 | Uno studio per ruoli: la pagina si collauda contro la tavola prima di Marco | accettata, 20/10/2026 (Marco, dal check di salute). Allarga ADR 0015: ricette, un giro |  |

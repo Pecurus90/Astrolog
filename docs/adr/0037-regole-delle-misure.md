@@ -40,4 +40,5 @@ un frame nessun programma usa la stessa statistica.
 
 - ADR 0022 porta in testa "superata in parte da ADR 0037": formula CCD dell'SNR, "5 zone" come
   base del frame, denominatore del tilt al centro, "nessuna fonte" per il tilt.
-- Il commento di `frame_metrics` in `schema.sql` (SNR dal solver) si corregge con `measure`.
+- `frame_metrics` (col commento "SNR dal solver") e' uscita con `measure` (passo 25): le misure
+  stanno in `pipeline_measures`.

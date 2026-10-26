@@ -23,6 +23,9 @@ dependencies = [
                              #         immagini slim nemmeno. Senza, ogni nome di fuso
                              #         risulterebbe inesistente e ogni luogo nascerebbe
                              #         senza fuso, in silenzio
+  "numpy>=2.3.5",              # BSD   - i pixel dei frame per measure (prima solo via astropy)
+  "sep>=1.4.1",                # LGPL-3 - fondo, stelle e flussi di measure (ADR 0007; ruota
+                             #         aarch64 compresa, la ragione per cui photutils e' fuori)
 ]
 
 [project.optional-dependencies]
@@ -142,7 +145,7 @@ layers = [
 [[tool.importlinter.contracts]]
 name = "Gli stadi non si conoscono fra loro: a metterli in fila e' spine.run"
 type = "independence"
-# measure si aggiunge qui quando nasce.
+# measure e' nato nella pipeline nuova (pipeline/measure.py), non qui.
 modules = ["astrolog.spine.scan", "astrolog.spine.normalize", "astrolog.spine.solve", "astrolog.spine.identify", "astrolog.spine.group"]
 
 [[tool.importlinter.contracts]]
@@ -290,5 +293,5 @@ ignore_imports = ["astrolog.api.scan -> astrolog.pipeline.run"]
 # Mappa, passo 4: la scheda e' una funzione pura, si rifa' su tutti gli header senza database.
 name = "leggere un file e farne la scheda e' puro: niente database"
 type = "forbidden"
-source_modules = ["astrolog.pipeline.card", "astrolog.pipeline.sky", "astrolog.pipeline.values", "astrolog.pipeline.scanner", "astrolog.pipeline.fingerprint", "astrolog.pipeline.walk", "astrolog.pipeline.footprint"]
+source_modules = ["astrolog.pipeline.card", "astrolog.pipeline.sky", "astrolog.pipeline.values", "astrolog.pipeline.scanner", "astrolog.pipeline.fingerprint", "astrolog.pipeline.walk", "astrolog.pipeline.footprint", "astrolog.pipeline.pixels", "astrolog.pipeline.stars"]
 forbidden_modules = ["sqlite3", "astrolog.db"]

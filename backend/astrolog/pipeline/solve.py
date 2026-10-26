@@ -20,6 +20,7 @@ from ..db.transaction import transaction
 from . import capacity, timeouts
 from .footprint import footprint
 from .scan import busy
+from .shots import first_per_shot, is_fz
 from .walk import long_path
 
 # The whole pass would fail the same way: stop at the first.
@@ -239,7 +240,7 @@ def _solve_root(
     this = _Pass(now, astap.version(solver), ",".join(_installed(solver)), machine, limits)
     asked = {"root": root_id, "passes": PASSES, "version": this.version,
              "installed": this.installed}  # fmt: skip
-    rows = _first_per_shot(conn.execute(PENDING, asked).fetchall())
+    rows = first_per_shot(conn.execute(PENDING, asked).fetchall())
     workers, stop = pace
     flock = _Flock(conn, (Path(root["path"]), Path(named)), solver, this)
     flock.fly(rows, workers or capacity.capacity(), stop or threading.Event(), launcher)
@@ -251,17 +252,6 @@ def _borrows(card: sqlite3.Row) -> bool:
     no_pointing = card["pointing_ra_deg"] is None and card["object_name"] is not None
     no_field = None in (card["focal_mm"], card["pixel_um"]) and card["camera"] is not None
     return no_pointing or no_field
-
-
-def _first_per_shot(rows: list[sqlite3.Row]) -> list[sqlite3.Row]:
-    """PENDING's order kept: a shot's plain file before its copies."""
-    seen: set[int] = set()
-    first = []
-    for row in rows:
-        if row["frame_id"] not in seen:
-            seen.add(row["frame_id"])
-            first.append(row)
-    return first
 
 
 @dataclass
@@ -350,17 +340,13 @@ def _installed(solver: astap.Solver) -> tuple[str, ...]:
     return astap.star_databases(solver.exe)
 
 
-def _is_fz(rel_path: str) -> bool:
-    return rel_path.lower().endswith(".fz")
-
-
 def _try(
     path: Path, shot: tuple[sqlite3.Row, _Hint], solver: astap.Solver, where: tuple[Path, _Pass]
 ) -> _Tried:
     work, this = where
     card, hint = shot
     # unread version: try
-    if _is_fz(path.name) and this.release is not None and this.release < astap.FZ_SINCE:
+    if is_fz(path.name) and this.release is not None and this.release < astap.FZ_SINCE:
         return _Tried(astap.Solution(ok=False, reason=astap.Reason.FZ_UNSUPPORTED), None)
     start = time.monotonic()
     ladder = _ladder(hint.pointing, hint.field_deg, typeless=card["frame_type"] == "unknown")
@@ -411,7 +397,7 @@ def _launch(given: str, base: Path, solver: astap.Solver, search: astap.Search) 
 def _readable_name(path: str, fresh: Path) -> str | None:
     """Name ASTAP can read: as is, 8.3, else copy in launch folder (N.I.N.A. solves a copy too).
     Never a hard link: shares read-only flag, cleanup clears it on user's file."""
-    fz = _is_fz(path)
+    fz = is_fz(path)
     named = astap.code_page_path(path)
     # 8.3 of a .fz ends .FZ; ASTAP wants .fits.fz (hnsky.org)
     if named is not None and not (fz and named != path):

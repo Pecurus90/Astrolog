@@ -544,21 +544,6 @@ CREATE TRIGGER asks_type_folder_moved AFTER UPDATE OF root_path, retired_at ON f
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = frames.id)
   WHERE image_type = 'unknown'; END;
 
--- Le misure per frame. Prima quelle che il solver da' nella stessa passata (HFD, stelle,
--- SNR), poi eccentricita' e fondo cielo (casella misura). NULL = non misurata.
-CREATE TABLE frame_metrics (
-  frame_id       INTEGER PRIMARY KEY REFERENCES frames (id) ON DELETE CASCADE,
-  hfd_px         REAL,
-  fwhm_px        REAL,
-  stars          INTEGER,
-  snr            REAL,
-  eccentricity   REAL,
-  sky_background REAL,
-  sky_noise      REAL,
-  source         TEXT NOT NULL CHECK (source IN ('astap', 'sep')),  -- mai l'header: si misura
-  measured_at    TEXT NOT NULL
-) STRICT;
-
 -- Un oggetto dell'archivio: cio' che e' stato fotografato. Il nome vive in object_names.
 -- Una voce di catalogo e' UN oggetto solo: due pose della stessa galassia che ne creassero due
 -- sparpaglierebbero le ore, che e' il difetto contro cui esiste tutto identify. Lo garantisce
@@ -1091,6 +1076,26 @@ CREATE TABLE pipeline_solutions (
   CHECK (outcome = 'solved' OR coalesce(rotation_deg, mirrored, skew_deg, width_deg, height_deg,
     corners, expected_scale_arcsec_px, measured_focal_mm, astap_warning) IS NULL),
   CHECK ((expected_scale_arcsec_px IS NULL) = (scale_disagrees IS NULL))
+) STRICT;
+
+-- RILEVATO. Misure di una posa light dai suoi pixel (pipeline/measure.py, docs/domini/misure.md),
+-- scritte una volta; nessuna riga: da misurare. unreadable si riprova, gli altri restano.
+CREATE TABLE pipeline_measures (
+  frame_id       INTEGER PRIMARY KEY REFERENCES pipeline_frames (id) ON DELETE CASCADE,
+  file_id        INTEGER REFERENCES pipeline_files (id) ON DELETE SET NULL,  -- file letto
+  outcome        TEXT NOT NULL CHECK (outcome IN ('measured', 'too_few_stars', 'unreadable',
+                   'not_supported', 'fz_unsupported')),
+  stars          INTEGER CHECK (stars >= 0),  -- rilevate sul frame intero: indicatore relativo
+  kept           INTEGER CHECK (kept >= 0),   -- stelle di cui hfd_px e' la mediana
+  hfd_px         REAL CHECK (hfd_px > 0),     -- pixel del sensore, anche a colori
+  background_adu REAL,                        -- fondo cielo: solo stessa camera, guadagno, posa
+  noise_adu      REAL CHECK (noise_adu >= 0), -- 1,4826 MAD; a colori del superpixel (circa /2)
+  duration_s     REAL CHECK (duration_s >= 0),
+  measured_at    TEXT NOT NULL,
+  CHECK ((outcome = 'measured') = (hfd_px IS NOT NULL)),
+  CHECK ((outcome IN ('measured', 'too_few_stars')) = (stars IS NOT NULL)
+    AND (stars IS NULL) = (kept IS NULL) AND (stars IS NULL) = (background_adu IS NULL)
+    AND (stars IS NULL) = (noise_adu IS NULL))
 ) STRICT;
 
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave calcolata dal nome, mai salvata:

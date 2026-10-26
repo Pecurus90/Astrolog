@@ -95,9 +95,9 @@ sbagliata. Il secondo copre anche il caso in cui **il sito c'e' ma il suo fuso n
 la frase parla di "da dove osservavi" e il gesto e' lo stesso -- si apre la scheda del sito -- e
 distinguerli vorrebbe dire una quinta frase per un caso che nasce solo da coordinate storte.
 
-**Le misure sono quelle che l'app ha preso davvero.** Oggi sono **HFD e stelle**, che il
-riconoscitore da' ancora mentre risolve il frame, poi le misura `measure` (ADR 0022, 0033); FWHM, SNR, eccentricita' e fondo cielo sono colonne
-che aspettano la casella che le misura, e una pagina non scrive un numero che nessuno ha misurato.
+**Le misure sono quelle che l'app ha preso davvero.** Le prende `measure` dai pixel
+([`misure.md`](misure.md)): oggi stelle, HFD, fondo e rumore nella pipeline nuova, che la pagina
+non legge ancora; una pagina non scrive un numero che nessuno ha misurato.
 Dove la scala del cielo e' nota, l'HFD si legge in **arcosecondi**, o due notti con due telescopi
 non si potrebbero confrontare.
 
@@ -136,18 +136,8 @@ La pagina e' il **riepilogo delle notti passate**, e ci arriva per pezzi: l'elen
 sono, e il meteo di ogni notte anche; restano le misure dei frame. Ogni riga *nasce con* qui sopra dice quale pezzo la
 porta; finche' non c'e', la pagina **tace invece di ripiegare** su un numero inventato.
 
-**Le misure dei frame, a schermo** (regole in ADR 0022, 0037, 0039; qui finche' non nasce il
-contratto di `measure`). Stati approvati (Marco, 18/10/2026): "misura in corso" (non ancora
-misurato); "troppo poche stelle" (non misurabile, il numero tace); forma stimata, quando il fit
-non riesce, detta sulla riga; senza scala del cielo FWHM e HFD in px e niente zenit; senza sito
-o coordinate dell'oggetto niente zenit; le mediane solo sui frame misurati, con quanti ("su 112
-di 120 frame"). Per notte e filtro la mediana di ogni misura, e un grafico della FWHM frame per
-frame con l'altezza dell'oggetto sullo stesso asse del tempo. La curva dello SQM lungo la notte
-porta l'altezza della Luna sullo stesso asse, con "il valore cambia anche con la direzione del
-cielo" accanto, e "nessun frame L o a colori in questa notte" quando manca; una camera a colori
-senza bias non ha SQM e dice "serve il bias della camera", col rimando a "Bias (ADU)" in
-Attrezzatura. Parole del campionamento ancora proposte, da approvare sulla tavola:
-"sottocampionata (grave)", "sottocampionata", "ideale", "sovracampionata".
+**Le misure dei frame, a schermo**: stati e testi approvati stanno nel contratto delle misure,
+[`misure.md`](misure.md), sezione *I testi a schermo*.
 
 **Se torna una seconda vista**, in partenza si apre l'elenco (Marco, 21/9/2026).
 

@@ -1,8 +1,8 @@
 # La spina -- contratto
 
 La spina e' la catena che trasforma cartelle di FITS in un archivio interrogabile: **scan
--> normalize -> solve -> identify -> group** (e `measure`, che e' nel grafo e non ha ancora un
-lavoro). Non e' una linea ma un grafo: ogni
+-> normalize -> solve -> identify -> group** (e `measure`, che nel grafo della spina vecchia non
+ha lavoro: e' nato nella pipeline nuova, [`misure.md`](misure.md)). Non e' una linea ma un grafo: ogni
 stadio lavora su cio' che per lui manca (`frame_stages`), e la ripresa e' sempre "cio' che
 manca", mai "dal file N". Lo schema sta in `backend/astrolog/schema.sql`; il disegno nei
 contratti di `backend/pyproject.toml`. Le decisioni ereditate da old/ che riguardano questo
@@ -553,9 +553,9 @@ stesso oggetto** (la regola esatta e' piu' sotto): e' cio' che lo salva dai 23 s
 cache `cache/solve/<frame_hash>.ini` e `.wcs` e' immutabile: un reset la rilegge invece di
 ri-risolvere.
 
-**HFD e stelle le misura `measure`**, le stelle sul frame intero senza pixel caldi (ADR 0022,
-0033); la pipeline vecchia le prende ancora da `-analyse` (+0,3 s a frame), in `frame_metrics`
-con `source = 'astap'`, e la nuova toglie quella passata. **Il tilt no**: servirebbe `-extract`, che scrive un CSV **accanto al
+**HFD e stelle le misura `measure`** dai pixel, nella pipeline nuova (ADR 0022, 0033;
+[`misure.md`](misure.md)): la passata `-analyse` (+0,3 s a frame) e `frame_metrics` sono uscite
+anche dalla vecchia, che non le leggeva. **Il tilt no**: servirebbe `-extract`, che scrive un CSV **accanto al
 FITS dell'utente** ignorando `-o` e la cartella di lavoro (verificato) -- e su una
 condivisione in sola lettura fallirebbe. Tilt, eccentricita' e fondo cielo nascono con
 `measure`, dove i pixel li leggiamo noi e non si scrive niente. La rotazione e' quella

@@ -235,13 +235,6 @@ class Launcher:
                 child.kill()
 
 
-def _number(text: object) -> float | None:
-    """The machine's decimal comma counts as a point. Never a fallback zero."""
-    if text is None:
-        return None
-    return as_float(str(text).strip().replace(",", "."))
-
-
 def read_ini_text(text: str | None) -> dict[str, str]:
     """ASTAP writes `KEY=value` lines both in the result file and on screen: one reader."""
     out = {}
@@ -372,22 +365,6 @@ def from_ini(ini: dict[str, str]) -> Solution:
         crpix=crpix if None not in crpix else None,  # type: ignore[arg-type]
         warning=ini.get("WARNING", "").strip() or None,
     )
-
-
-def analyse(fits_path: str | Path, solver: Solver) -> tuple[float | None, int | None]:
-    """`(median HFD, stars)` from a second ASTAP pass: the only way to these two numbers that
-    leaves no file in the user's folder."""
-    if not solver.exe:
-        return None, None
-    cmd = [solver.exe, "-f", str(fits_path), "-analyse", "30"]
-    try:
-        _code, out = (solver.run or _run)(cmd, solver.timeout_s)
-    except (subprocess.TimeoutExpired, TimeoutError, OSError) as err:
-        log.info("astap: analyse senza esito", extra={"file": str(fits_path), "error": repr(err)})
-        return None, None
-    values = read_ini_text(out)
-    stars = _number(values.get("STARS"))
-    return _number(values.get("HFD_MEDIAN")), None if stars is None else int(stars)
 
 
 # [C ASTAP source: RICE_1 in astap_cli from 2026.07.17] hnsky.org says 2026.07.16: GUI only.

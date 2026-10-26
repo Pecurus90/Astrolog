@@ -43,7 +43,7 @@ backfocus, setup, Deep sky.
 | il fuso orario del sito, ricavato dalle sue coordinate | `timezone` | fuso | zona, orario |
 | l'ora che il file dice, UTC come vuole lo standard FITS: e' l'istante su cui la posa conta | `date_obs` | ora della posa | ora vera, ora corretta |
 | quanto e' scuro il cielo di un sito, in magnitudini per arcosecondo quadrato: e' la misura | `sky_sqm` | luminosita' del cielo | brillanza |
-| la luminosita' del cielo misurata su un frame L, senza filtro o a colori (ADR 0022): a schermo "SQM 19.2" (Marco, 18/10/2026) | `sqm` (su `frame_metrics`) | SQM | brillanza, fondo in magnitudini |
+| la luminosita' del cielo misurata su un frame L, senza filtro o a colori (ADR 0022): a schermo "SQM 19.2" (Marco, 18/10/2026) | `sqm` (su `pipeline_measures`, passo 25.3) | SQM | brillanza, fondo in magnitudini |
 | la classe di cielo da 1 a 9, ricavata dalla luminosita': si mostra col numero misurato accanto, **tranne in due posti** -- il primo avvio, dove si sceglie e non c'e' ancora niente da dichiarare, e il piede della barra, dove sono 227px e la classe e' un promemoria di dov'e' puntata l'app. La scala dove si sceglie si intitola "Bortle" ("Bortle, da 1 a 9" per chi ascolta; Marco, 17/10/2026) | `bortle` | Bortle | classe, qualita' del cielo, scala di Bortle |
 | come si sa la luminosita' di un sito: misurata, chiesta al servizio, scelta sulla scala | `sky_source` | (una frase tradotta) | fonte, origine |
 | l'altezza del sito sul livello del mare; assente vuol dire "non fornita", mai zero | `elevation_m` | altitudine | quota, altezza |
@@ -77,7 +77,7 @@ backfocus, setup, Deep sky.
 | il gruppo di un frame senza nome e senza cielo: la notte, la camera, il telescopio e il puntamento di chi ha aperto il gruppo. Lo scrive `identify` quando il frame arriva, e si risceglie solo se casa cambia fuso e la notte del frame con lei | `unnamed_key` | -- | cella, id del gruppo |
 | un frame risolto nel cui campo il catalogo non ha nessun candidato: il cielo c'e', ma non dice cosa hai ripreso. Lo scrive `identify`, e resta quando il frame torna in coda | `empty_cone` | senza oggetti identificati | il cielo non ha trovato niente, vuoto, senza oggetto |
 | un frame che il solver non ha risolto | `unsolved` | non risolto | senza cielo, da risolvere, fallito |
-| quanto sono larghe le stelle in un frame, in pixel: e' la misura del fuoco. La misura `measure` (ADR 0022, 0033); oggi viene ancora dal solver | `hfd_px` | HFD | fuoco, nitidezza (la FWHM e' un'altra misura, la riga sotto) |
+| quanto sono larghe le stelle in un frame, in pixel: il diametro che contiene meta' della loro luce, la misura del fuoco. La misura `measure` dai pixel (ADR 0022, 0033; [`misure.md`](misure.md)) | `hfd_px` | HFD | fuoco, nitidezza (la FWHM e' un'altra misura, la riga sotto) |
 | la larghezza a meta' altezza delle stelle, in pixel: una misura sua accanto all'HFD, uguale per una gaussiana (ADR 0022, 0037) | `fwhm_px` | FWHM | HFD (e' l'altra misura), larghezza, nitidezza |
 | l'identita' di una voce di catalogo, stabile fra due ricostruzioni (gli id invece si rinumerano) | `slug` | sigla-chiave | id, codice, chiave |
 | il numero che un oggetto porta dentro un catalogo (`224`); il catalogo sta accanto, in `catalog` | `designation` | designazione | numero, sigla |
