@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 160; senza fonte: 1.
-Fonti: C norma: 63; U usanza: 1; D metodo: 6; M misura: 12; P decisione: 29; T tecnico: 51.
+Valori: 169; senza fonte: 1.
+Fonti: C norma: 71; U usanza: 1; D metodo: 6; M misura: 12; P decisione: 29; T tecnico: 52.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -217,6 +217,37 @@ Fonti: C norma: 63; U usanza: 1; D metodo: 6; M misura: 12; P decisione: 29; T t
 |---|---|---|
 | LEFT_OUT_KEPT | `100` | P ADR 0038 |
 
+### pipeline/debayer.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| COLOURS | `"RGGB": ((0, 1), (1, 2)),` | C PCL BayerPatternToColorIndices |
+| COLOURS | `"BGGR": ((2, 1), (1, 0)),` | C PCL BayerPatternToColorIndices |
+| COLOURS | `"GBRG": ((1, 2), (0, 1)),` | C PCL BayerPatternToColorIndices |
+| COLOURS | `"GRBG": ((1, 0), (2, 1)),` | C PCL BayerPatternToColorIndices |
+| (K1, K2) | `1.5, 0.5` | C Chang 1999, PCL VNGThread |
+| TIE | `1e-10` | C PCL VNGThread |
+| BORDER | `2` | C PCL |
+| STRIP | `256` | T |
+| _STRAIGHT | `((7, 17, 1), (2, 12, 1), (6, 16, 0.5), (8, 18, 0.5), (1, 11, 0.5), ...` | C PCL VNGThread::ComputeGradients |
+| _STRAIGHT | `((13, 11, 1), (14, 12, 1), (8, 6, 0.5), (18, 16, 0.5), (9, 7, 0.5),...` | C PCL VNGThread::ComputeGradients |
+| _STRAIGHT | `((17, 7, 1), (22, 12, 1), (16, 6, 0.5), (18, 8, 0.5), (21, 11, 0.5)...` | C PCL VNGThread::ComputeGradients |
+| _STRAIGHT | `((11, 13, 1), (10, 12, 1), (6, 8, 0.5), (16, 18, 0.5), (5, 7, 0.5),...` | C PCL VNGThread::ComputeGradients |
+| _GREEN | `((8, 16, 1), (4, 12, 1), (3, 11, 1), (9, 17, 1)),` | C PCL VNGThread::ComputeGradients |
+| _GREEN | `((18, 6, 1), (24, 12, 1), (23, 11, 1), (19, 7, 1)),` | C PCL VNGThread::ComputeGradients |
+| _GREEN | `((6, 18, 1), (0, 12, 1), (1, 13, 1), (5, 17, 1)),` | C PCL VNGThread::ComputeGradients |
+| _GREEN | `((16, 8, 1), (20, 12, 1), (21, 13, 1), (15, 7, 1)),` | C PCL VNGThread::ComputeGradients |
+| _OTHER | `((8, 16, 1), (4, 12, 1), (7, 11, 0.5), (13, 17, 0.5), (3, 7, 0.5), ...` | C PCL VNGThread::ComputeGradients |
+| _OTHER | `((18, 6, 1), (24, 12, 1), (13, 7, 0.5), (17, 11, 0.5), (19, 13, 1),...` | C PCL VNGThread::ComputeGradients |
+| _OTHER | `((6, 18, 1), (0, 12, 1), (7, 13, 0.5), (11, 17, 0.5), (1, 7, 0.5), ...` | C PCL VNGThread::ComputeGradients |
+| _OTHER | `((16, 8, 1), (20, 12, 1), (11, 7, 0.5), (17, 13, 0.5), (15, 11, 1),...` | C PCL VNGThread::ComputeGradients |
+| _GREEN_SUMS | `(1, 2, 3, 7, 11, 12, 13), (7, 9, 12, 13, 14, 17, 19), (11, 12, 13, ...` | C PCL VNGThread::ComputeSums |
+| _GREEN_SUMS | `(5, 7, 10, 11, 12, 15, 17), (3, 7, 8, 9, 13), (13, 17, 18, 19, 23),...` | C PCL VNGThread::ComputeSums |
+| _GREEN_SUMS | `(11, 15, 16, 17, 21),` | C PCL VNGThread::ComputeSums |
+| _OTHER_SUMS | `(2, 6, 7, 8, 12), (8, 12, 13, 14, 18), (12, 16, 17, 18, 22), (6, 10...` | C PCL VNGThread::ComputeSums |
+| _OTHER_SUMS | `(3, 4, 7, 8, 9, 12, 13), (12, 13, 17, 18, 19, 23, 24), (0, 1, 5, 6,...` | C PCL VNGThread::ComputeSums |
+| _OTHER_SUMS | `(11, 12, 15, 16, 17, 20, 21),` | C PCL VNGThread::ComputeSums |
+
 ### pipeline/fingerprint.py
 
 | simbolo | valore | fonte |
@@ -278,7 +309,6 @@ Fonti: C norma: 63; U usanza: 1; D metodo: 6; M misura: 12; P decisione: 29; T t
 | GRID | `3` | P ADR 0022 |
 | PER_CELL | `60` | P ADR 0022 |
 | SIGMA_TO_HFD | `2.3548` | D Gaussian profile |
-| BAYER | `2` | C Bayer pattern: one colour quad is 2x2 sensor pixels |
 | NOISE_FLOOR_ADU | `0.2887` | D uniform quantization noise, step/sqrt(12) |
 
 ### pipeline/timeouts.py

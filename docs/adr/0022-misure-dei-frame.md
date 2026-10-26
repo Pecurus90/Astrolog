@@ -30,8 +30,12 @@ che resta nasce coi test.
    Angolo solo da eccentricita' 0,4, girato col cielo: "in AR" o "in Dec".
 5. **SNR**: PSF SNR della documentazione di PixInsight (ImageWeighting, eq. 7, 18-19), c3 = <!-- software-ok -->
    1,350e-7, c4 = 4,987e6; sui 45 frame rho 0,97 con PixInsight. Mai fra camere o oggetti. <!-- software-ok -->
-6. **Camere a colori** sul superpixel 2x2, in pixel del sensore; sotto ~1,2 superpixel di FWHM il
-   canale verde a piena risoluzione.
+6. **Camere a colori** (Marco, 26/10/2026, passo 24.06; prima: superpixel 2x2) come WBPP: debayer
+   VNG a piena risoluzione (Chang, Cheung e Pan 1999, il VNGThread di PixInsight portato), poi <!-- software-ok -->
+   tutto sull'intensita' HSI (min + max) / 2, il piano su cui misura il SubframeSelector; pattern
+   da `BAYERPAT` con `XBAYROFF`/`YBAYROFF`, come l'Auto del Debayer. Il rumore come lo dice WBPP:
+   per piano R, G, B del mosaico, poi (min + max) / 2. Il superpixel allargava le
+   stelle piccole: Canon 700D HFD 6,94 px contro 3,97 di ASTAP, con VNG 3,20.
 7. **Altre misure**: fondo e rumore in ADU (solo stessa camera, guadagno, posa); gradiente sul
    frame ridotto, (max - min) / mediana, col lato piu' chiaro; tilt e curvatura dalla HFD in
    cinque zone (quattro angoli e centro); stelle sature (`DATAMAX` o il tetto dall'istogramma);

@@ -9,15 +9,19 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..db.transaction import transaction
-from .pixels import Pixels, read_pixels
+from .debayer import pattern_of
+from .pixels import Pixels, Unmeasurable, Why, read_pixels
 from .scan import busy
 from .shots import first_per_shot
 from .stars import Measured, measure_frame
 
 # Light shots without a row, or whose last file was unreadable; plain file before its copy.
 PENDING = (
-    "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.bayer"
+    "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.bayer,"
+    " h.header ->> '$.BAYERPAT' AS BAYERPAT, h.header ->> '$.XBAYROFF' AS XBAYROFF,"
+    " h.header ->> '$.YBAYROFF' AS YBAYROFF"
     " FROM pipeline_files AS f JOIN pipeline_cards AS c ON c.file_id = f.id"
+    " JOIN pipeline_headers AS h ON h.file_id = f.id"
     " WHERE f.root_id = :root AND f.state = 'present' AND f.skip_reason IS NULL"
     " AND c.frame_type = 'light'"
     " AND NOT EXISTS (SELECT 1 FROM pipeline_measures AS m"
@@ -70,9 +74,12 @@ def measure_root(
 def _measure(conn: sqlite3.Connection, path: Path, row: sqlite3.Row, now: str) -> str:
     start = time.perf_counter()
     values: dict[str, object] = {key: None for key in _NUMBERS}
-    read = read_pixels(path)
+    pattern = pattern_of(dict(row))
+    read = Unmeasurable(Why.NOT_SUPPORTED)  # a matrix not R G B (CYGM): no debayer for it
+    if pattern is not None or not row["bayer"]:
+        read = read_pixels(path)
     if isinstance(read, Pixels):
-        found = measure_frame(read.data, saturation=read.saturation, bayer=bool(row["bayer"]))
+        found = measure_frame(read.data, saturation=read.saturation, pattern=pattern)
         outcome = "measured" if isinstance(found, Measured) else "too_few_stars"
         values |= {key: getattr(found, key, None) for key in _NUMBERS}
     else:

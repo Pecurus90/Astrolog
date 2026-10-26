@@ -1,5 +1,7 @@
 # Tests removed on purpose, one per line: name - reason. Checked by tools/guardia_test.py.
-test_the_stages_never_write_the_file - Marco 25/10/2026: a scan writes the backup when a folder's sample changes; replaced by test_a_scan_writes_the_file_only_for_a_new_sample
+test_a_colour_frame_is_measured_on_its_superpixel_in_sensor_pixels - step 24.06, ADR 0022 point 6: superpixel replaced by VNG; replaced by test_a_colour_frame_is_measured_after_vng_in_sensor_pixels
+test_a_colour_camera_is_measured_on_its_superpixel - step 24.06, ADR 0022 point 6: superpixel replaced by VNG; replaced by test_a_colour_camera_is_measured_after_its_debayer
+test_the_stages_never_write_the_file -Marco 25/10/2026: a scan writes the backup when a folder's sample changes; replaced by test_a_scan_writes_the_file_only_for_a_new_sample
 il movimento d'apertura non riparte tornando indietro - the v33 sheet has no entrance animation: .as-entra is the first-run page
 test_only_hardening_closes_the_review_in_one_round_and_is_parked - esegui.js replaced by costruisci.js (ADR 0015)
 test_a_defect_is_fixed_and_a_hardening_twice_is_parked_once - esegui.js replaced by costruisci.js (ADR 0015)

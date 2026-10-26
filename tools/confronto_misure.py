@@ -26,11 +26,10 @@ from pathlib import Path, PurePath
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
 
 from astrolog.astap import Run, find_exe
-from astrolog.pipeline.card import bayer
+from astrolog.pipeline.debayer import pattern_of
 from astrolog.pipeline.pixels import Pixels, read_pixels
 from astrolog.pipeline.scanner import read_header
 from astrolog.pipeline.stars import Measured, measure_frame
-from astrolog.pipeline.values import Program
 
 FRAME_SUFFIXES = (".fits", ".fit", ".fts")
 SNR_MIN = 30  # the -analyse threshold misure.md has always quoted
@@ -45,12 +44,31 @@ SUBFRAME_CANDIDATES = (
 )
 MONO, COLOR = "mono", "colori"
 
+DEBAYERED = "_d"  # [C PCL DebayerParameters: outputPostfix default, the file an .xisf beside]
+
+# Colour frames debayered first, VNG and the pattern from the header, as WBPP does.
 # Measurements columns: 3 path, 5 FWHM, 10 median, 12 noise, 14 stars (SubframeSelectorProcess.cpp).
 # Errors land in the file too: the program's console never reaches stdout on Windows.
 _SCRIPT = """var files = %s;
+var colour = %s;
+var work = %s;
 var out = %s;
 var lines = ["path,fwhm_px,median,noise,stars"];
 try {
+   if (colour.length > 0) {
+      var D = new Debayer;
+      D.cfaPattern = Debayer.prototype.Auto;
+      D.debayerMethod = Debayer.prototype.VNG;
+      D.targetItems = colour.map(function (f) { return [true, f]; });
+      D.outputDirectory = work;
+      D.outputPostfix = "%s";
+      D.overwriteExistingFiles = true;
+      D.noGUIMessages = true;
+      D.executeGlobal();
+      colour.forEach(function (f) {
+         files.push(work + "/" + File.extractName(f) + "%s.xisf");
+      });
+   }
    var SS = new SubframeSelector;
    SS.routine = SubframeSelector.prototype.MeasureSubframes;
    SS.nonInteractive = true;
@@ -111,10 +129,19 @@ def astap_from_code(code: int) -> Astap | None:
     return Astap(hfd_px=(code // 1_000_000) / 100, stars=code % 1_000_000)
 
 
-def subframe_script(frames: Iterable[PurePath], out: PurePath) -> str:
-    """Paths as JSON strings with forward slashes: the script reads a backslash as an escape."""
-    paths = [p.as_posix() for p in frames]
-    return _SCRIPT % (json.dumps(paths), json.dumps(out.as_posix()))
+def subframe_script(
+    frames: Iterable[PurePath], colour: Iterable[PurePath], work: PurePath, out: PurePath
+) -> str:
+    """Paths as JSON strings with forward slashes: the script reads a backslash as an escape.
+    `frames` measured as they are; `colour` debayered into `work` first."""
+    paths = [json.dumps([p.as_posix() for p in group]) for group in (frames, colour)]
+    places = (json.dumps(work.as_posix()), json.dumps(out.as_posix()))
+    return _SCRIPT % (*paths, *places, DEBAYERED, DEBAYERED)
+
+
+def debayered_name(frame: PurePath) -> str:
+    """What the SubframeSelector row of a colour frame is called: its debayered copy."""
+    return f"{frame.stem}{DEBAYERED}.xisf"
 
 
 def read_subframes(text: str) -> dict[str, Subframe]:
@@ -136,16 +163,18 @@ def read_subframes(text: str) -> dict[str, Subframe]:
 
 
 def measure_ours(path: Path) -> tuple[Ours, bool] | None:
-    """measure_frame as the pipeline calls it; colour from BAYERPAT as card.bayer reads it."""
+    """measure_frame as the pipeline calls it; colour from BAYERPAT and its offsets."""
     with open(path, "rb") as fh:
         header = read_header(fh)
     read = read_pixels(path)
     if header is None or not isinstance(read, Pixels):
         return None
-    color = bool(bayer(Program.NINA, header.cards))
-    found = measure_frame(read.data, saturation=read.saturation, bayer=color)
+    pattern = pattern_of(header.cards)
+    if pattern is None and header.cards.get("BAYERPAT"):
+        return None  # a matrix not R G B: the pipeline says not_supported, so does this
+    found = measure_frame(read.data, saturation=read.saturation, pattern=pattern)
     hfd = found.hfd_px if isinstance(found, Measured) else None
-    return Ours(found.stars, hfd, found.background_adu, found.noise_adu), color
+    return Ours(found.stars, hfd, found.background_adu, found.noise_adu), pattern is not None
 
 
 def _pairs(row: Row) -> dict[str, float | None]:
@@ -172,7 +201,7 @@ RATIO_NAMES = tuple(_pairs(Row("", False, Ours(1, 1.0, 1.0, 1.0), None, None)))
 
 
 def ratios(rows: Iterable[Row]) -> dict[str, dict[str, Ratio]]:
-    """Per measure, per sensor kind: colour noise is the superpixel's, not comparable to mono."""
+    """Per measure, per sensor kind: a colour frame is measured on its debayered intensity."""
     gathered: dict[str, dict[str, list[float]]] = {name: {} for name in RATIO_NAMES}
     for row in rows:
         for name, value in _pairs(row).items():
@@ -198,10 +227,12 @@ def run_astap(exe: str, frame: Path, run: Run) -> Astap | None:
     return astap_from_code(code)
 
 
-def run_subframes(exe: str, frames: list[Path], run: Run) -> dict[str, Subframe]:
+def run_subframes(
+    exe: str, frames: list[Path], colour: list[Path], run: Run
+) -> dict[str, Subframe]:
     with tempfile.TemporaryDirectory() as work:
         script, out = Path(work) / "subframes.js", Path(work) / "subframes.csv"
-        script.write_text(subframe_script(frames, out), encoding="utf-8")
+        script.write_text(subframe_script(frames, colour, Path(work), out), encoding="utf-8")
         cmd = [exe, "-n", "--automation-mode", "--no-startup-scripts", f"-r={script.as_posix()}"]
         run([*cmd, "--force-exit"], SUBFRAME_TIMEOUT_S)
         if not out.exists():
@@ -258,13 +289,15 @@ def main(argv: list[str], run: Run = _launch, measure: Measure = measure_ours) -
     subframe = args.subframe or _subframe_exe()
     print(f"{len(frames)} frame; ASTAP: {astap or 'non trovato'}; SubframeSelector: "
           f"{subframe or 'non trovato'}")  # fmt: skip
-    subs = run_subframes(subframe, frames, run) if subframe else {}
+    measured = {frame: measure(frame) or (None, False) for frame in frames}
+    colour = [frame for frame, (_, color) in measured.items() if color]
+    mono = [frame for frame in frames if frame not in colour]
+    subs = run_subframes(subframe, mono, colour, run) if subframe else {}
     rows = []
-    for frame in frames:
-        measured = measure(frame)
-        ours, color = measured if measured else (None, False)
+    for frame, (ours, color) in measured.items():
         found = run_astap(astap, frame, run) if astap else None
-        rows.append(Row(frame.name, color, ours, found, subs.get(frame.name)))
+        sub = subs.get(debayered_name(frame) if color else frame.name)
+        rows.append(Row(frame.name, color, ours, found, sub))
     _print_rows(rows)
     _print_ratios(ratios(rows))
     return 0

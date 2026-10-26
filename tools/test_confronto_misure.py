@@ -3,7 +3,7 @@ No program runs here: their launch is faked with the output measured on a real f
 
 import os
 import sys
-from pathlib import Path, PureWindowsPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 
@@ -15,6 +15,7 @@ from confronto_misure import (
     Row,
     Subframe,
     astap_from_code,
+    debayered_name,
     main,
     ratios,
     read_subframes,
@@ -58,10 +59,24 @@ def test_a_script_error_is_said_not_swallowed():
 def test_the_script_names_every_frame_with_forward_slashes(tmp_path):
     """The script engine reads a backslash as an escape: C:\\new would hold a newline."""
     frames = [PureWindowsPath(r"C:\copie\new.fits"), PureWindowsPath(r"C:\copie\b.fits")]
-    script = subframe_script(frames, PureWindowsPath(r"C:\out\ss.csv"))
+    colour = [PureWindowsPath(r"C:\copie\canon.fits")]
+    work, out = PureWindowsPath(r"C:\out"), PureWindowsPath(r"C:\out\ss.csv")
+    script = subframe_script(frames, colour, work, out)
     assert '"C:/copie/new.fits"' in script and '"C:/copie/b.fits"' in script
+    assert '"C:/copie/canon.fits"' in script and '"C:/out"' in script
     assert '"C:/out/ss.csv"' in script
     assert "\\" not in script.split("var lines")[0]
+
+
+def test_colour_frames_are_debayered_with_vng_before_they_are_measured():
+    """As WBPP: Debayer, pattern from the header, VNG; the copy is what gets measured."""
+    script = subframe_script([], [PurePosixPath("/c/canon.fits")], PurePosixPath("/w"),
+                             PurePosixPath("/w/ss.csv"))  # fmt: skip
+    debayer = script.index("new Debayer")
+    assert debayer < script.index("new SubframeSelector")
+    assert "Debayer.prototype.VNG" in script and "Debayer.prototype.Auto" in script
+    assert 'D.outputPostfix = "_d"' in script and '"_d.xisf"' in script
+    assert debayered_name(PurePosixPath("/c/canon.fits")) == "canon_d.xisf"
 
 
 def _row(name, color, ours, astap, sub):
@@ -105,15 +120,18 @@ def test_main_measures_every_frame_and_prints_the_table(tmp_path, capsys):
             return ASTAP_CODE, "HFD_MEDIAN=3,3\nSTARS=523\n"
         out = next(a for a in cmd if a.startswith("-r="))[3:]
         csv = Path(out).with_suffix(".csv")
+        script = Path(out).read_text(encoding="utf-8")
+        mono, colour = (script.split("\n")[i] for i in (0, 1))
+        assert "08.fits" in mono and "09.fit" not in mono and "09.fit" in colour
         csv.write_text(
             "path,fwhm_px,median,noise,stars\n"
             f"{(folder / '08.fits').as_posix()},2.0,0.0038,0.0003,5000\n"
-            f"{(folder / '09.fit').as_posix()},2.5,0.0040,0.0004,4000\n"
+            f"{csv.parent.as_posix()}/09_d.xisf,2.5,0.0040,0.0004,4000\n"
         )
         return 0, ""
 
     def measure(path):
-        return Ours(3000, 2.9, 244.0, 22.9), False
+        return Ours(3000, 2.9, 244.0, 22.9), path.name == "09.fit"
 
     code = main(
         [str(folder), "--astap", "astap_cli", "--subframe", "PixInsight"],  # software-ok
@@ -126,6 +144,7 @@ def test_main_measures_every_frame_and_prints_the_table(tmp_path, capsys):
     assert sum("-analyse" in c for c in launched) == 2, "ASTAP once a frame"
     assert sum(any(a.startswith("-r=") for a in c) for c in launched) == 1, "one batch"
     assert "stelle / ASTAP" in printed
+    assert "| 09.fit | colori | 3000 | 2.90 | 244.0 | 22.9 | 523 | 3.32 | 4000 | 2.50 |" in printed
 
 
 def test_main_without_frames_says_so(tmp_path, capsys):

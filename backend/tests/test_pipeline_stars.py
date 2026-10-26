@@ -91,8 +91,8 @@ def _field(
     return data.astype(np.float32)
 
 
-def _measured(data: np.ndarray, *, bayer: bool = False) -> Measured:
-    result = measure_frame(data, saturation=65535.0, bayer=bayer)
+def _measured(data: np.ndarray, *, pattern: str | None = None) -> Measured:
+    result = measure_frame(data, saturation=65535.0, pattern=pattern)
     assert isinstance(result, Measured), result
     return result
 
@@ -140,33 +140,45 @@ def test_saturated_stars_are_counted_but_not_measured() -> None:
 
 
 def test_a_frame_without_enough_stars_says_so_and_keeps_the_count() -> None:
-    result = measure_frame(_field(count=MIN_STARS - 1), saturation=65535.0, bayer=False)
+    result = measure_frame(_field(count=MIN_STARS - 1), saturation=65535.0, pattern=None)
     assert isinstance(result, TooFewStars)
     assert result.stars == MIN_STARS - 1
-    flat = measure_frame(_field(count=0), saturation=65535.0, bayer=False)
+    flat = measure_frame(_field(count=0), saturation=65535.0, pattern=None)
     assert isinstance(flat, TooFewStars)
     assert flat.stars == 0
 
 
-def test_a_colour_frame_is_measured_on_its_superpixel_in_sensor_pixels() -> None:
-    mono = _field("gauss", 3.0)
-    pattern = np.tile(
-        np.array([[1.0, 1.4], [1.4, 0.7]], dtype=np.float32), (_SIDE // 2, _SIDE // 2)
-    )
-    measured = _measured(mono * pattern, bayer=True)  # R G / G B, sky and stars alike
-    assert measured.hfd_px == pytest.approx(_true_hfd("gauss", 3.0), rel=0.05)
+def _mosaic(r: float, g: float, b: float) -> np.ndarray:
+    return np.tile(np.array([[r, g], [g, b]], dtype=np.float32), (_SIDE // 2, _SIDE // 2))
+
+
+@pytest.mark.parametrize("sigma", [1.2, 3.0])
+def test_a_colour_frame_is_measured_after_vng_in_sensor_pixels(sigma: float) -> None:
+    """Small stars were the 2x2 superpixel's undoing: frame 15 of the 24 (Canon 700D) read HFD
+    6.94 px against ASTAP's 3.97; here 16% over the truth at sigma 1.2, VNG 3%."""
+    measured = _measured(_field("gauss", sigma) * _mosaic(0.82, 1.0, 0.83), pattern="RGGB")
+    assert measured.hfd_px == pytest.approx(_true_hfd("gauss", sigma), rel=0.05)
     assert measured.stars == 60
 
 
+def test_colour_noise_is_the_mid_of_the_cfa_channels_as_pixinsight_says_it() -> None:
+    """Debayer's noise per CFA plane (the two greens averaged), then SubframeSelector's (min +
+    max) / 2 (PCL): sensor noise 10, 20, 30 ADU gives R 10, G 20 / sqrt 2, B 30, so 20."""
+    rng = np.random.default_rng(5)
+    rows, cols = np.indices((_SIDE, _SIDE))
+    total = np.array([[10.0, 20.0], [20.0, 30.0]])[rows % 2, cols % 2]
+    extra = np.sqrt(total**2 - _NOISE**2)  # on top of the field's own
+    data = _field(count=36) + (rng.normal(0, 1, total.shape) * extra).astype(np.float32)
+    assert _measured(data, pattern="RGGB").noise_adu == pytest.approx(20.0, rel=0.03)
+
+
 def test_a_colour_star_clipped_in_one_channel_is_saturated() -> None:
-    """Green clipped, red and blue not: the quad mean stays under the ceiling, its max does not."""
-    pattern = np.tile(
-        np.array([[1.0, 1.4], [1.4, 0.7]], dtype=np.float32), (_SIDE // 2, _SIDE // 2)
-    )
+    """Green clipped, red and blue not: the sensor pixel is looked at, not the debayered one."""
+    pattern = _mosaic(1.0, 1.4, 0.7)
     data = _field("gauss", 3.0, count=36) * pattern
     bright = _field("gauss", 3.0, count=36, flux=2.8e6) * pattern  # green core about 70000
     data[:, : _SIDE // 2] = np.minimum(bright[:, : _SIDE // 2], 65535.0)
-    assert _measured(data, bayer=True).kept == 18
+    assert _measured(data, pattern="RGGB").kept == 18
 
 
 def test_a_nebula_under_the_stars_is_sky_the_ring_follows() -> None:
@@ -218,7 +230,7 @@ def test_a_frame_of_one_adu_steps_has_no_stars_in_its_steps() -> None:
     """MAD 0 on a quantized sky: without the floor the noise is 0 and every step is a star."""
     rng = np.random.default_rng(1)
     data = (1000 + (rng.random((_SIDE, _SIDE)) < 0.1)).astype(np.float32)
-    result = measure_frame(data, saturation=65535.0, bayer=False)
+    result = measure_frame(data, saturation=65535.0, pattern=None)
     assert isinstance(result, TooFewStars)
     assert result.noise_adu >= 1 / math.sqrt(12)
 

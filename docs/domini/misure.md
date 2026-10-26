@@ -17,7 +17,9 @@ parole in [`glossario.md`](glossario.md).
 | Le stelle si contano una volta; i pixel caldi di un light non calibrato non sono stelle | `test_every_star_is_counted_once`, `test_hot_pixels_are_not_stars` |
 | Una stella saturata conta fra le stelle ma non entra nell'HFD, anche se in una camera a colori satura un canale solo | `test_saturated_stars_are_counted_but_not_measured`, `test_a_colour_star_clipped_in_one_channel_is_saturated` |
 | Una nebulosa sotto le stelle e' cielo, non stella | `test_a_nebula_under_the_stars_is_sky_the_ring_follows` |
-| Una camera a colori si misura sul superpixel e il numero torna in pixel del sensore | `test_a_colour_frame_is_measured_on_its_superpixel_in_sensor_pixels`, `test_a_colour_camera_is_measured_on_its_superpixel` |
+| Una camera a colori si misura come in WBPP, dopo il debayer VNG, in pixel del sensore, anche con stelle piccole | `test_a_colour_frame_is_measured_after_vng_in_sensor_pixels`, `test_a_colour_camera_is_measured_after_its_debayer`, `test_a_colour_matrix_not_rgb_is_not_measured` |
+| A colori il rumore e' quello che dice WBPP, canale per canale | `test_colour_noise_is_the_mid_of_the_cfa_channels_as_pixinsight_says_it` <!-- software-ok --> |
+| Il debayer e' quello di PixInsight, pixel per pixel, col pattern letto come lo legge lui | `test_vng_is_pixinsights_pixel_for_pixel`, `test_the_pattern_is_read_as_pixinsights_auto` (`backend/tests/test_pipeline_debayer.py`) <!-- software-ok --> |
 | Un frame con troppo poche stelle (nuvole, frame di prova) lo dice, e il numero dell'HFD tace | `test_a_frame_without_enough_stars_says_so_and_keeps_the_count`, `test_a_cloudy_frame_keeps_its_stars_and_says_too_few`, `test_a_frame_of_one_adu_steps_has_no_stars_in_its_steps` |
 | Un file che non si legge ora si riprova; uno che non e' un'immagine da misurare lo dice | `test_a_file_unreadable_now_is_tried_again`, `test_a_frame_too_small_to_measure_says_so`, `test_a_cut_file_a_missing_one_and_a_compressed_one_say_why` (`backend/tests/test_pipeline_pixels.py`) |
 | Una fermata ferma la misura fra un frame e l'altro | `test_a_stop_measures_nothing_more` |
@@ -36,12 +38,19 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
 
 **Il metodo** (ADR 0022, punti 1, 2, 3, 7, 8, 9; ADR 0033, D1):
 
-- **Camera a colori** (la scheda dice `BAYERPAT`): tutto sul superpixel 2x2, media del quadrato;
-  il numero torna in pixel del sensore (x2). La saturazione si guarda sul pixel del sensore piu'
-  alto del quadrato: la media nasconde un verde saturato. Scheda muta: mono.
+- **Camera a colori** (la scheda dice `BAYERPAT`; Marco, 26/10/2026, ADR 0022 punto 6) come
+  WBPP: debayer VNG a piena risoluzione (`pipeline/debayer.py`, il VNGThread di PixInsight portato <!-- software-ok -->
+  termine per termine, bordo di 2 pixel copiato dal vicino), poi tutto sull'intensita' HSI
+  (min + max) / 2, il piano su cui misura il SubframeSelector. Pattern da `BAYERPAT`, una colonna
+  in piu' con `XBAYROFF` dispari e una riga con `YBAYROFF` dispari; `ROWORDER` non si legge (come
+  l'Auto del Debayer; sui 4 frame veri il verde sta dove lo dice `BAYERPAT`). Una matrice non
+  R G B (CYGM): `not_supported`. La saturazione si guarda sul pixel del sensore: il debayer
+  nasconde un verde saturato. Scheda muta: mono.
 - **Fondo**: `sep.Background`. **Rumore**: 1,4826 x MAD del frame meno il fondo, a piena
-  risoluzione (Rousseeuw e Croux 1993; `units.sigma_from_mad`); a colori e' quello del
-  superpixel, circa meta' del pixel del sensore: non si confronta con la mono. Mai sotto un
+  risoluzione (Rousseeuw e Croux 1993; `units.sigma_from_mad`). A colori quello che dice WBPP:
+  per piano R, G (media dei due), B a mezza risoluzione, come lo stima il Debayer, poi (min +
+  max) / 2 come il SubframeSelector; le stelle si cercano col rumore dell'intensita'. Non si
+  confronta con la mono. Mai sotto un
   gradino da 1 ADU, 1/sqrt(12): un cielo quantizzato ha MAD 0 e ogni gradino diventava stella.
 - **Stelle**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con mediana 3x3 esatta: i <!-- software-ok -->
   pixel caldi spariscono, le stelle restano. Il numero e' un **indicatore relativo**: sui 24
@@ -71,21 +80,24 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
 - **Contro i programmi di riferimento**: `python tools/confronto_misure.py CARTELLA` misura le
   copie con measure, con `astap_cli -analyse 30` e col SubframeSelector di PixInsight senza <!-- software-ok -->
   finestra, e stampa il nostro diviso il loro (minimo / mediana / massimo), mono e colori a
-  parte. Si rilancia a ogni sottopasso di measure. Siril no (Marco, 26/10/2026). Sui 24 frame: <!-- software-ok -->
+  parte; i colori li passa prima al Debayer VNG di PixInsight col pattern Auto, come WBPP. Si <!-- software-ok -->
+  rilancia a ogni sottopasso di measure. Siril no (Marco, 26/10/2026). Sui 24 frame (colori <!-- software-ok -->
+  dopo VNG, passo 24.06):
 
   | Misura | Mono (20) | Colori (4) | Perche' lo scarto |
   |---|---|---|---|
-  | Fondo / mediana SubframeSelector | 0,99 / 1,00 / 1,00 | 0,95 / 0,97 / 1,00 | La mediana dell'immagine porta le stelle e la nebulosa, `sep` le toglie |
-  | Rumore / rumore SubframeSelector | 1,00 / 1,02 / 1,05 | 0,11 / 0,13 / 0,39 | Mono: MAD contro wavelet MRS, stessa cosa. Colori: il SubframeSelector misura il mosaico grezzo, dove la differenza fra i canali conta come rumore; il nostro e' del superpixel |
-  | HFD / FWHM SubframeSelector | 1,15 / 1,36 / 1,46 | 1,58 / 1,77 / 4,20 | Grandezze diverse: sulla Moffat HFD/FWHM e' 1,36 a beta 2,5 e 1,17 a beta 4 (dalla formula del flusso racchiuso); la gaussiana da' 1. A colori la FWHM e' del mosaico grezzo |
-  | HFD / HFD ASTAP | 0,71 / 0,83 / 0,94 | 1,02 / 1,11 / 1,75 | Mono: ASTAP sta il 6-41% sopra; ADR 0022 lo misurava +8…27% sopra la verita' (il raggio medio). Colori: ASTAP misura il grezzo; i 24 frame non dicono chi ha ragione sul Rosetta, le iniettate dicono la nostra |
-  | Stelle / stelle ASTAP | 1,06 / 2,96 / 18,97 | 2,12 / 2,87 / 10,30 | ASTAP conta da SNR 30, noi da 5 sigma |
-  | Stelle / stelle SubframeSelector | 0,36 / 0,47 / 1,12 | 0,31 / 0,90 / 2,94 | Il SubframeSelector rileva sui livelli delle wavelet e arriva piu' in basso; un indicatore relativo, non un conteggio |
+  | Fondo / mediana SubframeSelector | 0,99 / 1,00 / 1,00 | 0,99 / 1,00 / 1,00 | La mediana dell'immagine porta le stelle e la nebulosa, `sep` le toglie |
+  | Rumore / rumore SubframeSelector | 1,00 / 1,02 / 1,05 | 1,01 / 1,04 / 1,06 | MAD contro wavelet MRS, stessa cosa. Colori: come il Debayer, per piano R, G (media dei due), B a mezza risoluzione, poi (min + max) / 2 come il SubframeSelector; sull'intensita' sarebbe 0,88-0,96 |
+  | HFD / FWHM SubframeSelector | 1,15 / 1,36 / 1,46 | 1,25 / 1,30 / 1,72 | Grandezze diverse: sulla Moffat HFD/FWHM e' 1,36 a beta 2,5 e 1,17 a beta 4 (dalla formula del flusso racchiuso); la gaussiana da' 1 |
+  | HFD / HFD ASTAP | 0,71 / 0,83 / 0,94 | 0,78 / 0,83 / 0,89 | ASTAP sta il 6-41% sopra; ADR 0022 lo misurava +8…27% sopra la verita' (il raggio medio). Colori: ASTAP misura il mosaico grezzo. Col superpixel il Canon (frame 15) dava 6,94 px contro 3,97, ora 3,20 |
+  | Stelle / stelle ASTAP | 1,06 / 2,96 / 18,97 | 5,52 / 9,98 / 37,75 | ASTAP conta da SNR 30 sul grezzo, noi da 5 sigma sull'intensita' a piena risoluzione |
+  | Stelle / stelle SubframeSelector | 0,36 / 0,47 / 1,12 | 0,64 / 0,77 / 1,34 | Il SubframeSelector rileva sui livelli delle wavelet e arriva piu' in basso; un indicatore relativo, non un conteggio |
 
   La FWHM confrontata a quella del SubframeSelector arriva col passo 25.1; ASTAP non da' fondo
   ne' rumore.
-- **Tempo**: da 1,2 a 4,0 s a frame da 26 MP mono, 0,5-0,9 s a colori, un processo, su copia
-  locale. Senza il tetto di 60 per casella un campo denso arrivava a 7,9 s.
+- **Tempo**: da 1,2 a 4,0 s a frame da 26 MP mono; a colori da 4,2 s (18 MP) a 7,0 s (26 MP),
+  di cui il debayer 3,6-5 s; un processo, su copia locale. Senza il tetto di 60 per casella un
+  campo denso arrivava a 7,9 s.
 
 **Cosa si scrive** (`pipeline_measures`): esito, stelle, stelle tenute, HFD in pixel del
 sensore, fondo e rumore in ADU, durata, ora. Il fondo si confronta solo con la stessa camera,
@@ -113,7 +125,7 @@ dell'oggetto no.
 ## Cosa non fa ancora, e con cosa arrivera'
 
 - **25.1**: FWHM, eccentricita', direzione dell'allungamento (fit di Moffat, scipy) sulle stelle
-  gia' scelte, canale verde sotto ~1,2 superpixel; "forma stimata" e "forma non misurabile".
+  gia' scelte, a colori sull'intensita' dopo VNG; "forma stimata" e "forma non misurabile".
 - **25.2**: SNR (PSF SNR), gradiente, tilt e curvatura dalle cinque zone, stelle sature col
   tetto dall'istogramma, massa d'aria e valori allo zenit, i secondi d'arco.
 - **25.3**: SQM col metodo di ASTAP portato, il lettore del catalogo D80, il bias della camera.

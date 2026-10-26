@@ -105,12 +105,21 @@ def test_a_file_unreadable_now_is_tried_again(conn, tmp_path):
     assert [r["outcome"] for r in _measures(conn)] == ["measured"]
 
 
-def test_a_colour_camera_is_measured_on_its_superpixel(conn, tmp_path):
-    pattern = np.tile(np.array([[1.0, 1.4], [1.4, 0.7]]), (300, 300))
-    _light(tmp_path / "nas" / "a.fits", _field("gauss", 3.0) * pattern, "BAYERPAT= 'RGGB'")
+def test_a_colour_camera_is_measured_after_its_debayer(conn, tmp_path):
+    """G R / B G read as RGGB moved one column (XBAYROFF), as the Debayer's Auto reads it."""
+    pattern = np.tile(np.array([[1.0, 0.82], [0.83, 1.0]]), (300, 300))
+    _light(tmp_path / "nas" / "a.fits", _field("gauss", 1.2) * pattern,
+           "BAYERPAT= 'RGGB'", "XBAYROFF=                    1")  # fmt: skip
     measure_root(conn, _scanned(conn, tmp_path / "nas"), LATER)
     (row,) = _measures(conn)
-    assert row["hfd_px"] == pytest.approx(_true_hfd("gauss", 3.0), rel=0.05)
+    assert row["outcome"] == "measured"
+    assert row["hfd_px"] == pytest.approx(_true_hfd("gauss", 1.2), rel=0.05)
+
+
+def test_a_colour_matrix_not_rgb_is_not_measured(conn, tmp_path):
+    _light(tmp_path / "nas" / "a.fits", _field("gauss", 2.0), "BAYERPAT= 'CYGM'")
+    measure_root(conn, _scanned(conn, tmp_path / "nas"), LATER)
+    assert [r["outcome"] for r in _measures(conn)] == ["not_supported"]
 
 
 def test_a_stop_measures_nothing_more(conn, tmp_path):

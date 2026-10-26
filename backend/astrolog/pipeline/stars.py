@@ -1,13 +1,13 @@
 """One frame measured on its pixels (ADR 0022, docs/domini/misure.md): sky, noise, stars on a
 median-filtered copy, HFD on the raw frame. Pure: pixels in, numbers out."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
 import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 
 from ..units import sigma_from_mad
+from .debayer import COLOURS, debayered
 
 THRESHOLD_SIGMA = 5.0  # [C Siril find_star default: 5 sigma over sky, software-ok]
 SATURATED_SHARE = 0.9  # [P ADR 0022: peak under 90% of saturation]
@@ -25,7 +25,6 @@ GRID = 3  # [P ADR 0022]
 PER_CELL = 60  # [P ADR 0022]
 # Gaussian HFD = FWHM = 2 sqrt(2 ln 2) sigma. [D Gaussian profile]
 SIGMA_TO_HFD = 2.3548
-BAYER = 2  # [C Bayer pattern: one colour quad is 2x2 sensor pixels]
 # Noise never under one ADU step's own: a quantized sky has MAD 0, and then every step is a star.
 # [D uniform quantization noise, step/sqrt(12)]
 NOISE_FLOOR_ADU = 0.2887
@@ -48,24 +47,45 @@ class TooFewStars:
     noise_adu: float
 
 
-def measure_frame(data: np.ndarray, *, saturation: float, bayer: bool) -> Measured | TooFewStars:
-    """`bayer`: a colour sensor, measured on its 2x2 superpixel and given back in sensor pixels;
-    unknown is mono. `saturation`: the ceiling in the same units as `data`."""
-    raw = _quads(data, np.mean) if bayer else np.ascontiguousarray(data, dtype=np.float32)
-    ceiling = _quads(data, np.max) if bayer else raw  # a clipped sensor pixel, not its quad
-    scale = BAYER if bayer else 1
+def measure_frame(
+    data: np.ndarray, *, saturation: float, pattern: str | None
+) -> Measured | TooFewStars:
+    """`pattern`: a colour sensor's Bayer matrix (debayer.COLOURS), measured on the intensity of
+    its VNG image as WBPP does; None is mono. `saturation`: the ceiling in the units of `data`."""
+    ceiling = np.ascontiguousarray(data, dtype=np.float32)  # a clipped sensor pixel, colour too
+    raw = ceiling if pattern is None else debayered(ceiling, pattern, top=saturation)
     sky = sep.Background(raw)
     residual = raw - sky.back()
-    spread = sigma_from_mad(float(np.median(np.abs(residual - np.median(residual)))))
-    noise = max(spread, NOISE_FLOOR_ADU)
+    noise = max(_sigma(residual), NOISE_FLOOR_ADU)
     filtered = median3x3(residual)
     objects = _found(filtered, noise)
     keep = _spread(objects, _kept(ceiling, objects, saturation), raw.shape)
     hfds = _hfd((residual, filtered), objects, keep)
     background, stars = float(sky.globalback), len(objects)
+    if pattern is not None:  # noise said as WBPP says it; detection keeps the plane's own
+        noise = max(_mosaic_noise(ceiling, pattern), NOISE_FLOOR_ADU)
     if len(hfds) < MIN_STARS:
         return TooFewStars(stars, len(hfds), background, noise)
-    return Measured(stars, len(hfds), float(np.median(hfds)) * scale, background, noise)
+    return Measured(stars, len(hfds), float(np.median(hfds)), background, noise)
+
+
+def _sigma(residual: np.ndarray) -> float:
+    return sigma_from_mad(float(np.median(np.abs(residual - np.median(residual)))))
+
+
+def _mosaic_noise(data: np.ndarray, pattern: str) -> float:
+    """Noise of each colour plane, a channel's samples averaged per 2x2 quad, less its sky; then
+    (min + max) / 2 (PCL Debayer SignalAndNoiseEvaluationThread, SubframeSelector ReadInputData)."""
+    rows, cols = data.shape[0] // 2 * 2, data.shape[1] // 2 * 2
+    quads = data[:rows, :cols].reshape(rows // 2, 2, cols // 2, 2)
+    colours = COLOURS[pattern]
+    sigmas = []
+    for channel in range(3):
+        cells = [(r, c) for r in (0, 1) for c in (0, 1) if colours[r][c] == channel]
+        plane = sum(quads[:, r, :, c] for r, c in cells) / len(cells)
+        plane = np.ascontiguousarray(plane, dtype=np.float32)
+        sigmas.append(_sigma(plane - sep.Background(plane).back()))
+    return (min(sigmas) + max(sigmas)) / 2
 
 
 def median3x3(data: np.ndarray) -> np.ndarray:
@@ -84,13 +104,6 @@ def median3x3(data: np.ndarray) -> np.ndarray:
 
 def _med3(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> np.ndarray:
     return np.maximum(np.minimum(a, b), np.minimum(np.maximum(a, b), c))
-
-
-def _quads(data: np.ndarray, how: Callable[..., np.ndarray]) -> np.ndarray:
-    """One value per 2x2 colour quad: the mean is the superpixel, the pattern gone (ADR 0022)."""
-    rows, cols = (data.shape[0] // BAYER) * BAYER, (data.shape[1] // BAYER) * BAYER
-    quads = data[:rows, :cols].reshape(rows // BAYER, BAYER, cols // BAYER, BAYER)
-    return np.ascontiguousarray(how(quads, axis=(1, 3)), dtype=np.float32)
 
 
 def _found(filtered: np.ndarray, noise: float) -> np.ndarray:

@@ -1089,7 +1089,7 @@ CREATE TABLE pipeline_measures (
   kept           INTEGER CHECK (kept >= 0),   -- stelle di cui hfd_px e' la mediana
   hfd_px         REAL CHECK (hfd_px > 0),     -- pixel del sensore, anche a colori
   background_adu REAL,                        -- fondo cielo: solo stessa camera, guadagno, posa
-  noise_adu      REAL CHECK (noise_adu >= 0), -- 1,4826 MAD; a colori del superpixel (circa /2)
+  noise_adu      REAL CHECK (noise_adu >= 0), -- 1,4826 MAD; a colori per piano R G B, (min+max)/2
   duration_s     REAL CHECK (duration_s >= 0),
   measured_at    TEXT NOT NULL,
   CHECK ((outcome = 'measured') = (hfd_px IS NOT NULL)),
