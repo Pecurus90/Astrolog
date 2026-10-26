@@ -57,6 +57,15 @@ Decisioni di Marco dal piano di ASTAP, qui con la loro casa:
   Docker), il primo lancio va da solo, una posa che aspetta una sorella aspetta i lanci in volo,
   scrive solo la passata, lo stop uccide i figli; una passata per radice (`scan.busy`). Misura
   su 9 copie vere: 7 pose in 1,3 s con un lancio, 0,4 s con otto.
+- Numeri (passo 24, 26/10/2026): copia di 11 notti dell'archivio di Marco, 393 file e 18 GB,
+  N.I.N.A. e ASIAIR; ASTAP CLI 2025.11.19 col D80, 6 insieme (12 core, 61 GiB). Vecchia: lettura
+  0,8 s, solver 367,6 s (uno alla volta, `-analyse` piu' solve), 392 su 393. Nuova: lettura 0,1 s
+  e 313 frame (80 riscritti da PixInsight scartati, `rewritten`), solver 80,2 s, 312 su 313 (lo <!-- software-ok -->
+  stesso frame); lancio riuscito: mediana 0,28 s, 95% sotto 0,81 s, massimo 1,18 s; il frame
+  senza soluzione costa da solo 70 s di scala. Dentro l'app, dietro le quinte: rilettura senza
+  file riletti; Stop: sei ASTAP uccisi in 0,2 s, l'app libera. Da confermare (vecchia): la cometa
+  C/2025 A6 presa per NGC 5980 a bassa fiducia (60), il filtro `H` senza banda (44), la Canon
+  dell'ASIAIR senza ottica (102).
 - Avvio misurato (CLI 2025.11.19, Windows): `astap_cli -h` risponde subito; `astap.exe -h` apre
   la finestra e non esce (3 su 3 oltre 90 s), quindi la versione si chiede solo alla CLI. Un file
   che ASTAP non legge (`.fz` in GZIP_1, immagine in un'estensione) fallisce subito con "Error
