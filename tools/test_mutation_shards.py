@@ -106,7 +106,7 @@ def test_an_unknown_shard_or_option_is_refused():
     assert main(["mutation_shards.py", "api", "--other"]) == 2
 
 
-def test_the_report_keeps_the_shard_own_unrun_mutants_and_drops_the_others(capsys):
+def test_the_report_keeps_the_shard_own_unrun_mutants_and_drops_the_others(tmp_path, capsys):
     results = io.StringIO(
         "    astrolog.api.app.x_health__mutmut_1: survived\n"
         "    astrolog.api.app.x_health__mutmut_2: not checked\n"
@@ -115,7 +115,7 @@ def test_the_report_keeps_the_shard_own_unrun_mutants_and_drops_the_others(capsy
         "    astrolog.log.x_f__mutmut_1: not checked\n"
         "    astrolog.log.x_f__mutmut_2: survived\n"
     )
-    assert main(["mutation_shards.py", "api", "--filter"], results) == 0
+    assert main(["mutation_shards.py", "api", "--filter"], results, write_reference(tmp_path)) == 0
     captured = capsys.readouterr()
     assert captured.out.splitlines() == [
         "    astrolog.api.app.x_health__mutmut_1: survived",
@@ -125,11 +125,11 @@ def test_the_report_keeps_the_shard_own_unrun_mutants_and_drops_the_others(capsy
     assert "shard api: 3 of 5 mutants are its own" in captured.err
 
 
-def test_a_line_with_a_colon_that_names_no_mutant_passes_and_is_not_counted(capsys):
+def test_a_line_with_a_colon_that_names_no_mutant_passes_and_is_not_counted(tmp_path, capsys):
     results = io.StringIO(
         "hint: run mutmut show <name>\n    astrolog.api.app.x_health__mutmut_1: survived\n"
     )
-    assert main(["mutation_shards.py", "api", "--filter"], results) == 0
+    assert main(["mutation_shards.py", "api", "--filter"], results, write_reference(tmp_path)) == 0
     captured = capsys.readouterr()
     assert captured.out.splitlines() == [
         "hint: run mutmut show <name>",
@@ -138,12 +138,12 @@ def test_a_line_with_a_colon_that_names_no_mutant_passes_and_is_not_counted(caps
     assert "shard api: 1 of 1 mutants are its own" in captured.err
 
 
-def test_a_clean_shard_passes_and_prints_nothing(capsys):
+def test_a_clean_shard_passes_and_prints_nothing(tmp_path, capsys):
     results = io.StringIO(
         "    astrolog.api.app.x_health__mutmut_1: killed\n"
         "    astrolog.log.x_f__mutmut_1: survived\n"
     )
-    assert main(["mutation_shards.py", "api", "--filter"], results) == 0
+    assert main(["mutation_shards.py", "api", "--filter"], results, write_reference(tmp_path)) == 0
     captured = capsys.readouterr()
     assert captured.out == ""
     assert "shard api: 1 of 2" in captured.err
@@ -170,17 +170,18 @@ def test_the_workflow_runs_every_shard_and_filters_each_report_to_its_own():
     assert "rm -rf mutants/tests" in workflow and 'rm -f "$f" "$f.meta"' in workflow
 
 
-def test_a_mutant_no_shard_owns_fails_the_rest_report_alone(capsys):
+def test_a_mutant_no_shard_owns_fails_the_rest_report_alone(tmp_path, capsys):
     lines = (
         "    astrolog.log.x_f__mutmut_1: killed\n"
         "    astrolog.api.app.x_health__mutmut_1: killed\n"
         "    astrolog.other.y_f__mutmut_1: not checked\n"
     )
-    assert main(["mutation_shards.py", "rest", "--filter"], io.StringIO(lines)) == 1
+    path = write_reference(tmp_path)
+    assert main(["mutation_shards.py", "rest", "--filter"], io.StringIO(lines), path) == 1
     captured = capsys.readouterr()
     assert "    astrolog.other.y_f__mutmut_1: not checked" in captured.out.splitlines()
     assert "shard rest: 1 mutants belong to no shard" in captured.err
-    assert main(["mutation_shards.py", "api", "--filter"], io.StringIO(lines)) == 0
+    assert main(["mutation_shards.py", "api", "--filter"], io.StringIO(lines), path) == 0
     assert "belong to no shard" not in capsys.readouterr().err
 
 
