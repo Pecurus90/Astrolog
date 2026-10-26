@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div class="al-c-card-meteo__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{ v.desk }}" hint-placeholder-val="{{ true }}"><div class="al-c-card-meteo__colonna-1" onClick="{{ onClick }}" style="box-shadow:inset 0 0 0 2px {{ anello }};cursor:{{ cur }}">
+<div class="al-c-card-meteo__riga-1"><span class="al-c-card-meteo__testo-1">{{ nome }}<sc-if value="{{ limitaL }}" hint-placeholder-val="{{ false }}"><b class="al-c-card-meteo__blocco-2">{{ limitaL }}</b></sc-if></span><sc-if value="{{ etichetta }}" hint-placeholder-val="{{ false }}"><span class="al-c-card-meteo__pillola-1">{{ etichetta }}</span></sc-if><sc-if value="{{ torna }}" hint-placeholder-val="{{ false }}"><a class="al-c-card-meteo__tondo-1" href="#" onClick="{{ torna }}" aria-label="Torna alla notte" title="Torna alla notte">×</a></sc-if><sc-if value="{{ link }}" hint-placeholder-val="{{ false }}"><a class="al-c-card-meteo__tondo-2" href="{{ link }}" aria-label="{{ linkL }}">↗</a></sc-if></div>
+<sc-if value="{{ ok }}" hint-placeholder-val="{{ true }}"><div class="al-c-card-meteo__colonna-2">
+<span class="al-c-card-meteo__riga-2"><span class="al-c-card-meteo__testo-2">{{ valore }}</span><span class="al-c-card-meteo__testo-3">{{ unita }}</span></span>
+<div class="al-c-card-meteo__riga-3" onMouseLeave="{{ onLeave }}" tabIndex="{{ tabI }}" onKeyDown="{{ onTasto }}" aria-label="{{ celleL }}" style="cursor:{{ celleCur }}"><sc-for list="{{ celle }}" as="x" hint-placeholder-count="14"><span class="al-c-card-meteo__riga-4" onMouseEnter="{{ x.on }}" onClick="{{ x.click }}" title="{{ x.title }}"><span class="al-c-card-meteo__pillola-2" style="height:{{ x.h }};background:{{ x.bg }};opacity:{{ x.op }}"></span></span></sc-for></div>
+<span class="al-c-card-meteo__colonna-3" style="min-height:{{ notaMin }}"><span class="al-c-card-meteo__testo-3">{{ nota }}</span><sc-if value="{{ haPicco }}" hint-placeholder-val="{{ false }}"><span>{{ picco }}</span></sc-if></span>
+<dc-import name="componenti/Pillola" esito="{{ pill.esito }}" testo="{{ pill.testo }}" fondo="carta" dimensione="media" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" hint-size="90px,22px"></dc-import>
+<sc-if value="{{ aggiornamento }}" hint-placeholder-val="{{ false }}"><span class="al-c-card-meteo__riga-5"><span class="al-c-card-meteo__tondo-3" aria-hidden="true">!</span><span class="al-c-card-meteo__blocco-3">{{ aggiornamento }}</span><a href="#" class="al-bottone al-bottone--testo">Aggiorna</a></span></sc-if>
+</div></sc-if>
+<sc-if value="{{ av }}" hint-placeholder-val="{{ false }}"><div class="al-c-card-meteo__colonna-4">
+<span class="al-c-card-meteo__riga-6"><span class="al-c-card-meteo__tondo-4" aria-hidden="true" style="background:{{ av.bg }};color:{{ av.fg }}">{{ av.segno }}</span><span class="al-c-card-meteo__colonna-5"><b class="al-c-card-meteo__testo-4">{{ av.titolo }}</b><span class="al-c-card-meteo__testo-5">{{ av.testo }}</span></span></span>
+<sc-if value="{{ av.azione }}" hint-placeholder-val="{{ false }}"><a href="#" class="al-bottone al-bottone--testo al-bottone--piccolo al-c-card-meteo__blocco-4">{{ av.azione }}</a></sc-if>
+</div></sc-if>
+</div></sc-if>
+<sc-if value="{{ v.tel }}" hint-placeholder-val="{{ false }}"><div class="al-c-card-meteo__colonna-6">
+<span class="al-c-card-meteo__testo-6">{{ nome }}</span>
+<span class="al-c-card-meteo__riga-2"><span class="al-c-card-meteo__testo-7">{{ valore }}</span><span class="al-c-card-meteo__testo-8">{{ unita }}</span></span>
+<div class="al-c-card-meteo__riga-7"><sc-for list="{{ celle }}" as="x" hint-placeholder-count="14"><span class="al-c-card-meteo__pillola-3" style="height:{{ x.h }};background:{{ x.bg }}"></span></sc-for></div>
+<dc-import name="componenti/Pillola" esito="{{ pill.esito }}" testo="{{ pill.testo }}" fondo="carta" dimensione="minima" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" hint-size="70px,20px"></dc-import>
+</div></sc-if>
+<sc-if value="{{ v.compatta }}" hint-placeholder-val="{{ false }}"><a class="al-c-card-meteo__colonna-7" onClick="{{ onClick }}" aria-expanded="{{ aperto }}" style="box-shadow:inset 0 0 0 2px {{ anello }}">
+<span class="al-c-card-meteo__riga-8"><span>{{ nome }}</span><span>{{ chev }}</span></span>
+<span class="al-c-card-meteo__riga-9"><span class="al-c-card-meteo__testo-9">{{ valore }}</span><span class="al-c-card-meteo__testo-10">{{ unita }}</span></span>
+<span class="al-c-card-meteo__riga-10"><sc-for list="{{ celle }}" as="x" hint-placeholder-count="14"><span class="al-c-card-meteo__pillola-3" style="height:{{ x.h }};background:{{ x.bg }};opacity:{{ x.op }}"></span></sc-for></span>
+<dc-import name="componenti/Pillola" esito="{{ pill.esito }}" testo="{{ pill.testo }}" fondo="carta" dimensione="micro" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" hint-size="80px,18px"></dc-import>
+</a></sc-if>
+<sc-if value="{{ v.mancante }}" hint-placeholder-val="{{ false }}"><div class="al-c-card-meteo__colonna-8" style="border-radius:{{ mR }};padding:{{ mPad }};gap:{{ mGap }}"><span class="al-c-card-meteo__testo-3" style="font-size:{{ mFs }}">{{ nome }}</span><span style="font-size:{{ mFs2 }}">? Non disponibile</span></div></sc-if>
+</sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:300,&quot;height&quot;:300},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;,&quot;telefono compatta&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Card&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;mancante&quot;,&quot;non si misura&quot;,&quot;chiave&quot;,&quot;chiave non valida&quot;,&quot;non disponibile&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Card&quot;},&quot;nome&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Nuvole&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Misura&quot;},&quot;valore&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;16&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Misura&quot;},&quot;unita&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Misura&quot;},&quot;nota&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;media nel buio · picco 40% tra le 05 e le 06&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Misura&quot;},&quot;esito&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;buona&quot;,&quot;incerta&quot;,&quot;non adatta&quot;,&quot;mancante&quot;],&quot;default&quot;:&quot;buona&quot;,&quot;tsType&quot;:&quot;0 | 1 | 2 | string&quot;,&quot;section&quot;:&quot;Misura&quot;},&quot;giudizio&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;buona&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Misura&quot;},&quot;limita&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Misura&quot;},&quot;anello&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Misura&quot;},&quot;link&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Misura&quot;},&quot;etichetta&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Misura&quot;},&quot;aggiornamento&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Misura&quot;},&quot;picco&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;celle&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{h,bg,op?,on?,title?}[]&quot;},&quot;aperto&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onClick&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onLeave&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  componentWillUnmount() { this._alw && clearInterval(this._alw); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), fm = p.formato || 'desktop', stato = p.stato || 'normale';
+    const hatch = AL.tratteggio;
+    // Esempio per la tavola e i Tweaks: le nuvole di stanotte. Le barrette nel buio coi colori fissi degli esiti, mai l'accento.
+    let celle = p.celle;
+    if (!celle) { const d = [5,8,10,10,8,6,8,12,16,22,26,40,30,20], mn = Math.min(...d), mx = Math.max(...d), q = ALsoglie.esito.nuvole;
+      celle = d.map((x, i) => ({ h: (25 + (x - mn) / (mx - mn) * 75) + '%', bg: i < 3 || i > 11 ? t.sparkOff : t.pills[q(x)][1] })); }
+    // Gli stati in cui la misura non c'è
+    const ST = {
+      'non si misura': ['?', 'Sotto le nuvole non si misura.', 'Torna con il cielo sereno.', '', 'non si misura'],
+      'chiave': ['?', 'Il seeing richiede una chiave Meteoblue.', '', 'Apri le Impostazioni', 'serve una chiave'],
+      'chiave non valida': ['!', 'Chiave Meteoblue non valida o scaduta.', '', 'Apri le Impostazioni', 'chiave non valida'],
+      'non disponibile': ['?', 'Non disponibile', 'Non tutti i modelli danno la visibilità.', '', 'non disponibile'],
+      'in arrivo': ['?', 'Seeing in arrivo da Meteoblue.', 'La chiave è salvata: il seeing arriva al prossimo giro.', '', 'in arrivo'] };
+    const s = ST[stato], ok = stato === 'normale', manc = stato === 'mancante';
+    const av = s ? { segno: s[0], titolo: s[1], testo: s[2], azione: s[3], bg: s[0] === '!' ? t.warn : t.card, fg: s[0] === '!' ? t.warnFg : t.text } : null;
+    let es = p.esito ?? 0; if (es === 'ignoto') es = 'mancante';
+    const pill = s ? { esito: s[0] === '!' ? 2 : 'mancante', testo: s[4] } : { esito: es, testo: p.giudizio ?? 'buono' };
+    if (s) celle = Array.from({ length: 14 }, () => ({ h: '100%', bg: hatch(t.sparkOff), op: 1 }));
+    const tel = fm === 'telefono' && !manc, comp = fm === 'telefono compatta' && !manc, desk = fm === 'desktop' && !manc;
+    const mT = fm !== 'desktop';
+    return { pronto: true, t, modo: p.modo, accento: p.accento, v: { desk, tel: tel && ok, compatta: comp, mancante: manc }, ok, av, pill, celle,
+      nome: p.nome ?? 'Nuvole', valore: s && comp ? '?' : (p.valore ?? '16'), unita: s && comp ? '' : (p.unita ?? '%'), nota: p.nota ?? 'media nel buio · picco 40% tra le 05 e le 06',
+      picco: p.picco ?? '', haPicco: p.picco != null, notaMin: p.picco != null ? '34px' : '32px',
+      limitaL: p.limita ? 'limita alle ' + p.limita : '', etichetta: p.etichetta || '', link: p.link || '', linkL: (p.nome ?? 'Nuvole') + ' in Meteo',
+      anello: p.anello || 'transparent', onClick: p.onClick || undefined, cur: p.onClick ? 'pointer' : 'default', onLeave: p.onLeave || undefined,
+      celleCur: celle.some(x => x.on) ? 'crosshair' : 'auto', aggiornamento: p.aggiornamento || '', torna: p.onTorna || null, onTasto: p.onTasto || undefined, tabI: p.onTasto ? 0 : -1, celleL: (p.nome ?? 'Nuvole') + ' ora per ora: frecce per portare la carta a un\u0027ora, Esc per tornare alla notte', aperto: !!p.aperto, chev: p.aperto ? '▴' : '▾',
+      mR: mT ? '20px' : '22px', mPad: mT ? '12px 14px' : '16px 18px', mGap: mT ? '4px' : '6px', mFs: mT ? '13px' : '14px', mFs2: mT ? '12px' : '13px' };
+  }
+}
+</script>
+</body>
+</html>

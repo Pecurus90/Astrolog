@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<script src="componenti/moto.js"></script>
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}@keyframes skPulse{0%,100%{opacity:1}50%{opacity:.45}}@keyframes alIn{from{opacity:0;transform:translateY(14px)}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-arch__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="al-arch__blocco-2" ref="{{ rifR }}"><dc-import name="componenti/Telaio" formato="{{ fmt }}" pagina="Archivio" etichetta="Archivio" altezza="100vh" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+
+<sc-if value="{{ S.loading }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Scheletro" carte="{{ SK }}" testo="Caricamento…" griglia="{{ L.cgrid }}" gap="{{ L.gap }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,900px"></dc-import></sc-if>
+
+<sc-if value="{{ av }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="pagina" formato="{{ fmt }}" segno="?" titolo="{{ av.t }}" testo="{{ av.x }}" azione="{{ av.a }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,100px"></dc-import></sc-if>
+
+<sc-if value="{{ S.main }}" hint-placeholder-val="{{ true }}"><div class="al-arch__colonna-1" style="gap:{{ L.gap }}">
+
+<dc-import name="componenti/Carta" formato="{{ fmt }}" etichetta="L'archivio" colonne="12" ritardo="0" padding="{{ L.pad }}" gap="16" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<sc-if value="{{ F.tel }}" hint-placeholder-val="{{ false }}"><div class="al-arch__colonna-2">
+<div class="al-arch__riga-1"><span role="tablist" aria-label="Parte dell'archivio" class="al-scelta al-scelta--segmentato al-scelta--riempie al-scelta--sottili al-arch__blocco-3"><sc-for list="{{ lingT }}" as="g" hint-placeholder-count="3"><a href="#" role="tab" aria-selected="{{ g.selA }}" onClick="{{ g.on }}" class="al-scelta__voce">{{ g.l }}</a></sc-for></span>
+<a class="al-arch__tondo-2" href="#" onClick="{{ agg.apri }}" aria-haspopup="dialog" aria-label="Aggiungi oggetto">+</a></div>
+<span class="al-arch__blocco-4"><b class="al-arch__testo-1">{{ H.n }} {{ H.l }}</b> · {{ H.s }}</span>
+<sc-if value="{{ F.tel }}" hint-placeholder-val="{{ false }}"><div style="display:flex;justify-content:flex-end"><div role="group" aria-label="Ordine e vista" style="display:flex;gap:8px;align-items:center;flex:none"><select key="{{ ordT.v }}" defaultValue="{{ ordT.v }}" onChange="{{ ordT.on }}" aria-label="Ordine" class="al-tendina al-tendina--tondo" style="flex:none;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ ordT.o }}" as="x" hint-placeholder-count="3"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select><div role="radiogroup" aria-label="Vista" style="flex:none;display:flex;gap:2px;padding:2px;border-radius:999px;background:var(--carta-2)"><sc-for list="{{ visT }}" as="v" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ v.on }}" aria-label="{{ v.l }}" title="{{ v.l }}" onClick="{{ v.scegli }}" style="width:44px;height:44px;padding:0;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;background:transparent;color:{{ v.fg }};box-shadow:{{ v.sh }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ v.d }}"></path></svg></button></sc-for></div></div></div></sc-if>
+</div></sc-if>
+<sc-if value="{{ F.desk }}" hint-placeholder-val="{{ true }}"><div class="al-arch__colonna-3">
+<div class="al-arch__riga-2"><dc-import name="componenti/PillolaScelta" forma="segmentato" classe="al-scelta--sottili" opzioni="{{ linguette }}" etichetta="Parte dell'archivio" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="330px,40px"></dc-import><a href="#" onClick="{{ agg.apri }}" aria-haspopup="dialog" class="al-bottone al-bottone--pieno al-bottone--blocco al-bottone--a-sinistra">+ Aggiungi oggetto</a></div>
+<div class="al-arch__riga-3">
+<span class="al-arch__riga-4"><span class="al-arch__testo-2" style="font-size:{{ L.bfs }}">{{ H.n }}</span><span class="al-arch__colonna-4"><span class="al-arch__testo-3">{{ H.l }}</span><span class="al-arch__testo-4">{{ H.s }}</span></span></span>
+<sc-if value="{{ vOrd }}" hint-placeholder-val="{{ true }}"><span class="al-arch__riga-5"><div role="group" aria-label="Ordine e vista" style="display:flex;gap:8px;align-items:center;flex:none"><select key="{{ ordT.v }}" defaultValue="{{ ordT.v }}" onChange="{{ ordT.on }}" aria-label="Ordine" class="al-tendina al-tendina--tondo" style="flex:none;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ ordT.o }}" as="x" hint-placeholder-count="3"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select><div role="radiogroup" aria-label="Vista" style="flex:none;display:flex;gap:2px;padding:2px;border-radius:999px;background:var(--carta-2)"><sc-for list="{{ visT }}" as="v" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ v.on }}" aria-label="{{ v.l }}" title="{{ v.l }}" onClick="{{ v.scegli }}" style="width:44px;height:44px;padding:0;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;background:transparent;color:{{ v.fg }};box-shadow:{{ v.sh }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ v.d }}"></path></svg></button></sc-for></div></div></span></sc-if>
+</div>
+</div></sc-if>
+<sc-if value="{{ H.deep }}" hint-placeholder-val="{{ true }}"><div class="al-arch__riga-6">
+<input value="{{ fl.q }}" onInput="{{ fl.cerca }}" aria-label="Cerca un oggetto" placeholder="Cerca: M 31, Velo, Andromeda…" class="al-campo al-campo--tondo al-campo--piccolo al-arch__blocco-5">
+<dc-import name="componenti/Filtri" parte="bottone" attivi="{{ fl.n }}" aperto="{{ fl.aperto }}" on-apri="{{ fl.toggle }}" altezza="{{ L.pillH }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100px,40px"></dc-import>
+<sc-if value="{{ F.desk }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Filtri" parte="togli" attivi="{{ fl.n }}" on-togli="{{ fl.togli }}" altezza="{{ L.pillH }}" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="80px,40px"></dc-import></sc-if>
+<span class="al-arch__testo-5" data-an="conta">{{ fl.sintesi }}</span>
+</div></sc-if>
+
+<sc-if value="{{ fl.aperto }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Filtri" gruppi="{{ fl.gruppi }}" colonne="5" attivi="{{ fl.n }}" on-togli="{{ fl.togli }}" mostra="{{ fl.mostra }}" on-mostra="{{ fl.toggle }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,300px"></dc-import></sc-if>
+</dc-import>
+
+<sc-if value="{{ S.astap }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="{{ fmt }}" segno="!" titolo="ASTAP non è installato: 1204 frame restano non risolti finché il programma non c'è." azione="Apri le Impostazioni" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,46px"></dc-import></sc-if>
+
+<sc-if value="{{ vuota }}" hint-placeholder-val="{{ false }}"><div class="al-arch__blocco-6"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ fmt }}" segno="?" titolo="Nessun oggetto con questi criteri" testo="Togline uno, o tutti con «Togli tutti»." modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,80px"></dc-import></div></sc-if>
+
+<sc-if value="{{ V.carte }}" hint-placeholder-val="{{ true }}"><div class="al-arch__centro-1" style="grid-template-columns:{{ L.cgrid }};gap:{{ L.gap }}"><sc-for list="{{ carte }}" as="o" hint-placeholder-count="8"><dc-import name="componenti/Carta" formato="{{ fmt }}" etichetta="{{ o.n }}" colonne="{{ L.cc }}" ritardo="{{ o.rit }}" padding="0" gap="0" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,380px">
+<div style="position:relative;display:flex;flex-direction:column;min-width:0">
+<a class="al-arch__colonna-5" data-k="{{ o.n }}" href="#" onClick="{{ o.on }}" aria-haspopup="dialog" aria-label="{{ o.aria }}">
+<span class="al-arch__riga-7" style="aspect-ratio:{{ L.foto }};background:var(--foto-fondo)"><span aria-hidden="true" style="position:absolute;inset:0;display:grid;grid-template-columns:{{ o.pCols }};grid-auto-rows:1fr;gap:2px"><sc-for list="{{ o.parti }}" as="q" hint-placeholder-count="1"><span style="background:{{ q.bg }};background-size:cover;background-position:center"></span></sc-for></span><sc-if value="{{ o.senzaFoto }}" hint-placeholder-val="{{ true }}"><span class="al-arch__blocco-7" style="font-size:{{ L.fotoFs }}">{{ o.n }}</span></sc-if><sc-if value="{{ o.tag }}" hint-placeholder-val="{{ false }}"><span class="al-arch__strato-2">{{ o.tag }}</span></sc-if></span>
+<span class="al-arch__colonna-2" style="padding:{{ L.cp }}">
+<span class="al-arch__colonna-6"><b class="al-arch__blocco-8" style="font-size:{{ L.nfs }}">{{ o.n }}</b><span class="al-arch__blocco-9">{{ o.sub }}</span></span>
+<span class="al-arch__riga-8"><span class="al-arch__testo-6" style="font-size:{{ L.ofs }}">{{ o.ore }}</span><span class="al-arch__testo-7">{{ o.fr }}</span></span>
+<sc-if value="{{ o.bar }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/BarraFiltri" filtri="{{ o.filD }}" altezza="8" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,8px"></dc-import></sc-if>
+<span class="al-arch__blocco-9">{{ o.filT }}</span>
+</span>
+</a>
+<div style="position:absolute;left:0;right:0;top:0;aspect-ratio:{{ L.foto }};display:grid;grid-template-columns:{{ o.pCols }};grid-auto-rows:1fr;gap:2px;pointer-events:none;z-index:2"><sc-for list="{{ o.parti }}" as="q" hint-placeholder-count="1"><span style="position:relative"><label title="{{ q.tit }}" style="position:absolute;right:6px;bottom:6px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--carta);color:var(--testo);cursor:pointer;pointer-events:auto"><input type="file" accept="image/*" onChange="{{ q.foto }}" aria-label="{{ q.aria }}" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"></input><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ q.ic }}"></path></svg></label></span></sc-for></div>
+</div>
+</dc-import></sc-for></div></sc-if>
+
+<sc-if value="{{ V.elenco }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="{{ fmt }}" etichetta="Elenco" colonne="12" ritardo="60" padding="{{ L.lpad }}" gap="2" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,600px">
+<sc-if value="{{ F.desk }}" hint-placeholder-val="{{ true }}"><div class="al-arch__centro-2" aria-hidden="true" style="grid-template-columns:{{ L.lc }}"><span>oggetto</span><span>tipo e costellazione</span><span>integrazione</span><span>filtri</span><span>produzioni</span><span></span></div></sc-if>
+<sc-for list="{{ carte }}" as="o" hint-placeholder-count="10"><a class="al-arch__centro-3" href="#" onClick="{{ o.on }}" aria-haspopup="dialog" aria-label="{{ o.aria }}" style="grid-template-columns:{{ L.lc }};gap:{{ L.lgap }}">
+<span class="al-arch__colonna-6"><b class="al-arch__blocco-10">{{ o.n }}</b><span class="al-arch__blocco-9">{{ o.comune }}</span></span>
+<span class="al-arch__blocco-11" style="display:{{ L.lD }}">{{ o.sub }}</span>
+<span class="al-arch__colonna-1" style="align-items:{{ L.oreAl }}"><span class="al-arch__testo-8">{{ o.ore }}</span><span class="al-arch__testo-7">{{ o.fr }}</span></span>
+<span class="al-arch__blocco-12" style="display:{{ L.lD }}"><sc-if value="{{ o.bar }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/BarraFiltri" filtri="{{ o.filD }}" altezza="8" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,8px"></dc-import></sc-if><span class="al-arch__blocco-9">{{ o.filT }}</span></span>
+<span class="al-arch__testo-9" style="display:{{ L.lD }}">{{ o.prod }}</span>
+<span class="al-arch__blocco-13" style="display:{{ L.lD }}">↗</span>
+</a></sc-for>
+</dc-import></sc-if>
+
+<sc-if value="{{ altre }}" hint-placeholder-val="{{ true }}"><div class="al-arch__riga-9"><a href="#" class="al-bottone al-bottone--tenue al-bottone--rovescio al-bottone--blocco al-bottone--a-sinistra">Mostra altri 20</a><span class="al-arch__testo-4">{{ altre }}</span></div></sc-if>
+
+</div></sc-if>
+
+</dc-import>
+
+<sc-if value="{{ D }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/FinestraRiepilogo" tipo="oggetto" oggetto="{{ D.ogg }}" aria="{{ D.aria }}" posizione="{{ D.pos }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" on-chiudi="{{ D.chiudi }}" on-prima="{{ D.prima }}" on-dopo="{{ D.dopo }}" prima-no="{{ D.primaNo }}" dopo-no="{{ D.dopoNo }}" hint-size="100%,100vh"></dc-import></sc-if>
+<sc-if value="{{ agg.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Finestra" titolo="Aggiungi oggetto" sottotitolo="Sole, pianeti, Luna, comete e asteroidi che non arrivano dai FITS" on-chiudi="{{ agg.chiudi }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="0px,0px">
+<div class="al-arch__colonna-8"><b class="al-arch__testo-11">Tipo</b><dc-import name="componenti/PillolaScelta" forma="spunta" opzioni="{{ agg.tipi }}" etichetta="Tipo" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,40px"></dc-import></div>
+<div class="al-arch__colonna-8"><span class="al-arch__colonna-9"><b class="al-arch__testo-11">Da dove vengono i dati</b><span class="al-arch__testo-4">una o più fonti; il file SER si indica per percorso e non si carica</span></span><dc-import name="componenti/PillolaScelta" forma="spunta" opzioni="{{ agg.fonti }}" etichetta="Fonti" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,40px"></dc-import></div>
+<div class="al-arch__colonna-10"><span class="al-arch__colonna-11"><b class="al-arch__testo-11">I campi</b><span class="al-arch__testo-4">ogni campo dice da dove viene e si corregge sempre a mano</span></span>
+<sc-for list="{{ agg.campi }}" as="c" hint-placeholder-count="6"><label class="al-arch__centro-4" style="grid-template-columns:{{ agg.cg }}"><span class="al-arch__colonna-12"><span class="al-arch__testo-12">{{ c.l }}</span><span class="al-arch__testo-13" style="color:{{ c.nC }}">{{ c.n }}</span></span><input defaultValue="{{ c.v }}" placeholder="{{ c.ph }}" class="al-campo al-campo--piccolo al-arch__blocco-14"><span class="al-arch__pillola-1">{{ c.da }}</span></label></sc-for>
+</div>
+<div class="al-arch__colonna-8"><span class="al-arch__colonna-9"><b class="al-arch__testo-11">Calcolate dall'app</b><span class="al-arch__testo-4">dati simulati: qui solo per mostrare dove vanno</span></span><div class="al-arch__griglia-1"><sc-for list="{{ agg.calc }}" as="k" hint-placeholder-count="4"><span class="al-arch__colonna-13"><span class="al-arch__testo-10">{{ k.l }}</span><b class="al-arch__testo-14">{{ k.v }}</b></span></sc-for></div></div>
+<div class="al-finestra__gesti"><a href="#" onClick="{{ agg.chiudi }}" class="al-bottone al-bottone--tenue al-bottone--rovescio">Annulla</a><a href="#" onClick="{{ agg.chiudi }}" class="al-bottone al-bottone--pieno">Aggiungi</a></div>
+</dc-import></sc-if>
+</div></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;caricamento&quot;,&quot;archivio vuoto&quot;,&quot;nessun risultato&quot;,&quot;nessun oggetto identificato&quot;,&quot;ASTAP assente&quot;,&quot;Sole&quot;,&quot;Sistema solare&quot;,&quot;aggiungi oggetto&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;vista&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;carte&quot;,&quot;elenco&quot;],&quot;default&quot;:&quot;carte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;dettaglio&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;chiuso&quot;,&quot;aperto&quot;],&quot;default&quot;:&quot;chiuso&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: null, vista: null, ord: 'nome', f: {}, q: '', filAp: false, det: null };
+  rifR = el => { this._root = el; };
+  chiudiDet = () => this.setState({ det: false });
+  getSnapshotBeforeUpdate(pp, ps) { const M = window.ALmoto; return M && (ps.f !== this.state.f || ps.q !== this.state.q || ps.ord !== this.state.ord) ? M.rect(this._root) : null; }
+  moto(snap) { const M = window.ALmoto, r = this._root; if (!M || !r) return; if (snap) M.flip(snap, r);
+    if (this._cnt !== this._pC) { if (this._pC != null && this._attivi) M.conta(r.querySelector('[data-an=conta]'), this._pC, this._cnt); this._pC = this._cnt; } }
+  componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rs); }
+  componentDidUpdate(pp, ps, snap) { this.moto(snap); if (pp.stato !== this.props.stato) this.setState({ ling: null, agg: null, aTipo: null, aFonti: null }); if (pp.stato !== this.props.stato || pp.dettaglio !== this.props.dettaglio || pp.vista !== this.props.vista) this.setState({ det: null, f: {}, q: '', vista: null }); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, set = o => this.setState(o), CAT = window.ALcat;
+    const modo = this.state.modo || p.modo || 'scuro', t = AL.tema(modo, p.accento);
+    const fmtP = AL.formatoScelto(p.formato), tel = AL.telefono(fmtP, this.state.w), F = { tel, desk: !tel };
+    const stato = p.stato || 'normale';
+    const num = AL.num, fh = AL.ore;
+    const L = tel ? { grid: 'repeat(2,minmax(0,1fr))', gap: '10px', pad: '20px', bfs: '48px', pillH: '44px', pillH2: '44px', inFs: '16px', flCols: 'minmax(0,1fr)', cc: 'auto', cgrid: 'repeat(2,minmax(0,1fr))', foto: '3 / 2', fotoFs: '20px', cp: '12px 12px 14px', nfs: '15px', ofs: '22px', lpad: '8px 4px', lc: 'minmax(0,1fr) auto', lgap: '10px', lD: 'none', oreAl: 'flex-end', sk: [1, 2, 3, 4], skH: '300px' }
+      : { grid: 'repeat(12,minmax(0,1fr))', gap: '16px', pad: '28px', bfs: '64px', pillH: '40px', pillH2: '32px', inFs: '15px', flCols: 'repeat(5,minmax(0,1fr))', cc: 'auto', cgrid: 'repeat(5,minmax(0,1fr))', foto: '3 / 2', fotoFs: '22px', cp: '14px 16px 16px', nfs: '16px', ofs: '24px', lpad: '16px 16px 8px', lc: 'minmax(0,1.3fr) minmax(0,1.2fr) 100px minmax(0,1fr) 110px 24px', lgap: '16px', lD: 'flex', oreAl: 'flex-start', sk: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], skH: '320px', skG: 'repeat(5,minmax(0,1fr))' };
+    // Dati simulati in componenti/dati.js; IC 1396 allineato al riepilogo
+    const FD = AL.FD;
+    const CATL = n => /^M /.test(n) ? 'Messier' : /^NGC/.test(n) ? 'NGC' : /^IC/.test(n) ? 'IC' : /^Sh2/.test(n) ? 'Sharpless' : 'altro';
+    const tutti0 = ALdati.oggetti.map(({ n, spec, ore, fr, prod, fil, rec }, i) => { const c = CAT[n]; const tipo = spec === 'cometa' ? 'cometa' : c ? c[1] : 'Tipo non disponibile', cost = spec === 'cometa' ? 'Costellazione non disponibile' : c ? c[2] : 'Costellazione non disponibile';
+      const forma = spec === 'mosaico' ? 'mosaico' : prod > 1 ? 'più produzioni' : 'una produzione';
+      return { n, spec, ore, fr, prod, fil, rec, tipo, cost, forma, comune: spec === 'cometa' ? 'cometa, fuori catalogo' : c && c[0] ? c[0] : '',
+        // simulati: anni, siti, ottica e camera di ogni oggetto
+        anni: i % 3 === 0 ? ['2024', '2025', '2026'] : i % 3 === 1 ? ['2025', '2026'] : ['2026'], siti: i % 4 === 1 ? ['Casa'] : i % 4 === 2 ? ['Cima Ekar', 'Casa'] : ['Cima Ekar'],
+        ottica: [i % 2 ? 'RedCat 51' : 'Askar 107PHQ'], camera: [fil.some(f => /colori/.test(f[0])) ? 'ASI 533MC' : 'ASI 2600MM'], cat: [CATL(n)] }; });
+    // Deep sky: automatico dai FITS. Le comete in FITS vanno da sole in Sistema solare.
+    const tutti = tutti0.filter(o => o.spec !== 'cometa'), cometa = tutti0.filter(o => o.spec === 'cometa');
+    // Filtri: tipo, costellazione, filtri, forma, + campo di testo
+    const FS = this.state.f || {}, q = (this.state.q || '').trim().toLowerCase().replace(/\s+/g, '');
+    const fac = o => ({ periodo: o.anni, tipo: [o.tipo.split(' ')[0] === 'nebulosa' ? 'nebulosa' : o.tipo.split(' ')[0]], cost: [o.cost], filtri: o.fil.map(f => f[0]), forma: [o.forma], sito: o.siti, ottica: o.ottica, camera: o.camera, catalogo: o.cat });
+    const FAC = tutti.map(fac), GR = [['periodo', 'Periodo'], ['tipo', 'Tipo'], ['cost', 'Costellazione'], ['filtri', 'Filtri'], ['forma', 'Produzioni'], ['sito', 'Sito'], ['ottica', 'Ottica'], ['camera', 'Camera'], ['catalogo', 'Catalogo']];
+    const okQ = o => !q || (o.n + o.comune + o.cost + o.tipo).toLowerCase().replace(/\s+/g, '').includes(q);
+    const passa = (i, salta) => okQ(tutti[i]) && GR.every(([k]) => k === salta || !(FS[k] && FS[k].length) || FS[k].some(v => FAC[i][k].includes(v)));
+    const ORD = { filtri: Object.keys(FD), forma: ['una produzione', 'più produzioni', 'mosaico'] };
+    // Una tendina compare solo se c'e' una scelta
+    const gruppi = GR.filter(([k]) => new Set(FAC.flatMap(f => f[k])).size > 1).map(([k, l]) => { const vals = [...new Set(FAC.flatMap(f => f[k]))]; if (ORD[k]) vals.sort((a, b) => ORD[k].indexOf(a) - ORD[k].indexOf(b)); else vals.sort((a, b) => (a === 'non si sa') - (b === 'non si sa') || a.localeCompare(b, 'it'));
+      return { l, opz: vals.map(v => { const sel = (FS[k] || []).includes(v), c = tutti.filter((_, i) => passa(i, k) && FAC[i][k].includes(v)).length, no = !c && !sel;
+        return { l: k === 'filtri' ? FD[v][0] : v, c: String(c), sel, no, tinta: k === 'filtri' ? v : null,
+          on: e => { e.preventDefault(); if (no) return; const cur = new Set(FS[k] || []); sel ? cur.delete(v) : cur.add(v); set({ f: { ...FS, [k]: [...cur] } }); } }; }) }; });
+    let visti = tutti.map((_, i) => i).filter(i => stato === 'nessun risultato' ? false : passa(i, null));
+    const ord = this.state.ord || 'nome';
+    const nk = s => s.replace(/(\d+)/g, m => m.padStart(5, '0'));
+    visti.sort((a, b) => ord === 'ore' ? ((tutti[b].ore ?? -1) - (tutti[a].ore ?? -1)) : ord === 'recenti' ? tutti[a].rec - tutti[b].rec : nk(tutti[a].n).localeCompare(nk(tutti[b].n), 'it'));
+    const nAtt = (q ? 1 : 0) + Object.values(FS).reduce((a, v) => a + (v ? v.length : 0), 0), attivi = !!nAtt || stato === 'nessun risultato', filAp = !!this.state.filAp;
+    const fl = { q: stato === 'nessun risultato' ? 'Andromeda XX' : this.state.q, cerca: e => set({ q: e.target.value }), gruppi, attivi, aperto: filAp, n: nAtt, mostra: visti.length ? 'Mostra ' + visti.length + (visti.length === 1 ? ' oggetto' : ' oggetti') : 'Nessun oggetto',
+      vistaTel: filAp && !F.desk, toggle: e => { e.preventDefault(); set({ filAp: !filAp }); }, togli: e => { e.preventDefault(); set({ f: {}, q: '' }); },
+      sintesi: attivi ? visti.length + (visti.length === 1 ? ' oggetto' : ' oggetti') + ' con questi criteri' : '15 di 240, ' + (ord === 'nome' ? 'per nome' : ord === 'ore' ? 'dalla più lunga' : 'dai più recenti') };
+    const vista = this.state.vista || p.vista || 'carte', V = { carte: vista === 'carte', elenco: vista === 'elenco' };
+    const pillT = (sel, l, on) => ({ l, sel, on });
+    const viste = [['carte', 'Carte'], ['elenco', 'Elenco']].map(([k, l]) => pillT(vista === k, l, () => set({ vista: k })));
+    const ordini = [['nome', 'Per nome'], ['ore', 'Per integrazione'], ['recenti', 'Più recenti']].map(([k, l]) => pillT(ord === k, l, () => set({ ord: k })));
+    const aperto = this.state.det != null ? this.state.det : (p.dettaglio === 'aperto' ? 'IC 1396' : null); this._aperto = !!aperto;
+    // Il periodo restringe ore e frame della carta
+    const per = FS.periodo && FS.periodo.length ? FS.periodo : null, quota = o => per ? o.anni.filter(a => per.includes(a)).length / o.anni.length : 1;
+    const ling = this.state.ling || (stato === 'Sole' ? 'sole' : stato === 'Sistema solare' ? 'ss' : 'deep');
+    const linguette = [['deep', 'Deep sky'], ['sole', 'Sole'], ['ss', 'Sistema solare']].map(([k, l]) => pillT(ling === k, l, () => set({ ling: k, det: null })));
+    let carte = visti.map((i, j) => { const o0 = tutti[i], k = quota(o0), o = k === 1 ? o0 : { ...o0, ore: o0.ore != null ? o0.ore * k : null, fr: Math.round(o0.fr * k) };
+      return { bar: true, nProd: o.prod || 1, mos: o.spec === 'mosaico', anteprima: 'Nessuna anteprima', n: o.n, comune: o.comune || (o.spec === 'mosaico' ? 'mosaico di 4 pannelli' : ''), sub: o.tipo + ' · ' + o.cost, ore: o.ore != null ? fh(o.ore) : num(o.fr) + ' frame', fr: o.ore != null ? num(o.fr) + ' frame' : 'senza durata',
+        filD: o.fil, filT: o.fil.map(f => FD[f[0]][0]).join(' · '), tag: o.spec === 'mosaico' ? 'mosaico · 4 pannelli' : o.prod > 1 ? o.prod + ' produzioni' : '',
+        prod: o.spec === 'mosaico' ? 'mosaico · 4' : o.prod > 1 ? o.prod + ' produzioni' : 'una', fotoBg: 'var(--foto-fondo)', rit: String(Math.min(8, j) * 60),
+        aria: o.n + (o.comune ? ', ' + o.comune : '') + ', ' + (o.ore != null ? fh(o.ore) : 'senza durata') + ', apri il riepilogo', on: e => { e.preventDefault(); set({ det: o.n }); } }; });
+    const senzaOgg = stato === 'nessun oggetto identificato' || stato === 'ASTAP assente';
+    if (senzaOgg && ling === 'deep') carte = [{ bar: true, anteprima: 'Nessuna anteprima', n: stato === 'ASTAP assente' ? 'Non risolti' : 'Senza oggetti identificati', comune: stato === 'ASTAP assente' ? 'restano qui finché ASTAP non c\u0027è' : 'frame senza oggetti identificati', sub: 'un gruppo e 2 pannelli senza oggetti identificati', ore: fh(14.3), fr: '1204 frame', filD: [['l', 412, 5.1], ['ha', 792, 9.2]], filT: 'L · Hα', tag: stato === 'ASTAP assente' ? 'non risolti' : 'senza oggetti identificati', prod: '—', fotoBg: 'var(--foto-fondo)', rit: '0', aria: (stato === 'ASTAP assente' ? 'Non risolti' : 'Senza oggetti identificati') + ', 1204 frame', on: e => e.preventDefault() }].concat(carte);
+    // Sole e Sistema solare: aggiunti a mano (dati simulati); la cometa arriva dai FITS
+    const man = (n, comune, sub, ore, fr, filT, ant) => ({ bar: false, anteprima: ant, n, comune, sub, ore, fr, filD: [], filT, tag: '', prod: 'una', fotoBg: 'var(--foto-fondo)', rit: '0', aria: n + ', ' + comune, on: e => e.preventDefault() });
+    const SOLE = [man('Sole · 12 settembre', 'Hα', 'Casa · 10:42', '3 video', 'SER', 'dal SER e dal log', 'foto finale'), man('Sole · 4 settembre', 'luce bianca', 'Casa · 09:15', '4 video', 'SER', 'dal SER', 'Nessuna anteprima'),
+      man('Sole · 28 agosto', 'CaK', 'Cima Ekar · 11:03', '2 video', 'SER', 'dal log', 'Nessuna anteprima'), man('Sole · 15 agosto', 'filtro non indicato', 'Casa · ora non indicata', '1 foto', 'foto finale', 'scritto a mano', 'foto finale')];
+    const SS = [man('Giove', 'pianeta', 'Casa · 2 settembre, 04:10', '5 video', 'SER', 'dal SER e dal log', 'foto finale'), man('Saturno', 'pianeta', 'Casa · 28 agosto, 23:40', '3 video', 'SER', 'dal SER', 'Nessuna anteprima'),
+      man('Luna', 'mosaico di 6 pannelli', 'Cima Ekar · 24 agosto, 21:30', '6 video', 'SER', 'dal log', 'foto finale'), man('4 Vesta', 'asteroide', 'Cima Ekar · 19 agosto', '1 foto', 'foto finale', 'scritto a mano', 'foto finale')]
+      .concat(cometa.map(o => ({ bar: true, anteprima: 'Nessuna anteprima', n: o.n, comune: 'cometa, dai FITS', sub: 'arrivata da sola', ore: fh(o.ore), fr: num(o.fr) + ' frame', filD: o.fil, filT: o.fil.map(f => FD[f[0]][0]).join(' · '), tag: '', prod: 'una', fotoBg: 'var(--foto-fondo)', rit: '0', aria: o.n + ', cometa', on: e => { e.preventDefault(); set({ det: o.n }); } })));
+    if (ling === 'sole') carte = SOLE; else if (ling === 'ss') carte = SS;
+    // v56.12: l'anteprima si aggiunge a mano dalla tessera (resta in questa sessione: simulato)
+    const FT = this.state.foto || {};
+    // v56.13: un'anteprima per produzione (riquadro diviso), un tondo piccolo per ciascuna
+    const CAM = 'M4 8h3l2-2h6l2 2h3v11H4zM12 11v5M9.5 13.5h5', MAT = 'M4 20h4L19 9l-4-4L4 16zM14 6l4 4';
+    carte = carte.map(o => { const np = o.mos ? 1 : Math.max(1, Number(o.nProd) || 1), pc = np <= 3 ? np : Math.ceil(np / 2), prima = o.anteprima === 'foto finale';
+      const parti = Array.from({ length: np }, (_, i) => { const key = o.n + '#' + i, u = FT[key], ha = !!u || (prima && i === 0), nome = np > 1 ? (i + 1) + 'ª produzione di ' + o.n : o.n;
+        return { bg: u ? 'url(' + u + ')' : 'transparent', ic: ha ? MAT : CAM, tit: (ha ? 'Cambia' : 'Aggiungi') + (np > 1 ? ' l\u0027anteprima della ' + (i + 1) + 'ª produzione' : ' l\u0027anteprima'), aria: (ha ? 'Cambia' : 'Aggiungi') + ' l\u0027anteprima: ' + nome,
+          ha, foto: e => { const f = e.target.files && e.target.files[0]; if (!f) return; const url = URL.createObjectURL(f); this.setState(s => ({ foto: { ...(s.foto || {}), [key]: url } })); } }; });
+      return { ...o, parti, pCols: 'repeat(' + pc + ',minmax(0,1fr))', senzaFoto: !parti.some(q => q.ha) }; });
+    const H = ling === 'sole' ? { deep: false, n: '4', l: 'riprese del Sole', s: '10 video SER · 2 foto finali · aggiunte a mano' } : ling === 'ss' ? { deep: false, n: '5', l: 'oggetti: 2 pianeti, Luna, un asteroide, una cometa', s: 'la cometa arriva da sola dai FITS; gli altri si aggiungono a mano' }
+      : { deep: true, n: '240', l: 'oggetti, di cui 3 mosaici', s: '486 ore · 18 430 frame · 212 notti' };
+    const S = { loading: stato === 'caricamento', main: stato !== 'caricamento' && stato !== 'archivio vuoto', astap: stato === 'ASTAP assente' && ling === 'deep' };
+    // Aggiungi oggetto (ADR 0019): tipo, fonti, campi con la provenienza, metriche calcolate dall'app (simulate)
+    const aggOn = this.state.agg ?? stato === 'aggiungi oggetto', aTipo = this.state.aTipo || 'Sole', aF = this.state.aFonti || ['ser', 'log'];
+    const FONTI = [['ser', 'File SER (percorso)'], ['log', 'Log del programma di ripresa'], ['foto', 'Foto finale'], ['mano', 'A mano']];
+    const da = aF.includes('ser') ? 'dal SER' : aF.includes('log') ? 'dal log' : aF.includes('foto') ? 'dal nome del file' : 'scritto a mano', auto = da !== 'scritto a mano';
+    const OB = { Sole: 'Sole', pianeta: 'Giove', Luna: 'Luna', cometa: 'C/2026 F3', asteroide: '4 Vesta', altro: '' };
+    const obb = (x) => ({ n: x, nC: x === 'obbligatorio' ? t.text : t.muted });
+    const campi = [{ l: 'Oggetto', v: OB[aTipo], ph: 'nome', da: OB[aTipo] && aTipo !== 'altro' ? 'dal tipo' : 'scritto a mano', ...obb('obbligatorio') },
+      { l: 'Data', v: auto ? '12 settembre 2026' : '', ph: 'gg mese aaaa', da, ...obb('obbligatorio') },
+      { l: 'Ora', v: aF.includes('ser') || aF.includes('log') ? '10:42:18' : '', ph: 'senza ora: non disponibile', da: aF.includes('ser') ? 'dal SER' : aF.includes('log') ? 'dal log' : 'scritto a mano', n: 'fortemente consigliata', nC: t.muted },
+      { l: 'Sito', v: aF.includes('log') ? 'Casa' : '', ph: 'Cerca un luogo', da: aF.includes('log') ? 'dal log' : 'scritto a mano', ...obb('obbligatorio') }]
+      .concat(aTipo === 'Sole' ? [{ l: 'Filtro', v: aF.includes('foto') || aF.includes('ser') ? 'Hα' : '', ph: 'Hα, luce bianca, CaK', da: aF.includes('foto') || aF.includes('ser') ? 'dal nome del file' : 'scritto a mano', ...obb('facoltativo') }] : [])
+      .concat(aF.includes('ser') ? [{ l: 'File SER', v: 'D:\\Sole\\2026-09-12\\Sole_104218_Ha.ser', ph: '', da: 'percorso, non si carica', ...obb('') }] : [])
+      .concat(aF.includes('log') ? [{ l: 'Programma', v: 'FireCapture 2.7', ph: '', da: 'dal log', ...obb('') }] : []);
+    const calc = aTipo === 'Sole' ? [['altezza', '41°'], ['diametro', '31′ 52″'], ['meridiano centrale', '212°'], ['Carrington', 'rotazione 2310'], ['meteo del giorno', 'buona · seeing 2.1″'], ['attività solare', '112 macchie']]
+      : aTipo === 'pianeta' ? [['altezza', '52°'], ['diametro', '46.2″'], ['fase', '99%'], ['meridiano centrale', '118°'], ['meteo della notte', 'buona · seeing 1.6″']]
+      : [['altezza', '38°'], ['fase', aTipo === 'Luna' ? '62%' : '—'], ['meteo della notte', 'buona · seeing 1.8″']];
+    const NA = campi[2].v ? null : 'senza ora: non disponibile';
+    const agg = { on: aggOn, apri: e => { e.preventDefault(); set({ agg: true }); }, chiudi: e => { e && e.preventDefault && e.preventDefault(); set({ agg: false }); },
+      tipi: ['Sole', 'pianeta', 'Luna', 'cometa', 'asteroide', 'altro'].map(k => ({ l: k, sel: aTipo === k, on: e => { e && e.preventDefault && e.preventDefault(); set({ aTipo: k }); } })),
+      fonti: FONTI.map(([k, l]) => ({ l, sel: aF.includes(k), on: e => { e && e.preventDefault && e.preventDefault(); const c = new Set(aF); c.has(k) ? c.size > 1 && c.delete(k) : c.add(k); set({ aFonti: [...c] }); } })),
+      campi, calc: calc.map(([l, v]) => ({ l, v: NA && l !== 'meteo del giorno' && l !== 'attività solare' ? 'Non disponibile' : v })), cg: tel ? 'minmax(0,1fr)' : '150px minmax(0,1fr) 170px' };
+    const SK = [{ col: '1 / -1', h: '150px', pad: '24px', gap: '14px', blocchi: ['Caricamento…', { flex: '1', w: '40%' }] }].concat(L.sk.map(() => ({ h: L.skH, pad: '12px', blocchi: [{ h: '100%', r: '20px' }] })));
+    const av = stato === 'archivio vuoto' ? { t: 'Archivio vuoto', x: 'Aggiungi le cartelle dei file e avvia la scansione.', a: 'Aggiungi cartelle' } : null;
+    // Produzioni e pannelli (simulati) in componenti/dati.js
+    const PRODI = ALdati.produzioni;
+    let D = null;
+    if (aperto && S.main && tutti0.some(x => x.n === aperto)) { const ia = visti.findIndex(i => tutti[i].n === aperto), o = tutti0.find(x => x.n === aperto);
+      const vai = d => () => { const i2 = visti[ia + d]; if (i2 != null) set({ det: tutti[i2].n }); };
+      D = { aria: 'Riepilogo: ' + aperto, pos: p.dettaglio ? 'dentro' : 'fissa',
+        ogg: { n: o.n, ore: o.ore, fr: o.fr, fil: o.fil, prod: o.prod, produzioni: PRODI(o), pannelli: ALdati.pannelli(o) }, chiudi: this.chiudiDet, prima: vai(-1), dopo: vai(1), primaNo: ia <= 0, dopoNo: ia < 0 || ia >= visti.length - 1 }; }
+    this._cnt = visti.length; this._attivi = attivi; this._tel = tel;
+    // Telefono: viste in una pista compatta
+    const pista = arr => arr.map(o => ({ ...o, selA: o.sel ? 'true' : 'false', fw: o.sel ? 600 : 500, bg: o.sel ? t.accent : 'transparent', fg: o.sel ? t.hPillFg : t.text, on: e => { e && e.preventDefault && e.preventDefault(); o.on(); } }));
+    return { pronto: true, lingT: pista(linguette),  vOrd: F.desk || !H.deep, H, linguette, agg, rifR: this.rifR, modo, accento: p.accento, setModo: m => set({ modo: m }), t, F, S, SK, L, V, av, fl, viste, ordini, carte,
+      // v56.11: ordine in tendina e vista a due icone, desktop e telefono (via il «⋯» del telefono)
+      ordT: (() => { const c = ordini.find(o => o.sel === true || o.sel === 'true') || ordini[0]; return { v: c.l, o: ordini.map(o => ({ v: o.l, l: o.l })), on: e => { const o = ordini.find(x => x.l === e.target.value); o && o.on({ preventDefault() {}, stopPropagation() {} }); } }; })(),
+      visT: [['carte', 'Carte', 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'], ['elenco', 'Elenco', 'M4 6h16M4 12h16M4 18h16']].map(([k, l, d]) => ({ l, d, on: String(vista === k), fg: vista === k ? 'var(--testo)' : 'var(--tenue)', sh: vista === k ? 'inset 0 0 0 2px var(--accento)' : 'none', scegli: () => set({ vista: k }) })), vuota: S.main && H.deep && !visti.length, altre: S.main && H.deep && visti.length && !attivi ? '15 di 240' : '', D, fmt: tel ? 'telefono' : 'desktop' };
+  }
+}
+</script>
+</body>
+</html>

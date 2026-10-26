@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}button,select{font:inherit;color:inherit}[role=tablist]{scrollbar-width:none}@keyframes alIn{from{opacity:0;transform:translateY(14px)}}@keyframes alWipe{from{clip-path:inset(-12px 100% -12px -12px)}to{clip-path:inset(-12px -12px -12px -12px)}}@keyframes alGrow{from{transform:scale(1,0)}}@keyframes alPop{from{opacity:0;transform:scale(.6)}}[data-al-wait] *{animation-play-state:paused!important}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-stat__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="{{ F.f }}" pagina="Statistiche" etichetta="{{ F.lab }}" altezza="100vh" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+
+<sc-if value="{{ F.tel }}" hint-placeholder-val="{{ false }}"><div class="al-stat__colonna-1">
+<sc-if value="{{ testa.ctl }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex"><select key="{{ annoTel.v }}" defaultValue="{{ annoTel.v }}" onChange="{{ annoTel.on }}" aria-label="Anno" class="al-tendina al-tendina--tondo al-stat__blocco-2" style="font-weight:600"><sc-for list="{{ optAnni }}" as="o" hint-placeholder-count="6"><option value="{{ o.l }}" selected="{{ o.sel }}">{{ o.l }}</option></sc-for></select></div>
+<div class="al-stat__riga-1" style="margin:0 -12px;padding:0 12px"><sc-for list="{{ sels }}" as="s" hint-placeholder-count="3"><select value="{{ s.v }}" onChange="{{ s.on }}" aria-label="{{ s.l }}" class="al-tendina al-tendina--tondo al-stat__blocco-2"><sc-for list="{{ s.opz }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.lt }}</option></sc-for></select></sc-for></div></sc-if>
+<span class="al-stat__blocco-3">dati simulati</span>
+</div></sc-if>
+
+<div class="al-stat__centro-1" style="grid-template-columns:{{ L.grid }};gap:{{ L.gap }}">
+
+<sc-if value="{{ F.desk }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="desktop" colonne="12" etichetta="Statistiche" ritardo="0" padding="22px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,130px">
+<div class="al-stat__riga-2">
+<span class="al-stat__colonna-2"><h1 class="al-stat__testo-1">Statistiche</h1><span class="al-stat__testo-2">{{ testa.sub }}</span></span>
+<sc-if value="{{ testa.ctl }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/PillolaScelta" forma="segmentato" classe="al-scelta--sottili" opzioni="{{ optAnni }}" etichetta="Anno" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="420px,40px"></dc-import></sc-if>
+</div>
+<sc-if value="{{ testa.ctl }}" hint-placeholder-val="{{ true }}"><div class="al-stat__riga-3"><sc-for list="{{ sels }}" as="s" hint-placeholder-count="3"><label class="al-stat__riga-4">{{ s.l }}<select value="{{ s.v }}" onChange="{{ s.on }}" class="al-tendina al-tendina--tondo al-stat__blocco-4"><sc-for list="{{ s.opz }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></label></sc-for></div></sc-if>
+</dc-import></sc-if>
+
+<sc-if value="{{ S.vuoto }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="pagina" formato="{{ F.f }}" segno="?" titolo="Nessun frame ancora: le statistiche nascono con la prima notte." testo="La scansione legge i frame delle cartelle scelte." azione="Scansiona" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,110px"></dc-import></sc-if>
+
+<sc-if value="{{ S.main }}" hint-placeholder-val="{{ true }}">
+
+<dc-import name="componenti/Carta" formato="{{ F.f }}" tono="protagonista" colonne="12" etichetta="L'anno in un colpo" ritardo="40" padding="{{ L.pad }}" gap="18" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,260px">
+<div class="al-stat__centro-2" style="grid-template-columns:{{ L.annoGrid }}">
+<div class="al-stat__colonna-3">
+<span class="al-stat__testo-3">{{ big.tit }}</span>
+<sc-if value="{{ big.ok }}" hint-placeholder-val="{{ true }}"><span class="al-stat__riga-5"><span class="al-stat__testo-4" style="font-size:{{ L.big }}">{{ big.n }}</span><span class="al-stat__testo-5" style="font-size:{{ L.bigS }}">{{ big.su }}</span></span></sc-if>
+<sc-if value="{{ big.no }}" hint-placeholder-val="{{ false }}"><span class="al-stat__testo-6" style="font-size:{{ L.bigS }}">Meteo storico in arrivo</span></sc-if>
+<sc-if value="{{ big.conf }}" hint-placeholder-val="{{ true }}"><span class="al-stat__testo-7">{{ big.conf }}</span></sc-if>
+<span class="al-stat__testo-8">{{ big.aiuto }}</span>
+</div>
+<div class="al-stat__centro-3" style="grid-template-columns:{{ L.celle }}">
+<sc-for list="{{ celle }}" as="c" hint-placeholder-count="4"><span class="al-stat__colonna-4"><span class="al-stat__testo-9">{{ c.l }}</span><b class="al-stat__testo-10" style="font-size:{{ L.cv }}">{{ c.v }}</b><sc-if value="{{ c.dd }}" hint-placeholder-val="{{ true }}"><span class="al-stat__riga-6"><b class="al-stat__riga-7" style="color:{{ c.dc }}"><svg class="al-stat__grafico-1" width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="{{ c.ic }}" fill="none" stroke="{{ c.dc }}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ c.dd }}</b><span class="al-stat__testo-11">{{ c.dr }}</span></span></sc-if></span></sc-for>
+</div>
+</div>
+<div class="al-stat__colonna-5"><sc-for list="{{ note }}" as="n" hint-placeholder-count="2"><span class="al-stat__testo-12">{{ n }}</span></sc-for></div>
+</dc-import>
+
+<dc-import name="componenti/Carta" formato="{{ F.f }}" colonne="12" etichetta="Calendario delle notti" ritardo="80" padding="{{ L.pad }}" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,260px">
+<div class="al-stat__riga-8"><span class="al-stat__colonna-2"><span class="al-stat__testo-13" style="font-size:{{ L.h2 }}">Calendario delle notti</span><span class="al-stat__testo-2">{{ cal.sub }}</span></span>
+<sc-if value="{{ calT }}" hint-placeholder-val="{{ false }}"><select key="{{ calT.v }}" defaultValue="{{ calT.v }}" onChange="{{ calT.on }}" aria-label="Anno del calendario" class="al-tendina" style="flex:none;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ calT.o }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></sc-if></div>
+<div class="al-stat__blocco-5" data-tipbox="1"><div class="al-stat__blocco-6" ref="{{ rCal }}" onScroll="{{ calScroll }}" style="scrollbar-width:{{ L.sb }}">
+<div class="al-stat__griglia-1" onMouseLeave="{{ tipVia }}">
+<span></span>
+<div class="al-stat__centro-4" aria-hidden="true" style="grid-template-columns:{{ cal.cols }}"><sc-for list="{{ cal.mesi }}" as="m" hint-placeholder-count="12"><span class="al-stat__blocco-7" style="grid-column:{{ m.c }} / span 4">{{ m.l }}</span></sc-for></div>
+<div class="al-stat__centro-5" aria-hidden="true" style="grid-template-rows:{{ cal.rows }}"><sc-for list="{{ cal.gg }}" as="g" hint-placeholder-count="7"><span class="al-stat__riga-9">{{ g }}</span></sc-for></div>
+<div class="al-stat__centro-6" role="img" aria-label="{{ cal.aria }}" style="grid-template-rows:{{ cal.rows }};grid-auto-columns:{{ cal.cs }}"><sc-for list="{{ cal.celle }}" as="c" hint-placeholder-count="120"><span class="al-stat__blocco-8" title="{{ c.a }}" onMouseEnter="{{ c.on }}" onClick="{{ c.on }}" style="background:{{ c.bg }};box-shadow:{{ c.sh }};cursor:{{ c.cur }};animation-delay:{{ c.dl }}"></span></sc-for></div>
+</div>
+</div>
+<sc-if value="{{ T.cal }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.cal.x }}px;top:{{ T.cal.y }}px;transform:{{ T.cal.tf }}"><b class="al-riquadro__titolo">{{ T.cal.s }}</b><sc-for list="{{ T.cal.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if></div>
+<div class="al-stat__riga-10">
+<span class="al-stat__testo-14" aria-live="polite" style="color:{{ cal.rigaC }}">{{ cal.riga }}</span>
+<span class="al-stat__riga-11"><span class="al-stat__riga-12">meno ore<sc-for list="{{ cal.leg }}" as="c" hint-placeholder-count="4"><i class="al-stat__blocco-9" style="background:{{ c }}"></i></sc-for>più ore</span><sc-if value="{{ cal.persa }}" hint-placeholder-val="{{ true }}"><span class="al-stat__riga-13"><i class="al-stat__riquadro-1"></i>notte buona persa</span></sc-if></span>
+</div>
+</dc-import>
+
+<dc-import name="componenti/Carta" formato="{{ F.f }}" colonne="12" etichetta="Volumi nell'anno" ritardo="120" padding="{{ L.pad }}" gap="16" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,300px">
+<span class="al-stat__colonna-2"><span class="al-stat__testo-13" style="font-size:{{ L.h2 }}">{{ vol.tit }}</span><span class="al-stat__testo-2">{{ vol.sub }}</span></span>
+<div class="al-stat__centro-7" style="grid-template-columns:{{ L.vol }}">
+<div class="al-stat__colonna-3"><span class="al-stat__testo-2">{{ vb.tit }}</span>
+<div class="al-stat__blocco-10" ref="{{ rVb }}" onMouseLeave="{{ tipVia }}">
+<svg class="al-stat__grafico-2" width="{{ vb.w }}" height="{{ vb.h }}" role="img" aria-label="{{ vb.aria }}">
+<sc-for list="{{ vb.gy }}" as="g" hint-placeholder-count="4"><line class="al-stat__tratto-1" x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
+
+<sc-for list="{{ vb.mk }}" as="k" hint-placeholder-count="0"><line class="al-stat__tratto-2" x1="{{ k.lx }}" x2="{{ k.lx }}" y1="{{ k.y1 }}" y2="{{ k.y2 }}" stroke-dasharray="2 3"></line></sc-for>
+<sc-for list="{{ vb.b }}" as="b" hint-placeholder-count="20"><rect class="al-stat__tratto-3" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="1" fill="{{ b.c }}" style="animation-delay:{{ b.dl }}"></rect></sc-for><sc-for list="{{ vb.b }}" as="b" hint-placeholder-count="20"><rect x="{{ b.hx }}" y="{{ b.hy }}" width="{{ b.hw }}" height="{{ b.hh }}" fill="transparent" onMouseEnter="{{ b.on }}" onClick="{{ b.on }}"></rect></sc-for>
+</svg><sc-for list="{{ vb.gy }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ vb.gx }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ vb.mk }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for>
+<sc-if value="{{ T.vb }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.vb.x }}px;top:{{ T.vb.y }}px;transform:{{ T.vb.tf }}"><b class="al-riquadro__titolo">{{ T.vb.s }}</b><sc-for list="{{ T.vb.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
+</div></div>
+<div class="al-stat__colonna-3"><span class="al-stat__riga-14"><span class="al-stat__testo-15">{{ vc.tit }}</span><b class="al-stat__testo-13">{{ vc.oggi }}</b></span>
+<div class="al-stat__blocco-10" ref="{{ rVc }}">
+<svg class="al-stat__grafico-2" width="{{ vc.w }}" height="{{ vc.h }}" role="img" aria-label="{{ vc.aria }}">
+<sc-for list="{{ vc.gy }}" as="g" hint-placeholder-count="4"><line class="al-stat__tratto-1" x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
+
+<sc-if value="{{ vc.pc }}" hint-placeholder-val="{{ true }}"><path class="al-stat__tratto-4" d="{{ vc.pc }}" fill="none" stroke-width="1.5" stroke-dasharray="5 4"></path></sc-if>
+<path class="al-stat__tratto-5" d="{{ vc.py }}" fill="none" stroke-width="2"></path>
+<line class="al-stat__tratto-6" x1="{{ vc.ox }}" x2="{{ vc.ox }}" y1="{{ vc.oy1 }}" y2="{{ vc.oy2 }}" stroke-dasharray="2 3"></line>
+<sc-if value="{{ vc.cy }}" hint-placeholder-val="{{ true }}"><circle class="al-stat__tratto-7" cx="{{ vc.ox }}" cy="{{ vc.cy }}" r="3.5" stroke-width="1.5"></circle></sc-if>
+<circle class="al-stat__tratto-8" cx="{{ vc.ox }}" cy="{{ vc.yy }}" r="5" stroke-width="2.5"></circle>
+</svg><sc-for list="{{ vc.gy }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ vc.gx }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for></div>
+<span class="al-stat__riga-15"><sc-for list="{{ vc.leg }}" as="l" hint-placeholder-count="2"><span class="al-stat__riga-13"><i class="al-stat__blocco-11" style="border-top:2px {{ l.st }} {{ l.c }}"></i>{{ l.l }}</span></sc-for></span>
+</div>
+</div>
+</dc-import>
+
+<dc-import name="componenti/Carta" formato="{{ F.f }}" colonne="8" etichetta="Capacità" ritardo="160" padding="{{ L.pad }}" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,420px">
+<div class="al-stat__riga-16"><span class="al-stat__colonna-2"><span class="al-stat__testo-13" style="font-size:{{ L.h2 }}">Capacità</span><span class="al-stat__testo-2">{{ cap.sub }}</span></span>
+</div>
+<sc-if value="{{ capT }}" hint-placeholder-val="{{ false }}"><div role="group" aria-label="Cosa mostrare nella capacità" style="display:flex;gap:8px;align-items:center;width:100%;flex-wrap:wrap"><sc-if value="{{ capT.mis }}" hint-placeholder-val="{{ true }}"><select key="{{ capT.mis.v }}" defaultValue="{{ capT.mis.v }}" onChange="{{ capT.mis.on }}" aria-label="Misura" class="al-tendina" style="flex:{{ F.flexSel }};min-width:0;max-width:100%;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ capT.mis.o }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></sc-if><sc-if value="{{ capT.cmp }}" hint-placeholder-val="{{ true }}"><select key="{{ capT.cmp.v }}" defaultValue="{{ capT.cmp.v }}" onChange="{{ capT.cmp.on }}" aria-label="Confronta" class="al-tendina" style="flex:none;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ capT.cmp.o }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></sc-if></div></sc-if>
+<sc-if value="{{ cap.cmpOn }}" hint-placeholder-val="{{ true }}"><div class="al-stat__riga-17"><sc-for list="{{ cap.sels }}" as="s" hint-placeholder-count="0"><select value="{{ s.v }}" onChange="{{ s.on }}" aria-label="{{ s.l }}" class="al-tendina al-tendina--tondo al-stat__blocco-12"><sc-for list="{{ s.opz }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></sc-for></div></sc-if>
+<sc-if value="{{ cap.ok }}" hint-placeholder-val="{{ true }}">
+<div class="al-stat__riga-18"><sc-for list="{{ cap.leg }}" as="l" hint-placeholder-count="2"><span class="al-stat__riga-19"><svg class="al-stat__grafico-3" width="14" height="14" aria-hidden="true"><path d="{{ l.d }}" fill="{{ l.c }}"></path></svg><span class="al-stat__colonna-6"><span>{{ l.l }}</span><span class="al-stat__testo-16">{{ l.m }}</span></span></span></sc-for></div>
+<div class="al-stat__blocco-10" ref="{{ rCap }}" onMouseLeave="{{ tipVia }}">
+<svg class="al-stat__grafico-2" width="{{ cap.w }}" height="{{ cap.h }}" role="img" aria-label="{{ cap.aria }}">
+<sc-for list="{{ cap.gy }}" as="g" hint-placeholder-count="4"><line class="al-stat__tratto-1" x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
+
+<sc-for list="{{ cap.wh }}" as="w" hint-placeholder-count="20"><line x1="{{ w.x }}" x2="{{ w.x }}" y1="{{ w.y1 }}" y2="{{ w.y2 }}" stroke="{{ w.c }}" stroke-width="2.5" stroke-linecap="round" opacity="{{ w.o }}"></line></sc-for>
+<sc-for list="{{ cap.tr }}" as="r" hint-placeholder-count="2"><path class="al-stat__tratto-9" d="{{ r.d }}" fill="none" stroke="{{ r.c }}" stroke-width="1.75" stroke-dasharray="{{ r.da }}" stroke-linejoin="round"></path></sc-for>
+<sc-for list="{{ cap.pt }}" as="q" hint-placeholder-count="20"><path d="{{ q.d }}" fill="{{ q.f }}" stroke="{{ q.c }}" stroke-width="1.5"></path></sc-for><sc-for list="{{ cap.pt }}" as="q" hint-placeholder-count="20"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="8" fill="transparent" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></circle></sc-for>
+</svg><sc-for list="{{ cap.gy }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ cap.gx }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for>
+<sc-if value="{{ T.cap }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.cap.x }}px;top:{{ T.cap.y }}px;transform:{{ T.cap.tf }}"><b class="al-riquadro__titolo">{{ T.cap.s }}</b><sc-for list="{{ T.cap.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
+</div>
+<div class="al-stat__colonna-7"><sc-for list="{{ cap.note }}" as="n" hint-placeholder-count="2"><span class="al-stat__testo-12">{{ n }}</span></sc-for></div>
+</sc-if>
+<sc-if value="{{ cap.no }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ F.f }}" segno="?" titolo="Le misure dei frame non ci sono ancora." testo="Le notti, le ore e i filtri ci sono già." modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import></sc-if>
+</dc-import>
+
+<dc-import name="componenti/Carta" formato="{{ F.f }}" colonne="4" etichetta="Cielo del sito" ritardo="200" padding="{{ L.pad }}" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,420px">
+<span class="al-stat__colonna-2"><span class="al-stat__testo-13" style="font-size:{{ L.h2 }}">Cielo del sito</span><span class="al-stat__testo-2">{{ cie.sub }}</span></span>
+<sc-if value="{{ cie.ok }}" hint-placeholder-val="{{ true }}">
+<span class="al-stat__riga-20"><span class="al-stat__testo-17">{{ cie.big }}</span><span class="al-stat__testo-2">{{ cie.bigL }}</span></span>
+<div class="al-stat__riga-21"><span class="al-stat__riga-13"><i class="al-stat__blocco-13"></i>Luna sotto −5°</span><span class="al-stat__riga-13"><i class="al-stat__blocco-11" style="border-top:2px dashed {{ cie.lc }}"></i>Luna su</span></div>
+<div class="al-stat__blocco-10" ref="{{ rCm }}" onMouseLeave="{{ tipVia }}">
+<svg class="al-stat__grafico-2" width="{{ cm.w }}" height="{{ cm.h }}" role="img" aria-label="{{ cm.aria }}">
+<sc-for list="{{ cm.gy }}" as="g" hint-placeholder-count="3"><line class="al-stat__tratto-1" x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
+
+<path class="al-stat__tratto-10" d="{{ cm.ps }}" fill="none" stroke="{{ cie.lc }}" stroke-width="1.75" stroke-dasharray="5 4"></path>
+<path class="al-stat__tratto-11" d="{{ cm.pg }}" fill="none" stroke-width="1.75"></path>
+<sc-for list="{{ cm.pt }}" as="q" hint-placeholder-count="12"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="3" fill="{{ q.c }}"></circle></sc-for><sc-for list="{{ cm.pt }}" as="q" hint-placeholder-count="12"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="9" fill="transparent" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></circle></sc-for>
+</svg><sc-for list="{{ cm.gy }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ cm.gx }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for>
+<sc-if value="{{ T.cm }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.cm.x }}px;top:{{ T.cm.y }}px;transform:{{ T.cm.tf }}"><b class="al-riquadro__titolo">{{ T.cm.s }}</b><sc-for list="{{ T.cm.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
+</div>
+<span class="al-stat__testo-2">a ogni ora della notte, Luna sotto −5°</span>
+<div class="al-stat__blocco-10" ref="{{ rCo }}" onMouseLeave="{{ tipVia }}">
+<svg class="al-stat__grafico-2" width="{{ co.w }}" height="{{ co.h }}" role="img" aria-label="{{ co.aria }}">
+<sc-for list="{{ co.gy }}" as="g" hint-placeholder-count="3"><line class="al-stat__tratto-1" x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
+
+<path class="al-stat__tratto-12" d="{{ co.p }}" fill="none" stroke-width="1.75"></path>
+<sc-for list="{{ co.pt }}" as="q" hint-placeholder-count="9"><circle class="al-stat__tratto-13" cx="{{ q.x }}" cy="{{ q.y }}" r="3"></circle></sc-for><sc-for list="{{ co.pt }}" as="q" hint-placeholder-count="9"><circle cx="{{ q.x }}" cy="{{ q.y }}" r="10" fill="transparent" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></circle></sc-for>
+</svg><sc-for list="{{ co.gy }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ co.gx }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-1" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});color:{{ g.c }}">{{ g.l }}</span></sc-for>
+<sc-if value="{{ T.co }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.co.x }}px;top:{{ T.co.y }}px;transform:{{ T.co.tf }}"><b class="al-riquadro__titolo">{{ T.co.s }}</b><sc-for list="{{ T.co.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
+</div>
+<div class="al-stat__colonna-8"><div class="al-stat__riga-22" data-tipbox="1" onMouseLeave="{{ tipVia }}"><b class="al-stat__testo-18">{{ cie.bortle }}</b><button class="al-stat__centro-8" type="button" aria-label="Come si misura il Bortle" onMouseEnter="{{ cie.info }}" onClick="{{ cie.info }}" style="width:{{ L.ib }};height:{{ L.ib }}">i</button><sc-if value="{{ T.bor }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.bor.x }}px;top:{{ T.bor.y }}px;transform:{{ T.bor.tf }}"><b class="al-riquadro__titolo">{{ T.bor.s }}</b><sc-for list="{{ T.bor.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if></div><span class="al-stat__testo-19">Solo frame L, senza filtro o a colori: i filtri a banda stretta non misurano il cielo.</span></div>
+</sc-if>
+<sc-if value="{{ cie.no }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ F.f }}" segno="?" titolo="Le misure dei frame non ci sono ancora." testo="Lo SQM si legge dai frame L, senza filtro o a colori." modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import></sc-if>
+</dc-import>
+
+<dc-import name="componenti/Carta" formato="{{ F.f }}" colonne="12" etichetta="Stagioni" ritardo="240" padding="{{ L.pad }}" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,420px">
+<div class="al-stat__riga-16"><span class="al-stat__colonna-2"><span class="al-stat__testo-13" style="font-size:{{ L.h2 }}">Stagioni</span><span class="al-stat__testo-2">{{ sta.sub }}</span></span>
+<div role="group" aria-label="Cosa mostrare nelle stagioni" style="display:flex;gap:8px;align-items:center;width:100%">
+<select key="{{ sta.misTel.v }}" defaultValue="{{ sta.misTel.v }}" onChange="{{ sta.misTel.on }}" aria-label="Misura delle stagioni" class="al-tendina" style="flex:0 1 280px;min-width:0;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ sta.misTel.gruppi }}" as="g" hint-placeholder-count="3"><optgroup label="{{ g.l }}"><sc-for list="{{ g.o }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></optgroup></sc-for></select>
+<sc-if value="{{ sta.annoOn }}" hint-placeholder-val="{{ true }}"><select key="{{ sta.annoTel.v }}" defaultValue="{{ sta.annoTel.v }}" onChange="{{ sta.annoTel.on }}" aria-label="Anno" class="al-tendina" style="flex:none;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ sta.annoTel.o }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></sc-if>
+<div role="radiogroup" aria-label="Vista" style="flex:none;display:flex;gap:2px;padding:2px;border-radius:999px;background:var(--carta-2)"><sc-for list="{{ sta.visTel }}" as="v" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ v.on }}" aria-label="{{ v.l }}" title="{{ v.l }}" onClick="{{ v.scegli }}" style="width:44px;height:44px;padding:0;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;background:transparent;color:{{ v.fg }};box-shadow:{{ v.sh }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ v.d }}"></path></svg></button></sc-for></div>
+</div></div>
+<div class="al-stat__colonna-10" data-tipbox="1" onMouseLeave="{{ tipVia }}"><sc-if value="{{ sta.gDesk }}" hint-placeholder-val="{{ true }}"><div class="al-stat__griglia-2" role="table" aria-label="Mesi per anno" onMouseLeave="{{ tipVia }}">
+<span></span><sc-for list="{{ sta.mesi }}" as="m" hint-placeholder-count="12"><span class="al-stat__blocco-14">{{ m }}</span></sc-for>
+<sc-for list="{{ sta.righe }}" as="r" hint-placeholder-count="6"><span class="al-stat__riga-9" style="margin-top:{{ r.mt }}"><span class="al-stat__pillola-1" style="background:{{ r.bg }};color:{{ r.fg }};font-weight:{{ r.fw }}">{{ r.l }}</span></span><sc-for list="{{ r.c }}" as="c" hint-placeholder-count="12"><span class="al-stat__centro-10" role="cell" aria-label="{{ c.a }}" onMouseEnter="{{ c.on }}" onClick="{{ c.on }}" style="margin-top:{{ r.mt }};background:{{ c.bg }};color:{{ c.fg }};box-shadow:{{ c.sh }};animation-delay:{{ c.dl }}">{{ c.s }}</span></sc-for></sc-for>
+</div></sc-if>
+
+<sc-if value="{{ sta.gTel }}" hint-placeholder-val="{{ false }}"><div class="al-stat__colonna-6"><sc-for list="{{ sta.tel }}" as="r" hint-placeholder-count="12"><a class="al-stat__griglia-3" href="#" onClick="{{ r.on }}" aria-label="{{ r.a }}"><span class="al-stat__colonna-6"><span class="al-stat__testo-14">{{ r.l }}</span><span class="al-stat__testo-16">{{ r.media }}</span></span><span class="al-stat__centro-12" style="background:{{ r.bg }};color:{{ r.fg }}">{{ r.s }}</span></a></sc-for></div>
+</sc-if>
+<sc-if value="{{ sta.linee }}" hint-placeholder-val="{{ false }}"><div class="al-stat__colonna-1">
+<div class="al-stat__blocco-10" ref="{{ rStl }}" onMouseLeave="{{ tipVia }}">
+<svg class="al-stat__grafico-2" width="{{ stl.w }}" height="{{ stl.h }}" role="img" aria-label="{{ stl.aria }}">
+<sc-for list="{{ stl.gy }}" as="g" hint-placeholder-count="4"><line class="al-stat__tratto-1" x1="{{ g.x1 }}" x2="{{ g.x2 }}" y1="{{ g.y }}" y2="{{ g.y }}"></line></sc-for>
+<sc-for list="{{ stl.alt }}" as="p" hint-placeholder-count="5"><path class="al-stat__tratto-14" d="{{ p.d }}" fill="none" stroke-width="1.25" stroke-linejoin="round" opacity="0.45" style="animation-delay:{{ p.dl }}"></path></sc-for>
+<sc-if value="{{ stl.med }}" hint-placeholder-val="{{ true }}"><path class="al-stat__tratto-15" d="{{ stl.med }}" fill="none" stroke-width="1.5" stroke-dasharray="5 4"></path></sc-if>
+<path class="al-stat__tratto-16" d="{{ stl.hl }}" fill="none" stroke-width="2.5" stroke-linejoin="round"></path>
+<sc-if value="{{ stl.cur }}" hint-placeholder-val="{{ false }}"><line class="al-stat__tratto-6" x1="{{ stl.cur.x }}" x2="{{ stl.cur.x }}" y1="{{ stl.cur.y1 }}" y2="{{ stl.cur.y2 }}" stroke-dasharray="2 3"></line></sc-if><sc-for list="{{ stl.pt }}" as="q" hint-placeholder-count="12"><circle class="al-stat__tratto-17" cx="{{ q.x }}" cy="{{ q.y }}" r="{{ q.r }}" stroke-width="1.5"></circle></sc-for>
+<sc-for list="{{ stl.hit }}" as="q" hint-placeholder-count="12"><rect x="{{ q.x }}" y="{{ q.y }}" width="{{ q.w }}" height="{{ q.h }}" fill="transparent" onMouseEnter="{{ q.on }}" onClick="{{ q.on }}"></rect></sc-for>
+</svg><sc-for list="{{ stl.gy }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-2" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});font-size:{{ g.fs }};font-weight:{{ g.fw }};color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ stl.gx }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-2" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});font-size:{{ g.fs }};font-weight:{{ g.fw }};color:{{ g.c }}">{{ g.l }}</span></sc-for><sc-for list="{{ stl.fine }}" as="g" hint-placeholder-count="4"><span class="al-stat__strato-2" aria-hidden="true" style="left:{{ g.x }}px;top:{{ g.y }}px;transform:translate({{ g.tf }});font-size:{{ g.fs }};font-weight:{{ g.fw }};color:{{ g.c }}">{{ g.l }}</span></sc-for>
+<sc-if value="{{ T.stl }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.stl.x }}px;top:{{ T.stl.y }}px;transform:{{ T.stl.tf }}"><b class="al-riquadro__titolo">{{ T.stl.s }}</b><sc-for list="{{ T.stl.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
+</div>
+<span class="al-stat__riga-15"><sc-for list="{{ stl.leg }}" as="l" hint-placeholder-count="3"><span class="al-stat__riga-13"><i class="al-stat__blocco-11" style="border-top:{{ l.w }} {{ l.st }} {{ l.c }};opacity:{{ l.o }}"></i>{{ l.l }}</span></sc-for></span>
+</div></sc-if>
+<div class="al-stat__centro-13" style="grid-template-columns:{{ L.stag }}">
+<sc-for list="{{ sta.stag }}" as="s" hint-placeholder-count="4"><span class="al-stat__riga-24" onMouseEnter="{{ s.on }}" onClick="{{ s.on }}" style="background:{{ s.bg }};color:{{ s.fg }}"><span class="al-stat__colonna-11"><span class="al-stat__testo-20">{{ s.l }}</span><span class="al-stat__testo-21">{{ s.m }}</span></span><b class="al-stat__testo-22">{{ s.s }}</b></span></sc-for>
+</div><sc-if value="{{ T.sta }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.sta.x }}px;top:{{ T.sta.y }}px;transform:{{ T.sta.tf }}"><b class="al-riquadro__titolo">{{ T.sta.s }}</b><sc-for list="{{ T.sta.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if></div>
+<div class="al-stat__riga-10">
+<span class="al-stat__colonna-12"><span class="al-stat__testo-23" aria-live="polite" style="color:{{ sta.rigaC }}">{{ sta.riga }}</span><sc-if value="{{ sta.nota }}" hint-placeholder-val="{{ false }}"><span class="al-stat__testo-19">{{ sta.nota }}</span></sc-if></span>
+<sc-if value="{{ sta.gLeg }}" hint-placeholder-val="{{ true }}"><span class="al-stat__riga-12">{{ sta.lo }}<sc-for list="{{ sta.leg }}" as="c" hint-placeholder-count="5"><i class="al-stat__blocco-15" style="background:{{ c }}"></i></sc-for>{{ sta.hi }}</span></sc-if>
+</div>
+</dc-import>
+
+<dc-import name="componenti/Carta" formato="{{ F.f }}" colonne="{{ fil.col }}" etichetta="Per filtro" ritardo="280" padding="{{ L.pad }}" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,380px">
+<span class="al-stat__colonna-2"><span class="al-stat__testo-13" style="font-size:{{ L.h2 }}">Per filtro</span><span class="al-stat__testo-2">{{ fil.sub }}</span></span>
+<div class="al-stat__centro-14" style="grid-template-columns:{{ L.fil }}">
+<div class="al-stat__colonna-13" data-tipbox="1" onMouseLeave="{{ tipVia }}">
+<div class="al-stat__riga-25" role="img" aria-label="{{ fil.aria }}" style="gap:{{ fil.gap }}"><sc-for list="{{ fil.bar }}" as="b" hint-placeholder-count="12"><span class="al-stat__colonna-14" onMouseEnter="{{ b.on }}" onClick="{{ b.on }}" style="background:{{ b.hv }}"><span class="al-stat__testo-24">{{ b.tot }}</span><span class="al-stat__riga-26" style="animation-delay:{{ b.dl }}"><sc-for list="{{ b.seg }}" as="s" hint-placeholder-count="3"><span class="al-stat__blocco-16" onMouseEnter="{{ s.on }}" onClick="{{ s.on }}" style="height:{{ s.h }}px;background:{{ s.bg }};border:{{ s.bd }}"></span></sc-for></span></span></sc-for></div>
+<div class="al-stat__riga-27" aria-hidden="true" style="gap:{{ fil.gap }}"><sc-for list="{{ fil.bar }}" as="b" hint-placeholder-count="12"><span class="al-stat__blocco-17">{{ b.l }}</span></sc-for></div>
+<span class="al-stat__testo-14" aria-live="polite" style="color:{{ fil.rigaC }}">{{ fil.riga }}</span><sc-if value="{{ T.fil }}" hint-placeholder-val="{{ false }}"><span role="tooltip" class="al-riquadro" style="left:{{ T.fil.x }}px;top:{{ T.fil.y }}px;transform:{{ T.fil.tf }}"><b class="al-riquadro__titolo">{{ T.fil.s }}</b><sc-for list="{{ T.fil.rows }}" as="r" hint-placeholder-count="2"><span style="opacity:{{ r.o }};font-weight:{{ r.fw }}">{{ r.l }}</span><span class="al-riquadro__valore" style="font-weight:{{ r.fw }}">{{ r.v }}</span></sc-for></span></sc-if>
+</div>
+<div class="al-stat__griglia-4" role="table" aria-label="Filtri">
+<span class="al-stat__blocco-18">filtro</span><span class="al-stat__blocco-19">ore</span><span class="al-stat__blocco-19">frame</span><span class="al-stat__blocco-19">notti</span>
+<sc-for list="{{ fil.righe }}" as="r" hint-placeholder-count="5"><span class="al-stat__riga-28"><i class="al-stat__blocco-20" style="background:{{ r.bg }};border:{{ r.bd }}"></i><span class="al-stat__blocco-21">{{ r.l }}</span></span><span class="al-stat__riga-29">{{ r.h }}</span><span class="al-stat__riga-30">{{ r.p }}</span><span class="al-stat__riga-30">{{ r.n }}</span></sc-for>
+</div>
+</div>
+</dc-import>
+
+<sc-if value="{{ set.ok }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="{{ F.f }}" colonne="5" etichetta="Per setup" ritardo="320" padding="{{ L.pad }}" gap="12" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,380px">
+<span class="al-stat__colonna-2"><span class="al-stat__testo-13" style="font-size:{{ L.h2 }}">Per setup</span><span class="al-stat__testo-2">{{ set.sub }}</span></span>
+<div class="al-stat__colonna-6"><sc-for list="{{ set.righe }}" as="r" hint-placeholder-count="3"><div class="al-stat__colonna-15">
+<span class="al-stat__riga-31"><b class="al-stat__blocco-22">{{ r.n }}</b><span class="al-stat__testo-25">{{ r.h }}</span></span>
+<span class="al-stat__testo-2">{{ r.a }}</span>
+<span class="al-stat__riga-32"><span class="al-stat__testo-2">FWHM</span><b class="al-stat__testo-26">{{ r.px }}</b><span class="al-stat__testo-27">{{ r.as }}</span></span>
+
+</div></sc-for></div>
+<sc-if value="{{ set.nota }}" hint-placeholder-val="{{ true }}"><span class="al-stat__blocco-23">{{ set.nota }}</span></sc-if>
+</dc-import></sc-if>
+
+</sc-if>
+</div>
+</dc-import></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pieno&quot;,&quot;primo anno&quot;,&quot;zero frame&quot;,&quot;misure dei frame non ancora calcolate&quot;,&quot;sito senza meteo storico&quot;,&quot;un setup solo&quot;],&quot;default&quot;:&quot;pieno&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, cw: {} };
+  componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rs); this._io && this._io.disconnect(); Object.values(this._ro || {}).forEach(o => o.disconnect()); }
+  attesa() { if (this._io || typeof IntersectionObserver === 'undefined') return; const ss = document.querySelectorAll('section[aria-label]'); if (!ss.length) return;
+    this._io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.removeAttribute('data-al-wait'); this._io.unobserve(e.target); } }), { threshold: 0.15 });
+    ss.forEach(s => { const r = s.getBoundingClientRect(); if (r.top > window.innerHeight) s.setAttribute('data-al-wait', ''); this._io.observe(s); }); }
+  componentDidUpdate(pp) { if (!this._io) setTimeout(() => this.attesa(), 60); if (pp.stato !== this.props.stato) this.setState({ anno: null, conf: undefined, setup: null, tip: null }); }
+  // Larghezza dei grafici: si misura il contenitore
+  rifW(k) { this._rw = this._rw || {}; this._ro = this._ro || {};
+    if (!this._rw[k]) this._rw[k] = el => { if (this._ro[k]) { this._ro[k].disconnect(); delete this._ro[k]; } if (!el) return;
+      const f = () => { const w = el.clientWidth; if (w && w !== this.state.cw[k]) this.setState(s => ({ cw: { ...s.cw, [k]: w } })); };
+      if (k === 'cal' && !this._calFine) { this._calFine = 1; requestAnimationFrame(() => { el.scrollLeft = el.scrollWidth; }); } f(); if (typeof ResizeObserver !== 'undefined') { const o = new ResizeObserver(f); o.observe(el); this._ro[k] = o; } };
+    return this._rw[k]; }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati && window.ALstat; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js', 'dati-statistiche.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    const telSel = (opts) => { opts = opts || []; const c = opts.find(o => o.sel === true || o.sel === 'true') || opts[0] || {}; return { v: c.l, o: opts.map(o => ({ v: o.l, l: o.l })), on: e => { const o = opts.find(x => x.l === e.target.value); o && o.on({ preventDefault() {}, stopPropagation() {} }); } }; };
+
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, st = this.state, set = o => this.setState(o), SD = ALstat;
+    const qs = new URLSearchParams(typeof location !== 'undefined' ? location.search : '');
+    const modo = st.modo || p.modo || 'scuro', t = AL.tema(modo, p.accento), dk = t.dk;
+    const stato = qs.get('stato') || p.stato || 'pieno';
+    const fmt = qs.get('formato') || p.formato || 'automatico', tel = AL.telefono(fmt, st.w);
+    const F = { tel, desk: !tel, flexSel: tel ? '1 1 auto' : 'none', f: tel ? 'telefono' : 'desktop', lab: tel ? 'Statistiche · telefono' : 'Statistiche' };
+    const L = tel ? { grid: 'minmax(0,1fr)', gap: '12px', big: '76px', bigS: '24px', pad: '20px 16px', h2: '18px', annoGrid: 'minmax(0,1fr)', celle: 'repeat(2,minmax(0,1fr))', cv: '22px', vol: 'minmax(0,1fr)', fil: 'minmax(0,1fr)', stag: 'repeat(2,minmax(0,1fr))', sb: 'none', selH: '44px', ib: '44px' }
+      : { grid: 'repeat(12,minmax(0,1fr))', gap: '16px', big: '104px', bigS: '34px', pad: '26px 28px', h2: '22px', annoGrid: 'minmax(0,0.9fr) minmax(0,1.3fr)', celle: 'repeat(4,minmax(0,1fr))', cv: '26px', vol: 'minmax(0,1.3fr) minmax(0,1fr)', fil: 'minmax(0,1.25fr) minmax(0,1fr)', stag: 'repeat(4,minmax(0,1fr))', sb: 'thin', selH: '32px', ib: '26px' };
+    const num = AL.num, fh = AL.ore, h0 = x => num(Math.round(x)) + ' h', M3 = SD.M3, MESI = SD.MESI, med = SD.med;
+    const fx = n => Math.round(n * 10) / 10, cap1 = s => s[0].toUpperCase() + s.slice(1);
+
+    // Dati (simulati): l'app manda i numeri, la pagina non calcola niente
+    const varG = stato === 'primo anno' ? 'primo anno' : stato === 'un setup solo' ? 'un setup solo' : '';
+    const sito = st.sito || 'Cima Ekar', G = SD.genera(sito, varG);
+    const vuoto = stato === 'zero frame', noMis = stato === 'misure dei frame non ancora calcolate', noMet = stato === 'sito senza meteo storico';
+    const anni = G.anni, last = anni[anni.length - 1], primo = anni.length === 1;
+    const Y = st.anno != null && (st.anno === 'tutto' || anni.includes(st.anno)) ? st.anno : last, tutto = Y === 'tutto';
+    let C = st.conf === undefined ? Y - 1 : st.conf; if (tutto || C === Y || !anni.includes(C)) C = null;
+    const usati = SD.ORDINE.filter(s => G.giorni.some(g => g.setup === s));
+    const setup = st.setup && usati.includes(st.setup) ? st.setup : 'tutti';
+    const OD = SD.doyDi(2026, 9, 30), curY = Y === SD.OGGI.y;
+    const A = SD.conti(G, Y, setup), B = C != null ? SD.conti(G, C, setup, curY ? OD : null) : null;
+    const cl = C == null ? '' : C === Y - 1 ? 'l\u0027anno scorso' : 'nel ' + C;
+    const uscita = g => g.out && (setup === 'tutti' || g.setup === setup);
+    const dl = g => g.dow + ' ' + g.d + ' ' + M3[g.m - 1];
+    const t0 = G.giorni[0].t, tO = SD.ts(2026, 9, 30);
+    const SN = k => SD.SETUP[k].n;
+
+    // Valore al passaggio o al tocco
+    const tip = st.tip || null, T = { vb: null, cap: null, cm: null, co: null, stl: null, cal: null, sta: null, fil: null, bor: null }; if (tip && tip.k in T) T[tip.k] = tip;
+    const RW = (l, v, fw) => ({ l, v: v == null ? '' : String(v), fw: fw || 400, o: v == null ? 1 : 0.72 });
+    const SU = 'translate(-50%,calc(-100% - 10px))';
+    const tipOn = (k, x, y, s, rows, id) => e => { const c = this.state.tip, uid = id ?? s + x; if (e && e.type === 'click') { e.preventDefault && e.preventDefault(); if (tel && c && c.k === k && c.id === uid) { set({ tip: null }); return; } }
+      if (c && c.k === k && c.id === uid) return; set({ tip: { k, x, y, s, rows, id: uid, tf: SU } }); };
+    // Riquadro ancorato all'elemento: per calendario, stagioni e filtri (contenitore data-tipbox)
+    const tipE = (k, id, s, rows, su) => e => { const c = this.state.tip; if (e && e.type === 'click') { e.preventDefault && e.preventDefault(); if (tel && c && c.k === k && c.id === id) { set({ tip: null }); return; } }
+      if (c && c.k === k && c.id === id) return; const el = e && e.currentTarget, w = el && el.closest('[data-tipbox]'); if (!w) return;
+      const a = el.getBoundingClientRect(), b = w.getBoundingClientRect(), x = Math.max(90, Math.min(b.width - 90, a.left + a.width / 2 - b.left)), sotto = !su && a.top - b.top < 96;
+      set({ tip: { k, id, s, rows, x: Math.round(x), y: Math.round(sotto ? a.bottom - b.top : a.top - b.top), tf: sotto ? 'translate(-50%,10px)' : SU } }); };
+    const tipVia = () => { if (this.state.tip && !tel) set({ tip: null }); };
+    const calScroll = () => { const c = this.state.tip; if (c && c.k === 'cal') set({ tip: null }); };
+    const cw = k => st.cw[k] || (tel ? 330 : k === 'cm' || k === 'co' ? 340 : 620);
+    const clampX = (x, w, m) => Math.max(m, Math.min(w - m, x));
+
+    // Assi
+    const PL = 40, PR = 10, PT = 12, PB = 22;
+    const ticks = (a, b, n) => { if (b - a < 1e-9) b = a + 1; const s0 = (b - a) / n, mg = Math.pow(10, Math.floor(Math.log10(s0))), s = [1, 2, 2.5, 5, 10].map(x => x * mg).find(x => x >= s0 - 1e-12);
+      const lo = Math.floor(a / s + 1e-9) * s, hi = Math.ceil(b / s - 1e-9) * s, v = []; for (let x = lo; x <= hi + s / 2; x += s) v.push(+x.toFixed(6)); return { lo, hi, v }; };
+    const scala = (w, h, lo, hi) => ({ X: f => PL + f * (w - PL - PR), Y: v => PT + (1 - (v - lo) / (hi - lo)) * (h - PT - PB) });
+    const gridY = (w, s, tk, f) => tk.v.map(v => ({ x1: PL, x2: w - PR, y: fx(s.Y(v)), x: PL - 6, tf: '-100%,-50%', c: t.muted, l: f(v) }));
+    const gxL = (x, h, l) => ({ x: fx(x), y: h - PB + 7, l, tf: '-50%,0', c: t.muted });
+    const gxMesi = (s, h, step) => M3.map((l, i) => gxL(s.X((SD.doyDi(2021, i + 1, 1) + 15) / 366), h, l)).filter((_, i) => i % (step || 1) === 0);
+    const gxAnni = (s, h) => anni.map(y => gxL(s.X((SD.ts(y, 7, 1) - t0) / (tO - t0)), h, String(y)));
+    const fT = g => (g.t - t0) / (tO - t0);
+
+    // Testa
+    const optAnni = anni.map(y => ({ l: String(y), sel: Y === y, on: () => set({ anno: y, conf: undefined, tip: null }) })).concat(primo ? [] : [{ l: 'Tutto', sel: tutto, on: () => set({ anno: 'tutto', tip: null }) }]);
+    // Telefono (v50): gli anni in una tendina, nella riga delle altre; crescono ogni anno e non stanno in una riga
+    const annoTel = { v: (optAnni.find(o => o.sel) || optAnni[optAnni.length - 1] || { l: '' }).l, on: e => { const o = optAnni.find(x => x.l === e.target.value); o && o.on(); } };
+    const sels = [];
+    if (!tutto && !primo) sels.push({ l: 'Confronta con', v: C == null ? 'nessuno' : String(C), on: e => set({ conf: e.target.value === 'nessuno' ? null : +e.target.value, tip: null }),
+      opz: anni.filter(y => y !== Y).reverse().map(y => ({ v: String(y), l: String(y), lt: 'con il ' + y })).concat([{ v: 'nessuno', l: 'nessuno', lt: 'nessun confronto' }]) });
+    sels.push({ l: 'Sito', v: sito, on: e => set({ sito: e.target.value, anno: null, conf: undefined, setup: null, tip: null }), opz: SD.SITI.map(s => ({ v: s, l: s + (s === 'Cima Ekar' ? ' · casa' : ''), lt: s })) });
+    if (usati.length > 1) sels.push({ l: 'Setup', v: setup, on: e => set({ setup: e.target.value, tip: null }), opz: [{ v: 'tutti', l: 'Tutti', lt: 'Tutti i setup' }].concat(usati.map(s => ({ v: s, l: SN(s), lt: SN(s) }))) });
+    const periodo = tutto ? anni[0] + '–' + last : String(Y);
+    const testa = { ctl: !vuoto, sub: vuoto ? sito : sito + ' · ' + (setup === 'tutti' ? (usati.length > 1 ? 'tutti i setup' : SN(usati[0])) : SN(setup)) + ' · dati simulati' };
+
+    // 2 · L'anno in un colpo
+    const big = { tit: noMet ? 'notti buone ' + (tutto ? anni[0] + '–' + last : 'nel ' + Y) : 'notti buone sfruttate ' + (tutto ? anni[0] + '–' + last : 'nel ' + Y), n: num(A.sfruttate), su: 'su ' + A.buone + ' notti buone',
+      conf: B && !noMet ? cl + ' ' + B.sfruttate + ' su ' + B.buone : '', ok: !noMet, no: noMet,
+      aiuto: noMet ? 'Le notti buone si contano quando arriva il meteo delle notti passate.' : 'Notti con qualità da 70 al sito, e in quante sei uscito.' };
+    const VERDE = t.pills[0][1], ROSSO = t.pills[2][1];
+    const dlt2 = (a, b, f, u, ub) => ({ dd: a > b ? '+' + f(a - b) + (u || '') : a < b ? '−' + f(b - a) + (u || '') : 'uguale', ic: a > b ? 'M1 10L5 6L8 8L14 2M10 2H14V6' : a < b ? 'M1 2L5 6L8 4L14 10M10 10H14V6' : 'M1 6H14', dc: a > b ? VERDE : a < b ? ROSSO : t.hMu, dr: cl + ' ' + f(b) + (ub ?? u ?? '') });
+    const rA = A.resa == null ? null : Math.round(A.resa * 100), rB = B && B.resa != null ? Math.round(B.resa * 100) : null;
+    const celle = [
+      { l: 'notti uscite', v: num(A.uscite), ...(B ? dlt2(A.uscite, B.uscite, num) : {}), k: 'uscite' },
+      { l: 'ore integrate', v: h0(A.ore), ...(B ? dlt2(Math.round(A.ore), Math.round(B.ore), num, ' h') : {}), k: 'ore' },
+      { l: 'frame', v: num(A.pose), ...(B ? dlt2(A.pose, B.pose, num) : {}), k: 'pose' },
+      { l: 'resa del buio', v: rA == null ? '–' : rA + ' %', ...(rB != null && rA != null ? dlt2(rA, rB, String, ' punti', ' %') : {}), k: 'resa' }];
+    const note = ['Resa del buio: ore integrate sulle ore di buio delle notti in cui sei uscito.'];
+    if (curY && B) note.push('Confronto fino al 30 settembre, come il ' + Y + '.');
+    if (!noMet && !primo && (tutto || Y <= G.app.y || (C != null && C <= G.app.y))) note.push('Notti prima del ' + G.app.l + ': qualità senza seeing.');
+
+    // 3 · Calendario
+    const appC = SD.ts(G.app.y, G.app.m, G.app.d);
+    const cy = tutto ? (st.calY && anni.includes(st.calY) ? st.calY : last) : Y;
+    const gy = G.giorni.filter(g => g.y === cy), j1 = (new Date(Date.UTC(cy, 0, 1)).getUTCDay() + 6) % 7, nc = Math.ceil((j1 + gy.length) / 7);
+    const cs = tel ? 14 : Math.max(11, Math.min(19, Math.floor((cw('cal') - 34) / nc) - 3));
+    const STEP = [0.34, 0.55, 0.78, 1].map(o => AL.rgba(t.accent, o)), stepDi = h => h < 2 ? 0 : h < 4 ? 1 : h < 6 ? 2 : 3;
+    const hov = tip && tip.k === 'cal' ? tip.id : null;
+    let perse = 0, uscC = 0;
+    const cel = Array.from({ length: j1 }, () => ({ bg: 'transparent', sh: 'none', cur: 'default' })).concat(gy.map((g, gi) => { const o = uscita(g), persa = !g.futuro && !o && g.buona && !noMet;
+      if (persa) perse++; if (o) uscC++;
+      // Notti prima dell'app: la qualità si conta senza seeing (soglie.senzaPassate); accanto «senza seeing»
+      const qS = g.q + (g.t < appC ? ' · ' + ALsoglie.senzaRiga(ALsoglie.senzaPassate) : '');
+      const s = g.futuro ? null : dl(g) + ' · ' + (o ? fh(g.ore) + (noMet ? '' : ' · qualità ' + qS) : persa ? 'notte buona, non sei uscito · qualità ' + qS : 'nessuna uscita' + (noMet ? '' : ' · qualità ' + qS));
+      const rows = g.futuro ? null : [o ? RW('ore', fh(g.ore)) : RW(persa ? 'notte buona, non sei uscito' : 'nessuna uscita')].concat(noMet ? [] : [RW('qualità', qS)]);
+      const sh = []; if (hov === g.doy) sh.push('0 0 0 2px ' + t.text); if (g.futuro) sh.push('inset 0 0 0 1px ' + t.line); else if (persa) sh.push('inset 0 0 0 2px ' + t.text);
+      return { bg: g.futuro ? 'transparent' : o ? STEP[stepDi(g.ore)] : t.card2, sh: sh.length ? sh.join(',') : 'none', a: s || undefined, cur: s ? 'pointer' : 'default', dl: (Math.floor((gi + j1) / 7) * 0.012).toFixed(3) + 's',
+        on: s ? tipE('cal', g.doy, dl(g), rows) : undefined }; }));
+    const cal = { cols: 'repeat(' + nc + ',' + cs + 'px)', rows: 'repeat(7,' + cs + 'px)', cs: cs + 'px', celle: cel, gg: ['lun', '', 'mer', '', 'ven', '', 'dom'],
+      mesi: M3.map((l, i) => ({ l, c: Math.floor((SD.doyDi(cy, i + 1, 1) + j1) / 7) + 1 })),
+      sub: cy + ' · ' + uscC + ' notti uscite' + (noMet ? '' : ' · ' + perse + (perse === 1 ? ' notte buona persa' : ' notti buone perse')),
+      aria: 'Calendario delle notti del ' + cy + ': ' + uscC + ' notti uscite' + (noMet ? '' : ', ' + perse + ' notti buone perse'),
+      riga: tel ? 'Tocca un giorno per vederne le ore.' : 'Passa sopra un giorno per vederne le ore.', rigaC: t.muted,
+      leg: STEP, persa: !noMet, anni: tutto ? anni.map(y => ({ l: String(y), sel: y === cy, on: () => set({ calY: y, tip: null }) })) : null };
+
+    // 4 · Volumi
+    const VH = tel ? 150 : 180, wB = cw('vb'), wC = cw('vc');
+    const primaVolta = {}; G.giorni.forEach(g => { if (g.out && !primaVolta[g.setup]) primaVolta[g.setup] = g; });
+    const primoSetup = Object.values(primaVolta).sort((a, b) => a.t - b.t)[0];
+    let vb;
+    if (!tutto) { const out = A.out, mx = Math.max(4, ...out.map(g => g.ore)), tk = ticks(0, mx, 4), s = scala(wB, VH, 0, tk.hi), bw = Math.max(2, (wB - PL - PR) / 366 * 0.8);
+      const mk = Object.entries(primaVolta).filter(([k, g]) => g !== primoSetup && g.y === Y && (setup === 'tutti' || setup === k)).map(([k, g], i) => { const x = s.X(g.doy / 366), dx = tel ? x > wB / 2 : x > wB - 230; return { lx: fx(x), y1: PT, y2: VH - PB, x: fx(x + (dx ? -5 : 5)), y: PT + i * 14, tf: dx ? '-100%,0' : '0,0', c: t.text, l: tel ? String(SN(k)).split(' · ')[0] : SN(k) }; }); // v53: sul telefono il nome corto e il lato che c'e'
+      vb = { w: wB, h: VH, gy: gridY(wB, s, tk, v => v + ' h'), gx: gxMesi(s, VH, tel ? 2 : 1), mk, tit: 'ore integrate, notte per notte',
+        b: out.map(g => { const x = s.X(g.doy / 366), y = s.Y(g.ore); return { x: fx(x - bw / 2), y: fx(y), w: fx(bw), h: fx(s.Y(0) - y), c: t.accent, dl: (0.1 + x / wB * 0.7).toFixed(2) + 's', hx: fx(x - 5), hy: PT, hw: 10, hh: VH - PT - PB, on: tipOn('vb', clampX(x, wB, 150), y, dl(g), [RW('ore', fh(g.ore))].concat(usati.length > 1 ? [RW('setup', SN(g.setup))] : [])) }; }),
+        aria: 'Ore integrate notte per notte nel ' + Y + ': ' + out.length + ' notti, ' + h0(A.ore) };
+    } else { const N = (2026 - anni[0]) * 12 + 9, mesi = Array.from({ length: N }, (_, i) => ({ i, y: anni[0] + Math.floor(i / 12), m: i % 12, h: 0 }));
+      A.out.forEach(g => { mesi[(g.y - anni[0]) * 12 + g.m - 1].h += g.ore; });
+      const tk = ticks(0, Math.max(4, ...mesi.map(m => m.h)), 4), s = scala(wB, VH, 0, tk.hi), bw = Math.max(2, (wB - PL - PR) / N * 0.7);
+      const mk = Object.entries(primaVolta).filter(([k, g]) => g !== primoSetup && (setup === 'tutti' || setup === k)).map(([k, g], i) => { const x = s.X(((g.y - anni[0]) * 12 + g.m - 0.5) / N), dx = x > wB - 230; return { lx: fx(x), y1: PT, y2: VH - PB, x: fx(x + (dx ? -5 : 5)), y: PT + i * 14, tf: dx ? '-100%,0' : '0,0', c: t.text, l: SN(k) }; });
+      vb = { w: wB, h: VH, gy: gridY(wB, s, tk, v => v + ' h'), gx: anni.map(y => gxL(s.X(((y - anni[0]) * 12 + 6) / N), VH, String(y))), mk, tit: 'ore integrate, mese per mese',
+        b: mesi.filter(m => m.h > 0).map(m => { const x = s.X((m.i + 0.5) / N), y = s.Y(m.h); return { x: fx(x - bw / 2), y: fx(y), w: fx(bw), h: fx(s.Y(0) - y), c: t.accent, dl: (0.1 + x / wB * 0.7).toFixed(2) + 's', hx: fx(x - bw / 2 - 1), hy: PT, hw: fx(bw + 2), hh: VH - PT - PB, on: tipOn('vb', clampX(x, wB, 70), y, cap1(MESI[m.m]) + ' ' + m.y, [RW('ore', fh(m.h))]) }; }),
+        aria: 'Ore integrate mese per mese, ' + periodo };
+    }
+    let vc;
+    const endOf = yy => yy === SD.OGGI.y ? OD : SD.doyDi(yy, 12, 31);
+    const cum = (yy, end) => { const a = new Array(end + 1).fill(0); G.giorni.forEach(g => { if (g.y === yy && uscita(g) && g.doy <= end) a[g.doy] += g.ore; }); for (let i = 1; i <= end; i++) a[i] += a[i - 1]; return a; };
+    if (!tutto) { const cY = cum(Y, endOf(Y)), cC = C != null ? cum(C, endOf(C)) : null, mx = Math.max(10, cY[cY.length - 1], cC ? cC[cC.length - 1] : 0), tk = ticks(0, mx, 4), s = scala(wC, VH, 0, tk.hi);
+      const path = a => a.map((v, i) => (i ? 'L' : 'M') + fx(s.X(i / 366)) + ' ' + fx(s.Y(v))).join('');
+      const vY = cY[Math.min(OD, cY.length - 1)], vC = cC ? cC[Math.min(OD, cC.length - 1)] : null;
+      vc = { w: wC, h: VH, gy: gridY(wC, s, tk, v => v + ' h'), gx: gxMesi(s, VH, 2), py: path(cY), pc: cC ? path(cC) : '', ox: fx(s.X(OD / 366)), oy1: PT, oy2: VH - PB, yy: fx(s.Y(vY)), cy: vC != null ? fx(s.Y(vC)) : null,
+        tit: 'cumulato, sul giorno dell\u0027anno', oggi: 'al 30 set: ' + h0(vY) + (vC != null ? ' · ' + cl + ' ' + h0(vC) : ''),
+        leg: [{ l: String(Y), st: 'solid', c: t.accent }].concat(C != null ? [{ l: String(C), st: 'dashed', c: t.muted }] : []), aria: 'Ore cumulate nel ' + Y + (C != null ? ' e nel ' + C : '') };
+    } else { const gg = G.giorni.filter(g => !g.futuro), s0 = []; let c = 0; gg.forEach(g => { if (uscita(g)) c += g.ore; s0.push([fT(g), c]); });
+      const tk = ticks(0, Math.max(10, c), 4), s = scala(wC, VH, 0, tk.hi);
+      vc = { w: wC, h: VH, gy: gridY(wC, s, tk, v => num(v) + ' h'), gx: gxAnni(s, VH), py: s0.filter((_, i) => i % 3 === 0 || i === s0.length - 1).map((q, i) => (i ? 'L' : 'M') + fx(s.X(q[0])) + ' ' + fx(s.Y(q[1]))).join(''), pc: '', ox: fx(s.X(1)), oy1: PT, oy2: VH - PB, yy: fx(s.Y(c)), cy: null,
+        tit: 'cumulato, ' + periodo, oggi: 'al 30 set 2026: ' + h0(c), leg: [{ l: periodo, st: 'solid', c: t.accent }], aria: 'Ore cumulate ' + periodo };
+    }
+    const vol = { tit: 'Volumi nell\u0027anno', sub: tutto ? h0(A.ore) + ' in ' + A.uscite + ' notti, ' + periodo : h0(A.ore) + ' in ' + A.uscite + ' notti' };
+
+    // 5 · Capacità
+    const COL = { fra: t.strum[0], fra07: t.strum[1], redcat: t.strum[2], newton: t.strum[3] };
+    const forma = (k, x, y, r) => k === 'fra07' ? 'M' + fx(x) + ' ' + fx(y - r * 1.25) + 'L' + fx(x + r * 1.25) + ' ' + fx(y) + 'L' + fx(x) + ' ' + fx(y + r * 1.25) + 'L' + fx(x - r * 1.25) + ' ' + fx(y) + 'Z'
+      : k === 'redcat' ? 'M' + fx(x - r) + ' ' + fx(y - r) + 'h' + 2 * r + 'v' + 2 * r + 'h' + -2 * r + 'Z'
+      : k === 'newton' ? 'M' + fx(x) + ' ' + fx(y - r * 1.3) + 'L' + fx(x + r * 1.2) + ' ' + fx(y + r * 0.9) + 'L' + fx(x - r * 1.2) + ' ' + fx(y + r * 0.9) + 'Z'
+      : 'M' + fx(x - r) + ' ' + fx(y) + 'a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0a' + r + ' ' + r + ' 0 1 0 ' + -2 * r + ' 0';
+    const MIS = { fwhm: { l: 'FWHM allo zenit', px: true }, hfd: { l: 'HFD allo zenit', px: true }, ecc: { l: 'Eccentricità', px: false } };
+    const mis = st.mis || 'fwhm', MI = MIS[mis];
+    const val = (v, k) => MI.px ? v.toFixed(1) + '″ · ' + (v / SD.SETUP[k].scala).toFixed(1) + ' px' : v.toFixed(2);
+    const HC = tel ? 220 : 300, wK = cw('cap');
+    // Confronta setup (v31.7): due setup scelti nello stesso periodo, in ″; la tendina in testa qui non conta
+    const inP = g => !g.futuro && g.out && (tutto || g.y === Y), oreP = k => G.giorni.reduce((a, g) => a + (inP(g) && g.setup === k ? g.ore : 0), 0);
+    const usP = usati.filter(k => oreP(k) > 0).sort((a, b) => oreP(b) - oreP(a)), cmpOn = !noMis && usP.length > 1, perSet = cmpOn && st.capM === 'setup';
+    const sA = usP.includes(st.capA) ? st.capA : usP[0], sB0 = usP.includes(st.capB) ? st.capB : usP.find(k => k !== sA), sB = sB0 === sA ? usP.find(k => k !== sA) : sB0;
+    const serieA = perSet ? [tutto ? 'tutto' : Y] : tutto ? ['tutto'] : [Y].concat(C != null ? [C] : []);
+    const nottiDi = yy => G.giorni.filter(g => !g.futuro && uscita(g) && (yy === 'tutto' || g.y === yy));
+    const pts = []; if (perSet) G.giorni.filter(g => inP(g) && (g.setup === sA || g.setup === sB)).forEach(g => pts.push({ g, yy: g.y, si: g.setup === sA ? 0 : 1, k: g.setup, x: tutto ? fT(g) : g.doy / 366, m: g[mis] }));
+    else serieA.forEach((yy, si) => nottiDi(yy).forEach(g => pts.push({ g, yy, si, k: g.setup, x: tutto ? fT(g) : g.doy / 366, m: g[mis] })));
+    let capV = { ok: false };
+    if (!noMis && pts.length) {
+      const lo = Math.min(...pts.map(q => q.m.n >= 4 ? q.m.q1 : q.m.med)), hi = Math.max(...pts.map(q => q.m.n >= 4 ? q.m.q3 : q.m.med)), tk = ticks(lo, hi, 4), s = scala(wK, HC, tk.lo, tk.hi);
+      const tr = [];
+      serieA.forEach((yy, si) => SD.ORDINE.forEach(k => { const arr = pts.filter(q => q.si === si && q.k === k).sort((a, b) => a.g.t - b.g.t); if (!arr.length) return;
+        const seg = [[]]; arr.forEach((q, i) => { if (i && (q.g.t - arr[i - 1].g.t) / 864e5 > 26) seg.push([]); seg[seg.length - 1].push(q); });
+        const d = seg.filter(sg => sg.length > 1).map(sg => sg.map((q, i) => { const w = sg.slice(Math.max(0, i - 3), i + 4).map(z => z.m.med); return (i ? 'L' : 'M') + fx(s.X(q.x)) + ' ' + fx(s.Y(med(w))); }).join('')).join('');
+        if (d) tr.push({ d, c: COL[k], da: si ? '5 4' : 'none' }); }));
+      const ord = pts.slice().sort((a, b) => b.si - a.si);
+      capV = { ok: true, w: wK, h: HC, gy: gridY(wK, s, tk, v => MI.px ? v.toFixed(1) + '″' : v.toFixed(2)), gx: tutto ? gxAnni(s, HC) : gxMesi(s, HC, tel ? 2 : 1), tr,
+        wh: ord.filter(q => q.m.n >= 4).map(q => ({ x: fx(s.X(q.x)), y1: fx(s.Y(q.m.q1)), y2: fx(s.Y(q.m.q3)), c: COL[q.k], o: q.si ? 0.3 : 0.45 })),
+        pt: ord.map(q => { const x = s.X(q.x), y = s.Y(q.m.med);
+          return { x: fx(x), y: fx(y), d: forma(q.k, x, y, 3.2), c: COL[q.k], f: q.si ? t.card : COL[q.k],
+            on: tipOn('cap', clampX(x, wK, 150), y, dl(q.g) + ' ' + q.g.y, [RW(MI.l.replace(' allo zenit', ''), val(q.m.med, q.k))].concat(q.m.n >= 4 ? [RW('quartili', MI.px ? q.m.q1.toFixed(1) + '–' + q.m.q3.toFixed(1) + '″' : q.m.q1.toFixed(2) + '–' + q.m.q3.toFixed(2))] : [], [RW('frame', q.m.n)], usati.length > 1 ? [RW('setup', SN(q.k))] : [])) }; }),
+        leg: SD.ORDINE.filter(k => pts.some(q => q.k === k)).map(k => { const mA = med(pts.filter(q => q.k === k && q.si === 0).map(q => q.m.med)), mC = med(pts.filter(q => q.k === k && q.si === 1).map(q => q.m.med));
+          return { d: forma(k, 7, 7, 4.5), c: COL[k], l: SN(k), m: perSet ? 'mediana ' + val(med(pts.filter(q => q.k === k).map(q => q.m.med)), k) : (mA != null ? 'mediana ' + val(mA, k) : 'nessuna notte nel ' + Y) + (mC != null ? ' · ' + C + ' ' + val(mC, k) : '') }; }),
+        aria: MI.l + ', notte per notte' };
+    }
+    const escl = serieA.reduce((a, yy) => a + (yy === 'tutto' ? Object.values(G.senzaMassa).reduce((x, y) => x + y, 0) : G.senzaMassa[yy] || 0), 0);
+    const capNote = [];
+    if (perSet) capNote.push('Punto pieno ' + SN(sA) + ', punto vuoto e linea tratteggiata ' + SN(sB) + '; la barretta va dal primo al terzo quartile, sotto 4 misure niente barretta. Linea: mediana mobile su 7 notti.' + (MI.px ? ' In ″ si confronta fra setup diversi; i px al passaggio.' : ''));
+    else if (!tutto) capNote.push('Punto pieno ' + Y + (C != null ? ', punto vuoto e linea tratteggiata ' + C : '') + '; la barretta va dal primo al terzo quartile, sotto 4 misure niente barretta. Linea: mediana mobile su 7 notti.');
+    else capNote.push('La barretta va dal primo al terzo quartile, sotto 4 misure niente barretta. Linea: mediana mobile su 7 notti.');
+    if (MI.px) capNote.push('Allo zenit: valore diviso per la massa d\u0027aria alla 0.6 (ESO).');
+    if (escl && MI.px) capNote.push(escl + ' frame senza massa d\u0027aria esclusi.');
+    const cap = { ...capV, no: noMis, note: capNote, cmpOn, cmp: [['anni', 'Anni'], ['setup', 'Setup']].map(([k, l]) => ({ l, sel: (perSet ? 'setup' : 'anni') === k, on: () => set({ capM: k, tip: null }) })),
+      sels: perSet ? [['capA', sA, 'Primo setup'], ['capB', sB, 'Secondo setup']].map(([sk, v, l], i) => ({ l, v, on: e => set({ [sk]: e.target.value, tip: null }), opz: usP.filter(k => k !== (i ? sA : sB)).map(k => ({ v: k, l: SN(k) })) })) : [],
+      sub: perSet ? 'due setup a confronto, notte per notte, ' + (tutto ? periodo : 'nel ' + Y) : tutto ? 'la qualità dei frame, notte per notte, ' + periodo : 'la qualità dei frame, notte per notte' + (C != null ? ', ' + Y + ' sul ' + C : ''),
+      _: 0, opz: Object.entries(MIS).map(([k, m]) => ({ l: m.l, sel: k === mis, on: () => set({ mis: k, tip: null }) })) };
+
+    // 9 · Cielo del sito
+    const cN = G.giorni.filter(g => !g.futuro && g.out && (tutto || g.y === Y));
+    const wM = cw('cm'), HS = 140, LC = AL.LUNA.line;
+    let cm = {}, co = {}, cie = { ok: false, no: noMis, lc: LC, sub: tutto ? 'SQM, ' + periodo : 'SQM nel ' + Y };
+    if (!noMis) {
+      const mG = M3.map((_, i) => med(cN.filter(g => g.m === i + 1 && g.sqmGiu != null).map(g => g.sqmGiu))), mS = M3.map((_, i) => med(cN.filter(g => g.m === i + 1 && g.sqmSu != null).map(g => g.sqmSu)));
+      const nG = M3.map((_, i) => cN.filter(g => g.m === i + 1 && g.sqmGiu != null).length), nS = M3.map((_, i) => cN.filter(g => g.m === i + 1 && g.sqmSu != null).length);
+      const all = mG.concat(mS).filter(v => v != null);
+      if (all.length) { const tk = ticks(Math.min(...all), Math.max(...all), 3), s = scala(wM, HS, tk.lo, tk.hi), X = i => s.X((i + 0.5) / 12);
+        const path = a => { let d = '', on = false; a.forEach((v, i) => { if (v == null) { on = false; return; } d += (on ? 'L' : 'M') + fx(X(i)) + ' ' + fx(s.Y(v)); on = true; }); return d; };
+        const rCm = i => [RW('Luna sotto −5°', mG[i] == null ? '–' : mG[i].toFixed(2)), RW('Luna su', mS[i] == null ? '–' : mS[i].toFixed(2)), RW('notti', Math.max(nG[i], nS[i]))];
+        const pt = []; mG.forEach((v, i) => v != null && pt.push({ x: fx(X(i)), y: fx(s.Y(v)), c: t.accent, on: tipOn('cm', clampX(X(i), wM, 80), s.Y(v), cap1(MESI[i]), rCm(i), 'm' + i) }));
+        mS.forEach((v, i) => v != null && pt.push({ x: fx(X(i)), y: fx(s.Y(v)), c: LC, on: tipOn('cm', clampX(X(i), wM, 80), s.Y(v), cap1(MESI[i]), rCm(i), 'm' + i) }));
+        cm = { w: wM, h: HS, gy: gridY(wM, s, tk, v => v.toFixed(1)), gx: M3.map((l, i) => gxL(X(i), HS, l[0])), pg: path(mG), ps: path(mS), pt, aria: 'SQM mese per mese, con la Luna sotto −5° e con la Luna su' };
+        const oo = cN.filter(g => g.ore9), oreM = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => oo.length ? oo.reduce((a, g) => a + g.ore9[i], 0) / oo.length : null), HL = ['21', '22', '23', '00', '01', '02', '03', '04', '05'];
+        const wO = cw('co'), tk2 = ticks(Math.min(...oreM), Math.max(...oreM), 3), s2 = scala(wO, HS, tk2.lo, tk2.hi), X2 = i => s2.X(i / 8);
+        co = { w: wO, h: HS, gy: gridY(wO, s2, tk2, v => v.toFixed(1)), gx: HL.map((l, i) => gxL(X2(i), HS, l)).filter((_, i) => !tel || i % 2 === 0), p: oreM.map((v, i) => (i ? 'L' : 'M') + fx(X2(i)) + ' ' + fx(s2.Y(v))).join(''),
+          pt: oreM.map((v, i) => ({ x: fx(X2(i)), y: fx(s2.Y(v)), on: tipOn('co', clampX(X2(i), wO, 60), s2.Y(v), 'alle ' + HL[i], [RW('SQM', v.toFixed(2))]) })), aria: 'SQM medio dalle 21 alle 05' };
+        const t12 = SD.ts(2025, 9, 30), sg = G.giorni.filter(g => g.sqmGiu != null && g.t > t12 && g.t <= tO && SD.SETUP[g.setup].bias), mesiB = new Set(sg.map(g => g.y * 12 + g.m)).size, mT = med(cN.filter(g => g.sqmGiu != null).map(g => g.sqmGiu));
+        cie = { ...cie, ok: true, big: mT != null ? mT.toFixed(2) : '–', bigL: 'mag/arcsec², mediana con la Luna sotto −5°', bortle: mesiB >= 6 ? 'Bortle ' + ALsoglie.misure.bortleDi(med(sg.map(g => g.sqmGiu))) + ' · misurato su ' + sg.length + ' notti' : 'Servono notti in 6 mesi diversi: finora ' + sg.length + (sg.length === 1 ? ' notte' : ' notti') + ' in ' + mesiB + (mesiB === 1 ? ' mese' : ' mesi') + '.', info: tipE('bor', 'b', 'Come si misura', [RW('periodo', 'ultimi 12 mesi'), RW('notti', 'in almeno 6 mesi diversi'), RW('frame', 'L, senza filtro o a colori, col bias'), RW('Sole', 'sotto −18°'), RW('Luna', 'sotto −5°'), RW('oggetto', 'sopra 30°'), RW('conto', 'una mediana per notte, poi delle notti')], true) };
+      }
+    }
+
+    // 6 · Stagioni
+    const misS = st.misS || 'notti';
+    const appT = SD.ts(G.app.y, G.app.m, G.app.d), molti = setup === 'tutti' && usati.length > 1;
+    const pxS = p => p == null ? '' : ' · ' + p.toFixed(1) + ' px';
+    // Misure della griglia: g gruppo, met dal meteo, fr dai frame, set dipende dal setup (segue la tendina in testa; «Tutti» = tutti i setup insieme, v31.2), tutte = tutte le notti (non solo le uscite), inv = più basso è meglio
+    const MS = {
+      notti: { g: 'cielo', l: 'Notti buone e uscite', lo: 'meno uscite', hi: 'più uscite' },
+      qual: { g: 'cielo', l: 'Qualità della notte', lo: 'qualità più bassa', hi: 'più alta', met: 1, tutte: 1, get: g => g.q, f: v => String(Math.round(v)), d: v => 'qualità mediana ' + Math.round(v), sub: 'qualità della notte mediana, da 0 a 100, tutte le notti' },
+      seeing: { g: 'cielo', l: 'Seeing', lo: 'seeing peggiore', hi: 'migliore', met: 1, tutte: 1, inv: 1, get: g => g.seeing, f: v => v.toFixed(1) + '″', d: v => 'seeing mediano ' + v.toFixed(1) + '″', sub: 'seeing mediano, tutte le notti' },
+      fwhm: { g: 'frame', l: 'FWHM', lo: 'FWHM più alta', hi: 'più bassa', fr: 1, set: 1, inv: 1, get: g => g.fwhm.med, f: v => v.toFixed(1) + '″', d: (v, p) => 'FWHM mediana allo zenit ' + v.toFixed(1) + '″' + pxS(p), sub: 'FWHM mediana allo zenit, ″' },
+      hfd: { g: 'frame', l: 'HFD', lo: 'HFD più alta', hi: 'più bassa', fr: 1, set: 1, inv: 1, get: g => g.hfd.med, f: v => v.toFixed(1) + '″', d: (v, p) => 'HFD mediana allo zenit ' + v.toFixed(1) + '″' + pxS(p), sub: 'HFD mediana allo zenit, ″' },
+      ecc: { g: 'frame', l: 'Eccentricità', lo: 'stelle meno rotonde', hi: 'più rotonde', fr: 1, inv: 1, get: g => g.ecc.med, f: v => v.toFixed(2), d: v => 'eccentricità mediana ' + v.toFixed(2), sub: 'eccentricità mediana' },
+      sqm: { g: 'frame', l: 'SQM', lo: 'cielo più chiaro', hi: 'più buio', fr: 1, get: g => g.sqmGiu, f: v => v.toFixed(2), d: v => 'SQM mediano ' + v.toFixed(2) + ' mag/arcsec²', sub: 'SQM mediano, mag/arcsec², Luna sotto −5°, frame L o a colori' },
+      ore: { g: 'volumi', l: 'Ore integrate', lo: 'meno ore', hi: 'più ore', sub: 'ore integrate, mese per mese' } };
+    const M = MS[misS], inv = !!M.inv;
+    const nN = n => n + (n === 1 ? ' notte' : ' notti');
+    const valori = (pass, out) => (M.tutte ? pass : out).filter(g => M.get(g) != null);
+    const pxDi = gs => misS === 'fwhm' || misS === 'hfd' ? med(gs.map(g => M.get(g) / SD.SETUP[g.setup].scala)) : null;
+    const cella = (gg, l) => { const pass = gg.filter(g => !g.futuro); if (!pass.length) return { v: null, why: l + ': deve ancora venire' };
+      const Lm = misS === 'ore' ? 'ore' : M.l;
+      const out = pass.filter(uscita);
+      if (misS === 'notti') { const b = noMet ? null : pass.filter(g => g.buona).length; return { v: out.length, s: (b == null ? '–' : b) + ' · ' + out.length, d: l + ': ' + (b == null ? 'meteo storico in arrivo' : b + (b === 1 ? ' notte buona' : ' notti buone')) + ', ' + out.length + (out.length === 1 ? ' uscita' : ' uscite'), tt: l, rw: [RW('notti buone', b == null ? '–' : b), RW('uscite', out.length)] }; }
+      if (M.met && noMet) return { v: null, why: l + ': meteo storico in arrivo' };
+      if (M.fr && noMis) return { v: null, why: l + ': misure dei frame non ancora calcolate' };
+      if (!M.tutte && !out.length) return { v: null, why: l + ': nessuna uscita' };
+      if (misS === 'ore') { const h = out.reduce((a, g) => a + g.ore, 0); return { v: h, s: h0(h), d: l + ': ' + fh(h) + ' in ' + nN(out.length), tt: l, rw: [RW('ore', fh(h)), RW('notti', out.length)] }; }
+      const vs = valori(pass, out);
+      if (!vs.length) return { v: null, why: l + ': ' + (misS === 'seeing' && pass[pass.length - 1].t < appT ? 'seeing non archiviato prima del ' + G.app.l : misS === 'sqm' ? 'nessun frame L o a colori con la Luna sotto −5°' : setup !== 'tutti' ? 'nessuna uscita con ' + SN(setup) : 'nessun dato') };
+      const v = med(vs.map(M.get)), px = pxDi(vs); return { v, s: M.f(v), d: l + ': ' + M.d(v, px) + ', ' + nN(vs.length), tt: l, rw: [RW(Lm, M.f(v) + (px != null ? ' · ' + px.toFixed(1) + ' px' : '')), RW('notti', vs.length)] }; };
+    const telY = st.staY && anni.includes(st.staY) ? st.staY : (tutto ? last : Y);
+    const grid = anni.map(y => ({ y, c: M3.map((_, i) => cella(G.giorni.filter(g => g.y === y && g.m === i + 1), MESI[i] + ' ' + y)) }));
+    const vals = grid.flatMap(r => r.c.map(c => c.v)).filter(v => v != null), vLo = Math.min(...vals), vHi = Math.max(...vals);
+    const OP = [0.12, 0.28, 0.46, 0.68, 0.9];
+    const mix = o => { const a = parseInt(t.accent.slice(1), 16), b = parseInt(t.card.slice(1), 16), ch = sh => Math.round(((a >> sh) & 255) * o + ((b >> sh) & 255) * (1 - o)); return [ch(16), ch(8), ch(0)]; };
+    const lum = c => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+    const SC = OP.map(o => { const c = mix(o), L0 = lum(c), alt = t.inchiostro, La = dk ? 0.004 : 1, Lt = lum([parseInt(t.text.slice(1, 3), 16), parseInt(t.text.slice(3, 5), 16), parseInt(t.text.slice(5, 7), 16)]);
+      const cr = (x, y) => (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); const cand = [[t.text, Lt], [AL.NERO, 0], [AL.BIANCO, 1]].sort((x, y) => cr(L0, y[1]) - cr(L0, x[1])); return { bg: 'rgb(' + c.join(',') + ')', fg: cand[0][0] }; });
+    const passo = v => { if (vHi - vLo < 1e-9) return 2; const f = (v - vLo) / (vHi - vLo); return Math.max(0, Math.min(4, Math.floor((inv ? 1 - f : f) * 4.999))); };
+    const hovS = tip && tip.k === 'sta' ? tip.id : null;
+    const vista = (c, id) => { if (c.v == null) { const p = c.why.indexOf(': '); return { s: '–', bg: 'transparent', fg: t.muted, sh: 'inset 0 0 0 1px ' + t.line + (hovS === id ? ',0 0 0 2px ' + t.text : ''), a: c.why, on: tipE('sta', id, cap1(c.why.slice(0, p)), [RW(c.why.slice(p + 2))]) }; }
+      const k = passo(c.v); return { s: c.s, bg: SC[k].bg, fg: SC[k].fg, sh: hovS === id ? '0 0 0 2px ' + t.text : 'none', a: c.d, on: tipE('sta', id, cap1(c.tt), c.rw) }; };
+    const media = i => { const cc = grid.map(r => r.c[i]).filter(c => c.v != null); if (!cc.length) return { v: null, why: MESI[i] + ', media: nessun dato' };
+      if (misS === 'notti') { const gg = grid.map(r => G.giorni.filter(g => g.y === r.y && g.m === i + 1 && !g.futuro)).filter(a => a.length), b = noMet ? null : gg.reduce((a, x) => a + x.filter(g => g.buona).length, 0) / gg.length, u = gg.reduce((a, x) => a + x.filter(uscita).length, 0) / gg.length;
+        return { v: u, s: (b == null ? '–' : b.toFixed(1)) + ' · ' + u.toFixed(1), d: MESI[i] + ', media di ' + gg.length + ' anni: ' + (b == null ? 'meteo storico in arrivo' : b.toFixed(1) + ' notti buone') + ', ' + u.toFixed(1) + ' uscite', tt: MESI[i] + ', media', rw: [RW('notti buone', b == null ? '–' : b.toFixed(1)), RW('uscite', u.toFixed(1)), RW('anni', gg.length)] }; }
+      const v = cc.reduce((a, c) => a + c.v, 0) / cc.length, s = misS === 'ore' ? h0(v) : M.f(v);
+      return { v, s, d: MESI[i] + ', media di ' + cc.length + (cc.length === 1 ? ' anno: ' : ' anni: ') + (misS === 'ore' ? fh(v) : M.d(v)), tt: MESI[i] + ', media', rw: [RW(misS === 'ore' ? 'ore' : M.l, misS === 'ore' ? fh(v) : s), RW('anni', cc.length)] }; };
+    const righeS = grid.map(r => ({ l: String(r.y), on: r.y === Y, bg: r.y === Y ? t.accent : 'transparent', fg: r.y === Y ? t.hPillFg : t.text, fw: r.y === Y ? 600 : 400, mt: '0px', c: r.c.map((c, i) => ({ ...vista(c, r.y + '-' + i), dl: ((anni.indexOf(r.y) * 12 + i) * 0.008).toFixed(3) + 's' })) }));
+    const medie = M3.map((_, i) => media(i));
+    if (!primo) righeS.push({ l: 'media', bg: 'transparent', fg: t.muted, fw: 500, mt: '6px', c: medie.map((c, i) => ({ ...vista(c, 'm-' + i), dl: ((anni.length * 12 + i) * 0.008).toFixed(3) + 's' })) });
+    const STG = [['inverno', 'dic · gen · feb', [12, 1, 2]], ['primavera', 'mar · apr · mag', [3, 4, 5]], ['estate', 'giu · lug · ago', [6, 7, 8]], ['autunno', 'set · ott · nov', [9, 10, 11]]];
+    const stag = STG.map(([l, m, mm], si) => { const per = anni.map(y => G.giorni.filter(g => !g.futuro && mm.some(x => (x === 12 ? g.y === y - 1 : g.y === y) && g.m === x))).filter(a => a.length);
+      let c; const pass = per.flat(), out = pass.filter(uscita);
+      if (misS === 'notti') { const b = noMet ? null : per.reduce((a, x) => a + x.filter(g => g.buona).length, 0) / per.length, u = out.length / per.length; c = { v: u, s: (b == null ? '–' : b.toFixed(1)) + ' · ' + u.toFixed(1), d: '', tt: l + ', media per anno', rw: [RW('notti buone', b == null ? '–' : b.toFixed(1)), RW('uscite', u.toFixed(1))] }; }
+      else if (misS === 'ore') { const h = out.reduce((a, g) => a + g.ore, 0) / per.length; c = { v: h / 3, s: h0(h), d: '', tt: l + ', media per anno', rw: [RW('ore', fh(h))] }; }
+      else { const vs = (M.met && noMet) || (M.fr && noMis) ? [] : valori(pass, out), v = med(vs.map(M.get));
+        const px = v == null ? null : pxDi(vs); c = v == null ? { v: null, why: cap1(l) + ': nessun dato' } : { v, s: M.f(v), d: '', tt: l, rw: [RW(M.l, M.f(v) + (px != null ? ' · ' + px.toFixed(1) + ' px' : '')), RW('notti', vs.length)] }; }
+      const vv = vista(c, 's-' + si);
+      return { l: cap1(l), m, s: vv.s, bg: t.card2, fg: t.text, on: vv.on }; });
+    const telR = grid.find(r => r.y === telY);
+    const staTel = M3.map((_, i) => { const v = vista(telR.c[i], telY + '-' + i); return { l: cap1(MESI[i]), s: v.s, bg: v.bg, fg: v.fg, a: v.a, media: primo ? '' : 'media ' + medie[i].s, on: v.on }; });
+    const vistaS = st.vistaS || 'griglia', linee = vistaS === 'linee';
+    const wS = cw('stl'), HSt = tel ? 200 : 240, valsL = grid.flatMap(r => r.c.map(c => c.v)).concat(primo ? [] : medie.map(c => c.v)).filter(v => v != null);
+    let stl = {};
+    if (linee && valsL.length) { const tk = ticks(Math.min(...valsL), Math.max(...valsL), 4), s = scala(wS, HSt, tk.lo, tk.hi), X = i => s.X((i + 0.5) / 12);
+      const fT2 = v => misS === 'ore' ? v + ' h' : misS === 'notti' || misS === 'qual' ? String(Math.round(v * 10) / 10) : misS === 'ecc' ? v.toFixed(2) : misS === 'sqm' ? v.toFixed(1) : v.toFixed(1) + '″';
+      const path = cc => { let d = '', on = false; cc.forEach((c, i) => { if (c.v == null) { on = false; return; } d += (on ? 'L' : 'M') + fx(X(i)) + ' ' + fx(s.Y(c.v)); on = true; }); return d; };
+      const hr = grid.find(r => r.y === telY), lastI = hr.c.map(c => c.v != null).lastIndexOf(true), cw2 = (wS - PL - PR) / 12;
+      const fine = []; if (lastI >= 0) fine.push({ x: fx(X(lastI) + 8), y: fx(s.Y(hr.c[lastI].v)), tf: '0,-50%', c: t.text, fs: '12px', fw: 600, l: String(telY) });
+      stl = { w: wS, h: HSt, gy: gridY(wS, s, tk, fT2).map(g => ({ ...g, fs: '11px', fw: 400 })), gx: M3.map((l, i) => ({ ...gxL(X(i), HSt, tel ? l[0] : l), fs: '11px', fw: 400 })), fine,
+        alt: grid.filter(r => r.y !== telY).map((r, i) => ({ d: path(r.c), dl: (0.1 + i * 0.05).toFixed(2) + 's' })), med: primo ? '' : path(medie), hl: path(hr.c),
+        pt: hr.c.map((c, i) => c.v == null ? null : { x: fx(X(i)), y: fx(s.Y(c.v)), r: tip && tip.k === 'stl' && tip.id === i ? 5 : 3.5 }).filter(Boolean),
+        hit: M3.map((_, i) => { const c = hr.c[i], y = c.v != null ? s.Y(c.v) : s.Y((tk.lo + tk.hi) / 2);
+          return { x: fx(X(i) - cw2 / 2), y: PT, w: fx(cw2), h: HSt - PT - PB, on: () => { const z = this.state.tip; if (z && z.k === 'stl' && z.id === i) return; set({ tip: { k: 'stl', id: i, x: clampX(X(i), wS, 70), y: PT, tf: 'translate(-50%,0)', s: cap1(MESI[i]),
+            rows: grid.slice().reverse().map(r => ({ l: String(r.y), v: r.c[i].v == null ? '–' : misS === 'notti' ? String(r.c[i].v) : r.c[i].s, fw: r.y === telY ? 600 : 400, o: r.y === telY ? 1 : 0.72 })).concat(primo ? [] : [{ l: 'media', v: medie[i].v == null ? '–' : misS === 'notti' ? medie[i].v.toFixed(1) : medie[i].s, fw: 400, o: 0.72 }]) } }); } }; }),
+        cur: tip && tip.k === 'stl' ? { x: fx(X(tip.id)), y1: PT, y2: HSt - PB } : null,
+        leg: [{ l: String(telY), st: 'solid', c: t.accent, w: '2.5px', o: 1 }].concat(primo ? [] : [{ l: 'media', st: 'dashed', c: t.text, w: '1.5px', o: 1 }], anni.length > 1 ? [{ l: 'gli altri anni', st: 'solid', c: t.muted, w: '1.25px', o: 0.6 }] : []),
+        aria: (misS === 'notti' ? 'Notti uscite' : M.l) + ' mese per mese, ' + telY + (primo ? '' : ' con la media e gli altri anni') };
+      if (misS === 'notti') stl.aria = 'Notti uscite mese per mese, ' + telY; }
+    const GR = [['cielo', 'Cielo'], ['frame', 'Frame'], ['volumi', 'Volumi']], PRIMA = { cielo: 'notti', frame: 'fwhm', volumi: 'ore' };
+    const sta = { vis: [['griglia', 'Griglia'], ['linee', 'Linee']].map(([k, l]) => ({ l, sel: vistaS === k, on: () => set({ vistaS: k, tip: null }) })), linee, gLeg: !linee, gDesk: !tel && !linee, gTel: tel && !linee, annoOn: tel || linee, // v54.1: desktop come il telefono: Misura ▾ · Anno ▾ (solo nelle linee: la griglia mostra tutti gli anni) · vista a icone
+      // Telefono (v52.2): una riga sola: Misura ▾ (raggruppata Cielo · Frame · Volumi), Anno ▾, vista a due icone
+      misTel: { v: misS, on: e => set({ misS: e.target.value, tip: null }), gruppi: GR.map(([g, l]) => ({ l, o: Object.entries(MS).filter(([, m]) => m.g === g).map(([k, m]) => ({ v: k, l: ({ notti: 'Notti buone', qual: 'Qualità', ore: 'Ore integrate' })[k] || m.l })) })) },
+      annoTel: { v: String(telY), on: e => set({ staY: Number(e.target.value), tip: null }), o: anni.map(y => ({ v: String(y), l: String(y) })) },
+      visTel: [['griglia', 'Griglia', 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z'], ['linee', 'Linee', 'M3 18l5-6 4 4 9-10']].map(([k, l, d]) => ({ l, d, on: String(vistaS === k), fg: vistaS === k ? 'var(--testo)' : 'var(--tenue)', sh: vistaS === k ? 'inset 0 0 0 2px var(--accento)' : 'none', scegli: () => set({ vistaS: k, tip: null }) })), grp: GR.map(([k, l]) => ({ l, sel: M.g === k, on: () => M.g !== k && set({ misS: PRIMA[k], tip: null }) })),
+      opz: Object.entries(MS).filter(([, m]) => m.g === M.g).map(([k, m]) => ({ l: m.l, sel: k === misS, on: () => set({ misS: k, tip: null }) })), mesi: M3, righe: righeS, stag, tel: staTel,
+
+      sub: misS === 'notti' ? (linee ? 'notti uscite, mese per mese' : '«9 · 6»: notti buone e uscite, mese per mese') : M.sub + (M.set && setup !== 'tutti' ? ' · ' + SN(setup) : ''), nota: M.set && molti ? 'Tutti i setup insieme: in px FWHM e HFD cambiano da un setup all\u0027altro.' : '',
+      riga: linee ? (tel ? 'Tocca un mese per gli anni a confronto.' : 'Passa sopra un mese per gli anni a confronto.') : (tel ? 'Tocca un mese' : 'Passa sopra un mese') + ': il valore, o perché manca.', rigaC: t.muted,
+      lo: M.lo, hi: M.hi, leg: (inv ? SC.slice().reverse() : SC).map(c => c.bg) };
+
+    // 7 · Per filtro
+    const FD = AL.FD, tot = {}; A.out.forEach(g => g.fil.forEach(([f, h, n]) => { const x = tot[f] || (tot[f] = { h: 0, p: 0, n: 0 }); x.h += h; x.p += n; x.n++; }));
+    const ordF = Object.keys(tot).sort((a, b) => tot[b].h - tot[a].h);
+    const grF = tutto ? anni.map(y => ({ l: String(y), L: String(y), gg: A.out.filter(g => g.y === y) })) : M3.map((l, i) => ({ l, L: MESI[i], gg: A.out.filter(g => g.m === i + 1) }));
+    grF.forEach(gr => { gr.f = {}; gr.gg.forEach(g => g.fil.forEach(([f, h]) => { gr.f[f] = (gr.f[f] || 0) + h; })); gr.t = Object.values(gr.f).reduce((a, h) => a + h, 0); });
+    const mxF = Math.max(1, ...grF.map(g => g.t)), hovF = tip && tip.k === 'fil' ? tip.id : null;
+    const fil = { col: usati.length > 1 && stato !== 'un setup solo' ? 7 : 12, gap: tel ? '3px' : '6px', sub: (tutto ? 'ore integrate per filtro, anno per anno' : 'ore integrate per filtro, mese per mese') + '; in basso il filtro con più ore',
+      bar: grF.map((gr, bi) => ({ dl: (0.1 + bi * 0.04).toFixed(2) + 's', hv: hovF === gr.l ? t.card2 : 'transparent', on: gr.t ? tipE('fil', gr.l, cap1(gr.L), ordF.filter(f => gr.f[f]).map(f => RW(FD[f][0], fh(gr.f[f]))).concat(ordF.filter(f => gr.f[f]).length > 1 ? [RW('totale', fh(gr.t), 600)] : [])) : undefined, l: tel && !tutto ? gr.l[0] : gr.l, tot: gr.t ? (gr.t >= 10 || tel ? num(Math.round(gr.t)) : fh(gr.t).replace(' h ', ' h\u00a0')) : '',
+        seg: ordF.filter(f => gr.f[f]).map(f => { const ti = AL.tinta(t, f), id = gr.l + f, s = cap1(gr.L) + ' · ' + FD[f][0] + ' · ' + fh(gr.f[f]);
+          return { h: Math.max(2, Math.round(gr.f[f] / mxF * 150)), bg: ti.bg, bd: ti.bd }; }) })),
+      righe: ordF.map(f => { const ti = AL.tinta(t, f); return { l: FD[f][0], bg: ti.bg, bd: ti.bd, h: fh(tot[f].h), p: num(tot[f].p), n: String(tot[f].n) }; }),
+      riga: (tel ? 'Tocca una barra' : 'Passa sopra una barra') + ': le ore per filtro.', rigaC: t.muted,
+      aria: 'Ore per filtro: ' + ordF.map(f => FD[f][0] + ' ' + fh(tot[f].h)).join(', ') };
+
+    // 8 · Per setup
+    const perS = SD.ORDINE.map(k => ({ k, gg: A.out.filter(g => g.setup === k) })).filter(x => x.gg.length).map(x => { const h = x.gg.reduce((a, g) => a + g.ore, 0), ogg = new Set(x.gg.flatMap(g => g.ogg)).size;
+      const fw = med(x.gg.map(g => g.fwhm.med));
+      return { h, n: SN(x.k), hL: h0(h), a: num(x.gg.reduce((a, g) => a + g.pose, 0)) + ' frame · ' + ogg + (ogg === 1 ? ' oggetto' : ' oggetti') + ' · ' + x.gg.length + (x.gg.length === 1 ? ' notte' : ' notti'),
+        px: noMis ? 'non ancora calcolata' : fw.toFixed(1) + '″', as: noMis ? '' : (fw / SD.SETUP[x.k].scala).toFixed(1) + ' px · ' + SD.SETUP[x.k].scala.toFixed(2) + '″/px' }; }).sort((a, b) => b.h - a.h);
+    const setS = { ok: usati.length > 1 && stato !== 'un setup solo', sub: 'in ordine di ore' + (tutto ? ', ' + periodo : ', nel ' + Y),
+      righe: perS.map(r => ({ n: r.n, h: r.hL, a: r.a, px: r.px, as: r.as, tipo: r.tipo, tb: r.tb })), nota: noMis ? '' : 'FWHM mediana allo zenit. In ″ si confronta fra setup diversi; in px dipende dalla scala.' };
+
+    const S = { vuoto, main: !vuoto };
+    return { pronto: true, modo, accento: p.accento, setModo: m => set({ modo: m }), t, F, L, S, T, testa, optAnni, annoTel, sels, big, celle, note, cal, vol, vb, vc, cap, cie, cm, co, sta, fil, set: setS,
+      // Telefono (v52.3): le scelte delle carte in tendina, una riga sola
+      calT: cal.anni ? telSel(cal.anni) : null,  capT: { // v56.18: le tendine anche sul desktop (Calendario, Capacità)
+        mis: cap.ok ? telSel(cap.opz) : null, cmp: cap.cmpOn ? telSel(cap.cmp.map(o => ({ ...o, l: 'con ' + o.l.toLowerCase() }))) : null }, tipVia,
+      rCal: this.rifW('cal'), calScroll, rStl: this.rifW('stl'), stl, rVb: this.rifW('vb'), rVc: this.rifW('vc'), rCap: this.rifW('cap'), rCm: this.rifW('cm'), rCo: this.rifW('co') };
+  }
+}
+</script>
+</body>
+</html>

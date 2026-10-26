@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}@keyframes skPulse{0%,100%{opacity:1}50%{opacity:.45}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style></helmet>
+<div class="al-c-scheletro__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="al-c-scheletro__blocco-2" role="status" aria-live="polite" aria-label="{{ aria }}" style="display:{{ disp }};grid-template-columns:{{ cols }};gap:{{ gap }}">
+<sc-for list="{{ carte }}" as="c" hint-placeholder-count="2"><sc-if value="{{ c.pila }}" hint-placeholder-val="{{ false }}"><div class="al-c-scheletro__colonna-1" style="grid-column:{{ c.col }};gap:{{ gap }}"><sc-for list="{{ c.pila }}" as="q" hint-placeholder-count="2"><div class="al-c-scheletro__colonna-2" style="height:{{ q.h }};flex:{{ q.flex }};border-radius:{{ r }};padding:{{ q.pad }};gap:{{ q.gap }}"><sc-for list="{{ q.blocchi }}" as="b" hint-placeholder-count="1"><span class="al-c-scheletro__blocco-3" style="height:{{ b.h }};width:{{ b.w }};flex:{{ b.flex }};border-radius:{{ b.r }}"></span></sc-for></div></sc-for></div></sc-if><sc-if value="{{ c.carta }}" hint-placeholder-val="{{ true }}"><div class="al-c-scheletro__blocco-4" style="grid-column:{{ c.col }};height:{{ c.h }};border-radius:{{ r }};padding:{{ c.pad }};display:{{ c.disp }};grid-template-columns:{{ c.griglia }};gap:{{ c.gap }}">
+<sc-for list="{{ c.blocchi }}" as="b" hint-placeholder-count="3"><sc-if value="{{ b.testo }}" hint-placeholder-val="{{ false }}"><span class="al-c-scheletro__testo-1">{{ b.testo }}</span></sc-if><sc-if value="{{ b.blocco }}" hint-placeholder-val="{{ true }}"><span class="al-c-scheletro__blocco-3" style="height:{{ b.h }};width:{{ b.w }};flex:{{ b.flex }};border-radius:{{ b.r }}"></span></sc-if><sc-if value="{{ b.gruppo }}" hint-placeholder-val="{{ false }}"><div class="al-c-scheletro__blocco-5" style="display:{{ b.disp }};grid-template-columns:{{ b.griglia }};flex-direction:{{ b.dir }};justify-content:{{ b.just }};align-items:{{ b.al }};gap:{{ b.gap }};flex:{{ b.flex }};height:{{ b.h }}">
+<sc-for list="{{ b.figli }}" as="f" hint-placeholder-count="2"><sc-if value="{{ f.testo }}" hint-placeholder-val="{{ false }}"><span class="al-c-scheletro__testo-1">{{ f.testo }}</span></sc-if><sc-if value="{{ f.blocco }}" hint-placeholder-val="{{ true }}"><span class="al-c-scheletro__blocco-3" style="height:{{ f.h }};width:{{ f.w }};flex:{{ f.flex }};border-radius:{{ f.r }}"></span></sc-if><sc-if value="{{ f.gruppo }}" hint-placeholder-val="{{ false }}"><div class="al-c-scheletro__colonna-1" style="gap:{{ f.gap }};flex:{{ f.flex }}"><sc-for list="{{ f.figli }}" as="g" hint-placeholder-count="3"><span class="al-c-scheletro__blocco-3" style="height:{{ g.h }};width:{{ g.w }};flex:{{ g.flex }};border-radius:{{ g.r }}"></span></sc-for></div></sc-if></sc-for>
+</div></sc-if></sc-for>
+</div></sc-if></sc-for>
+</div></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:420},&quot;carte&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Array&lt;{col?:string,h?:string,pad?:string,gap?:string,griglia?:string,blocchi:any[]}&gt;&quot;},&quot;griglia&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;gap&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;testo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Caricamento&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  componentWillUnmount() { this._alw && clearInterval(this._alw); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), tel = p.formato === 'telefono';
+    // Un blocco: { h, w, r, flex } · { testo } · { riga | colonna | griglia: [figli], gap, ... }; il cerchio e' { h, w, r: '50%', flex: 'none' }
+    const blocco = x => ({ blocco: true, h: x.h || 'auto', w: x.w || 'auto', flex: x.flex || '0 1 auto', r: x.r || '14px' });
+    const gruppo = x => { const g = x.griglia ? 'grid' : 'flex';
+      return { gruppo: true, disp: g, griglia: x.griglia || 'none', dir: x.colonna ? 'column' : 'row', just: x.tra ? 'space-between' : x.attorno ? 'space-around' : 'flex-start', al: x.al || (x.griglia || x.colonna ? 'stretch' : 'center'), gap: x.gap || '0', flex: x.flex || '0 1 auto', h: x.h || 'auto', figli: (x.riga || x.colonna || x.figli || []).map(uno) }; };
+    const uno = x => typeof x === 'string' ? { testo: x } : x.riga || x.colonna || x.figli ? gruppo(x) : blocco(x);
+    const sotto = x => x.figli ? { gruppo: true, gap: x.gap || '0', flex: x.flex || '0 1 auto', figli: x.figli.map(blocco) } : uno(x);
+    // Una carta: { col, h, pad, gap, griglia, blocchi } oppure una pila di carte nella stessa colonna: { col, pila: [{ h, flex, pad, blocchi }] }
+    const carte = (p.carte || [{ h: '300px', blocchi: [{ h: '36px', w: '60%' }, { flex: '1' }] }]).map(c => c.pila ? { pila: c.pila.map(q => ({ h: q.h || 'auto', flex: q.flex || '0 1 auto', pad: q.pad || (tel ? '20px' : '28px'), gap: q.gap || '0', blocchi: (q.blocchi || []).map(blocco) })), carta: false, col: c.col || 'auto' } : ({ carta: true, pila: null, col: c.col || 'auto', h: c.h || 'auto', pad: c.pad || (tel ? '20px' : '28px'), gap: c.gap || (tel ? '14px' : '18px'),
+      disp: c.griglia ? 'grid' : 'flex', griglia: c.griglia || 'none',
+      blocchi: (c.blocchi || []).map(x => { const u = uno(x); if (u.figli) u.figli = (x.riga || x.colonna || x.figli).map(sotto); return u; }) }));
+    return { pronto: true, t, carte, r: tel ? '24px' : '28px', disp: tel && !p.griglia ? 'flex' : 'grid', cols: p.griglia || (tel ? 'none' : 'repeat(12,minmax(0,1fr))'), gap: p.gap || (tel ? '12px' : '16px'), aria: p.testo || 'Caricamento' };
+  }
+}
+</script>
+</body>
+</html>

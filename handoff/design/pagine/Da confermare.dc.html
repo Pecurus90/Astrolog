@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<script src="componenti/moto.js"></script>
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}input::placeholder{color:inherit;opacity:.5}@keyframes alSpin{to{transform:rotate(360deg)}}@keyframes skPulse{0%,100%{opacity:1}50%{opacity:.45}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-conf__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="{{ fmt }}" pagina="Da confermare" etichetta="Da confermare" altezza="{{ altezza }}" domande="{{ conto }}" da-confermare="{{ barraConf }}" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<div class="al-conf__centro-1" ref="{{ rifRoot }}" style="grid-template-columns:{{ L.cols }};gap:{{ L.gap }}">
+
+<sc-if value="{{ V.sx }}" hint-placeholder-val="{{ true }}"><div class="al-conf__colonna-1" style="position:{{ L.asPos }};gap:{{ L.gap }}">
+
+<sc-if value="{{ V.testa }}" hint-placeholder-val="{{ true }}"><section class="al-conf__colonna-2" aria-label="Il conto" style="border-radius:{{ L.rad }};padding:{{ L.pad }}">
+<span class="al-conf__riga-1"><span class="al-conf__testo-1" data-an="conto" style="font-size:{{ L.big }}">{{ conto }}</span><span class="al-conf__testo-2">da confermare</span></span>
+<sc-if value="{{ tacche }}" hint-placeholder-val="{{ false }}"><span class="al-conf__riga-2" role="img" aria-label="{{ taccheAl }}"><sc-for list="{{ tacche }}" as="g" hint-placeholder-count="10"><span class="al-conf__blocco-2" style="background:{{ g.bg }};border:{{ g.bd }}"></span></sc-for></span></sc-if>
+<sc-if value="{{ V.regola }}" hint-placeholder-val="{{ true }}"><p class="al-conf__testo-3">Le risposte si salvano tutte insieme con Applica. Rispondere è facoltativo: senza risposta i frame restano invariati.</p></sc-if>
+</section></sc-if>
+<sc-if value="{{ V.indice }}" hint-placeholder-val="{{ true }}"><nav class="al-conf__colonna-3" aria-labelledby="dc-ind" aria-disabled="{{ fz.ad }}" style="border-radius:{{ L.rad }};opacity:{{ fz.op }};pointer-events:{{ fz.pe }}">
+<span class="al-conf__blocco-3" id="dc-ind">Sezioni</span>
+<ol class="al-conf__colonna-4"><sc-for list="{{ indice }}" as="i" hint-placeholder-count="7"><li><a class="al-conf__riga-3" href="{{ i.href }}" onClick="{{ i.on }}" aria-current="{{ i.cur }}" style="background:{{ i.bg }}"><span class="al-conf__colonna-5"><span class="al-conf__testo-4" style="font-weight:{{ i.fw }}">{{ i.n }}</span><span class="al-conf__testo-5">{{ i.c }}</span></span><span class="al-conf__tondo-1" aria-hidden="true" style="background:{{ i.sg.bg }};color:{{ i.sg.fg }};border:1.5px solid {{ i.sg.bd }}">{{ i.sg.s }}</span></a></li></sc-for></ol>
+</nav></sc-if>
+</div></sc-if>
+
+<div class="al-conf__colonna-6" style="gap:{{ L.gap }}">
+<sc-if value="{{ V.carica }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Scheletro" carte="{{ sk }}" griglia="{{ skG }}" gap="{{ L.gap }}" testo="Caricamento…" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,760px"></dc-import></sc-if>
+<sc-if value="{{ av }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="pagina" formato="{{ fmt }}" segno="{{ av.s }}" titolo="{{ av.t }}" testo="{{ av.x }}" azione="{{ av.a }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,100px"></dc-import></sc-if>
+<sc-if value="{{ esito }}" hint-placeholder-val="{{ false }}"><div class="al-conf__riga-4" role="status" data-an="esito" style="border-radius:{{ L.rad }};padding:{{ L.epad }}"><span class="al-conf__tondo-2" aria-hidden="true" style="background:{{ esito.bg }};color:{{ esito.fg }}">{{ esito.s }}</span><span class="al-conf__colonna-7"><b class="al-conf__testo-6">{{ esito.t }}</b><sc-if value="{{ esito.x }}" hint-placeholder-val="{{ false }}"><span class="al-conf__testo-7">{{ esito.x }}</span></sc-if></span><sc-if value="{{ esito.chiudi }}" hint-placeholder-val="{{ false }}"><a href="#" role="button" onClick="{{ esito.chiudi }}" class="al-bottone al-bottone--contorno">Chiudi</a></sc-if></div></sc-if>
+
+<sc-if value="{{ V.tipi }}" hint-placeholder-val="{{ false }}"><section class="al-conf__colonna-8" aria-labelledby="dc-tipi" style="border-radius:{{ L.rad }}">
+<span class="al-conf__blocco-4" id="dc-tipi">Tipi di domanda</span>
+<ul class="al-conf__colonna-9"><sc-for list="{{ tipi }}" as="ti" hint-placeholder-count="7"><li><a class="al-conf__colonna-10" href="#" onClick="{{ ti.on }}"><span class="al-conf__riga-5"><span class="al-conf__blocco-5">{{ ti.n }}</span><span aria-hidden="true" style="flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--carta-2);color:var(--testo);font-size:14px">↗</span></span><span class="al-conf__riga-6"><sc-for list="{{ ti.chips }}" as="x" hint-placeholder-count="2"><span class="al-conf__riga-7" style="background:{{ x.bg }};color:{{ x.fg }};box-shadow:inset 0 0 0 1.5px {{ x.ring }}"><span aria-hidden="true">{{ x.s }}</span>{{ x.l }}</span></sc-for></span></a></li></sc-for></ul>
+</section></sc-if>
+
+<sc-if value="{{ caso }}" hint-placeholder-val="{{ false }}"><div class="al-conf__riga-8"><a href="#" role="button" onClick="{{ caso.indietro }}" class="al-bottone al-bottone--testo al-bottone--a-filo">← Tutti i tipi</a><span class="al-conf__blocco-6">{{ caso.quale }}</span></div></sc-if>
+
+<div class="al-conf__colonna-11" aria-disabled="{{ fz.ad }}" style="gap:{{ L.gap }};opacity:{{ fz.op }};pointer-events:{{ fz.pe }}">
+<sc-for list="{{ sezioni }}" as="s" hint-placeholder-count="5">
+<sc-if value="{{ s.chiusa }}" hint-placeholder-val="{{ false }}"><div class="al-conf__riga-9" id="{{ s.id }}" style="border-radius:{{ L.rad }};padding:{{ L.cpad }}"><h2 class="al-conf__blocco-7">{{ s.n }}</h2><span class="al-conf__riga-7" style="background:{{ s.sum.bg }};color:{{ s.sum.fg }};box-shadow:inset 0 0 0 1.5px {{ s.sum.ring }}"><span aria-hidden="true">{{ s.sum.s }}</span>{{ s.sum.l }}</span><a class="al-conf__riga-10" href="#" role="button" onClick="{{ s.riapri.on }}" style="min-height:{{ L.bh }};background:{{ s.riapri.bg }};color:{{ s.riapri.fg }};box-shadow:inset 0 0 0 1.5px {{ s.riapri.ring }}">Riapri</a></div></sc-if>
+<sc-if value="{{ s.aperta }}" hint-placeholder-val="{{ true }}"><section class="al-conf__colonna-12" id="{{ s.id }}" aria-labelledby="{{ s.hid }}" style="border-radius:{{ L.rad }};padding:{{ L.pad }}">
+<header class="al-conf__colonna-13"><span class="al-conf__riga-11"><h2 class="al-conf__testo-9" id="{{ s.hid }}" style="font-size:{{ L.h2 }}">{{ s.n }}</h2><span class="al-conf__testo-10">{{ s.quante }}</span></span><sc-if value="{{ s.perche }}" hint-placeholder-val="{{ false }}"><p class="al-conf__blocco-8">{{ s.perche }}</p></sc-if></header>
+<sc-for list="{{ s.items }}" as="it" hint-placeholder-count="2">
+
+<sc-if value="{{ it.riga }}" hint-placeholder-val="{{ true }}"><div class="al-conf__centro-2" style="grid-template-columns:{{ L.riga }};padding:{{ L.rpad }}"><span class="al-conf__colonna-14"><span class="al-conf__testo-11">{{ it.riga.nome }}</span><span class="al-conf__testo-10">{{ it.riga.frame }}</span></span><span class="al-conf__blocco-9" style="font-weight:{{ it.riga.bfw }};color:{{ it.riga.bc }}">{{ it.riga.breve }}</span><span class="al-conf__colonna-15"><span class="al-conf__riga-7" style="background:{{ it.riga.st.bg }};color:{{ it.riga.st.fg }};box-shadow:inset 0 0 0 1.5px {{ it.riga.st.ring }}"><span aria-hidden="true">{{ it.riga.st.s }}</span>{{ it.riga.st.l }}</span><sc-if value="{{ it.riga.era }}" hint-placeholder-val="{{ false }}"><span class="al-conf__blocco-10">{{ it.riga.era }}</span></sc-if></span><a href="#" role="button" onClick="{{ it.riga.g.on }}" aria-label="{{ it.riga.g.al }}" class="al-bottone al-bottone--tenue al-bottone--rovescio al-conf__blocco-11">{{ it.riga.g.l }}</a></div></sc-if>
+
+<sc-if value="{{ it.dom }}" hint-placeholder-val="{{ false }}"><article class="al-conf__colonna-16" data-an="dom" aria-label="{{ it.dom.al }}" style="padding:{{ L.qpad }}">
+<div class="al-conf__colonna-17"><div class="al-conf__riga-12"><h3 class="al-conf__blocco-12" style="font-size:{{ L.h3 }}">{{ it.dom.nome }}</h3><span class="al-conf__riga-7" style="background:{{ it.dom.st.bg }};color:{{ it.dom.st.fg }};box-shadow:inset 0 0 0 1.5px {{ it.dom.st.ring }}"><span aria-hidden="true">{{ it.dom.st.s }}</span>{{ it.dom.st.l }}</span><sc-if value="{{ it.dom.era }}" hint-placeholder-val="{{ false }}"><span class="al-conf__testo-10">{{ it.dom.era }}</span></sc-if></div><span class="al-conf__testo-7">{{ it.dom.frame }}</span></div>
+<sc-if value="{{ it.dom.haProve }}" hint-placeholder-val="{{ true }}"><dl class="al-conf__centro-3" style="grid-template-columns:{{ L.dl }};gap:{{ L.dlGap }}"><sc-for list="{{ it.dom.prove }}" as="pv" hint-placeholder-count="3"><dt class="al-conf__testo-12">{{ pv.k }}</dt><dd class="al-conf__colonna-18" style="color:{{ pv.c }}"><sc-for list="{{ pv.righe }}" as="rg" hint-placeholder-count="1"><span>{{ rg }}</span></sc-for></dd></sc-for></dl></sc-if>
+<sc-for list="{{ it.dom.parti }}" as="pt" hint-placeholder-count="1"><div class="al-conf__colonna-19" style="padding-top:{{ pt.ptop }};border-top:{{ pt.btop }}">
+<span class="al-conf__riga-13"><span class="al-conf__testo-13" id="{{ pt.id }}">{{ pt.capo }}</span><sc-if value="{{ pt.st }}" hint-placeholder-val="{{ false }}"><span class="al-conf__riga-7" style="background:{{ pt.st.bg }};color:{{ pt.st.fg }};box-shadow:inset 0 0 0 1.5px {{ pt.st.ring }}"><span aria-hidden="true">{{ pt.st.s }}</span>{{ pt.st.l }}</span></sc-if></span>
+<sc-if value="{{ pt.scelte }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/PillolaScelta" forma="risposta" opzioni="{{ pt.scelte }}" etichetta="{{ pt.capo }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,44px"></dc-import></sc-if>
+<sc-if value="{{ pt.av }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="{{ pt.av.tipo }}" formato="{{ fmt }}" segno="{{ pt.av.s }}" titolo="{{ pt.av.t }}" testo="{{ pt.av.x }}" azione="{{ pt.av.a }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,52px"></dc-import></sc-if>
+<sc-if value="{{ pt.campi }}" hint-placeholder-val="{{ false }}"><div class="al-conf__centro-4" style="grid-template-columns:{{ L.campi }}"><sc-for list="{{ pt.campi }}" as="f" hint-placeholder-count="1"><div class="al-conf__colonna-17"><label class="al-conf__testo-14" for="{{ f.id }}">{{ f.lab }}</label><input id="{{ f.id }}" value="{{ f.v }}" onChange="{{ f.on }}" placeholder="{{ f.ph }}" autocomplete="off" spellcheck="false" class="al-campo al-campo--rovescio al-conf__blocco-13"><sc-if value="{{ f.aiuto }}" hint-placeholder-val="{{ false }}"><span class="al-conf__testo-10">{{ f.aiuto }}</span></sc-if></div></sc-for></div></sc-if>
+<sc-if value="{{ pt.lista }}" hint-placeholder-val="{{ false }}"><div class="al-conf__colonna-20"><span class="al-conf__testo-10" id="{{ pt.lid }}">Modelli trovati</span><ul class="al-conf__colonna-21" role="listbox" aria-labelledby="{{ pt.lid }}"><sc-for list="{{ pt.lista }}" as="m" hint-placeholder-count="2"><li class="al-conf__riga-14" role="option" aria-selected="{{ m.as }}" onClick="{{ m.on }}" style="background:{{ m.bg }};color:{{ m.fg }}"><b class="al-conf__testo-15">{{ m.marca }}</b><span class="al-conf__blocco-14">{{ m.n }}</span><span class="al-conf__testo-16" aria-hidden="true">{{ m.ok }}</span></li></sc-for></ul></div></sc-if>
+<sc-if value="{{ pt.sotto }}" hint-placeholder-val="{{ false }}"><div class="al-conf__colonna-22"><sc-if value="{{ pt.sottoT }}" hint-placeholder-val="{{ false }}"><span class="al-conf__testo-14" id="{{ pt.sid }}">{{ pt.sottoT }}</span></sc-if><dc-import name="componenti/PillolaScelta" forma="risposta" opzioni="{{ pt.sotto }}" etichetta="{{ pt.sottoL }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,44px"></dc-import></div></sc-if>
+<sc-if value="{{ pt.nota }}" hint-placeholder-val="{{ false }}"><span class="al-conf__testo-17">{{ pt.nota }}</span></sc-if>
+</div></sc-for>
+</article></sc-if>
+
+<sc-if value="{{ it.ric }}" hint-placeholder-val="{{ false }}"><div class="al-conf__colonna-23"><a class="al-conf__riga-15" href="#" role="button" aria-expanded="{{ it.ric.exp }}" onClick="{{ it.ric.on }}"><span class="al-conf__blocco-15">{{ it.ric.l }}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ it.ric.chev }}"></path></svg></a>
+<sc-if value="{{ it.ric.aperto }}" hint-placeholder-val="{{ false }}"><ul class="al-conf__colonna-9"><sc-for list="{{ it.ric.voci }}" as="v" hint-placeholder-count="5"><li class="al-conf__riga-16"><span class="al-conf__colonna-24"><span class="al-conf__testo-18">{{ v.n }}</span><span class="al-conf__testo-10">{{ v.x }}</span></span><a href="#" role="button" onClick="{{ v.on }}" aria-label="{{ v.al }}" class="al-bottone al-bottone--tenue al-bottone--rovescio al-conf__blocco-16">Correggi</a></li></sc-for></ul></sc-if>
+</div></sc-if>
+
+</sc-for>
+</section></sc-if>
+</sc-for>
+</div>
+
+<sc-if value="{{ caso }}" hint-placeholder-val="{{ false }}"><div class="al-conf__griglia-1"><a href="#" role="button" aria-disabled="{{ caso.prima.dis }}" onClick="{{ caso.prima.on }}" class="al-bottone al-bottone--tenue al-bottone--rovescio al-bottone--blocco" style="opacity:{{ caso.prima.op }}">Caso prima</a><a href="#" role="button" aria-disabled="{{ caso.dopo.dis }}" onClick="{{ caso.dopo.on }}" class="al-bottone al-bottone--tenue al-bottone--rovescio al-bottone--blocco" style="opacity:{{ caso.dopo.op }}">Caso dopo</a></div></sc-if>
+
+<sc-if value="{{ piede }}" hint-placeholder-val="{{ true }}"><div class="al-conf__riga-17" role="region" aria-label="Le modifiche da applicare" style="bottom:{{ L.pBottom }};background:{{ piede.bg }};border-radius:{{ L.pRad }};padding:{{ L.ppad }};flex-wrap:{{ piede.wrap }};margin-left:{{ L.pMl }};width:{{ L.pW }};gap:{{ L.pGap }};min-height:{{ L.pMh }};box-sizing:border-box;backdrop-filter:{{ L.pBf }};-webkit-backdrop-filter:{{ L.pBf }}">
+<p class="al-conf__riga-18" aria-live="polite"><span class="al-conf__testo-19" data-an="piede" style="font-size:{{ piede.nSz }}">{{ piede.n }}</span><span class="al-conf__testo-20">{{ piede.l }}</span></p>
+<sc-if value="{{ piede.uBtn }}" hint-placeholder-val="{{ false }}"><a class="al-conf__tondo-3" href="#" role="button" aria-expanded="{{ piede.uBtn.exp }}" aria-label="Include un'unione di strumenti: mostra l'avviso" onClick="{{ piede.uBtn.on }}"><span class="al-conf__tondo-4" aria-hidden="true">!</span></a></sc-if>
+<sc-if value="{{ piede.unione }}" hint-placeholder-val="{{ false }}"><span class="al-conf__riga-19"><span class="al-conf__tondo-5" aria-hidden="true">!</span><span><b class="al-conf__testo-15">Include un'unione di strumenti:</b> non è reversibile.</span></span></sc-if>
+<span class="al-conf__blocco-17"></span>
+<a class="al-conf__riga-20" href="#" role="button" aria-disabled="{{ piede.b.dis }}" aria-busy="{{ piede.b.busy }}" onClick="{{ piede.b.on }}" style="background:{{ piede.b.bg }};color:{{ piede.b.fg }};opacity:{{ piede.b.op }};cursor:{{ piede.b.cur }}"><sc-if value="{{ piede.b.busy }}" hint-placeholder-val="{{ false }}"><span class="al-conf__tondo-6" aria-hidden="true"></span></sc-if>{{ piede.b.l }}</a>
+<sc-if value="{{ piede.uTesto }}" hint-placeholder-val="{{ false }}"><p class="al-conf__blocco-18"><b class="al-conf__testo-15">Include un'unione di strumenti:</b> non è reversibile.</p></sc-if>
+</div></sc-if>
+</div>
+</div>
+</dc-import></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;caricamento&quot;,&quot;non si legge&quot;,&quot;applicazione in corso&quot;,&quot;applicato&quot;,&quot;non applicato&quot;,&quot;niente da confermare&quot;,&quot;niente da confermare, con risposte salvate&quot;,&quot;zero frame&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;domanda&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Filtri · O3&quot;,&quot;Filtri · nessun modello&quot;,&quot;Filtri · filtro esistente&quot;,&quot;Filtri · nuovo filtro&quot;,&quot;Filtri · elenco dei modelli non disponibile&quot;,&quot;Strumenti duplicati&quot;,&quot;Attrezzatura · una parte&quot;,&quot;Attrezzatura · due parti&quot;,&quot;Attrezzatura · tre parti&quot;,&quot;Attrezzatura · altra camera&quot;,&quot;Oggetti · candidati&quot;,&quot;Oggetti · nessun candidato&quot;,&quot;Oggetti · frame senza nome&quot;,&quot;Oggetti · riconosciuti aperti&quot;,&quot;Frame senza tipo&quot;,&quot;Frame senza sito&quot;,&quot;Frame senza sito · molte notti&quot;,&quot;Frame senza sito · nessun sito dichiarato&quot;,&quot;Mosaici proposti&quot;],&quot;default&quot;:&quot;Filtri · O3&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;motivo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;oggetto non nel catalogo&quot;,&quot;dati non aggiornati&quot;,&quot;scansione in corso&quot;,&quot;unione non possibile&quot;,&quot;nome già usato&quot;,&quot;altro errore&quot;],&quot;default&quot;:&quot;oggetto non nel catalogo&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;telefono&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tipi&quot;,&quot;un caso&quot;],&quot;default&quot;:&quot;tipi&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;altezza&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = this.preset(this.props);
+  componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs);
+    const h = decodeURIComponent((location.hash || '').slice(1)); if (h) this.vaiSez(h); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rs); (this._t || []).forEach(clearTimeout); }
+  componentDidUpdate(pp) { this.anima(); if (['stato', 'domanda', 'motivo', 'telefono'].some(k => pp[k] !== this.props[k])) { (this._t || []).forEach(clearTimeout); this.setState(this.preset(this.props)); } }
+  // Animazioni (componenti/moto.js): la domanda che si apre sale e sfuma; conto e piede contano; l'esito entra. Ferme col movimento ridotto.
+  rifRoot = el => { this._root = el; };
+  anima() { const M = window.ALmoto, r = this._root; if (!r || !M) return;
+    const q = s => r.querySelector('[data-an=' + s + ']'), ok = el => el && el.animate && !M.rm(), st = this.state;
+    if (st.aperta !== this._ap) { if (this._ap !== undefined) { const a = q('dom'); if (ok(a)) a.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.2,.7,.2,1)' }); } this._ap = st.aperta; }
+    const c = q('conto'), n = c ? parseInt(c.textContent, 10) : null; if (this._c != null && n != null && n !== this._c) M.conta(c, this._c, n); this._c = n;
+    const p = q('piede'), m = p ? parseInt(p.textContent, 10) : null; if (this._p != null && m != null && m !== this._p) M.conta(p, this._p, m); this._p = m;
+    const e = q('esito'); if (e && !this._e && ok(e)) e.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 300 }); this._e = !!e; }
+  dopo(ms, f) { (this._t = this._t || []).push(setTimeout(f, ms)); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  // Stato di partenza da stato + domanda (Tweaks). sel0 = risposte salvate; sel = risposte date ora, non applicate.
+  preset(p) {
+    const stato = p.stato || 'normale', dom = p.domanda || 'Filtri · O3';
+    let base = BASE(), aperta = 'f2', ric = false, noMod = false, noSiti = false, fase = null, motivo = null, esito = null;
+    let sel = { s1: { s: 'si' }, f1: { m: 'catalogo', mod: 'Antlia 3nm Narrowband H-alpha Pro' }, a1: { camera: 'Notte in quota' }, z1: { s: 'Cima Ekar' }, m1: { m: 'mosaico', nome: 'Sadr' } };
+    const Q = id => base.find(q => q.id === id);
+    ({
+      'Filtri · nessun modello': () => { sel.f2 = { cerca: 'antlia oxx' }; },
+      'Filtri · filtro esistente': () => { sel.f2 = { m: 'esistente' }; },
+      'Filtri · nuovo filtro': () => { sel.f2 = { m: 'nuovo', nome: 'Antlia OIII 3nm', banda: 'OIII' }; },
+      'Filtri · elenco dei modelli non disponibile': () => { noMod = true; },
+      'Strumenti duplicati': () => { aperta = 's1'; },
+      'Attrezzatura · una parte': () => { Object.assign(Q('a1'), A_UNA); delete sel.a1; aperta = 'a1'; },
+      'Attrezzatura · due parti': () => { aperta = 'a1'; },
+      'Attrezzatura · tre parti': () => { Object.assign(Q('a1'), A_TRE); delete sel.a1; aperta = 'a1'; },
+      'Attrezzatura · altra camera': () => { Object.assign(Q('a1'), A_TRE); sel.a1 = { camera: 'altra', cNome: 'ZWO ASI533MC Pro', cFoc: '250' }; aperta = 'a1'; },
+      'Oggetti · candidati': () => { aperta = 'o1'; },
+      'Oggetti · nessun candidato': () => { Q('o1').cand = []; aperta = 'o1'; },
+      'Oggetti · frame senza nome': () => { aperta = 'o2'; },
+      'Oggetti · riconosciuti aperti': () => { aperta = null; ric = true; },
+      'Frame senza tipo': () => { aperta = 't2'; },
+      'Frame senza sito': () => { aperta = 'z1'; },
+      'Frame senza sito · molte notti': () => { Q('z1').notti = MOLTE; aperta = 'z1'; },
+      'Frame senza sito · nessun sito dichiarato': () => { noSiti = true; delete sel.z1; Q('z1').sel0 = {}; aperta = 'z1'; },
+      'Mosaici proposti': () => { aperta = 'm1'; }
+    }[dom] || (() => {}))();
+    if (stato === 'applicazione in corso') fase = 'in corso';
+    if (stato === 'non applicato') { fase = 'errore'; motivo = p.motivo || 'oggetto non nel catalogo'; }
+    if (stato === 'applicato') { const r = this.applica(base, sel, noMod); base = r.base; sel = {}; esito = r; fase = 'fatto'; if (!base.some(q => q.id === aperta)) aperta = 'a1'; }
+    if (stato === 'niente da confermare, con risposte salvate') { base = base.filter(q => q.sez !== 'strumenti' && q.sez !== 'filtri').map(q => ({ ...q, sel0: { ...q.sel0, ...TUTTE[q.id] } })); sel = {}; aperta = null; }
+    return { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: this.state ? this.state.modo : null, base, sel, aperta, ric, noMod, noSiti, fase, motivo, esito, riap: {}, tel: p.telefono === 'un caso' ? 'caso' : 'tipi', stato };
+  }
+  // Applica: le risposte date ora diventano salvate; strumenti e filtri applicati escono dalla coda.
+  applica(base, sel, noMod) { let n = 0, frame = 0; const out = [];
+    base.forEach(q => { const cur = merge(q, sel, noMod), x = stat(q, cur); if (!x.mod) { out.push(q); return; }
+      n++; frame += q.frame; if ((q.sez === 'strumenti' || q.sez === 'filtri') && x.comp) return; out.push({ ...q, sel0: { ...q.sel0, ...(sel[q.id] || {}) } }); });
+    return { base: out, n, frame }; }
+  vaiSez(k) { const qs = this.state.base.filter(q => q.sez === k); if (!qs.length) return;
+    const q = qs.find(q => stat(q, merge(q, this.state.sel, this.state.noMod)).st === 'dare') || qs[0];
+    this.setState(s => ({ aperta: q.id, ric: false, riap: { ...s.riap, [k]: true }, tel: 'caso' }));
+    this.dopo(60, () => { const el = document.getElementById('sez-' + k); if (el && !this._tel) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 16, behavior: 'smooth' }); }); }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, s = this.state, set = o => this.setState(o);
+    const modo = s.modo || p.modo || 'scuro', t = AL.tema(modo, p.accento), num = AL.num;
+    const fmtP = AL.formatoScelto(p.formato), tel = AL.telefono(fmtP, s.w); this._tel = tel;
+    const L = tel ? { cols: 'minmax(0,1fr)', gap: '12px', asPos: 'static', rad: '24px', pad: '20px', big: '48px', h2: '22px', h3: '20px', cpad: '14px 14px 14px 20px', riga: 'minmax(0,1fr) auto', rpad: '12px 12px 12px 16px', qpad: '18px', dl: 'minmax(0,1fr)', dlGap: '0', campi: 'minmax(0,1fr)', bh: '44px', fs: '16px', pBottom: '28px', ppad: '0 8px 0 18px', epad: '16px', pMl: '76px', pW: 'calc(100% - 76px)', pGap: '8px', pMh: '64px', pRad: '32px', pBf: 'blur(18px) saturate(1.6)' }
+      : { cols: '300px minmax(0,1fr)', gap: '16px', asPos: 'sticky', rad: '28px', pad: '28px', big: '64px', h2: '24px', h3: '22px', cpad: '16px 16px 16px 28px', riga: 'minmax(0,1fr) minmax(0,1.4fr) 200px 104px', rpad: '12px 12px 12px 18px', qpad: '24px', dl: 'max-content minmax(0,1fr)', dlGap: '6px 20px', campi: 'repeat(auto-fit,minmax(220px,1fr))', bh: '40px', fs: '15px', pBottom: '16px', ppad: '14px 14px 14px 24px', epad: '18px 18px 18px 22px', pMl: '0', pW: 'auto', pGap: '12px 20px', pMh: '0', pRad: '28px', pBf: 'none' };
+    const PL = { dare: { s: '○', l: 'senza risposta', bg: 'transparent', fg: t.text, ring: t.muted }, ora: { s: '●', l: 'da applicare', bg: t.hPill, fg: t.hPillFg, ring: 'transparent' },
+      salvata: { s: '✓', l: 'salvata', bg: t.pillOkBg, fg: t.pillOkFg, ring: 'transparent' }, cambiata: { s: '◐', l: 'cambiata, da applicare', bg: 'transparent', fg: t.text, ring: t.accent },
+      indicare: { s: '○', l: 'da indicare', bg: 'transparent', fg: t.text, ring: t.muted } };
+    const fz = s.fase === 'in corso' ? { op: 0.45, pe: 'none', ad: 'true' } : { op: 1, pe: 'auto', ad: undefined };
+    const setQ = (id, o) => this.setState(st => ({ sel: { ...st.sel, [id]: { ...(st.sel[id] || {}), ...o } } }));
+    const pick = (on, l, sub, f, dis) => ({ l, sub: sub || '', sel: !!on, no: !!dis, on: () => f() });
+    const fld = (id, lab, v, f, ph, aiuto) => ({ id, lab, v: v || '', ph: ph || '', aiuto: aiuto || '', on: e => f(e.target.value) });
+    // la domanda aperta: titolo, prove, parti con le scelte
+    const domanda = (q, cur, x) => { const id = q.id, S = o => setQ(id, o), parti = [];
+      const P = (capo, o) => parti.push({ capo, id: 'cp-' + id + '-' + parti.length, sid: 'cs-' + id + '-' + parti.length, lid: 'cl-' + id + '-' + parti.length, ptop: parti.length ? '16px' : '0', btop: parti.length ? '1px solid ' + t.line : '0', st: null, scelte: null, av: null, campi: null, lista: null, sotto: null, sottoT: '', sottoL: '', nota: '', ...o });
+      let prove = q.prove.slice();
+      if (q.tipo === 'strumento') P(q.nome + ' e ' + q.a + ' sono lo stesso strumento?', { scelte: [pick(cur.s === 'si', 'Sì, unisci a ' + q.nome, '', () => S({ s: 'si' })), pick(cur.s === 'no', 'No, sono distinti', '', () => S({ s: 'no' }))] });
+      if (q.tipo === 'filtro') { const m = cur.m, o = { scelte: [pick(m === 'esistente', 'Filtro esistente', '', () => S({ m: 'esistente' })), pick(m === 'catalogo', 'Modello da catalogo', '', () => S({ m: 'catalogo' }), s.noMod), pick(m === 'nuovo', 'Nuovo filtro', '', () => S({ m: 'nuovo' }))] };
+        if (s.noMod) o.av = { tipo: 'riga', s: '!', t: 'Elenco dei modelli non disponibile', x: '', a: '' };
+        if (m === 'esistente') Object.assign(o, { sotto: MIEI.map(f => pick(cur.mio === f, f, '', () => S({ mio: f }))), sottoL: 'Filtro esistente' });
+        if (m === 'catalogo') { const c = cur.cerca || '', tk = c.toLowerCase().split(/\s+/).filter(Boolean), tr = tk.length ? MODELLI.filter(([a, b]) => tk.every(k => (a + ' ' + b).toLowerCase().includes(k))) : [];
+          o.campi = [fld('cerca-' + id, 'Cerca fra i modelli per ' + q.nome, c, v => S({ cerca: v, mod: null }), 'Marca o nome')];
+          if (tk.length && tr.length) o.lista = tr.map(([a, b]) => { const n = a + ' ' + b, on = cur.mod === n; return { marca: a, n: b, as: on ? 'true' : 'false', ok: on ? '✓' : '', bg: on ? t.hPill : 'transparent', fg: on ? t.hPillFg : t.text, on: () => S({ mod: n }) }; });
+          if (tk.length && !tr.length) o.nota = 'Nessun modello per «' + c + '». Se non è in elenco, seleziona Nuovo filtro.'; }
+        if (m === 'nuovo') Object.assign(o, { campi: [fld('nome-' + id, 'Nome', cur.nome, v => S({ nome: v }))], sotto: BANDE.map(b => pick(cur.banda === b, b, '', () => S({ banda: b }))), sottoT: 'Banda', sottoL: 'Banda' });
+        P('Come rispondere per ' + q.nome, o); }
+      if (q.tipo === 'attrezzatura') { const v = vals(q, cur), v0 = vals(q, merge(q, {}, s.noMod)), camOk = q.parti.indexOf('camera') < 0 || !!v[0];
+        q.parti.forEach((k, j) => { const st = !v[j] ? PL.indicare : v[j] === v0[j] ? PL.salvata : PL.ora, o = { st };
+          if (k === 'camera') { o.scelte = CORREDI.map(([n, sub]) => pick(cur.camera === n, n, sub, () => S({ camera: n }))).concat([pick(cur.camera === 'altra', 'Altra camera', '', () => S({ camera: 'altra' }))]);
+            if (cur.camera === 'altra') o.campi = [fld('cn-' + id, 'Camera', cur.cNome, x => S({ cNome: x })), fld('cf-' + id, 'Focale (mm)', cur.cFoc, x => S({ cFoc: x })), fld('co-' + id, 'Ottica', cur.cOtt, x => S({ cOtt: x }), '', 'Facoltativa.')]; }
+          if (k === 'ottica') { o.scelte = OTTICHE.map(n => pick(cur.ottica === n, n, '', () => S({ ottica: n }))).concat([pick(cur.ottica === 'altra', 'Altra ottica', '', () => S({ ottica: 'altra' }))]);
+            if (cur.ottica === 'altra') o.campi = [fld('on-' + id, 'Nome dell\u0027ottica', cur.oNome, x => S({ oNome: x }))]; }
+          if (k === 'filtro') { const d = !camOk; o.scelte = [['colori', 'A colori, nessun filtro'], ['nessuno', 'Nessun filtro'], ['esistente', 'Filtro esistente']].map(([kk, l]) => pick(cur.filtro === kk, l, '', () => S({ filtro: kk }), d));
+            if (d) o.nota = 'Selezionabile dopo aver indicato la camera.';
+            if (!d && cur.filtro === 'esistente') Object.assign(o, { sotto: MIEI.map(f => pick(cur.fMio === f, f, '', () => S({ fMio: f }))), sottoL: 'Filtro esistente' }); }
+          P(CAPO[k] + ' per ' + q.nome, o); }); }
+      if (q.tipo === 'oggetto') { if (!q.cand.length) prove = [['Oggetti nel campo', ['Nessuno']]].concat(prove);
+        const o = { scelte: q.cand.map(([n, pos]) => pick(cur.o === n, n, pos, () => S({ o: n }))).concat([pick(cur.o === 'altro', 'Altro nome', '', () => S({ o: 'altro' })), pick(cur.o === 'non', 'Non è un oggetto', 'frame di prova o di messa a fuoco: esclusi dalle ore', () => S({ o: 'non' }))]) };
+        if (cur.o === 'altro') o.campi = [fld('og-' + id, 'Nome dell\u0027oggetto', cur.nome, x => S({ nome: x }))];
+        P('Oggetto per ' + q.nome, o); }
+      if (q.tipo === 'tipo') P('Tipo dei frame in ' + q.nome, { scelte: ['Light', 'Calibrazione'].map(n => pick(cur.t === n, n, '', () => S({ t: n }))) });
+      if (q.tipo === 'sito') { const pr = [['Oggetti nel campo', q.prove[0][1]]];
+        if (!s.noSiti) pr.push(['Distanza', [SITI[0][1] + ' km dal sito predefinito']]);
+        pr.push(['Notti', s.noSiti ? ['Notti non calcolabili senza sito'] : q.notti.map(([m, g]) => m + ': ' + g)]); prove = pr;
+        P('Sito per le coordinate ' + q.nome, s.noSiti ? { av: { tipo: 'blocco', s: '?', t: 'Per rispondere serve almeno un sito: si aggiunge nelle Impostazioni.', x: '', a: 'Apri le Impostazioni' } }
+          : { scelte: SITI.map(([n, km]) => pick(cur.s === n, n + ', a ' + km + ' km', '', () => S({ s: n }))) }); }
+      if (q.tipo === 'mosaico') { const o = { scelte: [pick(cur.m === 'mosaico', 'Mosaico', '', () => S({ m: 'mosaico' })), pick(cur.m === 'no', 'Non è un mosaico', '', () => S({ m: 'no' }))] };
+        if (cur.m === 'mosaico') o.campi = [fld('mo-' + id, 'Oggetto del mosaico (' + q.dove + ')', cur.nome, x => S({ nome: x }))];
+        P(q.nome + ', ' + q.dove + ': mosaico?', o); }
+      return { nome: q.nome, al: q.nome + ', ' + x.st.l, st: x.stP, era: x.era, frame: frameL(q), prove: prove.map(([k, r, ns]) => ({ k, righe: r, c: ns ? t.muted : t.text })), haProve: prove.length > 0, parti }; };
+    const frameL = q => (q.tipo === 'mosaico' ? q.pannelli + ' pannelli · ' : '') + (q.frame === 1 ? '1 frame' : num(q.frame) + ' frame') + (q.ore != null ? ' · ' + AL.ore(q.ore) : '');
+    const QS = s.base.map(q => { const cur = merge(q, s.sel, s.noMod), x = stat(q, cur); return { q, cur, ...x, stP: x.st === 'dare' ? PL.dare : x.st === 'ora' ? PL.ora : x.st === 'cambiata' ? PL.cambiata : PL.salvata }; });
+    const conto = QS.filter(x => x.st === 'dare').length, mods = QS.filter(x => x.mod).length, unione = QS.some(x => x.q.tipo === 'strumento' && x.mod && x.cur.s === 'si');
+    const SZ = SEZ.map(([k, n, perche]) => { const qs = QS.filter(x => x.q.sez === k); if (!qs.length) return null;
+      const c = st => qs.filter(x => x.st === st).length; return { k, n, perche, qs, dare: c('dare'), ora: c('ora'), salv: c('salvata'), camb: c('cambiata'), mod: qs.filter(x => x.mod).length, cur: qs.some(x => x.q.id === s.aperta) }; }).filter(Boolean);
+    const apriQ = id => e => { e && e.preventDefault(); set({ aperta: id, ric: false }); };
+    const riga = x => ({ riga: { nome: x.q.nome, frame: frameL(x.q), breve: x.breve, bfw: x.comp ? 600 : 400, bc: x.comp ? t.text : t.muted, st: x.stP, era: x.era, g: { l: x.st === 'dare' ? 'Rispondi' : 'Cambia', al: (x.st === 'dare' ? 'Rispondi: ' : 'Cambia: ') + x.q.nome, on: apriQ(x.q.id) } }, dom: null, ric: null });
+    const dom = x => ({ riga: null, ric: null, dom: domanda(x.q, x.cur, x) });
+    const ricI = () => ({ riga: null, dom: null, ric: { l: num(218) + ' oggetti identificati', exp: s.ric ? 'true' : 'false', aperto: s.ric, chev: s.ric ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6', on: e => { e.preventDefault(); set({ ric: !s.ric, aperta: s.ric ? s.aperta : null }); },
+      voci: RIC.map(([n, x]) => ({ n, x, al: 'Correggi: ' + n, on: e => e.preventDefault() })) } });
+    const sezione = (z, items, perche) => { const chiusa = !items, sum = z.mod > 0 ? { ...PL.ora, l: z.mod === 1 ? '1 risposta da applicare' : z.mod + ' risposte da applicare' } : { ...PL.salvata, l: z.qs.length === 1 ? '1 risposta salvata' : z.qs.length + ' risposte salvate' };
+      return { id: 'sez-' + z.k, hid: 'sezh-' + z.k, n: z.n, chiusa, aperta: !chiusa, sum, quante: z.qs.length === 1 ? '1 domanda' : z.qs.length + ' domande', perche: perche ? z.perche : '', items: items || [],
+        riapri: { bg: 'transparent', fg: t.text, ring: t.line, on: e => { e.preventDefault(); set({ riap: { ...s.riap, [z.k]: true } }); } } }; };
+    const stato = s.stato, pagAv = { 'non si legge': { s: '!', t: 'Da confermare non disponibile', x: '', a: 'Riprova' }, 'zero frame': { s: '?', t: 'Nessun frame in archivio.', x: 'Le domande compaiono dopo la scansione.', a: 'Aggiungi cartelle' },
+      'niente da confermare': { s: '✓', t: 'Niente da confermare', x: 'Nessuna domanda aperta.', a: '' } }[stato] || null;
+    const carica = stato === 'caricamento', vuota = carica || !!pagAv;
+    let sezioni = [], tipi = [], caso = null;
+    if (!vuota && !tel) sezioni = SZ.map(z => { const open = z.dare > 0 || z.cur || s.riap[z.k] || (z.k === 'oggetti' && s.ric);
+      if (!open) return sezione(z, null); const it = z.qs.map(x => x.q.id === s.aperta ? dom(x) : riga(x)); if (z.k === 'oggetti') it.push(ricI()); return sezione(z, it, z.cur); });
+    const chips = z => [[z.dare, PL.dare, ' senza risposta'], [z.ora, PL.ora, ' da applicare'], [z.salv, PL.salvata, ' salvate'], [z.camb, PL.cambiata, ' cambiate, da applicare']].filter(c => c[0]).map(([n, P, l]) => ({ ...P, l: n + l }));
+    const vaiTel = k => e => { e && e.preventDefault(); this.vaiSez(k); };
+    if (!vuota && tel && s.tel === 'tipi') tipi = SZ.map(z => ({ n: z.n, chips: chips(z), on: vaiTel(z.k) }));
+    if (!vuota && tel && s.tel === 'caso') { const z = SZ.find(z => z.cur) || SZ.find(z => z.dare) || SZ[0];
+      if (z) { let k = Math.max(0, z.qs.findIndex(x => x.q.id === s.aperta)); const x = z.qs[k];
+        sezioni = [sezione(z, [dom(x)], true)];
+        const vai = j => ({ dis: j < 0 || j >= z.qs.length ? 'true' : undefined, op: j < 0 || j >= z.qs.length ? 0.4 : 1, on: e => { e.preventDefault(); if (j >= 0 && j < z.qs.length) set({ aperta: z.qs[j].q.id }); } });
+        caso = { quale: 'caso ' + (k + 1) + ' di ' + z.qs.length, indietro: e => { e.preventDefault(); set({ tel: 'tipi' }); }, prima: vai(k - 1), dopo: vai(k + 1) }; } }
+    const indice = SZ.map(z => ({ n: z.n, href: '#sez-' + z.k, c: z.dare ? z.dare + ' senza risposta' : 'tutte con risposta', cur: z.cur ? 'true' : undefined, bg: z.cur ? t.card2 : 'transparent', fw: z.cur ? 600 : 400,
+      sg: z.dare ? { s: String(z.dare), bg: 'transparent', fg: t.text, bd: t.muted } : { s: '✓', bg: t.pillOkBg, fg: t.pillOkFg, bd: 'transparent' }, on: e => { e.preventDefault(); this.vaiSez(z.k); } }));
+    const busy = s.fase === 'in corso', noApp = !mods || busy;
+    const uT = tel && unione && s.uAp;
+    const piede = vuota || !SZ.length ? null : { n: mods, l: tel ? 'da applicare' : mods === 1 ? 'modifica da applicare' : 'modifiche da applicare', unione: tel ? null : unione, bg: tel ? 'color-mix(in srgb, var(--carta) 90%, transparent)' : t.card, nSz: tel ? '26px' : '30px',
+      wrap: tel && !uT ? 'nowrap' : 'wrap', uTesto: uT || null, uBtn: tel && unione ? { exp: s.uAp ? 'true' : 'false', on: e => { e.preventDefault(); set({ uAp: !s.uAp }); } } : null,
+      b: { l: busy ? 'Applicazione in corso…' : 'Applica', busy: busy ? 'true' : undefined, dis: noApp ? 'true' : undefined, bg: t.hPill, fg: t.hPillFg, op: !mods && !busy ? 0.45 : 1, cur: busy ? 'progress' : noApp ? 'not-allowed' : 'pointer',
+        on: e => { e.preventDefault(); if (noApp) return; set({ fase: 'in corso', esito: null });
+          this.dopo(1400, () => { const st = this.state, r = this.applica(st.base, st.sel, st.noMod); this.setState({ base: r.base, sel: {}, fase: 'fatto', esito: r, aperta: r.base.some(q => q.id === st.aperta) ? st.aperta : null }); }); } } };
+    const chiudi = e => { e.preventDefault(); set({ fase: null, esito: null }); };
+    const esito = s.fase === 'fatto' && s.esito ? { s: '✓', bg: t.pillOkBg, fg: t.pillOkFg, t: (s.esito.n === 1 ? '1 modifica applicata, ' : s.esito.n + ' modifiche applicate, ') + num(s.esito.frame) + ' frame da rielaborare', x: '', chiudi }
+      : s.fase === 'errore' ? { s: '!', bg: t.warn, fg: t.warnFg, t: 'Modifiche non applicate', x: MOTIVI[s.motivo] || '', chiudi: null } : null;
+    const sxDesk = !tel && !pagAv;
+    const tacche = vuota || !QS.length ? null : QS.map(x => x.st === 'dare' ? { bg: 'transparent', bd: '1.5px solid ' + t.muted } : x.st === 'salvata' ? { bg: t.pillOkFg, bd: '0' } : { bg: t.accent, bd: '0' });
+    if (carica) L.cols = 'minmax(0,1fr)';
+    return { pronto: true, rifRoot: this.rifRoot, tacche, taccheAl: (QS.length - conto) + ' domande con risposta su ' + QS.length, altezza: p.altezza || '100vh', t, L, fz, modo, accento: p.accento, setModo: m => set({ modo: m }), fmt: tel ? 'telefono' : 'desktop', conto, barraConf: conto > 0 && !vuota,
+      V: { sx: !carica && (sxDesk || (tel && !vuota)), carica, testa: !vuota, regola: conto > 0 && !(tel && s.tel === 'caso'), indice: sxDesk && !carica && SZ.length > 0, tipi: tipi.length > 0 },
+      sk: tel ? SK.tel : SK.desk, skG: tel ? 'minmax(0,1fr)' : '300px minmax(0,1fr)', av: pagAv, esito, indice, sezioni, tipi, caso, piede };
+  }
+}
+const SK = { desk: [{ col: '1', h: '190px', blocchi: [{ h: '64px', w: '120px' }, { h: '14px' }, { h: '14px', w: '70%' }] }, { col: '2', h: '72px', blocchi: [{ riga: [{ h: '22px', w: '240px' }, 'Caricamento…'], tra: true }] }, { col: '1', h: '380px', blocchi: [{ h: '14px', w: '80px' }, { h: '44px', r: '16px' }, { h: '44px', r: '16px' }, { h: '44px', r: '16px' }, { h: '44px', r: '16px' }] }, { col: '2', h: '420px', blocchi: [{ h: '26px', w: '200px' }, { h: '56px', r: '18px' }, { flex: '1', r: '22px' }] }],
+  tel: [{ h: '120px', blocchi: [{ riga: [{ h: '48px', w: '90px' }, 'Caricamento…'], tra: true }, { h: '14px' }] }, { h: '320px', blocchi: [{ h: '14px', w: '120px' }, { h: '72px', r: '18px' }, { h: '72px', r: '18px' }, { h: '72px', r: '18px' }] }] };
+const SEZ = [
+  ['strumenti', 'Strumenti duplicati', 'Strumenti con nome simile e stesse caratteristiche: possono essere lo stesso strumento rilevato da due programmi. L\u0027unione non è reversibile.'],
+  ['filtri', 'Filtri', 'Filtri non riconosciuti. L\u0027associazione vale anche per i frame futuri.'],
+  ['attrezzatura', 'Attrezzatura da completare', 'Camera, ottica o filtro non indicati nei file. La risposta vale per tutti i frame con le stesse intestazioni, anche futuri.'],
+  ['oggetti', 'Oggetti', 'Oggetto non certo, oppure non indicato nei file né identificato dal plate solving. La risposta vale per tutti i frame del gruppo.'],
+  ['tipo', 'Frame senza tipo', 'Tipo di frame non indicato nei file. Finché non viene indicato, i frame sono esclusi dal conteggio delle ore.'],
+  ['sito', 'Frame senza sito', 'Frame ripresi a coordinate che non corrispondono a nessun sito. L\u0027associazione vale anche per le notti future.'],
+  ['mosaici', 'Mosaici proposti', 'Pannelli adiacenti ripresi con lo stesso setup. Vengono uniti solo dopo conferma.']];
+// Dati simulati (dalla tavola vecchia, al 30 settembre 2026). I nomi di filtri e strumenti sono come li scrive l'utente.
+const SENS = '6248 × 4176 px · 3.76 µm';
+const BASE = () => [
+  { id: 's1', sez: 'strumenti', tipo: 'strumento', nome: 'ZWO ASI2600MM Pro', a: 'ATR2600M', frame: 412, prove: [['Simile a', ['ATR2600M']], ['Sensore', [SENS]], ['Altri frame', ['1032 frame con ZWO ASI2600MM Pro']]], sel0: {} },
+  { id: 'f1', sez: 'filtri', tipo: 'filtro', nome: 'H', frame: 86, prove: [], sel0: {} },
+  { id: 'f2', sez: 'filtri', tipo: 'filtro', nome: 'O3', frame: 40, prove: [['Oggetti nel campo', ['NGC 6992 (28 frame), NGC 6960 (12 frame)']], ['Ottica e camera', ['Askar FRA400 · ZWO ASI2600MM Pro']]], sel0: {}, cerca0: 'antlia oiii' },
+  { id: 'a1', sez: 'attrezzatura', tipo: 'attrezzatura', nome: 'EQ6-R', frame: 214, parti: ['camera', 'filtro'], prove: [['Camera nel file', ['Non indicata'], 1], ['Telescopio nel file', ['EQ6-R']], ['Sensore', [SENS]], ['Ottica nei frame', ['Askar FRA400 · 400 mm']], ['Oggetti nel campo', ['NGC 7000 (120 frame), IC 5070 (64 frame), M 31 (30 frame)']]], sel0: {} },
+  { id: 'o1', sez: 'oggetti', tipo: 'oggetto', nome: 'NGC 7000', frame: 64, ore: 5.3, cand: [['NGC 7000 · Nebulosa Nord America', 'nell\u0027inquadratura'], ['IC 5070 · Nebulosa Pellicano', 'fuori dall\u0027inquadratura'], ['IC 5068', 'posizione non nota']], prove: [['Notte', ['27 set 2026']], ['Ottica e camera', ['Askar FRA400 · ZWO ASI2600MM Pro']]], sel0: {} },
+  { id: 'o2', sez: 'oggetti', tipo: 'oggetto', nome: 'Frame senza nome', frame: 18, ore: 0.6, cand: [], prove: [['Notte', ['12 ago 2025']], ['Camera e telescopio', ['ASI294MC · RedCat 51']], ['Puntamento', ['Non indicato'], 1], ['Primo e ultimo frame', ['Non indicati'], 1]], sel0: { o: 'non' } },
+  { id: 't1', sez: 'tipo', tipo: 'tipo', nome: 'D:\\Astro\\M31\\Sconosciuto', frame: 120, prove: [], sel0: { t: 'Light' } },
+  { id: 't2', sez: 'tipo', tipo: 'tipo', nome: 'D:\\Astro\\2025\\Agosto\\Flat e dark della notte del 12\\Sconosciuto', frame: 36, prove: [['Notte', ['12 ago 2025']], ['Durata', ['senza durata'], 1]], sel0: {} },
+  { id: 'z1', sez: 'sito', tipo: 'sito', nome: '46.10 N 12.00 E', frame: 52, notti: [['ago 2025', '12, 13']], prove: [['Oggetti nel campo', ['M 31 (12 frame), M 33 (4 frame), NGC 7000 (3 frame) + 2']]], sel0: { s: 'Casa' } },
+  { id: 'm1', sez: 'mosaici', tipo: 'mosaico', nome: 'IC 1318, NGC 6910', dove: 'RA 305.2 Dec 40.6', pannelli: 2, frame: 96, prove: [['Oggetti nel campo', ['IC 1318, NGC 6910, Sadr']], ['Notte', ['19 e 20 set 2026']]], sel0: {} }];
+const A_UNA = { nome: 'ZWO ASI2600MM Pro', parti: ['filtro'], prove: [['Camera nel file', ['ZWO ASI2600MM Pro']], ['Telescopio nel file', ['EQ6-R']], ['Sensore', [SENS]], ['Ottica nei frame', ['Askar FRA400 · 400 mm']]] };
+const A_TRE = { nome: SENS, parti: ['camera', 'ottica', 'filtro'], prove: [['Camera nel file', ['Non indicata'], 1], ['Telescopio nel file', ['Non indicato'], 1], ['Sensore', [SENS]], ['Ottica nei frame', ['Non indicata'], 1]] };
+const MOLTE = [['mag 2025', '3, 4, 24, 25, 31'], ['giu 2025', '1, 20, 21, 22, 27, 28'], ['lug 2025', '4, 5, 18, 19, 25, 26, 27'], ['ago 2025', '1, 2, 12, 13, 14, 22, 23, 29'], ['set 2025', '12, 13, 19, 20, 26, 27, 28'], ['ott 2025', '3']];
+const TUTTE = { a1: { camera: 'Notte in quota', filtro: 'nessuno' }, o1: { o: 'NGC 7000 · Nebulosa Nord America' }, t2: { t: 'Calibrazione' }, m1: { m: 'mosaico', nome: 'Sadr' } };
+const CORREDI = [['Notte in quota', 'Askar FRA400 · ZWO ASI2600MM Pro'], ['Casa leggero', 'RedCat 51 · ZWO ASI294MC Pro']];
+const OTTICHE = ['Askar FRA400', 'RedCat 51', 'Askar 107PHQ'];
+const MIEI = ['Antlia 3nm Narrowband H-alpha Pro', 'Baader L 36 mm', 'Optolong L-eXtreme'];
+const MODELLI = [['Antlia', '3nm Narrowband OIII Pro'], ['Antlia', '4.5nm Narrowband OIII'], ['Antlia', '3nm Narrowband H-alpha Pro'], ['Antlia', '3nm Narrowband SII Pro'], ['Baader', 'OIII 6.5nm CMOS'], ['Optolong', 'OIII 6.5nm'], ['Chroma', 'OIII 3nm']];
+const BANDE = ['L', 'R', 'G', 'B', 'HA', 'HB', 'OIII', 'SII'];
+const SITI = [['Cima Ekar', '44.1'], ['Passo Coe', '64.8'], ['Casa', '71.0']];
+const RIC = [['IC 1396', 'Proboscide d\u0027Elefante · 310 frame'], ['M 31', 'Galassia di Andromeda · 412 frame'], ['M 33', 'Galassia del Triangolo · 186 frame'], ['M 42', 'Nebulosa di Orione · 94 frame'], ['NGC 6992', 'Velo Est · 140 frame']];
+const CAPO = { camera: 'Camera', ottica: 'Ottica', filtro: 'Filtro' };
+const MOTIVI = { 'oggetto non nel catalogo': 'Oggetto non presente nel catalogo. Nessuna modifica salvata.', 'dati non aggiornati': 'Dati non aggiornati: ricarica la pagina. Nessuna modifica salvata.',
+  'scansione in corso': 'Scansione in corso: riprova al termine. Nessuna modifica salvata.', 'unione non possibile': 'Unione non possibile. Nessuna modifica salvata.', 'nome già usato': 'Nome già usato da un altro strumento. Nessuna modifica salvata.', 'altro errore': '' };
+// risposta corrente: valori di partenza dell'interfaccia, poi le salvate, poi quelle date ora
+function merge(q, sel, noMod) { const ui = q.tipo === 'filtro' ? { m: noMod ? 'esistente' : 'catalogo', cerca: q.cerca0 || '' } : {}; return { ...ui, ...q.sel0, ...(sel[q.id] || {}) }; }
+// i valori di ogni parte della risposta (null = non data)
+function vals(q, c) {
+  if (q.tipo === 'strumento') return [c.s === 'si' ? 'Sì, unisci a ' + q.nome : c.s === 'no' ? 'No, sono distinti' : null];
+  if (q.tipo === 'filtro') return [c.m === 'esistente' && c.mio ? 'Filtro esistente: ' + c.mio : c.m === 'catalogo' && c.mod ? c.mod : c.m === 'nuovo' && c.nome && c.banda ? 'Nuovo filtro: ' + c.nome + ' · ' + c.banda : null];
+  if (q.tipo === 'attrezzatura') return q.parti.map(k => k === 'camera' ? (c.camera === 'altra' ? (c.cNome && c.cFoc ? c.cNome : null) : c.camera || null)
+    : k === 'ottica' ? (c.ottica === 'altra' ? c.oNome || null : c.ottica || null)
+    : (c.filtro === 'colori' ? 'A colori, nessun filtro' : c.filtro === 'nessuno' ? 'Nessun filtro' : c.filtro === 'esistente' && c.fMio ? 'Filtro esistente: ' + c.fMio : null));
+  if (q.tipo === 'oggetto') return [c.o === 'altro' ? c.nome || null : c.o === 'non' ? 'Non è un oggetto' : c.o || null];
+  if (q.tipo === 'tipo') return [c.t || null];
+  if (q.tipo === 'sito') return [c.s || null];
+  if (q.tipo === 'mosaico') return [c.m === 'mosaico' ? (c.nome ? 'Mosaico: ' + c.nome : null) : c.m === 'no' ? 'Non è un mosaico' : null];
+  return [null]; }
+const ALT = { strumento: q => 'Sì, unisci a ' + q.nome + ' · No, sono distinti', filtro: () => 'Filtro esistente · Modello da catalogo · Nuovo filtro', oggetto: q => q.cand.length ? q.cand.map(c => c[0]).join(' · ') : 'Altro nome · Non è un oggetto',
+  tipo: () => 'Light · Calibrazione', sito: () => SITI.map(s => s[0]).join(' · '), mosaico: () => 'Mosaico · Non è un mosaico' };
+// stato della risposta: senza risposta, da applicare, salvata, cambiata (con cosa era)
+function stat(q, cur) { const v = vals(q, cur), v0 = vals(q, { ...(q.tipo === 'filtro' ? { m: '' } : {}), ...q.sel0 }), comp = v.every(Boolean), was = v0.every(Boolean), ch = v.some((x, i) => x !== v0[i]);
+  const st = !comp ? 'dare' : !ch ? 'salvata' : was ? 'cambiata' : 'ora';
+  const breve = q.tipo === 'attrezzatura' ? (comp ? v.join(' · ') : q.parti.map((k, i) => CAPO[k] + ' per ' + q.nome + ': ' + (v[i] || 'da indicare')).join(' · ')) : comp ? v[0] : ALT[q.tipo](q);
+  return { comp, st, mod: v.some((x, i) => x && x !== v0[i]), breve, era: st === 'cambiata' ? 'era ' + v0.join(' · ') : '' }; }
+</script>
+</body>
+</html>

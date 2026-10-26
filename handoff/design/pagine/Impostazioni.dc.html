@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.8}input::placeholder{color:inherit;opacity:.5}@keyframes alIn{from{opacity:0;transform:translateY(14px)}}@keyframes alFade{from{opacity:0}}@keyframes alFadeUp{from{opacity:0;transform:translateY(6px)}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-imp__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}">
+<input class="al-imp__blocco-2" type="file" accept=".hrz,.txt,text/plain" ref="{{ fileRef }}" onChange="{{ onFile }}" aria-hidden="true" tabindex="-1">
+<sc-if value="{{ F.desk }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="desktop" pagina="Impostazioni" etichetta="Impostazioni" sito="Cima Ekar" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<div class="al-imp__griglia-1">
+<div class="al-imp__riga-1"><span class="al-imp__riga-2"><span class="al-imp__testo-1 al-solo-voce">Impostazioni</span><span class="al-imp__testo-2">{{ tabSub }}</span></span><sc-if value="{{ tab.siti }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-3"><sc-for list="{{ siti }}" as="s" hint-placeholder-count="2"><a class="al-imp__pillola-1" href="#" onClick="{{ s.on }}" aria-pressed="{{ s.sel }}" style="font-weight:{{ s.fw }};background:{{ s.bg }};color:{{ s.fg }};box-shadow:inset 0 0 0 2px {{ s.ring }}">{{ s.l }}</a></sc-for></span></sc-if></div>
+<div role="tablist" aria-label="Sezioni" class="al-scelta al-scelta--linguette al-scelta--sottili al-imp__blocco-3"><sc-for list="{{ tabs }}" as="g" hint-placeholder-count="8"><a href="#" role="tab" aria-selected="{{ g.sel }}" onClick="{{ g.on }}" class="al-scelta__voce">{{ g.l }}</a></sc-for></div>
+
+<sc-if value="{{ tab.generale }}" hint-placeholder-val="{{ true }}"><div class="al-imp__griglia-2">
+<dc-import name="componenti/Carta" colonne="4" ritardo="0" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Nome utente" hint-size="100%,200px">
+<span class="al-imp__testo-3">Nome utente</span>
+<span class="al-imp__riga-4"><input value="{{ nome.v }}" onChange="{{ nome.on }}" aria-label="Nome utente" placeholder="Il tuo nome" class="al-campo al-imp__blocco-4"><a class="al-imp__riga-5" href="#" onClick="{{ nome.salva }}" aria-disabled="{{ nome.dis }}" style="background:{{ nome.bg }};color:{{ nome.fg }}">Salva</a></span>
+<sc-if value="{{ nome.fatto }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-4">✓ Salvato</span></sc-if>
+<span class="al-imp__testo-5">Usato per intestare le statistiche.</span>
+</dc-import>
+<dc-import name="componenti/Carta" colonne="8" ritardo="60" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Tema" hint-size="100%,320px">
+<span class="al-imp__riga-6"><span class="al-imp__testo-3">Tema</span><span class="al-imp__testo-5">come si vede l'app</span></span>
+<dc-import name="componenti/SceltaTema" modo="{{ modoSc }}" accento="{{ accento }}" sito="Cima Ekar" formato="desktop" on-modo="{{ setModoSc }}" on-accento="{{ setAccento }}" hint-size="100%,240px"></dc-import>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.siti }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
+<dc-import name="componenti/Carta" colonne="5" ritardo="0" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Il sito" hint-size="100%,420px">
+<span class="al-imp__testo-6">{{ sitoN }}</span>
+<sc-for list="{{ righe }}" as="r" hint-placeholder-count="3"><div class="al-imp__griglia-3"><span class="al-imp__testo-2">{{ r.l }}</span><span class="al-imp__colonna-1"><b class="al-imp__testo-7">{{ r.v }}</b><span class="al-imp__testo-8">{{ r.s }}</span></span></div></sc-for>
+<div class="al-imp__griglia-3"><span class="al-imp__testo-2">Predefinito</span><span class="al-imp__colonna-2"><b class="al-imp__testo-7">{{ pred.v }}</b><sc-if value="{{ pred.on }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ pred.on }}" class="al-bottone al-bottone--contorno al-bottone--piccolo">Usa come predefinito</a></sc-if><span class="al-imp__testo-8">Il sito dei conti quando una notte non ne ha uno.</span></span></div>
+<div class="al-imp__griglia-4">
+<span class="al-imp__testo-2">Orizzonte</span>
+<span class="al-imp__colonna-3">
+<sc-if value="{{ oz.ok }}" hint-placeholder-val="{{ true }}"><span class="al-imp__colonna-1"><b class="al-imp__testo-7">{{ oz.file }}</b><span class="al-imp__testo-8">{{ oz.sub }}</span></span></sc-if>
+<sc-if value="{{ oz.vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-9">Nessun orizzonte: conta solo l'altezza minima.</span></sc-if>
+<sc-if value="{{ oz.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-7" role="alert" style="background:{{ errBg }};color:{{ errFg }}"><b class="al-imp__tondo-1" aria-hidden="true">!</b><span class="al-imp__testo-10">Il file non si legge: servono almeno due righe azimut altezza.</span></span></sc-if>
+<span class="al-imp__riga-4"><sc-for list="{{ oz.azioni }}" as="a" hint-placeholder-count="2"><a class="al-imp__pillola-2" href="#" onClick="{{ a.on }}" style="font-weight:{{ a.fw }};background:{{ a.bg }};color:{{ a.fg }};box-shadow:{{ a.sh }}">{{ a.l }}</a></sc-for></span>
+<span class="al-imp__testo-11">File dell'orizzonte di N.I.N.A.: azimut e altezza in gradi, una coppia per riga.</span>
+</span>
+</div>
+</dc-import>
+<dc-import name="componenti/Carta" colonne="7" ritardo="60" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="L'orizzonte a 360°" hint-size="100%,560px">
+<div class="al-imp__riga-6"><span class="al-imp__testo-12">L'orizzonte a 360°</span><span class="al-imp__testo-5">visto dall'alto · N in alto, E a destra</span></div>
+<div class="al-imp__griglia-5">
+<div class="al-imp__blocco-5">{{ disegno }}</div>
+<div class="al-imp__colonna-4">
+<span class="al-imp__testo-13" aria-live="polite">{{ lettura }}</span>
+<span class="al-imp__colonna-5"><sc-for list="{{ leg }}" as="l" hint-placeholder-count="3"><span class="al-imp__riga-8"><i class="al-imp__blocco-6" style="background:{{ l.bg }};border-top:{{ l.b }}"></i><span>{{ l.n }}</span></span></sc-for></span>
+<span class="al-imp__testo-11">Passa sul disegno, o usa le frecce, per leggere ogni direzione. Profilo d'esempio: dati simulati.</span>
+</div>
+</div>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.cartelle }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
+<dc-import name="componenti/Carta" colonne="8" ritardo="0" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Cartelle" hint-size="100%,420px">
+<span class="al-imp__riga-9"><span class="al-imp__testo-3">Cartelle</span><span class="al-imp__testo-5">{{ car.conto }}</span></span>
+<sc-for list="{{ car.lista }}" as="c" hint-placeholder-count="3"><div class="al-imp__riga-10"><span class="al-imp__tondo-2" aria-hidden="true">✓</span><span class="al-imp__colonna-6"><b class="al-imp__testo-14">{{ c.p }}</b><span class="al-imp__testo-8">{{ c.n }}</span></span><a href="#" onClick="{{ c.togli }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-imp__blocco-7">Togli</a></div></sc-for>
+<sc-if value="{{ car.vuota }}" hint-placeholder-val="{{ false }}"><span class="al-imp__blocco-8">Nessuna cartella: l'archivio è vuoto.</span></sc-if>
+<div class="al-imp__colonna-7">
+<span class="al-imp__riga-11"><span class="al-imp__testo-15">Aggiungi una cartella</span><span role="radiogroup" aria-label="Dove sono i file" class="al-scelta al-scelta--segmentato al-scelta--sottili"><sc-for list="{{ car.dove }}" as="d" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ d.sel }}" onClick="{{ d.on }}" class="al-scelta__voce">{{ d.l }}</a></sc-for></span></span>
+<span class="al-imp__riga-4"><input value="{{ car.perc }}" onChange="{{ car.onPerc }}" aria-label="Percorso della cartella" placeholder="{{ car.ph }}" class="al-campo al-imp__blocco-9"><a class="al-imp__riga-5" href="#" onClick="{{ car.verifica }}" aria-disabled="{{ car.dis }}" style="background:{{ car.bg }};color:{{ car.fg }}">{{ car.vl }}</a></span>
+<span class="al-imp__testo-8">{{ car.aiuto }}</span>
+<sc-if value="{{ car.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="desktop" segno="{{ car.esito.s }}" titolo="{{ car.esito.t }}" testo="{{ car.esito.x }}" azione="{{ car.esito.a }}" on-azione="{{ car.esito.on }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import></sc-if>
+</div>
+</dc-import>
+<dc-import name="componenti/Carta" colonne="4" ritardo="60" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Scansione" hint-size="100%,220px">
+<span class="al-imp__testo-3">Scansione</span>
+<span class="al-imp__colonna-1"><b class="al-imp__testo-7">{{ scan.t }}</b><span class="al-imp__testo-5">{{ scan.s }}</span></span>
+<a href="#" onClick="{{ scan.on }}" class="al-bottone al-bottone--pieno al-bottone--blocco al-bottone--a-sinistra al-imp__blocco-10">{{ scan.b }}</a>
+<span class="al-imp__testo-11">Vengono lette anche le sottocartelle. Si avvia anche da Scansiona, nel menu dell'ingranaggio.</span>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.meteo }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
+<dc-import name="componenti/Carta" colonne="7" ritardo="0" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Seeing (Meteoblue)" hint-size="100%,320px">
+<span class="al-imp__testo-3">Seeing (Meteoblue)</span>
+<span class="al-imp__testo-9">Con una chiave Meteoblue il seeing è disponibile ora per ora, per sette notti. Senza chiave il resto del meteo funziona.</span>
+<dc-import name="componenti/Avviso" tipo="riga" formato="desktop" segno="{{ key.st.s }}" titolo="{{ key.st.t }}" testo="" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import>
+<span class="al-imp__riga-4"><input value="{{ key.v }}" onChange="{{ key.on }}" aria-label="Chiave Meteoblue" placeholder="Chiave Meteoblue" class="al-campo al-imp__blocco-9"><a class="al-imp__riga-5" href="#" onClick="{{ key.verifica }}" aria-disabled="{{ key.dis }}" style="background:{{ key.bg }};color:{{ key.fg }}">{{ key.vl }}</a><sc-if value="{{ key.rimuovi }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ key.rimuovi }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra">Rimuovi chiave</a></sc-if></span>
+<sc-if value="{{ key.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="desktop" segno="{{ key.esito.s }}" titolo="{{ key.esito.t }}" testo="" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></sc-if>
+<a class="al-imp__blocco-11" href="https://www.meteoblue.com/it/weather-api" target="_blank" rel="noopener">Chiedi una chiave a Meteoblue ↗</a>
+</dc-import>
+<dc-import name="componenti/Carta" colonne="5" ritardo="60" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Previsione" hint-size="100%,220px">
+<span class="al-imp__testo-3">Previsione</span>
+<span class="al-imp__colonna-8"><span class="al-imp__testo-2">Meteo apre su</span><span role="radiogroup" aria-label="Meteo apre su" class="al-scelta al-scelta--linguette al-scelta--sottili"><sc-for list="{{ obiettivo }}" as="o" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ o.sel }}" onClick="{{ o.on }}" class="al-scelta__voce">{{ o.l }}</a></sc-for></span></span>
+<span class="al-imp__testo-16">Fonti: Open-Meteo per il meteo, Meteoblue per il seeing.</span>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.astap }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
+<dc-import name="componenti/Carta" colonne="12" ritardo="0" padding="24px 28px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="ASTAP" hint-size="100%,360px">
+<span class="al-imp__riga-6"><span class="al-imp__testo-3">ASTAP</span><span class="al-imp__testo-5">il programma che identifica il campo dalle stelle (plate solving)</span></span>
+<div class="al-imp__griglia-6"><span class="al-imp__blocco-12">Percorso del programma</span><span class="al-imp__colonna-9"><span class="al-imp__riga-4"><input value="{{ ast.v }}" onChange="{{ ast.on }}" aria-label="Percorso di ASTAP" placeholder="C:\Program Files\astap\astap_cli.exe" class="al-campo al-imp__blocco-13"><a href="#" onClick="{{ ast.verifica }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra">{{ ast.vl }}</a></span><span class="al-imp__testo-8">Il percorso deve terminare con il programma (astap_cli).</span><sc-if value="{{ ast.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="desktop" segno="{{ ast.esito.s }}" titolo="{{ ast.esito.t }}" testo="{{ ast.esito.x }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></sc-if></span></div>
+<sc-for list="{{ ast.cat }}" as="c" hint-placeholder-count="2"><div class="al-imp__griglia-7"><span class="al-imp__testo-2">{{ c.l }}</span><span class="al-imp__riga-12"><span class="al-imp__riga-13" style="background:{{ c.bg }};color:{{ c.fg }}">{{ c.s }} {{ c.v }}</span></span><span class="al-imp__testo-5">{{ c.d }}</span></div></sc-for>
+<a class="al-imp__blocco-14" href="https://www.hnsky.org/astap.htm" target="_blank" rel="noopener">ASTAP e i cataloghi, sul sito di hnsky.org ↗</a>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.automazione }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
+<sc-for list="{{ autoP }}" as="q" hint-placeholder-count="2"><dc-import name="componenti/Carta" colonne="6" ritardo="0" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Automazione" hint-size="100%,320px">
+<span class="al-imp__colonna-10"><span class="al-imp__testo-13">{{ q.n }}</span><span class="al-imp__testo-5">{{ q.sub }}</span></span>
+<sc-for list="{{ q.righe }}" as="r" hint-placeholder-count="3"><div class="al-imp__colonna-11"><span class="al-imp__riga-14"><span class="al-imp__testo-17">{{ r.l }}</span><span role="radiogroup" aria-label="{{ r.l }}" class="al-scelta al-scelta--segmentato al-scelta--sottili"><sc-for list="{{ r.op }}" as="o" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ o.sel }}" onClick="{{ o.on }}" class="al-scelta__voce">{{ o.l }}</a></sc-for></span></span><span class="al-imp__testo-11">{{ r.s }}</span></div></sc-for>
+<sc-if value="{{ q.flat }}" hint-placeholder-val="{{ false }}"><span class="al-imp__blocco-15">Flat</span><sc-for list="{{ q.flatR }}" as="r" hint-placeholder-count="3"><div class="al-imp__riga-15"><span class="al-imp__blocco-16">{{ r.l }}</span><span class="al-imp__colonna-12"><sc-if value="{{ r.campi }}" hint-placeholder-val="{{ true }}"><span class="al-imp__riga-16"><sc-for list="{{ r.campi }}" as="c" hint-placeholder-count="1"><span class="al-imp__riga-12"><sc-if value="{{ c.pre }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-2">{{ c.pre }}</span></sc-if><input type="text" inputmode="{{ c.im }}" value="{{ c.v }}" onChange="{{ c.on }}" placeholder="{{ c.ph }}" aria-label="{{ c.aria }}" aria-invalid="{{ c.inv }}" class="al-campo al-campo--piccolo al-imp__testo-18" aria-invalid="{{ c.inv }}" style="width:{{ c.wd }}"><span class="al-imp__testo-2">{{ c.u }}</span></span></sc-for></span></sc-if><sc-if value="{{ r.pills }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-17"><sc-for list="{{ r.pills }}" as="o" hint-placeholder-count="2"><a class="al-imp__riga-18" href="#" onClick="{{ o.on }}" aria-pressed="{{ o.sel }}" style="font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:inset 0 0 0 1.5px {{ o.ring }}">{{ o.l }}</a></sc-for></span></sc-if><sc-if value="{{ r.fisso }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-19">{{ r.fisso }}</span></sc-if><sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ r.err }}</span></sc-if><sc-if value="{{ r.warn }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-19" role="status"><b class="al-imp__tondo-3" aria-hidden="true">!</b>{{ r.warn }}</span></sc-if></span><span class="al-imp__blocco-17">{{ r.s }}</span></div></sc-for></sc-if>
+<span class="al-imp__blocco-18">La chiusura d'emergenza col maltempo si imposta in N.I.N.A.</span>
+</dc-import></sc-for>
+</div></sc-if>
+
+<sc-if value="{{ tab.luna }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
+<dc-import name="componenti/Carta" colonne="12" ritardo="0" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Luna" hint-size="100%,260px">
+<span class="al-imp__riga-9"><span class="al-imp__testo-3">Luna</span><span class="al-imp__testo-5">la regola della banda larga, in tutta l'app</span></span>
+<sc-for list="{{ lunaR }}" as="r" hint-placeholder-count="3"><div class="al-imp__griglia-8"><span class="al-imp__testo-2">{{ r.l }}</span><span class="al-imp__colonna-13"><sc-if value="{{ r.num }}" hint-placeholder-val="{{ true }}"><span class="al-imp__riga-12"><input type="text" inputmode="numeric" value="{{ r.v }}" onChange="{{ r.on }}" placeholder="{{ r.ph }}" aria-label="{{ r.aria }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--numero al-campo--piccolo al-imp__blocco-19" aria-invalid="{{ r.inv }}"><span class="al-imp__testo-2">{{ r.u }}</span></span></sc-if><sc-if value="{{ r.scelta }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-17"><sc-for list="{{ r.pills }}" as="o" hint-placeholder-count="4"><a class="al-imp__riga-18" href="#" onClick="{{ o.on }}" aria-pressed="{{ o.sel }}" style="font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:inset 0 0 0 1.5px {{ o.ring }}">{{ o.l }}</a></sc-for></span></sc-if><sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ r.err }}</span></sc-if></span><span class="al-imp__testo-5">{{ r.s }}</span></div></sc-for>
+<span class="al-imp__riga-20"><span>Sotto un cielo buio la Luna disturba prima: abbassa le percentuali.</span><span class="al-imp__testo-21">{{ lunaOra }}</span></span>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.planner }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
+<dc-import name="componenti/Carta" colonne="12" ritardo="0" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Planner" hint-size="100%,460px">
+<span class="al-imp__riga-9"><span class="al-imp__testo-3">Planner</span><span class="al-imp__testo-5">soglie, con la partenza e la fonte</span></span>
+<sc-for list="{{ sogR }}" as="r" hint-placeholder-count="9"><div class="al-imp__griglia-9"><span class="al-imp__testo-2">{{ r.l }}</span><span class="al-imp__colonna-13"><span class="al-imp__riga-12"><input type="text" inputmode="{{ r.im }}" value="{{ r.v }}" onChange="{{ r.on }}" placeholder="{{ r.ph }}" aria-label="{{ r.aria }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--numero al-campo--piccolo al-imp__testo-18" aria-invalid="{{ r.inv }}" style="width:{{ r.wd }}"><span class="al-imp__testo-2">{{ r.u }}</span><sc-if value="{{ r.cambiato }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-22">· cambiato</span></sc-if></span><sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ r.err }}</span></sc-if></span><span class="al-imp__testo-5">{{ r.s }}</span></div></sc-for>
+<span class="al-imp__riga-21"><span>Il Planner, Progetti e il Piano della notte leggono questi valori.</span><sc-if value="{{ sogRip }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ sogRip }}" class="al-bottone al-bottone--contorno">Rimetti i valori di partenza</a></sc-if></span>
+</dc-import>
+<sc-for list="{{ plCarte }}" as="k" hint-placeholder-count="3"><dc-import name="componenti/Carta" colonne="12" ritardo="0" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="{{ k.tit }}" hint-size="100%,280px">
+<span class="al-imp__riga-22"><span class="al-imp__testo-3">{{ k.tit }}</span><span class="al-imp__testo-5">{{ k.sub }}</span></span>
+<sc-for list="{{ k.righe }}" as="r" hint-placeholder-count="3"><div class="al-imp__riga-15"><span class="al-imp__blocco-16">{{ r.l }}</span><span class="al-imp__colonna-12"><sc-if value="{{ r.campi }}" hint-placeholder-val="{{ true }}"><span class="al-imp__riga-16"><sc-for list="{{ r.campi }}" as="c" hint-placeholder-count="1"><span class="al-imp__riga-12"><sc-if value="{{ c.pre }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-2">{{ c.pre }}</span></sc-if><input type="text" inputmode="{{ c.im }}" value="{{ c.v }}" onChange="{{ c.on }}" placeholder="{{ c.ph }}" aria-label="{{ c.aria }}" aria-invalid="{{ c.inv }}" class="al-campo al-campo--piccolo al-imp__testo-18" aria-invalid="{{ c.inv }}" style="width:{{ c.wd }}"><span class="al-imp__testo-2">{{ c.u }}</span></span></sc-for></span></sc-if><sc-if value="{{ r.pills }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-17"><sc-for list="{{ r.pills }}" as="o" hint-placeholder-count="2"><a class="al-imp__riga-18" href="#" onClick="{{ o.on }}" aria-pressed="{{ o.sel }}" style="font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:inset 0 0 0 1.5px {{ o.ring }}">{{ o.l }}</a></sc-for></span></sc-if><sc-if value="{{ r.fisso }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-19">{{ r.fisso }}</span></sc-if><sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ r.err }}</span></sc-if><sc-if value="{{ r.warn }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-19" role="status"><b class="al-imp__tondo-3" aria-hidden="true">!</b>{{ r.warn }}</span></sc-if></span><span class="al-imp__blocco-17">{{ r.s }}</span></div></sc-for>
+<sc-if value="{{ k.curva }}" hint-placeholder-val="{{ false }}"><div class="al-imp__riga-23"><svg class="al-imp__grafico-1" role="img" aria-label="{{ k.curva.aria }}" viewBox="0 0 300 100" preserveAspectRatio="none"><line class="al-imp__tratto-1" x1="0" y1="100" x2="300" y2="100" stroke-width="1" vector-effect="non-scaling-stroke"></line><path d="{{ k.curva.l0.d }}" fill="none" stroke="{{ k.curva.l0.c }}" stroke-width="2" stroke-dasharray="{{ k.curva.l0.da }}" vector-effect="non-scaling-stroke"></path><path d="{{ k.curva.l1.d }}" fill="none" stroke="{{ k.curva.l1.c }}" stroke-width="2" stroke-dasharray="{{ k.curva.l1.da }}" vector-effect="non-scaling-stroke"></path><path d="{{ k.curva.l2.d }}" fill="none" stroke="{{ k.curva.l2.c }}" stroke-width="2" stroke-dasharray="{{ k.curva.l2.da }}" vector-effect="non-scaling-stroke"></path><line class="al-imp__tratto-2" x1="{{ k.curva.x }}" y1="0" x2="{{ k.curva.x }}" y2="100" stroke-width="1.5" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"></line></svg><span class="al-imp__colonna-14"><b class="al-imp__testo-23">{{ k.curva.testo }}</b><sc-for list="{{ k.curva.leg }}" as="g" hint-placeholder-count="3"><span class="al-imp__riga-24"><span class="al-imp__blocco-20" aria-hidden="true" style="border-top:2px {{ g.st }} {{ g.c }}"></span>{{ g.n }}</span></sc-for><span class="al-imp__testo-21">{{ k.curva.asse }}</span></span></div></sc-if>
+<sc-if value="{{ k.nota }}" hint-placeholder-val="{{ false }}"><span class="al-imp__blocco-21">{{ k.nota }}</span></sc-if>
+</dc-import></sc-for>
+</div></sc-if>
+
+<sc-if value="{{ tab.planner }}" hint-placeholder-val="{{ false }}"><div class="al-imp__griglia-2">
+<dc-import name="componenti/Carta" colonne="12" ritardo="0" padding="24px 28px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Tempi della notte" hint-size="100%,420px">
+<span class="al-imp__riga-9"><span class="al-imp__testo-3">Tempi della notte</span><span class="al-imp__testo-5">uguali per tutta l'app · avvio, cambi, conto dei blocchi e chiusura del Piano della notte</span></span>
+<sc-for list="{{ tempiG }}" as="g" hint-placeholder-count="3"><span class="al-imp__riga-25">{{ g.t }}<span class="al-imp__testo-24">{{ g.u }}</span></span><sc-for list="{{ g.righe }}" as="r" hint-placeholder-count="6"><div class="al-imp__griglia-9"><span class="al-imp__testo-2">{{ r.l }}</span><span class="al-imp__riga-12"><input type="text" inputmode="numeric" value="{{ r.v }}" onChange="{{ r.on }}" placeholder="{{ r.ph }}" aria-label="{{ r.aria }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--numero al-campo--piccolo al-imp__blocco-19" aria-invalid="{{ r.inv }}"><span class="al-imp__testo-2">{{ r.u }}</span></span><span class="al-imp__testo-5">{{ r.s }}</span></div></sc-for></sc-for>
+<span class="al-imp__blocco-22">Scrivi tempi larghi: il margine sta dentro il numero.</span>
+</dc-import>
+</div></sc-if>
+<sc-if value="{{ nuova }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/SezioneServizi" sezione="{{ nuovaK }}" stato="{{ statoN }}" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,600px"></dc-import></sc-if>
+</div>
+</dc-import></sc-if>
+
+<sc-if value="{{ F.tel }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Telaio" formato="telefono" pagina="Impostazioni" etichetta="Impostazioni · telefono" sito="Cima Ekar" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<div class="al-imp__colonna-15">
+<sc-if value="{{ ind.on }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-16" role="list">
+<sc-for list="{{ ind.voci }}" as="v" hint-placeholder-count="9"><a class="al-imp__riga-26" href="#" role="listitem" onClick="{{ v.on }}" style="border-top:{{ v.bd }}"><span class="al-imp__colonna-6"><b class="al-imp__testo-25">{{ v.l }}</b><span class="al-imp__blocco-24">{{ v.sub }}</span></span><span class="al-imp__blocco-25" aria-hidden="true">↗</span></a></sc-for>
+</div></sc-if>
+<sc-if value="{{ ind.off }}" hint-placeholder-val="{{ true }}"><a class="al-imp__riga-27" href="#" onClick="{{ ind.torna }}">← Impostazioni</a>
+<span class="al-imp__colonna-17"><span class="al-imp__testo-26">{{ ind.tit }}</span><span class="al-imp__testo-5">{{ ind.sub }}</span></span></sc-if>
+
+
+<sc-if value="{{ tab.generale }}" hint-placeholder-val="{{ true }}"><div class="al-imp__colonna-18">
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Nome utente" hint-size="100%,180px">
+<span class="al-imp__testo-27">Nome utente</span>
+<span class="al-imp__riga-28"><input value="{{ nome.v }}" onChange="{{ nome.on }}" onInput="{{ nome.on }}" aria-label="Nome utente" placeholder="Il tuo nome" class="al-campo al-imp__blocco-26"><sc-if value="{{ nome.cambiato }}" hint-placeholder-val="{{ false }}"><a class="al-imp__strato-1" href="#" onClick="{{ nome.salva }}"><span class="al-imp__riga-29">Salva</span></a></sc-if></span>
+
+<sc-if value="{{ nome.fatto }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-4">✓ Salvato</span></sc-if>
+<span class="al-imp__testo-8">Usato per intestare le statistiche.</span>
+</dc-import>
+<dc-import name="componenti/Carta" formato="telefono" ritardo="60" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Tema" hint-size="100%,420px">
+<span class="al-imp__testo-27">Tema</span>
+<dc-import name="componenti/SceltaTema" modo="{{ modoSc }}" accento="{{ accento }}" sito="Cima Ekar" formato="telefono" on-modo="{{ setModoSc }}" on-accento="{{ setAccento }}" hint-size="100%,360px"></dc-import>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.siti }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
+<span class="al-imp__riga-3"><sc-for list="{{ siti }}" as="s" hint-placeholder-count="2"><a class="al-imp__riga-30" href="#" onClick="{{ s.on }}" aria-pressed="{{ s.sel }}" style="font-weight:{{ s.fw }};background:{{ s.bg }};color:{{ s.fg }};box-shadow:inset 0 0 0 2px {{ s.ring }}">{{ s.l }}</a></sc-for></span>
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Il sito" hint-size="100%,300px">
+<span class="al-imp__testo-28">{{ sitoN }}</span>
+<sc-for list="{{ righe }}" as="r" hint-placeholder-count="3"><div class="al-imp__riga-31"><span class="al-imp__testo-2">{{ r.l }}</span><span class="al-imp__colonna-19"><b class="al-imp__testo-7">{{ r.v }}</b><span class="al-imp__testo-8">{{ r.s }}</span></span></div></sc-for>
+<div class="al-imp__riga-32"><span class="al-imp__testo-2">Predefinito</span><sc-if value="{{ pred.on }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ pred.on }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra">Usa come predefinito</a></sc-if><sc-if value="{{ pred.si }}" hint-placeholder-val="{{ true }}"><b class="al-imp__testo-7">sì</b></sc-if></div>
+<div class="al-imp__colonna-20">
+<span class="al-imp__riga-33"><span class="al-imp__testo-2">Orizzonte</span><sc-if value="{{ oz.ok }}" hint-placeholder-val="{{ true }}"><span class="al-imp__colonna-19"><b class="al-imp__testo-7">{{ oz.file }}</b><span class="al-imp__testo-8">{{ oz.sub }}</span></span></sc-if></span>
+<sc-if value="{{ oz.vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-17">Nessun orizzonte: conta solo l'altezza minima.</span></sc-if>
+<sc-if value="{{ oz.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-7" role="alert" style="background:{{ errBg }};color:{{ errFg }}"><b class="al-imp__tondo-1" aria-hidden="true">!</b><span>Il file non si legge: servono almeno due righe azimut altezza.</span></span></sc-if>
+<span class="al-imp__riga-34"><sc-for list="{{ oz.azioni }}" as="a" hint-placeholder-count="2"><a class="al-imp__riga-35" href="#" onClick="{{ a.on }}" style="font-weight:{{ a.fw }};background:{{ a.bg }};color:{{ a.fg }};box-shadow:{{ a.sh }}">{{ a.l }}</a></sc-for></span>
+<span class="al-imp__testo-8">File dell'orizzonte di N.I.N.A.: azimut e altezza in gradi, una coppia per riga.</span>
+</div>
+</dc-import>
+<dc-import name="componenti/Carta" formato="telefono" ritardo="60" padding="20px 12px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="L'orizzonte a 360°" hint-size="100%,520px">
+<span class="al-imp__blocco-27">L'orizzonte a 360°</span>
+<div class="al-imp__blocco-28">{{ disegno }}</div>
+<span class="al-imp__blocco-29" aria-live="polite">{{ lettura }}</span>
+<span class="al-imp__colonna-21"><sc-for list="{{ leg }}" as="l" hint-placeholder-count="3"><span class="al-imp__riga-8"><i class="al-imp__blocco-6" style="background:{{ l.bg }};border-top:{{ l.b }}"></i><span>{{ l.n }}</span></span></sc-for></span>
+<span class="al-imp__blocco-30">Tocca il disegno per leggere ogni direzione. Profilo d'esempio: dati simulati.</span>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.cartelle }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Cartelle" hint-size="100%,420px">
+<span class="al-imp__riga-9"><span class="al-imp__testo-27">Cartelle</span><span class="al-imp__testo-8">{{ car.conto }}</span></span>
+<sc-for list="{{ car.lista }}" as="c" hint-placeholder-count="3"><div class="al-imp__riga-36"><span class="al-imp__colonna-6"><b class="al-imp__testo-14">{{ c.p }}</b><span class="al-imp__testo-8">{{ c.n }}</span></span><a href="#" onClick="{{ c.togli }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra al-imp__blocco-7">Togli</a></div></sc-for>
+<sc-if value="{{ car.vuota }}" hint-placeholder-val="{{ false }}"><span class="al-imp__blocco-8">Nessuna cartella: l'archivio è vuoto.</span></sc-if>
+<div class="al-imp__colonna-22">
+<span class="al-imp__testo-23">Aggiungi una cartella</span>
+<span role="radiogroup" aria-label="Dove sono i file" class="al-scelta al-scelta--segmentato al-scelta--sottili al-scelta--riempie"><sc-for list="{{ car.dove }}" as="d" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ d.sel }}" onClick="{{ d.on }}" class="al-scelta__voce">{{ d.l }}</a></sc-for></span>
+<input value="{{ car.perc }}" onChange="{{ car.onPerc }}" aria-label="Percorso della cartella" placeholder="{{ car.ph }}" class="al-campo">
+<a class="al-imp__riga-37" href="#" onClick="{{ car.verifica }}" aria-disabled="{{ car.dis }}" style="background:{{ car.bg }};color:{{ car.fg }}">{{ car.vl }}</a>
+<span class="al-imp__testo-8">{{ car.aiuto }}</span>
+<sc-if value="{{ car.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="telefono" segno="{{ car.esito.s }}" titolo="{{ car.esito.t }}" testo="{{ car.esito.x }}" azione="{{ car.esito.a }}" on-azione="{{ car.esito.on }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,110px"></dc-import></sc-if>
+</div>
+</dc-import>
+<dc-import name="componenti/Carta" formato="telefono" ritardo="60" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Scansione" hint-size="100%,200px">
+<span class="al-imp__testo-27">Scansione</span>
+<span class="al-imp__colonna-1"><b class="al-imp__testo-7">{{ scan.t }}</b><span class="al-imp__testo-5">{{ scan.s }}</span></span>
+<a href="#" onClick="{{ scan.on }}" class="al-bottone al-bottone--pieno al-bottone--blocco">{{ scan.b }}</a>
+<span class="al-imp__testo-8">Vengono lette anche le sottocartelle. Si avvia anche da Scansiona, nel menu Altro.</span>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.meteo }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Seeing (Meteoblue)" hint-size="100%,380px">
+<span class="al-imp__testo-27">Seeing (Meteoblue)</span>
+<span class="al-imp__testo-17">Con una chiave Meteoblue il seeing è disponibile ora per ora, per sette notti. Senza chiave il resto del meteo funziona.</span>
+<dc-import name="componenti/Avviso" tipo="riga" formato="telefono" segno="{{ key.st.s }}" titolo="{{ key.st.t }}" testo="" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import>
+<input value="{{ key.v }}" onChange="{{ key.on }}" aria-label="Chiave Meteoblue" placeholder="Chiave Meteoblue" class="al-campo">
+<a class="al-imp__riga-37" href="#" onClick="{{ key.verifica }}" aria-disabled="{{ key.dis }}" style="background:{{ key.bg }};color:{{ key.fg }}">{{ key.vl }}</a>
+<sc-if value="{{ key.rimuovi }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ key.rimuovi }}" class="al-bottone al-bottone--contorno al-bottone--blocco">Rimuovi chiave</a></sc-if>
+<sc-if value="{{ key.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="telefono" segno="{{ key.esito.s }}" titolo="{{ key.esito.t }}" testo="" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></sc-if>
+<a class="al-imp__riga-38" href="https://www.meteoblue.com/it/weather-api" target="_blank" rel="noopener">Chiedi una chiave a Meteoblue ↗</a>
+</dc-import>
+<dc-import name="componenti/Carta" formato="telefono" ritardo="60" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Previsione" hint-size="100%,180px">
+<span class="al-imp__testo-27">Previsione</span>
+<span class="al-imp__testo-5">Meteo apre su</span>
+<span role="radiogroup" aria-label="Meteo apre su" class="al-scelta al-scelta--linguette al-scelta--sottili al-scelta--riempie"><sc-for list="{{ obiettivo }}" as="o" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ o.sel }}" onClick="{{ o.on }}" class="al-scelta__voce">{{ o.l }}</a></sc-for></span>
+<span class="al-imp__testo-8">Fonti: Open-Meteo per il meteo, Meteoblue per il seeing.</span>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.astap }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="ASTAP" hint-size="100%,420px">
+<span class="al-imp__testo-27">ASTAP</span>
+<span class="al-imp__testo-5">Il programma che identifica il campo dalle stelle (plate solving).</span>
+<span class="al-imp__testo-5">Percorso del programma</span>
+<input value="{{ ast.v }}" onChange="{{ ast.on }}" aria-label="Percorso di ASTAP" placeholder="C:\Program Files\astap\astap_cli.exe" class="al-campo">
+<a href="#" onClick="{{ ast.verifica }}" class="al-bottone al-bottone--contorno al-bottone--blocco">{{ ast.vl }}</a>
+<sc-if value="{{ ast.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="telefono" segno="{{ ast.esito.s }}" titolo="{{ ast.esito.t }}" testo="{{ ast.esito.x }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></sc-if>
+<sc-for list="{{ ast.cat }}" as="c" hint-placeholder-count="2"><div class="al-imp__colonna-23"><span class="al-imp__riga-39"><span class="al-imp__testo-17">{{ c.l }}</span><span class="al-imp__pillola-3" style="background:{{ c.bg }};color:{{ c.fg }}">{{ c.s }} {{ c.v }}</span></span><span class="al-imp__testo-8">{{ c.d }}</span></div></sc-for>
+<a class="al-imp__riga-38" href="https://www.hnsky.org/astap.htm" target="_blank" rel="noopener">ASTAP e i cataloghi, sul sito di hnsky.org ↗</a>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.automazione }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
+<sc-for list="{{ autoP }}" as="q" hint-placeholder-count="2"><dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Automazione" hint-size="100%,340px">
+<span class="al-imp__colonna-24"><span class="al-imp__testo-29">{{ q.n }}</span><span class="al-imp__testo-8">{{ q.sub }}</span></span>
+<sc-for list="{{ q.righe }}" as="r" hint-placeholder-count="3"><div class="al-imp__colonna-25"><span class="al-imp__testo-17">{{ r.l }}</span><span role="radiogroup" aria-label="{{ r.l }}" class="al-scelta al-scelta--segmentato al-scelta--sottili al-scelta--riempie"><sc-for list="{{ r.op }}" as="o" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ o.sel }}" onClick="{{ o.on }}" class="al-scelta__voce">{{ o.l }}</a></sc-for></span><span class="al-imp__testo-8">{{ r.s }}</span></div></sc-for>
+<sc-if value="{{ q.flat }}" hint-placeholder-val="{{ false }}"><span class="al-imp__blocco-15">Flat</span><sc-for list="{{ q.flatR }}" as="r" hint-placeholder-count="3"><div class="al-imp__riga-15"><span class="al-imp__blocco-16">{{ r.l }}</span><span class="al-imp__colonna-12"><sc-if value="{{ r.campi }}" hint-placeholder-val="{{ true }}"><span class="al-imp__riga-16"><sc-for list="{{ r.campi }}" as="c" hint-placeholder-count="1"><span class="al-imp__riga-12"><sc-if value="{{ c.pre }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-2">{{ c.pre }}</span></sc-if><input type="text" inputmode="{{ c.im }}" value="{{ c.v }}" onChange="{{ c.on }}" placeholder="{{ c.ph }}" aria-label="{{ c.aria }}" aria-invalid="{{ c.inv }}" class="al-campo al-imp__testo-18" aria-invalid="{{ c.inv }}" style="width:{{ c.wd }}"><span class="al-imp__testo-2">{{ c.u }}</span></span></sc-for></span></sc-if><sc-if value="{{ r.pills }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-17"><sc-for list="{{ r.pills }}" as="o" hint-placeholder-count="2"><a class="al-imp__riga-40" href="#" onClick="{{ o.on }}" aria-pressed="{{ o.sel }}" style="font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:inset 0 0 0 1.5px {{ o.ring }}">{{ o.l }}</a></sc-for></span></sc-if><sc-if value="{{ r.fisso }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-19">{{ r.fisso }}</span></sc-if><sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ r.err }}</span></sc-if><sc-if value="{{ r.warn }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-19" role="status"><b class="al-imp__tondo-3" aria-hidden="true">!</b>{{ r.warn }}</span></sc-if></span><span class="al-imp__blocco-17">{{ r.s }}</span></div></sc-for></sc-if>
+<span class="al-imp__blocco-18">La chiusura d'emergenza col maltempo si imposta in N.I.N.A.</span>
+</dc-import></sc-for>
+</div></sc-if>
+
+<sc-if value="{{ tab.luna }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Luna" hint-size="100%,360px">
+<span class="al-imp__testo-28">Luna</span>
+<sc-for list="{{ lunaR }}" as="r" hint-placeholder-count="3"><div class="al-imp__colonna-26"><span class="al-imp__testo-5">{{ r.l }}</span><sc-if value="{{ r.num }}" hint-placeholder-val="{{ true }}"><span class="al-imp__riga-12"><input type="text" inputmode="numeric" value="{{ r.v }}" onChange="{{ r.on }}" placeholder="{{ r.ph }}" aria-label="{{ r.aria }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--numero al-imp__blocco-19" aria-invalid="{{ r.inv }}"><span class="al-imp__testo-2">{{ r.u }}</span></span></sc-if><sc-if value="{{ r.scelta }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-17"><sc-for list="{{ r.pills }}" as="o" hint-placeholder-count="4"><a class="al-imp__riga-40" href="#" onClick="{{ o.on }}" aria-pressed="{{ o.sel }}" style="font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:inset 0 0 0 1.5px {{ o.ring }}">{{ o.l }}</a></sc-for></span></sc-if><sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ r.err }}</span></sc-if><span class="al-imp__testo-8">{{ r.s }}</span></div></sc-for>
+<span class="al-imp__blocco-31">Sotto un cielo buio la Luna disturba prima: abbassa le percentuali.</span>
+</dc-import>
+</div></sc-if>
+
+<sc-if value="{{ tab.planner }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Planner" hint-size="100%,600px">
+<span class="al-imp__testo-28">Planner</span>
+<sc-for list="{{ sogR }}" as="r" hint-placeholder-count="9"><div class="al-imp__riga-41"><span class="al-imp__colonna-27"><span class="al-imp__testo-17">{{ r.l }}</span><span class="al-imp__testo-8">{{ r.s }}</span><sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-30" role="alert">✕ {{ r.err }}</span></sc-if></span><span class="al-imp__riga-42"><input type="text" inputmode="{{ r.im }}" value="{{ r.v }}" onChange="{{ r.on }}" placeholder="{{ r.ph }}" aria-label="{{ r.aria }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--numero" aria-invalid="{{ r.inv }}" style="width:{{ r.wd }}"><span class="al-imp__testo-5">{{ r.u }}</span></span></div></sc-for>
+<sc-if value="{{ sogRip }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ sogRip }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-imp__testo-31">Rimetti i valori di partenza</a></sc-if>
+</dc-import>
+<sc-for list="{{ plCarte }}" as="k" hint-placeholder-count="3"><dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="{{ k.tit }}" hint-size="100%,280px">
+<span class="al-imp__riga-22"><span class="al-imp__testo-27">{{ k.tit }}</span><span class="al-imp__testo-5">{{ k.sub }}</span></span>
+<sc-for list="{{ k.righe }}" as="r" hint-placeholder-count="3"><div class="al-imp__riga-15"><span class="al-imp__blocco-16">{{ r.l }}</span><span class="al-imp__colonna-12"><sc-if value="{{ r.campi }}" hint-placeholder-val="{{ true }}"><span class="al-imp__riga-16"><sc-for list="{{ r.campi }}" as="c" hint-placeholder-count="1"><span class="al-imp__riga-12"><sc-if value="{{ c.pre }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-2">{{ c.pre }}</span></sc-if><input type="text" inputmode="{{ c.im }}" value="{{ c.v }}" onChange="{{ c.on }}" placeholder="{{ c.ph }}" aria-label="{{ c.aria }}" aria-invalid="{{ c.inv }}" class="al-campo al-imp__testo-18" aria-invalid="{{ c.inv }}" style="width:{{ c.wd }}"><span class="al-imp__testo-2">{{ c.u }}</span></span></sc-for></span></sc-if><sc-if value="{{ r.pills }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-17"><sc-for list="{{ r.pills }}" as="o" hint-placeholder-count="2"><a class="al-imp__riga-40" href="#" onClick="{{ o.on }}" aria-pressed="{{ o.sel }}" style="font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:inset 0 0 0 1.5px {{ o.ring }}">{{ o.l }}</a></sc-for></span></sc-if><sc-if value="{{ r.fisso }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-19">{{ r.fisso }}</span></sc-if><sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-imp__testo-20" role="alert">✕ {{ r.err }}</span></sc-if><sc-if value="{{ r.warn }}" hint-placeholder-val="{{ false }}"><span class="al-imp__riga-19" role="status"><b class="al-imp__tondo-3" aria-hidden="true">!</b>{{ r.warn }}</span></sc-if></span><span class="al-imp__blocco-17">{{ r.s }}</span></div></sc-for>
+<sc-if value="{{ k.curva }}" hint-placeholder-val="{{ false }}"><div class="al-imp__riga-23"><svg class="al-imp__grafico-1" role="img" aria-label="{{ k.curva.aria }}" viewBox="0 0 300 100" preserveAspectRatio="none"><line class="al-imp__tratto-1" x1="0" y1="100" x2="300" y2="100" stroke-width="1" vector-effect="non-scaling-stroke"></line><path d="{{ k.curva.l0.d }}" fill="none" stroke="{{ k.curva.l0.c }}" stroke-width="2" stroke-dasharray="{{ k.curva.l0.da }}" vector-effect="non-scaling-stroke"></path><path d="{{ k.curva.l1.d }}" fill="none" stroke="{{ k.curva.l1.c }}" stroke-width="2" stroke-dasharray="{{ k.curva.l1.da }}" vector-effect="non-scaling-stroke"></path><path d="{{ k.curva.l2.d }}" fill="none" stroke="{{ k.curva.l2.c }}" stroke-width="2" stroke-dasharray="{{ k.curva.l2.da }}" vector-effect="non-scaling-stroke"></path><line class="al-imp__tratto-2" x1="{{ k.curva.x }}" y1="0" x2="{{ k.curva.x }}" y2="100" stroke-width="1.5" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"></line></svg><span class="al-imp__colonna-14"><b class="al-imp__testo-23">{{ k.curva.testo }}</b><sc-for list="{{ k.curva.leg }}" as="g" hint-placeholder-count="3"><span class="al-imp__riga-24"><span class="al-imp__blocco-20" aria-hidden="true" style="border-top:2px {{ g.st }} {{ g.c }}"></span>{{ g.n }}</span></sc-for><span class="al-imp__testo-21">{{ k.curva.asse }}</span></span></div></sc-if>
+<sc-if value="{{ k.nota }}" hint-placeholder-val="{{ false }}"><span class="al-imp__blocco-21">{{ k.nota }}</span></sc-if>
+</dc-import></sc-for>
+</div></sc-if>
+
+<sc-if value="{{ tab.planner }}" hint-placeholder-val="{{ false }}"><div class="al-imp__colonna-18">
+<dc-import name="componenti/Carta" formato="telefono" ritardo="0" padding="20px" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Tempi della notte" hint-size="100%,500px">
+<span class="al-imp__testo-28">Tempi della notte</span>
+<sc-for list="{{ tempiG }}" as="g" hint-placeholder-count="3"><span class="al-imp__riga-43">{{ g.t }}<span class="al-imp__testo-24">{{ g.u }}</span></span><sc-for list="{{ g.righe }}" as="r" hint-placeholder-count="6"><div class="al-imp__riga-41"><span class="al-imp__colonna-27"><span class="al-imp__testo-17">{{ r.l }}</span><span class="al-imp__testo-8">{{ r.s }}</span></span><span class="al-imp__riga-44"><input type="text" inputmode="numeric" value="{{ r.v }}" onChange="{{ r.on }}" placeholder="{{ r.ph }}" aria-label="{{ r.aria }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--numero al-imp__blocco-32" aria-invalid="{{ r.inv }}"><span class="al-imp__testo-2">{{ r.u }}</span></span></div></sc-for></sc-for>
+<span class="al-imp__blocco-31">Scrivi tempi larghi: il margine sta dentro il numero.</span>
+</dc-import>
+</div></sc-if>
+<sc-if value="{{ nuova }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/SezioneServizi" sezione="{{ nuovaK }}" stato="{{ statoN }}" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,600px"></dc-import></sc-if>
+</div>
+</dc-import></sc-if>
+</sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;sezione&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Generale&quot;,&quot;Siti&quot;,&quot;Cartelle e scansione&quot;,&quot;Meteo&quot;,&quot;ASTAP&quot;,&quot;Luna&quot;,&quot;Planner&quot;,&quot;Automazione&quot;,&quot;Servizi&quot;,&quot;Scansioni&quot;,&quot;Diagnostica&quot;,&quot;Backup&quot;],&quot;default&quot;:&quot;Generale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;senza chiave&quot;,&quot;rifiutata&quot;,&quot;non raggiungibile&quot;,&quot;nessuna scansione&quot;,&quot;in corso&quot;,&quot;una bloccata&quot;,&quot;molti file non leggibili&quot;,&quot;ASTAP assente&quot;,&quot;errori&quot;,&quot;mai scritto&quot;,&quot;ripristino al primo avvio&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Sezioni nuove&quot;},&quot;orizzonte&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;importato&quot;,&quot;nessuno&quot;,&quot;non leggibile&quot;],&quot;default&quot;:&quot;importato&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;astap&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;installato&quot;,&quot;catalogo mancante&quot;],&quot;default&quot;:&quot;installato&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;tempi&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;vuoti&quot;,&quot;d'esempio&quot;],&quot;default&quot;:&quot;vuoti&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;luna&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;dalle Impostazioni&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Luna&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: null, modoSc: null, accento: null, ozBy: {}, az: 90, foc: false, sito: 'Cima Ekar', pred: null, nome: null, nomeOk: false,
+    dove: 'computer', perc: '', verifica: null, vPath: '', cartelle: [{ p: 'D:\\Astro\\2026', n: '1240 file FITS' }, { p: 'E:\\Archivio\\Deep sky', n: 'oltre 5000 file FITS' }, { p: 'E:\\Archivio\\Calibrazione', n: '486 file FITS' }],
+    scan: 'ferma', chiave: '', chiaveSalvata: 'ab12', esitoChiave: null, obiettivo: null, astapPerc: 'C:\\Program Files\\astap\\astap_cli.exe', esitoAstap: null };
+  componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); (this._t || []).forEach(clearTimeout); window.removeEventListener('resize', this._rs); }
+  componentDidUpdate(pp) { if (pp.orizzonte !== this.props.orizzonte) this.setState({ ozBy: {} }); }
+  dopo(ms, f) { (this._t = this._t || []).push(setTimeout(f, ms)); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  fileRef = el => { this._file = el; };
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const ce = React.createElement, R = Math.PI / 180;
+    const accento = this.state.accento || this.props.accento, modoSc = this.state.modoSc || this.state.modo || this.props.modo || 'scuro', modo = modoSc === 'automatico' ? 'scuro' : modoSc, t = AL.tema(modo, accento);
+    const fmt = AL.formatoScelto(this.props.formato), tel = AL.telefono(fmt, this.state.w);
+    const set = o => this.setState(o), prev = e => e && e.preventDefault && e.preventDefault();
+    const PRIM = { fw: 600, bg: t.hPill, fg: t.hPillFg, sh: 'none' }, SEC = { fw: 500, bg: 'transparent', fg: t.text, sh: 'inset 0 0 0 1.5px ' + t.line };
+    const pill = (on, f, l) => ({ l, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: 'transparent', fg: t.text, ring: on ? t.accent : t.line, /* v56.38: la scelta con l'anello */ on: e => { prev(e); f(); } });
+    const campo = bad => ({ ring: bad ? t.bad : t.line, rw: bad ? '2px' : '1.5px', inv: bad ? 'true' : 'false' });
+
+    // Sezioni a linguette: una alla volta
+    const SEZ = [['generale', 'Generale', 'nome e tema'], ['siti', 'Siti', 'uno per sito: coordinate, Bortle, orizzonte'], ['cartelle', 'Cartelle e scansione', 'dove sono i file'], ['meteo', 'Meteo', 'seeing e previsione'], ['astap', 'ASTAP', 'identificazione degli oggetti'],
+      ['luna', 'Luna', 'la regola della banda larga, in tutta l\u0027app'], ['planner', 'Planner', 'soglie e tempi della notte, con la fonte'], ['automazione', 'Automazione', 'per postazione: tetto, sicurezza, flat'],
+      ['servizi', 'Servizi', 'le chiavi di Meteoblue, AAVSO e TNS'], ['scansioni', 'Scansioni', 'le scansioni passate e cosa è rimasto fuori'], ['diagnostica', 'Diagnostica', 'per una segnalazione, da copiare'], ['backup', 'Backup', 'il file delle risposte']];
+    const NOMI = Object.fromEntries(SEZ.map(([k, l]) => [l, k])), Qs = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
+    const tw = NOMI[this.props.sezione] || Qs.get('sezione') || 'generale';
+    if (this.state.tabK !== tw) { if (this.state.tabK === undefined) Object.assign(this.state, { tabK: tw, sez: tw }); else setTimeout(() => this.setState({ tabK: tw, sez: tw })); }
+    const sez = SEZ.some(x => x[0] === this.state.sez) ? this.state.sez : 'generale', TB = Object.fromEntries(SEZ.map(([k]) => [k, sez === k])), tabSub = SEZ.find(x => x[0] === sez)[2];
+    const tabs = SEZ.map(([k, l]) => { const on = sez === k; return { l, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.text : 'transparent', fg: on ? t.card : t.text, bgT: on ? t.accent : 'transparent', fgT: on ? t.hPillFg : t.text, ring: on ? t.text : t.line, on: e => { prev(e); set({ sez: k }); } }; });
+    // Telefono: si parte dall'indice delle sezioni; con ?sezione= o il Tweak si apre la sezione
+    const indOn = tel && (this.state.ind ?? !((this.props.sezione && this.props.sezione !== 'Generale') || Qs.get('sezione')));
+    const RIAS = { generale: nomeV0 => nomeV0 + ' · modo ' + (this.state.modo || this.props.modo || 'scuro'), siti: () => 'Cima Ekar · Bortle 3 · predefinito' };
+    const ind = { on: indOn, off: tel && !indOn, tit: (SEZ.find(x => x[0] === sez) || [])[1], sub: tabSub, torna: e => { prev(e); set({ ind: true }); },
+      voci: SEZ.map(([k2, l, d], i) => ({ l, sub: RIAS[k2] ? RIAS[k2](this.state.nome ?? (ALsoglie.imp.get('generale.nome') || 'Marco')) : d, bd: i ? '1px solid ' + t.line : '0', on: e => { prev(e); set({ ind: false, sez: k2 }); } })) };
+
+    // Generale: nome
+    const IMP = ALsoglie.imp, nomeV = this.state.nome ?? (IMP.get('generale.nome') || 'Marco'), nm = nomeV.trim();
+    const nomeS = IMP.get('generale.nome') || 'Marco', camb = !!nm && nm !== nomeS && !this.state.nomeOk;
+    const nome = { cambiato: camb, padR: camb ? '92px' : '14px', v: nomeV, on: e => set({ nome: e.target.value, nomeOk: false }), fatto: this.state.nomeOk, dis: nm ? 'false' : 'true', bg: nm ? t.hPill : t.card2, fg: nm ? t.hPillFg : t.muted,
+      salva: e => { prev(e); if (nm) { IMP.set('generale.nome', nm); set({ nomeOk: true }); } } };
+
+    // Siti: orizzonte dai Tweaks, poi dalle azioni (Importa, Sostituisci, Togli)
+    const MIN = 30, p0 = this.props.orizzonte || 'importato';
+    const sitoK = this.state.sito, setOz = v => set({ ozBy: { ...this.state.ozBy, [sitoK]: v } });
+    const oz = this.state.ozBy[sitoK] || (sitoK === 'Casa' ? { k: 'vuoto' } : p0 === 'importato' ? { k: 'ok', file: 'Cima Ekar.hrz', f: ALdati.orizzonte['Cima Ekar'], quando: '19 ottobre 2026' } : p0 === 'non leggibile' ? { k: 'err' } : { k: 'vuoto' });
+    const hor = oz.k === 'ok' ? oz.f : null;
+    const apri = e => { prev(e); this._file && this._file.click(); };
+    const onFile = e => { const f = e.target.files && e.target.files[0]; if (!f) return; const r = new FileReader();
+      r.onload = () => { const h = ALdati.leggiOrizzonte(r.result); setOz(h ? { k: 'ok', file: f.name, f: h, quando: 'oggi' } : { k: 'err' }); }; r.readAsText(f); e.target.value = ''; };
+    const azioni = oz.k === 'ok' ? [{ l: 'Sostituisci', ...SEC, on: apri }, { l: 'Togli', ...SEC, on: e => { prev(e); setOz({ k: 'vuoto' }); } }] : [{ l: 'Importa file', ...PRIM, on: apri }];
+    const ozV = { ok: oz.k === 'ok', vuoto: oz.k === 'vuoto', err: oz.k === 'err', file: oz.file, sub: hor ? hor.punti.length + ' punti · importato ' + (oz.quando === 'oggi' ? 'oggi' : 'il ' + oz.quando) : '', azioni };
+    const siti = ['Cima Ekar', 'Casa'].map(l => pill(l === sitoK, () => set({ sito: l }), l));
+    const righe = sitoK === 'Casa' ? [{ l: 'Coordinate', v: '45.55 N · 11.55 E', s: '40 m' }, { l: 'Bortle', v: 'Bortle 6 – periferia luminosa', s: 'scritto a mano' }]
+      : [{ l: 'Coordinate', v: '45.85 N · 11.57 E', s: '1366 m' }, { l: 'Bortle', v: 'Bortle 3 – cielo di campagna', s: 'scritto a mano' }];
+    const predK = this.state.pred || IMP.get('siti.predefinito'), isPred = predK === sitoK, pred = { v: isPred ? 'sì' : 'no', si: isPred, on: isPred ? null : e => { prev(e); IMP.set('siti.predefinito', sitoK); set({ pred: sitoK }); } };
+
+    // Cartelle e scansione (testi del Primo avvio)
+    const nas = this.state.dove === 'nas', ver = this.state.verifica, pend = ['trovati', 'parziale', 'registrata'].includes(ver);
+    const aggiungi = e => { prev(e); this.setState(st => ({ cartelle: st.cartelle.concat([{ p: st.vPath, n: st.verifica === 'parziale' ? 'oltre 5000 file FITS' : '1240 file FITS' }]), verifica: null, perc: '' })); };
+    const EC = { trovati: { s: '✓', t: 'File trovati', x: '1240 file FITS · ' + this.state.vPath, a: 'Aggiungi cartella', on: aggiungi },
+      parziale: { s: '✓', t: 'Conteggio parziale', x: 'Conteggio interrotto a 5000: i file sono di più.', a: 'Aggiungi cartella', on: aggiungi },
+      irraggiungibile: { s: '!', t: 'Cartella non raggiungibile', x: 'Controlla il percorso o collega il disco, poi riprova.', a: '' },
+      registrata: { s: '!', t: 'Cartella già registrata', x: 'Corrisponde a \\\\nas\\astro\\2026: stessi file. I dati associati vengono mantenuti.', a: 'Usa questo percorso', on: aggiungi } }[ver] || null;
+    const pc = this.state.perc.trim(), nC = this.state.cartelle.length;
+    const car = { lista: this.state.cartelle.map((c, i) => ({ ...c, togli: e => { prev(e); set({ cartelle: this.state.cartelle.filter((_, j) => j !== i) }); } })), vuota: !nC, conto: nC === 1 ? '1 cartella' : nC + ' cartelle',
+      dove: [['computer', 'Su questo computer'], ['nas', 'Sul NAS']].map(([k, l]) => { const on = this.state.dove === k; return { l, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.text : 'transparent', fg: on ? t.card : t.text, on: e => { prev(e); set({ dove: k, verifica: null }); } }; }),
+      perc: this.state.perc, onPerc: e => set({ perc: e.target.value, verifica: null }), ph: nas ? '/data/astro/2026' : 'D:\\Astro\\2026',
+      aiuto: nas ? 'Percorso interno al container, non quello del computer.' : 'Vengono lette anche le sottocartelle.',
+      vl: ver === 'in corso' ? 'Verifica…' : 'Verifica', dis: pc ? 'false' : 'true', bg: pc && !pend ? t.hPill : t.card2, fg: pc && !pend ? t.hPillFg : t.muted, esito: EC,
+      verifica: e => { prev(e); if (!pc || ver === 'in corso') return; set({ verifica: 'in corso', vPath: pc }); this.dopo(900, () => this.setState({ verifica: /^f:|riprese/i.test(pc) ? 'irraggiungibile' : /archivio/i.test(pc) ? 'parziale' : /nas/i.test(pc) ? 'registrata' : 'trovati' })); } };
+    const sc = this.state.scan, scan = sc === 'in corso' ? { t: 'Scansione in corso', s: 'file letti 3412 su 18 430 · ancora circa 1 h 20', b: 'Interrompi', on: e => { prev(e); set({ scan: 'ferma' }); } }
+      : { t: 'Ultima scansione oggi, 07:12', s: '214 file nuovi, nessun problema', b: 'Scansiona', on: e => { prev(e); set({ scan: 'in corso' }); } };
+
+    // Meteo: chiave Meteoblue (testi del Primo avvio), previsione di partenza
+    const EK = { valida: ['✓', 'Chiave valida: seeing attivo.'], rimossa: ['?', 'Chiave rimossa: seeing non disponibile.'], rifiutata: ['!', 'Chiave non riconosciuta da Meteoblue: non salvata.'] }[this.state.esitoChiave];
+    const kk = this.state.chiave.trim(), ks = this.state.chiaveSalvata;
+    const key = { st: ks ? { s: '✓', t: 'Chiave salvata (termina con ' + ks + ').' } : { s: '?', t: 'Nessuna chiave: seeing non disponibile.' }, esito: EK ? { s: EK[0], t: EK[1] } : null,
+      v: this.state.chiave, on: e => set({ chiave: e.target.value }), vl: this.state.esitoChiave === 'in corso' ? 'Verifica…' : 'Verifica e salva', dis: kk ? 'false' : 'true', bg: kk ? t.hPill : t.card2, fg: kk ? t.hPillFg : t.muted,
+      verifica: e => { prev(e); if (!kk) return; set({ esitoChiave: 'in corso' }); this.dopo(900, () => this.setState(kk.length >= 12 ? { esitoChiave: 'valida', chiaveSalvata: kk.slice(-4), chiave: '' } : { esitoChiave: 'rifiutata' })); },
+      rimuovi: ks ? e => { prev(e); set({ chiaveSalvata: null, esitoChiave: 'rimossa' }); } : null };
+    const obK = this.state.obiettivo || IMP.get('meteo.obiettivo'), obiettivo = ['Deep sky', 'Sole'].map(l => pill(obK === l, () => { IMP.set('meteo.obiettivo', l); set({ obiettivo: l }); }, l));
+
+    // ASTAP (testi del Primo avvio); catalogo D80
+    const ap = this.props.astap || 'installato', EA = { trovato: ['✓', 'ASTAP trovato', 'Gli oggetti ripresi verranno identificati.'], sbagliato: ['!', 'ASTAP non trovato in questo percorso.', 'Il percorso deve terminare con il programma (astap_cli).'] }[this.state.esitoAstap];
+    const OK = { s: '✓', bg: t.pillOkBg, fg: t.pillOkFg }, NO = { s: '?', bg: t.card2, fg: t.text };
+    const ast = { v: this.state.astapPerc, on: e => set({ astapPerc: e.target.value, esitoAstap: null }), vl: this.state.esitoAstap === 'in corso' ? 'Verifica…' : 'Verifica percorso', esito: EA ? { s: EA[0], t: EA[1], x: EA[2] } : null,
+      verifica: e => { prev(e); set({ esitoAstap: 'in corso' }); this.dopo(900, () => this.setState({ esitoAstap: /astap_cli(\.exe)?$/i.test(this.state.astapPerc.trim()) ? 'trovato' : 'sbagliato' })); },
+      cat: [{ l: 'Catalogo D80', ...(ap === 'catalogo mancante' ? { ...NO, v: 'non trovato' } : { ...OK, v: 'trovato' }), d: 'Per identificare gli oggetti. Circa 1.25 GB, nella cartella di ASTAP.' }] };
+
+    // Luna (v26): tre righe, lette da tutte le pagine. La seconda percentuale non sta sotto la prima.
+    const SO = ALsoglie, lunaK = this.props.luna || 'dalle Impostazioni';
+    if (this.state.lunaK !== lunaK) { const r0 = SO.usaLuna(lunaK), v = { buona: String(r0.buona), limite: String(r0.limite), alt: r0.alt };
+      if (this.state.lunaK === undefined) Object.assign(this.state, { lunaK, lv: v }); else setTimeout(() => this.setState({ lunaK, lv: v })); }
+    const lv = this.state.lv || { buona: '25', limite: '50', alt: 0 }, nb = parseInt(lv.buona, 10), nl = parseInt(lv.limite, 10);
+    const okB = !isNaN(nb) && nb >= 0 && nb <= 100, okL = !isNaN(nl) && nl <= 100 && (!okB || nl >= nb);
+    const errL = isNaN(nl) || nl > 100 ? 'Un numero da 0 a 100.' : okB && nl < nb ? 'Deve essere almeno ' + nb + '%.' : '';
+    const cambiaL = (k, val) => { const nv = { ...lv, [k]: val }, b = parseInt(nv.buona, 10), l = parseInt(nv.limite, 10); set({ lv: nv });
+      if (!isNaN(b) && !isNaN(l) && b >= 0 && l <= 100 && l >= b) SO.salvaLuna({ buona: b, limite: l, alt: nv.alt }); };
+    const lunaR = [
+      { l: 'Banda larga buona fino a', num: true, v: lv.buona, u: '%', ph: '25', aria: 'Banda larga buona fino a, in percento', ...campo(!okB), err: okB ? '' : 'Un numero da 0 a 100.', s: 'regola diffusa fra chi riprende', on: e => cambiaL('buona', e.target.value.replace(/[^0-9]/g, '').slice(0, 3)) },
+      { l: 'Banda larga al limite fino a', num: true, v: lv.limite, u: '%', ph: '50', aria: 'Banda larga al limite fino a, in percento', ...campo(!okL), err: errL, s: 'nessuna convenzione: scegli tu', on: e => cambiaL('limite', e.target.value.replace(/[^0-9]/g, '').slice(0, 3)) },
+      { l: 'La Luna conta sopra', num: false, scelta: true, s: lv.alt === -5 ? 'rete TESS: sotto −5° il cielo non sente la Luna' : lv.alt === 0 ? 'Nautical Almanac: Luna sorta' : 'nessuna convenzione: scegli tu', err: '', pills: [-5, 0, 5, 10].map(a => pill(lv.alt === a, () => cambiaL('alt', a), a ? SO.gradi(a) : 'l\u0027orizzonte')) }];
+    const rr = SO.sogliaRipresa, lunaOra = 'Ora: buona fino al ' + rr.buona + '%, al limite fino al ' + rr.limite + '%, conta ' + SO.sopraT() + '.';
+
+    // Planner (ADR 0023): le soglie si scrivono, con la partenza e la fonte accanto. Si salvano sul computer.
+    const SG = [['alt', 'Altezza minima, deep sky', '30', '°', 'massa d\u0027aria 2', 0, 90], ['dur', 'Durata minima sopra l\u0027altezza', '1', 'h', 'nessuna convenzione: scegli tu', 0.25, 12],
+      ['stagione', 'Stagione: quota delle ore del mese migliore', '67', '%', 'nessuna convenzione: scegli tu (due terzi)', 10, 100], ['mese', 'Stagione: ore utili almeno, il 15 del mese', '3', 'h', 'nessuna convenzione: scegli tu', 0, 12], ['altS', 'Altezza minima di pianeti, Luna e Sole', '30', '°', 'massa d\u0027aria 2', 0, 90], ['adc', 'ADC sotto', '35', '°', 'BAA', 0, 90],
+      ['grs', 'Macchia Rossa, longitudine (Sistema II)', '91', '°', 'Sky & Telescope, da JUPOS', 0, 360], ['grsD', 'Macchia Rossa, data della misura', '1/6/2026', '', 'Sky & Telescope, da JUPOS', null, null], ['grsV', 'Macchia Rossa, deriva', '1.75', '° al mese', 'Sky & Telescope, da JUPOS', -10, 10]];
+    // Chiavi del registro: planner.alt, planner.dur, … (soglie.js, ALsoglie.imp)
+    if (!this.state.sg) this.state.sg = Object.fromEntries(SG.map(r => [r[0], String(IMP.get('planner.' + r[0]))]));
+    const sgv = this.state.sg, salvaSg = nv => { set({ sg: nv }); SG.forEach(([k, , , , , lo]) => { const v = nv[k], n = parseFloat(String(v).replace(',', '.')); IMP.set('planner.' + k, lo == null ? (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(v) ? v : null) : (isNaN(n) ? null : n)); }); };
+    const sogR = SG.map(([k, l, p0s, u, f, lo, hi]) => { const v = sgv[k], isD = lo == null, n = parseFloat(String(v).replace(',', '.'));
+      const err = isD ? (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(v) ? '' : 'Scrivi la data come 1/6/2026.') : v === '' || isNaN(n) || n < lo || n > hi ? 'Un numero da ' + lo + ' a ' + hi + '.' : '';
+      return { l, v, u, ph: p0s, s: 'partenza ' + p0s + (u && u[0] !== '°' ? ' ' : '') + u + ' · ' + f, im: isD ? 'text' : 'decimal', wd: isD ? '120px' : '76px', aria: l, ...campo(!!err), err, cambiato: v !== p0s && !err,
+        on: e => salvaSg({ ...sgv, [k]: e.target.value.slice(0, isD ? 10 : 6) }) }; });
+    const sogRip = SG.some(r => sgv[r[0]] !== r[2]) ? e => { prev(e); salvaSg(Object.fromEntries(SG.map(r => [r[0], r[2]]))); } : null;
+
+    // Campo generico delle carte nuove (v30)
+    const num = s0 => { const n = parseFloat(String(s0).replace(',', '.')); return isNaN(n) ? null : n; };
+    const cF = (k, v, o) => ({ v: v == null ? '' : String(v), u: o.u || '', ph: o.ph || '—', wd: o.wd || '76px', im: o.im || 'decimal', al: o.al || 'right', pre: o.pre || '', aria: o.aria, ...campo(!!o.bad), on: e => { const x = e.target.value.slice(0, o.max || 6); set({ ['pv_' + k]: x }); o.salva(x); } });
+    const pv = (k, def) => this.state['pv_' + k] !== undefined ? this.state['pv_' + k] : def;
+    // Luna per oggetto (v30, al posto di «Distanza dalla Luna 40°»): piena a Luna piena, la meta' dopo N giorni (Target Scheduler, ACP, Voyager)
+    const LB = IMP.schema['luna.bersaglio'], lb0 = LB.v, lbS = this.state.lb || IMP.get('luna.bersaglio') || lb0, PCT = 62, d0 = SO.giorniDaPiena(PCT);
+    const lbSalva = (k, i, x) => { const n = num(x), cur = JSON.parse(JSON.stringify(lbS)); if (n == null || n <= 0) { set({ ['pv_lb' + k + i]: x }); return; } cur[k][i] = n; IMP.set('luna.bersaglio', cur); set({ lb: cur, ['pv_lb' + k + i]: x }); };
+    const lbR = LB.righe.map(r => { const v = lbS[r.k], a = pv('lb' + r.k + 0, v[0]), b = pv('lb' + r.k + 1, v[1]);
+      return { l: r.l, campi: [cF('lb' + r.k + 0, a, { u: '° a Luna piena', aria: r.l + ', gradi a Luna piena', bad: num(a) == null, salva: () => {} }), cF('lb' + r.k + 1, b, { pre: 'metà a', u: 'giorni', aria: r.l + ', giorni per la metà', bad: num(b) == null, salva: () => {} })].map((c, i) => ({ ...c, on: e => lbSalva(r.k, i, e.target.value.slice(0, 5)) })),
+        err: num(a) == null || num(b) == null ? 'Un numero.' : '', s: 'partenza ' + lb0[r.k][0] + '° · metà a ' + lb0[r.k][1] + ' giorni · ' + r.fonte }; });
+    // Curva lungo il mese lunare: x = eta' della Luna (0 nuova, 14.8 piena, 29.5 nuova); y = distanza richiesta (0-130°)
+    const LC = [[t.text, ''], [t.text, '6 4'], [t.muted, '']], linea = k => { let d = ''; for (let i = 0; i <= 60; i++) { const age = i / 60 * 29.53, gd = Math.abs(age - 14.765), r = lbS[k], req = r[0] / (1 + Math.pow(gd / r[1], 2)); d += (i ? 'L' : 'M') + (i * 5).toFixed(1) + ' ' + (100 - Math.min(130, req) / 130 * 100).toFixed(1); } return d; };
+    const serveT = LB.righe.map(r => SO.serveLuna(r.k, PCT, lbS) + '°'), xS = ((14.765 + d0) / 29.53 * 300).toFixed(1);
+    const curvaLB = { aria: 'Distanza richiesta lungo il mese lunare; stanotte servono ' + serveT.join(', '), testo: 'stanotte servono ' + serveT.join(' · '), x: xS, asse: 'Luna nuova · piena · nuova; tratteggio: stanotte, Luna al ' + PCT + '% (dati simulati)',
+      l0: { d: linea('larga'), c: LC[0][0], da: LC[0][1] }, l1: { d: linea('oiii'), c: LC[1][0], da: LC[1][1] }, l2: { d: linea('stretta'), c: LC[2][0], da: LC[2][1] },
+      leg: [['banda larga', 0], ['OIII', 1], ['Hα, SII, dual band', 2]].map(([n, i]) => ({ n, c: LC[i][0], st: LC[i][1] ? 'dashed' : 'solid' })) };
+    // La notte del piano (v30): crepuscolo, altezza massima, pausa prima del meridiano
+    const crep = this.state.crep || IMP.get('planner.crep'), aMx = pv('altMax', IMP.get('planner.altMax')), pz0 = pv('pausa', IMP.get('planner.pausa'));
+    const opt = (k, key, x, lo, hi) => { if (String(x).trim() === '') { IMP.set(key, null); return; } const n = num(x); if (n != null && n >= lo && n <= hi) IMP.set(key, n); };
+    const errO = (x, lo, hi) => String(x ?? '').trim() === '' ? '' : num(x) == null || num(x) < lo || num(x) > hi ? 'Un numero da ' + lo + ' a ' + hi + '.' : '';
+    const notteR = [{ l: 'Crepuscolo ammesso, banda larga', fisso: 'buio astronomico', s: 'fisso' },
+      { l: 'Crepuscolo ammesso, banda stretta', pills: [['astronomico', 'buio astronomico'], ['nautico', 'crepuscolo nautico · Sole sotto −6°']].map(([k, l]) => pill(crep === k, () => { IMP.set('planner.crep', k); set({ crep: k }); }, l)), s: 'partenza buio astronomico' },
+      { l: 'Altezza massima', campi: [cF('altMax', aMx, { u: '°', ph: 'spenta', aria: 'Altezza massima, vuota = spenta', bad: !!errO(aMx, 30, 90), salva: x => opt('altMax', 'planner.altMax', x, 30, 90) })], err: errO(aMx, 30, 90), s: 'Per montature altazimutali o setup che allo zenit toccano.' },
+      { l: 'Pausa prima del meridiano', campi: [cF('pausa', pz0, { u: 'min', ph: 'vuota', aria: 'Pausa prima del meridiano, in minuti', bad: !!errO(pz0, 0, 120), salva: x => opt('pausa', 'planner.pausa', x, 0, 120) })], err: errO(pz0, 0, 120), s: 'Solo se la usi nel programma di ripresa.' }];
+    // Ricerca (v30): chiavi e soglia delle supernove
+    const kA = pv('aavso', IMP.get('ricerca.aavso')), kT = pv('tns', IMP.get('ricerca.tns')), snM = pv('sn', IMP.get('ricerca.sn'));
+    const ricR = [{ l: 'Chiave AAVSO', campi: [cF('aavso', kA, { wd: '260px', im: 'text', al: 'left', ph: 'dal tuo profilo AAVSO', aria: 'Chiave AAVSO', max: 64, salva: x => IMP.set('ricerca.aavso', x.trim()) })], s: 'campagne dal Target Tool' },
+      { l: 'Chiave TNS', campi: [cF('tns', kT, { wd: '260px', im: 'text', al: 'left', ph: 'dal Transient Name Server', aria: 'Chiave TNS', max: 64, salva: x => IMP.set('ricerca.tns', x.trim()) })], s: 'supernove dal Transient Name Server' },
+      { l: 'Supernove più brillanti di', campi: [cF('sn', snM, { pre: 'mag', aria: 'Supernove più brillanti di, magnitudine', bad: num(snM) == null, salva: x => { const y = num(x); if (y != null) IMP.set('ricerca.sn', y); } })], err: num(snM) == null ? 'Un numero.' : '', s: 'partenza mag 17 · la lista di Rochester' }];
+    const plCarte = [{ tit: 'Luna per oggetto', sub: 'per la banda del filtro · al posto della distanza fissa', righe: lbR, curva: curvaLB, nota: 'Più la Luna è piena, più l\u0027oggetto deve stare lontano. Sotto −5° la Luna non conta.' },
+      { tit: 'La notte del piano', sub: 'crepuscolo, altezza massima, meridiano', righe: notteR, curva: null, nota: '' },
+      { tit: 'Ricerca', sub: 'chiavi dei servizi e soglia delle supernove', righe: ricR, curva: null, nota: '' }];
+    // Tempi della notte (v27): tre gruppi, uguali per tutta l'app, vuoti di partenza. Chiave planner.tempi (soglie.js).
+    const IMPt = ALsoglie.imp, TD = IMPt.schema['planner.tempi'].righe, tK = this.props.tempi || 'vuoti';
+    if (this.state.tK !== tK) { const sv = IMPt.get('planner.tempi') || {}, v = Object.fromEntries(TD.map(r => [r.k, tK === 'd\u0027esempio' ? String(r.es) : sv[r.k] != null ? String(sv[r.k]) : '']));
+      if (this.state.tK === undefined) Object.assign(this.state, { tK, tv: v }); else setTimeout(() => this.setState({ tK, tv: v })); }
+    const tv = this.state.tv || {}, auDi = k => this.state['au' + k] || IMPt.get('automazione.' + k) || {}, conTetto = ['a', 'b'].some(k => auDi(k).tetto);
+    const UG = { 'Avvio e chiusura': 'minuti', 'Per oggetto': 'minuti', 'Durante le pose': 'secondi, frame, ore' };
+    const tempiG = Object.keys(UG).map(g => ({ t: g, u: UG[g], righe: TD.filter(r => r.g === g && (!r.tetto || conTetto)).map(r => { const v = tv[r.k] ?? '', n = parseFloat(String(v).replace(',', '.')), bad = v !== '' && (isNaN(n) || n < 0);
+      return { l: r.l, v, u: r.u, ph: '—', aria: r.l + ', in ' + r.u, ...campo(bad), s: 'nessuna convenzione: scegli tu',
+        on: e => { const nv = { ...tv, [r.k]: e.target.value.replace(/[^0-9.,]/g, '').slice(0, 5) }; set({ tv: nv }); IMPt.set('planner.tempi', Object.fromEntries(TD.map(x => { const y = parseFloat(String(nv[x.k] ?? '').replace(',', '.')); return [x.k, isNaN(y) ? null : y]; }))); } }; }) }));
+    // Flat (v30): con pannello o flat di cielo. Valori per tutte le postazioni.
+    const flatR = cielo => { const nF = pv('flatN', IMPt.get('flat.n')), nn = num(nF), q0 = this.state.flatQ || IMPt.get('flat.quando'), dk = this.state.flatD ?? IMPt.get('flat.dark');
+      const QQ = ['ogni notte', 'ogni {n} giorni', 'a fine progetto'], ogni = pv('flatO', IMPt.get('flat.ogni'));
+      return [{ l: 'Flat per filtro', campi: [cF('flatN', nF, { aria: 'Flat per filtro', im: 'numeric', bad: nn == null, salva: x => { const y = num(x); if (y != null) IMPt.set('flat.n', y); } })], err: nn == null ? 'Un numero.' : '', warn: nn != null && nn < 20 ? 'Sotto 20 flat la calibrazione aggiunge rumore.' : '', s: 'partenza 25' }]
+        .concat(cielo ? [] : [{ l: 'Dark-flat', pills: [['Sì', true], ['No', false]].map(([l, v]) => pill(dk === v, () => { IMPt.set('flat.dark', v); set({ flatD: v }); }, l)), s: 'stesso numero dei flat' }])
+        .concat([{ l: 'Quando', pills: QQ.map(x => pill(q0 === x, () => { IMPt.set('flat.quando', x); set({ flatQ: x }); }, x.replace('{n}', 'n'))), campi: q0 === 'ogni {n} giorni' ? [cF('flatO', ogni, { pre: 'ogni', u: 'giorni', aria: 'Ogni quanti giorni', im: 'numeric', bad: num(ogni) == null, salva: x => { const y = num(x); if (y != null) IMPt.set('flat.ogni', y); } })] : null, s: 'sempre solo i filtri usati' }])
+        .concat(cielo ? [{ l: 'Finestra dei flat di cielo', fisso: 'Sole da −2° a −7°', s: 'nessuna convenzione: scegli tu' }] : []); };
+    // Automazione (v27): per postazione, solo Sì / No. La ruota portafiltri viene dal setup in Attrezzatura.
+    const AUT = [['tetto', 'Tetto o cupola motorizzati', 'Avvio: apre il tetto prima dell\u0027unpark · Chiusura: park, poi chiude il tetto'], ['sensore', 'Sensore di sicurezza', 'Avvio: aspetta che sia sicuro prima di aprire'], ['flat', 'Pannello per i flat', 'Avvio apre il coperchio, Chiusura lo chiude, flat a fine notte'], ['cielo', 'Flat di cielo', 'solo senza pannello: flat al crepuscolo, Sole fra −2° e −7°']];
+    const autoP = [['a', 'ZWO AM5 · Askar FRA400 · ASI2600MM Pro', 'mono · ruota 7 filtri'], ['b', 'Sky-Watcher EQ6-R Pro · Askar 103APO · ASI2600MM Pro', 'mono · ruota 7 filtri']].map(([k, n, sub]) => { const cur = auDi(k);
+      return { n, sub, flat: !!(cur.flat || cur.cielo), flatR: flatR(!!cur.flat && false || (!cur.flat && !!cur.cielo)), righe: AUT.filter(([f]) => f !== 'cielo' || !cur.flat).map(([f, l, sx]) => ({ l, s: sx, op: [['Sì', true], ['No', false]].map(([ol, ov]) => { const on = !!cur[f] === ov; return { l: ol, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.text : 'transparent', fg: on ? t.card : t.text,
+        on: e => { prev(e); const nv = { ...cur, [f]: ov }; IMPt.set('automazione.' + k, nv); set({ ['au' + k]: nv }); } }; }) })) }; });
+
+    // Il disegno: cerchio visto dall'alto, bordo = 0°, centro = zenit
+    const S = 400, c = S / 2, RR = c - 30, rad = a => RR * (1 - Math.max(0, Math.min(90, a)) / 90);
+    const xy = (az, a) => [c + rad(a) * Math.sin(az * R), c - rad(a) * Math.cos(az * R)];
+    const DIRS = ['Nord', 'Nord-est', 'Est', 'Sud-est', 'Sud', 'Sud-ovest', 'Ovest', 'Nord-ovest'];
+    const az = this.state.az, hAz = hor ? hor(az) : 0;
+    const ring = (a, k) => ce('circle', { key: k, cx: c, cy: c, r: rad(a), fill: 'none', stroke: t.muted, strokeOpacity: 0.3, strokeDasharray: '2 4' });
+    const sag = hor ? (() => { let d = 'M' + c + ' ' + (c - RR) + ' A' + RR + ' ' + RR + ' 0 1 1 ' + c + ' ' + (c + RR) + ' A' + RR + ' ' + RR + ' 0 1 1 ' + c + ' ' + (c - RR) + ' Z ';
+      for (let a = 0; a <= 360; a += 1) { const [x, y] = xy(a, hor(a)); d += (a ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1) + ' '; } return d + 'Z'; })() : null;
+    const sopra = hor ? (() => { let d = '', on = false; for (let a = 0; a <= 360; a += 1) { const h = hor(a); if (h <= MIN) { on = false; continue; } const [x, y] = xy(a, h); d += (on ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1) + ' '; on = true; } return d; })() : '';
+    const conta = Math.max(MIN, hAz), dir = DIRS[Math.round(az / 45) % 8];
+    const lettura = !hor ? 'Nessun orizzonte: conta solo l\u0027altezza minima.' : dir + ' ' + az + '°: ostacolo fino a ' + Math.round(hAz) + '°' + (hAz <= MIN ? ' · conta l\u0027altezza minima' : '');
+    const pick = ev => { const r = ev.currentTarget.getBoundingClientRect(), pt = ev.touches ? ev.touches[0] : ev, dx = pt.clientX - (r.left + r.width / 2), dy = pt.clientY - (r.top + r.height / 2);
+      const a = Math.round(((Math.atan2(dx, -dy) / R) + 360) % 360); if (a !== this.state.az) set({ az: a }); };
+    const key2 = ev => { const st = ev.shiftKey ? 15 : 1; let a = az; if (ev.key === 'ArrowRight' || ev.key === 'ArrowUp') a += st; else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowDown') a -= st; else return; ev.preventDefault(); set({ az: ((a % 360) + 360) % 360 }); };
+    const [px, py] = xy(az, conta), [ex, ey] = xy(az, 0);
+    const disegno = ce('div', { style: { position: 'relative', width: '100%', height: '100%' } }, ce('svg', { viewBox: '0 0 ' + S + ' ' + S, width: '100%', height: '100%', role: 'slider', tabIndex: 0, 'aria-label': 'Orizzonte del sito a 360°. Frecce: un grado. Maiusc e frecce: 15°.', 'aria-valuemin': 0, 'aria-valuemax': 359, 'aria-valuenow': az, 'aria-valuetext': lettura,
+      onMouseMove: pick, onTouchStart: pick, onTouchMove: pick, onKeyDown: key2, onFocus: () => set({ foc: true }), onBlur: () => set({ foc: false }), style: { display: 'block', overflow: 'visible', cursor: 'crosshair', touchAction: 'none', outline: this.state.foc ? '2px solid ' + t.text : 'none', outlineOffset: 4, borderRadius: '50%' } },
+      ce('circle', { cx: c, cy: c, r: RR, fill: t.card2 }),
+      ring(60, 'r60'), ce('circle', { cx: c, cy: c, r: 2, fill: t.muted }),
+      Array.from({ length: 12 }, (_, k) => { const a = k * 30, [x1, y1] = xy(a, 0); return ce('line', { key: 't' + k, x1, y1, x2: c + (RR + 6) * Math.sin(a * R), y2: c - (RR + 6) * Math.cos(a * R), stroke: t.muted, strokeOpacity: 0.6 }); }),
+      sag ? ce('path', { key: 'sag' + oz.file, d: sag, fillRule: 'evenodd', fill: t.muted, fillOpacity: t.dk ? 0.42 : 0.32, stroke: t.text, strokeOpacity: 0.55, strokeWidth: 1, style: { animation: 'alFade .5s ease-out both' } }) : null,
+      ce('circle', { cx: c, cy: c, r: rad(MIN), fill: 'none', stroke: t.text, strokeWidth: 1.5, strokeDasharray: '6 4', strokeOpacity: 0.85 }),
+      sopra ? ce('path', { d: sopra, fill: 'none', stroke: t.text, strokeWidth: 3.5, strokeLinecap: 'round', strokeLinejoin: 'round' }) : null,
+      [['30°', MIN], ['60°', 60]].map(([l, a]) => ce('text', { key: l, x: c + 5, y: c - rad(a) - 4, fill: t.muted, fontSize: 11 }, l)),
+      [['N', 0], ['E', 90], ['S', 180], ['O', 270]].map(([l, a]) => ce('text', { key: l, x: c + (RR + 18) * Math.sin(a * R), y: c - (RR + 18) * Math.cos(a * R) + 4.5, fill: t.text, fontSize: 13, fontWeight: 600, textAnchor: 'middle' }, l)),
+      ce('line', { x1: ex, y1: ey, x2: c, y2: c, stroke: t.accent, strokeWidth: 1.5, strokeDasharray: '3 3' }),
+      ce('circle', { cx: px, cy: py, r: 6, style: { fill: 'var(--su-immagine)' }, stroke: t.accent, strokeWidth: 2.5 })));
+    const leg = [hor ? { n: 'sagoma degli ostacoli', bg: AL.rgba(t.muted, t.dk ? 0.42 : 0.32), b: '0' } : null, { n: 'altezza minima, deep sky: ' + MIN + '°', bg: 'transparent', b: '2px dashed ' + t.text }, hor ? { n: 'tratto spesso = la sagoma supera la linea: conta la sagoma', bg: 'transparent', b: '3.5px solid ' + t.text } : null].filter(Boolean);
+    return { pronto: true, t, errBg: t.pills[1][0], errFg: t.pills[1][1], F: { tel, desk: !tel }, modo, modoSc, accento, setModo: m => set({ modo: m, modoSc: m }), setModoSc: m => set({ modoSc: m }), setAccento: a => set({ accento: a }),
+      tabs, tab: indOn ? {} : TB, nuova: !indOn && ['servizi', 'scansioni', 'diagnostica', 'backup'].includes(sez), nuovaK: sez, statoN: this.props.stato || 'normale', ind, tabSub, nome, fileRef: this.fileRef, onFile, oz: ozV, siti, sitoN: sitoK, righe, pred, car, scan, key, obiettivo, ast, lunaR, lunaOra, sogR, sogRip, plCarte, tempiG, autoP, disegno, lettura, leg };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div class="al-c-striscia__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{ desk }}" hint-placeholder-val="{{ true }}"><div class="al-c-striscia__blocco-2" ref="{{ rif }}" role="tablist" aria-label="{{ etichetta }}" style="display:{{ dDisp }};grid-template-columns:repeat({{ n }},minmax(0,1fr));overflow-x:{{ dOv }};padding-bottom:{{ dPb }}">
+<sc-if value="{{ intest }}" hint-placeholder-val="{{ true }}"><span class="al-c-striscia__blocco-3" style="grid-column:span {{ nOre }}">ora per ora</span><sc-if value="{{ nTend }}" hint-placeholder-val="{{ true }}"><span class="al-c-striscia__blocco-3" style="grid-column:span {{ nTend }}">tendenza, meno affidabile</span></sc-if></sc-if>
+<sc-for list="{{ tiles }}" as="n" hint-placeholder-count="7"><a class="al-c-striscia__colonna-1" role="tab" aria-selected="{{ n.sel }}" onClick="{{ n.on }}" style="width:{{ dW }};flex:{{ dFlex }};background:{{ n.bg }};color:{{ n.fg }};border:1.5px dashed {{ n.dash }};box-shadow:{{ n.ring }}">
+<span class="al-c-striscia__riga-1"><b class="al-c-striscia__testo-1">{{ n.day }}</b><span class="al-c-striscia__testo-2" style="color:{{ n.mu }}">{{ n.tag }}</span></span>
+<dc-import name="componenti/Pillola" esito="{{ n.es }}" testo="{{ n.pillT }}" dimensione="piccola" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" hint-size="90px,22px"></dc-import>
+<sc-if value="{{ n.rip }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Ripresa" tipo="{{ n.rip.tipo }}" testo="{{ n.rip.testo }}" forma="segno" colore="{{ n.fg }}" tenue="{{ n.mu }}" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,16px"></dc-import></sc-if>
+<span class="al-c-striscia__colonna-2"><span class="al-c-striscia__testo-3">{{ n.hours }}</span><span class="al-c-striscia__testo-4" style="color:{{ n.mu }}">{{ n.range }}</span></span>
+<span class="al-c-striscia__riga-2"><sc-for list="{{ n.cells }}" as="c" hint-placeholder-count="14"><span class="al-c-striscia__pillola-1" style="height:{{ c.h }};background:{{ c.bg }}"></span></sc-for></span>
+</a></sc-for>
+</div></sc-if>
+<sc-if value="{{ tel }}" hint-placeholder-val="{{ false }}"><div class="al-c-striscia__riga-3" ref="{{ rif }}" role="tablist" aria-label="{{ etichetta }}" style="padding:0 {{ rientro }} 2px;scroll-padding:0 {{ rientro }}">
+<sc-for list="{{ tiles }}" as="n" hint-placeholder-count="7"><a class="al-c-striscia__colonna-3" role="tab" aria-selected="{{ n.sel }}" onClick="{{ n.on }}" style="background:{{ n.bg }};color:{{ n.fg }};border:1.5px dashed {{ n.dash }};box-shadow:{{ n.ring }}">
+<span class="al-c-striscia__riga-4"><b class="al-c-striscia__testo-5">{{ n.day }}</b><span class="al-c-striscia__testo-6" style="color:{{ n.mu }}">{{ n.tagS }}</span></span>
+<dc-import name="componenti/Pillola" esito="{{ n.es }}" testo="{{ n.pillT }}" dimensione="micro" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" hint-size="80px,18px"></dc-import>
+<sc-if value="{{ n.ripT }}" hint-placeholder-val="{{ false }}"><span class="al-c-striscia__blocco-4" aria-hidden="{{ n.ripT.nasc }}" style="visibility:{{ n.ripT.vis }}"><dc-import name="componenti/Ripresa" tipo="{{ n.ripT.tipo }}" testo="{{ n.ripT.testo }}" forma="segno" colore="{{ n.fg }}" tenue="{{ n.mu }}" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,16px"></dc-import></span></sc-if>
+<span class="al-c-striscia__testo-7">{{ n.hours }}</span><span class="al-c-striscia__testo-8" style="color:{{ n.mu }}">{{ n.range }}</span>
+</a></sc-for>
+</div></sc-if>
+</sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:200},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Striscia&quot;},&quot;etichetta&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;le sette notti&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Striscia&quot;},&quot;notti&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{day,tag,tagS,tend,sel,esito,pillT,rip?:{tipo,testo},hours,range,cells,on}[]&quot;},&quot;rientro&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = { sel: 0 };
+  componentWillUnmount() { this._alw && clearInterval(this._alw); }
+  // La casella scelta entra da sola nella vista quando cambia (mai scrollIntoView)
+  rif = el => { this._c = el; };
+  componentDidMount() { this.porta(); }
+  componentDidUpdate() { this.porta(); }
+  porta() { const c = this._c; if (!c || c.scrollWidth <= c.clientWidth + 1) return; const tabs = [...c.querySelectorAll('[role=tab]')], i = tabs.findIndex(x => x.getAttribute('aria-selected') === 'true'); if (i < 0 || i === this._ultima) return; this._ultima = i;
+    const s = tabs[i].getBoundingClientRect(), r = c.getBoundingClientRect(); if (s.left < r.left + 8 || s.right > r.right - 8) c.scrollLeft += s.left - r.left - 16; }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, modo = p.modo || 'scuro', t = AL.tema(modo, p.accento), tel = p.formato === 'telefono';
+    let notti = p.notti;
+    if (!notti) { // Esempio (dati simulati): le sette notti di Meteo, la prima scelta.
+      const q = ALsoglie.esito.nuvole;
+      const R = [['mer 30', 'stanotte', 0, '9 ore', '21–03', [5,8,10,10,8,6,8,12,16,22,26,40,30,20]], ['gio 1', '', 2, 'nessuna ora', 'coperto', [60,75,85,92,96,98,98,97,95,94,90,85,80,75]], ['ven 2', '', 0, '8 ore', '21–05', [12,8,6,4,3,3,4,5,6,7,8,10,14,18]],
+        ['sab 3', '', 1, '9 ore di buio', 'nuvole al 38%'], ['dom 4', '', 0, '9 ore di buio', 'nuvole al 14%'], ['lun 5', '', 0, '9 ore di buio', 'nuvole al 9%'], ['mar 6', '', 2, '9 ore di buio', 'nuvole al 72%']];
+      notti = R.map(([day, tag, s, hours, range, d], i) => { const on = i === this.state.sel;
+        return { day, tag, tagS: d ? tag : 'tendenza', tend: !d, sel: on, esito: s, pillT: AL.PAROLE[s], hours, range, on: () => this.setState({ sel: i }),
+          cells: d ? d.map((x, h) => ({ h: (20 + x * 0.8) + '%', bg: h < 3 || h > 11 ? (on ? AL.rgba(t.hPillFg, 0.3) : t.sparkOff) : t.pills[q(x)][1] })) : [] }; }); }
+    // Scelta: piena del colore del testo. Tendenza: tratteggiata.
+    const riserva = !!this.props.riserva;
+    const tiles = notti.map(n => ({ ...n, ripT: n.rip ? { ...n.rip, vis: 'visible', nasc: 'false' } : riserva ? { tipo: 'larga', testo: '4 h di banda larga', vis: 'hidden', nasc: 'true' } : null, es: n.esito === 'ignoto' ? 'mancante' : n.esito,
+      // v54: anello anche sul desktop
+      bg: n.tend && !n.sel ? 'transparent' : t.card2, fg: t.text, mu: t.muted, ring: n.sel ? 'inset 0 0 0 2px ' + t.accent : 'none', dash: n.tend && !n.sel ? t.line : 'transparent' }));
+    const nTend = tiles.filter(n => n.tend).length;
+    const scorre = !tel && tiles.length > 8;
+    return { pronto: true, t, modo, accento: p.accento, desk: !tel, tel, tiles, rif: this.rif, intest: p.intestazione !== false, dDisp: scorre ? 'flex' : 'grid', dOv: scorre ? 'auto' : 'visible', dPb: scorre ? '4px' : '0', dW: scorre ? '164px' : 'auto', dFlex: scorre ? 'none' : '0 1 auto', n: tiles.length, nOre: tiles.length - nTend, nTend, etichetta: p.etichetta || 'le sette notti', rientro: (p.rientro ?? 20) + 'px' };
+  }
+}
+</script>
+</body>
+</html>

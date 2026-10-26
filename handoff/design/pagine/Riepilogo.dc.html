@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}</style>
+</helmet>
+<dc-import name="componenti/Riepilogo" tipo="{{ tipo }}" stato="{{ stato }}" formato="{{ formato }}" modo="{{ modo }}" accento="{{ accento }}" contenitore="pagina" hint-size="100%,100vh"></dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tipo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;oggetto&quot;,&quot;notte&quot;],&quot;default&quot;:&quot;oggetto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;caricamento&quot;,&quot;misure in calcolo&quot;,&quot;senza durata&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  // La pagina del riepilogo: il componente vero sta in componenti/Riepilogo (lo usano anche Notti e Archivio)
+  renderVals() { const p = this.props; return { tipo: p.tipo || 'oggetto', stato: p.stato || 'normale', formato: (typeof location !== 'undefined' && (location.search.match(/formato=(telefono|desktop)/) || [])[1]) || p.formato || 'automatico', modo: p.modo || 'scuro', accento: p.accento }; }
+}
+</script>
+</body>
+</html>

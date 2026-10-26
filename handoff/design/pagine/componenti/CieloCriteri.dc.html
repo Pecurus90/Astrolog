@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+<div style="display:flex;align-items:flex-start;gap:12px">
+<div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0"><b style="font-size:15px;font-weight:600">{{ crit.titolo }}</b><span style="font-size:12px;color:var(--tenue);text-wrap:pretty">{{ crit.sub }}</span></div>
+<sc-if value="{{ crit.chiudi }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ crit.chiudi }}" aria-label="Chiudi i criteri" style="flex:none;width:36px;height:36px;border:0;border-radius:50%;background:var(--carta-2);color:inherit;cursor:pointer;font-size:17px">×</button></sc-if>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ crit.passi }}" as="x" hint-placeholder-count="3"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px"><span style="font-size:14px">{{ x.l }}</span><span style="display:flex;align-items:center;gap:4px"><button type="button" class="al-bottone al-bottone--tenue al-bottone--icona al-bottone--piccolo" onClick="{{ x.meno }}" aria-label="{{ x.menoL }}">−</button><b style="min-width:66px;text-align:center;font-weight:500;font-variant-numeric:tabular-nums">{{ x.v }}</b><button type="button" class="al-bottone al-bottone--tenue al-bottone--icona al-bottone--piccolo" onClick="{{ x.piu }}" aria-label="{{ x.piuL }}">+</button></span></div></sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:12px;color:var(--tenue)">Verso, col buio</span><dc-import name="componenti/PillolaScelta" forma="spunta" misura="piccola" fondo="carta" opzioni="{{ crit.dir }}" etichetta="Direzione nel cielo" formato="{{ formato }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,36px"></dc-import></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:12px;color:var(--tenue)">Tipo</span><dc-import name="componenti/PillolaScelta" forma="spunta" misura="piccola" fondo="carta" opzioni="{{ crit.tipi }}" etichetta="Tipo" formato="{{ formato }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,36px"></dc-import></div>
+<sc-if value="{{ crit.cats }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:12px;color:var(--tenue)">Catalogo</span><dc-import name="componenti/PillolaScelta" forma="spunta" misura="piccola" fondo="carta" opzioni="{{ crit.cats }}" etichetta="Catalogo" formato="{{ formato }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,36px"></dc-import></div></sc-if>
+<sc-if value="{{ crit.arch }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:12px;color:var(--tenue)">Archivio</span><dc-import name="componenti/PillolaScelta" forma="segmentato" misura="piccola" fondo="carta" opzioni="{{ crit.arch }}" etichetta="Archivio" formato="{{ formato }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,36px"></dc-import></div></sc-if>
+<sc-if value="{{ crit.archNota }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:var(--tenue);text-wrap:pretty">{{ crit.archNota }}</span></sc-if>
+<sc-if value="{{ crit.entra }}" hint-placeholder-val="{{ false }}"><button type="button" role="switch" aria-checked="{{ crit.entra.on }}" onClick="{{ crit.entra.cambia }}" style="display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:8px 12px;border:0;border-radius:14px;background:var(--carta-2);color:inherit;text-align:left;cursor:pointer"><span aria-hidden="true" style="flex:none;width:36px;height:22px;border-radius:999px;position:relative;background:{{ crit.entra.bg }}"><i style="position:absolute;top:3px;left:{{ crit.entra.x }};width:16px;height:16px;border-radius:50%;background:{{ crit.entra.pal }}"></i></span><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14px">{{ crit.entra.l }}</span><span style="font-size:12px;color:var(--tenue)">{{ crit.entra.sub }}</span></span></button></sc-if>
+<sc-if value="{{ crit.altri }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:10px">
+<button type="button" onClick="{{ crit.altri.cambia }}" aria-expanded="{{ crit.altri.on }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:0;border:0;background:transparent;color:inherit;cursor:pointer;font-size:14px;font-weight:600"><span>{{ crit.altri.l }}</span><span aria-hidden="true">{{ crit.altri.freccia }}</span></button>
+<sc-if value="{{ crit.altri.aperto }}" hint-placeholder-val="{{ false }}"><div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
+<sc-for list="{{ crit.altri.campi }}" as="c" hint-placeholder-count="8"><label style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--tenue);min-width:0">{{ c.l }}<input type="number" step="any" value="{{ c.v }}" placeholder="{{ c.ph }}" onChange="{{ c.on }}" class="al-campo al-campo--numero al-campo--piccolo" style="width:100%;text-align:left;padding:0 12px"></label></sc-for>
+<label style="grid-column:1 / -1;display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--tenue)">Costellazione<select class="al-tendina" value="{{ crit.altri.cost }}" onChange="{{ crit.altri.onCost }}" style="width:100%"><sc-for list="{{ crit.altri.costOpz }}" as="o" hint-placeholder-count="10"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></label>
+</div></sc-if>
+</div></sc-if>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:12px;color:var(--tenue)">Ordina</span><dc-import name="componenti/PillolaScelta" forma="pillole" misura="piccola" fondo="carta" opzioni="{{ crit.ord }}" etichetta="Ordina" formato="{{ formato }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,36px"></dc-import></div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--linea)"><b style="font-size:13px;font-weight:600">{{ crit.conto }}</b><span style="display:flex;gap:6px;flex-wrap:wrap"><sc-if value="{{ crit.cambiati }}" hint-placeholder-val="{{ false }}"><button type="button" class="al-bottone al-bottone--testo al-bottone--piccolo" onClick="{{ crit.ripristina }}">Ripristina</button></sc-if><sc-if value="{{ crit.mostra }}" hint-placeholder-val="{{ false }}"><button type="button" class="al-bottone al-bottone--pieno al-bottone--piccolo" onClick="{{ crit.mostra }}">Mostra la lista</button></sc-if></span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:380,&quot;height&quot;:560},&quot;crit&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;}}"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div class="al-c-da-confermare__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="al-c-da-confermare__colonna-1" role="dialog" aria-label="Da confermare" style="position:{{ pos }};top:{{ top }};right:{{ right }};width:{{ w }}">
+<span class="al-c-da-confermare__riga-1"><span class="al-c-da-confermare__testo-1">{{ n }}</span><span class="al-c-da-confermare__testo-2">da confermare</span></span>
+<ul class="al-c-da-confermare__colonna-2" aria-label="Sezioni"><sc-for list="{{ sezioni }}" as="s" hint-placeholder-count="4"><li class="al-c-da-confermare__riga-2"><span class="al-c-da-confermare__colonna-3"><span class="al-c-da-confermare__testo-3">{{ s.n }}</span><span class="al-c-da-confermare__testo-4">{{ s.c }}</span></span><a class="al-c-da-confermare__riga-3" href="{{ s.href }}" aria-label="{{ s.al }}">Rispondi</a></li></sc-for></ul>
+</div></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:340,&quot;height&quot;:340},&quot;statico&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Pannello&quot;},&quot;sezioni&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;[string, string, number][]&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  componentWillUnmount() { this._alw && clearInterval(this._alw); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), st = !!p.statico;
+    // Le sezioni con domande senza risposta (simulate, come la pagina Da confermare). Rispondi apre la pagina su quella sezione.
+    const base = /\/componenti\//.test(location.pathname) ? '../' : '';
+    const S = p.sezioni || [['filtri', 'Filtri', 1], ['attrezzatura', 'Attrezzatura da completare', 1], ['oggetti', 'Oggetti', 1], ['tipo', 'Frame senza tipo', 1]];
+    const sezioni = S.map(([k, n, c]) => ({ n, c: c === 1 ? '1 domanda' : c + ' domande', href: base + 'Da%20confermare.dc.html#' + k, al: 'Rispondi: ' + n }));
+    return { pronto: true, t, sezioni, n: S.reduce((a, s) => a + s[2], 0),
+      pos: st ? 'relative' : 'absolute', top: st ? 'auto' : 'calc(100% + 10px)', right: st ? 'auto' : '0', w: st ? 'auto' : '320px' };
+  }
+}
+</script>
+</body>
+</html>

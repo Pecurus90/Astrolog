@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div class="al-c-barra-filtri__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ anima }}" hint-placeholder-val="{{ false }}"><span class="al-c-barra-filtri__riga-1" data-an="barra" role="img" aria-label="{{ aria }}" style="height:{{ h }}"><sc-for list="{{ pezzi }}" as="f" hint-placeholder-count="3"><span class="al-c-barra-filtri__blocco-2" style="flex:{{ f.flex }};background:{{ f.bg }};border:{{ f.bd }}"></span></sc-for></span></sc-if><sc-if value="{{ ferma }}" hint-placeholder-val="{{ true }}"><span class="al-c-barra-filtri__riga-2" role="img" aria-label="{{ aria }}" style="height:{{ h }}"><sc-for list="{{ pezzi }}" as="f" hint-placeholder-count="3"><span class="al-c-barra-filtri__blocco-2" style="flex:{{ f.flex }};background:{{ f.bg }};border:{{ f.bd }}"></span></sc-for></span></sc-if>
+<sc-if value="{{ righe }}" hint-placeholder-val="{{ false }}"><sc-for list="{{ pezzi }}" as="f" hint-placeholder-count="3"><span class="al-c-barra-filtri__centro-1" style="grid-template-columns:12px minmax(0,1fr) auto {{ L.oreW }};gap:{{ L.gap }};font-size:{{ L.fs }}"><i class="al-c-barra-filtri__blocco-3" style="background:{{ f.bg }};border:{{ f.bd }}"></i><b class="al-c-barra-filtri__blocco-4">{{ f.n }}</b><span class="al-c-barra-filtri__testo-1" style="font-size:{{ L.fs2 }}">{{ f.fr }}</span><span class="al-c-barra-filtri__testo-2">{{ f.h }}</span></span></sc-for></sc-if></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:140},&quot;filtri&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Array&lt;[string, number, number|null]&gt;&quot;},&quot;altezza&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;12&quot;,&quot;8&quot;],&quot;default&quot;:&quot;12&quot;,&quot;tsType&quot;:&quot;number | string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;righe&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;anima&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  componentWillUnmount() { this._alw && clearInterval(this._alw); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), tel = p.formato === 'telefono';
+    // filtri: [filtro, frame, ore]; i pezzi sono larghi quanto le ore (o i frame, senza durata)
+    const fil = p.filtri || [['ha', 70, 2.3], ['oiii', 56, 1.9], ['sii', 30, 1.0]];
+    const pezzi = fil.map(([k, fr, h]) => ({ ...AL.tinta(t, k), n: (AL.FD[k] || AL.FD.ignoto)[0], fr: fr + ' frame', h: AL.ore(h), flex: String(h ?? fr / 60) }));
+    const anima = !!p.anima;
+    return { pronto: true, t, pezzi, anima, ferma: !anima, righe: !!p.righe, h: (p.altezza ?? 12) + 'px', aria: 'Filtri: ' + pezzi.map(f => f.n + ' ' + f.h).join(', '),
+      L: tel ? { oreW: '66px', gap: '8px', fs: '13px', fs2: '12px' } : { oreW: '76px', gap: '10px', fs: '14px', fs2: '13px' } };
+  }
+}
+</script>
+</body>
+</html>

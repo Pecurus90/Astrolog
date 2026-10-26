@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="caratteri.css" rel="stylesheet">
+<link href="astrolog.css" rel="stylesheet">
+<style>html,body{margin:0;background:var(--tavola-fondo)}a{color:inherit}a:hover{opacity:.8}</style>
+</helmet>
+<section style="display:flex;flex-direction:column;gap:120px;padding:80px;min-width:max-content;background:var(--tavola-fondo);font-family:'Outfit',sans-serif">
+<div style="display:flex;flex-direction:column;gap:32px">
+<span style="font-size:30px;font-weight:500;color:var(--tavola-testo)">La scheda sul telefono · da scegliere</span>
+<span style="font-size:15px;color:var(--tavola-tenue);max-width:900px">Stesso progetto (IC 1396), tre modi. Le azioni sono già in fila di pillole, Elimina in testo rosso; «← Progetti» è un testo. Tweak «scheda» nella pagina.</span>
+<div style="display:flex;gap:56px;align-items:flex-start">
+<sc-for list="{{ var }}" as="it" hint-placeholder-count="3"><div data-screen-label="{{ it.label }}" ref="{{ it.ref }}" style="display:flex;flex-direction:column;gap:10px;flex:none;width:390px"><span style="font-size:18px;font-weight:500;color:var(--tavola-testo)">{{ it.titolo }}</span><span style="font-size:14px;color:var(--tavola-tenue);min-height:60px">{{ it.nota }}</span><div style="width:390px;height:844px;overflow-y:auto;overflow-x:hidden;border-radius:44px;box-shadow:0 0 0 10px var(--tavola-cornice), 0 30px 60px rgba(0,0,0,.4);background:var(--tavola-schermo)"><sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}"><dc-import name="Progetti" progetto="ic1396" scheda="{{ it.v }}" formato="telefono" hint-size="390px,844px"></dc-import></sc-if></div></div></sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:32px">
+<span style="font-size:30px;font-weight:500;color:var(--tavola-testo)">Progetti, gli stati · telefono 390 px</span>
+<span style="font-size:15px;color:var(--tavola-tenue);max-width:900px">Ogni schermo si accende quando entra nella vista. Oggi è mercoledì 30 settembre 2026; progetti, notti e misure simulati.</span>
+<div style="display:flex;gap:56px;align-items:flex-start">
+<sc-for list="{{ tel }}" as="it" hint-placeholder-count="5"><div data-screen-label="{{ it.label }}" ref="{{ it.ref }}" style="display:flex;flex-direction:column;gap:10px;flex:none;width:390px"><span style="font-size:18px;font-weight:500;color:var(--tavola-testo)">{{ it.titolo }}</span><span style="font-size:14px;color:var(--tavola-tenue);min-height:40px">{{ it.nota }}</span><div style="width:390px;height:844px;overflow-y:auto;overflow-x:hidden;border-radius:44px;box-shadow:0 0 0 10px var(--tavola-cornice), 0 30px 60px rgba(0,0,0,.4);background:var(--tavola-schermo)"><sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}"><dc-import name="Progetti" stato="{{ it.st }}" progetto="{{ it.p }}" modifica="{{ it.mod }}" calendario="{{ it.cal }}" formato="telefono" hint-size="390px,844px"></dc-import></sc-if></div></div></sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:24px">
+<span style="font-size:30px;font-weight:500;color:var(--tavola-testo)">Desktop · 1440 px</span>
+<div style="display:flex;gap:80px;align-items:flex-start">
+<sc-for list="{{ desk }}" as="it" hint-placeholder-count="5"><div data-screen-label="{{ it.label }}" ref="{{ it.ref }}" style="display:flex;flex-direction:column;gap:16px;width:1440px;min-height:1600px;flex:none"><div style="display:flex;gap:12px;align-items:baseline;color:var(--tavola-testo)"><span style="font-size:22px;font-weight:500">{{ it.titolo }}</span><span style="font-size:15px;color:var(--tavola-tenue)">{{ it.nota }}</span></div><sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}"><dc-import name="Progetti" stato="{{ it.st }}" progetto="{{ it.p }}" modifica="{{ it.mod }}" calendario="{{ it.cal }}" formato="desktop" hint-size="1440px,1600px"></dc-import></sc-if></div></sc-for>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { on: {} };
+  refs = {}; els = {};
+  componentDidMount() {
+    this._io = typeof IntersectionObserver !== 'undefined' ? new IntersectionObserver(es => {
+      const add = {}; es.forEach(e => { if (e.isIntersecting) add[e.target.dataset.k] = true; });
+      if (Object.keys(add).length) this.setState(s => ({ on: { ...s.on, ...add } }));
+    }, { rootMargin: '300px' }) : null;
+    Object.values(this.els).forEach(el => this.osserva(el));
+    if (!this._io) this.setState({ on: new Proxy({}, { get: () => true }) });
+  }
+  componentWillUnmount() { this._io && this._io.disconnect(); }
+  osserva(el) { if (el instanceof Element && this._io && !el._oss) { el._oss = 1; this._io.observe(el); } }
+  rif(k) { if (!this.refs[k]) this.refs[k] = el => { if (!el) return; el.dataset.k = k; this.els[k] = el; this.osserva(el); }; return this.refs[k]; }
+  renderVals() {
+    const T = [
+      ['Sistema solare', 'Luna a mosaico: segno del corpo nell\u0027anello, durata nel piano, niente barra né calendario', 'normale', 'sol-luna'],
+      ['Finito dalla prima scansione', 'M 27: obiettivo = ore fatte, «dalla prima scansione · agosto 2025», calendario dalle ore', 'normale', 'imp-M27'],
+      ['In Modifica', 'IC 1396: nome, setup in pillole, obiettivo per filtro con − e +; le ore fatte restano', 'normale', 'ic1396', true],
+      ['Calendario su più mesi', 'IC 1396 aperto sul primo mese con notti: ‹ spenta, › verso settembre', 'normale', 'ic1396', false, 'primo mese'],
+      ['Oltre il 100%', 'NGC 6960: ✓ nell\u0027anello, «+ 10 min» a destra, «di 8 h · + 10 min» nella scheda', 'obiettivo raggiunto', 'ngc6960']];
+    const on = this.state.on;
+    const mk = (f) => T.map(([titolo, nota, st, p, mod, cal], i) => { const k = f + i, nn = String(i + 1).padStart(2, '0');
+      return { titolo: nn + ' · ' + titolo, nota, st, p, mod: !!mod, cal: cal || 'ultimo mese', label: (f === 't' ? 'Telefono' : 'Desktop') + ' · ' + nn + ' · ' + titolo, ref: this.rif(k), on: !!on[k] }; });
+    const VV = [['colonna', 'Com\u0027era: tutto in colonna, anello grande sotto la miniatura.'], ['affiancata', 'A · Miniatura in alto, anello e barre per filtro nella stessa riga, tre misure in una riga.'], ['carosello', 'B · Come A; sotto, Mosaico, Le notti e Le misure in carte che scorrono di lato.']];
+    const variants = VV.map(([v, nota], i) => { const k = 'v' + i; return { v, nota, titolo: ['Com\u0027era', 'A · Affiancata', 'B · Carosello'][i], label: 'Scheda · ' + v, ref: this.rif(k), on: !!on[k] }; });
+    return { var: variants, tel: mk('t'), desk: mk('d') };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}@property --p{syntax:'<number>';inherits:false;initial-value:100}@keyframes alFill{from{--p:0}}@keyframes alIn{from{opacity:0;transform:translateY(14px)}}@keyframes alFade{from{opacity:0}}@keyframes alFadeUp{from{opacity:0;transform:translateY(6px)}}@keyframes alGrowX{from{transform:scaleX(0)}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-prog__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="{{ L.f }}" pagina="Progetti" etichetta="{{ L.etich }}" sito="Cima Ekar" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<div class="al-prog__colonna-1" style="gap:{{ L.gap }}">
+
+<sc-if value="{{ L.testa }}" hint-placeholder-val="{{ true }}"><div class="al-prog__riga-1"><sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><span class="al-prog__testo-1" style="font-size:{{ L.h1 }}">Progetti</span></sc-if><span class="al-prog__testo-2">{{ testaSub }}</span></div></sc-if>
+
+<sc-if value="{{ vuoto }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="{{ L.f }}" ritardo="0" padding="{{ L.padV }}" gap="14" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" etichetta="Nessun progetto" hint-size="100%,220px">
+<span class="al-prog__tondo-1" aria-hidden="true">◉</span>
+<span class="al-prog__testo-3">Nessun progetto ancora.</span>
+<a href="Planner.dc.html" class="al-bottone al-bottone--pieno al-bottone--blocco al-bottone--a-sinistra">Apri il Planner</a>
+</dc-import></sc-if>
+
+<sc-if value="{{ pieno }}" hint-placeholder-val="{{ true }}"><div class="al-prog__centro-1" style="grid-template-columns:{{ L.cols }}">
+
+<sc-if value="{{ L.lista }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="{{ L.f }}" ritardo="0" padding="{{ L.padL }}" gap="18" modo="{{ modo }}" accento="{{ accento }}" etichetta="Elenco dei progetti" hint-size="100%,600px">
+<sc-if value="{{ L.tel }}" hint-placeholder-val="{{ false }}"><div class="al-prog__colonna-2">
+<div class="al-prog__riga-2"><input value="{{ cerca.v }}" onChange="{{ cerca.on }}" placeholder="Cerca un progetto" aria-label="Cerca un progetto" type="search" class="al-campo al-campo--tondo al-prog__blocco-2"><select key="{{ ordT.v }}" defaultValue="{{ ordT.v }}" onChange="{{ ordT.on }}" aria-label="Ordine nei gruppi" class="al-tendina al-tendina--tondo" style="flex:0 1 auto;max-width:136px;min-width:0;text-overflow:ellipsis;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ ordT.o }}" as="x" hint-placeholder-count="3"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select></div>
+<div role="tablist" aria-label="Gruppi" class="al-scelta al-scelta--segmentato al-scelta--sottili"><sc-for list="{{ pillole }}" as="p" hint-placeholder-count="5"><a href="#" role="tab" aria-selected="{{ p.sel }}" onClick="{{ p.on }}" class="al-scelta__voce">{{ p.l }}<span class="al-prog__testo-4">{{ p.n }}</span></a></sc-for></div>
+
+</div></sc-if>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><div class="al-prog__colonna-2"><input value="{{ cerca.v }}" onChange="{{ cerca.on }}" placeholder="Cerca un progetto" aria-label="Cerca un progetto" type="search" class="al-campo al-campo--tondo al-campo--piccolo al-prog__testo-5">
+<select key="{{ ordT.v }}" defaultValue="{{ ordT.v }}" onChange="{{ ordT.on }}" aria-label="Ordine nei gruppi" class="al-tendina al-tendina--tondo" style="flex:0 1 auto;max-width:136px;min-width:0;text-overflow:ellipsis;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ ordT.o }}" as="x" hint-placeholder-count="3"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select></div></sc-if>
+
+<sc-if value="{{ cerca.nessuno }}" hint-placeholder-val="{{ false }}"><span class="al-prog__blocco-5">{{ cerca.nessuno }}</span></sc-if>
+<sc-for list="{{ gruppi }}" as="gr" hint-placeholder-count="4"><div class="al-prog__colonna-3">
+<sc-if value="{{ gr.testa }}" hint-placeholder-val="{{ true }}"><span class="al-prog__riga-4"><b class="al-prog__testo-6">{{ gr.l }} · {{ gr.n }}</b><span class="al-prog__testo-7">{{ gr.nota }}</span></span></sc-if>
+<sc-for list="{{ gr.righe }}" as="r" hint-placeholder-count="3"><a class="al-prog__griglia-1" href="#" onClick="{{ r.on }}" aria-current="{{ r.cur }}" style="background:{{ r.bg }};box-shadow:inset 0 0 0 1.5px {{ r.ring }}">
+<span class="al-prog__tondo-3" style="background:{{ r.anello }}"><span class="al-prog__tondo-4" style="background:{{ r.dentro }};font-size:{{ r.pfs }}">{{ r.pctS }}</span></span>
+<span class="al-prog__colonna-4" style="display:flex;flex-direction:column;gap:3px;min-width:0"><b class="al-prog__testo-8" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.n }}</b><span class="al-prog__testo-9" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tenue)">{{ r.corB }}</span><sc-if value="{{ r.bar }}" hint-placeholder-val="{{ true }}"><span class="al-dash__riga-20" aria-hidden="true" style="margin:3px 0 1px"><sc-for list="{{ r.segs }}" as="g" hint-placeholder-count="3"><span style="width:{{ g.w }};background:{{ g.c }}"></span></sc-for></span></sc-if><span class="al-prog__blocco-7" style="color:{{ r.statoC }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.stato }}</span></span>
+<span class="al-prog__colonna-5"><b class="al-prog__testo-10">{{ r.fatteS }}</b><span class="al-prog__testo-11" style="color:{{ r.subC }}">{{ r.subR }}</span></span>
+</a></sc-for>
+<sc-if value="{{ gr.piu }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ gr.piu.on }}" aria-expanded="{{ gr.piu.exp }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra al-prog__blocco-8">{{ gr.piu.l }}</a></sc-if>
+<sc-if value="{{ gr.vuota }}" hint-placeholder-val="{{ false }}"><span class="al-prog__blocco-9">{{ gr.vuota }}</span></sc-if>
+</div></sc-for>
+</dc-import></sc-if>
+
+<sc-if value="{{ s }}" hint-placeholder-val="{{ true }}"><div class="al-prog__colonna-6" key="{{ s.id }}">
+<sc-if value="{{ L.tel }}" hint-placeholder-val="{{ false }}"><a class="al-prog__riga-5" href="#" onClick="{{ indietro }}">← Progetti</a></sc-if>
+
+<dc-import name="componenti/Carta" formato="{{ L.f }}" ritardo="0" padding="{{ L.pad }}" gap="16" modo="{{ modo }}" accento="{{ accento }}" etichetta="{{ s.n }}" hint-size="100%,200px">
+<div class="al-prog__riga-6"><span class="al-prog__riga-7" style="background:{{ s.gr.bg }};color:{{ s.gr.fg }}"><span class="al-prog__tondo-5" aria-hidden="true" style="background:{{ s.gr.sBg }};color:{{ s.gr.sFg }}">{{ s.gr.segno }}</span>{{ s.gr.l }}</span>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><span class="al-prog__riga-8" style="position:relative;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="al-prog__riga-9" href="{{ s.az.prim.href }}" onClick="{{ s.az.prim.on }}" style="font-weight:600;background:{{ s.az.prim.bg }};color:{{ s.az.prim.fg }}">{{ s.az.prim.l }}</a><sc-for list="{{ s.az.tondi }}" as="a" hint-placeholder-count="1"><a class="al-bottone al-bottone--tenue al-bottone--icona" href="{{ a.href }}" aria-label="{{ a.aria }}" title="{{ a.tit }}" style="border-radius:50%;width:44px">↗</a></sc-for><button type="button" class="al-bottone al-bottone--tenue al-bottone--icona" onClick="{{ s.az.apri }}" aria-haspopup="menu" aria-expanded="{{ s.az.exp }}" aria-label="Altre azioni sul progetto" title="Altro" style="border-radius:50%;width:44px;font-size:18px">⋯</button><sc-if value="{{ s.az.aperto }}" hint-placeholder-val="{{ false }}"><div role="menu" aria-label="Altre azioni sul progetto" style="position:absolute;right:0;top:{{ s.az.mTop }};bottom:{{ s.az.mBot }};z-index:6;min-width:220px;display:flex;flex-direction:column;padding:6px;border-radius:20px;background:var(--carta);box-shadow:0 12px 32px rgba(0,0,0,.28), inset 0 0 0 1px var(--linea)"><sc-for list="{{ s.az.menu }}" as="m" hint-placeholder-count="3"><a role="menuitem" href="#" onClick="{{ m.on }}" style="min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:14px;font-size:14px;font-weight:500;color:{{ m.fg }};border-top:{{ m.bd }}" style-hover="background:var(--carta-2)">{{ m.l }}</a></sc-for></div></sc-if></span></sc-if></div>
+<div class="al-prog__colonna-3"><span class="al-prog__riga-10"><span class="al-prog__testo-12" style="font-size:{{ L.h2 }}">{{ s.n }}</span><span class="al-prog__testo-13">{{ s.com }}</span></span><span class="al-prog__testo-14">{{ s.cor }}</span></div>
+<sc-if value="{{ s.proposta }}" hint-placeholder-val="{{ false }}"><div class="al-prog__riga-11" role="status"><span class="al-prog__tondo-6" aria-hidden="true">✓</span><b class="al-prog__blocco-10">Obiettivo raggiunto. Segnarlo come finito?</b><a class="al-prog__riga-12" href="#" onClick="{{ s.finisci }}" style="min-height:{{ L.bh }}">Segna come finito</a></div></sc-if>
+<sc-if value="{{ s.conferma }}" hint-placeholder-val="{{ false }}"><div class="al-prog__riga-13" role="alertdialog" aria-label="Eliminare il progetto?"><span class="al-prog__tondo-7" aria-hidden="true">✕</span><b class="al-prog__blocco-11">Il progetto sparisce. I frame restano nell'archivio.</b><span class="al-prog__riga-14"><a class="al-prog__riga-15" href="#" onClick="{{ s.elimina }}" style="min-height:{{ L.bh }}">Elimina</a><a href="#" onClick="{{ s.annulla }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra">Annulla</a></span></div></sc-if>
+<sc-if value="{{ s.ed }}" hint-placeholder-val="{{ false }}"><div class="al-prog__colonna-7" role="form" aria-label="Modifica il progetto">
+<span class="al-prog__riga-16"><b class="al-prog__testo-15">Modifica</b><span class="al-prog__testo-7">le ore fatte restano; oggetto e inquadratura si cambiano con «Rinquadra»</span></span>
+<label class="al-prog__colonna-8"><span class="al-prog__testo-16">Nome</span><input value="{{ s.ed.n }}" onChange="{{ s.ed.onN }}" class="al-campo al-campo--rovescio al-campo--piccolo al-prog__testo-5"></label>
+<div class="al-prog__colonna-8"><span class="al-prog__testo-16">Setup</span><select key="{{ s.ed.setT.v }}" defaultValue="{{ s.ed.setT.v }}" onChange="{{ s.ed.setT.on }}" aria-label="Setup" class="al-tendina al-tendina--tondo" style="align-self:flex-start;max-width:100%;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ s.ed.setT.o }}" as="x" hint-placeholder-count="3"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select></div>
+<div class="al-prog__colonna-8"><span class="al-prog__testo-16">Obiettivo per filtro</span><sc-for list="{{ s.ed.fil }}" as="f" hint-placeholder-count="3"><span class="al-prog__riga-17"><span class="al-prog__tondo-8" aria-hidden="true" style="background:{{ f.c }}"></span><span class="al-prog__colonna-9"><b class="al-prog__testo-17">{{ f.l }}</b><span class="al-prog__testo-18">{{ f.fatte }}</span></span><span class="al-prog__blocco-12">{{ f.v }}</span><a class="al-prog__tondo-9" href="#" onClick="{{ f.meno }}" aria-label="{{ f.ariaM }}" style="width:{{ L.bh3 }};height:{{ L.bh3 }}">−</a><a class="al-prog__tondo-9" href="#" onClick="{{ f.piu }}" aria-label="{{ f.ariaP }}" style="width:{{ L.bh3 }};height:{{ L.bh3 }}">+</a></span></sc-for></div>
+<span class="al-prog__riga-14"><a href="#" onClick="{{ s.ed.salva }}" class="al-bottone al-bottone--pieno al-bottone--blocco al-bottone--a-sinistra">Salva</a><a href="#" onClick="{{ s.ed.annulla }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra">Annulla</a></span>
+</div></sc-if>
+<sc-if value="{{ s.ds }}" hint-placeholder-val="{{ true }}"><div class="al-prog__colonna-10">
+<div class="al-prog__centro-2" style="grid-template-columns:{{ L.bCols }}">
+<div class="al-prog__colonna-11" style="grid-column:{{ L.miniC }}"><div class="al-prog__riquadro-1" role="img" aria-label="{{ s.mini.aria }}">{{ s.mini.img }}<span class="al-prog__strato-1" style="width:{{ s.mini.w }};height:{{ s.mini.h }};transform:translate(-50%,-50%) rotate({{ s.mini.rot }});grid-template-columns:{{ s.mini.gc }};grid-template-rows:{{ s.mini.gr }}"><sc-for list="{{ s.mini.celle }}" as="c" hint-placeholder-count="1"><span style="box-shadow:inset 0 0 0 1px {{ c.bd }}"></span></sc-for></span><span class="al-prog__strato-2">{{ s.mini.cap }}</span></div><span class="al-prog__testo-19">CDS hips2fits · DSS2 colore</span></div>
+<dc-import name="componenti/Avanzamento" anello="{{ s.anello }}" testo="{{ s.pctS }}" fatte="{{ s.fatteS }}" obiettivo="{{ s.obS }}" aria="{{ s.ringAria }}" filtri="{{ s.fil }}" titolo="Per filtro{{ s.perPann }}" colonna="{{ L.filC }}" misura="{{ L.avM }}" formato="{{ L.f }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,190px"></dc-import>
+</div>
+</div></sc-if>
+<sc-if value="{{ s.sol }}" hint-placeholder-val="{{ false }}"><div class="al-prog__colonna-1"><sc-for list="{{ s.sol }}" as="q" hint-placeholder-count="5"><div class="al-prog__centro-4" style="grid-template-columns:{{ L.solCols }}"><span class="al-prog__testo-16">{{ q.l }}</span><span class="al-prog__colonna-15"><b class="al-prog__testo-24">{{ q.v }}</b><sc-if value="{{ q.s }}" hint-placeholder-val="{{ false }}"><span class="al-prog__testo-7">{{ q.s }}</span></sc-if></span></div></sc-for></div></sc-if>
+<sc-if value="{{ L.tel }}" hint-placeholder-val="{{ false }}"><span class="al-prog__riga-18" style="position:relative;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="al-prog__riga-19" href="{{ s.az.prim.href }}" onClick="{{ s.az.prim.on }}" style="font-weight:600;background:{{ s.az.prim.bg }};color:{{ s.az.prim.fg }}">{{ s.az.prim.l }}</a><sc-for list="{{ s.az.tondi }}" as="a" hint-placeholder-count="1"><a class="al-bottone al-bottone--tenue al-bottone--icona" href="{{ a.href }}" aria-label="{{ a.aria }}" title="{{ a.tit }}" style="border-radius:50%;width:44px">↗</a></sc-for><button type="button" class="al-bottone al-bottone--tenue al-bottone--icona" onClick="{{ s.az.apri }}" aria-haspopup="menu" aria-expanded="{{ s.az.exp }}" aria-label="Altre azioni sul progetto" title="Altro" style="border-radius:50%;width:44px;font-size:18px">⋯</button><sc-if value="{{ s.az.aperto }}" hint-placeholder-val="{{ false }}"><div role="menu" aria-label="Altre azioni sul progetto" style="position:absolute;right:0;top:{{ s.az.mTop }};bottom:{{ s.az.mBot }};z-index:6;min-width:220px;display:flex;flex-direction:column;padding:6px;border-radius:20px;background:var(--carta);box-shadow:0 12px 32px rgba(0,0,0,.28), inset 0 0 0 1px var(--linea)"><sc-for list="{{ s.az.menu }}" as="m" hint-placeholder-count="3"><a role="menuitem" href="#" onClick="{{ m.on }}" style="min-height:44px;display:flex;align-items:center;padding:0 14px;border-radius:14px;font-size:14px;font-weight:500;color:{{ m.fg }};border-top:{{ m.bd }}" style-hover="background:var(--carta-2)">{{ m.l }}</a></sc-for></div></sc-if></span></sc-if>
+</dc-import>
+
+<sc-if value="{{ L.car }}" hint-placeholder-val="{{ false }}"><span class="al-prog__testo-25">{{ s.carT }}</span></sc-if>
+<div class="al-prog__blocco-13" style="display:{{ L.carD }}">
+<sc-if value="{{ s.mos }}" hint-placeholder-val="{{ false }}"><div class="al-prog__blocco-14" style="flex:{{ L.carF }};width:{{ L.carW }}"><dc-import name="componenti/Carta" formato="{{ L.f }}" ritardo="60" padding="{{ L.pad }}" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Mosaico" hint-size="100%,200px">
+<div class="al-prog__riga-20"><span class="al-prog__testo-26">Mosaico · {{ s.mos.forma }}</span><span class="al-prog__testo-16">{{ s.mos.sub }}</span></div>
+<div class="al-prog__centro-5" style="grid-template-columns:{{ s.mos.gc }}"><sc-for list="{{ s.mos.p }}" as="p" hint-placeholder-count="2"><div class="al-prog__colonna-16"><span class="al-prog__riga-21"><b class="al-prog__testo-27">{{ p.l }}</b><span class="al-prog__testo-16">{{ p.pctS }}</span></span><span class="al-prog__testo-28">{{ p.fatte }} <span class="al-prog__testo-16">di {{ p.ob }}</span></span><span class="al-prog__riga-22"><span class="al-prog__pillola-2" style="width:{{ p.w }}"></span></span></div></sc-for></div>
+<sc-if value="{{ s.mos.senza }}" hint-placeholder-val="{{ false }}"><span class="al-prog__riga-23"><span class="al-prog__tondo-12" aria-hidden="true">?</span>{{ s.mos.senza }}</span></sc-if>
+</dc-import></div></sc-if>
+
+<div class="al-prog__blocco-15" style="display:{{ L.duoD }};grid-template-columns:{{ L.duo }}">
+<div class="al-prog__blocco-14" style="flex:{{ L.carF }};width:{{ L.carW }}"><dc-import name="componenti/Carta" formato="{{ L.f }}" ritardo="120" padding="{{ L.pad }}" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Le notti" hint-size="100%,200px">
+<span class="al-prog__testo-29">Le notti</span>
+<sc-for list="{{ s.notti }}" as="n" hint-placeholder-count="3"><div class="al-prog__colonna-17" style="border-top:{{ n.bd }}"><span class="al-prog__testo-16">{{ n.l }}</span><b class="al-prog__testo-30">{{ n.v }}</b><sc-if value="{{ n.s }}" hint-placeholder-val="{{ false }}"><span class="al-prog__testo-7">{{ n.s }}</span></sc-if><sc-if value="{{ n.link }}" hint-placeholder-val="{{ false }}"><a href="{{ n.link.href }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra al-bottone--piccolo al-prog__blocco-16">{{ n.link.l }}</a></sc-if></div></sc-for>
+<sc-if value="{{ s.cal }}" hint-placeholder-val="{{ false }}"><div class="al-prog__colonna-18">
+<span class="al-prog__testo-16">{{ s.cal.sub }}</span>
+<dc-import name="componenti/CalendarioNotti" tipo="luna" anno="{{ s.cal.y }}" mese="{{ s.cal.m }}" giorni="{{ s.cal.giorni }}" buone="{{ s.cal.buone }}" buone-l="notte ripresa per questo progetto" titolo="{{ s.cal.titolo }}" on-prima="{{ s.cal.prima }}" on-dopo="{{ s.cal.dopo }}" prima-no="{{ s.cal.primaNo }}" dopo-no="{{ s.cal.dopoNo }}" formato="{{ L.f }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,380px"></dc-import>
+<sc-if value="{{ s.cal.selN }}" hint-placeholder-val="{{ false }}"><div class="al-prog__griglia-2"><b class="al-prog__testo-31">{{ s.cal.selN.d }}</b><span class="al-prog__testo-32">{{ s.cal.selN.ore }}</span><span class="al-prog__riga-24"><span class="al-prog__pillola-3" aria-hidden="true" style="background:{{ s.cal.selN.rb }};box-shadow:{{ s.cal.selN.rs }}"></span>{{ s.cal.selN.rip }}</span><a class="al-prog__riga-25" href="Notti.dc.html" style="min-height:{{ L.bh3 }}">Apri in Notti ↗</a></div></sc-if>
+</div></sc-if>
+</dc-import></div>
+<sc-if value="{{ s.ds }}" hint-placeholder-val="{{ true }}"><div class="al-prog__blocco-14" style="flex:{{ L.carF }};width:{{ L.carW }}"><dc-import name="componenti/Carta" formato="{{ L.f }}" ritardo="180" padding="{{ L.pad }}" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Le misure" hint-size="100%,200px">
+<span class="al-prog__riga-16"><span class="al-prog__testo-26">Le misure</span><span class="al-prog__testo-7">{{ s.misSub }}</span></span>
+<sc-if value="{{ s.mis }}" hint-placeholder-val="{{ true }}"><div class="al-prog__centro-6" style="grid-template-columns:{{ L.misCols }}"><sc-for list="{{ s.mis }}" as="m" hint-placeholder-count="9"><div class="al-prog__colonna-19"><span class="al-prog__testo-7">{{ m.l }}</span><b class="al-prog__blocco-17">{{ m.v }}</b><sc-if value="{{ m.s }}" hint-placeholder-val="{{ false }}"><span class="al-prog__testo-33">{{ m.s }}</span></sc-if><sc-if value="{{ m.gz }}" hint-placeholder-val="{{ false }}"><span class="al-prog__riga-26" style="background:{{ m.gz.bg }};color:{{ m.gz.fg }}">{{ m.gz.s }} {{ m.gz.t }}</span></sc-if></div></sc-for></div></sc-if>
+<sc-if value="{{ s.misVuote }}" hint-placeholder-val="{{ false }}"><span class="al-prog__testo-2">{{ s.misVuote }}</span></sc-if>
+<sc-if value="{{ s.mis }}" hint-placeholder-val="{{ true }}"><a class="al-prog__riga-27" href="Archivio.dc.html" style="min-height:{{ L.bh3 }}">Tutte le misure, per filtro e per notte, nell'Archivio ↗</a></sc-if>
+</dc-import></div></sc-if>
+</div>
+</div>
+</div></sc-if>
+
+</div></sc-if>
+</div>
+</dc-import></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;obiettivo raggiunto&quot;,&quot;appena creato&quot;,&quot;elimina&quot;,&quot;vuoto&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;progetto&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;modifica&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;calendario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ultimo mese&quot;,&quot;primo mese&quot;],&quot;default&quot;:&quot;ultimo mese&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;scheda&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;colonna&quot;,&quot;affiancata&quot;,&quot;carosello&quot;],&quot;default&quot;:&quot;affiancata&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Telefono&quot;}}">
+class Component extends DCLogic {
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: null, sel: undefined, gr: null, del: null, gone: [], fin: {}, ask: null, stK: null, aperti: {}, ed: null, ov: {} };
+  componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rs); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, stato = p.stato || 'normale';
+    // I Tweaks rimettono la pagina allo stato scelto
+    if (this.state.stK !== stato) { const fresh = { stK: stato, sel: undefined, gr: null, del: null, gone: [], fin: {}, ask: null }; if (this.state.stK !== null) { setTimeout(() => this.setState(fresh)); } else Object.assign(this.state, fresh); }
+    const modo = this.state.modo || p.modo || 'scuro', t = AL.tema(modo, p.accento), MS = ALsoglie.misure;
+    const fmt = AL.formatoScelto(p.formato), tel = AL.telefono(fmt, this.state.w);
+    const set = o => this.setState(o), prev = e => e && e.preventDefault && e.preventDefault();
+    const H = m => AL.ore(m / 60), R = Math.PI / 180;
+    // Setup (come in Attrezzatura): focale, apertura, pixel e sensore per la miniatura e il limite della FWHM
+    const COR = { fra: ['Askar FRA400 · ASI2600MM Pro', 400, 72, 3.76, 6248, 4176, 'Cima Ekar'], apo: ['Askar 103APO · ASI2600MM Pro', 700, 103, 3.76, 6248, 4176, 'Cima Ekar'], apo294: ['Askar 103APO · ASI294MC Pro', 700, 103, 4.63, 4144, 2822, 'Cima Ekar'], red: ['RedCat 51 · ASI294MC Pro', 250, 51, 4.63, 4144, 2822, 'Casa'] };
+    const CON_FILE = { 'Cima Ekar': true, Casa: false };
+    const BORTLE = { 'Cima Ekar': 3, Casa: 6 };   // come in Impostazioni › Siti
+    // Progetti (simulati; i cinque in corso sono quelli della Dashboard). Minuti fatti / obiettivo per filtro.
+    const P0 = [
+      { id: 'ic1396', n: 'IC 1396', com: 'Proboscide d\u0027Elefante', c: 'fra', gr: 'corso', ra: 324.75, dec: 57.5, rot: 0, fil: [['ha', 370, 480], ['oiii', 300, 420], ['sii', 190, 300]], ultima: 'domenica 27 settembre', prossima: ['venerdì 2 ottobre', '5 h visibili'], mis: [3.1, 0.38, 21.8, 430] },
+      { id: 'ngc7000', n: 'NGC 7000', com: 'Nebulosa Nord America', c: 'fra', gr: 'corso', ra: 314.0, dec: 44.3, rot: 0, fil: [['ha', 388, 450], ['oiii', 317, 450]], mos: { c: 2, r: 1, ov: 20, p: [[360, 450], [345, 450]], senza: 12 }, ultima: 'giovedì 24 settembre', prossima: ['venerdì 2 ottobre', '4 h visibili'], mis: [3.3, 0.41, 21.7, 352] },
+      { id: 'm31', n: 'M 31', com: 'Galassia di Andromeda', c: 'fra', gr: 'corso', ra: 10.685, dec: 41.269, rot: 125, fil: [['l', 220, 300], ['r', 110, 140], ['g', 110, 140], ['b', 110, 140]], ultima: 'giovedì 24 settembre', prossima: ['venerdì 2 ottobre', '3 h visibili'], mis: [3.6, 0.44, 21.7, 275] },
+      { id: 'sh2155', n: 'Sh2-155', com: 'Nebulosa Grotta', c: 'apo', gr: 'corso', ra: 343.42, dec: 62.62, rot: 0, fil: [['ha', 234, 360], ['oiii', 156, 240]], ultima: 'martedì 22 settembre', prossima: ['venerdì 2 ottobre', '4 h visibili'], mis: [2.6, 0.36, 21.9, 195] },
+      { id: 'ngc6992', n: 'NGC 6992', com: 'Velo Est', c: 'apo', gr: 'corso', ra: 313.9, dec: 31.72, rot: 30, fil: [['ha', 153, 240], ['oiii', 152, 240]], ultima: 'giovedì 24 settembre', prossima: ['venerdì 2 ottobre', '2 h visibili'], mis: [2.8, 0.52, 21.8, 122] },
+      { id: 'm42', n: 'M 42', com: 'Nebulosa di Orione', c: 'red', gr: 'attesa', torna: 'novembre', ra: 83.82, dec: -5.39, rot: 0, fil: [['ha-oiii', 240, 600], ['senza', 60, 120]], ultima: 'sabato 14 marzo', mis: [4.1, 0.40, 19.2, 150] },
+      { id: 'm101', n: 'M 101', com: 'Galassia Girandola', c: 'apo', gr: 'attesa', torna: 'marzo', ra: 210.8, dec: 54.35, rot: 0, fil: [['l', 180, 360], ['r', 40, 120], ['g', 40, 120], ['b', 40, 120]], ultima: 'mercoledì 20 maggio', mis: [2.9, 0.47, 21.8, 160] },
+      { id: 'm51', n: 'M 51', com: 'Galassia Vortice', c: 'apo', gr: 'fermi', fermo: '1 anno e 5 mesi', mesi: 'marzo–giugno 2026', ra: 202.47, dec: 47.2, rot: 0, fil: [['l', 90, 480], ['r', 30, 120], ['g', 30, 120], ['b', 30, 120]], ultima: 'martedì 28 aprile 2025', mis: [3.4, 0.39, 21.7, 72] },
+      { id: 'm45', n: 'M 45', com: 'Pleiadi', c: 'red', gr: 'finiti', finito: '12 febbraio 2026', ra: 56.75, dec: 24.12, rot: 0, fil: [['senza', 610, 600]], ultima: 'martedì 10 febbraio', mis: [4.3, 0.42, 19.3, 366] },
+      { id: 'ngc7635', n: 'NGC 7635', com: 'Nebulosa Bolla', c: 'apo', gr: 'finiti', finito: '2 novembre 2025', ra: 350.2, dec: 61.2, rot: 0, fil: [['ha', 420, 360], ['oiii', 300, 300], ['sii', 240, 240]], ultima: 'sabato 31 ottobre 2025', mis: [2.5, 0.35, 21.5, 480] }];
+    // Nel Piano della notte di stanotte (come lo stato normale del Piano)
+    const PIANO = { ic1396: '22:45–03:15 · 04:00–05:10', ngc7000: '20:48–22:40', ngc6992: '20:48–23:30', sh2155: '23:40–03:15' };
+    // Notti riprese (simulate): data, ore, ripresa (larga / mista / stretta)
+    // Notti riprese (simulate): [giorno, mese 0-11, anno, minuti, ripresa l / m / s]
+    const NN = { ic1396: [[27, 8, 2026, 230, 's'], [24, 8, 2026, 260, 'm'], [22, 8, 2026, 190, 'l'], [13, 8, 2026, 180, 'l'], [19, 7, 2026, 150, 'l'], [16, 7, 2026, 120, 'm'], [11, 7, 2026, 140, 'l']],
+      ngc7000: [[24, 8, 2026, 255, 'm'], [19, 8, 2026, 300, 'l'], [13, 8, 2026, 150, 'l'], [20, 7, 2026, 0, 'l']], m31: [[24, 8, 2026, 210, 'm'], [19, 8, 2026, 230, 'l']],
+      sh2155: [[22, 8, 2026, 200, 'l'], [13, 8, 2026, 190, 'l']], ngc6992: [[24, 8, 2026, 180, 'm'], [19, 8, 2026, 125, 'l']] };
+    // La prima scansione crea un progetto finito per ogni oggetto gia' ripreso: obiettivo = ore fatte (dati simulati, 28 oggetti)
+    const IMP = [['M 27', 'Nebulosa Manubrio', 299.9, 22.72, 'apo', 'ha', 380, 'agosto 2025'], ['M 57', 'Nebulosa Anello', 283.4, 33.03, 'apo', 'ha', 240, 'luglio 2025'], ['M 13', 'Ammasso di Ercole', 250.4, 36.46, 'fra', 'l', 300, 'giugno 2025'], ['M 81', 'Galassia di Bode', 148.9, 69.07, 'apo', 'l', 620, 'aprile 2025'],
+      ['M 82', 'Galassia Sigaro', 148.97, 69.68, 'apo', 'ha', 480, 'aprile 2025'], ['M 63', 'Galassia Girasole', 198.96, 42.03, 'apo', 'l', 540, 'maggio 2025'], ['M 106', '', 184.74, 47.3, 'apo', 'l', 510, 'marzo 2025'], ['M 33', 'Galassia del Triangolo', 23.46, 30.66, 'fra', 'l', 720, 'novembre 2024'],
+      ['NGC 2237', 'Nebulosa Rosetta', 97.98, 4.96, 'fra', 'ha', 900, 'febbraio 2025'], ['IC 434', 'Testa di Cavallo', 85.25, -2.46, 'fra', 'ha', 610, 'gennaio 2025'], ['IC 1805', 'Nebulosa Cuore', 38.2, 61.45, 'fra', 'ha', 780, 'dicembre 2024'], ['IC 1848', 'Nebulosa Anima', 42.8, 60.4, 'fra', 'ha', 660, 'dicembre 2024'],
+      ['NGC 281', 'Nebulosa Pac-Man', 13.2, 56.62, 'apo', 'ha', 540, 'ottobre 2024'], ['NGC 6888', 'Nebulosa Crescente', 303.0, 38.35, 'apo', 'ha', 600, 'agosto 2024'], ['NGC 6960', 'Velo Ovest', 311.4, 30.71, 'apo', 'ha', 420, 'settembre 2024'], ['NGC 7380', 'Nebulosa Mago', 341.8, 58.1, 'apo', 'ha', 480, 'ottobre 2024'],
+      ['M 16', 'Nebulosa Aquila', 274.7, -13.8, 'red', 'ha-oiii', 360, 'luglio 2024'], ['M 8', 'Nebulosa Laguna', 270.9, -24.38, 'red', 'ha-oiii', 300, 'luglio 2024'], ['M 20', 'Nebulosa Trifida', 270.6, -23.03, 'red', 'senza', 240, 'giugno 2024'], ['M 17', 'Nebulosa Omega', 275.2, -16.18, 'red', 'ha-oiii', 280, 'luglio 2024'],
+      ['NGC 7023', 'Nebulosa Iris', 315.4, 68.17, 'apo', 'l', 720, 'settembre 2024'], ['Sh2-101', 'Nebulosa Tulipano', 300.0, 35.33, 'apo', 'ha', 420, 'agosto 2024'], ['M 1', 'Nebulosa Granchio', 83.63, 22.01, 'apo', 'ha', 360, 'gennaio 2024'], ['M 97', 'Nebulosa Civetta', 168.7, 55.02, 'apo', 'ha', 300, 'marzo 2024'],
+      ['NGC 2264', 'Albero di Natale', 100.24, 9.9, 'fra', 'ha', 480, 'febbraio 2024'], ['M 78', '', 86.69, 0.08, 'fra', 'l', 360, 'gennaio 2024'], ['NGC 6946', 'Galassia Fuochi d\u0027artificio', 308.7, 60.15, 'apo', 'l', 540, 'ottobre 2023'], ['M 74', 'Galassia Fantasma', 24.17, 15.78, 'apo', 'l', 420, 'novembre 2023']];
+    IMP.forEach(([n, com, ra, dec, c, f, m, quando]) => P0.push({ id: 'imp-' + n.replace(/\W/g, ''), n, com, c, gr: 'finiti', imp: true, finito: quando, ra, dec, rot: 0, fil: [[f, m, m]], ultima: quando, mis: [2.6 + (m % 9) / 10, 0.36 + (m % 7) / 100, (c === 'red' ? 19.2 : 21.7) + (m % 3) / 10, Math.round(m * 1.1)] }));
+    // Sistema solare (v27): Luna, pianeti e Sole dal Planner, «Salva come progetto». Niente ore da raggiungere.
+    const SOLP = [{ id: 'sol-luna', n: 'Luna', com: 'mosaico intero', glifo: '◐', c: 'fra', corpo: 'Luna', mosT: 'Intero · 12 pannelli · sovrapposizione 20% · ordine dal terminatore', filtro: 'R', rip: '4000 frame · 5 ms · circa 80 s', roi: '', dur: '17 min', nelPiano: 'stanotte, 03:00', ult: 'martedì 29 settembre' },
+      { id: 'sol-giove', n: 'Giove', com: 'R G B', glifo: '●', c: 'fra', corpo: 'Giove', mosT: '', filtro: 'R · G · B', rip: '3000 frame · 8 ms · circa 60 s per filtro', roi: '640 × 480 px', dur: '4 min', nelPiano: 'stanotte, 05:00', ult: 'domenica 27 settembre' },
+      { id: 'sol-saturno', n: 'Saturno', com: 'R G B', glifo: '●', c: 'fra', corpo: 'Saturno', mosT: '', filtro: 'R · G · B', rip: '3000 frame · 12 ms · circa 60 s per filtro', roi: '800 × 600 px', dur: '4 min', nelPiano: '', ult: 'giovedì 24 settembre' },
+      { id: 'sol-sole-lb', n: 'Sole', com: 'Luce bianca', glifo: '◎', c: 'fra', corpo: 'Sole', mosT: 'Intero · 12 pannelli · sovrapposizione 20% · riga per riga', filtro: 'Luce bianca', rip: '1000 frame · 2 ms · circa 10 s', roi: '', dur: '3 min', nelPiano: '', ult: 'sabato 26 settembre' },
+      { id: 'sol-sole-ha', n: 'Sole', com: 'Hα', glifo: '◎', c: 'fra', corpo: 'Sole', mosT: 'Zona · 4 pannelli · sovrapposizione 20% · riga per riga', filtro: 'Hα', rip: '1500 frame · 10 ms · circa 25 s', roi: '', dur: '2 min', nelPiano: '', ult: 'mai' }];
+    SOLP.forEach(x => P0.push({ ...x, gr: 'solare', sol: true, fil: [], ra: 0, dec: 0, rot: 0, ultima: x.ult }));
+    if (stato === 'obiettivo raggiunto') P0.splice(5, 0, { id: 'ngc6960', n: 'NGC 6960', com: 'Velo Ovest', c: 'apo', gr: 'corso', ra: 311.4, dec: 30.71, rot: 30, fil: [['ha', 250, 240], ['oiii', 240, 240]], ultima: 'mercoledì 23 settembre', prossima: ['venerdì 2 ottobre', '2 h visibili'], mis: [2.7, 0.37, 21.3, 245] });
+    if (stato === 'appena creato') P0.unshift({ id: 'ngc891', n: 'NGC 891', com: 'Galassia di taglio', c: 'apo', gr: 'corso', ra: 35.639, dec: 42.349, rot: 22, fil: [['l', 0, 360], ['r', 0, 120], ['g', 0, 120], ['b', 0, 120]], ultima: null, prossima: ['venerdì 2 ottobre', '6 h visibili'], mis: null });
+    const Q = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams(), nuovoU = Q.get('nuovo') === '1' && Q.get('n');
+    if (Q.get('solnuovo') === '1' && Q.get('n') && !P0.find(y => y.id === Q.get('p'))) P0.push({ id: Q.get('p'), n: Q.get('n'), com: Q.get('com') || '', glifo: '●', c: 'fra', corpo: Q.get('n'), mosT: Q.get('mos') || '', filtro: Q.get('filtro') || 'Nessun filtro', rip: 'da scrivere: frame e posa', roi: '', dur: '—', nelPiano: '', ult: 'mai', gr: 'solare', sol: true, nuovo: true, fil: [], ra: 0, dec: 0, rot: 0, ultima: 'mai' });
+    const nuovoSol = Q.get('solnuovo') === '1' ? Q.get('p') : null;
+    if (nuovoU && !P0.find(y => y.id === Q.get('p'))) { const mo = (Q.get('mos') || '').split('x').map(Number);
+      P0.unshift({ id: Q.get('p'), n: Q.get('n'), com: Q.get('com') || '', c: COR[Q.get('c')] ? Q.get('c') : 'apo', gr: 'corso', ra: +Q.get('ra'), dec: +Q.get('dec'), rot: +Q.get('rot') || 0,
+        fil: (Q.get('fil') || '').split(',').filter(Boolean).map(s2 => { const [k, m] = s2.split(':'); return [k, 0, +m || 0]; }).filter(f => f[2] > 0 && AL.FD[f[0]]),
+        mos: mo.length === 3 && mo[0] ? { c: mo[0], r: mo[1], ov: mo[2], p: Array.from({ length: mo[0] * mo[1] }, () => [0, 0]), senza: 0 } : null,
+        ultima: null, prossima: ['venerdì 2 ottobre', Q.get('vis') ? Q.get('vis') + ' visibili' : 'nessuna ora visibile'], mis: null }); }
+    const PR = stato === 'vuoto' ? [] : P0.filter(x => !this.state.gone.includes(x.id)).map(x0 => { const ov = this.state.ov[x0.id], x = ov ? { ...x0, n: ov.n, c: ov.c, fil: x0.fil.map(([k, a, b]) => [k, a, ov.ob[k] ?? b]) } : x0;
+      const gr = x.sol ? 'solare' : this.state.fin[x.id] || x.gr, fatte = x.fil.reduce((a, f) => a + f[1], 0), ob = Math.max(1, x.fil.reduce((a, f) => a + f[2], 0));
+      if (x.mos && !x.mos.p[0][1]) x.mos.p = x.mos.p.map(() => [0, ob / x.mos.p.length]);
+      return { ...x, gr, fatte, ob, pct: Math.round(fatte / ob * 100) }; });
+    const GR = [['corso', 'In corso', 'nei loro mesi buoni'], ['attesa', 'In attesa', 'fuori dai mesi buoni'], ['fermi', 'Fermi', 'mesi buoni passati senza frame'], ['finiti', 'Finiti', 'segnati come finiti o dalla prima scansione'], ['solare', 'Sistema solare', 'Luna, pianeti e Sole, a video']];
+    const breveN = d => d.replace(/^(\S{3})\S* (\d+) .*$/, '$1 $2');
+    const statoDi = x => x.gr === 'solare' ? (x.nelPiano ? 'nel piano ' + x.nelPiano : 'ultima volta nel piano: ' + x.ult) : x.gr === 'corso' ? (x.fatte >= x.ob ? 'obiettivo raggiunto' : PIANO[x.id] ? 'nel piano stanotte · ' + PIANO[x.id].split(' · ')[0] : 'prossima: ' + breveN(x.prossima[0]) + ' · ' + x.prossima[1]) : x.imp ? 'dalla prima scansione · ' + x.finito : x.gr === 'attesa' ? 'torna buono a ' + x.torna : x.gr === 'fermi' ? 'fermo da ' + x.fermo : 'finito il ' + (x.finito || 'oggi');
+    const urlSel = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('p') : null;
+    const nuovoId = nuovoSol || (nuovoU ? Q.get('p') : null) || (stato === 'appena creato' ? 'ngc891' : null);
+    const def = p.progetto ? p.progetto : stato === 'obiettivo raggiunto' ? 'ngc6960' : nuovoId ? nuovoId : stato === 'elimina' ? 'ngc6992' : urlSel;
+    let selId = this.state.sel === undefined ? (def || (tel ? null : PR[0] && PR[0].id)) : this.state.sel;
+    if (selId && !PR.find(x => x.id === selId)) selId = tel ? null : PR[0] && PR[0].id;
+    const gK = this.state.gr || (selId ? (PR.find(x => x.id === selId) || {}).gr : null) || 'corso';
+    const RC = { corso: t.ring, attesa: t.muted, fermi: t.warn, finiti: t.pillOkFg, solare: t.muted };
+    const ringOf = (pct, track, gr) => 'conic-gradient(' + (RC[gr] || t.ring) + ' 0 ' + Math.min(100, pct) + '%, ' + track + ' ' + Math.min(100, pct) + '% 100%)';
+    const subDi = x => x.gr === 'solare' ? 'nel piano' : x.fatte > x.ob ? '+ ' + H(x.fatte - x.ob) : x.imp ? 'finito' : 'di ' + H(x.ob);
+    const riga = x => { const on = x.id === selId, nuovo = x.id === nuovoId;
+      // v56.16: come le righe di «Progetti in corso» nella Dashboard: nome, setup sotto, barra dei filtri
+      const obT = x.fil ? x.fil.reduce((a, f) => a + f[2], 0) : 0;
+      const segs = !x.sol && x.fil ? x.fil.map(([k, a]) => ({ c: AL.tinta(t, k).bg, w: (obT ? Math.min(a, 1e9) / obT * 100 : 0) + '%', l: AL.FD[k][0] + ' ' + H(a) })) : [];
+      return { segs, bar: segs.length > 0, n: x.n + (x.sol && x.com ? ' · ' + x.com : ''), corB: COR[x.c][0], stato: statoDi(x), statoC: x.gr === 'fermi' ? t.warn : t.muted, fatteS: x.sol ? x.dur : x.fatte ? H(x.fatte) : '0 h', obS: H(x.ob), subR: subDi(x), subC: x.fatte > x.ob && !x.imp ? t.text : t.muted,
+        pctS: x.sol ? x.glifo : x.pct >= 100 ? '✓' : x.pct + '%', pfs: x.sol || x.pct >= 100 ? '15px' : '11px',
+        anello: x.sol ? t.card2 : ringOf(x.pct, t.track, x.gr), dentro: on ? t.card2 : t.card, bg: on ? t.card2 : 'transparent', ring: nuovo || (on && !tel) ? t.accent : 'transparent', cur: on ? 'true' : undefined,
+        on: e => { prev(e); set({ sel: x.id, del: null }); if (tel && typeof window !== 'undefined') window.scrollTo(0, 0); } }; };
+    // Cerca e ordine dentro i gruppi: per data (dell'ultima notte), per ore che mancano, per nome
+    const qq = (this.state.q || '').trim().toLowerCase(), ordK = this.state.ord || 'data', OD = { data: 'Data', manca: 'Ore che mancano', nome: 'Nome' };
+    const cerca = { v: this.state.q || '', on: e => set({ q: e.target.value }), nessuno: '' };
+    const ordine = Object.keys(OD).map(k => { const on = ordK === k; return { l: OD[k], sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.text : 'transparent', fg: on ? t.card : t.text, ring: on ? t.text : t.line, bgA: on ? t.accent : 'transparent', fgA: on ? t.hPillFg : t.text, on: e => { prev(e); set({ ord: k }); } }; });
+    const trova = x => !qq || (x.n + ' ' + (x.com || '')).toLowerCase().includes(qq), ordF = (a, b) => ordK === 'nome' ? a.n.localeCompare(b.n, 'it', { numeric: true }) : ordK === 'manca' ? (b.ob - b.fatte) - (a.ob - a.fatte) : 0;
+    if (qq && !PR.some(trova)) cerca.nessuno = 'Nessun progetto col nome «' + this.state.q.trim() + '».';
+    const gruppi = GR.filter(([k]) => !tel || k === gK).map(([k, l, nota]) => { const rr = PR.filter(x => x.gr === k && trova(x)).sort(ordF), ap = k === 'corso' || tel || !!qq || !!this.state.aperti[k] || rr.length <= 3, vis = ap ? rr : rr.slice(0, 3).concat(rr.slice(3).filter(x => x.id === selId));
+      const piu = k === 'corso' || tel || qq || rr.length <= 3 ? null : { l: ap ? 'Mostra meno' : 'Mostra tutti · ' + rr.length, exp: ap ? 'true' : 'false', on: e => { prev(e); set({ aperti: { ...this.state.aperti, [k]: !ap } }); } };
+      return { testa: !tel, l: l.toUpperCase(), n: rr.length, nota, righe: vis.map(riga), piu, vuota: rr.length ? '' : qq ? 'Nessuno in questo gruppo.' : k === 'attesa' ? 'Nessun progetto fuori dai mesi buoni.' : k === 'fermi' ? 'Nessun progetto fermo.' : k === 'finiti' ? 'Nessun progetto finito.' : k === 'solare' ? 'Nessun progetto del Sistema solare: si salvano dal Planner, in Sistema solare.' : 'Nessun progetto nei suoi mesi buoni.' }; });
+    const pillole = GR.map(([k, l]) => { const on = k === gK; return { l, n: PR.filter(x => x.gr === k).length, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.accent : 'transparent', fg: on ? t.hPillFg : t.text, ring: on ? t.accent : t.line, on: e => { prev(e); set({ gr: k }); } }; });
+
+    // La scheda
+    const x = PR.find(y => y.id === selId);
+    let s = null;
+    if (x) {
+      const c = COR[x.c], scala = 206.265 * c[3] / c[1], F = MS.F(scala, c[2]);
+      const campo = mm => 2 * Math.atan(mm / (2 * c[1])) / R, W1 = campo(c[4] * c[3] / 1000), H1 = campo(c[5] * c[3] / 1000);
+      const mo = x.mos, W = mo ? W1 * (mo.c - (mo.c - 1) * mo.ov / 100) : W1, Hh = mo ? H1 * (mo.r - (mo.r - 1) * mo.ov / 100) : H1;
+      const fovW = Math.max(W, Hh) * 1.45 * 1.0, fovH = fovW / 1.6;
+      const src = 'https://alasky.cds.unistra.fr/hips-image-services/hips2fits?hips=' + encodeURIComponent('CDS/P/DSS2/color') + '&width=480&height=300&fov=' + fovW.toFixed(3) + '&projection=TAN&coordsys=icrs&ra=' + x.ra + '&dec=' + x.dec + '&format=jpg';
+      const GRd = { solare: [x.glifo || '●', 'Sistema solare · a video', t.card2, t.text], corso: ['●', 'In corso', t.pillOkBg, t.pillOkFg], attesa: ['◷', 'In attesa · torna buono a ' + x.torna, t.card2, t.text], fermi: ['!', 'Fermo da ' + x.fermo, t.pills[1][0], t.pills[1][1]], finiti: ['✓', x.imp ? 'Finito · dalla prima scansione, ' + x.finito : 'Finito il ' + (x.finito || 'oggi'), t.card2, t.text] }[x.gr];
+      const PRIM = { fw: 600, bg: t.hPill, fg: t.hPillFg, sh: 'none' }, SEC = { fw: 500, bg: 'transparent', fg: t.text, sh: 'inset 0 0 0 1.5px ' + t.line };
+      const finisci = e => { prev(e); set({ fin: { ...this.state.fin, [x.id]: 'finiti' }, ask: null }); };
+      const alPiano = { l: 'Aggiungi al piano ↗', href: 'Piano della notte.dc.html', ...SEC, on: undefined };
+      const rinq = 'Planner.dc.html?' + new URLSearchParams({ da: 'progetto', p: x.id, n: x.n, c: x.c, cn: COR[x.c][0], rot: x.rot, mos: x.mos ? x.mos.c + 'x' + x.mos.r + 'x' + x.mos.ov : '', fatte: x.fatte ? H(x.fatte) : '0 h', ob: H(x.ob), fil: x.fil.map(([k, , ob]) => k + ':' + ob).join(',') }).toString();
+      const modifica = { l: 'Modifica', href: '#', ...SEC, on: e => { prev(e); set({ ed: { id: x.id, n: x.n, c: x.c, ob: Object.fromEntries(x.fil.map(([k, , b]) => [k, b])) }, del: null }); } };
+      const azioni = x.sol ? [{ l: 'Apri nel Planner ↗', href: 'Planner.dc.html', ...PRIM, on: undefined }, alPiano, { l: 'Elimina', href: '#', ...SEC, fg: t.bad, on: e => { prev(e); set({ del: x.id }); } }] : [{ l: 'Reframing ↗', href: rinq, ...PRIM, on: undefined }, modifica,
+        ...(x.gr === 'corso' ? [{ l: 'Seleziona i frame ↗', href: 'Selezione dei frame.dc.html?progetto=' + x.id, ...SEC, on: undefined }] : []),
+        ...(x.gr === 'corso' && !PIANO[x.id] ? [alPiano] : []),
+        x.gr === 'finiti' ? { l: 'Riapri', href: '#', ...SEC, on: e => { prev(e); set({ fin: { ...this.state.fin, [x.id]: 'corso' } }); } } : { l: 'Segna come finito', href: '#', ...SEC, on: finisci },
+        { l: 'Elimina', href: '#', ...SEC, fg: t.bad, on: e => { prev(e); set({ del: x.id }); } }];
+      // v56.15: una azione piena, i collegamenti come tondi ↗, il resto nel menu «⋯» (Elimina in rosso, in fondo)
+      const mOn = this.state.menu === x.id, chiudiM = () => this.setState({ menu: null });
+      const az = { prim: azioni[0], tondi: azioni.slice(1).filter(a => /↗/.test(a.l)).map(a => ({ href: a.href, tit: a.l.replace(' ↗', ''), aria: 'Apri ' + (/frame/.test(a.l) ? 'Selezione dei frame' : 'Piano della notte') + ': ' + a.l.replace(' ↗', '') })),
+        menu: azioni.slice(1).filter(a => !/↗/.test(a.l)).map(a => ({ l: a.l, fg: a.l === 'Elimina' ? t.bad : t.text, bd: a.l === 'Elimina' ? '1px solid ' + t.line : '0', on: e => { chiudiM(); a.on && a.on(e); } })),
+        aperto: mOn, exp: mOn ? 'true' : 'false', apri: e => { prev(e); this.setState({ menu: mOn ? null : x.id }); },
+        mTop: tel ? 'auto' : 'calc(100% + 6px)', mBot: tel ? 'calc(100% + 6px)' : 'auto' };
+      const conferma = this.state.del === x.id || (stato === 'elimina' && this.state.del === null && x.id === 'ngc6992');
+      const nPan = mo ? mo.c * mo.r : 1;
+      const fil = x.fil.map(([k, a, b]) => ({ l: AL.FD[k][0], c: AL.tinta(t, k).bg, w: Math.min(100, a / b * 100) + '%', fatte: a ? H(a) : '0 h', ob: H(b) }));
+      // Le misure come nel riepilogo dell'Archivio: mediane del progetto, un giudizio dove c'e' una soglia (dati simulati dalle tre mediane)
+      const mis = x.mis ? (() => { const [fw, ecc, sqm, n] = x.mis, nonG = MS.nonGiudicabile(F), gz = g => g ? { s: g.s, t: g.t, bg: g.e === 'neutra' ? t.card : t.pills[g.e][0], fg: g.e === 'neutra' ? t.text : t.pills[g.e][1] } : null, k = (fw * 10) % 7;
+        return [{ l: 'FWHM', v: fw.toFixed(1) + '″ · ' + (fw / scala).toFixed(1) + ' px', s: nonG ? 'non giudicabile su questo setup' : MS.camp(fw / scala), gz: nonG ? null : gz(MS.fwhm(fw, F)) },
+          { l: 'Eccentricità', v: ecc.toFixed(2), s: '', gz: gz(MS.ecc(ecc)) },
+          { l: 'Luminosità del cielo', v: 'SQM ' + sqm.toFixed(1), s: 'Bortle ' + BORTLE[c[6]] + ' a ' + c[6], gz: gz(MS.cielo(sqm, BORTLE[c[6]])) }]; })() : [];
+      const notti = x.sol ? [{ l: 'Nel piano', v: x.nelPiano ? x.nelPiano : 'non in un piano', s: x.nelPiano ? 'Sistema solare · notte' : '', link: x.nelPiano ? { l: 'Apri il piano ↗', href: 'Piano della notte.dc.html' } : null }, { l: 'Ultima volta nel piano', v: x.ult, s: '' }].map(n => ({ ...n, bd: '1px solid ' + t.line })) : [
+        ...(x.gr === 'corso' ? [{ l: 'Stanotte', v: PIANO[x.id] ? 'nel piano · ' + PIANO[x.id] : 'non nel piano', s: '', link: { l: PIANO[x.id] ? 'Apri il piano ↗' : 'Aggiungi al piano ↗', href: 'Piano della notte.dc.html' } }] : []),
+        { l: 'Ultima notte', v: x.ultima || 'nessuna, ancora', s: '' },
+        x.gr === 'corso' ? { l: 'Prossima notte', v: x.prossima[0], s: x.prossima[1] + (CON_FILE[c[6]] ? ' · con l\u0027orizzonte di ' + c[6] : '') } : x.gr === 'attesa' ? { l: 'Mesi buoni', v: 'Torna buono a ' + x.torna, s: 'mese buono: almeno ' + ALsoglie.imp.get('planner.mese') + ' ore visibili' } : x.gr === 'fermi' ? { l: 'Fermo', v: 'da ' + x.fermo, s: 'mesi buoni ' + x.mesi + ' passati senza frame' } : { l: 'Finito', v: x.finito || 'oggi', s: x.imp ? 'dalla prima scansione: obiettivo = ore fatte' : 'segnato da te' }]
+        .map((n, i) => ({ ...n, bd: '1px solid ' + t.line }));
+      const RIP = { l: ['banda larga', AL.rgba(t.text, 0.55), 'none'], m: ['banda larga, poi solo banda stretta', 'linear-gradient(90deg,' + AL.rgba(t.text, 0.55) + ' 50%,transparent 50%)', 'inset 0 0 0 1px ' + AL.rgba(t.text, 0.55)], s: ['solo banda stretta', 'transparent', 'inset 0 0 0 1px ' + AL.rgba(t.text, 0.55)] };
+      const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'], GS = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+      // Notti simulate anche per i progetti in attesa, fermi e finiti: dal mese dell'ultima notte (o della fine) all'indietro, ore = ore fatte
+      const MI = { gennaio: 0, febbraio: 1, marzo: 2, aprile: 3, maggio: 4, giugno: 5, luglio: 6, agosto: 7, settembre: 8, ottobre: 9, novembre: 10, dicembre: 11 };
+      const simN = () => { const src = (x.ultima || x.finito || '').toLowerCase().split(' '), mi = src.findIndex(w => w in MI); if (mi < 0 || !x.fatte) return [];
+        const m0 = MI[src[mi]], y0 = +src[mi + 1] || 2026, nN = Math.max(2, Math.min(8, Math.round(x.fatte / 150))), per = Math.ceil(x.fatte / nN), out = []; let h = x.id.length * 7;
+        for (let i = 0; i < nN; i++) { const back = Math.floor(i / 4), mm = (m0 - back + 12) % 12, yy = y0 - (m0 - back < 0 ? 1 : 0); h = (h * 31 + 11) % 97; out.push([i === 0 && +src[mi - 1] ? +src[mi - 1] : 3 + ((h + i * 7) % 25), mm, yy, per, ['l', 'l', 'm', 's'][h % 4]]); }
+        return out; };
+      const nn = (NN[x.id] || simN()).filter(q => q[3] > 0), mesi = [...new Set(nn.map(q => q[2] * 12 + q[1]))].sort((p2, q2) => p2 - q2);
+      const cm = mesi.length ? (this.state.calM && this.state.calM.id === x.id && mesi.includes(this.state.calM.k) ? this.state.calM.k : p.calendario === 'primo mese' ? mesi[0] : mesi[mesi.length - 1]) : null, iM = mesi.indexOf(cm);
+      const nm = nn.filter(q => q[2] * 12 + q[1] === cm), selD = this.state.calD && this.state.calD.id === x.id && this.state.calD.k === cm ? this.state.calD.d : null, sq = nm.find(q => q[0] === selD);
+      const cal = mesi.length ? { y: Math.floor(cm / 12), m: cm % 12, titolo: MESI[cm % 12][0].toUpperCase() + MESI[cm % 12].slice(1) + ' ' + Math.floor(cm / 12), buone: nm.map(q => q[0]),
+        giorni: nm.map(q => ({ d: q[0], sel: q[0] === selD, aria: q[0] + ' ' + MESI[q[1]] + ', ' + H(q[3]), on: () => set({ calD: { id: x.id, k: cm, d: q[0] === selD ? null : q[0] } }) })),
+        sub: nn.length + (nn.length === 1 ? ' notte' : ' notti') + ' in ' + mesi.length + (mesi.length === 1 ? ' mese' : ' mesi') + ' · tocca un giorno acceso',
+        prima: () => iM > 0 && set({ calM: { id: x.id, k: mesi[iM - 1] }, calD: null }), dopo: () => iM < mesi.length - 1 && set({ calM: { id: x.id, k: mesi[iM + 1] }, calD: null }), primaNo: iM <= 0, dopoNo: iM >= mesi.length - 1,
+        selN: sq ? { d: GS[new Date(sq[2], sq[1], sq[0]).getDay()] + ' ' + sq[0] + ' ' + MESI[sq[1]], ore: H(sq[3]), rip: RIP[sq[4]][0], rb: RIP[sq[4]][1], rs: RIP[sq[4]][2] } : null } : null;
+      const sol = x.sol ? [{ l: 'Corpo', v: x.corpo, s: '' }, { l: 'Setup', v: COR[x.c][0], s: 'senza barlow' }, ...(x.mosT ? [{ l: 'Mosaico', v: x.mosT, s: 'sulla carta del Planner' }] : []), { l: 'Filtro', v: x.filtro, s: '' },
+        { l: 'Ripresa', v: x.rip, s: x.roi ? 'regione ' + x.roi : '' }, { l: 'Durata nel piano', v: x.dur, s: 'pannelli × (ripresa + spostamento), dai tempi delle Impostazioni' }] : null;
+      const E = this.state.ed && this.state.ed.id === x.id ? this.state.ed : p.modifica && !x.sol && !this.state.edUsato && x.id === p.progetto ? { id: x.id, n: x.n, c: x.c, ob: Object.fromEntries(x.fil.map(([k, , b]) => [k, b])) } : null, setE = o2 => set({ ed: { ...E, ...o2 } });
+      const ed = E ? { n: E.n, onN: e => setE({ n: e.target.value }),
+        setT: { v: E.c, o: Object.keys(COR).map(k => ({ v: k, l: COR[k][0] })), on: e => setE({ c: e.target.value }) },
+        setup: Object.keys(COR).map(k => { const on = E.c === k; return { l: COR[k][0], sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.accent : 'transparent', fg: on ? t.hPillFg : t.text, ring: on ? t.accent : t.line, on: e2 => { prev(e2); setE({ c: k }); } }; }),
+        fil: x.fil.map(([k, a]) => ({ l: AL.FD[k][0], c: AL.tinta(t, k).bg, v: H(E.ob[k]), fatte: a ? H(a) + ' fatte' : 'niente ancora', meno: e2 => { prev(e2); setE({ ob: { ...E.ob, [k]: Math.max(30, E.ob[k] - 30) } }); }, piu: e2 => { prev(e2); setE({ ob: { ...E.ob, [k]: E.ob[k] + 30 } }); }, ariaM: AL.FD[k][0] + ', 30 minuti in meno', ariaP: AL.FD[k][0] + ', 30 minuti in più' })),
+        salva: e2 => { prev(e2); set({ ov: { ...this.state.ov, [x.id]: { n: E.n.trim() || x.n, c: E.c, ob: E.ob } }, ed: null, edUsato: true }); }, annulla: e2 => { prev(e2); set({ ed: null, edUsato: true }); } } : null;
+      s = { id: x.id, n: x.n, com: x.com, ds: !x.sol, ed, sol, cal, cor: c[0], gr: { segno: GRd[0], l: GRd[1], bg: GRd[2], fg: GRd[3], sBg: GRd[3], sFg: GRd[2] }, azioni, az, finisci,
+        proposta: x.gr === 'corso' && x.fatte >= x.ob && !conferma, conferma, elimina: e => { prev(e); set({ gone: [...this.state.gone, x.id], del: null, sel: tel ? null : undefined }); }, annulla: e => { prev(e); set({ del: false }); },
+        mini: { img: React.createElement('img', { key: src, src, alt: '', draggable: false, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } }), w: (W / fovW * 100).toFixed(1) + '%', h: (Hh / fovH * 100).toFixed(1) + '%', rot: (-x.rot) + 'deg', gc: 'repeat(' + (mo ? mo.c : 1) + ',1fr)', gr: 'repeat(' + (mo ? mo.r : 1) + ',1fr)', celle: Array.from({ length: nPan }, () => ({ bd: mo ? AL.rgba(t.accent, 0.8) : 'transparent' })),
+          cap: (mo ? mo.c + ' × ' + mo.r + ' · ' : '') + 'rotazione ' + x.rot + '°', aria: 'Inquadratura di ' + x.n + ' sulla carta: ' + W.toFixed(2) + '° × ' + Hh.toFixed(2) + '°, rotazione ' + x.rot + '° dal Nord verso Est' },
+        anello: ringOf(x.pct, t.track, x.gr), pctS: x.pct >= 100 ? '✓' : x.pct + '%', fatteS: x.fatte ? H(x.fatte) : '0 h', obS: x.fatte > x.ob ? H(x.ob) + ' · + ' + H(x.fatte - x.ob) : H(x.ob), ringAria: (x.fatte ? H(x.fatte) : '0 h') + ' di ' + H(x.ob) + ', ' + x.pct + ' per cento' + (x.fatte > x.ob ? ', ' + H(x.fatte - x.ob) + ' in più' : ''),
+        perPann: mo ? ' · in tutto il mosaico' : '', fil,
+        mos: mo ? { forma: mo.c + ' × ' + mo.r, sub: mo.ov + '% di sovrapposizione · ' + H(x.ob / nPan) + ' a pannello', gc: 'repeat(' + Math.min(mo.c, tel ? 2 : 4) + ',minmax(0,1fr))',
+          p: mo.p.map(([a, b], i) => ({ l: 'Pannello ' + (i + 1), fatte: H(a), ob: H(b), w: Math.min(100, a / b * 100) + '%', pctS: Math.round(a / b * 100) + '%' })), senza: mo.senza ? mo.senza + ' frame senza pannello: non risolti.' : '' } : null,
+        carT: [mo ? 'Mosaico' : '', 'Le notti', x.sol ? '' : 'Le misure'].filter(Boolean).join(' · ') + ' · scorri di lato', notti, mis, misSub: x.mis ? 'tutti i filtri · mediane di ' + AL.num(x.mis[3]) + ' frame' : '', misVuote: x.mis ? '' : 'Le misure arrivano con i primi frame.' };
+    }
+    const SV = ((typeof location !== 'undefined' && (location.search.match(/scheda=(colonna|affiancata|carosello)/) || [])[1]) || p.scheda || 'affiancata'), VA = tel && SV !== 'colonna', VB = tel && SV === 'carosello';
+    const L = tel ? { f: 'telefono', miniC: VA ? '1 / -1' : 'auto', filC: VA ? 'auto' : '1 / -1', car: VB, carD: VB ? 'flex' : 'contents', duoD: VB ? 'contents' : 'grid', carF: VB ? '0 0 86%' : '0 1 auto', carW: VB ? '86%' : 'auto', tel: true, desk: false, etich: 'Progetti · telefono', gap: '12px', h1: '26px', h2: '30px', cols: 'minmax(0,1fr)', lista: !s, testa: !s, padL: '16px', pad: '20px', padV: '28px 20px', bh: '44px', bCols: VA ? '104px minmax(0,1fr)' : 'minmax(0,1fr)', avM: VA ? 'piccola' : '', duo: 'minmax(0,1fr)', misCols: VB ? 'repeat(2,minmax(0,1fr))' : VA ? 'repeat(3,minmax(0,1fr))' : 'minmax(0,1fr)', solCols: 'minmax(0,1fr)', bh3: '44px', inFs: '16px' }
+      : { f: 'desktop', miniC: 'auto', filC: '1 / -1', car: false, carD: 'contents', duoD: 'grid', carF: '0 1 auto', carW: 'auto', tel: false, desk: true, etich: 'Progetti', gap: '16px', h1: '30px', h2: '40px', cols: 'minmax(0,5fr) minmax(0,7fr)', lista: true, testa: true, padL: '20px 16px', pad: '24px 28px', padV: '36px 32px', bh: '40px', bCols: 'minmax(0,1fr) 200px', avM: '', duo: 'minmax(0,1fr)', misCols: 'repeat(3,minmax(0,1fr))', solCols: '180px minmax(0,1fr)', bh3: '34px', inFs: '14px' };
+    const nC = PR.filter(y => y.gr === 'corso').length, nS = PR.filter(y => y.gr === 'solare').length;
+    return { pronto: true, t, L, modo, accento: p.accento, setModo: m => set({ modo: m }), vuoto: !PR.length, pieno: !!PR.length, gruppi, pillole, cerca, ordine, s,
+      // v56.14: l'ordine in tendina, desktop e telefono (via «⋯» e il suo foglio)
+      ordT: { v: ordK, o: Object.keys(OD).map(k => ({ v: k, l: OD[k] })), on: e => set({ ord: e.target.value }) }, testaSub: PR.length ? PR.length + ' progetti, ' + nC + ' in corso, ' + nS + ' del Sistema solare · ultima scansione oggi, 07:12' : '',
+      indietro: e => { prev(e); set({ sel: null, del: null }); } };
+  }
+}
+</script>
+</body>
+</html>

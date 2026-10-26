@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}input::placeholder{color:inherit;opacity:.5}@keyframes alSpin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-avvio__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="al-avvio__colonna-1" data-screen-label="Primo avvio">
+<div class="al-avvio__centro-1" style="max-width:{{ L.max }};padding:{{ L.pad }};grid-template-columns:{{ L.cols }};gap:{{ L.gap }}">
+
+<div class="al-avvio__colonna-2" style="position:{{ L.asPos }};gap:{{ L.asGap }}">
+<div class="al-avvio__colonna-3"><h1 class="al-avvio__testo-1" style="font-size:{{ L.h1 }}">Primo avvio</h1><p class="al-avvio__testo-2">Tutti i passi sono facoltativi.</p></div>
+<sc-if value="{{ listaDesk }}" hint-placeholder-val="{{ true }}"><div class="al-avvio__colonna-4"><sc-if value="{{ quanti }}" hint-placeholder-val="{{ true }}"><span class="al-avvio__blocco-2">{{ quanti }}</span></sc-if><ol class="al-avvio__colonna-5" aria-label="I passi del primo avvio"><sc-for list="{{ tappe }}" as="m" hint-placeholder-count="6"><li class="al-avvio__riga-1" aria-current="{{ m.cur }}" aria-label="{{ m.al }}" style="background:{{ m.rowBg }}"><span class="al-avvio__tondo-1" aria-hidden="true" style="background:{{ m.sg.bg }};color:{{ m.sg.fg }};border:1.5px {{ m.sg.bs }} {{ m.sg.bd }}">{{ m.sg.s }}</span><span class="al-avvio__colonna-6"><span class="al-avvio__testo-3" style="font-weight:{{ m.fw }};color:{{ m.nc }}">{{ m.nome }}</span><sc-if value="{{ m.sotto }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__testo-4">{{ m.sotto }}</span></sc-if></span></li></sc-for></ol></div></sc-if>
+<sc-if value="{{ listaTel }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__colonna-7"><ol class="al-avvio__riga-2" aria-label="I passi del primo avvio"><sc-for list="{{ tappe }}" as="m" hint-placeholder-count="6"><li class="al-avvio__riga-3" aria-current="{{ m.cur }}" aria-label="{{ m.al }}" style="flex:{{ m.flex }}"><span class="al-avvio__riquadro-1" aria-hidden="true" style="display:{{ m.lineD }}"></span><span class="al-avvio__tondo-2" aria-hidden="true" style="background:{{ m.sg.bg }};color:{{ m.sg.fg }};border:1.5px {{ m.sg.bs }} {{ m.sg.bd }}">{{ m.sg.s }}</span></li></sc-for></ol><sc-if value="{{ quanti }}" hint-placeholder-val="{{ true }}"><span class="al-avvio__testo-5"><b class="al-avvio__testo-6">{{ quanti }}</b><span class="al-avvio__testo-7"> · {{ corrente }}</span></span></sc-if></div></sc-if>
+</div>
+
+<section class="al-avvio__colonna-8" aria-labelledby="pa-tit" style="border-radius:{{ L.rad }};padding:{{ L.cpad }}">
+<header class="al-avvio__colonna-4"><h2 class="al-avvio__riga-4" id="pa-tit" style="font-size:{{ L.h2 }}"><span>{{ titolo }}</span><sc-if value="{{ pastiglia }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__pillola-1" style="background:{{ pastiglia.bg }};color:{{ pastiglia.fg }}">{{ pastiglia.l }}</span></sc-if></h2><sc-if value="{{ perche }}" hint-placeholder-val="{{ true }}"><p class="al-avvio__blocco-3">{{ perche }}</p></sc-if></header>
+
+<sc-if value="{{ V.backup }}" hint-placeholder-val="{{ false }}">
+<div class="al-avvio__centro-2" style="grid-template-columns:{{ L.conti }}"><sc-for list="{{ conti }}" as="c" hint-placeholder-count="4"><div class="al-avvio__colonna-9"><span class="al-avvio__testo-8">{{ c.n }}</span><span class="al-avvio__testo-9">{{ c.l }}</span></div></sc-for></div>
+<p class="al-avvio__testo-10">Ripristinare i dati salvati? Le cartelle si rileggono.</p>
+<div class="al-avvio__riga-5"><a href="#" role="button" aria-disabled="{{ bk.ripristina.dis }}" aria-busy="{{ bk.ripristina.busy }}" onClick="{{ bk.ripristina.on }}" class="{{ bk.ripristina.cls }} al-avvio__blocco-4"><sc-if value="{{ bk.ripristina.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ bk.ripristina.l }}</a><a href="#" role="button" aria-disabled="{{ bk.zero.dis }}" aria-busy="{{ bk.zero.busy }}" onClick="{{ bk.zero.on }}" class="{{ bk.zero.cls }} al-avvio__blocco-4"><sc-if value="{{ bk.zero.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ bk.zero.l }}</a></div>
+</sc-if>
+
+<sc-if value="{{ V.nome }}" hint-placeholder-val="{{ true }}"><div class="al-avvio__blocco-5"><div class="al-avvio__colonna-10"><label class="al-avvio__testo-11" for="pa-nome">Nome</label><div class="al-avvio__riga-6"><input id="pa-nome" value="{{ F.nome.v }}" onChange="{{ F.nome.on }}" onBlur="{{ F.nome.bl }}" placeholder="Nome" aria-invalid="{{ F.nome.inv }}" aria-describedby="pa-nome-e" autocomplete="off" spellcheck="false" class="al-campo al-avvio__blocco-6"></div><sc-if value="{{ F.nome.err }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__riga-7" id="pa-nome-e" style="color:{{ t.errFg }}"><b aria-hidden="true">!</b>{{ F.nome.err }}</span></sc-if><span class="al-avvio__testo-12">Facoltativo.</span></div></div></sc-if>
+
+<sc-if value="{{ V.sito }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__colonna-11">
+<div class="al-avvio__colonna-12"><span class="al-avvio__testo-13">Cerca per nome</span>
+<div class="al-avvio__colonna-10"><label class="al-avvio__testo-11" for="pa-q">Cerca un luogo</label><div class="al-avvio__riga-6"><input id="pa-q" value="{{ F.q.v }}" onChange="{{ F.q.on }}" onBlur="{{ F.q.bl }}" placeholder="" aria-invalid="{{ F.q.inv }}" aria-describedby="pa-q-e" autocomplete="off" spellcheck="false" class="al-campo al-avvio__blocco-6"><a href="#" role="button" aria-disabled="{{ R.cerca.dis }}" aria-busy="{{ R.cerca.busy }}" onClick="{{ R.cerca.on }}" class="{{ R.cerca.cls }} al-avvio__blocco-4"><sc-if value="{{ R.cerca.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ R.cerca.l }}</a></div><sc-if value="{{ F.q.err }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__riga-7" id="pa-q-e" style="color:{{ t.errFg }}"><b aria-hidden="true">!</b>{{ F.q.err }}</span></sc-if></div>
+<sc-if value="{{ R.lista }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__colonna-4"><span class="al-avvio__testo-9">Risultati della ricerca</span><ul class="al-avvio__colonna-13"><sc-for list="{{ R.posti }}" as="r" hint-placeholder-count="2"><li class="al-avvio__riga-8" style="box-shadow:inset 0 0 0 {{ r.rw }} var(--testo)"><span class="al-avvio__colonna-14"><span class="al-avvio__testo-14">{{ r.n }}</span><span class="al-avvio__testo-15">{{ r.c }}</span></span><sc-if value="{{ r.sel }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__riga-9">✓ Selezionato</span></sc-if><sc-if value="{{ r.libero }}" hint-placeholder-val="{{ true }}"><a href="#" role="button" aria-disabled="{{ r.b.dis }}" aria-busy="{{ r.b.busy }}" onClick="{{ r.b.on }}" class="{{ r.b.cls }} al-avvio__blocco-4"><sc-if value="{{ r.b.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ r.b.l }}</a></sc-if></li></sc-for></ul></div></sc-if>
+<sc-if value="{{ R.nessuno }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ formato }}" segno="{{ R.av.s }}" titolo="{{ R.av.t }}" testo="{{ R.av.x }}" azione="{{ R.av.a }}" on-azione="{{ R.av.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,80px"></dc-import></sc-if>
+<sc-if value="{{ R.errore }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="{{ formato }}" segno="{{ R.av.s }}" titolo="{{ R.av.t }}" testo="{{ R.av.x }}" azione="{{ R.av.a }}" on-azione="{{ R.av.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,46px"></dc-import></sc-if>
+</div>
+<div class="al-avvio__colonna-15"><span class="al-avvio__colonna-16"><span class="al-avvio__testo-13">Coordinate</span><span class="al-avvio__testo-12">Si scrivono anche senza rete.</span></span>
+<div class="al-avvio__colonna-10"><label class="al-avvio__testo-11" for="pa-sn">Nome del sito</label><div class="al-avvio__riga-6"><input id="pa-sn" value="{{ F.sNome.v }}" onChange="{{ F.sNome.on }}" onBlur="{{ F.sNome.bl }}" placeholder="es. Malga in quota" aria-invalid="{{ F.sNome.inv }}" aria-describedby="pa-sn-e" autocomplete="off" spellcheck="false" class="al-campo al-avvio__blocco-6"></div><sc-if value="{{ F.sNome.err }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__riga-7" id="pa-sn-e" style="color:{{ t.errFg }}"><b aria-hidden="true">!</b>{{ F.sNome.err }}</span></sc-if></div>
+<div class="al-avvio__centro-3" style="grid-template-columns:{{ L.coppia }}"><div class="al-avvio__colonna-10"><label class="al-avvio__testo-11" for="pa-lat">Latitudine</label><div class="al-avvio__riga-6"><input id="pa-lat" value="{{ F.lat.v }}" onChange="{{ F.lat.on }}" onBlur="{{ F.lat.bl }}" placeholder="46.4843 N" aria-invalid="{{ F.lat.inv }}" aria-describedby="pa-lat-e" autocomplete="off" spellcheck="false" class="al-campo al-avvio__blocco-6"></div><sc-if value="{{ F.lat.err }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__riga-7" id="pa-lat-e" style="color:{{ t.errFg }}"><b aria-hidden="true">!</b>{{ F.lat.err }}</span></sc-if></div><div class="al-avvio__colonna-10"><label class="al-avvio__testo-11" for="pa-lon">Longitudine</label><div class="al-avvio__riga-6"><input id="pa-lon" value="{{ F.lon.v }}" onChange="{{ F.lon.on }}" onBlur="{{ F.lon.bl }}" placeholder="12.0561 E" aria-invalid="{{ F.lon.inv }}" aria-describedby="pa-lon-e" autocomplete="off" spellcheck="false" class="al-campo al-avvio__blocco-6"></div><sc-if value="{{ F.lon.err }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__riga-7" id="pa-lon-e" style="color:{{ t.errFg }}"><b aria-hidden="true">!</b>{{ F.lon.err }}</span></sc-if></div></div>
+<span class="al-avvio__testo-12">Virgola o punto, e la lettera del verso: N, S, E, O.</span>
+</div>
+<div class="al-avvio__colonna-15"><span class="al-avvio__testo-13" id="pa-b">Bortle, da 1 a 9</span>
+<div class="al-avvio__centro-4" role="radiogroup" aria-labelledby="pa-b" style="grid-template-columns:{{ L.bortle }}"><sc-for list="{{ bortle }}" as="b" hint-placeholder-count="9"><a class="al-avvio__centro-5" href="#" role="radio" aria-checked="{{ b.sel }}" aria-label="{{ b.al }}" onClick="{{ b.on }}" style="background:{{ b.bg }};color:{{ b.fg }}">{{ b.n }}</a></sc-for></div>
+<div class="al-avvio__riga-10" aria-hidden="true"><span>1 – cielo buio</span><span>9 – centro città</span></div>
+<div class="al-avvio__colonna-17" aria-live="polite"><span class="al-avvio__testo-3" style="font-weight:{{ bL.fw }}">{{ bL.t }}</span><sc-if value="{{ bL.f }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__testo-16">{{ bL.f }}</span></sc-if></div>
+<span class="al-avvio__testo-12">Facoltativo.</span>
+</div>
+<div class="al-avvio__riga-11"><a href="#" role="button" aria-disabled="{{ R.salva.dis }}" aria-busy="{{ R.salva.busy }}" onClick="{{ R.salva.on }}" class="{{ R.salva.cls }} al-avvio__blocco-4"><sc-if value="{{ R.salva.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ R.salva.l }}</a></div>
+</div></sc-if>
+
+<sc-if value="{{ V.tema }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/SceltaTema" modo="{{ modoScelto }}" accento="{{ accento }}" sito="{{ sitoNome }}" formato="{{ formato }}" on-modo="{{ setModo }}" on-accento="{{ setAccento }}" hint-size="100%,240px"></dc-import></sc-if>
+
+<sc-if value="{{ V.nasNo }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ formato }}" segno="{{ C.nasNo.s }}" titolo="{{ C.nasNo.t }}" testo="{{ C.nasNo.x }}" azione="{{ C.nasNo.a }}" on-azione="{{ C.nasNo.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,80px"></dc-import></sc-if>
+<sc-if value="{{ V.pc }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__colonna-10"><label class="al-avvio__testo-11" for="pa-perc">Percorso della cartella</label><div class="al-avvio__riga-6"><input id="pa-perc" value="{{ F.perc.v }}" onChange="{{ F.perc.on }}" onBlur="{{ F.perc.bl }}" aria-invalid="{{ F.perc.inv }}" aria-describedby="pa-perc-e" autocomplete="off" spellcheck="false" class="al-campo al-avvio__blocco-6"><a href="#" role="button" aria-disabled="{{ C.verifica.dis }}" aria-busy="{{ C.verifica.busy }}" onClick="{{ C.verifica.on }}" class="{{ C.verifica.cls }} al-avvio__blocco-4"><sc-if value="{{ C.verifica.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ C.verifica.l }}</a></div><sc-if value="{{ F.perc.err }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__riga-7" id="pa-perc-e" style="color:{{ t.errFg }}"><b aria-hidden="true">!</b>{{ F.perc.err }}</span></sc-if><span class="al-avvio__testo-12">{{ C.aiuto }}</span></div></sc-if>
+<sc-if value="{{ V.nas }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__colonna-18">
+<span class="al-avvio__testo-17">Scegli una cartella</span>
+<div class="al-avvio__colonna-19"><span class="al-avvio__testo-9">Cartella corrente:</span><span class="al-avvio__testo-18">{{ N.dir }}</span></div>
+<div class="al-avvio__riga-12"><a href="#" role="button" aria-disabled="{{ N.sel.dis }}" aria-busy="{{ N.sel.busy }}" onClick="{{ N.sel.on }}" class="{{ N.sel.cls }} al-avvio__blocco-4"><sc-if value="{{ N.sel.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ N.sel.l }}</a><a href="#" role="button" aria-disabled="{{ N.su.dis }}" aria-busy="{{ N.su.busy }}" onClick="{{ N.su.on }}" class="{{ N.su.cls }} al-avvio__blocco-4"><sc-if value="{{ N.su.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ N.su.l }}</a><a href="#" role="button" aria-disabled="{{ N.dati.dis }}" aria-busy="{{ N.dati.busy }}" onClick="{{ N.dati.on }}" class="{{ N.dati.cls }} al-avvio__blocco-4"><sc-if value="{{ N.dati.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ N.dati.l }}</a></div>
+<ul class="al-avvio__colonna-20" aria-label="Sottocartelle">
+<sc-for list="{{ N.sub }}" as="d" hint-placeholder-count="4"><li class="al-avvio__riga-13"><span class="al-avvio__blocco-7">{{ d.n }}</span><a href="#" role="button" aria-disabled="{{ d.apri.dis }}" aria-busy="{{ d.apri.busy }}" onClick="{{ d.apri.on }}" class="{{ d.apri.cls }} al-avvio__blocco-4"><sc-if value="{{ d.apri.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ d.apri.l }}</a></li></sc-for>
+<sc-if value="{{ N.vuota }}" hint-placeholder-val="{{ false }}"><li class="al-avvio__blocco-8">Nessuna sottocartella</li></sc-if>
+</ul></div></sc-if>
+<sc-if value="{{ C.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ formato }}" segno="{{ C.esito.s }}" titolo="{{ C.esito.t }}" testo="{{ C.esito.x }}" azione="{{ C.esito.a }}" on-azione="{{ C.esito.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,80px"></dc-import></sc-if>
+<sc-if value="{{ C.lista }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__colonna-15"><span class="al-avvio__testo-13">Cartelle aggiunte</span><ul class="al-avvio__colonna-13"><sc-for list="{{ C.aggiunte }}" as="c" hint-placeholder-count="2"><li class="al-avvio__riga-14"><span class="al-avvio__tondo-4" aria-hidden="true" style="background:{{ c.sg.bg }};color:{{ c.sg.fg }};border:1.5px {{ c.sg.bs }} {{ c.sg.bd }}">{{ c.sg.s }}</span><span class="al-avvio__colonna-19"><span class="al-avvio__testo-19">{{ c.p }}</span><span class="al-avvio__testo-9">{{ c.n }}</span></span></li></sc-for></ul></div></sc-if>
+
+<sc-if value="{{ V.seeing }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__colonna-21">
+<dc-import name="componenti/Avviso" tipo="riga" formato="{{ formato }}" segno="{{ K.st.s }}" titolo="{{ K.st.t }}" testo="{{ K.st.x }}" azione="{{ K.st.a }}" on-azione="{{ K.st.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,46px"></dc-import>
+<a class="al-avvio__riga-15" href="https://www.meteoblue.com/it/weather-api" target="_blank" rel="noopener">Come ottenere una chiave ↗</a>
+<div class="al-avvio__colonna-10"><label class="al-avvio__testo-11" for="pa-key">Chiave Meteoblue</label><div class="al-avvio__riga-6"><input id="pa-key" value="{{ F.chiave.v }}" onChange="{{ F.chiave.on }}" onBlur="{{ F.chiave.bl }}" placeholder="" aria-invalid="{{ F.chiave.inv }}" aria-describedby="pa-key-e" autocomplete="off" spellcheck="false" class="al-campo al-avvio__blocco-6"><a href="#" role="button" aria-disabled="{{ K.verifica.dis }}" aria-busy="{{ K.verifica.busy }}" onClick="{{ K.verifica.on }}" class="{{ K.verifica.cls }} al-avvio__blocco-4"><sc-if value="{{ K.verifica.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ K.verifica.l }}</a></div><sc-if value="{{ F.chiave.err }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__riga-7" id="pa-key-e" style="color:{{ t.errFg }}"><b aria-hidden="true">!</b>{{ F.chiave.err }}</span></sc-if></div>
+<sc-if value="{{ K.rimuovi }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__riga-11"><a href="#" role="button" aria-disabled="{{ K.rimuovi.dis }}" aria-busy="{{ K.rimuovi.busy }}" onClick="{{ K.rimuovi.on }}" class="{{ K.rimuovi.cls }} al-avvio__blocco-4"><sc-if value="{{ K.rimuovi.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ K.rimuovi.l }}</a></div></sc-if>
+<sc-if value="{{ K.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="{{ formato }}" segno="{{ K.esito.s }}" titolo="{{ K.esito.t }}" testo="{{ K.esito.x }}" azione="{{ K.esito.a }}" on-azione="{{ K.esito.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,46px"></dc-import></sc-if>
+</div></sc-if>
+
+<sc-if value="{{ V.astapNo }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__colonna-11">
+<div class="al-avvio__centro-6" style="grid-template-columns:{{ L.due }}">
+<div class="al-avvio__colonna-22"><span class="al-avvio__testo-13">Senza ASTAP</span><span class="al-avvio__testo-20">I file vengono catalogati e le ore contate, ma gli oggetti ripresi non vengono identificati.</span></div>
+<div class="al-avvio__colonna-22"><span class="al-avvio__testo-13">Download</span><a class="al-avvio__riga-15" href="https://www.hnsky.org/astap.htm" target="_blank" rel="noopener">Scarica ASTAP dal sito dell'autore ↗</a><span class="al-avvio__testo-12">L'app non scarica né installa ASTAP.</span></div>
+</div>
+<div class="al-avvio__colonna-12"><span class="al-avvio__testo-13">Già installato</span><div class="al-avvio__colonna-10"><label class="al-avvio__testo-11" for="pa-astap">Percorso di ASTAP</label><div class="al-avvio__riga-6"><input id="pa-astap" value="{{ F.astap.v }}" onChange="{{ F.astap.on }}" onBlur="{{ F.astap.bl }}" placeholder="C:\Program Files\astap\astap_cli.exe" aria-invalid="{{ F.astap.inv }}" aria-describedby="pa-astap-e" autocomplete="off" spellcheck="false" class="al-campo al-avvio__blocco-6"><a href="#" role="button" aria-disabled="{{ A.verifica.dis }}" aria-busy="{{ A.verifica.busy }}" onClick="{{ A.verifica.on }}" class="{{ A.verifica.cls }} al-avvio__blocco-4"><sc-if value="{{ A.verifica.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ A.verifica.l }}</a></div><sc-if value="{{ F.astap.err }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__riga-7" id="pa-astap-e" style="color:{{ t.errFg }}"><b aria-hidden="true">!</b>{{ F.astap.err }}</span></sc-if><span class="al-avvio__testo-12">Percorso del programma (astap_cli), non della cartella.</span></div></div>
+</div></sc-if>
+<sc-if value="{{ V.astapCat }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__colonna-12">
+<dc-import name="componenti/Avviso" tipo="blocco" formato="{{ formato }}" segno="{{ A.cat.s }}" titolo="{{ A.cat.t }}" testo="{{ A.cat.x }}" azione="{{ A.cat.a }}" on-azione="{{ A.cat.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,80px"></dc-import>
+<div class="al-avvio__colonna-22"><a class="al-avvio__riga-15" href="https://www.hnsky.org/astap.htm" target="_blank" rel="noopener">Scarica il catalogo stellare ↗</a><span class="al-avvio__testo-20">Catalogo consigliato: D80 (circa 1.25 GB), nella stessa cartella di ASTAP.</span></div>
+</div></sc-if>
+<sc-if value="{{ A.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ formato }}" segno="{{ A.esito.s }}" titolo="{{ A.esito.t }}" testo="{{ A.esito.x }}" azione="{{ A.esito.a }}" on-azione="{{ A.esito.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,80px"></dc-import></sc-if>
+
+<sc-if value="{{ V.chiusura }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__colonna-21"><ul class="al-avvio__colonna-23"><sc-for list="{{ righe }}" as="r" hint-placeholder-count="5"><li class="al-avvio__centro-7" style="grid-template-columns:{{ L.chCols }}"><span class="al-avvio__tondo-5" aria-hidden="true" style="background:{{ r.sg.bg }};color:{{ r.sg.fg }};border:1.5px {{ r.sg.bs }} {{ r.sg.bd }}">{{ r.sg.s }}</span><span class="al-avvio__testo-21">{{ r.voce }}</span><span class="al-avvio__testo-22" style="grid-column:{{ L.chVal }};color:{{ r.c }}">{{ r.val }}</span></li></sc-for></ul>
+<sc-if value="{{ nonPartita }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="{{ formato }}" segno="{{ nonPartita.s }}" titolo="{{ nonPartita.t }}" testo="{{ nonPartita.x }}" azione="{{ nonPartita.a }}" on-azione="{{ nonPartita.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,46px"></dc-import></sc-if>
+</div></sc-if>
+
+<sc-if value="{{ salvaErr }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ formato }}" segno="{{ salvaErr.s }}" titolo="{{ salvaErr.t }}" testo="{{ salvaErr.x }}" azione="{{ salvaErr.a }}" on-azione="{{ salvaErr.on }}" modo="{{ visto }}" accento="{{ accento }}" hint-size="100%,80px"></dc-import></sc-if>
+<sc-if value="{{ gestiCarta }}" hint-placeholder-val="{{ true }}"><div class="al-avvio__riga-16"><sc-if value="{{ g.salta }}" hint-placeholder-val="{{ true }}"><a class="al-avvio__riga-17" href="Dashboard.dc.html">Salta</a></sc-if><span class="al-avvio__blocco-9"></span><sc-if value="{{ g.indietro }}" hint-placeholder-val="{{ true }}"><a href="#" role="button" aria-disabled="{{ g.indietro.dis }}" aria-busy="{{ g.indietro.busy }}" onClick="{{ g.indietro.on }}" class="{{ g.indietro.cls }} al-avvio__blocco-4"><sc-if value="{{ g.indietro.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ g.indietro.l }}</a></sc-if><a href="#" role="button" aria-disabled="{{ g.avanti.dis }}" aria-busy="{{ g.avanti.busy }}" onClick="{{ g.avanti.on }}" class="{{ g.avanti.cls }} al-avvio__blocco-4"><sc-if value="{{ g.avanti.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ g.avanti.l }}</a></div></sc-if>
+</section>
+</div>
+<sc-if value="{{ barraTel }}" hint-placeholder-val="{{ false }}"><div class="al-avvio__riga-18"><sc-if value="{{ g.salta }}" hint-placeholder-val="{{ true }}"><a class="al-avvio__riga-17" href="Dashboard.dc.html">Salta</a></sc-if><span class="al-avvio__blocco-9"></span><sc-if value="{{ g.indietro }}" hint-placeholder-val="{{ true }}"><a href="#" role="button" aria-disabled="{{ g.indietro.dis }}" aria-busy="{{ g.indietro.busy }}" onClick="{{ g.indietro.on }}" class="{{ g.indietro.cls }} al-avvio__blocco-4"><sc-if value="{{ g.indietro.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ g.indietro.l }}</a></sc-if><a href="#" role="button" aria-disabled="{{ g.avanti.dis }}" aria-busy="{{ g.avanti.busy }}" onClick="{{ g.avanti.on }}" class="{{ g.avanti.cls }} al-avvio__blocco-4"><sc-if value="{{ g.avanti.busy }}" hint-placeholder-val="{{ false }}"><span class="al-avvio__tondo-3" aria-hidden="true"></span></sc-if>{{ g.avanti.l }}</a></div></sc-if>
+</div></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;passo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;backup&quot;,&quot;nome&quot;,&quot;sito&quot;,&quot;tema&quot;,&quot;cartelle&quot;,&quot;seeing&quot;,&quot;astap&quot;,&quot;chiusura&quot;],&quot;default&quot;:&quot;nome&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;nome: scritto&quot;,&quot;nome: salvataggio non riuscito&quot;,&quot;sito: ricerca in corso&quot;,&quot;sito: risultati&quot;,&quot;sito: selezionato&quot;,&quot;sito: nessun risultato&quot;,&quot;sito: ricerca non riuscita&quot;,&quot;sito: coordinate non valide&quot;,&quot;sito: salvataggio&quot;,&quot;sito: sito non salvato&quot;,&quot;tema: chiaro · turchese&quot;,&quot;tema: automatico&quot;,&quot;tema: automatico senza sito&quot;,&quot;cartelle: verifica in corso&quot;,&quot;cartelle: file trovati&quot;,&quot;cartelle: conteggio parziale&quot;,&quot;cartelle: non raggiungibile&quot;,&quot;cartelle: già registrata&quot;,&quot;cartelle: aggiunte&quot;,&quot;cartelle: NAS&quot;,&quot;cartelle: NAS vuota&quot;,&quot;cartelle: NAS senza elenco&quot;,&quot;seeing: verifica in corso&quot;,&quot;seeing: chiave valida&quot;,&quot;seeing: chiave salvata&quot;,&quot;seeing: chiave rimossa&quot;,&quot;seeing: non riconosciuta&quot;,&quot;seeing: non risponde&quot;,&quot;seeing: risposta non valida&quot;,&quot;astap: verifica in corso&quot;,&quot;astap: trovato&quot;,&quot;astap: trovato senza catalogo&quot;,&quot;astap: percorso sbagliato&quot;,&quot;chiusura: scansione non partita&quot;,&quot;chiusura: passi saltati&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;astap&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;non trovato&quot;,&quot;catalogo mancante&quot;,&quot;installato&quot;],&quot;default&quot;:&quot;non trovato&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;,&quot;automatico&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = this.preset(this.props);
+  componentDidMount() { this._rsz = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rsz); }
+  componentDidUpdate(prev) { if (['passo', 'stato', 'astap', 'modo', 'accento'].some(k => prev[k] !== this.props[k])) { this.ferma(); this.setState(this.preset(this.props)); } }
+  componentWillUnmount() { this.ferma(); this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rsz); }
+  ferma() { (this._t || []).forEach(clearTimeout); this._t = []; }
+  dopo(ms, f) { (this._t = this._t || []).push(setTimeout(f, ms)); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  // Lo stato di partenza da passo + stato (Tweaks). I passi prima di quello scelto risultano fatti, il seeing saltato.
+  preset(p) {
+    const stato = p.stato || 'normale', m = /^([a-z]+): (.+)$/.exec(stato); let passo = m ? m[1] : (p.passo || 'nome');
+    let astap = p.astap || 'non trovato'; if (passo === 'astap' && astap === 'installato') astap = 'non trovato';
+    const steps = ['nome', 'sito', 'tema', 'cartelle', 'seeing'].concat(astap === 'installato' ? [] : ['astap']);
+    if (passo === 'astap' && steps.indexOf('astap') < 0) passo = 'seeing';
+    const vista = passo === 'backup' ? 'backup' : passo === 'chiusura' ? 'chiusura' : 'passo';
+    const i = vista === 'passo' ? Math.max(0, steps.indexOf(passo)) : 0;
+    const s = { vista, i, steps, astap, modo: p.modo || 'scuro', accento: p.accento || 'ambra · blu notte', marks: {}, nome: '', q: '', ricerca: null, scelto: -1, sNome: '', lat: '', lon: '', tocc: {}, bortle: 0, sitoSalva: null, sito: null,
+      dove: 'computer', perc: '', vPath: '', verifica: null, aggiunte: [], nasDir: '/data/astro/2026/Cima Ekar', nasLista: true, chiave: '', chiaveSalvata: null, esitoChiave: null, astapPerc: '', esitoAstap: null, salvaErr: null, scansione: true, ripr: false };
+    if (vista !== 'backup') {
+      const fino = vista === 'chiusura' ? steps.length : i, DEF = { nome: 'fatto', sito: 'fatto', tema: 'fatto', cartelle: 'fatto', seeing: 'saltato', astap: 'saltato' };
+      steps.slice(0, fino).forEach(k => { s.marks[k] = DEF[k]; });
+      if (s.marks.nome) s.nome = 'Marco';
+      if (s.marks.sito) s.sito = { nome: 'Cima Ekar', bortle: 3 };
+      if (s.marks.cartelle) s.aggiunte = TRE.slice();
+    }
+    const SITO = () => Object.assign(s, { q: 'Cima Ekar', ricerca: 'risultati', scelto: 0, sNome: 'Cima Ekar', lat: '45.8486 N', lon: '11.5689 E', bortle: 3 });
+    const PC = (perc, verifica) => Object.assign(s, { perc, vPath: perc, verifica });
+    const KEY = (esitoChiave, chiave) => Object.assign(s, { esitoChiave, chiave: chiave || '' });
+    const AST = (esitoAstap, astapPerc) => Object.assign(s, { esitoAstap, astapPerc: astapPerc || 'C:\\Program Files\\astap\\astap_cli.exe' });
+    ({
+      'nome: scritto': () => { s.nome = 'Marco'; },
+      'nome: salvataggio non riuscito': () => { s.nome = 'Marco'; s.salvaErr = 'nome'; },
+      'sito: ricerca in corso': () => { s.q = 'Cima Ekar'; s.ricerca = 'in corso'; },
+      'sito: risultati': () => { s.q = 'Cima Ekar'; s.ricerca = 'risultati'; },
+      'sito: selezionato': SITO,
+      'sito: nessun risultato': () => { s.q = 'Malga Ekarr'; s.ricerca = 'nessuno'; },
+      'sito: ricerca non riuscita': () => { s.q = 'Cima Ekar'; s.ricerca = 'errore'; },
+      'sito: coordinate non valide': () => Object.assign(s, { lat: '46.48.43 N', lon: '212.0561 E', tocc: { sNome: true, lat: true, lon: true } }),
+      'sito: salvataggio': () => { SITO(); s.sitoSalva = 'in corso'; },
+      'sito: sito non salvato': () => { SITO(); s.salvaErr = 'sito'; },
+      'tema: chiaro · turchese': () => { s.modo = 'chiaro'; s.accento = 'turchese · petrolio'; },
+      'tema: automatico': () => { s.modo = 'automatico'; },
+      'tema: automatico senza sito': () => { s.sito = null; s.marks.sito = 'saltato'; },
+      'cartelle: verifica in corso': () => PC('D:\\Astro\\2026', 'in corso'),
+      'cartelle: file trovati': () => PC('D:\\Astro\\2026', 'trovati'),
+      'cartelle: conteggio parziale': () => PC('E:\\Archivio\\Deep sky', 'parziale'),
+      'cartelle: non raggiungibile': () => PC('F:\\Riprese', 'irraggiungibile'),
+      'cartelle: già registrata': () => PC('D:\\Astro\\2026', 'registrata'),
+      'cartelle: aggiunte': () => { s.aggiunte = TRE.slice(); },
+      'cartelle: NAS': () => { s.dove = 'nas'; },
+      'cartelle: NAS vuota': () => { s.dove = 'nas'; s.nasDir = '/data/astro/2026/Cima Ekar/IC 1396 Proboscide d\u0027Elefante/Ha 300 s'; },
+      'cartelle: NAS senza elenco': () => { s.dove = 'nas'; s.nasLista = false; },
+      'seeing: verifica in corso': () => KEY('in corso', '3f9c1e07d5ab12'),
+      'seeing: chiave valida': () => { KEY('valida'); s.chiaveSalvata = 'ab12'; },
+      'seeing: chiave salvata': () => { s.chiaveSalvata = 'ab12'; },
+      'seeing: chiave rimossa': () => KEY('rimossa'),
+      'seeing: non riconosciuta': () => KEY('rifiutata', '3f9c1e07d5ab1'),
+      'seeing: non risponde': () => KEY('muto', '3f9c1e07d5ab12'),
+      'seeing: risposta non valida': () => KEY('invalida', '3f9c1e07d5ab12'),
+      'astap: verifica in corso': () => AST('in corso'),
+      'astap: trovato': () => AST('trovato'),
+      'astap: trovato senza catalogo': () => AST('senza catalogo'),
+      'astap: percorso sbagliato': () => AST('sbagliato', 'C:\\Program Files\\astap'),
+      'chiusura: scansione non partita': () => { s.scansione = false; },
+      'chiusura: passi saltati': () => { s.nome = ''; s.sito = null; s.aggiunte = []; Object.assign(s.marks, { nome: 'saltato', sito: 'saltato', cartelle: 'saltato' }); }
+    }[stato] || (() => {}))();
+    return s;
+  }
+  esito(k, s) { return { nome: !!s.nome.trim(), sito: !!s.sito, tema: true, cartelle: s.aggiunte.length > 0, seeing: !!s.chiaveSalvata, astap: s.esitoAstap === 'trovato' }[k] ? 'fatto' : 'saltato'; }
+  avanti() { const s = this.state, k = s.steps[s.i], marks = { ...s.marks, [k]: this.esito(k, s) };
+    this.setState(s.i + 1 >= s.steps.length ? { marks, vista: 'chiusura', salvaErr: null } : { marks, i: s.i + 1, salvaErr: null }); }
+  indietro() { this.setState(s => ({ i: Math.max(0, s.i - 1), salvaErr: null })); }
+  verifica(path) { this.setState({ verifica: 'in corso', vPath: path });
+    this.dopo(900, () => { const q = path.trim(); this.setState({ verifica: /^f:|riprese/i.test(q) ? 'irraggiungibile' : /archivio/i.test(q) ? 'parziale' : 'trovati' }); }); }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, s = this.state, fP = AL.formatoScelto(p.formato), tel = AL.telefono(fP, (this.state.w ?? window.innerWidth));
+    const visto = s.modo === 'automatico' ? 'scuro' : s.modo, t = { ...AL.tema(visto, s.accento) };
+    t.errFg = t.pills[2][1];
+    const set = o => this.setState(o);
+    const B = (l, k, o = {}) => { const pr = k === 'p', no = !!o.no, busy = !!o.busy;
+      return { l: busy ? o.busy : l, busy, dis: no ? 'true' : undefined, cls: 'al-bottone ' + (pr ? 'al-bottone--pieno' : k === 'b' ? 'al-bottone--contorno' : k === 'c' ? 'al-bottone--tenue al-bottone--rovescio' : 'al-bottone--tenue'), bg: pr ? t.hPill : k === 'b' ? 'transparent' : k === 'c' ? t.card : t.card2, fg: pr ? t.hPillFg : t.text, ring: k === 'b' ? t.line : 'transparent', fw: pr ? 600 : 500,
+        op: no ? 0.45 : 1, cur: no ? 'not-allowed' : busy ? 'progress' : 'pointer', on: e => { e && e.preventDefault && e.preventDefault(); if (no || busy) return; o.on && o.on(); } }; };
+    const key = s.vista === 'passo' ? s.steps[s.i] : s.vista;
+    const nas = key === 'cartelle' && s.dove === 'nas';
+    const V = { backup: key === 'backup', nome: key === 'nome', sito: key === 'sito', tema: key === 'tema', pc: key === 'cartelle' && (!nas || !s.nasLista), nas: nas && s.nasLista, nasNo: nas && !s.nasLista,
+      seeing: key === 'seeing', astapNo: key === 'astap' && s.astap === 'non trovato', astapCat: key === 'astap' && s.astap === 'catalogo mancante', chiusura: key === 'chiusura' };
+    // campi
+    const cl = coord(s.lat, true), cn = coord(s.lon, false);
+    const fld = (k, err) => ({ v: s[k], err: err || '', inv: err ? 'true' : 'false', bd: err ? t.errFg : t.line,
+      on: e => { const v = e.target.value; this.setState({ [k]: v }); }, bl: () => { if (!this.state.tocc[k]) this.setState(st => ({ tocc: { ...st.tocc, [k]: true } })); } });
+    const F = { nome: fld('nome'), q: fld('q'), sNome: fld('sNome', s.tocc.sNome && !s.sNome.trim() ? 'Nome obbligatorio' : ''),
+      lat: fld('lat', s.tocc.lat && cl.err), lon: fld('lon', s.tocc.lon && cn.err), perc: fld('perc'), chiave: fld('chiave'), astap: fld('astapPerc') };
+    const sitoOk = !!s.sNome.trim() && cl.v != null && cn.v != null;
+    // sito
+    const R = { lista: s.ricerca === 'risultati', nessuno: s.ricerca === 'nessuno', errore: s.ricerca === 'errore',
+      av: s.ricerca === 'nessuno' ? { s: '?', t: 'Nessun risultato', x: 'Controlla il nome o la connessione, oppure inserisci le coordinate.', a: '' }
+        : { s: '!', t: 'Ricerca non riuscita', x: 'Il servizio non ha risposto.', a: 'Inserisci le coordinate', on: e => { e && e.preventDefault(); const el = document.getElementById('pa-lat'); el && el.focus(); } },
+      posti: POSTI.map((r, j) => ({ n: r.n, c: r.lat + ' · ' + r.lon, sel: s.scelto === j, libero: s.scelto !== j, rw: s.scelto === j ? '2px' : '0',
+        b: B('Seleziona', 'c', { on: () => set({ scelto: j, sNome: r.nome, lat: r.lat, lon: r.lon, tocc: {} }) }) })),
+      cerca: B('Cerca', 't', { no: !s.q.trim(), busy: s.ricerca === 'in corso' && 'Ricerca…', on: () => { set({ ricerca: 'in corso', scelto: -1 });
+        this.dopo(800, () => { this.setState({ ricerca: /ekar|asiago/i.test(this.state.q) && !/ekarr/i.test(this.state.q) ? 'risultati' : 'nessuno' }); }); } }),
+      salva: B('Salva sito', 'p', { no: !sitoOk, busy: s.sitoSalva === 'in corso' && 'Salvataggio…', on: () => { set({ sitoSalva: 'in corso', salvaErr: null });
+        this.dopo(700, () => { const st = this.state; this.setState({ sito: { nome: st.sNome.trim(), bortle: st.bortle }, sitoSalva: null, marks: { ...st.marks, sito: 'fatto' }, i: st.i + 1 }); }); } }) };
+    const bortle = BORTLE.map((b, j) => { const n = j + 1, sel = s.bortle === n;
+      return { n, sel: sel ? 'true' : 'false', al: 'Bortle ' + n + ' – ' + b[0], bg: sel ? t.hPill : t.card2, fg: sel ? t.hPillFg : t.text, on: e => { e.preventDefault(); set({ bortle: sel ? 0 : n }); } }; });
+    const bL = s.bortle ? { t: 'Bortle ' + s.bortle + ' – ' + BORTLE[s.bortle - 1][0], f: BORTLE[s.bortle - 1][1], fw: 600 } : { t: 'Nessuna classe selezionata.', f: '', fw: 400 };
+    // cartelle
+    const pend = ['trovati', 'parziale', 'registrata'].indexOf(s.verifica) >= 0;
+    const aggiungi = e => { e && e.preventDefault && e.preventDefault(); this.setState(st => ({ aggiunte: st.aggiunte.concat([{ p: st.vPath, n: st.verifica === 'parziale' ? 'oltre 5000 file FITS' : '1240 file FITS' }]), verifica: null, perc: '' })); };
+    const EC = { trovati: { s: '✓', t: 'File trovati', x: '1240 file FITS · ' + s.vPath, a: 'Aggiungi cartella', on: aggiungi },
+      parziale: { s: '✓', t: 'Conteggio parziale', x: 'Conteggio interrotto a 5000: i file sono di più.', a: 'Aggiungi cartella', on: aggiungi },
+      irraggiungibile: { s: '!', t: 'Cartella non raggiungibile', x: 'Controlla il percorso o collega il disco, poi riprova.', a: '' },
+      registrata: { s: '!', t: 'Cartella già registrata', x: 'Corrisponde a \\\\nas\\astro\\2026: stessi file. I dati associati vengono mantenuti.', a: 'Usa questo percorso', on: aggiungi } }[s.verifica] || null;
+    const sgOk = { s: '✓', bg: t.pillOkBg, fg: t.pillOkFg, bd: 'transparent', bs: 'solid' };
+    const C = { esito: key === 'cartelle' ? EC : null, lista: key === 'cartelle' && s.aggiunte.length > 0, aggiunte: s.aggiunte.map(a => ({ ...a, sg: sgOk })),
+      aiuto: nas ? 'Percorso interno al container, non quello del computer.' : '',
+      nasNo: { s: '?', t: 'Elenco delle cartelle non disponibile', x: 'Inserisci il percorso.', a: '' },
+      verifica: B('Verifica', pend ? 't' : 'p', { no: !s.perc.trim(), busy: s.verifica === 'in corso' && 'Verifica…', on: () => this.verifica(s.perc) }) };
+    const sub = NAS[s.nasDir] || [];
+    const N = { dir: s.nasDir, vuota: !sub.length, sub: sub.map(n => ({ n, apri: B('Apri', 't', { on: () => set({ nasDir: s.nasDir + '/' + n }) }) })),
+      sel: B('Seleziona cartella', pend ? 'c' : 'p', { busy: s.verifica === 'in corso' && 'Verifica…', on: () => this.verifica(s.nasDir) }),
+      su: B('Cartella superiore', 'c', { no: s.nasDir === '/data', on: () => set({ nasDir: s.nasDir.replace(/\/[^/]+$/, '') || '/data' }) }),
+      dati: B('Cartella dei dati', 'c', { no: s.nasDir === '/data', on: () => set({ nasDir: '/data' }) }) };
+    // seeing
+    const EK = { valida: ['✓', 'Chiave valida: seeing attivo.'], rimossa: ['?', 'Chiave rimossa: seeing non disponibile.'], rifiutata: ['!', 'Chiave non riconosciuta da Meteoblue: non salvata.'],
+      muto: ['!', 'Meteoblue non risponde: chiave non verificata e non salvata.'], invalida: ['!', 'Risposta non valida da Meteoblue: chiave non salvata.'] }[s.esitoChiave];
+    const K = { st: s.chiaveSalvata ? { s: '✓', t: 'Chiave salvata (termina con ' + s.chiaveSalvata + ').', x: '', a: '' } : { s: '?', t: 'Nessuna chiave: seeing non disponibile.', x: '', a: '' },
+      esito: EK ? { s: EK[0], t: EK[1], x: '', a: '' } : null,
+      verifica: B('Verifica e salva', s.chiaveSalvata && !s.chiave.trim() ? 't' : 'p', { no: !s.chiave.trim(), busy: s.esitoChiave === 'in corso' && 'Verifica…', on: () => { set({ esitoChiave: 'in corso' });
+        this.dopo(900, () => { const k = this.state.chiave.trim(); this.setState(k.length >= 12 ? { esitoChiave: 'valida', chiaveSalvata: k.slice(-4), chiave: '' } : { esitoChiave: 'rifiutata' }); }); } }),
+      rimuovi: s.chiaveSalvata ? B('Rimuovi chiave', 'b', { on: () => set({ chiaveSalvata: null, esitoChiave: 'rimossa' }) }) : null };
+    // ASTAP
+    const EA = { trovato: ['✓', 'ASTAP trovato', 'Gli oggetti ripresi verranno identificati.'],
+      'senza catalogo': ['!', 'ASTAP trovato, catalogo mancante', 'Catalogo stellare mancante: senza, gli oggetti non vengono identificati.'],
+      sbagliato: ['!', 'ASTAP non trovato in questo percorso.', 'Il percorso deve terminare con il programma (astap_cli).'] }[s.esitoAstap];
+    const A = { esito: EA && key === 'astap' ? { s: EA[0], t: EA[1], x: EA[2], a: '' } : null,
+      cat: { s: '!', t: 'Catalogo stellare mancante', x: 'ASTAP richiede un catalogo stellare, che si scarica a parte. Senza catalogo gli oggetti non vengono identificati.', a: '' },
+      verifica: B('Verifica percorso', s.esitoAstap === 'trovato' ? 't' : 'p', { no: !s.astapPerc.trim(), busy: s.esitoAstap === 'in corso' && 'Verifica…', on: () => { set({ esitoAstap: 'in corso' });
+        this.dopo(900, () => { this.setState({ esitoAstap: /astap_cli(\.exe)?$/i.test(this.state.astapPerc.trim()) ? 'trovato' : 'sbagliato' }); }); } }) };
+    const inc = { bg: t.pills[1][0], fg: t.pills[1][1] };
+    const pastiglia = key !== 'astap' ? null : s.esitoAstap === 'trovato' ? { l: '✓ Trovato', bg: t.pillOkBg, fg: t.pillOkFg }
+      : s.astap === 'catalogo mancante' || s.esitoAstap === 'senza catalogo' ? { l: '! Catalogo mancante', ...inc } : { l: '! Non trovato', ...inc };
+    // passi
+    const sg = (m, n) => m === 'fatto' ? sgOk : m === 'saltato' ? { s: '–', bg: 'transparent', fg: t.muted, bd: t.muted, bs: 'dashed' }
+      : m === 'ora' ? { s: String(n), bg: t.accent, fg: t.calOnFg, bd: 'transparent', bs: 'solid' } : { s: String(n), bg: 'transparent', fg: t.muted, bd: t.line, bs: 'solid' };
+    const tappe = s.steps.map((k, j) => { const cur = s.vista === 'passo' && j === s.i, m = cur ? 'ora' : (s.marks[k] || 'dopo');
+      return { nome: NOMI[k], cur: cur ? 'step' : undefined, sg: sg(m, j + 1), fw: cur ? 600 : 400, nc: m === 'dopo' ? t.muted : t.text, rowBg: cur ? t.card : 'transparent',
+        sotto: m === 'fatto' ? 'fatto' : m === 'saltato' ? 'saltato' : '', flex: j ? '1' : 'none', lineD: j ? 'block' : 'none',
+        al: NOMI[k] + (m === 'ora' ? ', passo attuale' : m === 'dopo' ? ', da fare' : ', ' + m) }; });
+    // gesti: un solo primario; se il passo ha un comando suo, Avanti scende a tenue
+    const last = s.vista === 'passo' && s.i === s.steps.length - 1;
+    const cmd = !!{ sito: true, cartelle: !(s.aggiunte.length && !s.perc.trim() && !pend) && !(nas && s.nasLista && s.aggiunte.length && !pend), seeing: !(s.chiaveSalvata && !s.chiave.trim()), astap: s.astap === 'non trovato' && s.esitoAstap !== 'trovato' }[key];
+    const g = s.vista === 'passo' ? { salta: true, indietro: s.i > 0 ? B('Indietro', 't', { on: () => this.indietro() }) : null, avanti: B(last ? 'Fine' : 'Avanti', cmd ? 't' : 'p', { on: () => this.avanti() }) }
+      : s.vista === 'chiusura' ? { salta: false, indietro: null, avanti: B('Apri AstroLog', 'p', { on: () => { location.href = 'Dashboard.dc.html'; } }) } : null;
+    // chiusura: solo cio' che e' vero
+    const n = s.aggiunte.length, no = { s: '–', bg: 'transparent', fg: t.muted, bd: t.muted, bs: 'dashed' }, warn = { s: '!', bg: t.warn, fg: t.warnFg, bd: 'transparent', bs: 'solid' };
+    const riga = (voce, ok, val, nv, w) => ({ voce, val: ok ? val : nv, c: ok ? t.text : t.muted, sg: w ? warn : ok ? sgOk : no });
+    const righe = [riga('Nome utente', !!s.nome.trim(), s.nome.trim(), 'Non indicato'),
+      riga('Sito di osservazione', !!s.sito, s.sito ? s.sito.nome + (s.sito.bortle ? ' · Bortle ' + s.sito.bortle : '') : '', 'Nessun sito'),
+      riga('Tema', true, s.modo.charAt(0).toUpperCase() + s.modo.slice(1) + ' · ' + s.accento),
+      riga('Cartelle', n > 0, s.scansione ? n + ' · scansione avviata' : String(n), 'Nessuna', n > 0 && !s.scansione),
+      riga('Seeing', !!s.chiaveSalvata, 'Chiave salvata', 'Senza chiave')];
+    const PERCHE = { backup: 'Ultimo backup: 12 ottobre 2026, 22:14.', nome: 'Usato per intestare le statistiche.', sito: 'Serve a calcolare le notti e l\u0027altezza degli oggetti. Altri siti si aggiungono dalle Impostazioni.',
+      tema: 'Come si vede l\u0027app. Si cambia quando si vuole dalle Impostazioni.',
+      cartelle: nas ? 'L\u0027app è in un container e vede percorsi diversi da quelli del computer. Seleziona la cartella dall\u0027elenco.' : 'Indica una cartella: vengono lette anche le sottocartelle. Se ne possono aggiungere più di una.',
+      seeing: 'Con una chiave Meteoblue il seeing è disponibile ora per ora, per sette notti. Senza chiave il resto del meteo funziona. Si può aggiungere dalle Impostazioni.',
+      astap: s.astap === 'catalogo mancante' ? 'ASTAP è installato, ma manca il catalogo stellare. Si scarica a parte, anche dopo.' : 'ASTAP non è installato. È il programma che identifica il campo inquadrato dalle stelle (plate solving). Si può installare anche dopo.',
+      chiusura: 'Tutto si cambia dalle Impostazioni.' };
+    const L = tel ? { max: 'none', pad: '20px 16px 28px', cols: 'minmax(0,1fr)', gap: '18px', asPos: 'static', asGap: '16px', h1: '24px', rad: '24px', cpad: '20px', h2: '24px', fs: '16px', conti: 'repeat(2,minmax(0,1fr))', due: 'minmax(0,1fr)', coppia: 'repeat(2,minmax(0,1fr))', bortle: 'repeat(5,minmax(0,1fr))', chCols: '26px minmax(0,1fr)', chVal: '2' }
+      : { max: '1160px', pad: '64px 40px 80px', cols: '300px minmax(0,1fr)', gap: '56px', asPos: 'sticky', asGap: '28px', h1: '34px', rad: '28px', cpad: '32px', h2: '28px', fs: '15px', conti: 'repeat(4,minmax(0,1fr))', due: 'repeat(2,minmax(0,1fr))', coppia: 'repeat(2,minmax(0,1fr))', bortle: 'repeat(9,minmax(0,1fr))', chCols: '26px 200px minmax(0,1fr)', chVal: 'auto' };
+    return { pronto: true, t, L, V, F, R, bortle, bL, C, N, K, A, g, pastiglia, tappe, righe, formato: tel ? 'telefono' : 'desktop', visto, accento: s.accento, modoScelto: s.modo, sitoNome: s.sito ? s.sito.nome : '',
+      setModo: m => set({ modo: m }), setAccento: a => set({ accento: a }),
+      titolo: key === 'backup' ? 'Backup trovato' : key === 'chiusura' ? 'Primo avvio completato' : NOMI[key], perche: PERCHE[key],
+      quanti: s.vista === 'passo' ? 'Passo ' + (s.i + 1) + ' di ' + s.steps.length : '', corrente: NOMI[key] || '',
+      listaDesk: !tel && s.vista !== 'backup', listaTel: tel && s.vista !== 'backup', gestiCarta: !tel && !!g, barraTel: tel && !!g,
+      conti: [{ n: '1204', l: 'conferme' }, { n: '2', l: 'siti' }, { n: '3', l: 'cartelle' }, { n: '9', l: 'strumenti e filtri' }],
+      bk: { ripristina: B('Ripristina', 'p', { busy: s.ripr && 'Ripristino…', on: () => { set({ ripr: true }); this.dopo(900, () => { location.href = 'Dashboard.dc.html'; }); } }), zero: B('Inizia da zero', 't', { on: () => set({ vista: 'passo', i: 0 }) }) },
+      nonPartita: key === 'chiusura' && n > 0 && !s.scansione ? { s: '!', t: 'La scansione non è partita: si avvia da Scansiona, nel menu dell\u0027ingranaggio.', x: '', a: '' } : null,
+      salvaErr: s.salvaErr ? { s: '!', t: s.salvaErr === 'sito' ? 'Sito non salvato' : 'Salvataggio non riuscito', x: 'L\u0027app non ha risposto. Riprova.', a: '' } : null };
+  }
+}
+const NOMI = { nome: 'Nome utente', sito: 'Sito di osservazione', tema: 'Tema', cartelle: 'Cartelle', seeing: 'Seeing (Meteoblue)', astap: 'ASTAP' };
+// Bortle: nomi e frasi dell'app, dalla voce "Bortle scale" di Wikipedia. Non si riscrivono.
+const BORTLE = [["cielo eccellente, buio pieno","La Via Lattea proietta ombre, e il cielo stesso ha un suo debole bagliore naturale; a occhio nudo si arriva a M33 e a molti oggetti Messier."],
+  ["cielo buio vero","La luce zodiacale è gialla e fa ombra, la Via Lattea d\u0027estate è piena di struttura, e M33 si vede a occhio nudo senza fatica."],
+  ["cielo di campagna","Qualche alone di luce basso sull\u0027orizzonte, ma la Via Lattea d\u0027estate è ancora complessa e M33 si vede con la visione distolta."],
+  ["campagna più chiara","Gli aloni delle luci si vedono in più direzioni; la Via Lattea è ancora bella ma senza dettagli, e la luce zodiacale non arriva a metà cielo."],
+  ["cielo di periferia","Solo accenni di luce zodiacale nelle notti migliori; la Via Lattea sbiadisce allo zenit e sparisce verso l\u0027orizzonte, e le luci si vedono quasi ovunque."],
+  ["periferia luminosa","Niente luce zodiacale; il cielo basso è grigio-bianco e la Via Lattea si intravede solo allo zenit. M33 solo col binocolo."],
+  ["fra periferia e città","Tutto il cielo è grigio chiaro, con sorgenti di luce forte in ogni direzione; la Via Lattea quasi non si vede."],
+  ["cielo di città","Il cielo è grigio o arancione e ci si legge; molte stelle delle costellazioni sono deboli o non si vedono affatto."],
+  ["centro città","Le costellazioni si perdono e, a occhio nudo, a parte le Pleiadi non si vede nessun oggetto Messier: restano Luna, pianeti e gli ammassi più luminosi."]];
+const POSTI = [{ n: 'Cima Ekar, Asiago (VI), Italia', nome: 'Cima Ekar', lat: '45.8486 N', lon: '11.5689 E' }, { n: 'Pennar, Asiago (VI), Italia', nome: 'Pennar', lat: '45.8664 N', lon: '11.5264 E' }];
+const TRE = [{ p: 'D:\\Astro\\2026', n: '1240 file FITS' }, { p: 'E:\\Archivio\\Deep sky', n: 'oltre 5000 file FITS' }, { p: 'E:\\Archivio\\Calibrazione', n: '486 file FITS' }];
+const NAS = { '/data': ['astro', 'backup', 'foto'], '/data/astro': ['2024', '2025', '2026', 'calibrazione'], '/data/astro/2026': ['Casa', 'Cima Ekar'],
+  '/data/astro/2026/Cima Ekar': ['IC 1396 Proboscide d\u0027Elefante', 'M 31 Galassia di Andromeda', 'NGC 7000 Nebulosa Nord America', 'dark', 'flat'],
+  '/data/astro/2026/Cima Ekar/IC 1396 Proboscide d\u0027Elefante': ['Ha 300 s', 'OIII 300 s', 'SII 300 s'] };
+// "46,4843 N": virgola o punto, lettera del verso facoltativa (S e O negativi)
+function coord(x, lat) { const q = (x || '').trim(); if (!q) return {};
+  const m = /^(-?\d+(?:[.,]\d+)?)\s*°?\s*([NSEOW])?$/i.exec(q), es = lat ? '46.4843 N' : '12.0561 E';
+  if (!m) return { err: 'Coordinata non valida. Esempio: ' + es };
+  const L = (m[2] || '').toUpperCase(); if (L && (lat ? 'NS' : 'EOW').indexOf(L) < 0) return { err: 'Coordinata non valida. Esempio: ' + es };
+  let v = parseFloat(m[1].replace(',', '.')); if (L === 'S' || L === 'O' || L === 'W') v = -Math.abs(v);
+  const max = lat ? 90 : 180; if (Math.abs(v) > max) return { err: 'Valore fra -' + max + ' e ' + max };
+  return { v }; }
+</script>
+</body>
+</html>

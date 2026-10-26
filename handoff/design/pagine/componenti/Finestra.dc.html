@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div class="al-c-finestra__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}" data-formato="{{ fmt }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="{{ vcls }}" onClick="{{ fuori }}"><div ref="{{ rif }}" role="dialog" aria-modal="true" aria-label="{{ titolo }}" tabIndex="-1" data-fin="1" onKeyDown="{{ tasti }}" class="{{ pcls }}">
+<sc-if value="{{ testa }}" hint-placeholder-val="{{ true }}"><span aria-hidden="true" class="al-finestra__maniglia"></span>
+<div class="al-finestra__testa"><sc-if value="{{ segno }}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" class="al-finestra__segno">{{ segno }}</span></sc-if><span class="al-finestra__titoli"><span class="al-finestra__titolo">{{ titolo }}</span><sc-if value="{{ sottotitolo }}" hint-placeholder-val="{{ false }}"><span class="al-finestra__sottotitolo">{{ sottotitolo }}</span></sc-if></span><a href="#" onClick="{{ chiudi }}" aria-label="Chiudi" class="al-finestra__chiudi">×</a></div></sc-if>
+{{ contenuto }}
+</div></div></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:600},&quot;titolo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Aggiungi oggetto&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;segno&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;!&quot;,&quot;?&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;testa&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;si&quot;,&quot;no&quot;],&quot;default&quot;:&quot;si&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;sottotitolo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;larghezza&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;stretta&quot;,&quot;media&quot;,&quot;larga&quot;,&quot;schermo&quot;],&quot;default&quot;:&quot;media&quot;,&quot;tsType&quot;:&quot;'stretta' | 'media' | 'larga' | 'schermo'&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;fondo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;telaio&quot;,&quot;carta&quot;],&quot;default&quot;:&quot;telaio&quot;,&quot;tsType&quot;:&quot;'telaio' | 'carta'&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;posizione&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;fissa&quot;,&quot;dentro&quot;],&quot;default&quot;:&quot;fissa&quot;,&quot;tsType&quot;:&quot;'fissa' | 'dentro'&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;onChiudi&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;children&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;ReactNode&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  // Finestra sopra la pagina: titolo, corpo, gesti in fondo (classe al-finestra__gesti nel corpo).
+  // Si chiude con ×, Esc o cliccando fuori; il fuoco resta dentro finche' e' aperta e torna dove era alla chiusura.
+  // Sul telefono e' un foglio che sale dal basso.
+  rif = el => { this._p = el; if (el && !this._focus) { this._prima = document.activeElement; this._focus = true; setTimeout(() => el.focus({ preventScroll: true }), 0); } };
+  componentDidMount() { this._key = e => { if (e.key === 'Escape') this.chiudi(e); }; document.addEventListener('keydown', this._key); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); document.removeEventListener('keydown', this._key); const b = this._prima; if (b && b.focus && document.contains(b)) b.focus({ preventScroll: true }); }
+  chiudi = e => { e && e.preventDefault && e.preventDefault(); this.props.onChiudi && this.props.onChiudi(); };
+  tasti = e => { if (e.key !== 'Tab' || !this._p) return;
+    const f = [...this._p.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])')].filter(x => x.offsetParent !== null);
+    if (!f.length) { e.preventDefault(); return; }
+    const a = f[0], z = f[f.length - 1];
+    if (e.shiftKey && (document.activeElement === a || document.activeElement === this._p)) { e.preventDefault(); z.focus(); }
+    else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); } };
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), tel = p.formato === 'telefono';
+    const lg = p.larghezza || 'media';
+    return { pronto: true, t, fmt: tel ? 'telefono' : 'desktop', rif: this.rif, tasti: this.tasti, chiudi: this.chiudi,
+      titolo: p.titolo || 'Finestra', segno: p.segno || '', sottotitolo: p.sottotitolo || '', contenuto: p.children,
+      testa: p.testa !== 'no' && p.testa !== false,
+      vcls: 'al-finestra' + (p.posizione === 'dentro' ? ' al-finestra--dentro' : '') + (lg === 'schermo' ? ' al-finestra--schermo' : ''),
+      pcls: 'al-finestra__pannello al-finestra__pannello--' + lg + (p.fondo === 'carta' ? ' al-finestra__pannello--carta' : ''),
+      fuori: e => { if (e.target === e.currentTarget) this.chiudi(e); } };
+  }
+}
+</script>
+</body>
+</html>

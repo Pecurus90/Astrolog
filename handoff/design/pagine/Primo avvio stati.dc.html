@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="caratteri.css" rel="stylesheet">
+<link href="astrolog.css" rel="stylesheet">
+<style>html,body{margin:0;background:var(--tavola-fondo)}a{color:inherit}a:hover{opacity:.8}</style>
+</helmet>
+<section style="display:flex;flex-direction:column;gap:120px;padding:80px;min-width:max-content;background:var(--tavola-fondo);font-family:'Outfit',sans-serif">
+<div style="display:flex;flex-direction:column;gap:32px">
+<span style="font-size:30px;font-weight:500;color:var(--tavola-testo)">Primo avvio, gli stati · telefono 390 px</span>
+<span style="font-size:15px;color:var(--tavola-tenue);max-width:900px">Ogni schermo si accende quando entra nella vista. Gli schermi sono lunghi quanto il passo: la barra dei gesti, fissa in fondo sul telefono, qui sta alla fine. Dati simulati.</span>
+<sc-for list="{{ righeTel }}" as="riga" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;gap:20px"><span style="font-size:22px;font-weight:500;color:var(--tavola-testo)">{{ riga.titolo }}</span><div style="display:flex;gap:56px;align-items:flex-start">
+<sc-for list="{{ riga.voci }}" as="it" hint-placeholder-count="8"><div data-screen-label="{{ it.label }}" ref="{{ it.ref }}" style="display:flex;flex-direction:column;gap:10px;flex:none;width:390px"><span style="font-size:18px;font-weight:500;color:var(--tavola-testo)">{{ it.titolo }}</span><span style="font-size:14px;color:var(--tavola-tenue);min-height:40px">{{ it.nota }}</span><div style="width:390px;min-height:844px;overflow:hidden;border-radius:44px;box-shadow:0 0 0 10px var(--tavola-cornice), 0 30px 60px rgba(0,0,0,.4);background:var(--tavola-schermo);display:flex;flex-direction:column"><sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}"><dc-import name="Primo avvio" passo="{{ it.passo }}" stato="{{ it.stato }}" astap="{{ it.astap }}" modo="{{ it.modo }}" accento="{{ it.acc }}" formato="telefono" hint-size="390px,844px"></dc-import></sc-if></div></div></sc-for>
+</div></div></sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:24px">
+<span style="font-size:30px;font-weight:500;color:var(--tavola-testo)">Desktop · 1440 px</span>
+<div style="display:flex;gap:80px;align-items:flex-start">
+<sc-for list="{{ desk }}" as="it" hint-placeholder-count="4"><div data-screen-label="{{ it.label }}" ref="{{ it.ref }}" style="display:flex;flex-direction:column;gap:16px;width:1440px;min-height:900px;flex:none"><div style="display:flex;gap:12px;align-items:baseline;color:var(--tavola-testo)"><span style="font-size:22px;font-weight:500">{{ it.titolo }}</span><span style="font-size:15px;color:var(--tavola-tenue)">{{ it.nota }}</span></div><div style="border-radius:20px;overflow:hidden;min-height:900px;background:var(--tavola-schermo);display:flex;flex-direction:column"><sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}"><dc-import name="Primo avvio" passo="{{ it.passo }}" stato="{{ it.stato }}" astap="{{ it.astap }}" modo="{{ it.modo }}" accento="{{ it.acc }}" formato="desktop" hint-size="1440px,900px"></dc-import></sc-if></div></div></sc-for>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { on: {} };
+  refs = {}; els = {};
+  componentDidMount() {
+    this._io = typeof IntersectionObserver !== 'undefined' ? new IntersectionObserver(es => {
+      const add = {}; es.forEach(e => { if (e.isIntersecting) add[e.target.dataset.k] = true; });
+      if (Object.keys(add).length) this.setState(s => ({ on: { ...s.on, ...add } }));
+    }, { rootMargin: '300px' }) : null;
+    Object.values(this.els).forEach(el => this.osserva(el));
+    if (!this._io) this.setState({ on: new Proxy({}, { get: () => true }) });
+  }
+  componentWillUnmount() { this._io && this._io.disconnect(); }
+  osserva(el) { if (el instanceof Element && this._io && !el._oss) { el._oss = 1; this._io.observe(el); } }
+  rif(k) { if (!this.refs[k]) this.refs[k] = el => { if (!el) return; el.dataset.k = k; this.els[k] = el; this.osserva(el); }; return this.refs[k]; }
+  renderVals() {
+    // [passo, stato, nota, astap, modo, accento]
+    const R = [
+      ['Entrata, nome, tema', [['backup', 'normale', 'prima dei passi, senza telaio'], ['nome', 'normale', 'passo 1 di 6: manca ASTAP'], ['nome', 'nome: scritto', ''], ['nome', 'nome: salvataggio non riuscito', 'ci si resta'], ['nome', 'normale', 'con ASTAP: 5 passi', 'installato'],
+        ['tema', 'normale', 'scuro · ambra · blu notte, il predefinito'], ['tema', 'tema: chiaro · turchese', 'tutto il primo avvio prende il tema'], ['tema', 'tema: automatico', 'scuro adesso, dal tramonto all\u0027alba'], ['tema', 'tema: automatico senza sito', 'sito saltato: Automatico spento, e il perché']]],
+      ['Sito di osservazione', [['sito', 'normale', ''], ['sito', 'sito: ricerca in corso', ''], ['sito', 'sito: risultati', ''], ['sito', 'sito: selezionato', 'nome e coordinate riempiti, modificabili'], ['sito', 'sito: nessun risultato', ''], ['sito', 'sito: ricerca non riuscita', ''], ['sito', 'sito: coordinate non valide', 'errori sotto i campi'], ['sito', 'sito: salvataggio', 'il bottone al lavoro'], ['sito', 'sito: sito non salvato', '']]],
+      ['Cartelle', [['cartelle', 'normale', 'sul computer'], ['cartelle', 'cartelle: verifica in corso', ''], ['cartelle', 'cartelle: file trovati', 'Aggiungi è il primario, Verifica scende'], ['cartelle', 'cartelle: conteggio parziale', ''], ['cartelle', 'cartelle: non raggiungibile', 'niente Aggiungi'], ['cartelle', 'cartelle: già registrata', ''], ['cartelle', 'cartelle: aggiunte', 'Avanti torna primario'],
+        ['cartelle', 'cartelle: NAS', 'sul NAS: l\u0027elenco'], ['cartelle', 'cartelle: NAS vuota', 'percorso lungo, nessuna sottocartella'], ['cartelle', 'cartelle: NAS senza elenco', 'il percorso a mano']]],
+      ['Seeing (Meteoblue)', [['seeing', 'normale', ''], ['seeing', 'seeing: verifica in corso', ''], ['seeing', 'seeing: chiave valida', ''], ['seeing', 'seeing: chiave salvata', 'tornando al passo'], ['seeing', 'seeing: chiave rimossa', ''], ['seeing', 'seeing: non riconosciuta', ''], ['seeing', 'seeing: non risponde', ''], ['seeing', 'seeing: risposta non valida', '']]],
+      ['ASTAP e chiusura', [['astap', 'normale', 'non trovato'], ['astap', 'normale', 'catalogo mancante: il percorso non si chiede', 'catalogo mancante'], ['astap', 'astap: verifica in corso', ''], ['astap', 'astap: trovato', ''], ['astap', 'astap: trovato senza catalogo', 'non è il caso buono'], ['astap', 'astap: percorso sbagliato', ''],
+        ['chiusura', 'normale', 'il seeing saltato si vede'], ['chiusura', 'chiusura: scansione non partita', 'la riga che oggi manca'], ['chiusura', 'chiusura: passi saltati', 'saltato distinto da fatto'], ['chiusura', 'normale', 'modo chiaro, corallo · terracotta', '', 'chiaro', 'corallo · terracotta']]]];
+    const on = this.state.on; let n = 0;
+    const voce = (pre, [passo, stato, nota, astap, modo, acc]) => { const k = pre + (n++), lab = passo + (stato !== 'normale' ? ' · ' + stato.replace(/^[a-z]+: /, '') : '') + (astap ? ' · ' + astap : '') + (modo ? ' · ' + modo : '');
+      return { passo, stato, nota, astap: astap || 'non trovato', modo: modo || 'scuro', acc: acc || 'ambra · blu notte', titolo: lab, label: (pre === 't' ? 'Telefono · ' : 'Desktop · ') + lab, ref: this.rif(k), on: !!on[k] }; };
+    const righeTel = R.map(([titolo, v]) => ({ titolo, voci: v.map(x => voce('t', x)) }));
+    const D = [['backup', 'normale', 'prima dei passi'], ['nome', 'normale', 'passo 1 di 6'], ['sito', 'sito: selezionato', 'un solo primario: Salva sito'], ['sito', 'sito: coordinate non valide', 'modo chiaro', '', 'chiaro'], ['tema', 'normale', 'il selettore, componente SceltaTema'],
+      ['cartelle', 'cartelle: file trovati', ''], ['cartelle', 'cartelle: NAS', ''], ['seeing', 'seeing: chiave valida', ''], ['astap', 'normale', 'non trovato'], ['chiusura', 'chiusura: scansione non partita', '']];
+    return { righeTel, desk: D.map(x => voce('d', x)) };
+  }
+}
+</script>
+</body>
+</html>

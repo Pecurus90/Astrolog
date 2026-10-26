@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}input::placeholder{color:inherit;opacity:.55}@keyframes alIn{from{opacity:0;transform:translateY(14px)}}@keyframes alFadeUp{from{opacity:0;transform:translateY(6px)}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-piano__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="{{ L.f }}" pagina="Piano della notte" etichetta="{{ L.etich }}" sito="{{ sitoT }}" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<div class="al-piano__colonna-1" style="gap:{{ L.gap }}">
+
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><div class="al-piano__riga-1"><span class="al-piano__testo-1">Piano della notte</span><span class="al-piano__testo-2">{{ testaSub }}</span></div></sc-if>
+
+<sc-if value="{{ senzaSito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="{{ L.f }}" ritardo="0" padding="{{ L.padV }}" gap="14" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" etichetta="Serve un sito" hint-size="100%,220px">
+<span class="al-piano__tondo-1" aria-hidden="true">◎</span>
+<span class="al-piano__testo-3">Serve un sito: il piano dipende da dove sei.</span>
+<a href="Impostazioni.dc.html" class="al-bottone al-bottone--pieno al-bottone--blocco al-bottone--a-sinistra">Scegli il sito</a>
+</dc-import></sc-if>
+
+<sc-if value="{{ conSito }}" hint-placeholder-val="{{ true }}"><div class="al-piano__colonna-1" style="gap:{{ L.gap }}">
+
+<div class="al-piano__blocco-2" style="z-index:{{ posMenu.z }}"><dc-import name="componenti/Carta" formato="{{ L.f }}" ritardo="0" padding="{{ L.pad }}" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="La notte e la postazione" hint-size="100%,170px">
+<sc-if value="{{ L.tel }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-2">
+<div role="tablist" aria-label="Notte" class="al-scelta al-scelta--segmentato al-scelta--sottili"><sc-for list="{{ notti }}" as="n" hint-placeholder-count="7"><a href="#" role="tab" aria-selected="{{ n.sel }}" aria-label="{{ n.aria }}" onClick="{{ n.on }}" class="al-scelta__voce">{{ n.l }}</a></sc-for></div>
+<div class="al-piano__riga-2"><select key="{{ modoTel.v }}" defaultValue="{{ modoTel.v }}" onChange="{{ modoTel.on }}" aria-label="Tecnica della postazione per questa notte" class="al-tendina al-tendina--tondo al-tendina--pillola al-piano__blocco-3"><sc-for list="{{ modi }}" as="m" hint-placeholder-count="3"><option value="{{ m.l }}">{{ m.l }}</option></sc-for></select><a class="al-piano__tondo-2" href="#" onClick="{{ opzT.apri }}" aria-haspopup="dialog" aria-expanded="{{ opzT.exp }}" aria-label="Setup e opzioni">⋯</a></div>
+<span class="al-piano__riga-3"><b class="al-piano__testo-4">{{ posMenu.l }}</b>{{ contoT }}<a class="al-bottone al-bottone--tenue al-bottone--icona" href="Meteo.dc.html?formato=telefono" aria-label="Apri Meteo" title="Meteo" style="border-radius:50%;width:44px;flex:none">↗</a></span>
+<sc-if value="{{ opzT.on }}" hint-placeholder-val="{{ false }}"><div role="dialog" aria-label="Setup e opzioni" class="al-pannello">
+<span class="al-pannello__testa"><span class="al-pannello__titolo">Setup</span><a class="al-piano__riga-5" href="#" onClick="{{ opzT.chiudi }}">Fatto</a></span>
+<sc-for list="{{ postazioni }}" as="q" hint-placeholder-count="2"><a class="al-piano__riga-6" href="#" role="radio" aria-checked="{{ q.sel }}" onClick="{{ q.on }}" style="background:{{ q.bg }};color:{{ q.fg }};box-shadow:inset 0 0 0 2px {{ q.ring }};border-radius:18px"><span class="al-piano__blocco-4" aria-hidden="true">{{ q.chk }}</span><span class="al-piano__colonna-3"><b class="al-piano__testo-5">{{ q.aria }}</b><span class="al-piano__testo-6">{{ q.sub }}</span></span></a></sc-for>
+<span class="al-piano__blocco-5">{{ posMenu.cam }}</span>
+<sc-if value="{{ gg }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-4"><span class="al-piano__testo-7">Sistema solare</span><span role="radiogroup" aria-label="Notte o giorno" class="al-scelta al-scelta--segmentato al-scelta--riempie al-scelta--sottili"><sc-for list="{{ gg }}" as="m" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ m.sel }}" onClick="{{ m.on }}" class="al-scelta__voce">{{ m.l }}</a></sc-for></span></div></sc-if>
+</div></sc-if>
+<sc-if value="{{ modoAsk }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-5" role="alertdialog" aria-label="{{ modoAsk.t }}"><b class="al-piano__testo-5">{{ modoAsk.t }}</b><span class="al-piano__griglia-1"><a href="#" onClick="{{ modoAsk.si }}" class="al-bottone al-bottone--pieno al-bottone--blocco">Cambia</a><a href="#" onClick="{{ modoAsk.no }}" class="al-bottone al-bottone--contorno al-bottone--blocco">Annulla</a></span></div></sc-if>
+</div></sc-if>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><div class="al-piano__colonna-6"><div role="tablist" aria-label="Notte" class="al-scelta al-scelta--linguette al-scelta--sottili al-scelta--scorre al-piano__testo-8"><sc-for list="{{ notti }}" as="n" hint-placeholder-count="7"><a href="#" role="tab" aria-selected="{{ n.sel }}" aria-label="{{ n.aria }}" onClick="{{ n.on }}" class="al-scelta__voce">{{ n.l }}</a></sc-for></div>
+<div class="al-piano__riga-7">
+<div class="al-piano__riga-8">
+<sc-if value="{{ due }}" hint-placeholder-val="{{ true }}"><div class="al-piano__blocco-6">
+<a href="#" onClick="{{ posMenu.toggle }}" aria-haspopup="listbox" aria-expanded="{{ posMenu.exp }}" aria-label="{{ posMenu.aria }}" class="al-bottone al-bottone--tenue al-bottone--blocco al-bottone--a-sinistra al-piano__blocco-7" style="background:var(--carta-2);color:var(--testo);box-shadow:inset 0 0 0 1px var(--linea)"><span class="al-piano__blocco-8">{{ posMenu.l }}</span><sc-if value="{{ posMenu.n }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-9">{{ posMenu.n }}</span></sc-if><span class="al-piano__testo-10" aria-hidden="true">▾</span></a>
+<sc-if value="{{ posMenu.open }}" hint-placeholder-val="{{ false }}"><a class="al-piano__strato-1" href="#" aria-label="Chiudi" onClick="{{ posMenu.close }}"></a><div class="al-piano__strato-2" role="listbox" aria-label="Setup"><sc-for list="{{ postazioni }}" as="q" hint-placeholder-count="2"><a class="al-piano__riga-9" href="#" role="option" aria-selected="{{ q.sel }}" onClick="{{ q.on }}" style="background:{{ q.bgM }}"><span class="al-piano__blocco-4" aria-hidden="true">{{ q.chk }}</span><span class="al-piano__colonna-3"><b class="al-piano__testo-11">{{ q.aria }}</b><span class="al-piano__testo-7">{{ q.sub }}</span></span></a></sc-for></div></sc-if>
+</div></sc-if>
+<sc-if value="{{ una }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-12">{{ posN }}</span></sc-if>
+<div role="radiogroup" aria-label="Modo della postazione per questa notte" class="al-scelta al-scelta--segmentato al-scelta--sottili"><sc-for list="{{ modi }}" as="m" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ m.sel }}" onClick="{{ m.on }}" class="al-scelta__voce"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ m.ic }}"></path></svg>{{ m.l }}</a></sc-for></div>
+<sc-if value="{{ gg }}" hint-placeholder-val="{{ false }}"><div role="radiogroup" aria-label="Notte o giorno" class="al-scelta al-scelta--segmentato al-scelta--sottili"><sc-for list="{{ gg }}" as="m" hint-placeholder-count="2"><a href="#" role="radio" aria-checked="{{ m.sel }}" onClick="{{ m.on }}" class="al-scelta__voce"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ m.ic }}"></path></svg>{{ m.l }}</a></sc-for></div></sc-if>
+<span class="al-piano__testo-13">{{ posMenu.cam }}</span>
+</div>
+<span class="al-piano__riga-10"><b class="al-piano__testo-14">{{ sitoT }}</b><span class="al-piano__riga-11" style="background:{{ verd.bg }};color:{{ verd.fg }}">{{ verd.s }} {{ verd.t }}</span><span class="al-piano__testo-15">{{ verd.sub }}</span><a class="al-bottone al-bottone--tenue al-bottone--icona" href="Meteo.dc.html" aria-label="Apri Meteo" title="Meteo" style="border-radius:50%;width:44px;flex:none">↗</a></span>
+</div>
+<sc-if value="{{ modoAsk }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-13" role="alertdialog" aria-label="{{ modoAsk.t }}"><b class="al-piano__testo-5">{{ modoAsk.t }}</b><a href="#" onClick="{{ modoAsk.si }}" class="al-bottone al-bottone--pieno al-bottone--blocco al-bottone--a-sinistra al-bottone--piccolo">Cambia</a><a href="#" onClick="{{ modoAsk.no }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra al-bottone--piccolo">Annulla</a></span></sc-if>
+</div></sc-if>
+</dc-import></div>
+
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><div class="al-piano__griglia-2">
+
+<div class="al-piano__colonna-7">
+<dc-import name="componenti/Carta" formato="desktop" ritardo="60" padding="20px 18px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Cosa si fa stanotte" hint-size="100%,420px">
+<div class="al-piano__colonna-8"><span class="al-piano__testo-16">{{ propT }}</span><span class="al-piano__testo-7">{{ propH }}</span></div>
+<sc-if value="{{ tabs }}" hint-placeholder-val="{{ true }}"><div role="tablist" aria-label="Categoria" class="al-scelta al-scelta--linguette al-scelta--sottili"><sc-for list="{{ tabs }}" as="g" hint-placeholder-count="2"><a href="#" role="tab" aria-selected="{{ g.sel }}" onClick="{{ g.on }}" class="al-scelta__voce"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ g.ic }}"></path></svg>{{ g.l }}</a></sc-for></div></sc-if>
+<sc-if value="{{ crit }}" hint-placeholder-val="{{ false }}"><div class="al-piano__riga-14" role="group" aria-label="Criteri"><span class="al-piano__blocco-5">Criteri</span><sc-for list="{{ crit }}" as="c" hint-placeholder-count="3"><a class="al-piano__riga-15" href="#" role="checkbox" aria-checked="{{ c.sel }}" onClick="{{ c.on }}" style="font-weight:{{ c.fw }};background:{{ c.bg }};color:{{ c.fg }};box-shadow:inset 0 0 0 1.5px {{ c.ring }}">{{ c.s }}{{ c.l }}</a></sc-for></div></sc-if>
+<sc-if value="{{ campo }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-4"><div class="al-piano__riga-16"><input value="{{ campo.v }}" onChange="{{ campo.on }}" onKeyDown="{{ campo.key }}" placeholder="{{ campo.ph }}" aria-label="{{ campo.l }}" class="al-campo al-campo--tondo al-campo--piccolo al-piano__blocco-9"><a class="al-piano__riga-17" href="#" onClick="{{ campo.add }}" aria-disabled="{{ campo.dis }}" style="background:{{ campo.bg }};color:{{ campo.fg }}">{{ campo.l }}</a></div><sc-if value="{{ campo.err }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-18" role="status"><b class="al-piano__tondo-3" aria-hidden="true">!</b>{{ campo.err }}</span></sc-if></div></sc-if>
+<sc-for list="{{ prop }}" as="r" hint-placeholder-count="3"><div class="al-piano__colonna-9" draggable="true" onDragStart="{{ r.ds }}" onDragEnd="{{ r.de }}">
+<span class="al-piano__riga-19"><span class="al-piano__tondo-4" aria-hidden="true" style="color:{{ r.col }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ r.ic }}"></path></svg></span><span class="al-piano__colonna-10"><span class="al-piano__blocco-10"><b class="al-piano__testo-17">{{ r.n }}</b><span class="al-piano__testo-18"> · {{ r.set }}</span></span><span class="al-piano__testo-19">{{ r.ore }}</span></span><sc-if value="{{ r.lock }}" hint-placeholder-val="{{ false }}"><span class="al-piano__centro-1" aria-label="ora fissa"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"></path></svg></span></sc-if><sc-if value="{{ r.puo }}" hint-placeholder-val="{{ true }}"><a href="#" onClick="{{ r.add }}" class="al-bottone al-bottone--tenue al-bottone--rovescio al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra al-piano__blocco-11">Aggiungi</a></sc-if></span>
+<sc-if value="{{ r.pills }}" hint-placeholder-val="{{ true }}"><span class="al-piano__riga-20"><sc-for list="{{ r.pills }}" as="pl" hint-placeholder-count="1"><span class="al-piano__riga-21" style="background:{{ pl.bg }};color:{{ pl.fg }}">{{ pl.s }}{{ pl.t }}</span></sc-for></span></sc-if>
+<sc-if value="{{ r.man }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-22"><span class="al-piano__testo-20">mancano</span><sc-for list="{{ r.man }}" as="f" hint-placeholder-count="2"><span class="al-piano__riga-23" style="color:{{ f.fg }}"><span class="al-piano__tondo-5" aria-hidden="true" style="background:{{ f.c }};border:{{ f.bd }};opacity:{{ f.op }}"></span>{{ f.s }}</span></sc-for></span></sc-if>
+<sc-if value="{{ r.nota }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-24"><span class="al-piano__pillola-1" aria-hidden="true" style="background:{{ ripTr }}"></span>{{ r.nota }}</span></sc-if>
+<sc-if value="{{ r.righe }}" hint-placeholder-val="{{ false }}"><sc-for list="{{ r.righe }}" as="x" hint-placeholder-count="1"><span class="al-piano__testo-21" style="color:{{ x.fg }};font-weight:{{ x.fw }}">{{ x.s }}</span></sc-for></sc-if>
+<sc-if value="{{ r.link }}" hint-placeholder-val="{{ false }}"><a class="al-piano__riga-25" href="{{ r.link.h }}" target="_blank">{{ r.link.l }}</a></sc-if><sc-if value="{{ r.nel }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-7">✓ {{ r.nel }}</span></sc-if>
+</div></sc-for>
+<sc-if value="{{ propVuote.on }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-11"><span class="al-piano__testo-22">{{ propVuote.t }}</span><sc-if value="{{ propVuote.planner }}" hint-placeholder-val="{{ false }}"><a href="Planner.dc.html" class="al-bottone al-bottone--pieno al-bottone--blocco al-bottone--a-sinistra">Apri il Planner</a></sc-if></div></sc-if>
+</dc-import>
+
+<dc-import name="componenti/Carta" formato="desktop" ritardo="120" padding="20px 18px" gap="10" modo="{{ modo }}" accento="{{ accento }}" etichetta="Eventi di stanotte" hint-size="100%,120px">
+<div class="al-piano__colonna-8"><span class="al-piano__testo-16">Eventi di stanotte</span><span class="al-piano__testo-7">Dagli Eventi del Planner: l'ora è fissa.</span></div>
+<sc-for list="{{ eventi }}" as="e" hint-placeholder-count="1"><div class="al-piano__riga-26" draggable="true" onDragStart="{{ e.ds }}" onDragEnd="{{ e.de }}">
+<span class="al-piano__tondo-4" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"></path></svg></span>
+<span class="al-piano__colonna-10"><b class="al-piano__testo-23">{{ e.n }}</b><span class="al-piano__testo-18">{{ e.sub }}</span></span>
+<sc-if value="{{ e.nel }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-13">✓ nel piano</span></sc-if>
+<sc-if value="{{ e.puo }}" hint-placeholder-val="{{ true }}"><a href="#" onClick="{{ e.add }}" class="al-bottone al-bottone--tenue al-bottone--rovescio al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra al-piano__blocco-11">Aggiungi</a></sc-if>
+</div></sc-for>
+<sc-if value="{{ eventiVuoti }}" hint-placeholder-val="{{ false }}"><span class="al-piano__blocco-12">Nessun evento stanotte.</span></sc-if>
+</dc-import>
+</div>
+
+<div class="al-piano__colonna-7">
+<dc-import name="componenti/Carta" formato="desktop" ritardo="60" padding="22px 24px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Linea del tempo" hint-size="100%,500px">
+<div class="al-piano__colonna-12">
+<div class="al-piano__riga-27"><span class="al-piano__riga-28"><span class="al-piano__testo-16">{{ notteTit }}</span><span class="al-piano__testo-18">{{ notteT }}</span></span>
+<span class="al-piano__riga-29"><sc-if value="{{ az.annulla }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ az.annulla }}" class="al-bottone al-bottone--testo al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra al-piano__blocco-13">↶ Annulla</a></sc-if><a href="#" onClick="{{ az.rifai }}" aria-disabled="{{ az.dis }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra">Rifai il piano</a><a class="al-piano__riga-30" href="#" onClick="{{ az.completa }}" aria-disabled="{{ az.dis }}" style="background:{{ az.bg }};color:{{ az.fg }}">Completa il piano</a></span></div>
+<span class="al-piano__testo-7">{{ aiuto }}</span>
+</div>
+<sc-if value="{{ solLine }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-31" role="note"><span aria-hidden="true">!</span>{{ solLine }}</span></sc-if>
+<div class="al-piano__griglia-3">
+<span></span>
+<div class="al-piano__blocco-14"><sc-for list="{{ ticks }}" as="o" hint-placeholder-count="12"><span class="al-piano__strato-3" style="left:{{ o.l }}">{{ o.s }}</span></sc-for></div>
+<div class="al-piano__colonna-13"><span class="al-piano__colonna-14" title="{{ luna.t }}"><span>Luna</span><span class="al-piano__riga-32"><span class="al-piano__blocco-15"><dc-import name="componenti/Luna" percento="{{ luna.pct }}" misura="13" piena="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="13px,13px"></dc-import></span>{{ luna.pct }}%</span></span><span class="al-piano__riga-33">Meteo</span><span class="al-piano__riga-34">Piano</span><span class="al-piano__riga-35">Eventi</span></div>
+<div class="al-piano__colonna-15" ref="{{ rTrk }}" onDragOver="{{ dOver }}" onDrop="{{ dIn }}" onDragLeave="{{ dOut }}">
+<sc-for list="{{ fasce }}" as="f" hint-placeholder-count="9"><span class="al-piano__strato-4" aria-hidden="true" style="left:{{ f.l }};width:{{ f.w }};background:{{ f.bg }}"></span></sc-for>
+<sc-if value="{{ ora }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-5" aria-hidden="true" style="left:{{ ora.l }}"><span class="al-piano__strato-6">adesso {{ ora.s }}</span></span></sc-if>
+<div class="al-piano__blocco-16">
+<svg class="al-piano__grafico-1" aria-hidden="true" viewBox="0 0 1000 100" preserveAspectRatio="none"><path d="{{ lunaPath }}" fill="none" stroke="{{ lunaC }}" stroke-width="1" opacity=".55" vector-effect="non-scaling-stroke"></path><path d="{{ lunaConta }}" fill="none" stroke="{{ lunaC }}" stroke-width="2" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"></path></svg>
+<sc-for list="{{ rip }}" as="s" hint-placeholder-count="2"><span class="al-piano__strato-7" aria-hidden="true" style="left:{{ s.l }};width:{{ s.w }};background:{{ s.bg }};box-shadow:{{ s.sh }}"></span></sc-for>
+</div>
+<div class="al-piano__blocco-17">
+<sc-for list="{{ met }}" as="m" hint-placeholder-count="3"><span class="al-piano__strato-8" style="left:{{ m.l }};width:{{ m.w }};background:{{ m.c }}"></span><sc-if value="{{ m.lab }}" hint-placeholder-val="{{ true }}"><span class="al-piano__strato-9" style="left:{{ m.l }}">{{ m.s }} {{ m.p }}</span></sc-if></sc-for>
+<sc-if value="{{ metNo }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-10">Previsione non disponibile</span></sc-if>
+</div>
+<div class="al-piano__blocco-18">
+<sc-for list="{{ pezzi }}" as="c" hint-placeholder-count="3"><span class="al-piano__strato-11" role="img" aria-label="{{ c.t }}" title="{{ c.t }}" style="top:{{ c.top }};bottom:{{ c.top }};left:{{ c.l }};width:{{ c.w }};background:{{ cambioBg }}"></span></sc-for>
+<sc-if value="{{ ghost }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-12" aria-hidden="true" style="left:{{ ghost.l }};width:{{ ghost.w }}"></span></sc-if>
+<sc-for list="{{ blocchi }}" as="b" hint-placeholder-count="3"><div class="al-piano__strato-13" role="button" tabindex="0" title="{{ b.titolo }}" aria-label="{{ b.aria }}" aria-pressed="{{ b.selA }}" onPointerDown="{{ b.down }}" onKeyDown="{{ b.key }}" style="left:{{ b.l }};width:{{ b.w }};z-index:{{ b.z }};box-shadow:inset 0 0 0 {{ b.rw }} {{ b.ring }};cursor:{{ b.cur }}">
+<sc-if value="{{ b.parts }}" hint-placeholder-val="{{ false }}"><sc-for list="{{ b.parts }}" as="q" hint-placeholder-count="1"><span class="al-piano__strato-14" aria-hidden="true" style="left:{{ q.l }};width:{{ q.w }};background:{{ q.bg }};border-left:1.5px solid {{ q.bd }};border-right:1.5px solid {{ q.bd }}"></span></sc-for></sc-if>
+<svg class="al-piano__grafico-2" aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="{{ b.curva }}" fill="none" stroke="{{ b.col }}" stroke-width="1.5" vector-effect="non-scaling-stroke" opacity=".85"></path></svg>
+<sc-if value="{{ b.pausa }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-4" title="{{ b.pausa.t }}" aria-hidden="true" style="left:{{ b.pausa.l }};width:{{ b.pausa.w }};background:{{ pausaBg }}"></span></sc-if><sc-if value="{{ b.flip }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-15" title="{{ b.flip.t }}" aria-hidden="true" style="left:{{ b.flip.l }};width:{{ b.flip.w }};background:{{ cambioBg }}"></span></sc-if>
+<sc-if value="{{ b.tr }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-4" aria-hidden="true" style="left:{{ b.tr.l }};border-left:1.5px dashed {{ b.col }}"><span class="al-piano__strato-16" style="left:{{ b.tr.x }};right:{{ b.tr.rx }}">{{ b.tr.s }}</span></span></sc-if>
+<div class="al-piano__colonna-16">
+<span class="al-piano__riga-36"><svg class="al-piano__grafico-3" aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{ b.col }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ b.ic }}"></path></svg><b class="al-piano__blocco-19">{{ b.n }}</b><sc-if value="{{ b.largo }}" hint-placeholder-val="{{ true }}"><span class="al-piano__testo-7">{{ b.durS }}</span></sc-if><sc-if value="{{ b.lock }}" hint-placeholder-val="{{ false }}"><svg class="al-piano__grafico-3" aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"></path></svg></sc-if></span>
+<sc-if value="{{ b.largo }}" hint-placeholder-val="{{ true }}"><span class="al-piano__blocco-20">{{ b.filS }}</span></sc-if><sc-if value="{{ b.why }}" hint-placeholder-val="{{ false }}"><span class="al-piano__blocco-21" title="{{ b.whyT }}">{{ b.why }}</span></sc-if>
+<sc-if value="{{ b.conf }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-37"><span aria-hidden="true">✕</span><span>{{ b.conf }}</span></span></sc-if>
+<sc-if value="{{ b.segs }}" hint-placeholder-val="{{ true }}"><span class="al-piano__riga-38"><sc-for list="{{ b.segs }}" as="g" hint-placeholder-count="2"><span class="al-piano__blocco-22" style="width:{{ g.w }};background:{{ g.bg }};border:{{ g.bd }}"></span></sc-for></span></sc-if>
+</div>
+<sc-if value="{{ b.rz }}" hint-placeholder-val="{{ true }}"><span class="al-piano__strato-17" aria-hidden="true" onPointerDown="{{ b.downL }}"></span><span class="al-piano__strato-18" aria-hidden="true" onPointerDown="{{ b.downR }}"></span></sc-if>
+</div></sc-for>
+<sc-for list="{{ evB }}" as="e" hint-placeholder-count="1"><span class="al-piano__strato-19" aria-hidden="true" style="left:{{ e.l }};width:{{ e.w }};background:{{ e.bg }}"></span></sc-for>
+<sc-if value="{{ vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-20">{{ vuotoT }}</span></sc-if>
+</div>
+<div class="al-piano__blocco-23">
+<sc-for list="{{ evB }}" as="e" hint-placeholder-count="1"><a class="al-piano__strato-21" href="#" onClick="{{ e.on }}" aria-label="{{ e.aria }}" style="left:{{ e.l }};background:{{ e.chip }};box-shadow:inset 0 0 0 1.5px {{ e.ring }}"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"></path></svg>{{ e.n }}</a></sc-for>
+</div>
+</div>
+</div>
+<div class="al-piano__riga-39"><sc-for list="{{ legenda }}" as="g" hint-placeholder-count="6"><span class="al-piano__riga-23"><span class="al-piano__blocco-24" aria-hidden="true" style="background:{{ g.bg }};border-top:{{ g.bt }}"></span>{{ g.n }}</span></sc-for></div>
+<sc-if value="{{ passi }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-17"><sc-for list="{{ passi }}" as="x" hint-placeholder-count="2"><span class="al-piano__riga-40"><span class="al-piano__blocco-25" aria-hidden="true" style="background:{{ cambioBg }}"></span>{{ x.t }}</span></sc-for></div></sc-if>
+<sc-if value="{{ mancanti }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-41"><span class="al-piano__tondo-6" aria-hidden="true">?</span><span class="al-piano__testo-24">Scrivi i tempi in Impostazioni: {{ mancanti }}.</span><a class="al-piano__testo-14" href="Impostazioni.dc.html">Impostazioni ↗</a></span></sc-if>
+<sc-if value="{{ confL.on }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-18" role="status"><b class="al-piano__testo-25">✕ {{ confL.t }}</b><sc-for list="{{ confL.r }}" as="c" hint-placeholder-count="2"><a class="al-piano__testo-26" href="#" onClick="{{ c.on }}"><b class="al-piano__testo-27">{{ c.n }}</b> · {{ c.s }}</a></sc-for></div></sc-if>
+<sc-if value="{{ ed }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-19">
+<span class="al-piano__riga-42"><span class="al-piano__riga-43"><b class="al-piano__testo-17">{{ ed.n }}</b><span class="al-piano__testo-28">{{ ed.range }}</span></span><span class="al-piano__riga-16"><a href="#" onClick="{{ ed.togli }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra">Togli dal piano</a><a href="#" onClick="{{ ed.chiudi }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra">Chiudi</a></span></span>
+<sc-if value="{{ ed.nota }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-26">{{ ed.nota }}</span></sc-if>
+<sc-if value="{{ ed.conto }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-29">{{ ed.conto }}</span></sc-if>
+<sc-if value="{{ ed.mos }}" hint-placeholder-val="{{ false }}"><div class="al-piano__riga-44"><div class="al-piano__tondo-7" aria-hidden="true" style="grid-template-columns:{{ ed.mos.cols }}"><sc-for list="{{ ed.mos.celle }}" as="c" hint-placeholder-count="12"><span class="al-piano__centro-2" style="background:{{ c.bg }};box-shadow:inset 0 0 0 1px {{ c.bd }}">{{ c.n }}</span></sc-for></div><span class="al-piano__blocco-26">{{ ed.mos.info }}</span></div></sc-if>
+
+<sc-if value="{{ ed.haF }}" hint-placeholder-val="{{ true }}"><div class="al-piano__riga-45"><sc-for list="{{ ed.fil }}" as="f" hint-placeholder-count="2"><span class="al-piano__riga-46"><span class="al-piano__tondo-5" aria-hidden="true" style="background:{{ f.c }};border:{{ f.bd }}"></span><b class="al-piano__testo-27">{{ f.l }}</b><span class="al-piano__blocco-27">{{ f.v }}</span><a class="al-piano__tondo-8" href="#" onClick="{{ f.meno }}" aria-label="{{ f.ariaM }}">−</a><a class="al-piano__tondo-8" href="#" onClick="{{ f.piu }}" aria-label="{{ f.ariaP }}">+</a></span></sc-for></div></sc-if>
+<sc-if value="{{ ed.pr }}" hint-placeholder-val="{{ true }}"><span class="al-piano__testo-7">Trascina il blocco per spostarlo, i bordi per allungarlo. Coi tasti: ← → di 5 minuti, con Maiuscolo di 15.</span></sc-if>
+</div></sc-if>
+</dc-import>
+
+<dc-import name="componenti/Carta" formato="desktop" ritardo="120" padding="22px 24px" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="Totali ed export" hint-size="100%,120px">
+<div class="al-piano__riga-47">
+<span class="al-piano__colonna-20"><span class="al-piano__riga-48"><span class="al-piano__testo-30">{{ tot.big }}</span><span class="al-piano__testo-2">{{ tot.lab }}</span></span><span class="al-piano__testo-19">{{ tot.riga }}</span></span>
+<span class="al-piano__colonna-21">
+<sc-if value="{{ exp.ask }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-49" role="alertdialog" aria-label="{{ exp.askT }}"><b class="al-piano__testo-5">{{ exp.askT }}</b><a href="#" onClick="{{ exp.si }}" class="al-bottone al-bottone--pieno al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra">Esporta</a><a href="#" onClick="{{ exp.no }}" class="al-bottone al-bottone--contorno al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra">Annulla</a></span></sc-if>
+<sc-if value="{{ exp.btn }}" hint-placeholder-val="{{ true }}"><a class="al-piano__riga-50" href="#" onClick="{{ exp.on }}" aria-disabled="{{ exp.dis }}" style="background:{{ exp.bg }};color:{{ exp.fg }}">{{ exp.l }}</a></sc-if>
+<span class="al-piano__testo-31">{{ exp.riga }}</span>
+<sc-if value="{{ exp.avvisi }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-22"><sc-for list="{{ exp.avvisi }}" as="v" hint-placeholder-count="2"><span class="al-piano__riga-51"><b class="al-piano__tondo-9" aria-hidden="true">!</b>{{ v.t }}</span></sc-for></div></sc-if>
+<sc-if value="{{ exp.fatto }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-52">✓ {{ exp.fatto }}</span></sc-if>
+</span>
+</div>
+</dc-import>
+</div>
+</div></sc-if>
+
+<sc-if value="{{ L.tel }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-23">
+
+<dc-import name="componenti/Carta" formato="telefono" ritardo="60" padding="16px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Linea del tempo" hint-size="100%,760px">
+<div class="al-piano__colonna-24"><div class="al-piano__riga-53"><span class="al-piano__testo-16">{{ notteTit }}</span><a class="al-piano__riga-54" href="#" onClick="{{ apriProposte }}" aria-haspopup="dialog"><span class="al-piano__riga-55">+ {{ apriTc }}<span class="al-piano__testo-32">{{ propN }}</span></span></a></div><span class="al-piano__riga-56"><span>{{ notteT }} ·</span><span class="al-piano__blocco-28"><dc-import name="componenti/Luna" percento="{{ luna.pct }}" misura="16" piena="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="16px,16px"></dc-import></span><span>{{ luna.t }}</span></span></div>
+<sc-if value="{{ L.linea }}" hint-placeholder-val="{{ false }}"><div class="al-piano__griglia-4"><span></span><span class="al-piano__blocco-29"><span class="al-piano__strato-22">Luna</span><span class="al-piano__strato-23">Meteo</span><span class="al-piano__strato-24">Piano</span></span></div>
+<div class="al-piano__griglia-5">
+<div class="al-piano__blocco-30" style="height:{{ L.th }}"><sc-for list="{{ ticks }}" as="o" hint-placeholder-count="12"><span class="al-piano__strato-25" style="top:{{ o.l }}">{{ o.s }}</span></sc-for></div>
+<div class="al-piano__blocco-31" style="height:{{ L.th }}">
+<sc-for list="{{ fasce }}" as="f" hint-placeholder-count="9"><span class="al-piano__strato-26" aria-hidden="true" style="top:{{ f.l }};height:{{ f.w }};background:{{ f.bg }}"></span></sc-for>
+<sc-if value="{{ ora }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-27" aria-hidden="true" style="top:{{ ora.l }}"></span></sc-if>
+<svg class="al-piano__grafico-4" aria-hidden="true" viewBox="0 0 100 1000" preserveAspectRatio="none"><path d="{{ lunaPathV }}" fill="none" stroke="{{ lunaC }}" stroke-width="1" opacity=".55" vector-effect="non-scaling-stroke"></path><path d="{{ lunaContaV }}" fill="none" stroke="{{ lunaC }}" stroke-width="2" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"></path></svg>
+<sc-for list="{{ rip }}" as="s" hint-placeholder-count="2"><span class="al-piano__strato-28" aria-hidden="true" style="top:{{ s.l }};height:{{ s.w }};background:{{ s.bg }};box-shadow:{{ s.sh }}"></span></sc-for>
+<sc-for list="{{ met }}" as="m" hint-placeholder-count="3"><span class="al-piano__strato-29" style="top:{{ m.l }};height:{{ m.w }};background:{{ m.c }}"></span><sc-if value="{{ m.lab }}" hint-placeholder-val="{{ true }}"><span class="al-piano__strato-30" style="top:{{ m.l }}">{{ m.s }}</span></sc-if></sc-for>
+<sc-if value="{{ metNo }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-31"></span></sc-if>
+<div class="al-piano__strato-32">
+<sc-for list="{{ pezzi }}" as="c" hint-placeholder-count="3"><span class="al-piano__strato-33" role="img" aria-label="{{ c.t }}" style="left:{{ c.side }};right:{{ c.side }};top:{{ c.l }};height:{{ c.w }};background:{{ cambioBg }}"></span></sc-for>
+<sc-for list="{{ blocchi }}" as="b" hint-placeholder-count="3"><a class="al-piano__strato-34" href="#" onClick="{{ b.tap }}" aria-label="{{ b.aria }}" style="top:{{ b.l }};height:{{ b.w }};z-index:{{ b.z }};box-shadow:inset 0 0 0 {{ b.rw }} {{ b.ring }}">
+<sc-if value="{{ b.partsV }}" hint-placeholder-val="{{ false }}"><sc-for list="{{ b.partsV }}" as="q" hint-placeholder-count="1"><span class="al-piano__strato-35" aria-hidden="true" style="top:{{ q.l }};height:{{ q.w }};background:{{ q.bg }};border-top:1.5px solid {{ q.bd }};border-bottom:1.5px solid {{ q.bd }}"></span></sc-for></sc-if>
+<svg class="al-piano__grafico-5" aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="{{ b.curvaV }}" fill="none" stroke="{{ b.col }}" stroke-width="1.5" vector-effect="non-scaling-stroke" opacity=".85"></path></svg>
+<sc-if value="{{ b.flip }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-36" aria-hidden="true" style="top:{{ b.flip.l }};height:{{ b.flip.w }};background:{{ cambioBg }}"></span></sc-if>
+<sc-if value="{{ b.tr }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-26" aria-hidden="true" style="top:{{ b.tr.l }};border-top:1.5px dashed {{ b.col }}"><span class="al-piano__strato-37">{{ b.tr.s }}</span></span></sc-if>
+<span class="al-piano__colonna-25"><span class="al-piano__riga-36"><svg class="al-piano__grafico-3" aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{ b.col }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ b.ic }}"></path></svg><b class="al-piano__testo-5">{{ b.n }}</b><span class="al-piano__testo-7">{{ b.durS }}</span><sc-if value="{{ b.lock }}" hint-placeholder-val="{{ false }}"><svg class="al-piano__grafico-3" aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"></path></svg></sc-if></span><span class="al-piano__blocco-20">{{ b.filS }}</span><sc-if value="{{ b.conf }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-57"><span aria-hidden="true">✕</span><span>{{ b.conf }}</span></span></sc-if></span>
+</a></sc-for>
+<sc-for list="{{ evB }}" as="e" hint-placeholder-count="1"><span class="al-piano__strato-38" aria-hidden="true" style="top:{{ e.l }};border-top:2px solid {{ e.bg }}"></span><a class="al-piano__strato-39" href="#" onClick="{{ e.tap }}" aria-label="{{ e.aria }}" style="top:{{ e.l }};background:{{ e.chip }};box-shadow:inset 0 0 0 1.5px {{ e.ring }}"><svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"></path></svg>{{ e.n }}</a></sc-for>
+<sc-if value="{{ vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-40">{{ vuotoT }}</span></sc-if>
+</div>
+</div>
+</div></sc-if>
+<sc-if value="{{ L.elenco }}" hint-placeholder-val="{{ true }}"><div class="al-piano__colonna-12">
+<div class="al-piano__blocco-32" aria-hidden="true"><sc-for list="{{ ticksE }}" as="o" hint-placeholder-count="6"><span class="al-piano__strato-3" style="left:{{ o.l }}">{{ o.s }}</span></sc-for></div>
+<div class="al-piano__blocco-33" role="img" aria-label="{{ striscia.aria }}">
+<sc-for list="{{ fasce }}" as="f" hint-placeholder-count="9"><span class="al-piano__strato-41" style="left:{{ f.l }};width:{{ f.w }};background:{{ f.bg }}"></span></sc-for>
+<svg class="al-piano__grafico-6" viewBox="0 0 1000 100" preserveAspectRatio="none"><path d="{{ lunaPath }}" fill="none" stroke="{{ lunaC }}" stroke-width="1" opacity=".55" vector-effect="non-scaling-stroke"></path><path d="{{ lunaConta }}" fill="none" stroke="{{ lunaC }}" stroke-width="2" stroke-dasharray="5 3" vector-effect="non-scaling-stroke"></path></svg>
+<sc-for list="{{ pezzi }}" as="c" hint-placeholder-count="3"><span class="al-piano__strato-42" style="left:{{ c.l }};width:{{ c.w }};background:{{ cambioBg }}"></span></sc-for>
+<sc-for list="{{ blocchi }}" as="b" hint-placeholder-count="3"><span class="al-piano__strato-43" style="left:{{ b.l }};width:{{ b.w }};background:{{ b.colT }};box-shadow:inset 0 0 0 1.5px {{ b.ring }}"></span></sc-for>
+<sc-for list="{{ evB }}" as="e" hint-placeholder-count="1"><span class="al-piano__strato-44" style="left:{{ e.l }};border-left:2px solid {{ e.bg }}"></span></sc-for>
+<sc-if value="{{ ora }}" hint-placeholder-val="{{ false }}"><span class="al-piano__strato-45" style="left:{{ ora.l }}"></span></sc-if>
+</div>
+</div>
+<div class="al-piano__colonna-26" role="list" aria-label="Il piano, in ordine d'ora">
+<sc-for list="{{ elenco }}" as="r" hint-placeholder-count="4"><sc-if value="{{ r.t }}" hint-placeholder-val="{{ false }}"><span class="al-piano__griglia-6" role="listitem"><span class="al-piano__testo-33">{{ r.ora }}</span><span class="al-piano__blocco-34" aria-hidden="true" style="background:{{ cambioBg }}"></span><span class="al-piano__blocco-10">{{ r.n }}</span></span></sc-if><sc-if value="{{ r.b }}" hint-placeholder-val="{{ true }}"><a class="al-piano__griglia-7" href="#" role="listitem" onClick="{{ r.tap }}" aria-label="{{ r.aria }}" style="background:{{ r.bg }}"><span class="al-piano__colonna-27"><b class="al-piano__testo-5">{{ r.ora }}</b><span class="al-piano__testo-7">{{ r.fine }}</span></span><span class="al-piano__blocco-35" aria-hidden="true" style="background:{{ r.col }}"></span><span class="al-piano__colonna-3"><span class="al-piano__riga-58"><svg class="al-piano__grafico-3" aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ r.ic }}"></path></svg><b class="al-piano__blocco-36">{{ r.n }}</b></span><span class="al-piano__blocco-37">{{ r.sub }}</span><sc-if value="{{ r.why }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-34">{{ r.why }}</span></sc-if><sc-if value="{{ r.conf }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-35">✕ {{ r.conf }}</span></sc-if></span><span class="al-piano__riga-59" style="display:flex;align-items:center;gap:8px">{{ r.dur }}<span aria-hidden="true" style="width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--carta-2);color:var(--testo);font-size:14px">↗</span></span></a></sc-if></sc-for>
+<sc-if value="{{ vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-piano__blocco-38">Nessun blocco. Tocca «+ Proposte» o «Completa il piano».</span></sc-if>
+</div>
+</sc-if>
+<div class="al-piano__riga-60"><a class="al-piano__riga-61" href="#" onClick="{{ az.completa }}" aria-disabled="{{ az.dis }}" style="background:{{ az.bg }};color:{{ az.fg }}">Completa il piano</a><a class="al-piano__riga-62" href="#" onClick="{{ az.rifai }}" aria-disabled="{{ az.dis }}">Rifai</a><sc-if value="{{ az.annulla }}" hint-placeholder-val="{{ false }}"><a class="al-piano__riga-63" href="#" onClick="{{ az.annulla }}">↶ Annulla</a></sc-if></div>
+<span class="al-piano__testo-7">{{ aiuto }}</span>
+<div class="al-piano__riga-64"><sc-for list="{{ legenda }}" as="g" hint-placeholder-count="6"><span class="al-piano__riga-65"><span class="al-piano__blocco-39" aria-hidden="true" style="background:{{ g.bg }};border-top:{{ g.bt }}"></span>{{ g.n }}</span></sc-for></div>
+<sc-if value="{{ passiT }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-28"><sc-for list="{{ passi }}" as="x" hint-placeholder-count="2"><span class="al-piano__riga-66"><span class="al-piano__blocco-40" aria-hidden="true" style="background:{{ cambioBg }}"></span>{{ x.t }}</span></sc-for></div></sc-if>
+<sc-if value="{{ mancanti }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-67"><span class="al-piano__testo-24">Scrivi i tempi in Impostazioni: {{ mancanti }}.</span><a class="al-piano__riga-68" href="Impostazioni.dc.html">Impostazioni ↗</a></span></sc-if>
+<sc-if value="{{ confL.on }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-24" role="status"><b class="al-piano__testo-25">✕ {{ confL.t }}</b><sc-for list="{{ confL.r }}" as="c" hint-placeholder-count="2"><a class="al-piano__blocco-41" href="#" onClick="{{ c.tap }}"><b class="al-piano__testo-27">{{ c.n }}</b> · {{ c.s }}</a></sc-for></div></sc-if>
+</dc-import>
+
+<dc-import name="componenti/Carta" formato="telefono" ritardo="120" padding="20px" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Totali ed export" hint-size="100%,200px">
+<span class="al-piano__riga-48"><span class="al-piano__testo-36">{{ tot.big }}</span><span class="al-piano__testo-2">{{ tot.lab }}</span></span>
+<span class="al-piano__testo-19">{{ tot.riga }}</span>
+<sc-if value="{{ exp.ask }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-29" role="alertdialog" aria-label="{{ exp.askT }}"><b class="al-piano__testo-23">{{ exp.askT }}</b><span class="al-piano__griglia-1"><a href="#" onClick="{{ exp.si }}" class="al-bottone al-bottone--pieno al-bottone--blocco">Esporta</a><a href="#" onClick="{{ exp.no }}" class="al-bottone al-bottone--contorno al-bottone--blocco">Annulla</a></span></div></sc-if>
+<sc-if value="{{ exp.btn }}" hint-placeholder-val="{{ true }}"><a class="al-piano__riga-69" href="#" onClick="{{ exp.on }}" aria-disabled="{{ exp.dis }}" style="background:{{ exp.bg }};color:{{ exp.fg }}">{{ exp.l }}</a></sc-if>
+<span class="al-piano__testo-7">{{ exp.riga }}</span>
+<sc-if value="{{ exp.avvisi }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-22"><sc-for list="{{ exp.avvisi }}" as="v" hint-placeholder-count="2"><span class="al-piano__riga-51"><b class="al-piano__tondo-9" aria-hidden="true">!</b>{{ v.t }}</span></sc-for></div></sc-if>
+<sc-if value="{{ exp.fatto }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-70">✓ {{ exp.fatto }}</span></sc-if>
+</dc-import>
+
+<sc-if value="{{ foglio.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Finestra" titolo="{{ foglio.titolo }}" fondo="carta" on-chiudi="{{ foglio.chiudi }}" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="0px,0px">
+
+<sc-if value="{{ foglio.prop }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-30">
+<sc-if value="{{ tabs }}" hint-placeholder-val="{{ true }}"><div role="tablist" aria-label="Categoria" class="al-scelta al-scelta--linguette al-scelta--sottili"><sc-for list="{{ tabs }}" as="g" hint-placeholder-count="2"><a href="#" role="tab" aria-selected="{{ g.sel }}" onClick="{{ g.on }}" class="al-scelta__voce"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ g.ic }}"></path></svg>{{ g.l }}</a></sc-for></div></sc-if>
+<sc-if value="{{ crit }}" hint-placeholder-val="{{ false }}"><div class="al-piano__riga-71" role="group" aria-label="Criteri"><sc-for list="{{ crit }}" as="c" hint-placeholder-count="3"><a class="al-piano__riga-72" href="#" role="checkbox" aria-checked="{{ c.sel }}" onClick="{{ c.on }}" style="font-weight:{{ c.fw }};background:{{ c.bg }};color:{{ c.fg }};box-shadow:inset 0 0 0 1.5px {{ c.ring }}">{{ c.s }}{{ c.l }}</a></sc-for></div></sc-if>
+<span class="al-piano__testo-7">{{ propH }}</span>
+<sc-if value="{{ campo }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-4"><div class="al-piano__riga-16"><input value="{{ campo.v }}" onChange="{{ campo.on }}" onKeyDown="{{ campo.key }}" placeholder="{{ campo.ph }}" aria-label="{{ campo.l }}" class="al-campo al-campo--tondo al-piano__blocco-42"><a class="al-piano__riga-73" href="#" onClick="{{ campo.add }}" aria-disabled="{{ campo.dis }}" style="background:{{ campo.bg }};color:{{ campo.fg }}">{{ campo.lb }}</a></div><sc-if value="{{ campo.err }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-26" role="status">! {{ campo.err }}</span></sc-if></div></sc-if>
+<sc-for list="{{ prop }}" as="r" hint-placeholder-count="3"><div class="al-piano__colonna-31">
+<span class="al-piano__riga-74"><span class="al-piano__tondo-4" aria-hidden="true" style="color:{{ r.col }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ r.ic }}"></path></svg></span><span class="al-piano__colonna-10"><b class="al-piano__testo-17">{{ r.n }}</b><span class="al-piano__blocco-37">{{ r.set }}</span></span><sc-if value="{{ r.puo }}" hint-placeholder-val="{{ true }}"><a href="#" onClick="{{ r.add }}" class="al-bottone al-bottone--pieno al-bottone--blocco al-bottone--a-sinistra al-piano__blocco-11">Aggiungi</a></sc-if></span>
+<span class="al-piano__testo-19">{{ r.ore }}</span>
+<sc-if value="{{ r.pills }}" hint-placeholder-val="{{ true }}"><span class="al-piano__riga-20"><sc-for list="{{ r.pills }}" as="pl" hint-placeholder-count="1"><span class="al-piano__riga-75" style="background:{{ pl.bg }};color:{{ pl.fg }}">{{ pl.s }}{{ pl.t }}</span></sc-for></span></sc-if>
+<sc-if value="{{ r.man }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-22"><span class="al-piano__testo-20">mancano</span><sc-for list="{{ r.man }}" as="f" hint-placeholder-count="2"><span class="al-piano__riga-23" style="color:{{ f.fg }}"><span class="al-piano__tondo-5" aria-hidden="true" style="background:{{ f.c }};border:{{ f.bd }};opacity:{{ f.op }}"></span>{{ f.s }}</span></sc-for></span></sc-if>
+<sc-if value="{{ r.nota }}" hint-placeholder-val="{{ false }}"><span class="al-piano__riga-24"><span class="al-piano__pillola-1" aria-hidden="true" style="background:{{ ripTr }}"></span>{{ r.nota }}</span></sc-if>
+<sc-if value="{{ r.righe }}" hint-placeholder-val="{{ false }}"><sc-for list="{{ r.righe }}" as="x" hint-placeholder-count="1"><span class="al-piano__testo-26" style="color:{{ x.fg }};font-weight:{{ x.fw }}">{{ x.s }}</span></sc-for></sc-if>
+<sc-if value="{{ r.link }}" hint-placeholder-val="{{ false }}"><a class="al-piano__riga-25" href="{{ r.link.h }}" target="_blank">{{ r.link.l }}</a></sc-if><sc-if value="{{ r.nel }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-7">✓ {{ r.nel }}</span></sc-if>
+</div></sc-for>
+<sc-if value="{{ propVuote.on }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-32"><span class="al-piano__testo-37">{{ propVuote.t }}</span><sc-if value="{{ propVuote.planner }}" hint-placeholder-val="{{ false }}"><a href="Planner.dc.html" class="al-bottone al-bottone--pieno al-bottone--blocco al-bottone--a-sinistra">Apri il Planner</a></sc-if></div></sc-if>
+<span class="al-piano__colonna-33"><span class="al-piano__testo-37">Eventi di stanotte</span><span class="al-piano__testo-7">Dagli Eventi del Planner: l'ora è fissa.</span></span>
+<sc-for list="{{ eventi }}" as="e" hint-placeholder-count="1"><div class="al-piano__riga-76"><svg class="al-piano__grafico-3" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"></path></svg><span class="al-piano__colonna-10"><b class="al-piano__testo-23">{{ e.n }}</b><span class="al-piano__testo-7">{{ e.sub }}</span></span><sc-if value="{{ e.nel }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-7">✓ nel piano</span></sc-if><sc-if value="{{ e.puo }}" hint-placeholder-val="{{ true }}"><a href="#" onClick="{{ e.add }}" class="al-bottone al-bottone--contorno al-bottone--blocco al-bottone--a-sinistra al-piano__blocco-11">Aggiungi</a></sc-if></div></sc-for>
+<sc-if value="{{ eventiVuoti }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-2">Nessun evento stanotte.</span></sc-if>
+</div></sc-if>
+
+<sc-if value="{{ foglio.blocco }}" hint-placeholder-val="{{ false }}"><div class="al-piano__colonna-23">
+<span class="al-piano__testo-2">{{ ed.range }}</span>
+<sc-for list="{{ ed.conf }}" as="c" hint-placeholder-count="1"><span class="al-piano__riga-77"><span aria-hidden="true">✕</span>{{ c.s }}</span></sc-for>
+<sc-if value="{{ ed.nota }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-19">{{ ed.nota }}</span></sc-if>
+<sc-if value="{{ ed.conto }}" hint-placeholder-val="{{ false }}"><span class="al-piano__testo-29">{{ ed.conto }}</span></sc-if>
+<sc-if value="{{ ed.mos }}" hint-placeholder-val="{{ false }}"><div class="al-piano__riga-44"><div class="al-piano__tondo-7" aria-hidden="true" style="grid-template-columns:{{ ed.mos.cols }}"><sc-for list="{{ ed.mos.celle }}" as="c" hint-placeholder-count="12"><span class="al-piano__centro-2" style="background:{{ c.bg }};box-shadow:inset 0 0 0 1px {{ c.bd }}">{{ c.n }}</span></sc-for></div><span class="al-piano__blocco-26">{{ ed.mos.info }}</span></div></sc-if>
+
+<sc-if value="{{ ed.pr }}" hint-placeholder-val="{{ true }}"><span class="al-piano__griglia-1"><a href="#" onClick="{{ ed.prima }}" class="al-bottone al-bottone--contorno al-bottone--blocco">↑ 15 min prima</a><a href="#" onClick="{{ ed.dopo }}" class="al-bottone al-bottone--contorno al-bottone--blocco">↓ 15 min dopo</a></span></sc-if>
+<sc-if value="{{ ed.haF }}" hint-placeholder-val="{{ true }}"><sc-for list="{{ ed.fil }}" as="f" hint-placeholder-count="2"><span class="al-piano__riga-78"><span class="al-piano__tondo-10" aria-hidden="true" style="background:{{ f.c }};border:{{ f.bd }}"></span><b class="al-piano__blocco-43">{{ f.l }}</b><span>{{ f.v }}</span><a class="al-piano__tondo-11" href="#" onClick="{{ f.meno }}" aria-label="{{ f.ariaM }}">−</a><a class="al-piano__tondo-11" href="#" onClick="{{ f.piu }}" aria-label="{{ f.ariaP }}">+</a></span></sc-for></sc-if>
+<a href="#" onClick="{{ ed.togli }}" class="al-bottone al-bottone--contorno al-bottone--blocco">Togli dal piano</a>
+</div></sc-if>
+</dc-import></sc-if>
+</div></sc-if>
+
+</div></sc-if>
+</div>
+</dc-import></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;dopo Completa il piano&quot;,&quot;banda stretta col crepuscolo nautico&quot;,&quot;altezza massima col conflitto&quot;,&quot;pausa prima del meridiano&quot;,&quot;Sistema solare · notte&quot;,&quot;Sistema solare · giorno&quot;,&quot;Sistema solare · senza chiave Meteoblue&quot;,&quot;esportato per SharpCap&quot;,&quot;piano Ricerca&quot;,&quot;Ricerca · chiavi mancanti&quot;,&quot;postazione senza automazione&quot;,&quot;margine prima di un transito&quot;,&quot;con conflitti&quot;,&quot;piano vuoto&quot;,&quot;esportato&quot;,&quot;tempi non scritti&quot;,&quot;nessun progetto&quot;,&quot;nessun progetto alto&quot;,&quot;Ricerca senza oggetti&quot;,&quot;senza buio&quot;,&quot;senza sito&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;automazione&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;AM5 con tetto, sensore e pannello · EQ6-R con flat di cielo&quot;,&quot;nessuna&quot;,&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;AM5 con tetto, sensore e pannello · EQ6-R con flat di cielo&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Postazione&quot;},&quot;setup&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mono con ruota&quot;,&quot;a colori senza ruota&quot;],&quot;default&quot;:&quot;mono con ruota&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Postazione&quot;},&quot;rete&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;sì&quot;,&quot;no&quot;],&quot;default&quot;:&quot;sì&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;tempi&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;d'esempio&quot;,&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;d'esempio&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Impostazioni&quot;},&quot;luna&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;dalle Impostazioni&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Impostazioni&quot;},&quot;orizzonte&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;importato&quot;,&quot;nessuno&quot;],&quot;default&quot;:&quot;importato&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Impostazioni&quot;},&quot;postazioni&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;due&quot;,&quot;una&quot;],&quot;default&quot;:&quot;due&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Impostazioni&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;crepuscolo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;buio astronomico&quot;,&quot;crepuscolo nautico&quot;,&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;buio astronomico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Planner&quot;},&quot;altezzaMax&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;spenta&quot;,&quot;80&quot;,&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;spenta&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Planner&quot;},&quot;pausa&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;vuota&quot;,&quot;10&quot;,&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;vuota&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Planner&quot;},&quot;seeing&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;con la chiave Meteoblue&quot;,&quot;senza chiave Meteoblue&quot;],&quot;default&quot;:&quot;con la chiave Meteoblue&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;chiavi&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;AAVSO e TNS&quot;,&quot;nessuna&quot;],&quot;default&quot;:&quot;AAVSO e TNS&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;faseLuna&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;come stanotte, 62%&quot;,&quot;primo quarto, 50%&quot;,&quot;piena, 100%&quot;],&quot;default&quot;:&quot;come stanotte, 62%&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Impostazioni&quot;}}">
+class Component extends DCLogic {
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: null, stK: null, notte: 0, pos: 'a', piani: {}, modi: {}, giorni: {}, crit: { exo: true, neo: true, var: true, aavso: true, sn: true }, sel: null, drag: null, ghost: null, ask: false, esp: {}, foglio: null, annulla: null, modoAsk: null, comete: [], extra: [], campoT: '' };
+  _n = 0;
+  componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); this._mv = e => this.muovi(e); this._up = () => this.lascia();
+    window.addEventListener('resize', this._rs); window.addEventListener('pointermove', this._mv); window.addEventListener('pointerup', this._up); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rs); window.removeEventListener('pointermove', this._mv); window.removeEventListener('pointerup', this._up); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  nid() { return 'b' + (++this._n); }
+  // Minuti dal mezzogiorno: la notte non passa per lo zero
+  toM(s) { const [h, m] = s.split(':').map(Number); return (h < 12 ? h + 24 : h) * 60 + m - 720; }
+  fmt(m, off = 720) { let x = (Math.round(m) + off) % 1440; if (x < 0) x += 1440; return String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0'); }
+  alt(dec, tr, m, lat) { const R = Math.PI / 180, H = (m - tr) / 60 * 15.04 * R; return Math.asin(Math.sin(lat * R) * Math.sin(dec * R) + Math.cos(lat * R) * Math.cos(dec * R) * Math.cos(H)) / R; }
+  azi(dec, tr, m, lat) { const R = Math.PI / 180, H = (m - tr) / 60 * 15.04 * R, f = lat * R, d = dec * R; return ((Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(f) - Math.tan(d) * Math.cos(f)) / R + 180) % 360 + 360) % 360; }
+  // Dati simulati: progetti come nella Dashboard, ore mancanti da Progetti; pianeti come in Meteo; transiti, minimi, NEO, postazioni ed evento inventati
+  dati() { if (this._d) return this._d; const M = s => this.toM(s);
+    const P = [
+      { id: 'ic1396', n: 'IC 1396', pos: 'a', dec: 57.5, tr: M('22:10'), luna: 74, man: [['ha', 110], ['oiii', 120], ['sii', 110]] },
+      { id: 'ngc7000', n: 'NGC 7000', pos: 'a', dec: 44.3, tr: M('21:30'), luna: 80, man: [['ha', 62], ['oiii', 133]] },
+      { id: 'm31', n: 'M 31', pos: 'a', dec: 41.27, tr: M('01:10'), luna: 52, mos: { n: 4, ord: [3, 4, 1, 2] }, man: [['ha', 60], ['l', 80], ['r', 30], ['g', 30], ['b', 30]] },
+      { id: 'sh2155', n: 'Sh2-155', pos: 'b', dec: 62.62, tr: M('23:25'), luna: 68, man: [['ha', 126], ['oiii', 84]] },
+      { id: 'ngc6992', n: 'NGC 6992', pos: 'b', dec: 31.72, tr: M('21:25'), luna: 88, chiude: 'ultime 3 settimane nei mesi buoni', man: [['ha', 87], ['oiii', 88]] },
+      { id: 'ngc6960', n: 'NGC 6960', pos: 'a', col: 4, dec: 30.72, tr: M('20:55'), luna: 90, chiude: 'ultime 2 settimane nei mesi buoni', man: [['ha', 60], ['oiii', 45]] }];
+    P.forEach((x, i) => { x.col = x.col ?? i; x.kind = 'p'; x.cat = 'ds'; x.tot = x.man.reduce((a, f) => a + f[1], 0); });
+    // Progetti del Sistema solare (v27): dal Planner, «Salva come progetto». Ripresa per pannello (per filtro sui pianeti): frame, posa, fps calcolati
+    const SOL = [{ id: 'luna', n: 'Luna', moon: true, cat: 'luna', mos: { tipo: 'Intero', n: 12, cols: 4, ordine: 'dal terminatore', sov: 20 }, fil: ['r'], frame: 4000, posa: 5, fps: 50 },
+      { id: 'giove', n: 'Giove', cat: 'pianeta', dec: 18, tr: M('08:54'), fil: ['r', 'g', 'b'], frame: 3000, posa: 8, fps: 50, roi: '640 × 480 px', riga: 'Macchia Rossa al meridiano 05:20', grs: M('05:20') },
+      { id: 'saturno', n: 'Saturno', cat: 'pianeta', dec: 3, tr: M('01:15'), fil: ['r', 'g', 'b'], frame: 3000, posa: 12, fps: 50, roi: '800 × 600 px' }].map(x => ({ ...x, kind: 's' }));
+    // Di giorno (minuti dalla mezzanotte): il Sole a mosaico, luce bianca poi Hα
+    const SOLE = [{ id: 'sole-lb', n: 'Sole', sub: 'Luce bianca', sole: true, cat: 'sole', dec: -3, tr: 798, mos: { tipo: 'Intero', n: 12, cols: 4, ordine: 'riga per riga', sov: 20 }, fil: ['lb'], frame: 1000, posa: 2, fps: 100 },
+      { id: 'sole-ha', n: 'Sole', sub: 'Hα', sole: true, cat: 'sole', dec: -3, tr: 798, mos: { tipo: 'Zona', n: 4, cols: 2, ordine: 'riga per riga', sov: 20 }, fil: ['ha'], frame: 1500, posa: 10, fps: 60 }].map(x => ({ ...x, kind: 's' }));
+    const RIC = [{ id: 'qatar1', n: 'Qatar-1 b', cat: 'exo', dec: 65.2, tr: M('21:10'), t1: M('21:50'), t2: M('23:24') },
+      { id: 'hatp37', n: 'HAT-P-37 b', cat: 'exo', dec: 51.2, tr: M('19:55'), t1: M('22:41'), t2: M('00:32') },
+      { id: 'tx', n: '2026 TX', cat: 'neo', dec: 5, tr: M('23:30'), d: 45 },
+      { id: 'algol', n: 'Algol', cat: 'var', ecl: true, dec: 40.96, tr: M('03:40'), min: M('02:46'), d: 120 },
+      { id: 'sscyg', n: 'SS Cygni', cat: 'var', dec: 43.6, tr: M('22:40'), d: 30 },
+      { id: 'chcyg', n: 'CH Cygni', cat: 'aavso', dec: 50.24, tr: M('19:25'), d: 120, fil: 'V', cad: 'ogni 2 min per 2 h', pri: 'alta', ult: '3 giorni fa' },
+      { id: 'sn26qd', n: 'SN 2026qd', cat: 'sn', dec: 34.42, tr: M('22:40'), d: 30, mag: 15.8, ospite: 'NGC 7331', giorni: 12 }].map(x => ({ ...x, kind: 'r' }));
+    const POS = [{ k: 'a', n: 'ZWO AM5 · Askar FRA400 · ASI2600MM Pro', breve: 'AM5 · FRA400', set: 'Askar FRA400 · ASI2600MM Pro' },
+      { k: 'b', n: 'Sky-Watcher EQ6-R Pro · Askar 103APO · ASI2600MM Pro', breve: 'EQ6-R · 103APO', set: 'Askar 103APO · ASI2600MM Pro' }];
+    const GG = ['mercoledì 30 settembre', 'giovedì 1 ottobre', 'venerdì 2 ottobre', 'sabato 3 ottobre', 'domenica 4 ottobre', 'lunedì 5 ottobre', 'martedì 6 ottobre'];
+    const CORTO = ['Stanotte', 'gio 1', 'ven 2', 'sab 3', 'dom 4', 'lun 5', 'mar 6'], RISE = ['23:40', '00:10', '00:34', '01:30', '02:28', '03:30', '04:35'], FASE = [62, 52, 43, 34, 25, 17, 10];
+    const MET = [[['19:00', 0], ['04:00', 1], ['06:00', 0]], [['19:00', 2]], [['19:00', 0]], null, null, null, null], VERD = [0, 2, 0];
+    const limiti = N => { N.t0 = Math.floor((N.ss - 5) / 30) * 30; N.t1 = Math.ceil((N.sr + 5) / 30) * 30; return N; };
+    const NOTTI = GG.map((g, i) => { const ss = M('19:11') - 2 * i, sr = M('07:25') + Math.round(1.5 * i), c1 = ss + 31, n1 = c1 + 33, dk0 = n1 + 33, dk1 = sr - 97, n2 = dk1 + 33, c2 = n2 + 33, rise = M(RISE[i]);
+      return limiti({ i, dove: GG[i], corto: CORTO[i], lat: 45.85, ss, sr, c1, n1, dk0, dk1, n2, c2, luna: { pct: FASE[i], rise, tr: rise + 457 }, met: MET[i] ? MET[i].map(([h, l]) => [M(h), l]) : null, verd: VERD[i] }); });
+    const DAY = GG.map((g, i) => ({ i, dove: (GG[i + 1] || 'mercoledì 7 ottobre') + ' · di giorno', corto: CORTO[i], lat: 45.85, t0: 390, t1: 1200, sr: 445 + Math.round(1.5 * i), ss: 1151 - 2 * i, dk0: null, dk1: null,
+      luna: { pct: FASE[i], rise: null, tr: (M(RISE[i]) + 457 + 720) % 1440 }, met: i === 2 ? null : [[390, 0], [840, 1], [960, 0]], verd: 0, giorno: true }));
+    const SENZA = limiti({ i: 0, dove: 'domenica 21 giugno', corto: 'Stanotte', lat: 51, ss: M('21:31'), c1: M('22:22'), n1: M('23:37'), dk0: null, dk1: null, n2: M('02:12'), c2: M('03:27'), sr: M('04:18'), luna: { pct: 3, rise: null, tr: M('13:00') }, met: [[M('19:00'), 0]], verd: 0 });
+    const EV = [{ id: 'iss', notte: 0, n: 'ISS sulla Luna', ora: '03:41:12', a: M('03:36'), d: 10, sub: '03:41:12 · durata 0.8 s', cop: 'il transito della ISS delle 03:41' }];
+    // Seeing simulato (classi di Meteo: 0 buono, 1 incerto, 2 non adatto), notte e giorno: dalla previsione di Meteoblue
+    const SEE = [[M('18:00'), 1], [M('02:00'), 0], [M('03:30'), 1], [M('04:30'), 0], [M('06:00'), 1]], SEED = [[360, 1], [510, 0], [600, 1]];
+    return this._d = { P, SOL, SOLE, RIC, POS, NOTTI, DAY, SENZA, EV, SEE, SEED }; }
+  iniziali(stato) { const M = s => this.toM(s), Md = s => { const [h, m] = s.split(':').map(Number); return h * 60 + m; }, B = (pid, a, f, x) => ({ id: this.nid(), k: 'p', pid, a: M(a), f, ...(x || {}) }), E = eid => ({ id: this.nid(), k: 'e', eid }), S = (sid, a, day) => ({ id: this.nid(), k: 's', sid, a: day ? Md(a) : M(a) });
+    const notteSS = [S('saturno', '23:00'), S('luna', '03:00'), S('giove', '05:00')];
+    if (stato === 'Sistema solare · notte' || stato === 'Sistema solare · senza chiave Meteoblue') return { piani: {}, modi: { '0:a': 'ss' }, auto: { K: '0:a' } };
+    if (stato === 'pausa prima del meridiano') return { piani: { '0:a': [B('ngc7000', '20:48', { ha: 60, oiii: 45 }), B('m31', '23:45', { ha: 150, l: 0, r: 0, g: 0, b: 0 })] } };
+    if (['dopo Completa il piano', 'banda stretta col crepuscolo nautico'].includes(stato)) return { piani: {}, pos: 'a', auto: { K: '0:a' } };
+    if (stato === 'Ricerca · chiavi mancanti') return { piani: {}, modi: { '0:a': 'ric' }, auto: { K: '0:a' } };
+    if (stato === 'postazione senza automazione') return { piani: { '0:b': [B('ngc6992', '20:48', { ha: 80, oiii: 80 }), B('sh2155', '23:40', { ha: 126, oiii: 84 })] }, pos: 'b' };
+    if (stato === 'esportato per SharpCap') return { piani: { '0:a': notteSS }, modi: { '0:a': 'ss' }, esp: { '0:a': '18:42' } };
+    if (stato === 'Sistema solare · giorno') return { piani: {}, modi: { '0:a': 'ss' }, giorni: { '0:a': true }, auto: { K: '0:a:g' } };
+    if (stato === 'margine prima di un transito') return { piani: { '0:a': [B('ngc7000', '20:48', { ha: 60, oiii: 45 }), B('ic1396', '22:45', { ha: 150, oiii: 0, sii: 120 }, { fine: M('03:31') }), E('iss')] } };
+    if (stato === 'piano Ricerca') return { piani: {}, modi: { '0:a': 'ric' }, auto: { K: '0:a' } };
+    if (stato === 'Ricerca senza oggetti') return { piani: {}, modi: { '0:a': 'ric' } };
+    if (['piano vuoto', 'nessun progetto', 'nessun progetto alto', 'senza buio', 'senza sito'].includes(stato)) return { piani: {} };
+    const b = [B('ngc6992', '20:48', { ha: 80, oiii: 80 }), B('sh2155', '23:40', { ha: 126, oiii: 84 })];
+    if (stato === 'con conflitti') return { piani: { '0:a': [B('ngc7000', '20:48', { ha: 75, oiii: 45 }), B('ic1396', '22:30', { ha: 150, oiii: 0, sii: 0 }), B('m31', '01:10', { l: 90, r: 30, g: 30, b: 30 }), E('iss'), B('ngc7000', '04:20', { ha: 60, oiii: 0 })], '0:b': b } };
+    return { piani: { '0:a': [B('ngc7000', '20:48', { ha: 60, oiii: 45 }), B('ic1396', '22:45', { ha: 140, oiii: 0, sii: 100 }), E('iss'), B('ic1396', '04:00', { ha: 0, oiii: 60, sii: 0 })], '0:b': b } }; }
+  scala(f, nd) { const ks = Object.keys(f), tot = ks.reduce((a, k) => a + f[k], 0); if (!tot) return f; const o = {}; let s = 0, big = ks[0];
+    ks.forEach(k => { o[k] = Math.round(f[k] * nd / tot / 5) * 5; s += o[k]; if (f[k] > f[big]) big = k; }); o[big] += nd - s; return o; }
+  piano(K, fn, extra) { this.setState(s => ({ piani: { ...s.piani, [K]: fn(s.piani[K] || []) }, ask: false, annulla: null, ...(extra || {}) })); }
+  sposta(K, id, dm) { const c = this._env; this.piano(K, a => a.map(b => { if (b.id !== id || b.a == null || (b.k === 'r' && c.fisso(b.rid))) return b; const it = c.items.find(o => o.id === id), d = it ? it.end - it.a : 30; return { ...b, a: Math.max(c.t0, Math.min(c.t1 - d, b.a + dm)), why: undefined }; })); }
+  cambia(K, id, campo, dv) { this.piano(K, a => a.map(b0 => { if (b0.id !== id) return b0; const b = { ...b0, why: undefined };
+    if (campo.slice(0, 2) === 'f:') { const k = campo.slice(2), f = { ...b.f, [k]: Math.max(0, (b.f[k] || 0) + dv) }; return Object.values(f).reduce((x, v) => x + v, 0) < 15 ? b : { ...b, f }; }
+    if (campo === 'd') return { ...b, d: Math.max(15, b.d + dv) };
+    return { ...b, [campo]: Math.max(0, b[campo] + dv) }; })); }
+  togli(K, id) { this.piano(K, a => a.filter(b => b.id !== id), { sel: null, foglio: null }); }
+  posto(c, x, d, at) { if (at != null) { if (c.dk1 != null && at < c.dk1 && at + d > c.dk1) d = Math.max(15, c.dk1 - at); return { a: at, d }; }
+    if (c.dk0 != null) { const free = (s, e) => c.items.every(o => e + c.cam <= o.a || s >= o.end + c.cam), okk = m => c.ok(x, m);
+      for (let s = c.dk0; s + 15 <= c.dk1; s += 5) if (okk(s) && okk(s + 10) && free(s, s + 15)) { let e = s + 15; while (e + 5 <= c.dk1 && e - s < d && okk(e) && free(s, e + 5)) e += 5; return { a: s, d: e - s }; } }
+    const fine = c.items.reduce((m, o) => Math.max(m, o.end), -1e9) + c.cam; d = Math.min(60, d); return { a: fine + d <= c.t1 ? Math.max(c.t0, fine) : (c.dk0 ?? c.t0), d }; }
+  nuovo(x, a, d) { const c = this._env, r = c && c.ohR ? c.ohR(x) : 1;
+    return x.kind === 'p' ? { id: this.nid(), k: 'p', pid: x.id, a, f: this.scala(Object.fromEntries(x.man), Math.max(15, Math.floor(d / r / 5) * 5)) } : x.kind === 's' ? { id: this.nid(), k: 's', sid: x.id, a } : x.kind === 'c' ? { id: this.nid(), k: 'c', cid: x.id, a, d } : { id: this.nid(), k: 'r', rid: x.id, a, d }; }
+  fissoNuovo(x) { return x.cat === 'exo' ? { id: this.nid(), k: 'r', rid: x.id, bA: 60, bD: 60 } : { id: this.nid(), k: 'r', rid: x.id }; }
+  aggiungi(q, at) { const c = this._env; if (!c) return; const x = q.x; let nb;
+    if (q.fix) nb = this.fissoNuovo(x); else { const z = this.posto(c, x, q.d, at); nb = this.nuovo(x, z.a, z.d); }
+    this.piano(c.K, l => [...l, nb], { sel: nb.id, ghost: null, foglio: null }); }
+  aggiungiE(ev) { const c = this._env; if (!c) return; this.piano(c.K, l => l.some(b => b.eid === ev.id) ? l : [...l, { id: this.nid(), k: 'e', eid: ev.id }], { ghost: null, foglio: null }); }
+  // Completa (tiene i blocchi) o Rifai (da capo). Regole fisse (v30), nessun punteggio:
+  // Deep sky e Ricerca: prima le ore fisse; poi fra chi passa le soglie chi scende prima (a pari merito l'ordine delle proposte); ogni blocco vicino al suo transito;
+  // mai sotto la durata minima; i filtri a blocchi nell'ordine della Luna; le ore «non adatte» del meteo solo se non c'e' altro posto.
+  // Sistema solare: ogni corpo nell'ora col seeing migliore sopra la soglia, a pari merito vicino al transito; Giove sulla Macchia Rossa; la Luna piu' alta possibile.
+  riempi(tiene) { const c = this._env; if (!c || c.dk0 == null) return; const K = c.K, prima = this.state.piani[K] || [];
+    const nuovi = tiene ? prima.slice() : [], occ = tiene ? c.items.map(o => ({ a: o.a, end: o.end })) : [], cam = c.cam, auto = [];
+    const libero = (s, e) => s >= c.t0 && e <= c.t1 && occ.every(o => e + cam <= o.a || s >= o.end + cam), dentro = ref => nuovi.some(b => (b.pid || b.sid || b.rid || b.cid) === ref);
+    if (c.ss) { c.flex.filter(f => !dentro(f.x.id)).forEach(f => { const pk = c.ssPosto(f.x, f.need, libero); if (!pk) return; const nb = { ...this.nuovo(f.x, pk.a, f.need), why: pk.why }; nuovi.push(nb); occ.push({ a: pk.a, end: pk.a + f.need }); }); }
+    else {
+      c.fissi.forEach(f => { if (dentro(f.x.id)) return; if (occ.some(o => f.a < o.end && o.a < f.e)) return; nuovi.push(this.fissoNuovo(f.x)); occ.push({ a: f.a, end: f.e }); });
+      let rest = c.flex.filter(f => !dentro(f.x.id));
+      const T0 = Math.min(c.dk0, ...rest.map(f => c.w0(f.x))), T1 = Math.max(c.dk1, ...rest.map(f => c.w1(f.x)));
+      [true, false].forEach(evita => { for (let t = T0; t + 15 <= T1 && rest.length;) {
+        if (!libero(t, t + 15) || (evita && c.bad(t))) { t += 5; continue; }
+        const okF = (x, m) => m >= c.w0(x) && m + 5 <= c.w1(x) + 5 && c.ok(x, m) && (!c.okL || c.okL(x, m)), vis = rest.filter(f => okF(f.x, t) && okF(f.x, t + 10)); if (!vis.length) { t += 5; continue; }
+        let gap = t + 15; while (gap + 5 <= T1 && libero(t, gap + 5) && !(evita && c.bad(gap))) gap += 5;
+        const fine = f => { let m = t; while (m + 5 <= c.w1(f.x) && okF(f.x, m + 5)) m += 5; return m; };
+        const ord = vis.map(f => ({ f, e: fine(f) })).sort((p, q) => p.e - q.e || rest.indexOf(p.f) - rest.indexOf(q.f)); let messo = false;
+        for (const { f, e } of ord) { const end = Math.min(t + f.need, e, gap); if (end - t >= Math.min(c.minD(f.x), f.need)) { const nb = f.x.kind === 'p' ? c.alloca(f.x, t, end, this.nid()) : this.nuovo(f.x, t, end - t); if (!nb) continue; nuovi.push(nb); auto.push(nb); occ.push({ a: t, end: t + c.durDi(nb) }); rest = rest.filter(y => y !== f); t = t + c.durDi(nb) + cam; messo = true; break; } }
+        if (!messo) t += 5; } });
+      // Ogni blocco il piu' vicino possibile al suo transito, se c'e' spazio; poi l'ordine dei filtri e il perche'
+      auto.sort((p, q) => p.a - q.a).forEach(nb => { const x = c.xDi(nb), d = c.durDi(nb), i = occ.findIndex(o => o.a === nb.a); const o0 = occ[i]; const altri = occ.filter(o => o !== o0);
+        const lo = Math.max(c.t0, ...altri.filter(o => o.end <= nb.a).map(o => o.end + cam)), hi = Math.min(c.t1, ...altri.filter(o => o.a >= nb.a + d).map(o => o.a - cam));
+        const okT = s => s >= lo && s + d <= hi && s >= c.w0(x) && s + d <= c.w1(x) && [0, 0.5, 1].every(q => c.ok(x, s + d * q - (q === 1 ? 5 : 0)));
+        let best = nb.a; const id = x.tr - d / 2; for (let s2 = lo; s2 + d <= hi; s2 += 5) if (okT(s2) && Math.abs(s2 - id) < Math.abs(best - id)) best = s2;
+        nb.a = best; o0.a = best; o0.end = best + d; c.rifinisci(nb); });
+    }
+    this.setState(s => ({ piani: { ...s.piani, [K]: nuovi }, annulla: { K, piano: prima }, sel: null, ask: false })); }
+  inizia(e, b, mode, K) { if (e.button !== 0 || b.k === 'e') return; if (mode === 'm' && b.lock) return; if (mode !== 'm' && ((b.lock && !b.exo) || b.k === 's')) return; e.stopPropagation();
+    const raw = (this.state.piani[K] || []).find(y => y.id === b.id); this.setState({ drag: { id: b.id, mode, x0: e.clientX, K, b0: raw, a0: b.a, d0: b.d, exo: !!b.exo, moved: false }, ask: false }); }
+  muovi(e) { const d = this.state.drag, c = this._env; if (!d || !this._trk || !c) return; const W = this._trk.getBoundingClientRect().width; if (!W) return;
+    const px = e.clientX - d.x0; if (!d.moved && Math.abs(px) < 4) return; const dm = Math.round(px / W * c.S / 5) * 5, raw = d.b0; let nb;
+    if (d.mode === 'm') { let a = Math.max(c.t0, Math.min(c.t1 - d.d0, d.a0 + dm));
+      c.items.forEach(o => { if (o.id === raw.id) return; if (Math.abs(a - (o.end + c.cam)) <= 8) a = o.end + c.cam; else if (Math.abs(a + d.d0 - (o.a - c.cam)) <= 8) a = o.a - c.cam - d.d0; }); nb = { ...raw, a, fine: undefined }; }
+    else if (d.exo) nb = d.mode === 'r' ? { ...raw, bD: Math.max(0, raw.bD + dm) } : { ...raw, bA: Math.max(0, raw.bA - dm) };
+    else { const ov = raw.k === 'p' ? d.d0 - Object.values(raw.f).reduce((x, v) => x + v, 0) : 0;
+      if (d.mode === 'r') { const nd = Math.max(15, Math.min(c.t1 - d.a0, d.d0 + dm)); nb = raw.k === 'p' ? { ...raw, f: this.scala(raw.f, Math.max(15, nd - ov)) } : { ...raw, d: nd }; }
+      else { const a = Math.max(c.t0, Math.min(d.a0 + d.d0 - 15, d.a0 + dm)), nd = d.d0 - (a - d.a0); nb = raw.k === 'p' ? { ...raw, a, fine: undefined, f: this.scala(raw.f, Math.max(15, nd - ov)) } : { ...raw, a, d: nd }; } }
+    nb = { ...nb, why: undefined }; this.setState(s => ({ drag: { ...s.drag, moved: true }, annulla: null, piani: { ...s.piani, [d.K]: (s.piani[d.K] || []).map(b => b.id === raw.id ? nb : b) } })); }
+  lascia() { const d = this.state.drag; if (!d) return; this.setState({ drag: null, sel: d.moved ? d.id : (this.state.sel === d.id ? null : d.id) }); }
+  rTrk = el => { this._trk = el; };
+  dOver = e => { const q = this._dragP, ev = this._dragE, c = this._env; if ((!q && !ev) || !this._trk || !c) return; e.preventDefault(); const r = this._trk.getBoundingClientRect();
+    let a, d; if (ev) { a = ev.a; d = ev.d; } else if (q.fix) { a = q.a; d = q.e - q.a; } else { d = q.d; a = Math.max(c.t0, Math.min(c.t1 - 30, Math.round(((e.clientX - r.left) / r.width * c.S + c.t0) / 5) * 5)); }
+    const g = this.state.ghost; if (!g || g.a !== a || g.d !== d) this.setState({ ghost: { a, d } }); };
+  dIn = e => { e.preventDefault(); const g = this.state.ghost, q = this._dragP, ev = this._dragE; this._dragP = this._dragE = null;
+    if (ev) this.aggiungiE(ev); else if (q && (q.fix || g)) this.aggiungi(q, q.fix ? null : g.a); else this.setState({ ghost: null }); };
+  dOut = e => { if (e.currentTarget.contains(e.relatedTarget)) return; if (this.state.ghost) this.setState({ ghost: null }); };
+  hash(s) { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100003; return h; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, Q = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams(), stato = Q.get('stato') || p.stato || 'normale';
+    const SO = ALsoglie; SO.usaLuna(p.luna);
+    // I Tweaks rimettono la pagina allo stato scelto
+    if (this.state.stK !== stato) { const ini = this.iniziali(stato), fresh = { stK: stato, notte: 0, pos: ini.pos || 'a', piani: ini.piani, modi: ini.modi || {}, giorni: ini.giorni || {}, crit: { exo: true, neo: true, var: true, aavso: true, sn: true }, sel: null, drag: null, ghost: null, ask: false, esp: stato === 'esportato' ? { '0:a': '18:42' } : ini.esp || {}, foglio: null, annulla: null, modoAsk: null, comete: [], extra: [], campoT: '' };
+      this._auto = ini.auto || null; if (this.state.stK !== null) setTimeout(() => this.setState(fresh)); else Object.assign(this.state, fresh); }
+    const modo = this.state.modo || p.modo || 'scuro', t = AL.tema(modo, p.accento);
+    const fF = Q.get('formato') || p.formato || 'automatico', tel = AL.telefono(fF, this.state.w);
+    const set = o => this.setState(o), prev = e => e && e.preventDefault && e.preventDefault(), H = m => AL.ore(m / 60), M = s => this.toM(s), mn = m => m < 60 ? Math.round(m) + ' min' : H(m);
+    const D = this.dati(), sito = stato !== 'senza sito', buioNo = stato === 'senza buio';
+    const IC = { ds: 'M12 4a8 8 0 1 0 .01 0M12 10a2 2 0 1 0 .01 0', pianeta: 'M7 12a5 5 0 1 0 10 0a5 5 0 1 0-10 0M2.5 15.5c3 1.5 16-4 19-7', luna: 'M16 4a8 8 0 1 0 4 13a7 7 0 0 1-4-13z', cometa: 'M15 6a3 3 0 1 0 .01 0M12.5 10.5L4 19M13 8.5L6 11M16.5 11L13 18',
+      exo: 'M10 5a7 7 0 1 0 .01 0M19 12.5a1.5 1.5 0 1 0 .01 0', var: 'M3 12c2-6 4-6 6 0s4 6 6 0 4-6 6 0', neo: 'M8 5l7-1 5 6-3 8-8 1-5-6z', sole: 'M12 7a5 5 0 1 0 .01 0M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4', ric: 'M4 19h16M6 15l4-5 3 3 5-7', aavso: 'M12 3v18M3 12h18M6 6l12 12', sn: 'M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z' };
+    // Tempi della notte (v27, Impostazioni › Planner): tre gruppi, chiave planner.tempi. Un pezzo senza valore non si disegna, la riga sotto lo nomina.
+    const TD = ALsoglie.imp.schema['planner.tempi'].righe, tK = stato === 'tempi non scritti' ? 'vuoti' : (p.tempi || 'd\u0027esempio');
+    const T = Object.fromEntries(TD.map(r => [r.k, tK === 'd\u0027esempio' ? r.es : tK === 'dalle Impostazioni' ? ((ALsoglie.imp.get('planner.tempi') || {})[r.k] ?? null) : null]));
+    // Automazione della postazione (Impostazioni › Automazione) e setup (Attrezzatura: ruota portafiltri)
+    const auK = stato === 'postazione senza automazione' ? 'nessuna' : (p.automazione || 'AM5 con tetto, sensore e pannello · EQ6-R con flat di cielo'), AU = k => auK === 'dalle Impostazioni' ? (ALsoglie.imp.get('automazione.' + k) || {}) : auK === 'nessuna' ? (k === 'b' ? { cielo: true } : {}) : k === 'a' ? { tetto: true, sensore: true, flat: true } : { cielo: true };
+    const wheel = (p.setup || 'mono con ruota') === 'mono con ruota', camT = wheel ? 'mono · ruota 7 filtri' : 'a colori · senza ruota';
+    const due = (p.postazioni || 'due') === 'due', rete = (p.rete || 'sì') !== 'no', horF = (p.orizzonte || 'importato') === 'importato' && ALdati.orizzonte ? ALdati.orizzonte['Cima Ekar'] : null;
+    const FASE = { 'primo quarto, 50%': 50, 'piena, 100%': 100 }[p.faseLuna] ?? null;   // Tweak: la Luna di stanotte
+    const nI = buioNo ? 0 : this.state.notte, N0 = buioNo ? D.SENZA : D.NOTTI[nI];
+    const posK = due ? this.state.pos : 'a', POS = D.POS.find(x => x.k === posK), K0 = (buioNo ? 'x' : nI) + ':' + posK;
+    // Tre linguette per tecnica, per postazione e per notte; il Sistema solare ha Notte · Giorno (il Sole)
+    const modoK = (this.state.modi || {})[K0] || 'ds', giorno = modoK === 'ss' && !buioNo && !!(this.state.giorni || {})[K0], K = K0 + (giorno ? ':g' : ''), N = (q => FASE == null ? q : { ...q, luna: { ...q.luna, pct: FASE } })(giorno ? D.DAY[nI] : N0);
+    const F = m => this.fmt(m, giorno ? 0 : 720), au = AU(posK);
+    // I tempi che servono qui: il tetto solo con il tetto, il cambio filtro solo con la ruota, lo spostamento fra pannelli solo nel Sistema solare
+    const serve = r => (!r.tetto || au.tetto) && (r.k !== 'filtro' || wheel) && (r.k !== 'pannello' || modoK === 'ss') && (r.k !== 'flat' || (au.flat && modoK !== 'ss')) && (modoK !== 'ss' || !['dither', 'ditherOgni', 'scarico', 'afOgni', 'flip', 'flat'].includes(r.k));
+    const mancanti = TD.filter(r => serve(r) && T[r.k] == null).map(r => r.l[0].toLowerCase() + r.l.slice(1)).join(', ');
+    const somma = ks => { const v = ks.map(k => T[k]).filter(v => v != null); return v.length ? v.reduce((x, y) => x + y, 0) : null; };
+    const passiA = [['raffreddamento', 'raff'], au.sensore && ['aspetta che sia sicuro'], au.flat && ['apre il coperchio'], au.tetto && ['apre il tetto', 'apri'], ['unpark', 'unpark']].filter(Boolean);
+    const passiC = [['park', 'park'], au.tetto && ['chiude il tetto', 'chiudi'], au.flat && ['chiude il coperchio'], ['riscaldamento', 'risc']].filter(Boolean);
+    const avvio = somma(passiA.map(x => x[1]).filter(Boolean)), chius = somma(passiC.map(x => x[1]).filter(Boolean)), cambioT = somma(['punt', 'af']), flipT = T.flip, cam = cambioT || 0;
+    const S = N.t1 - N.t0, pct = m => (m - N.t0) / S * 100, pc = m => pct(m).toFixed(3) + '%', wc = d => (Math.max(0, d) / S * 100).toFixed(3) + '%';
+    const altO = (x, m) => this.alt(x.dec, x.tr, m, N.lat), altL = m => this.alt(22, N.luna.tr, m, N.lat);
+    // Dietro l'orizzonte: la sagoma del sito importata in Impostazioni; senza, 0°
+    const horAt = (x, m) => horF ? horF(this.azi(x.dec, x.tr, m, N.lat)) : 0;
+    const IMP = SO.imp, AMIN = +IMP.get('planner.alt'), AMINS = +IMP.get('planner.altS'), ADC = +IMP.get('planner.adc'), DMIN = +IMP.get('planner.dur') * 60;   // da Impostazioni › Planner
+    // v30: altezza massima (vuota = spenta), pausa prima del meridiano (vuota), crepuscolo ammesso per la banda stretta. Tweaks o Impostazioni.
+    const twI = (v, k) => v === 'dalle Impostazioni' ? IMP.get(k) : v;
+    const ALTMAX = stato === 'altezza massima col conflitto' ? 80 : (v => v == null || v === 'spenta' ? null : parseFloat(v))(twI(p.altezzaMax, 'planner.altMax'));
+    const PAUSA = stato === 'pausa prima del meridiano' ? 10 : (v => v == null || v === 'vuota' ? null : parseFloat(v))(twI(p.pausa, 'planner.pausa'));
+    const CREP = stato === 'banda stretta col crepuscolo nautico' ? 'nautico' : (v => v === 'crepuscolo nautico' || v === 'nautico' ? 'nautico' : 'astronomico')(twI(p.crepuscolo, 'planner.crep'));
+    const seeOn = stato !== 'Sistema solare · senza chiave Meteoblue' && (p.seeing || 'con la chiave Meteoblue') !== 'senza chiave Meteoblue';
+    const chiaviK = stato === 'Ricerca · chiavi mancanti' ? 'nessuna' : (p.chiavi || 'AAVSO e TNS'), haAAVSO = chiaviK === 'AAVSO e TNS', haTNS = chiaviK === 'AAVSO e TNS', SNMAG = +IMP.get('ricerca.sn');
+    const minDi = x => x.kind === 's' ? AMINS : AMIN, ok = (x, m) => { const h = altO(x, m); return h >= minDi(x) && h >= horAt(x, m) && (x.kind !== 'p' || ALTMAX == null || h <= ALTMAX); };
+    const W0 = giorno ? N.sr : N.dk0, W1 = giorno ? N.ss : N.dk1, hasW = W0 != null;
+    const dk = N.dk0 != null, RIP = SO.sogliaRipresa, rip = m => SO.ripresa(N.luna.pct, altL(m)), gL = SO.giudizioLuna(N.luna.pct), contaL = m => gL >= 1 && altL(m) >= RIP.alt;
+    const metAt = m => { if (!N.met) return null; let v = N.met[0][1]; N.met.forEach(([a, l]) => { if (m >= a) v = l; }); return v; };
+    const LARGA = { l: 1, r: 1, g: 1, b: 1, colori: 1, 'colori-lp': 1, 'colori-uvir': 1, senza: 1 };
+    // La Luna per oggetto (v30, Impostazioni › Planner): la distanza richiesta dipende dalla fase e dalla banda; sotto −5° la Luna non conta
+    const LREG = SO.lunaReg(), serveB = b => SO.serveLuna(b, N.luna.pct, LREG), passa = (x, k, m) => x.luna == null || SO.lunaPassa(k, x.luna, N.luna.pct, altL(m), LREG);
+    const BN = { larga: 'banda larga', oiii: 'OIII', stretta: 'banda stretta' }, ordDi = b => b.ord || b.x.man.map(f => f[0]);
+    const lunaPill = x => { const bs = [...new Set((x.man || [['l']]).map(f => SO.bandaDi(f[0])))], okB = b => x.luna >= serveB(b), tutti = bs.every(okB);
+      if (bs.length === 1) return PL(tutti ? '✓' : '!', 'Luna a ' + x.luna + '° · servono ' + serveB(bs[0]) + '°', tutti ? 0 : 1);
+      const nomeB = b => b === 'larga' ? 'larga' : b === 'oiii' ? 'OIII' : AL.FD[(x.man.find(f => SO.bandaDi(f[0]) === 'stretta') || ['ha'])[0]][0];
+      return PL(tutti ? '✓' : '!', 'Luna a ' + x.luna + '° · ' + bs.map(b => nomeB(b) + (okB(b) ? ' sì' : ' no')).join(' · '), tutti ? 0 : 1); };
+    // Finestre: banda larga nel buio astronomico (fisso); banda stretta dal crepuscolo nautico se ammesso: dalla fine del civile, Sole sotto −6° (Target Scheduler, ADR 0013)
+    const soloStretta = x => x.kind === 'p' && x.man.every(f => SO.bandaDi(f[0]) !== 'larga');
+    const w0 = x => !giorno && CREP === 'nautico' && soloStretta(x) && N.c1 != null ? N.c1 : (giorno ? N.sr : N.dk0), w1 = x => !giorno && CREP === 'nautico' && soloStretta(x) && N.c2 != null ? N.c2 : (giorno ? N.ss : N.dk1);
+    const seeAt = m => { const tb = giorno ? D.SEED : D.SEE; let v = tb[0][1]; tb.forEach(([a, l]) => { if (m >= a) v = l; }); return v; };
+    const EVn = sito && !buioNo && !giorno ? D.EV.filter(e => e.notte === nI) : [];
+    const SOLx = giorno ? D.SOLE : D.SOL.map(x => x.moon ? { ...x, dec: 22, tr: N.luna.tr } : x), COMx = this.state.comete || [], RICx = D.RIC.concat(this.state.extra || []);
+    // Il conto di un blocco deep sky: pose, dither, scaricamento, filtro (con la ruota), autofocus, flip. Una parte senza tempo scritto manca.
+    const POSA = { ha: 300, oiii: 300, sii: 300 }, posaDi = k => POSA[k] || 120;
+    const contoP = (x, f, a, ord) => { const fil = (ord || x.man.map(q => q[0])).map(k => [k]).filter(([k]) => (f[k] || 0) > 0), integ = fil.reduce((q, [k]) => q + f[k], 0); let n = 0, sec = 0, min = 0;
+      const parti = fil.map(([k]) => { const nk = Math.max(1, Math.round(f[k] * 60 / posaDi(k))); n += nk; return AL.FD[k][0] + ' ' + nk + ' × ' + posaDi(k) + ' s = ' + H(nk * posaDi(k) / 60); });
+      if (T.dither != null && T.ditherOgni) { const nd = Math.floor(n / T.ditherOgni); if (nd) { sec += nd * T.dither; parti.push('dither ' + nd + ' × ' + T.dither + ' s'); } }
+      if (T.scarico != null && n) { sec += n * T.scarico; parti.push('scaricamento ' + n + ' × ' + T.scarico + ' s'); }
+      if (wheel && T.filtro != null && fil.length) { sec += fil.length * T.filtro; parti.push('filtro ' + (fil.length > 1 ? fil.length + ' × ' : '') + T.filtro + ' s'); }
+      if (T.af != null && T.afOgni) { const na = Math.ceil(integ / 60 / T.afOgni); if (na) { min += na * T.af; parti.push('autofocus ' + na + ' × ' + T.af + ' min'); } }
+      const d0 = integ + sec / 60 + min; if (flipT != null && x.tr >= a && x.tr <= a + d0) { min += flipT; parti.push('flip ' + flipT + ' min'); }
+      const d = Math.ceil(integ + sec / 60 + min); return { d, s: parti.join(' · ') + ' → ' + H(d) }; };
+    const ohR = x => x.kind === 'p' ? contoP(x, Object.fromEntries(x.man), -1e4).d / x.tot : 1;
+    // Il Sistema solare: pannelli × (ripresa + spostamento), per filtro sui pianeti; cambio filtro solo con la ruota
+    const ripSec = x => x.frame / x.fps, nPan = x => x.mos ? x.mos.n : 1;
+    const solSec = x => x.fil.length * nPan(x) * (ripSec(x) + (x.mos ? (T.pannello ?? 0) : 0)) + (wheel && x.fil.length > 1 ? (x.fil.length - 1) * (T.filtro ?? 0) : 0);
+    const solD = x => Math.max(2, Math.ceil(solSec(x) / 60)), filLab = k => k === 'lb' ? 'Luce bianca' : AL.FD[k][0];
+    const solConto = x => (x.mos ? nPan(x) + ' pannelli × ' : '') + (x.fil.length > 1 ? x.fil.length + ' filtri × ' : '') + '(' + x.frame + ' frame · ' + x.posa + ' ms · circa ' + Math.round(ripSec(x)) + ' s' + (x.mos && T.pannello != null ? ' + spostamento ' + T.pannello + ' s' : '') + ')' + (wheel && x.fil.length > 1 && T.filtro != null ? ' · filtro ' + (x.fil.length - 1) + ' × ' + T.filtro + ' s' : '') + ' → ' + mn(solD(x));
+    const fisso = x => x.cat === 'exo' || !!x.ecl;
+
+    // Il piano di questa notte e postazione
+    const items = ((this.state.piani || {})[K] || []).map(b => {
+      if (b.k === 'e') { const ev = D.EV.find(e => e.id === b.eid); return { ...b, a: ev.a, d: ev.d, end: ev.a + ev.d, ev, n: ev.n, lock: true }; }
+      if (b.k === 'p') { const x = D.P.find(y => y.id === b.pid); let c = contoP(x, b.f, b.a, b.ord); const a = b.fine != null ? b.fine - c.d : b.a; if (a !== b.a) c = contoP(x, b.f, a, b.ord); return { ...b, x, a, d: c.d, conto: c.s, end: a + c.d, n: x.n }; }
+      if (b.k === 's') { const x = SOLx.find(y => y.id === b.sid); if (!x) return null; const d = solD(x); return { ...b, x, d, end: b.a + d, n: x.n + (x.sub ? ' · ' + x.sub : '') }; }
+      if (b.k === 'c') { const x = COMx.find(y => y.id === b.cid); return x ? { ...b, x, end: b.a + b.d, n: x.n } : null; }
+      const x = RICx.find(y => y.id === b.rid); if (!x) return null;
+      if (x.cat === 'exo') { const a = x.t1 - b.bA, end = x.t2 + b.bD; return { ...b, x, a, end, d: end - a, n: x.n, lock: true, exo: true }; }
+      if (x.ecl) { const a = x.min - x.d / 2; return { ...b, x, a, d: x.d, end: a + x.d, n: x.n, lock: true }; }
+      return { ...b, x, end: b.a + b.d, n: x.n }; }).filter(Boolean).sort((a, b) => a.a - b.a);
+    const nonE = items.filter(b => b.k !== 'e');
+
+    // Conflitti: sovrapposti, sotto la soglia o dietro l'orizzonte, banda larga con la Luna, sopra un evento fisso, base corta. Il meteo non e' un conflitto.
+    const conf = {}, add = (id, s) => { (conf[id] = conf[id] || []).push(s); };
+    nonE.forEach((b, i) => {
+      nonE.slice(0, i).forEach(o => { if (o.a < b.end && b.a < o.end) add(b.id, 'Si sovrappone a ' + o.n + '.'); });
+      for (let m = b.a; m < b.end; m += 5) { const h = altO(b.x, m); if (h < 0 || h < horAt(b.x, m)) { add(b.id, 'Dietro l\u0027orizzonte dalle ' + F(m) + '.'); break; } if (h < minDi(b.x)) { add(b.id, (b.x.sole ? 'Sole sotto ' : 'Sotto ') + minDi(b.x) + '° dalle ' + F(m) + '.'); break; } }
+      if (b.k === 'p' && ALTMAX != null) for (let m = b.a; m < b.end; m += 5) if (altO(b.x, m) > ALTMAX) { add(b.id, 'Sopra ' + ALTMAX + '° dalle ' + F(m) + '.'); break; }
+      if (b.k === 'p' && PAUSA && flipT != null && b.x.tr > b.a && b.x.tr < b.end && [b.a, b.end].some(m => m > b.x.tr - PAUSA && m < b.x.tr + flipT)) add(b.id, 'Il flip cade nella pausa prima del meridiano.');
+      if (b.k === 'p') { let c = b.a; const vis = {}; ordDi(b).forEach(k => { const v = b.f[k] || 0, bd = SO.bandaDi(k); if (v && !vis[bd]) for (let m = c; m < c + v; m += 5) if (!passa(b.x, k, m)) { vis[bd] = 1; add(b.id, 'Luna a ' + b.x.luna + '°: in ' + BN[bd] + ' servono ' + serveB(bd) + '°.'); break; } c += v; }); }
+      if (b.exo) { if (b.bA < 30) add(b.id, 'Base prima del transito sotto 30 min.'); if (b.bD < 30) add(b.id, 'Base dopo il transito sotto 30 min.'); }
+      items.forEach(o => { if (o.k === 'e' && o.a < b.end && b.a < o.end) add(b.id, 'Copre ' + o.ev.cop + '.'); }); });
+    const marg = (T.punt || 0) + (T.af || 0) + (wheel && T.filtro ? T.filtro / 60 : 0);
+    if (marg) items.forEach(o => { if (!o.lock) return; const pr = nonE.filter(b => b.id !== o.id && b.end <= o.a + 0.01).sort((p2, q2) => q2.end - p2.end)[0]; if (!pr) return; const mg = o.a - pr.end;
+      if (mg < marg) add(pr.id, 'Arrivi ' + (o.x && o.x.ecl ? 'al minimo' : 'al transito') + ' con ' + Math.max(0, Math.round(mg)) + ' min di margine.'); });
+    const nConf = Object.values(conf).reduce((a, l) => a + l.length, 0);
+
+    // Curve d'altezza: orizzontali sul desktop, verticali sul telefono
+    const curva = (fn, a, d, n, sx, sy, vert) => { let s = '', pen = false; for (let i = 0; i <= n; i++) { const m = a + d * i / n, h = fn(m); if (h < 0) { pen = false; continue; }
+      const u = i / n * sx, v = Math.max(0, 100 - h / 90 * 100) * sy / 100; s += (pen ? 'L' : 'M') + (vert ? (100 - v * 100 / sy).toFixed(1) + ' ' + (u * (vert / sx)).toFixed(1) : u.toFixed(1) + ' ' + v.toFixed(1)); pen = true; } return s; };
+    const lunaC2 = m => contaL(m) ? altL(m) : -1;
+    const lunaPath = curva(altL, N.t0, S, 120, 1000, 100, 0), lunaConta = curva(lunaC2, N.t0, S, 120, 1000, 100, 0);
+    const lunaPathV = curva(altL, N.t0, S, 120, 100, 100, 1000), lunaContaV = curva(lunaC2, N.t0, S, 120, 100, 100, 1000);
+
+    const sel = this.state.sel, cur = this.state.drag ? this.state.drag.id : null, rel = (b, m) => ((m - b.a) / b.d * 100).toFixed(2) + '%';
+    const PLI = { saturno: 0, giove: 1, marte: 2, venere: 3, mercurio: 4, urano: 5, nettuno: 6 };
+    // Il colore della barretta (v32): progetti col loro colore, Luna, Sole col filtro, pianeti, tipi della Ricerca (t.tipi)
+    const colDi = x => x.kind === 'p' ? t.pal[x.col] : x.moon ? AL.LUNA.line : x.sole ? (x.fil[0] === 'lb' ? t.FC[3] : AL.linea(t, x.fil[0])) : x.cat === 'pianeta' ? (t.pl[PLI[x.id]] || t.text) : x.kind === 'c' ? t.tipi.cometa : x.ecl ? t.tipi.ecl : t.tipi[x.cat] || t.text;
+    const icDi = x => x.kind === 'p' ? IC.ds : x.kind === 'c' ? IC.cometa : IC[x.cat];
+    const blocchi = nonE.map(b => { const cf = conf[b.id] || [], on = sel === b.id, x = b.x, col = colDi(x);
+      let filS = '', segs = null, parts = null, mk = null;
+      if (b.k === 'p') { const fil = ordDi(b).map(k => [k]).filter(([k]) => (b.f[k] || 0) > 0); filS = fil.map(([k]) => AL.FD[k][0] + ' ' + H(b.f[k])).join(' · ') + (x.mos ? ' · pannelli ' + x.mos.ord.join(' · ') : '');
+        segs = fil.map(([k]) => { const tn = AL.tinta(t, k); return { w: (b.f[k] / b.d * 100).toFixed(2) + '%', bg: tn.bg, bd: tn.bd }; }); }
+      else if (b.k === 's') { let adc = false; for (let m = b.a; m < b.end; m += 1) if (altO(x, m) < ADC) adc = true;
+        filS = (x.mos ? 'mosaico ' + x.mos.n + ' pannelli' : x.fil.map(filLab).join(' ') + ' · ' + x.fil.length + ' × ' + mn(ripSec(x) / 60)) + (adc && !x.sole ? ' · ADC' : '');
+        segs = x.mos ? Array.from({ length: x.mos.n }, () => ({ w: (100 / x.mos.n).toFixed(2) + '%', bg: AL.rgba(t.text, 0.55), bd: '0' })) : x.fil.map(k => { const tn = AL.tinta(t, k); return { w: (100 / x.fil.length).toFixed(2) + '%', bg: tn.bg, bd: tn.bd }; }); }
+      else if (b.k === 'c') filS = 'cometa · posizione ricalcolata per ogni blocco';
+      else if (b.exo) { filS = 'base ' + mn(b.bA) + ' · transito ' + F(x.t1) + '–' + F(x.t2) + ' · base ' + mn(b.bD); parts = [{ a: x.t1, b: x.t2 }]; }
+      else if (x.ecl) { filS = 'binaria a eclisse'; mk = { at: x.min, s: 'minimo ' + F(x.min) }; }
+      else filS = x.cat === 'neo' ? 'NEO · posizione dal Minor Planet Center' : 'variabile';
+      const trM = (b.k === 'p' || (b.k === 's' && b.d >= 20)) && x.tr >= b.a && x.tr <= b.end ? x.tr : null, mark = mk || (trM != null ? { at: trM, s: (b.d >= 120 ? 'transita ' : '') + F(trM) } : null), dx = mark ? (mark.at - b.a) / b.d : 0;
+      const pp = parts ? parts.map(z => ({ l: rel(b, z.a), w: ((z.b - z.a) / b.d * 100).toFixed(2) + '%', bg: AL.rgba(t.text, 0.08), bd: AL.rgba(t.text, 0.35) })) : null;
+      return { id: b.id, l: pc(b.a), w: wc(b.d), n: b.n, durS: H(b.d), largo: b.d / S >= 0.09, titolo: b.n + ' · ' + F(b.a) + '–' + F(b.end) + (filS ? ' · ' + filS : '') + (b.why ? ' · ' + b.why : ''), filS, col, ic: icDi(x), lock: !!b.lock, segs, parts: pp, partsV: pp, conf: cf.length ? (b.d >= 100 ? cf[0] + (cf.length > 1 ? ' +' + (cf.length - 1) : '') : ' ') : '',
+        tr: mark ? { l: rel(b, mark.at), s: mark.s, x: dx > 0.5 ? 'auto' : '0', rx: dx > 0.5 ? '0' : 'auto' } : null,
+        flip: trM != null && flipT && b.k === 'p' ? { l: rel(b, trM), w: (flipT / b.d * 100).toFixed(2) + '%', t: 'Flip · ' + flipT + ' min' } : null,
+        pausa: trM != null && PAUSA && b.k === 'p' ? { l: rel(b, Math.max(b.a, trM - PAUSA)), w: (Math.min(PAUSA, trM - b.a) / b.d * 100).toFixed(2) + '%', t: 'Pausa prima del meridiano · ' + PAUSA + ' min' } : null,
+        why: b.why || '', whyT: b.why && b.why.includes('seeing') ? 'previsione del seeing, non una misura' : (b.why || ''),
+        curva: curva(m => altO(x, m), b.a, b.d, 40, 100, 100, 0), curvaV: curva(m => altO(x, m), b.a, b.d, 40, 100, 100, 100),
+        ring: cf.length ? t.bad : on ? t.text : col, rw: cf.length || on ? '2px' : '1.5px', z: b.id === cur ? 8 : on ? 7 : 2, selA: on ? 'true' : 'false', cur: b.lock && !b.exo ? 'pointer' : b.lock ? 'default' : 'grab', rz: (!b.lock || !!b.exo) && b.k !== 's',
+        aria: b.n + ', ' + F(b.a) + '–' + F(b.end) + ', ' + filS + (b.lock ? ', ora fissa' : '') + (cf.length ? '. ' + cf.join(' ') : ''),
+        down: e => { if (b.lock) { if (e.button === 0) set({ sel: on ? null : b.id }); return; } this.inizia(e, b, 'm', K); }, downL: e => this.inizia(e, b, 'l', K), downR: e => this.inizia(e, b, 'r', K),
+        key: e => { if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !b.lock) { e.preventDefault(); this.sposta(K, b.id, (e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 15 : 5)); } else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); this.togli(K, b.id); } else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); set({ sel: on ? null : b.id }); } },
+        tap: e => { prev(e); set({ sel: b.id, foglio: 'blocco' }); } }; });
+    const evB = items.filter(b => b.k === 'e').map(b => { const on = sel === b.id; return { id: b.id, l: pc(b.a), w: wc(b.d), n: 'ISS ' + b.ev.ora.slice(0, 5), bg: t.tipi.evento, col: t.tipi.evento, chip: on ? t.card : t.card2, ring: on ? t.text : t.line,
+      aria: b.n + ' alle ' + b.ev.ora + ', ora fissa', on: e => { prev(e); set({ sel: on ? null : b.id }); }, tap: e => { prev(e); set({ sel: b.id, foglio: 'blocco' }); } }; });
+
+    // Avvio, cambi e chiusura: pezzi tratteggiati, nome al passaggio del mouse
+    const pz = []; if (items.length) { const f0 = items[0], fine = Math.max(...items.map(b => b.end));
+      if (avvio) pz.push({ a: Math.max(N.t0, f0.a - avvio), d: Math.min(avvio, f0.a - N.t0), t: 'Avvio · ' + mn(avvio) + ' · ' + passiA.map(x => x[0]).join(' · '), full: true, av: true });
+      if (cambioT) items.slice(1).forEach(b => pz.push({ a: b.a - cambioT, d: cambioT, t: 'Cambio · ' + mn(cambioT) + ' · puntamento e centratura, autofocus' }));
+      if (chius) pz.push({ a: fine, d: Math.min(chius, N.t1 - fine), t: 'Chiusura · ' + mn(chius) + ' · ' + passiC.map(x => x[0]).join(' · '), full: true, ch: true });
+      // Flat (v30): col pannello dopo la chiusura; senza, flat di cielo al crepuscolo della sera (Sole fra −2° e −7°). Solo i filtri usati stanotte.
+      const fUs = [...new Set(items.filter(b => b.k === 'p').flatMap(b => ordDi(b).filter(k => (b.f[k] || 0) > 0)))], nF = +IMP.get('flat.n'), dkF = IMP.get('flat.dark') !== false;
+      const flT = fUs.map(k => AL.FD[k][0]).join(' '), nT = fUs.map(() => nF).join(' + ');
+      if (fUs.length && au.flat && T.flat != null) { const a = fine + (chius || 0), d = Math.min(fUs.length * T.flat, N.t1 - a); pz.push({ a, d, t: 'Flat · ' + flT + ' · ' + nT + (dkF ? ' · dark-flat ' + nT : ''), full: true, fl: true }); }
+      if (fUs.length && au.cielo && !au.flat && !giorno) pz.push({ a: N.ss + 10, d: 26, t: 'Flat di cielo · ' + flT + ' · ' + nT + ' · Sole da −2° a −7°', full: true, fl: true }); }
+    const passi = items.length ? [{ t: 'Avvio' + (avvio ? ' ' + F(items[0].a - avvio) : '') + ' · ' + passiA.map(x => x[0]).join(' · ') }, { t: 'Chiusura' + (chius ? ' ' + F(Math.max(...items.map(b => b.end))) : '') + ' · ' + passiC.map(x => x[0]).join(' · ') }].concat(pz.filter(z => z.fl).map(z => ({ t: z.t.replace(' · ', ' ' + F(z.a) + ' · ') }))) : [];
+    const pezzi = pz.map(z => ({ l: pc(z.a), w: wc(z.d), t: z.t, top: z.full ? '0px' : '10px', side: z.full ? '0px' : '8px' }));
+    const cambioBg = AL.tratteggio(AL.rgba(t.muted, 0.55)), ripTr = AL.tratteggio(AL.rgba(t.muted, 0.8));
+    // Telefono, vista «elenco» (v28.4): la notte in una striscia sottile, il piano come righe in ordine d'ora
+    const bM = Object.fromEntries(blocchi.map(x => [x.id, x])), eM = Object.fromEntries(evB.map(x => [x.id, x]));
+    blocchi.forEach(x => { x.colT = AL.rgba(x.col, 0.85); });
+    const elenco = items.filter(b => bM[b.id] || eM[b.id]).map(b => { const x = bM[b.id] || eM[b.id], on = sel === b.id;
+        return { a: b.a, b: 'true', ora: F(b.a), fine: F(b.end), n: x.n, ic: x.ic || '', col: x.col || t.muted, lock: !!b.lock, sub: x.filS || (b.ev ? 'ora fissa · ' + b.ev.ora : ''), why: x.why || '', conf: x.conf && x.conf.trim() ? x.conf : '', dur: x.durS || '', bg: on ? t.card2 : 'transparent', tap: x.tap, aria: x.aria }; })
+      .concat(pz.map(z => ({ a: z.a, t: 'true', ora: F(z.a), n: z.t })))
+      .sort((u, v) => u.a - v.a);
+    const striscia = { aria: 'La notte: ' + (items.length ? items.length + (items.length === 1 ? ' blocco' : ' blocchi') : 'nessun blocco'), sub: giorno ? 'Sole sopra l\u0027orizzonte · blocchi pieni · tratteggio: avvio, cambi e chiusura' : 'fasce: crepuscolo e buio · linea: Luna · blocchi pieni · tratteggio: avvio, cambi e chiusura' };
+
+    // Fasce del cielo, Luna e ripresa, meteo
+    const pts = giorno ? [[N.t0, 1], [N.sr, 0], [N.ss, 1]] : dk ? [[N.t0, 0], [N.ss, 1], [N.c1, 2], [N.n1, 3], [N.dk0, 4], [N.dk1, 3], [N.n2, 2], [N.c2, 1], [N.sr, 0]] : [[N.t0, 0], [N.ss, 1], [N.c1, 2], [N.n1, 3], [N.n2, 2], [N.c2, 1], [N.sr, 0]];
+    const fasce = pts.map(([a, k], i) => { const b = i + 1 < pts.length ? pts[i + 1][0] : N.t1; return { l: pc(a), w: wc(b - a), bg: AL.rgba(t.band.c, t.band.o[k]) }; });
+    const ripK = m => rip(m) === 'stretta' ? 'stretta' : contaL(m) ? 'limite' : 'larga', ripS = [];
+    if (dk) for (let m = N.dk0; m < N.dk1; m += 5) { const k = ripK(m), l = ripS[ripS.length - 1]; if (l && l.k === k) l.b = Math.min(N.dk1, m + 5); else ripS.push({ a: m, b: Math.min(N.dk1, m + 5), k }); }
+    const RS = { larga: { bg: AL.rgba(t.muted, 0.4), sh: 'none', n: 'banda larga' }, limite: { bg: 'transparent', sh: 'inset 0 0 0 1.5px ' + AL.rgba(t.muted, 0.9), n: 'banda larga al limite' }, stretta: { bg: ripTr, sh: 'none', n: 'solo banda stretta' } };
+    const rip2 = ripS.map(s => ({ l: pc(s.a), w: wc(s.b - s.a), bg: RS[s.k].bg, sh: RS[s.k].sh }));
+    const met = N.met ? N.met.map(([a, lv], i) => { const a2 = Math.max(a, N.t0), b = i + 1 < N.met.length ? N.met[i + 1][0] : N.t1; return { l: pc(a2), w: wc(b - a2), c: t.pills[lv][1], s: AL.SEGNI[lv], p: AL.PAROLE[lv], lab: (b - a2) / S > 0.06 }; }) : [];
+    const ticks = []; for (let h = Math.ceil(N.t0 / 60) * 60; h <= N.t1; h += 60) ticks.push({ l: pc(h), s: F(h).slice(0, 2) });
+    const ora = nI === 0 && !buioNo && !giorno ? { l: pc(M('20:05')), s: '20:05' } : null;
+    const luna = { pct: N.luna.pct, t: 'Luna ' + AL.al(N.luna.pct) + N.luna.pct + '%' + (N.luna.rise != null ? ' · sorge ' + F(N.luna.rise) : ' · sotto l\u0027orizzonte') };
+    const buio = dk ? N.dk1 - N.dk0 : 0, kinds = [...new Set(ripS.map(s => s.k))];
+    const legenda = giorno ? [{ n: 'Sole ' + F(N.sr) + '–' + F(N.ss), bg: AL.rgba(t.band.c, t.band.o[0]), bt: '0' }].concat(pz.length ? [{ n: 'avvio, cambi e chiusura', bg: cambioBg, bt: '0' }] : []) : [].concat(dk ? [{ n: 'buio ' + F(N.dk0) + '–' + F(N.dk1), bg: AL.rgba(t.band.c, t.band.o[4]), bt: '0' }] : [{ n: 'nessun buio', bg: 'transparent', bt: '0' }])
+      .concat([{ n: gL >= 1 ? 'Luna, tratteggiata dove conta' : 'Luna', bg: 'transparent', bt: '2px dashed ' + AL.LUNA.line }])
+      .concat(kinds.map(k => ({ n: RS[k].n, bg: k === 'limite' ? 'transparent' : RS[k].bg, bt: k === 'limite' ? '2px solid ' + AL.rgba(t.muted, 0.9) : '0' })))
+      .concat(pz.length || flipT ? [{ n: 'avvio, cambi, flip, chiusura' + (pz.some(z => z.fl) ? ' e flat' : ''), bg: cambioBg, bt: '0' }] : []).concat(PAUSA ? [{ n: 'pausa prima del meridiano', bg: AL.rgba(t.muted, 0.45), bt: '0' }] : []);
+
+    // Le proposte, per modo. Fotografia: Deep sky o Sistema solare. Ricerca: esopianeti, NEO e variabili insieme. Nessun punteggio.
+    const nelDi = id => { const nel = items.filter(b => (b.pid || b.sid || b.rid || b.cid) === id); return nel.length ? 'nel piano · ' + nel.map(b => F(b.a) + '–' + F(b.end)).join(', ') : ''; };
+    const dsH = (x, q) => ({ ds: e => { this._dragP = q; this._dragE = null; e.dataTransfer.effectAllowed = 'copy'; e.dataTransfer.setData('text/plain', x.n); }, de: () => { this._dragP = null; if (this.state.ghost) set({ ghost: null }); }, add: e => { prev(e); this.aggiungi(q); } });
+    const PL = (s, tx, lv) => ({ s: s ? s + ' ' : '', t: tx, bg: lv == null ? t.card : t.pills[lv][0], fg: lv == null ? t.text : t.pills[lv][1] });
+    let prop = [], flex = [], fissi = [], propH = '', campo = null, vuotoT0 = '', planner = false;
+    if (modoK === 'ds') {
+      const PR = stato === 'nessun progetto' ? [] : D.P.filter(x => x.pos === posK);
+      const metr = x => { let vis = 0, ut = 0, nota = '', fv = null, st = null; if (dk) for (let m = N.dk0; m < N.dk1; m += 5) if (ok(x, m)) { vis += 5; if (metAt(m) === 0) ut += 5; if (fv == null) fv = m; if (st == null && !passa(x, 'l', m)) st = m; }
+        if (x.man.some(f => LARGA[f[0]]) && st != null) nota = st === fv ? 'tutta la notte solo banda stretta' : 'dalle ' + F(st) + ' solo banda stretta'; return { vis, ut: N.met ? ut : null, nota }; };
+      const propL = stato === 'nessun progetto alto' || buioNo ? [] : PR.map(x => ({ x, ...metr(x) })).filter(r => r.vis >= 60).sort((a, b) => (!!b.x.chiude - !!a.x.chiude) || ((b.ut ?? b.vis) - (a.ut ?? a.vis)) || (b.x.tot - a.x.tot));
+      prop = propL.map(({ x, vis, ut, nota }) => { const q = { x, fix: false, d: Math.min(120, Math.round(x.tot / 5) * 5) };
+        return { id: x.id, n: x.n, set: POS.set, ic: IC.ds, col: t.pal[x.col], lock: false, puo: true, ore: H(vis) + ' visibili · ' + (ut == null ? 'utili senza previsione' : ut ? H(ut) + ' utili' : 'nessuna ora utile'),
+          pills: [lunaPill(x)].concat(x.chiude ? [PL('◷', x.chiude, 1)] : []), nota, righe: x.mos ? [{ s: 'mosaico ' + x.mos.n + ' pannelli: tutti ogni notte, dal più indietro', fg: t.muted, fw: 400 }] : null, nel: nelDi(x.id),
+          man: x.man.map(([k, v]) => { const tn = AL.tinta(t, k), off = !!(nota && LARGA[k]); return { s: AL.FD[k][0] + ' ' + H(v), c: tn.bg, bd: tn.bd, op: off ? 0.4 : 1, fg: off ? t.muted : t.text }; }), ...dsH(x, q) }; });
+      flex = propL.map(r => ({ x: r.x, need: Math.ceil(r.x.tot * ohR(r.x)) }));   // l'ordine delle proposte
+      // Le comete stanno nel deep sky (pose lunghe), per sigla
+      const comV = buioNo ? [] : COMx.map(x => { let a0 = null, a1 = null, mx = -90, mxT = null; if (hasW) for (let m = W0; m < W1; m += 5) { const h = altO(x, m); if (h > mx) { mx = h; mxT = m; } if (ok(x, m)) { if (a0 == null) a0 = m; a1 = m + 5; } } return { x, a0, a1, mx, mxT }; });
+      prop = prop.concat(comV.map(({ x, a0, a1, mx, mxT }) => ({ id: x.id, n: x.n, set: POS.set, ic: IC.cometa, col: t.tipi.cometa, lock: false, puo: a0 != null, man: null, nota: '', nel: nelDi(x.id),
+        righe: [{ s: 'mag ' + x.mag.toFixed(1) + ' · ' + Math.round(mx) + '° alle ' + F(mxT) + ' · dati simulati', fg: t.text, fw: 400 }, { s: 'posizione ricalcolata per ogni blocco', fg: t.muted, fw: 400 }],
+        pills: [PL('', 'Cometa', null), lunaPill({ ...x, man: [['l', 1]] })], ore: a0 != null ? 'sopra ' + AMIN + '° ' + F(a0) + '–' + F(a1) : 'sotto ' + AMIN + '° stanotte', ...dsH(x, { x, fix: false, d: x.d }) })));
+      flex = flex.concat(comV.filter(r => r.a0 != null).map(r => ({ x: r.x, need: r.x.d })));
+      const sig = this.state.campoT.trim();
+      campo = { l: 'Aggiungi una cometa', lb: 'Aggiungi', ph: 'C/2026 A1, 12P', v: this.state.campoT, err: rete ? '' : 'Serve la rete per la posizione della cometa.', dis: rete && sig ? 'false' : 'true', bg: rete && sig ? t.hPill : t.card2, fg: rete && sig ? t.hPillFg : t.muted,
+        on: e => set({ campoT: e.target.value }), key: e => { if (e.key === 'Enter') { e.preventDefault(); this._campo && this._campo(); } }, add: e => { prev(e); this._campo && this._campo(); } };
+      this._campo = () => { if (!rete || !sig || COMx.some(c => c.n.toLowerCase() === sig.toLowerCase())) return; const h = this.hash(sig);
+        set({ campoT: '', comete: [...COMx, { id: 'c-' + h, n: sig, kind: 'c', cat: 'cometa', dec: 25 + h % 40, tr: M('20:30') + h % 240, mag: 7 + (h % 50) / 10, luna: 40 + h % 60, d: 45 }] }); };
+      propH = 'Prima chi si chiude, poi le ore utili, poi le ore mancanti. Le comete per sigla. Trascina sulla linea del tempo o Aggiungi.';
+      planner = stato === 'nessun progetto'; vuotoT0 = stato === 'nessun progetto' ? 'Nessun progetto ancora.' : buioNo ? 'Nessun buio stanotte.' : 'Nessun progetto alto più di ' + AMIN + ' gradi stanotte.';
+    } else if (modoK === 'ss') {
+      const solV = buioNo ? [] : SOLx.map(x => { let a0 = null, a1 = null, mx = -90, mxT = null, adc = 0; if (hasW) for (let m = W0; m < W1; m += 5) { const h = altO(x, m); if (h > mx) { mx = h; mxT = m; } if (ok(x, m)) { if (a0 == null) a0 = m; a1 = m + 5; if (h < ADC) adc += 5; } } return { x, a0, a1, mx, mxT, adc }; })
+        .filter(r => r.x.cat === 'cometa' || (r.a0 != null && r.a1 - r.a0 >= 30));
+      prop = solV.map(({ x, a0, a1, mx, mxT, adc }) => { const q = { x, fix: false, d: solD(x) };
+        const rip = (x.mos ? 'mosaico ' + x.mos.tipo.toLowerCase() + ' · ' + x.mos.n + ' pannelli · ' : '') + x.fil.map(filLab).join(' ') + ' · ' + x.frame + ' frame · ' + x.posa + ' ms · circa ' + Math.round(ripSec(x)) + ' s' + (x.roi ? ' · regione ' + x.roi : '');
+        const righe = [{ s: rip, fg: t.text, fw: 400 }].concat(x.moon ? [{ s: 'illuminata ' + AL.al(N.luna.pct) + N.luna.pct + '%', fg: t.muted, fw: 400 }] : x.riga ? [{ s: x.riga, fg: t.muted, fw: 400 }] : []).concat([{ s: 'in Progetti · durata ' + mn(solD(x)), fg: t.muted, fw: 400 }]);
+        const pills = [].concat(adc && !x.sole ? [PL('!', 'ADC sotto ' + ADC + '°', 1)] : []);
+        return { id: x.id, n: x.n + (x.sub ? ' · ' + x.sub : ''), set: POS.set, ic: IC[x.cat], col: colDi(x), lock: false, puo: a0 != null, man: null, nota: '', nel: nelDi(x.id), righe, pills: pills.length ? pills : null,
+          ore: a0 != null ? 'sopra ' + AMINS + '° ' + F(a0) + '–' + F(a1) + ' · massimo ' + Math.round(mx) + '° alle ' + F(mxT) : 'sotto ' + AMINS + '° stanotte', ...dsH(x, q) }; });
+      flex = solV.filter(r => r.a0 != null).map(r => ({ x: r.x, need: solD(r.x) }));
+      propH = giorno ? 'Il Sole dai Progetti, da alba a tramonto. A video, export per SharpCap.' : 'Luna e pianeti dai Progetti, a video. Export per SharpCap.';
+      vuotoT0 = buioNo ? 'Nessun buio stanotte.' : giorno ? 'Nessun progetto del Sole.' : 'Nessun pianeta alto più di ' + AMINS + ' gradi stanotte.';
+    } else {
+      const cr = this.state.crit, ricC = stato === 'Ricerca senza oggetti' || buioNo ? [] : RICx.filter(x => cr[x.cat] && (x.cat !== 'aavso' || haAAVSO) && (x.cat !== 'sn' || (haTNS && x.mag <= SNMAG)));
+      const okR = (x, a, e) => { if (!hasW || a < W0 || e > W1) return false; for (let m = a; m <= e; m += 5) if (!ok(x, m)) return false; return true; };
+      const ricV = ricC.map(x => { if (fisso(x)) { const a = x.cat === 'exo' ? x.t1 - 60 : x.min - x.d / 2, e = x.cat === 'exo' ? x.t2 + 60 : x.min + x.d / 2; return { x, fix: true, a, e, fit: okR(x, a, e), hMid: altO(x, (a + e) / 2) }; }
+        let a0 = null, a1 = null; if (hasW) for (let m = W0; m < W1; m += 5) if (ok(x, m)) { if (a0 == null) a0 = m; a1 = m + 5; } return { x, fix: false, a0, a1 }; })
+        .filter(r => r.fix ? r.fit : r.x.sim || (r.a0 != null && r.a1 - r.a0 >= r.x.d)).sort((a, b) => (a.fix ? a.a : a.a0 ?? 1e4) - (b.fix ? b.a : b.a0 ?? 1e4));
+      const TIPO = { exo: 'Esopianeta', neo: 'NEO', var: 'Variabile', aavso: 'Campagna AAVSO', sn: 'Supernova' };
+      prop = ricV.map(r => { const x = r.x, nel = nelDi(x.id), q = r.fix ? { x, fix: true, a: r.a, e: r.e } : { x, fix: false, d: x.d };
+        const sov = r.fix && !nel ? items.find(o => o.a < r.e && r.a < o.end) : null, righe = [];
+        if (x.cat === 'neo') righe.push({ s: 'posizione dal Minor Planet Center, serve la rete', fg: t.muted, fw: 400 });
+        if (x.cat === 'aavso') righe.push({ s: 'filtro ' + x.fil + ' · ' + x.cad + ' · priorità ' + x.pri, fg: t.text, fw: 400 }, { s: 'ultima: ' + x.ult + ' · dal Target Tool', fg: t.muted, fw: 400 });
+        if (x.cat === 'sn') righe.push({ s: 'mag ' + x.mag.toFixed(1) + ' · in ' + x.ospite + ' · ' + x.giorni + ' giorni dalla scoperta', fg: t.text, fw: 400 }, { s: 'dal Transient Name Server', fg: t.muted, fw: 400 }); if (x.sim) righe.push({ s: 'dati simulati per la tavola', fg: t.muted, fw: 400 });
+        if (sov) righe.push({ s: '✕ Si sovrappone a ' + sov.n + ': escluso.', fg: t.text, fw: 600 });
+        const ore = x.cat === 'exo' ? 'transito ' + F(x.t1) + '–' + F(x.t2) + ' · base 1 h prima e dopo' : x.ecl ? 'minimo ' + F(x.min) + ' · binaria a eclisse' : r.a0 != null ? 'sopra ' + AMIN + '° ' + F(r.a0) + '–' + F(r.a1) + ' · ' + mn(x.d) : mn(x.d);
+        return { id: x.id, n: x.n, set: POS.set, ic: IC[x.cat], col: colDi(x), lock: r.fix, puo: !(r.fix && nel), ore, pills: [PL('', TIPO[x.cat] + (r.fix ? ' · ora fissa' : ''), null)], man: null, nota: '', righe: righe.length ? righe : null, nel, link: x.cat === 'aavso' ? { l: 'Alert ↗', h: 'https://www.aavso.org/aavso-alert-notices' } : null, ...dsH(x, q) }; });
+      // Senza chiave la riga del tipo lo dice
+      [['aavso', 'Campagne AAVSO', 'AAVSO', haAAVSO], ['sn', 'Supernove', 'TNS', haTNS]].forEach(([k, n, ch, ha]) => { if (!ha && cr[k] && !buioNo && stato !== 'Ricerca senza oggetti') prop.push({ id: 'k-' + k, n, set: '', ic: IC[k], col: t.muted, lock: false, puo: false, ore: 'Serve la chiave ' + ch + ' in Impostazioni.', pills: null, man: null, nota: '', righe: null, nel: '', link: { l: 'Impostazioni ↗', h: 'Impostazioni.dc.html?sezione=planner' }, ds: () => {}, de: () => {}, add: () => {} }); });
+      fissi = ricV.filter(r => r.fix).sort((a, b) => b.hMid - a.hMid);
+      flex = ricV.filter(r => !r.fix).map(r => ({ x: r.x, need: r.x.d }));
+      const nm = this.state.campoT.trim();
+      campo = { l: 'Aggiungi oggetto', lb: 'Aggiungi', ph: 'WASP-12 b, Algol…', v: this.state.campoT, err: '', dis: nm ? 'false' : 'true', bg: nm ? t.hPill : t.card2, fg: nm ? t.hPillFg : t.muted,
+        on: e => set({ campoT: e.target.value }), key: e => { if (e.key === 'Enter') { e.preventDefault(); this._campo && this._campo(); } }, add: e => { prev(e); this._campo && this._campo(); } };
+      this._campo = () => { if (!nm || RICx.some(x => x.n.toLowerCase() === nm.toLowerCase())) return; const h = this.hash(nm);
+        set({ campoT: '', extra: [...(this.state.extra || []), { id: 'x-' + h, n: nm, kind: 'r', cat: 'var', dec: 30 + h % 40, tr: M('22:30') + h % 180, d: 30, sim: true }] }); };
+      propH = 'Esopianeti, NEO, variabili, campagne AAVSO e supernove nella stessa notte. Trascina sulla linea del tempo o Aggiungi.';
+      vuotoT0 = buioNo ? 'Nessun buio stanotte.' : 'Nessun oggetto di ricerca stanotte. Aggiungine uno per nome.';
+    }
+    const propVuote = { on: !prop.length, planner, t: vuotoT0 };
+    const eventi = EVn.map(ev => { const nel = items.some(b => b.eid === ev.id); return { n: ev.n, sub: ev.sub, nel, puo: !nel, add: e => { prev(e); this.aggiungiE(ev); },
+      ds: e => { this._dragE = ev; this._dragP = null; e.dataTransfer.effectAllowed = 'copy'; e.dataTransfer.setData('text/plain', ev.n); }, de: () => { this._dragE = null; if (this.state.ghost) set({ ghost: null }); } }; });
+    const linguetta = (on, l, ic, f) => ({ l, ic, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.accent : 'transparent', fg: on ? t.hPillFg : t.text, ring: on ? t.accent : t.line, on: e => { prev(e); f(); } });
+    const tabs = null;
+    const crit = modoK !== 'ric' ? null : [['exo', 'Esopianeti'], ['neo', 'NEO'], ['var', 'Variabili'], ['aavso', 'Campagne AAVSO'], ['sn', 'Supernove']].map(([k, l]) => { const on = !!this.state.crit[k]; return { ...linguetta(on, l, IC[k], () => set({ crit: { ...this.state.crit, [k]: !on } })), s: on ? '✓ ' : '' }; });
+
+    const xDi = nb => nb.k === 'p' ? D.P.find(y => y.id === nb.pid) : nb.k === 'c' ? COMx.find(y => y.id === nb.cid) : nb.k === 's' ? SOLx.find(y => y.id === nb.sid) : RICx.find(y => y.id === nb.rid);
+    const durDi = nb => nb.k === 'p' ? contoP(xDi(nb), nb.f, nb.a, nb.ord).d : nb.k === 's' ? solD(xDi(nb)) : nb.d;
+    // Il perche' dell'ora e l'ordine dei filtri di un blocco messo dal piano
+    const rifinisci = nb => { const x = xDi(nb); if (!x) return; const d = durDi(nb), e = nb.a + d, why = [];
+      if (nb.k === 'p') { const ks = x.man.map(f => f[0]).filter(k => (nb.f[k] || 0) > 0), fo = k => { let a1 = null, b1 = null; for (let m = nb.a; m < e; m += 5) if (passa(x, k, m)) { if (a1 == null) a1 = m; b1 = m + 5; } return [a1 ?? 1e9, b1 ?? 1e9]; };
+        const ord = ks.slice().sort((p2, q2) => { const A = fo(p2), B = fo(q2); return A[0] - B[0] || A[1] - B[1] || ks.indexOf(p2) - ks.indexOf(q2); }); nb.ord = ord;
+        if (N.dk0 != null && nb.a < N.dk0) why.push(AL.FD[ord[0]][0] + ' dal crepuscolo nautico, ' + F(nb.a));
+        const lb = ord.filter(k => SO.bandaDi(k) === 'larga'), sb = ord.filter(k => SO.bandaDi(k) !== 'larga');
+        if (lb.length && sb.length) { let lun = null; for (let m = nb.a + 5; m < e; m += 5) if ((altL(m) >= RIP.alt) !== (altL(m - 5) >= RIP.alt)) { lun = m; break; }
+          if (lun != null) { const nL = lb.map(k => AL.FD[k][0]).join(''), nS = sb.map(k => AL.FD[k][0]).join(' '), prima = ord[0], dopo = SO.bandaDi(prima) === 'larga' ? lb : sb, tCambio = nb.a + dopo.reduce((q, k) => q + nb.f[k], 0);
+            why.push(SO.bandaDi(prima) === 'larga' ? nL + ' prima della Luna, ' + nS + ' dalle ' + F(tCambio) : nS + ' con la Luna, ' + nL + ' dopo le ' + F(tCambio)); } } }
+      if (x.tr > nb.a && x.tr < e) why.push('al transito ' + F(x.tr));
+      else if (!ok(x, e + 5) && ok(x, e - 5)) why.push('prima che scenda: sotto ' + minDi(x) + '° alle ' + F(e));
+      nb.why = why.join(' · ') || undefined; };
+    // Sistema solare: l'ora del corpo
+    const ssPosto = (x, d, lib) => { const cand = []; if (hasW) for (let s0 = W0; s0 + d <= W1; s0 += 5) if (ok(x, s0) && ok(x, s0 + d) && lib(s0, s0 + d)) cand.push(s0); if (!cand.length) return null;
+      const mid = s0 => s0 + d / 2, dTr = s0 => Math.abs(mid(s0) - x.tr), vic = cand.reduce((p2, q2) => dTr(q2) < dTr(p2) ? q2 : p2), trIn = s0 => x.tr >= s0 && x.tr <= s0 + d;
+      if (x.grs != null && ok(x, x.grs)) { const b = cand.reduce((p2, q2) => Math.abs(mid(q2) - x.grs) < Math.abs(mid(p2) - x.grs) ? q2 : p2); if (Math.abs(mid(b) - x.grs) <= 15) return { a: b, why: 'Macchia Rossa al meridiano ' + F(x.grs) }; }
+      if (x.moon) { const b = cand.reduce((p2, q2) => altO(x, mid(q2)) > altO(x, mid(p2)) ? q2 : p2); return { a: b, why: trIn(b) ? 'al transito ' + F(x.tr) : 'sale fino a ' + Math.round(altO(x, mid(b))) + '° alle ' + F(mid(b)) }; }
+      if (seeOn) { const b = cand.reduce((p2, q2) => { const A = seeAt(mid(p2)), B = seeAt(mid(q2)); return B < A || (B === A && dTr(q2) < dTr(p2)) ? q2 : p2; });
+        return { a: b, why: b === vic && trIn(b) ? 'al transito ' + F(x.tr) : 'seeing ' + ['buono', 'incerto', 'non adatto'][seeAt(mid(b))] + ' ' + F(b) }; }
+      return { a: vic, why: trIn(vic) ? 'al transito ' + F(x.tr) : 'il più vicino al transito delle ' + F(x.tr) }; };
+    this._env = { K, S, t0: N.t0, t1: N.t1, dk0: W0, dk1: W1, cam, ok, ohR, okL: (x, m) => x.kind !== 'p' || x.man.some(f => passa(x, f[0], m)), fisso: rid => { const x = RICx.find(y => y.id === rid); return x && fisso(x); }, items: items.map(({ id, a, end }) => ({ id, a, end })), fissi, flex,
+      ss: modoK === 'ss', ssPosto,
+      // I filtri a blocchi, ognuno solo nelle ore in cui la sua regola della Luna passa; l'ordine dalla Luna
+      alloca: (x, t, end, id) => { const r = ohR(x), fin = t + (end - t) / r, ks = x.man.map(q => q[0]), first = k => { for (let m = t; m < fin; m += 5) if (passa(x, k, m)) return m; return 1e9; }, last = k => { let l = -1; for (let m = t; m < fin; m += 5) if (passa(x, k, m)) l = m; return l; };
+        const ord = ks.slice().sort((p2, q2) => first(p2) - first(q2) || last(p2) - last(q2) || ks.indexOf(p2) - ks.indexOf(q2)), need = Object.fromEntries(x.man), f = {}; let cur = t;
+        ord.forEach(k => { let u = 0; while (u + 5 <= need[k] && cur + 5 <= fin && passa(x, k, cur)) { cur += 5; u += 5; } if (u >= 15) f[k] = u; else cur -= u; });
+        return Object.keys(f).length ? { id, k: 'p', pid: x.id, a: t, f: Object.fromEntries(ks.map(k => [k, f[k] || 0])), ord } : null; }, w0, w1, minD: x => x.kind === 'p' || x.kind === 'c' ? DMIN : 15, bad: m => metAt(m) === 2, durDi, xDi, rifinisci };
+    if (this._auto && this.state.stK === stato && this._auto.K === K) { this._auto = null; setTimeout(() => this.riempi(false)); }
+
+    // Il blocco scelto
+    const sb = items.find(b => b.id === sel); let rows = [];
+    if (sb && sb.k === 'p') rows = sb.x.man.map(([k]) => { const v = sb.f[k] || 0, tn = AL.tinta(t, k); return { l: AL.FD[k][0], c: tn.bg, bd: tn.bd, v: v ? H(v) : '—', campo: 'f:' + k }; });
+    else if (sb && sb.exo) rows = [{ l: 'Base prima', v: mn(sb.bA), campo: 'bA' }, { l: 'Base dopo', v: mn(sb.bD), campo: 'bD' }];
+    else if (sb && !sb.lock && sb.k !== 'e' && sb.k !== 's') rows = [{ l: 'Durata', v: H(sb.d), campo: 'd' }];
+    const mosDi = x => { if (!x || !x.mos) return null; const c = x.mos.cols, rr = x.mos.n === 12 ? 4 : c, celle = []; let k = 0; const ord = [];
+      for (let r = 0; r < rr; r++) for (let q = 0; q < c; q++) { const ang = x.mos.n === 12 && (r === 0 || r === rr - 1) && (q === 0 || q === c - 1); celle.push({ r, q, vis: !ang }); }
+      const vis = celle.filter(z => z.vis), seq = x.mos.ordine === 'dal terminatore' ? vis.slice().sort((p2, q2) => q2.q - p2.q || p2.r - q2.r) : vis; seq.forEach((z, i) => { z.n = String(i + 1); });
+      return { cols: 'repeat(' + c + ',26px)', celle: celle.map(z => ({ n: z.vis ? z.n : '', bg: z.vis ? AL.rgba(t.text, 0.12) : 'transparent', bd: z.vis ? AL.rgba(t.text, 0.4) : 'transparent' })), info: 'Mosaico ' + x.mos.tipo.toLowerCase() + ' · ' + x.mos.n + ' pannelli · sovrapposizione ' + x.mos.sov + '% · ordine ' + x.mos.ordine + ' · ' + x.fil.map(filLab).join(' '), sole: !!x.sole }; };
+    const ed = sb ? { n: sb.n, pr: !sb.lock, range: F(sb.a) + '–' + F(sb.end) + ' · ' + H(sb.d), conf: (conf[sb.id] || []).map(s => ({ s })),
+      nota: sb.k === 'e' ? 'Ora fissa, ' + sb.ev.ora + ': non si sposta.' : sb.exo ? 'Ora fissa, ' + F(sb.x.t1) + ': non si sposta. Le basi si allungano dai bordi.' : sb.lock ? 'Ora fissa, ' + F(sb.x.min) + ': non si sposta.' : '',
+      conto: sb.k === 's' ? solConto(sb.x) : '', mos: sb.k === 's' ? mosDi(sb.x) : null,
+      haF: rows.length > 0, fil: rows.map(r => ({ l: r.l, c: r.c || t.muted, bd: r.bd || '0', v: r.v, ariaM: r.l + ', 15 minuti in meno', ariaP: r.l + ', 15 minuti in più', meno: e => { prev(e); this.cambia(K, sb.id, r.campo, -15); }, piu: e => { prev(e); this.cambia(K, sb.id, r.campo, 15); } })),
+      prima: e => { prev(e); this.sposta(K, sb.id, -15); }, dopo: e => { prev(e); this.sposta(K, sb.id, 15); },
+      togli: e => { prev(e); this.togli(K, sb.id); }, chiudi: e => { prev(e); set({ sel: null, foglio: null }); } } : null;
+    const confL = { on: nConf > 0, t: nConf === 1 ? '1 conflitto' : nConf + ' conflitti', r: items.flatMap(b => (conf[b.id] || []).map(s => ({ n: b.n, s, on: e => { prev(e); set({ sel: b.id }); }, tap: e => { prev(e); set({ sel: b.id, foglio: 'blocco' }); } }))) };
+
+    // Totali ed export
+    const plan = items.reduce((a, b) => a + b.d, 0), pzT = pz.reduce((a, z) => a + z.d, 0); let lib = 0;
+    if (hasW) for (let m = W0; m < W1; m++) if (!items.some(b => m >= b.a && m < b.end) && !pz.some(z => m >= z.a && m < z.a + z.d)) lib++;
+    const tot = { big: plan ? H(plan) : 'Nessun blocco', lab: plan ? 'pianificate' : '',
+      riga: (giorno ? 'Sole sopra l\u0027orizzonte ' + H(W1 - W0) : dk ? 'Buio ' + H(buio) : 'Nessun buio') + ' · pianificato ' + (plan ? H(plan) : 'niente') + (pzT ? ' · avvio, cambi, chiusura' + (pz.some(z => z.fl) ? ' e flat ' : ' ') + mn(pzT) : '') + (hasW ? ' · libero ' + (lib ? mn(lib) : 'nessun minuto') : '') };
+    const fatto = this.state.esp[K], vuotoP = !items.length;
+    const sc = modoK === 'ss', exp = { l: sc ? 'Esporta per SharpCap' : 'Esporta per N.I.N.A.', riga: sc ? 'Un file di sequenza per SharpCap Pro: parte da solo all\u0027avvio.' : 'Un file per la notte intera, nel sequencer avanzato di N.I.N.A. La chiusura d\u0027emergenza col maltempo si imposta in N.I.N.A.',
+      avvisi: sc ? [{ t: 'Sul disco non c\u0027è plate solving: il puntamento è quello della montatura. Se restano buchi fra i pannelli, alza la sovrapposizione.' }, { t: 'Il video esce in SER: tienilo fuori dalle cartelle dell\u0027archivio.' }] : null, btn: !this.state.ask, ask: this.state.ask, askT: (nConf === 1 ? '1 conflitto' : nConf + ' conflitti') + ': esporto lo stesso?', fatto: fatto ? 'Esportato alle ' + fatto : '',
+      dis: vuotoP ? 'true' : 'false', bg: vuotoP ? t.card2 : t.hPill, fg: vuotoP ? t.muted : t.hPillFg,
+      on: e => { prev(e); if (vuotoP) return; if (nConf) return set({ ask: true }); set({ esp: { ...this.state.esp, [K]: '20:05' } }); },
+      si: e => { prev(e); set({ ask: false, esp: { ...this.state.esp, [K]: '20:05' } }); }, no: e => { prev(e); set({ ask: false }); } };
+    const un = this.state.annulla, puoA = hasW && (flex.length || fissi.length);
+    const az = { completa: e => { prev(e); if (puoA) this.riempi(true); }, rifai: e => { prev(e); if (puoA) this.riempi(false); }, dis: puoA ? 'false' : 'true', bg: puoA ? t.hPill : t.card2, fg: puoA ? t.hPillFg : t.muted,
+      annulla: un && un.K === K ? e => { prev(e); this.setState(s => ({ piani: { ...s.piani, [un.K]: un.piano }, annulla: null, sel: null })); } : null };
+
+    // Testa: notte, postazione, modo, verdetto
+    const notti = (buioNo ? [N] : D.NOTTI).map((n, i) => { const on = i === nI; return { l: n.corto, aria: n.dove, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.text : 'transparent', fg: on ? t.card : t.text, ring: on ? t.text : t.line, bgT: on ? t.accent : 'transparent', fgT: on ? t.hPillFg : t.text,
+      on: e => { prev(e); if (!buioNo) set({ notte: i, sel: null, ask: false, foglio: null, modoAsk: null }); } }; });
+    const MN = { ds: 'Deep sky', ss: 'Sistema solare', ric: 'Ricerca' }, postazioni = D.POS.map(x => { const on = x.k === posK, kk = nI + ':' + x.k, mk = (this.state.modi || {})[kk] || 'ds', nP = ((this.state.piani || {})[kk + (mk === 'ss' && (this.state.giorni || {})[kk] ? ':g' : '')] || []).length, mo = mk === 'ds' ? '' : MN[mk];
+      return { l: x.breve, aria: x.n, n: [mo, nP ? nP + (nP === 1 ? ' blocco' : ' blocchi') : ''].filter(Boolean).join(' · '), sub: [MN[mk], nP ? nP + (nP === 1 ? ' blocco' : ' blocchi') : 'nessun blocco'].join(' · '), chk: on ? '✓' : '', bgM: on ? t.card2 : 'transparent', sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: 'transparent', fg: t.text, ring: on ? t.accent : t.line, /* v56.23: la postazione scelta con l'anello */
+        on: e => { prev(e); set({ pos: x.k, sel: null, ask: false, foglio: null, modoAsk: null, posOpen: false, opzT: false }); } }; });
+    const opzT = { on: !!this.state.opzT, exp: this.state.opzT ? 'true' : 'false', apri: e => { prev(e); set({ opzT: !this.state.opzT }); }, chiudi: e => { prev(e); set({ opzT: false }); } };
+    const qS = postazioni.find(q => q.sel === 'true'), posMenu = { l: qS.l, n: qS.n, cam: camT, aria: 'Setup: ' + qS.aria, open: !!this.state.posOpen, z: this.state.posOpen ? 31 : 1, exp: this.state.posOpen ? 'true' : 'false', toggle: e => { prev(e); set({ posOpen: !this.state.posOpen }); }, close: e => { prev(e); set({ posOpen: false }); } };
+    const modi = [['ds', 'Deep sky', IC.ds], ['ss', 'Sistema solare', IC.pianeta], ['ric', 'Ricerca', IC.ric]].map(([k, l, ic]) => { const on = modoK === k; return { l, ic, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.text : 'transparent', fg: on ? t.card : t.text, bgT: on ? t.accent : 'transparent', fgT: on ? t.hPillFg : t.text,
+      on: e => { prev(e); if (on) return; if (items.length) set({ modoAsk: k }); else set({ modi: { ...this.state.modi, [K0]: k }, sel: null, annulla: null, campoT: '' }); } }; });
+    const gg = modoK === 'ss' && !buioNo ? [['n', 'Notte', IC.luna], ['g', 'Giorno', IC.sole]].map(([k, l, ic]) => { const on = (k === 'g') === giorno; return { l, ic, sel: on ? 'true' : 'false', fw: on ? 600 : 500, bg: on ? t.text : 'transparent', fg: on ? t.card : t.text, bgT: on ? t.accent : 'transparent', fgT: on ? t.hPillFg : t.text,
+      on: e => { prev(e); if (!on) set({ giorni: { ...this.state.giorni, [K0]: k === 'g' }, sel: null, annulla: null, ask: false }); } }; }) : null;
+    const solLine = giorno ? 'Filtro solare sempre davanti all\u0027ottica. Tetto e sicurezza li gestisce N.I.N.A.' : '';
+    const mA = this.state.modoAsk, modoAsk = mA ? { t: 'Il piano di stanotte si svuota: cambio?', si: e => { prev(e); set({ modi: { ...this.state.modi, [K0]: mA }, piani: { ...this.state.piani, [K]: [] }, modoAsk: null, sel: null, annulla: null, foglio: null, campoT: '' }); }, no: e => { prev(e); set({ modoAsk: null }); } } : null;
+    let utN = 0; if (dk && N.met) for (let m = N.dk0; m < N.dk1; m += 5) if (metAt(m) === 0) utN += 5;
+    const verd = giorno ? (N.met ? { s: AL.SEGNI[N.verd], t: 'giorno ' + AL.PAROLE[N.verd], bg: t.pills[N.verd][0], fg: t.pills[N.verd][1], sub: 'Sole dalle ' + F(N.sr) + ' alle ' + F(N.ss) } : { s: '?', t: 'senza previsione', bg: t.card2, fg: t.text, sub: 'Sole dalle ' + F(N.sr) + ' alle ' + F(N.ss) }) : buioNo ? { s: '◐', t: 'nessun buio', bg: t.card2, fg: t.text, sub: 'crepuscolo dalle ' + F(N.ss) + ' alle ' + F(N.sr) }
+      : N.met ? { s: AL.SEGNI[N.verd], t: 'notte ' + AL.PAROLE[N.verd], bg: t.pills[N.verd][0], fg: t.pills[N.verd][1], sub: (utN ? H(utN) + ' utili' : 'nessuna ora utile') + ' su ' + H(buio) + ' di buio' }
+      : { s: '?', t: 'senza previsione', bg: t.card2, fg: t.text, sub: H(buio) + ' di buio' };
+    const sitoT = sito ? (buioNo ? 'Sito di prova a 51° N' : 'Cima Ekar') : '';
+    const vistaT = 'elenco';   // v30.1 (Marco): il telefono e' l'elenco della v28.4, la linea verticale e' uscita
+    const L = tel ? { linea: vistaT === 'linea', elenco: vistaT !== 'linea', f: 'telefono', tel: true, desk: false, etich: 'Piano della notte · telefono', gap: '12px', pad: '20px', padV: '28px 20px', bh: '44px', bh2: '44px', bh3: '44px', th: Math.round(S * 0.9) + 'px' }
+      : { f: 'desktop', tel: false, desk: true, etich: 'Piano della notte', gap: '16px', pad: '20px 24px', padV: '36px 32px', bh: '40px', bh2: '36px', bh3: '32px', th: '0px' };
+    const fo = this.state.foglio, foglio = { on: tel && (fo === 'proposte' || (fo === 'blocco' && !!ed)), prop: fo === 'proposte', blocco: fo === 'blocco' && !!ed, titolo: fo === 'proposte' ? 'Cosa si fa stanotte' : ed ? ed.n : '', chiudi: e => { prev(e); set({ foglio: null, sel: fo === 'blocco' ? null : sel }); } };
+    const g = this.state.ghost;
+    return { pronto: true, t, L, modo, accento: p.accento, setModo: m => set({ modo: m }), senzaSito: !sito, conSito: sito, sitoT, due, una: !due, posN: POS.n,
+      testaSub: (sito ? sitoT + ' · ' : '') + N.dove + ' · dati simulati, adesso 20:05', notteT: N.dove + (due ? ' · ' + (tel ? POS.breve : POS.set) : ''),
+      notti, postazioni, posMenu, opzT, modi, modoTel: { v: (modi.find(m => m.sel === true || m.sel === 'true') || modi[0]).l, on: e => { const m = modi.find(x => x.l === e.target.value); m && m.on({ preventDefault() {} }); } }, giorno, aiuto: modoK === 'ss' ? 'Ogni corpo nell\u0027ora col seeing migliore sopra la soglia, vicino al transito.' : 'Prima le ore fisse, poi chi scende prima, vicino al suo transito.', contoT: '· ' + (sitoT ? sitoT + ' · ' : '') + verd.s + ' ' + verd.t, notteTit: giorno ? 'Il giorno' : 'La notte', modoAsk, verd, propT: 'Cosa si fa stanotte' + (prop.length ? ' · ' + prop.length : ''), propH, prop, propVuote, propN: prop.length ? String(prop.length) : '', tabs, crit, campo, eventi, eventiVuoti: !eventi.length,
+      apriTc: modoK === 'ric' ? 'Oggetti' : 'Proposte',
+      apriT: modoK === 'ric' ? 'Oggetti di ricerca ed eventi' : 'Proposte ed eventi', gg, solLine, passi,
+      passiT: L.linea ? passi : null, ticks, ticksE: ticks.filter((o, i) => i % 2 === 0), striscia, elenco, fasce, ora, lunaPath, lunaConta, lunaPathV, lunaContaV, lunaC: AL.LUNA.line, luna, rip: rip2, ripTr, met, metNo: !N.met, pezzi, cambioBg, pausaBg: AL.rgba(t.muted, 0.45), blocchi, evB, legenda,
+      ghost: g && !tel ? { l: pc(g.a), w: wc(g.d) } : null, vuoto: vuotoP, vuotoT: tel ? 'Tocca «Proposte ed eventi» per cominciare.' : 'Trascina qui un progetto.',
+      mancanti, confL, ed, tot, exp, az, foglio, apriProposte: e => { prev(e); set({ foglio: 'proposte' }); },
+      rTrk: this.rTrk, dOver: this.dOver, dIn: this.dIn, dOut: this.dOut };
+  }
+}
+</script>
+</body>
+</html>

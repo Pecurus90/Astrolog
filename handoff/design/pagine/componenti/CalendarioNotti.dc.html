@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div class="al-c-calendario-notti__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="al-c-calendario-notti__colonna-1" style="gap:{{ L.gap }}">
+<div class="al-c-calendario-notti__riga-1">
+<a class="al-c-calendario-notti__tondo-1" href="#" onClick="{{ prima }}" aria-label="Mese prima" aria-disabled="{{ primaNo }}" style="width:{{ L.nav }};height:{{ L.nav }};font-size:{{ L.navFs }};opacity:{{ primaOp }}">‹</a>
+<span class="al-c-calendario-notti__colonna-2"><b class="al-c-calendario-notti__testo-1" style="font-size:{{ L.tfs }}">{{ titolo }}</b><sc-if value="{{ sub }}" hint-placeholder-val="{{ true }}"><span class="al-c-calendario-notti__testo-2">{{ sub }}</span></sc-if></span>
+<a class="al-c-calendario-notti__tondo-1" href="#" onClick="{{ dopo }}" aria-label="Mese dopo" aria-disabled="{{ dopoNo }}" style="width:{{ L.nav }};height:{{ L.nav }};font-size:{{ L.navFs }};opacity:{{ dopoOp }}">›</a>
+</div>
+<sc-if value="{{ numero }}" hint-placeholder-val="{{ false }}"><span class="al-c-calendario-notti__colonna-3"><span class="al-c-calendario-notti__riga-2"><span class="al-c-calendario-notti__testo-3">{{ numero }}</span><span class="al-c-calendario-notti__testo-4">{{ numeroL }}</span></span><span class="al-c-calendario-notti__testo-5">{{ conta }}</span></span></sc-if>
+<div class="al-c-calendario-notti__griglia-1" style="gap:{{ L.gg }}">
+<sc-for list="{{ dow }}" as="w" hint-placeholder-count="7"><span class="al-c-calendario-notti__testo-6" style="padding-bottom:{{ L.dpb }}">{{ w }}</span></sc-for>
+<sc-for list="{{ days }}" as="c" hint-placeholder-count="31"><a class="al-c-calendario-notti__colonna-4" href="#" onClick="{{ c.on }}" role="{{ c.role }}" aria-pressed="{{ c.sel }}" aria-label="{{ c.aria }}" tabindex="{{ c.tab }}" style="height:{{ L.ch }};background:{{ c.bg }};color:{{ c.fg }};box-shadow:inset 0 0 0 {{ c.ow }} var(--testo);gap:{{ L.cg }};font-size:{{ L.cfs }};font-weight:{{ c.fw }};cursor:{{ c.cur }};visibility:{{ c.vis }}"><span>{{ c.n }}</span><span class="al-c-calendario-notti__blocco-2">{{ c.segni }}</span><sc-if value="{{ c.stella }}" hint-placeholder-val="{{ false }}"><span class="al-c-calendario-notti__strato-1" aria-hidden="true">★</span></sc-if></a></sc-for>
+</div>
+<div class="al-c-calendario-notti__riga-3" style="margin-top:{{ L.lmt }};padding:{{ L.lpad }}"><sc-for list="{{ leg }}" as="l" hint-placeholder-count="4"><span class="al-c-calendario-notti__riga-4"><i class="al-c-calendario-notti__centro-1" style="background:{{ l.bg }};color:{{ l.fg }}">{{ l.s }}</i>{{ l.l }}</span></sc-for></div>
+</div></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:380,&quot;height&quot;:460},&quot;tipo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;notti&quot;,&quot;luna&quot;],&quot;default&quot;:&quot;notti&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;anno&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:2026,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Mese&quot;},&quot;mese&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:8,&quot;min&quot;:0,&quot;max&quot;:11,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Mese&quot;},&quot;giorni&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Array&amp;lt;{d:number,esiti?:number[],segno?:string,stella?:boolean,sel?:boolean,on?:Function,aria?:string}&amp;gt;&quot;},&quot;buone&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number[]&quot;},&quot;titolo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Testi&quot;},&quot;sub&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Testi&quot;},&quot;numero&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Testi&quot;},&quot;numeroL&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Testi&quot;},&quot;conta&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Testi&quot;},&quot;nuova&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Testi&quot;},&quot;piena&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Testi&quot;},&quot;onPrima&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&amp;gt; void&quot;},&quot;onDopo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&amp;gt; void&quot;},&quot;primaNo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;boolean&quot;},&quot;dopoNo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;boolean&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;buoneL&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Calendario&quot;}}">
+class Component extends DCLogic {
+  componentWillUnmount() { this._alw && clearInterval(this._alw); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), tel = p.formato === 'telefono', luna = p.tipo === 'luna';
+    const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+    const O = ALdati.oggi, y = +(p.anno ?? O.y), m = +(p.mese ?? O.m - 1), corrente = y === O.y && m === O.m - 1;
+    const ev = f => e => { e && e.preventDefault && e.preventDefault(); f && f(e); };
+    const segno = e => e >= 0 ? AL.SEGNI[e] : '?';
+    // giorni: { d, esiti: [0|1|2|-1…] (notti), buona, segno ('●' '○'), stella, sel, on, aria }
+    const G = {}; (p.giorni || (luna ? [{ d: 9, segno: '●' }, { d: 24, segno: '○' }, { d: 27, stella: true }] : [{ d: 16, esiti: [2] }, { d: 24, esiti: [0], sel: true }, { d: 27, esiti: [-1] }])).forEach(g => { G[g.d] = g; });
+    if (luna) (p.buone || []).forEach(d => { G[d] = { ...(G[d] || { d }), buona: true }; });
+    const primo = (new Date(y, m, 1).getDay() + 6) % 7, giorni = new Date(y, m + 1, 0).getDate();
+    // Le notti finiscono a oggi (si chiude la settimana); la Luna guarda anche avanti
+    const fine = corrente && !luna ? Math.min(giorni, O.d + (6 - (new Date(y, m, O.d).getDay() + 6) % 7)) : giorni;
+    const vuoto = { n: '', vis: 'hidden', bg: 'transparent', fg: t.muted, ow: '0', fw: 400, segni: '', cur: 'default', tab: '-1', on: ev() };
+    const days = []; for (let i = 0; i < primo; i++) days.push(vuoto);
+    for (let d = 1; d <= fine; d++) { const g = G[d], oggi = corrente && d === O.d, poi = corrente && d > O.d && !luna, ow = oggi ? '1.5px' : '0';
+      if (luna) { const sel = g && g.sel, bg = sel ? t.text : g && g.buona ? t.calOn : t.card2, fg = sel ? t.card : g && g.buona ? t.calOnFg : t.text;
+        days.push({ n: d, vis: 'inherit', bg, fg, ow, fw: oggi ? 600 : 500, segni: (g && g.segno) || '', stella: !!(g && g.stella), role: g && g.on ? 'button' : undefined, sel: sel ? 'true' : 'false', tab: g && g.on ? '0' : '-1', cur: g && g.on ? 'pointer' : 'default', aria: g && g.aria, on: ev(g && g.on) }); continue; }
+      if (!g || !g.esiti) { days.push({ n: poi ? '' : d, vis: poi ? 'hidden' : 'inherit', bg: 'transparent', fg: t.muted, ow, fw: oggi ? 600 : 400, segni: '', cur: 'default', tab: '-1', aria: oggi ? d + ' ' + MESI[m] + ', oggi' : undefined, on: ev() }); continue; }
+      const best = Math.min(...g.esiti.filter(v => v >= 0).concat([9])), e = best === 9 ? -1 : best, on = !!g.sel;
+      days.push({ n: d, vis: 'inherit', role: 'button', sel: on ? 'true' : 'false', tab: '0', cur: 'pointer', fw: 600, ow, bg: on ? t.hPill : e >= 0 ? t.pills[e][0] : t.card2, fg: on ? t.hPillFg : e >= 0 ? t.pills[e][1] : t.text, segni: g.esiti.map(segno).join(''), aria: g.aria, on: ev(g.on) }); }
+    const leg = luna && p.buoneL ? [{ s: '', l: p.buoneL, bg: t.calOn, fg: t.calOnFg }] : luna ? [{ s: '', l: 'notte buona per la banda larga', bg: t.calOn, fg: t.calOnFg }, { s: '★', l: 'notte di ripresa', bg: t.card2, fg: t.text }, { s: '●', l: p.nuova || 'Luna nuova', bg: t.card2, fg: t.text }, { s: '○', l: p.piena || 'Luna piena', bg: t.card2, fg: t.text }]
+      : [[0, 'buona'], [1, 'incerta'], [2, 'non adatta'], [-1, 'senza meteo']].map(([e, l]) => ({ s: segno(e), l, bg: e >= 0 ? t.pills[e][0] : t.card2, fg: e >= 0 ? t.pills[e][1] : t.text }));
+    const L = tel ? { gap: '12px', nav: '44px', navFs: '18px', tfs: '17px', gg: '3px', dpb: '0', ch: '46px', cg: '2px', cfs: '14px', lmt: '0', lpad: '0 4px' } : { gap: '14px', nav: '36px', navFs: '17px', tfs: '18px', gg: '6px', dpb: '2px', ch: '42px', cg: '1px', cfs: '13px', lmt: 'auto', lpad: '0' };
+    return { pronto: true, t, L, days, leg, dow: ['lu', 'ma', 'me', 'gi', 've', 'sa', 'do'], titolo: p.titolo || MESI[m][0].toUpperCase() + MESI[m].slice(1) + ' ' + y, sub: p.sub || '',
+      numero: p.numero || '', numeroL: p.numeroL || '', conta: p.conta || '', prima: ev(p.primaNo ? null : p.onPrima), dopo: ev(p.dopoNo ? null : p.onDopo),
+      primaNo: p.primaNo ? 'true' : undefined, dopoNo: p.dopoNo ? 'true' : undefined, primaOp: p.primaNo ? 0.35 : 1, dopoOp: p.dopoNo ? 0.35 : 1 };
+  }
+}
+</script>
+</body>
+</html>

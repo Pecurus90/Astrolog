@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-cerca__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="{{ fmt }}" pagina="Archivio" etichetta="Cerca" altezza="100vh" menu="cerca" cerca="{{ testo }}" cerca-stato="{{ stato }}" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<div class="al-cerca__centro-1" aria-hidden="true" style="grid-template-columns:{{ cols }}">
+<div class="al-cerca__riquadro-1"></div>
+<sc-for list="{{ finte }}" as="f" hint-placeholder-count="6"><div class="al-cerca__riquadro-2"></div></sc-for>
+</div>
+</dc-import></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;ricerca&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;m31&quot;,&quot;ngc 7 (molti)&quot;,&quot;velo (mosaico)&quot;,&quot;zwo (attrezzatura)&quot;,&quot;ca (siti e pagine)&quot;,&quot;5/6 (data)&quot;,&quot;m 1033 (niente)&quot;,&quot;campo vuoto&quot;],&quot;default&quot;:&quot;m31&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Cerca&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;scansione in corso&quot;,&quot;archivio vuoto&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Cerca&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Cerca&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: null };
+  componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rs); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = './componenti/' + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, modo = this.state.modo || p.modo || 'scuro', t = AL.tema(modo, p.accento);
+    const fP = p.formato || 'automatico', tel = AL.telefono(fP, this.state.w);
+    const T = { 'm31': 'm31', 'ngc 7 (molti)': 'ngc 7', 'velo (mosaico)': 'velo', 'zwo (attrezzatura)': 'zwo', 'ca (siti e pagine)': 'ca', '5/6 (data)': '5/6', 'm 1033 (niente)': 'm 1033', 'campo vuoto': '' };
+    return { pronto: true, fmt: tel ? 'telefono' : 'desktop', testo: T[p.ricerca || 'm31'] ?? 'm31', stato: p.stato || 'normale', modo, accento: p.accento, setModo: m => this.setState({ modo: m }), t,
+      cols: tel ? 'minmax(0,1fr)' : 'repeat(3,minmax(0,1fr))', finte: tel ? [1, 2] : [1, 2, 3, 4, 5, 6] };
+  }
+}
+</script>
+</body>
+</html>

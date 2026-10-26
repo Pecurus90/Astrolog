@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<script src="componenti/moto.js"></script>
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}@keyframes skPulse{0%,100%{opacity:1}50%{opacity:.45}}@keyframes alIn{from{opacity:0;transform:translateY(14px)}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-c-riepilogo__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" solo="{{ fin }}" formato="{{ fmt }}" pagina="{{ pagina }}" etichetta="Riepilogo" altezza="100vh" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+
+<sc-if value="{{ S.loading }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Scheletro" carte="{{ SK }}" testo="Caricamento…" griglia="minmax(0,1fr)" gap="{{ L.gap }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,760px"></dc-import></sc-if>
+
+<sc-if value="{{ S.ready }}" hint-placeholder-val="{{ true }}"><div class="al-c-riepilogo__centro-1" ref="{{ rifR }}" style="grid-template-columns:{{ L.grid }};gap:{{ L.gap }}">
+
+<dc-import name="componenti/Carta" formato="{{ fmt }}" etichetta="Riepilogo" colonne="7" ritardo="0" padding="{{ L.pad }}" gap="16" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,220px">
+<div class="al-c-riepilogo__riga-1">
+<sc-if value="{{ H.pag }}" hint-placeholder-val="{{ true }}"><a class="al-c-riepilogo__riga-2" href="#" style="min-height:{{ L.pillH }};padding:0 {{ L.backP }};background:{{ L.backBg }};font-weight:{{ L.backW }}">{{ H.back }}</a></sc-if><sc-if value="{{ H.fin }}" hint-placeholder-val="{{ false }}"><span class="al-c-riepilogo__riga-3"><a class="al-c-riepilogo__tondo-1" href="#" onClick="{{ H.prima }}" aria-label="{{ H.primaL }}" style="width:{{ H.navH }};height:{{ H.navH }};opacity:{{ H.primaOp }}">‹</a><a class="al-c-riepilogo__tondo-1" href="#" onClick="{{ H.dopo }}" aria-label="{{ H.dopoL }}" style="width:{{ H.navH }};height:{{ H.navH }};opacity:{{ H.dopoOp }}">›</a></span></sc-if>
+<span class="al-c-riepilogo__riga-4"><sc-for list="{{ H.chips }}" as="c" hint-placeholder-count="2"><span class="al-c-riepilogo__pillola-1">{{ c }}</span></sc-for><sc-if value="{{ H.fin }}" hint-placeholder-val="{{ false }}"><a class="al-c-riepilogo__tondo-2" href="#" onClick="{{ H.chiudi }}" aria-label="Chiudi" style="width:{{ H.navH }};height:{{ H.navH }}">×</a></sc-if></span>
+</div>
+<div class="al-c-riepilogo__colonna-1"><span class="al-c-riepilogo__testo-1">{{ H.sopra }}</span><span class="al-c-riepilogo__riga-5"><b class="al-c-riepilogo__testo-2" style="font-size:{{ L.tfs }}">{{ H.titolo }}</b><span class="al-c-riepilogo__testo-3" style="font-size:{{ L.sfs }}">{{ H.nome }}</span></span><span class="al-c-riepilogo__testo-4">{{ H.periodo }}</span></div>
+<sc-if value="{{ H.opz }}" hint-placeholder-val="{{ false }}"><div class="al-c-riepilogo__riga-6" role="tablist" aria-label="{{ H.opzL }}" style="flex-wrap:{{ L.wrap }};overflow-x:{{ L.ov }}"><span class="al-c-riepilogo__blocco-2">{{ H.opzL }}</span><sc-for list="{{ H.opz }}" as="o" hint-placeholder-count="2"><a class="al-c-riepilogo__colonna-2" href="#" role="tab" aria-selected="{{ o.sel }}" onClick="{{ o.on }}" style="min-height:{{ L.prH }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};border-radius:0"><b class="al-c-riepilogo__testo-5">{{ o.l }}</b><span class="al-c-riepilogo__testo-6" style="color:{{ o.mu }}">{{ o.sub }}</span></a></sc-for></div></sc-if>
+<sc-if value="{{ L.t3 }}" hint-placeholder-val="{{ false }}"><div class="al-c-riepilogo__colonna-3"><div class="al-c-riepilogo__griglia-1"><span class="al-c-riepilogo__colonna-4"><span class="al-c-riepilogo__testo-7">{{ H.ore }}</span><span class="al-c-riepilogo__blocco-3">{{ H.frame }}</span></span><sc-for list="{{ H.kpi }}" as="k" hint-placeholder-count="2"><span class="al-c-riepilogo__colonna-5"><span class="al-c-riepilogo__testo-7">{{ k.v }}</span><span class="al-c-riepilogo__blocco-3">{{ k.l }}</span></span></sc-for></div><div class="al-c-riepilogo__riga-4"><sc-if value="{{ H.es }}" hint-placeholder-val="{{ false }}"><span class="al-c-riepilogo__testo-8">cielo</span><dc-import name="componenti/Pillola" esito="{{ H.es.e }}" testo="{{ H.es.t }}" dimensione="piccola" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" hint-size="90px,22px"></dc-import></sc-if><sc-for list="{{ H.filtri }}" as="f" hint-placeholder-count="4"><span class="al-c-riepilogo__riga-7"><i class="al-c-riepilogo__tondo-3" style="background:{{ f.bg }};border:{{ f.bd }}"></i><b class="al-c-riepilogo__testo-9">{{ f.n }}</b><span class="al-c-riepilogo__testo-3">{{ f.fr }}</span></span></sc-for></div></div></sc-if>
+<sc-if value="{{ L.t1 }}" hint-placeholder-val="{{ true }}"><div class="al-c-riepilogo__riga-8"><span class="al-c-riepilogo__testo-10" style="font-size:{{ L.bfs }}">{{ H.ore }}</span><span class="al-c-riepilogo__colonna-6"><span class="al-c-riepilogo__testo-11">{{ H.oreL }}</span><span class="al-c-riepilogo__testo-12">{{ H.frame }}</span></span><sc-for list="{{ H.kpi }}" as="k" hint-placeholder-count="1"><span class="al-c-riepilogo__colonna-7"><span class="al-c-riepilogo__testo-13">{{ k.v }}</span><span class="al-c-riepilogo__testo-8">{{ k.l }}</span></span></sc-for><sc-if value="{{ H.es }}" hint-placeholder-val="{{ false }}"><span class="al-c-riepilogo__colonna-8"><dc-import name="componenti/Pillola" esito="{{ H.es.e }}" testo="{{ H.es.t }}" dimensione="piccola" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" hint-size="90px,22px"></dc-import><span class="al-c-riepilogo__testo-8">cielo della notte</span></span></sc-if><span class="al-c-riepilogo__riga-9" style="margin-left:{{ L.filMl }}"><sc-for list="{{ H.filtri }}" as="f" hint-placeholder-count="4"><span class="al-c-riepilogo__riga-7"><i class="al-c-riepilogo__tondo-3" style="background:{{ f.bg }};border:{{ f.bd }}"></i><b class="al-c-riepilogo__testo-9">{{ f.n }}</b><span class="al-c-riepilogo__testo-3">{{ f.fr }}</span></span></sc-for></span></div></sc-if>
+</dc-import>
+<dc-import name="componenti/Carta" formato="{{ fmt }}" etichetta="Setup" colonne="5" ritardo="30" padding="{{ L.pad }}" gap="12" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,300px">
+<span class="al-c-riepilogo__riga-13" style="align-items:center"><span class="al-c-riepilogo__testo-14">{{ CO.titolo }}</span><span class="al-c-riepilogo__testo-8">simulato</span><a class="al-c-riepilogo__tondo-1" href="Attrezzatura.dc.html" aria-label="Apri in Attrezzatura" title="Attrezzatura" style="width:44px;height:44px;margin-left:auto;flex:none">↗</a></span>
+<sc-for list="{{ CO.corredi }}" as="c" hint-placeholder-count="1"><div class="al-c-riepilogo__colonna-15">
+<span class="al-c-riepilogo__colonna-6"><b class="al-c-riepilogo__testo-24">{{ c.n }}</b><span class="al-c-riepilogo__testo-8">{{ c.uso }}</span></span>
+<sc-for list="{{ c.vis }}" as="x" hint-placeholder-count="4"><span style="display:flex;gap:10px;align-items:flex-start;min-width:0"><span aria-hidden="true" style="flex:none;width:32px;height:32px;border-radius:50%;background:var(--carta-2);display:grid;place-items:center;color:var(--tenue)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="{{ x.d }}"></path></svg></span><span style="display:flex;flex-direction:column;gap:1px;min-width:0"><span class="al-c-riepilogo__testo-3">{{ x.l }}</span><span style="text-wrap:pretty">{{ x.v }}</span></span></span></sc-for>
+<sc-if value="{{ c.puo }}" hint-placeholder-val="{{ false }}"><a class="al-bottone al-bottone--testo al-bottone--piccolo al-bottone--a-filo" style="align-self:flex-start;min-height:{{ L.pillH }}" href="#" onClick="{{ c.toggle }}" aria-expanded="{{ c.ap }}">{{ c.toggleL }} <span aria-hidden="true">{{ c.chev }}</span></a></sc-if>
+</div></sc-for>
+
+</dc-import>
+
+<sc-if value="{{ T.oggetto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="{{ fmt }}" etichetta="In cielo" colonne="12" ritardo="60" padding="{{ L.pad }}" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,160px">
+<span class="al-c-riepilogo__riga-10"><span class="al-c-riepilogo__testo-14">In cielo</span><span class="al-c-riepilogo__testo-8">dal catalogo</span></span>
+<div class="al-c-riepilogo__griglia-2"><sc-for list="{{ SC.tiles }}" as="x" hint-placeholder-count="4"><span class="al-c-riepilogo__colonna-9"><span class="al-c-riepilogo__testo-12">{{ x.l }}</span><span class="al-c-riepilogo__testo-15" style="font-size:{{ L.xfs }}">{{ x.v }}</span><span class="al-c-riepilogo__testo-16">{{ x.s }}</span></span></sc-for></div>
+</dc-import></sc-if>
+
+<sc-if value="{{ T.notte }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="{{ fmt }}" etichetta="Gli oggetti" colonne="12" ritardo="60" padding="{{ L.pad }}" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<span class="al-c-riepilogo__riga-10"><span class="al-c-riepilogo__testo-14">Gli oggetti</span><span class="al-c-riepilogo__testo-8">{{ SC.sub }}</span></span>
+<div class="al-c-riepilogo__griglia-3"><sc-for list="{{ SC.oggetti }}" as="o" hint-placeholder-count="3"><span class="al-c-riepilogo__colonna-10">
+<span class="al-c-riepilogo__riga-11"><span class="al-c-riepilogo__colonna-11"><b class="al-c-riepilogo__testo-17">{{ o.n }}</b><span class="al-c-riepilogo__testo-12">{{ o.nome }}</span></span><span style="display:flex;align-items:center;gap:8px;flex:none"><span class="al-c-riepilogo__testo-18">{{ o.ore }}</span><a class="al-c-riepilogo__tondo-1" href="Progetti.dc.html" target="_top" aria-label="Apri {{ o.n }} in Progetti" title="Progetti" style="width:44px;height:44px;flex:none">↗</a></span></span>
+<span class="al-c-riepilogo__griglia-4"><sc-for list="{{ o.dati }}" as="x" hint-placeholder-count="4"><span class="al-c-riepilogo__testo-3">{{ x.l }}</span><span class="al-c-riepilogo__testo-19">{{ x.v }}</span></sc-for></span>
+</span></sc-for></div>
+</dc-import></sc-if>
+
+<div class="al-c-riepilogo__blocco-4"><dc-import name="componenti/MisureFrame" selezione="{{ SEL }}" on-mediane="{{ suMediane }}" tipo="{{ MFT }}" gruppi="{{ MFG }}" scala="{{ SC.scala }}" stato="{{ MFS }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,2400px"></dc-import></div>
+
+<div class="al-c-riepilogo__colonna-12" style="grid-column:{{ L.c8 }};gap:{{ L.gap }}">
+<sc-if value="{{ T.oggetto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="{{ fmt }}" etichetta="Le notti" colonne="12" ritardo="300" padding="{{ L.pad }}" gap="4" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<span class="al-c-riepilogo__riga-12"><span class="al-c-riepilogo__testo-14">Le notti</span><span class="al-c-riepilogo__testo-8">{{ NT.sub }}</span></span>
+<sc-for list="{{ NT.righe }}" as="r" hint-placeholder-count="3"><a class="al-c-riepilogo__centro-2" href="#" aria-label="{{ r.aria }}" style="grid-template-columns:{{ L.ntCols }}"><span class="al-c-riepilogo__colonna-13"><b class="al-c-riepilogo__testo-20">{{ r.d }}</b><span class="al-c-riepilogo__testo-8">{{ r.sito }}</span></span><span class="al-c-riepilogo__testo-21">{{ r.ore }}</span><span class="al-c-riepilogo__testo-22" style="display:{{ L.ntD }}">{{ r.fr }}</span><span class="al-c-riepilogo__blocco-5" style="display:{{ L.ntD }}"><dc-import name="componenti/Luna" percento="{{ r.lunaP }}" crescente="{{ r.lunaC }}" misura="20" modo="{{ modo }}" accento="{{ accento }}" hint-size="20px,20px"></dc-import>{{ r.luna }}</span><span class="al-c-riepilogo__colonna-14"><dc-import name="componenti/Pillola" esito="{{ r.es }}" testo="{{ r.esT }}" dimensione="minima" modo="{{ modo }}" accento="{{ accento }}" hint-size="80px,20px"></dc-import><span class="al-c-riepilogo__testo-23" style="display:{{ L.ntD }}">{{ r.cielo }}</span></span><span class="al-c-riepilogo__blocco-6" aria-hidden="true">↗</span></a></sc-for>
+</dc-import></sc-if>
+</div>
+
+
+</div></sc-if>
+</dc-import></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tipo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;oggetto&quot;,&quot;notte&quot;],&quot;default&quot;:&quot;oggetto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;caricamento&quot;,&quot;misure in calcolo&quot;,&quot;senza durata&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  suMediane = k => { const s = this.state.kpi; if (!s || s.fw !== k.fw || s.snr !== k.snr) this.setState({ kpi: k }); };
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: null, prod: 0, kpi: null };
+  componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); setTimeout(() => this.moto(), 60); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rs); }
+  componentDidUpdate(pp) { this.moto(); if ((pp.oggetto && pp.oggetto.n) !== (this.props.oggetto && this.props.oggetto.n)) this.setState({ prod: 0 }); }
+  rifR = el => { this._root = el; };
+  moto() { const M = window.ALmoto, r = this._root; if (!M || !r) return; if (this._firma !== this._pF) { M.disegna(r); if (this._pF == null) M.mini(r); this._pF = this._firma; } }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, set = o => this.setState(o);
+    const modo = this.state.modo || p.modo || 'scuro', t = AL.tema(modo, p.accento);
+    const fmtP = p.formato || 'automatico', tel = AL.telefono(fmtP, this.state.w), F = { tel, desk: !tel };
+    const tipo = p.tipo === 'notte' ? 'notte' : 'oggetto', T = { notte: tipo === 'notte', oggetto: tipo === 'oggetto' };
+    const stato = p.stato || 'normale';
+    const S = { loading: stato === 'caricamento', ready: stato !== 'caricamento' };
+    const SK = [{ h: '220px', pad: '24px', gap: '14px', blocchi: ['Caricamento…', { h: '44px', w: '60%' }, { flex: '1' }] }, { h: '520px', pad: '24px', blocchi: [{ h: '100%' }] }];
+    const virg = AL.virg, num = AL.num, fh = AL.ore;
+    const hh = x => { const m = Math.round((18 + x) * 60) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+    const L = tel ? { backP: '4px', backBg: 'transparent', backW: 600, t3: true, t1: false, grid: 'minmax(0,1fr)', gap: '12px', pad: '20px', tfs: '30px', sfs: '16px', bfs: '48px', prH: '52px', ch: 200, ch2: 140, mini: 'repeat(7,118px)', ov: 'auto', wrap: 'nowrap', ctl: 'minmax(0,1fr)', pillH: '44px', ntCols: 'minmax(0,1fr) auto auto auto', ntD: 'none', filMl: '0', c8: 'auto', xfs: '18px' }
+      : { backP: '16px', backBg: t.card2, backW: 500, t3: false, t1: true, grid: 'repeat(12,minmax(0,1fr))', gap: '16px', pad: '28px', tfs: '44px', sfs: '20px', bfs: '64px', prH: '48px', ch: 260, ch2: 170, mini: 'repeat(7,minmax(0,1fr))', ov: 'visible', wrap: 'wrap', ctl: '96px minmax(0,1fr)', pillH: '34px', ntCols: 'minmax(140px,1fr) 60px 72px 56px minmax(0,130px) 20px', ntD: 'flex', filMl: 'auto', c8: 'span 8', xfs: '24px' };
+
+    // Frame simulati: tre notti (16, 24, 27 settembre). Valori deterministici, uguali fra notte e oggetto.
+    const hash = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) % 20000) / 10000 - 1; };
+    const RIP = ALdati.ripresa, LUNA = {}, NI = {}, MET = {};
+    Object.entries(RIP).forEach(([k, v]) => { LUNA[k] = v.luna[0] / 100; MET[k] = { luna: v.luna, ...v.met }; NI[k] = { d: v.d, sito: v.sito, cor: v.cor, start: v.start, oggs: JSON.parse(JSON.stringify(v.oggs)) }; });
+    const BS = { l: 2300, ha: 950, oiii: 700, hb: 600 }, BB = { l: 1650, ha: 410, oiii: 380, hb: 360 }, BN = { l: 46, ha: 32, oiii: 26, hb: 22 }, FO = { l: 0.15, ha: -0.1, oiii: 0, hb: 0.05 };
+    const BASE = { l: 'l', r: 'l', g: 'l', b: 'l', colori: 'l', 'colori-lp': 'l', 'colori-uvir': 'l', senza: 'l', ignoto: 'l', ha: 'ha', hb: 'hb', oiii: 'oiii', sii: 'hb', 'ha-oiii': 'ha', 'sii-oiii': 'oiii', tri: 'ha', quad: 'ha' };
+    const gen = k => { const N = NI[k], casa = N.cor === 'casa', out = []; let tt = N.start;
+      const fine = N.start + Object.values(N.oggs).flat().reduce((a, b) => a + b[1] * (b[2] / 3600 + 0.004), 0);
+      Object.entries(N.oggs).forEach(([o, bl]) => bl.forEach(([f, n, ex]) => { const bf = BASE[f] || 'l'; for (let j = 0; j < n; j++) { const key = k + o + f + j, a = Math.sin(Math.PI * Math.min(1, Math.max(0, (tt - N.start) / (fine - N.start)))), z1 = hash(key + '1'), z2 = hash(key + '2'), z3 = hash(key + '3'), z4 = hash(key + '4');
+        out.push({ notte: k, ogg: o, f, t: tt, ex, casa, fwhm: (casa ? 3.3 : 2.4) + 0.55 * (1 - a) + FO[bf] + z1 * 0.22, ecc: 0.36 + (casa ? 0.07 : 0) + 0.05 * (1 - a) + z2 * 0.06,
+          stelle: Math.round(BS[bf] * (casa ? 0.55 : 1) * (0.72 + 0.35 * a) * (1 + z3 * 0.08)), fondo: Math.round(BB[bf] * (1 + 0.4 * (LUNA[k] ?? 0.5) * (1 - a)) + z4 * 18), snr: Math.round(BN[bf] * (casa ? 0.8 : 1) * (0.78 + 0.3 * a) + z1 * 2), alt: 28 + 47 * a + z2 * 1.2 }); const u = out[out.length - 1]; u.hfd = u.fwhm * 1.18 + z4 * 0.05; u.rumore = Math.round(Math.sqrt(u.fondo) * 1.9 + z3 * 2); tt += ex / 3600 + 0.004; } })); return out; };
+    const PN = T.notte ? p.notte : null;
+    if (PN) { const sumH = PN.ogg.reduce((a, o) => a + (o[1] || 0), 0) || 1, oggs = {};
+      PN.ogg.forEach(([o, h]) => { oggs[o] = PN.fil.map(([k, fr, hf]) => { const n = PN.ore == null ? fr : Math.round(fr * (h || 0) / sumH); return [k, n, hf ? hf * 3600 / fr : 120]; }).filter(b => b[1] > 0); });
+      NI[PN.id] = { d: PN.titolo, sito: PN.sito, cor: PN.sito === 'Casa' ? 'casa' : 'ekar', start: 3, oggs }; LUNA[PN.id] = PN.luna ? PN.luna[1] / 100 : 0.5; }
+    const PO0 = T.oggetto && p.oggetto && (p.oggetto.n !== 'IC 1396' || p.oggetto.produzioni) ? p.oggetto : null;
+    const OPZ = PO0 ? (PO0.pannelli ? [{ l: 'Riepilogo generale', sub: PO0.pannelli.length + ' pannelli' }].concat(PO0.pannelli.map((x, i) => ({ ...x, l: 'Pannello ' + (i + 1), sub: x.n }))) : (PO0.produzioni && PO0.produzioni.length > 1 ? PO0.produzioni : null)) : null;
+    const ps = OPZ ? Math.min(this.state.prod || 0, OPZ.length - 1) : 0, scP = OPZ ? OPZ[ps] : null;
+    const PO = PO0 ? (scP && scP.fil ? { ...PO0, ...scP, prod: 1, n: PO0.pannelli ? (window.ALcat[scP.n] ? scP.n : PO0.n + ', pannello ' + ps) : PO0.n, catN: PO0.pannelli ? (window.ALcat[scP.n] ? scP.n : PO0.n) : PO0.n } : { ...PO0, catN: PO0.n }) : null, GIO = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato']; let NKo = null;
+    if (PO) { const nn = PO.ore == null ? 1 : Math.max(1, Math.min(5, Math.round(PO.ore / 2.5))), prod = PO.prod || 1; NKo = [];
+      const Y = PO.anno || 2026; for (let j = 0; j < nn; j++) { const day = 27 - 3 * (nn - 1 - j), k = day + ' set', casa = PO.sito ? PO.sito === 'Casa' : (prod > 1 && j % 2 === 1); NKo.push(k);
+        NI[k] = { d: GIO[new Date(Y, 8, day).getDay()] + ' ' + day + ' settembre ' + Y, sito: casa ? 'Casa' : 'Cima Ekar', cor: casa ? 'casa' : 'ekar', start: 3, oggs: { [PO.n]: PO.fil.map(([f, fr, hf]) => { const base = Math.floor(fr / nn), n = j === nn - 1 ? fr - base * (nn - 1) : base; return [f, n, hf ? hf * 3600 / fr : 120]; }).filter(b => b[1] > 0) } }; LUNA[k] = 0.3 + (day % 7) / 10; } }
+    const NK = T.notte ? [PN ? PN.id : '24 set'] : (NKo || ['16 set', '24 set', '27 set']);
+    const tutti = T.notte ? gen(NK[0]) : NK.flatMap(k => gen(k).filter(x => x.ogg === (PO ? PO.n : 'IC 1396')));
+    const contaF = {}; tutti.forEach(x => { contaF[x.f] = (contaF[x.f] || 0) + 1; x.k = contaF[x.f]; });
+
+    // Filtri: tinte in tema.js
+    const FD = AL.FD, presenti = Object.keys(FD).filter(k => contaF[k]);
+
+    // Catalogo (vero)
+    const CAT = window.ALcat, distL = d => d == null ? 'distanza non nota' : d >= 1e6 ? virg(d / 1e6, d >= 1e7 ? 0 : 1) + ' milioni di anni luce' : num(d) + ' anni luce';
+    const estL = c => { if (c[3] == null) return 'non nota'; const e = c[3] * c[4] * 0.000290888, q = Math.pow(10, Math.max(0, Math.floor(Math.log10(e)) - 1)); return 'circa ' + num(Math.round(e / q) * q) + ' anni luce'; };
+    const lune = c => { const n = c[4] / 31; return n >= 1.5 ? 'più di ' + Math.floor(n) + ' Lune piene' : n >= 0.9 ? 'come la Luna piena' : 'meno della Luna piena'; };
+    const oreDi = arr => arr.reduce((a, x) => a + x.ex, 0) / 3600;
+
+    // Testa
+    const H = T.oggetto ? { back: '← Archivio', sopra: 'oggetto', titolo: 'IC 1396', nome: CAT['IC 1396'][0], periodo: 'dal 16 al 27 settembre 2026 · 3 notti, 2 siti', ore: fh(oreDi(tutti)), frame: num(tutti.length) + ' frame', chips: ['Cima Ekar', 'Casa'] }
+      : { back: '← Notti', sopra: 'la notte', titolo: 'Giovedì 24 settembre 2026', nome: '', periodo: 'Cima Ekar · dalle 21:00 alle 03:36', ore: '6 h 36', frame: '198 frame · 5 oggetti', chips: ['Cima Ekar'] };
+    if (PN) { const fine = tutti.length ? tutti[tutti.length - 1].t + tutti[tutti.length - 1].ex / 3600 : 3;
+      Object.assign(H, { titolo: PN.titolo, periodo: PN.sito + (PN.ore != null ? ' · dalle 21:00 alle ' + hh(fine) : ' · i file non hanno l\u0027ora'), ore: PN.ore != null ? fh(PN.ore) : num(PN.fr) + ' frame', frame: PN.ore != null ? num(PN.fr) + ' frame · ' + PN.ogg.length + (PN.ogg.length === 1 ? ' oggetto' : ' oggetti') + (PN.altri ? ' e ' + PN.altri + ' altri' : '') : 'senza durata', chips: [PN.sito] }); }
+    if (PO) { const siti = [...new Set(NKo.map(k => NI[k].sito))], cc = CAT[PO.catN];
+      Object.assign(H, { titolo: PO0.n, nome: PO0.pannelli && ps > 0 ? (scP.n === 'nessun oggetto' ? 'pannello ' + ps + ', senza oggetti in catalogo' : 'pannello ' + ps + ': ' + scP.n) : cc ? cc[0] : 'fuori catalogo', periodo: (NKo.length > 1 ? 'dal ' + NKo[0].split(' ')[0] + ' al 27 settembre ' + (PO.anno || 2026) + ' · ' + NKo.length + ' notti' : 'il 27 settembre ' + (PO.anno || 2026) + ' · una notte') + (siti.length > 1 ? ', ' + siti.length + ' siti' : ''),
+        ore: PO.ore != null ? fh(PO.ore) : num(PO.fr) + ' frame', frame: PO.ore != null ? num(PO.fr) + ' frame' + (PO.fil.some(f => f[2] == null) ? ' · ' + PO.fil.filter(f => f[2] == null).reduce((a, f) => a + f[1], 0) + ' senza durata' : '') : 'senza durata', chips: siti }); }
+    // v56.3: linguette sottili (sottolineatura nell'accento), non pillole piene
+    H.opz = OPZ ? OPZ.map((o, i) => ({ l: o.l, sub: o.sub, sel: i === ps ? 'true' : 'false', bg: 'transparent', fg: i === ps ? t.text : t.muted, mu: t.muted, sh: i === ps ? 'inset 0 -2px 0 ' + t.accent : 'inset 0 -1px 0 ' + t.line, on: e => { e.preventDefault(); set({ prod: i }); } })) : null;
+    H.opzL = PO0 && PO0.pannelli ? 'mosaico' : 'produzioni';
+    H.oreL = (PN && PN.ore == null) || (PO && PO.ore == null) ? '' : 'Integrazione';
+    const fin = p.contenitore === 'finestra';
+    Object.assign(H, { fin, pag: !fin, chiudi: e => { e.preventDefault(); p.onChiudi && p.onChiudi(); }, prima: e => { e.preventDefault(); p.onPrima && p.onPrima(); }, dopo: e => { e.preventDefault(); p.onDopo && p.onDopo(); },
+      primaOp: p.primaNo ? 0.35 : 1, dopoOp: p.dopoNo ? 0.35 : 1, primaL: T.notte ? 'La notte prima' : 'L\u0027oggetto prima', dopoL: T.notte ? 'La notte dopo' : 'L\u0027oggetto dopo', navH: '44px' });
+    H.filtri = presenti.map(k => ({ n: FD[k][0], ...AL.tinta(t, k), fr: String(contaF[k]) }));
+
+    // In cielo
+    const c0 = CAT['IC 1396'];
+    const SC = { tiles: [{ l: 'tipo', v: 'Nebulosa a emissione', s: 'idrogeno ionizzato da stelle giovani' }, { l: 'costellazione', v: c0[2], s: 'alta d\u0027estate e d\u0027autunno' }, { l: 'distanza', v: distL(c0[3]), s: c0[3] == null ? '' : 'circa ' + num(Math.round(c0[3] / 3.2616 / 10) * 10) + ' parsec' }, { l: 'estensione', v: estL(c0), s: c0[4] + '\u2032 in cielo, ' + lune(c0) }],
+      oggetti: Object.keys(NI[NK[0]].oggs).map(o => { const c = CAT[o], fr = tutti.filter(x => x.ogg === o); const cf = {}; fr.forEach(x => { cf[x.f] = (cf[x.f] || 0) + 1; }); return { n: o, nome: c ? c[0] || '' : 'non è nel catalogo', frame: fr.length + ' frame', filtri: Object.keys(cf).map(k => [k, cf[k]]), ore: fr.length && PN && PN.ore == null ? fr.length + ' frame' : fh(oreDi(fr)), dati: c ? [{ l: 'tipo', v: c[1] }, { l: 'costellazione', v: c[2] }, { l: 'distanza', v: distL(c[3]) }, { l: 'estensione', v: estL(c) }] : [] }; }),
+      get corredo() { return tutti.some(x => x.casa) ? 'Casa leggero' : 'Notte in quota'; }, get scala() { return tutti.some(x => x.casa) ? 3.82 : 1.94; }, get sub() { return 'dal catalogo' + (this.altri ? ' · ' + this.altri : ''); }, altri: PN ? (PN.altri ? 'e ' + PN.altri + (PN.altri === 1 ? ' altro oggetto' : ' altri oggetti') : '') : 'e 2 altri oggetti, 21 frame in 42 min' };
+
+    if (PO) { const cc = CAT[PO.catN]; SC.tiles = cc ? [{ l: 'tipo', v: cc[1][0].toUpperCase() + cc[1].slice(1), s: '' }, { l: 'costellazione', v: cc[2], s: '' }, { l: 'distanza', v: distL(cc[3]), s: cc[3] != null && cc[3] < 1e6 ? 'circa ' + num(Math.round(cc[3] / 3.2616 / 10) * 10) + ' parsec' : '' }, { l: 'estensione', v: estL(cc), s: cc[4] + '\u2032 in cielo, ' + lune(cc) }]
+      : [{ l: 'tipo', v: 'Tipo non disponibile', s: 'fuori catalogo: per esempio una cometa' }, { l: 'costellazione', v: 'Costellazione non disponibile', s: 'si muove nel cielo' }]; }
+    // Le misure dei frame stanno in componenti/MisureFrame; in testa le sue mediane (FWHM e SNR)
+    const perNotte = NK.map(k => tutti.filter(x => x.notte === k));
+    const KP = this.state.kpi; // SNR solo per produzione, mai sull'oggetto intero quando le produzioni sono piu' d'una (ADR 0022: mai fra setup e camere diversi)
+    H.kpi = [{ v: KP ? KP.fw : '…', l: 'FWHM mediana' }].concat(T.oggetto && OPZ && OPZ.length > 1 ? [] : [{ v: KP ? KP.snr : '…', l: 'SNR mediano' }]);
+    H.es = T.notte ? (PN && PN.es != null ? { e: PN.es, t: PN.esT } : PN ? null : { e: 0, t: 'buona' }) : null;
+
+    // Corredo (simulato; nomi dei pezzi come nel vecchio sistema)
+    const COR = ALdati.corredi;
+    // v56.7: le icone dei pezzi, le stesse di Attrezzatura
+    const ICR = {"ottica":"M2.8 11.2l12.6-4.4 1.4 4-12.6 4.4zM15.4 6.8l3.6-1.2 1.9 5.3-3.6 1.3M2.4 11.4l-.6.2.9 2.6.6-.2M9 13.6l-2.6 7.2M10.6 13l3 7.8M5.6 20.8h9","riduttore":"M12 3.5c2.6 2.4 2.6 14.6 0 17-2.6-2.4-2.6-14.6 0-17zM4 8.5h5M4 15.5h5M15 8.5h5M15 15.5h5M4 8.5v7M20 8.5v7","ruota":"M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M10 6.6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M15.100000000000001 10.3a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M13.2 16.4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M6.800000000000001 16.4a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M4.9 10.3a2 2 0 1 0 4 0a2 2 0 1 0 -4 0M11.2 12a0.8 0.8 0 1 0 1.6 0a0.8 0.8 0 1 0 -1.6 0","camera":"M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0 -17 0M6 12a6 6 0 1 0 12 0a6 6 0 1 0 -12 0M9.9 9.8h4.2a0.5 0.5 0 0 1 0.5 0.5v3.4a0.5 0.5 0 0 1 -0.5 0.5h-4.2a0.5 0.5 0 0 1 -0.5 -0.5v-3.4a0.5 0.5 0 0 1 0.5 -0.5zM12 1.8v1.7M12 20.5v1.7","montatura":"M12 21.5V15M6.5 21.5L12 15l5.5 6.5M10.2 8.5h3.6a1.2 1.2 0 0 1 1.2 1.2v4.1a1.2 1.2 0 0 1 -1.2 1.2h-3.6a1.2 1.2 0 0 1 -1.2 -1.2v-4.1a1.2 1.2 0 0 1 1.2 -1.2zM15 11.5l4.8-6.3M9 12l-4 4.4M2.7 17.3a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0","focheggiatore":"M4.6 7h7.3a1.6 1.6 0 0 1 1.6 1.6v6.8a1.6 1.6 0 0 1 -1.6 1.6h-7.3a1.6 1.6 0 0 1 -1.6 -1.6v-6.8a1.6 1.6 0 0 1 1.6 -1.6zM5.799999999999999 12a2.4 2.4 0 1 0 4.8 0a2.4 2.4 0 1 0 -4.8 0M13.5 10h3M13.5 14h3M16.4 12a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0M19 8.4v1M19 14.6v1M15.4 12h1M21.6 12h1","guida":"M3 11.5l9.4-3.3 1.1 3.1-9.4 3.3zM12.4 8.2l2.6-.9 1.4 4-2.6.9M14.3 17.5a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0 -6.4 0M17.5 13v1.4M17.5 20.6V22M13 17.5h1.4M20.6 17.5H22","programma":"M5 4.5h14a2 2 0 0 1 2 2v11a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2zM3 8.5h18M6.5 15.5l2.5-3 2 2 3-4 3.5 5","campo":"M3 6h18v12H3zM3 10h18M9 6v12"};
+    const usati = ['ekar', 'casa'].filter(c => tutti.some(x => (x.casa ? 'casa' : 'ekar') === c));
+    const CO = { titolo: usati.length > 1 ? 'Due setup' : 'Setup', corredi: usati.map(c => { const arr = tutti.filter(x => (x.casa ? 'casa' : 'ekar') === c); return { n: COR[c].n, uso: num(arr.length) + ' frame · ' + fh(oreDi(arr)) + (usati.length > 1 ? ' · ' + (c === 'casa' ? 'Casa' : 'Cima Ekar') : ''), righe: COR[c].righe.map(([l, v]) => ({ l, v, d: ICR[l] || ICR.campo })) }; }).map((c, i) => { const key = usati[i], ap = !!(this.state.corAp || {})[key], /* v56.5: in alto partono chiusi */ CORTE = ['ottica', 'camera', 'montatura', 'campo'];
+      return { ...c, vis: ap ? c.righe : c.righe.filter(r => CORTE.includes(r.l)), puo: true, ap: ap ? 'true' : 'false', toggleL: ap ? 'Meno strumenti' : 'Tutti gli strumenti', chev: ap ? '▴' : '▾', toggle: e => { e.preventDefault(); set({ corAp: { ...(this.state.corAp || {}), [key]: !ap } }); } }; }) };
+
+    // Le notti dell'oggetto
+    const NT = { sub: 'le notti con ' + (PO ? PO.n : 'IC 1396'), righe: (T.oggetto ? NK : []).map((k, j) => { const arr = perNotte[j], m = (PO ? null : MET[k]) || { luna: [40 + (j * 17) % 55, j % 2], u: 5 + (j % 3), b: 9 }, e = m.u != null ? ALsoglie.livello(ALsoglie.puntoNotte(m)) : 'mancante';
+      return { aria: 'Apri la notte di ' + NI[k].d, d: NI[k].d, sito: NI[k].sito, ore: fh(oreDi(arr)), fr: arr.length + ' frame', lunaP: m.luna[0], lunaC: !!m.luna[1], luna: m.luna[0] + '%',
+        es: e, esT: m.u != null ? AL.PAROLE[e] : 'meteo in arrivo', cielo: m.u != null ? m.u + ' su ' + m.b + ' ore utili' : 'arriva il ' + m.a }; }) };
+
+    this._firma = [ps, NK.join(), p.oggetto && p.oggetto.n, p.notte && p.notte.id].join('|');
+    const cnt = arr => { const c = {}; arr.forEach(x => { c[x.f] = (c[x.f] || 0) + 1; }); return Object.keys(c).map(k => [k, c[k]]); };
+    const MFG = T.oggetto ? NK.map((k, j) => ({ n: NI[k].d, filtri: cnt(perNotte[j]), seeing: j > 0, es: typeof NT.righe[j].es === 'number' ? NT.righe[j].es : null, esT: NT.righe[j].esT })) : SC.oggetti.map(o => ({ n: o.n, filtri: o.filtri, seeing: true }));
+    const MFT = T.oggetto ? 'oggetto' : 'notte', MFS = stato === 'misure in calcolo' ? 'misura in corso' : 'normale';
+    const SEL = T.notte ? 'Selezione dei frame.dc.html?notte=2026-10-12' : '';
+    return { SEL, MFG, MFT, MFS, suMediane: this.suMediane, pronto: true, fin, rifR: this.rifR, modo, accento: p.accento, setModo: m => set({ modo: m }), t, F, T, S, SK, L, H, SC, CO, NT, fmt: tel ? 'telefono' : 'desktop', pagina: T.notte ? 'Notti' : 'Archivio' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="componenti/moto.js"></script><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div class="al-c-finestra-riepilogo__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="al-c-finestra-riepilogo__blocco-1" ref="{{ rif }}"><div class="al-c-finestra-riepilogo__blocco-2" data-an="velo" role="dialog" aria-modal="true" aria-label="{{ aria }}" onClick="{{ fuori }}" style="position:{{ D.pos }};background:{{ D.ovBg }};padding:{{ D.ovPad }}">
+<div class="al-c-finestra-riepilogo__blocco-3" data-an="pannello" style="max-width:{{ D.maxW }};border-radius:{{ D.r }};padding:{{ D.pad }};min-height:{{ D.minH }};height:{{ D.h }};overflow-y:{{ D.ovY }};box-shadow:{{ D.sh }}"><dc-import name="componenti/Riepilogo" tipo="{{ tipo }}" contenitore="finestra" notte="{{ notte }}" oggetto="{{ oggetto }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" on-chiudi="{{ chiudi }}" on-prima="{{ prima }}" on-dopo="{{ dopo }}" prima-no="{{ primaNo }}" dopo-no="{{ dopoNo }}" hint-size="100%,1400px"></dc-import></div>
+</div></div></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;tipo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;oggetto&quot;,&quot;notte&quot;],&quot;default&quot;:&quot;oggetto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Riepilogo&quot;},&quot;notte&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;oggetto&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;posizione&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;fissa&quot;,&quot;dentro&quot;],&quot;default&quot;:&quot;dentro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;aria&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;onChiudi&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onPrima&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onDopo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;primaNo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;boolean&quot;},&quot;dopoNo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;boolean&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  // Il riepilogo sopra la pagina: finestra larga 1180 sul desktop, pagina intera sul telefono. Si chiude con ×, Esc o cliccando fuori.
+  rif = el => { this._r = el; };
+  componentDidMount() { this._key = e => { if (e.key === 'Escape') this.chiudi(); }; document.addEventListener('keydown', this._key); this._apri = true; this.moto(); }
+  componentDidUpdate() { this.moto(); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); document.removeEventListener('keydown', this._key); }
+  moto() { const M = window.ALmoto, r = this._r; if (!M || !r) return; const tel = this.props.formato === 'telefono';
+    if (this._apri) { this._apri = false; M.apri(r, tel); } if (this._dir) { M.scivola(r, this._dir); this._dir = 0; } }
+  chiudi = () => { const M = window.ALmoto, f = () => this.props.onChiudi && this.props.onChiudi(); if (M && this._r) M.chiudi(this._r, this.props.formato === 'telefono', f); else f(); };
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), tel = p.formato === 'telefono', dk = !tel;
+    // v56.11: telefono in una finestra larga (anteprima): la finestra sta nel telefono di 390 × 844, come il Telaio
+    const ant = tel && typeof window !== 'undefined' && window.innerWidth > 500;
+    const D = { pos: p.posizione === 'dentro' ? 'absolute' : 'fixed', ovBg: dk || ant ? 'rgba(8,8,10,.62)' : t.frame, ovPad: dk ? '32px' : ant ? '32px 16px' : '0', maxW: dk ? '1180px' : ant ? '390px' : 'none', r: dk ? '32px' : ant ? '44px' : '0', pad: dk ? '20px' : '12px 12px 32px', minH: dk || ant ? '0' : '100%', h: ant ? '844px' : 'auto', ovY: ant ? 'auto' : 'visible', sh: ant ? '0 0 0 10px ' + (AL.CORNICE_TEL || '#000') : 'none' };
+    return { pronto: true, t, D, rif: this.rif, tipo: p.tipo || 'oggetto', notte: p.notte, oggetto: p.oggetto, fmt: tel ? 'telefono' : 'desktop', modo: p.modo, accento: p.accento,
+      aria: p.aria || 'Riepilogo', chiudi: this.chiudi, fuori: e => { if (e.target === e.currentTarget) this.chiudi(); },
+      prima: () => { this._dir = -1; p.onPrima && p.onPrima(); }, dopo: () => { this._dir = 1; p.onDopo && p.onDopo(); }, primaNo: !!p.primaNo, dopoNo: !!p.dopoNo };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div class="al-c-sezione-servizi__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}" data-formato="{{ fmt }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="al-imp-sezione">
+
+<sc-if value="{{ S.servizi }}" hint-placeholder-val="{{ true }}">
+<p class="al-imp-intro">Le chiavi dei servizi in un posto solo. Si vede solo come finisce ogni chiave; le chiavi non escono dal computer e non vanno nel backup.</p>
+<sc-for list="{{ servizi }}" as="k" hint-placeholder-count="3"><section class="al-imp-carta" aria-label="{{ k.nome }}">
+<div class="al-imp-testa"><span class="al-imp-titoli"><b class="al-imp-titolo">{{ k.nome }}</b><span class="al-imp-sotto">{{ k.serve }}</span></span><a href="{{ k.link }}" target="_blank" rel="noopener" class="al-bottone al-bottone--testo al-bottone--piccolo">Dove si prende ↗</a></div>
+<div class="al-imp-riga"><span class="al-imp-etichetta">Chiave</span><span class="al-imp-valore"><sc-if value="{{ k.chiave }}" hint-placeholder-val="{{ true }}"><span class="al-imp-chiave">{{ k.chiave }}</span><a href="#" onClick="{{ k.cambia }}" class="al-bottone al-bottone--contorno al-bottone--piccolo">Cambia</a><a href="#" onClick="{{ k.togli }}" class="al-bottone al-bottone--testo al-bottone--piccolo">Togli</a></sc-if><sc-if value="{{ k.vuota }}" hint-placeholder-val="{{ false }}"><input class="al-campo al-campo--piccolo al-c-sezione-servizi__blocco-2" aria-label="{{ k.aria }}" placeholder="Incolla la chiave"><a href="#" onClick="{{ k.verifica }}" class="al-bottone al-bottone--pieno al-bottone--piccolo">Verifica</a></sc-if></span></div>
+<div class="al-imp-riga"><span class="al-imp-etichetta">Ultimo tentativo</span><span class="al-imp-valore"><dc-import name="componenti/Pillola" esito="{{ k.esito }}" testo="{{ k.esitoT }}" dimensione="piccola" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="120px,24px"></dc-import><span class="al-imp-nota">{{ k.quando }}</span></span></div>
+<sc-if value="{{ k.dopo }}" hint-placeholder-val="{{ false }}"><p class="al-imp-nota">{{ k.dopo }}</p></sc-if>
+</section></sc-for>
+</sc-if>
+
+<sc-if value="{{ S.scansioni }}" hint-placeholder-val="{{ false }}">
+<p class="al-imp-intro">Le scansioni passate, la più recente in alto: quanto è durata, cosa è entrato, cosa è rimasto fuori e perché.</p>
+<sc-if value="{{ sc.vuoto }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" segno="?" titolo="Nessuna scansione ancora" testo="Aggiungi una cartella in «Cartelle e scansione» e avvia la prima." formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import></sc-if>
+<sc-for list="{{ sc.lista }}" as="s" hint-placeholder-count="3"><section class="al-imp-carta" aria-label="{{ s.quando }}">
+<div class="al-imp-testa"><span class="al-imp-titoli"><b class="al-imp-titolo">{{ s.quando }}</b><span class="al-imp-sotto">{{ s.durata }}</span></span><dc-import name="componenti/Pillola" esito="{{ s.esito }}" segno="{{ s.segno }}" testo="{{ s.esitoT }}" dimensione="piccola" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="120px,24px"></dc-import></div>
+<sc-if value="{{ s.barra }}" hint-placeholder-val="{{ false }}"><span role="progressbar" aria-valuenow="{{ s.n }}" aria-valuemin="0" aria-valuemax="100" class="al-imp-barra"><span style="width:{{ s.pct }}"></span></span></sc-if>
+<div class="al-imp-riga"><span class="al-imp-etichetta">Cartelle</span><span class="al-imp-valore al-imp-valore--colonna"><sc-for list="{{ s.cartelle }}" as="c" hint-placeholder-count="2"><span class="al-imp-percorso">{{ c }}</span></sc-for></span></div>
+<div class="al-imp-riga"><span class="al-imp-etichetta">Entrati</span><span class="al-imp-valore"><b>{{ s.entrati }}</b></span></div>
+<sc-if value="{{ s.fuori }}" hint-placeholder-val="{{ true }}"><div class="al-imp-riga"><span class="al-imp-etichetta">Rimasti fuori</span><span class="al-imp-valore al-imp-valore--colonna"><sc-for list="{{ s.fuori }}" as="f" hint-placeholder-count="2"><span>{{ f }}</span></sc-for></span></div></sc-if>
+<sc-if value="{{ s.illeggibili }}" hint-placeholder-val="{{ false }}"><div class="al-imp-riga"><span class="al-imp-etichetta">{{ s.illT }}</span><span class="al-imp-valore al-imp-valore--colonna"><sc-for list="{{ s.illeggibili }}" as="f" hint-placeholder-count="3"><span class="al-imp-file"><span class="al-imp-percorso">{{ f.p }}</span><span class="al-imp-nota">{{ f.m }}</span></span></sc-for><sc-if value="{{ s.altri }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ s.mostra }}" class="al-bottone al-bottone--testo al-bottone--piccolo al-bottone--a-filo">{{ s.altri }}</a></sc-if></span></div></sc-if>
+<sc-if value="{{ s.motivo }}" hint-placeholder-val="{{ false }}"><div class="al-imp-riga"><span class="al-imp-etichetta">Motivo</span><span class="al-imp-valore">{{ s.motivo }}</span></div></sc-if>
+<sc-if value="{{ s.gesti }}" hint-placeholder-val="{{ false }}"><div class="al-imp-gesti"><sc-for list="{{ s.gesti }}" as="g" hint-placeholder-count="1"><a href="#" onClick="{{ g.on }}" class="{{ g.cls }}">{{ g.l }}</a></sc-for></div></sc-if>
+</section></sc-for>
+</sc-if>
+
+<sc-if value="{{ S.diagnostica }}" hint-placeholder-val="{{ false }}">
+<p class="al-imp-intro">Tutto quello che serve per una segnalazione, senza dati personali: niente chiavi, niente nome.</p>
+<section class="al-imp-carta" aria-label="Diagnostica">
+<sc-for list="{{ dg.righe }}" as="r" hint-placeholder-count="6"><div class="al-imp-riga"><span class="al-imp-etichetta">{{ r.l }}</span><span class="al-imp-valore al-imp-valore--colonna"><sc-if value="{{ r.esito }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Pillola" esito="{{ r.esito }}" testo="{{ r.esitoT }}" dimensione="piccola" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="120px,24px"></dc-import></sc-if><sc-for list="{{ r.v }}" as="v" hint-placeholder-count="1"><span class="{{ r.cls }}">{{ v }}</span></sc-for></span></div></sc-for>
+<div class="al-imp-gesti al-imp-gesti--inizio"><a href="#" onClick="{{ dg.copia }}" class="al-bottone al-bottone--pieno">{{ dg.copiaL }}</a><span class="al-imp-nota">L'app non manda niente da sola: copi tu e incolli dove vuoi.</span></div>
+</section>
+</sc-if>
+
+<sc-if value="{{ S.backup }}" hint-placeholder-val="{{ false }}">
+<p class="al-imp-intro">Le tue risposte (siti, attrezzatura, quello che hai confermato) stanno in un file accanto al database: se il database si rovina, si rimettono da lì.</p>
+<sc-if value="{{ bk.proposta }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="blocco" segno="?" titolo="Ho trovato le tue risposte del 12 ottobre 2026: le rimetto?" testo="Al primo avvio, se accanto al database c'è un file delle risposte. Si può anche dopo, da Importa." formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import><div class="al-imp-gesti al-imp-gesti--inizio"><a href="#" class="al-bottone al-bottone--pieno">Rimettile</a><a href="#" class="al-bottone al-bottone--contorno">Non ora</a></div></sc-if>
+<section class="al-imp-carta" aria-label="Il file delle risposte">
+<div class="al-imp-riga"><span class="al-imp-etichetta">File</span><span class="al-imp-valore"><span class="al-imp-percorso">D:\AstroLog\astrolog-risposte.json</span></span></div>
+<div class="al-imp-riga"><span class="al-imp-etichetta">Scritto l'ultima volta</span><span class="al-imp-valore">{{ bk.quando }}</span></div>
+<div class="al-imp-gesti al-imp-gesti--inizio"><a href="#" class="al-bottone al-bottone--pieno" aria-disabled="{{ bk.no }}">Esporta</a><a href="#" class="al-bottone al-bottone--contorno">Importa</a></div>
+<p class="al-imp-nota">L'esportazione non porta le chiavi dei servizi né il percorso di ASTAP. Importa fa lo stesso ripristino del primo avvio.</p>
+</section>
+</sc-if>
+
+</div></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:800},&quot;sezione&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;servizi&quot;,&quot;scansioni&quot;,&quot;diagnostica&quot;,&quot;backup&quot;],&quot;default&quot;:&quot;servizi&quot;,&quot;tsType&quot;:&quot;'servizi' | 'scansioni' | 'diagnostica' | 'backup'&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;senza chiave&quot;,&quot;attiva&quot;,&quot;rifiutata&quot;,&quot;non raggiungibile&quot;,&quot;nessuna scansione&quot;,&quot;in corso&quot;,&quot;una bloccata&quot;,&quot;molti file non leggibili&quot;,&quot;ASTAP assente&quot;,&quot;errori&quot;,&quot;mai scritto&quot;,&quot;ripristino al primo avvio&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  // Le quattro sezioni nuove di Impostazioni (v32): Servizi, Scansioni, Diagnostica, Backup. Dati simulati.
+  state = { copiato: false, tutti: false };
+  componentWillUnmount() { this._alw && clearInterval(this._alw); clearTimeout(this._tc); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), tel = p.formato === 'telefono', sez = p.sezione || 'servizi', stato = p.stato || 'normale', no = e => e && e.preventDefault && e.preventDefault();
+    const S = { servizi: sez === 'servizi', scansioni: sez === 'scansioni', diagnostica: sez === 'diagnostica', backup: sez === 'backup' };
+    // Servizi: lo stato del Tweak vale per Meteoblue; AAVSO attiva, TNS senza chiave
+    const E = { 'attiva': [0, 'riuscito', 'oggi, 07:12'], 'rifiutata': [2, 'chiave rifiutata', 'oggi, 07:12'], 'non raggiungibile': [1, 'non raggiungibile', 'oggi, 07:12 · riprova da solo fra un\u0027ora'], 'risposta non valida': [1, 'risposta non valida', 'ieri, 22:40'] };
+    const svc = (nome, serve, link, st, fine, dopo) => { const vuota = st === 'senza chiave', e = E[st] || [-1, 'nessun tentativo', ''];
+      return { nome, serve, link, aria: 'Chiave di ' + nome, chiave: vuota ? '' : '…' + fine, vuota, esito: vuota ? 'mancante' : e[0], esitoT: vuota ? 'senza chiave' : e[1], quando: vuota ? '' : e[2], dopo: vuota ? dopo : st === 'rifiutata' ? 'Controlla la chiave sul sito del servizio e incollala di nuovo.' : '', cambia: no, togli: no, verifica: no }; };
+    const mb = { normale: 'attiva', 'senza chiave': 'senza chiave', attiva: 'attiva', rifiutata: 'rifiutata', 'non raggiungibile': 'non raggiungibile' }[stato] || 'attiva';
+    const servizi = [svc('Meteoblue', 'Il seeing della notte, nel Meteo e nel punteggio delle ore.', 'https://www.meteoblue.com/it/weather-api', mb, 'a3f9', 'Senza la chiave le ore si contano senza seeing.'),
+      svc('AAVSO', 'Le campagne di osservazione, nel Piano della notte › Ricerca.', 'https://www.aavso.org/', 'attiva', '7c21', ''),
+      svc('TNS', 'Le supernove recenti, nel Piano della notte › Ricerca.', 'https://www.wis-tns.org/', 'senza chiave', '', 'Senza la chiave la Ricerca non mostra le supernove.')];
+    // Scansioni
+    const CART = ['D:\\Astro\\2026', 'E:\\Riprese\\Sole'];
+    const fatta = { quando: 'ieri, 22:05', durata: '3 min 40 s', esito: 0, segno: '✓', esitoT: 'completata', cartelle: CART, entrati: '186 frame', fuori: ['6 senza data nell\u0027intestazione', '3 già in archivio'], illeggibili: null };
+    const interrotta = { quando: '18 ottobre, 21:30', durata: '1 min 05 s', esito: 1, segno: '!', esitoT: 'interrotta a mano', cartelle: CART.slice(0, 1), entrati: '3412 file letti su 18 430', fuori: null, illeggibili: null };
+    const F = [['D:\\Astro\\2026\\M31\\L_0042.fits', 'intestazione rovinata'], ['D:\\Astro\\2026\\M31\\L_0043.fits', 'file vuoto (0 byte)'], ['E:\\Riprese\\Sole\\2026-09-12\\Sole_104218_Ha.ser', 'formato non riconosciuto'], ['D:\\Astro\\2026\\NGC7000\\Ha_0007.fits', 'accesso negato'], ['D:\\Astro\\2026\\NGC7000\\Ha_0008.fits', 'accesso negato']];
+    const molti = stato === 'molti file non leggibili', tutti = this.state.tutti;
+    const ill = molti ? (tutti ? F.concat(Array.from({ length: 32 }, (_, i) => ['D:\\Astro\\2026\\IC1396\\SII_' + String(i + 1).padStart(4, '0') + '.fits', 'intestazione rovinata'])) : F) : F.slice(0, 2);
+    const ultima = { quando: 'oggi, 07:12', durata: '4 min 12 s', esito: 0, segno: '✓', esitoT: 'completata', cartelle: CART, entrati: '214 frame', fuori: ['8 senza data nell\u0027intestazione', '4 doppioni dello stesso file'], illeggibili: ill.map(([p, m]) => ({ p, m })), illT: 'Non leggibili · ' + (molti ? 37 : 2), altri: molti && !tutti ? 'Mostra tutti i 37' : '', mostra: e => { no(e); this.setState({ tutti: true }); } };
+    const inCorso = { quando: 'adesso', durata: 'da 1 min 20 s', esito: 'neutra', segno: '', esitoT: 'in corso · 42%', barra: true, n: 42, pct: '42%', cartelle: CART, entrati: '7740 file letti su 18 430', fuori: null, gesti: [{ l: 'Interrompi', cls: 'al-bottone al-bottone--contorno al-bottone--piccolo', on: no }] };
+    const bloccata = { quando: 'oggi, 09:52', durata: 'ferma da 2 min', esito: 2, segno: '✕', esitoT: 'bloccata', cartelle: CART.slice(0, 1), entrati: '3412 file letti su 18 430', fuori: null, motivo: 'Il disco D: non risponde: lettura di una cartella non completata. Controlla il disco e riprova; riparte da dove si era fermata.',
+      gesti: [{ l: 'Riprova', cls: 'al-bottone al-bottone--pieno al-bottone--piccolo', on: no }, { l: 'Dettagli', cls: 'al-bottone al-bottone--testo al-bottone--piccolo', on: no }] };
+    const lista = stato === 'nessuna scansione' ? [] : stato === 'in corso' ? [inCorso, ultima, fatta] : stato === 'una bloccata' ? [bloccata, ultima, fatta] : [ultima, fatta, interrotta];
+    const sc = { vuoto: !lista.length, lista: lista.map(x => ({ fuori: null, illeggibili: null, barra: false, motivo: '', gesti: null, altri: '', ...x })) };
+    // Diagnostica
+    const astapNo = stato === 'ASTAP assente';
+    const righe = [{ l: 'Versione', v: ['AstroLog 0.9 (dati simulati)'] }, { l: 'Sistema', v: ['Windows 11 · 64 bit'] },
+      { l: 'Percorsi', v: ['dati: D:\\AstroLog', 'database: D:\\AstroLog\\astrolog.db', 'ASTAP: ' + (astapNo ? 'non indicato' : 'C:\\Program Files\\astap\\astap_cli.exe')], cls: 'al-imp-percorso' },
+      { l: 'ASTAP', esito: astapNo ? 'mancante' : 0, esitoT: astapNo ? 'non trovato' : 'trovato', v: [] }, { l: 'Catalogo D80', esito: astapNo ? 'mancante' : 0, esitoT: astapNo ? 'non trovato' : 'trovato', v: [] },
+      { l: 'Frame non lavorati', v: astapNo ? ['Identificazione: 1204 frame, ASTAP non c\u0027è', 'Misure: 0'] : ['Identificazione: 12 frame, campo non risolto', 'Misure: 3 frame, stelle troppo poche'] },
+      { l: 'Ultimi errori del diario', v: stato === 'errori' ? ['oggi 09:52 · lettura: il disco D: non risponde', 'oggi 07:13 · meteo: Meteoblue non raggiungibile', 'ieri 22:41 · identificazione: tempo scaduto su L_0042.fits'] : ['nessun errore negli ultimi 7 giorni'], cls: 'al-imp-nota' }];
+    const testo = () => righe.map(r => r.l + ': ' + [r.esitoT].concat(r.v).filter(Boolean).join(' · ')).join('\n');
+    const dg = { righe: righe.map(r => ({ esito: null, esitoT: '', cls: '', ...r })), copiaL: this.state.copiato ? 'Copiato ✓' : 'Copia',
+      copia: e => { no(e); try { navigator.clipboard && navigator.clipboard.writeText(testo()); } catch (x) {} this.setState({ copiato: true }); clearTimeout(this._tc); this._tc = setTimeout(() => this.setState({ copiato: false }), 2000); } };
+    // Backup
+    const mai = stato === 'mai scritto';
+    const bk = { quando: mai ? 'non ancora: si scrive alla prima risposta' : 'oggi, 07:14 · 46 KB', no: mai ? 'true' : undefined, proposta: stato === 'ripristino al primo avvio' };
+    return { pronto: true, t, fmt: tel ? 'telefono' : 'desktop', modo: p.modo, accento: p.accento, S, servizi, sc, dg, bk };
+  }
+}
+</script>
+</body>
+</html>

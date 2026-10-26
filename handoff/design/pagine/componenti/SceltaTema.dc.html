@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div class="al-c-scelta-tema__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="al-c-scelta-tema__colonna-1" role="group" aria-label="Tema">
+<div class="al-c-scelta-tema__colonna-2">
+<span class="al-c-scelta-tema__testo-1" id="st-modo">Modo</span>
+<span class="al-scelta al-scelta--segmentato al-scelta--sottili" role="radiogroup" aria-labelledby="st-modo" style="align-self:flex-start"><sc-for list="{{ modi }}" as="o" hint-placeholder-count="3"><a class="al-scelta__voce" href="#" role="radio" aria-checked="{{ o.sel }}" aria-disabled="{{ o.no }}" onClick="{{ o.on }}" style="opacity:{{ o.op }};cursor:{{ o.cur }}">{{ o.l }}</a></sc-for></span>
+<sc-if value="{{ nota }}" hint-placeholder-val="{{ false }}"><span class="al-c-scelta-tema__testo-2">{{ nota }}</span></sc-if>
+</div>
+<div class="al-c-scelta-tema__colonna-2">
+<span class="al-c-scelta-tema__testo-1" id="st-acc">Accento</span>
+<span class="al-c-scelta-tema__centro-1" role="radiogroup" aria-labelledby="st-acc" style="grid-template-columns:{{ L.cols }}"><sc-for list="{{ accenti }}" as="a" hint-placeholder-count="5"><a class="al-c-scelta-tema__riga-3" href="#" role="radio" aria-checked="{{ a.sel }}" onClick="{{ a.on }}" style="flex-direction:{{ L.dir }};align-items:{{ L.al }};gap:{{ L.gap }};min-height:{{ L.voceH }};background:{{ a.bg }};box-shadow:inset 0 0 0 {{ a.rw }} {{ a.ring }}">
+<span class="al-c-scelta-tema__riga-4" aria-hidden="true" style="width:{{ L.campW }};height:{{ L.campH }};background:{{ a.c.frame }};box-shadow:inset 0 0 0 1px {{ a.c.line }}"><span class="al-c-scelta-tema__riga-5" style="background:{{ a.c.card }}"><span class="al-c-scelta-tema__tondo-1" style="border:3px solid {{ a.c.accent }}"></span><span class="al-c-scelta-tema__pillola-1" style="background:{{ a.c.hPill }};color:{{ a.c.hPillFg }}">Avanti</span></span></span>
+<span class="al-c-scelta-tema__riga-6" style="padding:{{ L.nomePad }}"><span class="al-c-scelta-tema__tondo-2" aria-hidden="true" style="background:{{ a.sp.bg }};color:{{ a.sp.fg }};border:1.5px solid {{ a.sp.bd }}">{{ a.sp.s }}</span><span class="al-c-scelta-tema__blocco-2" style="font-weight:{{ a.fw }}">{{ a.l }}</span></span>
+</a></sc-for></span>
+</div>
+<sc-if value="{{ piede }}" hint-placeholder-val="{{ false }}"><span class="al-c-scelta-tema__testo-3">{{ piede }}</span></sc-if>
+</div></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:720,&quot;height&quot;:320},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;,&quot;automatico&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro' | 'automatico'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;sito&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Cima Ekar&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Dati&quot;},&quot;ora&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Dati&quot;},&quot;piede&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Dati&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;onModo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(modo: string) =&gt; void&quot;},&quot;onAccento&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(accento: string) =&gt; void&quot;}}">
+class Component extends DCLogic {
+  state = { modo: null, accento: null };
+  componentWillUnmount() { this._alw && clearInterval(this._alw); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, tel = p.formato === 'telefono';
+    // controllato se la pagina passa on-modo / on-accento; se no tiene la scelta da solo (Sistema)
+    const modo = (p.onModo ? p.modo : this.state.modo ?? p.modo) || 'scuro';
+    const accento = (p.onAccento ? p.accento : this.state.accento ?? p.accento) || AL.PREDEFINITO;
+    const sito = p.sito || '', senzaSito = !sito;
+    const visto = modo === 'automatico' ? (p.ora || 'scuro') : modo;
+    const t = AL.tema(visto, accento);
+    const setM = m => { p.onModo ? p.onModo(m) : this.setState({ modo: m }); };
+    const setA = a => { p.onAccento ? p.onAccento(a) : this.setState({ accento: a }); };
+    const modi = [['chiaro', 'Chiaro'], ['scuro', 'Scuro'], ['automatico', 'Automatico']].map(([k, l]) => {
+      const sel = modo === k, no = k === 'automatico' && senzaSito && !sel;
+      return { l, sel: sel ? 'true' : 'false', no: no ? 'true' : undefined, bg: sel ? t.hPill : 'transparent', fg: sel ? t.hPillFg : t.text, op: no ? 0.45 : 1, cur: no ? 'not-allowed' : 'pointer',
+        on: e => { e.preventDefault(); if (!no) setM(k); } }; });
+    const nota = senzaSito ? 'Automatico ha bisogno di un sito di osservazione: tramonto e alba si calcolano da lì.'
+      : modo === 'automatico' ? 'Scuro dal tramonto all\u0027alba di ' + sito + ', chiaro di giorno.' : '';
+    const accenti = AL.ACCENTI.map(k => { const sel = k === accento, c = AL.tema(visto, k);
+      return { l: k, sel: sel ? 'true' : 'false', fw: sel ? 600 : 400, bg: sel ? t.card2 : 'transparent', ring: sel ? t.text : t.line, rw: sel ? '2px' : '1px',
+        c: { frame: c.frame, card: c.card, line: c.line, accent: c.accent, hPill: c.hPill, hPillFg: c.hPillFg },
+        sp: sel ? { s: '✓', bg: t.text, fg: t.card, bd: t.text } : { s: '', bg: 'transparent', fg: t.text, bd: t.muted },
+        on: e => { e.preventDefault(); setA(k); } }; });
+    const L = tel ? { h: '44px', fs: '14px', segAl: 'stretch', segFlex: '1', cols: 'minmax(0,1fr)', dir: 'row', al: 'center', gap: '14px', voceH: '60px', campW: '112px', campH: '44px', nomePad: '0' }
+      : { h: '36px', fs: '13px', segAl: 'flex-start', segFlex: 'none', cols: 'repeat(auto-fill,minmax(124px,1fr))', dir: 'column', al: 'stretch', gap: '10px', voceH: '0', campW: '100%', campH: '64px', nomePad: '0 4px 4px' };
+    return { pronto: true, t, L, modi, nota, accenti, piede: p.piede || '' };
+  }
+}
+</script>
+</body>
+</html>

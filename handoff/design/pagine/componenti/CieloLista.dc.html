@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:22px;font-weight:500">{{ lista.titolo }}</span><span style="font-size:13px;color:var(--tenue);text-wrap:pretty">{{ lista.sub }}</span></div>
+<span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none;text-align:right"><b style="font-size:44px;font-weight:300;line-height:1;letter-spacing:-.02em">{{ lista.num }}</b><span style="font-size:12px;color:var(--tenue)">{{ lista.numL }}</span></span>
+</div>
+<sc-if value="{{ lista.liste }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/PillolaScelta" forma="segmentato" misura="piccola" fondo="carta" scorre="{{ true }}" opzioni="{{ lista.liste }}" etichetta="Lista" formato="{{ formato }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,36px"></dc-import></sc-if>
+<sc-if value="{{ lista.critL }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ lista.critApri }}" aria-expanded="{{ lista.critOn }}" style="display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:8px 14px;border:0;border-radius:14px;background:var(--carta-2);color:inherit;text-align:left;cursor:pointer;font-size:13px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex:none"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg><span style="flex:1;min-width:0;text-wrap:pretty">{{ lista.critL }}</span><span style="flex:none;font-weight:600">{{ lista.critAzione }}</span></button></sc-if>
+<sc-if value="{{ lista.critInline }}" hint-placeholder-val="{{ false }}"><div style="padding:14px 16px;border-radius:18px;box-shadow:inset 0 0 0 1.5px var(--linea)"><dc-import name="componenti/CieloCriteri" crit="{{ lista.crit }}" formato="{{ formato }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,420px"></dc-import></div></sc-if>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ lista.righe }}" as="r" hint-placeholder-count="8"><button type="button" onClick="{{ r.vai }}" aria-current="{{ r.cur }}" style="display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:12px;align-items:center;min-height:52px;padding:6px 10px;margin:0 -10px;border:0;border-radius:14px;background:{{ r.bg }};color:inherit;text-align:left;cursor:pointer;opacity:{{ r.op }}">
+<b aria-hidden="true" style="display:grid;place-items:center;width:24px;height:24px;border-radius:999px;background:var(--scelta);color:var(--scelta-testo);font-size:12px;font-weight:700">{{ r.n }}</b>
+<span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+<span style="display:flex;align-items:baseline;gap:8px;min-width:0;white-space:nowrap;overflow:hidden"><b style="font-weight:600">{{ r.id }}</b><span style="color:var(--tenue);font-size:13px;overflow:hidden;text-overflow:ellipsis">{{ r.nome }}</span></span>
+<sc-if value="{{ r.prog }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tenue);min-width:0"><span style="flex:none;width:72px;height:6px;border-radius:999px;background:var(--traccia);overflow:hidden"><i style="display:block;height:100%;border-radius:999px;background:var(--accento);width:{{ r.prog.w }}"></i></span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.prog.l }}</span></span></sc-if>
+<sc-if value="{{ r.info }}" hint-placeholder-val="{{ true }}"><span style="font-size:12px;color:var(--tenue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.info }}</span></sc-if>
+</span>
+<span style="display:flex;align-items:center;gap:10px;justify-content:flex-end"><span style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><b style="font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.v }}</b><span style="font-size:11px;color:var(--tenue);white-space:nowrap">{{ r.vSub }}</span></span><sc-if value="{{ r.pill }}" hint-placeholder-val="{{ false }}"><span class="{{ r.pill.cls }}" style="min-width:74px;text-align:center">{{ r.pill.segno }} {{ r.pill.l }}</span></sc-if></span>
+</button></sc-for>
+</div>
+<sc-if value="{{ lista.vuoto }}" hint-placeholder-val="{{ false }}"><span style="padding:14px 16px;border-radius:16px;background:var(--carta-2);font-size:13px;text-wrap:pretty">{{ lista.vuoto }}</span></sc-if>
+<sc-if value="{{ lista.piu }}" hint-placeholder-val="{{ false }}"><button type="button" class="al-bottone al-bottone--tenue al-bottone--piccolo" onClick="{{ lista.piu.on }}" style="align-self:flex-start">{{ lista.piu.l }}</button></sc-if>
+<sc-if value="{{ lista.nota }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:var(--tenue);text-wrap:pretty">{{ lista.nota }}</span></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:520,&quot;height&quot;:640},&quot;lista&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;}}"></script>
+</body>
+</html>

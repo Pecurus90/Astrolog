@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.8}@keyframes skPulse{0%,100%{opacity:1}50%{opacity:.45}}@property --p{syntax:'<number>';inherits:false;initial-value:100}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="al-sis__blocco-1" data-screen-label="Sistema" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<div class="al-sis__colonna-1">
+
+<header class="al-sis__riga-1">
+<div class="al-sis__colonna-2"><span class="al-sis__testo-1">AstroLog · linguaggio bento</span><span class="al-sis__testo-2">Token, telaio e mattoni</span><span class="al-sis__blocco-2">Ricavati da pagine/Dashboard.dc.html il 17 ottobre 2026. Ogni pagina nuova si costruisce con questi pezzi; se ne serve uno che qui non c'è, si aggiunge qui prima. I pezzi segnati con un nome sono i componenti veri di pagine/componenti/, gli stessi di Dashboard e Meteo; token e soglie stanno in componenti/tema.js e componenti/soglie.js.</span></div>
+<span class="al-sis__riga-2"><span class="al-sis__pillola-1">modo {{ modoL }}</span><span class="al-sis__pillola-1">accento {{ accL }}</span></span>
+</header>
+
+<section class="al-sis__colonna-3" aria-label="Token">
+<div class="al-sis__riga-3"><span class="al-sis__testo-3">1</span><span class="al-sis__testo-4">Token</span></div>
+
+<div class="al-sis__colonna-4">
+<div class="al-sis__riga-4"><span class="al-sis__testo-5">Colori del tema</span><span class="al-sis__testo-6">2 modi × 5 accenti · la colonna cerchiata è quella in vista</span></div>
+<div class="al-sis__blocco-3"><div class="al-sis__griglia-1">
+<span></span><sc-for list="{{ combos }}" as="c" hint-placeholder-count="10"><span class="al-sis__colonna-5" style="box-shadow:inset 0 0 0 {{ c.ow }} var(--testo)"><b class="al-sis__testo-7">{{ c.m }}</b><span class="al-sis__testo-8">{{ c.a }}</span></span></sc-for>
+<sc-for list="{{ toks }}" as="r" hint-placeholder-count="20"><div class="al-sis__blocco-4"><span class="al-sis__colonna-6"><b class="al-sis__testo-9">{{ r.n }}</b><span class="al-sis__testo-10">{{ r.d }}</span></span><sc-for list="{{ r.cells }}" as="x" hint-placeholder-count="10"><span class="al-sis__colonna-7"><span class="al-sis__blocco-5" style="background:{{ x.bg }}"></span><span class="al-sis__testo-11">{{ x.hex }}</span></span></sc-for></div></sc-for>
+</div></div>
+<span class="al-sis__testo-12">Gli esiti hanno due colori, fondo e testo. Il carattere cambia col modo: Outfit nello scuro, Plus Jakarta Sans nel chiaro. Nel chiaro l'accento "originale" tinge di verde anche telaio e neutri.</span>
+</div>
+
+<div class="al-sis__griglia-2">
+<div class="al-sis__colonna-8">
+<span class="al-sis__testo-5">Colori con un significato</span>
+<span class="al-sis__testo-6">Non cambiano con l'accento; cambiano solo col modo, per il contrasto.</span>
+<sc-for list="{{ fixed }}" as="g" hint-placeholder-count="4"><div class="al-sis__colonna-9"><b class="al-sis__testo-13">{{ g.n }}</b><div class="al-sis__riga-5"><sc-for list="{{ g.items }}" as="i" hint-placeholder-count="5"><span class="al-sis__riga-6"><i class="al-sis__tondo-1" style="background:{{ i.c }};border:{{ i.b }}"></i>{{ i.l }} <span class="al-sis__testo-8">{{ i.h }}</span></span></sc-for></div></div></sc-for>
+</div>
+<div class="al-sis__colonna-8">
+<div class="al-sis__riga-7"><span class="al-sis__testo-5">Contrasto</span><span class="al-sis__pillola-2">{{ cMinL }}</span></div>
+<span class="al-sis__testo-6">Coppia più debole per combinazione, su quindici coppie di testo (anche quelle dei componenti: casella scelta, segno di avviso, pillola protagonista). Soglia 4.5:1.</span>
+<div class="al-sis__colonna-10"><sc-for list="{{ contrast }}" as="c" hint-placeholder-count="10"><span class="al-sis__griglia-3"><span><b class="al-sis__testo-14">{{ c.combo }}</b> <span class="al-sis__testo-8">· {{ c.pair }}</span></span><span class="al-sis__testo-15">{{ c.r }}</span><span class="al-sis__pillola-3" style="background:{{ c.pBg }};color:{{ c.pFg }}">{{ c.v }}</span></span></sc-for></div>
+</div>
+</div>
+
+<div class="al-sis__griglia-2">
+<div class="al-sis__colonna-8">
+<span class="al-sis__testo-5">Caratteri</span>
+<sc-for list="{{ type }}" as="y" hint-placeholder-count="8"><div class="al-sis__griglia-4"><span class="al-sis__blocco-6" style="font-size:{{ y.fs }};font-weight:{{ y.fw }};letter-spacing:{{ y.ls }};color:{{ y.c }}">{{ y.ex }}</span><span class="al-sis__colonna-11"><b class="al-sis__testo-14">{{ y.n }}</b><span class="al-sis__testo-8">{{ y.spec }}</span></span></div></sc-for>
+</div>
+<div class="al-sis__colonna-8">
+<span class="al-sis__testo-5">Misure</span>
+<sc-for list="{{ sizes }}" as="s" hint-placeholder-count="10"><div class="al-sis__griglia-5"><span class="al-sis__blocco-7" style="border-radius:{{ s.r }}"></span><span class="al-sis__colonna-10"><b class="al-sis__testo-13">{{ s.n }}</b><span class="al-sis__testo-16">{{ s.d }}</span></span><span class="al-sis__testo-17">{{ s.v }}</span></div></sc-for>
+</div>
+</div>
+</section>
+
+<section class="al-sis__colonna-3" aria-label="Telaio">
+<div class="al-sis__riga-3"><span class="al-sis__testo-3">2</span><span class="al-sis__testo-4">Telaio</span></div>
+
+<div class="al-sis__colonna-12">
+<span class="al-sis__blocco-8">Desktop, da 700 px in su (componenti/Telaio). Pagina con margine 40, telaio largo al massimo 1360 con angoli da 36 e margine interno 24; sotto la barra la griglia a 12 colonne con spazi da 16.</span>
+<div class="al-sis__blocco-9" ref="{{ frameRef }}"><div class="al-sis__blocco-10" style="zoom:{{ zoom }}"><dc-import name="componenti/Telaio" formato="desktop" pagina="Dashboard" scansione="in corso" cornice="{{ false }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="1312px,190px"><div class="al-sis__griglia-6"><sc-for list="{{ cols }}" as="c" hint-placeholder-count="12"><span class="al-sis__centro-1">{{ c }}</span></sc-for></div></dc-import></div></div>
+</div>
+
+<div class="al-sis__griglia-7">
+<div class="al-sis__colonna-13"><span class="al-sis__colonna-14"><b class="al-sis__testo-14">Altro<span class="al-sis__testo-18"> · componenti/Menu</span></b><span class="al-sis__testo-6">le pagine meno usate; si scorre con le frecce, Esc chiude</span></span><dc-import name="componenti/Menu" tipo="altro" statico="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,190px"></dc-import></div>
+<div class="al-sis__colonna-13"><span class="al-sis__colonna-14"><b class="al-sis__testo-14">Impostazioni<span class="al-sis__testo-18"> · componenti/Menu</span></b><span class="al-sis__testo-6">azioni rapide; il selettore dei temi sta in Tutte le impostazioni</span></span><dc-import name="componenti/Menu" tipo="impostazioni" statico="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,190px"></dc-import></div>
+<div class="al-sis__colonna-15"><span class="al-sis__colonna-16"><b class="al-sis__testo-19">Scansione<span class="al-sis__testo-18"> · componenti/Menu e Telaio, parametro scansione</span></b><span class="al-sis__testo-12">"Scansiona" sta nel menu dell'ingranaggio. Una scansione può durare ore: mentre lavora l'ingranaggio porta un anello che gira (sul telefono anche "Altro"); interrotta o bloccata porta "!" ambra. Nel menu la fase, i file letti, il tempo che resta e Interrompi; finita, l'esito dell'ultima scansione con l'ora.</span></span>
+<div class="al-sis__griglia-8">
+<div class="al-sis__colonna-17"><span class="al-sis__testo-20">ferma</span><dc-import name="componenti/Menu" tipo="impostazioni" scansione="ferma" statico="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,190px"></dc-import></div>
+<div class="al-sis__colonna-17"><span class="al-sis__testo-20">in corso</span><dc-import name="componenti/Menu" tipo="impostazioni" scansione="in corso" statico="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,250px"></dc-import></div>
+<div class="al-sis__colonna-17"><span class="al-sis__testo-20">interrotta</span><dc-import name="componenti/Menu" tipo="impostazioni" scansione="interrotta" statico="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,250px"></dc-import></div>
+<div class="al-sis__colonna-17"><span class="al-sis__testo-20">bloccata</span><dc-import name="componenti/Menu" tipo="impostazioni" scansione="bloccata" statico="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,250px"></dc-import></div>
+</div>
+<div class="al-sis__riga-8">
+<div class="al-sis__colonna-18"><dc-import name="componenti/Telaio" formato="telefono" pagina="Dashboard" scansione="in corso" menu="altro" altezza="700px" modo="{{ modo }}" accento="{{ accento }}" hint-size="390px,700px"></dc-import></div>
+<div class="al-sis__colonna-19"><dc-import name="componenti/Telaio" formato="telefono" pagina="Dashboard" scansione="bloccata" altezza="330px" modo="{{ modo }}" accento="{{ accento }}" hint-size="390px,330px"></dc-import></div>
+</div>
+</div>
+<div class="al-sis__colonna-13"><span class="al-sis__colonna-14"><b class="al-sis__testo-14">Da confermare<span class="al-sis__testo-18"> · componenti/DaConfermare</span></b><span class="al-sis__testo-6">il numero pulsa finché restano frame; il pannello porta all'ultima notte</span></span>
+<dc-import name="componenti/DaConfermare" statico="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,330px"></dc-import></div>
+</div>
+
+<div class="al-sis__griglia-9">
+<div class="al-sis__colonna-20">
+<span class="al-sis__colonna-14"><b class="al-sis__testo-14">Telefono, sotto 700 px</b><span class="al-sis__testo-6">in alto segno, sito, Da confermare come icona, Cerca; in basso la barra fissa. Margini 12, spazi 12, bersagli da 44.</span></span>
+<div class="al-sis__colonna-21"><dc-import name="componenti/Telaio" formato="telefono" pagina="Dashboard" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,560px"><div class="al-sis__centro-2">carte in colonna · angoli 24 · margine interno 20</div></dc-import></div></div>
+<div class="al-sis__colonna-20">
+<span class="al-sis__colonna-14"><b class="al-sis__testo-14">Altro, sul telefono</b><span class="al-sis__testo-6">sale sopra la barra; contiene anche il modo e Impostazioni. Voci da 48.</span></span>
+<div class="al-sis__colonna-21"><dc-import name="componenti/Telaio" formato="telefono" pagina="Dashboard" menu="altro" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,560px"></dc-import></div></div>
+<div class="al-sis__colonna-22">
+<span class="al-sis__testo-5">Regole del telaio</span>
+<sc-for list="{{ frameRules }}" as="r" hint-placeholder-count="6"><span class="al-sis__blocco-11">{{ r }}</span></sc-for>
+</div>
+</div>
+</section>
+
+<section class="al-sis__colonna-3" aria-label="Mattoni">
+<div class="al-sis__riga-3"><span class="al-sis__testo-3">3</span><span class="al-sis__testo-4">Mattoni</span></div>
+<div class="al-sis__griglia-10">
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Carta<span class="al-sis__testo-18"> · componenti/Carta</span></b><span class="al-sis__testo-12">Tre livelli: carta sul telaio, carta interna sulla carta, carta protagonista (una per pagina, porta il grafico). Un numero protagonista per carta; titolo da 22.</span></span>
+<dc-import name="componenti/Carta" tono="protagonista" padding="20px" gap="12" anello="{{ t.line }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<span class="al-sis__riga-9"><span class="al-sis__testo-21">Titolo della carta</span><a class="al-sis__tondo-2" href="#">↗</a></span>
+<span class="al-sis__colonna-10"><span class="al-sis__testo-22">Ore utili stanotte</span><span class="al-sis__testo-23">6 ore</span></span>
+<div class="al-sis__riga-10"><span>carta interna</span><span class="al-sis__testo-8">carta2 · angoli 16–22</span></div>
+</dc-import>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Pillola di verdetto<span class="al-sis__testo-18"> · componenti/Pillola</span></b><span class="al-sis__testo-12">Sempre segno + parola + colore. Il colore non dipende dall'accento. "?" quando il dato manca.</span></span>
+<div class="al-sis__colonna-23"><sc-for list="{{ pillRows }}" as="pr" hint-placeholder-count="4"><div class="al-sis__riga-11"><span class="al-sis__blocco-12">{{ pr.d }}</span><sc-for list="{{ pr.items }}" as="e" hint-placeholder-count="5"><dc-import name="componenti/Pillola" esito="{{ e.e }}" testo="{{ e.l }}" dimensione="{{ pr.d }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="90px,22px"></dc-import></sc-for></div></sc-for></div>
+<div class="al-sis__riga-11"><span class="al-sis__pillola-4">✓ notte buona</span><span class="al-sis__testo-16">accanto al numero protagonista prende l'accento</span></div>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Pillole di scelta<span class="al-sis__testo-18"> · componente PillolaScelta</span></b><span class="al-sis__testo-12">Due forme. Segmentato per viste, ordini e modello: binario carta2 (hTrack sulla protagonista), scelta nell'accento. Pillole per i filtri, a scelta multipla: fondo carta2, conto, pallino della tinta o linea della curva; a zero spenta. Spunta per accendere una misura sul grafico: anello e pallino nel colore della misura, mai l'accento; spenta col perché nel suggerimento. Alte 32, 24 la piccola (Luna / Sole), 44 sul telefono.</span></span>
+<div class="al-sis__riga-12"><dc-import name="componenti/PillolaScelta" forma="segmentato" opzioni="{{ seg1 }}" etichetta="Vista" modo="{{ modo }}" accento="{{ accento }}" hint-size="300px,40px"></dc-import><dc-import name="componenti/PillolaScelta" forma="segmentato" misura="piccola" opzioni="{{ seg2 }}" etichetta="Luna o Sole" modo="{{ modo }}" accento="{{ accento }}" hint-size="120px,30px"></dc-import></div>
+<dc-import name="componenti/PillolaScelta" opzioni="{{ pilF }}" etichetta="Filtri" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import>
+<dc-import name="componenti/PillolaScelta" opzioni="{{ pilL }}" etichetta="Filtri nel grafico" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import>
+<dc-import name="componenti/PillolaScelta" forma="spunta" opzioni="{{ pilS }}" etichetta="Sul grafico" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import>
+<span class="al-sis__testo-16">segmentato · segmentato piccolo · pillole coi filtri (Notti, Archivio) · pillole con la linea della curva (Riepilogo) · spunta: le misure sul grafico (Meteo)</span>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Scelta del tema<span class="al-sis__testo-18"> · componenti/SceltaTema</span></b><span class="al-sis__testo-12">Modo (Chiaro, Scuro, Automatico) e accento. Ogni accento ha un campione dei suoi colori nel modo scelto: si riconosce senza leggerne il nome. Senza sito Automatico è spento e lo dice. Nel primo avvio e in Impostazioni; nella barra solo il modo. Qui la scelta è locale: modo e accento della tavola si cambiano dai Tweaks.</span></span>
+<dc-import name="componenti/SceltaTema" modo="{{ modo }}" accento="{{ accento }}" sito="Cima Ekar" hint-size="100%,240px"></dc-import>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Bottoni e freccia ↗</b><span class="al-sis__testo-12">Un solo primario per carta. La freccia ↗ solo dove si apre un dettaglio in un'altra pagina; → per "Apri in…".</span></span>
+<div class="al-sis__riga-13">
+<a class="al-sis__pillola-5" href="#">Primario</a>
+<a class="al-sis__pillola-6" href="#">Secondario</a>
+<a class="al-sis__pillola-7" href="#">Statistiche ↗</a>
+<a class="al-sis__tondo-2" href="#" aria-label="Apri">↗</a>
+<a class="al-sis__tondo-3" href="#" aria-label="Apri">↗</a>
+<a class="al-sis__tondo-4" href="#" aria-label="Successivo">›</a>
+</div>
+<span class="al-sis__testo-16">altezze desktop 40 · 36 · 32 · 28 · telefono sempre 44</span>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Card meteo<span class="al-sis__testo-18"> · componenti/CardMeteo</span></b><span class="al-sis__testo-12">Nome, valore grande, 14 barrette ora per ora (spente fuori dal buio, nel buio i colori fissi degli esiti, mai l'accento), nota, giudizio. Si accende con l'anello quando limita la notte.</span></span>
+<div class="al-sis__griglia-11">
+<sc-for list="{{ meteoEx }}" as="m" hint-placeholder-count="2"><dc-import name="componenti/CardMeteo" formato="desktop" nome="{{ m.k }}" valore="{{ m.v }}" unita="{{ m.u }}" celle="{{ m.cells }}" nota="{{ m.note }}" esito="{{ m.s }}" giudizio="{{ m.verdict }}" anello="{{ m.ring }}" limita="{{ m.lim }}" link="#" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,220px"></dc-import></sc-for>
+<dc-import name="componenti/CardMeteo" formato="desktop" stato="non si misura" nome="Seeing" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px"></dc-import>
+<dc-import name="componenti/CardMeteo" formato="desktop" stato="chiave" nome="Seeing" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px"></dc-import>
+</div>
+<span class="al-sis__testo-16">stati: Non disponibile (riga sotto), non si misura, chiave mancante o rifiutata, non disponibile</span>
+<div class="al-sis__griglia-12"><dc-import name="componenti/CardMeteo" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="150px,150px"></dc-import><div class="al-sis__griglia-13"><dc-import name="componenti/CardMeteo" formato="telefono compatta" anello="{{ t.accent }}" esito="incerta" giudizio="incerto 03:00" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,120px"></dc-import><dc-import name="componenti/CardMeteo" formato="telefono compatta" stato="chiave non valida" nome="Seeing" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,120px"></dc-import></div></div>
+<span class="al-sis__testo-16">telefono: striscia scorrevole (Dashboard) e carte a due colonne che si aprono (Meteo)</span>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Riga con anello</b><span class="al-sis__testo-12">Anello da 42 con la percentuale, nome e dettagli in una riga, barra dei filtri a segmenti nei colori di convenzione, poi colonne di valori con l'etichetta sotto. Righe separate da una linea.</span></span>
+<div class="al-sis__griglia-14">
+<span class="al-sis__tondo-5" style="background:{{ projRing }}"><span class="al-sis__tondo-6">72%</span></span>
+<span class="al-sis__colonna-24"><span class="al-sis__blocco-13"><b class="al-sis__testo-24">IC 1396</b><span class="al-sis__testo-25"> · banda stretta · 14 h 20 di 20 h</span></span>
+<span class="al-sis__riga-14"><sc-for list="{{ segs }}" as="s" hint-placeholder-count="3"><span style="width:{{ s.w }};background:{{ s.c }}"></span></sc-for></span>
+<span class="al-sis__riga-15"><sc-for list="{{ segs }}" as="s" hint-placeholder-count="3"><span class="al-sis__riga-16"><i class="al-sis__tondo-7" style="background:{{ s.c }}"></i>{{ s.l }}</span></sc-for></span></span>
+<span class="al-sis__colonna-10"><b class="al-sis__testo-26">5 ore</b><span class="al-sis__testo-27">utili stanotte</span></span>
+</div>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Anello e barre dell'anno</b><span class="al-sis__testo-12">Anello a segmenti con un taglio sottile fra le parti, il numero dentro. Barre a pillola: piene per il passato, accento per il mese in corso, tratteggiate per il futuro; l'anno prima è un contorno tratteggiato.</span></span>
+<div class="al-sis__griglia-15">
+<span class="al-sis__tondo-8" style="background:{{ filterRing }}"><span class="al-sis__tondo-9"><span class="al-sis__testo-28">36%</span><span class="al-sis__testo-27">in Hα</span></span></span>
+<div class="al-sis__colonna-2">
+<div class="al-sis__griglia-16"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><div class="al-sis__riga-17"><span class="al-sis__pillola-8" style="height:{{ m.h }};background:{{ m.bg }};box-shadow:inset 0 0 0 1px {{ m.ring }}"></span><span class="al-sis__strato-1" style="height:{{ m.gh }}"></span></div></sc-for></div>
+<div class="al-sis__griglia-17"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><span>{{ m.l }}</span></sc-for></div>
+</div>
+</div>
+<span class="al-sis__testo-16">dati simulati, come nella Dashboard</span>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Avviso e passi<span class="al-sis__testo-18"> · componenti/Avviso</span></b><span class="al-sis__testo-12">Avviso quando un dato non arriva: segno, titolo, cosa succede da solo, un'azione. Passi per il vuoto: il primo pieno con l'azione, i successivi spenti.</span></span>
+<dc-import name="componenti/Avviso" tipo="blocco" segno="!" titolo="Meteo non raggiungibile" testo="Si riprova da solo ogni 15 minuti." azione="Riprova ora" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,80px"></dc-import>
+<dc-import name="componenti/Avviso" tipo="riga" segno="!" titolo="Aggiornamento delle 20:00 non riuscito." azione="Aggiorna" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,46px"></dc-import>
+<div class="al-sis__griglia-18">
+<span class="al-sis__tondo-10">1</span>
+<b class="al-sis__testo-29">Scegli la cartella delle riprese</b>
+<a class="al-sis__pillola-9" href="#">Scegli la cartella</a>
+</div>
+<div class="al-sis__griglia-19">
+<span class="al-sis__tondo-11">2</span>
+<span class="al-sis__testo-30">Crea un progetto</span>
+</div>
+<div class="al-sis__griglia-20"><sc-for list="{{ missing }}" as="m" hint-placeholder-count="3"><dc-import name="componenti/CardMeteo" formato="telefono" stato="mancante" nome="{{ m }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,60px"></dc-import></sc-for></div>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Modulo<span class="al-sis__testo-18"> · componente Modulo</span></b><span class="al-sis__testo-12">Creare e modificare (Attrezzatura). Solo disegno: i valori e i controlli li tiene la pagina. Tipo a tasselli poi «Tipo: … Cambia», blocchi «nome e modello» e «dati tecnici» (sul telefono uno aperto alla volta), «dai file» / «inserito» / «calcolato» accanto al campo, errori sopra Salva / Annulla. Le scelte sono PillolaScelta forma «risposta», come in Da confermare.</span></span>
+<dc-import name="componenti/Modulo" m="{{ modEs }}" t="{{ t }}" hint-size="100%,420px"></dc-import>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Scheletro di caricamento<span class="al-sis__testo-18"> · componente Scheletro</span></b><span class="al-sis__testo-12">La pagina gli passa le carte con le misure di quelle vere; blocchi carta2 da angoli 14 che pulsano in 1.6 s, una riga vera che dice cosa si sta calcolando. Angoli delle carte 28 (24 sul telefono). Fermo col movimento ridotto.</span></span>
+<div class="al-sis__riquadro-1"><dc-import name="componenti/Scheletro" carte="{{ skEs }}" griglia="minmax(0,1fr)" testo="Caricamento…" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px"></dc-import></div>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Calendario della Luna<span class="al-sis__testo-18"> · componente CalendarioNotti, Dashboard</span></b><span class="al-sis__testo-12">Stessa griglia del calendario delle notti. Accento = notte buona per la banda larga; ★ notte di ripresa (dall'archivio, apre la scheda); ● ○ Luna nuova e piena; contorno = oggi; pieno del testo = scelto (qui l'accento vuol dire notte buona). Guarda anche avanti: il mese intero.</span></span>
+<dc-import name="componenti/CalendarioNotti" tipo="luna" anno="2026" mese="8" giorni="{{ calLuna }}" buone="{{ calBuone }}" nuova="Luna nuova mercoledì 9" piena="Luna piena giovedì 24" prima-no="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,400px"></dc-import>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Legenda e grafici</b><span class="al-sis__testo-12">Legenda a pillole con punto, nome in neretto e nota. Linee: 1.75 la principale con alone e area sfumata, 1.25 le altre, tratteggio per la Luna. Marcatore: punto bianco con anello e alone.</span></span>
+<div class="al-sis__riga-2"><sc-for list="{{ legend }}" as="l" hint-placeholder-count="3"><span class="al-sis__riga-18"><i class="al-sis__tondo-12" style="background:{{ l.c }}"></i><b class="al-sis__testo-14">{{ l.n }}</b><span class="al-sis__testo-8">{{ l.note }}</span></span></sc-for></div>
+<div class="al-sis__riga-19">
+<span class="al-sis__riga-20"><i class="al-sis__blocco-14"></i>principale</span>
+<span class="al-sis__riga-20"><i class="al-sis__blocco-15"></i>altre</span>
+<span class="al-sis__riga-20"><i class="al-sis__blocco-16"></i>Luna</span>
+<span class="al-sis__riga-20"><span class="al-sis__centro-3"><span class="al-sis__strato-2"></span><span class="al-sis__tondo-13"></span></span>marcatore</span>
+</div>
+<div class="al-sis__riga-21"><sc-for list="{{ bandKey }}" as="k" hint-placeholder-count="5"><span class="al-sis__riga-22"><i class="al-sis__blocco-17" style="background:{{ k.bg }}"></i>{{ k.n }}</span></sc-for></div>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Riquadro dei valori</b><span class="al-sis__testo-12">Segue il puntatore sul grafico, a destra della linea; oltre il 60% della larghezza passa a sinistra. Sul telefono compare solo toccando e sta sopra il grafico, per non coprire il numero.</span></span>
+<div class="al-sis__riga-23">
+<div class="al-sis__colonna-25">
+<b class="al-sis__testo-9">alle 23:00</b>
+<sc-for list="{{ tipRows }}" as="r" hint-placeholder-count="2"><span class="al-sis__riga-24"><i class="al-sis__tondo-7" style="background:{{ r.c }}"></i><span class="al-sis__blocco-18">{{ r.n }}</span><b class="al-sis__testo-31">{{ r.v }}</b></span></sc-for>
+</div>
+<span class="al-sis__blocco-19">angoli 16 · ora in neretto · una riga per serie, col punto del suo colore · fondo "riquadro"</span>
+</div>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Scheda della notte</b><span class="al-sis__testo-12">Si apre sotto il calendario toccando un giorno con ★: data e ore, cosa si è ripreso, un'azione verso Notti. Si chiude con × o toccando di nuovo il giorno.</span></span>
+<div class="al-sis__griglia-21">
+<b class="al-sis__testo-14">★ Domenica 27 settembre · 4 h 12</b>
+<a class="al-sis__tondo-14" aria-label="Chiudi">×</a>
+<span class="al-sis__testo-6">Cima Ekar: IC 1396 · 126 frame</span>
+<a class="al-sis__pillola-10" href="#">Apri in Notti →</a>
+</div>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Calendario delle notti<span class="al-sis__testo-18"> · componente CalendarioNotti, Notti</span></b><span class="al-sis__testo-12">Casella da 42 (46 sul telefono), angoli 12. Fondo e segno dicono il verdetto della notte: ✓ ! ✕, e ? senza meteo; due notti nello stesso giorno, due segni. Scelta nell'accento, contorno = oggi. Nel mese di oggi la griglia finisce a oggi. Toccato, il giorno apre la sua notte. Sopra la griglia il numero della carta: le ore del mese, poi notti e notti buone; legenda in fondo.</span></span>
+<dc-import name="componenti/CalendarioNotti" tipo="notti" anno="2026" mese="8" giorni="{{ calNotti }}" sub="10 notti · 29 h 18" numero="29 h 18" numero-l="a settembre" conta="10 notti · 4 buone" dopo-no="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,440px"></dc-import>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Barra dei filtri<span class="al-sis__testo-18"> · componente BarraFiltri</span></b><span class="al-sis__testo-12">Pezzi in proporzione alle ore (senza durata: ai frame), spazio 2, nell'ordine dell'app. Alta 12 nella notte, 8 nelle righe e nelle carte. Sotto, se serve, una riga per filtro: tinta, nome, frame, ore. Filtro non indicato: vuoto tratteggiato; nessun filtro: tenue. Tinte in tema.js (AL.FD).</span></span>
+<dc-import name="componenti/BarraFiltri" filtri="{{ filEs }}" righe="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,140px"></dc-import>
+<dc-import name="componenti/BarraFiltri" filtri="{{ filEs2 }}" altezza="8" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,8px"></dc-import>
+<span class="al-sis__testo-16">SII + OIII · tri band · a colori UV/IR</span>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Luna<span class="al-sis__testo-18"> · componente Luna</span></b><span class="al-sis__testo-12">Disco crema su antracite, bordo nel grigio della Luna, un tratto di circa 1 px. La falce viene dalla frazione illuminata (AL.lunaD). Da 20–22 nelle righe, 30 e 34 con fase e percentuale, 60 e 76 a disco pieno nella Dashboard.</span></span>
+<div class="al-sis__riga-25"><dc-import name="componenti/Luna" percento="62" misura="76" piena="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="76px,76px"></dc-import><dc-import name="componenti/Luna" percento="83" misura="30" titolo="Gibbosa calante" testo="illuminata al 83%" modo="{{ modo }}" accento="{{ accento }}" hint-size="160px,30px"></dc-import><dc-import name="componenti/Luna" percento="28" crescente="{{ true }}" misura="22" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import></div>
+</div>
+
+<div class="al-sis__colonna-8">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Ripresa<span class="al-sis__testo-18"> · componente Ripresa</span></b><span class="al-sis__testo-12">Cosa si riprende, accanto al verdetto. Segno pieno largo = banda larga; segno stretto dentro il contorno = solo banda stretta; tutti e due = la notte cambia. Colore del testo, mai l'accento. Riga: seconda riga sotto il verdetto (Dashboard, Meteo). Segno: con le ore di banda larga (prossime notti, sette notti, Notti, riquadro della Luna).</span></span>
+<div class="al-sis__colonna-26"><dc-import name="componenti/Ripresa" tipo="mista" testo="Banda larga 20:48–01:00 · poi solo banda stretta" modo="{{ modo }}" accento="{{ accento }}" hint-size="360px,22px"></dc-import><dc-import name="componenti/Ripresa" tipo="larga" testo="Tutta la notte banda larga" modo="{{ modo }}" accento="{{ accento }}" hint-size="360px,22px"></dc-import><dc-import name="componenti/Ripresa" tipo="stretta" testo="Tutta la notte solo banda stretta" modo="{{ modo }}" accento="{{ accento }}" hint-size="360px,22px"></dc-import>
+<span class="al-sis__riga-26"><dc-import name="componenti/Ripresa" tipo="mista" testo="4 h 15 di banda larga" forma="segno" modo="{{ modo }}" accento="{{ accento }}" hint-size="150px,16px"></dc-import><dc-import name="componenti/Ripresa" tipo="larga" testo="9 ore di banda larga" forma="segno" modo="{{ modo }}" accento="{{ accento }}" hint-size="150px,16px"></dc-import><dc-import name="componenti/Ripresa" tipo="stretta" testo="solo banda stretta" forma="segno" modo="{{ modo }}" accento="{{ accento }}" hint-size="150px,16px"></dc-import></span></div>
+</div>
+
+<div class="al-sis__colonna-27">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Criteri<span class="al-sis__testo-18"> · componente Filtri, Notti e Archivio</span></b><span class="al-sis__testo-12">Gruppi di pillole: nello stesso gruppo basta una, fra gruppi valgono tutte. Ogni pillola dice quanti risultati trova con gli altri filtri; a zero è spenta. Notti ha anche il campo per l'oggetto. Desktop: gruppi in colonna (Notti) o in cinque colonne (Archivio), «Togli tutti» sottolineato in testa. Telefono: bottone «Filtri» col numero degli attivi, si apre sotto, pillole da 44, in fondo «Mostra N» e «Togli tutti».</span></span>
+<div class="al-sis__riga-20"><dc-import name="componenti/Filtri" parte="bottone" attivi="2" aperto="{{ true }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100px,40px"></dc-import><dc-import name="componenti/Filtri" parte="togli" attivi="2" modo="{{ modo }}" accento="{{ accento }}" hint-size="80px,40px"></dc-import></div>
+<dc-import name="componenti/Filtri" gruppi="{{ filGr }}" campo="per esempio M 31 o Velo" attivi="2" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,300px"></dc-import>
+</div>
+
+<div class="al-sis__colonna-28">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Riga della notte<span class="al-sis__testo-18"> · Notti</span></b><span class="al-sis__testo-12">Sei colonne che si confrontano dall'alto in basso: giorno, sito e oggetti, ore, filtri, cielo (verdetto e ore utili), Luna. Angoli 18; la scelta prende carta2. Sul telefono tre colonne: giorno, sito e oggetti, ore col verdetto.</span></span>
+<div class="al-sis__griglia-22">
+<span class="al-sis__colonna-29"><span class="al-sis__testo-32">19</span><span class="al-sis__testo-16">sab</span></span>
+<span class="al-sis__colonna-30"><b class="al-sis__testo-29">Cima Ekar</b><span class="al-sis__testo-6">M 33 · NGC 891</span></span>
+<span class="al-sis__colonna-29"><span class="al-sis__testo-33">3 h 06</span><span class="al-sis__testo-16">209 frame</span></span>
+<span class="al-sis__colonna-24"><dc-import name="componenti/BarraFiltri" filtri="{{ filEs }}" altezza="8" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,8px"></dc-import><span class="al-sis__blocco-20">L · R · G · B · Filtro non indicato</span></span>
+<span class="al-sis__colonna-31"><dc-import name="componenti/Pillola" esito="buona" fondo="carta" dimensione="minima" modo="{{ modo }}" accento="{{ accento }}" hint-size="80px,20px"></dc-import><span class="al-sis__testo-16">8 su 9 ore utili</span></span>
+<span class="al-sis__riga-27"><dc-import name="componenti/Luna" percento="64" crescente="{{ true }}" misura="22" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import>64%</span>
+</div>
+</div>
+
+<div class="al-sis__colonna-28">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Le misure dei frame<span class="al-sis__testo-18"> · componenti/MisureFrame, nel Riepilogo della notte e dell'oggetto</span></b><span class="al-sis__testo-12">Dodici misure in tessere (mediana, quartili, mini-curva): la prima scelta ha l'anello nell'accento, la seconda il contorno tratteggiato. Frame per frame: un grafico per filtro, una barra per frame, la prima misura piena nel colore delle barre dell'anno, la seconda tratteggiata col trattino in cima; oppure a linee. Riquadro al passaggio, finestra sui frame quando sono tanti. Poi il frame toccato, le notti o gli oggetti a confronto (quartili sulla stessa scala), la tabella per filtro, tilt e curvatura sul sensore. Pillola solo dove c'è una soglia ("rotonde" fino a 0,45); "stimata" e "sottocampionata" a contorno.</span></span>
+<sc-if value="{{ mfOn }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/MisureFrame" tipo="notte" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,2400px"></dc-import></sc-if>
+<a class="al-sis__riga-28" href="#" role="button" aria-expanded="{{ mfExp }}" onClick="{{ mfToggle }}">{{ mfL }}</a>
+<span class="al-sis__testo-16">dati simulati · il componente si apre a richiesta, perché la tavola resti leggera da catturare</span>
+</div>
+
+<div class="al-sis__colonna-28">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Striscia delle notti e dei giorni<span class="al-sis__testo-18"> · componenti/Striscia</span></b><span class="al-sis__testo-12">Sette caselle: le prime tre ora per ora, piene, con le barrette delle nuvole; le altre di tendenza, tratteggiate. Quella scelta è piena del colore del testo. Sul telefono scorrono di lato, larghe 140.</span></span>
+<div class="al-sis__blocco-21"><div class="al-sis__blocco-22"><dc-import name="componenti/Striscia" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,170px"></dc-import></div></div>
+<span class="al-sis__testo-16">dati simulati, come in Meteo</span>
+</div>
+<div class="al-sis__colonna-28">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Finestra<span class="al-sis__testo-18"> · componenti/Finestra</span></b><span class="al-sis__testo-12">Titolo, ×, corpo, gesti in fondo; Esc e fuoco dentro; sul telefono foglio dal basso. Larghezza stretta, media, larga.</span></span>
+<sc-if value="{{ ap.fi.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Finestra" titolo="Aggiungi oggetto" posizione="dentro" larghezza="stretta" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,260px"><span class="al-finestra__testo">Corpo della finestra.</span><div class="al-finestra__gesti"><a href="#" class="al-bottone al-bottone--contorno">Annulla</a><a href="#" class="al-bottone al-bottone--pieno">Aggiungi</a></div></dc-import></sc-if>
+<a class="al-sis__riga-28" href="#" role="button" aria-expanded="{{ ap.fi.exp }}" onClick="{{ ap.fi.toggle }}">{{ ap.fi.l }}</a>
+</div>
+
+<div class="al-sis__colonna-28">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Cerca<span class="al-sis__testo-18"> · componenti/Cerca</span></b><span class="al-sis__testo-12">La ricerca (Ctrl K): oggetti, notti, attrezzatura, siti, pagine. Stati: normale, scansione in corso, archivio vuoto.</span></span>
+<sc-if value="{{ ap.ce.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Cerca" testo="m31" statico="{{ true }}" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,480px"></dc-import></sc-if>
+<a class="al-sis__riga-28" href="#" role="button" aria-expanded="{{ ap.ce.exp }}" onClick="{{ ap.ce.toggle }}">{{ ap.ce.l }}</a>
+</div>
+
+<div class="al-sis__colonna-28">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Riepilogo<span class="al-sis__testo-18"> · componenti/Riepilogo</span></b><span class="al-sis__testo-12">Il riepilogo di un oggetto o di una notte: produzioni, misure, attrezzatura.</span></span>
+<sc-if value="{{ ap.ri.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Riepilogo" tipo="oggetto" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,1600px"></dc-import></sc-if>
+<a class="al-sis__riga-28" href="#" role="button" aria-expanded="{{ ap.ri.exp }}" onClick="{{ ap.ri.toggle }}">{{ ap.ri.l }}</a>
+</div>
+
+<div class="al-sis__colonna-28">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Riepilogo in finestra<span class="al-sis__testo-18"> · componenti/FinestraRiepilogo</span></b><span class="al-sis__testo-12">Il Riepilogo in una finestra larga (desktop) o a pagina intera (telefono), con prima e dopo. In Archivio e Notti.</span></span>
+<sc-if value="{{ ap.fr.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/FinestraRiepilogo" tipo="notte" posizione="dentro" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,900px"></dc-import></sc-if>
+<a class="al-sis__riga-28" href="#" role="button" aria-expanded="{{ ap.fr.exp }}" onClick="{{ ap.fr.toggle }}">{{ ap.fr.l }}</a>
+</div>
+
+<div class="al-sis__colonna-28">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Sezioni di servizio<span class="al-sis__testo-18"> · componenti/SezioneServizi</span></b><span class="al-sis__testo-12">Le quattro sezioni di Impostazioni: Servizi, Scansioni, Diagnostica, Backup.</span></span>
+<sc-if value="{{ ap.ss.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/SezioneServizi" sezione="servizi" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,900px"></dc-import></sc-if>
+<a class="al-sis__riga-28" href="#" role="button" aria-expanded="{{ ap.ss.exp }}" onClick="{{ ap.ss.toggle }}">{{ ap.ss.l }}</a>
+</div>
+
+<div class="al-sis__colonna-28">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Vetro sul cielo<span class="al-sis__testo-18"> · al-bottone--vetro · al-vetro · al-vetro--alto</span></b><span class="al-sis__testo-12">Sopra il cielo dei Planner: bottoni, tendine, righello, momenti dell'evento, bolla delle pagine. Token --vetro, --vetro-bordo, --vetro-filtro, --cielo-testo-2 (11,6:1 sul vetro), --ombra-vetro.</span></span>
+<div style="position:relative;border-radius:var(--raggio-carta);overflow:hidden;background:radial-gradient(120% 90% at 45% 50%, var(--cielo-fondo) 0%, var(--cielo) 64%);padding:20px;display:flex;flex-direction:column;gap:14px;color:var(--cielo-testo)">
+<span style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" class="al-bottone al-bottone--vetro" style="display:flex;gap:10px;align-items:center"><b style="font-weight:600">Giove</b><span style="color:var(--cielo-testo-2)">RGB · 45,6″</span><span>41°</span><span aria-hidden="true" style="font-size:9px;color:var(--cielo-testo-2)">▾</span></button><button type="button" class="al-bottone al-bottone--vetro" style="display:flex;gap:8px;align-items:center"><span style="color:var(--cielo-testo-2)">Setup</span><b style="font-weight:600">C9.25</b><span aria-hidden="true" style="font-size:9px;color:var(--cielo-testo-2)">▾</span></button><button type="button" class="al-bottone al-bottone--vetro al-bottone--icona" aria-label="Avvicina" style="font-size:20px">+</button><button type="button" class="al-bottone al-bottone--cielo al-bottone--piccolo al-bottone--velo">Cambia</button></span>
+<span class="al-vetro al-vetro--alto" style="display:flex;align-items:center;gap:0;min-height:62px;padding:8px 6px;border-radius:22px;align-self:flex-start"><span style="display:flex;flex-direction:column;padding:0 14px;line-height:1.2"><span style="font-size:11px;color:var(--cielo-testo-2)">parti</span><b style="font-size:16px;font-weight:500">03:36</b></span><span style="display:flex;flex-direction:column;padding:0 14px;border-left:1px solid rgba(255,255,255,.16);line-height:1.2"><span style="font-size:11px;color:var(--cielo-testo-2)">entra nel disco</span><b style="font-size:16px;font-weight:500">03:41:11,6</b></span></span>
+</div>
+<span class="al-sis__testo-12">Telefono: il cielo a tutto schermo; in alto il modo in tendina e il corpo o l'evento, si ritirano mentre il dito muove il cielo. In basso il bordo del foglio (carta, maniglia, tocca o tira su) con la bolla delle pagine a sinistra; il foglio a tre altezze (chiuso · metà · pieno) con le linguette. «Come si usa» al primo avvio. Si vede aprendo i Planner qui sotto in «Telefono ↗».</span>
+</div>
+
+<div class="al-sis__colonna-28">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Planner del Sistema solare<span class="al-sis__testo-18"> · componenti/PlannerSolare2</span></b><span class="al-sis__testo-12">Disco nel campo, righello, mosaico; Quando, Ripresa, Sequenza per SharpCap. Nel Planner.</span></span>
+<sc-if value="{{ ap.ps.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/PlannerSolare2" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,900px"></dc-import></sc-if>
+<a class="al-sis__riga-28" href="#" role="button" aria-expanded="{{ ap.ps.exp }}" onClick="{{ ap.ps.toggle }}">{{ ap.ps.l }}</a>
+<span style="display:flex;gap:8px;flex-wrap:wrap"><a class="al-bottone al-bottone--contorno al-bottone--piccolo" href="Planner.dc.html?pianifica=solare">Desktop ↗</a><a class="al-bottone al-bottone--contorno al-bottone--piccolo" href="Planner.dc.html?pianifica=solare&amp;formato=telefono">Telefono ↗</a></span>
+</div>
+
+<div class="al-sis__colonna-28">
+<span class="al-sis__colonna-16"><b class="al-sis__testo-19">Eventi del Planner<span class="al-sis__testo-18"> · componenti/PlannerEventi2</span></b><span class="al-sis__testo-12">ISS, eclissi, occultazioni, congiunzioni, lune di Giove; Disco · Mappa, Sequenza per SharpCap. Nel Planner.</span></span>
+<sc-if value="{{ ap.pe.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/PlannerEventi2" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,900px"></dc-import></sc-if>
+<a class="al-sis__riga-28" href="#" role="button" aria-expanded="{{ ap.pe.exp }}" onClick="{{ ap.pe.toggle }}">{{ ap.pe.l }}</a>
+<span style="display:flex;gap:8px;flex-wrap:wrap"><a class="al-bottone al-bottone--contorno al-bottone--piccolo" href="Planner.dc.html?pianifica=eventi">Desktop ↗</a><a class="al-bottone al-bottone--contorno al-bottone--piccolo" href="Planner.dc.html?pianifica=eventi&amp;formato=telefono">Telefono ↗</a></span>
+</div>
+<span class="al-sis__testo-16">dati simulati · i componenti grandi si aprono a richiesta, perché la tavola resti leggera da catturare</span>
+
+</div>
+</section>
+
+<footer class="al-sis__blocco-23">Animazioni (vedi DECISIONI): curve che si disegnano in 0.8 s al cambio vista, carte che entrano in fila a 60 ms, puntatore con 0.16 s di ritardo, anelli e barre che si riempiono una volta. Nulla su pillole, menu e calendario. Tutto fermo col movimento ridotto.</footer>
+
+</div>
+</div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;modo&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;scuro&quot;, &quot;chiaro&quot;], &quot;default&quot;: &quot;scuro&quot;, &quot;tsType&quot;: &quot;'scuro' | 'chiaro'&quot;, &quot;section&quot;: &quot;Tema&quot;}, &quot;accento&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;originale&quot;, &quot;ambra · blu notte&quot;, &quot;turchese · petrolio&quot;, &quot;corallo · terracotta&quot;, &quot;ghiaccio · indaco&quot;], &quot;default&quot;: &quot;ambra · blu notte&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = { zoom: 1 };
+  frameRef = el => {
+    if (this._ro) { this._ro.disconnect(); this._ro = null; }
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    this._ro = new ResizeObserver(() => { const z = Math.min(1, el.clientWidth / 1312); if (Math.abs(z - this.state.zoom) > 0.002) this.setState({ zoom: z }); });
+    this._ro.observe(el);
+  };
+  componentWillUnmount() { this._ro && this._ro.disconnect(); this._alw && clearInterval(this._alw); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  apri = k => e => { e.preventDefault(); this.setState(st => ({ ap: { ...(st.ap || {}), [k]: !(st.ap || {})[k] } })); };
+  mfToggle = e => { e.preventDefault(); this.setState(st => ({ mfOn: !st.mfOn })); };
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const SO = ALsoglie;
+    // La fonte dei token è il foglio (astrolog.css); tema.js rimanda coi var(--…), AL.hexDi ne legge il valore
+    const tema = AL.tema;
+    const modo = this.props.modo || 'scuro', accento = this.props.accento ?? 'ambra · blu notte';
+    const t = tema(modo, accento); t.pal1 = t.pal[1]; t.FC0 = t.FC[0]; t.FC2 = t.FC[2];
+    const MODES = ['scuro', 'chiaro'], ACCS = AL.ACCENTI;
+    const all = []; MODES.forEach(m => ACCS.forEach(a => all.push({ m, a, t: tema(m, a) })));
+    const combos = all.map(c => ({ m: c.m, a: c.a.split(' · ')[0], ow: c.m === modo && c.a === accento ? '1.5px' : '0' }));
+    const TOK = [
+      ['pagina', 'page', 'dietro il telaio'], ['telaio', 'frame', 'fondo dell\u0027app'], ['carta', 'card', 'fondo delle carte'], ['carta2', 'card2', 'carta interna, binari'],
+      ['linea', 'line', 'separatori, contorni'], ['testo', 'text', 'testo principale'], ['tenue', 'muted', 'etichette, note'],
+      ['attivo', 'navOn', 'primario, scelta attiva'], ['su attivo', 'navOnFg', 'testo sul primario'], ['accento', 'accent', 'curva principale, anello'], ['su accento', 'calOnFg', 'testo sull\u0027accento'],
+      ['barre anno', 'monthBar', 'mesi passati'], ['binario', 'track', 'sotto barre e anelli'], ['spento', 'sparkOff', 'fuori dal buio, futuro'], ['riquadro', 'tipBg', 'valori sul grafico'],
+      ['avviso', 'warn', 'segno "!"'], ['male', 'bad', 'barrette ✕'], ['da confermare', 'todoBg', 'numero che pulsa'],
+      ['verdetto buono', 'p0', 'fondo · testo'], ['verdetto incerto', 'p1', 'fondo · testo'], ['verdetto non adatto', 'p2', 'fondo · testo'] ];
+    const toks = TOK.map(([n, k, d]) => ({ n, d, cells: all.map(c => { if (k[0] === 'p' && /\d/.test(k[1])) { const p = c.t.pills[+k[1]]; return { bg: 'linear-gradient(90deg,' + p[0] + ' 50%,' + p[1] + ' 50%)', hex: p[1] }; } const v = c.t[k]; return { bg: AL.hexDi(v, c.m, c.a), hex: AL.hexDi(v, c.m, c.a) }; }) }));
+    const lum = h => { const n = parseInt(h.slice(1), 16); const f = x => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); }; return 0.2126 * f(n >> 16) + 0.7152 * f((n >> 8) & 255) + 0.0722 * f(n & 255); };
+    const cr = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    const nf = v => v.toFixed(1) + ':1';
+    const mix = (fg, o, bg) => { const a = parseInt(fg.slice(1), 16), b = parseInt(bg.slice(1), 16), ch = sh => Math.round(((a >> sh) & 255) * o + ((b >> sh) & 255) * (1 - o)); return '#' + [16, 8, 0].map(sh => ch(sh).toString(16).padStart(2, '0')).join(''); };
+    let gmin = 99;
+    const contrast = all.map(c => { const T = c.t;
+      const P = [['testo su carta', T.text, T.card], ['tenue su carta', T.muted, T.card], ['tenue su carta2', T.muted, T.card2], ['tenue su telaio', T.muted, T.frame], ['su attivo', T.navOnFg, T.navOn], ['su accento', T.calOnFg, T.calOn],
+        ['verdetto buono', T.pills[0][1], T.pills[0][0]], ['verdetto incerto', T.pills[1][1], T.pills[1][0]], ['verdetto non adatto', T.pills[2][1], T.pills[2][0]], ['da confermare', T.todoFg, T.todoBg], ['testo su carta2', T.text, T.card2], ['segno di avviso', T.warnFg, T.warn], ['casella scelta', T.card, T.text], ['tenue sulla casella scelta', mix(T.dk ? '#0d0d10' : '#ffffff', 0.72, T.text), T.text], ['su protagonista', T.hPillFg, T.hPill]].map(([n, a, b]) => ({ n, r: cr(AL.hexDi(a, c.m, c.a), AL.hexDi(b, c.m, c.a)) }));
+      const w = P.reduce((m, p) => p.r < m.r ? p : m); gmin = Math.min(gmin, w.r); const ok = w.r >= 4.5;
+      return { combo: c.m + ' · ' + c.a.split(' · ')[0], pair: w.n, r: nf(w.r), v: ok ? '✓ passa' : '✕ sotto', pBg: t.pills[ok ? 0 : 2][0], pFg: t.pills[ok ? 0 : 2][1] }; });
+    const cMinL = (gmin >= 4.5 ? '✓ ' : '✕ ') + 'minimo ' + nf(gmin);
+    const fixed = [
+      { n: 'Filtri', items: ['l', 'r', 'g', 'b', 'ha', 'hb', 'oiii', 'sii', 'colori-lp', 'colori-uvir'].map(k => { const x = AL.tinta(t, k); return { l: AL.FD[k][0], c: x.bg, h: x.bg }; }) },
+      { n: 'Filtri a più bande: strisce oblique da 3 px delle loro tinte', items: ['colori', 'ha-oiii', 'sii-oiii', 'tri', 'quad'].map(k => ({ l: AL.FD[k][0], h: '', c: AL.tinta(t, k).bg })).concat([{ l: 'filtro sconosciuto', h: 'vuoto, tratteggiato', c: 'transparent', b: AL.tinta(t, 'ignoto').bd }, { l: 'nessun filtro', h: 'tenue', c: AL.tinta(t, 'senza').bg }]) },
+      { n: 'Pianeti', items: [['Mercurio', t.pl[4]], ['Venere', t.pl[3]], ['Marte', t.pl[2]], ['Giove', t.pl[1]], ['Saturno', t.pl[0]], ['Urano', t.pl[5]], ['Nettuno', t.pl[6]]].map(([l, c]) => ({ l, c, h: c })) },
+      { n: 'Tipi della Ricerca e degli eventi (barretta dei blocchi nel Piano della notte)', items: [['Esopianeta', t.tipi.exo], ['Binaria a eclisse', t.tipi.ecl], ['Variabile · AAVSO', t.tipi.var], ['NEO', t.tipi.neo], ['Supernova', t.tipi.sn], ['Cometa', t.tipi.cometa], ['Evento a ora fissa', t.tipi.evento]].map(([l, c]) => ({ l, c, h: c })) },
+      { n: 'Curve dei progetti (dopo l\u0027accento)', items: t.pal.slice(1).map((c, i) => ({ l: String(i + 2), c, h: c })) },
+      { n: 'Luna e Sole', items: [['Luna, linea', AL.LUNA.line], ['disco', AL.LUNA.lit], ['ombra', AL.LUNA.dark], ['Sole', AL.SOLE]].map(([l, c]) => ({ l, c, h: c })) } ];
+    fixed.forEach(g => g.items.forEach(i => { i.b = i.b || '0'; i.h = i.h ?? i.c; }));
+    const type = [
+      { n: 'Numero protagonista', spec: '64 · 300 · −0.03em', fs: '64px', fw: 300, ls: '-.03em', ex: '6 ore', c: t.text },
+      { n: 'Numero di carta', spec: '56 · 300 · −0.02em', fs: '56px', fw: 300, ls: '-.02em', ex: '128 h 40', c: t.text },
+      { n: 'Numero di card', spec: '38 · 300 · −0.02em', fs: '38px', fw: 300, ls: '-.02em', ex: '1.4″', c: t.text },
+      { n: 'Titolo di pagina', spec: '28 · 500', fs: '28px', fw: 500, ls: '0', ex: 'Meteo della notte', c: t.text },
+      { n: 'Titolo di carta', spec: '22 · 500 (20 telefono)', fs: '22px', fw: 500, ls: '0', ex: 'Progetti in corso', c: t.text },
+      { n: 'Testo', spec: '15 · 400 · neretto 600', fs: '15px', fw: 400, ls: '0', ex: 'IC 1396 · banda stretta', c: t.text },
+      { n: 'Nota', spec: '13 · tenue', fs: '13px', fw: 400, ls: '0', ex: 'Previsione del 30 settembre, 18:05', c: t.muted },
+      { n: 'Etichetta', spec: '11–12 · tenue · minimo 11', fs: '12px', fw: 400, ls: '0', ex: 'utili stanotte · transito', c: t.muted } ];
+    const sizes = [
+      { n: 'Telaio', d: 'margine pagina 40 · interno 24', v: '36', r: '14px' },
+      { n: 'Carta', d: 'interno 28 (24 se stretta) · telefono 24 / 20', v: '28', r: '11px' },
+      { n: 'Carta interna, card meteo', d: 'interno 18', v: '22', r: '9px' },
+      { n: 'Riquadri piccoli', d: 'scheda notte, menu, riquadro valori', v: '16–18', r: '7px' },
+      { n: 'Giorno, voce di menu', d: 'calendario 12 · voce 14', v: '12–14', r: '5px' },
+      { n: 'Pillola, barre', d: 'sempre piena', v: '999', r: '15px' },
+      { n: 'Griglia desktop', d: '12 colonne', v: 'spazio 16', r: '0' },
+      { n: 'Dentro le carte', d: 'fra blocchi 18 · fra righe 12', v: '12–18', r: '0' },
+      { n: 'Telefono', d: 'margini e spazi', v: '12', r: '0' },
+      { n: 'Bersaglio sul telefono', d: 'minimo, anche le pillole', v: '44', r: '0' } ];
+    const IC = { dash: 'M4 4h7v9H4zM13 4h7v5h-7zM13 11h7v9h-7zM4 15h7v5H4z', notti: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z', arch: 'M4 5h16v4H4zM5 9v10h14V9M10 13h4', met: 'M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6 11a3.5 3.5 0 0 0 1 7z', altro: 'M5 12h.01M12 12h.01M19 12h.01',
+      plan: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4', carta: 'M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4l-5.3 3 1.2-6-4.5-4.1 6-.7z', attr: 'M3 14l12-6 2 4-12 6zM15 8l3-1.5 2 4-3 1.5M9 16l-2 5M11 15l2 6', imp: 'M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4',
+      sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4', proj: 'M12 3v3M12 18v3M3 12h3M18 12h3M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', stat: 'M5 20v-9M12 20V5M19 20v-7M3 20h18' };
+    const dk = modo === 'scuro';
+    const modeIcon = dk ? IC.sun : IC.notti;
+    const navDesk = ['Dashboard', 'Notti', 'Archivio', 'Progetti', 'Statistiche', 'Meteo', 'Altro ▾'].map((l, i) => ({ l, bg: i === 0 ? t.hPill : 'transparent', fg: i === 0 ? t.hPillFg : t.muted, px: i === 0 ? '18px' : '11px', fw: i === 0 ? 500 : 400 }));
+    const cols = Array.from({ length: 12 }, (_, i) => String(i + 1));
+    const menus = [
+      { n: 'Altro', d: 'le pagine meno usate; si scorre con le frecce, Esc chiude', items: [
+        { l: 'Planner', s: 'cosa riprendere nelle prossime notti', d: IC.plan }, { l: 'Carta del cielo', s: 'il cielo di stanotte da Cima Ekar', d: IC.carta }, { l: 'Attrezzatura', s: 'telescopi, camere, filtri', d: IC.attr }] },
+      { n: 'Impostazioni', d: 'azioni rapide; il selettore dei temi sta in Tutte le impostazioni', items: [
+        { l: 'Scansiona', s: 'ultima scansione oggi, 07:12', d: 'M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4' }, { l: 'Modo automatico', s: 'scuro dal tramonto all\u0027alba', d: 'M12 3a9 9 0 1 0 0 18V3z' }, { l: 'Tutte le impostazioni', s: 'siti, tema, cartelle, servizi', d: IC.imp }] } ];
+    menus.forEach(m => m.items.forEach((i, k) => { i.bg = k === 0 ? t.card2 : 'transparent'; }));
+    const tn = (on) => [['Dashboard', IC.dash], ['Notti', IC.notti], ['Archivio', IC.arch], ['Meteo', IC.met], ['Altro', IC.altro]].map(([l, d], i) => ({ l, d, bg: i === on ? t.card2 : 'transparent', fg: i === on ? t.text : t.muted }));
+    const telAltro = [['Progetti', IC.proj], ['Statistiche', IC.stat], ['Planner', IC.plan], ['Carta del cielo', IC.carta], ['Attrezzatura', IC.attr], [dk ? 'Passa al modo chiaro' : 'Passa al modo scuro', modeIcon], ['Impostazioni', IC.imp]].map(([l, d]) => ({ l, d }));
+    const frameRules = [
+      'La barra non cambia da una pagina all\u0027altra: cambia solo la voce accesa (aria-current).',
+      'In vista sei pagine; Planner, Carta del cielo e Attrezzatura stanno in Altro.',
+      'A destra, in quest\u0027ordine: sito, Da confermare (sparisce se non c\u0027è nulla), Cerca (Ctrl K), modo, Impostazioni.',
+      'I menu si aprono 10–12 px sotto il bottone, larghi 260–320, e si chiudono cliccando fuori o con Esc.',
+      'Sul telefono la barra in basso tiene le quattro pagine più usate più Altro; la pagina corrente ha il fondo carta2.',
+      'Il contenuto non scorre sotto le barre: in alto sticky col fondo del telaio, in basso margine di 96.' ];
+    const esiti = [[0, '✓ buona'], [1, '! incerta'], [2, '✕ non adatta']].map(([k, l]) => ({ l, bg: t.pills[k][0], fg: t.pills[k][1] })).concat([{ l: '? senza meteo', bg: t.card2, fg: t.text }]);
+    const seg1 = [{ l: 'Notte', sel: true }, { l: 'Progetti' }, { l: 'Sistema solare' }], seg2 = [{ l: 'Luna', sel: true }, { l: 'Sole' }];
+    const pilF = [{ l: 'Hα', tinta: 'ha', c: '6', sel: true }, { l: 'OIII', tinta: 'oiii', c: '5' }, { l: 'quad band', tinta: 'quad', c: '1' }, { l: 'Filtro non indicato', tinta: 'ignoto', c: '1' }, { l: 'SII', tinta: 'sii', c: '0', no: true }];
+    const pilS = [{ l: 'umidità %', colore: t.pal[2], sel: true }, { l: 'condensa', colore: t.pal[1], sel: true }, { l: 'vento' }, { l: 'seeing', no: true, titolo: 'Sotto le nuvole non si misura' }];
+    const pilL = [{ l: 'Hα + OIII', linea: AL.linea(t, 'ha-oiii'), c: '58', sel: true }, { l: 'quad band', linea: AL.linea(t, 'quad'), c: '71', sel: true }];
+
+    // Esempio del Modulo: un'ottica nuova, coi due blocchi e il rapporto focale calcolato
+    const fx = (k, lab, v, o) => ({ id: 'si-' + k, lid: 'sil-' + k, lab, col: 'auto', orig: '', testo: false, tendina: false, pillole: null, calc: null, azione: null, v: '', ...o, ...(v != null ? { testo: true, v, on: () => {} } : {}) });
+    const modEs = { al: 'Nuovo strumento', titolo: 'Nuovo strumento', disco: null, tipi: null, modo, accento, formato: 'desktop', bg: t.card2, sub: t.card, cs: modo === 'scuro' ? 'dark' : 'light', rad: '22px', pad: '22px', hfs: '18px', sh: 'none',
+      tipo: { l: 'ottica', ic: 'M2.8 11.2l12.6-4.4 1.4 4-12.6 4.4zM15.4 6.8l3.6-1.2 1.9 5.3-3.6 1.3M9 13.6l-2.6 7.2M10.6 13l3 7.8M5.6 20.8h9', cambia: e => e.preventDefault() },
+      blocchi: [{ titolo: 'nome e modello', riass: '3 di 4 scritti', aperto: true, hasT: true, exp: 'true', fisso: true, cur: 'default', chev: '', toggle: () => {}, bg: t.card, pad: '16px 20px 20px', col: 'auto', campi: [fx('n', 'Nome', 'Sharpstar 61EDPH III', { col: '1 / -1' }), fx('m', 'Marca', 'Sharpstar'), fx('mo', 'Modello', '61EDPH III')] },
+        { titolo: 'dati tecnici', riass: '2 di 3 scritti', aperto: true, hasT: true, exp: 'true', fisso: true, cur: 'default', chev: '', toggle: () => {}, bg: t.card, pad: '16px 20px 20px', col: 'auto', campi: [fx('a', 'Apertura (mm)', '61'), fx('f', 'Focale nativa (mm)', '275'), fx('rf', 'Rapporto focale', null, { orig: 'calcolato', calc: { v: 'f/4.5', c: t.text, td: 'underline dotted', fs: '16px' } })] }],
+      righe: [], errore: '', perche: '', tipiCols: 'repeat(5,minmax(0,1fr))', bCols: 'repeat(2,minmax(0,1fr))', fs: '15px', hit: '40px',
+      salva: { l: 'Salva', op: 1, cur: 'pointer', on: e => e.preventDefault() }, annulla: e => e.preventDefault(), gPos: 'static', gBg: 'transparent', gPad: '0', gMar: '0', gSh: 'none' };
+    const skEs = [{ h: '180px', pad: '20px', gap: '12px', blocchi: [{ riga: [{ h: '28px', w: '45%' }, 'Caricamento…'], tra: true }, { h: '44px', w: '35%' }, { flex: '1' }] }];
+    const calLuna = [{ d: 9, segno: '●' }, { d: 24, segno: '○' }, { d: 27, stella: true, on: () => {} }, { d: 19, stella: true, sel: true, on: () => {} }], calBuone = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+    const calNotti = [{ d: 13, esiti: [0] }, { d: 16, esiti: [2] }, { d: 19, esiti: [0, 0] }, { d: 20, esiti: [1] }, { d: 22, esiti: [-1] }, { d: 24, esiti: [0] }, { d: 27, esiti: [-1] }, { d: 28, esiti: [-1] }, { d: 29, esiti: [-1], sel: true }];
+    const filEs = [['l', 65, 1.1], ['r', 37, 0.6], ['g', 37, 0.6], ['b', 37, 0.6], ['ignoto', 9, 0.2]], filEs2 = [['sii-oiii', 14, 0.7], ['tri', 8, 0.4], ['colori-uvir', 10, 0.5]];
+    const filGr = [{ l: 'Sito', opz: [{ l: 'Cima Ekar', c: '6', sel: true }, { l: 'Casa', c: '4' }] }, { l: 'Filtri', opz: [{ l: 'Hα', tinta: 'ha', c: '2', sel: true }, { l: 'quad band', tinta: 'quad', c: '1' }, { l: 'SII', tinta: 'sii', c: '0', no: true }] }];
+    const dark = i => i >= 3 && i <= 11;
+    const cellsOf = (d, q) => { const mn = Math.min(...d), mx = Math.max(...d); return d.map((x, i) => ({ h: (mx === mn ? 55 : 25 + (x - mn) / (mx - mn) * 75) + '%', bg: !dark(i) ? t.sparkOff : t.pills[q(x)][1] })); };
+    const meteoEx = [
+      { k: 'Nuvole', v: '16', u: '%', note: 'media nel buio · picco 40% tra le 05 e le 06', s: 0, verdict: '✓ buono', hl: false, d: [5,8,10,10,8,6,8,12,16,22,26,40,30,20], q: SO.esito.nuvole },
+      { k: 'Condensa', v: '1', u: '°C', note: 'temperatura meno punto di rugiada · sotto 3 °C dalle 01', s: 2, verdict: '✕ non adatto', hl: true, d: [6,5,4.5,4,3.6,3.2,3.1,2.8,2,1.5,1,0.8,0.7,1], q: SO.esito.condensa } ]
+      .map(m => ({ ...m, verdict: m.verdict.slice(2), lim: m.hl ? '04:00' : '', cells: cellsOf(m.d, m.q), pBg: t.pills[m.s][0], pFg: t.pills[m.s][1], ring: m.hl ? t.spark : 'transparent' }));
+    const projRing = 'conic-gradient(' + t.ring + ' 0 72%, ' + t.track + ' 72% 100%)';
+    const segs = [['Hα 6 h 10', t.FC[0], 30.8], ['OIII 5 h', t.FC[1], 25], ['SII 3 h 10', t.FC[2], 15.8]].map(([l, c, w]) => ({ l, c, w: w + '%' }));
+    const FD = [36, 30, 13, 11, 10], fcol = [t.FC[0], t.FC[1], t.FC[3], t.FC[2], t.FC[4]];
+    let a0 = 0; const filterRing = 'conic-gradient(' + FD.map((p, j) => { const s0 = a0; a0 += p; return fcol[j] + ' ' + s0 + '% ' + (a0 - 0.6) + '%, ' + t.card + ' ' + (a0 - 0.6) + '% ' + a0 + '%'; }).join(', ') + ')';
+    const hatch = AL.tratteggio;
+    const mh = [9,12,20,17,13,8,16,19,14.7,0,0,0], mh25 = [7,10,15,19,16,11,14,22,17,12,6,4];
+    const months = ['g','f','m','a','m','g','l','a','s','o','n','d'].map((l, i) => ({ l, gh: (14 + mh25[i] / 20 * 72) + '%', h: (i > 8 ? 40 : 14 + mh[i] / 20 * 72) + '%', bg: i > 8 ? hatch(t.sparkOff) : i === 8 ? t.calOn : t.monthBar, ring: i > 8 ? t.sparkOff : 'transparent' }));
+    const missing = ['Nuvole', 'Seeing', 'Jet stream'];
+    const legend = [{ n: 'Qualità della notte', c: t.accent, note: '' }, { n: 'Luna', c: AL.LUNA.line, note: 'sorge 23:40' }, { n: 'Saturno', c: t.pl[0], note: 'tramonta 04:30' }];
+    const rgba = AL.rgba;
+    const bandKey = ['giorno', 'crepuscolo civile', 'nautico', 'astronomico', 'buio'].map((n, k) => ({ n, bg: rgba(t.band.c, t.band.o[k]) }));
+    const tipRows = [{ n: 'Qualità', c: t.accent, v: '82 · limita la condensa' }, { n: 'Luna', c: AL.LUNA.line, v: 'sotto l\u0027orizzonte' }];
+    const pillRows = ['media', 'piccola', 'minima', 'micro'].map(d => ({ d, items: [[0, 'buona'], [1, 'incerta'], [2, 'non adatta'], ['mancante', 'senza meteo'], ['neutra', '◐ banda stretta']].map(([e, l]) => ({ e, l })) }));
+    // Mattoni delle Notti (copie, come nella pagina)
+    const mfOn = !!this.state.mfOn, mfExp = mfOn ? 'true' : 'false', mfL = mfOn ? 'Chiudi il componente vero' : 'Apri il componente vero', mfToggle = this.mfToggle;
+    const ap = Object.fromEntries(['fi', 'ce', 'ri', 'fr', 'ss', 'ps', 'pe'].map(k => { const on = !!(this.state.ap || {})[k]; this._ap = this._ap || {}; this._ap[k] = this._ap[k] || this.apri(k); return [k, { on, exp: on ? 'true' : 'false', l: on ? 'Chiudi il componente vero' : 'Apri il componente vero', toggle: this._ap[k] }]; }));
+    return { ap, mfOn, mfExp, mfL, mfToggle, pronto: true, modo, accento, pillRows, tipRows, frameRef: this.frameRef, zoom: this.state.zoom, t, modoL: modo, accL: accento, combos, toks, contrast, cMinL, fixed, type, sizes, modeIcon, navDesk, cols, menus, navTel: tn(0), navTelAltro: tn(4), telAltro, frameRules,
+      esiti, seg1, seg2, pilF, pilL, pilS, skEs, modEs, calLuna, calBuone, calNotti, filEs, filEs2, filGr, meteoEx, projRing, segs, filterRing, months, missing, legend, bandKey };
+  }
+}
+</script>
+</body>
+</html>

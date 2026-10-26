@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.8}button{font:inherit;color:inherit}@keyframes alIn{from{opacity:0;transform:translateY(14px)}}@keyframes alFade{from{opacity:0}}@keyframes alDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}@keyframes alFadeUp{from{opacity:0;transform:translateY(6px)}}@keyframes alPop{from{opacity:0;transform:translate(-50%,-50%) scale(.4)}}@keyframes skPulse{0%,100%{opacity:1}50%{opacity:.45}}@keyframes alPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.92)}}@keyframes alHalo{0%{box-shadow:0 0 0 0 var(--h)}100%{box-shadow:0 0 0 10px transparent}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-meteo__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ F.desk }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="desktop" pagina="Meteo" etichetta="Meteo" sito="{{ site }}" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+
+<sc-if value="{{ S.loading }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Scheletro" carte="{{ SK.desk }}" testo="Caricamento…" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,1500px"></dc-import></sc-if>
+
+<sc-if value="{{ S.ready }}" hint-placeholder-val="{{ true }}"><div class="al-meteo__griglia-1">
+
+<dc-import name="componenti/Carta" formato="desktop" etichetta="Le notti" colonne="12" ritardo="0" padding="24px 28px 28px" gap="18" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<div class="al-meteo__riga-1">
+<div class="al-meteo__colonna-1"><span class="al-meteo__testo-1">Le prossime notti</span><sc-if value="{{ head.arrivo }}" hint-placeholder-val="{{ true }}"><span class="al-meteo__testo-2">{{ head.arrivo }}</span></sc-if></div>
+<div class="al-meteo__riga-2">
+<span class="al-meteo__riga-18" style="display:flex;gap:8px;align-items:center"><sc-if value="{{ head.model }}" hint-placeholder-val="{{ true }}"><span class="al-meteo__riga-19" data-menu="1"><a class="al-meteo__riga-20" onClick="{{ mmenuToggle }}" aria-haspopup="menu" aria-expanded="{{ mmenu }}" aria-label="Modello: {{ modelL }}"><span class="al-meteo__riga-21">{{ modelL }}<span class="al-meteo__testo-12" aria-hidden="true">▾</span></span></a>
+<sc-if value="{{ mmenu }}" hint-placeholder-val="{{ false }}"><div class="al-meteo__strato-3" role="menu"><sc-for list="{{ models }}" as="o" hint-placeholder-count="4"><a class="al-meteo__riga-22" role="menuitemradio" aria-checked="{{ o.sel }}" onClick="{{ o.onTel }}" style="background:{{ o.mbg }}"><span class="al-meteo__colonna-5"><span class="al-meteo__testo-23">{{ o.l }}</span><span class="al-meteo__testo-14">{{ o.d }}</span></span><span>{{ o.check }}</span></a></sc-for></div></sc-if></span></sc-if>
+<sc-if value="{{ head.agg }}" hint-placeholder-val="{{ true }}"><a class="al-meteo__centro-1" href="#" aria-label="Aggiorna la previsione" title="Aggiorna"><span class="al-meteo__tondo-2" aria-hidden="true">↻</span></a></sc-if></span>
+</div>
+</div>
+<sc-if value="{{ status }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="desktop" segno="!" titolo="{{ status.t }}" azione="{{ status.a }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,46px"></dc-import></sc-if>
+<sc-if value="{{ S.strip }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Striscia" formato="desktop" notti="{{ tiles }}" etichetta="{{ stripL }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,170px"></dc-import></sc-if>
+</dc-import>
+
+<sc-if value="{{ av }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="pagina" formato="desktop" segno="{{ av.sign }}" titolo="{{ av.title }}" testo="{{ av.text }}" azione="{{ av.act }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,100px"></dc-import></sc-if>
+
+<sc-if value="{{ S.night }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="desktop" etichetta="La notte" tono="protagonista" colonne="{{ protCols }}" ritardo="60" padding="28px" gap="18" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<sc-if value="{{ S.obj }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/PillolaScelta" forma="segmentato" classe="al-scelta--sottili" fondo="protagonista" allinea="flex-start" opzioni="{{ objOpts }}" etichetta="Obiettivo" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="180px,40px"></dc-import></sc-if>
+<div class="al-meteo__colonna-2"><span class="al-meteo__testo-3">{{ hv.top }}</span><span class="al-meteo__riga-3"><span class="al-meteo__testo-4" style="font-size:{{ hv.fs }}">{{ hvVal }}</span><sc-if value="{{ hv.pill }}" hint-placeholder-val="{{ true }}"><span class="al-meteo__pillola-1" style="background:{{ hv.pBg }};color:{{ hv.pFg }}">{{ hv.pill }}</span></sc-if></span><sc-if value="{{ ripV }}" hint-placeholder-val="{{ true }}"><span class="al-meteo__riga-4"><dc-import name="componenti/Ripresa" tipo="{{ ripV.tipo }}" testo="{{ ripV.testo }}" fondo="protagonista" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="360px,22px"></dc-import></span></sc-if><span class="al-meteo__testo-5">{{ hv.sub }}</span></div>
+<sc-if value="{{ hv.chart }}" hint-placeholder-val="{{ true }}"><div class="al-meteo__colonna-3">
+<sc-if value="{{ chartHint }}" hint-placeholder-val="{{ false }}"><span class="al-meteo__testo-6">{{ chartHint }}</span></sc-if>
+{{ chart }}
+<div class="al-meteo__riga-5"><sc-for list="{{ tickHours }}" as="h" hint-placeholder-count="8"><span>{{ h }}</span></sc-for></div>
+<div class="al-meteo__riga-6"><sc-for list="{{ bandKey }}" as="k" hint-placeholder-count="6"><span class="al-meteo__riga-7"><i class="al-meteo__blocco-2" style="background:{{ k.bg }}"></i>{{ k.n }}</span></sc-for></div>
+</div></sc-if>
+<sc-if value="{{ S.scale }}" hint-placeholder-val="{{ true }}"><div class="al-meteo__colonna-4">
+<div class="al-meteo__riga-8"><sc-for list="{{ legend }}" as="l" hint-placeholder-count="5"><span class="al-meteo__riga-9"><i class="al-meteo__blocco-3" style="background:{{ l.c }};box-shadow:inset 0 0 0 1px {{ l.b }}"></i><b class="al-meteo__testo-7">{{ l.n }}</b><span class="al-meteo__testo-8">{{ l.note }}</span></span></sc-for></div>
+<div class="al-meteo__riga-10"><span class="al-meteo__testo-9" id="scala-l">Sul grafico <span class="al-meteo__testo-10">{{ scaleCount }}</span></span><dc-import name="componenti/PillolaScelta" forma="spunta" fondo="protagonista" opzioni="{{ scaleP }}" etichetta="Sul grafico" formato="desktop" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></div>
+</div></sc-if>
+</dc-import></sc-if>
+
+<sc-if value="{{ S.right }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="desktop" etichetta="Come va" colonne="4" ritardo="120" padding="28px 24px" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<div class="al-meteo__riga-11"><span class="al-meteo__testo-11">{{ pesa.title }}</span><span class="al-meteo__testo-2">{{ pesa.when }}</span></div>
+<sc-if value="{{ pesa.verdict }}" hint-placeholder-val="{{ true }}"><div class="al-meteo__colonna-5"><span class="al-meteo__blocco-4">decide il verdetto</span>
+<a class="al-meteo__colonna-6" onClick="{{ pesa.verdict.on }}"><span class="al-meteo__riga-12"><b class="al-meteo__testo-7">{{ pesa.verdict.n }}</b><span class="al-meteo__pillola-2" style="background:{{ pesa.verdict.pBg }};color:{{ pesa.verdict.pFg }}">{{ pesa.verdict.pill }}</span></span><span class="al-meteo__testo-2">{{ pesa.verdict.t }}</span></a></div></sc-if>
+<div class="al-meteo__colonna-5"><span class="al-meteo__blocco-5">{{ pesa.lab }}</span>
+<sc-for list="{{ pesa.rows }}" as="r" hint-placeholder-count="2"><a class="al-meteo__colonna-7" onClick="{{ r.on }}" title="{{ r.title }}" style="cursor:{{ r.cur }}"><span class="al-meteo__riga-12"><b class="al-meteo__testo-7">{{ r.n }}</b><dc-import name="componenti/Pillola" esito="{{ r.es }}" testo="{{ r.pillT }}" dimensione="piccola" modo="{{ modo }}" accento="{{ accento }}" hint-size="100px,22px"></dc-import></span><span class="al-meteo__testo-2">{{ r.t }}</span></a></sc-for>
+<sc-if value="{{ pesa.empty }}" hint-placeholder-val="{{ false }}"><span class="al-meteo__blocco-6">{{ pesa.empty }}</span></sc-if>
+</div>
+<sc-if value="{{ pesa.more }}" hint-placeholder-val="{{ false }}"><div class="al-meteo__colonna-5"><sc-for list="{{ pesa.more }}" as="r" hint-placeholder-count="1"><span class="al-meteo__colonna-8"><span class="al-meteo__riga-12"><b class="al-meteo__testo-7">{{ r.n }}</b><dc-import name="componenti/Pillola" esito="{{ r.es }}" testo="{{ r.pillT }}" dimensione="piccola" modo="{{ modo }}" accento="{{ accento }}" hint-size="100px,22px"></dc-import></span><span class="al-meteo__testo-2">{{ r.t }}</span></span></sc-for></div></sc-if>
+<sc-if value="{{ pesa.altri }}" hint-placeholder-val="{{ false }}"><a href="#" role="button" aria-expanded="{{ pesa.altri.exp }}" onClick="{{ pesa.altri.on }}" class="al-bottone al-bottone--tenue al-bottone--piccolo al-bottone--blocco al-bottone--a-sinistra al-meteo__blocco-7">{{ pesa.altri.l }}<span class="al-meteo__testo-12" aria-hidden="true">{{ pesa.altri.chev }}</span></a></sc-if>
+<sc-if value="{{ pesa.ev }}" hint-placeholder-val="{{ false }}"><span class="al-meteo__blocco-8">{{ pesa.evLab }}</span><div class="al-meteo__blocco-9"><div class="al-meteo__strato-1" role="list">
+<sc-for list="{{ pesa.ev }}" as="e" hint-placeholder-count="10"><a class="al-meteo__griglia-2" role="listitem" onClick="{{ e.on }}" aria-label="{{ e.aria }}" style="background:{{ e.bg }}">
+<b class="al-meteo__blocco-10">{{ e.t }}</b>
+<span class="al-meteo__riga-13"><span class="al-meteo__strato-2"></span><span class="al-meteo__tondo-1" aria-hidden="true" style="margin-top:{{ e.mt }};width:{{ e.d }};height:{{ e.d }};background:{{ e.dBg }};box-shadow:{{ e.dSh }};color:{{ e.dFg }}">{{ e.segno }}</span></span>
+<span class="al-meteo__colonna-9"><span class="al-meteo__testo-13" style="font-weight:{{ e.fw }}">{{ e.n }}</span><span class="al-meteo__testo-14">{{ e.s }}</span></span></a></sc-for>
+</div></div></sc-if>
+<div class="al-meteo__griglia-3"><sc-for list="{{ facts }}" as="f" hint-placeholder-count="2"><span class="al-meteo__colonna-10"><span class="al-meteo__testo-14">{{ f.k }}</span><b class="al-meteo__testo-15">{{ f.v }}</b><span class="al-meteo__testo-14">{{ f.s }}</span></span></sc-for></div>
+</dc-import></sc-if>
+
+<sc-if value="{{ S.cards }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="desktop" etichetta="Le misure" colonne="12" ritardo="180" padding="24px 28px 28px" gap="18" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<div class="al-meteo__riga-14"><span class="al-meteo__testo-11">{{ cardsTitle }}</span><span class="al-meteo__testo-2">{{ cardsSub }}</span></div>
+<div class="al-meteo__griglia-4">
+<sc-for list="{{ cards }}" as="c" hint-placeholder-count="8"><dc-import name="componenti/CardMeteo" formato="desktop" stato="{{ c.stato }}" nome="{{ c.k }}" valore="{{ c.v }}" unita="{{ c.u }}" celle="{{ c.cells }}" nota="{{ c.note }}" picco="{{ c.picco }}" esito="{{ c.es }}" giudizio="{{ c.pillT }}" anello="{{ c.ring }}" etichetta="{{ c.tag }}" aggiornamento="{{ c.st }}" fissa="{{ c.fissa }}" on-torna="{{ c.torna }}" on-tasto="{{ c.tasto }}" on-click="{{ c.on }}" on-leave="{{ c.leave }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,240px"></dc-import></sc-for>
+</div>
+</dc-import>
+<dc-import name="componenti/Carta" formato="desktop" etichetta="Altre misure" colonne="12" ritardo="240" padding="24px 28px" gap="12" griglia="220px repeat(3,minmax(0,1fr))" allinea="center" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<span class="al-meteo__colonna-11"><span class="al-meteo__testo-11">Altre misure</span><span class="al-meteo__testo-2">senza giudizio, per contesto</span></span>
+<sc-for list="{{ extra }}" as="e" hint-placeholder-count="3"><span class="al-meteo__colonna-12"><span class="al-meteo__testo-16">{{ e.k }}</span><span class="al-meteo__riga-15"><span class="al-meteo__testo-17">{{ e.v }}</span><span class="al-meteo__testo-18">{{ e.u }}</span></span><span class="al-meteo__testo-14">{{ e.n }}</span></span></sc-for>
+</dc-import>
+<sc-if value="{{ camp }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="desktop" etichetta="Campionamento" colonne="12" ritardo="280" padding="24px 28px" gap="12" griglia="220px repeat(5,minmax(0,1fr))" allinea="center" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<span class="al-meteo__colonna-11"><span class="al-meteo__testo-11">Campionamento</span><span class="al-meteo__testo-2">dei setup, col seeing previsto di {{ camp.see }}″</span></span>
+<sc-for list="{{ camp.righe }}" as="c" hint-placeholder-count="5"><span class="al-meteo__colonna-13"><span class="al-meteo__testo-19">{{ c.n }}</span><span class="al-meteo__testo-20">{{ c.sc }}</span><dc-import name="componenti/Pillola" esito="{{ c.es }}" testo="{{ c.l }}" fondo="carta" dimensione="piccola" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,22px"></dc-import><span class="al-meteo__testo-21">{{ c.nota }}</span></span></sc-for>
+</dc-import></sc-if></sc-if>
+
+</div>
+<footer class="al-meteo__riga-16"><span>Previsione: Weather data by Open-Meteo.com</span><sc-if value="{{ seeCred }}" hint-placeholder-val="{{ true }}"><span>Seeing: meteoblue</span></sc-if><span>Orari in ora locale del sito</span><span class="al-meteo__testo-22">Aerosol e polveri: Generated using Copernicus Atmosphere Monitoring Service information 2026. Neither the European Commission nor ECMWF is responsible for any use that may be made of the Copernicus information or data it contains.</span></footer>
+</sc-if>
+</dc-import></sc-if>
+
+<sc-if value="{{ F.tel }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Telaio" formato="telefono" pagina="Meteo" etichetta="Meteo · telefono" sito="{{ site }}" altezza="100vh" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<sc-if value="{{ S.loading }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Scheletro" carte="{{ SK.tel }}" testo="Caricamento…" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,1000px"></dc-import></sc-if>
+<sc-if value="{{ S.ready }}" hint-placeholder-val="{{ true }}"><div class="al-meteo__colonna-14">
+
+<dc-import name="componenti/Carta" formato="telefono" etichetta="Le notti" ritardo="0" padding="20px 0" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<div class="al-meteo__colonna-15"><div class="al-meteo__riga-17"><span class="al-meteo__blocco-11">Le prossime notti</span><span class="al-meteo__riga-18">
+<sc-if value="{{ head.model }}" hint-placeholder-val="{{ true }}"><span class="al-meteo__riga-19" data-menu="1"><a class="al-meteo__riga-20" onClick="{{ mmenuToggle }}" aria-haspopup="menu" aria-expanded="{{ mmenu }}" aria-label="Modello: {{ modelL }}"><span class="al-meteo__riga-21">{{ modelL }}<span class="al-meteo__testo-12" aria-hidden="true">▾</span></span></a>
+<sc-if value="{{ mmenu }}" hint-placeholder-val="{{ false }}"><div class="al-meteo__strato-3" role="menu"><sc-for list="{{ models }}" as="o" hint-placeholder-count="4"><a class="al-meteo__riga-22" role="menuitemradio" aria-checked="{{ o.sel }}" onClick="{{ o.onTel }}" style="background:{{ o.mbg }}"><span class="al-meteo__colonna-5"><span class="al-meteo__testo-23">{{ o.l }}</span><span class="al-meteo__testo-14">{{ o.d }}</span></span><span>{{ o.check }}</span></a></sc-for></div></sc-if></span></sc-if>
+<sc-if value="{{ head.agg }}" hint-placeholder-val="{{ true }}"><a class="al-meteo__centro-1" href="#" aria-label="Aggiorna la previsione" title="Aggiorna"><span class="al-meteo__tondo-2" aria-hidden="true">↻</span></a></sc-if>
+</span></div><sc-if value="{{ head.arrivo }}" hint-placeholder-val="{{ true }}"><a class="al-meteo__riga-23" href="#" role="button" aria-expanded="{{ head.exp }}" aria-label="{{ head.arrivo }}" onClick="{{ head.tocca }}"><span class="al-meteo__blocco-12">{{ head.corto }}</span><svg class="al-meteo__grafico-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ head.chev }}"></path></svg></a></sc-if></div>
+<sc-if value="{{ status }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="riga" formato="telefono" segno="!" rientro="20" titolo="{{ status.t }}" azione="{{ status.a }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,110px"></dc-import></sc-if>
+<sc-if value="{{ S.strip }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Striscia" formato="telefono" riserva="{{ true }}" notti="{{ tiles }}" etichetta="{{ stripL }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,130px"></dc-import></sc-if>
+</dc-import>
+
+<sc-if value="{{ av }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="pagina" formato="telefono" segno="{{ av.sign }}" titolo="{{ av.title }}" testo="{{ av.text }}" azione="{{ av.act }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,160px"></dc-import></sc-if>
+
+<sc-if value="{{ S.night }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="telefono" etichetta="La notte" tono="protagonista" ritardo="60" padding="20px 16px" gap="14" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<sc-if value="{{ S.obj }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/PillolaScelta" forma="segmentato" fondo="protagonista" allinea="flex-start" misura="piccola" opzioni="{{ objOpts }}" classe="al-scelta--sottili" etichetta="Obiettivo" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="160px,44px"></dc-import></sc-if>
+<div class="al-meteo__colonna-11"><span class="al-meteo__testo-24">{{ hv.top }}</span><span class="al-meteo__riga-24"><span class="al-meteo__testo-25" style="font-size:{{ hv.fsTel }}">{{ hvVal }}</span><sc-if value="{{ hv.pill }}" hint-placeholder-val="{{ true }}"><span class="al-meteo__pillola-3" style="background:{{ hv.pBg }};color:{{ hv.pFg }}">{{ hv.pill }}</span></sc-if></span><sc-if value="{{ ripV }}" hint-placeholder-val="{{ true }}"><span class="al-meteo__riga-25"><dc-import name="componenti/Ripresa" tipo="{{ ripV.tipo }}" testo="{{ ripV.testo }}" fondo="protagonista" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="300px,40px"></dc-import></span></sc-if><span class="al-meteo__testo-26">{{ hv.sub }}</span></div>
+<sc-if value="{{ hv.chart }}" hint-placeholder-val="{{ true }}"><div class="al-meteo__colonna-16"><sc-if value="{{ chartHint }}" hint-placeholder-val="{{ false }}"><span class="al-meteo__testo-6">{{ chartHint }}</span></sc-if>{{ chart }}<div class="al-meteo__riga-26"><sc-for list="{{ tickHoursTel }}" as="h" hint-placeholder-count="5"><span>{{ h }}</span></sc-for></div></div></sc-if>
+<sc-if value="{{ S.scale }}" hint-placeholder-val="{{ true }}"><div class="al-meteo__colonna-17">
+<div class="al-meteo__riga-27"><sc-for list="{{ legend }}" as="l" hint-placeholder-count="5"><span class="al-meteo__riga-28"><i class="al-meteo__blocco-13" style="background:{{ l.c }};box-shadow:inset 0 0 0 1px {{ l.b }}"></i><b class="al-meteo__testo-7">{{ l.n }}</b></span></sc-for></div>
+<span class="al-meteo__testo-27">Sul grafico <span class="al-meteo__testo-10">{{ scaleCount }}</span></span>
+<span class="al-meteo__riga-29"><dc-import name="componenti/PillolaScelta" forma="spunta" fondo="protagonista" scorre="{{ true }}" opzioni="{{ scaleP }}" etichetta="Sul grafico" formato="telefono" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,44px"></dc-import></span>
+</div></sc-if>
+</dc-import></sc-if>
+
+<sc-if value="{{ S.right }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="telefono" etichetta="Come va" ritardo="120" padding="20px" gap="10" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<div class="al-meteo__riga-30"><span class="al-meteo__testo-28">{{ pesa.title }}</span><span class="al-meteo__testo-14">{{ pesa.when }}</span></div>
+<sc-if value="{{ pesa.verdict }}" hint-placeholder-val="{{ true }}"><div class="al-meteo__colonna-18"><span class="al-meteo__riga-12"><b class="al-meteo__testo-7">{{ pesa.verdict.n }}</b><span class="al-meteo__pillola-4" style="background:{{ pesa.verdict.pBg }};color:{{ pesa.verdict.pFg }}">{{ pesa.verdict.pill }}</span></span><span class="al-meteo__testo-14">decide il verdetto · {{ pesa.verdict.t }}</span></div></sc-if>
+<span class="al-meteo__testo-14">{{ pesa.labT }}</span>
+<sc-for list="{{ pesa.rows }}" as="r" hint-placeholder-count="2"><a class="al-meteo__colonna-19" onClick="{{ r.on }}" style="cursor:{{ r.cur }}"><span class="al-meteo__riga-12"><b class="al-meteo__testo-29">{{ r.n }}</b><dc-import name="componenti/Pillola" esito="{{ r.es }}" testo="{{ r.pillT }}" dimensione="minima" modo="{{ modo }}" accento="{{ accento }}" hint-size="90px,20px"></dc-import></span><span class="al-meteo__testo-14">{{ r.t }}</span></a></sc-for>
+<sc-if value="{{ pesa.empty }}" hint-placeholder-val="{{ false }}"><span class="al-meteo__blocco-14">{{ pesa.empty }}</span></sc-if>
+<sc-if value="{{ pesa.more }}" hint-placeholder-val="{{ false }}"><sc-for list="{{ pesa.more }}" as="r" hint-placeholder-count="1"><span class="al-meteo__colonna-20"><span class="al-meteo__riga-12"><b class="al-meteo__testo-29">{{ r.n }}</b><dc-import name="componenti/Pillola" esito="{{ r.es }}" testo="{{ r.pillT }}" dimensione="minima" modo="{{ modo }}" accento="{{ accento }}" hint-size="90px,20px"></dc-import></span><span class="al-meteo__testo-14">{{ r.t }}</span></span></sc-for></sc-if>
+<sc-if value="{{ pesa.altri }}" hint-placeholder-val="{{ false }}"><a href="#" role="button" aria-expanded="{{ pesa.altri.exp }}" onClick="{{ pesa.altri.on }}" class="al-bottone al-bottone--tenue al-bottone--blocco al-bottone--a-sinistra al-meteo__blocco-7">{{ pesa.altri.l }}<span class="al-meteo__testo-12" aria-hidden="true">{{ pesa.altri.chev }}</span></a></sc-if>
+<sc-if value="{{ pesa.ev }}" hint-placeholder-val="{{ false }}"><span class="al-meteo__blocco-15">{{ pesa.evLabT }}</span><div class="al-meteo__colonna-21" role="list"><sc-for list="{{ pesa.evT }}" as="e" hint-placeholder-count="10"><a class="al-meteo__griglia-5" role="listitem" onClick="{{ e.on }}" aria-label="{{ e.aria }}" style="background:{{ e.bg }}">
+<b class="al-meteo__testo-30">{{ e.t }}</b>
+<span class="al-meteo__riga-31"><span class="al-meteo__strato-4"></span><span class="al-meteo__tondo-1" aria-hidden="true" style="width:{{ e.d }};height:{{ e.d }};background:{{ e.dBg }};box-shadow:{{ e.dSh }};color:{{ e.dFg }}">{{ e.segno }}</span></span>
+<span class="al-meteo__colonna-9"><span class="al-meteo__testo-13" style="font-weight:{{ e.fw }}">{{ e.n }}</span><span class="al-meteo__testo-14">{{ e.s }}</span></span></a></sc-for></div><a class="al-meteo__riga-32" href="#" role="button" aria-expanded="{{ pesa.evX.exp }}" onClick="{{ pesa.evX.on }}">{{ pesa.evX.l }}<span class="al-meteo__testo-31" aria-hidden="true">{{ pesa.evX.chev }}</span></a></sc-if>
+<div class="al-meteo__griglia-6"><sc-for list="{{ facts }}" as="f" hint-placeholder-count="2"><span class="al-meteo__colonna-22"><span class="al-meteo__testo-32">{{ f.k }}</span><b class="al-meteo__testo-33">{{ f.v }}</b><span class="al-meteo__testo-32">{{ f.s }}</span></span></sc-for></div>
+</dc-import></sc-if>
+
+<sc-if value="{{ S.cards }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="telefono" etichetta="Le misure" ritardo="180" padding="20px 16px" gap="12" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,200px">
+<div class="al-meteo__colonna-23"><span class="al-meteo__testo-28">{{ cardsTitle }}</span><span class="al-meteo__testo-14">{{ cardsSubTel }}</span></div>
+<div class="al-meteo__griglia-7">
+<sc-for list="{{ telItems }}" as="it" hint-placeholder-count="8">
+<sc-if value="{{ it.card }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/CardMeteo" formato="telefono compatta" stato="{{ it.card.stato }}" nome="{{ it.card.k }}" valore="{{ it.card.vTel }}" unita="{{ it.card.uTel }}" celle="{{ it.card.cells }}" esito="{{ it.card.es }}" giudizio="{{ it.card.pillTelT }}" anello="{{ it.card.ringTel }}" aperto="{{ it.card.open }}" on-click="{{ it.card.tap }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,130px"></dc-import></sc-if>
+<sc-if value="{{ it.detail }}" hint-placeholder-val="{{ false }}"><div class="al-meteo__colonna-24">
+<span class="al-meteo__riga-33"><b class="al-meteo__testo-7">{{ it.detail.k }}</b><a class="al-meteo__tondo-3" onClick="{{ it.detail.tap }}" aria-label="Chiudi">×</a></span>
+<sc-if value="{{ it.detail.ok }}" hint-placeholder-val="{{ true }}"><div class="al-meteo__colonna-17">
+<span class="al-meteo__testo-34">{{ it.detail.note }} · {{ it.detail.picco }}</span>
+<div class="al-meteo__riga-34"><sc-for list="{{ it.detail.cells }}" as="x" hint-placeholder-count="14"><span class="al-meteo__riga-35" onClick="{{ x.on }}"><span class="al-meteo__pillola-5" style="height:{{ x.h }};background:{{ x.bg }};opacity:{{ x.op }}"></span></span></sc-for></div>
+<div class="al-meteo__blocco-16"><span class="al-meteo__strato-5">18</span><span class="al-meteo__strato-6">21</span><span class="al-meteo__strato-7">01</span><span class="al-meteo__strato-8">05</span><span class="al-meteo__strato-9">07</span></div>
+<dc-import name="componenti/Pillola" esito="{{ it.detail.es }}" testo="{{ it.detail.pillT }}" fondo="carta" dimensione="piccola" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" hint-size="120px,22px"></dc-import>
+<sc-if value="{{ it.detail.st }}" hint-placeholder-val="{{ false }}"><span class="al-meteo__testo-35">! {{ it.detail.st }}</span></sc-if>
+<sc-if value="{{ it.detail.canPlot }}" hint-placeholder-val="{{ false }}"><a onClick="{{ it.detail.on }}" class="al-bottone al-bottone--pieno al-bottone--blocco">{{ it.detail.plotL }}</a></sc-if>
+</div></sc-if>
+<sc-if value="{{ it.detail.av }}" hint-placeholder-val="{{ false }}"><div class="al-meteo__colonna-17"><span class="al-meteo__riga-36"><span class="al-meteo__tondo-4" aria-hidden="true" style="background:{{ it.detail.av.sBg }};color:{{ it.detail.av.sFg }}">{{ it.detail.av.sign }}</span><span class="al-meteo__colonna-25"><b class="al-meteo__testo-36">{{ it.detail.av.title }}</b><span class="al-meteo__testo-14">{{ it.detail.av.text }}</span></span></span><sc-if value="{{ it.detail.av.act }}" hint-placeholder-val="{{ false }}"><a href="#" class="al-bottone al-bottone--testo al-bottone--blocco">{{ it.detail.av.act }}</a></sc-if></div></sc-if>
+</div></sc-if>
+</sc-for>
+</div>
+<div class="al-meteo__colonna-26"><sc-for list="{{ extra }}" as="e" hint-placeholder-count="3"><span class="al-meteo__riga-37"><span class="al-meteo__colonna-5"><span class="al-meteo__testo-13">{{ e.k }}</span><span class="al-meteo__testo-32">{{ e.n }}</span></span><span class="al-meteo__testo-37"><span class="al-meteo__testo-38">{{ e.v }}</span> <span class="al-meteo__testo-14">{{ e.u }}</span></span></span></sc-for></div>
+<sc-if value="{{ camp }}" hint-placeholder-val="{{ false }}"><div class="al-meteo__colonna-27"><span class="al-meteo__testo-23">Campionamento</span><span class="al-meteo__testo-14">col seeing previsto di {{ camp.see }}″</span><sc-for list="{{ camp.righe }}" as="c" hint-placeholder-count="5"><span class="al-meteo__riga-38"><span class="al-meteo__colonna-28"><span class="al-meteo__testo-13">{{ c.n }}</span><span class="al-meteo__testo-32">{{ c.sc }} · {{ c.nota }}</span></span><span class="al-meteo__riga-39"><dc-import name="componenti/Pillola" esito="{{ c.es }}" testo="{{ c.l }}" fondo="carta2" dimensione="piccola" allinea="center" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,22px"></dc-import></span></span></sc-for></div></sc-if>
+</dc-import></sc-if>
+
+<footer class="al-meteo__colonna-29"><span>{{ credT }}</span><span>Aerosol e polveri: Generated using Copernicus Atmosphere Monitoring Service information 2026. Neither the European Commission nor ECMWF is responsible for any use that may be made of the Copernicus information or data it contains.</span></footer>
+</div></sc-if>
+</dc-import></sc-if>
+</sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;obiettivo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Deep sky&quot;,&quot;Sole&quot;],&quot;default&quot;:&quot;Deep sky&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;caricamento&quot;,&quot;senza sito&quot;,&quot;sito senza fuso orario&quot;,&quot;prima previsione non arrivata&quot;,&quot;servizio che tace&quot;,&quot;servizio che tace, previsione buona&quot;,&quot;modello senza notti&quot;,&quot;seeing senza chiave&quot;,&quot;seeing, chiave non valida&quot;,&quot;seeing, Meteoblue muto&quot;,&quot;visibilità non disponibile&quot;,&quot;sito con poca storia&quot;,&quot;sole sempre su&quot;,&quot;senza buio&quot;,&quot;nuvole incomplete&quot;,&quot;risposta non valida&quot;,&quot;cambio del modello non riuscito&quot;,&quot;seeing parziale&quot;,&quot;seeing, chiave appena messa&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;luna&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dalle Impostazioni&quot;],&quot;default&quot;:&quot;dalle Impostazioni&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Luna&quot;}}">
+class Component extends DCLogic {
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: null, menu: null, mmenu: false, night: 0, hover: null, cf: false, metrics: null, obj: null, model: null, open: null };
+  componentDidMount() {
+    this._seen = new WeakSet();
+    this._io = typeof IntersectionObserver !== 'undefined' ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.style.animationPlayState = 'running'; this._io.unobserve(e.target); } }), { rootMargin: '0px 0px -40px 0px' }) : null;
+    this._scan = () => document.querySelectorAll('[data-anim]').forEach(el => { if (this._seen.has(el)) return; this._seen.add(el); if (this._io) this._io.observe(el); else el.style.animationPlayState = 'running'; });
+    this._scan(); this._bp = () => document.querySelectorAll('[data-anim]').forEach(el => { el.style.animationPlayState = 'running'; }); window.addEventListener('beforeprint', this._bp);
+    // Le carte arrivano dai componenti dopo il primo disegno: si guarda il DOM.
+    this._mo = typeof MutationObserver !== 'undefined' ? new MutationObserver(() => { if (this._raf) return; this._raf = requestAnimationFrame(() => { this._raf = 0; this._scan(); }); }) : null; this._mo && this._mo.observe(document.body, { childList: true, subtree: true });
+    this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs);
+    // Il menu dei modelli sul telefono (la barra ha i suoi)
+    this._down = ev => { if (!this.state.mmenu) return; if (ev.target.closest && ev.target.closest('[data-menu]')) return; this.setState({ mmenu: false }); };
+    this._key = ev => { if (ev.key === 'Escape' && this.state.mmenu) this.setState({ mmenu: false }); };
+    document.addEventListener('mousedown', this._down); document.addEventListener('keydown', this._key);
+  }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); this._mo && this._mo.disconnect(); this._io && this._io.disconnect(); window.removeEventListener('beforeprint', this._bp); window.removeEventListener('resize', this._rs); document.removeEventListener('mousedown', this._down); document.removeEventListener('keydown', this._key); }
+  componentDidUpdate() { this._scan && this._scan(); }
+  // Token e soglie stanno in componenti/tema.js e componenti/soglie.js
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    const ce = React.createElement, set = o => this.setState(o);
+    if (!this.alPronto()) return { pronto: false };
+    ALsoglie.usaLuna(this.props.luna);
+    const SO = ALsoglie;
+    const modo = this.state.modo || this.props.modo || 'scuro', dk = modo === 'scuro';
+    const stato = this.props.stato || 'normale';
+    const fmtP = AL.formatoScelto(this.props.formato), tel = AL.telefono(fmtP, this.state.w);
+    const F = { tel, desk: !tel };
+    const t = AL.tema(modo, this.props.accento);
+    const HUM = t.umid;
+    const ESC0 = [t.pills[0][1], t.pills[1][1], t.pills[2][1]]; // esiti: colori fissi, non l'accento
+    const rgba = AL.rgba;
+    const hatch = AL.tratteggio;
+
+    // Stati
+    const is = s => stato === s;
+    const model = this.state.model || (is('modello senza notti') ? 'ICON' : 'Automatico');
+    const X = { loading: is('caricamento'), noSite: is('senza sito'), noTz: is('sito senza fuso orario'), first: is('prima previsione non arrivata'), stale: is('servizio che tace'), staleOk: is('servizio che tace, previsione buona'),
+      noModel: is('modello senza notti') && model === 'ICON', seeKey: is('seeing senza chiave'), seeBad: is('seeing, chiave non valida'), seeMute: is('seeing, Meteoblue muto'), visNA: is('visibilità non disponibile'),
+      storia: is('sito con poca storia'), soleSu: is('sole sempre su'), senzaBuio: is('senza buio'), nonSiSa: is('nuvole incomplete'), invalid: is('risposta non valida'), modelFail: is('cambio del modello non riuscito'), seePart: is('seeing parziale'), seeNew: is('seeing, chiave appena messa') };
+    const site = X.soleSu ? 'Capo Nord' : X.senzaBuio ? 'Oslo' : X.noSite ? null : 'Cima Ekar';
+    const signBox = k => k === '!' ? { sign: '!', sBg: t.warn, sFg: t.warnFg, sRing: 'transparent' } : { sign: '?', sBg: t.card2, sFg: t.text, sRing: t.line };
+    let av = null;
+    if (X.noSite) av = { ...signBox('?'), title: 'Sito predefinito mancante', text: 'La previsione richiede un sito predefinito.', act: 'Aggiungi sito' };
+    else if (X.noTz) av = { ...signBox('!'), title: 'Fuso orario del sito non riconosciuto: le notti non si possono calcolare.', text: '', act: 'Modifica sito' };
+    else if (X.first) av = { ...signBox('?'), title: 'Nessuna previsione disponibile.', text: 'La previsione si aggiorna ogni tre ore.', act: '' };
+    else if (X.stale) av = { ...signBox('!'), title: 'Aggiornamento delle 20:00 non riuscito. Nessuna previsione disponibile.', text: 'Le notti dell\u0027ultima previsione sono passate tutte.', act: 'Aggiorna' };
+    else if (X.noModel) av = { ...signBox('?'), title: 'Nessuna notte disponibile per questo modello.', text: 'Gli altri modelli si scelgono qui sopra.', act: '' };
+    const special = X.soleSu || X.senzaBuio;
+    const S = { loading: X.loading, ready: !X.loading, strip: !X.loading && !av && !special, night: !X.loading && !av, right: !X.loading && !av && !X.soleSu };
+    const seeArr = X.seeKey || X.seeBad || X.seeNew ? '' : X.seeMute ? ' · Seeing Meteoblue del 29 settembre, 18:00 (26 ore fa)' : X.staleOk ? ' · Seeing Meteoblue del 30 settembre, 06:00 (14 ore fa)' : ' · Seeing Meteoblue del 30 settembre, 06:00 (14 ore fa)';
+    const arrivo = X.noSite || X.noTz || X.first ? '' : X.stale ? 'Previsione Open-Meteo del 26 settembre, 18:05 (4 giorni fa) · ora locale del sito' : X.staleOk ? 'Previsione Open-Meteo del 30 settembre, 08:05 (12 ore fa)' + seeArr + ' · ora locale del sito'
+      : X.noModel ? 'Previsione Open-Meteo del 30 settembre, 18:05 (2 ore fa) · ora locale del sito' : X.soleSu ? 'Previsione Open-Meteo del 20 giugno, 18:05 (2 ore fa) · ora locale del sito' : X.senzaBuio ? 'Previsione Open-Meteo del 21 giugno, 18:05 (2 ore fa) · ora locale del sito'
+      : 'Previsione Open-Meteo del 30 settembre, 18:05 (2 ore fa)' + seeArr + ' · ora locale del sito';
+    const arAp = !!this.state.arAp, corti = [...arrivo.matchAll(/(Open-Meteo|Meteoblue)[^(]*\(([^)]*)\)/g)].map(m => m[1] + ' ' + m[2]).join(' · ');
+    const head = { title: site ? 'Meteo a ' + site : 'Meteo', arrivo, corto: arAp || !corti ? arrivo : corti, exp: arAp ? 'true' : 'false', chev: arAp ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6', tocca: e => { e.preventDefault(); this.setState({ arAp: !arAp }); }, model: !X.noSite, agg: !(X.noSite || X.noTz || X.stale || X.staleOk) };
+    const status = X.staleOk ? { t: 'Aggiornamento delle 20:00 non riuscito. Previsione delle 08:05.', a: 'Aggiorna' } : X.invalid ? { t: 'Risposta non valida dal servizio alle 20:00. Previsione delle 18:05.', a: 'Aggiorna' } : X.modelFail ? { t: 'Cambio del modello non riuscito: ICON non risponde. Resta Automatico.', a: 'Riprova' } : null;
+    const MODS = [['Automatico', 'predefinito'], ['ECMWF', 'centro europeo'], ['ICON', 'servizio meteo tedesco'], ['GFS', 'servizio meteo americano']];
+    const models = MODS.map(([l, d]) => ({ l, d, sel: l === model, bg: l === model ? t.hPill : 'transparent', fg: l === model ? t.hPillFg : t.text, mbg: l === model ? t.card2 : 'transparent', check: l === model ? '✓' : '',
+      on: () => set({ model: l }), onTel: () => set({ model: l, mmenu: false }) }));
+    const SK = { desk: [
+      { col: 'span 12', h: '262px', blocchi: [{ riga: [{ h: '34px', w: '320px' }, 'Caricamento…'], tra: true }, { griglia: 'repeat(7,minmax(0,1fr))', gap: '10px', flex: '1', figli: [1, 2, 3, 4, 5, 6, 7].map(() => ({ r: '22px' })) }] },
+      { col: 'span 8', h: '640px', blocchi: [{ h: '16px', w: '240px' }, { h: '64px', w: '280px' }, { flex: '1' }, { h: '36px', w: '70%' }] },
+      { col: 'span 4', h: '640px', gap: '14px', blocchi: [{ h: '28px', w: '60%' }, { h: '70px' }, { h: '70px' }, { flex: '1' }] },
+      { col: 'span 12', h: '560px', gap: '12px', griglia: 'repeat(4,minmax(0,1fr))', blocchi: [1, 2, 3, 4, 5, 6, 7, 8].map(() => ({ r: '22px' })) }],
+      tel: [{ h: '230px', blocchi: [{ h: '30px', w: '70%' }, 'Caricamento…', { flex: '1' }] }, { h: '440px', blocchi: [{ h: '48px', w: '55%' }, { flex: '1' }] },
+        { h: '300px', gap: '10px', griglia: '1fr 1fr', blocchi: [1, 2, 3, 4].map(() => ({ r: '18px' })) }] };
+
+    // Obiettivo: deep sky (la notte, 18–08) o Sole (il giorno, 06–20)
+    const objK = special ? 'deep' : (this.state.obj || ((this.props.obiettivo || ALsoglie.imp.get('meteo.obiettivo')) === 'Sole' ? 'sole' : 'deep')), SUN = objK === 'sole';
+    S.obj = S.night && !special;
+    const objOpts = [['deep', 'Deep sky'], ['sole', 'Sole']].map(([k, l]) => ({ l, sel: k === objK, bg: k === objK ? t.hPill : 'transparent', fg: k === objK ? t.hPillFg : t.hFg, on: () => set({ obj: k, night: 0, hover: null, open: null }) }));
+
+    // Misure: giudizio ora per ora con le soglie dell'app (soglie.js)
+    const H = SUN ? ['06','07','08','09','10','11','12','13','14','15','16','17','18','19'] : ['18','19','20','21','22','23','00','01','02','03','04','05','06','07'];
+    const WA = SUN ? 2 : 3, WB = 11;
+    const hh = h => H[h] + ':00';
+    const inW = h => h >= WA && h <= WB;
+    const MS = {
+      nuvole: { k: 'Nuvole', u: '%', dec: 0, q: SO.esito.nuvole, kind: 'max' },
+      basse: { k: 'Nuvole basse', u: '%', dec: 0, q: SO.esito.nuvole, kind: 'max' },
+      raffiche: { k: 'Raffiche', u: 'km/h', dec: 0, q: SO.esito.raffiche, kind: 'max' },
+      condensa: { k: 'Condensa', u: '°C', dec: 0, q: SO.esito.condensa, kind: 'cond' },
+      pioggia: { k: 'Pioggia', u: 'mm', dec: 1, q: SO.esito.pioggia, kind: 'rain', pq: SO.esito.pioggiaProb },
+      visibilita: { k: 'Visibilità', u: 'km', dec: 1, q: SO.esito.visibilita, kind: 'vis' },
+      vento: { k: 'Vento', u: 'km/h', dec: 0, q: SO.esito.vento, kind: 'fix' },
+      seeing: { k: 'Seeing', u: '″', dec: 1, q: SUN ? SO.esito.seeingGiorno : SO.esito.seeing, kind: 'max' },
+      jet: { k: 'Jet stream', u: 'km/h', dec: 0, q: SO.esito.jet, kind: 'max' },
+      aerosol: { k: 'Aerosol', u: '', dec: 2, q: SO.esito.aerosol, kind: 'max', good: 'limpido' },
+      umidita: { k: 'Umidità', u: '%', dec: 0, q: SO.esito.umidita, kind: 'max' } };
+    // Le carte stanno sempre allo stesso posto (contratto, Marco 13/10/2026)
+    const ORDER = SUN ? ['nuvole', 'basse', 'pioggia', 'visibilita', 'vento', 'seeing', 'jet', 'aerosol'] : ['nuvole', 'basse', 'condensa', 'pioggia', 'visibilita', 'vento', 'seeing', 'jet', 'aerosol'];
+    const lvOf = (id, x) => SO.neutro[id] && SO.neutro[id](x) ? 'neutra' : MS[id].q(x);
+    const nf = (x, dec) => x.toFixed(dec);
+    // Interi; pioggia, seeing e visibilita' un decimale, l'aerosol due; il numero resta dal lato della soglia del valore vero
+    const fv = (id, x) => { if (x === 0) return '0'; const d = MS[id].dec; return nf(SO.mostra(x, d, v => lvOf(id, v)), d); };
+    const withU = (id, x) => { const u = MS[id].u; return fv(id, x) + (u === '%' || u === '″' || !u ? u : ' ' + u); };
+    const NUL = Array(14).fill(null), Z = Array(14).fill(0);
+
+    // Le sette notti. Dati simulati, coerenti con la Dashboard (mercoledì 30 settembre).
+    const NIGHTS = [
+      { day: 'mer 30', tag: 'stanotte', name: 'Notte di mercoledì 30 · stanotte', when: 'stanotte', s: 0, value: '6 ore', range: '21–03', sub: 'dalle 21:00 alle 03:00, 6 ore · 3 modelli d\u0027accordo su 4', buio: '20:48–05:48', luna: [62, '23:40'], moonTr: 7.5,
+        layers: { b: [2,3,4,4,3,2,3,5,8,14,18,28,20,12], m: [3,4,5,5,4,3,4,6,7,8,9,12,10,8], a: [10,12,14,12,10,8,8,10,12,14,16,20,18,15], u: [70,74,78,82,85,87,89,91,92,93,94,95,94,90] },
+        m: { nuvole: { d: [5,8,10,10,8,6,8,12,16,22,26,40,30,20], v: '16', sotto: 'media nel buio' }, condensa: { d: [6,5,4.5,4,3.6,3.2,3.1,2.8,2,1.5,1,0.8,0.7,1], v: '1', sotto: 'minimo di temperatura meno punto di rugiada' },
+          pioggia: { d: Z, p: [0,0,0,0,0,0,0,5,5,5,10,10,5,5], v: '0', sotto: 'totale nel buio' }, visibilita: { d: [15,14,14,13,13,12,12,12,12,12,12,12,13,14], v: '12', sotto: 'minima nel buio' },
+          vento: { d: [6,7,9,13,6,5,4,4,4,5,5,4,4,5], v: '5', sotto: 'media nel buio, a 10 m', picco: 'raffiche fino a 13 km/h tra le 21:00 e le 22:00' },
+          seeing: { d: [1.3,1.3,1.4,1.4,1.3,1.3,1.4,1.4,1.5,1.5,1.6,1.8,1.7,1.6], v: '1.4', sotto: 'media nel buio, Meteoblue' }, jet: { d: [90,92,95,97,97,98,96,95,96,97,96,95,94,93], v: '96', sotto: 'media nel buio, 250 hPa' },
+          aerosol: { d: [0.07,0.07,0.07,0.08,0.07,0.07,0.07,0.07,0.06,0.06,0.07,0.07,0.07,0.07], v: '0.07', sotto: 'media nel buio, spessore ottico' } },
+        extra: [['Temperatura e punto di rugiada', '3', '°C', 'media nel buio · punto di rugiada 2 °C'], ['Polveri', '2', 'µg/m³', 'media nel buio'], ['Vento a 700 hPa', '15', 'km/h', 'meno vento in 2 notti su 10 dell\u0027ultimo anno, in questo sito']] },
+      { day: 'gio 1', tag: '', name: 'Notte di giovedì 1', when: 'giovedì 1', s: 2, value: 'Nessuna ora', range: 'coperto', sub: 'coperto dalle 17, pioggia fino alle 05 · 4 modelli d\u0027accordo su 4', buio: '20:46–05:49', luna: [52, '00:10'], moonTr: 8.3,
+        layers: { b: [50,65,78,85,88,90,92,90,88,86,84,80,72,66], m: [40,55,70,80,85,88,90,88,85,82,80,75,70,60], a: [30,40,50,60,70,70,72,70,68,65,60,55,50,45], u: [82,86,90,94,96,97,98,98,97,97,96,95,93,90] },
+        m: { nuvole: { d: [60,75,85,92,96,98,98,97,95,94,90,85,80,75], v: '94', sotto: 'media nel buio' }, condensa: { d: [3,2,1.5,1,0.5,0.3,0.2,0.1,0.1,0.2,0.3,0.4,0.6,1], v: '0', sotto: 'minimo di temperatura meno punto di rugiada' },
+          pioggia: { d: [0,0.2,0.4,0.6,0.8,0.9,0.5,0.4,0.3,0.2,0.1,0,0,0], p: [40,60,80,90,95,95,90,85,80,70,60,40,30,20], v: '3.8', sotto: 'totale nel buio' }, visibilita: { d: [20,15,10,8,6,5,4,2,1,0.5,0.5,0.5,1,2], v: '0.5', sotto: 'minima nel buio' },
+          vento: { d: [18,22,20,14,12,11,10,10,11,12,12,11,10,9], v: '12', sotto: 'media nel buio, a 10 m', picco: 'raffiche fino a 26 km/h tra le 00:00 e le 01:00' },
+          seeing: { d: NUL, v: '', sotto: '', nubi: true }, jet: { d: [86,87,88,88,89,89,88,88,87,87,88,88,87,86], v: '88', sotto: 'media nel buio, 250 hPa' }, aerosol: { d: NUL, v: '', sotto: '', nubi: true } },
+        extra: [['Temperatura e punto di rugiada', '8', '°C', 'media nel buio · punto di rugiada 8 °C'], ['Polveri', '1', 'µg/m³', 'media nel buio'], ['Vento a 700 hPa', '31', 'km/h', 'meno vento in 5 notti su 10 dell\u0027ultimo anno, in questo sito']] },
+      { day: 'ven 2', tag: '', name: 'Notte di venerdì 2', when: 'venerdì 2', s: 0, value: '8 ore', range: '21–05', sub: 'dalle 21:00 alle 05:00, 8 ore · 4 modelli d\u0027accordo su 4', buio: '20:45–05:50', luna: [43, '00:34'], moonTr: 9.1,
+        layers: { b: [4,3,2,1,1,1,1,2,2,3,3,4,6,8], m: [6,4,3,2,2,2,2,3,3,4,4,5,7,9], a: [15,10,8,6,5,5,6,7,8,9,10,12,14,18], u: [60,62,65,68,70,72,74,75,76,77,78,79,78,74] },
+        m: { nuvole: { d: [12,8,6,4,3,3,4,5,6,7,8,10,14,18], v: '6', sotto: 'media nel buio' }, condensa: { d: [9,8,7,6.5,6,5.6,5.2,5,4.8,4.5,4.3,4,4.2,5], v: '4', sotto: 'minimo di temperatura meno punto di rugiada' },
+          pioggia: { d: Z, p: [0,0,0,0,0,0,0,0,0,5,5,5,0,0], v: '0', sotto: 'totale nel buio' }, visibilita: { d: [22,24,25,25,25,26,26,25,25,24,24,23,22,22], v: '24', sotto: 'minima nel buio' },
+          vento: { d: [10,9,8,9,10,8,7,7,8,8,7,7,8,9], v: '8', sotto: 'media nel buio, a 10 m', picco: 'raffiche fino a 18 km/h tra le 22:00 e le 23:00' },
+          seeing: { d: [1.7,1.6,1.6,1.5,1.5,1.6,1.6,1.6,1.7,1.8,1.9,1.8,1.7,1.7], v: '1.7', sotto: 'media nel buio, Meteoblue' }, jet: { d: [70,70,71,72,73,74,76,78,77,75,72,70,68,66], v: '74', sotto: 'media nel buio, 250 hPa' },
+          aerosol: { d: [0.05,0.05,0.05,0.05,0.04,0.04,0.05,0.05,0.05,0.05,0.06,0.06,0.05,0.05], v: '0.05', sotto: 'media nel buio, spessore ottico' } },
+        extra: [['Temperatura e punto di rugiada', '9', '°C', 'media nel buio · punto di rugiada 5 °C'], ['Polveri', '3', 'µg/m³', 'media nel buio'], ['Vento a 700 hPa', '12', 'km/h', 'meno vento in 1 notte su 10 dell\u0027ultimo anno, in questo sito']] },
+      { day: 'sab 3', tend: true, name: 'Notte di sabato 3 · tendenza', when: 'sabato 3', s: 1, value: '9 ore', cloud: 38, range: 'nuvole al 38%', sub: 'nuvole al 38% nel buio · 2 modelli d\u0027accordo su 4', buio: '20:43–05:51', luna: [34, '01:30'], moonTr: 9.9 },
+      { day: 'dom 4', tend: true, name: 'Notte di domenica 4 · tendenza', when: 'domenica 4', s: 0, value: '9 ore', cloud: 14, range: 'nuvole al 14%', sub: 'nuvole al 14% nel buio · 3 modelli d\u0027accordo su 4', buio: '20:41–05:52', luna: [25, '02:30'], moonTr: 10.7 },
+      { day: 'lun 5', tend: true, name: 'Notte di lunedì 5 · tendenza', when: 'lunedì 5', s: 0, value: '9 ore', cloud: 9, range: 'nuvole al 9%', sub: 'nuvole al 9% nel buio · 4 modelli d\u0027accordo su 4', buio: '20:40–05:53', luna: [17, '03:35'], moonTr: 11.5 },
+      { day: 'mar 6', tend: true, name: 'Notte di martedì 6 · tendenza', when: 'martedì 6', s: 2, value: '9 ore', cloud: 72, range: 'nuvole al 72%', sub: 'nuvole al 72% nel buio · 3 modelli d\u0027accordo su 4', buio: '20:38–05:54', luna: [10, '04:40'], moonTr: 12.3 } ];
+    // I sette giorni, per chi riprende il Sole. Dati simulati; il giorno di oggi è passato.
+    const ds = (sotto, d, o) => ({ d, sotto, ...o });
+    const DAYS = [
+      { day: 'gio 1', tag: 'domani', name: 'Giorno di giovedì 1 · domani', when: 'domani', s: 1, value: '4 ore', range: '08–12', best: '08:30–10:30', sub: 'dalle 08:00 alle 12:00, 4 ore · seeing migliore 08:30–10:30 · 3 modelli d\u0027accordo su 4', sun: ['07:26', '19:11', '11 h 45'],
+        layers: { b: [5,4,3,2,4,6,10,20,35,50,65,78,85,88], m: [6,5,4,4,6,10,16,28,45,60,72,82,88,90], a: [20,18,15,12,14,20,30,40,50,55,60,65,70,72], u: [85,80,72,65,60,58,56,58,62,68,74,80,86,90] },
+        m: { nuvole: ds('media col Sole alto', [10,8,6,5,8,12,20,35,55,70,82,90,95,96]), pioggia: ds('totale col Sole alto', [0,0,0,0,0,0,0,0,0.1,0.2,0.5,0.8,1,1.2], { p: [0,0,0,0,0,0,5,10,20,35,55,75,85,90] }),
+          visibilita: ds('minima col Sole alto', [25,28,30,30,28,25,22,18,14,10,8,5,3,2]), vento: ds('media col Sole alto, a 10 m', [4,5,7,9,11,13,15,16,18,20,22,24,22,20], { picco: 'raffiche fino a 34 km/h tra le 16:00 e le 17:00' }),
+          seeing: ds('media col Sole alto, Meteoblue', [2.0,1.8,1.6,1.7,1.9,2.3,2.8,3.2,3.4,3.3,3.0,2.8,2.6,2.5]), jet: ds('media col Sole alto, 250 hPa', [88,88,87,86,86,85,85,86,87,88,88,89,89,89]),
+          aerosol: ds('media col Sole alto, spessore ottico', [0.06,0.06,0.07,0.07,0.08,0.08,0.09,0.09,0.08,0.08,0.07,0.07,0.07,0.07]) },
+        extra: [['Temperatura', '16', '°C', 'massima, alle 14:00'], ['Polveri', '4', 'µg/m³', 'media col Sole alto'], ['Vento a 700 hPa', '22', 'km/h', 'meno vento in 4 giorni su 10 dell\u0027ultimo anno, in questo sito']] },
+      { day: 'ven 2', tag: '', name: 'Giorno di venerdì 2', when: 'venerdì 2', s: 0, value: '10 ore', range: '08–18', best: '08:00–10:00', sub: 'dalle 08:00 alle 18:00, 10 ore · seeing migliore 08:00–10:00 · 4 modelli d\u0027accordo su 4', sun: ['07:27', '19:09', '11 h 42'],
+        layers: { b: [2,2,1,1,2,2,3,4,5,6,5,4,3,2], m: [3,3,2,2,3,3,4,5,6,7,6,5,4,3], a: [12,10,8,8,9,10,12,14,16,18,16,14,12,10], u: [78,72,64,56,50,46,44,43,44,46,50,56,62,68] },
+        m: { nuvole: ds('media col Sole alto', [5,4,3,3,4,5,6,8,10,12,10,8,6,5]), pioggia: ds('totale col Sole alto', Z, { p: Z }), visibilita: ds('minima col Sole alto', [20,24,28,30,32,32,32,30,30,28,28,26,24,22]),
+          vento: ds('media col Sole alto, a 10 m', [3,4,5,7,8,10,11,12,12,11,10,8,6,5], { picco: 'raffiche fino a 20 km/h tra le 14:00 e le 15:00' }), seeing: ds('media col Sole alto, Meteoblue', [2.1,1.9,1.7,1.8,2.1,2.5,2.9,3.1,3.2,3.0,2.7,2.4,2.2,2.1]),
+          jet: ds('media col Sole alto, 250 hPa', [72,72,73,74,75,76,77,78,78,77,76,75,74,73]), aerosol: ds('media col Sole alto, spessore ottico', [0.05,0.05,0.05,0.05,0.05,0.06,0.06,0.06,0.05,0.05,0.05,0.05,0.05,0.05]) },
+        extra: [['Temperatura', '19', '°C', 'massima, alle 15:00'], ['Polveri', '3', 'µg/m³', 'media col Sole alto'], ['Vento a 700 hPa', '12', 'km/h', 'meno vento in 1 giorno su 10 dell\u0027ultimo anno, in questo sito']] },
+      { day: 'sab 3', tag: '', name: 'Giorno di sabato 3', when: 'sabato 3', s: 1, value: '3 ore', range: '08–10 · 17–18', best: '08:00–09:00', sub: 'dalle 08:00 alle 10:00 e dalle 17:00 alle 18:00, 3 ore · seeing migliore 08:00–09:00 · 2 modelli d\u0027accordo su 4', sun: ['07:29', '19:07', '11 h 38'],
+        layers: { b: [14,12,8,7,10,14,18,22,20,15,10,8,7,6], m: [20,16,12,10,14,18,24,28,26,20,14,10,9,8], a: [30,28,24,22,26,30,34,38,36,32,28,24,22,20], u: [80,74,66,60,55,52,50,50,52,55,60,66,72,76] },
+        m: { nuvole: ds('media col Sole alto', [30,25,18,16,22,28,35,40,38,30,22,18,16,15]), pioggia: ds('totale col Sole alto', Z, { p: [0,0,5,5,10,15,20,20,15,10,5,5,0,0] }), visibilita: ds('minima col Sole alto', [18,20,22,24,24,24,22,22,22,22,24,24,22,20]),
+          vento: ds('media col Sole alto, a 10 m', [5,6,8,10,14,18,22,26,28,24,18,12,8,6], { picco: 'raffiche fino a 41 km/h tra le 14:00 e le 15:00' }), seeing: ds('media col Sole alto, Meteoblue', [2.3,2.1,1.9,2.0,2.4,2.8,3.3,3.6,3.7,3.4,3.0,2.7,2.5,2.4]),
+          jet: ds('media col Sole alto, 250 hPa', [125,128,130,132,134,135,133,130,128,126,124,122,120,118]), aerosol: ds('media col Sole alto, spessore ottico', [0.10,0.11,0.12,0.12,0.13,0.13,0.12,0.12,0.11,0.11,0.10,0.10,0.10,0.10]) },
+        extra: [['Temperatura', '18', '°C', 'massima, alle 15:00'], ['Polveri', '9', 'µg/m³', 'media col Sole alto'], ['Vento a 700 hPa', '38', 'km/h', 'meno vento in 8 giorni su 10 dell\u0027ultimo anno, in questo sito']] },
+      { day: 'dom 4', tend: true, name: 'Giorno di domenica 4 · tendenza', when: 'domenica 4', s: 0, value: '11 ore', cloud: 12, range: 'nuvole al 12%', sub: 'nuvole al 12% col Sole alto · 3 modelli d\u0027accordo su 4', sun: ['07:30', '19:05', '11 h 35'] },
+      { day: 'lun 5', tend: true, name: 'Giorno di lunedì 5 · tendenza', when: 'lunedì 5', s: 0, value: '11 ore', cloud: 8, range: 'nuvole all\u00278%', sub: 'nuvole all\u00278% col Sole alto · 4 modelli d\u0027accordo su 4', sun: ['07:31', '19:03', '11 h 32'] },
+      { day: 'mar 6', tend: true, name: 'Giorno di martedì 6 · tendenza', when: 'martedì 6', s: 2, value: '11 ore', cloud: 70, range: 'nuvole al 70%', sub: 'nuvole al 70% col Sole alto · 3 modelli d\u0027accordo su 4', sun: ['07:33', '19:01', '11 h 28'] },
+      { day: 'mer 7', tend: true, name: 'Giorno di mercoledì 7 · tendenza', when: 'mercoledì 7', s: 1, value: '11 ore', cloud: 35, range: 'nuvole al 35%', sub: 'nuvole al 35% col Sole alto · 2 modelli d\u0027accordo su 4', sun: ['07:34', '18:59', '11 h 25'] } ];
+    // Valori del giorno calcolati sulle ore col Sole alto
+    DAYS.forEach(D => { if (!D.m) return; Object.entries(D.m).forEach(([id, sp]) => { const w = sp.d.filter((x, h) => h >= 2 && h <= 11);
+      const v = MS[id].kind === 'rain' ? w.reduce((a, b) => a + b, 0) : MS[id].kind === 'vis' ? Math.min(...w) : w.reduce((a, b) => a + b, 0) / w.length;
+      sp.v = id === 'seeing' ? nf(v, 1) : id === 'aerosol' ? nf(v, 2) : id === 'pioggia' ? (v ? nf(v, 1) : '0') : String(Math.round(v)); }); });
+    if (X.nonSiSa) { const n0 = NIGHTS[0], cut = a => a.map((v, i) => i >= 7 ? null : v);
+      NIGHTS[0] = { ...n0, s: 'ignoto', value: 'Non disponibile', range: 'nuvole incomplete', sub: 'Non valutabile: copertura nuvolosa incompleta per le ore di buio.', layers: { ...n0.layers, b: cut(n0.layers.b), m: cut(n0.layers.m), a: cut(n0.layers.a) },
+        m: { ...n0.m, nuvole: { ...n0.m.nuvole, d: cut(n0.m.nuvole.d), v: '?', sotto: 'copertura incompleta dalle 01:00' } } }; }
+    // Nuvole basse dagli strati; raffiche (simulate dal vento medio)
+    [...NIGHTS, ...DAYS].forEach(n => { if (!n.m) return; if (n.layers) n.m.basse = { d: n.layers.b };
+      if (n.m.vento) n.m.raffiche = { d: n.m.vento.d.map(x => x == null ? null : Math.round(x * 1.8)) }; });
+    const LIST = SUN ? DAYS : NIGHTS;
+    // Il verdetto dal punteggio della notte (ADR 0020, Marco 20/10/2026: supera il contratto): ogni ora 0-100 dalla somma dei pesi
+    // di nuvole, seeing, trasparenza, condensa, vento e jet stream (soglie.js); buona da 70, incerta da 40. Ore utili = qualita' da 60, intervallo e conto.
+    const qN = 57, qt0 = SUN ? 6 : 18, qlat = 45.85 * Math.PI / 180, qR = Math.PI / 180, GOOD = SO.utile;
+    const qlerp = (arr, i) => { const a = Math.min(Math.floor(i / 4), 13), b = Math.min(a + 1, 13), f = (i % 4) / 4; if (arr[a] == null) return null; if (f === 0) return arr[a]; if (arr[b] == null) return null; return arr[a] * (1 - f) + arr[b] * f; };
+    const qalt = (tr, dec) => Array.from({ length: qN }, (_, i) => { let x = qt0 + i * 0.25 - tr; x = ((x + 36) % 24) - 12; const Hh = x * 15.041 * qR, d = dec * qR; return Math.asin(Math.sin(qlat) * Math.sin(d) + Math.cos(qlat) * Math.cos(d) * Math.cos(Hh)) / qR; });
+    const QS = { nuvole: ['le nuvole', SO.qualita.nuvole], seeing: ['il seeing', SUN ? SO.qualita.seeingGiorno : SO.qualita.seeing], jet: ['il jet stream', SO.qualita.jet], vento: ['il vento', SO.qualita.vento],
+      condensa: ['la condensa', SO.qualita.condensa], aerosol: ['l\u0027aerosol', SO.qualita.aerosol], visibilita: ['la visibilità', SO.qualita.visibilita] };
+    const qOff = (n, id) => !n.m[id] || n.m[id].nubi || (id === 'seeing' && (X.seeKey || X.seeBad || X.seeNew)) || (id === 'visibilita' && X.visNA) || (SUN && id === 'condensa');
+    const hOra = h => h > 13 ? (SUN ? '20' : '08') : H[h];
+    const iDi = s => { const [h, m] = s.split(':').map(Number); return ((h < 12 ? h + 24 : h) - 18) * 4 + Math.round(m / 15); };
+    const fq = k => { const m = (18 * 60 + k * 15) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+    // La Luna pesa per la banda larga solo sopra l'altezza delle Impostazioni, col buio. Anche le notti di tendenza: la Luna si calcola.
+    if (!SUN) NIGHTS.forEach((n, i) => { if (!n.luna) return; const a = qalt(n.moonTr, 24 - i * 1.5); n.rip = SO.lunaNotte(n.luna[0], H.map((_, h) => a[h * 4 + 2]), WA, WB, hOra); });
+    const qualOf = (n, alt) => Array.from({ length: qN }, (_, i) => { const cv = qlerp(n.m.nuvole.d, i); if (cv == null) return null; const parts = [[QS.nuvole[0], QS.nuvole[1](cv)]];
+      Object.keys(QS).forEach(id => { if (id === 'nuvole' || qOff(n, id)) return; const x = id === 'seeing' && X.seePart && i >= 32 ? null : qlerp(n.m[id].d, i); if (x == null) return; parts.push([QS[id][0], QS[id][1](x)]); });
+      const pm = n.m.pioggia && n.m.pioggia.d ? qlerp(n.m.pioggia.d, i) : null;
+      if (SUN) parts.push(['il Sole basso', SO.qualita.soleBasso(alt[i])]);
+      const vk = n.m.visibilita && n.m.visibilita.d ? qlerp(n.m.visibilita.d, i) : null;
+      return SO.ora(parts, pm > 0 ? 'pioggia' : cv >= 50 ? 'nuvole' : SO.nebbia(vk) ? 'nebbia' : false); });
+    LIST.forEach((n, i) => { if (n.tend) { n.cm = n.cloud; return; } if (!n.m) return; n.alt = SUN ? qalt(13.3, -3.3 - i * 0.4) : qalt(n.moonTr, 24 - i * 1.5); n.q = qualOf(n, n.alt);
+      if (n.s === 'ignoto') return;
+      const hs = []; for (let h = WA; h <= WB; h++) { const q = n.q[h * 4]; if (q && q.v >= GOOD) hs.push(h); }
+      const runs = []; hs.forEach(h => { const r = runs[runs.length - 1]; if (r && r.b === h) r.b = h + 1; else runs.push({ a: h, b: h + 1 }); });
+      const cnt = SO.conto(runs), tail = n.sub.split(' · ').filter(x => /modell/.test(x)).join(' · ');
+      const qm = []; for (let k = WA * 4; k <= WB * 4; k++) qm.push(n.q[k] ? n.q[k].v : null); n.qm = SO.media(qm); n.s = n.qm == null ? 'ignoto' : SO.livello(n.qm); n.senzaT = (X.seeKey || X.seeBad || X.seeNew || X.seePart) && SO.senzaRiga(SO.senzaTutte(n.q.slice(WA * 4, WB * 4 + 1)));
+      n.runs = runs; n.value = cnt ? SO.nOre(cnt) : 'Nessuna ora'; if (cnt) n.range = runs.map(r => H[r.a] + '–' + hOra(r.b)).join(' · ');
+      n.best = null; if (SUN && n.m.seeing && !qOff(n, 'seeing')) { let bk = -1, bv = 99; hs.forEach(h => { const x = n.m.seeing.d[h]; if (x != null && x < bv) { bv = x; bk = h; } }); if (bk >= 0) n.best = H[bk] + '–' + hOra(bk + 1); }
+      n.sub = (cnt ? SO.intervallo(runs, hOra) : 'nessuna ora utile ' + (SUN ? 'col Sole alto' : 'nel buio')) + (n.best ? ' · seeing migliore ' + n.best : '') + (tail ? ' · ' + tail : ''); });
+    const ni = special ? 0 : Math.min(this.state.night, LIST.length - 1), N0 = LIST[ni];
+    const signs = ['✓', '!', '✕'], words = ['buona', 'incerta', 'non adatta'], wordsM = ['buono', 'incerto', 'non adatto'];
+    const pillOf = s => s === 'ignoto' ? [t.card2, t.text] : t.pills[s];
+
+    // La parola della notte e' quella dell'ora peggiore, con l'intervallo e il conto delle ore che la portano (judge.py)
+    const RK = L => L === 'neutra' ? 0.5 : L;
+    const wordOf = (id, L) => L === 'neutra' ? 'fra 0.1 e 1' : L === 0 && MS[id].good ? MS[id].good : wordsM[L];
+    const signOf = L => L === 'neutra' ? '–' : signs[L];
+    const runsOf = hs => { const out = []; hs.forEach(h => { const r = out[out.length - 1]; if (r && r.b === h) r.b = h + 1; else out.push({ a: h, b: h + 1 }); }); return out; };
+    const anal = (id, d) => { let worst = null, first = 99; const hs = [];
+      for (let h = WA; h <= WB; h++) { if (d[h] == null) continue; hs.push(h); const L = lvOf(id, d[h]); if (worst == null || RK(L) > RK(worst)) { worst = L; first = h; } }
+      if (worst == null) return { s: 'ignoto', rank: -1, first: 99, word: 'non disponibile', when: '', label: '? non disponibile' };
+      const runs = runsOf(hs.filter(h => lvOf(id, d[h]) === worst)), all = SO.conto(runs) === WB - WA + 1, word = wordOf(id, worst);
+      const when = all ? (SUN ? 'tutto il giorno' : 'tutta la notte') : SO.intervallo(runs, hOra);
+      return { s: worst, rank: RK(worst), first, runs, all, word, when, part: hs.length < WB - WA + 1, label: signOf(worst) + ' ' + word + ' ' + when }; };
+    // Il valore della notte: la media delle ore che hanno un numero (la pioggia, il totale); il picco e' l'ora peggiore; una misura parziale lo dice
+    const winS = SUN ? 'col Sole alto' : 'nel buio';
+    const summ = (id, d) => { const m = MS[id], hs = []; for (let h = WA; h <= WB; h++) if (d[h] != null) hs.push(h); if (!hs.length) return { v: '', sotto: '', picco: '' };
+      const rain = m.kind === 'rain', tot = hs.reduce((a, h) => a + d[h], 0), x = rain ? tot : tot / hs.length;
+      const part = hs.length < WB - WA + 1 ? ', ' + SO.intervallo(runsOf(hs), hOra) + ' su ' + (WB - WA + 1) : '';
+      const low = m.kind === 'cond' || m.kind === 'vis'; let pk = hs[0]; hs.forEach(h => { if (low ? d[h] < d[pk] : d[h] > d[pk]) pk = h; });
+      const src = { vento: ' · a 10 m', seeing: ' · Meteoblue', jet: ' · a 250 hPa', aerosol: ' · spessore ottico' }[id] || '';
+      let picco = rain && d[pk] <= 0 ? 'nessuna ora con pioggia' : 'picco ' + withU(id, d[pk]) + ' alle ' + H[pk];
+      if (id === 'vento' && N0.m.raffiche) { const rf = N0.m.raffiche.d; let g = WA; for (let h = WA; h <= WB; h++) if (rf[h] != null && rf[h] > rf[g]) g = h; picco = 'raffiche fino a ' + withU('raffiche', rf[g]) + ' alle ' + H[g]; }
+      return { v: fv(id, x), sotto: (rain ? 'totale ' : 'media ') + winS + part + src, picco }; };
+
+    // Le misure sul grafico: fino a quattro insieme, ognuna col suo colore
+    const MAXM = 99, POOL = dk ? [t.pal[2], t.pal[4], t.pal[1], t.pal[3]] : [t.pal[4], t.pal[3], t.pal[1], t.pal[2]]; // mai l'accento, mai il blu dell'umidità finché c'è
+    const disabled = id => (id === 'seeing' && (X.seeKey || X.seeBad || X.seeNew)) || (id === 'visibilita' && X.visNA) || (N0.m && N0.m[id] && N0.m[id].nubi) || (SUN && id === 'condensa');
+    // All'apertura si accendono le misure che peggiorano la qualità nella finestra
+    // All'apertura il grafico disegna solo le nubi; l'umidita' e una misura alla volta si accendono a mano
+    const autoM = [];
+    const metrics = (this.state.metrics || (this.props.misure ? this.props.misure.split(',').map(x => x.trim()) : autoM)).filter(id => !N0.tend && N0.m && !disabled(id) && (id === 'umidita' ? !!N0.layers : !!N0.m[id]));
+    const colOf = {}; metrics.forEach(id => { colOf[id] = id === 'umidita' ? HUM : id === 'pioggia' ? POOL[0] : t.spark; });
+    // A destra una misura alla volta: un'altra la sostituisce. L'umidita' (in %, a sinistra) si aggiunge.
+    const toggleM = id => { const cur = metrics; if (cur.includes(id)) return set({ metrics: cur.filter(x => x !== id) }); set({ metrics: id === 'umidita' ? [...cur, id] : [...cur.filter(x => x === 'umidita'), id] }); };
+    const addM = id => { if (!metrics.includes(id)) toggleM(id); };
+    const hov = this.state.hover, hH = hov == null ? null : Math.min(13, Math.round(hov / 4));
+
+    // Carte
+    let cards = [], cardsSub = '', cardsSubTel = '';
+    // Una carta si porta a un'ora da sola (barrette, frecce) e x la riporta alla notte; il filo del grafico porta tutte le altre
+    const cardH = this.state.cardH || {}, pinC = (id, h) => set({ cardH: { ...cardH, [id]: h } }), unpin = id => { const o = { ...cardH }; delete o[id]; set({ cardH: o }); };
+    if (N0.m && !N0.tend) {
+      cards = ORDER.filter(id => N0.m[id]).map(id => { const spec0 = N0.m[id], spec = id === 'seeing' && X.seePart && spec0.d ? { ...spec0, d: spec0.d.map((x, h) => h >= 8 ? null : x) } : spec0, d = spec.d, m = MS[id], A = anal(id, d), V = summ(id, d);
+        const vals = d.filter(x => x != null), mn = vals.length ? Math.min(...vals) : 0, mx = vals.length ? Math.max(...vals) : 1;
+        const pin = cardH[id], hC = pin != null ? pin : hH, lv = x => lvOf(id, x), lvC = L => L === 'neutra' ? t.muted : ESC0[L];
+        const cells = d.map((x, h) => ({ h: x == null ? '100%' : (mx === mn ? 55 : 25 + (x - mn) / (mx - mn) * 75) + '%', bg: x == null ? hatch(t.sparkOff) : !inW(h) ? t.sparkOff : lvC(lv(x)), op: hC == null || hC === h ? 1 : 0.35,
+          on: () => set({ hover: h * 4 }), click: e => { e && e.stopPropagation && e.stopPropagation(); pinC(id, h); }, title: hh(h) + ' · ' + (x == null ? 'Non disponibile' : withU(id, x) + ' · ' + wordOf(id, lv(x))) }));
+        let avc = null, st = '';
+        if (spec.nubi) avc = { ...signBox('?'), sBg: t.card, title: 'Sotto le nuvole non si misura.', text: 'Torna con il cielo sereno.', act: '', short: 'non si misura', stato: 'non si misura' };
+        if (id === 'seeing' && X.seeKey) avc = { ...signBox('?'), sBg: t.card, title: 'Il seeing richiede una chiave Meteoblue.', text: '', act: 'Apri le Impostazioni', short: 'serve una chiave', stato: 'chiave' };
+        if (id === 'seeing' && X.seeBad) avc = { ...signBox('!'), title: 'Chiave Meteoblue non valida o scaduta.', text: '', act: 'Apri le Impostazioni', short: 'chiave non valida', stato: 'chiave non valida' };
+        if (id === 'seeing' && X.seeNew) avc = { ...signBox('?'), sBg: t.card, title: 'Seeing in arrivo da Meteoblue.', text: 'La chiave è salvata: il seeing arriva al prossimo giro.', act: '', short: 'in arrivo', stato: 'in arrivo' };
+        if (id === 'visibilita' && X.visNA) avc = { ...signBox('?'), sBg: t.card, title: 'Non disponibile', text: 'Non tutti i modelli danno la visibilità.', act: '', short: 'non disponibile', stato: 'non disponibile' };
+        if (id === 'seeing' && X.seeMute) st = 'Ultimo aggiornamento del seeing non riuscito: dati precedenti.';
+        const atH = hC != null && d[hC] != null, Lh = atH ? lv(d[hC]) : null;
+        const pill = atH ? signOf(Lh) + ' ' + wordOf(id, Lh) + ' alle ' + hh(hC) : A.label;
+        const sel = metrics.includes(id), canPlot = id !== 'nuvole' && id !== 'basse' && !avc;
+        return { id, k: m.k, ok: !avc, av: avc, st, A, vS: V.v ? withU(id, +V.v) + ' ' + V.sotto.split(' · ')[0] : '',
+          v: atH ? fv(id, d[hC]) : V.v, u: m.u, note: atH ? 'alle ' + hh(hC) + (pin != null ? ' · solo questa carta' : '') : V.sotto, picco: atH ? '' : V.picco, pill, cells,
+          tag: id === 'nuvole' || id === 'basse' ? 'sul grafico, in %' : sel ? 'sul grafico' : '', ring: sel ? colOf[id] : 'transparent', ringTel: sel ? colOf[id] : 'transparent',
+          cur: canPlot ? 'pointer' : 'default', on: canPlot ? () => toggleM(id) : null, canPlot, plotL: sel ? 'Togli dal grafico' : 'Metti sul grafico', onPlot: () => toggleM(id),
+          fissa: pin != null, torna: pin != null ? e => { e && e.preventDefault && e.preventDefault(); e && e.stopPropagation && e.stopPropagation(); unpin(id); } : null,
+          tasto: ev => { let h = cardH[id] ?? hH ?? WA; if (ev.key === 'ArrowRight') h++; else if (ev.key === 'ArrowLeft') h--; else if (ev.key === 'Escape') { unpin(id); return; } else return; ev.preventDefault(); pinC(id, Math.max(0, Math.min(13, h))); },
+          es: avc ? (avc.sign === '!' ? 2 : 'mancante') : (atH ? Lh : A.s), pillT: pill.slice(2), stato: avc ? avc.stato : 'normale',
+          vTel: avc ? '?' : atH ? fv(id, d[hC]) : V.v, uTel: avc ? '' : m.u, pillTel: avc ? (avc.sign + ' ' + avc.short) : signOf(atH ? Lh : A.s) + ' ' + (atH ? wordOf(id, Lh) : A.word) };
+      });
+      cards.forEach(c => { c.pillTelT = c.pillTel.slice(2); c.leave = () => set({ hover: null }); if (!c.ok) c.cells = Array(14).fill(0).map(() => ({ h: '100%', bg: hatch(t.sparkOff), op: 1 })); });
+      cardsSub = hH != null ? 'alle ' + hh(hH) + ' · fuori dal grafico tornano ' + (SUN ? 'al giorno' : 'alla notte') : winS + ', sempre nello stesso ordine · il filo del grafico porta tutte le carte a un\u0027ora, una barretta ne ferma una sola · clicca una carta per metterla sul grafico';
+      cardsSubTel = hH != null ? 'alle ' + hh(hH) : winS + ', sempre nello stesso ordine · tocca una carta per aprirla, poi una barretta per l\u0027ora';
+    }
+    S.cards = S.night && !special && cards.length > 0;
+    S.scale = S.cards;
+    const cardsTitle = SUN ? 'Le misure del giorno' : 'Le misure della notte';
+    const extra = N0.extra ? N0.extra.map(([k, v, u, n]) => ({ k, v, u, n: X.storia && k === 'Vento a 700 hPa' ? 'confronto con lo storico non ancora disponibile' : n })) : [];
+    // Campionamento dei corredi col seeing previsto (scale simulate: nell'app arrivano gia' calcolate) (regola di Claude Code, 18/10): sotto se la scala supera meta' del seeing, sovra se e' sotto un terzo
+    const seeV = !SUN && N0.m && N0.m.seeing && N0.m.seeing.v && !X.seeKey && !X.seeBad ? parseFloat(String(N0.m.seeing.v).replace(',', '.')) : null;
+    const camp = seeV ? { see: N0.m.seeing.v, righe: [['103APO · ASI2600MM', 1.11], ['Notte in quota', 1.94], ['103APO · ASI294MC', 1.36], ['Casa leggero', 3.82], ['Planetarie', 0.55]].map(([n, sc]) => { const k = sc > seeV / 2 ? 'sotto' : sc < seeV / 3 ? 'sovra' : 'ok';
+      return { n, sc: sc.toFixed(2) + '″/px', es: k === 'ok' ? 0 : 1, l: k === 'ok' ? 'ottimo' : k === 'sotto' ? 'sottocampionato' : 'sovracampionato', nota: 'ottimo con seeing fra ' + (2 * sc).toFixed(1) + ' e ' + (3 * sc).toFixed(1) + '″' }; }) } : null;
+    const open = this.state.open;
+    const telItems = [];
+    cards.forEach((c, i) => { c.open = open === c.id; c.chev = c.open ? '▴' : '▾'; c.tap = () => { const o = { ...cardH }; delete o[c.id]; set({ open: open === c.id ? null : c.id, cardH: o }); }; telItems.push({ card: c });
+      if (i % 2 === 1 || i === cards.length - 1) { const oi = cards.findIndex(x => x.id === open); if (oi >= 0 && Math.floor(oi / 2) === Math.floor(i / 2)) { const dc = cards[oi]; telItems.push({ detail: { ...dc, on: dc.onPlot, cells: dc.cells.map((x, h) => ({ ...x, on: () => pinC(dc.id, h) })) } }); } } });
+
+    // Gli altri fattori (contratto): pesano accanto al verdetto senza cambiarlo. Ordine del backend: da «non adatto» a «buono», a pari parola chi comincia prima.
+    let pesa = { when: N0.when, verdict: null, rows: [], empty: '', more: null, altri: null, title: 'Gli altri fattori', lab: '' };
+    if (X.senzaBuio) { pesa.when = 'domenica 21 giugno'; pesa.empty = 'Il cielo non arriva al buio: le ore utili si contano col Sole sotto l\u0027orizzonte.'; }
+    else if (N0.m && !N0.tend) {
+      const FX = cards.filter(c => c.id !== 'nuvole').map(c => c.ok ? { k: c.k, id: c.id, rank: c.A.rank, first: c.A.first, es: c.A.s, pillT: c.A.word, when: c.A.when, t: c.A.when + (c.vS ? ' · ' + c.vS : ''), plot: c.canPlot }
+        : { k: c.k, id: c.id, rank: -1, first: 99, es: c.es, pillT: c.av.short, when: '', t: c.av.title, plot: false });
+      if (N0.m.raffiche) { const A = anal('raffiche', N0.m.raffiche.d); FX.push({ k: 'Raffiche', id: null, rank: A.rank, first: A.first, es: A.s, pillT: A.word, when: A.when, t: A.when, plot: false }); }
+      if (!SUN && N0.rip) FX.push({ k: 'Luna', id: null, rank: N0.rip.L, first: N0.rip.su[0], es: Math.min(1, N0.rip.L), pillT: N0.rip.pill, when: '', t: N0.rip.testo, luna: true, plot: false });
+      FX.sort((a, b) => (b.rank - a.rank) || (a.first - b.first));
+      const rows = FX.map(f => ({ n: f.k, es: f.es, pillT: f.pillT, t: f.t, on: f.plot ? () => addM(f.id) : null, cur: f.plot ? 'pointer' : 'default', title: f.plot ? 'Metti sul grafico' : '' }));
+      const altri = !!this.state.altri; pesa.rows = rows.slice(0, 2); pesa.more = altri ? rows.slice(2) : null;
+      pesa.altri = rows.length > 2 ? { l: 'Altri ' + (rows.length - 2) + ' fattori', exp: altri ? 'true' : 'false', chev: altri ? '▴' : '▾', on: e => { e.preventDefault(); set({ altri: !altri }); } } : null;
+      pesa.lab = 'pesano accanto al verdetto, senza cambiarlo · ' + rows.length + ' fattori, i più gravi prima';
+      // Accanto al semaforo: solo cio' che e' incerto o non adatto, con la parola e le ore
+      // Il racconto della notte: dal tramonto all'alba, un evento per riga (deciso da Marco, v13; il verdetto dalle nuvole)
+      if (!SUN) {
+          const E = [], cap = s => s[0].toUpperCase() + s.slice(1), iH = h => h * 4;
+          const add = (at, n, s, k, x) => E.push({ at: Math.max(0, Math.min(qN - 1, at)), n, s: s || '', k, ...(x || {}) });
+          const [b0, b1] = N0.buio.split('\u2013');
+          add(iDi('19:11'), 'Tramonto', '', 'sole', { t: '19:11', p: 0 }); add(iDi(b0), 'Inizia il buio', 'buio astronomico fino alle ' + b1, 'cielo', { t: b0, p: 0 });
+          add(iDi(b1), 'Finisce il buio', '', 'cielo', { t: b1, p: 0 }); add(iDi('07:25'), 'Alba', '', 'sole', { t: '07:25', p: 0 });
+          const lv = SO.livello, story = [];
+        for (let h = WA; h <= WB; h++) { const q = N0.q && N0.q[h * 4], last = story[story.length - 1];
+          if (!q) { if (last && last.nul) last.b = h + 1; else story.push({ a: h, b: h + 1, nul: true }); continue; }
+          const L = lv(q.v), why = L === 0 ? '' : q.why;
+          if (last && !last.nul && last.L === L && last.why === why) { last.b = h + 1; if (q.v < last.mv) { last.mv = q.v; last.mw = q.why; } } else story.push({ a: h, b: h + 1, L, why, mv: q.v, mw: q.why }); }
+        story.forEach(r => { if (r.nul) add(iH(r.a), 'Nuvole non disponibili', 'copertura incompleta fino alle ' + hh(r.b), 'esito', { L: 'ignoto', p: 1 });
+          else add(iH(r.a), ['Diventa buona', 'Diventa incerta', 'Diventa non adatta'][r.L], r.L === 0 ? (r.mv >= 85 ? 'nessun limite' : 'qualit\u00e0 da ' + Math.round(r.mv) + ' \u00b7 il primo limite \u00e8 ' + r.mw) : 'limita ' + r.why + ' \u00b7 qualit\u00e0 fino a ' + Math.round(r.mv), 'esito', { L: r.L, p: 1 }); });
+        const nd = N0.m.nuvole.d; let pl = null; for (let h = WA; h <= WB; h++) { const x = nd[h]; if (x == null) continue; const L = SO.esito.nuvole(x);
+          if (pl != null && L !== pl) add(iH(h), L > pl ? 'Nuvole oltre il ' + (L === 2 ? 50 : 25) + '%' : 'Nuvole sotto il ' + (pl === 2 ? 50 : 25) + '%', 'al ' + Math.round(x) + '%', 'misura'); pl = L; }
+        const pd = N0.m.pioggia && N0.m.pioggia.d; if (pd) { let on = false; for (let h = 0; h < 14; h++) { const r = pd[h] > 0; if (r && !on) add(iH(h), 'Inizia la pioggia', withU('pioggia', pd[h]) + ' nell\u0027ora', 'misura'); if (!r && on) add(iH(h), 'Finisce la pioggia', '', 'misura'); on = r; } }
+          const cd = N0.m.condensa && N0.m.condensa.d; if (cd) { const h = cd.findIndex(x => x != null && x < 3); if (h >= 0 && h <= WB) add(iH(h), 'Condensa sotto 3 \u00b0C', 'temperatura meno punto di rugiada ' + withU('condensa', cd[h]), 'misura'); }
+          const rf = N0.m.raffiche && N0.m.raffiche.d; if (rf) { let g = WA; for (let h = WA; h <= WB; h++) if (rf[h] != null && rf[h] > rf[g]) g = h; add(iH(g), 'Raffiche fino a ' + withU('raffiche', rf[g]), 'vento a 10 m', 'misura'); }
+          const sd = !(X.seeKey || X.seeBad || X.seeNew) && N0.m.seeing && !N0.m.seeing.nubi && N0.m.seeing.d; if (sd) { let bk = -1, bv = 99; for (let h = WA; h <= WB; h++) if (sd[h] != null && sd[h] < bv) { bv = sd[h]; bk = h; } if (bk >= 0) add(iH(bk), 'Seeing migliore', withU('seeing', bv) + ' \u00b7 Meteoblue', 'misura'); }
+          const ma = qalt(N0.moonTr, 24 - ni * 1.5); for (let i = 1; i < qN; i++) { if (ma[i - 1] < 0 && ma[i] >= 0) add(i, 'Sorge la Luna', 'illuminata ' + AL.al(N0.luna[0]) + N0.luna[0] + '%', 'luna'); if (ma[i - 1] >= 0 && ma[i] < 0) add(i, 'Tramonta la Luna', '', 'luna'); }
+          // La Luna per la banda larga (contratto): dove comincia e finisce a pesare
+          const LR = N0.rip; if (LR && LR.L > 0 && !LR.tutta) { const g = SO.gradi(SO.sogliaRipresa.alt), dopo = LR.L === 2 ? 'banda stretta consigliata' : 'banda larga al limite', libera = LR.L === 2 ? 'banda larga' : 'senza Luna';
+            if (LR.su[0] > WA) add(iH(LR.su[0]), 'La Luna sale sopra ' + g, 'da qui ' + dopo, 'ripresa'); if (LR.su[1] <= WB) add(iH(LR.su[1]), 'La Luna scende sotto ' + g, 'da qui ' + libera, 'ripresa'); }
+          // Pianeti: calcolati, simulati
+          [['Saturno', 1.25, 3], ['Giove', 8.9, 18], ['Marte', 9.3, 19], ['Venere', 14.0, -17]].forEach(([nm, tr, dec]) => { const a = qalt(tr, dec); let mx = -99, mk = -1;
+            for (let i = 1; i < qN; i++) { if (a[i - 1] < 0 && a[i] >= 0) add(i, 'Sorge ' + nm, '', 'pianeta'); if (a[i - 1] >= 0 && a[i] < 0) add(i, 'Tramonta ' + nm, '', 'pianeta'); if (a[i] > mx) { mx = a[i]; mk = i; } }
+            if (mk > 0 && mk < qN - 1 && mx >= +SO.imp.get('planner.altS')) add(mk, nm + ' culmina', 'a ' + Math.round(mx) + '\u00b0', 'pianeta'); });
+          const PR = { sole: 0, cielo: 0, esito: 1 };
+          // Dal tramonto all'alba, in ordine d'ora al minuto
+          const mi = e => { const [h, m] = (e.t || fq(e.at)).split(':').map(Number); return ((h < 12 ? h + 24 : h) - 18) * 60 + m; }, m0 = mi({ t: '19:11' }), m1 = mi({ t: '07:25' });
+          pesa.ev = E.filter(e => mi(e) >= m0 && mi(e) <= m1).sort((a, b) => (mi(a) - mi(b)) || ((PR[a.k] ?? 2) - (PR[b.k] ?? 2))).map(e => { const vs = e.k === 'esito', ig = e.L === 'ignoto', ring = !vs && e.k !== 'sole' && e.k !== 'luna';
+            return { t: e.t || fq(e.at), n: e.n, s: e.s, segno: vs ? (ig ? '?' : signs[e.L]) : '', d: vs ? '18px' : '10px', mt: vs ? '0' : '4px',
+              dBg: vs ? (ig ? t.card2 : t.pills[e.L][1]) : e.k === 'sole' ? AL.SOLE : e.k === 'luna' ? AL.LUNA.line : t.card, dFg: ig ? t.text : t.card, dSh: ring ? 'inset 0 0 0 1.5px ' + t.muted : ig ? 'inset 0 0 0 1.5px ' + t.line : 'none',
+              fw: vs ? 600 : 500, bg: hov === e.at ? t.card2 : 'transparent', on: () => set({ hover: e.at }), aria: (e.t || fq(e.at)) + ', ' + e.n + (e.s ? ', ' + e.s : '') }; });
+          pesa.evLab = pesa.ev.length + ' eventi, in ordine d\u0027ora \u00b7 toccane uno per portarci il grafico';
+          const evAp = !!this.state.evAp, EK = E.filter(e => mi(e) >= m0 && mi(e) <= m1).sort((a, b) => (mi(a) - mi(b)) || ((PR[a.k] ?? 2) - (PR[b.k] ?? 2))).map(e => e.k), evH = pesa.ev.filter((x, i) => ['cielo', 'esito', 'luna', 'ripresa'].includes(EK[i]));
+          pesa.evT = evAp ? pesa.ev : evH; pesa.evLabT = evAp ? pesa.evLab : 'I momenti che contano · ' + evH.length + ' di ' + pesa.ev.length;
+          pesa.evX = { exp: evAp ? 'true' : 'false', l: evAp ? 'Solo i momenti che contano' : 'Tutta la notte, ora per ora · ' + pesa.ev.length, chev: evAp ? '▴' : '▾', on: e => { e.preventDefault(); set({ evAp: !evAp }); } };
+        }
+    } else if (N0.tend) {
+      pesa.rows = SUN ? [{ n: 'Sole', pill: N0.sun[2], es: 'neutra', pillT: N0.sun[2], t: 'sorge alle ' + N0.sun[0] + ' · tramonta alle ' + N0.sun[1], on: null, cur: 'default', title: '' }]
+        : N0.rip ? [{ n: 'Luna', es: Math.min(1, N0.rip.L), pillT: N0.rip.pill, t: N0.rip.testo, on: null, cur: 'default', title: '' }] : [];
+      pesa.empty = SUN ? 'Per i giorni di tendenza non ci sono le misure ora per ora: si vedono da tre giorni prima.' : 'Per le notti di tendenza non ci sono le misure ora per ora: si vedono da tre giorni prima.';
+    }
+    if (pesa.labT == null) pesa.labT = pesa.lab;
+    const fixP = r => ({ ...r, es: r.es ?? 'neutra', pillT: r.pillT ?? r.pill }); pesa.rows = pesa.rows.map(fixP); if (pesa.more) pesa.more = pesa.more.map(fixP);
+    const facts = X.senzaBuio ? [{ k: 'Sole sotto l\u0027orizzonte', v: '22:44–03:56', s: 'mai oltre il nautico' }, { k: 'Ore utili', v: '5 ore', s: 'dalle 23:00 alle 04:00' }]
+      : SUN ? [{ k: 'Sole sopra l\u0027orizzonte', v: N0.sun[0] + '–' + N0.sun[1], s: N0.sun[2] }]
+      : pesa.ev ? []
+      : [{ k: 'Buio', v: N0.buio, s: '9 ore' }].concat(N0.qm != null ? [{ k: 'Qualità della notte', v: Math.round(N0.qm) + '/100', s: 'media nel buio · decide il verdetto' }] : []);
+
+    // Protagonista
+    let hv;
+    if (X.soleSu) hv = { name: 'Notte di sabato 20 giugno · a Capo Nord', value: 'Nessun buio', label: '', pill: '', sub: 'Il Sole non tramonta: nessuna ora di buio.', chart: false, fs: '44px', fsTel: '32px' };
+    else if (X.senzaBuio) hv = { name: 'Notte di domenica 21 giugno · a Oslo', value: '5 ore', label: 'ore utili col Sole sotto l\u0027orizzonte', pill: '✓ buona', pBg: t.pills[0][0], pFg: t.pills[0][1], sub: 'dalle 23:00 alle 04:00, 5 ore · 3 modelli d\u0027accordo su 4', chart: true, fs: '64px', fsTel: '48px' };
+    else { const s = N0.s, pb = s === 'ignoto' ? null : t.pills[s]; // v51: esiti coi colori fissi, anche «buona»
+      hv = { name: N0.name, value: N0.value, label: SUN ? (N0.tend ? 'Sole sopra l\u0027orizzonte' : 'ore utili') : N0.tend ? 'buio' : s === 'ignoto' ? '' : 'ore utili', pill: s === 'ignoto' ? '' : signs[s] + ' ' + words[s], pBg: pb && pb[0], pFg: pb && pb[1],
+        sub: N0.sub + (N0.senzaT ? ' · ' + N0.senzaT : '') + (N0.tend ? (SUN ? '. Dal quarto giorno la previsione è una tendenza, meno affidabile e senza dettaglio orario.' : '. Dalla quarta notte la previsione è una tendenza, meno affidabile e senza dettaglio orario.') : ''), chart: true,
+        fs: s === 'ignoto' ? '52px' : '64px', fsTel: s === 'ignoto' ? '36px' : '48px' }; }
+    const hvVal = ce('span', { key: 'hv-' + ni + '-' + objK + '-' + stato, style: { display: 'inline-block', animation: 'alFadeUp .45s ease-out both' } }, hv.value);
+    hv.top = hv.label ? hv.label.charAt(0).toUpperCase() + hv.label.slice(1) + ' · ' + hv.name.charAt(0).toLowerCase() + hv.name.slice(1) : hv.name;
+
+    // Striscia
+    const tiles = special ? [] : LIST.map((n, i) => { const on = i === ni, pb = pillOf(n.s);
+      const nd = n.m ? n.m.nuvole.d : null;
+      return { day: n.day, tend: !!n.tend, esito: n.s, pillT: n.s === 'ignoto' ? 'non disponibile' : words[n.s], rip: n.rip ? { tipo: n.rip.tipo, testo: n.rip.breve } : null, tag: n.tag || '', tagS: n.tend ? 'tendenza' : (n.tag || ''), sel: on, on: () => set({ night: i, hover: null, open: null, cardH: null, altri: false }),
+        bg: on ? t.text : n.tend ? 'transparent' : t.card2, fg: on ? t.card : t.text, mu: on ? rgba(t.inchiostro, 0.72) : t.muted, ring: 'transparent', dash: n.tend && !on ? t.line : 'transparent',
+        pill: n.s === 'ignoto' ? '? non disponibile' : signs[n.s] + ' ' + words[n.s], pBg: pb[0], pFg: pb[1],
+        hours: n.tend ? (SUN ? '11 ore di Sole' : '9 ore di buio') : n.value === 'Nessuna ora' ? 'nessuna ora' : n.s === 'ignoto' ? '?' : n.value, range: n.range,
+        cells: nd ? nd.map((x, h) => ({ h: x == null ? '100%' : (20 + x * 0.8) + '%', bg: x == null ? hatch(on ? t.card : t.sparkOff) : !inW(h) ? (on ? rgba(t.inchiostro, 0.25) : t.sparkOff) : ESC0[MS.nuvole.q(x)] })) : [] }; });
+    const stripL = SUN ? 'i sette giorni' : 'le sette notti';
+
+    // Grafico del cielo
+    const N = 57, PADL = tel ? 28 : 36, PADR = tel ? 8 : 12, CH = tel ? 180 : 250;
+    const t0 = SUN ? 6 : 18;
+    const fmtT = i => { const m = (t0 * 60 + i * 15) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+    const lerp = (arr, i) => { const a = Math.min(Math.floor(i / 4), 13), b = Math.min(a + 1, 13), f = (i % 4) / 4; if (arr[a] == null) return null; if (f === 0) return arr[a]; if (arr[b] == null) return null; return arr[a] * (1 - f) + arr[b] * f; };
+    const Qv = arr => Array.from({ length: N }, (_, i) => lerp(arr, i));
+    const Xx = i => i / (N - 1) * 1000, yP = v => 195 - v / 100 * 185;
+    const pathQ = (vals, yf) => { let d = '', on = false; vals.forEach((v, i) => { if (v == null) { on = false; return; } d += (on ? 'L' : 'M') + Xx(i).toFixed(1) + ' ' + yf(v).toFixed(1) + ' '; on = true; }); return d; };
+    const areaQ = (vals, yf) => { let d = '', seg = []; const flush = () => { if (seg.length > 1) d += 'M' + seg[0][0] + ' 195 ' + seg.map(p => 'L' + p[0] + ' ' + p[1]).join(' ') + ' L' + seg[seg.length - 1][0] + ' 195 Z '; seg = []; }; vals.forEach((v, i) => { if (v == null) { flush(); return; } seg.push([Xx(i).toFixed(1), yf(v).toFixed(1)]); }); flush(); return d; };
+    const lat = 45.85 * Math.PI / 180, R = Math.PI / 180;
+    const altA = (tr, dec) => Array.from({ length: N }, (_, i) => { let x = t0 + i * 0.25 - tr; x = ((x + 36) % 24) - 12; const Hh = x * 15.041 * R, d = dec * R; return Math.asin(Math.sin(lat) * Math.sin(d) + Math.cos(lat) * Math.cos(d) * Math.cos(Hh)) / R; });
+    const body = SUN ? { n: 'Sole', c: AL.SOLE, alt: altA(13.3, -3.3 - ni * 0.4), dash: '6 4', w: 1.75 } : null;
+    const BANDS = SUN ? { edges: [0, 66, 102, 942, 978, 1000], lvl: [0, 2, 4, 2, 0], TW: [{ x: 66, l: '06:56' }, { x: 102, l: N0.sun[0], strong: 1 }, { x: 942, l: N0.sun[1], strong: 1 }, { x: 978, l: '19:41' }],
+        key: ['crepuscolo nautico', 'civile', 'giorno · Sole ' + N0.sun[0] + '–' + N0.sun[1]], keyL: [0, 2, 4] }
+      : X.senzaBuio ? { edges: [0, 338, 427, 620, 709, 1000], lvl: [0, 1, 2, 1, 0], TW: [{ x: 338, l: '22:44', strong: 1 }, { x: 427, l: '23:59' }, { x: 620, l: '02:41' }, { x: 709, l: '03:56', strong: 1 }],
+        key: ['giorno · tramonto 22:44', 'crepuscolo civile', 'nautico, mai buio', 'alba 03:56'], keyL: [0, 1, 2, 0] }
+      : { edges: [0, 84.5, 120.2, 160.7, 200, 842.9, 882.1, 922.6, 958.3, 1000], lvl: [0, 1, 2, 3, 4, 3, 2, 1, 0], TW: [{ x: 84.5, l: '19:11' }, { x: 120.2, l: '19:41' }, { x: 160.7, l: '20:15' }, { x: 200, l: '20:48', strong: 1 }, { x: 842.9, l: '05:48', strong: 1 }, { x: 882.1, l: '06:21' }, { x: 922.6, l: '06:55' }, { x: 958.3, l: '07:25' }],
+        key: ['giorno · tramonto 19:11', 'crepuscolo civile', 'nautico', 'astronomico', 'buio ' + N0.buio, 'alba 07:25'], keyL: [0, 1, 2, 3, 4, 0] };
+    const bandKey = BANDS.key.map((n, k) => ({ n, bg: rgba(t.band.c, t.band.o[BANDS.keyL[k]]) }));
+    const TWv = tel ? BANDS.TW.filter(b => b.strong) : BANDS.TW;
+    const LAY = N0.layers || (X.senzaBuio ? NIGHTS[0].layers : null);
+    const LC = [{ k: 'a', n: 'Nuvole alte', o: 0.10, so: 0.45 }, { k: 'm', n: 'medie', o: 0.17, so: 0.6 }, { k: 'b', n: 'basse', o: 0.28, so: 0.9 }];
+    const LQ = LAY ? { a: Qv(LAY.a), m: Qv(LAY.m), b: Qv(LAY.b), u: Qv(LAY.u) } : null;
+    // Ogni misura: valori, se usa la scala in % (umidità, probabilità di pioggia) o la sua forma, e l'esito
+    const SER = metrics.map(id => { if (id === 'umidita') return { id, n: 'Umidità', vals: LQ.u, raw: LAY.u, pct: true, lv: () => 0, fmt: v => Math.round(v) + '%', c: colOf[id] };
+      const raw = N0.m[id].d; let vv = raw.filter(x => x != null), mn = Math.min(...vv), mx = Math.max(...vv); if (id === 'pioggia' || id === 'aerosol') mn = 0; if (id === 'visibilita') { mn = 0; mx = 20; } if (mx - mn < 1e-9) { mn -= 1; mx += 1; }
+      return { id, n: MS[id].k, vals: Qv(raw), raw, pct: false, mn, mx, lv: x => lvOf(id, x), fmt: v => withU(id, v), c: colOf[id] }; });
+    const QUAL = N0.q && !X.senzaBuio && !N0.tend ? N0.q : null;
+    const qName = SUN ? 'Qualità del giorno' : 'Qualità della notte';
+    // La scala di ogni misura arriva col backend (axis_*): la visibilita' da 0 a 20 km con la radice (axis_curve: sqrt)
+    const ySer = s => v => s.pct ? yP(v) : s.id === 'visibilita' ? 185 - Math.sqrt(Math.max(0, Math.min(v, 20)) / 20) * 160 : 185 - (v - s.mn) / (s.mx - s.mn) * 160;
+    const idx = hov ?? (SUN ? 16 : 20), key = ni + '-' + modo + '-' + stato + '-' + objK;
+    // Animazioni: le nubi salgono dal fondo, Sole/Luna e misure si disegnano da sinistra (0,8 s), i segni compaiono alla fine
+    // (niente clipPath né transform-box: la pagina deve lasciarsi catturare)
+    const DRAW = d => ({ pathLength: 1, strokeDasharray: 1, style: { animation: 'alDraw .8s cubic-bezier(.3,.6,.2,1) ' + (d || 0) + 's both' } });
+    const wipe = (gk, delay, kids) => ce('g', { key: gk, style: { animation: 'alFade .6s ease-out ' + delay + 's both' } }, kids);
+    const FADE = d => ({ style: { animation: 'alFade .5s ease-out ' + (d || 0) + 's both' } });
+    const els = [], over = [];
+    BANDS.lvl.forEach((l, k) => els.push(ce('rect', { key: 'b' + k, x: BANDS.edges[k], y: 0, width: BANDS.edges[k + 1] - BANDS.edges[k], height: 200, fill: t.band.c, fillOpacity: t.band.o[l] })));
+    BANDS.TW.forEach(b => els.push(ce('line', { key: 't' + b.x, x1: b.x, x2: b.x, y1: 0, y2: 200, stroke: t.hMu, strokeOpacity: 0.45, vectorEffect: 'non-scaling-stroke', strokeDasharray: '1 3' })));
+    [10, 102.5, 195].forEach(y => els.push(ce('line', { key: 'g' + y, x1: 0, x2: 1000, y1: y, y2: y, stroke: t.hMu, strokeOpacity: 0.25, vectorEffect: 'non-scaling-stroke', strokeDasharray: '2 4' })));
+    if (body) els.push(wipe('body-' + key, 0.1, ce('path', { d: pathQ(body.alt.map(a => a < 0 ? null : a / 90 * 100), yP), fill: 'none', stroke: body.c, strokeWidth: body.w, strokeDasharray: body.dash || undefined, vectorEffect: 'non-scaling-stroke', strokeLinecap: 'round' })));
+    if (LQ && !N0.tend) {
+      LC.forEach((c, k) => els.push(ce('g', { key: 'lg' + c.k + key, style: { animation: 'alFade .6s ease-out ' + (k * 0.1) + 's both' } },
+        ce('path', { d: areaQ(LQ[c.k], yP), fill: t.hFg, fillOpacity: c.o }),
+        ce('path', { d: pathQ(LQ[c.k], yP), fill: 'none', stroke: t.hFg, strokeOpacity: c.so, strokeWidth: c.k === 'b' ? 1.75 : 1.25, vectorEffect: 'non-scaling-stroke', strokeLinejoin: 'round' }))));
+      const i0 = LQ.b.findIndex(v => v == null);
+      if (i0 >= 0) { els.push(ce('rect', { key: 'miss', x: Xx(i0), y: 0, width: 1000 - Xx(i0), height: 195, fill: 'url(#hz-' + modo + ')', ...FADE(.5) }));
+        over.push(ce('span', { key: 'missl', style: { position: 'absolute', left: (i0 / (N - 1) * 100 + 1) + '%', top: 8, fontSize: 11, color: t.hFg, background: t.hBg, borderRadius: 8, padding: '2px 6px' } }, 'nuvole mancanti dalle ' + hh(LAY.b.findIndex(v => v == null)))); }
+    }
+    if (QUAL) { const qv = QUAL.map(q => q ? q.v : null), gid = 'qg-' + key.replace(/[^a-z0-9-]/gi, '');
+      els.push(ce('g', { key: 'q' + key }, ce('defs', null, ce('linearGradient', { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 }, ce('stop', { offset: '0%', stopColor: t.hBar, stopOpacity: 0.24 }), ce('stop', { offset: '100%', stopColor: t.hBar, stopOpacity: 0 }))),
+        ce('path', { d: pathQ(qv, yP), fill: 'none', stroke: t.hBar, strokeWidth: 6, strokeOpacity: 0.14, vectorEffect: 'non-scaling-stroke', strokeLinecap: 'round', style: { animation: 'alFade .6s ease-out .4s both' } }),
+        ce('path', { d: pathQ(qv, yP), fill: 'none', stroke: t.hBar, strokeWidth: 1.75, vectorEffect: 'non-scaling-stroke', strokeLinecap: 'round', strokeLinejoin: 'round', ...DRAW(0.1) }))); }
+    // Le misure accese: l'umidita' in % a sinistra; a destra una misura col colore del giudizio e la sua parola dove cambia
+    const wIn = i => i >= WA * 4 && i < (WB + 1) * 4, LVC = [ESC0[0], ESC0[1], ESC0[2], t.hMu], LVI = L => L === 'neutra' ? 3 : L;
+    SER.forEach(sr => { const yf = ySer(sr), segs = [[], [], [], []], off = [], gs = [], sk = 's-' + sr.id + '-' + ni + '-' + objK + '-' + modo;
+      for (let i = 0; i < N - 1; i++) { const a = sr.vals[i], b = sr.vals[i + 1]; if (a == null || b == null) continue; const sg = 'M' + Xx(i).toFixed(1) + ' ' + yf(a).toFixed(1) + ' L' + Xx(i + 1).toFixed(1) + ' ' + yf(b).toFixed(1) + ' ';
+        if (!wIn(i)) off.push(sg); else segs[LVI(sr.lv((a + b) / 2))].push(sg); }
+      const col = L => sr.pct ? sr.c : LVC[L];
+      gs.push(ce('path', { key: 'so' + sr.id, d: off.join(''), fill: 'none', stroke: sr.pct ? sr.c : t.hMu, strokeOpacity: 0.45, strokeWidth: 1.25, vectorEffect: 'non-scaling-stroke', strokeLinecap: 'round' }));
+      segs.forEach((sg, L) => { if (!sg.length) return; gs.push(ce('path', { key: 'sl' + sr.id + L, d: sg.join(''), fill: 'none', stroke: col(L), strokeWidth: sr.pct ? 1.75 : 2.5, ...DRAW(0), vectorEffect: 'non-scaling-stroke', strokeLinecap: 'round' })); });
+      if (!sr.pct) { let prev = null; for (let h = WA; h <= WB; h++) { const x = sr.raw[h]; if (x == null) { prev = null; continue; } const L = sr.lv(x); if (L !== prev) { const pc = L === 'neutra' ? [t.card2, t.text] : t.pills[L];
+          over.push(ce('span', { key: 'w' + sk + h, style: { position: 'absolute', left: (h * 4 / (N - 1) * 100) + '%', top: (yf(x) / 2) + '%', transform: 'translate(-10%,-140%)', background: pc[0], color: pc[1], borderRadius: 999, padding: '1px 7px', fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', pointerEvents: 'none', boxShadow: '0 0 0 2px ' + t.hBg, animation: 'alFadeUp .3s ease-out ' + (0.15 + h / 14 * 0.8).toFixed(2) + 's both' } }, signOf(L) + ' ' + wordOf(sr.id, L))); } prev = L; }
+        [[sr.mx, 12.5], [sr.mn, 92.5]].forEach(([v, top]) => over.push(ce('span', { key: 'ax' + sk + top, style: { position: 'absolute', right: 0, top: top + '%', transform: 'translate(calc(100% + 4px),-50%)', fontSize: 11, color: t.hMu, whiteSpace: 'nowrap', pointerEvents: 'none' } }, withU(sr.id, v)))); }
+      els.push(wipe(sk, 0, gs)); });
+    if (N0.tend) { els.push(wipe('tl-' + key, 0.1, ce('line', { x1: SUN ? 102 : 200, x2: SUN ? 942 : 843, y1: yP(N0.cloud), y2: yP(N0.cloud), stroke: t.hFg, strokeWidth: 1.75, strokeDasharray: '6 5', vectorEffect: 'non-scaling-stroke' })));
+      over.push(ce('span', { key: 'tlab' + key, style: { animation: 'alFade .4s ease-out .6s both', position: 'absolute', left: SUN ? '12%' : '21%', top: 'calc(' + (yP(N0.cloud) / 2) + '% - 24px)', fontSize: 12, color: t.hFg } }, 'nuvole al ' + N0.cloud + '% ' + (SUN ? 'col Sole alto' : 'nel buio') + ' · senza dettaglio orario')); }
+    const svg = ce('svg', { key: key, viewBox: '0 0 1000 200', preserveAspectRatio: 'none', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'visible' } },
+      ce('defs', null, ce('pattern', { id: 'hz-' + modo, width: 6, height: 6, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, ce('line', { x1: 0, y1: 0, x2: 0, y2: 6, stroke: t.hMu, strokeOpacity: 0.5, strokeWidth: 1.5 }))), els);
+    const interactive = !!LQ && !N0.tend;
+    const left = idx / (N - 1) * 100, flip = idx > N * 0.6;
+    const dotOf = (v, yf, c, k) => v == null ? null : ce('span', { key: k, style: { position: 'absolute', left: left + '%', top: (yf(v) / 2) + '%', width: 0, height: 0, pointerEvents: 'none', zIndex: 2, transition: 'left .16s ease-out, top .16s ease-out' } },
+      ce('span', { style: { position: 'absolute', left: -11, top: -11, width: 22, height: 22, borderRadius: '50%', background: c, opacity: 0.22 } }), ce('span', { style: { position: 'absolute', left: -5.5, top: -5.5, width: 11, height: 11, borderRadius: '50%', background: 'var(--punto-chiaro)', boxShadow: '0 0 0 2px ' + c } }));
+    const tipRows = interactive ? [['Nuvole basse', LQ.b[idx], t.hFg], ['medie', LQ.m[idx], rgba(t.hFg, 0.6)], ['alte', LQ.a[idx], rgba(t.hFg, 0.35)]].map(([n, v, c]) => ({ n, c, v: v == null ? 'Non disponibile' : Math.round(v) + '%' })) : [];
+    if (interactive && QUAL) { const q = QUAL[idx]; tipRows.unshift({ n: 'Qualità', c: t.hBar, v: q == null ? 'Non disponibile' : Math.round(q.v) + (q.v >= 99.5 ? ' · nessun limite' : ' · limita ' + q.why) + (q.v > 0 && (X.seeKey || X.seeBad || X.seeNew || X.seePart) && SO.senzaRiga(q.senza) ? ' · ' + SO.senzaRiga(q.senza) : '') }); }
+    if (interactive && body) tipRows.push({ n: body.n, c: body.c, v: (body.alt[idx] < 0 ? 'sotto l\u0027orizzonte' : Math.round(body.alt[idx]) + '°') + (body.n === 'Luna' && N0.luna ? ' · illuminata ' + AL.al(N0.luna[0]) + N0.luna[0] + '%' + (N0.rip && idx >= N0.rip.i0 && idx < N0.rip.i1 ? ' · ' + SO.nomiRipresa[SO.ripresa(N0.rip.fase, body.alt[idx])] : '') : '') });
+    SER.forEach(sr => { const v = sr.vals[idx]; tipRows.push({ n: sr.n, c: sr.pct ? sr.c : t.hFg, v: v == null ? 'Non disponibile' : sr.fmt(v) + (sr.pct ? '' : ' · ' + wordOf(sr.id, sr.lv(v))) }); });
+    if (interactive && !SUN) { const hI = Math.min(13, Math.floor(idx / 4)), x = LAY.b && N0.m.nuvole.d[hI]; tipRows.push({ n: 'Cielo', c: t.hBar, v: !inW(hI) ? 'fuori dal buio' : x == null ? 'Non disponibile' : N0.q && N0.q[hI * 4] && N0.q[hI * 4].v >= GOOD ? 'ora utile' : 'ora non utile' }); }
+    const tip = ce('div', { className: 'al-riquadro al-riquadro--lista', role: 'tooltip', style: { position: 'absolute', top: tel ? -10 : 4, left: tel ? 0 : left + '%', transform: tel ? 'translateY(-100%)' : flip ? 'translateX(calc(-100% - 14px))' : 'translateX(14px)', zIndex: 3, animation: 'alFade .15s ease-out both', transition: tel ? 'none' : 'left .16s ease-out' } },
+      ce('b', { style: { fontWeight: 600, fontSize: 13 } }, 'alle ' + fmtT(idx)),
+      tipRows.map((r, k) => ce('span', { key: k, style: { display: 'flex', alignItems: 'center', gap: 8 } }, ce('i', { style: { width: 8, height: 8, borderRadius: '50%', background: r.c } }), ce('span', { style: { flex: 1 } }, r.n), ce('b', { style: { fontWeight: 600, marginLeft: 12 } }, r.v))));
+    const onMove = ev => { const r = ev.currentTarget.getBoundingClientRect(); const cx = ev.touches ? ev.touches[0].clientX : ev.clientX; const i = Math.max(0, Math.min(N - 1, Math.round((cx - r.left) / r.width * (N - 1)))); if (i !== this.state.hover) set({ hover: i }); };
+    const onKey = ev => { const st = ev.shiftKey ? 4 : 1; let i = this.state.hover ?? idx;
+      if (ev.key === 'ArrowRight' || ev.key === 'ArrowUp') i += st; else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowDown') i -= st; else if (ev.key === 'Home') i = 0; else if (ev.key === 'End') i = N - 1; else if (ev.key === 'Escape') { set({ hover: null }); return; } else return;
+      ev.preventDefault(); set({ hover: Math.max(0, Math.min(N - 1, i)) }); };
+    const valText = 'alle ' + fmtT(idx) + ': ' + tipRows.map(r => r.n + ' ' + r.v).join(', ');
+    const twLabels = ce('div', { style: { position: 'absolute', left: PADL, right: PADR, top: 0, height: 34, pointerEvents: 'none' } }, TWv.map((b, k) => ce('span', { key: k, style: { position: 'absolute', left: b.x / 10 + '%', top: k % 2 ? 17 : 0, transform: 'translateX(-50%)', fontSize: 11, color: t.hMu, whiteSpace: 'nowrap', fontWeight: b.strong ? 600 : 400 } }, b.l)));
+    // Variante a fasce: una riga per misura sotto il cielo, ora per ora, col colore e il segno dell'esito
+    // Le fasce usano i colori fissi degli esiti (verde, giallo, rosso), non l'accento: ambra e giallo si confonderebbero
+    const lanesEl = null;
+    const chart = ce('div', { style: { position: 'relative', paddingTop: 34 } }, twLabels, ce('div', { style: { position: 'relative', height: CH } },
+      ['100%', '50%', '0'].map((l, k) => ce('span', { key: l, style: { position: 'absolute', left: 0, top: [5, 51.25, 97.5][k] + '%', transform: 'translateY(-50%)', fontSize: 11, color: t.hMu } }, l)),
+      ce('div', { onMouseMove: interactive ? onMove : undefined, onMouseLeave: interactive && !tel ? () => set({ hover: null }) : undefined, onTouchStart: interactive ? onMove : undefined, onTouchMove: interactive ? onMove : undefined, onKeyDown: interactive ? onKey : undefined,
+        onFocus: interactive ? () => set({ cf: true, hover: this.state.hover ?? idx }) : undefined, onBlur: () => set({ cf: false }), tabIndex: interactive ? 0 : -1, role: interactive ? 'slider' : 'img',
+        'aria-label': (SUN ? 'Il cielo, dalle 06 alle 20. ' : 'Il cielo, dal tramonto all\u0027alba. ') + hv.value + ' ' + (hv.label || '') + '. Frecce per spostarsi di 15 minuti, Maiuscolo più frecce di un\u0027ora.', 'aria-valuemin': 0, 'aria-valuemax': N - 1, 'aria-valuenow': idx, 'aria-valuetext': valText,
+        style: { position: 'absolute', left: PADL, right: PADR, top: 0, bottom: 0, cursor: interactive ? 'crosshair' : 'default', touchAction: 'pan-y', outline: this.state.cf ? '2px solid ' + t.hFg : 'none', outlineOffset: 6, borderRadius: 8 } }, svg, over,
+        interactive && hov != null ? ce('span', { style: { position: 'absolute', left: left + '%', top: 0, bottom: 0, borderLeft: '1.5px dashed ' + t.hMu, pointerEvents: 'none', transition: 'left .16s ease-out' } }) : null,
+        interactive && hov != null ? [QUAL && QUAL[idx] ? dotOf(QUAL[idx].v, yP, t.hBar, 'dq') : null, QUAL && QUAL[idx] ? dotOf(QUAL[idx].v, yP, t.hBar, 'dq') : null, ...SER.map(sr => dotOf(sr.vals[idx], ySer(sr), sr.pct ? sr.c : t.hFg, 'd' + sr.id))] : null,
+        interactive && hov != null ? tip : null)), lanesEl);
+    const legend = [{ n: 'Nuvole basse', c: rgba(t.hFg, 0.28), b: rgba(t.hFg, 0.9), note: '' }, { n: 'medie', c: rgba(t.hFg, 0.17), b: rgba(t.hFg, 0.6), note: '' }, { n: 'alte', c: rgba(t.hFg, 0.10), b: rgba(t.hFg, 0.45), note: '' }]
+      .concat(body ? [{ n: body.n, c: 'transparent', b: body.c, note: '' }] : []).concat(QUAL ? [{ n: qName, c: t.hBar, b: t.hBar, note: '' }] : [])
+      .concat(SER.map(sr => ({ n: sr.pct ? sr.n + '%' : sr.n, c: sr.pct ? sr.c : ESC0[0], b: sr.pct ? sr.c : t.hMu, note: sr.pct ? '' : 'a destra, col colore del giudizio' })));
+    const SC = [['umidita', 'umidità %'], ['condensa', 'condensa'], ['pioggia', 'pioggia'], ['vento', 'vento'], ['seeing', 'seeing'], ['jet', 'jet stream'], ['aerosol', 'aerosol'], ['visibilita', 'visibilità']]
+      .filter(([id]) => !(id === 'visibilita' && X.visNA) && !(SUN && id === 'condensa'));
+    const scaleOpts = SC.map(([id, l]) => { const sel = metrics.includes(id), full = !sel && metrics.length >= MAXM, dis = !!disabled(id) || full;
+      return { l, sel, dis, title: full ? 'Al massimo quattro misure insieme' : disabled(id) ? (id === 'seeing' && (X.seeKey || X.seeBad || X.seeNew) ? (X.seeNew ? 'Il seeing arriva da Meteoblue al prossimo giro.' : 'Il seeing richiede una chiave Meteoblue.') : 'Sotto le nuvole non si misura') : (id === 'umidita' ? 'in %, sulla scala di sinistra' : 'una alla volta, sulla scala di destra'),
+        op: dis ? 0.45 : 1, cur: dis ? 'not-allowed' : 'pointer', bg: sel ? t.hTrack : 'transparent', ring: sel ? colOf[id] : t.line, dot: sel ? colOf[id] : 'transparent', dotRing: sel ? colOf[id] : t.hMu, on: dis ? null : () => toggleM(id) }; });
+    const scaleP = scaleOpts.map(o => ({ l: o.l, sel: o.sel, no: o.dis, titolo: o.title || undefined, colore: o.sel ? o.ring : null, on: o.on }));
+    const scaleCount = metrics.length ? '· ' + metrics.length + (metrics.length === 1 ? ' accesa' : ' accese') : '';
+    const tickHours = SUN ? ['06','08','10','12','14','16','18','20'] : ['18','20','22','00','02','04','06','08'];
+    const tickHoursTel = SUN ? ['06','10','14','18','20'] : ['18','22','02','06','08'];
+
+    const noMouse = tel || (typeof matchMedia !== 'undefined' && matchMedia('(hover: none)').matches);
+    const chartHint = !interactive ? '' : noMouse ? 'Tocca il grafico o le barrette per vedere un\u0027ora' : 'Passa sul grafico per vedere un\u0027ora · frecce per spostarti, Esc per tornare alla notte';
+    const seeCred = !SUN || true ? !(X.seeKey || X.seeBad || X.seeNew) : false;
+    const credT = 'Previsione: Weather data by Open-Meteo.com' + (seeCred ? ' · Seeing: meteoblue' : '') + ' · Orari in ora locale del sito';
+    return { pronto: true, chartHint, seeCred, credT, ripV: !SUN && !special && N0.rip ? N0.rip : null, SK,  modo, accento: this.props.accento, setModo: m => set({ modo: m }), site, protCols: X.soleSu ? 12 : 8, F, S, t, head, status, av, models, modelL: model, mmenu: this.state.mmenu, mmenuToggle: () => set({ mmenu: !this.state.mmenu }),
+      tiles, hv, chart, bandKey, legend, scaleOpts, scaleP, pesa, facts, cards, cardsSub, cardsSubTel, extra, camp, telItems, protSpan: X.soleSu ? 'span 12' : 'span 8',
+      hvVal, tickHours, tickHoursTel, objOpts, cardsTitle, stripL, scaleCount };
+  }
+}
+</script>
+</body>
+</html>

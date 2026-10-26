@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div class="al-c-pillola__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><span aria-hidden="{{ nascosto }}" class="{{ cls }}" style="align-self:{{ allinea }};text-align:{{ ta }};font-family:{{ font }}">{{ label }}</span></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;forma&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;pillola&quot;,&quot;segno&quot;],&quot;default&quot;:&quot;pillola&quot;,&quot;tsType&quot;:&quot;'pillola' | 'segno'&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;classe&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;acapo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Pillola&quot;},&quot;$preview&quot;:{&quot;width&quot;:260,&quot;height&quot;:60},&quot;esito&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;buona&quot;,&quot;incerta&quot;,&quot;non adatta&quot;,&quot;mancante&quot;,&quot;neutra&quot;,&quot;avviso&quot;,&quot;spenta&quot;],&quot;default&quot;:&quot;buona&quot;,&quot;tsType&quot;:&quot;0 | 1 | 2 | string&quot;,&quot;section&quot;:&quot;Esito&quot;},&quot;testo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;buona&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Esito&quot;},&quot;segno&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Esito&quot;},&quot;dimensione&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;media&quot;,&quot;piccola&quot;,&quot;minima&quot;,&quot;micro&quot;],&quot;default&quot;:&quot;media&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;fondo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;carta2&quot;,&quot;carta&quot;],&quot;default&quot;:&quot;carta2&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;allinea&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  componentWillUnmount() { this._alw && clearInterval(this._alw); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento);
+    // esito: 0 / 1 / 2 o le parole; "mancante" = dato che manca (?), "neutra" = informazione senza giudizio
+    // seconda passata: avviso (al limite, fondo dell'avviso) e spenta (senza fondo, tenue) hanno solo il testo che arriva; forma="segno" e' il tondo da solo (al-segno)
+    const E = { buona: 0, buono: 0, incerta: 1, 'non adatta': 2, no: 2, mancante: -1, ignoto: -1, neutra: -2, avviso: -3, spenta: -4 };
+    let e = p.esito ?? 0; if (typeof e === 'string') e = e in E ? E[e] : (isNaN(+e) ? 0 : +e);
+    const D = { media: ['4px 10px', '12px'], piccola: ['3px 10px', '12px'], minima: ['3px 9px', '11px'], micro: ['2px 8px', '11px'] };
+    const segno = p.segno ?? (e >= 0 ? AL.SEGNI[e] : e === -1 ? '?' : '');
+    const testo = p.testo ?? (e >= 0 ? AL.PAROLE[e] : e === -1 ? 'Non disponibile' : '');
+    const tipo = ['buona', 'incerta', 'non-adatta'][e] || (e === -1 ? 'mancante' : e === -3 ? 'avviso' : e === -4 ? 'spenta' : 'neutra'), cl = p.classe ? ' ' + p.classe : '';
+    if (p.forma === 'segno') return { pronto: true, t, nascosto: 'true', cls: 'al-segno al-segno--' + (tipo === 'incerta' ? 'avviso' : tipo) + (p.fondo === 'carta2' ? ' al-segno--carta-2' : '') + cl, label: segno || '?' };
+    const dim = D[p.dimensione] && p.dimensione !== 'media' ? ' al-pillola--' + p.dimensione : '';
+    return { pronto: true, t, cls: 'al-pillola al-pillola--' + tipo + dim + (p.acapo ? ' al-pillola--acapo' : '') + (p.fondo === 'carta' ? ' al-pillola--su-carta' : '') + cl, ta: p.acapo && p.allinea === 'flex-end' ? 'right' : undefined, allinea: p.allinea, font: p.standalone ? t.font : undefined, label: segno ? segno + ' ' + testo : testo };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><span class="al-c-ripresa__riga-1" role="img" aria-label="{{ aria }}" style="gap:{{ gap }};color:{{ fg }}"><span class="al-c-ripresa__riga-2" aria-hidden="true" style="margin-top:{{ mt }}">
+<sc-if value="{{ L }}" hint-placeholder-val="{{ true }}"><svg class="al-c-ripresa__grafico-1" width="{{ w }}" height="{{ h }}" viewBox="0 0 20 10"><rect x="1" y="1" width="18" height="8" rx="4" fill="currentColor"></rect></svg></sc-if>
+<sc-if value="{{ S }}" hint-placeholder-val="{{ false }}"><svg class="al-c-ripresa__grafico-1" width="{{ w }}" height="{{ h }}" viewBox="0 0 20 10"><rect x="1.6" y="1.6" width="16.8" height="6.8" rx="3.4" fill="none" stroke="currentColor" stroke-opacity=".6" stroke-width="1.2"></rect><rect x="7.5" y="1" width="5" height="8" rx="2.5" fill="currentColor"></rect></svg></sc-if>
+</span><span class="al-c-ripresa__blocco-1" style="font-size:{{ fs }};font-weight:{{ fw }};color:{{ tc }}">{{ testo }}</span></span></sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:60},&quot;tipo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;larga&quot;,&quot;stretta&quot;,&quot;mista&quot;],&quot;default&quot;:&quot;mista&quot;,&quot;tsType&quot;:&quot;'larga' | 'stretta' | 'mista'&quot;,&quot;section&quot;:&quot;Ripresa&quot;},&quot;testo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Banda larga 20:45–00:45 · poi solo banda stretta&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Ripresa&quot;},&quot;forma&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;riga&quot;,&quot;segno&quot;],&quot;default&quot;:&quot;riga&quot;,&quot;tsType&quot;:&quot;'riga' | 'segno'&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;fondo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;carta&quot;,&quot;protagonista&quot;],&quot;default&quot;:&quot;carta&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;colore&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;tenue&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  componentWillUnmount() { this._alw && clearInterval(this._alw); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  // La ripresa della notte: segno (largo pieno = banda larga; stretto dentro il contorno = solo banda stretta) e parole.
+  // Il segno usa il colore del testo, mai l'accento: la forma e la parola dicono il tipo.
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), tipo = p.tipo || 'mista', riga = (p.forma || 'riga') === 'riga', tel = p.formato === 'telefono', prot = p.fondo === 'protagonista';
+    const fg = p.colore || (prot ? t.hFg : t.text), mu = p.tenue || (prot ? t.hMu : t.muted);
+    const testo = p.testo ?? (tipo === 'larga' ? 'Tutta la notte banda larga' : tipo === 'stretta' ? 'Tutta la notte solo banda stretta' : 'Banda larga 20:45–00:45 · poi solo banda stretta');
+    return { pronto: true, L: tipo !== 'stretta', S: tipo !== 'larga', testo, fg, tc: riga ? fg : mu,
+      mt: riga ? '4px' : '3px', w: riga ? 20 : 16, h: riga ? 10 : 8, gap: riga ? '10px' : '6px', fs: riga ? (tel ? '14px' : '15px') : '12px', fw: riga ? 500 : 400,
+      aria: 'Ripresa: ' + testo };
+  }
+}
+</script>
+</body>
+</html>

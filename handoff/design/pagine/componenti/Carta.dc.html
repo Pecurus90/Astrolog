@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}@keyframes alIn{from{opacity:0;transform:translateY(14px)}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style></helmet>
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><section class="al-c-carta__blocco-1" ref="{{ rif }}" aria-label="{{ etichetta }}" style="animation:{{ anim }};grid-column:{{ col }};background:{{ bg }};color:{{ fg }};border-radius:{{ r }};padding:{{ pad }};display:{{ disp }};grid-template-columns:{{ griglia }};gap:{{ gap }};align-items:{{ allinea }};justify-content:{{ giustifica }};flex:{{ flex }};box-shadow:inset 0 0 0 2px {{ anello }}">{{ contenuto }}</section></sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:480,&quot;height&quot;:260},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;tono&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;carta&quot;,&quot;protagonista&quot;],&quot;default&quot;:&quot;carta&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;colonne&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;min&quot;:1,&quot;max&quot;:12,&quot;default&quot;:12,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;padding&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;gap&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;min&quot;:0,&quot;max&quot;:40,&quot;default&quot;:18,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;griglia&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;anello&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;ritardo&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;min&quot;:0,&quot;max&quot;:600,&quot;step&quot;:60,&quot;default&quot;:0,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Entrata&quot;},&quot;etichetta&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;allinea&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;giustifica&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;flex&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;children&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;ReactNode&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() { this._bp = () => { if (this._el) this._el.style.animationPlayState = 'running'; }; window.addEventListener('beforeprint', this._bp); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); this._io && this._io.disconnect(); window.removeEventListener('beforeprint', this._bp); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  // L'entrata parte quando la carta entra nello schermo, una volta sola.
+  rif = el => {
+    if (el === this._el) return; this._el = el; if (!el) return;
+    if (this._run || typeof IntersectionObserver === 'undefined') { el.style.animationPlayState = 'running'; return; }
+    this._io && this._io.disconnect();
+    this._io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.style.animationPlayState = 'running'; this._run = true; this._io.disconnect(); } }), { rootMargin: '0px 0px -40px 0px' });
+    this._io.observe(el);
+  };
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), tel = p.formato === 'telefono';
+    const prot = p.tono === 'protagonista';
+    const num = v => typeof v === 'number' || /^\d+(\.\d+)?$/.test(String(v));
+    const px = v => v == null || v === '' ? undefined : num(v) ? v + 'px' : v;
+    const col = tel || p.colonne == null || p.colonne === '' ? undefined : (num(p.colonne) ? 'span ' + p.colonne : p.colonne);
+    const rit = p.ritardo;
+    return { pronto: true, rif: this.rif, etichetta: p.etichetta, contenuto: p.children,
+      anim: rit == null || rit === '' ? undefined : 'alIn var(--durata-entrata) var(--curva-entrata) ' + rit + 'ms both paused',
+      col, bg: prot ? t.hBg : t.card, fg: prot ? t.hFg : t.text, r: tel ? '24px' : '28px',
+      pad: px(p.padding) || (tel ? '20px' : '28px'), disp: p.griglia ? 'grid' : 'flex', griglia: p.griglia,
+      gap: px(p.gap) ?? (tel ? '14px' : '18px'), allinea: p.allinea, giustifica: p.giustifica, flex: p.flex, anello: p.anello || 'transparent' };
+  }
+}
+</script>
+</body>
+</html>

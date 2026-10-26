@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}@keyframes skPulse{0%,100%{opacity:1}50%{opacity:.35}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-misure__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}" data-formato="{{ fmt }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="{{ fmt }}" pagina="Misure dei frame" etichetta="Misure dei frame" altezza="100vh" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,100vh"><div class="al-misure__blocco-2">
+<div class="al-misure__colonna-1">
+
+<header class="al-misure__colonna-2">
+<h1 class="al-misure__testo-1">Le misure dei frame</h1>
+<p class="al-misure__blocco-3">Com'è venuta ogni ripresa, con le misure dell'app. Un giudizio per misura dove c'è una soglia, mai d'insieme; nessuno scarto. Dati simulati.</p>
+</header>
+
+<section class="al-misure__colonna-3" aria-labelledby="s-notti">
+<h2 class="al-misure__blocco-4 al-solo-voce" id="s-notti">Il riepilogo della notte · le misure dei frame</h2>
+<dc-import name="componenti/MisureFrame" tipo="notte" stato="{{ statoMF }}" scala="{{ cor.sc }}" apertura="{{ cor.ap }}" formato="{{ formato }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,2400px"></dc-import>
+</section>
+
+<section class="al-misure__colonna-3" aria-labelledby="s-arch">
+<h2 class="al-misure__blocco-4" id="s-arch">Archivio · le misure della produzione</h2>
+<article class="al-misure__colonna-4">
+<div class="al-misure__colonna-5"><span class="al-misure__testo-2">M 31</span>
+<dc-import name="componenti/PillolaScelta" ruolo="radio" classe="al-misure__scelta al-scelta--sottili" opzioni="{{ prodP }}" etichetta="Produzione" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import>
+<span class="al-misure__testo-3">{{ A.su }}</span></div>
+<div class="al-misure__centro-1 al-misure__centro-1--produzione"><sc-for list="{{ A.righe }}" as="r" hint-placeholder-count="3"><div class="al-misure__colonna-6">
+<span class="al-misure__testo-4">{{ r.k }}</span>
+<span class="al-misure__riga-3"><span class="al-misure__testo-5">{{ r.med }}</span><span class="al-misure__testo-4">mediana</span></span>
+<dc-import name="componenti/Quartili" q1="{{ r.q1 }}" qw="{{ r.qw }}" m="{{ r.m }}" soglia="{{ r.soglia }}" hint-size="100%,32px"></dc-import>
+<span class="al-misure__riga-4"><span>{{ r.lo }}</span><span>{{ r.hi }}</span></span>
+<span class="al-misure__testo-6">quartili {{ r.qs }}</span>
+<sc-if value="{{ r.gz }}" hint-placeholder-val="{{ false }}"><span class="al-misure__riga-5"><dc-import name="componenti/Pillola" esito="{{ r.gz.e }}" segno="{{ r.gz.s }}" testo="{{ r.gz.t }}" dimensione="piccola" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="70px,22px"></dc-import></span></sc-if>
+<sc-if value="{{ r.nota }}" hint-placeholder-val="{{ false }}"><span class="al-misure__testo-7">{{ r.nota }}</span></sc-if>
+</div></sc-for></div>
+</article>
+</section>
+
+<section class="al-misure__colonna-3" aria-labelledby="s-sqm">
+<h2 class="al-misure__blocco-4" id="s-sqm">Luminosità del cielo</h2>
+<p class="al-misure__blocco-5">Come ASTAP. Solo con L, nessun filtro e con le camere a colori; con R, G, B e i filtri a banda stretta non c'è, né la riga. Nelle Notti la curva della notte, frame per frame, con la Luna.</p>
+<article class="al-misure__colonna-7">
+<div class="al-misure__centro-1 al-misure__centro-1--cielo"><sc-for list="{{ Q }}" as="q" hint-placeholder-count="8"><div class="al-misure__colonna-8">
+<span class="al-misure__riga-6"><span class="al-misure__tondo-1" aria-hidden="true" style="background:{{ q.dot }};border:{{ q.bd }}"></span>{{ q.f }}</span>
+<sc-if value="{{ q.v }}" hint-placeholder-val="{{ true }}"><span class="al-misure__testo-8">{{ q.v }}</span></sc-if>
+<sc-if value="{{ q.manca }}" hint-placeholder-val="{{ false }}"><span class="al-misure__riga-7"><dc-import name="componenti/Pillola" forma="segno" esito="mancante" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import>{{ q.manca }}</span></sc-if>
+<sc-if value="{{ q.tag }}" hint-placeholder-val="{{ false }}"><span class="al-misure__pillola-1">{{ q.tag }}</span></sc-if>
+<sc-if value="{{ q.n }}" hint-placeholder-val="{{ false }}"><span class="al-misure__testo-7">{{ q.n }}</span></sc-if>
+<sc-if value="{{ q.link }}" hint-placeholder-val="{{ false }}"><a class="al-misure__riga-8" href="{{ q.link.href }}">{{ q.link.l }}</a></sc-if>
+</div></sc-for></div>
+<div class="al-misure__colonna-9">
+<div class="al-misure__blocco-6" aria-hidden="true">
+<div class="al-misure__strato-1"></div>
+<sc-for list="{{ QS.marks }}" as="m" hint-placeholder-count="2"><div class="al-misure__strato-2" style="left:{{ m.x }}"><span class="al-misure__testo-9">{{ m.l }}</span><span class="{{ m.cls }}"></span></div></sc-for>
+</div>
+<div class="al-misure__riga-9"><span>17 · più chiaro</span><span>più alto il numero, più buio il cielo</span><span>22 · più buio</span></div>
+</div>
+</article>
+</section>
+
+
+
+<section class="al-misure__colonna-3" aria-labelledby="s-bortle">
+<h2 class="al-misure__blocco-4" id="s-bortle">Il Bortle del sito dalle misure</h2>
+<p class="al-misure__blocco-7">L'app propone, chi riprende sceglie; non lo cambia mai da sola. Contano i frame con lo SQM e col bias della camera, Sole sotto −18°, Luna sotto −5°, oggetto sopra 30°, negli ultimi 12 mesi: una mediana per notte, poi la mediana delle notti. Dove: nelle Impostazioni del sito; la proposta anche nella Dashboard.</p>
+<div class="al-misure__centro-2 al-misure__centro-2--bortle">
+<article class="al-misure__colonna-10">
+<span class="al-misure__testo-4">La proposta · la classe misurata è diversa</span>
+<div class="al-misure__riga-10"><dc-import name="componenti/Pillola" forma="segno" esito="mancante" classe="al-misure__tondo-3" modo="{{ modo }}" accento="{{ accento }}" hint-size="28px,28px"></dc-import><span class="al-misure__testo-10">Le misure di Cima Ekar dicono Bortle 5 (SQM 19.6, 34 notti). Nel sito c'è Bortle 4.</span></div>
+<div class="al-misure__riga-11"><button type="button" onClick="{{ BT.usa }}" class="al-bottone al-bottone--pieno">Usa Bortle 5</button><button type="button" onClick="{{ BT.lascia }}" class="al-bottone al-bottone--contorno">Lascia Bortle 4</button></div>
+<sc-if value="{{ BT.esito }}" hint-placeholder-val="{{ false }}"><span class="al-misure__testo-4">{{ BT.esito }}</span></sc-if>
+</article>
+<article class="al-misure__colonna-11">
+<span class="al-misure__testo-4">Impostazioni · il sito</span>
+<span class="al-misure__testo-11">Cima Ekar</span>
+<span class="al-misure__riga-3"><span class="al-misure__testo-12">{{ BT.n }}</span><span class="al-misure__testo-13">Bortle</span></span>
+<span class="al-misure__testo-3">{{ BT.da }}</span>
+<sc-if value="{{ BT.sqm }}" hint-placeholder-val="{{ false }}"><span class="al-misure__testo-6">SQM 19.6 · mediana di 34 notti in 9 mesi</span></sc-if>
+</article>
+<article class="al-misure__colonna-11">
+<span class="al-misure__testo-4">Impostazioni · dati scarsi</span>
+<span class="al-misure__testo-11">Passo Coe</span>
+<span class="al-misure__riga-3"><span class="al-misure__testo-12">3</span><span class="al-misure__testo-13">Bortle</span></span>
+<span class="al-misure__testo-3">scritto a mano</span>
+<span class="al-misure__riga-12" role="img" aria-label="2 mesi su 6"><sc-for list="{{ BT.mesi }}" as="x" hint-placeholder-count="6"><span class="{{ x.cls }}"></span></sc-for></span>
+<span class="al-misure__testo-14">Servono notti in 6 mesi diversi: finora 4 notti in 2 mesi.</span>
+</article>
+</div>
+</section>
+
+<section class="al-misure__colonna-3" aria-labelledby="s-stati">
+<h2 class="al-misure__blocco-4" id="s-stati">Gli stati</h2>
+<div class="al-misure__centro-2 al-misure__centro-2--stati"><sc-for list="{{ ST }}" as="s" hint-placeholder-count="6"><article class="{{ s.cls }}">
+<span class="al-misure__testo-4">{{ s.k }}</span>
+<div class="al-misure__colonna-13">
+<sc-if value="{{ s.v }}" hint-placeholder-val="{{ true }}"><span class="al-misure__testo-15">{{ s.v }}</span></sc-if>
+<span class="al-misure__riga-13"><sc-if value="{{ s.pulse }}" hint-placeholder-val="{{ false }}"><span class="al-misure__tondo-4" aria-hidden="true"></span></sc-if><sc-if value="{{ s.seg }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Pillola" forma="segno" esito="{{ s.segE }}" segno="{{ s.seg }}" classe="al-misure__tondo-5" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import></sc-if>{{ s.r }}</span>
+</div>
+<sc-if value="{{ s.click }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ s.click }}" class="al-bottone al-bottone--contorno al-misure__blocco-8">{{ s.btn }}</button></sc-if>
+</article></sc-for></div>
+</section>
+
+</div>
+</div></dc-import></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;setup&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Notte in quota · 1.94″/px (FWHM non giudicabile)&quot;,&quot;Askar 103 · ATR2600M · 1.385″/px&quot;],&quot;default&quot;:&quot;Notte in quota · 1.94″/px (FWHM non giudicabile)&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;misura in corso&quot;,&quot;troppo poche stelle&quot;,&quot;forma stimata&quot;,&quot;senza scala del cielo&quot;,&quot;senza sito&quot;,&quot;senza bias&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, prod: 0, st: null };
+  componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rs); }
+  componentDidUpdate(pp) { if (pp.stato !== this.props.stato) this.setState({ st: null }); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  // Tavola: le misure del riepilogo (componente MisureFrame), le misure della produzione, la luminosita' del cielo, gli stati
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, s = this.state, set = o => this.setState(o), modo = p.modo || 'scuro', accento = p.accento, t = AL.tema(modo, accento);
+    const fmtP = AL.formatoScelto(p.formato), tel = AL.telefono(fmtP, s.w);
+    // Spaziature, raggi, titoli e griglie nel foglio (sezione Misure dei frame, [data-formato="telefono"])
+    const fmt = tel ? 'telefono' : 'desktop';
+    const stato = s.st || p.stato || 'normale', P = (v, d) => v.toFixed(d), VG = AL.virg;
+    // Archivio: per produzione (oggetto + ottica + camera)
+    const PR = [
+      { n: 'Askar FRA400 · ZWO ASI2600MM Pro', su: '2026 · su 172 di 180 frame', sc: 1.94, ap: 72, fw: [4.0, 4.3, 4.7], ec: [.36, .41, .47], sn: [360, 430, 500] },
+      { n: 'Askar 103 · ZWO ATR2600M', su: '2026 · su 118 di 120 frame', sc: 1.385, ap: 103, fw: [2.9, 3.2, 3.6], ec: [.38, .52, .61], sn: [280, 340, 410] },
+      { n: 'RedCat 51 · ZWO ASI294MC Pro', su: '2025 · su 240 di 240 frame', sc: 3.82, ap: 51, fw: [7.8, 8.3, 9.0], ec: [.33, .38, .44], sn: [180, 220, 270] },
+      { n: 'Newton 200/800 · ZWO ASI533MC Pro', su: '2024 · su 96 di 104 frame', px: true, fw: [2.0, 2.2, 2.5], ec: [.41, .48, .55], sn: [190, 240, 280] }];
+    const MS = ALsoglie.misure;
+    const pr = PR[Math.min(s.prod, PR.length - 1)];
+    const box = (k, q, lo, hi, fm, extra) => { const pc = v => ((v - lo) / (hi - lo) * 100).toFixed(1) + '%';
+      return { k, med: fm(q[1]), qs: fm(q[0]) + ' – ' + fm(q[2]), q1: pc(q[0]), qw: ((q[2] - q[0]) / (hi - lo) * 100).toFixed(1) + '%', m: pc(q[1]), lo: fm(lo), hi: fm(hi), soglia: '', gz: null, nota: '', ...extra }; };
+    const A = { su: pr.su, righe: [
+      pr.px ? box('FWHM', pr.fw, 0, 4, v => P(v, 1) + ' px', { nota: 'Senza scala del cielo: in px, non si confronta fra setup.' })
+        : box('FWHM', pr.fw, 0, 7, v => P(v, 1) + '″', { med: P(pr.fw[1], 1) + '″ · ' + P(pr.fw[1] / pr.sc, 1) + ' px', gz: MS.fwhm(pr.fw[1], MS.F(pr.sc, pr.ap)), nota: MS.nonGiudicabile(MS.F(pr.sc, pr.ap)) ? 'non giudicabile su questo setup · ' + MS.camp(pr.fw[1] / pr.sc) : MS.camp(pr.fw[1] / pr.sc) }),
+      box('Eccentricità', pr.ec, 0, 1, v => VG(v, 2), { soglia: '45%', gz: MS.ecc(pr.ec[1]), nota: 'Rotonde fino a 0.45, allungate oltre 0.71.' }),
+      box('SNR', pr.sn, 0, 600, v => AL.num(Math.round(v)), { nota: 'PSF SNR: si confronta solo dentro la stessa notte e lo stesso oggetto, mai fra camere.' })] };
+    const prodP = PR.map((x, j) => ({ l: x.n, sel: j === s.prod, on: () => set({ prod: j }) }));
+    // Luminosita' del cielo
+    const tq = k => { const x = AL.tinta(t, k); return { dot: x.bg, bd: x.bd || '0' }; };
+    const Q = [
+      { f: 'L', ...tq('l'), v: 'SQM 19.2' }, { f: 'nessun filtro', ...tq('senza'), v: 'SQM 19.3' }, { f: 'a colori', ...tq('colori'), v: 'SQM 18.9' },
+      { f: 'L, camera senza bias', ...tq('l'), v: 'SQM 19.2', tag: 'senza bias' },
+      { f: 'a colori, camera senza bias', ...tq('colori'), manca: 'serve il bias della camera', link: { l: 'Bias (ADU) in Attrezzatura ↗', href: 'Attrezzatura.dc.html' } }].map(q => ({ v: '', manca: '', tag: '', n: '', link: null, ...q }));
+    const QS = { marks: [{ l: 'a colori 18.9', v: 18.9, c: 'tenue' }, { l: 'L 19.2', v: 19.2, c: 'testo' }].map(m => ({ ...m, cls: 'al-misure__tondo-2 al-misure__tondo-2--' + m.c, x: ((m.v - 17) / 5 * 100).toFixed(1) + '%' })) };
+    // Stati: ognuno porta la riga in alto in quello stato
+    const cur = stato, mk = (k, st, v, r, seg, o) => ({ k, v, r, seg: seg || '', segE: seg === '!' ? 'incerta' : 'mancante', pulse: false, btn: cur === st ? 'Mostrato sopra' : 'Mostra sopra', cls: 'al-misure__colonna-12' + (cur === st ? ' al-misure__colonna-12--acceso' : ''),
+      click: e => { e.preventDefault(); set({ st }); if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' }); }, ...o });
+    const ST = [
+      mk('Non ancora misurato', 'misura in corso', '', 'misura in corso', '', { pulse: true }),
+      mk('Non misurabile (nuvole, frame di prova)', 'troppo poche stelle', '', 'troppo poche stelle', '?'),
+      mk('Forma stimata', 'forma stimata', 'FWHM 4.1″ · 2.1 px · eccentricità 0.52', 'Forma stimata: il fit non è riuscito.', '!'),
+      mk('Frame non risolto', 'senza scala del cielo', 'FWHM 2.1 px · HFD 2.9 px', 'Senza scala del cielo: niente FWHM allo zenit.', '?'),
+      mk('Senza sito o senza coordinate dell\u0027oggetto', 'senza sito', 'FWHM 4.2″ · 2.2 px', 'Senza sito: niente FWHM allo zenit.', '?'),
+      mk('Mediane', 'normale', 'FWHM 4.1″ · 2.1 px', 'su 112 di 120 frame', '')];
+    const bs = s.bortle, BT = { n: bs === 'usa' ? '5' : '4', da: bs === 'usa' ? 'misurato su 34 notti' : 'scritto a mano', sqm: bs === 'usa', esito: bs === 'usa' ? 'Bortle 5 nel sito.' : bs === 'lascia' ? 'Resta Bortle 4; si propone di nuovo solo se la classe misurata cambia.' : '',
+      usa: e => { e.preventDefault(); set({ bortle: 'usa' }); }, lascia: e => { e.preventDefault(); set({ bortle: 'lascia' }); }, mesi: [0, 1, 2, 3, 4, 5].map(i => ({ cls: 'al-misure__pillola-2' + (i < 2 ? ' al-misure__pillola-2--fatto' : '') })) };
+    return { pronto: true, BT, statoMF: ['misura in corso', 'senza scala del cielo', 'senza sito', 'senza bias'].includes(stato) ? stato : 'normale', cor: (this.props.setup || '').indexOf('Askar 103') === 0 ? { sc: 1.385, ap: 103 } : { sc: 1.94, ap: 72 }, formato: fmtP, fmt, t, modo, accento, A, prodP, Q, QS, ST };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}@property --p{syntax:'<number>';inherits:false;initial-value:100}@keyframes alFill{from{--p:0}}@keyframes alGrowX{from{transform:scaleX(0)}}input::placeholder{color:inherit;opacity:.5}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-sel__testo-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}" data-formato="{{ fmt }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}">
+<dc-import name="componenti/Telaio" formato="{{ fmt }}" pagina="{{ telPag }}" etichetta="{{ etichetta }}" sito="Cima Ekar" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" anteprima="{{ anteprima }}" hint-size="100%,100vh">
+
+<sc-if value="{{ V.pagina }}" hint-placeholder-val="{{ true }}">
+<div class="al-sel__colonna-1">
+
+<div class="al-sel__riga-1">
+<div class="al-sel__colonna-2">
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><h1 class="al-sel__testo-2">Selezione dei frame</h1></sc-if>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><span class="al-sel__testo-3">Prima dello stacking: togli i frame che non servono. Le soglie segnano, tu decidi, poi li sposti in «scartate». Dati simulati.</span></sc-if>
+<sc-if value="{{ L.tel }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-3">Qui guardi i frame e cosa segnano le soglie. Scartare, tenere e spostare si fa dal computer. Dati simulati.</span></sc-if>
+</div>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ apriRegole }}" class="al-bottone al-bottone--tenue al-bottone--icona" aria-label="Apri le soglie dei setup" title="Soglie dei setup" style="border-radius:50%;width:44px;flex:none">↗</button></sc-if>
+</div>
+
+<dc-import name="componenti/Carta" formato="{{ fmt }}" padding="var(--sel-carta-pad)" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="La scelta" hint-size="100%,420px">
+<div class="al-sel__centro-1">
+<div class="al-sel__colonna-3">
+<div class="al-sel__colonna-4">
+<span class="al-sel__testo-4">Parti da</span>
+<dc-import name="componenti/PillolaScelta" forma="segmentato" ruolo="radio" allinea="flex-start" opzioni="{{ partiO }}" classe="al-scelta--sottili" etichetta="Parti da" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,40px"></dc-import>
+<span class="al-sel__testo-5">{{ partiSub }}</span>
+</div>
+<sc-if value="{{ DD.on }}" hint-placeholder-val="{{ true }}"><div class="al-sel__colonna-5">
+<span class="al-sel__testo-4">Progetto</span>
+<a href="#" onClick="{{ DD.apri }}" aria-haspopup="listbox" aria-expanded="{{ DD.esp }}" class="al-tendina al-sel__riga-2"><span class="al-sel__blocco-2">{{ DD.val }}</span><span class="al-sel__testo-6" aria-hidden="true">▾</span></a>
+<sc-if value="{{ DD.aperto }}" hint-placeholder-val="{{ false }}"><div class="al-sel__strato-1" onClick="{{ DD.chiudi }}"></div>
+<div class="al-sel__strato-2">
+<input value="{{ DD.q }}" onInput="{{ DD.cerca }}" onKeyDown="{{ DD.tasti }}" role="combobox" aria-expanded="true" aria-controls="sel-lista" aria-autocomplete="list" aria-label="Cerca un progetto" placeholder="Cerca un progetto" class="al-campo al-campo--piena">
+<span class="al-sel__blocco-3">Progetti in corso</span>
+<div class="al-sel__colonna-6" id="sel-lista" role="listbox" aria-label="Progetti in corso">
+<sc-for list="{{ DD.voci }}" as="v" hint-placeholder-count="3"><a class="al-sel__colonna-7" href="#" role="option" aria-selected="{{ v.sel }}" onClick="{{ v.on }}"><span class="al-sel__testo-7">{{ v.l }}</span><span class="al-sel__testo-8">{{ v.sub }}</span></a></sc-for>
+<sc-if value="{{ DD.vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-sel__blocco-4">{{ DD.vuoto }}</span></sc-if>
+</div>
+</div></sc-if>
+</div></sc-if>
+<sc-if value="{{ CAL.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/CalendarioNotti" tipo="luna" anno="2026" mese="9" giorni="{{ CAL.giorni }}" buone="{{ CAL.buone }}" buoneL="{{ CAL.leg }}" sub="{{ CAL.sub }}" primaNo="{{ true }}" dopoNo="{{ true }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,360px"></dc-import></sc-if>
+</div>
+<div class="al-sel__colonna-8">
+<div class="al-sel__colonna-9"><span class="al-sel__testo-9">{{ RS.tit }}</span><span class="al-sel__testo-3">{{ RS.sub }}</span></div>
+<sc-if value="{{ RS.az }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ RS.az.on }}" class="al-bottone al-bottone--pieno al-sel__blocco-5">{{ RS.az.l }}</button></sc-if>
+<sc-if value="{{ PC }}" hint-placeholder-val="{{ false }}"><div class="al-sel__centro-2"><dc-import name="componenti/Avanzamento" percento="{{ PC.pp }}" testo="{{ PC.pctS }}" fatte="{{ PC.fatteS }}" obiettivo="{{ PC.obS }}" aria="{{ PC.aria }}" filtri="{{ PC.fil }}" nota="{{ PC.via }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,190px"></dc-import></div></sc-if>
+<sc-for list="{{ RS.blocchi }}" as="b" hint-placeholder-count="1"><div class="al-sel__colonna-10">
+<span class="al-sel__blocco-6">{{ b.n }}</span>
+<sc-for list="{{ b.righe }}" as="r" hint-placeholder-count="2"><div class="al-sel__griglia-1">
+<span class="al-sel__riga-3"><span class="al-sel__tondo-1" aria-hidden="true" style="background:{{ r.dot }};border:{{ r.bd }}"></span>{{ r.f }}</span>
+<span class="al-sel__testo-10">{{ r.fr }}</span>
+<span class="al-sel__riga-4"><b class="al-sel__testo-11">{{ r.ore }}</b><span class="al-sel__testo-4">{{ r.di }}</span></span>
+</div></sc-for>
+</div></sc-for>
+<sc-if value="{{ RS.vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-12">{{ RS.vuoto }}</span></sc-if>
+</div>
+</div>
+</dc-import>
+
+<dc-import name="componenti/Carta" formato="{{ fmt }}" tono="protagonista" padding="var(--sel-esito-pad)" gap="12px 28px" griglia="var(--sel-esito-griglia)" modo="{{ modo }}" accento="{{ accento }}" etichetta="Da scartare" hint-size="100%,96px">
+<span class="al-sel__riga-5"><b class="al-sel__testo-13">{{ ES.n }}</b><span class="al-sel__colonna-11"><span class="al-sel__testo-14">da scartare</span><span class="al-sel__testo-15">{{ ES.det }}</span></span></span>
+<span class="al-sel__colonna-12"><span class="al-sel__testo-15">restano per lo stacking</span><span class="al-sel__testo-16">{{ ES.resta }}</span></span>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><span class="al-sel__riga-6">
+<sc-if value="{{ ES.annulla }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ ES.annulla }}" class="al-bottone al-bottone--testo">↶ Annulla</button></sc-if>
+<button type="button" onClick="{{ ES.sposta }}" aria-disabled="{{ ES.spostaNo }}" class="al-bottone al-bottone--pieno">{{ ES.spostaL }}</button>
+</span></sc-if>
+</dc-import>
+
+<dc-import name="componenti/Carta" formato="{{ fmt }}" padding="var(--sel-carta-pad)" gap="16" modo="{{ modo }}" accento="{{ accento }}" etichetta="Frame per frame" hint-size="100%,520px">
+<div class="al-sel__riga-7">
+<h2 class="al-sel__testo-17">{{ h2 }}</h2>
+<sc-if value="{{ L.tel }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/PillolaScelta" classe="al-scelta--sottili" forma="segmentato" ruolo="radio" misura="piccola" opzioni="{{ rvO }}" etichetta="Quali frame" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,30px"></dc-import></sc-if>
+
+</div>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><div class="al-sel__riga-9">
+<dc-import name="componenti/PillolaScelta" classe="al-scelta--sottili" forma="segmentato" ruolo="radio" misura="piccola" opzioni="{{ misO }}" etichetta="Misura" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,30px"></dc-import>
+<label class="al-sel__riga-10">Confronta con<select class="al-tendina al-tendina--piccolo" value="{{ misBV }}" onChange="{{ misBCambia }}"><sc-for list="{{ misBO }}" as="o" hint-placeholder-count="5"><option value="{{ o.k }}" selected="{{ o.sel }}">{{ o.l }}</option></sc-for></select></label>
+</div></sc-if>
+<div class="al-sel__riga-11">
+<span class="al-sel__testo-4">Filtro</span>
+<dc-import name="componenti/PillolaScelta" ruolo="radio" classe="al-sel__filtri al-scelta--sottili" opzioni="{{ cfO }}" etichetta="Filtro" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,32px"></dc-import>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><span class="al-sel__testo-8">un filtro alla volta: le misure di filtri diversi non si confrontano</span></sc-if>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><div class="al-sel__riga-8" style="margin-left:auto;display:flex;gap:8px;align-items:center">
+<div role="radiogroup" aria-label="Vista" style="flex:none;display:flex;gap:2px;padding:2px;border-radius:999px;background:var(--carta-2)"><sc-for list="{{ gvI }}" as="v" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ v.sel }}" aria-label="{{ v.l }}" title="{{ v.l }}" onClick="{{ v.on }}" style="width:44px;height:44px;padding:0;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;background:transparent;color:{{ v.fg }};box-shadow:{{ v.sh }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ v.d }}"></path></svg></button></sc-for></div>
+<select key="{{ ordT.v }}" defaultValue="{{ ordT.v }}" onChange="{{ ordT.on }}" aria-label="Ordine" class="al-tendina al-tendina--tondo" style="flex:none;align-self:flex-start;max-width:100%;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ ordT.o }}" as="x" hint-placeholder-count="2"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select>
+</div></sc-if>
+</div>
+<sc-if value="{{ G.vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-sel__riga-12"><dc-import name="componenti/Pillola" forma="segno" esito="mancante" fondo="carta2" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import>{{ G.vuoto }}</span></sc-if>
+<sc-if value="{{ G.pieno }}" hint-placeholder-val="{{ true }}">
+<div class="al-sel__centro-3">
+<sc-if value="{{ PV }}" hint-placeholder-val="{{ true }}"><div class="al-sel__colonna-13" role="region" aria-label="Il frame">
+<div class="al-sel__riga-13">
+<button type="button" onClick="{{ PV.prima }}" aria-label="Frame prima" class="al-bottone al-bottone--tenue al-bottone--piccolo al-bottone--icona al-sel__blocco-8">‹</button>
+<span class="al-sel__testo-18">{{ PV.pos }}</span>
+<button type="button" onClick="{{ PV.dopo }}" aria-label="Frame dopo" class="al-bottone al-bottone--tenue al-bottone--piccolo al-bottone--icona al-sel__blocco-8">›</button>
+</div>
+<div class="al-sel__blocco-9" onTouchStart="{{ PV.ts }}" onTouchEnd="{{ PV.te }}" style="background:{{ PV.fondo }}">
+<div class="{{ PV.vcls }}" role="img" aria-label="{{ PV.al }}"><sc-for list="{{ PV.viste }}" as="w" hint-placeholder-count="1"><svg class="al-sel__grafico-1" viewBox="{{ w.vb }}" width="100%" preserveAspectRatio="xMidYMid slice" style="background:{{ PV.fondo }}">
+<sc-for list="{{ PV.stelle }}" as="q" hint-placeholder-count="30"><ellipse cx="{{ q.x }}" cy="{{ q.y }}" rx="{{ q.rx }}" ry="{{ q.ry }}" transform="rotate(35 {{ q.x }} {{ q.y }})" opacity="{{ q.o }}" class="al-sel__stella"></ellipse></sc-for>
+<sc-if value="{{ PV.scia }}" hint-placeholder-val="{{ false }}"><line class="al-sel__scia" x1="-10" y1="182" x2="310" y2="34" stroke-width="1.4" opacity=".85"></line></sc-if>
+</svg></sc-for></div>
+<span class="al-sel__strato-3">frame simulato</span>
+<div class="al-sel__strato-4"><div class="al-sel__riga-14" role="radiogroup" aria-label="Ingrandimento"><sc-for list="{{ PV.zmO }}" as="o" hint-placeholder-count="3"><button type="button" class="al-bottone al-sel__tondo-3" role="radio" aria-checked="{{ o.sel }}" aria-label="{{ o.l }}" title="{{ o.l }}" onClick="{{ o.on }}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ o.d }}"></path></svg></button></sc-for></div><button type="button" class="al-bottone al-sel__tondo-4" onClick="{{ PV.fsApri }}" aria-label="Schermo intero" title="Schermo intero"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V3h4M11 3h4v4M15 11v4h-4M7 15H3v-4"></path></svg></button></div>
+</div>
+<div class="al-sel__riga-15">
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><button type="button" class="al-bottone al-sel__tondo-5 al-sel__tondo-5--pericolo" onClick="{{ PV.ko.on }}" aria-pressed="{{ PV.ko.p }}" aria-label="{{ PV.ko.al }}" title="{{ PV.ko.al }} (S)">✕</button></sc-if>
+<button type="button" class="al-bottone al-sel__tondo-6" onClick="{{ PV.play }}" aria-pressed="{{ PV.playA }}" aria-label="{{ PV.playL }}" title="{{ PV.playL }}">{{ PV.playS }}</button><a href="#" onClick="{{ PV.velGira }}" aria-label="{{ PV.velA }}" title="{{ PV.velA }}" class="al-tendina al-tendina--piccolo al-sel2__riga-1">{{ PV.velL }}<span class="al-sel2__testo-1" aria-hidden="true">↻</span></a>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><button type="button" class="al-bottone al-sel__tondo-5 al-sel__tondo-5--tieni" onClick="{{ PV.ok.on }}" aria-pressed="{{ PV.ok.p }}" aria-label="{{ PV.ok.al }}" title="{{ PV.ok.al }} (T)">✓</button></sc-if>
+</div>
+<sc-if value="{{ PV.extraD }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ PV.extra.on }}" class="al-bottone al-bottone--testo al-bottone--piccolo al-sel__blocco-10">{{ PV.extra.l }}</button></sc-if>
+<dc-import name="componenti/PillolaScelta" classe="al-scelta--sottili" forma="segmentato" ruolo="radio" misura="piccola" allinea="flex-start" opzioni="{{ PV.strO }}" etichetta="Stretch" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,30px"></dc-import>
+<span class="al-sel__testo-19">{{ PV.strN }}</span>
+<div class="al-sel__colonna-12"><b class="al-sel__testo-20">{{ PV.file }}</b><span class="al-sel__testo-8">{{ PV.sub }}</span></div>
+<span class="al-sel__riga-16"><span aria-hidden="true" class="{{ PV.st.cls }}">{{ PV.st.s }}</span><span class="al-sel__colonna-14"><span>{{ PV.st.l }}</span><sc-if value="{{ PV.st.sub }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-21">{{ PV.st.sub }}</span></sc-if></span></span>
+<sc-if value="{{ PV.notaD }}" hint-placeholder-val="{{ false }}"><input type="text" value="{{ PV.nota.v }}" onChange="{{ PV.nota.on }}" aria-label="Perché lo scarti" placeholder="Perché? per esempio scia di satellite" class="al-campo al-campo--piccolo al-campo--piena"></sc-if>
+<div class="al-sel__griglia-2">
+<sc-for list="{{ PV.righe }}" as="r" hint-placeholder-count="6"><span>{{ r.n }}</span><b class="al-sel__testo-22">{{ r.v }}</b><dc-import name="componenti/Pillola" esito="{{ r.es }}" segno="{{ r.zs }}" testo="{{ r.zt }}" classe="al-sel__pillola-1" modo="{{ modo }}" accento="{{ accento }}" hint-size="60px,20px"></dc-import></sc-for>
+</div>
+
+</div></sc-if>
+<sc-if value="{{ L.tel }}" hint-placeholder-val="{{ false }}"><div class="al-sel__colonna-15"><b class="al-sel__blocco-6">Le soglie applicate</b><sc-for list="{{ TS }}" as="r" hint-placeholder-count="3"><span class="al-sel__riga-17"><span>{{ r.l }}</span><b class="al-sel__testo-23">{{ r.c }}</b></span></sc-for><span class="al-sel__testo-8">Si cambiano dal computer.</span></div></sc-if>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><div class="al-sel__colonna-2">
+<div class="al-sel__blocco-11" tabindex="0" role="group" aria-label="{{ G.al }}" onKeyDown="{{ G.key }}" onPointerDown="{{ G.down }}" onPointerMove="{{ G.move }}" onPointerUp="{{ G.up }}" onPointerLeave="{{ G.leave }}"><sc-if value="{{ G.sg }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:{{ G.sg.left }};top:{{ G.sg.top }};transform:{{ G.sg.tf }};z-index:4;pointer-events:auto" onPointerDown="{{ G.sg.ferma }}"><sc-if value="{{ G.sg.nonUso }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ G.sg.on }}" aria-label="{{ G.sg.aria }}" title="{{ G.sg.dove }}" style="display:flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border:0;border-radius:999px;background:var(--testo);color:var(--carta);font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)">Usa {{ G.sg.l }}</button></sc-if><sc-if value="{{ G.sg.uso }}" hint-placeholder-val="{{ false }}"><span role="status" style="display:flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border-radius:999px;background:var(--carta);color:var(--testo);font-size:13px;font-weight:600;white-space:nowrap;box-shadow:inset 0 0 0 1.5px var(--accento), 0 6px 18px rgba(0,0,0,.35)"><span aria-hidden="true">✓</span>{{ G.sg.l }} in uso</span></sc-if></div></sc-if>
+<svg class="al-sel__grafico-2" viewBox="{{ G.vb }}" width="100%" aria-hidden="true">
+<sc-for list="{{ G.grid }}" as="g" hint-placeholder-count="3"><line class="al-sel__tratto-1" x1="{{ G.x0 }}" x2="{{ G.x1 }}" y1="{{ g.y }}" y2="{{ g.y }}" stroke-width="1"></line></sc-for>
+<line class="al-sel__tratto-1" x1="{{ G.x0 }}" x2="{{ G.x1 }}" y1="{{ G.bot }}" y2="{{ G.bot }}" stroke-width="1"></line>
+<sc-for list="{{ G.sep }}" as="x" hint-placeholder-count="2"><line class="al-sel__tratto-1" x1="{{ x.x }}" x2="{{ x.x }}" y1="{{ G.top }}" y2="{{ G.bot }}" stroke-width="1" stroke-dasharray="3 4"></line></sc-for>
+<sc-if value="{{ G.br }}" hint-placeholder-val="{{ false }}"><rect class="al-sel__tratto-2" x="{{ G.br.x }}" y="{{ G.top }}" width="{{ G.br.w }}" height="{{ G.br.h }}" rx="6" fill-opacity=".12" stroke-width="1" stroke-dasharray="4 3"></rect></sc-if>
+<sc-for list="{{ G.bars }}" as="b" hint-placeholder-count="40"><rect class="{{ b.cls }}" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="{{ b.r }}"></rect></sc-for>
+<sc-for list="{{ G.ticks }}" as="q" hint-placeholder-count="0"><path class="al-sel__tratto-3" d="{{ q.d }}" stroke-width="3.5" stroke-linecap="round"></path><path class="al-sel__tratto-4" d="{{ q.d }}" stroke-width="1.5" stroke-linecap="round"></path></sc-for>
+<sc-for list="{{ G.linee }}" as="l" hint-placeholder-count="0"><path class="{{ l.cls }}" d="{{ l.d }}" stroke-linejoin="round" stroke-linecap="round"></path></sc-for>
+<sc-for list="{{ G.dots }}" as="p" hint-placeholder-count="0"><path class="{{ p.cls }}" d="{{ p.d }}"></path></sc-for>
+<sc-for list="{{ G.soglie }}" as="q" hint-placeholder-count="1"><line class="al-sel__tratto-4" x1="{{ G.x0 }}" x2="{{ G.x1 }}" y1="{{ q.y }}" y2="{{ q.y }}" stroke-width="1.25" stroke-dasharray="6 5"></line></sc-for>
+<sc-for list="{{ G.marks }}" as="p" hint-placeholder-count="0"><path class="{{ p.cls }}" d="{{ p.d }}" stroke-linecap="round"></path></sc-for>
+<sc-if value="{{ G.hx }}" hint-placeholder-val="{{ false }}"><line class="al-sel__tratto-6" x1="{{ G.hx }}" x2="{{ G.hx }}" y1="{{ G.top }}" y2="{{ G.bot }}" stroke-width="1.25"></line></sc-if>
+</svg>
+<sc-for list="{{ G.yl }}" as="l" hint-placeholder-count="3"><span class="al-sel__strato-5" aria-hidden="true" style="top:{{ l.y }}">{{ l.l }}</span></sc-for>
+<sc-for list="{{ G.yr }}" as="l" hint-placeholder-count="0"><span class="al-sel__strato-6" aria-hidden="true" style="top:{{ l.y }}">{{ l.l }}</span></sc-for>
+<sc-for list="{{ G.ql }}" as="l" hint-placeholder-count="1"><span class="al-sel__strato-7" aria-hidden="true" style="right:{{ G.mr }};top:{{ l.y }}">{{ l.l }}</span></sc-for>
+<sc-if value="{{ G.tip }}" hint-placeholder-val="{{ false }}"><div role="tooltip" class="al-riquadro al-sel__blocco-12" style="left:{{ G.tip.l }};transform:{{ G.tip.tx }}"><b class="al-riquadro__titolo">{{ G.tip.t }}</b><span class="al-riquadro__sotto">{{ G.tip.s }}</span><span>{{ G.tip.n }}</span><b class="al-riquadro__valore">{{ G.tip.v }}</b><sc-if value="{{ G.tip.z }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Pillola" esito="{{ G.tip.z.es }}" segno="{{ G.tip.z.zs }}" testo="{{ G.tip.z.zt }}" classe="al-sel__pillola-2" modo="{{ modo }}" accento="{{ accento }}" hint-size="120px,20px"></dc-import></sc-if></div></sc-if>
+</div>
+<div class="al-sel__blocco-13" style="margin-left:{{ G.ml }};margin-right:{{ G.mr }}"><sc-for list="{{ G.gl }}" as="g" hint-placeholder-count="3"><span class="al-sel__strato-8" style="left:calc({{ g.x }} - {{ G.ml }})">{{ g.l }}</span></sc-for></div>
+<sc-if value="{{ G.win }}" hint-placeholder-val="{{ false }}"><div class="al-sel__riga-18" style="margin-left:{{ G.ml }};margin-right:{{ G.mr }}"><button type="button" onClick="{{ G.win.prima }}" aria-label="Frame prima" class="al-bottone al-bottone--tenue al-bottone--piccolo al-bottone--icona">‹</button><div class="al-sel__riquadro-1" onClick="{{ G.win.vai }}" role="slider" aria-label="Tratto dei frame in vista" aria-valuetext="{{ G.win.txt }}"><span class="al-sel__strato-9" style="left:{{ G.win.l }};width:{{ G.win.w }}"></span></div><button type="button" onClick="{{ G.win.dopo }}" aria-label="Frame dopo" class="al-bottone al-bottone--tenue al-bottone--piccolo al-bottone--icona">›</button><span class="al-sel__testo-24">{{ G.win.txt }}</span></div></sc-if>
+<sc-if value="{{ G.xlab }}" hint-placeholder-val="{{ false }}"><span class="al-sel__riga-19" style="margin-left:{{ G.ml }};margin-right:{{ G.mr }}"><span>{{ G.xlab.a }}</span><span>{{ G.xlab.b }}</span></span></sc-if>
+<div class="al-sel__riga-20"><sc-for list="{{ G.leg }}" as="l" hint-placeholder-count="5"><span class="al-sel__riga-21"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14"><path class="{{ l.cls }}" d="{{ l.d }}" stroke-linecap="round"></path></svg>{{ l.l }}</span></sc-for></div>
+<span class="al-sel__testo-25">{{ G.aiuto }}</span>
+<div class="al-sel__colonna-16" role="group" aria-label="Le soglie">
+<div class="al-sel__riga-22">
+<span class="al-sel__riga-23"><b class="al-sel__testo-26">Scarta i frame con…</b><span class="al-sel__testo-4">{{ TB.tot }}</span></span>
+<span class="al-sel__riga-24"><sc-if value="{{ TB.corredi }}" hint-placeholder-val="{{ false }}"><select key="{{ TB.corT.v }}" defaultValue="{{ TB.corT.v }}" onChange="{{ TB.corT.on }}" aria-label="Setup" class="al-tendina al-tendina--tondo" style="flex:none;align-self:flex-start;max-width:100%;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ TB.corT.o }}" as="x" hint-placeholder-count="2"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select></sc-if><sc-if value="{{ TB.stato }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Pillola" esito="avviso" segno="!" testo="modifiche da applicare" classe="al-sel__pillola-3" modo="{{ modo }}" accento="{{ accento }}" hint-size="180px,22px"></dc-import></sc-if><button type="button" onClick="{{ TB.applica }}" aria-disabled="{{ TB.appNo }}" class="al-bottone al-bottone--pieno al-bottone--piccolo">{{ TB.appL }}</button></span>
+</div>
+<sc-for list="{{ TB.righe }}" as="r" hint-placeholder-count="5"><div class="al-sel__centro-5">
+<dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ r.sw }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="150px,44px"></dc-import>
+<span class="{{ r.rcls }}">
+<div class="al-sel__blocco-15"><a href="#" onClick="{{ r.opT }}" aria-haspopup="listbox" aria-expanded="{{ r.opE }}" aria-label="{{ r.opA }}" class="al-tendina al-tendina--piccolo al-sel__riga-27">{{ r.opV }}<span class="al-sel__testo-28" aria-hidden="true">▾</span></a><sc-if value="{{ r.opMenu }}" hint-placeholder-val="{{ false }}"><div class="al-sel__strato-1" onClick="{{ r.opChiudi }}"></div><div class="al-sel__strato-11" role="listbox" aria-label="{{ r.opA }}"><sc-for list="{{ r.opO }}" as="o" hint-placeholder-count="4"><a class="al-sel__riga-28" href="#" role="option" aria-selected="{{ o.selA }}" onClick="{{ o.on }}"><b class="al-sel__blocco-16">{{ o.l }}</b><span class="al-sel__testo-29">{{ o.a }}</span></a></sc-for></div></sc-if></div>
+<input type="text" inputmode="decimal" value="{{ r.v }}" onChange="{{ r.onV }}" aria-label="{{ r.vA }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--piccolo al-campo--numero al-sel__blocco-17">
+<span class="al-sel__testo-30">{{ r.u }}</span>
+<sc-if value="{{ r.qui }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tenue);white-space:nowrap"><span aria-hidden="true">✎</span>cambiata qui<button type="button" class="al-bottone al-bottone--testo al-bottone--piccolo" onClick="{{ r.ripristina }}" aria-label="{{ r.ripA }}" style="min-height:44px">Ripristina</button></span></sc-if>
+<sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-31" role="alert">✕ {{ r.err }}</span></sc-if>
+</span>
+<b class="al-sel__testo-32">{{ r.conta }}</b>
+</div></sc-for>
+<div class="al-sel__colonna-17">
+<div class="al-sel__centro-6">
+<dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ TB.fx.sw }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="150px,44px"></dc-import>
+<span class="al-sel__riga-26">
+<input type="text" value="{{ TB.fx.testo }}" onInput="{{ TB.fx.onT }}" aria-label="Formula" aria-invalid="{{ TB.fx.inv }}" placeholder="per esempio FWHM / SNR &gt; 0.012" spellcheck="false" class="al-campo al-campo--piccolo al-sel__blocco-19">
+<select class="al-tendina al-tendina--piccolo al-sel__blocco-20" aria-label="Aggiungi alla formula" value="" onChange="{{ TB.fx.onAdd }}"><option value="">Aggiungi…</option><sc-for list="{{ TB.fx.chips }}" as="c" hint-placeholder-count="16"><option value="{{ c.l }}">{{ c.n }}</option></sc-for></select>
+</span>
+<b class="al-sel__testo-32">{{ TB.fx.conta }}</b>
+</div>
+<div class="al-sel__riga-29">
+<span class="{{ TB.fx.esCls }}" role="status" aria-live="polite"><span aria-hidden="true" class="{{ TB.fx.esSCls }}">{{ TB.fx.esS }}</span><span class="al-sel__blocco-22">{{ TB.fx.es }}</span></span>
+</div>
+</div>
+</div>
+</div></sc-if>
+
+
+</div>
+</sc-if>
+</dc-import>
+
+<sc-if value="{{ E }}" hint-placeholder-val="{{ false }}"><div role="status"><dc-import name="componenti/Avviso" tipo="blocco" formato="{{ fmt }}" segno="{{ E.s }}" titolo="{{ E.t }}" testo="{{ E.x }}" azione="{{ E.a }}" on-azione="{{ E.on }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,90px"></dc-import></div></sc-if>
+
+<sc-if value="{{ SC.on }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Carta" formato="{{ fmt }}" padding="var(--sel-carta-pad)" gap="14" modo="{{ modo }}" accento="{{ accento }}" etichetta="In scartate" hint-size="100%,240px">
+<div class="al-sel__riga-7">
+<span class="al-sel__riga-31"><h2 class="al-sel__testo-17">In «scartate»</h2><span class="al-sel__testo-34">{{ SC.sub }}</span></span>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><div class="al-sel__riga-32"><button type="button" onClick="{{ SC.tutti }}" class="al-bottone al-bottone--contorno al-bottone--piccolo">Riporta indietro tutti</button><button type="button" onClick="{{ SC.cancella }}" class="al-bottone al-bottone--pericolo al-bottone--piccolo">Elimina dal disco…</button></div></sc-if>
+</div>
+<sc-for list="{{ SC.dir }}" as="d" hint-placeholder-count="3"><div class="al-sel__riga-33">
+<span class="al-sel__colonna-18"><span class="al-sel__testo-35">{{ d.p }}</span><span class="al-sel__testo-36">{{ d.n }} · da {{ d.da }}</span></span>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ d.on }}" class="al-bottone al-bottone--tenue al-bottone--piccolo">Riporta indietro</button></sc-if>
+</div></sc-for>
+<span class="al-sel__testo-25">Si eliminano solo da qui, mai da una cartella normale. Eliminati, non si recuperano.</span>
+</dc-import></sc-if>
+
+<sc-if value="{{ CN }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-4">{{ CN }}</span></sc-if>
+
+<sc-if value="{{ SB.on }}" hint-placeholder-val="{{ false }}"><div class="al-sel__riga-34" role="toolbar" aria-label="Frame selezionati">
+<b class="al-sel__testo-37">{{ SB.n }}</b>
+<sc-for list="{{ SB.az }}" as="a" hint-placeholder-count="3"><button type="button" onClick="{{ a.on }}" class="{{ a.cls }}">{{ a.l }}</button></sc-for>
+<button type="button" onClick="{{ SB.via }}" aria-label="Togli la selezione" class="al-bottone al-bottone--piccolo al-bottone--icona">×</button>
+</div></sc-if>
+
+</div>
+</sc-if>
+
+<sc-if value="{{ V.regole }}" hint-placeholder-val="{{ false }}">
+<div class="al-sel__colonna-1">
+<div class="al-sel__colonna-19">
+<button type="button" class="al-bottone al-sel__riga-35" onClick="{{ chiudiRegole }}">← Selezione dei frame</button>
+<span class="al-sel__riga-36"><h1 class="al-sel__testo-38">Impostazioni</h1><span class="al-sel__testo-12">le soglie di ogni setup</span></span>
+<dc-import name="componenti/PillolaScelta" forma="linguette" scorre="{{ L.tel }}" opzioni="{{ tabs }}" etichetta="Sezioni" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,36px"></dc-import>
+</div>
+<div class="al-sel__centro-7">
+<dc-import name="componenti/Carta" formato="{{ fmt }}" colonne="8" padding="var(--sel-carta-pad)" gap="0" modo="{{ modo }}" accento="{{ accento }}" etichetta="Soglie per setup" hint-size="100%,420px">
+<div class="al-sel__colonna-20"><span class="al-sel__testo-39">Scarta i frame con…</span>
+<select key="{{ TI.corT.v }}" defaultValue="{{ TI.corT.v }}" onChange="{{ TI.corT.on }}" aria-label="Setup" class="al-tendina al-tendina--tondo" style="flex:none;align-self:flex-start;max-width:100%;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ TI.corT.o }}" as="x" hint-placeholder-count="2"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select>
+<dc-import name="componenti/PillolaScelta" classe="al-scelta--sottili" forma="segmentato" ruolo="radio" misura="piccola" allinea="flex-start" opzioni="{{ TI.filtri }}" etichetta="Filtro" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,30px"></dc-import>
+<span class="al-sel__riga-37"><span class="al-sel__testo-5">{{ TI.sub }}</span><sc-if value="{{ TI.stato }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Pillola" esito="avviso" segno="!" testo="modifiche da applicare" classe="al-sel__pillola-3" modo="{{ modo }}" accento="{{ accento }}" hint-size="180px,22px"></dc-import></sc-if><button type="button" onClick="{{ TI.applica }}" aria-disabled="{{ TI.appNo }}" class="al-bottone al-bottone--pieno al-bottone--piccolo">Applica</button></span></div>
+<sc-for list="{{ TI.righe }}" as="r" hint-placeholder-count="5"><div class="al-sel__centro-5">
+<dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ r.sw }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="150px,44px"></dc-import>
+<span class="{{ r.rcls }}">
+<div class="al-sel__blocco-15"><a href="#" onClick="{{ r.opT }}" aria-haspopup="listbox" aria-expanded="{{ r.opE }}" aria-label="{{ r.opA }}" class="al-tendina al-tendina--piccolo al-sel__riga-27">{{ r.opV }}<span class="al-sel__testo-28" aria-hidden="true">▾</span></a><sc-if value="{{ r.opMenu }}" hint-placeholder-val="{{ false }}"><div class="al-sel__strato-1" onClick="{{ r.opChiudi }}"></div><div class="al-sel__strato-11" role="listbox" aria-label="{{ r.opA }}"><sc-for list="{{ r.opO }}" as="o" hint-placeholder-count="4"><a class="al-sel__riga-28" href="#" role="option" aria-selected="{{ o.selA }}" onClick="{{ o.on }}"><b class="al-sel__blocco-16">{{ o.l }}</b><span class="al-sel__testo-29">{{ o.a }}</span></a></sc-for></div></sc-if></div>
+<input type="text" inputmode="decimal" value="{{ r.v }}" onChange="{{ r.onV }}" aria-label="{{ r.vA }}" aria-invalid="{{ r.inv }}" class="al-campo al-campo--piccolo al-campo--numero al-sel__blocco-17">
+<span class="al-sel__testo-30">{{ r.u }}</span>
+<sc-if value="{{ r.qui }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tenue);white-space:nowrap"><span aria-hidden="true">✎</span>cambiata qui<button type="button" class="al-bottone al-bottone--testo al-bottone--piccolo" onClick="{{ r.ripristina }}" aria-label="{{ r.ripA }}" style="min-height:44px">Ripristina</button></span></sc-if>
+<sc-if value="{{ r.err }}" hint-placeholder-val="{{ false }}"><span class="al-sel__testo-31" role="alert">✕ {{ r.err }}</span></sc-if>
+</span>
+<b class="al-sel__testo-32">{{ r.conta }}</b>
+</div></sc-for>
+<div class="al-sel__colonna-17">
+<div class="al-sel__centro-6">
+<dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ TI.fx.sw }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="150px,44px"></dc-import>
+<span class="al-sel__riga-26">
+<input type="text" value="{{ TI.fx.testo }}" onInput="{{ TI.fx.onT }}" aria-label="Formula" aria-invalid="{{ TI.fx.inv }}" placeholder="per esempio FWHM / SNR &gt; 0.012" spellcheck="false" class="al-campo al-campo--piccolo al-sel__blocco-19">
+<select class="al-tendina al-tendina--piccolo al-sel__blocco-20" aria-label="Aggiungi alla formula" value="" onChange="{{ TI.fx.onAdd }}"><option value="">Aggiungi…</option><sc-for list="{{ TI.fx.chips }}" as="c" hint-placeholder-count="16"><option value="{{ c.l }}">{{ c.n }}</option></sc-for></select>
+</span>
+<b class="al-sel__testo-32">{{ TI.fx.conta }}</b>
+</div>
+<div class="al-sel__riga-29">
+<span class="{{ TI.fx.esCls }}" role="status" aria-live="polite"><span aria-hidden="true" class="{{ TI.fx.esSCls }}">{{ TI.fx.esS }}</span><span class="al-sel__blocco-22">{{ TI.fx.es }}</span></span>
+</div>
+</div>
+</dc-import>
+<dc-import name="componenti/Carta" formato="{{ fmt }}" colonne="4" padding="var(--sel-carta-pad)" gap="12" modo="{{ modo }}" accento="{{ accento }}" etichetta="Come funzionano" hint-size="100%,300px">
+<span class="al-sel__testo-39">Come funzionano</span>
+<sc-for list="{{ COME }}" as="c" hint-placeholder-count="5"><span class="al-sel__griglia-3"><dc-import name="componenti/Pillola" forma="segno" esito="mancante" segno="{{ c.s }}" fondo="carta2" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import><span>{{ c.t }}</span></span></sc-for>
+</dc-import>
+</div>
+</div>
+</sc-if>
+
+</dc-import>
+
+<sc-if value="{{ PVF }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Finestra" larghezza="schermo" testa="no" titolo="Il frame a schermo intero" on-chiudi="{{ PV.fsChiudi }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="0px,0px">
+<div class="al-sel__riga-38">
+<span class="al-sel__colonna-12"><b class="al-sel__testo-40">{{ PV.file }}</b><span class="al-sel__testo-29">{{ PV.sub }} · {{ PV.st.l }}</span></span>
+<span class="al-sel__riga-39">frecce per scorrere · S scarta · T tiene · Esc per tornare<button type="button" class="al-bottone al-sel__tondo-7" onClick="{{ PV.fsChiudi }}" aria-label="Torna alla pagina">×</button></span>
+</div>
+<div class="al-sel__riga-40">
+<div class="al-sel__blocco-23"><div class="{{ PV.vcls }}" role="img" aria-label="{{ PV.al }}"><sc-for list="{{ PV.viste }}" as="w" hint-placeholder-count="1"><svg class="al-sel__grafico-1" viewBox="{{ w.vb }}" width="100%" preserveAspectRatio="xMidYMid slice" style="background:{{ PV.fondo }}">
+<sc-for list="{{ PV.stelle }}" as="q" hint-placeholder-count="30"><ellipse cx="{{ q.x }}" cy="{{ q.y }}" rx="{{ q.rx }}" ry="{{ q.ry }}" transform="rotate(35 {{ q.x }} {{ q.y }})" opacity="{{ q.o }}" class="al-sel__stella"></ellipse></sc-for>
+<sc-if value="{{ PV.scia }}" hint-placeholder-val="{{ false }}"><line class="al-sel__scia" x1="-10" y1="182" x2="310" y2="34" stroke-width="1.4" opacity=".85"></line></sc-if>
+</svg></sc-for></div><div class="al-sel__strato-4"><div class="al-sel__riga-14" role="radiogroup" aria-label="Ingrandimento"><sc-for list="{{ PV.zmO }}" as="o" hint-placeholder-count="3"><button type="button" class="al-bottone al-sel__tondo-3" role="radio" aria-checked="{{ o.sel }}" aria-label="{{ o.l }}" title="{{ o.l }}" onClick="{{ o.on }}"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ o.d }}"></path></svg></button></sc-for></div><button type="button" class="al-bottone al-sel__tondo-4" onClick="{{ PV.fsApri }}" aria-label="Schermo intero" title="Schermo intero"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V3h4M11 3h4v4M15 11v4h-4M7 15H3v-4"></path></svg></button></div></div>
+</div>
+<div class="al-sel__riga-15">
+<button type="button" class="al-bottone al-sel__tondo-8" onClick="{{ PV.prima }}" aria-label="Frame prima">‹</button>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><button type="button" class="al-bottone al-sel__tondo-5 al-sel__tondo-5--pericolo al-sel__tondo-5--su-immagine" onClick="{{ PV.ko.on }}" aria-pressed="{{ PV.ko.p }}" aria-label="{{ PV.ko.al }}">✕</button></sc-if>
+<span class="al-sel__blocco-24">{{ PV.pos }}</span>
+<sc-if value="{{ L.desk }}" hint-placeholder-val="{{ true }}"><button type="button" class="al-bottone al-sel__tondo-5 al-sel__tondo-5--tieni al-sel__tondo-5--su-immagine" onClick="{{ PV.ok.on }}" aria-pressed="{{ PV.ok.p }}" aria-label="{{ PV.ok.al }}">✓</button></sc-if>
+<button type="button" class="al-bottone al-sel__tondo-8" onClick="{{ PV.dopo }}" aria-label="Frame dopo">›</button>
+</div>
+</dc-import></sc-if>
+
+<sc-if value="{{ FS }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Finestra" titolo="{{ FS.tit }}" sottotitolo="{{ FS.sub }}" larghezza="media" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" on-chiudi="{{ chiudiFin }}" hint-size="0px,0px">
+<p class="al-finestra__testo al-sel__testo-41">I file vanno nella cartella «scartate», nella radice dell'archivio, con lo stesso percorso: lo stacking non li vede più. Si riportano indietro quando vuoi.</p>
+<div class="al-sel__colonna-21"><sc-for list="{{ FS.dir }}" as="d" hint-placeholder-count="3"><div class="al-sel__riga-41"><span class="al-sel__colonna-12"><span class="al-sel__testo-35">{{ d.p }}</span><span class="al-sel__testo-36">→ {{ d.dove }}</span></span><span class="al-sel__testo-42">{{ d.n }}</span></div></sc-for></div>
+<div class="al-finestra__gesti"><button type="button" onClick="{{ chiudiFin }}" class="al-bottone al-bottone--contorno">Annulla</button><button type="button" onClick="{{ FS.ok }}" class="al-bottone al-bottone--pieno">{{ FS.okL }}</button></div>
+</dc-import></sc-if>
+
+<sc-if value="{{ FC }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Finestra" titolo="{{ FC.tit }}" segno="{{ FC.segno }}" sottotitolo="{{ FC.sub }}" larghezza="media" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" on-chiudi="{{ chiudiFin }}" hint-size="0px,0px">
+<p class="al-sel__testo-43">{{ FC.testo }}</p>
+<div class="al-sel__colonna-21"><sc-for list="{{ FC.dir }}" as="d" hint-placeholder-count="3"><div class="al-sel__riga-41"><span class="al-sel__blocco-25">{{ d.p }}</span><span class="al-sel__testo-42">{{ d.n }}</span></div></sc-for></div>
+<p class="al-finestra__testo al-sel__testo-41">Si eliminano solo i frame in «scartate». Le cartelle normali non si toccano.</p>
+<div class="al-finestra__gesti"><button type="button" onClick="{{ chiudiFin }}" class="al-bottone al-bottone--contorno">Annulla</button><button type="button" onClick="{{ FC.ok }}" class="{{ FC.okCls }}">{{ FC.okL }}</button></div>
+</dc-import></sc-if>
+
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;esempio&quot;,&quot;appena aperto&quot;,&quot;misura in corso&quot;,&quot;dopo lo spostamento&quot;,&quot;notte da misurare&quot;,&quot;nessun progetto in corso&quot;,&quot;formula con errore&quot;,&quot;modifiche da applicare&quot;,&quot;elimina, col cestino&quot;,&quot;elimina, senza cestino (NAS)&quot;],&quot;default&quot;:&quot;esempio&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;errore&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;nessuno&quot;,&quot;cartella in sola lettura (NAS)&quot;,&quot;disco staccato&quot;,&quot;file aperto da un altro programma&quot;],&quot;default&quot;:&quot;nessuno&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;vista&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;selezione&quot;,&quot;impostazioni&quot;],&quot;default&quot;:&quot;selezione&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440 };
+  componentDidMount() { this._kd = e => this._fsKey && this._fsKey(e); window.addEventListener('keydown', this._kd); this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); this._rs(); if (typeof ResizeObserver !== 'undefined') { this._ro = new ResizeObserver(() => { if (window.innerWidth !== this.state.w) this._rs(); }); this._ro.observe(document.documentElement); } }
+  componentWillUnmount() { window.removeEventListener('keydown', this._kd); this._alw && clearInterval(this._alw); this._play && clearInterval(this._play); this._ro && this._ro.disconnect(); window.removeEventListener('resize', this._rs); }
+  componentDidUpdate(pp) { if (pp.stato !== this.props.stato || pp.errore !== this.props.errore) this.setState(this.inizio(this.props.stato)); if (pp.vista !== this.props.vista) this.setState({ vista: null }); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  // Archivio simulato: cinque gruppi (oggetto + setup + filtro + posa + guadagno) in tre notti
+  archivio() { if (this._A) return this._A;
+    const SET = { fra: { k: 'fra', n: 'Askar FRA400 + ZWO ASI2600MM Pro', b: 'FRA400 + 2600MM', sc: 1.94, ap: 72, mb: 52, gain: 100 }, a103: { k: 'a103', n: 'Askar 103 + ZWO ATR2600M', b: 'Askar 103 + ATR2600M', sc: 1.385, ap: 103, mb: 52, gain: 100 } };
+    const NOTTI = [{ k: 'n05', n: '5 ottobre', c: '5/10', d: '2026-10-05', disco: 'D:\\Astro' }, { k: 'n12', n: '12 ottobre', c: '12/10', d: '2026-10-12', disco: '\\\\NAS\\astro' }, { k: 'n18', n: '18 ottobre', c: '18/10', d: '2026-10-18', disco: 'E:\\Astro' }];
+    const GR = [
+      { k: 'm31L', o: 'M 31', s: 'fra', f: 'l', posa: 300, cul: 85, tr: 23.8, b: { hfd: 5.6, snr: 380, st: 2300, ecc: .37, bg: 780, sqm: 19.62 }, parti: [['n05', 40, 20.67], ['n12', 40, 21.0], ['n18', 40, 22.25]] },
+      { k: 'm31L180', o: 'M 31', s: 'fra', f: 'l', posa: 180, cul: 85, tr: 23.8, b: { hfd: 5.5, snr: 290, st: 2150, ecc: .37, bg: 470, sqm: 19.62 }, parti: [['n18', 20, 20.4]] },
+      { k: 'm31H', o: 'M 31', s: 'fra', f: 'ha', posa: 600, cul: 85, tr: 23.8, b: { hfd: 6.0, snr: 210, st: 950, ecc: .35, bg: 300 }, parti: [['n05', 16, 24.4], ['n18', 16, 19.3]] },
+      { k: 'n7000', o: 'NGC 7000', s: 'fra', f: 'ha', posa: 600, cul: 88, tr: 20.3, b: { hfd: 6.2, snr: 240, st: 3200, ecc: .34, bg: 320 }, parti: [['n12', 12, 18.85]] },
+      { k: 'm33L', o: 'M 33', s: 'a103', f: 'l', posa: 180, cul: 75, tr: 24.6, b: { hfd: 4.1, snr: 300, st: 1800, ecc: .41, bg: 820, sqm: 19.55 }, parti: [['n12', 30, 21.2], ['n18', 30, 22.0]] }];
+    const list = [], idx = {}, pad = n => String(n).padStart(4, '0'), R = Math.PI / 180;
+    GR.forEach((g, gk) => { const S = SET[g.s], FN = g.f === 'l' ? 'L' : 'Ha', ON = g.o.replace(' ', ''); let num = 0;
+      g.parti.forEach(([nk, cnt, h0]) => { const ni = NOTTI.findIndex(x => x.k === nk), N = NOTTI[ni];
+        for (let i = 0; i < cnt; i++) { num++; const ph = i * 2.39996 + ni * 1.7 + .3 + gk, ora = h0 + i * (g.posa + 30) / 3600, sc = g.b.hfd / 5.6;
+          const alt = Math.max(20, g.cul - 12 * Math.abs(ora - g.tr)), X = 1 / Math.sin(alt * R);
+          let hfd = g.b.hfd + .08 * sc * Math.sin(ph), snr = g.b.snr * (1 + .06 * Math.sin(ph * 1.3 + 1)), st = g.b.st * (1 + .05 * Math.sin(ph * .7 + 2)), bg = g.b.bg * (1 + .03 * Math.sin(ph * 1.1)) + (X - 1) * 40, grad = 3 + 1.1 * (1 + Math.sin(ph * .9)), sqm = g.b.sqm != null ? g.b.sqm + .05 * Math.sin(ph * 1.7) : null;
+          let ecc = g.b.ecc + .05 * Math.sin(ph * 1.9 + .5);
+          const nuv = (g.k === 'm31L' && nk === 'n12' && i >= 18 && i <= 25) || (g.k === 'n7000' && i === 4) || (g.k === 'm33L' && nk === 'n12' && i >= 21 && i <= 22);
+          if (nuv) { hfd = g.b.hfd + .75 * sc + .07 * (i % 8); snr = g.b.snr * .53 + 8 * (i % 3); st = g.b.st * .3 + 20 * (i % 5); bg = g.b.bg * 1.42 + 6 * i; grad = 9 + (i % 3); if (sqm != null) sqm = 18.72 + .03 * (i % 4); }
+          if (g.k === 'm31L' && nk === 'n05' && i === 36) hfd = g.b.hfd * 1.14;
+          if (g.k === 'm31H' && nk === 'n05' && i === 15) hfd = g.b.hfd * 1.17;
+          if (g.k === 'm33L' && nk === 'n18' && i === 9) ecc = .76;
+          const f = { id: g.k + '-' + nk + '-' + i, g: g.k, o: g.o, s: g.s, f: g.f, n: nk, ni, i, ora, t: ni * 100 + ora, posa: g.posa, mb: S.mb, sc: S.sc,
+            file: ON + '_' + FN + '_' + g.posa + 's_' + pad(num) + '.fits', dir: N.disco + '\\' + N.d + '\\' + g.o + '\\' + FN, radice: N.disco, rel: N.d + '\\' + g.o + '\\' + FN, gain: S.gain,
+            hfd, fw: hfd / 1.36, stelle: Math.round(st), ecc, snr, bg, grad, X, sqm };
+          list.push(f); idx[f.id] = f; } }); });
+    return (this._A = { SET, NOTTI, GR, list, idx }); }
+  inizio(st) { const man = {}, scart = {}, nota = {}, id = (n, i) => 'm31L-' + n + '-' + i;
+    if (st !== 'appena aperto') { [id('n05', 36), id('n12', 18)].forEach(k => { man[k] = 'tenuto'; }); [id('n05', 22), id('n18', 5), id('n18', 14)].forEach(k => { man[k] = 'escluso'; nota[k] = 'scia di satellite'; }); }
+    if (st === 'dopo lo spostamento') { for (let i = 19; i <= 25; i++) scart[id('n12', i)] = true; [id('n05', 22), id('n18', 5), id('n18', 14)].forEach(k => { scart[k] = true; }); }
+    if (st === 'elimina, col cestino') [id('n05', 22), id('n18', 5), id('n18', 14)].forEach(k => { scart[k] = true; });
+    if (st === 'elimina, senza cestino (NAS)') for (let i = 19; i <= 25; i++) { scart[id('n12', i)] = true; man[id('n12', i)] = 'escluso'; }
+    return { man, scart, nota, canc: {}, sel: {}, storia: [], esito: null, fin: st && st.indexOf('elimina') === 0 ? 'cancella' : null, riprova: false, hov: null, br: null, cur: null, playing: false }; }
+  // La formula: misure (FWHM, HFD, Eccentricità, Stelle, SNR, Fondo, Gradiente), anche con _mediana _mad _min _max del gruppo; + − × ÷, parentesi, < > ≤ ≥, «e» / «o». Vera = il frame si scarta.
+  formula(testo) {
+    const NOMI = { fwhm: 'fw', hfd: 'hfd', stelle: 'stelle', 'eccentricità': 'ecc', eccentricita: 'ecc', ecc: 'ecc', snr: 'snr', fondo: 'bg', gradiente: 'grad', altezza: 'alt' }, SUF = { mediana: 'md', mad: 'mad', min: 'min', max: 'max' };
+    const s = (testo || '').trim(); if (!s) return { err: 'Scrivi una formula, per esempio FWHM / SNR > 0.012.' };
+    const tk = []; let i = 0;
+    while (i < s.length) { const c = s[i];
+      if (/\s/.test(c)) { i++; continue; }
+      const d2 = s.slice(i, i + 2); if (['<=', '>=', '&&', '||'].includes(d2)) { tk.push({ t: 'op', v: d2 === '<=' ? '≤' : d2 === '>=' ? '≥' : d2 === '&&' ? 'e' : 'o' }); i += 2; continue; }
+      if ('<>≤≥+-−*/×÷()'.includes(c)) { tk.push({ t: 'op', v: c === '×' ? '*' : c === '÷' ? '/' : c === '−' ? '-' : c }); i++; continue; }
+      const num = s.slice(i).match(/^\d+(?:[.,]\d+)?/); if (num) { tk.push({ t: 'n', v: parseFloat(num[0].replace(',', '.')) }); i += num[0].length; continue; }
+      const w = s.slice(i).match(/^[A-Za-zÀ-ÿ_]+/); if (w) { const x = w[0].toLowerCase(); i += w[0].length;
+        if (x === 'e' || x === 'and') { tk.push({ t: 'op', v: 'e' }); continue; } if (x === 'o' || x === 'or') { tk.push({ t: 'op', v: 'o' }); continue; }
+        const [b, sf] = x.split('_'); if (!NOMI[b]) return { err: '«' + w[0] + '» non è una misura: usa FWHM, HFD, Eccentricità, Stelle, SNR, Fondo, Gradiente, Altezza.' };
+        if (sf && !SUF[sf]) return { err: 'Dopo «' + w[0].split('_')[0] + '_» va mediana, mad, min o max.' };
+        tk.push({ t: 'v', m: NOMI[b], q: sf ? SUF[sf] : null }); continue; }
+      return { err: 'Il segno «' + c + '» non si usa: servono + − × ÷, parentesi e < > ≤ ≥.' }; }
+    let p = 0; const usa = new Set(), isOp = v => tk[p] && tk[p].t === 'op' && tk[p].v === v, fail = m => { throw new Error(m); };
+    const bin = (a, b, op) => ({ k: 'n', fn: (f, g) => { const x = a.fn(f, g), y = b.fn(f, g); if (x == null || y == null) return null; return op === '+' ? x + y : op === '-' ? x - y : op === '*' ? x * y : y === 0 ? null : x / y; } });
+    let pOr = null;
+    const pAt = () => { const x = tk[p]; if (!x) fail('La formula finisce a metà.'); if (x.t === 'n') { p++; return { k: 'n', fn: () => x.v }; } if (x.t === 'v') { p++; if (!x.q) usa.add(x.m); return { k: 'n', fn: (f, g) => g(x.m, f, x.q) }; }
+      if (x.v === '(') { p++; const e = pOr(); if (!isOp(')')) fail('Manca una parentesi chiusa.'); p++; return e; } fail('Prima di «' + x.v + '» manca un numero o una misura.'); };
+    const pUn = () => { if (isOp('-')) { p++; const a = pUn(); return { k: 'n', fn: (f, g) => { const v = a.fn(f, g); return v == null ? null : -v; } }; } return pAt(); };
+    const pProd = () => { let a = pUn(); while (isOp('*') || isOp('/')) { const op = tk[p++].v; a = bin(a, pUn(), op); } return a; };
+    const pSum = () => { let a = pProd(); while (isOp('+') || isOp('-')) { const op = tk[p++].v; a = bin(a, pProd(), op); } return a; };
+    const pCmp = () => { const a = pSum(), x = tk[p]; if (x && x.t === 'op' && '<>≤≥'.includes(x.v)) { p++; const b = pSum(), op = x.v; if (a.k === 'b' || b.k === 'b') fail('Un confronto alla volta: lega i confronti con «e» o «o».');
+        return { k: 'b', fn: (f, g) => { const u = a.fn(f, g), v = b.fn(f, g); if (u == null || v == null) return null; return op === '<' ? u < v : op === '>' ? u > v : op === '≤' ? u <= v : u >= v; } }; } return a; };
+    const logic = (sub, word) => () => { let a = sub(); while (isOp(word)) { p++; const b = sub(); if (a.k !== 'b' || b.k !== 'b') fail('«' + word + '» lega due confronti, per esempio FWHM > 3 ' + word + ' Stelle < 500.'); const x = a, y = b;
+        a = { k: 'b', fn: (f, g) => { const u = x.fn(f, g), v = y.fn(f, g); if (u == null || v == null) return null; return word === 'e' ? u && v : u || v; } }; } return a; };
+    const pAnd = logic(pCmp, 'e'); pOr = logic(pAnd, 'o');
+    try { const r = pOr(); if (p < tk.length) fail('Verso la fine c\u0027è qualcosa di troppo.'); if (r.k !== 'b') fail('Manca il confronto: aggiungi per esempio > 0.012.'); return { fn: r.fn, usa: [...usa] }; } catch (e) { return { err: e.message }; } }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    if (!this._ini) { const st0 = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('stato')) || this.props.stato || 'esempio';
+      Object.assign(this.state, this.inizio(st0), { sg: {}, sgT: {}, bz: st0 === 'formula con errore' ? { fra: { fx: { on: true, testo: 'FWHM / > 0.012' } } } : st0 === 'modifiche da applicare' ? { 'fra|l': { fw: { tipo: 'abs', v: 2.9 }, snr: { v: 2 } } } : {} },
+        st0 === 'notte da misurare' ? { parti: 'notte', nn: ['n18'] } : st0 === 'nessun progetto in corso' ? { parti: 'progetto' } : {}); this._ini = true; }
+    const p = this.props, s = this.state, set = o => this.setState(o), no = e => { if (e && e.preventDefault) e.preventDefault(); };
+    const q0 = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams(), modo = s.modo || q0.get('modo') || p.modo || 'scuro', accento = q0.get('accento') || p.accento, t = AL.tema(modo, accento);
+    const tel = AL.telefono(AL.formatoScelto(p.formato), s.w), fmt = tel ? 'telefono' : 'desktop';
+    const qs = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
+    const vista = s.vista || (qs.get('vista') === 'regole' || p.vista === 'impostazioni' ? 'regole' : 'pagina');
+    const A = this.archivio(), P = (v, d) => v == null || isNaN(v) ? '—' : v.toFixed(d), FDn = k => (AL.FD[k] || AL.FD.ignoto)[0];
+    const qn = (a, q) => { const b = a.slice().sort((x, y) => x - y); if (!b.length) return null; const i = (b.length - 1) * q, lo = Math.floor(i); return b[lo] + (b[Math.min(lo + 1, b.length - 1)] - b[lo]) * (i - lo); };
+    const hhmm = h => { const m = Math.round(h * 60) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+    const MB = n => n >= 1000 ? P(n / 1000, 2) + ' GB' : n + ' MB', H = fr => fr.reduce((a, f) => a + f.posa, 0) / 3600;
+    // Spaziature, raggi, titoli e griglie stanno nel foglio sotto [data-formato="telefono"]: qui resta solo quale formato e'
+    const L = { desk: !tel, tel };
+    // Le misure
+    const STATO = qs.get('stato') || p.stato || 'esempio', inCorso = STATO === 'misura in corso', daMis = STATO === 'notte da misurare', misurato = f => !(inCorso && f.g === 'm31L' && f.n === 'n18' && f.i >= 28) && !(daMis && f.n === 'n18');
+    const M = { fw: { l: 'FWHM', u: '″', get: f => f.fw, fmt: v => P(v, 2) + '″' }, hfd: { l: 'HFD', u: '″', get: f => f.hfd, fmt: v => P(v, 2) + '″' },
+      ecc: { l: 'Eccentricità', u: '', get: f => f.ecc, fmt: v => P(v, 2) }, stelle: { l: 'Stelle', u: '', get: f => f.stelle, fmt: v => AL.num(Math.round(v)) },
+      snr: { l: 'SNR', u: '', get: f => f.snr, fmt: v => AL.num(Math.round(v)) }, bg: { l: 'Fondo cielo', u: 'ADU', get: f => f.bg, fmt: v => AL.num(Math.round(v)) + ' ADU' },
+      grad: { l: 'Gradiente', u: '%', get: f => f.grad, fmt: v => P(v, 1) + '%' }, X: { l: 'Massa d\u0027aria', u: '', get: f => f.X, fmt: v => P(v, 2) },
+      sqm: { l: 'Luminosità del cielo', u: '', get: f => f.sqm, fmt: v => 'SQM ' + P(v, 2) }, alt: { l: 'Altezza', u: '°', get: f => Math.asin(1 / f.X) * 180 / Math.PI, fmt: v => Math.round(v) + '°' } };
+    const MK = Object.keys(M), getM = (m, f) => m === 'X' || m === 'alt' ? M[m].get(f) : misurato(f) ? M[m].get(f) : null;
+    const fmtS = (m, v) => ['stelle', 'snr', 'bg'].includes(m) ? AL.num(Math.round(v)) + (M[m].u ? ' ' + M[m].u : '') : m === 'alt' ? Math.round(v) + '°' : P(v, 2) + M[m].u;
+    const vivi = A.list.filter(f => !s.canc[f.id]);
+    // Statistiche del gruppo (oggetto + setup + filtro + posa + guadagno, tutte le notti) per le soglie relative e la formula
+    const stC = {}, gst = (g, m) => { const k = g + '|' + m; if (stC[k]) return stC[k]; const a = vivi.filter(f => f.g === g).map(f => getM(m, f)).filter(v => v != null); const md = qn(a, .5), mad = md == null ? null : 1.4826 * qn(a.map(v => Math.abs(v - md)), .5);
+      return (stC[k] = { md, mad, min: a.length ? Math.min(...a) : null, max: a.length ? Math.max(...a) : null, n: a.length }); };
+    // Le soglie, per setup e filtro (in Impostazioni e qui): sei misure e una formula.
+    const SK = ['fw', 'ecc', 'stelle', 'snr', 'bg', 'alt'];
+    // Partenze uguali per ogni setup (Claude Code, v36.2): relative col MAD scalato, 2,5 come in Leys et al. 2013; eccentricità e altezza spente
+    const D0 = { fw: { on: true, op: '>', tipo: 'rel', v: 2.5 }, ecc: { on: false, op: '>', tipo: 'abs', v: .6 }, stelle: { on: true, op: '<', tipo: 'rel', v: 2.5 }, snr: { on: true, op: '<', tipo: 'rel', v: 2.5 }, bg: { on: false, op: '>', tipo: 'rel', v: 2.5 }, alt: { on: false, op: '<', tipo: 'abs', v: 30 }, fx: { on: false, testo: 'FWHM / SNR > 0.012' } };
+    const DEF = { fra: D0, a103: D0 };
+    const TIPO = {}, DEFF = {};
+    // Le soglie applicate stanno in s.sg (setup|filtro; la formula per setup); quelle che stai scrivendo in s.bz, finche' non premi Applica
+    const righeDi = (sk, fk, bz) => { const d = DEF[sk], k2 = sk + '|' + fk, o = s.sg[k2] || {}, b = bz ? (s.bz[k2] || {}) : {}, fo = s.sg[sk] || {}, fb = bz ? (s.bz[sk] || {}) : {}, r = {};
+      Object.keys(d).forEach(k => { const fx = k === 'fx'; r[k] = { ...d[k], ...(((DEFF[sk] || {})[fk] || {})[k] || {}), ...((fx ? fo : o)[k] || {}), ...((fx ? fb : b)[k] || {}) }; if (TIPO[k]) r[k].tipo = TIPO[k]; }); return r; };
+    const rrC = {}, RR = (sk, fk, bz) => { const k = sk + '|' + fk + (bz ? '|b' : ''); return rrC[k] || (rrC[k] = righeDi(sk, fk, bz)); };
+    const fxC = {}, FXof = tx => fxC[tx] || (fxC[tx] = this.formula(tx));
+    const su = o => o === '>' || o === '≥';
+    const soglia = (r, m, g) => { if (r.tipo === 'abs') return r.v; const q = gst(g, m); return q.n < 10 || q.mad == null ? null : su(r.op) ? q.md + r.v * q.mad : q.md - r.v * q.mad; };
+    const cmp = (v, op, th) => op === '>' ? v > th : op === '≥' ? v >= th : op === '<' ? v < th : v <= th;
+    const colpisce = (r, m, f) => { const v = getM(m, f), th = soglia(r, m, f.g); return v != null && th != null && cmp(v, r.op, th); };
+    const getF = (m, f, q) => q ? gst(f.g, m)[q] : getM(m, f);
+    const fxDi = f => { const r = RR(f.s, f.f).fx, c = FXof(r.testo); return r.on && c.fn && misurato(f) ? c.fn(f, getF) === true : false; };
+    const nomeR = (m, r, g) => { const v = r.tipo === 'abs' ? r.v : g != null ? soglia(r, m, g) : null; return M[m].l + ' ' + r.op + (v != null ? ' ' + fmtS(m, v) : ''); }; // v56.31: solo il valore, niente mediana a schermo
+    const colpi = f => { if (!misurato(f)) return []; const R0 = RR(f.s, f.f); return SK.filter(m => R0[m].on && colpisce(R0[m], m, f)).map(m => nomeR(m, R0[m], f.g)).concat(fxDi(f) ? ['la formula'] : []); };
+    // Lo stato di un frame: in «scartate» > da scartare a mano > tenuto a mano > non misurato > da scartare per le soglie > tenuto
+    const SG = { esc: 'scartare', tenm: 'tenuto-mano', scart: 'scartata', nm: 'tenuto', ten: 'tenuto' };
+    const ST = {}; vivi.forEach(f => { const pr = colpi(f); let x;
+      if (s.scart[f.id]) x = { k: 'scart', l: 'in «scartate»', sub: f.radice + '\\scartate\\' + f.rel, s: '→' };
+      else if (s.man[f.id] === 'escluso') x = { k: 'escm', l: 'da scartare · a mano', sub: s.nota[f.id] || '', s: '✕' };
+      else if (s.man[f.id] === 'tenuto') x = { k: 'tenm', l: 'tenuto a mano', sub: pr.length ? 'le soglie lo scarterebbero: ' + pr.join(' · ') : '', s: '✓' };
+      else if (!misurato(f)) x = { k: 'nm', l: 'non misurato', sub: 'misura in corso: le soglie non lo toccano', s: '?' };
+      else if (pr.length) x = { k: 'escr', l: 'da scartare', sub: pr.join(' · '), s: '✕' };
+      else x = { k: 'ten', l: 'tenuto', sub: '', s: '✓' };
+      ST[f.id] = { ...x, pr, cls: 'al-segno al-sel__segno--' + SG[x.k === 'escm' || x.k === 'escr' ? 'esc' : x.k] }; });
+    const tenuto = f => ['ten', 'tenm', 'nm'].includes(ST[f.id].k), escluso = f => ['escm', 'escr'].includes(ST[f.id].k);
+    const alLimite = f => misurato(f) && SK.some(m => { const r = RR(f.s, f.f)[m]; if (!r.on) return false; const v = getM(m, f), th = soglia(r, m, f.g); if (v == null || th == null || cmp(v, r.op, th)) return false; const q = gst(f.g, m); return r.tipo === 'rel' && Math.abs(v - th) <= (q.mad || 0); });
+    // La scelta: un progetto in corso o delle notti (l'archivio e' gia' pulito)
+    if (!this._link) { this._link = true; const lp = { m31: 0, ngc7000: 1, m33: 2 }[qs.get('progetto')], ln = A.NOTTI.find(n => n.d === qs.get('notte')); if (lp != null) Object.assign(this.state, { parti: 'progetto', pi: lp }); if (ln) Object.assign(this.state, { parti: 'notte', nn: [ln.k] }); }
+    const parti = s.parti === 'notte' ? 'notte' : 'progetto', pi = s.pi || 0, cnt = fn => vivi.filter(fn).length;
+    const PROG = [{ k: 'p1', n: 'M 31 · Galassia di Andromeda', gr: ['m31L', 'm31L180', 'm31H'], ob: { l: 14, ha: 8 } }, { k: 'p2', n: 'NGC 7000 · Nebulosa Nord America', gr: ['n7000'], ob: { ha: 6 } }, { k: 'p3', n: 'M 33 · Galassia del Triangolo', gr: ['m33L'], ob: { l: 5 } }];
+    if (STATO === 'nessun progetto in corso') PROG.length = 0;
+    const nessuno = parti === 'progetto' && !PROG.length, P0 = PROG[Math.min(pi, PROG.length - 1)] || { n: '', gr: [], ob: {} }, inSel = parti === 'progetto' ? f => P0.gr.includes(f.g) : () => true;
+    const nottiCon = A.NOTTI.filter(n => vivi.some(f => inSel(f) && f.n === n.k)), nnOk = (s.nn || []).filter(k => nottiCon.some(n => n.k === k));
+    const nnV = parti === 'progetto' ? [] : !nnOk.length ? [A.NOTTI[A.NOTTI.length - 1].k] : nnOk, notteDi = k => A.NOTTI.find(n => n.k === k);
+    const inV = f => inSel(f) && (!nnV.length || nnV.includes(f.n)), V = vivi.filter(inV).sort((a, b) => a.t - b.t);
+    const reset = { sel: {}, hov: null, br: null, cur: null };
+    const partiO = [['progetto', 'Un progetto in corso'], ['notte', 'Delle notti']].map(([k, l]) => ({ l, sel: k === parti ? 'true' : 'false', on: e => { no(e); set({ parti: k, dd: null, ...reset }); } }));
+    const partiSub = parti === 'progetto' ? 'i frame del progetto, notte per notte, contro l\u0027obiettivo' : 'tutti gli oggetti delle notti scelte nel calendario';
+    const norm = x => (x || '').toLowerCase().replace(/\s+/g, ''), qq = norm(s.q);
+    const vociDD = PROG.map((x, i) => ({ l: x.n, sub: Object.keys(x.ob).map(k => FDn(k) + ' ' + AL.ore(x.ob[k])).join(' · ') + ' di obiettivo · ' + AL.num(cnt(f => x.gr.includes(f.g))) + ' frame', sel: i === pi, i }))
+      .filter(v => !qq || norm(v.l).includes(qq)).map(v => ({ ...v, sel: v.sel ? 'true' : 'false', on: e => { no(e); set({ pi: v.i, dd: null, q: '', ...reset }); } }));
+    const DD = { on: parti === 'progetto' && !nessuno, val: P0.n, aperto: !!s.dd, esp: s.dd ? 'true' : 'false', q: s.q || '', voci: vociDD, vuoto: vociDD.length ? '' : 'Nessun progetto in corso con «' + (s.q || '').trim() + '».',
+      apri: e => { no(e); set({ dd: !s.dd, q: '' }); if (!s.dd) setTimeout(() => { const el = document.querySelector('input[aria-controls="sel-lista"]'); if (el) el.focus(); }, 40); }, chiudi: () => set({ dd: null, q: '' }), cerca: e => set({ q: e.target.value }),
+      tasti: e => { if (e.key === 'Escape') set({ dd: null, q: '' }); else if (e.key === 'Enter' && vociDD[0]) vociDD[0].on(e); } };
+    const giornoDi = n => +n.d.slice(8), tocN = k => { const c = nnV.slice(), i = c.indexOf(k); if (i >= 0) { if (parti === 'notte' && c.length === 1) return; c.splice(i, 1); } else c.push(k); set({ nn: c, ...reset }); };
+    const CAL = { on: parti === 'notte', giorni: nottiCon.map(n => { const on = nnV.includes(n.k), c = cnt(f => inSel(f) && f.n === n.k); return { d: giornoDi(n), stella: true, sel: on, on: () => tocN(n.k), aria: n.n + ', ' + c + ' frame' + (on ? ', scelta' : '') }; }),
+      buone: nottiCon.map(giornoDi), leg: 'notte con frame ★ · tocca per sceglierla, anche più di una',
+      sub: nnV.length ? nnV.length + ' di ' + nottiCon.length + (nottiCon.length === 1 ? ' notte scelta' : ' notti scelte') : 'tutte le ' + nottiCon.length + ' notti',
+      tutte: nnV.length && parti !== 'notte' ? e => { no(e); set({ nn: [], ...reset }); } : null };
+    // Le decisioni: tutto si annulla
+    const fai = (o, esito) => set({ storia: s.storia.concat([{ man: s.man }]).slice(-30), esito: esito === undefined ? null : esito, ...o });
+    const scarta = ids => { const m = { ...s.man }; ids.forEach(k => { if (!s.scart[k]) m[k] = 'escluso'; }); fai({ man: m }); };
+    const tieni = ids => { const m = { ...s.man }; ids.forEach(k => { if (!s.scart[k]) { if (ST[k].pr.length) m[k] = 'tenuto'; else delete m[k]; } }); fai({ man: m }); };
+    const allaRegola = ids => { const m = { ...s.man }; ids.forEach(k => { delete m[k]; }); fai({ man: m }); };
+    // Le azioni sui file, con gli errori simulati (Tweaks «errore»)
+    const ERR = s.riprova ? 'nessuno' : (qs.get('errore') || p.errore || 'nessuno');
+    const falli = f => ERR.indexOf('sola lettura') >= 0 ? f.dir.indexOf('\\\\NAS') === 0 : ERR.indexOf('disco') === 0 ? f.dir.indexOf('E:') === 0 : ERR.indexOf('file') === 0 ? f.id === 'm31L-n18-14' : false;
+    const perche = fl => { const d = [...new Set(fl.map(f => f.dir))];
+      return ERR.indexOf('sola lettura') >= 0 ? (d.length === 1 ? 'La cartella ' + d[0] : 'Le cartelle ' + d.join(', ')) + ' sul NAS è in sola lettura. Dai il permesso di scrittura, poi riprova.'
+        : ERR.indexOf('disco') === 0 ? 'Il disco E: non risponde: è staccato. Ricollegalo, poi riprova.' : fl[0].file + ' è aperto in un altro programma. Chiudilo, poi riprova.'; };
+    const VERBI = { sposta: ['Spostati', 'spostati', 'spostato'], riporta: ['Riportati indietro', 'riportati indietro', 'riportato indietro'], cancella: ['Eliminati', 'eliminati', 'eliminato'] };
+    const esegui = (az, ids) => { const fr = ids.map(k => A.idx[k]), ok = fr.filter(f => !falli(f)), ko = fr.filter(falli), sc = { ...s.scart }, cn = { ...s.canc }, m = { ...s.man };
+      ok.forEach(f => { if (az === 'sposta') { sc[f.id] = true; if (!m[f.id]) m[f.id] = 'escluso'; } if (az === 'riporta') delete sc[f.id]; if (az === 'cancella') { delete sc[f.id]; cn[f.id] = true; } });
+      const v = VERBI[az], mb = MB(ok.reduce((a, f) => a + f.mb, 0)), dirs = new Set(ok.map(f => f.dir)).size;
+      const esito = ko.length ? { s: '!', t: v[0] + ' ' + ok.length + ' di ' + fr.length + ' frame', x: ko.length + (ko.length === 1 ? ' non ' + v[2] + '. ' : ' non ' + v[1] + '. ') + perche(ko), a: 'Riprova ' + (ko.length === 1 ? 'il frame' : 'i ' + ko.length), az, ids: ko.map(f => f.id) }
+        : az === 'sposta' ? { s: '✓', t: ok.length + ' frame in «scartate» · ' + mb + ' · ' + dirs + (dirs === 1 ? ' cartella' : ' cartelle'), x: 'Lo stacking non li vede più.', a: 'Riporta indietro', az: 'annullaSposta', ids: ok.map(f => f.id) }
+        : az === 'riporta' ? { s: '✓', t: ok.length + ' frame riportati alla cartella di prima', x: 'Restano da scartare finché non li tieni.', a: '', ids: [] }
+        : (n => ({ s: '✓', t: ok.length + ' frame eliminati · ' + mb, x: n === ok.length ? 'Erano sul NAS: cancellati per sempre.' : n ? (ok.length - n) + ' nel cestino, ' + n + ' cancellati per sempre (NAS).' : 'Sono nel cestino del computer.', a: '', ids: [] }))(ok.filter(f => f.radice.indexOf('\\\\') === 0).length);
+      set({ scart: sc, canc: cn, man: m, esito, fin: null, sel: {}, cancN: az === 'cancella' ? (s.cancN || 0) + ok.length : s.cancN || 0, cancMb: az === 'cancella' ? (s.cancMb || 0) + ok.reduce((a, f) => a + f.mb, 0) : s.cancMb || 0 }); };
+    const E = s.esito ? { ...s.esito, on: () => { const x = s.esito; if (x.az === 'annullaSposta') esegui('riporta', x.ids); else if (x.ids.length) { this.state.riprova = true; esegui(x.az, x.ids); } } } : null;
+    if (E && E.az === 'annullaSposta' && !E.a) E.a = '';
+    // Il resoconto a destra della scelta
+    const rigaF = fr => { const k = fr[0].f, tn = AL.tinta(t, k), te = fr.filter(tenuto); return { f: FDn(k), dot: tn.bg, bd: tn.bd || '0', fr: AL.num(te.length) + ' di ' + AL.num(fr.length) + ' frame tenuti', ore: AL.ore(H(te)), di: te.length < fr.length ? 'di ' + AL.ore(H(fr)) : 'di integrazione' }; };
+    const perFiltro = fr => [...new Set(fr.map(f => f.f + '|' + f.posa))].map(c => { const [k, ps] = c.split('|'), sub = fr.filter(f => f.f === k && f.posa === +ps), r = rigaF(sub); if (new Set(fr.filter(f => f.f === k).map(f => f.posa)).size > 1) r.f += ' · ' + ps + ' s'; return r; });
+    const blocchi = parti === 'notte' || true ? A.GR.filter(g => V.some(f => f.g === g.k)).reduce((acc, g) => { const key = g.o + '|' + g.s; let b = acc.find(x => x.key === key); if (!b) { b = { key, n: g.o + ' · ' + A.SET[g.s].n, fr: [] }; acc.push(b); } b.fr = b.fr.concat(V.filter(f => f.g === g.k)); return acc; }, [])
+      : [...new Set(V.map(f => f.s))].map(sk => ({ key: sk, n: A.SET[sk].n, fr: V.filter(f => f.s === sk) }));
+    const RS = { az: nessuno ? { l: 'Parti dalle notti', on: e => { no(e); set({ parti: 'notte', ...reset }); } } : null, tit: nessuno ? 'Nessun progetto in corso' : parti === 'progetto' ? P0.n : nnV.length === 1 ? 'Notte del ' + notteDi(nnV[0]).n : nnV.length + ' notti', sub: nessuno ? 'I progetti si creano dal Planner, con «Salva come progetto». Intanto puoi rivedere i frame di una notte.' : parti === 'progetto' ? 'progetto in corso · tutte le notti' : 'tutti gli oggetti · ' + AL.num(V.length) + ' frame',
+      blocchi: parti === 'progetto' ? blocchi.map(b => ({ n: 'Per filtro e posa', righe: perFiltro(b.fr) })).filter(b => b.righe.some(r => r.f.indexOf(' s') > 0)).slice(0, 1) : blocchi.map(b => ({ n: b.n, righe: perFiltro(b.fr) })), vuoto: V.length || nessuno ? '' : 'Nessun frame in questa scelta.' };
+    const PC = parti === 'progetto' && !nessuno ? (() => { const tutti = vivi.filter(f => P0.gr.includes(f.g)), ks = Object.keys(P0.ob), te = tutti.filter(tenuto), hT = H(te), ob = ks.reduce((a, k) => a + P0.ob[k], 0), pct = Math.round(hT / ob * 100), via = tutti.length - te.length, pp = Math.min(100, pct);
+      return { pp, pctS: pct >= 100 ? '✓' : pct + '%', fatteS: AL.ore(hT), obS: AL.ore(ob), aria: AL.ore(hT) + ' di ' + AL.ore(ob) + ', ' + pct + ' per cento',
+        fil: ks.map(k => { const h = H(te.filter(f => f.f === k)); return { l: FDn(k), c: AL.tinta(t, k).bg, w: Math.min(100, h / P0.ob[k] * 100) + '%', fatte: h ? AL.ore(h) : '0 h', ob: AL.ore(P0.ob[k]) }; }),
+        via: via ? 'senza ' + (via === 1 ? '1 frame da scartare' : via + ' frame da scartare') + ' · con tutti ' + AL.ore(H(tutti)) : '' }; })() : null;
+    // Il grafico: un filtro alla volta
+    const combV = [...new Set(V.map(f => f.f + '|' + f.posa))].sort((a, b) => { const [fa, pa] = a.split('|'), [fb, pb] = b.split('|'); return fa === fb ? pb - pa : fa === 'l' ? -1 : fb === 'l' ? 1 : fa.localeCompare(fb); });
+    const cfK = combV.includes(s.cf) ? s.cf : combV[0], fk = cfK ? cfK.split('|')[0] : undefined, pk = cfK ? +cfK.split('|')[1] : 0, piuPose = k => combV.filter(c => c.split('|')[0] === k).length > 1;
+    const cfO = combV.map(c => { const [k, ps] = c.split('|'), on = c === cfK; return { l: FDn(k) + (piuPose(k) ? ' · ' + ps + ' s' : ''), c: AL.num(V.filter(f => f.f === k && f.posa === +ps).length) + ' frame', sel: on, tinta: k, on: e => { no(e); set({ cf: c, ...reset }); } }; });
+    const mis = MK.includes(s.mis) ? s.mis : 'fw', misB = MK.includes(s.misB) && s.misB !== mis ? s.misB : null, lin = s.gv === 'linea', ordV = s.ordG === 'val';
+    const misO = MK.map(k => ({ l: M[k].l, sel: k === mis ? 'true' : 'false', on: e => { no(e); set({ mis: k, hov: null }); } }));
+    const misBO = [{ k: '', l: 'nessuna' }].concat(MK.filter(k => k !== mis).map(k => ({ k, l: M[k].l }))).map(o => ({ ...o, sel: o.k === (misB || '') }));
+    const gvO = [['barre', 'Barre'], ['linea', 'Linee']].map(([k, l]) => ({ l, sel: (k === 'linea') === lin ? 'true' : 'false', on: e => { no(e); set({ gv: k }); } }));
+    // v56.25: vista a due icone, ordine e setup in tendina, il resto in linguette sottili (come Misure dei frame)
+    const tSel = arr => { arr = arr || []; const c = arr.find(o => o.sel === true || o.sel === 'true') || arr[0] || {}; return { v: c.l, o: arr.map(o => ({ v: o.l, l: o.l })), on: e => { const o = arr.find(x => x.l === e.target.value); o && o.on({ preventDefault() {}, stopPropagation() {} }); } }; };
+    const gvI = gvO.map((o, i) => ({ ...o, d: i ? 'M3 18l5-6 4 4 9-10' : 'M5 20V10M10 20V4M15 20v-7M20 20v-11', fg: o.sel === 'true' ? 'var(--testo)' : 'var(--tenue)', sh: o.sel === 'true' ? 'inset 0 0 0 2px var(--accento)' : 'none' }));
+    const ordO = [['ora', 'Per ora'], ['val', 'Per valore']].map(([k, l]) => ({ l, sel: (k === 'val') === ordV ? 'true' : 'false', on: e => { no(e); set({ ordG: k, hov: null, br: null }); } }));
+    let VF = (fk ? V.filter(f => f.f === fk && f.posa === pk) : []).sort((a, b) => a.t - b.t);
+    if (ordV) VF = VF.filter(f => getM(mis, f) != null).sort((a, b) => getM(mis, a) - getM(mis, b)).concat(VF.filter(f => getM(mis, f) == null));
+    // Sul telefono si rivedono i frame dubbi uno alla volta
+    const rv = s.rv === 'tutti' ? 'tutti' : 'dubbi';
+    if (tel && rv === 'dubbi') VF = VF.filter(f => escluso(f) || alLimite(f));
+    const rvO = [['dubbi', 'Da scartare o al limite'], ['tutti', 'Tutti']].map(([k, l]) => ({ l, sel: k === rv ? 'true' : 'false', on: e => { no(e); set({ rv: k, cur: null }); } }));
+    const VFa = VF;
+    const grS = [...new Set(VF.map(f => f.g))], G1 = grS.length === 1 ? A.GR.find(g => g.k === grS[0]) : null;
+    const W = tel ? 360 : 1000, x0 = tel ? 36 : 50, x1 = W - (misB ? x0 : 8), Hc = tel ? 190 : 260, top = 12, bot = Hc - 14, pc = (v, d) => (v / d * 100).toFixed(2) + '%';
+    const rng = m => { const a = VF.map(f => getM(m, f)).filter(v => v != null); return a.length ? [Math.min(...a), Math.max(...a)] : null; };
+    const R1 = G1 ? RR(G1.s, G1.f) : null, ths = G1 && SK.includes(mis) && R1[mis].on ? [{ m: mis, r: R1[mis], v: soglia(R1[mis], mis, G1.k) }].filter(x => x.v != null) : [];
+    const RA = rng(mis), RB = misB ? rng(misB) : null;
+    let lo = RA ? RA[0] : 0, hi = RA ? RA[1] : 1; ths.forEach(x => { lo = Math.min(lo, x.v); hi = Math.max(hi, x.v); }); { const pd = (hi - lo) * .15 || .5; lo -= pd; hi += pd; }
+    let loB = RB ? RB[0] : 0, hiB = RB ? RB[1] : 1; { const pd = (hiB - loB) * .15 || .5; loB -= pd; hiB += pd; }
+    const Y = v => bot - (v - lo) / (hi - lo) * (bot - top), YB = v => bot - (v - loB) / (hiB - loB) * (bot - top);
+    const circ = (x, y, r) => 'M' + (x - r).toFixed(1) + ' ' + y.toFixed(1) + 'a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0a' + r + ' ' + r + ' 0 1 0 ' + -2 * r + ' 0';
+    // Con tanti frame il grafico mostra una finestra, che segue il frame nel riquadro
+    const maxN = Math.floor((x1 - x0) / (tel ? 4 : 5)), curA = VFa.find(f => f.id === s.cur) || VFa.find(escluso) || VFa[0], iCurA = curA ? VFa.indexOf(curA) : 0;
+    let stW = 0; if (VFa.length > maxN) { stW = s.win != null ? s.win : iCurA - Math.floor(maxN / 2); if (iCurA < stW || iCurA >= stW + maxN) stW = iCurA - Math.floor(maxN / 2); stW = Math.max(0, Math.min(VFa.length - maxN, stW)); VF = VFa.slice(stW, stW + maxN); }
+    const n = VF.length, slot = (x1 - x0) / Math.max(1, n), bw = Math.max(1.5, Math.min(14, slot * .62)), cx = i => x0 + slot * (i + .5);
+    const curF = curA, vistoF = VF.find(f => f.id === s.hov) || curF;
+    const bars = [], ticks = [], marks = [], dots = [], sep = [], gl = []; let dA = '', dB = '', hx = null;
+    VF.forEach((f, i) => { const x = cx(i), k = ST[f.id].k, va = getM(mis, f), on = f.id === s.hov, cu = curF && f.id === curF.id, sl = !!s.sel[f.id], esc = k === 'escm' || k === 'escr', nuova = !ordV && (i === 0 || VF[i - 1].n !== f.n);
+      if (nuova) { if (i) sep.push({ x: (x0 + slot * i).toFixed(1) }); const xg = x0 + slot * i, lab = A.NOTTI[f.ni].n, pr = gl[gl.length - 1]; if (!pr || xg - pr.xv > pr.l.length * 6.4 + 10) gl.push({ x: pc(xg, W), xv: xg, l: lab }); }
+      if (on) hx = x.toFixed(1);
+      const mk = k === 'tenm' ? { d: circ(x, bot + 7, 2.2), cls: 'al-sel__segnetto al-sel__segnetto--tenuto' } : esc ? { d: 'M' + (x - 2.6).toFixed(1) + ' ' + (bot + 4.4) + 'l5.2 5.2m0 -5.2l-5.2 5.2', cls: 'al-sel__segnetto al-sel__segnetto--scartare' } : k === 'scart' ? { d: 'M' + (x - 3).toFixed(1) + ' ' + (bot + 7) + 'h6', cls: 'al-sel__segnetto al-sel__segnetto--scartata' } : null;
+      if (mk) marks.push(mk);
+      if (va == null) { marks.push({ d: 'M' + (x - 2.5).toFixed(1) + ' ' + (bot - 6) + 'h5v5h-5z', cls: 'al-sel__segnetto al-sel__segnetto--non-misurato' }); return; }
+      const y = Y(va), h = Math.max(bw, bot - y), acc = on || cu;
+      if (!lin) bars.push({ x: (x - bw / 2).toFixed(1), y: (bot - h).toFixed(1), w: bw.toFixed(1), h: h.toFixed(1), r: Math.min(bw / 2, 4).toFixed(1),
+        cls: 'al-sel__barra' + (acc ? ' al-sel__barra--accesa' : sl ? ' al-sel__barra--selezionata' : esc ? ' al-sel__barra--scartare' : '') + (k === 'scart' && !acc ? ' al-sel__barra--scartata' : '') });
+      else { dA += (dA && !nuova ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1); dots.push({ d: circ(x, y, acc ? 5 : sl ? 4 : 2.6), cls: 'al-sel__punto' + (acc || sl ? ' al-sel__punto--acceso' : esc ? ' al-sel__punto--scartare' : k === 'scart' ? ' al-sel__punto--scartata' : '') }); }
+      if (misB) { const vb = getM(misB, f); if (vb != null) { const yb = YB(vb); if (!lin) ticks.push({ d: 'M' + (x - bw / 2 - 1.5).toFixed(1) + ' ' + yb.toFixed(1) + 'H' + (x + bw / 2 + 1.5).toFixed(1) }); else dB += (dB && !nuova ? 'L' : 'M') + x.toFixed(1) + ' ' + yb.toFixed(1); } } });
+    const idxAt = e => { const r = e.currentTarget.getBoundingClientRect(), xv = (e.clientX - r.left) / r.width * W; return Math.max(0, Math.min(n - 1, Math.floor((xv - x0) / slot))); };
+    const vai = d => { const N = VFa.length, i = VFa.findIndex(f => curF && f.id === curF.id), j = Math.max(0, Math.min(N - 1, (i < 0 ? 0 : i) + d)); if (VFa[j]) set({ cur: VFa[j].id, hov: null, win: null }); return j; };
+    this._fsKey = e => { if (!this.state.fs) return; const k = e.key.toLowerCase(); if (k === 'escape') { e.preventDefault(); set({ fs: false }); } else if (k === 'arrowright' || k === 'arrowleft') { e.preventDefault(); vai(k === 'arrowright' ? 1 : -1); } else if (k === 's' && curF) { e.preventDefault(); scarta([curF.id]); } else if (k === 't' && curF) { e.preventDefault(); tieni([curF.id]); } };
+    this._next = () => { const i = VFa.findIndex(f => curF && f.id === curF.id); if (i >= VFa.length - 1) { clearInterval(this._play); this._play = null; set({ playing: false }); } else vai(1); };
+    const VMis = VF.filter(f => getM(mis, f) != null), cI = curF ? VF.indexOf(curF) : -1;
+    const G = { vuoto: !fk ? 'Nessun frame in questa scelta.' : VMis.length ? '' : VF.length && !VF.some(misurato) ? 'Le misure di questi frame non ci sono ancora: l\u0027app le calcola dopo la scansione. Finché mancano, i frame restano tenuti e le soglie non li toccano.' : mis === 'sqm' ? 'La luminosità del cielo c\u0027è solo con L, nessun filtro e a colori: scegli un\u0027altra misura.' : 'Nessun frame misurato in questo filtro.', pieno: !!VMis.length,
+      vb: '0 0 ' + W + ' ' + Hc, x0, x1, top, bot, touch: tel ? 'pan-y' : 'none', ml: pc(x0, W), mr: pc(W - x1, W),
+      al: M[mis].l + (misB ? ' e ' + M[misB].l : '') + ' di ' + n + ' frame ' + (fk ? FDn(fk) : '') + '. Frecce per passare da un frame all\u0027altro, S per scartarlo, T per tenerlo.',
+      grid: [.1, .5, .9].map(q => ({ y: (bot - q * (bot - top)).toFixed(1) })), yl: [.1, .5, .9].map(q => ({ y: pc(bot - q * (bot - top), Hc), l: fmtS(mis, lo + q * (hi - lo)) })),
+      yr: misB && RB ? [.1, .5, .9].map(q => ({ y: pc(bot - q * (bot - top), Hc), l: fmtS(misB, loB + q * (hiB - loB)) })) : [],
+      sep, gl, bars, ticks, marks, dots, hx, linee: [].concat(lin && dA ? [{ d: dA, cls: 'al-sel__tratto-5 al-sel__linea' }] : []).concat(lin && dB ? [{ d: dB, cls: 'al-sel__tratto-5 al-sel__linea al-sel__linea--seconda' }] : []),
+      cx: cI >= 0 ? { x: (x0 + slot * cI).toFixed(1), w: slot.toFixed(1), h: (bot - top).toFixed(1) } : null,
+      soglie: ths.map(x => ({ y: Y(x.v).toFixed(1) })), ql: ths.map(x => ({ y: pc(Y(x.v), Hc), l: 'soglia ' + fmtS(mis, x.v) })),
+      br: s.br ? { x: (x0 + slot * s.br.a).toFixed(1), w: (slot * (s.br.b - s.br.a + 1)).toFixed(1), h: (bot - top).toFixed(1) } : null,
+      win: VFa.length > maxN ? { txt: 'frame ' + (stW + 1) + '–' + (stW + n) + ' di ' + VFa.length, l: pc(stW, VFa.length), w: pc(n, VFa.length), prima: e => { no(e); const st2 = Math.max(0, stW - Math.floor(maxN * .8)); set({ win: st2, cur: VFa[st2].id }); }, dopo: e => { no(e); const st2 = Math.min(VFa.length - maxN, stW + Math.floor(maxN * .8)); set({ win: st2, cur: VFa[st2].id }); },
+        vai: e => { const r = e.currentTarget.getBoundingClientRect(), q = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), st2 = Math.max(0, Math.min(VFa.length - maxN, Math.round(q * VFa.length - maxN / 2))); set({ win: st2, cur: VFa[st2 + Math.floor(maxN / 2)].id }); } } : null,
+      // v56.26: toccata una barra, la soglia della misura si compila col valore di quel frame (un tocco su «Usa come soglia»)
+      sg: (() => { const fi = VF.findIndex(x => x.id === s.cur), f = VF[fi]; if (!f) return null; const va = getM(mis, f); if (va == null || isNaN(va)) return null; const px = cx(fi) / W, yTop = Math.max(top, Math.min(bot, Y(va))) / Hc, lato = px > .7 ? 'translate(-100%,-100%)' : px < .3 ? 'translate(0,-100%)' : 'translate(-50%,-100%)'; const key = f.s + '|' + f.f, r = (RR(f.s, f.f, true) || {})[mis] || {}, op = r.op || '>', v = +(+va).toFixed(['stelle', 'snr', 'bg', 'alt'].includes(mis) ? 0 : 2), uso = r.tipo === 'abs' && +r.v === v && r.on !== false;
+        return { left: (px * 100).toFixed(2) + '%', top: 'calc(' + (yTop * 100).toFixed(2) + '% - 8px)', tf: lato, l: M[mis].l + ' ' + op + ' ' + fmtS(mis, v), dove: A.SET[f.s].b + ' · ' + FDn(f.f), uso, nonUso: !uso, ferma: e => e.stopPropagation(), aria: 'Usa ' + M[mis].l + ' ' + op + ' ' + fmtS(mis, v) + ' come soglia per ' + A.SET[f.s].b + ', filtro ' + FDn(f.f), on: e => { no(e); upd(key, mis, { tipo: 'abs', v, on: true }); const t2 = { ...s.sgT }; delete t2[key + mis]; set({ sgT: t2 }); } }; })(),
+      xlab: ordV ? { a: 'dal valore più basso', b: 'al più alto, per ' + M[mis].l } : null,
+      down: e => { if (e.button || !n) return; this._dr = { i0: idxAt(e), add: e.shiftKey || e.metaKey || e.ctrlKey }; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} },
+      move: e => { if (!n) return; const i = idxAt(e), f = VF[i], d = this._dr; if (d && i !== d.i0) { const a = Math.min(d.i0, i), b = Math.max(d.i0, i); if (!s.br || s.br.a !== a || s.br.b !== b) set({ br: { a, b }, hov: f.id }); return; } if (!tel && f && f.id !== s.hov) set({ hov: f.id }); },
+      up: e => { const d = this._dr; this._dr = null; if (!d || !n) return; const i = idxAt(e), a = Math.min(d.i0, i), b = Math.max(d.i0, i);
+        if (a === b) { if (d.add) { const sl = { ...s.sel }, id = VF[a].id; if (sl[id]) delete sl[id]; else sl[id] = true; set({ sel: sl, br: null }); } else set({ cur: VF[a].id, br: null }); return; }
+        const sl = d.add ? { ...s.sel } : {}; VF.slice(a, b + 1).forEach(f => { sl[f.id] = true; }); set({ sel: sl, br: null }); },
+      leave: () => { if (!this._dr && s.hov) set({ hov: null }); },
+      key: e => { const k = e.key.toLowerCase(); if (k === 'arrowright' || k === 'arrowleft') { e.preventDefault(); vai(k === 'arrowright' ? 1 : -1); }
+        else if (k === 's' && curF) { e.preventDefault(); scarta([curF.id]); } else if (k === 't' && curF) { e.preventDefault(); tieni([curF.id]); } else if (k === 'escape') set({ sel: {}, hov: null, br: null }); },
+      tip: null,
+      leg: [{ l: 'tenuto', d: 'M4 3h6v10h-6z', c: 'tenuto' }, { l: 'tenuto a mano', d: circ(7, 7, 2.6), c: 'tenuto-mano' },
+        { l: 'da scartare', d: 'M3.5 3.5l7 7m0 -7l-7 7', c: 'scartare' }, { l: 'in «scartate»', d: 'M3 7h8', c: 'scartata' }, { l: 'quello nel riquadro', d: 'M4 3h6v10h-6z', c: 'accesa' }, { l: 'selezionato', d: 'M4 3h6v10h-6z', c: 'selezionata' }]
+        .concat(misB ? [{ l: M[misB].l + ' · scala a destra', d: lin ? 'M0 7h14' : 'M2 7h10', c: lin ? 'seconda al-sel__legenda--seconda-linee' : 'seconda' }] : [])
+        .concat(ths.length ? [{ l: 'soglia', d: 'M0 7h14', c: 'soglia' }] : []).concat(VF.some(f => ST[f.id].k === 'nm') ? [{ l: 'non misurato', d: 'M4.5 4.5h5v5h-5z', c: 'non-misurato' }] : []).map(x => ({ l: x.l, d: x.d, cls: 'al-sel__legenda al-sel__legenda--' + x.c })),
+      aiuto: (tel ? 'Tocca una barra: il frame va nel riquadro. ' : 'Un clic porta il frame nel riquadro; trascina sulle barre per selezionarne più d\u0027uno. Tastiera: frecce, S scarta, T tiene. ') + (ths.length || !SK.includes(mis) ? '' : G1 ? 'Nessuna soglia accesa su questa misura.' : 'Qui ci sono più oggetti: la soglia cambia per oggetto e si legge nel riquadro.') };
+    const hI = VF.findIndex(f => f.id === s.hov);
+    if (hI >= 0 && VF[hI].id !== s.cur) { /* v56.29: sulla barra cliccata resta solo «Usa …» */ const f = VF[hI], x = cx(hI), v = getM(mis, f); G.tip = { l: pc(x, W), tx: x > W * .6 ? 'translateX(calc(-100% - 14px))' : 'translateX(14px)', t: f.file, s: A.NOTTI[f.ni].n + ' · ' + hhmm(f.ora) + ' · ' + ST[f.id].l, n: M[mis].l, v: v == null ? '—' : M[mis].fmt(v) }; }
+    // Il riquadro del frame: immagine simulata con lo stretch, le misure col giudizio, Tieni / Scarta
+    // Il giudizio di una misura: esito, segno e parola per la Pillola (i colori stanno nel foglio)
+    const GZ = { dentro: { es: 'buona', s: '✓', t: 'dentro' }, limite: { es: 'avviso', s: '!', t: 'al limite' }, fuori: { es: 'non adatta', s: '✕', t: 'fuori' } };
+    const giudica = (m, f) => { const r = RR(f.s, f.f)[m]; if (!r || !r.on) return null; const v = getM(m, f), th = soglia(r, m, f.g); if (v == null || th == null) return null; if (cmp(v, r.op, th)) return 'fuori';
+      const q = gst(f.g, m), vic = r.tipo === 'rel' && Math.abs(v - th) <= (q.mad || 0); return vic ? 'limite' : 'dentro'; };
+    if (G.tip && hI >= 0) { const f = VF[hI], g = giudica(mis, f), r = RR(f.s, f.f)[mis], th = r && r.on ? soglia(r, mis, f.g) : null; if (g) G.tip.z = { es: GZ[g].es, zs: GZ[g].s, zt: GZ[g].t + ' · soglia ' + r.op + ' ' + fmtS(mis, th) }; }
+    if (!this._campo) { let sd = 7; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; }; this._campo = Array.from({ length: 48 }, () => ({ x: 8 + rnd() * 284, y: 8 + rnd() * 184, b: Math.pow(rnd(), 1.8) })).sort((a, b) => b.b - a.b); }
+    let PV = null;
+    if (vistoF) { const f = vistoF, st = ST[f.id], uguale = s.str !== 'frame', mdF = gst(f.g, 'fw').md || f.fw, mdS = gst(f.g, 'stelle').md || f.stelle, mdB = gst(f.g, 'bg').md || f.bg, ms = misurato(f);
+      const nVis = Math.max(5, Math.round(48 * Math.min(1.1, f.stelle / mdS))), rB = f.bg / mdB, lum = uguale ? Math.max(6, Math.min(44, 10 + (rB - 1) * 70)) : 10, scala = f.fw / mdF, e2 = Math.sqrt(Math.max(.2, 1 - f.ecc * f.ecc));
+      const stelle = this._campo.slice(0, nVis).map(q => { const r = (1 + 2.3 * q.b) * scala; return { x: q.x.toFixed(1), y: q.y.toFixed(1), rx: r.toFixed(2), ry: (r * e2).toFixed(2), o: (uguale ? Math.max(.12, Math.min(1, .35 + q.b * .9 - (rB - 1) * 1.1)) : Math.max(.35, Math.min(1, .45 + q.b * .8))).toFixed(2) }; });
+      const i = VFa.indexOf(f), B = (l, fn, cls) => ({ l, cls: 'al-bottone ' + cls, on: e => { no(e); fn(); } });
+      const az = st.k === 'scart' ? [B('Riporta indietro', () => esegui('riporta', [f.id]), 'al-bottone--contorno')] : st.k === 'escm' ? [B('Tieni', () => tieni([f.id]), 'al-bottone--pieno')] : st.k === 'escr' ? [B('Tieni comunque', () => tieni([f.id]), 'al-bottone--pieno')]
+        : st.k === 'tenm' ? [B('Scarta', () => scarta([f.id]), 'al-bottone--pieno'), B('Torna alle soglie', () => allaRegola([f.id]), 'al-bottone--contorno')] : [B('Scarta', () => scarta([f.id]), 'al-bottone--pieno')];
+      const righe = SK.map(m => { const v = getM(m, f), g = giudica(m, f), z = g ? GZ[g] : null; return { n: M[m].l, v: v == null ? '—' : M[m].fmt(v), es: z ? z.es : 'spenta', zs: z ? z.s : '', zt: z ? z.t : RR(f.s, f.f)[m].on ? '' : 'spenta' }; })
+        .concat(RR(f.s, f.f).fx.on && FXof(RR(f.s, f.f).fx.testo).fn ? [(() => { const x = ms ? FXof(RR(f.s, f.f).fx.testo).fn(f, getF) : null, z = x == null ? null : x ? GZ.fuori : GZ.dentro; return { n: 'Formula', v: x == null ? '—' : x ? 'vera' : 'falsa', es: z ? z.es : 'spenta', zs: z ? z.s : '', zt: z ? z.t : '' }; })()] : []);
+      const zm = ['centro', 'angoli'].includes(s.zm) ? s.zm : 'intero';
+      PV = { ts: e => { this._tx = e.touches ? e.touches[0].clientX : null; }, te: e => { const x = e.changedTouches ? e.changedTouches[0].clientX : null; if (this._tx != null && x != null && Math.abs(x - this._tx) > 50) vai(x < this._tx ? 1 : -1); this._tx = null; },
+        viste: zm === 'intero' ? [{ vb: '0 0 300 200' }] : zm === 'centro' ? [{ vb: '105 67 90 60' }] : [0, 70, 140].flatMap(y => [0, 105, 210].map(x => ({ vb: x + ' ' + y + ' 90 60' }))), vcls: 'al-sel__centro-4' + (zm === 'angoli' ? ' al-sel__centro-4--angoli' : ''),
+        zmO: [['intero', 'Intero', 'M2.5 4.5h13v9h-13z'], ['centro', 'Centro ingrandito', 'M2.5 4.5h13v9h-13zM7 7.5h4v3h-4z'], ['angoli', 'Angoli e bordi, 3 × 3', 'M2.5 3.5h13v11h-13zM6.8 3.5v11M11.2 3.5v11M2.5 7.2h13M2.5 10.8h13']].map(([k, l, d]) => ({ l, d, sel: k === zm ? 'true' : 'false', on: e => { no(e); set({ zm: k }); } })),
+        fsApri: e => { no(e); set({ fs: !s.fs }); }, fsChiudi: e => { no(e); set({ fs: false }); },
+        ko: (() => { const p = st.k === 'escm' || st.k === 'escr'; return { p: p ? 'true' : 'false', al: p ? 'Da scartare' : 'Scarta', on: e => { no(e); if (st.k === 'scart' || st.k === 'escm') return; scarta([f.id]); } }; })(),
+        ok: (() => { const p = st.k === 'ten' || st.k === 'tenm'; return { p: p ? 'true' : 'false', al: st.k === 'escr' ? 'Tieni comunque' : p ? 'Tenuto' : 'Tieni', on: e => { no(e); if (st.k === 'scart' || st.k === 'ten') return; tieni([f.id]); } }; })(),
+        extraD: tel ? null : st.k === 'scart' ? { l: 'Riporta indietro da «scartate»', on: e => { no(e); esegui('riporta', [f.id]); } } : st.k === 'tenm' ? { l: 'Torna alle soglie', on: e => { no(e); allaRegola([f.id]); } } : null,
+        notaD: !tel && st.k === 'escm' ? { v: s.nota[f.id] || '', on: e => set({ nota: { ...s.nota, [f.id]: e.target.value } }) } : null,
+        pos: (i + 1) + ' di ' + VFa.length + ' · ' + FDn(f.f), prima: e => { no(e); vai(-1); }, dopo: e => { no(e); vai(1); }, fondo: 'hsl(222 14% ' + lum.toFixed(1) + '%)', stelle, scia: (s.nota[f.id] || '').indexOf('satellite') >= 0,
+        al: 'Frame simulato ' + f.file + ': ' + nVis + ' stelle visibili, fondo ' + (rB > 1.15 ? 'più chiaro della mediana' : 'come la mediana'),
+        strO: [['uguale', 'Stretch uguale per tutti'], ['frame', 'Per frame']].map(([k, l]) => ({ l, sel: (k === 'frame') === !uguale ? 'true' : 'false', on: e => { no(e); set({ str: k }); } })),
+        strN: uguale ? 'Lo stesso stretch per tutti i frame, come il Blink: un cielo più chiaro si vede più chiaro.' : 'Ogni frame col suo stretch: si guardano le stelle, il fondo sembra sempre uguale.',
+        file: f.file, sub: A.NOTTI[f.ni].n + ' · ' + hhmm(f.ora) + ' · ' + f.o + ' ' + FDn(f.f) + ' · ' + f.posa + ' s · gain ' + f.gain + ' · ' + A.SET[f.s].b, st: { s: st.s, l: st.l, sub: st.sub, cls: st.cls }, righe, az,
+        play: e => { no(e); if (this._play) { clearInterval(this._play); this._play = null; set({ playing: false }); } else { this._play = setInterval(() => this._next && this._next(), (this.state.vel || .5) * 1000); set({ playing: true }); } },
+        velL: String(s.vel || .5).replace('.', ',') + ' s', velA: 'Un frame ogni ' + String(s.vel || .5).replace('.', ',') + ' s: tocca per cambiare (0,1 · 0,3 · 0,5 · 1 · 2 s)', velGira: e => { no(e); const L5 = [.1, .3, .5, 1, 2], v = L5[(L5.indexOf(s.vel || .5) + 1) % L5.length]; set({ vel: v }); if (this._play) { clearInterval(this._play); this._play = setInterval(() => this._next && this._next(), v * 1000); } },
+        playA: s.playing ? 'true' : 'false', playL: s.playing ? 'Ferma' : 'Riproduci', playS: s.playing ? '❚❚' : '▶' }; }
+    // Le soglie: la tabella del setup (qui e in Impostazioni)
+    // L'interruttore di una soglia (PillolaScelta forma interruttore): una sola opzione
+    const swOf = (on, nome, tog, l) => ({ sw: [{ l: l || nome, sel: on, titolo: (on ? 'Spegni ' : 'Accendi ') + nome, on: e => { no(e); tog(); } }] });
+    const upd = (key, k, o) => { const cur = s.bz[key] || {}; set({ bz: { ...s.bz, [key]: { ...cur, [k]: { ...(cur[k] || {}), ...o } } } }); };
+    const tabella = (sk, fk, fr, gEs) => { const key = sk + '|' + fk, R2 = RR(sk, fk, true), Ra = RR(sk, fk), mis2 = fr.filter(f => f.s === sk && f.f === fk && misurato(f));
+      const righe = SK.map(m => { const r = R2[m], tk = key + m, txt = s.sgT[tk], bad = txt != null && isNaN(parseFloat(String(txt).replace(',', '.'))), nC = mis2.filter(f => colpisce(r, m, f)).length, q = gEs ? gst(gEs.k, m) : null, th = gEs ? soglia(r, m, gEs.k) : null;
+        // v56.30: la soglia e' cambiata qui rispetto a Impostazioni › Soglie dei setup?
+        const d0 = { ...DEF[sk][m], ...(((DEFF[sk] || {})[fk] || {})[m] || {}) }; if (TIPO[m]) d0.tipo = TIPO[m];
+        const qui = ['on', 'op', 'v', 'tipo'].some(z => d0[z] !== undefined && String(d0[z]) !== String(r[z]));
+        return { qui, ripristina: e => { no(e); upd(key, m, { on: d0.on, op: d0.op, v: d0.v, tipo: d0.tipo }); const t2 = { ...s.sgT }; delete t2[tk]; set({ sgT: t2 }); }, ripA: 'Ripristina ' + M[m].l + ' come in Impostazioni', ...swOf(r.on, M[m].l, () => upd(key, m, { on: !r.on })), nome: M[m].l, rcls: 'al-sel__riga-26' + (r.on ? '' : ' al-sel__riga-26--spenta'), opA: 'Confronto per ' + M[m].l,
+          opO: [['>', 'maggiore di'], ['≥', 'da'], ['<', 'minore di'], ['≤', 'fino a']].map(([o, w]) => ({ l: o, a: w, selA: o === r.op ? 'true' : 'false', on: e => { no(e); upd(key, m, { op: o }); set({ opA: null }); } })), opV: r.op,
+          opMenu: s.opA === tk, opE: s.opA === tk ? 'true' : 'false', opT: e => { no(e); set({ opA: s.opA === tk ? null : tk }); }, opChiudi: () => set({ opA: null }), 
+          v: txt != null ? txt : String(r.tipo === 'rel' ? (th != null ? +(+th).toFixed(['stelle', 'snr', 'bg', 'alt'].includes(m) ? 0 : 2) : r.v) : r.v).replace('.', ','), // v56.31: solo «valore»; la mediana resta solo come punto di partenza vA: 'Valore per ' + M[m].l, inv: bad ? 'true' : 'false', err: bad ? 'Serve un numero, per esempio 2 o 1,5.' : m === 'fw' && r.tipo === 'abs' && r.on && (r.op === '<' || r.op === '≤' ? false : r.v < ALsoglie.misure.F(A.SET[sk].sc, A.SET[sk].ap)) ? 'sotto il limite del setup (' + P(ALsoglie.misure.F(A.SET[sk].sc, A.SET[sk].ap), 2) + '″): scarterebbe tutto' : '',
+          onV: e => { const x = e.target.value, v = parseFloat(x.replace(',', '.')); if (!isNaN(v)) upd(key, m, { v, tipo: 'abs' }); set({ sgT: { ...s.sgT, [tk]: x } }); },
+          u: M[m].u, 
+          conta: r.on ? 'scarta ' + nC : 'spenta' }; });
+      const fx = R2.fx, c = FXof(fx.testo), nF = c.fn ? mis2.filter(f => c.fn(f, getF) === true).length : 0, fxCamb = fx.testo.trim() !== Ra.fx.testo.trim() || fx.on !== Ra.fx.on;
+      const diff = fxCamb || SK.some(m => ['on', 'op', 'v', 'tipo'].some(k => R2[m][k] !== Ra[m][k])), err = fx.on ? c.err : null;
+      const setFx = o => { const cur = s.bz[sk] || {}; set({ bz: { ...s.bz, [sk]: { ...cur, fx: { ...(cur.fx || {}), ...o } } } }); };
+      const nQui = righe.filter(x => x.qui).length;
+      return { righe, diff, nQui, appL: nQui ? 'Applica · ' + nQui + (nQui === 1 ? ' soglia cambiata' : ' soglie cambiate') : 'Applica', stato: diff ? '! modifiche da applicare' : '', appNo: diff && !err ? 'false' : 'true',
+        applica: e => { no(e); if (!diff || err) return; const sg = { ...s.sg }, bz = { ...s.bz }; [key, sk].forEach(k => { if (bz[k]) { const a = { ...(sg[k] || {}) }; Object.keys(bz[k]).forEach(m => { a[m] = { ...(a[m] || {}), ...bz[k][m] }; }); sg[k] = a; delete bz[k]; } }); const t2 = { ...s.sgT }; Object.keys(t2).forEach(k => { if (k.indexOf(key) === 0) delete t2[k]; }); set({ sg, bz, sgT: t2 }); },
+        fx: { ...swOf(fx.on, 'la formula', () => setFx({ on: !fx.on }), 'Formula'), testo: fx.testo, onT: e => setFx({ testo: e.target.value }), inv: c.err ? 'true' : 'false',
+        onAdd: e => { const tok = e.target.value; e.target.value = ''; if (!tok) return; const v = fx.testo.replace(/\s+$/, ''); setFx({ testo: tok[0] === '_' ? v + tok : (v ? v + ' ' : '') + tok }); },
+        conta: !fx.on ? 'spenta' : c.err ? '—' : 'scarta ' + nF,
+        es: c.err ? c.err : fxCamb ? 'Si legge bene. Premi Applica per usarla sui frame.' : fx.on ? 'In uso: scarta i frame per cui è vera.' : 'Pronta: accendila e premi Applica.', esS: c.err ? '✕' : fxCamb ? '!' : '✓',
+        esCls: 'al-sel__riga-30' + (c.err ? ' al-sel__riga-30--errore' : ''), esSCls: 'al-segno al-sel__blocco-21 al-segno--' + (c.err ? 'non-adatta' : fxCamb ? 'avviso' : 'buona'),
+        chips: [['FWHM', 'FWHM'], ['HFD', 'HFD'], ['Eccentricità', 'Eccentricità'], ['Stelle', 'Stelle'], ['SNR', 'SNR'], ['Fondo', 'Fondo cielo'], ['Altezza', 'Altezza'], ['_mediana', '… mediana del gruppo'], ['_mad', '… MAD del gruppo'], ['_min', '… minimo del gruppo'], ['_max', '… massimo del gruppo'], ['+', '+ più'], ['−', '− meno'], ['×', '× per'], ['÷', '÷ diviso'], ['(', '( apri'], [')', ') chiudi'], ['<', '< minore'], ['>', '> maggiore'], ['≤', '≤ fino a'], ['≥', '≥ da'], ['e', 'e (tutte e due)'], ['o', 'o (una delle due)']].map(([l, n]) => ({ l, n })) } }; };
+    const corrV = [...new Set(V.map(f => f.s))], skP = corrV.includes(s.sk) ? s.sk : G1 && corrV.includes(G1.s) ? G1.s : corrV[0] || 'fra';
+    const gP = G1 && G1.s === skP ? G1 : A.GR.find(g => g.s === skP && g.f === fk && g.posa === pk && V.some(f => f.g === g.k)) || A.GR.find(g => g.s === skP && g.f === fk && V.some(f => f.g === g.k)) || A.GR.find(g => g.s === skP && g.f === fk) || A.GR.find(g => g.s === skP);
+    const nTot = V.filter(f => f.s === skP && f.f === fk && f.posa === pk && ST[f.id].k === 'escr').length;
+    const TB = { ...tabella(skP, fk || gP.f, V, gP), corredi: corrV.length > 1 ? corrV.map(k => ({ l: A.SET[k].b, sel: k === skP ? 'true' : 'false', on: e => { no(e); set({ sk: k }); } })) : null,
+      cor: '', tot: FDn(fk || gP.f) + (fk && piuPose(fk) ? ' · ' + pk + ' s' : '') + ' · ' + nTot + ' da scartare per le soglie applicate' };
+    // Da scartare e cosa resta
+    const vEsc = V.filter(escluso), vTen = V.filter(tenuto), nMan = vEsc.filter(f => ST[f.id].k === 'escm').length, nNm = V.filter(f => ST[f.id].k === 'nm').length, perF = [...new Set(vEsc.map(f => f.f))].map(k => FDn(k) + ' ' + vEsc.filter(f => f.f === k).length).join(' · ');
+    const ES = { n: AL.num(vEsc.length), nL: vEsc.length === 1 ? 'frame' : 'frame', det: vEsc.length ? AL.ore(H(vEsc)) + ' · ' + MB(vEsc.reduce((a, f) => a + f.mb, 0)) + ' · ' + perF + ' · ' + nMan + ' a mano' : 'nessuno',
+      resta: AL.num(vTen.length) + ' frame · ' + AL.ore(H(vTen)) + ' di ' + AL.ore(H(V)) + (nNm ? ' · ' + nNm + ' da misurare' : ''), restaS: 'su ' + AL.num(V.length) + ' frame · ' + AL.ore(H(V)) + ' di questa scelta',
+      spostaL: 'Sposta in «scartate» · ' + vEsc.length, spostaNo: vEsc.length ? 'false' : 'true', sposta: e => { no(e); if (vEsc.length) set({ fin: 'sposta' }); },
+      annulla: s.storia.length ? e => { no(e); const h = s.storia[s.storia.length - 1]; set({ ...h, storia: s.storia.slice(0, -1), esito: null }); } : null };
+    // La barra della selezione
+    const selIds = V.filter(f => s.sel[f.id]).map(f => f.id), selSc = selIds.filter(k => s.scart[k]), selAlt = selIds.filter(k => !s.scart[k]), selMan = selAlt.filter(k => s.man[k]);
+    const SBb = (l, on, pieno) => ({ l, cls: 'al-bottone al-bottone--piccolo al-sel__sb' + (pieno ? ' al-sel__sb--acceso' : ''), on: e => { no(e); on(); } });
+    const SB = { on: selIds.length > 0, n: selIds.length + (selIds.length === 1 ? ' selezionato' : ' selezionati'), via: e => { no(e); set({ sel: {} }); },
+      az: (selAlt.length ? [SBb('Scarta', () => { scarta(selAlt); set({ sel: {} }); }, true), SBb('Tieni', () => { tieni(selAlt); set({ sel: {} }); })] : []).concat(selMan.length ? [SBb('Torna alle soglie', () => { allaRegola(selMan); set({ sel: {} }); })] : []).concat(selSc.length ? [SBb('Riporta indietro', () => esegui('riporta', selSc))] : []) };
+    // In «scartate»
+    const scF = vivi.filter(f => s.scart[f.id] && inV(f)), dirsOf = fr => [...new Set(fr.map(f => f.dir))].map(d => { const x = fr.filter(f => f.dir === d); return { d, fr: x, n: x.length + ' frame · ' + MB(x.reduce((a, f) => a + f.mb, 0)) }; });
+    const SC = { on: scF.length > 0, sub: scF.length + ' frame · ' + MB(scF.reduce((a, f) => a + f.mb, 0)) + ' · ' + dirsOf(scF).length + (dirsOf(scF).length === 1 ? ' cartella' : ' cartelle'), tutti: e => { no(e); esegui('riporta', scF.map(f => f.id)); }, cancella: e => { no(e); set({ fin: 'cancella' }); },
+      dir: dirsOf(scF).map(x => ({ p: x.fr[0].radice + '\\scartate\\' + x.fr[0].rel, n: x.n, da: x.d, on: e => { no(e); esegui('riporta', x.fr.map(f => f.id)); } })) };
+    const CN = s.cancN ? s.cancN + ' frame eliminati da «scartate» in questa sessione · ' + MB(s.cancMb) + '.' : '';
+    let FS = null, FC = null;
+    if (s.fin === 'sposta' && vEsc.length) { const dd = dirsOf(vEsc), mbA = MB(vEsc.reduce((a, f) => a + f.mb, 0));
+      FS = { tit: 'Spostare ' + vEsc.length + ' frame in «scartate»?', sub: vEsc.length + ' frame · ' + mbA + ' · ' + dd.length + (dd.length === 1 ? ' cartella' : ' cartelle'), dir: dd.map((x, j) => ({ p: x.d, dove: x.fr[0].radice + '\\scartate\\' + x.fr[0].rel, n: x.n })), okL: 'Sposta ' + vEsc.length + ' frame', ok: e => { no(e); esegui('sposta', vEsc.map(f => f.id)); } }; }
+    if (s.fin === 'cancella' && scF.length) { const dd = dirsOf(scF), mbA = MB(scF.reduce((a, f) => a + f.mb, 0)), senzaC = f => f.radice.indexOf('\\\\') === 0, nNo = scF.filter(senzaC).length, tutti = nNo === scF.length;
+      FC = { tit: tutti ? 'Eliminare ' + scF.length + ' frame per sempre?' : 'Mettere ' + scF.length + ' frame nel cestino?', segno: tutti || nNo ? '!' : '', sub: scF.length + ' frame · ' + mbA + ' · da ' + dd.length + (dd.length === 1 ? ' cartella in «scartate»' : ' cartelle in «scartate»'),
+        dir: dd.map((x, j) => ({ p: x.fr[0].radice + '\\scartate\\' + x.fr[0].rel, n: x.n + (senzaC(x.fr[0]) ? ' · senza cestino' : ' · nel cestino') })),
+        testo: tutti ? 'Su questa cartella non c\u0027è il cestino: i file si cancellano per sempre. Non si recuperano.' : nNo ? 'I file vanno nel cestino del computer. ' + nNo + ' sono sul NAS, dove il cestino non c\u0027è: quelli si cancellano per sempre e non si recuperano.' : 'I file vanno nel cestino del computer: da lì si possono ancora recuperare.',
+        okL: tutti ? 'Elimina per sempre' : nNo ? 'Elimina · ' + nNo + ' per sempre' : 'Metti nel cestino', okCls: tutti || nNo ? 'al-bottone al-bottone--pericolo' : 'al-bottone al-bottone--pieno', ok: e => { no(e); esegui('cancella', scF.map(f => f.id)); } }; }
+    // Impostazioni › Selezione dei frame: le soglie di ogni setup
+    const SEZ = [['generale', 'Generale'], ['siti', 'Siti'], ['cartelle', 'Cartelle e scansione'], ['meteo', 'Meteo'], ['astap', 'ASTAP'], ['luna', 'Luna'], ['planner', 'Planner'], ['automazione', 'Automazione'], ['selezione', 'Selezione dei frame'], ['servizi', 'Servizi'], ['scansioni', 'Scansioni'], ['diagnostica', 'Diagnostica'], ['backup', 'Backup']];
+    const tabs = SEZ.map(([k, l]) => ({ l, sel: k === 'selezione', href: k === 'selezione' ? undefined : 'Impostazioni.dc.html?sezione=' + k }));
+    const skI = A.SET[s.skI] ? s.skI : 'fra', filI = [...new Set(vivi.filter(f => f.s === skI).map(f => f.f))], fI = filI.includes(s.fI) ? s.fI : filI[0], gI = A.GR.find(g => g.s === skI && g.f === fI), frI = vivi.filter(f => f.s === skI && f.f === fI);
+    const TI = { ...tabella(skI, fI, frI, gI), corredi: Object.values(A.SET).map(x => ({ l: x.b, sel: x.k === skI ? 'true' : 'false', on: e => { no(e); set({ skI: x.k }); } })),
+      filtri: filI.map(k => ({ l: FDn(k), sel: k === fI ? 'true' : 'false', on: e => { no(e); set({ fI: k }); } })),
+      sub: A.SET[skI].n + ' · ' + FDn(fI) + ' · si contano tutti i frame (' + AL.num(frI.length) + '). La formula vale per tutti i filtri del setup.' };
+    const COME = [{ s: '✕', t: 'Una soglia segna il frame da scartare; lo spostamento in «scartate» lo fai tu, e si annulla.' }, { s: '✓', t: 'La scelta a mano vince sempre, anche se poi cambi la soglia.' },
+      { s: '–', t: 'Il gruppo è oggetto, setup, filtro, posa e guadagno, con tutte le notti: le soglie dalla mediana si contano lì, sui frame misurati, e non valgono sotto 10 frame.' },
+      { s: 'M', t: 'MAD: quanto i frame si allontanano dalla mediana. Ogni soglia si conta dalla mediana del gruppo, in MAD, o col valore che scrivi tu. La partenza è 2,5 MAD per FWHM, stelle, SNR e fondo cielo; valore per eccentricità (0,6) e altezza (30°).' },
+      { s: '!', t: 'Al limite: dalla parte buona, entro 1 MAD dalla soglia dalla mediana. Una soglia a valore non ha «al limite».' }, { s: 'ƒ', t: 'Eccentricità e altezza partono spente: accendile col tuo valore. La formula si scrive, si controlla e vale solo dopo Applica.' }, { s: '?', t: 'I frame non ancora misurati restano fuori: le soglie non li toccano.' }];
+    TB.corT = TB.corredi ? tSel(TB.corredi) : null; if (typeof TI !== 'undefined' && TI) TI.corT = tSel(TI.corredi);
+    return { pronto: true, ordT: tSel(ordO), gvI, t, modo, accento, fmt, L, anteprima: qs.get('anteprima') !== 'no', setModo: m => set({ modo: m }), telPag: vista === 'regole' ? 'Impostazioni' : 'Selezione dei frame', etichetta: vista === 'regole' ? 'Impostazioni · Selezione dei frame' : 'Selezione dei frame',
+      V: { pagina: vista === 'pagina', regole: vista === 'regole' }, apriRegole: e => { no(e); set({ vista: 'regole', skI: skP, fI: fk, sel: {} }); if (typeof window !== 'undefined') window.scrollTo(0, 0); }, chiudiRegole: e => { no(e); set({ vista: 'pagina' }); if (typeof window !== 'undefined') window.scrollTo(0, 0); },
+      partiO, partiSub, DD, CAL, rvO, h2: tel ? 'Da rivedere' : 'Frame per frame', TS: TB.righe.filter(r => r.conta !== 'spenta').map(r => ({ l: r.nome + ' ' + r.opV + ' ' + r.v + ' ' + r.u, c: r.conta })), RS, PC, TB, cfO, misO, misBO, gvO, ordO, misBV: misB || '', misBCambia: e => set({ misB: e.target.value || null, hov: null }), G, PV, PVF: !!(PV && s.fs), ES, E, SB: tel ? { on: false } : SB, SC, CN, FS, FC, chiudiFin: () => set({ fin: null }),
+      tabs, TI, COME };
+  }
+}
+</script>
+</body>
+</html>

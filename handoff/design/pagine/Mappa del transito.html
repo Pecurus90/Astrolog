@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mappa del transito</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script src="componenti/transiti.js"></script>
+<style>
+html,body{margin:0;height:100%;background:#0b0d16;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+#m{position:absolute;inset:0}
+.leaflet-container{background:#0b0d16;font:inherit}
+.al-n{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#fff;color:#15111f;font-weight:700;font-size:14px;box-shadow:0 0 0 2px #15111f,0 4px 12px rgba(0,0,0,.4)}
+.al-n.on{width:38px;height:38px;font-size:16px;background:var(--acc);color:var(--acc-t)}
+.al-et{position:absolute;left:24px;top:-6px;white-space:nowrap;padding:3px 9px;border-radius:999px;background:#fff;color:#15111f;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.al-sito{width:14px;height:14px;border-radius:50%;background:#15111f;box-shadow:0 0 0 3px #fff}
+.al-tu{width:16px;height:16px;border-radius:50%;background:#2f7dff;box-shadow:0 0 0 3px #fff,0 0 0 10px rgba(47,125,255,.25)}
+.al-fr{color:#15111f;font-size:18px;line-height:1;text-shadow:0 0 3px #fff,0 0 3px #fff}
+.leaflet-control-attribution{font-size:10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="m" role="application" aria-label="Mappa della striscia del transito e dei posti suggeriti"></div>
+<script>
+// Riceve l'evento dall'indirizzo; il Planner manda la scelta del posto e la posizione con postMessage
+const Q = new URLSearchParams(location.search), num = (k, d) => Q.has(k) ? +Q.get(k) : d;
+const EV = { id: Q.get('id') || 'e2', az: num('az', 62), off: num('off', 0.8), strip: num('strip', 5), alt: num('alt', 44), met: Q.get('met') === 'n' || !Q.has('met') ? null : +Q.get('met') };
+const ACC = { originale: ['#b9a6ff', '#15111f'], ambra: ['#ffb54a', '#1d1406'], turchese: ['#4fd6c8', '#06201d'], corallo: ['#ff8a76', '#2a0d07'], ghiaccio: ['#9fd3ff', '#0a1a2a'] }[Q.get('acc')] || ['#ffb54a', '#1d1406'];
+document.documentElement.style.setProperty('--acc', ACC[0]); document.documentElement.style.setProperty('--acc-t', ACC[1]);
+const T = window.ALtransiti, S = T.striscia(EV), P = T.posti(EV, 3), tel = Q.get('tel') === '1';
+let sel = num('sel', 0);
+const map = L.map('m', { zoomControl: false, attributionControl: true });
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap contributors' }).addTo(map);
+L.polygon(S.bordo, { color: ACC[0], weight: 1.5, fillColor: ACC[0], fillOpacity: 0.22 }).addTo(map);
+L.polyline(S.linea, { color: '#15111f', weight: 2, dashArray: '8 6' }).addTo(map);
+S.frecce.forEach(f => L.marker(f.p, { interactive: false, keyboard: false, icon: L.divIcon({ className: '', iconSize: [18, 18], html: '<div class="al-fr" style="transform:rotate(' + (f.az - 90) + 'deg)" aria-hidden="true">➜</div>' }) }).addTo(map));
+L.marker([T.SITO.lat, T.SITO.lon], { keyboard: false, icon: L.divIcon({ className: '', iconSize: [14, 14], html: '<div class="al-sito"></div>' + (P.some(p => p.salvato) ? '' : '<span class="al-et" style="left:20px;top:-4px">' + T.SITO.n + '</span>') }) }).addTo(map);
+const mk = P.map((p, i) => { const m = L.marker([p.lat, p.lon], { title: p.n, alt: 'Posto ' + (i + 1) + ': ' + p.n, icon: icona(i) }).addTo(map);
+  m.on('click', () => { scegli(i); parent.postMessage({ astrologPosto: i }, '*'); }); return m; });
+function icona(i) { const on = i === sel, s = on ? 38 : 30; return L.divIcon({ className: '', iconSize: [s, s], iconAnchor: [s / 2, s / 2], html: '<div class="al-n' + (on ? ' on' : '') + '">' + (i + 1) + '</div>' + (on ? '<span class="al-et" style="left:' + (s + 6) + 'px;top:' + (s / 2 - 12) + 'px">' + P[i].nb + '</span>' : '') }); }
+function scegli(i, vola) { sel = i; mk.forEach((m, k) => { m.setIcon(icona(k)); m.setZIndexOffset(k === i ? 1000 : 0); }); if (vola && P[i]) map.flyTo([P[i].lat, P[i].lon], Math.max(map.getZoom(), 12), { duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 0.6 }); }
+let tu = null;
+window.addEventListener('message', e => { const d = e.data || {}; if (typeof d.astrologSel === 'number') scegli(d.astrologSel, true);
+  if (d.astrologTu) { if (!tu) tu = L.marker([d.astrologTu.lat, d.astrologTu.lon], { keyboard: false, icon: L.divIcon({ className: '', iconSize: [16, 16], html: '<div class="al-tu" aria-label="Sei qui"></div>' }) }).addTo(map); map.flyTo([d.astrologTu.lat, d.astrologTu.lon], 13, { duration: 0.6 }); } });
+const pad = tel ? { paddingTopLeft: [24, 150], paddingBottomRight: [24, 220] } : { paddingTopLeft: [40, 90], paddingBottomRight: [40, 110] };
+map.fitBounds(L.latLngBounds([[T.SITO.lat, T.SITO.lon], ...P.map(p => [p.lat, p.lon])]).pad(0.25), pad);
+</script>
+</body>
+</html>

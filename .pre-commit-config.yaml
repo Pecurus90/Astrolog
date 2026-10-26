@@ -1,6 +1,7 @@
 # Fast checks run on commit; the full suite on push and in CI (--hook-stage manual).
 default_install_hook_types: [pre-commit, pre-push, commit-msg]
-exclude: ^old/
+# old/ is the quarry; handoff/design/ is Design's export, kept byte for byte as exported.
+exclude: ^(old|handoff/design)/
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<div class="al-c-filtri__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ bottone }}" hint-placeholder-val="{{ false }}"><a class="al-c-filtri__riga-1" href="#" onClick="{{ apri }}" aria-expanded="{{ ap }}" style="min-height:{{ L.h }};background:{{ B.bg }};color:{{ B.fg }}">Criteri<sc-if value="{{ B.n }}" hint-placeholder-val="{{ false }}"><span class="al-c-filtri__pillola-1" style="background:{{ B.fg }};color:{{ B.bg }}">{{ B.n }}</span></sc-if><sc-if value="{{ B.chev }}" hint-placeholder-val="{{ true }}"><span class="al-c-filtri__testo-1" aria-hidden="true">{{ B.chev }}</span></sc-if></a></sc-if>
+<sc-if value="{{ corpo }}" hint-placeholder-val="{{ true }}"><div class="al-c-filtri__colonna-1" style="gap:{{ L.gap }};padding:{{ rientro }}">
+<sc-if value="{{ campo }}" hint-placeholder-val="{{ false }}"><label class="al-c-filtri__colonna-2"><span class="al-c-filtri__testo-2" style="font-size:{{ L.lfs }}">oggetto</span><input value="{{ q }}" onInput="{{ cerca }}" placeholder="{{ campo }}" class="al-campo al-campo--tondo al-campo--piccolo al-c-filtri__blocco-2"></label></sc-if>
+<div class="al-c-filtri__centro-1" style="grid-template-columns:{{ cols }};gap:{{ L.gap }} 24px">
+<sc-for list="{{ gruppi }}" as="g" hint-placeholder-count="4"><div class="al-c-filtri__colonna-3" role="group" aria-label="{{ g.l }}" style="padding-top:{{ L.gp }}"><span class="al-c-filtri__testo-2" style="font-size:{{ L.lfs }}">{{ g.l }}</span><dc-import name="componenti/PillolaScelta" opzioni="{{ g.opz }}" etichetta="{{ g.l }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></div></sc-for>
+</div>
+<sc-if value="{{ piede }}" hint-placeholder-val="{{ false }}"><div class="al-c-filtri__riga-2"><a href="#" onClick="{{ mostraOn }}" class="al-bottone al-bottone--pieno al-bottone--blocco al-c-filtri__blocco-3">{{ mostra }}</a><sc-if value="{{ attivi }}" hint-placeholder-val="{{ false }}"><a href="#" onClick="{{ togli }}" class="al-bottone al-bottone--testo al-bottone--blocco al-bottone--a-sinistra">Togli i criteri</a></sc-if></div></sc-if>
+</div></sc-if>
+<sc-if value="{{ togliSolo }}" hint-placeholder-val="{{ false }}"><a class="al-c-filtri__riga-3" href="#" onClick="{{ togli }}" style="min-height:{{ L.h }}">Togli i criteri</a></sc-if></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:320},&quot;parte&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;corpo&quot;,&quot;bottone&quot;,&quot;togli&quot;],&quot;default&quot;:&quot;corpo&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;gruppi&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;Array&lt;{l:string,opz:any[]}&gt;&quot;},&quot;colonne&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:1,&quot;min&quot;:1,&quot;max&quot;:6,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;campo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;per esempio M 31 o Velo&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Testi&quot;},&quot;q&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;onCerca&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(q: string) =&gt; void&quot;},&quot;attivi&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:9,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;aperto&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Stato&quot;},&quot;freccia&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onApri&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onTogli&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;mostra&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Mostra 6 notti&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Testi&quot;},&quot;onMostra&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;altezza&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;rientro&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  componentWillUnmount() { this._alw && clearInterval(this._alw); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), tel = p.formato === 'telefono', parte = p.parte || 'corpo';
+    const ev = f => e => { e && e.preventDefault && e.preventDefault(); f && f(e); };
+    // Gruppi: { l, opz: [{ l, c, sel, no, tinta, on }] } (vedi PillolaScelta). Nello stesso gruppo basta una scelta, fra gruppi valgono tutte.
+    const gruppi = p.gruppi || [{ l: 'Anno', opz: [{ l: '2026', c: '11', sel: true }, { l: '2025', c: '0', no: true }] }, { l: 'Filtri', opz: [{ l: 'Hα', tinta: 'ha', c: '4' }, { l: 'OIII', tinta: 'oiii', c: '3' }, { l: 'quad band', tinta: 'quad', c: '1' }] }];
+    const n = +(p.attivi || 0), ap = !!p.aperto;
+    const L = tel ? { h: '44px', gap: '12px', lfs: '12px', ifs: '16px', ih: '44px', ip: '16px', gp: '10px' } : { h: p.altezza || '40px', gap: '14px', lfs: '13px', ifs: '14px', ih: '38px', ip: '14px', gp: '12px' };
+    return { pronto: true, t, L, modo: p.modo, accento: p.accento, fmt: tel ? 'telefono' : 'desktop',
+      bottone: parte === 'bottone', corpo: parte === 'corpo', togliSolo: parte === 'togli' && n > 0,
+      B: { n: n ? String(n) : '', bg: n ? t.hPill : t.card2, fg: n ? t.hPillFg : t.text, chev: p.freccia === false ? '' : ap ? '▴' : '▾' }, ap: ap ? 'true' : 'false', apri: ev(p.onApri),
+      gruppi, cols: tel ? 'minmax(0,1fr)' : 'repeat(' + (p.colonne || 1) + ',minmax(0,1fr))', campo: p.campo || '', q: p.q || '', cerca: e => p.onCerca && p.onCerca(e.target.value),
+      piede: tel && !!p.mostra, mostra: p.mostra || '', mostraOn: ev(p.onMostra), attivi: n > 0, togli: ev(p.onTogli), rientro: p.rientro || '0' };
+  }
+}
+</script>
+</body>
+</html>

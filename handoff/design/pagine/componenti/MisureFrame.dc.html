@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}a{color:inherit;text-decoration:none}@keyframes skPulse{0%,100%{opacity:1}50%{opacity:.35}}</style></helmet>
+<div class="al-c-misure-frame__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}" data-formato="{{ fmt }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><div class="al-c-misure-frame__colonna-1">
+
+<section class="al-c-misure-frame__colonna-2" aria-label="Le misure dei frame">
+<div class="al-c-misure-frame__riga-1" style="align-items:center"><h2 class="al-c-misure-frame__testo-1">Le misure dei frame</h2><span class="al-c-misure-frame__testo-2">simulate</span></div>
+<div class="al-c-misure-frame__riga-2">
+<dc-import name="componenti/PillolaScelta" ruolo="radio" classe="al-c-misure-frame__scelta al-scelta--sottili" scorre="{{ tel }}" opzioni="{{ filP }}" etichetta="Filtro" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import>
+<span class="al-c-misure-frame__testo-4">{{ su }}</span>
+<sc-if value="{{ attesa }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__riga-5"><span class="al-c-misure-frame__tondo-2" aria-hidden="true"></span>misura in corso</span></sc-if>
+<sc-if value="{{ isola }}" hint-placeholder-val="{{ false }}"><button type="button" class="al-bottone al-c-misure-frame__riga-6" onClick="{{ isola.via }}">solo {{ isola.n }} ×</button></sc-if>
+</div>
+<div class="al-c-misure-frame__centro-1 al-c-misure-frame__centro-1--tessere"><sc-for list="{{ tiles }}" as="x" hint-placeholder-count="12"><a class="{{ x.cls }}" href="#" role="button" aria-pressed="{{ x.on }}" onClick="{{ x.click }}">
+<span class="al-c-misure-frame__riga-7"><span class="al-c-misure-frame__blocco-2">{{ x.k }}</span><sc-if value="{{ x.dot }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__tondo-3" aria-hidden="true" style="background:{{ x.dot }}"></span></sc-if></span>
+<span class="al-c-misure-frame__testo-5">{{ x.v }}</span>
+<sc-if value="{{ x.sub }}" hint-placeholder-val="{{ true }}"><span class="al-c-misure-frame__testo-6">{{ x.sub }}</span></sc-if>
+<sc-if value="{{ x.gz }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__riga-8"><dc-import name="componenti/Pillola" esito="{{ x.gz.e }}" segno="{{ x.gz.s }}" testo="{{ x.gz.t }}" dimensione="micro" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="60px,20px"></dc-import></span></sc-if>
+<sc-if value="{{ x.tag }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__blocco-3">{{ x.tag }}</span></sc-if>
+<sc-if value="{{ x.d }}" hint-placeholder-val="{{ true }}"><svg class="al-c-misure-frame__grafico-1" aria-hidden="true" width="100%" height="20" viewBox="0 0 100 30" preserveAspectRatio="none"><path class="{{ x.sc }}" d="{{ x.d }}" fill="none" stroke-width="1.5" vector-effect="non-scaling-stroke"></path></svg></sc-if>
+</a></sc-for></div>
+<span class="al-c-misure-frame__testo-7">Mediane, coi quartili sotto. Toccata una misura, entra nei grafici: la prima piena, la seconda tratteggiata. Un giudizio per misura, dove c'è una soglia; nessuno scarto.</span>
+</section>
+
+
+
+<section class="al-c-misure-frame__colonna-4" aria-label="I grafici">
+<div class="al-c-misure-frame__riga-9"><h2 class="al-c-misure-frame__blocco-4">Frame per frame</h2><sc-if value="{{ sel }}" hint-placeholder-val="{{ false }}"><a href="{{ sel }}" target="_top" class="al-bottone al-bottone--tenue al-bottone--icona" aria-label="Apri Selezione dei frame" title="Selezione dei frame" style="border-radius:50%;width:44px">↗</a></sc-if>
+<div role="group" aria-label="Vista dei grafici" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto"><div role="radiogroup" aria-label="Vista" style="flex:none;display:flex;gap:2px;padding:2px;border-radius:999px;background:var(--carta-2)"><sc-for list="{{ VB.vis }}" as="v" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ v.on }}" aria-label="{{ v.l }}" title="{{ v.l }}" onClick="{{ v.scegli }}" style="width:44px;height:44px;padding:0;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;background:transparent;color:{{ v.fg }};box-shadow:{{ v.sh }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ v.d }}"></path></svg></button></sc-for></div><sc-for list="{{ VB.sels }}" as="g" hint-placeholder-count="1"><select key="{{ g.v }}" defaultValue="{{ g.v }}" onChange="{{ g.on }}" aria-label="{{ g.l }}" class="al-tendina al-tendina--tondo" style="flex:none;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ g.o }}" as="x" hint-placeholder-count="2"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select></sc-for><sc-if value="{{ LU }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/PillolaScelta" forma="interruttore" opzioni="{{ LU.sw }}" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="110px,44px"></dc-import></sc-if></div></div>
+<div class="al-c-misure-frame__riga-19"><span class="al-c-misure-frame__testo-9">Un grafico per filtro</span><dc-import name="componenti/PillolaScelta" classe="al-c-misure-frame__scelta al-scelta--sottili" scorre="{{ tel }}" opzioni="{{ C.gfP }}" etichetta="Grafici per filtro" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,32px"></dc-import></div>
+<sc-for list="{{ C.charts }}" as="c" hint-placeholder-count="1"><div class="al-c-misure-frame__colonna-6">
+<div class="al-c-misure-frame__riga-20">
+<span class="al-c-misure-frame__riga-21"><span class="al-c-misure-frame__tondo-1" aria-hidden="true" style="background:{{ c.dot }};border:{{ c.bd }}"></span>{{ c.n }}</span>
+<sc-if value="{{ c.nota }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__testo-2">{{ c.nota }}</span></sc-if>
+<sc-for list="{{ C.sw }}" as="w" hint-placeholder-count="2"><span class="al-c-misure-frame__riga-22"><i class="{{ w.cls }}" aria-hidden="true"></i>{{ w.n }}</span></sc-for>
+<span class="al-c-misure-frame__blocco-5"></span><span class="al-c-misure-frame__testo-10"><sc-for list="{{ c.md }}" as="m" hint-placeholder-count="2"><span class="al-c-misure-frame__testo-11">{{ m.n }} {{ m.v }}</span></sc-for> · mediane</span>
+</div>
+<div class="al-c-misure-frame__blocco-6" onMouseMove="{{ c.move }}" onMouseLeave="{{ c.out }}" onTouchStart="{{ c.move }}" onTouchMove="{{ c.move }}" onClick="{{ c.click }}">
+<svg class="al-c-misure-frame__grafico-2" viewBox="{{ c.vb }}" width="100%" role="img" aria-label="{{ c.al }}">
+<line class="al-c-misure-frame__tratto-1" x1="{{ c.x0 }}" x2="{{ c.x1 }}" y1="{{ c.bot }}" y2="{{ c.bot }}" stroke-width="1"></line>
+<sc-for list="{{ c.sep }}" as="x" hint-placeholder-count="0"><line class="al-c-misure-frame__tratto-2" x1="{{ x }}" x2="{{ x }}" y1="0" y2="{{ c.bot }}" stroke-width="1" stroke-dasharray="3 4"></line></sc-for>
+<sc-for list="{{ c.Bt }}" as="r" hint-placeholder-count="0"><rect class="al-c-misure-frame__tratto-2" x="{{ r.x }}" y="{{ r.y }}" width="{{ r.w }}" height="{{ r.h }}" rx="{{ r.r }}" fill="none" stroke-opacity=".55" stroke-width="1" stroke-dasharray="1.5 3.5"></rect></sc-for>
+<sc-for list="{{ c.A }}" as="r" hint-placeholder-count="20"><rect class="{{ r.cls }}" x="{{ r.x }}" y="{{ r.y }}" width="{{ r.w }}" height="{{ r.h }}" rx="{{ r.r }}" stroke-width="1.25"></rect></sc-for>
+<sc-for list="{{ c.B }}" as="r" hint-placeholder-count="0"><path class="al-c-misure-frame__tratto-3" d="{{ r.d }}" stroke-width="3.5" stroke-linecap="round"></path><path class="al-c-misure-frame__tratto-4" d="{{ r.d }}" stroke-width="1.5" stroke-linecap="round"></path></sc-for>
+<sc-if value="{{ c.lin }}" hint-placeholder-val="{{ false }}"><path class="al-c-misure-frame__tratto-5" d="{{ c.dA }}" fill="none" stroke-opacity=".18" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"></path><path class="al-c-misure-frame__tratto-5" d="{{ c.dA }}" fill="none" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"></path><path class="al-c-misure-frame__tratto-4" d="{{ c.dB }}" fill="none" stroke-width="1.25" stroke-dasharray="3 5" stroke-linecap="round"></path></sc-if>
+<sc-if value="{{ c.dL }}" hint-placeholder-val="{{ false }}"><path class="al-c-misure-frame__tratto-2" d="{{ c.dL }}" fill="none" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round" stroke-linejoin="round"></path></sc-if>
+<sc-for list="{{ c.xs }}" as="q" hint-placeholder-count="0"><path class="al-c-misure-frame__tratto-2" d="{{ q.d }}" stroke-width="1.5" fill="none"></path></sc-for>
+<sc-if value="{{ c.hx }}" hint-placeholder-val="{{ false }}"><line class="al-c-misure-frame__tratto-4" x1="{{ c.hx }}" x2="{{ c.hx }}" y1="0" y2="{{ c.bot }}" stroke-width="1" stroke-opacity=".35"></line><sc-if value="{{ c.lin }}" hint-placeholder-val="{{ false }}"><circle class="al-c-misure-frame__tratto-6" cx="{{ c.hx }}" cy="{{ c.hy }}" r="5" stroke-width="2"></circle></sc-if></sc-if>
+</svg>
+<sc-for list="{{ c.lab }}" as="l" hint-placeholder-count="3"><span class="al-c-misure-frame__strato-1" aria-hidden="true" style="left:{{ l.x }};top:{{ l.y }};transform:{{ l.tr }}">{{ l.l }}</span></sc-for>
+<sc-if value="{{ c.tip }}" hint-placeholder-val="{{ false }}"><div role="tooltip" class="al-riquadro al-c-misure-frame__blocco-7" style="left:{{ c.tip.l }};transform:{{ c.tip.tx }}"><b class="al-riquadro__titolo">{{ c.tip.t }}</b><span class="al-riquadro__sotto">{{ c.tip.s }}</span><sc-for list="{{ c.tip.r }}" as="r" hint-placeholder-count="2"><span>{{ r.n }}</span><b class="al-riquadro__valore">{{ r.v }}</b></sc-for></div></sc-if>
+</div>
+<div class="al-c-misure-frame__blocco-8" style="margin-left:{{ c.ml }};margin-right:{{ c.mr }}"><sc-for list="{{ c.gl }}" as="g" hint-placeholder-count="2"><span class="al-c-misure-frame__strato-2" style="left:calc({{ g.x }} - {{ c.ml }})">{{ g.l }}</span></sc-for></div>
+<sc-if value="{{ c.ov }}" hint-placeholder-val="{{ false }}"><div class="al-c-misure-frame__riga-23" style="margin-left:{{ c.ml }};margin-right:{{ c.mr }}"><button type="button" class="al-bottone al-c-misure-frame__tondo-5" aria-label="Frame prima" onClick="{{ c.ov.prima }}">‹</button><div class="al-c-misure-frame__riquadro-1" onPointerDown="{{ c.ov.drag }}" onPointerMove="{{ c.ov.drag }}" role="slider" aria-label="Tratto dei frame in vista" aria-valuetext="{{ c.ov.txt }}"><svg class="al-c-misure-frame__grafico-3" viewBox="0 0 100 24" preserveAspectRatio="none" width="100%" height="100%" aria-hidden="true"><path class="al-c-misure-frame__tratto-2" d="{{ c.ov.d }}" stroke-width="1" vector-effect="non-scaling-stroke"></path></svg><span class="al-c-misure-frame__strato-3" style="left:{{ c.ov.l }};width:{{ c.ov.w }}"></span></div><button type="button" class="al-bottone al-c-misure-frame__tondo-5" aria-label="Frame dopo" onClick="{{ c.ov.dopo }}">›</button></div><div class="al-c-misure-frame__riga-24" style="margin-left:{{ c.ml }}"><span class="al-c-misure-frame__testo-12">{{ c.ov.txt }}</span><sc-for list="{{ c.ov.notti }}" as="g" hint-placeholder-count="0"><button type="button" onClick="{{ g.click }}" class="al-bottone al-bottone--tenue al-bottone--piccolo">{{ g.n }}</button></sc-for></div></sc-if>
+</div></sc-for>
+<sc-if value="{{ C.xlab }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__riga-25"><span>{{ C.xlab.a }}</span><span>{{ C.xlab.b }}</span></span></sc-if>
+<div class="al-c-misure-frame__riga-26"><span>Una barra per frame, nell'ordine di ripresa. Passa sopra per i valori, tocca per aprire il frame.</span><sc-for list="{{ C.legX }}" as="g" hint-placeholder-count="0"><span class="al-c-misure-frame__riga-27"><svg aria-hidden="true" width="18" height="10" viewBox="0 0 18 10"><path class="{{ g.cls }}" d="{{ g.d }}" fill="none" stroke-width="1.5"></path></svg>{{ g.n }}</span></sc-for></div>
+</section>
+
+
+
+
+
+
+
+<section class="al-c-misure-frame__colonna-4" aria-label="Il frame">
+<div class="al-c-misure-frame__riga-28">
+<div class="al-c-misure-frame__colonna-7"><h2 class="al-c-misure-frame__testo-1">{{ FX.tit }}</h2><span class="al-c-misure-frame__testo-4">{{ FX.sub }}</span></div>
+<div class="al-c-misure-frame__riga-29"><button type="button" class="al-bottone al-c-misure-frame__tondo-6" aria-label="Frame prima" onClick="{{ FX.prima }}">‹</button><button type="button" class="al-bottone al-c-misure-frame__tondo-6" aria-label="Frame dopo" onClick="{{ FX.dopo }}">›</button></div>
+</div>
+<sc-if value="{{ FX.attesa }}" hint-placeholder-val="{{ false }}"><div class="al-c-misure-frame__riga-30"><span class="al-c-misure-frame__tondo-7" aria-hidden="true"></span>misura in corso</div></sc-if>
+<sc-if value="{{ FX.poche }}" hint-placeholder-val="{{ false }}"><div class="al-c-misure-frame__riga-31"><span class="al-c-misure-frame__tondo-8" aria-hidden="true">?</span>troppo poche stelle</div></sc-if>
+<sc-if value="{{ FX.nota }}" hint-placeholder-val="{{ false }}"><div class="al-c-misure-frame__riga-32"><dc-import name="componenti/Pillola" forma="segno" esito="{{ FX.notaE }}" segno="{{ FX.notaS }}" fondo="carta2" modo="{{ modo }}" accento="{{ accento }}" hint-size="22px,22px"></dc-import>{{ FX.nota }}</div></sc-if>
+<sc-if value="{{ FX.tiles }}" hint-placeholder-val="{{ true }}"><div class="al-c-misure-frame__centro-1 al-c-misure-frame__centro-1--frame"><sc-for list="{{ FX.tiles }}" as="x" hint-placeholder-count="8"><div class="al-c-misure-frame__colonna-8"><span class="al-c-misure-frame__testo-2">{{ x.k }}</span><span class="{{ x.vcls }}">{{ x.v }}</span><sc-if value="{{ x.sub }}" hint-placeholder-val="{{ true }}"><span class="al-c-misure-frame__testo-14">{{ x.sub }}</span></sc-if><sc-if value="{{ x.gz }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__riga-8"><dc-import name="componenti/Pillola" esito="{{ x.gz.e }}" segno="{{ x.gz.s }}" testo="{{ x.gz.t }}" dimensione="micro" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="60px,20px"></dc-import></span></sc-if><sc-if value="{{ x.gz2 }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__riga-8"><dc-import name="componenti/Pillola" esito="{{ x.gz2.e }}" segno="{{ x.gz2.s }}" testo="{{ x.gz2.t }}" dimensione="micro" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="60px,20px"></dc-import></span></sc-if><sc-if value="{{ x.link }}" hint-placeholder-val="{{ false }}"><a class="al-c-misure-frame__riga-33" href="{{ x.link.href }}">{{ x.link.l }}</a></sc-if><sc-if value="{{ x.tag }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__blocco-3">{{ x.tag }}</span></sc-if></div></sc-for></div></sc-if>
+</section>
+
+<section class="al-c-misure-frame__colonna-9" aria-label="A confronto">
+<div class="al-c-misure-frame__riga-9"><h2 class="al-c-misure-frame__blocco-4">{{ K.titolo }}</h2>
+<select key="{{ cmpT.v }}" defaultValue="{{ cmpT.v }}" onChange="{{ cmpT.on }}" aria-label="Misura" class="al-tendina al-tendina--tondo" style="flex:none;min-height:44px;box-sizing:border-box;font-family:var(--carattere)"><sc-for list="{{ cmpT.o }}" as="x" hint-placeholder-count="2"><option value="{{ x.v }}">{{ x.l }}</option></sc-for></select></div>
+<div class="al-c-misure-frame__colonna-10"><sc-for list="{{ K.rows }}" as="r" hint-placeholder-count="3"><a class="al-c-misure-frame__centro-2" href="#" onClick="{{ r.click }}" aria-pressed="{{ r.on }}">
+<span class="al-c-misure-frame__colonna-11"><span class="al-c-misure-frame__testo-15">{{ r.n }}</span><span class="al-c-misure-frame__riga-34"><sc-for list="{{ r.fd }}" as="d" hint-placeholder-count="2"><span class="al-c-misure-frame__tondo-10" aria-hidden="true" style="background:{{ d.bg }};border:{{ d.bd }}"></span></sc-for>{{ r.su }}</span></span>
+<span class="al-c-misure-frame__colonna-12"><dc-import name="componenti/Quartili" misura="piccola" q1="{{ r.q1 }}" qw="{{ r.qw }}" m="{{ r.m }}" hint-size="100%,20px"></dc-import><sc-if value="{{ r.see }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__testo-2">{{ r.see }}</span></sc-if></span>
+<span class="al-c-misure-frame__colonna-13"><span class="al-c-misure-frame__testo-16">{{ r.v }}</span><sc-if value="{{ r.es }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Pillola" esito="{{ r.es.e }}" testo="{{ r.es.t }}" dimensione="micro" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="70px,20px"></dc-import></sc-if></span>
+</a></sc-for></div>
+<span class="al-c-misure-frame__riga-35"><span>{{ K.lo }}</span><span>stessa scala per tutte le righe · toccata una riga, resta solo quella</span><span>{{ K.hi }}</span></span>
+</section>
+
+<section class="al-c-misure-frame__colonna-9" aria-label="Per filtro">
+<h2 class="al-c-misure-frame__testo-1">Per filtro</h2>
+<div class="al-c-misure-frame__blocco-9">
+<div class="al-c-misure-frame__centro-3" role="table" aria-label="Mediane per filtro" style="grid-template-columns:{{ PF.cols }};min-width:{{ PF.minW }}">
+<div class="al-c-misure-frame__blocco-1" role="row"><sc-for list="{{ PF.head }}" as="h" hint-placeholder-count="10"><span class="al-c-misure-frame__blocco-10" role="columnheader" style="text-align:{{ h.al }}">{{ h.l }}</span></sc-for></div>
+<sc-for list="{{ PF.rows }}" as="r" hint-placeholder-count="3"><a class="al-c-misure-frame__blocco-1" href="#" role="row" onClick="{{ r.click }}" aria-pressed="{{ r.on }}"><sc-for list="{{ r.c }}" as="c" hint-placeholder-count="10"><span class="al-c-misure-frame__colonna-14" role="cell" style="align-items:{{ c.ai }}"><span class="al-c-misure-frame__colonna-15" style="align-items:{{ c.ai }};text-align:{{ c.ta }}"><span class="al-c-misure-frame__riga-36" style="font-weight:{{ c.fw }}"><sc-if value="{{ c.dot }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__tondo-1" aria-hidden="true" style="background:{{ c.dot }};border:{{ c.bd }}"></span></sc-if>{{ c.v }}</span><sc-if value="{{ c.gz }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Pillola" esito="{{ c.gz.e }}" segno="{{ c.gz.s }}" testo="{{ c.gz.t }}" acapo="{{ true }}" allinea="flex-end" dimensione="micro" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="60px,20px"></dc-import></sc-if><sc-if value="{{ c.s }}" hint-placeholder-val="{{ false }}"><span class="al-c-misure-frame__testo-17">{{ c.s }}</span></sc-if></span></span></sc-for></a></sc-for>
+</div></div>
+<span class="al-c-misure-frame__testo-18">Il fondo si confronta solo con la stessa camera, lo stesso gain e la stessa posa. Toccata una riga, resta solo quel filtro.</span>
+</section>
+
+<section class="al-c-misure-frame__colonna-4" aria-label="Tilt e curvatura di campo">
+<h2 class="al-c-misure-frame__testo-1">Tilt e curvatura di campo</h2>
+<div class="al-c-misure-frame__centro-4">
+<sc-if value="{{ SN }}" hint-placeholder-val="{{ true }}"><div class="al-c-misure-frame__colonna-16">
+<span class="al-c-misure-frame__testo-9">{{ SN.titolo }}</span>
+<div class="al-c-misure-frame__blocco-11"><svg class="al-c-misure-frame__grafico-3" viewBox="0 0 300 200" width="100%" role="img" aria-label="{{ SN.al }}"><rect class="al-c-misure-frame__tratto-7" x="20" y="10" width="260" height="173" rx="6" stroke-width="1.5"></rect><sc-for list="{{ SN.pt }}" as="c" hint-placeholder-count="5"><circle class="{{ c.cls }}" cx="{{ c.x }}" cy="{{ c.y }}" r="{{ c.r }}" fill="none"></circle></sc-for></svg><sc-for list="{{ SN.pt }}" as="c" hint-placeholder-count="5"><span class="{{ c.lcls }}" aria-hidden="true" style="left:{{ c.lx }};top:{{ c.ly }}">{{ c.l }}</span></sc-for></div>
+<div class="al-c-misure-frame__griglia-1"><div class="al-c-misure-frame__colonna-17"><span class="al-c-misure-frame__testo-9">tilt</span><span class="al-c-misure-frame__testo-19">{{ SN.tilt }}</span><span class="al-c-misure-frame__riga-37"><sc-if value="{{ SN.tiltG }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Pillola" esito="{{ SN.tiltG.e }}" segno="{{ SN.tiltG.s }}" testo="{{ SN.tiltG.t }}" dimensione="micro" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="60px,20px"></dc-import></sc-if></span></div><div class="al-c-misure-frame__colonna-17"><span class="al-c-misure-frame__testo-9">curvatura</span><span class="al-c-misure-frame__testo-19">{{ SN.curv }}</span></div></div>
+</div></sc-if>
+<div class="al-c-misure-frame__colonna-18">
+<span class="al-c-misure-frame__testo-9">Per filtro</span>
+<div class="al-c-misure-frame__centro-1 al-c-misure-frame__centro-1--filtri"><sc-for list="{{ SM }}" as="m" hint-placeholder-count="3"><div class="al-c-misure-frame__colonna-19"><span class="al-c-misure-frame__riga-38"><span class="al-c-misure-frame__tondo-1" aria-hidden="true" style="background:{{ m.dot }};border:{{ m.bd }}"></span>{{ m.n }}</span><svg class="al-c-misure-frame__grafico-3" viewBox="0 0 150 100" width="100%" aria-hidden="true"><rect class="al-c-misure-frame__tratto-7" x="6" y="5" width="138" height="90" rx="4" stroke-width="1"></rect><sc-for list="{{ m.pt }}" as="c" hint-placeholder-count="5"><circle class="{{ c.cls }}" cx="{{ c.x }}" cy="{{ c.y }}" r="{{ c.r }}" fill="none"></circle></sc-for></svg><span class="al-c-misure-frame__testo-20">tilt {{ m.tilt }} · curvatura {{ m.curv }}</span><span class="al-c-misure-frame__riga-37"><sc-if value="{{ m.tiltG }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Pillola" esito="{{ m.tiltG.e }}" segno="{{ m.tiltG.s }}" testo="{{ m.tiltG.t }}" dimensione="micro" fondo="carta" modo="{{ modo }}" accento="{{ accento }}" hint-size="60px,20px"></dc-import></sc-if></span></div></sc-for></div>
+<span class="al-c-misure-frame__testo-7">Dalle HFD dei quattro angoli e del centro, in px; mediane dei frame misurati. Il cerchio più grande è l'angolo con la HFD più alta. Tilt e curvatura nel tempo: toccali fra le misure.</span>
+</div>
+</div>
+</section>
+
+</div></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:2600},&quot;tipo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;oggetto&quot;,&quot;notte&quot;],&quot;default&quot;:&quot;oggetto&quot;,&quot;tsType&quot;:&quot;'oggetto' | 'notte'&quot;,&quot;section&quot;:&quot;Contenuto&quot;},&quot;selezione&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;onMediane&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k: { fw: string, snr: string }) =&gt; void&quot;},&quot;gruppi&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{ n: string, filtri: [string, number][], seeing?: boolean, es?: 0|1|2, esT?: string }[]&quot;},&quot;scala&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:1.94,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Contenuto&quot;},&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;misura in corso&quot;,&quot;senza scala del cielo&quot;,&quot;senza sito&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Contenuto&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = { w: typeof window !== 'undefined' ? window.innerWidth : 1440, fil: null, grp: null, met: null, ord: 'ora', zen: false, cmp: null, sel: null, vista: 'barre', gf: null, win: null, hov: null };
+  dice() { const k = this._kpi; if (k && this.props.onMediane && JSON.stringify(k) !== this._kd) { this._kd = JSON.stringify(k); this.props.onMediane(k); } }
+  componentDidMount() { this.dice(); this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rs); }
+  componentDidUpdate(pp) { this.dice(); const k = p => (p.tipo || '') + (p.stato || '') + JSON.stringify((p.gruppi || []).map(g => [g.n, g.filtri])); if (k(pp) !== k(this.props)) this.setState({ fil: null, grp: null, sel: null }); }
+  alPronto() { const ok = () => window.AL; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  // Altezza della Luna (simulata): sorge alle 00:30, a 45° verso le 04:30
+  luna(tt) { return Math.max(-8, 45 * Math.sin((tt - 4) / 8 * Math.PI)); }
+  ora(tt) { const m = Math.round((20.5 + tt) * 60) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+  // Frame simulati. Notte: i gruppi sono gli oggetti, uno dopo l'altro. Oggetto: i gruppi sono le notti, ognuna dalle 20:30.
+  gen(GR, tipo, scala, stato) { const key = JSON.stringify([GR.map(g => [g.n, g.filtri, g.seeing]), tipo, scala, stato]); if (this._k === key) return this._fr; this._k = key;
+    let sd = 11; const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; }, R = Math.PI / 180;
+    const SQ = { l: 19.2, colori: 18.9, 'colori-lp': 19.0, 'colori-uvir': 18.9, senza: 19.3 }, MU = { b: 1.08, r: .97, ha: .95, sii: .95, oiii: 1.02, hb: .98 }, NB = { ha: .55, oiii: .5, sii: .45, hb: .5, 'ha-oiii': .6, 'sii-oiii': .55, tri: .6, quad: .6 };
+    const tot = tipo === 'notte' ? GR.reduce((a, g) => a + g.filtri.reduce((b, f) => b + f[1], 0), 0) : 0, out = []; let t0n = 0;
+    GR.forEach((g, gi) => { const n = g.filtri.reduce((b, f) => b + f[1], 0), step = Math.min(.05, 8.4 / (tipo === 'notte' ? tot : n)), dec = 40 + (gi * 13) % 25, tr = tipo === 'notte' ? 21 + t0n + n * step / 2 : 24.5 + gi * .4;
+      const sBase = 1.7 + rnd() * .9, sW = .25 + rnd() * .2, see = tt => sBase + sW * Math.sin(tt * .8 + gi), bias = .15 + rnd() * .3, hasSee = g.seeing !== false;
+      let tt = tipo === 'notte' ? t0n : 0, k0 = 0;
+      g.filtri.forEach(([fk, cnt], fj) => { for (let i = 0; i < cnt; i++, tt += step, k0++) {
+        const H = (20.5 + tt - tr) * 15 * R, h = Math.max(15, Math.asin(Math.sin(45.85 * R) * Math.sin(dec * R) + Math.cos(45.85 * R) * Math.cos(dec * R) * Math.cos(H)) / R), X = 1 / Math.sin(h * R);
+        const sfoc = k0 % 29 === 17 ? 1.12 : 1, zen = (see(tt) * 1.12 + (rnd() - .5) * .3) * (MU[fk] || 1) * Math.max(1, 2.15 * scala / 2.5) * sfoc, fw = zen * Math.pow(X, .6), hfd = fw * 1.36, c = hfd / scala * .93, nb = NB[fk];
+        const tl = .05 + .02 * Math.sin(tt * 1.7) + (fk === 'oiii' ? .05 : 0) + rnd() * .02, cv = .1 + rnd() * .03;
+        const corn = [1 + cv - tl / 2, 1 + cv, 1 + cv + tl / 2, 1 + cv + tl / 4].map(m => m * c);
+        const stars = Math.round((1500 - (fw - 2.5) * 180) * (nb ? nb : fj ? .6 : 1) + rnd() * 60);
+        let st = (gi === 0 && cnt > 50 && fj === 0 && i >= 40 && i <= 47) ? 'poche' : (k0 % 37 === 30 ? 'stimata' : 'ok');
+        if (stato === 'misura in corso' && gi === GR.length - 1 && k0 > n * .55) st = 'attesa';
+        out.push({ id: out.length, g: gi, f: fk, k: k0, tt, h, X, fw, hfd, stars, sat: Math.round(stars * .014), ecc: (k0 % 19 === 7 ? .5 : .33) + rnd() * .12, dir: rnd() < .7 ? 'AR' : 'Dec',
+          snr: Math.round(((nb ? 24 : fj ? 22 : 36) * Math.pow(h / 60, .2) + rnd() * 4 - 2) * 14 * (k0 % 23 === 11 ? .55 : 1)), bg: Math.round((nb ? 310 : 780) + (90 - h) * (nb ? .2 : .6) + rnd() * 10), rum: Math.round((nb ? 11 : 20) + rnd() * 3), grad: Math.round(3 + (90 - h) * .06 + rnd()),
+          corn, cen: c, lu: Math.max(0, this.luna(tt)), sqm: SQ[fk] != null ? SQ[fk] + (h - 35) * .012 - Math.max(0, this.luna(tt)) * .01 + rnd() * .06 : null, st, see: hasSee ? see(tt) + bias : null }); } });
+      if (tipo === 'notte') t0n = tt; });
+    return (this._fr = out); }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, s = this.state, set = o => this.setState(o), modo = p.modo || 'scuro', accento = p.accento, t = AL.tema(modo, accento);
+    const fmtP = p.formato || 'automatico', tel = AL.telefono(fmtP, s.w);
+    // Spaziature, raggi e griglie nel foglio (MisureFrame, [data-formato="telefono"]); i colori degli stati sono classi
+    const fmt = tel ? 'telefono' : 'desktop';
+    const tipo = p.tipo || 'oggetto', stato = p.stato || 'normale', SC = p.scala || 1.94, noScala = stato === 'senza scala del cielo', noSito = stato === 'senza sito', zenOk = !noScala && !noSito;
+    const DEF = { oggetto: [{ n: '16 settembre', filtri: [['ha', 44], ['oiii', 30]], seeing: false, es: 0 }, { n: '24 settembre', filtri: [['ha', 36], ['sii', 26], ['oiii', 20]], es: 1 }, { n: '27 settembre', filtri: [['ha', 46]], es: 0 }],
+      notte: [{ n: 'IC 1396', filtri: [['ha', 60], ['oiii', 30]] }, { n: 'NGC 7000', filtri: [['l', 40], ['r', 12], ['g', 12], ['b', 12]] }] };
+    const GR = p.gruppi && p.gruppi.length ? p.gruppi : DEF[tipo], FR = this.gen(GR, tipo, SC, stato);
+    const P = (v, d) => v == null || isNaN(v) ? '—' : v.toFixed(d), VG = (v, d) => v == null || isNaN(v) ? '—' : AL.virg(v, d), FDn = k => (AL.FD[k] || AL.FD.ignoto)[0];
+    const ang = v => noScala ? P(v / SC, 1) + ' px' : P(v, 1) + '″', zen = (v, X) => v / Math.pow(X, .6);
+    const qn = (a, q) => { const b = a.slice().sort((x, y) => x - y); if (!b.length) return null; const i = (b.length - 1) * q, lo = Math.floor(i); return b[lo] + (b[Math.min(lo + 1, b.length - 1)] - b[lo]) * (i - lo); };
+    const STRETTI = ['ha', 'hb', 'oiii', 'sii', 'ha-oiii', 'sii-oiii', 'tri', 'quad'];
+    const COL = ['colori', 'colori-lp', 'colori-uvir', 'tri', 'quad', 'ha-oiii', 'sii-oiii'], piccole = f => COL.includes(f.f) && f.cen / 2 < 1.2;
+    // Tilt come ASTAP: (angolo peggiore - migliore) / HFD mediana. Tilt e curvatura tacciono sulle camere a colori con stelle sotto 1,2 superpixel.
+    const tiltOf = f => piccole(f) ? null : (Math.max(...f.corn) - Math.min(...f.corn)) / qn(f.corn.concat(f.cen), .5) * 100, curvOf = f => piccole(f) ? null : ((f.corn[0] + f.corn[1] + f.corn[2] + f.corn[3]) / 4 - f.cen) / f.cen * 100;
+    const AP = p.apertura ?? (SC < 1.6 ? 103 : SC > 3 ? 51 : 72), MS = ALsoglie.misure, F = MS.F(SC, AP), BS = noSito ? null : (p.bortle ?? 4);
+    // Senza bias della camera: mono col numero e "senza bias"; a colori niente SQM, "serve il bias della camera"
+    const noBias = p.bias === false || stato === 'senza bias', SQF = ['l', 'senza'].concat(COL), colSQ = fk => COL.includes(fk);
+    const due = v => noScala ? P(v / SC, 1) + ' px' : P(v, 1) + '″ · ' + P(v / SC, 1) + ' px';
+    const gzFw = v => noScala ? null : MS.fwhm(v, F), nonG = !noScala && MS.nonGiudicabile(F);
+    const useZ = zenOk && s.zen, mis = f => f.st === 'ok' || f.st === 'stimata';
+    const MET = {
+      fw: { l: 'FWHM', get: f => (useZ ? zen(f.fw, f.X) : f.fw) / (noScala ? SC : 1), fmt: v => noScala ? P(v, 1) + ' px' : P(v, 1) + '″', z: true },
+      hfd: { l: 'HFD', get: f => (useZ ? zen(f.hfd, f.X) : f.hfd) / (noScala ? SC : 1), fmt: v => noScala ? P(v, 1) + ' px' : P(v, 1) + '″', z: true },
+      stars: { l: 'Stelle', get: f => f.stars, fmt: v => AL.num(Math.round(v)) },
+      ecc: { l: 'Eccentricità', get: f => f.ecc, fmt: v => VG(v, 2) },
+      snr: { l: 'SNR', get: f => f.snr, fmt: v => AL.num(Math.round(v)) },
+      bg: { l: 'Fondo cielo', get: f => f.bg, fmt: v => AL.num(Math.round(v)) + ' ADU', perF: 1 },
+      rum: { l: 'Rumore del fondo', get: f => f.rum, fmt: v => Math.round(v) + ' ADU', perF: 1 },
+      grad: { l: 'Gradiente del fondo', get: f => f.grad, fmt: v => Math.round(v) + '%' },
+      tilt: { l: 'Tilt', get: tiltOf, fmt: v => Math.round(v) + '%' },
+      curv: { l: 'Curvatura', get: curvOf, fmt: v => Math.round(v) + '%' },
+      sqm: { l: 'Luminosità del cielo', get: f => noScala || (noBias && colSQ(f.f)) ? null : f.sqm, fmt: v => P(v, 1), perF: 1 },
+      X: { l: 'Massa d\u0027aria', get: f => noSito ? null : f.X, fmt: v => VG(v, 2) } };
+    const ORD = Object.keys(MET).filter(k => !(k === 'X' && noSito) && !(k === 'sqm' && noScala));
+    const met = (s.met || (tipo === 'oggetto' ? ['fw', 'snr'] : ['fw', 'ecc'])).filter(k => ORD.includes(k));
+    const inG = f => s.grp == null || f.g === s.grp, inF = f => s.fil == null || f.f === s.fil;
+    const V = FR.filter(f => inG(f) && inF(f)), M = V.filter(mis), fset = [...new Set(M.map(f => f.f))];
+    const vals = (k, arr) => arr.map(MET[k].get).filter(v => v != null);
+    { const all = FR.filter(mis); this._kpi = all.length ? { fw: noScala ? P(qn(all.map(f => f.fw / SC), .5), 1) + ' px' : P(qn(all.map(f => f.fw), .5), 1) + '″', snr: String(Math.round(qn(all.map(f => f.snr), .5))) } : null; }
+    // In testa: filtri (con "tutti") e quanti frame valgono
+    const filtriTutti = [...new Set(FR.filter(inG).map(f => f.f))];
+    const filP = [{ l: 'tutti', c: String(FR.filter(inG).length), sel: s.fil == null, on: () => set({ fil: null, sel: null }) }]
+      .concat(filtriTutti.map(k => ({ l: FDn(k), c: String(FR.filter(f => inG(f) && f.f === k).length), sel: s.fil === k, tinta: k, on: () => set({ fil: k, sel: null }) })));
+    const su = 'su ' + AL.num(M.length) + ' di ' + AL.num(V.length) + ' frame';
+    const isola = s.grp != null ? { n: GR[s.grp].n, via: e => { e.preventDefault(); set({ grp: null, sel: null }); } } : null;
+    // Tessere
+    const spark = (k, arr) => { const ord = arr.slice().sort((a, b) => a.g - b.g || a.tt - b.tt), v = ord.map(MET[k].get).filter(x => x != null); if (v.length < 4) return ''; const B = 24, bins = [];
+      for (let i = 0; i < B; i++) { const a = v.slice(Math.floor(i * v.length / B), Math.max(Math.floor(i * v.length / B) + 1, Math.floor((i + 1) * v.length / B))); bins.push(qn(a, .5)); }
+      const lo = Math.min(...bins), hi = Math.max(...bins), r = hi - lo || 1; return bins.map((b, i) => (i ? 'L' : 'M') + (i / (B - 1) * 100).toFixed(1) + ' ' + (27 - (b - lo) / r * 24).toFixed(1)).join(''); };
+    const tiles = ORD.filter(k => !(k === 'sqm' && fset.length && (s.fil != null && !SQF.includes(s.fil)) || (tipo !== 'notte' && fset.every(f => !SQF.includes(f))))).map(k => { const m = MET[k], a = vals(k, M), on = met.includes(k), j = met.indexOf(k);
+      const fsq = k === 'sqm' ? fset.filter(f => ['l', 'senza'].concat(COL).includes(f)) : fset, multi = m.perF && fsq.length > 1, md = qn(a, .5);
+      let v = a.length ? m.fmt(md) : '—', sub = a.length ? m.fmt(qn(a, .25)) + ' – ' + m.fmt(qn(a, .75)) : '', gz = null, tag = '';
+      if ((k === 'fw' || k === 'hfd') && a.length && !noScala) v = due(useZ ? md : md);
+      if ((k === 'tilt' || k === 'curv') && !a.length && M.length) { v = '—'; sub = 'stelle troppo piccole per una camera a colori'; }
+      if (k === 'sqm' && !multi && a.length) { v = 'SQM ' + P(md, 1); sub = 'mag/arcsec²'; if (noBias) tag = 'senza bias'; }
+      if (k === 'sqm' && !a.length) { const nessuno = !FR.some(f => inG(f) && SQF.includes(f.f)); v = '—'; sub = nessuno ? 'nessun frame L o a colori in questa notte' : noBias ? 'serve il bias della camera · Bias (ADU) in Attrezzatura' : ''; }
+      if (multi) { v = 'per filtro'; sub = 'si confronta per filtro'; }
+      if (k === 'fw' && zenOk && a.length && !useZ) sub = 'allo zenit ' + ang(qn(M.map(f => zen(f.fw, f.X)), .5));
+      if (k === 'fw' && a.length) { tag = MS.camp(qn(M.map(f => f.fw / SC), .5)); if (!multi) { gz = gzFw(qn(M.map(f => f.fw), .5)); if (nonG) sub = 'non giudicabile su questo setup. Limite del setup ' + P(F, 1) + '″: ' + (2 * SC >= F - 1e-9 ? 'due pixel da ' + P(SC, 2) + '″.' : 'diffrazione dell\u0027apertura da ' + AP + ' mm.'); } }
+      if (k === 'hfd' && a.length && !multi && !noScala) sub = 'mediana del setup: ' + P(qn(M.map(f => f.hfd / SC), .5) * .94, 1) + ' px';
+      if (k === 'tilt' && a.length) gz = MS.tilt(md);
+      if (k === 'sqm' && a.length && !multi) gz = MS.cielo(md, BS);
+      if (k === 'ecc' && a.length) { gz = MS.ecc(md); if (md >= .4) { const d = M.filter(f => f.ecc >= .4).map(f => f.dir), ar = d.filter(x => x === 'AR').length; sub = 'in ' + (ar >= d.length / 2 ? 'AR' : 'Dec') + ' · ' + sub; } }
+      if (k === 'stars' && a.length) sub = Math.round(qn(M.map(f => f.sat), .5)) + ' sature · ' + sub;
+      return { k: m.l + (k === 'fw' && useZ ? ' allo zenit' : ''), v, sub, gz, tag, on: on ? 'true' : 'false', cls: 'al-c-misure-frame__colonna-3' + (j === 0 ? ' al-c-misure-frame__colonna-3--prima' : j === 1 ? ' al-c-misure-frame__colonna-3--seconda' : ''), dot: '', d: multi ? '' : spark(k, M), sc: 'al-c-misure-frame__spark' + (j === 0 ? ' al-c-misure-frame__spark--prima' : ''),
+        click: e => { e.preventDefault(); const cur = met.slice(); if (on) { if (cur.length > 1) cur.splice(j, 1); } else { cur.push(k); if (cur.length > 2) cur.shift(); } set({ met: cur, hov: null }); } }; });
+    // Per filtro
+    const PFK = ['fw', 'hfd', 'ecc', 'snr', 'bg', 'tilt', 'curv', 'sqm'].filter(k => ORD.includes(k));
+    const PF = { cols: 'minmax(92px,1.1fr) ' + PFK.map(k => k === 'sqm' || k === 'fw' ? 'minmax(84px,1.3fr)' : 'minmax(64px,1fr)').join(' '), minW: (100 + PFK.length * 72) + 'px',
+      head: [{ l: 'Filtro', al: 'left' }].concat(PFK.map(k => ({ l: k === 'sqm' ? 'Luminosità' : k === 'bg' ? 'Fondo' : MET[k].l, al: 'right' }))),
+      rows: filtriTutti.map(fk => { const all = FR.filter(f => inG(f) && f.f === fk), mm = all.filter(mis), on = s.fil === fk, tn = AL.tinta(t, fk);
+        const cell = k => { const a = vals(k, mm); if (k === 'sqm' && !SQF.includes(fk)) return { v: '', s: '', ai: 'flex-end', fw: 400 }; if (k === 'sqm' && noBias && colSQ(fk)) return { v: '—', s: 'serve il bias della camera', ai: 'flex-end', ta: 'right', fw: 400 }; if (!a.length) return { v: '—', s: '', ai: 'flex-end', fw: 400 };
+          let v = MET[k].fmt(qn(a, .5)), sb = ''; if (k === 'sqm') v = 'SQM ' + P(qn(a, .5), 1);
+          let gz = null; if (k === 'fw') { gz = gzFw(qn(mm.map(f => f.fw), .5)); sb = MS.camp(qn(mm.map(f => f.fw / SC), .5)); }
+          if (k === 'bg') sb = '± ' + Math.round(qn(mm.map(f => f.rum), .5)); if (k === 'ecc') gz = MS.ecc(qn(a, .5)); if (k === 'tilt') gz = MS.tilt(qn(a, .5));
+          if (k === 'sqm') { gz = MS.cielo(qn(a, .5), BS); if (noBias) sb = 'senza bias'; }
+          return { v, s: sb, gz, ai: 'flex-end', ta: 'right', fw: 400 }; };
+        return { on: on ? 'true' : 'false', click: e => { e.preventDefault(); set({ fil: on ? null : fk, sel: null }); },
+          c: [{ v: FDn(fk), s: mm.length + ' di ' + all.length + ' frame', ai: 'flex-start', ta: 'left', fw: 600, dot: tn.bg, bd: tn.bd || '0' }].concat(PFK.map(cell)) }; }) };
+    // Grafici: un grafico per filtro, una barra per frame; prima misura piena, seconda tratteggiata (come l'anno della Dashboard)
+    const met2 = met.slice(0, 2), lin = s.vista === 'linee', ord = s.ord === 'val' ? 'val' : 'ora';
+    const W = tel ? 360 : 1000, x0 = tel ? 30 : 44, x1 = W - (met2[1] ? (tel ? 30 : 44) : 8), Hc = tel ? 170 : 220, top = 12, bot = Hc - 6;
+    const selF = FR[s.sel] && V.includes(FR[s.sel]) ? FR[s.sel] : (M[Math.min(5, M.length - 1)] || V[0]);
+    const gf = (s.gf || [s.fil || filtriTutti[0]]).filter(k => filtriTutti.includes(k)); if (!gf.length && filtriTutti.length) gf.push(filtriTutti[0]);
+    const range = k => { const a2 = vals(k, FR.filter(f => inG(f) && gf.includes(f.f) && mis(f))); if (!a2.length) return null; let lo = Math.min(...a2), hi = Math.max(...a2); const pd = (hi - lo) * .15 || .5; lo = Math.max(0, lo - pd); hi += pd; if (k === 'ecc') hi = Math.min(1, hi); return [lo, hi]; };
+    const RA0 = met2.map(range), RA = RA0.map(r => r || [0, 1]), fAx = (k, v) => k === 'stars' ? AL.num(Math.round(v)) : ['snr', 'bg', 'rum', 'grad', 'tilt', 'curv'].includes(k) ? String(Math.round(v)) : ['ecc', 'X'].includes(k) ? VG(v, 2) : P(v, 1);
+    const maxN = Math.floor((x1 - x0) / (tel ? 4 : 5)), pc = (v, d) => (v / d * 100).toFixed(2) + '%';
+    const luOn = !!s.luna && !noSito && ord === 'ora';
+    const charts = gf.map(fk => { const tn = AL.tinta(t, fk);
+      let fr = FR.filter(f => inG(f) && f.f === fk).sort((u, w) => u.g - w.g || u.tt - w.tt); if (ord === 'val') fr = fr.filter(mis).sort((u, w) => MET[met2[0]].get(u) - MET[met2[0]].get(w));
+      const N = fr.length, win = N > maxN, st0 = win ? Math.max(0, Math.min(N - maxN, (s.win && s.win[fk]) || 0)) : 0, vis = win ? fr.slice(st0, st0 + maxN) : fr, n = vis.length;
+      const slot = (x1 - x0) / Math.max(1, n), bw = Math.max(1.5, Math.min(14, slot * .6)), cx = i => x0 + slot * (i + .5);
+      const Ys = RA.map(r => v => bot - (v - r[0]) / (r[1] - r[0]) * (bot - top));
+      const A = [], B = [], xs = [], sep = [], gl = []; let dA = '', dB = '', hx = null, hy = null;
+      const hid = s.hov && s.hov.fk === fk ? s.hov.id : null;
+      vis.forEach((f, i) => { const x = cx(i);
+        if (ord === 'ora' && (i === 0 || vis[i - 1].g !== f.g)) { if (i) sep.push((x0 + slot * i).toFixed(1)); const xg = x0 + slot * i, lab = tel ? GR[f.g].n.replace(/^\S+ /, '').replace(' settembre', ' set').replace(' ottobre', ' ott') : GR[f.g].n, prev = gl[gl.length - 1];
+          if (!prev || xg - prev.xv > prev.l.length * 6.2 + 8) gl.push({ x: pc(xg, W), xv: xg, l: lab }); }
+        if (!mis(f)) { xs.push({ d: f.st === 'poche' ? 'M' + (x - 3) + ' ' + (bot - 8) + 'l6 6m0 -6l-6 6' : 'M' + (x - 2) + ' ' + (bot - 4) + 'a2 2 0 1 0 4 0a2 2 0 1 0 -4 0' }); return; }
+        const va = MET[met2[0]].get(f); if (va == null) return; const ya = Ys[0](va), on = f.id === hid || (hid == null && selF && f.id === selF.id);
+        if (on) { hx = x; hy = ya; }
+        if (!lin) A.push({ x: (x - bw / 2).toFixed(1), y: ya.toFixed(1), w: bw.toFixed(1), h: Math.max(bw, bot - ya).toFixed(1), r: (bw / 2).toFixed(1), cls: 'al-c-misure-frame__barra' + (f.st === 'stimata' ? ' al-c-misure-frame__barra--stimata' : on ? ' al-c-misure-frame__barra--accesa' : '') });
+        dA += (dA ? 'L' : 'M') + x.toFixed(1) + ' ' + ya.toFixed(1);
+        if (met2[1]) { const vb = MET[met2[1]].get(f); if (vb != null) { const yb = Ys[1](vb), w2 = bw + 1.5; if (!lin) B.push({ sol: bw < 5, x: (x - w2 / 2).toFixed(1), y: yb.toFixed(1), w: w2.toFixed(1), h: Math.max(w2, bot - yb).toFixed(1), r: (w2 / 2).toFixed(1), d: 'M' + (x - w2 / 2 - 1).toFixed(1) + ' ' + yb.toFixed(1) + 'H' + (x + w2 / 2 + 1).toFixed(1) }); dB += (dB ? 'L' : 'M') + x.toFixed(1) + ' ' + yb.toFixed(1); } } });
+      const pick = e => { const el = e.currentTarget, rc = el.getBoundingClientRect(), cxp = (e.touches ? e.touches[0].clientX : e.clientX) - rc.left, xv = cxp / rc.width * W, i = Math.floor((xv - x0) / slot);
+        const f = vis[Math.max(0, Math.min(n - 1, i))]; if (f && (!s.hov || s.hov.id !== f.id)) set({ hov: { fk, id: f.id } }); };
+      const hf = hid != null ? FR[hid] : null;
+      const tip = hf ? { l: pc(cx(vis.indexOf(hf)), W), tx: vis.indexOf(hf) > n * .6 ? 'translateX(calc(-100% - 12px))' : 'translateX(12px)', t: 'Frame ' + (fr.indexOf(hf) + 1) + ' di ' + N + ' · ' + FDn(fk), s: GR[hf.g].n + ' · ' + this.ora(hf.tt),
+        r: mis(hf) ? met2.map((k, j) => ({ n: MET[k].l + (MET[k].z && useZ ? ' allo zenit' : ''), v: MET[k].get(hf) == null ? '—' : MET[k].fmt(MET[k].get(hf)), da: j ? '1' : '' })).concat(noSito || met2.includes('X') ? [] : [{ n: 'massa d\u0027aria', v: VG(hf.X, 2), da: '' }]).concat(luOn ? [{ n: 'altezza della Luna', v: hf.lu < .5 ? 'sotto l\u0027orizzonte' : Math.round(hf.lu) + '°', da: '' }] : []) : [{ n: hf.st === 'poche' ? 'troppo poche stelle' : 'misura in corso', v: '', da: '' }] } : null;
+      const tk = (j, side) => { const r = RA[j]; return [.1, .5, .9].map(q => { const v = r[0] + (r[1] - r[0]) * q; return { x: side ? pc(x1 + 6, W) : pc(x0 - 6, W), y: pc(Ys[j](v), Hc), tr: side ? 'translate(0,-50%)' : 'translate(-100%,-50%)', l: fAx(met2[j], v) }; }); };
+      const dL = luOn ? vis.map((f, i) => (i ? 'L' : 'M') + cx(i).toFixed(1) + ' ' + (bot - f.lu / 90 * (bot - top)).toFixed(1)).join('') : '';
+      const mm = fr.filter(mis), md = met2.map(k => { const q = vals(k, mm); return q.length ? MET[k].fmt(qn(q, .5)) : '—'; });
+      const ov = win ? { d: fr.map((f, i) => { const v = mis(f) ? MET[met2[0]].get(f) : null; if (v == null) return ''; const x = i / N * 100, y = 22 - (v - RA[0][0]) / (RA[0][1] - RA[0][0]) * 20; return 'M' + x.toFixed(2) + ' 22V' + y.toFixed(1); }).join(''),
+        l: (st0 / N * 100).toFixed(2) + '%', w: (maxN / N * 100).toFixed(2) + '%', txt: 'frame ' + (st0 + 1) + '–' + (st0 + n) + ' di ' + N,
+        drag: e => { if (e.type !== 'pointerdown' && !(e.buttons & 1)) return; const rc = e.currentTarget.getBoundingClientRect(), q = (e.clientX - rc.left) / rc.width; set({ win: { ...(s.win || {}), [fk]: Math.round(q * N - maxN / 2) } }); },
+        prima: e => { e.preventDefault(); set({ win: { ...(s.win || {}), [fk]: st0 - Math.floor(maxN / 2) } }); }, dopo: e => { e.preventDefault(); set({ win: { ...(s.win || {}), [fk]: st0 + Math.floor(maxN / 2) } }); },
+        notti: ord === 'ora' ? [...new Set(fr.map(f => f.g))].map(g => ({ n: GR[g].n, click: e => { e.preventDefault(); set({ win: { ...(s.win || {}), [fk]: fr.findIndex(f => f.g === g) } }); } })) : [] } : null;
+      return { fk, n: FDn(fk), dot: tn.bg, bd: tn.bd || '0', vb: '0 0 ' + W + ' ' + Hc, x0, x1, top, bot, A, B, Bt: B.filter(q => !q.sol), dA: lin ? dA : '', dB: lin ? dB : '', dL, xs, sep, hx, hy, lin: lin ? true : null, bars: lin ? null : true,
+        lab: (RA0[0] ? tk(0, false) : []).concat(met2[1] && RA0[1] ? tk(1, true) : []), gl, ml: pc(x0, W), mr: pc(W - x1, W), tip, ov, md: met2.map((k, j) => ({ n: MET[k].l, v: md[j] })),
+        al: FDn(fk) + ': ' + met2.map(k => MET[k].l).join(' e ') + ' di ' + N + ' frame', move: pick, out: () => set({ hov: null }), click: e => { pick(e); const hv = this.state.hov; if (hv) set({ sel: hv.id }); } }; });
+    const sw = met2.map((k, j) => ({ n: MET[k].l + (MET[k].z && useZ ? ' allo zenit' : ''), cls: 'al-c-misure-frame__pillola-1 al-c-misure-frame__pillola-1--' + (lin ? 'linea' : 'barra') + (j ? '-2' : '-1') }));
+    if (luOn) sw.push({ n: 'altezza della Luna, da 0° a 90°', cls: 'al-c-misure-frame__pillola-1 al-c-misure-frame__pillola-1--luna' });
+    const gfP = filtriTutti.map(k => { const on = gf.includes(k); return { l: FDn(k), sel: on, tinta: k,
+      on: () => { let c = gf.slice(); if (on) { if (c.length > 1) c = c.filter(x => x !== k); } else c.push(k); set({ gf: c, hov: null }); } }; });
+    charts.forEach((c, i) => { c.nota = !met2.includes('sqm') ? '' : !SQF.includes(gf[i]) ? 'la luminosità del cielo c\u0027è solo con L, nessun filtro e a colori' : noBias && colSQ(gf[i]) ? 'serve il bias della camera' : 'il valore cambia anche con la direzione del cielo'; });
+    const legX = []; if (V.some(f => f.st === 'stimata')) legX.push({ n: 'forma stimata', d: lin ? 'M9 5m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0' : 'M6 1h6v8h-6z', cls: 'al-c-misure-frame__chiave--accento' });
+    if (V.some(f => f.st === 'poche')) legX.push({ n: 'troppo poche stelle', d: 'M6 2l6 6m0 -6l-6 6', cls: 'al-c-misure-frame__chiave--tenue' }); if (V.some(f => f.st === 'attesa')) legX.push({ n: 'misura in corso', d: 'M7 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0', cls: 'al-c-misure-frame__chiave--tenue' });
+    const C = { charts, sw, gfP, legX, due: !!met2[1], xlab: ord === 'val' ? { a: 'dal valore più basso', b: 'al più alto, per ' + MET[met2[0]].l } : null };
+    const sg = (l, opz, cur, f) => ({ l, o: opz.map(([n, v]) => ({ l: n, sel: cur === v, on: () => f(v) })) });
+    const segs = [sg('Vista', [['barre', 'barre'], ['linee', 'linee']], lin ? 'linee' : 'barre', v => set({ vista: v })), sg('Ordine', [['per ora', 'ora'], ['per valore', 'val']], ord, v => set({ ord: v, win: null }))];
+    if (zenOk && met2.some(k => MET[k].z)) segs.push(sg('Valore', [['misurata', false], ['allo zenit', true]], s.zen, v => set({ zen: v })));
+    const LU = !noSito && ord === 'ora' ? { on: s.luna ? 'true' : 'false', l: s.luna ? '✓ nei grafici' : 'Mostra', al: s.luna ? 'Togli l\u0027altezza della Luna dai grafici' : 'Mostra l\u0027altezza della Luna nei grafici', click: e => { e.preventDefault(); set({ luna: !s.luna }); }, sw: [{ l: 'Luna', sel: !!s.luna, titolo: (s.luna ? 'Spegni' : 'Accendi') + ' la Luna nei grafici', on: e => { e && e.preventDefault && e.preventDefault(); set({ luna: !s.luna }); } }] } : null; // v56.35: l'interruttore comune
+    // v56.4: una riga sola come le Stagioni: vista a due icone, «Per ora ▾», «Misurata ▾», Luna; desktop e telefono
+    const tSel = g => { const c = g.o.find(o => o.sel) || g.o[0]; return { l: g.l, v: c.l, o: g.o.map(o => ({ v: o.l, l: o.l })), on: e => { const o = g.o.find(x => x.l === e.target.value); o && o.on(); } }; };
+    const VB = { vis: [['barre', 'Barre', 'M5 20V10M10 20V4M15 20v-7M20 20v-11'], ['linee', 'Linee', 'M3 18l5-6 4 4 9-10']].map(([k, l, d]) => ({ l, d, on: String((lin ? 'linee' : 'barre') === k), fg: (lin ? 'linee' : 'barre') === k ? 'var(--testo)' : 'var(--tenue)', sh: (lin ? 'linee' : 'barre') === k ? 'inset 0 0 0 2px var(--accento)' : 'none', scegli: () => set({ vista: k }) })), sels: segs.slice(1).map(tSel) };
+    const cmpT = { v: met.includes(s.cmp) ? s.cmp : met[0], o: met.map(k => ({ v: k, l: MET[k].l })), on: e => set({ cmp: e.target.value }) };
+    // A confronto: una riga per gruppo, stessa scala
+    const ck = met.includes(s.cmp) ? s.cmp : met[0], cm = MET[ck], Fg = FR.filter(f => inF(f) && mis(f)), allV = vals(ck, Fg);
+    const klo = allV.length ? Math.min(...allV) : 0, khi = allV.length ? Math.max(...allV) : 1, kr = khi - klo || 1, kp = v => ((v - klo) / kr * 100).toFixed(1) + '%';
+    const K = { titolo: tipo === 'oggetto' ? 'Le notti a confronto' : 'Gli oggetti a confronto', lo: cm.fmt(klo), hi: cm.fmt(khi),
+      seg: met.map(k => ({ l: MET[k].l, sel: k === ck, on: () => set({ cmp: k }) })),
+      rows: GR.map((g, gi) => { const all = FR.filter(f => f.g === gi && inF(f)), mm = all.filter(mis), a = vals(ck, mm), on = s.grp === gi, fk = [...new Set(all.map(f => f.f))];
+        const sv = mm.filter(f => f.see != null).map(f => f.see), sz = mm.map(f => zen(f.fw, f.X));
+        return { n: g.n, su: 'su ' + mm.length + ' di ' + all.length + ' frame', fd: fk.map(k => { const x = AL.tinta(t, k); return { bg: x.bg, bd: x.bd || '0' }; }), on: on ? 'true' : 'false',
+          q1: a.length ? kp(qn(a, .25)) : '0%', qw: a.length ? ((qn(a, .75) - qn(a, .25)) / kr * 100).toFixed(1) + '%' : '0%', m: a.length ? kp(qn(a, .5)) : '-10%', v: a.length ? cm.fmt(qn(a, .5)) : '—',
+          see: tipo === 'oggetto' && ck === 'fw' && zenOk && mm.length ? (g.seeing === false || !sv.length ? 'seeing non disponibile per questa notte' : 'seeing previsto ' + P(qn(sv, .5), 1) + '″ · FWHM allo zenit ' + P(qn(sz, .5), 1) + '″') : '',
+          es: g.es != null ? { e: g.es, t: g.esT || AL.PAROLE[g.es] } : null, click: e => { e.preventDefault(); set({ grp: on ? null : gi, sel: null }); } }; }) };
+    // Tilt e curvatura
+    const sens = (arr0, W2, H2, big) => { const arr = arr0.filter(f => !piccole(f)); if (!arr.length) return null; const corn = [0, 1, 2, 3].map(j => qn(arr.map(f => f.corn[j]), .5)), cen = qn(arr.map(f => f.cen), .5), mx = Math.max(...corn);
+      const sx = W2 / 300, sy = H2 / 200, pos = [[70, 50], [230, 50], [230, 143], [70, 143]], r = v => big ? 9 + (v / cen - 1) * 70 : 4 + (v / cen - 1) * 34;
+      const pt = corn.map((v, j) => { const tp = j < 2, cx = pos[j][0] * sx, cy = pos[j][1] * sy; return { x: +cx.toFixed(1), y: +cy.toFixed(1), r: Math.max(2, r(v)), cls: 'al-c-misure-frame__cerchio' + (v === mx ? ' al-c-misure-frame__cerchio--max' : ''), lcls: 'al-c-misure-frame__strato-4' + (v === mx ? ' al-c-misure-frame__strato-4--max' : ''), lx: (cx / W2 * 100).toFixed(1) + '%', ly: ((cy + (tp ? r(v) + 12 : -r(v) - 11) * sy) / H2 * 100).toFixed(1) + '%', l: P(v, 1) + ' px' }; })
+        .concat([{ x: 150 * sx, y: 96 * sy, r: Math.max(2, r(cen)), cls: 'al-c-misure-frame__cerchio', lcls: 'al-c-misure-frame__strato-4', lx: '50%', ly: ((96 + r(cen) + 12) / 200 * 100).toFixed(1) + '%', l: P(cen, 1) + ' px' }]);
+      const tl = Math.round((mx - Math.min(...corn)) / qn(corn.concat(cen), .5) * 100), cv = Math.round(((corn[0] + corn[1] + corn[2] + corn[3]) / 4 - cen) / cen * 100);
+      return { pt, tilt: tl + '%', tiltG: MS.tilt(tl), curv: cv + '%', al: 'HFD agli angoli ' + corn.map(v => P(v, 1)).join(' / ') + ' px, al centro ' + P(cen, 1) + ' px: tilt ' + tl + '%, curvatura ' + cv + '%' }; };
+    const SN0 = sens(M, 300, 200, true), SN = SN0 ? { ...SN0, titolo: (s.fil ? FDn(s.fil) : 'Tutti i filtri') + ' · ' + su } : null;
+    const SM = filtriTutti.map(fk => { const x = sens(FR.filter(f => inG(f) && f.f === fk && mis(f)), 150, 100, false), tn = AL.tinta(t, fk); return x ? { n: FDn(fk), dot: tn.bg, bd: tn.bd || '0', ...x } : null; }).filter(Boolean);
+    // Il frame scelto
+    const fr = selF, fst = fr ? fr.st : 'attesa', fv = fst === 'ok' || fst === 'stimata', iV = V.indexOf(fr);
+    const vai = d => e => { e.preventDefault(); const n = V[(iV + d + V.length) % V.length]; if (n) set({ sel: n.id }); };
+    const FX = { tit: fr ? 'Frame ' + (iV + 1) + ' di ' + V.length + ' · ' + FDn(fr.f) : 'Nessun frame', sub: fr ? [GR[fr.g].n, this.ora(fr.tt)].concat(noSito ? [] : ['altezza ' + Math.round(fr.h) + '°', 'massa d\u0027aria ' + VG(fr.X, 2)]).join(' · ') : '', prima: vai(-1), dopo: vai(1),
+      attesa: fst === 'attesa', poche: fst === 'poche', nota: null, tiles: null };
+    if (fr && fv) { const stim = fst === 'stimata', tl = tiltOf(fr), cv = curvOf(fr), nar = STRETTI.includes(fr.f);
+      const pari = FR.filter(f => f.g === fr.g && f.f === fr.f && f.st === 'ok'), poche = pari.length < MS.minimo, camp = MS.camp(fr.fw / SC);
+      // Oggetto: nel riepilogo dell'oggetto i gruppi sono le notti, quindi stessi oggetto e filtro = stesso filtro di tutte le notti
+      const ogg = tipo === 'oggetto', po = ogg ? FR.filter(f => f.f === fr.f && f.st === 'ok') : [], pocheO = ogg && po.length < MS.minimo;
+      const subN = (base) => [poche ? base : '', pocheO ? 'meno di 10 frame dell\u0027oggetto in questo filtro' : ''].filter(Boolean).join(' · ');
+      FX.tiles = [{ k: 'FWHM', v: due(fr.fw), sub: stim ? '' : nonG ? 'non giudicabile su questo setup' : '', gz: stim ? null : gzFw(fr.fw), tag: stim ? 'stimata' : noScala ? '' : camp, vcls: 'al-c-misure-frame__testo-13 al-c-misure-frame__testo-13--grande' },
+        { k: 'HFD', v: due(fr.hfd), sub: subN('fuoco: servono 10 frame della notte'), gz: stim ? null : MS.fuoco(fr.hfd, pari.map(f => f.hfd)), gz2: stim || !ogg ? null : MS.hfdAltaOgg(fr.hfd, po.map(f => f.hfd)) }, { k: 'Stelle', v: AL.num(fr.stars), sub: fr.sat + ' sature' },
+        { k: 'Eccentricità', v: VG(fr.ecc, 2), sub: fr.ecc >= .4 ? 'in ' + fr.dir : '', gz: stim ? null : MS.ecc(fr.ecc), tag: stim ? 'stimata' : '' },
+        { k: 'SNR', v: AL.num(fr.snr), sub: subN('si giudica con 10 frame della notte') || (ogg ? 'si confronta nella notte e nell\u0027oggetto' : 'si confronta nella notte'), gz: MS.snrBasso(fr.snr, pari.map(f => f.snr)), gz2: ogg ? MS.snrBassoOgg(fr.snr, po.map(f => f.snr)) : null },
+        { k: 'Fondo cielo', v: AL.num(fr.bg) + ' ADU', sub: '± ' + fr.rum + ' di rumore' }].concat(noSito ? [] : [{ k: 'Massa d\u0027aria', v: VG(fr.X, 2), sub: 'altezza ' + Math.round(fr.h) + '°', gz: MS.basso(fr.X) }]).concat([ { k: 'Gradiente del fondo', v: fr.grad + '%', sub: 'più chiaro verso est' },
+        tl == null ? { k: 'Tilt · curvatura', v: '—', sub: 'stelle troppo piccole per una camera a colori' } : { k: 'Tilt · curvatura', v: Math.round(tl) + '% · ' + Math.round(cv) + '%', gz: (g => ({ ...g, t: 'tilt ' + g.t }))(MS.tilt(tl)) }]).concat(nar || noScala || fr.sqm == null ? [] : noBias && colSQ(fr.f) ? [{ k: 'Luminosità del cielo', v: '—', sub: 'serve il bias della camera', link: { l: 'Bias (ADU) in Attrezzatura ↗', href: 'Attrezzatura.dc.html' } }] : [{ k: 'Luminosità del cielo', v: 'SQM ' + P(fr.sqm, 1), sub: 'mag/arcsec²' + (BS == null ? ' · senza Bortle del sito' : ''), gz: MS.cielo(fr.sqm, BS), tag: noBias ? 'senza bias' : '' }])
+        .map(q => ({ vcls: 'al-c-misure-frame__testo-13', sub: '', gz: null, gz2: null, tag: '', link: null, ...q }));
+      if (stim) Object.assign(FX, { nota: 'Forma stimata: il fit non è riuscito.', notaS: '!', notaE: 'incerta' });
+      else if (noScala) Object.assign(FX, { nota: 'Senza scala del cielo: FWHM e HFD in px, niente FWHM allo zenit.', notaS: '?', notaE: 'mancante' });
+      else if (noSito) Object.assign(FX, { nota: 'Senza sito: niente FWHM allo zenit.', notaS: '?', notaE: 'mancante' }); }
+    return { VB, cmpT, pronto: true, sel: p.selezione || '', t, fmt, tel, modo, accento, filP, su, attesa: stato === 'misura in corso', isola, tiles, PF, segs, C, K, SN, SM, FX, LU };
+  }
+}
+</script>
+</body>
+</html>

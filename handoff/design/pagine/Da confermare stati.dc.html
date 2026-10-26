@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="caratteri.css" rel="stylesheet">
+<link href="astrolog.css" rel="stylesheet">
+<style>html,body{margin:0;background:var(--tavola-fondo)}a{color:inherit}a:hover{opacity:.8}</style>
+</helmet>
+<section style="display:flex;flex-direction:column;gap:120px;padding:80px;min-width:max-content;background:var(--tavola-fondo);font-family:'Outfit',sans-serif">
+<div style="display:flex;flex-direction:column;gap:32px">
+<span style="font-size:30px;font-weight:500;color:var(--tavola-testo)">Da confermare, gli stati · telefono 390 px</span>
+<span style="font-size:15px;color:var(--tavola-tenue);max-width:900px">Ogni schermo si accende quando entra nella vista. Sul telefono prima i tipi di domanda, poi un caso alla volta. Testi dell'app, controllati da Claude Code il 17 ottobre; dati simulati.</span>
+<sc-for list="{{ righeTel }}" as="riga" hint-placeholder-count="4"><div style="display:flex;flex-direction:column;gap:20px"><span style="font-size:22px;font-weight:500;color:var(--tavola-testo)">{{ riga.titolo }}</span><div style="display:flex;gap:56px;align-items:flex-start">
+<sc-for list="{{ riga.voci }}" as="it" hint-placeholder-count="6"><div data-screen-label="{{ it.label }}" ref="{{ it.ref }}" style="display:flex;flex-direction:column;gap:10px;flex:none;width:390px"><span style="font-size:18px;font-weight:500;color:var(--tavola-testo)">{{ it.titolo }}</span><span style="font-size:14px;color:var(--tavola-tenue);min-height:40px">{{ it.nota }}</span><div style="width:390px;min-height:844px;overflow:hidden;border-radius:44px;box-shadow:0 0 0 10px var(--tavola-cornice), 0 30px 60px rgba(0,0,0,.4);background:var(--tavola-schermo);display:flex;flex-direction:column"><sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}"><dc-import name="Da confermare" stato="{{ it.stato }}" domanda="{{ it.domanda }}" motivo="{{ it.motivo }}" telefono="{{ it.tel }}" modo="{{ it.modo }}" accento="{{ it.acc }}" formato="telefono" altezza="844px" hint-size="390px,844px"></dc-import></sc-if></div></div></sc-for>
+</div></div></sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:24px">
+<span style="font-size:30px;font-weight:500;color:var(--tavola-testo)">Desktop · 1440 px</span>
+<div style="display:flex;gap:80px;align-items:flex-start">
+<sc-for list="{{ desk }}" as="it" hint-placeholder-count="4"><div data-screen-label="{{ it.label }}" ref="{{ it.ref }}" style="display:flex;flex-direction:column;gap:16px;width:1520px;min-height:900px;flex:none"><div style="display:flex;gap:12px;align-items:baseline;color:var(--tavola-testo)"><span style="font-size:22px;font-weight:500">{{ it.titolo }}</span><span style="font-size:15px;color:var(--tavola-tenue)">{{ it.nota }}</span></div><div style="border-radius:20px;overflow:hidden;min-height:900px;display:flex;flex-direction:column"><sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}"><dc-import name="Da confermare" stato="{{ it.stato }}" domanda="{{ it.domanda }}" motivo="{{ it.motivo }}" modo="{{ it.modo }}" accento="{{ it.acc }}" formato="desktop" hint-size="1520px,900px"></dc-import></sc-if></div></div></sc-for>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { on: {} };
+  refs = {}; els = {};
+  componentDidMount() {
+    this._io = typeof IntersectionObserver !== 'undefined' ? new IntersectionObserver(es => {
+      const add = {}; es.forEach(e => { if (e.isIntersecting) add[e.target.dataset.k] = true; });
+      if (Object.keys(add).length) this.setState(s => ({ on: { ...s.on, ...add } }));
+    }, { rootMargin: '300px' }) : null;
+    Object.values(this.els).forEach(el => this.osserva(el));
+    if (!this._io) this.setState({ on: new Proxy({}, { get: () => true }) });
+  }
+  componentWillUnmount() { this._io && this._io.disconnect(); }
+  osserva(el) { if (el instanceof Element && this._io && !el._oss) { el._oss = 1; this._io.observe(el); } }
+  rif(k) { if (!this.refs[k]) this.refs[k] = el => { if (!el) return; el.dataset.k = k; this.els[k] = el; this.osserva(el); }; return this.refs[k]; }
+  renderVals() {
+    // [titolo, nota, stato, domanda, telefono, motivo, modo, accento]
+    const R = [
+      ['La pagina', [['I tipi di domanda', 'la prima vista sul telefono', 'normale', '', 'tipi'], ['Un caso', 'Filtri, caso 2 di 2', 'normale', '', 'un caso'], ['Caricamento', '', 'caricamento'], ['Non si legge', '', 'non si legge'],
+        ['Niente da confermare', 'senza pillola in barra', 'niente da confermare'], ['Con risposte salvate', 'conto a zero, piede a zero', 'niente da confermare, con risposte salvate', '', 'tipi'], ['Zero frame', 'primo avvio', 'zero frame']]],
+      ['Applica', [['In corso', 'le sezioni si fermano', 'applicazione in corso', '', 'tipi'], ['Applicato', 'strumenti e filtri escono dalla coda', 'applicato', '', 'tipi'], ['Non applicato', 'oggetto non nel catalogo', 'non applicato', '', 'tipi', 'oggetto non nel catalogo'], ['Non applicato', 'dati non aggiornati', 'non applicato', '', 'tipi', 'dati non aggiornati'], ['Non applicato', 'altro errore: solo il titolo', 'non applicato', '', 'tipi', 'altro errore'], ['Modo chiaro', 'corallo · terracotta', 'normale', '', 'tipi', '', 'chiaro', 'corallo · terracotta']]],
+      ['Le domande · filtri e strumenti', [['Strumenti duplicati', 'l\u0027unione si dice nel piede', 'normale', 'Strumenti duplicati', 'un caso'], ['Filtri · catalogo', 'la strada predefinita', 'normale', 'Filtri · O3', 'un caso'], ['Filtri · nessun modello', '', 'normale', 'Filtri · nessun modello', 'un caso'], ['Filtri · filtro esistente', '', 'normale', 'Filtri · filtro esistente', 'un caso'], ['Filtri · nuovo filtro', '', 'normale', 'Filtri · nuovo filtro', 'un caso'], ['Filtri · senza elenco', 'la strada del catalogo si spegne', 'normale', 'Filtri · elenco dei modelli non disponibile', 'un caso']]],
+      ['Le domande · attrezzatura, oggetti, frame, mosaici', [['Attrezzatura · una parte', '', 'normale', 'Attrezzatura · una parte', 'un caso'], ['Attrezzatura · due parti', 'camera data ora, filtro da indicare', 'normale', 'Attrezzatura · due parti', 'un caso'], ['Attrezzatura · tre parti', 'titolo dal sensore', 'normale', 'Attrezzatura · tre parti', 'un caso'], ['Attrezzatura · altra camera', '', 'normale', 'Attrezzatura · altra camera', 'un caso'],
+        ['Oggetti · candidati', '', 'normale', 'Oggetti · candidati', 'un caso'], ['Oggetti · nessun candidato', '', 'normale', 'Oggetti · nessun candidato', 'un caso'], ['Frame senza nome', 'salvata: si cambia', 'normale', 'Oggetti · frame senza nome', 'un caso'], ['Frame senza tipo', '', 'normale', 'Frame senza tipo', 'un caso'],
+        ['Frame senza sito', 'cambiata, con cosa era', 'normale', 'Frame senza sito', 'un caso'], ['Molte notti', 'per mese, tutte', 'normale', 'Frame senza sito · molte notti', 'un caso'], ['Nessun sito dichiarato', 'frase approvata da Marco', 'normale', 'Frame senza sito · nessun sito dichiarato', 'un caso'], ['Mosaici proposti', '', 'normale', 'Mosaici proposti', 'un caso']]]];
+    const on = this.state.on; let n = 0;
+    const voce = (pre, [titolo, nota, stato, domanda, tel, motivo, modo, acc]) => { const k = pre + (n++);
+      return { titolo, nota: nota || '', stato, domanda: domanda || 'Filtri · O3', tel: tel || 'tipi', motivo: motivo || 'oggetto non nel catalogo', modo: modo || 'scuro', acc: acc || 'ambra · blu notte', label: (pre === 't' ? 'Telefono · ' : 'Desktop · ') + titolo, ref: this.rif(k), on: !!on[k] }; };
+    const righeTel = R.map(([titolo, v]) => ({ titolo, voci: v.map(x => voce('t', x)) }));
+    const D = [['Normale', 'Filtri · O3 aperta', 'normale'], ['Attrezzatura · tre parti', '', 'normale', 'Attrezzatura · tre parti'], ['Frame senza sito · molte notti', '', 'normale', 'Frame senza sito · molte notti'], ['Oggetti già riconosciuti', 'una cosa aperta alla volta', 'normale', 'Oggetti · riconosciuti aperti'],
+      ['Applica in corso', '', 'applicazione in corso'], ['Applicato', '', 'applicato'], ['Non applicato', 'scansione in corso', 'non applicato', '', '', 'scansione in corso'], ['Con risposte salvate', '', 'niente da confermare, con risposte salvate'], ['Modo chiaro', 'ghiaccio · indaco', 'normale', '', '', '', 'chiaro', 'ghiaccio · indaco']];
+    return { righeTel, desk: D.map(x => voce('d', x)) };
+  }
+}
+</script>
+</body>
+</html>

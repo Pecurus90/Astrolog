@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}</style></helmet>
+<sc-if value="{{ notteOn }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Carta" formato="{{ formato }}" colonne="{{ colA }}" padding="{{ pad }}" gap="14" ritardo="0" etichetta="Stanotte" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,380px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px 16px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 240px"><span style="font-size:22px;font-weight:500">{{ notte.titolo }}</span><span style="font-size:13px;color:var(--tenue);text-wrap:pretty">{{ notte.sub }}</span><a class="al-bottone al-bottone--testo al-bottone--piccolo" href="Meteo.dc.html" style="align-self:flex-start;margin-left:-14px">Meteo di stanotte ↗</a></div>
+<span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-left:auto;text-align:right"><b style="font-size:44px;font-weight:300;line-height:1;letter-spacing:-.02em;white-space:nowrap">{{ notte.ore }}</b><span style="font-size:12px;color:var(--tenue)">{{ notte.oreL }}</span></span>
+</div>
+<div style="display:grid;grid-template-columns:30px minmax(0,1fr);gap:0 8px">
+<div style="position:relative;height:{{ notte.h }};font-size:11px;color:var(--tenue)"><sc-for list="{{ notte.yl }}" as="y" hint-placeholder-count="4"><span style="position:absolute;right:0;top:{{ y.y }};transform:translateY(-50%)">{{ y.l }}</span></sc-for></div>
+<div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+<svg viewBox="0 0 600 200" preserveAspectRatio="none" role="img" aria-label="{{ notte.aria }}" style="width:100%;height:{{ notte.h }};display:block;overflow:visible">
+<rect x="{{ notte.bx }}" y="0" width="{{ notte.bw }}" height="200" fill="var(--carta-2)"></rect>
+<path d="{{ notte.dOrz }}" fill="var(--traccia)"></path>
+<line x1="0" x2="600" y1="{{ notte.ym }}" y2="{{ notte.ym }}" stroke="var(--tenue)" stroke-width="1" stroke-dasharray="4 5" vector-effect="non-scaling-stroke"></line>
+<line x1="0" x2="600" y1="{{ notte.y0 }}" y2="{{ notte.y0 }}" stroke="var(--linea)" stroke-width="1" vector-effect="non-scaling-stroke"></line>
+<path d="{{ notte.dLuna }}" fill="none" stroke="var(--luna-linea)" stroke-width="1.5" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"></path>
+<path d="{{ notte.dTutta }}" fill="none" stroke="var(--tenue)" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>
+<path d="{{ notte.dUtile }}" fill="none" stroke="var(--accento)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
+<sc-if value="{{ notte.mer }}" hint-placeholder-val="{{ false }}"><line x1="{{ notte.mer.x }}" x2="{{ notte.mer.x }}" y1="0" y2="200" stroke="var(--accento)" stroke-width="1.5" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"></line></sc-if>
+<line x1="{{ notte.x }}" x2="{{ notte.x }}" y1="0" y2="200" stroke="var(--testo)" stroke-width="1.5" vector-effect="non-scaling-stroke"></line>
+</svg>
+<div style="position:relative;height:14px;font-size:11px;color:var(--tenue)"><sc-for list="{{ notte.ore12 }}" as="o" hint-placeholder-count="7"><span style="position:absolute;left:{{ o.x }};transform:translateX(-50%)">{{ o.l }}</span></sc-for></div>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--tenue)">
+<span style="display:flex;align-items:center;gap:6px"><i aria-hidden="true" style="width:18px;height:3.5px;border-radius:2px;background:var(--accento)"></i>{{ notte.legUtile }}</span>
+<span style="display:flex;align-items:center;gap:6px"><i aria-hidden="true" style="width:18px;height:1.5px;background:var(--tenue)"></i>il resto della notte</span>
+<span style="display:flex;align-items:center;gap:6px"><i aria-hidden="true" style="width:18px;border-top:1.5px dashed var(--luna-linea)"></i>Luna</span>
+<span style="display:flex;align-items:center;gap:6px"><i aria-hidden="true" style="width:14px;height:10px;border-radius:3px;background:var(--traccia)"></i>orizzonte del sito</span>
+<sc-if value="{{ notte.mer }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:6px"><i aria-hidden="true" style="height:12px;border-left:1.5px dotted var(--accento)"></i>{{ notte.mer.leg }}</span></sc-if>
+<span style="display:flex;align-items:center;gap:6px"><i aria-hidden="true" style="width:14px;height:10px;border-radius:3px;background:var(--carta-2);box-shadow:inset 0 0 0 1px var(--linea)"></i>buio astronomico</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;padding-top:12px;border-top:1px solid var(--linea)">
+<sc-for list="{{ notte.righe }}" as="r" hint-placeholder-count="4"><span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:12px;color:var(--tenue)">{{ r.l }}</span><b style="font-weight:500;font-variant-numeric:tabular-nums">{{ r.v }}</b></span></sc-for>
+</div>
+</dc-import></sc-if>
+<dc-import name="componenti/Carta" formato="{{ formato }}" colonne="{{ colB }}" padding="{{ pad }}" gap="14" ritardo="60" etichetta="Periodo migliore" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,380px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:22px;font-weight:500">Periodo migliore</span><span style="font-size:13px;color:var(--tenue);text-wrap:pretty">{{ anno.sub }}</span></div>
+<b style="font-size:20px;font-weight:500;text-wrap:pretty">{{ anno.periodo }}</b>
+<div role="img" aria-label="{{ anno.aria }}" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;align-items:end;height:150px">
+<sc-for list="{{ anno.mesi }}" as="m" hint-placeholder-count="12"><div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;min-width:0"><span style="font-size:10px;color:var(--tenue);font-variant-numeric:tabular-nums;white-space:nowrap">{{ m.v }}</span><span style="width:100%;max-width:24px;border-radius:6px 6px 3px 3px;height:{{ m.h }};background:{{ m.bg }};box-shadow:{{ m.ring }}"></span></div></sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;font-size:11px;text-align:center"><sc-for list="{{ anno.mesi }}" as="m" hint-placeholder-count="12"><span style="display:flex;flex-direction:column;gap:2px;color:{{ m.lc }};font-weight:{{ m.fw }}"><span>{{ m.l }}</span><span aria-hidden="true">{{ m.ok }}</span></span></sc-for></div>
+<span style="font-size:12px;color:var(--tenue);text-wrap:pretty">{{ anno.nota }}</span>
+</dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:460},&quot;notte&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;anno&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;colA&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;8&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;colB&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;4&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;pad&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;24px 28px&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;notteOn&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}"></script>
+</body>
+</html>

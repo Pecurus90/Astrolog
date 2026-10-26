@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="caratteri.css" rel="stylesheet">
+<script src="componenti/moto.js"></script>
+<style>[data-sc-name^="componenti/"]{display:contents}html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{opacity:.85}@keyframes alSpin{to{transform:rotate(360deg)}}@keyframes alDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}@keyframes skPulse{0%,100%{opacity:1}50%{opacity:.45}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style>
+</helmet>
+<div class="al-attr__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}"><dc-import name="componenti/Telaio" formato="{{ fmt }}" pagina="Attrezzatura" etichetta="Attrezzatura" altezza="{{ altezza }}" domande="{{ domande }}" da-confermare="{{ true }}" scansione="{{ scan }}" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ setModo }}" hint-size="100%,100vh">
+<div class="al-attr__colonna-1" style="gap:{{ L.gap }}">
+
+<div class="al-attr__riga-1" style="padding:{{ L.barPad }}">
+<sc-if value="{{ indietro }}" hint-placeholder-val="{{ false }}"><a href="#" role="button" onClick="{{ indietro }}" class="al-bottone al-bottone--testo al-bottone--a-filo">← Attrezzatura</a></sc-if>
+<sc-if value="{{ V.h1 }}" hint-placeholder-val="{{ true }}"><h1 class="al-attr__testo-1" style="font-size:{{ L.h1 }}">Attrezzatura</h1></sc-if>
+<span class="al-attr__blocco-2"></span>
+<a class="al-attr__riga-2" href="#" role="button" aria-expanded="{{ agg.exp }}" onClick="{{ agg.on }}" style="background:{{ agg.bg }};color:{{ agg.fg }};box-shadow:inset 0 0 0 1.5px {{ agg.ring }}"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v12M6 12h12"></path></svg>Aggiungi strumento</a>
+</div>
+
+<sc-if value="{{ rielab }}" hint-placeholder-val="{{ false }}"><div class="al-attr__riga-3" role="status" style="border-radius:{{ L.rad }}"><span class="al-attr__tondo-1" aria-hidden="true">↻</span><span class="al-attr__blocco-3">{{ rielab.l }}</span><a href="#" role="button" onClick="{{ rielab.chiudi }}" class="al-bottone al-bottone--contorno">Chiudi</a></div></sc-if>
+
+<sc-if value="{{ carica }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Scheletro" carte="{{ sk }}" griglia="{{ L.cols }}" gap="{{ L.gap }}" testo="Caricamento…" formato="{{ fmt }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,880px"></dc-import></sc-if>
+<sc-if value="{{ av }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Avviso" tipo="pagina" formato="{{ fmt }}" segno="{{ av.s }}" titolo="{{ av.t }}" testo="{{ av.x }}" azione="{{ av.a }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="100%,120px"></dc-import></sc-if>
+
+<sc-if value="{{ V.main }}" hint-placeholder-val="{{ true }}"><div class="al-attr__colonna-1" style="gap:{{ L.gap }}">
+<sc-if value="{{ modTop }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Modulo" m="{{ modTop }}" t="{{ t }}" hint-size="100%,420px"></dc-import></sc-if>
+
+<sc-if value="{{ V.indice }}" hint-placeholder-val="{{ true }}"><nav class="al-attr__colonna-1" ref="{{ rifInd }}" aria-label="Indice dell'attrezzatura" style="gap:{{ L.gap }}">
+<section class="al-attr__colonna-2" aria-labelledby="ix-cor">
+<header class="al-attr__riga-4"><h2 class="al-attr__testo-2" id="ix-cor">Setup</h2><span class="al-attr__testo-3">{{ nCor }}</span></header>
+<ul class="al-attr__centro-1" style="grid-template-columns:{{ L.cCols }};gap:{{ L.gap }}"><sc-for list="{{ indC }}" as="r" hint-placeholder-count="5"><li class="al-attr__riga-5"><a class="al-attr__colonna-3" href="#" onClick="{{ r.on }}" aria-current="{{ r.cur }}" style="min-height:{{ L.cH }};padding:{{ L.cPad }};border-radius:{{ L.rad }};background:{{ r.bg }};color:{{ r.fg }};box-shadow:{{ r.sh }}">
+<span class="al-attr__colonna-4"><span class="al-attr__blocco-4" title="{{ r.n }}">{{ r.n }}</span><ul class="al-attr__colonna-5"><sc-for list="{{ r.pezzi }}" as="x" hint-placeholder-count="2"><li class="al-attr__riga-6" title="{{ x }}" style="color:{{ r.mu }}"><span class="al-attr__tondo-2" aria-hidden="true"></span><span class="al-attr__blocco-5">{{ x }}</span></li></sc-for></ul></span>
+<span class="al-attr__blocco-2"></span>
+<span class="al-attr__riga-7"><span class="al-attr__testo-4" style="font-size:{{ r.oFs }}">{{ r.ore }}</span><sc-if value="{{ r.foc }}" hint-placeholder-val="{{ true }}"><span class="al-attr__testo-5" style="color:{{ r.mu }}">{{ r.foc }}</span></sc-if></span>
+<sc-if value="{{ r.barra }}" hint-placeholder-val="{{ false }}"><span class="al-attr__riga-8" aria-hidden="true" style="background:{{ r.track }}"><span class="al-attr__blocco-6" data-an="barra" style="width:{{ r.barra }};background:{{ r.bc }}"></span></span></sc-if>
+<span class="al-attr__riga-9"><span class="al-attr__riga-10" aria-hidden="true"><sc-for list="{{ r.seg }}" as="g" hint-placeholder-count="9"><span class="al-attr__blocco-7" style="background:{{ g.bg }};border:{{ g.bd }}"></span></sc-for></span><sc-if value="{{ r.manca }}" hint-placeholder-val="{{ false }}"><span class="al-attr__riga-11" style="box-shadow:inset 0 0 0 1.5px {{ r.mRing }}"><span aria-hidden="true">○</span>{{ r.manca }}</span></sc-if></span>
+</a></li></sc-for></ul>
+</section>
+<section class="al-attr__colonna-2" aria-labelledby="ix-comp">
+<header class="al-attr__riga-4"><h2 class="al-attr__testo-2" id="ix-comp">Componenti</h2><span class="al-attr__testo-3">{{ nComp }}</span></header>
+<ul class="al-attr__riga-12"><sc-for list="{{ indG }}" as="r" hint-placeholder-count="9"><li class="al-attr__riga-5"><a class="al-attr__riga-13" href="#" onClick="{{ r.on }}" aria-current="{{ r.cur }}" style="background:{{ r.bg }};color:{{ r.fg }};box-shadow:{{ r.sh }}"><span class="al-attr__tondo-3" aria-hidden="true" style="background:{{ r.icBg }}"><svg class="al-attr__grafico-1" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="{{ r.ic }}"></path></svg></span><span class="al-attr__testo-6" style="font-weight:{{ r.fw }}">{{ r.n }}</span><span class="al-attr__testo-7" style="color:{{ r.mu }}">{{ r.q }}</span></a></li></sc-for></ul>
+</section>
+</nav></sc-if>
+
+<sc-if value="{{ V.dett }}" hint-placeholder-val="{{ true }}"><div class="al-attr__colonna-1" ref="{{ rifDett }}" style="gap:{{ L.gap }}">
+<sc-if value="{{ cor }}" hint-placeholder-val="{{ true }}"><div class="al-attr__centro-2" style="grid-template-columns:{{ L.dGrid }};gap:{{ L.gap }}">
+<div class="al-attr__colonna-1" style="grid-column:{{ L.s8 }};gap:{{ L.gap }}">
+<section class="al-attr__colonna-6" aria-label="{{ cor.nome }}" style="background:{{ P.bg }};color:{{ P.fg }};border-radius:{{ L.rad }};padding:{{ L.pad }}">
+<div class="al-attr__riga-14"><div class="al-attr__colonna-7"><h2 class="al-attr__testo-8" style="font-size:{{ L.hc }}">{{ cor.nome }}</h2><sc-if value="{{ cor.def }}" hint-placeholder-val="{{ false }}"><span class="al-attr__testo-9" style="color:{{ P.mu }}">{{ cor.def }}</span></sc-if></div><a class="al-attr__riga-15" href="#" role="button" aria-expanded="{{ cor.rin.exp }}" aria-label="{{ cor.rin.al }}" onClick="{{ cor.rin.on }}" style="min-height:{{ L.bh }};box-shadow:inset 0 0 0 1.5px {{ P.line }}">Rinomina</a></div>
+<div class="al-attr__centro-3" style="grid-template-columns:{{ L.hGrid }}"><div class="al-attr__colonna-6"><sc-if value="{{ cor.ore }}" hint-placeholder-val="{{ true }}"><span class="al-attr__testo-10" data-an="big" style="font-size:{{ L.big }}">{{ cor.ore }}</span></sc-if>
+<sc-if value="{{ cor.attesa }}" hint-placeholder-val="{{ false }}"><span class="al-attr__riga-16" style="color:{{ P.mu }};min-height:{{ L.big }}"><span class="al-attr__tondo-4" aria-hidden="true"></span>conteggio in corso</span></sc-if>
+<div class="al-attr__riga-17"><sc-for list="{{ cor.misure }}" as="x" hint-placeholder-count="3"><span class="al-attr__riga-18" style="background:{{ P.track }}">{{ x.v }}<sc-if value="{{ x.calc }}" hint-placeholder-val="{{ false }}"><span class="al-attr__testo-11" style="color:{{ P.mu }}">{{ x.calc }}</span></sc-if></span></sc-for></div></div>
+<ul class="al-attr__colonna-8"><sc-for list="{{ cor.chi }}" as="c" hint-placeholder-count="2"><li class="al-attr__griglia-1"><span class="al-attr__tondo-5" aria-hidden="true"><svg class="al-attr__grafico-1" aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="{{ c.ic }}"></path></svg></span><span class="al-attr__colonna-9"><span class="al-attr__testo-12">{{ c.tipo }}</span><span class="al-attr__testo-13">{{ c.n }}</span><sc-if value="{{ c.sp }}" hint-placeholder-val="{{ true }}"><span class="al-attr__testo-14">{{ c.sp }}</span></sc-if></span></li></sc-for></ul>
+</div>
+<sc-if value="{{ cor.rinM }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Modulo" m="{{ cor.rinM }}" t="{{ t }}" hint-size="100%,200px"></dc-import></sc-if>
+</section>
+<sc-if value="{{ cor.treno }}" hint-placeholder-val="{{ false }}"><section class="al-attr__colonna-10" aria-labelledby="dt-treno" style="border-radius:{{ L.rad }};padding:{{ L.pad }}">
+<div class="al-attr__riga-19"><h3 class="al-attr__testo-2" id="dt-treno">Treno ottico</h3><span class="al-attr__testo-12">Schema non in scala. Seleziona uno strumento per aprirlo.</span></div>
+<div class="al-attr__riquadro-1" style="padding:{{ L.trPad }}">{{ cor.treno }}</div>
+</section></sc-if>
+<section class="al-attr__colonna-11" aria-labelledby="dt-parti" style="border-radius:{{ L.rad }};padding:{{ L.pad }}">
+<header class="al-attr__riga-20"><h3 class="al-attr__testo-2" id="dt-parti">Parti</h3><sc-if value="{{ cor.manca }}" hint-placeholder-val="{{ false }}"><span class="al-attr__riga-21"><span aria-hidden="true">○</span>{{ cor.manca }}</span></sc-if></header>
+<ul class="al-attr__centro-4" style="grid-template-columns:{{ L.tCols }}"><sc-for list="{{ cor.parti }}" as="r" hint-placeholder-count="9"><li class="al-attr__colonna-12" data-an="riga" style="grid-column:{{ r.col }};min-height:{{ L.tH }};background:{{ r.bg }};box-shadow:{{ r.sh }}">
+<span class="al-attr__riga-22"><span class="al-attr__tondo-6" aria-hidden="true" style="background:{{ r.icBg }};border:{{ r.icBd }}"><svg class="al-attr__grafico-1" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="{{ r.ic }}"></path></svg></span><span class="al-attr__testo-14">{{ r.tipo }}</span></span>
+<span class="al-attr__colonna-9"><sc-for list="{{ r.nomi }}" as="x" hint-placeholder-count="1"><span class="al-attr__colonna-13"><sc-if value="{{ x.vai }}" hint-placeholder-val="{{ false }}"><a class="al-attr__testo-15" href="#" onClick="{{ x.vai }}" aria-label="{{ x.al }}" style="font-size:{{ x.fs }}">{{ x.n }} <span class="al-attr__testo-16" aria-hidden="true">↗</span></a></sc-if><sc-if value="{{ x.solo }}" hint-placeholder-val="{{ true }}"><span class="al-attr__testo-15" style="font-size:{{ x.fs }}">{{ x.n }}</span></sc-if><sc-if value="{{ x.f }}" hint-placeholder-val="{{ false }}"><span class="al-attr__testo-12">{{ x.f }}</span></sc-if></span></sc-for><sc-if value="{{ r.vuoto }}" hint-placeholder-val="{{ false }}"><span class="al-attr__riga-23"><span aria-hidden="true">○</span>da indicare</span></sc-if></span>
+<sc-if value="{{ r.sel }}" hint-placeholder-val="{{ false }}"><a class="al-attr__riga-24" href="#" role="button" aria-expanded="{{ r.sel.exp }}" aria-label="{{ r.sel.al }}" onClick="{{ r.sel.on }}" style="min-height:{{ L.bh }};background:{{ r.sel.bg }};color:{{ r.sel.fg }};box-shadow:inset 0 0 0 1.5px {{ r.sel.ring }}">Seleziona</a></sc-if>
+<sc-if value="{{ r.pannello }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Modulo" m="{{ r.pannello }}" t="{{ t }}" hint-size="100%,200px"></dc-import></sc-if>
+</li></sc-for></ul>
+</section>
+</div>
+<div class="al-attr__colonna-1" style="grid-column:{{ L.s4 }};gap:{{ L.gap }}">
+<section class="al-attr__colonna-14" aria-label="Campo" style="border-radius:{{ L.rad }};padding:{{ L.pad }}">
+<sc-if value="{{ cor.campo.ok }}" hint-placeholder-val="{{ true }}"><span class="al-attr__testo-17">campo</span><span class="al-attr__testo-18" data-an="big" style="font-size:{{ L.mid }}">{{ cor.campo.dim }}</span><span class="al-attr__testo-19"><b class="al-attr__testo-20">{{ cor.campo.scala }}</b> <span class="al-attr__testo-16">{{ cor.campo.scalaL }}</span></span></sc-if>
+<sc-if value="{{ cor.campo.no }}" hint-placeholder-val="{{ false }}"><span class="al-attr__riga-25"><span class="al-attr__tondo-7" aria-hidden="true"></span>campo non ancora disponibile</span></sc-if>
+<sc-if value="{{ cor.confronto }}" hint-placeholder-val="{{ false }}"><div class="al-attr__riquadro-2" role="img" aria-label="{{ cor.confrontoAl }}"><sc-for list="{{ cor.confronto }}" as="q" hint-placeholder-count="3"><span class="al-attr__strato-1" style="width:{{ q.w }};height:{{ q.h }};border:{{ q.bd }};background:{{ q.bg }};z-index:{{ q.z }}"><span class="al-attr__strato-2" style="top:{{ q.lt }};bottom:{{ q.lb }};font-weight:{{ q.fw }};color:{{ q.fg }}">{{ q.l }}</span></span></sc-for><span class="al-attr__strato-3" style="width:{{ cor.luna }}"><span class="al-attr__tondo-8" style="background:{{ cor.lunaBg }}"></span><span class="al-attr__strato-4">Luna piena, per misura</span></span></div></sc-if>
+</section>
+<section class="al-attr__colonna-15" aria-labelledby="dt-num" style="border-radius:{{ L.rad }};padding:{{ L.pad }}">
+<div class="al-attr__colonna-16"><h3 class="al-attr__testo-2" id="dt-num">Dati del setup</h3><span class="al-attr__testo-12">Dalle schede tecniche degli strumenti.</span></div>
+<ul class="al-attr__colonna-17" aria-labelledby="dt-num"><sc-for list="{{ cor.conti }}" as="k" hint-placeholder-count="9"><li class="al-attr__colonna-18" data-an="riga">
+<span class="al-attr__riga-26"><span class="al-attr__testo-17">{{ k.l }}</span><sc-if value="{{ k.v }}" hint-placeholder-val="{{ true }}"><span class="al-attr__testo-21">{{ k.v }}</span></sc-if></span>
+<sc-if value="{{ k.pl }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Pillola" esito="{{ k.es }}" testo="{{ k.pl }}" fondo="carta2" dimensione="piccola" allinea="flex-start" modo="{{ modo }}" accento="{{ accento }}" hint-size="auto,22px"></dc-import></sc-if>
+<sc-if value="{{ k.sub }}" hint-placeholder-val="{{ true }}"><span class="al-attr__testo-22">{{ k.sub }}</span></sc-if>
+<sc-if value="{{ k.manca }}" hint-placeholder-val="{{ false }}"><span class="al-attr__riga-27"><span class="al-attr__tondo-9" aria-hidden="true">?</span><span class="al-attr__blocco-8">{{ k.manca }}</span></span></sc-if>
+</li></sc-for></ul>
+</section>
+<sc-if value="{{ cor.filtri }}" hint-placeholder-val="{{ false }}"><section class="al-attr__colonna-19" aria-labelledby="dt-filtri" style="border-radius:{{ L.rad }};padding:{{ L.pad }}">
+<div class="al-attr__griglia-2"><div class="al-attr__colonna-20"><div class="al-attr__colonna-21"><h3 class="al-attr__testo-2" id="dt-filtri">Filtri</h3><span class="al-attr__testo-12">in proporzione ai frame</span></div>
+
+<ul class="al-attr__colonna-22"><sc-for list="{{ cor.filtri }}" as="f" hint-placeholder-count="4"><li class="al-attr__riga-28"><span class="al-attr__tondo-10" aria-hidden="true" style="background:{{ f.bg }};border:{{ f.bd }}"></span>{{ f.n }}</li></sc-for></ul></div><div class="al-attr__tondo-11" role="img" aria-label="{{ cor.filtriAl }}" style="width:{{ L.ring }};height:{{ L.ring }};background:{{ cor.ring }}"><span class="al-attr__tondo-12"><span class="al-attr__testo-23">{{ cor.nFil }}</span><span class="al-attr__testo-12">{{ cor.nFilL }}</span></span></div></div>
+</section></sc-if>
+</div>
+
+
+</div></sc-if>
+
+<sc-if value="{{ grp }}" hint-placeholder-val="{{ false }}"><section class="al-attr__colonna-23" aria-labelledby="dt-grp" style="border-radius:{{ L.rad }};padding:{{ L.pad }}">
+<header class="al-attr__riga-29"><h2 class="al-attr__testo-24" id="dt-grp" style="font-size:{{ L.hc }}">{{ grp.n }}</h2><span class="al-attr__testo-25">{{ grp.q }}</span></header>
+<ul class="al-attr__centro-4" style="grid-template-columns:{{ L.vCols }}"><sc-for list="{{ grp.voci }}" as="p" hint-placeholder-count="4"><li class="al-attr__colonna-24" data-an="riga" style="grid-column:{{ p.col }};box-shadow:{{ p.sh }}">
+<span class="al-attr__riga-30"><sc-if value="{{ p.disco }}" hint-placeholder-val="{{ false }}"><span class="al-attr__tondo-13" aria-hidden="true" style="background:{{ p.disco.bg }};border:{{ p.disco.bd }}"></span></sc-if><sc-if value="{{ p.ic }}" hint-placeholder-val="{{ true }}"><span class="al-attr__tondo-14" aria-hidden="true"><svg class="al-attr__grafico-1" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="{{ p.ic }}"></path></svg></span></sc-if><span class="al-attr__blocco-2"></span><a class="al-attr__riga-15" href="#" role="button" aria-expanded="{{ p.pen.exp }}" aria-label="{{ p.pen.al }}" onClick="{{ p.pen.on }}" style="min-height:{{ L.bh }};background:{{ p.pen.bg }};color:{{ p.pen.fg }};box-shadow:inset 0 0 0 1.5px {{ p.pen.ring }}">Modifica</a></span>
+<span class="al-attr__colonna-25"><span class="al-attr__testo-26">{{ p.nome }}</span><sc-if value="{{ p.sub }}" hint-placeholder-val="{{ true }}"><span class="al-attr__testo-14">{{ p.sub }}</span></sc-if><sc-if value="{{ p.man }}" hint-placeholder-val="{{ false }}"><span class="al-attr__pillola-1">inserito manualmente</span></sc-if></span>
+<span class="al-attr__riga-31"><sc-for list="{{ p.scheda }}" as="x" hint-placeholder-count="2"><span class="al-attr__riga-32"><sc-if value="{{ x.pal }}" hint-placeholder-val="{{ false }}"><span class="al-attr__tondo-15" aria-hidden="true" style="background:{{ x.pal.bg }};border:{{ x.pal.bd }}"></span></sc-if><span class="al-attr__testo-27" style="text-decoration:{{ x.td }}">{{ x.v }}</span><sc-if value="{{ x.calc }}" hint-placeholder-val="{{ false }}"><span class="al-attr__testo-16">(calcolato)</span></sc-if></span></sc-for></span>
+<span class="al-attr__colonna-26">
+<sc-if value="{{ p.uso.ore }}" hint-placeholder-val="{{ true }}"><span class="al-attr__testo-28">{{ p.uso.ore }}</span><span class="al-attr__riga-33" aria-hidden="true"><span class="al-attr__riquadro-3" data-an="barra" style="width:{{ p.uso.barra }}"></span></span></sc-if>
+<sc-if value="{{ p.uso.attesa }}" hint-placeholder-val="{{ false }}"><span class="al-attr__riga-34"><span class="al-attr__tondo-16" aria-hidden="true"></span>conteggio in corso</span></sc-if>
+<sc-if value="{{ p.uso.file }}" hint-placeholder-val="{{ false }}"><span class="al-attr__riga-34"><span class="al-attr__tondo-17" aria-hidden="true"></span>non indicato nei file</span></sc-if>
+<sc-if value="{{ p.uso.corredo }}" hint-placeholder-val="{{ false }}"><span class="al-attr__riga-34"><span class="al-attr__tondo-18" aria-hidden="true"></span>{{ p.uso.corredo }}</span></sc-if>
+<sc-if value="{{ p.uso.sel }}" hint-placeholder-val="{{ false }}"><a href="#" role="button" onClick="{{ p.uso.sel.on }}" class="al-bottone al-bottone--testo al-bottone--a-filo al-bottone--sottolineato al-attr__blocco-9">Seleziona montatura</a></sc-if>
+</span>
+<sc-if value="{{ p.mod }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Modulo" m="{{ p.mod }}" t="{{ t }}" hint-size="100%,380px"></dc-import></sc-if>
+</li></sc-for></ul>
+</section></sc-if>
+</div></sc-if>
+
+</div></sc-if>
+</div>
+</dc-import></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;stato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;normale&quot;,&quot;caricamento&quot;,&quot;non si legge&quot;,&quot;vuota&quot;,&quot;poca attrezzatura&quot;,&quot;scansione in corso&quot;,&quot;dopo il salvataggio&quot;],&quot;default&quot;:&quot;normale&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;vista&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;setup più usato&quot;,&quot;Planetarie · conteggio in corso&quot;,&quot;Camere&quot;,&quot;Filtri&quot;],&quot;default&quot;:&quot;setup più usato&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;aperto&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;niente&quot;,&quot;Aggiungi · prima del tipo&quot;,&quot;Aggiungi · ottica, marca nuova&quot;,&quot;Aggiungi · camera ancora vuota&quot;,&quot;Aggiungi · filtro, due bande&quot;,&quot;Aggiungi · setup&quot;,&quot;Modifica · camera&quot;,&quot;Modifica · mono o a colori&quot;,&quot;Modifica · unisci a&quot;,&quot;Corredo · seleziona la montatura&quot;,&quot;Corredo · rinomina&quot;,&quot;Aggiungi · camera, tutti i campi&quot;,&quot;Aggiungi · guida fuori asse&quot;,&quot;Aggiungi · distanziale&quot;,&quot;Corredo · seleziona i distanziali&quot;],&quot;default&quot;:&quot;niente&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;errore&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;nessuno&quot;,&quot;nome già usato (strumento)&quot;,&quot;nome già usato (filtro)&quot;,&quot;scansione in corso&quot;,&quot;unione non possibile&quot;,&quot;dati non aggiornati&quot;,&quot;setup già presente&quot;,&quot;ottica e camera non valide&quot;,&quot;altro errore&quot;],&quot;default&quot;:&quot;nessuno&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;telefono&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;indice&quot;,&quot;dettaglio&quot;],&quot;default&quot;:&quot;indice&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Pagina&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;automatico&quot;,&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;automatico&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  state = this.preset(this.props);
+  componentDidMount() { this._rs = () => this.setState({ w: window.innerWidth }); window.addEventListener('resize', this._rs); }
+  // Animazioni (componenti/moto.js): barre una volta all'arrivo; al cambio di corredo o gruppo il numero sale e le righe entrano in fila
+  rifDett = el => { this._dett = el; };
+  rifInd = el => { this._ind = el; };
+  rifTr = el => { if (!el) return; const w = el.offsetWidth; if (w && Math.abs(w - (this.state.trW || 0)) > 4) setTimeout(() => this.setState({ trW: w }), 0); };
+  anima() { const M = window.ALmoto; if (!M) return;
+    const k = JSON.stringify(this.state.sel) + '|' + (this.state.telDett ? 1 : 0);
+    if (this._ind && !this._indFatto) { this._indFatto = true; M.barre(this._ind); }
+    if (this._dett && k !== this._k) { this._k = k; M.numero(this._dett); M.righe(this._dett); M.barre(this._dett); } }
+  componentDidUpdate(pp) { this.anima(); if (['stato', 'vista', 'aperto', 'errore', 'telefono'].some(k => pp[k] !== this.props[k])) { (this._t || []).forEach(clearTimeout); this.setState(this.preset(this.props)); } }
+  componentWillUnmount() { this._alw && clearInterval(this._alw); window.removeEventListener('resize', this._rs); (this._t || []).forEach(clearTimeout); }
+  dopo(ms, f) { (this._t = this._t || []).push(setTimeout(f, ms)); }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  // Stato di partenza dai Tweaks. sel: cosa mostra il dettaglio (corredo i, gruppo n, nuovo). ap: il modulo aperto.
+  preset(p) {
+    const stato = p.stato || 'normale', D = DATI(stato), a = p.aperto || 'niente', vista = p.vista || 'setup più usato';
+    let sel = vista === 'Planetarie · conteggio in corso' && D.corredi[4] ? { k: 'c', i: 4 } : vista === 'Camere' && D.comp.length ? { k: 'g', n: 'Camere' } : vista === 'Filtri' && D.filtri.length ? { k: 'g', n: 'Filtri' } : { k: 'c', i: 0 };
+    const N = (tipo, v, passo) => ({ k: 'nuovo', tipo, v: v || {}, passo: passo || 'chi' });
+    const M = (id, x, passo) => { const c = trova(D, id); if (!c) return null; const v0 = valori(c); return { k: 'mod', id, v0, v: { ...v0, ...(x || {}) }, passo: passo || 'chi' }; };
+    const ap = ({
+      'Aggiungi · prima del tipo': () => N(null),
+      'Aggiungi · ottica, marca nuova': () => N('ottica', { Nome: 'Sharpstar 61EDPH III', Marca: 'altra…', NuovaMarca: 'Sharpstar', Modello: '61EDPH III', Apertura: '61', Focale: '275', Peso: '2.2' }),
+      'Aggiungi · camera ancora vuota': () => N('camera'),
+      'Aggiungi · filtro, due bande': () => N('Filtro', { Nome: 'Antlia ALP-T 5nm', Marca: 'Antlia', Modello: 'ALP-T', nb: '2', bande: [['HA', '5'], ['OIII', '5']] }, 'dati'),
+      'Aggiungi · setup': () => N('Setup', { ottica: 'RedCat 51', camera: 'ZWO ASI2600MM Pro', FocaleEff: '250' }),
+      'Modifica · camera': () => M('cam1', null, 'dati'),
+      'Modifica · mono o a colori': () => M('cam1', { Sensore: 'a colori' }, 'dati'),
+      'Modifica · unisci a': () => M('cam4', { unisci: 'ZWO ASI2600MM Pro' }),
+      'Setup · seleziona la montatura': () => D.corredi[2] ? { k: 'scegli', ci: 2, parte: 'montatura', v: { sel: '--' } } : null,
+      'Aggiungi · camera, tutti i campi': () => N('camera', { Nome: 'ZWO ASI533MM Pro', Marca: 'ZWO', Modello: 'ASI533MM Pro', SensNome: 'IMX533', Ris: '3008 × 3008', Pixel: '3.76', Sensore: 'mono', ADC: '14', Raffreddata: 'sì', Raffr: '35', Spess: '17.5', Peso: '0.47' }, 'dati'),
+      'Aggiungi · guida fuori asse': () => N('guida fuori asse', { Nome: 'ZWO OAG-L', Marca: 'ZWO', Spess: '16.5' }, 'dati'),
+      'Aggiungi · distanziale': () => N('distanziale', { Nome: 'Distanziale M48 7.5 mm', Spess: '7.5' }, 'dati'),
+      'Setup · seleziona i distanziali': () => D.corredi[0] ? { k: 'scegli', ci: 0, parte: 'distanziali', v: { sel: ['Distanziale M42 0.5 mm'] } } : null,
+      'Setup · rinomina': () => D.corredi[0] ? { k: 'rinomina', ci: 0, v: { Nome: '' } } : null
+    }[a] || (() => null))();
+    if (ap && ap.k === 'nuovo') sel = { k: 'nuovo' };
+    if (ap && ap.ci != null) sel = { k: 'c', i: ap.ci };
+    if (ap && ap.k === 'mod') { const c = trova(D, ap.id); sel = { k: 'g', n: gruppoDi(c) }; }
+    const errFix = p.errore && p.errore !== 'nessuno' ? ERR[p.errore] : null;
+    return { w: typeof window !== 'undefined' ? window.innerWidth : 1440, modo: this.state ? this.state.modo : null, D, sel, ap: ap && ap.k !== 'nuovo' ? ap : null, nuovo: ap && ap.k === 'nuovo' ? ap : null,
+      errFix, err: ap ? errFix : null, busy: false, rielab: stato === 'dopo il salvataggio' ? 3032 : null, telDett: (p.telefono || 'indice') === 'dettaglio' || !!ap, stato };
+  }
+  // Salva: il modulo si chiude e la pagina si aggiorna, nessun messaggio (salvo i frame da rielaborare).
+  applica() { const s = this.state, ap = s.ap || s.nuovo; if (!ap) return; const D = JSON.parse(JSON.stringify(s.D)), v = ap.v; let rielab = s.rielab, sel = s.sel;
+    const marca = v.Marca === 'altra…' ? (v.NuovaMarca || '').trim() : v.Marca && v.Marca !== '--' ? v.Marca : '';
+    if (ap.k === 'rinomina') D.corredi[ap.ci].nome = v.Nome.trim();
+    if (ap.k === 'scegli') { const c = D.corredi[ap.ci]; if (Array.isArray(v.sel) ? v.sel.length : v.sel && v.sel !== '--') c.scelte[ap.parte] = v.sel; else delete c.scelte[ap.parte]; }
+    if (ap.k === 'nuovo') {
+      if (ap.tipo === 'Setup') { D.corredi.push({ ottica: v.ottica, camera: v.camera, focale: pos(v.FocaleEff), ore: 'attesa', scelte: {}, parti: {}, filtri: null }); sel = { k: 'c', i: D.corredi.length - 1 }; }
+      else if (ap.tipo === 'Filtro') { D.filtri.push({ id: 'n' + Date.now(), nome: v.Nome.trim(), marca, modello: v.Modello || '', man: 1, bande: bandeV(v).map(([b, nm]) => [b, pos(nm) || null]), s: specV(v, 'Filtro'), ore: 'file' }); sel = { k: 'g', n: 'Filtri' }; }
+      else { D.comp.push({ id: 'n' + Date.now(), tipo: ap.tipo, nome: v.Nome.trim(), marca, modello: v.Modello || '', note: v.Note || '', man: 1, s: specV(v, ap.tipo), ore: 'file' }); sel = { k: 'g', n: gruppoDi({ tipo: ap.tipo }) }; } }
+    if (ap.k === 'mod') { const lista = D.filtri.some(c => c.id === ap.id) ? D.filtri : D.comp, i = lista.findIndex(c => c.id === ap.id), c = lista[i];
+      if (v.unisci && v.unisci !== '--') lista.splice(i, 1);
+      else { const vecchio = c.nome, nuovo = v.Nome.trim();
+        Object.assign(c, { nome: nuovo, marca, modello: v.Modello || '' });
+        if (c.bande) { c.bande = bandeV(v).map(([b, nm]) => [b, pos(nm) || null]); c.s = { ...c.s, ...specV(v, 'Filtro') }; }
+        else { c.note = v.Note || ''; c.s = { ...c.s, ...specV(v, c.tipo) }; if (c.tipo === 'camera' && c.frame && v.Sensore !== ap.v0.Sensore) rielab = c.frame; }
+        if (vecchio !== nuovo) D.corredi.forEach(k => { if (k.ottica === vecchio) k.ottica = nuovo; if (k.camera === vecchio) k.camera = nuovo;
+          Object.values(k.parti).forEach(arr => (arr || []).forEach(x => { if (x[0] === vecchio) x[0] = nuovo; }));
+          Object.keys(k.scelte).forEach(q => { if (k.scelte[q] === vecchio) k.scelte[q] = nuovo; }); (k.filtri || []).forEach(x => { if (x[0] === vecchio) x[0] = nuovo; }); }); } }
+    this.setState({ D, ap: null, nuovo: null, busy: false, err: null, rielab, sel });
+  }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, s = this.state, set = o => this.setState(o);
+    const modo = s.modo || p.modo || 'scuro', t = AL.tema(modo, p.accento), num = AL.num;
+    const fmtP = AL.formatoScelto(p.formato), tel = AL.telefono(fmtP, s.w);
+    const scan = s.stato === 'scansione in corso', D = s.D, ap = s.ap, nv = s.nuovo, cur = ap || nv;
+    const L = tel ? { gap: '12px', rad: '24px', pad: '20px', h1: '26px', hc: '24px', big: '48px', mid: '34px', barPad: '4px 4px 0', cols: 'minmax(0,1fr)', navPos: 'static', dGrid: 'minmax(0,1fr)', s8: '1 / -1', s4: '1 / -1',
+        pRiga: 'minmax(0,1fr) auto', pTipo: '1 / -1', pPad: '12px 12px 12px 16px', gRiga: 'minmax(0,1fr) auto', gFull: '1 / -1', gName: '1 / -1', gPad: '14px 12px 14px 16px', oMod: 3, bh: '44px', hit: '44px', cCols: 'repeat(2,minmax(0,1fr))', cH: '200px', cPad: '16px', gCols: 'minmax(0,1fr)', tCols: 'repeat(2,minmax(0,1fr))', tH: '140px', hGrid: 'minmax(0,1fr)', kCols: 'repeat(2,minmax(0,1fr))', trPad: '10px 6px', vCols: 'minmax(0,1fr)', ring: '140px' }
+      : { gap: '16px', rad: '28px', pad: '28px', h1: '34px', hc: '30px', big: '64px', mid: '40px', barPad: '4px 8px 0', cols: '320px minmax(0,1fr)', navPos: 'sticky', dGrid: 'repeat(12,minmax(0,1fr))', s8: 'span 8', s4: 'span 4',
+        pRiga: '150px minmax(0,1fr) auto', pTipo: 'auto', pPad: '10px 10px 10px 18px', gRiga: 'minmax(0,1.1fr) minmax(0,1.5fr) minmax(130px,auto) auto', gFull: 'auto', gName: 'auto', gPad: '14px 12px 14px 18px', oMod: 3, bh: '40px', hit: '40px', cCols: 'repeat(auto-fill,minmax(210px,1fr))', cH: '220px', cPad: '22px', gCols: 'repeat(auto-fill,minmax(220px,1fr))', tCols: 'repeat(4,minmax(0,1fr))', tH: '160px', hGrid: 'minmax(0,1fr) minmax(0,1.1fr)', kCols: 'repeat(3,minmax(0,1fr))', trPad: '18px 16px', vCols: 'repeat(auto-fill,minmax(280px,1fr))', ring: '140px' };
+    const sopra = () => { if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    const apri = (x, extra) => set({ ap: x, err: x ? s.errFix : null, busy: false, ...(extra || {}) });
+    const chiudi = () => set({ ap: null, nuovo: null, err: null, busy: false });
+    const setV = o => this.setState(st => st.nuovo ? { nuovo: { ...st.nuovo, v: { ...st.nuovo.v, ...o } } } : { ap: st.ap && { ...st.ap, v: { ...st.ap.v, ...o } } });
+    const setAp = f => this.setState(st => st.nuovo ? { nuovo: f(st.nuovo) } : { ap: f(st.ap) });
+    const pick = (on, l, f) => ({ l, sel: !!on, on: () => f() });
+    const btn = on => ({ bg: on ? t.hPill : t.card, fg: on ? t.hPillFg : t.text, ring: on ? 'transparent' : t.line });
+    const salva = e => { e && e.preventDefault(); if (this._dis) return; if (s.errFix) { set({ err: s.errFix }); return; } set({ busy: true, err: null }); this.dopo(700, () => this.applica()); };
+    // Il modulo (componente Modulo): nuovo strumento, modifica, selezione di una parte, rinomina
+    const modulo = ctx => {
+      const a = cur, v = a.v, comp = a.k === 'mod' ? trova(D, a.id) : null, tipo = comp ? (comp.bande ? 'Filtro' : comp.tipo) : a.tipo;
+      const bg = ctx === 'top' ? t.card : t.card2, sub = ctx === 'top' ? t.card2 : t.card;
+      const or = k => comp && v[k] ? (comp.da && comp.da[k] === 'file' && v[k] === a.v0[k] ? 'dai file' : 'inserito') : '';
+      const F = (k, o) => { const f = { id: 'at-' + k, lid: 'atl-' + k, lab: o.lab != null ? o.lab : FLD[k], col: o.largo ? '1 / -1' : 'auto', orig: o.orig != null ? o.orig : or(k), testo: false, tendina: false, pillole: null, calc: null, azione: null, v: '', ...o.x };
+        if (f.tendina) f.opts = f.opts.map(x => React.createElement('option', { key: x, value: x }, x)); return f; };
+      const TX = (k, o = {}) => F(k, { ...o, x: { testo: true, v: v[k] || '', on: e => setV({ [k]: e.target.value }) } });
+      const TD = (k, opts, o = {}) => F(k, { ...o, x: { tendina: true, opts, v: v[k] || '--', on: e => setV({ [k]: e.target.value }) } });
+      const PL = (k, opts, o = {}) => F(k, { ...o, x: { pillole: opts.map(x => pick(v[k] === x, x, () => setV({ [k]: x }))) } });
+      const blocco = (id, titolo, campi, riass) => { const fisso = !tel || !titolo, aperto = fisso || a.passo === id;
+        return { id, titolo, riass: riass || '', campi, aperto, hasT: !!titolo, exp: aperto ? 'true' : 'false', fisso: fisso ? true : undefined, cur: fisso ? 'default' : 'pointer', chev: fisso ? '' : aperto ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6',
+          toggle: () => setAp(x => ({ ...x, passo: x.passo === id ? '' : id })), bg: titolo ? sub : 'transparent', pad: titolo ? (tel ? '4px 16px 16px' : '16px 20px 20px') : '0', col: titolo ? 'auto' : '1 / -1' }; };
+      const scritti = (n, m) => n + ' di ' + m + ' scritti';
+      let titolo = 'Nuovo strumento', disco = null, tipi = null, tipoR = null, blocchi = [], righe = [], perche = '', ok = true, soloAnnulla = false;
+      const tipoRiga = () => ({ l: tipo, ic: IC[ICT[tipo]], cambia: e => { e.preventDefault(); setAp(x => ({ ...x, tipo: null })); } });
+      if (a.k === 'rinomina') { const c = D.corredi[a.ci]; titolo = 'Nome di ' + nomeC(c); blocchi = [blocco('n', '', [TX('Nome', { largo: true, orig: '' })])];
+        if (!(v.Nome || '').trim()) { ok = false; perche = 'Per salvare serve il nome.'; } }
+      else if (a.k === 'scegli') { const c = D.corredi[a.ci], k = a.parte, voci = vociParte(D, k); titolo = cap(k) + ' di ' + nomeC(c);
+        if (voci.length && k === 'distanziali') { const arr = Array.isArray(v.sel) ? v.sel : []; blocchi = [blocco('s', '', [F('sel', { lab: 'Distanziali', largo: true, orig: '', x: { pillole: voci.map(x => pick(arr.includes(x), x, () => setV({ sel: arr.includes(x) ? arr.filter(y => y !== x) : [...arr, x] }))) } })])]; }
+        else if (voci.length) blocchi = [blocco('s', '', [F('sel', { lab: cap(k) + (k === 'riduttore' || k === 'guida' ? '' : ' (vuoto: dai file)'), largo: true, orig: '', x: { tendina: true, opts: ['--', ...voci], v: v.sel || '--', on: e => setV({ sel: e.target.value }) } })])];
+        else { soloAnnulla = true; blocchi = [blocco('s', '', [F('sel', { lab: '', largo: true, orig: '', x: { azione: { l: 'aggiungine uno', on: e => { e.preventDefault(); set({ ap: null, nuovo: { k: 'nuovo', tipo: k === 'guida' ? null : k === 'distanziali' ? 'distanziale' : k, v: {}, passo: 'chi' }, sel: { k: 'nuovo' }, err: null }); sopra(); } } } })])]; } }
+      else if (tipo == null) { ok = false; tipi = TIPI.map(x => ({ l: x, ic: IC[ICT[x]], on: e => { e.preventDefault(); setAp(y => ({ ...y, tipo: x, passo: 'chi' })); } })); }
+      else if (tipo === 'Setup') { tipoR = tipoRiga();
+        const ott = D.comp.filter(c => c.tipo === 'ottica').map(c => c.nome), cam = D.comp.filter(c => c.tipo === 'camera').map(c => c.nome);
+        blocchi = [blocco('c', '', [PL('ottica', ott, { lab: 'Ottica', largo: true, orig: '' }), PL('camera', cam, { lab: 'Camera', largo: true, orig: '' }), TX('FocaleEff', { lab: 'Focale effettiva (mm)', orig: '' })])];
+        if (!v.ottica || !v.camera || !pos(v.FocaleEff)) { ok = false; perche = 'Per salvare servono ottica, camera e focale effettiva.'; } }
+      else { const isF = tipo === 'Filtro';
+        if (comp) titolo = comp.nome; else tipoR = tipoRiga();
+        if (isF) disco = AL.tinta(t, discoK(comp ? comp.bande : bandeV(v)));
+        const chi = [TX('Nome', { largo: true }), TD('Marca', ['--', ...marche(D), 'altra…'])];
+        if (v.Marca === 'altra…') chi.push(TX('NuovaMarca', { orig: '' }));
+        chi.push(TX('Modello')); if (!isF) chi.push(TX('Note', { largo: true }));
+        const chiK = isF ? ['Nome', 'Marca', 'Modello'] : ['Nome', 'Marca', 'Modello', 'Note'];
+        const chiN = chiK.filter(k => k === 'Marca' ? v.Marca && v.Marca !== '--' : (v[k] || '').trim()).length;
+        let tec, tecR;
+        if (isF) { const nb = +(v.nb || 1), bb = v.bande || [];
+          tec = [PL('nb', ['1', '2', '3', '4'], { lab: 'Quante bande', largo: true, orig: '' })];
+          for (let i = 0; i < nb; i++) { const b = bb[i] || ['--', ''];
+            const setB = (j, val) => { const n = (v.bande || []).map(x => x.slice()); while (n.length <= i) n.push(['--', '']); n[i][j] = val; setV({ bande: n }); };
+            tec.push(F('b' + i, { lab: nb > 1 ? 'Banda ' + (i + 1) : 'Banda', orig: '', x: { tendina: true, opts: ['--', ...BANDE], v: b[0] || '--', on: e => setB(0, e.target.value) } }),
+              F('nm' + i, { lab: 'Larghezza (nm)', orig: '', x: { testo: true, v: b[1] || '', on: e => setB(1, e.target.value) } })); }
+          TECF.forEach(k => tec.push(PLF[k] ? PL(k, PLF[k], { lab: FLD[k], largo: k === 'Misura' }) : TX(k, { lab: FLD[k] })));
+          tecR = scritti(bandeV(v).length + TECF.filter(k => (v[k] || '').trim()).length, nb + TECF.length); }
+        else { const K = TEC[tipo].filter(k => k !== 'Raffr' || v.Raffreddata === 'sì'); tec = [];
+          const CALC = (id, lab, val, miss) => F(id, { lab, orig: 'calcolato', x: { calc: val ? { v: val, c: t.text, td: 'underline dotted', fs: '16px' } : { v: miss, c: t.muted, td: 'none', fs: '14px' } } });
+          K.forEach(k => { const lab = LABT(tipo, k); tec.push(PLF[k] ? PL(k, PLF[k], { lab, largo: k === 'Sensore' || k === 'Misura' || k === 'Schema' }) : TX(k, { lab }));
+            if (k === 'Focale' && tipo === 'ottica') { const ap0 = pos(v.Apertura), f = pos(v.Focale);
+              tec.push(CALC('rf', 'Rapporto focale', ap0 && f ? 'f/' + AL.virg(f / ap0, 1) : '', 'servono apertura e focale'), CALC('pr', 'Potere risolutore', ap0 ? PT(116 / ap0, 2) + '″' : '', 'serve l\u0027apertura')); }
+            if (k === 'Pixel') { const r = risP(v.Ris), px = pos(v.Pixel); tec.push(CALC('ds', 'Dimensione del sensore (mm)', r && px ? VG(r[0] * px / 1000, 1) + ' × ' + VG(r[1] * px / 1000, 1) : '', 'servono risoluzione e pixel')); } });
+          tecR = scritti(K.filter(k => (v[k] || '').trim()).length, K.length);
+          if (comp && tipo === 'camera' && comp.frame && v.Sensore !== a.v0.Sensore) righe.push({ s: '↻', l: num(comp.frame) + ' frame da rielaborare', bg: 'transparent', fg: t.text, bd: '1.5px solid ' + t.accent }); }
+        const unito = comp && v.unisci && v.unisci !== '--';
+        if (!unito) blocchi = [blocco('chi', 'nome e modello', chi, scritti(chiN, chiK.length)), blocco('dati', 'dati tecnici', tec, tecR)];
+        if (comp) { const altri = (isF ? D.filtri : D.comp.filter(c => c.tipo === tipo)).filter(c => c.id !== comp.id).map(c => c.nome);
+          if (altri.length) blocchi.push(blocco('u', '', [F('unisci', { lab: 'Unisci a', orig: '', x: { tendina: true, opts: ['--', ...altri], v: v.unisci || '--', on: e => setV({ unisci: e.target.value }) } })])); }
+        if (unito) righe.push({ s: '!', l: 'L\u0027unione non è reversibile.', bg: t.warn, fg: t.warnFg, bd: '0' });
+        else if (!(v.Nome || '').trim()) { ok = false; perche = 'Per salvare serve il nome.'; }
+        else if (isF && !bandeV(v).length) { ok = false; perche = 'Per salvare serve almeno una banda.'; } }
+      if (scan && !soloAnnulla) { ok = false; perche = 'Scansione in corso: si salva al termine.'; }
+      const dis = !ok || s.busy; this._dis = dis;
+      return { al: titolo, titolo, disco, modo, accento: p.accento, formato: tel ? 'telefono' : 'desktop', tipi, tipo: tipoR, blocchi, righe, errore: s.err || '', perche, bg, sub, cs: modo === 'scuro' ? 'dark' : 'light',
+        rad: ctx === 'top' ? L.rad : '20px', pad: ctx === 'top' ? L.pad : (tel ? '16px' : '22px'), hfs: ctx === 'top' ? L.hc : '17px', sh: ctx === 'top' ? 'none' : 'inset 0 0 0 2px ' + t.accent,
+        tipiCols: tel ? 'repeat(2,minmax(0,1fr))' : 'repeat(6,minmax(0,1fr))', bCols: tel ? 'minmax(0,1fr)' : 'repeat(2,minmax(0,1fr))', fs: tel ? '16px' : '15px', hit: L.hit,
+        salva: soloAnnulla ? null : { l: s.busy ? 'Salvataggio…' : 'Salva', busy: s.busy ? 'true' : undefined, dis: dis ? 'true' : undefined, op: dis && !s.busy ? 0.45 : 1, cur: s.busy ? 'progress' : dis ? 'not-allowed' : 'pointer', on: salva },
+        annulla: e => { e.preventDefault(); chiudi(); },
+        gPos: tel ? 'sticky' : 'static', gBg: tel ? AL.rgba(bg, 0.92) : 'transparent', gPad: tel ? '10px' : '0', gMar: tel ? '0 -6px' : '0', gSh: tel ? '0 8px 24px rgba(0,0,0,.18)' : 'none' };
+    };
+    const vaiComp = (nome, extra) => { const c = D.comp.find(x => x.nome === nome); if (!c) return null; return e => { e.preventDefault(); set({ sel: { k: 'g', n: gruppoDi(c) }, ap: null, nuovo: null, telDett: true, ...(extra || {}) }); sopra(); }; };
+    // Le parti di un corredo: dai file (coi frame), scelta a mano, da indicare
+    const parte = (c, k) => { if (k === 'ottica' || k === 'camera') return c[k] ? { st: 'file', nomi: [[c[k], '']] } : { st: 'vuoto', nomi: [] };
+      if (c.scelte[k] && [].concat(c.scelte[k]).length) return { st: 'mano', nomi: [].concat(c.scelte[k]).map(n => [n, '(scelta a mano)']) };
+      const pp = c.parti[k]; return pp && pp.length ? { st: 'file', nomi: pp.map(([n, f]) => [n, f ? num(f) + ' frame' : '']) } : { st: 'vuoto', nomi: [] }; };
+    const mancano = c => PARTI.filter(k => parte(c, k).st === 'vuoto').length;
+    const daInd = n => n ? n + ' da indicare' : '';
+    const corredoV = (c, i) => { const nome = nomeC(c), ott = D.comp.find(x => x.nome === c.ottica), apt = ott && ott.s && ott.s.apertura;
+      const mont = c.scelte.montatura || (c.parti.montatura && c.parti.montatura[0] && c.parti.montatura[0][0]);
+      const rf = apt && c.focale ? 'f/' + AL.virg(c.focale / apt, 1) : '';
+      const misure = [c.focale && { v: num(c.focale) + ' mm', calc: '' }, rf && { v: rf, calc: '(calcolato)' }, mont && { v: 'su ' + mont, calc: '' }].filter(Boolean);
+      const attesa = c.ore === 'attesa', rinExp = !!(ap && ap.k === 'rinomina' && ap.ci === i);
+      const cw = c.campo && c.campo[0], ch = c.campo && c.campo[1];
+      const campo = c.scala ? { ok: true, no: false, dim: AL.virg(cw, 2) + '° × ' + AL.virg(ch, 2) + '°', scala: PT(c.scala, 2), scalaL: c.scala === 1 ? 'arcosecondo per pixel' : 'arcosecondi per pixel' } : { ok: false, no: true };
+      const fl = c.filtri && c.filtri.length ? c.filtri.map(([n, f, k]) => ({ n, peso: f, ...AL.tinta(t, k) })) : null;
+      const parti = PARTI.map(k => { const x = parte(c, k), fisso = k === 'ottica' || k === 'camera', exp = !!(ap && ap.k === 'scegli' && ap.ci === i && ap.parte === k);
+        return { tipo: k, ic: IC[ICT[k]], col: exp || (tel && fisso) ? '1 / -1' : fisso ? 'span 2' : 'auto', icBg: x.st === 'vuoto' ? 'transparent' : t.card, icBd: x.st === 'vuoto' ? '1.5px dashed ' + t.muted : '0', vuoto: x.st === 'vuoto', bg: x.st === 'vuoto' ? 'transparent' : t.card2, sh: exp ? 'inset 0 0 0 2px ' + t.accent : x.st === 'vuoto' ? 'inset 0 0 0 1.5px ' + t.line : 'none',
+          nomi: x.nomi.map(([n, f]) => { const vai = k !== 'programma di ripresa' ? vaiComp(n) : null; return { n, f, vai, solo: !vai, fs: fisso ? '19px' : '15px', al: 'Apri ' + n + ' fra i componenti' }; }),
+          sel: fisso ? null : { exp: exp ? 'true' : 'false', al: 'Seleziona ' + k, ...btn(exp || x.st === 'vuoto'), on: e => { e.preventDefault(); if (exp) chiudi(); else apri({ k: 'scegli', ci: i, parte: k, v: { sel: c.scelte[k] || (k === 'distanziali' ? [] : '--') } }); } },
+          pannello: exp ? modulo('dentro') : null }; });
+      const n = mancano(c), seg = PARTI.map(k => parte(c, k).st === 'vuoto' ? { bg: 'transparent', bd: '1.5px solid ' + t.muted } : { bg: t.accent, bd: '0' });
+      const col = D.corredi.map((k, j) => ({ k, j })).filter(x => x.k.scala), W = Math.max(...col.map(x => x.k.campo[0]), 0.9) * 1.15, H = W / 1.5;
+      const confronto = c.scala ? col.sort((a, b) => b.k.campo[0] - a.k.campo[0]).map((x, k) => { const on = x.j === i;
+        return { w: (x.k.campo[0] / W * 100).toFixed(1) + '%', h: Math.min(100, x.k.campo[1] / H * 100).toFixed(1) + '%', bd: on ? '2px solid ' + t.accent : '1.5px solid ' + t.muted, bg: on ? AL.rgba(t.accent, 0.16) : 'transparent', z: on ? 2 : 1, l: corto(x.k), lt: k % 2 ? 'auto' : '4px', lb: k % 2 ? '4px' : 'auto', fw: on ? 600 : 500, fg: on ? t.text : t.muted }; }) : null;
+      const chi = [['ottica', c.ottica], ['camera', c.camera]].map(([k, n]) => { const q = D.comp.find(x => x.nome === n); return { tipo: k, n: n || k + ' non indicata', ic: IC[ICT[k]], sp: q ? specs(q).filter(x => !/^peso/.test(x.v)).slice(0, 3).map(x => x.v).join(' · ') : '' }; });
+      const TT = trenoDi(c);
+      return { nome, seg, confronto, chi, conti: conti(c), treno: TT ? treno(TT, { modo, t, hov: s.hov, set: n => set({ hov: n }), vai: vaiComp, nome, tel, w: s.trW, ref: this.rifTr }) : null, luna: (0.52 / W * 100).toFixed(1) + '%', lunaBg: modo === 'scuro' ? 'rgba(236,230,214,.85)' : 'rgba(138,132,116,.35)', confrontoAl: confronto ? 'Il campo di ' + nome + ' a confronto con ' + (col.length > 1 ? 'gli altri setup e ' : '') + 'la Luna piena' : '', segAl: (PARTI.length - n) + ' parti su ' + PARTI.length, def: c.nome ? defC(c) : '', misure, ore: attesa ? '' : AL.ore(c.ore), attesa, campo, parti, manca: daInd(n), pCol: fl ? L.s8 : '1 / -1',
+        rin: { exp: rinExp ? 'true' : 'false', al: 'Rinomina ' + nome, on: e => { e.preventDefault(); if (rinExp) chiudi(); else apri({ k: 'rinomina', ci: i, v: { Nome: c.nome || '' } }); } },
+        rinM: rinExp ? modulo('dentro') : null, filtri: fl, ring: fl ? anello(t, c.filtri) : '', nFil: fl ? String(fl.length) : '', nFilL: fl && fl.length === 1 ? 'filtro' : 'filtri', filtriAl: fl ? 'Filtri, in proporzione ai frame: ' + fl.map(f => f.n).join(', ') : '' }; };
+    // I conti del corredo (regole di Claude Code, 18/10): ognuno solo coi suoi dati, se no dice cosa manca
+    const trenoDi = c => { const pz = k => parte(c, k).nomi.map(([n]) => D.comp.find(q => q.nome === n)).filter(Boolean);
+      const ott = D.comp.find(q => q.nome === c.ottica); if (!ott) return null; const gui = pz('guida')[0];
+      return { ott, cam: D.comp.find(q => q.nome === c.camera), rid: pz('riduttore')[0], oag: gui && gui.tipo === 'guida fuori asse' ? gui : null, gs: gui && gui.tipo === 'ottica di guida' ? gui : null, camG: pz('camera di guida')[0], ruota: pz('ruota portafiltri')[0], foc: pz('focheggiatore')[0], dist: pz('distanziali') }; };
+    const conti = c => { const pz = k => parte(c, k).nomi.map(([n]) => D.comp.find(q => q.nome === n)).filter(Boolean), S = q => (q && q.s) || {};
+      const ott = D.comp.find(q => q.nome === c.ottica), cam = D.comp.find(q => q.nome === c.camera), f = c.focale, out = [];
+      const rid = pz('riduttore')[0], ruota = pz('ruota portafiltri')[0], mont = pz('montatura')[0], foc = pz('focheggiatore')[0], gui = pz('guida')[0], camG = pz('camera di guida')[0], dist = pz('distanziali');
+      const OK = (l, v, sub, es, pl) => out.push({ l, v, sub: sub || '', es: es ?? null, pl: pl || '', manca: '', bg: t.card2, sh: 'none' });
+      const NO = (l, m) => out.push({ l, v: '', sub: '', es: null, pl: '', manca: m, bg: 'transparent', sh: 'inset 0 0 0 1.5px ' + t.line });
+      const deg = mm => VG(2 * Math.atan(mm / (2 * f)) * 180 / Math.PI, 2) + '°';
+      if (!S(ott).apertura) NO('Rapporto focale', 'manca l\u0027apertura dell\u0027ottica'); else OK('Rapporto focale', 'f/' + VG(f / S(ott).apertura, 1), 'focale effettiva ' + num(f) + ' mm');
+      const px = S(cam).pixel, sr = px && f ? 206.265 * px / f : null;
+      if (!sr) NO('Campionamento', 'manca il pixel della camera'); else OK('Campionamento', PT(sr, 2) + '″/px', (c.scala ? 'sul cielo ' + PT(c.scala, 2) + '″/px' : 'sul cielo: non ancora misurato') + ' · ottimo con seeing fra ' + PT(2 * sr, 1) + ' e ' + PT(3 * sr, 1) + '″; il giudizio della notte sta in Meteo');
+      const sw = S(cam).risW && px ? S(cam).risW * px / 1000 : null, sh = S(cam).risH && px ? S(cam).risH * px / 1000 : null;
+      if (!px) NO('Campo previsto', 'manca il pixel della camera'); else if (!sw) NO('Campo previsto', 'manca la risoluzione della camera'); else OK('Campo previsto', deg(sw) + ' × ' + deg(sh), c.campo ? 'sul cielo ' + VG(c.campo[0], 2) + '° × ' + VG(c.campo[1], 2) + '°' : 'sul cielo: non ancora misurato');
+      if (!px) NO('Dimensione del sensore', 'manca il pixel della camera'); else if (!sw) NO('Dimensione del sensore', 'manca la risoluzione della camera'); else OK('Dimensione del sensore', VG(sw, 1) + ' × ' + VG(sh, 1) + ' mm', 'dalla risoluzione e dal pixel della camera');
+      const ci = rid ? S(rid).cerchio : S(ott).cerchio, diag = sw ? Math.hypot(sw, sh) : null;
+      if (!diag) NO('Copertura', px ? 'manca la risoluzione della camera' : 'manca il pixel della camera'); else if (!ci) NO('Copertura', 'manca il cerchio d\u0027immagine ' + (rid ? 'del riduttore' : 'dell\u0027ottica'));
+      else OK('Copertura', VG(diag, 1) + ' mm', 'diagonale del sensore · cerchio d\u0027immagine ' + VG(ci, 1) + ' mm', diag <= ci ? 0 : 2, diag <= ci ? 'copre il sensore' : 'non copre il sensore');
+      const oag = gui && gui.tipo === 'guida fuori asse', fg = oag ? f : S(gui).focale, pg = S(camG).pixel, sg = fg && pg ? 206.265 * pg / fg : null;
+      if (!gui) NO('Scala di guida', 'manca la guida'); else if (!camG) NO('Scala di guida', 'manca la camera di guida'); else if (!pg) NO('Scala di guida', 'manca il pixel della camera di guida'); else if (!fg) NO('Scala di guida', 'manca la focale dell\u0027ottica di guida');
+      else OK('Scala di guida', PT(sg, 2) + '″/px', (oag ? 'fuori asse, con la focale del setup' : 'con ' + gui.nome) + ' · consigliata fra 0.5 e 4″/px', sg < 0.5 || sg > 4 ? 1 : 0, sg < 0.5 || sg > 4 ? 'fuori intervallo' : 'nell\u0027intervallo');
+      if (!sr) NO('Rapporto guida/ripresa', 'manca il campionamento'); else if (!sg) NO('Rapporto guida/ripresa', 'manca la scala di guida'); else OK('Rapporto guida/ripresa', VG(sg / sr, 1) + '×', 'scala di guida su campionamento');
+      const ric = rid ? S(rid).backfocus : S(ott).backfocus, treno = [oag ? gui : null, ruota, ...dist, cam].filter(Boolean), senza = treno.find(q => !S(q).spessore);
+      if (!ric) NO('Backfocus del treno', 'manca il backfocus richiesto ' + (rid ? 'del riduttore' : 'dell\u0027ottica')); else if (senza) NO('Backfocus del treno', 'manca lo spessore ' + ARTD[senza.tipo]);
+      else { const tot = treno.reduce((a, q) => a + S(q).spessore, 0), d = tot - ric; const tol = rid ? S(rid).toll : S(ott).toll, dif = (d > 0 ? '+' : '−') + VG(Math.abs(d), 1) + ' mm', da = 'richiesto ' + VG(ric, 1) + ' mm ' + (rid ? 'dal riduttore' : 'dall\u0027ottica');
+        if (!tol) OK('Backfocus del treno', VG(tot, 1) + ' mm', da + ' · ' + dif + ' · tolleranza non indicata');
+        else { const ok = Math.abs(d) <= tol; OK('Backfocus del treno', VG(tot, 1) + ' mm', da + ' · tolleranza ±' + VG(tol, 1) + ' mm', ok ? 0 : 1, ok ? (Math.abs(d) < 0.05 ? 'esatto' : dif + ', in tolleranza') : (d > 0 ? 'lungo di ' : 'corto di ') + VG(Math.abs(d), 1) + ' mm'); } }
+      const pesi = [ott, cam, rid, ruota, foc, gui, camG, ...dist].filter(Boolean), sp = pesi.find(q => !S(q).peso), cmax = mont ? Math.max(S(mont).caricoCon || 0, S(mont).caricoSenza || 0) : 0;
+      if (!mont) NO('Carico', 'manca la montatura'); else if (!cmax) NO('Carico', 'manca il carico della montatura'); else if (sp) NO('Carico', 'manca il peso ' + ARTD[sp.tipo]);
+      else { const kg = pesi.reduce((a, q) => a + S(q).peso, 0), pc = kg / cmax * 100; OK('Carico', Math.round(pc) + '%', 'del carico della montatura · ' + VG(kg, 1) + ' kg su ' + VG(cmax, 1), pc > 100 ? 2 : 0, pc > 100 ? 'oltre il carico' : 'entro il carico'); }
+      return out; };
+    const usoT = c => { const o = c.ore;
+      if (typeof o === 'number') { const max = Math.max(...D.comp.concat(D.filtri).filter(x => (x.bande ? 'Filtro' : x.tipo) === (c.bande ? 'Filtro' : c.tipo) && typeof x.ore === 'number').map(x => x.ore));
+        return { ore: AL.ore(o), barra: Math.max(3, o / max * 100).toFixed(1) + '%' }; } if (o === 'attesa') return { attesa: true }; if (o === 'file') return { file: true };
+      return { corredo: ['riduttore', 'focheggiatore', 'distanziale'].includes(c.tipo) ? 'non associato a un setup' : 'non associata a un setup', sel: c.tipo === 'montatura' ? { on: e => { e.preventDefault();
+        const ci = D.corredi.findIndex(k => !k.scelte.montatura && !(k.parti.montatura && k.parti.montatura.length)); if (ci >= 0) { apri({ k: 'scegli', ci, parte: 'montatura', v: { sel: c.nome } }, { sel: { k: 'c', i: ci }, nuovo: null, telDett: true }); sopra(); } } } : null }; };
+    const voce = (c, isF) => { const exp = !!(ap && ap.k === 'mod' && ap.id === c.id), sub = [c.marca, c.modello && c.modello !== c.nome ? c.modello : ''].filter(Boolean).join(' · ');
+      const scheda = isF ? c.bande.map(([b, nm]) => ({ v: nm ? b + ' ' + vir(nm) + ' nm' : b, pal: AL.tinta(t, BK[b] || 'ignoto'), td: 'none', calc: false })).concat(specs(c)) : specs(c);
+      return { nome: c.nome, sub, man: !!c.man, ic: isF ? '' : IC[ICT[c.tipo]], col: exp ? '1 / -1' : 'auto', disco: isF ? AL.tinta(t, discoK(c.bande)) : null, scheda, sh: exp ? 'inset 0 0 0 2px ' + t.accent : 'none',
+        uso: { ore: '', attesa: false, file: false, corredo: '', sel: null, ...usoT(c) }, mod: exp ? modulo('dentro') : null,
+        pen: { al: 'Modifica ' + c.nome, exp: exp ? 'true' : 'false', ...btn(exp), on: e => { e.preventDefault(); if (exp) chiudi(); else { const v0 = valori(c); apri({ k: 'mod', id: c.id, v0, v: { ...v0 }, passo: 'chi' }, { nuovo: null }); } } } }; };
+    const GR = GRUPPI.map(([n, tipo]) => ({ n, tipo, lista: tipo === 'Filtro' ? D.filtri : D.comp.filter(c => c.tipo === tipo) })).filter(g => g.lista.length);
+    const st = s.stato, carica = st === 'caricamento';
+    const av = st === 'non si legge' ? { s: '!', t: 'Attrezzatura non disponibile', x: '', a: 'Riprova' } : st === 'vuota' ? { s: '?', t: 'Nessuna attrezzatura', x: 'L\u0027attrezzatura viene rilevata dagli header dei file FITS dopo la scansione.', a: 'Aggiungi cartella' } : null;
+    const nuovoAp = !!nv;
+    const pieno = !carica && (!av || nuovoAp);
+    let sel = s.sel; if (sel.k === 'c' && !D.corredi[sel.i]) sel = D.corredi.length ? { k: 'c', i: 0 } : GR.length ? { k: 'g', n: GR[0].n } : { k: 'nessuno' };
+    if (sel.k === 'g' && !GR.some(g => g.n === sel.n)) sel = D.corredi.length ? { k: 'c', i: 0 } : { k: 'nessuno' };
+    if (sel.k === 'nuovo' && !nuovoAp) sel = D.corredi.length ? { k: 'c', i: 0 } : { k: 'nessuno' };
+    const dett = tel ? s.telDett || nuovoAp : true;
+    const scegliSel = x => e => { e.preventDefault(); set({ sel: x, ap: null, nuovo: null, err: null, telDett: true }); if (tel) sopra(); };
+    const maxC = Math.max(1, ...D.corredi.map(c => typeof c.ore === 'number' ? c.ore : 0));
+    const indC = D.corredi.map((c, i) => { const on = !tel && sel.k === 'c' && sel.i === i, n = mancano(c), num0 = typeof c.ore === 'number';
+      return { n: corto(c), pezzi: [c.ottica || 'ottica non indicata', c.camera || 'camera non indicata'], foc: c.focale ? num(c.focale) + ' mm' : '', seg: PARTI.map(k => parte(c, k).st === 'vuoto' ? { bg: 'transparent', bd: '1.5px solid ' + t.muted } : { bg: t.accent, bd: '0' }), ore: c.ore === 'attesa' ? 'conteggio in corso' : AL.ore(c.ore), oFs: c.ore === 'attesa' ? '14px' : '34px', manca: daInd(n),
+        barra: num0 ? Math.max(3, c.ore / maxC * 100).toFixed(1) + '%' : '', track: t.track, bc: t.accent,
+        // v54: la cosa scelta ha l'anello nell'accento, non il fondo pieno (come sul telefono)
+        cur: on ? 'true' : undefined, bg: t.card, fg: t.text, mu: t.muted, mRing: t.muted, sh: on ? 'inset 0 0 0 2px ' + t.accent : 'none', chev: tel, on: scegliSel({ k: 'c', i }) }; });
+    const indG = GR.map(g => { const on = !tel && sel.k === 'g' && sel.n === g.n;
+      return { n: g.n, ic: IC[ICT[g.tipo]], q: String(g.lista.length), cur: on ? 'true' : undefined, bg: t.card, fg: t.text, mu: t.muted, fw: on ? 600 : 500, icBg: t.card2, sh: on ? 'inset 0 0 0 2px ' + t.accent : 'none', chev: tel, on: scegliSel({ k: 'g', n: g.n }) }; });
+    const cor = pieno && dett && sel.k === 'c' ? corredoV(D.corredi[sel.i], sel.i) : null;
+    const g = pieno && dett && sel.k === 'g' ? GR.find(x => x.n === sel.n) : null;
+    const grp = g ? { n: g.n, q: String(g.lista.length), voci: g.lista.map(c => voce(c, g.tipo === 'Filtro')) } : null;
+    const P = { bg: t.card, fg: t.text, mu: t.muted, track: t.card2, line: t.line };
+    return { P, pronto: true, rifDett: this.rifDett, rifInd: this.rifInd, altezza: p.altezza || '100vh', t, L, modo, accento: p.accento, setModo: m => set({ modo: m }), fmt: tel ? 'telefono' : 'desktop', domande: 4, scan: scan ? 'in corso' : undefined,
+      agg: { exp: nuovoAp ? 'true' : 'false', ...btn(nuovoAp), on: e => { e.preventDefault(); if (nuovoAp) chiudi(); else { set({ nuovo: { k: 'nuovo', tipo: null, v: {}, passo: 'chi' }, ap: null, err: s.errFix, busy: false, sel: { k: 'nuovo' }, telDett: true }); sopra(); } } },
+      indietro: tel && dett && pieno ? e => { e.preventDefault(); set({ telDett: false, ap: null, nuovo: null, err: null }); } : null,
+      rielab: s.rielab ? { l: num(s.rielab) + ' frame da rielaborare', chiudi: e => { e.preventDefault(); set({ rielab: null }); } } : null,
+      carica, sk: tel ? SK.tel : SK.desk, av: nuovoAp ? null : av,
+      V: { h1: !tel, main: pieno, indice: !tel || !dett, dett },
+      indC, indG, nCor: String(D.corredi.length), nComp: String(D.comp.length + D.filtri.length), modTop: nuovoAp && dett ? modulo('top') : null, cor, grp };
+  }
+}
+const SK = { desk: [{ col: '1', h: '420px', blocchi: [{ h: '14px', w: '80px' }, { h: '56px', r: '18px' }, { h: '56px', r: '18px' }, { h: '56px', r: '18px' }, { flex: '1' }] }, { col: '2', h: '420px', blocchi: [{ riga: [{ h: '30px', w: '320px' }, 'Caricamento…'], tra: true }, { h: '64px', w: '200px' }, { riga: [{ h: '36px', w: '90px', r: '999px' }, { h: '36px', w: '90px', r: '999px' }, { h: '36px', w: '160px', r: '999px' }], gap: '8px' }] }, { col: '1', h: '440px', blocchi: [{ h: '14px', w: '100px' }, { flex: '1' }] }, { col: '2', h: '440px', blocchi: [{ h: '24px', w: '120px' }, { h: '52px', r: '18px' }, { h: '52px', r: '18px' }, { h: '52px', r: '18px' }, { h: '52px', r: '18px' }] }],
+  tel: [{ h: '360px', blocchi: [{ riga: [{ h: '14px', w: '80px' }, 'Caricamento…'], tra: true }, { h: '64px', r: '18px' }, { h: '64px', r: '18px' }, { h: '64px', r: '18px' }, { flex: '1' }] }, { h: '420px', blocchi: [{ h: '14px', w: '100px' }, { flex: '1' }] }] };
+const C = (x, y, r) => 'M' + (x - r) + ' ' + y + 'a' + r + ' ' + r + ' 0 1 0 ' + 2 * r + ' 0a' + r + ' ' + r + ' 0 1 0 ' + -2 * r + ' 0';
+const R = (x, y, w, h, r) => { const a = 'a' + r + ' ' + r + ' 0 0 1 ', W = +(w - 2 * r).toFixed(2), H = +(h - 2 * r).toFixed(2); return 'M' + (x + r) + ' ' + y + 'h' + W + a + r + ' ' + r + 'v' + H + a + -r + ' ' + r + 'h' + -W + a + -r + ' ' + -r + 'v' + -H + a + r + ' ' + -r + 'z'; };
+// Segni dei tipi, solo nella scelta del tipo del modulo nuovo
+const IC = {
+  ottica: 'M2.8 11.2l12.6-4.4 1.4 4-12.6 4.4zM15.4 6.8l3.6-1.2 1.9 5.3-3.6 1.3M2.4 11.4l-.6.2.9 2.6.6-.2M9 13.6l-2.6 7.2M10.6 13l3 7.8M5.6 20.8h9',
+  camera: C(12, 12, 8.5) + C(12, 12, 6) + R(9.4, 9.8, 5.2, 4.4, 0.5) + 'M12 1.8v1.7M12 20.5v1.7',
+  montatura: 'M12 21.5V15M6.5 21.5L12 15l5.5 6.5' + R(9, 8.5, 6, 6.5, 1.2) + 'M15 11.5l4.8-6.3M9 12l-4 4.4' + C(4.2, 17.3, 1.5),
+  riduttore: 'M12 3.5c2.6 2.4 2.6 14.6 0 17-2.6-2.4-2.6-14.6 0-17zM4 8.5h5M4 15.5h5M15 8.5h5M15 15.5h5M4 8.5v7M20 8.5v7',
+  ruota: C(12, 12, 9) + C(12, 6.6, 2) + C(17.1, 10.3, 2) + C(15.2, 16.4, 2) + C(8.8, 16.4, 2) + C(6.9, 10.3, 2) + C(12, 12, 0.8),
+  programma: R(3, 4.5, 18, 15, 2) + 'M3 8.5h18M6.5 15.5l2.5-3 2 2 3-4 3.5 5',
+  guida: 'M3 11.5l9.4-3.3 1.1 3.1-9.4 3.3zM12.4 8.2l2.6-.9 1.4 4-2.6.9' + C(17.5, 17.5, 3.2) + 'M17.5 13v1.4M17.5 20.6V22M13 17.5h1.4M20.6 17.5H22',
+  camguida: R(3, 8, 11.5, 8, 2) + 'M14.5 10h2.5v4h-2.5M17 10.8h3.5v2.4H17M6.5 8V6.5M11 8V6.5' + C(8.8, 12, 1.7),
+  fuoco: R(3, 7, 10.5, 10, 1.6) + C(8.2, 12, 2.4) + 'M13.5 10h3M13.5 14h3' + C(19, 12, 2.6) + 'M19 8.4v1M19 14.6v1M15.4 12h1M21.6 12h1',
+  filtro: C(12, 12, 9) + C(12, 12, 6) + 'M9 9.5l2-1.5',
+  oag: R(4, 9, 16, 7, 1.5) + 'M12 9V4.5M9.5 4.5h5M12 16v3.5M8 12.5h8',
+  dist: R(5, 7, 14, 10, 1.5) + 'M9 7v10M15 7v10',
+  corredo: 'M2.8 9.2l11-3.8 1.3 3.7-11 3.8zM13.8 5.4l3.1-1 1.7 4.7-3.1 1.1' + R(18.4, 5, 3.6, 4.4, 0.8) + 'M12 21.5V15.5M7.5 21.5l4.5-6 4.5 6M8.6 12.5l3.4 3' };
+const ICT = { ottica: 'ottica', camera: 'camera', montatura: 'montatura', riduttore: 'riduttore', 'ruota portafiltri': 'ruota', 'ottica di guida': 'guida', guida: 'guida', 'guida fuori asse': 'oag', 'camera di guida': 'camguida', focheggiatore: 'fuoco', distanziale: 'dist', distanziali: 'dist', 'programma di ripresa': 'programma', Filtro: 'filtro', Setup: 'corredo' };
+// Parole e ordini dell'app (risposta di Claude Code, 17/10/2026)
+const TIPI = ['ottica', 'camera', 'montatura', 'riduttore', 'ruota portafiltri', 'ottica di guida', 'guida fuori asse', 'camera di guida', 'focheggiatore', 'distanziale', 'Filtro', 'Setup'];
+const GRUPPI = [['Telescopi e obiettivi', 'ottica'], ['Camere', 'camera'], ['Montature', 'montatura'], ['Riduttori e spianatori', 'riduttore'], ['Ruote portafiltri', 'ruota portafiltri'], ['Guide', 'ottica di guida'], ['Guide fuori asse', 'guida fuori asse'], ['Camere di guida', 'camera di guida'], ['Focheggiatori', 'focheggiatore'], ['Distanziali', 'distanziale'], ['Filtri', 'Filtro']];
+const PARTI = ['ottica', 'camera', 'riduttore', 'ruota portafiltri', 'distanziali', 'montatura', 'focheggiatore', 'guida', 'camera di guida', 'programma di ripresa'];
+const MISURE = ['1.25″', '31 mm', '36 mm', '2″', '50 mm quadrato'];
+const BANDE = ['L', 'R', 'G', 'B', 'HA', 'HB', 'OIII', 'SII'];
+const BK = { L: 'l', R: 'r', G: 'g', B: 'b', HA: 'ha', HB: 'hb', OIII: 'oiii', SII: 'sii' };
+const PROGRAMMI = ['N.I.N.A.', 'ASIAIR'];
+const SCHEMI = ['rifrattore', 'Newton', 'Schmidt-Cassegrain', 'Ritchey-Chrétien', 'Maksutov', 'obiettivo fotografico', 'altro'];
+const FLD = { Schema: 'Schema ottico', Nome: 'Nome', Marca: 'Marca', NuovaMarca: 'Nuova marca', Modello: 'Modello', Note: 'Note', Peso: 'Peso (kg)', Apertura: 'Apertura (mm)', Focale: 'Focale nativa (mm)', FocaleG: 'Focale (mm)', CerchioImm: 'Cerchio d\u0027immagine (mm)', Backfocus: 'Backfocus richiesto (mm)', Tolleranza: 'Tolleranza del backfocus (mm)', Bias: 'Bias (ADU)', SensNome: 'Sensore', Ris: 'Risoluzione (px), larghezza × altezza', Sensore: 'Tipo di sensore', Pixel: 'Pixel (µm)', ADC: 'Bit del convertitore', Raffreddata: 'Raffreddata', Raffr: 'Raffreddamento (°C sotto l\u0027ambiente)', Spess: 'Spessore (mm)', Prisma: 'Prisma (mm)', CaricoCon: 'Carico con contrappeso (kg)', CaricoSenza: 'Carico senza contrappeso (kg)', Fattore: 'Fattore', Posizioni: 'Numero di posizioni', Misura: 'Misura', Passo: 'Passo (µm)', PassiTot: 'Passi totali', Montato: 'Montato', Veloci: 'Per ottiche veloci' };
+const PLF = { Schema: SCHEMI, Sensore: ['mono', 'a colori'], Raffreddata: ['sì', 'no'], Misura: MISURE, Montato: ['sì', 'no'], Veloci: ['sì', 'no'] };
+const LABT = (tipo, k) => k === 'Spess' && (tipo === 'camera' || tipo === 'camera di guida') ? 'Spessore fino al sensore (mm)' : k === 'Misura' && tipo === 'ruota portafiltri' ? 'Misura dei filtri' : FLD[k];
+const TEC = { ottica: ['Schema', 'Apertura', 'Focale', 'CerchioImm', 'Backfocus', 'Tolleranza', 'Peso'], camera: ['SensNome', 'Ris', 'Pixel', 'Sensore', 'ADC', 'Bias', 'Raffreddata', 'Raffr', 'Spess', 'Peso'], 'camera di guida': ['SensNome', 'Ris', 'Pixel', 'Sensore', 'ADC', 'Spess', 'Peso'], 'ottica di guida': ['Apertura', 'FocaleG', 'Peso'], 'guida fuori asse': ['Spess', 'Prisma', 'Peso'], montatura: ['CaricoCon', 'CaricoSenza', 'Peso'], riduttore: ['Fattore', 'Backfocus', 'Tolleranza', 'CerchioImm', 'Peso'], 'ruota portafiltri': ['Posizioni', 'Misura', 'Spess', 'Peso'], focheggiatore: ['Passo', 'PassiTot', 'Peso'], distanziale: ['Spess', 'Peso'] };
+const TECF = ['Misura', 'Montato', 'Veloci', 'Spess'];
+const ARTD = { ottica: 'dell\u0027ottica', camera: 'della camera', riduttore: 'del riduttore', 'ruota portafiltri': 'della ruota portafiltri', montatura: 'della montatura', focheggiatore: 'del focheggiatore', 'ottica di guida': 'dell\u0027ottica di guida', 'guida fuori asse': 'della guida fuori asse', 'camera di guida': 'della camera di guida', distanziale: 'del distanziale' };
+const ERR = { 'nome già usato (strumento)': 'Nome già usato da uno strumento dello stesso tipo.', 'nome già usato (filtro)': 'Nome già usato da un altro filtro.', 'scansione in corso': 'Scansione in corso: riprova al termine.',
+  'unione non possibile': 'Unione non possibile. Nessuna modifica salvata.', 'dati non aggiornati': 'Dati non aggiornati: ricarica la pagina. Nessuna modifica salvata.', 'setup già presente': 'Setup già presente (stessa ottica, stessa camera, focale entro il 5%).',
+  'ottica e camera non valide': 'Ottica e camera vanno selezionate fra gli strumenti del tipo corrispondente.', 'altro errore': 'Salvataggio non riuscito' };
+const anello = (t, ff) => { const tot = ff.reduce((s, f) => s + f[1], 0); let a0 = 0;
+  return 'conic-gradient(' + ff.map(f => { const s0 = a0; a0 += f[1] / tot * 100; return AL.linea(t, f[2]) + ' ' + s0.toFixed(2) + '% ' + (a0 - 0.8).toFixed(2) + '%, ' + t.card + ' ' + (a0 - 0.8).toFixed(2) + '% ' + a0.toFixed(2) + '%'; }).join(', ') + ')'; };
+const corto = c => c.nome || [c.ottica, c.camera].map(s => (s || '?').replace(/^(ZWO|Askar|William Optics|Celestron|QHY|Sky-Watcher)\s+/, '').split(' ')[0]).join(' · ');
+// Il treno ottico: esploso in vista isometrica, a linee, in millimetri; le linee nascoste le copre il fondo
+const pezziTreno = T => [['ottica', T.ott], ['focheggiatore', T.foc], ['riduttore', T.rid], ['guida fuori asse', T.oag], ...T.dist.map(q => ['distanziale', q]), ['ruota portafiltri', T.ruota], ['camera', T.cam], ['ottica di guida', T.gs], ['camera di guida', T.camG]].filter(x => x[1]);
+function treno(T, o) {
+  const ce = React.createElement, VE = 'non-scaling-stroke', C = 0.70711, Q = 0.40825, N = 56, PI = Math.PI;
+  const P = (x, y, z) => [(x + z) * C, -(x + 2 * y - z) * Q];
+  const G = []; let g = null, B = [1e9, 1e9, -1e9, -1e9];
+  const grp = (q, tipo, x, y, z) => { g = { n: q.nome, tipo, d: -x + y + z, els: [], b: [1e9, 1e9, -1e9, -1e9] }; G.push(g); };
+  const bb = pts => pts.forEach(([u, v]) => { B = [Math.min(B[0], u), Math.min(B[1], v), Math.max(B[2], u), Math.max(B[3], v)]; g.b = [Math.min(g.b[0], u), Math.min(g.b[1], v), Math.max(g.b[2], u), Math.max(g.b[3], v)]; });
+  const path = (pts, close) => pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('') + (close ? 'Z' : '');
+  const add = (d, fill, op) => g.els.push(ce('path', { key: g.els.length, d, fill: fill ? o.t.card2 : 'none', strokeOpacity: op == null ? 1 : op, vectorEffect: VE, strokeLinejoin: 'round', strokeLinecap: 'round', pathLength: 1, strokeDasharray: 1, style: { animation: 'alDraw .9s cubic-bezier(.3,.6,.2,1) both' } }));
+  const hull = pts => { const p = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (k, a, b) => (a[0] - k[0]) * (b[1] - k[1]) - (a[1] - k[1]) * (b[0] - k[0]), lo = [], up = [];
+    for (const q of p) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+    for (let i = p.length - 1; i >= 0; i--) { const q = p[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+    return lo.slice(0, -1).concat(up.slice(0, -1)); };
+  const pt = (ax, s, A, Bv, c) => ax === 'x' ? P(s, c[0] + A, c[1] + Bv) : P(c[0] + A, s, c[1] + Bv);
+  const anello = (ax, s, r, c) => { const out = []; for (let i = 0; i <= N; i++) { const a = i / N * PI * 2; out.push(pt(ax, s, r * Math.cos(a), r * Math.sin(a), c)); } return out; };
+  // meta' visibile di un anello sulla superficie: la normale guarda verso chi osserva, d = (-1, 1, 1)
+  const arco = (ax, s, r, c, op) => { const a0 = ax === 'x' ? -PI / 4 : PI / 4, out = []; for (let i = 0; i <= N / 2; i++) { const a = a0 + i / (N / 2) * PI; out.push(pt(ax, s, r * Math.cos(a), r * Math.sin(a), c)); } add(path(out), false, op == null ? 0.55 : op); };
+  const cyl = (ax, s0, len, r, c = [0, 0]) => { const e0 = anello(ax, s0, r, c), e1 = anello(ax, s0 + len, r, c); add(path(hull(e0.concat(e1)), true), true); add(path(ax === 'x' ? e0 : e1, true)); bb(e0.concat(e1)); };
+  const faccia = (ax, s, r, c, op) => add(path(anello(ax, s, r, c), true), false, op == null ? 0.6 : op);
+  const box = (x, y, z, dx, dy, dz) => { const p = (a, b, k) => P(x + a * dx, y + b * dy, z + k * dz);
+    const f = [[p(0, 0, 0), p(0, 1, 0), p(0, 1, 1), p(0, 0, 1)], [p(0, 1, 0), p(1, 1, 0), p(1, 1, 1), p(0, 1, 1)], [p(0, 0, 1), p(0, 1, 1), p(1, 1, 1), p(1, 0, 1)]];
+    f.forEach(q => add(path(q, true), true)); bb([].concat(...f)); };
+  const S = q => (q && q.s) || {}, E = 30;
+  const ott = T.ott, so = S(ott), sch = so.schema || 'rifrattore', ap = so.apertura || 80, fo = so.focale || 500;
+  const SC = /Schmidt|Maksutov/.test(sch), RC = /Ritchey/.test(sch), NW = sch === 'Newton';
+  const R = (ap + (SC ? 26 : 22)) / 2, L = SC ? ap * 2.1 : NW ? fo * 0.92 : RC ? ap * 2.2 : fo * 0.78, rf = ap > 80 ? 32 : 26;
+  const dew = SC || NW || RC ? 0 : Math.min(ap * 1.3, L * 0.32), Lt = L - dew;
+  // l'ottica, dal fondo al davanti
+  grp(ott, 'ottica', L / 2, 0, 0);
+  box(dew + Lt * 0.15, -R - 16, -16, Lt * 0.7, 10, 32);
+  let xf;
+  if (SC) { cyl('x', L + 40, 30, 30); cyl('x', L, 40, R * 0.86); xf = L + 70; }
+  else if (NW) xf = 0;
+  else { cyl('x', dew + Lt + 70, 36, rf - 6); cyl('x', dew + Lt, 70, rf); arco('x', dew + Lt + 70 + 12, rf - 6, [0, 0], 0.4); xf = dew + Lt + 106; }
+  cyl('x', dew, Lt, R);
+  [0.28, 0.66].forEach(f => { const x = dew + Lt * f; box(x, -R - 6, -7, 14, 6, 14); arco('x', x, R + 3, [0, 0], 0.9); arco('x', x + 14, R + 3, [0, 0], 0.9); });
+  const fr = dew ? R + 6 : R;
+  if (dew) cyl('x', 0, dew, fr);
+  faccia('x', 0, fr * 0.84, [0, 0]);
+  if (!SC && !NW) faccia('x', 0, fr * 0.7, [0, 0], 0.35);
+  if (sch !== 'rifrattore') faccia('x', 0, fr * 0.3, [0, 0], 0.9);
+  if (NW || RC) { add(path([P(0, fr * 0.84, 0), P(0, -fr * 0.84, 0)]), false, 0.6); add(path([P(0, 0, fr * 0.84), P(0, 0, -fr * 0.84)]), false, 0.6); }
+  if (NW) cyl('y', R - 4, 60, rf, [L * 0.16, 0]);
+  // il treno, in esploso
+  const items = [];
+  if (T.rid) items.push({ q: T.rid, tipo: 'riduttore', len: 40, r: SC ? 50 : 36, rid: true });
+  if (T.oag) items.push({ q: T.oag, tipo: 'guida fuori asse', len: Math.max(12, S(T.oag).spessore || 16), r: 45, oag: true });
+  T.dist.forEach(q => items.push({ q, tipo: 'distanziale', len: Math.max(4, S(q).spessore || 5), r: 30 }));
+  if (T.ruota) { const rw = (S(T.ruota).posizioni || 7) > 5 ? 92 : 80; items.push({ q: T.ruota, tipo: 'ruota portafiltri', len: Math.max(16, S(T.ruota).spessore || 20), r: rw, off: rw - 52 }); }
+  if (T.cam) items.push({ q: T.cam, tipo: 'camera', len: 100, r: S(T.cam).sensore === 'colori' ? 39 : 45, cam: true });
+  let oagCam = null;
+  if (!NW) { let x = xf + E;
+    items.forEach(it => { grp(it.q, it.tipo, x + it.len / 2, it.off || 0, 0);
+      if (it.cam) { const k = it.len * 0.42; cyl('x', x + k, it.len - k, it.r - 2); for (let d = k + 8; d < it.len - 4; d += 7) arco('x', x + d, it.r - 2, [0, 0], 0.45); cyl('x', x, k, it.r); faccia('x', x, it.r * 0.45, [0, 0], 0.4); }
+      else if (it.oag) { cyl('y', it.r - 6, 62, 11, [x + it.len / 2, 0]); cyl('x', x, it.len, it.r); faccia('x', x, it.r * 0.55, [0, 0], 0.4); oagCam = { x: x + it.len / 2, y: it.r + 62 + 22 }; }
+      else { cyl('x', x, it.len, it.r, [it.off || 0, 0]); if (it.rid) [12, 20, 28].forEach(d => arco('x', x + d, it.r, [0, 0], 0.4)); if (it.off) faccia('x', x, 18, [0, 0], 0.4); }
+      x += it.len + E; }); }
+  else { let y = R + 56 + E; const fx = L * 0.16;
+    items.forEach(it => { grp(it.q, it.tipo, fx, y + it.len / 2, 0);
+      if (it.oag) { cyl('x', fx - it.r - 56, 62, 11, [y + it.len / 2, 0]); cyl('y', y, it.len, it.r, [fx, 0]); oagCam = { x: fx - it.r - 62 - 22 - 44, y: y + it.len / 2, lato: true }; }
+      else cyl('y', y, it.len, it.r, [fx + (it.off || 0), 0]);
+      y += it.len + E; }); }
+  if (T.foc) { const m = SC ? [L + 4, R * 0.86] : NW ? [L * 0.16 + rf + 6, R + 6] : [dew + Lt + 12, rf]; grp(T.foc, 'focheggiatore', m[0] + 25, m[1] + 30, 0); box(m[0], m[1] + 10, -22, 48, 40, 44); }
+  if (T.gs) { const sg = S(T.gs), rg = ((sg.apertura || 30) + 12) / 2, lg = (sg.focale || 120) * 1.15, xg = dew + Lt * 0.4, yg = R + 30 + rg;
+    if (T.camG) { grp(T.camG, 'camera di guida', xg + lg + E + 22, yg, 0); cyl('x', xg + lg + E, 44, 18, [yg, 0]); }
+    grp(T.gs, 'ottica di guida', xg + lg / 2, yg, 0); [0.18, 0.68].forEach(f => { const x = xg + lg * f; box(x, R + 2, -6, 12, yg - rg - R, 12); });
+    cyl('x', xg, lg, rg, [yg, 0]); [0.18, 0.68].forEach(f => { const x = xg + lg * f; arco('x', x, rg + 2, [yg, 0], 0.9); arco('x', x + 12, rg + 2, [yg, 0], 0.9); }); faccia('x', xg, rg * 0.8, [yg, 0]); }
+  else if (T.camG && oagCam) { grp(T.camG, 'camera di guida', oagCam.x, oagCam.y, 0); if (oagCam.lato) cyl('x', oagCam.x, 44, 18, [oagCam.y, 0]); else cyl('y', oagCam.y, 44, 18, [oagCam.x, 0]); }
+  // asse ottico
+  const ax0 = P(-40, 0, 0), ax1 = P((NW ? L : xf + items.reduce((s, it) => s + it.len + E, 0)) + 60, 0, 0);
+  const pad = 24, padV = 46, W = B[2] - B[0] + pad * 2, H = B[3] - B[1] + padV * 2, vx = B[0] - pad, vy = B[1] - padV;
+  const asse = ce('path', { key: 'asse', d: path([ax0, ax1]), fill: 'none', stroke: o.t.muted, strokeOpacity: 0.6, strokeDasharray: '10 4 2 4', vectorEffect: VE, pointerEvents: 'none' });
+  const vista = q => { const n = q.n, on = o.hov === n, vai = o.vai(n);
+    return ce('g', { key: 'g' + n + q.tipo, role: vai ? 'button' : undefined, tabIndex: vai ? 0 : undefined, 'aria-label': q.tipo + ': ' + n, onClick: vai || undefined, onKeyDown: vai ? e => { if (e.key === 'Enter' || e.key === ' ') vai(e); } : undefined,
+      onMouseEnter: () => o.set(n), onMouseLeave: () => o.set(null), onFocus: () => o.set(n), onBlur: () => o.set(null),
+      stroke: on ? o.t.accent : o.t.text, strokeWidth: on ? 2 : 1.1, opacity: o.hov && !on ? 0.3 : 1, style: { cursor: vai ? 'pointer' : 'default', transition: 'opacity .15s', outline: 'none' } }, q.els); };
+  const ord = G.slice().sort((a, b) => a.d - b.d);
+  // etichette: sopra i pezzi che stanno in alto, gli altri alternati sotto e sopra; spinte di lato perche' non si tocchino
+  const ALTO = ['focheggiatore', 'ottica di guida', 'camera di guida'], lab = G.map((q, k) => ({ q, cx: (q.b[0] + q.b[2]) / 2 })).sort((a, b) => a.cx - b.cx);
+  let alt = 0; lab.forEach(l => { l.su = ALTO.includes(l.q.tipo) ? true : (alt++ % 2 === 1); });
+  const PXW = o.w || (o.tel ? 330 : 800), sc = (B[2] - B[0] + 48) / PXW;
+  const num = new Map(pezziTreno(T).map(([, q], k) => [q.nome, k + 1]));
+  lab.forEach(l => { l.k = num.get(l.q.n) || 0; l.w = (o.tel ? 30 : l.q.n.length * 7.9 + 30) * sc; });
+  const spingi = arr => { for (let i = 1; i < arr.length; i++) arr[i].x = Math.max(arr[i].cx, arr[i - 1].x + (arr[i - 1].w + arr[i].w) / 2 + 6 * sc);
+    const maxX = B[2] + 24, over = arr.length ? arr[arr.length - 1].x + arr[arr.length - 1].w / 2 - maxX : 0;
+    if (over > 0) { arr[arr.length - 1].x -= over; for (let i = arr.length - 2; i >= 0; i--) arr[i].x = Math.min(arr[i].x, arr[i + 1].x - (arr[i].w + arr[i + 1].w) / 2 - 6 * sc); } };
+  const su = lab.filter(l => l.su), giu = lab.filter(l => !l.su); [su, giu].forEach(a => { a.forEach(l => { l.x = l.cx; }); spingi(a); });
+  const fili = lab.map(l => { const on = o.hov === l.q.n, ay = l.su ? l.q.b[1] : l.q.b[3], ey = l.su ? vy : vy + H;
+    return ce('g', { key: 'f' + l.q.n + l.q.tipo, pointerEvents: 'none', stroke: on ? o.t.accent : o.t.muted, strokeOpacity: o.hov && !on ? 0.3 : 0.8 },
+      ce('path', { d: 'M' + l.cx + ' ' + ay + 'L' + l.cx + ' ' + (l.su ? ay - 14 : ay + 14) + 'L' + l.x + ' ' + ey, fill: 'none', vectorEffect: VE, strokeWidth: on ? 1.6 : 1 }),
+      ce('path', { d: 'M' + (l.cx - 3) + ' ' + ay + 'a3 3 0 1 0 6 0a3 3 0 1 0 -6 0', fill: on ? o.t.accent : o.t.muted, stroke: 'none' })); });
+  const svg = ce('svg', { key: o.nome, viewBox: vx + ' ' + vy + ' ' + W + ' ' + H, width: '100%', role: 'group', 'aria-label': 'Treno ottico di ' + o.nome + ', schema non in scala', style: { display: 'block' } }, asse, ...fili, ...ord.map(vista));
+  const pill = (l, extra) => { const n = l.q.n, on = o.hov === n, vai = o.vai(n);
+    return ce('a', { key: 'l' + n + l.q.tipo, href: '#', onClick: vai || (e => e.preventDefault()), onMouseEnter: () => o.set(n), onMouseLeave: () => o.set(null), onFocus: () => o.set(n), onBlur: () => o.set(null), 'aria-label': l.q.tipo + ': ' + n + ', apri',
+      style: { display: 'inline-flex', alignItems: 'center', gap: 6, boxSizing: 'border-box', whiteSpace: 'nowrap', width: 'max-content', borderRadius: 999, background: on ? o.t.hPill : o.t.card, color: on ? o.t.hPillFg : o.t.text, fontSize: 12, fontWeight: 600, transition: 'background .15s', ...extra } },
+      o.tel ? String(l.k) : n); };
+  const riga = (arr, su) => ce('div', { style: { position: 'relative', height: o.tel ? 30 : 30 } }, arr.map(l => pill(l, { position: 'absolute', left: ((l.x - vx) / W * 100) + '%', [su ? 'bottom' : 'top']: 0, transform: 'translateX(-50%)', height: o.tel ? 28 : 28, minWidth: o.tel ? 28 : 0, justifyContent: 'center', padding: o.tel ? 0 : '0 11px' })));
+  const leg = o.tel ? ce('ul', { style: { listStyle: 'none', margin: '12px 0 0', padding: 0, display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 6 } }, lab.slice().sort((a, b) => a.k - b.k).map(l => { const n = l.q.n, on = o.hov === n, vai = o.vai(n);
+    return ce('li', { key: n + l.q.tipo, style: { display: 'flex', minWidth: 0 } }, ce('a', { href: '#', onClick: vai || (e => e.preventDefault()), style: { flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, minHeight: 44, boxSizing: 'border-box', padding: '0 12px 0 8px', borderRadius: 16, background: on ? o.t.hPill : o.t.card, color: on ? o.t.hPillFg : o.t.text, fontSize: 13 } },
+      ce('span', { style: { width: 22, height: 22, flex: 'none', borderRadius: '50%', boxShadow: 'inset 0 0 0 1.5px currentColor', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 700 } }, String(l.k)), ce('span', { style: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, n))); })) : null;
+  return ce('div', null, ce('div', { ref: o.ref, style: { maxWidth: Math.round((o.tel ? 300 : 400) * W / H), margin: '0 auto' } }, riga(su, true), svg, riga(giu, false)), leg);
+
+}
+const cap = s => s[0].toUpperCase() + s.slice(1);
+const vir = x => x == null ? '' : String(x);
+const pos = x => { const n = parseFloat(String(x || '').replace(/[\s\u202F]/g, '').replace(',', '.')); return n > 0 ? n : 0; };
+const nomeC = c => c.nome || defC(c);
+const defC = c => (c.ottica || 'ottica non indicata') + ' · ' + (c.camera || 'camera non indicata');
+const trova = (D, id) => D.comp.find(c => c.id === id) || D.filtri.find(c => c.id === id) || null;
+const gruppoDi = c => (GRUPPI.find(g => g[1] === (c.bande ? 'Filtro' : c.tipo)) || [])[0];
+const marche = D => [...new Set(D.comp.concat(D.filtri).map(c => c.marca).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+const TPARTE = { guida: ['ottica di guida', 'guida fuori asse'], distanziali: ['distanziale'] };
+const vociParte = (D, k) => k === 'programma di ripresa' ? PROGRAMMI : D.comp.filter(c => (TPARTE[k] || [k]).includes(c.tipo)).map(c => c.nome);
+const PT = (x, d) => Number(x).toFixed(d);
+const VG = (x, d) => String(AL.virg(x, d)).replace(/\.0+$/, '');
+const risP = s => { const m = String(s || '').match(/(\d[\d.]*)\D+(\d[\d.]*)/); return m ? [parseInt(m[1].replace(/\./g, ''), 10), parseInt(m[2].replace(/\./g, ''), 10)] : null; };
+const bandeV = v => (v.bande || []).slice(0, +(v.nb || 1)).filter(b => b[0] && b[0] !== '--');
+const discoK = bb => { const k = (bb || []).map(b => b[0]); if (!k.length) return 'ignoto'; if (k.length === 1) return BK[k[0]] || 'ignoto';
+  const j = k.slice().sort().join('+'); return j === 'HA+OIII' ? 'ha-oiii' : j === 'OIII+SII' ? 'sii-oiii' : k.length === 3 ? 'tri' : 'quad'; };
+const MAPN = { Apertura: 'apertura', Focale: 'focale', FocaleG: 'focale', CerchioImm: 'cerchio', Backfocus: 'backfocus', Tolleranza: 'toll', Bias: 'bias', Peso: 'peso', Pixel: 'pixel', ADC: 'adc', Raffr: 'raffr', Spess: 'spessore', Prisma: 'prisma', CaricoCon: 'caricoCon', CaricoSenza: 'caricoSenza', Fattore: 'riduzione', Posizioni: 'posizioni', Passo: 'passo', PassiTot: 'passiTot' };
+const SN = b => b == null ? '' : b ? 'sì' : 'no';
+const valori = c => { const s = c.s || {}, v = { Nome: c.nome, Marca: c.marca || '--', Modello: c.modello || '', Note: c.note || '' };
+  Object.keys(MAPN).forEach(k => { v[k] = vir(s[MAPN[k]]); });
+  Object.assign(v, { Schema: s.schema || '', SensNome: s.sensNome || '', Ris: s.risW ? AL.num(s.risW) + ' × ' + AL.num(s.risH) : '', Sensore: s.sensore === 'mono' ? 'mono' : s.sensore === 'colori' ? 'a colori' : '', Raffreddata: SN(s.raffreddata), Misura: s.misura || '', Montato: SN(s.montato), Veloci: SN(s.veloci) });
+  if (c.bande) Object.assign(v, { nb: String(c.bande.length || 1), bande: c.bande.map(([b, nm]) => [b, nm != null ? vir(nm) : '']) });
+  return v; };
+const specV = (v, tipo) => { const K = tipo === 'Filtro' ? TECF : TEC[tipo] || [], o = {};
+  K.forEach(k => { if (MAPN[k]) o[MAPN[k]] = pos(v[k]) || undefined; });
+  if (K.includes('SensNome')) o.sensNome = (v.SensNome || '').trim() || undefined;
+  if (K.includes('Ris')) { const r = risP(v.Ris); o.risW = r ? r[0] : undefined; o.risH = r ? r[1] : undefined; }
+  if (K.includes('Sensore')) o.sensore = v.Sensore === 'mono' ? 'mono' : v.Sensore === 'a colori' ? 'colori' : undefined;
+  [['Raffreddata', 'raffreddata'], ['Montato', 'montato'], ['Veloci', 'veloci']].forEach(([k, q]) => { if (K.includes(k)) o[q] = v[k] === 'sì' ? true : v[k] === 'no' ? false : undefined; });
+  if (K.includes('Misura')) o.misura = v.Misura || undefined;
+  if (K.includes('Schema')) o.schema = v.Schema || undefined;
+  if (K.includes('Raffreddata') && v.Raffreddata !== 'sì') o.raffr = undefined;
+  return o; };
+// La scheda di un pezzo, con le parole dell'app: una voce solo se c'e' il valore
+const specs = c => { const s = c.s || {}, o = [], sp = (v, calc) => o.push({ v, calc: !!calc, td: calc ? 'underline dotted' : 'none', pal: null });
+  if (s.schema) sp(s.schema);
+  if (s.sensNome) sp('sensore ' + s.sensNome);
+  if (s.apertura) sp('apertura ' + vir(s.apertura) + ' mm'); if (s.focale) sp('focale ' + AL.num(s.focale) + ' mm');
+  if (s.apertura && c.tipo === 'ottica') sp('potere risolutore ' + PT(116 / s.apertura, 2) + '″', true);
+  if (s.cerchio) sp('cerchio d\u0027immagine ' + vir(s.cerchio) + ' mm'); if (s.backfocus) sp('backfocus ' + vir(s.backfocus) + ' mm' + (s.toll ? ' ± ' + vir(s.toll) : ''));
+  if (s.risW) sp(AL.num(s.risW) + ' × ' + AL.num(s.risH) + ' px');
+  if (s.sensore) sp(s.sensore === 'mono' ? 'monocromatica' : 'a colori');
+  if (s.pixel) sp('pixel ' + vir(s.pixel) + ' µm'); else if (s.pixelCalc) sp('pixel ' + vir(s.pixelCalc) + ' µm', true);
+  if (s.risW && s.pixel) sp(VG(s.risW * s.pixel / 1000, 1) + ' × ' + VG(s.risH * s.pixel / 1000, 1) + ' mm', true);
+  if (s.adc) sp(s.adc + ' bit'); if (s.bias) sp('bias ' + AL.num(s.bias) + ' ADU'); if (s.raffreddata) sp('raffreddata' + (s.raffr ? ', ' + vir(s.raffr) + ' °C sotto l\u0027ambiente' : ''));
+  if (s.caricoCon) sp('carico ' + vir(s.caricoCon) + ' kg con contrappeso'); if (s.caricoSenza) sp(vir(s.caricoSenza) + ' kg senza');
+  if (s.posizioni) sp(s.posizioni === 1 ? '1 posizione' : s.posizioni + ' posizioni'); if (s.misura) sp(c.tipo === 'ruota portafiltri' ? 'filtri da ' + s.misura : s.misura);
+  if (s.riduzione) sp((s.riduzione > 1 ? 'barlow ' : 'riduzione ') + vir(s.riduzione) + '×');
+  if (s.passo) sp('passo ' + vir(s.passo) + ' µm'); if (s.passiTot) sp(AL.num(s.passiTot) + ' passi');
+  if (s.spessore) sp('spessore ' + vir(s.spessore) + ' mm'); if (s.prisma) sp('prisma ' + vir(s.prisma) + ' mm');
+  if (s.montato != null) sp(s.montato ? 'montato' : 'non montato'); if (s.veloci) sp('per ottiche veloci');
+  if (s.peso) sp('peso ' + vir(s.peso) + ' kg');
+  return o; };
+// Dati d'esempio (dalla tavola vecchia; "Notte in quota" e' Askar FRA400 · ZWO ASI2600MM Pro, come in Da confermare). Setup dal piu' usato.
+function DATI(stato) {
+  if (stato === 'vuota' || stato === 'caricamento' || stato === 'non si legge') return { comp: [], filtri: [], corredi: [] };
+  const comp = [
+    { id: 'o1', col: 'bianco', tipo: 'ottica', nome: 'Askar 103APO F/6.8 Triplet', marca: 'Askar', modello: '103APO', s: { schema: 'rifrattore', apertura: 103, focale: 700, cerchio: 44, backfocus: 55, toll: 1, peso: 4.5 }, ore: 79.6 },
+    { id: 'o2', col: 'bianco', tipo: 'ottica', nome: 'Askar FRA400', marca: 'Askar', s: { schema: 'rifrattore', apertura: 72, focale: 400, cerchio: 44, backfocus: 55, peso: 3.2 }, ore: 22.3 },
+    { id: 'o3', col: 'rosso', tipo: 'ottica', nome: 'RedCat 51', marca: 'William Optics', s: { schema: 'rifrattore', apertura: 51, focale: 250, cerchio: 44, backfocus: 55, peso: 1.5 }, ore: 4.1 },
+    { id: 'o4', col: 'nero', tipo: 'ottica', nome: 'Celestron EdgeHD 8', marca: 'Celestron', s: { schema: 'Schmidt-Cassegrain', apertura: 203, focale: 2032, cerchio: 42, backfocus: 133.4, peso: 6.4 }, ore: 'attesa' },
+    { id: 'cam1', col: 'rosso', tipo: 'camera', nome: 'ZWO ASI2600MM Pro', marca: 'ZWO', modello: 'ASI2600MM Pro', s: { sensNome: 'IMX571', risW: 6248, risH: 4176, sensore: 'mono', pixel: 3.76, adc: 16, bias: 500, raffreddata: true, raffr: 35, spessore: 17.5, peso: 0.7 }, da: { Nome: 'file', Pixel: 'file', Sensore: 'file', Ris: 'file' }, ore: 83.7, frame: 3032 },
+    { id: 'cam2', col: 'rosso', tipo: 'camera', nome: 'ZWO ASI294MC Pro', marca: 'ZWO', modello: 'ASI294MC Pro', s: { sensNome: 'IMX294', risW: 4144, risH: 2822, sensore: 'colori', pixel: 4.63, adc: 14, raffreddata: true, raffr: 35, spessore: 6.5, peso: 0.41 }, da: { Nome: 'file', Pixel: 'file', Sensore: 'file', Ris: 'file' }, ore: 22.3, frame: 760 },
+    { id: 'cam3', col: 'nero', tipo: 'camera', nome: 'QHY268M', s: { risW: 6280, risH: 4210, sensore: 'mono', pixel: 3.76, spessore: 17.5 }, da: { Nome: 'file', Pixel: 'file', Sensore: 'file', Ris: 'file' }, ore: 'attesa' },
+    { id: 'cam4', col: 'nero', tipo: 'camera', nome: 'ATR2600M', s: { risW: 6248, risH: 4176, sensore: 'mono', pixel: 3.76 }, da: { Nome: 'file', Pixel: 'file', Sensore: 'file', Ris: 'file' }, ore: 11.4, frame: 412 },
+    { id: 'm1', col: 'rosso', tipo: 'montatura', nome: 'ZWO AM5', marca: 'ZWO', s: { caricoCon: 20, caricoSenza: 13, peso: 5.5 }, ore: 51 },
+    { id: 'm2', col: 'bianco', tipo: 'montatura', nome: 'Sky-Watcher EQ6-R Pro', marca: 'Sky-Watcher', man: 1, note: 'Ferma in garage da marzo.', s: { caricoCon: 20, peso: 17.3 }, ore: 'corredo' },
+    { id: 'r1', col: 'nero', tipo: 'riduttore', nome: 'Celestron 0.7x', marca: 'Celestron', man: 1, s: { riduzione: 0.7, backfocus: 105, toll: 0.5, cerchio: 27 }, ore: 'file' },
+    { id: 'w1', col: 'rosso', tipo: 'ruota portafiltri', nome: 'ZWO EFW 7x36 II', marca: 'ZWO', s: { posizioni: 7, misura: '36 mm', spessore: 20, peso: 0.6 }, ore: 63.5 },
+    { id: 'w2', col: 'rosso', tipo: 'ruota portafiltri', nome: 'ZWO EFW 5x2"', marca: 'ZWO', s: { posizioni: 5, misura: '2″', spessore: 20 }, ore: 20.2 },
+    { id: 'g1', col: 'nero', tipo: 'ottica di guida', nome: 'ZWO 30 mm f/4', marca: 'ZWO', man: 1, s: { apertura: 30, focale: 120, peso: 0.2 }, ore: 'file' },
+    { id: 'oag1', col: 'rosso', tipo: 'guida fuori asse', nome: 'ZWO OAG-L', marca: 'ZWO', man: 1, s: { spessore: 16.5, prisma: 8, peso: 0.15 }, ore: 'file' },
+    { id: 'gc1', col: 'rosso', tipo: 'camera di guida', nome: 'ZWO ASI220MM Mini', marca: 'ZWO', s: { sensNome: 'IMX220', risW: 1920, risH: 1080, sensore: 'mono', pixel: 3.75, adc: 12, spessore: 8.5, peso: 0.1 }, da: { Nome: 'file' }, ore: 42.5 },
+    { id: 'fo1', col: 'rosso', tipo: 'focheggiatore', nome: 'ZWO EAF', marca: 'ZWO', s: { passo: 5, passiTot: 60000, peso: 0.3 }, ore: 59.4 },
+    { id: 'd1', col: 'grigio', tipo: 'distanziale', nome: 'Distanziale M42 0.5 mm', man: 1, s: { spessore: 0.5, peso: 0.01 }, ore: 'file' },
+    { id: 'd2', col: 'grigio', tipo: 'distanziale', nome: 'Distanziale M48 16.5 mm', man: 1, s: { spessore: 16.5, peso: 0.05 }, ore: 'corredo' }];
+  const NB = { misura: '36 mm', spessore: 1, montato: true, veloci: true }, LRGB = { misura: '36 mm', spessore: 2, montato: true };
+  const filtri = [
+    { id: 'f1', nome: 'Antlia Ha 3nm Pro', marca: 'Antlia', modello: '3nm Narrowband H-alpha Pro', bande: [['HA', 3]], s: NB, ore: 26.1 },
+    { id: 'f2', nome: 'Antlia OIII 3nm Pro', marca: 'Antlia', modello: '3nm Narrowband OIII Pro', bande: [['OIII', 3]], s: NB, ore: 21.4 },
+    { id: 'f3', nome: 'Antlia SII 3nm Pro', marca: 'Antlia', modello: '3nm Narrowband SII Pro', bande: [['SII', 3]], s: NB, ore: 15.9 },
+    { id: 'f4', nome: 'Optolong L-eXtreme', marca: 'Optolong', modello: 'L-eXtreme', bande: [['HA', 7], ['OIII', 7]], s: { misura: '2″', spessore: 1.85, montato: false }, ore: 18.2 },
+    { id: 'f5', nome: 'Baader L', marca: 'Baader', modello: 'L CMOS-optimized', bande: [['L', null]], s: LRGB, ore: 9.1 },
+    { id: 'f6', nome: 'Baader R', marca: 'Baader', bande: [['R', null]], s: LRGB, ore: 2.6 },
+    { id: 'f7', nome: 'Baader G', marca: 'Baader', bande: [['G', null]], s: LRGB, ore: 2.6 },
+    { id: 'f8', nome: 'Baader B', marca: 'Baader', bande: [['B', null]], s: LRGB, ore: 2.6 }];
+  const corredi = [
+    { ottica: 'Askar 103APO F/6.8 Triplet', camera: 'ZWO ASI2600MM Pro', focale: 700, scala: 1.11, campo: [1.93, 1.29], ore: 61.4, scelte: { guida: 'ZWO OAG-L', distanziali: ['Distanziale M42 0.5 mm'] },
+      parti: { montatura: [['ZWO AM5', 632]], 'ruota portafiltri': [['ZWO EFW 7x36 II', 1420], ['ZWO EFW 5x2"', 632]], focheggiatore: [['ZWO EAF', 1420]], 'camera di guida': [['ZWO ASI220MM Mini', 632]], 'programma di ripresa': [['N.I.N.A.', 1420], ['ASIAIR', 632]] },
+      filtri: [['Antlia Ha 3nm Pro', 620, 'ha'], ['Antlia OIII 3nm Pro', 540, 'oiii'], ['Antlia SII 3nm Pro', 410, 'sii'], ['Baader L', 212, 'l'], ['Baader R', 90, 'r'], ['Baader G', 90, 'g'], ['Baader B', 90, 'b']] },
+    { nome: 'Notte in quota', ottica: 'Askar FRA400', camera: 'ZWO ASI2600MM Pro', focale: 400, scala: 1.94, campo: [3.36, 2.25], ore: 22.3, scelte: { guida: 'ZWO 30 mm f/4' },
+      parti: { montatura: [['ZWO AM5', 980]], 'ruota portafiltri': [['ZWO EFW 7x36 II', 980]], 'camera di guida': [['ZWO ASI220MM Mini', 980]], 'programma di ripresa': [['ASIAIR', 980]] },
+      filtri: [['Antlia Ha 3nm Pro', 360, 'ha'], ['Antlia OIII 3nm Pro', 270, 'oiii'], ['Antlia SII 3nm Pro', 190, 'sii'], ['Baader L', 160, 'l']] },
+    { ottica: 'Askar 103APO F/6.8 Triplet', camera: 'ZWO ASI294MC Pro', focale: 700, scala: 1.36, campo: [2.46, 1.68], ore: 18.2, scelte: {},
+      parti: { focheggiatore: [['ZWO EAF', 640]], 'programma di ripresa': [['N.I.N.A.', 640]] }, filtri: [['Optolong L-eXtreme', 640, 'ha-oiii']] },
+    { nome: 'Casa leggero', ottica: 'RedCat 51', camera: 'ZWO ASI294MC Pro', focale: 250, ore: 4.1, scelte: {}, parti: { montatura: [['ZWO AM5', 120]], 'programma di ripresa': [['ASIAIR', 120]] }, filtri: null },
+    { nome: 'Planetarie', ottica: 'Celestron EdgeHD 8', camera: 'QHY268M', focale: 1422, ore: 'attesa', scelte: { riduttore: 'Celestron 0.7x' }, parti: { 'programma di ripresa': [['N.I.N.A.', null]] }, filtri: null }];
+  if (stato === 'poca attrezzatura') return { comp: comp.filter(c => c.id === 'o3' || c.id === 'cam2'), filtri: [], corredi: [{ ...corredi[3], parti: { 'programma di ripresa': [['ASIAIR', 120]] } }] };
+  return { comp, filtri, corredi };
+}
+</script>
+</body>
+</html>

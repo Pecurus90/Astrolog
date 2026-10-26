@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}@property --p{syntax:'<number>';inherits:false;initial-value:100}@keyframes alFill{from{--p:0}}@keyframes alGrowX{from{transform:scaleX(0)}}</style></helmet>
+<div class="al-c-avanzamento__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}" data-formato="{{ fmt }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}">
+<div class="{{ clsA }}"><span class="al-c-avanzamento__tondo-1" role="img" aria-label="{{ aria }}" style="background:{{ anello }}"><span class="al-c-avanzamento__tondo-2"><span class="al-c-avanzamento__testo-1">{{ pct }}</span><span class="al-c-avanzamento__testo-2">delle ore</span></span></span><span class="al-c-avanzamento__colonna-2"><b class="al-c-avanzamento__testo-3">{{ fatte }}</b><span class="al-c-avanzamento__testo-4">di {{ ob }}</span></span></div>
+<div class="{{ clsF }}" style="grid-column:{{ colonna }}"><span class="al-c-avanzamento__testo-4">{{ titolo }}</span><sc-for list="{{ filtri }}" as="f" hint-placeholder-count="2"><div class="al-c-avanzamento__centro-1"><b class="al-c-avanzamento__testo-5">{{ f.l }}</b><span class="al-c-avanzamento__pillola-1"><span class="al-c-avanzamento__strato-1" style="width:{{ f.w }};background:{{ f.c }}"></span></span><span class="al-c-avanzamento__testo-6"><b class="al-c-avanzamento__testo-7">{{ f.fatte }}</b><span class="al-c-avanzamento__testo-8"> di {{ f.ob }}</span></span></div></sc-for><sc-if value="{{ nota }}" hint-placeholder-val="{{ false }}"><span class="al-c-avanzamento__testo-4">{{ nota }}</span></sc-if></div>
+</sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:640,&quot;height&quot;:260},&quot;percento&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:100,&quot;step&quot;:1,&quot;default&quot;:62,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Dati&quot;},&quot;anello&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;testo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Dati&quot;},&quot;fatte&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;12 h 30&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Dati&quot;},&quot;obiettivo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;20 h&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Dati&quot;},&quot;aria&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;titolo&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Per filtro&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Dati&quot;},&quot;filtri&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{ l: string, c: string, w: string, fatte: string, ob: string }[]&quot;},&quot;nota&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Dati&quot;},&quot;misura&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;piccola&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;'' | 'piccola'&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;colonna&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Forma&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;}}">
+class Component extends DCLogic {
+  // L'avanzamento di un progetto: l'anello delle ore fatte sull'obiettivo e una barra per filtro (colore del filtro dai dati).
+  // Due blocchi fratelli (l'involucro non fa scatola): la pagina li mette nella sua griglia. Misura dal foglio: grande sul desktop, media sul telefono, piccola col prop.
+  componentWillUnmount() { this._alw && clearInterval(this._alw); }
+  alPronto() { const ok = () => window.AL; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const p = this.props, t = AL.tema(p.modo, p.accento), pc = Math.max(0, Math.min(100, +(p.percento ?? 62)));
+    const pic = p.misura === 'piccola' ? ' al-c-avanzamento--piccola' : '';
+    return { pronto: true, t, fmt: p.formato === 'telefono' ? 'telefono' : 'desktop', clsA: 'al-c-avanzamento__colonna-1' + pic, clsF: 'al-c-avanzamento__colonna-3' + pic,
+      anello: p.anello || 'conic-gradient(var(--anello) 0 ' + pc + '%, var(--traccia) ' + pc + '% 100%)',
+      pct: p.testo ?? (pc >= 100 ? '✓' : Math.round(pc) + '%'), fatte: p.fatte ?? '12 h 30', ob: p.obiettivo ?? '20 h', aria: p.aria || (p.fatte ?? '12 h 30') + ' di ' + (p.obiettivo ?? '20 h'),
+      titolo: p.titolo || 'Per filtro', filtri: p.filtri || [{ l: 'Hα', c: 'var(--filtro-0)', w: '70%', fatte: '7 h', ob: '10 h' }, { l: 'OIII', c: 'var(--filtro-1)', w: '55%', fatte: '5 h 30', ob: '10 h' }],
+      nota: p.nota || '', colonna: p.colonna };
+  }
+}
+</script>
+</body>
+</html>

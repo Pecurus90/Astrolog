@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}@keyframes alSpin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){[style*="alSpin"]{animation:none!important}}@keyframes alPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.92)}}@keyframes alHalo{0%{box-shadow:0 0 0 0 var(--h)}100%{box-shadow:0 0 0 10px transparent}}@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style></helmet>
+<div class="al-c-telaio__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ pronto }}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{ solo }}" hint-placeholder-val="{{ false }}">{{ contenuto }}</sc-if>
+<sc-if value="{{ desk }}" hint-placeholder-val="{{ true }}"><div class="al-c-telaio__blocco-2" ref="{{ rif }}" data-screen-label="{{ etichetta }}" style="min-height:{{ minH }};background:{{ pageBg }};padding:{{ pagePad }};min-width:{{ minW }};height:{{ pn.h }};overflow:{{ pn.o }}">
+<div class="al-c-telaio__colonna-1" style="max-width:{{ pn.mw }};border-radius:{{ pn.r }};padding:{{ pn.pad }};gap:{{ pn.gap }};height:{{ pn.hc }};box-sizing:border-box">
+<header class="al-c-telaio__riga-1" style="height:{{ pn.hh }};box-sizing:border-box;flex:none">
+<div class="al-c-telaio__riga-2"><span class="al-c-telaio__tondo-1"><span class="al-c-telaio__tondo-2"></span></span>AstroLog</div>
+<nav class="al-c-telaio__riga-3" aria-label="Navigazione principale">
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="6"><a class="al-c-telaio__pillola-1" href="{{ n.href }}" aria-current="{{ n.cur }}" style="background:{{ n.bg }};color:{{ n.fg }};padding:{{ n.pad }};font-weight:{{ n.fw }}">{{ n.l }}</a></sc-for>
+<span class="al-c-telaio__riga-4" data-menu="1"><a class="al-c-telaio__riga-5" href="#" onClick="{{ m.altroToggle }}" aria-haspopup="menu" aria-expanded="{{ m.altro }}" style="color:{{ m.altroFg }};background:{{ m.altroBg }}">Altro<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ m.altroChev }}"></path></svg></a>
+<sc-if value="{{ m.altro }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Menu" tipo="altro" sito="{{ sito }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="260px,190px"></dc-import></sc-if></span>
+</nav>
+<div class="al-c-telaio__riga-6">
+<a class="al-c-telaio__riga-7" href="#">{{ sitoL }}</a>
+<sc-if value="{{ daConf }}" hint-placeholder-val="{{ true }}"><span class="al-c-telaio__blocco-3" data-menu="1"><a class="al-c-telaio__riga-8" href="#" onClick="{{ m.todoToggle }}" aria-haspopup="dialog" aria-expanded="{{ m.todo }}">Da confermare{{ badge }}</a>
+<sc-if value="{{ m.todo }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/DaConfermare" modo="{{ modo }}" accento="{{ accento }}" hint-size="320px,330px"></dc-import></sc-if></span></sc-if>
+<a class="al-c-telaio__riga-9" href="#" onClick="{{ m.cercaToggle }}" aria-haspopup="dialog" aria-expanded="{{ m.cerca }}" title="Cerca · Ctrl K" aria-label="Cerca oggetto, notte, attrezzatura, sito o pagina"><svg class="al-c-telaio__grafico-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"></path></svg>Cerca</a>
+<a class="al-c-telaio__tondo-3" href="#" onClick="{{ m.modeToggle }}" title="{{ m.modeL }}" aria-label="{{ m.modeL }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="{{ m.modeIcon }}"></path></svg></a>
+<span class="al-c-telaio__riga-10" data-menu="1"><a class="al-c-telaio__tondo-4" href="#" onClick="{{ m.impToggle }}" aria-haspopup="menu" aria-expanded="{{ m.imp }}" title="{{ scanL }}" aria-label="{{ scanL }}" style="background:{{ m.impBg }}"><svg class="al-c-telaio__grafico-1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"></path></svg>{{ scanSegno }}</a>
+<sc-if value="{{ m.imp }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Menu" tipo="impostazioni" scansione="{{ scan }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="290px,190px"></dc-import></sc-if></span>
+</div>
+</header>
+{{ contenuto }}
+</div>
+<sc-if value="{{ m.cerca }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Cerca" testo="{{ cercaQ }}" stato="{{ cercaStato }}" formato="desktop" statico="{{ false }}" on-chiudi="{{ m.cercaChiudi }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="0px,0px"></dc-import></sc-if>
+</div></sc-if>
+<sc-if value="{{ tel }}" hint-placeholder-val="{{ false }}"><div class="al-c-telaio__blocco-4" data-formato="telefono" ref="{{ rifA }}" style="display:{{ A.d }};min-height:{{ A.mh }};background:{{ A.bg }};padding:{{ A.pad }}"><div class="al-c-telaio__blocco-5" style="display:{{ A.id }};width:{{ A.w }};height:{{ A.h }};border-radius:{{ A.r }};box-shadow:{{ A.sh }};transform:{{ A.tf }};overflow:{{ A.oh }}"><div style="display:{{ A.id }};height:{{ A.ih }};overflow-y:{{ A.ov }}"><div class="al-c-telaio__colonna-2" ref="{{ rif }}" data-screen-label="{{ etichetta }}" style="min-height:{{ minH }}">
+<header class="al-c-telaio__riga-11">
+<span class="al-c-telaio__tondo-5" aria-label="AstroLog"><span class="al-c-telaio__tondo-6"></span></span>
+<a class="al-c-telaio__riga-12" href="#" aria-label="{{ titoloTel }} · sito {{ sitoL }}"><b style="font-size:17px;font-weight:600;line-height:1.1;color:var(--testo);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ titoloTel }}</b><span style="font-size:12px;line-height:1.2;color:var(--tenue);white-space:nowrap">{{ sitoL }}</span></a>
+<span class="al-c-telaio__blocco-6"></span>
+<sc-if value="{{ daConf }}" hint-placeholder-val="{{ true }}"><a class="al-c-telaio__riga-13" href="Da confermare.dc.html" aria-label="{{ todoAria }}"><svg class="al-c-telaio__grafico-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12l3 3 5-6"></path></svg>{{ badge }}</a></sc-if>
+<a class="al-c-telaio__tondo-7" href="#" onClick="{{ m.cercaToggle }}" aria-haspopup="dialog" aria-expanded="{{ m.cerca }}" aria-label="Cerca"><svg class="al-c-telaio__grafico-1" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4"></path></svg></a>
+</header>
+<main class="al-c-telaio__colonna-3">{{ contenuto }}</main>
+<sc-if value="{{ m.cerca }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Cerca" testo="{{ cercaQ }}" stato="{{ cercaStato }}" formato="telefono" statico="{{ false }}" on-chiudi="{{ m.cercaChiudi }}" modo="{{ modo }}" accento="{{ accento }}" hint-size="0px,0px"></dc-import></sc-if>
+<sc-if value="{{ m.altro }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/Menu" tipo="altro telefono" scansione="{{ scan }}" modo="{{ modo }}" accento="{{ accento }}" on-modo="{{ cambiaModo }}" hint-size="100%,370px"></dc-import></sc-if>
+
+<sc-if value="{{ vetro }}" hint-placeholder-val="{{ false }}"><div style="position:sticky;bottom:0;z-index:5;margin-top:auto;height:0;pointer-events:none">
+<sc-if value="{{ vb.acc }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:{{ vb.accL }};right:12px;bottom:28px;height:64px;box-sizing:border-box;border-radius:32px;display:flex;align-items:center;gap:8px;padding:0 8px 0 4px;color:var(--testo);background:color-mix(in srgb, var(--carta) 80%, transparent);backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);box-shadow:inset 0 0 0 1px var(--linea), 0 12px 30px rgba(0,0,0,.28);opacity:{{ vb.accOp }};pointer-events:{{ vb.accPe }};transform:translateX({{ vb.accX }});transition:opacity .3s, transform .45s var(--curva-entrata)">
+<a href="{{ vb.href }}" aria-label="{{ vb.aria }}" style="flex:1;min-width:0;height:56px;border-radius:28px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:0 12px;text-align:left;color:inherit;text-decoration:none"><span style="display:flex;align-items:baseline;gap:8px;max-width:100%;white-space:nowrap"><b style="font-size:17px;font-weight:500;line-height:1.1">{{ vb.t }}</b><span style="font-size:12px;font-weight:600;color:var(--testo);overflow:hidden;text-overflow:ellipsis">{{ vb.esito }}</span></span><span style="max-width:100%;font-size:11px;color:var(--tenue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ vb.r }}</span></a>
+<sc-if value="{{ vb.az }}" hint-placeholder-val="{{ false }}"><a href="{{ vb.az.href }}" onClick="{{ vb.az.on }}" aria-label="{{ vb.az.l }}" title="{{ vb.az.l }}" style="flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--scelta);color:var(--scelta-testo)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ vb.az.d }}"></path></svg></a></sc-if>
+</div></sc-if>
+<nav aria-label="Pagine dell'app" style="position:absolute;left:12px;bottom:28px;height:64px;width:{{ vb.tabW }};box-sizing:border-box;padding:5px;border-radius:32px;display:flex;justify-content:center;overflow:hidden;pointer-events:auto;background:color-mix(in srgb, var(--carta) 90%, transparent);backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);box-shadow:inset 0 0 0 1px var(--linea), 0 12px 30px rgba(0,0,0,.28);transition:width .5s var(--curva-entrata)">
+<sc-for list="{{ vb.tabs }}" as="b" hint-placeholder-count="5"><a href="{{ b.href }}" onClick="{{ b.on }}" aria-label="{{ b.aria }}" aria-current="{{ b.cur }}" aria-expanded="{{ b.esp }}" data-menu="{{ b.dm }}" style="flex:1 1 0;max-width:{{ b.mw }};min-width:0;opacity:{{ b.op }};height:54px;border-radius:27px;background:{{ b.bg }};color:{{ b.fg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:{{ b.pd }};overflow:hidden;text-decoration:none;transition:max-width .5s var(--curva-entrata), opacity .3s, background .3s"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ b.d }}"></path></svg><span style="font-size:10px;line-height:1;white-space:nowrap;max-height:{{ b.lh }};opacity:{{ b.lo }};transition:opacity .2s, max-height .3s">{{ b.l }}</span></a></sc-for>
+</nav>
+</div></sc-if>
+</div></div></div></div></sc-if>
+</sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:520},&quot;scansione&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ferma&quot;,&quot;in corso&quot;,&quot;interrotta&quot;,&quot;bloccata&quot;],&quot;default&quot;:&quot;ferma&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Telaio&quot;},&quot;formato&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;telefono&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Telaio&quot;},&quot;pagina&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Dashboard&quot;,&quot;Notti&quot;,&quot;Archivio&quot;,&quot;Progetti&quot;,&quot;Statistiche&quot;,&quot;Meteo&quot;],&quot;default&quot;:&quot;Dashboard&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Telaio&quot;},&quot;menu&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;nessuno&quot;,&quot;altro&quot;,&quot;impostazioni&quot;,&quot;da confermare&quot;,&quot;cerca&quot;],&quot;default&quot;:&quot;nessuno&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Telaio&quot;},&quot;sito&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Cima Ekar&quot;,&quot;tsType&quot;:&quot;string | null&quot;,&quot;section&quot;:&quot;Telaio&quot;},&quot;daConfermare&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Telaio&quot;},&quot;domande&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;min&quot;:0,&quot;max&quot;:200,&quot;default&quot;:4,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Telaio&quot;},&quot;cornice&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Telaio&quot;},&quot;altezza&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;etichetta&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;onModo&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(modo: string) =&gt; void&quot;},&quot;children&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;ReactNode&quot;},&quot;modo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scuro&quot;,&quot;chiaro&quot;],&quot;default&quot;:&quot;scuro&quot;,&quot;tsType&quot;:&quot;'scuro' | 'chiaro'&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;accento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;originale&quot;,&quot;ambra · blu notte&quot;,&quot;turchese · petrolio&quot;,&quot;corallo · terracotta&quot;,&quot;ghiaccio · indaco&quot;],&quot;default&quot;:&quot;ambra · blu notte&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tema&quot;},&quot;pieno&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Telaio&quot;}}">
+class Component extends DCLogic {
+  state = { menu: undefined, modo: null };
+  rif = el => { this._root = el; };
+  componentDidMount() {
+    this._prevMenu = this.cur();
+    this._down = ev => { if (!this.cur()) return; if (ev.target.closest && ev.target.closest('[data-menu]')) return; this.setState({ menu: null }); };
+    this._key = ev => {
+      if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'k' || ev.key === 'K')) { ev.preventDefault(); this.setState({ menu: 'cerca' }); return; }
+      if (!this.cur() || !this._root) return;
+      if (this.cur() === 'cerca') return;
+      if (ev.key === 'Escape') { const host = document.activeElement && document.activeElement.closest('[data-menu]'); this.setState({ menu: null }, () => { const b = host && host.querySelector('a'); b && b.focus(); }); return; }
+      if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { const m = this._root.querySelector('[role=menu]'); if (!m) return; const it = [...m.querySelectorAll('[role=menuitem]')]; const i = it.indexOf(document.activeElement); const n = ev.key === 'ArrowDown' ? (i + 1) % it.length : (i - 1 + it.length) % it.length; it[n] && it[n].focus(); ev.preventDefault(); }
+    };
+    document.addEventListener('mousedown', this._down); document.addEventListener('keydown', this._key);
+    // Vetro (v50): mentre si scorre resta solo la bolla; il vetro ricompare quando ci si ferma
+    this._sc = () => { if (!this._vetroOn) return; if (!this.state.vScorre) this.setState({ vScorre: true, vTabs: false }); clearTimeout(this._scT); this._scT = setTimeout(() => this.setState({ vScorre: false }), 450); }; window.addEventListener('scroll', this._sc, true);
+  }
+  componentWillUnmount() { window.removeEventListener('scroll', this._sc, true); clearTimeout(this._scT); this._rz && window.removeEventListener('resize', this._rz); this._alw && clearInterval(this._alw); document.removeEventListener('mousedown', this._down); document.removeEventListener('keydown', this._key); }
+  componentDidUpdate(pp, ps) {
+    const now = this.cur();
+    if ((now === 'altro' || now === 'imp') && this._prevMenu !== now) { let n = 0; const go = () => { const m = this._root && this._root.querySelector('[role=menu]'); const f = m && m.querySelector('[role=menuitem]'); if (f) f.focus({ preventScroll: true }); else if (n++ < 30) requestAnimationFrame(go); }; requestAnimationFrame(go); }
+    this._prevMenu = now;
+  }
+  // Menu aperto: dallo stato; all'inizio dal parametro (per le tavole).
+  cur() { if (this.state.menu !== undefined) return this.state.menu; const M = { altro: 'altro', impostazioni: 'imp', 'da confermare': 'todo', cerca: 'cerca' }; return M[this.props.menu] || null; }
+  alPronto() { const ok = () => window.AL && window.ALsoglie && window.ALcat && window.ALdati; if (ok()) return true;
+    const b = /\/componenti\/[^/]*$/.test(location.pathname) ? './' : './componenti/';
+    ['tema.js', 'soglie.js', 'catalogo.js', 'dati.js'].forEach(f => { if (!document.querySelector('script[data-al="' + f + '"]')) { const s = document.createElement('script'); s.src = b + f; s.setAttribute('data-al', f); document.head.appendChild(s); } });
+    if (!this._alw) this._alw = setInterval(() => { if (ok()) { clearInterval(this._alw); this._alw = null; this.forceUpdate(); } }, 25);
+    return false; }
+  // Formato telefono in una finestra larga: il telefono si mostra come anteprima, largo 390 e alto 844, al centro
+  rifA = el => { this._a = el; if (!el) return; setTimeout(() => this.misura(), 0); if (!this._rz) { this._rz = () => this.misura(); window.addEventListener('resize', this._rz); } };
+  misura() { let e = this._a && this._a.parentElement; while (e && !e.getBoundingClientRect().width) e = e.parentElement; const w = e ? e.getBoundingClientRect().width : 0, on = w > 640;
+    if (on !== !!this.state.anteprima) this.setState({ anteprima: on }); }
+  renderVals() {
+    if (!this.alPronto()) return { pronto: false };
+    const ce = React.createElement, p = this.props;
+    const modo = p.onModo ? (p.modo || 'scuro') : (this.state.modo || p.modo || 'scuro'), dk = modo === 'scuro', accento = p.accento;
+    const t = AL.tema(modo, accento), tel = p.formato === 'telefono', cornice = p.cornice !== false;
+    const pagina = p.pagina || 'Dashboard', mn = this.cur();
+    const cambiaModo = m => { if (p.onModo) p.onModo(m); else this.setState({ modo: m }); };
+    const toggle = id => e => { e && e.preventDefault(); this.setState({ menu: this.cur() === id ? null : id }); };
+    const m = { cerca: mn === 'cerca', cercaToggle: toggle('cerca'), cercaChiudi: () => this.setState({ menu: null }), altro: mn === 'altro', imp: mn === 'imp', todo: mn === 'todo', altroToggle: toggle('altro'), impToggle: toggle('imp'), todoToggle: toggle('todo'),
+      altroBg: mn === 'altro' ? t.card2 : 'transparent', altroFg: mn === 'altro' ? t.text : t.muted, altroChev: mn === 'altro' ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6', impBg: mn === 'imp' ? t.card2 : t.card,
+      modeL: dk ? 'Passa al modo chiaro' : 'Passa al modo scuro',
+      modeIcon: dk ? 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4' : 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
+      modeToggle: e => { e.preventDefault(); cambiaModo(dk ? 'chiaro' : 'scuro'); } };
+    const HREF = { Dashboard: 'Dashboard.dc.html', Notti: 'Notti.dc.html', Archivio: 'Archivio.dc.html', Progetti: 'Progetti.dc.html', Statistiche: 'Statistiche.dc.html', Meteo: 'Meteo.dc.html' };
+    const nav = ['Dashboard', 'Notti', 'Archivio', 'Progetti', 'Statistiche', 'Meteo'].map(l => { const on = l === pagina;
+      return { l, href: on ? '#' : (HREF[l] || '#'), cur: on ? 'page' : undefined, bg: on ? t.navOn : 'transparent', fg: on ? t.navOnFg : t.muted, pad: on ? '9px 18px' : '9px 11px', fw: on ? 500 : 400 }; });
+    const NI = { dash: 'M4 4h7v9H4zM13 4h7v5h-7zM13 11h7v9h-7zM4 15h7v5H4z', notti: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z', arch: 'M4 5h16v4H4zM5 9v10h14V9M10 13h4', met: 'M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6 11a3.5 3.5 0 0 0 1 7z', altro: 'M5 12h.01M12 12h.01M19 12h.01' };
+    const navTel = [['Dashboard', NI.dash], ['Notti', NI.notti], ['Archivio', NI.arch], ['Meteo', NI.met], ['Altro', NI.altro]].map(([l, d], i) => { const on = l === pagina, alt = i === 4 && mn === 'altro';
+      return { l, d, cur: on ? 'page' : undefined, dm: i === 4 ? '1' : undefined, bg: 'transparent', fg: on || alt ? t.text : t.muted, fw: on ? 600 : 500, ib: on ? t.hPill : alt ? t.card2 : 'transparent', ifg: on ? t.hPillFg : 'currentColor', href: i === 4 || on ? '#' : HREF[l], on: i === 4 ? toggle('altro') : on ? (e => e.preventDefault()) : undefined }; });
+    const badge = ce('span', { style: { position: 'relative', display: 'inline-grid', placeItems: 'center' } },
+      ce('span', { style: { position: 'absolute', inset: 0, borderRadius: 999, '--h': t.todoBg, animation: 'alHalo 1.6s ease-out infinite' } }),
+      ce('span', { style: { position: 'relative', background: t.todoBg, color: t.todoFg, borderRadius: 999, padding: '1px 8px', fontWeight: 600, fontSize: 13, animation: 'alPulse 1.6s ease-in-out infinite' } }, String(p.domande ?? 4)));
+    // Scansione al lavoro: anello che gira sull'ingranaggio (e su Altro sul telefono); interrotta o bloccata: "!" ambra
+    const scan = p.scansione || 'ferma', scanOn = scan === 'in corso', scanNo = scan === 'interrotta' || scan === 'bloccata';
+    const segno = (dx, dy) => scanOn ? ce('span', { 'aria-hidden': true, style: { position: 'absolute', inset: dy, borderRadius: '50%', border: '2px solid ' + t.accent, borderRightColor: 'transparent', borderBottomColor: 'transparent', animation: 'alSpin 1.1s linear infinite' } })
+      : scanNo ? ce('span', { 'aria-hidden': true, style: { position: 'absolute', top: dx, right: dx, width: 16, height: 16, borderRadius: '50%', background: t.warn, color: t.warnFg, fontSize: 11, fontWeight: 700, display: 'grid', placeItems: 'center', boxShadow: '0 0 0 2px ' + t.frame } }, '!') : null;
+    const scanL = 'Impostazioni' + (scanOn ? ' · scansione in corso' : scan === 'interrotta' ? ' · scansione interrotta' : scan === 'bloccata' ? ' · scansione bloccata' : '');
+    navTel.forEach((n, i) => { if (i === 4) { n.segno = segno('4px', '6px 50% auto auto'); n.aria = scanOn || scanNo ? 'Altro · ' + scanL.split(' · ')[1] : 'Altro'; } else { n.segno = null; n.aria = n.l; } });
+    if (scanOn || scanNo) navTel[4].segno = ce('span', { 'aria-hidden': true, style: scanOn ? { position: 'absolute', top: 6, left: 'calc(50% + 5px)', width: 12, height: 12, borderRadius: '50%', border: '2px solid ' + t.accent, borderRightColor: 'transparent', boxSizing: 'border-box', animation: 'alSpin 1.1s linear infinite' }
+      : { position: 'absolute', top: 4, left: 'calc(50% + 5px)', width: 16, height: 16, borderRadius: '50%', background: t.warn, color: t.warnFg, fontSize: 11, fontWeight: 700, display: 'grid', placeItems: 'center', boxShadow: '0 0 0 2px ' + t.card } }, scanOn ? null : '!');
+    const sito = p.sito === undefined ? 'Cima Ekar' : p.sito;
+    const solo = !!p.solo;
+    const an = tel && !!this.state.anteprima && p.anteprima !== false;
+    const A = an ? { d: 'flex', mh: '100vh', bg: t.page, pad: '32px 16px', id: 'block', w: '390px', h: '844px', ov: 'auto', r: '44px', sh: '0 0 0 10px ' + AL.CORNICE_TEL + ', 0 24px 60px rgba(0,0,0,.35)', tf: 'translateZ(0)', oh: 'hidden', ih: '100%' } : { d: 'contents', mh: '0', bg: 'transparent', pad: '0', id: 'contents', w: 'auto', h: 'auto', ov: 'visible', r: '0', sh: 'none', tf: 'none', oh: 'visible', ih: 'auto' };
+    // Pieno (Planner, fase di Aladin): la pagina a tutto schermo, senza margini; la barra in alto resta quella di sempre
+    const pieno = !tel && !!p.pieno, pn = pieno ? { h: 'var(--al-vh, 100vh)', o: 'hidden', mw: 'none', r: '0', pad: '0 16px 16px', gap: '0', hc: '100%', hh: '64px' } : { h: 'auto', o: 'visible', mw: '1360px', r: '36px', pad: '24px', gap: '16px', hc: 'auto', hh: 'auto' };
+    // Barra di vetro (v50, prova): come nel Planner sul telefono. La bolla e' la pagina; toccata apre le cinque voci. Accanto la cosa piu' importante della pagina e un'azione. Dati simulati.
+    // v53: la bolla di vetro e' l'unica barra del telefono (la barra a cinque icone e' uscita)
+    const vetro = tel;
+    let vb = null;
+    if (vetro) { const ap = !!this.state.vTabs, cerca = e => { e && e.preventDefault(); this.setState({ menu: 'cerca', vTabs: false }); };
+      const FR = 'M7 17L17 7M9 7h8v8', CE = 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-3.5-3.5', PIU = 'M12 5v14M5 12h14';
+      // Il vetro c'e' solo dove aggiunge qualcosa che la pagina non ha (Marco, v50): altrimenti resta la bolla
+      const CON = []; // Marco (v50, giro 4): niente vetro accanto alla bolla; gli avvisi (è stagione) andranno nelle notifiche dell'app
+      const VB = { Dashboard: { t: 'IC 1396', esito: '✓ è stagione', r: 'il prossimo progetto · 14 h 20 di 20 h · priorità alta', href: 'Progetti.dc.html', aria: 'È stagione per IC 1396: apri Progetti', az: { l: 'Apri Progetti', d: FR, href: 'Progetti.dc.html' } },
+        Notti: { t: '212 notti', esito: '', r: '486 ore · 18 430 frame · tutto l\u0027archivio', href: '#', aria: '212 notti, 486 ore', az: { l: 'Cerca una notte', d: CE, href: '#', on: cerca } },
+        Archivio: { t: '240 oggetti', esito: '', r: '486 ore integrate · 3 mosaici', href: '#', aria: '240 oggetti, 486 ore', az: { l: 'Cerca un oggetto', d: CE, href: '#', on: cerca } },
+        Meteo: { t: 'Il piano', esito: '3 oggetti', r: 'NGC 7000, IC 1396, M 31 · 9 ore', href: 'Piano della notte.dc.html', aria: 'Il piano di stanotte, 3 oggetti: apri il Piano della notte', az: { l: 'Apri il Piano della notte', d: FR, href: 'Piano della notte.dc.html' } },
+        Progetti: { t: 'Nuovo progetto', esito: '', r: 'si inquadra nel Planner, si salva qui', href: 'Planner.dc.html', aria: 'Nuovo progetto: apri il Planner', az: { l: 'Nuovo progetto nel Planner', d: PIU, href: 'Planner.dc.html' } },
+        Statistiche: { t: 'Sei anni', esito: '', r: 'Cima Ekar, Casa, Passo Coe', href: '#', aria: 'Statistiche, sei anni', az: null },
+        'Piano della notte': { t: '9 ore', esito: '✓ notte buona', r: 'il piano di stanotte a Cima Ekar', href: 'Meteo.dc.html', aria: 'Piano della notte, 9 ore: apri il Meteo', az: { l: 'Apri il Meteo', d: FR, href: 'Meteo.dc.html' } },
+        'Selezione dei frame': { t: 'Da scartare', esito: '', r: 'sul telefono si guarda; si sposta dal computer', href: '#', aria: 'Selezione dei frame', az: null },
+        Attrezzatura: { t: '5 setup', esito: '', r: 'ottiche, camere, filtri', href: '#', aria: 'Attrezzatura, 5 setup', az: { l: 'Aggiungi strumento', d: PIU, href: '#' } },
+        'Da confermare': { t: (p.domande ?? 4) + ' domande', esito: '! da confermare', r: 'la scansione chiede una risposta', href: '#', aria: (p.domande ?? 4) + ' domande da confermare', az: null },
+        Planner: { t: 'Cielo', esito: '', r: 'trova un oggetto e fanne un progetto', href: '#', aria: 'Planner, il cielo', az: { l: 'Cerca un oggetto', d: CE, href: '#', on: cerca } },
+        Impostazioni: { t: 'Impostazioni', esito: '', r: 'siti, cartelle, meteo, soglie', href: '#', aria: 'Impostazioni', az: null } };
+      const v0 = { t: pagina, esito: '', r: '', href: '#', aria: pagina, az: null, ...(VB[pagina] || {}), ...(p.vetro || {}) };
+      const NV = { Dashboard: NI.dash, Notti: NI.notti, Archivio: NI.arch, Meteo: NI.met, Altro: NI.altro, Progetti: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', Statistiche: 'M5 20V11M12 20V5M19 20v-6', 'Piano della notte': 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5zM14 3h5M16.5 3v4', 'Selezione dei frame': 'M4 5h16l-6 8v6l-4-2v-4z', Planner: 'M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z', Attrezzatura: 'M4 15l11-6 2 4-11 6zM9 17l-2 4M11 16l2 5', 'Da confermare': 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12l3 3 5-6', Impostazioni: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1' };
+      const cinque = ['Dashboard', 'Notti', 'Archivio', 'Meteo', 'Altro'], fuori = !cinque.includes(pagina) && !!NV[pagina], cur = fuori ? pagina : (NV[pagina] ? pagina : 'Altro');
+      const tabs = (fuori ? [pagina, ...cinque] : cinque).map(l => { const on = l === cur, via = !ap && !on, alt = l === 'Altro', tolta = fuori && l === pagina && ap;
+        if (tolta) return { l, d: NV[l], mw: '0px', pd: '0', op: 0, lh: '0px', lo: 0, bg: 'transparent', fg: 'var(--testo)', href: '#', aria: l, on: e => e.preventDefault() };
+        return { l, d: NV[l], cur: on && l === pagina ? 'page' : undefined, esp: on && !ap ? 'false' : undefined, dm: alt ? '1' : undefined, aria: on && !ap ? pagina + ': mostra le pagine dell\u0027app' : l, mw: via ? '0px' : '90px', pd: via ? '0' : '0 4px', op: via ? 0 : 1, lh: ap ? '12px' : '0px', lo: ap ? 1 : 0,
+          bg: ap && (on || (fuori && alt)) ? 'var(--carta-2)' : 'transparent', fg: on || (fuori && ap && alt) ? 'var(--accento)' : 'var(--testo)', href: on || alt || !HREF[l] ? '#' : HREF[l],
+          on: on && !ap ? (e => { e.preventDefault(); this.setState({ vTabs: true, menu: null }); }) : on ? (e => { e.preventDefault(); this.setState({ vTabs: false }); }) : alt ? (e => { e.preventDefault(); this.setState({ menu: this.cur() === 'altro' ? null : 'altro' }); }) : undefined }; });
+      const sc = !!this.state.vScorre && !ap; this._vetroOn = true;
+      vb = { ...v0, acc: CON.includes(pagina) || !!p.vetro, az: v0.az, tabs, tabW: ap ? 'calc(100% - 24px)' : '64px', accL: '88px', accOp: ap || sc ? 0 : 1, accPe: ap || sc ? 'none' : 'auto', accX: ap || sc ? '40px' : '0px' }; } else this._vetroOn = false;
+    const titoloTel = ({ 'Selezione dei frame': 'Selezione', 'Misure dei frame': 'Misure', 'Piano della notte': 'Piano della notte' })[pagina] || pagina;
+    return { A, pn, titoloTel, vetro, vetroNo: !vetro, vb, rifA: this.rifA, pronto: true, t, modo, accento, solo, scan, scanL, scanSegno: segno('-3px', '-3px'), desk: !tel && !solo, tel: tel && !solo, m, nav, navTel, badge, cambiaModo, rif: this.rif, contenuto: p.children ?? '', cercaQ: p.cerca ?? '', cercaStato: p.cercaStato || 'normale',
+      etichetta: p.etichetta, sito: sito || '', sitoL: sito ? sito + ' ▾' : 'Aggiungi sito', daConf: p.daConfermare !== false && pagina !== 'Da confermare', todoAria: (p.domande ?? 4) + ' da confermare',
+      minH: tel ? (an ? '844px' : (p.altezza || '100%')) : (cornice || pieno ? '100vh' : 'auto'), pageBg: pieno ? 'var(--telaio)' : cornice ? t.page : 'transparent', pagePad: cornice && !pieno ? '40px' : '0', minW: cornice && !pieno ? '1440px' : '0' };
+  }
+}
+</script>
+</body>
+</html>

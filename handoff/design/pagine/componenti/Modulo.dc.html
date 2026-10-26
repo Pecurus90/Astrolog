@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>[data-sc-name^="componenti/"]{display:contents}@keyframes alSpin{to{transform:rotate(360deg)}}</style></helmet>
+<div class="al-c-modulo__blocco-1" data-modo="{{ t.modo }}" data-accento="{{ t.acc }}">
+<sc-if value="{{ m }}" hint-placeholder-val="{{ false }}"><section class="al-c-modulo__colonna-1" role="group" aria-label="{{ m.al }}" style="background:{{ m.bg }};border-radius:{{ m.rad }};padding:{{ m.pad }};box-shadow:{{ m.sh }};color-scheme:{{ m.cs }}">
+<div class="al-c-modulo__riga-1">
+
+<sc-if value="{{ m.disco }}" hint-placeholder-val="{{ false }}"><span class="al-c-modulo__centro-1" aria-hidden="true" style="background:{{ m.sub }}"><span class="al-c-modulo__tondo-1" style="background:{{ m.disco.bg }};border:{{ m.disco.bd }}"></span></span></sc-if>
+<h2 class="al-c-modulo__blocco-2" style="font-size:{{ m.hfs }}">{{ m.titolo }}</h2>
+</div>
+<sc-if value="{{ m.tipi }}" hint-placeholder-val="{{ false }}"><div class="al-c-modulo__colonna-2"><span class="al-c-modulo__testo-1" id="mod-tipo">Tipo</span><div class="al-c-modulo__centro-2" role="radiogroup" aria-labelledby="mod-tipo" style="grid-template-columns:{{ m.tipiCols }}"><sc-for list="{{ m.tipi }}" as="x" hint-placeholder-count="10"><a class="al-c-modulo__colonna-3" href="#" role="radio" aria-checked="false" onClick="{{ x.on }}" style="background:{{ m.sub }}"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="{{ x.ic }}"></path></svg><span class="al-c-modulo__testo-2">{{ x.l }}</span></a></sc-for></div></div></sc-if>
+<sc-if value="{{ m.tipo }}" hint-placeholder-val="{{ false }}"><div class="al-c-modulo__riga-2" style="background:{{ m.sub }}"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="{{ m.tipo.ic }}"></path></svg><span class="al-c-modulo__blocco-3">Tipo: <b class="al-c-modulo__testo-3">{{ m.tipo.l }}</b></span><a href="#" role="button" onClick="{{ m.tipo.cambia }}" class="al-bottone al-bottone--contorno" style="min-height:{{ m.hit }}">Cambia</a></div></sc-if>
+<sc-if value="{{ m.blocchi }}" hint-placeholder-val="{{ true }}"><div class="al-c-modulo__centro-3" style="grid-template-columns:{{ m.bCols }}"><sc-for list="{{ m.blocchi }}" as="b" hint-placeholder-count="2"><section class="al-c-modulo__colonna-4" style="grid-column:{{ b.col }};background:{{ b.bg }};padding:{{ b.pad }}">
+<sc-if value="{{ b.hasT }}" hint-placeholder-val="{{ true }}"><h3 class="al-c-modulo__testo-4"><button class="al-c-modulo__riga-3" type="button" aria-expanded="{{ b.exp }}" onClick="{{ b.toggle }}" disabled="{{ b.fisso }}" style="min-height:{{ m.hit }};cursor:{{ b.cur }}"><span class="al-c-modulo__riga-4"><span class="al-c-modulo__testo-5">{{ b.titolo }}</span><span class="al-c-modulo__testo-6">{{ b.riass }}</span></span><sc-if value="{{ b.chev }}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ b.chev }}"></path></svg></sc-if></button></h3></sc-if>
+<sc-if value="{{ b.aperto }}" hint-placeholder-val="{{ true }}"><div class="al-c-modulo__griglia-1"><sc-for list="{{ b.campi }}" as="f" hint-placeholder-count="3"><div class="al-c-modulo__colonna-5" style="grid-column:{{ f.col }}">
+<sc-if value="{{ f.lab }}" hint-placeholder-val="{{ true }}"><span class="al-c-modulo__riga-5"><label class="al-c-modulo__testo-1" for="{{ f.id }}" id="{{ f.lid }}">{{ f.lab }}</label><sc-if value="{{ f.orig }}" hint-placeholder-val="{{ false }}"><span class="al-c-modulo__pillola-1">{{ f.orig }}</span></sc-if></span></sc-if>
+<sc-if value="{{ f.testo }}" hint-placeholder-val="{{ true }}"><input id="{{ f.id }}" value="{{ f.v }}" onChange="{{ f.on }}" autocomplete="off" spellcheck="false" class="al-campo al-campo--vuoto al-campo--piena"></sc-if>
+<sc-if value="{{ f.tendina }}" hint-placeholder-val="{{ false }}"><div class="al-c-modulo__blocco-4"><select id="{{ f.id }}" value="{{ f.v }}" onChange="{{ f.on }}" class="al-tendina al-tendina--vuoto al-tendina--freccia al-campo--piena">{{ f.opts }}</select><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="al-tendina__freccia"><path d="M6 9l6 6 6-6"></path></svg></div></sc-if>
+<sc-if value="{{ f.pillole }}" hint-placeholder-val="{{ false }}"><dc-import name="componenti/PillolaScelta" forma="risposta" fondo="vuoto" opzioni="{{ f.pillole }}" etichetta="{{ f.lab }}" formato="{{ m.formato }}" modo="{{ m.modo }}" accento="{{ m.accento }}" hint-size="100%,44px"></dc-import></sc-if>
+<sc-if value="{{ f.calc }}" hint-placeholder-val="{{ false }}"><output class="al-c-modulo__riga-6" id="{{ f.id }}" style="font-size:{{ f.calc.fs }};color:{{ f.calc.c }};text-decoration:{{ f.calc.td }}">{{ f.calc.v }}</output></sc-if>
+<sc-if value="{{ f.azione }}" hint-placeholder-val="{{ false }}"><a href="#" role="button" onClick="{{ f.azione.on }}" class="al-bottone al-bottone--contorno al-c-modulo__blocco-5" style="min-height:{{ m.hit }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v12M6 12h12"></path></svg>{{ f.azione.l }}</a></sc-if>
+</div></sc-for></div></sc-if>
+</section></sc-for></div></sc-if>
+<sc-for list="{{ m.righe }}" as="r" hint-placeholder-count="0"><div class="al-c-modulo__riga-7"><span class="al-c-modulo__tondo-2" aria-hidden="true" style="background:{{ r.bg }};color:{{ r.fg }};border:{{ r.bd }}">{{ r.s }}</span><span class="al-c-modulo__blocco-6">{{ r.l }}</span></div></sc-for>
+<sc-if value="{{ m.errore }}" hint-placeholder-val="{{ false }}"><div class="al-c-modulo__riga-8" role="alert"><span class="al-c-modulo__tondo-3" aria-hidden="true">!</span><span class="al-c-modulo__blocco-6">{{ m.errore }}</span></div></sc-if>
+<div class="al-c-modulo__riga-9" style="position:{{ m.gPos }};background:{{ m.gBg }};padding:{{ m.gPad }};margin:{{ m.gMar }};box-shadow:{{ m.gSh }}">
+<sc-if value="{{ m.salva }}" hint-placeholder-val="{{ true }}"><a href="#" role="button" aria-disabled="{{ m.salva.dis }}" aria-busy="{{ m.salva.busy }}" onClick="{{ m.salva.on }}" class="al-bottone al-bottone--pieno" style="opacity:{{ m.salva.op }}"><sc-if value="{{ m.salva.busy }}" hint-placeholder-val="{{ false }}"><span class="al-c-modulo__tondo-4" aria-hidden="true"></span></sc-if>{{ m.salva.l }}</a></sc-if>
+<a href="#" role="button" onClick="{{ m.annulla }}" class="al-bottone al-bottone--contorno">Annulla</a>
+<sc-if value="{{ m.perche }}" hint-placeholder-val="{{ false }}"><span class="al-c-modulo__blocco-7" aria-live="polite">{{ m.perche }}</span></sc-if>
+</div>
+</section></sc-if></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:500},&quot;m&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;t&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;}}"></script>
+</body>
+</html>
