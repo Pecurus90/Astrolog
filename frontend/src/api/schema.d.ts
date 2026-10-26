@@ -715,7 +715,8 @@ export interface paths {
         /**
          * Stop
          * @description Asks for the Stop and returns the worker snapshot. Cooperative: the worker stops within the
-         *     item in progress, with the transaction closed. Always 200, even with nothing running.
+         *     item in progress, with the transaction closed. Always 200, even with nothing running. The new
+         *     pipeline behind the scenes stops too: its ASTAP killed.
          */
         post: operations["stop"];
         delete?: never;
