@@ -50,8 +50,9 @@ jobs:
             done
           fi
           set -f
-          # A runner lost at 3 h saves nothing: stopped earlier, mutmut keeps each verdict it has.
-          timeout -k 5m -s INT 160m mutmut run --max-children 4 $patterns || [ $? -eq 124 ]
+          # A runner lost saves nothing (rest: at 3 h, then shut down at 2 h 30): stopped earlier,
+          # mutmut keeps each verdict it has and the next night goes on.
+          timeout -k 5m -s INT 120m mutmut run --max-children 4 $patterns || [ $? -eq 124 ]
       - uses: actions/cache/save@v6
         if: always()
         with:
