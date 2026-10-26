@@ -32,11 +32,12 @@ def _behind(db_path, tmp_path):
 def test_behind_runs_on_its_own_thread_and_folders_kicked_meanwhile_wait(
     conn, db_path, tmp_path, monkeypatch
 ):
-    gate, seen = threading.Event(), []
+    gate, entered, seen = threading.Event(), threading.Event(), []
     real = run_module.run_roots
 
     def slow(conn_, paths, *rest):
         seen.append(list(paths))
+        entered.set()
         gate.wait(10.0)
         yield from real(conn_, paths, *rest)
 
@@ -45,6 +46,7 @@ def test_behind_runs_on_its_own_thread_and_folders_kicked_meanwhile_wait(
         nina_light(tmp_path / name / "x.fits", ord(name))
     behind = _behind(db_path, tmp_path)
     behind.kick([str(tmp_path / "a")])
+    assert entered.wait(10.0)  # the first round has taken `a`: the next kick waits its turn
     behind.kick([str(tmp_path / "b"), str(tmp_path / "a")])
     gate.set()
     behind.join(10.0)
