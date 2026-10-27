@@ -255,6 +255,18 @@ def test_the_nas_folder_is_chosen_from_a_list(tmp_path, db_path):
         assert fuori.json()["detail"]["code"] == "path_outside_data_root"
 
 
+def test_the_nas_data_root_comes_from_the_environment(tmp_path, db_path, monkeypatch):
+    """Il container dichiara la radice in ASTROLOG_DATA_ROOT: l'app la prende da li', senza
+    che chi la avvia la passi."""
+    radice = tmp_path / "library"
+    radice.mkdir()
+    monkeypatch.setenv("ASTROLOG_DATA_ROOT", str(radice))
+    with TestClient(create_app(db_path), base_url="http://localhost") as c:
+        r = c.get("/api/v1/folders/browse")
+    assert r.status_code == 200, r.text
+    assert r.json()["path"] == os.path.realpath(radice)
+
+
 def test_without_a_data_root_there_is_no_list(client_vuoto):
     """Sul desktop non c'e' una radice dei dati: la cartella si sceglie dal sistema, e l'app non
     elenca le cartelle della macchina a chi glielo chiede."""

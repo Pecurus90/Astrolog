@@ -359,3 +359,36 @@ def test_a_locked_database_skips_one_weather_round_not_all(db_path, monkeypatch)
     finally:
         stop.set()
         filo.join(timeout=5)
+
+
+def giro_senza_servizi(monkeypatch):
+    """Il giro meteo coi passi che chiedono fuori fermi: torna i siti per cui ha chiesto la
+    previsione."""
+    import astrolog.api.app as app_mod
+
+    chieste = []
+    monkeypatch.setattr(app_mod.climate, "step", lambda conn, site: None)
+    monkeypatch.setattr(app_mod.moon_calendar, "step", lambda conn, site, night: False)
+    monkeypatch.setattr(app_mod.history, "step", lambda conn: None)
+    monkeypatch.setattr(
+        app_mod.rounds, "refresh", lambda conn, site: chieste.append(site["id"]) or "ok"
+    )
+    return app_mod._weather_round, chieste
+
+
+def test_a_round_without_a_home_site_asks_nothing_and_falls_nowhere(db_path, monkeypatch, caplog):
+    giro, chieste = giro_senza_servizi(monkeypatch)
+    giro(str(db_path), forecast.Cadence(3600))
+    assert chieste == []
+    assert [r.getMessage() for r in caplog.records if r.levelname == "ERROR"] == []
+
+
+def test_the_forecast_waits_its_cadence_from_one_round_to_the_next(db_path, monkeypatch, caplog):
+    """Il giro passa ogni minuto, la previsione si chiede una volta per cadenza."""
+    metti_casa(db_path)
+    giro, chieste = giro_senza_servizi(monkeypatch)
+    cadenza = forecast.Cadence(3600)
+    giro(str(db_path), cadenza)
+    giro(str(db_path), cadenza)
+    assert chieste == [1]
+    assert [r.getMessage() for r in caplog.records if r.levelname == "ERROR"] == []

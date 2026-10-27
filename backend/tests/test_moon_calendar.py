@@ -11,6 +11,7 @@ from astrolog.db import config
 from astrolog.db.connect import connect
 from astrolog.spine import moon_calendar
 from astrolog.spine.group_store import home_site
+from astrolog.weather import forecast
 from group_bench import ROMA, luogo, prepara
 
 OGGI = dt.date(2026, 10, 16)
@@ -44,6 +45,20 @@ def test_the_round_writes_this_month_and_the_next(conn):
         "2026-11-30",
         61,
     )
+
+
+def test_the_weather_round_writes_the_calendar_of_tonight_at_the_site(db_path, conn, monkeypatch):
+    """Il giro di sottofondo lo scrive per la notte del sito: alle 12:30 di Roma del 1 novembre e'
+    gia' la notte del 1, in UTC ancora quella del 31 ottobre."""
+    import astrolog.api.app as app_mod
+
+    monkeypatch.setattr(app_mod, "now_iso", lambda: "2026-11-01T11:30:00Z")
+    monkeypatch.setattr(app_mod.climate, "step", lambda conn, site: None)
+    monkeypatch.setattr(app_mod.rounds, "refresh", lambda conn, site: "ok")
+    monkeypatch.setattr(app_mod.history, "step", lambda conn: None)
+    app_mod._weather_round(str(db_path), forecast.Cadence(3600))
+    giorni = righe(conn)  # da un'altra connessione: il giro l'ha salvato
+    assert (giorni[0]["night_date"], giorni[-1]["night_date"]) == ("2026-11-01", "2026-12-31")
 
 
 def test_a_second_round_with_nothing_changed_does_not_recompute(conn):
