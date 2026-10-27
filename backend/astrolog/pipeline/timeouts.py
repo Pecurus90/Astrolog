@@ -36,7 +36,7 @@ _FAILED_BLIND = (
 
 def t_quantile(p: float, df: int) -> float:
     """One-sided Student t quantile, by bisection on the exact CDF [C Abramowitz & Stegun 26.7.3-4,
-    p. 948]; no scipy in the backend."""
+    p. 948]."""
     return _t_quantile(p, df)
 
 

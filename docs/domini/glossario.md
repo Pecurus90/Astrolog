@@ -78,7 +78,10 @@ backfocus, setup, Deep sky.
 | un frame risolto nel cui campo il catalogo non ha nessun candidato: il cielo c'e', ma non dice cosa hai ripreso. Lo scrive `identify`, e resta quando il frame torna in coda | `empty_cone` | senza oggetti identificati | il cielo non ha trovato niente, vuoto, senza oggetto |
 | un frame che il solver non ha risolto | `unsolved` | non risolto | senza cielo, da risolvere, fallito |
 | quanto sono larghe le stelle in un frame, in pixel: il diametro che contiene meta' della loro luce, la misura del fuoco. La misura `measure` dai pixel (ADR 0022, 0033; [`misure.md`](misure.md)) | `hfd_px` | HFD | fuoco, nitidezza (la FWHM e' un'altra misura, la riga sotto) |
-| la larghezza a meta' altezza delle stelle, in pixel: una misura sua accanto all'HFD, uguale per una gaussiana (ADR 0022, 0037) | `fwhm_px` | FWHM | HFD (e' l'altra misura), larghezza, nitidezza |
+| la larghezza a meta' altezza delle stelle, in pixel: una misura sua accanto all'HFD, uguale per una gaussiana; dal fit di Moffat, media geometrica dei due assi (ADR 0022, 0037) | `fwhm_px` | FWHM | HFD (e' l'altra misura), larghezza, nitidezza |
+| quanto sono allungate le stelle: sqrt(1 - (b/a)^2), 0 tonde, verso 1 righe (ADR 0022) | `eccentricity` | eccentricita' | ellitticita' (e' 1 - b/a, un'altra), rotondita' |
+| dove punta l'asse lungo delle stelle, in gradi da 0 a 180 sui pixel; solo da eccentricita' 0,4 e se le stelle sono d'accordo (ADR 0022) | `angle_deg` | direzione dell'allungamento | angolo di posizione (e' sul cielo), rotazione |
+| come e' venuta la forma: dal fit, stimata dai momenti quando il fit non tiene, o non misurabile (ciambelle, righe) | `shape` | forma (stimata, non misurabile) | qualita', PSF |
 | l'identita' di una voce di catalogo, stabile fra due ricostruzioni (gli id invece si rinumerano) | `slug` | sigla-chiave | id, codice, chiave |
 | il numero che un oggetto porta dentro un catalogo (`224`); il catalogo sta accanto, in `catalog` | `designation` | designazione | numero, sigla |
 | catalogo e designazione insieme, come si scrivono (`NGC 224`) | `catalog` + `designation` | sigla | nome, designazione |

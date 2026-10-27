@@ -19,15 +19,17 @@ ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "backend" / "astrolog"
 BASELINE = Path(__file__).resolve().parent / "nomi_italiani.txt"
 
-# English words, acronyms and proper names that end in a vowel the rule would flag.
+# English words, acronyms, proper names and Greek letters ending in a vowel the rule would flag.
 ENGLISH = frozenset(
     [
         "a",
+        "alpha",
         "ap",
         "api",
         "ascii",
         "astro",
         "auto",
+        "beta",
         "camera",
         "criteria",
         "crota",
@@ -62,6 +64,7 @@ ENGLISH = frozenset(
         "sigma",
         "sii",
         "siioiii",
+        "theta",
         "to",
         "too",
         "tri",

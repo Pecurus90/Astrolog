@@ -12,6 +12,7 @@ from ..db.transaction import transaction
 from .debayer import pattern_of
 from .pixels import Pixels, Unmeasurable, Why, read_pixels
 from .scan import busy
+from .shape import Shape
 from .shots import first_per_shot
 from .stars import Measured, measure_frame
 
@@ -31,19 +32,24 @@ PENDING = (
 
 UPSERT = (
     "INSERT INTO pipeline_measures (frame_id, file_id, outcome, stars, kept, hfd_px,"
-    " background_adu, noise_adu, duration_s, measured_at)"
+    " background_adu, noise_adu, shape, shape_stars, fwhm_px, eccentricity, angle_deg,"
+    " duration_s, measured_at)"
     " VALUES (:frame_id, :file_id, :outcome, :stars, :kept, :hfd_px, :background_adu,"
-    " :noise_adu, :duration_s, :measured_at)"
+    " :noise_adu, :shape, :shape_stars, :fwhm_px, :eccentricity, :angle_deg,"
+    " :duration_s, :measured_at)"
     " ON CONFLICT (frame_id) DO UPDATE SET file_id = excluded.file_id,"
     " outcome = excluded.outcome, stars = excluded.stars, kept = excluded.kept,"
     " hfd_px = excluded.hfd_px, background_adu = excluded.background_adu,"
-    " noise_adu = excluded.noise_adu, duration_s = excluded.duration_s,"
-    " measured_at = excluded.measured_at"
+    " noise_adu = excluded.noise_adu, shape = excluded.shape,"
+    " shape_stars = excluded.shape_stars, fwhm_px = excluded.fwhm_px,"
+    " eccentricity = excluded.eccentricity, angle_deg = excluded.angle_deg,"
+    " duration_s = excluded.duration_s, measured_at = excluded.measured_at"
     " WHERE pipeline_measures.outcome = 'unreadable'"
 )
 
 
 _NUMBERS = ("stars", "kept", "hfd_px", "background_adu", "noise_adu")  # TooFewStars: no hfd_px
+_SHAPE = ("shape", "shape_stars", "fwhm_px", "eccentricity", "angle_deg")
 
 
 @dataclass
@@ -73,7 +79,7 @@ def measure_root(
 
 def _measure(conn: sqlite3.Connection, path: Path, row: sqlite3.Row, now: str) -> str:
     start = time.perf_counter()
-    values: dict[str, object] = {key: None for key in _NUMBERS}
+    values: dict[str, object] = {key: None for key in (*_NUMBERS, *_SHAPE)}
     pattern = pattern_of(dict(row))
     read = Unmeasurable(Why.NOT_SUPPORTED)  # a matrix not R G B (CYGM): no debayer for it
     if pattern is not None or not row["bayer"]:
@@ -82,6 +88,8 @@ def _measure(conn: sqlite3.Connection, path: Path, row: sqlite3.Row, now: str) -
         found = measure_frame(read.data, saturation=read.saturation, pattern=pattern)
         outcome = "measured" if isinstance(found, Measured) else "too_few_stars"
         values |= {key: getattr(found, key, None) for key in _NUMBERS}
+        if found.shape is not None:
+            values |= _shape_values(found.shape)
     else:
         outcome = read.why.value
     values |= {
@@ -91,3 +99,10 @@ def _measure(conn: sqlite3.Connection, path: Path, row: sqlite3.Row, now: str) -
     with transaction(conn, immediate=True):
         conn.execute(UPSERT, values)
     return outcome
+
+
+def _shape_values(shape: Shape) -> dict[str, object]:
+    return {
+        "shape": shape.kind.value, "shape_stars": shape.stars, "fwhm_px": shape.fwhm_px,
+        "eccentricity": shape.eccentricity, "angle_deg": shape.angle_deg,
+    }  # fmt: skip

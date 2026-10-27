@@ -1090,12 +1090,24 @@ CREATE TABLE pipeline_measures (
   hfd_px         REAL CHECK (hfd_px > 0),     -- pixel del sensore, anche a colori
   background_adu REAL,                        -- fondo cielo: solo stessa camera, guadagno, posa
   noise_adu      REAL CHECK (noise_adu >= 0), -- 1,4826 MAD; a colori per piano R G B, (min+max)/2
+  -- forma: fit di Moffat (fitted), momenti di sep se il fit non tiene (estimated), ciambelle o
+  -- righe (unmeasurable); NULL: meno di 5 stelle. Anche con too_few_stars: un frame mosso.
+  shape          TEXT CHECK (shape IN ('fitted', 'estimated', 'unmeasurable')),
+  shape_stars    INTEGER CHECK (shape_stars >= 0),  -- stelle della mediana; unmeasurable: guardate
+  fwhm_px        REAL CHECK (fwhm_px > 0),          -- media geometrica dei due assi
+  eccentricity   REAL CHECK (eccentricity >= 0 AND eccentricity < 1),
+  angle_deg      REAL CHECK (angle_deg >= 0 AND angle_deg < 180),  -- asse lungo, da +x verso +y
   duration_s     REAL CHECK (duration_s >= 0),
   measured_at    TEXT NOT NULL,
   CHECK ((outcome = 'measured') = (hfd_px IS NOT NULL)),
   CHECK ((outcome IN ('measured', 'too_few_stars')) = (stars IS NOT NULL)
     AND (stars IS NULL) = (kept IS NULL) AND (stars IS NULL) = (background_adu IS NULL)
-    AND (stars IS NULL) = (noise_adu IS NULL))
+    AND (stars IS NULL) = (noise_adu IS NULL)),
+  CHECK (shape IS NULL OR stars IS NOT NULL),
+  CHECK ((shape IS NULL) = (shape_stars IS NULL)),
+  CHECK (coalesce(shape IN ('fitted', 'estimated'), 0) = (fwhm_px IS NOT NULL)
+    AND (fwhm_px IS NULL) = (eccentricity IS NULL)),
+  CHECK (angle_deg IS NULL OR eccentricity >= 0.4)  -- direzione solo da 0,4 (ADR 0022)
 ) STRICT;
 
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave calcolata dal nome, mai salvata:

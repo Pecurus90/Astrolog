@@ -55,19 +55,44 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
 - **Stelle**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con mediana 3x3 esatta: i <!-- software-ok -->
   pixel caldi spariscono, le stelle restano. Il numero e' un **indicatore relativo**: sui 24
   frame veri e' da 1 a 19 volte quello di ASTAP `-analyse 30`, che conta solo da SNR 30.
-- **Stelle tenute per l'HFD**: intere (`flag` 0), picco sotto il 90% della saturazione
-  (`DATAMAX`, o il massimo del tipo di dato), b/a sopra 0,5 (Siril), lontane dal bordo e dalle <!-- software-ok -->
-  vicine piu' di 3 HFD stimate dai momenti di `sep` (la FWHM arriva al passo 25.1). Al massimo
-  60 per casella di una griglia 3x3, prese lungo tutta la classifica del flusso.
-- **HFD**: diametro col meta' flusso dentro un'apertura di 3 HFD stimate, con `sep.sum_circle`
+- **Stelle tenute**: intere (`flag` 0), picco sotto il 90% della saturazione (`DATAMAX`, o il
+  massimo del tipo di dato), lontane dal bordo e dalle vicine piu' di 3 FWHM stimate dai momenti
+  di `sep`. Per l'HFD anche b/a sopra 0,5 (Siril); la forma le prende tutte, se no un frame <!-- software-ok -->
+  mosso non ne ha (Marco, 27/10). SubframeSelector fa lo stesso fino a b/a 0,3-0,4: oltre, il suo <!-- software-ok -->
+  `maxDistortion` 0,6 scarta le stelle e tace; noi diciamo 0,95-0,98 (misurato, 14 frame
+  sintetici da b/a 1 a 0,2). Al massimo 60 per casella di una griglia 3x3, prese lungo tutta la classifica
+  del flusso. La stima dai momenti sta circa 1,6 volte sopra la FWHM vera: e' una scala per
+  bordo, vicine e finestre, non una misura.
+- **HFD**: diametro col meta' flusso dentro un'apertura di 3 FWHM stimate, con `sep.sum_circle`
   su 96 raggi e interpolazione; il valore del frame e' la mediana. **Fondo locale: mediana
   dell'anello** da 1 a 1,5 aperture **sulla copia filtrata**, senza maschera dei segmenti. ADR
   0022 diceva "media dell'anello a oggetti mascherati": sul vero (Rosetta, Canon 700D) la
   maschera copriva l'anello con la nebulosa e il fondo restava zero (HFD 12,3 px contro 4,0 di
   ASTAP). La copia filtrata toglie i pixel caldi (per cui ADR 0022 scartava la mediana), la
   mediana toglie le vicine. `sep.flux_radius` non ha l'anello: non si usa.
+- **Forma** (ADR 0022 punto 4, `pipeline/shape.py`): per stella una Moffat ellittica
+  A (1 + (x'/ax)^2 + (y'/ay)^2)^-beta, beta libero fra 1,01 e 100, integrata sul pixel (5x5
+  campioni a stima sotto 3 px, 3x3 sotto 6, uno sopra), col fondo fisso alla mediana dell'anello
+  sulla copia filtrata (libero si mangiava le ali: FWHM +4%), su un cerchio di 2 FWHM stimate,
+  pixel caldi fuori dal nucleo tolti. Levenberg-Marquardt di scipy (MINPACK) con lo jacobiano
+  scritto, al piu' 400 valutazioni. Per stella FWHM = 2 sqrt(ax ay) sqrt(2^(1/beta) - 1), la
+  media geometrica dei due assi; eccentricita' sqrt(1 - (b/a)^2); asse lungo da +x (colonne)
+  verso +y (righe), da 0 a 180 gradi. Per il frame la mediana delle stelle.
+  - **Fit** (`fitted`) quando regge almeno meta' delle stelle e almeno 5; se no **stimata**
+    (`estimated`) dai momenti di `sep`, che leggono le ali: su una Moffat beta 3 la FWHM esce
+    1,5 volte la vera. **Non misurabile** (`unmeasurable`) se piu' di meta' sono ciambelle
+    (centro sotto l'anello di 3 rumori) o se l'eccentricita' arriva a 0,99; FWHM ed
+    eccentricita' tacciono. Le righe vere arrivano qui di rado: `sep` le spezza in pezzi vicini
+    e il frame dice troppo poche stelle.
+  - **Direzione** solo da eccentricita' 0,4 e se le stelle sono d'accordo: media assiale degli
+    angoli (gli angoli raddoppiati sul cerchio, Mardia 1972), lunghezza almeno 0,5; coma e tilt
+    allungano in raggiera e la direzione tace. Sui pixel: il giro col cielo ("in AR", "in Dec")
+    arriva al 25.2 con la scala risolta.
+  - **Colori**: sull'intensita' dopo VNG, come WBPP; VNG allarga le stelle piccole, come le
+    vede il SubframeSelector: FWHM 4 px +2%, 3 px +8%, 2 px +27% (l'HFD +4%).
 - **Poche stelle**: sotto 5 stelle tenute, `too_few_stars`: il numero delle stelle resta,
-  l'HFD tace. Sui 24 frame veri la meno ricca ne tiene 291.
+  l'HFD tace. La forma c'e' anche li', se le stelle di ogni rotondita' sono almeno 5: un frame
+  mosso dice quanto. Sui 24 frame veri la meno ricca ne tiene 291.
 - **Non e' riproducibile bit per bit**: `sep` separa le stelle che si toccano con un passo a
   caso; lo stesso frame rimisurato cambia di pochi decimi per cento (stelle 1565/1566, HFD 3,486
   contro 3,478 px, audit del 26/10/2026). I test non chiedono conteggi esatti su stelle unite.
@@ -76,7 +101,10 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
 B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
 
 - **Stelle iniettate** di forma nota sui fondi veri (Rosetta, M31, Ha, L): mediana dell'HFD
-  entro l'1% dalla verita', P90 da +7 a +23%.
+  entro l'1% dalla verita', P90 da +7 a +23%. Forma (27/10/2026, 150 Moffat ellittiche beta 3,
+  b/a 0,7, picco 100 rumori, su tutti i 24): FWHM da +0,2 a +0,7%, eccentricita' 0,710-0,716
+  contro 0,714. Sui 4 a colori iniettate dopo VNG: provano il fit sul fondo vero, non VNG
+  (quello lo misura la riga dei colori sotto, su stelle sintetiche).
 - **Contro i programmi di riferimento**: `python tools/confronto_misure.py CARTELLA` misura le
   copie con measure, con `astap_cli -analyse 30` e col SubframeSelector di PixInsight senza <!-- software-ok -->
   finestra, e stampa il nostro diviso il loro (minimo / mediana / massimo), mono e colori a
@@ -89,18 +117,20 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Fondo / mediana SubframeSelector | 0,99 / 1,00 / 1,00 | 0,99 / 1,00 / 1,00 | La mediana dell'immagine porta le stelle e la nebulosa, `sep` le toglie |
   | Rumore / rumore SubframeSelector | 1,00 / 1,02 / 1,05 | 1,01 / 1,04 / 1,06 | MAD contro wavelet MRS, stessa cosa. Colori: come il Debayer, per piano R, G (media dei due), B a mezza risoluzione, poi (min + max) / 2 come il SubframeSelector; sull'intensita' sarebbe 0,88-0,96 |
   | HFD / FWHM SubframeSelector | 1,15 / 1,36 / 1,46 | 1,25 / 1,30 / 1,72 | Grandezze diverse: sulla Moffat HFD/FWHM e' 1,36 a beta 2,5 e 1,17 a beta 4 (dalla formula del flusso racchiuso); la gaussiana da' 1 |
+  | FWHM / FWHM SubframeSelector | 0,68 / 0,83 / 1,00 | 0,68 / 0,83 / 1,00 | Il SubframeSelector valuta la Moffat al centro del pixel, noi la integriamo (ADR 0022): le stelle piccole gli escono larghe. Ai centri la nostra da' 1,36 contro 1,39 (frame 05), 4,39 contro 4,33 (frame 23); una stella sintetica da 1,0 px integrata torna 1,00, ai centri 1,29. Uguali sopra 4 px. Tenuta l'integrata (27/10/2026) |
+  | Eccentricita' / SubframeSelector | 0,93 / 1,02 / 1,10 | 0,99 / 1,05 / 1,07 | Stessa definizione, sqrt(1 - (b/a)^2); a colori VNG allunga di poco le stelle piccole |
   | HFD / HFD ASTAP | 0,71 / 0,83 / 0,94 | 0,78 / 0,83 / 0,89 | ASTAP sta il 6-41% sopra; ADR 0022 lo misurava +8…27% sopra la verita' (il raggio medio). Colori: ASTAP misura il mosaico grezzo. Col superpixel il Canon (frame 15) dava 6,94 px contro 3,97, ora 3,20 |
   | Stelle / stelle ASTAP | 1,06 / 2,96 / 18,97 | 5,52 / 9,98 / 37,75 | ASTAP conta da SNR 30 sul grezzo, noi da 5 sigma sull'intensita' a piena risoluzione |
   | Stelle / stelle SubframeSelector | 0,36 / 0,47 / 1,12 | 0,64 / 0,77 / 1,34 | Il SubframeSelector rileva sui livelli delle wavelet e arriva piu' in basso; un indicatore relativo, non un conteggio |
 
-  La FWHM confrontata a quella del SubframeSelector arriva col passo 25.1; ASTAP non da' fondo
-  ne' rumore.
-- **Tempo**: da 1,2 a 4,0 s a frame da 26 MP mono; a colori da 4,2 s (18 MP) a 7,0 s (26 MP),
-  di cui il debayer 3,6-5 s; un processo, su copia locale. Senza il tetto di 60 per casella un
-  campo denso arrivava a 7,9 s.
+  ASTAP non da' fondo ne' rumore.
+- **Tempo** (27/10/2026, con la forma): da 1,9 a 4,1 s a frame da 26 MP mono; a colori da 6,1 a
+  8,8 s, di cui il debayer 3,6-5 s; la forma da 0,6 a 1,6 s, su 291-540 stelle. Un processo, su
+  copia locale. Senza il tetto di 60 per casella un campo denso arrivava a 7,9 s.
 
 **Cosa si scrive** (`pipeline_measures`): esito, stelle, stelle tenute, HFD in pixel del
-sensore, fondo e rumore in ADU, durata, ora. Il fondo si confronta solo con la stessa camera,
+sensore, fondo e rumore in ADU; la forma (fit, stimata, non misurabile) con le sue stelle, FWHM
+in pixel, eccentricita' e direzione; durata, ora. Il fondo si confronta solo con la stessa camera,
 guadagno e posa (ADR 0022). Le misure scritte negli header da altri programmi non si leggono.
 
 **La pipeline vecchia** non lancia piu' `-analyse` (D1, +0,3 s a frame) e non ha piu'
@@ -124,10 +154,9 @@ dell'oggetto no.
 
 ## Cosa non fa ancora, e con cosa arrivera'
 
-- **25.1**: FWHM, eccentricita', direzione dell'allungamento (fit di Moffat, scipy) sulle stelle
-  gia' scelte, a colori sull'intensita' dopo VNG; "forma stimata" e "forma non misurabile".
 - **25.2**: SNR (PSF SNR), gradiente, tilt e curvatura dalle cinque zone, stelle sature col
-  tetto dall'istogramma, massa d'aria e valori allo zenit, i secondi d'arco.
+  tetto dall'istogramma, massa d'aria e valori allo zenit, i secondi d'arco, la direzione
+  girata col cielo.
 - **25.3**: SQM col metodo di ASTAP portato, il lettore del catalogo D80, il bias della camera.
 - **26-27**: soglie relative (Qn), eccentricita' rispetto al setup, Bortle del sito, oggetto basso.
 - **A schermo**: col porting delle pagine (fase 5). Le tavole di Design (`handoff/design/`,

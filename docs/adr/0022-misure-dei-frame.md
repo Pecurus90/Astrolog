@@ -20,14 +20,17 @@ che resta nasce coi test.
    88:1273, 1993); coincide con PixInsight entro l'1-2%. <!-- software-ok -->
 2. Stelle con `sep.extract` a 5 sigma (Siril) su una copia filtrata con mediana 3x3 esatta: in <!-- software-ok -->
    banda stretta la maggior parte dei rilevamenti sul grezzo erano pixel caldi. Tenute: intere,
-   picco sotto il 90% della saturazione, b/a sopra 0,5, lontane dal bordo e dalle vicine.
+   picco sotto il 90% della saturazione, lontane dal bordo e dalle vicine piu' di 3 FWHM; b/a
+   sopra 0,5 solo per l'HFD: la forma le prende tutte, se no un frame mosso non ne ha (25.1).
 3. **HFD**: diametro col meta' flusso, fondo ad anello locale (con la nebulosa il fondo a maglie
    dava +20-30%). Sostituisce la HFD di ASTAP, il raggio medio, alta del 6-27%.
 4. **FWHM, eccentricita', angolo**: fit di Moffat ellittico (Levenberg-Marquardt) integrato sul
    pixel, 60 stelle per casella di una griglia 3x3 lungo tutta la classifica di flusso; FWHM =
    2a sqrt(2^(1/b) - 1), eccentricita' sqrt(1 - (b/a)^2) (PixInsight). Fit che non converge: <!-- software-ok -->
    momenti di `sep`, detto. Eccentricita' >= 0,99 o stella a ciambella: forma non misurabile.
-   Angolo solo da eccentricita' 0,4, girato col cielo: "in AR" o "in Dec".
+   Angolo solo da eccentricita' 0,4, girato col cielo: "in AR" o "in Dec". Il 25.1 scrive
+   l'angolo sui pixel; il giro col cielo arriva al 25.2 con la scala risolta (stesso incontro fra
+   measure e solve).
 5. **SNR**: PSF SNR della documentazione di PixInsight (ImageWeighting, eq. 7, 18-19), c3 = <!-- software-ok -->
    1,350e-7, c4 = 4,987e6; sui 45 frame rho 0,97 con PixInsight. Mai fra camere o oggetti. <!-- software-ok -->
 6. **Camere a colori** (Marco, 26/10/2026, passo 24.06; prima: superpixel 2x2) come WBPP: debayer

@@ -1,5 +1,5 @@
 """One frame measured on its pixels (ADR 0022, docs/domini/misure.md): sky, noise, stars on a
-median-filtered copy, HFD on the raw frame. Pure: pixels in, numbers out."""
+median-filtered copy, HFD and shape on the raw frame. Pure: pixels in, numbers out."""
 
 from dataclasses import dataclass
 
@@ -8,23 +8,20 @@ import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 
 from ..units import sigma_from_mad
 from .debayer import COLOURS, debayered
+from .shape import MIN_STARS, RING_OUTER, Shape, estimated_fwhm, shape_of
 
 THRESHOLD_SIGMA = 5.0  # [C Siril find_star default: 5 sigma over sky, software-ok]
 SATURATED_SHARE = 0.9  # [P ADR 0022: peak under 90% of saturation]
 MIN_AXIS_RATIO = 0.5  # [C Siril find_star default roundness, software-ok]
-ROOM_HFD = 3.0  # [P ADR 0022: away from the edge and from neighbours more than 3 HFD]
-# Aperture radius in estimated HFD: a Moffat beta 2.5 holds 99% of its flux there.
+ROOM_FWHM = 3.0  # [P plan 25.1: away from the edge and from neighbours more than 3 FWHM]
+# Aperture radius in estimated FWHM: a Moffat beta 2.5 holds 99% of its flux there.
 # [D Moffat 1969, enclosed flux 1-(1+r^2/a^2)^(1-b)]
-APERTURE_HFD = 3.0
-RING_OUTER = 1.5  # [T] ring from the aperture to 1.5 times it: the local sky
+APERTURE_FWHM = 3.0
 RADII = 96  # [T] radii sampled per star; half flux interpolated between two
 SUBPIX = 5  # [C sep docs: sum_circle default subpixel sampling]
-MIN_STARS = 5  # [T] fewer kept stars: the median HFD says nothing; measured on real frames
 # Stars spread over the field, not the brightest: a 3x3 grid, 60 a cell, across the flux ranking.
 GRID = 3  # [P ADR 0022]
 PER_CELL = 60  # [P ADR 0022]
-# Gaussian HFD = FWHM = 2 sqrt(2 ln 2) sigma. [D Gaussian profile]
-SIGMA_TO_HFD = 2.3548
 # Noise never under one ADU step's own: a quantized sky has MAD 0, and then every step is a star.
 # [D uniform quantization noise, step/sqrt(12)]
 NOISE_FLOOR_ADU = 0.2887
@@ -37,6 +34,7 @@ class Measured:
     hfd_px: float  # sensor pixels
     background_adu: float
     noise_adu: float
+    shape: Shape | None  # on stars of any roundness: a trailed frame still has one
 
 
 @dataclass(frozen=True)
@@ -45,6 +43,7 @@ class TooFewStars:
     kept: int
     background_adu: float
     noise_adu: float
+    shape: Shape | None
 
 
 def measure_frame(
@@ -59,14 +58,16 @@ def measure_frame(
     noise = max(_sigma(residual), NOISE_FLOOR_ADU)
     filtered = median3x3(residual)
     objects = _found(filtered, noise)
-    keep = _spread(objects, _kept(ceiling, objects, saturation), raw.shape)
+    usable = _kept(ceiling, objects, saturation)
+    keep = _spread(objects, usable[_round(objects[usable])], raw.shape)
     hfds = _hfd((residual, filtered), objects, keep)
+    shape = shape_of((residual, filtered), objects, _spread(objects, usable, raw.shape), noise)
     background, stars = float(sky.globalback), len(objects)
     if pattern is not None:  # noise said as WBPP says it; detection keeps the plane's own
         noise = max(_mosaic_noise(ceiling, pattern), NOISE_FLOOR_ADU)
     if len(hfds) < MIN_STARS:
-        return TooFewStars(stars, len(hfds), background, noise)
-    return Measured(stars, len(hfds), float(np.median(hfds)), background, noise)
+        return TooFewStars(stars, len(hfds), background, noise, shape)
+    return Measured(stars, len(hfds), float(np.median(hfds)), background, noise, shape)
 
 
 def _sigma(residual: np.ndarray) -> float:
@@ -112,24 +113,23 @@ def _found(filtered: np.ndarray, noise: float) -> np.ndarray:
     return sep.extract(np.ascontiguousarray(filtered), THRESHOLD_SIGMA, err=noise)
 
 
-def _estimate(objects: np.ndarray) -> np.ndarray:
-    """HFD guessed from sep's second moments, for edges, neighbours and apertures only."""
-    return SIGMA_TO_HFD * np.sqrt(np.maximum(objects["a"] * objects["b"], 0.25))
-
-
 def _kept(raw: np.ndarray, objects: np.ndarray, saturation: float) -> np.ndarray:
-    """Indices of stars fit to measure: whole, unsaturated, round enough, alone, off the edge."""
+    """Indices of stars fit to measure: whole, unsaturated, alone, off the edge."""
     if len(objects) == 0:
         return np.array([], dtype=int)
-    x, y, guess = objects["x"], objects["y"], _estimate(objects)
-    room = ROOM_HFD * guess
+    x, y, guess = objects["x"], objects["y"], estimated_fwhm(objects)
+    room = ROOM_FWHM * guess
     rows, cols = raw.shape
     inside = (x > room) & (y > room) & (x < cols - 1 - room) & (y < rows - 1 - room)
-    ratio = objects["b"] / np.maximum(objects["a"], 1e-9)
-    ok = (objects["flag"] == 0) & inside & (ratio > MIN_AXIS_RATIO)
+    ok = (objects["flag"] == 0) & inside
     ok &= _peaks(raw, objects, guess) < SATURATED_SHARE * saturation
     candidates = np.flatnonzero(ok)
     return candidates[_alone(x, y, room, candidates)]
+
+
+def _round(objects: np.ndarray) -> np.ndarray:
+    """Round enough for the HFD; the shape takes them all, else a trailed frame has none."""
+    return objects["b"] / np.maximum(objects["a"], 1e-9) > MIN_AXIS_RATIO
 
 
 def _alone(x: np.ndarray, y: np.ndarray, room: np.ndarray, candidates: np.ndarray) -> np.ndarray:
@@ -201,7 +201,7 @@ def _hfd(
         return np.array([])
     residual, filtered = images
     x, y = objects["x"][keep], objects["y"][keep]
-    aperture = APERTURE_HFD * _estimate(objects)[keep]
+    aperture = APERTURE_FWHM * estimated_fwhm(objects)[keep]
     sky = _ring_sky(filtered, (x, y), aperture)
     steps = np.linspace(1 / RADII, 1.0, RADII)
     enclosed = np.empty((RADII, len(keep)))

@@ -24,8 +24,8 @@ from confronto_misure import (
 
 # One real frame (ATR2600M, 26/10/2026): what each program answered.
 SUBFRAME_CSV = (
-    "path,fwhm_px,median,noise,stars\n"
-    "C:/copie/08.fits,2.1918546436391044,0.003784237429499626,0.0003233111870382953,5023\n"
+    "path,fwhm_px,eccentricity,median,noise,stars\n"
+    "C:/copie/08.fits,2.1918546436391044,0.4523,0.003784237429499626,0.0003233111870382953,5023\n"
 )
 ASTAP_CODE = 332000523  # HFD_MEDIAN=3,3 and STARS=523 on stdout, two decimals in the code
 
@@ -46,6 +46,7 @@ def test_the_subframe_values_come_back_in_adu():
     found = read_subframes(SUBFRAME_CSV)
     sub = found["08.fits"]
     assert sub.fwhm_px == pytest.approx(2.1919, abs=1e-4)
+    assert sub.eccentricity == pytest.approx(0.4523)
     assert sub.median_adu == pytest.approx(248.0, abs=0.01)
     assert sub.noise_adu == pytest.approx(21.19, abs=0.01)
     assert sub.stars == 5023
@@ -53,7 +54,7 @@ def test_the_subframe_values_come_back_in_adu():
 
 def test_a_script_error_is_said_not_swallowed():
     with pytest.raises(ValueError, match="routine"):
-        read_subframes("path,fwhm_px,median,noise,stars\nerror,Error: routine(): invalid\n")
+        read_subframes("path,fwhm_px,eccentricity,median,noise,stars\nerror,Error: routine()\n")
 
 
 def test_the_script_names_every_frame_with_forward_slashes(tmp_path):
@@ -99,6 +100,13 @@ def test_ratios_split_mono_and_color():
     assert noise == pytest.approx((0.5, 0.5, 0.5))
 
 
+def test_fwhm_and_eccentricity_are_set_beside_the_subframe_selector():
+    ours = Ours(1000, 2.0, 100, 10, fwhm_px=2.2, eccentricity=0.45)
+    table = ratios([_row("a", False, ours, None, Subframe(2.0, 110, 9, 2000, eccentricity=0.5))])
+    assert table["FWHM / SubframeSelector FWHM"]["mono"] == pytest.approx((1.1, 1.1, 1.1))
+    assert table["eccentricita' / SubframeSelector"]["mono"] == pytest.approx((0.9, 0.9, 0.9))
+
+
 def test_a_missing_program_leaves_its_ratios_out():
     rows = [_row("a", False, Ours(1000, 2.0, 100.0, 10.0), None, None)]
     table = ratios(rows)
@@ -124,14 +132,14 @@ def test_main_measures_every_frame_and_prints_the_table(tmp_path, capsys):
         mono, colour = (script.split("\n")[i] for i in (0, 1))
         assert "08.fits" in mono and "09.fit" not in mono and "09.fit" in colour
         csv.write_text(
-            "path,fwhm_px,median,noise,stars\n"
-            f"{(folder / '08.fits').as_posix()},2.0,0.0038,0.0003,5000\n"
-            f"{csv.parent.as_posix()}/09_d.xisf,2.5,0.0040,0.0004,4000\n"
+            "path,fwhm_px,eccentricity,median,noise,stars\n"
+            f"{(folder / '08.fits').as_posix()},2.0,0.40,0.0038,0.0003,5000\n"
+            f"{csv.parent.as_posix()}/09_d.xisf,2.5,0.45,0.0040,0.0004,4000\n"
         )
         return 0, ""
 
     def measure(path):
-        return Ours(3000, 2.9, 244.0, 22.9), path.name == "09.fit"
+        return Ours(3000, 2.9, 244.0, 22.9, 2.6, 0.42), path.name == "09.fit"
 
     code = main(
         [str(folder), "--astap", "astap_cli", "--subframe", "PixInsight"],  # software-ok
@@ -144,7 +152,9 @@ def test_main_measures_every_frame_and_prints_the_table(tmp_path, capsys):
     assert sum("-analyse" in c for c in launched) == 2, "ASTAP once a frame"
     assert sum(any(a.startswith("-r=") for a in c) for c in launched) == 1, "one batch"
     assert "stelle / ASTAP" in printed
-    assert "| 09.fit | colori | 3000 | 2.90 | 244.0 | 22.9 | 523 | 3.32 | 4000 | 2.50 |" in printed
+    row = "| 09.fit | colori | 3000 | 2.90 | 2.60 | 0.42 | 244.0 | 22.9 | 523 | 3.32 | 4000 | 2.50 "
+    row += "| 0.45 |"
+    assert row in printed
 
 
 def test_main_without_frames_says_so(tmp_path, capsys):

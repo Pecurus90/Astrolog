@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 169; senza fonte: 1.
-Fonti: C norma: 71; U usanza: 1; D metodo: 6; M misura: 12; P decisione: 29; T tecnico: 52.
+Valori: 181; senza fonte: 1.
+Fonti: C norma: 71; U usanza: 1; D metodo: 7; M misura: 13; P decisione: 31; T tecnico: 61.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -280,6 +280,26 @@ Fonti: C norma: 71; U usanza: 1; D metodo: 6; M misura: 12; P decisione: 29; T t
 |---|---|---|
 | MAX_HEADER_BLOCKS | `100` | T |
 
+### pipeline/shape.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| WINDOW_FWHM | `2.0` | T |
+| WINDOW_MIN_PX | `3.0` | T |
+| RING_OUTER | `1.5` | T |
+| BETA_MIN | `1.01` | T; D Moffat 1969 |
+| BETA_MAX | `100.0` | T |
+| START_BETA | `2.5` | M misure.md: HFD/FWHM 1.36 on the 24 real frames, a Moffat of beta 2.5 |
+| EVALUATIONS_PER_PARAMETER | `50` | T |
+| HOT_SIGMA | `5.0` | T |
+| DOUGHNUT_SIGMA | `3.0` | T |
+| FIT_SHARE | `0.5` | T |
+| UNMEASURABLE_ECCENTRICITY | `0.99` | P ADR 0022: eccentricity from 0.99, shape not measurable |
+| DIRECTION_ECCENTRICITY | `0.4` | P ADR 0022: direction only from eccentricity 0.4 |
+| DIRECTION_AGREEMENT | `0.5` | T |
+| SIGMA_TO_FWHM | `2.3548` | D Gaussian profile: FWHM = 2 sqrt(2 ln 2) sigma |
+| MIN_STARS | `5` | T |
+
 ### pipeline/sky.py
 
 | simbolo | valore | fonte |
@@ -300,15 +320,12 @@ Fonti: C norma: 71; U usanza: 1; D metodo: 6; M misura: 12; P decisione: 29; T t
 | THRESHOLD_SIGMA | `5.0` | C Siril find_star default: 5 sigma over sky, software-ok |
 | SATURATED_SHARE | `0.9` | P ADR 0022: peak under 90% of saturation |
 | MIN_AXIS_RATIO | `0.5` | C Siril find_star default roundness, software-ok |
-| ROOM_HFD | `3.0` | P ADR 0022: away from the edge and from neighbours more than 3 HFD |
-| APERTURE_HFD | `3.0` | D Moffat 1969, enclosed flux 1-(1+r^2/a^2)^(1-b) |
-| RING_OUTER | `1.5` | T |
+| ROOM_FWHM | `3.0` | P plan 25.1: away from the edge and from neighbours more than 3 FWHM |
+| APERTURE_FWHM | `3.0` | D Moffat 1969, enclosed flux 1-(1+r^2/a^2)^(1-b) |
 | RADII | `96` | T |
 | SUBPIX | `5` | C sep docs: sum_circle default subpixel sampling |
-| MIN_STARS | `5` | T |
 | GRID | `3` | P ADR 0022 |
 | PER_CELL | `60` | P ADR 0022 |
-| SIGMA_TO_HFD | `2.3548` | D Gaussian profile |
 | NOISE_FLOOR_ADU | `0.2887` | D uniform quantization noise, step/sqrt(12) |
 
 ### pipeline/timeouts.py

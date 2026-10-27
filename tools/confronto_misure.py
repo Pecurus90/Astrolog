@@ -8,8 +8,9 @@ Frames are read, never written: point it at copies anyway, both programs may lea
 What each one gives (checked on its sources and on a real frame):
 - ASTAP -analyse 30: median HFD and star count from SNR 30; no sky, no noise. The exit code is
   HFD x 100 x 1e6 + stars (hnsky.org/astap.htm), two decimals where stdout prints the locale's one.
-- SubframeSelector (PCL SubframeSelectorProcess.cpp, column order fixed there): FWHM in px from a
-  PSF fit, median and MRS noise on [0,1] of the 16-bit range, star count. No HFD.
+- SubframeSelector (PCL SubframeSelectorProcess.cpp, column order fixed there): FWHM in px and
+  eccentricity from a PSF fit, median and MRS noise on [0,1] of the 16-bit range, star count.
+  No HFD.
 """
 
 import argparse
@@ -47,13 +48,14 @@ MONO, COLOR = "mono", "colori"
 DEBAYERED = "_d"  # [C PCL DebayerParameters: outputPostfix default, the file an .xisf beside]
 
 # Colour frames debayered first, VNG and the pattern from the header, as WBPP does.
-# Measurements columns: 3 path, 5 FWHM, 10 median, 12 noise, 14 stars (SubframeSelectorProcess.cpp).
+# Measurements columns: 3 path, 5 FWHM, 6 eccentricity, 10 median, 12 noise, 14 stars
+# (SubframeSelectorProcess.cpp).
 # Errors land in the file too: the program's console never reaches stdout on Windows.
 _SCRIPT = """var files = %s;
 var colour = %s;
 var work = %s;
 var out = %s;
-var lines = ["path,fwhm_px,median,noise,stars"];
+var lines = ["path,fwhm_px,eccentricity,median,noise,stars"];
 try {
    if (colour.length > 0) {
       var D = new Debayer;
@@ -78,7 +80,7 @@ try {
    SS.executeGlobal();
    for (var i = 0; i < SS.measurements.length; ++i) {
       var m = SS.measurements[i];
-      lines.push([m[3], m[5], m[10], m[12], m[14]].join(","));
+      lines.push([m[3], m[5], m[6], m[10], m[12], m[14]].join(","));
    }
 } catch (e) {
    lines.push("error," + e);
@@ -93,6 +95,8 @@ class Ours:
     hfd_px: float | None  # None: too few stars kept
     background_adu: float
     noise_adu: float
+    fwhm_px: float | None = None  # None: no shape, or not measurable
+    eccentricity: float | None = None
 
 
 @dataclass(frozen=True)
@@ -107,6 +111,7 @@ class Subframe:
     median_adu: float
     noise_adu: float
     stars: int
+    eccentricity: float | None = None
 
 
 @dataclass(frozen=True)
@@ -152,12 +157,13 @@ def read_subframes(text: str) -> dict[str, Subframe]:
             continue
         if line.startswith("error,"):
             raise ValueError(f"SubframeSelector: {line.removeprefix('error,')}")
-        path, fwhm, median, noise, stars = line.rsplit(",", 4)  # a comma may sit in the path
+        path, fwhm, eccentricity, median, noise, stars = line.rsplit(",", 5)  # comma in a path
         found[Path(path).name] = Subframe(
             fwhm_px=float(fwhm),
             median_adu=float(median) * ADU_RANGE,
             noise_adu=float(noise) * ADU_RANGE,
             stars=int(float(stars)),
+            eccentricity=float(eccentricity),
         )
     return found
 
@@ -174,7 +180,10 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
         return None  # a matrix not R G B: the pipeline says not_supported, so does this
     found = measure_frame(read.data, saturation=read.saturation, pattern=pattern)
     hfd = found.hfd_px if isinstance(found, Measured) else None
-    return Ours(found.stars, hfd, found.background_adu, found.noise_adu), pattern is not None
+    shape = found.shape
+    fwhm, eccentricity = (shape.fwhm_px, shape.eccentricity) if shape else (None, None)
+    ours = Ours(found.stars, hfd, found.background_adu, found.noise_adu, fwhm, eccentricity)
+    return ours, pattern is not None
 
 
 def _pairs(row: Row) -> dict[str, float | None]:
@@ -182,12 +191,19 @@ def _pairs(row: Row) -> dict[str, float | None]:
     ours, astap, sub = row.ours, row.astap, row.subframe
     if ours is None:
         return {}
-    hfd = ours.hfd_px
+    hfd, fwhm, eccentricity = ours.hfd_px, ours.fwhm_px, ours.eccentricity
+    theirs = sub.eccentricity if sub else None
     return {
         "stelle / ASTAP": ours.stars / astap.stars if astap and astap.stars else None,
         "HFD / ASTAP HFD": hfd / astap.hfd_px if astap and hfd else None,
         "stelle / SubframeSelector": ours.stars / sub.stars if sub and sub.stars else None,
         "HFD / SubframeSelector FWHM": hfd / sub.fwhm_px if sub and hfd and sub.fwhm_px else None,
+        "FWHM / SubframeSelector FWHM": (
+            fwhm / sub.fwhm_px if sub and fwhm and sub.fwhm_px else None
+        ),
+        "eccentricita' / SubframeSelector": (
+            eccentricity / theirs if eccentricity is not None and theirs else None
+        ),
         "fondo / SubframeSelector": (
             ours.background_adu / sub.median_adu if sub and sub.median_adu else None
         ),
@@ -246,9 +262,10 @@ def _number(value: float | None, digits: int = 2) -> str:
 
 
 def _print_rows(rows: list[Row]) -> None:
-    print("| frame | tipo | stelle | HFD | fondo | rumore | ASTAP stelle | ASTAP HFD "
-          "| SubframeSelector stelle | FWHM | mediana | rumore |")  # fmt: skip
-    print("|---" * 12 + "|")
+    print("| frame | tipo | stelle | HFD | FWHM | eccentricita' | fondo | rumore "
+          "| ASTAP stelle | ASTAP HFD | SubframeSelector stelle | FWHM | eccentricita' "
+          "| mediana | rumore |")  # fmt: skip
+    print("|---" * 15 + "|")
     for row in rows:
         o, a, s = row.ours, row.astap, row.subframe
         cells = [
@@ -256,12 +273,15 @@ def _print_rows(rows: list[Row]) -> None:
             COLOR if row.color else MONO,
             str(o.stars) if o else "-",
             _number(o.hfd_px if o else None),
+            _number(o.fwhm_px if o else None),
+            _number(o.eccentricity if o else None),
             _number(o.background_adu if o else None, 1),
             _number(o.noise_adu if o else None, 1),
             str(a.stars) if a else "-",
             _number(a.hfd_px if a else None),
             str(s.stars) if s else "-",
             _number(s.fwhm_px if s else None),
+            _number(s.eccentricity if s else None),
             _number(s.median_adu if s else None, 1),
             _number(s.noise_adu if s else None, 1),
         ]

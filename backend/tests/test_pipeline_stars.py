@@ -7,10 +7,10 @@ import tracemalloc
 import numpy as np
 import pytest
 
+from astrolog.pipeline.shape import SIGMA_TO_FWHM
 from astrolog.pipeline.stars import (
     MIN_STARS,
-    ROOM_HFD,
-    SIGMA_TO_HFD,
+    ROOM_FWHM,
     Measured,
     TooFewStars,
     _kept,  # pyright: ignore[reportPrivateUsage] -- the check itself, without sep
@@ -205,7 +205,7 @@ def _detections(count: int, side: int, seed: int) -> np.ndarray:
 def test_a_star_with_a_neighbour_closer_than_its_room_is_dropped() -> None:
     objects = _detections(800, 600, seed=5)
     raw = np.zeros((600, 600), dtype=np.float32)
-    room = ROOM_HFD * SIGMA_TO_HFD * np.sqrt(objects["a"] * objects["b"])
+    room = ROOM_FWHM * SIGMA_TO_FWHM * np.sqrt(objects["a"] * objects["b"])
     gap = np.hypot(*(objects[k][:, None] - objects[k][None, :] for k in ("x", "y")))
     np.fill_diagonal(gap, np.inf)
     x, y = objects["x"], objects["y"]

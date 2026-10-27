@@ -26,6 +26,8 @@ dependencies = [
   "numpy>=2.3.5",              # BSD   - i pixel dei frame per measure (prima solo via astropy)
   "sep>=1.4.1",                # LGPL-3 - fondo, stelle e flussi di measure (ADR 0007; ruota
                              #         aarch64 compresa, la ragione per cui photutils e' fuori)
+  "scipy>=1.18.1",             # BSD-3 - il fit di Moffat della forma delle stelle (ADR 0022
+                             #         punto 4, Levenberg-Marquardt; ruote per tutte e cinque)
 ]
 
 [project.optional-dependencies]

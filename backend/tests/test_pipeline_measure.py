@@ -56,6 +56,10 @@ def test_a_light_is_measured_once_and_written(conn, tmp_path):
     assert row["background_adu"] == pytest.approx(1000, abs=1)
     assert row["noise_adu"] == pytest.approx(10, rel=0.05)
     assert row["measured_at"] == LATER
+    assert (row["shape"], row["shape_stars"]) == ("fitted", 60)
+    assert row["fwhm_px"] == pytest.approx(2.3548 * 2.5, rel=0.03)
+    assert row["eccentricity"] < 0.15
+    assert row["angle_deg"] is None
     assert result.measured == 1
     again = measure_root(conn, root, "2026-01-01T00:00:00+00:00")
     assert again.measured == 0
@@ -74,6 +78,7 @@ def test_a_cloudy_frame_keeps_its_stars_and_says_too_few(conn, tmp_path):
     measure_root(conn, _scanned(conn, tmp_path / "nas"), LATER)
     (row,) = _measures(conn)
     assert (row["outcome"], row["stars"], row["hfd_px"]) == ("too_few_stars", 2, None)
+    assert (row["shape"], row["fwhm_px"]) == (None, None)  # too few stars, not a shape fault
 
 
 def test_a_frame_too_small_to_measure_says_so(conn, tmp_path):
