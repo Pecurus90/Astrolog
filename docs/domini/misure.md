@@ -109,7 +109,8 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   copie con measure, con `astap_cli -analyse 30` e col SubframeSelector di PixInsight senza <!-- software-ok -->
   finestra, e stampa il nostro diviso il loro (minimo / mediana / massimo), mono e colori a
   parte; i colori li passa prima al Debayer VNG di PixInsight col pattern Auto, come WBPP. Si <!-- software-ok -->
-  rilancia a ogni sottopasso di measure. Siril no (Marco, 26/10/2026). Sui 24 frame (colori <!-- software-ok -->
+  rilancia a ogni sottopasso di measure, e ogni misura che il SubframeSelector da' si confronta
+  con la sua (Marco, 27/10/2026). Siril no (Marco, 26/10/2026). Sui 24 frame (colori <!-- software-ok -->
   dopo VNG, passo 24.06):
 
   | Misura | Mono (20) | Colori (4) | Perche' lo scarto |
