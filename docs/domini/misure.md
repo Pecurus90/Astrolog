@@ -15,6 +15,7 @@ parole in [`glossario.md`](glossario.md).
 | L'HFD e' il diametro che contiene meta' della luce della stella, anche con le ali di una stella vera | `test_the_hfd_of_gaussian_stars_is_the_diameter_holding_half_the_flux`, `test_the_hfd_of_moffat_stars_holds_their_wings`, `test_the_truth_is_the_analytic_hfd_once_the_pixel_is_small` (`backend/tests/test_pipeline_stars.py`) |
 | Fondo cielo e rumore sono quelli del cielo, non delle stelle | `test_background_and_noise_are_the_sky_and_its_spread` |
 | Le stelle si contano una volta; i pixel caldi di un light non calibrato non sono stelle | `test_every_star_is_counted_once`, `test_hot_pixels_are_not_stars` |
+| Le stelle sono quelle che conta il SubframeSelector: una stella debole o una macchia di nebulosa larga non conta (Marco, 27/10/2026) <!-- software-ok --> | `test_the_frame_counts_the_stars_the_subframeselector_would`, `test_a_star_over_the_aperture_threshold_is_found_one_under_is_not`, `test_a_wide_faint_patch_is_not_a_star_however_much_light_it_holds`, `test_a_hot_pixel_is_not_a_star`, `test_a_dark_pixel_among_bright_ones_has_a_position`, `test_a_structure_starts_at_its_threshold_on_the_median_copy`, `test_the_position_is_the_barycentre` (`backend/tests/test_pipeline_detect.py`) <!-- software-ok --> |
 | Una stella saturata conta fra le stelle ma non entra nell'HFD, anche se in una camera a colori satura un canale solo | `test_saturated_stars_are_counted_but_not_measured`, `test_a_colour_star_clipped_in_one_channel_is_saturated` |
 | Una nebulosa sotto le stelle e' cielo, non stella | `test_a_nebula_under_the_stars_is_sky_the_ring_follows` |
 | Una camera a colori si misura come in WBPP, dopo il debayer VNG, in pixel del sensore, anche con stelle piccole | `test_a_colour_frame_is_measured_after_vng_in_sensor_pixels`, `test_a_colour_camera_is_measured_after_its_debayer`, `test_a_colour_matrix_not_rgb_is_not_measured` |
@@ -52,9 +53,23 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   max) / 2 come il SubframeSelector; le stelle si cercano col rumore dell'intensita'. Non si
   confronta con la mono. Mai sotto un
   gradino da 1 ADU, 1/sqrt(12): un cielo quantizzato ha MAD 0 e ogni gradino diventava stella.
-- **Stelle**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con mediana 3x3 esatta: i <!-- software-ok -->
-  pixel caldi spariscono, le stelle restano. Il numero e' un **indicatore relativo**: sui 24
-  frame veri e' da 1 a 19 volte quello di ASTAP `-analyse 30`, che conta solo da SNR 30.
+- **Stelle** (`pipeline/detect.py`, passo 25.15): **quelle che conta il SubframeSelector** <!-- software-ok -->
+  (Marco, 27/10/2026), riscritto dalla sua documentazione pubblica (lo StarDetector della PCL:
+  filtro mediano dei pixel caldi, strutture, segnale sul fondo in unita' di dispersione) e tarato
+  a scatola chiusa sulle sue uscite, mai sul sorgente PCL. Struttura: i pixel della copia
+  mediana 3x3 sopra 2,4 sigma, uniti in 8 direzioni; la sua mappa delle strutture
+  (`StarDetectionPreview`) sui 24 frame parte da 2,3-2,5. Stella: la struttura il cui miglior
+  quadrato 2x2 sul residuo grezzo supera 17,25 volte il rumore di quattro pixel. Una stella per
+  struttura: due che si toccano contano una. Tarato sulle 12 copie pari contro il conteggio del
+  SubframeSelector, provato sulle 12 dispari: mediana 1,00, da 0,98 a 1,12; stella per stella,
+  contro i segni della sua anteprima, F1 0,93. Il picco sulla copia mediana seguiva la FWHM del
+  frame (correlazione 0,90: le stelle piccole perdevano il picco nella mediana), 1 px e 3 px pure
+  (-0,80 e 0,78); il quadrato 2x2 no (-0,25). Prima (`sep.extract` a 5 sigma) era da 0,36 a 1,34
+  volte il suo. Fuori dal conteggio la selezione per HFD e forma: resta su `sep`, sotto. Il
+  numero sale, nella mediana circa il doppio di prima. 0,3 s a frame da 26 MP.
+- **Rilevamenti per la misura**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con <!-- software-ok -->
+  mediana 3x3 esatta: i pixel caldi spariscono, le stelle restano; i suoi momenti sono la scala
+  di bordo, vicine e finestre.
 - **Stelle tenute**: intere (`flag` 0), picco sotto il 90% della saturazione (`DATAMAX`, o il
   massimo del tipo di dato), lontane dal bordo e dalle vicine piu' di 3 FWHM stimate dai momenti
   di `sep`. Per l'HFD anche b/a sopra 0,5 (Siril); la forma le prende tutte, se no un frame <!-- software-ok -->
@@ -121,13 +136,14 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | FWHM / FWHM SubframeSelector | 0,68 / 0,83 / 1,00 | 0,68 / 0,83 / 1,00 | Il SubframeSelector valuta la Moffat al centro del pixel, noi la integriamo (ADR 0022): le stelle piccole gli escono larghe. Ai centri la nostra da' 1,36 contro 1,39 (frame 05), 4,39 contro 4,33 (frame 23); una stella sintetica da 1,0 px integrata torna 1,00, ai centri 1,29. Uguali sopra 4 px. Tenuta l'integrata (27/10/2026) |
   | Eccentricita' / SubframeSelector | 0,93 / 1,02 / 1,10 | 0,99 / 1,05 / 1,07 | Stessa definizione, sqrt(1 - (b/a)^2); a colori VNG allunga di poco le stelle piccole |
   | HFD / HFD ASTAP | 0,71 / 0,83 / 0,94 | 0,78 / 0,83 / 0,89 | ASTAP sta il 6-41% sopra; ADR 0022 lo misurava +8…27% sopra la verita' (il raggio medio). Colori: ASTAP misura il mosaico grezzo. Col superpixel il Canon (frame 15) dava 6,94 px contro 3,97, ora 3,20 |
-  | Stelle / stelle ASTAP | 1,06 / 2,96 / 18,97 | 5,52 / 9,98 / 37,75 | ASTAP conta da SNR 30 sul grezzo, noi da 5 sigma sull'intensita' a piena risoluzione |
-  | Stelle / stelle SubframeSelector | 0,36 / 0,47 / 1,12 | 0,64 / 0,77 / 1,34 | Il SubframeSelector rileva sui livelli delle wavelet e arriva piu' in basso; un indicatore relativo, non un conteggio |
+  | Stelle / stelle ASTAP | 0,94 / 6,20 / 27,79 | 6,76 / 14,47 / 31,56 | ASTAP conta da SNR 30 sul grezzo, noi come il SubframeSelector sull'intensita' a piena risoluzione |
+  | Stelle / stelle SubframeSelector | 0,98 / 1,00 / 1,10 | 0,99 / 1,00 / 1,12 | Tarato sul suo conteggio (12 copie pari, prova sulle 12 dispari). Sopra 1,05 due frame: 15 (Canon 700D, 1,12) e 21 (NGC 6888, campo denso a FWHM 1,34, 1,10); il perche' non e' misurato |
 
   ASTAP non da' fondo ne' rumore.
 - **Tempo** (27/10/2026, con la forma): da 1,9 a 4,1 s a frame da 26 MP mono; a colori da 6,1 a
   8,8 s, di cui il debayer 3,6-5 s; la forma da 0,6 a 1,6 s, su 291-540 stelle. Un processo, su
-  copia locale. Senza il tetto di 60 per casella un campo denso arrivava a 7,9 s.
+  copia locale. Senza il tetto di 60 per casella un campo denso arrivava a 7,9 s. Il conteggio
+  come il SubframeSelector aggiunge 0,3 s (passo 25.15). <!-- software-ok -->
 
 **Cosa si scrive** (`pipeline_measures`): esito, stelle, stelle tenute, HFD in pixel del
 sensore, fondo e rumore in ADU; la forma (fit, stimata, non misurabile) con le sue stelle, FWHM

@@ -8,6 +8,7 @@ import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 
 from ..units import sigma_from_mad
 from .debayer import COLOURS, debayered
+from .detect import detect
 from .shape import MIN_STARS, RING_OUTER, Shape, estimated_fwhm, shape_of
 
 THRESHOLD_SIGMA = 5.0  # [C Siril find_star default: 5 sigma over sky, software-ok]
@@ -29,7 +30,7 @@ NOISE_FLOOR_ADU = 0.2887
 
 @dataclass(frozen=True)
 class Measured:
-    stars: int  # every detection on the frame: a relative indicator (ADR 0022)
+    stars: int  # as the SubframeSelector counts them (detect.py); software-ok
     kept: int  # stars the HFD is the median of
     hfd_px: float  # sensor pixels
     background_adu: float
@@ -62,7 +63,7 @@ def measure_frame(
     keep = _spread(objects, usable[_round(objects[usable])], raw.shape)
     hfds = _hfd((residual, filtered), objects, keep)
     shape = shape_of((residual, filtered), objects, _spread(objects, usable, raw.shape), noise)
-    background, stars = float(sky.globalback), len(objects)
+    background, stars = float(sky.globalback), len(detect(residual, filtered, noise).x)
     if pattern is not None:  # noise said as WBPP says it; detection keeps the plane's own
         noise = max(_mosaic_noise(ceiling, pattern), NOISE_FLOOR_ADU)
     if len(hfds) < MIN_STARS:

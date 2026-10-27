@@ -44,7 +44,9 @@ riscrive, porta in testa "superato in parte da ADR 0033".
 ### Decisioni del piano di ASTAP (Marco, 23/10/2026), qui per avere una casa
 
 - **D1 Stelle da `measure`**: la passata `-analyse` esce (letture del file da 3 a 2); `measure`
-  conta le stelle sul frame intero senza pixel caldi (copia filtrata 3×3). Anche la HFD.
+  conta le stelle sul frame intero senza pixel caldi (copia filtrata 3×3). Anche la HFD. Le
+  conta come il SubframeSelector (Marco, 27/10/2026; passo 25.15, `pipeline/detect.py`): <!-- software-ok -->
+  riscritto dalla documentazione pubblica e tarato a scatola chiusa, mai dal sorgente PCL.
 - **D7 ASTAP in parallelo**: meta' dei core fisici, mai oltre un quarto della RAM (circa 160 MB a
   processo, misurati su 26 MP). Lo scrittore del database resta uno.
 

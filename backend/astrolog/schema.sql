@@ -1085,7 +1085,7 @@ CREATE TABLE pipeline_measures (
   file_id        INTEGER REFERENCES pipeline_files (id) ON DELETE SET NULL,  -- file letto
   outcome        TEXT NOT NULL CHECK (outcome IN ('measured', 'too_few_stars', 'unreadable',
                    'not_supported', 'fz_unsupported')),
-  stars          INTEGER CHECK (stars >= 0),  -- rilevate sul frame intero: indicatore relativo
+  stars          INTEGER CHECK (stars >= 0),  -- sul frame intero, come le conta SubframeSelector
   kept           INTEGER CHECK (kept >= 0),   -- stelle di cui hfd_px e' la mediana
   hfd_px         REAL CHECK (hfd_px > 0),     -- pixel del sensore, anche a colori
   background_adu REAL,                        -- fondo cielo: solo stessa camera, guadagno, posa

@@ -18,7 +18,8 @@ che resta nasce coi test.
 
 1. Fondo `sep.Background`; rumore 1,4826 x MAD a piena risoluzione (Rousseeuw e Croux, JASA
    88:1273, 1993); coincide con PixInsight entro l'1-2%. <!-- software-ok -->
-2. Stelle con `sep.extract` a 5 sigma (Siril) su una copia filtrata con mediana 3x3 esatta: in <!-- software-ok -->
+2. Stelle con `sep.extract` a 5 sigma (Siril) su una copia filtrata con mediana 3x3 esatta (il <!-- software-ok -->
+   conteggio, dal passo 25.15, e' quello del SubframeSelector: ADR 0033 D1, `misure.md`): in <!-- software-ok -->
    banda stretta la maggior parte dei rilevamenti sul grezzo erano pixel caldi. Tenute: intere,
    picco sotto il 90% della saturazione, lontane dal bordo e dalle vicine piu' di 3 FWHM; b/a
    sopra 0,5 solo per l'HFD: la forma le prende tutte, se no un frame mosso non ne ha (25.1).

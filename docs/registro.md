@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 181; senza fonte: 1.
-Fonti: C norma: 71; U usanza: 1; D metodo: 7; M misura: 13; P decisione: 31; T tecnico: 61.
+Valori: 185; senza fonte: 1.
+Fonti: C norma: 71; U usanza: 1; D metodo: 8; M misura: 13; P decisione: 31; T tecnico: 64.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -247,6 +247,15 @@ Fonti: C norma: 71; U usanza: 1; D metodo: 7; M misura: 13; P decisione: 31; T t
 | _OTHER_SUMS | `(2, 6, 7, 8, 12), (8, 12, 13, 14, 18), (12, 16, 17, 18, 22), (6, 10...` | C PCL VNGThread::ComputeSums |
 | _OTHER_SUMS | `(3, 4, 7, 8, 9, 12, 13), (12, 13, 17, 18, 19, 23, 24), (0, 1, 5, 6,...` | C PCL VNGThread::ComputeSums |
 | _OTHER_SUMS | `(11, 12, 15, 16, 17, 20, 21),` | C PCL VNGThread::ComputeSums |
+
+### pipeline/detect.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| STRUCTURE_SIGMA | `2.4` | T |
+| APERTURE_SNR | `17.25` | T |
+| APERTURE_PX | `2` | T |
+| _EIGHT | `np.ones((3, 3), dtype=bool)` | D 8-connected: diagonal pixels of a star join it |
 
 ### pipeline/fingerprint.py
 
