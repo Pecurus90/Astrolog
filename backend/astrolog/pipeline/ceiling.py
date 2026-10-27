@@ -27,7 +27,7 @@ def ceiling_of(sensor: np.ndarray, declared: float) -> float:
     cut, floor = (float(v) for v in np.partition(flat, (wide, start))[[start, wide]])
     values, counts = np.unique(flat[flat >= floor], return_counts=True)
     wanted = np.flatnonzero((counts >= SPIKE_MIN) & (values >= cut) & (values > 0))
-    piles = [i for i in wanted if _is_pile(values, counts, i)]
+    piles = [i for i in wanted.tolist() if _is_pile(values, counts, i)]
     if not piles:
         return float(declared)
     top = values[piles[-1]]
