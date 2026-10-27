@@ -30,26 +30,33 @@ PENDING = (
     " ORDER BY f.frame_id, lower(f.rel_path) LIKE '%.fz', f.rel_path"
 )
 
+_NUMBERS = (  # TooFewStars: no hfd_px, tilt_pct, curvature_pct
+    "stars", "kept", "hfd_px", "background_adu", "noise_adu", "ceiling_adu", "saturated",
+    "psf_snr", "gradient_pct", "gradient_angle_deg", "tilt_pct", "curvature_pct",
+)  # fmt: skip
+_SHAPE = ("shape", "shape_stars", "fwhm_px", "eccentricity", "angle_deg")
+
 UPSERT = (
     "INSERT INTO pipeline_measures (frame_id, file_id, outcome, stars, kept, hfd_px,"
-    " background_adu, noise_adu, shape, shape_stars, fwhm_px, eccentricity, angle_deg,"
-    " duration_s, measured_at)"
+    " background_adu, noise_adu, ceiling_adu, saturated, psf_snr, gradient_pct,"
+    " gradient_angle_deg, tilt_pct, curvature_pct, shape, shape_stars, fwhm_px, eccentricity,"
+    " angle_deg, duration_s, measured_at)"
     " VALUES (:frame_id, :file_id, :outcome, :stars, :kept, :hfd_px, :background_adu,"
-    " :noise_adu, :shape, :shape_stars, :fwhm_px, :eccentricity, :angle_deg,"
+    " :noise_adu, :ceiling_adu, :saturated, :psf_snr, :gradient_pct, :gradient_angle_deg,"
+    " :tilt_pct, :curvature_pct, :shape, :shape_stars, :fwhm_px, :eccentricity, :angle_deg,"
     " :duration_s, :measured_at)"
     " ON CONFLICT (frame_id) DO UPDATE SET file_id = excluded.file_id,"
     " outcome = excluded.outcome, stars = excluded.stars, kept = excluded.kept,"
     " hfd_px = excluded.hfd_px, background_adu = excluded.background_adu,"
-    " noise_adu = excluded.noise_adu, shape = excluded.shape,"
-    " shape_stars = excluded.shape_stars, fwhm_px = excluded.fwhm_px,"
+    " noise_adu = excluded.noise_adu, ceiling_adu = excluded.ceiling_adu,"
+    " saturated = excluded.saturated, psf_snr = excluded.psf_snr,"
+    " gradient_pct = excluded.gradient_pct, gradient_angle_deg = excluded.gradient_angle_deg,"
+    " tilt_pct = excluded.tilt_pct, curvature_pct = excluded.curvature_pct,"
+    " shape = excluded.shape, shape_stars = excluded.shape_stars, fwhm_px = excluded.fwhm_px,"
     " eccentricity = excluded.eccentricity, angle_deg = excluded.angle_deg,"
     " duration_s = excluded.duration_s, measured_at = excluded.measured_at"
     " WHERE pipeline_measures.outcome = 'unreadable'"
 )
-
-
-_NUMBERS = ("stars", "kept", "hfd_px", "background_adu", "noise_adu")  # TooFewStars: no hfd_px
-_SHAPE = ("shape", "shape_stars", "fwhm_px", "eccentricity", "angle_deg")
 
 
 @dataclass

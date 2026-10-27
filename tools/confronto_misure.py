@@ -49,13 +49,14 @@ DEBAYERED = "_d"  # [C PCL DebayerParameters: outputPostfix default, the file an
 
 # Colour frames debayered first, VNG and the pattern from the header, as WBPP does.
 # Measurements columns: 3 path, 5 FWHM, 6 eccentricity, 10 median, 12 noise, 14 stars
-# (SubframeSelectorProcess.cpp).
+# (SubframeSelectorProcess.cpp); 28 PSF SNR, found on the 24 copies: c3 F^2 / (c4 sigma^2)
+# from column 21 (PSF flux) and 12 gives it back within 3% (misure.md).
 # Errors land in the file too: the program's console never reaches stdout on Windows.
 _SCRIPT = """var files = %s;
 var colour = %s;
 var work = %s;
 var out = %s;
-var lines = ["path,fwhm_px,eccentricity,median,noise,stars"];
+var lines = ["path,fwhm_px,eccentricity,median,noise,stars,psf_snr"];
 try {
    if (colour.length > 0) {
       var D = new Debayer;
@@ -80,7 +81,7 @@ try {
    SS.executeGlobal();
    for (var i = 0; i < SS.measurements.length; ++i) {
       var m = SS.measurements[i];
-      lines.push([m[3], m[5], m[6], m[10], m[12], m[14]].join(","));
+      lines.push([m[3], m[5], m[6], m[10], m[12], m[14], m[28]].join(","));
    }
 } catch (e) {
    lines.push("error," + e);
@@ -97,6 +98,7 @@ class Ours:
     noise_adu: float
     fwhm_px: float | None = None  # None: no shape, or not measurable
     eccentricity: float | None = None
+    psf_snr: float | None = None
 
 
 @dataclass(frozen=True)
@@ -112,6 +114,7 @@ class Subframe:
     noise_adu: float
     stars: int
     eccentricity: float | None = None
+    psf_snr: float | None = None
 
 
 @dataclass(frozen=True)
@@ -157,13 +160,14 @@ def read_subframes(text: str) -> dict[str, Subframe]:
             continue
         if line.startswith("error,"):
             raise ValueError(f"SubframeSelector: {line.removeprefix('error,')}")
-        path, fwhm, eccentricity, median, noise, stars = line.rsplit(",", 5)  # comma in a path
+        path, fwhm, eccentricity, median, noise, stars, snr = line.rsplit(",", 6)  # comma in a path
         found[Path(path).name] = Subframe(
             fwhm_px=float(fwhm),
             median_adu=float(median) * ADU_RANGE,
             noise_adu=float(noise) * ADU_RANGE,
             stars=int(float(stars)),
             eccentricity=float(eccentricity),
+            psf_snr=float(snr),
         )
     return found
 
@@ -182,7 +186,8 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
     hfd = found.hfd_px if isinstance(found, Measured) else None
     shape = found.shape
     fwhm, eccentricity = (shape.fwhm_px, shape.eccentricity) if shape else (None, None)
-    ours = Ours(found.stars, hfd, found.background_adu, found.noise_adu, fwhm, eccentricity)
+    ours = Ours(found.stars, hfd, found.background_adu, found.noise_adu, fwhm, eccentricity,
+                found.psf_snr)  # fmt: skip
     return ours, pattern is not None
 
 
@@ -209,6 +214,9 @@ def _pairs(row: Row) -> dict[str, float | None]:
         ),
         "rumore / SubframeSelector": (
             ours.noise_adu / sub.noise_adu if sub and sub.noise_adu else None
+        ),
+        "PSF SNR / SubframeSelector": (
+            ours.psf_snr / sub.psf_snr if sub and sub.psf_snr and ours.psf_snr else None
         ),
     }
 
@@ -264,8 +272,8 @@ def _number(value: float | None, digits: int = 2) -> str:
 def _print_rows(rows: list[Row]) -> None:
     print("| frame | tipo | stelle | HFD | FWHM | eccentricita' | fondo | rumore "
           "| ASTAP stelle | ASTAP HFD | SubframeSelector stelle | FWHM | eccentricita' "
-          "| mediana | rumore |")  # fmt: skip
-    print("|---" * 15 + "|")
+          "| mediana | rumore | PSF SNR | PSF SNR SubframeSelector |")  # fmt: skip
+    print("|---" * 17 + "|")
     for row in rows:
         o, a, s = row.ours, row.astap, row.subframe
         cells = [
@@ -284,6 +292,8 @@ def _print_rows(rows: list[Row]) -> None:
             _number(s.eccentricity if s else None),
             _number(s.median_adu if s else None, 1),
             _number(s.noise_adu if s else None, 1),
+            _number(o.psf_snr if o else None, 4),
+            _number(s.psf_snr if s else None, 4),
         ]
         print("| " + " | ".join(cells) + " |")
 

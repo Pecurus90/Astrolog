@@ -15,6 +15,8 @@ STRUCTURE_SIGMA = 2.4
 APERTURE_SNR = 17.25
 # Count ratio against the frame's FWHM: correlation -0.80 at 1 px, 0.78 at 3, -0.25 at 2. [T]
 APERTURE_PX = 2
+# Saturated: this many sensor pixels at the ceiling; one is a hot pixel inside a star. [T]
+CLIPPED_PIXELS = 2
 _EIGHT = np.ones((3, 3), dtype=bool)  # [D 8-connected: diagonal pixels of a star join it]
 
 
@@ -22,11 +24,18 @@ _EIGHT = np.ones((3, 3), dtype=bool)  # [D 8-connected: diagonal pixels of a sta
 class Detections:
     x: np.ndarray  # barycentre on the median copy, columns
     y: np.ndarray  # rows
+    saturated: np.ndarray  # bool: CLIPPED_PIXELS sensor pixels at the ceiling; all False unasked
+    flux: np.ndarray  # the residual summed over the star's structure
 
 
-def detect(residual: np.ndarray, filtered: np.ndarray, noise: float) -> Detections:
-    """`residual`: the frame less its sky; `filtered`: its 3x3 median copy (hot pixels gone);
-    `noise`: the sky's sigma. One star per structure: touching stars count once."""
+def detect(
+    residual: np.ndarray,
+    filtered: np.ndarray,
+    noise: float,
+    clip: tuple[np.ndarray, float] | None = None,
+) -> Detections:
+    """`residual`: frame less sky; `filtered`: its 3x3 median; `clip`: sensor pixels (colour: the
+    mosaic) and their ceiling. One star per structure: touching stars count once."""
     found = ndimage.label(filtered > STRUCTURE_SIGMA * noise, structure=_EIGHT)
     labels, count = cast(tuple[np.ndarray, int], found)  # stubs say int | tuple
     # Structure pixels only: ndimage's per-label max and centre sweep the frame, 1.5 s at 26 MP.
@@ -41,4 +50,10 @@ def detect(residual: np.ndarray, filtered: np.ndarray, noise: float) -> Detectio
     total = np.bincount(owner, weight, count + 1)[star]
     x = np.bincount(owner, weight * cols, count + 1)[star] / total
     y = np.bincount(owner, weight * rows, count + 1)[star] / total
-    return Detections(x, y)
+    saturated = np.zeros(len(x), dtype=bool)
+    if clip is not None:
+        sensor, top = clip
+        at_top = np.bincount(owner, sensor[rows, cols] >= top, count + 1)[star]
+        saturated = at_top >= CLIPPED_PIXELS
+    flux = np.bincount(owner, residual[rows, cols].astype(float), count + 1)[star]
+    return Detections(x, y, saturated, flux)

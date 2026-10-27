@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 185; senza fonte: 1.
-Fonti: C norma: 71; U usanza: 1; D metodo: 8; M misura: 13; P decisione: 31; T tecnico: 64.
+Valori: 200; senza fonte: 1.
+Fonti: C norma: 74; U usanza: 1; D metodo: 8; M misura: 14; P decisione: 33; T tecnico: 73.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -211,6 +211,17 @@ Fonti: C norma: 71; U usanza: 1; D metodo: 8; M misura: 13; P decisione: 31; T t
 | CORE_SHARE | `2` | P ADR 0033, D7 |
 | THREADS_PER_CORE | `2` | T |
 
+### pipeline/ceiling.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| TOP_SHARE | `0.999` | T |
+| NEIGHBOUR_SHARE | `0.99` | T |
+| SPIKE_MIN | `4` | T |
+| SPIKE_RATIO | `10.0` | T |
+| NEIGHBOURS | `8` | T |
+| SAME_PILE | `0.001` | M misure.md |
+
 ### pipeline/changes.py
 
 | simbolo | valore | fonte |
@@ -255,7 +266,21 @@ Fonti: C norma: 71; U usanza: 1; D metodo: 8; M misura: 13; P decisione: 31; T t
 | STRUCTURE_SIGMA | `2.4` | T |
 | APERTURE_SNR | `17.25` | T |
 | APERTURE_PX | `2` | T |
+| CLIPPED_PIXELS | `2` | T |
 | _EIGHT | `np.ones((3, 3), dtype=bool)` | D 8-connected: diagonal pixels of a star join it |
+
+### pipeline/field.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| PSF_SNR_C3 | `1.350e-7` | C PixInsight ImageWeighting, eq. 18-19; software-ok |
+| PSF_SNR_C4 | `4.987e6` | C PixInsight ImageWeighting, eq. 18-19; software-ok |
+| PSF_FLUX_SCALE | `0.944` | T |
+| MESH_PX | `64` | C sep docs: Background bw, bh default |
+| PLANE_EXPLAINS | `0.5` | T |
+| ZONE_MIN_STARS | `25` | T |
+| GRID | `3` | P ADR 0037: the 3x3 grid, its corners and centre the five zones |
+| CENTRE | `GRID * GRID // 2` | P ADR 0037 |
 
 ### pipeline/fingerprint.py
 

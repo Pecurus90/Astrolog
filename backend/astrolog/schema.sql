@@ -1097,6 +1097,14 @@ CREATE TABLE pipeline_measures (
   fwhm_px        REAL CHECK (fwhm_px > 0),          -- media geometrica dei due assi
   eccentricity   REAL CHECK (eccentricity >= 0 AND eccentricity < 1),
   angle_deg      REAL CHECK (angle_deg >= 0 AND angle_deg < 180),  -- asse lungo, da +x verso +y
+  -- tetto: la pila in cima all'istogramma, se no DATAMAX o il massimo del tipo (ceiling.py)
+  ceiling_adu    REAL,
+  saturated      INTEGER CHECK (saturated >= 0),  -- delle stelle, quelle al tetto
+  psf_snr        REAL CHECK (psf_snr >= 0),  -- ImageWeighting eq. 18-19 (SubframeSelector); NULL: < 5 stelle
+  gradient_pct   REAL CHECK (gradient_pct >= 0),  -- 100 (max - min) / mediana del fondo ridotto
+  gradient_angle_deg REAL CHECK (gradient_angle_deg >= 0 AND gradient_angle_deg < 360),  -- lato chiaro
+  tilt_pct       REAL CHECK (tilt_pct >= 0),  -- HFD degli angoli, ASTAP; NULL: zona povera
+  curvature_pct  REAL,  -- angoli meno centro, con segno: + angoli peggiori
   duration_s     REAL CHECK (duration_s >= 0),
   measured_at    TEXT NOT NULL,
   CHECK ((outcome = 'measured') = (hfd_px IS NOT NULL)),
@@ -1107,7 +1115,13 @@ CREATE TABLE pipeline_measures (
   CHECK ((shape IS NULL) = (shape_stars IS NULL)),
   CHECK (coalesce(shape IN ('fitted', 'estimated'), 0) = (fwhm_px IS NOT NULL)
     AND (fwhm_px IS NULL) = (eccentricity IS NULL)),
-  CHECK (angle_deg IS NULL OR eccentricity >= 0.4)  -- direzione solo da 0,4 (ADR 0022)
+  CHECK (angle_deg IS NULL OR eccentricity >= 0.4),  -- direzione solo da 0,4 (ADR 0022)
+  CHECK ((stars IS NULL) = (ceiling_adu IS NULL) AND (stars IS NULL) = (saturated IS NULL)
+    AND saturated <= stars),
+  CHECK (psf_snr IS NULL OR stars >= 5),
+  CHECK (gradient_pct IS NOT NULL OR gradient_angle_deg IS NULL),
+  CHECK (gradient_pct IS NULL OR stars IS NOT NULL),
+  CHECK ((tilt_pct IS NULL) = (curvature_pct IS NULL) AND (tilt_pct IS NULL OR hfd_px IS NOT NULL))
 ) STRICT;
 
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave calcolata dal nome, mai salvata:

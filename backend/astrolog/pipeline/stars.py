@@ -7,8 +7,10 @@ import numpy as np
 import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 
 from ..units import sigma_from_mad
+from .ceiling import ceiling_of
 from .debayer import COLOURS, debayered
 from .detect import detect
+from .field import PSF_FLUX_SCALE, gradient_of, psf_snr, zones_of
 from .shape import MIN_STARS, RING_OUTER, Shape, estimated_fwhm, shape_of
 
 THRESHOLD_SIGMA = 5.0  # [C Siril find_star default: 5 sigma over sky, software-ok]
@@ -29,17 +31,30 @@ NOISE_FLOOR_ADU = 0.2887
 
 
 @dataclass(frozen=True)
-class Measured:
+class Across:
+    """What every frame with a sky has, stars or not (field.py, ceiling.py)."""
+
+    ceiling_adu: float  # the histogram's clip pile, else DATAMAX or the type's top
+    saturated: int  # of `stars`, those with sensor pixels at the ceiling
+    psf_snr: float | None  # None: under MIN_STARS stars
+    gradient_pct: float | None
+    gradient_angle_deg: float | None
+
+
+@dataclass(frozen=True)
+class Measured(Across):
     stars: int  # as the SubframeSelector counts them (detect.py); software-ok
     kept: int  # stars the HFD is the median of
     hfd_px: float  # sensor pixels
     background_adu: float
     noise_adu: float
     shape: Shape | None  # on stars of any roundness: a trailed frame still has one
+    tilt_pct: float | None  # None: a zone under field.ZONE_MIN_STARS
+    curvature_pct: float | None
 
 
 @dataclass(frozen=True)
-class TooFewStars:
+class TooFewStars(Across):
     stars: int
     kept: int
     background_adu: float
@@ -50,25 +65,36 @@ class TooFewStars:
 def measure_frame(
     data: np.ndarray, *, saturation: float, pattern: str | None
 ) -> Measured | TooFewStars:
-    """`pattern`: a colour sensor's Bayer matrix (debayer.COLOURS), measured on the intensity of
-    its VNG image as WBPP does; None is mono. `saturation`: the ceiling in the units of `data`."""
-    ceiling = np.ascontiguousarray(data, dtype=np.float32)  # a clipped sensor pixel, colour too
-    raw = ceiling if pattern is None else debayered(ceiling, pattern, top=saturation)
+    """`pattern`: Bayer matrix (debayer.COLOURS), measured on its VNG intensity as WBPP; None mono.
+    `saturation`: declared full scale; debayer clips there (as WBPP), stars at ceiling.py's."""
+    sensor = np.ascontiguousarray(data, dtype=np.float32)  # a clipped sensor pixel, colour too
+    top = ceiling_of(sensor, saturation)
+    raw = sensor if pattern is None else debayered(sensor, pattern, top=saturation)
     sky = sep.Background(raw)
-    residual = raw - sky.back()
+    back = sky.back()
+    residual = raw - back
     noise = max(_sigma(residual), NOISE_FLOOR_ADU)
-    filtered = median3x3(residual)
-    objects = _found(filtered, noise)
-    usable = _kept(ceiling, objects, saturation)
-    keep = _spread(objects, usable[_round(objects[usable])], raw.shape)
-    hfds = _hfd((residual, filtered), objects, keep)
-    shape = shape_of((residual, filtered), objects, _spread(objects, usable, raw.shape), noise)
-    background, stars = float(sky.globalback), len(detect(residual, filtered, noise).x)
+    images = (residual, median3x3(residual))
+    objects = _found(images[1], noise)
+    usable = _kept(sensor, objects, top)
+    round_ones = usable[_round(objects[usable])]
+    hfds, hx, hy = _hfd(images, objects, _spread(objects, round_ones, raw.shape))
+    shape = shape_of(images, objects, _spread(objects, usable, raw.shape), noise)
+    found = detect(*images, noise, clip=(sensor, top))
     if pattern is not None:  # noise said as WBPP says it; detection keeps the plane's own
-        noise = max(_mosaic_noise(ceiling, pattern), NOISE_FLOOR_ADU)
+        noise = max(_mosaic_noise(sensor, pattern), NOISE_FLOOR_ADU)
+    gradient = gradient_of(back)
+    flux = PSF_FLUX_SCALE * float(found.flux.sum())
+    snr = psf_snr(flux, noise) if len(found.x) >= MIN_STARS else None
+    across = Across(top, int(found.saturated.sum()), snr, gradient.pct, gradient.angle_deg)
+    common = {"stars": len(found.x), "kept": len(hfds), "background_adu": float(sky.globalback),
+              "noise_adu": noise, "shape": shape} | vars(across)  # fmt: skip
     if len(hfds) < MIN_STARS:
-        return TooFewStars(stars, len(hfds), background, noise, shape)
-    return Measured(stars, len(hfds), float(np.median(hfds)), background, noise, shape)
+        return TooFewStars(**common)
+    zones = zones_of(hfds, hx, hy, raw.shape)
+    return Measured(**common, hfd_px=float(np.median(hfds)),
+                    tilt_pct=zones.tilt_pct if zones else None,
+                    curvature_pct=zones.curvature_pct if zones else None)  # fmt: skip
 
 
 def _sigma(residual: np.ndarray) -> float:
@@ -195,11 +221,11 @@ def _peaks(raw: np.ndarray, objects: np.ndarray, guess: np.ndarray) -> np.ndarra
 
 def _hfd(
     images: tuple[np.ndarray, np.ndarray], objects: np.ndarray, keep: np.ndarray
-) -> np.ndarray:
-    """Half-flux diameter on the raw residual, less the ring median on the filtered copy (no hot
-    pixels, no neighbours). No segment mask: a masked nebula empties the ring (Rosette)."""
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """HFD on the raw residual less the ring median on the filtered copy, and where each star is.
+    No segment mask: a masked nebula empties the ring (Rosette)."""
     if len(keep) == 0:
-        return np.array([])
+        return np.array([]), np.array([]), np.array([])
     residual, filtered = images
     x, y = objects["x"][keep], objects["y"][keep]
     aperture = APERTURE_FWHM * estimated_fwhm(objects)[keep]
@@ -217,4 +243,4 @@ def _hfd(
         radii[j] = (
             np.interp(total[j] / 2, np.maximum.accumulate(enclosed[:, j]), steps) * aperture[j]
         )
-    return 2 * radii[good]
+    return 2 * radii[good], x[good], y[good]
