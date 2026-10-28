@@ -83,12 +83,13 @@ UPSERT = (
     " installed, duration_s, launch_s, machine, hint_from, field_from, ra_deg, dec_deg,"
     " scale_arcsec_px, expected_scale_arcsec_px, scale_disagrees, measured_focal_mm,"
     " astap_warning, rotation_deg, mirrored, skew_deg, width_deg, height_deg, corners,"
-    " cd1_1, cd1_2, cd2_1, cd2_2, tried_at)"
+    " cd1_1, cd1_2, cd2_1, cd2_2, crpix1, crpix2, tried_at)"
     " VALUES (:frame_id, :outcome, :step, :file_id, :astap_version, :catalogue, :installed,"
     " :duration_s, :launch_s, :machine, :hint_from, :field_from, :ra_deg, :dec_deg,"
     " :scale_arcsec_px, :expected_scale_arcsec_px, :scale_disagrees, :measured_focal_mm,"
     " :astap_warning, :rotation_deg, :mirrored, :skew_deg,"
-    " :width_deg, :height_deg, :corners, :cd1_1, :cd1_2, :cd2_1, :cd2_2, :tried_at)"
+    " :width_deg, :height_deg, :corners, :cd1_1, :cd1_2, :cd2_1, :cd2_2, :crpix1, :crpix2,"
+    " :tried_at)"
     " ON CONFLICT (frame_id) DO UPDATE SET attempts = attempts + 1, outcome = excluded.outcome,"
     " step = excluded.step, file_id = excluded.file_id, astap_version = excluded.astap_version,"
     " catalogue = excluded.catalogue, installed = excluded.installed,"
@@ -102,7 +103,7 @@ UPSERT = (
     " mirrored = excluded.mirrored, skew_deg = excluded.skew_deg, width_deg = excluded.width_deg,"
     " height_deg = excluded.height_deg, corners = excluded.corners, cd1_1 = excluded.cd1_1,"
     " cd1_2 = excluded.cd1_2, cd2_1 = excluded.cd2_1, cd2_2 = excluded.cd2_2,"
-    " tried_at = excluded.tried_at"
+    " crpix1 = excluded.crpix1, crpix2 = excluded.crpix2, tried_at = excluded.tried_at"
     # settled by another pass meanwhile: stays
     " WHERE pipeline_solutions.outcome NOT IN ('solved', 'no_solution', 'no_stars')"
 )
@@ -339,9 +340,8 @@ class _Flock:
 
 def _installed(solver: astap.Solver) -> tuple[str, ...]:
     """Where ASTAP reads its catalogue: folder said, else beside it (Windows; Mac not)."""
-    if solver.databases is not None:
-        return astap.catalogues_in(solver.databases)
-    return astap.star_databases(solver.exe)
+    folder = astap.catalogue_folder(solver)
+    return () if folder is None else astap.catalogues_in(folder)
 
 
 def _try(
@@ -459,10 +459,12 @@ def forget(conn: sqlite3.Connection, frame_id: int) -> bool:
 
 def _measured(found: astap.Solution, row: sqlite3.Row) -> dict[str, object]:
     """Footprint of a solution: the sky's rectangle, written once, never redone by a reader."""
-    keys = ("mirrored", "skew_deg", "width_deg", "height_deg", "corners", *CD_COLUMNS)
+    keys = ("mirrored", "skew_deg", "width_deg", "height_deg", "corners", *CD_COLUMNS,
+            "crpix1", "crpix2")  # fmt: skip
     if not (found.ok and found.cd and found.crpix):
         return {key: None for key in keys}
     cd: dict[str, object] = dict(zip(CD_COLUMNS, found.cd, strict=True))
+    cd |= {"crpix1": found.crpix[0], "crpix2": found.crpix[1]}
     sky = footprint(
         found.cd,
         found.crpix,

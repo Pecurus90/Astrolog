@@ -16,6 +16,7 @@ from .measure import measure_root
 from .scan import scan_root
 from .sky_measure import sky_root
 from .solve import solve_root
+from .sqm_measure import sqm_root
 
 log = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ def run_roots(
             solve_root(conn, root, now, solver, work, stop=stop)
             measure_root(conn, root, now, stop=stop)
             sky_root(conn, root, now, stop=stop)
+            sqm_root(conn, root, now, astap.catalogue_folder(solver), stop=stop)
         except Exception:  # behind the scenes: the user's scan never breaks here
             log.warning("pipeline nuova: cartella saltata %s", path, exc_info=True)
         yield {"current": number, "total": len(paths)}

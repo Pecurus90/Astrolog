@@ -17,4 +17,6 @@ dipendenza.
 - Per contribuire: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 Licenza: [GPL-3.0](LICENSE). Il solver astrometrico e' [ASTAP](https://www.hnsky.org/astap.htm)
-(MPL 2.0); i database stellari sono estratti di Gaia DR3 -- *ESA/Gaia/DPAC*.
+(MPL 2.0); i database stellari sono estratti di Gaia DR3 -- *ESA/Gaia/DPAC*. Il metodo dello SQM
+e il lettore dei cataloghi sono portati dal sorgente di ASTAP (Han Kleijn, MPL 2.0: i due file,
+`backend/astrolog/pipeline/sqm.py` e `star_catalogue.py`, restano sotto quella licenza).

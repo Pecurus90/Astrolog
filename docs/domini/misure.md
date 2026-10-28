@@ -34,6 +34,11 @@ parole in [`glossario.md`](glossario.md).
 | Un file che non si legge ora si riprova; uno che non e' un'immagine da misurare lo dice | `test_a_file_unreadable_now_is_tried_again`, `test_a_frame_too_small_to_measure_says_so`, `test_a_cut_file_a_missing_one_and_a_compressed_one_say_why` (`backend/tests/test_pipeline_pixels.py`) |
 | Una fermata ferma la misura fra un frame e l'altro | `test_a_stop_measures_nothing_more` |
 | HFD e stelle non costano una seconda passata di ASTAP | `test_a_cached_sky_launches_nothing_at_all` (`backend/tests/test_solve.py`) |
+| La luminosita' del cielo (SQM) e' quella di ASTAP: zero point dalle stelle del catalogo, cielo dalla moda dell'istogramma | `test_the_zero_point_and_the_sky_come_back`, `test_the_sky_is_the_histogram_mode`, `test_a_mean_far_above_the_mode_wins`, `test_the_mode_leaves_out_the_frame_borders`, `test_star_flux_sums_the_star_over_its_ring`, `test_the_best_mean_drops_outliers_and_weighs_by_snr`, `test_the_sky_brightness_formula`, `test_the_brightest_stars_near_the_frame_top_are_left_out` (`backend/tests/test_pipeline_sqm.py`) |
+| Il catalogo e' quello che ASTAP ha gia' installato, letto come lo legge lui | `test_the_documented_star_decodes_to_sirius`, `test_a_position_falls_in_its_area`, `test_a_field_on_the_corner_of_four_areas_shares_its_quota`, `test_the_window_keeps_the_square_around_the_centre`, `test_the_catalogue_is_the_first_gaia_bp_one_in_astaps_order`, `test_the_real_d80_reads_bright_to_faint` (`backend/tests/test_pipeline_star_catalogue.py`) |
+| Lo SQM solo su mono col filtro L e su camere a colori (Marco, 28/10/2026); senza catalogo le pose aspettano | `test_a_mono_shot_counts_only_with_the_l_filter`, `test_a_colour_shot_behind_a_narrow_filter_does_not_count`, `test_your_own_l_filter_counts`, `test_without_a_catalogue_shots_wait` (`backend/tests/test_pipeline_sqm_measure.py`) |
+| Il bias della camera a quell'offset si toglie al cielo (Marco, 28/10/2026); dichiarato dopo riscrive le sue pose; a colori senza bias lo SQM tace | `test_a_bias_declared_before_is_taken_off`, `test_a_bias_declared_after_rewrites_the_shots_of_that_camera_and_offset`, `test_a_colour_shot_needs_the_bias`, `test_a_bias_over_the_sky_leaves_no_brightness`, `test_a_mono_l_shot_gets_its_sky_brightness_without_bias` |
+| Senza altezza (sito, ora, sotto l'orizzonte) lo SQM lo dice senza leggere i pixel; una soluzione dimenticata lo porta via | `test_a_shot_without_altitude_is_said_without_reading_it`, `test_a_forgotten_solution_takes_the_sky_brightness_with_it`, `test_a_shot_waits_for_its_sky_row` |
 
 ## Le decisioni
 
@@ -236,12 +241,37 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   come il SubframeSelector aggiunge 0,3 s (passo 25.15). <!-- software-ok --> Col 25.2: da 2,0 a
   4,1 s mono, da 5,6 a 7,8 s a colori.
 
+**Lo SQM** (stadio `sqm`, `pipeline/sqm.py` e `star_catalogue.py`, portati dal sorgente di ASTAP,
+MPL-2.0; ADR 0022 punto 8):
+
+- **Metodo e soglie di ASTAP**, ognuna col suo tag nel codice: stelle del catalogo nel campo
+  risolto, flusso col fondo dall'anello, zero point dalla media pesata, cielo dalla moda,
+  SQM = ZP - 2,5 log10((cielo - bias) / scala^2) + 0,2811 X - 0,28. Cataloghi cercati nella
+  cartella di ASTAP in quest'ordine: d80, d50, d20, d05; v50 e .290 esclusi (altre bande o altro
+  formato). La distorsione SIP non entra: si usa la sola CD.
+- **A colori** il superpixel 2x2 col suo intento (media dei quattro); il ciclo di ASTAP scorre a
+  passo 1 su un quarto del frame, quel difetto non si porta. Da riga di comando ASTAP non ha un
+  riferimento a colori: `astap.exe -sqm` su un frame a colori non chiude in 120 s.
+- **Bias**: per camera e offset, `pipeline_camera_bias`; se il cielo non sta sopra il bias lo SQM
+  e' NULL (ASTAP azzera il bias e calcola lo stesso). N.I.N.A. e ASIAIR non scrivono `PEDESTAL`.
+- **Sul vero** (28/10/2026, `python tools/confronto_sqm.py CARTELLA [--bias ADU]`, contro
+  `astap.exe -r 30 -sqm`): 48 frame mono (20 del passo 25 senza bias, 28 del 18/10 con
+  `--bias 400`): zero point uguale a MZEROR su tutti entro 0,0001; scarto dello SQM mediana
+  0,003 mag, massimo 0,028 (m08; poi n01 0,019, 04 0,011, gli altri sotto 0,01). ASTAP scrive
+  due decimali: fino a 0,005 e' arrotondamento. Un frame mono (m14) ASTAP non lo risolve. A
+  colori (risolti con `astap_cli`, nessun riferimento): 29 frame Poseidon-C, ASI2600MC Duo,
+  Canon 700D, zero point su 25 (da 22,2 a 27,9, da 186 a 3478 stelle), 4 senza soluzione o
+  senza altezza; lo SQM aspetta il bias della camera, che non abbiamo.
+- **Tempo**: da 0,4 a 1,1 s a frame mono da 26 MP, soluzione data.
+
 **Cosa si scrive** (`pipeline_measures`): esito, stelle, stelle tenute, HFD in pixel del
 sensore, fondo e rumore in ADU; la forma (fit, stimata, non misurabile) con le sue stelle, FWHM
 in pixel, eccentricita' e direzione; il tetto e le stelle sature, il PSF SNR, il gradiente col
 lato chiaro, tilt e curvatura; durata, ora. In `pipeline_sky`: se risolta, meta' posa, altezza,
 massa d'aria, FWHM e HFD in secondi d'arco e allo zenit, direzione e lato chiaro sul cielo con
-l'asse. In `pipeline_solutions` la matrice CD. Il fondo si confronta solo con la stessa camera,
+l'asse. In `pipeline_solutions` la matrice CD e il pixel di riferimento. In `pipeline_sqm`:
+esito (misurato, calibrazione fallita, senza altezza, illeggibile), catalogo, zero point, stelle
+di calibrazione, cielo in ADU, colori, bias tolto, SQM, durata, ora. Il fondo si confronta solo con la stessa camera,
 guadagno e posa (ADR 0022). Le misure scritte negli header da altri programmi non si leggono.
 
 **La pipeline vecchia** non lancia piu' `-analyse` (D1, +0,3 s a frame) e non ha piu'
@@ -265,7 +295,8 @@ dell'oggetto no.
 
 ## Cosa non fa ancora, e con cosa arrivera'
 
-- **25.3**: SQM col metodo di ASTAP portato, il lettore del catalogo D80, il bias della camera.
+- **Bias (ADU) a schermo**: col porting di Attrezzatura (fase 5) e il setup della pipeline
+  (passo 40); oggi si dichiara solo da codice (`declare_bias`).
 - **26-27**: soglie relative (Qn), eccentricita' rispetto al setup, Bortle del sito, oggetto basso.
 - **A schermo**: col porting delle pagine (fase 5). Le tavole di Design (`handoff/design/`,
   26/10/2026) chiedono le stesse misure; quattro scarti vanno al censimento (passo 24.1):

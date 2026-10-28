@@ -26,6 +26,7 @@ ENGLISH = frozenset(
         "alpha",
         "ap",
         "api",
+        "area",
         "ascii",
         "astro",
         "auto",
@@ -56,6 +57,7 @@ ENGLISH = frozenset(
         "nogo",
         "o",
         "oiii",
+        "quota",
         "ra",
         "radii",
         "ratio",
@@ -69,6 +71,8 @@ ENGLISH = frozenset(
         "too",
         "tri",
         "via",
+        "xi",
+        "zero",
     ]
 )
 # Italian words the vowel rule does not catch.

@@ -46,7 +46,7 @@ del 20/10/2026 su app e forum:
   - notti buone e notti uscite (meteo storico e tue notti);
   - ore integrate;
   - FWHM mediana allo zenit, in arcsec (ADR 0022), coi quartili;
-  - cielo: SQM dai frame L, senza filtro e a colori (ADR 0022; Luna sotto -5° separata da Luna
+  - cielo: SQM dai frame mono col filtro L e a colori (ADR 0022; Luna sotto -5° separata da Luna
     su) e seeing storico (solo da quando l'app archivia la previsione);
   - le altre misure dei frame (Marco, 20/10/2026): HFD allo zenit, eccentricita'; e la qualita'
     della notte dal meteo (ADR 0020). Mediana del mese. Stelle e fondo cielo, prima in elenco,

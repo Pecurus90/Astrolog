@@ -159,11 +159,16 @@ def _search(
 def star_databases(exe: str | Path | None) -> tuple[str, ...]:
     """Only beside the resolved executable, not in known install folders, which would show another
     program's catalogue. Looked at, not asked: asking ASTAP means running it."""
+    folder = _exe_folder(exe)
+    return () if folder is None else catalogues_in(folder)
+
+
+def _exe_folder(exe: str | Path | None) -> Path | None:
     if exe is None:
-        return ()
+        return None
     with contextlib.suppress(OSError):
-        return catalogues_in(Path(exe).resolve().parent)
-    return ()
+        return Path(exe).resolve().parent
+    return None
 
 
 def catalogues_in(folder: str | Path) -> tuple[str, ...]:
@@ -270,6 +275,13 @@ class Solver:
     run: Run | None = None  # tests inject it: the suite never launches ASTAP
     timeout_s: float = TIMEOUT_S
     databases: str | Path | None = None  # catalogue folder; ASTAP picks one for the field
+
+
+def catalogue_folder(solver: Solver) -> Path | None:
+    """Where ASTAP reads its catalogues: the folder said, else beside the executable."""
+    if solver.databases is not None:
+        return Path(solver.databases)
+    return _exe_folder(solver.exe)
 
 
 @dataclass(frozen=True)

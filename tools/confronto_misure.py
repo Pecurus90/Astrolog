@@ -180,15 +180,18 @@ def read_subframes(text: str) -> dict[str, Subframe]:
     return found
 
 
-def card_altitude(cards: dict[str, Value]) -> float | None:
-    """As the sky stage on a shot not solved: the card's pointing, site and mid exposure."""
+def card_altitude(
+    cards: dict[str, Value], centre: tuple[float, float] | None = None
+) -> float | None:
+    """As the sky stage: the solved centre, else the card's pointing; site and mid exposure."""
     program = program_of(cards)
     if program is None:
         return None
     card = read_card(program, cards)
     start = None if card.start_utc is None else card.start_utc.isoformat(timespec="microseconds")
     row = {f.name: getattr(card, f.name) for f in fields(card)} | {"start_utc": start}
-    [altitude] = apparent_altitudes([row | {"ra_deg": None, "dec_deg": None}])
+    ra, dec = centre or (None, None)
+    [altitude] = apparent_altitudes([row | {"ra_deg": ra, "dec_deg": dec}])
     return altitude
 
 

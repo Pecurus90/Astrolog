@@ -1076,6 +1076,9 @@ CREATE TABLE pipeline_solutions (
   cd1_2           REAL,
   cd2_1           REAL,
   cd2_2           REAL,
+  -- pixel di riferimento del .wcs, da 1: proietta le stelle del catalogo (pipeline_sqm)
+  crpix1          REAL,
+  crpix2          REAL,
   tried_at        TEXT NOT NULL,  -- ora della passata, non del lancio
   CHECK ((outcome = 'solved') = (ra_deg IS NOT NULL)
     AND (ra_deg IS NULL) = (dec_deg IS NULL) AND (ra_deg IS NULL) = (scale_arcsec_px IS NULL)),
@@ -1083,6 +1086,7 @@ CREATE TABLE pipeline_solutions (
     corners, expected_scale_arcsec_px, measured_focal_mm, astap_warning, cd1_1) IS NULL),
   CHECK ((cd1_1 IS NULL) = (cd1_2 IS NULL) AND (cd1_1 IS NULL) = (cd2_1 IS NULL)
     AND (cd1_1 IS NULL) = (cd2_2 IS NULL)),
+  CHECK ((crpix1 IS NULL) = (crpix2 IS NULL) AND (crpix1 IS NULL OR cd1_1 IS NOT NULL)),
   CHECK ((expected_scale_arcsec_px IS NULL) = (scale_disagrees IS NULL))
 ) STRICT;
 
@@ -1159,6 +1163,43 @@ CREATE TABLE pipeline_sky (
   CHECK ((fwhm_zenith_arcsec IS NULL) = (fwhm_arcsec IS NULL OR airmass IS NULL)),
   CHECK ((angle_pa_deg IS NULL) = (angle_axis IS NULL))
 ) STRICT;
+
+-- RILEVATO. Luminosita' del cielo, metodo di ASTAP (pipeline/sqm_measure.py, ADR 0022 punto 8);
+-- nessuna riga: da misurare o non ammessa. Va via con la riga del cielo (soluzione dimenticata).
+CREATE TABLE pipeline_sqm (
+  frame_id      INTEGER PRIMARY KEY REFERENCES pipeline_sky (frame_id) ON DELETE CASCADE,
+  file_id       INTEGER REFERENCES pipeline_files (id) ON DELETE SET NULL,  -- file letto
+  -- no_altitude: sito, ora o posizione ignoti, o sotto l'orizzonte; pixel non letti
+  outcome       TEXT NOT NULL CHECK (outcome IN ('measured', 'calibration_failed', 'no_altitude',
+                  'unreadable')),
+  catalogue     TEXT CHECK (catalogue IN ('d80', 'd50', 'd20', 'd05')),
+  zero_point_mag REAL,              -- MZERO di ASTAP: magnitudine BP di 1 ADU della posa
+  calibration_stars INTEGER CHECK (calibration_stars > 0),
+  sky_adu       REAL,               -- moda dell'istogramma; a colori sui blocchi 2x2
+  colour        INTEGER CHECK (colour IN (0, 1)),  -- misurata sui blocchi 2x2
+  -- bias della camera a quell'offset (pipeline_camera_bias); NULL: non dichiarato
+  bias_adu      REAL CHECK (bias_adu > 0),
+  -- mag/arcsec^2 allo zenit; NULL: a colori senza bias, o cielo non sopra il bias
+  sqm           REAL,
+  duration_s    REAL CHECK (duration_s >= 0),
+  computed_at   TEXT NOT NULL,
+  CHECK ((outcome = 'measured') = (zero_point_mag IS NOT NULL)
+    AND (zero_point_mag IS NULL) = (calibration_stars IS NULL)
+    AND (zero_point_mag IS NULL) = (sky_adu IS NULL)),
+  CHECK ((outcome IN ('measured', 'calibration_failed')) = (catalogue IS NOT NULL)
+    AND (catalogue IS NULL) = (colour IS NULL)),
+  CHECK (sqm IS NULL OR outcome = 'measured'),
+  CHECK (sqm IS NULL OR colour = 0 OR bias_adu IS NOT NULL)
+) STRICT;
+
+-- DICHIARATO. Bias della camera in ADU per lo SQM, per camera e offset (ADR 0021), come scritti
+-- nella scheda; offset NULL: i file non lo scrivono.
+CREATE TABLE pipeline_camera_bias (
+  camera   TEXT NOT NULL CHECK (camera <> ''),
+  offset   INTEGER CHECK (offset >= 0),
+  bias_adu REAL NOT NULL CHECK (bias_adu > 0)
+) STRICT;
+CREATE UNIQUE INDEX pipeline_camera_bias_key ON pipeline_camera_bias (camera, ifnull(offset, -1));
 
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave calcolata dal nome, mai salvata:
 -- una rinomina non la lascia indietro. Due nomi con la stessa chiave: rifiutati in filters.py.

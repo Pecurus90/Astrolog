@@ -43,7 +43,8 @@ backfocus, setup, Deep sky.
 | il fuso orario del sito, ricavato dalle sue coordinate | `timezone` | fuso | zona, orario |
 | l'ora che il file dice, UTC come vuole lo standard FITS: e' l'istante su cui la posa conta | `date_obs` | ora della posa | ora vera, ora corretta |
 | quanto e' scuro il cielo di un sito, in magnitudini per arcosecondo quadrato: e' la misura | `sky_sqm` | luminosita' del cielo | brillanza |
-| la luminosita' del cielo misurata su un frame L, senza filtro o a colori (ADR 0022): a schermo "SQM 19.2" (Marco, 18/10/2026) | `sqm` (su `pipeline_measures`, passo 25.3) | SQM | brillanza, fondo in magnitudini |
+| la luminosita' del cielo misurata su un frame mono col filtro L o a colori (ADR 0022): a schermo "SQM 19.2" (Marco, 18/10/2026) | `sqm` (su `pipeline_sqm`) | SQM | brillanza, fondo in magnitudini |
+| il livello in ADU di un frame senza luce, per camera e offset, che lo SQM toglie al cielo (ADR 0021) | `bias_adu` (`pipeline_camera_bias`) | bias della camera | pedestal, offset |
 | la classe di cielo da 1 a 9, ricavata dalla luminosita': si mostra col numero misurato accanto, **tranne in due posti** -- il primo avvio, dove si sceglie e non c'e' ancora niente da dichiarare, e il piede della barra, dove sono 227px e la classe e' un promemoria di dov'e' puntata l'app. La scala dove si sceglie si intitola "Bortle" ("Bortle, da 1 a 9" per chi ascolta; Marco, 17/10/2026) | `bortle` | Bortle | classe, qualita' del cielo, scala di Bortle |
 | come si sa la luminosita' di un sito: misurata, chiesta al servizio, scelta sulla scala | `sky_source` | (una frase tradotta) | fonte, origine |
 | l'altezza del sito sul livello del mare; assente vuol dire "non fornita", mai zero | `elevation_m` | altitudine | quota, altezza |
@@ -113,7 +114,7 @@ backfocus, setup, Deep sky.
 | il pixel di una camera ricavato dalla scala misurata sulle sue pose, la focale del setup e il binning, quando i file non lo dicono | `instruments.pixel_from_sky_um` | pixel (calcolato) | pixel ricavato dal cielo, pixel stimato |
 | il filtro davanti al sensore, come strumento | `filter` | filtro | vetro |
 | la categoria di un filtro (L, R, G, B, Ha, OIII, SII, duo, OSC...) | `passband` | banda | tipo, canale, categoria |
-| il filtro esplicito di chi non ha un vetro davanti: una riga sola, non un vuoto | `is_none` | nessun filtro | vuoto, senza filtro (come etichetta; nella prosa dello SQM «frame L, senza filtro o a colori» resta, ADR 0022) |
+| il filtro esplicito di chi non ha un vetro davanti: una riga sola, non un vuoto | `is_none` | nessun filtro | vuoto, senza filtro (come etichetta; nella prosa dello SQM «frame L o a colori», ADR 0022) |
 | cio' che l'header dice dell'attrezzatura, e la chiave della domanda su di essa: grafia di camera e telescopio (non quella che il programma dice montatura), focale entro il 5 %, sensore e pixel; mai la notte o la cartella | `signature` (`spine/signature.py`) | firma | impronta, gruppo |
 | la scheda di Da confermare su una firma: chiede solo cio' che i frame lasciano fuori -- la camera, l'ottica, il filtro (su una camera non a colori, senza i frame con la matrice) -- e conta finche' ogni parte chiesta non ha risposta | `gear`, `GearSignature` | attrezzatura da completare | frame senza camera, frame senza ottica, frame senza filtro |
 | la risposta su una firma: i NOMI di camera e ottica con la focale, e cosa c'era davanti -- nessun filtro (`no_filter`) o uno dei tuoi (`filter`, col nome del filtro in un campo suo). "A colori" (`color`) si scrive sulla scheda della camera | `GearEdit`, `signature.Answer` | risposta sull'attrezzatura | correzione, filtro dichiarato |

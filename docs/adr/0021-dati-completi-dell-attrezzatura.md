@@ -36,7 +36,7 @@ vince su quello dei file (come oggi, strato del dichiarato).
   - Tipo di sensore: F, come oggi (`BAYERPAT`);
   - Bit dell'ADC (`BITPIX` dice il formato del file, non l'ADC: si scrive a mano);
   - Raffreddata (si'/no) e Raffreddamento (ΔT, °C);
-  - Spessore fino al sensore (mm); Bias (ADU), per la luminosita' del cielo (ADR 0022; Marco, 18/10).
+  - Spessore fino al sensore (mm); Bias (ADU) per lo SQM, uno per offset dei file (ADR 0022; Marco 28/10).
 - **Camera di guida**: come la camera, senza raffreddamento. I frame di guida non entrano
   nell'archivio: dai file arriva solo il nome (`GUIDECAM`).
 - **Ottica di guida** (il tubo guida): Apertura (mm), Focale (mm). PHD2 chiede la focale

@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 202; senza fonte: 1.
-Fonti: C norma: 75; U usanza: 1; D metodo: 8; M misura: 14; P decisione: 33; T tecnico: 74.
+Valori: 231; senza fonte: 1.
+Fonti: C norma: 103; U usanza: 1; D metodo: 8; M misura: 14; P decisione: 33; T tecnico: 75.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -358,6 +358,46 @@ Fonti: C norma: 75; U usanza: 1; D metodo: 8; M misura: 14; P decisione: 33; T t
 |---|---|---|
 | PASSES | `2` | P ADR 0036, D5 |
 | SCALE_TOLERANCE | `0.05` | C ASTAP manual, "preferably 5% accuracy" |
+
+### pipeline/sqm.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| ANNULUS_RADIUS | `14` | C ASTAP unit_sqm.pas calculate_sqm: annulus_radius:=14 |
+| SIGNAL_SIGMA | `3.0` | C ASTAP HFD: val>3.0*sd_bg is signal |
+| STAR_FLOOR_SIGMA | `12.0` | C ASTAP HFD: sumval<=12*sd_bg, no star |
+| BOXED_SHARE | `2 / 9` | C ASTAP HFD: 2 of the 9 pixels of the box lit |
+| DROP_OFF | `0.1` | C ASTAP HFD: distance_histogram<=0.1*distance_top_value |
+| DISK_SHARE | `0.35` | C ASTAP HFD: illuminated_pixels<0.35*sqr(r+r-2), not a disk |
+| (MIN_HFD, MAX_HFD) | `0.8, 15.0` | C ASTAP plot_and_measure_stars: hfd1<15 and hfd1>=0.8 |
+| MIN_SNR | `30.0` | C ASTAP plot_and_measure_stars: snr>30, "found emperical" |
+| STARS_PER_PIXEL | `730 / (2328 * 1760)` | C ASTAP plot_and_measure_stars |
+| OUTSIDE_PX | `50` | C ASTAP plot_star: x>-50 and x<=width+50, counted toward the quota |
+| SATURATION_MARGIN | `1001.0` | C ASTAP plot_star: pixel<data_max-1000, data_max=datamax_org-1 |
+| OUTLIER_SIGMA | `1.5` | C ASTAP get_best_mean: noise<1.50*sd |
+| FLUX_BIAS_MAG | `21.0` | C ASTAP plot_and_measure_stars: 21 {bias} |
+| (EDGE_WIDTH, EDGE_HEIGHT) | `0.042, 0.015` | C ASTAP get_hist: unused sensor areas up to 4.2%, 1.5% |
+| HISTOGRAM_TOP | `65000` | C ASTAP get_hist: col<65000, bright stars out |
+| MEAN_OVER_MODE | `1.5` | C ASTAP get_background: his_mean>1.5*backgr, use the mean |
+| SIXTEEN_BIT | `65535.0` | T |
+| WIDE_RANGE | `1.5` | C ASTAP load_fits: measured_max<=1.5 or >65535*1.5, rescaled |
+| EXTINCTION_MAG | `0.2811` | C ASTAP unit_hjd.pas atmospheric_absorption |
+| ZENITH_EXTINCTION_MAG | `0.28` | C ASTAP unit_sqm.pas: correction at zenith defined as zero |
+
+### pipeline/star_catalogue.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| RING_CELLS | `RING_CELLS = (1, 3, 9, 15, 21, 27, 33, 38, 43, 48, 52, 56, 60, 63, ...` | C ASTAP unit_star_database.pas area_and_boundaries1476 |
+| RING_CELLS | `69, 68, 67, 65, 63, 60, 56, 52, 48, 43, 38, 33, 27, 21, 15, 9, 3, 1)` | C ASTAP unit_star_database.pas area_and_boundaries1476 |
+| RING_DEG | `90 / 17.5` | C ASTAP unit_star_database.pas dec_boundaries1476 |
+| DEC_EDGES | `(-90.0, *(-90 + RING_DEG / 2 + RING_DEG * k for k in range(35)), 90.0)` | C ASTAP unit_star_database.pas dec_boundaries1476 |
+| HEADER_BYTES | `110` | C ASTAP astap.htm Appendix 3: 110 byte header, record size in the last |
+| RA_STEP | `360.0 / (2**24 - 1)` | C ASTAP readdatabase1476: 3 byte RA |
+| DEC_STEP | `90.0 / (128 * 2**16 - 1)` | C ASTAP readdatabase1476: 3 byte two's complement Dec |
+| MAGNITUDE_RECORD | `0xFFFFFF` | C ASTAP readdatabase1476: RA all ones marks a header record |
+| MAX_FIELD_DEG | `5.142857` | C ASTAP find_areas |
+| MIN_SHARE | `0.01` | C ASTAP find_areas: too small, ignore |
 
 ### pipeline/stars.py
 

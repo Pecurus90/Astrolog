@@ -202,7 +202,7 @@ sarebbe peggio -- i frame non si perdono comunque.
 
 **Il Bortle del sito dalle misure** (Marco, 18/10/2026; ADR 0022, 0039; nasce con `measure`, oggi
 nessun codice). L'app **propone**, l'utente sceglie; mai un cambio da sola.
-- **Frame che contano**: quelli con lo SQM dai pixel (L, senza filtro, a colori) **e col bias
+- **Frame che contano**: quelli con lo SQM dai pixel (mono col filtro L, a colori) **e col bias
   della camera** (senza, lo scarto arriva a 0,18 mag, e una classe e' larga 0,5-1 mag); Sole
   sotto -18° e Luna sotto -5° ("Sun below –18° and Moon below –5°", arXiv 2104.10616); oggetto
   sopra 30°, contro il bagliore delle citta' che lo SQM non corregge.

@@ -49,9 +49,11 @@ che resta nasce coi test.
    grafico): ZP = 21 + 2,5 log10 della media pesata per SNR di flusso / 10^((21 - BP)/2,5), scarto
    a 1,5 sigma, flusso col fondo dall'anello; cielo = moda dell'istogramma; SQM = ZP - 2,5
    log10((cielo - bias)/scala^2) + 0,2811 X - 0,28, X di Pickering 2002. Catalogo D80 (Gaia BP);
-   solo L, senza filtro e a colori (superpixel, media dei quattro). Verificato contro `astap.exe
-   -sqm` entro 0,007 mag su 18 frame. Mono senza bias: "senza bias" (0,03-0,18 mag); a colori
-   solo col bias della camera (ADR 0021): senza, fino a 0,9 mag. `OFFSET` non si usa.
+   solo mono col filtro L e a colori (Marco, 28/10/2026: un mono senza filtro scritto tace; a
+   colori superpixel, media dei quattro). Verificato contro `astap.exe -sqm` su 48 frame mono:
+   mediana 0,003 mag, massimo 0,028 (`misure.md`). Mono senza bias: "senza bias" (0,03-0,18 mag); a colori solo col bias della camera
+   (ADR 0021): senza, fino a 0,9 mag. `OFFSET` non e' il bias in ADU, ma lo sceglie: il bias si
+   dichiara per camera e offset (Marco, 28/10/2026). Costruito al passo 25.3: `misure.md`.
 9. Il Bortle del sito dalle misure: l'app propone, l'utente sceglie (`domini/sito.md`).
 
 **I giudizi** (Marco, 18/10/2026): misura per misura, per frame, notte e produzione (mediana);
