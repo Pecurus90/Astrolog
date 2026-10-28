@@ -21,16 +21,19 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path, PurePath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
 
 from astrolog.astap import Run, find_exe
+from astrolog.pipeline.card import read_card
 from astrolog.pipeline.debayer import pattern_of
 from astrolog.pipeline.pixels import Pixels, read_pixels
-from astrolog.pipeline.scanner import read_header
+from astrolog.pipeline.scanner import program_of, read_header
+from astrolog.pipeline.sky_measure import apparent_altitudes
 from astrolog.pipeline.stars import Measured, measure_frame
+from astrolog.pipeline.values import Value
 
 FRAME_SUFFIXES = (".fits", ".fit", ".fts")
 SNR_MIN = 30  # the -analyse threshold misure.md has always quoted
@@ -50,13 +53,13 @@ DEBAYERED = "_d"  # [C PCL DebayerParameters: outputPostfix default, the file an
 # Colour frames debayered first, VNG and the pattern from the header, as WBPP does.
 # Measurements columns: 3 path, 5 FWHM, 6 eccentricity, 10 median, 12 noise, 14 stars
 # (SubframeSelectorProcess.cpp); 28 PSF SNR, found on the 24 copies: c3 F^2 / (c4 sigma^2)
-# from column 21 (PSF flux) and 12 gives it back within 3% (misure.md).
+# from column 21 (PSF flux) and 12 gives it back within 3% (misure.md); 20 altitude, degrees.
 # Errors land in the file too: the program's console never reaches stdout on Windows.
 _SCRIPT = """var files = %s;
 var colour = %s;
 var work = %s;
 var out = %s;
-var lines = ["path,fwhm_px,eccentricity,median,noise,stars,psf_snr"];
+var lines = ["path,fwhm_px,eccentricity,median,noise,stars,psf_snr,altitude_deg"];
 try {
    if (colour.length > 0) {
       var D = new Debayer;
@@ -81,7 +84,7 @@ try {
    SS.executeGlobal();
    for (var i = 0; i < SS.measurements.length; ++i) {
       var m = SS.measurements[i];
-      lines.push([m[3], m[5], m[6], m[10], m[12], m[14], m[28]].join(","));
+      lines.push([m[3], m[5], m[6], m[10], m[12], m[14], m[28], m[20]].join(","));
    }
 } catch (e) {
    lines.push("error," + e);
@@ -99,6 +102,7 @@ class Ours:
     fwhm_px: float | None = None  # None: no shape, or not measurable
     eccentricity: float | None = None
     psf_snr: float | None = None
+    altitude_deg: float | None = None  # from the card: pointing, site, mid exposure
 
 
 @dataclass(frozen=True)
@@ -115,6 +119,7 @@ class Subframe:
     stars: int
     eccentricity: float | None = None
     psf_snr: float | None = None
+    altitude_deg: float | None = None
 
 
 @dataclass(frozen=True)
@@ -160,7 +165,9 @@ def read_subframes(text: str) -> dict[str, Subframe]:
             continue
         if line.startswith("error,"):
             raise ValueError(f"SubframeSelector: {line.removeprefix('error,')}")
-        path, fwhm, eccentricity, median, noise, stars, snr = line.rsplit(",", 6)  # comma in a path
+        path, fwhm, eccentricity, median, noise, stars, snr, alt = line.rsplit(
+            ",", 7
+        )  # comma in a path
         found[Path(path).name] = Subframe(
             fwhm_px=float(fwhm),
             median_adu=float(median) * ADU_RANGE,
@@ -168,8 +175,21 @@ def read_subframes(text: str) -> dict[str, Subframe]:
             stars=int(float(stars)),
             eccentricity=float(eccentricity),
             psf_snr=float(snr),
+            altitude_deg=float(alt) if alt.strip() else None,
         )
     return found
+
+
+def card_altitude(cards: dict[str, Value]) -> float | None:
+    """As the sky stage on a shot not solved: the card's pointing, site and mid exposure."""
+    program = program_of(cards)
+    if program is None:
+        return None
+    card = read_card(program, cards)
+    start = None if card.start_utc is None else card.start_utc.isoformat(timespec="microseconds")
+    row = {f.name: getattr(card, f.name) for f in fields(card)} | {"start_utc": start}
+    [altitude] = apparent_altitudes([row | {"ra_deg": None, "dec_deg": None}])
+    return altitude
 
 
 def measure_ours(path: Path) -> tuple[Ours, bool] | None:
@@ -187,7 +207,7 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
     shape = found.shape
     fwhm, eccentricity = (shape.fwhm_px, shape.eccentricity) if shape else (None, None)
     ours = Ours(found.stars, hfd, found.background_adu, found.noise_adu, fwhm, eccentricity,
-                found.psf_snr)  # fmt: skip
+                found.psf_snr, card_altitude(header.cards))  # fmt: skip
     return ours, pattern is not None
 
 
@@ -217,6 +237,11 @@ def _pairs(row: Row) -> dict[str, float | None]:
         ),
         "PSF SNR / SubframeSelector": (
             ours.psf_snr / sub.psf_snr if sub and sub.psf_snr and ours.psf_snr else None
+        ),
+        "altezza / SubframeSelector": (
+            ours.altitude_deg / sub.altitude_deg
+            if sub and sub.altitude_deg and ours.altitude_deg is not None
+            else None
         ),
     }
 
@@ -272,8 +297,9 @@ def _number(value: float | None, digits: int = 2) -> str:
 def _print_rows(rows: list[Row]) -> None:
     print("| frame | tipo | stelle | HFD | FWHM | eccentricita' | fondo | rumore "
           "| ASTAP stelle | ASTAP HFD | SubframeSelector stelle | FWHM | eccentricita' "
-          "| mediana | rumore | PSF SNR | PSF SNR SubframeSelector |")  # fmt: skip
-    print("|---" * 17 + "|")
+          "| mediana | rumore | PSF SNR | PSF SNR SubframeSelector | altezza "
+          "| altezza SubframeSelector |")  # fmt: skip
+    print("|---" * 19 + "|")
     for row in rows:
         o, a, s = row.ours, row.astap, row.subframe
         cells = [
@@ -294,6 +320,8 @@ def _print_rows(rows: list[Row]) -> None:
             _number(s.noise_adu if s else None, 1),
             _number(o.psf_snr if o else None, 4),
             _number(s.psf_snr if s else None, 4),
+            _number(o.altitude_deg if o else None),
+            _number(s.altitude_deg if s else None),
         ]
         print("| " + " | ".join(cells) + " |")
 

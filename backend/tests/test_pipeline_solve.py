@@ -915,6 +915,7 @@ def test_the_footprint_is_written_with_the_solution(conn, tmp_path):
     assert row["width_deg"] == pytest.approx(20 * row["scale_arcsec_px"] / 3600)
     assert row["height_deg"] == pytest.approx(10 * row["scale_arcsec_px"] / 3600)
     assert len(json.loads(row["corners"])) == 4
+    assert (row["cd1_1"], row["cd1_2"], row["cd2_1"], row["cd2_2"]) == pytest.approx(_CD)
 
 
 def test_a_shot_solved_on_its_retry_gets_its_footprint(conn, tmp_path):

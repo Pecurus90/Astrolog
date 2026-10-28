@@ -295,5 +295,5 @@ ignore_imports = ["astrolog.api.scan -> astrolog.pipeline.run"]
 # Mappa, passo 4: la scheda e' una funzione pura, si rifa' su tutti gli header senza database.
 name = "leggere un file e farne la scheda e' puro: niente database"
 type = "forbidden"
-source_modules = ["astrolog.pipeline.card", "astrolog.pipeline.sky", "astrolog.pipeline.values", "astrolog.pipeline.scanner", "astrolog.pipeline.fingerprint", "astrolog.pipeline.walk", "astrolog.pipeline.footprint", "astrolog.pipeline.pixels", "astrolog.pipeline.stars", "astrolog.pipeline.detect"]
+source_modules = ["astrolog.pipeline.card", "astrolog.pipeline.sky", "astrolog.pipeline.values", "astrolog.pipeline.scanner", "astrolog.pipeline.fingerprint", "astrolog.pipeline.walk", "astrolog.pipeline.footprint", "astrolog.pipeline.airmass", "astrolog.pipeline.altitude", "astrolog.pipeline.pixels", "astrolog.pipeline.stars", "astrolog.pipeline.detect"]
 forbidden_modules = ["sqlite3", "astrolog.db"]

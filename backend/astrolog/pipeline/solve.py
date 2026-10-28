@@ -39,6 +39,7 @@ WAITING = ("timeout", "crashed", "unreadable")
 PASSES = 2  # [P ADR 0036, D5]
 # solved scale against the card's, either way round [C ASTAP manual, "preferably 5% accuracy"]
 SCALE_TOLERANCE = 0.05
+CD_COLUMNS = ("cd1_1", "cd1_2", "cd2_1", "cd2_2")
 
 PENDING = (  # plain file before its fpack copy: ASTAP before astap.FZ_SINCE reads no .fz
     "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.frame_type, c.width, c.height,"
@@ -81,12 +82,13 @@ UPSERT = (
     "INSERT INTO pipeline_solutions (frame_id, outcome, step, file_id, astap_version, catalogue,"
     " installed, duration_s, launch_s, machine, hint_from, field_from, ra_deg, dec_deg,"
     " scale_arcsec_px, expected_scale_arcsec_px, scale_disagrees, measured_focal_mm,"
-    " astap_warning, rotation_deg, mirrored, skew_deg, width_deg, height_deg, corners, tried_at)"
+    " astap_warning, rotation_deg, mirrored, skew_deg, width_deg, height_deg, corners,"
+    " cd1_1, cd1_2, cd2_1, cd2_2, tried_at)"
     " VALUES (:frame_id, :outcome, :step, :file_id, :astap_version, :catalogue, :installed,"
     " :duration_s, :launch_s, :machine, :hint_from, :field_from, :ra_deg, :dec_deg,"
     " :scale_arcsec_px, :expected_scale_arcsec_px, :scale_disagrees, :measured_focal_mm,"
     " :astap_warning, :rotation_deg, :mirrored, :skew_deg,"
-    " :width_deg, :height_deg, :corners, :tried_at)"
+    " :width_deg, :height_deg, :corners, :cd1_1, :cd1_2, :cd2_1, :cd2_2, :tried_at)"
     " ON CONFLICT (frame_id) DO UPDATE SET attempts = attempts + 1, outcome = excluded.outcome,"
     " step = excluded.step, file_id = excluded.file_id, astap_version = excluded.astap_version,"
     " catalogue = excluded.catalogue, installed = excluded.installed,"
@@ -98,7 +100,9 @@ UPSERT = (
     " scale_disagrees = excluded.scale_disagrees, measured_focal_mm = excluded.measured_focal_mm,"
     " astap_warning = excluded.astap_warning, rotation_deg = excluded.rotation_deg,"
     " mirrored = excluded.mirrored, skew_deg = excluded.skew_deg, width_deg = excluded.width_deg,"
-    " height_deg = excluded.height_deg, corners = excluded.corners, tried_at = excluded.tried_at"
+    " height_deg = excluded.height_deg, corners = excluded.corners, cd1_1 = excluded.cd1_1,"
+    " cd1_2 = excluded.cd1_2, cd2_1 = excluded.cd2_1, cd2_2 = excluded.cd2_2,"
+    " tried_at = excluded.tried_at"
     # settled by another pass meanwhile: stays
     " WHERE pipeline_solutions.outcome NOT IN ('solved', 'no_solution', 'no_stars')"
 )
@@ -446,16 +450,19 @@ def _scale_check(solved: float | None, row: sqlite3.Row) -> dict[str, object]:
 
 def forget(conn: sqlite3.Connection, frame_id: int) -> bool:
     """On request (header fixed, new catalogue): the shot is solved again at the next pass.
-    False: nothing to forget."""
+    False: nothing to forget. Its measures on the sky go too: they wait for the new one."""
     with transaction(conn, immediate=True):
+        conn.execute("DELETE FROM pipeline_sky WHERE frame_id = ?", (frame_id,))
         gone = conn.execute("DELETE FROM pipeline_solutions WHERE frame_id = ?", (frame_id,))
     return gone.rowcount > 0
 
 
 def _measured(found: astap.Solution, row: sqlite3.Row) -> dict[str, object]:
     """Footprint of a solution: the sky's rectangle, written once, never redone by a reader."""
+    keys = ("mirrored", "skew_deg", "width_deg", "height_deg", "corners", *CD_COLUMNS)
     if not (found.ok and found.cd and found.crpix):
-        return {key: None for key in ("mirrored", "skew_deg", "width_deg", "height_deg", "corners")}
+        return {key: None for key in keys}
+    cd: dict[str, object] = dict(zip(CD_COLUMNS, found.cd, strict=True))
     sky = footprint(
         found.cd,
         found.crpix,
@@ -471,4 +478,4 @@ def _measured(found: astap.Solution, row: sqlite3.Row) -> dict[str, object]:
         "width_deg": sky.width_deg,
         "height_deg": sky.height_deg,
         "corners": None if sky.corners is None else json.dumps(sky.corners),
-    }
+    } | cd

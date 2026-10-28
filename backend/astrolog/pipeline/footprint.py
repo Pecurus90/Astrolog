@@ -47,6 +47,16 @@ def footprint(
     )
 
 
+def position_angle(cd: tuple[float, float, float, float], angle_deg: float) -> float:
+    """A direction on the file's pixels (from +x toward +y, rows as stored) as a position angle on
+    the sky, [0, 360) from North toward East: the CD matrix maps it to (east, north), Paper II."""
+    a = math.radians(angle_deg)
+    east = cd[0] * math.cos(a) + cd[1] * math.sin(a)
+    north = cd[2] * math.cos(a) + cd[3] * math.sin(a)
+    turned = math.degrees(math.atan2(east, north)) % 360.0
+    return 0.0 if turned >= 360.0 else turned  # -1e-17 % 360 is 360.0
+
+
 def _corners(
     cd: tuple[float, float, float, float],
     crpix: tuple[float, float],

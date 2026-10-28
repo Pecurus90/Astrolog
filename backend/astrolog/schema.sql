@@ -1070,11 +1070,19 @@ CREATE TABLE pipeline_solutions (
   width_deg       REAL CHECK (width_deg > 0),
   height_deg      REAL CHECK (height_deg > 0),
   corners         TEXT CHECK (json_valid(corners)),  -- [[ra, dec] x4] spigoli dei pixel
+  -- matrice CD del .wcs, gradi per pixel del file come salvato: gira un angolo dei pixel sul
+  -- cielo (pipeline_sky); NULL: ASTAP non l'ha scritta intera
+  cd1_1           REAL,
+  cd1_2           REAL,
+  cd2_1           REAL,
+  cd2_2           REAL,
   tried_at        TEXT NOT NULL,  -- ora della passata, non del lancio
   CHECK ((outcome = 'solved') = (ra_deg IS NOT NULL)
     AND (ra_deg IS NULL) = (dec_deg IS NULL) AND (ra_deg IS NULL) = (scale_arcsec_px IS NULL)),
   CHECK (outcome = 'solved' OR coalesce(rotation_deg, mirrored, skew_deg, width_deg, height_deg,
-    corners, expected_scale_arcsec_px, measured_focal_mm, astap_warning) IS NULL),
+    corners, expected_scale_arcsec_px, measured_focal_mm, astap_warning, cd1_1) IS NULL),
+  CHECK ((cd1_1 IS NULL) = (cd1_2 IS NULL) AND (cd1_1 IS NULL) = (cd2_1 IS NULL)
+    AND (cd1_1 IS NULL) = (cd2_2 IS NULL)),
   CHECK ((expected_scale_arcsec_px IS NULL) = (scale_disagrees IS NULL))
 ) STRICT;
 
@@ -1122,6 +1130,34 @@ CREATE TABLE pipeline_measures (
   CHECK (gradient_pct IS NOT NULL OR gradient_angle_deg IS NULL),
   CHECK (gradient_pct IS NULL OR stars IS NOT NULL),
   CHECK ((tilt_pct IS NULL) = (curvature_pct IS NULL) AND (tilt_pct IS NULL OR hfd_px IS NOT NULL))
+) STRICT;
+
+-- RILEVATO. Misure col cielo (pipeline/sky_measure.py, docs/domini/misure.md): una riga per posa
+-- leggibile, riscritta all'arrivo della soluzione; sito e ora dalla scheda del file misurato.
+CREATE TABLE pipeline_sky (
+  frame_id      INTEGER PRIMARY KEY REFERENCES pipeline_measures (frame_id) ON DELETE CASCADE,
+  solved        INTEGER NOT NULL CHECK (solved IN (0, 1)),  -- coordinate e scala dalla soluzione
+  -- meta' posa UTC (inizio + posa/2; posa ignota: inizio); NULL: inizio non scritto
+  mid_utc       TEXT CHECK (mid_utc GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:'
+    || '[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]+00:00'),
+  -- apparente, al centro: soluzione, se no puntamento della scheda; NULL: sito, ora o punto ignoti
+  altitude_deg  REAL CHECK (altitude_deg BETWEEN -90 AND 90),
+  airmass       REAL CHECK (airmass >= 1),  -- Pickering 2002; NULL: sotto l'orizzonte
+  hfd_arcsec    REAL CHECK (hfd_arcsec > 0),  -- px per scala risolta
+  fwhm_arcsec   REAL CHECK (fwhm_arcsec > 0),
+  hfd_zenith_arcsec  REAL CHECK (hfd_zenith_arcsec > 0),  -- / airmass^0,6 (ESO)
+  fwhm_zenith_arcsec REAL CHECK (fwhm_zenith_arcsec > 0),
+  -- asse lungo come angolo di posizione, da Nord verso Est; asse del cielo piu' vicino
+  angle_pa_deg  REAL CHECK (angle_pa_deg >= 0 AND angle_pa_deg < 180),
+  angle_axis    TEXT CHECK (angle_axis IN ('ra', 'dec')),
+  gradient_pa_deg REAL CHECK (gradient_pa_deg >= 0 AND gradient_pa_deg < 360),  -- lato chiaro
+  computed_at   TEXT NOT NULL,
+  CHECK (altitude_deg IS NULL OR mid_utc IS NOT NULL),
+  CHECK (airmass IS NULL OR altitude_deg >= 0),
+  CHECK (solved = 1 OR coalesce(hfd_arcsec, fwhm_arcsec, angle_pa_deg, gradient_pa_deg) IS NULL),
+  CHECK ((hfd_zenith_arcsec IS NULL) = (hfd_arcsec IS NULL OR airmass IS NULL)),
+  CHECK ((fwhm_zenith_arcsec IS NULL) = (fwhm_arcsec IS NULL OR airmass IS NULL)),
+  CHECK ((angle_pa_deg IS NULL) = (angle_axis IS NULL))
 ) STRICT;
 
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave calcolata dal nome, mai salvata:

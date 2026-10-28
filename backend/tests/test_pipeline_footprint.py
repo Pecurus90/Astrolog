@@ -4,9 +4,10 @@ Numeri da tests/astap/solved.ini (N.I.N.A., 560 mm)."""
 import math
 
 import pytest
+from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS
 
-from astrolog.pipeline.footprint import footprint
+from astrolog.pipeline.footprint import footprint, position_angle
 from astrolog.pipeline.sky import deproject
 
 CD = (-2.6277393210341225e-004, 2.7944155214576776e-004,
@@ -15,6 +16,15 @@ CRPIX = (3.1125e003, 2.0845e003)
 CENTRE = (2.4125198643662179e002, 1.7726894038989336e001)
 SIZE = (6224, 4168)
 FLIPPED = (-CD[0], CD[1], -CD[2], CD[3])  # first pixel axis reversed: left-right mirror
+
+
+def _oracle(cd: tuple[float, float, float, float]) -> WCS:
+    wcs = WCS(naxis=2)
+    wcs.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+    wcs.wcs.crval = list(CENTRE)
+    wcs.wcs.crpix = list(CRPIX)
+    wcs.wcs.cd = [[cd[0], cd[1]], [cd[2], cd[3]]]
+    return wcs
 
 
 def test_the_scale_is_the_root_of_the_matrix_determinant():
@@ -71,16 +81,28 @@ def test_the_field_is_the_frame_size_at_the_measured_scale():
 @pytest.mark.parametrize("cd", [CD, FLIPPED])
 def test_the_corners_are_the_pixel_edges_on_the_sky(cd):
     """Proiezione TAN inversa (Paper II) dagli spigoli esterni; oracolo: astropy.wcs."""
-    wcs = WCS(naxis=2)
-    wcs.wcs.ctype = ["RA---TAN", "DEC--TAN"]
-    wcs.wcs.crval = list(CENTRE)
-    wcs.wcs.crpix = list(CRPIX)
-    wcs.wcs.cd = [[cd[0], cd[1]], [cd[2], cd[3]]]
+    wcs = _oracle(cd)
     edges = [(0.5, 0.5), (6224.5, 0.5), (6224.5, 4168.5), (0.5, 4168.5)]
     expected = [float(v) for edge in edges for v in wcs.wcs_pix2world([edge], 1)[0]]
     corners = footprint(cd, CRPIX, CENTRE, SIZE, bottom_up=False).corners
     assert corners is not None
     assert [v for corner in corners for v in corner] == pytest.approx(expected, abs=1e-9)
+
+
+@pytest.mark.parametrize("cd", [CD, FLIPPED])
+@pytest.mark.parametrize("angle", [0.0, 37.0, 90.0, 200.0, 315.0])
+def test_a_pixel_direction_turns_into_its_position_angle_on_the_sky(cd, angle):
+    """Da Nord verso Est, sui pixel del file (x colonne, y righe); oracolo: astropy.wcs e
+    position_angle di due punti vicini al centro."""
+    wcs = _oracle(cd)
+    step = (
+        CRPIX[0] + 5 * math.cos(math.radians(angle)),
+        CRPIX[1] + 5 * math.sin(math.radians(angle)),
+    )
+    (ra0, dec0), (ra1, dec1) = wcs.wcs_pix2world([CRPIX, step], 1)
+    here, there = SkyCoord(ra0, dec0, unit="deg"), SkyCoord(ra1, dec1, unit="deg")
+    expected = float(here.position_angle(there).to_value("deg")) % 360  # pyright: ignore[reportArgumentType]
+    assert position_angle(cd, angle) == pytest.approx(expected, abs=1e-3)
 
 
 def test_a_frame_across_zero_hours_keeps_its_corners_in_range():

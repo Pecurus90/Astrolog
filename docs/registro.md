@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 200; senza fonte: 1.
-Fonti: C norma: 74; U usanza: 1; D metodo: 8; M misura: 14; P decisione: 33; T tecnico: 73.
+Valori: 202; senza fonte: 1.
+Fonti: C norma: 75; U usanza: 1; D metodo: 8; M misura: 14; P decisione: 33; T tecnico: 74.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -202,6 +202,12 @@ Fonti: C norma: 74; U usanza: 1; D metodo: 8; M misura: 14; P decisione: 33; T t
 | TIMEOUT_S | `15` | P ADR 0038 |
 | _REFUSALS | `frozenset({400, 401, 403, 429})` | C RFC 9110 15.5.1-15.5.4; RFC 6585 4 |
 
+### pipeline/airmass.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| SEEING_POWER | `0.6` | C ESO La Silla seeing, eso.org/sci/facilities/lasilla/astclim/seeing.html |
+
 ### pipeline/capacity.py
 
 | simbolo | valore | fonte |
@@ -339,6 +345,12 @@ Fonti: C norma: 74; U usanza: 1; D metodo: 8; M misura: 14; P decisione: 33; T t
 | simbolo | valore | fonte |
 |---|---|---|
 | _J2000_PRECESSION | `erfa.bp06(2451545.0, 0.0)[1]` | C IAU 2006 precession at J2000.0 TT |
+
+### pipeline/sky_measure.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| AXIS_SPLIT_DEG | `45.0` | T |
 
 ### pipeline/solve.py
 

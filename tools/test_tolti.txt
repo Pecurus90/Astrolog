@@ -350,3 +350,4 @@ test_hfd_and_stars_come_from_the_second_pass - step 25, ADR 0033 D1: frame_metri
 test_quality_numbers_that_do_not_arrive_stay_empty - step 25, ADR 0033 D1: astap.analyse removed
 test_the_analyse_pass_writes_nothing_next_to_the_frame - step 25, ADR 0033 D1: astap.analyse removed; measure reads pixels read-only
 test_the_quality_numbers_are_read_with_their_decimal_comma - step 25, ADR 0033 D1: astap.analyse removed
+test_the_script_reads_the_psf_snr_column - step 25.2: renamed test_the_script_reads_the_psf_snr_and_altitude_columns, column 20 added
