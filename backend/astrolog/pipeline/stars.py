@@ -11,7 +11,8 @@ from .ceiling import ceiling_of
 from .debayer import COLOURS, debayered
 from .detect import detect
 from .field import PSF_FLUX_SCALE, gradient_of, psf_snr, zones_of
-from .shape import MIN_STARS, RING_OUTER, Shape, estimated_fwhm, shape_of
+from .psf_flux import ring_sky
+from .shape import MIN_STARS, Shape, estimated_fwhm, shape_of
 
 THRESHOLD_SIGMA = 5.0  # [C Siril find_star default: 5 sigma over sky, software-ok]
 SATURATED_SHARE = 0.9  # [P ADR 0022: peak under 90% of saturation]
@@ -81,11 +82,12 @@ def measure_frame(
     hfds, hx, hy = _hfd(images, objects, _spread(objects, round_ones, raw.shape))
     shape = shape_of(images, objects, _spread(objects, usable, raw.shape), noise)
     found = detect(*images, noise, clip=(sensor, top))
+    # On the measured plane's own noise: a colour frame's intensity, as misure.md says
+    flux = PSF_FLUX_SCALE * float(found.flux.sum())
+    snr = psf_snr(flux, noise) if len(found.x) >= MIN_STARS else None
     if pattern is not None:  # noise said as WBPP says it; detection keeps the plane's own
         noise = max(_mosaic_noise(sensor, pattern), NOISE_FLOOR_ADU)
     gradient = gradient_of(back)
-    flux = PSF_FLUX_SCALE * float(found.flux.sum())
-    snr = psf_snr(flux, noise) if len(found.x) >= MIN_STARS else None
     across = Across(top, int(found.saturated.sum()), snr, gradient.pct, gradient.angle_deg)
     common = {"stars": len(found.x), "kept": len(hfds), "background_adu": float(sky.globalback),
               "noise_adu": noise, "shape": shape} | vars(across)  # fmt: skip
@@ -190,22 +192,6 @@ def _spread(objects: np.ndarray, keep: np.ndarray, shape: tuple[int, ...]) -> np
     return np.sort(np.concatenate(chosen)) if chosen else keep
 
 
-def _ring_sky(
-    filtered: np.ndarray, centres: tuple[np.ndarray, np.ndarray], aperture: np.ndarray
-) -> np.ndarray:
-    """Median of the pixels between the aperture and RING_OUTER times it, star by star."""
-    rows, cols = filtered.shape
-    sky = np.empty(len(aperture))
-    for i, (x, y, inner) in enumerate(zip(*centres, aperture, strict=True)):
-        outer = inner * RING_OUTER
-        y0, y1 = max(0, int(y - outer)), min(rows, int(y + outer) + 2)
-        x0, x1 = max(0, int(x - outer)), min(cols, int(x + outer) + 2)
-        dy, dx = np.ogrid[y0 - y : y1 - y, x0 - x : x1 - x]
-        distance = np.hypot(dy, dx)
-        sky[i] = np.median(filtered[y0:y1, x0:x1][(distance >= inner) & (distance < outer)])
-    return sky
-
-
 def _peaks(raw: np.ndarray, objects: np.ndarray, guess: np.ndarray) -> np.ndarray:
     """Highest raw pixel near each centre: a clipped core stays flat at the ceiling."""
     peaks = np.empty(len(objects))
@@ -229,7 +215,7 @@ def _hfd(
     residual, filtered = images
     x, y = objects["x"][keep], objects["y"][keep]
     aperture = APERTURE_FWHM * estimated_fwhm(objects)[keep]
-    sky = _ring_sky(filtered, (x, y), aperture)
+    sky = ring_sky(filtered, (x, y), aperture)
     steps = np.linspace(1 / RADII, 1.0, RADII)
     enclosed = np.empty((RADII, len(keep)))
     for i, share in enumerate(steps):

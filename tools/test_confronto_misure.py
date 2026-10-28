@@ -16,7 +16,9 @@ from confronto_misure import (
     Subframe,
     astap_from_code,
     card_altitude,
+    colour_subframe,
     debayered_name,
+    intensity_name,
     main,
     ratios,
     read_subframes,
@@ -118,8 +120,22 @@ def test_colour_frames_are_debayered_with_vng_before_they_are_measured():
     debayer = script.index("new Debayer")
     assert debayer < script.index("new SubframeSelector")
     assert "Debayer.prototype.VNG" in script and "Debayer.prototype.Auto" in script
-    assert 'D.outputPostfix = "_d"' in script and '"_d.xisf"' in script
+    assert 'D.outputPostfix = "_d"' in script and '"_d"' in script
     assert debayered_name(PurePosixPath("/c/canon.fits")) == "canon_d.xisf"
+
+
+def test_colour_frames_give_their_intensity_too_and_its_psf_snr_is_compared():
+    """HSI (min + max) / 2 of the debayered copy, the plane measure_frame works on; the PSF SNR
+    of the colour row is the intensity's (Marco, 28/10/2026)."""
+    script = subframe_script([], [PurePosixPath("/c/canon.fits")], PurePosixPath("/w"),
+                             PurePosixPath("/w/ss.csv"))  # fmt: skip
+    assert "(max($T[0],$T[1],$T[2])+min($T[0],$T[1],$T[2]))/2" in script
+    assert script.index("new PixelMath") < script.index("new SubframeSelector")
+    assert intensity_name(PurePosixPath("/c/canon.fits")) == "canon_d_i.xisf"
+    rgb = Subframe(2.0, 100, 9, 400, psf_snr=0.03)
+    assert colour_subframe(rgb, Subframe(2.0, 100, 8, 500, psf_snr=0.9)).psf_snr == 0.9
+    assert colour_subframe(rgb, None).psf_snr is None
+    assert colour_subframe(None, rgb) is None
 
 
 def _row(name, color, ours, astap, sub):

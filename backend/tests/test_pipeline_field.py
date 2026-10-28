@@ -6,6 +6,7 @@ import math
 import numpy as np
 import pytest
 
+from astrolog.pipeline import stars
 from astrolog.pipeline.ceiling import SPIKE_MIN, ceiling_of
 from astrolog.pipeline.field import (
     PSF_FLUX_SCALE,
@@ -130,13 +131,12 @@ def test_psf_snr_is_the_documented_formula() -> None:
     assert psf_snr(5000.0 / 65535, 2.0 / 65535) == pytest.approx(psf_snr(5000.0, 2.0))
 
 
-def test_the_frame_psf_flux_is_the_stars_flux_over_their_structures() -> None:
-    """A Gaussian star of 6e4 over a 10 ADU sky: its 2.4 sigma structure reaches 6 sigma of the
-    profile, 99% of the flux. 36 stars, times the tuned scale."""
+def test_the_frame_psf_snr_takes_the_stars_flux_times_the_tuned_scale() -> None:
+    """Gaussian: 1 - 0.1 of the flux inside the tenth of the peak (psf_flux.py), 36 of 6e4."""
     data = _sky()
     _stars(data, _grid(6), 2.0, 6e4)
     found = measure_frame(data, saturation=65535.0, pattern=None)
-    flux = PSF_FLUX_SCALE * 36 * 6e4 * 0.99
+    flux = PSF_FLUX_SCALE * 36 * 6e4 * 0.9
     assert found.psf_snr == pytest.approx(psf_snr(flux, _NOISE), rel=0.03)
 
 
@@ -153,6 +153,18 @@ def test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are() -> None:
     alone = measure_frame(without, saturation=65535.0, pattern=None)
     assert found.psf_snr is not None and alone.psf_snr is not None
     assert found.psf_snr > 10 * alone.psf_snr
+
+
+def test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one(monkeypatch) -> None:
+    """Compared with the SubframeSelector on the intensity (misure.md): the mosaic's noise, the
+    one written, never enters it."""
+    data = _sky()
+    _stars(data, _grid(6), 2.0, 6e4)
+    first = measure_frame(data, saturation=65535.0, pattern="RGGB")
+    monkeypatch.setattr(stars, "_mosaic_noise", lambda *_: 1e3)
+    second = measure_frame(data, saturation=65535.0, pattern="RGGB")
+    assert second.noise_adu == 1e3
+    assert second.psf_snr == first.psf_snr
 
 
 def test_under_five_stars_no_psf_snr() -> None:

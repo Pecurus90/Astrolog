@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 240; senza fonte: 1.
-Fonti: C norma: 107; U usanza: 2; D metodo: 9; M misura: 14; P decisione: 35; T tecnico: 76.
+Valori: 241; senza fonte: 1.
+Fonti: C norma: 108; U usanza: 2; D metodo: 9; M misura: 14; P decisione: 35; T tecnico: 76.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -281,7 +281,7 @@ Fonti: C norma: 107; U usanza: 2; D metodo: 9; M misura: 14; P decisione: 35; T 
 |---|---|---|
 | PSF_SNR_C3 | `1.350e-7` | C PixInsight ImageWeighting, eq. 18-19; software-ok |
 | PSF_SNR_C4 | `4.987e6` | C PixInsight ImageWeighting, eq. 18-19; software-ok |
-| PSF_FLUX_SCALE | `0.944` | T |
+| PSF_FLUX_SCALE | `1.078` | T |
 | MESH_PX | `64` | C sep docs: Background bw, bh default |
 | PLANE_EXPLAINS | `0.5` | T |
 | ZONE_MIN_STARS | `25` | T |
@@ -305,6 +305,12 @@ Fonti: C norma: 107; U usanza: 2; D metodo: 9; M misura: 14; P decisione: 35; T 
 |---|---|---|
 | MIN_IMAGE_SIDE_PX | `20` | T |
 | _TYPES | `{8: ">u1", 16: ">i2", 32: ">i4"}` | C FITS 4.0 table 8: BITPIX |
+
+### pipeline/psf_flux.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| TENTH | `0.1` | C PixInsight ImageWeighting par. 2.2; software-ok |
 
 ### pipeline/scan.py
 

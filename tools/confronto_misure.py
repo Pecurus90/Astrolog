@@ -21,7 +21,7 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, replace
 from pathlib import Path, PurePath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
@@ -49,8 +49,10 @@ SUBFRAME_CANDIDATES = (
 MONO, COLOR = "mono", "colori"
 
 DEBAYERED = "_d"  # [C PCL DebayerParameters: outputPostfix default, the file an .xisf beside]
+INTENSITY = "_i"  # our own: the HSI intensity (min + max) / 2 of the debayered copy
 
-# Colour frames debayered first, VNG and the pattern from the header, as WBPP does.
+# Colour frames debayered first, VNG and the pattern from the header, as WBPP does; their HSI
+# intensity measured too, for the PSF SNR.
 # Measurements columns: 3 path, 5 FWHM, 6 eccentricity, 10 median, 12 noise, 14 stars
 # (SubframeSelectorProcess.cpp); 28 PSF SNR, found on the 24 copies: c3 F^2 / (c4 sigma^2)
 # from column 21 (PSF flux) and 12 gives it back within 3% (misure.md); 20 altitude, degrees.
@@ -72,7 +74,23 @@ try {
       D.noGUIMessages = true;
       D.executeGlobal();
       colour.forEach(function (f) {
-         files.push(work + "/" + File.extractName(f) + "%s.xisf");
+         var name = work + "/" + File.extractName(f) + "%s";
+         files.push(name + ".xisf");
+         var w = ImageWindow.open(name + ".xisf")[0];
+         var P = new PixelMath;
+         P.expression = "(max($T[0],$T[1],$T[2])+min($T[0],$T[1],$T[2]))/2";
+         P.useSingleExpression = true;
+         P.createNewImage = true;
+         P.showNewImage = false;
+         P.newImageId = "intensity";
+         P.newImageColorSpace = PixelMath.prototype.Gray;
+         P.newImageSampleFormat = PixelMath.prototype.f32;
+         P.executeOn(w.mainView);
+         var I = ImageWindow.windowById("intensity");
+         I.saveAs(name + "%s.xisf", false, false, false, false);
+         I.forceClose();
+         w.forceClose();
+         files.push(name + "%s.xisf");
       });
    }
    var SS = new SubframeSelector;
@@ -149,12 +167,25 @@ def subframe_script(
     `frames` measured as they are; `colour` debayered into `work` first."""
     paths = [json.dumps([p.as_posix() for p in group]) for group in (frames, colour)]
     places = (json.dumps(work.as_posix()), json.dumps(out.as_posix()))
-    return _SCRIPT % (*paths, *places, DEBAYERED, DEBAYERED)
+    return _SCRIPT % (*paths, *places, DEBAYERED, DEBAYERED, INTENSITY, INTENSITY)
 
 
 def debayered_name(frame: PurePath) -> str:
     """What the SubframeSelector row of a colour frame is called: its debayered copy."""
     return f"{frame.stem}{DEBAYERED}.xisf"
+
+
+def intensity_name(frame: PurePath) -> str:
+    """The row of a colour frame's intensity plane, the one our PSF SNR is measured on."""
+    return f"{frame.stem}{DEBAYERED}{INTENSITY}.xisf"
+
+
+def colour_subframe(rgb: Subframe | None, plane: Subframe | None) -> Subframe | None:
+    """The debayered row with the intensity's PSF SNR: on RGB the program fits a third to a
+    sixth of the stars and its PSF SNR falls 20-30 times (misure.md; Marco, 28/10/2026)."""
+    if rgb is None:
+        return None
+    return replace(rgb, psf_snr=plane.psf_snr if plane else None)
 
 
 def read_subframes(text: str) -> dict[str, Subframe]:
@@ -357,7 +388,9 @@ def main(argv: list[str], run: Run = _launch, measure: Measure = measure_ours) -
     rows = []
     for frame, (ours, color) in measured.items():
         found = run_astap(astap, frame, run) if astap else None
-        sub = subs.get(debayered_name(frame) if color else frame.name)
+        sub = subs.get(frame.name)
+        if color:
+            sub = colour_subframe(subs.get(debayered_name(frame)), subs.get(intensity_name(frame)))
         rows.append(Row(frame.name, color, ours, found, sub))
     _print_rows(rows)
     _print_ratios(ratios(rows))

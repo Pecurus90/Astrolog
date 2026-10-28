@@ -19,7 +19,7 @@ parole in [`glossario.md`](glossario.md).
 | Le stelle sono quelle che conta il SubframeSelector: una stella debole o una macchia di nebulosa larga non conta (Marco, 27/10/2026) <!-- software-ok --> | `test_the_frame_counts_the_stars_the_subframeselector_would`, `test_a_star_over_the_aperture_threshold_is_found_one_under_is_not`, `test_a_wide_faint_patch_is_not_a_star_however_much_light_it_holds`, `test_a_hot_pixel_is_not_a_star`, `test_a_dark_pixel_among_bright_ones_has_a_position`, `test_a_structure_starts_at_its_threshold_on_the_median_copy`, `test_the_position_is_the_barycentre` (`backend/tests/test_pipeline_detect.py`) <!-- software-ok --> |
 | Una stella saturata conta fra le stelle ma non entra nell'HFD, anche se in una camera a colori satura un canale solo | `test_saturated_stars_are_counted_but_not_measured`, `test_a_colour_star_clipped_in_one_channel_is_saturated` |
 | Il tetto di saturazione e' dove la camera taglia davvero, anche sotto il massimo del tipo (Canon a 61208), e quante stelle ci arrivano | `test_the_ceiling_is_the_pile_at_the_top_of_the_histogram_not_the_maximum`, `test_twelve_bits_in_sixteen_clip_at_their_own_top`, `test_a_smooth_bright_patch_is_not_a_pile`, `test_stars_at_the_ceiling_are_counted_saturated_and_kept_out` (`backend/tests/test_pipeline_field.py`) |
-| Il PSF SNR e' quello della documentazione di PixInsight, sature comprese come le tiene lui <!-- software-ok --> | `test_psf_snr_is_the_documented_formula`, `test_the_frame_psf_flux_is_the_stars_flux_over_their_structures`, `test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are`, `test_under_five_stars_no_psf_snr` |
+| Il PSF SNR e' quello della documentazione di PixInsight, sature comprese come le tiene lui <!-- software-ok --> | `test_psf_snr_is_the_documented_formula`, `test_the_frame_psf_snr_takes_the_stars_flux_times_the_tuned_scale`, `test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are`, `test_under_five_stars_no_psf_snr`, `test_pipeline_psf_flux.py` (quota Moffat al decimo, fondo lasciato sotto le stelle, luce col centro al buio, stella tagliata) |
 | Il gradiente del fondo dice quanto e verso dove; un fondo piatto o a zero non inventa un lato | `test_a_sky_on_a_plane_gives_its_spread_over_its_median_and_its_bright_side`, `test_the_bright_side_turns_with_the_plane`, `test_a_flat_sky_has_no_gradient_and_no_side`, `test_a_sky_at_zero_or_under_has_no_gradient` |
 | Tilt e curvatura dalle cinque zone, e tacciono con poche stelle in una zona | `test_tilt_is_worst_less_best_corner_over_the_median_hfd`, `test_curvature_is_corners_against_the_centre_with_its_sign`, `test_a_zone_with_too_few_stars_leaves_tilt_and_curvature_silent`, `test_tilt_reaches_the_frame_through_measure` |
 | La massa d'aria e' quella dell'oggetto a meta' posa, con l'aria che lo alza, finita all'orizzonte e nessuna sotto | `test_the_airmass_is_pickering_on_the_apparent_altitude`, `test_the_refraction_lifts_a_low_star_saemundsson`, `test_under_the_horizon_there_is_no_airmass`, `test_the_altitude_agrees_with_astropy` (`backend/tests/test_pipeline_airmass.py`, `test_pipeline_altitude.py`) |
@@ -133,13 +133,21 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
     vede il SubframeSelector: FWHM 4 px +2%, 3 px +8%, 2 px +27% (l'HFD +4%).
 - **PSF SNR** (`pipeline/field.py`, ADR 0022 punto 5): ImageWeighting di PixInsight, eq. 7 e <!-- software-ok -->
   18-19, PSF SNR = 1,350e-7 F^2 / (4,987e6 sigma^2); F e' la somma dei flussi di tutte le
-  stelle del conteggio, sature comprese (il SubframeSelector le tiene: il suo limite e' il fondo
-  scala), sigma il rumore scritto. PixInsight integra ogni stella nella regione al decimo del <!-- software-ok -->
-  massimo del suo fit; noi sommiamo il residuo sulla struttura della stella (`detect.py`), per una
-  costante tarata a scatola chiusa (sotto). Una PSF sola per il frame, nel cerchio al decimo del
-  massimo, dava da 0,06 a 0,42 volte il suo PSF SNR sui mono: le stelle chiare e sature, larghe,
-  portano gran parte del flusso, e il loro fit e' largo. Sotto 5 stelle tace. Mai fra camere o
-  oggetti.
+  stelle del conteggio, sature comprese (sui mono toglierle dava 0,13-0,74 volte il suo), sigma
+  il rumore del piano misurato: a colori quello dell'intensita', non il rumore scritto (Marco,
+  28/10/2026). Il flusso di una stella (`pipeline/psf_flux.py`, passo 26.4): come documenta
+  ImageWeighting par. 2.2, i pixel veri sopra un decimo del picco meno il fondo locale; noi il
+  picco e la regione sulla copia mediana dentro la struttura della stella, il fondo dalla
+  mediana di un anello appena fuori la struttura (lui lo fitta), la somma sul residuo. Una
+  struttura col centro fuori dalla propria regione non e' una stella: flusso 0 (sul Canon 15
+  luce estesa contata come stella, centro a zero e luce a 20-36 px, portava l'83% del nostro F e
+  nulla del suo: tolte, il suo F si muoveva del 4%). Tutto per una costante tarata a scatola
+  chiusa (sotto). Provate e scartate (28/10/2026): una PSF Moffat beta 4 per zona applicata a
+  tutte (0,12-0,48 volte il suo: perde le stelle chiare e sature, che lui fitta una a una e
+  larghe); picco sul residuo grezzo (0,54-0,97); rigetto Chauvenet dei flussi (ImageWeighting
+  par. 2.2.1: sui mono 0,003-0,9); un tetto di dimensione. Le stelle sotto 3 px escono
+  leggermente larghe (la copia mediana abbassa il picco: Moffat beta 4 a 2 px +10% di flusso,
+  a 4 px esatta 0,822). Sotto 5 stelle tace. Mai fra camere o oggetti.
 - **Gradiente** (ADR 0022 punto 7): la mappa del fondo di `sep` ai centri delle sue maglie da
   64 pixel, (max - min) / mediana in %. Il **lato chiaro**: la pendenza del piano dei minimi
   quadrati, da +x verso +y, 0-360 gradi, solo quando il piano spiega almeno meta' della varianza
@@ -217,7 +225,7 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | HFD / HFD ASTAP | 0,71 / 0,83 / 0,94 | 0,78 / 0,83 / 0,89 | ASTAP sta il 6-41% sopra; ADR 0022 lo misurava +8…27% sopra la verita' (il raggio medio). Colori: ASTAP misura il mosaico grezzo. Col superpixel il Canon (frame 15) dava 6,94 px contro 3,97, ora 3,20 |
   | Stelle / stelle ASTAP | 0,94 / 6,20 / 27,79 | 6,76 / 14,47 / 31,56 | ASTAP conta da SNR 30 sul grezzo, noi come il SubframeSelector sull'intensita' a piena risoluzione |
   | Stelle / stelle SubframeSelector | 0,98 / 1,00 / 1,10 | 0,99 / 1,00 / 1,12 | Tarato sul suo conteggio (12 copie pari, prova sulle 12 dispari). Sopra 1,05 due frame: 15 (Canon 700D, 1,12) e 21 (NGC 6888, campo denso a FWHM 1,34, 1,10); il perche' non e' misurato |
-  | PSF SNR / PSF SNR SubframeSelector | 0,92 / 1,01 / 1,59 | 19,1 / 22,9 / 2443 | Costante del flusso tarata sulle 10 mono pari (mediana 1,12 a costante 1), prova sulle 10 dispari: mediana 1,01. Sopra 1,3 il frame 23 (FWHM 4,3 px, 265 stelle, 1,59) e il 12 (1,24): stelle larghe, la struttura raccoglie piu' della regione al decimo del massimo. **A colori lo scarto e' aperto**: 19-29 volte il suo, il Canon 15 2443 (il SubframeSelector da' 0,0005); il perche' non e' misurato, non si tara via. Nella colonna 28 della sua tabella; c3 F^2 / (c4 sigma^2) delle colonne 21 e 12 la ridà entro il 3% |
+  | PSF SNR / PSF SNR SubframeSelector | 0,91 / 0,99 / 1,15 | 0,99 / 1,09 / 1,23 | Passo 26.4. Costante del flusso tarata sulle 10 mono pari (mediana 0,860 a costante 1), prova sulle 10 dispari: mediana 0,99, da 0,91 a 1,15. Colori contro il suo PSF SNR sull'intensita' (min + max) / 2 del Debayer, che lo strumento gli passa (Marco, 28/10/2026): sull'RGB fitta 1/3-1/6 delle stelle e crolla 20-30 volte. Il piu' alto, Canon 18 a 1,23: il perche' non e' misurato. Il 23 (nebulosa, prima 1,59) 1,15; il Canon 15 (prima 2443) 1,17. Sotto 0,95 il 16 e il 01 (0,91): il perche' non e' misurato. Nella colonna 28 della sua tabella; c3 F^2 / (c4 sigma^2) delle colonne 21 e 12 la ridà entro il 3% |
 
   | Altezza / altezza SubframeSelector | 1,00 / 1,00 / 1,01 | 1,00 / 1,00 / 1,00 | Dal puntamento della scheda, come lo stadio `sky` senza soluzione; scarto da -0,25 a +0,30 gradi sui 22 col sito (i 2 Canon non l'hanno, lui scrive 0). Ne' l'inizio posa ne' l'altezza geometrica lo spiegano (da -0,15 a +0,24 all'inizio); il perche' non e' misurato. 0,3 gradi sopra i 30 gradi sono meno dell'1% di massa d'aria. Colonna 20 della sua tabella |
 
@@ -239,7 +247,8 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   8,8 s, di cui il debayer 3,6-5 s; la forma da 0,6 a 1,6 s, su 291-540 stelle. Un processo, su
   copia locale. Senza il tetto di 60 per casella un campo denso arrivava a 7,9 s. Il conteggio
   come il SubframeSelector aggiunge 0,3 s (passo 25.15). <!-- software-ok --> Col 25.2: da 2,0 a
-  4,1 s mono, da 5,6 a 7,8 s a colori.
+  4,1 s mono, da 5,6 a 7,8 s a colori. Col 26.4 (il flusso al decimo, un anello di fondo per
+  stella): da 2,2 a 4,5 s mono, da 5,8 a 8,2 s a colori.
 
 **Lo SQM** (stadio `sqm`, `pipeline/sqm.py` e `star_catalogue.py`, portati dal sorgente di ASTAP,
 MPL-2.0; ADR 0022 punto 8):

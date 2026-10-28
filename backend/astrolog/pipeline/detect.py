@@ -7,6 +7,8 @@ from typing import cast
 import numpy as np
 from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
+from .psf_flux import tenth_flux
+
 # Structure pixels: the median copy over this many sigma. The SubframeSelector's structure map on
 # the 24 real frames starts at 2.3-2.5; counts move under 0.2% from 2.0 to 2.4. [T]
 STRUCTURE_SIGMA = 2.4
@@ -25,7 +27,7 @@ class Detections:
     x: np.ndarray  # barycentre on the median copy, columns
     y: np.ndarray  # rows
     saturated: np.ndarray  # bool: CLIPPED_PIXELS sensor pixels at the ceiling; all False unasked
-    flux: np.ndarray  # the residual summed over the star's structure
+    flux: np.ndarray  # as the PSF SNR sums it (psf_flux.py)
 
 
 def detect(
@@ -55,5 +57,7 @@ def detect(
         sensor, top = clip
         at_top = np.bincount(owner, sensor[rows, cols] >= top, count + 1)[star]
         saturated = at_top >= CLIPPED_PIXELS
-    flux = np.bincount(owner, residual[rows, cols].astype(float), count + 1)[star]
-    return Detections(x, y, saturated, flux)
+    index = np.cumsum(star) - 1  # label to star number
+    mine = star[owner]
+    pixels = (rows[mine], cols[mine], index[owner[mine]])
+    return Detections(x, y, saturated, tenth_flux((residual, filtered), pixels, (x, y)))
