@@ -304,7 +304,8 @@ def test_scan_schedule_nas(db_path, tmp_path):
         c.post("/api/v1/folders", json={"root_path": str(root)})
         assert wait_until(lambda: c.get("/api/v1/scan-runs").json()["items"] != [])
         assert wait_until(lambda: c.get("/api/v1/scan-runs").json()["items"][0]["status"] == "ok")
-        assert c.get("/api/v1/scan-runs").json()["items"][0]["new"] == 1
+        # a later round may end before this read and find nothing new: the file is new once
+        assert sum(run["new"] for run in c.get("/api/v1/scan-runs").json()["items"]) == 1
 
 
 def test_a_locked_database_skips_one_round_of_the_schedule_not_all(db_path, tmp_path):
