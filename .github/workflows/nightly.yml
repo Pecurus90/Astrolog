@@ -27,7 +27,8 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - run: python -m pip install --quiet -e ".[dev]" mutmut
+      # mutmut 3.8.0 reads item._nodeid, gone in pytest 9.2: stats fail on every test
+      - run: python -m pip install --quiet -e ".[dev]" "mutmut>=3.8.1"
       # mutmut resumes from mutants/ and retests only changed functions: each night goes on
       # from the last one, so a shard too long for one job finishes over several.
       - uses: actions/cache/restore@v6
