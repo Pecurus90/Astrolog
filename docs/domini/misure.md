@@ -293,11 +293,35 @@ approvare sulla tavola: "sottocampionata (grave)", "sottocampionata", "ideale",
 "sovracampionata". Dove si vedono: Notti, Archivio, Statistiche, Selezione dei frame; la scheda
 dell'oggetto no.
 
+## Le regole fra frame (ADR 0039)
+
+Scritte come funzioni pure con i loro test (passo 26); le collega alla pipeline il passo 40, che
+porta setup e oggetti. Nessuna misura del frame cambia: il rumore resta 1,4826 MAD, una scala
+su milioni di pixel, come il SubframeSelector la confronta.
+
+- **Soglia relativa**: mediana ± 2,5 Qn (`robust.relative_bounds`), sotto 10 valori tace; tace
+  anche a Qn zero (valori ripetuti), dove la soglia sarebbe la mediana stessa. Qn di
+  Rousseeuw e Croux (JASA 88:1273, 1993), costante 2,21914 = 1/(√2 Φ⁻¹(5/8)) (p. 1277; il 2,2219
+  dei primi lavori e' un refuso) e fattori di piccolo campione di robustbase 0.99-7 (tavola fino a
+  12, poi polinomio in 1/n, simulazione di Maechler su 2^27 campioni): quelli che vanno con
+  2,21914. I fattori del 1992 (n/(n+1,4), n/(n+3,8)) vanno col refuso e non si usano. Il k-esimo
+  scarto si sceglie esatto senza la matrice delle coppie: 50.000 valori in 0,04 s.
+- **Eccentricita' rispetto al setup** (`pipeline/setup_rules.py`): fuori solo sopra mediana +
+  2,5 Qn, una coda (stelle piu' tonde non sono uno scarto); avviso "stelle allungate" se la
+  mediana del setup supera 0,6 (b/a 0,8), sotto 10 frame non si dice.
+- **Raffiche per setup**: FWHM² = calma² + c v⁴ (ADR 0039) su un punto per ora di meteo (la
+  raffica e' oraria), fit di Theil-Sen (Sen 1968: un frame con le nuvole non lo inclina).
+  Incerto dove il vento aggiunge una volta calma² (FWHM × √2, tempo doppio), niente dove la
+  aggiunge tre volte (FWHM doppia), come il seeing contro il pavimento del setup. Nessuna
+  estrapolazione: sotto 10 punti, senza crescita o con la soglia oltre la raffica piu' forte
+  misurata resta il 25 km/h (`domini/meteo.md`); "niente" oltre i dati non si dice.
+
 ## Cosa non fa ancora, e con cosa arrivera'
 
 - **Bias (ADU) a schermo**: col porting di Attrezzatura (fase 5) e il setup della pipeline
   (passo 40); oggi si dichiara solo da codice (`declare_bias`).
-- **26-27**: soglie relative (Qn), eccentricita' rispetto al setup, Bortle del sito, oggetto basso.
+- **Le regole fra frame collegate**: al passo 40 (setup, oggetti) e 40.1 (zona di selezione,
+  con "al limite" a 1 Qn). **27**: Bortle del sito, oggetto basso.
 - **A schermo**: col porting delle pagine (fase 5). Le tavole di Design (`handoff/design/`,
   26/10/2026) chiedono le stesse misure; quattro scarti vanno al censimento (passo 24.1):
   eccentricita' a soglie fisse 0,45/0,71 (ADR 0039 le ha tolte), soglia relativa con la MAD

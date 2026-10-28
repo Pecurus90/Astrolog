@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 231; senza fonte: 1.
-Fonti: C norma: 103; U usanza: 1; D metodo: 8; M misura: 14; P decisione: 33; T tecnico: 75.
+Valori: 240; senza fonte: 1.
+Fonti: C norma: 107; U usanza: 2; D metodo: 9; M misura: 14; P decisione: 35; T tecnico: 76.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -320,6 +320,13 @@ Fonti: C norma: 103; U usanza: 1; D metodo: 8; M misura: 14; P decisione: 33; T 
 |---|---|---|
 | MAX_HEADER_BLOCKS | `100` | T |
 
+### pipeline/setup_rules.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| ELONGATED_ECCENTRICITY | `0.6` | U ADR 0039: b/a 0.8, forum usage; sqrt(1 - 0.8^2) = 0.6 |
+| UNUSABLE_SHARE | `3.0` | P ADR 0039 |
+
 ### pipeline/shape.py
 
 | simbolo | valore | fonte |
@@ -445,6 +452,19 @@ Fonti: C norma: 103; U usanza: 1; D metodo: 8; M misura: 14; P decisione: 33; T 
 |---|---|---|
 | _KM_PER_DEGREE | `111.2` | C IUGG mean radius R1 6371.0088 km: 2*pi*R1/360 = 111.195 |
 | search(limit=) | `5` | T |
+
+### robust.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| QN_CONSTANT | `2.21914` | C Rousseeuw & Croux, JASA 88:1273, 1993, p. 1277 after (3.7) |
+| SMALL_SAMPLE | `0.399356, 0.99365, 0.51321, 0.84401, 0.61220,` | C robustbase 0.99-7 R/qnsn.R, Maechler's simulation, Nsim 2^27 |
+| SMALL_SAMPLE | `0.85877, 0.66993, 0.87344, 0.72014, 0.88906, 0.75743,` | C robustbase 0.99-7 R/qnsn.R, Maechler's simulation, Nsim 2^27 |
+| ODD_TERMS | `(1.60188, -2.1284, -5.172)` | C robustbase 0.99-7 R/qnsn.R, Qn.finite.c |
+| EVEN_TERMS | `(3.67561, 1.9654, 6.987, -77.0)` | C robustbase 0.99-7 R/qnsn.R, Qn.finite.c |
+| RELATIVE_QN | `2.5` | D Leys et al. 2013, J. Exp. Soc. Psychol. 49:764; ADR 0039 with Qn |
+| MIN_VALUES | `10` | P ADR 0032: at least 10 frames, under that the relative bound is silent |
+| WINDOW_PER_VALUE | `8` | T |
 
 ### spine/folder_move.py
 

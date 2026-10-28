@@ -29,7 +29,9 @@ di posa.
 
 - La rugiada si giudica per vetro esposto (lente, lastra): e' il caso peggiore; uno specchio
   alluminato resta piu' caldo (Chadwick 2013).
-- Restano da verificare sulle fonti primarie: fattori di piccolo campione di Qn, Beysens
+- Qn verificato su robustbase 0.99-7 (`R/qnsn.R`, `man/Qn.Rd`): costante 2,21914, il 2,2219 dei
+  primi lavori e' un refuso; i fattori di piccolo campione sono quelli di robustbase, non i 1992
+  che vanno col refuso (`domini/misure.md`). Resta da verificare Beysens
   originale (un termine in H^2 di pvdeg). Hahn & Meeker verificato tramite NIST Dataplot
   (PREDICTION LIMITS, cita Hahn & Meeker 1991 pp. 61-62); t di Student da Abramowitz & Stegun
   26.7.3-4, provata sulla loro tavola. Il modo e' quello dell'ultimo lancio (indizio o cieco).

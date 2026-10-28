@@ -95,7 +95,8 @@ pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`m
   il conto delle ore che la portano. Le soglie stanno in `backend/astrolog/weather/judge.py`, con
   la fonte accanto al numero (riverificate il 24/10/2026, ADR 0034), e la rotta le manda alla
   pagina (`scales`). ADR 0039 sostituira' la condensa (Beysens), il seeing (rispetto al setup) e,
-  quando i frame bastano, le raffiche (per setup); oggi valgono queste:
+  quando i frame bastano, le raffiche (per setup: la regola e' scritta, `pipeline/setup_rules.py`
+  e `domini/misure.md`, e si collega al passo 40); oggi valgono queste:
   - nuvole e nuvole basse: classi FEW e SCT (WMO/ICAO); pioggia: qualunque e' niente (ASCOM);
     vento medio: incerta da Beaufort 4 (20 km/h), niente da 5 (29 km/h, RMetS); raffiche: niente
     oltre 25 km/h (iTelescope: Beaufort e' una scala del vento medio);
