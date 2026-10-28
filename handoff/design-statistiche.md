@@ -157,12 +157,12 @@ classifica: ordine per ore.
 
 ## 9. Cielo del sito
 
-- **SQM** per mese e anno (mag/arcsec²), dai frame L, senza filtro o a colori. Due serie:
+- **SQM** per mese e anno (mag/arcsec²), dai frame L o a colori. Due serie:
   **Luna sotto -5°** e **Luna su**.
 - **Curva media per ora della notte**: SQM medio dalle 21 alle 05, per vedere quando il cielo e'
   piu' buio.
 - Sotto il Bortle del sito, come in Impostazioni: «misurato su {n} notti».
-- Riga: «Solo frame L, senza filtro o a colori: i filtri stretti non misurano il cielo.»
+- Riga: «Solo frame L o a colori: i filtri stretti non misurano il cielo.»
 
 ## 10. Stati (Tweaks)
 
