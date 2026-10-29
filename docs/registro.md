@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 243; senza fonte: 1.
-Fonti: C norma: 115; U usanza: 2; D metodo: 11; M misura: 15; P decisione: 35; T tecnico: 68.
+Valori: 245; senza fonte: 1.
+Fonti: C norma: 119; U usanza: 2; D metodo: 16; M misura: 15; P decisione: 35; T tecnico: 61.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -270,8 +270,10 @@ Fonti: C norma: 115; U usanza: 2; D metodo: 11; M misura: 15; P decisione: 35; T
 | PSF_SNR_C3 | `1.350e-7` | C PixInsight ImageWeighting, eq. 18-19; software-ok |
 | PSF_SNR_C4 | `4.987e6` | C PixInsight ImageWeighting, eq. 18-19; software-ok |
 | MESH_PX | `64` | C sep docs: Background bw, bh default |
-| PLANE_EXPLAINS | `0.5` | T |
-| ZONE_MIN_STARS | `25` | T |
+| PLANE_EXPLAINS | `0.5` | D R^2 over one half: the plane explains the larger part |
+| TILT_BAND_PCT | `5.0` | C ASTAP astap.htm, CCD inspector: tilt 0-5% "none" |
+| D2_FOUR | `2.059` | C Montgomery, Statistical Quality Control: d2 for subgroups of 4 |
+| MEDIAN_SE | `math.sqrt(math.pi / 2)` | D asymptotic standard error of the median, normal |
 | GRID | `3` | P ADR 0037: the 3x3 grid, its corners and centre the five zones |
 | CENTRE | `GRID * GRID // 2` | P ADR 0037 |
 
@@ -346,14 +348,14 @@ Fonti: C norma: 115; U usanza: 2; D metodo: 11; M misura: 15; P decisione: 35; T
 | BETA_MAX | `100.0` | T |
 | START_BETA | `2.5` | M misure.md: HFD/FWHM 1.36 on the 24 real frames, a Moffat of beta 2.5 |
 | EVALUATIONS_PER_PARAMETER | `50` | T |
-| HOT_SIGMA | `5.0` | T |
-| DOUGHNUT_SIGMA | `3.0` | T |
-| FIT_SHARE | `0.5` | T |
+| HOT_SIGMA | `5.0` | D Chauvenet's criterion |
+| DOUGHNUT_SIGMA | `3.0` | C Starck and Murtagh 1998: significance at 3 sigma, as noise.py |
+| FIT_SHARE | `0.5` | D the median's breakdown point, one half (Hampel 1971) |
 | UNMEASURABLE_ECCENTRICITY | `0.99` | P ADR 0022: eccentricity from 0.99, shape not measurable |
 | DIRECTION_ECCENTRICITY | `0.4` | P ADR 0022: direction only from eccentricity 0.4 |
-| DIRECTION_AGREEMENT | `0.5` | T |
+| DIRECTION_ALPHA | `0.05` | C Zar, Biostatistical Analysis, 27.1: Rayleigh test, alpha 0.05 |
 | SIGMA_TO_FWHM | `2.3548` | D Gaussian profile: FWHM = 2 sqrt(2 ln 2) sigma |
-| MIN_STARS | `5` | T |
+| MIN_STARS | `5` | D order statistics, distribution-free |
 
 ### pipeline/sky.py
 

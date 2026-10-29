@@ -359,3 +359,4 @@ test_without_a_pile_the_declared_ceiling_stays - step 26.45, ADR 0041: ceiling.p
 test_a_smooth_bright_patch_is_not_a_pile - step 26.45, ADR 0041: ceiling.py removed
 test_twelve_bits_in_sixteen_clip_at_their_own_top - step 26.45, ADR 0041: ceiling.py removed
 test_a_few_equal_pixels_are_no_pile - step 26.45, ADR 0041: ceiling.py removed
+test_a_zone_with_too_few_stars_leaves_tilt_and_curvature_silent - step 26.45: the zone minimum follows the frame's HFD spread; replaced by test_the_stars_a_zone_needs_follow_the_frame_s_own_hfd_spread and test_never_under_min_stars_a_zone

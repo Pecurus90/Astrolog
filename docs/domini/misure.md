@@ -22,7 +22,7 @@ parole in [`glossario.md`](glossario.md).
 | Il PSF SNR e' quello della documentazione di PixInsight, sature comprese come le tiene lui <!-- software-ok --> | `test_psf_snr_is_the_documented_formula`, `test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale`, `test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are`, `test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one`, `test_under_five_stars_no_psf_snr`, `test_pipeline_psf_flux.py` (quota Moffat al decimo, fondo lasciato sotto le stelle, luce col centro al buio, stella tagliata) |
 | Il rumore e' l'MRS di Starck e Murtagh, come lo dichiara PixInsight; nei campi densi resta quello del cielo <!-- software-ok --> | `test_pipeline_noise.py` (fattore del primo strato 0,8908 come Duchamp, trasformata che si ricompone, rumore gaussiano letto entro il 2%, campo affollato e nebulosa entro il 3%), `test_in_a_crowded_field_the_noise_is_read_off_the_stars` |
 | Il gradiente del fondo dice quanto e verso dove; un fondo piatto o a zero non inventa un lato | `test_a_sky_on_a_plane_gives_its_spread_over_its_median_and_its_bright_side`, `test_the_bright_side_turns_with_the_plane`, `test_a_flat_sky_has_no_gradient_and_no_side`, `test_a_sky_at_zero_or_under_has_no_gradient` |
-| Tilt e curvatura dalle cinque zone, e tacciono con poche stelle in una zona | `test_tilt_is_worst_less_best_corner_over_the_median_hfd`, `test_curvature_is_corners_against_the_centre_with_its_sign`, `test_a_zone_with_too_few_stars_leaves_tilt_and_curvature_silent`, `test_tilt_reaches_the_frame_through_measure` |
+| Tilt e curvatura dalle cinque zone, e tacciono con poche stelle in una zona | `test_tilt_is_worst_less_best_corner_over_the_median_hfd`, `test_curvature_is_corners_against_the_centre_with_its_sign`, `test_the_stars_a_zone_needs_follow_the_frame_s_own_hfd_spread`, `test_never_under_min_stars_a_zone`, `test_tilt_reaches_the_frame_through_measure` |
 | La massa d'aria e' quella dell'oggetto a meta' posa, con l'aria che lo alza, finita all'orizzonte e nessuna sotto | `test_the_airmass_is_pickering_on_the_apparent_altitude`, `test_the_refraction_lifts_a_low_star_saemundsson`, `test_under_the_horizon_there_is_no_airmass`, `test_the_altitude_agrees_with_astropy` (`backend/tests/test_pipeline_airmass.py`, `test_pipeline_altitude.py`) |
 | FWHM e HFD anche in secondi d'arco dalla scala risolta e allo zenit; senza soluzione niente secondi, senza sito o ora niente altezza ne' zenit | `test_a_solved_shot_gets_its_airmass_arcseconds_and_zenith_values`, `test_a_value_at_the_zenith_is_divided_by_the_airmass_to_the_three_fifths`, `test_without_a_site_there_is_no_altitude_but_the_arcseconds_stay`, `test_without_a_start_there_is_no_time_nor_altitude`, `test_the_mid_exposure_is_the_start_plus_half` (`backend/tests/test_pipeline_sky_measure.py`) |
 | La direzione delle stelle e il lato chiaro del gradiente girati col cielo: "in AR" o "in Dec" | `test_a_pixel_direction_turns_into_its_position_angle_on_the_sky` (`test_pipeline_footprint.py`), `test_the_shape_and_the_bright_side_turn_with_the_sky`, `test_the_nearer_sky_axis_names_the_direction`, `test_a_solution_without_its_matrix_gives_arcseconds_but_no_direction`, `test_round_stars_and_a_flat_sky_have_no_direction` |
@@ -140,8 +140,8 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
     eccentricita' tacciono. Le righe vere arrivano qui di rado: `sep` le spezza in pezzi vicini
     e il frame dice troppo poche stelle.
   - **Direzione** solo da eccentricita' 0,4 e se le stelle sono d'accordo: media assiale degli
-    angoli (gli angoli raddoppiati sul cerchio, Mardia 1972), lunghezza almeno 0,5; coma e tilt
-    allungano in raggiera e la direzione tace. Si scrive sui pixel e girata col cielo (sotto,
+    angoli (raddoppiati sul cerchio, Mardia 1972), se Rayleigh rifiuta l'uniforme al 5% (Zar,
+    cap. 27; prima lunghezza 0,5, nostra); coma e tilt allungano in raggiera: la direzione tace. Si scrive sui pixel e girata col cielo (sotto,
     **Col cielo**).
   - **Colori**: sull'intensita' dopo VNG, come WBPP; VNG allarga le stelle piccole, come le
     vede il SubframeSelector: FWHM 4 px +2%, 3 px +8%, 2 px +27% (l'HFD +4%).
@@ -180,10 +180,10 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   centrale della griglia 3x3 (le zone 1A, 3A, 1C, 3C e 2B di ASTAP). Tilt = 100 (angolo peggiore
   - migliore) / HFD mediana del frame (hnsky.org/astap.htm). Curvatura = 100 (mediana dei quattro
   angoli - centro) / HFD mediana, col segno: positiva se gli angoli sono peggiori (l'"off-axis
-  aberration" di ASTAP, sulle zone). Almeno 25 stelle per zona, se no tacciono: peggiore meno
-  migliore di quattro mediane non e' mai sotto zero, e a 5 stelle per zona un sensore piano
-  leggeva il 15%. Solo con l'HFD (`measured`), sulle sue stelle tonde (b/a sopra 0,5): su un
-  frame mosso le zone restano povere e tilt e curvatura tacciono.
+  aberration" di ASTAP). Stelle per zona dalla dispersione s delle HFD del frame (MAD relativa):
+  su un sensore piano lo scarto fra le quattro mediane d'angolo, d2(4) sqrt(pi/2) s / sqrt(n)
+  (d2 2,059, Montgomery), sta nella prima fascia di tilt di ASTAP (0-5%, "nessuno"); mai sotto 5,
+  prima 25 fisse. Solo con l'HFD, sulle stelle tonde: su un frame mosso tilt e curvatura tacciono.
 - **Col cielo** (`pipeline/sky_measure.py`, stadio `sky` dopo `measure`; ADR 0022 punti 5 e 7):
   le misure dei pixel con la soluzione di `solve`, il sito e l'ora della scheda del file misurato,
   in `pipeline_sky`. Una posa senza soluzione si scrive subito e si riscrive quando la soluzione

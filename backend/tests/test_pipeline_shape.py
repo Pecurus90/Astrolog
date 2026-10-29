@@ -146,6 +146,14 @@ def test_directions_that_disagree_give_no_direction() -> None:
     assert found.angle_deg is None
 
 
+def test_a_direction_is_one_the_rayleigh_test_holds_at_five_percent() -> None:
+    """Axial Rayleigh test (Zar 27.1): 21 of 30 stars at 10 degrees, 9 at 100, mean length 0.4,
+    p 0.008: a direction. 4 of 5 at 10, 1 at 100, length 0.6, p 0.17: none."""
+    many = shape._direction([10.0] * 21 + [100.0] * 9)
+    assert many is not None and many == pytest.approx(10.0, abs=0.01)
+    assert shape._direction([10.0] * 4 + [100.0]) is None
+
+
 @pytest.mark.parametrize("degrees", [-1e-15, 180.0, 360.0 - 1e-13, -180.0])
 def test_an_angle_folds_into_0_to_180_never_180_itself(degrees: float) -> None:
     """-1e-15 % 180 is 180.0 in floats, and the schema refuses 180."""

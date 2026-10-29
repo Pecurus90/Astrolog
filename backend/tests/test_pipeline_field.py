@@ -10,11 +10,11 @@ from astrolog.pipeline import stars
 from astrolog.pipeline.field import (
     PSF_SNR_C3,
     PSF_SNR_C4,
-    ZONE_MIN_STARS,
     gradient_of,
     psf_snr,
     zones_of,
 )
+from astrolog.pipeline.shape import MIN_STARS
 from astrolog.pipeline.stars import Measured, measure_frame
 
 _SIDE = 600
@@ -199,15 +199,19 @@ def test_the_gradient_reaches_the_frame_through_measure() -> None:
 # Tilt and curvature
 
 
-def _zone_stars(hfd_of) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """ZONE_MIN_STARS stars in each of the 3x3 cells of a 900 px frame, HFD given by the cell."""
+def _zone_stars(
+    hfd_of, per_zone: int = 25, spread: float = 0.0
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """`per_zone` stars in each of the 3x3 cells of a 900 px frame, HFD given by the cell, each
+    star off it by `spread` relative, the same pattern in every cell (a flat sensor stays flat)."""
     xs, ys, hfds = [], [], []
+    offsets = np.random.default_rng(3).normal(0, spread, per_zone)
     for row in range(3):
         for col in range(3):
-            for k in range(ZONE_MIN_STARS):
-                xs.append(col * 300 + 20 + (260 * k) // ZONE_MIN_STARS)
+            for k in range(per_zone):
+                xs.append(col * 300 + 20 + (260 * k) // per_zone)
                 ys.append(row * 300 + 150)
-                hfds.append(hfd_of(row, col))
+                hfds.append(hfd_of(row, col) * (1 + offsets[k]))
     return np.array(hfds, float), np.array(xs, float), np.array(ys, float)
 
 
@@ -233,8 +237,18 @@ def test_curvature_is_corners_against_the_centre_with_its_sign() -> None:
     assert flipped.curvature_pct == pytest.approx(-100 * 1.0 / 3.0)
 
 
-def test_a_zone_with_too_few_stars_leaves_tilt_and_curvature_silent() -> None:
-    hfd, x, y = _zone_stars(lambda r, c: 3.0)
+def test_the_stars_a_zone_needs_follow_the_frame_s_own_hfd_spread() -> None:
+    """Four corner medians on a flat sensor stay inside ASTAP's first tilt band (5%) when
+    d2(4) sqrt(pi/2) s / sqrt(n) is under it: s 2% asks 2 stars, s 20% asks 107."""
+    tight = _zone_stars(lambda r, c: 3.0, per_zone=10, spread=0.02)
+    assert zones_of(*tight, (900, 900)) is not None
+    loose = _zone_stars(lambda r, c: 3.0, per_zone=50, spread=0.20)
+    assert zones_of(*loose, (900, 900)) is None
+    assert zones_of(*_zone_stars(lambda r, c: 3.0, per_zone=120, spread=0.20), (900, 900))
+
+
+def test_never_under_min_stars_a_zone() -> None:
+    hfd, x, y = _zone_stars(lambda r, c: 3.0, per_zone=MIN_STARS)
     lonely = np.ones(len(x), dtype=bool)
     lonely[np.flatnonzero((x < 300) & (y < 300))[0]] = False  # one corner a star short
     assert zones_of(hfd[lonely], x[lonely], y[lonely], (900, 900)) is None
@@ -242,7 +256,7 @@ def test_a_zone_with_too_few_stars_leaves_tilt_and_curvature_silent() -> None:
 
 def test_tilt_reaches_the_frame_through_measure() -> None:
     """Wider stars in one corner of a measured frame: tilt over 0, flat field near 0."""
-    side, per_side = 900, 18  # 36 stars a cell, over ZONE_MIN_STARS
+    side, per_side = 900, 18  # 36 stars a cell
     data = _sky(side=side)
     for y, x in _grid(per_side, margin=30, side=side):
         _stars(data, [(y, x)], 2.4 if (y < 300 and x < 300) else 2.0, 6e4)

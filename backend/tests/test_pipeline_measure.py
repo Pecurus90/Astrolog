@@ -63,8 +63,8 @@ def test_a_light_is_measured_once_and_written(conn, tmp_path):
     assert (row["ceiling_adu"], row["saturated"]) == (65535.0, 0)
     assert row["psf_snr"] > 0
     assert row["gradient_pct"] < 5
-    assert row["tilt_pct"] is None  # 60 stars: under 25 a zone
-    assert row["curvature_pct"] is None
+    assert row["tilt_pct"] < 5  # equal stars ask few a zone: a flat field, in ASTAP's first band
+    assert row["curvature_pct"] is not None
     assert result.measured == 1
     again = measure_root(conn, root, "2026-01-01T00:00:00+00:00")
     assert again.measured == 0

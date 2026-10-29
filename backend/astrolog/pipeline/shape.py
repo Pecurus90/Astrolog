@@ -18,14 +18,21 @@ BETA_MIN = 1.01
 BETA_MAX = 100.0  # [T]
 START_BETA = 2.5  # [M misure.md: HFD/FWHM 1.36 on the 24 real frames, a Moffat of beta 2.5]
 EVALUATIONS_PER_PARAMETER = 50  # [T] a star that does not converge stops there
-HOT_SIGMA = 5.0  # [T] raw over its median copy by this much off the core: a hot pixel, masked
-DOUGHNUT_SIGMA = 3.0  # [T] centre this far under its ring: a doughnut, out of focus
-FIT_SHARE = 0.5  # [T] fits that hold at least half the stars, else the moments speak
+# Raw over its median copy by this much off the core: a hot pixel, masked. Chauvenet, one tail
+# (hot is only over), on ~1e6 fit pixels a frame: n P(>k) < 0.5 at k 4.9. [D Chauvenet's criterion]
+HOT_SIGMA = 5.0
+# Centre this far under its ring: a doughnut, out of focus.
+DOUGHNUT_SIGMA = 3.0  # [C Starck and Murtagh 1998: significance at 3 sigma, as noise.py]
+# Fits that hold at least half the stars, else the moments speak: their median is then theirs.
+FIT_SHARE = 0.5  # [D the median's breakdown point, one half (Hampel 1971)]
 UNMEASURABLE_ECCENTRICITY = 0.99  # [P ADR 0022: eccentricity from 0.99, shape not measurable]
 DIRECTION_ECCENTRICITY = 0.4  # [P ADR 0022: direction only from eccentricity 0.4]
-DIRECTION_AGREEMENT = 0.5  # [T] length of the mean of 2 theta: under it no one direction
+# One direction where the axial Rayleigh test rejects a uniform spread at this level.
+DIRECTION_ALPHA = 0.05  # [C Zar, Biostatistical Analysis, 27.1: Rayleigh test, alpha 0.05]
 SIGMA_TO_FWHM = 2.3548  # [D Gaussian profile: FWHM = 2 sqrt(2 ln 2) sigma]
-MIN_STARS = 5  # [T] fewer stars: a median (HFD, shape) says nothing; measured on real frames
+# Fewer stars: a median (HFD, shape) says nothing. At 5 the lowest and highest hold the median
+# with 94% (1 - 2 / 2^5), the first n over 90%. [D order statistics, distribution-free]
+MIN_STARS = 5
 
 type Record = np.void | np.ndarray  # one detection of sep's structured array
 
@@ -98,9 +105,13 @@ def _frame(kind: ShapeKind, stars: list[Star]) -> Shape:
 
 
 def _direction(angles: list[float]) -> float | None:
-    """Axial mean: angles doubled on the circle, so 179 and 1 agree [D Mardia 1972, axial data]."""
+    """Axial mean: angles doubled on the circle, so 179 and 1 agree [D Mardia 1972, axial data];
+    one direction only where the Rayleigh test rejects no direction (Zar eq. 27.4)."""
     mean = np.mean(np.exp(2j * np.radians(angles)))
-    if abs(mean) < DIRECTION_AGREEMENT:
+    n = len(angles)
+    resultant = n * float(abs(mean))
+    p = math.exp(math.sqrt(1 + 4 * n + 4 * (n * n - resultant**2)) - (1 + 2 * n))
+    if p >= DIRECTION_ALPHA:
         return None
     return _folded(float(np.degrees(np.angle(mean))) / 2)
 

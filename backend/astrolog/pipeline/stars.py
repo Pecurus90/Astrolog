@@ -50,7 +50,7 @@ class Measured(Across):
     background_adu: float
     noise_adu: float
     shape: Shape | None  # on stars of any roundness: a trailed frame still has one
-    tilt_pct: float | None  # None: a zone under field.ZONE_MIN_STARS
+    tilt_pct: float | None  # None: a zone under field.zone_min_stars
     curvature_pct: float | None
 
 
