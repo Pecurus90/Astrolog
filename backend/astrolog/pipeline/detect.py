@@ -9,16 +9,16 @@ from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
 from .psf_flux import tenth_flux
 
-# Structure pixels: the median copy over this many sigma. The SubframeSelector's structure map on
-# the 24 real frames starts at 2.3-2.5; counts move under 0.2% from 2.0 to 2.4. [T]
-STRUCTURE_SIGMA = 2.4
+# Structure pixels: the median copy over this many sigma.
+# [C Starck and Murtagh 1998, PASP 110:193: significance at 3 sigma, as noise.py's support]
+STRUCTURE_SIGMA = 3.0
 # Star: best 2x2 sum on the raw residual over the noise of 4 pixels, the SubframeSelector's own
 # threshold on synthetic frames of known truth, FWHM 1.5-6 px (misure.md); software-ok
 APERTURE_SNR = 16.85  # [M plan 26.45: half its stars found there, median of five FWHM]
-# Count ratio against the frame's FWHM: correlation -0.80 at 1 px, 0.78 at 3, -0.25 at 2. [T]
-APERTURE_PX = 2
-# Saturated: this many sensor pixels at the ceiling; one is a hot pixel inside a star. [T]
-CLIPPED_PIXELS = 2
+# Its threshold on the synthetic frames holds within 1.18x over FWHM 1.5-6; 1 px 1.48x, 3 px 1.64x.
+APERTURE_PX = 2  # [M plan 26.45: the aperture whose threshold does not follow the FWHM]
+# Saturated: one sensor pixel at the ceiling. [C ASTAP plot_star: a pixel at data_max]
+CLIPPED_PIXELS = 1
 _EIGHT = np.ones((3, 3), dtype=bool)  # [D 8-connected: diagonal pixels of a star join it]
 
 

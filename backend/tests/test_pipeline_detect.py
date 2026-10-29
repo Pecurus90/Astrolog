@@ -78,6 +78,15 @@ def test_a_structure_starts_at_its_threshold_on_the_median_copy() -> None:
     assert _found(pair) == 2
 
 
+def test_one_sensor_pixel_at_the_ceiling_makes_a_star_saturated() -> None:
+    """As ASTAP: a pixel at the top is enough."""
+    star = _gauss(150, 150, 2.0, 20000.0)
+    sensor = star.copy()
+    sensor[150, 150] = 60000.0
+    found = detect(star, median3x3(star), _NOISE, clip=(sensor, 60000.0))
+    assert found.saturated.tolist() == [True]
+
+
 def test_the_frame_counts_the_stars_the_subframeselector_would() -> None:
     """36 stars at a 2x2 SNR of 14: sep at 5 sigma counted 31, the SubframeSelector none.
     software-ok"""

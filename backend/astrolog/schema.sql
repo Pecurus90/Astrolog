@@ -1109,7 +1109,7 @@ CREATE TABLE pipeline_measures (
   fwhm_px        REAL CHECK (fwhm_px > 0),          -- media geometrica dei due assi
   eccentricity   REAL CHECK (eccentricity >= 0 AND eccentricity < 1),
   angle_deg      REAL CHECK (angle_deg >= 0 AND angle_deg < 180),  -- asse lungo, da +x verso +y
-  -- tetto: la pila in cima all'istogramma, se no DATAMAX o il massimo del tipo (ceiling.py)
+  -- tetto: DATAMAX, se no il massimo del tipo dopo BZERO e BSCALE (ADR 0041)
   ceiling_adu    REAL,
   saturated      INTEGER CHECK (saturated >= 0),  -- delle stelle, quelle al tetto
   psf_snr        REAL CHECK (psf_snr >= 0),  -- ImageWeighting eq. 18-19 (SubframeSelector); NULL: < 5 stelle

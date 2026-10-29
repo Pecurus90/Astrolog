@@ -18,7 +18,7 @@ parole in [`glossario.md`](glossario.md).
 | Le stelle si contano una volta; i pixel caldi di un light non calibrato non sono stelle | `test_every_star_is_counted_once`, `test_hot_pixels_are_not_stars` |
 | Le stelle sono quelle che conta il SubframeSelector: una stella debole o una macchia di nebulosa larga non conta (Marco, 27/10/2026) <!-- software-ok --> | `test_the_frame_counts_the_stars_the_subframeselector_would`, `test_a_star_over_the_aperture_threshold_is_found_one_under_is_not`, `test_a_wide_faint_patch_is_not_a_star_however_much_light_it_holds`, `test_a_hot_pixel_is_not_a_star`, `test_a_dark_pixel_among_bright_ones_has_a_position`, `test_a_structure_starts_at_its_threshold_on_the_median_copy`, `test_the_position_is_the_barycentre` (`backend/tests/test_pipeline_detect.py`) <!-- software-ok --> |
 | Una stella saturata conta fra le stelle ma non entra nell'HFD, anche se in una camera a colori satura un canale solo | `test_saturated_stars_are_counted_but_not_measured`, `test_a_colour_star_clipped_in_one_channel_is_saturated` |
-| Il tetto di saturazione e' dove la camera taglia davvero, anche sotto il massimo del tipo (Canon a 61208), e quante stelle ci arrivano | `test_the_ceiling_is_the_pile_at_the_top_of_the_histogram_not_the_maximum`, `test_twelve_bits_in_sixteen_clip_at_their_own_top`, `test_a_smooth_bright_patch_is_not_a_pile`, `test_stars_at_the_ceiling_are_counted_saturated_and_kept_out` (`backend/tests/test_pipeline_field.py`) |
+| Il tetto di saturazione e' il fondo scala dichiarato, come PixInsight, e satura e' una stella con un pixel li' (Marco, 29/10/2026) <!-- software-ok --> | `test_the_ceiling_is_the_declared_full_scale_as_pixinsight`, `test_stars_at_the_ceiling_are_counted_saturated_and_kept_out` (`backend/tests/test_pipeline_field.py`), `test_one_sensor_pixel_at_the_ceiling_makes_a_star_saturated` (`backend/tests/test_pipeline_detect.py`) |
 | Il PSF SNR e' quello della documentazione di PixInsight, sature comprese come le tiene lui <!-- software-ok --> | `test_psf_snr_is_the_documented_formula`, `test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale`, `test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are`, `test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one`, `test_under_five_stars_no_psf_snr`, `test_pipeline_psf_flux.py` (quota Moffat al decimo, fondo lasciato sotto le stelle, luce col centro al buio, stella tagliata) |
 | Il rumore e' l'MRS di Starck e Murtagh, come lo dichiara PixInsight; nei campi densi resta quello del cielo <!-- software-ok --> | `test_pipeline_noise.py` (fattore del primo strato 0,8908 come Duchamp, trasformata che si ricompone, rumore gaussiano letto entro il 2%, campo affollato e nebulosa entro il 3%), `test_in_a_crowded_field_the_noise_is_read_off_the_stars` |
 | Il gradiente del fondo dice quanto e verso dove; un fondo piatto o a zero non inventa un lato | `test_a_sky_on_a_plane_gives_its_spread_over_its_median_and_its_bright_side`, `test_the_bright_side_turns_with_the_plane`, `test_a_flat_sky_has_no_gradient_and_no_side`, `test_a_sky_at_zero_or_under_has_no_gradient` |
@@ -76,10 +76,26 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   (Marco, 27/10/2026), riscritto dalla sua documentazione pubblica (lo StarDetector della PCL:
   filtro mediano dei pixel caldi, strutture, segnale sul fondo in unita' di dispersione) e tarato
   a scatola chiusa sulle sue uscite, mai sul sorgente PCL. Struttura: i pixel della copia
-  mediana 3x3 sopra 2,4 sigma, uniti in 8 direzioni; la sua mappa delle strutture
-  (`StarDetectionPreview`) sui 24 frame parte da 2,3-2,5. Stella: la struttura il cui miglior
-  quadrato 2x2 sul residuo grezzo supera 16,85 volte il rumore di quattro pixel. Una stella per
-  struttura: due che si toccano contano una. Il 16,85 e' la soglia del SubframeSelector misurata
+  mediana 3x3 sopra 3 sigma, la significativita' di Starck e Murtagh (come il supporto del
+  rumore), uniti in 8 direzioni. Stella: la struttura il cui miglior quadrato 2x2 sul residuo
+  grezzo supera 16,85 volte il rumore di quattro pixel. Una stella per struttura: due che si
+  toccano contano una. Sulle sonde a verita' nota l'errore fra 2,4 e 3 sigma cambia dell'1,5%:
+  si tiene la convenzione. Sui 205 frame (HFD sotto 5 px, AstroLog / SubframeSelector, mediane)
+  le stelle restano 0,99-1,02 per gruppo A/B e mono/colori; il PSF SNR cala di 0,01-0,03 (A mono
+  0,99 a 0,96, B mono 1,01 a 0,98), perche' la struttura piu' stretta stringe l'ellisse dei
+  momenti: lui misura sull'ellisse della PSF fittata (ImageWeighting par. 2.2), passo 26.46. Il quadrato 2x2: sulle stesse sonde la sua soglia varia 1,18 volte
+  da FWHM 1,5 a 6, quella di 1 px 1,48 e di 3 px 1,64. **Aperto: le stelle doppie.** La
+  documentazione PJSR dello StarDetector (`doc/pjsr/objects/StarDetector`) dice che con
+  `allowClusteredSources` spento (default del SubframeSelector, letto dal programma, con
+  `structureLayers` 5) una struttura con piu' massimi locali (filtro 5x5, sotto 0,75 del fondo
+  scala) non e' una stella. Sonde del passo 26.45, 100 sistemi a frame, FWHM 3: le coppie uguali
+  sotto 7 px lui non le conta (noi una), quelle a 9 px le separa sempre, anche brillanti; una
+  compagna al 3% a 6 px non gli toglie la principale. Provate le regole documentate (massimi
+  sul residuo o sulla copia mediana, strutture su 5 strati a trous): i conteggi si avvicinano
+  (IC 405 x07 4054 contro 4053), ma sui 205 frame il PSF SNR scende da circa 0,99 a 0,78-0,94,
+  perche' le stelle brillanti con una vicina al 2% a 10 px restano in una struttura con due
+  massimi e si scartano; lui le separa con un criterio che non pubblica. Resta la regola di
+  prima finche' una convenzione non spiega la separazione. Il 16,85 e' la soglia del SubframeSelector misurata
   su frame sintetici a verita' nota (400 stelle a SNR fissato, FWHM da 1,5 a 6 px: meta' trovate
   a 18,2 / 16,9 / 16,1 / 15,9 / 18,8, mediana 16,85), non sui nostri frame (passo 26.45, Marco
   28/10: niente costanti per far tornare i conti). Prima 17,25, tarato sulle 12 copie pari:
@@ -92,19 +108,14 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
 - **Rilevamenti per la misura**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con <!-- software-ok -->
   mediana 3x3 esatta: i pixel caldi spariscono, le stelle restano; i suoi momenti sono la scala
   di bordo, vicine e finestre.
-- **Tetto e stelle sature** (`pipeline/ceiling.py`, passo 25.2; ADR 0022 punto 7): un sensore
-  tagliato ammucchia i pixel piu' chiari su un valore solo. Il tetto e' il valore piu' basso
-  della pila piu' alta fra i pixel sopra il 99,9° percentile: almeno 4 pixel su quel valore e
-  almeno 10 volte la mediana dei conteggi degli 8 valori presenti appena sotto (cosi' regge 8 bit
-  e 12 bit in 16); valori entro lo 0,1% sono una pila. Nessuna pila: `DATAMAX`, o il massimo del
-  tipo di dato. Sulle 24 copie: ATR2600M a 65535 (da 64 a 4050 pixel, vicini da 1 a 4), Canon
-  700D a 61208/61212 con pochi pixel isolati sopra fino a 65532: il massimo avrebbe sbagliato.
-  Una nebulosa liscia ha molti pixel per valore anche nei vicini: non e' una pila. **Satura** una
-  stella del conteggio con almeno 2 pixel del sensore al tetto (uno e' un pixel caldo dentro la
-  stella); a colori si guarda il mosaico. Il debayer taglia invece al fondo scala dichiarato,
-  come quello di PixInsight. Fuori: un light diviso per il flat o col dark sottratto non ha pila, <!-- software-ok -->
-  il tetto resta quello dichiarato e le sature si perdono. Il tetto e' per frame: un frame Canon
-  senza stelle tagliate dice 65535.
+- **Tetto e stelle sature** (`pipeline/stars.py`, ADR 0041): il tetto e' il fondo scala
+  dichiarato, `DATAMAX` o il massimo del tipo dopo `BZERO` e `BSCALE`, come PixInsight <!-- software-ok -->
+  (ImageWeighting par. 3.1.1: soglia di saturazione 1,0 del fondo scala). **Satura** una stella <!-- software-ok -->
+  del conteggio con almeno un pixel del sensore al tetto (lo stesso par. 3.1.1, e ASTAP); a
+  colori si guarda il mosaico. Una camera che taglia sotto il fondo scala (la Canon 700D delle
+  copie a 61208) non ha sature, li' come qui (Marco, 29/10/2026). Prima (passo 25.2) il tetto
+  era una pila cercata nell'istogramma con 5 soglie tarate sulle 24 copie; Chauvenet su
+  conteggi di Poisson e' stato provato e non reggeva.
 - **Stelle tenute**: intere (`flag` 0), picco sotto il 90% del tetto, lontane dal bordo e dalle vicine piu' di 3 FWHM stimate dai momenti
   di `sep`. Per l'HFD anche b/a sopra 0,5 (Siril); la forma le prende tutte, se no un frame <!-- software-ok -->
   mosso non ne ha (Marco, 27/10). SubframeSelector fa lo stesso fino a b/a 0,3-0,4: oltre, il suo <!-- software-ok -->
@@ -149,8 +160,9 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   sulla copia mediana (A, B, THETA di SExtractor, Bertin e Arnouts 1996), raggio sqrt(2 ln 10)
   come per una gaussiana, sommata con `sep.sum_ellipse`; il fondo e' la mediana di un anello di
   24 px appena fuori la struttura (BACKPHOTO_THICK di SExtractor). Nessuna costante: sul passo
-  26.45 il PSF SNR sui frame nitidi (HFD sotto 5 px) ha mediana 0,99 mono e 0,98 colori sul
-  gruppo A (sviluppo), 1,01 e 0,95 sul B (verifica). Una Moffat beta 4 di
+  26.45 il PSF SNR sui frame nitidi (HFD sotto 5 px) ha mediana 0,96 mono e 0,97 colori sul
+  gruppo A (sviluppo), 0,98 e 0,93 sul B (verifica), con le strutture a 3 sigma (a 2,4 erano
+  0,99 / 0,98 / 1,01 / 0,95). Una Moffat beta 4 di
   flusso noto torna 0,88 del totale (i momenti vedono le ali), lui 0,92 a 3 px e 0,875 a 5 px.
   Una struttura col centro fuori dal proprio decimo non e' una stella: flusso 0 (sul Canon 15
   luce estesa contata come stella portava l'83% del nostro F e nulla del suo). Provate e
@@ -247,7 +259,8 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   ASTAP non da' fondo ne' rumore. Le misure del 25.2 non spostano le altre righe (stesse cifre
   di prima). Il SubframeSelector non da' tetto, sature, gradiente, tilt, curvatura, secondi
   d'arco ne' direzione sul cielo.
-- **Le misure nuove sul vero** (27/10/2026, 24 copie): tetto 65535 sui 22 ATR2600M e 61208 sui
+- **Le misure nuove sul vero** (27/10/2026, 24 copie; dal 29/10 il tetto e' il fondo scala,
+  ADR 0041, e il Canon dice 65535 e 0 sature): tetto 65535 sui 22 ATR2600M e 61208 sui
   due Canon; sature da 6 a 454 per frame. Gradiente da 2,6 a 45,3% (il 23, nebulosa), il lato
   chiaro solo su 5 frame: sugli altri il piano non spiega la mappa. Tilt da 0,8 a 77% (il Canon
   18, obiettivo), curvatura da -6,9 a +20%; il 23 tace (265 stelle, sotto 25 per zona). Il tilt

@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 250; senza fonte: 1.
-Fonti: C norma: 114; U usanza: 2; D metodo: 11; M misura: 15; P decisione: 35; T tecnico: 76.
+Valori: 243; senza fonte: 1.
+Fonti: C norma: 115; U usanza: 2; D metodo: 11; M misura: 15; P decisione: 35; T tecnico: 68.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -217,17 +217,6 @@ Fonti: C norma: 114; U usanza: 2; D metodo: 11; M misura: 15; P decisione: 35; T
 | CORE_SHARE | `2` | P ADR 0033, D7 |
 | THREADS_PER_CORE | `2` | T |
 
-### pipeline/ceiling.py
-
-| simbolo | valore | fonte |
-|---|---|---|
-| TOP_SHARE | `0.999` | T |
-| NEIGHBOUR_SHARE | `0.99` | T |
-| SPIKE_MIN | `4` | T |
-| SPIKE_RATIO | `10.0` | T |
-| NEIGHBOURS | `8` | T |
-| SAME_PILE | `0.001` | M misure.md |
-
 ### pipeline/changes.py
 
 | simbolo | valore | fonte |
@@ -269,10 +258,9 @@ Fonti: C norma: 114; U usanza: 2; D metodo: 11; M misura: 15; P decisione: 35; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| STRUCTURE_SIGMA | `2.4` | T |
+| STRUCTURE_SIGMA | `3.0` | C Starck and Murtagh 1998, PASP 110:193: significance at 3 sigma, as noise.py's support |
 | APERTURE_SNR | `16.85` | M plan 26.45: half its stars found there, median of five FWHM |
-| APERTURE_PX | `2` | T |
-| CLIPPED_PIXELS | `2` | T |
+| APERTURE_PX | `2` | M plan 26.45: the aperture whose threshold does not follow the FWHM |
 | _EIGHT | `np.ones((3, 3), dtype=bool)` | D 8-connected: diagonal pixels of a star join it |
 
 ### pipeline/field.py
@@ -685,7 +673,7 @@ Fonti: C norma: 114; U usanza: 2; D metodo: 11; M misura: 15; P decisione: 35; T
 | 0019 | Sole e Sistema solare entrano in Archivio a mano, il deep sky resta automatico | accettata, 17/10/2026 (Marco). Nessun codice ancora. Ordine dei pezzi: disegno della linguetta e di "Aggiungi oggetto"; comete, |  |
 | 0020 | La qualita' della notte e' un punteggio da 0 a 100, coi pesi decisi con Marco | accettata, 17/10/2026 (Marco); superata in gran parte da ADR 0034 (somma a punti, pesi, seeing nel voto, ora utile da 60, Luna 25/50 e -5°, fattore mancante ripartito, nebbia dall'Atlante WMO). | domini/meteo.md |
 | 0021 | L'attrezzatura porta i dati delle schede tecniche, e il setup ci calcola | accettata, 18/10/2026 (Marco). ADR 0033: i programmi verificati sono due (ADR 0029). |  |
-| 0022 | Le misure dei frame: tutte, attestate, nel database, senza voto | accettata, 18/10/2026 (Marco); superata in parte da ADR 0033 (stelle da `measure`), 0037 (SNR, zone, tilt) e 0039 (Qn, eccentricita', oggetto basso, Bortle del sito). Ridotta il 26/10/2026: il metodo costruito, le misure sul vero e i testi stanno in `docs/domini/misure.md`. |  |
+| 0022 | Le misure dei frame: tutte, attestate, nel database, senza voto | accettata, 18/10/2026 (Marco); superata in parte da ADR 0033 (stelle da `measure`), 0037 (SNR, zone, tilt), 0039 (Qn, eccentricita', oggetto basso, Bortle del sito) e 0041 (tetto al fondo scala). Ridotta il 26/10/2026: il metodo costruito, le misure sul vero e i testi stanno in `docs/domini/misure.md`. |  |
 | 0023 | Planner e Progetti: inquadratura, mosaico, setup di prova, filtri, modifiche | accettata, 18/10/2026 (Marco). ADR 0033: nel piano della notte il meteo e' una striscia (ADR 0013). Superata la riga "Planetario e solare: nessun progetto" (Marco, 19/10/2026: si salvano in Progetti senza ore). I progetti nascono solo nel Planner (Marco, 24/10/2026). La spec sta in `docs/domini/planner.md` (24/10/2026). |  |
 | 0024 | Statistiche: i confronti nel tempo | accettata, 20/10/2026 (Marco); superata in parte da ADR 0034 (qualita' della notte -> Trasparenza, seeing fuori, niente punti ripartiti). Nessun codice; la pagina e' ancora in lavorazione con Marco (24/10/2026). |  |
 | 0025 | Uno studio per ruoli: la pagina si collauda contro la tavola prima di Marco | accettata, 20/10/2026 (Marco, dal check di salute). Allarga ADR 0015: ricette, un giro |  |
@@ -704,3 +692,4 @@ Fonti: C norma: 114; U usanza: 2; D metodo: 11; M misura: 15; P decisione: 35; T
 | 0038 | Le regole di file, oggetti e API con le fonti, e l'oggetto annidato che si chiede | accettata, 24/10/2026 (Marco: l'oggetto annidato si chiede). Ultimi tre gruppi della |  |
 | 0039 | Le soglie deboli ricavate da fisica e statistica, o tarate su ogni utente | accettata, 24/10/2026; supera in parte ADR 0022, 0034, 0036, 0037. Il resto nella fase 4; gia' costruiti: le raffiche a 25 km/h di ADR 0034, il tempo di ASTAP (`pipeline/timeouts.py`). |  |
 | 0040 | Il metodo: sette regole tenute da macchine, congelato fino al 21/11/2026 | accettata, 24/10/2026 (Marco). Supera in parte ADR 0001, 0015, 0025, 0027, 0028, 0030, |  |
+| 0041 | Il tetto di saturazione e' il fondo scala dichiarato | accettata, 29/10/2026 (Marco); supera ADR 0022 punto 7 nella parte "il tetto dall'istogramma". Passo 26.45. | domini/misure.md |

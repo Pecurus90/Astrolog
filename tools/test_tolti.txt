@@ -353,3 +353,9 @@ test_the_quality_numbers_are_read_with_their_decimal_comma - step 25, ADR 0033 D
 test_the_script_reads_the_psf_snr_column - step 25.2: renamed test_the_script_reads_the_psf_snr_and_altitude_columns, column 20 added
 test_the_frame_psf_flux_is_the_stars_flux_over_their_structures - step 26.4: the flux is each star over a tenth of its peak; replaced by test_the_frame_psf_snr_takes_the_stars_flux_times_the_tuned_scale and test_pipeline_psf_flux.py
 test_the_frame_psf_snr_takes_the_stars_flux_times_the_tuned_scale - step 26.45: PSF_FLUX_SCALE removed, the flux needs no constant; replaced by test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale
+test_the_ceiling_is_the_pile_at_the_top_of_the_histogram_not_the_maximum - step 26.45, ADR 0041: the ceiling is the declared full scale; replaced by test_the_ceiling_is_the_declared_full_scale_as_pixinsight
+test_a_clipped_sensor_at_its_type_maximum_has_that_ceiling - step 26.45, ADR 0041: ceiling.py removed
+test_without_a_pile_the_declared_ceiling_stays - step 26.45, ADR 0041: ceiling.py removed
+test_a_smooth_bright_patch_is_not_a_pile - step 26.45, ADR 0041: ceiling.py removed
+test_twelve_bits_in_sixteen_clip_at_their_own_top - step 26.45, ADR 0041: ceiling.py removed
+test_a_few_equal_pixels_are_no_pile - step 26.45, ADR 0041: ceiling.py removed

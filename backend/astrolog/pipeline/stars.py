@@ -7,7 +7,6 @@ import numpy as np
 import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 
 from ..units import sigma_from_mad
-from .ceiling import ceiling_of
 from .debayer import COLOURS, debayered
 from .detect import detect
 from .field import gradient_of, psf_snr, zones_of
@@ -34,9 +33,9 @@ NOISE_FLOOR_ADU = 0.2887
 
 @dataclass(frozen=True)
 class Across:
-    """What every frame with a sky has, stars or not (field.py, ceiling.py)."""
+    """What every frame with a sky has, stars or not (field.py)."""
 
-    ceiling_adu: float  # the histogram's clip pile, else DATAMAX or the type's top
+    ceiling_adu: float  # DATAMAX, else the type's top (ADR 0041)
     saturated: int  # of `stars`, those with sensor pixels at the ceiling
     psf_snr: float | None  # None: under MIN_STARS stars
     gradient_pct: float | None
@@ -68,9 +67,8 @@ def measure_frame(
     data: np.ndarray, *, saturation: float, pattern: str | None
 ) -> Measured | TooFewStars:
     """`pattern`: Bayer matrix (debayer.COLOURS), measured on its VNG intensity as WBPP; None mono.
-    `saturation`: declared full scale; debayer clips there (as WBPP), stars at ceiling.py's."""
+    `saturation`: declared full scale, the ceiling (ADR 0041); debayer clips there (as WBPP)."""
     sensor = np.ascontiguousarray(data, dtype=np.float32)  # a clipped sensor pixel, colour too
-    top = ceiling_of(sensor, saturation)
     raw = sensor if pattern is None else debayered(sensor, pattern, top=saturation)
     sky = sep.Background(raw)
     back = sky.back()
@@ -78,11 +76,11 @@ def measure_frame(
     noise = max(_sigma(residual), NOISE_FLOOR_ADU)
     images = (residual, median3x3(residual))
     objects = _found(images[1], noise)
-    usable = _kept(sensor, objects, top)
+    usable = _kept(sensor, objects, saturation)
     round_ones = usable[_round(objects[usable])]
     hfds, hx, hy = _hfd(images, objects, _spread(objects, round_ones, raw.shape))
     shape = shape_of(images, objects, _spread(objects, usable, raw.shape), noise)
-    found = detect(*images, noise, clip=(sensor, top))
+    found = detect(*images, noise, clip=(sensor, saturation))
     noise = max(mrs_noise(raw), NOISE_FLOOR_ADU)  # detection kept the first pass
     # On the measured plane's own noise: a colour frame's intensity, as misure.md says
     flux = float(found.flux.sum())
@@ -90,7 +88,7 @@ def measure_frame(
     if pattern is not None:  # noise said as WBPP says it
         noise = max(_mosaic_noise(sensor, pattern), NOISE_FLOOR_ADU)
     gradient = gradient_of(back)
-    across = Across(top, int(found.saturated.sum()), snr, gradient.pct, gradient.angle_deg)
+    across = Across(saturation, int(found.saturated.sum()), snr, gradient.pct, gradient.angle_deg)
     common = {"stars": len(found.x), "kept": len(hfds), "background_adu": float(sky.globalback),
               "noise_adu": noise, "shape": shape} | vars(across)  # fmt: skip
     if len(hfds) < MIN_STARS:

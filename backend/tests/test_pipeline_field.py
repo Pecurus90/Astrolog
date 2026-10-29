@@ -1,5 +1,5 @@
-"""Measures across the frame (ADR 0022 points 5 and 7, ADR 0037): the saturation ceiling from the
-histogram, saturated stars, PSF SNR, the sky gradient, tilt and curvature from five zones."""
+"""Measures across the frame (ADR 0022 point 5, ADR 0037, ADR 0041): saturated stars at the
+declared full scale, PSF SNR, the sky gradient, tilt and curvature from five zones."""
 
 import math
 
@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 
 from astrolog.pipeline import stars
-from astrolog.pipeline.ceiling import SPIKE_MIN, ceiling_of
 from astrolog.pipeline.field import (
     PSF_SNR_C3,
     PSF_SNR_C4,
@@ -51,50 +50,6 @@ def _grid(count_side: int, margin: int = 50, side: int = _SIDE) -> list[tuple[in
     return [(int(y), int(x)) for y in steps for x in steps]
 
 
-# The ceiling
-
-
-def test_the_ceiling_is_the_pile_at_the_top_of_the_histogram_not_the_maximum() -> None:
-    """Canon 700D on the 24 copies: hundreds of pixels at 61208/61212, a few stray ones above."""
-    data = _sky()
-    data[100:110, 100:110] = 61208.0
-    data[200:205, 200:210] = 61212.0
-    data[300, 300], data[301, 305], data[310, 320] = 65532.0, 63000.0, 62280.0
-    assert ceiling_of(data, 65535.0) == 61208.0
-
-
-def test_a_clipped_sensor_at_its_type_maximum_has_that_ceiling() -> None:
-    data = _sky()
-    data[50:60, 50:60] = 65535.0
-    assert ceiling_of(data, 65535.0) == 65535.0
-
-
-def test_without_a_pile_the_declared_ceiling_stays() -> None:
-    """No star clipped: bright cores of many values, none repeated. Calibrated frames too."""
-    data = _sky()
-    _stars(data, _grid(6), 2.0, 2e5)
-    assert ceiling_of(data, 65535.0) == 65535.0
-
-
-def test_a_smooth_bright_patch_is_not_a_pile() -> None:
-    """A nebula holds many pixels per value, and so do its neighbouring values."""
-    rows, cols = np.indices((_SIDE, _SIDE))
-    data = _sky() + (40000 * np.exp(-((rows - 300) ** 2 + (cols - 300) ** 2) / 2e4)).round()
-    assert ceiling_of(data.astype(np.float32), 65535.0) == 65535.0
-
-
-def test_twelve_bits_in_sixteen_clip_at_their_own_top() -> None:
-    data = _sky()
-    data[100:104, 100:104] = 4095.0
-    assert ceiling_of(data, 65535.0) == 4095.0
-
-
-def test_a_few_equal_pixels_are_no_pile() -> None:
-    data = _sky()
-    data[100, 100 : 100 + SPIKE_MIN - 1] = 50000.0
-    assert ceiling_of(data, 65535.0) == 65535.0
-
-
 # Saturated stars, through measure_frame
 
 
@@ -104,13 +59,27 @@ def test_stars_at_the_ceiling_are_counted_saturated_and_kept_out() -> None:
     _stars(data, places, 2.0, 6e4)
     clipped = _sky(2) * 0
     _stars(clipped, places[:12], 2.0, 4e6)
-    data = np.minimum(data + clipped, 61208.0)  # a ceiling under the type's maximum
+    data = np.minimum(data + clipped, 65535.0)
     found = measure_frame(data, saturation=65535.0, pattern=None)
     assert found.saturated == 12
     assert found.stars == 36
     assert isinstance(found, Measured)
     assert found.kept == 24
-    assert found.ceiling_adu == 61208.0
+    assert found.ceiling_adu == 65535.0
+
+
+def test_the_ceiling_is_the_declared_full_scale_as_pixinsight() -> None:
+    """ImageWeighting 3.1.1: saturated over the threshold, 1.0 of the full scale. A camera that
+    clips under it (Canon 700D at 61208) has no saturated stars, there as here. software-ok"""
+    data = _sky()
+    places = _grid(6)
+    _stars(data, places, 2.0, 6e4)
+    clipped = _sky(2) * 0
+    _stars(clipped, places[:12], 2.0, 4e6)
+    data = np.minimum(data + clipped, 61208.0)
+    found = measure_frame(data, saturation=65535.0, pattern=None)
+    assert found.ceiling_adu == 65535.0
+    assert found.saturated == 0
 
 
 def test_a_frame_without_clipped_stars_has_none_saturated() -> None:
