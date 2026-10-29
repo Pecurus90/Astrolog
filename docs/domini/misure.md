@@ -101,8 +101,8 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   28/10: niente costanti per far tornare i conti); prima 17,25, tarato sulle copie. Fuori dal
   conteggio la selezione per HFD e forma: resta su `sep`, sotto. 0,3 s a frame da 26 MP.
 - **Rilevamenti per la misura**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con <!-- software-ok -->
-  mediana 3x3 esatta: i pixel caldi spariscono, le stelle restano; i suoi momenti sono la scala
-  di bordo, vicine e finestre.
+  mediana 3x3 esatta, senza deblending (ripartiva a caso i pixel contesi: stesso frame, tilt 10,7
+  / 9,1 / 8,4%); i suoi momenti sono la scala di bordo, vicine e finestre.
 - **Tetto e stelle sature** (`pipeline/stars.py`, ADR 0041): il tetto e' il fondo scala
   dichiarato, `DATAMAX` o il massimo del tipo dopo `BZERO` e `BSCALE`, come PixInsight <!-- software-ok -->
   (ImageWeighting par. 3.1.1: soglia di saturazione 1,0 del fondo scala). **Satura** una stella <!-- software-ok -->

@@ -15,6 +15,7 @@ from .psf_flux import ring_sky
 from .shape import MIN_STARS, Shape, estimated_fwhm, shape_of
 
 THRESHOLD_SIGMA = 5.0  # [C Siril find_star default: 5 sigma over sky, software-ok]
+NO_DEBLENDING = 1.0  # [C sep docs, extract: deblend_cont 1.0 disables deblending]
 SATURATED_SHARE = 0.9  # [P ADR 0022: peak under 90% of saturation]
 MIN_AXIS_RATIO = 0.5  # [C Siril find_star default roundness, software-ok]
 ROOM_FWHM = 3.0  # [P plan 25.1: away from the edge and from neighbours more than 3 FWHM]
@@ -135,9 +136,11 @@ def _med3(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> np.ndarray:
 
 
 def _found(filtered: np.ndarray, noise: float) -> np.ndarray:
-    """Detections on the filtered copy: hot pixels gone, stars kept (ADR 0022, point 8)."""
+    """Detections on the filtered copy: hot pixels gone, stars kept (ADR 0022, point 8). No
+    deblending: it hands contested pixels out at random, and the same frame measured otherwise."""
     sep.set_extract_pixstack(max(300_000, filtered.size))  # dense fields fill sep's default
-    return sep.extract(np.ascontiguousarray(filtered), THRESHOLD_SIGMA, err=noise)
+    data = np.ascontiguousarray(filtered)
+    return sep.extract(data, THRESHOLD_SIGMA, err=noise, deblend_cont=NO_DEBLENDING)
 
 
 def _kept(raw: np.ndarray, objects: np.ndarray, saturation: float) -> np.ndarray:

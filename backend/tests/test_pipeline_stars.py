@@ -13,6 +13,7 @@ from astrolog.pipeline.stars import (
     ROOM_FWHM,
     Measured,
     TooFewStars,
+    _found,  # pyright: ignore[reportPrivateUsage] -- sep as measure calls it
     _kept,  # pyright: ignore[reportPrivateUsage] -- the check itself, without sep
     measure_frame,
     median3x3,
@@ -241,3 +242,20 @@ def test_the_median_filter_is_the_exact_3x3_median() -> None:
     padded = np.pad(data, 1, mode="symmetric")
     windows = [padded[dy : dy + 41, dx : dx + 37] for dy in range(3) for dx in range(3)]
     assert np.array_equal(median3x3(data), np.median(np.stack(windows), axis=0))
+
+
+def test_a_crowded_frame_gives_the_same_detections_every_time() -> None:
+    """sep's deblending hands contested pixels out at random: on NGC 6888 the same pixels gave
+    27525, 27518, 27520 detections and a tilt of 10.7, 9.1, 8.4%."""
+    rng = np.random.default_rng(5)
+    side = 800
+    data = rng.normal(_BACKGROUND, _NOISE, (side, side))
+    rows, cols = np.mgrid[0:side, 0:side]
+    ys, xs = rng.uniform(5, side - 5, (2, 3000))
+    for y, x, flux in zip(ys, xs, rng.lognormal(8, 1, 3000), strict=True):
+        near = (slice(max(0, int(y) - 8), int(y) + 9), slice(max(0, int(x) - 8), int(x) + 9))
+        rr = (rows[near] - y) ** 2 + (cols[near] - x) ** 2
+        data[near] += flux / (2 * math.pi * 1.5**2) * np.exp(-rr / (2 * 1.5**2))
+    filtered = median3x3((data - np.median(data)).astype(np.float32))
+    runs = [_found(filtered, _NOISE) for _ in range(8)]
+    assert all(np.array_equal(run[["x", "y", "flux"]], runs[0][["x", "y", "flux"]]) for run in runs)
