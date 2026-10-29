@@ -9,9 +9,6 @@ import numpy as np
 # PSF SNR = c3 F^2 / (c4 sigma^2), F the stars' summed flux (psf_flux.py), sigma the noise.
 PSF_SNR_C3 = 1.350e-7  # [C PixInsight ImageWeighting, eq. 18-19; software-ok]
 PSF_SNR_C4 = 4.987e6  # [C PixInsight ImageWeighting, eq. 18-19; software-ok]
-# F times this: at 1 the 10 even mono copies read 0.860 of the SubframeSelector's PSF SNR, so
-# 1 / sqrt(0.860); the 10 odd ones then 0.91-1.15, median 0.99 (misure.md). [T] software-ok
-PSF_FLUX_SCALE = 1.078
 MESH_PX = 64  # [C sep docs: Background bw, bh default] the reduced frame: one value a mesh
 PLANE_EXPLAINS = 0.5  # [T] the bright side only when a plane holds half the map's variance
 # Stars per zone for tilt and curvature: worst less best of four medians is never under 0, and

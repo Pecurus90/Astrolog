@@ -12,9 +12,9 @@ from .psf_flux import tenth_flux
 # Structure pixels: the median copy over this many sigma. The SubframeSelector's structure map on
 # the 24 real frames starts at 2.3-2.5; counts move under 0.2% from 2.0 to 2.4. [T]
 STRUCTURE_SIGMA = 2.4
-# Star: best 2x2 sum on the raw residual over the noise of 4 pixels. Tuned on the 12 even frames
-# to the SubframeSelector's count; the 12 odd ones: median 1.00, 0.98 to 1.12 (misure.md). [T]
-APERTURE_SNR = 17.25
+# Star: best 2x2 sum on the raw residual over the noise of 4 pixels, the SubframeSelector's own
+# threshold on synthetic frames of known truth, FWHM 1.5-6 px (misure.md); software-ok
+APERTURE_SNR = 16.85  # [M plan 26.45: half its stars found there, median of five FWHM]
 # Count ratio against the frame's FWHM: correlation -0.80 at 1 px, 0.78 at 3, -0.25 at 2. [T]
 APERTURE_PX = 2
 # Saturated: this many sensor pixels at the ceiling; one is a hot pixel inside a star. [T]

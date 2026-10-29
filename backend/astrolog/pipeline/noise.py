@@ -1,0 +1,63 @@
+"""The frame's noise by the multiresolution support (Starck & Murtagh 1998, PASP 110:193; as
+PixInsight ImageWeighting par. 2.4, 3.1.2: software-ok). Pure: pixels in, a sigma out."""
+
+import numpy as np
+from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
+
+from ..units import sigma_from_mad
+
+B3 = np.array([1, 4, 6, 4, 1]) / 16  # [C Starck & Murtagh, starlet B3 spline kernel]
+LAYERS = 4  # [C PixInsight ImageWeighting par. 3.1.2: the first four wavelet layers; software-ok]
+K_SIGMA = 3.0  # [C Starck & Murtagh 1998 par. 2.2: k "often" 3]
+BIAS = 0.974  # [C Starck & Murtagh 1998 par. 3: sigma divided by 0.974]
+TOLERANCE = 1e-4  # [T] relative change that stops the iteration; the paper gives none
+MAX_ROUNDS = 20  # [T] a frame that has not converged by then keeps the last sigma
+
+
+def starlet(image: np.ndarray, layers: int) -> tuple[list[np.ndarray], np.ndarray]:
+    """A trous B3 transform, borders mirrored: w_j = c_{j-1} - c_j, the kernel's taps 2^j apart."""
+    planes, smooth = [], np.asarray(image, dtype=np.float32)
+    for j in range(layers):
+        kernel = np.zeros(4 * 2**j + 1, dtype=np.float32)
+        kernel[:: 2**j] = B3
+        coarser = ndimage.convolve1d(smooth, kernel, axis=0, mode="mirror")
+        coarser = ndimage.convolve1d(coarser, kernel, axis=1, mode="mirror")
+        planes.append(smooth - coarser)
+        smooth = coarser
+    return planes, smooth
+
+
+def _unit_sigmas(layers: int) -> np.ndarray:
+    """Each layer's sigma for unit Gaussian noise: the L2 norm of its impulse response (as Duchamp
+    app-waveletNoise; 0.8908 at the first layer)."""
+    side = 4 * 2**layers + 1
+    impulse = np.zeros((side, side), dtype=np.float32)
+    impulse[side // 2, side // 2] = 1
+    planes, _ = starlet(impulse, layers)
+    return np.array([float(np.sqrt(np.sum(p.astype(np.float64) ** 2))) for p in planes])
+
+
+UNIT_SIGMAS = _unit_sigmas(LAYERS)
+
+
+def mrs_noise(image: np.ndarray) -> float:
+    """Sigma of I - c_p over the pixels in no layer's support (|w_j| >= k sigma sigma_j), iterated
+    to a fixed point, over 0.974. The start, which the paper leaves open: the first layer's MAD."""
+    planes, smooth = starlet(image, LAYERS)
+    first = planes[0]
+    sigma = sigma_from_mad(float(np.median(np.abs(first - np.median(first))))) / UNIT_SIGMAS[0]
+    strongest = np.abs(planes.pop(0)) / UNIT_SIGMAS[0]  # layer by layer: one plane at a time
+    for unit in UNIT_SIGMAS[1:]:
+        np.maximum(strongest, np.abs(planes.pop(0)) / unit, out=strongest)
+    detail = np.asarray(image, dtype=np.float32) - smooth
+    del smooth
+    for _ in range(MAX_ROUNDS):
+        quiet = detail[strongest < K_SIGMA * sigma]
+        if quiet.size < 2:
+            break
+        new = float(np.std(quiet))
+        settled = abs(new - sigma) <= TOLERANCE * new
+        sigma = new
+        if settled:
+            break
+    return sigma / BIAS

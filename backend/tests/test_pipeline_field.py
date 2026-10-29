@@ -9,7 +9,6 @@ import pytest
 from astrolog.pipeline import stars
 from astrolog.pipeline.ceiling import SPIKE_MIN, ceiling_of
 from astrolog.pipeline.field import (
-    PSF_FLUX_SCALE,
     PSF_SNR_C3,
     PSF_SNR_C4,
     ZONE_MIN_STARS,
@@ -131,12 +130,12 @@ def test_psf_snr_is_the_documented_formula() -> None:
     assert psf_snr(5000.0 / 65535, 2.0 / 65535) == pytest.approx(psf_snr(5000.0, 2.0))
 
 
-def test_the_frame_psf_snr_takes_the_stars_flux_times_the_tuned_scale() -> None:
+def test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale() -> None:
     """Gaussian: 1 - 0.1 of the flux inside the tenth of the peak (psf_flux.py), 36 of 6e4."""
     data = _sky()
     _stars(data, _grid(6), 2.0, 6e4)
     found = measure_frame(data, saturation=65535.0, pattern=None)
-    flux = PSF_FLUX_SCALE * 36 * 6e4 * 0.9
+    flux = 36 * 6e4 * 0.9
     assert found.psf_snr == pytest.approx(psf_snr(flux, _NOISE), rel=0.03)
 
 
@@ -165,6 +164,16 @@ def test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one(monkeypa
     second = measure_frame(data, saturation=65535.0, pattern="RGGB")
     assert second.noise_adu == 1e3
     assert second.psf_snr == first.psf_snr
+
+
+def test_in_a_crowded_field_the_noise_is_read_off_the_stars() -> None:
+    """1500 faint stars on a 10 ADU sky: their wings in the MAD read 12.5; off the grown
+    structures the sky's own 10 (NGC 6888 of the copies: 1.24 times the SubframeSelector)."""
+    data = _sky()
+    spots = np.random.default_rng(3).uniform(20, 580, (1500, 2)).astype(int)
+    _stars(data, [(int(y), int(x)) for y, x in spots], 1.5, 3e3)
+    found = measure_frame(data, saturation=65535.0, pattern=None)
+    assert found.noise_adu == pytest.approx(_NOISE, rel=0.03)
 
 
 def test_under_five_stars_no_psf_snr() -> None:

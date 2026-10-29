@@ -19,7 +19,8 @@ parole in [`glossario.md`](glossario.md).
 | Le stelle sono quelle che conta il SubframeSelector: una stella debole o una macchia di nebulosa larga non conta (Marco, 27/10/2026) <!-- software-ok --> | `test_the_frame_counts_the_stars_the_subframeselector_would`, `test_a_star_over_the_aperture_threshold_is_found_one_under_is_not`, `test_a_wide_faint_patch_is_not_a_star_however_much_light_it_holds`, `test_a_hot_pixel_is_not_a_star`, `test_a_dark_pixel_among_bright_ones_has_a_position`, `test_a_structure_starts_at_its_threshold_on_the_median_copy`, `test_the_position_is_the_barycentre` (`backend/tests/test_pipeline_detect.py`) <!-- software-ok --> |
 | Una stella saturata conta fra le stelle ma non entra nell'HFD, anche se in una camera a colori satura un canale solo | `test_saturated_stars_are_counted_but_not_measured`, `test_a_colour_star_clipped_in_one_channel_is_saturated` |
 | Il tetto di saturazione e' dove la camera taglia davvero, anche sotto il massimo del tipo (Canon a 61208), e quante stelle ci arrivano | `test_the_ceiling_is_the_pile_at_the_top_of_the_histogram_not_the_maximum`, `test_twelve_bits_in_sixteen_clip_at_their_own_top`, `test_a_smooth_bright_patch_is_not_a_pile`, `test_stars_at_the_ceiling_are_counted_saturated_and_kept_out` (`backend/tests/test_pipeline_field.py`) |
-| Il PSF SNR e' quello della documentazione di PixInsight, sature comprese come le tiene lui <!-- software-ok --> | `test_psf_snr_is_the_documented_formula`, `test_the_frame_psf_snr_takes_the_stars_flux_times_the_tuned_scale`, `test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are`, `test_under_five_stars_no_psf_snr`, `test_pipeline_psf_flux.py` (quota Moffat al decimo, fondo lasciato sotto le stelle, luce col centro al buio, stella tagliata) |
+| Il PSF SNR e' quello della documentazione di PixInsight, sature comprese come le tiene lui <!-- software-ok --> | `test_psf_snr_is_the_documented_formula`, `test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale`, `test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are`, `test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one`, `test_under_five_stars_no_psf_snr`, `test_pipeline_psf_flux.py` (quota Moffat al decimo, fondo lasciato sotto le stelle, luce col centro al buio, stella tagliata) |
+| Il rumore e' l'MRS di Starck e Murtagh, come lo dichiara PixInsight; nei campi densi resta quello del cielo <!-- software-ok --> | `test_pipeline_noise.py` (fattore del primo strato 0,8908 come Duchamp, trasformata che si ricompone, rumore gaussiano letto entro il 2%, campo affollato e nebulosa entro il 3%), `test_in_a_crowded_field_the_noise_is_read_off_the_stars` |
 | Il gradiente del fondo dice quanto e verso dove; un fondo piatto o a zero non inventa un lato | `test_a_sky_on_a_plane_gives_its_spread_over_its_median_and_its_bright_side`, `test_the_bright_side_turns_with_the_plane`, `test_a_flat_sky_has_no_gradient_and_no_side`, `test_a_sky_at_zero_or_under_has_no_gradient` |
 | Tilt e curvatura dalle cinque zone, e tacciono con poche stelle in una zona | `test_tilt_is_worst_less_best_corner_over_the_median_hfd`, `test_curvature_is_corners_against_the_centre_with_its_sign`, `test_a_zone_with_too_few_stars_leaves_tilt_and_curvature_silent`, `test_tilt_reaches_the_frame_through_measure` |
 | La massa d'aria e' quella dell'oggetto a meta' posa, con l'aria che lo alza, finita all'orizzonte e nessuna sotto | `test_the_airmass_is_pickering_on_the_apparent_altitude`, `test_the_refraction_lifts_a_low_star_saemundsson`, `test_under_the_horizon_there_is_no_airmass`, `test_the_altitude_agrees_with_astropy` (`backend/tests/test_pipeline_airmass.py`, `test_pipeline_altitude.py`) |
@@ -61,21 +62,28 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   l'Auto del Debayer; sui 4 frame veri il verde sta dove lo dice `BAYERPAT`). Una matrice non
   R G B (CYGM): `not_supported`. La saturazione si guarda sul pixel del sensore: il debayer
   nasconde un verde saturato. Scheda muta: mono.
-- **Fondo**: `sep.Background`. **Rumore**: 1,4826 x MAD del frame meno il fondo, a piena
-  risoluzione (Rousseeuw e Croux 1993; `units.sigma_from_mad`). A colori quello che dice WBPP:
-  per piano R, G (media dei due), B a mezza risoluzione, come lo stima il Debayer, poi (min +
-  max) / 2 come il SubframeSelector; le stelle si cercano col rumore dell'intensita'. Non si
-  confronta con la mono. Mai sotto un
-  gradino da 1 ADU, 1/sqrt(12): un cielo quantizzato ha MAD 0 e ogni gradino diventava stella.
+- **Fondo**: `sep.Background`. **Rumore** (`pipeline/noise.py`, passo 26.45): il supporto
+  multirisoluzione di Starck e Murtagh (1998, PASP 110:193), lo stimatore che PixInsight dichiara <!-- software-ok -->
+  (ImageWeighting par. 2.4, 3.1.2): trasformata a trous B3 sui primi 4 strati, pixel fuori dal
+  supporto a 3 sigma, iterato fino a fermarsi, diviso per 0,974. Sui 205 frame del passo 26.45
+  da 0,996 a 1,004 volte il suo, senza tarature; la MAD di prima arrivava a 1,24 nei campi da
+  40 mila stelle (le ali entravano nel conto). Le stelle si cercano ancora col primo passaggio
+  (1,4826 MAD), la soglia e' misurata con quello. A colori quello che dice WBPP: per piano R, G
+  (media dei due), B a mezza risoluzione, come lo stima il Debayer, poi (min + max) / 2 come il
+  SubframeSelector. Non si confronta con la mono. Mai sotto un gradino da 1 ADU, 1/sqrt(12).
+  Costa da 1,3 a 3,2 s a frame.
 - **Stelle** (`pipeline/detect.py`, passo 25.15): **quelle che conta il SubframeSelector** <!-- software-ok -->
   (Marco, 27/10/2026), riscritto dalla sua documentazione pubblica (lo StarDetector della PCL:
   filtro mediano dei pixel caldi, strutture, segnale sul fondo in unita' di dispersione) e tarato
   a scatola chiusa sulle sue uscite, mai sul sorgente PCL. Struttura: i pixel della copia
   mediana 3x3 sopra 2,4 sigma, uniti in 8 direzioni; la sua mappa delle strutture
   (`StarDetectionPreview`) sui 24 frame parte da 2,3-2,5. Stella: la struttura il cui miglior
-  quadrato 2x2 sul residuo grezzo supera 17,25 volte il rumore di quattro pixel. Una stella per
-  struttura: due che si toccano contano una. Tarato sulle 12 copie pari contro il conteggio del
-  SubframeSelector, provato sulle 12 dispari: mediana 1,00, da 0,98 a 1,12; stella per stella,
+  quadrato 2x2 sul residuo grezzo supera 16,85 volte il rumore di quattro pixel. Una stella per
+  struttura: due che si toccano contano una. Il 16,85 e' la soglia del SubframeSelector misurata
+  su frame sintetici a verita' nota (400 stelle a SNR fissato, FWHM da 1,5 a 6 px: meta' trovate
+  a 18,2 / 16,9 / 16,1 / 15,9 / 18,8, mediana 16,85), non sui nostri frame (passo 26.45, Marco
+  28/10: niente costanti per far tornare i conti). Prima 17,25, tarato sulle 12 copie pari:
+  mediana 1,00, da 0,98 a 1,12 sulle dispari; stella per stella,
   contro i segni della sua anteprima, F1 0,93. Il picco sulla copia mediana seguiva la FWHM del
   frame (correlazione 0,90: le stelle piccole perdevano il picco nella mediana), 1 px e 3 px pure
   (-0,80 e 0,78); il quadrato 2x2 no (-0,25). Prima (`sep.extract` a 5 sigma) era da 0,36 a 1,34
@@ -135,19 +143,26 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   18-19, PSF SNR = 1,350e-7 F^2 / (4,987e6 sigma^2); F e' la somma dei flussi di tutte le
   stelle del conteggio, sature comprese (sui mono toglierle dava 0,13-0,74 volte il suo), sigma
   il rumore del piano misurato: a colori quello dell'intensita', non il rumore scritto (Marco,
-  28/10/2026). Il flusso di una stella (`pipeline/psf_flux.py`, passo 26.4): come documenta
-  ImageWeighting par. 2.2, i pixel veri sopra un decimo del picco meno il fondo locale; noi il
-  picco e la regione sulla copia mediana dentro la struttura della stella, il fondo dalla
-  mediana di un anello appena fuori la struttura (lui lo fitta), la somma sul residuo. Una
-  struttura col centro fuori dalla propria regione non e' una stella: flusso 0 (sul Canon 15
-  luce estesa contata come stella, centro a zero e luce a 20-36 px, portava l'83% del nostro F e
-  nulla del suo: tolte, il suo F si muoveva del 4%). Tutto per una costante tarata a scatola
-  chiusa (sotto). Provate e scartate (28/10/2026): una PSF Moffat beta 4 per zona applicata a
-  tutte (0,12-0,48 volte il suo: perde le stelle chiare e sature, che lui fitta una a una e
-  larghe); picco sul residuo grezzo (0,54-0,97); rigetto Chauvenet dei flussi (ImageWeighting
-  par. 2.2.1: sui mono 0,003-0,9); un tetto di dimensione. Le stelle sotto 3 px escono
-  leggermente larghe (la copia mediana abbassa il picco: Moffat beta 4 a 2 px +10% di flusso,
-  a 4 px esatta 0,822). Sotto 5 stelle tace. Mai fra camere o oggetti.
+  28/10/2026). Il flusso di una stella (`pipeline/psf_flux.py`, passo 26.45), come documenta
+  ImageWeighting par. 2.2: i pixel veri nell'ellisse dove la PSF scende a un decimo del picco,
+  meno il fondo locale. Lui l'ellisse la prende dal fit; noi dai momenti secondi della struttura
+  sulla copia mediana (A, B, THETA di SExtractor, Bertin e Arnouts 1996), raggio sqrt(2 ln 10)
+  come per una gaussiana, sommata con `sep.sum_ellipse`; il fondo e' la mediana di un anello di
+  24 px appena fuori la struttura (BACKPHOTO_THICK di SExtractor). Nessuna costante: sul passo
+  26.45 il PSF SNR sui frame nitidi (HFD sotto 5 px) ha mediana 0,99 mono e 0,98 colori sul
+  gruppo A (sviluppo), 1,01 e 0,95 sul B (verifica). Una Moffat beta 4 di
+  flusso noto torna 0,88 del totale (i momenti vedono le ali), lui 0,92 a 3 px e 0,875 a 5 px.
+  Una struttura col centro fuori dal proprio decimo non e' una stella: flusso 0 (sul Canon 15
+  luce estesa contata come stella portava l'83% del nostro F e nulla del suo). Provate e
+  scartate: una PSF Moffat beta 4 per zona (0,12-0,48 volte il suo); la regione dentro la
+  struttura (0,88: le ali delle deboli fuori); rigetto Chauvenet dei flussi (ImageWeighting
+  par. 2.2.1); stelle sature tolte (0,2); un tetto di 32 px, l'immagine a scale piccole, il
+  diametro a meta' picco, un fit di PSF sui candidati: per distinguere stella e luce estesa,
+  ognuna sistema un caso e ne rompe un altro. **Scarto aperto** sugli oggetti estesi molto
+  luminosi: M42 da 2,2 a 3,9 volte il suo (il nucleo saturo passa per stella), la cometa
+  C/2025 A6 1,4-1,5, M31 1,3, M51 e M33 su un frame. Sui frame sfocati (HFD oltre 5 px:
+  NGC 7380 fino a 3,2, IC443 1,5) il PSF SNR segue le stelle che il SubframeSelector perde; si
+  tengono le nostre (Marco, 28/10/2026). Sotto 5 stelle tace. Mai fra camere o oggetti.
 - **Gradiente** (ADR 0022 punto 7): la mappa del fondo di `sep` ai centri delle sue maglie da
   64 pixel, (max - min) / mediana in %. Il **lato chiaro**: la pendenza del piano dei minimi
   quadrati, da +x verso +y, 0-360 gradi, solo quando il piano spiega almeno meta' della varianza
@@ -305,8 +320,8 @@ dell'oggetto no.
 ## Le regole fra frame (ADR 0039)
 
 Scritte come funzioni pure con i loro test (passo 26); le collega alla pipeline il passo 40, che
-porta setup e oggetti. Nessuna misura del frame cambia: il rumore resta 1,4826 MAD, una scala
-su milioni di pixel, come il SubframeSelector la confronta.
+porta setup e oggetti. Nessuna misura del frame cambia: il rumore del frame e' l'MRS (sopra),
+una scala su milioni di pixel, come il SubframeSelector la confronta.
 
 - **Soglia relativa**: mediana ± 2,5 Qn (`robust.relative_bounds`), sotto 10 valori tace; tace
   anche a Qn zero (valori ripetuti), dove la soglia sarebbe la mediana stessa. Qn di

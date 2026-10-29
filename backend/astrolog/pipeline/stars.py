@@ -10,7 +10,8 @@ from ..units import sigma_from_mad
 from .ceiling import ceiling_of
 from .debayer import COLOURS, debayered
 from .detect import detect
-from .field import PSF_FLUX_SCALE, gradient_of, psf_snr, zones_of
+from .field import gradient_of, psf_snr, zones_of
+from .noise import mrs_noise
 from .psf_flux import ring_sky
 from .shape import MIN_STARS, Shape, estimated_fwhm, shape_of
 
@@ -82,10 +83,11 @@ def measure_frame(
     hfds, hx, hy = _hfd(images, objects, _spread(objects, round_ones, raw.shape))
     shape = shape_of(images, objects, _spread(objects, usable, raw.shape), noise)
     found = detect(*images, noise, clip=(sensor, top))
+    noise = max(mrs_noise(raw), NOISE_FLOOR_ADU)  # detection kept the first pass
     # On the measured plane's own noise: a colour frame's intensity, as misure.md says
-    flux = PSF_FLUX_SCALE * float(found.flux.sum())
+    flux = float(found.flux.sum())
     snr = psf_snr(flux, noise) if len(found.x) >= MIN_STARS else None
-    if pattern is not None:  # noise said as WBPP says it; detection keeps the plane's own
+    if pattern is not None:  # noise said as WBPP says it
         noise = max(_mosaic_noise(sensor, pattern), NOISE_FLOOR_ADU)
     gradient = gradient_of(back)
     across = Across(top, int(found.saturated.sum()), snr, gradient.pct, gradient.angle_deg)
@@ -104,17 +106,15 @@ def _sigma(residual: np.ndarray) -> float:
 
 
 def _mosaic_noise(data: np.ndarray, pattern: str) -> float:
-    """Noise of each colour plane, a channel's samples averaged per 2x2 quad, less its sky; then
-    (min + max) / 2 (PCL Debayer SignalAndNoiseEvaluationThread, SubframeSelector ReadInputData)."""
+    """MRS noise of each colour plane, a channel's samples averaged per 2x2 quad; then
+    (min + max) / 2 (PCL Debayer, SubframeSelector ReadInputData)."""
     rows, cols = data.shape[0] // 2 * 2, data.shape[1] // 2 * 2
     quads = data[:rows, :cols].reshape(rows // 2, 2, cols // 2, 2)
     colours = COLOURS[pattern]
     sigmas = []
     for channel in range(3):
         cells = [(r, c) for r in (0, 1) for c in (0, 1) if colours[r][c] == channel]
-        plane = sum(quads[:, r, :, c] for r, c in cells) / len(cells)
-        plane = np.ascontiguousarray(plane, dtype=np.float32)
-        sigmas.append(_sigma(plane - sep.Background(plane).back()))
+        sigmas.append(mrs_noise(np.mean([quads[:, r, :, c] for r, c in cells], axis=0)))
     return (min(sigmas) + max(sigmas)) / 2
 
 

@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 241; senza fonte: 1.
-Fonti: C norma: 108; U usanza: 2; D metodo: 9; M misura: 14; P decisione: 35; T tecnico: 76.
+Valori: 250; senza fonte: 1.
+Fonti: C norma: 114; U usanza: 2; D metodo: 11; M misura: 15; P decisione: 35; T tecnico: 76.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -270,7 +270,7 @@ Fonti: C norma: 108; U usanza: 2; D metodo: 9; M misura: 14; P decisione: 35; T 
 | simbolo | valore | fonte |
 |---|---|---|
 | STRUCTURE_SIGMA | `2.4` | T |
-| APERTURE_SNR | `17.25` | T |
+| APERTURE_SNR | `16.85` | M plan 26.45: half its stars found there, median of five FWHM |
 | APERTURE_PX | `2` | T |
 | CLIPPED_PIXELS | `2` | T |
 | _EIGHT | `np.ones((3, 3), dtype=bool)` | D 8-connected: diagonal pixels of a star join it |
@@ -281,7 +281,6 @@ Fonti: C norma: 108; U usanza: 2; D metodo: 9; M misura: 14; P decisione: 35; T 
 |---|---|---|
 | PSF_SNR_C3 | `1.350e-7` | C PixInsight ImageWeighting, eq. 18-19; software-ok |
 | PSF_SNR_C4 | `4.987e6` | C PixInsight ImageWeighting, eq. 18-19; software-ok |
-| PSF_FLUX_SCALE | `1.078` | T |
 | MESH_PX | `64` | C sep docs: Background bw, bh default |
 | PLANE_EXPLAINS | `0.5` | T |
 | ZONE_MIN_STARS | `25` | T |
@@ -299,6 +298,17 @@ Fonti: C norma: 108; U usanza: 2; D metodo: 9; M misura: 14; P decisione: 35; T 
 | _MAX_AXES | `999` | C FITS 4.0 4.4.1.1: NAXIS at most 999 |
 | _MAX_BYTES | `2**62` | T |
 
+### pipeline/noise.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| B3 | `np.array([1, 4, 6, 4, 1]) / 16` | C Starck & Murtagh, starlet B3 spline kernel |
+| LAYERS | `4` | C PixInsight ImageWeighting par. 3.1.2: the first four wavelet layers; software-ok |
+| K_SIGMA | `3.0` | C Starck & Murtagh 1998 par. 2.2: k "often" 3 |
+| BIAS | `0.974` | C Starck & Murtagh 1998 par. 3: sigma divided by 0.974 |
+| TOLERANCE | `1e-4` | T |
+| MAX_ROUNDS | `20` | T |
+
 ### pipeline/pixels.py
 
 | simbolo | valore | fonte |
@@ -310,7 +320,11 @@ Fonti: C norma: 108; U usanza: 2; D metodo: 9; M misura: 14; P decisione: 35; T 
 
 | simbolo | valore | fonte |
 |---|---|---|
-| TENTH | `0.1` | C PixInsight ImageWeighting par. 2.2; software-ok |
+| TENTH | `0.1` | C PixInsight ImageWeighting par. 2.2: the PSF over a tenth of its peak; software-ok |
+| TENTH_RADIUS | `math.sqrt(2 * math.log(1 / TENTH))` | D Gaussian: exp(-r^2 / 2) = TENTH |
+| MIN_AXIS_PX | `0.5` | D a pixel's own half-width |
+| SUBPIX | `5` | C sep docs: sum_ellipse default subpixel sampling |
+| LOCAL_SKY_PX | `24` | C SExtractor BACKPHOTO_THICK default 24 |
 
 ### pipeline/scan.py
 
