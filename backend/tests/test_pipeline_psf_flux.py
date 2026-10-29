@@ -48,10 +48,10 @@ def _fluxes(residual: np.ndarray) -> np.ndarray:
     return found.flux
 
 
-@pytest.mark.parametrize(("fwhm", "over"), [(2.0, 1.10), (4.0, 1.07), (6.0, 1.06)])
+@pytest.mark.parametrize(("fwhm", "over"), [(2.0, 1.10), (4.0, 1.04), (6.0, 0.99)])
 def test_a_moffat_of_beta_4_keeps_its_share_inside_the_tenth(fwhm: float, over: float) -> None:
     """At the tenth a Moffat holds 1 - 0.1^((beta - 1) / beta) = 0.822 [D Moffat 1969]; moments
-    see the wings, the ellipse 6-10% more, as the SubframeSelector (misure.md). [M]"""
+    see the wings, fewer as the star widens past the structure's 32 px (plan 26.46). [M]"""
     share = 1 - 0.1 ** (3 / 4)
     flux = _fluxes(_field(fwhm, 1e5))
     assert np.median(flux) == pytest.approx(over * share * 1e5, rel=0.03)

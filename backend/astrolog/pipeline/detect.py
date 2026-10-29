@@ -7,11 +7,19 @@ from typing import cast
 import numpy as np
 from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
+from .noise import coarse, detail_unit_sigma
 from .psf_flux import tenth_flux
 
-# Structure pixels: the median copy over this many sigma.
+# Structure pixels: the median copy's first starlet layers, I - c_5, over this many of their sigma.
 # [C Starck and Murtagh 1998, PASP 110:193: significance at 3 sigma, as noise.py's support]
 STRUCTURE_SIGMA = 3.0
+# Scales up to 2^5 = 32 px: a nebula core or a coma wider than that is no structure of a star.
+STRUCTURE_LAYERS = 5  # [C StarDetector structureLayers, SubframeSelector default; software-ok]
+STRUCTURE_UNIT = detail_unit_sigma(STRUCTURE_LAYERS)
+# A star covers over (1 - maxDistortion) of a disc's pi / 4 of its square: his cut at b/a 0.3-0.4
+# (misure.md, 14 synthetic frames) agrees; 0.6 of the square would drop b/a under 0.76.
+MAX_DISTORTION = 0.6  # [C StarDetector maxDistortion, SubframeSelector default; software-ok]
+MIN_COVERAGE = (1 - MAX_DISTORTION) * np.pi / 4  # [D a disc fills pi / 4 of its square]
 # Star: best 2x2 sum on the raw residual over the noise of 4 pixels, the SubframeSelector's own
 # threshold on synthetic frames of known truth, FWHM 1.5-6 px (misure.md); software-ok
 APERTURE_SNR = 16.85  # [M plan 26.45: half its stars found there, median of five FWHM]
@@ -38,7 +46,9 @@ def detect(
 ) -> Detections:
     """`residual`: frame less sky; `filtered`: its 3x3 median; `clip`: sensor pixels (colour: the
     mosaic) and their ceiling. One star per structure: touching stars count once."""
-    found = ndimage.label(filtered > STRUCTURE_SIGMA * noise, structure=_EIGHT)
+    detail = filtered - coarse(filtered, STRUCTURE_LAYERS)
+    found = ndimage.label(detail > STRUCTURE_SIGMA * STRUCTURE_UNIT * noise, structure=_EIGHT)
+    del detail
     labels, count = cast(tuple[np.ndarray, int], found)  # stubs say int | tuple
     # Structure pixels only: ndimage's per-label max and centre sweep the frame, 1.5 s at 26 MP.
     rows, cols = np.nonzero(labels)
@@ -46,9 +56,11 @@ def detect(
     box = ndimage.uniform_filter(residual, APERTURE_PX) * APERTURE_PX  # 2x2 mean x 2 = sum / 2
     snr = np.full(count + 1, -np.inf)
     np.maximum.at(snr, owner, box[rows, cols] / noise)
-    star = snr >= APERTURE_SNR
-    # On the median copy: over the threshold in every pixel of a structure, so never a zero sum.
-    weight = filtered[rows, cols].astype(float)
+    star = (snr >= APERTURE_SNR) & (_coverage(labels, owner, count) >= MIN_COVERAGE)
+    # Barycentre on the median copy's light: on a dark residual a structure pixel can sit at or
+    # under zero, and a structure with none above has no position.
+    weight = np.maximum(filtered[rows, cols].astype(float), 0.0)
+    star &= np.bincount(owner, weight, count + 1) > 0
     total = np.bincount(owner, weight, count + 1)[star]
     x = np.bincount(owner, weight * cols, count + 1)[star] / total
     y = np.bincount(owner, weight * rows, count + 1)[star] / total
@@ -61,3 +73,13 @@ def detect(
     mine = star[owner]
     pixels = (rows[mine], cols[mine], index[owner[mine]])
     return Detections(x, y, saturated, tenth_flux((residual, filtered), pixels, (x, y)))
+
+
+def _coverage(labels: np.ndarray, owner: np.ndarray, count: int) -> np.ndarray:
+    """Each structure's pixels over its circumscribed square, the bounding box's longer side."""
+    area = np.bincount(owner, minlength=count + 1).astype(float)
+    side = np.ones(count + 1)
+    for i, box in enumerate(ndimage.find_objects(labels), start=1):
+        if box is not None:
+            side[i] = max(box[0].stop - box[0].start, box[1].stop - box[1].start)
+    return area / side**2

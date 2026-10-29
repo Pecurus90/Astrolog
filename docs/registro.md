@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 245; senza fonte: 1.
-Fonti: C norma: 119; U usanza: 2; D metodo: 16; M misura: 15; P decisione: 35; T tecnico: 61.
+Valori: 248; senza fonte: 1.
+Fonti: C norma: 121; U usanza: 2; D metodo: 17; M misura: 15; P decisione: 35; T tecnico: 61.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -259,6 +259,9 @@ Fonti: C norma: 119; U usanza: 2; D metodo: 16; M misura: 15; P decisione: 35; T
 | simbolo | valore | fonte |
 |---|---|---|
 | STRUCTURE_SIGMA | `3.0` | C Starck and Murtagh 1998, PASP 110:193: significance at 3 sigma, as noise.py's support |
+| STRUCTURE_LAYERS | `5` | C StarDetector structureLayers, SubframeSelector default; software-ok |
+| MAX_DISTORTION | `0.6` | C StarDetector maxDistortion, SubframeSelector default; software-ok |
+| MIN_COVERAGE | `(1 - MAX_DISTORTION) * np.pi / 4` | D a disc fills pi / 4 of its square |
 | APERTURE_SNR | `16.85` | M plan 26.45: half its stars found there, median of five FWHM |
 | APERTURE_PX | `2` | M plan 26.45: the aperture whose threshold does not follow the FWHM |
 | _EIGHT | `np.ones((3, 3), dtype=bool)` | D 8-connected: diagonal pixels of a star join it |

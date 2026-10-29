@@ -75,15 +75,19 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
 - **Stelle** (`pipeline/detect.py`, passo 25.15): **quelle che conta il SubframeSelector** <!-- software-ok -->
   (Marco, 27/10/2026), riscritto dalla sua documentazione pubblica (lo StarDetector della PCL:
   filtro mediano dei pixel caldi, strutture, segnale sul fondo in unita' di dispersione) e tarato
-  a scatola chiusa sulle sue uscite, mai sul sorgente PCL. Struttura: i pixel della copia
-  mediana 3x3 sopra 3 sigma, la significativita' di Starck e Murtagh (come il supporto del
-  rumore), uniti in 8 direzioni. Stella: la struttura il cui miglior quadrato 2x2 sul residuo
+  a scatola chiusa sulle sue uscite, mai sul sorgente PCL. Struttura (passo 26.46): i pixel
+  dove i primi 5 strati a trous della copia mediana 3x3 (I - c5, scale fino a 32 px:
+  `structureLayers` 5 dello StarDetector, default del SubframeSelector) superano 3 volte la
+  loro dispersione, la significativita' di Starck e Murtagh (come il supporto del rumore),
+  uniti in 8 direzioni. Una struttura che copre meno di (1 - 0,6) pi / 4 del quadrato
+  circoscritto (`maxDistortion` 0,6: un disco ne copre pi / 4) non e' una stella: scie, coppie
+  unite da un ponte, nodi di nebulosa irregolari. Prima (passo 25.15) i pixel della copia
+  mediana sopra 3 sigma: un nucleo di nebulosa o una chioma e la stella sopra erano una
+  struttura sola. Stella: la struttura il cui miglior quadrato 2x2 sul residuo
   grezzo supera 16,85 volte il rumore di quattro pixel. Una stella per struttura: due che si
   toccano contano una. Sulle sonde a verita' nota l'errore fra 2,4 e 3 sigma cambia dell'1,5%:
-  si tiene la convenzione. Sui 205 frame (HFD sotto 5 px, AstroLog / SubframeSelector, mediane)
-  le stelle restano 0,99-1,02 per gruppo A/B e mono/colori; il PSF SNR cala di 0,01-0,03 (A mono
-  0,99 a 0,96, B mono 1,01 a 0,98), perche' la struttura piu' stretta stringe l'ellisse dei
-  momenti: lui misura sull'ellisse della PSF fittata (ImageWeighting par. 2.2), passo 26.46. Il quadrato 2x2: sulle stesse sonde la sua soglia varia 1,18 volte
+  si tiene la convenzione. Sui 164 frame nitidi le stelle restano 0,99-1,03 per camera (M42
+  1,13: il nucleo si spezza in nodi piccoli che lui non conta). Il quadrato 2x2: sulle stesse sonde la sua soglia varia 1,18 volte
   da FWHM 1,5 a 6, quella di 1 px 1,48 e di 3 px 1,64. **Aperto: le stelle doppie.** La
   documentazione PJSR dello StarDetector (`doc/pjsr/objects/StarDetector`) dice che con
   `allowClusteredSources` spento (default del SubframeSelector, letto dal programma, con
@@ -154,22 +158,27 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   meno il fondo locale. Lui l'ellisse la prende dal fit; noi dai momenti secondi della struttura
   sulla copia mediana (A, B, THETA di SExtractor, Bertin e Arnouts 1996), raggio sqrt(2 ln 10)
   come per una gaussiana, sommata con `sep.sum_ellipse`; il fondo e' la mediana di un anello di
-  24 px appena fuori la struttura (BACKPHOTO_THICK di SExtractor). Nessuna costante: sul passo
-  26.45 il PSF SNR sui frame nitidi (HFD sotto 5 px) ha mediana 0,96 mono e 0,97 colori sul
-  gruppo A (sviluppo), 0,98 e 0,93 sul B (verifica), con le strutture a 3 sigma (a 2,4 erano
-  0,99 / 0,98 / 1,01 / 0,95). Una Moffat beta 4 di
-  flusso noto torna 0,88 del totale (i momenti vedono le ali), lui 0,92 a 3 px e 0,875 a 5 px.
-  Una struttura col centro fuori dal proprio decimo non e' una stella: flusso 0 (sul Canon 15
-  luce estesa contata come stella portava l'83% del nostro F e nulla del suo). Provate e
-  scartate: una PSF Moffat beta 4 per zona (0,12-0,48 volte il suo); la regione dentro la
-  struttura (0,88: le ali delle deboli fuori); rigetto Chauvenet dei flussi (ImageWeighting
-  par. 2.2.1); stelle sature tolte (0,2); un tetto di 32 px, l'immagine a scale piccole, il
-  diametro a meta' picco, un fit di PSF sui candidati: per distinguere stella e luce estesa,
-  ognuna sistema un caso e ne rompe un altro. **Scarto aperto** sugli oggetti estesi molto
-  luminosi: M42 da 2,2 a 3,9 volte il suo (il nucleo saturo passa per stella), la cometa
-  C/2025 A6 1,4-1,5, M31 1,3, M51 e M33 su un frame. Sui frame sfocati (HFD oltre 5 px:
-  NGC 7380 fino a 3,2, IC443 1,5) il PSF SNR segue le stelle che il SubframeSelector perde; si
-  tengono le nostre (Marco, 28/10/2026). Sotto 5 stelle tace. Mai fra camere o oggetti.
+  24 px appena fuori la struttura (BACKPHOTO_THICK di SExtractor). Nessuna costante. Strutture a
+  5 strati (passo 26.46), frame nitidi (HFD sotto 5 px): mediana 0,90 mono e 0,88 colori sul gruppo
+  A (sviluppo), 0,89 e 0,85 sul B (verifica); a 3 sigma della copia mediana 0,96 / 0,97 / 0,98 /
+  0,93. Cala del 6-9% (struttura piu' stretta, ellisse dei momenti piu' stretta), ma nessun frame
+  passa 1,03 e gli oggetti estesi rientrano: M42 da 0,57-3,82 a 0,79-1,00, M31 da 1,17-1,30 a
+  0,90-0,97, M33 n.1 da 1,38 a 0,90 (Marco, 29/10/2026: la soglia del passo, mediane entro 0,02,
+  non regge). Una Moffat beta 4 torna 1,10 / 1,04 / 0,99 della quota al decimo a FWHM 2 / 4 / 6 px.
+  Struttura col centro fuori dal proprio decimo: flusso 0 (Canon 15: luce estesa, 83% del nostro F).
+  Provate e scartate: PSF Moffat beta 4 per zona (0,12-0,48 volte il suo); regione dentro la
+  struttura (0,88); Chauvenet dei flussi (ImageWeighting par. 2.2.1); sature tolte (0,2); tetto di
+  32 px, scale piccole, diametro a meta' picco, fit sui candidati: ognuna sistema un caso e ne rompe
+  un altro. Al 26.46: strutture a 3 e 4 strati; momenti adattivi (Bernstein e Jarvis 2002; Shark
+  0,98 a 0,78); flusso nel decimo di una Moffat beta 4 fittata a stella, che coincide col suo fit
+  (ampiezza 87.826 contro 87.816, assi 1,00) ma porta le mediane a 0,75-0,91, 35 frame fuori, e
+  diverge sui nuclei. **Limite del confronto**: il suo rilevatore (StarDetector PJSR, stessi
+  conteggi: 1028, 278, 741, 1200) coi suoi fit da' 0,84-1,02 del flusso PSF che scrive (colonna 21,
+  formula invertita entro l'1,5%), 0,71-1,04 nel PSF SNR: il resto non e' pubblicato (non fondo,
+  non modello). **Scarto aperto**: cometa C/2025 A6 0,58-0,67 su tre frame (lui fitta nucleo e
+  chioma, 43% del flusso), M51 n.1 0,63 e n.3 0,59 (stelle sdoppiate dalla guida). Frame sfocati:
+  NGC 7380 fino a 3,2, IC443 1,5, stelle che lui perde; si tengono le nostre (Marco, 28/10/2026).
+  Sotto 5 stelle tace. Mai fra camere o oggetti.
 - **Gradiente** (ADR 0022 punto 7): la mappa del fondo di `sep` ai centri delle sue maglie da
   64 pixel, (max - min) / mediana in %. Il **lato chiaro**: la pendenza del piano dei minimi
   quadrati, da +x verso +y, 0-360 gradi, solo quando il piano spiega almeno meta' della varianza
@@ -236,7 +245,8 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   rilancia a ogni sottopasso di measure, e ogni misura che il SubframeSelector da' si confronta
   con la sua (Marco, 27/10/2026). Siril no (Marco, 26/10/2026). <!-- software-ok -->
 
-  **Scarti del passo 26.45** (29/10/2026, codice `d2a000e3`): 205 copie da 31 oggetti e 4
+  **Scarti del passo 26.46** (29/10/2026; fondo, rumore, FWHM ed eccentricita' dal passo 26.45,
+  codice `d2a000e3`, che il 26.46 non tocca): 205 copie da 31 oggetti e 4
   camere (Canon 700D escluso), gruppo A di sviluppo e B di verifica divisi per oggetto
   (`groups.txt` della prova); qui i 164 frame nitidi (HFD sotto 5 px). AstroLog diviso
   SubframeSelector, 10° percentile / mediana / 90° percentile; colori contro il suo valore
@@ -248,38 +258,27 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Rumore | 1,00 / 1,00 / 1,00 | 1,00 / 1,00 / 1,00 | 1,00 / 1,00 / 1,00 | 1,00 / 1,00 / 1,00 | Nessuno: lo stesso MRS (Starck e Murtagh 1998); a colori per piano come il Debayer |
   | FWHM | 0,77 / 0,79 / 0,86 | 0,71 / 0,86 / 0,98 | 0,69 / 0,89 / 1,03 | 0,90 / 0,96 / 0,98 | Lui valuta la Moffat al centro del pixel, noi la integriamo sul pixel (ADR 0022): le stelle piccole gli escono larghe; una sintetica da 1,0 px integrata torna 1,00, ai centri 1,29; uguali sopra 4 px |
   | Eccentricita' | 1,00 / 1,00 / 1,04 | 1,00 / 1,03 / 1,07 | 1,00 / 1,04 / 1,10 | 1,00 / 1,02 / 1,04 | Stessa definizione, sqrt(1 - (b/a)^2); sulle stelle piccole il fit integrato vede meglio l'asse corto |
-  | Stelle | 0,97 / 1,00 / 1,01 | 0,97 / 1,00 / 1,02 | 0,99 / 1,01 / 1,05 | 1,01 / 1,02 / 1,04 | Soglia 16,85 dalla sonda sintetica, strutture a 3 sigma. Sopra 1,03 i campi densi a colori (NGC 6888 Poseidon 1,06, IC 405 1,04): lui scarta le strutture con due massimi locali (doppie), noi le contiamo una (sopra, "Aperto: le stelle doppie") |
-  | PSF SNR | 0,88 / 0,92 / 0,96 | 0,89 / 0,98 / 1,21 | 0,89 / 0,96 / 1,09 | 0,95 / 1,00 / 1,07 | Stessa formula; il flusso noi lo sommiamo nell'ellisse al decimo dei momenti, lui in quella della PSF fittata (ImageWeighting par. 2.2) e scarta le doppie. Oggetti estesi lontani: passo 26.46 |
+  | Stelle | 0,96 / 0,99 / 1,01 | 0,97 / 0,99 / 1,02 | 0,99 / 1,01 / 1,05 | 1,01 / 1,03 / 1,04 | Soglia 16,85 dalla sonda sintetica, strutture su 5 strati a trous. Sopra 1,03 i campi densi a colori (NGC 6888 Poseidon 1,04, IC 405 1,04): lui scarta le strutture con due massimi locali (doppie), noi le contiamo una (sopra, "Aperto: le stelle doppie"); M42 1,13, i nodi del nucleo |
+  | PSF SNR | 0,86 / 0,89 / 0,94 | 0,81 / 0,89 / 0,95 | 0,82 / 0,87 / 0,93 | 0,85 / 0,88 / 0,94 | Stessa formula; il flusso noi lo sommiamo nell'ellisse al decimo dei momenti della struttura, piu' stretta di quella della PSF fittata con cui somma lui (ImageWeighting par. 2.2). Il suo flusso non si rifa' meglio di 0,84-1,02 nemmeno col suo rilevatore e i suoi fit (sopra, "Limite del confronto") |
 
-  Per oggetto (mediane, stesso verso; il rumore e' 1,00 ovunque). Stelle e PSF SNR entro
-  0,95-1,03 su NGC 7023 (Giovanni, ASI2600MC Duo), Abell 2151, IC 443, IC 1396, LBN 777, LDN
-  1235, LDN 1400, M33, M45, M97, NGC 4438, NGC 6888 (ATR2600M USB2), NGC 6960, NGC 7023
-  (Poseidon), Sh2-185, VdB 152. Fuori:
+  Per oggetto (mediane, stesso verso; il rumore e' 1,00 ovunque). Il PSF SNR sta fra 0,81 e
+  0,96 su ogni oggetto tranne la cometa; le stelle entro 0,97-1,03 tranne dove scritto. Gli
+  oggetti estesi del passo 26.46 e i piu' lontani:
 
   | Oggetto | Camera | Gruppo | Frame | Stelle | PSF SNR | FWHM |
   |---|---|---|---|---|---|---|
-  | C/2025 A6 Lemmon (cometa) | ATR2600M USB2 | A | 4 | 0,98 | 1,40 | 0,99 |
-  | Caldwell 14 | Poseidon-C PRO | B | 5 | 1,00 | 0,92 | 0,69 |
-  | IC 405 | Poseidon-C PRO | B | 9 | 1,04 | 0,93 | 1,01 |
-  | LBN 576 | ATR2600M | B | 5 | 1,01 | 0,91 | 0,79 |
-  | M31 | Poseidon-C PRO | B | 5 | 1,01 | 1,26 | 0,76 |
-  | M42 | ATR2600M USB2 | B | 5 | 0,97 | 0,74 | 0,95 |
-  | M51 | ATR2600M USB2 | B | 5 | 1,02 | 1,04 | 0,79 |
-  | M66 | Poseidon-C PRO | A | 5 | 1,01 | 1,09 | 0,79 |
-  | NGC 1333 | Poseidon-C PRO | A | 1 | 1,01 | 0,90 | 1,00 |
-  | NGC 6888 | ATR2600M | A | 5 | 0,99 | 0,93 | 0,79 |
-  | NGC 6888 | Poseidon-C PRO | A | 5 | 1,06 | 0,97 | 0,67 |
-  | NGC 7380 | Poseidon-C PRO | B | 5 | 1,03 | 0,83 | 1,06 |
-  | NGC 7635 | Poseidon-C PRO | A | 3 | 1,00 | 0,93 | 0,96 |
-  | PK 164+31.1 | ATR2600M USB2 | B | 5 | 1,00 | 0,94 | 0,92 |
-  | WR 134 | ATR2600M USB2 | A | 5 | 1,01 | 0,89 | 0,87 |
+  | C/2025 A6 Lemmon (cometa) | ATR2600M USB2 | A | 4 | 0,98 | 0,63 | 0,99 |
+  | IC 405 | Poseidon-C PRO | B | 9 | 1,04 | 0,85 | 1,01 |
+  | M31 | Poseidon-C PRO | B | 5 | 1,01 | 0,96 | 0,76 |
+  | M42 | ATR2600M USB2 | B | 5 | 1,13 | 0,94 | 0,95 |
+  | M51 | ATR2600M USB2 | B | 5 | 1,01 | 0,87 | 0,79 |
+  | NGC 1333 | Poseidon-C PRO | A | 1 | 1,00 | 0,83 | 1,00 |
+  | NGC 6888 | Poseidon-C PRO | A | 5 | 1,04 | 0,91 | 0,67 |
+  | NGC 7380 | Poseidon-C PRO | B | 5 | 1,03 | 0,81 | 1,06 |
 
-  Spiegati con la convenzione: fondo, rumore, FWHM (sotto 0,8 le stelle piu' piccole),
-  eccentricita'. Spiegati e aperti: stelle sopra 1,03 e PSF SNR sotto 0,95 nei campi densi (doppie, ellisse dei momenti
-  contro PSF fittata); PSF SNR di cometa (1,40), M31 (1,26), M42 (0,74), NGC 7380 (0,83), dove
-  luce estesa entra nel flusso o ne esce: passo 26.46. I 41 frame sfocati (HFD da 5 px): stelle
-  1,07 / 1,36 / 3,72, PSF SNR 0,91 / 1,01 / 2,22; li' lui perde stelle vere e si tengono le
-  nostre (Marco, 28/10/2026).
+  Spiegati con la convenzione: fondo, rumore, FWHM (sotto 0,8 le piu' piccole), eccentricita'.
+  Aperti: stelle sopra 1,03 nei campi densi (doppie); PSF SNR 0,81-0,96, cometa e M51 (sopra).
+  41 frame sfocati (HFD da 5 px): stelle 1,07 / 1,36 / 3,74, PSF SNR 0,84 / 0,92 / 2,18 (Marco, 28/10/2026).
 
   Dal confronto del 27/10 sulle 24 copie, che il 26.45 non tocca:
 

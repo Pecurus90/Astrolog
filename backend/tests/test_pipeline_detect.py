@@ -70,12 +70,40 @@ def test_a_wide_faint_patch_is_not_a_star_however_much_light_it_holds() -> None:
 
 
 def test_a_structure_starts_at_its_threshold_on_the_median_copy() -> None:
-    """Two stars joined by a bridge over STRUCTURE_SIGMA are one structure, one star."""
+    """Two stars joined by a bridge over STRUCTURE_SIGMA are one structure, too thin a one for a
+    star (MIN_COVERAGE); the bridge cut, two stars."""
     pair = _gauss(150, 140, 1.5, 3000.0) + _gauss(150, 160, 1.5, 3000.0)
-    pair[149:152, 140:161] = np.maximum(pair[149:152, 140:161], 1.2 * STRUCTURE_SIGMA * _NOISE)
-    assert _found(pair) == 1
+    pair[149:152, 140:161] = np.maximum(pair[149:152, 140:161], 2 * STRUCTURE_SIGMA * _NOISE)
+    assert _found(pair) == 0
     pair[149:152, 148:153] = 0.0
     assert _found(pair) == 2
+
+
+def _glow() -> np.ndarray:
+    """Light the sky map left, far wider than 32 px: 50 sigma at the peak, sigma 100 px."""
+    glow = _gauss(150, 150, 100.0, 1.0)
+    return glow * (50 * _NOISE / glow.max())
+
+
+def test_a_glow_wider_than_the_structure_scales_is_no_star() -> None:
+    """Over 3 sigma of the median copy it was one structure, a star of its 2x2 SNR of 100."""
+    assert _found(_glow()) == 0
+
+
+def test_a_star_on_a_wide_glow_keeps_its_own_flux() -> None:
+    star = _gauss(150, 170, 1.5, 20000.0)
+    alone = detect(star, median3x3(star), _NOISE)
+    on_glow = detect(both := star + _glow(), median3x3(both), _NOISE)
+    assert len(on_glow.x) == 1
+    assert float(on_glow.flux[0]) == pytest.approx(float(alone.flux[0]), rel=0.1)
+
+
+def test_a_trail_is_not_a_star() -> None:
+    """A structure covering under (1 - maxDistortion) pi / 4 of its square: StarDetector docs."""
+    trail = np.zeros((_SIDE, _SIDE), dtype=np.float32)
+    for x in range(100, 160):
+        trail += _gauss(150, x, 1.0, 2000.0)
+    assert _found(trail) == 0
 
 
 def test_one_sensor_pixel_at_the_ceiling_makes_a_star_saturated() -> None:

@@ -18,13 +18,25 @@ def starlet(image: np.ndarray, layers: int) -> tuple[list[np.ndarray], np.ndarra
     """A trous B3 transform, borders mirrored: w_j = c_{j-1} - c_j, the kernel's taps 2^j apart."""
     planes, smooth = [], np.asarray(image, dtype=np.float32)
     for j in range(layers):
-        kernel = np.zeros(4 * 2**j + 1, dtype=np.float32)
-        kernel[:: 2**j] = B3
-        coarser = ndimage.convolve1d(smooth, kernel, axis=0, mode="mirror")
-        coarser = ndimage.convolve1d(coarser, kernel, axis=1, mode="mirror")
+        coarser = _smoother(smooth, j)
         planes.append(smooth - coarser)
         smooth = coarser
     return planes, smooth
+
+
+def coarse(image: np.ndarray, layers: int) -> np.ndarray:
+    """The starlet's last smooth plane c_layers alone: no detail plane kept, one frame of memory."""
+    smooth = np.asarray(image, dtype=np.float32)
+    for j in range(layers):
+        smooth = _smoother(smooth, j)
+    return smooth
+
+
+def _smoother(smooth: np.ndarray, j: int) -> np.ndarray:
+    kernel = np.zeros(4 * 2**j + 1, dtype=np.float32)
+    kernel[:: 2**j] = B3
+    coarser = ndimage.convolve1d(smooth, kernel, axis=0, mode="mirror")
+    return ndimage.convolve1d(coarser, kernel, axis=1, mode="mirror")
 
 
 def _unit_sigmas(layers: int) -> np.ndarray:
@@ -35,6 +47,15 @@ def _unit_sigmas(layers: int) -> np.ndarray:
     impulse[side // 2, side // 2] = 1
     planes, _ = starlet(impulse, layers)
     return np.array([float(np.sqrt(np.sum(p.astype(np.float64) ** 2))) for p in planes])
+
+
+def detail_unit_sigma(layers: int) -> float:
+    """Sigma of the first `layers` layers summed, I - c_layers, for unit Gaussian noise."""
+    side = 4 * 2**layers + 1
+    impulse = np.zeros((side, side), dtype=np.float32)
+    impulse[side // 2, side // 2] = 1
+    detail = impulse - coarse(impulse, layers)
+    return float(np.sqrt(np.sum(detail.astype(np.float64) ** 2)))
 
 
 UNIT_SIGMAS = _unit_sigmas(LAYERS)
