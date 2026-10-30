@@ -71,7 +71,7 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   (1,4826 MAD), la soglia e' misurata con quello. A colori quello che dice WBPP: per piano R, G
   (media dei due), B a mezza risoluzione, come lo stima il Debayer, poi (min + max) / 2 come il
   SubframeSelector. Non si confronta con la mono. Mai sotto un gradino da 1 ADU, 1/sqrt(12).
-  Costa da 1,3 a 3,2 s a frame.
+  Costa da 1,3 a 3,2 s a frame (dal 30/10 i tap del B3 senza gli zeri: 1,4 s su 26 MP).
 - **Stelle** (`pipeline/detect.py`, passo 25.15): **quelle che conta il SubframeSelector** <!-- software-ok -->
   (Marco, 27/10/2026), riscritto dalla sua documentazione pubblica (lo StarDetector della PCL:
   filtro mediano dei pixel caldi, strutture, segnale sul fondo in unita' di dispersione) e tarato
@@ -103,7 +103,7 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   su frame sintetici a verita' nota (400 stelle a SNR fissato, FWHM da 1,5 a 6 px: meta' trovate
   a 18,2 / 16,9 / 16,1 / 15,9 / 18,8, mediana 16,85), non sui nostri frame (passo 26.45, Marco
   28/10: niente costanti per far tornare i conti); prima 17,25, tarato sulle copie. Fuori dal
-  conteggio la selezione per HFD e forma: resta su `sep`, sotto. 0,3 s a frame da 26 MP.
+  conteggio la selezione per HFD e forma: resta su `sep`, sotto. 1,0 s a frame da 26 MP (0,3 prima del 26.46).
 - **Rilevamenti per la misura**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con <!-- software-ok -->
   mediana 3x3 esatta, senza deblending (ripartiva a caso i pixel contesi: stesso frame, tilt 10,7
   / 9,1 / 8,4%); i suoi momenti sono la scala di bordo, vicine e finestre.

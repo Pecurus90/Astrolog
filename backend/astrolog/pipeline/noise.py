@@ -2,7 +2,6 @@
 PixInsight ImageWeighting par. 2.4, 3.1.2: software-ok). Pure: pixels in, a sigma out."""
 
 import numpy as np
-from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
 from ..units import sigma_from_mad
 
@@ -33,10 +32,25 @@ def coarse(image: np.ndarray, layers: int) -> np.ndarray:
 
 
 def _smoother(smooth: np.ndarray, j: int) -> np.ndarray:
-    kernel = np.zeros(4 * 2**j + 1, dtype=np.float32)
-    kernel[:: 2**j] = B3
-    coarser = ndimage.convolve1d(smooth, kernel, axis=0, mode="mirror")
-    return ndimage.convolve1d(coarser, kernel, axis=1, mode="mirror")
+    return _taps(_taps(smooth, 2**j, 0), 2**j, 1)
+
+
+def _taps(image: np.ndarray, step: int, axis: int) -> np.ndarray:
+    """B3 along one axis, its five taps `step` apart: the zeros between them never multiplied.
+    Borders mirrored without repeating the edge, as ndimage's mirror."""
+    reach, size = 2 * step, image.shape[axis]
+    padded = np.pad(image, [(reach, reach) if a == axis else (0, 0) for a in (0, 1)], "reflect")
+
+    def shifted(offset: int) -> np.ndarray:
+        window = [slice(None), slice(None)]
+        window[axis] = slice(reach + offset, reach + offset + size)
+        return padded[tuple(window)]
+
+    out = shifted(-reach) + shifted(reach)
+    out *= np.float32(B3[0])
+    out += (shifted(-step) + shifted(step)) * np.float32(B3[1])
+    out += shifted(0) * np.float32(B3[2])
+    return out
 
 
 def _unit_sigmas(layers: int) -> np.ndarray:
