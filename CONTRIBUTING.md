@@ -2,7 +2,7 @@
 
 Il metodo di lavoro sta in [`CLAUDE.md`](CLAUDE.md): vale per chiunque, umano o no.
 
-**Ambiente.** Python 3.12 e Node 20.19 o piu' recente. Una volta:
+**Ambiente.** Python 3.12 e Node 22.22.2 o piu' recente (jsdom 30 dei test). Una volta:
 `python -m pip install -e "backend[dev]"` e `npm install` in `frontend/` (su Windows e Mac
 `npm install`, non `npm ci`: il lock e' risolto per Linux, dove gira la CI e girera' l'immagine
 Docker, e i binari nativi differiscono).

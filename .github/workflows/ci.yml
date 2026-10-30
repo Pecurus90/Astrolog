@@ -29,7 +29,7 @@ jobs:
       - run: python -m pip install --quiet -e "backend[dev]"
       - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
       - run: npm install --no-audit --no-fund
         working-directory: frontend
       - name: All checks (the same ones that run on commit and push)
@@ -105,7 +105,7 @@ jobs:
           python-version: "3.12"
       - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
       - name: La pagina si costruisce PRIMA della ruota -- e' lei che deve portarsela dentro
         # Senza questo passo la ruota si costruiva da un checkout pulito, dove `astrolog/web/`
         # non c'e' (e' ignorato, ed e' giusto: e' un prodotto del build). Risultato: chi
