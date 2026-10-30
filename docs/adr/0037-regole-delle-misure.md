@@ -1,6 +1,6 @@
 # 0037 -- Le regole delle misure dei frame con le fonti verificate
 
-**Stato:** accettata, 24/10/2026; superata in parte da ADR 0039 (2,5 MAD -> Qn, eccentricita' 0,45/0,71/0,6, oggetto basso 30°, Bortle su 6 mesi). Nessun codice: le misure nascono con `measure`.
+**Stato:** accettata, 24/10/2026; superata in parte da ADR 0039 (2,5 MAD -> Qn, eccentricita' 0,45/0,71/0,6, oggetto basso 30°, Bortle su 6 mesi) e da ADR 0042 (tilt e curvatura come Image Analysis, 30/10/2026). Nessun codice: le misure nascono con `measure`.
 Soglie tecniche scelte dalla sessione sulle convenzioni (CLAUDE.md, principio 1). Supera in parte
 ADR 0022 (dieci contraddizioni interne) e conferma ADR 0032.
 

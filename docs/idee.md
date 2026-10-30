@@ -47,3 +47,6 @@ ogni tappa del piano si rilegge: si fa, resta o si cancella; ferma da tre tappe 
   finestra coi dati scaricati (Marco dice "NPC": MPC o JPL, da scegliere): grandezza, periodo,
   velocita' e velocita' angolare, distanza dalla Terra; accanto il Sistema solare in scala con
   l'orbita dell'oggetto, dove sta adesso e dove andra', rispetto alla Terra.
+- **Pesi e approvazione dei frame come Image Analysis** (30/10/2026, ADR 0042): le sue espressioni
+  di approvazione e di peso con media biweight, Qn e z-score sulla serie, al posto delle nostre
+  soglie relative (mediana +- 2,5 Qn); da decidere prima del passo 40.1. <!-- software-ok -->

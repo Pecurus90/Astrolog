@@ -1,6 +1,6 @@
 # 0022 -- Le misure dei frame: tutte, attestate, nel database, senza voto
 
-**Stato:** accettata, 18/10/2026 (Marco); superata in parte da ADR 0033 (stelle da `measure`), 0037 (SNR, zone, tilt), 0039 (Qn, eccentricita', oggetto basso, Bortle del sito) e 0041 (tetto al fondo scala). Ridotta il 26/10/2026: il metodo costruito, le misure sul vero e i testi stanno in `docs/domini/misure.md`.
+**Stato:** accettata, 18/10/2026 (Marco); superata in parte da ADR 0033 (stelle da `measure`), 0037 (SNR, zone, tilt), 0039 (Qn, eccentricita', oggetto basso, Bortle del sito), 0041 (tetto al fondo scala) e 0042 (FWHM, eccentricita' e gradiente come Image Analysis, 30/10/2026). Ridotta il 26/10/2026: il metodo costruito, le misure sul vero e i testi stanno in `docs/domini/misure.md`.
 
 ## Contesto
 
