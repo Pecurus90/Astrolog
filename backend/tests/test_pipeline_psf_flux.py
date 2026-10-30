@@ -72,7 +72,7 @@ def test_a_glow_with_its_centre_in_the_dark_adds_no_flux() -> None:
     ring = np.hypot(rows - 120, cols - 120)  # between the stars
     glow = _field(3.0, 1e5) + (200 * np.exp(-(((ring - 25) / 4) ** 2))).astype(np.float32)
     found = detect(glow, median3x3(glow), _NOISE)
-    assert len(found.x) == 26
+    assert len(found.x) == 25  # the ring, maxima all round it, is no star since plan 26.48
     assert found.flux.sum() == pytest.approx(clear.sum(), rel=0.01)
 
 

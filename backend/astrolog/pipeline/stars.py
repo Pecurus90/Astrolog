@@ -10,7 +10,7 @@ from ..units import sigma_from_mad
 from .debayer import COLOURS, debayered
 from .detect import detect
 from .field import gradient_of, psf_snr, zones_of
-from .noise import mrs_noise
+from .noise import NOISE_FLOOR_ADU, mrs_noise
 from .psf_flux import ring_sky
 from .shape import MIN_STARS, Shape, estimated_fwhm, shape_of
 
@@ -27,9 +27,6 @@ SUBPIX = 5  # [C sep docs: sum_circle default subpixel sampling]
 # Stars spread over the field, not the brightest: a 3x3 grid, 60 a cell, across the flux ranking.
 GRID = 3  # [P ADR 0022]
 PER_CELL = 60  # [P ADR 0022]
-# Noise never under one ADU step's own: a quantized sky has MAD 0, and then every step is a star.
-# [D uniform quantization noise, step/sqrt(12)]
-NOISE_FLOOR_ADU = 0.2887
 
 
 @dataclass(frozen=True)
@@ -45,7 +42,7 @@ class Across:
 
 @dataclass(frozen=True)
 class Measured(Across):
-    stars: int  # as the SubframeSelector counts them (detect.py); software-ok
+    stars: int  # as Image Analysis counts them (detect.py); software-ok
     kept: int  # stars the HFD is the median of
     hfd_px: float  # sensor pixels
     background_adu: float
@@ -81,8 +78,9 @@ def measure_frame(
     round_ones = usable[_round(objects[usable])]
     hfds, hx, hy = _hfd(images, objects, _spread(objects, round_ones, raw.shape))
     shape = shape_of(images, objects, _spread(objects, usable, raw.shape), noise)
-    found = detect(*images, noise, clip=(sensor, saturation))
-    noise = max(mrs_noise(raw), NOISE_FLOOR_ADU)  # detection kept the first pass
+    # MRS, not the first pass: crowded fields lift a MAD (40k synthetic stars: 19.8 for 10)
+    noise = max(mrs_noise(raw), NOISE_FLOOR_ADU)
+    found = detect(*images, noise, clip=(sensor, saturation), level=(raw, saturation))
     # On the measured plane's own noise: a colour frame's intensity, as misure.md says
     flux = float(found.flux.sum())
     snr = psf_snr(flux, noise) if len(found.x) >= MIN_STARS else None

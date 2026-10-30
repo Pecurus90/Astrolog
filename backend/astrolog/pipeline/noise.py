@@ -11,6 +11,9 @@ K_SIGMA = 3.0  # [C Starck & Murtagh 1998 par. 2.2: k "often" 3]
 BIAS = 0.974  # [C Starck & Murtagh 1998 par. 3: sigma divided by 0.974]
 TOLERANCE = 1e-4  # [T] relative change that stops the iteration; the paper gives none
 MAX_ROUNDS = 20  # [T] a frame that has not converged by then keeps the last sigma
+# Noise never under one ADU step's own: a quantized sky has MAD 0, and then every step is a star.
+# [D uniform quantization noise, step/sqrt(12)]
+NOISE_FLOOR_ADU = 0.2887
 
 
 def starlet(image: np.ndarray, layers: int) -> tuple[list[np.ndarray], np.ndarray]:

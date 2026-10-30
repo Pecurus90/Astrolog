@@ -16,7 +16,7 @@ parole in [`glossario.md`](glossario.md).
 | L'HFD e' il diametro che contiene meta' della luce della stella, anche con le ali di una stella vera | `test_the_hfd_of_gaussian_stars_is_the_diameter_holding_half_the_flux`, `test_the_hfd_of_moffat_stars_holds_their_wings`, `test_the_truth_is_the_analytic_hfd_once_the_pixel_is_small` (`backend/tests/test_pipeline_stars.py`) |
 | Fondo cielo e rumore sono quelli del cielo, non delle stelle | `test_background_and_noise_are_the_sky_and_its_spread` |
 | Le stelle si contano una volta; i pixel caldi di un light non calibrato non sono stelle | `test_every_star_is_counted_once`, `test_hot_pixels_are_not_stars` |
-| Le stelle sono quelle che conta il SubframeSelector: una stella debole o una macchia di nebulosa larga non conta (Marco, 27/10/2026) <!-- software-ok --> | `test_the_frame_counts_the_stars_the_subframeselector_would`, `test_a_star_over_the_aperture_threshold_is_found_one_under_is_not`, `test_a_wide_faint_patch_is_not_a_star_however_much_light_it_holds`, `test_a_hot_pixel_is_not_a_star`, `test_a_dark_pixel_among_bright_ones_has_a_position`, `test_a_structure_starts_at_its_threshold_on_the_median_copy`, `test_the_position_is_the_barycentre` (`backend/tests/test_pipeline_detect.py`) <!-- software-ok --> |
+| Le stelle sono quelle che conta Image Analysis: una stella debole, una macchia di nebulosa larga, una sorgente multipla o un nodo su una nebulosa non contano (Marco, 27/10 e 30/10/2026) <!-- software-ok --> | `test_two_peaks_in_one_structure_are_no_star`, `test_a_saturated_star_with_a_ragged_top_is_one_star`, `test_the_dispersion_that_counts_is_the_local_one`, `test_a_knot_on_a_nebula_is_measured_over_the_nebula`, `test_a_wide_faint_star_is_one_star_not_a_cluster_of_noise_peaks`, `test_a_star_with_no_free_sky_around_falls_back_on_the_frame_noise`, `test_the_frame_counts_the_stars_the_subframeselector_would`, `test_a_star_over_the_aperture_threshold_is_found_one_under_is_not`, `test_a_wide_faint_patch_is_not_a_star_however_much_light_it_holds`, `test_a_hot_pixel_is_not_a_star`, `test_a_dark_pixel_among_bright_ones_has_a_position`, `test_a_structure_starts_at_its_threshold_on_the_median_copy`, `test_the_position_is_the_barycentre` (`backend/tests/test_pipeline_detect.py`) <!-- software-ok --> |
 | Una stella saturata conta fra le stelle ma non entra nell'HFD, anche se in una camera a colori satura un canale solo | `test_saturated_stars_are_counted_but_not_measured`, `test_a_colour_star_clipped_in_one_channel_is_saturated` |
 | Il tetto di saturazione e' il fondo scala dichiarato, come PixInsight, e satura e' una stella con un pixel li' (Marco, 29/10/2026) <!-- software-ok --> | `test_the_ceiling_is_the_declared_full_scale_as_pixinsight`, `test_stars_at_the_ceiling_are_counted_saturated_and_kept_out` (`backend/tests/test_pipeline_field.py`), `test_one_sensor_pixel_at_the_ceiling_makes_a_star_saturated` (`backend/tests/test_pipeline_detect.py`) |
 | Il PSF SNR e' quello della documentazione di PixInsight, sature comprese come le tiene lui <!-- software-ok --> | `test_psf_snr_is_the_documented_formula`, `test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale`, `test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are`, `test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one`, `test_under_five_stars_no_psf_snr`, `test_pipeline_psf_flux.py` (quota Moffat al decimo, fondo lasciato sotto le stelle, luce col centro al buio, stella tagliata) |
@@ -67,43 +67,47 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   (ImageWeighting par. 2.4, 3.1.2): trasformata a trous B3 sui primi 4 strati, pixel fuori dal
   supporto a 3 sigma, iterato fino a fermarsi, diviso per 0,974. Sui 205 frame del passo 26.45
   da 0,996 a 1,004 volte il suo, senza tarature; la MAD di prima arrivava a 1,24 nei campi da
-  40 mila stelle (le ali entravano nel conto). Le stelle si cercano ancora col primo passaggio
-  (1,4826 MAD), la soglia e' misurata con quello. A colori quello che dice WBPP: per piano R, G
+  40 mila stelle (le ali entravano nel conto). Le stelle contate lo usano dal passo 26.48; i
+  rilevamenti di `sep` (HFD, forma) restano sul primo passaggio (1,4826 MAD). A colori quello che dice WBPP: per piano R, G
   (media dei due), B a mezza risoluzione, come lo stima il Debayer, poi (min + max) / 2 come il
   SubframeSelector. Non si confronta con la mono. Mai sotto un gradino da 1 ADU, 1/sqrt(12).
   Costa da 1,3 a 3,2 s a frame (dal 30/10 i tap del B3 senza gli zeri: 1,4 s su 26 MP).
-- **Stelle** (`pipeline/detect.py`, passo 25.15): **quelle che conta il SubframeSelector** <!-- software-ok -->
-  (Marco, 27/10/2026), riscritto dalla sua documentazione pubblica (lo StarDetector della PCL:
-  filtro mediano dei pixel caldi, strutture, segnale sul fondo in unita' di dispersione) e tarato
-  a scatola chiusa sulle sue uscite, mai sul sorgente PCL. Struttura (passo 26.46): i pixel
-  dove i primi 5 strati a trous della copia mediana 3x3 (I - c5, scale fino a 32 px:
-  `structureLayers` 5 dello StarDetector, default del SubframeSelector) superano 3 volte la
-  loro dispersione, la significativita' di Starck e Murtagh (come il supporto del rumore),
-  uniti in 8 direzioni. Una struttura che copre meno di (1 - 0,6) pi / 4 del quadrato
-  circoscritto (`maxDistortion` 0,6: un disco ne copre pi / 4) non e' una stella: scie, coppie
-  unite da un ponte, nodi di nebulosa irregolari. Prima (passo 25.15) i pixel della copia
-  mediana sopra 3 sigma: un nucleo di nebulosa o una chioma e la stella sopra erano una
-  struttura sola. Stella: la struttura il cui miglior quadrato 2x2 sul residuo
-  grezzo supera 16,85 volte il rumore di quattro pixel. Una stella per struttura: due che si
-  toccano contano una. Sulle sonde a verita' nota l'errore fra 2,4 e 3 sigma cambia dell'1,5%:
-  si tiene la convenzione. Sui 164 frame nitidi le stelle restano 0,99-1,03 per camera (M42
-  1,13: il nucleo si spezza in nodi piccoli che lui non conta). Il quadrato 2x2: sulle stesse sonde la sua soglia varia 1,18 volte
-  da FWHM 1,5 a 6, quella di 1 px 1,48 e di 3 px 1,64. **Aperto: le stelle doppie.** La
-  documentazione PJSR dello StarDetector (`doc/pjsr/objects/StarDetector`) dice che con
-  `allowClusteredSources` spento (default del SubframeSelector, letto dal programma, con
-  `structureLayers` 5) una struttura con piu' massimi locali (filtro 5x5, sotto 0,75 del fondo
-  scala) non e' una stella. Sonde del passo 26.45, 100 sistemi a frame, FWHM 3: le coppie uguali
-  sotto 7 px lui non le conta (noi una), quelle a 9 px le separa sempre, anche brillanti; una
-  compagna al 3% a 6 px non gli toglie la principale. Provate le regole documentate (massimi
-  sul residuo o sulla copia mediana, strutture su 5 strati a trous): i conteggi si avvicinano
-  (IC 405 x07 4054 contro 4053), ma sui 205 frame il PSF SNR scende da circa 0,99 a 0,78-0,94,
-  perche' le stelle brillanti con una vicina al 2% a 10 px restano in una struttura con due
-  massimi e si scartano; lui le separa con un criterio che non pubblica. Resta la regola di
-  prima finche' una convenzione non spiega la separazione. Il 16,85 e' la soglia del SubframeSelector misurata
-  su frame sintetici a verita' nota (400 stelle a SNR fissato, FWHM da 1,5 a 6 px: meta' trovate
-  a 18,2 / 16,9 / 16,1 / 15,9 / 18,8, mediana 16,85), non sui nostri frame (passo 26.45, Marco
-  28/10: niente costanti per far tornare i conti); prima 17,25, tarato sulle copie. Fuori dal
-  conteggio la selezione per HFD e forma: resta su `sep`, sotto. 1,0 s a frame da 26 MP (0,3 prima del 26.46).
+- **Stelle** (`pipeline/detect.py`, passi 25.15, 26.46, 26.48): **quelle che conta Image
+  Analysis** (Marco 27/10 e 30/10/2026, ADR 0042): lo StarDetector nativo PJSR ai default ridà
+  le sue Stars in 203 frame su 205; regole dalla documentazione PJSR
+  (`doc/pjsr/objects/StarDetector`), provate a scatola chiusa, mai sul sorgente PCL. Struttura:
+  i pixel dove I - c5 della copia mediana 3x3 (scale fino a 32 px, `structureLayers` 5)
+  supera 3 volte la sua dispersione (Starck e Murtagh), uniti in 8 direzioni; sotto (1 - 0,6)
+  pi / 4 del quadrato circoscritto (`maxDistortion` 0,6) non e' una stella. Stella: la struttura il cui miglior quadrato 2x2 sul residuo grezzo, meno due volte il
+  fondo locale b, supera 16,85 volte la dispersione locale n ((s - b) / n, la `sensitivity`). b
+  e n: mediana e 1,4826 MAD dei pixel del residuo nel riquadro della struttura allargato di 16
+  px, fuori da ogni struttura dilatata di 4; sotto 16 pixel liberi b = 0 e n il rumore del frame;
+  n mai sotto il gradino di 1 ADU. Sonda a meta' rumore: lui perde le stelle dove il rumore
+  raddoppia; un nodo su una nebulosa larga si misura sulla nebulosa (M42). **La cornice e' un
+  compenso misurato**: attorno alle SUE strutture la sonda dice dilatata 1 e allargata 6, ma con
+  le nostre (I - c5, non le sue) la cornice larga da' 7 frame fuori banda contro 22. Torna alla
+  sua quando l'operatore delle strutture sara' il suo (passo 26.48.1). Una struttura con piu' di
+  un massimo locale 5x5 sul residuo, fra i suoi pixel, e' una sorgente multipla e si scarta
+  (`allowClusteredSources` spento, `localDetectionFilterRadius` 2; un plateau conta uno), salvo
+  che un pixel del piano misurato superi 0,75 del tetto (`localMaximaDetectionLimit`; il tetto di
+  ADR 0041, dove una stella si taglia: PixInsight normalizza sul fondo scala del tipo, uguale <!-- software-ok -->
+  finche' `DATAMAX` manca). Sonda NGC 7380 n.3: noi 1849, lui 351, lui con le multiple 1982.
+  Strutture e prefiltro sul rumore MRS (sintetico da 40 mila stelle: la MAD 19,8, il vero 10).
+  Prefiltro di velocita': 2x2 sotto 8 volte quel rumore non arriva al conto locale (nessuna sua
+  stella sotto, sul banco). Il 16,85 e il 2x2: sintetici a verita' nota (400 stelle, FWHM
+  1,5-6: meta' trovate a 18,2 / 16,9 / 16,1 / 15,9 / 18,8; 1 px varia 1,48 volte, 3 px 1,64),
+  non i nostri frame (26.45, Marco 28/10). **Banco dei 205** (codice del 26.48): stelle / sue,
+  mediane colori A 1,006, B 1,006, mono A 0,986, B 0,987; fuori 0,95-1,05 7 frame su 205 (prima 49), tutti a colori:
+  IC 405 x00 e x04, NGC 1333 x03, NGC 6888 Poseidon n.0/2/3 (fino a 1,10), NGC 7023 n.4 (1,20);
+  i mono tutti in banda. Al limite della soglia la nostra transizione e' piu' ripida della sua:
+  sui sintetici a verita' nota del 26.45 (80 frame, FWHM 1,5-6) contiamo 0,967 volte lui, meno
+  di lui appena sotto la soglia (FWHM 4: 10 contro 33 su 400), di piu' appena sopra; una stella
+  debole sotto la soglia non conta (36 a SNR 12: 0 su 20 semi), a SNR 14 il rumore ne porta su
+  da 0 a 2 su 36. **Aperto (passo 26.48.1)**: l'operatore delle sue strutture; sulle isolate
+  somiglia a I - c3 a 2,1 sigma, con luce diffusa si allarga (escluse wavelet c2-c6, MMT,
+  aperture, anelli, isteresi, accrescimento, unione multiscala). Tempo: il conto locale e' un ciclo
+  per candidato, da 0,3 s (mono, 2400 stelle) a 2,8 s (45 mila) a frame, e il rilevamento intero
+  passa da 1,5 a 2,1 s e da 4,3 a 7,6 s; il 26.57 lo accorcia. HFD e forma restano su `sep`.
 - **Rilevamenti per la misura**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con <!-- software-ok -->
   mediana 3x3 esatta, senza deblending (ripartiva a caso i pixel contesi: stesso frame, tilt 10,7
   / 9,1 / 8,4%); i suoi momenti sono la scala di bordo, vicine e finestre.
@@ -267,10 +271,8 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
   | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
 
-  Gli scarti aperti hanno ognuno il suo passo: stelle 26.48, FWHM ed eccentricita' 26.49, PSF
-  SNR 26.50, colori 26.56 (a colori lui somma il flusso PSF per canale dai metadati del Debayer,
-  noi sull'intensita'). Stelle a colori oltre 1,10: 36 frame, 33 sfocati (HFD da 5 px); gli
-  altri tre fra 1,11 e 1,12 (IC 443, NGC 7380), campi densi di nebulosa.
+  Scarti aperti, ognuno col suo passo: stelle 26.48 (fatto, sopra), FWHM ed eccentricita' 26.49,
+  PSF SNR 26.50, colori 26.56 (lui somma il flusso PSF per canale, noi sull'intensita').
 
   Secondi a frame, mediana, stessa macchina, un frame alla volta:
 
@@ -284,13 +286,11 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Image Analysis, misure estese | 3,57 | 2,46 + 1,78 di debayer |
   | Image Analysis, senza estese | 2,42 | 1,14 + 1,78 di debayer |
 
-  Perche' degli scarti, dal 26.46 contro il SubframeSelector (tabelle per camera e oggetto in <!-- software-ok -->
-  questo file al commit `9add5161`): FWHM, lui valuta la Moffat al centro del pixel, noi la
-  integriamo (le piccole gli escono larghe, uguali sopra 4 px); PSF SNR, noi sommiamo
-  nell'ellisse dei momenti, piu' stretta della sua fittata (ImageWeighting par. 2.2; cometa
-  0,61); stelle sopra 1,03 nei campi densi, le doppie. HFD / FWHM non e' uno scarto: sulla
-  Moffat vale 1,36 a beta 2,5 e 1,17 a beta 4. HFD / HFD ASTAP, mediane 0,83-0,92 (ADR 0022 lo
-  misurava +8…27% sopra la verita'); le sue stelle contano da SNR 30 sul grezzo: 0,9-27 volte.
+  Perche' degli scarti (dal 26.46; tabelle per camera e oggetto al commit `9add5161`): FWHM, lui
+  valuta la Moffat al centro del pixel, noi la integriamo; PSF SNR, noi sommiamo nell'ellisse
+  dei momenti, piu' stretta della sua fittata (ImageWeighting par. 2.2; cometa 0,61). HFD / FWHM
+  non e' uno scarto: sulla Moffat 1,36 a beta 2,5 e 1,17 a beta 4. HFD / HFD ASTAP 0,83-0,92;
+  le sue stelle contano da SNR 30 sul grezzo: 0,9-27 volte.
 - **Le misure nuove sul vero** (27/10/2026, 24 copie; dal 29/10 il tetto e' il fondo scala,
   ADR 0041, e il Canon dice 65535 e 0 sature): tetto 65535 sui 22 ATR2600M e 61208 sui
   due Canon; sature da 6 a 454 per frame. Gradiente da 2,6 a 45,3% (il 23, nebulosa), il lato

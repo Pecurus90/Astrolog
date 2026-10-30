@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 248; senza fonte: 1.
-Fonti: C norma: 121; U usanza: 2; D metodo: 17; M misura: 15; P decisione: 35; T tecnico: 61.
+Valori: 254; senza fonte: 1.
+Fonti: C norma: 123; U usanza: 2; D metodo: 17; M misura: 18; P decisione: 35; T tecnico: 62.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -264,6 +264,12 @@ Fonti: C norma: 121; U usanza: 2; D metodo: 17; M misura: 15; P decisione: 35; T
 | MIN_COVERAGE | `(1 - MAX_DISTORTION) * np.pi / 4` | D a disc fills pi / 4 of its square |
 | APERTURE_SNR | `16.85` | M plan 26.45: half its stars found there, median of five FWHM |
 | APERTURE_PX | `2` | M plan 26.45: the aperture whose threshold does not follow the FWHM |
+| PEAK_RADIUS | `2` | C PJSR StarDetector defaults; software-ok; C StarDetector localDetectionFilterRadius default; software-ok |
+| BRIGHT_LEVEL | `0.75` | C StarDetector localMaximaDetectionLimit default; software-ok |
+| RING_GROW | `4` | M plan 26.48: 7 frames of 205 off 0.95-1.05, 22 with his 1 and 6 |
+| RING_MARGIN | `16` | M plan 26.48: as RING_GROW |
+| MIN_RING | `16` | T |
+| PREFILTER_SNR | `8.0` | M plan 26.48: no star of his under it |
 | _EIGHT | `np.ones((3, 3), dtype=bool)` | D 8-connected: diagonal pixels of a star join it |
 
 ### pipeline/field.py
@@ -301,6 +307,7 @@ Fonti: C norma: 121; U usanza: 2; D metodo: 17; M misura: 15; P decisione: 35; T
 | BIAS | `0.974` | C Starck & Murtagh 1998 par. 3: sigma divided by 0.974 |
 | TOLERANCE | `1e-4` | T |
 | MAX_ROUNDS | `20` | T |
+| NOISE_FLOOR_ADU | `0.2887` | D uniform quantization noise, step/sqrt(12) |
 
 ### pipeline/pixels.py
 
@@ -432,7 +439,6 @@ Fonti: C norma: 121; U usanza: 2; D metodo: 17; M misura: 15; P decisione: 35; T
 | SUBPIX | `5` | C sep docs: sum_circle default subpixel sampling |
 | GRID | `3` | P ADR 0022 |
 | PER_CELL | `60` | P ADR 0022 |
-| NOISE_FLOOR_ADU | `0.2887` | D uniform quantization noise, step/sqrt(12) |
 
 ### pipeline/timeouts.py
 
