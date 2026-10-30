@@ -1,7 +1,5 @@
 """The frame's noise by the multiresolution support (noise.py, Starck & Murtagh 1998)."""
 
-import time
-
 import numpy as np
 import pytest
 from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
@@ -51,20 +49,6 @@ def _dense_coarse(image: np.ndarray, layers: int) -> np.ndarray:
 def test_the_coarse_plane_is_the_textbook_one(shape: tuple[int, int]) -> None:
     image = np.random.default_rng(3).normal(0, 1, shape).astype(np.float32)
     assert np.allclose(coarse(image, 5), _dense_coarse(image, 5), atol=1e-6)
-
-
-def test_the_coarse_plane_skips_the_kernels_zeros() -> None:
-    """At 5 layers 4 taps in 5 are zeros: only the taps, 0.65 s a frame against 2.0 s."""
-    image = np.random.default_rng(4).normal(0, 1, (1024, 1536)).astype(np.float32)
-    ours, dense = [], []
-    for _ in range(3):
-        start = time.perf_counter()
-        coarse(image, 5)
-        ours.append(time.perf_counter() - start)
-        start = time.perf_counter()
-        _dense_coarse(image, 5)
-        dense.append(time.perf_counter() - start)
-    assert min(ours) < 0.6 * min(dense)
 
 
 def test_pure_gaussian_noise_reads_its_sigma() -> None:

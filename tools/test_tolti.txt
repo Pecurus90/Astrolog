@@ -360,3 +360,4 @@ test_a_smooth_bright_patch_is_not_a_pile - step 26.45, ADR 0041: ceiling.py remo
 test_twelve_bits_in_sixteen_clip_at_their_own_top - step 26.45, ADR 0041: ceiling.py removed
 test_a_few_equal_pixels_are_no_pile - step 26.45, ADR 0041: ceiling.py removed
 test_a_zone_with_too_few_stars_leaves_tilt_and_curvature_silent - step 26.45: the zone minimum follows the frame's HFD spread; replaced by test_the_stars_a_zone_needs_follow_the_frame_s_own_hfd_spread and test_never_under_min_stars_a_zone
+test_the_coarse_plane_skips_the_kernels_zeros - 30/10/2026: wall-clock ratio flaky on the Windows runner (0.76 against 0.6); the time per frame is gated by the bench, step 26.57 (ADR 0042)
