@@ -31,6 +31,7 @@ FIXED = {
 }
 REST = "rest"
 FILTER = "--filter"
+DROP_BROKEN = "--drop-broken"
 MUTANT = re.compile(r"\S+__mutmut_\d+")
 
 
@@ -186,9 +187,26 @@ def below_reference(shard: str, statuses: Counter[str], reference: Path) -> bool
     return round(score, 4) < saved
 
 
+def drop_broken(mutants: Path) -> int:
+    """mutmut writes a .meta by truncating first: a run stopped mid-write leaves it unreadable and
+    every later `mutmut` dies on it. Drops it with its module, so the next run mutates it again."""
+    broken = 0
+    for meta in mutants.rglob("*.py.meta"):
+        try:
+            json.loads(meta.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            meta.unlink()
+            meta.with_suffix("").unlink(missing_ok=True)
+            broken += 1
+    sys.stderr.write(f"{mutants}: {broken} broken .meta dropped\n")
+    return 0
+
+
 def main(argv: list[str], stdin: TextIO = sys.stdin, reference: Path = REFERENCE) -> int:
     if argv[1:2] == [FRONTEND]:
         return frontend(argv[2:], reference)
+    if argv[1:2] == [DROP_BROKEN] and len(argv) == 3:
+        return drop_broken(Path(argv[2]))
     names = [*FIXED, REST]
     if len(argv) not in (2, 3) or argv[1] not in names or argv[2:] not in ([], [FILTER]):
         sys.stderr.write(f"usage: mutation_shards.py {{{','.join(names)}}} [{FILTER}]\n")

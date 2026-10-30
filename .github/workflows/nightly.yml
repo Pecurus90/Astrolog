@@ -41,6 +41,7 @@ jobs:
         timeout-minutes: 270
         run: |
           patterns="$(python ../tools/mutation_shards.py ${{ matrix.shard }})"
+          python ../tools/mutation_shards.py --drop-broken mutants
           # a resumed mutants/ gets new .py from mutmut, never new data (schema.sql), and keeps
           # what the repo deleted: tests copied again, modules gone dropped with their verdicts
           if [ -d mutants/astrolog ]; then
@@ -54,6 +55,8 @@ jobs:
           # A runner lost saves nothing (rest: at 3 h, then shut down at 2 h 30): stopped earlier,
           # mutmut keeps each verdict it has and the next night goes on.
           timeout -k 5m -s INT 120m mutmut run --max-children 4 $patterns || [ $? -eq 124 ]
+          # stopped mid-write, a .meta stays empty: dropped before the cache and the report
+          python ../tools/mutation_shards.py --drop-broken mutants
       - uses: actions/cache/save@v6
         if: always()
         with:

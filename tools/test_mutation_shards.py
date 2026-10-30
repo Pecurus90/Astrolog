@@ -168,6 +168,20 @@ def test_the_workflow_runs_every_shard_and_filters_each_report_to_its_own():
     # mutmut refreshes the .py of a resumed mutants/, never the data: schema.sql must follow.
     assert "rsync -a --exclude='*.py' astrolog/ mutants/astrolog/" in workflow
     assert "rm -rf mutants/tests" in workflow and 'rm -f "$f" "$f.meta"' in workflow
+    # A run stopped mid-write leaves a broken .meta: dropped before the run and before the cache.
+    assert workflow.count("mutation_shards.py --drop-broken mutants") == 2
+
+
+def test_a_meta_left_broken_by_a_stopped_run_is_dropped_with_its_module(tmp_path, capsys):
+    # mutmut opens the .meta with "w" before json.dump: stopped in between, it stays empty.
+    pkg = tmp_path / "astrolog"
+    pkg.mkdir()
+    for name, meta in [("good", '{"exit_code_by_key": {}}'), ("empty", ""), ("cut", '{"exit_')]:
+        (pkg / f"{name}.py").write_text("x = 1\n", encoding="utf-8")
+        (pkg / f"{name}.py.meta").write_text(meta, encoding="utf-8")
+    assert main(["mutation_shards.py", "--drop-broken", str(tmp_path)]) == 0
+    assert sorted(p.name for p in pkg.iterdir()) == ["good.py", "good.py.meta"]
+    assert "2 broken" in capsys.readouterr().err
 
 
 def test_a_mutant_no_shard_owns_fails_the_rest_report_alone(tmp_path, capsys):
