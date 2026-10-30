@@ -1112,7 +1112,7 @@ CREATE TABLE pipeline_measures (
   -- tetto: DATAMAX, se no il massimo del tipo dopo BZERO e BSCALE (ADR 0041)
   ceiling_adu    REAL,
   saturated      INTEGER CHECK (saturated >= 0),  -- delle stelle, quelle al tetto
-  psf_snr        REAL CHECK (psf_snr >= 0),  -- ImageWeighting eq. 18-19 (SubframeSelector); NULL: < 5 stelle
+  psf_snr        REAL CHECK (psf_snr >= 0),  -- ImageWeighting eq. 23-24 (SubframeSelector); NULL: < 5 stelle
   gradient_pct   REAL CHECK (gradient_pct >= 0),  -- 100 (max - min) / mediana del fondo ridotto
   gradient_angle_deg REAL CHECK (gradient_angle_deg >= 0 AND gradient_angle_deg < 360),  -- lato chiaro
   tilt_pct       REAL CHECK (tilt_pct >= 0),  -- HFD degli angoli, ASTAP; NULL: zona povera

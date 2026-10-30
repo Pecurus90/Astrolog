@@ -10,8 +10,8 @@ from ..units import sigma_from_mad
 from .shape import MIN_STARS
 
 # PSF SNR = c3 F^2 / (c4 sigma^2), F the stars' summed flux (psf_flux.py), sigma the noise.
-PSF_SNR_C3 = 1.350e-7  # [C PixInsight ImageWeighting, eq. 18-19; software-ok]
-PSF_SNR_C4 = 4.987e6  # [C PixInsight ImageWeighting, eq. 18-19; software-ok]
+PSF_SNR_C3 = 1.316e-7  # [C PixInsight ImageWeighting, eq. 23-24; software-ok]
+PSF_SNR_C4 = 4.987e6  # [C PixInsight ImageWeighting, eq. 23-24; software-ok]
 MESH_PX = 64  # [C sep docs: Background bw, bh default] the reduced frame: one value a mesh
 # The bright side only when a plane holds more of the map's variance than it leaves.
 PLANE_EXPLAINS = 0.5  # [D R^2 over one half: the plane explains the larger part]
@@ -38,7 +38,7 @@ class Zones:
 
 
 def psf_snr(flux: float, noise: float) -> float | None:
-    """ImageWeighting eq. 7 and 18-19: the units cancel, ADU or SubframeSelector's [0, 1] alike."""
+    """ImageWeighting eq. 7 and 23-24: the units cancel, ADU or SubframeSelector's [0, 1] alike."""
     if noise <= 0:
         return None
     return PSF_SNR_C3 * flux * flux / (PSF_SNR_C4 * noise * noise)

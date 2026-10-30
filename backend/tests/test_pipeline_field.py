@@ -94,9 +94,17 @@ def test_a_frame_without_clipped_stars_has_none_saturated() -> None:
 
 
 def test_psf_snr_is_the_documented_formula() -> None:
-    """ImageWeighting eq. 18-19: c3 F^2 / (c4 sigma^2); units cancel, ADU or [0,1] alike."""
+    """ImageWeighting eq. 23-24: c3 F^2 / (c4 sigma^2); units cancel, ADU or [0,1] alike."""
     assert psf_snr(5000.0, 2.0) == pytest.approx(PSF_SNR_C3 * 5000.0**2 / (PSF_SNR_C4 * 4.0))
     assert psf_snr(5000.0 / 65535, 2.0 / 65535) == pytest.approx(psf_snr(5000.0, 2.0))
+
+
+def test_psf_snr_gives_back_the_programs_own_value() -> None:
+    """Its PSFFlux, Noise and PSFSNR on one frame (Shark n.0, ImageAnalysis = SubframeSelector):
+    the formula with the documented constants returns its PSF SNR. software-ok"""
+    assert psf_snr(2756.598924285991, 0.0010614623312019081) == pytest.approx(
+        0.17797316030630608, rel=1e-4
+    )
 
 
 def test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale() -> None:

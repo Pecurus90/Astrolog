@@ -270,8 +270,8 @@ Fonti: C norma: 121; U usanza: 2; D metodo: 17; M misura: 15; P decisione: 35; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| PSF_SNR_C3 | `1.350e-7` | C PixInsight ImageWeighting, eq. 18-19; software-ok |
-| PSF_SNR_C4 | `4.987e6` | C PixInsight ImageWeighting, eq. 18-19; software-ok |
+| PSF_SNR_C3 | `1.316e-7` | C PixInsight ImageWeighting, eq. 23-24; software-ok |
+| PSF_SNR_C4 | `4.987e6` | C PixInsight ImageWeighting, eq. 23-24; software-ok |
 | MESH_PX | `64` | C sep docs: Background bw, bh default |
 | PLANE_EXPLAINS | `0.5` | D R^2 over one half: the plane explains the larger part |
 | TILT_BAND_PCT | `5.0` | C ASTAP astap.htm, CCD inspector: tilt 0-5% "none" |
