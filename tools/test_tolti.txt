@@ -360,4 +360,14 @@ test_a_smooth_bright_patch_is_not_a_pile - step 26.45, ADR 0041: ceiling.py remo
 test_twelve_bits_in_sixteen_clip_at_their_own_top - step 26.45, ADR 0041: ceiling.py removed
 test_a_few_equal_pixels_are_no_pile - step 26.45, ADR 0041: ceiling.py removed
 test_a_zone_with_too_few_stars_leaves_tilt_and_curvature_silent - step 26.45: the zone minimum follows the frame's HFD spread; replaced by test_the_stars_a_zone_needs_follow_the_frame_s_own_hfd_spread and test_never_under_min_stars_a_zone
+test_a_missing_program_leaves_its_ratios_out - step 26.47, ADR 0042: Image Analysis replaces the SubframeSelector; replaced by test_a_missing_program_or_undefined_value_leaves_its_ratio_out
+test_an_altitude_the_program_left_empty_is_none - step 26.47, ADR 0042: undefined values come as 0 with the Flags mask; replaced by test_an_undefined_value_is_none_and_a_flagged_zero_is_a_value
+test_colour_frames_give_their_intensity_too_and_its_psf_snr_is_compared - step 26.47, ADR 0042: no intensity copy, the program measures the debayered RGB as in WBPP
+test_fwhm_and_eccentricity_are_set_beside_the_subframe_selector - step 26.47, ADR 0042: replaced by test_every_common_measure_is_set_beside_image_analysis
+test_main_measures_every_frame_and_prints_the_table - step 26.47, ADR 0042: replaced by test_main_measures_every_frame_and_prints_the_tables
+test_psf_snr_is_set_beside_the_subframe_selector - step 26.47, ADR 0042: replaced by test_every_common_measure_is_set_beside_image_analysis
+test_ratios_split_mono_and_color - step 26.47: ratios split by group too; replaced by test_ratios_split_group_and_kind
+test_the_altitude_is_set_beside_the_subframe_selector - step 26.47, ADR 0042: replaced by test_every_common_measure_is_set_beside_image_analysis
+test_the_script_reads_the_psf_snr_and_altitude_columns - step 26.47, ADR 0042: columns by name, not index; replaced by test_the_script_reads_the_columns_by_their_constants
+test_the_subframe_values_come_back_in_adu - step 26.47, ADR 0042: replaced by test_every_column_of_the_measurements_table_is_read_by_name
 test_the_coarse_plane_skips_the_kernels_zeros - 30/10/2026: wall-clock ratio flaky on the Windows runner (0.76 against 0.6); the time per frame is gated by the bench, step 26.57 (ADR 0042)

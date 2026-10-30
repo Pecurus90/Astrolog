@@ -239,59 +239,58 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   b/a 0,7, picco 100 rumori, su tutti i 24): FWHM da +0,2 a +0,7%, eccentricita' 0,710-0,716
   contro 0,714. Sui 4 a colori iniettate dopo VNG: provano il fit sul fondo vero, non VNG
   (quello lo misura la riga dei colori sotto, su stelle sintetiche).
-- **Contro i programmi di riferimento**: `python tools/confronto_misure.py CARTELLA` misura le
-  copie con measure, con `astap_cli -analyse 30` e col SubframeSelector di PixInsight senza <!-- software-ok -->
-  finestra, e stampa il nostro diviso il loro (minimo / mediana / massimo), mono e colori a
-  parte; i colori li passa prima al Debayer VNG di PixInsight col pattern Auto, come WBPP. Si <!-- software-ok -->
-  rilancia a ogni sottopasso di measure, e ogni misura che il SubframeSelector da' si confronta
-  con la sua (Marco, 27/10/2026). Siril no (Marco, 26/10/2026). <!-- software-ok -->
+- **Contro i programmi di riferimento**: il riferimento e' Image Analysis di PixInsight (ADR <!-- software-ok -->
+  0042; documentazione `doc/tools/ImageAnalysis`, 28/10/2026), al posto del SubframeSelector. <!-- software-ok -->
+  `python tools/confronto_misure.py CARTELLA --groups GRUPPI --out FILE` misura le copie con
+  measure, con `astap_cli -analyse 30` e con Image Analysis senza finestra, misure estese accese;
+  legge tutte le 57 colonne della sua tabella per nome (indefinite a 0, la maschera Flags dice
+  quali zeri sono veri) e stampa il nostro diviso il suo (frame, minimo / mediana / massimo) per
+  mono e colori e per gruppo A/B. I colori li passa prima al Debayer VNG col pattern Auto, come
+  WBPP: il Debayer scrive il rumore per canale che Image Analysis legge. Tempi a frame: i nostri <!-- software-ok -->
+  per stadio di `measure_frame`, i suoi con e senza le misure estese, un frame alla volta senza
+  thread per file, e il suo debayer a parte (`--no-times` li salta). Si rilancia a ogni
+  sottopasso di measure, e ogni misura che lui da' si confronta con la sua (Marco, 27/10 e
+  30/10/2026). Siril no (Marco, 26/10/2026). <!-- software-ok -->
 
-  **Scarti del passo 26.46** (29/10/2026; fondo, rumore, FWHM ed eccentricita' dal passo 26.45,
-  codice `d2a000e3`, che il 26.46 non tocca): 205 copie da 31 oggetti e 4
-  camere (Canon 700D escluso), gruppo A di sviluppo e B di verifica divisi per oggetto
-  (`groups.txt` della prova); qui i 164 frame nitidi (HFD sotto 5 px). AstroLog diviso
-  SubframeSelector, 10° percentile / mediana / 90° percentile; colori contro il suo valore
-  sull'intensita' (min + max) / 2 del Debayer VNG, come la passa WBPP. <!-- software-ok -->
+  **Primo giro contro Image Analysis** (passo 26.47, 30/10/2026, codice `a1cf1457`): le 205
+  copie del 26.46, nitidi e sfocati insieme; AstroLog diviso lui, mediana [minimo-massimo];
+  colori contro la sua misura sull'RGB del Debayer, come in WBPP.
 
-  | Misura | ATR2600M (10) | ATR2600M USB2 (69) | Poseidon-C PRO (80) | ASI2600MC Duo (5) | Perche' lo scarto |
-  |---|---|---|---|---|---|
-  | Fondo | 1,00 / 1,00 / 1,00 | 1,00 / 1,00 / 1,00 | 1,00 / 1,00 / 1,00 | 1,00 / 1,00 / 1,00 | Nessuno: `sep` toglie stelle e nebulosa, la sua mediana le porta, sul cielo coincidono |
-  | Rumore | 1,00 / 1,00 / 1,00 | 1,00 / 1,00 / 1,00 | 1,00 / 1,00 / 1,00 | 1,00 / 1,00 / 1,00 | Nessuno: lo stesso MRS (Starck e Murtagh 1998); a colori per piano come il Debayer |
-  | FWHM | 0,77 / 0,79 / 0,86 | 0,71 / 0,86 / 0,98 | 0,69 / 0,89 / 1,03 | 0,90 / 0,96 / 0,98 | Lui valuta la Moffat al centro del pixel, noi la integriamo sul pixel (ADR 0022): le stelle piccole gli escono larghe; una sintetica da 1,0 px integrata torna 1,00, ai centri 1,29; uguali sopra 4 px |
-  | Eccentricita' | 1,00 / 1,00 / 1,04 | 1,00 / 1,03 / 1,07 | 1,00 / 1,04 / 1,10 | 1,00 / 1,02 / 1,04 | Stessa definizione, sqrt(1 - (b/a)^2); sulle stelle piccole il fit integrato vede meglio l'asse corto |
-  | Stelle | 0,96 / 0,99 / 1,01 | 0,97 / 0,99 / 1,02 | 0,99 / 1,01 / 1,05 | 1,01 / 1,03 / 1,04 | Soglia 16,85 dalla sonda sintetica, strutture su 5 strati a trous. Sopra 1,03 i campi densi a colori (NGC 6888 Poseidon 1,04, IC 405 1,04): lui scarta le strutture con due massimi locali (doppie), noi le contiamo una (sopra, "Aperto: le stelle doppie"); M42 1,13, i nodi del nucleo |
-  | PSF SNR | 0,83 / 0,87 / 0,92 | 0,79 / 0,87 / 0,93 | 0,80 / 0,85 / 0,90 | 0,83 / 0,86 / 0,91 | Stessa formula (costante giusta dal 30/10); il flusso noi lo sommiamo nell'ellisse al decimo dei momenti della struttura, piu' stretta di quella della PSF fittata con cui somma lui (ImageWeighting par. 2.2). Il suo flusso non si rifa' meglio di 0,84-1,02 nemmeno col suo rilevatore e i suoi fit (sopra, "Limite del confronto") |
+  | Misura | Mono A (35) | Mono B (45) | Colori A (80) | Colori B (45) |
+  |---|---|---|---|---|
+  | Stelle | 0,99 [0,96-1,03] | 1,00 [0,96-1,20] | 1,02 [0,99-8,10] | 1,04 [0,99-5,27] |
+  | FWHM | 0,81 [0,65-1,00] | 0,86 [0,67-1,00] | 0,96 [0,63-1,11] | 1,02 [0,63-1,14] |
+  | Eccentricita' | 1,02 [0,95-1,11] | 1,03 [0,98-1,07] | 1,03 [0,97-1,13] | 1,02 [0,98-1,19] |
+  | Fondo / mediana | 1,00 [0,99-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,00] |
+  | Rumore | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] |
+  | PSF SNR | 0,87 [0,56-0,94] | 0,87 [0,58-1,00] | 17,7 [14,3-35,0] | 18,1 [16,0-28,2] |
+  | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
+  | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
 
-  Per oggetto (mediane, stesso verso; il rumore e' 1,00 ovunque). Il PSF SNR sta fra 0,79 e
-  0,94 su ogni oggetto tranne la cometa; le stelle entro 0,97-1,03 tranne dove scritto. Gli
-  oggetti estesi del passo 26.46 e i piu' lontani:
+  Gli scarti aperti hanno ognuno il suo passo: stelle 26.48, FWHM ed eccentricita' 26.49, PSF
+  SNR 26.50, colori 26.56 (a colori lui somma il flusso PSF per canale dai metadati del Debayer,
+  noi sull'intensita'). Stelle a colori oltre 1,10: 36 frame, 33 sfocati (HFD da 5 px); gli
+  altri tre fra 1,11 e 1,12 (IC 443, NGC 7380), campi densi di nebulosa.
 
-  | Oggetto | Camera | Gruppo | Frame | Stelle | PSF SNR | FWHM |
-  |---|---|---|---|---|---|---|
-  | C/2025 A6 Lemmon (cometa) | ATR2600M USB2 | A | 4 | 0,98 | 0,61 | 0,99 |
-  | IC 405 | Poseidon-C PRO | B | 9 | 1,04 | 0,83 | 1,01 |
-  | M31 | Poseidon-C PRO | B | 5 | 1,01 | 0,93 | 0,76 |
-  | M42 | ATR2600M USB2 | B | 5 | 1,13 | 0,91 | 0,95 |
-  | M51 | ATR2600M USB2 | B | 5 | 1,01 | 0,85 | 0,79 |
-  | NGC 1333 | Poseidon-C PRO | A | 1 | 1,00 | 0,81 | 1,00 |
-  | NGC 6888 | Poseidon-C PRO | A | 5 | 1,04 | 0,89 | 0,67 |
-  | NGC 7380 | Poseidon-C PRO | B | 5 | 1,03 | 0,79 | 1,06 |
+  Secondi a frame, mediana, stessa macchina, un frame alla volta:
 
-  Spiegati con la convenzione: fondo, rumore, FWHM (sotto 0,8 le piu' piccole), eccentricita'.
-  Aperti: stelle sopra 1,03 nei campi densi (doppie); PSF SNR 0,79-0,94, cometa e M51 (sopra).
-  41 frame sfocati (HFD da 5 px): stelle 1,07 / 1,36 / 3,74, PSF SNR 0,82 / 0,90 / 2,13 (Marco, 28/10/2026).
+  | | Mono | Colori |
+  |---|---|---|
+  | AstroLog, totale | 5,69 | 14,01 |
+  | di cui debayer VNG | - | 4,43 |
+  | di cui rumore MRS (e per piano colore) | 1,67 | 1,93 + 1,33 |
+  | di cui stelle e flusso PSF | 1,44 | 1,56 |
+  | di cui forma | 1,02 | 1,80 |
+  | Image Analysis, misure estese | 3,57 | 2,46 + 1,78 di debayer |
+  | Image Analysis, senza estese | 2,42 | 1,14 + 1,78 di debayer |
 
-  Dal confronto del 27/10 sulle 24 copie, che il 26.45 non tocca:
-
-  | Misura | Mono (20) | Colori (4) | Perche' lo scarto |
-  |---|---|---|---|
-  | HFD / FWHM SubframeSelector | 1,15 / 1,36 / 1,46 | 1,25 / 1,30 / 1,72 | Grandezze diverse: sulla Moffat HFD/FWHM e' 1,36 a beta 2,5 e 1,17 a beta 4 (dalla formula del flusso racchiuso); la gaussiana da' 1 |
-  | HFD / HFD ASTAP | 0,71 / 0,83 / 0,94 | 0,78 / 0,83 / 0,89 | ASTAP sta il 6-41% sopra; ADR 0022 lo misurava +8…27% sopra la verita' (il raggio medio). Colori: ASTAP misura il mosaico grezzo |
-  | Stelle / stelle ASTAP | 0,94 / 6,20 / 27,79 | 6,76 / 14,47 / 31,56 | ASTAP conta da SNR 30 sul grezzo, noi come il SubframeSelector sull'intensita' a piena risoluzione |
-  | Altezza / altezza SubframeSelector | 1,00 / 1,00 / 1,01 | 1,00 / 1,00 / 1,00 | Dal puntamento della scheda, come lo stadio `sky` senza soluzione; scarto da -0,25 a +0,30 gradi sui 22 col sito. Ne' l'inizio posa ne' l'altezza geometrica lo spiegano; il perche' non e' misurato. 0,3 gradi sopra i 30 gradi sono meno dell'1% di massa d'aria |
-
-  ASTAP non da' fondo ne' rumore. Il SubframeSelector non da' tetto, sature, gradiente, tilt,
-  curvatura, secondi d'arco ne' direzione sul cielo.
+  Perche' degli scarti, dal 26.46 contro il SubframeSelector (tabelle per camera e oggetto in <!-- software-ok -->
+  questo file al commit `9add5161`): FWHM, lui valuta la Moffat al centro del pixel, noi la
+  integriamo (le piccole gli escono larghe, uguali sopra 4 px); PSF SNR, noi sommiamo
+  nell'ellisse dei momenti, piu' stretta della sua fittata (ImageWeighting par. 2.2; cometa
+  0,61); stelle sopra 1,03 nei campi densi, le doppie. HFD / FWHM non e' uno scarto: sulla
+  Moffat vale 1,36 a beta 2,5 e 1,17 a beta 4. HFD / HFD ASTAP, mediane 0,83-0,92 (ADR 0022 lo
+  misurava +8…27% sopra la verita'); le sue stelle contano da SNR 30 sul grezzo: 0,9-27 volte.
 - **Le misure nuove sul vero** (27/10/2026, 24 copie; dal 29/10 il tetto e' il fondo scala,
   ADR 0041, e il Canon dice 65535 e 0 sature): tetto 65535 sui 22 ATR2600M e 61208 sui
   due Canon; sature da 6 a 454 per frame. Gradiente da 2,6 a 45,3% (il 23, nebulosa), il lato
