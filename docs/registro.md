@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 254; senza fonte: 1.
-Fonti: C norma: 123; U usanza: 2; D metodo: 17; M misura: 18; P decisione: 35; T tecnico: 62.
+Valori: 258; senza fonte: 1.
+Fonti: C norma: 122; U usanza: 2; D metodo: 19; M misura: 21; P decisione: 35; T tecnico: 62.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -258,18 +258,22 @@ Fonti: C norma: 123; U usanza: 2; D metodo: 17; M misura: 18; P decisione: 35; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| STRUCTURE_SIGMA | `3.0` | C Starck and Murtagh 1998, PASP 110:193: significance at 3 sigma, as noise.py's support |
 | STRUCTURE_LAYERS | `5` | C StarDetector structureLayers, SubframeSelector default; software-ok |
+| STRUCTURE_REACH | `2 ** (STRUCTURE_LAYERS - 1)` | D kernel radius: 2^L + 1 px across |
+| STRUCTURE_CUT | `0.01` | M plan 26.48.1: sigma doubling per layer, 1.3 / 2.5 / 5 / 10 px |
+| STRUCTURE_BLUR | `STRUCTURE_REACH / np.sqrt(-2 * np.log(STRUCTURE_CUT))` | D Gaussian at the cut |
+| STRUCTURE_SIGMA | `2.12` | M plan 26.48.1: 2.10-2.16 MRS; crowded fields up to 2.44, plan 26.48.2 |
+| MIN_PIXELS | `3` | M plan 26.48.1: his smallest star 3 px in 185 frames, more in the rest |
 | MAX_DISTORTION | `0.6` | C StarDetector maxDistortion, SubframeSelector default; software-ok |
 | MIN_COVERAGE | `(1 - MAX_DISTORTION) * np.pi / 4` | D a disc fills pi / 4 of its square |
-| APERTURE_SNR | `16.85` | M plan 26.45: half its stars found there, median of five FWHM |
+| APERTURE_SNR | `16.5` | M plan 26.48.1: 16.2-16.7 per profile, his structures and ring |
 | APERTURE_PX | `2` | M plan 26.45: the aperture whose threshold does not follow the FWHM |
 | PEAK_RADIUS | `2` | C PJSR StarDetector defaults; software-ok; C StarDetector localDetectionFilterRadius default; software-ok |
 | BRIGHT_LEVEL | `0.75` | C StarDetector localMaximaDetectionLimit default; software-ok |
-| RING_GROW | `4` | M plan 26.48: 7 frames of 205 off 0.95-1.05, 22 with his 1 and 6 |
-| RING_MARGIN | `16` | M plan 26.48: as RING_GROW |
+| RING_MARGIN | `6` | M plan 26.48: as RING_GROW |
 | MIN_RING | `16` | T |
 | PREFILTER_SNR | `8.0` | M plan 26.48: no star of his under it |
+| FLUX_GROW | `3` | M plan 26.48.1: flux within 5% of the truth; 2 px 10% short at sigma 3.5 |
 | _EIGHT | `np.ones((3, 3), dtype=bool)` | D 8-connected: diagonal pixels of a star join it |
 
 ### pipeline/field.py

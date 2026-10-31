@@ -1,10 +1,19 @@
 """Star detection as Image Analysis counts (plans 25.15, 26.48, misure.md): a structure on the
 median copy, one local maximum, its best 2x2 over APERTURE_SNR of its local background."""
 
+from typing import cast
+
 import numpy as np
 import pytest
+from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
-from astrolog.pipeline.detect import APERTURE_SNR, BRIGHT_LEVEL, STRUCTURE_SIGMA, detect
+from astrolog.pipeline.detect import (
+    APERTURE_SNR,
+    BRIGHT_LEVEL,
+    STRUCTURE_SIGMA,
+    detect,
+    structure_map,
+)
 from astrolog.pipeline.stars import measure_frame, median3x3
 
 _SIDE = 300
@@ -36,6 +45,43 @@ def _aperture_snr(star: np.ndarray) -> float:
 
 def _found(residual: np.ndarray) -> int:
     return len(detect(residual, median3x3(residual), _NOISE).x)
+
+
+@pytest.mark.parametrize(("sigma", "area"), [(0.8, 12), (1.5, 40), (3.0, 112), (5.0, 216)])
+def test_a_bright_star_s_structure_is_as_wide_as_his(sigma: float, area: int) -> None:
+    """Far over the threshold the structure stops where the star meets its blur: his map's areas,
+    StarDetector.structureMap on Gaussians of this sigma at 3000 noise units (plan 26.48.1)."""
+    rows, cols = np.mgrid[0:256, 0:256] - 127.5
+    star = (1e6 * np.exp(-(rows**2 + cols**2) / (2 * sigma**2))).astype(np.float32)
+    found = ndimage.label(structure_map(median3x3(star), _NOISE), np.ones((3, 3)))
+    labels, _ = cast(tuple[np.ndarray, int], found)  # stubs say int | tuple
+    assert int((labels == labels[128, 128]).sum()) == area
+
+
+def test_a_close_neighbour_does_not_take_a_star_s_own_pixels_for_its_flux() -> None:
+    """Grown FLUX_GROW px for the flux ellipse, a grown pixel goes to the nearest star, not the
+    higher label: two equal stars 8 px apart keep equal fluxes (the higher label took 4% more)."""
+    pair = _gauss(150, 146, 1.2, 20000.0) + _gauss(150, 154, 1.2, 20000.0)
+    found = detect(pair, median3x3(pair), _NOISE)
+    assert len(found.x) == 2
+    assert float(found.flux[0]) == pytest.approx(float(found.flux[1]), rel=0.02)
+
+
+def test_a_one_pixel_gap_inside_a_structure_is_closed() -> None:
+    """His map is closed 3x3: a pixel under the threshold amid structure pixels belongs to it."""
+    flat = np.zeros((64, 64), dtype=np.float32)
+    flat[24:40, 24:40] = 100 * _NOISE
+    flat[32, 32] = 0.0
+    assert structure_map(flat, _NOISE)[32, 32]
+
+
+def test_a_structure_of_two_pixels_is_no_star() -> None:
+    """His smallest star covers 3 pixels on 205 frames, minStructureSize off: a 2 x 3 block leaves
+    two pixels on the median copy, whatever its light."""
+    residual = _sky(11)
+    residual[150:152, 149:152] += 300 * _NOISE
+    assert int(structure_map(median3x3(residual), _NOISE)[148:154, 147:154].sum()) == 2
+    assert _found(residual) == 0
 
 
 def test_a_star_over_the_aperture_threshold_is_found_one_under_is_not() -> None:
@@ -116,11 +162,10 @@ def test_the_position_is_the_barycentre() -> None:
 
 
 def test_a_dark_pixel_among_bright_ones_has_a_position() -> None:
-    """Five bright of its eight: only its median is over the threshold, its raw pixel is dark;
+    """A dark raw pixel ringed by bright ones: its median is bright, its raw value under zero;
     barycentre weights of 0 gave NaN (frame 05 of the 24)."""
     residual = np.zeros((_SIDE, _SIDE), dtype=np.float32)
-    for y, x in ((99, 99), (99, 100), (99, 101), (101, 99), (101, 101)):
-        residual[y, x] = 100 * _NOISE
+    residual[99:102, 99:102] = 100 * _NOISE
     residual[100, 100] = -_NOISE
     found = detect(residual, median3x3(residual), _NOISE)
     assert len(found.x) == 1
@@ -188,10 +233,10 @@ def test_one_sensor_pixel_at_the_ceiling_makes_a_star_saturated() -> None:
     assert found.saturated.tolist() == [True]
 
 
-@pytest.mark.parametrize(("snr", "most"), [(12, 0), (14, 2)])
+@pytest.mark.parametrize(("snr", "most"), [(12, 0), (14, 3)])
 def test_the_frame_counts_the_stars_the_subframeselector_would(snr: int, most: int) -> None:
-    """36 stars: at a 2x2 SNR of 14 sep at 5 sigma counted 31. Under 16.85 none, but at 14 noise
-    lifts a few to it: his tail is wider than ours (26.45 synthetics), so up to 2. software-ok"""
+    """36 stars: at a 2x2 SNR of 14 sep at 5 sigma counted 31. Under 16.5 none, but at 14 noise
+    lifts a few to it: his tail is wider than ours (26.45 synthetics), so up to 3. software-ok"""
     rng = np.random.default_rng(2)
     flux = snr / _aperture_snr(_gauss(150, 150, 2.0, 1.0))
     data = np.full((_SIDE, _SIDE), 1000.0, dtype=np.float32)

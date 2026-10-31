@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
-from astrolog.pipeline.noise import UNIT_SIGMAS, coarse, mrs_noise, starlet
+from astrolog.pipeline.noise import UNIT_SIGMAS, mrs_noise, starlet
 
 _SIDE = 512
 
@@ -48,7 +48,7 @@ def _dense_coarse(image: np.ndarray, layers: int) -> np.ndarray:
 @pytest.mark.parametrize("shape", [(1024, 1536), (40, 37), (10, 9)])
 def test_the_coarse_plane_is_the_textbook_one(shape: tuple[int, int]) -> None:
     image = np.random.default_rng(3).normal(0, 1, shape).astype(np.float32)
-    assert np.allclose(coarse(image, 5), _dense_coarse(image, 5), atol=1e-6)
+    assert np.allclose(starlet(image, 5)[1], _dense_coarse(image, 5), atol=1e-6)
 
 
 def test_pure_gaussian_noise_reads_its_sigma() -> None:

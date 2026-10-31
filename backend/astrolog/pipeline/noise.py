@@ -26,14 +26,6 @@ def starlet(image: np.ndarray, layers: int) -> tuple[list[np.ndarray], np.ndarra
     return planes, smooth
 
 
-def coarse(image: np.ndarray, layers: int) -> np.ndarray:
-    """The starlet's last smooth plane c_layers alone: no detail plane kept, one frame of memory."""
-    smooth = np.asarray(image, dtype=np.float32)
-    for j in range(layers):
-        smooth = _smoother(smooth, j)
-    return smooth
-
-
 def _smoother(smooth: np.ndarray, j: int) -> np.ndarray:
     return _taps(_taps(smooth, 2**j, 0), 2**j, 1)
 
@@ -64,15 +56,6 @@ def _unit_sigmas(layers: int) -> np.ndarray:
     impulse[side // 2, side // 2] = 1
     planes, _ = starlet(impulse, layers)
     return np.array([float(np.sqrt(np.sum(p.astype(np.float64) ** 2))) for p in planes])
-
-
-def detail_unit_sigma(layers: int) -> float:
-    """Sigma of the first `layers` layers summed, I - c_layers, for unit Gaussian noise."""
-    side = 4 * 2**layers + 1
-    impulse = np.zeros((side, side), dtype=np.float32)
-    impulse[side // 2, side // 2] = 1
-    detail = impulse - coarse(impulse, layers)
-    return float(np.sqrt(np.sum(detail.astype(np.float64) ** 2)))
 
 
 UNIT_SIGMAS = _unit_sigmas(LAYERS)

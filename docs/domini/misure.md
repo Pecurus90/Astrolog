@@ -72,21 +72,31 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   (media dei due), B a mezza risoluzione, come lo stima il Debayer, poi (min + max) / 2 come il
   SubframeSelector. Non si confronta con la mono. Mai sotto un gradino da 1 ADU, 1/sqrt(12).
   Costa da 1,3 a 3,2 s a frame (dal 30/10 i tap del B3 senza gli zeri: 1,4 s su 26 MP).
-- **Stelle** (`pipeline/detect.py`, passi 25.15, 26.46, 26.48): **quelle che conta Image
+- **Stelle** (`pipeline/detect.py`, passi 25.15, 26.46, 26.48, 26.48.1): **quelle che conta Image
   Analysis** (Marco 27/10 e 30/10/2026, ADR 0042): lo StarDetector nativo PJSR ai default ridà
   le sue Stars in 203 frame su 205; regole dalla documentazione PJSR
-  (`doc/pjsr/objects/StarDetector`), provate a scatola chiusa, mai sul sorgente PCL. Struttura:
-  i pixel dove I - c5 della copia mediana 3x3 (scale fino a 32 px, `structureLayers` 5)
-  supera 3 volte la sua dispersione (Starck e Murtagh), uniti in 8 direzioni; sotto (1 - 0,6)
-  pi / 4 del quadrato circoscritto (`maxDistortion` 0,6) non e' una stella. Stella: la struttura il cui miglior quadrato 2x2 sul residuo grezzo, meno due volte il
-  fondo locale b, supera 16,85 volte la dispersione locale n ((s - b) / n, la `sensitivity`). b
-  e n: mediana e 1,4826 MAD dei pixel del residuo nel riquadro della struttura allargato di 16
-  px, fuori da ogni struttura dilatata di 4; sotto 16 pixel liberi b = 0 e n il rumore del frame;
-  n mai sotto il gradino di 1 ADU. Sonda a meta' rumore: lui perde le stelle dove il rumore
-  raddoppia; un nodo su una nebulosa larga si misura sulla nebulosa (M42). **La cornice e' un
-  compenso misurato**: attorno alle SUE strutture la sonda dice dilatata 1 e allargata 6, ma con
-  le nostre (I - c5, non le sue) la cornice larga da' 7 frame fuori banda contro 22. Torna alla
-  sua quando l'operatore delle strutture sara' il suo (passo 26.48.1). Una struttura con piu' di
+  (`doc/pjsr/objects/StarDetector`), provate a scatola chiusa, mai sul sorgente PCL. **Struttura**
+  (26.48.1, sonde sulla sua `structureMap`; la doc: non una wavelet): copia mediana 3x3 meno la sua
+  gaussiana, nucleo 2^L + 1 px troncato all'1% (sigma 2^(L-1) / sqrt(2 ln 100), 5,27 px a L 5),
+  pixel sopra 2,12 volte il rumore, chiusi 3x3, 8 direzioni. Su gobbe a verita' nota l'area satura
+  (12 / 40 / 112 / 216 px a sigma 0,8 / 1,5 / 3 / 5) e' di questa gaussiana, sigma raddoppia per
+  strato (1,3 / 2,5 / 5 / 10 px, L 3-6), la soglia segue il rumore (non cielo, piedistallo, satura,
+  galassia); mappa uguale alla sua, J 0,98-0,9999 su 12 frame (I - c5 a 3 sigma: 0,57-0,86).
+  **Aperto (26.48.2)**: 2,12 nei campi radi (2,10-2,16, 14 mono); negli affollati sale (NGC 6888,
+  WR 134, SH2-185 2,32-2,44; NGC 6888 Poseidon 3,84, NGC 7380 2,54): un suo rumore non MRS; ~30
+  stimatori esclusi (MRS 1-5 strati, k-sigma e MAD su strati e copia mediana, unilaterali, fuori
+  mappa: il migliore CV 0,029); con la sua soglia NGC 6888 Poseidon n.0 da 1,07 a 1,007. Sotto 3 px
+  nessuna sua stella (205 frame, `minStructureSize` spento); sotto (1 - 0,6) pi / 4 del quadrato
+  circoscritto (`maxDistortion` 0,6) non e' una stella. Stella: miglior 2x2 sul residuo meno 2 b
+  sopra 16,5 n ((s - b) / n, la `sensitivity`); b e n mediana e 1,4826 MAD del residuo nel
+  riquadro allargato di 6 px fuori dalle strutture dilatate di 1 (la sua cornice, sonde 26.48;
+  sparito il compenso 4 / 16); sotto 16 pixel liberi b = 0 e n il rumore; n mai sotto 1 ADU. Lui
+  perde le stelle dove il rumore raddoppia; un nodo su nebulosa si misura sulla nebulosa (M42).
+  **Una soglia sola**: `peakResponse` 1 e `brightThreshold` 1 danno gli stessi conteggi (LDN 1400
+  n.0 5779, default 3919) e al default cadono anche gaussiane perfette fra la soglia e 2,4-2,9
+  volte quella: sulle deboli passa solo lo scavalco. Il 16,5: meta' trovate su profili noti
+  (gaussiane sigma 1-4, Moffat: 16,2-16,7); dischi e Moffat beta 4 +10% / -13% con ogni nucleo
+  provato (2x2, 3x3, gaussiane 0,6-1,3). Una struttura con piu' di
   un massimo locale 5x5 sul residuo, fra i suoi pixel, e' una sorgente multipla e si scarta
   (`allowClusteredSources` spento, `localDetectionFilterRadius` 2; un plateau conta uno), salvo
   che un pixel del piano misurato superi 0,75 del tetto (`localMaximaDetectionLimit`; il tetto di
@@ -94,20 +104,14 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   finche' `DATAMAX` manca). Sonda NGC 7380 n.3: noi 1849, lui 351, lui con le multiple 1982.
   Strutture e prefiltro sul rumore MRS (sintetico da 40 mila stelle: la MAD 19,8, il vero 10).
   Prefiltro di velocita': 2x2 sotto 8 volte quel rumore non arriva al conto locale (nessuna sua
-  stella sotto, sul banco). Il 16,85 e il 2x2: sintetici a verita' nota (400 stelle, FWHM
-  1,5-6: meta' trovate a 18,2 / 16,9 / 16,1 / 15,9 / 18,8; 1 px varia 1,48 volte, 3 px 1,64),
-  non i nostri frame (26.45, Marco 28/10). **Banco dei 205** (codice del 26.48): stelle / sue,
-  mediane colori A 1,006, B 1,006, mono A 0,986, B 0,987; fuori 0,95-1,05 7 frame su 205 (prima 49), tutti a colori:
-  IC 405 x00 e x04, NGC 1333 x03, NGC 6888 Poseidon n.0/2/3 (fino a 1,10), NGC 7023 n.4 (1,20);
-  i mono tutti in banda. Al limite della soglia la nostra transizione e' piu' ripida della sua:
-  sui sintetici a verita' nota del 26.45 (80 frame, FWHM 1,5-6) contiamo 0,967 volte lui, meno
-  di lui appena sotto la soglia (FWHM 4: 10 contro 33 su 400), di piu' appena sopra; una stella
-  debole sotto la soglia non conta (36 a SNR 12: 0 su 20 semi), a SNR 14 il rumore ne porta su
-  da 0 a 2 su 36. **Aperto (passo 26.48.1)**: l'operatore delle sue strutture; sulle isolate
-  somiglia a I - c3 a 2,1 sigma, con luce diffusa si allarga (escluse wavelet c2-c6, MMT,
-  aperture, anelli, isteresi, accrescimento, unione multiscala). Tempo: il conto locale e' un ciclo
-  per candidato, da 0,3 s (mono, 2400 stelle) a 2,8 s (45 mila) a frame, e il rilevamento intero
-  passa da 1,5 a 2,1 s e da 4,3 a 7,6 s; il 26.57 lo accorcia. HFD e forma restano su `sep`.
+  stella sotto, sul banco). Il 2x2: sintetici del 26.45 (1 px varia 1,48 volte, 3 px 1,64), non i
+  nostri frame (Marco 28/10). **Banco dei 205** (26.48.1): stelle / sue, colori A 1,014, B 0,998,
+  mono A 1,006, B 0,999; **mono tutti in 0,95-1,05** senza compenso; fuori 9, a colori: NGC 6888
+  Poseidon n.0/2/3 1,07-1,08 (soglia di mappa, 26.48.2), NGC 7380 Poseidon n.1/2/3 e x07/x08
+  0,91-0,95 (il nostro piano debayerizzato spezza strutture in piu' massimi, il suo no), NGC 7023
+  n.4 1,07 (249 stelle). A SNR 12 nessuna di 36 (20 semi), a SNR 14 il rumore ne porta su fino a
+  3. Conto locale da 0,3 s (2400 stelle) a 2,8 s (45 mila) a frame; banco 23,9 s mediani a frame
+  (26.48: 23,8). HFD e forma restano su `sep`.
 - **Rilevamenti per la misura**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con <!-- software-ok -->
   mediana 3x3 esatta, senza deblending (ripartiva a caso i pixel contesi: stesso frame, tilt 10,7
   / 9,1 / 8,4%); i suoi momenti sono la scala di bordo, vicine e finestre.
@@ -161,23 +165,20 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   28/10/2026). Il flusso di una stella (`pipeline/psf_flux.py`, passo 26.45), come documenta
   ImageWeighting par. 2.2: i pixel veri nell'ellisse dove la PSF scende a un decimo del picco,
   meno il fondo locale. Lui l'ellisse la prende dal fit; noi dai momenti secondi della struttura
-  sulla copia mediana (A, B, THETA di SExtractor, Bertin e Arnouts 1996), raggio sqrt(2 ln 10)
-  come per una gaussiana, sommata con `sep.sum_ellipse`; il fondo e' la mediana di un anello di
-  24 px appena fuori la struttura (BACKPHOTO_THICK di SExtractor). Nessuna costante. Strutture a
-  5 strati (passo 26.46), frame nitidi (HFD sotto 5 px): mediana 0,88 mono e 0,86 colori sul gruppo
-  A (sviluppo), 0,87 e 0,83 sul B (verifica); a 3 sigma della copia mediana 0,94 / 0,95 / 0,96 /
-  0,91 (con la costante giusta). Cala del 6-9% (struttura e ellisse dei momenti piu' strette), ma
-  nessun frame passa 1,00 e gli oggetti estesi rientrano: M42 da 0,56-3,72 a 0,77-0,97, M31 da
-  1,14-1,27 a 0,88-0,94, M33 n.1 da 1,35 a 0,88 (Marco, 29/10/2026: la soglia del passo, mediane entro 0,02,
-  non regge). Una Moffat beta 4 torna 1,10 / 1,04 / 0,99 della quota al decimo a FWHM 2 / 4 / 6 px.
+  dilatata di 3 px (`FLUX_GROW`, 26.48.1: la sua struttura taglia le ali; su gaussiane a verita'
+  nota sigma 1,2-3,5 il flusso entro il 5% del vero, 2 px 10% sotto; un pixel cresciuto va alla
+  stella piu' vicina) sulla copia mediana (A, B, THETA di SExtractor, Bertin e Arnouts 1996),
+  raggio sqrt(2 ln 10) come per una gaussiana, `sep.sum_ellipse`; fondo: mediana di un anello di 24
+  px fuori la struttura (BACKPHOTO_THICK di SExtractor). Sugli 80 mono, tutti i frame, mediana 1,01
+  del suo (con le strutture I - c5 0,84; al 26.46, frame nitidi, 0,88 / 0,87), dieci percentili
+  0,89 / 1,09; M42 0,84-0,98, M51 0,96-1,14 (prima 0,53-0,92), LBN 576 n.0/2, NGC 6888 n.0, VdB 152
+  n.0 1,10-1,12, cometa 0,46-0,82: il 26.50 riparte da qui (Marco 29/10: mediane entro 0,02 non
+  bastano). Una Moffat beta 4 torna 1,12 / 1,07 / 1,02 della quota al decimo a FWHM 2 / 4 / 6 px.
   Struttura col centro fuori dal proprio decimo: flusso 0 (Canon 15: luce estesa, 83% del nostro F).
-  Provate e scartate: PSF Moffat beta 4 per zona (0,12-0,48 volte il suo); regione dentro la
-  struttura (0,88); Chauvenet dei flussi (ImageWeighting par. 2.2.1); sature tolte (0,2); tetto di
-  32 px, scale piccole, diametro a meta' picco, fit sui candidati: ognuna sistema un caso e ne rompe
-  un altro. Al 26.46: strutture a 3 e 4 strati; momenti adattivi (Bernstein e Jarvis 2002; Shark
-  0,98 a 0,78); flusso nel decimo di una Moffat beta 4 fittata a stella, che coincide col suo fit
-  (ampiezza 87.826 contro 87.816, assi 1,00) ma porta le mediane a 0,75-0,91, 35 frame fuori, e
-  diverge sui nuclei. **Limite del confronto**: il suo rilevatore (StarDetector PJSR, stessi
+  Scartate: Moffat beta 4 per zona (0,12-0,48); regione dentro la struttura; Chauvenet (par.
+  2.2.1); sature tolte (0,2); tetto 32 px, scale piccole, diametro a meta' picco, fit sui
+  candidati; strutture a 3-4 strati, momenti adattivi (Bernstein e Jarvis 2002), Moffat fittata a
+  stella (come il suo fit, ma mediane 0,75-0,91 e 35 frame fuori). **Limite del confronto**: il suo rilevatore (StarDetector PJSR, stessi
   conteggi: 1028, 278, 741, 1200) coi suoi fit da' 0,84-1,02 del flusso PSF che scrive (colonna 21,
   formula invertita entro l'1,5%), 0,71-1,04 nel PSF SNR: il resto non e' pubblicato (non fondo,
   non modello). **Scarto aperto**: cometa C/2025 A6 0,56-0,65 su tre frame (lui fitta nucleo e
@@ -271,7 +272,7 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
   | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
 
-  Scarti aperti, ognuno col suo passo: stelle 26.48 (fatto, sopra), FWHM ed eccentricita' 26.49,
+  Scarti aperti, ognuno col suo passo: stelle 26.48.2 (soglia di mappa negli affollati, sopra), FWHM ed eccentricita' 26.49,
   PSF SNR 26.50, colori 26.56 (lui somma il flusso PSF per canale, noi sull'intensita').
 
   Secondi a frame, mediana, stessa macchina, un frame alla volta:

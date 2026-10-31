@@ -8,22 +8,27 @@ import numpy as np
 from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
 from ..units import sigma_from_mad
-from .noise import NOISE_FLOOR_ADU, coarse, detail_unit_sigma
+from .noise import NOISE_FLOOR_ADU
 from .psf_flux import tenth_flux
 
-# Structure pixels: the median copy's first starlet layers, I - c_5, over this many of their sigma.
-# [C Starck and Murtagh 1998, PASP 110:193: significance at 3 sigma, as noise.py's support]
-STRUCTURE_SIGMA = 3.0
 # Scales up to 2^5 = 32 px: a nebula core or a coma wider than that is no structure of a star.
 STRUCTURE_LAYERS = 5  # [C StarDetector structureLayers, SubframeSelector default; software-ok]
-STRUCTURE_UNIT = detail_unit_sigma(STRUCTURE_LAYERS)
+# Structure: median copy less its Gaussian blur, kernel 2^L + 1 px cut at 1% of its peak (sigma
+# 5.27 px at 5 layers); his map's saturated areas, layers 3 to 6 (misure.md). software-ok
+STRUCTURE_REACH = 2 ** (STRUCTURE_LAYERS - 1)  # [D kernel radius: 2^L + 1 px across]
+STRUCTURE_CUT = 0.01  # [M plan 26.48.1: sigma doubling per layer, 1.3 / 2.5 / 5 / 10 px]
+STRUCTURE_BLUR = STRUCTURE_REACH / np.sqrt(-2 * np.log(STRUCTURE_CUT))  # [D Gaussian at the cut]
+# Pixels over this many frame sigmas, closed 3x3: his map on 21 frames, sparse fields. software-ok
+STRUCTURE_SIGMA = 2.12  # [M plan 26.48.1: 2.10-2.16 MRS; crowded fields up to 2.44, plan 26.48.2]
+# No star of his on fewer pixels, 205 frames, minStructureSize off. software-ok
+MIN_PIXELS = 3  # [M plan 26.48.1: his smallest star 3 px in 185 frames, more in the rest]
 # A star covers over (1 - maxDistortion) of a disc's pi / 4 of its square: his cut at b/a 0.3-0.4
 # (misure.md, 14 synthetic frames) agrees; 0.6 of the square would drop b/a under 0.76.
 MAX_DISTORTION = 0.6  # [C StarDetector maxDistortion, SubframeSelector default; software-ok]
 MIN_COVERAGE = (1 - MAX_DISTORTION) * np.pi / 4  # [D a disc fills pi / 4 of its square]
-# Star: best 2x2 sum on the raw residual over the noise of 4 pixels, the SubframeSelector's own
-# threshold on synthetic frames of known truth, FWHM 1.5-6 px (misure.md); software-ok
-APERTURE_SNR = 16.85  # [M plan 26.45: half its stars found there, median of five FWHM]
+# Star: best 2x2 sum on the raw residual over the noise of 4 pixels, its half-found amplitude on
+# synthetic stars of known profile, Gaussian sigma 1-4 and Moffat (misure.md); software-ok
+APERTURE_SNR = 16.5  # [M plan 26.48.1: 16.2-16.7 per profile, his structures and ring]
 # Its threshold on the synthetic frames holds within 1.18x over FWHM 1.5-6; 1 px 1.48x, 3 px 1.64x.
 APERTURE_PX = 2  # [M plan 26.45: the aperture whose threshold does not follow the FWHM]
 # Saturated: one sensor pixel at the ceiling. [C ASTAP plot_star: a pixel at data_max]
@@ -33,12 +38,14 @@ CLIPPED_PIXELS = 1
 PEAK_RADIUS = 2  # [C StarDetector localDetectionFilterRadius default; software-ok]
 BRIGHT_LEVEL = 0.75  # [C StarDetector localMaximaDetectionLimit default; software-ok]
 # (2x2 - 2 b) / n, b and n median and MAD of the box grown by RING_MARGIN less every structure
-# grown by RING_GROW (PJSR sensitivity). His ring is 1 and 6, round structures not ours yet.
-RING_GROW = 4  # [M plan 26.48: 7 frames of 205 off 0.95-1.05, 22 with his 1 and 6]
-RING_MARGIN = 16  # [M plan 26.48: as RING_GROW]
+# grown by RING_GROW (PJSR sensitivity), probed around his structures. software-ok
+RING_GROW = 1  # [M plan 26.48: tile and ring probes on his structures]
+RING_MARGIN = 6  # [M plan 26.48: as RING_GROW]
 MIN_RING = 16  # [T] fewer free sky pixels: the frame's noise, the sky at zero
 # Speed: candidates under it never reach the local test. [M plan 26.48: no star of his under it]
 PREFILTER_SNR = 8.0
+# Moments of the flux ellipse on the star grown by this: Gaussian sigma 1.2-3.5, bright and faint.
+FLUX_GROW = 3  # [M plan 26.48.1: flux within 5% of the truth; 2 px 10% short at sigma 3.5]
 _EIGHT = np.ones((3, 3), dtype=bool)  # [D 8-connected: diagonal pixels of a star join it]
 
 
@@ -59,9 +66,7 @@ def detect(
 ) -> Detections:
     """`residual` less sky, `filtered` its 3x3 median, `noise` MRS; `clip` sensor pixels and their
     ceiling, `level` measured plane and ceiling (BRIGHT_LEVEL). One star per structure."""
-    detail = filtered - coarse(filtered, STRUCTURE_LAYERS)
-    found = ndimage.label(detail > STRUCTURE_SIGMA * STRUCTURE_UNIT * noise, structure=_EIGHT)
-    del detail
+    found = ndimage.label(structure_map(filtered, noise), structure=_EIGHT)
     labels, count = cast(tuple[np.ndarray, int], found)  # stubs say int | tuple
     # Structure pixels only: ndimage's per-label max and centre sweep the frame, 1.5 s at 26 MP.
     rows, cols = np.nonzero(labels)
@@ -71,6 +76,7 @@ def detect(
     best = np.full(count + 1, -np.inf)
     np.maximum.at(best, owner, box[rows, cols])
     star = (best >= PREFILTER_SNR * noise) & (_coverage(owner, boxes, count) >= MIN_COVERAGE)
+    star &= np.bincount(owner, minlength=count + 1) >= MIN_PIXELS
     bright = np.zeros(count + 1, dtype=bool)
     if level is not None:
         plane, top = level
@@ -90,9 +96,30 @@ def detect(
         at_top = np.bincount(owner, sensor[rows, cols] >= top, count + 1)[star]
         saturated = at_top >= CLIPPED_PIXELS
     index = np.cumsum(star) - 1  # label to star number
+    # Flux ellipse from the star grown FLUX_GROW px: its structure stops short of the wings. A grown
+    # sky pixel goes to the nearest star, square distance as the dilation's; no structure's pixel.
+    kept = np.where(star[labels], labels, 0)
+    far, (near_r, near_c) = cast(
+        tuple[np.ndarray, tuple[np.ndarray, np.ndarray]],
+        ndimage.distance_transform_cdt(kept == 0, metric="chessboard", return_indices=True),
+    )
+    grown = (far >= 0) & (far <= FLUX_GROW) & ((labels == 0) | (kept > 0))
+    kept = np.where(grown, kept[near_r, near_c], 0)
+    del far, near_r, near_c
+    rows, cols = np.nonzero(kept)
+    owner = np.asarray(kept[rows, cols], dtype=np.intp)
     mine = star[owner]
     pixels = (rows[mine], cols[mine], index[owner[mine]])
     return Detections(x, y, saturated, tenth_flux((residual, filtered), pixels, (x, y)))
+
+
+def structure_map(filtered: np.ndarray, noise: float) -> np.ndarray:
+    """Structure pixels: `filtered` less its blur over STRUCTURE_SIGMA `noise`, closed 3x3."""
+    blur = ndimage.gaussian_filter(
+        filtered, STRUCTURE_BLUR, mode="mirror", truncate=STRUCTURE_REACH / STRUCTURE_BLUR
+    )
+    np.subtract(filtered, blur, out=blur)
+    return ndimage.binary_closing(blur > STRUCTURE_SIGMA * noise, _EIGHT)
 
 
 def _coverage(owner: np.ndarray, boxes: list[tuple[slice, slice] | None], count: int) -> np.ndarray:
