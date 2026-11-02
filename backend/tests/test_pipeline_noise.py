@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
-from astrolog.pipeline.noise import UNIT_SIGMAS, mrs_noise, starlet
+from astrolog.pipeline.noise import UNIT_SIGMAS, mrs_noise, starlet, structure_noise
+from astrolog.pipeline.stars import median3x3
 
 _SIDE = 512
 
@@ -64,3 +65,16 @@ def test_a_crowded_field_and_a_nebula_leave_the_noise_as_it_is() -> None:
         np.float32
     )
     assert mrs_noise(data) == pytest.approx(10.0, rel=0.03)
+
+
+def test_the_structure_noise_of_gaussian_noise_is_its_sigma() -> None:
+    """Read on the median copy, said in the frame's sigma: on white noise the same as MRS."""
+    assert structure_noise(median3x3(_noise(10.0))) == pytest.approx(10.0, rel=0.02)
+
+
+def test_noise_correlated_at_the_structure_scale_lifts_the_structure_noise() -> None:
+    """A Debayer correlates neighbours: the first layer, MRS's weight, sees little of it; the
+    second layer, at the structures' scale, sees it (plan 26.48.2, colour frames 2.5-3.9 MRS)."""
+    data = ndimage.gaussian_filter(_noise(10.0), 0.8)
+    data *= 10.0 / mrs_noise(data)
+    assert structure_noise(median3x3(data)) > 2 * mrs_noise(data)

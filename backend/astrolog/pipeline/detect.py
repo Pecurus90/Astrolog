@@ -18,8 +18,8 @@ STRUCTURE_LAYERS = 5  # [C StarDetector structureLayers, SubframeSelector defaul
 STRUCTURE_REACH = 2 ** (STRUCTURE_LAYERS - 1)  # [D kernel radius: 2^L + 1 px across]
 STRUCTURE_CUT = 0.01  # [M plan 26.48.1: sigma doubling per layer, 1.3 / 2.5 / 5 / 10 px]
 STRUCTURE_BLUR = STRUCTURE_REACH / np.sqrt(-2 * np.log(STRUCTURE_CUT))  # [D Gaussian at the cut]
-# Pixels over this many frame sigmas, closed 3x3: his map on 21 frames, sparse fields. software-ok
-STRUCTURE_SIGMA = 2.12  # [M plan 26.48.1: 2.10-2.16 MRS; crowded fields up to 2.44, plan 26.48.2]
+# Pixels over this many structure-noise sigmas, closed 3x3: his map, sparse fields. software-ok
+STRUCTURE_SIGMA = 2.11  # [M plan 26.48.2: 2.09-2.12 on 7 sparse mono; misure.md]
 # No star of his on fewer pixels, 205 frames, minStructureSize off. software-ok
 MIN_PIXELS = 3  # [M plan 26.48.1: his smallest star 3 px in 185 frames, more in the rest]
 # A star covers over (1 - maxDistortion) of a disc's pi / 4 of its square: his cut at b/a 0.3-0.4
@@ -60,13 +60,14 @@ class Detections:
 def detect(
     residual: np.ndarray,
     filtered: np.ndarray,
-    noise: float,
+    noise: float | tuple[float, float],
     clip: tuple[np.ndarray, float] | None = None,
     level: tuple[np.ndarray, float] | None = None,
 ) -> Detections:
-    """`residual` less sky, `filtered` its 3x3 median, `noise` MRS; `clip` sensor pixels and their
-    ceiling, `level` measured plane and ceiling (BRIGHT_LEVEL). One star per structure."""
-    found = ndimage.label(structure_map(filtered, noise), structure=_EIGHT)
+    """`filtered` the residual's 3x3 median; `noise` MRS and the map's (structure_noise), one for
+    both on white noise; `clip` sensor and ceiling, `level` plane and ceiling. One star each."""
+    noise, threshold_noise = noise if isinstance(noise, tuple) else (noise, noise)
+    found = ndimage.label(structure_map(filtered, threshold_noise), structure=_EIGHT)
     labels, count = cast(tuple[np.ndarray, int], found)  # stubs say int | tuple
     # Structure pixels only: ndimage's per-label max and centre sweep the frame, 1.5 s at 26 MP.
     rows, cols = np.nonzero(labels)

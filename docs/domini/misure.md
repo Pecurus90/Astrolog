@@ -78,14 +78,14 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   (`doc/pjsr/objects/StarDetector`), provate a scatola chiusa, mai sul sorgente PCL. **Struttura**
   (26.48.1, sonde sulla sua `structureMap`; la doc: non una wavelet): copia mediana 3x3 meno la sua
   gaussiana, nucleo 2^L + 1 px troncato all'1% (sigma 2^(L-1) / sqrt(2 ln 100), 5,27 px a L 5),
-  pixel sopra 2,12 volte il rumore, chiusi 3x3, 8 direzioni. Su gobbe a verita' nota l'area satura
+  pixel sopra 2,11 volte il rumore di struttura, chiusi 3x3, 8 direzioni. Su gobbe a verita' nota l'area satura
   (12 / 40 / 112 / 216 px a sigma 0,8 / 1,5 / 3 / 5) e' di questa gaussiana, sigma raddoppia per
   strato (1,3 / 2,5 / 5 / 10 px, L 3-6), la soglia segue il rumore (non cielo, piedistallo, satura,
   galassia); mappa uguale alla sua, J 0,98-0,9999 su 12 frame (I - c5 a 3 sigma: 0,57-0,86).
-  **Aperto (26.48.2)**: 2,12 nei campi radi (2,10-2,16, 14 mono); negli affollati sale (NGC 6888,
-  WR 134, SH2-185 2,32-2,44; NGC 6888 Poseidon 3,84, NGC 7380 2,54): un suo rumore non MRS; ~30
-  stimatori esclusi (MRS 1-5 strati, k-sigma e MAD su strati e copia mediana, unilaterali, fuori
-  mappa: il migliore CV 0,029); con la sua soglia NGC 6888 Poseidon n.0 da 1,07 a 1,007. Sotto 3 px
+  **Rumore di struttura** (26.48.2, `noise.structure_noise`): strato 2 B3 della copia mediana a 3
+  sigma, diviso per 0,1492 (lo stesso su rumore bianco). Vede il rumore correlato (Debayer) che MRS
+  non vede: sua soglia su MRS 2,10-3,86, su questo 1,97-2,19 mono e colori, salvo Caldwell 14 e M31-33
+  Poseidon 1,83-1,93 (21 frame; ~45 stimatori provati, nessuno entro il 2%; pixel caldi esclusi). Sotto 3 px
   nessuna sua stella (205 frame, `minStructureSize` spento); sotto (1 - 0,6) pi / 4 del quadrato
   circoscritto (`maxDistortion` 0,6) non e' una stella. Stella: miglior 2x2 sul residuo meno 2 b
   sopra 16,5 n ((s - b) / n, la `sensitivity`); b e n mediana e 1,4826 MAD del residuo nel
@@ -102,16 +102,16 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   che un pixel del piano misurato superi 0,75 del tetto (`localMaximaDetectionLimit`; il tetto di
   ADR 0041, dove una stella si taglia: PixInsight normalizza sul fondo scala del tipo, uguale <!-- software-ok -->
   finche' `DATAMAX` manca). Sonda NGC 7380 n.3: noi 1849, lui 351, lui con le multiple 1982.
-  Strutture e prefiltro sul rumore MRS (sintetico da 40 mila stelle: la MAD 19,8, il vero 10).
+  Prefiltro e cornice sul rumore MRS (sintetico da 40 mila stelle: la MAD 19,8, il vero 10).
   Prefiltro di velocita': 2x2 sotto 8 volte quel rumore non arriva al conto locale (nessuna sua
   stella sotto, sul banco). Il 2x2: sintetici del 26.45 (1 px varia 1,48 volte, 3 px 1,64), non i
-  nostri frame (Marco 28/10). **Banco dei 205** (26.48.1): stelle / sue, colori A 1,014, B 0,998,
-  mono A 1,006, B 0,999; **mono tutti in 0,95-1,05** senza compenso; fuori 9, a colori: NGC 6888
-  Poseidon n.0/2/3 1,07-1,08 (soglia di mappa, 26.48.2), NGC 7380 Poseidon n.1/2/3 e x07/x08
-  0,91-0,95 (il nostro piano debayerizzato spezza strutture in piu' massimi, il suo no), NGC 7023
-  n.4 1,07 (249 stelle). A SNR 12 nessuna di 36 (20 semi), a SNR 14 il rumore ne porta su fino a
-  3. Conto locale da 0,3 s (2400 stelle) a 2,8 s (45 mila) a frame; banco 23,9 s mediani a frame
-  (26.48: 23,8). HFD e forma restano su `sep`.
+  nostri frame (Marco 28/10). **Banco dei 205** (26.48.2): stelle / sue, colori A 0,992, B 0,981,
+  mono A 0,992, B 0,997; **mono tutti in 0,95-1,05** senza compenso; NGC 6888 Poseidon (1,07-1,08
+  su MRS) e NGC 7023 n.4 rientrati; fuori 9, tutti NGC 7380 a colori, 0,90-0,95: il nostro piano
+  debayerizzato spezza strutture in piu' massimi, il suo no (aperto, 26.48.2). A SNR 12 nessuna di
+  36 (20 semi), a SNR 14 il rumore ne porta su fino a 3. Conto locale da 0,3 s (2400 stelle) a
+  2,8 s (45 mila) a frame; rumore di struttura 0,85 s a 24 MP; banco 16,8 s mediani a frame.
+  HFD e forma restano su `sep`.
 - **Rilevamenti per la misura**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con <!-- software-ok -->
   mediana 3x3 esatta, senza deblending (ripartiva a caso i pixel contesi: stesso frame, tilt 10,7
   / 9,1 / 8,4%); i suoi momenti sono la scala di bordo, vicine e finestre.
@@ -272,7 +272,7 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
   | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
 
-  Scarti aperti, ognuno col suo passo: stelle 26.48.2 (soglia di mappa negli affollati, sopra), FWHM ed eccentricita' 26.49,
+  Scarti aperti, ognuno col suo passo: stelle 26.48.2 (NGC 7380 a colori, sopra), FWHM ed eccentricita' 26.49,
   PSF SNR 26.50, colori 26.56 (lui somma il flusso PSF per canale, noi sull'intensita').
 
   Secondi a frame, mediana, stessa macchina, un frame alla volta:

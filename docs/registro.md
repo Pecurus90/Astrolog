@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 258; senza fonte: 1.
-Fonti: C norma: 122; U usanza: 2; D metodo: 19; M misura: 21; P decisione: 35; T tecnico: 62.
+Valori: 259; senza fonte: 1.
+Fonti: C norma: 122; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 35; T tecnico: 62.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -262,7 +262,7 @@ Fonti: C norma: 122; U usanza: 2; D metodo: 19; M misura: 21; P decisione: 35; T
 | STRUCTURE_REACH | `2 ** (STRUCTURE_LAYERS - 1)` | D kernel radius: 2^L + 1 px across |
 | STRUCTURE_CUT | `0.01` | M plan 26.48.1: sigma doubling per layer, 1.3 / 2.5 / 5 / 10 px |
 | STRUCTURE_BLUR | `STRUCTURE_REACH / np.sqrt(-2 * np.log(STRUCTURE_CUT))` | D Gaussian at the cut |
-| STRUCTURE_SIGMA | `2.12` | M plan 26.48.1: 2.10-2.16 MRS; crowded fields up to 2.44, plan 26.48.2 |
+| STRUCTURE_SIGMA | `2.11` | M plan 26.48.2: 2.09-2.12 on 7 sparse mono; misure.md |
 | MIN_PIXELS | `3` | M plan 26.48.1: his smallest star 3 px in 185 frames, more in the rest |
 | MAX_DISTORTION | `0.6` | C StarDetector maxDistortion, SubframeSelector default; software-ok |
 | MIN_COVERAGE | `(1 - MAX_DISTORTION) * np.pi / 4` | D a disc fills pi / 4 of its square |
@@ -312,6 +312,7 @@ Fonti: C norma: 122; U usanza: 2; D metodo: 19; M misura: 21; P decisione: 35; T
 | TOLERANCE | `1e-4` | T |
 | MAX_ROUNDS | `20` | T |
 | NOISE_FLOOR_ADU | `0.2887` | D uniform quantization noise, step/sqrt(12) |
+| MEDIAN_LAYER2_GAIN | `0.1492` | M plan 26.48.2: 3x3 median of Gaussian noise, 4 x 4 MP, +-0.0001 |
 
 ### pipeline/pixels.py
 

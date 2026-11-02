@@ -10,7 +10,7 @@ from ..units import sigma_from_mad
 from .debayer import COLOURS, debayered
 from .detect import detect
 from .field import gradient_of, psf_snr, zones_of
-from .noise import NOISE_FLOOR_ADU, mrs_noise
+from .noise import NOISE_FLOOR_ADU, mrs_noise, structure_noise
 from .psf_flux import ring_sky
 from .shape import MIN_STARS, Shape, estimated_fwhm, shape_of
 
@@ -80,7 +80,8 @@ def measure_frame(
     shape = shape_of(images, objects, _spread(objects, usable, raw.shape), noise)
     # MRS, not the first pass: crowded fields lift a MAD (40k synthetic stars: 19.8 for 10)
     noise = max(mrs_noise(raw), NOISE_FLOOR_ADU)
-    found = detect(*images, noise, clip=(sensor, saturation), level=(raw, saturation))
+    structure = max(structure_noise(images[1]), NOISE_FLOOR_ADU)
+    found = detect(*images, (noise, structure), clip=(sensor, saturation), level=(raw, saturation))
     # On the measured plane's own noise: a colour frame's intensity, as misure.md says
     flux = float(found.flux.sum())
     snr = psf_snr(flux, noise) if len(found.x) >= MIN_STARS else None

@@ -14,6 +14,7 @@ from astrolog.pipeline.detect import (
     detect,
     structure_map,
 )
+from astrolog.pipeline.noise import mrs_noise, structure_noise
 from astrolog.pipeline.stars import measure_frame, median3x3
 
 _SIDE = 300
@@ -73,6 +74,46 @@ def test_a_one_pixel_gap_inside_a_structure_is_closed() -> None:
     flat[24:40, 24:40] = 100 * _NOISE
     flat[32, 32] = 0.0
     assert structure_map(flat, _NOISE)[32, 32]
+
+
+def test_correlated_noise_raises_no_structure_on_an_empty_sky() -> None:
+    """Same MRS, neighbours correlated as a Debayer leaves them: over MRS 4% of the sky was
+    structure; over the structure noise none, as on white noise (plan 26.48.2)."""
+    sky = ndimage.gaussian_filter(_sky(12, (512, 512)), 0.8)
+    sky *= _NOISE / mrs_noise(sky)
+    filtered = median3x3(sky)
+    assert structure_map(filtered, mrs_noise(sky)).mean() > 0.01
+    assert not structure_map(filtered, structure_noise(filtered)).any()
+
+
+def test_the_structures_follow_the_structure_noise_not_the_frame_noise() -> None:
+    """Stars at 10 sigma of the structure scale: found; told a structure noise 100 times larger,
+    no structure, whatever the frame noise."""
+    data = _sky(13)
+    for y, x in ((100, 100), (200, 200)):
+        data += _gauss(y, x, 1.5, 4000.0)
+    assert len(detect(data, median3x3(data), (_NOISE, _NOISE)).x) == 2
+    assert len(detect(data, median3x3(data), (_NOISE, 100 * _NOISE)).x) == 0
+
+
+def test_the_frame_measures_its_structure_noise_on_the_median_copy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: list[np.ndarray] = []
+
+    def spy(filtered: np.ndarray) -> float:
+        seen.append(filtered)
+        return 100 * _NOISE
+
+    monkeypatch.setattr("astrolog.pipeline.stars.structure_noise", spy)
+    data = _sky(14)
+    data += _gauss(150, 150, 1.5, 4000.0)
+    assert measure_frame(data, saturation=65535.0, pattern=None).stars == 0
+    assert len(seen) == 1
+    # median copy of the residual: a flat sky over a constant leaves the image less its median
+    residual = data - float(np.median(data))
+    assert float(np.abs(seen[0] - median3x3(residual)).max()) < 0.5 * _NOISE
+    assert float(np.abs(seen[0] - residual).max()) > 5 * _NOISE
 
 
 def test_a_structure_of_two_pixels_is_no_star() -> None:

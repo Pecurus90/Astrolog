@@ -1,6 +1,8 @@
 """The frame's noise by the multiresolution support (Starck & Murtagh 1998, PASP 110:193; as
 PixInsight ImageWeighting par. 2.4, 3.1.2: software-ok). Pure: pixels in, a sigma out."""
 
+from collections.abc import Callable
+
 import numpy as np
 
 from ..units import sigma_from_mad
@@ -61,6 +63,35 @@ def _unit_sigmas(layers: int) -> np.ndarray:
 UNIT_SIGMAS = _unit_sigmas(LAYERS)
 
 
+# Structure noise: the median copy's second layer, k-sigma clipped, over its spread on white noise.
+# Sees noise correlated at the structures' scale (Debayer), which MRS's first layer misses.
+MEDIAN_LAYER2_GAIN = 0.1492  # [M plan 26.48.2: 3x3 median of Gaussian noise, 4 x 4 MP, +-0.0001]
+
+
+def structure_noise(filtered: np.ndarray) -> float:
+    """The frame's sigma as the structure map sees it: `filtered` the 3x3 median copy (plan 26.48.2;
+    his threshold over it and over MRS on 21 frames: misure.md, Stelle)."""
+    layer = starlet(filtered, 2)[0][1].ravel()
+    centre = float(np.median(layer))
+    start = sigma_from_mad(float(np.median(np.abs(layer - centre))))
+    away = np.abs(layer - centre)
+    return _fixed_point(start, lambda sigma: layer[away < K_SIGMA * sigma]) / MEDIAN_LAYER2_GAIN
+
+
+def _fixed_point(sigma: float, quiet_of: Callable[[float], np.ndarray]) -> float:
+    """Std of the pixels quiet at k sigma, again on the new sigma, until it settles."""
+    for _ in range(MAX_ROUNDS):
+        quiet = quiet_of(sigma)
+        if quiet.size < 2:
+            break
+        new = float(np.std(quiet))
+        settled = abs(new - sigma) <= TOLERANCE * new
+        sigma = new
+        if settled:
+            break
+    return sigma
+
+
 def mrs_noise(image: np.ndarray) -> float:
     """Sigma of I - c_p over the pixels in no layer's support (|w_j| >= k sigma sigma_j), iterated
     to a fixed point, over 0.974. The start, which the paper leaves open: the first layer's MAD."""
@@ -72,13 +103,4 @@ def mrs_noise(image: np.ndarray) -> float:
         np.maximum(strongest, np.abs(planes.pop(0)) / unit, out=strongest)
     detail = np.asarray(image, dtype=np.float32) - smooth
     del smooth
-    for _ in range(MAX_ROUNDS):
-        quiet = detail[strongest < K_SIGMA * sigma]
-        if quiet.size < 2:
-            break
-        new = float(np.std(quiet))
-        settled = abs(new - sigma) <= TOLERANCE * new
-        sigma = new
-        if settled:
-            break
-    return sigma / BIAS
+    return _fixed_point(sigma, lambda s: detail[strongest < K_SIGMA * s]) / BIAS
