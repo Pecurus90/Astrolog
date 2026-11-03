@@ -143,6 +143,19 @@ def test_two_peaks_in_one_structure_are_no_star() -> None:
     assert _found(apart) == 2
 
 
+def test_a_maximum_is_one_over_the_whole_5x5_not_only_its_structure() -> None:
+    """A bump on the structure's edge outshone by a pixel just outside it is no second maximum
+    (plan 26.48.3: his singles 0.957 kept restricted, 0.986 open, NGC 7380 n.3)."""
+    star = _gauss(150, 150, 1.5, 20000.0)
+    edge = int(np.flatnonzero(structure_map(median3x3(star), _NOISE)[150]).max())
+    bump = star.copy()
+    bump[150, edge] += 1200.0
+    outshone = bump.copy()
+    outshone[150, edge + 2] += 1500.0
+    assert _found(bump) == 0
+    assert _found(outshone) == 1
+
+
 def test_a_saturated_star_with_a_ragged_top_is_one_star() -> None:
     """Pixels over localMaximaDetectionLimit of the full scale take no part in the maxima map."""
     top = 60000.0

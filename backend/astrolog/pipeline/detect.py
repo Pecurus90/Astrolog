@@ -134,11 +134,11 @@ def _coverage(owner: np.ndarray, boxes: list[tuple[slice, slice] | None], count:
 
 
 def _peaks(residual: np.ndarray, labels: np.ndarray, count: int) -> np.ndarray:
-    """Local maxima of each structure on the residual, its own pixels only; a plateau counts one."""
-    inside = np.where(labels > 0, residual, -np.inf).astype(np.float32)
-    top = ndimage.maximum_filter(inside, size=2 * PEAK_RADIUS + 1, mode="constant", cval=-np.inf)
-    at = (labels > 0) & (inside == top)
-    del inside, top
+    """Structure pixels at the top of their 5x5 on the whole residual, sky pixels too (plan
+    26.48.3, probe on his singles); a plateau counts one."""
+    top = ndimage.maximum_filter(residual, size=2 * PEAK_RADIUS + 1, mode="constant", cval=-np.inf)
+    at = (labels > 0) & (residual == top)
+    del top
     spots, _ = cast(tuple[np.ndarray, int], ndimage.label(at, structure=_EIGHT))
     owner_of = np.zeros(int(spots.max()) + 1, dtype=np.intp)
     owner_of[spots[at]] = labels[at]  # a spot lies in one structure: both are 8-connected

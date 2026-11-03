@@ -16,7 +16,7 @@ parole in [`glossario.md`](glossario.md).
 | L'HFD e' il diametro che contiene meta' della luce della stella, anche con le ali di una stella vera | `test_the_hfd_of_gaussian_stars_is_the_diameter_holding_half_the_flux`, `test_the_hfd_of_moffat_stars_holds_their_wings`, `test_the_truth_is_the_analytic_hfd_once_the_pixel_is_small` (`backend/tests/test_pipeline_stars.py`) |
 | Fondo cielo e rumore sono quelli del cielo, non delle stelle | `test_background_and_noise_are_the_sky_and_its_spread` |
 | Le stelle si contano una volta; i pixel caldi di un light non calibrato non sono stelle | `test_every_star_is_counted_once`, `test_hot_pixels_are_not_stars` |
-| Le stelle sono quelle che conta Image Analysis: una stella debole, una macchia di nebulosa larga, una sorgente multipla o un nodo su una nebulosa non contano (Marco, 27/10 e 30/10/2026) <!-- software-ok --> | `test_two_peaks_in_one_structure_are_no_star`, `test_a_saturated_star_with_a_ragged_top_is_one_star`, `test_the_dispersion_that_counts_is_the_local_one`, `test_a_knot_on_a_nebula_is_measured_over_the_nebula`, `test_a_wide_faint_star_is_one_star_not_a_cluster_of_noise_peaks`, `test_a_star_with_no_free_sky_around_falls_back_on_the_frame_noise`, `test_the_frame_counts_the_stars_the_subframeselector_would`, `test_a_star_over_the_aperture_threshold_is_found_one_under_is_not`, `test_a_wide_faint_patch_is_not_a_star_however_much_light_it_holds`, `test_a_hot_pixel_is_not_a_star`, `test_a_dark_pixel_among_bright_ones_has_a_position`, `test_a_structure_starts_at_its_threshold_on_the_median_copy`, `test_the_position_is_the_barycentre` (`backend/tests/test_pipeline_detect.py`) <!-- software-ok --> |
+| Le stelle sono quelle che conta Image Analysis: una stella debole, una macchia di nebulosa larga, una sorgente multipla o un nodo su una nebulosa non contano (Marco, 27/10 e 30/10/2026) <!-- software-ok --> | `test_two_peaks_in_one_structure_are_no_star`, `test_a_maximum_is_one_over_the_whole_5x5_not_only_its_structure`, `test_a_saturated_star_with_a_ragged_top_is_one_star`, `test_the_dispersion_that_counts_is_the_local_one`, `test_a_knot_on_a_nebula_is_measured_over_the_nebula`, `test_a_wide_faint_star_is_one_star_not_a_cluster_of_noise_peaks`, `test_a_star_with_no_free_sky_around_falls_back_on_the_frame_noise`, `test_the_frame_counts_the_stars_the_subframeselector_would`, `test_a_star_over_the_aperture_threshold_is_found_one_under_is_not`, `test_a_wide_faint_patch_is_not_a_star_however_much_light_it_holds`, `test_a_hot_pixel_is_not_a_star`, `test_a_dark_pixel_among_bright_ones_has_a_position`, `test_a_structure_starts_at_its_threshold_on_the_median_copy`, `test_the_position_is_the_barycentre` (`backend/tests/test_pipeline_detect.py`) <!-- software-ok --> |
 | Una stella saturata conta fra le stelle ma non entra nell'HFD, anche se in una camera a colori satura un canale solo | `test_saturated_stars_are_counted_but_not_measured`, `test_a_colour_star_clipped_in_one_channel_is_saturated` |
 | Il tetto di saturazione e' il fondo scala dichiarato, come PixInsight, e satura e' una stella con un pixel li' (Marco, 29/10/2026) <!-- software-ok --> | `test_the_ceiling_is_the_declared_full_scale_as_pixinsight`, `test_stars_at_the_ceiling_are_counted_saturated_and_kept_out` (`backend/tests/test_pipeline_field.py`), `test_one_sensor_pixel_at_the_ceiling_makes_a_star_saturated` (`backend/tests/test_pipeline_detect.py`) |
 | Il PSF SNR e' quello della documentazione di PixInsight, sature comprese come le tiene lui <!-- software-ok --> | `test_psf_snr_is_the_documented_formula`, `test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale`, `test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are`, `test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one`, `test_under_five_stars_no_psf_snr`, `test_pipeline_psf_flux.py` (quota Moffat al decimo, fondo lasciato sotto le stelle, luce col centro al buio, stella tagliata) |
@@ -96,22 +96,22 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   n.0 5779, default 3919) e al default cadono anche gaussiane perfette fra la soglia e 2,4-2,9
   volte quella: sulle deboli passa solo lo scavalco. Il 16,5: meta' trovate su profili noti
   (gaussiane sigma 1-4, Moffat: 16,2-16,7); dischi e Moffat beta 4 +10% / -13% con ogni nucleo
-  provato (2x2, 3x3, gaussiane 0,6-1,3). Una struttura con piu' di
-  un massimo locale 5x5 sul residuo, fra i suoi pixel, e' una sorgente multipla e si scarta
+  provato (2x2, 3x3, gaussiane 0,6-1,3). Una struttura con piu' di un pixel in cima al suo 5x5
+  sul residuo intero, cielo compreso, e' una sorgente multipla e si scarta
   (`allowClusteredSources` spento, `localDetectionFilterRadius` 2; un plateau conta uno), salvo
   che un pixel del piano misurato superi 0,75 del tetto (`localMaximaDetectionLimit`; il tetto di
   ADR 0041, dove una stella si taglia: PixInsight normalizza sul fondo scala del tipo, uguale <!-- software-ok -->
-  finche' `DATAMAX` manca). Sonda NGC 7380 n.3: noi 1849, lui 351, lui con le multiple 1982.
+  finche' `DATAMAX` manca). Sonda sulla sua mappa e il suo piano (26.48.3): sue singole tenute
+  0,986 / 0,991 / 0,999 (NGC 7380 n.3, x07, IC 405 n.0; fra i soli pixel della struttura 0,957 /
+  0,961 / 0,998), sue multiple tagliate tutte.
   Prefiltro e cornice sul rumore MRS (sintetico da 40 mila stelle: la MAD 19,8, il vero 10).
   Prefiltro di velocita': 2x2 sotto 8 volte quel rumore non arriva al conto locale (nessuna sua
   stella sotto, sul banco). Il 2x2: sintetici del 26.45 (1 px varia 1,48 volte, 3 px 1,64), non i
-  nostri frame (Marco 28/10). **Banco dei 205** (26.48.2, VNG pubblicato 3/11): stelle / sue, colori
-  A 0,993, B 0,983, mono A 0,992, B 0,997; **mono tutti in 0,95-1,05** senza compenso; NGC 6888
-  Poseidon e NGC 7023 n.4 rientrati; fuori 10 a colori (0,90-0,95: 9 NGC 7380, NGC 1333 n.1):
-  piu' massimi per struttura (26.48.3); non il Debayer, il VNG di prima era il suo al pixel. A SNR 12 nessuna di
-  36 (20 semi), a SNR 14 il rumore ne porta su fino a 3. Conto locale da 0,3 s (2400 stelle) a
-  2,8 s (45 mila) a frame; rumore di struttura 0,85 s a 24 MP; banco 16,8 s mediani a frame.
-  HFD e forma restano su `sep`.
+  nostri frame (Marco 28/10). **Banco dei 205** (26.48.3, massimi sul 5x5 intero): stelle / sue,
+  colori A 0,994, B 0,984, mono A 0,993, B 0,997; **mono tutti in 0,95-1,05** senza compenso; fuori
+  7, tutti NGC 7380 a colori (0,905-0,949): la soglia locale sulla nebulosa (26.48.4). A SNR 12
+  nessuna di 36 (20 semi), a SNR 14 il rumore ne porta su fino a 3. Conto locale da 0,3 s (2400
+  stelle) a 2,8 s (45 mila) a frame; rumore di struttura 0,85 s a 24 MP; HFD e forma su `sep`.
 - **Rilevamenti per la misura**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con <!-- software-ok -->
   mediana 3x3 esatta, senza deblending (ripartiva a caso i pixel contesi: stesso frame, tilt 10,7
   / 9,1 / 8,4%); i suoi momenti sono la scala di bordo, vicine e finestre.
