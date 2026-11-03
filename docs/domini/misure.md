@@ -137,26 +137,29 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   maschera copriva l'anello con la nebulosa e il fondo restava zero (HFD 12,3 px contro 4,0 di
   ASTAP). La copia filtrata toglie i pixel caldi (per cui ADR 0022 scartava la mediana), la
   mediana toglie le vicine. `sep.flux_radius` non ha l'anello: non si usa.
-- **Forma** (ADR 0022 punto 4, `pipeline/shape.py`): per stella una Moffat ellittica
-  A (1 + (x'/ax)^2 + (y'/ay)^2)^-beta, beta libero fra 1,01 e 100, integrata sul pixel (5x5
-  campioni a stima sotto 3 px, 3x3 sotto 6, uno sopra), col fondo fisso alla mediana dell'anello
-  sulla copia filtrata (libero si mangiava le ali: FWHM +4%), su un cerchio di 2 FWHM stimate,
-  pixel caldi fuori dal nucleo tolti. Levenberg-Marquardt di scipy (MINPACK) con lo jacobiano
-  scritto, al piu' 400 valutazioni. Per stella FWHM = 2 sqrt(ax ay) sqrt(2^(1/beta) - 1), la
-  media geometrica dei due assi; eccentricita' sqrt(1 - (b/a)^2); asse lungo da +x (colonne)
-  verso +y (righe), da 0 a 180 gradi. Per il frame la mediana delle stelle.
-  - **Fit** (`fitted`) quando regge almeno meta' delle stelle e almeno 5; se no **stimata**
-    (`estimated`) dai momenti di `sep`, che leggono le ali: su una Moffat beta 3 la FWHM esce
-    1,5 volte la vera. **Non misurabile** (`unmeasurable`) se piu' di meta' sono ciambelle
-    (centro sotto l'anello di 3 rumori) o se l'eccentricita' arriva a 0,99; FWHM ed
-    eccentricita' tacciono. Le righe vere arrivano qui di rado: `sep` le spezza in pezzi vicini
-    e il frame dice troppo poche stelle.
+- **Forma** (ADR 0042, passo 26.49, `pipeline/psf_fit.py`, `pipeline/shape.py`): come Image
+  Analysis (par. 2.1.6; ImageWeighting 2.1-2.2.1; PJSR PSF). Ogni stella del rilevatore, fino a
+  8000 dalle piu' brillanti: Moffat ellittica beta 4 col fondo B libero, al centro del pixel, sul
+  piano col suo cielo (a colori l'intensita' VNG), Levenberg-Marquardt di scipy, 400 valutazioni.
+  Regione quadrata: mezzo lato il lato maggiore del riquadro della struttura, +1 px per lato
+  finche' la mediana scende almeno dell'1%, al piu' 64 (nostro). Scartato il fit col centro fuori
+  dal riquadro o a meno di 1 px dal bordo (lui non da' numeri: nostri). FWHM 2 sqrt(sx sy)
+  sqrt(2^(1/4) - 1), eccentricita' sqrt(1 - (sy/sx)^2); PSFResidual (eq. 24) media winsorizzata al
+  10% di |v - f| sulla regione su 4 S / (pi Wx Wy), W al decimo, S i pixel sopra B nell'ellisse al
+  decimo (ImageWeighting eq. 7-10). Per il frame biweight di Tukey (c 6 MAD, 1e-10, 20 passi) e Qn
+  (le Sigma). Stella binnata sul pixel: +4% a FWHM 2,6 px, +1% a 5,2; beta 2,5 +8%, gaussiana -5%.
+  - **Fit** (`fitted`) quando regge almeno meta' delle stelle provate e almeno 5; se no **stimata**
+    (`estimated`) dai momenti di `sep` sulle 540 stelle sparse della griglia, che leggono le ali:
+    su una Moffat beta 3 la FWHM esce 1,5 volte la vera; niente residuo. **Non misurabile**
+    (`unmeasurable`) se piu' di meta' sono ciambelle
+    (centro sotto l'anello di 3 rumori) o se l'eccentricita' arriva a 0,99: FWHM ed
+    eccentricita' tacciono (le righe vere arrivano qui di rado: il rilevatore le scarta).
   - **Direzione** solo da eccentricita' 0,4 e se le stelle sono d'accordo: media assiale degli
     angoli (raddoppiati sul cerchio, Mardia 1972), se Rayleigh rifiuta l'uniforme al 5% (Zar,
     cap. 27; prima lunghezza 0,5, nostra); coma e tilt allungano in raggiera: la direzione tace. Si scrive sui pixel e girata col cielo (sotto,
     **Col cielo**).
   - **Colori**: sull'intensita' dopo VNG, come WBPP; VNG allarga le stelle piccole, come le
-    vede il SubframeSelector: FWHM 4 px +2%, 3 px +8%, 2 px +27% (l'HFD +4%).
+    vede Image Analysis dopo il Debayer: FWHM 3,5 px +4%, 1,8 px +28% (l'HFD +4%).
 - **PSF SNR** (`pipeline/field.py`, ADR 0022 punto 5): ImageWeighting di PixInsight, eq. 7 e <!-- software-ok -->
   23-24, PSF SNR = 1,316e-7 F^2 / (4,987e6 sigma^2) (fino al 30/10/2026 1,350e-7, letto male:
   il 2,6% in piu'; ora il suo PSF SNR torna esatto); F e' la somma dei flussi di tutte le
@@ -240,10 +243,8 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
 B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
 
 - **Stelle iniettate** di forma nota sui fondi veri (Rosetta, M31, Ha, L): mediana dell'HFD
-  entro l'1% dalla verita', P90 da +7 a +23%. Forma (27/10/2026, 150 Moffat ellittiche beta 3,
-  b/a 0,7, picco 100 rumori, su tutti i 24): FWHM da +0,2 a +0,7%, eccentricita' 0,710-0,716
-  contro 0,714. Sui 4 a colori iniettate dopo VNG: provano il fit sul fondo vero, non VNG
-  (quello lo misura la riga dei colori sotto, su stelle sintetiche).
+  entro l'1% dalla verita', P90 da +7 a +23% (la forma di allora, integrata sul pixel, e' al
+  commit `9add5161`).
 - **Contro i programmi di riferimento**: il riferimento e' Image Analysis di PixInsight (ADR <!-- software-ok -->
   0042; documentazione `doc/tools/ImageAnalysis`, 28/10/2026), al posto del SubframeSelector. <!-- software-ok -->
   `python tools/confronto_misure.py CARTELLA --groups GRUPPI --out FILE` misura le copie con
@@ -264,32 +265,31 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Misura | Mono A (35) | Mono B (45) | Colori A (80) | Colori B (45) |
   |---|---|---|---|---|
   | Stelle | 0,99 [0,96-1,03] | 1,00 [0,96-1,20] | 1,02 [0,99-8,10] | 1,04 [0,99-5,27] |
-  | FWHM | 0,81 [0,65-1,00] | 0,86 [0,67-1,00] | 0,96 [0,63-1,11] | 1,02 [0,63-1,14] |
-  | Eccentricita' | 1,02 [0,95-1,11] | 1,03 [0,98-1,07] | 1,03 [0,97-1,13] | 1,02 [0,98-1,19] |
+  | FWHM (26.49) | 1,00 [0,98-1,01] | 1,00 [0,98-1,01] | 1,00 [0,98-1,04] | 1,01 [0,99-1,04] |
+  | Eccentricita' (26.49) | 1,00 [0,99-1,00] | 1,00 [0,99-1,00] | 1,00 [0,99-1,01] | 0,99 [0,97-1,00] |
+  | FWHM Sigma (26.49) | 0,99 [0,86-1,08] | 1,02 [0,95-1,06] | 1,04 [0,98-1,13] | 1,04 [0,95-1,11] |
+  | Eccentricita' Sigma (26.49) | 0,99 [0,95-1,00] | 1,00 [0,97-1,01] | 0,99 [0,94-1,12] | 0,99 [0,94-1,02] |
+  | PSFResidual (26.49) | 1,17 [1,10-1,29] | 1,16 [1,07-1,41] | 1,21 [1,08-1,46] | 1,17 [1,08-1,47] |
+  | PSFResidual Sigma (26.49) | 1,11 [1,06-1,21] | 1,14 [1,05-1,34] | 1,14 [0,95-1,48] | 1,11 [0,98-1,41] |
   | Fondo / mediana | 1,00 [0,99-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,00] |
   | Rumore | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] |
   | PSF SNR | 0,87 [0,56-0,94] | 0,87 [0,58-1,00] | 17,7 [14,3-35,0] | 18,1 [16,0-28,2] |
   | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
   | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
 
-  Scarti aperti, ognuno col suo passo: FWHM ed eccentricita' 26.49,
-  PSF SNR 26.50, colori 26.56 (lui somma il flusso PSF per canale, noi sull'intensita').
+  Scarti aperti, ognuno col suo passo: PSF SNR 26.50, colori 26.56 (lui somma il flusso PSF per
+  canale, noi sull'intensita'). PSFResidual (26.49, Marco 3/11/2026): lui divide per `PSF.signal`
+  ("flusso sopra una soglia di significativita'", non documentata; sonde nel piano), che si
+  ricava al 26.50. Il fit del 26.49 porta `measure_frame` da 6,2 a 7,2 s mono e da 14,0 a 16,4 s
+  colori (6 copie; affollati +5 s): il tetto di ADR 0042 al 26.57.
 
-  Secondi a frame, mediana, stessa macchina, un frame alla volta:
+  Secondi a frame del 26.47, mediana, un frame alla volta, mono / colori: AstroLog 5,69 / 14,01
+  (debayer VNG 4,43, rumore MRS 1,67 / 1,93 + 1,33 per piano, stelle e flusso PSF 1,44 / 1,56,
+  forma 1,02 / 1,80); Image Analysis con le estese 3,57 / 2,46 + 1,78 di debayer, senza 2,42 /
+  1,14 + 1,78.
 
-  | | Mono | Colori |
-  |---|---|---|
-  | AstroLog, totale | 5,69 | 14,01 |
-  | di cui debayer VNG | - | 4,43 |
-  | di cui rumore MRS (e per piano colore) | 1,67 | 1,93 + 1,33 |
-  | di cui stelle e flusso PSF | 1,44 | 1,56 |
-  | di cui forma | 1,02 | 1,80 |
-  | Image Analysis, misure estese | 3,57 | 2,46 + 1,78 di debayer |
-  | Image Analysis, senza estese | 2,42 | 1,14 + 1,78 di debayer |
-
-  Perche' degli scarti (dal 26.46; tabelle per camera e oggetto al commit `9add5161`): FWHM, lui
-  valuta la Moffat al centro del pixel, noi la integriamo; PSF SNR, noi sommiamo nell'ellisse
-  dei momenti, piu' stretta della sua fittata (ImageWeighting par. 2.2; cometa 0,61). HFD / FWHM
+  Perche' degli scarti (dal 26.46; tabelle per camera e oggetto al commit `9add5161`): PSF SNR,
+  noi sommiamo nell'ellisse dei momenti, piu' stretta della sua fittata (ImageWeighting par. 2.2; cometa 0,61). HFD / FWHM
   non e' uno scarto: sulla Moffat 1,36 a beta 2,5 e 1,17 a beta 4. HFD / HFD ASTAP 0,83-0,92;
   le sue stelle contano da SNR 30 sul grezzo: 0,9-27 volte.
 - **Le misure nuove sul vero** (27/10/2026, 24 copie; dal 29/10 il tetto e' il fondo scala,

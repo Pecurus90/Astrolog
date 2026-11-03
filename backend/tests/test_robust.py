@@ -94,6 +94,33 @@ def test_the_relative_bounds_are_two_and_a_half_qn():
     assert relative_bounds(values[:9]) is None
 
 
+def test_the_biweight_is_the_centre_of_a_normal_and_ignores_far_outliers():
+    """Tukey (ImageAnalysis par. 2.2): oltre 6 MAD peso zero; sul campione normale e' la media."""
+    rng = np.random.default_rng(3)
+    values = rng.normal(10.0, 1.0, 2001)
+    clean = robust.biweight_location(values)
+    assert clean == pytest.approx(10.0, abs=0.05)
+    spoiled = np.concatenate([values, np.full(300, 40.0)])
+    assert robust.biweight_location(spoiled) == pytest.approx(clean, abs=0.05)
+    assert float(np.mean(spoiled)) > 13
+
+
+def test_the_biweight_is_the_fixed_point_of_its_weights():
+    """L'iterazione di eq. 109 si ferma dove M = somma pesata / somma dei pesi, MAD del passo 0."""
+    values = np.array([1.0, 2.0, 2.5, 3.0, 3.2, 4.0, 9.0])
+    centre = robust.biweight_location(values)
+    assert centre is not None
+    mad = float(np.median(np.abs(values - np.median(values))))
+    u = (values - centre) / (robust.BIWEIGHT_C * mad)
+    w = np.where(np.abs(u) < 1, (1 - u * u) ** 2, 0.0)
+    assert centre == pytest.approx(float((w * values).sum() / w.sum()), abs=1e-9)
+
+
+def test_the_biweight_of_nothing_or_of_ties():
+    assert robust.biweight_location([]) is None
+    assert robust.biweight_location([2.0, 2.0, 2.0, 5.0]) == 2.0  # MAD zero: the median
+
+
 def test_a_zero_scale_is_silent():
     """Qn zero (valori ripetuti, frame copiati): la soglia sarebbe la mediana, e tace."""
     assert relative_bounds([0.5] * 8 + [0.6, 0.7]) is None

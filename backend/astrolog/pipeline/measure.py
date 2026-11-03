@@ -34,17 +34,22 @@ _NUMBERS = (  # TooFewStars: no hfd_px, tilt_pct, curvature_pct
     "stars", "kept", "hfd_px", "background_adu", "noise_adu", "ceiling_adu", "saturated",
     "psf_snr", "gradient_pct", "gradient_angle_deg", "tilt_pct", "curvature_pct",
 )  # fmt: skip
-_SHAPE = ("shape", "shape_stars", "fwhm_px", "eccentricity", "angle_deg")
+_SHAPE = (
+    "shape", "shape_stars", "fwhm_px", "eccentricity", "angle_deg", "fwhm_sigma_px",
+    "eccentricity_sigma", "psf_residual", "psf_residual_sigma",
+)  # fmt: skip
 
 UPSERT = (
     "INSERT INTO pipeline_measures (frame_id, file_id, outcome, stars, kept, hfd_px,"
     " background_adu, noise_adu, ceiling_adu, saturated, psf_snr, gradient_pct,"
     " gradient_angle_deg, tilt_pct, curvature_pct, shape, shape_stars, fwhm_px, eccentricity,"
-    " angle_deg, duration_s, measured_at)"
+    " angle_deg, fwhm_sigma_px, eccentricity_sigma, psf_residual, psf_residual_sigma, duration_s,"
+    " measured_at)"
     " VALUES (:frame_id, :file_id, :outcome, :stars, :kept, :hfd_px, :background_adu,"
     " :noise_adu, :ceiling_adu, :saturated, :psf_snr, :gradient_pct, :gradient_angle_deg,"
     " :tilt_pct, :curvature_pct, :shape, :shape_stars, :fwhm_px, :eccentricity, :angle_deg,"
-    " :duration_s, :measured_at)"
+    " :fwhm_sigma_px, :eccentricity_sigma, :psf_residual, :psf_residual_sigma, :duration_s,"
+    " :measured_at)"
     " ON CONFLICT (frame_id) DO UPDATE SET file_id = excluded.file_id,"
     " outcome = excluded.outcome, stars = excluded.stars, kept = excluded.kept,"
     " hfd_px = excluded.hfd_px, background_adu = excluded.background_adu,"
@@ -54,6 +59,8 @@ UPSERT = (
     " tilt_pct = excluded.tilt_pct, curvature_pct = excluded.curvature_pct,"
     " shape = excluded.shape, shape_stars = excluded.shape_stars, fwhm_px = excluded.fwhm_px,"
     " eccentricity = excluded.eccentricity, angle_deg = excluded.angle_deg,"
+    " fwhm_sigma_px = excluded.fwhm_sigma_px, eccentricity_sigma = excluded.eccentricity_sigma,"
+    " psf_residual = excluded.psf_residual, psf_residual_sigma = excluded.psf_residual_sigma,"
     " duration_s = excluded.duration_s, measured_at = excluded.measured_at"
     " WHERE pipeline_measures.outcome = 'unreadable'"
 )
@@ -112,4 +119,8 @@ def _shape_values(shape: Shape) -> dict[str, object]:
     return {
         "shape": shape.kind.value, "shape_stars": shape.stars, "fwhm_px": shape.fwhm_px,
         "eccentricity": shape.eccentricity, "angle_deg": shape.angle_deg,
+        "psf_residual": shape.psf_residual,
+        "fwhm_sigma_px": spread.fwhm_px if (spread := shape.spread) else None,
+        "eccentricity_sigma": spread.eccentricity if spread else None,
+        "psf_residual_sigma": spread.psf_residual if spread else None,
     }  # fmt: skip

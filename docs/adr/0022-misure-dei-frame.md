@@ -25,7 +25,9 @@ che resta nasce coi test.
    sopra 0,5 solo per l'HFD: la forma le prende tutte, se no un frame mosso non ne ha (25.1).
 3. **HFD**: diametro col meta' flusso, fondo ad anello locale (con la nebulosa il fondo a maglie
    dava +20-30%). Sostituisce la HFD di ASTAP, il raggio medio, alta del 6-27%.
-4. **FWHM, eccentricita', angolo**: fit di Moffat ellittico (Levenberg-Marquardt) integrato sul
+4. **Superato** da ADR 0042 (passo 26.49, 3/11/2026: Moffat beta 4 al centro del pixel su ogni
+   stella del rilevatore, media biweight e Qn; `docs/domini/misure.md`, Forma). Era:
+   **FWHM, eccentricita', angolo**: fit di Moffat ellittico (Levenberg-Marquardt) integrato sul
    pixel, 60 stelle per casella di una griglia 3x3 lungo tutta la classifica di flusso; FWHM =
    2a sqrt(2^(1/b) - 1), eccentricita' sqrt(1 - (b/a)^2) (PixInsight). Fit che non converge: <!-- software-ok -->
    momenti di `sep`, detto. Eccentricita' >= 0,99 o stella a ciambella: forma non misurabile.

@@ -77,11 +77,14 @@ def measure_frame(
     usable = _kept(sensor, objects, saturation)
     round_ones = usable[_round(objects[usable])]
     hfds, hx, hy = _hfd(images, objects, _spread(objects, round_ones, raw.shape))
-    shape = shape_of(images, objects, _spread(objects, usable, raw.shape), noise)
+    first_noise = noise
     # MRS, not the first pass: crowded fields lift a MAD (40k synthetic stars: 19.8 for 10)
     noise = max(mrs_noise(raw), NOISE_FLOOR_ADU)
     structure = max(structure_noise(images[1]), NOISE_FLOOR_ADU)
     found = detect(*images, (noise, structure), clip=(sensor, saturation), level=(raw, saturation))
+    # Fitted on the plane with its sky: the sampling region's median needs the level (psf_fit.py)
+    chosen = _spread(objects, usable, raw.shape)
+    shape = shape_of((raw, *images), objects, chosen, first_noise, found)
     # On the measured plane's own noise: a colour frame's intensity, as misure.md says
     flux = float(found.flux.sum())
     snr = psf_snr(flux, noise) if len(found.x) >= MIN_STARS else None

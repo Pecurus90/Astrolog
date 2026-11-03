@@ -175,6 +175,10 @@ class Ours:
     psf_snr: float | None = None
     altitude_deg: float | None = None  # from the card: pointing, site, mid exposure
     seconds: dict[str, float] = field(default_factory=dict)  # by stage, and the total
+    psf_residual: float | None = None  # only a fitted shape
+    fwhm_sigma_px: float | None = None
+    eccentricity_sigma: float | None = None
+    psf_residual_sigma: float | None = None
 
 
 @dataclass(frozen=True)
@@ -340,8 +344,12 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
     hfd = found.hfd_px if isinstance(found, Measured) else None
     shape = found.shape
     fwhm, eccentricity = (shape.fwhm_px, shape.eccentricity) if shape else (None, None)
+    spread = shape.spread if shape else None
     ours = Ours(found.stars, hfd, found.background_adu, found.noise_adu, fwhm, eccentricity,
-                found.psf_snr, card_altitude(header.cards), seconds)  # fmt: skip
+                found.psf_snr, card_altitude(header.cards), seconds,
+                shape.psf_residual if shape else None, spread.fwhm_px if spread else None,
+                spread.eccentricity if spread else None,
+                spread.psf_residual if spread else None)  # fmt: skip
     return ours, pattern is not None
 
 
@@ -363,6 +371,14 @@ def _pairs(row: Row) -> dict[str, float | None]:
         "FWHM / Image Analysis": _over(o.fwhm_px, v.get("FWHMpx")),
         "HFD / FWHM Image Analysis": _over(o.hfd_px, v.get("FWHMpx")),
         "eccentricita' / Image Analysis": _over(o.eccentricity, v.get("Eccentricity")),
+        "FWHM Sigma / Image Analysis": _over(o.fwhm_sigma_px, v.get("FWHMpxSigma")),
+        "eccentricita' Sigma / Image Analysis": _over(
+            o.eccentricity_sigma, v.get("EccentricitySigma")
+        ),
+        "PSFResidual / Image Analysis": _over(o.psf_residual, v.get("PSFResidual")),
+        "PSFResidual Sigma / Image Analysis": _over(
+            o.psf_residual_sigma, v.get("PSFResidualSigma")
+        ),
         "fondo / mediana Image Analysis": _over(o.background_adu, v.get("Median"), ADU_RANGE),
         "rumore / Image Analysis": _over(o.noise_adu, v.get("Noise"), ADU_RANGE),
         "PSF SNR / Image Analysis": _over(o.psf_snr, v.get("PSFSNR")),

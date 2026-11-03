@@ -1102,13 +1102,19 @@ CREATE TABLE pipeline_measures (
   hfd_px         REAL CHECK (hfd_px > 0),     -- pixel del sensore, anche a colori
   background_adu REAL,                        -- fondo cielo: solo stessa camera, guadagno, posa
   noise_adu      REAL CHECK (noise_adu >= 0), -- 1,4826 MAD; a colori per piano R G B, (min+max)/2
-  -- forma: fit di Moffat (fitted), momenti di sep se il fit non tiene (estimated), ciambelle o
+  -- forma: fit di Moffat come Image Analysis (fitted), momenti di sep se il fit non tiene (estimated), ciambelle o
   -- righe (unmeasurable); NULL: meno di 5 stelle. Anche con too_few_stars: un frame mosso.
   shape          TEXT CHECK (shape IN ('fitted', 'estimated', 'unmeasurable')),
-  shape_stars    INTEGER CHECK (shape_stars >= 0),  -- stelle della mediana; unmeasurable: guardate
+  shape_stars    INTEGER CHECK (shape_stars >= 0),  -- stelle della media biweight; unmeasurable: guardate
   fwhm_px        REAL CHECK (fwhm_px > 0),          -- media geometrica dei due assi
   eccentricity   REAL CHECK (eccentricity >= 0 AND eccentricity < 1),
   angle_deg      REAL CHECK (angle_deg >= 0 AND angle_deg < 180),  -- asse lungo, da +x verso +y
+  -- dispersione fra le stelle, Qn (Image Analysis FWHMpxSigma, EccentricitySigma); NULL senza forma
+  fwhm_sigma_px      REAL CHECK (fwhm_sigma_px >= 0),
+  eccentricity_sigma REAL CHECK (eccentricity_sigma >= 0),
+  -- scarto del fit sul segnale medio della stella (Image Analysis PSFResidual); solo fitted
+  psf_residual       REAL CHECK (psf_residual >= 0),
+  psf_residual_sigma REAL CHECK (psf_residual_sigma >= 0),
   -- tetto: DATAMAX, se no il massimo del tipo dopo BZERO e BSCALE (ADR 0041)
   ceiling_adu    REAL,
   saturated      INTEGER CHECK (saturated >= 0),  -- delle stelle, quelle al tetto
@@ -1128,6 +1134,9 @@ CREATE TABLE pipeline_measures (
   CHECK (coalesce(shape IN ('fitted', 'estimated'), 0) = (fwhm_px IS NOT NULL)
     AND (fwhm_px IS NULL) = (eccentricity IS NULL)),
   CHECK (angle_deg IS NULL OR eccentricity >= 0.4),  -- direzione solo da 0,4 (ADR 0022)
+  CHECK ((fwhm_px IS NOT NULL OR fwhm_sigma_px IS NULL)
+    AND (fwhm_px IS NOT NULL OR eccentricity_sigma IS NULL)),
+  CHECK ((psf_residual IS NULL OR shape = 'fitted') AND (psf_residual IS NOT NULL OR psf_residual_sigma IS NULL)),
   CHECK ((stars IS NULL) = (ceiling_adu IS NULL) AND (stars IS NULL) = (saturated IS NULL)
     AND saturated <= stars),
   CHECK (psf_snr IS NULL OR stars >= 5),

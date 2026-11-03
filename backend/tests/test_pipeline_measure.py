@@ -57,7 +57,9 @@ def test_a_light_is_measured_once_and_written(conn, tmp_path):
     assert row["noise_adu"] == pytest.approx(10, rel=0.05)
     assert row["measured_at"] == LATER
     assert (row["shape"], row["shape_stars"]) == ("fitted", 60)
-    assert row["fwhm_px"] == pytest.approx(2.3548 * 2.5, rel=0.03)
+    # A Gaussian read by the Moffat 4 of Image Analysis: 5% narrow (misure.md, Forma)
+    assert row["fwhm_px"] == pytest.approx(0.95 * 2.3548 * 2.5, rel=0.03)
+    assert row["psf_residual"] > 0 and row["fwhm_sigma_px"] >= 0
     assert row["eccentricity"] < 0.15
     assert row["angle_deg"] is None
     assert (row["ceiling_adu"], row["saturated"]) == (65535.0, 0)

@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 258; senza fonte: 1.
-Fonti: C norma: 120; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 35; T tecnico: 63.
+Valori: 264; senza fonte: 1.
+Fonti: C norma: 128; U usanza: 2; D metodo: 18; M misura: 21; P decisione: 35; T tecnico: 62.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -320,6 +320,19 @@ Fonti: C norma: 120; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 35; T
 | MIN_IMAGE_SIDE_PX | `20` | T |
 | _TYPES | `{8: ">u1", 16: ">i2", 32: ">i4"}` | C FITS 4.0 table 8: BITPIX |
 
+### pipeline/psf_fit.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| BETA | `4.0` | C ImageAnalysis par. 2.1.6: default PSF type Moffat beta 4; software-ok |
+| MEDIAN_DROP | `0.01` | C ImageAnalysis par. 2.1.6; PJSR PSF, Adaptive sampling region; software-ok |
+| MAX_FITS | `8000` | C ImageAnalysis Maximum PSF fits default, brightest first; software-ok |
+| MAX_HALF_PX | `64` | T |
+| TENTH | `0.1` | C ImageAnalysis eq. 24: flux on the FWTM ellipse; software-ok |
+| WINSOR | `0.1` | C ImageAnalysis par. 2.1.6: residual a 10% Winsorized mean; software-ok |
+| EVALUATIONS_PER_PARAMETER | `50` | T |
+| _HALF | `2 ** (1 / BETA) - 1` | D Moffat 1969: half maximum where (1 + q)^-beta = 1/2 |
+
 ### pipeline/psf_flux.py
 
 | simbolo | valore | fonte |
@@ -329,6 +342,7 @@ Fonti: C norma: 120; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 35; T
 | MIN_AXIS_PX | `0.5` | D a pixel's own half-width |
 | SUBPIX | `5` | C sep docs: sum_ellipse default subpixel sampling |
 | LOCAL_SKY_PX | `24` | C SExtractor BACKPHOTO_THICK default 24 |
+| RING_OUTER | `1.5` | T |
 
 ### pipeline/scan.py
 
@@ -357,12 +371,6 @@ Fonti: C norma: 120; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 35; T
 |---|---|---|
 | WINDOW_FWHM | `2.0` | T |
 | WINDOW_MIN_PX | `3.0` | T |
-| RING_OUTER | `1.5` | T |
-| BETA_MIN | `1.01` | T; D Moffat 1969 |
-| BETA_MAX | `100.0` | T |
-| START_BETA | `2.5` | M misure.md: HFD/FWHM 1.36 on the 24 real frames, a Moffat of beta 2.5 |
-| EVALUATIONS_PER_PARAMETER | `50` | T |
-| HOT_SIGMA | `5.0` | D Chauvenet's criterion |
 | DOUGHNUT_SIGMA | `3.0` | C Starck and Murtagh 1998: significance at 3 sigma, as noise.py |
 | FIT_SHARE | `0.5` | D the median's breakdown point, one half (Hampel 1971) |
 | UNMEASURABLE_ECCENTRICITY | `0.99` | P ADR 0022: eccentricity from 0.99, shape not measurable |
@@ -488,6 +496,9 @@ Fonti: C norma: 120; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 35; T
 | RELATIVE_QN | `2.5` | D Leys et al. 2013, J. Exp. Soc. Psychol. 49:764; ADR 0039 with Qn |
 | MIN_VALUES | `10` | P ADR 0032: at least 10 frames, under that the relative bound is silent |
 | WINDOW_PER_VALUE | `8` | T |
+| BIWEIGHT_C | `6.0` | C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok |
+| BIWEIGHT_ITERATIONS | `20` | C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok |
+| BIWEIGHT_TOLERANCE | `1e-10` | C PixInsight ImageAnalysis par. 2.2, eq. 110; software-ok |
 
 ### spine/folder_move.py
 

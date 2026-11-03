@@ -1,5 +1,5 @@
-"""Star shape on synthetic stars of known shape (ADR 0022 point 4): FWHM, eccentricity and
-direction from the elliptical Moffat fit, through measure_frame as the pipeline calls it."""
+"""Star shape on synthetic stars of known shape (ADR 0042, misure.md Forma): FWHM, eccentricity,
+PSF residual, their spread and the direction, through measure_frame as the pipeline calls it."""
 
 import math
 
@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 from astrolog.pipeline import shape
+from astrolog.pipeline.psf_fit import Fitted
 from astrolog.pipeline.shape import Shape, ShapeKind
 from astrolog.pipeline.stars import Measured, TooFewStars, measure_frame
 
@@ -67,34 +68,50 @@ def _shape(data: np.ndarray, pattern: str | None = None) -> Shape:
     return found.shape
 
 
-@pytest.mark.parametrize(("alpha", "beta"), [(2.5, 2.5), (3.0, 4.0), (6.0, 2.5)])
-def test_round_moffat_stars_give_their_fwhm(alpha: float, beta: float) -> None:
-    found = _shape(_field([_moffat(alpha, 1.0, 0, beta)] * 49))
+@pytest.mark.parametrize(("alpha", "wider"), [(3.0, 0.05), (6.0, 0.02)])
+def test_round_moffat_stars_give_their_fwhm(alpha: float, wider: float) -> None:
+    """Beta 4, the fitted function. Fitted at the pixel centres, as Image Analysis: a star binned
+    on its pixels reads wider by the pixel, +4% at FWHM 2.6 px, +1% at 5.2. software-ok"""
+    found = _shape(_field([_moffat(alpha, 1.0, 0, 4.0)] * 49))
     assert found.kind is ShapeKind.FITTED
-    assert found.fwhm_px == pytest.approx(_moffat_fwhm(alpha, beta), rel=0.02)
+    truth = _moffat_fwhm(alpha, 4.0)
+    assert found.fwhm_px is not None and truth < found.fwhm_px < (1 + wider) * truth
     assert found.eccentricity is not None and found.eccentricity < 0.15
     assert found.angle_deg is None
+    assert found.psf_residual is not None and found.psf_residual < 0.02
 
 
-def test_gaussian_stars_are_a_moffat_of_large_beta() -> None:
-    found = _shape(_field([_gauss(1.8)] * 49))
-    assert found.kind is ShapeKind.FITTED
-    assert found.fwhm_px == pytest.approx(2.3548 * 1.8, rel=0.03)
+@pytest.mark.parametrize(
+    ("star", "low", "high"), [("moffat 2.5", 1.05, 1.12), ("gauss", 0.92, 0.97)]
+)
+def test_other_profiles_read_as_a_moffat_4_reads_them(star: str, low: float, high: float) -> None:
+    """Wider wings than beta 4 widen the fit, a Gaussian narrows it, and the residual says the
+    function does not follow the star: as Image Analysis with its default PSF type."""
+    profile, truth = _moffat(2.5, 1.0, 0, 2.5), _moffat_fwhm(2.5, 2.5)
+    if star == "gauss":
+        profile, truth = _gauss(1.8), 2.3548 * 1.8
+    found = _shape(_field([profile] * 49))
+    exact = _shape(_field([_moffat(3.0, 1.0, 0, 4.0)] * 49))
+    assert found.fwhm_px is not None and low * truth < found.fwhm_px < high * truth
+    assert found.psf_residual is not None and exact.psf_residual is not None
+    assert found.psf_residual > 2 * exact.psf_residual
 
 
-def test_undersampled_stars_keep_their_fwhm() -> None:
-    """FWHM 1.5 px: the fit integrates the model on the pixel, so the pixel is not added."""
-    alpha = 1.5 / _moffat_fwhm(1.0, 3.0)
-    found = _shape(_field([_moffat(alpha, 1.0, 0, 3.0)] * 49))
-    assert found.fwhm_px == pytest.approx(1.5, rel=0.05)
+def test_the_spread_is_the_qn_of_the_stars() -> None:
+    """FWHM from 2.6 to 4.4 px across the field: a spread; one FWHM: next to none."""
+    varied = _shape(_field([_moffat(3.0 + 2.0 * k / 48, 1.0, 0, 4.0) for k in range(49)]))
+    same = _shape(_field([_moffat(4.0, 1.0, 0, 4.0)] * 49))
+    assert varied.spread is not None and same.spread is not None
+    assert varied.spread.fwhm_px is not None and same.spread.fwhm_px is not None
+    assert varied.spread.fwhm_px > 0.3 > 10 * same.spread.fwhm_px
 
 
 @pytest.mark.parametrize(("ratio", "angle"), [(0.866, 30.0), (0.6, 120.0), (0.6, 0.0)])
 def test_elongated_stars_give_eccentricity_and_direction(ratio: float, angle: float) -> None:
-    found = _shape(_field([_moffat(3.0, ratio, angle, 3.0)] * 49))
+    found = _shape(_field([_moffat(4.0, ratio, angle, 4.0)] * 49))
     assert found.kind is ShapeKind.FITTED
     assert found.eccentricity == pytest.approx(math.sqrt(1 - ratio**2), abs=0.03)
-    assert found.fwhm_px == pytest.approx(_moffat_fwhm(3.0 * math.sqrt(ratio), 3.0), rel=0.03)
+    assert found.fwhm_px == pytest.approx(_moffat_fwhm(4.0 * math.sqrt(ratio), 4.0), rel=0.05)
     assert found.angle_deg is not None
     gap = abs(found.angle_deg - angle) % 180
     assert min(gap, 180 - gap) < 3.0
@@ -102,7 +119,7 @@ def test_elongated_stars_give_eccentricity_and_direction(ratio: float, angle: fl
 
 def test_trailed_stars_have_a_shape_even_with_too_few_round_ones() -> None:
     """b/a 0.25: none round enough for the HFD (sep's b/a 0.5), the shape says how long."""
-    data = _field([_moffat(5.0, 0.25, 45, 3.0)] * 49, flux=200000.0)
+    data = _field([_moffat(5.0, 0.25, 45, 4.0)] * 49, flux=200000.0)
     found = measure_frame(data, saturation=65535.0, pattern=None)
     assert isinstance(found, TooFewStars)
     assert found.shape is not None and found.shape.kind is ShapeKind.FITTED
@@ -110,26 +127,10 @@ def test_trailed_stars_have_a_shape_even_with_too_few_round_ones() -> None:
 
 
 def test_lines_instead_of_stars_are_an_unmeasurable_shape() -> None:
-    """From eccentricity 0.99. Real lines rarely get here: sep breaks them, too few stars."""
-    lines = [shape.Star(fwhm_px=3.0, eccentricity=0.995, angle_deg=10.0)] * 9
+    """From eccentricity 0.99. Real lines rarely get here: the detector drops them."""
+    lines = Fitted(np.full(9, 3.0), np.full(9, 0.995), np.full(9, 10.0), np.full(9, 0.01))
     found = shape._frame(ShapeKind.FITTED, lines)
     assert found == Shape(ShapeKind.UNMEASURABLE, 9, None, None, None)
-
-
-@pytest.mark.parametrize("s", [-1000.0, 1000.0])
-def test_beta_stays_in_its_bounds_however_far_the_fit_pushes(s: float) -> None:
-    """A real frame (24.05 set) pushed it to -inf and math.exp overflowed mid-scan."""
-    beta, slope = shape._beta(s)
-    assert shape.BETA_MIN <= beta <= shape.BETA_MAX and math.isfinite(slope)
-
-
-def test_a_window_of_noise_is_a_failed_fit_not_a_crash() -> None:
-    rng = np.random.default_rng(4)
-    ys, xs = np.mgrid[0:15, 0:15]
-    start = np.array([7.0, 7.0, 1.0, 50.0, -50.0, 0.0, 30.0])  # axes e^50 and e^-50: far off
-    window = shape.Window(xs.ravel() * 1.0, ys.ravel() * 1.0, rng.normal(0, 1, xs.size), start,
-                          shape._offsets(2.0))  # fmt: skip
-    assert shape._fitted(window) is None
 
 
 def test_doughnuts_are_an_unmeasurable_shape() -> None:
@@ -157,7 +158,7 @@ def test_a_direction_is_one_the_rayleigh_test_holds_at_five_percent() -> None:
 @pytest.mark.parametrize("degrees", [-1e-15, 180.0, 360.0 - 1e-13, -180.0])
 def test_an_angle_folds_into_0_to_180_never_180_itself(degrees: float) -> None:
     """-1e-15 % 180 is 180.0 in floats, and the schema refuses 180."""
-    assert 0.0 <= shape._folded(degrees) < 180.0
+    assert 0.0 <= shape.folded(degrees) < 180.0
     direction = shape._direction([degrees] * 5)
     assert direction is not None and 0.0 <= direction < 180.0
 
@@ -167,9 +168,10 @@ def test_a_fit_that_fails_falls_back_on_the_moments_and_says_so(
 ) -> None:
     """sep's moments on the median copy read the wings: a Moffat beta 3 comes out 1.5 times
     its FWHM. Estimated, and said so."""
-    monkeypatch.setattr(shape, "_fitted", lambda *_: None)
+    monkeypatch.setattr(shape, "fit_stars", lambda *_: Fitted(*(np.empty(0),) * 4))
     found = _shape(_field([_moffat(3.0, 0.7, 60, 3.0)] * 49))
     assert found.kind is ShapeKind.ESTIMATED
+    assert found.psf_residual is None and found.spread is not None
     truth = _moffat_fwhm(3.0 * math.sqrt(0.7), 3.0)
     assert found.fwhm_px is not None and truth < found.fwhm_px < 1.7 * truth
     assert found.eccentricity == pytest.approx(math.sqrt(1 - 0.7**2), abs=0.1)
@@ -179,18 +181,18 @@ def _mosaic(r: float, g: float, b: float) -> np.ndarray:
     return np.tile(np.array([[r, g], [g, b]], dtype=np.float32), (_SIDE // 2, _SIDE // 2))
 
 
-@pytest.mark.parametrize(("alpha", "wider"), [(4.0, 0.03), (2.0, 0.3)])
+@pytest.mark.parametrize(("alpha", "wider"), [(4.0, 0.05), (2.0, 0.3)])
 def test_round_colour_stars_stay_round_after_vng(alpha: float, wider: float) -> None:
-    """VNG widens small stars, as WBPP sees them: FWHM 4 px +2%, 2 px +27%. software-ok"""
-    data = _field([_moffat(alpha, 1.0, 0, 3.0)] * 49) * _mosaic(0.82, 1.0, 0.83)
+    """VNG widens small stars, as WBPP sees them: FWHM 3.5 px +4%, 1.8 px +28%. software-ok"""
+    data = _field([_moffat(alpha, 1.0, 0, 4.0)] * 49) * _mosaic(0.82, 1.0, 0.83)
     found = _shape(data, pattern="RGGB")
     assert found.eccentricity is not None and found.eccentricity < 0.15
-    truth = _moffat_fwhm(alpha, 3.0)
+    truth = _moffat_fwhm(alpha, 4.0)
     assert found.fwhm_px is not None and truth < found.fwhm_px < (1 + wider) * truth
 
 
 def test_an_eight_bit_frame_is_fitted_on_its_steps() -> None:
-    data = np.round(_field([_moffat(3.0, 1.0, 0, 3.0)] * 49, flux=3000.0) / 40)
+    data = np.round(_field([_moffat(3.0, 1.0, 0, 4.0)] * 49, flux=3000.0) / 40)
     found = measure_frame(data.astype(np.float32), saturation=255.0, pattern=None)
     assert isinstance(found, Measured) and found.shape is not None
-    assert found.shape.fwhm_px == pytest.approx(_moffat_fwhm(3.0, 3.0), rel=0.05)
+    assert found.shape.fwhm_px == pytest.approx(_moffat_fwhm(3.0, 4.0), rel=0.05)

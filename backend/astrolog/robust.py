@@ -23,6 +23,10 @@ EVEN_TERMS = (3.67561, 1.9654, 6.987, -77.0)  # [C robustbase 0.99-7 R/qnsn.R, Q
 RELATIVE_QN = 2.5  # [D Leys et al. 2013, J. Exp. Soc. Psychol. 49:764; ADR 0039 with Qn]
 MIN_VALUES = 10  # [P ADR 0032: at least 10 frames, under that the relative bound is silent]
 WINDOW_PER_VALUE = 8  # [T] pairs left per value when the bisection stops and picks among them
+# Biweight: values over 6 MAD from the centre weigh nothing, at most 20 steps.
+BIWEIGHT_C = 6.0  # [C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok]
+BIWEIGHT_ITERATIONS = 20  # [C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok]
+BIWEIGHT_TOLERANCE = 1e-10  # [C PixInsight ImageAnalysis par. 2.2, eq. 110; software-ok]
 
 
 @dataclass(frozen=True)
@@ -86,7 +90,7 @@ def _kth_gap(x: np.ndarray, k: int) -> float:
             low, below = middle, at_middle
 
 
-def qn(values: Sequence[float]) -> float | None:
+def qn(values: Sequence[float] | np.ndarray) -> float | None:
     """Qn = d c_n {|x_i - x_j|; i < j}_(k), k = C(h, 2), h = n // 2 + 1; None under two values."""
     n = len(values)
     if n < 2:
@@ -94,6 +98,27 @@ def qn(values: Sequence[float]) -> float | None:
     x = np.sort(np.asarray(values, dtype=float))
     h = n // 2 + 1
     return QN_CONSTANT * small_sample_factor(n) * _kth_gap(x, math.comb(h, 2))
+
+
+def biweight_location(values: Sequence[float] | np.ndarray) -> float | None:
+    """Tukey's biweight from the median, weights (1 - u^2)^2 with u the distance over BIWEIGHT_C
+    MADs, until it moves less than BIWEIGHT_TOLERANCE MAD or BIWEIGHT_ITERATIONS; None if empty."""
+    x = np.asarray(values, dtype=float)
+    if len(x) == 0:
+        return None
+    centre = float(np.median(x))
+    mad = float(np.median(np.abs(x - centre)))
+    if mad == 0:
+        return centre
+    for _ in range(BIWEIGHT_ITERATIONS):
+        u = (x - centre) / (BIWEIGHT_C * mad)
+        w = np.where(np.abs(u) < 1, (1 - u * u) ** 2, 0.0)
+        moved = float((w * x).sum() / w.sum())
+        done = abs(moved - centre) < BIWEIGHT_TOLERANCE * mad
+        centre = moved
+        if done:
+            break
+    return centre
 
 
 def relative_bounds(values: Sequence[float]) -> Bounds | None:

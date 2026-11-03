@@ -55,6 +55,7 @@ class Detections:
     y: np.ndarray  # rows
     saturated: np.ndarray  # bool: CLIPPED_PIXELS sensor pixels at the ceiling; all False unasked
     flux: np.ndarray  # as the PSF SNR sums it (psf_flux.py)
+    box: np.ndarray  # structure's box, (x0, x1, y0, y1) end exclusive: where the PSF fit starts
 
 
 def detect(
@@ -111,7 +112,10 @@ def detect(
     owner = np.asarray(kept[rows, cols], dtype=np.intp)
     mine = star[owner]
     pixels = (rows[mine], cols[mine], index[owner[mine]])
-    return Detections(x, y, saturated, tenth_flux((residual, filtered), pixels, (x, y)))
+    spans = [boxes[k - 1] for k in np.flatnonzero(star)]
+    box = np.array([(b[1].start, b[1].stop, b[0].start, b[0].stop) for b in spans], dtype=np.intp)
+    box = box.reshape(-1, 4)
+    return Detections(x, y, saturated, tenth_flux((residual, filtered), pixels, (x, y)), box)
 
 
 def structure_map(filtered: np.ndarray, noise: float) -> np.ndarray:

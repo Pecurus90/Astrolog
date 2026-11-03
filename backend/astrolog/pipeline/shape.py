@@ -1,26 +1,20 @@
-"""Star shape (ADR 0022 point 4, docs/domini/misure.md): elliptical Moffat by Levenberg-Marquardt,
-integrated on the pixel; the frame's FWHM, eccentricity, direction. Pure: pixels in, numbers out."""
+"""Star shape (ADR 0042, misure.md Forma): psf_fit.py on each star; the frame's biweight FWHM,
+eccentricity, PSF residual, their Qn, a direction. Pure: pixels in, numbers out. software-ok"""
 
 import math
 from dataclasses import dataclass
 from enum import StrEnum
 
 import numpy as np
-from scipy.optimize import least_squares  # pyright: ignore[reportMissingTypeStubs]
 
-# Window: a circle of 2 FWHM, never under 3 px; neighbours are kept 3 FWHM away (stars.py). [T]
+from ..robust import biweight_location, qn
+from .detect import Detections
+from .psf_fit import MAX_FITS, Fitted, fit_stars, folded
+from .psf_flux import RING_OUTER
+
+# Doughnut window: a circle of 2 FWHM, never under 3 px, its sky the ring out to RING_OUTER. [T]
 WINDOW_FWHM = 2.0
 WINDOW_MIN_PX = 3.0  # [T]
-RING_OUTER = 1.5  # [T] the local sky: the ring from the window (or aperture) to 1.5 times it
-# Beta over 1, else the flux is infinite [D Moffat 1969]. At most 100, a Gaussian for the fit:
-# capped at 10 a Gaussian star read 3% narrow, at 100 within 0.1%. [T] synthetic stars
-BETA_MIN = 1.01
-BETA_MAX = 100.0  # [T]
-START_BETA = 2.5  # [M misure.md: HFD/FWHM 1.36 on the 24 real frames, a Moffat of beta 2.5]
-EVALUATIONS_PER_PARAMETER = 50  # [T] a star that does not converge stops there
-# Raw over its median copy by this much off the core: a hot pixel, masked. Chauvenet, one tail
-# (hot is only over), on ~1e6 fit pixels a frame: n P(>k) < 0.5 at k 4.9. [D Chauvenet's criterion]
-HOT_SIGMA = 5.0
 # Centre this far under its ring: a doughnut, out of focus.
 DOUGHNUT_SIGMA = 3.0  # [C Starck and Murtagh 1998: significance at 3 sigma, as noise.py]
 # Fits that hold at least half the stars, else the moments speak: their median is then theirs.
@@ -44,64 +38,60 @@ class ShapeKind(StrEnum):
 
 
 @dataclass(frozen=True)
+class Spread:
+    """Qn of the stars' values (ImageAnalysis Sigma columns); the residual's only when fitted."""
+
+    fwhm_px: float | None
+    eccentricity: float | None
+    psf_residual: float | None
+
+
+@dataclass(frozen=True)
 class Shape:
     kind: ShapeKind
-    stars: int  # stars the values are the median of; unmeasurable: stars looked at
+    stars: int  # stars the values are the robust mean of; unmeasurable: stars looked at
     fwhm_px: float | None  # geometric mean of the two axes, sensor pixels
     eccentricity: float | None  # sqrt(1 - (b/a)^2)
     angle_deg: float | None  # long axis, [0, 180) from +x (columns) towards +y (rows)
-
-
-@dataclass(frozen=True)
-class Star:
-    fwhm_px: float
-    eccentricity: float
-    angle_deg: float
-
-
-@dataclass(frozen=True)
-class Window:
-    """Pixels of one star, values over its peak, and the sky-free start of its fit."""
-
-    xs: np.ndarray
-    ys: np.ndarray
-    values: np.ndarray
-    start: np.ndarray
-    offsets: np.ndarray  # sub-pixel sample positions, the model integrated on the pixel
+    psf_residual: float | None = None  # ImageAnalysis PSFResidual; only fitted
+    spread: Spread | None = None  # None with no values
 
 
 def shape_of(
-    images: tuple[np.ndarray, np.ndarray], objects: np.ndarray, chosen: np.ndarray, noise: float
+    images: tuple[np.ndarray, np.ndarray, np.ndarray],
+    objects: np.ndarray,
+    chosen: np.ndarray,
+    noise: float,
+    found: Detections,
 ) -> Shape | None:
-    """`images`: the residual (raw less sky) and its median copy; `chosen`: indices in sep's
-    `objects`. None with fewer than MIN_STARS: too few stars, the shape is not a shape fault."""
+    """`images`: the plane with its sky, the residual and its median copy; `chosen`: indices in
+    sep's `objects`, for doughnuts and moments; `found`: the stars fitted. None: too few stars."""
+    plane, residual, filtered = images
+    doughnuts = sum(_doughnut((residual, filtered), objects[i], noise) for i in chosen)
+    if len(chosen) >= MIN_STARS and doughnuts > len(chosen) / 2:
+        return Shape(ShapeKind.UNMEASURABLE, len(chosen), None, None, None)
+    fits = fit_stars(plane, found.x, found.y, found.box, found.flux)
+    tried = min(len(found.x), MAX_FITS)
+    if len(fits.fwhm_px) >= max(MIN_STARS, FIT_SHARE * tried):
+        return _frame(ShapeKind.FITTED, fits)
     if len(chosen) < MIN_STARS:
         return None
-    stars, doughnuts = [], 0
-    for i in chosen:
-        window = _window(images, objects[i], noise)
-        if window is None:
-            doughnuts += 1
-            continue
-        star = _fitted(window)
-        if star is not None:
-            stars.append(star)
-    if doughnuts > len(chosen) / 2:
-        return Shape(ShapeKind.UNMEASURABLE, len(chosen), None, None, None)
-    if len(stars) >= max(MIN_STARS, FIT_SHARE * len(chosen)):
-        return _frame(ShapeKind.FITTED, stars)
-    return _frame(ShapeKind.ESTIMATED, [_moments(objects[i]) for i in chosen])
+    return _frame(ShapeKind.ESTIMATED, _moments(objects[chosen]))
 
 
-def _frame(kind: ShapeKind, stars: list[Star]) -> Shape:
-    eccentricity = float(np.median([s.eccentricity for s in stars]))
-    if eccentricity >= UNMEASURABLE_ECCENTRICITY:
-        return Shape(ShapeKind.UNMEASURABLE, len(stars), None, None, None)
-    fwhm = float(np.median([s.fwhm_px for s in stars]))
+def _frame(kind: ShapeKind, stars: Fitted) -> Shape:
+    """Biweight and Qn over the stars, as Image Analysis aggregates them (par. 2.1.6)."""
+    eccentricity = biweight_location(stars.eccentricity)
+    if eccentricity is None or eccentricity >= UNMEASURABLE_ECCENTRICITY:
+        return Shape(ShapeKind.UNMEASURABLE, len(stars.fwhm_px), None, None, None)
+    residuals = stars.residual[np.isfinite(stars.residual)]
     angle = None
     if eccentricity >= DIRECTION_ECCENTRICITY:
-        angle = _direction([s.angle_deg for s in stars])
-    return Shape(kind, len(stars), fwhm, eccentricity, angle)
+        angle = _direction(list(stars.angle_deg))
+    fitted = kind is ShapeKind.FITTED
+    spread = Spread(qn(stars.fwhm_px), qn(stars.eccentricity), qn(residuals) if fitted else None)
+    return Shape(kind, len(stars.fwhm_px), biweight_location(stars.fwhm_px), eccentricity, angle,
+                 biweight_location(residuals) if fitted else None, spread)  # fmt: skip
 
 
 def _direction(angles: list[float]) -> float | None:
@@ -113,13 +103,7 @@ def _direction(angles: list[float]) -> float | None:
     p = math.exp(math.sqrt(1 + 4 * n + 4 * (n * n - resultant**2)) - (1 + 2 * n))
     if p >= DIRECTION_ALPHA:
         return None
-    return _folded(float(np.degrees(np.angle(mean))) / 2)
-
-
-def _folded(degrees: float) -> float:
-    """Into [0, 180): -1e-15 % 180 rounds to 180.0, which the schema refuses."""
-    folded = degrees % 180
-    return 0.0 if folded >= 180 else folded
+    return folded(float(np.degrees(np.angle(mean))) / 2)
 
 
 def estimated_fwhm(objects: np.ndarray) -> np.ndarray:
@@ -127,48 +111,30 @@ def estimated_fwhm(objects: np.ndarray) -> np.ndarray:
     return SIGMA_TO_FWHM * np.sqrt(np.maximum(objects["a"] * objects["b"], 0.25))
 
 
-def _moments(star: Record) -> Star:
-    """sep's second moments of the detection, on the median copy: the fallback (ADR 0022)."""
-    a, b = float(star["a"]), float(star["b"])
-    return Star(
-        _guess(star),
-        math.sqrt(max(0.0, 1 - (b / a) ** 2)) if a > 0 else 0.0,
-        _folded(math.degrees(float(star["theta"]))),
-    )
+def _moments(stars: np.ndarray) -> Fitted:
+    """sep's second moments of the detections, on the median copy: the fallback (ADR 0022)."""
+    a, b = stars["a"].astype(np.float64), stars["b"].astype(np.float64)
+    eccentricity = np.sqrt(np.maximum(0.0, 1 - (b / np.maximum(a, 1e-12)) ** 2))
+    eccentricity[a <= 0] = 0.0
+    angles = np.array([folded(math.degrees(float(t))) for t in stars["theta"]])
+    nothing = np.full(len(stars), np.nan)
+    return Fitted(estimated_fwhm(stars).astype(np.float64), eccentricity, angles, nothing)
 
 
-def _guess(star: Record) -> float:
-    return float(estimated_fwhm(star))  # pyright: ignore[reportArgumentType]
-
-
-def _window(images: tuple[np.ndarray, np.ndarray], star: Record, noise: float) -> Window | None:
-    """The star's circle less the ring's median sky, hot pixels masked off the core; None when
-    it is a doughnut. A free sky in the fit ate the wings: FWHM +4% at beta 2.5. [T]"""
+def _doughnut(images: tuple[np.ndarray, np.ndarray], star: Record, noise: float) -> bool:
+    """Centre darker than the ring around it, on the residual less the ring's median sky; the inner
+    disc holds the centre pixel at least."""
     residual, filtered = images
-    x, y, guess = float(star["x"]), float(star["y"]), _guess(star)
+    x, y = float(star["x"]), float(star["y"])
+    guess = float(estimated_fwhm(star))  # pyright: ignore[reportArgumentType]
     radius = max(WINDOW_MIN_PX, WINDOW_FWHM * guess)
     rows, cols, reach = *residual.shape, radius * RING_OUTER
     y0, y1 = max(0, int(y - reach)), min(rows, int(y + reach) + 2)
     x0, x1 = max(0, int(x - reach)), min(cols, int(x + reach) + 2)
     ys, xs = np.mgrid[y0:y1, x0:x1]
     distance = np.hypot(xs - x, ys - y)
-    smooth = filtered[y0:y1, x0:x1]
-    sky = float(np.median(smooth[(distance >= radius) & (distance < reach)]))
+    sky = float(np.median(filtered[y0:y1, x0:x1][(distance >= radius) & (distance < reach)]))
     values = residual[y0:y1, x0:x1].astype(np.float64) - sky
-    if _doughnut(values, distance, guess, noise):
-        return None
-    hot = (values + sky - smooth > HOT_SIGMA * noise) & (distance > guess / 2)
-    use = (distance <= radius) & ~hot
-    peak = max(float(values[use].max()), noise)
-    alpha = math.log(guess / (2 * math.sqrt(2 ** (1 / START_BETA) - 1)))
-    shape = _logit((START_BETA - BETA_MIN) / (BETA_MAX - BETA_MIN))
-    start = np.array([x, y, 1.0, alpha, alpha, float(star["theta"]), shape])
-    return Window(xs[use].astype(np.float64), ys[use].astype(np.float64), values[use] / peak,
-                  start, _offsets(guess))  # fmt: skip
-
-
-def _doughnut(values: np.ndarray, distance: np.ndarray, guess: float, noise: float) -> bool:
-    """Centre darker than the ring around it; the inner disc holds the centre pixel at least."""
     inner = max(1.0, guess / 4)
     centre = values[distance < inner]
     ring = values[(distance >= inner) & (distance < max(2.0, guess / 2))]
@@ -176,96 +142,3 @@ def _doughnut(values: np.ndarray, distance: np.ndarray, guess: float, noise: flo
         return False
     margin = DOUGHNUT_SIGMA * noise / math.sqrt(len(centre))
     return float(centre.mean()) < float(ring.mean()) - margin
-
-
-def _offsets(guess: float) -> np.ndarray:
-    """Samples per pixel side on sep's guess, about 1.6 times the true FWHM: 5 under 3, 3 under
-    6, else 1. One sample at FWHM 2.8 px read it 4% wide. [T] measured on synthetic stars."""
-    side = 5 if guess < 3 else 3 if guess < 6 else 1
-    steps = (np.arange(side) + 0.5) / side - 0.5
-    dy, dx = np.meshgrid(steps, steps, indexing="ij")
-    return np.stack([dx.ravel(), dy.ravel()])
-
-
-def _logit(share: float) -> float:
-    return math.log(share / (1 - share))
-
-
-def _beta(s: float) -> tuple[float, float]:
-    """Beta and its derivative in the fitted parameter: a logistic between the two bounds."""
-    share = 1 / (1 + math.exp(-s)) if s >= 0 else math.exp(s) / (1 + math.exp(s))  # no overflow
-    return BETA_MIN + (BETA_MAX - BETA_MIN) * share, (BETA_MAX - BETA_MIN) * share * (1 - share)
-
-
-class _Moffat:
-    """A (1 + (x'/ax)^2 + (y'/ay)^2)^-beta averaged on each pixel's samples, analytic Jacobian
-    (MINPACK lmder). Parameters: x0, y0, A, ln ax, ln ay, theta, s; beta = _beta(s)."""
-
-    def __init__(self, window: Window) -> None:
-        self.window = window
-        self._at: bytes = b""
-        self._model = np.empty(0)
-        self._jac = np.empty((0, 7))
-
-    def residuals(self, p: np.ndarray) -> np.ndarray:
-        self._evaluate(p)
-        return self._model - self.window.values
-
-    def jacobian(self, p: np.ndarray) -> np.ndarray:
-        self._evaluate(p)
-        return self._jac
-
-    def _evaluate(self, p: np.ndarray) -> None:
-        if p.tobytes() == self._at:
-            return
-        w = self.window
-        x0, y0, amp, log_ax, log_ay, theta, s = p
-        beta, beta_slope = _beta(s)
-        ax2, ay2 = math.exp(2 * log_ax), math.exp(2 * log_ay)
-        c, n = math.cos(theta), math.sin(theta)
-        dx = w.xs[:, None] + w.offsets[0][None, :] - x0
-        dy = w.ys[:, None] + w.offsets[1][None, :] - y0
-        u, v = c * dx + n * dy, -n * dx + c * dy
-        base = 1 + u * u / ax2 + v * v / ay2
-        g = base**-beta
-        dg = -beta * g / base  # d g / d q
-        jac = np.empty((len(w.values), 7))
-        jac[:, 0] = amp * np.mean(dg * (-2 * c * u / ax2 + 2 * n * v / ay2), axis=1)
-        jac[:, 1] = amp * np.mean(dg * (-2 * n * u / ax2 - 2 * c * v / ay2), axis=1)
-        jac[:, 2] = np.mean(g, axis=1)
-        jac[:, 3] = amp * np.mean(dg * (-2 * u * u / ax2), axis=1)
-        jac[:, 4] = amp * np.mean(dg * (-2 * v * v / ay2), axis=1)
-        jac[:, 5] = amp * np.mean(dg * 2 * u * v * (1 / ax2 - 1 / ay2), axis=1)
-        jac[:, 6] = amp * np.mean(-np.log(base) * g, axis=1) * beta_slope
-        self._model = amp * jac[:, 2]
-        self._jac = jac
-        self._at = p.tobytes()
-
-
-def _fitted(window: Window) -> Star | None:
-    """None when the fit fails: no convergence, a value not finite, a centre that wandered."""
-    model = _Moffat(window)
-    budget = EVALUATIONS_PER_PARAMETER * (len(window.start) + 1)
-    try:
-        with np.errstate(divide="raise", over="raise", invalid="raise", under="ignore"):
-            fit = least_squares(model.residuals, window.start,
-                                jac=model.jacobian,  # pyright: ignore[reportArgumentType] -- stub types jac as str only
-                                method="lm", x_scale="jac", max_nfev=budget)  # fmt: skip
-    except (ValueError, ArithmeticError):  # axes or beta pushed off any star: a failed fit
-        return None
-    x0, y0, amp, log_ax, log_ay, theta, s = fit.x
-    moved = math.hypot(x0 - window.start[0], y0 - window.start[1])
-    lost = moved > math.exp(window.start[3]) or not np.all(np.isfinite(fit.x))
-    if fit.status <= 0 or lost or amp <= 0:
-        return None
-    return _star(log_ax, log_ay, theta, _beta(s)[0])
-
-
-def _star(log_ax: float, log_ay: float, theta: float, beta: float) -> Star:
-    """FWHM 2 a sqrt(2^(1/beta) - 1), a the axes' geometric mean [C Moffat 1969: half maximum at r];
-    the long axis named, so b <= a."""
-    long_axis, short_axis = (log_ax, log_ay) if log_ax >= log_ay else (log_ay, log_ax)
-    angle = math.degrees(theta) + (0 if log_ax >= log_ay else 90)
-    fwhm = 2 * math.exp((log_ax + log_ay) / 2) * math.sqrt(2 ** (1 / beta) - 1)
-    eccentricity = math.sqrt(1 - math.exp(2 * (short_axis - long_axis)))
-    return Star(fwhm, eccentricity, _folded(angle))

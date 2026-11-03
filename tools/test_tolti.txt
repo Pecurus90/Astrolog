@@ -373,3 +373,7 @@ test_the_altitude_is_set_beside_the_subframe_selector - step 26.47, ADR 0042: re
 test_the_script_reads_the_psf_snr_and_altitude_columns - step 26.47, ADR 0042: columns by name, not index; replaced by test_the_script_reads_the_columns_by_their_constants
 test_the_subframe_values_come_back_in_adu - step 26.47, ADR 0042: replaced by test_every_column_of_the_measurements_table_is_read_by_name
 test_the_coarse_plane_skips_the_kernels_zeros - 30/10/2026: wall-clock ratio flaky on the Windows runner (0.76 against 0.6); the time per frame is gated by the bench, step 26.57 (ADR 0042)
+test_a_window_of_noise_is_a_failed_fit_not_a_crash - step 26.49, ADR 0022 point 4: the fit moved to psf_fit.py; replaced by test_pure_noise_is_no_fit_and_no_crash
+test_beta_stays_in_its_bounds_however_far_the_fit_pushes - step 26.49, ADR 0022 point 4: beta fixed at 4 as Image Analysis, no free beta to bound
+test_gaussian_stars_are_a_moffat_of_large_beta - step 26.49, ADR 0022 point 4: beta fixed at 4 as Image Analysis, no free beta to grow
+test_undersampled_stars_keep_their_fwhm - step 26.49, ADR 0022 point 4: the model is sampled at the pixel centre as Image Analysis, no integration over the pixel

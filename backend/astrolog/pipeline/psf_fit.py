@@ -1,0 +1,183 @@
+"""Each star's PSF as Image Analysis fits it (par. 2.1.6; misure.md, Forma): Moffat beta 4 at the
+pixel centres, sky fitted, median-stabilized square. Pure: pixels in, numbers out. software-ok"""
+
+import math
+from dataclasses import dataclass
+
+import numpy as np
+from scipy.optimize import least_squares  # pyright: ignore[reportMissingTypeStubs]
+
+BETA = 4.0  # [C ImageAnalysis par. 2.1.6: default PSF type Moffat beta 4; software-ok]
+# Region grows while its median falls by at least this.
+MEDIAN_DROP = 0.01  # [C ImageAnalysis par. 2.1.6; PJSR PSF, Adaptive sampling region; software-ok]
+MAX_FITS = 8000  # [C ImageAnalysis Maximum PSF fits default, brightest first; software-ok]
+MAX_HALF_PX = 64  # [T] a region still falling past 129 px across sits on a nebula: stops there
+# Fit refused with its centre this close to its region's edge, or off its detected structure.
+EDGE_PX = 1.0  # [T] ImageWeighting par. 2.2.1 says "too close", no number; software-ok
+TENTH = 0.1  # [C ImageAnalysis eq. 24: flux on the FWTM ellipse; software-ok]
+WINSOR = 0.1  # [C ImageAnalysis par. 2.1.6: residual a 10% Winsorized mean; software-ok]
+EVALUATIONS_PER_PARAMETER = 50  # [T] a star that does not converge stops there
+_HALF = 2 ** (1 / BETA) - 1  # [D Moffat 1969: half maximum where (1 + q)^-beta = 1/2]
+_TENTH = TENTH ** (-1 / BETA) - 1
+
+
+@dataclass(frozen=True)
+class Fitted:
+    """Per fitted star, the refused left out; residual NaN where the FWTM ellipse holds no flux."""
+
+    fwhm_px: np.ndarray  # 2 sqrt(sx sy) sqrt(2^(1/beta) - 1), ImageAnalysis eq. 22
+    eccentricity: np.ndarray  # sqrt(1 - sy^2 / sx^2), eq. 23
+    angle_deg: np.ndarray  # long axis, [0, 180) from +x towards +y
+    residual: np.ndarray  # eq. 24: Winsorized mean |v - f| over the mean signal 4 S / (pi Wx Wy)
+
+
+def fit_stars(
+    plane: np.ndarray, x: np.ndarray, y: np.ndarray, box: np.ndarray, flux: np.ndarray
+) -> Fitted:
+    """`plane` the measured pixels with their sky (the median needs its level); `box` per star
+    (x0, x1, y0, y1); the MAX_FITS brightest by `flux` fitted."""
+    order = np.argsort(-flux, kind="stable")[:MAX_FITS]
+    rows = [s for i in order if (s := _one(plane, float(x[i]), float(y[i]), box[i])) is not None]
+    if not rows:
+        empty = np.empty(0)
+        return Fitted(empty, empty, empty, empty)
+    fwhm, ecc, angle, residual = (np.array(c, dtype=np.float64) for c in zip(*rows, strict=True))
+    return Fitted(fwhm, ecc, angle, residual)
+
+
+def region(plane: np.ndarray, cx: int, cy: int, box: np.ndarray) -> tuple[slice, slice]:
+    """Square on the star, half side its structure's larger side, a pixel a side per step while
+    the median falls by MEDIAN_DROP or more (PJSR PSF, Adaptive sampling region); edges cut it."""
+    x0, x1, y0, y1 = (int(v) for v in box)
+    half = max(1, x1 - x0, y1 - y0)
+    rows, cols = plane.shape
+
+    def window(h: int) -> tuple[slice, slice]:
+        return (slice(max(0, cy - h), min(rows, cy + h + 1)),
+                slice(max(0, cx - h), min(cols, cx + h + 1)))  # fmt: skip
+
+    median = float(np.median(plane[window(half)]))
+    while half < MAX_HALF_PX:
+        grown = float(np.median(plane[window(half + 1)]))
+        if median - grown < MEDIAN_DROP * abs(median):
+            break
+        half, median = half + 1, grown
+    return window(half)
+
+
+def _one(
+    plane: np.ndarray, x: float, y: float, box: np.ndarray
+) -> tuple[float, float, float, float] | None:
+    cx, cy = round(x), round(y)
+    rs, cs = region(plane, cx, cy, box)
+    values = plane[rs, cs].astype(np.float64)
+    ys, xs = np.mgrid[rs, cs]
+    xs, ys, values = xs.ravel().astype(np.float64), ys.ravel().astype(np.float64), values.ravel()
+    sky = float(np.median(values))
+    peak = float(values.max()) - sky
+    if peak <= 0:
+        return None
+    width = max(1.0, (box[1] - box[0] + box[3] - box[2]) / 8)
+    start = np.array([0.0, 1.0, x, y, math.log(width), math.log(width), 0.0])
+    scaled = (values - sky) / peak
+    try:
+        with np.errstate(divide="raise", over="raise", invalid="raise", under="ignore"):
+            fit = least_squares(_residuals, start, jac=_jacobian,  # pyright: ignore[reportArgumentType]
+                                args=(xs, ys, scaled), method="lm", x_scale="jac",
+                                max_nfev=EVALUATIONS_PER_PARAMETER * (len(start) + 1))  # fmt: skip
+    except (ValueError, ArithmeticError):
+        return None
+    b, a, x0, y0, log_sx, log_sy, theta = fit.x
+    if fit.status <= 0 or not np.all(np.isfinite(fit.x)) or a <= 0:
+        return None
+    if not _placed(x0, y0, (xs, ys), box):
+        return None
+    sx, sy = math.exp(log_sx), math.exp(log_sy)
+    model = _model(fit.x, xs, ys)
+    residual = _residual(scaled, model, (xs - x0, ys - y0), (sx, sy, theta), b)
+    long_axis, short_axis = max(sx, sy), min(sx, sy)
+    angle = math.degrees(theta) + (0 if sx >= sy else 90)
+    fwhm = 2 * math.sqrt(sx * sy) * math.sqrt(_HALF)
+    eccentricity = math.sqrt(1 - (short_axis / long_axis) ** 2)
+    return fwhm, eccentricity, folded(angle), residual
+
+
+def _placed(x0: float, y0: float, pixels: tuple[np.ndarray, np.ndarray], box: np.ndarray) -> bool:
+    """Centre inside the detected structure and EDGE_PX inside the region (ImageWeighting 2.2.1)."""
+    xs, ys = pixels
+    inside_box = box[0] - 0.5 <= x0 <= box[1] - 0.5 and box[2] - 0.5 <= y0 <= box[3] - 0.5
+    off_edge = (xs.min() + EDGE_PX <= x0 <= xs.max() - EDGE_PX
+                and ys.min() + EDGE_PX <= y0 <= ys.max() - EDGE_PX)  # fmt: skip
+    return bool(inside_box and off_edge)
+
+
+def _residual(
+    values: np.ndarray,
+    model: np.ndarray,
+    offsets: tuple[np.ndarray, np.ndarray],
+    axes: tuple[float, float, float],
+    sky: float,
+) -> float:
+    """ImageAnalysis eq. 24 on values scaled alike: the ratio does not see the scale."""
+    sx, sy, theta = axes
+    dx, dy = offsets
+    c, s = math.cos(theta), math.sin(theta)
+    u, v = c * dx + s * dy, -s * dx + c * dy
+    wx, wy = 2 * sx * math.sqrt(_TENTH), 2 * sy * math.sqrt(_TENTH)  # FWTM along each axis
+    inside = (2 * u / wx) ** 2 + (2 * v / wy) ** 2 <= 1
+    above = values[inside] - sky
+    signal = float(above[above > 0].sum())  # ImageWeighting eq. 7: only pixels over B
+    if signal <= 0:
+        return math.nan
+    mean_signal = 4 * signal / (math.pi * wx * wy)
+    return winsorized_mean(np.abs(values - model)) / mean_signal
+
+
+def winsorized_mean(values: np.ndarray, share: float = WINSOR) -> float:
+    """Mean with the lowest and highest `share` set to the nearest kept value."""
+    ordered = np.sort(values)
+    cut = int(share * len(ordered))
+    if cut:
+        ordered[:cut] = ordered[cut]
+        ordered[-cut:] = ordered[-cut - 1]
+    return float(ordered.mean())
+
+
+def folded(degrees: float) -> float:
+    """Into [0, 180): -1e-15 % 180 rounds to 180.0, which the schema refuses."""
+    turned = degrees % 180
+    return 0.0 if turned >= 180 else turned
+
+
+def _parts(p: np.ndarray, xs: np.ndarray, ys: np.ndarray) -> tuple[np.ndarray, ...]:
+    _, a, x0, y0, log_sx, log_sy, theta = p
+    sx2, sy2 = math.exp(2 * log_sx), math.exp(2 * log_sy)
+    c, s = math.cos(theta), math.sin(theta)
+    dx, dy = xs - x0, ys - y0
+    u, v = c * dx + s * dy, -s * dx + c * dy
+    base = 1 + u * u / sx2 + v * v / sy2
+    return u, v, base, base**-BETA, np.array([a, c, s, sx2, sy2])
+
+
+def _model(p: np.ndarray, xs: np.ndarray, ys: np.ndarray) -> np.ndarray:
+    *_, g, _ = _parts(p, xs, ys)
+    return p[0] + p[1] * g
+
+
+def _residuals(p: np.ndarray, xs: np.ndarray, ys: np.ndarray, values: np.ndarray) -> np.ndarray:
+    return _model(p, xs, ys) - values
+
+
+def _jacobian(p: np.ndarray, xs: np.ndarray, ys: np.ndarray, _values: np.ndarray) -> np.ndarray:
+    """B + A (1 + u^2/sx^2 + v^2/sy^2)^-beta, analytic (MINPACK lmder)."""
+    u, v, base, g, (a, c, s, sx2, sy2) = _parts(p, xs, ys)
+    dg = -BETA * g / base * a  # d model / d base
+    jac = np.empty((len(xs), 7))
+    jac[:, 0] = 1.0
+    jac[:, 1] = g
+    jac[:, 2] = dg * (-2 * c * u / sx2 + 2 * s * v / sy2)
+    jac[:, 3] = dg * (-2 * s * u / sx2 - 2 * c * v / sy2)
+    jac[:, 4] = dg * (-2 * u * u / sx2)
+    jac[:, 5] = dg * (-2 * v * v / sy2)
+    jac[:, 6] = dg * 2 * u * v * (1 / sx2 - 1 / sy2)
+    return jac

@@ -6,14 +6,13 @@ import math
 import numpy as np
 import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 
-from .shape import RING_OUTER
-
 TENTH = 0.1  # [C PixInsight ImageWeighting par. 2.2: the PSF over a tenth of its peak; software-ok]
 TENTH_RADIUS = math.sqrt(2 * math.log(1 / TENTH))  # [D Gaussian: exp(-r^2 / 2) = TENTH]
 MIN_AXIS_PX = 0.5  # [D a pixel's own half-width] a lone bright pixel: sep needs axes over 0
 SUBPIX = 5  # [C sep docs: sum_ellipse default subpixel sampling]
 # Local sky ring, from just past the structure: a median, not sep's mean (neighbours stay out)
 LOCAL_SKY_PX = 24  # [C SExtractor BACKPHOTO_THICK default 24]
+RING_OUTER = 1.5  # [T] the local sky: the ring from the window (or aperture) to 1.5 times it
 
 
 def ring_sky(

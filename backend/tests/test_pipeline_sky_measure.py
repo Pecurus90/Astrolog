@@ -141,7 +141,9 @@ def test_an_unreadable_measure_waits(conn, tmp_path):
                  " hfd_px = NULL, background_adu = NULL, noise_adu = NULL, shape = NULL,"
                  " shape_stars = NULL, fwhm_px = NULL, eccentricity = NULL, angle_deg = NULL,"
                  " ceiling_adu = NULL, saturated = NULL, psf_snr = NULL, gradient_pct = NULL,"
-                 " gradient_angle_deg = NULL, tilt_pct = NULL, curvature_pct = NULL")  # fmt: skip
+                 " gradient_angle_deg = NULL, tilt_pct = NULL, curvature_pct = NULL,"
+                 " fwhm_sigma_px = NULL, eccentricity_sigma = NULL, psf_residual = NULL,"
+                 " psf_residual_sigma = NULL")  # fmt: skip
     assert sky_root(conn, root, LATER).written == 0 and _sky(conn) == []
 
 
