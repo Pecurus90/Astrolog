@@ -31,10 +31,11 @@ PENDING = (
     " ORDER BY f.frame_id, lower(f.rel_path) LIKE '%.fz', f.rel_path"
 )
 
-_NUMBERS = (  # TooFewStars: no hfd_px, tilt_pct, curvature_pct
+_NUMBERS = (  # TooFewStars: no hfd_px
     "stars", "kept", "hfd_px", "background_adu", "noise_adu", "ceiling_adu", "saturated",
     "psf_snr", "psf_flux_adu", "psf_mean_flux_adu", "psf_count", "psf_signal_weight",
-    "gradient_pct", "gradient_angle_deg", "tilt_pct", "curvature_pct", "median_adu", "sigma_adu",
+    "gradient_noise", "gradient_angle_deg", "row_banding", "column_banding", "fwhm_tilt",
+    "fwhm_curvature", "elongation_angle_deg", "elongation_coherence", "median_adu", "sigma_adu",
     "entropy_bits", "noise_ratio", "snr", "mstar_adu", "nstar_adu",
 )  # fmt: skip
 _SHAPE = (

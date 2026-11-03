@@ -1133,10 +1133,15 @@ CREATE TABLE pipeline_measures (
   snr            REAL CHECK (snr >= 0),             -- SNR, eq. 16; NULL: rumore zero
   mstar_adu      REAL CHECK (mstar_adu >= 0),       -- M*, fondo MMT a 256 px; NULL: nessun pixel sotto
   nstar_adu      REAL CHECK (nstar_adu >= 0),       -- N*, 2,054326 Sn
-  gradient_pct   REAL CHECK (gradient_pct >= 0),  -- 100 (max - min) / mediana del fondo ridotto
-  gradient_angle_deg REAL CHECK (gradient_angle_deg >= 0 AND gradient_angle_deg < 360),  -- lato chiaro
-  tilt_pct       REAL CHECK (tilt_pct >= 0),  -- HFD degli angoli, ASTAP; NULL: zona povera
-  curvature_pct  REAL,  -- angoli meno centro, con segno: + angoli peggiori
+  -- campo come Image Analysis (background.py, field.py); gradiente e banding in unita' di rumore
+  gradient_noise REAL CHECK (gradient_noise >= 0),  -- Gradient, picco-picco della superficie, eq. 13-14
+  gradient_angle_deg REAL CHECK (gradient_angle_deg >= 0 AND gradient_angle_deg < 360),  -- lato chiaro, nostro
+  row_banding    REAL CHECK (row_banding >= 0),     -- RowBanding, eq. 15
+  column_banding REAL CHECK (column_banding >= 0),  -- ColumnBanding
+  fwhm_tilt      REAL CHECK (fwhm_tilt >= 0),  -- FWHMTilt, eq. 26-27; NULL: meno di 32 fit
+  fwhm_curvature REAL,                         -- FWHMCurvature, con segno: + stelle piu' grandi agli angoli
+  elongation_angle_deg REAL CHECK (elongation_angle_deg >= 0 AND elongation_angle_deg < 180),  -- antiorario da +x
+  elongation_coherence REAL CHECK (elongation_coherence >= 0 AND elongation_coherence <= 1),  -- eq. 28-29
   duration_s     REAL CHECK (duration_s >= 0),
   measured_at    TEXT NOT NULL,
   CHECK ((outcome = 'measured') = (hfd_px IS NOT NULL)),
@@ -1161,9 +1166,12 @@ CREATE TABLE pipeline_measures (
     AND (sky_rate_adu_s IS NULL OR stars IS NOT NULL) AND (snr IS NULL OR stars IS NOT NULL)),
   CHECK ((mstar_adu IS NULL) = (nstar_adu IS NULL) AND (mstar_adu IS NULL OR stars IS NOT NULL)),
   CHECK (psf_signal_weight IS NULL OR (psf_snr IS NOT NULL AND mstar_adu IS NOT NULL)),
-  CHECK (gradient_pct IS NOT NULL OR gradient_angle_deg IS NULL),
-  CHECK (gradient_pct IS NULL OR stars IS NOT NULL),
-  CHECK ((tilt_pct IS NULL) = (curvature_pct IS NULL) AND (tilt_pct IS NULL OR hfd_px IS NOT NULL))
+  CHECK (coalesce(gradient_noise, gradient_angle_deg, row_banding, column_banding) IS NULL
+    OR stars IS NOT NULL),
+  CHECK ((row_banding IS NULL) = (column_banding IS NULL)),
+  CHECK ((fwhm_tilt IS NULL) = (fwhm_curvature IS NULL) AND (fwhm_tilt IS NULL OR psf_count >= 32)),
+  CHECK ((elongation_angle_deg IS NULL) = (elongation_coherence IS NULL)
+    AND (elongation_angle_deg IS NULL OR psf_count IS NOT NULL))
 ) STRICT;
 
 -- RILEVATO. Misure col cielo (pipeline/sky_measure.py, docs/domini/misure.md): una riga per posa

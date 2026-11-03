@@ -42,9 +42,10 @@ che resta nasce coi test.
    da `BAYERPAT` con `XBAYROFF`/`YBAYROFF`, come l'Auto del Debayer. Il rumore come lo dice WBPP:
    per piano R, G, B del mosaico, poi (min + max) / 2. Il superpixel allargava le
    stelle piccole: Canon 700D HFD 6,94 px contro 3,97 di ASTAP, con VNG 3,20.
-7. **Altre misure**: fondo e rumore in ADU (solo stessa camera, guadagno, posa); gradiente sul
-   frame ridotto, (max - min) / mediana, col lato piu' chiaro; tilt e curvatura dalla HFD in
-   cinque zone (quattro angoli e centro); stelle sature (`DATAMAX` o il tetto dall'istogramma);
+7. **Altre misure**: fondo e rumore in ADU (solo stessa camera, guadagno, posa); ~~gradiente sul
+   frame ridotto, (max - min) / mediana~~, col lato piu' chiaro; ~~tilt e curvatura dalla HFD in
+   cinque zone (quattro angoli e centro)~~ (superati da ADR 0042, passo 26.52: gradiente, tilt e
+   curvatura come Image Analysis; il lato chiaro resta); stelle sature (`DATAMAX` o il tetto dall'istogramma);
    FWHM e HFD anche allo zenit, valore / X^0,6 (ESO, "seeing varies with the airmass to the power
    of 3/5th"), con sito e coordinate.
 8. **SQM**: il metodo di ASTAP portato (MPL-2.0, nei crediti; `-sqm` c'e' solo nell'eseguibile

@@ -8,9 +8,10 @@ import numpy as np
 import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 
 from ..units import sigma_from_mad
+from .background import banding, gradient, valid_pixels
 from .debayer import COLOURS, debayered
 from .detect import detect
-from .field import gradient_of, photometry, psf_signal_weight, psf_snr, zones_of
+from .field import bright_side, elongation, fwhm_tilt, photometry, psf_signal_weight, psf_snr
 from .median import median3x3
 from .mmt import Background, mstar_nstar
 from .noise import NOISE_FLOOR_ADU, mrs, structure_noise
@@ -45,8 +46,14 @@ class Across:
     psf_mean_flux_adu: float | None  # PSFTotalMeanFlux, ADU per square pixel
     psf_count: int | None  # PSFCount, the fits summed
     psf_signal_weight: float | None  # PSFSignalWeight; None: no PSF SNR or no M*
-    gradient_pct: float | None
-    gradient_angle_deg: float | None
+    gradient_angle_deg: float | None  # bright side, ours (field.bright_side); None: no plane
+    gradient_noise: float | None  # ImageAnalysis Gradient, noise units; None: noise zero
+    row_banding: float | None  # RowBanding, noise units
+    column_banding: float | None  # ColumnBanding
+    fwhm_tilt: float | None  # FWHMTilt; None: under 32 fits
+    fwhm_curvature: float | None  # FWHMCurvature
+    elongation_angle_deg: float | None  # ElongationAngle, counterclockwise; None: round or no fit
+    elongation_coherence: float | None  # ElongationCoherence
     median_adu: float  # Image Analysis Median, the pedestal off (pixel_stats.py)
     sigma_adu: float  # Sigma
     entropy_bits: float  # Entropy
@@ -64,8 +71,6 @@ class Measured(Across):
     background_adu: float
     noise_adu: float
     shape: Shape | None  # on stars of any roundness: a trailed frame still has one
-    tilt_pct: float | None  # None: a zone under field.zone_min_stars
-    curvature_pct: float | None
 
 
 @dataclass(frozen=True)
@@ -92,7 +97,7 @@ def measure_frame(
     objects = _found(images[1], noise)
     usable = _kept(sensor, objects, saturation)
     round_ones = usable[_round(objects[usable])]
-    hfds, hx, hy = _hfd(images, objects, _spread(objects, round_ones, raw.shape))
+    hfds = _hfd(images, objects, _spread(objects, round_ones, raw.shape))
     first_noise = noise
     # MRS, not the first pass: crowded fields lift a MAD (40k synthetic stars: 19.8 for 10)
     quiet = mrs(raw)
@@ -108,19 +113,15 @@ def measure_frame(
     pixel = _pixel_values(raw, saturation, pedestal, noise, quiet.ratio)
     if pattern is not None:  # noise said as WBPP says it
         noise = max(_mosaic_noise(sensor, pattern), NOISE_FLOOR_ADU)
-    gradient = gradient_of(back)
+    field = _sky_field(raw, saturation, noise) | _star_field(fits, raw.shape)
     across = Across(ceiling_adu=saturation, saturated=int(found.saturated.sum()),
-                    gradient_pct=gradient.pct, gradient_angle_deg=gradient.angle_deg,
-                    mstar_adu=mmt.mstar_adu if mmt else None,
-                    nstar_adu=mmt.nstar_adu if mmt else None, **flux, **pixel)  # fmt: skip
+                    gradient_angle_deg=bright_side(back), mstar_adu=mmt.mstar_adu if mmt else None,
+                    nstar_adu=mmt.nstar_adu if mmt else None, **flux, **pixel, **field)  # fmt: skip
     common = {"stars": len(found.x), "kept": len(hfds), "background_adu": float(sky.globalback),
               "noise_adu": noise, "shape": shape} | vars(across)  # fmt: skip
     if len(hfds) < MIN_STARS:
         return TooFewStars(**common)
-    zones = zones_of(hfds, hx, hy, raw.shape)
-    return Measured(**common, hfd_px=float(np.median(hfds)),
-                    tilt_pct=zones.tilt_pct if zones else None,
-                    curvature_pct=zones.curvature_pct if zones else None)  # fmt: skip
+    return Measured(**common, hfd_px=float(np.median(hfds)))
 
 
 def _flux(fits: Fitted, noise: float, stars: int, mmt: Background | None) -> dict[str, Any]:
@@ -135,6 +136,26 @@ def _flux(fits: Fitted, noise: float, stars: int, mmt: Background | None) -> dic
     return {"psf_snr": psf_snr(found.flux, noise) if enough else None, "psf_flux_adu": found.flux,
             "psf_mean_flux_adu": found.mean_flux, "psf_count": found.count,
             "psf_signal_weight": weight}  # fmt: skip
+
+
+def _sky_field(raw: np.ndarray, ceiling: float, noise: float) -> dict[str, Any]:
+    """ImageAnalysis Gradient, RowBanding, ColumnBanding on the measured plane's valid pixels, in
+    units of the noise written. software-ok"""
+    valid = valid_pixels(raw, ceiling)
+    bands = banding(raw, valid, noise)
+    return {"gradient_noise": gradient(raw, valid, noise),
+            "row_banding": bands.row if bands else None,
+            "column_banding": bands.column if bands else None}  # fmt: skip
+
+
+def _star_field(fits: Fitted, shape: tuple[int, ...]) -> dict[str, Any]:
+    """FWHMTilt, FWHMCurvature, ElongationAngle, ElongationCoherence on the shape's fits."""
+    shaped = fits.brightest()
+    tilt, along = fwhm_tilt(shaped, shape), elongation(shaped)
+    return {"fwhm_tilt": tilt.tilt if tilt else None,
+            "fwhm_curvature": tilt.curvature if tilt else None,
+            "elongation_angle_deg": along.angle_deg if along else None,
+            "elongation_coherence": along.coherence if along else None}  # fmt: skip
 
 
 def _pixel_values(
@@ -237,11 +258,11 @@ def _peaks(raw: np.ndarray, objects: np.ndarray, guess: np.ndarray) -> np.ndarra
 
 def _hfd(
     images: tuple[np.ndarray, np.ndarray], objects: np.ndarray, keep: np.ndarray
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """HFD on the raw residual less the ring median on the filtered copy, and where each star is.
-    No segment mask: a masked nebula empties the ring (Rosette)."""
+) -> np.ndarray:
+    """HFD on the raw residual less the ring median on the filtered copy. No segment mask: a
+    masked nebula empties the ring (Rosette)."""
     if len(keep) == 0:
-        return np.array([]), np.array([]), np.array([])
+        return np.array([])
     residual, filtered = images
     x, y = objects["x"][keep], objects["y"][keep]
     aperture = APERTURE_FWHM * estimated_fwhm(objects)[keep]
@@ -259,4 +280,4 @@ def _hfd(
         radii[j] = (
             np.interp(total[j] / 2, np.maximum.accumulate(enclosed[:, j]), steps) * aperture[j]
         )
-    return 2 * radii[good], x[good], y[good]
+    return 2 * radii[good]

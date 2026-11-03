@@ -379,3 +379,11 @@ test_gaussian_stars_are_a_moffat_of_large_beta - step 26.49, ADR 0022 point 4: b
 test_undersampled_stars_keep_their_fwhm - step 26.49, ADR 0022 point 4: the model is sampled at the pixel centre as Image Analysis, no integration over the pixel
 test_the_mean_signal_sums_only_the_pixels_over_the_sky - step 26.50: the signal moved to its own function; replaced by test_the_signal_sums_only_the_pixels_over_the_sky and test_the_residual_is_over_the_mean_signal_of_the_fwtm_ellipse
 test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale - step 26.50: F is the fitted stars' signal; replaced by test_the_frame_psf_snr_takes_the_fitted_stars_signal_with_no_scale
+test_a_sky_on_a_plane_gives_its_spread_over_its_median_and_its_bright_side - step 26.52, ADR 0042: gradient in noise units as Image Analysis, no percentage; replaced by test_a_sky_on_a_plane_has_its_bright_side and test_the_gradient_is_the_fitted_surface_peak_to_peak_over_the_noise
+test_a_flat_sky_has_no_gradient_and_no_side - step 26.52, ADR 0042: no percentage; replaced by test_a_flat_sky_has_no_side
+test_a_sky_at_zero_or_under_has_no_gradient - step 26.52, ADR 0042: the gradient is over the noise, not over the sky level
+test_the_gradient_reaches_the_frame_through_measure - step 26.52, ADR 0042: replaced by test_the_bright_side_reaches_the_frame_through_measure and the gradient row of test_pipeline_measure
+test_tilt_is_worst_less_best_corner_over_the_median_hfd - step 26.52, ADR 0042 supersedes ADR 0037: tilt from the FWHM surface; replaced by test_tilt_and_curvature_are_the_documented_surface
+test_curvature_is_corners_against_the_centre_with_its_sign - step 26.52, ADR 0042: replaced by test_tilt_and_curvature_are_the_documented_surface
+test_the_stars_a_zone_needs_follow_the_frame_s_own_hfd_spread - step 26.52, ADR 0042: no zones; 32 fits as Image Analysis, test_under_32_stars_no_tilt
+test_never_under_min_stars_a_zone - step 26.52, ADR 0042: no zones; replaced by test_under_32_stars_no_tilt

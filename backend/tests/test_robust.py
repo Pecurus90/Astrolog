@@ -175,6 +175,34 @@ def test_sn_of_a_half_normal_sample_needs_its_own_factor():
     assert 2.054326 * sn == pytest.approx(1.0, rel=0.005)
 
 
+def test_the_biweight_fit_drops_the_outliers_a_least_squares_follows():
+    """A line, a fifth of its points thrown 50 sigma up: the biweight finds the line again."""
+    rng = np.random.default_rng(9)
+    x = np.linspace(-1.0, 1.0, 200)
+    y = 2.0 + 0.5 * x + rng.normal(0.0, 0.01, x.size)
+    y[::5] += 0.5
+    design = np.column_stack([np.ones_like(x), x])
+    assert robust.biweight_fit(design, y) == pytest.approx([2.0, 0.5], abs=0.005)
+    assert np.linalg.lstsq(design, y, rcond=None)[0][0] == pytest.approx(2.1, abs=0.01)
+
+
+def test_the_biweight_fit_of_an_exact_surface_is_the_surface():
+    """Residuals all zero, MAD zero: the ordinary fit stands."""
+    x = np.linspace(-1.0, 1.0, 50)
+    design = np.column_stack([np.ones_like(x), x, x * x])
+    assert robust.biweight_fit(design, 1 + 2 * x + 3 * x * x) == pytest.approx([1, 2, 3])
+
+
+def test_residuals_at_rounding_leave_the_ordinary_fit_alone():
+    """A surface met to the last bits: a scale of 1e-16 would weigh rounding as outliers and,
+    with every weight at zero, give back zeros. The ordinary fit stands, bit for bit."""
+    x = np.linspace(-1.0, 1.0, 32)
+    design = np.column_stack([np.ones_like(x), x, x * x])
+    y = 3.0 + np.random.default_rng(10).normal(0.0, 1e-15, x.size)
+    ordinary = np.linalg.lstsq(design, y, rcond=None)[0]
+    assert robust.biweight_fit(design, y).tolist() == ordinary.tolist()
+
+
 def test_a_zero_scale_is_silent():
     """Qn zero (valori ripetuti, frame copiati): la soglia sarebbe la mediana, e tace."""
     assert relative_bounds([0.5] * 8 + [0.6, 0.7]) is None

@@ -6,9 +6,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-# Valid pixels: the open range (min + e, max - e), e this share of the full scale: no empty
-# border, no saturation; one DN at 16 bit.
-EDGE_SHARE = 1 / 65535  # [C ImageAnalysis par. 2.1.2: e = 1/65535 of [0, 1]; software-ok]
+from .background import valid_pixels
+
 BWMV_MADS = 9.0  # [C ImageAnalysis eq. 10: u = (v - M) / (9 MAD); software-ok]
 BWMV_NORMAL = 0.990905  # [C ImageAnalysis eq. 9: sqrt BWMV consistent with a normal; software-ok]
 ENTROPY_BINS = 16  # [C ImageAnalysis eq. 11: bins of Sigma / 16; software-ok]
@@ -29,10 +28,7 @@ def pixel_stats(data: np.ndarray, *, full_scale: float, pedestal: float = 0.0) -
     """`full_scale`: what [0, 1] maps to (the ceiling, ADR 0041). `pedestal`: PEDESTAL, DN,
     negative accepted."""
     flat = np.asarray(data, dtype=np.float64).ravel()
-    low, high, edge = float(flat.min()), float(flat.max()), EDGE_SHARE * full_scale
-    valid = flat[(flat > low + edge) & (flat < high - edge)]
-    if valid.size == 0:  # a frame of two values: none in the open range
-        valid = flat
+    valid = flat[valid_pixels(flat, full_scale)]
     centre = float(np.median(valid))
     sigma = _sigma(valid, centre)
     low, high = _scale(valid[valid < centre], centre), _scale(valid[valid >= centre], centre)

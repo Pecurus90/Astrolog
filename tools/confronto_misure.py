@@ -161,8 +161,8 @@ OUR_STAGES = {
     "statistiche dei pixel": "pixel_stats",
     "fondo MMT": "mstar_nstar",
     "rumore per piano colore": "_mosaic_noise",
-    "gradiente": "gradient_of",
-    "tilt e curvatura": "zones_of",
+    "gradiente e banding": "_sky_field",
+    "tilt ed elongazione": "_star_field",
 }
 BACKGROUND, READ, OTHER, TOTAL = "fondo sep", "lettura file", "altro", "totale"
 
@@ -193,6 +193,12 @@ class Ours:
     snr: float | None = None
     mstar_adu: float | None = None
     nstar_adu: float | None = None
+    gradient_noise: float | None = None  # field (background.py, field.py)
+    row_banding: float | None = None
+    column_banding: float | None = None
+    fwhm_tilt: float | None = None
+    fwhm_curvature: float | None = None
+    elongation_coherence: float | None = None
 
 
 @dataclass(frozen=True)
@@ -371,7 +377,9 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
                 spread.psf_residual if spread else None, found.psf_flux_adu,
                 found.psf_mean_flux_adu, found.psf_count, found.psf_signal_weight,
                 found.median_adu, found.sigma_adu, found.entropy_bits, found.noise_ratio,
-                found.snr, found.mstar_adu, found.nstar_adu)  # fmt: skip
+                found.snr, found.mstar_adu, found.nstar_adu, found.gradient_noise,
+                found.row_banding, found.column_banding, found.fwhm_tilt, found.fwhm_curvature,
+                found.elongation_coherence)  # fmt: skip
     return ours, pattern is not None
 
 
@@ -417,6 +425,12 @@ def _pairs(row: Row) -> dict[str, float | None]:
         "SNR / Image Analysis": _over(o.snr, v.get("SNR")),
         "M* / Image Analysis": _over(o.mstar_adu, v.get("MStar"), ADU_RANGE),
         "N* / Image Analysis": _over(o.nstar_adu, v.get("NStar"), ADU_RANGE),
+        "gradiente / Image Analysis": _over(o.gradient_noise, v.get("Gradient")),
+        "banding righe / Image Analysis": _over(o.row_banding, v.get("RowBanding")),
+        "banding colonne / Image Analysis": _over(o.column_banding, v.get("ColumnBanding")),
+        "tilt FWHM / Image Analysis": _over(o.fwhm_tilt, v.get("FWHMTilt")),
+        "curvatura FWHM / Image Analysis": _over(o.fwhm_curvature, v.get("FWHMCurvature")),
+        "coerenza / Image Analysis": _over(o.elongation_coherence, v.get("ElongationCoherence")),
         "altezza / Image Analysis": _over(o.altitude_deg, v.get("Altitude")),
         "massa d'aria / Image Analysis": _over(airmass, v.get("Airmass")),
     }

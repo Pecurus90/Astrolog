@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 282; senza fonte: 1.
-Fonti: C norma: 144; U usanza: 2; D metodo: 18; M misura: 22; P decisione: 35; T tecnico: 63.
+Valori: 286; senza fonte: 1.
+Fonti: C norma: 148; U usanza: 2; D metodo: 17; M misura: 22; P decisione: 33; T tecnico: 66.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -208,6 +208,17 @@ Fonti: C norma: 144; U usanza: 2; D metodo: 18; M misura: 22; P decisione: 35; T
 |---|---|---|
 | SEEING_POWER | `0.6` | C ESO La Silla seeing, eso.org/sci/facilities/lasilla/astclim/seeing.html |
 
+### pipeline/background.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| EDGE_SHARE | `1 / 65535` | C ImageAnalysis par. 2.1.2: e = 1/65535 of [0, 1 |
+| MAX_TILES | `16` | C ImageAnalysis par. 2.1.3: a grid of up to 16 x 16 tiles; software-ok |
+| MIN_TILE_PX | `32` | C ImageAnalysis par. 2.1.3: tiles of at least 32 x 32 pixels; software-ok |
+| SURFACE_SAMPLES | `257` | T |
+| BANDING_REACH | `50` | C ImageAnalysis par. 2.1.3: within fifty rows; software-ok |
+| MEDIAN_SE | `1.2533` | C ImageAnalysis eq. 15; Kenney & Keeping 1962; software-ok |
+
 ### pipeline/capacity.py
 
 | simbolo | valore | fonte |
@@ -285,11 +296,7 @@ Fonti: C norma: 144; U usanza: 2; D metodo: 18; M misura: 22; P decisione: 35; T
 | PSFSW_C2 | `9.0e6` | C PixInsight ImageWeighting, eq. 22; software-ok |
 | MESH_PX | `64` | C sep docs: Background bw, bh default |
 | PLANE_EXPLAINS | `0.5` | D R^2 over one half: the plane explains the larger part |
-| TILT_BAND_PCT | `5.0` | C ASTAP astap.htm, CCD inspector: tilt 0-5% "none" |
-| D2_FOUR | `2.059` | C Montgomery, Statistical Quality Control: d2 for subgroups of 4 |
-| MEDIAN_SE | `math.sqrt(math.pi / 2)` | D asymptotic standard error of the median, normal |
-| GRID | `3` | P ADR 0037: the 3x3 grid, its corners and centre the five zones |
-| CENTRE | `GRID * GRID // 2` | P ADR 0037 |
+| TILT_MIN_STARS | `32` | C ImageAnalysis par. 2.1.6: at least 32 fitted stars; software-ok |
 
 ### pipeline/fingerprint.py
 
@@ -326,7 +333,6 @@ Fonti: C norma: 144; U usanza: 2; D metodo: 18; M misura: 22; P decisione: 35; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| EDGE_SHARE | `1 / 65535` | C ImageAnalysis par. 2.1.2: e = 1/65535 of [0, 1 |
 | BWMV_MADS | `9.0` | C ImageAnalysis eq. 10: u = (v - M) / (9 MAD); software-ok |
 | BWMV_NORMAL | `0.990905` | C ImageAnalysis eq. 9: sqrt BWMV consistent with a normal; software-ok |
 | ENTROPY_BINS | `16` | C ImageAnalysis eq. 11: bins of Sigma / 16; software-ok |
@@ -520,6 +526,9 @@ Fonti: C norma: 144; U usanza: 2; D metodo: 18; M misura: 22; P decisione: 35; T
 | BIWEIGHT_C | `6.0` | C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok |
 | BIWEIGHT_ITERATIONS | `20` | C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok |
 | BIWEIGHT_TOLERANCE | `1e-10` | C PixInsight ImageAnalysis par. 2.2, eq. 110; software-ok |
+| BIWEIGHT_FIT_C | `4.685` | C Holland & Welsch 1977, Commun. Stat. A6:813, Tukey's biweight |
+| BIWEIGHT_FIT_ITERATIONS | `50` | T |
+| EXACT_FIT | `1e-12` | T |
 | SN_OUTER | `20001` | M plan 26.51: three R* sets of 13 M, his Stat.Sn |
 | SN_HALVINGS | `60` | T |
 | CHAUVENET_EXPECTED | `0.5` | C Maples et al. 2018, ApJS 238:2, par. 2-4; C Maples et al. 2018, eq. 1: Chauvenet's criterion |

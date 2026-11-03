@@ -1,5 +1,5 @@
-"""Measures across the frame (ADR 0022 point 5, ADR 0037, ADR 0041): saturated stars at the
-declared full scale, PSF SNR, the sky gradient, tilt and curvature from five zones."""
+"""Measures across the frame (ADR 0022 point 5, ADR 0041, ADR 0042): saturated stars at the
+declared full scale, PSF SNR, the bright side, FWHM tilt and curvature, elongation."""
 
 import math
 
@@ -11,12 +11,13 @@ from astrolog.pipeline.field import (
     PSF_SNR_C3,
     PSF_SNR_C4,
     Photometry,
-    gradient_of,
+    bright_side,
+    elongation,
+    fwhm_tilt,
     psf_signal_weight,
     psf_snr,
-    zones_of,
 )
-from astrolog.pipeline.shape import MIN_STARS
+from astrolog.pipeline.psf_fit import Fitted
 from astrolog.pipeline.stars import Measured, measure_frame
 
 _SIDE = 600
@@ -177,14 +178,11 @@ def test_under_five_stars_no_psf_snr() -> None:
 # Gradient
 
 
-def test_a_sky_on_a_plane_gives_its_spread_over_its_median_and_its_bright_side() -> None:
-    """From 900 at the left to 1100 at the right, sampled at the mesh centres 32 and 608:
-    200 (608 - 32) / 639 over 1000, brighter at +x."""
+def test_a_sky_on_a_plane_has_its_bright_side() -> None:
+    """From 900 at the left to 1100 at the right: brighter at +x."""
     cols = np.indices((640, 640))[1]
     back = (900 + 200 * cols / 639).astype(np.float32)
-    gradient = gradient_of(back)
-    assert gradient.pct == pytest.approx(100 * 200 * (608 - 32) / 639 / 1000, rel=0.01)
-    assert _turn(gradient.angle_deg, 0.0) < 1.0
+    assert _turn(bright_side(back), 0.0) < 1.0
 
 
 def _turn(angle: float | None, expected: float) -> float:
@@ -195,102 +193,106 @@ def _turn(angle: float | None, expected: float) -> float:
 def test_the_bright_side_turns_with_the_plane() -> None:
     rows, cols = np.indices((640, 640))
     back = (1000 - 100 * cols / 639 + 100 * rows / 639).astype(np.float32)  # bright at -x, +y
-    assert _turn(gradient_of(back).angle_deg, 135.0) < 1.0
+    assert _turn(bright_side(back), 135.0) < 1.0
 
 
-def test_a_flat_sky_has_no_gradient_and_no_side() -> None:
-    gradient = gradient_of(np.full((640, 640), 1000.0, dtype=np.float32))
-    assert gradient.pct == pytest.approx(0.0, abs=1e-6)
-    assert gradient.angle_deg is None
+def test_a_flat_sky_has_no_side() -> None:
+    assert bright_side(np.full((640, 640), 1000.0, dtype=np.float32)) is None
 
 
-def test_a_sky_at_zero_or_under_has_no_gradient() -> None:
-    """A calibrated frame's sky can sit at 0 or under: a share of nothing is no number."""
-    cols = np.indices((640, 640))[1]
-    gradient = gradient_of((cols / 639 - 0.6).astype(np.float32))
-    assert gradient.pct is None
-
-
-def test_the_gradient_reaches_the_frame_through_measure() -> None:
+def test_the_bright_side_reaches_the_frame_through_measure() -> None:
     cols = np.indices((_SIDE, _SIDE))[1]
     data = _sky() + (200 * cols / (_SIDE - 1) - 100).astype(np.float32)
     _stars(data, _grid(6), 2.0, 6e4)
     found = measure_frame(data, saturation=65535.0, pattern=None)
-    assert found.gradient_pct == pytest.approx(18.0, rel=0.15)
     assert _turn(found.gradient_angle_deg, 0.0) < 5.0
 
 
-# Tilt and curvature
+# FWHM tilt and curvature, elongation (ImageAnalysis eq. 26-29)
 
 
-def _zone_stars(
-    hfd_of, per_zone: int = 25, spread: float = 0.0
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """`per_zone` stars in each of the 3x3 cells of a 900 px frame, HFD given by the cell, each
-    star off it by `spread` relative, the same pattern in every cell (a flat sensor stays flat)."""
-    xs, ys, hfds = [], [], []
-    offsets = np.random.default_rng(3).normal(0, spread, per_zone)
-    for row in range(3):
-        for col in range(3):
-            for k in range(per_zone):
-                xs.append(col * 300 + 20 + (260 * k) // per_zone)
-                ys.append(row * 300 + 150)
-                hfds.append(hfd_of(row, col) * (1 + offsets[k]))
-    return np.array(hfds, float), np.array(xs, float), np.array(ys, float)
+def _fits(fwhm: np.ndarray, x: np.ndarray, y: np.ndarray, eccentricity=None, angle=None) -> Fitted:
+    n = len(fwhm)
+    eccentricity = np.full(n, 0.3) if eccentricity is None else np.asarray(eccentricity, float)
+    angle = np.zeros(n) if angle is None else np.asarray(angle, float)
+    nothing = np.full(n, np.nan)
+    return Fitted(np.asarray(fwhm, float), eccentricity, angle, nothing, nothing, nothing,
+                  np.arange(n), np.asarray(x, float), np.asarray(y, float))  # fmt: skip
 
 
-def test_tilt_is_worst_less_best_corner_over_the_median_hfd() -> None:
-    """ASTAP: 100 (worst - best corner) / median HFD. Corners 3.0, 3.3, 3.6, 3.0; rest 3.0."""
-    corners = {(0, 0): 3.0, (0, 2): 3.3, (2, 0): 3.6, (2, 2): 3.0}
-    hfd, x, y = _zone_stars(lambda r, c: corners.get((r, c), 3.0))
-    zones = zones_of(hfd, x, y, (900, 900))
-    assert zones is not None
-    assert zones.tilt_pct == pytest.approx(100 * 0.6 / 3.0)
+def _field_of_stars(side_x: int = 1200, side_y: int = 800, per_side: int = 12):
+    steps_x = np.linspace(10, side_x - 11, per_side)
+    steps_y = np.linspace(10, side_y - 11, per_side)
+    x, y = (g.ravel() for g in np.meshgrid(steps_x, steps_y))
+    return x, y
 
 
-def test_curvature_is_corners_against_the_centre_with_its_sign() -> None:
-    """Corners 3.6, centre 3.0, the median 3.6: 100 (3.6 - 3.0) / 3.6. Centre worse: negative."""
-    hfd, x, y = _zone_stars(lambda r, c: 3.0 if (r, c) == (1, 1) else 3.6)
-    zones = zones_of(hfd, x, y, (900, 900))
-    assert zones is not None
-    assert zones.curvature_pct == pytest.approx(100 * 0.6 / 3.6)
-    assert zones.tilt_pct == pytest.approx(0.0)
-    hfd, x, y = _zone_stars(lambda r, c: 4.0 if (r, c) == (1, 1) else 3.0)
-    flipped = zones_of(hfd, x, y, (900, 900))
-    assert flipped is not None
-    assert flipped.curvature_pct == pytest.approx(-100 * 1.0 / 3.0)
+def test_tilt_and_curvature_are_the_documented_surface() -> None:
+    """w = a + b u + c v + d (u^2 + v^2), u v over the half diagonal R: tilt (|b| W + |c| H) /
+    (R a), curvature d / a; a tenth of the stars thrown off do not move them."""
+    x, y = _field_of_stars()
+    radius = math.hypot(1200, 800) / 2
+    u, v = (x - 599.5) / radius, (y - 399.5) / radius
+    fwhm = 3.0 + 0.2 * u - 0.1 * v + 0.4 * (u * u + v * v)
+    fwhm[::10] += 5.0
+    found = fwhm_tilt(_fits(fwhm, x, y), (800, 1200))
+    assert found is not None
+    assert found.tilt == pytest.approx((0.2 * 1200 + 0.1 * 800) / (radius * 3.0), rel=1e-6)
+    assert found.curvature == pytest.approx(0.4 / 3.0, rel=1e-6)
 
 
-def test_the_stars_a_zone_needs_follow_the_frame_s_own_hfd_spread() -> None:
-    """Four corner medians on a flat sensor stay inside ASTAP's first tilt band (5%) when
-    d2(4) sqrt(pi/2) s / sqrt(n) is under it: s 2% asks 2 stars, s 20% asks 107."""
-    tight = _zone_stars(lambda r, c: 3.0, per_zone=10, spread=0.02)
-    assert zones_of(*tight, (900, 900)) is not None
-    loose = _zone_stars(lambda r, c: 3.0, per_zone=50, spread=0.20)
-    assert zones_of(*loose, (900, 900)) is None
-    assert zones_of(*_zone_stars(lambda r, c: 3.0, per_zone=120, spread=0.20), (900, 900))
+def test_under_32_stars_no_tilt() -> None:
+    x, y = _field_of_stars(per_side=5)
+    assert fwhm_tilt(_fits(np.full(25, 3.0), x[:25], y[:25]), (800, 1200)) is None
+    x, y = _field_of_stars()
+    assert fwhm_tilt(_fits(np.full(32, 3.0), x[:32], y[:32]), (800, 1200)) is not None
 
 
-def test_never_under_min_stars_a_zone() -> None:
-    hfd, x, y = _zone_stars(lambda r, c: 3.0, per_zone=MIN_STARS)
-    lonely = np.ones(len(x), dtype=bool)
-    lonely[np.flatnonzero((x < 300) & (y < 300))[0]] = False  # one corner a star short
-    assert zones_of(hfd[lonely], x[lonely], y[lonely], (900, 900)) is None
+def test_aligned_elongations_give_their_angle_counterclockwise_and_full_coherence() -> None:
+    """Ours from +x towards +y (rows down), his counterclockwise: 180 less ours."""
+    x, y = _field_of_stars()
+    n = len(x)
+    eccentricity = np.linspace(0.2, 0.7, n)
+    found = elongation(_fits(np.full(n, 3.0), x, y, eccentricity, np.full(n, 30.0)))
+    assert found is not None
+    assert found.angle_deg == pytest.approx(150.0)
+    assert found.coherence == pytest.approx(1.0)
+
+
+def test_one_fit_coherence_never_rounds_past_one() -> None:
+    """One fit at 0.95 degrees: hypot over the weight gave 1.0000000000000002, past the CHECK."""
+    found = elongation(_fits(np.full(1, 3.0), np.zeros(1), np.zeros(1), [0.4], [0.95]))
+    assert found is not None
+    assert found.coherence <= 1.0
+
+
+def test_crossed_elongations_have_no_coherence() -> None:
+    """Half the stars at 0, half at 90 degrees, alike: the doubled angles cancel."""
+    x, y = _field_of_stars()
+    n = len(x)
+    angle = np.where(np.arange(n) % 2 == 0, 0.0, 90.0)
+    found = elongation(_fits(np.full(n, 3.0), x, y, np.full(n, 0.5), angle))
+    assert found is not None
+    assert found.coherence == pytest.approx(0.0, abs=1e-12)
+
+
+def test_round_stars_or_none_have_no_elongation() -> None:
+    x, y = _field_of_stars()
+    assert elongation(_fits(np.full(len(x), 3.0), x, y, np.zeros(len(x)))) is None
+    assert elongation(_fits(np.empty(0), np.empty(0), np.empty(0))) is None
 
 
 def test_tilt_reaches_the_frame_through_measure() -> None:
-    """Wider stars in one corner of a measured frame: tilt over 0, flat field near 0."""
-    side, per_side = 900, 18  # 36 stars a cell
+    """Stars wider towards +x: tilt over 0; an even field near 0."""
+    side, per_side = 900, 10
     data = _sky(side=side)
     for y, x in _grid(per_side, margin=30, side=side):
-        _stars(data, [(y, x)], 2.4 if (y < 300 and x < 300) else 2.0, 6e4)
+        _stars(data, [(y, x)], 1.8 + 0.6 * x / side, 6e4)
     found = measure_frame(data, saturation=65535.0, pattern=None)
-    assert isinstance(found, Measured)
-    assert found.tilt_pct == pytest.approx(100 * 0.4 / 2.0, rel=0.25)
+    assert found.fwhm_tilt is not None and found.fwhm_tilt > 0.2
     flat = _sky(side=side)
     _stars(flat, _grid(per_side, margin=30, side=side), 2.0, 6e4)
     even = measure_frame(flat, saturation=65535.0, pattern=None)
-    assert isinstance(even, Measured)
-    assert even.tilt_pct is not None
-    assert even.tilt_pct < 3.0
-    assert math.isfinite(even.curvature_pct or 0.0)
+    assert even.fwhm_tilt is not None and even.fwhm_tilt < 0.05
+    assert even.fwhm_curvature is not None and abs(even.fwhm_curvature) < 0.05
+    assert even.elongation_coherence is not None

@@ -84,7 +84,7 @@ def test_the_shape_and_the_bright_side_turn_with_the_sky(conn, tmp_path):
     """Gli angoli dei pixel, girati dalla CD della soluzione (formule: test_pipeline_footprint)."""
     root = _measured(conn, tmp_path, *_CARDS)
     conn.execute("UPDATE pipeline_measures SET eccentricity = 0.6, angle_deg = 10.0,"
-                 " gradient_pct = 5.0, gradient_angle_deg = 200.0")  # fmt: skip
+                 " gradient_angle_deg = 200.0")  # fmt: skip
     _solve(conn)
     sky_root(conn, root, LATER)
     [row] = _sky(conn)
@@ -141,8 +141,10 @@ def test_an_unreadable_measure_waits(conn, tmp_path):
                  " hfd_px = NULL, background_adu = NULL, noise_adu = NULL, shape = NULL,"
                  " shape_stars = NULL, fwhm_px = NULL, eccentricity = NULL, angle_deg = NULL,"
                  " ceiling_adu = NULL, saturated = NULL, psf_snr = NULL, psf_flux_adu = NULL,"
-                 " psf_mean_flux_adu = NULL, psf_count = NULL, gradient_pct = NULL,"
-                 " gradient_angle_deg = NULL, tilt_pct = NULL, curvature_pct = NULL,"
+                 " psf_mean_flux_adu = NULL, psf_count = NULL, gradient_noise = NULL,"
+                 " gradient_angle_deg = NULL, row_banding = NULL, column_banding = NULL,"
+                 " fwhm_tilt = NULL, fwhm_curvature = NULL, elongation_angle_deg = NULL,"
+                 " elongation_coherence = NULL,"
                  " fwhm_sigma_px = NULL, eccentricity_sigma = NULL, psf_residual = NULL,"
                  " psf_residual_sigma = NULL, psf_signal_weight = NULL, median_adu = NULL,"
                  " sky_rate_adu_s = NULL, sigma_adu = NULL, entropy_bits = NULL,"

@@ -8,6 +8,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .units import sigma_from_mad
+
 # 1/(sqrt 2 Phi^-1(5/8)), 6 digits; 2.2219 of the first papers is a typo (robustbase Qn.Rd)
 # [C Rousseeuw & Croux, JASA 88:1273, 1993, p. 1277 after (3.7)]
 QN_CONSTANT = 2.21914
@@ -27,6 +29,11 @@ WINDOW_PER_VALUE = 8  # [T] pairs left per value when the bisection stops and pi
 BIWEIGHT_C = 6.0  # [C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok]
 BIWEIGHT_ITERATIONS = 20  # [C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok]
 BIWEIGHT_TOLERANCE = 1e-10  # [C PixInsight ImageAnalysis par. 2.2, eq. 110; software-ok]
+# Biweight regression: residuals over this many sigmas (MAD) weigh nothing; 95% efficient.
+BIWEIGHT_FIT_C = 4.685  # [C Holland & Welsch 1977, Commun. Stat. A6:813, Tukey's biweight]
+BIWEIGHT_FIT_ITERATIONS = 50  # [T] a fit still moving stops there
+# Residual scale under this share of the values: rounding, the fit is exact; no reweighting.
+EXACT_FIT = 1e-12  # [T] a thousand times double precision's 2.2e-16
 # Sn's outer median over this many evenly spaced order statistics: 1e-5 of his on 13 M values.
 SN_OUTER = 20001  # [M plan 26.51: three R* sets of 13 M, his Stat.Sn]
 SN_HALVINGS = 60  # [T] bisection steps for each inner median, past double precision
@@ -131,6 +138,28 @@ def biweight_location(values: Sequence[float] | np.ndarray) -> float | None:
         if done:
             break
     return centre
+
+
+def biweight_fit(design: np.ndarray, values: np.ndarray) -> np.ndarray:
+    """Least squares reweighted by Tukey's biweight from the ordinary fit, sigma from the median
+    |residual| (Holland & Welsch 1977; ImageAnalysis eq. 13, 26) until it settles. software-ok"""
+    y = np.asarray(values, dtype=float)
+    beta = np.linalg.lstsq(design, y, rcond=None)[0]
+    for _ in range(BIWEIGHT_FIT_ITERATIONS):
+        left = y - design @ beta
+        sigma = sigma_from_mad(float(np.median(np.abs(left))))  # about 0, as a fit's residuals
+        if sigma <= EXACT_FIT * float(np.abs(y).max()):
+            break
+        u = left / (BIWEIGHT_FIT_C * sigma)
+        root = np.where(np.abs(u) < 1, 1 - u * u, 0.0)  # sqrt of (1 - u^2)^2
+        if not root.any():
+            break
+        moved = np.linalg.lstsq(design * root[:, None], y * root, rcond=None)[0]
+        settled = np.allclose(moved, beta, rtol=BIWEIGHT_TOLERANCE, atol=0)
+        beta = moved
+        if settled:
+            break
+    return beta
 
 
 def sn(values: np.ndarray) -> float | None:

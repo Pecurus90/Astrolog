@@ -36,6 +36,8 @@ class Fitted:
     signal: np.ndarray  # ImageWeighting eq. 7, plane units: S of eq. 24, the PSF flux
     mean_flux: np.ndarray  # eq. 8-10: signal over the tenth ellipse's area
     rank: np.ndarray  # place in the brightness order: MAX_FITS of them make the shape
+    x_px: np.ndarray  # fitted centre, column
+    y_px: np.ndarray  # fitted centre, row
 
     def brightest(self) -> "Fitted":
         """The fits among the MAX_FITS brightest tried, as Image Analysis measures the shape."""
@@ -49,7 +51,7 @@ def fit_stars(
     """`plane` the measured pixels with their sky (the median needs its level); `box` per star
     (x0, x1, y0, y1); the MAX_FLUX_FITS brightest by `flux` fitted."""
     order = np.argsort(-flux, kind="stable")[:MAX_FLUX_FITS]
-    rows = [(*s, rank) for rank, i in enumerate(order)
+    rows = [(*s[:6], rank, *s[6:]) for rank, i in enumerate(order)
             if (s := _one(plane, float(x[i]), float(y[i]), box[i])) is not None]  # fmt: skip
     if not rows:
         return Fitted(*(np.empty(0),) * len(fields(Fitted)))
@@ -76,9 +78,7 @@ def region(plane: np.ndarray, cx: int, cy: int, box: np.ndarray) -> tuple[slice,
     return window(half)
 
 
-def _one(
-    plane: np.ndarray, x: float, y: float, box: np.ndarray
-) -> tuple[float, float, float, float, float, float] | None:
+def _one(plane: np.ndarray, x: float, y: float, box: np.ndarray) -> tuple[float, ...] | None:
     cx, cy = round(x), round(y)
     rs, cs = region(plane, cx, cy, box)
     values = plane[rs, cs].astype(np.float64)
@@ -112,7 +112,8 @@ def _one(
     fwhm = 2 * math.sqrt(sx * sy) * math.sqrt(_HALF)
     eccentricity = math.sqrt(1 - (short_axis / long_axis) ** 2)
     flux = signal * peak  # back to the plane's units
-    return fwhm, eccentricity, folded(angle), residual, flux, flux / (math.pi * tenth_x * tenth_y)
+    mean_flux = flux / (math.pi * tenth_x * tenth_y)
+    return fwhm, eccentricity, folded(angle), residual, flux, mean_flux, x0, y0
 
 
 def _placed(x0: float, y0: float, pixels: tuple[np.ndarray, np.ndarray], box: np.ndarray) -> bool:

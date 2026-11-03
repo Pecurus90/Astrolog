@@ -20,8 +20,8 @@ un frame nessun programma usa la stessa statistica.
 | HFD | diametro che contiene meta' del flusso, esatto (non la formula rapida, +6,4%) | Weber & Brady via FocusMax; N.I.N.A. develop (curva di crescita) |
 | rumore | 1,4826 x MAD del fondo | Rousseeuw & Croux 1993; ASTAP e N.I.N.A. lo usano |
 | SNR del frame | la PSF SNR di ADR 0022 (rho 0,97 col riferimento); la formula CCD dello stesso ADR esce | nessuna convenzione: ogni programma la sua |
-| valore del frame | stelle sparse su una griglia 3 x 3; le 5 zone (centro e angoli) solo per tilt e curvatura | ADR 0022, verifica |
-| tilt | 100 x (HFD angolo peggiore - migliore) / HFD **mediana**; fino al 10% buono, dal 20% problema, in mezzo incerto | manuale di ASTAP: "equal or less than 10% ... good", "equal or more than 20% ... tilt problem"; codice `unit_inspector_plot.pas` |
+| valore del frame | stelle sparse su una griglia 3 x 3; ~~le 5 zone (centro e angoli) solo per tilt e curvatura~~ (superate da ADR 0042, passo 26.52) | ADR 0022, verifica |
+| tilt | **superata da ADR 0042, passo 26.52** (FWHMTilt e FWHMCurvature di Image Analysis): ~~100 x (HFD angolo peggiore - migliore) / HFD **mediana**; fino al 10% buono, dal 20% problema, in mezzo incerto~~ | manuale di ASTAP: "equal or less than 10% ... good", "equal or more than 20% ... tilt problem"; codice `unit_inspector_plot.pas` |
 | eccentricita' | e = sqrt(1 - b^2/a^2) dai momenti; giudizio rotonde fino a 0,45, allungate oltre 0,71; scarto (ADR 0032) a 0,6 | Bertin & Arnouts 1996 (definizione); soglie solo di forum, nessuna primaria (lo 0,42 attribuito alla documentazione di riferimento non c'e') |
 | limite del setup | F = max(2 x scala, 1,029 lambda / D) | Nyquist; FWHM del disco di Airy 1,029 lambda / D |
 | scarto dei frame | mediana +- 2,5 x MAD scalato, nel gruppo di ADR 0032 | Leys et al. 2013; robusta contro i frame cattivi, che spostano media e deviazione standard (Siril: mediana + k SD; ASTAP: media - k SD) | <!-- software-ok -->
