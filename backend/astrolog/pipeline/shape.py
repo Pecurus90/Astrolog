@@ -262,7 +262,7 @@ def _fitted(window: Window) -> Star | None:
 
 
 def _star(log_ax: float, log_ay: float, theta: float, beta: float) -> Star:
-    """FWHM 2 a sqrt(2^(1/beta) - 1), a the axes' geometric mean [C PCL PSFFit.h; software-ok];
+    """FWHM 2 a sqrt(2^(1/beta) - 1), a the axes' geometric mean [C Moffat 1969: half maximum at r];
     the long axis named, so b <= a."""
     long_axis, short_axis = (log_ax, log_ay) if log_ax >= log_ay else (log_ay, log_ax)
     angle = math.degrees(theta) + (0 if log_ax >= log_ay else 90)

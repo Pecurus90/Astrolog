@@ -35,7 +35,7 @@ che resta nasce coi test.
 5. **SNR**: PSF SNR della documentazione di PixInsight (ImageWeighting, eq. 7, 23-24), c3 = <!-- software-ok -->
    1,316e-7 (1,350e-7 fino al 30/10/2026, letto male), c4 = 4,987e6; sui 45 frame rho 0,97 con PixInsight. Mai fra camere o oggetti. <!-- software-ok -->
 6. **Camere a colori** (Marco, 26/10/2026, passo 24.06; prima: superpixel 2x2) come WBPP: debayer
-   VNG a piena risoluzione (Chang, Cheung e Pan 1999, il VNGThread di PixInsight portato), poi <!-- software-ok -->
+   VNG a piena risoluzione (Chang, Cheung e Pan 1999, dalle formule pubblicate; Marco 3/11/2026), poi
    tutto sull'intensita' HSI (min + max) / 2, il piano su cui misura il SubframeSelector; pattern
    da `BAYERPAT` con `XBAYROFF`/`YBAYROFF`, come l'Auto del Debayer. Il rumore come lo dice WBPP:
    per piano R, G, B del mosaico, poi (min + max) / 2. Il superpixel allargava le

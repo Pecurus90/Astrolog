@@ -55,10 +55,10 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
 **Il metodo** (ADR 0022, punti 1, 2, 3, 7, 8, 9; ADR 0033, D1):
 
 - **Camera a colori** (la scheda dice `BAYERPAT`; Marco, 26/10/2026, ADR 0022 punto 6) come
-  WBPP: debayer VNG a piena risoluzione (`pipeline/debayer.py`, il VNGThread di PixInsight portato <!-- software-ok -->
-  termine per termine, bordo di 2 pixel copiato dal vicino), poi tutto sull'intensita' HSI
-  (min + max) / 2, il piano su cui misura il SubframeSelector. Pattern da `BAYERPAT`, una colonna
-  in piu' con `XBAYROFF` dispari e una riga con `YBAYROFF` dispari; `ROWORDER` non si legge (come
+  WBPP: VNG a piena risoluzione dalle formule pubblicate (Chang 1999 in Chen, Stanford Psych 221;
+  US 6421084; Marco 3/11: niente sorgente PCL), bordo di 2 px copiato; dal suo VNG 9-10% dei pixel,
+  stelle 0,986-1,011 (125 frame). Poi l'intensita' HSI (min + max) / 2 del SubframeSelector.
+  Pattern da `BAYERPAT`, una colonna in piu' con `XBAYROFF` dispari e una riga con `YBAYROFF` dispari; `ROWORDER` non si legge (come
   l'Auto del Debayer; sui 4 frame veri il verde sta dove lo dice `BAYERPAT`). Una matrice non
   R G B (CYGM): `not_supported`. La saturazione si guarda sul pixel del sensore: il debayer
   nasconde un verde saturato. Scheda muta: mono.
@@ -105,10 +105,10 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   Prefiltro e cornice sul rumore MRS (sintetico da 40 mila stelle: la MAD 19,8, il vero 10).
   Prefiltro di velocita': 2x2 sotto 8 volte quel rumore non arriva al conto locale (nessuna sua
   stella sotto, sul banco). Il 2x2: sintetici del 26.45 (1 px varia 1,48 volte, 3 px 1,64), non i
-  nostri frame (Marco 28/10). **Banco dei 205** (26.48.2): stelle / sue, colori A 0,992, B 0,981,
-  mono A 0,992, B 0,997; **mono tutti in 0,95-1,05** senza compenso; NGC 6888 Poseidon (1,07-1,08
-  su MRS) e NGC 7023 n.4 rientrati; fuori 9, tutti NGC 7380 a colori, 0,90-0,95: il nostro piano
-  debayerizzato spezza strutture in piu' massimi, il suo no (aperto, 26.48.2). A SNR 12 nessuna di
+  nostri frame (Marco 28/10). **Banco dei 205** (26.48.2, VNG pubblicato 3/11): stelle / sue, colori
+  A 0,993, B 0,983, mono A 0,992, B 0,997; **mono tutti in 0,95-1,05** senza compenso; NGC 6888
+  Poseidon e NGC 7023 n.4 rientrati; fuori 10 a colori (0,90-0,95: 9 NGC 7380, NGC 1333 n.1):
+  piu' massimi per struttura (26.48.3); non il Debayer, il VNG di prima era il suo al pixel. A SNR 12 nessuna di
   36 (20 semi), a SNR 14 il rumore ne porta su fino a 3. Conto locale da 0,3 s (2400 stelle) a
   2,8 s (45 mila) a frame; rumore di struttura 0,85 s a 24 MP; banco 16,8 s mediani a frame.
   HFD e forma restano su `sep`.

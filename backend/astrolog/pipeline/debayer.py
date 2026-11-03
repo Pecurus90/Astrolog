@@ -1,53 +1,54 @@
-"""Colour frame made one plane as WBPP measures it: VNG debayer (Chang, Cheung, Pan 1999; PCL
-VNGThread copied term by term), then HSI intensity. Pure: pixels in, pixels out. software-ok"""
+"""Colour frame made one plane as WBPP measures it: VNG debayer (Chang, Cheung, Pan, SPIE 3650,
+1999), then HSI intensity. Pure: pixels in, pixels out. software-ok"""
 
 from collections.abc import Iterator, Mapping
 
 import numpy as np
 
-# Channel (0 R, 1 G, 2 B) at [row % 2][col % 2]. [C PCL BayerPatternToColorIndices]
+# Channel (0 R, 1 G, 2 B) at [row % 2][col % 2]. [C BAYERPAT: letters row by row from pixel 0]
 COLOURS = {
     "RGGB": ((0, 1), (1, 2)),
     "BGGR": ((2, 1), (1, 0)),
     "GBRG": ((1, 2), (0, 1)),
     "GRBG": ((1, 0), (2, 1)),
 }
-K1, K2 = 1.5, 0.5  # threshold k1 min + k2 (max - min) [C Chang 1999, PCL VNGThread]
-TIE = 1e-10  # on [0,1]: a gradient at the threshold is in [C PCL VNGThread]
-BORDER = 2  # the 5x5 window: two rows and columns copied from the nearest computed [C PCL]
+# threshold k1 min + k2 (max - min); equal gradients all pass, flat sky too [C Chang 1999]
+K1, K2 = 1.5, 0.5
+BORDER = 2  # [T] the 5x5 window: two rows and columns copied from the nearest computed
 STRIP = 256  # [T] output rows per pass: memory a few MB, whatever the sensor
 
-# N E S W NE SE NW SW: (a, b, weight) on the 5x5 window, row-major, centre 12; the full-weight SE
-# and SW terms of a red or blue centre are PCL's own. [C PCL VNGThread::ComputeGradients]
+# N E S W NE SE NW SW: (a, b, weight) on the 5x5 window, row-major, centre 12. Formulas as printed
+# by Chen, Stanford Psych 221 (1999), 1-based there; SE "|B25 - R13|" is R25. [C Chang 1999]
 _STRAIGHT = (
     ((7, 17, 1), (2, 12, 1), (6, 16, 0.5), (8, 18, 0.5), (1, 11, 0.5), (3, 13, 0.5)),
     ((13, 11, 1), (14, 12, 1), (8, 6, 0.5), (18, 16, 0.5), (9, 7, 0.5), (19, 17, 0.5)),
-    ((17, 7, 1), (22, 12, 1), (16, 6, 0.5), (18, 8, 0.5), (21, 11, 0.5), (23, 13, 0.5)),
-    ((11, 13, 1), (10, 12, 1), (6, 8, 0.5), (16, 18, 0.5), (5, 7, 0.5), (15, 17, 0.5)),
+    ((17, 7, 1), (22, 12, 1), (18, 8, 0.5), (16, 6, 0.5), (23, 13, 0.5), (21, 11, 0.5)),
+    ((11, 13, 1), (10, 12, 1), (16, 18, 0.5), (6, 8, 0.5), (15, 17, 0.5), (5, 7, 0.5)),
 )
-# [C PCL VNGThread::ComputeGradients] green centre
+# green centre: the diagonals weigh all four terms 1 [C Chang 1999]
 _GREEN = (
     *_STRAIGHT,
     ((8, 16, 1), (4, 12, 1), (3, 11, 1), (9, 17, 1)),
-    ((18, 6, 1), (24, 12, 1), (23, 11, 1), (19, 7, 1)),
-    ((6, 18, 1), (0, 12, 1), (1, 13, 1), (5, 17, 1)),
+    ((18, 6, 1), (24, 12, 1), (19, 7, 1), (23, 11, 1)),
+    ((6, 18, 1), (0, 12, 1), (5, 17, 1), (1, 13, 1)),
     ((16, 8, 1), (20, 12, 1), (21, 13, 1), (15, 7, 1)),
 )
-# [C PCL VNGThread::ComputeGradients] red or blue centre
+# red or blue centre [C Chang 1999]
 _OTHER = (
     *_STRAIGHT,
     ((8, 16, 1), (4, 12, 1), (7, 11, 0.5), (13, 17, 0.5), (3, 7, 0.5), (9, 13, 0.5)),
-    ((18, 6, 1), (24, 12, 1), (13, 7, 0.5), (17, 11, 0.5), (19, 13, 1), (23, 17, 0.5)),
-    ((6, 18, 1), (0, 12, 1), (7, 13, 0.5), (11, 17, 0.5), (1, 7, 0.5), (5, 11, 0.5)),
-    ((16, 8, 1), (20, 12, 1), (11, 7, 0.5), (17, 13, 0.5), (15, 11, 1), (21, 17, 0.5)),
+    ((18, 6, 1), (24, 12, 1), (13, 7, 0.5), (17, 11, 0.5), (19, 13, 0.5), (23, 17, 0.5)),
+    ((6, 18, 1), (0, 12, 1), (11, 17, 0.5), (7, 13, 0.5), (5, 11, 0.5), (1, 7, 0.5)),
+    ((16, 8, 1), (20, 12, 1), (17, 13, 0.5), (11, 7, 0.5), (21, 17, 0.5), (15, 11, 0.5)),
 )
-# Window samples each valid direction averages, per channel. [C PCL VNGThread::ComputeSums]
+# Region of each direction, averaged per channel: Chen's table, a green centre's from US 6421084;
+# the directions they omit by symmetry. [C Chang 1999]
 _GREEN_SUMS = (
     (1, 2, 3, 7, 11, 12, 13), (7, 9, 12, 13, 14, 17, 19), (11, 12, 13, 17, 21, 22, 23),
     (5, 7, 10, 11, 12, 15, 17), (3, 7, 8, 9, 13), (13, 17, 18, 19, 23), (1, 5, 6, 7, 11),
     (11, 15, 16, 17, 21),
 )  # fmt: skip
-# [C PCL VNGThread::ComputeSums] red or blue centre
+# red or blue centre [C Chang 1999]
 _OTHER_SUMS = (
     (2, 6, 7, 8, 12), (8, 12, 13, 14, 18), (12, 16, 17, 18, 22), (6, 10, 11, 12, 16),
     (3, 4, 7, 8, 9, 12, 13), (12, 13, 17, 18, 19, 23, 24), (0, 1, 5, 6, 7, 11, 12),
@@ -56,8 +57,8 @@ _OTHER_SUMS = (
 
 
 def pattern_of(cards: Mapping[str, object]) -> str | None:
-    """BAYERPAT with an odd XBAYROFF swapping columns, an odd YBAYROFF rows; ROWORDER not read
-    (PCL DebayerInstance::BayerPatternFromTargetPropertyValue). None: no RGB Bayer matrix."""
+    """BAYERPAT with an odd XBAYROFF swapping columns, an odd YBAYROFF rows; ROWORDER not read.
+    None: no RGB Bayer matrix."""
     written = cards.get("BAYERPAT")
     if not isinstance(written, str):
         return None
@@ -93,7 +94,7 @@ def debayered(mosaic: np.ndarray, pattern: str, *, top: float) -> np.ndarray:
 
 def intensity(rgb: np.ndarray) -> np.ndarray:
     """HSI intensity (min + max) / 2, the plane SubframeSelector measures a colour frame on
-    (PCL SubframeSelectorInstance ReadInputData, RGBColorSystem::Intensity)."""
+    (sonde 26.48, pi_plane: its counts on RGB are those on this plane)."""
     return (rgb.min(axis=0) + rgb.max(axis=0)) / 2
 
 
@@ -146,10 +147,10 @@ def _lattice(window: list[np.ndarray], channels: list[int], top: float) -> np.nd
     diffs = {pair: np.abs(np.subtract(*(window[k] for k in pair))) for pair in pairs}
     gradients = np.zeros((len(terms), *window[12].shape), dtype=np.float32)
     for gradient, direction in zip(gradients, terms, strict=True):
-        for a, b, w in direction:  # in PCL's order: the same float sums
-            gradient += diffs[frozenset((a, b))] * w if w != 1 else diffs[frozenset((a, b))]
+        for a, b, w in direction:
+            gradient += diffs[frozenset((a, b))] * w
     low, high = gradients.min(axis=0), gradients.max(axis=0)
-    valid = gradients <= K1 * low + K2 * (high - low) + TIE * top
+    valid = gradients <= K1 * low + K2 * (high - low)
     sums = np.zeros((3, *window[12].shape), dtype=np.float32)
     for direction, samples in enumerate(_GREEN_SUMS if green else _OTHER_SUMS):
         for channel in set(channels[k] for k in samples):

@@ -105,7 +105,7 @@ def _sigma(residual: np.ndarray) -> float:
 
 def _mosaic_noise(data: np.ndarray, pattern: str) -> float:
     """MRS noise of each colour plane, a channel's samples averaged per 2x2 quad; then
-    (min + max) / 2 (PCL Debayer, SubframeSelector ReadInputData)."""
+    (min + max) / 2, the plane SubframeSelector measures (sonde 26.48, pi_plane)."""
     rows, cols = data.shape[0] // 2 * 2, data.shape[1] // 2 * 2
     quads = data[:rows, :cols].reshape(rows // 2, 2, cols // 2, 2)
     colours = COLOURS[pattern]

@@ -163,8 +163,8 @@ def test_a_colour_frame_is_measured_after_vng_in_sensor_pixels(sigma: float) -> 
 
 
 def test_colour_noise_is_the_mid_of_the_cfa_channels_as_pixinsight_says_it() -> None:
-    """Debayer's noise per CFA plane (the two greens averaged), then SubframeSelector's (min +
-    max) / 2 (PCL): sensor noise 10, 20, 30 ADU gives R 10, G 20 / sqrt 2, B 30, so 20."""
+    """Noise per CFA plane (greens averaged), then (min + max) / 2 (sonde 26.48, pi_plane):
+    sensor noise 10, 20, 30 ADU gives R 10, G 20 / sqrt 2, B 30, so 20."""
     rng = np.random.default_rng(5)
     rows, cols = np.indices((_SIDE, _SIDE))
     total = np.array([[10.0, 20.0], [20.0, 30.0]])[rows % 2, cols % 2]
