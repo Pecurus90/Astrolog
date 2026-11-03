@@ -162,6 +162,7 @@ OUR_STAGES = {
     "fondo MMT": "mstar_nstar",
     "rumore per piano colore": "_mosaic_noise",
     "gradiente e banding": "_sky_field",
+    "scie": "trails",
     "tilt ed elongazione": "_star_field",
 }
 BACKGROUND, READ, OTHER, TOTAL = "fondo sep", "lettura file", "altro", "totale"
@@ -199,6 +200,7 @@ class Ours:
     fwhm_tilt: float | None = None
     fwhm_curvature: float | None = None
     elongation_coherence: float | None = None
+    trails: int | None = None
 
 
 @dataclass(frozen=True)
@@ -379,12 +381,17 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
                 found.median_adu, found.sigma_adu, found.entropy_bits, found.noise_ratio,
                 found.snr, found.mstar_adu, found.nstar_adu, found.gradient_noise,
                 found.row_banding, found.column_banding, found.fwhm_tilt, found.fwhm_curvature,
-                found.elongation_coherence)  # fmt: skip
+                found.elongation_coherence, found.trails)  # fmt: skip
     return ours, pattern is not None
 
 
 def _over(ours: float | None, theirs: float | None, scale: float = 1.0) -> float | None:
     return ours / (theirs * scale) if ours is not None and theirs else None
+
+
+def _minus(ours: float | None, theirs: float | None) -> float | None:
+    """A count mostly 0 on both sides: the difference, not a ratio."""
+    return ours - theirs if ours is not None and theirs is not None else None
 
 
 def _pairs(row: Row) -> dict[str, float | None]:
@@ -431,6 +438,7 @@ def _pairs(row: Row) -> dict[str, float | None]:
         "tilt FWHM / Image Analysis": _over(o.fwhm_tilt, v.get("FWHMTilt")),
         "curvatura FWHM / Image Analysis": _over(o.fwhm_curvature, v.get("FWHMCurvature")),
         "coerenza / Image Analysis": _over(o.elongation_coherence, v.get("ElongationCoherence")),
+        "scie meno Image Analysis": _minus(o.trails, v.get("Trails")),
         "altezza / Image Analysis": _over(o.altitude_deg, v.get("Altitude")),
         "massa d'aria / Image Analysis": _over(airmass, v.get("Airmass")),
     }

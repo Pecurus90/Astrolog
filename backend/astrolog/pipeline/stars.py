@@ -10,7 +10,7 @@ import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 from ..units import sigma_from_mad
 from .background import banding, gradient, valid_pixels
 from .debayer import COLOURS, debayered
-from .detect import detect
+from .detect import Detections, detect
 from .field import bright_side, elongation, fwhm_tilt, photometry, psf_signal_weight, psf_snr
 from .median import median3x3
 from .mmt import Background, mstar_nstar
@@ -19,6 +19,7 @@ from .pixel_stats import pixel_stats, snr
 from .psf_fit import Fitted, fit_stars
 from .psf_flux import ring_sky
 from .shape import MIN_STARS, Shape, estimated_fwhm, shape_of
+from .trails import trails
 
 THRESHOLD_SIGMA = 5.0  # [C Siril find_star default: 5 sigma over sky, software-ok]
 NO_DEBLENDING = 1.0  # [C sep docs, extract: deblend_cont 1.0 disables deblending]
@@ -50,6 +51,7 @@ class Across:
     gradient_noise: float | None  # ImageAnalysis Gradient, noise units; None: noise zero
     row_banding: float | None  # RowBanding, noise units
     column_banding: float | None  # ColumnBanding
+    trails: int  # Trails (trails.py)
     fwhm_tilt: float | None  # FWHMTilt; None: under 32 fits
     fwhm_curvature: float | None  # FWHMCurvature
     elongation_angle_deg: float | None  # ElongationAngle, counterclockwise; None: round or no fit
@@ -113,7 +115,7 @@ def measure_frame(
     pixel = _pixel_values(raw, saturation, pedestal, noise, quiet.ratio)
     if pattern is not None:  # noise said as WBPP says it
         noise = max(_mosaic_noise(sensor, pattern), NOISE_FLOOR_ADU)
-    field = _sky_field(raw, saturation, noise) | _star_field(fits, raw.shape)
+    field = _sky_field(raw, saturation, noise, found) | _star_field(fits, raw.shape)
     across = Across(ceiling_adu=saturation, saturated=int(found.saturated.sum()),
                     gradient_angle_deg=bright_side(back), mstar_adu=mmt.mstar_adu if mmt else None,
                     nstar_adu=mmt.nstar_adu if mmt else None, **flux, **pixel, **field)  # fmt: skip
@@ -138,14 +140,15 @@ def _flux(fits: Fitted, noise: float, stars: int, mmt: Background | None) -> dic
             "psf_signal_weight": weight}  # fmt: skip
 
 
-def _sky_field(raw: np.ndarray, ceiling: float, noise: float) -> dict[str, Any]:
+def _sky_field(raw: np.ndarray, ceiling: float, noise: float, found: Detections) -> dict[str, Any]:
     """ImageAnalysis Gradient, RowBanding, ColumnBanding on the measured plane's valid pixels, in
-    units of the noise written. software-ok"""
+    units of the noise written; Trails off its stars. software-ok"""
     valid = valid_pixels(raw, ceiling)
     bands = banding(raw, valid, noise)
     return {"gradient_noise": gradient(raw, valid, noise),
             "row_banding": bands.row if bands else None,
-            "column_banding": bands.column if bands else None}  # fmt: skip
+            "column_banding": bands.column if bands else None,
+            "trails": trails(raw, valid, found)}  # fmt: skip
 
 
 def _star_field(fits: Fitted, shape: tuple[int, ...]) -> dict[str, Any]:

@@ -1138,6 +1138,7 @@ CREATE TABLE pipeline_measures (
   gradient_angle_deg REAL CHECK (gradient_angle_deg >= 0 AND gradient_angle_deg < 360),  -- lato chiaro, nostro
   row_banding    REAL CHECK (row_banding >= 0),     -- RowBanding, eq. 15
   column_banding REAL CHECK (column_banding >= 0),  -- ColumnBanding
+  trails         INTEGER CHECK (trails >= 0 AND trails <= 16),  -- Trails: scie lunghe, al massimo 16
   fwhm_tilt      REAL CHECK (fwhm_tilt >= 0),  -- FWHMTilt, eq. 26-27; NULL: meno di 32 fit
   fwhm_curvature REAL,                         -- FWHMCurvature, con segno: + stelle piu' grandi agli angoli
   elongation_angle_deg REAL CHECK (elongation_angle_deg >= 0 AND elongation_angle_deg < 180),  -- antiorario da +x
@@ -1169,6 +1170,7 @@ CREATE TABLE pipeline_measures (
   CHECK (coalesce(gradient_noise, gradient_angle_deg, row_banding, column_banding) IS NULL
     OR stars IS NOT NULL),
   CHECK ((row_banding IS NULL) = (column_banding IS NULL)),
+  CHECK ((stars IS NULL) = (trails IS NULL)),
   CHECK ((fwhm_tilt IS NULL) = (fwhm_curvature IS NULL) AND (fwhm_tilt IS NULL OR psf_count >= 32)),
   CHECK ((elongation_angle_deg IS NULL) = (elongation_coherence IS NULL)
     AND (elongation_angle_deg IS NULL OR psf_count IS NOT NULL))

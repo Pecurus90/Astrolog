@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 286; senza fonte: 1.
-Fonti: C norma: 148; U usanza: 2; D metodo: 17; M misura: 22; P decisione: 33; T tecnico: 66.
+Valori: 305; senza fonte: 1.
+Fonti: C norma: 159; U usanza: 2; D metodo: 18; M misura: 22; P decisione: 33; T tecnico: 73.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -487,6 +487,30 @@ Fonti: C norma: 148; U usanza: 2; D metodo: 17; M misura: 22; P decisione: 33; T
 | MIN_SOLVED | `20` | D ADR 0039 |
 | FLOOR_S | `30` | D ADR 0039 |
 | RECENT | `500` | T |
+
+### pipeline/trails.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| BINNED_SIDE | `1500` | C ImageAnalysis par. 2.1.3: about 1500 px on the largest side; software-ok |
+| TILE_PX | `32` | C ImageAnalysis par. 2.1.3: tile medians of 32 x 32 binned px; software-ok |
+| INVALID_REACH | `3` | C ImageAnalysis par. 2.1.3: and those within three binned px; software-ok |
+| FLAG_SIGMA | `2.0` | C ImageAnalysis par. 2.1.3: two standard deviations over; software-ok |
+| BRIGHT_SHARE | `0.02` | C ImageAnalysis par. 2.1.3; software-ok |
+| BRIGHT_SCALE | `3.0` | C ImageAnalysis par. 2.1.3; software-ok |
+| ANGLE_STEP_DEG | `0.25` | C ImageAnalysis par. 2.1.3: Hough in steps of 0.25 degrees; software-ok |
+| RUN_SIDE_SHARE | `0.25` | C ImageAnalysis par. 2.1.3: a quarter of the smallest side; software-ok |
+| FLAGGED_SHARE | `0.35` | C ImageAnalysis par. 2.1.3: at least 35% of the samples; software-ok |
+| RUN_WINDOW | `25` | T |
+| SHOULDERS | `(2, 3)` | C ImageAnalysis par. 2.1.3: two and three binned px away; software-ok |
+| SIDES | `(4, 6)` | T |
+| MAX_TRAILS | `16` | C ImageAnalysis par. 2.1.3: up to 16 trails per frame; software-ok |
+| MAX_CANDIDATES | `100` | T |
+| REMOVED_PX | `2` | T |
+| FINE_ANGLE_DEG | `0.05` | T |
+| FINE_SHIFT_PX | `0.1` | T |
+| EXAMINED_REACH | `(1.0, 3)` | T |
+| _EIGHT | `np.ones((3, 3), dtype=np.int8)` | D 8-connected: diagonal pixels touch |
 
 ### pipeline/values.py
 

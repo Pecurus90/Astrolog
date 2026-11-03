@@ -94,6 +94,18 @@ def test_the_pixel_statistics_are_written_the_pedestal_off_and_the_sky_rate_per_
     assert timed["nstar_adu"] == pytest.approx(10, rel=0.1)
 
 
+def test_the_trails_are_written(conn, tmp_path):
+    """A diagonal line 8 noise high across one frame: one trail; the other none."""
+    crossed = _field("gauss", 2.5)
+    rows, cols = np.indices(crossed.shape)
+    crossed += 80.0 * np.exp(-((rows - cols) ** 2) / 4.0)
+    _light(tmp_path / "nas" / "a.fits", crossed, "EXPTIME =                120.0")
+    _light(tmp_path / "nas" / "b.fits", _field("gauss", 2.5, seed=4))
+    measure_root(conn, _scanned(conn, tmp_path / "nas"), LATER)
+    timed, untimed = _measures(conn)
+    assert (timed["trails"], untimed["trails"]) == (1, 0)
+
+
 def test_only_lights_are_measured(conn, tmp_path):
     for kind in ("DARK", "FLAT", "BIAS"):
         _light(tmp_path / "nas" / f"{kind}.fits", _field(seed=len(kind)), imagetyp=kind)

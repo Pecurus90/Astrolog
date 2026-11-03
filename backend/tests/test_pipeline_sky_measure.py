@@ -143,6 +143,7 @@ def test_an_unreadable_measure_waits(conn, tmp_path):
                  " ceiling_adu = NULL, saturated = NULL, psf_snr = NULL, psf_flux_adu = NULL,"
                  " psf_mean_flux_adu = NULL, psf_count = NULL, gradient_noise = NULL,"
                  " gradient_angle_deg = NULL, row_banding = NULL, column_banding = NULL,"
+                 " trails = NULL,"
                  " fwhm_tilt = NULL, fwhm_curvature = NULL, elongation_angle_deg = NULL,"
                  " elongation_coherence = NULL,"
                  " fwhm_sigma_px = NULL, eccentricity_sigma = NULL, psf_residual = NULL,"

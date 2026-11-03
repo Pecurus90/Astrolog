@@ -200,6 +200,14 @@ def test_every_common_measure_is_set_beside_image_analysis():
     assert 1.28 / 1.3 < airmass < 1.0, "ours at 51 degrees, a bit under its 1.3 at 50"
 
 
+def test_trails_are_set_beside_his_as_a_difference_his_zero_included():
+    rows = [
+        _row("a", False, Ours(1000, 2.0, 100, 10, trails=1), analysis=_analysis(Trails=0)),
+        _row("b", False, Ours(1000, 2.0, 100, 10, trails=2), analysis=_analysis(Trails=2)),
+    ]
+    assert ratios(rows)["scie meno Image Analysis"]["mono A"] == (2, 0, 0.5, 1)
+
+
 def test_a_missing_program_or_undefined_value_leaves_its_ratio_out():
     rows = [_row("a", False, Ours(1000, 2.0, 100.0, 10.0), None, _analysis(PSFSNR=None))]
     table = ratios(rows)

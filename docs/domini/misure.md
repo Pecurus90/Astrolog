@@ -23,6 +23,7 @@ parole in [`glossario.md`](glossario.md).
 | Le statistiche dei pixel sono quelle di Image Analysis: mediana senza pedestal e per secondo, Sigma, entropia, NoiseRatio, SNR, M\* e N\* del fondo, PSF Signal Weight (Marco, 30/10/2026) <!-- software-ok --> | `test_pipeline_pixel_stats.py` (pedestal, bordi e saturi fuori, Sigma di un normale, entropia 2,047 bit, fattori di scala per lato, M\* e N\* del rumore bianco, gradiente e stelle che non li spostano), `test_sn_is_the_definition_on_small_samples`, `test_psf_signal_weight_gives_back_the_programs_own_value`, `test_the_noise_ratio_is_the_share_of_pixels_the_noise_was_read_on`, `test_the_pixel_statistics_are_written_the_pedestal_off_and_the_sky_rate_per_second` |
 | Il rumore e' l'MRS di Starck e Murtagh, come lo dichiara PixInsight; nei campi densi resta quello del cielo <!-- software-ok --> | `test_pipeline_noise.py` (fattore del primo strato 0,8908 come Duchamp, trasformata che si ricompone, rumore gaussiano letto entro il 2%, campo affollato e nebulosa entro il 3%), `test_in_a_crowded_field_the_noise_is_read_off_the_stars` |
 | Gradiente e banding sono quelli di Image Analysis, in unita' di rumore; il lato chiaro e' nostro e un fondo piatto non lo inventa (Marco, 30/10/2026) <!-- software-ok --> | `test_pipeline_background.py` (superficie picco-picco sul rumore, riquadri luminosi scartati, saturi e bordi vuoti fuori, rumore bianco senza banding, righe spostate di 0,3 sigma, file alterne del mosaico), `test_the_biweight_fit_drops_the_outliers_a_least_squares_follows`, `test_a_sky_on_a_plane_has_its_bright_side`, `test_the_bright_side_turns_with_the_plane`, `test_a_flat_sky_has_no_side` |
+| Le scie di satelliti, aerei e meteore si contano come Image Analysis: lunghe almeno un quarto del lato corto, sottili, fino a 16; il bordo di una nebulosa no (Marco, 30/10/2026) <!-- software-ok --> | `test_pipeline_trails.py` (cielo senza scie, 4 sigma trovata in campo rado e denso, 2 sigma persa nel denso e trovata nel rado, meteora corta, tratteggio sotto il 35%, bordo e filamento di nebulosa, due incrociate, al massimo 16, stelle mascherate lungo la scia, bordo vuoto), `test_the_trails_are_written` |
 | Tilt, curvatura ed elongazione sono quelli di Image Analysis: dalle FWHM e dagli angoli di tutte le stelle fittate, muti sotto 32 fit o con stelle tonde (Marco, 30/10/2026) <!-- software-ok --> | `test_tilt_and_curvature_are_the_documented_surface`, `test_under_32_stars_no_tilt`, `test_aligned_elongations_give_their_angle_counterclockwise_and_full_coherence`, `test_crossed_elongations_have_no_coherence`, `test_round_stars_or_none_have_no_elongation`, `test_tilt_reaches_the_frame_through_measure` (`backend/tests/test_pipeline_field.py`) |
 | La massa d'aria e' quella dell'oggetto a meta' posa, con l'aria che lo alza, finita all'orizzonte e nessuna sotto | `test_the_airmass_is_pickering_on_the_apparent_altitude`, `test_the_refraction_lifts_a_low_star_saemundsson`, `test_under_the_horizon_there_is_no_airmass`, `test_the_altitude_agrees_with_astropy` (`backend/tests/test_pipeline_airmass.py`, `test_pipeline_altitude.py`) |
 | FWHM e HFD anche in secondi d'arco dalla scala risolta e allo zenit; senza soluzione niente secondi, senza sito o ora niente altezza ne' zenit | `test_a_solved_shot_gets_its_airmass_arcseconds_and_zenith_values`, `test_a_value_at_the_zenith_is_divided_by_the_airmass_to_the_three_fifths`, `test_without_a_site_there_is_no_altitude_but_the_arcseconds_stay`, `test_without_a_start_there_is_no_time_nor_altitude`, `test_the_mid_exposure_is_the_start_plus_half` (`backend/tests/test_pipeline_sky_measure.py`) |
@@ -204,6 +205,10 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   curvatura** (eq. 26-27): FWHM delle stelle della forma su a + b u + c v + d (u^2 + v^2); muti
   sotto 32 fit. **Elongazione** (eq. 28-29): antiorario (180 meno il nostro), coerenza 0-1. Il
   **lato chiaro** resta nostro: piano sulla mappa di `sep`, se spiega meta' della varianza.
+  **Scie** (26.53): l'algoritmo del par. 2.1.3, i numeri non pubblicati col tag in `trails.py`;
+  sigma MAD (la deviazione standard semplice: 180 frame su 205, non 201). Sintetici 4000 x 3000
+  contro di lui: 20 su 20 (4 sigma 6/6, 2 sigma denso 0/3, rado 3/3); una colonna calda di un
+  light non calibrato e' una scia, per lui e per noi.
 - **Col cielo** (`pipeline/sky_measure.py`, stadio `sky` dopo `measure`; ADR 0022 punti 5 e 7):
   le misure dei pixel con la soluzione di `solve`, il sito e l'ora della scheda del file misurato,
   in `pipeline_sky`. Una posa senza soluzione si scrive subito e si riscrive quando la soluzione
@@ -219,8 +224,8 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
     1998, eq. 16.4): 29' all'orizzonte, 1' a 45 gradi; sotto -1 grado niente. La quota del sito
     non c'e' nella scheda.
   - **Massa d'aria**: Pickering 2002 (DIO 12(1) 20-39), X = 1 / sin(h + 244 / (165 + 47 h^1,1))
-    sull'altezza apparente: 1 allo zenit, 1,99 a 30 gradi, 38,7 all'orizzonte, nessuna sotto.
-    La stessa che usera' lo SQM (ADR 0022). Solo il numero, nessun giudizio (ADR 0022).
+    sull'altezza apparente: 1 allo zenit, 1,99 a 30 gradi, 38,7 all'orizzonte, nessuna sotto;
+    quella dello SQM, solo il numero, nessun giudizio (ADR 0022).
   - **Secondi d'arco**: FWHM e HFD per la scala risolta, pixel del file come l'HFD (anche a
     colori e in binning). Un derivato scritto accanto al suo pixel: una lettura non calcola.
   - **Allo zenit**: secondi d'arco / X^0,6 (ESO, seeing di La Silla: seeing allo zenit = misurato
@@ -234,19 +239,13 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
     se no "in Dec".
     Senza CD (ASTAP non l'ha scritta intera) niente giro; la `rotation_deg` della soluzione e'
     l'angolo CROTA2, di segno opposto al nostro.
-- **Poche stelle**: sotto 5 stelle tenute, `too_few_stars`: il numero delle stelle resta,
-  l'HFD tace. La forma c'e' anche li', se le stelle di ogni rotondita' sono almeno 5: un frame
-  mosso dice quanto. Sui 24 frame veri la meno ricca ne tiene 291.
-- **Non e' riproducibile bit per bit**: `sep` separa le stelle che si toccano con un passo a
-  caso; lo stesso frame rimisurato cambia di pochi decimi per cento (stelle 1565/1566, HFD 3,486
-  contro 3,478 px, audit del 26/10/2026). I test non chiedono conteggi esatti su stelle unite.
+- **Poche stelle**: sotto 5 tenute, `too_few_stars`: il numero resta, l'HFD tace; la forma c'e'
+  se le stelle di ogni rotondita' sono almeno 5: un frame mosso dice quanto.
 
 **Le misure sul vero** (26/10/2026, 24 light copiati dall'archivio di Marco: ATR2600M L, R, G,
 B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
 
-- **Stelle iniettate** di forma nota sui fondi veri (Rosetta, M31, Ha, L): mediana dell'HFD
-  entro l'1% dalla verita', P90 da +7 a +23% (la forma di allora, integrata sul pixel, e' al
-  commit `9add5161`).
+- **Stelle iniettate** sui fondi veri (Rosetta, M31, Ha, L): HFD mediano entro l'1%, P90 +7/+23%.
 - **Contro i programmi di riferimento**: il riferimento e' Image Analysis di PixInsight (ADR <!-- software-ok -->
   0042; documentazione `doc/tools/ImageAnalysis`, 28/10/2026), al posto del SubframeSelector. <!-- software-ok -->
   `python tools/confronto_misure.py CARTELLA --groups GRUPPI --out FILE` misura le copie con
@@ -290,6 +289,7 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | FWHMTilt (26.52) | 1,03 [0,84-1,58] | 1,01 [0,90-1,22] | 1,04 [0,93-1,43] | 1,03 [0,87-1,13] |
   | FWHMCurvature (26.52) | 1,01 [0,59-1,15] | 1,01 [0,49-1,07] | 1,04 [-0,27-1,08] | 1,03 [0,17-1,08] |
   | Coerenza (differenza) / angolo (gradi) (26.52) | +0,006 / 0,19 | +0,001 / 0,14 | +0,003 / 0,32 | +0,005 / 0,32 |
+  | Scie, frame col suo conteggio (26.53) | 35 / 35 | 45 / 45 | 80 / 80 | 41 / 45 |
   | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
   | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
 
@@ -298,17 +298,17 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   Debayer, per canale dal grezzo). Tempi: il fit del 26.49 +1 s mono, +2,4 s colori; Sh2-185
   n.2 (21964 fit) 23,9 s; il 26.51 +2,8 s mono: il tetto di ADR 0042 al 26.57. Il 26.52: +0,86 s
   mono (mediane di riga); curvature vicine a zero danno rapporti larghi, scarto entro 0,07.
+  Scie: 201 su 205 (sempre zero: 179), 22 dei 26 con scie sue; fuori la Velo, dove lui per
+  strisce conta 4-11 scie sui filamenti: le sue 1-2 sono filamenti, il profilo li scarta. +0,5-0,9 s.
 
   Secondi a frame del 26.47, mediana, un frame alla volta, mono / colori: AstroLog 5,69 / 14,01
   (debayer VNG 4,43, rumore MRS 1,67 / 1,93 + 1,33 per piano, stelle e flusso PSF 1,44 / 1,56,
   forma 1,02 / 1,80); Image Analysis con le estese 3,57 / 2,46 + 1,78 di debayer, senza 2,42 /
   1,14 + 1,78.
 
-  Perche' degli scarti (dal 26.46; tabelle per camera e oggetto al commit `9add5161`): PSF SNR
-  fino al 26.49, l'ellisse dei momenti, piu' stretta della sua fittata (cometa 0,61). HFD / FWHM
-  non e' uno scarto: sulla Moffat 1,36 a beta 2,5 e 1,17 a beta 4. HFD / HFD ASTAP 0,83-0,92;
-  le sue stelle contano da SNR 30 sul grezzo: 0,9-27 volte. Le prove sulle 24 copie del
-  27-28/10 (tetto, gradiente, tilt, cielo, tempi) sono al commit `891c1e2f`, superate dal banco.
+  Perche' degli scarti (tabelle per camera e oggetto al commit `9add5161`): HFD / FWHM non e'
+  uno scarto (Moffat: 1,36 a beta 2,5, 1,17 a beta 4); HFD / HFD ASTAP 0,83-0,92; le sue
+  stelle contano da SNR 30 sul grezzo: 0,9-27 volte.
 
 **Lo SQM** (stadio `sqm`, `pipeline/sqm.py` e `star_catalogue.py`, portati dal sorgente di ASTAP,
 MPL-2.0; ADR 0022 punto 8):
@@ -337,7 +337,7 @@ MPL-2.0; ADR 0022 punto 8):
 sensore, fondo e rumore in ADU; la forma (fit, stimata, non misurabile) con le sue stelle, FWHM
 in pixel, eccentricita' e direzione; il tetto e le stelle sature, il PSF SNR e il PSF Signal
 Weight, le statistiche dei pixel (mediana, SkyRate, Sigma, entropia, NoiseRatio, SNR, M\*, N\*), il campo (gradiente col
-lato chiaro, banding, tilt, curvatura, elongazione); durata, ora. In `pipeline_sky`: se risolta, meta' posa, altezza,
+lato chiaro, banding, scie, tilt, curvatura, elongazione); durata, ora. In `pipeline_sky`: se risolta, meta' posa, altezza,
 massa d'aria, FWHM e HFD in secondi d'arco e allo zenit, direzione e lato chiaro sul cielo con
 l'asse. In `pipeline_solutions` la matrice CD e il pixel di riferimento. In `pipeline_sqm`:
 esito (misurato, calibrazione fallita, senza altezza, illeggibile), catalogo, zero point, stelle

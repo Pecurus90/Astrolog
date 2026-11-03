@@ -34,7 +34,7 @@ PENDING = (
 _NUMBERS = (  # TooFewStars: no hfd_px
     "stars", "kept", "hfd_px", "background_adu", "noise_adu", "ceiling_adu", "saturated",
     "psf_snr", "psf_flux_adu", "psf_mean_flux_adu", "psf_count", "psf_signal_weight",
-    "gradient_noise", "gradient_angle_deg", "row_banding", "column_banding", "fwhm_tilt",
+    "gradient_noise", "gradient_angle_deg", "row_banding", "column_banding", "trails", "fwhm_tilt",
     "fwhm_curvature", "elongation_angle_deg", "elongation_coherence", "median_adu", "sigma_adu",
     "entropy_bits", "noise_ratio", "snr", "mstar_adu", "nstar_adu",
 )  # fmt: skip
