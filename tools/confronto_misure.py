@@ -41,7 +41,7 @@ from astrolog.pipeline.pixels import Pixels, read_pixels
 from astrolog.pipeline.scanner import program_of, read_header
 from astrolog.pipeline.sky_measure import apparent_altitudes
 from astrolog.pipeline.stars import Measured, measure_frame
-from astrolog.pipeline.values import Value
+from astrolog.pipeline.values import Value, as_number
 
 FRAME_SUFFIXES = (".fits", ".fit", ".fts")
 SNR_MIN = 30  # the -analyse threshold misure.md has always quoted
@@ -157,7 +157,9 @@ OUR_STAGES = {
     "forma": "shape_of",
     "fit PSF": "fit_stars",
     "stelle": "detect",
-    "rumore MRS": "mrs_noise",
+    "rumore MRS": "mrs",
+    "statistiche dei pixel": "pixel_stats",
+    "fondo MMT": "mstar_nstar",
     "rumore per piano colore": "_mosaic_noise",
     "gradiente": "gradient_of",
     "tilt e curvatura": "zones_of",
@@ -183,6 +185,14 @@ class Ours:
     psf_flux_adu: float | None = None  # None: no fit
     psf_mean_flux_adu: float | None = None
     psf_count: int | None = None
+    psf_signal_weight: float | None = None
+    median_adu: float | None = None  # pixel statistics (pixel_stats.py, mmt.py)
+    sigma_adu: float | None = None
+    entropy_bits: float | None = None
+    noise_ratio: float | None = None
+    snr: float | None = None
+    mstar_adu: float | None = None
+    nstar_adu: float | None = None
 
 
 @dataclass(frozen=True)
@@ -341,7 +351,12 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
         return None  # a matrix not R G B: the pipeline says not_supported, so does this
     seconds = {READ: time.perf_counter() - start}
     with stage_clock(seconds):
-        found = measure_frame(read.data, saturation=read.saturation, pattern=pattern)
+        found = measure_frame(
+            read.data,
+            saturation=read.saturation,
+            pattern=pattern,
+            pedestal=as_number(header.cards.get("PEDESTAL")) or 0.0,
+        )
     total = time.perf_counter() - start
     seconds[OTHER] = total - sum(seconds.values())
     seconds[TOTAL] = total
@@ -354,7 +369,9 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
                 shape.psf_residual if shape else None, spread.fwhm_px if spread else None,
                 spread.eccentricity if spread else None,
                 spread.psf_residual if spread else None, found.psf_flux_adu,
-                found.psf_mean_flux_adu, found.psf_count)  # fmt: skip
+                found.psf_mean_flux_adu, found.psf_count, found.psf_signal_weight,
+                found.median_adu, found.sigma_adu, found.entropy_bits, found.noise_ratio,
+                found.snr, found.mstar_adu, found.nstar_adu)  # fmt: skip
     return ours, pattern is not None
 
 
@@ -392,6 +409,14 @@ def _pairs(row: Row) -> dict[str, float | None]:
             o.psf_mean_flux_adu, v.get("PSFTotalMeanFlux"), ADU_RANGE
         ),
         "fit PSF / Image Analysis": _over(o.psf_count, v.get("PSFCount")),
+        "PSF Signal Weight / Image Analysis": _over(o.psf_signal_weight, v.get("PSFSignalWeight")),
+        "mediana / Image Analysis": _over(o.median_adu, v.get("Median"), ADU_RANGE),
+        "Sigma / Image Analysis": _over(o.sigma_adu, v.get("Sigma"), ADU_RANGE),
+        "entropia / Image Analysis": _over(o.entropy_bits, v.get("Entropy")),
+        "NoiseRatio / Image Analysis": _over(o.noise_ratio, v.get("NoiseRatio")),
+        "SNR / Image Analysis": _over(o.snr, v.get("SNR")),
+        "M* / Image Analysis": _over(o.mstar_adu, v.get("MStar"), ADU_RANGE),
+        "N* / Image Analysis": _over(o.nstar_adu, v.get("NStar"), ADU_RANGE),
         "altezza / Image Analysis": _over(o.altitude_deg, v.get("Altitude")),
         "massa d'aria / Image Analysis": _over(airmass, v.get("Airmass")),
     }

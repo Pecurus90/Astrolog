@@ -14,7 +14,7 @@ from astrolog.pipeline.detect import (
     detect,
     structure_map,
 )
-from astrolog.pipeline.noise import mrs_noise, structure_noise
+from astrolog.pipeline.noise import mrs, structure_noise
 from astrolog.pipeline.stars import measure_frame, median3x3
 
 _SIDE = 300
@@ -80,9 +80,9 @@ def test_correlated_noise_raises_no_structure_on_an_empty_sky() -> None:
     """Same MRS, neighbours correlated as a Debayer leaves them: over MRS 4% of the sky was
     structure; over the structure noise none, as on white noise (plan 26.48.2)."""
     sky = ndimage.gaussian_filter(_sky(12, (512, 512)), 0.8)
-    sky *= _NOISE / mrs_noise(sky)
+    sky *= _NOISE / mrs(sky).sigma
     filtered = median3x3(sky)
-    assert structure_map(filtered, mrs_noise(sky)).mean() > 0.01
+    assert structure_map(filtered, mrs(sky).sigma).mean() > 0.01
     assert not structure_map(filtered, structure_noise(filtered)).any()
 
 

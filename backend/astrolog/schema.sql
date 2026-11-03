@@ -1101,7 +1101,7 @@ CREATE TABLE pipeline_measures (
   kept           INTEGER CHECK (kept >= 0),   -- stelle di cui hfd_px e' la mediana
   hfd_px         REAL CHECK (hfd_px > 0),     -- pixel del sensore, anche a colori
   background_adu REAL,                        -- fondo cielo: solo stessa camera, guadagno, posa
-  noise_adu      REAL CHECK (noise_adu >= 0), -- 1,4826 MAD; a colori per piano R G B, (min+max)/2
+  noise_adu      REAL CHECK (noise_adu >= 0), -- MRS (noise.py); a colori per piano R G B, (min+max)/2
   -- forma: fit di Moffat come Image Analysis (fitted), momenti di sep se il fit non tiene (estimated), ciambelle o
   -- righe (unmeasurable); NULL: meno di 5 stelle. Anche con too_few_stars: un frame mosso.
   shape          TEXT CHECK (shape IN ('fitted', 'estimated', 'unmeasurable')),
@@ -1123,6 +1123,16 @@ CREATE TABLE pipeline_measures (
   psf_flux_adu      REAL CHECK (psf_flux_adu >= 0),       -- somma dei segnali, ImageWeighting eq. 7
   psf_mean_flux_adu REAL CHECK (psf_mean_flux_adu >= 0),  -- somma dei flussi medi (ADU per pixel), eq. 8
   psf_count         INTEGER CHECK (psf_count > 0),
+  psf_signal_weight REAL CHECK (psf_signal_weight >= 0),  -- ImageWeighting eq. 21-22; NULL: senza PSF SNR o M*
+  -- statistiche dei pixel come Image Analysis (pixel_stats.py, mmt.py), sul piano misurato
+  median_adu     REAL,  -- Median: pixel validi, meno PEDESTAL
+  sky_rate_adu_s REAL,  -- SkyRate: median_adu / EXPTIME; NULL senza posa
+  sigma_adu      REAL CHECK (sigma_adu >= 0),       -- Sigma: 0,990905 sqrt BWMV
+  entropy_bits   REAL,                              -- Entropy standardizzata
+  noise_ratio    REAL CHECK (noise_ratio >= 0 AND noise_ratio <= 1),  -- NoiseRatio: quota di pixel dell'MRS
+  snr            REAL CHECK (snr >= 0),             -- SNR, eq. 16; NULL: rumore zero
+  mstar_adu      REAL CHECK (mstar_adu >= 0),       -- M*, fondo MMT a 256 px; NULL: nessun pixel sotto
+  nstar_adu      REAL CHECK (nstar_adu >= 0),       -- N*, 2,054326 Sn
   gradient_pct   REAL CHECK (gradient_pct >= 0),  -- 100 (max - min) / mediana del fondo ridotto
   gradient_angle_deg REAL CHECK (gradient_angle_deg >= 0 AND gradient_angle_deg < 360),  -- lato chiaro
   tilt_pct       REAL CHECK (tilt_pct >= 0),  -- HFD degli angoli, ASTAP; NULL: zona povera
@@ -1146,6 +1156,11 @@ CREATE TABLE pipeline_measures (
   CHECK (psf_snr IS NULL OR stars >= 5),
   CHECK ((psf_count IS NULL) = (psf_flux_adu IS NULL) AND (psf_count IS NULL) = (psf_mean_flux_adu IS NULL)
     AND (psf_count IS NULL OR stars IS NOT NULL) AND (psf_snr IS NULL OR psf_count IS NOT NULL)),
+  CHECK ((stars IS NULL) = (median_adu IS NULL) AND (stars IS NULL) = (sigma_adu IS NULL)
+    AND (stars IS NULL) = (entropy_bits IS NULL) AND (stars IS NULL) = (noise_ratio IS NULL)
+    AND (sky_rate_adu_s IS NULL OR stars IS NOT NULL) AND (snr IS NULL OR stars IS NOT NULL)),
+  CHECK ((mstar_adu IS NULL) = (nstar_adu IS NULL) AND (mstar_adu IS NULL OR stars IS NOT NULL)),
+  CHECK (psf_signal_weight IS NULL OR (psf_snr IS NOT NULL AND mstar_adu IS NOT NULL)),
   CHECK (gradient_pct IS NOT NULL OR gradient_angle_deg IS NULL),
   CHECK (gradient_pct IS NULL OR stars IS NOT NULL),
   CHECK ((tilt_pct IS NULL) = (curvature_pct IS NULL) AND (tilt_pct IS NULL OR hfd_px IS NOT NULL))

@@ -152,6 +152,29 @@ def test_rejected_values_are_winsorized_to_the_nearest_kept():
     assert robust.winsorized(values, kept).tolist() == [5.0, 5.0, 6.0, 7.0, 7.0]
 
 
+def _naive_sn(values: np.ndarray) -> float:
+    """Sn by the definition: himed over j of |x_i - x_j|, then lomed over i."""
+    x = np.sort(values)
+    inner = np.sort(np.abs(x[:, None] - x[None, :]), axis=1)[:, len(x) // 2]
+    return float(np.sort(inner)[(len(x) + 1) // 2 - 1])
+
+
+def test_sn_is_the_definition_on_small_samples():
+    rng = np.random.default_rng(7)
+    for n in (1, 2, 3, 10, 51, 400):
+        values = rng.normal(0.0, 1.0, n)
+        assert robust.sn(values) == pytest.approx(_naive_sn(values), abs=1e-12)
+    assert robust.sn(np.empty(0)) is None
+
+
+def test_sn_of_a_half_normal_sample_needs_its_own_factor():
+    """ImageWeighting eq. 20: 1 / 0.4867777 = 2.054326 makes Sn of a half-normal its sigma."""
+    values = np.abs(np.random.default_rng(8).normal(0.0, 1.0, 400_000))
+    sn = robust.sn(values)
+    assert sn is not None
+    assert 2.054326 * sn == pytest.approx(1.0, rel=0.005)
+
+
 def test_a_zero_scale_is_silent():
     """Qn zero (valori ripetuti, frame copiati): la soglia sarebbe la mediana, e tace."""
     assert relative_bounds([0.5] * 8 + [0.6, 0.7]) is None

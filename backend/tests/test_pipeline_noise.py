@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
-from astrolog.pipeline.noise import UNIT_SIGMAS, mrs_noise, starlet, structure_noise
+from astrolog.pipeline.noise import UNIT_SIGMAS, mrs, starlet, structure_noise
 from astrolog.pipeline.stars import median3x3
 
 _SIDE = 512
@@ -53,7 +53,16 @@ def test_the_coarse_plane_is_the_textbook_one(shape: tuple[int, int]) -> None:
 
 
 def test_pure_gaussian_noise_reads_its_sigma() -> None:
-    assert mrs_noise(_noise(10.0)) == pytest.approx(10.0, rel=0.02)
+    assert mrs(_noise(10.0)).sigma == pytest.approx(10.0, rel=0.02)
+
+
+def test_the_noise_ratio_is_the_share_of_pixels_the_noise_was_read_on() -> None:
+    """ImageAnalysis NoiseRatio: pure noise leaves nearly every pixel out of the support; stars
+    take theirs away."""
+    assert mrs(_noise(10.0)).ratio > 0.95
+    data = _noise(10.0)
+    _gauss_stars(data, 400, 20000.0, 2.0)
+    assert mrs(data).ratio < mrs(_noise(10.0)).ratio - 0.01
 
 
 def test_a_crowded_field_and_a_nebula_leave_the_noise_as_it_is() -> None:
@@ -64,7 +73,7 @@ def test_a_crowded_field_and_a_nebula_leave_the_noise_as_it_is() -> None:
     data += (3000 * np.exp(-((rows - 256) ** 2 + (cols - 256) ** 2) / (2 * 80.0**2))).astype(
         np.float32
     )
-    assert mrs_noise(data) == pytest.approx(10.0, rel=0.03)
+    assert mrs(data).sigma == pytest.approx(10.0, rel=0.03)
 
 
 def test_the_structure_noise_of_gaussian_noise_is_its_sigma() -> None:
@@ -76,5 +85,5 @@ def test_noise_correlated_at_the_structure_scale_lifts_the_structure_noise() -> 
     """A Debayer correlates neighbours: the first layer, MRS's weight, sees little of it; the
     second layer, at the structures' scale, sees it (plan 26.48.2, colour frames 2.5-3.9 MRS)."""
     data = ndimage.gaussian_filter(_noise(10.0), 0.8)
-    data *= 10.0 / mrs_noise(data)
-    assert structure_noise(median3x3(data)) > 2 * mrs_noise(data)
+    data *= 10.0 / mrs(data).sigma
+    assert structure_noise(median3x3(data)) > 2 * mrs(data).sigma

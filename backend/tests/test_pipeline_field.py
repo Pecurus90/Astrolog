@@ -10,7 +10,9 @@ from astrolog.pipeline import stars
 from astrolog.pipeline.field import (
     PSF_SNR_C3,
     PSF_SNR_C4,
+    Photometry,
     gradient_of,
+    psf_signal_weight,
     psf_snr,
     zones_of,
 )
@@ -97,6 +99,15 @@ def test_psf_snr_is_the_documented_formula() -> None:
     """ImageWeighting eq. 23-24: c3 F^2 / (c4 sigma^2); units cancel, ADU or [0,1] alike."""
     assert psf_snr(5000.0, 2.0) == pytest.approx(PSF_SNR_C3 * 5000.0**2 / (PSF_SNR_C4 * 4.0))
     assert psf_snr(5000.0 / 65535, 2.0 / 65535) == pytest.approx(psf_snr(5000.0, 2.0))
+
+
+def test_psf_signal_weight_gives_back_the_programs_own_value() -> None:
+    """ImageWeighting eq. 21-22 on its PSFFlux, PSFTotalMeanFlux, Noise, MStar (Abell 2151 n.0):
+    its PSFSignalWeight; no M*, no weight. software-ok"""
+    found = Photometry(2531.6810175144487, 33.12986348995004, 2000)
+    weight = psf_signal_weight(found, 0.0008990046849219067, 0.0006099659949541092)
+    assert weight == pytest.approx(0.09051482273618627, rel=1e-9)
+    assert psf_signal_weight(found, 0.0009, 0.0) is None
 
 
 def test_psf_snr_gives_back_the_programs_own_value() -> None:

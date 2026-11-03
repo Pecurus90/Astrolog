@@ -15,12 +15,13 @@ from .scan import busy
 from .shape import Shape
 from .shots import first_per_shot
 from .stars import Measured, measure_frame
+from .values import as_number
 
 # Light shots without a row, or whose last file was unreadable; plain file before its copy.
 PENDING = (
-    "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.bayer,"
+    "SELECT f.id AS file_id, f.frame_id, f.rel_path, c.bayer, c.exposure_s,"
     " h.header ->> '$.BAYERPAT' AS BAYERPAT, h.header ->> '$.XBAYROFF' AS XBAYROFF,"
-    " h.header ->> '$.YBAYROFF' AS YBAYROFF"
+    " h.header ->> '$.YBAYROFF' AS YBAYROFF, h.header ->> '$.PEDESTAL' AS PEDESTAL"
     " FROM pipeline_files AS f JOIN pipeline_cards AS c ON c.file_id = f.id"
     " JOIN pipeline_headers AS h ON h.file_id = f.id"
     " WHERE f.root_id = :root AND f.state = 'present' AND f.skip_reason IS NULL"
@@ -32,41 +33,20 @@ PENDING = (
 
 _NUMBERS = (  # TooFewStars: no hfd_px, tilt_pct, curvature_pct
     "stars", "kept", "hfd_px", "background_adu", "noise_adu", "ceiling_adu", "saturated",
-    "psf_snr", "psf_flux_adu", "psf_mean_flux_adu", "psf_count", "gradient_pct",
-    "gradient_angle_deg", "tilt_pct", "curvature_pct",
+    "psf_snr", "psf_flux_adu", "psf_mean_flux_adu", "psf_count", "psf_signal_weight",
+    "gradient_pct", "gradient_angle_deg", "tilt_pct", "curvature_pct", "median_adu", "sigma_adu",
+    "entropy_bits", "noise_ratio", "snr", "mstar_adu", "nstar_adu",
 )  # fmt: skip
 _SHAPE = (
     "shape", "shape_stars", "fwhm_px", "eccentricity", "angle_deg", "fwhm_sigma_px",
     "eccentricity_sigma", "psf_residual", "psf_residual_sigma",
 )  # fmt: skip
-
+_WRITTEN = ("file_id", "outcome", *_NUMBERS, *_SHAPE, "sky_rate_adu_s", "duration_s", "measured_at")
+# Only an unreadable row is written over: the others stay (misure.md).
 UPSERT = (
-    "INSERT INTO pipeline_measures (frame_id, file_id, outcome, stars, kept, hfd_px,"
-    " background_adu, noise_adu, ceiling_adu, saturated, psf_snr, psf_flux_adu,"
-    " psf_mean_flux_adu, psf_count, gradient_pct,"
-    " gradient_angle_deg, tilt_pct, curvature_pct, shape, shape_stars, fwhm_px, eccentricity,"
-    " angle_deg, fwhm_sigma_px, eccentricity_sigma, psf_residual, psf_residual_sigma, duration_s,"
-    " measured_at)"
-    " VALUES (:frame_id, :file_id, :outcome, :stars, :kept, :hfd_px, :background_adu,"
-    " :noise_adu, :ceiling_adu, :saturated, :psf_snr, :psf_flux_adu, :psf_mean_flux_adu,"
-    " :psf_count, :gradient_pct, :gradient_angle_deg,"
-    " :tilt_pct, :curvature_pct, :shape, :shape_stars, :fwhm_px, :eccentricity, :angle_deg,"
-    " :fwhm_sigma_px, :eccentricity_sigma, :psf_residual, :psf_residual_sigma, :duration_s,"
-    " :measured_at)"
-    " ON CONFLICT (frame_id) DO UPDATE SET file_id = excluded.file_id,"
-    " outcome = excluded.outcome, stars = excluded.stars, kept = excluded.kept,"
-    " hfd_px = excluded.hfd_px, background_adu = excluded.background_adu,"
-    " noise_adu = excluded.noise_adu, ceiling_adu = excluded.ceiling_adu,"
-    " saturated = excluded.saturated, psf_snr = excluded.psf_snr,"
-    " psf_flux_adu = excluded.psf_flux_adu, psf_mean_flux_adu = excluded.psf_mean_flux_adu,"
-    " psf_count = excluded.psf_count,"
-    " gradient_pct = excluded.gradient_pct, gradient_angle_deg = excluded.gradient_angle_deg,"
-    " tilt_pct = excluded.tilt_pct, curvature_pct = excluded.curvature_pct,"
-    " shape = excluded.shape, shape_stars = excluded.shape_stars, fwhm_px = excluded.fwhm_px,"
-    " eccentricity = excluded.eccentricity, angle_deg = excluded.angle_deg,"
-    " fwhm_sigma_px = excluded.fwhm_sigma_px, eccentricity_sigma = excluded.eccentricity_sigma,"
-    " psf_residual = excluded.psf_residual, psf_residual_sigma = excluded.psf_residual_sigma,"
-    " duration_s = excluded.duration_s, measured_at = excluded.measured_at"
+    f"INSERT INTO pipeline_measures (frame_id, {', '.join(_WRITTEN)})"  # noqa: S608 - our names
+    f" VALUES (:frame_id, {', '.join(f':{c}' for c in _WRITTEN)})"
+    f" ON CONFLICT (frame_id) DO UPDATE SET {', '.join(f'{c} = excluded.{c}' for c in _WRITTEN)}"
     " WHERE pipeline_measures.outcome = 'unreadable'"
 )
 
@@ -98,15 +78,19 @@ def measure_root(
 
 def _measure(conn: sqlite3.Connection, path: Path, row: sqlite3.Row, now: str) -> str:
     start = time.perf_counter()
-    values: dict[str, object] = {key: None for key in (*_NUMBERS, *_SHAPE)}
+    values: dict[str, object] = {key: None for key in _WRITTEN}
     pattern = pattern_of(dict(row))
     read = Unmeasurable(Why.NOT_SUPPORTED)  # a matrix not R G B (CYGM): no debayer for it
     if pattern is not None or not row["bayer"]:
         read = read_pixels(path)
     if isinstance(read, Pixels):
-        found = measure_frame(read.data, saturation=read.saturation, pattern=pattern)
+        pedestal = as_number(row["PEDESTAL"]) or 0.0  # ImageAnalysis eq. 8: none written, none off
+        found = measure_frame(read.data, saturation=read.saturation, pattern=pattern,
+                              pedestal=pedestal)  # fmt: skip
         outcome = "measured" if isinstance(found, Measured) else "too_few_stars"
         values |= {key: getattr(found, key, None) for key in _NUMBERS}
+        if row["exposure_s"]:  # SkyRate: Median per second of exposure (ImageAnalysis par. 2.1.2)
+            values["sky_rate_adu_s"] = found.median_adu / row["exposure_s"]
         if found.shape is not None:
             values |= _shape_values(found.shape)
     else:

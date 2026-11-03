@@ -228,14 +228,14 @@ def test_the_stage_clock_times_what_measure_frame_calls_and_puts_it_back():
 
 
 def test_a_stage_inside_another_counts_once():
-    """_mosaic_noise calls mrs_noise per plane: that time is the plane noise's, not twice."""
+    """_mosaic_noise calls mrs per plane: that time is the plane noise's, not twice."""
     seconds: dict[str, float] = {}
     with stage_clock(seconds):
         stars.measure_frame(_frame(True), saturation=65535, pattern="RGGB")
     assert {"debayer VNG", "rumore per piano colore", "rumore MRS"} <= set(seconds)
     alone: dict[str, float] = {}
     with stage_clock(alone):
-        stars.mrs_noise(_frame(False))
+        stars.mrs(_frame(False))
     assert set(alone) == {"rumore MRS"}
 
 

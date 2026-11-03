@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 270; senza fonte: 1.
-Fonti: C norma: 134; U usanza: 2; D metodo: 18; M misura: 21; P decisione: 35; T tecnico: 62.
+Valori: 282; senza fonte: 1.
+Fonti: C norma: 144; U usanza: 2; D metodo: 18; M misura: 22; P decisione: 35; T tecnico: 63.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -281,6 +281,8 @@ Fonti: C norma: 134; U usanza: 2; D metodo: 18; M misura: 21; P decisione: 35; T
 |---|---|---|
 | PSF_SNR_C3 | `1.316e-7` | C PixInsight ImageWeighting, eq. 23-24; software-ok |
 | PSF_SNR_C4 | `4.987e6` | C PixInsight ImageWeighting, eq. 23-24; software-ok |
+| PSFSW_C1 | `5.326e-6` | C PixInsight ImageWeighting, eq. 22; software-ok |
+| PSFSW_C2 | `9.0e6` | C PixInsight ImageWeighting, eq. 22; software-ok |
 | MESH_PX | `64` | C sep docs: Background bw, bh default |
 | PLANE_EXPLAINS | `0.5` | D R^2 over one half: the plane explains the larger part |
 | TILT_BAND_PCT | `5.0` | C ASTAP astap.htm, CCD inspector: tilt 0-5% "none" |
@@ -300,6 +302,13 @@ Fonti: C norma: 134; U usanza: 2; D metodo: 18; M misura: 21; P decisione: 35; T
 | _MAX_AXES | `999` | C FITS 4.0 4.4.1.1: NAXIS at most 999 |
 | _MAX_BYTES | `2**62` | T |
 
+### pipeline/mmt.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| LAYERS | `8` | C ImageWeighting par. 2.3: models at the scale of 256 pixels; software-ok |
+| SN_HALF_NORMAL | `2.054326` | C ImageWeighting eq. 15, 20: 1 / 0.4867777; software-ok |
+
 ### pipeline/noise.py
 
 | simbolo | valore | fonte |
@@ -312,6 +321,17 @@ Fonti: C norma: 134; U usanza: 2; D metodo: 18; M misura: 21; P decisione: 35; T
 | MAX_ROUNDS | `20` | T |
 | NOISE_FLOOR_ADU | `0.2887` | D uniform quantization noise, step/sqrt(12) |
 | MEDIAN_LAYER2_GAIN | `0.1492` | M plan 26.48.2: 3x3 median of Gaussian noise, 4 x 4 MP, +-0.0001 |
+
+### pipeline/pixel_stats.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| EDGE_SHARE | `1 / 65535` | C ImageAnalysis par. 2.1.2: e = 1/65535 of [0, 1 |
+| BWMV_MADS | `9.0` | C ImageAnalysis eq. 10: u = (v - M) / (9 MAD); software-ok |
+| BWMV_NORMAL | `0.990905` | C ImageAnalysis eq. 9: sqrt BWMV consistent with a normal; software-ok |
+| ENTROPY_BINS | `16` | C ImageAnalysis eq. 11: bins of Sigma / 16; software-ok |
+| SCALE_REJECTION | `4.0` | C ImageAnalysis par. 2.1.4: farther than four times; software-ok |
+| SCALE_ROUNDS | `2` | C ImageAnalysis par. 2.1.4: computed again twice; software-ok |
 
 ### pipeline/pixels.py
 
@@ -500,6 +520,8 @@ Fonti: C norma: 134; U usanza: 2; D metodo: 18; M misura: 21; P decisione: 35; T
 | BIWEIGHT_C | `6.0` | C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok |
 | BIWEIGHT_ITERATIONS | `20` | C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok |
 | BIWEIGHT_TOLERANCE | `1e-10` | C PixInsight ImageAnalysis par. 2.2, eq. 110; software-ok |
+| SN_OUTER | `20001` | M plan 26.51: three R* sets of 13 M, his Stat.Sn |
+| SN_HALVINGS | `60` | T |
 | CHAUVENET_EXPECTED | `0.5` | C Maples et al. 2018, ApJS 238:2, par. 2-4; C Maples et al. 2018, eq. 1: Chauvenet's criterion |
 | DEVIATION_PERCENTILE | `0.683` | C Maples et al. 2018, par. 2.2: technique 1 |
 | MEDIAN_CORRECTION | `(1.7198, 1.022)` | C Maples et al. 2018, Table 3, N > 100 |

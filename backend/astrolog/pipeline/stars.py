@@ -2,6 +2,7 @@
 median-filtered copy, HFD and shape on the raw frame. Pure: pixels in, numbers out."""
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
@@ -9,8 +10,11 @@ import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 from ..units import sigma_from_mad
 from .debayer import COLOURS, debayered
 from .detect import detect
-from .field import gradient_of, photometry, psf_snr, zones_of
-from .noise import NOISE_FLOOR_ADU, mrs_noise, structure_noise
+from .field import gradient_of, photometry, psf_signal_weight, psf_snr, zones_of
+from .median import median3x3
+from .mmt import Background, mstar_nstar
+from .noise import NOISE_FLOOR_ADU, mrs, structure_noise
+from .pixel_stats import pixel_stats, snr
 from .psf_fit import Fitted, fit_stars
 from .psf_flux import ring_sky
 from .shape import MIN_STARS, Shape, estimated_fwhm, shape_of
@@ -40,8 +44,16 @@ class Across:
     psf_flux_adu: float | None  # ImageAnalysis PSFFlux; None: no fit; software-ok
     psf_mean_flux_adu: float | None  # PSFTotalMeanFlux, ADU per square pixel
     psf_count: int | None  # PSFCount, the fits summed
+    psf_signal_weight: float | None  # PSFSignalWeight; None: no PSF SNR or no M*
     gradient_pct: float | None
     gradient_angle_deg: float | None
+    median_adu: float  # Image Analysis Median, the pedestal off (pixel_stats.py)
+    sigma_adu: float  # Sigma
+    entropy_bits: float  # Entropy
+    noise_ratio: float  # NoiseRatio: share of pixels the MRS noise took
+    snr: float | None  # SNR; None: noise zero
+    mstar_adu: float | None  # MStar (mmt.py); None: no pixel under the model
+    nstar_adu: float | None  # NStar
 
 
 @dataclass(frozen=True)
@@ -66,10 +78,10 @@ class TooFewStars(Across):
 
 
 def measure_frame(
-    data: np.ndarray, *, saturation: float, pattern: str | None
+    data: np.ndarray, *, saturation: float, pattern: str | None, pedestal: float = 0.0
 ) -> Measured | TooFewStars:
-    """`pattern`: Bayer matrix (debayer.COLOURS), measured on its VNG intensity as WBPP; None mono.
-    `saturation`: declared full scale, the ceiling (ADR 0041); debayer clips there (as WBPP)."""
+    """`pattern`: Bayer matrix, VNG intensity as WBPP; None mono. `saturation`: full scale, the
+    ceiling (ADR 0041), debayer clips there. `pedestal`: DN, off the median only (eq. 8)."""
     sensor = np.ascontiguousarray(data, dtype=np.float32)  # a clipped sensor pixel, colour too
     raw = sensor if pattern is None else debayered(sensor, pattern, top=saturation)
     sky = sep.Background(raw)
@@ -83,19 +95,24 @@ def measure_frame(
     hfds, hx, hy = _hfd(images, objects, _spread(objects, round_ones, raw.shape))
     first_noise = noise
     # MRS, not the first pass: crowded fields lift a MAD (40k synthetic stars: 19.8 for 10)
-    noise = max(mrs_noise(raw), NOISE_FLOOR_ADU)
+    quiet = mrs(raw)
+    noise = max(quiet.sigma, NOISE_FLOOR_ADU)
     structure = max(structure_noise(images[1]), NOISE_FLOOR_ADU)
     found = detect(*images, (noise, structure), clip=(sensor, saturation), level=(raw, saturation))
     # Fitted on the plane with its sky: the sampling region's median needs the level (psf_fit.py)
     fits = fit_stars(raw, found.x, found.y, found.box, found.flux)
     chosen = _spread(objects, usable, raw.shape)
     shape = shape_of(images, objects, chosen, first_noise, (fits, len(found.x)))
-    flux = _flux(fits, noise, len(found.x))
+    mmt = mstar_nstar(raw)
+    flux = _flux(fits, noise, len(found.x), mmt)
+    pixel = _pixel_values(raw, saturation, pedestal, noise, quiet.ratio)
     if pattern is not None:  # noise said as WBPP says it
         noise = max(_mosaic_noise(sensor, pattern), NOISE_FLOOR_ADU)
     gradient = gradient_of(back)
-    across = Across(saturation, int(found.saturated.sum()), *flux, gradient.pct,
-                    gradient.angle_deg)  # fmt: skip
+    across = Across(ceiling_adu=saturation, saturated=int(found.saturated.sum()),
+                    gradient_pct=gradient.pct, gradient_angle_deg=gradient.angle_deg,
+                    mstar_adu=mmt.mstar_adu if mmt else None,
+                    nstar_adu=mmt.nstar_adu if mmt else None, **flux, **pixel)  # fmt: skip
     common = {"stars": len(found.x), "kept": len(hfds), "background_adu": float(sky.globalback),
               "noise_adu": noise, "shape": shape} | vars(across)  # fmt: skip
     if len(hfds) < MIN_STARS:
@@ -106,16 +123,28 @@ def measure_frame(
                     curvature_pct=zones.curvature_pct if zones else None)  # fmt: skip
 
 
-def _flux(
-    fits: Fitted, noise: float, stars: int
-) -> tuple[float | None, float | None, float | None, int | None]:
-    """PSF SNR, PSFFlux, PSFTotalMeanFlux, PSFCount; on the measured plane's own noise: a colour
-    frame's intensity, as misure.md says. software-ok"""
+def _flux(fits: Fitted, noise: float, stars: int, mmt: Background | None) -> dict[str, Any]:
+    """PSF SNR, PSFFlux, PSFTotalMeanFlux, PSFCount, PSFSignalWeight; on the measured plane's own
+    noise: a colour frame's intensity, as misure.md says. software-ok"""
     found = photometry(fits)
     if found is None:
-        return None, None, None, None
-    snr = psf_snr(found.flux, noise) if stars >= MIN_STARS else None
-    return snr, found.flux, found.mean_flux, found.count
+        return dict.fromkeys(("psf_snr", "psf_flux_adu", "psf_mean_flux_adu", "psf_count",
+                              "psf_signal_weight"))  # fmt: skip
+    enough = stars >= MIN_STARS
+    weight = psf_signal_weight(found, noise, mmt.mstar_adu) if enough and mmt else None
+    return {"psf_snr": psf_snr(found.flux, noise) if enough else None, "psf_flux_adu": found.flux,
+            "psf_mean_flux_adu": found.mean_flux, "psf_count": found.count,
+            "psf_signal_weight": weight}  # fmt: skip
+
+
+def _pixel_values(
+    raw: np.ndarray, ceiling: float, pedestal: float, noise: float, ratio: float
+) -> dict[str, Any]:
+    """ImageAnalysis Median, Sigma, Entropy, NoiseRatio, SNR: the measured plane, its MRS noise."""
+    stats = pixel_stats(raw, full_scale=ceiling, pedestal=pedestal)
+    return {"median_adu": stats.median_adu, "sigma_adu": stats.sigma_adu,
+            "entropy_bits": stats.entropy_bits, "noise_ratio": ratio,
+            "snr": snr(stats.scale_low_adu, stats.scale_high_adu, noise)}  # fmt: skip
 
 
 def _sigma(residual: np.ndarray) -> float:
@@ -131,26 +160,8 @@ def _mosaic_noise(data: np.ndarray, pattern: str) -> float:
     sigmas = []
     for channel in range(3):
         cells = [(r, c) for r in (0, 1) for c in (0, 1) if colours[r][c] == channel]
-        sigmas.append(mrs_noise(np.mean([quads[:, r, :, c] for r, c in cells], axis=0)))
+        sigmas.append(mrs(np.mean([quads[:, r, :, c] for r, c in cells], axis=0)).sigma)
     return (min(sigmas) + max(sigmas)) / 2
-
-
-def median3x3(data: np.ndarray) -> np.ndarray:
-    """Exact 3x3 median, edges mirrored: vertical triples sorted once, then the median of the
-    nine is med3(max of lows, med3 of mids, min of highs) (Paeth, Graphics Gems 1990)."""
-    padded = np.pad(data, 1, mode="symmetric")
-    a, b, c = padded[:-2], padded[1:-1], padded[2:]
-    low, high = np.minimum(a, b), np.maximum(a, b)
-    mid = np.maximum(low, np.minimum(high, c))
-    low, high = np.minimum(low, c), np.maximum(high, c)
-    lows = np.maximum(np.maximum(low[:, :-2], low[:, 1:-1]), low[:, 2:])
-    highs = np.minimum(np.minimum(high[:, :-2], high[:, 1:-1]), high[:, 2:])
-    mids = _med3(mid[:, :-2], mid[:, 1:-1], mid[:, 2:])
-    return _med3(lows, mids, highs)
-
-
-def _med3(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> np.ndarray:
-    return np.maximum(np.minimum(a, b), np.minimum(np.maximum(a, b), c))
 
 
 def _found(filtered: np.ndarray, noise: float) -> np.ndarray:

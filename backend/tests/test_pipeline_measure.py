@@ -74,6 +74,26 @@ def test_a_light_is_measured_once_and_written(conn, tmp_path):
     assert _measures(conn)[0]["measured_at"] == LATER
 
 
+def test_the_pixel_statistics_are_written_the_pedestal_off_and_the_sky_rate_per_second(
+    conn, tmp_path
+):
+    """ImageAnalysis par. 2.1.2: Median less PEDESTAL, SkyRate = Median / EXPTIME. software-ok"""
+    _light(tmp_path / "nas" / "a.fits", _field("gauss", 2.5), "EXPTIME =                120.0",
+           "PEDESTAL=                  100")  # fmt: skip
+    _light(tmp_path / "nas" / "b.fits", _field("gauss", 2.5, seed=4))
+    measure_root(conn, _scanned(conn, tmp_path / "nas"), LATER)
+    timed, untimed = _measures(conn)
+    assert timed["median_adu"] == pytest.approx(900, abs=2)
+    assert timed["sky_rate_adu_s"] == pytest.approx(timed["median_adu"] / 120.0)
+    assert untimed["median_adu"] == pytest.approx(1000, abs=2) and untimed["sky_rate_adu_s"] is None
+    assert timed["sigma_adu"] == pytest.approx(10, rel=0.05)
+    # 16-bit steps at sigma 10: bins of 0.625 ADU, some empty; under the 2.047 of continuous noise
+    assert 1.0 < timed["entropy_bits"] < 2.1 and 0.5 < timed["noise_ratio"] <= 1
+    assert timed["snr"] > 0 and timed["psf_signal_weight"] > 0
+    assert timed["mstar_adu"] == pytest.approx(0.6745 * 10, rel=0.1)
+    assert timed["nstar_adu"] == pytest.approx(10, rel=0.1)
+
+
 def test_only_lights_are_measured(conn, tmp_path):
     for kind in ("DARK", "FLAT", "BIAS"):
         _light(tmp_path / "nas" / f"{kind}.fits", _field(seed=len(kind)), imagetyp=kind)

@@ -14,6 +14,8 @@ from .shape import MIN_STARS
 # PSF SNR = c3 F^2 / (c4 sigma^2), F the fitted stars' summed signal (psf_fit.py), sigma the noise.
 PSF_SNR_C3 = 1.316e-7  # [C PixInsight ImageWeighting, eq. 23-24; software-ok]
 PSF_SNR_C4 = 4.987e6  # [C PixInsight ImageWeighting, eq. 23-24; software-ok]
+PSFSW_C1 = 5.326e-6  # [C PixInsight ImageWeighting, eq. 22; software-ok]
+PSFSW_C2 = 9.0e6  # [C PixInsight ImageWeighting, eq. 22; software-ok]
 MESH_PX = 64  # [C sep docs: Background bw, bh default] the reduced frame: one value a mesh
 # The bright side only when a plane holds more of the map's variance than it leaves.
 PLANE_EXPLAINS = 0.5  # [D R^2 over one half: the plane explains the larger part]
@@ -61,6 +63,13 @@ def psf_snr(flux: float, noise: float) -> float | None:
     if noise <= 0:
         return None
     return PSF_SNR_C3 * flux * flux / (PSF_SNR_C4 * noise * noise)
+
+
+def psf_signal_weight(found: Photometry, noise: float, mstar: float) -> float | None:
+    """ImageWeighting eq. 21-22: c1 sum f sum f-bar / (c2 sigma_n M*); the units cancel."""
+    if noise <= 0 or mstar <= 0:
+        return None
+    return PSFSW_C1 * found.flux * found.mean_flux / (PSFSW_C2 * noise * mstar)
 
 
 def gradient_of(back: np.ndarray) -> Gradient:

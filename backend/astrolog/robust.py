@@ -1,5 +1,5 @@
-"""Robust statistics: Qn and its relative bounds between frames (ADR 0039); biweight and robust
-Chauvenet as Image Analysis aggregates stars. Pixel noise: units.sigma_from_mad. software-ok"""
+"""Robust statistics: Qn, relative bounds between frames (ADR 0039); biweight, robust Chauvenet
+and Sn as Image Analysis uses them. Pixel noise: units.sigma_from_mad. software-ok"""
 
 import math
 import statistics
@@ -27,6 +27,9 @@ WINDOW_PER_VALUE = 8  # [T] pairs left per value when the bisection stops and pi
 BIWEIGHT_C = 6.0  # [C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok]
 BIWEIGHT_ITERATIONS = 20  # [C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok]
 BIWEIGHT_TOLERANCE = 1e-10  # [C PixInsight ImageAnalysis par. 2.2, eq. 110; software-ok]
+# Sn's outer median over this many evenly spaced order statistics: 1e-5 of his on 13 M values.
+SN_OUTER = 20001  # [M plan 26.51: three R* sets of 13 M, his Stat.Sn]
+SN_HALVINGS = 60  # [T] bisection steps for each inner median, past double precision
 # Robust Chauvenet, two-sided: median and 68.3-percentile deviation, then mean and standard
 # deviation; a value goes when N P(>|z|) < 0.5. [C Maples et al. 2018, ApJS 238:2, par. 2-4]
 CHAUVENET_EXPECTED = 0.5  # [C Maples et al. 2018, eq. 1: Chauvenet's criterion]
@@ -128,6 +131,22 @@ def biweight_location(values: Sequence[float] | np.ndarray) -> float | None:
         if done:
             break
     return centre
+
+
+def sn(values: np.ndarray) -> float | None:
+    """Sn = lomed_i himed_j |x_i - x_j|, no consistency factor (Rousseeuw & Croux 1993, eq. 2.1);
+    the inner median exact over all n, the outer over SN_OUTER order statistics. None if empty."""
+    x = np.sort(np.asarray(values, dtype=float))
+    if len(x) == 0:
+        return None
+    at = x[np.linspace(0, len(x) - 1, min(SN_OUTER, len(x))).round().astype(np.int64)]
+    need = len(x) // 2 + 1  # himed: the (n // 2 + 1)-th smallest distance, itself included
+    low, high = np.zeros_like(at), np.maximum(at - x[0], x[-1] - at)
+    for _ in range(SN_HALVINGS):
+        middle = (low + high) / 2
+        enough = np.searchsorted(x, at + middle, "right") - np.searchsorted(x, at - middle) >= need
+        high, low = np.where(enough, middle, high), np.where(enough, low, middle)
+    return float(np.sort(high)[(len(high) + 1) // 2 - 1])  # lomed
 
 
 def robust_chauvenet(values: np.ndarray) -> np.ndarray:

@@ -2,6 +2,7 @@
 PixInsight ImageWeighting par. 2.4, 3.1.2: software-ok). Pure: pixels in, a sigma out."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -75,24 +76,33 @@ def structure_noise(filtered: np.ndarray) -> float:
     centre = float(np.median(layer))
     start = sigma_from_mad(float(np.median(np.abs(layer - centre))))
     away = np.abs(layer - centre)
-    return _fixed_point(start, lambda sigma: layer[away < K_SIGMA * sigma]) / MEDIAN_LAYER2_GAIN
+    sigma, _ = _fixed_point(start, lambda sigma: layer[away < K_SIGMA * sigma])
+    return sigma / MEDIAN_LAYER2_GAIN
 
 
-def _fixed_point(sigma: float, quiet_of: Callable[[float], np.ndarray]) -> float:
-    """Std of the pixels quiet at k sigma, again on the new sigma, until it settles."""
+def _fixed_point(sigma: float, quiet_of: Callable[[float], np.ndarray]) -> tuple[float, int]:
+    """Std of the pixels quiet at k sigma, again on the new sigma, until it settles; and how
+    many pixels the last one took."""
+    used = 0
     for _ in range(MAX_ROUNDS):
         quiet = quiet_of(sigma)
         if quiet.size < 2:
             break
-        new = float(np.std(quiet))
+        new, used = float(np.std(quiet)), quiet.size
         settled = abs(new - sigma) <= TOLERANCE * new
         sigma = new
         if settled:
             break
-    return sigma
+    return sigma, used
 
 
-def mrs_noise(image: np.ndarray) -> float:
+@dataclass(frozen=True)
+class Mrs:
+    sigma: float  # the noise, ADU
+    ratio: float  # share of the frame's pixels it was taken on (ImageAnalysis NoiseRatio)
+
+
+def mrs(image: np.ndarray) -> Mrs:
     """Sigma of I - c_p over the pixels in no layer's support (|w_j| >= k sigma sigma_j), iterated
     to a fixed point, over 0.974. The start, which the paper leaves open: the first layer's MAD."""
     planes, smooth = starlet(image, LAYERS)
@@ -103,4 +113,5 @@ def mrs_noise(image: np.ndarray) -> float:
         np.maximum(strongest, np.abs(planes.pop(0)) / unit, out=strongest)
     detail = np.asarray(image, dtype=np.float32) - smooth
     del smooth
-    return _fixed_point(sigma, lambda s: detail[strongest < K_SIGMA * s]) / BIAS
+    sigma, used = _fixed_point(sigma, lambda s: detail[strongest < K_SIGMA * s])
+    return Mrs(sigma / BIAS, used / detail.size)

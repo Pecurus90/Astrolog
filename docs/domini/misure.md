@@ -20,6 +20,7 @@ parole in [`glossario.md`](glossario.md).
 | Una stella saturata conta fra le stelle ma non entra nell'HFD, anche se in una camera a colori satura un canale solo | `test_saturated_stars_are_counted_but_not_measured`, `test_a_colour_star_clipped_in_one_channel_is_saturated` |
 | Il tetto di saturazione e' il fondo scala dichiarato, come PixInsight, e satura e' una stella con un pixel li' (Marco, 29/10/2026) <!-- software-ok --> | `test_the_ceiling_is_the_declared_full_scale_as_pixinsight`, `test_stars_at_the_ceiling_are_counted_saturated_and_kept_out` (`backend/tests/test_pipeline_field.py`), `test_one_sensor_pixel_at_the_ceiling_makes_a_star_saturated` (`backend/tests/test_pipeline_detect.py`) |
 | Il PSF SNR e il flusso PSF sono quelli della documentazione di PixInsight, sul segnale delle stelle fittate, sature comprese come le tiene lui <!-- software-ok --> | `test_psf_snr_is_the_documented_formula`, `test_the_frame_psf_snr_takes_the_fitted_stars_signal_with_no_scale`, `test_the_signal_sums_only_the_pixels_over_the_sky`, `test_an_exact_moffat_gives_its_signal_and_its_mean_flux`, `test_chauvenet_keeps_a_normal_sample_and_drops_far_outliers`, `test_chauvenet_rejects_one_at_a_time_from_the_farthest`, `test_rejected_values_are_winsorized_to_the_nearest_kept`, `test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are`, `test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one`, `test_under_five_stars_no_psf_snr`, `test_pipeline_psf_flux.py` (quota Moffat al decimo, fondo lasciato sotto le stelle, luce col centro al buio, stella tagliata) |
+| Le statistiche dei pixel sono quelle di Image Analysis: mediana senza pedestal e per secondo, Sigma, entropia, NoiseRatio, SNR, M\* e N\* del fondo, PSF Signal Weight (Marco, 30/10/2026) <!-- software-ok --> | `test_pipeline_pixel_stats.py` (pedestal, bordi e saturi fuori, Sigma di un normale, entropia 2,047 bit, fattori di scala per lato, M\* e N\* del rumore bianco, gradiente e stelle che non li spostano), `test_sn_is_the_definition_on_small_samples`, `test_psf_signal_weight_gives_back_the_programs_own_value`, `test_the_noise_ratio_is_the_share_of_pixels_the_noise_was_read_on`, `test_the_pixel_statistics_are_written_the_pedestal_off_and_the_sky_rate_per_second` |
 | Il rumore e' l'MRS di Starck e Murtagh, come lo dichiara PixInsight; nei campi densi resta quello del cielo <!-- software-ok --> | `test_pipeline_noise.py` (fattore del primo strato 0,8908 come Duchamp, trasformata che si ricompone, rumore gaussiano letto entro il 2%, campo affollato e nebulosa entro il 3%), `test_in_a_crowded_field_the_noise_is_read_off_the_stars` |
 | Il gradiente del fondo dice quanto e verso dove; un fondo piatto o a zero non inventa un lato | `test_a_sky_on_a_plane_gives_its_spread_over_its_median_and_its_bright_side`, `test_the_bright_side_turns_with_the_plane`, `test_a_flat_sky_has_no_gradient_and_no_side`, `test_a_sky_at_zero_or_under_has_no_gradient` |
 | Tilt e curvatura dalle cinque zone, e tacciono con poche stelle in una zona | `test_tilt_is_worst_less_best_corner_over_the_median_hfd`, `test_curvature_is_corners_against_the_centre_with_its_sign`, `test_the_stars_a_zone_needs_follow_the_frame_s_own_hfd_spread`, `test_never_under_min_stars_a_zone`, `test_tilt_reaches_the_frame_through_measure` |
@@ -184,6 +185,17 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
     0,46-0,82). Fuori: Sh2-185 n.2 0,85 (fit 0,944 dei suoi), cometa n.1 e n.4 0,87, VdB 152 n.0 e
     M42 n.4 1,09. **Colori** 20 volte il suo: lui somma per canale dal grezzo (26.56).
   Sotto 5 stelle o senza fit tace. Mai fra camere o oggetti.
+- **Statistiche dei pixel** (passo 26.51, `pipeline/pixel_stats.py`, `pipeline/mmt.py`) come Image <!-- software-ok -->
+  Analysis (ImageAnalysis par. 2.1.2, 2.1.4; ImageWeighting par. 2.3-2.5, 2.8), sul piano
+  misurato (a colori l'intensita'), sui pixel in (min + e, max - e), e 1/65535 del fondo scala.
+  **Mediana** meno `PEDESTAL` (DN; N.I.N.A. e ASIAIR non lo scrivono); **SkyRate** = mediana /
+  `EXPTIME` (lui non lo mette in tabella). **Sigma** 0,990905 sqrt(BWMV), u su 9 MAD. **Entropia**
+  a passi di Sigma / 16 meno 4 bit. **NoiseRatio** la quota di pixel dell'MRS. **SNR** eq. 16, i
+  lati della mediana col loro std, due volte entro 4 sigma. **M\*** mediana di R\* = {r - x | 0 <
+  x < r}, **N\*** 2,054326 Sn(R\*) (sonda su `mmtBackgroundResidual`: Sn, non MAD, entro 1e-5;
+  `robust.sn` esterno su 20001 statistiche d'ordine). Il fondo r a 256 px: il suo MMT usa elementi <!-- software-ok -->
+  "multiway" non pubblicati; qui piramide di mediane 3x3 e medie 2x2, 8 scale, bilineare al bordo
+  dispari (M\* 0,99-1,02 sul suo R\*). **PSF Signal Weight** eq. 21-22, flussi PSF e MRS.
 - **Gradiente** (ADR 0022 punto 7): la mappa del fondo di `sep` ai centri delle sue maglie da
   64 pixel, (max - min) / mediana in %. Il **lato chiaro**: la pendenza del piano dei minimi
   quadrati, da +x verso +y, 0-360 gradi, solo quando il piano spiega almeno meta' della varianza
@@ -273,14 +285,19 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | PSFFlux (26.50) | 0,99 [0,92-1,00] | 1,00 [0,98-1,05] | 4,01 [1,77-4,82] | 4,16 [1,10-5,15] |
   | PSFTotalMeanFlux (26.50) | 0,99 [0,95-1,10] | 1,03 [0,99-1,12] | 0,78 [0,14-1,13] | 0,90 [0,26-1,12] |
   | PSFCount (26.50) | 0,98 [0,94-1,00] | 0,99 [0,96-1,02] | 1,54 [0,13-3,72] | 1,47 [0,24-3,91] |
+  | Mediana, Sigma, Entropia (26.51) | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] |
+  | NoiseRatio (26.51) | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,01 [0,91-1,28] | 0,94 [0,89-1,25] |
+  | SNR (26.51) | 1,00 [0,98-1,01] | 1,00 [0,99-1,01] | 1,32 [1,23-1,74] | 1,17 [0,98-1,33] |
+  | M\* (26.51) | 1,00 [0,96-1,01] | 0,98 [0,96-1,00] | 0,87 [0,82-0,89] | 0,88 [0,85-0,89] |
+  | N\* (26.51) | 1,00 [0,97-1,00] | 0,99 [0,97-1,00] | 0,92 [0,86-0,95] | 0,94 [0,90-0,95] |
+  | PSF Signal Weight (26.51) | 0,99 [0,93-1,10] | 1,04 [0,98-1,15] | 3,98 [0,35-6,22] | 4,96 [0,36-6,48] |
   | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
   | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
 
   Scarti aperti, ognuno col suo passo: colori 26.56 (lui somma il flusso PSF per canale, noi
-  sull'intensita'; PSFResidual a colori 1,06-1,07). Il fit del 26.49 porta `measure_frame` da 6,2
-  a 7,2 s mono e da 14,0 a 16,4 s colori (6 copie; affollati +5 s); al 26.50 le fit del flusso
-  fino a 24576: frame tipici uguali (6,2-7,2 s), Sh2-185 n.2 (21964 fit) 23,9 s di cui 13,1 di
-  fit: il tetto di ADR 0042 al 26.57.
+  sull'intensita'; PSFResidual a colori 1,06-1,07; NoiseRatio, SNR, M\*, N\* dai metadati del
+  Debayer, per canale dal grezzo). Tempi: il fit del 26.49 +1 s mono, +2,4 s colori; Sh2-185
+  n.2 (21964 fit) 23,9 s; il 26.51 +2,8 s mono: il tetto di ADR 0042 al 26.57.
 
   Secondi a frame del 26.47, mediana, un frame alla volta, mono / colori: AstroLog 5,69 / 14,01
   (debayer VNG 4,43, rumore MRS 1,67 / 1,93 + 1,33 per piano, stelle e flusso PSF 1,44 / 1,56,
@@ -290,25 +307,8 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   Perche' degli scarti (dal 26.46; tabelle per camera e oggetto al commit `9add5161`): PSF SNR
   fino al 26.49, l'ellisse dei momenti, piu' stretta della sua fittata (cometa 0,61). HFD / FWHM
   non e' uno scarto: sulla Moffat 1,36 a beta 2,5 e 1,17 a beta 4. HFD / HFD ASTAP 0,83-0,92;
-  le sue stelle contano da SNR 30 sul grezzo: 0,9-27 volte.
-- **Le misure nuove sul vero** (27/10/2026, 24 copie; dal 29/10 il tetto e' il fondo scala,
-  ADR 0041, e il Canon dice 65535 e 0 sature): tetto 65535 sui 22 ATR2600M e 61208 sui
-  due Canon; sature da 6 a 454 per frame. Gradiente da 2,6 a 45,3% (il 23, nebulosa), il lato
-  chiaro solo su 5 frame: sugli altri il piano non spiega la mappa. Tilt da 0,8 a 77% (il Canon
-  18, obiettivo), curvatura da -6,9 a +20%; il 23 tace (265 stelle, sotto 25 per zona). Il tilt
-  alto e' vero: diviso a caso in due meta' delle stelle, le zone tornano entro 0,1 px (frame 00,
-  05, 07: l'angolo in alto a sinistra peggiore; il 20, piano, 0,8%).
-- **Col cielo sul vero** (28/10/2026, pipeline intera sulle 24 copie con ASTAP, 124 s compreso
-  il solve): 23 risolte, il Canon 15 no (secondi d'arco muti, niente sito). Altezza da 13,9 a
-  86,3 gradi, massa d'aria da 1,00 a 4,11; scala 1,38"/px sugli ATR2600M e Poseidon, 1,58 sul
-  Canon 18 (senza sito: secondi si', zenit no). HFD da 2,58" a 6,89", allo zenit da 2,41" a
-  3,95". Direzione su 17 frame: 14 "in AR", 3 "in Dec"; lato chiaro su 5 frame.
-- **Tempo** (27/10/2026, con la forma): da 1,9 a 4,1 s a frame da 26 MP mono; a colori da 6,1 a
-  8,8 s, di cui il debayer 3,6-5 s; la forma da 0,6 a 1,6 s, su 291-540 stelle. Un processo, su
-  copia locale. Senza il tetto di 60 per casella un campo denso arrivava a 7,9 s. Il conteggio
-  come il SubframeSelector aggiunge 0,3 s (passo 25.15). <!-- software-ok --> Col 25.2: da 2,0 a
-  4,1 s mono, da 5,6 a 7,8 s a colori. Col 26.4 (il flusso al decimo, un anello di fondo per
-  stella): da 2,2 a 4,5 s mono, da 5,8 a 8,2 s a colori.
+  le sue stelle contano da SNR 30 sul grezzo: 0,9-27 volte. Le prove sulle 24 copie del
+  27-28/10 (tetto, gradiente, tilt, cielo, tempi) sono al commit `891c1e2f`, superate dal banco.
 
 **Lo SQM** (stadio `sqm`, `pipeline/sqm.py` e `star_catalogue.py`, portati dal sorgente di ASTAP,
 MPL-2.0; ADR 0022 punto 8):
@@ -335,7 +335,8 @@ MPL-2.0; ADR 0022 punto 8):
 
 **Cosa si scrive** (`pipeline_measures`): esito, stelle, stelle tenute, HFD in pixel del
 sensore, fondo e rumore in ADU; la forma (fit, stimata, non misurabile) con le sue stelle, FWHM
-in pixel, eccentricita' e direzione; il tetto e le stelle sature, il PSF SNR, il gradiente col
+in pixel, eccentricita' e direzione; il tetto e le stelle sature, il PSF SNR e il PSF Signal
+Weight, le statistiche dei pixel (mediana, SkyRate, Sigma, entropia, NoiseRatio, SNR, M\*, N\*), il gradiente col
 lato chiaro, tilt e curvatura; durata, ora. In `pipeline_sky`: se risolta, meta' posa, altezza,
 massa d'aria, FWHM e HFD in secondi d'arco e allo zenit, direzione e lato chiaro sul cielo con
 l'asse. In `pipeline_solutions` la matrice CD e il pixel di riferimento. In `pipeline_sqm`:
