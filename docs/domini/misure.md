@@ -92,9 +92,9 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   riquadro allargato di 6 px fuori dalle strutture dilatate di 1 (la sua cornice, sonde 26.48;
   sparito il compenso 4 / 16); sotto 16 pixel liberi b = 0 e n il rumore; n mai sotto 1 ADU. Lui
   perde le stelle dove il rumore raddoppia; un nodo su nebulosa si misura sulla nebulosa (M42).
-  **Una soglia sola**: `peakResponse` 1 e `brightThreshold` 1 danno gli stessi conteggi (LDN 1400
-  n.0 5779, default 3919) e al default cadono anche gaussiane perfette fra la soglia e 2,4-2,9
-  volte quella: sulle deboli passa solo lo scavalco. Il 16,5: meta' trovate su profili noti
+  **Una soglia sola**, la porta `brightThreshold` 3 (doc PJSR): 16,5 = 3 soglie di `sensitivity`
+  (5,49 / 5,83 a `brightThreshold` 1, NGC 7380 n.3 / IC 405 n.0; LDN 1400 n.0 5779 contro 3919);
+  la curtosi (`peakResponse`) salva solo stelle oltre 2x2 250. Il 16,5: meta' trovate su profili noti
   (gaussiane sigma 1-4, Moffat: 16,2-16,7); dischi e Moffat beta 4 +10% / -13% con ogni nucleo
   provato (2x2, 3x3, gaussiane 0,6-1,3). Una struttura con piu' di un pixel in cima al suo 5x5
   sul residuo intero, cielo compreso, e' una sorgente multipla e si scarta
