@@ -121,6 +121,37 @@ def test_the_biweight_of_nothing_or_of_ties():
     assert robust.biweight_location([2.0, 2.0, 2.0, 5.0]) == 2.0  # MAD zero: the median
 
 
+def test_chauvenet_keeps_a_normal_sample_and_drops_far_outliers():
+    """Maples et al. 2018: N P(>|z|) < 0.5 rejects; with the correction factors a clean normal
+    sample loses almost nothing, and 5% at 50 sigma go, however much they pull the mean."""
+    rng = np.random.default_rng(7)
+    clean = rng.normal(10.0, 1.0, 1000)
+    assert robust.robust_chauvenet(clean).sum() >= 995
+    spoiled = np.concatenate([clean, np.full(50, 60.0)])
+    kept = robust.robust_chauvenet(spoiled)
+    assert not kept[1000:].any() and kept[:1000].sum() >= 990
+
+
+def test_chauvenet_rejects_one_at_a_time_from_the_farthest():
+    """Rejected one per pass, the farthest first, until none passes the criterion."""
+    values = np.array([10.0, 10.2, 9.8, 10.1, 9.9, 10.05, 9.95, 10.0, 10.15, 9.85, 13.0, 30.0])
+    kept = robust.robust_chauvenet(values)
+    assert kept.tolist() == [True] * 10 + [False, False]
+
+
+def test_chauvenet_on_ties_or_too_few_keeps_all():
+    assert robust.robust_chauvenet(np.full(10, 3.0)).all()
+    assert robust.robust_chauvenet(np.array([1.0, 100.0])).all()
+    assert robust.robust_chauvenet(np.empty(0)).size == 0
+
+
+def test_rejected_values_are_winsorized_to_the_nearest_kept():
+    """ImageWeighting par. 2.2.1: replaced with the nearest accepted values, the count kept."""
+    values = np.array([1.0, 5.0, 6.0, 7.0, 50.0])
+    kept = np.array([False, True, True, True, False])
+    assert robust.winsorized(values, kept).tolist() == [5.0, 5.0, 6.0, 7.0, 7.0]
+
+
 def test_a_zero_scale_is_silent():
     """Qn zero (valori ripetuti, frame copiati): la soglia sarebbe la mediana, e tace."""
     assert relative_bounds([0.5] * 8 + [0.6, 0.7]) is None

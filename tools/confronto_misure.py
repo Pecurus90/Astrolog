@@ -155,7 +155,8 @@ OUR_STAGES = {
     "stelle utili": "_kept",
     "HFD": "_hfd",
     "forma": "shape_of",
-    "stelle e flusso PSF": "detect",
+    "fit PSF": "fit_stars",
+    "stelle": "detect",
     "rumore MRS": "mrs_noise",
     "rumore per piano colore": "_mosaic_noise",
     "gradiente": "gradient_of",
@@ -179,6 +180,9 @@ class Ours:
     fwhm_sigma_px: float | None = None
     eccentricity_sigma: float | None = None
     psf_residual_sigma: float | None = None
+    psf_flux_adu: float | None = None  # None: no fit
+    psf_mean_flux_adu: float | None = None
+    psf_count: int | None = None
 
 
 @dataclass(frozen=True)
@@ -349,7 +353,8 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
                 found.psf_snr, card_altitude(header.cards), seconds,
                 shape.psf_residual if shape else None, spread.fwhm_px if spread else None,
                 spread.eccentricity if spread else None,
-                spread.psf_residual if spread else None)  # fmt: skip
+                spread.psf_residual if spread else None, found.psf_flux_adu,
+                found.psf_mean_flux_adu, found.psf_count)  # fmt: skip
     return ours, pattern is not None
 
 
@@ -382,6 +387,11 @@ def _pairs(row: Row) -> dict[str, float | None]:
         "fondo / mediana Image Analysis": _over(o.background_adu, v.get("Median"), ADU_RANGE),
         "rumore / Image Analysis": _over(o.noise_adu, v.get("Noise"), ADU_RANGE),
         "PSF SNR / Image Analysis": _over(o.psf_snr, v.get("PSFSNR")),
+        "flusso PSF / Image Analysis": _over(o.psf_flux_adu, v.get("PSFFlux"), ADU_RANGE),
+        "flusso medio PSF / Image Analysis": _over(
+            o.psf_mean_flux_adu, v.get("PSFTotalMeanFlux"), ADU_RANGE
+        ),
+        "fit PSF / Image Analysis": _over(o.psf_count, v.get("PSFCount")),
         "altezza / Image Analysis": _over(o.altitude_deg, v.get("Altitude")),
         "massa d'aria / Image Analysis": _over(airmass, v.get("Airmass")),
     }

@@ -1,5 +1,5 @@
-"""Robust scale between frames (ADR 0039): Qn of Rousseeuw and Croux, and the relative bounds it
-gives. Noise inside a frame stays the MAD of units.sigma_from_mad, a scale over every pixel."""
+"""Robust statistics: Qn and its relative bounds between frames (ADR 0039); biweight and robust
+Chauvenet as Image Analysis aggregates stars. Pixel noise: units.sigma_from_mad. software-ok"""
 
 import math
 import statistics
@@ -27,6 +27,15 @@ WINDOW_PER_VALUE = 8  # [T] pairs left per value when the bisection stops and pi
 BIWEIGHT_C = 6.0  # [C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok]
 BIWEIGHT_ITERATIONS = 20  # [C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok]
 BIWEIGHT_TOLERANCE = 1e-10  # [C PixInsight ImageAnalysis par. 2.2, eq. 110; software-ok]
+# Robust Chauvenet, two-sided: median and 68.3-percentile deviation, then mean and standard
+# deviation; a value goes when N P(>|z|) < 0.5. [C Maples et al. 2018, ApJS 238:2, par. 2-4]
+CHAUVENET_EXPECTED = 0.5  # [C Maples et al. 2018, eq. 1: Chauvenet's criterion]
+DEVIATION_PERCENTILE = 0.683  # [C Maples et al. 2018, par. 2.2: technique 1]
+# Correction factors (1 - a N^-b)^-1: Median-Technique 1, then Mean-Standard Deviation.
+MEDIAN_CORRECTION = (1.7198, 1.022)  # [C Maples et al. 2018, Table 3, N > 100]
+MEAN_CORRECTION = (0.7240, 0.773)  # [C Maples et al. 2018, Table 3, N > 100]
+# Under this many values nothing is rejected: the factors run away (N = 2: 6.5).
+CHAUVENET_MIN = 3  # [C Maples et al. 2018, par. 2: at least two distinct values stay]
 
 
 @dataclass(frozen=True)
@@ -119,6 +128,45 @@ def biweight_location(values: Sequence[float] | np.ndarray) -> float | None:
         if done:
             break
     return centre
+
+
+def robust_chauvenet(values: np.ndarray) -> np.ndarray:
+    """Which values stay: one rejected per pass, the farthest, each stage until none goes; the
+    factors' table for N <= 100 is not in the text, the N > 100 law serves there too."""
+    x = np.asarray(values, dtype=float)
+    kept = np.ones(len(x), dtype=bool)
+    for centre, scale, (a, b) in (
+        (np.median, _deviation_683, MEDIAN_CORRECTION),
+        (np.mean, _standard_deviation, MEAN_CORRECTION),
+    ):
+        while (n := int(kept.sum())) > CHAUVENET_MIN:
+            here = x[kept]
+            mu = float(centre(here))
+            sigma = scale(here - mu) / (1 - a * n**-b)
+            if sigma <= 0:
+                break
+            z = np.where(kept, np.abs(x - mu) / sigma, -1.0)
+            worst = int(np.argmax(z))
+            if n * math.erfc(z[worst] / math.sqrt(2)) >= CHAUVENET_EXPECTED:
+                break
+            kept[worst] = False
+    return kept
+
+
+def _deviation_683(deviations: np.ndarray) -> float:
+    ordered = np.sort(np.abs(deviations))
+    return float(ordered[math.ceil(DEVIATION_PERCENTILE * len(ordered)) - 1])
+
+
+def _standard_deviation(deviations: np.ndarray) -> float:
+    return float(np.sqrt((deviations**2).sum() / (len(deviations) - 1)))
+
+
+def winsorized(values: np.ndarray, kept: np.ndarray) -> np.ndarray:
+    """Rejected values replaced with the nearest kept one (ImageWeighting par. 2.2.1)."""
+    if not kept.any():
+        return values.copy()
+    return np.clip(values, values[kept].min(), values[kept].max())
 
 
 def relative_bounds(values: Sequence[float]) -> Bounds | None:

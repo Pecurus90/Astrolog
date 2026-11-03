@@ -64,6 +64,7 @@ def test_a_light_is_measured_once_and_written(conn, tmp_path):
     assert row["angle_deg"] is None
     assert (row["ceiling_adu"], row["saturated"]) == (65535.0, 0)
     assert row["psf_snr"] > 0
+    assert row["psf_count"] == 60 and row["psf_flux_adu"] > row["psf_mean_flux_adu"] > 0
     assert row["gradient_pct"] < 5
     assert row["tilt_pct"] < 5  # equal stars ask few a zone: a flat field, in ASTAP's first band
     assert row["curvature_pct"] is not None

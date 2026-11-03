@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 264; senza fonte: 1.
-Fonti: C norma: 128; U usanza: 2; D metodo: 18; M misura: 21; P decisione: 35; T tecnico: 62.
+Valori: 270; senza fonte: 1.
+Fonti: C norma: 134; U usanza: 2; D metodo: 18; M misura: 21; P decisione: 35; T tecnico: 62.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -327,6 +327,7 @@ Fonti: C norma: 128; U usanza: 2; D metodo: 18; M misura: 21; P decisione: 35; T
 | BETA | `4.0` | C ImageAnalysis par. 2.1.6: default PSF type Moffat beta 4; software-ok |
 | MEDIAN_DROP | `0.01` | C ImageAnalysis par. 2.1.6; PJSR PSF, Adaptive sampling region; software-ok |
 | MAX_FITS | `8000` | C ImageAnalysis Maximum PSF fits default, brightest first; software-ok |
+| MAX_FLUX_FITS | `24576` | C ImageCalibration maxStars default, read in PJSR; software-ok |
 | MAX_HALF_PX | `64` | T |
 | TENTH | `0.1` | C ImageAnalysis eq. 24: flux on the FWTM ellipse; software-ok |
 | WINSOR | `0.1` | C ImageAnalysis par. 2.1.6: residual a 10% Winsorized mean; software-ok |
@@ -499,6 +500,11 @@ Fonti: C norma: 128; U usanza: 2; D metodo: 18; M misura: 21; P decisione: 35; T
 | BIWEIGHT_C | `6.0` | C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok |
 | BIWEIGHT_ITERATIONS | `20` | C PixInsight ImageAnalysis par. 2.2, Robust Statistics; software-ok |
 | BIWEIGHT_TOLERANCE | `1e-10` | C PixInsight ImageAnalysis par. 2.2, eq. 110; software-ok |
+| CHAUVENET_EXPECTED | `0.5` | C Maples et al. 2018, ApJS 238:2, par. 2-4; C Maples et al. 2018, eq. 1: Chauvenet's criterion |
+| DEVIATION_PERCENTILE | `0.683` | C Maples et al. 2018, par. 2.2: technique 1 |
+| MEDIAN_CORRECTION | `(1.7198, 1.022)` | C Maples et al. 2018, Table 3, N > 100 |
+| MEAN_CORRECTION | `(0.7240, 0.773)` | C Maples et al. 2018, Table 3, N > 100 |
+| CHAUVENET_MIN | `3` | C Maples et al. 2018, par. 2: at least two distinct values stay |
 
 ### spine/folder_move.py
 

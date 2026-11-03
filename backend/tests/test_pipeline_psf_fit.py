@@ -73,15 +73,38 @@ def test_a_fit_off_its_detected_structure_is_refused() -> None:
     assert not psf_fit._placed(20.5, 34.0, pixels, wide)  # on the structure, at the region's edge
 
 
-def test_the_mean_signal_sums_only_the_pixels_over_the_sky() -> None:
-    """ImageWeighting eq. 7: v_i > B. Three pixels in the FWTM ellipse, 5, 5 and -4 over B: S 10;
-    |v - f| all 2, so r = 2 / (4 S / (pi Wx Wy))."""
-    values = np.array([5.0, 5.0, -4.0, 0.0])
-    offsets = (np.array([0.0, 1.0, 0.0, 30.0]), np.array([0.0, 0.0, 1.0, 30.0]))
+def test_the_signal_sums_only_the_pixels_over_the_sky() -> None:
+    """ImageWeighting eq. 7: v_i > B. Three pixels in the ellipse, 5, 5 and -4 over B: S 10; one
+    a pixel past the tenth, inside it grown by GROW_PX, counts; one far out does not."""
+    sigma = 3.0
+    tenth = sigma * math.sqrt(10 ** (1 / psf_fit.BETA) - 1)
+    values = np.array([5.0, 5.0, -4.0, 7.0, 9.0])
+    offsets = (np.array([0.0, 1.0, 0.0, tenth + 0.9, 30.0]), np.zeros(5))
+    assert psf_fit._signal(values, offsets, (sigma, sigma, 0.0), 0.0) == pytest.approx(17.0)
+
+
+def test_the_residual_is_over_the_mean_signal_of_the_fwtm_ellipse() -> None:
+    """ImageAnalysis eq. 24: |v - f| all 2, so r = 2 / (4 S / (pi Wx Wy)), W the FWTM."""
+    values = np.full(20, 7.0)
     sigma = 3.0
     wide = 2 * sigma * math.sqrt(10 ** (1 / psf_fit.BETA) - 1)
-    r = psf_fit._residual(values, values - 2, offsets, (sigma, sigma, 0.0), 0.0)
+    r = psf_fit._residual(values, values - 2, 10.0, (wide, wide))
     assert r == pytest.approx(2 / (4 * 10 / (math.pi * wide * wide)))
+
+
+def test_an_exact_moffat_gives_its_signal_and_its_mean_flux() -> None:
+    """Signal: every pixel within the tenth radius plus GROW_PX (all over the sky); mean flux over
+    the tenth ellipse's own area, ImageWeighting eq. 8-10."""
+    sigma, centre = 3.0, (40.3, 39.6)
+    plane = _star(81, centre, 5000.0, sigma)
+    box = _box(*centre, 3)[None]
+    fits = fit_stars(plane, np.array([centre[0]]), np.array([centre[1]]), box, np.ones(1))
+    tenth = sigma * math.sqrt(10 ** (1 / psf_fit.BETA) - 1)
+    ys, xs = np.mgrid[0:81, 0:81]
+    inside = np.hypot(xs - centre[0], ys - centre[1]) <= tenth + psf_fit.GROW_PX
+    signal = float((plane - _SKY)[inside].sum())
+    assert fits.signal[0] == pytest.approx(signal, rel=1e-3)
+    assert fits.mean_flux[0] == pytest.approx(signal / (math.pi * tenth * tenth), rel=1e-3)
 
 
 def test_pure_noise_is_no_fit_and_no_crash() -> None:
@@ -92,7 +115,10 @@ def test_pure_noise_is_no_fit_and_no_crash() -> None:
 
 
 def test_the_brightest_are_fitted_first_up_to_the_cap(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(psf_fit, "MAX_FITS", 2)
+    """Flux on the MAX_FLUX_FITS brightest (ImageCalibration maxStars), shape on the MAX_FITS
+    brightest of them (ImageAnalysis maxPSFFits). software-ok"""
+    monkeypatch.setattr(psf_fit, "MAX_FLUX_FITS", 2)
+    monkeypatch.setattr(psf_fit, "MAX_FITS", 1)
     plane = np.full((60, 120), _SKY)
     xs = np.array([20.0, 60.0, 100.0])
     for x, amp in zip(xs, (1000.0, 8000.0, 4000.0), strict=True):
@@ -100,6 +126,9 @@ def test_the_brightest_are_fitted_first_up_to_the_cap(monkeypatch: pytest.Monkey
     boxes = np.stack([_box(x, 30, 2) for x in xs])
     fits = fit_stars(plane, xs, np.full(3, 30.0), boxes, np.array([1.0, 8.0, 4.0]))
     assert len(fits.fwhm_px) == 2
+    assert fits.signal[0] > fits.signal[1]  # 8000 then 4000
+    brightest = fits.brightest()
+    assert len(brightest.fwhm_px) == 1 and brightest.signal[0] == fits.signal[0]
 
 
 def test_the_winsorized_mean_sets_each_tail_to_its_nearest_kept_value() -> None:

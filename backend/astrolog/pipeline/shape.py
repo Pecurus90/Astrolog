@@ -8,8 +8,7 @@ from enum import StrEnum
 import numpy as np
 
 from ..robust import biweight_location, qn
-from .detect import Detections
-from .psf_fit import MAX_FITS, Fitted, fit_stars, folded
+from .psf_fit import MAX_FITS, Fitted, folded
 from .psf_flux import RING_OUTER
 
 # Doughnut window: a circle of 2 FWHM, never under 3 px, its sky the ring out to RING_OUTER. [T]
@@ -58,20 +57,18 @@ class Shape:
 
 
 def shape_of(
-    images: tuple[np.ndarray, np.ndarray, np.ndarray],
+    images: tuple[np.ndarray, np.ndarray],
     objects: np.ndarray,
     chosen: np.ndarray,
     noise: float,
-    found: Detections,
+    fitted: tuple[Fitted, int],
 ) -> Shape | None:
-    """`images`: the plane with its sky, the residual and its median copy; `chosen`: indices in
-    sep's `objects`, for doughnuts and moments; `found`: the stars fitted. None: too few stars."""
-    plane, residual, filtered = images
-    doughnuts = sum(_doughnut((residual, filtered), objects[i], noise) for i in chosen)
+    """`images`: the residual and its median copy; `chosen`: indices in sep's `objects`, for
+    doughnuts and moments; `fitted`: psf_fit's stars and how many were tried. None: too few."""
+    fits, tried = fitted[0].brightest(), min(fitted[1], MAX_FITS)
+    doughnuts = sum(_doughnut(images, objects[i], noise) for i in chosen)
     if len(chosen) >= MIN_STARS and doughnuts > len(chosen) / 2:
         return Shape(ShapeKind.UNMEASURABLE, len(chosen), None, None, None)
-    fits = fit_stars(plane, found.x, found.y, found.box, found.flux)
-    tried = min(len(found.x), MAX_FITS)
     if len(fits.fwhm_px) >= max(MIN_STARS, FIT_SHARE * tried):
         return _frame(ShapeKind.FITTED, fits)
     if len(chosen) < MIN_STARS:
@@ -118,7 +115,8 @@ def _moments(stars: np.ndarray) -> Fitted:
     eccentricity[a <= 0] = 0.0
     angles = np.array([folded(math.degrees(float(t))) for t in stars["theta"]])
     nothing = np.full(len(stars), np.nan)
-    return Fitted(estimated_fwhm(stars).astype(np.float64), eccentricity, angles, nothing)
+    return Fitted(estimated_fwhm(stars).astype(np.float64), eccentricity, angles, nothing,
+                  nothing, nothing, np.arange(len(stars)))  # fmt: skip
 
 
 def _doughnut(images: tuple[np.ndarray, np.ndarray], star: Record, noise: float) -> bool:

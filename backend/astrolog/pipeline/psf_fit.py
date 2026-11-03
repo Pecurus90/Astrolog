@@ -1,8 +1,8 @@
-"""Each star's PSF as Image Analysis fits it (par. 2.1.6; misure.md, Forma): Moffat beta 4 at the
-pixel centres, sky fitted, median-stabilized square. Pure: pixels in, numbers out. software-ok"""
+"""Each star's PSF and PSF flux as Image Analysis fits them (par. 2.1.6; ImageWeighting 2.2): Moffat
+beta 4 at pixel centres, sky fitted, median-stabilized square. Pure. software-ok"""
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 import numpy as np
 from scipy.optimize import least_squares  # pyright: ignore[reportMissingTypeStubs]
@@ -11,6 +11,10 @@ BETA = 4.0  # [C ImageAnalysis par. 2.1.6: default PSF type Moffat beta 4; softw
 # Region grows while its median falls by at least this.
 MEDIAN_DROP = 0.01  # [C ImageAnalysis par. 2.1.6; PJSR PSF, Adaptive sampling region; software-ok]
 MAX_FITS = 8000  # [C ImageAnalysis Maximum PSF fits default, brightest first; software-ok]
+# PSF flux on more: its PSFCount reaches 23263 on the bench. ImageWeighting 3.1.1 says "24K".
+MAX_FLUX_FITS = 24576  # [C ImageCalibration maxStars default, read in PJSR; software-ok]
+# PSF.signal sums the pixels over B within the tenth ellipse grown by this, each semi-axis.
+GROW_PX = 1.0  # [M plan 26.50: signal and count 1.000 in median, PJSR PSF.signal, 3641 stars]
 MAX_HALF_PX = 64  # [T] a region still falling past 129 px across sits on a nebula: stops there
 # Fit refused with its centre this close to its region's edge, or off its detected structure.
 EDGE_PX = 1.0  # [T] ImageWeighting par. 2.2.1 says "too close", no number; software-ok
@@ -23,26 +27,33 @@ _TENTH = TENTH ** (-1 / BETA) - 1
 
 @dataclass(frozen=True)
 class Fitted:
-    """Per fitted star, the refused left out; residual NaN where the FWTM ellipse holds no flux."""
+    """Per fitted star, brightest first, the refused left out; residual NaN without signal."""
 
     fwhm_px: np.ndarray  # 2 sqrt(sx sy) sqrt(2^(1/beta) - 1), ImageAnalysis eq. 22
     eccentricity: np.ndarray  # sqrt(1 - sy^2 / sx^2), eq. 23
     angle_deg: np.ndarray  # long axis, [0, 180) from +x towards +y
     residual: np.ndarray  # eq. 24: Winsorized mean |v - f| over the mean signal 4 S / (pi Wx Wy)
+    signal: np.ndarray  # ImageWeighting eq. 7, plane units: S of eq. 24, the PSF flux
+    mean_flux: np.ndarray  # eq. 8-10: signal over the tenth ellipse's area
+    rank: np.ndarray  # place in the brightness order: MAX_FITS of them make the shape
+
+    def brightest(self) -> "Fitted":
+        """The fits among the MAX_FITS brightest tried, as Image Analysis measures the shape."""
+        first = self.rank < MAX_FITS
+        return Fitted(*(getattr(self, f.name)[first] for f in fields(self)))
 
 
 def fit_stars(
     plane: np.ndarray, x: np.ndarray, y: np.ndarray, box: np.ndarray, flux: np.ndarray
 ) -> Fitted:
     """`plane` the measured pixels with their sky (the median needs its level); `box` per star
-    (x0, x1, y0, y1); the MAX_FITS brightest by `flux` fitted."""
-    order = np.argsort(-flux, kind="stable")[:MAX_FITS]
-    rows = [s for i in order if (s := _one(plane, float(x[i]), float(y[i]), box[i])) is not None]
+    (x0, x1, y0, y1); the MAX_FLUX_FITS brightest by `flux` fitted."""
+    order = np.argsort(-flux, kind="stable")[:MAX_FLUX_FITS]
+    rows = [(*s, rank) for rank, i in enumerate(order)
+            if (s := _one(plane, float(x[i]), float(y[i]), box[i])) is not None]  # fmt: skip
     if not rows:
-        empty = np.empty(0)
-        return Fitted(empty, empty, empty, empty)
-    fwhm, ecc, angle, residual = (np.array(c, dtype=np.float64) for c in zip(*rows, strict=True))
-    return Fitted(fwhm, ecc, angle, residual)
+        return Fitted(*(np.empty(0),) * len(fields(Fitted)))
+    return Fitted(*(np.array(c, dtype=np.float64) for c in zip(*rows, strict=True)))
 
 
 def region(plane: np.ndarray, cx: int, cy: int, box: np.ndarray) -> tuple[slice, slice]:
@@ -67,7 +78,7 @@ def region(plane: np.ndarray, cx: int, cy: int, box: np.ndarray) -> tuple[slice,
 
 def _one(
     plane: np.ndarray, x: float, y: float, box: np.ndarray
-) -> tuple[float, float, float, float] | None:
+) -> tuple[float, float, float, float, float, float] | None:
     cx, cy = round(x), round(y)
     rs, cs = region(plane, cx, cy, box)
     values = plane[rs, cs].astype(np.float64)
@@ -93,13 +104,15 @@ def _one(
     if not _placed(x0, y0, (xs, ys), box):
         return None
     sx, sy = math.exp(log_sx), math.exp(log_sy)
-    model = _model(fit.x, xs, ys)
-    residual = _residual(scaled, model, (xs - x0, ys - y0), (sx, sy, theta), b)
+    signal = _signal(scaled, (xs - x0, ys - y0), (sx, sy, theta), b)
+    tenth_x, tenth_y = sx * math.sqrt(_TENTH), sy * math.sqrt(_TENTH)
+    residual = _residual(scaled, _model(fit.x, xs, ys), signal, (2 * tenth_x, 2 * tenth_y))
     long_axis, short_axis = max(sx, sy), min(sx, sy)
     angle = math.degrees(theta) + (0 if sx >= sy else 90)
     fwhm = 2 * math.sqrt(sx * sy) * math.sqrt(_HALF)
     eccentricity = math.sqrt(1 - (short_axis / long_axis) ** 2)
-    return fwhm, eccentricity, folded(angle), residual
+    flux = signal * peak  # back to the plane's units
+    return fwhm, eccentricity, folded(angle), residual, flux, flux / (math.pi * tenth_x * tenth_y)
 
 
 def _placed(x0: float, y0: float, pixels: tuple[np.ndarray, np.ndarray], box: np.ndarray) -> bool:
@@ -111,26 +124,31 @@ def _placed(x0: float, y0: float, pixels: tuple[np.ndarray, np.ndarray], box: np
     return bool(inside_box and off_edge)
 
 
-def _residual(
+def _signal(
     values: np.ndarray,
-    model: np.ndarray,
     offsets: tuple[np.ndarray, np.ndarray],
     axes: tuple[float, float, float],
     sky: float,
 ) -> float:
-    """ImageAnalysis eq. 24 on values scaled alike: the ratio does not see the scale."""
+    """ImageWeighting eq. 7: sum of v - B over the pixels with v > B, in the tenth ellipse grown
+    by GROW_PX (PSF.signal, misure.md)."""
     sx, sy, theta = axes
     dx, dy = offsets
     c, s = math.cos(theta), math.sin(theta)
     u, v = c * dx + s * dy, -s * dx + c * dy
-    wx, wy = 2 * sx * math.sqrt(_TENTH), 2 * sy * math.sqrt(_TENTH)  # FWTM along each axis
-    inside = (2 * u / wx) ** 2 + (2 * v / wy) ** 2 <= 1
-    above = values[inside] - sky
-    signal = float(above[above > 0].sum())  # ImageWeighting eq. 7: only pixels over B
+    rx, ry = sx * math.sqrt(_TENTH) + GROW_PX, sy * math.sqrt(_TENTH) + GROW_PX
+    above = values[(u / rx) ** 2 + (v / ry) ** 2 <= 1] - sky
+    return float(above[above > 0].sum())
+
+
+def _residual(
+    values: np.ndarray, model: np.ndarray, signal: float, fwtm: tuple[float, float]
+) -> float:
+    """ImageAnalysis eq. 24 on values scaled alike: the ratio does not see the scale."""
     if signal <= 0:
         return math.nan
-    mean_signal = 4 * signal / (math.pi * wx * wy)
-    return winsorized_mean(np.abs(values - model)) / mean_signal
+    wx, wy = fwtm
+    return winsorized_mean(np.abs(values - model)) / (4 * signal / (math.pi * wx * wy))
 
 
 def winsorized_mean(values: np.ndarray, share: float = WINSOR) -> float:

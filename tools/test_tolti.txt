@@ -377,3 +377,5 @@ test_a_window_of_noise_is_a_failed_fit_not_a_crash - step 26.49, ADR 0022 point 
 test_beta_stays_in_its_bounds_however_far_the_fit_pushes - step 26.49, ADR 0022 point 4: beta fixed at 4 as Image Analysis, no free beta to bound
 test_gaussian_stars_are_a_moffat_of_large_beta - step 26.49, ADR 0022 point 4: beta fixed at 4 as Image Analysis, no free beta to grow
 test_undersampled_stars_keep_their_fwhm - step 26.49, ADR 0022 point 4: the model is sampled at the pixel centre as Image Analysis, no integration over the pixel
+test_the_mean_signal_sums_only_the_pixels_over_the_sky - step 26.50: the signal moved to its own function; replaced by test_the_signal_sums_only_the_pixels_over_the_sky and test_the_residual_is_over_the_mean_signal_of_the_fwtm_ellipse
+test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale - step 26.50: F is the fitted stars' signal; replaced by test_the_frame_psf_snr_takes_the_fitted_stars_signal_with_no_scale

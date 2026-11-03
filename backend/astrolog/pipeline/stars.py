@@ -9,8 +9,9 @@ import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 from ..units import sigma_from_mad
 from .debayer import COLOURS, debayered
 from .detect import detect
-from .field import gradient_of, psf_snr, zones_of
+from .field import gradient_of, photometry, psf_snr, zones_of
 from .noise import NOISE_FLOOR_ADU, mrs_noise, structure_noise
+from .psf_fit import Fitted, fit_stars
 from .psf_flux import ring_sky
 from .shape import MIN_STARS, Shape, estimated_fwhm, shape_of
 
@@ -35,7 +36,10 @@ class Across:
 
     ceiling_adu: float  # DATAMAX, else the type's top (ADR 0041)
     saturated: int  # of `stars`, those with sensor pixels at the ceiling
-    psf_snr: float | None  # None: under MIN_STARS stars
+    psf_snr: float | None  # None: under MIN_STARS stars, or no fit
+    psf_flux_adu: float | None  # ImageAnalysis PSFFlux; None: no fit; software-ok
+    psf_mean_flux_adu: float | None  # PSFTotalMeanFlux, ADU per square pixel
+    psf_count: int | None  # PSFCount, the fits summed
     gradient_pct: float | None
     gradient_angle_deg: float | None
 
@@ -83,15 +87,15 @@ def measure_frame(
     structure = max(structure_noise(images[1]), NOISE_FLOOR_ADU)
     found = detect(*images, (noise, structure), clip=(sensor, saturation), level=(raw, saturation))
     # Fitted on the plane with its sky: the sampling region's median needs the level (psf_fit.py)
+    fits = fit_stars(raw, found.x, found.y, found.box, found.flux)
     chosen = _spread(objects, usable, raw.shape)
-    shape = shape_of((raw, *images), objects, chosen, first_noise, found)
-    # On the measured plane's own noise: a colour frame's intensity, as misure.md says
-    flux = float(found.flux.sum())
-    snr = psf_snr(flux, noise) if len(found.x) >= MIN_STARS else None
+    shape = shape_of(images, objects, chosen, first_noise, (fits, len(found.x)))
+    flux = _flux(fits, noise, len(found.x))
     if pattern is not None:  # noise said as WBPP says it
         noise = max(_mosaic_noise(sensor, pattern), NOISE_FLOOR_ADU)
     gradient = gradient_of(back)
-    across = Across(saturation, int(found.saturated.sum()), snr, gradient.pct, gradient.angle_deg)
+    across = Across(saturation, int(found.saturated.sum()), *flux, gradient.pct,
+                    gradient.angle_deg)  # fmt: skip
     common = {"stars": len(found.x), "kept": len(hfds), "background_adu": float(sky.globalback),
               "noise_adu": noise, "shape": shape} | vars(across)  # fmt: skip
     if len(hfds) < MIN_STARS:
@@ -100,6 +104,18 @@ def measure_frame(
     return Measured(**common, hfd_px=float(np.median(hfds)),
                     tilt_pct=zones.tilt_pct if zones else None,
                     curvature_pct=zones.curvature_pct if zones else None)  # fmt: skip
+
+
+def _flux(
+    fits: Fitted, noise: float, stars: int
+) -> tuple[float | None, float | None, float | None, int | None]:
+    """PSF SNR, PSFFlux, PSFTotalMeanFlux, PSFCount; on the measured plane's own noise: a colour
+    frame's intensity, as misure.md says. software-ok"""
+    found = photometry(fits)
+    if found is None:
+        return None, None, None, None
+    snr = psf_snr(found.flux, noise) if stars >= MIN_STARS else None
+    return snr, found.flux, found.mean_flux, found.count
 
 
 def _sigma(residual: np.ndarray) -> float:

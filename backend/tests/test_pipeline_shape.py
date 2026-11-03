@@ -6,7 +6,7 @@ import math
 import numpy as np
 import pytest
 
-from astrolog.pipeline import shape
+from astrolog.pipeline import shape, stars
 from astrolog.pipeline.psf_fit import Fitted
 from astrolog.pipeline.shape import Shape, ShapeKind
 from astrolog.pipeline.stars import Measured, TooFewStars, measure_frame
@@ -128,7 +128,8 @@ def test_trailed_stars_have_a_shape_even_with_too_few_round_ones() -> None:
 
 def test_lines_instead_of_stars_are_an_unmeasurable_shape() -> None:
     """From eccentricity 0.99. Real lines rarely get here: the detector drops them."""
-    lines = Fitted(np.full(9, 3.0), np.full(9, 0.995), np.full(9, 10.0), np.full(9, 0.01))
+    lines = Fitted(np.full(9, 3.0), np.full(9, 0.995), np.full(9, 10.0), np.full(9, 0.01),
+                   np.ones(9), np.ones(9), np.arange(9))  # fmt: skip
     found = shape._frame(ShapeKind.FITTED, lines)
     assert found == Shape(ShapeKind.UNMEASURABLE, 9, None, None, None)
 
@@ -168,7 +169,7 @@ def test_a_fit_that_fails_falls_back_on_the_moments_and_says_so(
 ) -> None:
     """sep's moments on the median copy read the wings: a Moffat beta 3 comes out 1.5 times
     its FWHM. Estimated, and said so."""
-    monkeypatch.setattr(shape, "fit_stars", lambda *_: Fitted(*(np.empty(0),) * 4))
+    monkeypatch.setattr(stars, "fit_stars", lambda *_: Fitted(*(np.empty(0),) * 7))
     found = _shape(_field([_moffat(3.0, 0.7, 60, 3.0)] * 49))
     assert found.kind is ShapeKind.ESTIMATED
     assert found.psf_residual is None and found.spread is not None

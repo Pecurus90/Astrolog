@@ -1118,7 +1118,11 @@ CREATE TABLE pipeline_measures (
   -- tetto: DATAMAX, se no il massimo del tipo dopo BZERO e BSCALE (ADR 0041)
   ceiling_adu    REAL,
   saturated      INTEGER CHECK (saturated >= 0),  -- delle stelle, quelle al tetto
-  psf_snr        REAL CHECK (psf_snr >= 0),  -- ImageWeighting eq. 23-24 (SubframeSelector); NULL: < 5 stelle
+  psf_snr        REAL CHECK (psf_snr >= 0),  -- ImageWeighting eq. 23-24 (SubframeSelector); NULL: < 5 stelle o nessun fit
+  -- fotometria PSF delle stelle fittate (Image Analysis PSFFlux, PSFTotalMeanFlux, PSFCount); NULL: nessun fit
+  psf_flux_adu      REAL CHECK (psf_flux_adu >= 0),       -- somma dei segnali, ImageWeighting eq. 7
+  psf_mean_flux_adu REAL CHECK (psf_mean_flux_adu >= 0),  -- somma dei flussi medi (ADU per pixel), eq. 8
+  psf_count         INTEGER CHECK (psf_count > 0),
   gradient_pct   REAL CHECK (gradient_pct >= 0),  -- 100 (max - min) / mediana del fondo ridotto
   gradient_angle_deg REAL CHECK (gradient_angle_deg >= 0 AND gradient_angle_deg < 360),  -- lato chiaro
   tilt_pct       REAL CHECK (tilt_pct >= 0),  -- HFD degli angoli, ASTAP; NULL: zona povera
@@ -1140,6 +1144,8 @@ CREATE TABLE pipeline_measures (
   CHECK ((stars IS NULL) = (ceiling_adu IS NULL) AND (stars IS NULL) = (saturated IS NULL)
     AND saturated <= stars),
   CHECK (psf_snr IS NULL OR stars >= 5),
+  CHECK ((psf_count IS NULL) = (psf_flux_adu IS NULL) AND (psf_count IS NULL) = (psf_mean_flux_adu IS NULL)
+    AND (psf_count IS NULL OR stars IS NOT NULL) AND (psf_snr IS NULL OR psf_count IS NOT NULL)),
   CHECK (gradient_pct IS NOT NULL OR gradient_angle_deg IS NULL),
   CHECK (gradient_pct IS NULL OR stars IS NOT NULL),
   CHECK ((tilt_pct IS NULL) = (curvature_pct IS NULL) AND (tilt_pct IS NULL OR hfd_px IS NOT NULL))

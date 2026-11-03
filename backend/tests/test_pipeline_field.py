@@ -107,14 +107,18 @@ def test_psf_snr_gives_back_the_programs_own_value() -> None:
     )
 
 
-def test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale() -> None:
-    """Gaussian: 1 - 0.1 of the flux inside the tenth of the peak (psf_flux.py), 36 of 6e4. The
-    structure over 3 sigma of its scales cuts the wings: moments, so the flux, 2.6% short. [M]"""
+def test_the_frame_psf_snr_takes_the_fitted_stars_signal_with_no_scale() -> None:
+    """ImageWeighting eq. 7, 23-24: F the stars' signal over the fitted sky, 36 of 6e4; the Moffat's
+    tenth grown 1 px holds a Gaussian whole, noise over B adds a little: 1.013. [M]"""
     data = _sky()
     _stars(data, _grid(6), 2.0, 6e4)
     found = measure_frame(data, saturation=65535.0, pattern=None)
-    flux = 36 * 6e4 * 0.9
-    assert found.psf_snr == pytest.approx(psf_snr(flux, _NOISE), rel=0.06)
+    assert found.psf_count == 36 and found.psf_flux_adu is not None
+    assert found.psf_flux_adu == pytest.approx(36 * 6e4, rel=0.03)
+    assert found.psf_snr == pytest.approx(psf_snr(found.psf_flux_adu, _NOISE), rel=0.02)
+    assert found.psf_mean_flux_adu == pytest.approx(
+        found.psf_flux_adu / (math.pi * (2 * math.sqrt(2 * math.log(10))) ** 2), rel=0.1
+    )
 
 
 def test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are() -> None:

@@ -182,10 +182,15 @@ def test_ratios_split_group_and_kind():
 
 def test_every_common_measure_is_set_beside_image_analysis():
     ours = Ours(1000, 2.0, 100, 10, fwhm_px=2.2, eccentricity=0.45, psf_snr=0.6,
-                altitude_deg=51.0)  # fmt: skip
+                altitude_deg=51.0, psf_flux_adu=65535.0, psf_mean_flux_adu=6553.5,
+                psf_count=900)  # fmt: skip
     theirs = _analysis(FWHMpx=2.0, Eccentricity=0.5, Median=110 / 65535, PSFSNR=0.5,
-                       Altitude=50.0, Airmass=1.3)  # fmt: skip
+                       Altitude=50.0, Airmass=1.3, PSFFlux=2.0, PSFTotalMeanFlux=0.05,
+                       PSFCount=1000)  # fmt: skip
     table = ratios([_row("a", False, ours, analysis=theirs)])
+    assert table["flusso PSF / Image Analysis"]["mono A"][2] == pytest.approx(0.5)
+    assert table["flusso medio PSF / Image Analysis"]["mono A"][2] == pytest.approx(2.0)
+    assert table["fit PSF / Image Analysis"]["mono A"][2] == pytest.approx(0.9)
     assert table["FWHM / Image Analysis"]["mono A"] == pytest.approx((1, 1.1, 1.1, 1.1))
     assert table["eccentricita' / Image Analysis"]["mono A"] == pytest.approx((1, 0.9, 0.9, 0.9))
     assert table["PSF SNR / Image Analysis"]["mono A"] == pytest.approx((1, 1.2, 1.2, 1.2))
@@ -216,7 +221,7 @@ def test_the_stage_clock_times_what_measure_frame_calls_and_puts_it_back():
     seconds: dict[str, float] = {}
     with stage_clock(seconds):
         stars.measure_frame(_frame(False), saturation=65535, pattern=None)
-    expected = {"fondo sep", "mediana 3x3", "forma", "stelle e flusso PSF", "rumore MRS"}
+    expected = {"fondo sep", "mediana 3x3", "forma", "fit PSF", "stelle", "rumore MRS"}
     assert expected <= set(seconds)
     assert "debayer VNG" not in seconds and "rumore per piano colore" not in seconds
     assert all(getattr(stars, name) is fn for name, fn in names.items())

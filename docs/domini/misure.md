@@ -19,7 +19,7 @@ parole in [`glossario.md`](glossario.md).
 | Le stelle sono quelle che conta Image Analysis: una stella debole, una macchia di nebulosa larga, una sorgente multipla o un nodo su una nebulosa non contano (Marco, 27/10 e 30/10/2026) <!-- software-ok --> | `test_two_peaks_in_one_structure_are_no_star`, `test_a_maximum_is_one_over_the_whole_5x5_not_only_its_structure`, `test_a_saturated_star_with_a_ragged_top_is_one_star`, `test_the_dispersion_that_counts_is_the_local_one`, `test_a_knot_on_a_nebula_is_measured_over_the_nebula`, `test_a_wide_faint_star_is_one_star_not_a_cluster_of_noise_peaks`, `test_a_star_with_no_free_sky_around_falls_back_on_the_frame_noise`, `test_the_frame_counts_the_stars_the_subframeselector_would`, `test_a_star_over_the_aperture_threshold_is_found_one_under_is_not`, `test_a_wide_faint_patch_is_not_a_star_however_much_light_it_holds`, `test_a_hot_pixel_is_not_a_star`, `test_a_dark_pixel_among_bright_ones_has_a_position`, `test_a_structure_starts_at_its_threshold_on_the_median_copy`, `test_the_position_is_the_barycentre` (`backend/tests/test_pipeline_detect.py`) <!-- software-ok --> |
 | Una stella saturata conta fra le stelle ma non entra nell'HFD, anche se in una camera a colori satura un canale solo | `test_saturated_stars_are_counted_but_not_measured`, `test_a_colour_star_clipped_in_one_channel_is_saturated` |
 | Il tetto di saturazione e' il fondo scala dichiarato, come PixInsight, e satura e' una stella con un pixel li' (Marco, 29/10/2026) <!-- software-ok --> | `test_the_ceiling_is_the_declared_full_scale_as_pixinsight`, `test_stars_at_the_ceiling_are_counted_saturated_and_kept_out` (`backend/tests/test_pipeline_field.py`), `test_one_sensor_pixel_at_the_ceiling_makes_a_star_saturated` (`backend/tests/test_pipeline_detect.py`) |
-| Il PSF SNR e' quello della documentazione di PixInsight, sature comprese come le tiene lui <!-- software-ok --> | `test_psf_snr_is_the_documented_formula`, `test_the_frame_psf_snr_takes_the_stars_flux_with_no_scale`, `test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are`, `test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one`, `test_under_five_stars_no_psf_snr`, `test_pipeline_psf_flux.py` (quota Moffat al decimo, fondo lasciato sotto le stelle, luce col centro al buio, stella tagliata) |
+| Il PSF SNR e il flusso PSF sono quelli della documentazione di PixInsight, sul segnale delle stelle fittate, sature comprese come le tiene lui <!-- software-ok --> | `test_psf_snr_is_the_documented_formula`, `test_the_frame_psf_snr_takes_the_fitted_stars_signal_with_no_scale`, `test_the_signal_sums_only_the_pixels_over_the_sky`, `test_an_exact_moffat_gives_its_signal_and_its_mean_flux`, `test_chauvenet_keeps_a_normal_sample_and_drops_far_outliers`, `test_chauvenet_rejects_one_at_a_time_from_the_farthest`, `test_rejected_values_are_winsorized_to_the_nearest_kept`, `test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are`, `test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one`, `test_under_five_stars_no_psf_snr`, `test_pipeline_psf_flux.py` (quota Moffat al decimo, fondo lasciato sotto le stelle, luce col centro al buio, stella tagliata) |
 | Il rumore e' l'MRS di Starck e Murtagh, come lo dichiara PixInsight; nei campi densi resta quello del cielo <!-- software-ok --> | `test_pipeline_noise.py` (fattore del primo strato 0,8908 come Duchamp, trasformata che si ricompone, rumore gaussiano letto entro il 2%, campo affollato e nebulosa entro il 3%), `test_in_a_crowded_field_the_noise_is_read_off_the_stars` |
 | Il gradiente del fondo dice quanto e verso dove; un fondo piatto o a zero non inventa un lato | `test_a_sky_on_a_plane_gives_its_spread_over_its_median_and_its_bright_side`, `test_the_bright_side_turns_with_the_plane`, `test_a_flat_sky_has_no_gradient_and_no_side`, `test_a_sky_at_zero_or_under_has_no_gradient` |
 | Tilt e curvatura dalle cinque zone, e tacciono con poche stelle in una zona | `test_tilt_is_worst_less_best_corner_over_the_median_hfd`, `test_curvature_is_corners_against_the_centre_with_its_sign`, `test_the_stars_a_zone_needs_follow_the_frame_s_own_hfd_spread`, `test_never_under_min_stars_a_zone`, `test_tilt_reaches_the_frame_through_measure` |
@@ -139,14 +139,16 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   mediana toglie le vicine. `sep.flux_radius` non ha l'anello: non si usa.
 - **Forma** (ADR 0042, passo 26.49, `pipeline/psf_fit.py`, `pipeline/shape.py`): come Image
   Analysis (par. 2.1.6; ImageWeighting 2.1-2.2.1; PJSR PSF). Ogni stella del rilevatore, fino a
-  8000 dalle piu' brillanti: Moffat ellittica beta 4 col fondo B libero, al centro del pixel, sul
+  24576 dalle piu' brillanti per il flusso (maxStars di ImageCalibration, letto in PJSR; sul banco
+  il suo PSFCount arriva a 23263) e, delle 8000 piu' brillanti (maxPSFFits di Image Analysis), per
+  la forma: Moffat ellittica beta 4 col fondo B libero, al centro del pixel, sul
   piano col suo cielo (a colori l'intensita' VNG), Levenberg-Marquardt di scipy, 400 valutazioni.
   Regione quadrata: mezzo lato il lato maggiore del riquadro della struttura, +1 px per lato
   finche' la mediana scende almeno dell'1%, al piu' 64 (nostro). Scartato il fit col centro fuori
   dal riquadro o a meno di 1 px dal bordo (lui non da' numeri: nostri). FWHM 2 sqrt(sx sy)
   sqrt(2^(1/4) - 1), eccentricita' sqrt(1 - (sy/sx)^2); PSFResidual (eq. 24) media winsorizzata al
-  10% di |v - f| sulla regione su 4 S / (pi Wx Wy), W al decimo, S i pixel sopra B nell'ellisse al
-  decimo (ImageWeighting eq. 7-10). Per il frame biweight di Tukey (c 6 MAD, 1e-10, 20 passi) e Qn
+  10% di |v - f| sulla regione su 4 S / (pi Wx Wy), W al decimo, S il segnale della stella (sotto,
+  **PSF SNR**: lo stesso `PSF.signal` di PJSR, 26.50). Per il frame biweight di Tukey (c 6 MAD, 1e-10, 20 passi) e Qn
   (le Sigma). Stella binnata sul pixel: +4% a FWHM 2,6 px, +1% a 5,2; beta 2,5 +8%, gaussiana -5%.
   - **Fit** (`fitted`) quando regge almeno meta' delle stelle provate e almeno 5; se no **stimata**
     (`estimated`) dai momenti di `sep` sulle 540 stelle sparse della griglia, che leggono le ali:
@@ -162,32 +164,26 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
     vede Image Analysis dopo il Debayer: FWHM 3,5 px +4%, 1,8 px +28% (l'HFD +4%).
 - **PSF SNR** (`pipeline/field.py`, ADR 0022 punto 5): ImageWeighting di PixInsight, eq. 7 e <!-- software-ok -->
   23-24, PSF SNR = 1,316e-7 F^2 / (4,987e6 sigma^2) (fino al 30/10/2026 1,350e-7, letto male:
-  il 2,6% in piu'; ora il suo PSF SNR torna esatto); F e' la somma dei flussi di tutte le
-  stelle del conteggio, sature comprese (sui mono toglierle dava 0,13-0,74 volte il suo), sigma
-  il rumore del piano misurato: a colori quello dell'intensita', non il rumore scritto (Marco,
-  28/10/2026). Il flusso di una stella (`pipeline/psf_flux.py`, passo 26.45), come documenta
-  ImageWeighting par. 2.2: i pixel veri nell'ellisse dove la PSF scende a un decimo del picco,
-  meno il fondo locale. Lui l'ellisse la prende dal fit; noi dai momenti secondi della struttura
-  dilatata di 3 px (`FLUX_GROW`, 26.48.1: la sua struttura taglia le ali; su gaussiane a verita'
-  nota sigma 1,2-3,5 il flusso entro il 5% del vero, 2 px 10% sotto; un pixel cresciuto va alla
-  stella piu' vicina) sulla copia mediana (A, B, THETA di SExtractor, Bertin e Arnouts 1996),
-  raggio sqrt(2 ln 10) come per una gaussiana, `sep.sum_ellipse`; fondo: mediana di un anello di 24
-  px fuori la struttura (BACKPHOTO_THICK di SExtractor). Sugli 80 mono, tutti i frame, mediana 1,01
-  del suo (con le strutture I - c5 0,84; al 26.46, frame nitidi, 0,88 / 0,87), dieci percentili
-  0,89 / 1,09; M42 0,84-0,98, M51 0,96-1,14 (prima 0,53-0,92), LBN 576 n.0/2, NGC 6888 n.0, VdB 152
-  n.0 1,10-1,12, cometa 0,46-0,82: il 26.50 riparte da qui (Marco 29/10: mediane entro 0,02 non
-  bastano). Una Moffat beta 4 torna 1,12 / 1,07 / 1,02 della quota al decimo a FWHM 2 / 4 / 6 px.
-  Struttura col centro fuori dal proprio decimo: flusso 0 (Canon 15: luce estesa, 83% del nostro F).
-  Scartate: Moffat beta 4 per zona (0,12-0,48); regione dentro la struttura; Chauvenet (par.
-  2.2.1); sature tolte (0,2); tetto 32 px, scale piccole, diametro a meta' picco, fit sui
-  candidati; strutture a 3-4 strati, momenti adattivi (Bernstein e Jarvis 2002), Moffat fittata a
-  stella (come il suo fit, ma mediane 0,75-0,91 e 35 frame fuori). **Limite del confronto**: il suo rilevatore (StarDetector PJSR, stessi
-  conteggi: 1028, 278, 741, 1200) coi suoi fit da' 0,84-1,02 del flusso PSF che scrive (colonna 21,
-  formula invertita entro l'1,5%), 0,71-1,04 nel PSF SNR: il resto non e' pubblicato (non fondo,
-  non modello). **Scarto aperto**: cometa C/2025 A6 0,56-0,65 su tre frame (lui fitta nucleo e
-  chioma, 43% del flusso), M51 n.1 0,61 e n.3 0,58 (stelle sdoppiate dalla guida). Frame sfocati:
-  NGC 7380 fino a 3,2, IC443 1,5, stelle che lui perde; si tengono le nostre (Marco, 28/10/2026).
-  Sotto 5 stelle tace. Mai fra camere o oggetti.
+  il 2,6% in piu'; ora il suo PSF SNR torna esatto); F = PSFFlux, la somma dei segnali di tutte
+  le stelle fittate (**Forma**), sature comprese, sigma il rumore del piano misurato: a colori
+  quello dell'intensita', non il rumore scritto (Marco, 28/10/2026). Dal 26.50, come la sua
+  fotometria PSF (ImageWeighting par. 2.2, eq. 7-10; `pipeline/psf_fit.py`, `field.photometry`):
+  - **Segnale** di una stella: somma di v - B sui pixel con v > B, B il fondo fittato,
+    nell'ellisse al decimo della Moffat fittata (semiassi sigma sqrt(10^(1/beta) - 1)) allargata
+    di 1 px per semiasse. Il +1 non e' documentato: sonda su `PSF.signal` di PJSR, stella per
+    stella sui suoi fit (Abell 2151 n.0 e M51 n.1, 3641 stelle): segnale e conteggio dei pixel
+    1,000 in mediana, piccole e grandi uguali (al decimo 0,84 / 0,43, a 1,5 volte il decimo 0,99
+    / 0,92 ma crescente col raggio); la somma dei suoi `PSF.signal` e' il suo PSFFlux (0,996).
+  - **Flusso medio** (eq. 8): segnale / (pi rx ry), r al decimo senza il +1; PSFTotalMeanFlux la
+    somma dopo Chauvenet robusto (Maples et al. 2018, due lati: mediana e deviazione al 68,3%, poi
+    media e deviazione standard, una alla volta; fattori di correzione della Table 3, la legge per
+    N > 100 anche sotto: il testo non da' la tabella) e i rifiutati winsorizzati (par. 2.2.1).
+    Sui suoi stessi flussi medi 1,02 e 1,045 del suo; senza Chauvenet 3,5. PSFCount: le fit.
+  - Sul banco (tabella sotto) 75 mono su 80 in 0,95-1,05; M51 0,98-1,04, cometa C/2025 A6
+    0,87-0,97 (col flusso dei momenti, `psf_flux.py`, ora solo l'ordine dei fit: 0,58-0,63 e
+    0,46-0,82). Fuori: Sh2-185 n.2 0,85 (fit 0,944 dei suoi), cometa n.1 e n.4 0,87, VdB 152 n.0 e
+    M42 n.4 1,09. **Colori** 20 volte il suo: lui somma per canale dal grezzo (26.56).
+  Sotto 5 stelle o senza fit tace. Mai fra camere o oggetti.
 - **Gradiente** (ADR 0022 punto 7): la mappa del fondo di `sep` ai centri delle sue maglie da
   64 pixel, (max - min) / mediana in %. Il **lato chiaro**: la pendenza del piano dei minimi
   quadrati, da +x verso +y, 0-360 gradi, solo quando il piano spiega almeno meta' della varianza
@@ -269,27 +265,30 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Eccentricita' (26.49) | 1,00 [0,99-1,00] | 1,00 [0,99-1,00] | 1,00 [0,99-1,01] | 0,99 [0,97-1,00] |
   | FWHM Sigma (26.49) | 0,99 [0,86-1,08] | 1,02 [0,95-1,06] | 1,04 [0,98-1,13] | 1,04 [0,95-1,11] |
   | Eccentricita' Sigma (26.49) | 0,99 [0,95-1,00] | 1,00 [0,97-1,01] | 0,99 [0,94-1,12] | 0,99 [0,94-1,02] |
-  | PSFResidual (26.49) | 1,17 [1,10-1,29] | 1,16 [1,07-1,41] | 1,21 [1,08-1,46] | 1,17 [1,08-1,47] |
-  | PSFResidual Sigma (26.49) | 1,11 [1,06-1,21] | 1,14 [1,05-1,34] | 1,14 [0,95-1,48] | 1,11 [0,98-1,41] |
+  | PSFResidual (26.50) | 0,98 [0,92-1,06] | 1,00 [0,91-1,14] | 1,07 [1,00-1,25] | 1,06 [0,99-1,24] |
+  | PSFResidual Sigma (26.50) | 0,94 [0,88-1,00] | 0,97 [0,88-1,07] | 1,01 [0,88-1,23] | 0,98 [0,91-1,18] |
   | Fondo / mediana | 1,00 [0,99-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,00] |
   | Rumore | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] |
-  | PSF SNR | 0,87 [0,56-0,94] | 0,87 [0,58-1,00] | 17,7 [14,3-35,0] | 18,1 [16,0-28,2] |
+  | PSF SNR (26.50) | 0,98 [0,85-0,99] | 1,00 [0,97-1,09] | 19,9 [4,22-33,8] | 21,1 [1,50-33,1] |
+  | PSFFlux (26.50) | 0,99 [0,92-1,00] | 1,00 [0,98-1,05] | 4,01 [1,77-4,82] | 4,16 [1,10-5,15] |
+  | PSFTotalMeanFlux (26.50) | 0,99 [0,95-1,10] | 1,03 [0,99-1,12] | 0,78 [0,14-1,13] | 0,90 [0,26-1,12] |
+  | PSFCount (26.50) | 0,98 [0,94-1,00] | 0,99 [0,96-1,02] | 1,54 [0,13-3,72] | 1,47 [0,24-3,91] |
   | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
   | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
 
-  Scarti aperti, ognuno col suo passo: PSF SNR 26.50, colori 26.56 (lui somma il flusso PSF per
-  canale, noi sull'intensita'). PSFResidual (26.49, Marco 3/11/2026): lui divide per `PSF.signal`
-  ("flusso sopra una soglia di significativita'", non documentata; sonde nel piano), che si
-  ricava al 26.50. Il fit del 26.49 porta `measure_frame` da 6,2 a 7,2 s mono e da 14,0 a 16,4 s
-  colori (6 copie; affollati +5 s): il tetto di ADR 0042 al 26.57.
+  Scarti aperti, ognuno col suo passo: colori 26.56 (lui somma il flusso PSF per canale, noi
+  sull'intensita'; PSFResidual a colori 1,06-1,07). Il fit del 26.49 porta `measure_frame` da 6,2
+  a 7,2 s mono e da 14,0 a 16,4 s colori (6 copie; affollati +5 s); al 26.50 le fit del flusso
+  fino a 24576: frame tipici uguali (6,2-7,2 s), Sh2-185 n.2 (21964 fit) 23,9 s di cui 13,1 di
+  fit: il tetto di ADR 0042 al 26.57.
 
   Secondi a frame del 26.47, mediana, un frame alla volta, mono / colori: AstroLog 5,69 / 14,01
   (debayer VNG 4,43, rumore MRS 1,67 / 1,93 + 1,33 per piano, stelle e flusso PSF 1,44 / 1,56,
   forma 1,02 / 1,80); Image Analysis con le estese 3,57 / 2,46 + 1,78 di debayer, senza 2,42 /
   1,14 + 1,78.
 
-  Perche' degli scarti (dal 26.46; tabelle per camera e oggetto al commit `9add5161`): PSF SNR,
-  noi sommiamo nell'ellisse dei momenti, piu' stretta della sua fittata (ImageWeighting par. 2.2; cometa 0,61). HFD / FWHM
+  Perche' degli scarti (dal 26.46; tabelle per camera e oggetto al commit `9add5161`): PSF SNR
+  fino al 26.49, l'ellisse dei momenti, piu' stretta della sua fittata (cometa 0,61). HFD / FWHM
   non e' uno scarto: sulla Moffat 1,36 a beta 2,5 e 1,17 a beta 4. HFD / HFD ASTAP 0,83-0,92;
   le sue stelle contano da SNR 30 sul grezzo: 0,9-27 volte.
 - **Le misure nuove sul vero** (27/10/2026, 24 copie; dal 29/10 il tetto e' il fondo scala,

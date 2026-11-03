@@ -32,7 +32,8 @@ PENDING = (
 
 _NUMBERS = (  # TooFewStars: no hfd_px, tilt_pct, curvature_pct
     "stars", "kept", "hfd_px", "background_adu", "noise_adu", "ceiling_adu", "saturated",
-    "psf_snr", "gradient_pct", "gradient_angle_deg", "tilt_pct", "curvature_pct",
+    "psf_snr", "psf_flux_adu", "psf_mean_flux_adu", "psf_count", "gradient_pct",
+    "gradient_angle_deg", "tilt_pct", "curvature_pct",
 )  # fmt: skip
 _SHAPE = (
     "shape", "shape_stars", "fwhm_px", "eccentricity", "angle_deg", "fwhm_sigma_px",
@@ -41,12 +42,14 @@ _SHAPE = (
 
 UPSERT = (
     "INSERT INTO pipeline_measures (frame_id, file_id, outcome, stars, kept, hfd_px,"
-    " background_adu, noise_adu, ceiling_adu, saturated, psf_snr, gradient_pct,"
+    " background_adu, noise_adu, ceiling_adu, saturated, psf_snr, psf_flux_adu,"
+    " psf_mean_flux_adu, psf_count, gradient_pct,"
     " gradient_angle_deg, tilt_pct, curvature_pct, shape, shape_stars, fwhm_px, eccentricity,"
     " angle_deg, fwhm_sigma_px, eccentricity_sigma, psf_residual, psf_residual_sigma, duration_s,"
     " measured_at)"
     " VALUES (:frame_id, :file_id, :outcome, :stars, :kept, :hfd_px, :background_adu,"
-    " :noise_adu, :ceiling_adu, :saturated, :psf_snr, :gradient_pct, :gradient_angle_deg,"
+    " :noise_adu, :ceiling_adu, :saturated, :psf_snr, :psf_flux_adu, :psf_mean_flux_adu,"
+    " :psf_count, :gradient_pct, :gradient_angle_deg,"
     " :tilt_pct, :curvature_pct, :shape, :shape_stars, :fwhm_px, :eccentricity, :angle_deg,"
     " :fwhm_sigma_px, :eccentricity_sigma, :psf_residual, :psf_residual_sigma, :duration_s,"
     " :measured_at)"
@@ -55,6 +58,8 @@ UPSERT = (
     " hfd_px = excluded.hfd_px, background_adu = excluded.background_adu,"
     " noise_adu = excluded.noise_adu, ceiling_adu = excluded.ceiling_adu,"
     " saturated = excluded.saturated, psf_snr = excluded.psf_snr,"
+    " psf_flux_adu = excluded.psf_flux_adu, psf_mean_flux_adu = excluded.psf_mean_flux_adu,"
+    " psf_count = excluded.psf_count,"
     " gradient_pct = excluded.gradient_pct, gradient_angle_deg = excluded.gradient_angle_deg,"
     " tilt_pct = excluded.tilt_pct, curvature_pct = excluded.curvature_pct,"
     " shape = excluded.shape, shape_stars = excluded.shape_stars, fwhm_px = excluded.fwhm_px,"

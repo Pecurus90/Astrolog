@@ -1,15 +1,17 @@
-"""Measures across the frame (ADR 0022 points 5 and 7, ADR 0037, docs/domini/misure.md): PSF SNR,
-the sky gradient, tilt and curvature from five zones. Pure: arrays in, numbers out."""
+"""Measures across the frame (ADR 0022 points 5 and 7, ADR 0037, misure.md): PSF photometry and
+SNR, sky gradient, tilt and curvature from five zones. Pure: arrays in, numbers out."""
 
 import math
 from dataclasses import dataclass
 
 import numpy as np
 
+from ..robust import robust_chauvenet, winsorized
 from ..units import sigma_from_mad
+from .psf_fit import Fitted
 from .shape import MIN_STARS
 
-# PSF SNR = c3 F^2 / (c4 sigma^2), F the stars' summed flux (psf_flux.py), sigma the noise.
+# PSF SNR = c3 F^2 / (c4 sigma^2), F the fitted stars' summed signal (psf_fit.py), sigma the noise.
 PSF_SNR_C3 = 1.316e-7  # [C PixInsight ImageWeighting, eq. 23-24; software-ok]
 PSF_SNR_C4 = 4.987e6  # [C PixInsight ImageWeighting, eq. 23-24; software-ok]
 MESH_PX = 64  # [C sep docs: Background bw, bh default] the reduced frame: one value a mesh
@@ -35,6 +37,23 @@ class Gradient:
 class Zones:
     tilt_pct: float  # 100 (worst - best corner HFD) / the frame's median HFD
     curvature_pct: float  # 100 (corners' median - centre) / the frame's median; + corners worse
+
+
+@dataclass(frozen=True)
+class Photometry:
+    """ImageAnalysis PSFFlux, PSFTotalMeanFlux, PSFCount, in the plane's units. software-ok"""
+
+    flux: float  # sum of the stars' signal (ImageWeighting eq. 7)
+    mean_flux: float  # sum of their mean fluxes (eq. 8), rejected ones winsorized (par. 2.2.1)
+    count: int  # valid fits
+
+
+def photometry(fits: Fitted) -> Photometry | None:
+    """None without a fit: no flux to sum."""
+    if len(fits.signal) == 0:
+        return None
+    mean = winsorized(fits.mean_flux, robust_chauvenet(fits.mean_flux))
+    return Photometry(float(fits.signal.sum()), float(mean.sum()), len(fits.signal))
 
 
 def psf_snr(flux: float, noise: float) -> float | None:
