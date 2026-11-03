@@ -109,7 +109,7 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   stella sotto, sul banco). Il 2x2: sintetici del 26.45 (1 px varia 1,48 volte, 3 px 1,64), non i
   nostri frame (Marco 28/10). **Banco dei 205** (26.48.3, massimi sul 5x5 intero): stelle / sue,
   colori A 0,994, B 0,984, mono A 0,993, B 0,997; **mono tutti in 0,95-1,05** senza compenso; fuori
-  7, tutti NGC 7380 a colori (0,905-0,949): la soglia locale sulla nebulosa (26.48.4). A SNR 12
+  7, tutti NGC 7380 a colori (0,905-0,949): scarto noto (26.48.4 parziale, Marco 3/11). A SNR 12
   nessuna di 36 (20 semi), a SNR 14 il rumore ne porta su fino a 3. Conto locale da 0,3 s (2400
   stelle) a 2,8 s (45 mila) a frame; rumore di struttura 0,85 s a 24 MP; HFD e forma su `sep`.
 - **Rilevamenti per la misura**: `sep.extract` a 5 sigma (Siril) sulla copia filtrata con <!-- software-ok -->
@@ -272,7 +272,7 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
   | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
 
-  Scarti aperti, ognuno col suo passo: stelle 26.48.2 (NGC 7380 a colori, sopra), FWHM ed eccentricita' 26.49,
+  Scarti aperti, ognuno col suo passo: FWHM ed eccentricita' 26.49,
   PSF SNR 26.50, colori 26.56 (lui somma il flusso PSF per canale, noi sull'intensita').
 
   Secondi a frame, mediana, stessa macchina, un frame alla volta:
