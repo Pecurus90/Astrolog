@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from astrolog.pipeline.background import banding, gradient, valid_pixels
+from astrolog.pipeline.background import Banding, banding, gradient, valid_pixels
 
 _NOISE = 10.0
 
@@ -26,7 +26,8 @@ def test_bright_tiles_do_not_make_a_gradient() -> None:
     sky = _sky()
     for k in range(11):
         sky[60 * k : 60 * k + 60, 80 * (k + 2) : 80 * (k + 3)] += 500.0
-    assert gradient(sky, valid_pixels(sky, 65535.0), _NOISE) < 0.1
+    flat = gradient(sky, valid_pixels(sky, 65535.0), _NOISE)
+    assert flat is not None and flat < 0.1
 
 
 def test_under_six_tiles_there_is_no_gradient() -> None:
@@ -44,8 +45,14 @@ def test_saturated_pixels_and_empty_borders_are_not_valid() -> None:
     assert valid[:, 40:].sum() == sky[:, 40:].size - 100
 
 
+def _banding(sky: np.ndarray) -> Banding:
+    found = banding(sky, valid_pixels(sky, 65535.0), _NOISE)
+    assert found is not None
+    return found
+
+
 def test_white_noise_has_no_banding() -> None:
-    found = banding(_sky(), valid_pixels(_sky(), 65535.0), _NOISE)
+    found = _banding(_sky())
     assert found.row < 0.02 and found.column < 0.02
 
 
@@ -53,7 +60,7 @@ def test_row_offsets_are_row_banding_in_noise_units() -> None:
     """Each row lifted by a normal of 0.3 sigma: row banding 0.3, columns untouched."""
     sky = _sky()
     sky += np.random.default_rng(2).normal(0.0, 0.3 * _NOISE, (sky.shape[0], 1))
-    found = banding(sky, valid_pixels(sky, 65535.0), _NOISE)
+    found = _banding(sky)
     assert found.row == pytest.approx(0.3, rel=0.1)
     assert found.column < 0.02
 
@@ -62,4 +69,4 @@ def test_alternating_rows_of_a_mosaic_are_not_banding() -> None:
     """Even rows 50 over the odd ones, as a CFA: each row is measured against its own parity."""
     sky = _sky()
     sky[::2] += 50.0
-    assert banding(sky, valid_pixels(sky, 65535.0), _NOISE).row < 0.02
+    assert _banding(sky).row < 0.02
