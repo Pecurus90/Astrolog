@@ -1121,12 +1121,13 @@ CREATE TABLE pipeline_measures (
   ceiling_adu    REAL,
   saturated      INTEGER CHECK (saturated >= 0),  -- delle stelle, quelle al tetto
   psf_snr        REAL CHECK (psf_snr >= 0),  -- ImageWeighting eq. 23-24 (SubframeSelector); NULL: < 5 stelle o nessun fit
-  -- fotometria PSF delle stelle fittate (Image Analysis PSFFlux, PSFTotalMeanFlux, PSFCount); NULL: nessun fit
+  -- fotometria PSF delle stelle fittate (Image Analysis PSFFlux, PSFTotalMeanFlux, PSFCount); NULL: nessun fit.
+  -- A colori, come rumore, NoiseRatio, SNR, M* e N*: per canale R G B del grezzo a mezza risoluzione, (min+max)/2
   psf_flux_adu      REAL CHECK (psf_flux_adu >= 0),       -- somma dei segnali, ImageWeighting eq. 7
   psf_mean_flux_adu REAL CHECK (psf_mean_flux_adu >= 0),  -- somma dei flussi medi (ADU per pixel), eq. 8
   psf_count         INTEGER CHECK (psf_count > 0),
   psf_signal_weight REAL CHECK (psf_signal_weight >= 0),  -- ImageWeighting eq. 21-22; NULL: senza PSF SNR o M*
-  -- statistiche dei pixel come Image Analysis (pixel_stats.py, mmt.py), sul piano misurato
+  -- statistiche dei pixel come Image Analysis (pixel_stats.py, mmt.py): Median, Sigma, Entropy sul piano misurato
   median_adu     REAL,  -- Median: pixel validi, meno PEDESTAL
   sky_rate_adu_s REAL,  -- SkyRate: median_adu / EXPTIME; NULL senza posa
   sigma_adu      REAL CHECK (sigma_adu >= 0),       -- Sigma: 0,990905 sqrt BWMV
@@ -1184,11 +1185,12 @@ CREATE TABLE pipeline_measures (
     OR stars IS NOT NULL),
   CHECK ((row_banding IS NULL) = (column_banding IS NULL)),
   CHECK ((stars IS NULL) = (trails IS NULL)),
-  CHECK ((fwhm_tilt IS NULL) = (fwhm_curvature IS NULL) AND (fwhm_tilt IS NULL OR psf_count >= 32)),
+  -- campo e scala sui fit del piano misurato; a colori psf_count e' dei canali, quindi si lega a stars
+  CHECK ((fwhm_tilt IS NULL) = (fwhm_curvature IS NULL) AND (fwhm_tilt IS NULL OR stars >= 32)),
   CHECK ((elongation_angle_deg IS NULL) = (elongation_coherence IS NULL)
-    AND (elongation_angle_deg IS NULL OR psf_count IS NOT NULL)),
+    AND (elongation_angle_deg IS NULL OR stars IS NOT NULL)),
   CHECK (coalesce(ladder_1_dex, ladder_51_dex, ladder_101_dex, ladder_201_dex, ladder_401_dex,
-    ladder_801_dex, ladder_1601_dex, ladder_3201_dex, ladder_6401_dex) IS NULL OR psf_count >= 50)
+    ladder_801_dex, ladder_1601_dex, ladder_3201_dex, ladder_6401_dex) IS NULL OR stars >= 50)
 ) STRICT;
 
 -- RILEVATO. Misure col cielo (pipeline/sky_measure.py, docs/domini/misure.md): una riga per posa

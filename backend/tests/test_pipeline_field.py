@@ -17,6 +17,8 @@ from astrolog.pipeline.field import (
     psf_signal_weight,
     psf_snr,
 )
+from astrolog.pipeline.mmt import Background
+from astrolog.pipeline.noise import Mrs
 from astrolog.pipeline.psf_fit import Fitted
 from astrolog.pipeline.stars import Measured, measure_frame
 
@@ -148,16 +150,50 @@ def test_saturated_stars_stay_in_the_psf_flux_clipped_as_they_are() -> None:
     assert found.psf_snr > 10 * alone.psf_snr
 
 
-def test_a_colour_psf_snr_takes_the_intensity_noise_not_the_written_one(monkeypatch) -> None:
-    """Compared with the SubframeSelector on the intensity (misure.md): the mosaic's noise, the
-    one written, never enters it."""
+def _tinted(r: float, g: float, b: float, side: int = _SIDE) -> np.ndarray:
+    """RGGB gains: a grey sky and grey stars seen through each colour's filter."""
+    gains = np.empty((side, side), dtype=np.float32)
+    gains[0::2, 0::2], gains[0::2, 1::2], gains[1::2, 0::2], gains[1::2, 1::2] = r, g, g, b
+    return gains
+
+
+def test_a_colour_frame_says_each_estimate_as_the_mid_range_of_its_channels() -> None:
+    """ImageAnalysis par. 2.1: each CFA channel's noise and PSF signal at half resolution, then
+    (min + max) / 2, the formulas after; a channel's flux a quarter of the full frame's. [M]"""
+    data = _sky()
+    _stars(data, _grid(6), 2.0, 6e4)
+    gains = (0.5, 1.0, 0.8)
+    found = measure_frame(data * _tinted(*gains), saturation=65535.0, pattern="RGGB")
+    cells = (data[0::2, 0::2], (data[0::2, 1::2] + data[1::2, 0::2]) / 2, data[1::2, 1::2])
+    planes = [measure_frame(cell * gain, saturation=65535.0, pattern=None)
+              for cell, gain in zip(cells, gains, strict=True)]  # fmt: skip
+    flux = [p.psf_flux_adu for p in planes if p.psf_flux_adu is not None]
+    noise = [p.noise_adu for p in planes]
+    assert len(flux) == 3 and found.psf_flux_adu is not None
+    assert found.psf_flux_adu == pytest.approx((min(flux) + max(flux)) / 2, rel=0.03)
+    assert found.psf_flux_adu == pytest.approx(0.75 * 36 * 6e4 / 4, rel=0.05)
+    assert found.noise_adu == pytest.approx((min(noise) + max(noise)) / 2, rel=0.03)
+    assert found.psf_snr == pytest.approx(psf_snr(found.psf_flux_adu, found.noise_adu), rel=1e-9)
+    assert found.psf_count == 36
+    assert found.mstar_adu is not None and found.snr is not None
+
+
+def test_a_colour_frames_stars_and_pixels_stay_on_the_intensity(monkeypatch) -> None:
+    """Star count, shape and the pixel statistics on the HSI intensity after VNG (par. 2.1): the
+    channels' estimates never reach them."""
     data = _sky()
     _stars(data, _grid(6), 2.0, 6e4)
     first = measure_frame(data, saturation=65535.0, pattern="RGGB")
-    monkeypatch.setattr(stars, "_mosaic_noise", lambda *_: 1e3)
+    said = stars.Estimates(Mrs(5.0, 0.5), Photometry(1e6, 1e3, 40), Background(3.0, 4.0),
+                           (6.0, 7.0))  # fmt: skip
+    monkeypatch.setattr(stars, "_estimates", lambda *_: said)
     second = measure_frame(data, saturation=65535.0, pattern="RGGB")
-    assert second.noise_adu == 1e3
-    assert second.psf_snr == first.psf_snr
+    assert (second.psf_flux_adu, second.psf_count, second.noise_adu) == (1e6, 40, 5.0)
+    assert (second.noise_ratio, second.mstar_adu) == (0.5, 3.0)
+    assert second.snr == pytest.approx(((6.0 + 7.0) / (2 * 5.0)) ** 2)
+    assert (second.stars, second.median_adu, second.sigma_adu) == (
+        first.stars, first.median_adu, first.sigma_adu)  # fmt: skip
+    assert second.shape == first.shape
 
 
 def test_in_a_crowded_field_the_noise_is_read_off_the_stars() -> None:

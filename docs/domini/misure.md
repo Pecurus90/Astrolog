@@ -34,6 +34,7 @@ parole in [`glossario.md`](glossario.md).
 | Una nebulosa sotto le stelle e' cielo, non stella | `test_a_nebula_under_the_stars_is_sky_the_ring_follows` |
 | Una camera a colori si misura come in WBPP, dopo il debayer VNG, in pixel del sensore, anche con stelle piccole | `test_a_colour_frame_is_measured_after_vng_in_sensor_pixels`, `test_a_colour_camera_is_measured_after_its_debayer`, `test_a_colour_matrix_not_rgb_is_not_measured` |
 | A colori il rumore e' quello che dice WBPP, canale per canale | `test_colour_noise_is_the_mid_of_the_cfa_channels_as_pixinsight_says_it` <!-- software-ok --> |
+| A colori rumore e flusso delle stelle si stimano per canale e si combinano come Image Analysis; stelle e pixel restano sull'intensita' | `test_a_colour_frame_says_each_estimate_as_the_mid_range_of_its_channels`, `test_a_colour_frames_stars_and_pixels_stay_on_the_intensity` (`backend/tests/test_pipeline_field.py`) |
 | Il debayer e' quello di PixInsight, pixel per pixel, col pattern letto come lo legge lui | `test_vng_is_pixinsights_pixel_for_pixel`, `test_the_pattern_is_read_as_pixinsights_auto` (`backend/tests/test_pipeline_debayer.py`) <!-- software-ok --> |
 | Un frame con troppo poche stelle (nuvole, frame di prova) lo dice, e il numero dell'HFD tace | `test_a_frame_without_enough_stars_says_so_and_keeps_the_count`, `test_a_cloudy_frame_keeps_its_stars_and_says_too_few`, `test_a_frame_of_one_adu_steps_has_no_stars_in_its_steps` |
 | Un file che non si legge ora si riprova; uno che non e' un'immagine da misurare lo dice | `test_a_file_unreadable_now_is_tried_again`, `test_a_frame_too_small_to_measure_says_so`, `test_a_cut_file_a_missing_one_and_a_compressed_one_say_why` (`backend/tests/test_pipeline_pixels.py`) |
@@ -72,10 +73,12 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   supporto a 3 sigma, iterato fino a fermarsi, diviso per 0,974. Sui 205 frame del passo 26.45
   da 0,996 a 1,004 volte il suo, senza tarature; la MAD di prima arrivava a 1,24 nei campi da
   40 mila stelle (le ali entravano nel conto). Le stelle contate lo usano dal passo 26.48; i
-  rilevamenti di `sep` (HFD, forma) restano sul primo passaggio (1,4826 MAD). A colori quello che dice WBPP: per piano R, G
-  (media dei due), B a mezza risoluzione, come lo stima il Debayer, poi (min + max) / 2 come il
-  SubframeSelector. Non si confronta con la mono. Mai sotto un gradino da 1 ADU, 1/sqrt(12).
-  Costa da 1,3 a 3,2 s a frame (dal 30/10 i tap del B3 senza gli zeri: 1,4 s su 26 MP).
+  rilevamenti di `sep` (HFD, forma) restano sul primo passaggio (1,4826 MAD). A colori per canale
+  (sotto). Mai sotto un gradino da 1 ADU, 1/sqrt(12). Costa da 1,3 a 3,2 s a frame.
+- **Stime per canale** (26.56, `stars._estimates`): a colori rumore, NoiseRatio, SNR, M\*, N\*,
+  PSFFlux, PSFTotalMeanFlux, PSFCount come Debayer e Image Analysis (par. 2.1, 2.1.4-2.1.5;
+  ImageWeighting 3.1): piani R, G (media dei due), B del grezzo a mezza risoluzione come un mono,
+  ogni stima (min + max) / 2, poi le formule; PSFCount per eccesso; sonde nel piano.
 - **Stelle** (`pipeline/detect.py`, passi 25.15, 26.46, 26.48, 26.48.1): **quelle che conta Image
   Analysis** (Marco 27/10 e 30/10/2026, ADR 0042): lo StarDetector nativo PJSR ai default ridà
   le sue Stars in 203 frame su 205; regole dalla documentazione PJSR
@@ -167,10 +170,9 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   - **Colori**: sull'intensita' dopo VNG, come WBPP; VNG allarga le stelle piccole, come le
     vede Image Analysis dopo il Debayer: FWHM 3,5 px +4%, 1,8 px +28% (l'HFD +4%).
 - **PSF SNR** (`pipeline/field.py`, ADR 0022 punto 5): ImageWeighting di PixInsight, eq. 7 e <!-- software-ok -->
-  23-24, PSF SNR = 1,316e-7 F^2 / (4,987e6 sigma^2) (fino al 30/10/2026 1,350e-7, letto male:
-  il 2,6% in piu'; ora il suo PSF SNR torna esatto); F = PSFFlux, la somma dei segnali di tutte
-  le stelle fittate (**Forma**), sature comprese, sigma il rumore del piano misurato: a colori
-  quello dell'intensita', non il rumore scritto (Marco, 28/10/2026). Dal 26.50, come la sua
+  23-24, PSF SNR = 1,316e-7 F^2 / (4,987e6 sigma^2); F = PSFFlux, la somma dei segnali di tutte
+  le stelle fittate (**Forma**), sature comprese, sigma il rumore; a colori F e sigma dalle
+  **Stime per canale** (26.56; prima l'intensita', Marco 28/10/2026). Dal 26.50, come la sua
   fotometria PSF (ImageWeighting par. 2.2, eq. 7-10; `pipeline/psf_fit.py`, `field.photometry`):
   - **Segnale** di una stella: somma di v - B sui pixel con v > B, B il fondo fittato,
     nell'ellisse al decimo della Moffat fittata (semiassi sigma sqrt(10^(1/beta) - 1)) allargata
@@ -186,11 +188,10 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   - Sul banco (tabella sotto) 75 mono su 80 in 0,95-1,05; M51 0,98-1,04, cometa C/2025 A6
     0,87-0,97 (col flusso dei momenti, `psf_flux.py`, ora solo l'ordine dei fit: 0,58-0,63 e
     0,46-0,82). Fuori: Sh2-185 n.2 0,85 (fit 0,944 dei suoi), cometa n.1 e n.4 0,87, VdB 152 n.0 e
-    M42 n.4 1,09. **Colori** 20 volte il suo: lui somma per canale dal grezzo (26.56).
-  Sotto 5 stelle o senza fit tace. Mai fra camere o oggetti.
+    M42 n.4 1,09. **Colori** 0,99 (26.56). Sotto 5 stelle o senza fit tace; mai fra camere.
 - **Statistiche dei pixel** (passo 26.51, `pipeline/pixel_stats.py`, `pipeline/mmt.py`) come Image <!-- software-ok -->
-  Analysis (ImageAnalysis par. 2.1.2, 2.1.4; ImageWeighting par. 2.3-2.5, 2.8), sul piano
-  misurato (a colori l'intensita'), sui pixel in (min + e, max - e), e 1/65535 del fondo scala.
+  Analysis (ImageAnalysis par. 2.1.2, 2.1.4; ImageWeighting par. 2.3-2.5, 2.8), sul piano misurato
+  (a colori l'intensita', il resto per canale), sui pixel in (min + e, max - e), 1/65535 del fondo.
   **Mediana** meno `PEDESTAL` (DN; N.I.N.A. e ASIAIR non lo scrivono); **SkyRate** = mediana /
   `EXPTIME` (lui non lo mette in tabella). **Sigma** 0,990905 sqrt(BWMV), u su 9 MAD. **Entropia**
   a passi di Sigma / 16 meno 4 bit. **NoiseRatio** la quota di pixel dell'MRS. **SNR** eq. 16, i
@@ -262,7 +263,7 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
 
   | Misura | Mono A (35) | Mono B (45) | Colori A (80) | Colori B (45) |
   |---|---|---|---|---|
-  | Stelle | 0,99 [0,96-1,03] | 1,00 [0,96-1,20] | 1,02 [0,99-8,10] | 1,04 [0,99-5,27] |
+  | Stelle (26.48.3) | 0,99 [0,97-1,02] | 1,00 [0,97-1,03] | 0,99 [0,95-1,03] | 0,98 [0,91-1,03] |
   | FWHM (26.49) | 1,00 [0,98-1,01] | 1,00 [0,98-1,01] | 1,00 [0,98-1,04] | 1,01 [0,99-1,04] |
   | Eccentricita' (26.49) | 1,00 [0,99-1,00] | 1,00 [0,99-1,00] | 1,00 [0,99-1,01] | 0,99 [0,97-1,00] |
   | FWHM Sigma (26.49) | 0,99 [0,86-1,08] | 1,02 [0,95-1,06] | 1,04 [0,98-1,13] | 1,04 [0,95-1,11] |
@@ -271,16 +272,16 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | PSFResidual Sigma (26.50) | 0,94 [0,88-1,00] | 0,97 [0,88-1,07] | 1,01 [0,88-1,23] | 0,98 [0,91-1,18] |
   | Fondo / mediana | 1,00 [0,99-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,00] |
   | Rumore | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] |
-  | PSF SNR (26.50) | 0,98 [0,85-0,99] | 1,00 [0,97-1,09] | 19,9 [4,22-33,8] | 21,1 [1,50-33,1] |
-  | PSFFlux (26.50) | 0,99 [0,92-1,00] | 1,00 [0,98-1,05] | 4,01 [1,77-4,82] | 4,16 [1,10-5,15] |
-  | PSFTotalMeanFlux (26.50) | 0,99 [0,95-1,10] | 1,03 [0,99-1,12] | 0,78 [0,14-1,13] | 0,90 [0,26-1,12] |
-  | PSFCount (26.50) | 0,98 [0,94-1,00] | 0,99 [0,96-1,02] | 1,54 [0,13-3,72] | 1,47 [0,24-3,91] |
+  | PSF SNR (26.50, colori 26.56) | 0,98 [0,85-0,99] | 1,00 [0,97-1,09] | 0,99 [0,89-1,06] | 0,99 [0,77-1,16] |
+  | PSFFlux (26.50, 26.56) | 0,99 [0,92-1,00] | 1,00 [0,98-1,05] | 1,00 [0,94-1,03] | 1,00 [0,88-1,08] |
+  | PSFTotalMeanFlux (26.50, 26.56) | 0,99 [0,95-1,10] | 1,03 [0,99-1,12] | 1,02 [0,88-1,09] | 1,00 [0,92-1,02] |
+  | PSFCount (26.50, 26.56) | 0,98 [0,94-1,00] | 0,99 [0,96-1,02] | 0,97 [0,75-1,09] | 0,97 [0,82-1,02] |
   | Mediana, Sigma, Entropia (26.51) | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] |
-  | NoiseRatio (26.51) | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,01 [0,91-1,28] | 0,94 [0,89-1,25] |
-  | SNR (26.51) | 1,00 [0,98-1,01] | 1,00 [0,99-1,01] | 1,32 [1,23-1,74] | 1,17 [0,98-1,33] |
-  | M\* (26.51) | 1,00 [0,96-1,01] | 0,98 [0,96-1,00] | 0,87 [0,82-0,89] | 0,88 [0,85-0,89] |
-  | N\* (26.51) | 1,00 [0,97-1,00] | 0,99 [0,97-1,00] | 0,92 [0,86-0,95] | 0,94 [0,90-0,95] |
-  | PSF Signal Weight (26.51) | 0,99 [0,93-1,10] | 1,04 [0,98-1,15] | 3,98 [0,35-6,22] | 4,96 [0,36-6,48] |
+  | NoiseRatio (26.51, 26.56) | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] |
+  | SNR (26.51, 26.56) | 1,00 [0,98-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,00] | 1,00 [0,99-1,01] |
+  | M\* (26.51, 26.56) | 1,00 [0,96-1,01] | 0,98 [0,96-1,00] | 0,99 [0,97-1,00] | 0,99 [0,98-1,00] |
+  | N\* (26.51, 26.56) | 1,00 [0,97-1,00] | 0,99 [0,97-1,00] | 0,99 [0,98-1,00] | 0,99 [0,98-1,00] |
+  | PSF Signal Weight (26.51, 26.56) | 0,99 [0,93-1,10] | 1,04 [0,98-1,15] | 1,03 [0,85-1,12] | 1,01 [0,84-1,10] |
   | Gradient (26.52) | 1,00 [0,98-1,02] | 1,00 [0,99-1,00] | 1,00 [0,99-1,00] | 1,00 [0,95-1,02] |
   | Row / ColumnBanding (26.52) | 1,00 / 1,00 | 1,00 / 1,00 | 0,99 / 0,99 [0,70-1,21] | 0,99 / 0,98 [0,77-1,45] |
   | FWHMTilt (26.52) | 1,03 [0,84-1,58] | 1,01 [0,90-1,22] | 1,04 [0,93-1,43] | 1,03 [0,87-1,13] |
@@ -290,10 +291,9 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
   | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
 
-  Scarti aperti, ognuno col suo passo: colori 26.56 (lui somma il flusso PSF per canale, noi
-  sull'intensita'; PSFResidual a colori 1,06-1,07; NoiseRatio, SNR, M\*, N\* dai metadati del
-  Debayer, per canale dal grezzo). Tempi: il fit del 26.49 +1 s mono, +2,4 s colori; Sh2-185
-  n.2 (21964 fit) 23,9 s; il 26.51 +2,8 s mono: il tetto di ADR 0042 al 26.57. Il 26.52: +0,86 s
+  Aperto: PSFResidual a colori (26.56, il nostro fit sulle stelle a colori). Tempi: fit del 26.49
+  +1 s mono, +2,4 s colori; 26.56 +7,7-16 s colori; Sh2-185 n.2 (21964 fit) 23,9 s; il 26.51
+  +2,8 s mono: il tetto di ADR 0042 al 26.57. Il 26.52: +0,86 s
   mono (mediane di riga); curvature vicine a zero danno rapporti larghi, scarto entro 0,07.
   Scie: 201 su 205 (sempre zero: 179), 22 dei 26 con scie sue; fuori la Velo, dove lui per
   strisce conta 4-11 scie sui filamenti: le sue 1-2 sono filamenti, il profilo li scarta. +0,5-0,9 s.

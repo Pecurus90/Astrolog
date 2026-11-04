@@ -160,7 +160,7 @@ OUR_STAGES = {
     "rumore MRS": "mrs",
     "statistiche dei pixel": "pixel_stats",
     "fondo MMT": "mstar_nstar",
-    "rumore per piano colore": "_mosaic_noise",
+    "stime per canale colore": "_estimates",
     "gradiente e banding": "_sky_field",
     "scie": "trails",
     "tilt ed elongazione": "_star_field",

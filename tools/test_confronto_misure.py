@@ -264,16 +264,16 @@ def test_the_stage_clock_times_what_measure_frame_calls_and_puts_it_back():
         stars.measure_frame(_frame(False), saturation=65535, pattern=None)
     expected = {"fondo sep", "mediana 3x3", "forma", "fit PSF", "stelle", "rumore MRS"}
     assert expected <= set(seconds)
-    assert "debayer VNG" not in seconds and "rumore per piano colore" not in seconds
+    assert "debayer VNG" not in seconds and "stime per canale colore" not in seconds
     assert all(getattr(stars, name) is fn for name, fn in names.items())
 
 
 def test_a_stage_inside_another_counts_once():
-    """_mosaic_noise calls mrs per plane: that time is the plane noise's, not twice."""
+    """_estimates calls mrs per channel: that time is the channel estimates', not twice."""
     seconds: dict[str, float] = {}
     with stage_clock(seconds):
         stars.measure_frame(_frame(True), saturation=65535, pattern="RGGB")
-    assert {"debayer VNG", "rumore per piano colore", "rumore MRS"} <= set(seconds)
+    assert {"debayer VNG", "stime per canale colore", "rumore MRS"} <= set(seconds)
     alone: dict[str, float] = {}
     with stage_clock(alone):
         stars.mrs(_frame(False))

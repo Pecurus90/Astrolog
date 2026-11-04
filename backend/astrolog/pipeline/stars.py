@@ -1,6 +1,7 @@
 """One frame measured on its pixels (ADR 0022, docs/domini/misure.md): sky, noise, stars on a
 median-filtered copy, HFD and shape on the raw frame. Pure: pixels in, numbers out."""
 
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -12,11 +13,19 @@ from . import transparency
 from .background import banding, gradient, valid_pixels
 from .debayer import COLOURS, debayered
 from .detect import Detections, detect
-from .field import bright_side, elongation, fwhm_tilt, photometry, psf_signal_weight, psf_snr
+from .field import (
+    Photometry,
+    bright_side,
+    elongation,
+    fwhm_tilt,
+    photometry,
+    psf_signal_weight,
+    psf_snr,
+)
 from .median import median3x3
 from .mmt import Background, mstar_nstar
-from .noise import NOISE_FLOOR_ADU, mrs, structure_noise
-from .pixel_stats import pixel_stats, snr
+from .noise import NOISE_FLOOR_ADU, Mrs, mrs, structure_noise
+from .pixel_stats import PixelStats, pixel_stats, snr
 from .psf_fit import Fitted, fit_stars
 from .psf_flux import ring_sky
 from .shape import MIN_STARS, Shape, estimated_fwhm, shape_of
@@ -35,6 +44,17 @@ SUBPIX = 5  # [C sep docs: sum_circle default subpixel sampling]
 # Stars spread over the field, not the brightest: a 3x3 grid, 60 a cell, across the flux ranking.
 GRID = 3  # [P ADR 0022]
 PER_CELL = 60  # [P ADR 0022]
+
+
+@dataclass(frozen=True)
+class Estimates:
+    """Noise and PSF signal Image Analysis reads; a colour frame's from Debayer, per CFA channel
+    off the raw data (ImageAnalysis par. 2.1.4-2.1.5). software-ok"""
+
+    noise: Mrs  # PCL:Noise:Sigmas, Fractions
+    found: Photometry | None  # PCL:Signal:PSFTotalFlux, PSFTotalMeanFlux, PSFCounts
+    mmt: Background | None  # PCL:Noise:MStar, NStar
+    scales: tuple[float, float]  # PCL:Noise:ScaleLow, ScaleHigh
 
 
 @dataclass(frozen=True)
@@ -112,16 +132,18 @@ def measure_frame(
     fits = fit_stars(raw, found.x, found.y, found.box, found.flux)
     chosen = _spread(objects, usable, raw.shape)
     shape = shape_of(images, objects, chosen, first_noise, (fits, len(found.x)))
-    mmt = mstar_nstar(raw)
-    flux = _flux(fits, noise, len(found.x), mmt)
-    pixel = _pixel_values(raw, saturation, pedestal, noise, quiet.ratio)
-    if pattern is not None:  # noise said as WBPP says it
-        noise = max(_mosaic_noise(sensor, pattern), NOISE_FLOOR_ADU)
+    stats = pixel_stats(raw, full_scale=saturation, pedestal=pedestal)
+    if pattern is None:
+        said = Estimates(quiet, photometry(fits), mstar_nstar(raw),
+                         (stats.scale_low_adu, stats.scale_high_adu))  # fmt: skip
+    else:  # each CFA channel's own, as Debayer writes them
+        said = _mid_range([_estimates(plane, saturation) for plane in _channels(sensor, pattern)])
+    noise = max(said.noise.sigma, NOISE_FLOOR_ADU)
     field = _sky_field(raw, saturation, noise, found) | _star_field(fits, raw.shape)
     across = Across(ceiling_adu=saturation, saturated=int(found.saturated.sum()),
-                    gradient_angle_deg=bright_side(back), mstar_adu=mmt.mstar_adu if mmt else None,
-                    nstar_adu=mmt.nstar_adu if mmt else None, ladder=_ladder(raw, found, fits),
-                    **flux, **pixel, **field)  # fmt: skip
+                    gradient_angle_deg=bright_side(back), ladder=_ladder(raw, found, fits),
+                    **_flux(said, noise, len(found.x)), **_pixel_values(stats, said, noise),
+                    **field)  # fmt: skip
     common = {"stars": len(found.x), "kept": len(hfds), "background_adu": float(sky.globalback),
               "noise_adu": noise, "shape": shape} | vars(across)  # fmt: skip
     if len(hfds) < MIN_STARS:
@@ -129,18 +151,20 @@ def measure_frame(
     return Measured(**common, hfd_px=float(np.median(hfds)))
 
 
-def _flux(fits: Fitted, noise: float, stars: int, mmt: Background | None) -> dict[str, Any]:
-    """PSF SNR, PSFFlux, PSFTotalMeanFlux, PSFCount, PSFSignalWeight; on the measured plane's own
-    noise: a colour frame's intensity, as misure.md says. software-ok"""
-    found = photometry(fits)
+def _flux(said: Estimates, noise: float, stars: int) -> dict[str, Any]:
+    """PSF SNR, PSFFlux, PSFTotalMeanFlux, PSFCount, PSFSignalWeight, MStar, NStar from the
+    estimates; `stars` the measured plane's, MIN_STARS. software-ok"""
+    found, mmt = said.found, said.mmt
+    back = {"mstar_adu": mmt.mstar_adu if mmt else None,
+            "nstar_adu": mmt.nstar_adu if mmt else None}  # fmt: skip
     if found is None:
-        return dict.fromkeys(("psf_snr", "psf_flux_adu", "psf_mean_flux_adu", "psf_count",
-                              "psf_signal_weight"))  # fmt: skip
+        return back | dict.fromkeys(("psf_snr", "psf_flux_adu", "psf_mean_flux_adu", "psf_count",
+                                     "psf_signal_weight"))  # fmt: skip
     enough = stars >= MIN_STARS
     weight = psf_signal_weight(found, noise, mmt.mstar_adu) if enough and mmt else None
-    return {"psf_snr": psf_snr(found.flux, noise) if enough else None, "psf_flux_adu": found.flux,
-            "psf_mean_flux_adu": found.mean_flux, "psf_count": found.count,
-            "psf_signal_weight": weight}  # fmt: skip
+    return back | {"psf_snr": psf_snr(found.flux, noise) if enough else None,
+                   "psf_flux_adu": found.flux, "psf_mean_flux_adu": found.mean_flux,
+                   "psf_count": found.count, "psf_signal_weight": weight}  # fmt: skip
 
 
 def _ladder(raw: np.ndarray, found: Detections, fits: Fitted) -> dict[int, float]:
@@ -174,31 +198,66 @@ def _star_field(fits: Fitted, shape: tuple[int, ...]) -> dict[str, Any]:
             "elongation_coherence": along.coherence if along else None}  # fmt: skip
 
 
-def _pixel_values(
-    raw: np.ndarray, ceiling: float, pedestal: float, noise: float, ratio: float
-) -> dict[str, Any]:
-    """ImageAnalysis Median, Sigma, Entropy, NoiseRatio, SNR: the measured plane, its MRS noise."""
-    stats = pixel_stats(raw, full_scale=ceiling, pedestal=pedestal)
+def _pixel_values(stats: PixelStats, said: Estimates, noise: float) -> dict[str, Any]:
+    """ImageAnalysis Median, Sigma, Entropy of the measured plane; NoiseRatio, SNR from the
+    estimates. software-ok"""
     return {"median_adu": stats.median_adu, "sigma_adu": stats.sigma_adu,
-            "entropy_bits": stats.entropy_bits, "noise_ratio": ratio,
-            "snr": snr(stats.scale_low_adu, stats.scale_high_adu, noise)}  # fmt: skip
+            "entropy_bits": stats.entropy_bits, "noise_ratio": said.noise.ratio,
+            "snr": snr(*said.scales, noise)}  # fmt: skip
 
 
 def _sigma(residual: np.ndarray) -> float:
     return sigma_from_mad(float(np.median(np.abs(residual - np.median(residual)))))
 
 
-def _mosaic_noise(data: np.ndarray, pattern: str) -> float:
-    """MRS noise of each colour plane, a channel's samples averaged per 2x2 quad; then
-    (min + max) / 2, the plane SubframeSelector measures (sonde 26.48, pi_plane)."""
+def _channels(data: np.ndarray, pattern: str) -> list[np.ndarray]:
+    """R, G, B planes at half resolution, a channel's samples averaged per 2x2 quad (Debayer's
+    channels: noise 1.000, flux 0.99-1.01 of its properties, sonde 26.56)."""
     rows, cols = data.shape[0] // 2 * 2, data.shape[1] // 2 * 2
     quads = data[:rows, :cols].reshape(rows // 2, 2, cols // 2, 2)
     colours = COLOURS[pattern]
-    sigmas = []
+    planes = []
     for channel in range(3):
         cells = [(r, c) for r in (0, 1) for c in (0, 1) if colours[r][c] == channel]
-        sigmas.append(mrs(np.mean([quads[:, r, :, c] for r, c in cells], axis=0)).sigma)
-    return (min(sigmas) + max(sigmas)) / 2
+        mean = np.mean([quads[:, r, :, c] for r, c in cells], axis=0, dtype=np.float32)
+        planes.append(np.ascontiguousarray(mean))
+    return planes
+
+
+def _estimates(plane: np.ndarray, saturation: float) -> Estimates:
+    """One channel's plane as the mono chain measures it: MRS noise, stars fitted, M* N*, scales."""
+    residual = plane - sep.Background(plane).back()
+    filtered = median3x3(residual)
+    quiet = mrs(plane)
+    noise = max(quiet.sigma, NOISE_FLOOR_ADU)
+    structure = max(structure_noise(filtered), NOISE_FLOOR_ADU)
+    found = detect(residual, filtered, (noise, structure), clip=(plane, saturation),
+                   level=(plane, saturation))  # fmt: skip
+    fits = fit_stars(plane, found.x, found.y, found.box, found.flux)
+    stats = pixel_stats(plane, full_scale=saturation)
+    return Estimates(quiet, photometry(fits), mstar_nstar(plane),
+                     (stats.scale_low_adu, stats.scale_high_adu))  # fmt: skip
+
+
+def _mid_range(channels: list[Estimates]) -> Estimates:
+    """ImageAnalysis par. 2.1: each estimate (min + max) / 2 over the channels; a channel with no
+    fit or no M*, none. PSFCount half up, as his (2079.5 -> 2080, sonde 26.56). software-ok"""
+
+    def mid(values: list[float]) -> float:
+        return (min(values) + max(values)) / 2
+
+    found = [c.found for c in channels if c.found is not None]
+    mmt = [c.mmt for c in channels if c.mmt is not None]
+    psf = None
+    if len(found) == len(channels):
+        count = math.floor(mid([f.count for f in found]) + 0.5)
+        psf = Photometry(mid([f.flux for f in found]), mid([f.mean_flux for f in found]), count)
+    back = None
+    if len(mmt) == len(channels):
+        back = Background(mid([m.mstar_adu for m in mmt]), mid([m.nstar_adu for m in mmt]))
+    noise = Mrs(mid([c.noise.sigma for c in channels]), mid([c.noise.ratio for c in channels]))
+    scales = (mid([c.scales[0] for c in channels]), mid([c.scales[1] for c in channels]))
+    return Estimates(noise, psf, back, scales)
 
 
 def _found(filtered: np.ndarray, noise: float) -> np.ndarray:
