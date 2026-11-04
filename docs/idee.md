@@ -50,3 +50,6 @@ ogni tappa del piano si rilegge: si fa, resta o si cancella; ferma da tre tappe 
 - **Pesi e approvazione dei frame come Image Analysis** (30/10/2026, ADR 0042): le sue espressioni
   di approvazione e di peso con media biweight, Qn e z-score sulla serie, al posto delle nostre
   soglie relative (mediana +- 2,5 Qn); da decidere prima del passo 40.1. <!-- software-ok -->
+- **Estinzione assoluta dal catalogo Gaia** (Marco, 4/11/2026): il punto zero di ogni frame dalle
+  stelle Gaia, come lo SQM, dice k e le nuvole senza finestre di stelle; su M51 0,40 contro il
+  nostro 0,37 (misure.md, Trasparenza). Altri usi: magnitudine limite, colore.

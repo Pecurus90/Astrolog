@@ -307,7 +307,7 @@ secondo meno il minimo (eq. 30), Bouguer (eq. 31) col biweight 4,685 sui soli re
 scala MAD (Holland e Welsch 1977; sola costante sotto 0,05 di massa d'aria, almeno 5 frame);
 la collega il passo 40. **Il flusso e' nostro** (Marco, 4/11/2026): v - B nell'ellisse a 1 FWTM
 (crescita del `PSF` di PJSR), ordine sul flusso misurato; il suo `PSF.flux` non si ritrova dai <!-- software-ok -->
-pixel. Sintetici: trasparenza e cielo x4 entro 0,01 mag; sul vero M51 k 0,37 contro il suo 0,10.
+pixel. Sintetici: trasparenza e cielo x4 entro 0,01 mag; M51 k 0,37, Gaia 0,40, il suo 0,10.
 Aperto: una satura col fit rifiutato non prende rango.
 
 **Lo SQM** (stadio `sqm`, `pipeline/sqm.py` e `star_catalogue.py`, portati dal sorgente di ASTAP,
