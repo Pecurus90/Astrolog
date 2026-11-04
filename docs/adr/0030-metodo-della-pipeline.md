@@ -61,3 +61,6 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
 - **Astropy fuori dalla nuova, una porta** (Marco, 4/11/2026, passo 26.54): header, pixel e
   coordinate si fanno senza astropy (lettore nostro, erfa); Luna e Sole sul frame vengono dalle
   effemeridi dell'app (`ephemeris/frames.py`), una chiamata per sito: una casa sola per la Luna.
+  Misura sulle 205 copie del banco (4/11/2026): valori identici ad astropy (10424 chiavi, pixel
+  al bit, metriche uguali; precessione entro 1e-10"); header 0,09 ms contro 0,29, precessione
+  0,02 ms contro 0,61; pixel 103 ms contro 58 (piu' lenti, al 26.57). Compressi: zero file.
