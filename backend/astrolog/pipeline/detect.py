@@ -69,6 +69,30 @@ def detect(
     """`filtered` the residual's 3x3 median; `noise` MRS and the map's (structure_noise), one for
     both on white noise; `clip` sensor and ceiling, `level` plane and ceiling. One star each."""
     noise, threshold_noise = noise if isinstance(noise, tuple) else (noise, noise)
+    found = structures((residual, filtered), threshold_noise, clip=clip, level=level)
+    return selected(found, (residual, filtered), noise)
+
+
+@dataclass(frozen=True)
+class Structures:
+    """The structure map's labels and what each holds, before the MRS noise: detect's first half."""
+
+    labels: np.ndarray  # 0 sky, 1..count the structures
+    boxes: list[tuple[slice, slice] | None]  # ndimage.find_objects
+    best: np.ndarray  # per label, best 2x2 sum over 2
+    shaped: np.ndarray  # per label: covers, big enough, one peak (or bright)
+    light: tuple[np.ndarray, np.ndarray, np.ndarray]  # per label, median-copy light, x, y moments
+    at_top: np.ndarray | None  # per label, sensor pixels at the ceiling; None unasked
+
+
+def structures(
+    images: tuple[np.ndarray, np.ndarray],
+    threshold_noise: float,
+    clip: tuple[np.ndarray, float] | None = None,
+    level: tuple[np.ndarray, float] | None = None,
+) -> Structures:
+    """`images` residual and its 3x3 median; the rest as detect's."""
+    residual, filtered = images
     found = ndimage.label(structure_map(filtered, threshold_noise), structure=_EIGHT)
     labels, count = cast(tuple[np.ndarray, int], found)  # stubs say int | tuple
     # Structure pixels only: ndimage's per-label max and centre sweep the frame, 1.5 s at 26 MP.
@@ -79,26 +103,37 @@ def detect(
     box *= APERTURE_PX  # 2x2 mean x 2 = sum / 2
     best = np.full(count + 1, -np.inf)
     np.maximum.at(best, owner, box[rows, cols])
-    star = (best >= PREFILTER_SNR * noise) & (_coverage(owner, boxes, count) >= MIN_COVERAGE)
-    star &= np.bincount(owner, minlength=count + 1) >= MIN_PIXELS
+    shaped = _coverage(owner, boxes, count) >= MIN_COVERAGE
+    shaped &= np.bincount(owner, minlength=count + 1) >= MIN_PIXELS
     bright = np.zeros(count + 1, dtype=bool)
     if level is not None:
         plane, top = level
         bright = np.bincount(owner, plane[rows, cols] > BRIGHT_LEVEL * top, count + 1) > 0
-    star &= bright | (_peaks(residual, labels, (rows, cols), count) <= 1)
-    star &= _over_local_sky(residual, labels, boxes, (best, star), noise)
+    shaped &= bright | (_peaks(residual, labels, (rows, cols), count) <= 1)
     # Barycentre on the median copy's light: on a dark residual a structure pixel can sit at or
     # under zero, and a structure with none above has no position.
     weight = np.maximum(filtered[rows, cols].astype(float), 0.0)
-    star &= np.bincount(owner, weight, count + 1) > 0
-    total = np.bincount(owner, weight, count + 1)[star]
-    x = np.bincount(owner, weight * cols, count + 1)[star] / total
-    y = np.bincount(owner, weight * rows, count + 1)[star] / total
-    saturated = np.zeros(len(x), dtype=bool)
+    light = tuple(np.bincount(owner, w, count + 1) for w in (weight, weight * cols, weight * rows))
+    at_top = None
     if clip is not None:
         sensor, top = clip
-        at_top = np.bincount(owner, sensor[rows, cols] >= top, count + 1)[star]
-        saturated = at_top >= CLIPPED_PIXELS
+        at_top = np.bincount(owner, sensor[rows, cols] >= top, count + 1)
+    return Structures(labels, boxes, best, shaped,
+                      cast(tuple[np.ndarray, np.ndarray, np.ndarray], light), at_top)  # fmt: skip
+
+
+def selected(found: Structures, images: tuple[np.ndarray, np.ndarray], noise: float) -> Detections:
+    """detect's second half: the structures over PREFILTER_SNR and APERTURE_SNR of `noise`."""
+    residual, filtered = images
+    labels, boxes, best = found.labels, found.boxes, found.best
+    total, moment_x, moment_y = found.light
+    star = (best >= PREFILTER_SNR * noise) & found.shaped
+    star &= _over_local_sky(residual, labels, boxes, (best, star), noise)
+    star &= total > 0
+    x, y = moment_x[star] / total[star], moment_y[star] / total[star]
+    saturated = np.zeros(len(x), dtype=bool)
+    if found.at_top is not None:
+        saturated = found.at_top[star] >= CLIPPED_PIXELS
     index = np.cumsum(star) - 1  # label to star number
     # Flux ellipse from the star grown FLUX_GROW px: its structure stops short of the wings. A grown
     # sky pixel goes to the nearest star, square distance as the dilation's; no structure's pixel.

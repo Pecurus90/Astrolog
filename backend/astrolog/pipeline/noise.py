@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..units import sigma_from_mad
-from .cores import MIN_STRIP_ROWS, compiled, in_parts, inlined, median
+from .cores import MIN_STRIP_ROWS, compiled, in_parts, inlined, maximum, median
 
 B3 = np.array([1, 4, 6, 4, 1]) / 16  # [C Starck & Murtagh, starlet B3 spline kernel]
 LAYERS = 4  # [C PixInsight ImageWeighting par. 3.1.2: the first four wavelet layers; software-ok]
@@ -163,10 +163,35 @@ def mrs(image: np.ndarray) -> Mrs:
     planes, smooth = starlet(image, LAYERS)
     first = planes[0]
     sigma = sigma_from_mad(median(np.abs(first - median(first)))) / UNIT_SIGMAS[0]
-    strongest = np.abs(planes.pop(0)) / UNIT_SIGMAS[0]  # layer by layer: one plane at a time
-    for unit in UNIT_SIGMAS[1:]:
-        np.maximum(strongest, np.abs(planes.pop(0)) / unit, out=strongest)
-    detail = np.asarray(image, dtype=np.float32) - smooth
-    del smooth
+    strongest, detail = _key_and_detail(image, planes, smooth)
+    del planes, smooth  # 26 MP planes are 100 MB each
     sigma, used = _fixed_point(sigma, detail, strongest)
     return Mrs(sigma / BIAS, used / detail.size)
+
+
+def _key_and_detail(
+    image: np.ndarray, planes: list[np.ndarray], smooth: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Flat: each pixel's largest |w_j| / sigma_j, and I - c_p, on all cores (_support)."""
+    images = (np.ascontiguousarray(image, dtype=np.float32).ravel(), smooth.ravel())
+    layers = tuple(p.ravel() for p in planes)
+    size = images[0].size
+    strongest, detail = np.empty(size), np.empty(size, dtype=np.float32)
+    in_parts(lambda a, b: _support(layers, UNIT_SIGMAS, images, (a, b), (strongest, detail)), size)
+    return strongest, detail
+
+
+@compiled
+def _support(layers: tuple[np.ndarray, ...], units: np.ndarray,
+             images: tuple[np.ndarray, np.ndarray], span: tuple[int, int],
+             out: tuple[np.ndarray, np.ndarray]) -> None:  # fmt: skip
+    """On `span`: each pixel's largest |w_j| / sigma_j over the layers, in float64 as numpy's
+    float32 / float64; and the image less the smooth plane, in float32."""
+    image, smooth = images
+    strongest, detail = out
+    for i in range(*span):
+        top = abs(np.float64(layers[0][i])) / units[0]
+        for j in range(1, len(layers)):
+            top = maximum(top, abs(np.float64(layers[j][i])) / units[j])
+        strongest[i] = top
+        detail[i] = image[i] - smooth[i]

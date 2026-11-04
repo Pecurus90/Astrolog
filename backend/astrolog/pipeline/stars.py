@@ -15,7 +15,7 @@ from . import transparency
 from .background import banding, gradient, valid_pixels
 from .cores import in_process, median, side_by_side, started
 from .debayer import COLOURS, debayered
-from .detect import Detections, detect
+from .detect import Detections, Structures, detect, selected, structures
 from .field import (
     Photometry,
     bright_side,
@@ -123,12 +123,15 @@ def measure_frame(
         channels = partial(_by_channel, sensor, pattern, saturation)
     extra = started(channels)
 
-    def sky_then_sep() -> tuple[_Sky, Callable[[], _SepStars]]:  # the stars need no sep's
+    def sky_then_stars() -> tuple[_Sky, Callable[[], _SepStars], Callable[[], Structures]]:
+        # sep's stars and the structures need no MRS noise: both start on the sky
         sky = _first_pass(raw)
-        return sky, started(lambda: _sep_stars(sky, sensor, saturation))
+        return (sky, started(lambda: _sep_stars(sky, sensor, saturation)),
+                started(lambda: structures(sky.images, sky.structure, clip=(sensor, saturation),
+                                           level=(raw, saturation))))  # fmt: skip
 
-    (first, sep_found), quiet, stats = side_by_side(
-        sky_then_sep, lambda: mrs(raw),
+    (first, sep_found, shapes), quiet, stats = side_by_side(
+        sky_then_stars, lambda: mrs(raw),
         lambda: pixel_stats(raw, full_scale=saturation, pedestal=pedestal))  # fmt: skip
 
     def written() -> float:
@@ -137,7 +140,7 @@ def measure_frame(
 
     valid = valid_pixels(raw, saturation)
     (found, fits, crossed), sky_field = side_by_side(
-        lambda: _stars(raw, (sensor, saturation), quiet, (first, valid)),
+        lambda: _stars(raw, quiet, (first, shapes()), valid),
         lambda: _sky_field(raw, valid, written()))  # fmt: skip
     noise = written()
     seen = sep_found()
@@ -225,13 +228,12 @@ def _ladder(raw: np.ndarray, found: Detections, fits: Fitted) -> dict[int, float
 
 
 def _stars(
-    raw: np.ndarray, clip: tuple[np.ndarray, float], quiet: Mrs, on: tuple["_Sky", np.ndarray]
+    raw: np.ndarray, quiet: Mrs, on: tuple["_Sky", Structures], valid: np.ndarray
 ) -> tuple[Detections, Fitted, int]:
-    """Image Analysis's stars on the MRS noise, fitted on the plane with its sky: the sampling
-    region's median needs the level (psf_fit.py); Trails off them on `on`'s valid. software-ok"""
-    first, valid = on
-    noise = max(quiet.sigma, NOISE_FLOOR_ADU)
-    found = detect(*first.images, (noise, first.structure), clip=clip, level=(raw, clip[1]))
+    """Image Analysis's stars on the MRS noise, fitted on the plane with its sky (the sampling
+    region's median needs the level, psf_fit.py); Trails on `valid`. software-ok"""
+    first, shapes = on
+    found = selected(shapes, first.images, max(quiet.sigma, NOISE_FLOOR_ADU))
     fits, crossed = side_by_side(lambda: fit_stars(raw, found.x, found.y, found.box, found.flux),
                                  lambda: trails(raw, valid, found))  # fmt: skip
     return found, fits, crossed
