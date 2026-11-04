@@ -149,8 +149,9 @@ def selected(found: Structures, images: tuple[np.ndarray, np.ndarray], noise: fl
     owner = np.asarray(kept[rows, cols], dtype=np.intp)
     mine = star[owner]
     pixels = (rows[mine], cols[mine], index[owner[mine]])
-    spans = [boxes[k - 1] for k in np.flatnonzero(star)]
-    box = np.array([(b[1].start, b[1].stop, b[0].start, b[0].stop) for b in spans], dtype=np.intp)
+    none = (slice(0, 0), slice(0, 0))  # never: a star has pixels
+    spans = [boxes[k - 1] or none for k in np.flatnonzero(star)]
+    box = np.array([(c.start, c.stop, r.start, r.stop) for r, c in spans], dtype=np.intp)
     box = box.reshape(-1, 4)
     return Detections(x, y, saturated, tenth_flux((residual, filtered), pixels, (x, y)), box)
 
