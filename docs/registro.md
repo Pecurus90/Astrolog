@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 318; senza fonte: 1.
-Fonti: C norma: 165; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T tecnico: 79.
+Valori: 319; senza fonte: 1.
+Fonti: C norma: 166; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T tecnico: 79.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -336,6 +336,7 @@ Fonti: C norma: 165; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T
 | TOLERANCE | `1e-4` | T |
 | MAX_ROUNDS | `20` | T |
 | NOISE_FLOOR_ADU | `0.2887` | D uniform quantization noise, step/sqrt(12) |
+| TAPS | `(np.float32(B3[0]), np.float32(B3[1]), np.float32(B3[2]))` | C Starck & Murtagh, B3 |
 | MEDIAN_LAYER2_GAIN | `0.1492` | M plan 26.48.2: 3x3 median of Gaussian noise, 4 x 4 MP, +-0.0001 |
 
 ### pipeline/pixel_stats.py

@@ -28,6 +28,9 @@ dependencies = [
                              #         aarch64 compresa, la ragione per cui photutils e' fuori)
   "scipy>=1.18.1",             # BSD-3 - il fit di Moffat della forma delle stelle (ADR 0022
                              #         punto 4, Levenberg-Marquardt; ruote per tutte e cinque)
+  "numba>=0.68.1",             # BSD-2 - i cicli caldi di measure compilati (piano 26.57, Marco
+                             #         4/11: non piu' lenti di Image Analysis; con llvmlite,
+                             #         BSD-2, ~150 MB; ruote per tutte e cinque)
 ]
 
 [project.optional-dependencies]

@@ -2,16 +2,19 @@
 local filter on threads, per-star work in processes on shared pixels. Same numbers as one core."""
 
 import atexit
+import math
 import multiprocessing
 import os
 import sys
 import threading
 from collections.abc import Callable, Sequence
 from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
+from functools import partial
 from multiprocessing import shared_memory
 from multiprocessing.process import BaseProcess
 from typing import Any
 
+import numba  # pyright: ignore[reportMissingTypeStubs] -- no stubs
 import numpy as np
 
 from .capacity import physical_cores
@@ -61,13 +64,39 @@ def by_strips(fn: Callable[[np.ndarray], np.ndarray], image: np.ndarray, margin:
     return np.concatenate(side_by_side(*(lambda k=k: strip(k) for k in range(count))))
 
 
+def compiled(fn: Callable[..., Any]) -> Callable[..., Any]:
+    """`fn` compiled to machine code, serial and off the GIL: our threads spread it (in_parts,
+    by_strips), no numba threading layer (Mac has no OpenMP). Cached on disk after the first."""
+    return numba.njit(cache=True, nogil=True)(fn)
+
+
+def in_parts(
+    fn: Callable[[int, int], Any], size: int, least: int = MIN_PARALLEL_VALUES
+) -> list[Any]:
+    """`fn(start, stop)` on CORES slices of range(size), `least` long at least, side by side,
+    results in order."""
+    count = max(1, min(CORES, size // least))
+    edges = np.linspace(0, size, count + 1).astype(int)
+    return side_by_side(*(partial(fn, int(edges[k]), int(edges[k + 1])) for k in range(count)))
+
+
 def median(values: np.ndarray) -> float:
     """float(np.median(values)), the same value: a sample brackets the middle, the cores count
     under it and gather between, a small partition ends it; NaN or a miss, np.median's own."""
     flat = values.ravel()
+    if flat.size < MIN_PARALLEL_VALUES:
+        return float(np.median(flat))
+    low, high = middle(flat)
+    return low if flat.size % 2 else float(np.mean(np.array([low, high], dtype=flat.dtype)))
+
+
+def middle(values: np.ndarray) -> tuple[float, float]:
+    """The two values at the middle ranks (n - 1) // 2 and n // 2, the same for odd n; NaN,
+    np.median's."""
+    flat = values.ravel()
     n = flat.size
     if n < MIN_PARALLEL_VALUES:
-        return float(np.median(flat))
+        return _middle_sorted(flat)
     sample = np.sort(flat[:: max(1, n // MEDIAN_SAMPLE)])
     ranks = ((n - 1) // 2, n // 2)
     spread = MEDIAN_SAMPLE_SIGMAS * np.sqrt(sample.size) / 2 + 1  # binomial sd at the middle
@@ -80,9 +109,21 @@ def median(values: np.ndarray) -> float:
     over = sum(t[2] for t in tallies)
     first, last = ranks[0] - under, ranks[1] - under
     if under + inside.size + over != n or first < 0 or last >= inside.size:
-        return float(np.median(flat))
-    middle = np.partition(inside, (first, last))[[first, last]]
-    return float(middle[0]) if n % 2 else float(np.mean(middle))
+        return _middle_sorted(flat)
+    pair = np.partition(inside, (first, last))
+    return float(pair[first]), float(pair[last])
+
+
+def _middle_sorted(flat: np.ndarray) -> tuple[float, float]:
+    """One partition, as np.median: a NaN sorts last and makes both NaN."""
+    n = flat.size
+    if n == 0:
+        return math.nan, math.nan
+    ranks = ((n - 1) // 2, n // 2)
+    part = np.partition(flat, (*ranks, n - 1))
+    if part.dtype.kind in "fc" and np.isnan(part[-1]):
+        return math.nan, math.nan
+    return float(part[ranks[0]]), float(part[ranks[1]])
 
 
 def _bracketed(part: np.ndarray, lo: float, hi: float) -> tuple[int, np.ndarray, int]:

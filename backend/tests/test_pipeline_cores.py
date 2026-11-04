@@ -13,7 +13,7 @@ from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
 from astrolog import __main__ as entry
 from astrolog.pipeline import cores, psf_fit
-from astrolog.pipeline.median import _median3x3, median3x3
+from astrolog.pipeline.median import median3x3
 from astrolog.pipeline.psf_fit import fit_stars
 
 _RNG = np.random.default_rng(57)
@@ -38,7 +38,6 @@ def test_each_keeps_the_order() -> None:
     [
         (lambda a: ndimage.gaussian_filter(a, 5.27, mode="mirror", truncate=16 / 5.27), 16),
         (lambda a: ndimage.maximum_filter(a, 5, mode="constant", cval=-np.inf), 2),
-        (_median3x3, 1),
     ],
 )
 def test_a_filter_by_strips_is_the_filter_on_the_whole_frame(fn, halo, monkeypatch) -> None:
@@ -54,14 +53,21 @@ def test_strips_without_their_halo_differ_so_the_check_above_sees_a_seam(monkeyp
     assert not np.array_equal(cores.by_strips(blur, image, 4), blur(image))
 
 
-def test_the_3x3_median_goes_by_strips_on_a_tall_frame(monkeypatch) -> None:
+def test_the_3x3_median_goes_by_parts_on_a_tall_frame(monkeypatch) -> None:
+    """Each part reads the rows past its own: no seam, the edge pixel repeated at the border."""
     monkeypatch.setattr(cores, "CORES", 4)
     calls = []
     real = cores.side_by_side
     monkeypatch.setattr(cores, "side_by_side", lambda *c: (calls.append(len(c)), real(*c))[1])
     image = _frame()
-    assert np.array_equal(median3x3(image), _median3x3(image))
+    whole = ndimage.median_filter(image, size=3, mode="nearest")
+    assert np.array_equal(median3x3(image), whole)
     assert calls == [4]
+
+
+def test_the_3x3_median_reads_big_endian_pixels_as_fits_holds_them() -> None:
+    image = _frame(40, 30)
+    assert np.array_equal(median3x3(image.astype(">f4")), median3x3(image))
 
 
 @pytest.mark.parametrize(

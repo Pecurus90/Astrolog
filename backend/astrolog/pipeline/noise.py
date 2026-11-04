@@ -1,13 +1,13 @@
 """The frame's noise by the multiresolution support (Starck & Murtagh 1998, PASP 110:193; as
 PixInsight ImageWeighting par. 2.4, 3.1.2: software-ok). Pure: pixels in, a sigma out."""
 
-from collections.abc import Callable
+import math
 from dataclasses import dataclass
 
 import numpy as np
 
 from ..units import sigma_from_mad
-from .cores import by_strips, median
+from .cores import MIN_STRIP_ROWS, compiled, in_parts, median
 
 B3 = np.array([1, 4, 6, 4, 1]) / 16  # [C Starck & Murtagh, starlet B3 spline kernel]
 LAYERS = 4  # [C PixInsight ImageWeighting par. 3.1.2: the first four wavelet layers; software-ok]
@@ -22,34 +22,68 @@ NOISE_FLOOR_ADU = 0.2887
 
 def starlet(image: np.ndarray, layers: int) -> tuple[list[np.ndarray], np.ndarray]:
     """A trous B3 transform, borders mirrored: w_j = c_{j-1} - c_j, the kernel's taps 2^j apart."""
-    planes, smooth = [], np.asarray(image, dtype=np.float32)
+    planes, smooth = [], np.ascontiguousarray(image, dtype=np.float32)
     for j in range(layers):
-        coarser = _smoother(smooth, j)
-        planes.append(smooth - coarser)
+        coarser, plane = _smoother(smooth, 2**j)
+        planes.append(plane)
         smooth = coarser
     return planes, smooth
 
 
-def _smoother(smooth: np.ndarray, j: int) -> np.ndarray:
-    return by_strips(lambda rows: _taps(_taps(rows, 2**j, 0), 2**j, 1), smooth, 2 ** (j + 1))
+def _smoother(smooth: np.ndarray, step: int) -> tuple[np.ndarray, np.ndarray]:
+    """B3 down the columns, then along the rows; and smooth less it, the layer."""
+    across, coarser, plane = (np.empty_like(smooth) for _ in range(3))
+    rows = smooth.shape[0]
+    in_parts(lambda a, b: _down(smooth, step, (a, b), across, TAPS), rows, least=MIN_STRIP_ROWS)
+    in_parts(lambda a, b: _along(across, step, (a, b), (smooth, coarser, plane), TAPS), rows,
+             least=MIN_STRIP_ROWS)  # fmt: skip
+    return coarser, plane
 
 
-def _taps(image: np.ndarray, step: int, axis: int) -> np.ndarray:
-    """B3 along one axis, its five taps `step` apart: the zeros between them never multiplied.
-    Borders mirrored without repeating the edge, as ndimage's mirror."""
-    reach, size = 2 * step, image.shape[axis]
-    padded = np.pad(image, [(reach, reach) if a == axis else (0, 0) for a in (0, 1)], "reflect")
+# B3's three distinct taps in float32: the sums as numpy's on float32 planes, to the bit.
+TAPS = (np.float32(B3[0]), np.float32(B3[1]), np.float32(B3[2]))  # [C Starck & Murtagh, B3]
 
-    def shifted(offset: int) -> np.ndarray:
-        window = [slice(None), slice(None)]
-        window[axis] = slice(reach + offset, reach + offset + size)
-        return padded[tuple(window)]
 
-    out = shifted(-reach) + shifted(reach)
-    out *= np.float32(B3[0])
-    out += (shifted(-step) + shifted(step)) * np.float32(B3[1])
-    out += shifted(0) * np.float32(B3[2])
-    return out
+@compiled
+def _mirror(i: int, size: int) -> int:
+    """Index reflected without repeating the edge (numpy pad 'reflect', ndimage 'mirror')."""
+    if size == 1:
+        return 0
+    while i < 0 or i >= size:
+        i = -i if i < 0 else 2 * (size - 1) - i
+    return i
+
+
+@compiled
+def _down(image: np.ndarray, step: int, span: tuple[int, int], out: np.ndarray,
+          taps: tuple[np.float32, np.float32, np.float32]) -> None:  # fmt: skip
+    """B3 along axis 0 on the rows of `span`, its five taps `step` apart."""
+    rows, cols = image.shape
+    for r in range(*span):
+        r0, r1 = _mirror(r - 2 * step, rows), _mirror(r - step, rows)
+        r3, r4 = _mirror(r + step, rows), _mirror(r + 2 * step, rows)
+        for c in range(cols):
+            value = (image[r0, c] + image[r4, c]) * taps[0]
+            value += (image[r1, c] + image[r3, c]) * taps[1]
+            out[r, c] = value + image[r, c] * taps[2]
+
+
+@compiled
+def _along(image: np.ndarray, step: int, span: tuple[int, int],
+           out: tuple[np.ndarray, np.ndarray, np.ndarray],
+           taps: tuple[np.float32, np.float32, np.float32]) -> None:  # fmt: skip
+    """B3 along axis 1 on the rows of `span` into out[1]; out[0] less it into out[2]."""
+    smooth, coarser, plane = out
+    cols = image.shape[1]
+    for r in range(*span):
+        for c in range(cols):
+            c0, c1 = _mirror(c - 2 * step, cols), _mirror(c - step, cols)
+            c3, c4 = _mirror(c + step, cols), _mirror(c + 2 * step, cols)
+            value = (image[r, c0] + image[r, c4]) * taps[0]
+            value += (image[r, c1] + image[r, c3]) * taps[1]
+            value = value + image[r, c] * taps[2]
+            coarser[r, c] = value
+            plane[r, c] = smooth[r, c] - value
 
 
 def _unit_sigmas(layers: int) -> np.ndarray:
@@ -75,26 +109,46 @@ def structure_noise(filtered: np.ndarray) -> float:
     his threshold over it and over MRS on 21 frames: misure.md, Stelle)."""
     layer = starlet(filtered, 2)[0][1].ravel()
     centre = median(layer)
-    start = sigma_from_mad(median(np.abs(layer - centre)))
     away = np.abs(layer - centre)
-    sigma, _ = _fixed_point(start, lambda sigma: layer[away < K_SIGMA * sigma])
+    start = sigma_from_mad(median(away))
+    sigma, _ = _fixed_point(start, layer, away)
     return sigma / MEDIAN_LAYER2_GAIN
 
 
-def _fixed_point(sigma: float, quiet_of: Callable[[float], np.ndarray]) -> tuple[float, int]:
-    """Std of the pixels quiet at k sigma, again on the new sigma, until it settles; and how
-    many pixels the last one took."""
+def _fixed_point(sigma: float, values: np.ndarray, key: np.ndarray) -> tuple[float, int]:
+    """Std of the values whose key is under k sigma, again on the new sigma, until it settles;
+    and how many values the last one took. Summed in float64 (np.std of float32: float32)."""
     used = 0
+    flat, keys = values.ravel(), key.ravel()
     for _ in range(MAX_ROUNDS):
-        quiet = quiet_of(sigma)
-        if quiet.size < 2:
+        under = key.dtype.type(K_SIGMA * sigma)  # compared in the key's type, as numpy's
+        sums = in_parts(lambda a, b, u=under: _quiet(flat, keys, u, (a, b), math.nan), flat.size)
+        count = sum(s[0] for s in sums)
+        if count < 2:
             break
-        new, used = float(np.std(quiet)), quiet.size
+        mean = math.fsum(s[1] for s in sums) / count
+        sums = in_parts(lambda a, b, u=under, m=mean: _quiet(flat, keys, u, (a, b), m), flat.size)
+        new, used = math.sqrt(math.fsum(s[2] for s in sums) / count), count
         settled = abs(new - sigma) <= TOLERANCE * new
         sigma = new
         if settled:
             break
     return sigma, used
+
+
+@compiled
+def _quiet(values: np.ndarray, key: np.ndarray, under: float, span: tuple[int, int],
+           mean: float) -> tuple[int, float, float]:  # fmt: skip
+    """Count, sum and squares about `mean` (NaN: skipped) of the values in `span` keyed under."""
+    count, total, squares = 0, 0.0, 0.0
+    for i in range(*span):
+        if key[i] < under:
+            v = float(values[i])
+            count += 1
+            total += v
+            if mean == mean:
+                squares += (v - mean) ** 2
+    return count, total, squares
 
 
 @dataclass(frozen=True)
@@ -114,5 +168,5 @@ def mrs(image: np.ndarray) -> Mrs:
         np.maximum(strongest, np.abs(planes.pop(0)) / unit, out=strongest)
     detail = np.asarray(image, dtype=np.float32) - smooth
     del smooth
-    sigma, used = _fixed_point(sigma, lambda s: detail[strongest < K_SIGMA * s])
+    sigma, used = _fixed_point(sigma, detail, strongest)
     return Mrs(sigma / BIAS, used / detail.size)
