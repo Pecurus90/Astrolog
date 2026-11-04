@@ -8,7 +8,7 @@ import os
 import sys
 import threading
 from collections.abc import Callable, Sequence
-from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import Executor, Future, ProcessPoolExecutor, ThreadPoolExecutor
 from functools import partial
 from multiprocessing import shared_memory
 from multiprocessing.process import BaseProcess
@@ -37,6 +37,21 @@ def side_by_side(*calls: Callable[[], Any]) -> list[Any]:
         return [call() for call in calls]
     with ThreadPoolExecutor(len(calls)) as threads:
         return [f.result() for f in [threads.submit(call) for call in calls]]
+
+
+def started(call: Callable[[], Any]) -> Callable[[], Any]:
+    """`call` begun now on its own thread; the function returned waits for its result, and
+    raises its exception."""
+    done: Future[Any] = Future()
+
+    def run() -> None:
+        try:
+            done.set_result(call())
+        except BaseException as error:  # noqa: BLE001 -- handed to whoever waits
+            done.set_exception(error)
+
+    threading.Thread(target=run, daemon=True).start()
+    return done.result
 
 
 def each(fn: Callable[[Any], Any], items: Sequence[Any]) -> list[Any]:

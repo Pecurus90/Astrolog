@@ -12,7 +12,7 @@ import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 from ..units import sigma_from_mad
 from . import transparency
 from .background import banding, gradient, valid_pixels
-from .cores import median, side_by_side
+from .cores import median, side_by_side, started
 from .debayer import COLOURS, debayered
 from .detect import Detections, detect
 from .field import (
@@ -115,26 +115,32 @@ def measure_frame(
     ceiling (ADR 0041), debayer clips there. `pedestal`: DN, off the median only (eq. 8)."""
     sensor = np.ascontiguousarray(data, dtype=np.float32)  # a clipped sensor pixel, colour too
     raw = sensor if pattern is None else debayered(sensor, pattern, top=saturation)
-    # each CFA channel's own, as Debayer writes them; mono's M* beside the rest (cores.py)
+    # each CFA channel's own, as Debayer writes them; mono's M* beside the rest (cores.py). The
+    # stars never wait for them: only the noise written does.
     channels = partial(mstar_nstar, raw)
     if pattern is not None:
         channels = partial(_by_channel, sensor, pattern, saturation)
-    first, quiet, stats, extra = side_by_side(
+    extra = started(channels)
+    first, quiet, stats = side_by_side(
         lambda: _first_pass(raw, sensor, saturation), lambda: mrs(raw),
-        lambda: pixel_stats(raw, full_scale=saturation, pedestal=pedestal), channels)  # fmt: skip
-    # MRS, not the first pass: crowded fields lift a MAD (40k synthetic stars: 19.8 for 10)
-    noise = max((quiet if pattern is None else extra.noise).sigma, NOISE_FLOOR_ADU)  # the written
+        lambda: pixel_stats(raw, full_scale=saturation, pedestal=pedestal))  # fmt: skip
+
+    def written() -> float:
+        # MRS, not the first pass: crowded fields lift a MAD (40k synthetic stars: 19.8 for 10)
+        return max((quiet if pattern is None else extra().noise).sigma, NOISE_FLOOR_ADU)
+
     valid = valid_pixels(raw, saturation)
     (found, fits, crossed), sky_field = side_by_side(
         lambda: _stars(raw, (sensor, saturation), quiet, (first, valid)),
-        lambda: _sky_field(raw, valid, noise))  # fmt: skip
+        lambda: _sky_field(raw, valid, written()))  # fmt: skip
+    noise = written()
     chosen = _spread(first.objects, first.usable, raw.shape)
     shape, star_field, ladder, found_flux = side_by_side(
         lambda: shape_of(first.images, first.objects, chosen, first.noise, (fits, len(found.x))),
         lambda: _star_field(fits, raw.shape), lambda: _ladder(raw, found, fits),
         lambda: photometry(fits) if pattern is None else None)  # fmt: skip
-    said = extra if pattern is not None else Estimates(
-        quiet, found_flux, extra, (stats.scale_low_adu, stats.scale_high_adu))  # fmt: skip
+    said = extra() if pattern is not None else Estimates(
+        quiet, found_flux, extra(), (stats.scale_low_adu, stats.scale_high_adu))  # fmt: skip
     sky_field["trails"] = crossed
     across = Across(ceiling_adu=saturation, saturated=int(found.saturated.sum()),
                     gradient_angle_deg=bright_side(first.back), ladder=ladder,
@@ -261,7 +267,9 @@ def _channels(data: np.ndarray, pattern: str) -> list[np.ndarray]:
 
 
 def _estimates(plane: np.ndarray, saturation: float) -> Estimates:
-    """One channel's plane as the mono chain measures it: MRS noise, stars fitted, M* N*, scales."""
+    """One channel's plane as the mono chain measures it: MRS noise, stars fitted, M* N*, scales;
+    M* N* and scales beside the stars."""
+    aside = started(lambda: (mstar_nstar(plane), pixel_stats(plane, full_scale=saturation)))
     residual = plane - sep.Background(plane).back()
     filtered = median3x3(residual)
     quiet = mrs(plane)
@@ -270,8 +278,8 @@ def _estimates(plane: np.ndarray, saturation: float) -> Estimates:
     found = detect(residual, filtered, (noise, structure), clip=(plane, saturation),
                    level=(plane, saturation))  # fmt: skip
     fits = fit_stars(plane, found.x, found.y, found.box, found.flux)
-    stats = pixel_stats(plane, full_scale=saturation)
-    return Estimates(quiet, photometry(fits), mstar_nstar(plane),
+    mmt, stats = aside()
+    return Estimates(quiet, photometry(fits), mmt,
                      (stats.scale_low_adu, stats.scale_high_adu))  # fmt: skip
 
 
