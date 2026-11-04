@@ -158,6 +158,15 @@ class _Unused(_Broken):
         pytest.fail("no work to the processes without the memory")
 
 
+def test_the_median_in_place_is_numpys_to_the_bit() -> None:
+    for n in (1, 2, 3, 4, 7, 64, 513, 2900):
+        values = _RNG.normal(0, 10, n).astype(np.float32)
+        values[: n // 3] = values[0]  # ties
+        assert cores.median_in_place(values.copy()) == np.float32(np.median(values))
+    assert np.isnan(cores.median_in_place(np.empty(0, np.float32)))
+    assert np.isnan(cores.median_in_place(np.array([1, np.nan, 2], np.float32)))
+
+
 def test_started_hands_back_its_result_and_raises_what_it_raised() -> None:
     gate = threading.Event()
     later = cores.started(lambda: gate.wait(5) and 7)

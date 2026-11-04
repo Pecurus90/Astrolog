@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 319; senza fonte: 1.
-Fonti: C norma: 166; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T tecnico: 79.
+Valori: 320; senza fonte: 1.
+Fonti: C norma: 166; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T tecnico: 80.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -240,6 +240,7 @@ Fonti: C norma: 166; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T
 |---|---|---|
 | MIN_STRIP_ROWS | `256` | T |
 | MIN_PARALLEL_VALUES | `1_000_000` | T |
+| STARS_A_CORE | `500` | T |
 | MEDIAN_SAMPLE | `100_000` | T |
 | MEDIAN_SAMPLE_SIGMAS | `6.0` | T |
 

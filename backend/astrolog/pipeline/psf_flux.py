@@ -6,6 +6,8 @@ import math
 import numpy as np
 import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 
+from .cores import STARS_A_CORE, compiled, in_parts, median_in_place
+
 TENTH = 0.1  # [C PixInsight ImageWeighting par. 2.2: the PSF over a tenth of its peak; software-ok]
 TENTH_RADIUS = math.sqrt(2 * math.log(1 / TENTH))  # [D Gaussian: exp(-r^2 / 2) = TENTH]
 MIN_AXIS_PX = 0.5  # [D a pixel's own half-width] a lone bright pixel: sep needs axes over 0
@@ -22,16 +24,41 @@ def ring_sky(
     outer: np.ndarray | None = None,
 ) -> np.ndarray:
     """Median of the pixels between `inner` and `outer` (RING_OUTER times inner if not given)."""
-    rows, cols = filtered.shape
-    far_all = inner * RING_OUTER if outer is None else outer
-    sky = np.empty(len(inner))
-    for i, (x, y, near, far) in enumerate(zip(*centres, inner, far_all, strict=True)):
+    far = inner * RING_OUTER if outer is None else outer
+    x, y = (np.asarray(c, dtype=np.float64) for c in centres)
+    image, sky = np.ascontiguousarray(filtered), np.empty(len(x))
+    radii = (np.asarray(inner, np.float64), np.asarray(far, np.float64))
+    in_parts(lambda a, b: _rings(image, (x, y), radii, (a, b), sky), len(x), least=STARS_A_CORE)
+    return sky
+
+
+@compiled
+def _rings(
+    image: np.ndarray,
+    centres: tuple[np.ndarray, np.ndarray],
+    radii: tuple[np.ndarray, np.ndarray],
+    span: tuple[int, int],
+    sky: np.ndarray,
+) -> None:
+    """The stars of `span`: median of the pixels whose distance from the centre is in [inner,
+    outer), into `sky`; offsets start + k as np.ogrid's, the hypotenuse as np.hypot's."""
+    rows, cols = image.shape
+    xs, ys = centres
+    inner, outer = radii
+    for i in range(*span):
+        x, y, near, far = xs[i], ys[i], inner[i], outer[i]
         y0, y1 = max(0, int(y - far)), min(rows, int(y + far) + 2)
         x0, x1 = max(0, int(x - far)), min(cols, int(x + far) + 2)
-        dy, dx = np.ogrid[y0 - y : y1 - y, x0 - x : x1 - x]
-        distance = np.hypot(dy, dx)
-        sky[i] = np.median(filtered[y0:y1, x0:x1][(distance >= near) & (distance < far)])
-    return sky
+        ring = np.empty(max(0, y1 - y0) * max(0, x1 - x0), dtype=image.dtype)
+        n = 0
+        for r in range(y0, y1):
+            dy = (y0 - y) + (r - y0)
+            for c in range(x0, x1):
+                distance = math.hypot(dy, (x0 - x) + (c - x0))
+                if near <= distance < far:
+                    ring[n] = image[r, c]
+                    n += 1
+        sky[i] = median_in_place(ring[:n])
 
 
 def tenth_flux(

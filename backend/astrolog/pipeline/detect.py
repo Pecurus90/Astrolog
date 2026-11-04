@@ -8,7 +8,7 @@ import numpy as np
 from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
 from ..units import sigma_from_mad
-from .cores import by_strips
+from .cores import by_strips, compiled, inlined, median_in_place
 from .noise import NOISE_FLOOR_ADU
 from .psf_flux import tenth_flux
 
@@ -85,7 +85,7 @@ def detect(
     if level is not None:
         plane, top = level
         bright = np.bincount(owner, plane[rows, cols] > BRIGHT_LEVEL * top, count + 1) > 0
-    star &= bright | (_peaks(residual, labels, count) <= 1)
+    star &= bright | (_peaks(residual, labels, (rows, cols), count) <= 1)
     star &= _over_local_sky(residual, labels, boxes, (best, star), noise)
     # Barycentre on the median copy's light: on a dark residual a structure pixel can sit at or
     # under zero, and a structure with none above has no position.
@@ -143,20 +143,34 @@ def _coverage(owner: np.ndarray, boxes: list[tuple[slice, slice] | None], count:
     return area / side**2
 
 
-def _peaks(residual: np.ndarray, labels: np.ndarray, count: int) -> np.ndarray:
-    """Structure pixels at the top of their 5x5 on the whole residual, sky pixels too (plan
-    26.48.3, probe on his singles); a plateau counts one."""
-
-    def tops(rows: np.ndarray) -> np.ndarray:
-        return ndimage.maximum_filter(rows, 2 * PEAK_RADIUS + 1, mode="constant", cval=-np.inf)
-
-    top = by_strips(tops, residual, PEAK_RADIUS)
-    at = (labels > 0) & (residual == top)
-    del top
+def _peaks(
+    residual: np.ndarray, labels: np.ndarray, pixels: tuple[np.ndarray, np.ndarray], count: int
+) -> np.ndarray:
+    """Structure pixels (`pixels`, rows and columns) at the top of their 5x5 on the whole residual,
+    sky pixels too (plan 26.48.3, probe on his singles); a plateau counts one."""
+    rows, cols = pixels
+    at = np.zeros(labels.shape, dtype=bool)
+    at[rows, cols] = _tops(residual, rows, cols, PEAK_RADIUS)
     spots, _ = cast(tuple[np.ndarray, int], ndimage.label(at, structure=_EIGHT))
     owner_of = np.zeros(int(spots.max()) + 1, dtype=np.intp)
     owner_of[spots[at]] = labels[at]  # a spot lies in one structure: both are 8-connected
     return np.bincount(owner_of[1:], minlength=count + 1)
+
+
+@compiled
+def _tops(image: np.ndarray, rows: np.ndarray, cols: np.ndarray, reach: int) -> np.ndarray:
+    """Each pixel no lower than any within `reach` (a square), the frame's edge cutting it: the
+    pixel equal to its maximum filter, outside -inf."""
+    height, width = image.shape
+    top = np.ones(len(rows), dtype=np.bool_)
+    for k in range(len(rows)):
+        r, c = rows[k], cols[k]
+        value = image[r, c]
+        for i in range(max(0, r - reach), min(height, r + reach + 1)):
+            for j in range(max(0, c - reach), min(width, c + reach + 1)):
+                if image[i, j] > value:
+                    top[k] = False
+    return top
 
 
 def _over_local_sky(
@@ -168,21 +182,53 @@ def _over_local_sky(
 ) -> np.ndarray:
     """(2x2 - 2 b) / n >= APERTURE_SNR for each candidate, b and n from its ring (RING_GROW)."""
     best, star = candidates
-    reach = 2 * RING_GROW + 1  # [D RING_GROW 8-connected dilations make this square]
-    free_sky = by_strips(lambda rows: ndimage.maximum_filter(rows, size=reach), labels, RING_GROW)
-    free_sky = free_sky == 0
     rows, cols = residual.shape
-    keep = np.zeros(len(star), dtype=bool)
-    for i in np.flatnonzero(star):
+    tried = np.flatnonzero(star)
+    windows = np.zeros((len(tried), 4), dtype=np.intp)
+    for k, i in enumerate(tried):
         r, c = boxes[i - 1] or (slice(0, 0), slice(0, 0))
-        ring = (
-            slice(max(r.start - RING_MARGIN, 0), min(r.stop + RING_MARGIN, rows)),
-            slice(max(c.start - RING_MARGIN, 0), min(c.stop + RING_MARGIN, cols)),
-        )
-        free = residual[ring][free_sky[ring]]
-        sky, spread = 0.0, noise
-        if free.size >= MIN_RING:
-            sky = float(np.median(free))
-            spread = sigma_from_mad(float(np.median(np.abs(free - sky))))
+        windows[k] = (max(r.start - RING_MARGIN, 0), min(r.stop + RING_MARGIN, rows),
+                      max(c.start - RING_MARGIN, 0), min(c.stop + RING_MARGIN, cols))  # fmt: skip
+    skies, mads, counts = _rings(residual, labels, windows, RING_GROW)
+    keep = np.zeros(len(star), dtype=bool)
+    for i, sky, mad, count in zip(tried, skies, mads, counts, strict=True):
+        if count < MIN_RING:
+            sky, spread = 0.0, noise
+        else:
+            sky, spread = float(sky), sigma_from_mad(float(mad))
         keep[i] = (best[i] - 2 * sky) / max(spread, NOISE_FLOOR_ADU) >= APERTURE_SNR
     return keep
+
+
+@compiled
+def _rings(
+    image: np.ndarray, labels: np.ndarray, windows: np.ndarray, grow: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Per window (r0, r1, c0, c1), its pixels with no label within `grow` (labels' maximum filter
+    zero, edges mirrored): their median, median absolute deviation from it, and count."""
+    skies, mads = np.zeros(len(windows), np.float32), np.zeros(len(windows), np.float32)
+    counts = np.zeros(len(windows), np.intp)
+    for k in range(len(windows)):
+        r0, r1, c0, c1 = windows[k]
+        free = np.empty((r1 - r0) * (c1 - c0), dtype=image.dtype)
+        n = 0
+        for r in range(r0, r1):
+            for c in range(c0, c1):
+                if _clear(labels, r, c, grow):
+                    free[n] = image[r, c]
+                    n += 1
+        counts[k] = n
+        if n:
+            skies[k] = median_in_place(free[:n])
+            mads[k] = median_in_place(np.abs(free[:n] - skies[k]))
+    return skies, mads, counts
+
+
+@inlined
+def _clear(labels: np.ndarray, r: int, c: int, grow: int) -> bool:
+    height, width = labels.shape
+    for i in range(max(0, r - grow), min(height, r + grow + 1)):
+        for j in range(max(0, c - grow), min(width, c + grow + 1)):
+            if labels[i, j]:
+                return False
+    return True

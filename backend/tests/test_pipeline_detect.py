@@ -11,6 +11,8 @@ from astrolog.pipeline.detect import (
     APERTURE_SNR,
     BRIGHT_LEVEL,
     STRUCTURE_SIGMA,
+    _rings,
+    _tops,
     detect,
     structure_map,
 )
@@ -299,3 +301,20 @@ def test_the_frame_counts_the_stars_the_subframeselector_would(snr: int, most: i
             data += _gauss(y, x, 2.0, flux)
     data += rng.normal(0, _NOISE, data.shape).astype(np.float32)
     assert measure_frame(data, saturation=65535.0, pattern=None).stars <= most
+
+
+def test_the_window_kernels_are_ndimages_and_numpys_to_the_bit() -> None:
+    residual = np.round(_sky(11), 1)  # plateaus: ties at the top
+    found = ndimage.label(residual > 12, structure=np.ones((3, 3)))
+    labels, _ = cast(tuple[np.ndarray, int], found)
+    rows, cols = np.nonzero(labels)
+    top = ndimage.maximum_filter(residual, 5, mode="constant", cval=-np.inf)
+    assert np.array_equal(_tops(residual, rows, cols, 2), residual[rows, cols] == top[rows, cols])
+    free_sky = ndimage.maximum_filter(labels, size=3) == 0
+    windows = np.array([(0, 9, 0, 14), (140, 160, 280, 300), (50, 51, 60, 61), (1, 1, 2, 2)])
+    skies, mads, counts = _rings(residual, labels, windows, 1)
+    for (r0, r1, c0, c1), sky, mad, count in zip(windows, skies, mads, counts, strict=True):
+        free = residual[r0:r1, c0:c1][free_sky[r0:r1, c0:c1]]
+        assert count == free.size
+        if free.size:
+            assert sky == np.median(free) and mad == np.median(np.abs(free - float(sky)))

@@ -25,6 +25,7 @@ from .capacity import physical_cores
 CORES = physical_cores() or 1
 MIN_STRIP_ROWS = 256  # [T] thinner strips spend more on margins and threads than they save
 MIN_PARALLEL_VALUES = 1_000_000  # [T] fewer: one partition is quicker than the threads
+STARS_A_CORE = 500  # [T] per-star windows: fewer a thread cost more in threads than they save
 MEDIAN_SAMPLE = 100_000  # [T] values sorted to bracket the middle
 MEDIAN_SAMPLE_SIGMAS = 6.0  # [T] the bracket misses once in ~1e9 frames, then np.median
 SHM_DIR = "/dev/shm"  # noqa: S108 -- only its free space read. [D POSIX shm_open on Linux: a tmpfs mounted here]
@@ -103,6 +104,43 @@ def minimum(a: float, b: float) -> float:
 def maximum(a: float, b: float) -> float:
     """np.maximum of two values."""
     return a if a > b or a != a else b
+
+
+@inlined
+def median_in_place(values: np.ndarray) -> float:
+    """np.median of a float32 array, reordered in place: the middle pair added and halved in
+    float32, as np.mean of two; empty or a NaN, NaN."""
+    n = len(values)
+    if n == 0 or np.isnan(values).any():
+        return np.nan
+    _select(values, n // 2)
+    if n % 2:
+        return values[n // 2]
+    return (values[: n // 2].max() + values[n // 2]) * np.float32(0.5)
+
+
+@inlined
+def _select(a: np.ndarray, k: int) -> None:
+    """Quickselect (Hoare 1961): a[k] the k-th smallest, none above it before, none under after."""
+    low, high = 0, len(a) - 1
+    while low < high:
+        pivot = a[(low + high) // 2]
+        i, j = low, high
+        while i <= j:
+            while a[i] < pivot:
+                i += 1
+            while a[j] > pivot:
+                j -= 1
+            if i <= j:
+                a[i], a[j] = a[j], a[i]
+                i += 1
+                j -= 1
+        if k <= j:
+            high = j
+        elif k >= i:
+            low = i
+        else:
+            return
 
 
 def in_parts(

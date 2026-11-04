@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 from astrolog.pipeline.detect import detect
+from astrolog.pipeline.psf_flux import RING_OUTER, ring_sky
 from astrolog.pipeline.stars import median3x3
 
 _SIDE = 600
@@ -82,3 +83,21 @@ def test_a_clipped_star_keeps_its_wide_region() -> None:
     clipped = np.minimum(_field(3.0, 1e7), 30000.0)
     share = 1 - 0.1 ** (3 / 4)
     assert np.median(_fluxes(clipped)) > 3 * share * 1e5
+
+
+def test_ring_sky_is_the_numpy_ring_median_to_the_bit() -> None:
+    rng = np.random.default_rng(7)
+    image = rng.normal(0, _NOISE, (200, 300)).astype(np.float32)
+    count = 1200  # over STARS_A_CORE: the stars on threads
+    x, y = rng.uniform(-3, 303, count), rng.uniform(-3, 203, count)  # some past the edges
+    inner = rng.uniform(1, 9, count)
+    want = np.empty(count)
+    for i, (cx, cy, near) in enumerate(zip(x, y, inner, strict=True)):
+        far = near * RING_OUTER
+        y0, y1 = max(0, int(cy - far)), min(200, int(cy + far) + 2)
+        x0, x1 = max(0, int(cx - far)), min(300, int(cx + far) + 2)
+        dy, dx = np.ogrid[y0 - cy : y1 - cy, x0 - cx : x1 - cx]
+        distance = np.hypot(dy, dx)
+        ring = image[y0:y1, x0:x1][(distance >= near) & (distance < far)]
+        want[i] = np.median(ring) if ring.size else np.nan
+    assert np.array_equal(ring_sky(image, (x, y), inner), want, equal_nan=True)
