@@ -865,6 +865,8 @@ catalogo conosce, come *M 81* o *m81*, diventa quella voce del catalogo; un altr
 
 ## Cosa non fa ancora
 
+- **AstroLog gira su Windows, sui Mac con chip Apple e su Linux (anche NAS); i Mac con processore
+  Intel non sono supportati.**
 - **Sul NAS la scansione puo' partire da sola a intervalli**, se chi avvia l'app imposta
   `ASTROLOG_SCAN_EVERY_MIN`. Per il resto partono da soli solo i giri del meteo -- la previsione,
   lo storico delle notti riprese e il solito del sito: la scansione si chiede col pulsante.
