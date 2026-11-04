@@ -158,6 +158,41 @@ class _Unused(_Broken):
         pytest.fail("no work to the processes without the memory")
 
 
+def test_started_hands_back_its_result_and_raises_what_it_raised() -> None:
+    gate = threading.Event()
+    later = cores.started(lambda: gate.wait(5) and 7)
+    gate.set()
+    assert later() == 7
+    with pytest.raises(ZeroDivisionError):
+        cores.started(lambda: 1 / 0)()
+
+
+def test_work_in_a_process_gives_what_it_gives_here(monkeypatch) -> None:
+    plane = _frame()
+    monkeypatch.setattr(cores, "CORES", 2)
+    monkeypatch.setattr(cores, "_pool", [])
+    try:
+        there = cores.in_process(median3x3, plane)
+    finally:
+        for pool in cores._pool:
+            pool.shutdown()
+    assert np.array_equal(there, median3x3(plane))
+
+
+def test_a_broken_pool_works_here_and_starts_afresh_next_time(monkeypatch) -> None:
+    plane = _frame()
+    monkeypatch.setattr(cores, "_pool", [_Broken()])
+    assert np.array_equal(cores.in_process(median3x3, plane), median3x3(plane))
+    assert cores._pool == []
+
+
+def test_no_room_in_shared_memory_works_here(monkeypatch) -> None:
+    plane = _frame()
+    monkeypatch.setattr(cores, "_shared_room", lambda: 0)
+    monkeypatch.setattr(cores, "_pool", [_Unused()])
+    assert np.array_equal(cores.in_process(median3x3, plane), median3x3(plane))
+
+
 def test_planes_shared_at_once_each_see_the_others_pages(monkeypatch) -> None:
     plane = np.zeros((1000, 1000), np.float32)  # 4 MB
     written: list[int] = []

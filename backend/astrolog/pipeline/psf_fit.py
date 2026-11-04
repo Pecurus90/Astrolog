@@ -1,9 +1,8 @@
 """Each star's PSF and PSF flux as Image Analysis fits them (par. 2.1.6; ImageWeighting 2.2): Moffat
 beta 4 at pixel centres, sky fitted, median-stabilized square. Pure. software-ok"""
 
-import logging
 import math
-from concurrent.futures.process import BrokenProcessPool
+from concurrent.futures import Executor
 from dataclasses import dataclass, fields
 from functools import partial
 from typing import Any
@@ -33,7 +32,6 @@ POOL_STARS = 500  # [T] fewer fit in 0.3 s on one core: not worth the processes
 CHUNKS_PER_CORE = 4  # [T] uneven stars even out over several chunks a process
 _HALF = 2 ** (1 / BETA) - 1  # [D Moffat 1969: half maximum where (1 + q)^-beta = 1/2]
 _TENTH = TENTH ** (-1 / BETA) - 1
-log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -77,18 +75,13 @@ def _pooled(stars: list[tuple[Any, ...]], plane: np.ndarray) -> list[tuple[float
     """`_fitted` interleaved over the processes, the bright, wide regions shared out; None when
     the shared memory does not fit or a worker died (then a fresh pool next frame)."""
     share = cores.CORES * CHUNKS_PER_CORE
-    pool = cores.processes()
-    try:
-        with cores.Shared(np.ascontiguousarray(plane)) as shared:
-            parts = [pool.submit(cores.attached, shared.ref, partial(_fitted, stars[k::share]))
-                     for k in range(share)]  # fmt: skip
-            return sorted((r for p in parts for r in p.result()), key=lambda r: r[8])
-    except BrokenProcessPool:
-        log.warning("star fits on one core: a worker process died, a new pool next frame")
-        cores.forget(pool)
-    except OSError as error:  # Docker: shm_size in the compose file
-        log.warning("star fits on one core: %s", error)
-    return None
+
+    def work(pool: Executor, ref: Any) -> list[tuple[float, ...]]:
+        parts = [pool.submit(cores.attached, ref, partial(_fitted, stars[k::share]))
+                 for k in range(share)]  # fmt: skip
+        return sorted((r for p in parts for r in p.result()), key=lambda r: r[8])
+
+    return cores.shared_work(plane, work, "star fits")
 
 
 def _fitted(stars: list[tuple[Any, ...]], plane: np.ndarray) -> list[tuple[float, ...]]:

@@ -58,7 +58,8 @@ def tenth_flux(
     a = np.sqrt(np.maximum(half + root, MIN_AXIS_PX**2))
     b = np.sqrt(np.maximum(half - root, MIN_AXIS_PX**2))
     theta = 0.5 * np.arctan2(2 * xy, x2 - y2)
-    data = np.ascontiguousarray(residual, dtype=np.float64)
+    # sep sums in float32 whatever it gets: a float64 copy, 200 MB at 26 MP, buys nothing
+    data = np.ascontiguousarray(residual)
     flux, _, _ = sep.sum_ellipse(data, x, y, a, b, theta, r=TENTH_RADIUS, subpix=SUBPIX)
     flux = np.asarray(flux, dtype=np.float64) - sky * math.pi * a * b * TENTH_RADIUS**2
     peak = np.zeros(count)

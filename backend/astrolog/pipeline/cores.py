@@ -2,6 +2,7 @@
 local filter on threads, per-star work in processes on shared pixels. Same numbers as one core."""
 
 import atexit
+import logging
 import math
 import multiprocessing
 import os
@@ -9,6 +10,7 @@ import sys
 import threading
 from collections.abc import Callable, Sequence
 from concurrent.futures import Executor, Future, ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from functools import partial
 from multiprocessing import shared_memory
 from multiprocessing.process import BaseProcess
@@ -26,6 +28,7 @@ MIN_PARALLEL_VALUES = 1_000_000  # [T] fewer: one partition is quicker than the 
 MEDIAN_SAMPLE = 100_000  # [T] values sorted to bracket the middle
 MEDIAN_SAMPLE_SIGMAS = 6.0  # [T] the bracket misses once in ~1e9 frames, then np.median
 SHM_DIR = "/dev/shm"  # noqa: S108 -- only its free space read. [D POSIX shm_open on Linux: a tmpfs mounted here]
+log = logging.getLogger(__name__)
 _lock = threading.Lock()
 _writing = threading.Lock()
 _pool: list[Executor] = []
@@ -176,6 +179,28 @@ def processes() -> Executor:
             _pool.append(pool)
             atexit.register(_pool[0].shutdown, cancel_futures=True)
         return _pool[0]
+
+
+def shared_work(image: np.ndarray, work: Callable[[Executor, Any], Any], what: str) -> Any | None:
+    """`work(pool, ref)`, `ref` naming `image` in shared memory for the processes; None, logged as
+    `what`, when the memory does not fit or a worker died (then a fresh pool next frame)."""
+    pool = processes()
+    try:
+        with Shared(np.ascontiguousarray(image)) as shared:
+            return work(pool, shared.ref)
+    except BrokenProcessPool:
+        log.warning("%s on one core: a worker process died, a new pool next frame", what)
+        forget(pool)
+    except OSError as error:  # Docker: shm_size in the compose file
+        log.warning("%s on one core: %s", what, error)
+    return None
+
+
+def in_process(fn: Callable[[np.ndarray], Any], image: np.ndarray) -> Any:
+    """`fn(image)` in one of the processes, off this one's GIL; here when they cannot."""
+    done = shared_work(image, lambda pool, ref: (pool.submit(attached, ref, fn).result(),),
+                       "a plane's work")  # fmt: skip
+    return fn(image) if done is None else done[0]
 
 
 def forget(broken: Executor) -> None:
