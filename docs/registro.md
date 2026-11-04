@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 322; senza fonte: 1.
-Fonti: C norma: 168; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T tecnico: 80.
+Valori: 323; senza fonte: 1.
+Fonti: C norma: 168; U usanza: 2; D metodo: 20; M misura: 22; P decisione: 33; T tecnico: 80.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -294,6 +294,7 @@ Fonti: C norma: 168; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T
 | MIN_RING | `16` | T |
 | PREFILTER_SNR | `8.0` | M plan 26.48: no star of his under it |
 | FLUX_GROW | `3` | M plan 26.48.1: flux within 5% of the truth; 2 px 10% short at sigma 3.5 |
+| GROW_MARGIN | `2 * FLUX_GROW + 2` | D chessboard distance: two steps of FLUX_GROW, one row each |
 | _EIGHT | `np.ones((3, 3), dtype=bool)` | D 8-connected: diagonal pixels of a star join it |
 
 ### pipeline/field.py

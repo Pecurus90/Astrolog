@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
+from astrolog.pipeline import cores
 from astrolog.pipeline.detect import (
     APERTURE_SNR,
     BRIGHT_LEVEL,
@@ -301,6 +302,23 @@ def test_the_frame_counts_the_stars_the_subframeselector_would(snr: int, most: i
             data += _gauss(y, x, 2.0, flux)
     data += rng.normal(0, _NOISE, data.shape).astype(np.float32)
     assert measure_frame(data, saturation=65535.0, pattern=None).stars <= most
+
+
+def test_detection_on_row_strips_is_the_whole_frames(monkeypatch: pytest.MonkeyPatch) -> None:
+    rng = np.random.default_rng(26)
+    data = rng.normal(0, _NOISE, (1300, 200)).astype(np.float32)
+    stamp = _gauss(7.3, 7.6, 1.3, 1.0, (15, 15))
+    for y, x in rng.integers(0, (1285, 185), (900, 2)):  # crowded: grown stars meet at the cuts
+        data[y : y + 15, x : x + 15] += float(rng.uniform(300, 3000)) * stamp
+    filtered = median3x3(data)
+    noise = (mrs(data).sigma, structure_noise(filtered))
+    monkeypatch.setattr(cores, "CORES", 1)
+    whole = detect(data, filtered, noise)
+    monkeypatch.setattr(cores, "CORES", 5)
+    strips = detect(data, filtered, noise)
+    assert len(whole.x) > 300
+    for name in ("x", "y", "flux", "box"):
+        assert np.array_equal(getattr(strips, name), getattr(whole, name))
 
 
 def test_the_window_kernels_are_ndimages_and_numpys_to_the_bit() -> None:

@@ -47,6 +47,9 @@ MIN_RING = 16  # [T] fewer free sky pixels: the frame's noise, the sky at zero
 PREFILTER_SNR = 8.0
 # Moments of the flux ellipse on the star grown by this: Gaussian sigma 1.2-3.5, bright and faint.
 FLUX_GROW = 3  # [M plan 26.48.1: flux within 5% of the truth; 2 px 10% short at sigma 3.5]
+# A grown pixel's nearest star lies within FLUX_GROW, and so does that of each neighbour the
+# transform passes it through: strips this much wider grow as the whole frame.
+GROW_MARGIN = 2 * FLUX_GROW + 2  # [D chessboard distance: two steps of FLUX_GROW, one row each]
 _EIGHT = np.ones((3, 3), dtype=bool)  # [D 8-connected: diagonal pixels of a star join it]
 
 
@@ -135,16 +138,19 @@ def selected(found: Structures, images: tuple[np.ndarray, np.ndarray], noise: fl
     if found.at_top is not None:
         saturated = found.at_top[star] >= CLIPPED_PIXELS
     index = np.cumsum(star) - 1  # label to star number
+
     # Flux ellipse from the star grown FLUX_GROW px: its structure stops short of the wings. A grown
     # sky pixel goes to the nearest star, square distance as the dilation's; no structure's pixel.
-    kept = np.where(star[labels], labels, 0)
-    far, (near_r, near_c) = cast(
-        tuple[np.ndarray, tuple[np.ndarray, np.ndarray]],
-        ndimage.distance_transform_cdt(kept == 0, metric="chessboard", return_indices=True),
-    )
-    grown = (far >= 0) & (far <= FLUX_GROW) & ((labels == 0) | (kept > 0))
-    kept = np.where(grown, kept[near_r, near_c], 0)
-    del far, near_r, near_c
+    def grow(strip: np.ndarray) -> np.ndarray:
+        kept = np.where(star[strip], strip, 0)
+        far, (near_r, near_c) = cast(
+            tuple[np.ndarray, tuple[np.ndarray, np.ndarray]],
+            ndimage.distance_transform_cdt(kept == 0, metric="chessboard", return_indices=True),
+        )
+        grown = (far >= 0) & (far <= FLUX_GROW) & ((strip == 0) | (kept > 0))
+        return np.where(grown, kept[near_r, near_c], 0)
+
+    kept = by_strips(grow, labels, GROW_MARGIN)
     rows, cols = np.nonzero(kept)
     owner = np.asarray(kept[rows, cols], dtype=np.intp)
     mine = star[owner]
