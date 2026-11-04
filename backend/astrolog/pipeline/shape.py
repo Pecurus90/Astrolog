@@ -116,7 +116,8 @@ def _moments(stars: np.ndarray) -> Fitted:
     angles = np.array([folded(math.degrees(float(t))) for t in stars["theta"]])
     nothing = np.full(len(stars), np.nan)
     return Fitted(estimated_fwhm(stars).astype(np.float64), eccentricity, angles, nothing,
-                  nothing, nothing, np.arange(len(stars)), stars["x"].astype(np.float64),
+                  nothing, nothing, nothing, np.arange(len(stars)), np.arange(len(stars)),
+                  stars["x"].astype(np.float64),
                   stars["y"].astype(np.float64))  # fmt: skip
 
 

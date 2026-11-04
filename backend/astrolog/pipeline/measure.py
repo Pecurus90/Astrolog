@@ -15,6 +15,7 @@ from .scan import busy
 from .shape import Shape
 from .shots import first_per_shot
 from .stars import Measured, measure_frame
+from .transparency import STARTS
 from .values import as_number
 
 # Light shots without a row, or whose last file was unreadable; plain file before its copy.
@@ -42,7 +43,9 @@ _SHAPE = (
     "shape", "shape_stars", "fwhm_px", "eccentricity", "angle_deg", "fwhm_sigma_px",
     "eccentricity_sigma", "psf_residual", "psf_residual_sigma",
 )  # fmt: skip
-_WRITTEN = ("file_id", "outcome", *_NUMBERS, *_SHAPE, "sky_rate_adu_s", "duration_s", "measured_at")
+_LADDER = {start: f"ladder_{start}_dex" for start in STARTS}
+_WRITTEN = ("file_id", "outcome", *_NUMBERS, *_SHAPE, *_LADDER.values(), "sky_rate_adu_s",
+            "duration_s", "measured_at")  # fmt: skip
 # Only an unreadable row is written over: the others stay (misure.md).
 UPSERT = (
     f"INSERT INTO pipeline_measures (frame_id, {', '.join(_WRITTEN)})"  # noqa: S608 - our names
@@ -90,6 +93,7 @@ def _measure(conn: sqlite3.Connection, path: Path, row: sqlite3.Row, now: str) -
                               pedestal=pedestal)  # fmt: skip
         outcome = "measured" if isinstance(found, Measured) else "too_few_stars"
         values |= {key: getattr(found, key, None) for key in _NUMBERS}
+        values |= {column: found.ladder.get(start) for start, column in _LADDER.items()}
         if row["exposure_s"]:  # SkyRate: Median per second of exposure (ImageAnalysis par. 2.1.2)
             values["sky_rate_adu_s"] = found.median_adu / row["exposure_s"]
         if found.shape is not None:

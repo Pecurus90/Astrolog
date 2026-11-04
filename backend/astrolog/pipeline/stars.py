@@ -8,6 +8,7 @@ import numpy as np
 import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 
 from ..units import sigma_from_mad
+from . import transparency
 from .background import banding, gradient, valid_pixels
 from .debayer import COLOURS, debayered
 from .detect import Detections, detect
@@ -63,6 +64,7 @@ class Across:
     snr: float | None  # SNR; None: noise zero
     mstar_adu: float | None  # MStar (mmt.py); None: no pixel under the model
     nstar_adu: float | None  # NStar
+    ladder: dict[int, float]  # window start -> median log10 flux (transparency.py); absent: none
 
 
 @dataclass(frozen=True)
@@ -118,7 +120,8 @@ def measure_frame(
     field = _sky_field(raw, saturation, noise, found) | _star_field(fits, raw.shape)
     across = Across(ceiling_adu=saturation, saturated=int(found.saturated.sum()),
                     gradient_angle_deg=bright_side(back), mstar_adu=mmt.mstar_adu if mmt else None,
-                    nstar_adu=mmt.nstar_adu if mmt else None, **flux, **pixel, **field)  # fmt: skip
+                    nstar_adu=mmt.nstar_adu if mmt else None, ladder=_ladder(raw, found, fits),
+                    **flux, **pixel, **field)  # fmt: skip
     common = {"stars": len(found.x), "kept": len(hfds), "background_adu": float(sky.globalback),
               "noise_adu": noise, "shape": shape} | vars(across)  # fmt: skip
     if len(hfds) < MIN_STARS:
@@ -138,6 +141,16 @@ def _flux(fits: Fitted, noise: float, stars: int, mmt: Background | None) -> dic
     return {"psf_snr": psf_snr(found.flux, noise) if enough else None, "psf_flux_adu": found.flux,
             "psf_mean_flux_adu": found.mean_flux, "psf_count": found.count,
             "psf_signal_weight": weight}  # fmt: skip
+
+
+def _ladder(raw: np.ndarray, found: Detections, fits: Fitted) -> dict[int, float]:
+    """Each fitted star's aperture flux; saturated, its structure's highest pixel at
+    SATURATED_SHARE of the plane's (ImageAnalysis par. 2.1.7). software-ok"""
+    flux = np.full(len(found.x), np.nan)
+    flux[fits.star.astype(int)] = fits.aperture_flux
+    peaks = np.array([raw[y0:y1, x0:x1].max() for x0, x1, y0, y1 in found.box.astype(int)])
+    top = float(np.nanmax(raw)) if raw.size else 0.0
+    return transparency.brightness_ladder(flux, peaks >= transparency.SATURATED_SHARE * top)
 
 
 def _sky_field(raw: np.ndarray, ceiling: float, noise: float, found: Detections) -> dict[str, Any]:

@@ -140,18 +140,21 @@ def biweight_location(values: Sequence[float] | np.ndarray) -> float | None:
     return centre
 
 
-def biweight_fit(design: np.ndarray, values: np.ndarray) -> np.ndarray:
-    """Least squares reweighted by Tukey's biweight from the ordinary fit, sigma from the median
-    |residual| (Holland & Welsch 1977; ImageAnalysis eq. 13, 26) until it settles. software-ok"""
+def biweight_fit(design: np.ndarray, values: np.ndarray, *, upper: bool = False) -> np.ndarray:
+    """Tukey's biweight from least squares, sigma median |residual| (Holland & Welsch 1977; IA eq.
+    13, 26). `upper`: only residuals over it weigh less, MAD scale (par. 2.1.7). software-ok"""
     y = np.asarray(values, dtype=float)
     beta = np.linalg.lstsq(design, y, rcond=None)[0]
     for _ in range(BIWEIGHT_FIT_ITERATIONS):
         left = y - design @ beta
-        sigma = sigma_from_mad(float(np.median(np.abs(left))))  # about 0, as a fit's residuals
+        centre = float(np.median(left)) if upper else 0.0  # about 0, as a fit's residuals
+        sigma = sigma_from_mad(float(np.median(np.abs(left - centre))))
         if sigma <= EXACT_FIT * float(np.abs(y).max()):
             break
         u = left / (BIWEIGHT_FIT_C * sigma)
         root = np.where(np.abs(u) < 1, 1 - u * u, 0.0)  # sqrt of (1 - u^2)^2
+        if upper:
+            root = np.where(left <= 0, 1.0, root)
         if not root.any():
             break
         moved = np.linalg.lstsq(design * root[:, None], y * root, rcond=None)[0]

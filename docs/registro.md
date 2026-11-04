@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 305; senza fonte: 1.
-Fonti: C norma: 159; U usanza: 2; D metodo: 18; M misura: 22; P decisione: 33; T tecnico: 73.
+Valori: 312; senza fonte: 1.
+Fonti: C norma: 165; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T tecnico: 73.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -511,6 +511,18 @@ Fonti: C norma: 159; U usanza: 2; D metodo: 18; M misura: 22; P decisione: 33; T
 | FINE_SHIFT_PX | `0.1` | T |
 | EXAMINED_REACH | `(1.0, 3)` | T |
 | _EIGHT | `np.ones((3, 3), dtype=np.int8)` | D 8-connected: diagonal pixels touch |
+
+### pipeline/transparency.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| STARTS | `(1, 51, 101, 201, 401, 801, 1601, 3201, 6401)` | C ImageAnalysis par. 2.1.7; software-ok |
+| WIDTH | `50` | C ImageAnalysis par. 2.1.7; software-ok |
+| SATURATED_SHARE | `0.75` | C ImageAnalysis par. 2.1.7; software-ok |
+| MAX_SATURATED | `0.4` | C ImageAnalysis par. 2.1.7; software-ok |
+| MIN_FIT_FRAMES | `5` | C ImageAnalysis par. 2.1.7: five frames with air masses; software-ok |
+| MIN_SPAN | `0.05` | C ImageAnalysis par. 2.1.7: air masses closer, only the constant; software-ok |
+| MAG | `2.5` | D Pogson 1856: 5 magnitudes a factor 100 |
 
 ### pipeline/values.py
 

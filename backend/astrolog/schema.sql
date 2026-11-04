@@ -1145,6 +1145,17 @@ CREATE TABLE pipeline_measures (
   fwhm_curvature REAL,                         -- FWHMCurvature, con segno: + stelle piu' grandi agli angoli
   elongation_angle_deg REAL CHECK (elongation_angle_deg >= 0 AND elongation_angle_deg < 180),  -- antiorario da +x
   elongation_coherence REAL CHECK (elongation_coherence >= 0 AND elongation_coherence <= 1),  -- eq. 28-29
+  -- scala di luminosita' (transparency.py, Image Analysis par. 2.1.7): mediana del log10 del flusso
+  -- in ADU di 50 stelle dal rango; le sature sopra le altre. NULL: meno stelle, o 40% sature
+  ladder_1_dex    REAL,
+  ladder_51_dex   REAL,
+  ladder_101_dex  REAL,
+  ladder_201_dex  REAL,
+  ladder_401_dex  REAL,
+  ladder_801_dex  REAL,
+  ladder_1601_dex REAL,
+  ladder_3201_dex REAL,
+  ladder_6401_dex REAL,
   duration_s     REAL CHECK (duration_s >= 0),
   measured_at    TEXT NOT NULL,
   CHECK ((outcome = 'measured') = (hfd_px IS NOT NULL)),
@@ -1175,7 +1186,9 @@ CREATE TABLE pipeline_measures (
   CHECK ((stars IS NULL) = (trails IS NULL)),
   CHECK ((fwhm_tilt IS NULL) = (fwhm_curvature IS NULL) AND (fwhm_tilt IS NULL OR psf_count >= 32)),
   CHECK ((elongation_angle_deg IS NULL) = (elongation_coherence IS NULL)
-    AND (elongation_angle_deg IS NULL OR psf_count IS NOT NULL))
+    AND (elongation_angle_deg IS NULL OR psf_count IS NOT NULL)),
+  CHECK (coalesce(ladder_1_dex, ladder_51_dex, ladder_101_dex, ladder_201_dex, ladder_401_dex,
+    ladder_801_dex, ladder_1601_dex, ladder_3201_dex, ladder_6401_dex) IS NULL OR psf_count >= 50)
 ) STRICT;
 
 -- RILEVATO. Misure col cielo (pipeline/sky_measure.py, docs/domini/misure.md): una riga per posa

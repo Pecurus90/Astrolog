@@ -106,6 +106,18 @@ def test_the_trails_are_written(conn, tmp_path):
     assert (timed["trails"], untimed["trails"]) == (1, 0)
 
 
+def test_the_brightness_ladder_is_written(conn, tmp_path):
+    """60 stars: the window from rank 1, none from 51 (misure.md Trasparenza). A hot pixel tops
+    the frame: else 60 equal stars all reach 3/4 of the highest and count saturated."""
+    data = _field("gauss", 2.5)
+    data[3, 3] = 65535.0
+    _light(tmp_path / "nas" / "a.fits", data)
+    measure_root(conn, _scanned(conn, tmp_path / "nas"), LATER)
+    (row,) = _measures(conn)
+    assert 3 < row["ladder_1_dex"] < 7  # log10 ADU of stars of 1e3 to 1e7 ADU
+    assert row["ladder_51_dex"] is None and row["ladder_6401_dex"] is None
+
+
 def test_only_lights_are_measured(conn, tmp_path):
     for kind in ("DARK", "FLAT", "BIAS"):
         _light(tmp_path / "nas" / f"{kind}.fits", _field(seed=len(kind)), imagetyp=kind)

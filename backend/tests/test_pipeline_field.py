@@ -217,7 +217,8 @@ def _fits(fwhm: np.ndarray, x: np.ndarray, y: np.ndarray, eccentricity=None, ang
     angle = np.zeros(n) if angle is None else np.asarray(angle, float)
     nothing = np.full(n, np.nan)
     return Fitted(np.asarray(fwhm, float), eccentricity, angle, nothing, nothing, nothing,
-                  np.arange(n), np.asarray(x, float), np.asarray(y, float))  # fmt: skip
+                  nothing, np.arange(n), np.arange(n), np.asarray(x, float),
+                  np.asarray(y, float))  # fmt: skip
 
 
 def _field_of_stars(side_x: int = 1200, side_y: int = 800, per_side: int = 12):
@@ -280,6 +281,28 @@ def test_round_stars_or_none_have_no_elongation() -> None:
     x, y = _field_of_stars()
     assert elongation(_fits(np.full(len(x), 3.0), x, y, np.zeros(len(x)))) is None
     assert elongation(_fits(np.empty(0), np.empty(0), np.empty(0))) is None
+
+
+def test_the_brightness_ladder_follows_the_transmission_not_the_sky_nor_much_the_seeing() -> None:
+    """Half light: log10 0.5 lower; sky x4: same, both within 0.01 mag. FWHM 3.5 to 5.2 px:
+    within 0.05 mag (0.034 measured; Gaussian under a Moffat 4 fit)."""
+    places = _grid(10, margin=40)
+    fluxes = 10 ** np.linspace(5.3, 4.0, len(places))
+    frames = {}
+    for name, (share, sigma, sky) in {
+        "clear": (1.0, 1.5, 0.0),
+        "half": (0.5, 1.5, 0.0),
+        "wide": (1.0, 2.2, 0.0),
+        "bright sky": (1.0, 1.5, 3000.0),
+    }.items():
+        data = _sky(seed=7) + np.float32(sky)
+        for place, flux in zip(places, fluxes, strict=True):
+            _stars(data, [place], sigma, share * flux)
+        frames[name] = measure_frame(data, saturation=65535.0, pattern=None).ladder
+    assert 1 in frames["clear"] and 101 not in frames["clear"]
+    assert frames["half"][1] - frames["clear"][1] == pytest.approx(math.log10(0.5), abs=0.004)
+    assert abs(frames["wide"][1] - frames["clear"][1]) < 0.05 / 2.5
+    assert frames["bright sky"][1] == pytest.approx(frames["clear"][1], abs=0.01 / 2.5)
 
 
 def test_tilt_reaches_the_frame_through_measure() -> None:

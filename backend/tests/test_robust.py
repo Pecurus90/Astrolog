@@ -186,6 +186,22 @@ def test_the_biweight_fit_drops_the_outliers_a_least_squares_follows():
     assert np.linalg.lstsq(design, y, rcond=None)[0][0] == pytest.approx(2.1, abs=0.01)
 
 
+def test_the_upper_biweight_fit_downweights_only_the_points_above():
+    """Clouds only add extinction (ImageAnalysis par. 2.1.7): points far below keep their weight,
+    points far above lose it; the scale is the MAD about the median residual. software-ok"""
+    rng = np.random.default_rng(11)
+    x = np.linspace(1.0, 2.0, 100)
+    design = np.column_stack([np.ones_like(x), x])
+    y = 0.1 + 0.2 * x + rng.normal(0.0, 0.01, x.size)
+    up, down = y.copy(), y.copy()
+    up[::10] += 0.5
+    down[::10] -= 0.5
+    assert robust.biweight_fit(design, up, upper=True) == pytest.approx([0.1, 0.2], abs=0.01)
+    lower = robust.biweight_fit(design, down, upper=True)  # the points below pull it down
+    assert lower[0] + 1.5 * lower[1] < 0.1 + 0.2 * 1.5 - 0.04
+    assert robust.biweight_fit(design, down) == pytest.approx([0.1, 0.2], abs=0.01)
+
+
 def test_the_biweight_fit_of_an_exact_surface_is_the_surface():
     """Residuals all zero, MAD zero: the ordinary fit stands."""
     x = np.linspace(-1.0, 1.0, 50)

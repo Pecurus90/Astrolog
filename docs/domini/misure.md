@@ -24,6 +24,7 @@ parole in [`glossario.md`](glossario.md).
 | Il rumore e' l'MRS di Starck e Murtagh, come lo dichiara PixInsight; nei campi densi resta quello del cielo <!-- software-ok --> | `test_pipeline_noise.py` (fattore del primo strato 0,8908 come Duchamp, trasformata che si ricompone, rumore gaussiano letto entro il 2%, campo affollato e nebulosa entro il 3%), `test_in_a_crowded_field_the_noise_is_read_off_the_stars` |
 | Gradiente e banding sono quelli di Image Analysis, in unita' di rumore; il lato chiaro e' nostro e un fondo piatto non lo inventa (Marco, 30/10/2026) <!-- software-ok --> | `test_pipeline_background.py` (superficie picco-picco sul rumore, riquadri luminosi scartati, saturi e bordi vuoti fuori, rumore bianco senza banding, righe spostate di 0,3 sigma, file alterne del mosaico), `test_the_biweight_fit_drops_the_outliers_a_least_squares_follows`, `test_a_sky_on_a_plane_has_its_bright_side`, `test_the_bright_side_turns_with_the_plane`, `test_a_flat_sky_has_no_side` |
 | Le scie di satelliti, aerei e meteore si contano come Image Analysis: lunghe almeno un quarto del lato corto, sottili, fino a 16; il bordo di una nebulosa no (Marco, 30/10/2026) <!-- software-ok --> | `test_pipeline_trails.py` (cielo senza scie, 4 sigma trovata in campo rado e denso, 2 sigma persa nel denso e trovata nel rado, meteora corta, tratteggio sotto il 35%, bordo e filamento di nebulosa, due incrociate, al massimo 16, stelle mascherate lungo la scia, bordo vuoto), `test_the_trails_are_written` |
+| La trasparenza di una serie (stesso campo e filtro) come Image Analysis: estinzione relativa al frame piu' trasparente, estinzione da nuvole oltre la legge di Bouguer; il flusso delle stelle e' il nostro (Marco, 30/10 e 4/11/2026) <!-- software-ok --> | `test_pipeline_transparency.py` (finestre dal rango 1, 51, 101, 201..., sature sopra le altre, 40% sature fuori, frame piu' trasparente a zero, flusso al secondo, finestra dei piu' frame, suo fit di Bouguer su Abell 2151 entro 1e-6, nuvole che non inclinano la retta, sola costante sotto 0,05 di massa d'aria, sotto 5 frame niente nuvole), `test_the_upper_biweight_fit_downweights_only_the_points_above` (`test_robust.py`), `test_the_aperture_flux_holds_the_moffat_out_to_its_full_width_at_a_tenth`, `test_each_fit_knows_its_detected_star` (`test_pipeline_psf_fit.py`), `test_the_brightness_ladder_follows_the_transmission_not_the_sky_nor_much_the_seeing` (`test_pipeline_field.py`), `test_the_brightness_ladder_is_written` |
 | Tilt, curvatura ed elongazione sono quelli di Image Analysis: dalle FWHM e dagli angoli di tutte le stelle fittate, muti sotto 32 fit o con stelle tonde (Marco, 30/10/2026) <!-- software-ok --> | `test_tilt_and_curvature_are_the_documented_surface`, `test_under_32_stars_no_tilt`, `test_aligned_elongations_give_their_angle_counterclockwise_and_full_coherence`, `test_crossed_elongations_have_no_coherence`, `test_round_stars_or_none_have_no_elongation`, `test_tilt_reaches_the_frame_through_measure` (`backend/tests/test_pipeline_field.py`) |
 | La massa d'aria e' quella dell'oggetto a meta' posa, con l'aria che lo alza, finita all'orizzonte e nessuna sotto | `test_the_airmass_is_pickering_on_the_apparent_altitude`, `test_the_refraction_lifts_a_low_star_saemundsson`, `test_under_the_horizon_there_is_no_airmass`, `test_the_altitude_and_azimuth_agree_with_astropy` (`backend/tests/test_pipeline_airmass.py`, `test_pipeline_altitude.py`) |
 | FWHM e HFD anche in secondi d'arco dalla scala risolta e allo zenit; senza soluzione niente secondi, senza sito o ora niente altezza ne' zenit | `test_a_solved_shot_gets_its_airmass_arcseconds_and_zenith_values`, `test_a_value_at_the_zenith_is_divided_by_the_airmass_to_the_three_fifths`, `test_without_a_site_there_is_no_altitude_but_the_arcseconds_stay`, `test_without_a_start_there_is_no_time_nor_altitude`, `test_the_mid_exposure_is_the_start_plus_half` (`backend/tests/test_pipeline_sky_measure.py`) |
@@ -289,10 +290,6 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
   | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
 
-  Osservazione (26.54), scarto massimo sui 198 leggibili (7 copie di PixInsight: programma <!-- software-ok -->
-  ignoto): angolo orario 0,08 gradi, Luna 0,0023, Sole 0,0005, distanza Luna 0,099, illuminata
-  0,0054; lato, gain, offset uguali; azimut 3,4 (mediana 0,32).
-
   Scarti aperti, ognuno col suo passo: colori 26.56 (lui somma il flusso PSF per canale, noi
   sull'intensita'; PSFResidual a colori 1,06-1,07; NoiseRatio, SNR, M\*, N\* dai metadati del
   Debayer, per canale dal grezzo). Tempi: il fit del 26.49 +1 s mono, +2,4 s colori; Sh2-185
@@ -300,15 +297,18 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   mono (mediane di riga); curvature vicine a zero danno rapporti larghi, scarto entro 0,07.
   Scie: 201 su 205 (sempre zero: 179), 22 dei 26 con scie sue; fuori la Velo, dove lui per
   strisce conta 4-11 scie sui filamenti: le sue 1-2 sono filamenti, il profilo li scarta. +0,5-0,9 s.
+  Osservazione (26.54), secondi a frame (26.47, base del 26.57) e perche' degli scarti: nei passi.
 
-  Secondi a frame del 26.47, mediana, un frame alla volta, mono / colori: AstroLog 5,69 / 14,01
-  (debayer VNG 4,43, rumore MRS 1,67 / 1,93 + 1,33 per piano, stelle e flusso PSF 1,44 / 1,56,
-  forma 1,02 / 1,80); Image Analysis con le estese 3,57 / 2,46 + 1,78 di debayer, senza 2,42 /
-  1,14 + 1,78.
-
-  Perche' degli scarti (tabelle per camera e oggetto al commit `9add5161`): HFD / FWHM non e'
-  uno scarto (Moffat: 1,36 a beta 2,5, 1,17 a beta 4); HFD / HFD ASTAP 0,83-0,92; le sue
-  stelle contano da SNR 30 sul grezzo: 0,9-27 volte.
+**La trasparenza** (`pipeline/transparency.py`, Image Analysis par. 2.1.7; numeri nel passo 26.55): <!-- software-ok -->
+per frame la scala di luminosita', mediana del log10 del flusso in finestre di 50 stelle dai ranghi
+1, 51, 101, 201, ..., 6401; satura la stella col picco a 3/4 del pixel piu' alto, contata sopra le
+altre; satura al 40% la finestra non c'e'. Sulla serie la finestra dei piu' frame, Delta m al
+secondo meno il minimo (eq. 30), Bouguer (eq. 31) col biweight 4,685 sui soli residui positivi,
+scala MAD (Holland e Welsch 1977; sola costante sotto 0,05 di massa d'aria, almeno 5 frame);
+la collega il passo 40. **Il flusso e' nostro** (Marco, 4/11/2026): v - B nell'ellisse a 1 FWTM
+(crescita del `PSF` di PJSR), ordine sul flusso misurato; il suo `PSF.flux` non si ritrova dai <!-- software-ok -->
+pixel. Sintetici: trasparenza e cielo x4 entro 0,01 mag; sul vero M51 k 0,37 contro il suo 0,10.
+Aperto: una satura col fit rifiutato non prende rango.
 
 **Lo SQM** (stadio `sqm`, `pipeline/sqm.py` e `star_catalogue.py`, portati dal sorgente di ASTAP,
 MPL-2.0; ADR 0022 punto 8):
@@ -337,7 +337,7 @@ MPL-2.0; ADR 0022 punto 8):
 sensore, fondo e rumore in ADU; la forma (fit, stimata, non misurabile) con le sue stelle, FWHM
 in pixel, eccentricita' e direzione; il tetto e le stelle sature, il PSF SNR e il PSF Signal
 Weight, le statistiche dei pixel (mediana, SkyRate, Sigma, entropia, NoiseRatio, SNR, M\*, N\*), il campo (gradiente col
-lato chiaro, banding, scie, tilt, curvatura, elongazione); durata, ora. In `pipeline_sky`: se risolta, meta' posa, altezza,
+lato chiaro, banding, scie, tilt, curvatura, elongazione), la scala di luminosita'; durata, ora. In `pipeline_sky`: se risolta, meta' posa, altezza,
 massa d'aria, FWHM e HFD in secondi d'arco e allo zenit, direzione e lato chiaro sul cielo con
 l'asse. In `pipeline_solutions` la matrice CD e il pixel di riferimento. In `pipeline_sqm`:
 esito (misurato, calibrazione fallita, senza altezza, illeggibile), catalogo, zero point, stelle

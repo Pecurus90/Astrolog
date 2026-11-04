@@ -32,6 +32,28 @@ def test_an_exact_moffat_gives_back_its_widths_and_no_residual() -> None:
     assert fits.residual[0] < 1e-4
 
 
+def test_the_aperture_flux_holds_the_moffat_out_to_its_full_width_at_a_tenth() -> None:
+    """PJSR PSF growth 1.0 in FWTM: the ellipse of semi-axes the FWTM holds 1 - (1 + 4 (10^(1/4)
+    - 1))^(1 - beta) of a Moffat beta 4, the fitted sky off; the detected star carried along."""
+    alpha, amplitude = 3.0, 5000.0
+    plane = _star(81, (40.3, 39.6), amplitude, alpha)
+    box = _box(40.3, 39.6, 3)[None]
+    fits = fit_stars(plane, np.array([40.3]), np.array([39.6]), box, np.ones(1))
+    total = math.pi * amplitude * alpha**2 / (psf_fit.BETA - 1)
+    held = 1 - (1 + 4 * (10 ** (1 / psf_fit.BETA) - 1)) ** (1 - psf_fit.BETA)
+    assert fits.aperture_flux[0] == pytest.approx(held * total, rel=0.01)
+    assert fits.star.tolist() == [0]
+
+
+def test_each_fit_knows_its_detected_star() -> None:
+    plane = _star(81, (20.0, 20.0), 3000.0, 2.0) + _star(81, (60.0, 60.0), 6000.0, 2.0) - _SKY
+    x, y = np.array([20.0, 60.0]), np.array([20.0, 60.0])
+    boxes = np.array([_box(20, 20, 2), _box(60, 60, 2)])
+    fits = fit_stars(plane, x, y, boxes, np.array([1.0, 2.0]))
+    assert fits.star.tolist() == [1, 0]  # brightest first
+    assert fits.rank.tolist() == [0, 1]
+
+
 def test_the_residual_does_not_see_the_scale_and_grows_with_noise() -> None:
     """ImageAnalysis eq. 24: relative to the star's mean signal 4 S / (pi Wx Wy)."""
     rng = np.random.default_rng(2)

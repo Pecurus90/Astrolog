@@ -32,6 +32,10 @@ PSF SNR, tilt, curvatura e gradiente; ne manca 24. Analisi completa nel report d
 - Le misure che lui calcola sulla serie (estinzione relativa e da nuvole) si calcolano sulla
   serie dello stesso campo e filtro; PSFScale e PSFScaleSNR no: servono i file di
   LocalNormalization e AstroLog non integra. <!-- software-ok -->
+- **Estinzione**: il suo algoritmo (finestre, sature, fit di Bouguer), il nostro flusso per stella:
+  il suo `PSF.flux` non si ritrova dai pixel, e sulle serie vere misura meno estinzione per massa <!-- software-ok -->
+  d'aria (0,10-0,15 contro 0,37). La prova passa ai sintetici a verita' nota (misure.md,
+  Trasparenza). (Marco, 4/11/2026)
 
 ## Conseguenze
 

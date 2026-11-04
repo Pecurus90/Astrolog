@@ -19,6 +19,8 @@ MAX_HALF_PX = 64  # [T] a region still falling past 129 px across sits on a nebu
 # Fit refused with its centre this close to its region's edge, or off its detected structure.
 EDGE_PX = 1.0  # [T] ImageWeighting par. 2.2.1 says "too close", no number; software-ok
 TENTH = 0.1  # [C ImageAnalysis eq. 24: flux on the FWTM ellipse; software-ok]
+# Flux measurement region, in FWTM: the transparency's flux (transparency.py).
+APERTURE_FWTM = 1.0  # [C PJSR PSF.fitStar growth default 1.0, in FWTM; software-ok]
 WINSOR = 0.1  # [C ImageAnalysis par. 2.1.6: residual a 10% Winsorized mean; software-ok]
 EVALUATIONS_PER_PARAMETER = 50  # [T] a star that does not converge stops there
 _HALF = 2 ** (1 / BETA) - 1  # [D Moffat 1969: half maximum where (1 + q)^-beta = 1/2]
@@ -35,6 +37,8 @@ class Fitted:
     residual: np.ndarray  # eq. 24: Winsorized mean |v - f| over the mean signal 4 S / (pi Wx Wy)
     signal: np.ndarray  # ImageWeighting eq. 7, plane units: S of eq. 24, the PSF flux
     mean_flux: np.ndarray  # eq. 8-10: signal over the tenth ellipse's area
+    aperture_flux: np.ndarray  # v - B in the ellipse of semi-axes the FWTM (APERTURE_FWTM)
+    star: np.ndarray  # index of the detected star fitted
     rank: np.ndarray  # place in the brightness order: MAX_FITS of them make the shape
     x_px: np.ndarray  # fitted centre, column
     y_px: np.ndarray  # fitted centre, row
@@ -51,7 +55,7 @@ def fit_stars(
     """`plane` the measured pixels with their sky (the median needs its level); `box` per star
     (x0, x1, y0, y1); the MAX_FLUX_FITS brightest by `flux` fitted."""
     order = np.argsort(-flux, kind="stable")[:MAX_FLUX_FITS]
-    rows = [(*s[:6], rank, *s[6:]) for rank, i in enumerate(order)
+    rows = [(*s[:7], i, rank, *s[7:]) for rank, i in enumerate(order)
             if (s := _one(plane, float(x[i]), float(y[i]), box[i])) is not None]  # fmt: skip
     if not rows:
         return Fitted(*(np.empty(0),) * len(fields(Fitted)))
@@ -113,7 +117,26 @@ def _one(plane: np.ndarray, x: float, y: float, box: np.ndarray) -> tuple[float,
     eccentricity = math.sqrt(1 - (short_axis / long_axis) ** 2)
     flux = signal * peak  # back to the plane's units
     mean_flux = flux / (math.pi * tenth_x * tenth_y)
-    return fwhm, eccentricity, folded(angle), residual, flux, mean_flux, x0, y0
+    aperture = _aperture(plane, (x0, y0), (2 * tenth_x, 2 * tenth_y, theta), sky + b * peak)
+    return fwhm, eccentricity, folded(angle), residual, flux, mean_flux, aperture, x0, y0
+
+
+def _aperture(
+    plane: np.ndarray, centre: tuple[float, float], axes: tuple[float, float, float], sky: float
+) -> float:
+    """Sum of v - B over the ellipse of semi-axes APERTURE_FWTM times the FWTM, past the
+    sampling region if it reaches further; the frame's edge cuts it."""
+    x0, y0 = centre
+    ax, ay, theta = APERTURE_FWTM * axes[0], APERTURE_FWTM * axes[1], axes[2]
+    reach = math.ceil(max(ax, ay))
+    rows, cols = plane.shape
+    r0, r1 = max(0, round(y0) - reach), min(rows, round(y0) + reach + 1)
+    c0, c1 = max(0, round(x0) - reach), min(cols, round(x0) + reach + 1)
+    ys, xs = np.mgrid[r0:r1, c0:c1]
+    c, s = math.cos(theta), math.sin(theta)
+    u, v = c * (xs - x0) + s * (ys - y0), -s * (xs - x0) + c * (ys - y0)
+    inside = (u / ax) ** 2 + (v / ay) ** 2 <= 1
+    return float((plane[r0:r1, c0:c1][inside].astype(np.float64) - sky).sum())
 
 
 def _placed(x0: float, y0: float, pixels: tuple[np.ndarray, np.ndarray], box: np.ndarray) -> bool:
