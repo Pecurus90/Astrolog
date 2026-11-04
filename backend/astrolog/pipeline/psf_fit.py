@@ -1,7 +1,9 @@
 """Each star's PSF and PSF flux as Image Analysis fits them (par. 2.1.6; ImageWeighting 2.2): Moffat
 beta 4 at pixel centres, sky fitted, median-stabilized square. Pure. software-ok"""
 
+import logging
 import math
+from concurrent.futures.process import BrokenProcessPool
 from dataclasses import dataclass, fields
 from functools import partial
 from typing import Any
@@ -31,6 +33,7 @@ POOL_STARS = 500  # [T] fewer fit in 0.3 s on one core: not worth the processes
 CHUNKS_PER_CORE = 4  # [T] uneven stars even out over several chunks a process
 _HALF = 2 ** (1 / BETA) - 1  # [D Moffat 1969: half maximum where (1 + q)^-beta = 1/2]
 _TENTH = TENTH ** (-1 / BETA) - 1
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -62,18 +65,30 @@ def fit_stars(
     (x0, x1, y0, y1); the MAX_FLUX_FITS brightest by `flux` fitted."""
     order = np.argsort(-flux, kind="stable")[:MAX_FLUX_FITS]
     stars = [(float(x[i]), float(y[i]), box[i], int(i), rank) for rank, i in enumerate(order)]
-    if len(stars) < POOL_STARS:
+    rows = _pooled(stars, plane) if len(stars) >= POOL_STARS else None
+    if rows is None:
         rows = _fitted(stars, plane)
-    else:  # interleaved: the bright, wide regions shared out
-        share = cores.CORES * CHUNKS_PER_CORE
-        with cores.Shared(np.ascontiguousarray(plane)) as shared:
-            parts = [cores.processes().submit(cores.attached, shared.ref,
-                                              partial(_fitted, stars[k::share]))
-                     for k in range(share)]  # fmt: skip
-            rows = sorted((r for p in parts for r in p.result()), key=lambda r: r[8])
     if not rows:
         return Fitted(*(np.empty(0),) * len(fields(Fitted)))
     return Fitted(*(np.array(c, dtype=np.float64) for c in zip(*rows, strict=True)))
+
+
+def _pooled(stars: list[tuple[Any, ...]], plane: np.ndarray) -> list[tuple[float, ...]] | None:
+    """`_fitted` interleaved over the processes, the bright, wide regions shared out; None when
+    the shared memory does not fit or a worker died (then a fresh pool next frame)."""
+    share = cores.CORES * CHUNKS_PER_CORE
+    pool = cores.processes()
+    try:
+        with cores.Shared(np.ascontiguousarray(plane)) as shared:
+            parts = [pool.submit(cores.attached, shared.ref, partial(_fitted, stars[k::share]))
+                     for k in range(share)]  # fmt: skip
+            return sorted((r for p in parts for r in p.result()), key=lambda r: r[8])
+    except BrokenProcessPool:
+        log.warning("star fits on one core: a worker process died, a new pool next frame")
+        cores.forget(pool)
+    except OSError as error:  # Docker: shm_size in the compose file
+        log.warning("star fits on one core: %s", error)
+    return None
 
 
 def _fitted(stars: list[tuple[Any, ...]], plane: np.ndarray) -> list[tuple[float, ...]]:

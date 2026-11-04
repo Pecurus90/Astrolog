@@ -1,9 +1,17 @@
 """One frame on every core (cores.py, plan 26.57): the parallel ways give the one-core numbers."""
 
+import contextlib
+import threading
+import time
+from concurrent.futures import Future
+from concurrent.futures.process import BrokenProcessPool
+from multiprocessing import shared_memory
+
 import numpy as np
 import pytest
 from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
+from astrolog import __main__ as entry
 from astrolog.pipeline import cores, psf_fit
 from astrolog.pipeline.median import _median3x3, median3x3
 from astrolog.pipeline.psf_fit import fit_stars
@@ -106,3 +114,82 @@ def test_stars_fitted_in_processes_are_those_fitted_on_one_core(monkeypatch) -> 
     assert len(alone.signal) > 30
     for name in ("fwhm_px", "signal", "residual", "x_px", "star", "rank"):
         assert np.allclose(getattr(pooled, name), getattr(alone, name), rtol=1e-9, equal_nan=True)
+
+
+class _Broken:
+    """A pool whose worker died: every result raises, as ProcessPoolExecutor's then."""
+
+    def submit(self, *_: object) -> Future:
+        done: Future = Future()
+        done.set_exception(BrokenProcessPool("a worker died"))
+        return done
+
+    def shutdown(self, **_: object) -> None:
+        pass
+
+
+def test_a_broken_pool_fits_on_one_core_and_starts_afresh_next_time(monkeypatch) -> None:
+    plane, x, y, box, flux = _stars(60)
+    alone = fit_stars(plane, x, y, box, flux)
+    monkeypatch.setattr(psf_fit, "POOL_STARS", 1)
+    monkeypatch.setattr(cores, "_pool", [_Broken()])
+    pooled = fit_stars(plane, x, y, box, flux)
+    assert np.allclose(pooled.signal, alone.signal, rtol=1e-9)
+    assert cores._pool == []
+
+
+def test_no_room_in_shared_memory_fits_on_one_core(monkeypatch) -> None:
+    plane, x, y, box, flux = _stars(60)
+    alone = fit_stars(plane, x, y, box, flux)
+    monkeypatch.setattr(psf_fit, "POOL_STARS", 1)
+    monkeypatch.setattr(cores, "_shared_room", lambda: 0)  # Docker's /dev/shm, 64 MB, full
+    monkeypatch.setattr(cores, "_pool", [_Unused()])
+    assert np.allclose(fit_stars(plane, x, y, box, flux).signal, alone.signal, rtol=1e-9)
+
+
+class _Unused(_Broken):
+    def submit(self, *_: object) -> Future:
+        pytest.fail("no work to the processes without the memory")
+
+
+def test_planes_shared_at_once_each_see_the_others_pages(monkeypatch) -> None:
+    plane = np.zeros((1000, 1000), np.float32)  # 4 MB
+    written: list[int] = []
+    meet = threading.Barrier(3, timeout=0.5)  # unlocked, all three check before any writes
+
+    def room() -> int:
+        with contextlib.suppress(threading.BrokenBarrierError):
+            meet.wait()
+        return 10 * 2**20 - sum(written)  # room for two
+
+    def created(**kwargs: object) -> shared_memory.SharedMemory:
+        memory = real(**kwargs)  # type: ignore[arg-type]
+        written.append(memory.size)  # its pages, as tmpfs counts them once written
+        return memory
+
+    def share() -> str:
+        try:
+            with cores.Shared(plane):
+                time.sleep(0.3)
+            return "shared"
+        except OSError:
+            return "one core"
+
+    real = shared_memory.SharedMemory
+    monkeypatch.setattr(cores.shared_memory, "SharedMemory", created)
+    monkeypatch.setattr(cores, "_shared_room", room)
+    assert sorted(cores.side_by_side(share, share, share)) == ["one core", "shared", "shared"]
+
+
+def test_the_frozen_app_lets_spawned_workers_start_before_anything_else(monkeypatch) -> None:
+    calls = []
+    monkeypatch.setattr(entry.multiprocessing, "freeze_support", lambda: calls.append("freeze"))
+
+    def stop(_: object) -> None:
+        calls.append("logging")
+        raise SystemExit
+
+    monkeypatch.setattr(entry, "setup_logging", stop)
+    with pytest.raises(SystemExit):
+        entry.main()
+    assert calls == ["freeze", "logging"]

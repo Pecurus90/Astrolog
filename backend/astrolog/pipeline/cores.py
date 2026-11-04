@@ -4,6 +4,7 @@ local filter on threads, per-star work in processes on shared pixels. Same numbe
 import atexit
 import multiprocessing
 import os
+import sys
 import threading
 from collections.abc import Callable, Sequence
 from concurrent.futures import Executor, ProcessPoolExecutor, ThreadPoolExecutor
@@ -21,7 +22,9 @@ MIN_STRIP_ROWS = 256  # [T] thinner strips spend more on margins and threads tha
 MIN_PARALLEL_VALUES = 1_000_000  # [T] fewer: one partition is quicker than the threads
 MEDIAN_SAMPLE = 100_000  # [T] values sorted to bracket the middle
 MEDIAN_SAMPLE_SIGMAS = 6.0  # [T] the bracket misses once in ~1e9 frames, then np.median
+SHM_DIR = "/dev/shm"  # noqa: S108 -- only its free space read. [D POSIX shm_open on Linux: a tmpfs mounted here]
 _lock = threading.Lock()
+_writing = threading.Lock()
 _pool: list[Executor] = []
 
 
@@ -102,6 +105,15 @@ def processes() -> Executor:
         return _pool[0]
 
 
+def forget(broken: Executor) -> None:
+    """Drop `broken`, a worker of it dead: the next processes() starts a new one. A newer pool,
+    started meanwhile by another plane, stays."""
+    with _lock:
+        if _pool and _pool[0] is broken:
+            _pool.clear()
+    broken.shutdown(wait=False, cancel_futures=True)
+
+
 def _die_with_parent() -> None:
     """In a worker: a watcher thread ends it when the app dies, even killed (no atexit then)."""
     parent = multiprocessing.parent_process()
@@ -115,11 +127,16 @@ def _exit_after(parent: BaseProcess) -> None:
 
 
 class Shared:
-    """An array in shared memory, for processes to read without a copy; closed on exit."""
+    """An array in shared memory, for processes to read without a copy; closed on exit. OSError
+    when it does not fit: a full tmpfs kills the writer with SIGBUS, no exception."""
 
     def __init__(self, image: np.ndarray) -> None:
-        self._memory = shared_memory.SharedMemory(create=True, size=max(1, image.nbytes))
-        np.ndarray(image.shape, image.dtype, self._memory.buf)[...] = image
+        with _writing:  # colour's three planes at once: each check sees the others' pages
+            room = _shared_room()
+            if room is not None and room < image.nbytes:
+                raise OSError(f"shared memory: {room} bytes free, {image.nbytes} needed")
+            self._memory = shared_memory.SharedMemory(create=True, size=max(1, image.nbytes))
+            np.ndarray(image.shape, image.dtype, self._memory.buf)[...] = image
         self.ref = (self._memory.name, image.shape, image.dtype.str)
 
     def __enter__(self) -> "Shared":
@@ -128,6 +145,14 @@ class Shared:
     def __exit__(self, *_: object) -> None:
         self._memory.close()
         self._memory.unlink()
+
+
+def _shared_room() -> int | None:
+    """Bytes free in /dev/shm (Linux; Docker's is 64 MB); None elsewhere, the pagefile backs it."""
+    if sys.platform != "linux" or not os.path.isdir(SHM_DIR):
+        return None
+    disk = os.statvfs(SHM_DIR)
+    return disk.f_bavail * disk.f_frsize
 
 
 def attached(ref: tuple[str, Sequence[int], str], fn: Callable[[np.ndarray], Any]) -> Any:

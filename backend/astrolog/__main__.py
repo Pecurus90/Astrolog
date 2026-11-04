@@ -1,6 +1,7 @@
 """`python -m astrolog`. NAS: `ASTROLOG_HOST=0.0.0.0`, `ASTROLOG_HOSTS=nas.local,...`,
 `ASTROLOG_SCAN_EVERY_MIN=60`; no token (docs/adr/0002-rete-di-casa-e-chiave-di-avvio.md)."""
 
+import multiprocessing
 import os
 import sys
 
@@ -14,6 +15,7 @@ from .weather.forecast import REFRESH_EVERY_S
 
 
 def main() -> None:
+    multiprocessing.freeze_support()  # PyInstaller sidecar (ADR 0004): a spawned worker stops here
     setup_logging(log_dir())
     try:
         _held = single_instance(data_dir())  # kept open: the lock lives with it
