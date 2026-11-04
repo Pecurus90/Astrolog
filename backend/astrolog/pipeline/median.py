@@ -2,10 +2,16 @@
 
 import numpy as np
 
+from .cores import by_strips
+
 
 def median3x3(data: np.ndarray) -> np.ndarray:
     """Exact 3x3 median, edges mirrored: vertical triples sorted once, then the median of the
     nine is med3(max of lows, med3 of mids, min of highs) (Paeth, Graphics Gems 1990)."""
+    return by_strips(_median3x3, data, 1)
+
+
+def _median3x3(data: np.ndarray) -> np.ndarray:
     padded = np.pad(data, 1, mode="symmetric")
     a, b, c = padded[:-2], padded[1:-1], padded[2:]
     low, high = np.minimum(a, b), np.maximum(a, b)

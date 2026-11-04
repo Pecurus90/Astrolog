@@ -3,6 +3,7 @@ median-filtered copy, HFD and shape on the raw frame. Pure: pixels in, numbers o
 
 import math
 from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
 import numpy as np
@@ -11,6 +12,7 @@ import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 from ..units import sigma_from_mad
 from . import transparency
 from .background import banding, gradient, valid_pixels
+from .cores import median, side_by_side
 from .debayer import COLOURS, debayered
 from .detect import Detections, detect
 from .field import (
@@ -113,6 +115,53 @@ def measure_frame(
     ceiling (ADR 0041), debayer clips there. `pedestal`: DN, off the median only (eq. 8)."""
     sensor = np.ascontiguousarray(data, dtype=np.float32)  # a clipped sensor pixel, colour too
     raw = sensor if pattern is None else debayered(sensor, pattern, top=saturation)
+    # each CFA channel's own, as Debayer writes them; mono's M* beside the rest (cores.py)
+    channels = partial(mstar_nstar, raw)
+    if pattern is not None:
+        channels = partial(_by_channel, sensor, pattern, saturation)
+    first, quiet, stats, extra = side_by_side(
+        lambda: _first_pass(raw, sensor, saturation), lambda: mrs(raw),
+        lambda: pixel_stats(raw, full_scale=saturation, pedestal=pedestal), channels)  # fmt: skip
+    # MRS, not the first pass: crowded fields lift a MAD (40k synthetic stars: 19.8 for 10)
+    noise = max((quiet if pattern is None else extra.noise).sigma, NOISE_FLOOR_ADU)  # the written
+    valid = valid_pixels(raw, saturation)
+    (found, fits, crossed), sky_field = side_by_side(
+        lambda: _stars(raw, (sensor, saturation), quiet, (first, valid)),
+        lambda: _sky_field(raw, valid, noise))  # fmt: skip
+    chosen = _spread(first.objects, first.usable, raw.shape)
+    shape, star_field, ladder, found_flux = side_by_side(
+        lambda: shape_of(first.images, first.objects, chosen, first.noise, (fits, len(found.x))),
+        lambda: _star_field(fits, raw.shape), lambda: _ladder(raw, found, fits),
+        lambda: photometry(fits) if pattern is None else None)  # fmt: skip
+    said = extra if pattern is not None else Estimates(
+        quiet, found_flux, extra, (stats.scale_low_adu, stats.scale_high_adu))  # fmt: skip
+    sky_field["trails"] = crossed
+    across = Across(ceiling_adu=saturation, saturated=int(found.saturated.sum()),
+                    gradient_angle_deg=bright_side(first.back), ladder=ladder,
+                    **_flux(said, noise, len(found.x)), **_pixel_values(stats, said, noise),
+                    **sky_field, **star_field)  # fmt: skip
+    common = {"stars": len(found.x), "kept": len(first.hfds), "background_adu": first.level,
+              "noise_adu": noise, "shape": shape} | vars(across)  # fmt: skip
+    if len(first.hfds) < MIN_STARS:
+        return TooFewStars(**common)
+    return Measured(**common, hfd_px=float(np.median(first.hfds)))
+
+
+@dataclass(frozen=True)
+class _First:
+    """sep's pass: sky, stars for the HFD and the shape; the structure map's noise."""
+
+    back: np.ndarray  # sep's sky
+    level: float  # its global level
+    images: tuple[np.ndarray, np.ndarray]  # residual, its 3x3 median
+    noise: float  # MAD of the residual
+    objects: np.ndarray  # sep's detections
+    usable: np.ndarray  # those fit to measure (_kept)
+    hfds: np.ndarray  # px, round ones spread on the grid
+    structure: float  # structure_noise of the median copy
+
+
+def _first_pass(raw: np.ndarray, sensor: np.ndarray, saturation: float) -> _First:
     sky = sep.Background(raw)
     back = sky.back()
     residual = raw - back
@@ -122,33 +171,8 @@ def measure_frame(
     usable = _kept(sensor, objects, saturation)
     round_ones = usable[_round(objects[usable])]
     hfds = _hfd(images, objects, _spread(objects, round_ones, raw.shape))
-    first_noise = noise
-    # MRS, not the first pass: crowded fields lift a MAD (40k synthetic stars: 19.8 for 10)
-    quiet = mrs(raw)
-    noise = max(quiet.sigma, NOISE_FLOOR_ADU)
     structure = max(structure_noise(images[1]), NOISE_FLOOR_ADU)
-    found = detect(*images, (noise, structure), clip=(sensor, saturation), level=(raw, saturation))
-    # Fitted on the plane with its sky: the sampling region's median needs the level (psf_fit.py)
-    fits = fit_stars(raw, found.x, found.y, found.box, found.flux)
-    chosen = _spread(objects, usable, raw.shape)
-    shape = shape_of(images, objects, chosen, first_noise, (fits, len(found.x)))
-    stats = pixel_stats(raw, full_scale=saturation, pedestal=pedestal)
-    if pattern is None:
-        said = Estimates(quiet, photometry(fits), mstar_nstar(raw),
-                         (stats.scale_low_adu, stats.scale_high_adu))  # fmt: skip
-    else:  # each CFA channel's own, as Debayer writes them
-        said = _mid_range([_estimates(plane, saturation) for plane in _channels(sensor, pattern)])
-    noise = max(said.noise.sigma, NOISE_FLOOR_ADU)
-    field = _sky_field(raw, saturation, noise, found) | _star_field(fits, raw.shape)
-    across = Across(ceiling_adu=saturation, saturated=int(found.saturated.sum()),
-                    gradient_angle_deg=bright_side(back), ladder=_ladder(raw, found, fits),
-                    **_flux(said, noise, len(found.x)), **_pixel_values(stats, said, noise),
-                    **field)  # fmt: skip
-    common = {"stars": len(found.x), "kept": len(hfds), "background_adu": float(sky.globalback),
-              "noise_adu": noise, "shape": shape} | vars(across)  # fmt: skip
-    if len(hfds) < MIN_STARS:
-        return TooFewStars(**common)
-    return Measured(**common, hfd_px=float(np.median(hfds)))
+    return _First(back, float(sky.globalback), images, noise, objects, usable, hfds, structure)
 
 
 def _flux(said: Estimates, noise: float, stars: int) -> dict[str, Any]:
@@ -177,15 +201,27 @@ def _ladder(raw: np.ndarray, found: Detections, fits: Fitted) -> dict[int, float
     return transparency.brightness_ladder(flux, peaks >= transparency.SATURATED_SHARE * top)
 
 
-def _sky_field(raw: np.ndarray, ceiling: float, noise: float, found: Detections) -> dict[str, Any]:
-    """ImageAnalysis Gradient, RowBanding, ColumnBanding on the measured plane's valid pixels, in
-    units of the noise written; Trails off its stars. software-ok"""
-    valid = valid_pixels(raw, ceiling)
-    bands = banding(raw, valid, noise)
-    return {"gradient_noise": gradient(raw, valid, noise),
-            "row_banding": bands.row if bands else None,
-            "column_banding": bands.column if bands else None,
-            "trails": trails(raw, valid, found)}  # fmt: skip
+def _stars(
+    raw: np.ndarray, clip: tuple[np.ndarray, float], quiet: Mrs, on: tuple["_First", np.ndarray]
+) -> tuple[Detections, Fitted, int]:
+    """Image Analysis's stars on the MRS noise, fitted on the plane with its sky: the sampling
+    region's median needs the level (psf_fit.py); Trails off them on `on`'s valid. software-ok"""
+    first, valid = on
+    noise = max(quiet.sigma, NOISE_FLOOR_ADU)
+    found = detect(*first.images, (noise, first.structure), clip=clip, level=(raw, clip[1]))
+    fits, crossed = side_by_side(lambda: fit_stars(raw, found.x, found.y, found.box, found.flux),
+                                 lambda: trails(raw, valid, found))  # fmt: skip
+    return found, fits, crossed
+
+
+def _sky_field(raw: np.ndarray, valid: np.ndarray, noise: float) -> dict[str, Any]:
+    """ImageAnalysis Gradient, RowBanding, ColumnBanding on the measured plane's `valid` pixels,
+    in units of the noise written. software-ok"""
+    bands, slope = side_by_side(lambda: banding(raw, valid, noise),
+                                lambda: gradient(raw, valid, noise))  # fmt: skip
+    return {"gradient_noise": slope,
+                   "row_banding": bands.row if bands else None,
+                   "column_banding": bands.column if bands else None}  # fmt: skip
 
 
 def _star_field(fits: Fitted, shape: tuple[int, ...]) -> dict[str, Any]:
@@ -207,7 +243,7 @@ def _pixel_values(stats: PixelStats, said: Estimates, noise: float) -> dict[str,
 
 
 def _sigma(residual: np.ndarray) -> float:
-    return sigma_from_mad(float(np.median(np.abs(residual - np.median(residual)))))
+    return sigma_from_mad(median(np.abs(residual - median(residual))))
 
 
 def _channels(data: np.ndarray, pattern: str) -> list[np.ndarray]:
@@ -237,6 +273,12 @@ def _estimates(plane: np.ndarray, saturation: float) -> Estimates:
     stats = pixel_stats(plane, full_scale=saturation)
     return Estimates(quiet, photometry(fits), mstar_nstar(plane),
                      (stats.scale_low_adu, stats.scale_high_adu))  # fmt: skip
+
+
+def _by_channel(sensor: np.ndarray, pattern: str, saturation: float) -> Estimates:
+    """The three channels' estimates side by side, mid-ranged."""
+    planes = _channels(sensor, pattern)
+    return _mid_range(side_by_side(*(partial(_estimates, p, saturation) for p in planes)))
 
 
 def _mid_range(channels: list[Estimates]) -> Estimates:

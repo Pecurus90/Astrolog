@@ -3,9 +3,13 @@ beta 4 at pixel centres, sky fitted, median-stabilized square. Pure. software-ok
 
 import math
 from dataclasses import dataclass, fields
+from functools import partial
+from typing import Any
 
 import numpy as np
 from scipy.optimize import least_squares  # pyright: ignore[reportMissingTypeStubs]
+
+from . import cores
 
 BETA = 4.0  # [C ImageAnalysis par. 2.1.6: default PSF type Moffat beta 4; software-ok]
 # Region grows while its median falls by at least this.
@@ -23,6 +27,8 @@ TENTH = 0.1  # [C ImageAnalysis eq. 24: flux on the FWTM ellipse; software-ok]
 APERTURE_FWTM = 1.0  # [C PJSR PSF.fitStar growth default 1.0, in FWTM; software-ok]
 WINSOR = 0.1  # [C ImageAnalysis par. 2.1.6: residual a 10% Winsorized mean; software-ok]
 EVALUATIONS_PER_PARAMETER = 50  # [T] a star that does not converge stops there
+POOL_STARS = 500  # [T] fewer fit in 0.3 s on one core: not worth the processes
+CHUNKS_PER_CORE = 4  # [T] uneven stars even out over several chunks a process
 _HALF = 2 ** (1 / BETA) - 1  # [D Moffat 1969: half maximum where (1 + q)^-beta = 1/2]
 _TENTH = TENTH ** (-1 / BETA) - 1
 
@@ -55,11 +61,25 @@ def fit_stars(
     """`plane` the measured pixels with their sky (the median needs its level); `box` per star
     (x0, x1, y0, y1); the MAX_FLUX_FITS brightest by `flux` fitted."""
     order = np.argsort(-flux, kind="stable")[:MAX_FLUX_FITS]
-    rows = [(*s[:7], i, rank, *s[7:]) for rank, i in enumerate(order)
-            if (s := _one(plane, float(x[i]), float(y[i]), box[i])) is not None]  # fmt: skip
+    stars = [(float(x[i]), float(y[i]), box[i], int(i), rank) for rank, i in enumerate(order)]
+    if len(stars) < POOL_STARS:
+        rows = _fitted(stars, plane)
+    else:  # interleaved: the bright, wide regions shared out
+        share = cores.CORES * CHUNKS_PER_CORE
+        with cores.Shared(np.ascontiguousarray(plane)) as shared:
+            parts = [cores.processes().submit(cores.attached, shared.ref,
+                                              partial(_fitted, stars[k::share]))
+                     for k in range(share)]  # fmt: skip
+            rows = sorted((r for p in parts for r in p.result()), key=lambda r: r[8])
     if not rows:
         return Fitted(*(np.empty(0),) * len(fields(Fitted)))
     return Fitted(*(np.array(c, dtype=np.float64) for c in zip(*rows, strict=True)))
+
+
+def _fitted(stars: list[tuple[Any, ...]], plane: np.ndarray) -> list[tuple[float, ...]]:
+    """(x, y, box, star, rank) each: the fit's row, star and rank after its first seven."""
+    return [(*s[:7], i, rank, *s[7:]) for x, y, box, i, rank in stars
+            if (s := _one(plane, x, y, box)) is not None]  # fmt: skip
 
 
 def region(plane: np.ndarray, cx: int, cy: int, box: np.ndarray) -> tuple[slice, slice]:

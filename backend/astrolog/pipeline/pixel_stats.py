@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from .background import valid_pixels
+from .cores import median, side_by_side
 
 BWMV_MADS = 9.0  # [C ImageAnalysis eq. 10: u = (v - M) / (9 MAD); software-ok]
 BWMV_NORMAL = 0.990905  # [C ImageAnalysis eq. 9: sqrt BWMV consistent with a normal; software-ok]
@@ -29,9 +30,10 @@ def pixel_stats(data: np.ndarray, *, full_scale: float, pedestal: float = 0.0) -
     negative accepted."""
     flat = np.asarray(data, dtype=np.float64).ravel()
     valid = flat[valid_pixels(flat, full_scale)]
-    centre = float(np.median(valid))
-    sigma = _sigma(valid, centre)
-    low, high = _scale(valid[valid < centre], centre), _scale(valid[valid >= centre], centre)
+    centre = median(valid)
+    sigma, low, high = side_by_side(lambda: _sigma(valid, centre),
+                                    lambda: _scale(valid[valid < centre], centre),
+                                    lambda: _scale(valid[valid >= centre], centre))  # fmt: skip
     return PixelStats(centre - pedestal, sigma, _entropy(valid, sigma), low, high)
 
 
@@ -44,7 +46,7 @@ def snr(scale_low: float, scale_high: float, noise: float) -> float | None:
 
 def _sigma(values: np.ndarray, centre: float) -> float:
     """ImageAnalysis eq. 9-10, the biweight midvariance about the median (Wilcox 2017, ch. 3)."""
-    mad = float(np.median(np.abs(values - centre)))
+    mad = median(np.abs(values - centre))
     if mad == 0:
         return 0.0
     u2 = ((values - centre) / (BWMV_MADS * mad)) ** 2

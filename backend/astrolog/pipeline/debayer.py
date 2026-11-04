@@ -1,9 +1,11 @@
 """Colour frame made one plane as WBPP measures it: VNG debayer (Chang, Cheung, Pan, SPIE 3650,
 1999), then HSI intensity. Pure: pixels in, pixels out. software-ok"""
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 
 import numpy as np
+
+from .cores import each
 
 # Channel (0 R, 1 G, 2 B) at [row % 2][col % 2]. [C BAYERPAT: letters row by row from pixel 0]
 COLOURS = {
@@ -79,16 +81,22 @@ def _odd(written: object) -> bool:
 def vng(mosaic: np.ndarray, pattern: str, *, top: float, strip: int = STRIP) -> np.ndarray:
     """(3, rows, cols) float32 R G B; `top`: the full scale the interpolated channels clip at."""
     rgb = np.empty((3, *mosaic.shape), dtype=np.float32)
-    for start, rows in _strips(mosaic, pattern, top, strip):
-        rgb[:, start : start + rows.shape[1]] = rows
+
+    def fill(span: tuple[int, int]) -> None:
+        rgb[:, span[0] : span[1]] = _rows(mosaic, pattern, top, span)
+
+    each(fill, _strips(mosaic.shape[0], strip))
     return _rows_copied(rgb)
 
 
 def debayered(mosaic: np.ndarray, pattern: str, *, top: float) -> np.ndarray:
-    """The intensity plane of the VNG image, a strip at a time: never three full planes."""
+    """The intensity plane of the VNG image, a strip at a time a core: never three full planes."""
     plane = np.empty(mosaic.shape, dtype=np.float32)
-    for start, rows in _strips(mosaic, pattern, top, STRIP):
-        plane[start : start + rows.shape[1]] = intensity(rows)
+
+    def fill(span: tuple[int, int]) -> None:
+        plane[span[0] : span[1]] = intensity(_rows(mosaic, pattern, top, span))
+
+    each(fill, _strips(mosaic.shape[0], STRIP))
     return _rows_copied(plane[np.newaxis])[0]
 
 
@@ -104,15 +112,16 @@ def _rows_copied(planes: np.ndarray) -> np.ndarray:
     return planes
 
 
-def _strips(
-    mosaic: np.ndarray, pattern: str, top: float, strip: int
-) -> Iterator[tuple[int, np.ndarray]]:
+def _strips(height: int, strip: int) -> list[tuple[int, int]]:
     """Inner rows in even-sized strips from row 2: a strip's row parity is the frame's."""
-    height = mosaic.shape[0]
     step = max(2, strip - strip % 2)
-    for start in range(BORDER, height - BORDER, step):
-        stop = min(start + step, height - BORDER)
-        yield start, _strip(mosaic[start - BORDER : stop + BORDER], COLOURS[pattern], top)
+    return [(start, min(start + step, height - BORDER))
+            for start in range(BORDER, height - BORDER, step)]  # fmt: skip
+
+
+def _rows(mosaic: np.ndarray, pattern: str, top: float, span: tuple[int, int]) -> np.ndarray:
+    start, stop = span
+    return _strip(mosaic[start - BORDER : stop + BORDER], COLOURS[pattern], top)
 
 
 def _strip(block: np.ndarray, colours: tuple[tuple[int, int], ...], top: float) -> np.ndarray:

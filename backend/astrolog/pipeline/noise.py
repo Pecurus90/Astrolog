@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..units import sigma_from_mad
+from .cores import by_strips, median
 
 B3 = np.array([1, 4, 6, 4, 1]) / 16  # [C Starck & Murtagh, starlet B3 spline kernel]
 LAYERS = 4  # [C PixInsight ImageWeighting par. 3.1.2: the first four wavelet layers; software-ok]
@@ -30,7 +31,7 @@ def starlet(image: np.ndarray, layers: int) -> tuple[list[np.ndarray], np.ndarra
 
 
 def _smoother(smooth: np.ndarray, j: int) -> np.ndarray:
-    return _taps(_taps(smooth, 2**j, 0), 2**j, 1)
+    return by_strips(lambda rows: _taps(_taps(rows, 2**j, 0), 2**j, 1), smooth, 2 ** (j + 1))
 
 
 def _taps(image: np.ndarray, step: int, axis: int) -> np.ndarray:
@@ -73,8 +74,8 @@ def structure_noise(filtered: np.ndarray) -> float:
     """The frame's sigma as the structure map sees it: `filtered` the 3x3 median copy (plan 26.48.2;
     his threshold over it and over MRS on 21 frames: misure.md, Stelle)."""
     layer = starlet(filtered, 2)[0][1].ravel()
-    centre = float(np.median(layer))
-    start = sigma_from_mad(float(np.median(np.abs(layer - centre))))
+    centre = median(layer)
+    start = sigma_from_mad(median(np.abs(layer - centre)))
     away = np.abs(layer - centre)
     sigma, _ = _fixed_point(start, lambda sigma: layer[away < K_SIGMA * sigma])
     return sigma / MEDIAN_LAYER2_GAIN
@@ -107,7 +108,7 @@ def mrs(image: np.ndarray) -> Mrs:
     to a fixed point, over 0.974. The start, which the paper leaves open: the first layer's MAD."""
     planes, smooth = starlet(image, LAYERS)
     first = planes[0]
-    sigma = sigma_from_mad(float(np.median(np.abs(first - np.median(first))))) / UNIT_SIGMAS[0]
+    sigma = sigma_from_mad(median(np.abs(first - median(first)))) / UNIT_SIGMAS[0]
     strongest = np.abs(planes.pop(0)) / UNIT_SIGMAS[0]  # layer by layer: one plane at a time
     for unit in UNIT_SIGMAS[1:]:
         np.maximum(strongest, np.abs(planes.pop(0)) / unit, out=strongest)

@@ -21,6 +21,7 @@ import statistics
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
@@ -146,7 +147,7 @@ try {
 File.writeTextFile(out, JSON.stringify(result));
 """
 
-# What measure_frame calls, by the name it looks up in stars.py; the rest is "altro".
+# What measure_frame calls, by the name it looks up in stars.py.
 OUR_STAGES = {
     "debayer VNG": "debayered",
     "rumore primo passo": "_sigma",
@@ -165,7 +166,7 @@ OUR_STAGES = {
     "scie": "trails",
     "tilt ed elongazione": "_star_field",
 }
-BACKGROUND, READ, OTHER, TOTAL = "fondo sep", "lettura file", "altro", "totale"
+BACKGROUND, READ, TOTAL = "fondo sep", "lettura file", "totale"
 
 
 @dataclass(frozen=True)
@@ -312,20 +313,23 @@ class _Sep:
 @contextmanager
 def stage_clock(seconds: dict[str, float]) -> Generator[None]:
     """Each stage of measure_frame timed where stars.py looks it up; a stage called inside
-    another counts in the outer one only. Put back on the way out."""
-    depth = [0]
+    another on its thread counts in the outer one only. Stages run side by side (cores.py): they
+    add up past the total. Put back on the way out."""
+    depth = threading.local()
+    lock = threading.Lock()
 
     def timed(label: str, fn: Callable[..., Any]) -> Callable[..., Any]:
         def clocked(*args: Any, **kwargs: Any) -> Any:
-            if depth[0]:
+            if getattr(depth, "n", 0):
                 return fn(*args, **kwargs)
-            depth[0] += 1
+            depth.n = 1
             start = time.perf_counter()
             try:
                 return fn(*args, **kwargs)
             finally:
-                depth[0] -= 1
-                seconds[label] = seconds.get(label, 0.0) + time.perf_counter() - start
+                depth.n = 0
+                with lock:
+                    seconds[label] = seconds.get(label, 0.0) + time.perf_counter() - start
 
         return clocked
 
@@ -388,9 +392,7 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
             pattern=pattern,
             pedestal=as_number(header.cards.get("PEDESTAL")) or 0.0,
         )
-    total = time.perf_counter() - start
-    seconds[OTHER] = total - sum(seconds.values())
-    seconds[TOTAL] = total
+    seconds[TOTAL] = time.perf_counter() - start
     hfd = found.hfd_px if isinstance(found, Measured) else None
     shape = found.shape
     fwhm, eccentricity = (shape.fwhm_px, shape.eccentricity) if shape else (None, None)

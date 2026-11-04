@@ -78,16 +78,22 @@ def _excess(plane: np.ndarray, valid: np.ndarray, noise: float) -> float:
     """Each row's valid median less the median of its parity's within BANDING_REACH rows; their
     MAD as sigma less what the noise gives a median of n, n the mean valid pixels a row."""
     counts = valid.sum(axis=1)
-    medians = np.array([np.median(r[k]) if n else np.nan
-                        for r, k, n in zip(plane, valid, counts, strict=True)])  # fmt: skip
-    left = []
-    for i, m in enumerate(medians):
-        if np.isnan(m):
-            continue
-        near = medians[max(0, i - BANDING_REACH) + (max(0, i - BANDING_REACH) - i) % 2 :
-                       i + BANDING_REACH + 1 : 2]  # fmt: skip
-        left.append(m - float(np.nanmedian(near)))
-    left_a = np.array(left)
+    medians = np.full(len(plane), np.nan)
+    whole = counts == plane.shape[1]  # rows all valid: one partition along the axis
+    medians[whole] = np.median(plane[whole], axis=1)
+    for i in np.flatnonzero(~whole & (counts > 0)):
+        medians[i] = np.median(plane[i][valid[i]])
+    seen = ~np.isnan(medians)
+    trend = np.full(len(medians), np.nan)
+    inner = np.zeros(len(medians), dtype=bool)
+    inner[BANDING_REACH : len(medians) - BANDING_REACH] = True
+    if (inner & seen).any():  # every window full, the same parity's at step 2
+        windows = np.lib.stride_tricks.sliding_window_view(medians, 2 * BANDING_REACH + 1)
+        trend[inner & seen] = np.nanmedian(windows[seen[inner], ::2], axis=1)
+    for i in np.flatnonzero(~inner & seen):
+        start = max(0, i - BANDING_REACH)
+        trend[i] = np.nanmedian(medians[start + (start - i) % 2 : i + BANDING_REACH + 1 : 2])
+    left_a = medians[seen] - trend[seen]
     s = sigma_from_mad(float(np.median(np.abs(left_a - np.median(left_a)))))
     expected = MEDIAN_SE * noise / math.sqrt(float(counts[counts > 0].mean()))
     return math.sqrt(max(0.0, s * s - expected * expected)) / noise

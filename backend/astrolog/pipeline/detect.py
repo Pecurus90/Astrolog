@@ -8,6 +8,7 @@ import numpy as np
 from scipy import ndimage  # pyright: ignore[reportMissingTypeStubs]
 
 from ..units import sigma_from_mad
+from .cores import by_strips
 from .noise import NOISE_FLOOR_ADU
 from .psf_flux import tenth_flux
 
@@ -74,7 +75,8 @@ def detect(
     rows, cols = np.nonzero(labels)
     owner = labels[rows, cols]
     boxes = ndimage.find_objects(labels)
-    box = ndimage.uniform_filter(residual, APERTURE_PX) * APERTURE_PX  # 2x2 mean x 2 = sum / 2
+    box = by_strips(lambda rows: ndimage.uniform_filter(rows, APERTURE_PX), residual, APERTURE_PX)
+    box *= APERTURE_PX  # 2x2 mean x 2 = sum / 2
     best = np.full(count + 1, -np.inf)
     np.maximum.at(best, owner, box[rows, cols])
     star = (best >= PREFILTER_SNR * noise) & (_coverage(owner, boxes, count) >= MIN_COVERAGE)
@@ -120,11 +122,15 @@ def detect(
 
 def structure_map(filtered: np.ndarray, noise: float) -> np.ndarray:
     """Structure pixels: `filtered` less its blur over STRUCTURE_SIGMA `noise`, closed 3x3."""
-    blur = ndimage.gaussian_filter(
-        filtered, STRUCTURE_BLUR, mode="mirror", truncate=STRUCTURE_REACH / STRUCTURE_BLUR
-    )
-    np.subtract(filtered, blur, out=blur)
-    return ndimage.binary_closing(blur > STRUCTURE_SIGMA * noise, _EIGHT)
+
+    def strip(rows: np.ndarray) -> np.ndarray:
+        blur = ndimage.gaussian_filter(
+            rows, STRUCTURE_BLUR, mode="mirror", truncate=STRUCTURE_REACH / STRUCTURE_BLUR
+        )
+        np.subtract(rows, blur, out=blur)
+        return ndimage.binary_closing(blur > STRUCTURE_SIGMA * noise, _EIGHT)
+
+    return by_strips(strip, filtered, STRUCTURE_REACH + 2)  # closing: one row each way, twice
 
 
 def _coverage(owner: np.ndarray, boxes: list[tuple[slice, slice] | None], count: int) -> np.ndarray:
@@ -140,7 +146,11 @@ def _coverage(owner: np.ndarray, boxes: list[tuple[slice, slice] | None], count:
 def _peaks(residual: np.ndarray, labels: np.ndarray, count: int) -> np.ndarray:
     """Structure pixels at the top of their 5x5 on the whole residual, sky pixels too (plan
     26.48.3, probe on his singles); a plateau counts one."""
-    top = ndimage.maximum_filter(residual, size=2 * PEAK_RADIUS + 1, mode="constant", cval=-np.inf)
+
+    def tops(rows: np.ndarray) -> np.ndarray:
+        return ndimage.maximum_filter(rows, 2 * PEAK_RADIUS + 1, mode="constant", cval=-np.inf)
+
+    top = by_strips(tops, residual, PEAK_RADIUS)
     at = (labels > 0) & (residual == top)
     del top
     spots, _ = cast(tuple[np.ndarray, int], ndimage.label(at, structure=_EIGHT))
@@ -159,7 +169,8 @@ def _over_local_sky(
     """(2x2 - 2 b) / n >= APERTURE_SNR for each candidate, b and n from its ring (RING_GROW)."""
     best, star = candidates
     reach = 2 * RING_GROW + 1  # [D RING_GROW 8-connected dilations make this square]
-    free_sky = ndimage.maximum_filter(labels, size=reach) == 0
+    free_sky = by_strips(lambda rows: ndimage.maximum_filter(rows, size=reach), labels, RING_GROW)
+    free_sky = free_sky == 0
     rows, cols = residual.shape
     keep = np.zeros(len(star), dtype=bool)
     for i in np.flatnonzero(star):

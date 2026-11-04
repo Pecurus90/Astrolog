@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 312; senza fonte: 1.
-Fonti: C norma: 165; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T tecnico: 73.
+Valori: 318; senza fonte: 1.
+Fonti: C norma: 165; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T tecnico: 79.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -234,6 +234,15 @@ Fonti: C norma: 165; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T
 |---|---|---|
 | LEFT_OUT_KEPT | `100` | P ADR 0038 |
 
+### pipeline/cores.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| MIN_STRIP_ROWS | `256` | T |
+| MIN_PARALLEL_VALUES | `1_000_000` | T |
+| MEDIAN_SAMPLE | `100_000` | T |
+| MEDIAN_SAMPLE_SIGMAS | `6.0` | T |
+
 ### pipeline/debayer.py
 
 | simbolo | valore | fonte |
@@ -358,6 +367,8 @@ Fonti: C norma: 165; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T
 | TENTH | `0.1` | C ImageAnalysis eq. 24: flux on the FWTM ellipse; software-ok |
 | WINSOR | `0.1` | C ImageAnalysis par. 2.1.6: residual a 10% Winsorized mean; software-ok |
 | EVALUATIONS_PER_PARAMETER | `50` | T |
+| POOL_STARS | `500` | T |
+| CHUNKS_PER_CORE | `4` | T |
 | _HALF | `2 ** (1 / BETA) - 1` | D Moffat 1969: half maximum where (1 + q)^-beta = 1/2 |
 
 ### pipeline/psf_flux.py

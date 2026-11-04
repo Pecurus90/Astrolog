@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..robust import sn
+from .cores import median
 from .median import median3x3
 
 # Dyadic layers 1, 2, ..., 128 px: the residual left is the model at 256 px.
@@ -25,7 +26,7 @@ def mstar_nstar(data: np.ndarray) -> Background | None:
     scale = sn(residual)
     if scale is None:
         return None
-    return Background(float(np.median(residual)), SN_HALF_NORMAL * scale)
+    return Background(median(residual), SN_HALF_NORMAL * scale)
 
 
 def background_residual(data: np.ndarray) -> np.ndarray:
