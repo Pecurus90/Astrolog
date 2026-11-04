@@ -8,7 +8,7 @@ from functools import partial
 from typing import Any
 
 import numpy as np
-from scipy.optimize import least_squares  # pyright: ignore[reportMissingTypeStubs]
+from scipy.optimize import leastsq  # pyright: ignore[reportMissingTypeStubs]
 
 from . import cores
 
@@ -28,6 +28,8 @@ TENTH = 0.1  # [C ImageAnalysis eq. 24: flux on the FWTM ellipse; software-ok]
 APERTURE_FWTM = 1.0  # [C PJSR PSF.fitStar growth default 1.0, in FWTM; software-ok]
 WINSOR = 0.1  # [C ImageAnalysis par. 2.1.6: residual a 10% Winsorized mean; software-ok]
 EVALUATIONS_PER_PARAMETER = 50  # [T] a star that does not converge stops there
+LM_TOLERANCE = 1e-8  # [C scipy least_squares default ftol, xtol, gtol]
+CONVERGED = (1, 2, 3, 4)  # [C MINPACK lmder info: 1-4 converged, 5 out of evaluations]
 POOL_STARS = 500  # [T] fewer fit in 0.3 s on one core: not worth the processes
 CHUNKS_PER_CORE = 4  # [T] uneven stars even out over several chunks a process
 _HALF = 2 ** (1 / BETA) - 1  # [D Moffat 1969: half maximum where (1 + q)^-beta = 1/2]
@@ -123,22 +125,26 @@ def _one(plane: np.ndarray, x: float, y: float, box: np.ndarray) -> tuple[float,
     width = max(1.0, (box[1] - box[0] + box[3] - box[2]) / 8)
     start = np.array([0.0, 1.0, x, y, math.log(width), math.log(width), 0.0])
     scaled = (values - sky) / peak
+    if len(values) < len(start):  # MINPACK fits no fewer residuals than parameters
+        return None
     try:
         with np.errstate(divide="raise", over="raise", invalid="raise", under="ignore"):
-            fit = least_squares(_residuals, start, jac=_jacobian,  # pyright: ignore[reportArgumentType]
-                                args=(xs, ys, scaled), method="lm", x_scale="jac",
-                                max_nfev=EVALUATIONS_PER_PARAMETER * (len(start) + 1))  # fmt: skip
+            # least_squares(method="lm", x_scale="jac")'s own MINPACK call, without its wrappers
+            fitted, _, _, _, status = leastsq(  # pyright: ignore[reportAssignmentType]
+                _residuals, start, args=(xs, ys, scaled), Dfun=_jacobian, full_output=True,
+                ftol=LM_TOLERANCE, xtol=LM_TOLERANCE, gtol=LM_TOLERANCE,
+                maxfev=EVALUATIONS_PER_PARAMETER * (len(start) + 1))  # fmt: skip
     except (ValueError, ArithmeticError):
         return None
-    b, a, x0, y0, log_sx, log_sy, theta = fit.x
-    if fit.status <= 0 or not np.all(np.isfinite(fit.x)) or a <= 0:
+    b, a, x0, y0, log_sx, log_sy, theta = fitted
+    if status not in CONVERGED or not np.all(np.isfinite(fitted)) or a <= 0:
         return None
     if not _placed(x0, y0, (xs, ys), box):
         return None
     sx, sy = math.exp(log_sx), math.exp(log_sy)
     signal = _signal(scaled, (xs - x0, ys - y0), (sx, sy, theta), b)
     tenth_x, tenth_y = sx * math.sqrt(_TENTH), sy * math.sqrt(_TENTH)
-    residual = _residual(scaled, _model(fit.x, xs, ys), signal, (2 * tenth_x, 2 * tenth_y))
+    residual = _residual(scaled, _model(fitted, xs, ys), signal, (2 * tenth_x, 2 * tenth_y))
     long_axis, short_axis = max(sx, sy), min(sx, sy)
     angle = math.degrees(theta) + (0 if sx >= sy else 90)
     fwhm = 2 * math.sqrt(sx * sy) * math.sqrt(_HALF)
@@ -219,35 +225,58 @@ def folded(degrees: float) -> float:
     return 0.0 if turned >= 180 else turned
 
 
-def _parts(p: np.ndarray, xs: np.ndarray, ys: np.ndarray) -> tuple[np.ndarray, ...]:
-    _, a, x0, y0, log_sx, log_sy, theta = p
-    sx2, sy2 = math.exp(2 * log_sx), math.exp(2 * log_sy)
-    c, s = math.cos(theta), math.sin(theta)
-    dx, dy = xs - x0, ys - y0
-    u, v = c * dx + s * dy, -s * dx + c * dy
-    base = 1 + u * u / sx2 + v * v / sy2
-    return u, v, base, base**-BETA, np.array([a, c, s, sx2, sy2])
+@cores.inlined
+def _widths(p: np.ndarray) -> tuple[float, float]:
+    """sx^2, sy^2; FloatingPointError where numpy's errstate would raise: exp overflowing, or
+    flushed to zero and divided by."""
+    sx2, sy2 = math.exp(2 * p[4]), math.exp(2 * p[5])
+    if not (math.isfinite(sx2) and math.isfinite(sy2)) or sx2 == 0 or sy2 == 0:
+        raise FloatingPointError("PSF width out of range")
+    return sx2, sy2
 
 
+@cores.inlined
+def _finite(value: float) -> float:
+    if not math.isfinite(value):
+        raise FloatingPointError("PSF model out of range")
+    return value
+
+
+@cores.compiled
 def _model(p: np.ndarray, xs: np.ndarray, ys: np.ndarray) -> np.ndarray:
-    *_, g, _ = _parts(p, xs, ys)
-    return p[0] + p[1] * g
+    """B + A (1 + u^2/sx^2 + v^2/sy^2)^-beta, u v the pixel's offset turned by theta."""
+    sx2, sy2 = _widths(p)
+    c, s = math.cos(p[6]), math.sin(p[6])
+    out = np.empty(len(xs))
+    for i in range(len(xs)):
+        dx, dy = xs[i] - p[2], ys[i] - p[3]
+        u, v = c * dx + s * dy, -s * dx + c * dy
+        out[i] = _finite(p[0] + p[1] * (1 + u * u / sx2 + v * v / sy2) ** -BETA)
+    return out
 
 
+@cores.compiled
 def _residuals(p: np.ndarray, xs: np.ndarray, ys: np.ndarray, values: np.ndarray) -> np.ndarray:
     return _model(p, xs, ys) - values
 
 
+@cores.compiled
 def _jacobian(p: np.ndarray, xs: np.ndarray, ys: np.ndarray, _values: np.ndarray) -> np.ndarray:
-    """B + A (1 + u^2/sx^2 + v^2/sy^2)^-beta, analytic (MINPACK lmder)."""
-    u, v, base, g, (a, c, s, sx2, sy2) = _parts(p, xs, ys)
-    dg = -BETA * g / base * a  # d model / d base
+    """_model's, analytic (MINPACK lmder)."""
+    a, (sx2, sy2) = p[1], _widths(p)
+    c, s = math.cos(p[6]), math.sin(p[6])
     jac = np.empty((len(xs), 7))
-    jac[:, 0] = 1.0
-    jac[:, 1] = g
-    jac[:, 2] = dg * (-2 * c * u / sx2 + 2 * s * v / sy2)
-    jac[:, 3] = dg * (-2 * s * u / sx2 - 2 * c * v / sy2)
-    jac[:, 4] = dg * (-2 * u * u / sx2)
-    jac[:, 5] = dg * (-2 * v * v / sy2)
-    jac[:, 6] = dg * 2 * u * v * (1 / sx2 - 1 / sy2)
+    for i in range(len(xs)):
+        dx, dy = xs[i] - p[2], ys[i] - p[3]
+        u, v = c * dx + s * dy, -s * dx + c * dy
+        base = 1 + u * u / sx2 + v * v / sy2
+        g = base**-BETA
+        dg = -BETA * g / base * a  # d model / d base
+        jac[i, 0] = 1.0
+        jac[i, 1] = g
+        jac[i, 2] = _finite(dg * (-2 * c * u / sx2 + 2 * s * v / sy2))
+        jac[i, 3] = _finite(dg * (-2 * s * u / sx2 - 2 * c * v / sy2))
+        jac[i, 4] = _finite(dg * (-2 * u * u / sx2))
+        jac[i, 5] = _finite(dg * (-2 * v * v / sy2))
+        jac[i, 6] = _finite(dg * 2 * u * v * (1 / sx2 - 1 / sy2))
     return jac

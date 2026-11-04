@@ -153,6 +153,27 @@ def test_the_brightest_are_fitted_first_up_to_the_cap(monkeypatch: pytest.Monkey
     assert len(brightest.fwhm_px) == 1 and brightest.signal[0] == fits.signal[0]
 
 
+def test_the_compiled_model_and_jacobian_are_numpys_and_raise_where_its_errstate_would() -> None:
+    xs, ys = (g.ravel().astype(float) for g in np.mgrid[0:15, 0:15])
+    p = np.array([0.1, 1.0, 7.2, 6.8, 0.9, 0.6, 0.4])
+    c, s = math.cos(p[6]), math.sin(p[6])
+    sx2, sy2 = math.exp(2 * p[4]), math.exp(2 * p[5])
+    u, v = c * (xs - p[2]) + s * (ys - p[3]), -s * (xs - p[2]) + c * (ys - p[3])
+    base = 1 + u * u / sx2 + v * v / sy2
+    assert np.allclose(psf_fit._model(p, xs, ys), p[0] + p[1] * base**-psf_fit.BETA, rtol=1e-14)
+    step = 1e-6 * np.eye(7)
+    numeric = np.stack([(psf_fit._model(p + d, xs, ys) - psf_fit._model(p - d, xs, ys)) / 2e-6
+                        for d in step], axis=1)  # fmt: skip
+    assert np.allclose(psf_fit._jacobian(p, xs, ys, xs), numeric, atol=1e-7)
+    for log_width in (400.0, -400.0):  # exp overflows; exp flushes to zero, then divides
+        wide = p.copy()
+        wide[4] = log_width
+        with pytest.raises(ArithmeticError):
+            psf_fit._model(wide, xs, ys)
+        with pytest.raises(ArithmeticError):
+            psf_fit._jacobian(wide, xs, ys, xs)
+
+
 def test_the_winsorized_mean_sets_each_tail_to_its_nearest_kept_value() -> None:
     values = np.arange(10, dtype=float)  # 10% a tail: 0 -> 1, 9 -> 8
     assert winsorized_mean(values) == pytest.approx((1 + 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 8) / 10)

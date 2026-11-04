@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 320; senza fonte: 1.
-Fonti: C norma: 166; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T tecnico: 80.
+Valori: 322; senza fonte: 1.
+Fonti: C norma: 168; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T tecnico: 80.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -369,6 +369,8 @@ Fonti: C norma: 166; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T
 | TENTH | `0.1` | C ImageAnalysis eq. 24: flux on the FWTM ellipse; software-ok |
 | WINSOR | `0.1` | C ImageAnalysis par. 2.1.6: residual a 10% Winsorized mean; software-ok |
 | EVALUATIONS_PER_PARAMETER | `50` | T |
+| LM_TOLERANCE | `1e-8` | C scipy least_squares default ftol, xtol, gtol |
+| CONVERGED | `(1, 2, 3, 4)` | C MINPACK lmder info: 1-4 converged, 5 out of evaluations |
 | POOL_STARS | `500` | T |
 | CHUNKS_PER_CORE | `4` | T |
 | _HALF | `2 ** (1 / BETA) - 1` | D Moffat 1969: half maximum where (1 + q)^-beta = 1/2 |
