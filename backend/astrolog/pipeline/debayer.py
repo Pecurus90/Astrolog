@@ -1,11 +1,12 @@
 """Colour frame made one plane as WBPP measures it: VNG debayer (Chang, Cheung, Pan, SPIE 3650,
 1999), then HSI intensity. Pure: pixels in, pixels out. software-ok"""
 
+import functools
 from collections.abc import Mapping
 
 import numpy as np
 
-from .cores import each
+from .cores import compiled, each, inlined, maximum, minimum
 
 # Channel (0 R, 1 G, 2 B) at [row % 2][col % 2]. [C BAYERPAT: letters row by row from pixel 0]
 COLOURS = {
@@ -80,24 +81,13 @@ def _odd(written: object) -> bool:
 
 def vng(mosaic: np.ndarray, pattern: str, *, top: float, strip: int = STRIP) -> np.ndarray:
     """(3, rows, cols) float32 R G B; `top`: the full scale the interpolated channels clip at."""
-    rgb = np.empty((3, *mosaic.shape), dtype=np.float32)
-
-    def fill(span: tuple[int, int]) -> None:
-        rgb[:, span[0] : span[1]] = _rows(mosaic, pattern, top, span)
-
-    each(fill, _strips(mosaic.shape[0], strip))
-    return _rows_copied(rgb)
+    return _filled(np.empty((3, *mosaic.shape), dtype=np.float32), mosaic, pattern, (top, strip))
 
 
 def debayered(mosaic: np.ndarray, pattern: str, *, top: float) -> np.ndarray:
-    """The intensity plane of the VNG image, a strip at a time a core: never three full planes."""
-    plane = np.empty(mosaic.shape, dtype=np.float32)
-
-    def fill(span: tuple[int, int]) -> None:
-        plane[span[0] : span[1]] = intensity(_rows(mosaic, pattern, top, span))
-
-    each(fill, _strips(mosaic.shape[0], STRIP))
-    return _rows_copied(plane[np.newaxis])[0]
+    """The intensity plane of the VNG image, pixel by pixel: never three full planes."""
+    plane = np.empty((1, *mosaic.shape), dtype=np.float32)
+    return _filled(plane, mosaic, pattern, (top, STRIP))[0]
 
 
 def intensity(rgb: np.ndarray) -> np.ndarray:
@@ -106,10 +96,52 @@ def intensity(rgb: np.ndarray) -> np.ndarray:
     return (rgb.min(axis=0) + rgb.max(axis=0)) / 2
 
 
+def _filled(
+    planes: np.ndarray, mosaic: np.ndarray, pattern: str, at: tuple[float, int]
+) -> np.ndarray:
+    """VNG on the inner rows a strip per core into `planes`: three R G B, or one the intensity;
+    the two border rows and columns copied from the nearest computed."""
+    top, strip = at
+    image = np.ascontiguousarray(mosaic, dtype=np.float32)
+    tables = _tables(pattern)
+    each(lambda span: _vng(image, tables, np.float64(top), span, planes),
+         _strips(mosaic.shape[0], strip))  # fmt: skip
+    planes[:, :, :BORDER] = planes[:, :, BORDER : BORDER + 1]
+    planes[:, :, -BORDER:] = planes[:, :, -BORDER - 1 : -BORDER]
+    return _rows_copied(planes)
+
+
 def _rows_copied(planes: np.ndarray) -> np.ndarray:
     planes[:, :BORDER] = planes[:, BORDER : BORDER + 1]
     planes[:, -BORDER:] = planes[:, -BORDER - 1 : -BORDER]
     return planes
+
+
+@functools.cache
+def _tables(pattern: str) -> tuple[np.ndarray, ...]:
+    """Per centre parity (row % 2 * 2 + col % 2), padded: its colour; each direction's pairs,
+    float32 weights and their number; its region's pixels by colour, in order, and how many."""
+    centres = np.zeros(4, dtype=np.int64)
+    pairs = np.zeros((4, 8, 6, 2), dtype=np.int64)
+    weights = np.zeros((4, 8, 6), dtype=np.float32)
+    terms = np.zeros((4, 8), dtype=np.int64)
+    members = np.zeros((4, 8, 3, 7), dtype=np.int64)
+    sizes = np.zeros((4, 8, 3), dtype=np.int64)
+    colours = COLOURS[pattern]
+    for p in range(4):
+        row, col = divmod(p, 2)
+        centres[p] = colours[row][col]
+        green = centres[p] == 1
+        directions, regions = (_GREEN, _GREEN_SUMS) if green else (_OTHER, _OTHER_SUMS)
+        for d, (direction, region) in enumerate(zip(directions, regions, strict=True)):
+            terms[p, d] = len(direction)
+            for t, (a, b, w) in enumerate(direction):
+                pairs[p, d, t], weights[p, d, t] = (a, b), w
+            for k in region:
+                colour = colours[(row + k // 5) % 2][(col + k % 5) % 2]
+                members[p, d, colour, sizes[p, d, colour]] = k
+                sizes[p, d, colour] += 1
+    return centres, pairs, weights, terms, members, sizes
 
 
 def _strips(height: int, strip: int) -> list[tuple[int, int]]:
@@ -119,55 +151,72 @@ def _strips(height: int, strip: int) -> list[tuple[int, int]]:
             for start in range(BORDER, height - BORDER, step)]  # fmt: skip
 
 
-def _rows(mosaic: np.ndarray, pattern: str, top: float, span: tuple[int, int]) -> np.ndarray:
-    start, stop = span
-    return _strip(mosaic[start - BORDER : stop + BORDER], COLOURS[pattern], top)
+@compiled
+def _vng(mosaic: np.ndarray, tables: tuple[np.ndarray, ...], top: float, span: tuple[int, int],
+         planes: np.ndarray) -> None:  # fmt: skip
+    """Rows `span` (inner), every inner column: R G B into three planes, or the intensity into
+    one. float32 sums as numpy's on float32, the step over the count in float64 as theirs."""
+    cols = mosaic.shape[1]
+    window = np.empty(25, dtype=np.float32)
+    scratch = np.empty((2, 8), dtype=np.float32)  # gradients; R G B sums
+    rgb = np.empty(3, dtype=np.float32)
+    for r in range(*span):
+        for c in range(BORDER, cols - BORDER):
+            for dy in range(5):
+                for dx in range(5):
+                    window[dy * 5 + dx] = mosaic[r - BORDER + dy, c - BORDER + dx]
+            _pixel(window, tables, (r % 2) * 2 + c % 2, (top, scratch), rgb)
+            if planes.shape[0] == 3:
+                planes[0, r, c], planes[1, r, c], planes[2, r, c] = rgb[0], rgb[1], rgb[2]
+            else:
+                low = minimum(minimum(rgb[0], rgb[1]), rgb[2])
+                high = maximum(maximum(rgb[0], rgb[1]), rgb[2])
+                planes[0, r, c] = (low + high) / np.float32(2)
 
 
-def _strip(block: np.ndarray, colours: tuple[tuple[int, int], ...], top: float) -> np.ndarray:
-    rows, cols = block.shape[0] - 2 * BORDER, block.shape[1] - 2 * BORDER
-    out = np.empty((3, rows, block.shape[1]), dtype=np.float32)
-    # the four same-parity planes, contiguous: a window sample is then a plain slice
-    planes = [[np.ascontiguousarray(block[r::2, c::2]) for c in (0, 1)] for r in (0, 1)]
-    for pr in (0, 1):
-        for pc in (0, 1):
-            nr, nc = len(range(pr, rows, 2)), len(range(pc, cols, 2))
-            if nr and nc:
-                window = [
-                    planes[(pr + k // 5) % 2][(pc + k % 5) % 2][
-                        (pr + k // 5) // 2 : (pr + k // 5) // 2 + nr,
-                        (pc + k % 5) // 2 : (pc + k % 5) // 2 + nc,
-                    ]
-                    for k in range(25)
-                ]
-                channels = [colours[(pr + k // 5) % 2][(pc + k % 5) % 2] for k in range(25)]
-                out[:, pr:rows:2, BORDER + pc : BORDER + cols : 2] = _lattice(window, channels, top)
-    out[:, :, :BORDER] = out[:, :, BORDER : BORDER + 1]
-    out[:, :, -BORDER:] = out[:, :, -BORDER - 1 : -BORDER]
-    return out
+@inlined
+def _gradients(window: np.ndarray, tables: tuple[np.ndarray, ...], parity: int,
+               gradient: np.ndarray) -> np.float32:  # fmt: skip
+    """The eight directions' gradients into `gradient`; the threshold k1 min + k2 (max - min)."""
+    _, pairs, weights, terms, _, _ = tables
+    for d in range(8):
+        total = np.float32(0)
+        for t in range(terms[parity, d]):
+            a, b = pairs[parity, d, t, 0], pairs[parity, d, t, 1]
+            total += abs(window[a] - window[b]) * weights[parity, d, t]
+        gradient[d] = total
+    low, high = gradient[0], gradient[0]
+    for d in range(1, 8):
+        low, high = minimum(low, gradient[d]), maximum(high, gradient[d])
+    return np.float32(K1) * low + np.float32(K2) * (high - low)
 
 
-def _lattice(window: list[np.ndarray], channels: list[int], top: float) -> np.ndarray:
-    """One of the four sub-lattices: every centre the same colour, so one table for all."""
-    centre = channels[12]
-    green = centre == 1
-    terms = _GREEN if green else _OTHER
-    pairs = {frozenset((a, b)) for direction in terms for a, b, _ in direction}
-    diffs = {pair: np.abs(np.subtract(*(window[k] for k in pair))) for pair in pairs}
-    gradients = np.zeros((len(terms), *window[12].shape), dtype=np.float32)
-    for gradient, direction in zip(gradients, terms, strict=True):
-        for a, b, w in direction:
-            gradient += diffs[frozenset((a, b))] * w
-    low, high = gradients.min(axis=0), gradients.max(axis=0)
-    valid = gradients <= K1 * low + K2 * (high - low)
-    sums = np.zeros((3, *window[12].shape), dtype=np.float32)
-    for direction, samples in enumerate(_GREEN_SUMS if green else _OTHER_SUMS):
-        for channel in set(channels[k] for k in samples):
-            members = [window[k] for k in samples if channels[k] == channel]
-            sums[channel] += np.where(valid[direction], sum(members) / len(members), 0)
-    count = valid.sum(axis=0)
-    rgb = np.empty_like(sums)
-    for channel in range(3):
-        moved = window[12] + (sums[channel] - sums[centre]) / count
-        rgb[channel] = window[12] if channel == centre else np.clip(moved, 0, top)
-    return rgb
+@inlined
+def _pixel(window: np.ndarray, tables: tuple[np.ndarray, ...], parity: int,
+           at: tuple[float, np.ndarray], rgb: np.ndarray) -> None:  # fmt: skip
+    """One pixel's R G B from its 5x5 window (Chang 1999): gradients, the threshold, the mean
+    step of each colour over the directions under it, added to the centre."""
+    centres, _, _, _, members, sizes = tables
+    top, scratch = at
+    gradient, sums = scratch[0], scratch[1]
+    centre = centres[parity]
+    under = _gradients(window, tables, parity, gradient)
+    sums[:3] = 0
+    count = 0
+    for d in range(8):
+        if not gradient[d] <= under:
+            continue
+        count += 1
+        for colour in range(3):
+            n = sizes[parity, d, colour]
+            if n:
+                mean = np.float32(0)
+                for m in range(n):
+                    mean += window[members[parity, d, colour, m]]
+                sums[colour] += mean / np.float32(n)
+    for colour in range(3):
+        if colour == centre:
+            rgb[colour] = window[12]
+        else:
+            moved = float(window[12]) + float(sums[colour] - sums[centre]) / count
+            rgb[colour] = min(max(moved, 0.0), top) if moved == moved else moved

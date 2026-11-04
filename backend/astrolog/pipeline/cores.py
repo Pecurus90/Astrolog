@@ -67,7 +67,24 @@ def by_strips(fn: Callable[[np.ndarray], np.ndarray], image: np.ndarray, margin:
 def compiled(fn: Callable[..., Any]) -> Callable[..., Any]:
     """`fn` compiled to machine code, serial and off the GIL: our threads spread it (in_parts,
     by_strips), no numba threading layer (Mac has no OpenMP). Cached on disk after the first."""
-    return numba.njit(cache=True, nogil=True)(fn)
+    return numba.njit(cache=True, nogil=True, error_model="numpy")(fn)  # x / 0: inf, as numpy
+
+
+def inlined(fn: Callable[..., Any]) -> Callable[..., Any]:
+    """A helper of compiled code, copied into each caller: a call per pixel costs its body."""
+    return numba.njit(cache=True, nogil=True, error_model="numpy", inline="always")(fn)
+
+
+@inlined
+def minimum(a: float, b: float) -> float:
+    """np.minimum of two values: a NaN either side wins."""
+    return a if a < b or a != a else b
+
+
+@inlined
+def maximum(a: float, b: float) -> float:
+    """np.maximum of two values."""
+    return a if a > b or a != a else b
 
 
 def in_parts(

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..units import sigma_from_mad
-from .cores import MIN_STRIP_ROWS, compiled, in_parts, median
+from .cores import MIN_STRIP_ROWS, compiled, in_parts, inlined, median
 
 B3 = np.array([1, 4, 6, 4, 1]) / 16  # [C Starck & Murtagh, starlet B3 spline kernel]
 LAYERS = 4  # [C PixInsight ImageWeighting par. 3.1.2: the first four wavelet layers; software-ok]
@@ -44,7 +44,7 @@ def _smoother(smooth: np.ndarray, step: int) -> tuple[np.ndarray, np.ndarray]:
 TAPS = (np.float32(B3[0]), np.float32(B3[1]), np.float32(B3[2]))  # [C Starck & Murtagh, B3]
 
 
-@compiled
+@inlined
 def _mirror(i: int, size: int) -> int:
     """Index reflected without repeating the edge (numpy pad 'reflect', ndimage 'mirror')."""
     if size == 1:

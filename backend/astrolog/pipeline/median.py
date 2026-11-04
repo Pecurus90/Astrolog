@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from .cores import MIN_STRIP_ROWS, compiled, in_parts
+from .cores import MIN_STRIP_ROWS, compiled, in_parts, inlined, maximum, minimum
 
 
 def median3x3(data: np.ndarray) -> np.ndarray:
@@ -26,25 +26,15 @@ def _median3x3(image: np.ndarray, span: tuple[int, int], out: np.ndarray) -> Non
         for k in range(cols + 2):
             c = min(max(k - 1, 0), cols - 1)
             a, b, d = image[above, c], image[r, c], image[below, c]
-            lo, hi = _min(a, b), _max(a, b)
-            mid[k] = _max(lo, _min(hi, d))
-            low[k], high[k] = _min(lo, d), _max(hi, d)
+            lo, hi = minimum(a, b), maximum(a, b)
+            mid[k] = maximum(lo, minimum(hi, d))
+            low[k], high[k] = minimum(lo, d), maximum(hi, d)
         for c in range(cols):
-            lows = _max(_max(low[c], low[c + 1]), low[c + 2])
-            highs = _min(_min(high[c], high[c + 1]), high[c + 2])
+            lows = maximum(maximum(low[c], low[c + 1]), low[c + 2])
+            highs = minimum(minimum(high[c], high[c + 1]), high[c + 2])
             out[r, c] = _med3(lows, _med3(mid[c], mid[c + 1], mid[c + 2]), highs)
 
 
-@compiled
-def _min(a: float, b: float) -> float:
-    return a if a < b or a != a else b  # a NaN either side wins, as np.minimum
-
-
-@compiled
-def _max(a: float, b: float) -> float:
-    return a if a > b or a != a else b
-
-
-@compiled
+@inlined
 def _med3(a: float, b: float, c: float) -> float:
-    return _max(_min(a, b), _min(_max(a, b), c))
+    return maximum(minimum(a, b), minimum(maximum(a, b), c))
