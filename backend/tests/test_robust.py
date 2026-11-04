@@ -222,3 +222,37 @@ def test_residuals_at_rounding_leave_the_ordinary_fit_alone():
 def test_a_zero_scale_is_silent():
     """Qn zero (valori ripetuti, frame copiati): la soglia sarebbe la mediana, e tace."""
     assert relative_bounds([0.5] * 8 + [0.6, 0.7]) is None
+
+
+def _chauvenet_one_pass_at_a_time(values: np.ndarray) -> np.ndarray:
+    """The definition, a full median and sort each pass: what the run-wise stage must give."""
+    x = np.asarray(values, dtype=float)
+    kept = np.ones(len(x), dtype=bool)
+    for centre, scale, (a, b) in (
+        (np.median, robust._deviation_683, robust.MEDIAN_CORRECTION),
+        (np.mean, robust._standard_deviation, robust.MEAN_CORRECTION),
+    ):
+        while (n := int(kept.sum())) > robust.CHAUVENET_MIN:
+            here = x[kept]
+            mu = float(centre(here))
+            sigma = scale(here - mu) / (1 - a * n**-b)
+            if sigma <= 0:
+                break
+            z = np.where(kept, np.abs(x - mu) / sigma, -1.0)
+            worst = int(np.argmax(z))
+            if n * math.erfc(z[worst] / math.sqrt(2)) >= robust.CHAUVENET_EXPECTED:
+                break
+            kept[worst] = False
+    return kept
+
+
+def test_robust_chauvenet_keeps_what_the_pass_by_pass_definition_keeps():
+    rng = np.random.default_rng(683)
+    cases = [rng.lognormal(0, 1.5, 3000), rng.standard_cauchy(2000), rng.normal(0, 1, 7),
+             rng.integers(0, 6, 400).astype(float),  # ties everywhere, both ends
+             np.concatenate([np.full(50, 3.0), rng.normal(3, 1, 50), [40.0, -34.0]]),  # equidistant
+             np.array([1.0, 1.0, 1.0, 1.0, 9.0]), np.array([2.0, 5.0]), np.array([]),
+             np.array([1.0, np.nan, 3.0, 4.0, 100.0])]  # fmt: skip
+    for values in cases:
+        want = _chauvenet_one_pass_at_a_time(values)
+        assert np.array_equal(robust.robust_chauvenet(values), want)

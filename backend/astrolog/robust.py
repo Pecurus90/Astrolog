@@ -6,6 +6,7 @@ import statistics
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+import numba  # pyright: ignore[reportMissingTypeStubs] -- no stubs
 import numpy as np
 
 from .units import sigma_from_mad
@@ -168,7 +169,8 @@ def biweight_fit(design: np.ndarray, values: np.ndarray, *, upper: bool = False)
 def sn(values: np.ndarray) -> float | None:
     """Sn = lomed_i himed_j |x_i - x_j|, no consistency factor (Rousseeuw & Croux 1993, eq. 2.1);
     the inner median exact over all n, the outer over SN_OUTER order statistics. None if empty."""
-    x = np.sort(np.asarray(values, dtype=float))
+    # sorted in its own type, then widened: the same order, float32 sorts twice as fast
+    x = np.sort(np.asarray(values)).astype(float)
     if len(x) == 0:
         return None
     at = x[np.linspace(0, len(x) - 1, min(SN_OUTER, len(x))).round().astype(np.int64)]
@@ -186,6 +188,9 @@ def robust_chauvenet(values: np.ndarray) -> np.ndarray:
     factors' table for N <= 100 is not in the text, the N > 100 law serves there too."""
     x = np.asarray(values, dtype=float)
     kept = np.ones(len(x), dtype=bool)
+    if len(x) and not np.isnan(x).any():  # NaN: numpy's median and argmax, the loop below
+        order = np.argsort(x, kind="stable")
+        kept = ~_median_stage(x[order], order, MEDIAN_CORRECTION)
     for centre, scale, (a, b) in (
         (np.median, _deviation_683, MEDIAN_CORRECTION),
         (np.mean, _standard_deviation, MEAN_CORRECTION),
@@ -202,6 +207,50 @@ def robust_chauvenet(values: np.ndarray) -> np.ndarray:
                 break
             kept[worst] = False
     return kept
+
+
+@numba.njit(cache=True, nogil=True, error_model="numpy")
+def _median_stage(
+    ordered: np.ndarray, order: np.ndarray, correction: tuple[float, float]
+) -> np.ndarray:
+    """The median stage on the values sorted (ties by index): the farthest from the median is an
+    end of what is kept, so the kept are a run, its median and 68.3% deviation read off it."""
+    a, b = correction
+    removed = np.zeros(len(ordered), dtype=np.bool_)
+    run = np.arange(len(ordered))  # each position's first of its equal values
+    for p in range(1, len(ordered)):
+        if ordered[p] == ordered[p - 1]:
+            run[p] = run[p - 1]
+    taken = np.zeros(len(ordered), dtype=np.intp)  # per run, its copies gone, lowest index first
+    lo, hi = 0, len(ordered) - 1
+    while hi - lo + 1 > CHAUVENET_MIN:
+        n = hi - lo + 1
+        middle = lo + n // 2
+        mu = ordered[middle] if n % 2 else (ordered[middle - 1] + ordered[middle]) / 2
+        k = math.ceil(DEVIATION_PERCENTILE * n)
+        start, stop = lo, hi - k + 1  # the k nearest to mu: a window, its far end the k-th
+        while start < stop:
+            mid = (start + stop) // 2
+            if abs(ordered[mid] - mu) > abs(ordered[mid + k] - mu):
+                start = mid + 1
+            else:
+                stop = mid
+        sigma = max(abs(ordered[start] - mu), abs(ordered[start + k - 1] - mu)) / (1 - a * n**-b)
+        if sigma <= 0:
+            break
+        z_lo, z_hi = abs(ordered[lo] - mu) / sigma, abs(ordered[hi] - mu) / sigma
+        low = order[run[lo] + taken[run[lo]]]
+        high = order[run[hi] + taken[run[hi]]]
+        bottom = z_lo > z_hi or (z_lo == z_hi and low < high)  # np.argmax: the first index
+        if n * math.erfc(max(z_lo, z_hi) / math.sqrt(2)) >= CHAUVENET_EXPECTED:
+            break
+        removed[low if bottom else high] = True
+        taken[run[lo] if bottom else run[hi]] += 1
+        if bottom:
+            lo += 1
+        else:
+            hi -= 1
+    return removed
 
 
 def _deviation_683(deviations: np.ndarray) -> float:
