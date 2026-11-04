@@ -25,7 +25,7 @@ from astrolog.pipeline.pixels import Pixels, read_pixels
 from astrolog.pipeline.scanner import read_header
 from astrolog.pipeline.sqm import Wcs, calibrate, sky_brightness
 from astrolog.pipeline.star_catalogue import catalogue_in
-from confronto_misure import FRAME_SUFFIXES, _launch, card_altitude
+from confronto_misure import FRAME_SUFFIXES, _launch, card_observation
 
 ASTAP_EXE = Path(r"C:\Program Files\astap\astap.exe")
 ASTAP_CLI = ASTAP_EXE.parent / "astap_cli.exe"
@@ -108,7 +108,7 @@ def measure_ours(frame: Path, wcs: Wcs | None, bias: float, folder: Path) -> Our
         return None
     colour = is_colour(frame)
     found = calibrate(read.data, wcs, folder, code, colour=colour)
-    altitude = card_altitude(header.cards, (wcs.ra_deg, wcs.dec_deg))
+    altitude = card_observation(header.cards, (wcs.ra_deg, wcs.dec_deg))["altitude_deg"]
     airmass = None if altitude is None else airmass_of(altitude)
     if found is None or airmass is None:
         return None

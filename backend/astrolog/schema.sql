@@ -1001,6 +1001,8 @@ CREATE TABLE pipeline_cards (
   -- fuoco e temperatura: metrica con measure
   focuser_position INTEGER CHECK (focuser_position >= 0),
   focuser_temp_c   REAL CHECK (focuser_temp_c >= -273.15),
+  -- lato del pilastro come scritto (PIERSIDE, ASCOM); NULL: non scritto o altra parola
+  pier_side        TEXT CHECK (pier_side IN ('east', 'west')),
   CHECK ((pointing_ra_deg IS NULL) = (pointing_dec_deg IS NULL)
     AND (pointing_ra_deg IS NULL) = (pointing_source IS NULL)),
   CHECK ((site_lat_deg IS NULL) = (site_lon_deg IS NULL)),
@@ -1195,8 +1197,24 @@ CREATE TABLE pipeline_sky (
   angle_pa_deg  REAL CHECK (angle_pa_deg >= 0 AND angle_pa_deg < 180),
   angle_axis    TEXT CHECK (angle_axis IN ('ra', 'dec')),
   gradient_pa_deg REAL CHECK (gradient_pa_deg >= 0 AND gradient_pa_deg < 360),  -- lato chiaro
+  -- Image Analysis par. 2.1.1, a meta' posa. Centro: da Nord verso Est; angolo orario in ore,
+  -- negativo prima del transito, posto di data. NULL: centro, sito o ora ignoti
+  azimuth_deg   REAL CHECK (azimuth_deg >= 0 AND azimuth_deg < 360),
+  hour_angle_h  REAL CHECK (hour_angle_h >= -12 AND hour_angle_h < 12),
+  -- Luna e Sole topocentrici, geometrici; distanza Luna-centro; illuminata 0-1, geocentrica.
+  -- NULL: sito o ora ignoti (la distanza anche col centro ignoto)
+  moon_altitude_deg   REAL CHECK (moon_altitude_deg BETWEEN -90 AND 90),
+  moon_separation_deg REAL CHECK (moon_separation_deg BETWEEN 0 AND 180),
+  moon_illumination   REAL CHECK (moon_illumination BETWEEN 0 AND 1),
+  sun_altitude_deg    REAL CHECK (sun_altitude_deg BETWEEN -90 AND 90),
   computed_at   TEXT NOT NULL,
   CHECK (altitude_deg IS NULL OR mid_utc IS NOT NULL),
+  CHECK ((azimuth_deg IS NULL) = (altitude_deg IS NULL)
+    AND (hour_angle_h IS NULL) = (altitude_deg IS NULL)),
+  CHECK ((moon_altitude_deg IS NULL) = (sun_altitude_deg IS NULL)
+    AND (moon_illumination IS NULL) = (sun_altitude_deg IS NULL)
+    AND (sun_altitude_deg IS NULL OR mid_utc IS NOT NULL)
+    AND (moon_separation_deg IS NULL OR moon_altitude_deg IS NOT NULL)),
   CHECK (airmass IS NULL OR altitude_deg >= 0),
   CHECK (solved = 1 OR coalesce(hfd_arcsec, fwhm_arcsec, angle_pa_deg, gradient_pa_deg) IS NULL),
   CHECK ((hfd_zenith_arcsec IS NULL) = (hfd_arcsec IS NULL OR airmass IS NULL)),

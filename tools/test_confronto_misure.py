@@ -19,7 +19,7 @@ from confronto_misure import (
     Row,
     analysis_script,
     astap_from_code,
-    card_altitude,
+    card_observation,
     debayered_name,
     group_of,
     main,
@@ -137,14 +137,47 @@ def test_each_frame_is_timed_alone_with_and_without_the_extended_measures():
     assert 'clock(f, "base", () => analyse([f], false, false))' in timed
 
 
+_M13 = {"SWCREATE": "N.I.N.A. 3.2.0.9001 (x64)", "IMAGETYP": "LIGHT",
+        "DATE-OBS": "2025-06-29T21:30:00.000", "EXPTIME": 300.0, "SITELAT": 45.494,
+        "SITELONG": 11.5218, "RA": 241.2548, "DEC": 17.7166, "PIERSIDE": "West", "GAIN": 100,
+        "OFFSET": 50}  # fmt: skip
+
+
 def test_our_altitude_comes_from_the_card_as_the_sky_stage_does():
     """M13 da Montebelluna poco dopo il transito: alto; senza sito, niente altezza."""
-    cards = {"SWCREATE": "N.I.N.A. 3.2.0.9001 (x64)", "IMAGETYP": "LIGHT",
-             "DATE-OBS": "2025-06-29T21:30:00.000", "EXPTIME": 300.0, "SITELAT": 45.494,
-             "SITELONG": 11.5218, "RA": 241.2548, "DEC": 17.7166}  # fmt: skip
-    altitude = card_altitude(cards)
+    altitude = card_observation(_M13)["altitude_deg"]
     assert altitude is not None and 60 < altitude < 75
-    assert card_altitude({k: v for k, v in cards.items() if not k.startswith("SITE")}) is None
+    no_site = card_observation({k: v for k, v in _M13.items() if not k.startswith("SITE")})
+    assert no_site["altitude_deg"] is None and no_site["moon_altitude_deg"] is None
+
+
+def test_the_card_gives_where_it_pointed_the_moon_the_sun_and_the_pier_side():
+    """Poco dopo il transito: angolo orario appena positivo, azimut a Sud; West e' 1 (ASCOM)."""
+    found = card_observation(_M13)
+    assert 0 < found["hour_angle_h"] < 1 and 180 < found["azimuth_deg"] < 230
+    assert -18 < found["sun_altitude_deg"] < -12
+    assert 0 <= found["moon_illumination"] <= 1 and 0 < found["moon_separation_deg"] < 180
+    assert (found["pier_side"], found["gain"], found["offset"]) == (1, 100, 50)
+
+
+def test_observation_measures_are_set_beside_his_as_differences():
+    """Angoli in gradi (l'angolo orario da ore), l'azimut attraverso il Nord; lato e impostazioni
+    uguali: zero."""
+    ours = Ours(1000, 2.0, 100, 10, azimuth_deg=359.9, hour_angle_h=-0.01, moon_altitude_deg=10.0,
+                moon_separation_deg=80.0, moon_illumination=0.5, sun_altitude_deg=-30.0,
+                pier_side=1, gain=100, offset=50)  # fmt: skip
+    theirs = _analysis(Azimuth=0.1, HourAngle=0.0, MoonAltitude=10.05, MoonSeparation=80.0,
+                       MoonIllumination=0.51, SunAltitude=-30.0, PierSide=1.0,
+                       GainSetting=100.0, Offset=50.0)  # fmt: skip
+    table = ratios([_row("a", False, ours, analysis=theirs)])
+    assert table["azimut meno Image Analysis (gradi)"]["mono A"][2] == pytest.approx(-0.2)
+    assert table["angolo orario meno Image Analysis (gradi)"]["mono A"][2] == pytest.approx(-0.15)
+    assert table["Luna alta meno Image Analysis"]["mono A"][2] == pytest.approx(-0.05)
+    assert table["Luna illuminata meno Image Analysis"]["mono A"][2] == pytest.approx(-0.01)
+    assert table["distanza Luna meno Image Analysis"]["mono A"][2] == 0
+    assert table["Sole alto meno Image Analysis"]["mono A"][2] == 0
+    for name in ("lato del pilastro", "gain", "offset"):
+        assert table[f"{name} meno Image Analysis"]["mono A"][2] == 0
 
 
 def test_groups_go_by_the_longest_name_prefix():

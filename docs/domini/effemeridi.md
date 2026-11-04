@@ -216,7 +216,11 @@ basta (`test_from_each_point_of_the_curve_how_much_dark_without_the_moon_is_left
 
 `backend/astrolog/ephemeris/` -- puro: non tocca il database, la spina, le rotte ne' la rete, e un
 contratto di import-linter lo fa rispettare. La rotta e' `GET /api/v1/tonight`, in
-`backend/astrolog/api/tonight.py`, che e' l'unico posto dove le effemeridi incontrano un sito.
+`backend/astrolog/api/tonight.py`, che e' l'unico posto dove le effemeridi incontrano un sito
+dell'utente. Il sito scritto nella scheda di una posa lo incontrano nello stadio `sky` della
+pipeline (`ephemeris/frames.py`, passo 26.54): Luna e Sole a meta' posa, la distanza della Luna
+dal centro e la sua luce non arrotondata (`moon.lit_fractions`, la stessa della fase); contratto
+in [`misure.md`](misure.md), "Col cielo".
 
 Chi mostrera' questi numeri e' il **piede della barra**, gia' deciso e disegnato in
 [`navigazione.md`](navigazione.md): il sito attivo col suo cielo, e sotto la Luna.

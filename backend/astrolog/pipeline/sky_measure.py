@@ -9,8 +9,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..db.transaction import transaction
+from ..ephemeris.frames import MoonAndSun, moon_and_sun
 from .airmass import airmass_of, apparent_altitude, at_zenith
-from .altitude import true_altitudes
+from .altitude import Observed, observed
 from .footprint import position_angle
 from .scan import busy
 
@@ -30,20 +31,17 @@ PENDING = (
     " ORDER BY m.frame_id"
 )
 
+# Named as MoonAndSun's fields and as their columns.
+LIGHT = ("moon_altitude_deg", "moon_separation_deg", "moon_illumination", "sun_altitude_deg")
+_COLUMNS = (
+    "solved", "mid_utc", "altitude_deg", "airmass", "hfd_arcsec", "fwhm_arcsec",
+    "hfd_zenith_arcsec", "fwhm_zenith_arcsec", "angle_pa_deg", "angle_axis", "gradient_pa_deg",
+    "azimuth_deg", "hour_angle_h", *LIGHT, "computed_at",
+)  # fmt: skip
 UPSERT = (
-    "INSERT INTO pipeline_sky (frame_id, solved, mid_utc, altitude_deg, airmass, hfd_arcsec,"
-    " fwhm_arcsec, hfd_zenith_arcsec, fwhm_zenith_arcsec, angle_pa_deg, angle_axis,"
-    " gradient_pa_deg, computed_at)"
-    " VALUES (:frame_id, :solved, :mid_utc, :altitude_deg, :airmass, :hfd_arcsec, :fwhm_arcsec,"
-    " :hfd_zenith_arcsec, :fwhm_zenith_arcsec, :angle_pa_deg, :angle_axis, :gradient_pa_deg,"
-    " :computed_at)"
-    " ON CONFLICT (frame_id) DO UPDATE SET solved = excluded.solved, mid_utc = excluded.mid_utc,"
-    " altitude_deg = excluded.altitude_deg, airmass = excluded.airmass,"
-    " hfd_arcsec = excluded.hfd_arcsec, fwhm_arcsec = excluded.fwhm_arcsec,"
-    " hfd_zenith_arcsec = excluded.hfd_zenith_arcsec,"
-    " fwhm_zenith_arcsec = excluded.fwhm_zenith_arcsec, angle_pa_deg = excluded.angle_pa_deg,"
-    " angle_axis = excluded.angle_axis, gradient_pa_deg = excluded.gradient_pa_deg,"
-    " computed_at = excluded.computed_at"
+    f"INSERT INTO pipeline_sky (frame_id, {', '.join(_COLUMNS)})"  # noqa: S608 - our names
+    f" VALUES (:frame_id, {', '.join(':' + c for c in _COLUMNS)})"
+    f" ON CONFLICT (frame_id) DO UPDATE SET {', '.join(f'{c} = excluded.{c}' for c in _COLUMNS)}"
 )
 
 # Nearer to East-West than to North-South: along RA. [T] the two axes split at half a right angle
@@ -58,7 +56,8 @@ class SkyResult:
 def sky_root(
     conn: sqlite3.Connection, root_id: int, now: str, *, stop: threading.Event | None = None
 ) -> SkyResult:
-    """No pixels read: the root's altitudes in one erfa call, then one write."""
+    """No pixels read: the root's sky in one erfa call and one astropy call per site, then
+    one write."""
     with busy(root_id):
         rows = conn.execute(PENDING, {"root": root_id}).fetchall()
         if stop is not None and stop.is_set():
@@ -112,30 +111,49 @@ def _turned(cd: tuple[float | None, ...], angle_deg: float | None) -> float | No
     return position_angle(cd, angle_deg)  # type: ignore[arg-type]
 
 
-def apparent_altitudes(rows: Sequence[Mapping[str, Any]]) -> list[float | None]:
-    """Centre solved, else the card's pointing; the card's site; mid exposure; one erfa call.
-    None: one of them unknown. The comparison tool calls it too, on a card."""
-    placed = [
-        (i, sky, (row["site_lat_deg"], row["site_lon_deg"]), mid)
+@dataclass(frozen=True, slots=True)
+class OnSky:
+    """Where the frame pointed and what lit it, at mid exposure (Image Analysis par. 2.1.1).
+    None: no centre (pointing values), or no site or time (all)."""
+
+    pointed: Observed | None  # altitude geometric: apparent_altitude adds the air
+    lit: MoonAndSun | None
+
+
+def on_sky(rows: Sequence[Mapping[str, Any]]) -> list[OnSky]:
+    """Centre solved, else the card's pointing; the card's site; mid exposure; one erfa call and
+    one astropy call per site. The comparison tool calls it too, on a card."""
+    timed = [
+        (i, (row["site_lat_deg"], row["site_lon_deg"]), dt.datetime.fromisoformat(mid),
+         _centre(row))
         for i, row in enumerate(rows)
-        if (sky := _centre(row)) is not None and row["site_lat_deg"] is not None
+        if row["site_lat_deg"] is not None
         and (mid := mid_exposure(row["start_utc"], row["exposure_s"])) is not None
     ]  # fmt: skip
-    instants = [dt.datetime.fromisoformat(mid) for *_, mid in placed]
-    found = true_altitudes([p[1] for p in placed], instants, [p[2] for p in placed])
-    altitudes: list[float | None] = [None] * len(rows)
-    for (i, *_), true in zip(placed, found, strict=True):
-        altitudes[i] = apparent_altitude(true)
-    return altitudes
+    pointing = [t for t in timed if t[3] is not None]
+    found = observed([t[3] for t in pointing], [t[2] for t in pointing], [t[1] for t in pointing])  # type: ignore[misc]
+    pointed = {t[0]: o for t, o in zip(pointing, found, strict=True)}
+    lights = moon_and_sun([t[2] for t in timed], [t[1] for t in timed], [t[3] for t in timed])
+    lit = {t[0]: m for t, m in zip(timed, lights, strict=True)}
+    return [OnSky(pointed.get(i), lit.get(i)) for i in range(len(rows))]
+
+
+def apparent_altitude_of(sky: OnSky) -> float | None:
+    return None if sky.pointed is None else apparent_altitude(sky.pointed.altitude_deg)
 
 
 def _with_altitudes(rows: list[sqlite3.Row], values: list[dict[str, object]]) -> None:
-    """Altitude, air mass, zenith values."""
-    for value, altitude in zip(values, apparent_altitudes([dict(r) for r in rows]), strict=True):
+    """Altitude, air mass, zenith values; azimuth, hour angle, Moon and Sun."""
+    for value, sky in zip(values, on_sky([dict(r) for r in rows]), strict=True):
+        altitude = apparent_altitude_of(sky)
         airmass = None if altitude is None else airmass_of(altitude)
         value |= {"altitude_deg": altitude, "airmass": airmass}
         value["hfd_zenith_arcsec"] = at_zenith(value["hfd_arcsec"], airmass)  # type: ignore[arg-type]
         value["fwhm_zenith_arcsec"] = at_zenith(value["fwhm_arcsec"], airmass)  # type: ignore[arg-type]
+        pointed, lit = sky.pointed, sky.lit
+        value["azimuth_deg"] = None if pointed is None else pointed.azimuth_deg
+        value["hour_angle_h"] = None if pointed is None else pointed.hour_angle_h
+        value |= {name: None if lit is None else getattr(lit, name) for name in LIGHT}
 
 
 def _centre(row: Mapping[str, Any]) -> tuple[float, float] | None:

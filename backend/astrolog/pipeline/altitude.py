@@ -1,23 +1,31 @@
-"""How high a fixed point of the sky stood from a site: erfa, as pipeline/sky.py, never astropy
-(ADR 0030). Geometric: the refraction is airmass.apparent_altitude's."""
+"""Where a fixed point of the sky stood from a site: erfa, as pipeline/sky.py (ADR 0030).
+Geometric: the refraction is airmass.apparent_altitude's."""
 
 import datetime as dt
 import math
 import warnings
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 import erfa
 import numpy as np
 from erfa import ErfaWarning
 
 
-def true_altitudes(
+@dataclass(frozen=True, slots=True)
+class Observed:
+    altitude_deg: float
+    azimuth_deg: float  # from North towards East, [0, 360)
+    hour_angle_h: float  # [-12, +12): negative before the transit (Image Analysis par. 2.1.1)
+
+
+def observed(
     skies: Sequence[tuple[float, float]],
     instants: Sequence[dt.datetime],
     sites: Sequence[tuple[float, float]],
-) -> list[float]:
-    """Degrees, one per point (RA, Dec J2000), UTC instant and site (lat, lon East +); one erfa
-    call. No pressure: no refraction. UT1 as UTC: under a second, a hundredth of a degree."""
+) -> list[Observed]:
+    """Per point (RA, Dec J2000), UTC instant, site (lat, lon East +); one erfa call, place of date.
+    No pressure: no refraction. UT1 as UTC: under a second, a hundredth of a degree."""
     if not skies:
         return []
     days = [_utc_days(i) for i in instants]
@@ -26,12 +34,16 @@ def true_altitudes(
     zeros = np.zeros(len(skies))
     with warnings.catch_warnings():  # year past leap-second table: 'dubious year', fine here
         warnings.simplefilter("ignore", ErfaWarning)
-        *_, zenith, _, _, _, _ = erfa.atco13(
+        azimuth, zenith, hour, *_ = erfa.atco13(
             ra, dec, zeros, zeros, zeros, zeros, np.array([d[0] for d in days]),
             np.array([d[1] for d in days]), zeros, lon, lat, zeros, zeros, zeros, zeros, zeros,
             zeros, zeros + 0.55,
         )  # fmt: skip
-    return [90.0 - math.degrees(float(z)) for z in zenith]
+    return [
+        Observed(90.0 - math.degrees(float(z)), math.degrees(float(a)) % 360.0,
+                 (math.degrees(float(h)) / 15.0 + 12.0) % 24.0 - 12.0)
+        for a, z, h in zip(azimuth, zenith, hour, strict=True)
+    ]  # fmt: skip
 
 
 def _utc_days(instant: dt.datetime) -> tuple[float, float]:

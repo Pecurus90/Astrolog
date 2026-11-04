@@ -6,8 +6,9 @@ import threading
 
 import pytest
 
+from astrolog.ephemeris.frames import moon_and_sun
 from astrolog.pipeline.airmass import airmass_of, apparent_altitude, at_zenith
-from astrolog.pipeline.altitude import true_altitudes
+from astrolog.pipeline.altitude import observed
 from astrolog.pipeline.footprint import position_angle
 from astrolog.pipeline.measure import measure_root
 from astrolog.pipeline.sky_measure import mid_exposure, sky_axis, sky_root
@@ -28,6 +29,7 @@ _SCALE = 1.39
 _CD = (-2.6277393210341225e-004, 2.7944155214576776e-004,
        -2.7944266362463124e-004, -2.6285912858408056e-004)  # fmt: skip
 _MID = dt.datetime(2025, 6, 29, 21, 32, 30, tzinfo=dt.UTC)
+_SITE = (45.494, 11.5218)
 
 
 def _measured(conn, tmp_path, *cards: str) -> int:
@@ -51,8 +53,8 @@ def _sky(conn) -> list[dict]:
 
 
 def _altitude(centre) -> float:
-    [true] = true_altitudes([centre], [_MID], [(45.494, 11.5218)])
-    return apparent_altitude(true)
+    [true] = observed([centre], [_MID], [_SITE])
+    return apparent_altitude(true.altitude_deg)
 
 
 def test_a_solved_shot_gets_its_airmass_arcseconds_and_zenith_values(conn, tmp_path):
@@ -70,6 +72,31 @@ def test_a_solved_shot_gets_its_airmass_arcseconds_and_zenith_values(conn, tmp_p
     assert row["fwhm_arcsec"] == pytest.approx(fwhm * _SCALE)
     assert row["hfd_zenith_arcsec"] == pytest.approx(at_zenith(hfd * _SCALE, row["airmass"]))
     assert row["fwhm_zenith_arcsec"] < row["fwhm_arcsec"]
+
+
+def test_a_shot_gets_where_it_pointed_and_the_moon_and_sun_of_its_moment(conn, tmp_path):
+    """Image Analysis par. 2.1.1: azimut e angolo orario del centro, Luna e Sole a meta' posa."""
+    root = _measured(conn, tmp_path, *_CARDS)
+    _solve(conn)
+    sky_root(conn, root, LATER)
+    [row] = _sky(conn)
+    [seen] = observed([_CENTRE], [_MID], [_SITE])
+    [lit] = moon_and_sun([_MID], [_SITE], [_CENTRE])
+    assert row["azimuth_deg"] == pytest.approx(seen.azimuth_deg)
+    assert row["hour_angle_h"] == pytest.approx(seen.hour_angle_h)
+    assert row["moon_altitude_deg"] == pytest.approx(lit.moon_altitude_deg)
+    assert row["moon_separation_deg"] == pytest.approx(lit.moon_separation_deg)
+    assert row["moon_illumination"] == pytest.approx(lit.moon_illumination)
+    assert row["sun_altitude_deg"] == pytest.approx(lit.sun_altitude_deg)
+    assert -18 < row["sun_altitude_deg"] < -12  # 23:32 a fine giugno a 45 N: crepuscolo astronomico
+
+
+def test_without_a_centre_the_moon_and_sun_stay_but_not_the_distance(conn, tmp_path):
+    root = _measured(conn, tmp_path, *(c for c in _CARDS if not c.startswith(("RA", "DEC"))))
+    sky_root(conn, root, LATER)
+    [row] = _sky(conn)
+    assert (row["azimuth_deg"], row["hour_angle_h"], row["moon_separation_deg"]) == (None,) * 3
+    assert row["moon_altitude_deg"] is not None and row["sun_altitude_deg"] is not None
 
 
 def test_round_stars_and_a_flat_sky_have_no_direction(conn, tmp_path):

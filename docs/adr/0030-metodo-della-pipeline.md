@@ -58,3 +58,6 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
   e risolve le stesse cartelle (`pipeline/run.py` `Behind`, un thread suo, mai il worker
   dell'utente), mai a schermo; lo Stop e la chiusura uccidono i suoi ASTAP e fermano la lettura
   fra due lotti. Una porta sola fra le due, dichiarata nel contratto di import.
+- **Astropy fuori dalla nuova, una porta** (Marco, 4/11/2026, passo 26.54): header, pixel e
+  coordinate si fanno senza astropy (lettore nostro, erfa); Luna e Sole sul frame vengono dalle
+  effemeridi dell'app (`ephemeris/frames.py`), una chiamata per sito: una casa sola per la Luna.

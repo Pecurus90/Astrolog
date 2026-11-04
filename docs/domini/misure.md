@@ -25,8 +25,9 @@ parole in [`glossario.md`](glossario.md).
 | Gradiente e banding sono quelli di Image Analysis, in unita' di rumore; il lato chiaro e' nostro e un fondo piatto non lo inventa (Marco, 30/10/2026) <!-- software-ok --> | `test_pipeline_background.py` (superficie picco-picco sul rumore, riquadri luminosi scartati, saturi e bordi vuoti fuori, rumore bianco senza banding, righe spostate di 0,3 sigma, file alterne del mosaico), `test_the_biweight_fit_drops_the_outliers_a_least_squares_follows`, `test_a_sky_on_a_plane_has_its_bright_side`, `test_the_bright_side_turns_with_the_plane`, `test_a_flat_sky_has_no_side` |
 | Le scie di satelliti, aerei e meteore si contano come Image Analysis: lunghe almeno un quarto del lato corto, sottili, fino a 16; il bordo di una nebulosa no (Marco, 30/10/2026) <!-- software-ok --> | `test_pipeline_trails.py` (cielo senza scie, 4 sigma trovata in campo rado e denso, 2 sigma persa nel denso e trovata nel rado, meteora corta, tratteggio sotto il 35%, bordo e filamento di nebulosa, due incrociate, al massimo 16, stelle mascherate lungo la scia, bordo vuoto), `test_the_trails_are_written` |
 | Tilt, curvatura ed elongazione sono quelli di Image Analysis: dalle FWHM e dagli angoli di tutte le stelle fittate, muti sotto 32 fit o con stelle tonde (Marco, 30/10/2026) <!-- software-ok --> | `test_tilt_and_curvature_are_the_documented_surface`, `test_under_32_stars_no_tilt`, `test_aligned_elongations_give_their_angle_counterclockwise_and_full_coherence`, `test_crossed_elongations_have_no_coherence`, `test_round_stars_or_none_have_no_elongation`, `test_tilt_reaches_the_frame_through_measure` (`backend/tests/test_pipeline_field.py`) |
-| La massa d'aria e' quella dell'oggetto a meta' posa, con l'aria che lo alza, finita all'orizzonte e nessuna sotto | `test_the_airmass_is_pickering_on_the_apparent_altitude`, `test_the_refraction_lifts_a_low_star_saemundsson`, `test_under_the_horizon_there_is_no_airmass`, `test_the_altitude_agrees_with_astropy` (`backend/tests/test_pipeline_airmass.py`, `test_pipeline_altitude.py`) |
+| La massa d'aria e' quella dell'oggetto a meta' posa, con l'aria che lo alza, finita all'orizzonte e nessuna sotto | `test_the_airmass_is_pickering_on_the_apparent_altitude`, `test_the_refraction_lifts_a_low_star_saemundsson`, `test_under_the_horizon_there_is_no_airmass`, `test_the_altitude_and_azimuth_agree_with_astropy` (`backend/tests/test_pipeline_airmass.py`, `test_pipeline_altitude.py`) |
 | FWHM e HFD anche in secondi d'arco dalla scala risolta e allo zenit; senza soluzione niente secondi, senza sito o ora niente altezza ne' zenit | `test_a_solved_shot_gets_its_airmass_arcseconds_and_zenith_values`, `test_a_value_at_the_zenith_is_divided_by_the_airmass_to_the_three_fifths`, `test_without_a_site_there_is_no_altitude_but_the_arcseconds_stay`, `test_without_a_start_there_is_no_time_nor_altitude`, `test_the_mid_exposure_is_the_start_plus_half` (`backend/tests/test_pipeline_sky_measure.py`) |
+| Di ogni posa so dove puntava e che luce aveva: azimut e angolo orario del centro, Luna e Sole a meta' posa, quanto la Luna e' lontana e illuminata, il lato del pilastro (Image Analysis par. 2.1.1; Marco, 30/10/2026) <!-- software-ok --> | `test_a_shot_gets_where_it_pointed_and_the_moon_and_sun_of_its_moment`, `test_without_a_centre_the_moon_and_sun_stay_but_not_the_distance` (`backend/tests/test_pipeline_sky_measure.py`), `test_the_altitude_and_azimuth_agree_with_astropy`, `test_the_hour_angle_is_the_apparent_sidereal_time_less_the_place_of_date` (`test_pipeline_altitude.py`), `test_ephemeris_frames.py`, `test_the_pier_side_is_east_or_west_as_written_else_unknown` (`test_pipeline_card.py`) |
 | La direzione delle stelle e il lato chiaro del gradiente girati col cielo: "in AR" o "in Dec" | `test_a_pixel_direction_turns_into_its_position_angle_on_the_sky` (`test_pipeline_footprint.py`), `test_the_shape_and_the_bright_side_turn_with_the_sky`, `test_the_nearer_sky_axis_names_the_direction`, `test_a_solution_without_its_matrix_gives_arcseconds_but_no_direction`, `test_round_stars_and_a_flat_sky_have_no_direction` |
 | Una soluzione arrivata dopo la misura riscrive le misure col cielo, una dimenticata le porta via | `test_an_unsolved_shot_takes_its_altitude_from_the_card_then_its_solution`, `test_a_forgotten_solution_takes_its_sky_measures_along`, `test_an_unreadable_measure_waits`, `test_a_stop_writes_nothing` |
 | Una nebulosa sotto le stelle e' cielo, non stella | `test_a_nebula_under_the_stars_is_sky_the_ring_follows` |
@@ -212,33 +213,31 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
 - **Col cielo** (`pipeline/sky_measure.py`, stadio `sky` dopo `measure`; ADR 0022 punti 5 e 7):
   le misure dei pixel con la soluzione di `solve`, il sito e l'ora della scheda del file misurato,
   in `pipeline_sky`. Una posa senza soluzione si scrive subito e si riscrive quando la soluzione
-  arriva; `solve.forget` porta via la sua riga. Nessun pixel letto: un conto erfa e una
-  scrittura per cartella; una fermata vale prima del conto. Il confronto calcola l'altezza con
-  la stessa funzione (`apparent_altitudes`).
+  arriva; `solve.forget` porta via la sua riga. Nessun pixel letto: un conto erfa, uno di
+  astropy per sito (Luna e Sole) e una scrittura per cartella; una fermata vale prima del conto.
+  Il confronto calcola il cielo con la stessa funzione (`on_sky`, in `card_observation`).
   - **Ora**: meta' posa, inizio piu' meta' di `EXPTIME`; posa ignota, l'inizio.
-  - **Altezza** del centro risolto, se no del puntamento della scheda (anche il bersaglio
-    pianificato: per la massa d'aria basta il grado; in un mosaico sbaglia di qualche grado), dal
-    sito scritto nella scheda e solo da quello: il sito di default non si indovina per un
-    viaggio. Geometrica con erfa (`pipeline/altitude.py`; astropy no, ADR 0030; UT1 come UTC,
-    sotto un centesimo di grado), poi la rifrazione di Saemundsson a 1010 hPa e 10 C (Meeus
-    1998, eq. 16.4): 29' all'orizzonte, 1' a 45 gradi; sotto -1 grado niente. La quota del sito
-    non c'e' nella scheda.
+  - **Altezza** del centro risolto, se no del puntamento (anche il bersaglio pianificato: in un
+    mosaico sbaglia di qualche grado), dal sito della scheda e solo da quello. Geometrica con erfa
+    (`pipeline/altitude.py`, ADR 0030; UT1 come UTC, sotto un centesimo di grado), poi Saemundsson
+    a 1010 hPa e 10 C (Meeus 1998, eq. 16.4): 29' all'orizzonte, 1' a 45 gradi; sotto -1 niente.
+  - **Osservazione** (26.54, Image Analysis par. 2.1.1): azimut da Nord verso Est e angolo orario <!-- software-ok -->
+    in ore fra -12 e +12 dal conto erfa dell'altezza, posto di data; Luna e Sole dalle effemeridi
+    (`ephemeris/frames.py`, una chiamata per sito), topocentrici senza rifrazione, distanza Luna-
+    centro, illuminata 0-1 geocentrica come la fase; senza centro restano Luna e Sole. Lato del
+    pilastro da `PIERSIDE` (ASCOM; ASIAIR non lo scrive). Il suo azimut prende il centro J2000
+    nelle eq. 4-5 (sonda: rifatto a 0,0002 gradi); il nostro e' il vero (Marco, 4/11/2026).
   - **Massa d'aria**: Pickering 2002 (DIO 12(1) 20-39), X = 1 / sin(h + 244 / (165 + 47 h^1,1))
-    sull'altezza apparente: 1 allo zenit, 1,99 a 30 gradi, 38,7 all'orizzonte, nessuna sotto;
-    quella dello SQM, solo il numero, nessun giudizio (ADR 0022).
+    sull'altezza apparente: 1 allo zenit, 1,99 a 30 gradi, 38,7 all'orizzonte, nessuna sotto (ADR 0022).
   - **Secondi d'arco**: FWHM e HFD per la scala risolta, pixel del file come l'HFD (anche a
     colori e in binning). Un derivato scritto accanto al suo pixel: una lettura non calcola.
-  - **Allo zenit**: secondi d'arco / X^0,6 (ESO, seeing di La Silla: seeing allo zenit = misurato
-    / airmass^0,6). La legge e' del seeing; FWHM e HFD portano anche ottica e guida, e basso
-    sull'orizzonte la correzione esagera: il frame 23 a 14 gradi (X 4,1) da 6,9" torna 3,0".
-  - **Girati col cielo**: la direzione della forma e il lato chiaro come angolo di posizione, da
-    Nord verso Est, dalla matrice CD della soluzione (Calabretta e Greisen 2002: (est, nord) = CD
-    per la direzione sui pixel del file come salvati, come measure li legge; `ROWORDER` non
-    entra, ma nessun file BOTTOM-UP vero e' misurato). Lo specchio non cambia un asse. "In AR"
-    se l'asse sta piu' vicino a Est-Ovest (angolo di posizione fra 45 e 135, estremi esclusi),
-    se no "in Dec".
-    Senza CD (ASTAP non l'ha scritta intera) niente giro; la `rotation_deg` della soluzione e'
-    l'angolo CROTA2, di segno opposto al nostro.
+  - **Allo zenit**: secondi d'arco / X^0,6 (ESO, seeing di La Silla). Legge del seeing; FWHM e HFD
+    portano ottica e guida, e basso la correzione esagera: a 14 gradi (X 4,1) 6,9" torna 3,0".
+  - **Girati col cielo**: forma e lato chiaro come angolo di posizione da Nord verso Est, dalla CD
+    della soluzione (Calabretta e Greisen 2002: (est, nord) = CD per la direzione sui pixel come
+    salvati; `ROWORDER` non entra, nessun BOTTOM-UP vero misurato); lo specchio non cambia un asse.
+    "In AR" se l'asse e' piu' vicino a Est-Ovest (fra 45 e 135 esclusi), se no "in Dec". Senza CD
+    niente giro; `rotation_deg` e' CROTA2, di segno opposto al nostro.
 - **Poche stelle**: sotto 5 tenute, `too_few_stars`: il numero resta, l'HFD tace; la forma c'e'
   se le stelle di ogni rotondita' sono almeno 5: un frame mosso dice quanto.
 
@@ -249,15 +248,12 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
 - **Contro i programmi di riferimento**: il riferimento e' Image Analysis di PixInsight (ADR <!-- software-ok -->
   0042; documentazione `doc/tools/ImageAnalysis`, 28/10/2026), al posto del SubframeSelector. <!-- software-ok -->
   `python tools/confronto_misure.py CARTELLA --groups GRUPPI --out FILE` misura le copie con
-  measure, con `astap_cli -analyse 30` e con Image Analysis senza finestra, misure estese accese;
-  legge tutte le 57 colonne della sua tabella per nome (indefinite a 0, la maschera Flags dice
-  quali zeri sono veri) e stampa il nostro diviso il suo (frame, minimo / mediana / massimo) per
-  mono e colori e per gruppo A/B. I colori li passa prima al Debayer VNG col pattern Auto, come
-  WBPP: il Debayer scrive il rumore per canale che Image Analysis legge. Tempi a frame: i nostri <!-- software-ok -->
-  per stadio di `measure_frame`, i suoi con e senza le misure estese, un frame alla volta senza
-  thread per file, e il suo debayer a parte (`--no-times` li salta). Si rilancia a ogni
-  sottopasso di measure, e ogni misura che lui da' si confronta con la sua (Marco, 27/10 e
-  30/10/2026). Siril no (Marco, 26/10/2026). <!-- software-ok -->
+  measure, `astap_cli -analyse 30` e Image Analysis senza finestra, estese accese; legge le 57
+  colonne per nome (indefinite a 0, Flags dice quali zeri sono veri) e stampa il nostro diviso
+  il suo, o la differenza, per mono e colori e gruppo A/B. Colori prima al Debayer VNG Auto, come
+  WBPP, che scrive il rumore per canale. Tempi: i nostri per stadio, i suoi con e senza estese, <!-- software-ok -->
+  un frame alla volta (`--no-times` li salta). Si rilancia a ogni sottopasso; ogni sua misura si
+  confronta (Marco, 27/10 e 30/10/2026). Siril no (Marco, 26/10/2026). <!-- software-ok -->
 
   **Primo giro contro Image Analysis** (passo 26.47, 30/10/2026, codice `a1cf1457`): le 205
   copie del 26.46, nitidi e sfocati insieme; AstroLog diviso lui, mediana [minimo-massimo];
@@ -292,6 +288,10 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   | Scie, frame col suo conteggio (26.53) | 35 / 35 | 45 / 45 | 80 / 80 | 41 / 45 |
   | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
   | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
+
+  Osservazione (26.54), scarto massimo sui 198 leggibili (7 copie di PixInsight: programma <!-- software-ok -->
+  ignoto): angolo orario 0,08 gradi, Luna 0,0023, Sole 0,0005, distanza Luna 0,099, illuminata
+  0,0054; lato, gain, offset uguali; azimut 3,4 (mediana 0,32).
 
   Scarti aperti, ognuno col suo passo: colori 26.56 (lui somma il flusso PSF per canale, noi
   sull'intensita'; PSFResidual a colori 1,06-1,07; NoiseRatio, SNR, M\*, N\* dai metadati del

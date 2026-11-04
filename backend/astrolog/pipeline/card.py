@@ -32,6 +32,13 @@ class FrameType(StrEnum):
     UNKNOWN = "unknown"  # missing, other word, or IMAGETYP and OBJECT disagree: asked later
 
 
+class PierSide(StrEnum):
+    """PIERSIDE as ASCOM names it (Image Analysis par. 2.1.1: East 0, West 1)."""
+
+    EAST = "east"
+    WEST = "west"
+
+
 # What N.I.N.A. and ASIAIR write, casefolded. DARKFLAT: N.I.N.A. < 3.0, "really just DARKs".
 _WRITTEN = {
     "light": FrameType.LIGHT,
@@ -136,6 +143,16 @@ def focuser_temp_c(values: dict[str, Value]) -> float | None:
     return as_celsius(values.get("FOCTEMP", values.get("FOCUSTEM")))
 
 
+def pier_side(values: dict[str, Value]) -> PierSide | None:
+    """Same rule for both programs: N.I.N.A. writes East or West, ASIAIR nothing; other word: not
+    known."""
+    written = values.get("PIERSIDE")
+    if not isinstance(written, str):
+        return None
+    word = written.strip().casefold()
+    return PierSide(word) if word in PierSide else None
+
+
 def focal_mm(values: dict[str, Value]) -> float | None:
     """Hint on both: N.I.N.A. from profile; ASIAIR whole mm, on darks too, so not frame's own
     solve (700 real files: up to 1 mm apart in one folder, 4 in one night)."""
@@ -200,6 +217,7 @@ class Card:
     mount: str | None
     focuser_position: int | None  # with focuser_temp_c: focus metric with measure
     focuser_temp_c: float | None
+    pier_side: PierSide | None  # flips with the meridian, and the frame with it
 
 
 @dataclass(frozen=True, slots=True)
@@ -283,4 +301,5 @@ def read_card(program: Program, values: dict[str, Value]) -> Card:
         mount=mount(program, values),
         focuser_position=focuser_position(values),
         focuser_temp_c=focuser_temp_c(values),
+        pier_side=pier_side(values),
     )

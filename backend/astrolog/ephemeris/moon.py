@@ -124,10 +124,22 @@ def phases(instants: Sequence[dt.datetime]) -> list[Phase]:
     out = []
     for start, end, elongation in zip(offsets[n : 2 * n], offsets[2 * n :], elongations[:n],
                                       strict=True):  # fmt: skip
-        # Illuminated fraction from elongation: 0 with Moon and Sun together, 1 when opposite.
-        lit = (1 - math.cos(math.radians(float(elongation)))) / 2
+        lit = _lit(elongation)
         out.append(Phase(phase_name(float(start), float(end), lit), round(lit * 100)))
     return out
+
+
+def lit_fractions(instants: Sequence[dt.datetime]) -> list[float]:
+    """0-1, unrounded: the light of `phases` without the name. Empty in, empty out."""
+    if not instants:
+        return []
+    _, elongations = _offsets_and_elongations(instants)
+    return [_lit(e) for e in elongations]
+
+
+def _lit(elongation: Any) -> float:
+    """Illuminated fraction from elongation: 0 with Moon and Sun together, 1 when opposite."""
+    return (1 - math.cos(math.radians(float(elongation)))) / 2
 
 
 def altitudes(instants: Sequence[dt.datetime], latitude: float, longitude: float) -> list[float]:

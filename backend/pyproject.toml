@@ -281,7 +281,10 @@ type = "forbidden"
 source_modules = ["astrolog.pipeline"]
 forbidden_modules = ["astrolog.fits", "astrolog.vocab", "astrolog.spine", "astrolog.worker", "astrolog.api", "astropy"]
 # astap.py e' di tutte e due: legge il .ini di ASTAP col lettore WCS di fits. La nuova lo usa, mai fits.
-ignore_imports = ["astrolog.astap -> astrolog.fits.header_wcs", "astrolog.astap -> astrolog.fits.header_keys"]
+# astropy fuori: la nuova legge da se' header e pixel, coordinate con erfa. Una porta sola: Luna e
+# Sole sul frame dalle effemeridi dell'app, una chiamata per sito (Marco 4/11/2026, passo 26.54).
+ignore_imports = ["astrolog.astap -> astrolog.fits.header_wcs", "astrolog.astap -> astrolog.fits.header_keys",
+                  "astrolog.pipeline.sky_measure -> astrolog.ephemeris.frames"]
 
 [[tool.importlinter.contracts]]
 name = "la vecchia non importa la nuova"

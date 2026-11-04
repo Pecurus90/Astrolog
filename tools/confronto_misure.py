@@ -35,11 +35,11 @@ import sep  # pyright: ignore[reportMissingImports] -- compiled module, no stubs
 from astrolog.astap import Run, find_exe
 from astrolog.pipeline import stars
 from astrolog.pipeline.airmass import airmass_of
-from astrolog.pipeline.card import read_card
+from astrolog.pipeline.card import PierSide, read_card
 from astrolog.pipeline.debayer import pattern_of
 from astrolog.pipeline.pixels import Pixels, read_pixels
 from astrolog.pipeline.scanner import program_of, read_header
-from astrolog.pipeline.sky_measure import apparent_altitudes
+from astrolog.pipeline.sky_measure import LIGHT, apparent_altitude_of, on_sky
 from astrolog.pipeline.stars import Measured, measure_frame
 from astrolog.pipeline.values import Value, as_number
 
@@ -201,6 +201,15 @@ class Ours:
     fwhm_curvature: float | None = None
     elongation_coherence: float | None = None
     trails: int | None = None
+    azimuth_deg: float | None = None  # observation, from the card as altitude_deg
+    hour_angle_h: float | None = None
+    moon_altitude_deg: float | None = None
+    moon_separation_deg: float | None = None
+    moon_illumination: float | None = None
+    sun_altitude_deg: float | None = None
+    pier_side: int | None = None  # 0 East, 1 West, as his
+    gain: int | None = None
+    offset: int | None = None
 
 
 @dataclass(frozen=True)
@@ -331,19 +340,33 @@ def stage_clock(seconds: dict[str, float]) -> Generator[None]:
             setattr(stars, name, fn)
 
 
-def card_altitude(
+OBSERVATION = ("altitude_deg", "azimuth_deg", "hour_angle_h", *LIGHT, "pier_side", "gain",
+               "offset")  # fmt: skip
+PIER_SIDES = {PierSide.EAST: 0, PierSide.WEST: 1}  # [C ImageAnalysis par. 2.1.1, as ASCOM]
+
+
+def card_observation(
     cards: dict[str, Value], centre: tuple[float, float] | None = None
-) -> float | None:
-    """As the sky stage: the solved centre, else the card's pointing; site and mid exposure."""
+) -> dict[str, Any]:
+    """As the sky stage: the solved centre, else the card's pointing; site and mid exposure.
+    Keys of OBSERVATION; unknown: None."""
     program = program_of(cards)
     if program is None:
-        return None
+        return dict.fromkeys(OBSERVATION)
     card = read_card(program, cards)
     start = None if card.start_utc is None else card.start_utc.isoformat(timespec="microseconds")
     row = {f.name: getattr(card, f.name) for f in fields(card)} | {"start_utc": start}
     ra, dec = centre or (None, None)
-    [altitude] = apparent_altitudes([row | {"ra_deg": ra, "dec_deg": dec}])
-    return altitude
+    [sky] = on_sky([row | {"ra_deg": ra, "dec_deg": dec}])
+    pointed, lit = sky.pointed, sky.lit
+    return {
+        "altitude_deg": apparent_altitude_of(sky),
+        "azimuth_deg": None if pointed is None else pointed.azimuth_deg,
+        "hour_angle_h": None if pointed is None else pointed.hour_angle_h,
+        **{name: None if lit is None else getattr(lit, name) for name in LIGHT},
+        "pier_side": None if card.pier_side is None else PIER_SIDES[card.pier_side],
+        "gain": card.gain, "offset": card.offset,
+    }  # fmt: skip
 
 
 def measure_ours(path: Path) -> tuple[Ours, bool] | None:
@@ -372,8 +395,9 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
     shape = found.shape
     fwhm, eccentricity = (shape.fwhm_px, shape.eccentricity) if shape else (None, None)
     spread = shape.spread if shape else None
+    seen = card_observation(header.cards)
     ours = Ours(found.stars, hfd, found.background_adu, found.noise_adu, fwhm, eccentricity,
-                found.psf_snr, card_altitude(header.cards), seconds,
+                found.psf_snr, seen["altitude_deg"], seconds,
                 shape.psf_residual if shape else None, spread.fwhm_px if spread else None,
                 spread.eccentricity if spread else None,
                 spread.psf_residual if spread else None, found.psf_flux_adu,
@@ -381,7 +405,8 @@ def measure_ours(path: Path) -> tuple[Ours, bool] | None:
                 found.median_adu, found.sigma_adu, found.entropy_bits, found.noise_ratio,
                 found.snr, found.mstar_adu, found.nstar_adu, found.gradient_noise,
                 found.row_banding, found.column_banding, found.fwhm_tilt, found.fwhm_curvature,
-                found.elongation_coherence, found.trails)  # fmt: skip
+                found.elongation_coherence, found.trails,
+                **{k: v for k, v in seen.items() if k != "altitude_deg"})  # fmt: skip
     return ours, pattern is not None
 
 
@@ -392,6 +417,13 @@ def _over(ours: float | None, theirs: float | None, scale: float = 1.0) -> float
 def _minus(ours: float | None, theirs: float | None) -> float | None:
     """A count mostly 0 on both sides: the difference, not a ratio."""
     return ours - theirs if ours is not None and theirs is not None else None
+
+
+def _turn(ours: float | None, theirs: float | None, full: float) -> float | None:
+    """An angle's difference the short way round: 359.9 against 0.1 is -0.2."""
+    if ours is None or theirs is None:
+        return None
+    return (ours - theirs + full / 2) % full - full / 2
 
 
 def _pairs(row: Row) -> dict[str, float | None]:
@@ -441,6 +473,21 @@ def _pairs(row: Row) -> dict[str, float | None]:
         "scie meno Image Analysis": _minus(o.trails, v.get("Trails")),
         "altezza / Image Analysis": _over(o.altitude_deg, v.get("Altitude")),
         "massa d'aria / Image Analysis": _over(airmass, v.get("Airmass")),
+        "azimut meno Image Analysis (gradi)": _turn(o.azimuth_deg, v.get("Azimuth"), 360.0),
+        "angolo orario meno Image Analysis (gradi)": _turn(
+            None if o.hour_angle_h is None else o.hour_angle_h * 15,
+            None if v.get("HourAngle") is None else v["HourAngle"] * 15,
+            360.0,
+        ),
+        "Luna alta meno Image Analysis": _minus(o.moon_altitude_deg, v.get("MoonAltitude")),
+        "distanza Luna meno Image Analysis": _minus(o.moon_separation_deg, v.get("MoonSeparation")),
+        "Luna illuminata meno Image Analysis": _minus(
+            o.moon_illumination, v.get("MoonIllumination")
+        ),
+        "Sole alto meno Image Analysis": _minus(o.sun_altitude_deg, v.get("SunAltitude")),
+        "lato del pilastro meno Image Analysis": _minus(o.pier_side, v.get("PierSide")),
+        "gain meno Image Analysis": _minus(o.gain, v.get("GainSetting")),
+        "offset meno Image Analysis": _minus(o.offset, v.get("Offset")),
     }
 
 

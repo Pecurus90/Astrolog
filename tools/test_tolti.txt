@@ -387,3 +387,4 @@ test_tilt_is_worst_less_best_corner_over_the_median_hfd - step 26.52, ADR 0042 s
 test_curvature_is_corners_against_the_centre_with_its_sign - step 26.52, ADR 0042: replaced by test_tilt_and_curvature_are_the_documented_surface
 test_the_stars_a_zone_needs_follow_the_frame_s_own_hfd_spread - step 26.52, ADR 0042: no zones; 32 fits as Image Analysis, test_under_32_stars_no_tilt
 test_never_under_min_stars_a_zone - step 26.52, ADR 0042: no zones; replaced by test_under_32_stars_no_tilt
+test_the_altitude_agrees_with_astropy - step 26.54: renamed test_the_altitude_and_azimuth_agree_with_astropy, azimuth added (observed replaces true_altitudes)

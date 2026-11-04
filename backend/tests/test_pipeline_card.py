@@ -15,6 +15,7 @@ from astropy.wcs import WCS
 from astrolog.pipeline.card import (
     Conditions,
     FrameType,
+    PierSide,
     frame_type,
     read_card,
     read_conditions,
@@ -252,6 +253,22 @@ _FIELD = {"GAIN": "gain", "OFFSET": "offset", "ISO": "iso", "NAXIS1": "width", "
 def test_the_real_optics_are_read(name, program, optics, focal, tmp_path):
     card = read_card(program, _values(name, tmp_path))
     assert (card.optics, card.focal_mm) == (optics, focal)
+
+
+@pytest.mark.parametrize(
+    ("written", "side"),
+    [("West", PierSide.WEST), ("East", PierSide.EAST), (" EAST ", PierSide.EAST),
+     ("Unknown", None), ("", None), (1, None), (None, None)],
+)  # fmt: skip
+def test_the_pier_side_is_east_or_west_as_written_else_unknown(written, side):
+    """PIERSIDE come ASCOM (East 0, West 1, Image Analysis par. 2.1.1); un'altra parola: non so."""
+    values = {} if written is None else {"PIERSIDE": written}
+    assert read_card(NINA, values).pier_side is side
+    assert read_card(ASIAIR, values).pier_side is side
+
+
+def test_the_real_nina_pier_side_is_read(tmp_path):
+    assert read_card(NINA, _values("nina.txt", tmp_path)).pier_side is PierSide.WEST
 
 
 def test_asiair_telescop_is_the_mount_never_the_optics():
