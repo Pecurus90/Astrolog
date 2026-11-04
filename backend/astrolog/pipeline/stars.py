@@ -32,7 +32,7 @@ from .pixel_stats import PixelStats, pixel_stats, snr
 from .psf_fit import Fitted, fit_stars
 from .psf_flux import ring_sky
 from .shape import MIN_STARS, Shape, estimated_fwhm, shape_of
-from .trails import trails
+from .trails import BinnedSky, binned_sky, counted
 
 THRESHOLD_SIGMA = 5.0  # [C Siril find_star default: 5 sigma over sky, software-ok]
 NO_DEBLENDING = 1.0  # [C sep docs, extract: deblend_cont 1.0 disables deblending]
@@ -123,6 +123,12 @@ def measure_frame(
         channels = partial(_by_channel, sensor, pattern, saturation)
     extra = started(channels)
 
+    def ground() -> tuple[np.ndarray, BinnedSky | None]:  # Trails' sky waits for no star
+        valid = valid_pixels(raw, saturation)
+        return valid, binned_sky(raw, valid)
+
+    open_sky = started(ground)
+
     def sky_then_stars() -> tuple[_Sky, Callable[[], _SepStars], Callable[[], Structures]]:
         # sep's stars and the structures need no MRS noise: both start on the sky
         sky = _first_pass(raw)
@@ -138,9 +144,9 @@ def measure_frame(
         # MRS, not the first pass: crowded fields lift a MAD (40k synthetic stars: 19.8 for 10)
         return max((quiet if pattern is None else extra().noise).sigma, NOISE_FLOOR_ADU)
 
-    valid = valid_pixels(raw, saturation)
+    valid, trail_sky = open_sky()
     (found, fits, crossed), sky_field = side_by_side(
-        lambda: _stars(raw, quiet, (first, shapes()), valid),
+        lambda: _stars(raw, quiet, (first, shapes()), trail_sky),
         lambda: _sky_field(raw, valid, written()))  # fmt: skip
     noise = written()
     seen = sep_found()
@@ -228,14 +234,14 @@ def _ladder(raw: np.ndarray, found: Detections, fits: Fitted) -> dict[int, float
 
 
 def _stars(
-    raw: np.ndarray, quiet: Mrs, on: tuple["_Sky", Structures], valid: np.ndarray
+    raw: np.ndarray, quiet: Mrs, on: tuple["_Sky", Structures], trail_sky: BinnedSky | None
 ) -> tuple[Detections, Fitted, int]:
     """Image Analysis's stars on the MRS noise, fitted on the plane with its sky (the sampling
-    region's median needs the level, psf_fit.py); Trails on `valid`. software-ok"""
+    region's median needs the level, psf_fit.py); Trails off them. software-ok"""
     first, shapes = on
     found = selected(shapes, first.images, max(quiet.sigma, NOISE_FLOOR_ADU))
     fits, crossed = side_by_side(lambda: fit_stars(raw, found.x, found.y, found.box, found.flux),
-                                 lambda: trails(raw, valid, found))  # fmt: skip
+                                 lambda: counted(trail_sky, found))  # fmt: skip
     return found, fits, crossed
 
 

@@ -1,6 +1,7 @@
 """Trails of satellites, aircraft and meteors as Image Analysis counts them (par. 2.1.3), from its
 public docs, never on PCL sources. Pure: pixels in, a count out. software-ok"""
 
+import functools
 from dataclasses import dataclass
 
 import numpy as np
@@ -32,6 +33,7 @@ REMOVED_PX = 2  # [T] an accepted trail's flagged pixels this near go
 FINE_ANGLE_DEG = 0.05  # [T] refinement steps over one Hough step each way
 FINE_SHIFT_PX = 0.1  # [T] over 1.5 binned px each way
 EXAMINED_REACH = (1.0, 3)  # [T] degrees, px: one candidate's neighbours are not examined again
+CHORD_SHAPES = 4  # [T] frame shapes whose chords stay kept, 17 MB each at 26 MP
 _EIGHT = np.ones((3, 3), dtype=np.int8)  # [D 8-connected: diagonal pixels touch]
 
 
@@ -50,21 +52,44 @@ class _Line:
     distance: float  # binned px from the origin
 
 
+@dataclass(frozen=True)
+class BinnedSky:
+    """The binned copy with its tile background off: all the count needs but the stars."""
+
+    factor: int  # sensor px a binned px
+    residual: np.ndarray  # binned, background off
+    usable: np.ndarray  # every sample valid, off the invalid ones
+    sigma: float  # MAD of the usable residual
+
+
 def trails(plane: np.ndarray, valid: np.ndarray, stars: Detections) -> int:
     """Count on a binned copy: tile background off, pixels over 2 sigma flagged off the stars,
     Hough candidates by significance, accepted on a long run and a thin profile."""
+    return counted(binned_sky(plane, valid), stars)
+
+
+def binned_sky(plane: np.ndarray, valid: np.ndarray) -> BinnedSky | None:
+    """trails' first half, before the stars; None: nothing usable, or a flat sky (no trail)."""
     factor = max(1, round(max(plane.shape) / BINNED_SIDE))
     binned, usable = _binned(plane, valid, factor)
     if not usable.any():
-        return 0
+        return None
     residual = binned - _background(binned, usable)
     sigma = sigma_from_mad(float(np.median(np.abs(residual[usable] - np.median(residual[usable])))))
     if sigma <= 0:
+        return None
+    _chords(*binned.shape)  # the Hough's lines, ready for the count
+    return BinnedSky(factor, residual, usable, sigma)
+
+
+def counted(sky: BinnedSky | None, stars: Detections) -> int:
+    """trails' second half: the stars masked, the trails counted."""
+    if sky is None:
         return 0
-    free = usable & ~_star_mask(binned.shape, factor, stars)
-    flagged = free & (residual > FLAG_SIGMA * sigma)
+    free = sky.usable & ~_star_mask(sky.residual.shape, sky.factor, stars)
+    flagged = free & (sky.residual > FLAG_SIGMA * sky.sigma)
     flagged &= ndimage.convolve(flagged.astype(np.int8), _EIGHT, mode="constant") > 1  # not alone
-    frame = _Frame(residual, flagged, free, sigma, RUN_SIDE_SHARE * min(binned.shape))
+    frame = _Frame(sky.residual, flagged, free, sky.sigma, RUN_SIDE_SHARE * min(free.shape))
     return _count(frame)
 
 
@@ -130,14 +155,11 @@ class _Hough:
 
     def __init__(self, frame: _Frame) -> None:
         rows, cols = frame.flagged.shape
-        self.angles = np.deg2rad(np.arange(0.0, 180.0, ANGLE_STEP_DEG))
-        diagonal = int(np.ceil(np.hypot(rows, cols)))
-        self.offset, self.size = diagonal + 1, 2 * diagonal + 3
+        self.angles, self.offset, self.size = _lines(rows, cols)
         ys, xs = np.nonzero(frame.flagged)
         self.band = self._votes(ys, xs)
         density = len(ys) / max(1, int(frame.open.sum())) * float(frame.open.mean())
-        distances = np.arange(self.size, dtype=float) - self.offset
-        self.expected = density * (2 * NEAR_PX + 1) * _chord(self.angles, distances, rows, cols)
+        self.expected = density * (2 * NEAR_PX + 1) * _chords(rows, cols)
         # Fewer votes: no run can pass, its open samples the frame's open share of it
         self.least = FLAGGED_SHARE * frame.min_run * float(frame.open.mean())
         self.score = self._score()
@@ -186,6 +208,21 @@ class _Hough:
         """An accepted trail's votes out; what was examined stays examined."""
         self.band -= self._votes(ys, xs)
         self.score = np.where(self.score == -np.inf, -np.inf, self._score())
+
+
+def _lines(rows: int, cols: int) -> tuple[np.ndarray, int, int]:
+    """The Hough's normal angles, and the offset and count of its distances, for a frame's shape."""
+    diagonal = int(np.ceil(np.hypot(rows, cols)))
+    return np.deg2rad(np.arange(0.0, 180.0, ANGLE_STEP_DEG)), diagonal + 1, 2 * diagonal + 3
+
+
+@functools.lru_cache(maxsize=CHORD_SHAPES)
+def _chords(rows: int, cols: int) -> np.ndarray:
+    """_chord on every Hough line of a shape: the same for every frame of it, kept, read only."""
+    angles, offset, size = _lines(rows, cols)
+    chords = _chord(angles, np.arange(size, dtype=float) - offset, rows, cols)
+    chords.flags.writeable = False
+    return chords
 
 
 def _chord(angles: np.ndarray, distances: np.ndarray, rows: int, cols: int) -> np.ndarray:

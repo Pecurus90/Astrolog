@@ -164,7 +164,8 @@ OUR_STAGES = {
     "fondo MMT": "mstar_nstar",
     "stime per canale colore": "_estimates",
     "gradiente e banding": "_sky_field",
-    "scie": "trails",
+    "cielo delle scie": "binned_sky",
+    "scie": "counted",
     "tilt ed elongazione": "_star_field",
 }
 BACKGROUND, READ, TOTAL = "fondo sep", "lettura file", "totale"

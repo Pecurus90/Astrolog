@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 323; senza fonte: 1.
-Fonti: C norma: 168; U usanza: 2; D metodo: 20; M misura: 22; P decisione: 33; T tecnico: 80.
+Valori: 324; senza fonte: 1.
+Fonti: C norma: 168; U usanza: 2; D metodo: 20; M misura: 22; P decisione: 33; T tecnico: 81.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -526,6 +526,7 @@ Fonti: C norma: 168; U usanza: 2; D metodo: 20; M misura: 22; P decisione: 33; T
 | FINE_ANGLE_DEG | `0.05` | T |
 | FINE_SHIFT_PX | `0.1` | T |
 | EXAMINED_REACH | `(1.0, 3)` | T |
+| CHORD_SHAPES | `4` | T |
 | _EIGHT | `np.ones((3, 3), dtype=np.int8)` | D 8-connected: diagonal pixels touch |
 
 ### pipeline/transparency.py
