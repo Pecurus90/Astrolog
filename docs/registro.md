@@ -805,3 +805,4 @@ Fonti: C norma: 166; U usanza: 2; D metodo: 19; M misura: 22; P decisione: 33; T
 | 0040 | Il metodo: sette regole tenute da macchine, congelato fino al 21/11/2026 | accettata, 24/10/2026 (Marco). Supera in parte ADR 0001, 0015, 0025, 0027, 0028, 0030, |  |
 | 0041 | Il tetto di saturazione e' il fondo scala dichiarato | accettata, 29/10/2026 (Marco); supera ADR 0022 punto 7 nella parte "il tetto dall'istogramma". Passo 26.45. | domini/misure.md |
 | 0042 | Le misure del frame sono quelle di Image Analysis | accettata, 30/10/2026 (Marco). Supera ADR 0022 punto 4 (FWHM ed eccentricita' dalla |  |
+| 0043 | I cicli caldi delle misure compilati con numba; i Mac Intel escono dai bersagli | accettata, 4/11/2026 (Marco). Passo 26.57. |  |

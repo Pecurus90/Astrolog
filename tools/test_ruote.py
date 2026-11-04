@@ -27,12 +27,17 @@ def test_a_library_without_the_arm_wheel_is_caught():
     assert ruote.covers(solo_x86, "Mac Apple Silicon") is False
 
 
-def test_a_universal2_wheel_covers_both_macs():
-    """Un file solo per i due Mac: chi lo pubblica non deve risultare scoperto su entrambi."""
+def test_a_universal2_wheel_covers_the_apple_silicon_mac():
+    """Un file solo per i due Mac: chi lo pubblica non deve risultare scoperto sul nostro."""
     universal = ["x-1.0-cp312-cp312-macosx_11_0_universal2.whl"]
-    assert ruote.covers(universal, "Mac Intel") is True
     assert ruote.covers(universal, "Mac Apple Silicon") is True
     assert ruote.covers(universal, "Linux arm64") is False
+
+
+def test_a_mac_intel_wheel_alone_is_not_enough():
+    """ADR 0043: Mac Intel fuori dai bersagli, la sua ruota non copre il Mac Apple Silicon."""
+    assert "Mac Intel" not in ruote.TARGETS
+    assert ruote.covers(["x-1.0-cp312-cp312-macosx_11_0_x86_64.whl"], "Mac Apple Silicon") is False
 
 
 def test_musllinux_counts_as_much_as_manylinux():

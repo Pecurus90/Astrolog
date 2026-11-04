@@ -1,8 +1,8 @@
-"""Ogni dipendenza ha una ruota pronta per tutte e cinque le architetture, o e' Python puro.
+"""Ogni dipendenza ha una ruota pronta per tutte e quattro le architetture, o e' Python puro.
 
-Le cinque sono Windows x64, Mac Intel, Mac Apple Silicon, Linux amd64 e Linux arm64: e' cio'
-che il progetto promette di far girare. Una dipendenza senza ruota per una di esse costringe
-chi installa a compilarla, e su un NAS senza compilatore semplicemente non si installa.
+Le quattro sono Windows x64, Mac Apple Silicon, Linux amd64 e Linux arm64: e' cio' che il
+progetto promette di far girare (Mac Intel fuori, ADR 0043). Una dipendenza senza ruota per una
+di esse costringe chi installa a compilarla, e su un NAS senza compilatore non si installa.
 
 Vincolo non ovvio: interroga PyPI, quindi **non sta nel cancello** (che deve girare offline e
 in pochi secondi): sta in CI. Guarda la chiusura transitiva, non le sole dipendenze
@@ -27,16 +27,14 @@ TIMEOUT_S = 30
 # `py3-none-any` (Python puro) vale per tutti e non compare qui.
 TARGETS = {
     "Windows x64": ("win_amd64",),
-    "Mac Intel": ("macosx", "x86_64"),
     "Mac Apple Silicon": ("macosx", "arm64"),
     "Linux amd64": ("manylinux", "x86_64"),
     "Linux arm64": ("manylinux", "aarch64"),
 }
 # Le musllinux valgono quanto le manylinux per l'immagine Docker Alpine, e una ruota
-# `universal2` copre tutti e due i Mac in un file solo: senza questa riga una dipendenza
-# sana risulterebbe scoperta su entrambi, e la CI andrebbe rossa a torto.
+# `universal2` copre anche il Mac Apple Silicon: senza questa riga una dipendenza sana
+# risulterebbe scoperta, e la CI andrebbe rossa a torto.
 ALSO = {
-    "Mac Intel": ("macosx", "universal2"),
     "Mac Apple Silicon": ("macosx", "universal2"),
     "Linux amd64": ("musllinux", "x86_64"),
     "Linux arm64": ("musllinux", "aarch64"),
@@ -128,7 +126,7 @@ def main():
             print(f"  {'OK ' if all(coperti.values()) else 'NO '} {nome:28} {segni}")
         for riga in mancano:
             print(f"  MANCA {riga}")
-    print(f"\n{len(esito)} pacchetti, {len(mancano)} senza ruota per tutte e cinque")
+    print(f"\n{len(esito)} pacchetti, {len(mancano)} senza ruota per tutte e quattro")
     return 1 if mancano else 0
 
 

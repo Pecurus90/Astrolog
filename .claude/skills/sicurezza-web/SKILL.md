@@ -47,10 +47,10 @@ copia e si incolla in pubblico.
 
 **Una dipendenza nuova entra con tre cose scritte accanto**: il difetto che risolve (se
 non lo sai nominare, non serve), la sua licenza (deve stare con la GPL-3 del progetto), e
-**una ruota pronta per le cinque architetture** -- Windows x64, Mac Intel, Mac Apple
-Silicon, Linux amd64, Linux arm64 -- oppure e' Python puro. Una libreria che su arm64 si
-compila dal sorgente (e' successo con `photutils` in `old/`) non entra finche' la CI non
-l'ha vista installarsi su tutte e cinque. Le versioni sono fissate; le vulnerabilita' le
+**una ruota pronta per le quattro architetture** -- Windows x64, Mac Apple Silicon, Linux
+amd64, Linux arm64 (Mac Intel fuori, ADR 0043) -- oppure e' Python puro. Una libreria che su
+arm64 si compila dal sorgente (e' successo con `photutils` in `old/`) non entra finche' la CI
+non l'ha vista installarsi su tutte e quattro. Le versioni sono fissate; le vulnerabilita' le
 cerca la CI.
 
 **Segreti.** Chiavi e credenziali vivono in `.env`, si leggono con `os.environ`; gitleaks,

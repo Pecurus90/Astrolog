@@ -7,8 +7,8 @@ description = "Cataloga, analizza e pianifica sessioni di astrofotografia dai FI
 requires-python = ">=3.12"
 license = "GPL-3.0-or-later"
 dependencies = [
-  # ognuna entra col difetto che risolve, la licenza, e una ruota per le cinque
-  # architetture (Windows x64, Mac Intel e Apple Silicon, Linux amd64 e arm64) o Python puro
+  # ognuna entra col difetto che risolve, la licenza, e una ruota per le quattro
+  # architetture (Windows x64, Mac Apple Silicon, Linux amd64 e arm64; ADR 0043) o Python puro
   "fastapi>=0.162.0",          # MIT   - le rotte e l'OpenAPI da cui si generano i tipi TS
   "uvicorn>=0.54.0",           # BSD   - il server
   "pydantic>=2.14.2",           # MIT   - la forma delle risposte
@@ -30,7 +30,7 @@ dependencies = [
                              #         punto 4, Levenberg-Marquardt; ruote per tutte e cinque)
   "numba>=0.68.1",             # BSD-2 - i cicli caldi di measure compilati (piano 26.57, Marco
                              #         4/11: non piu' lenti di Image Analysis; con llvmlite,
-                             #         BSD-2, ~150 MB; ruote per tutte e cinque)
+                             #         BSD-2, ~150 MB; Mac Intel senza ruota: fuori, ADR 0043)
 ]
 
 [project.optional-dependencies]

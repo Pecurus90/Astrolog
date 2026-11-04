@@ -81,16 +81,16 @@ jobs:
           done
 
   ruote:
-    name: ruote per le cinque architetture (ubuntu)
+    name: ruote per le quattro architetture (ubuntu)
     runs-on: ubuntu-latest
-    # Needs PyPI. A dependency without a wheel for one of the five targets cannot install on a NAS.
+    # Needs PyPI. A dependency without a wheel for one of the four targets (ADR 0043) cannot install.
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: python -m pip install --quiet -e backend
-      - name: Ogni dipendenza ha la ruota per Windows, Mac Intel, Mac ARM, Linux x64 e ARM?
+      - name: Ogni dipendenza ha la ruota per Windows, Mac ARM, Linux x64 e ARM?
         run: python tools/ruote.py
 
   pacchetto:
