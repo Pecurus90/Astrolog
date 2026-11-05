@@ -257,47 +257,47 @@ B, Ha, OIII, SII; Poseidon-C Pro; Canon 700D):
   un frame alla volta (`--no-times` li salta). Si rilancia a ogni sottopasso; ogni sua misura si
   confronta (Marco, 27/10 e 30/10/2026). Siril no (Marco, 26/10/2026). <!-- software-ok -->
 
-  **Primo giro contro Image Analysis** (passo 26.47, 30/10/2026, codice `a1cf1457`): le 205
-  copie del 26.46, nitidi e sfocati insieme; AstroLog diviso lui, mediana [minimo-massimo];
-  colori contro la sua misura sull'RGB del Debayer, come in WBPP.
+  **Confronto largo** (26.5, 5/11/2026, codice `bf5ce7f3`): 5979 light, meta' di ogni oggetto,
+  camera, notte e filtro, archivi di Marco, Giovanni Lovato, Nenad, Marco Lorenzi, niente Canon;
+  31 oggetti, ognuno da 5 frame. AstroLog diviso lui, mediana [5-95%] (sotto 10 frame la mediana).
 
-  | Misura | Mono A (35) | Mono B (45) | Colori A (80) | Colori B (45) |
-  |---|---|---|---|---|
-  | Stelle (26.48.3) | 0,99 [0,97-1,02] | 1,00 [0,97-1,03] | 0,99 [0,95-1,03] | 0,98 [0,91-1,03] |
-  | FWHM (26.49) | 1,00 [0,98-1,01] | 1,00 [0,98-1,01] | 1,00 [0,98-1,04] | 1,01 [0,99-1,04] |
-  | Eccentricita' (26.49) | 1,00 [0,99-1,00] | 1,00 [0,99-1,00] | 1,00 [0,99-1,01] | 0,99 [0,97-1,00] |
-  | FWHM Sigma (26.49) | 0,99 [0,86-1,08] | 1,02 [0,95-1,06] | 1,04 [0,98-1,13] | 1,04 [0,95-1,11] |
-  | Eccentricita' Sigma (26.49) | 0,99 [0,95-1,00] | 1,00 [0,97-1,01] | 0,99 [0,94-1,12] | 0,99 [0,94-1,02] |
-  | PSFResidual (26.50) | 0,98 [0,92-1,06] | 1,00 [0,91-1,14] | 1,07 [1,00-1,25] | 1,06 [0,99-1,24] |
-  | PSFResidual Sigma (26.50) | 0,94 [0,88-1,00] | 0,97 [0,88-1,07] | 1,01 [0,88-1,23] | 0,98 [0,91-1,18] |
-  | Fondo / mediana | 1,00 [0,99-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,00] |
-  | Rumore | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] |
-  | PSF SNR (26.50, colori 26.56) | 0,98 [0,85-0,99] | 1,00 [0,97-1,09] | 0,99 [0,89-1,06] | 0,99 [0,77-1,16] |
-  | PSFFlux (26.50, 26.56) | 0,99 [0,92-1,00] | 1,00 [0,98-1,05] | 1,00 [0,94-1,03] | 1,00 [0,88-1,08] |
-  | PSFTotalMeanFlux (26.50, 26.56) | 0,99 [0,95-1,10] | 1,03 [0,99-1,12] | 1,02 [0,88-1,09] | 1,00 [0,92-1,02] |
-  | PSFCount (26.50, 26.56) | 0,98 [0,94-1,00] | 0,99 [0,96-1,02] | 0,97 [0,75-1,09] | 0,97 [0,82-1,02] |
-  | Mediana, Sigma, Entropia (26.51) | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] |
-  | NoiseRatio (26.51, 26.56) | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] | 1,00 [1,00-1,00] |
-  | SNR (26.51, 26.56) | 1,00 [0,98-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,00] | 1,00 [0,99-1,01] |
-  | M\* (26.51, 26.56) | 1,00 [0,96-1,01] | 0,98 [0,96-1,00] | 0,99 [0,97-1,00] | 0,99 [0,98-1,00] |
-  | N\* (26.51, 26.56) | 1,00 [0,97-1,00] | 0,99 [0,97-1,00] | 0,99 [0,98-1,00] | 0,99 [0,98-1,00] |
-  | PSF Signal Weight (26.51, 26.56) | 0,99 [0,93-1,10] | 1,04 [0,98-1,15] | 1,03 [0,85-1,12] | 1,01 [0,84-1,10] |
-  | Gradient (26.52) | 1,00 [0,98-1,02] | 1,00 [0,99-1,00] | 1,00 [0,99-1,00] | 1,00 [0,95-1,02] |
-  | Row / ColumnBanding (26.52) | 1,00 / 1,00 | 1,00 / 1,00 | 0,99 / 0,99 [0,70-1,21] | 0,99 / 0,98 [0,77-1,45] |
-  | FWHMTilt (26.52) | 1,03 [0,84-1,58] | 1,01 [0,90-1,22] | 1,04 [0,93-1,43] | 1,03 [0,87-1,13] |
-  | FWHMCurvature (26.52) | 1,01 [0,59-1,15] | 1,01 [0,49-1,07] | 1,04 [-0,27-1,08] | 1,03 [0,17-1,08] |
-  | Coerenza (differenza) / angolo (gradi) (26.52) | +0,006 / 0,19 | +0,001 / 0,14 | +0,003 / 0,32 | +0,005 / 0,32 |
-  | Scie, frame col suo conteggio (26.53) | 35 / 35 | 45 / 45 | 80 / 80 | 41 / 45 |
-  | Altezza | 1,00 [1,00-1,02] | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 [0,99-1,02] |
-  | Massa d'aria | 1,00 [0,99-1,00] | 1,00 [1,00-1,00] | 1,00 [0,99-1,01] | 1,00 [0,99-1,01] |
+  | Misura | ATR2600M (4226) | Poseidon-C (1716) | 2600MC Duo (21) | 294MC (6) | Lorenzi (3) |
+  |---|---|---|---|---|---|
+  | Stelle | 1,00 [0,97-1,02] | 1,00 [0,96-1,02] | 1,01 [1,00-1,02] | 0,96 | 0,99 |
+  | FWHM, eccentricita' | 1,00 [0,99-1,01], 1,00 | 1,01 [0,99-1,04], 1,00 | 1,00, 1,00 | 1,00, 1,00 | 1,00, 1,00 |
+  | FWHM Sigma | 1,01 [0,91-1,04] | 1,04 [0,99-1,13] | 1,04 [1,02-1,09] | 1,05 | 0,96 |
+  | Eccentricita' Sigma | 0,99 [0,97-1,00] | 0,99 [0,96-1,01] | 1,00 [0,99-1,01] | 1,00 | 0,99 |
+  | PSFResidual | 0,98 [0,93-1,04] | 1,08 [1,02-1,18] | 1,05 [1,03-1,07] | 0,99 | 0,99 |
+  | PSFResidual Sigma | 0,95 [0,89-1,00] | 1,02 [0,95-1,12] | 1,01 [0,98-1,02] | 0,93 | 0,96 |
+  | Fondo, rumore, Sigma, entropia, NoiseRatio | 1,00 [0,99-1,00] | 1,00 [0,99-1,00] | 1,00 | 1,00 | 1,00 |
+  | PSF SNR | 0,99 [0,95-1,05] | 0,99 [0,96-1,07] | 1,00 [0,98-1,02] | 0,99 | 1,04 |
+  | PSFFlux | 0,99 [0,98-1,02] | 1,00 [0,98-1,03] | 1,00 [0,99-1,01] | 1,00 | 1,02 |
+  | PSFTotalMeanFlux | 1,00 [0,97-1,06] | 1,02 [0,95-1,06] | 1,02 [1,01-1,04] | 1,06 | 1,04 |
+  | PSFCount | 0,98 [0,96-1,01] | 0,97 [0,95-1,00] | 0,99 [0,96-1,01] | 0,98 | 0,99 |
+  | PSF Signal Weight | 1,01 [0,95-1,10] | 1,03 [0,95-1,09] | 1,03 [1,02-1,06] | 1,06 | 1,08 |
+  | SNR (prima di `bdfee06c`) | 1,00 [0,98-1,01] | 1,00 [0,99-1,01] | 1,00 [1,00-1,00] | 0,99 | 0,94 |
+  | M\*, N\* | 0,98 [0,96-1,00], 0,99 | 0,99 [0,98-1,00], 0,99 | 0,98, 0,99 | 1,00, 1,00 | 0,99, 0,99 |
+  | Gradient | 1,00 [1,00-1,00] | 1,00 [0,99-1,00] | 1,00 [0,99-1,00] | 1,00 | 1,00 |
+  | Row / ColumnBanding | 1,00 / 1,00 | 0,99 [0,86-1,08] / 0,99 | 0,99 / 0,98 [0,89-1,09] | 1,00 / 0,95 | - |
+  | FWHMTilt | 1,01 [0,88-1,09] | 1,03 [0,96-1,08] | 1,10 [1,02-1,29] | 1,01 | 1,02 |
+  | Altezza, massa d'aria | 1,00 [1,00-1,01] | 1,00 [0,99-1,01] | 1,00 | 1,00 | - |
 
-  Aperto: PSFResidual a colori (26.56, il nostro fit sulle stelle a colori). Tempi: fit del 26.49
-  +1 s mono, +2,4 s colori; 26.56 +7,7-16 s colori; Sh2-185 n.2 (21964 fit) 23,9 s; il 26.51
-  +2,8 s mono: il tetto di ADR 0042 al 26.57. Il 26.52: +0,86 s
-  mono (mediane di riga); curvature vicine a zero danno rapporti larghi, scarto entro 0,07.
-  Scie: 201 su 205 (sempre zero: 179), 22 dei 26 con scie sue; fuori la Velo, dove lui per
-  strisce conta 4-11 scie sui filamenti: le sue 1-2 sono filamenti, il profilo li scarta. +0,5-0,9 s.
-  Osservazione (26.54), secondi a frame (26.47, base del 26.57) e perche' degli scarti: nei passi.
+  Corretti: deblending di `sep` oltre 1024 rami (`bf5ce7f3`); SNR coi pixel alla mediana su un
+  lato (`bdfee06c`: 0,93-0,97 su interi deboli e somme, ora 1,0000); scie a cavallo (`c12b00e2`;
+  prima 98,3% di frame uguali). Spiegati, senza taratura (convenzione prima del dato):
+  - ASTAP: stelle x2-17, HFD 0,82-0,90, conta solo SNR 30 (65408 e 13,1: nessuna stella).
+  - Campi oltre 15 mila stelle (260 frame): FWHM 0,99, Sigma 0,88; Sh2-185 L 0,94-0,97, vicine
+    nella regione del fit (la sua non e' pubblicata). Sigma, M\* N\* (MMT non pubblicato), PSFCount
+    a colori: entro 5%, come al 26.47. PSFResidual a colori +5/+8% (NGC 1333 +10/+37%): aperto, non
+    a schermo. FWHMTilt Duo +10%: 20 frame, curvature vicine a zero danno rapporti larghi.
+  - Frame singoli: 3 a colori sotto nuvole (14-28 stelle), canali senza stelle, PSF tace (lui
+    ~1e-6); 6 mono dove lui somma 1,6-2,2 volte le sue stelle; 13 fuori 10% sulle stelle (prima
+    luce C9.25 fuori fuoco, crepuscolo M45 e LBN 576, NGC 7380 del 26.48.4); 5 con 0-1 stelle: lui
+    niente, noi fondo e rumore; 2 somme float di Lorenzi non lette (file riscritti).
+  - Osservazione: azimut vero contro il suo J2000 (M51 allo zenit 7,5 gradi); angolo orario
+    2600MC / 294MC 0,08 / 0,51 gradi: lo strumento usa `RA`, lui `CRVAL` (l'app il centro risolto);
+    182 frame senza altezza: riscritti da PixInsight o somme CCDStack, programma ignoto (ADR 0029). <!-- software-ok -->
+  - Tempi a frame, mediana: noi 2,05 s mono, 2,93 colori; lui 3,57 / 4,24 con Debayer (26.47).
 
 **La trasparenza** (`pipeline/transparency.py`, Image Analysis par. 2.1.7; numeri nel passo 26.55): <!-- software-ok -->
 per frame la scala di luminosita', mediana del log10 del flusso in finestre di 50 stelle dai ranghi
