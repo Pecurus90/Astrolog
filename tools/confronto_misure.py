@@ -152,7 +152,7 @@ OUR_STAGES = {
     "debayer VNG": "debayered",
     "rumore primo passo": "_sigma",
     "mediana 3x3": "median3x3",
-    "rilevamento sep": "_found",
+    "rilevamento sep": "_found_aside",
     "stelle utili": "_kept",
     "HFD": "_hfd",
     "forma": "shape_of",

@@ -200,7 +200,7 @@ def _first_pass(raw: np.ndarray) -> _Sky:
 
 def _sep_stars(sky: _Sky, sensor: np.ndarray, saturation: float) -> _SepStars:
     noise = max(_sigma(sky.images[0]), NOISE_FLOOR_ADU)
-    objects = _found(sky.images[1], noise)
+    objects = _found_aside(sky.images[1], noise)
     usable = _kept(sensor, objects, saturation)
     round_ones = usable[_round(objects[usable])]
     hfds = _hfd(sky.images, objects, _spread(objects, round_ones, sensor.shape))
@@ -340,6 +340,11 @@ def _mid_range(channels: list[Estimates]) -> Estimates:
     noise = Mrs(mid([c.noise.sigma for c in channels]), mid([c.noise.ratio for c in channels]))
     scales = (mid([c.scales[0] for c in channels]), mid([c.scales[1] for c in channels]))
     return Estimates(noise, psf, back, scales)
+
+
+def _found_aside(filtered: np.ndarray, noise: float) -> np.ndarray:
+    """_found in a process: sep holds the GIL, and the structures beside it would wait."""
+    return in_process(partial(_found, noise=noise), filtered)
 
 
 def _found(filtered: np.ndarray, noise: float) -> np.ndarray:
