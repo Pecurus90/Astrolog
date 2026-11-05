@@ -36,6 +36,8 @@ from .trails import BinnedSky, binned_sky, counted
 
 THRESHOLD_SIGMA = 5.0  # [C Siril find_star default: 5 sigma over sky, software-ok]
 NO_DEBLENDING = 1.0  # [C sep docs, extract: deblend_cont 1.0 disables deblending]
+# Its thresholds still build a tree, and a frame-wide faint web overflows it: one, no tree.
+DEBLEND_LEVELS = 1  # [C sep docs, extract: deblend_nthresh, the thresholds tried]
 SATURATED_SHARE = 0.9  # [P ADR 0022: peak under 90% of saturation]
 MIN_AXIS_RATIO = 0.5  # [C Siril find_star default roundness, software-ok]
 ROOM_FWHM = 3.0  # [P plan 25.1: away from the edge and from neighbours more than 3 FWHM]
@@ -352,7 +354,8 @@ def _found(filtered: np.ndarray, noise: float) -> np.ndarray:
     deblending: it hands contested pixels out at random, and the same frame measured otherwise."""
     sep.set_extract_pixstack(max(300_000, filtered.size))  # dense fields fill sep's default
     data = np.ascontiguousarray(filtered)
-    return sep.extract(data, THRESHOLD_SIGMA, err=noise, deblend_cont=NO_DEBLENDING)
+    return sep.extract(data, THRESHOLD_SIGMA, err=noise, deblend_cont=NO_DEBLENDING,
+                       deblend_nthresh=DEBLEND_LEVELS)  # fmt: skip
 
 
 def _kept(raw: np.ndarray, objects: np.ndarray, saturation: float) -> np.ndarray:

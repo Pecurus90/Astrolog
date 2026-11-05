@@ -259,3 +259,14 @@ def test_a_crowded_frame_gives_the_same_detections_every_time() -> None:
     filtered = median3x3((data - np.median(data)).astype(np.float32))
     runs = [_found(filtered, _NOISE) for _ in range(8)]
     assert all(np.array_equal(run[["x", "y", "flux"]], runs[0][["x", "y", "flux"]]) for run in runs)
+
+
+def test_a_faint_web_with_many_knots_is_one_detection_not_an_overflow() -> None:
+    """A frame-wide faint web (a real one: 37040 px at 5-25 sigma) split sep's deblending into
+    over 1024 sub-objects, and the frame went unmeasured."""
+    knots = 1200
+    filtered = np.zeros((40, 8 * knots + 16), dtype=np.float32)
+    filtered[19:22, :] = 6
+    for k in range(knots):
+        filtered[17:24, 6 + 8 * k : 11 + 8 * k] = 8 + (k % 7) * 3
+    assert len(_found(filtered, 1.0)) == 1
