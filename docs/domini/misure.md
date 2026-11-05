@@ -209,9 +209,9 @@ altri esiti restano. Un frame alla volta: il parallelo si misura quando servira'
   sotto 32 fit. **Elongazione** (eq. 28-29): antiorario (180 meno il nostro), coerenza 0-1. Il
   **lato chiaro** resta nostro: piano sulla mappa di `sep`, se spiega meta' della varianza.
   **Scie** (26.53): l'algoritmo del par. 2.1.3, i numeri non pubblicati col tag in `trails.py`;
-  sigma MAD (la deviazione standard semplice: 180 frame su 205, non 201). Sintetici 4000 x 3000
-  contro di lui: 20 su 20 (4 sigma 6/6, 2 sigma denso 0/3, rado 3/3); una colonna calda di un
-  light non calibrato e' una scia, per lui e per noi.
+  sigma MAD (la std semplice: 180 frame su 205, non 201). Campione segnalato: la linea o un pixel
+  a cavallo (26.5, nostra lettura; solo la linea perdeva scie deboli: 120 -> 146 su 188, 1 falsa
+  su 120, 2 sigma denso 2 cieli su 20; Marco 5/11/2026). Colonna calda non calibrata: scia per tutti.
 - **Col cielo** (`pipeline/sky_measure.py`, stadio `sky` dopo `measure`; ADR 0022 punti 5 e 7):
   le misure dei pixel con la soluzione di `solve`, il sito e l'ora della scheda del file misurato,
   in `pipeline_sky`. Una posa senza soluzione si scrive subito e si riscrive quando la soluzione

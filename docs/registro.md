@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 324; senza fonte: 1.
-Fonti: C norma: 168; U usanza: 2; D metodo: 20; M misura: 22; P decisione: 33; T tecnico: 81.
+Valori: 325; senza fonte: 1.
+Fonti: C norma: 168; U usanza: 2; D metodo: 21; M misura: 22; P decisione: 33; T tecnico: 81.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -515,6 +515,7 @@ Fonti: C norma: 168; U usanza: 2; D metodo: 20; M misura: 22; P decisione: 33; T
 | BRIGHT_SHARE | `0.02` | C ImageAnalysis par. 2.1.3; software-ok |
 | BRIGHT_SCALE | `3.0` | C ImageAnalysis par. 2.1.3; software-ok |
 | ANGLE_STEP_DEG | `0.25` | C ImageAnalysis par. 2.1.3: Hough in steps of 0.25 degrees; software-ok |
+| STRADDLE_PX | `0.5` | D the two pixel centres within one px of a line lie half a px each side |
 | RUN_SIDE_SHARE | `0.25` | C ImageAnalysis par. 2.1.3: a quarter of the smallest side; software-ok |
 | FLAGGED_SHARE | `0.35` | C ImageAnalysis par. 2.1.3: at least 35% of the samples; software-ok |
 | RUN_WINDOW | `25` | T |

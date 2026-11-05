@@ -82,14 +82,26 @@ def test_a_trail_four_times_the_noise_is_found_in_any_field() -> None:
 
 def test_a_trail_twice_the_noise_is_lost_in_a_dense_field_found_in_a_sparse_one() -> None:
     """Doc: twice the noise lost where unresolved stars lift the dispersion, found where sparse.
-    Seed 3: counting flags 1 px beside the line too passed 35% on noise."""
-    for seed in (1, 3):
+    Straddling the line, 2 dense skies of 20 pass 35% on noise: rare, not never."""
+    found = 0
+    for seed in range(1, 21):
         dense = _sky(seed, dense=True)
         _trail(dense, 2 * _NOISE, 37.0)
-        assert _count(dense) == 0, seed
+        found += _count(dense)
+    assert found <= 3
     sparse = _sky()
     _trail(sparse, 2 * _NOISE, 37.0)
     assert _count(sparse) == 1
+
+
+def test_a_thin_trail_between_two_pixel_rows_is_found() -> None:
+    """Doc: within one binned pixel of the line. A trail between two rows splits its light: on the
+    nearest row only, half the samples flagged (a real one, 1.8 sigma binned, lost so)."""
+    for seed in (1, 2, 4, 5):
+        for angle in (12.5, 37.0):
+            sky = _sky(seed)
+            _trail(sky, 2.2 * _NOISE, angle, shift=0.5, width=0.5)
+            assert _count(sky) == 1, (seed, angle)
 
 
 def test_a_meteor_shorter_than_a_quarter_of_the_short_side_is_not_counted() -> None:

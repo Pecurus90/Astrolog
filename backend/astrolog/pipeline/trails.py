@@ -20,6 +20,7 @@ BRIGHT_SCALE = 3.0  # [C ImageAnalysis par. 2.1.3; software-ok]
 STAR_PAD = 1.0  # [T] binned px past half the structure box's larger side
 ANGLE_STEP_DEG = 0.25  # [C ImageAnalysis par. 2.1.3: Hough in steps of 0.25 degrees; software-ok]
 NEAR_PX = 1  # [C ImageAnalysis par. 2.1.3: flagged pixels within one binned px; software-ok]
+STRADDLE_PX = 0.5  # [D the two pixel centres within one px of a line lie half a px each side]
 RUN_SIDE_SHARE = 0.25  # [C ImageAnalysis par. 2.1.3: a quarter of the smallest side; software-ok]
 FLAGGED_SHARE = 0.35  # [C ImageAnalysis par. 2.1.3: at least 35% of the samples; software-ok]
 # Share over a sliding window: one over the whole run grows it twice its length on noise flags.
@@ -306,8 +307,12 @@ def _run(frame: _Frame, flagged: np.ndarray, line: _Line) -> np.ndarray | None:
     t = t[keep]
     if len(t) < RUN_WINDOW:
         return None
-    # The sample on the line only: one across too lifts a dense field's noise flags over 35%
-    hit = flagged[at][keep]
+    # Our reading of the refinement's one binned px: the line or a pixel straddling it, half a px
+    hit = flagged[at].copy()
+    for half in (-STRADDLE_PX, STRADDLE_PX):
+        hit |= flagged[np.rint(y + half * sin).astype(int).clip(0, rows - 1),
+                       np.rint(x + half * cos).astype(int).clip(0, cols - 1)]  # fmt: skip
+    hit = hit[keep]
     dense = np.convolve(hit, np.ones(RUN_WINDOW), "valid") >= FLAGGED_SHARE * RUN_WINDOW
     covered = np.zeros(len(t), dtype=bool)
     for start in np.flatnonzero(dense):
