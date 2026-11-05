@@ -8,9 +8,10 @@ from contextlib import contextmanager
 
 @contextmanager
 def transaction(
-    conn: sqlite3.Connection, *, immediate: bool = False
+    conn: sqlite3.Connection, *, immediate: bool = True
 ) -> Iterator[sqlite3.Connection]:
-    """`immediate`: writer takes lock at start, so busy_timeout waits instead of failing."""
+    """Writer takes lock at start, so busy_timeout waits. Deferred, a read then a write fails at
+    once if another writer committed between (WAL, stale snapshot): Behind writes beside the app."""
     conn.execute("BEGIN IMMEDIATE" if immediate else "BEGIN")
     try:
         yield conn

@@ -2,6 +2,7 @@
 «Lascia»; dopo «Lascia» si ripropone solo se la classe misurata cambia; i dati scarsi si dicono."""
 
 import test_site_sky as sky
+from astrolog.api.deps import get_db
 from astrolog.db.connect import connect, create_database
 from astrolog.spine import backup
 from conftest import LATER
@@ -166,6 +167,39 @@ def test_a_dismissal_stays_with_the_place_not_with_the_name(client_vuoto, db_pat
     client_vuoto.app.state.behind.join(10.0)
     _measured(db_path, site["id"], 21.4)
     assert _site(client_vuoto, site["id"])["measured"]["propose"] is True
+
+
+def _written_meanwhile(client, db_path, when: str):
+    """Ogni richiesta ha una connessione che, prima di eseguire `when`, lascia scrivere un'altra
+    connessione, come il cielo riscritto da Behind fra una lettura e una scrittura della rotta."""
+
+    def get_db_with_a_writer_in_between():
+        conn = connect(db_path, check_same_thread=False)
+
+        def between(statement: str) -> None:
+            if when in statement:
+                other = connect(db_path)
+                other.execute("INSERT OR IGNORE INTO pipeline_filters (name) VALUES (?)", ("x",))
+                other.commit()
+                other.close()
+
+        conn.set_trace_callback(between)
+        try:
+            yield conn
+        finally:
+            conn.close()
+
+    client.app.dependency_overrides[get_db] = get_db_with_a_writer_in_between
+
+
+def test_a_site_write_waits_for_the_sky_written_behind(client_vuoto, db_path, offline):
+    """CI 42102084200: la rotta leggeva in una transazione differita, Behind scriveva e chiudeva,
+    e la scrittura della rotta trovava la sua lettura vecchia: "database is locked"."""
+    _written_meanwhile(client_vuoto, db_path, "INSERT INTO sites(")
+    r = client_vuoto.post(
+        "/api/v1/sites", json={"name": "Casa", "latitude": 45.5, "longitude": 11.5}
+    )
+    assert r.status_code == 201, r.text
 
 
 def test_moving_a_site_empties_a_sky_measured_on_its_frames(client_vuoto, db_path, offline):
