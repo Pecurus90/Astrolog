@@ -76,6 +76,17 @@ def test_the_scaling_factors_are_the_spreads_below_and_above_the_median() -> Non
     assert stats.scale_high_adu / stats.scale_low_adu == pytest.approx(3.0, rel=0.02)
 
 
+def test_pixels_at_the_median_belong_to_neither_side() -> None:
+    """Integer frames tie at the median: on the high side they pulled its spread down (SNR 3-7%
+    under his on faint narrowband and on sums; his within 1e-4 with neither)."""
+    values = np.repeat(
+        [0.0, 8.0, 9.0, 10.0, 11.0, 12.0, 99.0], [1, 1000, 1000, 3000, 1000, 1000, 1]
+    )
+    stats = _stats(values.reshape(2, 3501).astype(np.float32))  # 0 and 99 outside the open range
+    assert stats.scale_low_adu == pytest.approx(0.5)
+    assert stats.scale_high_adu == pytest.approx(0.5)
+
+
 def test_snr_is_the_squared_mean_scale_over_the_noise() -> None:
     """ImageAnalysis eq. 16."""
     assert snr(4.0, 6.0, 2.5) == pytest.approx(4.0)

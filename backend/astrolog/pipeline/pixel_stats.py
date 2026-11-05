@@ -81,8 +81,8 @@ def _entropy(values: np.ndarray, sigma: float) -> float:
 
 
 def _scale(values: np.ndarray, centre: float, *, upper: bool) -> float:
-    """Std of one side of the median (under it, or from it up), then twice more within 4 of it
-    from the median."""
+    """Std of one side of the median, the median itself on neither (his SNR within 1e-4, sonde
+    26.5), then twice more within 4 of it from the median."""
     spread, count = _side_std(values, centre, upper, math.inf)
     if count < 2:
         return 0.0
@@ -150,7 +150,7 @@ def _side(values: np.ndarray, span: tuple[int, int], around: tuple[float, float]
     count, total, squares = 0, 0.0, 0.0
     for i in range(*span):
         v = float(values[i])
-        if (v >= centre) == upper and abs(v - centre) <= reach:
+        if v != centre and (v > centre) == upper and abs(v - centre) <= reach:
             count += 1
             total += v
             squares += (v - mean) ** 2
