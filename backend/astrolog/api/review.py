@@ -21,6 +21,7 @@ from .models_page import page_of
 from .models_review import BandOut, FilterOut, ReviewOut, SettledObjects
 from .models_review_apply import ReviewApplied, ReviewApply
 from .models_review_groups import GearSignature, MosaicCandidate, TypelessFolder
+from .scan import sky_follows
 
 router = APIRouter(prefix="/api/v1", tags=["review"])
 
@@ -129,6 +130,8 @@ def apply(
     now = now_iso()
     with write.writing(conn):
         changed, requeued = write.apply_answers(conn, body, now)
+    if body.unclear:  # "these coordinates are that site": its sky from the frames follows
+        sky_follows(request)
     # without frames to redo the worker is not taken for nothing
     started = bool(requeued) and work.after(state, _stages_touched(body))
     return ReviewApplied(changed=changed, requeued=len(requeued), run_started=started)

@@ -7,8 +7,8 @@ from dataclasses import asdict
 from fastapi import APIRouter, Depends
 
 from ..clock import night_date, now_iso
+from ..site_of import home_site
 from ..spine import year
-from ..spine.group_store import home_site
 from .deps import get_db
 from .models_year import YearOut
 

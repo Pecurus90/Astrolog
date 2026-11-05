@@ -7,8 +7,8 @@ from collections.abc import Collection, Iterable
 
 from .. import place
 from ..db import idlist
-from .declarations import COORDINATES_SITE
-from .group import SAME_PLACE_KM, GroupReason
+from ..site_of import COORDINATES_SITE, SAME_PLACE_KM
+from .group import GroupReason
 from .stages import StageName, invalidate
 
 

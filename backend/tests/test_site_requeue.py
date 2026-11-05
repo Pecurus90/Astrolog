@@ -3,7 +3,7 @@ quelle; le notti di un luogo spostato; il trasloco di casa che non tocca le nott
 luoghi. Le regole stanno in `spine/site_requeue.py` e in `docs/domini/sito.md`.
 """
 
-from astrolog import place
+from astrolog import place, site_of
 from astrolog.db.connect import connect
 from astrolog.spine import declarations as decl
 from astrolog.spine.stages import mark_pending, set_status
@@ -82,7 +82,7 @@ def test_renaming_a_site_keeps_the_answers_that_name_it(client_vuoto, offline):
     r = client_vuoto.patch(f"/api/v1/sites/{cima['id']}", json={"name": "Cima Grappa"})
     assert r.status_code == 200, r.text
     with connect(client_vuoto.app.state.db_path) as conn:
-        assert decl.site_for_coordinates(conn, chiave) == "Cima Grappa"
+        assert site_of.site_for_coordinates(conn, chiave) == "Cima Grappa"
 
 
 def test_fixing_a_site_without_a_timezone_frees_the_frames_waiting_for_it(

@@ -139,11 +139,13 @@ name = "L'app e' a strati: api -> worker -> spine -> (fits, vocab, db, catalog)"
 type = "layers"
 # `weather` sta accanto alla spina e i due non si conoscono: il meteo si scrive fuori dalla
 # lettura dei file. `ephemeris` sta sul fondo insieme agli altri puri: lo chiamano l'api, la spina
-# e il meteo, e lui non chiama nessuno di loro.
+# e il meteo, e lui non chiama nessuno di loro. `site_of` (a quale sito va un posto) sta sotto la
+# spina e sopra il fondo: legge i siti con `place`, che porta `db.row`.
 layers = [
   "astrolog.api",
   "astrolog.worker",
   "astrolog.spine | astrolog.weather",
+  "astrolog.site_of",
   "astrolog.fits | astrolog.vocab | astrolog.db | astrolog.catalog | astrolog.ephemeris",
 ]
 

@@ -16,6 +16,7 @@ sono state assorbite qui e tolte da [`ereditato.md`](ereditato.md).
 | L'altitudine si compila da sola dalle coordinate; se non ci riesce resta vuota e me lo dice, non mette zero | `test_site_elevation_or_nothing` |
 | Del cielo dico quello che so: lo misuro con lo strumento, lo faccio chiedere al servizio, o scelgo il cielo dall'elenco dei nove | `test_site_sky_three_ways` |
 | Vedo la classe di Bortle **e** la misura accanto, e l'app non finge che la conversione sia una legge | `test_bortle_from_sky_brightness`, `test_the_bortle_is_derived_and_never_stored` |
+| Le mie foto misurano il cielo del sito: l'app mi propone il Bortle che dicono, lo adotto o lo lascio, e se lo lascio non me lo ripropone finche' la classe non cambia; se le notti non bastano mi dice quante ne ha e in quanti mesi | `test_the_good_frames_give_the_site_its_sky`, `test_a_year_of_nights_gives_back_the_level_under_the_season`, `test_too_few_data_say_how_many_nights_in_how_many_months`, `test_use_writes_the_measure_with_its_nights`, `test_dismissed_it_comes_back_only_when_the_class_changes`, `test_a_site_without_a_sky_is_proposed_one` |
 | Ho piu' siti: li aggiungo tutti e dico qual e' quello di casa | `test_sites_many_and_one_default` |
 | Un sito che ha gia' delle notti non lo perdo per sbaglio: l'app si rifiuta e mi dice quante | `test_site_with_nights_is_not_deleted` |
 | Se cambio il sito di casa, le notti che l'app aveva attribuito da sola vengono con me; quelle che ho dichiarato io restano dove le ho messe | `test_moving_home_takes_along_the_nights_the_app_assigned`, `test_a_night_that_would_collide_stays_where_it_is` |
@@ -72,7 +73,8 @@ ricompilato dal servizio -- lo stesso gesto deve voler dire la stessa cosa su og
 **Del cielo si salva la LUMINOSITA'**, in magnitudini per arcosecondo quadrato, con accanto
 **come la si sa**: misurata con lo strumento, chiesta al servizio, o scelta sulla scala.
 La misura vince sulla stima, e la stima su una scelta a occhio. Tre strade, un numero solo:
-cosi' due siti si confrontano davvero. Un numero e' credibile da 7 a 23 (Unihedron, SQM-LU:
+cosi' due siti si confrontano davvero (la quarta, il Bortle misurato sui frame e adottato, in
+fondo). Un numero e' credibile da 7 a 23 (Unihedron, SQM-LU:
 "about 7 (brightest) to 23 (darkest)"); la luminanza del servizio diventa magnitudini con
 Garstang, V = 12,603 - 2,5 log10 L, cosi' i 174 ucd/m2 del cielo naturale di Falchi tornano 22,00
 (ADR 0035).
@@ -200,21 +202,51 @@ dato
 il database non ne ammette due uguali, e far fallire il trasloco per un'attribuzione dubbia
 sarebbe peggio -- i frame non si perdono comunque.
 
-**Il Bortle del sito dalle misure** (Marco, 18/10/2026; ADR 0022, 0039; nasce con `measure`, oggi
-nessun codice). L'app **propone**, l'utente sceglie; mai un cambio da sola.
-- **Frame che contano**: quelli con lo SQM dai pixel (mono col filtro L, a colori) **e col bias
-  della camera** (senza, lo scarto arriva a 0,18 mag, e una classe e' larga 0,5-1 mag); Sole
-  sotto -18° e Luna sotto -5° ("Sun below –18° and Moon below –5°", arXiv 2104.10616); oggetto
-  sopra 30°, contro il bagliore delle citta' che lo SQM non corregge.
-- **Numero**: una mediana per notte, poi la mediana delle notti: una notte lunga non pesa di piu'.
-- **Minimo** (ADR 0039): notti in almeno 4 mesi degli ultimi 12, nessun buco oltre 3 mesi;
-  livello annuo da un fit armonico (il cielo ha stagioni, Posch et al. 2018).
-- **Quando**: lo calcola la scansione. Si propone quando la classe misurata e' diversa da quella
-  del sito; dopo «Lascia», di nuovo solo se la classe misurata cambia.
+**Il Bortle del sito dalle misure** (Marco, 18/10/2026; ADR 0022, 0039; `pipeline/site_sky.py`,
+tabella `site_sky_measures`). L'app **propone**, l'utente sceglie; mai un cambio da sola.
+- **Frame che contano**: quelli con lo SQM dai pixel (mono col filtro L, a colori: `SQM_SHOTS`,
+  quindi un filtro risposto dopo cambia l'insieme) **e col bias della camera** (senza, lo scarto
+  arriva a 0,18 mag, e una classe e' larga 0,5-1 mag); Sole sotto -18° e Luna sotto -5° ("Sun
+  below -18° and Moon below -5°", Bara et al. 2021, arXiv 2104.10616); cielo inquadrato sopra 30°,
+  contro il bagliore delle citta' che lo SQM non corregge. Nessuna fonte da' un'altezza minima (le
+  misure pubbliche sono allo zenit): 30° e' la massa d'aria 2, l'"esteso" dell'oggetto basso di
+  ADR 0039, perche' il fondo cielo e' esteso.
+- **Di quale sito**: quello a cui va la sua notte, con la stessa regola (`site_of.site_at`, sotto
+  tutte e due le pipeline: Marco, 5/11/2026, "voglio sia pulito"): casa entro 1 km, poi la
+  risposta dell'utente per quelle coordinate, poi il sito piu' vicino entro 1 km; le coordinate
+  sono quelle della scheda che ha dato Sole e Luna. Fuori da tutti: non conta, e nessun sito nasce.
+  Un sito senza fuso non ha notti, quindi non ha misura.
+- **Numero**: una mediana per notte (da mezzogiorno a mezzogiorno nel fuso del sito).
+- **Minimo** (ADR 0039): notti in almeno 4 mesi dei 12 di calendario che finiscono con l'**ultima
+  notte misurata** (Marco, 5/11/2026: un archivio vecchio scansionato oggi propone lo stesso; la
+  risposta porta prima e ultima notte), nessun buco oltre 3 mesi, contato in giro sui 12: il
+  fit e' periodico, e dicembre tocca gennaio.
+- **Livello annuo**: il cielo ha stagioni (Posch et al. 2018: 0,5-1,5 mag fra estate e inverno, ma
+  medie mensili e nessun fit). Il modello e' quello di Shah et al. 2025 (arXiv 2507.11343, App. F,
+  "m(t) = m0 + A sin[2π(t − t0)] + mt") **senza il termine lineare**: 12 mesi non misurano una
+  tendenza (Posch: "only measurable after more than two years"). Minimi quadrati di livello e
+  onda annua sulle mediane delle notti, poi la **mediana delle notti tolta l'onda**: una notte
+  nuvolosa sopra la citta' non sposta il livello.
+- **Quando**: lo riscrive chi cambia cio' da cui viene. Dentro la pipeline nella stessa
+  transazione: la fine di un giro, un bias dichiarato, un filtro risposto. Fuori, dove la vecchia
+  non puo' chiamare la nuova (ADR 0030, una porta sola): ogni scrittura dei siti, la risposta "queste
+  coordinate sono quel sito", il ripristino e l'import del backup **chiedono** il ricalcolo al thread
+  della pipeline (`Behind.refresh_sky`), che lo fa subito dopo, anche dopo uno Stop. Per un istante
+  la pagina puo' leggere la misura di prima; la lettura legge e basta. Si propone quando la classe misurata e' diversa da quella del sito, **anche quando il
+  sito il cielo non ce l'ha** (Marco, 5/11/2026: e' il caso in cui serve di piu'); dopo «Lascia»
+  (`site_sky_dismissed`, va nel backup col sito) di nuovo solo se la classe misurata cambia.
+- **«Usa»** scrive la misura nel sito con la provenienza `frames` e le sue notti (`sky_nights`):
+  una quarta strada accanto alle tre, perche' sotto il Bortle si legge «misurato su {n} notti» e
+  non «scritto a mano». Spostare il sito la svuota, come quella del servizio: era di quel posto, e
+  il posto nuovo propone la sua. Correggerla a mano la riporta a `measured` o `scale`.
 - **Parole** (Marco): «Le misure di {sito} dicono Bortle {b} (SQM {sqm}, {n} notti). Nel sito
-  c'e' Bortle {b0}.» · «Usa Bortle {b}» · «Lascia Bortle {b0}». Sotto il Bortle del sito:
+  c'e' Bortle {b0}.» · «Usa Bortle {b}» · «Lascia Bortle {b0}»; sito senza cielo (Marco,
+  5/11/2026): la prima frase sola, e «Usa Bortle {b}» · «Lascia vuoto». Sotto il Bortle del sito:
   «misurato su {n} notti» / «scritto a mano». Dati scarsi: «Servono notti in almeno 4 mesi, senza
-  buchi di oltre 3: finora {n} notti in {m} mesi.» (Marco, 24/10/2026).
+  buchi di oltre 3: finora {n} notti in {m} mesi.» (Marco, 24/10/2026). L'API manda codici e
+  numeri (`measured` in `SiteOut`); le frasi entrano con la pagina (fase 5).
+- **Oggi tace per tutti**: un bias si dichiara solo da codice finche' il setup della pipeline non
+  arriva a schermo (passo 40, `domini/misure.md`), quindi nessun frame conta ancora.
 - Il giudizio di un frame «come / piu' chiaro del Bortle del sito» resta: una classe e' larga, e
   un frame che esce dal basso ha Luna, foschia o luci.
 

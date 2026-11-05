@@ -10,8 +10,7 @@ from functools import partial
 
 from ..clock import night_date, now_iso
 from ..db.transaction import transaction
-from ..place import by_distance, coordinates_key, distance_km
-from . import declarations as decl
+from ..site_of import Sites, known_sites, site_at
 from . import gear_usage, mosaic
 from . import group_store as store
 from .stage_run import Event, FrameError, frame_safely, receipt, watched
@@ -20,10 +19,6 @@ from .stages import StageName, StageStatus, ready, set_status
 log = logging.getLogger(__name__)
 
 COUNTS = ("linked", "nights", "sessions", "waiting", "swept", "errors")
-
-# Below this the header's coordinates and the site's are the same place: two decimals already
-# move a coordinate by 1.1 km, and a consumer GPS errs by metres. Beyond it, ask.
-SAME_PLACE_KM = 1.0
 
 
 class GroupReason(StrEnum):
@@ -45,9 +40,6 @@ class _Placed:
     declared: bool
 
 
-type Sites = tuple[sqlite3.Row | None, list[sqlite3.Row]]
-
-
 def group_frames(conn: sqlite3.Connection) -> Iterator[Event]:
     """One event per frame, then the receipt."""
     counts: dict[str, int] = dict.fromkeys(COUNTS, 0)
@@ -65,7 +57,7 @@ def group_frames(conn: sqlite3.Connection) -> Iterator[Event]:
         # would leave grouped frames, no longer ready, that nobody would place.
         mosaic.place(conn, frame_ids)
         # read once per run: nobody writes sites during a run
-        site, all_sites = store.home_site(conn), store.sites(conn)
+        site, all_sites = known_sites(conn)
         total = len(frame_ids)
         for frame_id in frame_ids:
             # one that meanwhile is no longer ready is skipped (`stages.ready`)
@@ -109,29 +101,15 @@ def _one_frame(
 def _where(conn: sqlite3.Connection, frame: sqlite3.Row, known: Sites) -> _Placed | GroupReason:
     """What the frame lacks before what the app lacks, or the user fixes the wrong thing. The
     user's answer for those coordinates beats a nearer site declared later."""
-    home, all_sites = known
     if frame["object_id"] is None:
         return GroupReason.NO_OBJECT
     # without a zone, so "unreadable date" stays apart from "the site's zone does not exist"
     if night_date(frame["date_obs"]) is None:
         return GroupReason.NO_DATE
-    lat, lon = frame["site_lat"], frame["site_lon"]
-    away_km = None if home is None else distance_km(lat, lon, home["latitude"], home["longitude"])
-    if home is not None and (away_km is None or away_km <= SAME_PLACE_KM):
-        return _with_timezone(home, frame, answered=False)
-    if None in (lat, lon):
-        return GroupReason.NO_ACTIVE_SITE
-    said_site = decl.site_for_coordinates(conn, coordinates_key(lat, lon))
-    if said_site:
-        site = store.site_by_name(conn, said_site)
-        if site is None:
-            # The declared site was deleted (a rename carries the answer): ask again, not home.
-            return GroupReason.SITE_UNCLEAR
-        return _with_timezone(site, frame, answered=True)
-    near = [s for km, s in by_distance(lat, lon, all_sites) if km <= SAME_PLACE_KM]
-    if near:
-        return _with_timezone(near[0], frame, answered=False)
-    return GroupReason.SITE_UNCLEAR if home is not None else GroupReason.NO_ACTIVE_SITE
+    found = site_at(conn, frame["site_lat"], frame["site_lon"], known)
+    if not isinstance(found, tuple):
+        return GroupReason(found)  # the same codes
+    return _with_timezone(found[0], frame, answered=found[1])
 
 
 def _with_timezone(

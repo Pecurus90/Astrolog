@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 325; senza fonte: 1.
-Fonti: C norma: 168; U usanza: 2; D metodo: 21; M misura: 22; P decisione: 33; T tecnico: 81.
+Valori: 333; senza fonte: 1.
+Fonti: C norma: 171; U usanza: 2; D metodo: 24; M misura: 22; P decisione: 35; T tecnico: 81.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -320,6 +320,13 @@ Fonti: C norma: 168; U usanza: 2; D metodo: 21; M misura: 22; P decisione: 33; T
 | _MAX_AXES | `999` | C FITS 4.0 4.4.1.1: NAXIS at most 999 |
 | _MAX_BYTES | `2**62` | T |
 
+### pipeline/frame_rules.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| LOW_EXTENDED_DEG | `30.0` | P ADR 0039: Kasten-Young, Patat 2003, seeing X^0.6 |
+| LOW_STAR_DEG | `45.0` | P ADR 0039 |
+
 ### pipeline/mmt.py
 
 | simbolo | valore | fonte |
@@ -421,6 +428,17 @@ Fonti: C norma: 168; U usanza: 2; D metodo: 21; M misura: 22; P decisione: 33; T
 | DIRECTION_ALPHA | `0.05` | C Zar, Biostatistical Analysis, 27.1: Rayleigh test, alpha 0.05 |
 | SIGMA_TO_FWHM | `2.3548` | D Gaussian profile: FWHM = 2 sqrt(2 ln 2) sigma |
 | MIN_STARS | `5` | D order statistics, distribution-free |
+
+### pipeline/site_sky.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| SUN_BELOW_DEG | `-18.0` | C Bara et al. 2021, arXiv 2104.10616 |
+| MOON_BELOW_DEG | `-5.0` | C Bara et al. 2021, arXiv 2104.10616 |
+| WINDOW_MONTHS | `12` | D ADR 0039 |
+| MIN_MONTHS | `4` | D ADR 0039: "6 months" skews up to 0.13 mag |
+| MAX_HOLE_MONTHS | `3` | D ADR 0039 |
+| YEAR_DAYS | `365.25` | C Shah et al. 2025, arXiv 2507.11343 App. F |
 
 ### pipeline/sky.py
 

@@ -29,8 +29,13 @@ _INSTRUMENT = (
 )  # fmt: skip
 _SITE = (
     "name", "latitude", "longitude", "elevation_m", "elevation_source", "sky_sqm", "sky_source",
-    "horizon_json", "is_default",
+    "sky_nights", "horizon_json", "is_default",
 )  # fmt: skip
+# "Keep Bortle b0" travels with its site: the class not wanted, or nothing
+_SITES = (
+    f"SELECT {', '.join('s.' + c for c in _SITE)}, d.bortle AS sky_dismissed FROM sites s"  # noqa: S608
+    " LEFT JOIN site_sky_dismissed d ON d.site_id = s.id ORDER BY s.name"
+)
 # Not in the export: a declared solver path beats the search, and wrong elsewhere it stops it.
 _STAYS_HERE: Final = config.SECRETS | {"astap_path"}
 _FILTER = ("name", "brand", "model", "catalog_id", "passband", "is_none", "color")
@@ -60,7 +65,7 @@ def collect(conn: sqlite3.Connection, *, this_machine: bool) -> dict[str, Any]:
             for r in conn.execute("SELECT key, value FROM config")
             if this_machine or r["key"] not in _STAYS_HERE
         },
-        "sites": rows(f"SELECT {', '.join(_SITE)} FROM sites ORDER BY name"),  # noqa: S608
+        "sites": rows(_SITES),
         "folders": [_folder(conn, r) for r in conn.execute("SELECT * FROM folders ORDER BY id")],
         "instruments": rows(
             f"SELECT {', '.join(_INSTRUMENT)} FROM instruments"  # noqa: S608 - constant columns
@@ -240,11 +245,16 @@ def _restore_site(conn: sqlite3.Connection, site: dict[str, Any], now: str) -> N
     if site.get("is_default"):
         conn.execute("UPDATE sites SET is_default = 0 WHERE is_default = 1 AND name <> ?",
                      (site["name"],))  # fmt: skip
-    _upsert(conn, _Table("sites", _SITE, ("name",)), site, now)
+    site_id = _upsert(conn, _Table("sites", _SITE, ("name",)), site, now)
     conn.execute(
         "UPDATE sites SET timezone = ? WHERE name = ?",
         (place.timezone_of(site["latitude"], site["longitude"]), site["name"]),
     )
+    if site.get("sky_dismissed") is not None:
+        conn.execute(
+            "INSERT OR REPLACE INTO site_sky_dismissed (site_id, bortle) VALUES (?, ?)",
+            (site_id, site["sky_dismissed"]),
+        )
 
 
 def _restore_folder(conn: sqlite3.Connection, folder: dict[str, Any], now: str) -> None:

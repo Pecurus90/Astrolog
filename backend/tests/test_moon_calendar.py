@@ -9,8 +9,8 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import create_app
 from astrolog.db import config
 from astrolog.db.connect import connect
+from astrolog.site_of import home_site
 from astrolog.spine import moon_calendar
-from astrolog.spine.group_store import home_site
 from astrolog.weather import forecast
 from group_bench import ROMA, luogo, prepara
 

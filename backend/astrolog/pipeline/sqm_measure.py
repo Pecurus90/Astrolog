@@ -12,19 +12,10 @@ from typing import Any
 from ..db.transaction import transaction
 from .pixels import Pixels, read_pixels
 from .scan import busy
+from .site_sky import rebuild
 from .sqm import Wcs, calibrate, scale_arcsec, sky_brightness
+from .sqm_shots import SQM_SHOTS
 from .star_catalogue import catalogue_in
-
-# Shots it is for (ADR 0022 point 8): mono behind L, colour behind no filter or a broad one.
-# Readers filter with it too: a filter answered later changes the set.
-SQM_SHOTS = (
-    "((c.bayer = 1 AND (c.filter IS NULL OR p.standard IN ('l', 'uvir', 'none')"
-    "   OR (p.filter_name IS NOT NULL AND NOT EXISTS (SELECT 1 FROM pipeline_filter_bands AS b"
-    "   WHERE b.filter_name = p.filter_name AND b.band NOT IN ('l', 'uvir')))))"
-    " OR (ifnull(c.bayer, 0) = 0 AND (p.standard = 'l'"
-    "   OR (p.filter_name IS NOT NULL AND NOT EXISTS (SELECT 1 FROM pipeline_filter_bands AS b"
-    "   WHERE b.filter_name = p.filter_name AND b.band <> 'l')))))"
-)
 
 # Shots with their sky row and solution, without a sky brightness yet; card of the measured file.
 PENDING = (  # SQM_SHOTS is a constant: nothing from outside in the text
@@ -81,9 +72,9 @@ def sqm_root(
 
 
 def declare_bias(
-    conn: sqlite3.Connection, camera: str, offset: int | None, bias_adu: float
+    conn: sqlite3.Connection, camera: str, offset: int | None, bias_adu: float, now: str
 ) -> None:
-    """The camera's bias at that offset; its shots' sky brightness written again."""
+    """The camera's bias at that offset; its shots' sky brightness written again, and the sites'."""
     with transaction(conn, immediate=True):
         conn.execute(
             "DELETE FROM pipeline_camera_bias WHERE camera = ? AND offset IS ?", (camera, offset)
@@ -105,6 +96,7 @@ def declare_bias(
                 "UPDATE pipeline_sqm SET bias_adu = ?, sqm = ? WHERE frame_id = ?",
                 (bias_adu, _brightness(shot, bias_adu), shot["frame_id"]),
             )
+        rebuild(conn, now)
 
 
 def _measured(

@@ -4,9 +4,8 @@ An answered place stays listed with its answer: a wrong click attributes hundred
 import sqlite3
 from typing import Any
 
+from .. import site_of
 from ..place import coordinates_key
-from . import declarations as decl
-from . import group_store as store
 from . import objects as obj
 
 # Each way in (stopped there, or in a declared night) uses its index, unioned: an `OR` across two
@@ -58,8 +57,8 @@ def unclear_coordinates(conn: sqlite3.Connection, reason: str) -> list[dict[str,
 def _answered(conn: sqlite3.Connection, key: str) -> str | None:
     """Only if that site still exists, found the way the stage finds it: deleted, the answer no
     longer hooks, and the stage, the page and the counter ask again. A rename carries it."""
-    site_name = decl.site_for_coordinates(conn, key)
-    return site_name if site_name and store.site_by_name(conn, site_name) else None
+    site_name = site_of.site_for_coordinates(conn, key)
+    return site_name if site_name and site_of.site_by_name(conn, site_name) else None
 
 
 def frames_at(conn: sqlite3.Connection, coordinates: str, reason: str) -> list[int]:

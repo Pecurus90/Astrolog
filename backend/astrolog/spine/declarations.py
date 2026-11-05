@@ -7,6 +7,8 @@ from enum import StrEnum
 from typing import Any
 
 from ..clock import now_iso
+from ..site_of import COORDINATES as COORDINATES_ENTITY
+from ..site_of import COORDINATES_SITE
 from ..vocab.header_value import normalize_header_value
 from ..vocab.object_label import clean_object_name
 from . import counts
@@ -28,7 +30,7 @@ class EntityType(StrEnum):
     INSTRUMENT = "instrument"
     NIGHT = "night"
     SESSION = "session"
-    COORDINATES = "coordinates"
+    COORDINATES = COORDINATES_ENTITY  # site_of reads it below both pipelines
     # answers on a folder, keyed by its path
     FOLDER = "folder"
     # the target on frames with no name and no sky, keyed by the frame's fingerprint: the group's
@@ -235,8 +237,7 @@ def values_of(
 
 
 # A fact about the place, not a night, so it holds for nights to come: keyed by rounded coordinates
-# (`place.coordinates_key`).
-COORDINATES_SITE = "site"
+# (`place.coordinates_key`); read by `site_of.site_for_coordinates`, below both pipelines.
 
 
 def declare_coordinates(
@@ -255,11 +256,6 @@ def follow_site_rename(conn: sqlite3.Connection, old_name: str, new_name: str) -
         "UPDATE declarations SET value = ? WHERE entity_type = ? AND field = ? AND value = ?",
         (new_name, EntityType.COORDINATES, COORDINATES_SITE, old_name),
     )
-
-
-def site_for_coordinates(conn: sqlite3.Connection, coordinates_key: str | None) -> str | None:
-    value = declared(conn, EntityType.COORDINATES, coordinates_key, COORDINATES_SITE)
-    return value if isinstance(value, str) and value else None
 
 
 def learn(

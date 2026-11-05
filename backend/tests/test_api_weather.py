@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect, create_database
-from astrolog.spine.group_store import home_site
+from astrolog.site_of import home_site
 from astrolog.weather import forecast, openmeteo, rounds, sky
 from conftest import wait_until
 from test_weather_forecast import Finto, risposta

@@ -391,7 +391,7 @@ una scala su milioni di pixel, come il SubframeSelector la confronta.
 - **Bias (ADU) a schermo**: col porting di Attrezzatura (fase 5) e il setup della pipeline
   (passo 40); oggi si dichiara solo da codice (`declare_bias`).
 - **Le regole fra frame collegate**: al passo 40 (setup, oggetti) e 40.1 (zona di selezione,
-  con "al limite" a 1 Qn). **27**: Bortle del sito, oggetto basso.
+  con "al limite" a 1 Qn). Oggetto basso: `pipeline/frame_rules.py`, puro (Bortle: `domini/sito.md`).
 - **A schermo**: col porting delle pagine (fase 5). Le tavole di Design (`handoff/design/`,
   26/10/2026) chiedono le stesse misure; quattro scarti vanno al censimento (passo 24.1):
   eccentricita' a soglie fisse 0,45/0,71 (ADR 0039 le ha tolte), soglia relativa con la MAD

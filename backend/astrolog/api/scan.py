@@ -150,6 +150,12 @@ def behind(db_path: str | Path) -> Behind:
     return Behind(db_path, cache_dir() / "astap", solver_path)
 
 
+def sky_follows(request: Request) -> None:
+    """After a write that moves where frames go (sites, coordinates, a backup): the sites' sky from
+    the frames is written again behind, through the one door (docs/domini/sito.md)."""
+    request.app.state.behind.refresh_sky()
+
+
 def _feed_behind(state: State, folder_ids: Iterable[int]) -> None:
     """Its own connection: this runs in the worker's thread."""
     conn = connect(state.db_path)

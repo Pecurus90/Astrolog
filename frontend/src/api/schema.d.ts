@@ -942,6 +942,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sites/{site_id}/sky/use": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Use Measured Sky
+         * @description Use Bortle b: the sky measured on the frames becomes the site's, with its nights. Returns
+         *     the site as it now is.
+         *
+         *     404 `site_not_found`; 409 `site_sky_not_measured` while the frames are too few.
+         */
+        post: operations["use_measured_sky"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sites/{site_id}/sky/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dismiss Measured Sky
+         * @description Keep Bortle b0: the site stays as it is, and the measure is proposed again only when its
+         *     class changes. Returns the site as it now is.
+         *
+         *     404 `site_not_found`; 409 `site_sky_not_measured` while the frames are too few.
+         */
+        post: operations["dismiss_measured_sky"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings": {
         parameters: {
             query?: never;
@@ -3507,7 +3553,13 @@ export interface components {
             /** Sky Sqm */
             sky_sqm: number | null;
             /** Sky Source */
-            sky_source: ("measured" | "service" | "scale") | null;
+            sky_source: ("measured" | "service" | "scale" | "frames") | null;
+            /**
+             * Sky Nights
+             * @description With `frames`: the nights of the measure adopted, for 'measured on n nights'.
+             */
+            sky_nights: number | null;
+            measured: components["schemas"]["SiteSkyMeasured"];
             /**
              * Bortle
              * @description DERIVED: not a column, and it never appears without the measurement.
@@ -3525,6 +3577,44 @@ export interface components {
              * @description The empty fields, with their reason.
              */
             unknown: ("site_no_timezone" | "site_no_elevation" | "site_no_sky")[];
+        };
+        /**
+         * SiteSkyMeasured
+         * @description The site's sky from its frames (docs/domini/sito.md): the app proposes, the user chooses.
+         */
+        SiteSkyMeasured: {
+            /**
+             * Status
+             * @description too_few: nights in under 4 of the 12 months up to the last, or a hole over 3.
+             * @enum {string}
+             */
+            status: "enough" | "too_few";
+            /**
+             * Nights
+             * @description Nights in those 12 months; 0 when no frame counts yet.
+             */
+            nights: number;
+            /** Months */
+            months: number;
+            /**
+             * Sqm
+             * @description Annual level; None while too few.
+             */
+            sqm: number | null;
+            /**
+             * Bortle
+             * @description DERIVED from `sqm`, as the site's.
+             */
+            bortle: number | null;
+            /** First Night */
+            first_night: string | null;
+            /** Last Night */
+            last_night: string | null;
+            /**
+             * Propose
+             * @description Enough, a class other than the site's, and not the one dismissed.
+             */
+            propose: boolean;
         };
         /**
          * SiteSkyOut
@@ -5454,6 +5544,68 @@ export interface operations {
         };
     };
     set_default: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    use_measured_sky: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SiteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_measured_sky: {
         parameters: {
             query?: never;
             header?: never;

@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends
 from ..clock import night_date, now_iso
 from ..db import config
 from ..db.transaction import transaction
-from ..spine.group_store import home_site
+from ..site_of import home_site
 from ..weather import fetches, forecast, judge, meteoblue, openmeteo, rounds, sky, view
 from .deps import get_db
 from .models_weather import (

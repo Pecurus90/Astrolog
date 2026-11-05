@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 from pydantic import AfterValidator, BaseModel, Field
 
 # One decimal, as the screen shows it. Rounded here and not in `place.distance_km`, which is
-# compared with `spine.group.SAME_PLACE_KM`: rounding there would move the threshold.
+# compared with `site_of.SAME_PLACE_KM`: rounding there would move the threshold.
 DistanceKm = Annotated[float, AfterValidator(lambda km: round(km, 1))]
 
 

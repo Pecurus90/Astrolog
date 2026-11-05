@@ -9,11 +9,11 @@ posa**, proponendo i luoghi che l'utente ha gia' dichiarato.
 import pytest
 from fastapi.testclient import TestClient
 
+from astrolog import site_of
 from astrolog.api.app import create_app
 from astrolog.clock import now_iso
 from astrolog.db.connect import connect
 from astrolog.spine import coordinates
-from astrolog.spine import declarations as decl
 from astrolog.spine.group import GroupReason
 from conftest import apply, db, review
 from group_bench import ARIZONA, ROMA, VICINO, corri, luogo, notte_di, posa, prepara, stato
@@ -136,7 +136,7 @@ def test_a_distance_leaves_the_api_as_the_screen_shows_it(client):
     la pagina formatta e basta. Vale per la distanza da casa e per quella dei luoghi da cliccare.
 
     Non si arrotonda dentro `place.distance_km`: quella serve anche a decidere se due coordinate
-    sono lo stesso posto (`group.SAME_PLACE_KM`), e li' arrotondare sposterebbe la soglia."""
+    sono lo stesso posto (`site_of.SAME_PLACE_KM`), e li' arrotondare sposterebbe la soglia."""
     for posto in notti(review(client)):
         quanto = posto["distance_km"]
         assert quanto is None or quanto == round(quanto, 1), quanto
@@ -404,7 +404,7 @@ def test_the_answer_is_written_where_it_survives_a_reset(client):
     casa = next(c for c in gruppo["candidates"] if c["name"] == "Casa")
     apply(client, unclear=[{"key": gruppo["key"], "site_id": casa["id"]}])
     with db(client) as conn:
-        assert decl.site_for_coordinates(conn, gruppo["key"]) == "Casa"
+        assert site_of.site_for_coordinates(conn, gruppo["key"]) == "Casa"
 
 
 def test_a_place_already_answered_stays_with_its_nights(db_path):

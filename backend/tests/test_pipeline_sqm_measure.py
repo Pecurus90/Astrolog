@@ -64,7 +64,7 @@ def test_a_mono_l_shot_gets_its_sky_brightness_without_bias(conn, tmp_path):
 
 def test_a_bias_declared_before_is_taken_off(conn, tmp_path):
     root = _shot(conn, tmp_path, *_CARDS, "FILTER  = 'L'")
-    declare_bias(conn, "ZWO ASI2600MM Pro", 50, 500.0)
+    declare_bias(conn, "ZWO ASI2600MM Pro", 50, 500.0, LATER)
     sqm_root(conn, root, LATER, tmp_path / "astap")
     row = _row(conn)
     assert row is not None and row["bias_adu"] == 500.0
@@ -76,9 +76,9 @@ def test_a_bias_declared_after_rewrites_the_shots_of_that_camera_and_offset(conn
     root = _shot(conn, tmp_path, *_CARDS, "FILTER  = 'L'")
     sqm_root(conn, root, LATER, tmp_path / "astap")
     before = _row(conn)
-    declare_bias(conn, "ZWO ASI2600MM Pro", 30, 500.0)  # altro offset: niente
+    declare_bias(conn, "ZWO ASI2600MM Pro", 30, 500.0, LATER)  # altro offset: niente
     assert _row(conn) == before
-    declare_bias(conn, "ZWO ASI2600MM Pro", 50, 500.0)
+    declare_bias(conn, "ZWO ASI2600MM Pro", 50, 500.0, LATER)
     after = _row(conn)
     assert after is not None and before is not None
     assert after["bias_adu"] == 500.0 and after["sqm"] > before["sqm"]
@@ -86,7 +86,7 @@ def test_a_bias_declared_after_rewrites_the_shots_of_that_camera_and_offset(conn
 
 def test_a_bias_over_the_sky_leaves_no_brightness(conn, tmp_path):
     root = _shot(conn, tmp_path, *_CARDS, "FILTER  = 'L'")
-    declare_bias(conn, "ZWO ASI2600MM Pro", 50, 5000.0)
+    declare_bias(conn, "ZWO ASI2600MM Pro", 50, 5000.0, LATER)
     sqm_root(conn, root, LATER, tmp_path / "astap")
     row = _row(conn)
     assert row is not None and row["outcome"] == "measured" and row["sqm"] is None
@@ -98,7 +98,7 @@ def test_a_colour_shot_needs_the_bias(conn, tmp_path):
     row = _row(conn)
     assert row is not None
     assert (row["outcome"], row["colour"], row["sqm"]) == ("measured", 1, None)
-    declare_bias(conn, "ZWO ASI2600MM Pro", 50, 100.0)
+    declare_bias(conn, "ZWO ASI2600MM Pro", 50, 100.0, LATER)
     row = _row(conn)
     assert row is not None and row["sqm"] is not None
 
@@ -159,7 +159,7 @@ def test_a_shot_is_measured_once(conn, tmp_path):
 
 
 def test_a_bias_is_one_per_camera_and_offset(conn):
-    declare_bias(conn, "ZWO ASI2600MM Pro", None, 500.0)
-    declare_bias(conn, "ZWO ASI2600MM Pro", None, 510.0)
+    declare_bias(conn, "ZWO ASI2600MM Pro", None, 500.0, LATER)
+    declare_bias(conn, "ZWO ASI2600MM Pro", None, 510.0, LATER)
     rows = conn.execute("SELECT offset, bias_adu FROM pipeline_camera_bias").fetchall()
     assert [tuple(r) for r in rows] == [(None, 510.0)]

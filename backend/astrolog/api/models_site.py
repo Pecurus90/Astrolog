@@ -12,11 +12,29 @@ from .models_page import Page
 # untranslated.
 Missing = Literal["no_active_site", "no_solver", "no_star_database"]
 SolverSource = Literal["declared", "env", "path", "known_place"]
-SkySource = Literal["measured", "service", "scale"]
+SkySource = Literal["measured", "service", "scale", "frames"]
+SkyMeasuredStatus = Literal["enough", "too_few"]
 ElevationSource = Literal["declared", "service"]
 
 # A null alone does not tell "I don't know" from "I didn't ask": each empty field carries its code.
 Unknown = Literal["site_no_timezone", "site_no_elevation", "site_no_sky"]
+
+
+class SiteSkyMeasured(BaseModel):
+    """The site's sky from its frames (docs/domini/sito.md): the app proposes, the user chooses."""
+
+    status: SkyMeasuredStatus = Field(
+        description="too_few: nights in under 4 of the 12 months up to the last, or a hole over 3."
+    )
+    nights: int = Field(description="Nights in those 12 months; 0 when no frame counts yet.")
+    months: int
+    sqm: float | None = Field(description="Annual level; None while too few.")
+    bortle: int | None = Field(description="DERIVED from `sqm`, as the site's.")
+    first_night: str | None
+    last_night: str | None
+    propose: bool = Field(
+        description="Enough, a class other than the site's, and not the one dismissed."
+    )
 
 
 class SiteOut(BaseModel):
@@ -34,6 +52,10 @@ class SiteOut(BaseModel):
     )
     sky_sqm: float | None
     sky_source: SkySource | None
+    sky_nights: int | None = Field(
+        description="With `frames`: the nights of the measure adopted, for 'measured on n nights'."
+    )
+    measured: SiteSkyMeasured
     bortle: int | None = Field(
         description="DERIVED: not a column, and it never appears without the measurement."
     )

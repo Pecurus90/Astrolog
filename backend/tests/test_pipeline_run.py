@@ -60,6 +60,20 @@ def test_behind_runs_on_its_own_thread_and_folders_kicked_meanwhile_wait(
     assert conn.execute("SELECT count(*) FROM pipeline_files").fetchone()[0] == 2
 
 
+def test_the_sky_of_the_sites_is_written_again_behind_even_after_a_stop(
+    conn, db_path, tmp_path, monkeypatch
+):
+    """Non e' una scansione: lo Stop ferma le cartelle, non il cielo che un sito cambiato chiede."""
+    rebuilt = []
+    monkeypatch.setattr(run_module, "rebuild", lambda conn_, now: rebuilt.append(now))
+    behind = _behind(db_path, tmp_path)
+    behind.stop()
+    behind.refresh_sky()
+    behind.join(10.0)
+    assert len(rebuilt) == 1
+    assert conn.execute("SELECT count(*) FROM pipeline_files").fetchone()[0] == 0
+
+
 def test_a_stopped_behind_starts_again_at_the_next_kick(conn, db_path, tmp_path):
     nina_light(tmp_path / "a" / "x.fits", 1)
     behind = _behind(db_path, tmp_path)

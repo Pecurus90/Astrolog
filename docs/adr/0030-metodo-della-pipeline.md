@@ -58,6 +58,11 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
   e risolve le stesse cartelle (`pipeline/run.py` `Behind`, un thread suo, mai il worker
   dell'utente), mai a schermo; lo Stop e la chiusura uccidono i suoi ASTAP e fermano la lettura
   fra due lotti. Una porta sola fra le due, dichiarata nel contratto di import.
+- **Il cielo del sito, senza porte nuove** (Marco, 5/11/2026, passo 27: "voglio sia pulito"): la
+  regola "a quale sito va un posto" sta sotto tutte e due (`site_of.py`, strato suo sopra il fondo); le
+  scritture della vecchia che la cambiano (siti, risposte sulle coordinate, backup) chiedono il
+  ricalcolo a `Behind.refresh_sky` dalla porta che c'e'; la pagina legge `site_sky_measures`
+  come ogni tabella. E' il primo dato della nuova che arriva a schermo, e oggi tace (passo 40).
 - **Astropy fuori dalla nuova, una porta** (Marco, 4/11/2026, passo 26.54): header, pixel e
   coordinate si fanno senza astropy (lettore nostro, erfa); Luna e Sole sul frame vengono dalle
   effemeridi dell'app (`ephemeris/frames.py`), una chiamata per sito: una casa sola per la Luna.

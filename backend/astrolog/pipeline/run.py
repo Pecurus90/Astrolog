@@ -11,9 +11,11 @@ from typing import Any
 from .. import astap
 from ..clock import now_iso
 from ..db.connect import connect
+from ..db.transaction import transaction
 from .changes import add_root
 from .measure import measure_root
 from .scan import scan_root
+from .site_sky import rebuild
 from .sky_measure import sky_root
 from .solve import solve_root
 from .sqm_measure import sqm_root
@@ -45,7 +47,16 @@ def run_roots(
         except Exception:  # behind the scenes: the user's scan never breaks here
             log.warning("pipeline nuova: cartella saltata %s", path, exc_info=True)
         yield {"current": number, "total": len(paths)}
+    _sky_of_sites(conn, now)
     yield {"done": True, "total": len(paths)}
+
+
+def _sky_of_sites(conn: sqlite3.Connection, now: str) -> None:
+    try:
+        with transaction(conn, immediate=True):  # sites read under the lock: a move waits
+            rebuild(conn, now)
+    except Exception:  # behind the scenes, as a folder
+        log.warning("pipeline nuova: cielo dei siti non riscritto", exc_info=True)
 
 
 type Exe = Callable[[sqlite3.Connection], str | None]
@@ -59,6 +70,7 @@ class Behind:
         self._db_path, self._work, self._exe = db_path, work, exe
         self._lock = threading.Lock()
         self._pending: list[str] = []
+        self._sky = False  # the site's sky asked again
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
 
@@ -67,12 +79,21 @@ class Behind:
             self._pending += [p for p in paths if p not in self._pending]
             if self._stop.is_set():  # a new go: the round being stopped ends, then the queue runs
                 self._stop = threading.Event()
-            if self._thread is not None:
-                return
-            self._thread = threading.Thread(
-                target=self._loop, name="astrolog-pipeline", daemon=True
-            )
-            self._thread.start()
+            self._start()
+
+    def refresh_sky(self) -> None:
+        """Sites, an answer on coordinates or a backup changed where frames go: the sites' sky is
+        written again here, the door the app already has (ADR 0030). Not a scan: a stop holds."""
+        with self._lock:
+            self._sky = True
+            self._start()
+
+    def _start(self) -> None:
+        """Under the lock."""
+        if self._thread is not None:
+            return
+        self._thread = threading.Thread(target=self._loop, name="astrolog-pipeline", daemon=True)
+        self._thread.start()
 
     def stop(self) -> None:
         """Does not wait: a request asks it, the app's close then joins."""
@@ -90,11 +111,16 @@ class Behind:
             while True:
                 with self._lock:  # stopped or empty, gone in one step: a kick never finds it dying
                     stop = self._stop
-                    if stop.is_set() or not self._pending:
+                    paths = [] if stop.is_set() else self._pending
+                    self._pending = self._pending if stop.is_set() else []
+                    sky, self._sky = self._sky, False
+                    if not paths and not sky:
                         self._thread = None
                         return
-                    paths, self._pending = self._pending, []
-                self._run(paths, stop)
+                if paths:
+                    self._run(paths, stop)  # the sky at its end
+                else:
+                    self._rebuild_sky()
         except Exception:
             log.exception("pipeline nuova: il giro e' caduto")
         finally:
@@ -107,5 +133,12 @@ class Behind:
         try:
             for _ in run_roots(conn, paths, now_iso(), self._exe(conn), (self._work, stop)):
                 pass
+        finally:
+            conn.close()
+
+    def _rebuild_sky(self) -> None:
+        conn = connect(self._db_path, check_same_thread=False)
+        try:
+            _sky_of_sites(conn, now_iso())
         finally:
             conn.close()

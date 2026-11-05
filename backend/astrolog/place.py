@@ -41,6 +41,7 @@ class SkySource(StrEnum):
     MEASURED = "measured"
     SERVICE = "service"
     SCALE = "scale"
+    FRAMES = "frames"  # the measure on the frames, adopted (pipeline/site_sky.py)
 
 
 # Moving the place redoes only what came from the coordinates: what the user wrote stays theirs.

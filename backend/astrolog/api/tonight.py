@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends
 from ..clock import midnight_of, night_date, night_window, now_iso, seconds_between
 from ..db import config
 from ..ephemeris import moon, planets, sun
-from ..spine.group_store import home_site
+from ..site_of import home_site
 from ..units import bortle_of
 from . import weather
 from .deps import get_db

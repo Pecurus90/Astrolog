@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect
-from astrolog.spine.group_store import home_site
+from astrolog.site_of import home_site
 from astrolog.weather import forecast, meteoblue, sky, view
 from test_api_weather import dintorni_del_cielo, metti_casa
 from test_weather_meteoblue import CHIAVE, rifiuto, seeing

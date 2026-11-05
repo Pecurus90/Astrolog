@@ -54,13 +54,16 @@ CREATE TABLE sites (
   sky_sqm      REAL CHECK (sky_sqm BETWEEN 7 AND 23),   -- gli stessi estremi di
                                                        -- units.SQM_MIN/SQM_MAX: questa
                                                        -- e' la guardia del database
-  sky_source   TEXT CHECK (sky_source IN ('measured', 'service', 'scale')),
+  -- frames: il Bortle misurato sui frame, adottato con «Usa» (pipeline/site_sky.py)
+  sky_source   TEXT CHECK (sky_source IN ('measured', 'service', 'scale', 'frames')),
+  sky_nights   INTEGER CHECK (sky_nights > 0),  -- notti di quella misura, al momento di «Usa»
   horizon_json TEXT,
   is_default   INTEGER NOT NULL DEFAULT 0 CHECK (is_default IN (0, 1)),
   created_at   TEXT NOT NULL,
   CHECK ((elevation_m IS NULL) = (elevation_source IS NULL)),
-  CHECK ((sky_sqm IS NULL) = (sky_source IS NULL))   -- un numero senza la sua provenienza
+  CHECK ((sky_sqm IS NULL) = (sky_source IS NULL)),  -- un numero senza la sua provenienza
                                                      -- non si sa quanto valga
+  CHECK ((sky_source IS 'frames') = (sky_nights IS NOT NULL))
 ) STRICT;
 CREATE UNIQUE INDEX sites_name ON sites (name);
 CREATE UNIQUE INDEX sites_one_default ON sites (is_default) WHERE is_default = 1;
@@ -1273,6 +1276,25 @@ CREATE TABLE pipeline_camera_bias (
   bias_adu REAL NOT NULL CHECK (bias_adu > 0)
 ) STRICT;
 CREATE UNIQUE INDEX pipeline_camera_bias_key ON pipeline_camera_bias (camera, ifnull(offset, -1));
+
+-- RICAVATO. Cielo del sito dai frame (pipeline/site_sky.py, docs/domini/sito.md): una riga per
+-- sito con almeno una notte buona, riscritta intera da chi cambia frame, bias, filtri o siti.
+CREATE TABLE site_sky_measures (
+  site_id     INTEGER PRIMARY KEY REFERENCES sites (id) ON DELETE CASCADE,
+  nights      INTEGER NOT NULL CHECK (nights > 0),  -- nei 12 mesi fino all'ultima notte
+  months      INTEGER NOT NULL CHECK (months BETWEEN 1 AND 12),
+  sqm         REAL,  -- livello annuo; NULL: notti in meno di 4 mesi, o un buco oltre 3
+  first_night TEXT NOT NULL,
+  last_night  TEXT NOT NULL,
+  computed_at TEXT NOT NULL,
+  CHECK (first_night <= last_night)
+) STRICT;
+
+-- DICHIARATO. «Lascia»: la classe misurata che l'utente non ha voluto; si ripropone solo se cambia.
+CREATE TABLE site_sky_dismissed (
+  site_id INTEGER PRIMARY KEY REFERENCES sites (id) ON DELETE CASCADE,
+  bortle  INTEGER NOT NULL CHECK (bortle BETWEEN 1 AND 9)
+) STRICT;
 
 -- DICHIARATO. Filtro dell'utente, nato da una risposta. Chiave calcolata dal nome, mai salvata:
 -- una rinomina non la lascia indietro. Due nomi con la stessa chiave: rifiutati in filters.py.

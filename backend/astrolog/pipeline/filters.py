@@ -4,7 +4,9 @@ Unmatched name asked once; answer holds for every scan after."""
 import sqlite3
 from enum import StrEnum
 
+from ..clock import now_iso
 from ..db.transaction import transaction
+from .site_sky import rebuild
 
 
 class Band(StrEnum):
@@ -123,6 +125,7 @@ def answer(
         ).fetchall()
         for row in spellings:
             resolve(conn, row["written"])
+        rebuild(conn, now_iso())  # an L answered later: its shots now count for the site's sky
 
 
 def _user_filter(

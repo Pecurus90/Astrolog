@@ -3,9 +3,9 @@ yield (zone, elevation, sky) is derived on write and saved, so an opening page n
 
 import sqlite3
 from dataclasses import asdict
-from typing import NoReturn
+from typing import Any, NoReturn
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from .. import place
 from ..clock import now_iso
@@ -23,23 +23,45 @@ from .models_site import (
     SiteEdit,
     SiteList,
     SiteOut,
+    SiteSkyMeasured,
     Unknown,
 )
+from .scan import sky_follows
 
 router = APIRouter(prefix="/api/v1", tags=["sites"])
 
 _SELECT = (
     "SELECT s.id, s.name, s.latitude, s.longitude, s.elevation_m, s.timezone, s.sky_sqm,"
-    " s.elevation_source, s.sky_source, s.is_default,"
-    " (SELECT COUNT(*) FROM nights n WHERE n.site_id = s.id) AS nights"
-    " FROM sites s"
+    " s.elevation_source, s.sky_source, s.sky_nights, s.is_default,"
+    " (SELECT COUNT(*) FROM nights n WHERE n.site_id = s.id) AS nights,"
+    " m.nights AS m_nights, m.months AS m_months, m.sqm AS m_sqm, m.first_night AS m_first,"
+    " m.last_night AS m_last, d.bortle AS dismissed"
+    " FROM sites s LEFT JOIN site_sky_measures m ON m.site_id = s.id"
+    " LEFT JOIN site_sky_dismissed d ON d.site_id = s.id"
 )
+
+
+def _measured(data: dict[str, Any]) -> SiteSkyMeasured:
+    """Proposed when the measure is enough, of another class than the site's (none included),
+    and not the class the user dismissed."""
+    sqm = data.pop("m_sqm")
+    bortle = bortle_of(sqm)
+    dismissed = data.pop("dismissed")
+    return SiteSkyMeasured(
+        status="enough" if sqm is not None else "too_few",
+        nights=data.pop("m_nights") or 0, months=data.pop("m_months") or 0,
+        sqm=sqm, bortle=bortle, first_night=data.pop("m_first"), last_night=data.pop("m_last"),
+        propose=bortle is not None
+        and bortle != bortle_of(data["sky_sqm"])
+        and bortle != dismissed,
+    )  # fmt: skip
 
 
 def _out(row: sqlite3.Row) -> SiteOut:
     """Bortle is derived here from the brightness and never stored: a convention, not a datum."""
     data = dict(row)
     data["is_default"] = bool(data["is_default"])
+    data["measured"] = _measured(data)
     blanks: tuple[tuple[Unknown, object], ...] = (
         ("site_no_timezone", data["timezone"]),
         ("site_no_elevation", data["elevation_m"]),
@@ -108,7 +130,9 @@ def _name_taken_or_raise(err: sqlite3.IntegrityError) -> NoReturn:
 
 # [C RFC 9110 15.3.2: 201 Created]
 @router.post("/sites", response_model=SiteOut, status_code=201)
-def create_site(body: SiteCreate, conn: sqlite3.Connection = Depends(get_db)) -> SiteOut:
+def create_site(
+    body: SiteCreate, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> SiteOut:
     """A new site, enriched by what its coordinates can tell, returned as it is now saved.
 
     The very first site becomes the home one by itself: empty-handed there is nothing to choose,
@@ -153,11 +177,14 @@ def create_site(body: SiteCreate, conn: sqlite3.Connection = Depends(get_db)) ->
             home_nights.follow_home(conn)
     except sqlite3.IntegrityError as err:
         _name_taken_or_raise(err)
+    sky_follows(request)
     return _out(_row(conn, site_id))
 
 
 @router.patch("/sites/{site_id}", response_model=SiteOut)
-def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(get_db)) -> SiteOut:
+def edit_site(
+    site_id: int, body: SiteEdit, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> SiteOut:
     """What is sent wins, even when empty: sending a field empty means deleting it, and a field
     not sent stays as it was. Returns the site as it now is.
 
@@ -193,19 +220,22 @@ def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(g
     else:
         elevation_m, elevation_source = old["elevation_m"], old["elevation_source"]
 
+    sky_nights = None
     if "sky_sqm" in fields or "bortle" in fields:
         sky_sqm, sky_source = place.sky_of(
             latitude, longitude, sqm=fields.get("sky_sqm"), bortle=fields.get("bortle")
         )
     elif moved and old["sky_source"] == place.SkySource.SERVICE:
         sky_sqm, sky_source = place.sky_of(latitude, longitude, key=_sky_key(conn))
+    elif moved and old["sky_source"] == place.SkySource.FRAMES:
+        sky_sqm, sky_source = None, None  # that place's frames; the new place proposes its own
     else:
-        sky_sqm, sky_source = old["sky_sqm"], old["sky_source"]
+        sky_sqm, sky_source, sky_nights = old["sky_sqm"], old["sky_source"], old["sky_nights"]
     try:
         with transaction(conn):
             conn.execute(
                 "UPDATE sites SET name = ?, latitude = ?, longitude = ?, elevation_m = ?,"
-                " elevation_source = ?, timezone = ?, sky_sqm = ?, sky_source = ?"
+                " elevation_source = ?, timezone = ?, sky_sqm = ?, sky_source = ?, sky_nights = ?"
                 " WHERE id = ?",
                 (
                     fields.get("name", old["name"]),
@@ -216,11 +246,14 @@ def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(g
                     timezone,
                     sky_sqm,
                     sky_source,
+                    sky_nights,
                     site_id,
                 ),
             )
             if moved:
                 site_requeue.requeue_nights_of(conn, site_id)
+                # "Keep" answered that place's measure: the new place proposes its own
+                conn.execute("DELETE FROM site_sky_dismissed WHERE site_id = ?", (site_id,))
             new_name = fields.get("name", old["name"])
             if new_name != old["name"]:
                 declarations.follow_site_rename(conn, old["name"], new_name)
@@ -232,11 +265,14 @@ def edit_site(site_id: int, body: SiteEdit, conn: sqlite3.Connection = Depends(g
             home_nights.follow_home(conn)
     except sqlite3.IntegrityError as err:
         _name_taken_or_raise(err)
+    sky_follows(request)
     return _out(_row(conn, site_id))
 
 
 @router.post("/sites/{site_id}/default", response_model=SiteOut)
-def set_default(site_id: int, conn: sqlite3.Connection = Depends(get_db)) -> SiteOut:
+def set_default(
+    site_id: int, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> SiteOut:
     """ "This is my home site": it decides the time zone of the nights. Returns the site as it now
     is.
 
@@ -249,11 +285,14 @@ def set_default(site_id: int, conn: sqlite3.Connection = Depends(get_db)) -> Sit
             conn, near=[(row["latitude"], row["longitude"])], homeless=no_home
         )
         home_nights.follow_home(conn)
+    sky_follows(request)
     return _out(_row(conn, site_id))
 
 
 @router.delete("/sites/{site_id}", response_model=SiteDeleted)
-def delete_site(site_id: int, conn: sqlite3.Connection = Depends(get_db)) -> SiteDeleted:
+def delete_site(
+    site_id: int, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> SiteDeleted:
     """A site that has nights is not lost by mistake: the app refuses and says how many. If it was
     the home one, the app does not elect another by itself: it asks.
 
@@ -265,4 +304,42 @@ def delete_site(site_id: int, conn: sqlite3.Connection = Depends(get_db)) -> Sit
         conn.execute("DELETE FROM sites WHERE id = ?", (site_id,))
         site_requeue.requeue_waiting(conn)
         home_nights.follow_home(conn)
+    sky_follows(request)
     return SiteDeleted(site_id=site_id, deleted=True)
+
+
+def _enough_or_raise(row: sqlite3.Row) -> None:
+    if row["m_sqm"] is None:
+        raise HTTPException(status_code=409, detail={"code": "site_sky_not_measured"})
+
+
+@router.post("/sites/{site_id}/sky/use", response_model=SiteOut)
+def use_measured_sky(site_id: int, conn: sqlite3.Connection = Depends(get_db)) -> SiteOut:
+    """Use Bortle b: the sky measured on the frames becomes the site's, with its nights. Returns
+    the site as it now is.
+
+    404 `site_not_found`; 409 `site_sky_not_measured` while the frames are too few."""
+    row = _row(conn, site_id)
+    _enough_or_raise(row)
+    with transaction(conn):
+        conn.execute(
+            "UPDATE sites SET sky_sqm = ?, sky_source = ?, sky_nights = ? WHERE id = ?",
+            (row["m_sqm"], place.SkySource.FRAMES, row["m_nights"], site_id),
+        )
+    return _out(_row(conn, site_id))
+
+
+@router.post("/sites/{site_id}/sky/dismiss", response_model=SiteOut)
+def dismiss_measured_sky(site_id: int, conn: sqlite3.Connection = Depends(get_db)) -> SiteOut:
+    """Keep Bortle b0: the site stays as it is, and the measure is proposed again only when its
+    class changes. Returns the site as it now is.
+
+    404 `site_not_found`; 409 `site_sky_not_measured` while the frames are too few."""
+    row = _row(conn, site_id)
+    _enough_or_raise(row)
+    with transaction(conn):
+        conn.execute(
+            "INSERT OR REPLACE INTO site_sky_dismissed (site_id, bortle) VALUES (?, ?)",
+            (site_id, bortle_of(row["m_sqm"])),
+        )
+    return _out(_row(conn, site_id))

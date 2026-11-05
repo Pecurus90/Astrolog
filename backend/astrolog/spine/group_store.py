@@ -16,26 +16,10 @@ def frame(conn: sqlite3.Connection, frame_id: int) -> sqlite3.Row:
     ).fetchone()
 
 
-_SITE = "SELECT id, name, latitude, longitude, timezone, sky_sqm FROM sites"
-
-
-def home_site(conn: sqlite3.Connection) -> sqlite3.Row | None:
-    return conn.execute(_SITE + " WHERE is_default = 1").fetchone()
-
-
-def sites(conn: sqlite3.Connection) -> list[sqlite3.Row]:
-    return conn.execute(_SITE).fetchall()
-
-
 def night(conn: sqlite3.Connection, site_id: int, night_date: str) -> sqlite3.Row | None:
     return conn.execute(
         "SELECT id FROM nights WHERE site_id = ? AND night_date = ?", (site_id, night_date)
     ).fetchone()
-
-
-def site_by_name(conn: sqlite3.Connection, name: str) -> sqlite3.Row | None:
-    """By NAME: the user's answer travels on it, because ids are reused."""
-    return conn.execute(_SITE + " WHERE name = ?", (name,)).fetchone()
 
 
 def create_night(

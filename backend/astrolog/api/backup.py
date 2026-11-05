@@ -15,6 +15,7 @@ from ..spine import backup
 from .deps import get_db
 from .models_site import BackupCounts, BackupStatus
 from .paths import validate_root
+from .scan import sky_follows
 
 router = APIRouter(prefix="/api/v1", tags=["settings"])
 
@@ -22,7 +23,8 @@ router = APIRouter(prefix="/api/v1", tags=["settings"])
 # refresh and the probe are left out. A rule, not a list of routes, as `app._is_open`.
 _USER_WRITES = re.compile(
     r"^/api/v1/(review/apply|gear/.+|settings|settings/wizard-done|weather/meteoblue-key"
-    r"|sites(/\d+(/default)?)?|folders|folders/\d+(/move)?|backup/(restore|import))$"
+    r"|sites(/\d+(/default|/sky/use|/sky/dismiss)?)?|folders|folders/\d+(/move)?"
+    r"|backup/(restore|import))$"
 )
 
 
@@ -77,6 +79,7 @@ def restore_backup(request: Request, conn: sqlite3.Connection = Depends(get_db))
     data = backup.read(backup.path_for(request.app.state.db_path))
     assert data is not None  # the status just said found
     backup.restore(conn, data)
+    sky_follows(request)
     request.app.state.backup_offer = False
     return _status(request)
 
@@ -122,6 +125,7 @@ def import_backup(
         backup.restore(conn, data, this_machine=False)
     except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
         raise HTTPException(status_code=422, detail={"code": "not_a_backup"}) from e
+    sky_follows(request)
     request.app.state.backup_offer = False
     return _status(request)
 
