@@ -13,7 +13,7 @@ from .. import place
 from ..clock import now_iso
 from ..db import config
 from ..db.transaction import transaction
-from . import gear_usage
+from . import gear, gear_usage
 from .folder_move import SAMPLE_FILES
 
 log = logging.getLogger(__name__)
@@ -23,10 +23,9 @@ FILE_NAME: Final = "risposte.json"
 _WRITING = threading.Lock()
 VERSION: Final = 1
 
-_INSTRUMENT = (
-    "kind", "name", "brand", "model", "aperture_mm", "focal_mm", "reducer_factor", "weight_kg",
-    "payload_kg", "slots", "backfocus_mm", "notes",
-)  # fmt: skip
+# The whole card (ADR 0021), in one home: a field added to the card travels without a second list.
+# A camera's file-told fields are columns the next scan rewrites: the user's word is a declaration.
+_INSTRUMENT = ("kind", *gear.INSTRUMENT_FIELDS)
 _SITE = (
     "name", "latitude", "longitude", "elevation_m", "elevation_source", "sky_sqm", "sky_source",
     "sky_nights", "horizon_json", "is_default",
@@ -38,7 +37,9 @@ _SITES = (
 )
 # Not in the export: a declared solver path beats the search, and wrong elsewhere it stops it.
 _STAYS_HERE: Final = config.SECRETS | {"astap_path"}
-_FILTER = ("name", "brand", "model", "catalog_id", "passband", "is_none", "color")
+_FILTER = (
+    "name", "brand", "model", "catalog_id", "passband", "is_none", "color", *gear.FILTER_SPECS
+)  # fmt: skip
 _SAMPLE = (
     "SELECT p.rel_path, f.frame_hash FROM positions p JOIN frames f ON f.id = p.frame_id"
     " WHERE p.folder_id = ? ORDER BY p.rel_path LIMIT ?"

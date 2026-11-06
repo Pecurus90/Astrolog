@@ -1,6 +1,7 @@
 """The gear cards: what the user declares to own. Renaming or merging a piece learns the rule on the
 old spelling, or the next scan would recreate it; what changes a frame's meaning requeues it."""
 
+import json
 import sqlite3
 from collections.abc import Collection, Mapping, Sequence
 from typing import Any
@@ -22,10 +23,14 @@ from .stages import StageName, invalidate
 
 # Closed like the preference keys: a field that is not here does not get in.
 INSTRUMENT_FIELDS = (
-    "name", "brand", "model", "camera_type", "pixel_size_um", "aperture_mm", "focal_mm",
-    "reducer_factor", "weight_kg", "payload_kg", "slots", "backfocus_mm", "notes",
+    "name", "brand", "model", "optical_design", "camera_type", "sensor", "pixel_size_um",
+    "width_px", "height_px", "adc_bits", "cooled", "cooling_c", "aperture_mm", "focal_mm",
+    "image_circle_mm", "required_backfocus_mm", "backfocus_tolerance_mm", "reducer_factor",
+    "thickness_mm", "prism_mm", "filter_size", "step_um", "total_steps", "weight_kg",
+    "payload_kg", "payload_no_cw_kg", "slots", "notes",
 )  # fmt: skip
-FILTER_FIELDS = ("name", "brand", "model", "catalog_id")
+FILTER_SPECS = ("filter_size", "thickness_mm", "mounted", "fast_optics")
+FILTER_FIELDS = ("name", "brand", "model", "catalog_id", *FILTER_SPECS)
 
 
 def _set_fields(
@@ -113,8 +118,8 @@ def camera_specs(conn: sqlite3.Connection) -> dict[int, dict[str, Any]]:
     written: dict[str, dict[str, Any]] = {}
     for r in conn.execute(
         "SELECT entity_key, field, value FROM declarations"
-        " WHERE entity_type = 'instrument' AND field IN (?, ?)",
-        CAMERA_SPECS,
+        " WHERE entity_type = 'instrument' AND field IN (SELECT value FROM json_each(?))",
+        (json.dumps(CAMERA_SPECS),),
     ):
         written.setdefault(r["entity_key"], {})[r["field"]] = r["value"]
     return {
@@ -123,7 +128,7 @@ def camera_specs(conn: sqlite3.Connection) -> dict[int, dict[str, Any]]:
             for f in CAMERA_SPECS
         }
         for r in conn.execute(
-            "SELECT id, kind, name, camera_type, pixel_size_um FROM instruments"
+            f"SELECT id, kind, name, {', '.join(CAMERA_SPECS)} FROM instruments"  # noqa: S608
             " WHERE kind = 'camera'"
         )
     }

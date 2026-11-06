@@ -12,7 +12,7 @@ from ..db import idlist
 from ..db.replace_table import replace_rows
 from ..units import hundredths, median
 from ..vocab.instruments import InstrumentKind
-from . import counts, rigs
+from . import counts, gear_numbers, rigs
 from . import objects as obj
 
 
@@ -24,9 +24,9 @@ class UsageSubject(StrEnum):
     FILTER = "filter"
 
 
-# Optics and camera always have hours: they pass through the rig, which the spine derives from
-# every frame. For the others it depends on the archive (`_with_hours`).
-_ALWAYS = (InstrumentKind.OPTICS, InstrumentKind.CAMERA)
+# Optics, camera and spacers always have hours: they pass through the rig, which the spine derives
+# from every frame. For the others it depends on the archive (`_with_hours`).
+_ALWAYS = (InstrumentKind.OPTICS, InstrumentKind.CAMERA, InstrumentKind.SPACER)
 
 # Frames grouped once per list, not a correlated subselect per row, with `counts`'s link: the
 # nights too, or one row would tell two numbers.
@@ -100,9 +100,15 @@ GROUP BY f.rig_id, f.{kind}_id
 """
 # The words of the `rig_parts.kind` CHECK, in the card's order.
 _PIECE_KINDS = (InstrumentKind.MOUNT, *counts.ON_THE_FRAME, *counts.CHOSEN_ONLY)
-PART_KINDS = (*_PIECE_KINDS, "software", "filter")
+PART_KINDS = (*_PIECE_KINDS, InstrumentKind.SPACER, "software", "filter")
 _PARTS = (
     *(_PIECE_PART.format(kind=kind) for kind in _PIECE_KINDS),
+    # a spacer is on all of its rig's frames: it is the rig's, not the file's
+    """
+SELECT s.rig_id, 'spacer' AS kind, s.piece_id, NULL AS software, COUNT(f.id) AS frames
+FROM rig_spacers s LEFT JOIN frames f ON f.rig_id = s.rig_id AND f.copy_of IS NULL
+GROUP BY s.rig_id, s.piece_id
+""",
     """
 SELECT f.rig_id, 'software' AS kind, NULL AS piece_id, f.software, COUNT(*) AS frames
 FROM frames f WHERE f.copy_of IS NULL AND f.rig_id IS NOT NULL AND f.software IS NOT NULL
@@ -141,6 +147,7 @@ class UsageRow:
 def write(conn: sqlite3.Connection) -> None:
     """Redone whole: a frame changing rig moves four rows, one by one would get one wrong. Only
     rigs keep a position (`counts.ORDER_BY_TIME`); the page orders the rest on its own."""
+    rigs.write_spacers(conn)
     rows = [(*astuple(r), None) for r in (*_instruments(conn), *_filters(conn))]
     rows += [(*astuple(r), n) for n, r in enumerate(_rigs(conn))]
     replace_rows(conn, "gear_usage", _COLUMNS, rows)
@@ -148,8 +155,35 @@ def write(conn: sqlite3.Connection) -> None:
 
 
 def write_parts(conn: sqlite3.Connection) -> None:
-    """Alone after a choice on a rig, so the page reads it before the frames are reworked."""
+    """Alone after a choice on a rig, so the page reads it before the frames are reworked. The
+    rig's numbers come after: they read the parts."""
+    rigs.write_spacers(conn)
     replace_rows(conn, "rig_parts", _PART_COLUMNS, _parts(conn))
+    gear_numbers.write(conn)
+
+
+_SPACER_USAGE = f"""
+SELECT i.id, i.kind, {_USED}
+FROM instruments i LEFT JOIN (
+  SELECT s.piece_id AS id, {_COUNTS}
+  FROM rig_spacers s JOIN frames f ON f.rig_id = s.rig_id
+  WHERE f.copy_of IS NULL GROUP BY s.piece_id
+) u ON u.id = i.id
+WHERE i.kind = 'spacer'
+"""  # noqa: S608 - constant fragments of the spine, not user values
+
+
+def write_spacer_usage(conn: sqlite3.Connection) -> None:
+    """After a rig's spacers change: theirs are the rig's hours, so only they are recounted, not
+    the archive inside the request."""
+    write_parts(conn)
+    rows = conn.execute(_SPACER_USAGE).fetchall()
+    shot = idlist.grouped(conn, _PIECE_OBJECTS, [r["id"] for r in rows], "owner", obj.counted)
+    conn.executemany(
+        f"INSERT OR REPLACE INTO gear_usage({', '.join(_COLUMNS)})"
+        f" VALUES({', '.join('?' * len(_COLUMNS))})",  # segnaposto-ok: the columns, not the rows
+        [(*astuple(_row(UsageSubject.INSTRUMENT, r, shot)), None) for r in rows],
+    )
 
 
 def restore_rigs(conn: sqlite3.Connection, now: str | None = None) -> None:
@@ -178,7 +212,7 @@ def _parts(conn: sqlite3.Connection) -> list[tuple[Any, ...]]:
                 listed.append((mine[kind], None, 0))
             for piece, software, frames in listed:
                 # asked by kind first: the software has no id, and no id is not a choice
-                chosen = kind in mine and mine[kind] == piece
+                chosen = kind == InstrumentKind.SPACER or (kind in mine and mine[kind] == piece)
                 rows.append((rig["id"], kind, piece, software, frames, int(chosen), position))
                 position += 1
     return rows

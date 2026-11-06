@@ -4,7 +4,7 @@ import { Bottone } from "./Bottone"
 import { Campo } from "./Campo"
 import { Modulo, NomeDelPezzo, con, useScrittura } from "./ModuloDelGesto"
 import { NuovoCorredo, NuovoFiltro } from "./NuovoFiltroOCorredo"
-import { CampoDellaScheda, GENERE } from "./SchedaDelPezzo"
+import { CampoDellaScheda, GENERE, sulModulo } from "./SchedaDelPezzo"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { type Chiave, t } from "./i18n"
@@ -103,7 +103,7 @@ export function AggiungiUnPezzo({ schede, pezzi }: { schede: Schede; pezzi: Pezz
     >
       {scelta}
       <NomeDelPezzo id="aggiungi-name" onNome={(n) => setNome(n ?? "")} />
-      {(schede[genere] ?? []).map((campo) => (
+      {(schede[genere] ?? []).filter(sulModulo).map((campo) => (
         <CampoDellaScheda
           key={campo}
           id={`aggiungi-${campo}`}

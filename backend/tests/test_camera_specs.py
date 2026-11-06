@@ -334,8 +334,27 @@ def test_what_i_write_on_the_card_is_never_recomputed(conn, tmp_path):
     pose(conn, tmp_path / "uno", BIN1)
     gear.declare_instrument(conn, camera_id(conn), {"pixel_size_um": 3.8, "camera_type": "mono"})
     pose(conn, tmp_path / "due", BIN1, BIN1)
-    assert gear.camera_specs(conn)[camera_id(conn)] == {"camera_type": "mono", "pixel_size_um": 3.8}
+    letti = gear.camera_specs(conn)[camera_id(conn)]
+    assert (letti["camera_type"], letti["pixel_size_um"]) == ("mono", 3.8)
     assert colonna(conn, "pixel_size_um") == 3.76
+
+
+def test_the_resolution_is_the_whole_sensor_most_frequent_among_the_files(conn, tmp_path):
+    """ADR 0021: la risoluzione e' il sensore intero, NAXIS per binning, la piu' frequente. Un
+    file in bin 2 da 8 x 8 dice un sensore da 16 x 16; un file che non dice il binning non vota,
+    perche' un binning ignoto non vale 1."""
+    bin2 = {"XPIXSZ": 7.52, "XBINNING": 2}
+    pose(conn, tmp_path / "lib", bin2, bin2, BIN1, {"XPIXSZ": 3.76}, {"XPIXSZ": 3.76})
+    assert (colonna(conn, "width_px"), colonna(conn, "height_px")) == (16, 16)
+
+
+def test_the_resolution_i_write_wins_over_the_files(conn, tmp_path):
+    pose(conn, tmp_path / "lib", BIN1)
+    gear.declare_instrument(conn, camera_id(conn), {"width_px": 6248, "height_px": 4176})
+    pose(conn, tmp_path / "due", BIN1)
+    letti = gear.camera_specs(conn)[camera_id(conn)]
+    assert (letti["width_px"], letti["height_px"]) == (6248, 4176)
+    assert colonna(conn, "width_px") == 8
 
 
 def test_every_field_i_write_on_the_card_survives_a_new_reading(conn, tmp_path):
@@ -344,7 +363,11 @@ def test_every_field_i_write_on_the_card_survives_a_new_reading(conn, tmp_path):
     pose(conn, tmp_path / "uno", BIN1)
     # i campi della scheda di una camera (quelli che l'API accetta) fuori da pixel e colore: un
     # campo nuovo della scheda entra qui da solo, o la prova cade finche' non gli si da' un valore
-    valori = {"brand": "ZWO", "model": "ASI2600MM", "weight_kg": 0.7, "notes": "la mia"}
+    valori = {
+        "brand": "ZWO", "model": "ASI2600MM", "weight_kg": 0.7, "notes": "la mia",
+        "sensor": "IMX571", "adc_bits": 16, "cooled": True, "cooling_c": 35.0,
+        "thickness_mm": 17.5,
+    }  # fmt: skip
     campi = [c for c in CARD["camera"] if c not in decl.CAMERA_SPECS]
     assert set(campi) == set(valori), campi
     scritti = {c: valori[c] for c in campi}
@@ -362,7 +385,7 @@ def test_what_i_write_wins_field_by_field(conn, tmp_path):
     pose(conn, tmp_path / "lib", {**BIN1, "BAYERPAT": "RGGB"})
     gear.declare_instrument(conn, camera_id(conn), {"pixel_size_um": 3.8})
     specs = gear.camera_specs(conn)[camera_id(conn)]
-    assert specs == {"pixel_size_um": 3.8, "camera_type": "color"}
+    assert (specs["pixel_size_um"], specs["camera_type"]) == (3.8, "color")
 
 
 def test_merging_two_cameras_keeps_the_card_of_the_one_that_stays(conn, tmp_path):
@@ -374,7 +397,8 @@ def test_merging_two_cameras_keeps_the_card_of_the_one_that_stays(conn, tmp_path
     gear.declare_instrument(conn, a, {"pixel_size_um": 9.9, "camera_type": "mono"})
     gear.declare_instrument(conn, b, {"pixel_size_um": 5.5})
     gear.merge_instrument(conn, a, b)
-    assert gear.camera_specs(conn)[b] == {"pixel_size_um": 5.5, "camera_type": "mono"}
+    tenuta = gear.camera_specs(conn)[b]
+    assert (tenuta["pixel_size_um"], tenuta["camera_type"]) == (5.5, "mono")
     orfane = "SELECT COUNT(*) FROM declarations WHERE entity_key = 'camera|CAMA'"
     assert one(conn, orfane) == 0
     gear.declare_instrument(conn, b, {"name": "CAMA"})

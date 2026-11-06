@@ -6,27 +6,30 @@ from typing import Any, Final
 
 from fastapi import HTTPException
 
-from ..spine import declarations as decl
 from ..spine import gear
 from ..spine import unfiltered as unfiltered_reader
 from ..vocab.instruments import InstrumentKind
 from .models_gear import InstrumentCorrection
 
-# Only what the app computes with (`spina-normalize.md`, *Le schede*); the camera's two fields
-# are `decl.CAMERA_SPECS` and not a copy, being the ones the card writes among the declarations.
+# The maker's sheet, kind by kind and in reading order (ADR 0021). The camera's file-told fields
+# are `declarations.CAMERA_SPECS`, kept among the declarations; the guide camera's are not.
 _COMMON = ("brand", "model")
 _ON_EVERY_PIECE = ("weight_kg", "notes")
+_SENSOR = ("sensor", "camera_type", "pixel_size_um", "width_px", "height_px", "adc_bits")
+_BACK_END = ("image_circle_mm", "required_backfocus_mm", "backfocus_tolerance_mm")
 CARD: Final[dict[InstrumentKind, tuple[str, ...]]] = {
     kind: (*_COMMON, *own, *_ON_EVERY_PIECE)
     for kind, own in {
-        InstrumentKind.OPTICS: ("aperture_mm", "focal_mm"),
-        InstrumentKind.CAMERA: decl.CAMERA_SPECS,
-        InstrumentKind.MOUNT: ("payload_kg",),
-        InstrumentKind.REDUCER: ("reducer_factor",),
-        InstrumentKind.FILTER_WHEEL: ("slots",),
-        InstrumentKind.GUIDE_SCOPE: (),
-        InstrumentKind.GUIDE_CAMERA: (),
-        InstrumentKind.FOCUSER: (),
+        InstrumentKind.OPTICS: ("optical_design", "aperture_mm", "focal_mm", *_BACK_END),
+        InstrumentKind.CAMERA: (*_SENSOR, "cooled", "cooling_c", "thickness_mm"),
+        InstrumentKind.MOUNT: ("payload_kg", "payload_no_cw_kg"),
+        InstrumentKind.REDUCER: ("reducer_factor", *_BACK_END),
+        InstrumentKind.FILTER_WHEEL: ("slots", "filter_size", "thickness_mm"),
+        InstrumentKind.GUIDE_SCOPE: ("aperture_mm", "focal_mm"),
+        InstrumentKind.GUIDE_CAMERA: (*_SENSOR, "thickness_mm"),
+        InstrumentKind.FOCUSER: ("step_um", "total_steps"),
+        InstrumentKind.OAG: ("thickness_mm", "prism_mm"),
+        InstrumentKind.SPACER: ("thickness_mm",),
     }.items()
 }
 

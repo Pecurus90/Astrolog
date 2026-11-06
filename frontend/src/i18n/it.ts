@@ -126,6 +126,8 @@ export const it = {
   "review.kind.guide_scope": "ottica di guida",
   "review.kind.guide_camera": "camera di guida",
   "review.kind.focuser": "focheggiatore",
+  "review.kind.oag": "guida fuori asse",
+  "review.kind.spacer": "distanziale",
   "review.card.brand": "Marca",
   "review.card.model": "Modello",
   "review.card.camera_type": "Tipo di sensore",

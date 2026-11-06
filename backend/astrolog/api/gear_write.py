@@ -22,6 +22,7 @@ from .models_gear import (
     RigNaming,
     RigNew,
     RigPartChoice,
+    RigSpacers,
 )
 from .models_review_apply import FilterCorrection
 
@@ -110,9 +111,8 @@ def add_filter(
     work.busy(request.app.state)
     with write.writing(conn):
         bands = [b.model_dump() for b in body.bands]
-        new_id = gear_create.filter_declared(
-            conn, body.name, bands, now_iso(), brand=body.brand, model=body.model
-        )
+        card = body.model_dump(exclude={"name", "bands"})
+        new_id = gear_create.filter_declared(conn, body.name, bands, now_iso(), card)
         gear_usage.add_new(conn, gear_usage.UsageSubject.FILTER, new_id)
     return GearWritten(id=new_id, requeued=0, run_started=False)
 
@@ -155,6 +155,22 @@ def choose_rig_part(
         # the page shows the choice at once, before `normalize` has put it on the frames
         gear_usage.write_parts(conn)
     return _written(request, rig_id, requeued)
+
+
+@router.put("/gear/rigs/{rig_id}/spacers", response_model=GearWritten)
+def choose_rig_spacers(
+    rig_id: int, body: RigSpacers, request: Request, conn: sqlite3.Connection = Depends(get_db)
+) -> GearWritten:
+    """A rig's spacers, all of them: the list replaces the one there is, empty takes them off.
+    Kept among the declarations by name, so they follow a rename. No frame carries a spacer:
+    nothing is requeued, and a spacer's hours are its rigs'.
+
+    409 `worker_busy`; 404 `not_found`; 422 `not_of_kind` for a piece that is not a spacer."""
+    work.busy(request.app.state)
+    with write.writing(conn):
+        rigs.declare_spacers(conn, rig_id, body.piece_ids, now_iso())
+        gear_usage.write_spacer_usage(conn)
+    return GearWritten(id=rig_id, requeued=0, run_started=False)
 
 
 @router.patch("/gear/filters/{filter_id}", response_model=GearWritten)

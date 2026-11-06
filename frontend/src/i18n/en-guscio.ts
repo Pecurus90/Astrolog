@@ -74,5 +74,7 @@ export const enGuscio = {
   "search.kind.guide_scope": "guide scope",
   "search.kind.guide_camera": "guide camera",
   "search.kind.focuser": "focuser",
+  "search.kind.oag": "off-axis guider",
+  "search.kind.spacer": "spacer",
   "search.kind.filter": "filter",
 }

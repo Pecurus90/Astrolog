@@ -8,6 +8,7 @@ from enum import StrEnum
 
 from ..clock import now_iso
 from ..db.inserted import inserted_id
+from ..db.replace_table import replace_rows
 from ..units import same_focal
 from ..vocab.instruments import InstrumentKind
 from . import counts, signature
@@ -36,7 +37,11 @@ PART_FIELDS = counts.CARRIED
 # a piece the files name is renamed, never replaced.
 OVER_THE_FILE = (InstrumentKind.MOUNT,)
 # Without frames these say "no rig carries it", not "the files are silent": a rig is the remedy.
-NEEDS_A_RIG = (InstrumentKind.MOUNT, *counts.CHOSEN_ONLY)
+NEEDS_A_RIG = (InstrumentKind.MOUNT, *counts.CHOSEN_ONLY, InstrumentKind.SPACER)
+# A rig guides with a guide scope or an OAG, never both (ADR 0021): choosing one drops the other.
+GUIDES = (InstrumentKind.GUIDE_SCOPE, InstrumentKind.OAG)
+# A rig has many spacers, and a declaration one value per field: one field per spacer, its name.
+SPACER_FIELD = "spacer:"  # the queries say it as `LIKE 'spacer:%'`
 
 
 class NotOfKindError(ValueError):
@@ -109,7 +114,8 @@ def optics_less_key(
     may be gone, its declarations are not."""
     keys = conn.execute(
         "SELECT DISTINCT entity_key FROM declarations WHERE entity_type = 'rig'"
-        " AND field IN (SELECT value FROM json_each(?)) ORDER BY entity_key",
+        " AND (field IN (SELECT value FROM json_each(?)) OR field LIKE 'spacer:%')"
+        " ORDER BY entity_key",
         (json.dumps(CARRIED_FIELDS),),
     )
     for (key,) in keys:
@@ -121,14 +127,14 @@ def optics_less_key(
 
 def carry_declarations(conn: sqlite3.Connection, old_key: str, rig_id: int, now: str) -> None:
     """Copied, not moved: on a change of mind the new rig finds them there."""
-    for field in CARRIED_FIELDS:
-        conn.execute(
-            "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"
-            " SELECT entity_type, ?, field, value, ? FROM declarations"
-            " WHERE entity_type = 'rig' AND entity_key = ? AND field = ?"
-            " ON CONFLICT(entity_type, entity_key, field) DO NOTHING",
-            (decl_key(_rig(conn, rig_id)), now, old_key, field),
-        )
+    conn.execute(
+        "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"
+        " SELECT entity_type, ?, field, value, ? FROM declarations"
+        " WHERE entity_type = 'rig' AND entity_key = ?"
+        " AND (field IN (SELECT value FROM json_each(?)) OR field LIKE 'spacer:%')"
+        " ON CONFLICT(entity_type, entity_key, field) DO NOTHING",
+        (decl_key(_rig(conn, rig_id)), now, old_key, json.dumps(CARRIED_FIELDS)),
+    )
 
 
 def drop_empty(conn: sqlite3.Connection) -> None:
@@ -234,6 +240,9 @@ def declare_part(
         if chosen_for(conn, rig_id).get(kind) == piece_id:
             return []
         write_declaration(conn, EntityType.RIG, key, kind, piece["name"], now)
+        for other in GUIDES if kind in GUIDES else ():
+            if other != kind:
+                forget(conn, EntityType.RIG, key, other)
     frames = [r[0] for r in conn.execute("SELECT id FROM frames WHERE rig_id = ?", (rig_id,))]
     invalidate(conn, frames, StageName.NORMALIZE, now=now)
     return frames
@@ -262,6 +271,51 @@ def chosen_for(conn: sqlite3.Connection, rig_id: int) -> dict[str, int]:
         return {}
     found = conn.execute(_CHOSEN + " AND d.entity_key = ?", (decl_key(row),))
     return {r["kind"]: r["id"] for r in found}
+
+
+def declare_spacers(
+    conn: sqlite3.Connection, rig_id: int, piece_ids: list[int], now: str | None = None
+) -> None:
+    """The whole list replaces the one there is. No frame carries a spacer: nothing is requeued,
+    and `write_spacers` gives them the rig's hours."""
+    key = decl_key(_rig(conn, rig_id))
+    names: list[str] = []
+    for piece_id in dict.fromkeys(piece_ids):
+        piece = conn.execute(
+            "SELECT name FROM instruments WHERE id = ? AND kind = 'spacer'", (piece_id,)
+        ).fetchone()
+        if piece is None:
+            raise NotOfKindError(f"{piece_id} non e' un distanziale")
+        names.append(piece["name"])
+    conn.execute(
+        "DELETE FROM declarations WHERE entity_type = 'rig' AND entity_key = ?"
+        " AND field LIKE 'spacer:%'",
+        (key,),
+    )
+    for name in names:
+        write_declaration(conn, EntityType.RIG, key, SPACER_FIELD + name, name, now)
+
+
+_SPACERS = """
+SELECT d.entity_key, i.id FROM declarations d
+JOIN instruments i ON i.kind = 'spacer' AND i.name = d.value
+WHERE d.entity_type = 'rig' AND d.field LIKE 'spacer:%'
+ORDER BY d.entity_key, i.name COLLATE NOCASE, i.id
+"""
+
+
+def spacers(conn: sqlite3.Connection) -> dict[int, list[int]]:
+    """`{rig id: [spacer id]}` from the declarations: one home for parts, hours and numbers."""
+    by_key: dict[str, list[int]] = {}
+    for r in conn.execute(_SPACERS):
+        by_key.setdefault(r["entity_key"], []).append(r["id"])
+    return {rig["id"]: by_key[key] for key, rig in rigs_with_keys(conn) if key in by_key}
+
+
+def write_spacers(conn: sqlite3.Connection) -> None:
+    """Before counting: the hours of a spacer are its rigs'."""
+    rows = [(rig_id, piece) for rig_id, pieces in spacers(conn).items() for piece in pieces]
+    replace_rows(conn, "rig_spacers", ("rig_id", "piece_id"), rows)
 
 
 def rig_names(conn: sqlite3.Connection) -> dict[str, str]:
@@ -312,6 +366,17 @@ def follow_piece(
             " WHERE entity_type = 'rig' AND field = ? AND value = ?",
             (new_name, kind, old_name),
         )
+    if kind == InstrumentKind.SPACER:
+        # on a merge a rig may hold both: the kept one stays, once
+        conn.execute(
+            "UPDATE OR IGNORE declarations SET field = ?, value = ?"
+            " WHERE entity_type = 'rig' AND field = ?",
+            (SPACER_FIELD + new_name, new_name, SPACER_FIELD + old_name),
+        )
+        conn.execute(
+            "DELETE FROM declarations WHERE entity_type = 'rig' AND field = ?",
+            (SPACER_FIELD + old_name,),
+        )
 
 
 def follow_rename(
@@ -319,15 +384,19 @@ def follow_rename(
 ) -> None:
     """The key carries the piece's name: without following it the rig's name would be orphaned and
     the rebuilt rig would come back nameless."""
-    for r in conn.execute(
+    declared = conn.execute(
         "SELECT entity_key, field, value FROM declarations WHERE entity_type = 'rig'"
-    ).fetchall():
+    ).fetchall()
+    with_spacers = {r["entity_key"] for r in declared if r["field"].startswith(SPACER_FIELD)}
+    for r in declared:
         parts = rig_key_parts(r["entity_key"])
         if parts is None or old_name not in parts[:2]:
             continue
         optics, camera = (new_name if p == old_name else p for p in parts[:2])
         new_key = rig_key(optics, camera, parts[2])
         forget(conn, EntityType.RIG, r["entity_key"], r["field"])
+        if r["field"].startswith(SPACER_FIELD) and new_key in with_spacers:
+            continue  # the kept rig's spacers win whole, like its mount
         conn.execute(
             "INSERT INTO declarations(entity_type, entity_key, field, value, created_at)"
             " VALUES(?, ?, ?, ?, ?) ON CONFLICT(entity_type, entity_key, field)"

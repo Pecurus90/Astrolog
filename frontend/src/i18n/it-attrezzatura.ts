@@ -16,6 +16,8 @@ export const itAttrezzatura = {
   "gear.kind.guide_scope": "Guide",
   "gear.kind.guide_camera": "Camere di guida",
   "gear.kind.focuser": "Focheggiatori",
+  "gear.kind.oag": "Guide fuori asse",
+  "gear.kind.spacer": "Distanziali",
   "gear.part": "{parte}: {nome} ({frame})",
   "gear.part.chosen": "{parte}: {nome} (tua scelta)",
   "gear.part.software": "programma di ripresa",
@@ -33,6 +35,8 @@ export const itAttrezzatura = {
   "gear.noHours.mount": "non associata a un setup",
   "gear.noHours.reducer": "non associato a un setup",
   "gear.noHours.guide_scope": "non associata a un setup",
+  "gear.noHours.oag": "non associata a un setup",
+  "gear.noHours.spacer": "non associato a un setup",
   "gear.counting": "conteggio in corso",
   // Il setup: com'e' fatto e quanto cielo inquadra davvero.
   "gear.rig": "{ottica} + {camera}",

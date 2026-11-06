@@ -84,35 +84,56 @@ CREATE TABLE folders (
   root_key   TEXT GENERATED ALWAYS AS (rtrim(replace(root_path, '\', '/'), '/')) VIRTUAL
 ) STRICT;
 
--- Uno strumento posseduto: ottica, camera, montatura, riduttore, ruota, guida, focheggiatore.
+-- Uno strumento posseduto: ottica, camera, montatura, riduttore, ruota, guida (ottica o fuori
+-- asse), camera di guida, focheggiatore, distanziale.
 -- `detected = 1` se lo ha creato la spina da un header (provvisorio finche' l'utente non
 -- lo conferma in Da confermare); le specifiche le compila l'utente, mai internet.
--- I campi si chiedono solo se l'app ci fa qualcosa: rapporto focale, lato del sensore in
--- millimetri e scala in arcosecondi per pixel si DERIVANO e non stanno qui.
+-- La scheda tecnica del produttore (ADR 0021); quali campi per tipo: `instrument_answer.CARD`.
+-- Rapporto focale, lato del sensore, scale e conti del setup si DERIVANO (`gear_numbers`).
 CREATE TABLE instruments (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   kind            TEXT NOT NULL CHECK (kind IN ('optics', 'camera', 'mount', 'reducer',
-                                                'filter_wheel', 'guide_scope', 'guide_camera', 'focuser')),
+                                                'filter_wheel', 'guide_scope', 'guide_camera', 'focuser',
+                                                'oag', 'spacer')),
   name            TEXT NOT NULL,                   -- come lo chiama l'utente; e' la chiave degli alias
   brand           TEXT,
   model           TEXT,
+  optical_design  TEXT CHECK (optical_design IN ('refractor', 'newtonian', 'sct', 'rc', 'maksutov',
+                                                 'camera_lens', 'other')),
   camera_type     TEXT CHECK (camera_type IN ('mono', 'color')),
+  sensor          TEXT,                            -- camera: il nome del sensore (IMX571)
   pixel_size_um   REAL,                            -- camera: il pixel fisico piu' frequente fra i file (rilevato)
   pixel_from_sky_um REAL,                          -- camera: il pixel ricavato dalla scala misurata e dalla focale (rilevato)
-  aperture_mm     REAL,                            -- ottica: con la focale da' il rapporto focale
+  width_px        INTEGER,                         -- camera: il sensore intero piu' frequente fra i file (rilevato)
+  height_px       INTEGER,
+  adc_bits        INTEGER,                         -- BITPIX dice il formato del file, non l'ADC: a mano
+  cooled          INTEGER CHECK (cooled IN (0, 1)),
+  cooling_c       REAL,                            -- gradi sotto l'ambiente
+  aperture_mm     REAL,                            -- ottica e ottica di guida
   focal_mm        REAL,                            -- ottica: la focale nativa, senza riduttore
+  image_circle_mm REAL,                            -- ottica e riduttore: copre il sensore?
+  required_backfocus_mm  REAL,                     -- ottica e riduttore
+  backfocus_tolerance_mm REAL,                     -- del produttore: senza, il backfocus non si giudica
   reducer_factor  REAL,                            -- riduttore: 0.8 vuol dire un corredo diverso
+  thickness_mm    REAL,                            -- lungo il treno: camera fino al sensore, ruota, OAG, distanziale
+  prism_mm        REAL,                            -- OAG
+  filter_size     TEXT CHECK (filter_size IN ('1.25in', '31mm', '36mm', '2in', '50mm_square')),
+  step_um         REAL,                            -- focheggiatore
+  total_steps     INTEGER,
   weight_kg       REAL,                            -- col carico della montatura dice se il corredo sta in piedi
-  payload_kg      REAL,                            -- montatura: quanto regge
+  payload_kg      REAL,                            -- montatura: quanto regge, col contrappeso
+  payload_no_cw_kg REAL,                           -- e senza
   slots           INTEGER,                         -- ruota portafiltri: quanti filtri ci stanno
-  backfocus_mm    REAL,
   notes           TEXT,
   detected        INTEGER NOT NULL DEFAULT 0 CHECK (detected IN (0, 1)),
   created_at      TEXT NOT NULL,
-  CHECK (kind = 'camera' OR camera_type IS NULL),
+  CHECK (kind IN ('camera', 'guide_camera') OR camera_type IS NULL),
   CHECK (kind = 'camera' OR pixel_from_sky_um IS NULL),
-  CHECK (kind = 'mount' OR payload_kg IS NULL),
+  CHECK (kind = 'optics' OR optical_design IS NULL),
+  CHECK (kind = 'camera' OR cooled IS NULL),
+  CHECK (kind = 'mount' OR (payload_kg IS NULL AND payload_no_cw_kg IS NULL)),
   CHECK (kind = 'filter_wheel' OR slots IS NULL),
+  CHECK (kind = 'oag' OR prism_mm IS NULL),
   CHECK (kind = 'reducer' OR reducer_factor IS NULL)
 ) STRICT;
 CREATE UNIQUE INDEX instruments_kind_name ON instruments (kind, name);
@@ -130,6 +151,11 @@ CREATE TABLE filters (
   passband   TEXT NOT NULL,                        -- la banda canonica: dal vocabolario, dal modello o dalle bande
   is_none    INTEGER NOT NULL DEFAULT 0 CHECK (is_none IN (0, 1)),
   color      TEXT,
+  -- la scheda tecnica (ADR 0021): le misure della ruota, montato in cella, per ottiche veloci
+  filter_size  TEXT CHECK (filter_size IN ('1.25in', '31mm', '36mm', '2in', '50mm_square')),
+  thickness_mm REAL,
+  mounted      INTEGER CHECK (mounted IN (0, 1)),
+  fast_optics  INTEGER CHECK (fast_optics IN (0, 1)),
   created_at TEXT NOT NULL
 ) STRICT;
 CREATE UNIQUE INDEX filters_name ON filters (name);
@@ -309,10 +335,11 @@ CREATE TABLE frames (
   -- La montatura: quella che hai dato al corredo, o dove taci quella che il file nomina
   -- (`spine/normalize_rig.py`). Non ha un grezzo suo: con l'ASIAIR sta in `telescope_raw`.
   mount_id         INTEGER REFERENCES instruments (id),   -- normalize
-  -- Riduttore e ottica di guida: nessun programma li scrive, ci sono solo se li hai scelti sul
-  -- corredo.
+  -- Riduttore, ottica di guida e guida fuori asse: nessun programma li scrive, ci sono solo se
+  -- li hai scelti sul corredo.
   reducer_id       INTEGER REFERENCES instruments (id),   -- normalize
   guide_scope_id   INTEGER REFERENCES instruments (id),   -- normalize
+  oag_id           INTEGER REFERENCES instruments (id),   -- normalize
   -- La copia calibrata dello stesso scatto (l'elaborazione la riscrive nella cartella di
   -- acquisizione): resta in archivio con le sue posizioni, ma non e' un'altra ora di cielo.
   -- Chi conta le ore filtra `copy_of IS NULL`. Lo decide `normalize`; il grezzo vince.
@@ -746,7 +773,7 @@ CREATE TABLE rig_parts (
   rig_id   INTEGER NOT NULL REFERENCES rigs (id) ON DELETE CASCADE,
   kind     TEXT NOT NULL CHECK (kind IN
              ('mount', 'filter_wheel', 'focuser', 'guide_camera', 'reducer', 'guide_scope',
-              'software', 'filter')),
+              'oag', 'spacer', 'software', 'filter')),
   piece_id INTEGER,
   software TEXT,
   frames   INTEGER NOT NULL,
@@ -755,6 +782,25 @@ CREATE TABLE rig_parts (
   position INTEGER NOT NULL,                       -- l'ordine della scheda: genere, poi uso
   PRIMARY KEY (rig_id, position),
   CHECK ((kind = 'software') = (piece_id IS NULL) AND (kind = 'software') = (software IS NOT NULL))
+) STRICT;
+
+-- I distanziali di un corredo (DERIVATO dalle dichiarazioni `spacer:<nome>` del corredo, che
+-- seguono rinomina e unione): nessuna posa li porta, le loro ore sono quelle dei corredi. Lo
+-- riscrive `spine/rigs.write_spacers` prima di contare.
+CREATE TABLE rig_spacers (
+  rig_id   INTEGER NOT NULL REFERENCES rigs (id) ON DELETE CASCADE,
+  piece_id INTEGER NOT NULL REFERENCES instruments (id) ON DELETE CASCADE,
+  PRIMARY KEY (rig_id, piece_id)
+) STRICT;
+
+-- I conti dalle schede (ADR 0021): del corredo (rapporto focale, campionamento, campo, copertura,
+-- guida, backfocus, carico) e del pezzo (Dawes, sensore). DERIVATO: lo riscrive intero
+-- `spine/gear_numbers.write` dopo ogni scrittura di schede o parti; la pagina lo legge e basta.
+CREATE TABLE gear_numbers (
+  subject      TEXT NOT NULL CHECK (subject IN ('instrument', 'rig')),
+  subject_id   INTEGER NOT NULL,
+  numbers_json TEXT NOT NULL,
+  PRIMARY KEY (subject, subject_id)
 ) STRICT;
 
 -- I candidati del cielo per la scheda di un oggetto in dubbio, o di frame detti "non e' un oggetto"

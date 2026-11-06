@@ -48,7 +48,7 @@ from astrolog.spine import (
 from astrolog.spine.scan_store import COUNTS
 from astrolog.units import SQM_MAX, SQM_MIN
 from astrolog.vocab.filters import BANDS, PASSBANDS
-from astrolog.vocab.instruments import InstrumentKind
+from astrolog.vocab.instruments import FilterSize, InstrumentKind, OpticalDesign
 from astrolog.weather import fetches, forecast, judge, verdict
 from astrolog.worker.worker import STRUCTURAL_KEYS, State
 from conftest import add_folder
@@ -308,6 +308,25 @@ def test_instrument_kinds_say_what_the_schema_allows():
     dallo_schema = re.findall(r"'([a-z_]+)'", blocco)
     assert [k.value for k in InstrumentKind] == dallo_schema
     assert list(get_args(models_review.InstrumentKind)) == dallo_schema
+
+
+@pytest.mark.parametrize(
+    ("colonna", "enum", "letterale"),
+    [
+        ("optical_design", OpticalDesign, models_review.OpticalDesign),
+        ("filter_size", FilterSize, models_review.FilterSize),
+    ],
+)
+def test_the_closed_words_of_a_card_are_the_schemas(colonna, enum, letterale):
+    """Schema ottico e misura dei filtri (ADR 0021): stesso vocabolario nel CHECK, nell'enum e
+    nel `Literal` dell'API, in ogni tabella che li porta."""
+    schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
+    blocchi = re.findall(rf"{colonna}\s+TEXT CHECK \({colonna} IN \(([^)]*)\)\)", schema)
+    assert blocchi
+    for blocco in blocchi:
+        dallo_schema = re.findall(r"'([^']+)'", blocco)
+        assert [k.value for k in enum] == dallo_schema
+        assert list(get_args(letterale)) == dallo_schema
 
 
 def test_the_sky_bounds_are_the_same_in_the_model_the_units_and_the_schema():

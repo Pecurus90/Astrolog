@@ -15,8 +15,11 @@ from .models_review_groups import (
 
 InstrumentKind = Literal[
     "optics", "camera", "mount", "reducer", "filter_wheel", "guide_scope", "guide_camera",
-    "focuser",
+    "focuser", "oag", "spacer",
 ]  # fmt: skip
+# The closed words of a card, glued by a test to `vocab.instruments` and the schema CHECKs.
+OpticalDesign = Literal["refractor", "newtonian", "sct", "rc", "maksutov", "camera_lens", "other"]
+FilterSize = Literal["1.25in", "31mm", "36mm", "2in", "50mm_square"]
 # Only physical bands can be declared, never a derived label: no filter lets "duo" through. A test
 # keeps these words equal to `vocab.filters.BANDS`, since a `Literal` wants constants.
 Band = Literal["L", "R", "G", "B", "HA", "HB", "OIII", "SII"]
@@ -25,8 +28,11 @@ CameraType = Literal["mono", "color"]
 # The fields a card can ask for; which ones per kind is `instrument_answer.CARD`. A test keeps this
 # list glued to it and to the fields the answer accepts.
 CardField = Literal[
-    "brand", "model", "camera_type", "pixel_size_um", "aperture_mm", "focal_mm", "reducer_factor",
-    "weight_kg", "payload_kg", "slots", "notes",
+    "brand", "model", "optical_design", "camera_type", "sensor", "pixel_size_um", "width_px",
+    "height_px", "adc_bits", "cooled", "cooling_c", "aperture_mm", "focal_mm",
+    "image_circle_mm", "required_backfocus_mm", "backfocus_tolerance_mm", "reducer_factor",
+    "thickness_mm", "prism_mm", "filter_size", "step_um", "total_steps", "weight_kg",
+    "payload_kg", "payload_no_cw_kg", "slots", "notes",
 ]  # fmt: skip
 # A test keeps these glued to `spine.identify_decide`, which is in turn guarded against the schema
 # CHECK.

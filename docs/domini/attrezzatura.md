@@ -59,6 +59,12 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi str
 | Solo una montatura che possiedo puo' essere la montatura di un setup | `test_only_a_mount_can_be_the_mount_of_a_rig`, `test_only_a_mount_you_own_can_be_the_mount_of_a_rig`; *senza montature da scegliere il setup non offre il gesto* |
 | Rinominare o unire una montatura non la stacca dai setup, e se due setup diventano uno vince la montatura di quello che resta | `test_a_mount_renamed_or_merged_stays_the_mount_of_its_rigs`, `test_two_rigs_that_become_one_keep_the_mount_of_the_one_kept` |
 | Dalla ricerca apro un pezzo o un filtro (`/attrezzatura?pezzo=strumento-<id>`, `filtro-<id>`): la sua riga e' segnata e in vista | *con ?pezzo= la riga di quel pezzo e' segnata, e nessun'altra*, *un filtro si apre allo stesso modo* |
+| Ogni pezzo porta la scheda tecnica del produttore, tipo per tipo, e un filtro la sua (ADR 0021) | `test_the_card_asks_the_makers_sheet_kind_by_kind`, `test_a_filter_carries_its_sheet`, `test_the_closed_words_of_a_card_are_the_schemas` |
+| La risoluzione della camera viene dai file, il sensore intero piu' frequente; quella che scrivo vince | `test_the_resolution_is_the_whole_sensor_most_frequent_among_the_files`, `test_the_resolution_i_write_wins_over_the_files` |
+| Il setup guida con un'ottica di guida **oppure** una guida fuori asse, e porta tutti i suoi distanziali, con le ore del setup | `test_a_rig_guides_with_a_guide_scope_or_an_oag_never_both`, `test_a_rig_has_all_its_spacers_with_the_rigs_hours`, `test_spacers_follow_a_rename_and_an_empty_list_takes_them_off`, `test_only_a_spacer_is_a_spacer` |
+| Il setup fa i suoi conti dalle schede, e dove manca un dato dice quale | `test_the_example_of_the_board_comes_back`, `test_each_number_names_the_first_datum_it_lacks`, `test_the_rig_says_what_it_lacks_then_its_number_once_written` e gli altri di `backend/tests/test_rig_numbers.py` |
+| La pagina legge i conti scritti, non li rifa' | `test_the_page_reads_the_numbers_and_never_computes_them` |
+| Il backup delle risposte porta la scheda intera | `test_the_backup_carries_the_new_fields` |
 
 ## Le decisioni
 
@@ -208,7 +214,18 @@ bande si scrivono, anche quelle delle camere a colori.
 **La scheda tecnica e i conti del setup** (Marco, 18/10/2026): campi per tipo, formule, soglie e
 parole dei conti stanno in [ADR 0021](../adr/0021-dati-completi-dell-attrezzatura.md), che ne e'
 la casa; ogni conto compare solo coi suoi dati, e se ne manca uno lo dice ("manca il pixel della
-camera di guida"). L'ordine del treno ottico e' solo disegno: i conti non ne dipendono. "(vuoto:
+camera di guida"). L'ordine del treno ottico e' solo disegno: i conti non ne dipendono. **Il
+backend c'e'** (passo 32): i campi in `instrument_answer.CARD`, i conti in `spine/rig_numbers.py`,
+scritti da `spine/gear_numbers.py` dopo ogni scrittura di schede o parti e a fine giro, e letti
+dalla pagina in `numbers`; ognuno arriva intero o con `missing` (tipo di pezzo e campo, il primo
+che manca). La focale effettiva e' quella del setup, senza ripieghi; la parte che un conto legge
+e' quella scelta, altrimenti la piu' usata; la guida e' una, ottica o fuori asse, e sceglierne una
+toglie l'altra. I distanziali stanno fra le dichiarazioni del setup, uno per campo
+(`spacer:<nome>`), e le loro ore sono quelle dei setup che li portano (`rig_spacers`); se due
+setup diventano uno, vincono i distanziali di quello che resta, come la montatura
+(`test_two_rigs_that_become_one_keep_the_spacers_of_the_one_kept`). La pagina
+di oggi non chiede ancora i campi nuovi: arrivano col porting della tavola, insieme alle loro
+etichette. "(vuoto:
 dai file)" solo sulle parti che i file possono dire (non i distanziali). Il programma di ripresa
 e' una parte del setup coi suoi frame, senza ore e senza modulo. Le marche sono testo libero:
 "altra…" propone quelle gia' scritte.

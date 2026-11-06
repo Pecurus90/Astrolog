@@ -5,7 +5,7 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .models_review import Band
+from .models_review import Band, FilterSize
 from .models_review_groups import GearFilterAnswer, MosaicAnswer, TypelessAnswer
 
 
@@ -14,7 +14,16 @@ class BandIn(BaseModel):
     width_nm: float | None = None
 
 
-class FilterCorrection(BaseModel):
+class FilterSpecs(BaseModel):
+    """The technical sheet of a filter (ADR 0021): a filter written and one corrected share it."""
+
+    filter_size: FilterSize | None = None
+    thickness_mm: float | None = Field(None, gt=0)
+    mounted: bool | None = None
+    fast_optics: bool | None = Field(None, description="Made for fast optics.")
+
+
+class FilterCorrection(FilterSpecs):
     """The card of a filter, or "it is the same filter as" (`merge_into`)."""
 
     name: str | None = Field(None, min_length=1)

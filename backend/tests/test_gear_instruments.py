@@ -68,15 +68,20 @@ def test_renaming_a_piece_keeps_the_name_of_its_rig(client):
     assert dopo["name"] == "Principale"
 
 
-def test_the_card_asks_only_what_the_app_uses(client):
-    """Ottica: apertura e focale. Camera: colore e pixel. Montatura: quanto regge. Su tutti marca,
-    modello, peso e nota. Il rapporto focale, il lato del sensore e la scala non ci sono mai: si
-    derivano."""
+def test_the_card_asks_the_makers_sheet_kind_by_kind(client):
+    """ADR 0021: la scheda tecnica del produttore, tipo per tipo. Su tutti marca, modello, peso e
+    nota. Rapporto focale, dimensione del sensore e scale non ci sono mai: si derivano."""
     schede = gear(client)["cards"]
     comuni = {"brand", "model", "weight_kg", "notes"}
-    assert set(schede["optics"]) == comuni | {"aperture_mm", "focal_mm"}
-    assert set(schede["camera"]) == comuni | {"camera_type", "pixel_size_um"}
-    assert set(schede["mount"]) == comuni | {"payload_kg"}
+    retro = {"image_circle_mm", "required_backfocus_mm", "backfocus_tolerance_mm"}
+    assert set(schede["optics"]) == comuni | {"optical_design", "aperture_mm", "focal_mm"} | retro
+    assert set(schede["reducer"]) == comuni | {"reducer_factor"} | retro
+    assert set(schede["mount"]) == comuni | {"payload_kg", "payload_no_cw_kg"}
+    assert set(schede["oag"]) == comuni | {"thickness_mm", "prism_mm"}
+    assert set(schede["spacer"]) == comuni | {"thickness_mm"}
+    assert {"cooled", "cooling_c"} <= set(schede["camera"])
+    assert not {"cooled", "cooling_c"} & set(schede["guide_camera"])
+    assert set(schede["camera"]) - set(schede["guide_camera"]) == {"cooled", "cooling_c"}
 
 
 def test_every_field_of_the_card_is_one_the_answer_accepts():
@@ -275,7 +280,9 @@ def test_the_card_shows_what_i_wrote_over_what_the_files_say(client):
 
 
 MISURE = ("pixel_size_um", "aperture_mm", "focal_mm", "reducer_factor", "weight_kg",
-          "payload_kg", "backfocus_mm")  # fmt: skip
+          "payload_kg", "payload_no_cw_kg", "cooling_c", "image_circle_mm",
+          "required_backfocus_mm", "backfocus_tolerance_mm", "thickness_mm", "prism_mm",
+          "step_um")  # fmt: skip
 
 
 def test_every_measure_of_the_card_is_in_the_guard():

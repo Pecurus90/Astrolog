@@ -79,5 +79,7 @@ export const itGuscio = {
   "search.kind.guide_scope": "guida",
   "search.kind.guide_camera": "camera di guida",
   "search.kind.focuser": "focheggiatore",
+  "search.kind.oag": "guida fuori asse",
+  "search.kind.spacer": "distanziale",
   "search.kind.filter": "filtro",
 }

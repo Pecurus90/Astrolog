@@ -1,9 +1,11 @@
-"""What the FILES say of a camera's card, physical pixel and colour, voted by its frames. The most
-frequent value wins and a tie gives none; who wins on reading: `gear.camera_specs`."""
+"""What the FILES say of a camera's card, physical pixel, colour and whole sensor, voted by its
+frames. The most frequent value wins and a tie gives none; who wins on reading: `gear.camera_specs`.
+"""
 
 import sqlite3
 from collections import Counter
 from collections.abc import Collection, Iterable, Mapping
+from typing import Any
 
 from ..units import most_frequent, physical_pixel_um
 from . import declarations as decl
@@ -32,11 +34,11 @@ def from_files(conn: sqlite3.Connection, used: Mapping[str, str | None] | None =
     """Redone after every pass that worked a frame, so the first file does not decide for good. A
     colour other than the one the frames chose with requeues the camera's matrix-less frames."""
     before = store.camera_colours(conn)
-    for camera_id, (colour, pixel) in _voted(store.camera_votes(conn)).items():
-        store.set_camera_specs(conn, camera_id, colour, pixel)
+    for camera_id, said in _voted(store.camera_votes(conn)).items():
+        store.set_camera_specs(conn, camera_id, said)
         name, voted = before[camera_id]
         chosen = (used or {}).get(name, voted)  # the colour the frames chose with
-        if chosen != colour and unfiltered.written_colour(conn, name) is None:
+        if chosen != said.camera_type and unfiltered.written_colour(conn, name) is None:
             unfiltered.requeue(conn, camera_id)
 
 
@@ -45,15 +47,28 @@ def _colour(votes: Counter[bool]) -> str | None:
     return decl.CameraType.COLOR if most_frequent(+votes) else None
 
 
-def _voted(rows: Iterable[sqlite3.Row]) -> dict[int, tuple[str | None, float | None]]:
-    """`{camera id: (colour, physical pixel)}` from `normalize_store.camera_votes`."""
-    votes: dict[int, tuple[Counter[float | None], Counter[bool]]] = {}
+def _whole_sensor(r: sqlite3.Row) -> tuple[int, int] | None:
+    """The file's size times its binning: an unknown binning is not 1, so it does not vote."""
+    if not r["binning"] or not r["naxis1"] or not r["naxis2"]:
+        return None
+    return r["naxis1"] * r["binning"], r["naxis2"] * r["binning"]
+
+
+def _voted(rows: Iterable[sqlite3.Row]) -> dict[int, store.CameraFromFiles]:
+    """Per camera, from `normalize_store.camera_votes`: colour, physical pixel, whole sensor."""
+    votes: dict[int, tuple[Counter[Any], Counter[bool], Counter[Any]]] = {}
     for r in rows:
-        pixels, colours = votes.setdefault(r["camera_id"], (Counter(), Counter()))
+        empty = (Counter(), Counter(), Counter())
+        pixels, colours, sensors = votes.setdefault(r["camera_id"], empty)
         pixels[physical_pixel_um(r["pixel_size_um"], r["binning"])] += r["n"]
         colours[bool(r["color"])] += r["n"]
-    out: dict[int, tuple[str | None, float | None]] = {}
-    for camera_id, (pixels, colours) in votes.items():
+        sensors[_whole_sensor(r)] += r["n"]
+    out: dict[int, store.CameraFromFiles] = {}
+    for camera_id, (pixels, colours, sensors) in votes.items():
         pixels.pop(None, None)  # no physical pixel, no vote
-        out[camera_id] = (_colour(colours), most_frequent(pixels))
+        sensors.pop(None, None)
+        width, height = most_frequent(sensors) or (None, None)
+        out[camera_id] = store.CameraFromFiles(
+            _colour(colours), most_frequent(pixels), width, height
+        )
     return out

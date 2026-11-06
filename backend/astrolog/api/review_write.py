@@ -9,7 +9,16 @@ from fastapi import HTTPException
 from ..db.transaction import transaction
 from ..spine import coordinates as places
 from ..spine import declarations as decl
-from ..spine import gear, gear_create, mosaic, object_answer, rigs, typeless_answer, unnamed
+from ..spine import (
+    gear,
+    gear_create,
+    gear_numbers,
+    mosaic,
+    object_answer,
+    rigs,
+    typeless_answer,
+    unnamed,
+)
 from ..spine.declarations import TypeAnswer
 from ..spine.group import GroupReason
 from ..spine.stages import StageName, invalidate
@@ -95,6 +104,8 @@ def writing(conn: sqlite3.Connection) -> Iterator[None]:
     try:
         with transaction(conn):
             yield
+            # a card, a part or a merge moves the rigs' numbers: written here, never on reading
+            gear_numbers.write(conn)
     except Exception as err:
         refusal = _refusal(err)
         if refusal is None:

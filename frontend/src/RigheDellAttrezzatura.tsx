@@ -27,6 +27,8 @@ const SENZA_CORREDO: Partial<Record<Pezzo["kind"], Chiave>> = {
   mount: "gear.noHours.mount",
   reducer: "gear.noHours.reducer",
   guide_scope: "gear.noHours.guide_scope",
+  oag: "gear.noHours.oag",
+  spacer: "gear.noHours.spacer",
 }
 
 /** Quanto un pezzo e' servito: le ore col pezzo di sempre, i frame, le notti. Dove il legame con
@@ -83,8 +85,8 @@ function scheda(pezzo: Pezzo): string[] {
   if (pezzo.reducer_factor !== null) {
     righe.push(t("gear.reducerFactor", { fattore: numero(pezzo.reducer_factor) }))
   }
-  if (pezzo.backfocus_mm !== null) {
-    righe.push(t("gear.backfocus", { mm: numero(pezzo.backfocus_mm) }))
+  if (pezzo.required_backfocus_mm !== null) {
+    righe.push(t("gear.backfocus", { mm: numero(pezzo.required_backfocus_mm) }))
   }
   return righe
 }
@@ -145,6 +147,8 @@ const PARTE: Record<Corredo["parts"][number]["kind"], Chiave> = {
   guide_camera: "review.kind.guide_camera",
   reducer: "review.kind.reducer",
   guide_scope: "review.kind.guide_scope",
+  oag: "review.kind.oag",
+  spacer: "review.kind.spacer",
   software: "gear.part.software",
   filter: "gear.part.filter",
 }

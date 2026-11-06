@@ -391,3 +391,4 @@ test_never_under_min_stars_a_zone - step 26.52, ADR 0042: no zones; replaced by 
 test_the_altitude_agrees_with_astropy - step 26.54: renamed test_the_altitude_and_azimuth_agree_with_astropy, azimuth added (observed replaces true_altitudes)
 test_a_universal2_wheel_covers_both_macs - step 26.57, ADR 0043: Mac Intel out of the targets; renamed test_a_universal2_wheel_covers_the_apple_silicon_mac
 test_the_3x3_median_goes_by_strips_on_a_tall_frame -step 26.57: the median is a numba kernel by parts, renamed test_the_3x3_median_goes_by_parts_on_a_tall_frame, checked against ndimage
+test_the_card_asks_only_what_the_app_uses - step 32, ADR 0021: the card is the maker's sheet; renamed test_the_card_asks_the_makers_sheet_kind_by_kind

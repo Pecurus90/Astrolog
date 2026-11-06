@@ -15,10 +15,12 @@ import random
 
 import pytest
 
+from astrolog.clock import now_iso
 from astrolog.db.connect import connect, create_database
 from astrolog.spine import gear, gear_create
 from astrolog.spine import rigs as corredi
 from astrolog.spine.scan import scan_folder
+from astrolog.vocab.instruments import InstrumentKind
 from astrolog.vocab.software import Software
 from conftest import add_folder, frame_by_file, one, rows, run_normalize, write_light
 
@@ -386,6 +388,29 @@ def test_two_rigs_that_become_one_keep_the_mount_of_the_one_kept(conn, archive):
         )
     }
     assert montate == {_montatura(conn, "EQMod Mount")}
+
+
+def test_two_rigs_that_become_one_keep_the_spacers_of_the_one_kept(conn, archive):
+    """Come la montatura: i distanziali del corredo che resta vincono, non la somma dei due."""
+    vecchia = one(conn, "SELECT id FROM instruments WHERE kind = 'camera' AND name = 'ATR2600M'")
+    tenuta = one(
+        conn, "SELECT id FROM instruments WHERE kind = 'camera' AND name = 'ATR2600M(USB2.0)'"
+    )
+    via = one(conn, "SELECT id FROM rigs WHERE camera_id = ?", (vecchia,))
+    resta = one(conn, "SELECT id FROM rigs WHERE camera_id = ?", (tenuta,))
+    for nome in ("D10", "D5"):
+        gear_create.instrument(conn, InstrumentKind.SPACER, nome, now_iso(), detected=False)
+    corredi.declare_spacers(conn, via, [_spacer(conn, "D10")])
+    corredi.declare_spacers(conn, resta, [_spacer(conn, "D5")])
+    gear.merge_instrument(conn, vecchia, tenuta)
+    run_normalize(conn)
+
+    rimasto = one(conn, "SELECT id FROM rigs WHERE camera_id = ?", (tenuta,))
+    assert corredi.spacers(conn)[rimasto] == [_spacer(conn, "D5")]
+
+
+def _spacer(conn, nome):
+    return one(conn, "SELECT id FROM instruments WHERE kind = 'spacer' AND name = ?", (nome,))
 
 
 def test_the_same_mount_again_sends_nothing_back_to_be_read(conn, archive):

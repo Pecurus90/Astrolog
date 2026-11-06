@@ -13,3 +13,25 @@ class InstrumentKind(StrEnum):
     GUIDE_SCOPE = "guide_scope"
     GUIDE_CAMERA = "guide_camera"
     FOCUSER = "focuser"
+    OAG = "oag"
+    SPACER = "spacer"
+
+
+# The words of the `instruments.optical_design` CHECK (ADR 0021).
+class OpticalDesign(StrEnum):
+    REFRACTOR = "refractor"
+    NEWTONIAN = "newtonian"
+    SCT = "sct"
+    RC = "rc"
+    MAKSUTOV = "maksutov"
+    CAMERA_LENS = "camera_lens"
+    OTHER = "other"
+
+
+# The words of the `filter_size` CHECKs, wheel and filter alike (ADR 0021).
+class FilterSize(StrEnum):
+    INCH_1_25 = "1.25in"
+    MM_31 = "31mm"
+    MM_36 = "36mm"
+    INCH_2 = "2in"
+    MM_50_SQUARE = "50mm_square"

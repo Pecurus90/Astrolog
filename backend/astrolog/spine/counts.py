@@ -12,16 +12,21 @@ from ..vocab.instruments import InstrumentKind
 # a new kind be created but never renamed, so it is reborn as a duplicate.
 ON_THE_FRAME = (InstrumentKind.FILTER_WHEEL, InstrumentKind.FOCUSER, InstrumentKind.GUIDE_CAMERA)
 # Kinds no capture software writes: on the frame only by the user's choice on its rig.
-CHOSEN_ONLY = (InstrumentKind.REDUCER, InstrumentKind.GUIDE_SCOPE)
+CHOSEN_ONLY = (InstrumentKind.REDUCER, InstrumentKind.GUIDE_SCOPE, InstrumentKind.OAG)
 # Kinds the frame carries in a column of its own; forgetting one where hours are tied or a piece is
 # detached makes a merge crash.
 CARRIED = (*ON_THE_FRAME, InstrumentKind.MOUNT, *CHOSEN_ONLY)
 
 
+# A spacer no frame carries: it reaches the frames of the rigs that declare it (`rig_spacers`).
+# A row value against the whole table, not a sub-select searched per (frame, piece).
+_SPACERS = " OR (f.rig_id, i.id) IN (SELECT rig_id, piece_id FROM rig_spacers)"
+
+
 def _piece(through_rigs: str) -> str:
     """A frame reaches a piece through its rig, which depends on the caller's `FROM`, or through
     the columns it carries, which never change."""
-    return "(" + through_rigs + "".join(f" OR f.{k}_id = i.id" for k in CARRIED) + ")"
+    return "(" + through_rigs + "".join(f" OR f.{k}_id = i.id" for k in CARRIED) + _SPACERS + ")"
 
 
 # For callers with `rigs g` already joined: the same link, without a correlated sub-select per pair.
@@ -40,6 +45,10 @@ PIECE_FRAMES = " UNION ".join(
         f"SELECT f.{k}_id AS piece, f.id AS frame FROM frames f"  # noqa: S608 - our kinds
         f" WHERE f.{k}_id IS NOT NULL"
         for k in CARRIED
+    ]
+    + [
+        "SELECT s.piece_id AS piece, f.id AS frame FROM frames f"
+        " JOIN rig_spacers s ON s.rig_id = f.rig_id"
     ]
 )
 

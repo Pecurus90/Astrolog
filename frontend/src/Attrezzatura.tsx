@@ -26,6 +26,8 @@ const TITOLO: Record<Pezzo["kind"], Chiave> = {
   guide_scope: "gear.kind.guide_scope",
   guide_camera: "gear.kind.guide_camera",
   focuser: "gear.kind.focuser",
+  oag: "gear.kind.oag",
+  spacer: "gear.kind.spacer",
 }
 
 // L'ordine in cui si guardano: prima cio' che fa la foto, poi cio' che la tiene ferma, poi il

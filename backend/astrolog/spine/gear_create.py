@@ -47,17 +47,15 @@ class SpellingTakenError(ValueError):
     """That name is already a spelling of another filter of yours: the scan takes it there."""
 
 
-def filter_declared(  # noqa: PLR0913
+def filter_declared(
     conn: sqlite3.Connection,
     name: str,
     bands: Sequence[Mapping[str, Any]],
     now: str,
-    *,
-    brand: str | None = None,
-    model: str | None = None,
+    card: Mapping[str, Any] | None = None,
 ) -> int:
-    """A name the vocabulary turns into another (`L` -> `Lum`) is learnt as a rename, read after the
-    colour, so colour frames stay OSC. A taken name is refused: a twin would split the hours."""
+    """A vocabulary rename (`L` -> `Lum`) is learnt after the colour, so colour frames stay OSC; a
+    taken name is refused. `card` is brand, model and sheet (`gear.FILTER_FIELDS`)."""
     mono = normalize_filter(name, bayer=False)
     for spelling in {name, mono} - {None}:
         taken = declarations.alias_target(conn, "filter", normalize_header_value(spelling))
@@ -66,8 +64,8 @@ def filter_declared(  # noqa: PLR0913
     if mono and mono != name and filter_id_by_name(conn, mono) is not None:
         raise SpellingTakenError(f"{name} e' il tuo {mono}")
     filter_id = create_filter(conn, name, Passband.UNKNOWN, now)
-    card = {k: v for k, v in (("brand", brand), ("model", model)) if v}
-    gear.declare_filter(conn, filter_id, card, bands=bands, now=now)
+    written = {k: v for k, v in (card or {}).items() if v is not None and v != ""}
+    gear.declare_filter(conn, filter_id, written, bands=bands, now=now)
     if mono and mono != name:
         declarations.learn(conn, "filter", mono, name, now)
     return filter_id

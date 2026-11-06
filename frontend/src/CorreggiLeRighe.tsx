@@ -2,7 +2,7 @@ import { type ReactNode, useState } from "react"
 
 import { Campo } from "./Campo"
 import { Modulo, NomeDelPezzo, con, useScrittura } from "./ModuloDelGesto"
-import { CampoDellaScheda } from "./SchedaDelPezzo"
+import { CampoDellaScheda, sulModulo } from "./SchedaDelPezzo"
 import { TendinaDiScelta } from "./TendinaDiScelta"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
@@ -107,15 +107,17 @@ export function CorreggiIlPezzo({
       }
       onChiudi={onChiudi}
       campi={(scritta, cambia) =>
-        campi.map((campo) => (
-          <CampoDellaScheda
-            key={campo}
-            id={`${base}-${campo}`}
-            campo={campo}
-            valore={scritta[campo] ?? pezzo[campo]}
-            onValore={(v) => cambia(campo, v)}
-          />
-        ))
+        campi
+          .filter(sulModulo)
+          .map((campo) => (
+            <CampoDellaScheda
+              key={campo}
+              id={`${base}-${campo}`}
+              campo={campo}
+              valore={scritta[campo] ?? pezzo[campo]}
+              onValore={(v) => cambia(campo, v)}
+            />
+          ))
       }
     />
   )

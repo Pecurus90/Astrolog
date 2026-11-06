@@ -200,7 +200,12 @@ forbidden_modules = ["astrolog.spine.mosaic", "astrolog.spine.mosaic_geometry", 
 name = "L'Attrezzatura legge l'uso scritto: niente conti in lettura"
 type = "forbidden"
 source_modules = ["astrolog.spine.inventory", "astrolog.api.gear"]
-forbidden_modules = ["astrolog.spine.counts", "astrolog.spine.gear_usage"]
+forbidden_modules = [
+  "astrolog.spine.counts",
+  "astrolog.spine.gear_usage",
+  "astrolog.spine.rig_numbers",
+  "astrolog.spine.gear_numbers",
+]
 allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]

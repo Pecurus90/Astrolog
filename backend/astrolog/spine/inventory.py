@@ -49,12 +49,26 @@ ORDER BY p.rig_id, p.position
 """
 
 
+_NUMBERS = "SELECT subject_id, numbers_json FROM gear_numbers WHERE subject = ?"
+
+
+def _numbers(conn: sqlite3.Connection, subject: str) -> dict[int, Any]:
+    """What `gear_numbers` wrote: a row not yet written reads as none, never recomputed here."""
+    return {r[0]: json.loads(r[1]) for r in conn.execute(_NUMBERS, (subject,))}
+
+
 def instruments(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     # A camera's colour and pixel the user writes among the declarations, not in the column, which
     # belongs to the files: the column alone would show what the files say over the user.
     declared = gear.camera_specs(conn)
+    numbers = _numbers(conn, "instrument")
     return [
-        {**_row(r), **declared.get(r["id"], {}), "no_hours": no_hours(r)}
+        {
+            **_row(r),
+            **declared.get(r["id"], {}),
+            "no_hours": no_hours(r),
+            "numbers": numbers.get(r["id"], {}),
+        }
         for r in conn.execute(_INSTRUMENTS).fetchall()
     ]
 
@@ -71,6 +85,7 @@ def no_hours(r: sqlite3.Row) -> str | None:
 
 def rigs(conn: sqlite3.Connection) -> list[dict[str, Any]]:
     names = gear_rigs.rig_names(conn)
+    numbers = _numbers(conn, "rig")
     parts: dict[int, list[dict[str, Any]]] = {}
     for p in conn.execute(_PARTS):
         # a piece merged away since the count has no name until the next one: left out, not blank
@@ -82,6 +97,7 @@ def rigs(conn: sqlite3.Connection) -> list[dict[str, Any]]:
             **_row(r),
             "name": names.get(gear_rigs.decl_key(r)),
             "parts": parts.get(r["id"], []),
+            "numbers": numbers.get(r["id"]),
         }
         for r in conn.execute(_RIGS).fetchall()
     ]

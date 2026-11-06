@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 332; senza fonte: 1.
-Fonti: C norma: 170; U usanza: 2; D metodo: 24; M misura: 22; P decisione: 35; T tecnico: 81.
+Valori: 336; senza fonte: 1.
+Fonti: C norma: 172; U usanza: 3; D metodo: 24; M misura: 22; P decisione: 36; T tecnico: 81.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -667,6 +667,15 @@ Fonti: C norma: 170; U usanza: 2; D metodo: 24; M misura: 22; P decisione: 35; T
 | simbolo | valore | fonte |
 |---|---|---|
 | MARK_WEIGHT | `{None: 0, RewriteMark.REWRITTEN: 1, RewriteMark.CALIBRATED: 2}` | P docs/domini/glossario.md |
+
+### spine/rig_numbers.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| SEEING_PER_SCALE | `(2.0, 3.0)` | C astronomy.tools/calculators/ccd_suitability: Nyquist, 0.67-2"/px with 2-4" seeing |
+| GUIDE_SCALE_RANGE | `(0.5, 4.0)` | U Waddington, PHD2: "preferred range is roughly between 0.5 and 4 arc-sec/px", 2022 |
+| DAWES_ARCSEC_MM | `116.0` | C Dawes limit, astronomy.tools/calculators/telescope_capabilities: 116 / aperture mm |
+| FULL_LOAD_PERCENT | `100.0` | P ADR 0021 |
 
 ### spine/scan.py
 

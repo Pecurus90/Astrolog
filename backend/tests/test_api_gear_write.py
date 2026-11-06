@@ -275,15 +275,18 @@ def test_a_measure_of_zero_is_not_a_measure(vuoto):
     assert crea(vuoto, kind="optics", name="Zero", focal_mm=0).status_code == 422
 
 
-# I campi che lo schema **non** ferma: i suoi quattro CHECK coprono colore, portata, slot e
-# fattore di riduzione, e basta. Questi quattro passerebbero, e la riga li stamperebbe.
-SENZA_CHECK = {"aperture_mm": 130.0, "focal_mm": 900.0, "pixel_size_um": 3.8, "backfocus_mm": 55.0}
+# Campi che lo schema **non** ferma: i suoi CHECK coprono colore, schema ottico, raffreddamento,
+# portata, slot, prisma e fattore, e basta. Questi passerebbero, e la riga li stamperebbe.
+SENZA_CHECK = {
+    "aperture_mm": 130.0, "focal_mm": 900.0, "pixel_size_um": 3.8,
+    "required_backfocus_mm": 55.0, "thickness_mm": 20.0,
+}  # fmt: skip
 
 
 @pytest.mark.parametrize(
     ("genere", "campo", "valore"),
     [
-        # i quattro che lo schema NON ferma, su una montatura che non li ha
+        # quelli che lo schema NON ferma, su una montatura che non li ha
         *(("mount", campo, valore) for campo, valore in SENZA_CHECK.items()),
         # e uno che lo schema ferma, per controllare che la guardia arrivi prima del database
         ("optics", "payload_kg", 20.0),

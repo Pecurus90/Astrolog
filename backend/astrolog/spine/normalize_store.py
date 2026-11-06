@@ -29,13 +29,13 @@ def none_filter_id(conn: sqlite3.Connection) -> int | None:
 # One row per camera and per what its files say. Every camera is there, even with no frames, so it
 # can forget what they said; rewritten copies are not another frame and do not vote.
 _CAMERA_VOTES = """
-SELECT i.id AS camera_id, i.name AS camera, f.pixel_size_um, f.binning,
+SELECT i.id AS camera_id, i.name AS camera, f.pixel_size_um, f.binning, f.naxis1, f.naxis2,
        f.bayer_pattern IS NOT NULL AS color, COUNT(f.id) AS n
 FROM instruments i
 LEFT JOIN rigs r ON r.camera_id = i.id
 LEFT JOIN frames f ON f.rig_id = r.id AND f.copy_of IS NULL AND f.id NOT IN {listed}
 WHERE i.kind = 'camera'
-GROUP BY i.id, f.pixel_size_um, f.binning, color
+GROUP BY i.id, f.pixel_size_um, f.binning, f.naxis1, f.naxis2, color
 """
 
 
@@ -51,13 +51,23 @@ def camera_colours(conn: sqlite3.Connection) -> dict[int, tuple[str, str | None]
     return {r["id"]: (r["name"], r["camera_type"]) for r in rows}
 
 
-def set_camera_specs(
-    conn: sqlite3.Connection, camera_id: int, camera_type: str | None, pixel_size_um: float | None
-) -> None:
+@dataclass(frozen=True, slots=True)
+class CameraFromFiles:
+    """What the files say of a camera's card, `None` where they do not agree or say nothing."""
+
+    camera_type: str | None
+    pixel_size_um: float | None
+    width_px: int | None
+    height_px: int | None
+
+
+def set_camera_specs(conn: sqlite3.Connection, camera_id: int, said: CameraFromFiles) -> None:
+    values = (said.camera_type, said.pixel_size_um, said.width_px, said.height_px)
     conn.execute(
-        "UPDATE instruments SET camera_type = ?, pixel_size_um = ?"
-        " WHERE id = ? AND (camera_type IS NOT ? OR pixel_size_um IS NOT ?)",
-        (camera_type, pixel_size_um, camera_id, camera_type, pixel_size_um),
+        "UPDATE instruments SET camera_type = ?, pixel_size_um = ?, width_px = ?, height_px = ?"
+        " WHERE id = ? AND (camera_type IS NOT ? OR pixel_size_um IS NOT ? OR width_px IS NOT ?"
+        " OR height_px IS NOT ?)",
+        (*values, camera_id, *values),
     )
 
 

@@ -349,6 +349,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/gear/rigs/{rig_id}/spacers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Choose Rig Spacers
+         * @description A rig's spacers, all of them: the list replaces the one there is, empty takes them off.
+         *     Kept among the declarations by name, so they follow a rename. No frame carries a spacer:
+         *     nothing is requeued, and a spacer's hours are its rigs'.
+         *
+         *     409 `worker_busy`; 404 `not_found`; 422 `not_of_kind` for a piece that is not a spacer.
+         */
+        put: operations["choose_rig_spacers"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/gear/filters/{filter_id}": {
         parameters: {
             query?: never;
@@ -1511,6 +1535,22 @@ export interface components {
             objects: number;
         };
         /**
+         * Backfocus
+         * @description The train's thickness minus the required backfocus: negative is short.
+         */
+        Backfocus: {
+            /** Difference Mm */
+            difference_mm: number | null;
+            /** Tolerance Mm */
+            tolerance_mm: number | null;
+            /**
+             * Verdict
+             * @description Only with the maker's tolerance on the card: without it, the difference alone.
+             */
+            verdict: ("exact" | "in_tolerance" | "short" | "long") | null;
+            missing: components["schemas"]["Missing"] | null;
+        };
+        /**
          * BackupCounts
          * @description How many of each thing the file carries, as the offer says them.
          */
@@ -1628,6 +1668,19 @@ export interface components {
             /** Site Id */
             site_id: number;
         };
+        /**
+         * Coverage
+         * @description The sensor's diagonal against the image circle of the reducer, else of the optics.
+         */
+        Coverage: {
+            /** Diagonal Mm */
+            diagonal_mm: number | null;
+            /** Circle Mm */
+            circle_mm: number | null;
+            /** Covers */
+            covers: boolean | null;
+            missing: components["schemas"]["Missing"] | null;
+        };
         /** FileNotRead */
         FileNotRead: {
             /**
@@ -1658,6 +1711,17 @@ export interface components {
          * @description The card of a filter, or "it is the same filter as" (`merge_into`).
          */
         FilterCorrection: {
+            /** Filter Size */
+            filter_size?: ("1.25in" | "31mm" | "36mm" | "2in" | "50mm_square") | null;
+            /** Thickness Mm */
+            thickness_mm?: number | null;
+            /** Mounted */
+            mounted?: boolean | null;
+            /**
+             * Fast Optics
+             * @description Made for fast optics.
+             */
+            fast_optics?: boolean | null;
             /** Name */
             name?: string | null;
             /** Brand */
@@ -1673,6 +1737,17 @@ export interface components {
         };
         /** FilterEdit */
         FilterEdit: {
+            /** Filter Size */
+            filter_size?: ("1.25in" | "31mm" | "36mm" | "2in" | "50mm_square") | null;
+            /** Thickness Mm */
+            thickness_mm?: number | null;
+            /** Mounted */
+            mounted?: boolean | null;
+            /**
+             * Fast Optics
+             * @description Made for fast optics.
+             */
+            fast_optics?: boolean | null;
             /** Name */
             name?: string | null;
             /** Brand */
@@ -1719,6 +1794,17 @@ export interface components {
          *     frames. Brand and model if you want.
          */
         FilterNew: {
+            /** Filter Size */
+            filter_size?: ("1.25in" | "31mm" | "36mm" | "2in" | "50mm_square") | null;
+            /** Thickness Mm */
+            thickness_mm?: number | null;
+            /** Mounted */
+            mounted?: boolean | null;
+            /**
+             * Fast Optics
+             * @description Made for fast optics.
+             */
+            fast_optics?: boolean | null;
             /** Name */
             name: string;
             /** Bands */
@@ -1743,6 +1829,14 @@ export interface components {
             model: string | null;
             /** Bands */
             bands: components["schemas"]["BandOut"][];
+            /** Filter Size */
+            filter_size: ("1.25in" | "31mm" | "36mm" | "2in" | "50mm_square") | null;
+            /** Thickness Mm */
+            thickness_mm: number | null;
+            /** Mounted */
+            mounted: boolean | null;
+            /** Fast Optics */
+            fast_optics: boolean | null;
             /**
              * Frames
              * @description Null until it is counted (`counted`). The same holds for `integration_s`, `untimed` and `nights`.
@@ -1944,7 +2038,7 @@ export interface components {
             /** Id */
             id: number;
             /** Kind */
-            kind: ("optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser") | "filter";
+            kind: ("optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser" | "oag" | "spacer") | "filter";
             /** Name */
             name: string;
             /** Counted */
@@ -2076,7 +2170,7 @@ export interface components {
              * @description Which fields the card of each kind asks for, in reading order. It comes **per kind and not per piece** because it also serves to write one of a kind you do not own yet: there, there is no piece to copy them from. The backend decides them, and the page keeps no second list.
              */
             cards: {
-                [key: string]: ("brand" | "model" | "camera_type" | "pixel_size_um" | "aperture_mm" | "focal_mm" | "reducer_factor" | "weight_kg" | "payload_kg" | "slots" | "notes")[];
+                [key: string]: ("brand" | "model" | "optical_design" | "camera_type" | "sensor" | "pixel_size_um" | "width_px" | "height_px" | "adc_bits" | "cooled" | "cooling_c" | "aperture_mm" | "focal_mm" | "image_circle_mm" | "required_backfocus_mm" | "backfocus_tolerance_mm" | "reducer_factor" | "thickness_mm" | "prism_mm" | "filter_size" | "step_um" | "total_steps" | "weight_kg" | "payload_kg" | "payload_no_cw_kg" | "slots" | "notes")[];
             };
         };
         /**
@@ -2159,6 +2253,17 @@ export interface components {
             /** Run Started */
             run_started: boolean;
         };
+        /** GuideScale */
+        GuideScale: {
+            /** Value */
+            value: number | null;
+            /**
+             * In Range
+             * @description Within 0.5-4 "/px, PHD2's preferred range.
+             */
+            in_range: boolean | null;
+            missing: components["schemas"]["Missing"] | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2193,27 +2298,60 @@ export interface components {
             brand?: string | null;
             /** Model */
             model?: string | null;
+            /** Optical Design */
+            optical_design?: ("refractor" | "newtonian" | "sct" | "rc" | "maksutov" | "camera_lens" | "other") | null;
             /** Camera Type */
             camera_type?: ("mono" | "color") | null;
+            /** Sensor */
+            sensor?: string | null;
             /** Pixel Size Um */
             pixel_size_um?: number | null;
+            /** Width Px */
+            width_px?: number | null;
+            /** Height Px */
+            height_px?: number | null;
+            /** Adc Bits */
+            adc_bits?: number | null;
+            /** Cooled */
+            cooled?: boolean | null;
+            /**
+             * Cooling C
+             * @description Degrees below the ambient: a cooling of zero is no cooling.
+             */
+            cooling_c?: number | null;
             /** Aperture Mm */
             aperture_mm?: number | null;
             /** Focal Mm */
             focal_mm?: number | null;
+            /** Image Circle Mm */
+            image_circle_mm?: number | null;
+            /** Required Backfocus Mm */
+            required_backfocus_mm?: number | null;
+            /** Backfocus Tolerance Mm */
+            backfocus_tolerance_mm?: number | null;
             /** Reducer Factor */
             reducer_factor?: number | null;
+            /** Thickness Mm */
+            thickness_mm?: number | null;
+            /** Prism Mm */
+            prism_mm?: number | null;
+            /** Filter Size */
+            filter_size?: ("1.25in" | "31mm" | "36mm" | "2in" | "50mm_square") | null;
+            /** Step Um */
+            step_um?: number | null;
+            /** Total Steps */
+            total_steps?: number | null;
             /** Weight Kg */
             weight_kg?: number | null;
             /** Payload Kg */
             payload_kg?: number | null;
+            /** Payload No Cw Kg */
+            payload_no_cw_kg?: number | null;
             /**
              * Slots
              * @description A count: zero is not "I don't know", it is no wheel.
              */
             slots?: number | null;
-            /** Backfocus Mm */
-            backfocus_mm?: number | null;
             /** Notes */
             notes?: string | null;
             /** Name */
@@ -2232,34 +2370,67 @@ export interface components {
             brand?: string | null;
             /** Model */
             model?: string | null;
+            /** Optical Design */
+            optical_design?: ("refractor" | "newtonian" | "sct" | "rc" | "maksutov" | "camera_lens" | "other") | null;
             /** Camera Type */
             camera_type?: ("mono" | "color") | null;
+            /** Sensor */
+            sensor?: string | null;
             /** Pixel Size Um */
             pixel_size_um?: number | null;
+            /** Width Px */
+            width_px?: number | null;
+            /** Height Px */
+            height_px?: number | null;
+            /** Adc Bits */
+            adc_bits?: number | null;
+            /** Cooled */
+            cooled?: boolean | null;
+            /**
+             * Cooling C
+             * @description Degrees below the ambient: a cooling of zero is no cooling.
+             */
+            cooling_c?: number | null;
             /** Aperture Mm */
             aperture_mm?: number | null;
             /** Focal Mm */
             focal_mm?: number | null;
+            /** Image Circle Mm */
+            image_circle_mm?: number | null;
+            /** Required Backfocus Mm */
+            required_backfocus_mm?: number | null;
+            /** Backfocus Tolerance Mm */
+            backfocus_tolerance_mm?: number | null;
             /** Reducer Factor */
             reducer_factor?: number | null;
+            /** Thickness Mm */
+            thickness_mm?: number | null;
+            /** Prism Mm */
+            prism_mm?: number | null;
+            /** Filter Size */
+            filter_size?: ("1.25in" | "31mm" | "36mm" | "2in" | "50mm_square") | null;
+            /** Step Um */
+            step_um?: number | null;
+            /** Total Steps */
+            total_steps?: number | null;
             /** Weight Kg */
             weight_kg?: number | null;
             /** Payload Kg */
             payload_kg?: number | null;
+            /** Payload No Cw Kg */
+            payload_no_cw_kg?: number | null;
             /**
              * Slots
              * @description A count: zero is not "I don't know", it is no wheel.
              */
             slots?: number | null;
-            /** Backfocus Mm */
-            backfocus_mm?: number | null;
             /** Notes */
             notes?: string | null;
             /**
              * Kind
              * @enum {string}
              */
-            kind: "optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser";
+            kind: "optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser" | "oag" | "spacer";
             /**
              * Name
              * @description Required here: without a name the piece is nobody.
@@ -2278,15 +2449,19 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser";
+            kind: "optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser" | "oag" | "spacer";
             /** Name */
             name: string;
             /** Brand */
             brand: string | null;
             /** Model */
             model: string | null;
+            /** Optical Design */
+            optical_design: ("refractor" | "newtonian" | "sct" | "rc" | "maksutov" | "camera_lens" | "other") | null;
             /** Camera Type */
             camera_type: ("mono" | "color") | null;
+            /** Sensor */
+            sensor: string | null;
             /** Pixel Size Um */
             pixel_size_um: number | null;
             /**
@@ -2294,22 +2469,52 @@ export interface components {
              * @description Derived from the sky when the files do not say it: in a field of its own, so that whoever shows it says it is derived and does not confuse it with the one from the files or the user.
              */
             pixel_from_sky_um: number | null;
+            /**
+             * Width Px
+             * @description The whole sensor: on a camera the most frequent among its files, the one you write wins. The same holds for `height_px`.
+             */
+            width_px: number | null;
+            /** Height Px */
+            height_px: number | null;
+            /** Adc Bits */
+            adc_bits: number | null;
+            /** Cooled */
+            cooled: boolean | null;
+            /** Cooling C */
+            cooling_c: number | null;
             /** Aperture Mm */
             aperture_mm: number | null;
             /** Focal Mm */
             focal_mm: number | null;
+            /** Image Circle Mm */
+            image_circle_mm: number | null;
+            /** Required Backfocus Mm */
+            required_backfocus_mm: number | null;
+            /** Backfocus Tolerance Mm */
+            backfocus_tolerance_mm: number | null;
             /** Reducer Factor */
             reducer_factor: number | null;
+            /** Thickness Mm */
+            thickness_mm: number | null;
+            /** Prism Mm */
+            prism_mm: number | null;
+            /** Filter Size */
+            filter_size: ("1.25in" | "31mm" | "36mm" | "2in" | "50mm_square") | null;
+            /** Step Um */
+            step_um: number | null;
+            /** Total Steps */
+            total_steps: number | null;
             /** Weight Kg */
             weight_kg: number | null;
             /** Payload Kg */
             payload_kg: number | null;
+            /** Payload No Cw Kg */
+            payload_no_cw_kg: number | null;
             /** Slots */
             slots: number | null;
-            /** Backfocus Mm */
-            backfocus_mm: number | null;
             /** Notes */
             notes: string | null;
+            numbers: components["schemas"]["PieceNumbers"];
             /**
              * Detected
              * @description Detected from the files, or declared by you.
@@ -2343,6 +2548,17 @@ export interface components {
              * @description Why a counted piece has no hours to show: the files do not name that kind, or it is a mount, reducer or guide scope no rig carries yet. `None` when the hours are there.
              */
             no_hours: ("files_silent" | "no_rig") | null;
+        };
+        /** Load */
+        Load: {
+            /**
+             * Percent
+             * @description Of the mount's highest payload.
+             */
+            percent: number | null;
+            /** Within */
+            within: boolean | null;
+            missing: components["schemas"]["Missing"] | null;
         };
         /**
          * LookalikeEdit
@@ -2394,6 +2610,19 @@ export interface components {
             status: "ok" | "removed" | "refused" | "unreachable" | "bad_answer";
             /** Hint */
             hint: string | null;
+        };
+        /** Missing */
+        Missing: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "optics" | "camera" | "mount" | "reducer" | "filter_wheel" | "guide_scope" | "guide_camera" | "focuser" | "oag" | "spacer" | "rig" | "guide";
+            /**
+             * Field
+             * @description Null: the piece itself is missing from the rig.
+             */
+            field: ("brand" | "model" | "optical_design" | "camera_type" | "sensor" | "pixel_size_um" | "width_px" | "height_px" | "adc_bits" | "cooled" | "cooling_c" | "aperture_mm" | "focal_mm" | "image_circle_mm" | "required_backfocus_mm" | "backfocus_tolerance_mm" | "reducer_factor" | "thickness_mm" | "prism_mm" | "filter_size" | "step_um" | "total_steps" | "weight_kg" | "payload_kg" | "payload_no_cw_kg" | "slots" | "notes") | null;
         };
         /** MoonCalendarNightOut */
         MoonCalendarNightOut: {
@@ -2760,6 +2989,12 @@ export interface components {
              */
             arrives_on: string | null;
         };
+        /** Number */
+        Number: {
+            /** Value */
+            value: number | null;
+            missing: components["schemas"]["Missing"] | null;
+        };
         /**
          * ObjectAnswer
          * @description What the user said on a card: a catalog object (`value` is the slug), a written name, or "it
@@ -2874,6 +3109,14 @@ export interface components {
         PathProbe: {
             /** Root Path */
             root_path: string;
+        };
+        /**
+         * PieceNumbers
+         * @description Dawes's resolving power on an optics, the sensor's size on a camera; null on the others.
+         */
+        PieceNumbers: {
+            dawes?: components["schemas"]["Number"] | null;
+            sensor_size?: components["schemas"]["Sides"] | null;
         };
         /** PipelineStatus */
         PipelineStatus: {
@@ -3135,6 +3378,19 @@ export interface components {
             /** Focal Mm */
             focal_mm: number;
         };
+        /** RigNumbers */
+        RigNumbers: {
+            focal_ratio: components["schemas"]["Number"];
+            sampling: components["schemas"]["Sampling"];
+            field: components["schemas"]["Sides"];
+            sensor_size: components["schemas"]["Sides"];
+            coverage: components["schemas"]["Coverage"];
+            guide_scale: components["schemas"]["GuideScale"];
+            /** @description Guide scale over imaging scale, with no verdict. */
+            guide_ratio: components["schemas"]["Number"];
+            backfocus: components["schemas"]["Backfocus"];
+            load: components["schemas"]["Load"];
+        };
         /**
          * RigOnPage
          * @description A rig: how it is made, how much it served, and **how much sky it really frames**.
@@ -3179,9 +3435,11 @@ export interface components {
             height_deg: number | null;
             /**
              * Parts
-             * @description What its frames used and what you chose for it, kind by kind in the card's order (mount, wheel, focuser, guide camera, reducer, guide scope, capture software, filters), each from the most used. A kind no frame names and you did not choose is not listed.
+             * @description What its frames used and what you chose for it, kind by kind in the card's order (mount, wheel, focuser, guide camera, reducer, guide scope, OAG, spacers, capture software, filters), each from the most used. A kind no frame names and you did not choose is not listed.
              */
             parts: components["schemas"]["RigPart"][];
+            /** @description From the cards of its pieces: the chosen part, else the most used. Null only for a rig born after the last write of the numbers. */
+            numbers: components["schemas"]["RigNumbers"] | null;
         };
         /**
          * RigPart
@@ -3192,7 +3450,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "mount" | "filter_wheel" | "focuser" | "guide_camera" | "reducer" | "guide_scope" | "software" | "filter";
+            kind: "mount" | "filter_wheel" | "focuser" | "guide_camera" | "reducer" | "guide_scope" | "oag" | "spacer" | "software" | "filter";
             /**
              * Id
              * @description The instrument, or the filter for `filter`; null for `software`, which is not a piece.
@@ -3219,6 +3477,28 @@ export interface components {
         RigPartChoice: {
             /** Piece Id */
             piece_id: number | null;
+        };
+        /**
+         * RigSpacers
+         * @description The spacers of a rig, all of them: the list replaces the one there is, empty takes them
+         *     off. No file names a spacer, so there is nothing to go back to.
+         */
+        RigSpacers: {
+            /** Piece Ids */
+            piece_ids: number[];
+        };
+        /**
+         * Sampling
+         * @description The scale in "/px, and the seeing it is best for: from 2x to 3x the scale.
+         */
+        Sampling: {
+            /** Value */
+            value: number | null;
+            /** Seeing From */
+            seeing_from: number | null;
+            /** Seeing To */
+            seeing_to: number | null;
+            missing: components["schemas"]["Missing"] | null;
         };
         /**
          * ScanAllStarted
@@ -3454,6 +3734,17 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
+        };
+        /**
+         * Sides
+         * @description Width and height: degrees for the field, millimetres for the sensor.
+         */
+        Sides: {
+            /** Width */
+            width: number | null;
+            /** Height */
+            height: number | null;
+            missing: components["schemas"]["Missing"] | null;
         };
         /**
          * SiteCandidate
@@ -4773,13 +5064,48 @@ export interface operations {
             header?: never;
             path: {
                 rig_id: number;
-                kind: "filter_wheel" | "focuser" | "guide_camera" | "mount" | "reducer" | "guide_scope";
+                kind: "filter_wheel" | "focuser" | "guide_camera" | "mount" | "reducer" | "guide_scope" | "oag";
             };
             cookie?: never;
         };
         requestBody: {
             content: {
                 "application/json": components["schemas"]["RigPartChoice"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GearWritten"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    choose_rig_spacers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rig_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RigSpacers"];
             };
         };
         responses: {

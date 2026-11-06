@@ -129,6 +129,8 @@ export const en = {
   "review.kind.guide_scope": "guide scope",
   "review.kind.guide_camera": "guide camera",
   "review.kind.focuser": "focuser",
+  "review.kind.oag": "off-axis guider",
+  "review.kind.spacer": "spacer",
   "review.card.brand": "Brand",
   "review.card.model": "Model",
   "review.card.camera_type": "Sensor type",

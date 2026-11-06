@@ -15,7 +15,20 @@ import { misura, testo } from "./scritto"
 type CampoScheda = components["schemas"]["GearList"]["cards"][string][number]
 type Colore = NonNullable<components["schemas"]["InstrumentOnPage"]["camera_type"]>
 
-export type { CampoScheda }
+/** I campi della scheda tecnica (ADR 0021) che questa pagina ancora non chiede: le loro parole
+ *  Marco le approva sulla tavola, e arrivano col porting dell'Attrezzatura (passo 33). */
+const AL_PORTING = [
+  "optical_design", "sensor", "width_px", "height_px", "adc_bits", "cooled", "cooling_c",
+  "image_circle_mm", "required_backfocus_mm", "backfocus_tolerance_mm", "thickness_mm", "prism_mm",
+  "filter_size", "step_um", "total_steps", "payload_no_cw_kg",
+] as const satisfies readonly CampoScheda[]
+type CampoSulModulo = Exclude<CampoScheda, (typeof AL_PORTING)[number]>
+
+export type { CampoScheda, CampoSulModulo }
+
+/** Un campo che questo modulo sa scrivere. */
+export const sulModulo = (campo: CampoScheda): campo is CampoSulModulo =>
+  !(AL_PORTING as readonly CampoScheda[]).includes(campo)
 
 export function CampoDellaScheda({
   id,
@@ -24,7 +37,7 @@ export function CampoDellaScheda({
   onValore,
 }: {
   id: string
-  campo: CampoScheda
+  campo: CampoSulModulo
   valore: string | number | null | undefined
   onValore: (v: string | number | undefined) => void
 }) {
@@ -88,13 +101,15 @@ export const GENERE: Record<components["schemas"]["InstrumentOnPage"]["kind"], C
   guide_scope: "review.kind.guide_scope",
   guide_camera: "review.kind.guide_camera",
   focuser: "review.kind.focuser",
+  oag: "review.kind.oag",
+  spacer: "review.kind.spacer",
 }
 
 /** Ogni campo della scheda: la sua parola e **che forma ha** -- un testo, una misura (positiva),
  *  un conto (intero) o il colore. Un `Record` sul tipo generato: il giorno che il backend aggiunge
  *  un campo, qui non compila finche' qualcuno non dice come si scrive -- invece di comparire, in
  *  silenzio, come un numero. */
-const CAMPI: Record<CampoScheda, { etichetta: Chiave; forma: "testo" | "misura" | "conto" | "colore" }> =
+const CAMPI: Record<CampoSulModulo, { etichetta: Chiave; forma: "testo" | "misura" | "conto" | "colore" }> =
   {
     brand: { etichetta: "review.card.brand", forma: "testo" },
     model: { etichetta: "review.card.model", forma: "testo" },

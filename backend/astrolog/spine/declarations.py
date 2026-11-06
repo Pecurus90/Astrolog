@@ -137,7 +137,7 @@ def instrument_key(kind: InstrumentKind, name: str) -> str:
 
 # Camera fields the files can also tell: the user's word lives here, since the column is detected
 # and the spine recomputes it.
-CAMERA_SPECS = ("camera_type", "pixel_size_um")
+CAMERA_SPECS = ("camera_type", "pixel_size_um", "width_px", "height_px")
 
 
 class CameraType(StrEnum):

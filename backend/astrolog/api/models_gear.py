@@ -5,8 +5,9 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from .models_review import BandOut, CameraType, CardField, InstrumentKind
-from .models_review_apply import BandIn
+from .models_gear_numbers import PieceNumbers, RigNumbers
+from .models_review import BandOut, CameraType, CardField, FilterSize, InstrumentKind, OpticalDesign
+from .models_review_apply import BandIn, FilterSpecs
 
 
 class InstrumentCardIn(BaseModel):
@@ -23,17 +24,34 @@ class InstrumentCardIn(BaseModel):
 
     brand: str | None = None
     model: str | None = None
+    optical_design: OpticalDesign | None = None
     camera_type: CameraType | None = None
+    sensor: str | None = None
     pixel_size_um: float | None = Field(None, gt=0)
+    width_px: int | None = Field(None, gt=0)
+    height_px: int | None = Field(None, gt=0)
+    adc_bits: int | None = Field(None, gt=0)
+    cooled: bool | None = None
+    cooling_c: float | None = Field(
+        None, gt=0, description="Degrees below the ambient: a cooling of zero is no cooling."
+    )
     aperture_mm: float | None = Field(None, gt=0)
     focal_mm: float | None = Field(None, gt=0)
+    image_circle_mm: float | None = Field(None, gt=0)
+    required_backfocus_mm: float | None = Field(None, gt=0)
+    backfocus_tolerance_mm: float | None = Field(None, gt=0)
     reducer_factor: float | None = Field(None, gt=0)
+    thickness_mm: float | None = Field(None, gt=0)
+    prism_mm: float | None = Field(None, gt=0)
+    filter_size: FilterSize | None = None
+    step_um: float | None = Field(None, gt=0)
+    total_steps: int | None = Field(None, gt=0)
     weight_kg: float | None = Field(None, gt=0)
     payload_kg: float | None = Field(None, gt=0)
+    payload_no_cw_kg: float | None = Field(None, gt=0)
     slots: int | None = Field(
         None, gt=0, description='A count: zero is not "I don\'t know", it is no wheel.'
     )
-    backfocus_mm: float | None = Field(None, gt=0)
     notes: str | None = None
 
 
@@ -52,7 +70,7 @@ class RigNaming(BaseModel):
     name: str = Field(min_length=1)
 
 
-class FilterNew(BaseModel):
+class FilterNew(FilterSpecs):
     """A filter you write: the name, and the band it lets through -- it is what unblocks the
     frames. Brand and model if you want."""
 
@@ -71,7 +89,9 @@ class RigNew(BaseModel):
     focal_mm: float = Field(gt=0)
 
 
-ChosenKind = Literal["filter_wheel", "focuser", "guide_camera", "mount", "reducer", "guide_scope"]
+ChosenKind = Literal[
+    "filter_wheel", "focuser", "guide_camera", "mount", "reducer", "guide_scope", "oag"
+]  # fmt: skip
 
 
 class RigPartChoice(BaseModel):
@@ -79,6 +99,13 @@ class RigPartChoice(BaseModel):
     the files say."""
 
     piece_id: int | None
+
+
+class RigSpacers(BaseModel):
+    """The spacers of a rig, all of them: the list replaces the one there is, empty takes them
+    off. No file names a spacer, so there is nothing to go back to."""
+
+    piece_ids: list[int]
 
 
 class GearObject(BaseModel):
@@ -99,21 +126,40 @@ class InstrumentOnPage(BaseModel):
     name: str
     brand: str | None
     model: str | None
+    optical_design: OpticalDesign | None
     camera_type: CameraType | None
+    sensor: str | None
     pixel_size_um: float | None
     pixel_from_sky_um: float | None = Field(
         description="Derived from the sky when the files do not say it: in a field of its own, so "
         "that whoever shows it says it is derived and does not confuse it with the one from the "
         "files or the user."
     )
+    width_px: int | None = Field(
+        description="The whole sensor: on a camera the most frequent among its files, the one "
+        "you write wins. The same holds for `height_px`."
+    )
+    height_px: int | None
+    adc_bits: int | None
+    cooled: bool | None
+    cooling_c: float | None
     aperture_mm: float | None
     focal_mm: float | None
+    image_circle_mm: float | None
+    required_backfocus_mm: float | None
+    backfocus_tolerance_mm: float | None
     reducer_factor: float | None
+    thickness_mm: float | None
+    prism_mm: float | None
+    filter_size: FilterSize | None
+    step_um: float | None
+    total_steps: int | None
     weight_kg: float | None
     payload_kg: float | None
+    payload_no_cw_kg: float | None
     slots: int | None
-    backfocus_mm: float | None
     notes: str | None
+    numbers: PieceNumbers
     detected: bool = Field(description="Detected from the files, or declared by you.")
     mergeable_into: list[int] = Field(
         description="The pieces it can be merged into: only those the spine accepts."
@@ -149,6 +195,8 @@ class RigPart(BaseModel):
         "guide_camera",
         "reducer",
         "guide_scope",
+        "oag",
+        "spacer",
         "software",
         "filter",
     ]
@@ -190,9 +238,13 @@ class RigOnPage(BaseModel):
     height_deg: float | None
     parts: list[RigPart] = Field(
         description="What its frames used and what you chose for it, kind by kind in the card's "
-        "order (mount, wheel, focuser, guide camera, reducer, guide scope, capture software, "
-        "filters), each from the most used. A kind no frame names and you did not choose is not "
-        "listed."
+        "order (mount, wheel, focuser, guide camera, reducer, guide scope, OAG, spacers, capture "
+        "software, filters), each from the most used. A kind no frame names and you did not "
+        "choose is not listed."
+    )
+    numbers: RigNumbers | None = Field(
+        description="From the cards of its pieces: the chosen part, else the most used. Null "
+        "only for a rig born after the last write of the numbers."
     )
 
 
@@ -204,6 +256,10 @@ class FilterOnPage(BaseModel):
     brand: str | None
     model: str | None
     bands: list[BandOut]
+    filter_size: FilterSize | None
+    thickness_mm: float | None
+    mounted: bool | None
+    fast_optics: bool | None
     frames: int | None = Field(
         description="Null until it is counted (`counted`). The same holds for `integration_s`, "
         "`untimed` and `nights`."
