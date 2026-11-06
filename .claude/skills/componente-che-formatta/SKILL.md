@@ -35,7 +35,8 @@ natura delle voci, non per lo schermo: elenco a comparsa se vengono dall'archivi
 segmentato solo per voci poche e fisse.
 
 **La pagina nasce semplice**: struttura, testi e dati veri, senza grafica
--- nessun mock da trascrivere, nessun pack di `old/design/`.
+-- nessun mock da trascrivere, nessun pack di `old/design/`. Una pagina con una tavola di
+Claude Design in `handoff/design/` invece la segue, aspetto e funzioni: ricetta `/porta-tavola`.
 La veste **non la mette chi costruisce la pagina**: gliela mette la fetta della veste, coi
 mattoni del design system, cosi' due pagine sorelle si somigliano perche' condividono i
 mattoni e non perche' sono state copiate dallo stesso mock.

@@ -36,8 +36,8 @@ fino al 21/11/2026: un'idea di metodo va in una Issue `metodo`, non qui.
 - **Prima il rosso**: CI, Nightly, Issue `difetto`, avvisi di sicurezza vengono prima del passo
   del piano. **Fatto vuol dire verde su GitHub**, non in locale: dopo il push si guarda la CI.
 - **Ogni modifica al codice passa da una ricetta** invocata col suo nome: `/costruisci`,
-  `/ripara`, `/rifattorizza`, `/riordina`, `/rivedi`. Un giro di revisione, al massimo una
-  verifica; blocca solo un rilievo con prova; cio' che resta aperto ferma il lavoro.
+  `/ripara`, `/rifattorizza`, `/riordina`, `/rivedi`, `/porta-tavola`. Un giro di revisione,
+  al massimo una verifica; blocca solo un rilievo con prova; cio' che resta aperto ferma il lavoro.
 - **Uno scrive, gli altri leggono**: in parallelo solo `esploratore` (ricognizione) e `revisore`.
   Due agenti non scrivono mai insieme sugli stessi file, e nessuno lancia pre-commit mentre un
   altro scrive (mette da parte le modifiche non salvate).
