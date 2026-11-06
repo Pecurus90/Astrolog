@@ -4,21 +4,16 @@ Importing the package switches off astropy's network access, deliberately for ev
 from astropy.coordinates import solar_system_ephemeris
 from astropy.utils import iers
 
+from ..twilight import ASTRO_DEG as ASTRO_DEG  # read here by the ephemeris and its callers
+from ..twilight import CIVIL_DEG as CIVIL_DEG
+from ..twilight import NAUTICAL_DEG as NAUTICAL_DEG
+from ..twilight import RISESET_DEG as RISESET_DEG
+
 # Both together: without auto_max_age astropy raises on a future date instead of using its
 # bundled tables, and the app runs on a NAS or a laptop with no network.
 iers.conf.auto_download = False
 iers.conf.auto_max_age = None
 solar_system_ephemeris.set("builtin")
-
-# Rise/set altitude: refraction 34' + apparent radius 16' = 50', for the Moon too.
-# [C USNO RST_defs: Sun's centre at zenith distance 90.8333]
-RISESET_DEG = -0.833
-
-# Geometric altitude of the Sun's centre at the end of each twilight.
-# [C USNO https://aa.usno.navy.mil/faq/RST_defs: 6, 12, 18 degrees below the horizon]
-CIVIL_DEG = -6.0
-NAUTICAL_DEG = -12.0  # [C USNO]
-ASTRO_DEG = -18.0  # [C USNO]
 
 # Crossings are interpolated, so the step sets how dense the search is, not the error. [T]
 GRID_STEP_MIN = 3

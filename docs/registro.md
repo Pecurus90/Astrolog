@@ -6,8 +6,8 @@ U usanza di comunita' (forum, blog, un solo operatore: reale ma debole), D metod
 un'altra disciplina applicato ai nostri dati (statistica, fisica...), M misura nostra,
 P decisione di Marco, T tecnico (non una regola).
 
-Valori: 333; senza fonte: 1.
-Fonti: C norma: 171; U usanza: 2; D metodo: 24; M misura: 22; P decisione: 35; T tecnico: 81.
+Valori: 332; senza fonte: 1.
+Fonti: C norma: 170; U usanza: 2; D metodo: 24; M misura: 22; P decisione: 35; T tecnico: 81.
 
 ## Valori e tabelle nel codice (`backend/astrolog`)
 
@@ -151,10 +151,6 @@ Fonti: C norma: 171; U usanza: 2; D metodo: 24; M misura: 22; P decisione: 35; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| RISESET_DEG | `-0.833` | C USNO RST_defs: Sun's centre at zenith distance 90.8333 |
-| CIVIL_DEG | `-6.0` | C USNO https://aa.usno.navy.mil/faq/RST_defs: 6, 12, 18 degrees below the horizon |
-| NAUTICAL_DEG | `-12.0` | C USNO |
-| ASTRO_DEG | `-18.0` | C USNO |
 | GRID_STEP_MIN | `3` | T |
 | TRACK_STEP_MIN | `15` | T |
 | CALENDAR_STEP_MIN | `5` | T |
@@ -433,7 +429,6 @@ Fonti: C norma: 171; U usanza: 2; D metodo: 24; M misura: 22; P decisione: 35; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| SUN_BELOW_DEG | `-18.0` | C Bara et al. 2021, arXiv 2104.10616 |
 | MOON_BELOW_DEG | `-5.0` | C Bara et al. 2021, arXiv 2104.10616 |
 | WINDOW_MONTHS | `12` | D ADR 0039 |
 | MIN_MONTHS | `4` | D ADR 0039: "6 months" skews up to 0.13 mag |
@@ -698,6 +693,15 @@ Fonti: C norma: 171; U usanza: 2; D metodo: 24; M misura: 22; P decisione: 35; T
 | simbolo | valore | fonte |
 |---|---|---|
 | OWNER_ONLY | `0o600` | C POSIX sys/stat.h: S_IRUSR \| S_IWUSR |
+
+### twilight.py
+
+| simbolo | valore | fonte |
+|---|---|---|
+| RISESET_DEG | `-0.833` | C USNO RST_defs: Sun's centre at zenith distance 90.8333 |
+| CIVIL_DEG | `-6.0` | C USNO https://aa.usno.navy.mil/faq/RST_defs: 6, 12, 18 degrees below the horizon |
+| NAUTICAL_DEG | `-12.0` | C USNO |
+| ASTRO_DEG | `-18.0` | C USNO |
 
 ### units.py
 

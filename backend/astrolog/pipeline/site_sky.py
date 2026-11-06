@@ -12,13 +12,13 @@ import numpy as np
 from ..clock import night_date
 from ..db.replace_table import replace_rows
 from ..site_of import known_sites, site_at
+from ..twilight import ASTRO_DEG
 from ..units import hundredths
 from .frame_rules import LOW_EXTENDED_DEG
 from .sqm_shots import SQM_SHOTS
 
-# "No-Sun no-Moon": "Sun below -18 deg and Moon below -5 deg"; Moon light still reaches the sky
-# just under the horizon
-SUN_BELOW_DEG = -18.0  # [C Bara et al. 2021, arXiv 2104.10616]
+# "No-Sun no-Moon": "Sun below -18 deg and Moon below -5 deg" (Sun: astronomical night,
+# `twilight.ASTRO_DEG`); Moon light still reaches the sky just under the horizon
 MOON_BELOW_DEG = -5.0  # [C Bara et al. 2021, arXiv 2104.10616]
 WINDOW_MONTHS = 12  # [D ADR 0039]
 # Enough to separate the level from the season [D ADR 0039: "6 months" skews up to 0.13 mag]
@@ -103,7 +103,7 @@ def _nights_per_site(conn: sqlite3.Connection) -> dict[int, dict[str, list[float
     known = known_sites(conn)
     places: dict[tuple[float, float], sqlite3.Row | None] = {}
     per_site: dict[int, dict[str, list[float]]] = {}
-    limits = {"sun": SUN_BELOW_DEG, "moon": MOON_BELOW_DEG, "low": LOW_EXTENDED_DEG}
+    limits = {"sun": ASTRO_DEG, "moon": MOON_BELOW_DEG, "low": LOW_EXTENDED_DEG}
     for row in conn.execute(GOOD, limits):
         point = (row["site_lat_deg"], row["site_lon_deg"])
         if point not in places:
