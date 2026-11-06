@@ -31,8 +31,9 @@ dentro.
    media pesata sul buio; verdetto 70 / 40. Escono i pesi 35/30/12/9/9/5 e «limita X». Il seeing e'
    **fuori dal voto**: niente «senza seeing» (Notti, Statistiche); dove manca l'aerosol, «senza
    aerosol». Dove: Dashboard, Meteo, Notti, Statistiche, Sistema («Qualita' della notte»).
-4. **Cielo in classi okta** (Marco 24/10, glossario): le parole del cielo vengono dall'app (sereno,
-   poco nuvoloso, ...), non frasi scritte a mano. Dove: Notti (riga 202), Dashboard prossime notti,
+4. **Cielo in classi okta** (Marco 24/10, glossario): quattro parole del cielo dall'app: Sereno /
+   Nuvole sparse / Nuvoloso / Coperto (non «poco, parzialmente, molto nuvoloso», classi superate),
+   non frasi scritte a mano. Dove: Notti (riga 202), Dashboard prossime notti,
    Meteo («nuvole al 38 %» -> la classe, il numero accanto).
 5. **Condensa e raffiche**: la condensa non dice mai «non adatto» (ADR 0034; in arrivo il modello
    di Beysens); raffiche a 25 km/h, non 29. Dashboard e Meteo.
