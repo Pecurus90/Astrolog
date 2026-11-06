@@ -579,6 +579,6 @@ def test_the_site_out_of_range_is_dropped_never_corrected():
 
 def test_the_measurements_a_header_writes_are_not_read():
     """FWHM, HFR, HFD, SNR e le stelle che un programma scrive nell'header non si leggono: si
-    misurano (`docs/domini/spina.md`). Una chiave di misura fra quelle lette rompe questa prova."""
+    misurano (`spina-normalize.md`). Una chiave di misura fra quelle lette rompe questa prova."""
     letti = {key for keys in header_keys.KEYS.values() for key in keys}
     assert not letti & {"FWHM", "HFR", "HFD", "SNR", "STARCOUNT", "STARS"}

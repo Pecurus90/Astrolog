@@ -2,7 +2,7 @@
 
 Due regole, e ognuna ha qui la sua prova:
 
-- **i campi di una scheda si chiedono solo se l'app ci fa qualcosa** (`docs/domini/spina.md`,
+- **i campi di una scheda si chiedono solo se l'app ci fa qualcosa** (`spina-normalize.md`,
   *Le schede*), e quali siano per ogni tipo lo decide il backend: la pagina li mostra e basta;
 - **si unisce solo dentro lo stesso tipo**, e solo dove un tipo ha grafie da unire.
 

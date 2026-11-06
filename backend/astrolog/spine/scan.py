@@ -25,7 +25,7 @@ from .stage_run import Event, receipt
 
 log = logging.getLogger(__name__)
 
-DEFAULT_MIN_AGE_S = 30  # [P docs/domini/spina.md] younger file still being written: next time
+DEFAULT_MIN_AGE_S = 30  # [P docs/domini/spina-scan.md] younger file still being written: next time
 
 
 class _RootLostError(Exception):

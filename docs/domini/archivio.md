@@ -4,7 +4,7 @@
 conto: gli oggetti, con quanti frame, quante ore e con che filtri, in due viste -- **a carte** e
 a colonne. Le parole
 vengono da [`glossario.md`](glossario.md); come si legge il nome di un oggetto sta in
-[`spina.md`](spina.md); dove sta la voce nella barra, in [`navigazione.md`](navigazione.md).
+[`spina-identify.md`](spina-identify.md); dove sta la voce nella barra, in [`navigazione.md`](navigazione.md).
 
 ## Cosa chiede l'utente
 

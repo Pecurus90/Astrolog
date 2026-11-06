@@ -312,12 +312,12 @@ def test_the_user_answer_is_in_the_vocabulary_but_no_branch_writes_it():
 
 @pytest.mark.sorgente
 def test_the_branches_are_the_ones_the_contract_lists():
-    """La colonna `branch` di `docs/domini/spina.md` e questa costante sono lo stesso elenco.
+    """La colonna `branch` di `spina-identify.md` e questa costante sono lo stesso elenco.
 
     I due vocabolari chiusi hanno la loro guardia contro il CHECK dello schema; la tabella delle
     situazioni non ne aveva nessuna, e poteva divergere in silenzio dal codice -- che e' proprio
     il difetto contro cui quelle guardie esistono."""
-    contratto = Path(__file__).resolve().parents[2] / "docs" / "domini" / "spina.md"
+    contratto = Path(__file__).resolve().parents[2] / "docs" / "domini" / "spina-identify.md"
     testo = contratto.read_text(encoding="utf-8")
     tabella = testo[testo.index("| il nome dice | il cielo dice |") :]
     tabella = tabella[: tabella.index("\n\n")]

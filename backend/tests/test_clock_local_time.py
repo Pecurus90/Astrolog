@@ -1,5 +1,5 @@
 """Il tempo di `astrolog.clock`: quanto e' durata una corsa e la mezzanotte di una notte.
-`DATE-OBS` e' UTC, e la regola la dice il contratto, `docs/domini/spina.md`.
+`DATE-OBS` e' UTC, e la regola la dice il contratto, `docs/domini/spina-group.md`.
 """
 
 from astrolog.clock import elapsed_s, midnight_of, night_date

@@ -64,7 +64,7 @@ PENDING = (  # plain file before its fpack copy: ASTAP before astap.FZ_SINCE rea
 )
 
 # Measured centre of a solved shot of the same object, never of a session: two shots without
-# OBJECT are not sisters (docs/domini/spina.md, "indizio").
+# OBJECT are not sisters (docs/domini/spina-solve.md, "indizio").
 SISTER_POINTING = (
     "SELECT s.ra_deg, s.dec_deg FROM pipeline_solutions AS s"
     " JOIN pipeline_cards AS c ON c.file_id = s.file_id"

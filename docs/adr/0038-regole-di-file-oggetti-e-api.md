@@ -19,7 +19,7 @@ nessun ASTAP lanciato), riferimento il nome scritto dall'utente; validazione a o
   permessi 0600 da POSIX; codici HTTP da RFC 9110 e 6585. Il resto (lotti, tetti di memoria,
   valori di default degli elenchi) e' tecnico.
 - **Decisioni gia' prese, qui con la loro casa**: impronta di 64 KB e file "fresco" sotto 30 s
-  (`spina.md`); campioni di 5 file (ADR 0017); stima del tempo che tace il primo minuto
+  (`spina.md`, `spina-scan.md`); campioni di 5 file (ADR 0017); stima del tempo che tace il primo minuto
   (`navigazione.md`); peso minimo del pannello 25% (`mosaico.md`); ricevute coi primi 100 percorsi
   e le 100 chiavi sconosciute piu' frequenti (Marco, quinto audit della scansione).
 - **Oggetto principale**: i pesi del punteggio restano. Misura: base 59 notti su 100; la

@@ -3,7 +3,7 @@
 **Quando hai ripreso**, e cosa hai fatto quella notte. L'Archivio racconta gli oggetti; questa
 pagina racconta le **notti**, una per una: e' il modo in cui un astrofotografo si ricorda la vita
 osservativa: *"la notte del 17 maggio, a Cima Ekar, M 51 e M 101, sei ore".* Le parole vengono da
-[`glossario.md`](glossario.md); cos'e' una notte e chi la scrive sta in [`spina.md`](spina.md);
+[`glossario.md`](glossario.md); cos'e' una notte e chi la scrive sta in [`spina-scan.md`](spina-scan.md) e [`spina-group.md`](spina-group.md);
 dove sta la voce nella barra, in [`navigazione.md`](navigazione.md); come si contano le ore e
 perche' le copie non valgono, in [`archivio.md`](archivio.md), che ne e' la casa.
 

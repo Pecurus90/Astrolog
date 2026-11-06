@@ -11,7 +11,7 @@ from ..spine import gear
 from ..spine import unfiltered as unfiltered_reader
 from .models_gear import InstrumentCorrection
 
-# Only what the app computes with (`docs/domini/spina.md`, *Le schede*); the camera's two fields
+# Only what the app computes with (`spina-normalize.md`, *Le schede*); the camera's two fields
 # are `decl.CAMERA_SPECS` and not a copy, being the ones the card writes among the declarations.
 _COMMON = ("brand", "model")
 _ON_EVERY_PIECE = ("weight_kg", "notes")

@@ -5,7 +5,7 @@ Senza `BAYERPAT` l'app non distingue una mono da una camera a colori, quindi "FI
 "FILTER=none" sono la stessa domanda: cosa c'era davanti. Una camera che i suoi file dicono a
 colori non si chiede (Marco, 23/9/2026). "A colori" si scrive sulla scheda della camera; "nessun
 filtro" e "uno dei tuoi" sulla firma. Le regole stanno in `spine/signature.py` e nel contratto
-`docs/domini/spina.md`. L'archivio e' fatto qui, piccolo: una mono che non scrive il filtro (con
+`spina-normalize.md`. L'archivio e' fatto qui, piccolo: una mono che non scrive il filtro (con
 una copia calibrata), una camera con un solo file che porta la matrice, e una OSC.
 """
 

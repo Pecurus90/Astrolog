@@ -24,7 +24,7 @@ Raspberry Pi 4 (2-15 s a frame), nessuno di un NAS. Pesi da SourceForge `star_da
   ASTAP ne' il catalogo, e il primo avvio dice da dove prendere ASTAP (`docs/domini/sito.md`, *Il passo del riconoscitore*).
 - **Quando ASTAP non c'e' (chi installa da sorgente) l'app lo dice prima della prima scansione**:
   il passo in piu' del primo avvio e la preferenza `astap_path` stanno in
-  `docs/domini/spina.md`.
+  `docs/domini/spina-identify.md`.
 - Licenze: MPL 2.0 il programma, Gaia DR3 i database, con il credito *ESA/Gaia/DPAC*
   obbligatorio. **Dato non commerciale mai nel pacchetto; ammesso solo scaricato in cache, col
   credito** (Marco, 24/10/2026). `deep_sky.csv` e `hyperleda.csv` (non commerciali) quindi non si

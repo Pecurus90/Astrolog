@@ -1,4 +1,4 @@
-"""Lo stadio di scansione: le richieste dell'utente in `docs/domini/spina.md`, una per test.
+"""Lo stadio di scansione: le richieste dell'utente in `docs/domini/spina-scan.md`, una per test.
 Tutto su FITS veri fabbricati con astropy e su un DB nato da schema.sql."""
 
 import json

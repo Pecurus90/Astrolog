@@ -1,6 +1,6 @@
 """Cio' che la scansione lascia fuori, e perche': un file che non legge lo nomina col suo codice e
 va avanti, i file saltati li conta per motivo. Le richieste dell'utente in
-`docs/domini/spina.md`; FITS veri fabbricati con astropy e un DB nato da schema.sql."""
+`docs/domini/spina-scan.md`; FITS veri fabbricati con astropy e un DB nato da schema.sql."""
 
 import json
 import os

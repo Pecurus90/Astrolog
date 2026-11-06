@@ -42,7 +42,7 @@ DB_KINDS = ("d05", "d20", "d50", "d80", "v05", "v50", "g05", "w08",
 # any `x99_1.zip` would be a false "you have it". A new catalogue reads missing until listed.
 DB_NAME = re.compile(r"(" + "|".join(DB_KINDS) + r")_[0-9]+\.", re.IGNORECASE)
 
-# [M over twice the slowest blind solve that succeeds, 23 s, docs/domini/spina.md]; a free-field
+# [M over twice the slowest blind solve that succeeds, 23 s, spina-solve.md]; a free-field
 # blind search that finds nothing runs past it (285 s measured).
 TIMEOUT_S = 60
 # [C N.I.N.A. PlateSolveSettings.cs searchRadius = 30]; speed depends on field, not radius.

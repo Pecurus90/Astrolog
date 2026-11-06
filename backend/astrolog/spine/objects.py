@@ -10,7 +10,7 @@ from ..db.row import Row
 from . import counts
 
 # A name is two steps, not a column: the primary in `object_names`, else the catalog's name for the
-# slug (`docs/domini/spina.md`, the three invariants of an object's name).
+# slug (`docs/domini/spina-identify.md`, the three invariants of an object's name).
 NAME_COLUMNS = """
        (SELECT n.name FROM object_names n
          WHERE n.object_id = o.id AND n.is_primary = 1) AS primary_name,
@@ -44,7 +44,7 @@ SELECT o.id, o.catalog_slug, o.identity_confidence, {NAME_COLUMNS} FROM objects 
 
 def display_name(row: Row) -> str | None:
     """`None` only for an object with neither catalog nor names, which nothing should create
-    (`docs/domini/spina.md`, invariant 3)."""
+    (`docs/domini/spina-identify.md`, invariant 3)."""
     return row["primary_name"] or row["catalog_name"]
 
 

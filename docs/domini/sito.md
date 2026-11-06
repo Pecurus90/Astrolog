@@ -186,7 +186,7 @@ le tocca
 (`test_moving_home_leaves_the_nights_of_the_other_sites_alone`). Ogni cambio del fuso di casa --
 anche la prima casa, e anche casa tolta -- riscrive la notte che i frame senza coordinate portano da
 quando sono entrati, e le risposte sui frame senza nome che la portano nella chiave (`spine/home_nights.py`,
-il contratto in `domini/spina.md`). Un cambio dei siti rimette in coda i frame fermi perche' il posto non si sapeva, ma solo quelli che quel cambio puo'
+il contratto in `domini/spina-scan.md`). Un cambio dei siti rimette in coda i frame fermi perche' il posto non si sapeva, ma solo quelli che quel cambio puo'
 sbloccare: entro 1 km da un sito nuovo, spostato o diventato casa; con una risposta che nomina un
 sito rinominato; fermi perche' casa non c'era. **Rinominare non richiede:** le risposte che nominano
 il sito seguono il nome nuovo, perche' e' un'altra parola e non un altro posto (Marco, 25/10/2026;

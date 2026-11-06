@@ -1,5 +1,5 @@
 """Frames whose header does not say where follow home's zone, night and unnamed group. Answers
-carry no night, so none moves (contract: `domini/spina.md`)."""
+carry no night, so none moves (contract: `domini/spina-scan.md`)."""
 
 import json
 import sqlite3

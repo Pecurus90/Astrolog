@@ -1,6 +1,6 @@
 """Le specifiche della camera: il pixel fisico e il colore su cui concordano i file, e la parola
 dell'utente che nessun ricalcolo tocca. La convenzione di `XPIXSZ` e le sue fonti stanno nel
-contratto, `docs/domini/spina.md`.
+contratto, `docs/domini/spina-solve.md`.
 """
 
 import sqlite3

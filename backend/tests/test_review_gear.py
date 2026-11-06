@@ -6,7 +6,7 @@ l'ASIAIR scrive la montatura in `TELESCOP` -- e quelle che la camera la dicono m
 risponde scegliendo un corredo fra quelli che l'app conosce, oppure scrivendo i pezzi: nascono dai
 nomi, come da un header. La notte resta: se gli altri frame della stessa notte dicono una camera
 sola, quella non si chiede. Le regole stanno in `spine/signature.py` e nel contratto
-`docs/domini/spina.md`. Il filtro ha le sue prove in `test_review_gear_filter.py`.
+`docs/domini/spina-normalize.md`. Il filtro ha le sue prove in `test_review_gear_filter.py`.
 """
 
 import os

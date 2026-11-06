@@ -31,7 +31,7 @@ file, qui si legge frame; "produzione" nel nuovo e' la riga per ottica e camera 
 
 ### Attrezzatura e filtri -- cio' che non ha ancora una casa
 
-Il resto e' stato assorbito in [`spina.md`](spina.md) col contratto di `normalize`. Qui
+Il resto e' stato assorbito in [`spina-normalize.md`](spina-normalize.md) col contratto di `normalize`. Qui
 restano tre decisioni i cui domini non sono ancora nati.
 
 - **Il setup di una notte** ha una cascata a quattro gradini: dichiarato per (notte, setup)
@@ -118,7 +118,7 @@ non e' ancora nato.
 
 ## B. I frame -- cosa entra, cosa si conta
 
-- Tipo del frame, calibrazioni e anti-stack: in `spina.md` (*Cosa entra*).
+- Tipo del frame, calibrazioni e anti-stack: in `spina-scan.md` (*Cosa entra*).
 - **Un frame senza oggetto o senza data entra lo stesso**, con stato "non assegnato" e segnalato --
   `database.md:1395-1401`.
 - **`solved` = vera presenza di un WCS** (`WCSAXES`, matrice `CD`, `PLTSOLVD`), non un `CRVAL1` nudo --

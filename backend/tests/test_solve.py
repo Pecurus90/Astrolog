@@ -474,7 +474,7 @@ def test_a_file_astap_cannot_read_is_a_failure_not_a_wait(db_path, archivio_lett
 
 def test_solve_field_from_the_header(db_path, tmp_path):
     """Il campo passato al solver si CALCOLA dall'header, e non e' un numero qualunque: e' la
-    leva della velocita' (la misura sta in `docs/domini/spina.md`). Si prova sul comando che parte
+    leva della velocita' (la misura sta in `spina-solve.md`). Si prova sul comando che parte
     davvero, partendo da un header con dentro focale e pixel."""
     root = tmp_path / "lib"
     write_light(root / "a.fits", obj="M 31", FOCALLEN=1000.0, XPIXSZ=3.76)

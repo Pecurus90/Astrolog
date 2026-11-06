@@ -127,7 +127,7 @@ Fonti: C norma: 170; U usanza: 2; D metodo: 24; M misura: 22; P decisione: 35; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| TIMEOUT_S | `60` | M over twice the slowest blind solve that succeeds, 23 s, docs/domini/spina.md |
+| TIMEOUT_S | `60` | M over twice the slowest blind solve that succeeds, 23 s, spina-solve.md |
 | SEARCH_RADIUS_DEG | `30` | C N.I.N.A. PlateSolveSettings.cs searchRadius = 30 |
 | BLIND_RADIUS_DEG | `180` | C ASTAP default radius_search1; N.I.N.A. forces 180 without coordinates |
 | _POLE_DEG | `90.0` | T |
@@ -614,19 +614,19 @@ Fonti: C norma: 170; U usanza: 2; D metodo: 24; M misura: 22; P decisione: 35; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| CANDIDATES_LIMIT | `6` | P docs/domini/spina.md |
+| CANDIDATES_LIMIT | `6` | P docs/domini/spina-identify.md |
 
 ### spine/identify_decide.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| _RANK | `IdentityConfidence.LOW: 2,` | P docs/domini/spina.md |
+| _RANK | `IdentityConfidence.LOW: 2,` | P docs/domini/spina-identify.md |
 
 ### spine/identify_geometry.py
 
 | simbolo | valore | fonte |
 |---|---|---|
-| MIN_SEARCH_RADIUS_DEG | `3.0` | P docs/domini/spina.md |
+| MIN_SEARCH_RADIUS_DEG | `3.0` | P docs/domini/spina-identify.md |
 
 ### spine/identify_score.py
 
@@ -672,7 +672,7 @@ Fonti: C norma: 170; U usanza: 2; D metodo: 24; M misura: 22; P decisione: 35; T
 
 | simbolo | valore | fonte |
 |---|---|---|
-| DEFAULT_MIN_AGE_S | `30` | P docs/domini/spina.md |
+| DEFAULT_MIN_AGE_S | `30` | P docs/domini/spina-scan.md |
 | MTIME_TOLERANCE_S | `0.001` | P docs/domini/spina.md |
 
 ### spine/search.py

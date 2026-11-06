@@ -53,7 +53,7 @@ alzarla unirebbe in silenzio i pannelli di chi riprende con molta sovrapposizion
 
 **Il nome rafforza, non decide.** Un header che dice `Panel 2` e' un indizio forte -- N.I.N.A.
 aggiunge quel suffisso al nome del target -- e `normalize` lo conserva apposta invece di pulirlo
-(vedi [`spina.md`](spina.md)). Ma non basta da solo: *"Pane 1"* non e' un pannello, e un mosaico
+(vedi [`spina-normalize.md`](spina-normalize.md)). Ma non basta da solo: *"Pane 1"* non e' un pannello, e un mosaico
 ripreso senza rinominare i target non direbbe niente. La geometria e' il criterio, il nome e' il
 rinforzo.
 

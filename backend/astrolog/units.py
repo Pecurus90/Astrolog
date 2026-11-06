@@ -33,7 +33,7 @@ def most_frequent[T](weights: Mapping[T, int]) -> T | None:
 
 
 def physical_pixel_um(pixel_um: float | None, binning: int | None) -> float | None:
-    """`XPIXSZ` includes binning by convention (sources in `docs/domini/spina.md`), so it is
+    """`XPIXSZ` includes binning by convention (sources in `docs/domini/spina-solve.md`), so it is
     divided, then cleaned like a float32: a header's 11.28 / 3 gives 3.76, not 3.759999910990397."""
     if pixel_um is None or not binning:
         return None

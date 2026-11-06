@@ -115,7 +115,7 @@ chi cambia cio' da cui dipende -- `normalize` e il solver a fine giro, la rispos
 calibrazione" che stacca il cielo -- e la pagina lo legge e basta. Si
 mostra solo dove i file e l'utente tacciono, e dice che e' ricavato: un riduttore che la focale
 dell'header non conta lo sposta. Per la stessa ragione non basta a proporre un'unione fra due
-grafie, che vuole il pixel noto (`docs/domini/spina.md`).
+grafie, che vuole il pixel noto (`docs/domini/spina-normalize.md`).
 
 **Un pezzo arriva alle sue pose per due strade** (22/9/2026). Ottica e camera passano dal
 **setup**: la posa conosce quello, non i suoi pezzi. Ruota portafiltri, focheggiatore e camera di

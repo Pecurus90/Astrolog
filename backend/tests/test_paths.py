@@ -1,5 +1,5 @@
 """Il percorso di una cartella come l'app lo accetta e lo salva. Le regole e il loro perche'
-stanno in `api/paths.py` e nel contratto `docs/domini/spina.md`.
+stanno in `api/paths.py` e nel contratto `docs/domini/spina-scan.md`.
 
 La tabella della forma salvata e i controlli sul percorso risolto girano su qualunque sistema.
 Le forme che esistono solo su Windows si provano la', dove la CI le fa girare.

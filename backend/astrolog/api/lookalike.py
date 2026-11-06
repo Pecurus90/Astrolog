@@ -1,5 +1,5 @@
 """Two spellings of one camera, asked and never merged alone: the criterion, the direction and the
-no live in `docs/domini/spina.md`, *Due grafie della stessa camera sono una domanda*."""
+no live in `docs/domini/spina-normalize.md`, *Due grafie della stessa camera sono una domanda*."""
 
 import json
 import re

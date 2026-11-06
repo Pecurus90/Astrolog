@@ -25,12 +25,23 @@ def test_adr_0020_declares_what_it_supersedes():
     assert any(adr.startswith("0020") for adr, _, _ in superate())
 
 
+def contenuto(contratto: str) -> str:
+    """Il contratto con le sue parti: `spina.md` divisa per stadio vive anche in `spina-*.md`."""
+    casa = RADICE / contratto
+    parti = [casa, *sorted(casa.parent.glob(f"{casa.stem}-*{casa.suffix}"))]
+    # a removed document holds no sentence any more
+    return "\n".join(p.read_text(encoding="utf-8") for p in parti if p.exists()).lower()
+
+
 def test_a_superseded_sentence_is_gone_from_its_contract():
     tornate = [
         f"{adr}: {contratto} dice ancora {frase!r}"
         for adr, contratto, frase in superate()
-        # a removed document holds no sentence any more
-        if (RADICE / contratto).exists()
-        and frase.lower() in (RADICE / contratto).read_text(encoding="utf-8").lower()
+        if frase.lower() in contenuto(contratto)
     ]
     assert not tornate, tornate
+
+
+def test_a_split_contract_is_read_with_its_parts():
+    assert "## cosa chiede l'utente" in contenuto("docs/domini/spina.md")
+    assert "**`group` mette insieme le notti e le sessioni.**" in contenuto("docs/domini/spina.md")
