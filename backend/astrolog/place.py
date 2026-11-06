@@ -9,12 +9,11 @@ import zoneinfo
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, Protocol
 
 from tzfpy import get_tz
 
 from . import net
-from .db.row import Row
 from .units import believable_sqm, sqm_from_brightness, sqm_of_bortle
 
 # A degree of arc on the mean-radius Earth, not a measure of the place.
@@ -88,14 +87,24 @@ def distance_km(
     return math.hypot(north, east)
 
 
-def by_distance[S: Row](
+class Located(Protocol):
+    """Anything with coordinates: a site, or a candidate place."""
+
+    @property
+    def latitude(self) -> float | None: ...
+
+    @property
+    def longitude(self) -> float | None: ...
+
+
+def by_distance[S: Located](
     latitude: float | None, longitude: float | None, sites: Iterable[S]
 ) -> list[tuple[float, S]]:
     """Sorted on the true distance: rounded ones would tie two near sites, and comparing the rows
     on a tie would raise instead of sorting. Sites without coordinates stay out."""
     measured = []
     for site in sites:
-        km = distance_km(latitude, longitude, site["latitude"], site["longitude"])
+        km = distance_km(latitude, longitude, site.latitude, site.longitude)
         if km is not None:
             measured.append((km, site))
     return sorted(measured, key=lambda pair: pair[0])

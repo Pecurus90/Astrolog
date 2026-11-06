@@ -7,15 +7,10 @@ Le dipendenze sono **fissate**, e due non sono le piu' recenti. Le ragioni sono 
   `>=4.8.4 <6.1.0`: con la 7 il linter parte su una versione non supportata, e quel genere di
   rottura si manifesta con messaggi che parlano d'altro. Si alza quando `typescript-eslint`
   allarga l'intervallo, non prima.
-* **`vitest` 4.1.11 e non 5.0.0.** La 5 chiede Node `^22.12 || ^24 || >=26`; la CI installa
-  **Node 20** (`.github/workflows/ci.yml`) e `CONTRIBUTING.md` dichiara Node 20. Con la 5 la
-  suite girerebbe sulla macchina di chi sviluppa e cadrebbe in CI -- il difetto peggiore, perche'
-  lo vede solo chi non l'ha scritto. Si alza **insieme** a Node, che e' una decisione sui tre
-  bersagli (Windows, Mac, NAS in Docker), non una scelta di libreria.
-
-Un margine da sapere: `vite`, `eslint` e `@vitejs/plugin-react` chiedono Node **20.19** o
-superiore. La CI usa `node-version: "20"`, cioe' l'ultima 20.x, e oggi tiene; il giorno che
-qualcuno fissa un 20 piu' vecchio, quelle tre si fermano.
+* **`vitest` 4.1.12 e non 5.0.0.** La 5 chiede Node `^22.12 || ^24 || >=26`. Node e' uno solo
+  ovunque: **24**, nella CI (`.github/workflows/ci.yml`, `nightly.yml`), in `engines` di
+  `package.json` e in `CONTRIBUTING.md`. Node non la blocca piu': si alza in un passo suo, con la
+  suite intera verde in CI, non insieme ad altro.
 
 ## I comandi, e chi li chiama
 

@@ -16,12 +16,19 @@ from fastapi.testclient import TestClient
 from astrolog.api.app import create_app
 from astrolog.db.connect import connect, create_database
 from astrolog.site_of import home_site
+from astrolog.spine import moon_calendar
 from astrolog.weather import forecast, openmeteo, rounds, sky
 from conftest import wait_until
 from test_weather_forecast import Finto, risposta
 
 # i servizi che una prova non finge da se' non rispondono: e' il sito buio
-pytestmark = pytest.mark.usefixtures("offline")
+pytestmark = pytest.mark.usefixtures("offline", "senza_luna")
+
+
+@pytest.fixture
+def senza_luna(monkeypatch):
+    """Il calendario della Luna ha i suoi test (test_moon_calendar): nel giro costerebbe 6 s."""
+    monkeypatch.setattr(moon_calendar, "step", lambda conn, site, night: False)
 
 
 def attorno_ad_adesso():
@@ -256,7 +263,7 @@ def _meteo_scritto(tmp_path_factory):
     metti_casa(percorso)
     c = connect(percorso)
     try:
-        assert rounds.refresh(c, dict(home_site(c)), fetch=dintorni_del_cielo()) == "ok"
+        assert rounds.refresh(c, home_site(c), fetch=dintorni_del_cielo()) == "ok"
     finally:
         c.close()
     return percorso
@@ -368,10 +375,9 @@ def giro_senza_servizi(monkeypatch):
 
     chieste = []
     monkeypatch.setattr(app_mod.climate, "step", lambda conn, site: None)
-    monkeypatch.setattr(app_mod.moon_calendar, "step", lambda conn, site, night: False)
     monkeypatch.setattr(app_mod.history, "step", lambda conn: None)
     monkeypatch.setattr(
-        app_mod.rounds, "refresh", lambda conn, site: chieste.append(site["id"]) or "ok"
+        app_mod.rounds, "refresh", lambda conn, site: chieste.append(site.id) or "ok"
     )
     return app_mod._weather_round, chieste
 

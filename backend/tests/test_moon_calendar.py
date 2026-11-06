@@ -2,13 +2,14 @@
 il prossimo, per il sito di casa, con le notti buone per la banda larga dalle due soglie."""
 
 import datetime as dt
+import shutil
 
 import pytest
 from fastapi.testclient import TestClient
 
 from astrolog.api.app import create_app
 from astrolog.db import config
-from astrolog.db.connect import connect
+from astrolog.db.connect import connect, create_database
 from astrolog.site_of import home_site
 from astrolog.spine import moon_calendar
 from astrolog.weather import forecast
@@ -29,8 +30,48 @@ def conn(db_path):
     c.close()
 
 
-def casa(conn):
-    return dict(home_site(conn))
+def _modello(tmp_path_factory, oggi):
+    """Il calendario costa 6 s di effemeridi: si calcola una volta per modulo, i test lo copiano."""
+    path = tmp_path_factory.mktemp("luna") / "modello.db"
+    create_database(path)
+    c = connect(path)
+    try:
+        prepara(c)
+        luogo(c, ROMA)
+        moon_calendar.step(c, home_site(c), oggi)
+        c.commit()
+        c.execute("PRAGMA wal_checkpoint(TRUNCATE)")  # tutto nel .db: e' un file che si copia
+    finally:
+        c.close()
+    return path
+
+
+@pytest.fixture(scope="module")
+def _scritto_a_ottobre(tmp_path_factory):
+    return _modello(tmp_path_factory, OGGI)
+
+
+@pytest.fixture(scope="module")
+def _scritto_oggi(tmp_path_factory):
+    return _modello(tmp_path_factory, dt.date.today())
+
+
+def _copia(modello, db_path):
+    shutil.copy(modello, db_path)
+    c = connect(db_path)
+    yield c
+    c.close()
+
+
+@pytest.fixture
+def scritto(_scritto_a_ottobre, db_path):
+    """Il sito di casa col calendario di ottobre e novembre 2026 gia' scritto dal giro."""
+    yield from _copia(_scritto_a_ottobre, db_path)
+
+
+@pytest.fixture
+def scritto_oggi(_scritto_oggi, db_path):
+    yield from _copia(_scritto_oggi, db_path)
 
 
 def righe(conn):
@@ -38,7 +79,7 @@ def righe(conn):
 
 
 def test_the_round_writes_this_month_and_the_next(conn):
-    assert moon_calendar.step(conn, casa(conn), OGGI) is True
+    assert moon_calendar.step(conn, home_site(conn), OGGI) is True
     giorni = righe(conn)
     assert (giorni[0]["night_date"], giorni[-1]["night_date"], len(giorni)) == (
         "2026-10-01",
@@ -61,41 +102,39 @@ def test_the_weather_round_writes_the_calendar_of_tonight_at_the_site(db_path, c
     assert (giorni[0]["night_date"], giorni[-1]["night_date"]) == ("2026-11-01", "2026-12-31")
 
 
-def test_a_second_round_with_nothing_changed_does_not_recompute(conn):
-    moon_calendar.step(conn, casa(conn), OGGI)
-    assert moon_calendar.step(conn, casa(conn), OGGI) is False
+def test_a_second_round_with_nothing_changed_does_not_recompute(scritto):
+    assert moon_calendar.step(scritto, home_site(scritto), OGGI) is False
 
 
-def test_a_moved_site_is_recomputed(conn):
-    moon_calendar.step(conn, casa(conn), OGGI)
-    conn.execute("UPDATE sites SET latitude = latitude + 1")
-    assert moon_calendar.step(conn, casa(conn), OGGI) is True
+def test_a_moved_site_is_recomputed(scritto, monkeypatch):
+    rifatti = []
+    monkeypatch.setattr(moon_calendar, "rebuild", lambda conn, site, wanted: rifatti.append(site))
+    scritto.execute("UPDATE sites SET latitude = latitude + 1")
+    assert moon_calendar.step(scritto, home_site(scritto), OGGI) is True
+    assert [s.latitude for s in rifatti] == [ROMA[1] + 1]
 
 
-def test_new_and_full_moon_are_marked_on_their_nights(conn):
+def test_new_and_full_moon_are_marked_on_their_nights(scritto):
     """Ottobre 2026: Luna nuova il 10 alle 15:50 UTC, piena il 26 alle 04:11 UTC (in Italia la
     notte del 25, che va da mezzogiorno a mezzogiorno)."""
-    moon_calendar.step(conn, casa(conn), OGGI)
-    eventi = {r["night_date"]: r["event"] for r in righe(conn) if r["event"]}
+    eventi = {r["night_date"]: r["event"] for r in righe(scritto) if r["event"]}
     assert eventi["2026-10-10"] == "new"
     assert eventi["2026-10-25"] == "full"
 
 
-def test_a_good_broadband_night_has_little_moon_or_enough_dark_without_it(conn):
+def test_a_good_broadband_night_has_little_moon_or_enough_dark_without_it(scritto):
     """Di fabbrica: Luna sotto il 25%, oppure almeno 4 ore di buio senza Luna."""
-    moon_calendar.step(conn, casa(conn), OGGI)
-    for r in righe(conn):
+    for r in righe(scritto):
         attesa = r["illumination_pct"] < 25 or r["moonless_dark_s"] >= 4 * 3600
         assert bool(r["broadband_good"]) == attesa, r["night_date"]
 
 
-def test_changing_a_threshold_rejudges_the_nights_at_once(db_path, conn):
-    moon_calendar.step(conn, casa(conn), OGGI)
+def test_changing_a_threshold_rejudges_the_nights_at_once(db_path, scritto):
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         r = c.patch("/api/v1/settings", json={"values": {"moon_broadband_min_dark_h": 12}})
     assert r.status_code == 200, r.text
-    assert config.read(conn).moon_broadband_min_dark_h == 12
-    for row in righe(conn):
+    assert config.read(scritto).moon_broadband_min_dark_h == 12
+    for row in righe(scritto):
         assert bool(row["broadband_good"]) == (row["illumination_pct"] < 25), row["night_date"]
 
 
@@ -120,12 +159,9 @@ def test_every_threshold_out_of_range_is_named(db_path):
     assert r.json()["detail"] == {"code": "out_of_range", "keys": sorted(valori)}
 
 
-def test_the_routes_read_what_the_round_wrote(db_path, conn):
+def test_the_routes_read_what_the_round_wrote(db_path, scritto_oggi):
     """Il calendario esce com'e' scritto, con le due soglie per la legenda; Stanotte dice la
     prossima nuova e piena da li', e l'eta', la distanza e da dove sorge la Luna."""
-    oggi = dt.date.today()
-    moon_calendar.step(conn, casa(conn), oggi)
-    conn.commit()
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         cal = c.get("/api/v1/moon/calendar").json()
         luna = c.get("/api/v1/tonight").json()["moon"]
@@ -140,12 +176,11 @@ def test_the_routes_read_what_the_round_wrote(db_path, conn):
     assert luna["rise_compass"] is None or luna["rise_compass"] in {"NE", "ENE", "E", "ESE", "SE"}
 
 
-def test_a_moved_site_does_not_show_the_old_sky_until_the_round_rewrites_it(db_path, conn):
+def test_a_moved_site_does_not_show_the_old_sky_until_the_round_rewrites_it(db_path, scritto_oggi):
     """Spostato il sito, il calendario del posto di prima non esce piu': fino al giro dopo e' vuoto,
     come prima del primo giro. Cosi' la prossima nuova e piena."""
-    moon_calendar.step(conn, casa(conn), dt.date.today())
-    conn.execute("UPDATE sites SET latitude = latitude + 1")
-    conn.commit()
+    scritto_oggi.execute("UPDATE sites SET latitude = latitude + 1")
+    scritto_oggi.commit()
     with TestClient(create_app(db_path), base_url="http://localhost") as c:
         cal = c.get("/api/v1/moon/calendar").json()
         luna = c.get("/api/v1/tonight").json()["moon"]

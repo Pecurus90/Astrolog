@@ -3,7 +3,7 @@ and the Moon, every measure judged, the agreement counted. The writer calls it, 
 
 import json
 import sqlite3
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any
@@ -11,6 +11,7 @@ from typing import Any
 from ..db.replace_table import replace_rows
 from ..ephemeris import RISESET_DEG, moon
 from ..ephemeris.sun import Sky
+from ..site_of import Site
 from . import judge, openmeteo, position, verdict
 from .fetches import Source
 
@@ -54,10 +55,10 @@ def _sky_by_hour(conn: sqlite3.Connection, site_id: int) -> dict[str, dict[str, 
     return by_hour
 
 
-def _moon_by_hour(site: Mapping[str, Any], instants: Sequence[str]) -> dict[str, int | None]:
+def _moon_by_hour(site: Site, instants: Sequence[str]) -> dict[str, int | None]:
     """The Moon's lit percentage for the hours it is above the horizon, else `None`."""
     times = [datetime.fromisoformat(a) for a in instants]
-    alts = moon.altitudes(times, site["latitude"], site["longitude"])
+    alts = moon.altitudes(times, site.latitude, site.longitude)
     lit = moon.phases(times)
     return {
         a: p.illumination_pct if alt > RISESET_DEG else None
@@ -97,7 +98,7 @@ def _hours_json(hours: Sequence[verdict.Hour], summary: verdict.Summary) -> str:
 
 
 def _rows(
-    site: Mapping[str, Any], written: Sequence[_Night], usual: list[float] | None
+    site: Site, written: Sequence[_Night], usual: list[float] | None
 ) -> list[tuple[Any, ...]]:
     rows = []
     for w in written:
@@ -118,7 +119,7 @@ def _rows(
         }
         rows.append(
             (
-                site["id"],
+                site.id,
                 w.night,
                 w.model,
                 w.fetched_at,
@@ -129,10 +130,10 @@ def _rows(
     return rows
 
 
-def rebuild(conn: sqlite3.Connection, site: Mapping[str, Any]) -> None:
+def rebuild(conn: sqlite3.Connection, site: Site) -> None:
     """All of the site's nights or none; other sites stay."""
-    sky = _sky_by_hour(conn, site["id"])
-    models = conn.execute(_MODEL_ROWS, (site["id"], KIND, *_MODEL_SOURCES)).fetchall()
+    sky = _sky_by_hour(conn, site.id)
+    models = conn.execute(_MODEL_ROWS, (site.id, KIND, *_MODEL_SOURCES)).fetchall()
     series = {(r["night_date"], r["source"]): json.loads(r["hourly_json"]) for r in models}
     instants = sorted({o["at"] for hours in series.values() for o in hours})
     lit = _moon_by_hour(site, instants) if instants else {}
@@ -161,5 +162,5 @@ def rebuild(conn: sqlite3.Connection, site: Mapping[str, Any]) -> None:
         COLUMNS,
         _rows(site, written, position.percentiles(conn, site)),
         where="site_id = ?",
-        args=(site["id"],),
+        args=(site.id,),
     )

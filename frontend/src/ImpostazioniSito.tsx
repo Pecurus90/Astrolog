@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router"
 
@@ -10,6 +10,7 @@ import { SchedaDelSito, TogliIlSito } from "./SchedaDelSito"
 import { AzioniDelVuoto, NotaDelVuoto, Vuoto } from "./Vuoto"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
+import { useSiti } from "./api/siti"
 import { coordinate, t } from "./i18n"
 
 type Sito = components["schemas"]["SiteOut"]
@@ -38,14 +39,7 @@ export function Sito() {
   const [daTogliere, setDaTogliere] = useState<Sito>()
   const [casaRotta, setCasaRotta] = useState(false)
 
-  const siti = useQuery({
-    queryKey: ["sites"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/sites")
-      if (error) throw new Error(t("settings.site.failed"))
-      return data
-    },
-  })
+  const siti = useSiti()
   /** Dopo una scrittura: si rilegge l'elenco, e **solo se e' cambiato il sito di casa** anche il
    *  piede della barra. Quello sta fuori da questa pagina e tiene la sua risposta per un'ora --
    *  senza buttarla via, chi dichiara il sito qui continua a leggere "non so da dove osservi" fino

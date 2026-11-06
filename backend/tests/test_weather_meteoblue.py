@@ -115,7 +115,7 @@ def test_a_key_the_service_refuses_drops_its_seeing_and_says_why(db):  # noqa: F
     sky.refresh(db, SITO, fetch=rifiutata, now=ADESSO + timedelta(days=3))
     restano = {r["night_date"] for r in righe(db) if r["source"] == "meteoblue"}
     assert restano and all(notte < "2026-09-28" for notte in restano)
-    assert meteoblue.last_attempt(db, SITO["id"])["status"] == "refused"
+    assert meteoblue.last_attempt(db, SITO.id)["status"] == "refused"
 
 
 def test_a_refused_key_keeps_the_seeing_of_the_nights_gone_by(db):  # noqa: F811
@@ -137,7 +137,7 @@ def test_a_silent_service_keeps_the_seeing_it_gave_last_time(db):  # noqa: F811
     muto = servizi(**{"packages/seeing-1h": TimeoutError()})
     sky.refresh(db, SITO, fetch=muto, now=ADESSO + timedelta(hours=12))
     assert [tuple(r) for r in righe(db) if r["source"] == "meteoblue"] == prima
-    assert meteoblue.last_attempt(db, SITO["id"])["status"] == "unreachable"
+    assert meteoblue.last_attempt(db, SITO.id)["status"] == "unreachable"
 
 
 def test_the_key_never_reaches_the_log(db, caplog):  # noqa: F811

@@ -5,7 +5,6 @@
  * per area.
  */
 export const itAttrezzatura = {
-  "gear.title": "Attrezzatura",
   "gear.failed": "Attrezzatura non disponibile",
   // I generi, come si chiamano a schermo. Sono quelli che lo schema conosce: un genere nuovo
   // nasce li' e passa di qui, o resterebbe senza nome.

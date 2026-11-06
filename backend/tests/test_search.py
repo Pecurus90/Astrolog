@@ -173,7 +173,7 @@ def test_a_piece_and_a_filter_are_found_by_name_with_what_is_known_of_them(banco
     ha = filtro(banco, "Ha 3nm")
     banco.execute(
         "INSERT INTO gear_usage(subject, subject_id, frames, integration_s, untimed, nights,"
-        " objects_json, position) VALUES('filter', ?, 4, 1200.0, 0, 2, '[]', 0)",
+        " objects_json) VALUES('filter', ?, 4, 1200.0, 0, 2, '[]')",
         (ha,),
     )
 

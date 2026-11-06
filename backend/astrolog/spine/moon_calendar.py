@@ -4,12 +4,12 @@ each night with its Moon, its dark hours without it, and whether it is good for 
 import calendar
 import datetime as dt
 import sqlite3
-from typing import Any
 
 from ..clock import night_date, night_window
 from ..db import config
 from ..db.replace_table import replace_rows
 from ..ephemeris import moon
+from ..site_of import Site
 
 COLUMNS = (
     "site_id", "night_date", "latitude", "longitude", "phase_key", "illumination_pct",
@@ -35,16 +35,16 @@ def _thresholds(conn: sqlite3.Connection) -> tuple[int, int]:
     return prefs.moon_broadband_max_pct, prefs.moon_broadband_min_dark_h * 3600
 
 
-def step(conn: sqlite3.Connection, site: dict[str, Any] | None, today: dt.date) -> bool:
+def step(conn: sqlite3.Connection, site: Site | None, today: dt.date) -> bool:
     """Rewrites only when a night is missing or the site moved; True when it did. Without a site or
     a zone there is no sky to compute."""
-    if site is None or not site.get("timezone"):
+    if site is None or not site.timezone:
         return False
     wanted = nights_of(today)
     have = conn.execute(
         "SELECT COUNT(*) FROM moon_nights WHERE site_id = ? AND latitude = ? AND longitude = ?"
         " AND night_date BETWEEN ? AND ?",
-        (site["id"], site["latitude"], site["longitude"], wanted[0], wanted[-1]),
+        (site.id, site.latitude, site.longitude, wanted[0], wanted[-1]),
     ).fetchone()[0]
     if have == len(wanted):
         return False
@@ -52,10 +52,10 @@ def step(conn: sqlite3.Connection, site: dict[str, Any] | None, today: dt.date) 
     return True
 
 
-def rebuild(conn: sqlite3.Connection, site: dict[str, Any], wanted: list[str]) -> None:
-    tz = site["timezone"]
+def rebuild(conn: sqlite3.Connection, site: Site, wanted: list[str]) -> None:
+    tz = site.timezone
     windows = [(d, *night_window(d, tz)) for d in wanted]
-    nights = moon.calendar_nights(windows, site["latitude"], site["longitude"])
+    nights = moon.calendar_nights(windows, site.latitude, site.longitude)
     # true hours on from the start: added in UTC, else the clock-change night gains an hour
     start = windows[0][1]
     end = windows[-1][1].astimezone(dt.UTC) + dt.timedelta(hours=windows[-1][2])
@@ -66,10 +66,10 @@ def rebuild(conn: sqlite3.Connection, site: dict[str, Any], wanted: list[str]) -
     max_pct, min_dark_s = _thresholds(conn)
     rows = [
         (
-            site["id"],
+            site.id,
             n.night,
-            site["latitude"],
-            site["longitude"],
+            site.latitude,
+            site.longitude,
             n.phase_key.value,
             n.illumination_pct,
             n.dark_s,
@@ -79,7 +79,7 @@ def rebuild(conn: sqlite3.Connection, site: dict[str, Any], wanted: list[str]) -
         )  # fmt: skip
         for n in nights
     ]
-    replace_rows(conn, "moon_nights", COLUMNS, rows, where="site_id = ?", args=(site["id"],))
+    replace_rows(conn, "moon_nights", COLUMNS, rows, where="site_id = ?", args=(site.id,))
 
 
 def rejudge(conn: sqlite3.Connection) -> None:

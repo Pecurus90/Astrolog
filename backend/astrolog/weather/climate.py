@@ -4,12 +4,13 @@ verdict judges, written as percentiles for `position`. Asked once a year per sit
 import json
 import sqlite3
 import zoneinfo
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 from .. import net
 from ..clock import iso_z
+from ..site_of import Site
 from . import fetches, nights, openmeteo, verdict
 from .fetches import Source
 from .forecast import Outcome, Status
@@ -28,16 +29,16 @@ BAD_ANSWER_WAIT = timedelta(days=1)
 _fetch = net.fetch
 
 
-def _moved(conn: sqlite3.Connection, site: Mapping[str, Any]) -> bool:
+def _moved(conn: sqlite3.Connection, site: Site) -> bool:
     """The usual belongs to a place: a site that moved asks again now, not in a year."""
     row = conn.execute(
-        "SELECT latitude, longitude FROM weather_climate WHERE site_id = ?", (site["id"],)
+        "SELECT latitude, longitude FROM weather_climate WHERE site_id = ?", (site.id,)
     ).fetchone()
-    return row is not None and (row[0], row[1]) != (site["latitude"], site["longitude"])
+    return row is not None and (row[0], row[1]) != (site.latitude, site.longitude)
 
 
-def _due(conn: sqlite3.Connection, site: Mapping[str, Any], now: datetime) -> bool:
-    attempt = fetches.last(conn, site["id"], Source.CLIMATE)
+def _due(conn: sqlite3.Connection, site: Site, now: datetime) -> bool:
+    attempt = fetches.last(conn, site.id, Source.CLIMATE)
     if attempt is None:
         return True
     if attempt["status"] == Outcome.BAD_ANSWER:
@@ -60,13 +61,14 @@ def _percentiles(values: Sequence[float]) -> list[float]:
 
 
 def _night_means(
-    site: Mapping[str, Any], times: Sequence[datetime], wind: Sequence[float | None]
+    site: Site, times: Sequence[datetime], wind: Sequence[float | None]
 ) -> list[float]:
     """Mean wind of each whole night, over its verdict window: the day says nothing of the nights
     one shoots."""
-    covered = nights.covered(site["timezone"], times, times[0].date().isoformat(), whole=True)
-    sky = nights.sky(site["latitude"], site["longitude"], covered)
-    tz = zoneinfo.ZoneInfo(site["timezone"])
+    zone = cast("str", site.timezone)  # `step` returned before asking without one
+    covered = nights.covered(zone, times, times[0].date().isoformat(), whole=True)
+    sky = nights.sky(site.latitude, site.longitude, covered)
+    tz = zoneinfo.ZoneInfo(zone)
     means = []
     for _, pairs in covered:
         judged, _ = verdict.window(nights.hours({"v": wind}, pairs, tz, sky=sky))
@@ -78,13 +80,13 @@ def _night_means(
 
 def step(
     conn: sqlite3.Connection,
-    site: Mapping[str, Any] | None,
+    site: Site | None,
     *,
     fetch: net.Fetch | None = None,
     now: datetime | None = None,
 ) -> Status | None:
     """One call if due, and its outcome; `None` when not due."""
-    if site is None or not site["timezone"]:
+    if site is None or not site.timezone:
         return None
     moment = now or datetime.now(UTC)
     if not _due(conn, site, moment):
@@ -92,21 +94,19 @@ def step(
     end = moment.date() - timedelta(days=1)
     query = openmeteo.url(
         URL,
-        site["latitude"],
-        site["longitude"],
+        site.latitude,
+        site.longitude,
         (VARIABLE,),
         start_date=(end - timedelta(days=YEAR_DAYS)).isoformat(),
         end_date=end.isoformat(),
     )
     answer, failure = net.ask_why(fetch or _fetch, query)
     outcome = failure or _write(conn, site, answer, moment)
-    fetches.record(conn, site["id"], Source.CLIMATE, outcome, moment)
+    fetches.record(conn, site.id, Source.CLIMATE, outcome, moment)
     return outcome
 
 
-def _write(
-    conn: sqlite3.Connection, site: Mapping[str, Any], answer: Any, now: datetime
-) -> Outcome:
+def _write(conn: sqlite3.Connection, site: Site, answer: Any, now: datetime) -> Outcome:
     try:
         times, series = openmeteo.parse_single(answer, {VARIABLE: "wind_700hpa_kmh"})
     except openmeteo.BadAnswerError:
@@ -121,9 +121,9 @@ def _write(
         " computed_at = excluded.computed_at, nights = excluded.nights,"
         " percentiles_json = excluded.percentiles_json",
         (
-            site["id"],
-            site["latitude"],
-            site["longitude"],
+            site.id,
+            site.latitude,
+            site.longitude,
             iso_z(now),
             len(means),
             json.dumps(_percentiles(means)),

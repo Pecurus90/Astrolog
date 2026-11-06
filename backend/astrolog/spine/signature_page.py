@@ -11,6 +11,7 @@ from ..clock import NIGHT_SQL
 from ..db.row import Row
 from ..units import focal_buckets, known_focal
 from ..vocab.header_value import normalize_header_value
+from ..vocab.instruments import InstrumentKind
 from ..vocab.software import normalize_software, telescope_is_mount
 from . import declarations as decl
 from . import frame_folder as folder
@@ -59,7 +60,7 @@ def _camera_of(
     """What normalize settled, else what the header, the answer or the night would give."""
     return (
         r["rig_camera"]
-        or decl.instrument_name(conn, "camera", r["instrument_raw"])
+        or decl.instrument_name(conn, InstrumentKind.CAMERA, r["instrument_raw"])
         or (given.camera if given else None)
         or (night.camera if night is not None else None)
     )
@@ -160,7 +161,7 @@ def _add(
     for field, asked in zip(("asks_camera", "asks_optics", "asks_filter"), asks, strict=True):
         card[field] = card[field] or asked
     card["spellings"].add(normalize_header_value(r["telescope_raw"]))
-    card["optics"].add(decl.instrument_name(conn, "optics", r["telescope_raw"]))
+    card["optics"].add(decl.instrument_name(conn, InstrumentKind.OPTICS, r["telescope_raw"]))
     card["focal"].add(known_focal(r["focal_mm_raw"]))
 
 

@@ -8,6 +8,7 @@ from typing import Any
 from ..db import idlist
 from ..db.row import Row
 from ..vocab.filters import Passband, model_by_id, passband_from_bands
+from ..vocab.instruments import InstrumentKind
 from . import counts, gear_usage, rigs, signature
 from .declarations import (
     ALIAS_KINDS,
@@ -62,7 +63,11 @@ def declare_instrument(
     renamed = bool(new_name) and new_name != row["name"]
     if renamed and row["kind"] in ALIAS_KINDS:
         rename(conn, row["kind"], row["name"], new_name, now)
-    specs = {k: v for k, v in fields.items() if k in CAMERA_SPECS and row["kind"] == "camera"}
+    specs = {
+        k: v
+        for k, v in fields.items()
+        if k in CAMERA_SPECS and row["kind"] == InstrumentKind.CAMERA
+    }
     columns = [f for f in INSTRUMENT_FIELDS if f not in specs]
     changed = _set_fields(conn, "instruments", instrument_id, fields, columns) or bool(specs)
     for field, value in specs.items():
@@ -77,7 +82,12 @@ def declare_instrument(
 
 
 def _move_instrument_declarations(
-    conn: sqlite3.Connection, kind: str, old_name: str, new_name: str, *, merging: bool
+    conn: sqlite3.Connection,
+    kind: InstrumentKind,
+    old_name: str,
+    new_name: str,
+    *,
+    merging: bool,
 ) -> None:
     """On a rename what moves wins: the new name holds only leftovers. On a merge the kept piece's
     card wins, and the absorbed one fills only what it left empty."""
@@ -94,7 +104,7 @@ def _move_instrument_declarations(
     conn.execute(
         "DELETE FROM declarations WHERE entity_type = 'instrument' AND entity_key = ?", (old,)
     )
-    if kind == "camera":
+    if kind == InstrumentKind.CAMERA:
         follow_not_same_as(conn, old_name, new_name)
 
 

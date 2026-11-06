@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from ..clock import now_iso
 from ..spine import gear, gear_create, gear_usage, rigs
 from ..spine.stages import StageName
+from ..vocab.instruments import InstrumentKind
 from . import instrument_answer, work
 from . import review_write as write
 from .deps import get_db
@@ -41,16 +42,17 @@ def add_instrument(
     does not ask for."""
     work.busy(request.app.state)
     now = now_iso()
+    kind = InstrumentKind(body.kind)
     with write.writing(conn):
-        new_id = gear_create.instrument(conn, body.kind, body.name, now, detected=False)
-        card = instrument_answer.of_the_kind(body.kind, body.model_dump(exclude_none=True))
+        new_id = gear_create.instrument(conn, kind, body.name, now, detected=False)
+        card = instrument_answer.of_the_kind(kind, body.model_dump(exclude_none=True))
         # without kind and name: resending them would be a rename onto itself, which would set
         # `detected` by hand and hide that a piece you write is born declared
         gear.declare_instrument(
             conn, new_id, {c: v for c, v in card.items() if c not in ("kind", "name")}, now
         )
         # the page shows the usage at once (zero, or unknown for a kind no frame names)
-        gear_usage.add_piece(conn, new_id, body.kind)
+        gear_usage.add_piece(conn, new_id, kind)
     # a piece just born has no frames: a run would change no row
     return GearWritten(id=new_id, requeued=0, run_started=False)
 

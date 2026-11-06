@@ -5,12 +5,14 @@ Nessuna prova esce di casa: la chiamata e' un finto che risponde come il servizi
 """
 
 import json
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
 
 from astrolog.db.connect import connect, ensure_database
+from astrolog.site_of import Site
 from astrolog.weather import forecast, openmeteo
 
 
@@ -44,7 +46,7 @@ class Finto:
 
 
 ADESSO = datetime(2026, 9, 25, 15, 0, tzinfo=UTC)
-SITO = {"id": 1, "latitude": 45.55, "longitude": 11.55, "timezone": "Europe/Rome"}
+SITO = Site(1, "Casa", 45.55, 11.55, "Europe/Rome", None)
 
 
 @pytest.fixture
@@ -178,7 +180,7 @@ def test_without_a_home_site_or_its_timezone_nothing_is_asked(db):
     finto = Finto(risposta())
     assert forecast.refresh(db, None, fetch=finto, now=ADESSO) == "no_site"
     assert (
-        forecast.refresh(db, {**SITO, "timezone": None}, fetch=finto, now=ADESSO) == "no_timezone"
+        forecast.refresh(db, replace(SITO, timezone=None), fetch=finto, now=ADESSO) == "no_timezone"
     )
     assert finto.chiesti == []
     assert righe(db) == []
@@ -223,7 +225,7 @@ def test_the_round_runs_when_a_home_site_appears_or_changes():
     assert cadenza.due(SITO, 0.0)
     cadenza.done(SITO, "ok", 0.0)
     assert not cadenza.due(SITO, 60.0)
-    assert cadenza.due({**SITO, "latitude": 40.0}, 60.0)
+    assert cadenza.due(replace(SITO, latitude=40.0), 60.0)
 
 
 def test_after_a_good_round_the_next_is_the_full_interval():
@@ -242,7 +244,7 @@ def test_after_a_failed_round_it_tries_again_sooner(esito):
 
 
 def test_a_site_without_timezone_is_not_tried_again_every_few_minutes():
-    senza = {**SITO, "timezone": None}
+    senza = replace(SITO, timezone=None)
     cadenza = forecast.Cadence(3600)
     cadenza.done(senza, "no_timezone", 0.0)
     assert not cadenza.due(senza, forecast.RETRY_S)

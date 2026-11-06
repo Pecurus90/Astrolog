@@ -6,6 +6,7 @@ from dataclasses import asdict
 from typing import Final
 
 from ..place import by_distance, distance_km
+from ..site_of import known_sites
 from ..spine import coordinates as places
 from ..spine import filters_used, gear, object_answer, rigs, unnamed
 from ..spine import objects as obj
@@ -76,13 +77,12 @@ def unclear_coordinates(conn: sqlite3.Connection) -> list[UnclearCoordinates]:
     spots = places.unclear_coordinates(conn, GroupReason.SITE_UNCLEAR)
     if not spots:
         return []
-    sites = conn.execute("SELECT id, name, latitude, longitude, is_default FROM sites").fetchall()
-    home = next((s for s in sites if s["is_default"]), None)
+    home, sites = known_sites(conn)
     out: list[UnclearCoordinates] = []
     for spot in spots:
         # sorted before building the models, which round the distance (`place.by_distance`)
         nearest = [
-            SiteCandidate(id=s["id"], name=s["name"], distance_km=km)
+            SiteCandidate(id=s.id, name=s.name, distance_km=km)
             for km, s in by_distance(spot["latitude"], spot["longitude"], sites)
         ]
         out.append(
@@ -90,7 +90,7 @@ def unclear_coordinates(conn: sqlite3.Connection) -> list[UnclearCoordinates]:
                 **spot,
                 # without a home site there is no distance: zero would say "you are home"
                 distance_km=distance_km(
-                    spot["latitude"], spot["longitude"], home["latitude"], home["longitude"]
+                    spot["latitude"], spot["longitude"], home.latitude, home.longitude
                 )
                 if home
                 else None,

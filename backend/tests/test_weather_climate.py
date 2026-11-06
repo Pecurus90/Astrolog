@@ -6,10 +6,12 @@ previsioni: un anno intero in una chiamata, ore UTC senza fuso).
 """
 
 import json
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from astrolog.site_of import Site
 from astrolog.weather import climate, forecast, position, view
 from test_weather_forecast import (  # noqa: F401 - `db` e' una fixture
     SITO,
@@ -62,7 +64,7 @@ def test_the_climate_of_a_site_is_a_year_of_nights_seen_in_their_own_hours(db): 
 def test_where_the_dark_never_comes_the_climate_uses_the_hours_the_verdict_uses(db):  # noqa: F811
     """A Tromso d'estate il buio pieno non arriva: il solito si misura, come il verdetto, sulle ore
     col Sole sotto l'orizzonte. Solo sul buio mancherebbero i mesi chiari."""
-    tromso = {"id": 1, "latitude": 69.65, "longitude": 18.96, "timezone": "Europe/Oslo"}
+    tromso = Site(1, "Tromso", 69.65, 18.96, "Europe/Oslo", None)
     assert climate.step(db, tromso, fetch=Finto(anno()), now=ADESSO) == "ok"
     notti = db.execute("SELECT nights FROM weather_climate").fetchone()[0]
     assert 290 < notti < 330  # fuori restano solo le notti del Sole di mezzanotte
@@ -123,7 +125,7 @@ def test_a_site_that_moves_asks_its_climate_again_and_is_not_compared_with_the_o
 ):
     finto = Finto(mese())
     climate.step(db, SITO, fetch=finto, now=ADESSO)
-    spostato = {**SITO, "latitude": 33.4, "longitude": -111.9, "timezone": "America/Phoenix"}
+    spostato = replace(SITO, latitude=33.4, longitude=-111.9, timezone="America/Phoenix")
     assert position.percentiles(db, SITO) is not None
     assert position.percentiles(db, spostato) is None
     assert climate.step(db, spostato, fetch=finto, now=ADESSO + timedelta(minutes=1)) == "ok"
@@ -134,7 +136,7 @@ def test_a_site_that_moves_asks_its_climate_again_and_is_not_compared_with_the_o
 def test_without_a_site_or_its_timezone_nothing_is_asked(db, minimo_di_un_mese):  # noqa: F811
     finto = Finto(mese())
     assert climate.step(db, None, fetch=finto, now=ADESSO) is None
-    assert climate.step(db, {**SITO, "timezone": None}, fetch=finto, now=ADESSO) is None
+    assert climate.step(db, replace(SITO, timezone=None), fetch=finto, now=ADESSO) is None
     assert finto.chiesti == []
 
 

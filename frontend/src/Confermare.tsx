@@ -14,6 +14,7 @@ import { SezioneSenzaTipo } from "./SezioneSenzaTipo"
 import { api } from "./api/client"
 import { useColonnaStretta } from "./colonna"
 import { motivo } from "./api/motivo"
+import { useRevisione } from "./api/revisione"
 import type { components } from "./api/schema"
 import { type Chiave, numero, t } from "./i18n"
 import { type QualeSezione, SEZIONI } from "./sezioniDaConfermare"
@@ -96,14 +97,7 @@ function LaPagina({ stretta }: { stretta: boolean }) {
         })) as (chiave: string | number, risposta: Accumulo[S][keyof Accumulo[S]] | null) => void
   }, [])
 
-  const pagina = useQuery({
-    queryKey: ["review"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/review")
-      if (error) throw new Error(t("review.failed"))
-      return data
-    },
-  })
+  const pagina = useRevisione()
   const modelli = useQuery({
     queryKey: ["filter-models"],
     queryFn: async () => {

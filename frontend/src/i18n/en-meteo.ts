@@ -3,7 +3,6 @@
  * `it-meteo.ts` e si porta qui, con le stesse chiavi e gli stessi segnaposto.
  */
 export const enMeteo = {
-  "weather.title": "Weather",
   "weather.loading": "Loading\u2026",
   "weather.failed": "Forecast not available",
   "weather.noSite.title": "Default site missing",

@@ -48,6 +48,7 @@ from astrolog.spine import (
 from astrolog.spine.scan_store import COUNTS
 from astrolog.units import SQM_MAX, SQM_MIN
 from astrolog.vocab.filters import BANDS, PASSBANDS
+from astrolog.vocab.instruments import InstrumentKind
 from astrolog.weather import fetches, forecast, judge, verdict
 from astrolog.worker.worker import STRUCTURAL_KEYS, State
 from conftest import add_folder
@@ -298,13 +299,15 @@ def test_the_words_group_uses_are_the_words_the_api_shows():
 
 
 def test_instrument_kinds_say_what_the_schema_allows():
-    """Il `Literal` dei tipi di pezzo e il CHECK dello schema sono lo stesso vocabolario: se
-    lo schema cambia e il modello no, l'OpenAPI mentirebbe senza che niente diventi rosso."""
+    """`InstrumentKind` e il CHECK di `instruments.kind` sono lo stesso vocabolario, nello stesso
+    ordine: se lo schema cambia e l'enum no, l'OpenAPI mentirebbe senza che niente diventi rosso.
+    Il modello dell'API ripete le parole in un `Literal`, uguali all'enum."""
     schema = Path(SCHEMA_PATH).read_text(encoding="utf-8")
     blocco = schema[schema.index("kind            TEXT NOT NULL CHECK") :]
     blocco = blocco[: blocco.index("))") + 1]
-    dallo_schema = set(re.findall(r"'([a-z_]+)'", blocco))
-    assert set(get_args(models_review.InstrumentKind)) == dallo_schema
+    dallo_schema = re.findall(r"'([a-z_]+)'", blocco)
+    assert [k.value for k in InstrumentKind] == dallo_schema
+    assert list(get_args(models_review.InstrumentKind)) == dallo_schema
 
 
 def test_the_sky_bounds_are_the_same_in_the_model_the_units_and_the_schema():

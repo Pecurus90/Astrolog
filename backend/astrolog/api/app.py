@@ -122,14 +122,13 @@ def _weather_scheduler(db_path: str, every_s: float, stop_event: threading.Event
 def _weather_round(db_path: str, cadence: forecast.Cadence) -> None:
     conn = connect(db_path)
     try:
-        row = home_site(conn)
-        site = None if row is None else dict(row)
+        site = home_site(conn)
         try:
             climate.step(conn, site)  # before the forecast, which reads it
         except Exception:
             log.exception("meteo: il giro della climatologia e' caduto")
         try:
-            tonight = night_date(now_iso(), site["timezone"]) if site else None
+            tonight = night_date(now_iso(), site.timezone) if site else None
             if tonight and moon_calendar.step(conn, site, dt.date.fromisoformat(tonight)):
                 conn.commit()
         except Exception:

@@ -10,6 +10,7 @@ from enum import StrEnum
 from ..db.row import Row
 from ..units import known_focal, same_focal
 from ..vocab.header_value import normalize_header_value
+from ..vocab.instruments import InstrumentKind
 from ..vocab.software import normalize_software, telescope_is_mount
 from . import declarations as decl
 from .declarations import EntityType
@@ -179,7 +180,11 @@ def _every_answer(conn: sqlite3.Connection) -> list[tuple[str, Answer]]:
 
 
 def follow_piece(
-    conn: sqlite3.Connection, kind: str, old_name: str, new_name: str, now: str | None = None
+    conn: sqlite3.Connection,
+    kind: InstrumentKind,
+    old_name: str,
+    new_name: str,
+    now: str | None = None,
 ) -> None:
     """On the old name the piece would be reborn beside the new one at the next round."""
     for answer_key, stored_answer in _every_answer(conn):

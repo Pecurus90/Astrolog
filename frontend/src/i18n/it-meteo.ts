@@ -6,7 +6,6 @@
  * dall'ASCII si scrivono col loro codice.
  */
 export const itMeteo = {
-  "weather.title": "Meteo",
   "weather.loading": "Caricamento\u2026",
   "weather.failed": "Previsione non disponibile",
   "weather.noSite.title": "Sito predefinito mancante",

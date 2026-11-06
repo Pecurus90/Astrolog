@@ -2,12 +2,10 @@
  * I testi inglesi della pagina **Attrezzatura**: una **traduzione**, non una sorgente. Si scrive
  * in `it-attrezzatura.ts` e si porta qui, con le stesse chiavi e gli stessi segnaposto.
  *
- * `gear.title` e' la voce della barra (`nav.gear`), non una parola nuova: in inglese la pagina si
- * chiama *Equipment*, mentre *rig*, *instrument* e *frames* restano le parole gia' scelte in
- * `en.ts`.
+ * In inglese la pagina si chiama *Equipment*, come la voce della barra (`nav.gear`), mentre *rig*,
+ * *instrument* e *frames* restano le parole gia' scelte in `en.ts`.
  */
 export const enAttrezzatura = {
-  "gear.title": "Equipment",
   "gear.failed": "Equipment not available",
   "gear.kind.optics": "Telescopes and lenses",
   "gear.kind.camera": "Cameras",

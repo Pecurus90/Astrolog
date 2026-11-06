@@ -9,10 +9,13 @@ from typing import Any
 from ..db.inserted import inserted_id
 from ..vocab.filters import Passband, normalize_filter
 from ..vocab.header_value import normalize_header_value
+from ..vocab.instruments import InstrumentKind
 from . import declarations, gear
 
 
-def instrument(conn: sqlite3.Connection, kind: str, name: str, now: str, *, detected: bool) -> int:
+def instrument(
+    conn: sqlite3.Connection, kind: InstrumentKind, name: str, now: str, *, detected: bool
+) -> int:
     """Name only: `camera_specs` writes a camera's pixel and colour at the end of the pass, the
     rest is filled by whoever declares."""
     return inserted_id(

@@ -243,8 +243,6 @@ export const en = {
   "review.models.failed": "Model list not available",
   "review.loading": "Loading\u2026",
   "review.failed": "To confirm not available",
-  "health.tables": "{n} tables in the database",
-  "health.tables.one": "1 table in the database",
   "action.retry": "Try again",
   "settings.failed": "The service did not respond.",
   // I nomi delle nove classi sono i titoli **originali** della voce *Bortle scale* di Wikipedia,

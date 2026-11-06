@@ -3,20 +3,18 @@ whether the night is unusual for the place, not whether it is good."""
 
 import json
 import sqlite3
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
+
+from ..site_of import Site
 
 
-def percentiles(conn: sqlite3.Connection, site: Mapping[str, Any]) -> list[float] | None:
+def percentiles(conn: sqlite3.Connection, site: Site) -> list[float] | None:
     """`None` when missing or measured elsewhere: a moved site is not held to its old usual."""
     row = conn.execute(
         "SELECT latitude, longitude, percentiles_json FROM weather_climate WHERE site_id = ?",
-        (site["id"],),
+        (site.id,),
     ).fetchone()
-    if row is None or (row["latitude"], row["longitude"]) != (
-        site["latitude"],
-        site["longitude"],
-    ):
+    if row is None or (row["latitude"], row["longitude"]) != (site.latitude, site.longitude):
         return None
     return json.loads(row["percentiles_json"])
 

@@ -13,6 +13,7 @@ from typing import Any, TypeGuard, cast
 from .. import net
 from ..clock import iso_z, night_date
 from ..db.replace_table import replace_rows
+from ..site_of import Site
 from . import nights, openmeteo
 
 log = logging.getLogger(__name__)
@@ -77,15 +78,15 @@ def write_rows(
 
 
 def _rows(
-    site: Mapping[str, Any],
+    site: Site,
     models: Mapping[str, Mapping[str, list[Any]]],
     covered: Sequence[nights.Night],
     fetched_at: str,
 ) -> list[NightRow]:
     """Each model's nights that carry a value, with each hour's sky band; the judgement is
     `view`'s, which joins the sky sources first."""
-    sky = nights.sky(site["latitude"], site["longitude"], covered)
-    tz = zoneinfo.ZoneInfo(site["timezone"])
+    sky = nights.sky(site.latitude, site.longitude, covered)
+    tz = zoneinfo.ZoneInfo(cast("str", site.timezone))  # `refresh` returned before without one
     rows = []
     for model, series in models.items():
         for night, pairs in covered:
@@ -93,7 +94,7 @@ def _rows(
             if not nights.empty(hours):
                 rows.append(
                     NightRow(
-                        site["id"],
+                        site.id,
                         night,
                         KIND,
                         source_of(model),
@@ -107,7 +108,7 @@ def _rows(
 
 def refresh(
     conn: sqlite3.Connection,
-    site: Mapping[str, Any] | None,
+    site: Site | None,
     *,
     fetch: net.Fetch | None = None,
     now: datetime | None = None,
@@ -116,9 +117,9 @@ def refresh(
     answer deletes nothing: the previous forecast stays with its time."""
     if site is None:
         return Outcome.NO_SITE
-    if not site["timezone"]:
+    if not site.timezone:
         return Outcome.NO_TIMEZONE
-    answer = net.ask(fetch or _fetch, openmeteo.forecast_url(site["latitude"], site["longitude"]))
+    answer = net.ask(fetch or _fetch, openmeteo.forecast_url(site.latitude, site.longitude))
     if answer is None:
         return net.Failure.UNREACHABLE  # `net` already logged the silence
     try:
@@ -127,9 +128,9 @@ def refresh(
         log.info("meteo: il servizio non ha risposto una previsione")
         return Outcome.BAD_ANSWER
     moment = now or datetime.now(UTC)
-    current = cast("str", night_date(iso_z(moment), site["timezone"]))  # a valid instant and zone
+    current = cast("str", night_date(iso_z(moment), site.timezone))  # a valid instant and zone
     # Whole nights only: beyond the model's horizon, better no night than half a night.
-    covered = nights.covered(site["timezone"], times, current, whole=True)
+    covered = nights.covered(site.timezone, times, current, whole=True)
     if not covered:
         log.info("meteo: la risposta non porta nessuna notte intera")
         return Outcome.BAD_ANSWER
@@ -137,7 +138,7 @@ def refresh(
     if not rows:
         log.info("meteo: la risposta porta solo ore vuote")
         return Outcome.BAD_ANSWER
-    write_rows(conn, site["id"], [source_of(m) for m in openmeteo.MODELS], rows)
+    write_rows(conn, site.id, [source_of(m) for m in openmeteo.MODELS], rows)
     return Outcome.OK
 
 
@@ -150,12 +151,12 @@ class Cadence:
         self._done_for: tuple[Any, ...] | None = None
         self._next = 0.0
 
-    def due(self, site: Mapping[str, Any] | None, now: float) -> TypeGuard[Mapping[str, Any]]:
+    def due(self, site: Site | None, now: float) -> TypeGuard[Site]:
         if site is None:
             return False
         return self._key(site) != self._done_for or now >= self._next
 
-    def done(self, site: Mapping[str, Any], outcome: Status, now: float) -> None:
+    def done(self, site: Site, outcome: Status, now: float) -> None:
         self._done_for = self._key(site)
         wait = (
             self.every_s
@@ -165,5 +166,5 @@ class Cadence:
         self._next = now + wait
 
     @staticmethod
-    def _key(site: Mapping[str, Any]) -> tuple[Any, ...]:
-        return (site["id"], site["latitude"], site["longitude"], site["timezone"])
+    def _key(site: Site) -> tuple[Any, ...]:
+        return (site.id, site.latitude, site.longitude, site.timezone)

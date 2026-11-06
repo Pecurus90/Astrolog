@@ -137,6 +137,14 @@ repos:
         entry: python tools/glossario.py
         files: ^(README\.md|CONTRIBUTING\.md|docs/.*\.md|handoff/[^/]*\.md|frontend/src/.*|backend/astrolog/.*)$
         stages: [pre-commit, manual]
+      # A key nobody reads is a text a translator still pays for.
+      - id: dead-i18n-keys
+        name: every i18n key is read by the code
+        language: system
+        entry: python tools/chiavi_morte.py
+        files: ^frontend/src/.*\.tsx?$
+        pass_filenames: false
+        stages: [pre-commit, manual]
       # `/* .x-* */` closes the comment at `*/` and silently drops the next rule.
       - id: css-glob-comment
         name: CSS comment closed by a glob

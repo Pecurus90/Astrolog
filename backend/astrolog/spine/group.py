@@ -10,7 +10,7 @@ from functools import partial
 
 from ..clock import night_date, now_iso
 from ..db.transaction import transaction
-from ..site_of import Sites, known_sites, site_at
+from ..site_of import Site, Sites, known_sites, site_at
 from . import gear_usage, mosaic
 from . import group_store as store
 from .stage_run import Event, FrameError, frame_safely, receipt, watched
@@ -35,7 +35,7 @@ class GroupReason(StrEnum):
 class _Placed:
     """Where a frame goes: the site, its night in the site's zone, whether the user said it."""
 
-    site: sqlite3.Row
+    site: Site
     night_date: str
     declared: bool
 
@@ -112,10 +112,8 @@ def _where(conn: sqlite3.Connection, frame: sqlite3.Row, known: Sites) -> _Place
     return _with_timezone(found[0], frame, answered=found[1])
 
 
-def _with_timezone(
-    site: sqlite3.Row, frame: sqlite3.Row, *, answered: bool
-) -> _Placed | GroupReason:
-    date = night_date(frame["date_obs"], site["timezone"]) if site["timezone"] else None
+def _with_timezone(site: Site, frame: sqlite3.Row, *, answered: bool) -> _Placed | GroupReason:
+    date = night_date(frame["date_obs"], site.timezone) if site.timezone else None
     if date is None:
         return GroupReason.SITE_NO_TIMEZONE
     return _Placed(site, date, answered)
@@ -124,7 +122,7 @@ def _with_timezone(
 def _night(conn: sqlite3.Connection, placed: _Placed, now: str, counts: dict[str, int]) -> int:
     """`declared` when the site came from the user's answer, even "I was home": such a night is
     moved by nobody, neither a home move nor the sweep."""
-    site_id = placed.site["id"]
+    site_id = placed.site.id
     row = store.night(conn, site_id, placed.night_date)
     if row is not None:
         return row["id"]

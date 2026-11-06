@@ -21,6 +21,6 @@ def this_year(conn: sqlite3.Connection = Depends(get_db)) -> YearOut:
     two in the morning still counts last night. Without a home site, or with a zone that does not
     resolve, today in UTC: the archive does not depend on the site."""
     home = home_site(conn)
-    tonight = night_date(now_iso(), home["timezone"]) if home else None
+    tonight = night_date(now_iso(), home.timezone) if home else None
     today = dt.date.fromisoformat(tonight) if tonight else dt.datetime.now(dt.UTC).date()
     return YearOut.model_validate(asdict(year.of(conn, today)))

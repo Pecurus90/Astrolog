@@ -9,6 +9,7 @@ from enum import StrEnum
 from ..clock import now_iso
 from ..db.inserted import inserted_id
 from ..units import same_focal
+from ..vocab.instruments import InstrumentKind
 from . import counts, signature
 from .declarations import (
     EntityType,
@@ -33,9 +34,9 @@ class RigField(StrEnum):
 PART_FIELDS = counts.CARRIED
 # Where your word wins over the file's; for the other kinds it only fills the file's silence, since
 # a piece the files name is renamed, never replaced.
-OVER_THE_FILE = ("mount",)
+OVER_THE_FILE = (InstrumentKind.MOUNT,)
 # Without frames these say "no rig carries it", not "the files are silent": a rig is the remedy.
-NEEDS_A_RIG = ("mount", *counts.CHOSEN_ONLY)
+NEEDS_A_RIG = (InstrumentKind.MOUNT, *counts.CHOSEN_ONLY)
 
 
 class NotOfKindError(ValueError):
@@ -149,7 +150,7 @@ def create_declared(
     """Also written among the declarations: merging its optics or camera deletes the rigs, and
     `normalize` remakes them only from frames."""
     names: dict[str, str] = {}
-    for kind, piece_id in (("optics", optics_id), ("camera", camera_id)):
+    for kind, piece_id in ((InstrumentKind.OPTICS, optics_id), (InstrumentKind.CAMERA, camera_id)):
         row = conn.execute(
             "SELECT name FROM instruments WHERE id = ? AND kind = ?", (piece_id, kind)
         ).fetchone()
@@ -173,8 +174,8 @@ def restore_declared(conn: sqlite3.Connection, now: str | None = None) -> list[i
         if parts is None:
             continue  # a name with the bar inside: as in `follow_rename`, left alone
         optics, camera, focal = parts
-        optics_id = instrument_id(conn, "optics", optics)
-        camera_id = instrument_id(conn, "camera", camera)
+        optics_id = instrument_id(conn, InstrumentKind.OPTICS, optics)
+        camera_id = instrument_id(conn, InstrumentKind.CAMERA, camera)
         if optics_id is None or camera_id is None:
             continue
         if find_rig(conn, optics_id, camera_id, focal) is None:
@@ -286,7 +287,7 @@ def declare_rig(conn: sqlite3.Connection, rig_id: int, name: str, now: str | Non
 
 # Only these kinds are in a rig's key (`optics|camera|focal`). `follow_rename` looks at names, not
 # kinds, and real guide cameras carry camera-family names: called for one, it would move others'.
-KEY_KINDS = ("optics", "camera")
+KEY_KINDS = (InstrumentKind.OPTICS, InstrumentKind.CAMERA)
 
 
 # The pieces a rig declaration carries in its value, with the kind as field: the parts you give it.
@@ -294,7 +295,11 @@ VALUE_KINDS = PART_FIELDS
 
 
 def follow_piece(
-    conn: sqlite3.Connection, kind: str, old_name: str, new_name: str, now: str | None = None
+    conn: sqlite3.Connection,
+    kind: InstrumentKind,
+    old_name: str,
+    new_name: str,
+    now: str | None = None,
 ) -> None:
     """Optics and camera move the rig key and the gear answers, a chosen part the value naming
     it."""

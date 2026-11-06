@@ -92,13 +92,13 @@ def test_the_archive_dropdown_offers_the_filters_in_the_one_order(conn):
 
 
 def test_the_gear_page_lists_your_filters_in_the_one_order(conn):
-    """Anche i filtri gia' contati: la posizione del contatore vale per i corredi, non per loro."""
+    """Anche i filtri gia' contati, il piu' usato per ultimo: l'ordine e' quello della banda."""
     banco(conn)
-    for posto, (fid,) in enumerate(conn.execute("SELECT id FROM filters ORDER BY id DESC")):
+    for n, (fid,) in enumerate(conn.execute("SELECT id FROM filters ORDER BY id").fetchall()):
         conn.execute(
-            "INSERT INTO gear_usage(subject, subject_id, frames, objects_json, position)"
-            " VALUES('filter', ?, 1, '[]', ?)",
-            (fid, posto),
+            "INSERT INTO gear_usage(subject, subject_id, frames, objects_json)"
+            " VALUES('filter', ?, ?, '[]')",
+            (fid, n + 1),
         )
 
     assert [f["name"] for f in inventory.filters(conn)] == ATTESO

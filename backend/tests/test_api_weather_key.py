@@ -147,7 +147,7 @@ def test_the_hours_meteoblue_does_not_cover_stay_without_seeing(app, db_path):
         "UPDATE weather_nights SET hourly_json = ? WHERE source = 'meteoblue' AND night_date = ?",
         (json.dumps(ore[len(ore) // 2 :]), riga["night_date"]),
     )
-    view.rebuild(c, dict(home_site(c)))  # chi scrive riscrive la vista
+    view.rebuild(c, home_site(c))  # chi scrive riscrive la vista
     c.close()
     notte = next(
         n for n in app.get("/api/v1/weather").json()["nights"] if n["night"] == riga["night_date"]

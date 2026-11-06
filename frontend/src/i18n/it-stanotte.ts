@@ -12,14 +12,11 @@ export const itStanotte = {
   "tonight.weather": "meteo",
   "tonight.sites.manage": "Gestisci i siti",
   "tonight.sites.failed": "Cambio del sito non riuscito.",
-  "tonight.sites.unread": "Siti non disponibili.",
   "tonight.sky": "Bortle {n}",
   // Il sito c'e' ma non gli e' mai stata data una classe di cielo: non e' un guasto, e' una cosa
   // che manca.
   "tonight.sky.none": "Bortle non indicato",
   // La rampa di nove bande e' un disegno: chi ascolta sente questa frase al suo posto.
-  "tonight.sky.label": "Bortle {n} su 9, sito {sito}",
-  "tonight.sky.none.label": "Bortle non indicato per {sito}",
   "tonight.nosite": "Nessun sito selezionato.",
   "tonight.nosite.how": "Seleziona sito",
   "tonight.loading": "Caricamento\u2026",

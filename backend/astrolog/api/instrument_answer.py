@@ -9,23 +9,24 @@ from fastapi import HTTPException
 from ..spine import declarations as decl
 from ..spine import gear
 from ..spine import unfiltered as unfiltered_reader
+from ..vocab.instruments import InstrumentKind
 from .models_gear import InstrumentCorrection
 
 # Only what the app computes with (`spina-normalize.md`, *Le schede*); the camera's two fields
 # are `decl.CAMERA_SPECS` and not a copy, being the ones the card writes among the declarations.
 _COMMON = ("brand", "model")
 _ON_EVERY_PIECE = ("weight_kg", "notes")
-CARD: Final[dict[str, tuple[str, ...]]] = {
+CARD: Final[dict[InstrumentKind, tuple[str, ...]]] = {
     kind: (*_COMMON, *own, *_ON_EVERY_PIECE)
     for kind, own in {
-        "optics": ("aperture_mm", "focal_mm"),
-        "camera": decl.CAMERA_SPECS,
-        "mount": ("payload_kg",),
-        "reducer": ("reducer_factor",),
-        "filter_wheel": ("slots",),
-        "guide_scope": (),
-        "guide_camera": (),
-        "focuser": (),
+        InstrumentKind.OPTICS: ("aperture_mm", "focal_mm"),
+        InstrumentKind.CAMERA: decl.CAMERA_SPECS,
+        InstrumentKind.MOUNT: ("payload_kg",),
+        InstrumentKind.REDUCER: ("reducer_factor",),
+        InstrumentKind.FILTER_WHEEL: ("slots",),
+        InstrumentKind.GUIDE_SCOPE: (),
+        InstrumentKind.GUIDE_CAMERA: (),
+        InstrumentKind.FOCUSER: (),
     }.items()
 }
 
@@ -33,12 +34,12 @@ CARD: Final[dict[str, tuple[str, ...]]] = {
 class FieldNotOfKindError(ValueError):
     """A field that kind's card does not ask for; the route that exposes it makes it a 422."""
 
-    def __init__(self, kind: str, fields: list[str]) -> None:
+    def __init__(self, kind: InstrumentKind, fields: list[str]) -> None:
         super().__init__(f"{kind} non ha {', '.join(fields)}")
         self.fields = fields
 
 
-def of_the_kind(kind: str, fields: dict[str, Any]) -> dict[str, Any]:
+def of_the_kind(kind: InstrumentKind, fields: dict[str, Any]) -> dict[str, Any]:
     """Refused, not dropped: a field the kind lacks is the caller's mistake, and swallowing it would
     accept an answer that did not do what it said."""
     # they say which piece and its name, for every kind: not card fields
@@ -86,7 +87,7 @@ def merge(conn: sqlite3.Connection, instrument_id: int, into_id: int, now: str) 
     return requeued
 
 
-def _kind(conn: sqlite3.Connection, instrument_id: int) -> str | None:
+def _kind(conn: sqlite3.Connection, instrument_id: int) -> InstrumentKind | None:
     row = conn.execute("SELECT kind FROM instruments WHERE id = ?", (instrument_id,)).fetchone()
     return None if row is None else row["kind"]
 
@@ -99,6 +100,6 @@ def _colour(conn: sqlite3.Connection, instrument_id: int) -> bool:
     ).fetchone()
     return (
         row is not None
-        and row["kind"] == "camera"
+        and row["kind"] == InstrumentKind.CAMERA
         and unfiltered_reader.is_colour(conn, row["name"])
     )

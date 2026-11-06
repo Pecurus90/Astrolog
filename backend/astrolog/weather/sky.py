@@ -4,13 +4,14 @@ source is on its own: a silent or broken one keeps its old rows and stops none o
 import logging
 import sqlite3
 import zoneinfo
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
 from .. import net
 from ..clock import iso_z, night_of
 from ..db import config
+from ..site_of import Site
 from . import cams, meteoblue, nights
 from .fetches import Source
 from .forecast import KIND, NightRow, Outcome, Status, write_rows
@@ -41,7 +42,7 @@ def _parsed(source: Source, parse: Parse, answer: Any) -> Series | None:
 
 def _write(
     conn: sqlite3.Connection,
-    site: Mapping[str, Any],
+    site: Site,
     source: Source,
     series: Series | None,
     now: datetime,
@@ -49,59 +50,58 @@ def _write(
     if series is None:
         return Outcome.BAD_ANSWER
     times, values = series
-    tz = zoneinfo.ZoneInfo(site["timezone"])
+    zone = cast("str", site.timezone)  # the round asks the sky only after a forecast with a zone
+    tz = zoneinfo.ZoneInfo(zone)
     current = night_of(now.astimezone(tz))
     rows = []
-    for night, pairs in nights.covered(site["timezone"], times, current, whole=False):
+    for night, pairs in nights.covered(zone, times, current, whole=False):
         hours = nights.hours(values, pairs, tz)
         if not nights.empty(hours):
             rows.append(
-                NightRow(
-                    site["id"], night, KIND, source, iso_z(now), nights.hours_json(hours), None
-                )
+                NightRow(site.id, night, KIND, source, iso_z(now), nights.hours_json(hours), None)
             )
     if not rows:
         log.info("meteo: una fonte del cielo non porta nessuna notte", extra={"source": source})
         return Outcome.BAD_ANSWER
-    write_rows(conn, site["id"], [source], rows)
+    write_rows(conn, site.id, [source], rows)
     return Outcome.OK
 
 
 def _one(
     conn: sqlite3.Connection,
-    site: Mapping[str, Any],
+    site: Site,
     source: Source,
     fetch: net.Fetch,
     now: datetime,
 ) -> Status:
     module = SOURCES[source]
-    answer = net.ask(fetch, module.url(site["latitude"], site["longitude"]))
+    answer = net.ask(fetch, module.url(site.latitude, site.longitude))
     if answer is None:
         return net.Failure.UNREACHABLE
     return _write(conn, site, source, _parsed(source, module.parse, answer), now)
 
 
 def _meteoblue(
-    conn: sqlite3.Connection, site: Mapping[str, Any], fetch: net.Fetch, now: datetime
+    conn: sqlite3.Connection, site: Site, fetch: net.Fetch, now: datetime
 ) -> Status | None:
     """The outcome, recorded with its attempt; `None` without a key or before it is due."""
     key = config.read(conn).meteoblue_key
-    if not key or not meteoblue.due(conn, site["id"], now):
+    if not key or not meteoblue.due(conn, site.id, now):
         return None
-    answer, failure = net.ask_why(fetch, meteoblue.url(site["latitude"], site["longitude"], key))
+    answer, failure = net.ask_why(fetch, meteoblue.url(site.latitude, site.longitude, key))
     outcome = failure or _write(
         conn, site, Source.METEOBLUE, _parsed(Source.METEOBLUE, meteoblue.parse, answer), now
     )
     # only a refusal speaks of the key; a silence keeps the seeing it gave last time
     if outcome == net.Failure.REFUSED:
         meteoblue.drop_seeing(conn, now)
-    meteoblue.record(conn, site["id"], outcome, now)
+    meteoblue.record(conn, site.id, outcome, now)
     return outcome
 
 
 def refresh(
     conn: sqlite3.Connection,
-    site: Mapping[str, Any],
+    site: Site,
     *,
     fetch: net.Fetch | None = None,
     now: datetime | None = None,

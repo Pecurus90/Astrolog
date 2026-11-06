@@ -11,12 +11,18 @@ from ..db.declared import declared as declared  # the stages read it from here
 from ..site_of import COORDINATES as COORDINATES_ENTITY
 from ..site_of import COORDINATES_SITE
 from ..vocab.header_value import normalize_header_value
+from ..vocab.instruments import InstrumentKind
 from ..vocab.object_label import clean_object_name
 from . import counts
 
 # The kinds the spine creates from a header: without a rule, a renamed piece comes back doubled on
 # the next night. `filter` and `object` stay out: they map a spelling, never merge two.
-ALIAS_KINDS = ("optics", "camera", "mount", *counts.ON_THE_FRAME)
+ALIAS_KINDS = (
+    InstrumentKind.OPTICS,
+    InstrumentKind.CAMERA,
+    InstrumentKind.MOUNT,
+    *counts.ON_THE_FRAME,
+)
 
 
 class UnknownTargetError(ValueError):
@@ -75,7 +81,7 @@ def alias_target(conn: sqlite3.Connection, kind: str, header_value: str) -> str 
     return None if row is None else row["target_key"]
 
 
-def instrument_name(conn: sqlite3.Connection, kind: str, raw: str | None) -> str | None:
+def instrument_name(conn: sqlite3.Connection, kind: InstrumentKind, raw: str | None) -> str | None:
     """Learned rule, else the name as written. `normalize` and the gear question both read it: two
     readings would propose a renamed piece's old name and give birth to a second one."""
     key = normalize_header_value(raw)
@@ -87,8 +93,8 @@ def _named(raw: str | None, rule: str | None) -> str:
 
 
 def instrument_names(
-    conn: sqlite3.Connection, raws: Mapping[str, str | None]
-) -> dict[str, str | None]:
+    conn: sqlite3.Connection, raws: Mapping[InstrumentKind, str | None]
+) -> dict[InstrumentKind, str | None]:
     """`instrument_name` of one raw value per kind, the rules read in one query."""
     keys = {kind: key for kind, raw in raws.items() if (key := normalize_header_value(raw))}
     rules: dict[str, str] = {}
@@ -106,7 +112,7 @@ def instrument_names(
     }
 
 
-def instrument_id(conn: sqlite3.Connection, kind: str, name: str | None) -> int | None:
+def instrument_id(conn: sqlite3.Connection, kind: InstrumentKind, name: str | None) -> int | None:
     """Here, not in `gear`: `rigs` needs it too, and `gear` imports `rigs`."""
     row = conn.execute(
         "SELECT id FROM instruments WHERE kind = ? AND name = ?", (kind, name)
@@ -114,7 +120,7 @@ def instrument_id(conn: sqlite3.Connection, kind: str, name: str | None) -> int 
     return None if row is None else row["id"]
 
 
-def instrument_ids(conn: sqlite3.Connection, names: Mapping[str, str]) -> dict[str, int]:
+def instrument_ids(conn: sqlite3.Connection, names: Mapping[InstrumentKind, str]) -> dict[str, int]:
     """`instrument_id` of one name per kind, in one query; a kind with no piece is left out."""
     if not names:
         return {}
@@ -125,7 +131,7 @@ def instrument_ids(conn: sqlite3.Connection, names: Mapping[str, str]) -> dict[s
     return {r["kind"]: r["id"] for r in conn.execute(sql, args)}
 
 
-def instrument_key(kind: str, name: str) -> str:
+def instrument_key(kind: InstrumentKind, name: str) -> str:
     return f"{kind}|{name}"
 
 
@@ -188,7 +194,7 @@ def follow_not_same_as(conn: sqlite3.Connection, old_name: str, new_name: str) -
 
 def declare_instrument_spec(  # noqa: PLR0913
     conn: sqlite3.Connection,
-    kind: str,
+    kind: InstrumentKind,
     name: str,
     field: str,
     value: Any,

@@ -9,6 +9,7 @@ from typing import Any
 from ..spine import declarations as decl
 from ..spine import signature, typeless, typeless_answer, unfiltered, unnamed
 from ..spine import signature_page as cards
+from ..vocab.instruments import InstrumentKind
 from .models_review import FilterCandidate, RigChoice
 from .models_review_apply import GearEdit, ObjectEdit, TypelessFolderEdit
 
@@ -43,7 +44,7 @@ def answer_gear(
         if edit.filter_id is not None and edit.filter_id not in filter_choices:
             raise LookupError(f"filtro {edit.filter_id}")  # an old page, said before writing
         camera = (  # the night's camera too: the card asks the filter because of it
-            decl.instrument_name(conn, "camera", row["camera"])
+            decl.instrument_name(conn, InstrumentKind.CAMERA, row["camera"])
             or data.camera
             or row["settled_camera"]
         )
@@ -81,7 +82,7 @@ def _sensor(conn: sqlite3.Connection, camera: str | None, colour: bool, now: str
         return []
     before = unfiltered.is_colour(conn, camera)
     unfiltered.declare_sensor(conn, camera, colour, now)
-    camera_id = decl.instrument_id(conn, "camera", camera)
+    camera_id = decl.instrument_id(conn, InstrumentKind.CAMERA, camera)
     # the same colour moves nothing: only a change redoes the frames
     if camera_id is None or unfiltered.is_colour(conn, camera) == before:
         return []

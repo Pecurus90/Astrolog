@@ -8,7 +8,7 @@ import { AvvisiDellaScansione, Scansiona, ScansioneNelFoglio } from "./Scansiona
 import { ApriStanotte, Pastiglia, Stanotte } from "./Stanotte"
 import { numero, t } from "./i18n"
 import { PAGINE, type Pagina, paginaDi } from "./pagine"
-import { useRevisione } from "./revisione"
+import { useRevisione } from "./api/revisione"
 
 /**
  * Il telaio (disegno v26, `51-telaio.css`; contratto in `docs/domini/navigazione.md`): il binario

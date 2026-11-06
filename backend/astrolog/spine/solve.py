@@ -140,7 +140,8 @@ def _cache_dir(cache: Path | None) -> Path:
 def _in_order(conn: sqlite3.Connection) -> list[int]:
     pending = ready(conn, StageName.SOLVE)
     first = store.first_per_order_key(conn, pending)
-    rest = [i for i in pending if i not in set(first)]
+    taken = set(first)
+    rest = [i for i in pending if i not in taken]
     return first + store.newest_first(conn, rest)
 
 

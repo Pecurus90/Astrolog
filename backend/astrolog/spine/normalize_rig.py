@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from ..units import known_focal, same_focal
+from ..vocab.instruments import InstrumentKind
 from ..vocab.software import telescope_is_mount
 from . import counts, declarations, gear_create, rigs
 from .night_rig import NightRig
@@ -31,7 +32,11 @@ class Writing:
 
 
 def instrument_named(
-    conn: sqlite3.Connection, kind: str, name: str | None, counts: dict[str, int], now: str
+    conn: sqlite3.Connection,
+    kind: InstrumentKind,
+    name: str | None,
+    counts: dict[str, int],
+    now: str,
 ) -> int | None:
     """Created if missing: a name the user wrote gives birth to a piece just as a header does."""
     if not name:
@@ -41,7 +46,7 @@ def instrument_named(
 
 
 def _created(
-    conn: sqlite3.Connection, kind: str, name: str, counts: dict[str, int], now: str
+    conn: sqlite3.Connection, kind: InstrumentKind, name: str, counts: dict[str, int], now: str
 ) -> int:
     instrument_id = gear_create.instrument(conn, kind, name, now, detected=True)
     counts["instruments"] += 1
@@ -49,7 +54,11 @@ def _created(
 
 
 def instrument_for(
-    conn: sqlite3.Connection, kind: str, raw: str | None, counts: dict[str, int], now: str
+    conn: sqlite3.Connection,
+    kind: InstrumentKind,
+    raw: str | None,
+    counts: dict[str, int],
+    now: str,
 ) -> int | None:
     """The caller decides the kind: no list of mount names, which differ per user and would go
     stale; the software that wrote the file says whether a value is a mount."""
@@ -87,7 +96,9 @@ def carried_by_frame(  # noqa: PLR0913
     piece is created anyway: the user's word picks what goes on the frame, it deletes no piece."""
     carried = instruments_on_frame(conn, frame, tally, now)
     if telescope_is_mount(software):
-        carried["mount"] = instrument_for(conn, "mount", frame["telescope_raw"], tally, now)
+        carried[InstrumentKind.MOUNT] = instrument_for(
+            conn, InstrumentKind.MOUNT, frame["telescope_raw"], tally, now
+        )
     chosen = rigs.chosen_for(conn, rig_id) if rig_id is not None else {}
     for kind in counts.CARRIED:
         from_file = carried.get(kind)
@@ -110,13 +121,15 @@ def rig_for_frame(
     if telescope_is_mount(software):
         optics_id = None  # it is the mount, written by `carried_by_frame`
     else:
-        optics_id = instrument_for(conn, "optics", frame["telescope_raw"], counts, now)
-    camera_id = instrument_named(conn, "camera", given.camera, counts, now)
+        optics_id = instrument_for(conn, InstrumentKind.OPTICS, frame["telescope_raw"], counts, now)
+    camera_id = instrument_named(conn, InstrumentKind.CAMERA, given.camera, counts, now)
     groups = writing.buckets.get(given.camera, {})
     focal = known_focal(groups.get(frame["focal_mm"], frame["focal_mm"]))
     declared = answer is not None and answer.optics is not None
     if answer is not None:
-        optics_id = instrument_named(conn, "optics", answer.optics, counts, now) or optics_id
+        optics_id = (
+            instrument_named(conn, InstrumentKind.OPTICS, answer.optics, counts, now) or optics_id
+        )
         # the declared focal fills a silent one, or the rig born here would twin the detected one
         focal = focal if focal is not None else answer.focal_mm
     if (
@@ -124,7 +137,7 @@ def rig_for_frame(
         and optics_id is None
         and (focal is None or same_focal(night_rig.focal_mm, focal))
     ):
-        optics_id = instrument_named(conn, "optics", night_rig.optics, counts, now)
+        optics_id = instrument_named(conn, InstrumentKind.OPTICS, night_rig.optics, counts, now)
         focal = night_rig.focal_mm if focal is None else focal
     if optics_id is None and camera_id is None:
         return None

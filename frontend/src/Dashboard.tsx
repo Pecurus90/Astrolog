@@ -21,7 +21,7 @@ import { api } from "./api/client"
 import type { components } from "./api/schema"
 import { useColonnaStretta } from "./colonna"
 import { type Chiave, durata, fa, giorno, giornoBreve, giornoEMese, giornoENumero, numero, oraDelSito, orario, t } from "./i18n"
-import { useRevisione } from "./revisione"
+import { useRevisione } from "./api/revisione"
 
 type Meteo = components["schemas"]["WeatherOut"]
 type Notte = Meteo["nights"][number]

@@ -6,14 +6,16 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from ..vocab.instruments import InstrumentKind
+
 # Kinds the frame names itself, each with its `<kind>_raw`; a copy of this list elsewhere would let
 # a new kind be created but never renamed, so it is reborn as a duplicate.
-ON_THE_FRAME = ("filter_wheel", "focuser", "guide_camera")
+ON_THE_FRAME = (InstrumentKind.FILTER_WHEEL, InstrumentKind.FOCUSER, InstrumentKind.GUIDE_CAMERA)
 # Kinds no capture software writes: on the frame only by the user's choice on its rig.
-CHOSEN_ONLY = ("reducer", "guide_scope")
+CHOSEN_ONLY = (InstrumentKind.REDUCER, InstrumentKind.GUIDE_SCOPE)
 # Kinds the frame carries in a column of its own; forgetting one where hours are tied or a piece is
 # detached makes a merge crash.
-CARRIED = (*ON_THE_FRAME, "mount", *CHOSEN_ONLY)
+CARRIED = (*ON_THE_FRAME, InstrumentKind.MOUNT, *CHOSEN_ONLY)
 
 
 def _piece(through_rigs: str) -> str:
@@ -27,7 +29,7 @@ _WITH_RIGS = _piece("i.id IN (g.optics_id, g.camera_id)")
 
 # (piece, frame) pairs, so all pieces are counted at once by grouping instead of one correlated
 # sub-select per piece; `UNION` drops a frame reaching the same piece twice.
-_THROUGH_RIGS = ("optics", "camera")
+_THROUGH_RIGS = (InstrumentKind.OPTICS, InstrumentKind.CAMERA)
 PIECE_FRAMES = " UNION ".join(
     [
         f"SELECT g.{k}_id AS piece, f.id AS frame FROM frames f"  # noqa: S608 - our kinds

@@ -5,6 +5,7 @@ Nessuna prova esce di casa: le risposte finte hanno la forma di quelle vere (mis
 """
 
 import json
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -101,7 +102,9 @@ def test_the_round_asks_the_forecast_and_the_sky_together(db):  # noqa: F811
 
 def test_the_round_does_not_ask_the_sky_without_a_site_to_ask_for(db):  # noqa: F811
     finto = tutti()
-    assert rounds.refresh(db, {**SITO, "timezone": None}, fetch=finto, now=ADESSO) == "no_timezone"
+    assert (
+        rounds.refresh(db, replace(SITO, timezone=None), fetch=finto, now=ADESSO) == "no_timezone"
+    )
     assert finto.chiesti == []
 
 
@@ -132,9 +135,9 @@ def test_the_round_writes_how_the_forecast_request_went(db):  # noqa: F811
     from astrolog.weather import fetches
 
     rounds.refresh(db, SITO, fetch=tutti(), now=ADESSO)
-    assert fetches.last(db, SITO["id"], Source.FORECAST)["status"] == "ok"
+    assert fetches.last(db, SITO.id, Source.FORECAST)["status"] == "ok"
     rounds.refresh(db, SITO, fetch=tutti(**{"/v1/forecast": TimeoutError()}), now=ADESSO)
-    ultimo = fetches.last(db, SITO["id"], Source.FORECAST)
+    ultimo = fetches.last(db, SITO.id, Source.FORECAST)
     assert ultimo["status"] == "unreachable"
     assert ultimo["attempted_at"].startswith("2026-09-25T15:00")
 
@@ -142,5 +145,5 @@ def test_the_round_writes_how_the_forecast_request_went(db):  # noqa: F811
 def test_a_round_without_a_timezone_writes_no_attempt(db):  # noqa: F811
     from astrolog.weather import fetches
 
-    rounds.refresh(db, {**SITO, "timezone": None}, fetch=tutti(), now=ADESSO)
-    assert fetches.last(db, SITO["id"], Source.FORECAST) is None
+    rounds.refresh(db, replace(SITO, timezone=None), fetch=tutti(), now=ADESSO)
+    assert fetches.last(db, SITO.id, Source.FORECAST) is None

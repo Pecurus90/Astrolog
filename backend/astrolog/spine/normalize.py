@@ -18,6 +18,7 @@ from ..vocab.filters import (
     passband_of,
 )
 from ..vocab.header_value import normalize_header_value
+from ..vocab.instruments import InstrumentKind
 from ..vocab.software import normalize_software
 from . import (
     camera_sky,
@@ -135,7 +136,7 @@ def _camera_of(
 ) -> Given:
     """Where the header is silent the signature's answer, then the night, name the camera: from the
     rig alone those frames would get a filter nobody could ask them about."""
-    camera = declarations.instrument_name(conn, "camera", frame["instrument_raw"])
+    camera = declarations.instrument_name(conn, InstrumentKind.CAMERA, frame["instrument_raw"])
     found = signature.answer_for(answers, signature.parts_of(frame))
     answered = found[1] if found else None
     night = None

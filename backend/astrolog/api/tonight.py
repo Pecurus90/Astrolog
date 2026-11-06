@@ -3,14 +3,14 @@ downloads, so a lazy import would leave the process online until this route firs
 
 import sqlite3
 from datetime import datetime
-from typing import Any, cast
+from typing import cast
 
 from fastapi import APIRouter, Depends
 
 from ..clock import midnight_of, night_date, night_window, now_iso, seconds_between
 from ..db import config
 from ..ephemeris import moon, planets, sun
-from ..site_of import home_site
+from ..site_of import Site, home_site
 from ..units import bortle_of
 from . import weather
 from .deps import get_db
@@ -38,8 +38,8 @@ def _iso(instant: datetime | None) -> str | None:
     return instant.isoformat() if instant else None
 
 
-def _site_sky(row: dict[str, Any]) -> SiteSkyOut:
-    return SiteSkyOut(name=row["name"], sky_sqm=row["sky_sqm"], bortle=bortle_of(row["sky_sqm"]))
+def _site_sky(row: Site) -> SiteSkyOut:
+    return SiteSkyOut(name=row.name, sky_sqm=row.sky_sqm, bortle=bortle_of(row.sky_sqm))
 
 
 def _sky_band(band: sun.SkyBand) -> SkyBandOut:
@@ -58,11 +58,11 @@ def _sky_point(point: moon.TrackPoint) -> SkyPointOut:
 _HERE = "site_id = ? AND latitude = ? AND longitude = ?"
 
 
-def _here(site: dict[str, Any]) -> tuple[int, float, float]:
-    return site["id"], site["latitude"], site["longitude"]
+def _here(site: Site) -> tuple[int, float, float]:
+    return site.id, site.latitude, site.longitude
 
 
-def _next(conn: sqlite3.Connection, site: dict[str, Any], night: str, kind: str) -> str | None:
+def _next(conn: sqlite3.Connection, site: Site, night: str, kind: str) -> str | None:
     row = conn.execute(
         f"SELECT night_date FROM moon_nights WHERE {_HERE} AND night_date >= ? AND event = ?"  # noqa: S608
         " ORDER BY night_date LIMIT 1",
@@ -78,8 +78,7 @@ def moon_calendar(conn: sqlite3.Connection = Depends(get_db)) -> MoonCalendarOut
     good for broadband by the two thresholds in the settings, which travel along for the legend.
     Nothing is computed here: before the round has run, `nights` is empty."""
     prefs = config.read(conn)
-    row = home_site(conn)
-    home = dict(row) if row else None
+    home = home_site(conn)
     rows = (
         conn.execute(
             f"SELECT * FROM moon_nights WHERE {_HERE} ORDER BY night_date",  # noqa: S608
@@ -89,7 +88,7 @@ def moon_calendar(conn: sqlite3.Connection = Depends(get_db)) -> MoonCalendarOut
         else []
     )
     return MoonCalendarOut(
-        today=night_date(now_iso(), home["timezone"]) if home else None,
+        today=night_date(now_iso(), home.timezone) if home else None,
         max_pct=prefs.moon_broadband_max_pct,
         min_dark_h=prefs.moon_broadband_min_dark_h,
         nights=[
@@ -99,7 +98,7 @@ def moon_calendar(conn: sqlite3.Connection = Depends(get_db)) -> MoonCalendarOut
                 illumination_pct=r["illumination_pct"],
                 moonless_dark_s=r["moonless_dark_s"],
                 event=r["event"],
-                lit_side=moon.lit_side(r["phase_key"], home["latitude"]) if home else "right",
+                lit_side=moon.lit_side(r["phase_key"], home.latitude) if home else "right",
                 good=bool(r["broadband_good"]),
             )
             for r in rows
@@ -130,30 +129,25 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
     the Moon finely, the four planets of the chart at the curve's step. The
     reply carries the night it refers to, so whoever shows it knows when it has expired without
     asking again at every breath."""
-    row = home_site(conn)
-    if row is None:
+    home = home_site(conn)
+    if home is None:
         return TonightOut(night=None, site=None, moon=None)
-    home = dict(row)
 
-    the_night = night_date(now_iso(), home["timezone"])
+    the_night = night_date(now_iso(), home.timezone)
     # Midnight as `clock` composes it, the instant the Nights page uses too: otherwise two screens
     # would ask the same night at two different moments.
-    midnight = midnight_of(the_night, home["timezone"]) if the_night else None
+    midnight = midnight_of(the_night, home.timezone) if the_night else None
     if the_night is None or midnight is None:
         # A moment later the computation would raise and the route would become a 500.
         return TonightOut(night=None, site=_site_sky(home), moon=None)
-    window_start, window_hours = night_window(the_night, home["timezone"])
+    window_start, window_hours = night_window(the_night, home.timezone)
 
     moon_phase = moon.phase(midnight)
-    moon_night = moon.night_track(
-        window_start, home["latitude"], home["longitude"], hours=window_hours
-    )
-    bands = sun.night_bands(window_start, home["latitude"], home["longitude"], hours=window_hours)
+    moon_night = moon.night_track(window_start, home.latitude, home.longitude, hours=window_hours)
+    bands = sun.night_bands(window_start, home.latitude, home.longitude, hours=window_hours)
     dark = [(b.starts_at, b.ends_at) for b in bands if b.kind == sun.Sky.DARK]
     moonless_left = moon.moonless_dark_left_s(moon_night, dark)
-    tracks = planets.night_tracks(
-        window_start, home["latitude"], home["longitude"], hours=window_hours
-    )
+    tracks = planets.night_tracks(window_start, home.latitude, home.longitude, hours=window_hours)
     span = sun.chart_window(bands)
     return TonightOut(
         chart=ChartOut(
@@ -170,7 +164,7 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
         ],
         night=the_night,
         site=_site_sky(home),
-        weather=weather.brief_of(conn, home["id"], the_night),
+        weather=weather.brief_of(conn, home.id, the_night),
         sky_bands=[_sky_band(f) for f in bands],
         dark_s=round(sum(seconds_between(a, b) for a, b in dark)),
         moon=MoonOut(
@@ -180,9 +174,7 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
             set=_iso(moon_night.set),
             rise_compass=cast(
                 Compass,
-                moon.compass(
-                    moon.azimuth_deg(moon_night.rise, home["latitude"], home["longitude"])
-                ),
+                moon.compass(moon.azimuth_deg(moon_night.rise, home.latitude, home.longitude)),
             )
             if moon_night.rise
             else None,
@@ -197,7 +189,7 @@ def tonight(conn: sqlite3.Connection = Depends(get_db)) -> TonightOut:
                 )
                 for p, s in zip(moon_night.track, moonless_left, strict=True)
             ],
-            ceiling_deg=moon.sky_ceiling(home["latitude"]),
-            lit_side=moon.lit_side(moon_phase.phase_key, home["latitude"]),
+            ceiling_deg=moon.sky_ceiling(home.latitude),
+            lit_side=moon.lit_side(moon_phase.phase_key, home.latitude),
         ),
     )

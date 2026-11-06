@@ -5,6 +5,7 @@ import sqlite3
 from collections.abc import Mapping
 
 from ..vocab.filters import Passband, normalize_filter, passband_of
+from ..vocab.instruments import InstrumentKind
 from . import declarations as decl
 from .declarations import CameraType
 from .stages import StageName, invalidate
@@ -41,7 +42,7 @@ def is_colour(
 
 
 def written_colour(conn: sqlite3.Connection, camera_name: str) -> str | None:
-    key = decl.instrument_key("camera", camera_name)
+    key = decl.instrument_key(InstrumentKind.CAMERA, camera_name)
     return decl.declared(conn, decl.EntityType.INSTRUMENT, key, "camera_type")
 
 
@@ -56,7 +57,7 @@ def declare_sensor(
         spec = CameraType.MONO
     else:
         return
-    decl.declare_instrument_spec(conn, "camera", camera_name, "camera_type", spec, now)
+    decl.declare_instrument_spec(conn, InstrumentKind.CAMERA, camera_name, "camera_type", spec, now)
 
 
 def says_no_filter(filter_raw: str | None) -> bool:

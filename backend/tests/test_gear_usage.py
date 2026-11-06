@@ -88,6 +88,21 @@ def test_every_stage_that_moves_poses_writes_the_usage_at_the_end(client, tmp_pa
     assert scritte > 0
 
 
+def test_only_rigs_carry_the_counters_order(client):
+    """La pagina ordina i corredi dal piu' usato, gli strumenti per tipo e nome, i filtri per banda:
+    una posizione scritta per strumenti e filtri nessuno la leggerebbe."""
+    with db(client) as conn:
+        gear_usage.write(conn)
+        gear_usage.add_piece(conn, 1, "reducer")
+        posti = conn.execute(
+            "SELECT subject, COUNT(*) AS n, COUNT(position) AS posti FROM gear_usage"
+            " GROUP BY subject ORDER BY subject"
+        ).fetchall()
+    contati = {r["subject"]: (r["n"], r["posti"]) for r in posti}
+    assert contati["filter"][1] == contati["instrument"][1] == 0
+    assert contati["rig"][1] == contati["rig"][0] > 1
+
+
 def test_a_piece_not_yet_counted_says_so_and_not_that_the_files_are_silent(client):
     """Un pezzo nato a meta' di un giro -- alla prima scansione, per minuti -- non ha ancora la sua
     riga: la pagina dice che non e' ancora contato. "L'app non puo' saperlo" e' un'altra cosa, ed

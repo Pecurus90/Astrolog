@@ -244,8 +244,6 @@ export const it = {
   "review.models.failed": "Elenco dei modelli non disponibile",
   "review.loading": "Caricamento\u2026",
   "review.failed": "Da confermare non disponibile",
-  "health.tables": "{n} tabelle nel database",
-  "health.tables.one": "1 tabella nel database",
   "action.retry": "Riprova",
   "settings.failed": "Il servizio non ha risposto.",
   // **Che cielo hai**, le nove classi di Bortle. I nomi e le descrizioni vengono dalla colonna

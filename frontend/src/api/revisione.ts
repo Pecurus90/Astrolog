@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { api } from "./api/client"
-import { t } from "./i18n"
+import { t } from "../i18n"
+import { api } from "./client"
 
-/** Le domande da confermare: il conto lo leggono la barra e la Dashboard. */
+/** Le domande da confermare: la pagina, e il conto nella barra e nella Dashboard. */
 export function useRevisione() {
   return useQuery({
     queryKey: ["review"],

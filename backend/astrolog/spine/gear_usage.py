@@ -11,6 +11,7 @@ from typing import Any
 from ..db import idlist
 from ..db.replace_table import replace_rows
 from ..units import hundredths, median
+from ..vocab.instruments import InstrumentKind
 from . import counts, rigs
 from . import objects as obj
 
@@ -25,7 +26,7 @@ class UsageSubject(StrEnum):
 
 # Optics and camera always have hours: they pass through the rig, which the spine derives from
 # every frame. For the others it depends on the archive (`_with_hours`).
-_ALWAYS = ("optics", "camera")
+_ALWAYS = (InstrumentKind.OPTICS, InstrumentKind.CAMERA)
 
 # Frames grouped once per list, not a correlated subselect per row, with `counts`'s link: the
 # nights too, or one row would tell two numbers.
@@ -98,7 +99,7 @@ FROM frames f WHERE f.copy_of IS NULL AND f.rig_id IS NOT NULL AND f.{kind}_id I
 GROUP BY f.rig_id, f.{kind}_id
 """
 # The words of the `rig_parts.kind` CHECK, in the card's order.
-_PIECE_KINDS = ("mount", *counts.ON_THE_FRAME, *counts.CHOSEN_ONLY)
+_PIECE_KINDS = (InstrumentKind.MOUNT, *counts.ON_THE_FRAME, *counts.CHOSEN_ONLY)
 PART_KINDS = (*_PIECE_KINDS, "software", "filter")
 _PARTS = (
     *(_PIECE_PART.format(kind=kind) for kind in _PIECE_KINDS),
@@ -138,13 +139,10 @@ class UsageRow:
 
 
 def write(conn: sqlite3.Connection) -> None:
-    """Redone whole, all or nothing: a frame changing rig moves four rows, and following them one
-    by one would get one wrong. The page order is `counts.ORDER_BY_TIME`, written as position."""
-    rows = [
-        (*astuple(r), n)
-        for listing in (_instruments(conn), _rigs(conn), _filters(conn))
-        for n, r in enumerate(listing)
-    ]
+    """Redone whole: a frame changing rig moves four rows, one by one would get one wrong. Only
+    rigs keep a position (`counts.ORDER_BY_TIME`); the page orders the rest on its own."""
+    rows = [(*astuple(r), None) for r in (*_instruments(conn), *_filters(conn))]
+    rows += [(*astuple(r), n) for n, r in enumerate(_rigs(conn))]
     replace_rows(conn, "gear_usage", _COLUMNS, rows)
     write_parts(conn)
 
@@ -186,7 +184,7 @@ def _parts(conn: sqlite3.Connection) -> list[tuple[Any, ...]]:
     return rows
 
 
-def add_piece(conn: sqlite3.Connection, instrument_id: int, kind: str) -> None:
+def add_piece(conn: sqlite3.Connection, instrument_id: int, kind: InstrumentKind) -> None:
     """Only its own row: recounting the whole archive inside the request that creates it would
     cost seconds."""
     _add_row(conn, UsageSubject.INSTRUMENT, instrument_id, known=kind in _with_hours(conn))
@@ -198,12 +196,13 @@ def add_new(conn: sqlite3.Connection, subject: UsageSubject, row_id: int) -> Non
 
 
 def _add_row(conn: sqlite3.Connection, subject: UsageSubject, row_id: int, *, known: bool) -> None:
-    """At the bottom of its list, which runs from the most used: at the top, with zero hours, it
-    would lie."""
+    """A rig goes at the bottom of its list, which runs from the most used: at the top, with zero
+    hours, it would lie."""
     conn.execute(
         "INSERT OR REPLACE INTO gear_usage(subject, subject_id, frames, integration_s, untimed,"
         " nights, objects_json, position) VALUES(?, ?, ?, ?, ?, ?, '[]',"
-        " (SELECT COALESCE(MAX(position) + 1, 0) FROM gear_usage WHERE subject = ?))",
+        " CASE WHEN ? = 'rig' THEN"
+        " (SELECT COALESCE(MAX(position) + 1, 0) FROM gear_usage WHERE subject = 'rig') END)",
         (subject, row_id, *((0, 0.0, 0, 0) if known else (None,) * 4), subject),
     )
 

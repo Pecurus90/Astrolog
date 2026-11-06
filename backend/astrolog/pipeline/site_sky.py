@@ -11,7 +11,7 @@ import numpy as np
 
 from ..clock import night_date
 from ..db.replace_table import replace_rows
-from ..site_of import known_sites, site_at
+from ..site_of import Site, known_sites, site_at
 from ..twilight import ASTRO_DEG
 from ..units import hundredths
 from .frame_rules import LOW_EXTENDED_DEG
@@ -101,7 +101,7 @@ def rebuild(conn: sqlite3.Connection, now: str) -> None:
 def _nights_per_site(conn: sqlite3.Connection) -> dict[int, dict[str, list[float]]]:
     """Frames go where their nights go (`site_of.site_at`); a site without a zone has no nights."""
     known = known_sites(conn)
-    places: dict[tuple[float, float], sqlite3.Row | None] = {}
+    places: dict[tuple[float, float], Site | None] = {}
     per_site: dict[int, dict[str, list[float]]] = {}
     limits = {"sun": ASTRO_DEG, "moon": MOON_BELOW_DEG, "low": LOW_EXTENDED_DEG}
     for row in conn.execute(GOOD, limits):
@@ -110,9 +110,9 @@ def _nights_per_site(conn: sqlite3.Connection) -> dict[int, dict[str, list[float
             found = site_at(conn, *point, known)
             places[point] = found[0] if isinstance(found, tuple) else None
         site = places[point]
-        if site is None or not site["timezone"]:
+        if site is None or not site.timezone:
             continue
-        night = night_date(row["mid_utc"], site["timezone"])
+        night = night_date(row["mid_utc"], site.timezone)
         if night is not None:
-            per_site.setdefault(site["id"], {}).setdefault(night, []).append(row["sqm"])
+            per_site.setdefault(site.id, {}).setdefault(night, []).append(row["sqm"])
     return per_site

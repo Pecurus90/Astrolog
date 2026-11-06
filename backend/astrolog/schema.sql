@@ -731,8 +731,10 @@ CREATE TABLE gear_usage (
   width_deg       REAL,
   height_deg      REAL,
   objects_json    TEXT NOT NULL DEFAULT '[]',      -- cosa ci hai ripreso, dal piu' ripreso
-  position        INTEGER NOT NULL,                -- l'ordine della pagina: prima il piu' usato
-  PRIMARY KEY (subject, subject_id)
+  -- l'ordine dei corredi, dal piu' usato; strumenti per tipo e nome, filtri per banda (inventory)
+  position        INTEGER,
+  PRIMARY KEY (subject, subject_id),
+  CHECK ((subject = 'rig') = (position IS NOT NULL))
 ) STRICT;
 
 -- Le parti di un corredo: cio' che i suoi frame dicono di aver usato oltre a ottica e camera

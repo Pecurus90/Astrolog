@@ -8,6 +8,7 @@ import { Icon } from "./Icons"
 import { CieloLetto } from "./ScalaDelCielo"
 import { api } from "./api/client"
 import type { components } from "./api/schema"
+import { useSiti } from "./api/siti"
 import { tracciatoDellaLuna } from "./disegnoDellaLuna"
 import { oraDelSito, t } from "./i18n"
 import { Accordo, type Breve, Giudizio, VentoInQuota } from "./NotteDelMeteo"
@@ -145,14 +146,7 @@ type SitoDiStanotte = components["schemas"]["SiteSkyOut"]
 /** Il blocco del sito: i siti da scegliere, la classe del cielo e il rimando ai siti. */
 function Sito({ sito }: { sito: SitoDiStanotte | null }) {
   const cache = useQueryClient()
-  const siti = useQuery({
-    queryKey: ["sites"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/sites")
-      if (error) throw new Error(t("tonight.sites.unread"))
-      return data
-    },
-  })
+  const siti = useSiti()
   const scegli = useMutation({
     mutationFn: async (id: number) => {
       const { error } = await api.POST("/api/v1/sites/{site_id}/default", {

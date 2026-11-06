@@ -132,25 +132,23 @@ def weather(conn: sqlite3.Connection = Depends(get_db)) -> WeatherOut:
     home = home_site(conn)
     if home is None:
         return empty
-    current = night_date(now_iso(), home["timezone"]) if home["timezone"] else None
+    current = night_date(now_iso(), home.timezone) if home.timezone else None
     if current is None:
-        return empty.model_copy(
-            update={"site": home["name"], "missing": forecast.Outcome.NO_TIMEZONE}
-        )
-    rows = conn.execute(_NIGHTS, (home["id"], chosen, current)).fetchall()
+        return empty.model_copy(update={"site": home.name, "missing": forecast.Outcome.NO_TIMEZONE})
+    rows = conn.execute(_NIGHTS, (home.id, chosen, current)).fetchall()
     arrived = {
         r["source"]: r["fetched_at"]
-        for r in conn.execute(_ARRIVED, (home["id"], forecast.KIND, *sky.ALL_SOURCES, current))
+        for r in conn.execute(_ARRIVED, (home.id, forecast.KIND, *sky.ALL_SOURCES, current))
     }
     return empty.model_copy(
         update={
-            "site": home["name"],
+            "site": home.name,
             "fetched_at": conn.execute(
-                _LAST_FETCHED, (home["id"], forecast.KIND, forecast.source_of("%"))
+                _LAST_FETCHED, (home.id, forecast.KIND, forecast.source_of("%"))
             ).fetchone()[0],
             "nights": [_night(r, i) for i, r in enumerate(rows[:MAX_NIGHTS])],
-            "seeing": _seeing(conn, home["id"], arrived),
-            "last_request": _last_request(conn, home["id"]),
+            "seeing": _seeing(conn, home.id, arrived),
+            "last_request": _last_request(conn, home.id),
             "sources": [WeatherSourceOut(source=f, fetched_at=q) for f, q in arrived.items()],
         }
     )
@@ -161,7 +159,7 @@ def refresh(conn: sqlite3.Connection = Depends(get_db)) -> WeatherRefreshOut:
     """Asks for the forecast now. If the service is silent the previous one stays, and the reply
     says why."""
     home = home_site(conn)
-    status = rounds.refresh(conn, dict(home) if home else None)
+    status = rounds.refresh(conn, home)
     return WeatherRefreshOut(status=cast(RefreshStatus, status))
 
 
@@ -197,7 +195,7 @@ def put_meteoblue_key(
             meteoblue.forget(conn, now=datetime.now(UTC))
             home = home_site(conn)
             if home is not None:
-                view.rebuild(conn, dict(home))
+                view.rebuild(conn, home)
         return MeteoblueKeyOut(status=REMOVED, hint=None)
     outcome = meteoblue.check_key(trimmed)
     if outcome != forecast.Outcome.OK:
@@ -209,5 +207,5 @@ def put_meteoblue_key(
         meteoblue.forget(conn, now=datetime.now(UTC))
     home = home_site(conn)
     if home is not None:
-        rounds.refresh(conn, dict(home))
+        rounds.refresh(conn, home)
     return MeteoblueKeyOut(status=cast(KeyStatus, outcome), hint=config.hint(trimmed))

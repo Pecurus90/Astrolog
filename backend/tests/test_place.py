@@ -8,6 +8,7 @@ giorno che il servizio cambia, e non girerebbe su un portatile senza rete.
 
 import re
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -185,9 +186,9 @@ def test_a_distance_needs_all_four_coordinates(vuoto):
 
 
 def test_sites_without_coordinates_stay_out_of_the_distance_order():
-    vicino = {"latitude": 45.01, "longitude": 11.0}
-    lontano = {"latitude": 46.0, "longitude": 11.0}
-    senza = {"latitude": None, "longitude": None}
+    vicino = SimpleNamespace(latitude=45.01, longitude=11.0)
+    lontano = SimpleNamespace(latitude=46.0, longitude=11.0)
+    senza = SimpleNamespace(latitude=None, longitude=None)
     ordinati = place.by_distance(45.0, 11.0, [lontano, senza, vicino])
     assert [s for _km, s in ordinati] == [vicino, lontano]
 

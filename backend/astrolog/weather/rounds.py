@@ -2,18 +2,18 @@
 aloft, then the nights the page reads (`view`). Without a site or its timezone nothing is asked."""
 
 import sqlite3
-from collections.abc import Mapping
 from datetime import UTC, datetime
-from typing import Any, cast
+from typing import cast
 
 from ..net import Fetch
+from ..site_of import Site
 from . import fetches, forecast, sky, view
 from .forecast import Outcome
 
 
 def refresh(
     conn: sqlite3.Connection,
-    site: Mapping[str, Any] | None,
+    site: Site | None,
     *,
     fetch: Fetch | None = None,
     now: datetime | None = None,
@@ -22,11 +22,9 @@ def refresh(
     outcome = forecast.refresh(conn, site, fetch=fetch, now=now)
     if outcome not in (Outcome.NO_SITE, Outcome.NO_TIMEZONE):
         # past those two outcomes there is a site
-        known = cast("Mapping[str, Any]", site)
+        known = cast("Site", site)
         # so the page can say "no answer since": a restart or another reader knows it too
-        fetches.record(
-            conn, known["id"], fetches.Source.FORECAST, outcome, now or datetime.now(UTC)
-        )
+        fetches.record(conn, known.id, fetches.Source.FORECAST, outcome, now or datetime.now(UTC))
         sky.refresh(conn, known, fetch=fetch, now=now)
         view.rebuild(conn, known)
     return outcome

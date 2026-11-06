@@ -10,6 +10,7 @@ from typing import Any
 from ..spine import counts, gear
 from ..spine import declarations as decl
 from ..vocab.header_value import normalize_header_value
+from ..vocab.instruments import InstrumentKind
 from . import instrument_answer
 from .models_review import LookalikeOut
 from .models_review_apply import LookalikeEdit
@@ -84,7 +85,7 @@ def answer_all(conn: sqlite3.Connection, edits: Iterable[LookalikeEdit], now: st
         decl.write_declaration(
             conn,
             decl.EntityType.INSTRUMENT,
-            decl.instrument_key("camera", pair.name),
+            decl.instrument_key(InstrumentKind.CAMERA, pair.name),
             decl.not_same_as(pair.into_name),
             pair.into_name,
             now,

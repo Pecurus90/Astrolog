@@ -34,7 +34,7 @@ describe("le traduzioni", () => {
   prova("un segnaposto senza valore resta visibile invece di sparire", () => {
     // Un buco silenzioso diventa un testo scritto male che nessuno spiega; un `{n}` a schermo
     // si nota e si ripara.
-    expect(t("health.tables", {})).toContain("{n}")
+    expect(t("tonight.sky", {})).toContain("{n}")
   })
 
   prova("i conteggi si scrivono come li scrive la lingua", () => {
