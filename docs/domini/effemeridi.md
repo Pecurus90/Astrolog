@@ -13,7 +13,7 @@ Cosa l'utente ottiene, e la prova che lo difende.
 | Dove non sorge, vedo le fasce che quella notte ha **davvero**: alle Svalbard a gennaio il giorno non c'e', ma i crepuscoli si' | `test_a_real_polar_night_never_sees_the_day` |
 | Una notte in cui il buio comincia e non finisce **conta lo stesso**, fino al bordo | `test_the_dark_that_begins_and_does_not_end_is_measured_to_the_edge` |
 | Se la Luna non sorge **stanotte**, leggo che non sorge stanotte -- non un'ora finta | `test_a_moon_that_never_rises_comes_back_empty_not_invented`, `test_a_moon_that_never_rises_is_a_fact_not_an_error` |
-| So **quanto sale** stanotte, e a che ora ci arriva: e' cio' che dice se mi rovina le pose | `test_the_highest_point_of_the_night_is_told_with_its_instant` |
+| So **quanto sale** stanotte, e a che ora ci arriva: e' cio' che dice se mi rovina i frame | `test_the_highest_point_of_the_night_is_told_with_its_instant` |
 | Anche una notte in cui non sorge mi dice quanto poco sale, invece di tacere | `test_a_moon_that_never_rises_still_has_a_highest_point` |
 | Il grafico della notte comincia e finisce **con la notte**, senza perdere l'ultima mezz'ora | `test_the_curve_spans_the_whole_night_including_its_last_instant`, `test_the_route_sends_the_curve_and_the_highest_point` |
 | Due notti dello stesso posto si confrontano a occhio, perche' il grafico ha sempre la stessa altezza | `test_the_ceiling_is_the_highest_the_moon_can_ever_get_from_there`, `test_the_route_sends_the_ceiling_of_the_home_site` |

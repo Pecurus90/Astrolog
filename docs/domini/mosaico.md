@@ -21,13 +21,13 @@ Le parole stanno in [`glossario.md`](glossario.md):
 | Se dico di no, l'app non me lo richiede | `test_a_refused_mosaic_is_not_asked_again`, `test_an_unanswered_mosaic_counts_among_the_things_to_confirm` |
 | I pannelli ripresi in **notti diverse** stanno nello stesso mosaico | `test_panels_from_different_nights_are_the_same_mosaic` |
 | Due riprese **dello stesso campo** non diventano un mosaico: sono la stessa foto rifatta | `test_one_framing_shot_many_times_is_not_a_mosaic` |
-| Pochi frame spostati -- un giro al meridiano non ricentrato -- non fanno un pannello: un pannello conta solo con almeno il 25% del tempo del piu' lungo, e le pose se il tempo non si sa; i frame che non contano restano col loro oggetto | `test_two_stray_poses_beside_a_panel_are_not_a_mosaic`, `test_a_panel_shot_less_than_the_others_still_counts`, `test_the_share_is_measured_on_the_time_of_the_poses`, `test_without_the_time_the_share_is_measured_on_the_poses`, `test_without_the_time_few_poses_still_do_not_count`, `test_a_pose_that_leaves_for_another_rig_reweighs_the_mosaic`, `test_poses_that_turn_out_to_be_calibration_reweigh_the_mosaic`, `test_a_confirmed_mosaic_does_not_take_poses_that_do_not_count`, `test_the_centre_of_the_mosaic_does_not_lean_towards_a_panel_that_does_not_count`, `test_without_the_catalog_the_name_comes_from_the_panels_that_count`, `test_a_confirmed_mosaic_whose_other_panel_stops_counting_is_not_one_anymore` (`backend/tests/test_mosaic_weight.py`) |
+| Pochi frame spostati -- un giro al meridiano non ricentrato -- non fanno un pannello: un pannello conta solo con almeno il 25% del tempo del piu' lungo, e i frame se il tempo non si sa; i frame che non contano restano col loro oggetto | `test_two_stray_poses_beside_a_panel_are_not_a_mosaic`, `test_a_panel_shot_less_than_the_others_still_counts`, `test_the_share_is_measured_on_the_time_of_the_poses`, `test_without_the_time_the_share_is_measured_on_the_poses`, `test_without_the_time_few_poses_still_do_not_count`, `test_a_pose_that_leaves_for_another_rig_reweighs_the_mosaic`, `test_poses_that_turn_out_to_be_calibration_reweigh_the_mosaic`, `test_a_confirmed_mosaic_does_not_take_poses_that_do_not_count`, `test_the_centre_of_the_mosaic_does_not_lean_towards_a_panel_that_does_not_count`, `test_without_the_catalog_the_name_comes_from_the_panels_that_count`, `test_a_confirmed_mosaic_whose_other_panel_stops_counting_is_not_one_anymore` (`backend/tests/test_mosaic_weight.py`) |
 | Un frame di cui non si sa quanto e' grande il campo non fa mosaici | `test_poses_without_the_size_of_their_field_make_no_mosaic` |
 | Con un **altro setup** e' un altro progetto, non un altro pannello | `test_another_rig_is_another_production` |
 | Se di un frame non si sa come era orientato, l'app lo considera lo stesso invece di buttarlo via | `test_without_the_rotation_it_answers_on_the_circle_instead_of_giving_up` (`backend/tests/test_mosaic_geometry.py`), `test_panels_without_the_rotation_still_make_a_mosaic` |
 | Posso sciogliere un mosaico che ho confermato, e i pannelli tornano soggetti a se' | `test_dissolving_a_confirmed_mosaic_frees_its_panels` |
 | Quando dico di si' dico anche **di cosa** e' il mosaico, e il campo arriva gia' compilato con l'oggetto del catalogo al suo centro | `test_the_question_asks_what_the_mosaic_is_of_and_the_answer_names_it`, `test_the_proposal_is_the_catalog_object_at_the_centre` |
-| Le pose che ho ripreso dentro il mosaico stanno nel mosaico; quelle dello stesso oggetto riprese da sole no | `test_an_object_inside_and_outside_a_mosaic_keeps_its_own_poses`, `test_the_answer_is_written_on_the_poses_of_the_mosaic_only` |
+| I frame che ho ripreso dentro il mosaico stanno nel mosaico; quelli dello stesso oggetto ripresi da soli no | `test_an_object_inside_and_outside_a_mosaic_keeps_its_own_poses`, `test_the_answer_is_written_on_the_poses_of_the_mosaic_only` |
 | Un pannello ripreso dopo entra nel mosaico da solo, anche se la corsa si ferma a meta' | `test_poses_that_arrive_later_join_the_mosaic_when_the_spine_groups_them`, `test_a_group_run_stopped_halfway_still_writes_the_mosaic` |
 | Rinominare la camera, unirla a un'altra, o dire con che camera ho ripreso, non mi fa perdere la risposta | `test_renaming_the_camera_keeps_the_mosaic`, `test_merging_the_camera_into_another_keeps_the_mosaic`, `test_saying_the_camera_of_the_poses_keeps_the_mosaic` |
 | Una volta scritto, il mosaico non si ricalcola: un frame nuovo si confronta solo coi pannelli del suo setup nella sua fascia di cielo | `test_placing_again_does_not_redo_the_geometry`, `test_a_new_pose_is_compared_only_with_nearby_panels` |
@@ -87,7 +87,7 @@ li' (`test_merging_two_spellings_of_a_camera_joins_the_confirmed_mosaic`,
 dal pannello e dal mosaico, e un pannello rimasto vuoto si toglie
 (`test_a_pose_that_loses_its_sky_leaves_the_mosaic`,
 `test_an_emptied_panel_does_not_link_its_neighbours`); un mosaico rimasto con un pannello solo
-non e' piu' un mosaico, e le sue pose tornano ai loro oggetti
+non e' piu' un mosaico, e i suoi frame tornano ai loro oggetti
 (`test_a_confirmed_mosaic_left_with_one_panel_is_not_a_mosaic`).
 
 **L'app propone, l'utente conferma, e non si fonde niente.** I pannelli restano oggetti distinti:
@@ -123,11 +123,11 @@ l'Archivio che raccoglie i frame con la stessa chiave in una riga, col nome dett
 oggetto**: dove l'app mostra un oggetto, il mosaico si mostra e si usa allo stesso modo.
 
 **Un pannello conta solo se regge una parte del lavoro** (Marco, 27/9/2026): almeno il 25% del
-tempo del pannello piu' lungo del suo mosaico, contando le pose se il tempo non si sa. La pratica
+tempo del pannello piu' lungo del suo mosaico, contando i frame se il tempo non si sa. La pratica
 condivisa e' lo stesso tempo su ogni pannello, e al 25% il rumore del pannello e' il doppio; il
 perche' e le fonti stanno in `backend/astrolog/spine/mosaic_weight.py`. Lo scrive chi piazza o
-stacca le pose, sui mosaici che toccano (`mosaic.settle`, `panels.counts_in_mosaic`), e la proposta,
-il suo centro e il suo nome, la chiave sulle pose e i conti guardano solo i pannelli che contano. La
+stacca i frame, sui mosaici che toccano (`mosaic.settle`, `panels.counts_in_mosaic`), e la proposta,
+il suo centro e il suo nome, la chiave sui frame e i conti guardano solo i pannelli che contano. La
 sovrapposizione resta libera.
 
 **Senza le misure del campo non c'e' pannello.** I lati del rettangolo si ricavano da quanti pixel

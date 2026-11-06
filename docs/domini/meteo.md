@@ -1,8 +1,8 @@
 # Il meteo -- contratto
 
 **Com'e' la notte, prima e dopo.** Prima: le prossime notti ora per ora, col verdetto, le ore utili
-e cio' che serve alla planetaria. Dopo: il meteo vero delle notti che hai ripreso, accanto alle
-pose. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`marginal`/`nogo`),
+e cio' che serve alla planetaria. Dopo: il meteo vero delle notti che hai ripreso, accanto ai
+frame. Le parole vengono da [`glossario.md`](glossario.md) -- *verdetto* (`go`/`marginal`/`nogo`),
 *ore utili*, *misura*, *pesa*, *giudizio*; le notti da mezzogiorno a mezzogiorno nel fuso del sito sono di
 [`notti.md`](notti.md); le decisioni ereditate sul meteo, da verificare portandole, stanno in
 [`ereditato.md`](ereditato.md), sezione G.
@@ -179,7 +179,7 @@ fonte, con la serie ora per ora come arriva (lo storico col suo riassunto). Le n
 previsione pronte per la pagina stanno in `weather_view`, derivata: la riscrive il giro del meteo
 (`weather/view.py`) dopo previsione e cielo, unendo per ogni modello aerosol, seeing e Luna, coi
 giudizi e l'accordo gia' fatti. Una lettura non calcola mai. Non sta
-nella tabella delle notti, che spazza le notti senza pose -- e la notte di domani non ne ha ancora.
+nella tabella delle notti, che spazza le notti senza frame -- e la notte di domani non ne ha ancora.
 Si tiene cio' che l'app usa, mai la risposta intera del servizio.
 
 **A mani vuote.** Il meteo funziona appena c'e' un sito di casa, senza chiavi. Il primo avvio ha un

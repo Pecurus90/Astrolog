@@ -37,7 +37,7 @@ ogni tappa del piano si rilegge: si fa, resta o si cancella; ferma da tre tappe 
   verificato); stimarlo da ERA5 con Osborn e Sarazin, solo come "stimato" e solo se Marco lo vuole.
 - **Il fuoco e la temperatura** (Marco, 22/10/2026, con `measure`): dalla posizione e dalla
   temperatura del focheggiatore (gia' nella scheda del file) lo spostamento in step per grado, per
-  notte e setup, come il coefficiente di N.I.N.A.; con la nitidezza delle stelle, le pose sfocate
+  notte e setup, come il coefficiente di N.I.N.A.; con la nitidezza delle stelle, i frame sfocati
   e se il fuoco ha seguito la temperatura.
 - **La durata della posa per filtro** (Marco, 27/10/2026, da The Night Manager): dal fondo cielo
   misurato sui frame (`measure`) e dal rumore di lettura della camera, la posa piu' corta che

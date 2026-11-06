@@ -16,7 +16,7 @@ type Banda = components["schemas"]["BandIn"]["band"]
  * qualunque genere, compreso un corredo che non ha ancora ripreso). Sono quelli che la scansione
  * trovera': il filtro e' il suo nome, il corredo la sua impronta.
  *
- * - Il filtro chiede **la banda**, che e' cio' che sblocca le pose; il corredo **la focale**, che
+ * - Il filtro chiede **la banda**, che e' cio' che sblocca i frame; il corredo **la focale**, che
  *   senza farebbe nascere un doppione il giorno che i file la dicono.
  * - La scelta del genere arriva da fuori (`scelta`): e' la stessa tendina degli strumenti.
  */

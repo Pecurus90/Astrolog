@@ -152,7 +152,7 @@ export function coordinataDa(scritto: string, asse: Asse): number {
  * unita' e si formatta, che e' il mestiere di questo lato. Sta in una casa sola perche' la stessa
  * conversione la vorranno le altre sezioni, e un `/ 3600` ricopiato in tre componenti e' lo stesso
  * fatto in tre posti. Un decimale: il secondo non si legge, e "2.73 h" finge una precisione che
- * la somma di pose arrotondate non ha.
+ * la somma di tempi di posa arrotondati non ha.
  *
  * Ma un tempo **vero** sotto quel decimale non si scrive zero: un frame da un minuto diventerebbe
  * "0 h", che a schermo vuol dire "qui non c'e' tempo". Sotto la soglia in cui l'arrotondamento lo

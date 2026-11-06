@@ -50,7 +50,7 @@ const VUOTO: Accumulo = {
  * - le **sezioni vuote si nascondono**, con in cima quante ne hanno domande: una pagina di undici
  *   titoli vuoti sembra rotta, e il giorno che hai finito vuoi vederlo;
  * - dopo *Applica* **si ricarica dicendo cosa e' cambiato**, coi numeri della ricevuta: l'elenco
- *   di prima direbbe cose non piu' vere, perche' la risposta rifa' il lavoro sulle pose toccate.
+ *   di prima direbbe cose non piu' vere, perche' la risposta rifa' il lavoro sui frame toccati.
  *
  * *Applica* scrive solo le risposte: una domanda guardata e lasciata li' resta aperta (ADR 0014).
  */
@@ -221,7 +221,7 @@ function LaPagina({ stretta }: { stretta: boolean }) {
         >
           {t("review.applied", {
             n: numero(applica.data.changed),
-            pose: numero(applica.data.requeued),
+            frame: numero(applica.data.requeued),
           })}
         </Avviso>
       )}

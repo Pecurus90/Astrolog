@@ -16,7 +16,7 @@ type Schede = components["schemas"]["GearList"]["cards"]
  * Le **righe** dell'Attrezzatura: un pezzo, un corredo, un filtro.
  *
  * - **Qui non si calcola niente.** Ore, frame, notti, oggetti e la scala misurata arrivano gia'
- *   fatti dal backend, che sa quali pose escludere e in che ordine mettere le righe.
+ *   fatti dal backend, che sa quali frame escludere e in che ordine mettere le righe.
  * - **Cio' che l'app non sa non prende uno zero**: arrivano nulle le ore di una montatura, quelle
  *   di ogni genere che in questo archivio nessuna posa nomina, e la scala di un corredo che non
  *   ha ancora ripreso. La riga scrive **perche'** mancano, e chi decide e' il backend.
@@ -30,7 +30,7 @@ const SENZA_CORREDO: Partial<Record<Pezzo["kind"], Chiave>> = {
 }
 
 /** Quanto un pezzo e' servito: le ore col pezzo di sempre, i frame, le notti. Dove il legame con
- *  le pose non esiste -- la montatura, o un genere che i tuoi file non nominano mai -- si scrive
+ *  i frame non esiste -- la montatura, o un genere che i tuoi file non nominano mai -- si scrive
  *  **perche'**, che e' un dato anche quello. */
 function Uso({ pezzo }: { pezzo: Pezzo | Corredo | Filtro }) {
   // nato a meta' giro: i suoi numeri arrivano a fine giro, e non e' lo stesso di "non si sa"
@@ -207,7 +207,7 @@ export function UnCorredo({ corredo, montature }: { corredo: Corredo; montature:
   )
 }
 
-/** Quanto cielo inquadra un corredo, **misurato** sulle sue pose. Chi non ha ancora ripreso non
+/** Quanto cielo inquadra un corredo, **misurato** sui suoi frame. Chi non ha ancora ripreso non
  *  ce l'ha, e lo dice invece di prendersi il numero che la scheda direbbe. */
 function QuantoInquadra({ corredo }: { corredo: Corredo }) {
   if (corredo.scale_arcsec_px === null) return <Dettaglio>{t("gear.noScale")}</Dettaglio>

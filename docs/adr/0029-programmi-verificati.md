@@ -32,5 +32,5 @@ fonti vere, non da memoria.
 - **Pipeline nuova: niente lettura comune** (Marco, 22/10/2026, terzo audit). Un file che non e'
   di N.I.N.A. ne' ASIAIR si salta come "non supportato". Misura: nell'archivio di prova gli unici
   file di altri programmi (398) sono elaborati da PixInsight con `IMAGETYP LIGHT` e le chiavi <!-- software-ok -->
-  SBIG: la lettura comune li avrebbe contati come pose. La lettura SBIG resta solo nella vecchia,
+  SBIG: la lettura comune li avrebbe contati come frame. La lettura SBIG resta solo nella vecchia,
   finche' c'e'.

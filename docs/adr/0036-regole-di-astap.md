@@ -22,7 +22,7 @@ trovati e riparati: `astap_cli` legge i `.fz` dal 2026.07.17, non dal 16 (la dat
 | raggio cieco | 180° | default di ASTAP (`radius_search1 '180'`); N.I.N.A. forza 180 senza coordinate |
 | sottocampionamento | `-z 0` (ASTAP sceglie), poi `-z 1` | ASTAP `report_binning_astrometric`; N.I.N.A. 0; misura: `-z 1` 19/19 |
 | campo | l'altezza calcolata; `-fov 0` solo a campo ignoto | N.I.N.A. passa l'altezza; ASTAP con `-fov 0` prova 0,3-11,9° |
-| indizio ereditato | centro misurato di una sorella risolta con lo stesso OBJECT | `spine/solve.py` di prima; mai per sessione: due pose senza OBJECT non sono sorelle |
+| indizio ereditato | centro misurato di una sorella risolta con lo stesso OBJECT | `spine/solve.py` di prima; mai per sessione: due frame senza OBJECT non sono sorelle |
 | campo ereditato | scala misurata di una posa risolta con camera, binning e ottica uguali (ottica non scritta in tutte e due: uguale, l'ASIAIR non la scrive mai) | misura: 9 frame veri (D80, indizio, `-z 0`) risolti tutti col campo da x0,7 a x1,25, quasi tutti da x0,6 a x1,5, nessuno da x2; un campo sbagliato fallisce in 13 s al piu', poi `-fov 0` |
 | stelle, tolleranza, dimensione | default di ASTAP: 500, 0,007, 1,5" | help di `astap_cli` |
 | tempo per lancio | 60 s | misura: oltre il doppio del cieco riuscito piu' lento (23 s); NAS da misurare |
@@ -46,8 +46,8 @@ Decisioni di Marco dal piano di ASTAP, qui con la loro casa:
 - La scelta dell'oggetto principale e i mosaici non hanno una convenzione pubblicata (nessun
   software sceglie un soggetto): si decidono nel gruppo "oggetti", misurati sull'archivio.
 - Punto 7 (indizio e campo ereditati) costruito: ogni soluzione dice da dove vengono
-  (`pipeline_solutions.hint_from`, `field_from`: `card` o `sister`, ADR 0026), e le pose con indizio
-  e campo propri si risolvono per prime. Punto 8 costruito: scala attesa dalla scheda contro la
+  (`pipeline_solutions.hint_from`, `field_from`: `card` o `sister`, ADR 0026), e i frame con indizio
+  e campo propri si risolvono per primi. Punto 8 costruito: scala attesa dalla scheda contro la
   risolta, nei due versi (`solve.SCALE_TOLERANCE`), scritta con la soluzione
   (`expected_scale_arcsec_px`, `scale_disagrees`); `solve.forget` dimentica una soluzione a
   richiesta e la posa si rifa' alla passata dopo. Punto 10 costruito: focale misurata dal pixel
@@ -56,7 +56,7 @@ Decisioni di Marco dal piano di ASTAP, qui con la loro casa:
   (parallelo, D7) costruito: `pipeline/capacity.py` conta core fisici e RAM (anche i limiti di
   Docker), il primo lancio va da solo, una posa che aspetta una sorella aspetta i lanci in volo,
   scrive solo la passata, lo stop uccide i figli; una passata per radice (`scan.busy`). Misura
-  su 9 copie vere: 7 pose in 1,3 s con un lancio, 0,4 s con otto.
+  su 9 copie vere: 7 frame in 1,3 s con un lancio, 0,4 s con otto.
 - Numeri (passo 24, 26/10/2026): copia di 11 notti dell'archivio di Marco, 393 file e 18 GB,
   N.I.N.A. e ASIAIR; ASTAP CLI 2025.11.19 col D80, 6 insieme (12 core, 61 GiB). Vecchia: lettura
   0,8 s, solver 367,6 s (uno alla volta, `-analyse` piu' solve), 392 su 393. Nuova: lettura 0,1 s

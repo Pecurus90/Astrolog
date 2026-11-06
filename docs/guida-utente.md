@@ -11,7 +11,7 @@ apertamente, invece di essere lasciato indovinare.
 
 AstroLog gira in **una copia sola** per volta sugli stessi dati: se la apri una seconda volta (o
 se sul NAS parte un secondo container sulla stessa cartella dei dati), la seconda non si avvia e
-dice *AstroLog e' gia' aperto*. Due copie insieme farebbero sparire le pose a vicenda.
+dice *AstroLog e' gia' aperto*. Due copie insieme farebbero sparire i frame a vicenda.
 
 **Sul NAS l'app va tenuta solo nella rete di casa**, mai raggiungibile da Internet: non chiede
 una password, quindi chiunque la raggiunga puo' usarla. Non aprire la sua porta sul router.
@@ -381,7 +381,7 @@ vuoto senza un perche'. Il periodo guarda la **notte**, non l'orologio: una
 posa delle due del primo gennaio appartiene alla notte del 31 dicembre. Con questi criteri accesi
 ogni oggetto dice **solo cio' che hai chiesto**: stringendo al 2025, M 31 porta le ore, i frame e
 i filtri del 2025, non quelli di sempre, e l'ordine per ore segue quelle. Lo stesso per il sito e
-per il setup: "con il Newton" sono le pose fatte col Newton. Un mosaico apre i soli pannelli
+per il setup: "con il Newton" sono i frame fatti col Newton. Un mosaico apre i soli pannelli
 ripresi li', ma il numero di pannelli resta quello del mosaico. Le tendine del sito, dell'ottica e
 della camera compaiono solo se ne hai usati almeno due: con uno solo, sceglierlo non cambierebbe
 niente.
@@ -625,7 +625,7 @@ il binning: senza, la scala misurata non dice quanti pixel erano uniti, e l'app 
 il pixel lo scrivi tu nella scheda, vale il tuo.
 
 Di un setup leggi anche **quanto cielo inquadra davvero**: la scala in arcosecondi per pixel e
-il rettangolo in gradi, **misurati** sulle pose che l'app ha risolto -- non calcolati da focale e
+il rettangolo in gradi, **misurati** sui frame che l'app ha risolto -- non calcolati da focale e
 pixel. Cosi' un riduttore e' gia' dentro il numero, invece di essere una correzione da fare a
 mente. Se di un setup l'app non ha ancora riconosciuto nessuna posa -- perche' non hai ancora
 ripreso, o perche' ASTAP non ci e' ancora arrivato -- la scala non c'e', e te lo dice.
@@ -654,14 +654,14 @@ guarda per capire cosa hai ripreso -- e se vuoi marca e modello. Un **setup** vu
 camera, scelte fra i tuoi strumenti, e la **focale** vera, col riduttore se lo usi. La focale dei tuoi
 file l'app la **misura dal cielo** quando riconosce una foto e conosce il pixel della camera:
 anche se il tuo programma scrive la focale del telescopio senza il riduttore, dopo il
-riconoscimento le pose passano al setup della focale vera. Dove il cielo non c'e' (dark, flat,
+riconoscimento i frame passano al setup della focale vera. Dove il cielo non c'e' (dark, flat,
 foto non riconosciute) vale la focale che scrive il programma. Il giorno che i tuoi file li
 portano, sono gli stessi: un filtro scritto col
-nome che il tuo programma mette nei file (`L`, per esempio) prende le pose che lo dicono -- quelle
+nome che il tuo programma mette nei file (`L`, per esempio) prende i frame che lo dicono -- quelli
 di una camera a colori restano *OSC* -- e un setup con la stessa ottica, la stessa camera e una
-focale entro il 5% e' quello. Per la stessa ragione, se quel filtro ce l'hai gia' (le tue pose `L`
+focale entro il 5% e' quello. Per la stessa ragione, se quel filtro ce l'hai gia' (i tuoi frame `L`
 stanno gia' su *Lum*) o se hai gia' un setup uguale, te lo dice invece di fartene un secondo: il
-filtro si rinomina con *Modifica*. Con l'ASIAIR i file non dicono l'ottica: le sue pose vanno in un
+filtro si rinomina con *Modifica*. Con l'ASIAIR i file non dicono l'ottica: i suoi frame vanno in un
 setup senza ottica, finche' non dici quale era in *Da confermare* (*Attrezzatura da
 completare*).
 
@@ -805,7 +805,7 @@ frame *senza oggetti identificati* e quelli *non risolti*, perche' non sono la s
   quello scrivi il nome giusto. I pannelli che riprenderai dopo entrano nel mosaico da soli, e
   rinominare la camera o dire con che camera hai ripreso non cambia niente: la risposta resta.
   Un gruppo di frame conta come pannello solo se ha almeno un quarto del tempo del pannello piu'
-  lungo (le pose, se i file non dicono la durata): i pochi frame spostati di un giro al meridiano
+  lungo (i frame, se i file non dicono la durata): i pochi frame spostati di un giro al meridiano
   non ti fanno proporre un mosaico, e restano col loro oggetto. Un frame di cui non si sa quanto e'
   grande il campo non entra nei mosaici.
 - **Che oggetto e'.** L'oggetto te lo chiede in **una scheda per gruppo di frame**, sempre uguale:

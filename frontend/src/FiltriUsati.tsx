@@ -7,7 +7,7 @@ type Filtro = components["schemas"]["FilterUsed"]
 
 /**
  * **Con che filtri hai ripreso, e quanto**: la fila delle pastiglie dell'Archivio e la barra delle
- * Notti, col nome che tu hai dato a ognuno e le sue ore, quando le pose le dicono.
+ * Notti, col nome che tu hai dato a ognuno e le sue ore, quando i frame le dicono.
  *
  * - **Il colore viene dalla banda, non dal nome.** Il nome lo sceglie chi ha scritto il file o
  *   l'utente (`Lum`, `H`, `Ha 3nm`) e a una macchina non dice niente; la banda canonica e' un
@@ -46,7 +46,7 @@ export const VARIANTE: Record<string, string> = {
   UNKNOWN: "as-filtro--ignoto",
 }
 
-/** Cosa dice un filtro nella legenda: frame, e ore se le pose le dicono. */
+/** Cosa dice un filtro nella legenda: frame, e ore se i frame le dicono. */
 function quanto(f: Filtro): string {
   const frame = numero(f.frames)
   return f.integration_s > 0

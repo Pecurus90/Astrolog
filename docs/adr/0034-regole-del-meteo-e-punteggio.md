@@ -49,9 +49,9 @@ di Marco:
   un "no": pioggia, nebbia, nuvole oltre 50%, vento da 29, raffica oltre 25. Allo zenit, 550 nm.
   Notte = media delle ore di buio astronomico, ogni ora pesata per i suoi minuti di buio; senza
   buio astronomico il buio nautico, detto. Aerosol assente: fuori, "senza aerosol" accanto.
-- **Verdetto**: buona da 70, incerta da 40. Misurato sull'archivio di Marco (105 notti con pose,
+- **Verdetto**: buona da 70, incerta da 40. Misurato sull'archivio di Marco (105 notti con frame,
   76 piene, 684 senza, 2024-2026, storico Open-Meteo): l'86% delle notti piene sopra 70, delle
-  notti senza pose il 21% (due terzi con la Luna oltre il 50%); 60/35 e 80/50 peggio.
+  notti senza frame il 21% (due terzi con la Luna oltre il 50%); 60/35 e 80/50 peggio.
 - **Ore di posa** = somma di (Trasparenza / 100) x ore di buio, divisa per banda della Luna: "4,6
   ore di posa: 3,1 in banda larga, 1,5 solo banda stretta". Sostituisce le ore utili da 60.
 - **Seeing**: la sua parola (soglie sopra), fuori dal voto: a una nebulosa toglie dettaglio, non

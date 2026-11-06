@@ -16,12 +16,12 @@ const PRIMI = 3
  */
 export function provaDeiSoggetti(soggetti: Soggetti): { nome: string; dato: string }[] {
   const { found, not_found, not_yet } = soggetti
-  const pose = (n: number) => t("review.frames", { n: numero(n) })
+  const frames = (n: number) => t("review.frames", { n: numero(n) })
   const righe: { nome: string; dato: string }[] = []
   if (found.length > 0) {
     const nominati = found
       .slice(0, PRIMI)
-      .map((s) => t("review.subjects.item", { nome: s.name, pose: pose(s.frames) }))
+      .map((s) => t("review.subjects.item", { nome: s.name, frame: frames(s.frames) }))
       .join(", ")
     const altri = found.length - PRIMI
     righe.push({
@@ -30,8 +30,8 @@ export function provaDeiSoggetti(soggetti: Soggetti): { nome: string; dato: stri
     })
   }
   const aParte = [
-    not_found > 0 && t("review.subjects.notFound", { pose: pose(not_found) }),
-    not_yet > 0 && t("review.subjects.notYet", { pose: pose(not_yet) }),
+    not_found > 0 && t("review.subjects.notFound", { frame: frames(not_found) }),
+    not_yet > 0 && t("review.subjects.notYet", { frame: frames(not_yet) }),
   ].filter(Boolean)
   if (aParte.length > 0) righe.push({ nome: t("review.proof.others"), dato: aParte.join(" \u00b7 ") })
   return righe

@@ -9,7 +9,7 @@ type Posto = components["schemas"]["UnclearCoordinates"]
 type Risposta = components["schemas"]["CoordinatesEdit"]
 
 /**
- * Le pose riprese a coordinate che non cadono in nessun luogo dichiarato: **una domanda per posto**
+ * I frame ripresi a coordinate che non cadono in nessun luogo dichiarato: **una domanda per posto**
  * (le coordinate arrotondate al chilometro), non per notte, perche' la risposta e' un fatto sul posto
  * e vale anche per le notti che verranno.
  *

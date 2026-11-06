@@ -22,8 +22,8 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi str
 | Uno stesso pezzo montato su due setup non mi raddoppia le ore | `test_a_piece_on_two_rigs_does_not_count_its_hours_twice` |
 | Un setup mi dice ottica, camera e focale, e **quanto cielo inquadra davvero** | `test_a_rig_says_the_sky_it_really_frames`, `test_the_sky_of_a_rig_is_the_middle_value_not_the_average`, `test_a_frame_that_did_not_say_its_field_does_not_drag_the_others`; *un setup dice quanto cielo inquadra* |
 | Una camera i cui file non dicono il pixel me lo mostra ricavato dal cielo, e dice che e' ricavato; se i file o io lo diciamo, vince quello | `test_the_pixel_is_the_median_of_what_the_sky_measured`, `test_the_gear_page_reads_the_pixel_from_the_sky`, `test_what_the_user_writes_wins_on_the_page`, `test_a_camera_that_loses_every_solved_pose_forgets_its_pixel`, `test_calibration_answered_takes_back_the_pixel_its_sky_gave`, `test_normalize_writes_it_at_the_end_of_its_round`, `test_the_solver_writes_it_at_the_end_of_its_round`; *il pixel ricavato dal cielo si dice ricavato, e quello dei file vince* |
-| La pagina si apre senza rifare i conti, anche su un archivio grande: quanto e' servito ogni pezzo lo scrive la spina quando lavora le pose, e un pezzo che scrivo io ha i suoi numeri subito | `test_the_page_reads_what_was_written_not_the_frames`, `test_every_stage_that_moves_poses_writes_the_usage_at_the_end`, `test_the_page_counts_nothing_and_the_writer_asks_per_page`, `test_a_piece_written_by_hand_says_its_hours_at_once`, `test_a_piece_not_yet_counted_says_so_and_not_that_the_files_are_silent`, `test_the_rewrite_is_all_or_nothing`, `test_a_stopped_round_writes_what_it_did`, `test_a_round_that_breaks_writes_what_it_did`, `test_a_stage_with_nothing_to_do_does_not_count_again`, `test_a_new_catalog_rewrites_the_names_it_gives`, `test_calibration_answered_takes_its_night_object_and_sky_off_the_gear`; *un pezzo non ancora contato dice che si sta contando, non che i file tacciono* |
-| Un setup di cui l'app non ha ancora riconosciuto le pose non mi mostra una scala inventata | `test_a_rig_that_never_shot_says_nothing_about_the_sky`; *un setup di cui non si sa quanto inquadra non scrive una scala* |
+| La pagina si apre senza rifare i conti, anche su un archivio grande: quanto e' servito ogni pezzo lo scrive la spina quando lavora i frame, e un pezzo che scrivo io ha i suoi numeri subito | `test_the_page_reads_what_was_written_not_the_frames`, `test_every_stage_that_moves_poses_writes_the_usage_at_the_end`, `test_the_page_counts_nothing_and_the_writer_asks_per_page`, `test_a_piece_written_by_hand_says_its_hours_at_once`, `test_a_piece_not_yet_counted_says_so_and_not_that_the_files_are_silent`, `test_the_rewrite_is_all_or_nothing`, `test_a_stopped_round_writes_what_it_did`, `test_a_round_that_breaks_writes_what_it_did`, `test_a_stage_with_nothing_to_do_does_not_count_again`, `test_a_new_catalog_rewrites_the_names_it_gives`, `test_calibration_answered_takes_its_night_object_and_sky_off_the_gear`; *un pezzo non ancora contato dice che si sta contando, non che i file tacciono* |
+| Un setup di cui l'app non ha ancora riconosciuto i frame non mi mostra una scala inventata | `test_a_rig_that_never_shot_says_nothing_about_the_sky`; *un setup di cui non si sa quanto inquadra non scrive una scala* |
 | La montatura compare, e dove mancherebbero le ore capisco **perche'** | `test_a_mount_has_no_hours_and_the_page_says_why`, `test_a_mount_no_frame_carries_says_so_even_where_others_have_hours`; *la montatura dice perche' non ha ore*, *una montatura che nessuna posa porta, in un archivio dove altre ce l'hanno, non dice zero* |
 | Un riduttore o un'ottica di guida che nessun setup porta lo dice, invece di "non indicato nei file": i file non li scrivono mai, il rimedio e' sceglierli su un setup (Marco, 12/10/2026) | `test_a_piece_only_a_rig_can_carry_says_no_rig_carries_it`; *un riduttore e una guida che nessun setup porta lo dicono, ognuno col suo genere* |
 | Un filtro mi dice che banda lascia passare, e quanto e' larga | `test_a_filter_says_which_band_it_passes` |
@@ -39,7 +39,7 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi str
 | Creo a mano un **filtro** o un **setup**, anche prima di averci ripreso | `test_you_can_write_a_filter_you_have_not_used_yet`, `test_you_can_write_a_rig_before_shooting_with_it`; *scrivo a mano un filtro, con la sua banda*, *scrivo a mano un setup, con ottica e camera fra i miei pezzi e la focale* |
 | E sono quelli che i file porteranno, non un doppione | `test_a_filter_you_wrote_is_the_one_the_files_bring_later`, `test_a_rig_you_wrote_is_the_one_the_files_bring_later` |
 | Un setup che ho scritto io resta anche senza frame; uno che l'app aveva trovato nei file e a cui una mia risposta ha tolto tutti i frame sparisce, invece di restare con zero ore | `test_a_rig_written_by_hand_stays_even_without_poses`, `test_the_answer_gives_the_optics_and_the_poses_join_the_rig_that_has_it` (`backend/tests/test_review_gear.py`) |
-| Un filtro scritto col nome dei miei file prende le pose mono, e quelle a colori restano OSC | `test_a_filter_written_by_hand_takes_the_mono_frames_and_leaves_the_colour_ones_osc`, `test_a_mono_frame_that_writes_the_app_name_goes_to_the_filter_written_by_hand`, `test_a_colour_frame_stays_osc_after_a_filter_written_by_hand`, `test_a_colour_frame_that_writes_the_app_name_stays_osc_after_a_filter_written_by_hand`, `test_a_colour_frame_that_writes_the_app_name_stays_osc_after_a_rename` |
+| Un filtro scritto col nome dei miei file prende i frame mono, e quelli a colori restano OSC | `test_a_filter_written_by_hand_takes_the_mono_frames_and_leaves_the_colour_ones_osc`, `test_a_mono_frame_that_writes_the_app_name_goes_to_the_filter_written_by_hand`, `test_a_colour_frame_stays_osc_after_a_filter_written_by_hand`, `test_a_colour_frame_that_writes_the_app_name_stays_osc_after_a_filter_written_by_hand`, `test_a_colour_frame_that_writes_the_app_name_stays_osc_after_a_rename` |
 | Un filtro senza banda, un nome che ho gia' o che e' gia' la grafia di un mio filtro, o un filtro che ho gia' col nome che gli da' l'app, un setup che ho gia' o fatto di pezzi sbagliati si rifiutano e me lo dicono | `test_a_filter_needs_a_name_you_do_not_own_and_its_band`, `test_a_name_that_is_already_the_spelling_of_another_filter_is_refused`, `test_a_filter_you_already_have_under_the_app_name_is_not_written_twice`, `test_a_rig_you_have_or_not_made_of_optics_and_camera_is_refused`, `test_a_rig_you_already_have_is_refused`, `test_a_rig_is_made_of_an_optics_and_a_camera_you_own`; *un setup che ho gia' si rifiuta, e me lo dice* |
 | Il setup che ho scritto non sparisce se unisco due grafie della sua ottica o della sua camera, e se quello tenuto ce l'ha gia' ne resta uno | `test_a_rig_you_wrote_survives_the_merge_of_its_camera`, `test_a_merge_into_a_rig_you_already_have_keeps_one` |
 | Il nome che scrivo per uno strumento non parte se passo per filtro o setup e torno | *il nome scritto per uno strumento non parte dopo un giro su filtro o setup* |
@@ -51,7 +51,7 @@ e stanno in `frontend/tests/attrezzatura.test.tsx` e, per il gesto *Aggiungi str
 | Mentre compilo, quello che scelgo resta scelto | *cio' che scelgo in una scheda resta scelto*, *cambiando genere non porto con me i campi del genere di prima* |
 | E col lavoro in corso non scrivo a meta' | `test_you_cannot_write_gear_while_the_archive_is_being_read`, `test_a_busy_worker_is_not_an_error_for_whoever_answered` |
 | I campi che mi chiede una scheda sono quelli del suo genere | `test_the_page_knows_which_fields_a_kind_asks_even_without_owning_one`; *la scheda chiede i campi del genere che sta guardando, e li decide il backend* |
-| Se il mio programma scrive la montatura, la montatura ha le sue ore senza che io dica niente | `test_the_mount_the_files_name_is_carried_by_every_frame`, `test_a_mount_carried_by_the_frames_has_their_hours`, `test_a_frame_without_a_rig_still_takes_the_mount_its_file_names`; *una montatura portata dalle pose ha le sue ore* |
+| Se il mio programma scrive la montatura, la montatura ha le sue ore senza che io dica niente | `test_the_mount_the_files_name_is_carried_by_every_frame`, `test_a_mount_carried_by_the_frames_has_their_hours`, `test_a_frame_without_a_rig_still_takes_the_mount_its_file_names`; *una montatura portata dalle pose ha le sue ore* <!-- glossario-ok --> |
 | Dove i file tacciono, scelgo la montatura dalla scheda del setup, e le sue ore compaiono | `test_a_mount_declared_on_a_rig_is_carried_by_all_its_frames`, `test_a_rig_gets_its_mount_from_its_card_and_its_frames_go_back_to_be_read`; *scelgo la montatura di un setup dalla sua scheda*, *un setup dice su che montatura sta, e la voce vuota torna ai file* |
 | Quello che dico sul setup vince sui file, e se lo tolgo tornano i file; una montatura nuova che i file nominano nasce lo stesso | `test_what_you_declare_wins_over_the_mount_the_files_name`, `test_a_new_mount_the_files_name_is_born_even_on_a_rig_you_gave_one` |
 | Una posa che arriva alla montatura per due strade conta una volta, e ridare la stessa montatura non rimette niente in coda | `test_a_frame_that_reaches_the_mount_two_ways_counts_once`, `test_the_same_mount_again_sends_nothing_back_to_be_read` |
@@ -83,19 +83,19 @@ setup vivono nello strato del dichiarato: la spina riempie cio' che i file dicon
 resta.
 
 **Quanto cielo inquadra un setup si misura**, e la scala prevista dalla scheda sta accanto (ADR 0021, 0033). La
-scala in arcosecondi per pixel e il campo inquadrato escono dalle pose che il riconoscitore ha
-gia' risolto (`frame_wcs`), prese come **mediana** -- non media: una posa risolta storta, che su
+scala in arcosecondi per pixel e il campo inquadrato escono dai frame che il riconoscitore ha
+gia' risolto (`frame_wcs`), presi come **mediana** -- non media: un frame risolto storto, che su
 un campo povero di stelle capita, sposterebbe la media e lascia ferma la mediana -- e' cio' che quel setup ha inquadrato
 davvero, riduttore compreso e con la camera montata come la monti tu. Il conto teorico -- focale
 e pixel -- direbbe un altro numero su ogni setup con un riduttore, e sarebbe giusto sulla carta
-e sbagliato nel cielo. Un setup di cui il riconoscitore non ha ancora risolto nessuna posa
-non ha una scala, e lo dice -- e non e' lo stesso di "non ha mai ripreso": le pose possono
+e sbagliato nel cielo. Un setup di cui il riconoscitore non ha ancora risolto nessun frame
+non ha una scala, e lo dice -- e non e' lo stesso di "non ha mai ripreso": i frame possono
 esserci ed essere ancora in coda.
 
-**Quanto e' servito ogni pezzo lo scrive chi lavora le pose** (Marco, 22/9/2026: una lettura
+**Quanto e' servito ogni pezzo lo scrive chi lavora i frame** (Marco, 22/9/2026: una lettura
 non calcola mai). Ore, frame, notti, oggetti e cielo di ogni pezzo, setup e filtro si contano
-tutti insieme a fine giro di ogni stadio che cambia le pose -- setup e filtro, cielo, oggetto,
-notte -- **solo se quello stadio ha lavorato qualche posa**, perche' contare un archivio grande costa;
+tutti insieme a fine giro di ogni stadio che cambia i frame -- setup e filtro, cielo, oggetto,
+notte -- **solo se quello stadio ha lavorato qualche frame**, perche' contare un archivio grande costa;
 nella risposta "sono file di calibrazione", che stacca notte, oggetto e cielo senza che nessuno
 stadio lavori quei frame; e di nuovo all'avvio se arriva un catalogo nuovo, che da' i nomi degli
 oggetti
@@ -103,7 +103,7 @@ oggetti
 senza ricontare l'archivio dentro la richiesta. La pagina li legge e
 basta (`spine/inventory.py`), e un contratto in `backend/pyproject.toml` le vieta di contare. Si
 riscrive intera in un colpo solo: chi apre la pagina a meta' vede i numeri di prima, mai una tabella
-vuota. Fra un gesto che sposta pose -- un'unione -- e la fine del giro che parte subito dopo, la
+vuota. Fra un gesto che sposta frame -- un'unione -- e la fine del giro che parte subito dopo, la
 pagina mostra i numeri di prima; un pezzo nato a meta' giro -- alla prima scansione, per minuti --
 dice **conteggio in corso**, che non e' "non indicato nei file".
 
@@ -117,7 +117,7 @@ mostra solo dove i file e l'utente tacciono, e dice che e' ricavato: un riduttor
 dell'header non conta lo sposta. Per la stessa ragione non basta a proporre un'unione fra due
 grafie, che vuole il pixel noto (`docs/domini/spina-normalize.md`).
 
-**Un pezzo arriva alle sue pose per due strade** (22/9/2026). Ottica e camera passano dal
+**Un pezzo arriva ai suoi frame per due strade** (22/9/2026). Ottica e camera passano dal
 **setup**: la posa conosce quello, non i suoi pezzi. Ruota portafiltri, focheggiatore e camera di
 guida no -- quelli il programma li scrive **sulla singola posa** (`FWHEEL` e `FOCNAME` di N.I.N.A.,
 `GUIDECAM` dell'ASIAIR), quindi la posa li porta addosso e le loro ore si sanno. Il legame sta in
@@ -143,9 +143,9 @@ e basta.
 **Una parte si puo' scegliere sul setup** (Marco, 11/10/2026): `PUT
 /gear/rigs/{id}/parts/{kind}`, un gesto solo per montatura, ruota, focheggiatore, camera di guida,
 riduttore, ottica di guida (`counts.CARRIED`); `piece_id` nullo toglie la scelta. La scelta sta
-fra le dichiarazioni del setup col nome del pezzo, quindi segue rinomina e unione, e le pose del
+fra le dichiarazioni del setup col nome del pezzo, quindi segue rinomina e unione, e i frame del
 setup tornano a `normalize`. Due regole, in `rigs.OVER_THE_FILE`: la **montatura** scelta vale
-su tutte le pose, anche dove il file ne nomina un'altra (26/9/2026); per **gli altri generi** la
+su tutti i frame, anche dove il file ne nomina un'altra (26/9/2026); per **gli altri generi** la
 scelta riempie solo il silenzio del file -- cio' che i file nominano si rinomina, non si
 sostituisce. Riduttore e ottica di guida nessun programma li scrive (`counts.CHOSEN_ONLY`): stanno
 sulla posa (`reducer_id`, `guide_scope_id`) solo per scelta, e da li' prendono ore e parti come
@@ -164,11 +164,11 @@ spezzerebbe in due senza che nessuno abbia cambiato telescopio.
 negli stessi header e **oggi non si leggono affatto**: sono misure di una posa, non la scheda di
 uno strumento, e il posto dove andranno nascera' con le metriche dei frame.
 
-**La montatura arriva alle pose per due strade, e la tua parola vince** (Marco, 26/9/2026). Dove
+**La montatura arriva ai frame per due strade, e la tua parola vince** (Marco, 26/9/2026). Dove
 il programma la scrive -- l'ASIAIR, in `TELESCOP`, e lo dice il software, mai una lista di nomi (Marco, 24/10/2026) --
 la posa la porta addosso come la ruota, e le ore si sanno senza chiedere niente. Dove i file
-tacciono, la scegli dalla **scheda del setup**, fra le montature che possiedi: vale per tutte le
-sue pose, anche su quelle che il file nomina, e togliendola tornano i file. Sta fra le
+tacciono, la scegli dalla **scheda del setup**, fra le montature che possiedi: vale per tutti i
+suoi frame, anche su quelli che il file nomina, e togliendola tornano i file. Sta fra le
 dichiarazioni col **nome** della montatura, cosi' una rinomina o un'unione la portano con se', e
 una montatura sola per setup, per costruzione della chiave. Nessuna montatura si indovina: se ne
 possiedi una sola, non si da' per scontata. Una montatura che nessuna posa porta dice che nessun
@@ -189,7 +189,7 @@ grafie che sembrano la stessa camera sono lo stesso pezzo -- e alcune sue rispos
 nella scheda della firma diventa un pezzo.
 
 **L'unione passa dalla stessa mano di *Da confermare***: `api/instrument_answer.py`, non una
-seconda strada. Due strade vorrebbero dire due verita' sullo stesso pezzo -- le pose rimesse in
+seconda strada. Due strade vorrebbero dire due verita' sullo stesso pezzo -- i frame rimessi in
 coda solo per chi passa dal posto giusto. Ma scrivere un pezzo **non e' un Applica**: non conferma
 le domande aperte della pagina delle domande.
 
@@ -247,11 +247,11 @@ tavola.
 **Un filtro e un setup scritti a mano** (Marco, 21/9/2026) nascono dallo stesso *Aggiungi un
 pezzo*: il filtro col nome e la banda, il setup con ottica, camera e focale obbligatoria -- senza,
 i file che la dicono farebbero un secondo setup. Se il vocabolario darebbe al filtro un altro nome
-(`L` diventa `Lum`), il filtro lo impara come una rinomina: la regola si legge dopo il colore, e le
-pose mono di chi scrive `L` vengono a lui mentre quelle a colori restano OSC. Se quel nome e' gia'
-un tuo filtro, si rifiuta: le pose ci stanno gia', e si rinomina quello. Il setup sta anche fra le dichiarazioni, perche'
+(`L` diventa `Lum`), il filtro lo impara come una rinomina: la regola si legge dopo il colore, e i
+frame mono di chi scrive `L` vengono a lui mentre quelli a colori restano OSC. Se quel nome e' gia'
+un tuo filtro, si rifiuta: i frame ci stanno gia', e si rinomina quello. Il setup sta anche fra le dichiarazioni, perche'
 un'unione della sua ottica o della sua camera cancella i setup e `normalize` rifa' solo quelli con
-delle pose. Filtri e setup si correggono da qui (Marco, 25/9/2026): il nome di
+dei frame. Filtri e setup si correggono da qui (Marco, 25/9/2026): il nome di
 un setup, la scheda di un filtro, e l'unione di due grafie, di un pezzo o di un filtro -- la
 destinazione di un filtro e' uno con la banda nota, la stessa regola della tendina di *Da
 confermare*. Un filtro rinominato o unito non rinasce: la regola imparata vale anche sul nome che il

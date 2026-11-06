@@ -130,6 +130,13 @@ repos:
         entry: python tools/tetti.py
         files: (?i)^(.*\.md|frontend/\.prettierignore)$
         stages: [pre-commit]
+      # The glossary against the Italian texts (ADR 0025): its doubles noted, guarded forms absent.
+      - id: glossary
+        name: glossary doubles noted, guarded words out of the texts
+        language: system
+        entry: python tools/glossario.py
+        files: ^(README\.md|CONTRIBUTING\.md|docs/.*\.md|handoff/[^/]*\.md|frontend/src/.*|backend/astrolog/.*)$
+        stages: [pre-commit, manual]
       # `/* .x-* */` closes the comment at `*/` and silently drops the next rule.
       - id: css-glob-comment
         name: CSS comment closed by a glob

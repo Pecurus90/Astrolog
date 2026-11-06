@@ -159,7 +159,7 @@ export function NomeDelCorredo({
 }
 
 /** La montatura con cui usi un corredo, fra quelle che possiedi. La voce vuota toglie la tua parola:
- *  allora le pose prendono quella che i file nominano, dove la nominano. */
+ *  allora i frame prendono quella che i file nominano, dove la nominano. */
 export function MontaturaDelCorredo({
   corredo,
   come,

@@ -65,7 +65,7 @@ riusabile, mai una correzione su un frame: si chiede per gruppo, mai per file. L
 non sovrascrive mai il dichiarato, e la risposta chiama `invalidate` sugli stadi a valle.
 Un'eccezione sola, dove non c'e' niente da sovrascrivere: su una camera a colori una parola che il
 **vocabolario stesso** conosce come banda larga (`L`, `Lum`, `B`) resta OSC anche se una rinomina o
-un filtro scritto a mano ne hanno fatto una regola -- quella regola parla delle pose mono, e sulla
+un filtro scritto a mano ne hanno fatto una regola -- quella regola parla dei frame mono, e sulla
 matrice il filtro e' la matrice (`test_a_colour_frame_that_writes_the_app_name_stays_osc_after_a_rename`).
 Una risposta su una parola che il vocabolario non conosce resta la tua
 (`test_an_answer_on_a_word_the_vocabulary_does_not_know_stays_on_a_colour_camera`).

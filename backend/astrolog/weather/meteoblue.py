@@ -93,8 +93,8 @@ def forget(conn: sqlite3.Connection, *, now: datetime) -> None:
 
 
 def drop_seeing(conn: sqlite3.Connection, now: datetime) -> None:
-    """The seeing of a key that no longer holds must not pose as tonight's; a night gone by keeps
-    the seeing it had, for the statistics."""
+    """The seeing of a key that no longer holds must not pass for tonight's; a night gone by
+    keeps the seeing it had, for the statistics."""
     for site in conn.execute("SELECT id, timezone FROM sites"):
         conn.execute(
             "DELETE FROM weather_nights WHERE source = ? AND site_id = ? AND night_date >= ?",

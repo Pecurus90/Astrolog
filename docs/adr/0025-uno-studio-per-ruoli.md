@@ -14,7 +14,7 @@ codice: lotti da 0,1-0,9 M token, nessun revert in 300 commit. Non ha retto atto
   prima di lui;
 - nessuna ricetta per portare una tavola di Design; `porting-fedele` parla ancora di pagine da
   `old/src`;
-- il vocabolario non lo controlla nessuna macchina sui documenti («bersaglio», «pose» nelle
+- il vocabolario non lo controlla nessuna macchina sui documenti («bersaglio», «pose» nelle <!-- glossario-ok -->
   brief e negli ADR, 20/10/2026);
 - le consegne di Design si verificano a mano, senza lista (FWHM px/″ invertiti, 20/10/2026);
 - la sessione principale fa tutto: 125 commit `docs:` su 300.
@@ -55,6 +55,6 @@ la tabella per lavoro di ADR 0015 (superata: vedi 0040).
 - Nascono `tools/glossario.py` (la colonna «non si dice» contro testi, brief e documenti, con
   `<!-- glossario-ok -->` per le citazioni) e `tools/contratti.py` (ogni test citato in un
   contratto esiste). La riga **Supera** diventa obbligatoria in un ADR che cambia un contratto.
-  (superata: vedi 0040; `tools/glossario.py` al passo 26 del piano.)
+  (superata: vedi 0040; `tools/glossario.py` nato al passo 28 del piano.)
 - Il confronto automatico delle catture (Playwright) sarebbe una dipendenza di sviluppo: si
   chiede a Marco quando serve.

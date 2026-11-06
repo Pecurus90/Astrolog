@@ -214,12 +214,12 @@ giusta. Un header di un programma non verificato non entra nel corpus.
 delle coordinate dell'header, o del sito di casa, o in UTC se non si sa nessuno dei due; senza `DATE-OBS` e' la notte in cui il file e' stato scritto
 (Marco, 27/9/2026). La leggono le domande per notte, il solver e la domanda sui luoghi, che vengono
 prima di `group` o non sanno il sito. **Quando cambia il fuso di casa** -- nasce, se ne sceglie
-un'altra, si sposta, si toglie -- le pose che non hanno un fuso dalle coordinate dell'header si riscrivono nel fuso
+un'altra, si sposta, si toglie -- i frame che non hanno un fuso dalle coordinate dell'header si riscrivono nel fuso
 nuovo, e il gruppo dei frame senza nome, che porta la notte, si risceglie (`spine/home_nights.py`).
 Nessuna risposta porta la notte nella chiave (ADR 0014, S2): l'oggetto dei frame senza nome sta
 sull'impronta di ogni frame, l'attrezzatura sulla firma, e nessuno le deve spostare. La risposta
 di un gruppo e' quella che i suoi frame portano: un gruppo che si divide la porta su ogni parte; su
 due gruppi che diventano uno vale quella che c'era -- una sola, o la stessa su tutti e due --,
-anche per le pose che non l'avevano, e con due risposte diverse la domanda torna aperta. Si perde
+anche per i frame che non l'avevano, e con due risposte diverse la domanda torna aperta. Si perde
 un caso: un frame arrivato dopo la risposta, che il fuso nuovo porta in un gruppo senza frame
 risposti, torna una domanda.

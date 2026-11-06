@@ -165,11 +165,11 @@ export const it = {
   "review.mosaics.name": "Oggetto del mosaico ({dove})",
   "review.frames": "{n} frame",
   "review.frames.one": "1 frame",
-  "review.subjects.item": "{nome} ({pose})",
+  "review.subjects.item": "{nome} ({frame})",
   "review.subjects.more": "+ {n}",
   "review.subjects.more.one": "+ 1",
-  "review.subjects.notFound": "{pose} senza oggetti identificati",
-  "review.subjects.notYet": "{pose} non risolti",
+  "review.subjects.notFound": "{frame} senza oggetti identificati",
+  "review.subjects.notYet": "{frame} non risolti",
   "review.count.word": "da confermare",
   "review.index": "Sezioni",
   "review.index.open": "{n} senza risposta",
@@ -229,8 +229,8 @@ export const it = {
   "review.apply": "Applica",
   // il piede dice cosa si sta per mandare: un Applica che non dice quanto e' un salto nel buio
   // girata cosi' si legge bene con ogni numero
-  "review.applied": "{n} modifiche applicate, {pose} frame da rielaborare",
-  "review.applied.one": "1 modifica applicata, {pose} frame da rielaborare",
+  "review.applied": "{n} modifiche applicate, {frame} frame da rielaborare",
+  "review.applied.one": "1 modifica applicata, {frame} frame da rielaborare",
   "review.apply.failed": "Modifiche non applicate",
   "review.apply.unknownTarget":
     "Oggetto non presente nel catalogo. Nessuna modifica salvata.",

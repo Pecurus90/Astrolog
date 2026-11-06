@@ -46,7 +46,7 @@ Le prove nascono col porting, una per riga.
 sky, ricerca solo ricerca. Due postazioni possono fare due linguette diverse. Cambiare linguetta
 con blocchi nel piano chiede «Il piano di stanotte si svuota: cambio?» · «Cambia» / «Annulla».
 
-- **Deep sky**: progetti DSO dal Planner e **comete** (pose lunghe), per sigla («C/2026 A1»,
+- **Deep sky**: progetti DSO dal Planner e **comete** (posa lunga), per sigla («C/2026 A1»,
   «12P»), posizione da JPL Horizons ricalcolata per ogni blocco; senza rete «Serve la rete per la
   posizione della cometa.». Export per N.I.N.A.
 - **Sistema solare**: Luna, pianeti, Sole, a video. Interruttore «Notte · Giorno»: Notte da
@@ -85,7 +85,7 @@ mano, nessun punteggio. Una riga d'aiuto sotto i pulsanti.
    Soonest di Target Scheduler); a pari merito l'ordine delle proposte.
 3. Ogni blocco si sposta il piu' vicino possibile al suo transito, se c'e' spazio.
 4. Un blocco non scende sotto la durata minima (meno cambi: Target Switch Penalty).
-5. Filtri **a blocchi**: tutte le pose di un filtro, poi il successivo; ogni filtro nelle ore in
+5. Filtri **a blocchi**: tutti i frame di un filtro, poi il successivo; ogni filtro nelle ore in
    cui la sua regola della Luna passa: la banda larga senza Luna, la stretta con la Luna (Brecher,
    S&T nov. 2017). Nessun ordine per altezza.
 6. Le ore «non adatte» del meteo si evitano finche' c'e' altro posto: non sono un conflitto
@@ -223,8 +223,8 @@ d'emergenza col maltempo si imposta in N.I.N.A.».
     «Park» · «Chiusura del tetto» · «Riscaldamento della camera» (le due del tetto solo se una
     postazione ha il tetto);
   - Per oggetto (min): «Puntamento e centratura» · «Autofocus»;
-  - Durante le pose: «Cambio filtro» (s) · «Dither col settle» (s) · «Dither ogni» (pose) ·
-    «Scaricamento della posa» (s) · «Un autofocus ogni» (ore, stima) · «Meridian flip» (min) ·
+  - Durante i frame: «Cambio filtro» (s) · «Dither col settle» (s) · «Dither ogni» (frame) ·
+    «Scaricamento del frame» (s) · «Un autofocus ogni» (ore, stima) · «Meridian flip» (min) ·
     «Spostamento fra pannelli» (s) · «Flat e dark-flat per filtro» (min).
 - **Automazione**, per postazione, Si'/No (passi di N.I.N.A.: Open/Close Dome Shutter, Park Dome,
   Wait Until Safe, Open/Close Flat Panel Cover):
@@ -269,5 +269,5 @@ transienti; per ultimi comete e NEO, che chiedono la rete ogni notte.
 ## Cosa NON fa
 
 Non comanda l'hardware. Non decide durante la notte (niente ripianificazione dopo ogni posa).
-Non scarta pose ne' le vota. Non fa fotometria. Non mischia deep sky e ricerca nello stesso piano.
+Non scarta frame ne' li vota. Non fa fotometria. Non mischia deep sky e ricerca nello stesso piano.
 Non usa il «relax» della Luna vicino all'orizzonte di Target Scheduler: nessuna fonte.

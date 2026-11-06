@@ -206,7 +206,7 @@ pubblica la pratica; senza giudizio, niente consiglio. Testi approvati:
   dalla barlow.» (M = 1 + x / f della barlow).
 - Video al massimo: «Con la derotazione il tempo in tutto arriva a 3-4 volte; il singolo video
   no.» (Sky at Night).
-- Pianeti, sempre: «Pose sotto 30 ms, almeno 30 fotogrammi al secondo; area di ripresa stretta
+- Pianeti, sempre: «Posa sotto 30 ms, almeno 30 fotogrammi al secondo; area di ripresa stretta
   attorno al disco.» (documentazione di SharpCap). <!-- software-ok -->
 - Pianeti bassi o seeing da 2″: «Un filtro IR-pass soffre meno il seeing.» (produttori: fonte
   debole, solo consiglio).
@@ -322,7 +322,7 @@ minima.», «Il file non si legge: servono almeno due righe azimut altezza.», �
   volta nel piano: {data}».
 - **Azioni**: «Apri nel Planner», «Segna come finito» / «Riapri», «Elimina» («Il progetto sparisce.
   I frame restano nell'archivio.»).
-- **Modifiche** (Marco): ore, filtri e pose sempre libere. Inquadratura, griglia o setup su un
+- **Modifiche** (Marco): ore, filtri e tempi di posa sempre liberi. Inquadratura, griglia o setup su un
   progetto iniziato: «{durata} gia' riprese non conterebbero piu'.» · «Salva lo stesso» /
   «Annulla», contato sui frame veri. Supera «griglia congelata» (`ereditato.md` A).
 - **«Apri nel Planner»** riapre inquadratura, griglia, setup e ore com'erano: e' la via per

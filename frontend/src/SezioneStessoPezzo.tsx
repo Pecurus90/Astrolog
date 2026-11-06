@@ -16,7 +16,7 @@ type Scelta = "same" | "distinct"
  *
  * - **Si' unisce, no non la ripropone**: sono le due sole risposte, e tutte e due chiudono la
  *   domanda. Un'unione non si disfa, per questo niente e' preselezionato.
- * - **Quale grafia resta lo dice l'API** (`into_id`, quella con piu' pose): qui non si sceglie.
+ * - **Quale grafia resta lo dice l'API** (`into_id`, quella con piu' frame): qui non si sceglie.
  * - **E' memorizzata**: ogni risposta, in qualunque sezione, riscrive l'accumulatore della pagina.
  */
 export const SezioneStessoPezzo = memo(function SezioneStessoPezzo({

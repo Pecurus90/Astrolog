@@ -11,7 +11,7 @@
 -- instruments, filters, rigs, objects -- hanno l'id AUTOINCREMENT, e sono le sole (lo prova
 -- `backend/tests/test_db.py`): una risposta porta l'id del pezzo, e tre di loro l'Applica le
 -- conferma dicendo "ho visto fin qui" col numero (`backend/astrolog/api/review_write.py`). Tutte e
--- quattro perdono righe (le unioni, la spazzata di identify, i corredi rimasti senza pose).
+-- quattro perdono righe (le unioni, la spazzata di identify, i corredi rimasti senza frame).
 -- Senza, SQLite ridarebbe il numero piu' alto appena liberato alla riga nuova: una risposta da
 -- una pagina aperta prima finirebbe su di lei, o la farebbe nascere gia' "vista". Il perche' per
 -- esteso sta in `docs/domini/spina.md`.
@@ -170,18 +170,18 @@ CREATE TABLE header_aliases (
 -- per un oggetto il nome pulito o lo slug di catalogo, per
 -- una notte "sito:<id>|<data>", per una sessione "notte|oggetto|corredo", e per delle
 -- COORDINATE quelle che l'header portava, arrotondate al chilometro ("45.60,11.67") -- li' il
--- campo `site` dice il NOME del sito a cui appartengono le pose riprese di li'. Sono la chiave
+-- campo `site` dice il NOME del sito a cui appartengono i frame ripresi di li'. Sono la chiave
 -- giusta perche' la risposta e' un fatto sul posto e non su una notte: vale anche per le notti
 -- che verranno.
 -- Per l'ATTREZZATURA che i file non dicono (`signature`) la chiave e' la firma dell'header: grafia
 -- di camera e telescopio, focale, sensore (ADR 0014, S1); il campo `gear` tiene in JSON i NOMI di
 -- camera e ottica, la focale e cosa c'era davanti (`no_filter`, o `filter` col nome del filtro).
--- Vale anche per le pose che arriveranno con la stessa firma, in qualunque notte.
--- Per le pose che non dicono l'OGGETTO e di cui il cielo non dice niente (`frame`) la chiave e'
--- l'impronta della posa, non il gruppo, che porta la notte (ADR 0014, S2): la risposta del gruppo
--- si scrive su ognuna, e il campo `object` vale "catalog:<slug>", "name:<nome>" oppure "none",
+-- Vale anche per i frame che arriveranno con la stessa firma, in qualunque notte.
+-- Per i frame che non dicono l'OGGETTO e di cui il cielo non dice niente (`frame`) la chiave e'
+-- l'impronta del frame, non il gruppo, che porta la notte (ADR 0014, S2): la risposta del gruppo
+-- si scrive su ognuno, e il campo `object` vale "catalog:<slug>", "name:<nome>" oppure "none",
 -- cioe' non e' un oggetto (Marco, 15/9/2026).
--- Per un mosaico (`mosaic`) la chiave e' quella del mosaico -- l'impronta di una delle sue pose,
+-- Per un mosaico (`mosaic`) la chiave e' quella del mosaico -- l'impronta di uno dei suoi frame,
 -- scelta quando nasce e poi ferma, che non dipende dalla camera -- e il campo e' `answer`: il valore e'
 -- "no", oppure DI COSA e' il mosaico, "catalog:<slug>" o "name:<nome>", che e' il si' (Marco,
 -- 22/9/2026). Si scrive una volta, e nessuno la ricalcola (Marco, 23/9/2026).
@@ -202,7 +202,7 @@ CREATE TABLE declarations (
 -- stessa focale: il raggruppamento lo fa la spina prima di scrivere, e qui si conserva il
 -- rappresentante del gruppo -- percio' l'impronta e' su uguaglianza esatta.
 -- Il NOME che l'utente da' a un corredo non sta qui: sta fra le dichiarazioni, con la
--- chiave (ottica, camera, focale). Questa riga la fa la spina dalle pose, o l'utente
+-- chiave (ottica, camera, focale). Questa riga la fa la spina dai frame, o l'utente
 -- (`detected` = 0), e un'unione di due grafie la cancella; il nome invece deve tornare da solo
 -- quando la spina ricostruisce il corredo, e quello scritto dall'utente dalla sua dichiarazione.
 CREATE TABLE rigs (
@@ -288,9 +288,9 @@ CREATE TABLE frames (
   filter_id      INTEGER REFERENCES filters (id),  -- normalize
   object_id      INTEGER REFERENCES objects (id),  -- identify
   -- Il cielo misurato di questa posa non ha nessun candidato nel campo (1), ne ha (0), o non si sa
-  -- (NULL: nessun cielo, o `identify` non e' ancora passato). Lo scrive `identify` e resta anche quando la posa torna in coda: la domanda
-  -- sulle pose senza nome lo legge, e con lo stato dello stadio -- che una rimessa in coda azzera
-  -- -- una cartella di pose cosi' sparirebbe dalla pagina a ogni Applica.
+  -- (NULL: nessun cielo, o `identify` non e' ancora passato). Lo scrive `identify` e resta anche quando il frame torna in coda: la domanda
+  -- sui frame senza nome lo legge, e con lo stato dello stadio -- che una rimessa in coda azzera
+  -- -- una cartella di frame cosi' sparirebbe dalla pagina a ogni Applica.
   empty_cone     INTEGER CHECK (empty_cone IN (0, 1)),                        -- identify
   -- Il gruppo della posa senza nome e senza cielo (`spine/unnamed.py`): scelto quando la posa
   -- arriva, e riscelto solo se casa cambia fuso e con lei la notte (`spine/home_nights.py`). La
@@ -319,20 +319,20 @@ CREATE TABLE frames (
   copy_of        INTEGER REFERENCES frames (id),   -- normalize
   -- La posa sopravvive alla sua notte e alla sua sessione: quelle sono derivate e si
   -- rifanno, lei no. `SET NULL` e non `CASCADE`, o cancellare una sessione porterebbe via
-  -- delle pose.
+  -- dei frame.
   night_id       INTEGER REFERENCES nights (id) ON DELETE SET NULL,      -- group
   session_id     INTEGER REFERENCES sessions (id) ON DELETE SET NULL,    -- group
   -- L'inquadratura della posa (`panels`): la scrive `group` una volta, e non si rifa'.
   panel_id       INTEGER REFERENCES panels (id) ON DELETE SET NULL,      -- group
-  -- Il mosaico CONFERMATO di cui la posa fa parte, o NULL: la chiave del mosaico, scritta da chi
-  -- risponde e da `group` per le pose che arrivano dopo. Sta sulla posa e non sull'oggetto: lo
-  -- stesso oggetto puo' avere pose dentro un mosaico e altre fuori.
+  -- Il mosaico CONFERMATO di cui il frame fa parte, o NULL: la chiave del mosaico, scritta da chi
+  -- risponde e da `group` per i frame che arrivano dopo. Sta sul frame e non sull'oggetto: lo
+  -- stesso oggetto puo' avere frame dentro un mosaico e altri fuori.
   mosaic_key     TEXT,                                -- group, Da confermare
   created_at     TEXT NOT NULL
 ) STRICT;
 CREATE INDEX frames_mosaic ON frames (mosaic_key) WHERE mosaic_key IS NOT NULL;
--- Le pose di un pannello, con cio' che serve a contarle e a dirne l'oggetto: i mosaici di Da
--- confermare e chi pesa i pannelli le leggono dall'indice, senza la tabella. Il prezzo lo paga chi
+-- I frame di un pannello, con cio' che serve a contarli e a dirne l'oggetto: i mosaici di Da
+-- confermare e chi pesa i pannelli li leggono dall'indice, senza la tabella. Il prezzo lo paga chi
 -- riscrive una di queste colonne su una posa gia' in un pannello, che aggiorna anche l'indice.
 CREATE INDEX frames_panel ON frames (panel_id, copy_of, object_id, exposure_s)
   WHERE panel_id IS NOT NULL;
@@ -341,26 +341,26 @@ CREATE INDEX frames_unnamed ON frames (unnamed_key) WHERE unnamed_key IS NOT NUL
 CREATE INDEX frames_unnamed_night ON frames (json_extract(unnamed_key, '$[0]'))
   WHERE unnamed_key IS NOT NULL;
 CREATE INDEX frames_found ON frames (found_key) WHERE found_key IS NOT NULL;
--- Le pose di un oggetto, con cio' che serve a contarle: l'elenco degli oggetti di Da confermare le
--- conta tutte a ogni apertura, e dall'indice non legge la tabella.
+-- I frame di un oggetto, con cio' che serve a contarli: l'elenco degli oggetti di Da confermare li
+-- conta tutti a ogni apertura, e dall'indice non legge la tabella.
 CREATE INDEX frames_object ON frames (object_id, copy_of, exposure_s);
--- Le pose di un corredo, con cio' che serve a contarle: le conta la tendina dei corredi a ogni
+-- I frame di un corredo, con cio' che serve a contarli: li conta la tendina dei corredi a ogni
 -- apertura e a ogni Applica con una risposta sulla camera, e l'uso dell'Attrezzatura a fine giro.
 -- Sulla sola colonna, chi conta le ore leggerebbe comunque la riga di ogni posa.
 CREATE INDEX frames_rig ON frames (rig_id, copy_of, exposure_s, night_id);
 CREATE INDEX frames_session ON frames (session_id);
 CREATE INDEX frames_night ON frames (night_id);
--- Cio' che le pose di una notte locale dicono del corredo (`spine/night_rig.py`): lo chiedono la
+-- Cio' che i frame di una notte locale dicono del corredo (`spine/night_rig.py`): lo chiedono la
 -- domanda sulla camera e la normalizzazione, e dall'indice non leggono la tabella.
 CREATE INDEX frames_local_night
   ON frames (local_night, instrument_raw, telescope_raw, software_raw, focal_mm_raw);
 CREATE INDEX frames_date ON frames (date_obs);
--- Le pose di un filtro: le conta Da confermare, e la tendina dell'Archivio ci cerca la prima buona
--- (senza, anche un filtro con molte pose e nessuna buona scorrerebbe l'archivio), e l'uso
--- dell'Attrezzatura le conta dall'indice come per i corredi.
+-- I frame di un filtro: li conta Da confermare, e la tendina dell'Archivio ci cerca il primo buono
+-- (senza, anche un filtro con molti frame e nessuno buono scorrerebbe l'archivio), e l'uso
+-- dell'Attrezzatura li conta dall'indice come per i corredi.
 CREATE INDEX frames_filter ON frames (filter_id, copy_of, exposure_s, night_id);
--- Le pose su cui Da confermare chiede qualcosa, per i giudizi sul grezzo: la pagina legge solo
--- quelle, e un archivio i cui header dicono camera, filtro e ottica non ne ha nessuna.
+-- I frame su cui Da confermare chiede qualcosa, per i giudizi sul grezzo: la pagina legge solo
+-- quelli, e un archivio i cui header dicono camera, filtro e ottica non ne ha nessuno.
 CREATE INDEX frames_asks_camera ON frames (asks_camera) WHERE asks_camera = 1;
 CREATE INDEX frames_asks_filter ON frames (asks_filter) WHERE asks_filter = 1;
 CREATE INDEX frames_no_optics ON frames (names_optics) WHERE names_optics = 0;
@@ -407,7 +407,7 @@ CREATE INDEX frame_stages_pending ON frame_stages (stage, status);
 
 -- I mosaici: pannelli dello stesso corredo che si toccano senza contenersi (`docs/domini/
 -- mosaico.md`). Li scrive `group` quando una posa apre un pannello, e nessuno li ricalcola.
--- `key` e' l'impronta di una delle sue pose, scelta quando nasce e poi ferma: la chiave della
+-- `key` e' l'impronta di uno dei suoi frame, scelta quando nasce e poi ferma: la chiave della
 -- risposta, che non cambia quando cambia la camera. Il centro e il nome proposto -- la voce del catalogo al
 -- centro -- si riscrivono quando il mosaico cresce.
 CREATE TABLE mosaics (
@@ -432,7 +432,7 @@ CREATE TABLE panels (
   radius_deg   REAL NOT NULL,
   mosaic_id    INTEGER REFERENCES mosaics (id) ON DELETE SET NULL,
   -- Se il pannello regge una parte del lavoro del suo mosaico (`spine/mosaic_weight.py`): lo
-  -- scrive chi piazza o stacca le pose (`mosaic.settle`), e chi legge guarda solo questo.
+  -- scrive chi piazza o stacca i frame (`mosaic.settle`), e chi legge guarda solo questo.
   counts_in_mosaic INTEGER NOT NULL DEFAULT 1 CHECK (counts_in_mosaic IN (0, 1))
 ) STRICT;
 CREATE INDEX panels_rig_dec ON panels (rig_id, dec_deg);
@@ -464,7 +464,7 @@ CREATE TABLE frame_wcs (
 -- `spine/declarations.py`: `tests/test_asks_type.py` confronta il segno con la regola composta da
 -- quelle costanti, dopo ogni strada che cambia un ingresso.
 -- La chiave della cartella di ogni posizione, scritta una volta: la legge la regola, e i trigger
--- delle risposte ci trovano le pose della cartella risposta.
+-- delle risposte ci trovano i frame della cartella risposta.
 CREATE VIEW position_folders AS
 SELECT p.id AS position_id, p.frame_id,
   d.root_key || CASE WHEN p.rel_dir = '' THEN '' ELSE '/' || p.rel_dir END AS folder_key
@@ -485,8 +485,8 @@ SELECT f.id AS frame_id, f.image_type = 'unknown' AND CASE (
 FROM frames f;
 
 -- Il segno lo riscrive SQLite a ogni scrittura di un ingresso della regola, non chi scrive: un
--- segno rimasto a 0 manda un dark senza tipo all'oggetto, e diventa ore. Una risposta riscrive le
--- pose con una posizione nella sua cartella; una cartella registrata tutte quelle senza tipo.
+-- segno rimasto a 0 manda un dark senza tipo all'oggetto, e diventa ore. Una risposta riscrive i
+-- frame con una posizione nella sua cartella; una cartella registrata tutti quelli senza tipo.
 CREATE TRIGGER asks_type_frame_in AFTER INSERT ON frames BEGIN
   UPDATE frames SET asks_type = (SELECT waits FROM frame_waits WHERE frame_id = NEW.id)
   WHERE id = NEW.id; END;
@@ -548,7 +548,7 @@ CREATE TRIGGER asks_type_folder_moved AFTER UPDATE OF root_path, retired_at ON f
   WHERE image_type = 'unknown'; END;
 
 -- Un oggetto dell'archivio: cio' che e' stato fotografato. Il nome vive in object_names.
--- Una voce di catalogo e' UN oggetto solo: due pose della stessa galassia che ne creassero due
+-- Una voce di catalogo e' UN oggetto solo: due frame della stessa galassia che ne creassero due
 -- sparpaglierebbero le ore, che e' il difetto contro cui esiste tutto identify. Lo garantisce
 -- l'indice unico qui sotto; `catalog_slug` NULL (l'oggetto fuori catalogo) si ripete, perche'
 -- in SQLite i NULL non contendono un indice unico.
@@ -582,7 +582,7 @@ CREATE UNIQUE INDEX object_names_name ON object_names (name);
 -- Il meteo di una notte, per sito (RILEVATO: lo portano i servizi meteo, `astrolog.weather`,
 -- contratto in `docs/domini/meteo.md`). Una riga per tipo -- la previsione o lo storico -- e per
 -- fonte: un modello di Open-Meteo, Meteoblue, CAMS. Non sta su `nights`, che spazza le
--- notti senza pose: la notte di domani non ne ha ancora. Si tiene la serie ora per ora com'e'
+-- notti senza frame: la notte di domani non ne ha ancora. Si tiene la serie ora per ora com'e'
 -- arrivata; il riassunto (verdetto, ore utili) c'e' solo per lo storico, che le Notti leggono. La
 -- previsione si legge da `weather_view`, che unisce le fonti.
 -- L'ultimo tentativo di una fonte meteo che non deve ripetersi troppo spesso (Meteoblue per i
@@ -669,11 +669,11 @@ CREATE INDEX nights_date ON nights (night_date DESC, id DESC);
 CREATE TABLE sessions (
   id        INTEGER PRIMARY KEY,
   night_id  INTEGER NOT NULL REFERENCES nights (id) ON DELETE CASCADE,
-  -- L'oggetto se ne va (la spazzata di `identify` toglie quelli rimasti a zero pose) e la
-  -- sessione va con lui, per la stessa ragione del corredo qui sotto. Non porta via una posa
-  -- a nessuno: un oggetto arriva a zero pose solo perche' `identify` gliele ha appena
-  -- staccate tutte, e `group` -- che gira dopo, sempre, perche' `invalidate` li rimette in
-  -- coda insieme -- stacca comunque notte e sessione da quelle stesse pose in apertura di
+  -- L'oggetto se ne va (la spazzata di `identify` toglie quelli rimasti a zero frame) e la
+  -- sessione va con lui, per la stessa ragione del corredo qui sotto. Non porta via un frame
+  -- a nessuno: un oggetto arriva a zero frame solo perche' `identify` glieli ha appena
+  -- staccati tutti, e `group` -- che gira dopo, sempre, perche' `invalidate` li rimette in
+  -- coda insieme -- stacca comunque notte e sessione da quegli stessi frame in apertura di
   -- corsa. Senza, premere Applica su un archivio gia' raggruppato moriva col database in
   -- faccia. Il perche' per l'utente sta nel contratto della spina.
   object_id INTEGER NOT NULL REFERENCES objects (id) ON DELETE CASCADE,
@@ -715,7 +715,7 @@ CREATE TABLE scan_runs (
 ) STRICT;
 
 -- Quanto e' servito ogni pezzo, corredo e filtro (DERIVATO: si riscrive intero a fine giro di
--- ogni stadio che cambia le pose, `spine/gear_usage.py`, e la pagina Attrezzatura lo legge e
+-- ogni stadio che cambia i frame, `spine/gear_usage.py`, e la pagina Attrezzatura lo legge e
 -- basta). `subject_id` e' l'id della riga di `instruments`, `rigs` o `filters`: niente chiave
 -- esterna, perche' punta a tre tabelle, e chi legge parte da quelle -- una riga orfana non si
 -- vede. NULL nei quattro conteggi vuol dire "l'app non puo' saperlo", non zero; una riga che
@@ -755,7 +755,7 @@ CREATE TABLE rig_parts (
   CHECK ((kind = 'software') = (piece_id IS NULL) AND (kind = 'software') = (software IS NOT NULL))
 ) STRICT;
 
--- I candidati del cielo per la scheda di un oggetto in dubbio, o di pose dette "non e' un oggetto"
+-- I candidati del cielo per la scheda di un oggetto in dubbio, o di frame detti "non e' un oggetto"
 -- (DERIVATO: li scrive `spine/object_candidates.py`, che dice quando; Da confermare li legge).
 -- `object_key` e' la chiave stabile della scheda, perche' la riga dell'oggetto puo' non esserci
 -- piu'. `rank` e' l'ordine, dal piu' probabile; `in_frame` NULL quando il cielo non porta lati o

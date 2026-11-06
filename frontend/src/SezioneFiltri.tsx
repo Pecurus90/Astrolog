@@ -217,7 +217,7 @@ function RigaFiltri({
 }
 
 /** La strada di chi in catalogo non c'e': il nome che vuole, e la banda -- che e' cio' che
- *  sblocca le pose. La **larghezza** in nanometri e' facoltativa, e pretenderla fermerebbe la
+ *  sblocca i frame. La **larghezza** in nanometri e' facoltativa, e pretenderla fermerebbe la
  *  risposta su una cosa che un anti inquinamento luminoso non ha. */
 function AMano({
   filtro,

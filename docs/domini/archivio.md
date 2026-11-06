@@ -22,7 +22,7 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Le copie calibrate che tengo accanto agli originali non mi raddoppiano le ore | `test_a_rewritten_copy_is_not_another_hour_of_sky` |
 | Un frame che non dice quanto e' durato non conta come zero: me lo dice a parte | `test_a_pose_without_a_time_is_not_zero_hours`; *un frame che non dice quanto e' durato non diventa zero* |
 | Se nessun frame di un oggetto dice la durata, non mi scrive "0 h" | *se nessun frame dice la durata, non scrive zero ore* |
-| Vedo con che filtri ho ripreso ogni oggetto, nell'ordine dei filtri, e quante ore ciascuno | `test_the_filters_of_an_object_come_with_it_from_the_same_house`, `test_a_night_or_an_object_lists_its_filters_in_the_one_order`, `test_the_archive_dropdown_offers_the_filters_in_the_one_order` (`backend/tests/test_filter_order.py`); *dice con che filtri hai ripreso, nell'ordine dei filtri*, *ogni filtro dice le sue ore, nelle carte e nell'elenco*, *un filtro le cui pose non dicono la durata non scrive ore* |
+| Vedo con che filtri ho ripreso ogni oggetto, nell'ordine dei filtri, e quante ore ciascuno | `test_the_filters_of_an_object_come_with_it_from_the_same_house`, `test_a_night_or_an_object_lists_its_filters_in_the_one_order`, `test_the_archive_dropdown_offers_the_filters_in_the_one_order` (`backend/tests/test_filter_order.py`); *dice con che filtri hai ripreso, nell'ordine dei filtri*, *ogni filtro dice le sue ore, nelle carte e nell'elenco*, *un filtro le cui pose non dicono la durata non scrive ore* <!-- glossario-ok --> |
 | Un oggetto di cui i file non dicono il filtro non mi mostra pastiglie finte | *un oggetto senza filtri riconosciuti non mostra pastiglie finte* |
 | L'Archivio si apre a carte, e con un clic lo vedo a colonne per confrontare | *si apre a carte, e l'altra vista e' a un clic* |
 | Se mando a qualcuno il collegamento all'elenco, gli si apre l'elenco | *quale vista stai guardando resta nell'indirizzo* |
@@ -57,7 +57,7 @@ le tendine), in `backend/tests/test_spine_archive_mosaic.py` (le righe dei mosai
 | Cercando o filtrando, un mosaico compare intero se uno dei suoi pannelli risponde | `test_a_filter_of_the_bar_lets_the_mosaic_through_if_one_of_its_poses_passes`, `test_the_filter_used_is_asked_of_the_poses_of_the_row`, `test_a_mosaic_named_with_a_free_name_is_found_by_that_name` |
 | Un mosaico proposto e non ancora confermato non cambia l'Archivio | `test_without_a_confirmed_mosaic_nothing_changes` |
 | Un mosaico dice di esserlo e quanti pannelli ha, nelle due viste e anche a chi ascolta | `test_a_mosaic_row_says_how_many_panels_it_has`; *la carta di un mosaico dice mosaico e quanti pannelli, e si sente*, *anche nell'elenco la riga del mosaico porta la sua etichetta* (`frontend/tests/archivio-mosaici.test.tsx`) |
-| La carta di un mosaico dice ogni pannello, numerato: il suo oggetto, i frame e le ore (il punto del cielo arriva dalla rotta e non si scrive: Marco, 8/10/2026) | `test_every_panel_of_a_mosaic_says_its_object_its_frames_and_its_hours`, `test_a_panel_counts_like_every_row_copies_out_and_untimed_apart`, `test_a_panel_whose_poses_found_no_object_says_so_with_nothing`, `test_the_route_gives_a_mosaic_its_panels_and_an_object_none`, `test_all_the_panels_of_a_page_come_in_two_questions`; *la carta del mosaico dice ogni pannello, con oggetto, frame e ore*, *un pannello di cui il cielo non ha legato l'oggetto lo dice, e le pose senza tempo a parte*, *un oggetto non ha pannelli da aprire* (`frontend/tests/archivio-mosaici.test.tsx`) |
+| La carta di un mosaico dice ogni pannello, numerato: il suo oggetto, i frame e le ore (il punto del cielo arriva dalla rotta e non si scrive: Marco, 8/10/2026) | `test_every_panel_of_a_mosaic_says_its_object_its_frames_and_its_hours`, `test_a_panel_counts_like_every_row_copies_out_and_untimed_apart`, `test_a_panel_whose_poses_found_no_object_says_so_with_nothing`, `test_the_route_gives_a_mosaic_its_panels_and_an_object_none`, `test_all_the_panels_of_a_page_come_in_two_questions`; *la carta del mosaico dice ogni pannello, con oggetto, frame e ore*, *un pannello di cui il cielo non ha legato l'oggetto lo dice, e le pose senza tempo a parte*, *un oggetto non ha pannelli da aprire* (`frontend/tests/archivio-mosaici.test.tsx`) <!-- glossario-ok --> |
 | Posso vedere solo i mosaici, e l'interruttore *Solo mosaici* c'e' solo se ne ho | `test_you_can_narrow_down_to_the_mosaics`, `test_the_mosaic_choice_is_offered_only_to_who_has_a_mosaic`; *la tendina dei mosaici compare solo a chi ne ha, e stringe nel backend*, *chi non ha mosaici non vede la tendina* |
 | Stringo a un anno, o a date mie, e ogni riga dice solo le ore, i frame e i filtri di quel periodo | `test_a_period_keeps_the_rows_shot_in_it_with_their_hours_in_it`, `test_a_period_can_straddle_the_new_year`, `test_the_pills_of_a_row_say_the_narrowed_hours` (`backend/tests/test_spine_archive_scope.py`); *un anno chiede le notti dal primo gennaio al trentuno dicembre*, *scegliere le date apre dal e al, e una stagione a cavallo d'anno arriva intera*, *tornare a un anno dimentica le date scelte prima* (`frontend/tests/archivio-periodo.test.tsx`) |
 | Il periodo guarda la notte, non l'orologio | `test_the_period_reads_the_night_not_the_clock` |
@@ -106,14 +106,14 @@ pannello si legge allo stesso modo: i suoi frame, contati come ogni riga, il suo
 centro che la geometria ha scritto (`panels`); il centro dice **quale** pannello, se due inquadrano
 lo stesso oggetto. Tutti i pannelli della pagina arrivano in due domande, non in una per mosaico.
 
-**Periodo, sito, ottica e camera stringono le pose, e la riga dice quelle** (Marco, 7/10/2026:
+**Periodo, sito, ottica e camera stringono i frame, e la riga dice quelli** (Marco, 7/10/2026:
 *"se e' per periodo deve mostrare il periodo"*). Catalogo, costellazione e ricerca chiedono chi e'
-la riga; il filtro usato e questi quattro chiedono le sue pose. Il filtro usato fa passare la
+la riga; il filtro usato e questi quattro chiedono i suoi frame. Il filtro usato fa passare la
 riga e lascia le ore di sempre, perche' le pastiglie gia' dicono le ore per filtro; questi quattro
 invece **restringono** cio' che la riga conta -- ore, frame, pastiglie, pannelli -- perche' "M 31,
 12 h" sotto "2025" direbbe una cosa falsa a chi quell'anno ne ha fatte 2. La condizione e' una
-sola (`counts.Scope`) e si chiede alla stessa posa: "casa e ASI533" e' una posa fatta a casa con
-la ASI533, non un oggetto che ha pose dell'una e dell'altra. Il periodo si legge sulla **notte**
+sola (`counts.Scope`) e si chiede allo stesso frame: "casa e ASI533" e' un frame fatto a casa con
+la ASI533, non un oggetto che ha frame dell'una e dell'altra. Il periodo si legge sulla **notte**
 (`nights.night_date`, nel fuso del sito), mai su `date_obs`; un anno e' dal primo gennaio al
 trentuno dicembre, le due estreme comprese. Il numero dei pannelli di un mosaico resta quello del
 mosaico: e' cio' che il mosaico e', non cio' che e' stato ripreso nel periodo.
@@ -123,7 +123,7 @@ niente: e' la tendina con la sola voce "tutti" sotto un altro nome. Gli anni inv
 uno, perche' la stessa tendina porta a "Intervallo di date". Ottica e camera si leggono dal setup
 della posa (`rigs`), come le conta l'Attrezzatura.
 
-**E costa quanto le righe che mostra, non quanto le pose che contengono.** Le ore si contano solo
+**E costa quanto le righe che mostra, non quanto i frame che contengono.** Le ore si contano solo
 per le righe della pagina, e la conta non le calcola; un filtro guarda i pannelli solo di un
 mosaico. Lo misurano `backend/tests/test_spine_archive_cost.py`, in passi del motore e non in
 millisecondi.

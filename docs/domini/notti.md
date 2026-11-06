@@ -35,7 +35,7 @@ col loro titolo e stanno in `frontend/tests/notti.test.tsx`.
 | Se di una notte la Luna non si puo' sapere, la riga non mi mette un trattino | `test_a_night_whose_site_has_no_timezone_says_nothing_about_the_moon`; *una notte di cui non si sa la luna non scrive un trattino muto* |
 | Vedo che tempo faceva: nuvole, temperatura, vento (la casa e' [`meteo.md`](meteo.md)) | `test_the_nights_page_reads_the_weather_of_each_night_as_written`; *una notte ripresa dice com'era il cielo, e quante ore sono state serene* |
 | Di una notte di pochi giorni fa so il giorno in cui arriva il meteo | `test_a_young_night_says_the_day_its_weather_arrives`, `test_the_day_the_weather_arrives_is_counted_in_the_site_time_zone`; *una notte giovane dice il giorno in cui arriva il meteo* |
-| Vedo com'erano i miei frame quella notte: stelle piu' o meno gonfie, quante ne ha trovate | nasce con la casella che misura le pose |
+| Vedo com'erano i miei frame quella notte: stelle piu' o meno gonfie, quante ne ha trovate | nasce con la casella che misura i frame |
 | Apro una notte e vedo tutto -- oggetto per oggetto, i grafici, le misure, il setup | nasce con il modale, che e' lo stesso dell'oggetto e della libreria |
 | Dalla ricerca apro una notte precisa (`/notti?notte=<id>`), anche vecchia, e torno a tutte; una notte che non c'e' piu' lo dice | `test_a_night_is_asked_by_its_id_wherever_it_falls_in_the_list`, `test_a_night_that_does_not_exist_is_an_empty_list_not_an_error`, *con ?notte= chiede quella notte sola e porta a tutte le altre*, *una notte che non c'e' piu' lo dice, invece di dire che l'archivio e' vuoto* |
 
@@ -84,7 +84,7 @@ promessa vuota. Il raggruppamento lo fa il backend, perche' e' un conto, non una
 
 **E se la lettura non e' finita, lo dice.** Le notti nascono dopo che l'app ha riconosciuto cosa
 c'era in ogni posa: chi apre Notti a meta' corsa vedrebbe tre notti e crederebbe di averne tre.
-La riga in cima dice che sta ancora lavorando, con quante pose mancano.
+La riga in cima dice che sta ancora lavorando, con quanti frame mancano.
 
 **Non avere notti ha quattro motivi, e sono quattro risposte diverse.** *Non hai ancora frame* (e
 allora si parte dalla scansione); *non hai detto dov'e' casa* (e allora le notti non nasceranno
@@ -121,9 +121,9 @@ Greenwich e descrivere il cielo di un altro posto.
 calcola nessuna formula: lo dice un servizio, si chiede **una volta sola** e si tiene accanto alla
 notte. E' una casella sua, con la sua rete e il suo "se non c'e' rete l'app funziona lo stesso".
 
-**E il seeing non si recupera.** Quanto fosse buona l'aria quella notte lo dicono le **tue pose**,
+**E il seeing non si recupera.** Quanto fosse buona l'aria quella notte lo dicono i **tuoi frame**,
 non un modello su griglia: se il numero non e' stato misurato allora, oggi non esiste piu'. La
-cosa piu' vicina e' l'HFD delle pose, che l'app misura gia'; il numero che i servizi meteo
+cosa piu' vicina e' l'HFD dei frame, che l'app misura gia'; il numero che i servizi meteo
 chiamano "seeing" e' una previsione, e dove comparisse andrebbe scritto che viene da un modello.
 
 **A mani vuote e su tre bersagli.** I numeri arrivano dall'API gia' fatti -- ore sommate, date gia'

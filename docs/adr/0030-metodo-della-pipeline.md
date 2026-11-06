@@ -40,17 +40,17 @@ Si leggono solo i file di N.I.N.A. e ASIAIR (ADR 0029), di loro tutte le chiavi.
 - Costo: tre revisioni per passo del cuore (ordine di ore, non giorni). (superata: vedi 0040)
 - **Identita' della posa** (Marco, 22/10/2026, secondo audit): camera, inizio UTC normalizzato,
   dimensioni e durata dall'header (`pipeline/fingerprint.py`); i pixel solo se ne manca uno, o se
-  l'inizio non ha la frazione di secondo (pose brevi nello stesso secondo; archivio: mai). Un
+  l'inizio non ha la frazione di secondo (frame brevi nello stesso secondo; archivio: mai). Un
   `.fits` e la sua copia fpack sono la stessa posa (con la frazione); ogni file si apre una volta.
   Rischi accettati: due camere gemelle sincronizzate al millisecondo; senza frazione, la copia
-  fpack conta come seconda posa. Sull'archivio di prova: stesse 15.226 pose.
-- **Cartella nascosta dopo** (Marco, 22/10/2026, secondo audit): non si cammina e le sue pose non
-  si giudicano, come una cartella che non risponde; la vecchia le dava "non trovate". Il cestino
+  fpack conta come seconda posa. Sull'archivio di prova: stessi 15.226 frame.
+- **Cartella nascosta dopo** (Marco, 22/10/2026, secondo audit): non si cammina e i suoi frame non
+  si giudicano, come una cartella che non risponde; la vecchia li dava "non trovati". Il cestino
   resta "sparito": un file cestinato cambia percorso. Un FITS nascosto (punto, attributo) resta
   fuori come le cartelle, detto nella ricevuta (Marco, 23/10/2026, quinto audit).
 - **Altro disco sotto la radice** (Marco, 22/10/2026, audit 4): stessa lettera o rimontaggio con
   un altro volume: si giudica sempre e la ricevuta lo segna (`volume_changed`). Il disco sbagliato
-  mostra le pose sparite, che tornano col disco giusto; mai una radice muta per sempre.
+  mostra i frame spariti, che tornano col disco giusto; mai una radice muta per sempre.
 - **Coda del float32**: la pipeline nuova la toglie solo se il numero e' un float32
   (`pipeline/values.py`, `_without_float32_tail`); la vecchia arrotonda a 7 cifre
   (`units.py`, `strip_float32_noise`). Differenza voluta: un double vero resta com'e'.

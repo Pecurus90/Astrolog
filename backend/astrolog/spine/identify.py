@@ -93,7 +93,7 @@ def _sweep(conn: sqlite3.Connection) -> int:
     """After the detach and at the start, not the end: the names it frees go to this same pass."""
     dropped = store.drop_empty_objects(conn)
     if dropped:
-        log.info("identify: oggetti rimasti senza pose, tolti", extra={"quanti": dropped})
+        log.info("identify: oggetti rimasti senza frame, tolti", extra={"quanti": dropped})
     return dropped
 
 

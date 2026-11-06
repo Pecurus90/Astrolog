@@ -1,9 +1,9 @@
 import { numero, ore, t } from "./i18n"
 
 /**
- * Il tempo di un gruppo di pose: **le ore solo se ci sono, e le pose senza tempo a parte**.
+ * Il tempo di un gruppo di frame: **le ore solo se ci sono, e i frame senza tempo a parte**.
  *
- * Con tutte le pose mute "0 h" sarebbe un dato, e invece il tempo c'e': e' l'header che non lo dice.
+ * Con tutti i frame muti "0 h" sarebbe un dato, e invece il tempo c'e': e' l'header che non lo dice.
  * Una casa sola perche' lo mostrano gli oggetti e i mosaici, e la stessa regola scritta due volte
  * divergerebbe alla prima correzione.
  */
