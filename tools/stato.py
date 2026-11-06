@@ -1,12 +1,10 @@
-"""Lo stato del progetto all'avvio di ogni sessione (ADR 0040, regola 2: prima il rosso).
-
-Hook SessionStart: cio' che stampa entra nel contesto. Passo aperto, CI di main, Nightly, Issue per
-etichetta, avvisi di sicurezza, modifiche non salvate. Senza rete lo dice, non tace.
-"""
+"""Project state at every session start (SessionStart hook, ADR 0040 rule 2: red first): CI,
+Nightly, Issues, alerts, open step, what waits for Design, unsaved changes; offline it says so."""
 
 import datetime as dt
 import json
 import os
+import re
 import subprocess
 import sys
 from collections.abc import Callable
@@ -18,6 +16,7 @@ import piano
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # GitHub may skip a cron without telling: a nightly older than this is stopped, not green.
 NIGHTLY_STALE_H = 36
+QUEUE = "handoff/per-design.md"
 RULE = "Se qualcosa qui e' rosso, il lavoro di oggi e' quello."
 
 type Run = Callable[[list[str]], str]
@@ -153,10 +152,46 @@ def _dirty_line() -> str:
     return f"Modifiche non salvate: {n} file" + (" (un lavoro in volo: si chiede)" if n else "")
 
 
-def report(run: Run, now: dt.datetime) -> str:
-    return "\n".join(
-        ["Stato di AstroLog:", *github_lines(run, now), _plan_line(), _dirty_line(), RULE]
+def design_lines(queue: str, last_delivery: str, dirty: bool) -> list[str]:
+    """What waits to be given to Design, and whether a delivery under handoff/design is new."""
+    to_give = len(re.findall(r"^- \[da dare\]", queue, re.M))
+    given = len(re.findall(r"^- \[data\b", queue, re.M))
+    first = "Per Design: niente da dare"
+    if to_give or given:
+        first = f"Per Design: {to_give} voci da dare, {given} data in attesa della consegna"
+        first += f" ({QUEUE})"
+    match = re.search(r"^Consegna controllata: (\w+)", queue, re.M)
+    checked = match[1] if match else ""
+    same = bool(checked and last_delivery) and (
+        last_delivery.startswith(checked) or checked.startswith(last_delivery)
     )
+    second = "Consegna di Design: " + (
+        "nessuna nuova" if same and not dirty else "NUOVA, da controllare voce per voce"
+    )
+    return [first, second]
+
+
+def _git(args: list[str]) -> str:
+    done = subprocess.run(
+        ["git", *args], capture_output=True, encoding="utf-8", cwd=ROOT, timeout=15, check=True
+    )
+    return done.stdout.strip()
+
+
+def _design_lines() -> list[str]:
+    try:
+        with open(os.path.join(ROOT, QUEUE), encoding="utf-8") as h:
+            queue = h.read()
+        last = _git(["log", "-1", "--format=%h", "--", "handoff/design"])
+        dirty = bool(_git(["status", "--porcelain", "--", "handoff/design"]))
+    except (OSError, subprocess.SubprocessError):
+        return [f"Per Design: non so ({QUEUE} o git illeggibili)"]
+    return design_lines(queue, last, dirty)
+
+
+def report(run: Run, now: dt.datetime) -> str:
+    head = ["Stato di AstroLog:", *github_lines(run, now), _plan_line(), *_design_lines()]
+    return "\n".join([*head, _dirty_line(), RULE])
 
 
 if __name__ == "__main__":

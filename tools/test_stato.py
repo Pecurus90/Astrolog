@@ -1,7 +1,5 @@
-"""Lo stato all'avvio (ADR 0040, regola 2): il rosso si vede da solo, a ogni sessione.
-
-Si prova con risposte finte di `gh`: la rete non serve e il test non dipende da GitHub di oggi.
-"""
+"""State at start (ADR 0040 rule 2): red shows by itself every session. Fake `gh` answers: no
+network, and the test does not depend on today's GitHub."""
 
 import datetime as dt
 import json
@@ -141,6 +139,40 @@ def test_github_unreachable_is_said_not_hidden():
     assert stato.github_lines(_fake(risposte), NOW) == [
         "GitHub non raggiungibile: stato da controllare a mano"
     ]
+
+
+QUEUE = """# Per Design
+
+Consegna controllata: abc1234
+
+- [da dare] fonte pubblica al posto di ADR 0039
+- [da dare] esclusi al posto di saltati
+- [data] brief v59, punto 2
+- [fatta v63] brief v59, punto 1
+"""
+
+
+def test_what_is_still_to_give_design_is_counted():
+    lines = stato.design_lines(QUEUE, "abc1234", dirty=False)
+    assert lines == [
+        "Per Design: 2 voci da dare, 1 data in attesa della consegna (handoff/per-design.md)",
+        "Consegna di Design: nessuna nuova",
+    ]
+
+
+def test_a_delivery_not_yet_checked_is_said():
+    """A new commit under handoff/design, or files copied there and not committed."""
+    assert stato.design_lines(QUEUE, "def5678", dirty=False)[1] == (
+        "Consegna di Design: NUOVA, da controllare voce per voce"
+    )
+    assert stato.design_lines(QUEUE, "abc1234", dirty=True)[1] == (
+        "Consegna di Design: NUOVA, da controllare voce per voce"
+    )
+
+
+def test_an_empty_queue_says_so():
+    text = "# Per Design\n\nConsegna controllata: abc1234\n\n- [fatta v63] x\n"
+    assert stato.design_lines(text, "abc1234", dirty=False)[0] == "Per Design: niente da dare"
 
 
 def test_the_report_ends_with_the_rule():

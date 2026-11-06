@@ -80,8 +80,8 @@ fino al 21/11/2026: un'idea di metodo va in una Issue `metodo`, non qui.
   in tutte le sue case.
 - **Una superficie si collauda nel browser** (skill `collaudo-dal-vivo`).
 - **Prima la risposta, poi il lavoro.** Un testo o una frase nuovi si concordano prima del codice.
-  Un'idea di Marco "per dopo" resta in `docs/idee.md` finche' non dice di farla. Se Marco aspetta
-  qualcosa da dare ad altri (Design), quello viene prima.
+  Un'idea di Marco "per dopo" resta in `docs/idee.md` finche' non dice di farla. Ogni richiesta
+  per Design entra subito in `handoff/per-design.md`, mai solo in chat, e viene prima.
 - **La memoria non e' una casa**: cio' che vale sta nel repo; la memoria tiene il rimando.
 - Quando compatti, conserva il passo del piano, i file toccati e i comandi di test.
 
