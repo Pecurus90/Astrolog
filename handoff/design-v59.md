@@ -147,7 +147,8 @@ Le sette sezioni coincidono con le domande dell'app.
 
 ## 6. Dashboard
 
-1. **Tre carte per riga** sul computer (brief del 12/10, punto 1): oggi scorrono di lato.
+1. **Tre carte per riga sul telefono** (brief del 12/10, punto 2.1): le sei carte del meteo, due
+   file piene. Sul computer la fila da sei resta (brief del 12/10 sulla Dashboard, punto 1.1).
 2. **FWHM media** nella Dashboard (brief del 12/10, punto 5): chiuso, no (Marco, 6/11): la
    Dashboard resta senza misure dei frame.
 3. **Calendario della Luna a tre gradini** 25 / 65 con le ore senza Luna, al posto di due stati
@@ -171,9 +172,9 @@ Le sette sezioni coincidono con le domande dell'app.
 3. **Campionamento**: arriva dopo (servono le scale dei setup).
 4. «Cambio del modello non riuscito: ICON non risponde»: il cambio di modello legge e basta; lo
    stato resta col testo «AstroLog non risponde».
-5. **Seeing senza chiave** (Marco, 6/11; ADR 0034): la parola stimata dalla corrente a getto
-   (buono / medio / scarso), detta «stima dal vento in quota»; con la chiave Meteoblue il numero.
-   L'invito a inserire la chiave resta accanto.
+5. **Seeing senza chiave** (Marco, 6/11; ADR 0034): una soglia sola, dal jet stream: da 126 km/h
+   «scarso · stima dal vento in quota» (meteoblue); sotto, solo l'invito alla chiave (Marco, 6/11:
+   nessun «buono» o «medio» senza fonte). Con la chiave Meteoblue il numero.
 6. Fonte che tace: un testo generico per aerosol e jet, non solo la visibilita'; anno dei dati
    CAMS dai dati, non «2026».
 7. Testo morto «Al massimo quattro misure».
